@@ -49,8 +49,6 @@ class _WSModule extends CoreClass {
 		// TODO: Check every 30s/, for all sockets, if they are still allowed to be in the rooms they are in, and on socket at all (permission changing/banning)
 		const server = await AppModule.runJob("SERVER");
 
-		// this._io.origins(config.get("cors.origin"));
-
 		this._io = new WebSocketServer({ server, path: "/ws" });
 
 		this.rooms = {};

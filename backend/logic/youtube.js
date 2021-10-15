@@ -207,7 +207,6 @@ class _YouTubeModule extends CoreClass {
 						return resolve({ song });
 					})
 					.catch(err => {
-						// console.log(111, err, payload);
 						YouTubeModule.log("ERROR", "GET_SONG", `${err.message}`);
 						return reject(new Error("An error has occured. Please try again later."));
 					});
@@ -280,7 +279,6 @@ class _YouTubeModule extends CoreClass {
 					}
 				],
 				(err, response) => {
-					// console.log(222, err, payload);
 					if (err && err !== true) {
 						YouTubeModule.log("ERROR", "GET_PLAYLIST", "Some error has occurred.", err.message);
 						reject(new Error(err.message));
@@ -342,7 +340,6 @@ class _YouTubeModule extends CoreClass {
 						return resolve({ songs });
 					})
 					.catch(err => {
-						// console.log(333, err, payload);
 						YouTubeModule.log("ERROR", "GET_PLAYLIST_PAGE", `${err.message}`);
 						if (err.message === "Request failed with status code 404") {
 							return reject(new Error("Playlist not found. Is the playlist public/unlisted?"));
@@ -422,7 +419,6 @@ class _YouTubeModule extends CoreClass {
 							.catch(err => reject(err));
 					})
 					.catch(err => {
-						// console.log(444, err, payload);
 						YouTubeModule.log("ERROR", "FILTER_MUSIC_VIDEOS", `${err.message}`);
 						return reject(new Error("Failed to find playlist from YouTube"));
 					});

@@ -1,5 +1,4 @@
 import async from "async";
-// import mongoose from "mongoose";
 
 import CoreClass from "../core";
 
@@ -33,17 +32,6 @@ class _StationsModule extends CoreClass {
 		SongsModule = this.moduleManager.modules.songs;
 		PlaylistsModule = this.moduleManager.modules.playlists;
 		NotificationsModule = this.moduleManager.modules.notifications;
-
-		// this.defaultSong = {
-		// 	youtubeId: "60ItHLz5WEA",
-		// 	title: "Faded - Alan Walker",
-		// 	duration: 212,
-		// 	skipDuration: 0,
-		// 	likes: -1,
-		// 	dislikes: -1,
-		// 	requestedAt: Date.now(),
-		// 	status: "unverified"
-		// };
 
 		this.userList = {};
 		this.usersPerStation = {};
@@ -208,8 +196,6 @@ class _StationsModule extends CoreClass {
 	 */
 	INITIALIZE_STATION(payload) {
 		return new Promise((resolve, reject) => {
-			// if (typeof cb !== 'function') cb = ()=>{};
-
 			async.waterfall(
 				[
 					next => {
@@ -517,7 +503,6 @@ class _StationsModule extends CoreClass {
 						let lastSongAdded = null;
 
 						playlistSongs
-							// .map(song => song._doc)
 							.every(song => {
 								if (
 									songsToAdd.length < songsStillNeeded &&
@@ -784,21 +769,6 @@ class _StationsModule extends CoreClass {
 									if (err === "No songs available.") next(null, null, station);
 									else next(err);
 								});
-
-							// return StationsModule.stationModel.updateOne(
-							// 	{ _id: payload.stationId },
-							// 	{
-							// 		$pull: {
-							// 			queue: {
-							// 				_id: station.queue[0]._id
-							// 			}
-							// 		}
-							// 	},
-							// 	err => {
-							// 		if (err) return next(err);
-							// 		return next(null, station.queue[0], -12, station);
-							// 	}
-							// );
 						}
 
 						if (station.type === "community" && !station.partyMode) {
@@ -825,64 +795,6 @@ class _StationsModule extends CoreClass {
 								})
 								.catch(next);
 						}
-
-						// if (station.type === "community" && !station.partyMode) {
-						// 	return DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this).then(playlistModel =>
-						// 		playlistModel.findOne({ _id: station.privatePlaylist }, (err, playlist) => {
-						// 			if (err) return next(err);
-
-						// 			if (!playlist) return next(null, null, -13, station);
-
-						// 			playlist = playlist.songs;
-
-						// 			if (playlist.length > 0) {
-						// 				let currentSongIndex;
-
-						// 				if (station.currentSongIndex < playlist.length - 1)
-						// 					currentSongIndex = station.currentSongIndex + 1;
-						// 				else currentSongIndex = 0;
-
-						// 				const callback = (err, song) => {
-						// 					if (err) return next(err);
-						// 					if (song) return next(null, song, currentSongIndex, station);
-
-						// 					const currentSong = {
-						// 						youtubeId: playlist[currentSongIndex].youtubeId,
-						// 						title: playlist[currentSongIndex].title,
-						// 						duration: playlist[currentSongIndex].duration,
-						// 						likes: -1,
-						// 						dislikes: -1,
-						// 						requestedAt: playlist[currentSongIndex].requestedAt
-						// 					};
-
-						// 					return next(null, currentSong, currentSongIndex, station);
-						// 				};
-
-						// 				if (mongoose.Types.ObjectId.isValid(playlist[currentSongIndex]._id))
-						// 					return SongsModule.runJob(
-						// 						"GET_SONG",
-						// 						{
-						// 							id: playlist[currentSongIndex]._id
-						// 						},
-						// 						this
-						// 					)
-						// 						.then(response => callback(null, response.song))
-						// 						.catch(callback);
-						// 				return SongsModule.runJob(
-						// 					"GET_SONG_FROM_YOUTUBE_ID",
-						// 					{
-						// 						youtubeId: playlist[currentSongIndex].youtubeId
-						// 					},
-						// 					this
-						// 				)
-						// 					.then(response => callback(null, response.song))
-						// 					.catch(callback);
-						// 			}
-
-						// 			return next(null, null, -14, station);
-						// 		})
-						// 	);
-						// }
 
 						if (station.type === "official") {
 							StationsModule.runJob(
@@ -930,7 +842,6 @@ class _StationsModule extends CoreClass {
 							};
 						}
 
-						// if (currentSongIndex >= 0) $set.currentSongIndex = currentSongIndex;
 						$set.startedAt = Date.now();
 						$set.timePaused = 0;
 						if (station.paused) $set.pausedAt = Date.now();

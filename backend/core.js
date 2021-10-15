@@ -141,7 +141,6 @@ class Queue {
 	_handleQueue() {
 		if (this.queue.length > 0) {
 			const task = this.queue.reduce((a, b) => (a.priority < b.priority ? a : b));
-			// console.log(`First task: `, task);
 			if (task) {
 				if ((!this.paused && this.runningTasks.length < this.concurrency) || task.priority === -1) {
 					this.queue.remove(task);
@@ -204,7 +203,6 @@ class Job {
 	 * @param {string} status - the new status
 	 */
 	setStatus(status) {
-		// console.log(`Job ${this.toString()} has changed status from ${this.status} to ${status}`);
 		this.status = status;
 	}
 
@@ -309,7 +307,6 @@ export default class CoreClass {
 	constructor(name, options) {
 		this.name = name;
 		this.status = "UNINITIALIZED";
-		// this.log("Core constructor");
 		this.concurrency = options && options.concurrency ? options.concurrency : 10;
 		this.jobQueue = new Queue((job, options) => this._runJob(job, options), this.concurrency);
 		this.jobQueue.pause();
@@ -491,11 +488,6 @@ export default class CoreClass {
 				);
 				_parentJob.setStatus("WAITING_ON_CHILD_JOB");
 				_parentJob.module.jobQueue.pauseRunningJob(_parentJob);
-				// console.log(111, _parentJob.module.jobQueue.length());
-				// console.log(
-				// 	222,
-				// 	_parentJob.module.jobQueue.workersList().map(data => data.data.job)
-				// );
 			} else {
 				this.log(
 					"INFO",
@@ -504,14 +496,8 @@ export default class CoreClass {
 			}
 		}
 
-		// console.log(this);
-
-		// console.log(321, _parentJob);
-
 		job.setStatus("QUEUED");
 
-		// if (options.bypassQueue) this._runJob(job, options, () => {});
-		// else {
 		let calculatedPriority = null;
 		if (_priority) calculatedPriority = _priority;
 		else if (this.priorities[name]) calculatedPriority = this.priorities[name];
@@ -528,8 +514,6 @@ export default class CoreClass {
 		) {
 			this.moduleManager.debugJobs.all.push({ job, _priority });
 		}
-
-		// }
 
 		return deferredPromise.promise;
 	}
@@ -585,7 +569,6 @@ export default class CoreClass {
 								response
 							});
 						}
-						// job.onFinish.resolve(response);
 					})
 					.catch(error => {
 						this.log("INFO", `Running job ${job.name} (${job.toString()}) failed`);
@@ -605,7 +588,6 @@ export default class CoreClass {
 								error
 							});
 						}
-						// job.onFinish.reject(error);
 					})
 					.finally(() => {
 						const endTime = Date.now();

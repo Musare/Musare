@@ -45,16 +45,6 @@ class _UtilsModule extends CoreClass {
 		});
 	}
 
-	// COOKIES_TO_STRING() {//cookies
-	// 	return new Promise((resolve, reject) => {
-	//         let newCookie = [];
-	//         for (let prop in cookie) {
-	//             newCookie.push(prop + "=" + cookie[prop]);
-	//         }
-	//         return newCookie.join("; ");
-	//     });
-	// }
-
 	/**
 	 * Removes a cookie by name
 	 *

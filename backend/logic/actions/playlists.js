@@ -1359,7 +1359,6 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	remove: isLoginRequired(async function remove(session, playlistId, cb) {
-		// const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
@@ -1388,51 +1387,6 @@ export default {
 						.then(() => next(null, playlist))
 						.catch(next);
 				}
-
-				// (playlist, next) => {
-				// 	stationModel.find({ privatePlaylist: playlistId }, (err, res) => {
-				// 		next(err, playlist, res);
-				// 	});
-				// },
-
-				// (playlist, stations, next) => {
-				// 	async.each(
-				// 		stations,
-				// 		(station, next) => {
-				// 			async.waterfall(
-				// 				[
-				// 					next => {
-				// 						stationModel.updateOne(
-				// 							{ _id: station._id },
-				// 							{ $set: { privatePlaylist: null } },
-				// 							{ runValidators: true },
-				// 							next
-				// 						);
-				// 					},
-
-				// 					(res, next) => {
-				// 						if (!station.partyMode) {
-				// 							moduleManager.modules.stations
-				// 								.runJob("UPDATE_STATION", { stationId: station._id }, this)
-				// 								.then(station => next(null, station))
-				// 								.catch(next);
-				// 							CacheModule.runJob("PUB", {
-				// 								channel: "privatePlaylist.selected",
-				// 								value: {
-				// 									playlistId: null,
-				// 									stationId: station._id
-				// 								}
-				// 							});
-				// 						} else next();
-				// 					}
-				// 				],
-
-				// 				() => next()
-				// 			);
-				// 		},
-				// 		() => next(null, playlist)
-				// 	);
-				// }
 			],
 			async (err, playlist) => {
 				if (err) {

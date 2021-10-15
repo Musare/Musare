@@ -144,25 +144,6 @@ CacheModule.runJob("SUB", {
 	}
 });
 
-// CacheModule.runJob("SUB", {
-// 	channel: "privatePlaylist.selected",
-// 	cb: data => {
-// 		WSModule.runJob("EMIT_TO_ROOM", {
-// 			room: `station.${data.stationId}`,
-// 			args: ["event:privatePlaylist.selected", {data: {playlistId: data.playlistId}}]
-// 		});
-// 	}
-// });
-
-// CacheModule.runJob("SUB", {
-// 	channel: "privatePlaylist.deselected",
-// 	cb: data => {
-// 		WSModule.runJob("EMIT_TO_ROOM", {
-// 			room: `station.${data.stationId}`,
-// 			args: ["event:privatePlaylist.deselected"]
-// 		});
-// 	}
-// });
 
 CacheModule.runJob("SUB", {
 	channel: "station.includedPlaylist",
@@ -894,11 +875,8 @@ export default {
 						partyMode: station.partyMode,
 						playMode: station.playMode,
 						owner: station.owner,
-						// privatePlaylist: station.privatePlaylist,
 						includedPlaylists: station.includedPlaylists,
 						excludedPlaylists: station.excludedPlaylists,
-						// genres: station.genres,
-						// blacklistedGenres: station.blacklistedGenres,
 						theme: station.theme
 					};
 
@@ -1025,9 +1003,6 @@ export default {
 						partyMode: station.partyMode,
 						playMode: station.playMode,
 						owner: station.owner,
-						// privatePlaylist: station.privatePlaylist,
-						// genres: station.genres,
-						// blacklistedGenres: station.blacklistedGenres,
 						theme: station.theme,
 						paused: station.paused,
 						currentSong: station.currentSong
@@ -3113,14 +3088,6 @@ export default {
 						.then(station => next(null, station))
 						.catch(next);
 				}
-
-				// (res, next) => {
-				// 	StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-				// 		.then(station => {
-				// 			next(null, station);
-				// 		})
-				// 		.catch(next);
-				// }
 			],
 			async err => {
 				if (err) {
@@ -3687,14 +3654,6 @@ export default {
 
 				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 
-				// CacheModule.runJob("PUB", {
-				// 	channel: "privatePlaylist.selected",
-				// 	value: {
-				// 		playlistId,
-				// 		stationId
-				// 	}
-				// });
-
 				return cb({
 					status: "success",
 					message: "Successfully selected playlist."
@@ -3760,13 +3719,6 @@ export default {
 				);
 
 				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
-
-				// CacheModule.runJob("PUB", {
-				// 	channel: "privatePlaylist.deselected",
-				// 	value: {
-				// 		stationId
-				// 	}
-				// });
 
 				return cb({
 					status: "success",

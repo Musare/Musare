@@ -523,7 +523,6 @@ export default {
 			this.socket.dispatch("apis.joinAdminRoom", "songs", () => {});
 		},
 		...mapActions("admin/verifiedSongs", [
-			// "stopVideo",
 			"resetSongs",
 			"addSong",
 			"removeSong",
