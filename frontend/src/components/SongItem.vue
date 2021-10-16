@@ -63,7 +63,7 @@
 				v-if="disabledActions.indexOf('all') === -1"
 			>
 				<tippy
-					v-if="loggedIn"
+					v-if="loggedIn && hoveredTippy"
 					:touch="true"
 					:interactive="true"
 					placement="left"
@@ -135,8 +135,14 @@
 						</div>
 					</template>
 				</tippy>
+				<i
+					class="material-icons action-dropdown-icon"
+					v-else-if="loggedIn && !hoveredTippy"
+					@mouseenter="hoverTippy()"
+					>more_horiz</i
+				>
 				<a
-					v-if="
+					v-else-if="
 						!loggedIn && disabledActions.indexOf('youtube') === -1
 					"
 					target="_blank"
@@ -191,7 +197,8 @@ export default {
 		return {
 			utils,
 			formatedRequestedAt: null,
-			formatRequestedAtInterval: null
+			formatRequestedAtInterval: null,
+			hoveredTippy: false
 		};
 	},
 	computed: {
@@ -247,6 +254,9 @@ export default {
 					).forEach(popper => popper._tippy.hide()),
 				500
 			);
+		},
+		hoverTippy() {
+			this.hoveredTippy = true;
 		},
 		report(song) {
 			this.hideTippyElements();
