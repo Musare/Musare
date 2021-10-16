@@ -534,13 +534,18 @@ export default {
 
 				// create the user object
 				(hash, _id, next) => {
+					const avatarColors = ["blue", "orange", "green", "purple", "teal"];
 					next(null, {
 						_id,
-						name: "",
+						name: username,
 						username,
 						email: {
 							address: email,
 							verificationToken
+						},
+						avatar: {
+							type: "initials",
+							color: avatarColors[Math.random(Math.floor(Math.random() * avatarColors.length))]
 						},
 						services: {
 							password: {
