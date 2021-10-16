@@ -22,7 +22,7 @@ You can also find the staging branch at [musare.dev](https://musare.dev).
 ---
 
 ## Features
-- Playlists
+- **Playlists**
     - User created playlists
     - Automatically generated playlists for genres
     - Privacy configuration
@@ -30,7 +30,7 @@ You can also find the staging branch at [musare.dev](https://musare.dev).
     - Bulk import songs from YouTube playlist
     - Add songs from verified catalogue or YouTube
     - Ability to download in JSON format
-- Stations
+- **Stations**
     - Playlist mode to listen to selected playlists
     - Party mode to allow other users to add songs to queue
     - Ability to blacklist playlists to prevent songs within from playing
@@ -44,7 +44,7 @@ You can also find the staging branch at [musare.dev](https://musare.dev).
     - Vote to skip songs
     - Force skipping song by admins or owners
     - Add songs to queue from verified catalogue or YouTube (party mode only)
-- Song Management
+- **Song Management**
     - Verify songs to allow them to be searched for and played in official stations
     - Hide songs to remove from unverified catalogue
     - Import Album (WIP) to import songs in bulk
@@ -53,7 +53,7 @@ You can also find the staging branch at [musare.dev](https://musare.dev).
     - Configurable skip duration and song duration to cut intros and outros
     - Request songs from YouTube in official stations or admin area
     - Any song added to playlists or stations will be automatically requested
-- Users
+- **Users**
     - Activity logs
     - Profile page showing public playlists and activity logs
     - Text or gravatar profile pictures
@@ -61,10 +61,10 @@ You can also find the staging branch at [musare.dev](https://musare.dev).
     - Preferences to tailor site usage
     - Password reset
     - ActivityWatch integration
-- Punishments
+- **Punishments**
     - Ban users
     - Ban IPs
-- News
+- **News**
     - Admins can add/edit/remove news items
     - Markdown editor
 
