@@ -22,7 +22,7 @@ const regex = {
 	az09_: /^[a-z0-9_]+$/,
 	emailSimple: /^[\x00-\x7F]+@[a-z0-9]+\.[a-z0-9]+(\.[a-z0-9]+)?$/,
 	ascii: /^[\x00-\x7F]+$/,
-	name: /^[\p{L} .'-]+$/u,
+	name: /^[\p{L}0-9 .'_-]+$/u,
 	custom: regex => new RegExp(`^[${regex}]+$`)
 };
 
