@@ -38,8 +38,7 @@ class _MigrationModule extends CoreClass {
 			mongoose
 				.connect(mongoUrl, {
 					useNewUrlParser: true,
-					useUnifiedTopology: true,
-					useCreateIndex: true
+					useUnifiedTopology: true
 				})
 				.then(async () => {
 					mongoose.connection.on("error", err => this.log("ERROR", err));

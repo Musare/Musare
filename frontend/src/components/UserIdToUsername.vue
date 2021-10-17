@@ -34,3 +34,13 @@ export default {
 	}
 };
 </script>
+
+<style lang="scss" scoped>
+a {
+	color: var(--primary-color);
+	&:hover,
+	&:focus {
+		filter: brightness(90%);
+	}
+}
+</style>
