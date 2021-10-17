@@ -260,12 +260,7 @@ export default {
 					});
 				},
 
-				// playlists for a user's stations
 				next => {
-					playlistModel.deleteMany({ owner: session.userId }, next);
-				},
-
-				(res, next) => {
 					playlistModel.findOne({ createdBy: session.userId, displayName: "Liked Songs" }, next);
 				},
 
