@@ -4,7 +4,7 @@
 
 import config from "config";
 import async from "async";
-import { WebSocket, WebSocketServer } from "ws";
+import { WebSocketServer } from "ws";
 import { EventEmitter } from "events";
 
 import CoreClass from "../core";
