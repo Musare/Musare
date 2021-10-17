@@ -663,9 +663,6 @@
 									"
 									header="Currently Playing.."
 								/>
-								<!-- <p v-else class="nothing-here-text">
-								No song is currently playing
-							</p> -->
 							</div>
 							<div
 								v-if="nextSong"

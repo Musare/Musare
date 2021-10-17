@@ -50,6 +50,12 @@ class _TasksModule extends CoreClass {
 				timeout: 1000 * 60 * 60 * 6
 			});
 
+			// TasksModule.runJob("CREATE_TASK", {
+			// 	name: "logFileSizeCheckTask",
+			// 	fn: TasksModule.logFileSizeCheckTask,
+			// 	timeout: 1000 * 60 * 60
+			// });
+
 			TasksModule.runJob("CREATE_TASK", {
 				name: "collectStationUsersTask",
 				fn: TasksModule.collectStationUsersTask,

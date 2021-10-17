@@ -207,19 +207,6 @@
 						</aside>
 					</div>
 				</div>
-
-				<!--
-			
-			
-			<button
-				class="button is-info"
-				@click="shuffle()"
-				v-if="playlist.isUserModifiable"
-			>
-				Shuffle
-			</button>
-			<h5>Edit playlist details:</h5>
-			 -->
 			</div>
 		</template>
 		<template #footer>

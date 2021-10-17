@@ -502,19 +502,18 @@ class _StationsModule extends CoreClass {
 						const songsToAdd = [];
 						let lastSongAdded = null;
 
-						playlistSongs
-							.every(song => {
-								if (
-									songsToAdd.length < songsStillNeeded &&
-									currentYoutubeIds.indexOf(song.youtubeId) === -1
-								) {
-									lastSongAdded = song;
-									songsToAdd.push(song);
-									return true;
-								}
-								if (songsToAdd.length >= songsStillNeeded) return false;
+						playlistSongs.every(song => {
+							if (
+								songsToAdd.length < songsStillNeeded &&
+								currentYoutubeIds.indexOf(song.youtubeId) === -1
+							) {
+								lastSongAdded = song;
+								songsToAdd.push(song);
 								return true;
-							});
+							}
+							if (songsToAdd.length >= songsStillNeeded) return false;
+							return true;
+						});
 
 						let { currentSongIndex } = station;
 

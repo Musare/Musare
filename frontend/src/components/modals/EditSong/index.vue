@@ -66,7 +66,6 @@
 									</button>
 								</div>
 								<div class="player-footer-center">
-									<!-- <img src="/assets/social/youtube.svg" /> -->
 									<span>
 										<span>
 											{{ youtubeVideoCurrentTime }}
@@ -1120,6 +1119,28 @@ export default {
 				saveButtonRef.handleFailedSave();
 				return new Toast("Please fill in all fields");
 			}
+
+			// const thumbnailHeight = this.$refs.thumbnailElement.naturalHeight;
+			// const thumbnailWidth = this.$refs.thumbnailElement.naturalWidth;
+
+			// if (thumbnailHeight < 80 || thumbnailWidth < 80) {
+			// 	saveButtonRef.handleFailedSave();
+			// 	return new Toast(
+			// 		"Thumbnail width and height must be at least 80px."
+			// 	);
+			// }
+
+			// if (thumbnailHeight > 4000 || thumbnailWidth > 4000) {
+			// 	saveButtonRef.handleFailedSave();
+			// 	return new Toast(
+			// 		"Thumbnail width and height must be less than 4000px."
+			// 	);
+			// }
+
+			// if (thumbnailHeight - thumbnailWidth > 5) {
+			// 	saveButtonRef.handleFailedSave();
+			// 	return new Toast("Thumbnail cannot be taller than it is wide.");
+			// }
 
 			// Youtube Id
 			if (

@@ -76,12 +76,6 @@
 				</div>
 			</template>
 			<template #footer>
-				<!--button class='button is-warning'>
-					<span>&nbsp;Send Verification Email</span>
-				</button>
-				<button class='button is-warning'>
-					<span>&nbsp;Send Password Reset Email</span>
-        </button-->
 				<button class="button is-warning" @click="removeSessions()">
 					<span>&nbsp;Remove all sessions</span>
 				</button>

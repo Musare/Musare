@@ -180,17 +180,6 @@
 						>
 						<hr />
 					</div>
-					<!-- <div>
-						<span class="biggest"><b>Songs page</b></span>
-						<span
-							><b>Arrow keys up/down</b> - Moves between
-							songs</span
-						>
-						<span><b>E</b> - Edit selected song</span>
-						<span><b>A</b> - Add selected song</span>
-						<span><b>X</b> - Delete selected song</span>
-						<hr />
-					</div> -->
 					<div>
 						<span class="biggest"><b>Edit song modal</b></span>
 						<span class="bigger"><b>Navigation</b></span>

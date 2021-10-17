@@ -177,6 +177,13 @@ export default {
 			this.socket.dispatch("playlists.index", res => {
 				if (res.status === "success") {
 					this.setPlaylists(res.data.playlists);
+					if (this.$route.query.playlistId) {
+						const playlist = this.playlists.find(
+							playlist =>
+								playlist._id === this.$route.query.playlistId
+						);
+						if (playlist) this.edit(playlist._id);
+					}
 				}
 			});
 			this.socket.dispatch("apis.joinAdminRoom", "playlists", () => {});

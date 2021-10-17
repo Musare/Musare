@@ -110,6 +110,29 @@ class _PlaylistsModule extends CoreClass {
 		);
 	}
 
+	// /**
+	//  * Returns a list of playlists that include a specific song
+	//  *
+	//  * @param {object} payload - object that contains the payload
+	//  * @param {string} payload.songId - the song id
+	//  * @param {string} payload.includeSongs - include the songs
+	//  * @returns {Promise} - returns promise (reject, resolve)
+	//  */
+	// GET_PLAYLISTS_WITH_SONG(payload) {
+	// 	return new Promise((resolve, reject) => {
+	// 		async.waterfall([
+	// 			next => {
+	// 				const includeObject = payload.includeSongs ? null : { songs: false };
+	// 				PlaylistsModule.playlistModel.find({ "songs._id": payload.songId }, includeObject, next);
+	// 			},
+
+	// 			(playlists, next) => {
+	// 				console.log(playlists);
+	// 			}
+	// 		]);
+	// 	});
+	// }
+
 	/**
 	 * Creates a playlist that is not generated or editable by a user e.g. liked songs playlist
 	 *
