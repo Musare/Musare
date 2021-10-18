@@ -43,9 +43,6 @@ class _NotificationsModule extends CoreClass {
 						this.log("ERROR", `Stopped trying to reconnect.`);
 
 						this.setStatus("FAILED");
-
-						// this.failed = true;
-						// this._lockdown();
 					}
 				}
 			});
@@ -62,9 +59,6 @@ class _NotificationsModule extends CoreClass {
 						this.log("ERROR", `Stopped trying to reconnect.`);
 
 						this.setStatus("FAILED");
-
-						// this.failed = true;
-						// this._lockdown();
 					}
 				}
 			});

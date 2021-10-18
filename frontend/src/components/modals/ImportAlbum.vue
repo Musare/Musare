@@ -280,7 +280,6 @@ import SongItem from "../SongItem.vue";
 export default {
 	components: { Modal, SongItem, draggable },
 	props: {
-		// songType: { type: String, default: null },
 		sector: { type: String, default: "admin" }
 	},
 	data() {
@@ -595,13 +594,6 @@ export default {
 		text-align: center;
 		margin-left: 24px;
 	}
-
-	// .import-album-modal-body {
-	// 	display: flex;
-	// 	flex-direction: row;
-	// 	flex-wrap: wrap;
-	// 	justify-content: space-evenly;
-	// }
 
 	.modal-card {
 		width: 100%;

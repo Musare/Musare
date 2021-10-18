@@ -19,7 +19,6 @@ export default async function migrate(MigrationModule) {
 		async.waterfall(
 			[
 				next => {
-					// return next("BLOCKED");
 					this.log("INFO", `Migration 8. Finding activities with document version 1.`);
 					activityModel.find({ documentVersion: 1 }, (err, activities) => {
 						if (err) next(err);

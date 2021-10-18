@@ -128,17 +128,6 @@ export default {
 		this.socket.on("event:admin.report.created", res =>
 			this.reports.unshift(res.data.report)
 		);
-
-		// if (this.$route.query.id) {
-		// 	this.socket.dispatch(
-		// 		"reports.findOne",
-		// 		this.$route.query.id,
-		// 		res => {
-		// 			if (res.status === "success") this.view(res.data.report);
-		// 			else new Toast("Report with that ID not found");
-		// 		}
-		// 	);
-		// }
 	},
 	methods: {
 		init() {

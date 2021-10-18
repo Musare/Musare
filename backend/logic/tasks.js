@@ -32,15 +32,11 @@ class _TasksModule extends CoreClass {
 	 */
 	initialize() {
 		return new Promise(resolve => {
-			// return reject(new Error("Not fully migrated yet."));
-
 			CacheModule = this.moduleManager.modules.cache;
 			StationsModule = this.moduleManager.modules.stations;
 			UtilsModule = this.moduleManager.modules.utils;
 			WSModule = this.moduleManager.modules.ws;
 			DBModule = this.moduleManager.modules.db;
-
-			// this.createTask("testTask", testTask, 5000, true);
 
 			TasksModule.runJob("CREATE_TASK", {
 				name: "stationSkipTask",

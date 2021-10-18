@@ -287,13 +287,8 @@ export default {
 
 .night-mode {
 	div {
-		// background-color: var(--black);
 		color: var(--light-grey-2);
 	}
-
-	// #toasts-container .toast {
-	// color: var(--dark-grey-2);
-	// background-color: var(--light-grey-3) !important;
 
 	.input,
 	.textarea,
@@ -306,11 +301,6 @@ export default {
 			color: var(--light-grey-3);
 		}
 	}
-
-	// &:last-of-type {
-	// 	background-color: var(--light-grey) !important;
-	// }
-	// }
 
 	h1,
 	h2,
@@ -351,11 +341,6 @@ body.night-mode {
 
 	.toast {
 		font-weight: 600;
-		// background-color: var(--dark-grey) !important;
-
-		// &:last-of-type {
-		// 	background-color: var(--dark-grey-2) !important;
-		// }
 	}
 }
 
@@ -1020,7 +1005,6 @@ h4.section-title {
 		i,
 		span {
 			cursor: pointer;
-			// color: var(--dark-grey);
 
 			&:not(:first-child) {
 				margin-left: 5px;

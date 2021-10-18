@@ -47,8 +47,6 @@
 						<td>Role</td>
 						<td>Email Address</td>
 						<td>Email Verified</td>
-						<!-- <td>Likes</td>
-						<td>Dislikes</td> -->
 						<td>Songs Requested</td>
 						<td>Options</td>
 					</tr>
@@ -76,8 +74,6 @@
 						<td>{{ user.role }}</td>
 						<td>{{ user.email.address }}</td>
 						<td>{{ user.email.verified }}</td>
-						<!-- <td>{{ user.liked.length }}</td>
-						<td>{{ user.disliked.length }}</td> -->
 						<td>{{ user.songsRequested }}</td>
 						<td>
 							<button

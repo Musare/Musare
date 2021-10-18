@@ -66,7 +66,6 @@
 									</button>
 								</div>
 								<div class="player-footer-center">
-									<!-- <img src="/assets/social/youtube.svg" /> -->
 									<span>
 										<span>
 											{{ youtubeVideoCurrentTime }}
@@ -568,7 +567,6 @@ export default {
 		youtubeId: { type: String, default: null },
 		songId: { type: String, default: null },
 		discogsAlbum: { type: Object, default: null },
-		// songType: { type: String, default: null },
 		sector: { type: String, default: "admin" }
 	},
 	data() {
@@ -660,13 +658,6 @@ export default {
 		/* eslint-enable */
 	},
 	async mounted() {
-		// if (this.modals.editSong = false) this.video.player.stopVideo();
-
-		// this.loadVideoById(
-		//   this.song.youtubeId,
-		//   this.song.skipDuration
-		// );
-
 		this.activityWatchVideoDataInterval = setInterval(() => {
 			this.sendActivityWatchVideoData();
 		}, 1000);
@@ -803,6 +794,7 @@ export default {
 			}
 		});
 
+		// TODO
 		keyboardShortcuts.registerShortcut("editSong.saveVerifyClose", {
 			keyCode: 86,
 			ctrl: true,
@@ -907,9 +899,6 @@ export default {
 				res => {
 					if (res.status === "success") {
 						const { song } = res.data;
-						// this.song = { ...song };
-						// if (this.song.discogs === undefined)
-						// 	this.song.discogs = null;
 						if (this.song.discogs)
 							this.editSong({
 								...song,
@@ -923,8 +912,6 @@ export default {
 							"apis.joinRoom",
 							`edit-song.${this.song._id}`
 						);
-
-						// this.edit(res.data.song);
 
 						this.interval = setInterval(() => {
 							if (
@@ -1638,12 +1625,9 @@ export default {
 		.modal-card {
 			width: 1160px;
 			height: 100%;
-			// width: 1300px;
 
 			.modal-card-body {
 				display: flex;
-				// column-gap: 16px;
-				// row-gap: 16px;
 				padding: 16px;
 
 				@media screen and (max-width: 1000px) {
@@ -1652,7 +1636,6 @@ export default {
 
 				> div {
 					display: flex;
-					// flex-grow: 1;
 					height: 100%;
 					overflow: auto;
 				}
@@ -1669,44 +1652,13 @@ export default {
 	}
 }
 
-// #video-container {
-// 	position: relative;
-// 	padding-bottom: 56.25%; /* proportion value to aspect ratio 16:9 (9 / 16 = 0.5625 or 56.25%) */
-// 	height: 0;
-// 	overflow: hidden;
-
-// 	.player-cannot-autoplay {
-// 		position: relative;
-// 		width: 100%;
-// 		height: 100%;
-// 		bottom: calc(100% + 5px);
-// 		background-color: var(--primary-color);
-// 		display: flex;
-// 		align-items: center;
-// 		justify-content: center;
-
-// 		p {
-// 			color: var(--white);
-// 			font-size: 26px;
-// 			text-align: center;
-// 		}
-// 	}
-// }
-
 .left-section {
 	display: flex;
 	flex-direction: column;
 	margin-right: 16px;
-	// flex-grow: 0 !important;
-	// height: inherit !important;
-
-	// @media screen and (max-width: 1245px) {
-	// 	flex-grow: 1 !important;
-	// }
 
 	.top-section {
 		display: flex;
-		// flex-direction: column;
 
 		.player-section {
 			width: 530px;
@@ -1730,10 +1682,6 @@ export default {
 				}
 			}
 
-			// #durationCanvas {
-			// 	max-width: 100%;
-			// }
-
 			.player-footer {
 				border: 1px solid var(--light-grey-3);
 				border-radius: 0px 0px 3px 3px;
@@ -1742,11 +1690,6 @@ export default {
 				height: 54px;
 				padding-left: 10px;
 				padding-right: 10px;
-				// padding: 10px;
-				// width: 100%;
-				// background-color: var(--white);
-				// flex-direction: column;
-				// flex-flow: wrap;
 
 				> * {
 					width: 33.3%;
@@ -1965,26 +1908,6 @@ export default {
 
 		.album-art-container {
 			width: 100%;
-			// display: flex;
-			// flex-direction: column;
-
-			// div {
-			// 	display: flex;
-			// 	flex-direction: row;
-			// 	align-items: center;
-
-			// 	.thumbnail-preview {
-			// 		border: 1px solid var(--light-grey-3);
-
-			// 		width: 75px;
-			// 		height: 75px;
-			// 	}
-
-			// 	.control {
-			// 		margin-left: 20px;
-			// 		width: 100%;
-			// 	}
-			// }
 		}
 
 		.artists-container {
@@ -2105,23 +2028,13 @@ export default {
 .right-section {
 	display: flex;
 	flex-wrap: wrap;
-	// flex-basis: 450px;
-	// overflow-y: auto;
-
-	// @media screen and (max-width: 1245px) {
-	// 	height: inherit !important;
-	// }
 
 	#tabs-container {
 		width: 376px;
 		background-color: var(--light-grey);
 		border: 1px rgba(163, 224, 255, 0.75) solid;
 		border-radius: 5px;
-		// padding: 16px;
 		overflow: auto;
-		// display: flex;
-		// flex-direction: column;
-		// flex-grow: 1;
 
 		#tab-selection {
 			display: flex;
@@ -2154,161 +2067,6 @@ export default {
 			padding: 15px;
 		}
 	}
-
-	// .api-section {
-	// 	width: 376px;
-	// 	background-color: var(--light-grey);
-	// 	border: 1px rgba(163, 224, 255, 0.75) solid;
-	// 	border-radius: 5px;
-	// 	padding: 16px;
-	// 	overflow: auto;
-	// 	height: 100%;
-
-	// 	> label {
-	// 		margin-top: 12px;
-	// 	}
-
-	// 	.top-container {
-	// 		display: flex;
-
-	// 		img {
-	// 			height: 85px;
-	// 			width: 85px;
-	// 		}
-
-	// 		.right-container {
-	// 			padding: 8px;
-	// 			display: flex;
-	// 			flex-direction: column;
-	// 			flex: 1;
-
-	// 			.album-title {
-	// 				flex: 1;
-	// 				font-weight: 600;
-	// 			}
-
-	// 			.bottom-row {
-	// 				display: flex;
-	// 				flex-flow: row;
-	// 				line-height: 15px;
-
-	// 				img {
-	// 					height: 15px;
-	// 					align-self: end;
-	// 					flex: 1;
-	// 					user-select: none;
-	// 					-moz-user-select: none;
-	// 					-ms-user-select: none;
-	// 					-webkit-user-select: none;
-	// 					cursor: pointer;
-	// 				}
-
-	// 				p {
-	// 					text-align: right;
-	// 				}
-
-	// 				.type-year {
-	// 					font-size: 13px;
-	// 					align-self: end;
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-
-	// 	.bottom-container {
-	// 		padding: 12px;
-
-	// 		.bottom-container-field {
-	// 			line-height: 16px;
-	// 			margin-bottom: 8px;
-	// 			font-weight: 600;
-
-	// 			span {
-	// 				font-weight: 400;
-	// 			}
-	// 		}
-
-	// 		.bottom-container-field:last-of-type {
-	// 			margin-bottom: 0;
-	// 		}
-	// 	}
-
-	// 	.selected-discogs-info {
-	// 		background-color: var(--white);
-	// 		border: 1px solid var(--purple);
-	// 		border-radius: 5px;
-	// 		margin-bottom: 16px;
-
-	// 		.selected-discogs-info-none {
-	// 			font-size: 18px;
-	// 			text-align: center;
-	// 		}
-
-	// 		.bottom-row > p {
-	// 			flex: 1;
-	// 		}
-	// 	}
-
-	// 	.api-result {
-	// 		background-color: var(--white);
-	// 		border: 0.5px solid var(--primary-color);
-	// 		border-radius: 5px;
-	// 		margin-bottom: 16px;
-	// 	}
-
-	// 	button {
-	// 		background-color: var(--primary-color) !important;
-
-	// 		&:focus,
-	// 		&:hover {
-	// 			filter: contrast(0.75);
-	// 		}
-	// 	}
-
-	// 	.tracks {
-	// 		margin-top: 12px;
-
-	// 		.track:first-child {
-	// 			margin-top: 0;
-	// 			border-radius: 3px 3px 0 0;
-	// 		}
-
-	// 		.track:last-child {
-	// 			border-radius: 0 0 3px 3px;
-	// 		}
-
-	// 		.track {
-	// 			border: 0.5px solid var(--black);
-	// 			margin-top: -1px;
-	// 			line-height: 16px;
-	// 			display: flex;
-	// 			cursor: pointer;
-
-	// 			span {
-	// 				font-weight: 600;
-	// 				display: inline-block;
-	// 				margin-top: 7px;
-	// 				margin-bottom: 7px;
-	// 				margin-left: 7px;
-	// 			}
-
-	// 			p {
-	// 				display: inline-block;
-	// 				margin: 7px;
-	// 				flex: 1;
-	// 			}
-	// 		}
-
-	// 		.track:hover,
-	// 		.track:focus {
-	// 			background-color: var(--light-grey);
-	// 		}
-	// 	}
-
-	// 	.discogs-load-more {
-	// 		margin-bottom: 8px;
-	// 	}
-	// }
 }
 
 .modal-card-foot .is-primary {

@@ -312,7 +312,6 @@ export default {
 			this.socket.dispatch("apis.joinAdminRoom", "hiddenSongs");
 		},
 		...mapActions("admin/hiddenSongs", [
-			// "stopVideo",
 			"resetSongs",
 			"addSong",
 			"removeSong",

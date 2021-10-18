@@ -1113,7 +1113,6 @@ html {
 		display: flex;
 		align-items: center;
 		background: var(--primary-color);
-		// box-shadow: inset 0px 2px 4px rgba(100, 100, 100, 0.3);
 		width: 100%;
 		height: 30px;
 		line-height: 30px;
