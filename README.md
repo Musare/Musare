@@ -4,10 +4,6 @@
 
 Musare is an open-source collaborative music listening and catalogue curation application. Currently supporting YouTube based content.
 
-The master branch is available at [musare.com](https://musare.com).
-
-You can also find the staging branch at [musare.dev](https://musare.dev).
-
 ---
 
 ## Documentation

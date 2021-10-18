@@ -16,9 +16,11 @@ Musare can be installed with Docker (recommended) or without, guides for both in
 5. `cp .env.example .env` and configure as per [Configuration](./Configuration.md#Docker-Environment).
 6. `./musare.sh build`
 7. `./musare.sh start`
-8. Register a new user on the website and grant the admin role by running `./musare.sh admin add USERNAME`.
+8. **(optional)** Register a new user on the website and grant the admin role by running `./musare.sh admin add USERNAME`.
 
 ### Fixing the "couldn't connect to docker daemon" error
+
+**Windows Only**
 
 Some people have had issues while trying to execute the `docker-compose` command.
 To fix this, you will have to run `docker-machine env default`.
@@ -56,7 +58,7 @@ Run this command in your shell. You will have to do this command for every shell
         - **Manual**
             1. Run `startRedis.cmd` and `startMongo.cmd` to start Redis and Mongo.
             2. Execute `cd frontend && npm run dev` and `cd backend && npm run dev` separately.
-8. Register a new user on the website and grant the admin role by running the following in the mongodb shell.
+8. **(optional)** Register a new user on the website and grant the admin role by running the following in the mongodb shell.
     ```bash
     use musare
     db.auth("MUSAREDBUSER","MUSAREDBPASSWORD")
