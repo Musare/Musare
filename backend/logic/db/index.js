@@ -119,8 +119,6 @@ class _DBModule extends CoreClass {
 
 					mongoose.connection.on("reconnectFailed", () => {
 						this.log("INFO", "Reconnect failed, stopping reconnecting.");
-						// this.failed = true;
-						// this._lockdown();
 						this.setStatus("FAILED");
 					});
 
@@ -137,10 +135,6 @@ class _DBModule extends CoreClass {
 						if (email.indexOf("@") !== email.lastIndexOf("@")) return false;
 						return regex.emailSimple.test(email) && regex.ascii.test(email);
 					}, "Invalid email.");
-
-					// this.schemas.user
-					// 	.path("name")
-					// 	.validate(name => isLength(name, 1, 64) && regex.name.test(name), "Invalid name.");
 
 					// Station
 					this.schemas.station
@@ -171,43 +165,6 @@ class _DBModule extends CoreClass {
 							}),
 						message: "User already has 25 stations."
 					});
-
-					/*
-					this.schemas.station.path('queue').validate((queue, callback) => { //Callback no longer works, see station max count
-						let totalDuration = 0;
-						queue.forEach((song) => {
-							totalDuration += song.duration;
-						});
-						return callback(totalDuration <= 3600 * 3);
-					}, 'The max length of the queue is 3 hours.');
-		
-					this.schemas.station.path('queue').validate((queue, callback) => { //Callback no longer works, see station max count
-						if (queue.length === 0) return callback(true);
-						let totalDuration = 0;
-						const userId = queue[queue.length - 1].requestedBy;
-						queue.forEach((song) => {
-							if (userId === song.requestedBy) {
-								totalDuration += song.duration;
-							}
-						});
-						return callback(totalDuration <= 900);
-					}, 'The max length of songs per user is 15 minutes.');
-		
-					this.schemas.station.path('queue').validate((queue, callback) => { //Callback no longer works, see station max count
-						if (queue.length === 0) return callback(true);
-						let totalSongs = 0;
-						const userId = queue[queue.length - 1].requestedBy;
-						queue.forEach((song) => {
-							if (userId === song.requestedBy) {
-								totalSongs++;
-							}
-						});
-						if (totalSongs <= 2) return callback(true);
-						if (totalSongs > 3) return callback(false);
-						if (queue[queue.length - 2].requestedBy !== userId || queue[queue.length - 3] !== userId) return callback(true);
-						return callback(false);
-					}, 'The max amount of songs per user is 3, and only 2 in a row is allowed.');
-					*/
 
 					// Song
 					const songTitle = title => isLength(title, 1, 100);

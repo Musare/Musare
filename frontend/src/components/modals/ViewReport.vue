@@ -308,12 +308,10 @@ export default {
 				flex-direction: column;
 
 				.report-sub-item-title {
-					// font-size: 14px;
 					font-size: 16px;
 				}
 
 				.report-sub-item-description {
-					// font-size: 12px;
 					font-size: 14px;
 					line-height: 16px;
 				}

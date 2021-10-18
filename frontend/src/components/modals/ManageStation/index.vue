@@ -77,18 +77,6 @@
 									<span> Force Skip </span>
 								</button>
 
-								<!-- Station Settings Button -->
-								<!-- <button
-									class="button is-primary"
-									@click="openModal('manageStation')"
-								>
-									<i class="material-icons icon-with-button"
-										>settings</i
-									>
-									<span>
-										Manage Station
-									</span>
-								</button> -->
 								<router-link
 									v-if="sector !== 'station' && station.name"
 									:to="{
@@ -169,16 +157,6 @@
 			</div>
 		</template>
 		<template #footer>
-			<!-- <router-link
-				v-if="sector !== 'station' && station.name"
-				:to="{
-					name: 'station',
-					params: { id: station.name }
-				}"
-				class="button is-primary"
-			>
-				Go To Station
-			</router-link> -->
 			<button
 				class="button is-primary tab-actionable-button"
 				v-if="loggedIn && station.type === 'official'"
