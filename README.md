@@ -14,10 +14,8 @@ You can also find the staging branch at [musare.dev](https://musare.dev).
 - [Installation](./.wiki/Installation.md)
 - [Configuration](./.wiki/Configuration.md)
 - [Utility Script](./.wiki/Utility_Script.md)
-- [Technical Overview](./.wiki/Technical_Overview.md)
 - [Backend Commands](./.wiki/Backend_Commands.md)
-- [User Guide](./.wiki/User_Guide.md)
-- [Contributing](./.wiki/Contributing.md)
+- [Technical Overview](./.wiki/Technical_Overview.md)
 
 ---
 
@@ -60,6 +58,7 @@ You can also find the staging branch at [musare.dev](https://musare.dev).
     - Email or Github login/registration
     - Preferences to tailor site usage
     - Password reset
+    - Data deletion management
     - ActivityWatch integration
 - **Punishments**
     - Ban users
@@ -67,6 +66,7 @@ You can also find the staging branch at [musare.dev](https://musare.dev).
 - **News**
     - Admins can add/edit/remove news items
     - Markdown editor
+- **Dark Mode**
 
 ---
 
