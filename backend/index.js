@@ -39,8 +39,6 @@ if (
 	process.exit();
 }
 
-const fancyConsole = config.get("fancyConsole");
-
 if (config.debug && config.debug.traceUnhandledPromises === true) {
 	console.log("Enabled trace-unhandled/register");
 	import("trace-unhandled/register");
@@ -273,7 +271,6 @@ class ModuleManager {
 		this.jobManager = new JobManager();
 		this.i = 0;
 		this.lockdown = false;
-		this.fancyConsole = fancyConsole;
 		this.debugLogs = {
 			stationIssue: []
 		};
