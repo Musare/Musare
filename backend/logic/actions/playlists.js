@@ -1352,10 +1352,10 @@ export default {
 	}),
 
 	/**
-	 * Removes a private playlist
+	 * Removes a user's own modifiable user playlist
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} playlistId - the id of the playlist we are moving the song to the top from
+	 * @param {string} playlistId - the id of the playlist we are removing
 	 * @param {Function} cb - gets called with the result
 	 */
 	remove: isLoginRequired(async function remove(session, playlistId, cb) {
@@ -1431,6 +1431,78 @@ export default {
 			}
 		);
 	}),
+
+	/**
+	 * Removes a user's modifiable user playlist as an admin
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} playlistId - the id of the playlist we are removing
+	 * @param {Function} cb - gets called with the result
+	 */
+	 removeAdmin: isAdminRequired(async function removeAdmin(session, playlistId, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+						.then(playlist => next(null, playlist))
+						.catch(next);
+				},
+
+				(playlist, next) => {
+					if (!playlist.isUserModifiable) return next("Playlist cannot be removed.");
+					return next(null, playlist);
+				},
+
+				(playlist, next) => {
+					userModel.updateOne(
+						{ _id: playlist.createdBy },
+						{ $pull: { "preferences.orderOfPlaylists": playlist._id } },
+						err => next(err, playlist)
+					);
+				},
+
+				(playlist, next) => {
+					PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId }, this)
+						.then(() => next(null, playlist))
+						.catch(next);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"PLAYLIST_REMOVE_ADMIN",
+						`Removing private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_REMOVE_ADMIN",
+					`Successfully removed private playlist "${playlistId}" for user "${session.userId}".`
+				);
+
+				CacheModule.runJob("PUB", {
+					channel: "playlist.delete",
+					value: {
+						userId: session.userId,
+						playlistId
+					}
+				});
+
+				ActivitiesModule.runJob("REMOVE_ACTIVITY_REFERENCES", { type: "playlistId", playlistId });
+
+				return cb({
+					status: "success",
+					message: "Playlist successfully removed"
+				});
+			}
+		)
+	 }),
 
 	/**
 	 * Updates the privacy of a private playlist

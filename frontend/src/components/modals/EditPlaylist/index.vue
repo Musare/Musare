@@ -393,6 +393,9 @@ export default {
 		isAdmin() {
 			return this.userRole === "admin";
 		},
+		isOwner() {
+			return this.loggedIn && this.userId === this.playlist.createdBy;
+		},
 		repositionSong({ moved }) {
 			if (!moved) return; // we only need to update when song is moved
 
@@ -480,10 +483,27 @@ export default {
 			);
 		},
 		removePlaylist() {
-			this.socket.dispatch("playlists.remove", this.playlist._id, res => {
-				new Toast(res.message);
-				if (res.status === "success") this.closeModal("editPlaylist");
-			});
+			if (this.isOwner()) {
+				this.socket.dispatch(
+					"playlists.remove",
+					this.playlist._id,
+					res => {
+						new Toast(res.message);
+						if (res.status === "success")
+							this.closeModal("editPlaylist");
+					}
+				);
+			} else if (this.isAdmin()) {
+				this.socket.dispatch(
+					"playlists.removeAdmin",
+					this.playlist._id,
+					res => {
+						new Toast(res.message);
+						if (res.status === "success")
+							this.closeModal("editPlaylist");
+					}
+				);
+			}
 		},
 		async downloadPlaylist() {
 			if (this.apiDomain === "")
