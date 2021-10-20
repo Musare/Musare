@@ -72,6 +72,14 @@
 							<div id="station-info">
 								<div class="row" id="station-name">
 									<h1>{{ station.displayName }}</h1>
+									<i
+										v-if="station.type === 'official'"
+										class="material-icons verified-station"
+										content="Verified Station"
+										v-tippy
+									>
+										check_circle
+									</i>
 									<a href="#">
 										<!-- Favorite Station Button -->
 										<i
@@ -2466,6 +2474,10 @@ export default {
 							margin-left: auto;
 							color: var(--primary-color);
 						}
+					}
+
+					.verified-station {
+						color: var(--primary-color);
 					}
 				}
 
