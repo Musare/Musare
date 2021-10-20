@@ -1370,6 +1370,7 @@ export default {
 				},
 
 				(playlist, next) => {
+					if (playlist.createdBy !== session.userId) return next("You do not own this playlist."); 
 					if (!playlist.isUserModifiable) return next("Playlist cannot be removed.");
 					return next(null, playlist);
 				},
