@@ -1439,7 +1439,6 @@ class _StationsModule extends CoreClass {
 	 */
 	REMOVE_EXCLUDED_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
-			console.log(112, payload);
 			async.waterfall(
 				[
 					next => {
@@ -1490,6 +1489,52 @@ class _StationsModule extends CoreClass {
 								next();
 							})
 							.catch(next);
+					}
+				],
+				async err => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						return reject(new Error(err));
+					}
+
+					return resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Removes included or excluded playlist from a station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.playlistId - the playlist id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	REMOVE_INCLUDED_OR_EXCLUDED_PLAYLIST_FROM_STATIONS(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						if (!payload.playlistId) next("Please specify a playlist id");
+						else next();
+					},
+
+					next => {
+						StationsModule.stationModel.updateMany(
+							{
+								$or: [{ includedPlaylists: payload.playlistId }, { excludedPlaylists: payload.playlistId }]
+							},
+							{
+								$pull: {
+									includedPlaylists: payload.playlistId,
+									excludedPlaylists: payload.playlistId
+								}
+							},
+							(err) => {
+								if (err) next(err);
+								else next();
+							}
+						);
 					}
 				],
 				async err => {
