@@ -250,7 +250,7 @@ export default {
 						lofig.get("cookie").then(cookie => {
 							document.cookie = `${cookie.SIDname}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
 							this.closeModal("removeAccount");
-							return window.location.reload();
+							window.location.href = "/";
 						})
 					);
 				}
