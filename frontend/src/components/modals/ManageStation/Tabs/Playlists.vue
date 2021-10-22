@@ -338,7 +338,7 @@
 										v-if="
 											isPlaylistMode() &&
 											isOwnerOrAdmin() &&
-											!isSelected(element._id)
+											!isIncluded(element._id)
 										"
 										@click="includePlaylist(element)"
 										class="material-icons play-icon"
