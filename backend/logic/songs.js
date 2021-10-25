@@ -613,13 +613,19 @@ class _SongsModule extends CoreClass {
 						if (payload.includeVerified) statuses.push("verified");
 						if (statuses.length === 0) return next("No statuses have been included.");
 
+						let { query } = payload;
+
+						const isRegex = query.length > 2 && query.indexOf("/") === 0 && query.lastIndexOf("/") === query.length - 1;
+						if (isRegex) query = query.slice(1, query.length - 1);
+						else query = query.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 						const filterArray = [
 							{
-								title: new RegExp(`${payload.query}`, "i"),
+								title: new RegExp(`${query}`, "i"),
 								status: { $in: statuses }
 							},
 							{
-								artists: new RegExp(`${payload.query}`, "i"),
+								artists: new RegExp(`${query}`, "i"),
 								status: { $in: statuses }
 							}
 						];
