@@ -84,8 +84,8 @@
 		</div>
 
 		<edit-playlist v-if="modals.editPlaylist" sector="admin" />
-		<report v-if="modals.report" />
 		<edit-song v-if="modals.editSong" song-type="songs" />
+		<report v-if="modals.report" />
 	</div>
 </template>
 

@@ -1,9 +1,9 @@
 <template>
 	<div v-if="isUser">
 		<edit-playlist v-if="modals.editPlaylist" />
-		<report v-if="modals.report" />
 		<view-report v-if="modals.viewReport" />
 		<edit-song v-if="modals.editSong" song-type="songs" />
+		<report v-if="modals.report" />
 
 		<page-metadata :title="`Profile | ${user.username}`" />
 		<main-header />

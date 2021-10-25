@@ -699,13 +699,16 @@
 					:station-id="station._id"
 					sector="station"
 				/>
+				<edit-song
+					v-if="modals.editSong"
+					song-type="songs"
+					sector="station"
+				/>
 				<report v-if="modals.report" />
 			</div>
 
 			<main-footer />
 		</div>
-
-		<edit-song v-if="modals.editSong" song-type="songs" sector="station" />
 
 		<floating-box id="player-debug-box" ref="playerDebugBox">
 			<template #body>

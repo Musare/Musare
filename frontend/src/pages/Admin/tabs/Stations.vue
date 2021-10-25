@@ -186,8 +186,8 @@
 			:station-id="editingStationId"
 			sector="admin"
 		/>
-		<report v-if="modals.report" />
 		<edit-song v-if="modals.editSong" song-type="songs" sector="admin" />
+		<report v-if="modals.report" />
 	</div>
 </template>
 

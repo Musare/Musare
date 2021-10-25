@@ -79,8 +79,8 @@
 		</div>
 
 		<view-report v-if="modals.viewReport" sector="admin" />
-
 		<edit-song v-if="modals.editSong" song-type="songs" />
+		<report v-if="modals.report" />
 	</div>
 </template>
 
@@ -97,6 +97,9 @@ export default {
 	components: {
 		ViewReport: defineAsyncComponent(() =>
 			import("@/components/modals/ViewReport.vue")
+		),
+		Report: defineAsyncComponent(() =>
+			import("@/components/modals/Report.vue")
 		),
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong/index.vue")
