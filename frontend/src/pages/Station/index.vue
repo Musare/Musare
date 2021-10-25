@@ -72,6 +72,14 @@
 							<div id="station-info">
 								<div class="row" id="station-name">
 									<h1>{{ station.displayName }}</h1>
+									<i
+										v-if="station.type === 'official'"
+										class="material-icons verified-station"
+										content="Verified Station"
+										v-tippy
+									>
+										check_circle
+									</i>
 									<a href="#">
 										<!-- Favorite Station Button -->
 										<i
@@ -663,9 +671,6 @@
 									"
 									header="Currently Playing.."
 								/>
-								<!-- <p v-else class="nothing-here-text">
-								No song is currently playing
-							</p> -->
 							</div>
 							<div
 								v-if="nextSong"
@@ -694,13 +699,16 @@
 					:station-id="station._id"
 					sector="station"
 				/>
+				<edit-song
+					v-if="modals.editSong"
+					song-type="songs"
+					sector="station"
+				/>
 				<report v-if="modals.report" />
 			</div>
 
 			<main-footer />
 		</div>
-
-		<edit-song v-if="modals.editSong" song-type="songs" sector="station" />
 
 		<floating-box id="player-debug-box" ref="playerDebugBox">
 			<template #body>
@@ -1205,11 +1213,6 @@ export default {
 			this.station.description = res.data.description;
 		});
 
-		// this.socket.on("event:newOfficialPlaylist", res => {
-		// 	if (this.station.type === "official")
-		// 		this.updateSongsList(res.data.playlist);
-		// });
-
 		this.socket.on("event:station.users.updated", res =>
 			this.updateUsers(res.data.users)
 		);
@@ -1699,13 +1702,10 @@ export default {
 						);
 					}
 				} else if (difference < -200) {
-					// console.log("Difference0.8");
 					playbackRate = 0.8;
 				} else if (difference < -50) {
-					// console.log("Difference0.9");
 					playbackRate = 0.9;
 				} else if (difference < -25) {
-					// console.log("Difference0.99");
 					playbackRate = 0.95;
 				} else if (difference > 2000) {
 					if (!this.seeking) {
@@ -1716,16 +1716,12 @@ export default {
 						);
 					}
 				} else if (difference > 200) {
-					// console.log("Difference1.2");
 					playbackRate = 1.2;
 				} else if (difference > 50) {
-					// console.log("Difference1.1");
 					playbackRate = 1.1;
 				} else if (difference > 25) {
-					// console.log("Difference1.01");
 					playbackRate = 1.05;
 				} else if (this.player.getPlaybackRate !== 1.0) {
-					// console.log("NDifference1.0");
 					this.player.setPlaybackRate(1.0);
 				}
 
@@ -1734,11 +1730,6 @@ export default {
 					this.playbackRate = playbackRate;
 				}
 			}
-
-			/* if (this.currentTime !== undefined && this.paused) {
-				this.timePaused += Date.currently() - this.currentTime;
-				this.currentTime = undefined;
-			} */
 
 			let { timePaused } = this;
 			if (this.stationPaused)
@@ -2430,7 +2421,6 @@ export default {
 
 	#station-inner-container {
 		width: 100%;
-		// height: fit-content;
 		min-height: calc(100vh - 428px);
 		display: flex;
 		flex-direction: row;
@@ -2488,6 +2478,10 @@ export default {
 							color: var(--primary-color);
 						}
 					}
+
+					.verified-station {
+						color: var(--primary-color);
+					}
 				}
 
 				p {
@@ -2508,7 +2502,6 @@ export default {
 		#current-next-row {
 			display: flex;
 			flex-direction: row;
-			// max-width: calc(100vw - 40px);
 
 			#currently-playing-container,
 			#next-up-container {
@@ -2842,7 +2835,6 @@ export default {
 	width: 40px;
 	height: 40px;
 	border-radius: 100px;
-	// background-color: rgba(255, 255, 255, 0.15);
 	background-color: var(--primary-color);
 	opacity: 0.15;
 	bottom: 0px;
@@ -2878,7 +2870,6 @@ export default {
 	height: 60px;
 	-webkit-animation-duration: 22s;
 	animation-duration: 22s;
-	// background-color: rgba(255, 255, 255, 0.25);
 	background-color: var(--primary-color);
 	opacity: 0.25;
 }
@@ -2893,7 +2884,6 @@ export default {
 	height: 120px;
 	-webkit-animation-delay: 3s;
 	animation-delay: 3s;
-	// background-color: rgba(255, 255, 255, 0.2);
 	background-color: var(--primary-color);
 	opacity: 0.2;
 }
@@ -2924,7 +2914,6 @@ export default {
 	animation-delay: 2s;
 	-webkit-animation-duration: 40s;
 	animation-duration: 40s;
-	// background-color: rgba(255, 255, 255, 0.3);
 	background-color: var(--primary-color);
 	opacity: 0.3;
 }

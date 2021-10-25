@@ -55,16 +55,6 @@
 
 		<save-button ref="saveButton" @clicked="saveChanges()" />
 
-		<!-- <div class="section-margin-bottom" />
-
-		<h4 class="section-title">Export my data</h4>
-
-		<p class="section-description">
-			Download a copy of all data we store on you in JSON format.
-		</p>
-
-		<hr class="section-horizontal-rule" /> -->
-
 		<div class="section-margin-bottom" />
 
 		<h4 class="section-title">Remove any data we hold on you</h4>

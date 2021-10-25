@@ -29,11 +29,6 @@ export default async function migrate(MigrationModule) {
 						(err, res) => {
 							if (err) next(err);
 							else {
-								// { n: X, nModified: 1, ok: 1 }
-								// n = matched
-								// nModified = modified
-								// ok = successful
-
 								this.log(
 									"INFO",
 									`Migration 1 (activity). Matched: ${res.n}, modified: ${res.nModified}, ok: ${res.ok}.`

@@ -1,25 +1,22 @@
 import config from "config";
 
 import async from "async";
-// import crypto from "crypto";
+import crypto from "crypto";
 
 import CoreClass from "../core";
 
-// let APIModule;
 let AppModule;
-// let DBModule;
+let DBModule;
 let PlaylistsModule;
 let UtilsModule;
 let PunishmentsModule;
 let CacheModule;
-// let NotificationsModule;
+let NotificationsModule;
 
 class _APIModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("api");
-
-		// APIModule = this;
 	}
 
 	/**
@@ -30,12 +27,12 @@ class _APIModule extends CoreClass {
 	initialize() {
 		return new Promise((resolve, reject) => {
 			AppModule = this.moduleManager.modules.app;
-			// DBModule = this.moduleManager.modules.db;
+			DBModule = this.moduleManager.modules.db;
 			PlaylistsModule = this.moduleManager.modules.playlists;
 			UtilsModule = this.moduleManager.modules.utils;
 			PunishmentsModule = this.moduleManager.modules.punishments;
 			CacheModule = this.moduleManager.modules.cache;
-			// NotificationsModule = this.moduleManager.modules.notifications;
+			NotificationsModule = this.moduleManager.modules.notifications;
 
 			const SIDname = config.get("cookie.SIDname");
 
@@ -140,133 +137,122 @@ class _APIModule extends CoreClass {
 							});
 					});
 
-					// response.app.get("/debug_station", async (req, res) => {
-					// 	const responseObject = {};
+					if (config.get("debug.stationIssue")) {
+						response.app.get("/debug_station", async (req, res) => {
+							const responseObject = {};
 
-					// 	const stationModel = await DBModule.runJob("GET_MODEL", {
-					// 		modelName: "station"
-					// 	});
+							const stationModel = await DBModule.runJob("GET_MODEL", {
+								modelName: "station"
+							});
 
-					// 	async.waterfall(
-					// 		[
-					// 			next => {
-					// 				stationModel.find({}, next);
-					// 			},
+							async.waterfall(
+								[
+									next => {
+										stationModel.find({}, next);
+									},
 
-					// 			(stations, next) => {
-					// 				responseObject.mongo = {
-					// 					stations
-					// 				};
-					// 				next();
-					// 			},
+									(stations, next) => {
+										responseObject.mongo = {
+											stations
+										};
+										next();
+									},
 
-					// 			next => {
-					// 				CacheModule.runJob("HGETALL", { table: "stations" })
-					// 					.then(stations => {
-					// 						next(null, stations);
-					// 					})
-					// 					.catch(err => {
-					// 						console.log(err);
-					// 						next(err);
-					// 					});
-					// 			},
+									next => {
+										CacheModule.runJob("HGETALL", { table: "stations" })
+											.then(stations => {
+												next(null, stations);
+											})
+											.catch(err => {
+												console.log(err);
+												next(err);
+											});
+									},
 
-					// 			(stations, next) => {
-					// 				responseObject.redis = {
-					// 					stations
-					// 				};
-					// 				next();
-					// 			},
+									(stations, next) => {
+										responseObject.redis = {
+											stations
+										};
+										next();
+									},
 
-					// 			next => {
-					// 				responseObject.cryptoExamples = {};
-					// 				responseObject.mongo.stations.forEach(station => {
-					// 					const payloadName = `stations.nextSong?id=${station._id}`;
-					// 					responseObject.cryptoExamples[station._id] = crypto
-					// 						.createHash("md5")
-					// 						.update(`_notification:${payloadName}_`)
-					// 						.digest("hex");
-					// 				});
-					// 				next();
-					// 			},
+									next => {
+										responseObject.cryptoExamples = {};
+										responseObject.mongo.stations.forEach(station => {
+											const payloadName = `stations.nextSong?id=${station._id}`;
+											responseObject.cryptoExamples[station._id] = crypto
+												.createHash("md5")
+												.update(`_notification:${payloadName}_`)
+												.digest("hex");
+										});
+										next();
+									},
 
-					// 			next => {
-					// 				NotificationsModule.pub.keys("*", next);
-					// 			},
+									next => {
+										NotificationsModule.pub.keys("*", next);
+									},
 
-					// 			(redisKeys, next) => {
-					// 				responseObject.redis = {
-					// 					...redisKeys,
-					// 					ttl: {}
-					// 				};
-					// 				async.eachLimit(
-					// 					redisKeys,
-					// 					1,
-					// 					(redisKey, next) => {
-					// 						NotificationsModule.pub.ttl(redisKey, (err, ttl) => {
-					// 							responseObject.redis.ttl[redisKey] = ttl;
-					// 							next(err);
-					// 						});
-					// 					},
-					// 					next
-					// 				);
-					// 			},
+									(redisKeys, next) => {
+										responseObject.redis = {
+											...redisKeys,
+											ttl: {}
+										};
+										async.eachLimit(
+											redisKeys,
+											1,
+											(redisKey, next) => {
+												NotificationsModule.pub.ttl(redisKey, (err, ttl) => {
+													responseObject.redis.ttl[redisKey] = ttl;
+													next(err);
+												});
+											},
+											next
+										);
+									},
 
-					// 			next => {
-					// 				responseObject.debugLogs = this.moduleManager.debugLogs.stationIssue;
-					// 				next();
-					// 			},
+									next => {
+										responseObject.debugLogs = this.moduleManager.debugLogs.stationIssue;
+										next();
+									},
 
-					// 			next => {
-					// 				responseObject.debugJobs = this.moduleManager.debugJobs;
-					// 				next();
-					// 			}
-					// 		],
-					// 		(err, response) => {
-					// 			if (err) {
-					// 				console.log(err);
-					// 				return res.json({
-					// 					error: err,
-					// 					objectSoFar: responseObject
-					// 				});
-					// 			}
+									next => {
+										responseObject.debugJobs = this.moduleManager.debugJobs;
+										next();
+									}
+								],
+								err => {
+									if (err) {
+										console.log(err);
+										return res.json({
+											error: err,
+											objectSoFar: responseObject
+										});
+									}
 
-					// 			const responseJson = JSON.stringify(responseObject, (key, value) => {
-					// 				// console.log(key, value);
-					// 				if (
-					// 					key === "module" ||
-					// 					key === "task" ||
-					// 					key === "onFinish" ||
-					// 					key === "server" ||
-					// 					key === "nsp" ||
-					// 					key === "socket" ||
-					// 					key === "res" ||
-					// 					key === "client" ||
-					// 					key === "_idleNext" ||
-					// 					key === "_idlePrev"
-					// 				) {
-					// 					return undefined;
-					// 				}
-					// 				if (key === "parentJob" && value) return value.toString();
-					// 				return value;
-					// 			});
+									const responseJson = JSON.stringify(responseObject, (key, value) => {
+										if (
+											key === "module" ||
+											key === "task" ||
+											key === "onFinish" ||
+											key === "server" ||
+											key === "nsp" ||
+											key === "socket" ||
+											key === "res" ||
+											key === "client" ||
+											key === "_idleNext" ||
+											key === "_idlePrev"
+										) {
+											return undefined;
+										}
+										if (key === "parentJob" && value) return value.toString();
+										return value;
+									});
 
-					// 			res.end(responseJson);
-					// 		}
-					// 	);
-					// });
-
-					// Object.keys(actions).forEach(namespace => {
-					// 	Object.keys(actions[namespace]).forEach(action => {
-					// 		const name = `/${namespace}/${action}`;
-
-					// 		response.app.get(name, (req, res) => {
-					// 			actions[namespace][action](null, result => {
-					// 				if (typeof cb === "function") return res.json(result);
-					// 			});
-					// 		});
-					// 	});
-					// });
+									return res.end(responseJson);
+								}
+							);
+						});
+					}
 
 					resolve();
 				})

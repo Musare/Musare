@@ -1,5 +1,3 @@
-// const moduleManager = require('../../../index');
-
 import mail from "../index";
 
 /**

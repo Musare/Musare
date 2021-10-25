@@ -84,8 +84,8 @@
 		</div>
 
 		<edit-playlist v-if="modals.editPlaylist" sector="admin" />
-		<report v-if="modals.report" />
 		<edit-song v-if="modals.editSong" song-type="songs" />
+		<report v-if="modals.report" />
 	</div>
 </template>
 
@@ -177,12 +177,13 @@ export default {
 			this.socket.dispatch("playlists.index", res => {
 				if (res.status === "success") {
 					this.setPlaylists(res.data.playlists);
-					// if (this.$route.query.userId) {
-					// 	const user = this.users.find(
-					// 		user => user._id === this.$route.query.userId
-					// 	);
-					// 	if (user) this.edit(user);
-					// }
+					if (this.$route.query.playlistId) {
+						const playlist = this.playlists.find(
+							playlist =>
+								playlist._id === this.$route.query.playlistId
+						);
+						if (playlist) this.edit(playlist._id);
+					}
 				}
 			});
 			this.socket.dispatch("apis.joinAdminRoom", "playlists", () => {});

@@ -104,25 +104,34 @@ class _PlaylistsModule extends CoreClass {
 						reject(new Error(formattedErr));
 					} else {
 						resolve();
-
-						// PlaylistsModule.runJob("CREATE_MISSING_GENRE_PLAYLISTS", {})
-						// 	.then()
-						// 	.catch()
-						// 	.finally(() => {
-						// 		SongsModule.runJob("GET_ALL_GENRES", {})
-						// 			.then(response => {
-						// 				const { genres } = response;
-						// 				genres.forEach(genre => {
-						// 					PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre }).then().catch();
-						// 				});
-						// 			})
-						// 			.catch();
-						// 	});
 					}
 				}
 			)
 		);
 	}
+
+	// /**
+	//  * Returns a list of playlists that include a specific song
+	//  *
+	//  * @param {object} payload - object that contains the payload
+	//  * @param {string} payload.songId - the song id
+	//  * @param {string} payload.includeSongs - include the songs
+	//  * @returns {Promise} - returns promise (reject, resolve)
+	//  */
+	// GET_PLAYLISTS_WITH_SONG(payload) {
+	// 	return new Promise((resolve, reject) => {
+	// 		async.waterfall([
+	// 			next => {
+	// 				const includeObject = payload.includeSongs ? null : { songs: false };
+	// 				PlaylistsModule.playlistModel.find({ "songs._id": payload.songId }, includeObject, next);
+	// 			},
+
+	// 			(playlists, next) => {
+	// 				console.log(playlists);
+	// 			}
+	// 		]);
+	// 	});
+	// }
 
 	/**
 	 * Creates a playlist that is not generated or editable by a user e.g. liked songs playlist
@@ -151,29 +160,6 @@ class _PlaylistsModule extends CoreClass {
 			);
 		});
 	}
-
-	// /**
-	//  * Returns a list of playlists that include a specific song
-	//  *
-	//  * @param {object} payload - object that contains the payload
-	//  * @param {string} payload.songId - the song id
-	//  * @param {string} payload.includeSongs - include the songs
-	//  * @returns {Promise} - returns promise (reject, resolve)
-	//  */
-	// GET_PLAYLISTS_WITH_SONG(payload) {
-	// 	return new Promise((resolve, reject) => {
-	// 		async.waterfall([
-	// 			next => {
-	// 				const includeObject = payload.includeSongs ? null : { songs: false };
-	// 				PlaylistsModule.playlistModel.find({ "songs._id": payload.songId }, includeObject, next);
-	// 			},
-
-	// 			(playlists, next) => {
-	// 				console.log(playlists);
-	// 			}
-	// 		]);
-	// 	});
-	// }
 
 	/**
 	 * Creates a playlist that contains all songs of a specific genre
@@ -502,56 +488,6 @@ class _PlaylistsModule extends CoreClass {
 							})
 							.catch(next);
 					},
-
-					// (data, next) => {
-					// 	data.songsToDelete = [];
-					// 	data.songsToAdd = [];
-
-					// 	data.playlist.songs.forEach(playlistSong => {
-					// 		const found = data.songs.find(song => playlistSong.youtubeId === song.youtubeId);
-					// 		if (!found) data.songsToDelete.push(playlistSong);
-					// 	});
-
-					// 	data.songs.forEach(song => {
-					// 		const found = data.playlist.songs.find(playlistSong => song.youtubeId === playlistSong.youtubeId);
-					// 		if (!found) data.songsToAdd.push(song);
-					// 	});
-
-					// 	next(null, data);
-					// },
-
-					// (data, next) => {
-					// 	const promises = [];
-					// 	data.songsToAdd.forEach(song => {
-					// 		promises.push(
-					// 			PlaylistsModule.runJob(
-					// 				"ADD_SONG_TO_PLAYLIST",
-					// 				{ playlistId: data.playlist._id, song },
-					// 				this
-					// 			)
-					// 		);
-					// 	});
-					// 	data.songsToDelete.forEach(song => {
-					// 		promises.push(
-					// 			PlaylistsModule.runJob(
-					// 				"DELETE_SONG_FROM_PLAYLIST_BY_YOUTUBE_ID",
-					// 				{
-					// 					playlistId: data.playlist._id,
-					// 					youtubeId: song.youtubeId
-					// 				},
-					// 				this
-					// 			)
-					// 		);
-					// 	});
-
-					// 	Promise.allSettled(promises)
-					// 		.then(() => {
-					// 			next(null, data.playlist._id);
-					// 		})
-					// 		.catch(err => {
-					// 			next(err);
-					// 		});
-					// },
 
 					(playlistId, next) => {
 						StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST", { playlistId }, this)
@@ -1007,6 +943,17 @@ class _PlaylistsModule extends CoreClass {
 						)
 							.then(() => next())
 							.catch(next);
+					},
+
+					next => {
+						StationsModule.runJob(
+							"REMOVE_INCLUDED_OR_EXCLUDED_PLAYLIST_FROM_STATIONS",
+							{ playlistId: payload.playlistId },
+							this
+						).then(() => {
+							next();
+						})
+						.catch(err => next(err));
 					}
 				],
 				err => {

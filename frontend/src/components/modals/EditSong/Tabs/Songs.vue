@@ -37,7 +37,7 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapGetters, mapState } from "vuex";
 
 import SearchMusare from "@/mixins/SearchMusare.vue";
 
@@ -54,6 +54,9 @@ export default {
 	computed: {
 		...mapState("modals/editSong", {
 			song: state => state.song
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {

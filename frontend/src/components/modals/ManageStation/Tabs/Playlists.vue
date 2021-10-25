@@ -323,13 +323,6 @@
 								</template>
 
 								<template #actions>
-									<!-- <i
-									v-if="isExcluded(playlist._id)"
-									class="material-icons stop-icon"
-									content="This playlist is blacklisted in this station"
-									v-tippy="{ theme: 'info' }"
-									>play_disabled</i
-								> -->
 									<i
 										v-if="
 											isPartyMode() &&
@@ -345,7 +338,7 @@
 										v-if="
 											isPlaylistMode() &&
 											isOwnerOrAdmin() &&
-											!isSelected(element._id)
+											!isIncluded(element._id)
 										"
 										@click="includePlaylist(element)"
 										class="material-icons play-icon"

@@ -1,19 +1,9 @@
 /* eslint no-param-reassign: 0 */
 
-// import Vue from "vue";
-// import admin from "@/api/admin/index";
-
 export default {
 	namespaced: true,
 	state: {
-		discogsAlbum: {
-			// album: {
-			// 	genres: [],
-			// 	artists: [],
-			// 	artistIds: []
-			// },
-			// tracks: []
-		},
+		discogsAlbum: {},
 		originalPlaylistSongs: [],
 		playlistSongs: [],
 		editingSongs: false

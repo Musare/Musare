@@ -58,7 +58,6 @@ export default async function migrate(MigrationModule) {
 									}
 								}
 							);
-							// next();
 						},
 						next
 					);

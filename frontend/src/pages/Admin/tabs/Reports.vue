@@ -79,8 +79,8 @@
 		</div>
 
 		<view-report v-if="modals.viewReport" sector="admin" />
-
 		<edit-song v-if="modals.editSong" song-type="songs" />
+		<report v-if="modals.report" />
 	</div>
 </template>
 
@@ -97,6 +97,9 @@ export default {
 	components: {
 		ViewReport: defineAsyncComponent(() =>
 			import("@/components/modals/ViewReport.vue")
+		),
+		Report: defineAsyncComponent(() =>
+			import("@/components/modals/Report.vue")
 		),
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong/index.vue")
@@ -128,17 +131,6 @@ export default {
 		this.socket.on("event:admin.report.created", res =>
 			this.reports.unshift(res.data.report)
 		);
-
-		// if (this.$route.query.id) {
-		// 	this.socket.dispatch(
-		// 		"reports.findOne",
-		// 		this.$route.query.id,
-		// 		res => {
-		// 			if (res.status === "success") this.view(res.data.report);
-		// 			else new Toast("Report with that ID not found");
-		// 		}
-		// 	);
-		// }
 	},
 	methods: {
 		init() {

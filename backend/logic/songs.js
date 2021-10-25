@@ -232,16 +232,6 @@ class _SongsModule extends CoreClass {
 								})
 								.catch(next);
 						}
-
-						// else if (song && song.duration <= 0) {
-						// 	YouTubeModule.runJob("GET_SONG", { youtubeId: payload.youtubeId }, this)
-						// 		.then(response => next(null, { ...response.song }, false))
-						// 		.catch(next);
-						// } else {
-						// 	YouTubeModule.runJob("GET_SONG", { youtubeId: payload.youtubeId }, this)
-						// 		.then(response => next(null, { ...response.song }, false))
-						// 		.catch(next);
-						// }
 					},
 
 					(song, youtubeSong, next) => {
@@ -388,11 +378,6 @@ class _SongsModule extends CoreClass {
 														}
 													);
 												}
-												// playlists.forEach(playlist => {
-												// 	PlaylistsModule.runJob("UPDATE_PLAYLIST", {
-												// 		playlistId: playlist._id
-												// 	});
-												// });
 											});
 									}
 								);
@@ -403,35 +388,7 @@ class _SongsModule extends CoreClass {
 					},
 
 					(song, next) => {
-						// next(null, song);
 						const { _id, youtubeId, title, artists, thumbnail, duration, status } = song;
-						// const trimmedSong = {
-						// 	_id,
-						// 	youtubeId,
-						// 	title,
-						// 	artists,
-						// 	thumbnail,
-						// 	duration,
-						// 	status
-						// };
-						// this.log("INFO", `Going to update playlists and stations now for song ${_id}`);
-						// DBModule.runJob("GET_MODEL", { modelName: "playlist" }).then(playlistModel => {
-						// 	playlistModel.updateMany(
-						// 		{ "songs._id": song._id },
-						// 		{ $set: { "songs.$": trimmedSong } },
-						// 		err => {
-						// 			if (err) this.log("ERROR", err);
-						// 			else
-						// 				playlistModel.find({ "songs._id": song._id }, (err, playlists) => {
-						// 					playlists.forEach(playlist => {
-						// 						PlaylistsModule.runJob("UPDATE_PLAYLIST", {
-						// 							playlistId: playlist._id
-						// 						});
-						// 					});
-						// 				});
-						// 		}
-						// 	);
-						// });
 						this.log("INFO", `Going to update stations now for song ${_id}`);
 						DBModule.runJob("GET_MODEL", { modelName: "station" }, this)
 							.then(stationModel => {
@@ -656,13 +613,19 @@ class _SongsModule extends CoreClass {
 						if (payload.includeVerified) statuses.push("verified");
 						if (statuses.length === 0) return next("No statuses have been included.");
 
+						let { query } = payload;
+
+						const isRegex = query.length > 2 && query.indexOf("/") === 0 && query.lastIndexOf("/") === query.length - 1;
+						if (isRegex) query = query.slice(1, query.length - 1);
+						else query = query.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 						const filterArray = [
 							{
-								title: new RegExp(`${payload.query}`, "i"),
+								title: new RegExp(`${query}`, "i"),
 								status: { $in: statuses }
 							},
 							{
-								artists: new RegExp(`${payload.query}`, "i"),
+								artists: new RegExp(`${query}`, "i"),
 								status: { $in: statuses }
 							}
 						];
@@ -1141,11 +1104,6 @@ class _SongsModule extends CoreClass {
 											)
 												.then(() => next())
 												.catch(next);
-											// SongsModule.runJob("REQUEST_SONG", { youtubeId, userId: null }, this)
-											// 	.then(() => {
-											// 		next();
-											// 	})
-											// 	.catch(next);
 										},
 
 										next => {

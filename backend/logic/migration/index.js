@@ -55,8 +55,6 @@ class _MigrationModule extends CoreClass {
 
 					mongoose.connection.on("reconnectFailed", () => {
 						this.log("INFO", "Reconnect failed, stopping reconnecting.");
-						// this.failed = true;
-						// this._lockdown();
 						this.setStatus("FAILED");
 					});
 

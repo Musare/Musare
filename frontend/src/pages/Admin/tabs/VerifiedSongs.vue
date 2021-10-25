@@ -159,6 +159,7 @@
 		</div>
 		<import-album v-if="modals.importAlbum" />
 		<edit-song v-if="modals.editSong" song-type="songs" :key="song._id" />
+		<report v-if="modals.report" />
 		<request-song v-if="modals.requestSong" />
 		<floating-box
 			id="keyboardShortcutsHelper"
@@ -180,17 +181,6 @@
 						>
 						<hr />
 					</div>
-					<!-- <div>
-						<span class="biggest"><b>Songs page</b></span>
-						<span
-							><b>Arrow keys up/down</b> - Moves between
-							songs</span
-						>
-						<span><b>E</b> - Edit selected song</span>
-						<span><b>A</b> - Add selected song</span>
-						<span><b>X</b> - Delete selected song</span>
-						<hr />
-					</div> -->
 					<div>
 						<span class="biggest"><b>Edit song modal</b></span>
 						<span class="bigger"><b>Navigation</b></span>
@@ -268,6 +258,9 @@ export default {
 	components: {
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong")
+		),
+		Report: defineAsyncComponent(() =>
+			import("@/components/modals/Report.vue")
 		),
 		ImportAlbum: defineAsyncComponent(() =>
 			import("@/components/modals/ImportAlbum.vue")
@@ -523,7 +516,6 @@ export default {
 			this.socket.dispatch("apis.joinAdminRoom", "songs", () => {});
 		},
 		...mapActions("admin/verifiedSongs", [
-			// "stopVideo",
 			"resetSongs",
 			"addSong",
 			"removeSong",

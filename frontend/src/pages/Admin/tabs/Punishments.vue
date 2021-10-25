@@ -136,7 +136,6 @@ export default {
 	},
 	computed: {
 		sortedPunishments() {
-			//   return _.orderBy(this.punishments, -1);
 			return this.punishments;
 		},
 		...mapState("modalVisibility", {
@@ -155,7 +154,6 @@ export default {
 	},
 	methods: {
 		view(punishment) {
-			// this.viewPunishment(punishment);
 			this.viewingPunishmentId = punishment._id;
 			this.openModal("viewPunishment");
 		},

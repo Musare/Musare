@@ -59,9 +59,6 @@ class _CacheModule extends CoreClass {
 						this.log("ERROR", `Stopped trying to reconnect.`);
 
 						this.setStatus("FAILED");
-
-						// this.failed = true;
-						// this._lockdown();
 					}
 				}
 			});
@@ -164,9 +161,6 @@ class _CacheModule extends CoreClass {
 	 */
 	HDEL(payload) {
 		return new Promise((resolve, reject) => {
-			// if (!payload.key || !table || typeof key !== "string")
-			// return cb(null, null);
-
 			let { key } = payload;
 
 			if (!payload.table) return reject(new Error("Invalid table!"));
@@ -217,11 +211,6 @@ class _CacheModule extends CoreClass {
 	 */
 	PUB(payload) {
 		return new Promise((resolve, reject) => {
-			/* if (pubs[channel] === undefined) {
-            pubs[channel] = redis.createClient({ url: CacheModule.url });
-            pubs[channel].on('error', (err) => console.error);
-            } */
-
 			let { value } = payload;
 
 			if (!payload.channel) return reject(new Error("Invalid channel!"));
@@ -229,7 +218,6 @@ class _CacheModule extends CoreClass {
 
 			if (["object", "array"].includes(typeof value)) value = JSON.stringify(value);
 
-			// pubs[channel].publish(channel, value);
 			return CacheModule.client.publish(payload.channel, value, err => {
 				if (err) reject(err);
 				else resolve();

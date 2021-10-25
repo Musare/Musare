@@ -114,6 +114,7 @@
 		</div>
 		<import-album v-if="modals.importAlbum" />
 		<edit-song v-if="modals.editSong" song-type="songs" :key="song._id" />
+		<report v-if="modals.report" />
 		<request-song v-if="modals.requestSong" />
 		<floating-box
 			id="keyboardShortcutsHelper"
@@ -194,6 +195,9 @@ export default {
 	components: {
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong")
+		),
+		Report: defineAsyncComponent(() =>
+			import("@/components/modals/Report.vue")
 		),
 		ImportAlbum: defineAsyncComponent(() =>
 			import("@/components/modals/ImportAlbum.vue")
@@ -312,7 +316,6 @@ export default {
 			this.socket.dispatch("apis.joinAdminRoom", "hiddenSongs");
 		},
 		...mapActions("admin/hiddenSongs", [
-			// "stopVideo",
 			"resetSongs",
 			"addSong",
 			"removeSong",

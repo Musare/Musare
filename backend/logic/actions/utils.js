@@ -16,7 +16,6 @@ export default {
 				},
 
 				(modules, next) => {
-					// this.log(modules, next);
 					next(
 						null,
 						Object.keys(modules).map(moduleName => {
@@ -59,7 +58,6 @@ export default {
 				}
 			],
 			async (err, module) => {
-				// this.log(module.runningJobs);
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "GET_MODULE", `User ${session.userId} failed to get module. '${err}'`);
@@ -70,9 +68,6 @@ export default {
 						status: "success",
 						message: "Successfully got module info.",
 						data: {
-							// runningTasks: module.jobQueue.runningTasks,
-							// pausedTasks: module.jobQueue.pausedTasks,
-							// queuedTasks: module.jobQueue.queue,
 							jobStatistics: module.jobStatistics
 						}
 					});

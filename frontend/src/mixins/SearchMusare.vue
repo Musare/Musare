@@ -41,15 +41,15 @@ export default {
 				this.musareSearch.query,
 				page,
 				res => {
-					const { data } = res;
-					const { count, pageSize, songs } = data;
-
-					const newSongs = songs.map(song => ({
-						isAddedToQueue: false,
-						...song
-					}));
-
 					if (res.status === "success") {
+						const { data } = res;
+						const { count, pageSize, songs } = data;
+
+						const newSongs = songs.map(song => ({
+							isAddedToQueue: false,
+							...song
+						}));
+
 						this.musareSearch.results = [
 							...this.musareSearch.results,
 							...newSongs

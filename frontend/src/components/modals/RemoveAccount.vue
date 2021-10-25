@@ -73,6 +73,15 @@
 								autofocus
 								ref="password"
 								v-model="password.value"
+								@input="
+									checkForAutofill(
+										confirmPasswordMatch,
+										$event
+									)
+								"
+								@keypress="
+									submitOnEnter(confirmPasswordMatch, $event)
+								"
 							/>
 							<a @click="togglePasswordVisibility()">
 								<i class="material-icons">
@@ -201,6 +210,19 @@ export default {
 		this.accountRemovalMessage = await lofig.get("messages.accountRemoval");
 	},
 	methods: {
+		checkForAutofill(cb, event) {
+			if (
+				event.target.value !== "" &&
+				event.inputType === undefined &&
+				event.data === undefined &&
+				event.dataTransfer === undefined &&
+				event.isComposing === undefined
+			)
+				cb();
+		},
+		submitOnEnter(cb, event) {
+			if (event.which === 13) cb();
+		},
 		togglePasswordVisibility() {
 			if (this.$refs.password.type === "password") {
 				this.$refs.password.type = "text";
@@ -250,7 +272,7 @@ export default {
 						lofig.get("cookie").then(cookie => {
 							document.cookie = `${cookie.SIDname}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
 							this.closeModal("removeAccount");
-							return window.location.reload();
+							window.location.href = "/";
 						})
 					);
 				}

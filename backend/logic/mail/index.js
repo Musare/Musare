@@ -56,7 +56,6 @@ class _MailModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	SEND_MAIL(payload) {
-		// console.log(payload);
 		return new Promise((resolve, reject) => {
 			if (MailModule.enabled)
 				return MailModule.transporter

@@ -4,7 +4,7 @@
 
 import config from "config";
 import async from "async";
-import { WebSocket, WebSocketServer } from "ws";
+import { WebSocketServer } from "ws";
 import { EventEmitter } from "events";
 
 import CoreClass from "../core";
@@ -48,8 +48,6 @@ class _WSModule extends CoreClass {
 
 		// TODO: Check every 30s/, for all sockets, if they are still allowed to be in the rooms they are in, and on socket at all (permission changing/banning)
 		const server = await AppModule.runJob("SERVER");
-
-		// this._io.origins(config.get("cors.origin"));
 
 		this._io = new WebSocketServer({ server, path: "/ws" });
 
@@ -296,7 +294,7 @@ class _WSModule extends CoreClass {
 		return new Promise(resolve => {
 			// create room if it doesn't exist, and add socketId to array
 			if (WSModule.rooms[room]) {
-				if (!(socketId in WSModule.rooms[room])) WSModule.rooms[room].push(socketId);
+				if (WSModule.rooms[room].indexOf(socketId) === -1) WSModule.rooms[room].push(socketId);
 			} else WSModule.rooms[room] = [socketId];
 
 			return resolve();

@@ -63,13 +63,6 @@ export default async function migrate(MigrationModule) {
 								songs.map(song => song._doc),
 								1,
 								(song, next) => {
-									// this.log(
-									// 	"INFO",
-									// 	`Migration 5. Updating playlist songs and queue songs for song ${
-									// 		song.songId
-									// 	}/${song._id.toString()}.`
-									// );
-
 									const { _id, songId, title, artists, thumbnail, duration, status } = song;
 									const trimmedSong = {
 										_id,
@@ -117,21 +110,6 @@ export default async function migrate(MigrationModule) {
 							);
 						}
 					});
-					// songModel.updateMany(
-					// 	{ documentVersion: 2, verified: true },
-					// 	{ $set: { documentVersion: 3, status: "verified" }, $unset: { verified: "" } },
-					// 	(err, res) => {
-					// 		if (err) next(err);
-					// 		else {
-					// 			this.log(
-					// 				"INFO",
-					// 				`Migration 5 (verified songs). Matched: ${res.n}, modified: ${res.nModified}, ok: ${res.ok}.`
-					// 			);
-
-					// 			next();
-					// 		}
-					// 	}
-					// );
 				},
 
 				next => {
