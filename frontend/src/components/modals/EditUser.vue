@@ -76,9 +76,12 @@
 				</div>
 			</template>
 			<template #footer>
-				<button class="button is-warning" @click="removeSessions()">
-					<span>&nbsp;Remove all sessions</span>
-				</button>
+				<confirm @confirm="removeSessions()">
+					<a class="button is-warning"> Remove all sessions </a>
+				</confirm>
+				<confirm @confirm="removeAccount()">
+					<a class="button is-danger"> Remove account </a>
+				</confirm>
 			</template>
 		</modal>
 	</div>
@@ -91,9 +94,10 @@ import Toast from "toasters";
 import validation from "@/validation";
 import ws from "@/ws";
 import Modal from "../Modal.vue";
+import Confirm from "@/components/Confirm.vue";
 
 export default {
-	components: { Modal },
+	components: { Modal, Confirm },
 	props: {
 		userId: { type: String, default: "" },
 		sector: { type: String, default: "admin" }
@@ -116,12 +120,33 @@ export default {
 	mounted() {
 		ws.onConnect(this.init);
 	},
+	beforeUnmount() {
+		this.socket.dispatch(
+			"apis.leaveRoom",
+			`edit-user.${this.userId}`,
+			() => {}
+		);
+	},
 	methods: {
 		init() {
 			this.socket.dispatch(`users.getUserFromId`, this.userId, res => {
 				if (res.status === "success") {
 					const user = res.data;
 					this.editUser(user);
+
+					this.socket.dispatch(
+						"apis.joinRoom",
+						`edit-user.${this.userId}`
+					);
+
+					this.socket.on(
+						"event:user.removed",
+						res => {
+							if (res.data.userId === this.userId)
+								this.closeModal("editUser");
+						},
+						{ modal: "editUser" }
+					);
 				} else {
 					new Toast("User with that ID not found");
 					this.closeModal("editUser");
@@ -207,6 +232,11 @@ export default {
 				}
 			);
 		},
+		removeAccount() {
+			this.socket.dispatch(`users.adminRemove`, this.user._id, res => {
+				new Toast(res.message);
+			});
+		},
 		removeSessions() {
 			this.socket.dispatch(`users.removeSessions`, this.user._id, res => {
 				new Toast(res.message);
@@ -219,6 +249,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.night-mode .section {
+	background-color: unset !important;
+}
+
 .section {
 	padding: 15px 0 !important;
 }
@@ -233,5 +267,9 @@ export default {
 
 .select:after {
 	border-color: var(--primary-color);
+}
+
+.modal-card-foot > span:not(:last-child) {
+	margin-right: 10px;
 }
 </style>

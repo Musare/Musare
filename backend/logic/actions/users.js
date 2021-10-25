@@ -157,6 +157,16 @@ CacheModule.runJob("SUB", {
 	}
 });
 
+CacheModule.runJob("SUB", {
+	channel: "user.removeAccount",
+	cb: userId => {
+		WSModule.runJob("EMIT_TO_ROOMS", {
+			rooms: ["admin.users", `edit-user.${userId}`],
+			args: ["event:user.removed", { data: { userId } }]
+		});
+	}
+});
+
 export default {
 	/**
 	 * Lists all Users
@@ -357,6 +367,175 @@ export default {
 					"USER_REMOVE",
 					`Successfully removed data and account for user "${session.userId}"`
 				);
+
+				CacheModule.runJob("PUB", {
+					channel: "user.removeAccount",
+					value: session.userId
+				});
+
+				return cb({
+					status: "success",
+					message: "Successfully removed data and account."
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Removes all data held on a user, including their ability to login, by userId
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} userId - the user id that is going to be banned
+	 * @param {Function} cb - gets called with the result
+	 */
+	adminRemove: isAdminRequired(async function adminRemove(session, userId, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const dataRequestModel = await DBModule.runJob("GET_MODEL", { modelName: "dataRequest" }, this);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+		const activityModel = await DBModule.runJob("GET_MODEL", { modelName: "activity" }, this);
+
+		const dataRequestEmail = await MailModule.runJob("GET_SCHEMA", { schemaName: "dataRequest" }, this);
+
+		const songsToAdjustRatings = [];
+
+		async.waterfall(
+			[
+				next => {
+					if (!userId) return next("You must provide a userId to remove.");
+					return next();
+				},
+				// activities related to the user
+				next => {
+					activityModel.deleteMany({ userId }, next);
+				},
+
+				// user's stations
+				(res, next) => {
+					stationModel.find({ owner: userId }, (err, stations) => {
+						if (err) return next(err);
+
+						return async.each(
+							stations,
+							(station, callback) => {
+								// delete the station
+								stationModel.deleteOne({ _id: station._id }, err => {
+									if (err) return callback(err);
+
+									// if applicable, delete the corresponding playlist for the station
+									if (station.playlist)
+										return PlaylistsModule.runJob("DELETE_PLAYLIST", {
+											playlistId: station.playlist
+										})
+											.then(() => callback())
+											.catch(callback);
+
+									return callback();
+								});
+							},
+							err => next(err)
+						);
+					});
+				},
+
+				next => {
+					playlistModel.findOne({ createdBy: userId, displayName: "Liked Songs" }, next);
+				},
+
+				// get all liked songs (as the global rating values for these songs will need adjusted)
+				(playlist, next) => {
+					if (!playlist) return next();
+
+					playlist.songs.forEach(song =>
+						songsToAdjustRatings.push({ songId: song._id, youtubeId: song.youtubeId })
+					);
+
+					return next();
+				},
+
+				next => {
+					playlistModel.findOne({ createdBy: userId, displayName: "Disliked Songs" }, next);
+				},
+
+				// get all disliked songs (as the global rating values for these songs will need adjusted)
+				(playlist, next) => {
+					if (!playlist) return next();
+
+					playlist.songs.forEach(song =>
+						songsToAdjustRatings.push({ songId: song._id, youtubeId: song.youtubeId })
+					);
+
+					return next();
+				},
+
+				// user's playlists
+				next => {
+					playlistModel.deleteMany({ createdBy: userId }, next);
+				},
+
+				(res, next) => {
+					async.each(
+						songsToAdjustRatings,
+						(song, next) => {
+							const { songId, youtubeId } = song;
+
+							SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId, youtubeId })
+								.then(() => next())
+								.catch(next);
+						},
+						err => next(err)
+					);
+				},
+
+				// user object
+				next => {
+					userModel.deleteMany({ _id: userId }, next);
+				},
+
+				// request data removal for user
+				(res, next) => {
+					dataRequestModel.create({ userId, type: "remove" }, next);
+				},
+
+				(request, next) => {
+					WSModule.runJob("EMIT_TO_ROOM", {
+						room: "admin.users",
+						args: ["event:admin.dataRequests.created", { data: { request } }]
+					});
+
+					return next();
+				},
+
+				next => userModel.find({ role: "admin" }, next),
+
+				// send email to all admins of a data removal request
+				(users, next) => {
+					if (!config.get("sendDataRequestEmails")) return next();
+					if (users.length === 0) return next();
+
+					const to = [];
+					users.forEach(user => to.push(user.email.address));
+
+					return dataRequestEmail(to, userId, "remove", err => next(err));
+				}
+			],
+			async err => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"USER_ADMIN_REMOVE",
+						`Removing data and account for user "${userId}" failed. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				this.log("SUCCESS", "USER_ADMIN_REMOVE", `Successfully removed data and account for user "${userId}"`);
+
+				CacheModule.runJob("PUB", {
+					channel: "user.removeAccount",
+					value: userId
+				});
 
 				return cb({
 					status: "success",

@@ -1522,7 +1522,10 @@ class _StationsModule extends CoreClass {
 					next => {
 						StationsModule.stationModel.updateMany(
 							{
-								$or: [{ includedPlaylists: payload.playlistId }, { excludedPlaylists: payload.playlistId }]
+								$or: [
+									{ includedPlaylists: payload.playlistId },
+									{ excludedPlaylists: payload.playlistId }
+								]
 							},
 							{
 								$pull: {
@@ -1530,7 +1533,7 @@ class _StationsModule extends CoreClass {
 									excludedPlaylists: payload.playlistId
 								}
 							},
-							(err) => {
+							err => {
 								if (err) next(err);
 								else next();
 							}
