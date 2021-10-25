@@ -62,6 +62,13 @@ const modules = {
 							)
 						);
 
+					if (username.replaceAll(/[_]/g, "").length === 0)
+						return reject(
+							new Error(
+								"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _, and there has to be at least one letter or number."
+							)
+						);
+
 					if (!validation.isLength(password, 6, 200))
 						return reject(
 							new Error(

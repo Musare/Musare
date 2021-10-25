@@ -128,7 +128,10 @@ class _DBModule extends CoreClass {
 					this.schemas.user
 						.path("username")
 						.validate(
-							username => isLength(username, 2, 32) && regex.custom("a-zA-Z0-9_-").test(username),
+							username =>
+								isLength(username, 2, 32) &&
+								regex.custom("a-zA-Z0-9_-").test(username) &&
+								username.replaceAll(/[_]/g, "").length > 0,
 							"Invalid username."
 						);
 
@@ -140,7 +143,13 @@ class _DBModule extends CoreClass {
 
 					this.schemas.user
 						.path("name")
-						.validate(name => isLength(name, 1, 64) && regex.name.test(name), "Invalid name.");
+						.validate(
+							name =>
+								isLength(name, 1, 64) &&
+								regex.name.test(name) &&
+								name.replaceAll(/[ .'_-]/g, "").length > 0,
+							"Invalid name."
+						);
 
 					// Station
 					this.schemas.station

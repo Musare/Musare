@@ -136,16 +136,20 @@ export default {
 		// prettier-ignore
 		// eslint-disable-next-line func-names
 		"modifiedUser.username": function (value) {
-		if (!validation.isLength(value, 2, 32)) {
-			this.validation.username.message =
-				"Username must have between 2 and 32 characters.";
-			this.validation.username.valid = false;
-		} else if (
-			!validation.regex.azAZ09_.test(value) &&
-			value !== this.originalUser.username // Sometimes a username pulled from GitHub won't succeed validation
-		) {
+			if (!validation.isLength(value, 2, 32)) {
+				this.validation.username.message =
+					"Username must have between 2 and 32 characters.";
+				this.validation.username.valid = false;
+			} else if (
+				!validation.regex.azAZ09_.test(value) &&
+				value !== this.originalUser.username // Sometimes a username pulled from GitHub won't succeed validation
+			) {
 				this.validation.username.message =
 					"Invalid format. Allowed characters: a-z, A-Z, 0-9 and _.";
+				this.validation.username.valid = false;
+			} else if (value.replaceAll(/[_]/g, "").length === 0) {
+				this.validation.username.message =
+					"Invalid format. Allowed characters: a-z, A-Z, 0-9 and _, and there has to be at least one letter or number.";
 				this.validation.username.valid = false;
 			} else {
 				this.validation.username.message = "Everything looks great!";
@@ -254,6 +258,11 @@ export default {
 			if (!validation.regex.azAZ09_.test(username))
 				return new Toast(
 					"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _."
+				);
+
+			if (username.replaceAll(/[_]/g, "").length === 0)
+				return new Toast(
+					"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _, and there has to be at least one letter or number."
 				);
 
 			this.$refs.saveButton.saveStatus = "disabled";

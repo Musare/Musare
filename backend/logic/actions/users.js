@@ -534,7 +534,6 @@ export default {
 
 				// create the user object
 				(hash, _id, next) => {
-					const avatarColors = ["blue", "orange", "green", "purple", "teal"];
 					next(null, {
 						_id,
 						name: username,
@@ -542,10 +541,6 @@ export default {
 						email: {
 							address: email,
 							verificationToken
-						},
-						avatar: {
-							type: "initials",
-							color: avatarColors[Math.random(Math.floor(Math.random() * avatarColors.length))]
 						},
 						services: {
 							password: {
@@ -558,9 +553,10 @@ export default {
 				// generate the url for gravatar avatar
 				(user, next) => {
 					UtilsModule.runJob("CREATE_GRAVATAR", { email: user.email.address }, this).then(url => {
+						const avatarColors = ["blue", "orange", "green", "purple", "teal"];
 						user.avatar = {
 							type: "initials",
-							color: "blue",
+							color: avatarColors[Math.floor(Math.random() * avatarColors.length)],
 							url
 						};
 						next(null, user);
