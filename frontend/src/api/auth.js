@@ -34,7 +34,7 @@ export default {
 								if (cookie.domain !== "localhost")
 									domain = ` domain=${cookie.domain};`;
 
-								document.cookie = `SID=${
+								document.cookie = `${cookie.SIDname}=${
 									res.SID
 								}; expires=${date.toGMTString()}; ${domain}${secure}path=/`;
 
