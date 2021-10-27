@@ -4,12 +4,12 @@ Every input needs validation, below is the required formatting of each value.
 
 - **User**
     - Username
-        - Description: Any letter from a-z in any case, numbers, underscores and dashes.
+        - Description: Any letter from a-z in any case, numbers, underscores and dashes. Must contain at least 1 letter or number.
         - Length: From 2 to 32 characters.
         - Regex: ```/^[A-Za-z0-9_]+$/```
     - Name
-        - Description: Any letter from any language in any case, numbers, underscores, dashes, periods, apostrophes and spaces.
-        - Length: From 2 to 32 characters.
+        - Description: Any letter from any language in any case, numbers, underscores, dashes, periods, apostrophes and spaces. Must contain at least 1 letter or number.
+        - Length: From 2 to 64 characters.
         - Regex: ```/^[\p{L}0-9 .'_-]+$/u```
     - Email
         - Description: Standard email address.
