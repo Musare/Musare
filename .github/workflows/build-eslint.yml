@@ -1,0 +1,42 @@
+name: Musare Build and ESLint
+
+on:
+    push:
+        branches: [ polishing ]
+    pull_request:
+        branches: [ polishing ]
+    workflow_dispatch:
+
+env:
+    COMPOSE_PROJECT_NAME: musare
+    BACKEND_HOST: 127.0.0.1
+    BACKEND_PORT: 8080
+    FRONTEND_HOST: 127.0.0.1
+    FRONTEND_PORT: 80
+    FRONTEND_MODE: dev
+    MONGO_HOST: 127.0.0.1
+    MONGO_PORT: 27017
+    MONGO_ROOT_PASSWORD: PASSWORD_HERE
+    MONGO_USER_USERNAME: musare
+    MONGO_USER_PASSWORD: OTHER_PASSWORD_HERE
+    REDIS_HOST: 127.0.0.1
+    REDIS_PORT: 6379
+    REDIS_PASSWORD: PASSWORD
+
+jobs:
+    build-eslint:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Build Musare
+              run: |
+                  cp backend/config/template.json backend/config/default.json
+                  cp frontend/dist/config/template.json frontend/dist/config/default.json
+                  docker-compose build
+                  docker-compose pull
+            - name: Start Musare
+              run: docker-compose up -d
+            - name: ESlint Backend
+              run: docker-compose exec -T backend /bin/bash -c "npx eslint app/logic"
+            - name: ESLint Frontend
+              run: docker-compose exec -T frontend /bin/bash -c "cd app && npm run lint"
