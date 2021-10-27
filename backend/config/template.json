@@ -10,7 +10,6 @@
 	"hideAutomaticallyRequestedSongs": false,
     "hideAnonymousSongs": false,
 	"sendDataRequestEmails": true,
-	"fancyConsole": true,
 	"apis": {
 		"youtube": {
 			"key": "",
@@ -32,11 +31,6 @@
 			"secret": "",
 			"enabled": false
 		}
-	},
-	"cors": {
-		"origin": [
-			"http://localhost"
-		]
 	},
 	"smtp": {
 		"host": "smtp.mailgun.org",

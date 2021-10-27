@@ -1,84 +1,72 @@
-# MusareNode
+![Musare](frontend/dist/assets/blue_wordmark.png)
 
-Based off of the original [Musare](https://github.com/Musare/MusareMeteor), which utilized Meteor.
+# Musare
 
-MusareNode now uses NodeJS, Express, VueJS and websockets - among other technologies. We have also implemented the ability to host Musare in [Docker Containers](https://www.docker.com/).
+Musare is an open-source collaborative music listening and catalogue curation application. Currently supporting YouTube based content.
 
-The master branch is available at [musare.com](https://musare.com)
-You can also find the staging branch at [musare.dev](https://musare.dev)
+---
 
-<br />
-
-## Getting Started
+## Documentation
 - [Installation](./.wiki/Installation.md)
 - [Configuration](./.wiki/Configuration.md)
 - [Utility Script](./.wiki/Utility_Script.md)
+- [Backend Commands](./.wiki/Backend_Commands.md)
+- [Technical Overview](./.wiki/Technical_Overview.md)
+- [Value Formats](./.wiki/Value_Formats.md)
 
-<br />
+---
 
-## Our Stack
+## Features
+- **Playlists**
+    - User created playlists
+    - Automatically generated playlists for genres
+    - Privacy configuration
+    - Liked and Disliked songs playlists per user
+    - Bulk import songs from YouTube playlist
+    - Add songs from verified catalogue or YouTube
+    - Ability to download in JSON format
+- **Stations**
+    - Playlist mode to listen to selected playlists
+    - Party mode to allow other users to add songs to queue
+    - Ability to blacklist playlists to prevent songs within from playing
+    - Themes
+    - Privacy configuration
+    - Favoriting
+    - Official stations controlled by admins (playlist mode only)
+    - User created and controlled stations
+    - Pause playback just in local session
+    - Station-wide pausing by admins or owners
+    - Vote to skip songs
+    - Force skipping song by admins or owners
+    - Add songs to queue from verified catalogue or YouTube (party mode only)
+- **Song Management**
+    - Verify songs to allow them to be searched for and played in official stations
+    - Hide songs to remove from unverified catalogue
+    - Import Album (WIP) to import songs in bulk
+    - Discogs integration to import metadata
+    - Ability for users to report issues with songs and admins to resolve
+    - Configurable skip duration and song duration to cut intros and outros
+    - Request songs from YouTube in official stations or admin area
+    - Any song added to playlists or stations will be automatically requested
+- **Users**
+    - Activity logs
+    - Profile page showing public playlists and activity logs
+    - Text or gravatar profile pictures
+    - Email or Github login/registration
+    - Preferences to tailor site usage
+    - Password reset
+    - Data deletion management
+    - ActivityWatch integration
+- **Punishments**
+    - Ban users
+    - Ban IPs
+- **News**
+    - Admins can add/edit/remove news items
+    - Markdown editor
+- **Dark Mode**
 
-- NodeJS
-- MongoDB
-- Redis
-- Nginx (not required)
-- VueJS
-
-### **Frontend**
-
-The frontend is a [vue-cli](https://github.com/vuejs/vue-cli) generated, [vue-loader](https://github.com/vuejs/vue-loader) single page app, that's served over Nginx or Express. The Nginx server not only serves the frontend, but can also serve as a load balancer for requests going to the backend.
-
-### **Backend**
-
-The backend is a scalable NodeJS / Redis / MongoDB app. User sessions are stored in a central Redis server. All data is stored in a central MongoDB server. The Redis and MongoDB servers are replicated to several secondary nodes, which can become the primary node if the current primary node goes down.
-
-We currently only utilize 1 backend, 1 MongoDB server and 1 Redis server running for production, though it is relatively easy to expand.
-
-<br />
-
-## Extra
-
-Below is a list of helpful tips / solutions we've collected while developing MusareNode.
-
-### Fixing the "couldn't connect to docker daemon" error
-
-Some people have had issues while trying to execute the `docker-compose` command.
-To fix this, you will have to run `docker-machine env default`.
-This command will print various variables.
-At the bottom, it will say something similar to `@FOR /f "tokens=*" %i IN ('docker-machine env default') DO @%i`.
-Run this command in your shell. You will have to do this command for every shell you want to run `docker-compose` in (every session).
-
-### Calling Toasts
-
-You can create Toast notifications using our custom package, [`toasters`](https://github.com/jonathan-grah/vue-roaster), using the following code:
-
-```js
-import Toast from "toasters";
-new Toast({ content: "Hi!", persistant: true });
-```
-
-### Set user role
-
-When setting up you will need to grant yourself the admin role, using the following commands:
-
-```bash
-docker-compose exec mongo mongo admin
-
-use musare
-db.auth("MUSAREDBUSER","MUSAREDBPASSWORD")
-db.users.update({username: "USERNAME"}, {$set: {role: "admin"}})
-```
-
-OR use the Linux script:
-
-```
-tools/linux/makeUserAdmin.sh YOUR_MUSARE_USERNAME YOUR_MONGO_MUSARE_PASSWORD
-```
-
-<br />
+---
 
 ## Contact
 
-Get in touch with us via email at [core@musare.com](mailto:core@musare.com) or join our [Discord Guild](https://discord.gg/Y5NxYGP).
-
-You can also find us on [Facebook](https://www.facebook.com/MusareMusic) and [Twitter](https://twitter.com/MusareApp).
+Get in touch with us via email at [core@musare.com](mailto:core@musare.com).
