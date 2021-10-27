@@ -36,7 +36,7 @@ export default {
 	likedSongsPlaylist: { type: mongoose.Schema.Types.ObjectId },
 	dislikedSongsPlaylist: { type: mongoose.Schema.Types.ObjectId },
 	favoriteStations: [{ type: String }],
-	name: { type: String, default: "" },
+	name: { type: String, required: true },
 	location: { type: String, default: "" },
 	bio: { type: String, default: "" },
 	createdAt: { type: Date, default: Date.now },

@@ -531,7 +531,7 @@ export default {
 				(hash, _id, next) => {
 					next(null, {
 						_id,
-						name: "",
+						name: username,
 						username,
 						email: {
 							address: email,
@@ -548,9 +548,10 @@ export default {
 				// generate the url for gravatar avatar
 				(user, next) => {
 					UtilsModule.runJob("CREATE_GRAVATAR", { email: user.email.address }, this).then(url => {
+						const avatarColors = ["blue", "orange", "green", "purple", "teal"];
 						user.avatar = {
 							type: "initials",
-							color: "blue",
+							color: avatarColors[Math.floor(Math.random() * avatarColors.length)],
 							url
 						};
 						next(null, user);

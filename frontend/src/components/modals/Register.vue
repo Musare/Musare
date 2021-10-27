@@ -201,6 +201,10 @@ export default {
 				this.username.message =
 					"Invalid format. Allowed characters: a-z, A-Z, 0-9 and _.";
 				this.username.valid = false;
+			} else if (value.replaceAll(/[_]/g, "").length === 0) {
+				this.username.message =
+					"Invalid format. Allowed characters: a-z, A-Z, 0-9 and _, and there has to be at least one letter or number.";
+				this.username.valid = false;
 			} else {
 				this.username.message = "Everything looks great!";
 				this.username.valid = true;

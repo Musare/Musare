@@ -22,7 +22,7 @@ const regex = {
 	az09_: /^[a-z0-9_]+$/,
 	emailSimple: /^[\x00-\x7F]+@[a-z0-9]+\.[a-z0-9]+(\.[a-z0-9]+)?$/,
 	ascii: /^[\x00-\x7F]+$/,
-	name: /^[\p{L} .'-]+$/u,
+	name: /^[\p{L}0-9 .'_-]+$/u,
 	custom: regex => new RegExp(`^[${regex}]+$`)
 };
 
@@ -126,7 +126,10 @@ class _DBModule extends CoreClass {
 					this.schemas.user
 						.path("username")
 						.validate(
-							username => isLength(username, 2, 32) && regex.custom("a-zA-Z0-9_-").test(username),
+							username =>
+								isLength(username, 2, 32) &&
+								regex.custom("a-zA-Z0-9_-").test(username) &&
+								username.replaceAll(/[_]/g, "").length > 0,
 							"Invalid username."
 						);
 
@@ -135,6 +138,16 @@ class _DBModule extends CoreClass {
 						if (email.indexOf("@") !== email.lastIndexOf("@")) return false;
 						return regex.emailSimple.test(email) && regex.ascii.test(email);
 					}, "Invalid email.");
+
+					this.schemas.user
+						.path("name")
+						.validate(
+							name =>
+								isLength(name, 1, 64) &&
+								regex.name.test(name) &&
+								name.replaceAll(/[ .'_-]/g, "").length > 0,
+							"Invalid name."
+						);
 
 					// Station
 					this.schemas.station

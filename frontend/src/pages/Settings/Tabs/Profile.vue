@@ -148,11 +148,11 @@ export default {
 
 			if (!validation.regex.name.test(name))
 				return new Toast(
-					"Invalid name format. Only letters, spaces, apostrophes and hyphens are allowed."
+					"Invalid name format. Only letters, numbers, spaces, apostrophes, underscores and hyphens are allowed."
 				);
-			if (name.replaceAll(/[ .'-]/g, "").length === 0)
+			if (name.replaceAll(/[ .'_-]/g, "").length === 0)
 				return new Toast(
-					"Invalid name format. Only letters, spaces, apostrophes and hyphens are allowed, and there has to be at least one letter."
+					"Invalid name format. Only letters, numbers, spaces, apostrophes, underscores and hyphens are allowed, and there has to be at least one letter or number."
 				);
 
 			this.$refs.saveButton.status = "disabled";
