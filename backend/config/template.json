@@ -32,6 +32,11 @@
 			"enabled": false
 		}
 	},
+	"cors": {
+		"origin": [
+			"http://localhost"
+		]
+	},
 	"smtp": {
 		"host": "smtp.mailgun.org",
 		"port": 587,

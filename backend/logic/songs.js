@@ -615,9 +615,10 @@ class _SongsModule extends CoreClass {
 
 						let { query } = payload;
 
-						const isRegex = query.length > 2 && query.indexOf("/") === 0 && query.lastIndexOf("/") === query.length - 1;
+						const isRegex =
+							query.length > 2 && query.indexOf("/") === 0 && query.lastIndexOf("/") === query.length - 1;
 						if (isRegex) query = query.slice(1, query.length - 1);
-						else query = query.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&');
+						else query = query.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 						const filterArray = [
 							{
