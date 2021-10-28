@@ -1370,7 +1370,7 @@ export default {
 				},
 
 				(playlist, next) => {
-					if (playlist.createdBy !== session.userId) return next("You do not own this playlist."); 
+					if (playlist.createdBy !== session.userId) return next("You do not own this playlist.");
 					if (!playlist.isUserModifiable) return next("Playlist cannot be removed.");
 					return next(null, playlist);
 				},
@@ -1439,7 +1439,7 @@ export default {
 	 * @param {string} playlistId - the id of the playlist we are removing
 	 * @param {Function} cb - gets called with the result
 	 */
-	 removeAdmin: isAdminRequired(async function removeAdmin(session, playlistId, cb) {
+	removeAdmin: isAdminRequired(async function removeAdmin(session, playlistId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
@@ -1501,8 +1501,8 @@ export default {
 					message: "Playlist successfully removed"
 				});
 			}
-		)
-	 }),
+		);
+	}),
 
 	/**
 	 * Updates the privacy of a private playlist

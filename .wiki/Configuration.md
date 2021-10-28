@@ -27,6 +27,7 @@ Location: `backend/config/default.json`
 | `apis.discogs.client` | Discogs Application client, obtained from [here](https://www.discogs.com/settings/developers). |
 | `apis.discogs.secret` | Discogs Application secret, obtained with client. |
 | `apis.discogs.enabled` | Whether to enable Discogs API usage. |
+| `cors.origin` | Array of allowed request origin urls, for example `http://localhost`. |
 | `smtp.host` | SMTP Host |
 | `smtp.port` | SMTP Port |
 | `smtp.auth.user` | SMTP Username |
