@@ -244,6 +244,8 @@ export default {
 								stationModel.deleteOne({ _id: station._id }, err => {
 									if (err) return callback(err);
 
+									CacheModule.runJob("HDEL", { table: "stations", key: station._id });
+
 									// if applicable, delete the corresponding playlist for the station
 									if (station.playlist)
 										return PlaylistsModule.runJob("DELETE_PLAYLIST", {
