@@ -54,11 +54,7 @@
 				</p>
 
 				<p class="content-box-optional-helper">
-					<router-link
-						id="forgot-password"
-						href="#"
-						to="/reset_password"
-					>
+					<router-link id="forgot-password" to="/reset_password">
 						Forgot password?
 					</router-link>
 				</p>
@@ -94,12 +90,12 @@
 							</a>
 						</div>
 						<p class="control">
-							<a
+							<button
 								class="button is-info"
-								href="#"
 								@click="confirmPasswordMatch()"
-								>Check</a
 							>
+								Check
+							</button>
 						</p>
 					</div>
 				</div>
