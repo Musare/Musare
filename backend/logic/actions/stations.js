@@ -1304,7 +1304,7 @@ export default {
 								.then(socket => {
 									if (socket && socket.session && socket.session.userId) {
 										if (!users.includes(socket.session.userId)) users.push(socket.session.userId);
-									} else users.push(socketId);
+									}
 									return next();
 								})
 								.catch(next);
