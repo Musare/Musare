@@ -1088,7 +1088,7 @@ export default {
 		});
 
 		this.socket.on("event:station.deleted", () => {
-			window.location.href = "/";
+			window.location.href = "/?msg=The station you were in was deleted.";
 			return true;
 		});
 
