@@ -118,10 +118,7 @@ const router = createRouter({
 		},
 		{
 			path: "/reset_password",
-			component: () => import("@/pages/ResetPassword.vue"),
-			meta: {
-				guestsOnly: true
-			}
+			component: () => import("@/pages/ResetPassword.vue")
 		},
 		{
 			path: "/set_password",
