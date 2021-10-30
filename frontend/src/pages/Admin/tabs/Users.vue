@@ -204,6 +204,15 @@ body {
 	font-family: "Hind", sans-serif;
 }
 
+h2 {
+	font-size: 30px;
+	text-align: center;
+
+	@media only screen and (min-width: 700px) {
+		font-size: 35px;
+	}
+}
+
 .profile-picture {
 	max-width: 50px !important;
 	max-height: 50px !important;

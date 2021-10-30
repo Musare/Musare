@@ -2,6 +2,11 @@
 	<div>
 		<page-metadata title="Admin | News" />
 		<div class="container">
+			<div class="button-row">
+				<button class="is-primary button" @click="edit()">
+					Create News Item
+				</button>
+			</div>
 			<table class="table is-striped">
 				<thead>
 					<tr>
@@ -40,10 +45,6 @@
 					</tr>
 				</tbody>
 			</table>
-
-			<button class="is-primary button" @click="edit()">
-				Create News Item
-			</button>
 		</div>
 
 		<edit-news

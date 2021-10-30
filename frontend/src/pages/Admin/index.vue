@@ -227,6 +227,29 @@ export default {
 };
 </script>
 
+<style lang="scss">
+.main-container .container {
+	.search-songs {
+		margin-bottom: 5px;
+	}
+	.button-row {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		justify-content: center;
+		margin-bottom: 5px;
+
+		& > .button,
+		& > span {
+			margin: 5px 0;
+			&:not(:first-child) {
+				margin-left: 5px;
+			}
+		}
+	}
+}
+</style>
+
 <style lang="scss" scoped>
 .night-mode {
 	.tabs {

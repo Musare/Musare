@@ -10,39 +10,40 @@
 			<input
 				v-model="searchQuery"
 				type="text"
-				class="input"
+				class="input search-songs"
 				placeholder="Search for Songs"
 			/>
-			<button
-				v-if="!loadAllSongs"
-				class="button is-primary"
-				@click="loadAll()"
-			>
-				Load all
-			</button>
-			<button
-				class="button is-primary"
-				@click="toggleKeyboardShortcutsHelper"
-				@dblclick="resetKeyboardShortcutsHelper"
-			>
-				Keyboard shortcuts helper
-			</button>
-			<button class="button is-primary" @click="openModal('requestSong')">
-				Request song
-			</button>
-			<button class="button is-primary" @click="openModal('importAlbum')">
-				Import album
-			</button>
-			<confirm placement="bottom" @confirm="updateAllSongs()">
+			<div class="button-row">
 				<button
-					class="button is-danger"
-					content="Update all songs"
-					v-tippy
+					v-if="!loadAllSongs"
+					class="button is-primary"
+					@click="loadAll()"
 				>
-					Update all songs
+					Load all sets
 				</button>
-			</confirm>
-			<br />
+				<button
+					class="button is-primary"
+					@click="toggleKeyboardShortcutsHelper"
+					@dblclick="resetKeyboardShortcutsHelper"
+				>
+					Keyboard shortcuts helper
+				</button>
+				<button
+					class="button is-primary"
+					@click="openModal('requestSong')"
+				>
+					Request song
+				</button>
+				<button
+					class="button is-primary"
+					@click="openModal('importAlbum')"
+				>
+					Import album
+				</button>
+				<confirm placement="bottom" @confirm="updateAllSongs()">
+					<button class="button is-danger">Update all songs</button>
+				</confirm>
+			</div>
 			<div>
 				<input
 					type="text"

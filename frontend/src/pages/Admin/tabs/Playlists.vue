@@ -2,38 +2,38 @@
 	<div>
 		<page-metadata title="Admin | Playlists" />
 		<div class="container">
-			<button
-				class="button is-primary"
-				@click="deleteOrphanedStationPlaylists()"
-			>
-				Delete orphaned station playlists
-			</button>
-			<button
-				class="button is-primary"
-				@click="deleteOrphanedGenrePlaylists()"
-			>
-				Delete orphaned genre playlists
-			</button>
-			<button
-				class="button is-primary"
-				@click="requestOrphanedPlaylistSongs()"
-			>
-				Request orphaned playlist songs
-			</button>
-			<button
-				class="button is-primary"
-				@click="clearAndRefillAllStationPlaylists()"
-			>
-				Clear and refill all station playlists
-			</button>
-			<button
-				class="button is-primary"
-				@click="clearAndRefillAllGenrePlaylists()"
-			>
-				Clear and refill all genre playlists
-			</button>
-			<br />
-			<br />
+			<div class="button-row">
+				<button
+					class="button is-primary"
+					@click="deleteOrphanedStationPlaylists()"
+				>
+					Delete orphaned station playlists
+				</button>
+				<button
+					class="button is-primary"
+					@click="deleteOrphanedGenrePlaylists()"
+				>
+					Delete orphaned genre playlists
+				</button>
+				<button
+					class="button is-primary"
+					@click="requestOrphanedPlaylistSongs()"
+				>
+					Request orphaned playlist songs
+				</button>
+				<button
+					class="button is-primary"
+					@click="clearAndRefillAllStationPlaylists()"
+				>
+					Clear and refill all station playlists
+				</button>
+				<button
+					class="button is-primary"
+					@click="clearAndRefillAllGenrePlaylists()"
+				>
+					Clear and refill all genre playlists
+				</button>
+			</div>
 			<table class="table is-striped">
 				<thead>
 					<tr>

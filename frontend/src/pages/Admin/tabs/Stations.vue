@@ -2,11 +2,14 @@
 	<div>
 		<page-metadata title="Admin | Stations" />
 		<div class="container">
-			<button class="button is-primary" @click="clearEveryStationQueue()">
-				Clear every station queue
-			</button>
-			<br />
-			<br />
+			<div class="button-row">
+				<button
+					class="button is-primary"
+					@click="clearEveryStationQueue()"
+				>
+					Clear every station queue
+				</button>
+			</div>
 			<table class="table is-striped">
 				<thead>
 					<tr>

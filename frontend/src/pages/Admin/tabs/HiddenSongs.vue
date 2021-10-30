@@ -10,28 +10,31 @@
 			<input
 				v-model="searchQuery"
 				type="text"
-				class="input"
+				class="input search-songs"
 				placeholder="Search for Songs"
 			/>
-			<button
-				v-if="!loadAllSongs"
-				class="button is-primary"
-				@click="loadAll()"
-			>
-				Load all
-			</button>
-			<button
-				class="button is-primary"
-				@click="toggleKeyboardShortcutsHelper"
-				@dblclick="resetKeyboardShortcutsHelper"
-			>
-				Keyboard shortcuts helper
-			</button>
-			<button class="button is-primary" @click="openModal('requestSong')">
-				Request song
-			</button>
-			<br />
-			<br />
+			<div class="button-row">
+				<button
+					v-if="!loadAllSongs"
+					class="button is-primary"
+					@click="loadAll()"
+				>
+					Load all sets
+				</button>
+				<button
+					class="button is-primary"
+					@click="toggleKeyboardShortcutsHelper"
+					@dblclick="resetKeyboardShortcutsHelper"
+				>
+					Keyboard shortcuts helper
+				</button>
+				<button
+					class="button is-primary"
+					@click="openModal('requestSong')"
+				>
+					Request song
+				</button>
+			</div>
 			<table class="table is-striped">
 				<thead>
 					<tr>
