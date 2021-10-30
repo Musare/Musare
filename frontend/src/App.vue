@@ -675,19 +675,27 @@ a {
 
 .tippy-box[data-theme~="addToPlaylist"] {
 	font-size: 15px;
-	padding: 5px;
+	padding: 0;
 	border: 1px solid var(--light-grey-3);
 	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
 	background-color: var(--white);
 	color: var(--dark-grey);
-	width: 100%;
+	width: 350px;
+
+	.tippy-content {
+		padding: 0;
+	}
 
 	.nav-dropdown-items {
+		max-height: 220px;
+		overflow-y: auto;
+		padding: 10px 10px 0 10px;
+
 		.nav-item {
 			width: 100%;
 			justify-content: flex-start;
 			border: 0;
-			padding: 10px;
+			padding: 8px 4px;
 			font-size: 15.5px;
 			min-height: 36px;
 			background: var(--light-grey);
@@ -699,6 +707,7 @@ a {
 				flex-direction: row;
 				align-items: center;
 				overflow-wrap: anywhere;
+				margin: 0 !important;
 
 				p {
 					margin-left: 10px;
@@ -768,12 +777,17 @@ a {
 	.tippy-content > span {
 		display: flex;
 		flex-direction: column;
-		button {
-			width: 100%;
+
+		button.nav-item {
 			&:not(:last-of-type) {
 				margin-bottom: 10px;
 			}
 		}
+	}
+
+	#create-playlist {
+		margin: 10px 10px 10px 10px;
+		width: unset;
 	}
 }
 

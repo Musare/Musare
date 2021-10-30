@@ -177,21 +177,3 @@ export default {
 	}
 };
 </script>
-
-<style lang="scss" scoped>
-.nav-dropdown-items button .control {
-	margin-bottom: 0 !important;
-}
-
-#create-playlist {
-	margin-top: 10px;
-
-	i {
-		color: #fff;
-	}
-}
-
-.addToPlaylistDropdown {
-	display: flex;
-}
-</style>
