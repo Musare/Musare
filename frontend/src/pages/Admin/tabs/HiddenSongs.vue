@@ -2,17 +2,6 @@
 	<div>
 		<page-metadata title="Admin | Hidden songs" />
 		<div class="container">
-			<p>
-				<span>Sets loaded: {{ setsLoaded }} / {{ maxSets }}</span>
-				<br />
-				<span>Loaded songs: {{ songs.length }}</span>
-			</p>
-			<input
-				v-model="searchQuery"
-				type="text"
-				class="input search-songs"
-				placeholder="Search for Songs"
-			/>
 			<div class="button-row">
 				<button
 					v-if="!loadAllSongs"
@@ -35,6 +24,92 @@
 					Request song
 				</button>
 			</div>
+			<br />
+			<div class="box">
+				<p @click="toggleSearchBox()">
+					Search<i class="material-icons" v-show="searchBoxShown"
+						>expand_more</i
+					>
+					<i class="material-icons" v-show="!searchBoxShown"
+						>expand_less</i
+					>
+				</p>
+				<input
+					v-model="searchQuery"
+					type="text"
+					class="input search-songs"
+					placeholder="Search for Songs"
+					v-show="searchBoxShown"
+				/>
+			</div>
+			<div class="box">
+				<p @click="toggleFilterArtistsBox()">
+					Filter artists<i
+						class="material-icons"
+						v-show="filterArtistBoxShown"
+						>expand_more</i
+					>
+					<i class="material-icons" v-show="!filterArtistBoxShown"
+						>expand_less</i
+					>
+				</p>
+				<input
+					type="text"
+					class="input"
+					placeholder="Filter artist checkboxes"
+					v-model="artistFilterQuery"
+					v-show="filterArtistBoxShown"
+				/>
+				<label
+					v-for="artist in filteredArtists"
+					:key="artist"
+					v-show="filterArtistBoxShown"
+				>
+					<input
+						type="checkbox"
+						:checked="artistFilterSelected.indexOf(artist) !== -1"
+						@click="toggleArtistSelected(artist)"
+					/>
+					<span>{{ artist }}</span>
+				</label>
+			</div>
+			<div class="box">
+				<p @click="toggleFilterGenresBox()">
+					Filter genres<i
+						class="material-icons"
+						v-show="filterGenreBoxShown"
+						>expand_more</i
+					>
+					<i class="material-icons" v-show="!filterGenreBoxShown"
+						>expand_less</i
+					>
+				</p>
+				<input
+					type="text"
+					class="input"
+					placeholder="Filter genre checkboxes"
+					v-model="genreFilterQuery"
+					v-show="filterGenreBoxShown"
+				/>
+				<label
+					v-for="genre in filteredGenres"
+					:key="genre"
+					v-show="filterGenreBoxShown"
+				>
+					<input
+						type="checkbox"
+						:checked="genreFilterSelected.indexOf(genre) !== -1"
+						@click="toggleGenreSelected(genre)"
+					/>
+					<span>{{ genre }}</span>
+				</label>
+			</div>
+			<p>
+				<span>Sets loaded: {{ setsLoaded }} / {{ maxSets }}</span>
+				<br />
+				<span>Loaded songs: {{ songs.length }}</span>
+			</p>
+			<br />
 			<table class="table is-striped">
 				<thead>
 					<tr>
@@ -214,17 +289,91 @@ export default {
 	mixins: [ScrollAndFetchHandler],
 	data() {
 		return {
-			searchQuery: ""
+			searchQuery: "",
+			artistFilterQuery: "",
+			artistFilterSelected: [],
+			genreFilterQuery: "",
+			genreFilterSelected: [],
+			searchBoxShown: true,
+			filterArtistBoxShown: false,
+			filterGenreBoxShown: false
 		};
 	},
 	computed: {
 		filteredSongs() {
 			return this.songs.filter(
 				song =>
-					JSON.stringify(Object.values(song)).indexOf(
-						this.searchQuery
-					) !== -1
+					JSON.stringify(Object.values(song))
+						.toLowerCase()
+						.indexOf(this.searchQuery.toLowerCase()) !== -1 &&
+					(this.artistFilterSelected.length === 0 ||
+						song.artists.some(
+							artist =>
+								this.artistFilterSelected
+									.map(artistFilterSelected =>
+										artistFilterSelected.toLowerCase()
+									)
+									.indexOf(artist.toLowerCase()) !== -1
+						)) &&
+					(this.genreFilterSelected.length === 0 ||
+						song.genres.some(
+							genre =>
+								this.genreFilterSelected
+									.map(genreFilterSelected =>
+										genreFilterSelected.toLowerCase()
+									)
+									.indexOf(genre.toLowerCase()) !== -1
+						))
 			);
+		},
+		artists() {
+			const artists = [];
+			this.songs.forEach(song => {
+				song.artists.forEach(artist => {
+					if (artists.indexOf(artist) === -1) artists.push(artist);
+				});
+			});
+			return artists.sort();
+		},
+		filteredArtists() {
+			return this.artists
+				.filter(
+					artist =>
+						this.artistFilterSelected.indexOf(artist) !== -1 ||
+						artist
+							.toLowerCase()
+							.indexOf(this.artistFilterQuery.toLowerCase()) !==
+							-1
+				)
+				.sort(
+					(a, b) =>
+						(this.artistFilterSelected.indexOf(a) === -1 ? 1 : 0) -
+						(this.artistFilterSelected.indexOf(b) === -1 ? 1 : 0)
+				);
+		},
+		genres() {
+			const genres = [];
+			this.songs.forEach(song => {
+				song.genres.forEach(genre => {
+					if (genres.indexOf(genre) === -1) genres.push(genre);
+				});
+			});
+			return genres.sort();
+		},
+		filteredGenres() {
+			return this.genres
+				.filter(
+					genre =>
+						this.genreFilterSelected.indexOf(genre) !== -1 ||
+						genre
+							.toLowerCase()
+							.indexOf(this.genreFilterQuery.toLowerCase()) !== -1
+				)
+				.sort(
+					(a, b) =>
+						(this.genreFilterSelected.indexOf(a) === -1 ? 1 : 0) -
+						(this.genreFilterSelected.indexOf(b) === -1 ? 1 : 0)
+				);
 		},
 		...mapState("modalVisibility", {
 			modals: state => state.modals
@@ -294,6 +443,33 @@ export default {
 			if (event.srcElement.nextElementSibling)
 				event.srcElement.nextElementSibling.focus();
 		},
+		toggleArtistSelected(artist) {
+			if (this.artistFilterSelected.indexOf(artist) === -1)
+				this.artistFilterSelected.push(artist);
+			else
+				this.artistFilterSelected.splice(
+					this.artistFilterSelected.indexOf(artist),
+					1
+				);
+		},
+		toggleGenreSelected(genre) {
+			if (this.genreFilterSelected.indexOf(genre) === -1)
+				this.genreFilterSelected.push(genre);
+			else
+				this.genreFilterSelected.splice(
+					this.genreFilterSelected.indexOf(genre),
+					1
+				);
+		},
+		toggleSearchBox() {
+			this.searchBoxShown = !this.searchBoxShown;
+		},
+		toggleFilterArtistsBox() {
+			this.filterArtistBoxShown = !this.filterArtistBoxShown;
+		},
+		toggleFilterGenresBox() {
+			this.filterGenreBoxShown = !this.filterGenreBoxShown;
+		},
 		toggleKeyboardShortcutsHelper() {
 			this.$refs.keyboardShortcutsHelper.toggleBox();
 		},
@@ -332,6 +508,10 @@ export default {
 
 <style lang="scss" scoped>
 .night-mode {
+	.box {
+		background-color: var(--dark-grey-3) !important;
+	}
+
 	.table {
 		color: var(--light-grey-2);
 		background-color: var(--dark-grey-3);
@@ -353,6 +533,39 @@ export default {
 
 		strong {
 			color: var(--light-grey-2);
+		}
+	}
+}
+
+.box {
+	background-color: var(--light-grey);
+	border-radius: 5px;
+	padding: 8px 16px;
+
+	p {
+		text-align: center;
+		font-size: 24px;
+		user-select: none;
+		cursor: pointer;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	input[type="text"] {
+		margin-top: 8px;
+		margin-bottom: 8px;
+	}
+
+	label {
+		margin-right: 8px;
+		display: inline-flex;
+		align-items: center;
+
+		input[type="checkbox"] {
+			margin-right: 2px;
+			height: 16px;
+			width: 16px;
 		}
 	}
 }
