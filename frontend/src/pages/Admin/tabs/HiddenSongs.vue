@@ -37,7 +37,7 @@
 				<input
 					v-model="searchQuery"
 					type="text"
-					class="input search-songs"
+					class="input"
 					placeholder="Search for Songs"
 					v-show="searchBoxShown"
 				/>

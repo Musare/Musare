@@ -229,9 +229,6 @@ export default {
 
 <style lang="scss">
 .main-container .container {
-	.search-songs {
-		margin-bottom: 5px;
-	}
 	.button-row {
 		display: flex;
 		flex-direction: row;
