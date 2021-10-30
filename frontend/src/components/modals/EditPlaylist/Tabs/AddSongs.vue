@@ -215,13 +215,8 @@ export default {
 <style lang="scss" scoped>
 .youtube-tab {
 	.song-query-results {
-		padding: 10px;
 		margin-top: 10px;
-		border: 1px solid var(--light-grey-3);
-		border-radius: 3px;
 		max-width: 565px;
-		max-height: 500px;
-		overflow: auto;
 
 		.search-query-item:not(:last-of-type) {
 			margin-bottom: 10px;
