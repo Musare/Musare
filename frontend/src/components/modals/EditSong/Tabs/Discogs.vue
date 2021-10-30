@@ -312,6 +312,10 @@ export default {
 	strong {
 		color: var(--light-grey-2);
 	}
+
+	.discogs-tab .top-container .right-container .bottom-row img {
+		filter: invert(100%);
+	}
 }
 
 .discogs-tab {

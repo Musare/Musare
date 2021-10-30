@@ -567,10 +567,7 @@ export default {
 	.search-discogs-album,
 	.discogs-album,
 	.import-youtube-playlist,
-	.track-boxes {
-		background-color: var(--dark-grey-3) !important;
-	}
-
+	.track-boxes,
 	.api-result {
 		background-color: var(--dark-grey-3) !important;
 	}
@@ -580,6 +577,11 @@ export default {
 	.discogs-album .tracks .track:hover,
 	.discogs-album .tracks .track:focus {
 		background-color: var(--dark-grey-2) !important;
+	}
+
+	.api-result .bottom-row img,
+	.discogs-album .bottom-row img {
+		filter: invert(100%);
 	}
 
 	.label,
