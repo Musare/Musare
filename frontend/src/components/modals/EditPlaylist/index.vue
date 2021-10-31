@@ -303,6 +303,7 @@ export default {
 			}
 		},
 		...mapState({
+			loggedIn: state => state.user.auth.loggedIn,
 			userId: state => state.user.auth.userId,
 			userRole: state => state.user.auth.role
 		}),
