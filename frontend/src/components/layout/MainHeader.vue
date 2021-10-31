@@ -77,8 +77,6 @@
 import Toast from "toasters";
 import { mapState, mapGetters, mapActions } from "vuex";
 
-import ws from "@/ws";
-
 export default {
 	props: {
 		hideLogo: { type: Boolean, default: false },
@@ -101,7 +99,8 @@ export default {
 			modals: state => state.modalVisibility.modals.header,
 			role: state => state.user.auth.role,
 			loggedIn: state => state.user.auth.loggedIn,
-			username: state => state.user.auth.username
+			username: state => state.user.auth.username,
+			nightmode: state => state.user.preferences.nightmode
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -124,30 +123,20 @@ export default {
 			}
 
 			this.changeNightmode(this.localNightmode);
+		},
+		nightmode(nightmode) {
+			if (this.localNightmode !== nightmode)
+				this.localNightmode = nightmode;
 		}
 	},
 	async mounted() {
 		this.localNightmode = JSON.parse(localStorage.getItem("nightmode"));
 		if (this.localNightmode === null) this.localNightmode = false;
 
-		ws.onConnect(this.init);
-
-		this.socket.on("keep.event:user.preferences.updated", res => {
-			if (res.data.preferences.nightmode !== undefined)
-				this.localNightmode = res.data.preferences.nightmode;
-		});
-
 		this.frontendDomain = await lofig.get("frontendDomain");
 		this.siteSettings = await lofig.get("siteSettings");
 	},
-
 	methods: {
-		init() {
-			this.socket.dispatch("users.getPreferences", res => {
-				if (res.status === "success")
-					this.localNightmode = res.data.preferences.nightmode;
-			});
-		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("user/auth", ["logout"]),
 		...mapActions("user/preferences", ["changeNightmode"])
