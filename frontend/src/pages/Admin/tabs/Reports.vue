@@ -195,7 +195,7 @@ export default {
 }
 
 #options-column {
-	a:not(:last-of-type) {
+	button:not(:last-of-type) {
 		margin-right: 5px;
 	}
 }
