@@ -23,14 +23,13 @@
 						/>
 					</p>
 					<p class="control">
-						<a
+						<button
 							class="button is-info"
 							@click.prevent="searchForSongs()"
-							href="#"
-							><i class="material-icons icon-with-button"
-								>search</i
-							>Search</a
 						>
+							<i class="material-icons icon-with-button">search</i
+							>Search
+						</button>
 					</p>
 				</div>
 
@@ -73,13 +72,12 @@
 						</template>
 					</search-query-item>
 
-					<a
+					<button
 						class="button is-default load-more-button"
 						@click.prevent="loadMoreSongs()"
-						href="#"
 					>
 						Load more...
-					</a>
+					</button>
 				</div>
 
 				<!-- Import a playlist from youtube -->
@@ -118,14 +116,14 @@
 									</option>
 								</select>
 							</span>
-							<a
+							<button
 								class="button is-info"
 								@click.prevent="importPlaylist()"
-								href="#"
-								><i class="material-icons icon-with-button"
-									>publish</i
-								>Import</a
 							>
+								<i class="material-icons icon-with-button"
+									>publish</i
+								>Import
+							</button>
 						</p>
 					</div>
 				</div>

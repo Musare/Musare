@@ -90,7 +90,7 @@
 				</i>
 				Edit Song
 			</a>
-			<a class="button is-success" href="#" @click="resolve()">
+			<button class="button is-success" @click="resolve()">
 				<i
 					class="material-icons icon-with-button"
 					content="Resolve"
@@ -99,7 +99,7 @@
 					done_all
 				</i>
 				Resolve
-			</a>
+			</button>
 		</template>
 	</modal>
 </template>

@@ -20,13 +20,12 @@
 						<option :value="true">Import only music</option>
 					</select>
 				</span>
-				<a
+				<button
 					class="button is-info"
 					@click.prevent="importPlaylist()"
-					href="#"
-					><i class="material-icons icon-with-button">publish</i
-					>Import</a
 				>
+					<i class="material-icons icon-with-button">publish</i>Import
+				</button>
 			</p>
 		</div>
 	</div>

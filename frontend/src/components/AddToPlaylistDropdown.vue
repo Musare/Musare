@@ -25,7 +25,6 @@
 			<div class="nav-dropdown-items" v-if="playlists.length > 0">
 				<button
 					class="nav-item"
-					href="#"
 					v-for="(playlist, index) in playlists"
 					:key="playlist._id"
 					@click.prevent="toggleSongInPlaylist(index)"

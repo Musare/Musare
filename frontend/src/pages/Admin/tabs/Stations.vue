@@ -118,12 +118,12 @@
 										placeholder="Genre"
 										@keyup.enter="addGenre()"
 									/>
-									<a
+									<button
 										class="button is-info"
-										href="#"
 										@click="addGenre()"
-										>Add genre</a
 									>
+										Add genre
+									</button>
 								</p>
 								<span
 									v-for="(genre, index) in newStation.genres"
@@ -146,12 +146,12 @@
 										placeholder="Blacklisted Genre"
 										@keyup.enter="addBlacklistedGenre()"
 									/>
-									<a
+									<button
 										class="button is-info"
-										href="#"
 										@click="addBlacklistedGenre()"
-										>Add blacklisted genre</a
 									>
+										Add blacklisted genre
+									</button>
 								</p>
 								<span
 									v-for="(
@@ -171,10 +171,7 @@
 					</div>
 				</div>
 				<footer class="card-footer">
-					<a
-						class="card-footer-item"
-						href="#"
-						@click="createStation()"
+					<a class="card-footer-item" @click="createStation()"
 						>Create</a
 					>
 				</footer>

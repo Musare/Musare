@@ -56,7 +56,6 @@
 						<p class="content-box-optional-helper">
 							<router-link
 								id="forgot-password"
-								href="#"
 								to="/reset_password"
 								@click="closeLoginModal()"
 							>
@@ -83,12 +82,12 @@
 
 				<footer class="modal-card-foot">
 					<div id="actions">
-						<a
+						<button
 							class="button is-primary"
-							href="#"
 							@click="submitModal()"
-							>Login</a
 						>
+							Login
+						</button>
 						<a
 							class="button is-github"
 							:href="apiDomain + '/auth/github/authorize'"
@@ -108,7 +107,7 @@
 						<router-link to="/register" v-if="isPage">
 							Don't have an account?
 						</router-link>
-						<a v-else href="#" @click="changeToRegisterModal()">
+						<a v-else @click="changeToRegisterModal()">
 							Don't have an account?
 						</a>
 					</p>

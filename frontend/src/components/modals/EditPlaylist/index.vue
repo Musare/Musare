@@ -210,7 +210,7 @@
 			</div>
 		</template>
 		<template #footer>
-			<a
+			<button
 				class="button is-default"
 				v-if="
 					userId === playlist.createdBy ||
@@ -218,10 +218,9 @@
 					playlist.privacy === 'public'
 				"
 				@click="downloadPlaylist()"
-				href="#"
 			>
 				Download Playlist
-			</a>
+			</button>
 			<div class="right">
 				<confirm
 					v-if="playlist.type === 'station'"

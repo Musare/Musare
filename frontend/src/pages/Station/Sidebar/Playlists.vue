@@ -88,14 +88,13 @@
 		<p v-else class="nothing-here-text scrollable-list">
 			No Playlists found
 		</p>
-		<a
+		<button
 			class="button create-playlist tab-actionable-button"
-			href="#"
 			@click="openModal('createPlaylist')"
 		>
 			<i class="material-icons icon-with-button">create</i>
 			<span> Create Playlist </span>
-		</a>
+		</button>
 	</div>
 </template>
 

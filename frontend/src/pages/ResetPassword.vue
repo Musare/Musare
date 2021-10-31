@@ -31,9 +31,7 @@
 							</p>
 
 							<p class="content-box-optional-helper">
-								<a href="#" @click="step = 2"
-									>Already have a code?</a
-								>
+								<a @click="step = 2">Already have a code?</a>
 							</p>
 
 							<div class="content-box-inputs">
@@ -53,18 +51,18 @@
 										/>
 									</p>
 									<p class="control">
-										<a
+										<button
 											class="button is-info"
-											href="#"
 											@click="submitEmail()"
-											><i
+										>
+											<i
 												class="
 													material-icons
 													icon-with-button
 												"
 												>mail</i
-											>Request</a
-										>
+											>Request
+										</button>
 									</p>
 								</div>
 								<transition name="fadein-helpbox">
@@ -92,7 +90,6 @@
 
 							<p class="content-box-optional-helper">
 								<a
-									href="#"
 									@click="
 										email.value ? submitEmail() : (step = 1)
 									"
@@ -115,18 +112,18 @@
 										/>
 									</p>
 									<p class="control">
-										<a
+										<button
 											class="button is-info"
-											href="#"
 											@click="verifyCode()"
-											><i
+										>
+											<i
 												class="
 													material-icons
 													icon-with-button
 												"
 												>vpn_key</i
-											>Verify</a
-										>
+											>Verify
+										</button>
 									</p>
 								</div>
 							</div>
@@ -228,14 +225,13 @@
 									/>
 								</transition>
 
-								<a
+								<button
 									id="change-password-button"
 									class="button is-success"
-									href="#"
 									@click="changePassword()"
 								>
-									Change password</a
-								>
+									Change password
+								</button>
 							</div>
 						</div>
 
@@ -248,10 +244,7 @@
 								>check_circle</i
 							>
 							<h2>Password successfully {{ mode }}</h2>
-							<router-link
-								class="button is-dark"
-								href="#"
-								to="/settings"
+							<router-link class="button is-dark" to="/settings"
 								><i class="material-icons icon-with-button"
 									>undo</i
 								>Return to Settings</router-link
@@ -268,10 +261,7 @@
 								Password {{ mode }} failed, please try again
 								later
 							</h2>
-							<router-link
-								class="button is-dark"
-								href="#"
-								to="/settings"
+							<router-link class="button is-dark" to="/settings"
 								><i class="material-icons icon-with-button"
 									>undo</i
 								>Return to Settings</router-link

@@ -90,7 +90,7 @@
 
 			<hr class="section-horizontal-rule" />
 
-			<router-link to="/set_password" class="button is-default" href="#"
+			<router-link to="/set_password" class="button is-default"
 				><i class="material-icons icon-with-button">create</i>Set
 				Password
 			</router-link>

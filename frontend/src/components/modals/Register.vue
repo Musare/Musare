@@ -115,12 +115,12 @@
 				</section>
 				<footer class="modal-card-foot">
 					<div id="actions">
-						<a
+						<button
 							class="button is-primary"
-							href="#"
 							@click="submitModal()"
-							>Register</a
 						>
+							Register
+						</button>
 						<a
 							class="button is-github"
 							:href="apiDomain + '/auth/github/authorize'"
@@ -140,7 +140,7 @@
 						<router-link to="/login" v-if="isPage">
 							Already have an account?
 						</router-link>
-						<a v-else href="#" @click="changeToLoginModal()">
+						<a v-else @click="changeToLoginModal()">
 							Already have an account?
 						</a>
 					</p>

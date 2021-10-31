@@ -95,9 +95,7 @@
 					</div>
 				</div>
 				<footer class="card-footer">
-					<a class="card-footer-item" @click="banIP()" href="#"
-						>Ban IP</a
-					>
+					<a class="card-footer-item" @click="banIP()">Ban IP</a>
 				</footer>
 			</div>
 		</div>

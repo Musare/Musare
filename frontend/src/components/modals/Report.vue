@@ -187,15 +187,11 @@
 				</div>
 			</template>
 			<template #footer>
-				<a class="button is-success" @click="create()" href="#">
+				<button class="button is-success" @click="create()">
 					<i class="material-icons save-changes">done</i>
 					<span>&nbsp;Create</span>
-				</a>
-				<a
-					class="button is-danger"
-					href="#"
-					@click="closeModal('report')"
-				>
+				</button>
+				<a class="button is-danger" @click="closeModal('report')">
 					<span>&nbsp;Cancel</span>
 				</a>
 			</template>

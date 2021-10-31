@@ -43,15 +43,11 @@
 				<router-link class="nav-item" to="/settings"
 					>Settings</router-link
 				>
-				<a class="nav-item" href="#" @click="logout()">Logout</a>
+				<a class="nav-item" @click="logout()">Logout</a>
 			</span>
 			<span v-if="!loggedIn && !hideLoggedOut" class="grouped">
-				<a class="nav-item" href="#" @click="openModal('login')"
-					>Login</a
-				>
-				<a class="nav-item" href="#" @click="openModal('register')"
-					>Register</a
-				>
+				<a class="nav-item" @click="openModal('login')">Login</a>
+				<a class="nav-item" @click="openModal('register')">Register</a>
 			</span>
 			<div class="nav-item" id="nightmode-toggle">
 				<p class="is-expanded checkbox-control">

@@ -29,7 +29,7 @@
 export default {
 	data() {
 		return {
-			github: "#"
+			github: ""
 		};
 	},
 	async mounted() {

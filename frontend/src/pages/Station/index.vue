@@ -80,7 +80,7 @@
 									>
 										check_circle
 									</i>
-									<a href="#">
+									<a>
 										<!-- Favorite Station Button -->
 										<i
 											v-if="

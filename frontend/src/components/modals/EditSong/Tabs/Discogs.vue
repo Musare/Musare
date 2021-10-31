@@ -57,13 +57,9 @@
 				/>
 			</p>
 			<p class="control">
-				<a
-					class="button is-info"
-					@click="searchDiscogsForPage(1)"
-					href="#"
-					><i class="material-icons icon-with-button">search</i
-					>Search</a
-				>
+				<button class="button is-info" @click="searchDiscogsForPage(1)">
+					<i class="material-icons icon-with-button">search</i>Search
+				</button>
 			</p>
 		</div>
 

@@ -48,9 +48,8 @@
 							</ul>
 						</td>
 						<td id="options-column">
-							<a
+							<button
 								class="button is-primary"
-								href="#"
 								@click="view(report._id)"
 								content="Expand"
 								v-tippy
@@ -59,10 +58,9 @@
 									open_in_full
 								</i>
 								Expand
-							</a>
-							<a
+							</button>
+							<button
 								class="button is-success"
-								href="#"
 								@click="resolve(report._id)"
 								content="Resolve"
 								v-tippy
@@ -71,7 +69,7 @@
 									done_all
 								</i>
 								Resolve
-							</a>
+							</button>
 						</td>
 					</tr>
 				</tbody>
