@@ -62,11 +62,7 @@
 			</table>
 		</div>
 		<div slot="footer">
-			<a
-				class="button is-primary"
-				href="#"
-				@click="$parent.resolve(report._id)"
-			>
+			<a class="button is-primary" href="#" @click="resolve(report._id)">
 				<span>Resolve</span>
 			</a>
 			<a
@@ -95,6 +91,7 @@
 <script>
 import { mapActions, mapState } from "vuex";
 import { formatDistance } from "date-fns";
+import Toast from "toasters";
 
 import UserIdToUsername from "../UserIdToUsername.vue";
 import Modal from "./Modal.vue";
@@ -112,6 +109,20 @@ export default {
 	},
 	methods: {
 		formatDistance,
+		resolve(reportId) {
+			return this.resolveReport(reportId)
+				.then(res => {
+					if (res.status === "success")
+						this.closeModal({
+							sector: "admin",
+							modal: "viewReport"
+						});
+				})
+				.catch(
+					err => new Toast({ content: err.message, timeout: 5000 })
+				);
+		},
+		...mapActions("admin/reports", ["resolveReport"]),
 		...mapActions("modals", ["closeModal"])
 	},
 	components: { Modal, UserIdToUsername }

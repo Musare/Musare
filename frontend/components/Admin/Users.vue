@@ -88,7 +88,15 @@ export default {
 		},
 		init() {
 			this.socket.emit("users.index", result => {
-				if (result.status === "success") this.users = result.data;
+				if (result.status === "success") {
+					this.users = result.data;
+					if (this.$route.query.userId) {
+						const user = this.users.find(
+							user => user._id === this.$route.query.userId
+						);
+						if (user) this.edit(user);
+					}
+				}
 			});
 			this.socket.emit("apis.joinAdminRoom", "users", () => {});
 		},
@@ -107,6 +115,32 @@ export default {
 
 <style lang="scss" scoped>
 @import "styles/global.scss";
+
+.night-mode {
+	.table {
+		color: #ddd;
+		background-color: #222;
+
+		thead tr {
+			background: $night-mode-secondary;
+			td {
+				color: #fff;
+			}
+		}
+
+		tbody tr:hover {
+			background-color: #111 !important;
+		}
+
+		tbody tr:nth-child(even) {
+			background-color: #444;
+		}
+
+		strong {
+			color: #ddd;
+		}
+	}
+}
 
 body {
 	font-family: "Roboto", sans-serif;

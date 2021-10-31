@@ -12,7 +12,9 @@
     "bundle-analyse": "webpack --config webpack.prod.js --profile --json > bundle-stats.json && npx webpack-bundle-analyzer bundle-stats.json --mode static --report bundle-report.html --no-open",
     "dev": "webpack-dev-server --config webpack.dev.js",
     "prod": "webpack --config webpack.prod.js",
-    "test": ""
+    "test": "",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "devDependencies": {
     "@babel/core": "^7.5.4",
@@ -30,17 +32,16 @@
     "eslint-plugin-prettier": "^3.1.0",
     "eslint-plugin-vue": "^5.2.3",
     "fetch": "^1.1.0",
-    "node-sass": "^4.12.0",
+    "node-sass": "^4.14.1",
     "prettier": "1.18.2",
     "sass-loader": "^7.1.0",
-    "snyk": "^1.208.0",
     "vue-hot-reload-api": "^2.3.3",
     "vue-style-loader": "^4.1.2",
     "vue-template-compiler": "^2.6.10",
     "webpack": "^4.35.3",
     "webpack-bundle-analyzer": "^3.4.1",
     "webpack-cli": "^3.3.5",
-    "webpack-dev-server": "^3.7.2"
+    "webpack-dev-server": "^3.11.0"
   },
   "dependencies": {
     "@babel/runtime": "^7.5.4",
@@ -50,12 +51,14 @@
     "date-fns": "^2.0.1",
     "eslint-config-airbnb-base": "^13.2.0",
     "html-webpack-plugin": "^3.2.0",
-    "toasters": "2.0.1",
+    "snyk": "^1.321.0",
+    "toasters": "^2.1.0",
     "vue": "^2.6.10",
     "vue-loader": "^15.7.0",
     "vue-router": "^3.0.7",
     "vuex": "^3.1.1",
     "webpack-md5-hash": "0.0.6",
     "webpack-merge": "^4.2.1"
-  }
+  },
+  "snyk": true
 }

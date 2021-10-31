@@ -1,40 +1,45 @@
-const coreClass = require("../core");
+const CoreClass = require("../core.js");
 
-module.exports = class extends coreClass {
-	constructor(name, moduleManager) {
-		super(name, moduleManager);
+class APIModule extends CoreClass {
+    constructor() {
+        super("api");
+    }
 
-		this.dependsOn = ["app", "db", "cache"];
-	}
+    initialize() {
+        return new Promise((resolve, reject) => {
+            const app = this.moduleManager.modules["app"];
 
-	initialize() {
-		return new Promise((resolve, reject) => {
-			this.setStage(1);
+            const actions = require("./actions");
 
-			this.app = this.moduleManager.modules["app"];
+            app.runJob("GET_APP", {})
+                .then((response) => {
+                    response.app.get("/", (req, res) => {
+                        res.json({
+                            status: "success",
+                            message: "Coming Soon",
+                        });
+                    });
 
-			this.app.app.get('/', (req, res) => {
-				res.json({
-					status: 'success',
-					message: 'Coming Soon'
-				});
-			});
+                    // Object.keys(actions).forEach(namespace => {
+                    //     Object.keys(actions[namespace]).forEach(action => {
+                    //         let name = `/${namespace}/${action}`;
 
-			const actions = require("../logic/actions");
-	
-			Object.keys(actions).forEach((namespace) => {
-				Object.keys(actions[namespace]).forEach((action) => {
-					let name = `/${namespace}/${action}`;
-	
-					this.app.app.get(name, (req, res) => {
-						actions[namespace][action](null, (result) => {
-							if (typeof cb === 'function') return res.json(result);
-						});
-					});
-				})
-			});
+                    //         response.app.get(name, (req, res) => {
+                    //             actions[namespace][action](null, result => {
+                    //                 if (typeof cb === "function")
+                    //                     return res.json(result);
+                    //             });
+                    //         });
+                    //     });
+                    // });
 
-			resolve();
-		});
-	}
+                    resolve();
+                })
+                .catch((err) => {
+                    reject(err);
+                });
+        });
+    }
 }
+
+module.exports = new APIModule();

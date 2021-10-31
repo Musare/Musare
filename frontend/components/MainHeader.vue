@@ -109,7 +109,19 @@ export default {
 <style lang="scss" scoped>
 @import "styles/global.scss";
 
+.night-mode {
+	.nav-left,
+	.nav-right {
+		background-color: #222;
+	}
+
+	.nav-item {
+		color: #ddd !important;
+	}
+}
+
 .nav {
+	flex-shrink: 0;
 	background-color: $primary-color;
 	height: 64px;
 	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;

@@ -194,7 +194,6 @@ export default {
 	components: { EditStation, UserIdToUsername },
 	data() {
 		return {
-			stations: [],
 			newStation: {
 				genres: [],
 				blacklistedGenres: []
@@ -202,6 +201,9 @@ export default {
 		};
 	},
 	computed: {
+		...mapState("admin/stations", {
+			stations: state => state.stations
+		}),
 		...mapState("modals", {
 			modals: state => state.modals.station
 		})
@@ -329,24 +331,28 @@ export default {
 		},
 		init() {
 			this.socket.emit("stations.index", data => {
-				this.stations = data.stations;
+				this.loadStations(data.stations);
 			});
 			this.socket.emit("apis.joinAdminRoom", "stations", () => {});
 		},
 		...mapActions("modals", ["openModal"]),
-		...mapActions("admin/stations", ["editStation"])
+		...mapActions("admin/stations", [
+			"editStation",
+			"loadStations",
+			"stationRemoved",
+			"stationAdded"
+		])
 	},
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
 			if (this.socket.connected) this.init();
+
 			this.socket.on("event:admin.station.added", station => {
-				this.stations.push(station);
+				this.stationAdded(station);
 			});
 			this.socket.on("event:admin.station.removed", stationId => {
-				this.stations = this.stations.filter(station => {
-					return station._id !== stationId;
-				});
+				this.stationRemoved(stationId);
 			});
 			io.onConnect(() => {
 				this.init();
@@ -358,6 +364,45 @@ export default {
 
 <style lang="scss" scoped>
 @import "styles/global.scss";
+
+.night-mode {
+	.table {
+		color: #ddd;
+		background-color: #222;
+
+		thead tr {
+			background: $night-mode-secondary;
+			td {
+				color: #fff;
+			}
+		}
+
+		tbody tr:hover {
+			background-color: #111 !important;
+		}
+
+		tbody tr:nth-child(even) {
+			background-color: #444;
+		}
+
+		strong {
+			color: #ddd;
+		}
+	}
+
+	.card {
+		background: #222;
+
+		.card-header {
+			box-shadow: 0 1px 2px rgba(10, 10, 10, 0.8);
+		}
+
+		p,
+		.label {
+			color: #ddd;
+		}
+	}
+}
 
 .tag {
 	margin-top: 5px;

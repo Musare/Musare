@@ -33,7 +33,10 @@ export default {
 										cookie.domain
 									}; ${secure}path=/`;
 
-									return resolve({ status: "success" });
+									return resolve({
+										status: "success",
+										message: "Account registered!"
+									});
 								});
 							}
 							return reject(new Error("You must login"));
@@ -77,15 +80,15 @@ export default {
 	logout() {
 		return new Promise((resolve, reject) => {
 			io.getSocket(socket => {
-				socket.emit("users.logout", result => {
-					if (result.status === "success") {
+				socket.emit("users.logout", res => {
+					if (res.status === "success") {
 						return lofig.get("cookie").then(cookie => {
 							document.cookie = `${cookie.SIDname}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
 							return window.location.reload();
 						});
 					}
-					new Toast({ content: result.message, timeout: 4000 });
-					return reject(new Error(result.message));
+					new Toast({ content: res.message, timeout: 4000 });
+					return reject(new Error(res.message));
 				});
 			});
 		});

@@ -129,23 +129,52 @@ export default {
 			this.openModal({ sector: "admin", modal: "viewReport" });
 		},
 		resolve(reportId) {
-			this.socket.emit("reports.resolve", reportId, res => {
-				new Toast({ content: res.message, timeout: 3000 });
-				if (res.status === "success" && this.modals.viewReport)
-					this.closeModal({
-						sector: "admin",
-						modal: "viewReport"
-					});
-			});
+			return this.resolveReport(reportId)
+				.then(res => {
+					if (res.status === "success" && this.modals.viewReport)
+						this.closeModal({
+							sector: "admin",
+							modal: "viewReport"
+						});
+				})
+				.catch(
+					err => new Toast({ content: err.message, timeout: 5000 })
+				);
 		},
 		...mapActions("modals", ["openModal", "closeModal"]),
-		...mapActions("admin/reports", ["viewReport"])
+		...mapActions("admin/reports", ["viewReport", "resolveReport"])
 	}
 };
 </script>
 
 <style lang="scss" scoped>
 @import "styles/global.scss";
+
+.night-mode {
+	.table {
+		color: #ddd;
+		background-color: #222;
+
+		thead tr {
+			background: $night-mode-secondary;
+			td {
+				color: #fff;
+			}
+		}
+
+		tbody tr:hover {
+			background-color: #111 !important;
+		}
+
+		tbody tr:nth-child(even) {
+			background-color: #444;
+		}
+
+		strong {
+			color: #ddd;
+		}
+	}
+}
 
 .tag:not(:last-child) {
 	margin-right: 5px;

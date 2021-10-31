@@ -28,19 +28,15 @@
 					</div>
 				</div>
 				<div class="media-right">
-					{{ $parent.formatTime(currentSong.duration) }}
+					{{ utils.formatTime(currentSong.duration) }}
 				</div>
 			</article>
 			<p v-if="noSong" class="center">
 				There is currently no song playing.
 			</p>
+			<hr v-if="noSong" />
 
-			<article
-				v-else
-				v-for="(song, index) in songsList"
-				:key="index"
-				class="media"
-			>
+			<article v-for="song in songsList" :key="song.songId" class="media">
 				<div class="media-content">
 					<div
 						class="content"
@@ -74,7 +70,7 @@
 					</div>
 				</div>
 				<div class="media-right">
-					{{ $parent.formatTime(song.duration) }}
+					{{ utils.formatTime(song.duration) }}
 				</div>
 			</article>
 			<div
@@ -127,14 +123,16 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
-
 import Toast from "toasters";
+
+import utils from "../../js/utils";
 
 import UserIdToUsername from "../UserIdToUsername.vue";
 
 export default {
 	data() {
 		return {
+			utils,
 			dismissedWarning: false
 		};
 	},
@@ -185,6 +183,20 @@ export default {
 
 <style lang="scss" scoped>
 @import "styles/global.scss";
+
+.night-mode {
+	.sidebar {
+		background-color: $night-mode-secondary;
+
+		.title {
+			color: #fff;
+		}
+
+		* {
+			color: #ddd;
+		}
+	}
+}
 
 .sidebar {
 	position: fixed;

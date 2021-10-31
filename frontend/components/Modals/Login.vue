@@ -99,7 +99,7 @@ export default {
 				password: this.password
 			})
 				.then(res => {
-					if (res.status === "success") window.location.reload();
+					if (res.status === "success") window.location.href = "/";
 				})
 				.catch(
 					err => new Toast({ content: err.message, timeout: 5000 })
@@ -125,6 +125,20 @@ export default {
 
 <style lang="scss" scoped>
 @import "styles/global.scss";
+
+.night-mode {
+	.modal-card,
+	.modal-card-head,
+	.modal-card-body,
+	.modal-card-foot {
+		background-color: $night-mode-secondary;
+	}
+
+	.label,
+	p {
+		color: #ddd;
+	}
+}
 
 .button.is-github {
 	background-color: $dark-grey-2;

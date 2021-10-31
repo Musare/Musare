@@ -4,6 +4,7 @@ module.exports = {
 		az09_: /^[a-z0-9_]+$/,
 		emailSimple: /^[\x00-\x7F]+@[a-z0-9]+\.[a-z0-9]+(\.[a-z0-9]+)?$/,
 		ascii: /^[\x00-\x7F]+$/,
+		password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]/,
 		custom: regex => {
 			return new RegExp(`^[${regex}]+$`);
 		}

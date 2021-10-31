@@ -76,11 +76,8 @@ const modules = {
 
 					return auth
 						.register(user)
-						.then(() => {
-							return resolve({
-								status: "success",
-								message: "Account registered!"
-							});
+						.then(res => {
+							return resolve(res);
 						})
 						.catch(err => {
 							return reject(new Error(err.message));
@@ -214,6 +211,22 @@ const modules = {
 		mutations: {
 			editPlaylist(state, id) {
 				state.editing = id;
+			}
+		}
+	},
+	preferences: {
+		namespaced: true,
+		state: {
+			nightmode: true
+		},
+		actions: {
+			changeNightmode: ({ commit }, nightmode) => {
+				commit("changeNightmode", nightmode);
+			}
+		},
+		mutations: {
+			changeNightmode(state, nightmode) {
+				state.nightmode = nightmode;
 			}
 		}
 	}

@@ -57,7 +57,7 @@
 			<div class="control is-grouped">
 				<p class="control is-expanded">
 					<input
-						v-model="songQuery"
+						v-model="searchSongQuery"
 						class="input"
 						type="text"
 						placeholder="Search for Song to add"
@@ -95,19 +95,48 @@
 			<div class="control is-grouped">
 				<p class="control is-expanded">
 					<input
+						v-model="directSongQuery"
+						class="input"
+						type="text"
+						placeholder="Enter a YouTube id or URL directly"
+						autofocus
+						@keyup.enter="addSong()"
+					/>
+				</p>
+				<p class="control">
+					<a class="button is-info" @click="addSong()" href="#"
+						>Add</a
+					>
+				</p>
+			</div>
+			<div class="control is-grouped">
+				<p class="control is-expanded">
+					<input
 						v-model="importQuery"
 						class="input"
 						type="text"
 						placeholder="YouTube Playlist URL"
-						@keyup.enter="importPlaylist()"
+						@keyup.enter="importPlaylist(false)"
 					/>
 				</p>
 				<p class="control">
-					<a class="button is-info" @click="importPlaylist()" href="#"
-						>Import</a
+					<a
+						class="button is-info"
+						@click="importPlaylist(true)"
+						href="#"
+						>Import music</a
+					>
+				</p>
+				<p class="control">
+					<a
+						class="button is-info"
+						@click="importPlaylist(false)"
+						href="#"
+						>Import all</a
 					>
 				</p>
 			</div>
+			<button class="button is-info" @click="shuffle()">Shuffle</button>
 			<h5>Edit playlist details:</h5>
 			<div class="control is-grouped">
 				<p class="control is-expanded">
@@ -141,14 +170,17 @@ import Toast from "toasters";
 import Modal from "../Modal.vue";
 import io from "../../../io";
 import validation from "../../../validation";
+import utils from "../../../js/utils";
 
 export default {
 	components: { Modal },
 	data() {
 		return {
+			utils,
 			playlist: { songs: [] },
 			songQueryResults: [],
-			songQuery: "",
+			searchSongQuery: "",
+			directSongQuery: "",
 			importQuery: ""
 		};
 	},
@@ -201,58 +233,15 @@ export default {
 		});
 	},
 	methods: {
-		formatTime(duration) {
-			if (duration <= 0) return "0 seconds";
-
-			const hours = Math.floor(duration / (60 * 60));
-			const formatHours = () => {
-				if (hours > 0) {
-					if (hours > 1) {
-						if (hours < 10) return `0${hours} hours `;
-						return `${hours} hours `;
-					}
-					return `0${hours} hour `;
-				}
-				return "";
-			};
-
-			const minutes = Math.floor((duration - hours) / 60);
-			const formatMinutes = () => {
-				if (minutes > 0) {
-					if (minutes > 1) {
-						if (minutes < 10) return `0${minutes} minutes `;
-						return `${minutes} minutes `;
-					}
-					return `0${minutes} minute `;
-				}
-				return "";
-			};
-
-			const seconds = Math.floor(
-				duration - hours * 60 * 60 - minutes * 60
-			);
-			const formatSeconds = () => {
-				if (seconds > 0) {
-					if (seconds > 1) {
-						if (seconds < 10) return `0${seconds} seconds `;
-						return `${seconds} seconds `;
-					}
-					return `0${seconds} second `;
-				}
-				return "";
-			};
-
-			return formatHours() + formatMinutes() + formatSeconds();
-		},
 		totalLength() {
 			let length = 0;
 			this.playlist.songs.forEach(song => {
 				length += song.duration;
 			});
-			return this.formatTime(length);
+			return this.utils.formatTimeLong(length);
 		},
 		searchForSongs() {
-			let query = this.songQuery;
+			let query = this.searchSongQuery;
 			if (query.indexOf("&index=") !== -1) {
 				query = query.split("&index=");
 				query.pop();
@@ -282,6 +271,7 @@ export default {
 		addSongToPlaylist(id) {
 			this.socket.emit(
 				"playlists.addSongToPlaylist",
+				false,
 				id,
 				this.playlist._id,
 				res => {
@@ -289,7 +279,28 @@ export default {
 				}
 			);
 		},
-		importPlaylist() {
+		/* eslint-disable prefer-destructuring */
+		addSong() {
+			let id = "";
+
+			if (this.directSongQuery.length === 11) id = this.directSongQuery;
+			else {
+				const match = this.directSongQuery.match("v=([0-9A-Za-z_-]+)");
+				if (match.length > 0) id = match[1];
+			}
+
+			this.addSongToPlaylist(id);
+		},
+		/* eslint-enable prefer-destructuring */
+		shuffle() {
+			this.socket.emit("playlists.shuffle", this.playlist._id, res => {
+				new Toast({ content: res.message, timeout: 4000 });
+				if (res.status === "success") {
+					this.playlist = res.data;
+				}
+			});
+		},
+		importPlaylist(musicOnly) {
 			new Toast({
 				content:
 					"Starting to import your playlist. This can take some time to do.",
@@ -299,10 +310,21 @@ export default {
 				"playlists.addSetToPlaylist",
 				this.importQuery,
 				this.playlist._id,
+				musicOnly,
 				res => {
-					if (res.status === "success")
-						this.playlist.songs = res.data;
 					new Toast({ content: res.message, timeout: 4000 });
+					if (res.status === "success") {
+						new Toast({
+							content: `Successfully added ${res.stats.songsAddedSuccessfully} songs. Failed to add ${res.stats.songsFailedToAdd} songs.`,
+							timeout: 4000
+						});
+						if (musicOnly) {
+							new Toast({
+								content: `${res.stats.songsInPlaylistTotal} of the ${res.stats.videosInPlaylistTotal} videos in the playlist were songs.`,
+								timeout: 4000
+							});
+						}
+					}
 				}
 			);
 		},
@@ -344,7 +366,10 @@ export default {
 			this.socket.emit("playlists.remove", this.playlist._id, res => {
 				new Toast({ content: res.message, timeout: 3000 });
 				if (res.status === "success") {
-					this.closeModal();
+					this.closeModal({
+						sector: "station",
+						modal: "editPlaylist"
+					});
 				}
 			});
 		},

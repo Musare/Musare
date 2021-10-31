@@ -128,6 +128,12 @@ export default {
 <style lang="scss" scoped>
 @import "styles/global.scss";
 
+.night-mode {
+	p {
+		color: #ddd;
+	}
+}
+
 .card {
 	margin-top: 50px;
 }

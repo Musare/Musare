@@ -7,7 +7,7 @@
 				<div class="group-title">
 					Stations&nbsp;
 					<a
-						v-if="$parent.loggedIn"
+						v-if="loggedIn"
 						href="#"
 						@click="
 							openModal({
@@ -115,6 +115,9 @@
 						<span v-else class="songTitle">No song</span>
 					</div>
 				</router-link>
+				<h4 v-if="stations.length === 0">
+					There are no stations to display
+				</h4>
 			</div>
 			<main-footer />
 		</div>
@@ -154,9 +157,9 @@ export default {
 			);
 		},
 		...mapState({
-			modals: state => state.modals.modals.home,
 			loggedIn: state => state.user.auth.loggedIn,
-			userId: state => state.user.auth.userId
+			userId: state => state.user.auth.userId,
+			modals: state => state.modals.modals.home
 		})
 	},
 	mounted() {
@@ -299,6 +302,22 @@ html {
 	}
 }
 
+.night-mode {
+	.card,
+	.card-content,
+	.card-content div {
+		background-color: $night-mode-secondary;
+	}
+
+	.card-content .icons i {
+		color: #ddd;
+	}
+
+	.card-image .image {
+		background-color: #333;
+	}
+}
+
 @media only screen and (min-width: 1200px) {
 	html {
 		font-size: 15px;
@@ -352,6 +371,11 @@ html {
 	}
 }
 
+.app {
+	display: flex;
+	flex-direction: column;
+}
+
 .users-count {
 	font-size: 20px;
 	position: relative;
@@ -360,6 +384,7 @@ html {
 
 .group {
 	min-height: 64px;
+	flex: 1 0 auto;
 }
 
 .station-card {

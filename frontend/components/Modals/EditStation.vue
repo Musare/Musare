@@ -301,16 +301,23 @@ import io from "../../io";
 import validation from "../../validation";
 
 export default {
-	computed: mapState({
-		editing(state) {
-			return this.$props.store.split("/").reduce((a, v) => a[v], state)
-				.editing;
-		},
-		station(state) {
-			return this.$props.store.split("/").reduce((a, v) => a[v], state)
-				.station;
-		}
-	}),
+	computed: {
+		...mapState("admin/station", {
+			stations: state => state.stations
+		}),
+		...mapState({
+			editing(state) {
+				return this.$props.store
+					.split("/")
+					.reduce((a, v) => a[v], state).editing;
+			},
+			station(state) {
+				return this.$props.store
+					.split("/")
+					.reduce((a, v) => a[v], state).station;
+			}
+		})
+	},
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
@@ -422,9 +429,9 @@ export default {
 					if (res.status === "success") {
 						if (this.station) this.station.name = name;
 						else {
-							this.$parent.stations.forEach((station, index) => {
+							this.stations.forEach((station, index) => {
 								if (station._id === this.editing._id) {
-									this.$parent.stations[index].name = name;
+									this.stations[index].name = name;
 									return name;
 								}
 
@@ -461,9 +468,9 @@ export default {
 						if (this.station)
 							this.station.displayName = displayName;
 						else {
-							this.$parent.stations.forEach((station, index) => {
+							this.stations.forEach((station, index) => {
 								if (station._id === this.editing._id) {
-									this.$parent.stations[
+									this.stations[
 										index
 									].displayName = displayName;
 									return displayName;
@@ -506,9 +513,9 @@ export default {
 						if (this.station)
 							this.station.description = description;
 						else {
-							this.$parent.stations.forEach((station, index) => {
+							this.stations.forEach((station, index) => {
 								if (station._id === this.editing._id) {
-									this.$parent.stations[
+									this.stations[
 										index
 									].description = description;
 									return description;
@@ -543,9 +550,9 @@ export default {
 						if (this.station)
 							this.station.privacy = this.editing.privacy;
 						else {
-							this.$parent.stations.forEach((station, index) => {
+							this.stations.forEach((station, index) => {
 								if (station._id === this.editing._id) {
-									this.$parent.stations[
+									this.stations[
 										index
 									].privacy = this.editing.privacy;
 									return this.editing.privacy;
@@ -575,9 +582,9 @@ export default {
 							JSON.stringify(this.editing.genres)
 						);
 						if (this.station) this.station.genres = genres;
-						this.$parent.stations.forEach((station, index) => {
+						this.stations.forEach((station, index) => {
 							if (station._id === this.editing._id) {
-								this.$parent.stations[index].genres = genres;
+								this.stations[index].genres = genres;
 								return genres;
 							}
 
@@ -606,9 +613,9 @@ export default {
 						);
 						if (this.station)
 							this.station.blacklistedGenres = blacklistedGenres;
-						this.$parent.stations.forEach((station, index) => {
+						this.stations.forEach((station, index) => {
 							if (station._id === this.editing._id) {
-								this.$parent.stations[
+								this.stations[
 									index
 								].blacklistedGenres = blacklistedGenres;
 								return blacklistedGenres;
@@ -642,9 +649,9 @@ export default {
 							this.station.partyMode = this.editing.partyMode;
 						// if (this.station)
 						// 	this.station.partyMode = this.editing.partyMode;
-						// this.$parent.stations.forEach((station, index) => {
+						// this.stations.forEach((station, index) => {
 						// 	if (station._id === this.editing._id) {
-						// 		this.$parent.stations[
+						// 		this.stations[
 						// 			index
 						// 		].partyMode = this.editing.partyMode;
 						// 		return this.editing.partyMode;
@@ -806,6 +813,28 @@ export default {
 </script>
 
 <style lang="scss">
+@import "styles/global.scss";
+
+.night-mode {
+	.modal-card,
+	.modal-card-head,
+	.modal-card-body,
+	.modal-card-foot {
+		background-color: $night-mode-secondary;
+	}
+
+	.section {
+		background-color: #111 !important;
+		border: 0 !important;
+	}
+
+	.label,
+	p,
+	strong {
+		color: #ddd;
+	}
+}
+
 .edit-station-modal {
 	.modal-card-title {
 		text-align: center;
