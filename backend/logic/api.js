@@ -131,21 +131,24 @@ class _APIModule extends CoreClass {
 
 						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId })
 							.then(playlist => {
-								if (playlist.privacy === "public")
-									res.json({ status: "success", playlist });
+								if (playlist.privacy === "public") res.json({ status: "success", playlist });
 								else {
 									isLoggedIn(req, res, () => {
-										if (playlist.createdBy === req.session.userId) 
+										if (playlist.createdBy === req.session.userId)
 											res.json({ status: "success", playlist });
 										else {
 											userModel.findOne({ _id: req.session.userId }, (err, user) => {
 												if (err) res.json({ status: "error", message: err.message });
 												else if (user.role === "admin")
 													res.json({ status: "success", playlist });
-												else res.json({ status: "error", message: "You're not allowed to download this playlist." });
+												else
+													res.json({
+														status: "error",
+														message: "You're not allowed to download this playlist."
+													});
 											});
 										}
-									})
+									});
 								}
 							})
 							.catch(err => {
