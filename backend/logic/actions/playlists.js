@@ -1459,17 +1459,17 @@ export default {
 					userModel.updateOne(
 						{ _id: playlist.createdBy },
 						{ $pull: { "preferences.orderOfPlaylists": playlist._id } },
-						err => next(err, playlist)
+						err => next(err, playlist, playlist.createdBy)
 					);
 				},
 
-				(playlist, next) => {
+				(playlist, playlistCreator, next) => {
 					PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId }, this)
-						.then(() => next(null, playlist))
+						.then(() => next(null, playlistCreator))
 						.catch(next);
 				}
 			],
-			async err => {
+			async (err, playlistCreator) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -1489,7 +1489,7 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "playlist.delete",
 					value: {
-						userId: session.userId,
+						userId: playlistCreator,
 						playlistId
 					}
 				});
