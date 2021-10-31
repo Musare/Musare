@@ -219,6 +219,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.night-mode .section {
+	background-color: transparent !important;
+}
+
 .section {
 	padding: 15px 0 !important;
 }

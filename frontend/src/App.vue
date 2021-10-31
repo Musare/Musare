@@ -330,6 +330,15 @@ export default {
 	.tippy-box[data-theme~="songActions"] {
 		background-color: var(--dark-grey);
 	}
+
+	code {
+		background-color: var(--dark-grey-2) !important;
+	}
+}
+
+code {
+	background-color: var(--light-grey) !important;
+	color: var(--red) !important;
 }
 
 body.night-mode {
