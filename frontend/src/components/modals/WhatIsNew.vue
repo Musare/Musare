@@ -125,6 +125,10 @@ export default {
 	p {
 		color: var(--light-grey-2);
 	}
+
+	.section {
+		background-color: transparent !important;
+	}
 }
 
 .modal-card-head {
