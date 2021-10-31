@@ -124,13 +124,29 @@ class _APIModule extends CoreClass {
 						});
 					});
 
-					response.app.get("/export/privatePlaylist/:playlistId", isLoggedIn, (req, res) => {
+					response.app.get("/export/privatePlaylist/:playlistId", async (req, res) => {
 						const { playlistId } = req.params;
+
+						const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
+
 						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId })
 							.then(playlist => {
-								if (playlist.createdBy === req.session.userId)
+								if (playlist.privacy === "public")
 									res.json({ status: "success", playlist });
-								else res.json({ status: "error", message: "You're not the owner." });
+								else {
+									isLoggedIn(req, res, () => {
+										if (playlist.createdBy === req.session.userId) 
+											res.json({ status: "success", playlist });
+										else {
+											userModel.findOne({ _id: req.session.userId }, (err, user) => {
+												if (err) res.json({ status: "error", message: err.message });
+												else if (user.role === "admin")
+													res.json({ status: "success", playlist });
+												else res.json({ status: "error", message: "You're not allowed to download this playlist." });
+											});
+										}
+									})
+								}
 							})
 							.catch(err => {
 								res.json({ status: "error", message: err.message });

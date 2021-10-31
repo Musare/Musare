@@ -212,11 +212,7 @@
 		<template #footer>
 			<button
 				class="button is-default"
-				v-if="
-					userId === playlist.createdBy ||
-					isEditable() ||
-					playlist.privacy === 'public'
-				"
+				v-if="isOwner() || isAdmin() || playlist.privacy === 'public'"
 				@click="downloadPlaylist()"
 			>
 				Download Playlist
