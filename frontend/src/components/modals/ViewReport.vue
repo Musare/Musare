@@ -267,6 +267,7 @@ export default {
 
 			.item-description {
 				font-size: 14px;
+				line-height: 15px;
 				font-family: Karla, Arial, sans-serif;
 			}
 		}

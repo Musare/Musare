@@ -10,7 +10,12 @@
 		</div>
 
 		<div class="item-title-description">
-			<h2 class="item-title">
+			<h2
+				class="item-title"
+				:title="`Reported by ${
+					createdBy.username ? createdBy.username : 'Deleted User'
+				}`"
+			>
 				Reported by
 				<router-link
 					v-if="createdBy.username"
@@ -61,7 +66,7 @@ export default {
 <style lang="scss" scoped>
 .night-mode {
 	.report-info-item {
-		background-color: var(--dark-grey-2) !important;
+		background-color: var(--dark-grey) !important;
 		border: 0 !important;
 	}
 }
@@ -93,6 +98,10 @@ export default {
 		}
 	}
 
+	.item-title-description {
+		min-width: 0;
+	}
+
 	.item-title {
 		font-size: 14px;
 		margin: 0;
@@ -100,6 +109,7 @@ export default {
 
 	.item-description {
 		font-size: 12px;
+		line-height: 14px;
 		text-transform: capitalize;
 		margin: 0;
 	}
