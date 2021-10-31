@@ -200,10 +200,6 @@ export default {
 	}
 }
 
-body {
-	font-family: "Hind", sans-serif;
-}
-
 h2 {
 	font-size: 30px;
 	text-align: center;

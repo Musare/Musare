@@ -616,10 +616,6 @@ export default {
 	}
 }
 
-body {
-	font-family: "Hind", sans-serif;
-}
-
 .box {
 	background-color: var(--light-grey);
 	border-radius: 5px;

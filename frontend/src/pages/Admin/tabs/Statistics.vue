@@ -292,10 +292,6 @@ export default {
 	}
 }
 
-body {
-	font-family: "Hind", sans-serif;
-}
-
 .user-avatar {
 	display: block;
 	max-width: 50px;

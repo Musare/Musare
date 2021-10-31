@@ -119,7 +119,6 @@ export default {
 
 		*:not(i) {
 			margin: 0;
-			font-family: Karla, Arial, sans-serif;
 		}
 	}
 }
