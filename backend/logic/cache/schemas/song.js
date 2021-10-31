@@ -1,5 +1,1 @@
-'use strict';
-
-module.exports = (song) => {
-	return song;
-};
+export default song => song;

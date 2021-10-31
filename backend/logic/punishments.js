@@ -1,315 +1,306 @@
-const CoreClass = require("../core.js");
+import async from "async";
+import mongoose from "mongoose";
+import CoreClass from "../core";
 
-const async = require("async");
-const mongoose = require("mongoose");
+let PunishmentsModule;
+let CacheModule;
+let DBModule;
+let UtilsModule;
 
-class PunishmentsModule extends CoreClass {
-    constructor() {
-        super("punishments");
-    }
+class _PunishmentsModule extends CoreClass {
+	// eslint-disable-next-line require-jsdoc
+	constructor() {
+		super("punishments");
 
-    initialize() {
-        return new Promise(async (resolve, reject) => {
-            this.setStage(1);
+		PunishmentsModule = this;
+	}
 
-            this.cache = this.moduleManager.modules["cache"];
-            this.db = this.moduleManager.modules["db"];
-            this.io = this.moduleManager.modules["io"];
-            this.utils = this.moduleManager.modules["utils"];
+	/**
+	 * Initialises the punishments module
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async initialize() {
+		this.setStage(1);
 
-            const punishmentModel = await this.db.runJob("GET_MODEL", {
-                modelName: "punishment",
-            });
+		CacheModule = this.moduleManager.modules.cache;
+		DBModule = this.moduleManager.modules.db;
+		UtilsModule = this.moduleManager.modules.utils;
 
-            const punishmentSchema = await this.cache.runJob("GET_SCHEMA", {
-                schemaName: "punishment",
-            });
+		this.punishmentModel = this.PunishmentModel = await DBModule.runJob("GET_MODEL", { modelName: "punishment" });
+		this.punishmentSchemaCache = await CacheModule.runJob("GET_SCHEMA", { schemaName: "punishment" });
 
-            async.waterfall(
-                [
-                    (next) => {
-                        this.setStage(2);
-                        this.cache
-                            .runJob("HGETALL", { table: "punishments" })
-                            .then((punishments) => next(null, punishments))
-                            .catch(next);
-                    },
+		return new Promise((resolve, reject) =>
+			async.waterfall(
+				[
+					next => {
+						this.setStage(2);
+						CacheModule.runJob("HGETALL", { table: "punishments" })
+							.then(punishments => {
+								next(null, punishments);
+							})
+							.catch(next);
+					},
 
-                    (punishments, next) => {
-                        this.setStage(3);
-                        if (!punishments) return next();
-                        let punishmentIds = Object.keys(punishments);
-                        async.each(
-                            punishmentIds,
-                            (punishmentId, next) => {
-                                punishmentModel.findOne(
-                                    { _id: punishmentId },
-                                    (err, punishment) => {
-                                        if (err) next(err);
-                                        else if (!punishment)
-                                            this.cache
-                                                .runJob("HDEL", {
-                                                    table: "punishments",
-                                                    key: punishmentId,
-                                                })
-                                                .then(() => next())
-                                                .catch(next);
-                                        else next();
-                                    }
-                                );
-                            },
-                            next
-                        );
-                    },
+					(punishments, next) => {
+						this.setStage(3);
 
-                    (next) => {
-                        this.setStage(4);
-                        punishmentModel.find({}, next);
-                    },
+						if (!punishments) return next();
 
-                    (punishments, next) => {
-                        this.setStage(5);
-                        async.each(
-                            punishments,
-                            (punishment, next) => {
-                                if (
-                                    punishment.active === false ||
-                                    punishment.expiresAt < Date.now()
-                                )
-                                    return next();
-                                this.cache
-                                    .runJob("HSET", {
-                                        table: "punishments",
-                                        key: punishment._id,
-                                        value: punishmentSchema(
-                                            punishment,
-                                            punishment._id
-                                        ),
-                                    })
-                                    .then(() => next())
-                                    .catch(next);
-                            },
-                            next
-                        );
-                    },
-                ],
-                async (err) => {
-                    if (err) {
-                        err = await utils.runJob("GET_ERROR", { error: err });
-                        reject(new Error(err));
-                    } else {
-                        resolve();
-                    }
-                }
-            );
-        });
-    }
+						const punishmentIds = Object.keys(punishments);
 
-    /**
-     * Gets all punishments in the cache that are active, and removes those that have expired
-     *
-     * @param {Function} cb - gets called once we're done initializing
-     */
-    GET_PUNISHMENTS() {
-        //cb
-        return new Promise((resolve, reject) => {
-            let punishmentsToRemove = [];
-            async.waterfall(
-                [
-                    (next) => {
-                        this.cache
-                            .runJob("HGETALL", { table: "punishments" })
-                            .then((punishmentsObj) =>
-                                next(null, punishmentsObj)
-                            )
-                            .catch(next);
-                    },
+						return async.each(
+							punishmentIds,
+							(punishmentId, cb) => {
+								PunishmentsModule.punishmentModel.findOne({ _id: punishmentId }, (err, punishment) => {
+									if (err) next(err);
+									else if (!punishment)
+										CacheModule.runJob("HDEL", {
+											table: "punishments",
+											key: punishmentId
+										})
+											.then(() => cb())
+											.catch(next);
+									else cb();
+								});
+							},
+							next
+						);
+					},
 
-                    (punishmentsObj, next) => {
-                        let punishments = [];
-                        for (let id in punishmentsObj) {
-                            let obj = punishmentsObj[id];
-                            obj.punishmentId = id;
-                            punishments.push(obj);
-                        }
-                        punishments = punishments.filter((punishment) => {
-                            if (punishment.expiresAt < Date.now())
-                                punishmentsToRemove.push(punishment);
-                            return punishment.expiresAt > Date.now();
-                        });
-                        next(null, punishments);
-                    },
+					next => {
+						this.setStage(4);
+						PunishmentsModule.punishmentModel.find({}, next);
+					},
 
-                    (punishments, next) => {
-                        async.each(
-                            punishmentsToRemove,
-                            (punishment, next2) => {
-                                this.cache
-                                    .runJob("HDEL", {
-                                        table: "punishments",
-                                        key: punishment.punishmentId,
-                                    })
-                                    .finally(() => next2());
-                            },
-                            () => {
-                                next(null, punishments);
-                            }
-                        );
-                    },
-                ],
-                (err, punishments) => {
-                    if (err && err !== true) return reject(new Error(err));
+					(punishments, next) => {
+						this.setStage(5);
+						async.each(
+							punishments,
+							(punishment, next) => {
+								if (punishment.active === false || punishment.expiresAt < Date.now()) return next();
 
-                    resolve(punishments);
-                }
-            );
-        });
-    }
+								return CacheModule.runJob("HSET", {
+									table: "punishments",
+									key: punishment._id,
+									value: PunishmentsModule.punishmentSchemaCache(punishment, punishment._id)
+								})
+									.then(() => next())
+									.catch(next);
+							},
+							next
+						);
+					}
+				],
+				async err => {
+					if (err) {
+						const formattedErr = await UtilsModule.runJob("GET_ERROR", { error: err });
+						reject(new Error(formattedErr));
+					} else resolve();
+				}
+			)
+		);
+	}
 
-    /**
-     * Gets a punishment by id
-     *
-     * @param {String} id - the id of the punishment we are trying to get
-     * @param {Function} cb - gets called once we're done initializing
-     */
-    GET_PUNISHMENT() {
-        //id, cb
-        return new Promise(async (resolve, reject) => {
-            const punishmentModel = await db.runJob("GET_MODEL", {
-                modelName: "punishment",
-            });
+	/**
+	 * Gets all punishments in the cache that are active, and removes those that have expired
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_PUNISHMENTS() {
+		return new Promise((resolve, reject) => {
+			const punishmentsToRemove = [];
+			async.waterfall(
+				[
+					next => {
+						CacheModule.runJob("HGETALL", { table: "punishments" }, this)
+							.then(punishmentsObj => next(null, punishmentsObj))
+							.catch(next);
+					},
 
-            async.waterfall(
-                [
-                    (next) => {
-                        if (!mongoose.Types.ObjectId.isValid(payload.id))
-                            return next("Id is not a valid ObjectId.");
-                        this.cache
-                            .runJob("HGET", {
-                                table: "punishments",
-                                key: payload.id,
-                            })
-                            .then((punishment) => next(null, punishment))
-                            .catch(next);
-                    },
+					(punishmentsObj, next) => {
+						const punishments = Object.keys(punishmentsObj).map(punishmentKey => {
+							const punishment = punishmentsObj[punishmentKey];
+							punishment.punishmentId = punishmentKey;
+							return punishment;
+						});
 
-                    (punishment, next) => {
-                        if (punishment) return next(true, punishment);
-                        punishmentModel.findOne({ _id: payload.id }, next);
-                    },
+						const filteredPunishments = punishments.filter(punishment => {
+							if (punishment.expiresAt < Date.now()) punishmentsToRemove.push(punishment);
+							return punishment.expiresAt > Date.now();
+						});
 
-                    (punishment, next) => {
-                        if (punishment) {
-                            this.cache
-                                .runJob("HSET", {
-                                    table: "punishments",
-                                    key: payload.id,
-                                    value: punishment,
-                                })
-                                .then((punishment) => next(null, punishment))
-                                .catch(next);
-                        } else next("Punishment not found.");
-                    },
-                ],
-                (err, punishment) => {
-                    if (err && err !== true) return reject(new Error(err));
+						next(null, filteredPunishments);
+					},
 
-                    resolve(punishment);
-                }
-            );
-        });
-    }
+					(punishments, next) => {
+						async.each(
+							punishmentsToRemove,
+							(punishment, next2) => {
+								CacheModule.runJob(
+									"HDEL",
+									{
+										table: "punishments",
+										key: punishment.punishmentId
+									},
+									this
+								).finally(() => next2());
+							},
+							() => {
+								next(null, punishments);
+							}
+						);
+					}
+				],
+				(err, punishments) => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve(punishments);
+				}
+			);
+		});
+	}
 
-    /**
-     * Gets all punishments from a userId
-     *
-     * @param {String} userId - the userId of the punishment(s) we are trying to get
-     * @param {Function} cb - gets called once we're done initializing
-     */
-    GET_PUNISHMENTS_FROM_USER_ID(payload) {
-        //userId, cb
-        return new Promise((resolve, reject) => {
-            async.waterfall(
-                [
-                    (next) => {
-                        this.runJob("GET_PUNISHMENTS", {})
-                            .then((punishments) => next(null, punishments))
-                            .catch(next);
-                    },
-                    (punishments, next) => {
-                        punishments = punishments.filter((punishment) => {
-                            return (
-                                punishment.type === "banUserId" &&
-                                punishment.value === payload.userId
-                            );
-                        });
-                        next(null, punishments);
-                    },
-                ],
-                (err, punishments) => {
-                    if (err && err !== true) return reject(new Error(err));
+	/**
+	 * Gets a punishment by id
+	 *
+	 * @param {object} payload - object containing the payload
+	 * @param {string} payload.id - the id of the punishment we are trying to get
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_PUNISHMENT(payload) {
+		return new Promise((resolve, reject) =>
+			async.waterfall(
+				[
+					next => {
+						if (!mongoose.Types.ObjectId.isValid(payload.id)) return next("Id is not a valid ObjectId.");
+						return CacheModule.runJob(
+							"HGET",
+							{
+								table: "punishments",
+								key: payload.id
+							},
+							this
+						)
+							.then(punishment => next(null, punishment))
+							.catch(next);
+					},
 
-                    resolve(punishments);
-                }
-            );
-        });
-    }
+					(punishment, next) => {
+						if (punishment) return next(true, punishment);
+						return PunishmentsModule.punishmentModel.findOne({ _id: payload.id }, next);
+					},
 
-    ADD_PUNISHMENT(payload) {
-        //type, value, reason, expiresAt, punishedBy, cb
-        return new Promise(async (resolve, reject) => {
-            const punishmentModel = await db.runJob("GET_MODEL", {
-                modelName: "punishment",
-            });
+					(punishment, next) => {
+						if (punishment) {
+							CacheModule.runJob(
+								"HSET",
+								{
+									table: "punishments",
+									key: payload.id,
+									value: punishment
+								},
+								this
+							)
+								.then(punishment => {
+									next(null, punishment);
+								})
+								.catch(next);
+						} else next("Punishment not found.");
+					}
+				],
+				(err, punishment) => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve(punishment);
+				}
+			)
+		);
+	}
 
-            const punishmentSchema = await cache.runJob("GET_SCHEMA", {
-                schemaName: "punishment",
-            });
+	/**
+	 * Gets all punishments from a userId
+	 *
+	 * @param {object} payload - object containing the payload
+	 * @param {string} payload.userId - the userId of the punishment(s) we are trying to get
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_PUNISHMENTS_FROM_USER_ID(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						PunishmentsModule.runJob("GET_PUNISHMENTS", {}, this)
+							.then(punishments => {
+								next(null, punishments);
+							})
+							.catch(next);
+					},
+					(punishments, next) => {
+						const filteredPunishments = punishments.filter(
+							punishment => punishment.type === "banUserId" && punishment.value === payload.userId
+						);
+						next(null, filteredPunishments);
+					}
+				],
+				(err, punishments) => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve(punishments);
+				}
+			);
+		});
+	}
 
-            async.waterfall(
-                [
-                    (next) => {
-                        const punishment = new punishmentModel({
-                            type: payload.type,
-                            value: payload.value,
-                            reason: payload.reason,
-                            active: true,
-                            expiresAt: payload.expiresAt,
-                            punishedAt: Date.now(),
-                            punishedBy: payload.punishedBy,
-                        });
-                        punishment.save((err, punishment) => {
-                            if (err) return next(err);
-                            next(null, punishment);
-                        });
-                    },
+	/**
+	 * Adds a new punishment to the database
+	 *
+	 * @param {object} payload - object containing the payload
+	 * @param {string} payload.reason - the reason for the punishment e.g. spam
+	 * @param {string} payload.type - the type of punishment (enum: ["banUserId", "banUserIp"])
+	 * @param {string} payload.value - the user id/ip address for the ban (depends on punishment type)
+	 * @param {Date} payload.expiresAt - the date at which the punishment expires at
+	 * @param {string} payload.punishedBy - the userId of the who initiated the punishment
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	ADD_PUNISHMENT(payload) {
+		return new Promise((resolve, reject) =>
+			async.waterfall(
+				[
+					next => {
+						const punishment = new PunishmentsModule.PunishmentModel({
+							type: payload.type,
+							value: payload.value,
+							reason: payload.reason,
+							active: true,
+							expiresAt: payload.expiresAt,
+							punishedAt: Date.now(),
+							punishedBy: payload.punishedBy
+						});
+						punishment.save((err, punishment) => {
+							if (err) return next(err);
+							return next(null, punishment);
+						});
+					},
 
-                    (punishment, next) => {
-                        this.cache
-                            .runJob("HSET", {
-                                table: "punishments",
-                                key: punishment._id,
-                                value: punishmentSchema(
-                                    punishment,
-                                    punishment._id
-                                ),
-                            })
-                            .then(() => next())
-                            .catch(next);
-                    },
-
-                    (punishment, next) => {
-                        // DISCORD MESSAGE
-                        next(null, punishment);
-                    },
-                ],
-                (err, punishment) => {
-                    if (err) return reject(new Error(err));
-                    resolve(punishment);
-                }
-            );
-        });
-    }
+					(punishment, next) => {
+						CacheModule.runJob(
+							"HSET",
+							{
+								table: "punishments",
+								key: punishment._id,
+								value: PunishmentsModule.punishmentSchemaCache(punishment, punishment._id)
+							},
+							this
+						)
+							.then(() => next(null, punishment))
+							.catch(next);
+					}
+				],
+				(err, punishment) => {
+					if (err) return reject(new Error(err));
+					return resolve(punishment);
+				}
+			)
+		);
+	}
 }
 
-module.exports = new PunishmentsModule();
+export default new _PunishmentsModule();

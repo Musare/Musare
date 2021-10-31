@@ -1,8 +1,4 @@
-'use strict';
-
-module.exports = (stationId, songs) => {
-	return {
-		stationId,
-		songs
-	}
-};
+export default (stationId, songs) => ({
+	stationId,
+	songs
+});

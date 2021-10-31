@@ -1,38 +1,30 @@
 {
 	"mode": "development",
+	"migration": false,
 	"secret": "default",
 	"domain": "http://localhost",
 	"frontendPort": 80,
-	"serverDomain": "http://localhost:8080",
-  	"serverPort": 8080,
-	"isDocker": true,
-	"fancyConsole": true,
+	"serverDomain": "http://localhost/backend",
+	"serverPort": 8080,
+	"registrationDisabled": true,
+	"hideAutomaticallyRequestedSongs": false,
+    "hideAnonymousSongs": false,
+	"sendDataRequestEmails": true,
 	"apis": {
 		"youtube": {
-			"key": ""
+			"key": "",
+			"rateLimit": 500,
+			"requestTimeout": 5000,
+			"retryAmount": 2
 		},
 		"recaptcha": {
-			"secret": ""
+			"secret": "",
+			"enabled": false
 		},
 		"github": {
 			"client": "",
 			"secret": "",
 			"redirect_uri": ""
-		},
-		"discord": {
-			"token": "",
-			"loggingChannel": "",
-			"loggingServer": ""
-		},
-		"mailgun": {
-			"key": "",
-			"domain": "",
-		  	"enabled": false
-		},
-		"spotify": {
-			"client": "",
-			"secret": "",
-			"enabled": false
 		},
 		"discogs": {
 			"client": "",
@@ -42,21 +34,62 @@
 	},
 	"cors": {
 		"origin": [
-			"http://localhost",
-			"http://192.168.99.100",
-			"http://dev.musare.com"
+			"http://localhost"
 		]
 	},
-  	"redis": {
-	  	"url": "redis://redis:6379/0",
-	    "password": "PASSWORD"
-	},
-  	"mongo": {
-	  	"url": "mongodb://musare:OTHER_PASSWORD_HERE@mongo:27017/musare"
-	},
-  	"cookie": {
-	  	"domain": "localhost",
+	"smtp": {
+		"host": "smtp.mailgun.org",
+		"port": 587,
+		"auth": {
+			"user": "",
+			"pass": ""
+		},
 		"secure": false,
-		"SIDname": "SID"  
-	}
+		"enabled": false
+	},
+	"redis": {
+		"url": "redis://redis:6379/0",
+		"password": "PASSWORD"
+	},
+	"mongo": {
+		"url": "mongodb://musare:OTHER_PASSWORD_HERE@mongo:27017/musare"
+	},
+	"cookie": {
+		"domain": "localhost",
+		"secure": false,
+		"SIDname": "SID"
+	},
+	"skipConfigVersionCheck": false,
+	"skipDbDocumentsVersionCheck": false,
+	"debug": {
+		"stationIssue": false,
+		"traceUnhandledPromises": false,
+		"captureJobs": []
+	},
+	"defaultLogging": {
+		"hideType": [
+			"INFO"
+		],
+		"blacklistedTerms": []
+	},
+	"customLoggingPerModule": {
+		// "cache": {
+		//     "hideType": [
+		//     ],
+		//     "blacklistedTerms": []
+		// },
+		"migration": {
+			"hideType": [],
+			"blacklistedTerms": [
+				"Ran job",
+				"Running job",
+				"Queuing job",
+				"Pausing job",
+				"is queued",
+				"is re-queued",
+				"Requeing"
+			]
+		}
+	},
+	"configVersion": 6
 }

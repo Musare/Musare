@@ -1,0 +1,45 @@
+{
+	"env": {
+		"browser": false,
+        "es2021": true,
+        "node": true
+	},
+	"parserOptions": {
+		"ecmaVersion": 2021,
+		"sourceType": "module"
+	},
+	"extends": [
+		"eslint:recommended",
+		"airbnb-base",
+		"prettier",
+		"plugin:jsdoc/recommended"
+    ],
+    "plugins": [ "prettier", "jsdoc" ],
+	"rules": {
+		"no-console": 0,
+		"no-control-regex": 0,
+		"no-var": 2,
+		"no-underscore-dangle": 0,
+		"radix": 0,
+		"no-multi-assign": 0,
+		"no-shadow": 0,
+		"no-new": 0,
+        "import/no-unresolved": 0,
+		"prettier/prettier": ["error"], // end of copied frontend rules
+		"max-classes-per-file": 0,
+		"max-len": ["error", { "code": 140, "ignoreComments": true, "ignoreUrls": true, "ignoreTemplateLiterals": true }],
+		"no-param-reassign": 0,
+		"implicit-arrow-linebreak": 0,
+		"import/extensions": 0,
+		"class-methods-use-this": 0,
+		"require-jsdoc": [2, {
+			"require": {
+				"FunctionDeclaration": true,
+				"MethodDefinition": true,
+				"ClassDeclaration": false,
+				"ArrowFunctionExpression": false,
+				"FunctionExpression": false
+			}
+		}]
+    }
+}

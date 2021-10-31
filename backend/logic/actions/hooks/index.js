@@ -1,7 +1,7 @@
-'use strict';
+import loginRequired from "./loginRequired";
+import adminRequired from "./adminRequired";
+import ownerRequired from "./ownerRequired";
 
-module.exports = {
-	loginRequired: require('./loginRequired'),
-	adminRequired: require('./adminRequired'),
-	ownerRequired: require('./ownerRequired')
-};
+export const isLoginRequired = loginRequired;
+export const isAdminRequired = adminRequired;
+export const isOwnerRequired = ownerRequired;

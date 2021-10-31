@@ -12,6 +12,7 @@ startMongo.cmd
 .db
 .redis
 *.rdb
+backups/
 
 npm-debug.log
 lerna-debug.log
@@ -30,6 +31,7 @@ frontend/dist/config/default.json
 
 npm
 node_modules
+package-lock.json
 
 # Logs
 log/

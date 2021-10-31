@@ -1,206 +1,227 @@
-"use strict";
+import config from "config";
+import async from "async";
+import axios from "axios";
 
-const request = require("request");
-const config = require("config");
-const async = require("async");
+import { isAdminRequired } from "./hooks";
 
-const hooks = require("./hooks");
-// const moduleManager = require("../../index");
+import moduleManager from "../../index";
 
-const utils = require("../utils");
-// const logger = moduleManager.modules["logger"];
+const UtilsModule = moduleManager.modules.utils;
+const WSModule = moduleManager.modules.ws;
+const YouTubeModule = moduleManager.modules.youtube;
 
-module.exports = {
-    /**
-     * Fetches a list of songs from Youtubes API
-     *
-     * @param session
-     * @param query - the query we'll pass to youtubes api
-     * @param cb
-     * @return {{ status: String, data: Object }}
-     */
-    searchYoutube: (session, query, cb) => {
-        const params = [
-            "part=snippet",
-            `q=${encodeURIComponent(query)}`,
-            `key=${config.get("apis.youtube.key")}`,
-            "type=video",
-            "maxResults=15",
-        ].join("&");
+export default {
+	/**
+	 * Fetches a list of songs from Youtube's API
+	 *
+	 * @param {object} session - user session
+	 * @param {string} query - the query we'll pass to youtubes api
+	 * @param {Function} cb - callback
+	 * @returns {{status: string, data: object}} - returns an object
+	 */
+	searchYoutube(session, query, cb) {
+		return YouTubeModule.runJob("SEARCH", { query }, this)
+			.then(data => {
+				this.log("SUCCESS", "APIS_SEARCH_YOUTUBE", `Searching YouTube successful with query "${query}".`);
+				return cb({ status: "success", data });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "APIS_SEARCH_YOUTUBE", `Searching youtube failed with query "${query}". "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	},
 
-        async.waterfall(
-            [
-                (next) => {
-                    request(
-                        `https://www.googleapis.com/youtube/v3/search?${params}`,
-                        next
-                    );
-                },
+	/**
+	 * Fetches a specific page of search results from Youtube's API
+	 *
+	 * @param {object} session - user session
+	 * @param {string} query - the query we'll pass to youtubes api
+	 * @param {string} pageToken - identifies a specific page in the result set that should be retrieved
+	 * @param {Function} cb - callback
+	 * @returns {{status: string, data: object}} - returns an object
+	 */
+	searchYoutubeForPage(session, query, pageToken, cb) {
+		return YouTubeModule.runJob("SEARCH", { query, pageToken }, this)
+			.then(data => {
+				this.log(
+					"SUCCESS",
+					"APIS_SEARCH_YOUTUBE_FOR_PAGE",
+					`Searching YouTube successful with query "${query}".`
+				);
+				return cb({ status: "success", data });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log(
+					"ERROR",
+					"APIS_SEARCH_YOUTUBE_FOR_PAGE",
+					`Searching youtube failed with query "${query}". "${err}"`
+				);
+				return cb({ status: "error", message: err });
+			});
+	},
 
-                (res, body, next) => {
-                    next(null, JSON.parse(body));
-                },
-            ],
-            async (err, data) => {
-                console.log(data.error);
-                if (err || data.error) {
-                    if (!err) err = data.error.message;
-                    err = await utils.runJob("GET_ERROR", { error: err });
-                    console.log(
-                        "ERROR",
-                        "APIS_SEARCH_YOUTUBE",
-                        `Searching youtube failed with query "${query}". "${err}"`
-                    );
-                    return cb({ status: "failure", message: err });
-                }
-                console.log(
-                    "SUCCESS",
-                    "APIS_SEARCH_YOUTUBE",
-                    `Searching YouTube successful with query "${query}".`
-                );
-                return cb({ status: "success", data });
-            }
-        );
-    },
+	/**
+	 * Gets Discogs data
+	 *
+	 * @param session
+	 * @param query - the query
+	 * @param {Function} cb
+	 */
+	searchDiscogs: isAdminRequired(function searchDiscogs(session, query, page, cb) {
+		async.waterfall(
+			[
+				next => {
+					const options = {
+						params: { q: query, per_page: 20, page },
+						headers: {
+							"User-Agent": "Request",
+							Authorization: `Discogs key=${config.get("apis.discogs.client")}, secret=${config.get(
+								"apis.discogs.secret"
+							)}`
+						}
+					};
 
-    /**
-     * Gets Spotify data
-     *
-     * @param session
-     * @param title - the title of the song
-     * @param artist - an artist for that song
-     * @param cb
-     */
-    getSpotifySongs: hooks.adminRequired((session, title, artist, cb) => {
-        async.waterfall(
-            [
-                (next) => {
-                    utils
-                        .runJob("GET_SONGS_FROM_SPOTIFY", { title, artist })
-                        .then((songs) => next(null, songs))
-                        .catch(next);
-                },
-            ],
-            (songs) => {
-                console.log(
-                    "SUCCESS",
-                    "APIS_GET_SPOTIFY_SONGS",
-                    `User "${session.userId}" got Spotify songs for title "${title}" successfully.`
-                );
-                cb({ status: "success", songs: songs });
-            }
-        );
-    }),
+					axios
+						.get("https://api.discogs.com/database/search", options)
+						.then(res => next(null, res.data))
+						.catch(err => next(err));
+				}
+			],
+			async (err, body) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"APIS_SEARCH_DISCOGS",
+						`Searching discogs failed with query "${query}". "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+				this.log(
+					"SUCCESS",
+					"APIS_SEARCH_DISCOGS",
+					`User "${session.userId}" searched Discogs succesfully for query "${query}".`
+				);
+				return cb({
+					status: "success",
+					data: {
+						results: body.results,
+						pages: body.pagination.pages
+					}
+				});
+			}
+		);
+	}),
 
-    /**
-     * Gets Discogs data
-     *
-     * @param session
-     * @param query - the query
-     * @param cb
-     */
-    searchDiscogs: hooks.adminRequired((session, query, page, cb) => {
-        async.waterfall(
-            [
-                (next) => {
-                    const params = [
-                        `q=${encodeURIComponent(query)}`,
-                        `per_page=20`,
-                        `page=${page}`,
-                    ].join("&");
+	/**
+	 * Joins a room
+	 *
+	 * @param {object} session - user session
+	 * @param {string} room - the room to join
+	 * @param {Function} cb - callback
+	 */
+	joinRoom(session, room, cb) {
+		if (
+			room === "home" ||
+			room === "news" ||
+			room.startsWith("profile.") ||
+			room.startsWith("manage-station.") ||
+			room.startsWith("edit-song.") ||
+			room.startsWith("view-report.")
+		) {
+			WSModule.runJob("SOCKET_JOIN_ROOM", {
+				socketId: session.socketId,
+				room
+			})
+				.then(() => {})
+				.catch(err => {
+					this.log("ERROR", `Joining room failed: ${err.message}`);
+				});
+		}
 
-                    const options = {
-                        url: `https://api.discogs.com/database/search?${params}`,
-                        headers: {
-                            "User-Agent": "Request",
-                            Authorization: `Discogs key=${config.get(
-                                "apis.discogs.client"
-                            )}, secret=${config.get("apis.discogs.secret")}`,
-                        },
-                    };
+		cb({ status: "success", message: "Successfully joined room." });
+	},
 
-                    request(options, (err, res, body) => {
-                        if (err) next(err);
-                        body = JSON.parse(body);
-                        next(null, body);
-                        if (body.error) next(body.error);
-                    });
-                },
-            ],
-            async (err, body) => {
-                if (err) {
-                    err = await utils.runJob("GET_ERROR", { error: err });
-                    console.log(
-                        "ERROR",
-                        "APIS_SEARCH_DISCOGS",
-                        `Searching discogs failed with query "${query}". "${err}"`
-                    );
-                    return cb({ status: "failure", message: err });
-                }
-                console.log(
-                    "SUCCESS",
-                    "APIS_SEARCH_DISCOGS",
-                    `User "${session.userId}" searched Discogs succesfully for query "${query}".`
-                );
-                cb({
-                    status: "success",
-                    results: body.results,
-                    pages: body.pagination.pages,
-                });
-            }
-        );
-    }),
+	/**
+	 * Leaves a room
+	 *
+	 * @param {object} session - user session
+	 * @param {string} room - the room to leave
+	 * @param {Function} cb - callback
+	 */
+	leaveRoom(session, room, cb) {
+		if (
+			room === "home" ||
+			room.startsWith("profile.") ||
+			room.startsWith("manage-station.") ||
+			room.startsWith("edit-song.") ||
+			room.startsWith("view-report.")
+		) {
+			WSModule.runJob("SOCKET_LEAVE_ROOM", {
+				socketId: session.socketId,
+				room
+			})
+				.then(() => {})
+				.catch(err => {
+					this.log("ERROR", `Leaving room failed: ${err.message}`);
+				});
+		}
 
-    /**
-     * Joins a room
-     *
-     * @param session
-     * @param page - the room to join
-     * @param cb
-     */
-    joinRoom: (session, page, cb) => {
-        if (page === "home") {
-            utils.runJob("SOCKET_JOIN_ROOM", {
-                socketId: session.socketId,
-                room: page,
-            });
-        }
-        cb({});
-    },
+		cb({ status: "success", message: "Successfully left room." });
+	},
 
-    /**
-     * Joins an admin room
-     *
-     * @param session
-     * @param page - the admin room to join
-     * @param cb
-     */
-    joinAdminRoom: hooks.adminRequired((session, page, cb) => {
-        if (
-            page === "queue" ||
-            page === "songs" ||
-            page === "stations" ||
-            page === "reports" ||
-            page === "news" ||
-            page === "users" ||
-            page === "statistics" ||
-            page === "punishments"
-        ) {
-            utils.runJob("SOCKET_JOIN_ROOM", {
-                socketId: session.socketId,
-                room: `admin.${page}`,
-            });
-        }
-        cb({});
-    }),
+	/**
+	 * Joins an admin room
+	 *
+	 * @param {object} session - user session
+	 * @param {string} page - the admin room to join
+	 * @param {Function} cb - callback
+	 */
+	joinAdminRoom: isAdminRequired((session, page, cb) => {
+		if (
+			page === "unverifiedSongs" ||
+			page === "songs" ||
+			page === "hiddenSongs" ||
+			page === "stations" ||
+			page === "reports" ||
+			page === "news" ||
+			page === "playlists" ||
+			page === "users" ||
+			page === "statistics" ||
+			page === "punishments"
+		) {
+			WSModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session.socketId }).then(() => {
+				WSModule.runJob("SOCKET_JOIN_ROOM", {
+					socketId: session.socketId,
+					room: `admin.${page}`
+				});
+			});
+		}
 
-    /**
-     * Returns current date
-     *
-     * @param session
-     * @param cb
-     */
-    ping: (session, cb) => {
-        cb({ date: Date.now() });
-    },
+		cb({ status: "success", message: "Successfully joined admin room." });
+	}),
+
+	/**
+	 * Leaves all rooms
+	 *
+	 * @param {object} session - user session
+	 * @param {Function} cb - callback
+	 */
+	leaveRooms(session, cb) {
+		WSModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session.socketId });
+
+		cb({ status: "success", message: "Successfully left all rooms." });
+	},
+
+	/**
+	 * Returns current date
+	 *
+	 * @param {object} session - user session
+	 * @param {Function} cb - callback
+	 */
+	ping(session, cb) {
+		cb({ status: "success", message: "Successfully pinged.", data: { date: Date.now() } });
+	}
 };

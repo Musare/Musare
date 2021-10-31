@@ -1,40 +1,35 @@
-const VueLoaderPlugin = require("vue-loader/lib/plugin");
-const WebpackMd5Hash = require("webpack-md5-hash");
+const path = require("path");
+const { VueLoaderPlugin } = require("vue-loader");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const ESLintPlugin = require('eslint-webpack-plugin');
 
 module.exports = {
-	entry: "./main.js",
+	entry: "./src/main.js",
 	output: {
 		path: `${__dirname}/dist/build/`,
-		filename: "[name].[hash].js"
+		filename: "[name].[contenthash].js"
+	},
+	resolve: {
+		alias: {
+			"@": path.resolve(__dirname, "./src/")
+		},
+		extensions: [".js", ".vue"]
 	},
 	plugins: [
 		new VueLoaderPlugin(),
-		new WebpackMd5Hash(),
 		new HtmlWebpackPlugin({
 			hash: true,
 			template: "dist/index.tpl.html",
 			inject: "body",
 			filename: "index.html"
-		})
+		}),
+		new ESLintPlugin()
 	],
 	module: {
 		rules: [
 			{
-				enforce: "pre",
-				test: /\.vue$/,
-				loader: "eslint-loader",
-				exclude: /node_modules/
-			},
-			{
 				test: /\.vue$/,
 				loader: "vue-loader",
-				exclude: /node_modules/
-			},
-			{
-				enforce: "pre",
-				test: /\.js$/,
-				loader: "eslint-loader",
 				exclude: /node_modules/
 			},
 			{
@@ -45,11 +40,17 @@ module.exports = {
 			{
 				test: /\.scss$/,
 				exclude: /node_modules/,
-				use: ["vue-style-loader", "css-loader", "sass-loader"]
+				use: [
+					"vue-style-loader",
+					{
+						loader: "css-loader",
+						options: {
+							url: false
+						}
+					},
+					"sass-loader"
+				]
 			}
 		]
-	},
-	externals: {
-		moment: "moment"
 	}
 };

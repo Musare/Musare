@@ -1,17 +1,19 @@
-module.exports = {
-	songId: { type: String, min: 11, max: 11, required: true, index: true },
+export default {
+	youtubeId: { type: String, min: 11, max: 11, required: true, index: true, unique: true },
 	title: { type: String, required: true },
-	artists: [{ type: String }],
-	genres: [{ type: String }],
-	duration: { type: Number, required: true },
-	skipDuration: { type: Number, required: true },
-	thumbnail: { type: String, required: true },
+	artists: [{ type: String, default: [] }],
+	genres: [{ type: String, default: [] }],
+	duration: { type: Number, min: 1, required: true },
+	skipDuration: { type: Number, required: true, default: 0 },
+	thumbnail: { type: String },
 	likes: { type: Number, default: 0, required: true },
 	dislikes: { type: Number, default: 0, required: true },
-	explicit: { type: Boolean, default: false, required: true },
-	requestedBy: { type: String, required: true },
-	requestedAt: { type: Date, required: true },
-	acceptedBy: { type: String, required: true },
-	acceptedAt: { type: Date, default: Date.now, required: true },
-	discogs: { type: Object }
+	explicit: { type: Boolean },
+	requestedBy: { type: String },
+	requestedAt: { type: Date },
+	verifiedBy: { type: String },
+	verifiedAt: { type: Date },
+	discogs: { type: Object },
+	status: { type: String, required: true, default: "hidden", enum: ["hidden", "unverified", "verified"] },
+	documentVersion: { type: Number, default: 5, required: true }
 };

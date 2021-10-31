@@ -1,1044 +1,1484 @@
-"use strict";
+import async from "async";
 
-const async = require("async");
+import { isAdminRequired, isLoginRequired } from "./hooks";
 
-const hooks = require("./hooks");
-const queueSongs = require("./queueSongs");
+import moduleManager from "../../index";
 
-// const moduleManager = require("../../index");
+const DBModule = moduleManager.modules.db;
+const UtilsModule = moduleManager.modules.utils;
+const WSModule = moduleManager.modules.ws;
+const CacheModule = moduleManager.modules.cache;
+const SongsModule = moduleManager.modules.songs;
+const ActivitiesModule = moduleManager.modules.activities;
+const YouTubeModule = moduleManager.modules.youtube;
+const PlaylistsModule = moduleManager.modules.playlists;
 
-const db = require("../db");
-const songs = require("../songs");
-const cache = require("../cache");
-const utils = require("../utils");
-const activities = require("../activities");
-// const logger = moduleManager.modules["logger"];
+CacheModule.runJob("SUB", {
+	channel: "song.newUnverifiedSong",
+	cb: async songId => {
+		const songModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "song"
+		});
 
-cache.runJob("SUB", {
-    channel: "song.removed",
-    cb: (songId) => {
-        utils.runJob("EMIT_TO_ROOM", {
-            room: "admin.songs",
-            args: ["event:admin.song.removed", songId],
-        });
-    },
+		songModel.findOne({ _id: songId }, (err, song) =>
+			WSModule.runJob("EMIT_TO_ROOMS", {
+				rooms: ["admin.unverifiedSongs", `edit-song.${songId}`],
+				args: ["event:admin.unverifiedSong.created", { data: { song } }]
+			})
+		);
+	}
 });
 
-cache.runJob("SUB", {
-    channel: "song.added",
-    cb: async (songId) => {
-        const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
-        songModel.findOne({ _id: songId }, (err, song) => {
-            utils.runJob("EMIT_TO_ROOM", {
-                room: "admin.songs",
-                args: ["event:admin.song.added", song],
-            });
-        });
-    },
+CacheModule.runJob("SUB", {
+	channel: "song.removedUnverifiedSong",
+	cb: songId => {
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: "admin.unverifiedSongs",
+			args: ["event:admin.unverifiedSong.deleted", { data: { songId } }]
+		});
+	}
 });
 
-cache.runJob("SUB", {
-    channel: "song.updated",
-    cb: async (songId) => {
-        const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
-        songModel.findOne({ _id: songId }, (err, song) => {
-            utils.runJob("EMIT_TO_ROOM", {
-                room: "admin.songs",
-                args: ["event:admin.song.updated", song],
-            });
-        });
-    },
+CacheModule.runJob("SUB", {
+	channel: "song.updatedUnverifiedSong",
+	cb: async songId => {
+		const songModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "song"
+		});
+
+		songModel.findOne({ _id: songId }, (err, song) => {
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: "admin.unverifiedSongs",
+				args: ["event:admin.unverifiedSong.updated", { data: { song } }]
+			});
+		});
+	}
 });
 
-cache.runJob("SUB", {
-    channel: "song.like",
-    cb: (data) => {
-        utils.runJob("EMIT_TO_ROOM", {
-            room: `song.${data.songId}`,
-            args: [
-                "event:song.like",
-                {
-                    songId: data.songId,
-                    likes: data.likes,
-                    dislikes: data.dislikes,
-                },
-            ],
-        });
-        utils
-            .runJob("SOCKETS_FROM_USER", { userId: data.userId })
-            .then((response) => {
-                response.sockets.forEach((socket) => {
-                    socket.emit("event:song.newRatings", {
-                        songId: data.songId,
-                        liked: true,
-                        disliked: false,
-                    });
-                });
-            });
-    },
+CacheModule.runJob("SUB", {
+	channel: "song.newVerifiedSong",
+	cb: async songId => {
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+
+		songModel.findOne({ _id: songId }, (err, song) =>
+			WSModule.runJob("EMIT_TO_ROOMS", {
+				rooms: ["admin.songs", `edit-song.${songId}`],
+				args: ["event:admin.verifiedSong.created", { data: { song } }]
+			})
+		);
+	}
 });
 
-cache.runJob("SUB", {
-    channel: "song.dislike",
-    cb: (data) => {
-        utils.runJob("EMIT_TO_ROOM", {
-            room: `song.${data.songId}`,
-            args: [
-                "event:song.dislike",
-                {
-                    songId: data.songId,
-                    likes: data.likes,
-                    dislikes: data.dislikes,
-                },
-            ],
-        });
-        utils
-            .runJob("SOCKETS_FROM_USER", { userId: data.userId })
-            .then((response) => {
-                response.sockets.forEach((socket) => {
-                    socket.emit("event:song.newRatings", {
-                        songId: data.songId,
-                        liked: false,
-                        disliked: true,
-                    });
-                });
-            });
-    },
+CacheModule.runJob("SUB", {
+	channel: "song.removedVerifiedSong",
+	cb: songId => {
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: "admin.songs",
+			args: ["event:admin.verifiedSong.deleted", { data: { songId } }]
+		});
+	}
 });
 
-cache.runJob("SUB", {
-    channel: "song.unlike",
-    cb: (data) => {
-        utils.runJob("EMIT_TO_ROOM", {
-            room: `song.${data.songId}`,
-            args: [
-                "event:song.unlike",
-                {
-                    songId: data.songId,
-                    likes: data.likes,
-                    dislikes: data.dislikes,
-                },
-            ],
-        });
-        utils
-            .runJob("SOCKETS_FROM_USER", { userId: data.userId })
-            .then((response) => {
-                response.sockets.forEach((socket) => {
-                    socket.emit("event:song.newRatings", {
-                        songId: data.songId,
-                        liked: false,
-                        disliked: false,
-                    });
-                });
-            });
-    },
+CacheModule.runJob("SUB", {
+	channel: "song.updatedVerifiedSong",
+	cb: async songId => {
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+		songModel.findOne({ _id: songId }, (err, song) => {
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: "admin.songs",
+				args: ["event:admin.verifiedSong.updated", { data: { song } }]
+			});
+		});
+	}
 });
 
-cache.runJob("SUB", {
-    channel: "song.undislike",
-    cb: (data) => {
-        utils.runJob("EMIT_TO_ROOM", {
-            room: `song.${data.songId}`,
-            args: [
-                "event:song.undislike",
-                {
-                    songId: data.songId,
-                    likes: data.likes,
-                    dislikes: data.dislikes,
-                },
-            ],
-        });
-        utils
-            .runJob("SOCKETS_FROM_USER", { userId: data.userId })
-            .then((response) => {
-                response.sockets.forEach((socket) => {
-                    socket.emit("event:song.newRatings", {
-                        songId: data.songId,
-                        liked: false,
-                        disliked: false,
-                    });
-                });
-            });
-    },
+CacheModule.runJob("SUB", {
+	channel: "song.newHiddenSong",
+	cb: async songId => {
+		const songModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "song"
+		});
+
+		songModel.findOne({ _id: songId }, (err, song) =>
+			WSModule.runJob("EMIT_TO_ROOMS", {
+				rooms: ["admin.hiddenSongs", `edit-song.${songId}`],
+				args: ["event:admin.hiddenSong.created", { data: { song } }]
+			})
+		);
+	}
 });
 
-module.exports = {
-    /**
-     * Returns the length of the songs list
-     *
-     * @param session
-     * @param cb
-     */
-    length: hooks.adminRequired(async (session, cb) => {
-        const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
-        async.waterfall(
-            [
-                (next) => {
-                    songModel.countDocuments({}, next);
-                },
-            ],
-            async (err, count) => {
-                if (err) {
-                    err = await utils.runJob("GET_ERROR", { error: err });
-                    console.log(
-                        "ERROR",
-                        "SONGS_LENGTH",
-                        `Failed to get length from songs. "${err}"`
-                    );
-                    return cb({ status: "failure", message: err });
-                }
-                console.log(
-                    "SUCCESS",
-                    "SONGS_LENGTH",
-                    `Got length from songs successfully.`
-                );
-                cb(count);
-            }
-        );
-    }),
+CacheModule.runJob("SUB", {
+	channel: "song.removedHiddenSong",
+	cb: songId => {
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: "admin.hiddenSongs",
+			args: ["event:admin.hiddenSong.deleted", { data: { songId } }]
+		});
+	}
+});
 
-    /**
-     * Gets a set of songs
-     *
-     * @param session
-     * @param set - the set number to return
-     * @param cb
-     */
-    getSet: hooks.adminRequired(async (session, set, cb) => {
-        const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
-        async.waterfall(
-            [
-                (next) => {
-                    songModel
-                        .find({})
-                        .skip(15 * (set - 1))
-                        .limit(15)
-                        .exec(next);
-                },
-            ],
-            async (err, songs) => {
-                if (err) {
-                    err = await utils.runJob("GET_ERROR", { error: err });
-                    console.log(
-                        "ERROR",
-                        "SONGS_GET_SET",
-                        `Failed to get set from songs. "${err}"`
-                    );
-                    return cb({ status: "failure", message: err });
-                }
-                console.log(
-                    "SUCCESS",
-                    "SONGS_GET_SET",
-                    `Got set from songs successfully.`
-                );
-                cb(songs);
-            }
-        );
-    }),
+CacheModule.runJob("SUB", {
+	channel: "song.updatedHiddenSong",
+	cb: async songId => {
+		const songModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "song"
+		});
 
-    /**
-     * Gets a song
-     *
-     * @param session
-     * @param songId - the song id
-     * @param cb
-     */
-    getSong: hooks.adminRequired((session, songId, cb) => {
-        console.log(songId);
+		songModel.findOne({ _id: songId }, (err, song) => {
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: "admin.hiddenSongs",
+				args: ["event:admin.hiddenSong.updated", { data: { song } }]
+			});
+		});
+	}
+});
 
-        async.waterfall(
-            [
-                (next) => {
-                    song.getSong(songId, next);
-                },
-            ],
-            async (err, song) => {
-                if (err) {
-                    err = await utils.runJob("GET_ERROR", { error: err });
-                    console.log(
-                        "ERROR",
-                        "SONGS_GET_SONG",
-                        `Failed to get song ${songId}. "${err}"`
-                    );
-                    return cb({ status: "failure", message: err });
-                } else {
-                    console.log(
-                        "SUCCESS",
-                        "SONGS_GET_SONG",
-                        `Got song ${songId} successfully.`
-                    );
-                    cb({ status: "success", data: song });
-                }
-            }
-        );
-    }),
+CacheModule.runJob("SUB", {
+	channel: "song.like",
+	cb: data => {
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `song.${data.youtubeId}`,
+			args: [
+				"event:song.liked",
+				{
+					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
+				}
+			]
+		});
 
-    /**
-     * Obtains basic metadata of a song in order to format an activity
-     *
-     * @param session
-     * @param songId - the song id
-     * @param cb
-     */
-    getSongForActivity: (session, songId, cb) => {
-        async.waterfall(
-            [
-                (next) => {
-                    songs
-                        .runJob("GET_SONG_FROM_ID", { songId })
-                        .then((responsesong) => next(null, response.song))
-                        .catch(next);
-                },
-            ],
-            async (err, song) => {
-                if (err) {
-                    err = await utils.runJob("GET_ERROR", { error: err });
-                    console.log(
-                        "ERROR",
-                        "SONGS_GET_SONG_FOR_ACTIVITY",
-                        `Failed to obtain metadata of song ${songId} for activity formatting. "${err}"`
-                    );
-                    return cb({ status: "failure", message: err });
-                } else {
-                    if (song) {
-                        console.log(
-                            "SUCCESS",
-                            "SONGS_GET_SONG_FOR_ACTIVITY",
-                            `Obtained metadata of song ${songId} for activity formatting successfully.`
-                        );
-                        cb({
-                            status: "success",
-                            data: {
-                                title: song.title,
-                                thumbnail: song.thumbnail,
-                            },
-                        });
-                    } else {
-                        console.log(
-                            "ERROR",
-                            "SONGS_GET_SONG_FOR_ACTIVITY",
-                            `Song ${songId} does not exist so failed to obtain for activity formatting.`
-                        );
-                        cb({ status: "failure" });
-                    }
-                }
-            }
-        );
-    },
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
+			sockets.forEach(socket => {
+				socket.dispatch("event:song.ratings.updated", {
+					data: {
+						youtubeId: data.youtubeId,
+						liked: true,
+						disliked: false
+					}
+				});
+			});
+		});
+	}
+});
 
-    /**
-     * Updates a song
-     *
-     * @param session
-     * @param songId - the song id
-     * @param song - the updated song object
-     * @param cb
-     */
-    update: hooks.adminRequired(async (session, songId, song, cb) => {
-        const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
-        async.waterfall(
-            [
-                (next) => {
-                    songModel.updateOne(
-                        { _id: songId },
-                        song,
-                        { runValidators: true },
-                        next
-                    );
-                },
+CacheModule.runJob("SUB", {
+	channel: "song.dislike",
+	cb: data => {
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `song.${data.youtubeId}`,
+			args: [
+				"event:song.disliked",
+				{
+					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
+				}
+			]
+		});
 
-                (res, next) => {
-                    songs
-                        .runJob("UPDATE_SONG", { songId })
-                        .then((song) => next(null, song))
-                        .catch(next);
-                },
-            ],
-            async (err, song) => {
-                if (err) {
-                    err = await utils.runJob("GET_ERROR", { error: err });
-                    console.log(
-                        "ERROR",
-                        "SONGS_UPDATE",
-                        `Failed to update song "${songId}". "${err}"`
-                    );
-                    return cb({ status: "failure", message: err });
-                }
-                console.log(
-                    "SUCCESS",
-                    "SONGS_UPDATE",
-                    `Successfully updated song "${songId}".`
-                );
-                cache.runJob("PUB", {
-                    channel: "song.updated",
-                    value: song.songId,
-                });
-                cb({
-                    status: "success",
-                    message: "Song has been successfully updated",
-                    data: song,
-                });
-            }
-        );
-    }),
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
+			sockets.forEach(socket => {
+				socket.dispatch("event:song.ratings.updated", {
+					data: {
+						youtubeId: data.youtubeId,
+						liked: false,
+						disliked: true
+					}
+				});
+			});
+		});
+	}
+});
 
-    /**
-     * Removes a song
-     *
-     * @param session
-     * @param songId - the song id
-     * @param cb
-     */
-    remove: hooks.adminRequired(async (session, songId, cb) => {
-        const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
-        async.waterfall(
-            [
-                (next) => {
-                    songModel.deleteOne({ _id: songId }, next);
-                },
+CacheModule.runJob("SUB", {
+	channel: "song.unlike",
+	cb: data => {
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `song.${data.youtubeId}`,
+			args: [
+				"event:song.unliked",
+				{
+					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
+				}
+			]
+		});
 
-                (res, next) => {
-                    //TODO Check if res gets returned from above
-                    cache
-                        .runJob("HDEL", { table: "songs", key: songId })
-                        .then(() => next())
-                        .catch(next);
-                },
-            ],
-            async (err) => {
-                if (err) {
-                    err = await utils.runJob("GET_ERROR", { error: err });
-                    console.log(
-                        "ERROR",
-                        "SONGS_UPDATE",
-                        `Failed to remove song "${songId}". "${err}"`
-                    );
-                    return cb({ status: "failure", message: err });
-                }
-                console.log(
-                    "SUCCESS",
-                    "SONGS_UPDATE",
-                    `Successfully remove song "${songId}".`
-                );
-                cache.runJob("PUB", { channel: "song.removed", value: songId });
-                cb({
-                    status: "success",
-                    message: "Song has been successfully updated",
-                });
-            }
-        );
-    }),
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
+			sockets.forEach(socket => {
+				socket.dispatch("event:song.ratings.updated", {
+					data: {
+						youtubeId: data.youtubeId,
+						liked: false,
+						disliked: false
+					}
+				});
+			});
+		});
+	}
+});
 
-    /**
-     * Adds a song
-     *
-     * @param session
-     * @param song - the song object
-     * @param cb
-     */
-    add: hooks.adminRequired(async (session, song, cb) => {
-        const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
-        async.waterfall(
-            [
-                (next) => {
-                    songModel.findOne({ songId: song.songId }, next);
-                },
+CacheModule.runJob("SUB", {
+	channel: "song.undislike",
+	cb: data => {
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `song.${data.youtubeId}`,
+			args: [
+				"event:song.undisliked",
+				{
+					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
+				}
+			]
+		});
 
-                (existingSong, next) => {
-                    if (existingSong)
-                        return next("Song is already in rotation.");
-                    next();
-                },
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
+			sockets.forEach(socket => {
+				socket.dispatch("event:song.ratings.updated", {
+					data: {
+						youtubeId: data.youtubeId,
+						liked: false,
+						disliked: false
+					}
+				});
+			});
+		});
+	}
+});
 
-                (next) => {
-                    const newSong = new songModel(song);
-                    newSong.acceptedBy = session.userId;
-                    newSong.acceptedAt = Date.now();
-                    newSong.save(next);
-                },
+export default {
+	/**
+	 * Returns the length of the songs list
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param cb
+	 */
+	length: isAdminRequired(async function length(session, status, cb) {
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+		async.waterfall(
+			[
+				next => {
+					songModel.countDocuments({ status }, next);
+				}
+			],
+			async (err, count) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"SONGS_LENGTH",
+						`Failed to get length from songs that have the status ${status}. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+				this.log(
+					"SUCCESS",
+					"SONGS_LENGTH",
+					`Got length from songs that have the status ${status} successfully.`
+				);
+				return cb({ status: "success", message: "Successfully got length of songs.", data: { length: count } });
+			}
+		);
+	}),
 
-                (res, next) => {
-                    queueSongs.remove(session, song._id, () => {
-                        next();
-                    });
-                },
-            ],
-            async (err) => {
-                if (err) {
-                    err = await utils.runJob("GET_ERROR", { error: err });
-                    console.log(
-                        "ERROR",
-                        "SONGS_ADD",
-                        `User "${session.userId}" failed to add song. "${err}"`
-                    );
-                    return cb({ status: "failure", message: err });
-                }
-                console.log(
-                    "SUCCESS",
-                    "SONGS_ADD",
-                    `User "${session.userId}" successfully added song "${song.songId}".`
-                );
-                cache.runJob("PUB", {
-                    channel: "song.added",
-                    value: song.songId,
-                });
-                cb({
-                    status: "success",
-                    message: "Song has been moved from the queue successfully.",
-                });
-            }
-        );
-        //TODO Check if video is in queue and Add the song to the appropriate stations
-    }),
+	/**
+	 * Gets a set of songs
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param set - the set number to return
+	 * @param cb
+	 */
+	getSet: isAdminRequired(async function getSet(session, set, status, cb) {
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+		async.waterfall(
+			[
+				next => {
+					songModel
+						.find({ status })
+						.skip(15 * (set - 1))
+						.limit(15)
+						.exec(next);
+				}
+			],
+			async (err, songs) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"SONGS_GET_SET",
+						`Failed to get set from songs that have the status ${status}. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "SONGS_GET_SET", `Got set from songs that have the status ${status} successfully.`);
+				return cb({ status: "success", message: "Successfully got set of songs.", data: { songs } });
+			}
+		);
+	}),
 
-    /**
-     * Likes a song
-     *
-     * @param session
-     * @param songId - the song id
-     * @param cb
-     */
-    like: hooks.loginRequired(async (session, songId, cb) => {
-        const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
-        const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
-        async.waterfall(
-            [
-                (next) => {
-                    songModel.findOne({ songId }, next);
-                },
+	/**
+	 * Updates all songs
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param cb
+	 */
+	updateAll: isAdminRequired(async function length(session, cb) {
+		async.waterfall(
+			[
+				next => {
+					SongsModule.runJob("UPDATE_ALL_SONGS", {}, this)
+						.then(() => {
+							next();
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "SONGS_UPDATE_ALL", `Failed to update all songs. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "SONGS_UPDATE_ALL", `Updated all songs successfully.`);
+				return cb({ status: "success", message: "Successfully updated all songs." });
+			}
+		);
+	}),
 
-                (song, next) => {
-                    if (!song) return next("No song found with that id.");
-                    next(null, song);
-                },
-            ],
-            async (err, song) => {
-                if (err) {
-                    err = await utils.runJob("GET_ERROR", { error: err });
-                    console.log(
-                        "ERROR",
-                        "SONGS_LIKE",
-                        `User "${session.userId}" failed to like song ${songId}. "${err}"`
-                    );
-                    return cb({ status: "failure", message: err });
-                }
-                let oldSongId = songId;
-                songId = song._id;
-                userModel.findOne({ _id: session.userId }, (err, user) => {
-                    if (user.liked.indexOf(songId) !== -1)
-                        return cb({
-                            status: "failure",
-                            message: "You have already liked this song.",
-                        });
-                    userModel.updateOne(
-                        { _id: session.userId },
-                        {
-                            $push: { liked: songId },
-                            $pull: { disliked: songId },
-                        },
-                        (err) => {
-                            if (!err) {
-                                userModel.countDocuments(
-                                    { liked: songId },
-                                    (err, likes) => {
-                                        if (err)
-                                            return cb({
-                                                status: "failure",
-                                                message:
-                                                    "Something went wrong while liking this song.",
-                                            });
-                                        userModel.countDocuments(
-                                            { disliked: songId },
-                                            (err, dislikes) => {
-                                                if (err)
-                                                    return cb({
-                                                        status: "failure",
-                                                        message:
-                                                            "Something went wrong while liking this song.",
-                                                    });
-                                                songModel.update(
-                                                    { _id: songId },
-                                                    {
-                                                        $set: {
-                                                            likes: likes,
-                                                            dislikes: dislikes,
-                                                        },
-                                                    },
-                                                    (err) => {
-                                                        if (err)
-                                                            return cb({
-                                                                status:
-                                                                    "failure",
-                                                                message:
-                                                                    "Something went wrong while liking this song.",
-                                                            });
-                                                        songs.runJob(
-                                                            "UPDATE_SONG",
-                                                            { songId }
-                                                        );
-                                                        cache.runJob("PUB", {
-                                                            channel:
-                                                                "song.like",
-                                                            value: JSON.stringify(
-                                                                {
-                                                                    songId: oldSongId,
-                                                                    userId:
-                                                                        session.userId,
-                                                                    likes: likes,
-                                                                    dislikes: dislikes,
-                                                                }
-                                                            ),
-                                                        });
-                                                        activities.runJob(
-                                                            "ADD_ACTIVITY",
-                                                            {
-                                                                userId:
-                                                                    session.userId,
-                                                                activityType:
-                                                                    "liked_song",
-                                                                payload: [
-                                                                    songId,
-                                                                ],
-                                                            }
-                                                        );
-                                                        return cb({
-                                                            status: "success",
-                                                            message:
-                                                                "You have successfully liked this song.",
-                                                        });
-                                                    }
-                                                );
-                                            }
-                                        );
-                                    }
-                                );
-                            } else
-                                return cb({
-                                    status: "failure",
-                                    message:
-                                        "Something went wrong while liking this song.",
-                                });
-                        }
-                    );
-                });
-            }
-        );
-    }),
+	/**
+	 * Gets a song from the Musare song id
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} songId - the song id
+	 * @param {Function} cb
+	 */
+	getSongFromSongId: isAdminRequired(function getSongFromSongId(session, songId, cb) {
+		async.waterfall(
+			[
+				next => {
+					SongsModule.runJob("GET_SONG", { songId }, this)
+						.then(response => next(null, response.song))
+						.catch(err => next(err));
+				}
+			],
+			async (err, song) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "SONGS_GET_SONG_FROM_MUSARE_ID", `Failed to get song ${songId}. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "SONGS_GET_SONG_FROM_MUSARE_ID", `Got song ${songId} successfully.`);
+				return cb({ status: "success", data: { song } });
+			}
+		);
+	}),
 
-    /**
-     * Dislikes a song
-     *
-     * @param session
-     * @param songId - the song id
-     * @param cb
-     */
-    dislike: hooks.loginRequired(async (session, songId, cb) => {
-        const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
-        const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
-        async.waterfall(
-            [
-                (next) => {
-                    songModel.findOne({ songId }, next);
-                },
+	/**
+	 * Updates a song
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} songId - the song id
+	 * @param {object} song - the updated song object
+	 * @param {Function} cb
+	 */
+	update: isAdminRequired(async function update(session, songId, song, cb) {
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+		let existingSong = null;
+		async.waterfall(
+			[
+				next => {
+					songModel.findOne({ _id: songId }, next);
+				},
 
-                (song, next) => {
-                    if (!song) return next("No song found with that id.");
-                    next(null, song);
-                },
-            ],
-            async (err, song) => {
-                if (err) {
-                    err = await utils.runJob("GET_ERROR", { error: err });
-                    console.log(
-                        "ERROR",
-                        "SONGS_DISLIKE",
-                        `User "${session.userId}" failed to like song ${songId}. "${err}"`
-                    );
-                    return cb({ status: "failure", message: err });
-                }
-                let oldSongId = songId;
-                songId = song._id;
-                userModel.findOne({ _id: session.userId }, (err, user) => {
-                    if (user.disliked.indexOf(songId) !== -1)
-                        return cb({
-                            status: "failure",
-                            message: "You have already disliked this song.",
-                        });
-                    userModel.updateOne(
-                        { _id: session.userId },
-                        {
-                            $push: { disliked: songId },
-                            $pull: { liked: songId },
-                        },
-                        (err) => {
-                            if (!err) {
-                                userModel.countDocuments(
-                                    { liked: songId },
-                                    (err, likes) => {
-                                        if (err)
-                                            return cb({
-                                                status: "failure",
-                                                message:
-                                                    "Something went wrong while disliking this song.",
-                                            });
-                                        userModel.countDocuments(
-                                            { disliked: songId },
-                                            (err, dislikes) => {
-                                                if (err)
-                                                    return cb({
-                                                        status: "failure",
-                                                        message:
-                                                            "Something went wrong while disliking this song.",
-                                                    });
-                                                songModel.update(
-                                                    { _id: songId },
-                                                    {
-                                                        $set: {
-                                                            likes: likes,
-                                                            dislikes: dislikes,
-                                                        },
-                                                    },
-                                                    (err, res) => {
-                                                        if (err)
-                                                            return cb({
-                                                                status:
-                                                                    "failure",
-                                                                message:
-                                                                    "Something went wrong while disliking this song.",
-                                                            });
-                                                        songs.runJob(
-                                                            "UPDATE_SONG",
-                                                            { songId }
-                                                        );
-                                                        cache.runJob("PUB", {
-                                                            channel:
-                                                                "song.dislike",
-                                                            value: JSON.stringify(
-                                                                {
-                                                                    songId: oldSongId,
-                                                                    userId:
-                                                                        session.userId,
-                                                                    likes: likes,
-                                                                    dislikes: dislikes,
-                                                                }
-                                                            ),
-                                                        });
-                                                        return cb({
-                                                            status: "success",
-                                                            message:
-                                                                "You have successfully disliked this song.",
-                                                        });
-                                                    }
-                                                );
-                                            }
-                                        );
-                                    }
-                                );
-                            } else
-                                return cb({
-                                    status: "failure",
-                                    message:
-                                        "Something went wrong while disliking this song.",
-                                });
-                        }
-                    );
-                });
-            }
-        );
-    }),
+				(_existingSong, next) => {
+					existingSong = _existingSong;
+					songModel.updateOne({ _id: songId }, song, { runValidators: true }, next);
+				},
 
-    /**
-     * Undislikes a song
-     *
-     * @param session
-     * @param songId - the song id
-     * @param cb
-     */
-    undislike: hooks.loginRequired(async (session, songId, cb) => {
-        const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
-        const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
-        async.waterfall(
-            [
-                (next) => {
-                    songModel.findOne({ songId }, next);
-                },
+				(res, next) => {
+					SongsModule.runJob("UPDATE_SONG", { songId }, this)
+						.then(song => {
+							existingSong.genres
+								.concat(song.genres)
+								.filter((value, index, self) => self.indexOf(value) === index)
+								.forEach(genre => {
+									PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
+										.then(() => {})
+										.catch(() => {});
+								});
 
-                (song, next) => {
-                    if (!song) return next("No song found with that id.");
-                    next(null, song);
-                },
-            ],
-            async (err, song) => {
-                if (err) {
-                    err = await utils.runJob("GET_ERROR", { error: err });
-                    console.log(
-                        "ERROR",
-                        "SONGS_UNDISLIKE",
-                        `User "${session.userId}" failed to like song ${songId}. "${err}"`
-                    );
-                    return cb({ status: "failure", message: err });
-                }
-                let oldSongId = songId;
-                songId = song._id;
-                userModel.findOne({ _id: session.userId }, (err, user) => {
-                    if (user.disliked.indexOf(songId) === -1)
-                        return cb({
-                            status: "failure",
-                            message: "You have not disliked this song.",
-                        });
-                    userModel.updateOne(
-                        { _id: session.userId },
-                        { $pull: { liked: songId, disliked: songId } },
-                        (err) => {
-                            if (!err) {
-                                userModel.countDocuments(
-                                    { liked: songId },
-                                    (err, likes) => {
-                                        if (err)
-                                            return cb({
-                                                status: "failure",
-                                                message:
-                                                    "Something went wrong while undisliking this song.",
-                                            });
-                                        userModel.countDocuments(
-                                            { disliked: songId },
-                                            (err, dislikes) => {
-                                                if (err)
-                                                    return cb({
-                                                        status: "failure",
-                                                        message:
-                                                            "Something went wrong while undisliking this song.",
-                                                    });
-                                                songModel.update(
-                                                    { _id: songId },
-                                                    {
-                                                        $set: {
-                                                            likes: likes,
-                                                            dislikes: dislikes,
-                                                        },
-                                                    },
-                                                    (err) => {
-                                                        if (err)
-                                                            return cb({
-                                                                status:
-                                                                    "failure",
-                                                                message:
-                                                                    "Something went wrong while undisliking this song.",
-                                                            });
-                                                        songs.runJob(
-                                                            "UPDATE_SONG",
-                                                            { songId }
-                                                        );
-                                                        cache.runJob("PUB", {
-                                                            channel:
-                                                                "song.undislike",
-                                                            value: JSON.stringify(
-                                                                {
-                                                                    songId: oldSongId,
-                                                                    userId:
-                                                                        session.userId,
-                                                                    likes: likes,
-                                                                    dislikes: dislikes,
-                                                                }
-                                                            ),
-                                                        });
-                                                        return cb({
-                                                            status: "success",
-                                                            message:
-                                                                "You have successfully undisliked this song.",
-                                                        });
-                                                    }
-                                                );
-                                            }
-                                        );
-                                    }
-                                );
-                            } else
-                                return cb({
-                                    status: "failure",
-                                    message:
-                                        "Something went wrong while undisliking this song.",
-                                });
-                        }
-                    );
-                });
-            }
-        );
-    }),
+							next(null, song);
+						})
+						.catch(next);
+				}
+			],
+			async (err, song) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
-    /**
-     * Unlikes a song
-     *
-     * @param session
-     * @param songId - the song id
-     * @param cb
-     */
-    unlike: hooks.loginRequired(async (session, songId, cb) => {
-        const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
-        const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
-        async.waterfall(
-            [
-                (next) => {
-                    songModel.findOne({ songId }, next);
-                },
+					this.log("ERROR", "SONGS_UPDATE", `Failed to update song "${songId}". "${err}"`);
 
-                (song, next) => {
-                    if (!song) return next("No song found with that id.");
-                    next(null, song);
-                },
-            ],
-            async (err, song) => {
-                if (err) {
-                    err = await utils.runJob("GET_ERROR", { error: err });
-                    console.log(
-                        "ERROR",
-                        "SONGS_UNLIKE",
-                        `User "${session.userId}" failed to like song ${songId}. "${err}"`
-                    );
-                    return cb({ status: "failure", message: err });
-                }
-                let oldSongId = songId;
-                songId = song._id;
-                userModel.findOne({ _id: session.userId }, (err, user) => {
-                    if (user.liked.indexOf(songId) === -1)
-                        return cb({
-                            status: "failure",
-                            message: "You have not liked this song.",
-                        });
-                    userModel.updateOne(
-                        { _id: session.userId },
-                        { $pull: { liked: songId, disliked: songId } },
-                        (err) => {
-                            if (!err) {
-                                userModel.countDocuments(
-                                    { liked: songId },
-                                    (err, likes) => {
-                                        if (err)
-                                            return cb({
-                                                status: "failure",
-                                                message:
-                                                    "Something went wrong while unliking this song.",
-                                            });
-                                        userModel.countDocuments(
-                                            { disliked: songId },
-                                            (err, dislikes) => {
-                                                if (err)
-                                                    return cb({
-                                                        status: "failure",
-                                                        message:
-                                                            "Something went wrong while undiking this song.",
-                                                    });
-                                                songModel.updateOne(
-                                                    { _id: songId },
-                                                    {
-                                                        $set: {
-                                                            likes: likes,
-                                                            dislikes: dislikes,
-                                                        },
-                                                    },
-                                                    (err) => {
-                                                        if (err)
-                                                            return cb({
-                                                                status:
-                                                                    "failure",
-                                                                message:
-                                                                    "Something went wrong while unliking this song.",
-                                                            });
-                                                        songs.runJob(
-                                                            "UPDATE_SONG",
-                                                            { songId }
-                                                        );
-                                                        cache.runJob("PUB", {
-                                                            channel:
-                                                                "song.unlike",
-                                                            value: JSON.stringify(
-                                                                {
-                                                                    songId: oldSongId,
-                                                                    userId:
-                                                                        session.userId,
-                                                                    likes: likes,
-                                                                    dislikes: dislikes,
-                                                                }
-                                                            ),
-                                                        });
-                                                        return cb({
-                                                            status: "success",
-                                                            message:
-                                                                "You have successfully unliked this song.",
-                                                        });
-                                                    }
-                                                );
-                                            }
-                                        );
-                                    }
-                                );
-                            } else
-                                return cb({
-                                    status: "failure",
-                                    message:
-                                        "Something went wrong while unliking this song.",
-                                });
-                        }
-                    );
-                });
-            }
-        );
-    }),
+					return cb({ status: "error", message: err });
+				}
 
-    /**
-     * Gets user's own song ratings
-     *
-     * @param session
-     * @param songId - the song id
-     * @param cb
-     */
-    getOwnSongRatings: hooks.loginRequired(async (session, songId, cb) => {
-        const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
-        const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
-        async.waterfall(
-            [
-                (next) => {
-                    songModel.findOne({ songId }, next);
-                },
+				this.log("SUCCESS", "SONGS_UPDATE", `Successfully updated song "${songId}".`);
 
-                (song, next) => {
-                    if (!song) return next("No song found with that id.");
-                    next(null, song);
-                },
-            ],
-            async (err, song) => {
-                if (err) {
-                    err = await utils.runJob("GET_ERROR", { error: err });
-                    console.log(
-                        "ERROR",
-                        "SONGS_GET_OWN_RATINGS",
-                        `User "${session.userId}" failed to get ratings for ${songId}. "${err}"`
-                    );
-                    return cb({ status: "failure", message: err });
-                }
-                let newSongId = song._id;
-                userModel.findOne(
-                    { _id: session.userId },
-                    async (err, user) => {
-                        if (!err && user) {
-                            return cb({
-                                status: "success",
-                                songId: songId,
-                                liked: user.liked.indexOf(newSongId) !== -1,
-                                disliked:
-                                    user.disliked.indexOf(newSongId) !== -1,
-                            });
-                        } else {
-                            return cb({
-                                status: "failure",
-                                message: await utils.runJob("GET_ERROR", {
-                                    error: err,
-                                }),
-                            });
-                        }
-                    }
-                );
-            }
-        );
-    }),
+				if (song.status === "verified") {
+					CacheModule.runJob("PUB", {
+						channel: "song.updatedVerifiedSong",
+						value: song._id
+					});
+				} else if (song.status === "unverified") {
+					CacheModule.runJob("PUB", {
+						channel: "song.updatedUnverifiedSong",
+						value: song._id
+					});
+				} else if (song.status === "hidden") {
+					CacheModule.runJob("PUB", {
+						channel: "song.updatedHiddenSong",
+						value: song._id
+					});
+				}
+
+				return cb({
+					status: "success",
+					message: "Song has been successfully updated",
+					data: { song }
+				});
+			}
+		);
+	}),
+
+	// /**
+	//  * Removes a song
+	//  *
+	//  * @param session
+	//  * @param songId - the song id
+	//  * @param cb
+	//  */
+	// remove: isAdminRequired(async function remove(session, songId, cb) {
+	// 	const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+	// 	let song = null;
+	// 	async.waterfall(
+	// 		[
+	// 			next => {
+	// 				songModel.findOne({ _id: songId }, next);
+	// 			},
+
+	// 			(_song, next) => {
+	// 				song = _song;
+	// 				songModel.deleteOne({ _id: songId }, next);
+	// 			},
+
+	// 			(res, next) => {
+	// 				CacheModule.runJob("HDEL", { table: "songs", key: songId }, this)
+	// 					.then(() => {
+	// 						next();
+	// 					})
+	// 					.catch(next)
+	// 					.finally(() => {
+	// 						song.genres.forEach(genre => {
+	// 							PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
+	// 								.then(() => {})
+	// 								.catch(() => {});
+	// 						});
+	// 					});
+	// 			}
+	// 		],
+	// 		async err => {
+	// 			if (err) {
+	// 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+	// 				this.log("ERROR", "SONGS_REMOVE", `Failed to remove song "${songId}". "${err}"`);
+
+	// 				return cb({ status: "error", message: err });
+	// 			}
+
+	// 			this.log("SUCCESS", "SONGS_REMOVE", `Successfully removed song "${songId}".`);
+
+	// 			if (song.status === "verified") {
+	// 				CacheModule.runJob("PUB", {
+	// 					channel: "song.removedVerifiedSong",
+	// 					value: songId
+	// 				});
+	// 			}
+	// 			if (song.status === "unverified") {
+	// 				CacheModule.runJob("PUB", {
+	// 					channel: "song.removedUnverifiedSong",
+	// 					value: songId
+	// 				});
+	// 			}
+	// 			if (song.status === "hidden") {
+	// 				CacheModule.runJob("PUB", {
+	// 					channel: "song.removedHiddenSong",
+	// 					value: songId
+	// 				});
+	// 			}
+
+	// 			return cb({
+	// 				status: "success",
+	// 				message: "Song has been successfully removed"
+	// 			});
+	// 		}
+	// 	);
+	// }),
+
+	/**
+	 * Searches through official songs
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} query - the query
+	 * @param {string} page - the page
+	 * @param {Function} cb - gets called with the result
+	 */
+	searchOfficial: isLoginRequired(async function searchOfficial(session, query, page, cb) {
+		async.waterfall(
+			[
+				next => {
+					if ((!query && query !== "") || typeof query !== "string") next("Invalid query.");
+					else next();
+				},
+
+				next => {
+					SongsModule.runJob("SEARCH", {
+						query,
+						includeVerified: true,
+						trimmed: true,
+						page
+					})
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async (err, data) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "SONGS_SEARCH_OFFICIAL", `Searching songs failed. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "SONGS_SEARCH_OFFICIAL", "Searching songs successful.");
+				return cb({ status: "success", data });
+			}
+		);
+	}),
+
+	/**
+	 * Requests a song
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} youtubeId - the youtube id of the song that gets requested
+	 * @param {string} returnSong - returns the simple song
+	 * @param {Function} cb - gets called with the result
+	 */
+	request: isLoginRequired(async function add(session, youtubeId, returnSong, cb) {
+		SongsModule.runJob("REQUEST_SONG", { youtubeId, userId: session.userId }, this)
+			.then(response => {
+				this.log(
+					"SUCCESS",
+					"SONGS_REQUEST",
+					`User "${session.userId}" successfully requested song "${youtubeId}".`
+				);
+				return cb({
+					status: "success",
+					message: "Successfully requested that song",
+					song: returnSong ? response.song : null
+				});
+			})
+			.catch(async _err => {
+				const err = await UtilsModule.runJob("GET_ERROR", { error: _err }, this);
+				this.log(
+					"ERROR",
+					"SONGS_REQUEST",
+					`Requesting song "${youtubeId}" failed for user ${session.userId}. "${err}"`
+				);
+				return cb({ status: "error", message: err, song: returnSong && _err.data ? _err.data.song : null });
+			});
+	}),
+
+	/**
+	 * Hides a song
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} songId - the song id of the song that gets hidden
+	 * @param {Function} cb - gets called with the result
+	 */
+	hide: isLoginRequired(async function add(session, songId, cb) {
+		SongsModule.runJob("HIDE_SONG", { songId }, this)
+			.then(() => {
+				this.log("SUCCESS", "SONGS_HIDE", `User "${session.userId}" successfully hid song "${songId}".`);
+				return cb({
+					status: "success",
+					message: "Successfully hid that song"
+				});
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "SONGS_HIDE", `Hiding song "${songId}" failed for user ${session.userId}. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
+	 * Unhides a song
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} songId - the song id of the song that gets hidden
+	 * @param {Function} cb - gets called with the result
+	 */
+	unhide: isLoginRequired(async function add(session, songId, cb) {
+		SongsModule.runJob("UNHIDE_SONG", { songId }, this)
+			.then(() => {
+				this.log("SUCCESS", "SONGS_UNHIDE", `User "${session.userId}" successfully unhid song "${songId}".`);
+				return cb({
+					status: "success",
+					message: "Successfully unhid that song"
+				});
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log(
+					"ERROR",
+					"SONGS_UNHIDE",
+					`Unhiding song "${songId}" failed for user ${session.userId}. "${err}"`
+				);
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
+	 * Verifies a song
+	 *
+	 * @param session
+	 * @param songId - the song id
+	 * @param cb
+	 */
+	verify: isAdminRequired(async function add(session, songId, cb) {
+		const SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+		async.waterfall(
+			[
+				next => {
+					SongModel.findOne({ _id: songId }, next);
+				},
+
+				(song, next) => {
+					if (!song) return next("This song is not in the database.");
+					return next(null, song);
+				},
+
+				(song, next) => {
+					const oldStatus = song.status;
+
+					song.verifiedBy = session.userId;
+					song.verifiedAt = Date.now();
+					song.status = "verified";
+
+					song.save(err => next(err, song, oldStatus));
+				},
+
+				(song, oldStatus, next) => {
+					song.genres.forEach(genre => {
+						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
+							.then(() => {})
+							.catch(() => {});
+					});
+
+					SongsModule.runJob("UPDATE_SONG", { songId: song._id });
+					next(null, song, oldStatus);
+				}
+			],
+			async (err, song, oldStatus) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "SONGS_VERIFY", `User "${session.userId}" failed to verify song. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+
+				this.log("SUCCESS", "SONGS_VERIFY", `User "${session.userId}" successfully verified song "${songId}".`);
+
+				if (oldStatus === "hidden")
+					CacheModule.runJob("PUB", {
+						channel: "song.removedHiddenSong",
+						value: song._id
+					});
+
+				CacheModule.runJob("PUB", {
+					channel: "song.newVerifiedSong",
+					value: song._id
+				});
+
+				CacheModule.runJob("PUB", {
+					channel: "song.removedUnverifiedSong",
+					value: song._id
+				});
+
+				return cb({
+					status: "success",
+					message: "Song has been verified successfully."
+				});
+			}
+		);
+		// TODO Check if video is in queue and Add the song to the appropriate stations
+	}),
+
+	/**
+	 * Un-verifies a song
+	 *
+	 * @param session
+	 * @param songId - the song id
+	 * @param cb
+	 */
+	unverify: isAdminRequired(async function add(session, songId, cb) {
+		const SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+		async.waterfall(
+			[
+				next => {
+					SongModel.findOne({ _id: songId }, next);
+				},
+
+				(song, next) => {
+					if (!song) return next("This song is not in the database.");
+					return next(null, song);
+				},
+
+				(song, next) => {
+					song.status = "unverified";
+					song.save(err => {
+						next(err, song);
+					});
+				},
+
+				(song, next) => {
+					song.genres.forEach(genre => {
+						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
+							.then(() => {})
+							.catch(() => {});
+					});
+
+					SongsModule.runJob("UPDATE_SONG", { songId });
+
+					next(null);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log("ERROR", "SONGS_UNVERIFY", `User "${session.userId}" failed to verify song. "${err}"`);
+
+					return cb({ status: "error", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"SONGS_UNVERIFY",
+					`User "${session.userId}" successfully unverified song "${songId}".`
+				);
+
+				CacheModule.runJob("PUB", {
+					channel: "song.newUnverifiedSong",
+					value: songId
+				});
+
+				CacheModule.runJob("PUB", {
+					channel: "song.removedVerifiedSong",
+					value: songId
+				});
+
+				return cb({
+					status: "success",
+					message: "Song has been unverified successfully."
+				});
+			}
+		);
+		// TODO Check if video is in queue and Add the song to the appropriate stations
+	}),
+
+	/**
+	 * Requests a set of songs
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} url - the url of the the YouTube playlist
+	 * @param {boolean} musicOnly - whether to only get music from the playlist
+	 * @param {Function} cb - gets called with the result
+	 */
+	requestSet: isLoginRequired(function requestSet(session, url, musicOnly, returnSongs, cb) {
+		async.waterfall(
+			[
+				next => {
+					YouTubeModule.runJob(
+						"GET_PLAYLIST",
+						{
+							url,
+							musicOnly
+						},
+						this
+					)
+						.then(res => {
+							next(null, res.songs);
+						})
+						.catch(next);
+				},
+				(youtubeIds, next) => {
+					let successful = 0;
+					let songs = {};
+					let failed = 0;
+					let alreadyInDatabase = 0;
+
+					if (youtubeIds.length === 0) next();
+
+					async.eachOfLimit(
+						youtubeIds,
+						1,
+						(youtubeId, index, next) => {
+							WSModule.runJob(
+								"RUN_ACTION2",
+								{
+									session,
+									namespace: "songs",
+									action: "request",
+									args: [youtubeId, returnSongs]
+								},
+								this
+							)
+								.then(res => {
+									if (res.status === "success") successful += 1;
+									else failed += 1;
+									if (res.message === "This song is already in the database.") alreadyInDatabase += 1;
+									if (res.song) songs[index] = res.song;
+									else songs[index] = null;
+								})
+								.catch(() => {
+									failed += 1;
+								})
+								.finally(() => {
+									next();
+								});
+						},
+						() => {
+							if (returnSongs)
+								songs = Object.keys(songs)
+									.sort()
+									.map(key => songs[key]);
+
+							next(null, { successful, failed, alreadyInDatabase, songs });
+						}
+					);
+				}
+			],
+			async (err, response) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"REQUEST_SET",
+						`Importing a YouTube playlist to be requested failed for user "${session.userId}". "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+				this.log(
+					"SUCCESS",
+					"REQUEST_SET",
+					`Successfully imported a YouTube playlist to be requested for user "${session.userId}".`
+				);
+				return cb({
+					status: "success",
+					message: `Playlist is done importing. ${response.successful} were added succesfully, ${response.failed} failed (${response.alreadyInDatabase} were already in database)`,
+					songs: returnSongs ? response.songs : null
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Likes a song
+	 *
+	 * @param session
+	 * @param youtubeId - the youtube id
+	 * @param cb
+	 */
+	like: isLoginRequired(async function like(session, youtubeId, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+
+		async.waterfall(
+			[
+				next => songModel.findOne({ youtubeId }, next),
+
+				(song, next) => {
+					if (!song) return next("No song found with that id.");
+					return next(null, song);
+				},
+
+				(song, next) => userModel.findOne({ _id: session.userId }, (err, user) => next(err, song, user)),
+
+				(song, user, next) => {
+					if (!user) return next("User does not exist.");
+
+					return this.module
+						.runJob(
+							"RUN_ACTION2",
+							{
+								session,
+								namespace: "playlists",
+								action: "addSongToPlaylist",
+								args: [false, youtubeId, user.likedSongsPlaylist]
+							},
+							this
+						)
+						.then(res => {
+							if (res.status === "error") {
+								if (res.message === "That song is already in the playlist")
+									return next("You have already liked this song.");
+								return next("Unable to add song to the 'Liked Songs' playlist.");
+							}
+
+							return next(null, song, user.dislikedSongsPlaylist);
+						})
+						.catch(err => next(err));
+				},
+
+				(song, dislikedSongsPlaylist, next) => {
+					this.module
+						.runJob(
+							"RUN_ACTION2",
+							{
+								session,
+								namespace: "playlists",
+								action: "removeSongFromPlaylist",
+								args: [youtubeId, dislikedSongsPlaylist]
+							},
+							this
+						)
+						.then(res => {
+							if (res.status === "error")
+								return next("Unable to remove song from the 'Disliked Songs' playlist.");
+							return next(null, song);
+						})
+						.catch(err => next(err));
+				},
+
+				(song, next) => {
+					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, youtubeId })
+						.then(ratings => next(null, song, ratings))
+						.catch(err => next(err));
+				}
+			],
+			async (err, song, { likes, dislikes }) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"SONGS_LIKE",
+						`User "${session.userId}" failed to like song ${youtubeId}. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
+
+				CacheModule.runJob("PUB", {
+					channel: "song.like",
+					value: JSON.stringify({
+						youtubeId,
+						userId: session.userId,
+						likes,
+						dislikes
+					})
+				});
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: session.userId,
+					type: "song__like",
+					payload: {
+						message: `Liked song <youtubeId>${song.title} by ${song.artists.join(", ")}</youtubeId>`,
+						youtubeId,
+						thumbnail: song.thumbnail
+					}
+				});
+
+				return cb({
+					status: "success",
+					message: "You have successfully liked this song."
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Dislikes a song
+	 *
+	 * @param session
+	 * @param youtubeId - the youtube id
+	 * @param cb
+	 */
+	dislike: isLoginRequired(async function dislike(session, youtubeId, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					songModel.findOne({ youtubeId }, next);
+				},
+
+				(song, next) => {
+					if (!song) return next("No song found with that id.");
+					return next(null, song);
+				},
+
+				(song, next) => userModel.findOne({ _id: session.userId }, (err, user) => next(err, song, user)),
+
+				(song, user, next) => {
+					if (!user) return next("User does not exist.");
+
+					return this.module
+						.runJob(
+							"RUN_ACTION2",
+							{
+								session,
+								namespace: "playlists",
+								action: "addSongToPlaylist",
+								args: [false, youtubeId, user.dislikedSongsPlaylist]
+							},
+							this
+						)
+						.then(res => {
+							if (res.status === "error") {
+								if (res.message === "That song is already in the playlist")
+									return next("You have already disliked this song.");
+								return next("Unable to add song to the 'Disliked Songs' playlist.");
+							}
+
+							return next(null, song, user.likedSongsPlaylist);
+						})
+						.catch(err => next(err));
+				},
+
+				(song, likedSongsPlaylist, next) => {
+					this.module
+						.runJob(
+							"RUN_ACTION2",
+							{
+								session,
+								namespace: "playlists",
+								action: "removeSongFromPlaylist",
+								args: [youtubeId, likedSongsPlaylist]
+							},
+							this
+						)
+						.then(res => {
+							if (res.status === "error")
+								return next("Unable to remove song from the 'Liked Songs' playlist.");
+							return next(null, song);
+						})
+						.catch(err => next(err));
+				},
+
+				(song, next) => {
+					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, youtubeId })
+						.then(ratings => next(null, song, ratings))
+						.catch(err => next(err));
+				}
+			],
+			async (err, song, { likes, dislikes }) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"SONGS_DISLIKE",
+						`User "${session.userId}" failed to dislike song ${youtubeId}. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
+
+				CacheModule.runJob("PUB", {
+					channel: "song.dislike",
+					value: JSON.stringify({
+						youtubeId,
+						userId: session.userId,
+						likes,
+						dislikes
+					})
+				});
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: session.userId,
+					type: "song__dislike",
+					payload: {
+						message: `Disliked song <youtubeId>${song.title} by ${song.artists.join(", ")}</youtubeId>`,
+						youtubeId,
+						thumbnail: song.thumbnail
+					}
+				});
+
+				return cb({
+					status: "success",
+					message: "You have successfully disliked this song."
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Undislikes a song
+	 *
+	 * @param session
+	 * @param youtubeId - the youtube id
+	 * @param cb
+	 */
+	undislike: isLoginRequired(async function undislike(session, youtubeId, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					songModel.findOne({ youtubeId }, next);
+				},
+
+				(song, next) => {
+					if (!song) return next("No song found with that id.");
+					return next(null, song);
+				},
+
+				(song, next) => userModel.findOne({ _id: session.userId }, (err, user) => next(err, song, user)),
+
+				(song, user, next) => {
+					if (!user) return next("User does not exist.");
+
+					return this.module
+						.runJob(
+							"RUN_ACTION2",
+							{
+								session,
+								namespace: "playlists",
+								action: "removeSongFromPlaylist",
+								args: [youtubeId, user.dislikedSongsPlaylist]
+							},
+							this
+						)
+						.then(res => {
+							if (res.status === "error")
+								return next("Unable to remove song from the 'Disliked Songs' playlist.");
+							return next(null, song, user.likedSongsPlaylist);
+						})
+						.catch(err => next(err));
+				},
+
+				(song, likedSongsPlaylist, next) => {
+					this.module
+						.runJob(
+							"RUN_ACTION2",
+							{
+								session,
+								namespace: "playlists",
+								action: "removeSongFromPlaylist",
+								args: [youtubeId, likedSongsPlaylist]
+							},
+							this
+						)
+						.then(res => {
+							if (res.status === "error")
+								return next("Unable to remove song from the 'Liked Songs' playlist.");
+							return next(null, song);
+						})
+						.catch(err => next(err));
+				},
+
+				(song, next) => {
+					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, youtubeId })
+						.then(ratings => next(null, song, ratings))
+						.catch(err => next(err));
+				}
+			],
+			async (err, song, { likes, dislikes }) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"SONGS_UNDISLIKE",
+						`User "${session.userId}" failed to undislike song ${youtubeId}. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
+
+				CacheModule.runJob("PUB", {
+					channel: "song.undislike",
+					value: JSON.stringify({
+						youtubeId,
+						userId: session.userId,
+						likes,
+						dislikes
+					})
+				});
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: session.userId,
+					type: "song__undislike",
+					payload: {
+						message: `Removed <youtubeId>${song.title} by ${song.artists.join(
+							", "
+						)}</youtubeId> from your Disliked Songs`,
+						youtubeId,
+						thumbnail: song.thumbnail
+					}
+				});
+
+				return cb({
+					status: "success",
+					message: "You have successfully undisliked this song."
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Unlikes a song
+	 *
+	 * @param session
+	 * @param youtubeId - the youtube id
+	 * @param cb
+	 */
+	unlike: isLoginRequired(async function unlike(session, youtubeId, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					songModel.findOne({ youtubeId }, next);
+				},
+
+				(song, next) => {
+					if (!song) return next("No song found with that id.");
+					return next(null, song);
+				},
+
+				(song, next) => userModel.findOne({ _id: session.userId }, (err, user) => next(err, song, user)),
+
+				(song, user, next) => {
+					if (!user) return next("User does not exist.");
+
+					return this.module
+						.runJob(
+							"RUN_ACTION2",
+							{
+								session,
+								namespace: "playlists",
+								action: "removeSongFromPlaylist",
+								args: [youtubeId, user.dislikedSongsPlaylist]
+							},
+							this
+						)
+						.then(res => {
+							if (res.status === "error")
+								return next("Unable to remove song from the 'Disliked Songs' playlist.");
+							return next(null, song, user.likedSongsPlaylist);
+						})
+						.catch(err => next(err));
+				},
+
+				(song, likedSongsPlaylist, next) => {
+					this.module
+						.runJob(
+							"RUN_ACTION2",
+							{
+								session,
+								namespace: "playlists",
+								action: "removeSongFromPlaylist",
+								args: [youtubeId, likedSongsPlaylist]
+							},
+							this
+						)
+						.then(res => {
+							if (res.status === "error")
+								return next("Unable to remove song from the 'Liked Songs' playlist.");
+							return next(null, song);
+						})
+						.catch(err => next(err));
+				},
+
+				(song, next) => {
+					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, youtubeId })
+						.then(ratings => next(null, song, ratings))
+						.catch(err => next(err));
+				}
+			],
+			async (err, song, { likes, dislikes }) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"SONGS_UNLIKE",
+						`User "${session.userId}" failed to unlike song ${youtubeId}. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
+
+				CacheModule.runJob("PUB", {
+					channel: "song.unlike",
+					value: JSON.stringify({
+						youtubeId,
+						userId: session.userId,
+						likes,
+						dislikes
+					})
+				});
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: session.userId,
+					type: "song__unlike",
+					payload: {
+						message: `Removed <youtubeId>${song.title} by ${song.artists.join(
+							", "
+						)}</youtubeId> from your Liked Songs`,
+						youtubeId,
+						thumbnail: song.thumbnail
+					}
+				});
+
+				return cb({
+					status: "success",
+					message: "You have successfully unliked this song."
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Gets song ratings
+	 *
+	 * @param session
+	 * @param songId - the Musare song id
+	 * @param cb
+	 */
+
+	getSongRatings: isLoginRequired(async function getSongRatings(session, songId, cb) {
+		async.waterfall(
+			[
+				next => {
+					SongsModule.runJob("GET_SONG", { songId }, this)
+						.then(res => next(null, res.song))
+						.catch(next);
+				},
+
+				(song, next) => {
+					next(null, {
+						likes: song.likes,
+						dislikes: song.dislikes
+					});
+				}
+			],
+			async (err, ratings) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"SONGS_GET_RATINGS",
+						`User "${session.userId}" failed to get ratings for ${songId}. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				const { likes, dislikes } = ratings;
+
+				return cb({
+					status: "success",
+					data: {
+						likes,
+						dislikes
+					}
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Gets user's own song ratings
+	 *
+	 * @param session
+	 * @param youtubeId - the youtube id
+	 * @param cb
+	 */
+
+	getOwnSongRatings: isLoginRequired(async function getOwnSongRatings(session, youtubeId, cb) {
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+
+		async.waterfall(
+			[
+				next => songModel.findOne({ youtubeId }, next),
+				(song, next) => {
+					if (!song) return next("No song found with that id.");
+					return next(null);
+				},
+
+				next =>
+					playlistModel.findOne(
+						{ createdBy: session.userId, displayName: "Liked Songs" },
+						(err, playlist) => {
+							if (err) return next(err);
+							if (!playlist) return next("'Liked Songs' playlist does not exist.");
+
+							let isLiked = false;
+
+							Object.values(playlist.songs).forEach(song => {
+								// song is found in 'liked songs' playlist
+								if (song.youtubeId === youtubeId) isLiked = true;
+							});
+
+							return next(null, isLiked);
+						}
+					),
+
+				(isLiked, next) =>
+					playlistModel.findOne(
+						{ createdBy: session.userId, displayName: "Disliked Songs" },
+						(err, playlist) => {
+							if (err) return next(err);
+							if (!playlist) return next("'Disliked Songs' playlist does not exist.");
+
+							const ratings = { isLiked, isDisliked: false };
+
+							Object.values(playlist.songs).forEach(song => {
+								// song is found in 'disliked songs' playlist
+								if (song.youtubeId === youtubeId) ratings.isDisliked = true;
+							});
+
+							return next(null, ratings);
+						}
+					)
+			],
+			async (err, ratings) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"SONGS_GET_OWN_RATINGS",
+						`User "${session.userId}" failed to get ratings for ${youtubeId}. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				const { isLiked, isDisliked } = ratings;
+
+				return cb({
+					status: "success",
+					data: {
+						youtubeId,
+						liked: isLiked,
+						disliked: isDisliked
+					}
+				});
+			}
+		);
+	})
 };

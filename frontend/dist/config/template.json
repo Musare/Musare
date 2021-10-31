@@ -1,11 +1,19 @@
 {
 	"recaptcha": {
-		"key": ""
+		"key": "",
+		"enabled": false
 	},
-	"serverDomain": "http://localhost:8080",
+	"backend": {
+		"apiDomain": "http://localhost/backend",
+		"websocketsDomain": "ws://localhost/backend/ws"
+	},
+	"devServer": {
+		"port": "81",
+		"webSocketURL": "ws://localhost/ws"
+	},
 	"frontendDomain": "http://localhost",
-	"frontendPort": "81",
-  	"cookie": {
+	"mode": "development",
+	"cookie": {
 		"domain": "localhost",
 		"secure": false,
 		"SIDname": "SID"
@@ -13,12 +21,21 @@
 	"siteSettings": {
 		"logo_white": "/assets/white_wordmark.png",
 		"logo_blue": "/assets/blue_wordmark.png",
-		"siteName": "Musare",
-		"socialLinks": {
-			"github": "https://github.com/Musare/MusareNode",
-			"twitter": "https://twitter.com/MusareApp",
-			"facebook": "https://facebook.com/MusareMusic/",
-			"discord": "https://discord.gg/Y5NxYGP"
-		}
-	}
+		"sitename": "Musare",
+		"github": "https://github.com/Musare/MusareNode"
+	},
+	"messages": {
+		"accountRemoval": "Your account will be deactivated instantly and your data will shortly be deleted by an admin."
+	},
+	// "shortcutOverrides": {
+	// 	"editSong.useAllDiscogs": {
+	// 		"keyCode": 68,
+	// 		"ctrl": true,
+	// 		"alt": true,
+	// 		"shift": false,
+	// 		"preventDefault": true
+	// 	}
+	// },
+	"skipConfigVersionCheck": false,
+	"configVersion": 8
 }
