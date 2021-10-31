@@ -505,10 +505,9 @@ export default {
 			if (this.apiDomain === "")
 				this.apiDomain = await lofig.get("backend.apiDomain");
 
-			fetch(
-				`${this.apiDomain}/export/privatePlaylist/${this.playlist._id}`,
-				{ credentials: "include" }
-			)
+			fetch(`${this.apiDomain}/export/playlist/${this.playlist._id}`, {
+				credentials: "include"
+			})
 				.then(res => res.blob())
 				.then(blob => {
 					const url = window.URL.createObjectURL(blob);

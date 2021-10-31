@@ -124,7 +124,7 @@ class _APIModule extends CoreClass {
 						});
 					});
 
-					response.app.get("/export/privatePlaylist/:playlistId", async (req, res) => {
+					response.app.get("/export/playlist/:playlistId", async (req, res) => {
 						const { playlistId } = req.params;
 
 						const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
