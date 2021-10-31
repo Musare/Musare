@@ -1,12 +1,19 @@
 <template>
-	<div class='sidebar' transition='slide' v-if='$parent.sidebars.users'>
-		<div class='inner-wrapper'>
-			<div class='title'>Users</div>
-			<h5 class="center">Total users: {{$parent.userCount}}</h5>
+	<div class="sidebar" transition="slide">
+		<div class="inner-wrapper">
+			<div class="title">
+				Users
+			</div>
+			<h5 class="center">Total users: {{ userCount }}</h5>
 			<aside class="menu">
 				<ul class="menu-list">
-					<li v-for="user in $parent.users">
-						<a href="#" v-link="{ path: '/u/' + user }" target="_blank">{{user}}</a>
+					<li v-for="(username, index) in users" :key="index">
+						<router-link
+							:to="{ name: 'profile', params: { username } }"
+							target="_blank"
+						>
+							{{ username }}
+						</router-link>
 					</li>
 				</ul>
 			</aside>
@@ -14,41 +21,60 @@
 	</div>
 </template>
 
-<style type='scss' scoped>
-	.sidebar {
-		position: fixed;
-		z-index: 1;
-		top: 0;
-		right: 0;
-		width: 300px;
-		height: 100vh;
-		background-color: #fff;
-		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
-	}
+<script>
+import { mapState } from "vuex";
 
-	.inner-wrapper {
-		top: 64px;
-		position: relative;
-	}
+export default {
+	computed: mapState({
+		users: state => state.station.users,
+		userCount: state => state.station.userCount
+	})
+};
+</script>
 
-	.slide-transition {
-		transition: transform 0.6s ease-in-out;
-		transform: translateX(0);
-	}
+<style lang="scss" scoped>
+@import "styles/global.scss";
 
-	.slide-enter, .slide-leave {
-		transform: translateX(100%);
-	}
+.sidebar {
+	position: fixed;
+	z-index: 1;
+	top: 0;
+	right: 0;
+	width: 300px;
+	height: 100vh;
+	background-color: $white;
+	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16),
+		0 2px 10px 0 rgba(0, 0, 0, 0.12);
+}
 
-	.title {
-		background-color: rgb(3, 169, 244);
-		text-align: center;
-		padding: 10px;
-		color: white;
-		font-weight: 600;
-	}
+.inner-wrapper {
+	top: 60px;
+	position: relative;
+}
 
-	.menu { padding: 0 20px; }
+.slide-transition {
+	transition: transform 0.6s ease-in-out;
+	transform: translateX(0);
+}
 
-	.menu-list li a:hover { color: #000 !important; }
+.slide-enter,
+.slide-leave {
+	transform: translateX(100%);
+}
+
+.title {
+	background-color: rgb(3, 169, 244);
+	text-align: center;
+	padding: 10px;
+	color: $white;
+	font-weight: 600;
+}
+
+.menu {
+	padding: 0 20px;
+}
+
+.menu-list li a:hover {
+	color: #000 !important;
+}
 </style>

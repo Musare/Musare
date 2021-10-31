@@ -1,0 +1,24 @@
+{
+	"recaptcha": {
+		"key": ""
+	},
+	"serverDomain": "http://localhost:8080",
+	"frontendDomain": "http://localhost",
+	"frontendPort": "81",
+  	"cookie": {
+		"domain": "localhost",
+		"secure": false,
+		"SIDname": "SID"
+	},
+	"siteSettings": {
+		"logo_white": "/assets/white_wordmark.png",
+		"logo_blue": "/assets/blue_wordmark.png",
+		"siteName": "Musare",
+		"socialLinks": {
+			"github": "https://github.com/Musare/MusareNode",
+			"twitter": "https://twitter.com/MusareApp",
+			"facebook": "https://facebook.com/MusareMusic/",
+			"discord": "https://discord.gg/Y5NxYGP"
+		}
+	}
+}

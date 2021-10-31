@@ -4,15 +4,18 @@ const async = require('async');
 const config = require('config');
 const request = require('request');
 const bcrypt = require('bcrypt');
-
-const db = require('../db');
-const mail = require('../mail');
-const cache = require('../cache');
-const punishments = require('../punishments');
-const utils = require('../utils');
-const hooks = require('./hooks');
 const sha256 = require('sha256');
-const logger = require('../logger');
+
+const hooks = require('./hooks');
+
+const moduleManager = require("../../index");
+
+const db = moduleManager.modules["db"];
+const mail = moduleManager.modules["mail"];
+const cache = moduleManager.modules["cache"];
+const punishments = moduleManager.modules["punishments"];
+const utils = moduleManager.modules["utils"];
+const logger = moduleManager.modules["logger"];
 
 cache.sub('user.updateUsername', user => {
 	utils.socketsFromUser(user._id, sockets => {
@@ -71,6 +74,22 @@ cache.sub('user.ban', data => {
 	});
 });
 
+cache.sub('user.favoritedStation', data => {
+	utils.socketsFromUser(data.userId, sockets => {
+		sockets.forEach(socket => {
+			socket.emit('event:user.favoritedStation', data.stationId);
+		});
+	});
+});
+
+cache.sub('user.unfavoritedStation', data => {
+	utils.socketsFromUser(data.userId, sockets => {
+		sockets.forEach(socket => {
+			socket.emit('event:user.unfavoritedStation', data.stationId);
+		});
+	});
+});
+
 module.exports = {
 
 	/**
@@ -84,9 +103,9 @@ module.exports = {
 			(next) => {
 				db.models.user.find({}).exec(next);
 			}
-		], (err, users) => {
+		], async (err, users) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("USER_INDEX", `Indexing users failed. "${err}"`);
 				return cb({status: 'failure', message: err});
 			} else {
@@ -147,16 +166,21 @@ module.exports = {
 			},
 
 			(user, next) => {
-				let sessionId = utils.guid();
+				utils.guid().then((sessionId) => {
+					next(null, user, sessionId);
+				});
+			},
+
+			(user, sessionId, next) => {
 				cache.hset('sessions', sessionId, cache.schemas.session(sessionId, user._id), (err) => {
 					if (err) return next(err);
 					next(null, sessionId);
 				});
 			}
 
-		], (err, sessionId) => {
+		], async (err, sessionId) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("USER_PASSWORD_LOGIN", `Login failed with password for user "${identifier}". "${err}"`);
 				return cb({status: 'failure', message: err});
 			}
@@ -176,9 +200,9 @@ module.exports = {
 	 * @param {Object} recaptcha - the recaptcha data
 	 * @param {Function} cb - gets called with the result
 	 */
-	register: function(session, username, email, password, recaptcha, cb) {
+	register: async function(session, username, email, password, recaptcha, cb) {
 		email = email.toLowerCase();
-		let verificationToken = utils.generateRandomString(64);
+		let verificationToken = await utils.generateRandomString(64);
 		async.waterfall([
 
 			// verify the request with google recaptcha
@@ -225,10 +249,16 @@ module.exports = {
 				bcrypt.hash(sha256(password), salt, next)
 			},
 
-			// save the new user to the database
 			(hash, next) => {
+				utils.generateRandomString(12).then((_id) => {
+					next(null, hash, _id);
+				});
+			},
+
+			// save the new user to the database
+			(hash, _id, next) => {
 				db.models.user.create({
-					_id: utils.generateRandomString(12),//TODO Check if exists
+					_id,
 					username,
 					email: {
 						address: email,
@@ -250,9 +280,9 @@ module.exports = {
 				});
 			}
 
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("USER_PASSWORD_REGISTER", `Register failed with password for user "${username}"."${err}"`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -290,9 +320,9 @@ module.exports = {
 			(session, next) => {
 				cache.hdel('sessions', session.sessionId, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("USER_LOGOUT", `Logout failed. "${err}" `);
 				cb({ status: 'failure', message: err });
 			} else {
@@ -309,15 +339,15 @@ module.exports = {
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {String} userId - the id of the user we are trying to delete the sessions of
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} loggedInUser - the logged in userId automatically added by hooks
 	 */
-	removeSessions:  hooks.loginRequired((session, userId, cb, loggedInUser) => {
+	removeSessions:  hooks.loginRequired((session, userId, cb) => {
 
 		async.waterfall([
 
 			(next) => {
-				db.models.user.findOne({ _id: loggedInUser }, (err, user) => {
-					if (user.role !== 'admin' && loggedInUser !== userId) return next('Only admins and the owner of the account can remove their sessions.');
+				db.models.user.findOne({ _id: session.userId }, (err, user) => {
+					if (err) return next(err);
+					if (user.role !== 'admin' && session.userId !== userId) return next('Only admins and the owner of the account can remove their sessions.');
 					else return next();
 				});
 			},
@@ -349,9 +379,9 @@ module.exports = {
 				});
 			}
 
-		], err => {
+		], async err => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("REMOVE_SESSIONS_FOR_USER", `Couldn't remove all sessions for user "${userId}". "${err}"`);
 				return cb({ status: 'failure', message: err });
 			} else {
@@ -379,9 +409,9 @@ module.exports = {
 				if (!account) return next('User not found.');
 				next(null, account);
 			}
-		], (err, account) => {
+		], async (err, account) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("FIND_BY_USERNAME", `User not found for username "${username}". "${err}"`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -412,21 +442,26 @@ module.exports = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	getUsernameFromId: (session, userId, cb) => {
-		async.waterfall([
-			(next) => {
-				db.models.user.findOne({ _id: userId }, next);
-			},
-		], (err, user) => {
-			if (err && err !== true) {
-				err = utils.getError(err);
-				logger.error("GET_USERNAME_FROM_ID", `Getting the username from userId "${userId}" failed. "${err}"`);
-				cb({status: 'failure', message: err});
-			} else {
+		db.models.user.findById(userId).then(user => {
+			if (user) {
 				logger.success("GET_USERNAME_FROM_ID", `Found username for userId "${userId}".`);
 				return cb({
 					status: 'success',
 					data: user.username
 				});
+			} else {
+				logger.error("GET_USERNAME_FROM_ID", `Getting the username from userId "${userId}" failed. User not found.`);
+				cb({
+					status: 'failure',
+					message: "Couldn't find the user."
+				});
+			}
+			
+		}).catch(async err => {
+			if (err && err !== true) {
+				err = await utils.getError(err);
+				logger.error("GET_USERNAME_FROM_ID", `Getting the username from userId "${userId}" failed. "${err}"`);
+				cb({ status: 'failure', message: err });
 			}
 		});
 	},
@@ -457,9 +492,9 @@ module.exports = {
 				if (!user) return next('User not found.');
 				next(null, user);
 			}
-		], (err, user) => {
+		], async (err, user) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("FIND_BY_SESSION", `User not found. "${err}"`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -487,13 +522,12 @@ module.exports = {
 	 * @param {String} updatingUserId - the updating user's id
 	 * @param {String} newUsername - the new username
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	updateUsername: hooks.loginRequired((session, updatingUserId, newUsername, cb, userId) => {
+	updateUsername: hooks.loginRequired((session, updatingUserId, newUsername, cb) => {
 		async.waterfall([
 			(next) => {
-				if (updatingUserId === userId) return next(null, true);
-				db.models.user.findOne({_id: userId}, next);
+				if (updatingUserId === session.userId) return next(null, true);
+				db.models.user.findOne({_id: session.userId}, next);
 			},
 
 			(user, next) => {
@@ -518,11 +552,11 @@ module.exports = {
 			},
 
 			(next) => {
-				db.models.user.update({ _id: updatingUserId }, {$set: {username: newUsername}}, {runValidators: true}, next);
+				db.models.user.updateOne({ _id: updatingUserId }, {$set: {username: newUsername}}, {runValidators: true}, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("UPDATE_USERNAME", `Couldn't update username for user "${updatingUserId}" to username "${newUsername}". "${err}"`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -543,15 +577,14 @@ module.exports = {
 	 * @param {String} updatingUserId - the updating user's id
 	 * @param {String} newEmail - the new email
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	updateEmail: hooks.loginRequired((session, updatingUserId, newEmail, cb, userId) => {
+	updateEmail: hooks.loginRequired(async (session, updatingUserId, newEmail, cb) => {
 		newEmail = newEmail.toLowerCase();
-		let verificationToken = utils.generateRandomString(64);
+		let verificationToken = await utils.generateRandomString(64);
 		async.waterfall([
 			(next) => {
-				if (updatingUserId === userId) return next(null, true);
-				db.models.user.findOne({_id: userId}, next);
+				if (updatingUserId === session.userId) return next(null, true);
+				db.models.user.findOne({_id: session.userId}, next);
 			},
 
 			(user, next) => {
@@ -576,7 +609,7 @@ module.exports = {
 			},
 
 			(next) => {
-				db.models.user.update({_id: updatingUserId}, {$set: {"email.address": newEmail, "email.verified": false, "email.verificationToken": verificationToken}}, {runValidators: true}, next);
+				db.models.user.updateOne({_id: updatingUserId}, {$set: {"email.address": newEmail, "email.verified": false, "email.verificationToken": verificationToken}}, {runValidators: true}, next);
 			},
 
 			(res, next) => {
@@ -588,9 +621,9 @@ module.exports = {
 					next();
 				});
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("UPDATE_EMAIL", `Couldn't update email for user "${updatingUserId}" to email "${newEmail}". '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -607,9 +640,8 @@ module.exports = {
 	 * @param {String} updatingUserId - the updating user's id
 	 * @param {String} newRole - the new role
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	updateRole: hooks.adminRequired((session, updatingUserId, newRole, cb, userId) => {
+	updateRole: hooks.adminRequired((session, updatingUserId, newRole, cb) => {
 		newRole = newRole.toLowerCase();
 		async.waterfall([
 
@@ -623,16 +655,16 @@ module.exports = {
 				else return next();
 			},
 			(next) => {
-				db.models.user.update({_id: updatingUserId}, {$set: {role: newRole}}, {runValidators: true}, next);
+				db.models.user.updateOne({_id: updatingUserId}, {$set: {role: newRole}}, {runValidators: true}, next);
 			}
 
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
-				logger.error("UPDATE_ROLE", `User "${userId}" couldn't update role for user "${updatingUserId}" to role "${newRole}". "${err}"`);
+				err = await utils.getError(err);
+				logger.error("UPDATE_ROLE", `User "${session.userId}" couldn't update role for user "${updatingUserId}" to role "${newRole}". "${err}"`);
 				cb({status: 'failure', message: err});
 			} else {
-				logger.success("UPDATE_ROLE", `User "${userId}" updated the role of user "${updatingUserId}" to role "${newRole}".`);
+				logger.success("UPDATE_ROLE", `User "${session.userId}" updated the role of user "${updatingUserId}" to role "${newRole}".`);
 				cb({
 					status: 'success',
 					message: 'Role successfully updated.'
@@ -647,12 +679,11 @@ module.exports = {
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {String} newPassword - the new password
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	updatePassword: hooks.loginRequired((session, newPassword, cb, userId) => {
+	updatePassword: hooks.loginRequired((session, newPassword, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.user.findOne({_id: userId}, next);
+				db.models.user.findOne({_id: session.userId}, next);
 			},
 
 			(user, next) => {
@@ -675,16 +706,16 @@ module.exports = {
 			},
 
 			(hashedPassword, next) => {
-				db.models.user.update({_id: userId}, {$set: {"services.password.password": hashedPassword}}, next);
+				db.models.user.updateOne({_id: session.userId}, {$set: {"services.password.password": hashedPassword}}, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
-				logger.error("UPDATE_PASSWORD", `Failed updating user password of user '${userId}'. '${err}'.`);
+				err = await utils.getError(err);
+				logger.error("UPDATE_PASSWORD", `Failed updating user password of user '${session.userId}'. '${err}'.`);
 				return cb({ status: 'failure', message: err });
 			}
 
-			logger.success("UPDATE_PASSWORD", `User '${userId}' updated their password.`);
+			logger.success("UPDATE_PASSWORD", `User '${session.userId}' updated their password.`);
 			cb({
 				status: 'success',
 				message: 'Password successfully updated.'
@@ -698,13 +729,12 @@ module.exports = {
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {String} email - the email of the user that requests a password reset
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	requestPassword: hooks.loginRequired((session, cb, userId) => {
-		let code = utils.generateRandomString(8);
+	requestPassword: hooks.loginRequired(async (session, cb) => {
+		let code = await utils.generateRandomString(8);
 		async.waterfall([
 			(next) => {
-				db.models.user.findOne({_id: userId}, next);
+				db.models.user.findOne({_id: session.userId}, next);
 			},
 
 			(user, next) => {
@@ -722,13 +752,13 @@ module.exports = {
 			(user, next) => {
 				mail.schemas.passwordRequest(user.email.address, user.username, code, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
-				logger.error("REQUEST_PASSWORD", `UserId '${userId}' failed to request password. '${err}'`);
+				err = await utils.getError(err);
+				logger.error("REQUEST_PASSWORD", `UserId '${session.userId}' failed to request password. '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
-				logger.success("REQUEST_PASSWORD", `UserId '${userId}' successfully requested a password.`);
+				logger.success("REQUEST_PASSWORD", `UserId '${session.userId}' successfully requested a password.`);
 				cb({
 					status: 'success',
 					message: 'Successfully requested password.'
@@ -743,13 +773,12 @@ module.exports = {
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {String} code - the password code
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	verifyPasswordCode: hooks.loginRequired((session, code, cb, userId) => {
+	verifyPasswordCode: hooks.loginRequired((session, code, cb) => {
 		async.waterfall([
 			(next) => {
 				if (!code || typeof code !== 'string') return next('Invalid code1.');
-				db.models.user.findOne({"services.password.set.code": code, _id: userId}, next);
+				db.models.user.findOne({"services.password.set.code": code, _id: session.userId}, next);
 			},
 
 			(user, next) => {
@@ -757,9 +786,9 @@ module.exports = {
 				if (user.services.password.set.expires < new Date()) return next('That code has expired.');
 				next(null);
 			}
-		], (err) => {
+		], async(err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("VERIFY_PASSWORD_CODE", `Code '${code}' failed to verify. '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -779,9 +808,8 @@ module.exports = {
 	 * @param {String} code - the password code
 	 * @param {String} newPassword - the new password code
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	changePasswordWithCode: hooks.loginRequired((session, code, newPassword, cb, userId) => {
+	changePasswordWithCode: hooks.loginRequired((session, code, newPassword, cb) => {
 		async.waterfall([
 			(next) => {
 				if (!code || typeof code !== 'string') return next('Invalid code1.');
@@ -809,16 +837,16 @@ module.exports = {
 			},
 
 			(hashedPassword, next) => {
-				db.models.user.update({"services.password.set.code": code}, {$set: {"services.password.password": hashedPassword}, $unset: {"services.password.set": ''}}, {runValidators: true}, next);
+				db.models.user.updateOne({"services.password.set.code": code}, {$set: {"services.password.password": hashedPassword}, $unset: {"services.password.set": ''}}, {runValidators: true}, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("ADD_PASSWORD_WITH_CODE", `Code '${code}' failed to add password. '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
 				logger.success("ADD_PASSWORD_WITH_CODE", `Code '${code}' successfully added password.`);
-				cache.pub('user.linkPassword', userId);
+				cache.pub('user.linkPassword', session.userId);
 				cb({
 					status: 'success',
 					message: 'Successfully added password.'
@@ -832,27 +860,26 @@ module.exports = {
 	 *
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	unlinkPassword: hooks.loginRequired((session, cb, userId) => {
+	unlinkPassword: hooks.loginRequired((session, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.user.findOne({_id: userId}, next);
+				db.models.user.findOne({_id: session.userId}, next);
 			},
 
 			(user, next) => {
 				if (!user) return next('Not logged in.');
 				if (!user.services.github || !user.services.github.id) return next('You can\'t remove password login without having GitHub login.');
-				db.models.user.update({_id: userId}, {$unset: {"services.password": ''}}, next);
+				db.models.user.updateOne({_id: session.userId}, {$unset: {"services.password": ''}}, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
-				logger.error("UNLINK_PASSWORD", `Unlinking password failed for userId '${userId}'. '${err}'`);
+				err = await utils.getError(err);
+				logger.error("UNLINK_PASSWORD", `Unlinking password failed for userId '${session.userId}'. '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
-				logger.success("UNLINK_PASSWORD", `Unlinking password successful for userId '${userId}'.`);
-				cache.pub('user.unlinkPassword', userId);
+				logger.success("UNLINK_PASSWORD", `Unlinking password successful for userId '${session.userId}'.`);
+				cache.pub('user.unlinkPassword', session.userId);
 				cb({
 					status: 'success',
 					message: 'Successfully unlinked password.'
@@ -866,27 +893,26 @@ module.exports = {
 	 *
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	unlinkGitHub: hooks.loginRequired((session, cb, userId) => {
+	unlinkGitHub: hooks.loginRequired((session, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.user.findOne({_id: userId}, next);
+				db.models.user.findOne({_id: session.userId}, next);
 			},
 
 			(user, next) => {
 				if (!user) return next('Not logged in.');
 				if (!user.services.password || !user.services.password.password) return next('You can\'t remove GitHub login without having password login.');
-				db.models.user.update({_id: userId}, {$unset: {"services.github": ''}}, next);
+				db.models.user.updateOne({_id: session.userId}, {$unset: {"services.github": ''}}, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
-				logger.error("UNLINK_GITHUB", `Unlinking GitHub failed for userId '${userId}'. '${err}'`);
+				err = await utils.getError(err);
+				logger.error("UNLINK_GITHUB", `Unlinking GitHub failed for userId '${session.userId}'. '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
-				logger.success("UNLINK_GITHUB", `Unlinking GitHub successful for userId '${userId}'.`);
-				cache.pub('user.unlinkGitHub', userId);
+				logger.success("UNLINK_GITHUB", `Unlinking GitHub successful for userId '${session.userId}'.`);
+				cache.pub('user.unlinkGitHub', session.userId);
 				cb({
 					status: 'success',
 					message: 'Successfully unlinked GitHub.'
@@ -902,8 +928,8 @@ module.exports = {
 	 * @param {String} email - the email of the user that requests a password reset
 	 * @param {Function} cb - gets called with the result
 	 */
-	requestPasswordReset: (session, email, cb) => {
-		let code = utils.generateRandomString(8);
+	requestPasswordReset: async (session, email, cb) => {
+		let code = await utils.generateRandomString(8);
 		async.waterfall([
 			(next) => {
 				if (!email || typeof email !== 'string') return next('Invalid email.');
@@ -926,9 +952,9 @@ module.exports = {
 			(user, next) => {
 				mail.schemas.resetPasswordRequest(user.email.address, user.username, code, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("REQUEST_PASSWORD_RESET", `Email '${email}' failed to request password reset. '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -960,9 +986,9 @@ module.exports = {
 				if (!user.services.password.reset.expires > new Date()) return next('That code has expired.');
 				next(null);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("VERIFY_PASSWORD_RESET_CODE", `Code '${code}' failed to verify. '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -1011,11 +1037,11 @@ module.exports = {
 			},
 
 			(hashedPassword, next) => {
-				db.models.user.update({"services.password.reset.code": code}, {$set: {"services.password.password": hashedPassword}, $unset: {"services.password.reset": ''}}, {runValidators: true}, next);
+				db.models.user.updateOne({"services.password.reset.code": code}, {$set: {"services.password.password": hashedPassword}, $unset: {"services.password.reset": ''}}, {runValidators: true}, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("CHANGE_PASSWORD_WITH_RESET_CODE", `Code '${code}' failed to change password. '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -1036,13 +1062,12 @@ module.exports = {
 	 * @param {String} reason - the reason for the ban
 	 * @param {String} expiresAt - the time the ban expires
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	banUserById: hooks.adminRequired((session, value, reason, expiresAt, cb, userId) => {
+	banUserById: hooks.adminRequired((session, userId, reason, expiresAt, cb) => {
 		async.waterfall([
 			(next) => {
-				if (value === '') return next('You must provide an IP address to ban.');
-				else if (reason === '') return next('You must provide a reason for the ban.');
+				if (!userId) return next('You must provide a userId to ban.');
+				else if (!reason) return next('You must provide a reason for the ban.');
 				else return next();
 			},
 
@@ -1085,23 +1110,48 @@ module.exports = {
 			},
 
 			(next) => {
-				punishments.addPunishment('banUserId', value, reason, expiresAt, userId, next)
+				punishments.addPunishment('banUserId', userId, reason, expiresAt, userId, next)
 			},
 
 			(punishment, next) => {
-				cache.pub('user.ban', {userId: value, punishment});
+				cache.pub('user.ban', { userId, punishment });
 				next();
 			},
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
-				logger.error("BAN_USER_BY_ID", `User ${userId} failed to ban user ${value} with the reason ${reason}. '${err}'`);
+				err = await utils.getError(err);
+				logger.error("BAN_USER_BY_ID", `User ${session.userId} failed to ban user ${userId} with the reason ${reason}. '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
-				logger.success("BAN_USER_BY_ID", `User ${userId} has successfully banned user ${value} with the reason ${reason}.`);
+				logger.success("BAN_USER_BY_ID", `User ${session.userId} has successfully banned user ${userId} with the reason ${reason}.`);
 				cb({
 					status: 'success',
 					message: 'Successfully banned user.'
+				});
+			}
+		});
+	}),
+
+	getFavoriteStations: hooks.loginRequired((session, cb) => {
+		async.waterfall([
+			(next) => {
+				db.models.user.findOne({ _id: session.userId }, next);
+			},
+
+			(user, next) => {
+				if (!user) return next("User not found.");
+				next(null, user);
+			}
+		], async (err, user) => {
+			if (err && err !== true) {
+				err = await utils.getError(err);
+				logger.error("GET_FAVORITE_STATIONS", `User ${session.userId} failed to get favorite stations. '${err}'`);
+				cb({status: 'failure', message: err});
+			} else {
+				logger.success("GET_FAVORITE_STATIONS", `User ${session.userId} got favorite stations.`);
+				cb({
+					status: 'success',
+					favoriteStations: user.favoriteStations
 				});
 			}
 		});

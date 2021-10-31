@@ -2,11 +2,13 @@
 
 const async = require('async');
 
-const db = require('../db');
-const cache = require('../cache');
-const utils = require('../utils');
-const logger = require('../logger');
 const hooks = require('./hooks');
+const moduleManager = require("../../index");
+
+const db = moduleManager.modules["db"];
+const cache = moduleManager.modules["cache"];
+const utils = moduleManager.modules["utils"];
+const logger = moduleManager.modules["logger"];
 
 cache.sub('news.create', news => {
 	utils.socketsFromUser(news.createdBy, sockets => {
@@ -45,9 +47,9 @@ module.exports = {
 			(next) => {
 				db.models.news.find({}).sort({ createdAt: 'desc' }).exec(next);
 			}
-		], (err, news) => {
+		], async (err, news) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("NEWS_INDEX", `Indexing news failed. "${err}"`);
 				return cb({status: 'failure', message: err});
 			}
@@ -62,18 +64,17 @@ module.exports = {
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {Object} data - the object of the news data
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	create: hooks.adminRequired((session, data, cb, userId) => {
+	create: hooks.adminRequired((session, data, cb) => {
 		async.waterfall([
 			(next) => {
-				data.createdBy = userId;
+				data.createdBy = session.userId;
 				data.createdAt = Date.now();
 				db.models.news.create(data, next);
 			}
-		], (err, news) => {
+		], async (err, news) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("NEWS_CREATE", `Creating news failed. "${err}"`);
 				return cb({ 'status': 'failure', 'message': err });
 			}
@@ -94,9 +95,9 @@ module.exports = {
 			(next) => {
 				db.models.news.findOne({}).sort({ createdAt: 'desc' }).exec(next);
 			}
-		], (err, news) => {
+		], async (err, news) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("NEWS_NEWEST", `Getting the latest news failed. "${err}"`);
 				return cb({ 'status': 'failure', 'message': err });
 			}
@@ -114,15 +115,15 @@ module.exports = {
 	 */
 	//TODO Pass in an id, not an object
 	//TODO Fix this
-	remove: hooks.adminRequired((session, news, cb, userId) => {
-		db.models.news.remove({ _id: news._id }, err => {
+	remove: hooks.adminRequired((session, news, cb) => {
+		db.models.news.deleteOne({ _id: news._id }, async err => {
 			if (err) {
-				err = utils.getError(err);
-				logger.error("NEWS_REMOVE", `Removing news "${news._id}" failed for user "${userId}". "${err}"`);
+				err = await utils.getError(err);
+				logger.error("NEWS_REMOVE", `Removing news "${news._id}" failed for user "${session.userId}". "${err}"`);
 				return cb({ 'status': 'failure', 'message': err });
 			} else {
 				cache.pub('news.remove', news);
-				logger.success("NEWS_REMOVE", `Removing news "${news._id}" successful by user "${userId}".`);
+				logger.success("NEWS_REMOVE", `Removing news "${news._id}" successful by user "${session.userId}".`);
 				return cb({ 'status': 'success', 'message': 'Successfully removed News' });
 			}
 		});
@@ -137,15 +138,15 @@ module.exports = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	//TODO Fix this
-	update: hooks.adminRequired((session, _id, news, cb, userId) => {
-		db.models.news.update({ _id }, news, { upsert: true }, err => {
+	update: hooks.adminRequired((session, _id, news, cb) => {
+		db.models.news.updateOne({ _id }, news, { upsert: true }, async err => {
 			if (err) {
-				err = utils.getError(err);
-				logger.error("NEWS_UPDATE", `Updating news "${_id}" failed for user "${userId}". "${err}"`);
+				err = await utils.getError(err);
+				logger.error("NEWS_UPDATE", `Updating news "${_id}" failed for user "${session.userId}". "${err}"`);
 				return cb({ 'status': 'failure', 'message': err });
 			} else {
 				cache.pub('news.update', news);
-				logger.success("NEWS_UPDATE", `Updating news "${_id}" successful for user "${userId}".`);
+				logger.success("NEWS_UPDATE", `Updating news "${_id}" successful for user "${session.userId}".`);
 				return cb({ 'status': 'success', 'message': 'Successfully updated News' });
 			}
 		});

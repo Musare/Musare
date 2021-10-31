@@ -1,21 +1,70 @@
 <template>
 	<div>
-		<modal title='View Punishment'>
-			<div slot='body'>
+		<modal title="View Punishment">
+			<div slot="body">
 				<article class="message">
 					<div class="message-body">
-						<strong>Type: </strong>{{ punishment.type }}<br/>
-						<strong>Value: </strong>{{ punishment.value }}<br/>
-						<strong>Reason: </strong>{{ punishment.reason }}<br/>
-						<strong>Active: </strong>{{ punishment.active }}<br/>
-						<strong>Expires at: </strong>{{ moment(punishment.expiresAt).format('MMMM Do YYYY, h:mm:ss a'); }} ({{ moment(punishment.expiresAt).fromNow() }})<br/>
-						<strong>Punished at: </strong>{{ moment(punishment.punishedAt).format('MMMM Do YYYY, h:mm:ss a') }} ({{ moment(punishment.punishedAt).fromNow() }})<br/>
-						<strong>Punished by: </strong>{{ punishment.punishedBy }}<br/>
+						<strong>Type:</strong>
+						{{ punishment.type }}
+						<br />
+						<strong>Value:</strong>
+						{{ punishment.value }}
+						<br />
+						<strong>Reason:</strong>
+						{{ punishment.reason }}
+						<br />
+						<strong>Active:</strong>
+						{{ punishment.active }}
+						<br />
+						<strong>Expires at:</strong>
+						{{
+							format(
+								parseISO(punishment.expiresAt),
+								"MMMM do yyyy, h:mm:ss a"
+							)
+						}}
+						({{
+							formatDistance(
+								parseISO(punishment.expiresAt),
+								new Date(),
+								{ addSuffix: true }
+							)
+						}})
+						<br />
+						<strong>Punished at:</strong>
+						{{
+							format(
+								parseISO(punishment.punishedAt),
+								"MMMM do yyyy, h:mm:ss a"
+							)
+						}}
+						({{
+							formatDistance(
+								parseISO(punishment.punishedAt),
+								new Date(),
+								{ addSuffix: true }
+							)
+						}})
+						<br />
+						<strong>Punished by:</strong>
+						<user-id-to-username
+							:userId="punishment.punishedBy"
+							:alt="punishment.punishedBy"
+						/>
+						<br />
 					</div>
 				</article>
 			</div>
-			<div slot='footer'>
-				<button class='button is-danger' @click='$parent.toggleModal()'>
+			<div slot="footer">
+				<button
+					class="button is-danger"
+					@click="
+						closeModal({
+							sector: 'admin',
+							modal: 'viewPunishment'
+						})
+					"
+				>
 					<span>&nbsp;Close</span>
 				</button>
 			</div>
@@ -24,41 +73,36 @@
 </template>
 
 <script>
-	import io from '../../io';
-	import { Toast } from 'vue-roaster';
-	import Modal from './Modal.vue';
-	import validation from '../../validation';
+import { mapState, mapActions } from "vuex";
+import { format, formatDistance, parseISO } from "date-fns"; // eslint-disable-line no-unused-vars
 
-	export default {
-		components: { Modal },
-		data() {
-			return {
-				punishment: {},
-				ban: {},
-				moment
-			}
-		},
-		methods: {},
-		ready: function () {
-			let _this = this;
-			io.getSocket(socket => _this.socket = socket );
-		},
-		events: {
-			closeModal: function () {
-				this.$parent.modals.viewPunishment = false;
-			},
-			viewPunishment: function (punishment) {
-				this.punishment = {
-					type: punishment.type,
-					value: punishment.value,
-					reason: punishment.reason,
-					active: punishment.active,
-					expiresAt: punishment.expiresAt,
-					punishedAt: punishment.punishedAt,
-					punishedBy: punishment.punishedBy
-				};
-				this.$parent.toggleModal();
-			}
-		}
+import io from "../../io";
+import Modal from "./Modal.vue";
+import UserIdToUsername from "../UserIdToUsername.vue";
+
+export default {
+	components: { Modal, UserIdToUsername },
+	data() {
+		return {
+			ban: {}
+		};
+	},
+	computed: {
+		...mapState("admin/punishments", {
+			punishment: state => state.punishment
+		})
+	},
+	mounted() {
+		io.getSocket(socket => {
+			this.socket = socket;
+			return socket;
+		});
+	},
+	methods: {
+		...mapActions("modals", ["closeModal"]),
+		format,
+		formatDistance,
+		parseISO
 	}
+};
 </script>

@@ -1,233 +1,196 @@
 'use strict';
 
+const util = require("util");
+
 process.env.NODE_CONFIG_DIR = `${__dirname}/config`;
 
-const async = require('async');
-const fs = require('fs');
-
-
-const Discord = require("discord.js");
-const client = new Discord.Client();
-const db = require('./logic/db');
-const app = require('./logic/app');
-const mail = require('./logic/mail');
-const api = require('./logic/api');
-const io = require('./logic/io');
-const stations = require('./logic/stations');
-const songs = require('./logic/songs');
-const playlists = require('./logic/playlists');
-const cache = require('./logic/cache');
-const notifications = require('./logic/notifications');
-const punishments = require('./logic/punishments');
-const logger = require('./logic/logger');
-const tasks = require('./logic/tasks');
-const config = require('config');
-
-let currentComponent;
-let initializedComponents = [];
-let lockdownB = false;
+const config = require("config");
 
 process.on('uncaughtException', err => {
-	if (lockdownB || err.code === 'ECONNREFUSED' || err.code === 'UNCERTAIN_STATE') return;
+	if (err.code === 'ECONNREFUSED' || err.code === 'UNCERTAIN_STATE') return;
 	console.log(`UNCAUGHT EXCEPTION: ${err.stack}`);
 });
 
-const getError = (err) => {
-	let error = 'An error occurred.';
-	if (typeof err === "string") error = err;
-	else if (err.message) {
-		if (err.message !== 'Validation failed') error = err.message;
-		else error = err.errors[Object.keys(err.errors)].message;
+const fancyConsole = config.get("fancyConsole");
+
+class ModuleManager {
+	constructor() {
+		this.modules = {};
+		this.modulesInitialized = 0;
+		this.totalModules = 0;
+		this.modulesLeft = [];
+		this.i = 0;
+		this.lockdown = false;
+		this.fancyConsole = fancyConsole;
 	}
-	return error;
-};
 
-client.on('ready', () => {
-	discordClientCBS.forEach((cb) => {
-		cb();
-	});
-	discordClientCBS = [];
-	console.log(`Logged in to Discord as ${client.user.username}#${client.user.discriminator}`);
-});
+	addModule(moduleName) {
+		console.log("add module", moduleName);
+		const moduleClass = new require(`./logic/${moduleName}`);
+		this.modules[moduleName] = new moduleClass(moduleName, this);
+		this.totalModules++;
+		this.modulesLeft.push(moduleName);
+	}
 
-client.on('disconnect', (err) => {
-	console.log(`Discord disconnected. Code: ${err.code}.`);
-});
+	initialize() {
+		if (!this.modules["logger"]) return console.error("There is no logger module");
+		this.logger = this.modules["logger"];
+		if (this.fancyConsole) {
+			this.replaceConsoleWithLogger();
+			this.logger.reservedLines = Object.keys(this.modules).length + 5;
+		}
+		
+		for (let moduleName in this.modules) {
+			let module = this.modules[moduleName];
+			if (this.lockdown) break;
 
-client.login(config.get('apis.discord.token'));
+			module._onInitialize().then(() => {
+				this.moduleInitialized(moduleName);
+			});
 
-let discordClientCBS = [];
-const getDiscordClient = (cb) => {
-	if (client.status === 0) return cb();
-	else discordClientCBS.push(cb);
-};
+			let dependenciesInitializedPromises = [];
+			
+			module.dependsOn.forEach(dependencyName => {
+				let dependency = this.modules[dependencyName];
+				dependenciesInitializedPromises.push(dependency._onInitialize());
+			});
 
-const logToDiscord = (message, color, type, critical, extraFields, cb = ()=>{}) => {
-	getDiscordClient(() => {
-		let richEmbed = new Discord.RichEmbed();
-		richEmbed.setAuthor("Musare Logger", config.get("domain")+"/favicon-194x194.png", config.get("domain"));
-		richEmbed.setColor(color);
-		richEmbed.setDescription(message);
-		//richEmbed.setFooter("Footer", "https://musare.com/favicon-194x194.png");
-		//richEmbed.setImage("https://musare.com/favicon-194x194.png");
-		//richEmbed.setThumbnail("https://musare.com/favicon-194x194.png");
-		richEmbed.setTimestamp(new Date());
-		richEmbed.setTitle("MUSARE ALERT");
-		richEmbed.setURL(config.get("domain"));
-		richEmbed.addField("Type:", type, true);
-		richEmbed.addField("Critical:", (critical) ? 'True' : 'False', true);
-		extraFields.forEach((extraField) => {
-			richEmbed.addField(extraField.name, extraField.value, extraField.inline);
-		});
-		client.channels.get(config.get('apis.discord.loggingChannel')).sendEmbed(richEmbed).then(() => {
-			cb();
-		}).then((reason) => {
-			cb(reason);
-		});
-	});
-};
+			module.lastTime = Date.now();
 
-function lockdown() {
-	if (lockdownB) return;
-	lockdownB = true;
-	initializedComponents.forEach((component) => {
-		component._lockdown();
-	});
-	console.log("Backend locked down.");
-}
-
-function errorCb(message, err, component) {
-	err = getError(err);
-	lockdown();
-	logToDiscord(message, "#FF0000", message, true, [{name: "Error:", value: err, inline: false}, {name: "Component:", value: component, inline: true}]);
-}
-
-async.waterfall([
-
-	// setup our Redis cache
-	(next) => {
-		currentComponent = 'Cache';
-		cache.init(config.get('redis').url, config.get('redis').password, errorCb, () => {
-			next();
-		});
-	},
-
-	// setup our MongoDB database
-	(next) => {
-		initializedComponents.push(cache);
-		currentComponent = 'DB';
-		db.init(config.get("mongo").url, errorCb, next);
-	},
-
-	// setup the express server
-	(next) => {
-		initializedComponents.push(db);
-		currentComponent = 'App';
-		app.init(next);
-	},
-
-	// setup the mail
-	(next) => {
-		initializedComponents.push(app);
-		currentComponent = 'Mail';
-		mail.init(next);
-	},
-
-	// setup the socket.io server (all client / server communication is done over this)
-	(next) => {
-		initializedComponents.push(mail);
-		currentComponent = 'IO';
-		io.init(next);
-	},
-
-	// setup the punishment system
-	(next) => {
-		initializedComponents.push(io);
-		currentComponent = 'Punishments';
-		punishments.init(next);
-	},
-
-	// setup the notifications
-	(next) => {
-		initializedComponents.push(punishments);
-		currentComponent = 'Notifications';
-		notifications.init(config.get('redis').url, config.get('redis').password, errorCb, next);
-	},
-
-	// setup the stations
-	(next) => {
-		initializedComponents.push(notifications);
-		currentComponent = 'Stations';
-		stations.init(next)
-	},
-
-	// setup the songs
-	(next) => {
-		initializedComponents.push(stations);
-		currentComponent = 'Songs';
-		songs.init(next)
-	},
-
-	// setup the playlists
-	(next) => {
-		initializedComponents.push(songs);
-		currentComponent = 'Playlists';
-		playlists.init(next)
-	},
-
-	// setup the API
-	(next) => {
-		initializedComponents.push(playlists);
-		currentComponent = 'API';
-		api.init(next)
-	},
-
-	// setup the logger
-	(next) => {
-		initializedComponents.push(api);
-		currentComponent = 'Logger';
-		logger.init(next)
-	},
-
-	// setup the tasks system
-	(next) => {
-		initializedComponents.push(logger);
-		currentComponent = 'Tasks';
-		tasks.init(next)
-	},
-
-	// setup the frontend for local setups
-	(next) => {
-		initializedComponents.push(tasks);
-		currentComponent = 'Windows';
-		if (!config.get("isDocker")) {
-			const express = require('express');
-			const app = express();
-			app.listen(config.get("frontendPort"));
-			const rootDir = __dirname.substr(0, __dirname.lastIndexOf("backend")) + "frontend/build/";
-
-			app.use(express.static(rootDir, {
-				setHeaders: function(res, path) {
-					console.log(path);
-					if (path.indexOf('.html') !== -1) res.setHeader('Cache-Control', 'public, max-age=0');
-					else res.setHeader('Cache-Control', 'public, max-age=2628000');
-				}
-			}));
-
-			app.get("/*", (req, res) => {
-				res.sendFile(rootDir + "index.html");
+			Promise.all(dependenciesInitializedPromises).then((res, res2) => {
+				if (this.lockdown) return;
+				this.logger.info("MODULE_MANAGER", `${moduleName} dependencies have been completed`);
+				module._initialize();
 			});
 		}
-		if (lockdownB) return;
-		next();
 	}
-], (err) => {
-	if (err && err !== true) {
-		lockdown();
-		logToDiscord("An error occurred while initializing the backend server.", "#FF0000", "Startup error", true, [{name: "Error:", value: err, inline: false}, {name: "Component:", value: currentComponent, inline: true}]);
-		console.error('An error occurred while initializing the backend server');
-	} else {
-		logToDiscord("The backend server started successfully.", "#00AA00", "Startup", false, []);
-		console.info('Backend server has been successfully started');
+
+	async printStatus() {
+		try { await Promise.race([this.logger._onInitialize(), this.logger._isInitialized()]); } catch { return; }
+		if (!this.fancyConsole) return;
+		
+		let colors = this.logger.colors;
+
+		const rows = process.stdout.rows;
+
+		process.stdout.cursorTo(0, rows - this.logger.reservedLines);
+		process.stdout.clearScreenDown();
+
+		process.stdout.cursorTo(0, (rows - this.logger.reservedLines) + 2);
+
+		process.stdout.write(`${colors.FgYellow}Modules${colors.FgWhite}:\n`);
+
+		for (let moduleName in this.modules) {
+			let module = this.modules[moduleName];
+			let tabsAmount = Math.max(0, Math.ceil(2 - (moduleName.length / 8)));
+
+			let tabs = Array(tabsAmount).fill(`\t`).join("");
+
+			let timing = module.timeDifferences.map((timeDifference) => {
+				return `${colors.FgMagenta}${timeDifference}${colors.FgCyan}ms${colors.FgWhite}`;
+			}).join(", ");
+
+			let stateColor;
+			if (module.state === "NOT_INITIALIZED") stateColor = colors.FgWhite;
+			else if (module.state === "INITIALIZED") stateColor = colors.FgGreen;
+			else if (module.state === "LOCKDOWN" && !module.failed) stateColor = colors.FgRed;
+			else if (module.state === "LOCKDOWN" && module.failed) stateColor = colors.FgMagenta;
+			else stateColor = colors.FgYellow;
+			
+			process.stdout.write(`${moduleName}${tabs}${stateColor}${module.state}\t${colors.FgYellow}Stage: ${colors.FgRed}${module.stage}${colors.FgWhite}. ${colors.FgYellow}Timing${colors.FgWhite}: [${timing}]${colors.FgWhite}${colors.FgWhite}. ${colors.FgYellow}Total time${colors.FgWhite}: ${colors.FgRed}${module.totalTimeInitialize}${colors.FgCyan}ms${colors.Reset}\n`);
+		}
 	}
+
+	moduleInitialized(moduleName) {
+		this.modulesInitialized++;
+		this.modulesLeft.splice(this.modulesLeft.indexOf(moduleName), 1);
+
+		this.logger.info("MODULE_MANAGER", `Initialized: ${this.modulesInitialized}/${this.totalModules}.`);
+
+		if (this.modulesLeft.length === 0) this.allModulesInitialized();
+	}
+
+	allModulesInitialized() {
+		this.logger.success("MODULE_MANAGER", "All modules have started!");
+		this.modules["discord"].sendAdminAlertMessage("The backend server started successfully.", "#00AA00", "Startup", false, []);
+	}
+
+	aModuleFailed(failedModule) {
+		this.logger.error("MODULE_MANAGER", `A module has failed, locking down. Module: ${failedModule.name}`);
+		this.modules["discord"].sendAdminAlertMessage(`The backend server failed to start due to a failing module: ${failedModule.name}.`, "#AA0000", "Startup", false, []);
+
+		this._lockdown();
+	}
+
+	replaceConsoleWithLogger() {
+		this.oldConsole = {
+			log: console.log,
+			debug: console.debug,
+			info: console.info,
+			warn: console.warn,
+			error: console.error
+		};
+		console.log = (...args) => this.logger.debug(args.map(arg => util.format(arg)));
+		console.debug = (...args) => this.logger.debug(args.map(arg => util.format(arg)));
+		console.info = (...args) => this.logger.debug(args.map(arg => util.format(arg)));
+		console.warn = (...args) => this.logger.debug(args.map(arg => util.format(arg)));
+		console.error = (...args) => this.logger.error("CONSOLE", args.map(arg => util.format(arg)));
+	}
+
+	replaceLoggerWithConsole() {
+		console.log = this.oldConsole.log;
+		console.debug = this.oldConsole.debug;
+		console.info = this.oldConsole.info;
+		console.warn = this.oldConsole.warn;
+		console.error = this.oldConsole.error;
+	}
+
+	_lockdown() {
+		this.lockdown = true;
+		
+		for (let moduleName in this.modules) {
+			let module = this.modules[moduleName];
+			if (module.lockdownImmune) continue;
+			module._lockdown();
+		}
+	}
+}
+
+const moduleManager = new ModuleManager();
+
+module.exports = moduleManager;
+
+moduleManager.addModule("cache");
+moduleManager.addModule("db");
+moduleManager.addModule("mail");
+moduleManager.addModule("api");
+moduleManager.addModule("app");
+moduleManager.addModule("discord");
+moduleManager.addModule("io");
+moduleManager.addModule("logger");
+moduleManager.addModule("notifications");
+moduleManager.addModule("playlists");
+moduleManager.addModule("punishments");
+moduleManager.addModule("songs");
+moduleManager.addModule("spotify");
+moduleManager.addModule("stations");
+moduleManager.addModule("tasks");
+moduleManager.addModule("utils");
+
+moduleManager.initialize();
+
+process.stdin.on("data", function (data) {
+    if(data.toString() === "lockdown\r\n"){
+        console.log("Locking down.");
+       	moduleManager._lockdown();
+    }
 });
+
+
+if (fancyConsole) {
+	const rows = process.stdout.rows;
+
+	for(let i = 0; i < rows; i++) {
+		process.stdout.write("\n");
+	}
+}

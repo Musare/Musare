@@ -1,143 +1,181 @@
-import Vue from 'vue';
-import VueRouter from 'vue-router';
-import App from './App.vue';
-import auth from './auth';
-import io from './io';
+import Vue from "vue";
+
+import VueRouter from "vue-router";
+import store from "./store";
+
+import App from "./App.vue";
+import io from "./io";
+
+const handleMetadata = attrs => {
+	document.title = `Musare | ${attrs.title}`;
+};
+
+Vue.component("metadata", {
+	watch: {
+		$attrs: {
+			handler: attrs => {
+				handleMetadata(attrs);
+			},
+			deep: true,
+			immediate: true
+		}
+	},
+	render() {
+		return null;
+	}
+});
 
 Vue.use(VueRouter);
 
-let router = new VueRouter({
-	history: true,
-	suppressTransitionError: true
+Vue.directive("scroll", {
+	inserted(el, binding) {
+		const f = evt => {
+			clearTimeout(window.scrollDebounceId);
+			window.scrollDebounceId = setTimeout(() => {
+				if (binding.value(evt, el)) {
+					window.removeEventListener("scroll", f);
+				}
+			}, 200);
+		};
+		window.addEventListener("scroll", f);
+	}
 });
 
-let _this = this;
+const router = new VueRouter({
+	mode: "history",
+	routes: [
+		{
+			path: "/",
+			component: () => import("./components/pages/Home.vue")
+		},
+		{
+			path: "*",
+			component: () => import("./components/404.vue")
+		},
+		{
+			path: "/404",
+			component: () => import("./components/404.vue")
+		},
+		{
+			path: "/terms",
+			component: () => import("./components/pages/Terms.vue")
+		},
+		{
+			path: "/privacy",
+			component: () => import("./components/pages/Privacy.vue")
+		},
+		{
+			path: "/team",
+			component: () => import("./components/pages/Team.vue")
+		},
+		{
+			path: "/news",
+			component: () => import("./components/pages/News.vue")
+		},
+		{
+			path: "/about",
+			component: () => import("./components/pages/About.vue")
+		},
+		{
+			name: "profile",
+			path: "/u/:username",
+			component: () => import("./components/User/Show.vue")
+		},
+		{
+			path: "/settings",
+			component: () => import("./components/User/Settings.vue"),
+			meta: {
+				loginRequired: true
+			}
+		},
+		{
+			path: "/reset_password",
+			component: () => import("./components/User/ResetPassword.vue")
+		},
+		{
+			path: "/login",
+			component: () => import("./components/Modals/Login.vue")
+		},
+		{
+			path: "/register",
+			component: () => import("./components/Modals/Register.vue")
+		},
+		{
+			path: "/admin",
+			component: () => import("./components/pages/Admin.vue"),
+			meta: {
+				adminRequired: true
+			}
+		},
+		{
+			path: "/admin/:page",
+			component: () => import("./components/pages/Admin.vue"),
+			meta: {
+				adminRequired: true
+			}
+		},
+		{
+			name: "station",
+			path: "/:id",
+			component: () => import("./components/Station/Station.vue")
+		}
+	]
+});
 
-lofig.folder = '../config/default.json';
-lofig.get('serverDomain', function(res) {
-	io.init(res);
-	io.getSocket((socket) => {
-		socket.on("ready", (status, role, username, userId) => {
-			auth.data(status, role, username, userId);
+lofig.folder = "../config/default.json";
+lofig.get("serverDomain").then(serverDomain => {
+	io.init(serverDomain);
+	io.getSocket(socket => {
+		socket.on("ready", (loggedIn, role, username, userId) => {
+			store.dispatch("user/auth/authData", {
+				loggedIn,
+				role,
+				username,
+				userId
+			});
 		});
-		socket.on('keep.event:banned', ban => {
-			auth.setBanned(ban);
+		socket.on("keep.event:banned", ban => {
+			store.dispatch("user/auth/banUser", ban);
+		});
+		socket.on("event:user.username.changed", username => {
+			store.dispatch("user/auth/updateUsername", username);
 		});
 	});
 });
 
-document.onkeydown = event => {
-	event = event || window.event;
-	if (event.keyCode === 27) router.app.$dispatch('closeModal');
-};
-
-router.beforeEach(transition => {
-	window.location.hash = '';
-	//
+router.beforeEach((to, from, next) => {
 	if (window.stationInterval) {
 		clearInterval(window.stationInterval);
 		window.stationInterval = 0;
 	}
 	if (window.socket) io.removeAllListeners();
 	io.clear();
-	if (transition.to.loginRequired || transition.to.adminRequired) {
-		auth.getStatus((authenticated, role) => {
-			if (transition.to.loginRequired && !authenticated) transition.redirect('/login');
-			else if (transition.to.adminRequired && role !== 'admin') transition.redirect('/');
-			else transition.next();
-		});
-	} else transition.next();
+	if (to.meta.loginRequired || to.meta.adminRequired) {
+		const gotData = () => {
+			if (to.loginRequired && !store.state.user.auth.loggedIn)
+				next({ path: "/login" });
+			else if (to.adminRequired && store.state.user.auth.role !== "admin")
+				next({ path: "/" });
+			else next();
+		};
 
-	if (transition.to.officialRequired) {
-		io.getSocket(socket => {
-			socket.emit('stations.findByName', transition.to.params.id, res => {
-				if (res.status === 'success') {
-					if (res.data.type === 'community') transition.redirect(`/community/${transition.to.params.id}`);
-					else transition.next();
+		if (store.state.user.auth.gotData) gotData();
+		else {
+			const watcher = store.watch(
+				state => state.user.auth.gotData,
+				() => {
+					watcher();
+					gotData();
 				}
-			});
-		});
-	}
-
-	if (transition.to.communityRequired) {
-		io.getSocket(socket => {
-			socket.emit('stations.findByName', transition.to.params.id, res => {
-				if (res.status === 'success') {
-					if (res.data.type === 'official') transition.redirect(`/official/${transition.to.params.id}`);
-					else transition.next();
-				}
-			});
-		});
-	}
+			);
+		}
+	} else next();
 });
 
-router.afterEach(data => {
-	ga('set', 'page', data.to.path);
-	ga('send', 'pageview');
+// eslint-disable-next-line no-new
+new Vue({
+	router,
+	store,
+	el: "#root",
+	render: wrapper => wrapper(App)
 });
-
-
-router.map({
-	'/': {
-		component: resolve => require.ensure([], () => resolve(require('./components/pages/Home.vue')), 'home')
-	},
-	'*': {
-		component: resolve => require.ensure([], () => resolve(require('./components/404.vue')), '404')
-	},
-	'404': {
-		component: resolve => require.ensure([], () => resolve(require('./components/404.vue')), '404')
-	},
-	'/terms': {
-		component: resolve => require.ensure([], () => resolve(require('./components/pages/Terms.vue')), 'terms')
-	},
-	'/privacy': {
-		component: resolve => require.ensure([], () => resolve(require('./components/pages/Privacy.vue')), 'privacy')
-	},
-	'/team': {
-		component: resolve => require.ensure([], () => resolve(require('./components/pages/Team.vue')), 'team')
-	},
-	'/news': {
-		component: resolve => require.ensure([], () => resolve(require('./components/pages/News.vue')), 'news')
-	},
-	'/about': {
-		component: resolve => require.ensure([], () => resolve(require('./components/pages/About.vue')), 'about')
-	},
-	'/u/:username': {
-		component: resolve => require.ensure([], () => resolve(require('./components/User/Show.vue')), 'show-user')
-	},
-	'/settings': {
-		component: resolve => require.ensure([], () => resolve(require('./components/User/Settings.vue')), 'settings'),
-		loginRequired: true
-	},
-	'/reset_password': {
-		component: resolve => require.ensure([], () => resolve(require('./components/User/ResetPassword.vue')), 'reset-password')
-	},
-	'/login': {
-		component: resolve => require.ensure([], () => resolve(require('./components/Modals/Login.vue')), 'login')
-	},
-	'/register': {
-		component: resolve => require.ensure([], () => resolve(require('./components/Modals/Register.vue')), 'register')
-	},
-	'/admin': {
-		component: resolve => require.ensure([], () => resolve(require('./components/pages/Admin.vue')), 'admin'),
-		adminRequired: true
-	},
-	'/admin/:page': {
-		component: resolve => require.ensure([], () => resolve(require('./components/pages/Admin.vue')), 'admin'),
-		adminRequired: true
-	},
-	'/official/:id': {
-		component: resolve => require.ensure([], () => resolve(require('./components/Station/Station.vue')), 'station'),
-		officialRequired: true
-	},
-	'/:id': {
-		component: resolve => require.ensure([], () => resolve(require('./components/Station/Station.vue')), 'station'),
-		officialRequired: true
-	},
-	'/community/:id': {
-		component: resolve => require.ensure([], () => resolve(require('./components/Station/Station.vue')), 'station'),
-		communityRequired: true
-	}
-});
-
-router.start(App, 'body');

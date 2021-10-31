@@ -1,15 +1,48 @@
 <template>
-	<modal title='Report'>
-		<div slot='body'>
+	<modal title="Report">
+		<div slot="body">
+			<router-link
+				v-if="$route.query.returnToSong"
+				class="button is-dark back-to-song"
+				:to="{
+					path: '/admin/songs',
+					query: { id: report.songId }
+				}"
+			>
+				<i class="material-icons">keyboard_return</i> &nbsp; Edit Song
+			</router-link>
+
 			<article class="message">
 				<div class="message-body">
-					<strong>Song ID: </strong>{{ $parent.editing.songId }}<br/>
-					<strong>Created By: </strong>{{ $parent.editing.createdBy }}<br/>
-					<strong>Created At: </strong>{{ $parent.editing.createdAt }}<br/>
-					<span v-if='$parent.editing.description'><strong>Description: </strong>{{ $parent.editing.description }}</span>
+					<strong>Song ID:</strong>
+					{{ report.song.songId }} / {{ report.song._id }}
+					<br />
+					<strong>Author:</strong>
+					<user-id-to-username
+						:userId="report.createdBy"
+						:alt="report.createdBy"
+					/>
+					<br />
+					<strong>Time of report:</strong>
+					<span :title="report.createdAt">
+						{{
+							formatDistance(
+								new Date(report.createdAt),
+								new Date(),
+								{
+									addSuffix: true
+								}
+							)
+						}}
+					</span>
+					<br />
+					<span v-if="report.description">
+						<strong>Description:</strong>
+						{{ report.description }}
+					</span>
 				</div>
 			</article>
-			<table class='table is-narrow' v-if='$parent.editing.issues.length > 0'>
+			<table v-if="report.issues.length > 0" class="table is-narrow">
 				<thead>
 					<tr>
 						<td>Issue</td>
@@ -17,7 +50,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for='(index, issue) in $parent.editing.issues' track-by='$index'>
+					<tr v-for="(issue, index) in report.issues" :key="index">
 						<td>
 							<span>{{ issue.name }}</span>
 						</td>
@@ -28,11 +61,31 @@
 				</tbody>
 			</table>
 		</div>
-		<div slot='footer'>
-			<a class='button is-primary' @click='$parent.resolve($parent.editing._id)' href='#'>
+		<div slot="footer">
+			<a
+				class="button is-primary"
+				href="#"
+				@click="$parent.resolve(report._id)"
+			>
 				<span>Resolve</span>
 			</a>
-			<a class='button is-danger' @click='$parent.toggleModal()' href='#'>
+			<a
+				class="button is-primary"
+				:href="`/admin/songs?songId=${report.song.songId}`"
+				target="_blank"
+			>
+				<span>Go to song</span>
+			</a>
+			<a
+				class="button is-danger"
+				@click="
+					closeModal({
+						sector: 'admin',
+						modal: 'viewReport'
+					})
+				"
+				href="#"
+			>
 				<span>Cancel</span>
 			</a>
 		</div>
@@ -40,14 +93,36 @@
 </template>
 
 <script>
-	import Modal from './Modal.vue';
+import { mapActions, mapState } from "vuex";
+import { formatDistance } from "date-fns";
 
-	export default {
-		components: { Modal },
-		events: {
-			closeModal: function () {
-				this.$parent.modals.report = false;
-			}
+import UserIdToUsername from "../UserIdToUsername.vue";
+import Modal from "./Modal.vue";
+
+export default {
+	computed: {
+		...mapState("admin/reports", {
+			report: state => state.report
+		})
+	},
+	mounted() {
+		if (this.$route.query.returnToSong) {
+			this.closeModal({ sector: "admin", modal: "editSong" });
 		}
-	}
+	},
+	methods: {
+		formatDistance,
+		...mapActions("modals", ["closeModal"])
+	},
+	components: { Modal, UserIdToUsername }
+};
 </script>
+
+<style lang="scss">
+@import "styles/global.scss";
+
+.back-to-song {
+	display: flex;
+	margin-bottom: 20px;
+}
+</style>

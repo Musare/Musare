@@ -1,74 +1,165 @@
 <template>
-	<modal title='Edit News'>
-		<div slot='body'>
-			<label class='label'>Title</label>
-			<p class='control'>
-				<input class='input' type='text' placeholder='News Title' v-model='$parent.editing.title' autofocus>
+	<modal title="Edit News">
+		<div slot="body">
+			<label class="label">Title</label>
+			<p class="control">
+				<input
+					v-model="editing.title"
+					class="input"
+					type="text"
+					placeholder="News Title"
+					autofocus
+				/>
 			</p>
-			<label class='label'>Description</label>
-			<p class='control'>
-				<input class='input' type='text' placeholder='News Description' v-model='$parent.editing.description'>
+			<label class="label">Description</label>
+			<p class="control">
+				<input
+					v-model="editing.description"
+					class="input"
+					type="text"
+					placeholder="News Description"
+				/>
 			</p>
 			<div class="columns">
 				<div class="column">
-					<label class='label'>Bugs</label>
-					<p class='control has-addons'>
-						<input class='input' id='edit-bugs' type='text' placeholder='Bug' v-on:keyup.enter='addChange("bugs")'>
-						<a class='button is-info' href='#' @click='addChange("bugs")'>Add</a>
+					<label class="label">Bugs</label>
+					<p class="control has-addons">
+						<input
+							id="edit-bugs"
+							class="input"
+							type="text"
+							placeholder="Bug"
+							@keyup.enter="addChangeClick('bugs')"
+						/>
+						<a
+							class="button is-info"
+							href="#"
+							@click="addChangeClick('bugs')"
+							>Add</a
+						>
 					</p>
-					<span class='tag is-info' v-for='(index, bug) in $parent.editing.bugs' track-by='$index'>
+					<span
+						v-for="(bug, index) in editing.bugs"
+						class="tag is-info"
+						:key="index"
+					>
 						{{ bug }}
-						<button class='delete is-info' @click='removeChange("bugs", index)'></button>
+						<button
+							class="delete is-info"
+							@click="removeChangeClick('bugs', index)"
+						/>
 					</span>
 				</div>
 				<div class="column">
-					<label class='label'>Features</label>
-					<p class='control has-addons'>
-						<input class='input' id='edit-features' type='text' placeholder='Feature' v-on:keyup.enter='addChange("features")'>
-						<a class='button is-info' href='#' @click='addChange("features")'>Add</a>
+					<label class="label">Features</label>
+					<p class="control has-addons">
+						<input
+							id="edit-features"
+							class="input"
+							type="text"
+							placeholder="Feature"
+							@keyup.enter="addChangeClick('features')"
+						/>
+						<a
+							class="button is-info"
+							href="#"
+							@click="addChangeClick('features')"
+							>Add</a
+						>
 					</p>
-					<span class='tag is-info' v-for='(index, feature) in $parent.editing.features' track-by='$index'>
+					<span
+						v-for="(feature, index) in editing.features"
+						class="tag is-info"
+						:key="index"
+					>
 						{{ feature }}
-						<button class='delete is-info' @click='removeChange("features", index)'></button>
+						<button
+							class="delete is-info"
+							@click="removeChangeClick('features', index)"
+						/>
 					</span>
 				</div>
 			</div>
 
 			<div class="columns">
 				<div class="column">
-					<label class='label'>Improvements</label>
-					<p class='control has-addons'>
-						<input class='input' id='edit-improvements' type='text' placeholder='Improvement' v-on:keyup.enter='addChange("improvements")'>
-						<a class='button is-info' href='#' @click='addChange("improvements")'>Add</a>
+					<label class="label">Improvements</label>
+					<p class="control has-addons">
+						<input
+							id="edit-improvements"
+							class="input"
+							type="text"
+							placeholder="Improvement"
+							@keyup.enter="addChangeClick('improvements')"
+						/>
+						<a
+							class="button is-info"
+							href="#"
+							@click="addChangeClick('improvements')"
+							>Add</a
+						>
 					</p>
-					<span class='tag is-info' v-for='(index, improvement) in $parent.editing.improvements' track-by='$index'>
+					<span
+						v-for="(improvement, index) in editing.improvements"
+						class="tag is-info"
+						:key="index"
+					>
 						{{ improvement }}
-						<button class='delete is-info' @click='removeChange("improvements", index)'></button>
+						<button
+							class="delete is-info"
+							@click="removeChangeClick('improvements', index)"
+						/>
 					</span>
 				</div>
 				<div class="column">
-					<label class='label'>Upcoming</label>
-					<p class='control has-addons'>
-						<input class='input' id='edit-upcoming' type='text' placeholder='Upcoming' v-on:keyup.enter='addChange("upcoming")'>
-						<a class='button is-info' href='#' @click='addChange("upcoming")'>Add</a>
+					<label class="label">Upcoming</label>
+					<p class="control has-addons">
+						<input
+							id="edit-upcoming"
+							class="input"
+							type="text"
+							placeholder="Upcoming"
+							@keyup.enter="addChangeClick('upcoming')"
+						/>
+						<a
+							class="button is-info"
+							href="#"
+							@click="addChangeClick('upcoming')"
+							>Add</a
+						>
 					</p>
-					<span class='tag is-info' v-for='(index, upcoming) in $parent.editing.upcoming' track-by='$index'>
+					<span
+						v-for="(upcoming, index) in editing.upcoming"
+						class="tag is-info"
+						:key="index"
+					>
 						{{ upcoming }}
-						<button class='delete is-info' @click='removeChange("upcoming", index)'></button>
+						<button
+							class="delete is-info"
+							@click="removeChangeClick('upcoming', index)"
+						/>
 					</span>
 				</div>
 			</div>
 		</div>
-		<div slot='footer'>
-			<button class='button is-success' @click='$parent.updateNews(false)'>
-				<i class='material-icons save-changes'>done</i>
+		<div slot="footer">
+			<button class="button is-success" @click="updateNews(false)">
+				<i class="material-icons save-changes">done</i>
 				<span>&nbsp;Save</span>
 			</button>
-			<button class='button is-success' @click='$parent.updateNews(true)'>
-				<i class='material-icons save-changes'>done</i>
+			<button class="button is-success" @click="updateNews(true)">
+				<i class="material-icons save-changes">done</i>
 				<span>&nbsp;Save and close</span>
 			</button>
-			<button class='button is-danger' @click='$parent.toggleModal()'>
+			<button
+				class="button is-danger"
+				@click="
+					closeModal({
+						sector: 'admin',
+						modal: 'editNews'
+					})
+				"
+			>
 				<span>&nbsp;Close</span>
 			</button>
 		</div>
@@ -76,161 +167,216 @@
 </template>
 
 <script>
-	import { Toast } from 'vue-roaster';
+import { mapActions, mapState } from "vuex";
 
-	import Modal from './Modal.vue';
+import Toast from "toasters";
+import io from "../../io";
 
-	export default {
-		components: { Modal },
-		methods: {
-			addChange: function (type) {
-				let change = $(`#edit-${type}`).val().trim();
+import Modal from "./Modal.vue";
 
-				if (this.$parent.editing[type].indexOf(change) !== -1) return Toast.methods.addToast(`Tag already exists`, 3000);
+export default {
+	components: { Modal },
+	computed: {
+		...mapState("admin/news", {
+			editing: state => state.editing
+		})
+	},
+	methods: {
+		addChange(type) {
+			const change = document.getElementById(`edit-${type}`).value.trim();
 
-				if (change) this.$parent.editing[type].push(change);
-				else Toast.methods.addToast(`${type} cannot be empty`, 3000);
-			},
-			removeChange: function (type, index) {
-				this.$parent.editing[type].splice(index, 1);
-			},
+			if (this.editing[type].indexOf(change) !== -1)
+				return new Toast({
+					content: `Tag already exists`,
+					timeout: 3000
+				});
+
+			if (change) this.addChange({ type, change });
+			else
+				new Toast({
+					content: `${type} cannot be empty`,
+					timeout: 3000
+				});
+
+			document.getElementById(`edit-${type}`).value = "";
+			return true;
 		},
-		events: {
-			closeModal: function() {
-				this.$parent.toggleModal();
-			}
-		}
+		removeChange(type, index) {
+			this.removeChange({ type, index });
+		},
+		updateNews(close) {
+			this.socket.emit(
+				"news.update",
+				this.editing._id,
+				this.editing,
+				res => {
+					new Toast({ content: res.message, timeout: 4000 });
+					if (res.status === "success") {
+						if (close)
+							this.closeModal({
+								sector: "admin",
+								modal: "editNews"
+							});
+					}
+				}
+			);
+		},
+		...mapActions("modals", ["closeModal"]),
+		...mapActions("admin/news", ["addChange", "removeChange"])
+	},
+	mounted() {
+		io.getSocket(socket => {
+			this.socket = socket;
+		});
 	}
+};
 </script>
 
-<style type='scss' scoped>
-	input[type=range] {
-		-webkit-appearance: none;
-		width: 100%;
-		margin: 7.3px 0;
+<style lang="scss" scoped>
+@import "styles/global.scss";
+
+input[type="range"] {
+	-webkit-appearance: none;
+	width: 100%;
+	margin: 7.3px 0;
+}
+
+input[type="range"]:focus {
+	outline: none;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+	width: 100%;
+	height: 5.2px;
+	cursor: pointer;
+	box-shadow: 0;
+	background: $light-grey-2;
+	border-radius: 0;
+	border: 0;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+	box-shadow: 0;
+	border: 0;
+	height: 19px;
+	width: 19px;
+	border-radius: 15px;
+	background: $primary-color;
+	cursor: pointer;
+	-webkit-appearance: none;
+	margin-top: -6.5px;
+}
+
+input[type="range"]::-moz-range-track {
+	width: 100%;
+	height: 5.2px;
+	cursor: pointer;
+	box-shadow: 0;
+	background: $light-grey-2;
+	border-radius: 0;
+	border: 0;
+}
+
+input[type="range"]::-moz-range-thumb {
+	box-shadow: 0;
+	border: 0;
+	height: 19px;
+	width: 19px;
+	border-radius: 15px;
+	background: $primary-color;
+	cursor: pointer;
+	-webkit-appearance: none;
+	margin-top: -6.5px;
+}
+
+input[type="range"]::-ms-track {
+	width: 100%;
+	height: 5.2px;
+	cursor: pointer;
+	box-shadow: 0;
+	background: $light-grey-2;
+	border-radius: 1.3px;
+}
+
+input[type="range"]::-ms-fill-lower {
+	background: $light-grey-2;
+	border: 0;
+	border-radius: 0;
+	box-shadow: 0;
+}
+
+input[type="range"]::-ms-fill-upper {
+	background: $light-grey-2;
+	border: 0;
+	border-radius: 0;
+	box-shadow: 0;
+}
+
+input[type="range"]::-ms-thumb {
+	box-shadow: 0;
+	border: 0;
+	height: 15px;
+	width: 15px;
+	border-radius: 15px;
+	background: $primary-color;
+	cursor: pointer;
+	-webkit-appearance: none;
+	margin-top: 1.5px;
+}
+
+.controls {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.artist-genres {
+	display: flex;
+	justify-content: space-between;
+}
+
+#volumeSlider {
+	margin-bottom: 15px;
+}
+
+.has-text-centered {
+	padding: 10px;
+}
+
+.thumbnail-preview {
+	display: flex;
+	margin: 0 auto 25px auto;
+	max-width: 200px;
+	width: 100%;
+}
+
+.modal-card-body,
+.modal-card-foot {
+	border-top: 0;
+}
+
+.label,
+.checkbox,
+h5 {
+	font-weight: normal;
+}
+
+.video-container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 10px;
+
+	iframe {
+		pointer-events: none;
 	}
+}
 
-	input[type=range]:focus {
-		outline: none;
-	}
+.save-changes {
+	color: $white;
+}
 
-	input[type=range]::-webkit-slider-runnable-track {
-		width: 100%;
-		height: 5.2px;
-		cursor: pointer;
-		box-shadow: 0;
-		background: #c2c0c2;
-		border-radius: 0;
-		border: 0;
-	}
-
-	input[type=range]::-webkit-slider-thumb {
-		box-shadow: 0;
-		border: 0;
-		height: 19px;
-		width: 19px;
-		border-radius: 15px;
-		background: #03a9f4;
-		cursor: pointer;
-		-webkit-appearance: none;
-		margin-top: -6.5px;
-	}
-
-	input[type=range]::-moz-range-track {
-		width: 100%;
-		height: 5.2px;
-		cursor: pointer;
-		box-shadow: 0;
-		background: #c2c0c2;
-		border-radius: 0;
-		border: 0;
-	}
-
-	input[type=range]::-moz-range-thumb {
-		box-shadow: 0;
-		border: 0;
-		height: 19px;
-		width: 19px;
-		border-radius: 15px;
-		background: #03a9f4;
-		cursor: pointer;
-		-webkit-appearance: none;
-		margin-top: -6.5px;
-	}
-
-	input[type=range]::-ms-track {
-		width: 100%;
-		height: 5.2px;
-		cursor: pointer;
-		box-shadow: 0;
-		background: #c2c0c2;
-		border-radius: 1.3px;
-	}
-
-	input[type=range]::-ms-fill-lower {
-		background: #c2c0c2;
-		border: 0;
-		border-radius: 0;
-		box-shadow: 0;
-	}
-
-	input[type=range]::-ms-fill-upper {
-		background: #c2c0c2;
-		border: 0;
-		border-radius: 0;
-		box-shadow: 0;
-	}
-
-	input[type=range]::-ms-thumb {
-		box-shadow: 0;
-		border: 0;
-		height: 15px;
-		width: 15px;
-		border-radius: 15px;
-		background: #03a9f4;
-		cursor: pointer;
-		-webkit-appearance: none;
-		margin-top: 1.5px;
-	}
-
-	.controls {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-	}
-
-	.artist-genres {
-		display: flex;
-    	justify-content: space-between;
-	}
-
-	#volumeSlider { margin-bottom: 15px; }
-
-	.has-text-centered { padding: 10px; }
-
-	.thumbnail-preview {
-		display: flex;
-		margin: 0 auto 25px auto;
-		max-width: 200px;
-		width: 100%;
-	}
-
-	.modal-card-body, .modal-card-foot { border-top: 0; }
-
-	.label, .checkbox, h5 {
-		font-weight: normal;
-	}
-
-	.video-container {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		padding: 10px;
-
-		iframe { pointer-events: none; }
-	}
-
-	.save-changes { color: #fff; }
-
-	.tag:not(:last-child) { margin-right: 5px; }
+.tag:not(:last-child) {
+	margin-right: 5px;
+}
 </style>

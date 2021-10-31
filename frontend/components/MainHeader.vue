@@ -1,157 +1,170 @@
 <template>
 	<nav class="nav is-info">
 		<div class="nav-left">
-			<a class="nav-item is-brand" href="#" v-link="{ path: '/' }">
-				Musare
-			</a>
+			<router-link class="nav-item is-brand" to="/">
+				<img
+					:src="`${this.siteSettings.logo_white}`"
+					:alt="`${this.siteSettings.siteName}` || `Musare`"
+				/>
+			</router-link>
 		</div>
 
-		<span class="nav-toggle" :class="{ 'is-active': isMobile }" @click="isMobile = !isMobile">
-			<span></span>
-			<span></span>
-			<span></span>
+		<span
+			class="nav-toggle"
+			:class="{ 'is-active': isMobile }"
+			@click="isMobile = !isMobile"
+		>
+			<span />
+			<span />
+			<span />
 		</span>
 
 		<div class="nav-right nav-menu" :class="{ 'is-active': isMobile }">
-			<a class="nav-item is-tab admin" href="#" v-link="{ path: '/admin' }" v-if="$parent.$parent.role === 'admin'">
+			<router-link
+				v-if="role === 'admin'"
+				class="nav-item is-tab admin"
+				to="/admin"
+			>
 				<strong>Admin</strong>
-			</a>
-			<!--a class="nav-item is-tab" href="#">
-				About
-			</a-->
-			<a class="nav-item is-tab" href="#" v-link="{ path: '/team' }">
-				Team
-			</a>
-			<a class="nav-item is-tab" href="#" v-link="{ path: '/about' }">
-				About
-			</a>
-			<a class="nav-item is-tab" href="#" v-link="{ path: '/news' }">
-				News
-			</a>
-			<span class="grouped" v-if="$parent.$parent.loggedIn">
-				<a class="nav-item is-tab" href="#" v-link="{ path: '/u/' + $parent.$parent.username }">
+			</router-link>
+			<span v-if="loggedIn" class="grouped">
+				<router-link
+					class="nav-item is-tab"
+					:to="{
+						name: 'profile',
+						params: { username }
+					}"
+				>
 					Profile
-				</a>
-				<a class="nav-item is-tab" href="#" v-link="{ path: '/settings' }">
-					Settings
-				</a>
-				<a class="nav-item is-tab" href="#" @click="$parent.$parent.logout()">
-					Logout
-				</a>
+				</router-link>
+				<router-link class="nav-item is-tab" to="/settings"
+					>Settings</router-link
+				>
+				<a class="nav-item is-tab" href="#" @click="logout()">Logout</a>
 			</span>
-			<span class="grouped" v-else>
-				<a class="nav-item" href="#" @click="toggleModal('login')">
-					Login
-				</a>
-				<a class="nav-item" href="#" @click="toggleModal('register')">
-					Register
-				</a>
+			<span v-else class="grouped">
+				<a
+					class="nav-item"
+					href="#"
+					@click="
+						openModal({
+							sector: 'header',
+							modal: 'login'
+						})
+					"
+					>Login</a
+				>
+				<a
+					class="nav-item"
+					href="#"
+					@click="
+						openModal({
+							sector: 'header',
+							modal: 'register'
+						})
+					"
+					>Register</a
+				>
 			</span>
 		</div>
 	</nav>
 </template>
 
 <script>
-	export default {
-		data() {
-			return {
-				isMobile: false
+import { mapState, mapActions } from "vuex";
+
+export default {
+	data() {
+		return {
+			isMobile: false,
+			frontendDomain: "",
+			siteSettings: {
+				logo: "",
+				siteName: ""
 			}
-		},
-		methods: {
-			toggleModal: function (type) {
-				this.$dispatch('toggleModal', type);
-			}
-		}
+		};
+	},
+	mounted() {
+		lofig.get("frontendDomain").then(frontendDomain => {
+			this.frontendDomain = frontendDomain;
+		});
+
+		lofig.get("siteSettings").then(siteSettings => {
+			this.siteSettings = siteSettings;
+		});
+	},
+	computed: mapState({
+		modals: state => state.modals.modals.header,
+		role: state => state.user.auth.role,
+		loggedIn: state => state.user.auth.loggedIn,
+		username: state => state.user.auth.username
+	}),
+	methods: {
+		...mapActions("modals", ["openModal"]),
+		...mapActions("user/auth", ["logout"])
 	}
+};
 </script>
 
 <style lang="scss" scoped>
-	.nav {
-		background-color: #03a9f4;
-		height: 64px;
+@import "styles/global.scss";
 
-		.nav-menu.is-active {
-			.nav-item {
-				color: #333;
+.nav {
+	background-color: $primary-color;
+	height: 64px;
+	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 
-				&:hover {
-					color: #333;
-				}
-			}
-		}
-
-		.nav-toggle {
-			height: 64px;
-
-			&.is-active span {
-				background-color: #333;
-			}
-		}
-
-		.is-brand {
-			font-size: 2.1rem !important;
-			line-height: 64px !important;
-			padding: 0 20px;
-		}
-
+	.nav-menu.is-active {
 		.nav-item {
-			font-size: 15px;
-			color: hsl(0, 0%, 100%);
+			color: $dark-grey-2;
 
 			&:hover {
-				color: hsl(0, 0%, 100%);
-			}
-		}
-		.admin {
-			color: #424242;
-		}
-	}
-	.grouped {
-		margin: 0;
-		display: flex;
-		text-decoration: none;
-	}
-	.nightMode {
-		.nav {
-			background-color: #012332;
-			height: 64px;
-
-			.nav-menu.is-active {
-				.nav-item {
-					color: #333;
-
-					&:hover {
-						color: #333;
-					}
-				}
-			}
-
-			.nav-toggle {
-				height: 64px;
-
-				&.is-active span {
-					background-color: #333;
-				}
-			}
-
-			.is-brand {
-				font-size: 2.1rem !important;
-				line-height: 64px !important;
-				padding: 0 20px;
-			}
-
-			.nav-item {
-				font-size: 15px;
-				color: hsl(0, 0%, 100%);
-
-				&:hover {
-					color: hsl(0, 0%, 100%);
-				}
-			}
-			.admin strong {
-				color: #03a9f4;
+				color: $dark-grey-2;
 			}
 		}
 	}
+
+	a.nav-item.is-tab:hover {
+		border-bottom: none;
+		border-top: solid 1px $white;
+		padding-top: 9px;
+	}
+
+	.nav-toggle {
+		height: 64px;
+
+		&.is-active span {
+			background-color: $dark-grey-2;
+		}
+	}
+
+	.is-brand {
+		font-size: 2.1rem !important;
+		line-height: 38px !important;
+		padding: 0 20px;
+		font-family: Pacifico, cursive;
+
+		img {
+			max-height: 38px;
+			color: $musareBlue;
+		}
+	}
+
+	.nav-item {
+		font-size: 17px;
+		color: $white;
+
+		&:hover {
+			color: $white;
+		}
+	}
+	.admin strong {
+		color: #9d42b1;
+	}
+}
+.grouped {
+	margin: 0;
+	display: flex;
+	text-decoration: none;
+}
 </style>

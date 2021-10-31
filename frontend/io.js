@@ -1,97 +1,93 @@
-let callbacks = [];
-let callbacksPersist = [];
-let onConnectCallbacks = [];
-let onDisconnectCallbacks = [];
-let onConnectErrorCallbacks = [];
-let onConnectCallbacksPersist = [];
-let onDisconnectCallbacksPersist = [];
-let onConnectErrorCallbacksPersist = [];
+const callbacks = {
+	general: {
+		temp: [],
+		persist: []
+	},
+	onConnect: {
+		temp: [],
+		persist: []
+	},
+	onDisconnect: {
+		temp: [],
+		persist: []
+	},
+	onConnectError: {
+		temp: [],
+		persist: []
+	}
+};
 
 export default {
-
 	ready: false,
+
 	socket: null,
 
-	getSocket: function () {
-		if (arguments[0] === true) {
-			if (this.ready) arguments[1](this.socket);
-			else callbacksPersist.push(arguments[1]);
-		} else {
-			if (this.ready) arguments[0](this.socket);
-			else callbacks.push(arguments[0]);
-		}
+	getSocket(...args) {
+		if (args[0] === true) {
+			if (this.ready) args[1](this.socket);
+			else callbacks.general.persist.push(args[1]);
+		} else if (this.ready) args[0](this.socket);
+		else callbacks.general.temp.push(args[0]);
 	},
 
-	onConnect: function() {
-		if (arguments[0] === true) {
-			onConnectCallbacksPersist.push(arguments[1]);
-		} else onConnectCallbacks.push(arguments[0]);
+	onConnect(...args) {
+		if (args[0] === true) callbacks.onConnect.persist.push(args[1]);
+		else callbacks.onConnect.temp.push(args[0]);
 	},
 
-	onDisconnect: function() {
-		if (arguments[0] === true) {
-			onDisconnectCallbacksPersist.push(arguments[1]);
-		} else onDisconnectCallbacks.push(arguments[0]);
+	onDisconnect(...args) {
+		if (args[0] === true) callbacks.onDisconnect.persist.push(args[1]);
+		else callbacks.onDisconnect.temp.push(args[0]);
 	},
 
-	onConnectError: function() {
-		if (arguments[0] === true) {
-			onConnectErrorCallbacksPersist.push(arguments[1]);
-		} else onConnectErrorCallbacks.push(arguments[0]);
+	onConnectError(...args) {
+		if (args[0] === true) callbacks.onDisconnect.persist.push(args[1]);
+		else callbacks.onConnectError.temp.push(args[0]);
 	},
 
 	clear: () => {
-		onConnectCallbacks = [];
-		onDisconnectCallbacks = [];
-		onConnectErrorCallbacks = [];
-		callbacks = [];
+		Object.keys(callbacks).forEach(type => {
+			callbacks[type].temp = [];
+		});
 	},
 
-	removeAllListeners: function () {
-		Object.keys(this.socket._callbacks).forEach((id) => {
-			if (id.indexOf("$event:") !== -1 && id.indexOf("$event:keep.") === -1) {
+	removeAllListeners() {
+		Object.keys(this.socket._callbacks).forEach(id => {
+			if (
+				id.indexOf("$event:") !== -1 &&
+				id.indexOf("$event:keep.") === -1
+			)
 				delete this.socket._callbacks[id];
-			}
 		});
 	},
 
-	init: function (url) {
+	init(url) {
+		/* eslint-disable-next-line no-undef */
 		this.socket = window.socket = io(url);
-		this.socket.on('connect', () => {
-			onConnectCallbacks.forEach((cb) => {
-				cb();
-			});
-			onConnectCallbacksPersist.forEach((cb) => {
-				cb();
-			});
-		});
-		this.socket.on('disconnect', () => {
-			console.log("IO: SOCKET DISCONNECTED");
-			onDisconnectCallbacks.forEach((cb) => {
-				cb();
-			});
-			onDisconnectCallbacksPersist.forEach((cb) => {
-				cb();
-			});
-		});
-		this.socket.on('connect_error', () => {
-			console.log("IO: SOCKET CONNECT ERROR");
-			onConnectErrorCallbacks.forEach((cb) => {
-				cb();
-			});
-			onConnectErrorCallbacksPersist.forEach((cb) => {
-				cb();
-			});
-		});
-		this.ready = true;
-		callbacks.forEach(callback => {
-			callback(this.socket);
+
+		this.socket.on("connect", () => {
+			callbacks.onConnect.temp.forEach(cb => cb());
+			callbacks.onConnect.persist.forEach(cb => cb());
 		});
 
-		callbacksPersist.forEach(callback => {
-			callback(this.socket);
+		this.socket.on("disconnect", () => {
+			console.log("IO: SOCKET DISCONNECTED");
+			callbacks.onDisconnect.temp.forEach(cb => cb());
+			callbacks.onDisconnect.persist.forEach(cb => cb());
 		});
-		callbacks = [];
-		callbacksPersist = [];
+
+		this.socket.on("connect_error", () => {
+			console.log("IO: SOCKET CONNECT ERROR");
+			callbacks.onConnectError.temp.forEach(cb => cb());
+			callbacks.onConnectError.persist.forEach(cb => cb());
+		});
+
+		this.ready = true;
+
+		callbacks.general.temp.forEach(callback => callback(this.socket));
+		callbacks.general.persist.forEach(callback => callback(this.socket));
+
+		callbacks.general.temp = [];
+		callbacks.general.persist = [];
 	}
-}
+};

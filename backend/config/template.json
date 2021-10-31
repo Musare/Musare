@@ -1,10 +1,12 @@
 {
-	"secret": "",
-	"domain": "",
+	"mode": "development",
+	"secret": "default",
+	"domain": "http://localhost",
 	"frontendPort": 80,
-	"serverDomain": "",
+	"serverDomain": "http://localhost:8080",
   	"serverPort": 8080,
-  	"isDocker": true,
+	"isDocker": true,
+	"fancyConsole": true,
 	"apis": {
 		"youtube": {
 			"key": ""
@@ -25,7 +27,17 @@
 		"mailgun": {
 			"key": "",
 			"domain": "",
-		  	"enabled": true
+		  	"enabled": false
+		},
+		"spotify": {
+			"client": "",
+			"secret": "",
+			"enabled": false
+		},
+		"discogs": {
+			"client": "",
+			"secret": "",
+			"enabled": false
 		}
 	},
 	"cors": {
@@ -40,10 +52,11 @@
 	    "password": "PASSWORD"
 	},
   	"mongo": {
-	  	"url": "mongodb://musare:PASSWORD@mongo:27017/musare"
+	  	"url": "mongodb://musare:OTHER_PASSWORD_HERE@mongo:27017/musare"
 	},
   	"cookie": {
-	  	"domain": "",
-	  	"secure": false
+	  	"domain": "localhost",
+		"secure": false,
+		"SIDname": "SID"  
 	}
 }

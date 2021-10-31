@@ -1,11 +1,14 @@
 'use strict';
 
-const 	request = require('request'),
-		config  = require('config'),
-		async 	= require('async'),
-		utils 	= require('../utils'),
-		logger 	= require('../logger'),
-		hooks 	= require('./hooks');
+const request = require("request");
+const config = require("config");
+const async = require("async");
+
+const hooks = require('./hooks');
+const moduleManager = require("../../index");
+
+const utils = moduleManager.modules["utils"];
+const logger = moduleManager.modules["logger"];
 
 module.exports = {
 
@@ -34,9 +37,11 @@ module.exports = {
 			(res, body, next) => {
 				next(null, JSON.parse(body));
 			}
-		], (err, data) => {
-			if (err) {
-				err = utils.getError(err);
+		], async (err, data) => {
+			console.log(data.error);
+			if (err || data.error) {
+				if (!err) err = data.error.message;
+				err = await utils.getError(err);
 				logger.error("APIS_SEARCH_YOUTUBE", `Searching youtube failed with query "${query}". "${err}"`);
 				return cb({status: 'failure', message: err});
 			}
@@ -53,14 +58,56 @@ module.exports = {
 	 * @param artist - an artist for that song
 	 * @param cb
 	 */
-	getSpotifySongs: hooks.adminRequired((session, title, artist, cb, userId) => {
+	getSpotifySongs: hooks.adminRequired((session, title, artist, cb) => {
 		async.waterfall([
 			(next) => {
 				utils.getSongsFromSpotify(title, artist, next);
 			}
 		], (songs) => {
-			logger.success('APIS_GET_SPOTIFY_SONGS', `User "${userId}" got Spotify songs for title "${title}" successfully.`);
+			logger.success('APIS_GET_SPOTIFY_SONGS', `User "${session.userId}" got Spotify songs for title "${title}" successfully.`);
 			cb({status: 'success', songs: songs});
+		});
+	}),
+
+	/**
+	 * Gets Discogs data
+	 *
+	 * @param session
+	 * @param query - the query
+	 * @param cb
+	 */
+	searchDiscogs: hooks.adminRequired((session, query, page, cb) => {
+		async.waterfall([
+			(next) => {
+				const params = [
+					`q=${encodeURIComponent(query)}`,
+					`per_page=20`,
+					`page=${page}`
+				].join('&');
+		
+				const options = {
+					url: `https://api.discogs.com/database/search?${params}`,
+					headers: {
+						"User-Agent": "Request",
+						"Authorization": `Discogs key=${config.get("apis.discogs.client")}, secret=${config.get("apis.discogs.secret")}`
+					}
+				};
+		
+				request(options, (err, res, body) => {
+					if (err) next(err);
+					body = JSON.parse(body);
+					next(null, body);
+					if (body.error) next(body.error);
+				});
+			}
+		], async (err, body) => {
+			if (err) {
+				err = await utils.getError(err);
+				logger.error("APIS_SEARCH_DISCOGS", `Searching discogs failed with query "${query}". "${err}"`);
+				return cb({status: 'failure', message: err});
+			}
+			logger.success('APIS_SEARCH_DISCOGS', `User "${session.userId}" searched Discogs succesfully for query "${query}".`);
+			cb({status: 'success', results: body.results, pages: body.pagination.pages});
 		});
 	}),
 
@@ -86,7 +133,7 @@ module.exports = {
 	 * @param cb
 	 */
 	joinAdminRoom: hooks.adminRequired((session, page, cb) => {
-		if (page === 'queue' || page === 'songs' || page === 'stations' || page === 'reports' || page === 'news' || page === 'users' || page === 'statistics') {
+		if (page === 'queue' || page === 'songs' || page === 'stations' || page === 'reports' || page === 'news' || page === 'users' || page === 'statistics' || page === 'punishments') {
 			utils.socketJoinRoom(session.socketId, `admin.${page}`);
 		}
 		cb({});

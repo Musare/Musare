@@ -1,12 +1,10 @@
 'use strict';
 
-const moment  = require('moment'),
-	  io      = require('./io'),
-	  db      = require('./db'),
-	  config  = require('config'),
+const coreClass = require("../core");
+
+const config  = require('config'),
 	  async	  = require('async'),
-	  request = require('request'),
-	  cache   = require('./cache');
+	  request = require('request');
 
 class Timer {
 	constructor(callback, delay, paused) {
@@ -55,96 +53,137 @@ class Timer {
 			return Date.now() - this.timePaused;
 		}
 	}
-}
-
-function convertTime (duration) {
-	let a = duration.match(/\d+/g);
-
-	if (duration.indexOf('M') >= 0 && duration.indexOf('H') == -1 && duration.indexOf('S') == -1) {
-		a = [0, a[0], 0];
-	}
-
-	if (duration.indexOf('H') >= 0 && duration.indexOf('M') == -1) {
-		a = [a[0], 0, a[1]];
-	}
-	if (duration.indexOf('H') >= 0 && duration.indexOf('M') == -1 && duration.indexOf('S') == -1) {
-		a = [a[0], 0, 0];
-	}
-
-	duration = 0;
-
-	if (a.length == 3) {
-		duration = duration + parseInt(a[0]) * 3600;
-		duration = duration + parseInt(a[1]) * 60;
-		duration = duration + parseInt(a[2]);
-	}
-
-	if (a.length == 2) {
-		duration = duration + parseInt(a[0]) * 60;
-		duration = duration + parseInt(a[1]);
-	}
-
-	if (a.length == 1) {
-		duration = duration + parseInt(a[0]);
-	}
-
-	let hours = Math.floor(duration / 3600);
-	let minutes = Math.floor(duration % 3600 / 60);
-	let seconds = Math.floor(duration % 3600 % 60);
-
-	return (hours < 10 ? ("0" + hours + ":") : (hours + ":")) + (minutes < 10 ? ("0" + minutes + ":") : (minutes + ":")) + (seconds < 10 ? ("0" + seconds) : seconds);
-}
+} 
 
 let youtubeRequestCallbacks = [];
 let youtubeRequestsPending = 0;
 let youtubeRequestsActive = false;
 
-module.exports = {
-	htmlEntities: str => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'),
-	generateRandomString: function(len) {
+module.exports = class extends coreClass {
+	initialize() {
+		return new Promise((resolve, reject) => {
+			this.setStage(1);
+			
+			this.io = this.moduleManager.modules["io"];
+			this.db = this.moduleManager.modules["db"];
+			this.spotify = this.moduleManager.modules["spotify"];
+			this.cache = this.moduleManager.modules["cache"];
+
+			this.Timer = Timer;
+
+			resolve();
+		});
+	}
+
+	async parseCookies(cookieString) {
+		try { await this._validateHook(); } catch { return; }
+		let cookies = {};
+		if (cookieString) cookieString.split("; ").map((cookie) => {
+			(cookies[cookie.substring(0, cookie.indexOf("="))] = cookie.substring(cookie.indexOf("=") + 1, cookie.length));
+		});
+		return cookies;
+	}
+
+	async cookiesToString(cookies) {
+		try { await this._validateHook(); } catch { return; }
+		let newCookie = [];
+		for (let prop in cookie) {
+			newCookie.push(prop + "=" + cookie[prop]);
+		}
+		return newCookie.join("; ");
+	}
+
+	async removeCookie(cookieString, cookieName) {
+		try { await this._validateHook(); } catch { return; }
+		var cookies = this.parseCookies(cookieString);
+		delete cookies[cookieName];
+		return this.toString(cookies);
+	}
+
+	async htmlEntities(str) {
+		try { await this._validateHook(); } catch { return; }
+		return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+	}
+
+	async generateRandomString(len) {
+		try { await this._validateHook(); } catch { return; }
 		let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");
 		let result = [];
 		for (let i = 0; i < len; i++) {
-			result.push(chars[this.getRandomNumber(0, chars.length - 1)]);
+			result.push(chars[await this.getRandomNumber(0, chars.length - 1)]);
 		}
 		return result.join("");
-	},
-	getSocketFromId: function(socketId) {
+	}
+
+	async getSocketFromId(socketId) {
+		try { await this._validateHook(); } catch { return; }
 		return globals.io.sockets.sockets[socketId];
-	},
-	getRandomNumber: (min, max) => Math.floor(Math.random() * (max - min + 1)) + min,
-	convertTime,
-	Timer,
-	guid: () => [1,1,0,1,0,1,0,1,0,1,1,1].map(b => b ? Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1) : '-').join(''),
-	cookies: {
-		parseCookies: cookieString => {
-			let cookies = {};
-			if (cookieString) cookieString.split("; ").map((cookie) => {
-				(cookies[cookie.substring(0, cookie.indexOf("="))] = cookie.substring(cookie.indexOf("=") + 1, cookie.length));
-			});
-			return cookies;
-		},
-		toString: cookies => {
-			let newCookie = [];
-			for (let prop in cookie) {
-				newCookie.push(prop + "=" + cookie[prop]);
-			}
-			return newCookie.join("; ");
-		},
-		removeCookie: (cookieString, cookieName) => {
-			var cookies = this.parseCookies(cookieString);
-			delete cookies[cookieName];
-			return this.toString(cookies);
+	}
+
+	async getRandomNumber(min, max) {
+		try { await this._validateHook(); } catch { return; }
+		return Math.floor(Math.random() * (max - min + 1)) + min
+	}
+
+	async convertTime(duration) {
+		try { await this._validateHook(); } catch { return; }
+		let a = duration.match(/\d+/g);
+	
+		if (duration.indexOf('M') >= 0 && duration.indexOf('H') == -1 && duration.indexOf('S') == -1) {
+			a = [0, a[0], 0];
 		}
-	},
-	socketFromSession: function(socketId) {
-		let ns = io.io.of("/");
+	
+		if (duration.indexOf('H') >= 0 && duration.indexOf('M') == -1) {
+			a = [a[0], 0, a[1]];
+		}
+		if (duration.indexOf('H') >= 0 && duration.indexOf('M') == -1 && duration.indexOf('S') == -1) {
+			a = [a[0], 0, 0];
+		}
+	
+		duration = 0;
+	
+		if (a.length == 3) {
+			duration = duration + parseInt(a[0]) * 3600;
+			duration = duration + parseInt(a[1]) * 60;
+			duration = duration + parseInt(a[2]);
+		}
+	
+		if (a.length == 2) {
+			duration = duration + parseInt(a[0]) * 60;
+			duration = duration + parseInt(a[1]);
+		}
+	
+		if (a.length == 1) {
+			duration = duration + parseInt(a[0]);
+		}
+	
+		let hours = Math.floor(duration / 3600);
+		let minutes = Math.floor(duration % 3600 / 60);
+		let seconds = Math.floor(duration % 3600 % 60);
+	
+		return (hours < 10 ? ("0" + hours + ":") : (hours + ":")) + (minutes < 10 ? ("0" + minutes + ":") : (minutes + ":")) + (seconds < 10 ? ("0" + seconds) : seconds);
+	}
+
+	async guid () {
+		try { await this._validateHook(); } catch { return; }
+		return [1,1,0,1,0,1,0,1,0,1,1,1].map(b => b ? Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1) : '-').join('');
+	}
+
+	async socketFromSession(socketId) {
+		try { await this._validateHook(); } catch { return; }
+
+		let io = await this.io.io();
+		let ns = io.of("/");
 		if (ns) {
 			return ns.connected[socketId];
 		}
-	},
-	socketsFromSessionId: function(sessionId, cb) {
-		let ns = io.io.of("/");
+	}
+
+	async socketsFromSessionId(sessionId, cb) {
+		try { await this._validateHook(); } catch { return; }
+
+		let io = await this.io.io();
+		let ns = io.of("/");
 		let sockets = [];
 		if (ns) {
 			async.each(Object.keys(ns.connected), (id, next) => {
@@ -155,14 +194,18 @@ module.exports = {
 				cb(sockets);
 			});
 		}
-	},
-	socketsFromUser: function(userId, cb) {
-		let ns = io.io.of("/");
+	}
+
+	async socketsFromUser(userId, cb) {
+		try { await this._validateHook(); } catch { return; }
+
+		let io = await this.io.io();
+		let ns = io.of("/");
 		let sockets = [];
 		if (ns) {
 			async.each(Object.keys(ns.connected), (id, next) => {
 				let session = ns.connected[id].session;
-				cache.hget('sessions', session.sessionId, (err, session) => {
+				this.cache.hget('sessions', session.sessionId, (err, session) => {
 					if (!err && session && session.userId === userId) sockets.push(ns.connected[id]);
 					next();
 				});
@@ -170,14 +213,18 @@ module.exports = {
 				cb(sockets);
 			});
 		}
-	},
-	socketsFromIP: function(ip, cb) {
-		let ns = io.io.of("/");
+	}
+
+	async socketsFromIP(ip, cb) {
+		try { await this._validateHook(); } catch { return; }
+
+		let io = await this.io.io();
+		let ns = io.of("/");
 		let sockets = [];
 		if (ns) {
 			async.each(Object.keys(ns.connected), (id, next) => {
 				let session = ns.connected[id].session;
-				cache.hget('sessions', session.sessionId, (err, session) => {
+				this.cache.hget('sessions', session.sessionId, (err, session) => {
 					if (!err && session && ns.connected[id].ip === ip) sockets.push(ns.connected[id]);
 					next();
 				});
@@ -185,9 +232,13 @@ module.exports = {
 				cb(sockets);
 			});
 		}
-	},
-	socketsFromUserWithoutCache: function(userId, cb) {
-		let ns = io.io.of("/");
+	}
+
+	async socketsFromUserWithoutCache(userId, cb) {
+		try { await this._validateHook(); } catch { return; }
+
+		let io = await this.io.io();
+		let ns = io.of("/");
 		let sockets = [];
 		if (ns) {
 			async.each(Object.keys(ns.connected), (id, next) => {
@@ -198,31 +249,43 @@ module.exports = {
 				cb(sockets);
 			});
 		}
-	},
-	socketLeaveRooms: function(socketid) {
-		let socket = this.socketFromSession(socketid);
+	}
+
+	async socketLeaveRooms(socketid) {
+		try { await this._validateHook(); } catch { return; }
+
+		let socket = await this.socketFromSession(socketid);
 		let rooms = socket.rooms;
 		for (let room in rooms) {
 			socket.leave(room);
 		}
-	},
-	socketJoinRoom: function(socketId, room) {
-		let socket = this.socketFromSession(socketId);
+	}
+
+	async socketJoinRoom(socketId, room) {
+		try { await this._validateHook(); } catch { return; }
+
+		let socket = await this.socketFromSession(socketId);
 		let rooms = socket.rooms;
 		for (let room in rooms) {
 			socket.leave(room);
 		}
 		socket.join(room);
-	},
-	socketJoinSongRoom: function(socketId, room) {
-		let socket = this.socketFromSession(socketId);
+	}
+
+	async socketJoinSongRoom(socketId, room) {
+		try { await this._validateHook(); } catch { return; }
+
+		let socket = await this.socketFromSession(socketId);
 		let rooms = socket.rooms;
 		for (let room in rooms) {
 			if (room.indexOf('song.') !== -1) socket.leave(rooms);
 		}
 		socket.join(room);
-	},
-	socketsJoinSongRoom: function(sockets, room) {
+	}
+
+	async socketsJoinSongRoom(sockets, room) {
+		try { await this._validateHook(); } catch { return; }
+
 		for (let id in sockets) {
 			let socket = sockets[id];
 			let rooms = socket.rooms;
@@ -231,8 +294,11 @@ module.exports = {
 			}
 			socket.join(room);
 		}
-	},
-	socketsLeaveSongRooms: function(sockets) {
+	}
+
+	async socketsLeaveSongRooms(sockets) {
+		try { await this._validateHook(); } catch { return; }
+
 		for (let id in sockets) {
 			let socket = sockets[id];
 			let rooms = socket.rooms;
@@ -240,30 +306,36 @@ module.exports = {
 				if (room.indexOf('song.') !== -1) socket.leave(room);
 			}
 		}
-	},
-	emitToRoom: function(room) {
-		let sockets = io.io.sockets.sockets;
+	}
+
+	async emitToRoom(room, ...args) {
+		try { await this._validateHook(); } catch { return; }
+
+		let io = await this.io.io();
+		let sockets = io.sockets.sockets;
 		for (let id in sockets) {
 			let socket = sockets[id];
 			if (socket.rooms[room]) {
-				let args = [];
-				for (let i = 1; i < Object.keys(arguments).length; i++) {
-					args.push(arguments[i]);
-				}
 				socket.emit.apply(socket, args);
 			}
 		}
-	},
-	getRoomSockets: function(room) {
-		let sockets = io.io.sockets.sockets;
+	}
+
+	async getRoomSockets(room) {
+		try { await this._validateHook(); } catch { return; }
+
+		let io = await this.io.io();
+		let sockets = io.sockets.sockets;
 		let roomSockets = [];
 		for (let id in sockets) {
 			let socket = sockets[id];
 			if (socket.rooms[room]) roomSockets.push(socket);
 		}
 		return roomSockets;
-	},
-	getSongFromYouTube: (songId, cb) => {
+	}
+
+	async getSongFromYouTube(songId, cb) {
+		try { await this._validateHook(); } catch { return; }
 
 		youtubeRequestCallbacks.push({cb: (test) => {
 			youtubeRequestsActive = true;
@@ -319,8 +391,10 @@ module.exports = {
 		if (!youtubeRequestsActive) {
 			youtubeRequestCallbacks[0].cb(youtubeRequestCallbacks[0].songId);
 		}
-	},
-	getPlaylistFromYouTube: (url, cb) => {
+	}
+
+	async getPlaylistFromYouTube(url, cb) {
+		try { await this._validateHook(); } catch { return; }
 
 		let name = 'list'.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
 		var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
@@ -352,18 +426,30 @@ module.exports = {
 			});
 		}
 		getPage(null, []);
-	},
-	getSongFromSpotify: (song, cb) => {
+	}
+
+	async getSongFromSpotify(song, cb) {
+		try { await this._validateHook(); } catch { return; }
+
+		if (!config.get("apis.spotify.enabled")) return cb("Spotify is not enabled", null);
+
 		const spotifyParams = [
 			`q=${encodeURIComponent(song.title)}`,
 			`type=track`
 		].join('&');
 
-		request(`https://api.spotify.com/v1/search?${spotifyParams}`, (err, res, body) => {
+		const token = await this.spotify.getToken();
+		const options = {
+			url: `https://api.spotify.com/v1/search?${spotifyParams}`,
+			headers: {
+				Authorization: `Bearer ${token}`
+			}
+		};
 
+		request(options, (err, res, body) => {
 			if (err) console.error(err);
-
 			body = JSON.parse(body);
+			if (body.error) console.error(body.error);
 
 			durationArtistLoop:
 			for (let i in body) {
@@ -388,18 +474,33 @@ module.exports = {
 				}
 			}
 
-			cb(song);
+			cb(null, song);
 		});
-	},
-	getSongsFromSpotify: (title, artist, cb) => {
+	}
+
+	async getSongsFromSpotify(title, artist, cb) {
+		try { await this._validateHook(); } catch { return; }
+
+		if (!config.get("apis.spotify.enabled")) return cb([]);
+
 		const spotifyParams = [
 			`q=${encodeURIComponent(title)}`,
 			`type=track`
 		].join('&');
+		
+		const token = await this.spotify.getToken();
+		const options = {
+			url: `https://api.spotify.com/v1/search?${spotifyParams}`,
+			headers: {
+				Authorization: `Bearer ${token}`
+			}
+		};
 
-		request(`https://api.spotify.com/v1/search?${spotifyParams}`, (err, res, body) => {
+		request(options, (err, res, body) => {
 			if (err) return console.error(err);
 			body = JSON.parse(body);
+			if (body.error) return console.error(body.error);
+
 			let songs = [];
 
 			for (let i in body) {
@@ -427,8 +528,11 @@ module.exports = {
 
 			cb(songs);
 		});
-	},
-	shuffle: (array) => {
+	}
+
+	async shuffle(array) {
+		try { await this._validateHook(); } catch { return; }
+
 		let currentIndex = array.length, temporaryValue, randomIndex;
 
 		// While there remain elements to shuffle...
@@ -445,8 +549,11 @@ module.exports = {
 		}
 
 		return array;
-	},
-	getError: (err) => {
+	}
+
+	async getError(err) {
+		try { await this._validateHook(); } catch { return; }
+
 		let error = 'An error occurred.';
 		if (typeof err === "string") error = err;
 		else if (err.message) {
@@ -454,29 +561,5 @@ module.exports = {
 			else error = err.errors[Object.keys(err.errors)].message;
 		}
 		return error;
-	},
-	canUserBeInStation: (station, userId, cb) => {
-		async.waterfall([
-			(next) => {
-				if (station.privacy !== 'private') return next(true);
-				if (!userId) return next(false);
-				next();
-			},
-
-			(next) => {
-				db.models.user.findOne({_id: userId}, next);
-			},
-
-			(user, next) => {
-				if (!user) return next(false);
-				if (user.role === 'admin') return next(true);
-				if (station.type === 'official') return next(false);
-				if (station.owner === userId) return next(true);
-				next(false);
-			}
-		], (err) => {
-			if (err === true) return cb(true);
-			return cb(false);
-		});
 	}
-};
+}

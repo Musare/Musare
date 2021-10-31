@@ -1,149 +1,258 @@
 <template>
-	<div class='container'>
-		<input type='text' class='input' v-model='searchQuery' placeholder='Search for Songs'>
-		<br /><br />
-		<table class='table is-striped'>
-			<thead>
-				<tr>
-					<td>Thumbnail</td>
-					<td>Title</td>
-					<td>YouTube ID</td>
-					<td>Artists</td>
-					<td>Genres</td>
-					<td>Requested By</td>
-					<td>Options</td>
-				</tr>
-			</thead>
-			<tbody>
-				<tr v-for='(index, song) in filteredSongs' track-by='$index'>
-					<td>
-						<img class='song-thumbnail' :src='song.thumbnail' onerror="this.src='/assets/notes-transparent.png'">
-					</td>
-					<td>
-						<strong>{{ song.title }}</strong>
-					</td>
-					<td>{{ song.songId }}</td>
-					<td>{{ song.artists.join(', ') }}</td>
-					<td>{{ song.genres.join(', ') }}</td>
-					<td>{{ song.requestedBy }}</td>
-					<td>
-						<button class='button is-primary' @click='edit(song, index)'>Edit</button>
-						<button class='button is-success' @click='add(song)'>Add</button>
-						<button class='button is-danger' @click='remove(song._id, index)'>Remove</button>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+	<div>
+		<metadata title="Admin | Queue songs" />
+		<div class="container" v-scroll="handleScroll">
+			<p>
+				<span>Sets loaded: {{ position - 1 }} / {{ maxPosition }}</span>
+				<br />
+				<span>Loaded songs: {{ this.songs.length }}</span>
+			</p>
+			<input
+				v-model="searchQuery"
+				type="text"
+				class="input"
+				placeholder="Search for Songs"
+			/>
+			<button
+				v-if="!loadAllSongs"
+				class="button is-primary"
+				@click="loadAll()"
+			>
+				Load all
+			</button>
+			<br />
+			<br />
+			<table class="table is-striped">
+				<thead>
+					<tr>
+						<td>Thumbnail</td>
+						<td>Title</td>
+						<td>Artists</td>
+						<td>Genres</td>
+						<td>ID / YouTube ID</td>
+						<td>Requested By</td>
+						<td>Options</td>
+					</tr>
+				</thead>
+				<tbody>
+					<tr v-for="(song, index) in filteredSongs" :key="index">
+						<td>
+							<img
+								class="song-thumbnail"
+								:src="song.thumbnail"
+								onerror="this.src='/assets/notes-transparent.png'"
+							/>
+						</td>
+						<td>
+							<strong>{{ song.title }}</strong>
+						</td>
+						<td>{{ song.artists.join(", ") }}</td>
+						<td>{{ song.genres.join(", ") }}</td>
+						<td>
+							{{ song._id }}
+							<br />
+							<a
+								:href="
+									'https://www.youtube.com/watch?v=' +
+										`${song.songId}`
+								"
+								target="_blank"
+							>
+								{{ song.songId }}</a
+							>
+						</td>
+						<td>
+							<user-id-to-username
+								:userId="song.requestedBy"
+								:link="true"
+							/>
+						</td>
+						<td class="optionsColumn">
+							<button
+								class="button is-primary"
+								@click="edit(song, index)"
+							>
+								<i class="material-icons">edit</i>
+							</button>
+							<button
+								class="button is-success"
+								@click="add(song)"
+							>
+								<i class="material-icons">add</i>
+							</button>
+							<button
+								class="button is-danger"
+								@click="remove(song._id, index)"
+							>
+								<i class="material-icons">cancel</i>
+							</button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<edit-song v-if="modals.editSong" />
 	</div>
-	<nav class="pagination">
-		<a class="button" href='#' @click='getSet(position - 1)' v-if='position > 1'><i class="material-icons">navigate_before</i></a>
-		<a class="button" href='#' @click='getSet(position + 1)' v-if='maxPosition > position'><i class="material-icons">navigate_next</i></a>
-	</nav>
-	<edit-song v-show='modals.editSong'></edit-song>
 </template>
 
 <script>
-	import { Toast } from 'vue-roaster';
+import { mapState, mapActions } from "vuex";
+import Vue from "vue";
 
-	import EditSong from '../Modals/EditSong.vue';
-	import io from '../../io';
+import Toast from "toasters";
 
-	export default {
-		components: { EditSong },
-		data() {
-			return {
-				position: 1,
-				maxPosition: 1,
-				searchQuery: '',
-				songs: [],
-				modals: { editSong: false }
-			}
+import EditSong from "../Modals/EditSong.vue";
+import UserIdToUsername from "../UserIdToUsername.vue";
+
+import io from "../../io";
+
+export default {
+	components: { EditSong, UserIdToUsername },
+	data() {
+		return {
+			position: 1,
+			maxPosition: 1,
+			searchQuery: "",
+			songs: [],
+			gettingSet: false,
+			loadAllSongs: false
+		};
+	},
+	computed: {
+		filteredSongs() {
+			return this.songs.filter(
+				song =>
+					JSON.stringify(Object.values(song)).indexOf(
+						this.searchQuery
+					) !== -1
+			);
 		},
-		computed: {
-			filteredSongs: function () {
-				return this.$eval('songs | filterBy searchQuery');
-			}
+		...mapState("modals", {
+			modals: state => state.modals.admin
+		})
+	},
+	watch: {
+		// eslint-disable-next-line func-names
+		"modals.editSong": function(value) {
+			if (value === false) this.stopVideo();
+		}
+	},
+	methods: {
+		edit(song, index) {
+			const newSong = {};
+			Object.keys(song).forEach(n => {
+				newSong[n] = song[n];
+			});
+
+			this.editSong({ index, song: newSong, type: "queueSongs" });
+			this.openModal({ sector: "admin", modal: "editSong" });
 		},
-		watch: {
-			'modals.editSong': function (value) {
-				if (!value) this.$broadcast('stopVideo');
-			}
+		add(song) {
+			this.socket.emit("songs.add", song, res => {
+				if (res.status === "success")
+					new Toast({ content: res.message, timeout: 2000 });
+				else new Toast({ content: res.message, timeout: 4000 });
+			});
 		},
-		methods: {
-			toggleModal: function () {
-				this.modals.editSong = !this.modals.editSong;
-			},
-			getSet: function (position) {
-				let _this = this;
-				this.socket.emit('queueSongs.getSet', position, data => {
-					_this.songs = data;
-					this.position = position;
-				});
-			},
-			edit: function (song, index) {
-				this.$broadcast('editSong', song, index, 'queueSongs');
-			},
-			add: function (song) {
-				this.socket.emit('songs.add', song, res => {
-					if (res.status == 'success') Toast.methods.addToast(res.message, 2000);
-					else Toast.methods.addToast(res.message, 4000);
-				});
-			},
-			remove: function (id, index) {
-				console.log("Removing ", id);
-				this.socket.emit('queueSongs.remove', id, res => {
-					if (res.status == 'success') Toast.methods.addToast(res.message, 2000);
-				else Toast.methods.addToast(res.message, 4000);
-				});
-			},
-			init: function() {
-				let _this = this;
-				_this.socket.emit('queueSongs.index', data => {
-					_this.songs = data.songs;
-					_this.maxPosition = Math.round(data.maxLength / 50);
-				});
-				_this.socket.emit('apis.joinAdminRoom', 'queue', data => {});
-			}
+		remove(id) {
+			this.socket.emit("queueSongs.remove", id, res => {
+				if (res.status === "success")
+					new Toast({ content: res.message, timeout: 2000 });
+				else new Toast({ content: res.message, timeout: 4000 });
+			});
 		},
-		ready: function () {
-			let _this = this;
-			io.getSocket((socket) => {
-				_this.socket = socket;
-				if (_this.socket.connected) {
-					_this.init();
-					_this.socket.on('event:admin.queueSong.added', queueSong => {
-						_this.songs.push(queueSong);
-					});
-					_this.socket.on('event:admin.queueSong.removed', songId => {
-						_this.songs = _this.songs.filter(function(song) {
-							return song._id !== songId;
-						});
-					});
-					_this.socket.on('event:admin.queueSong.updated', updatedSong => {
-						for (let i = 0; i < _this.songs.length; i++) {
-							let song = _this.songs[i];
-							if (song._id === updatedSong._id) {
-								_this.songs.$set(i, updatedSong);
-							}
-						}
-					});
-				}
-				io.onConnect(() => {
-					_this.init();
+		getSet() {
+			if (this.gettingSet) return;
+			if (this.position > this.maxPosition) return;
+			this.gettingSet = true;
+			this.socket.emit("queueSongs.getSet", this.position, data => {
+				data.forEach(song => {
+					this.songs.push(song);
+				});
+				this.position += 1;
+				this.gettingSet = false;
+				if (this.loadAllSongs && this.maxPosition > this.position - 1)
+					setTimeout(() => {
+						this.getSet();
+					}, 500);
+			});
+		},
+		handleScroll() {
+			if (this.loadAllSongs) return false;
+			if (window.scrollY + 50 >= window.scrollMaxY) this.getSet();
+
+			return this.maxPosition === this.position;
+		},
+		loadAll() {
+			this.loadAllSongs = true;
+			this.getSet();
+		},
+		init() {
+			if (this.songs.length > 0)
+				this.position = Math.ceil(this.songs.length / 15) + 1;
+
+			this.socket.emit("queueSongs.length", length => {
+				this.maxPosition = Math.ceil(length / 15);
+				this.getSet();
+			});
+			this.socket.emit("apis.joinAdminRoom", "queue", () => {});
+		},
+		...mapActions("admin/songs", ["stopVideo", "editSong"]),
+		...mapActions("modals", ["openModal"])
+	},
+	mounted() {
+		io.getSocket(socket => {
+			this.socket = socket;
+
+			this.socket.on("event:admin.queueSong.added", queueSong => {
+				this.songs.push(queueSong);
+			});
+			this.socket.on("event:admin.queueSong.removed", songId => {
+				this.songs = this.songs.filter(song => {
+					return song._id !== songId;
 				});
 			});
-		}
+			this.socket.on("event:admin.queueSong.updated", updatedSong => {
+				for (let i = 0; i < this.songs.length; i += 1) {
+					const song = this.songs[i];
+					if (song._id === updatedSong._id) {
+						Vue.set(this.songs, i, updatedSong);
+					}
+				}
+			});
+
+			if (this.socket.connected) {
+				this.init();
+			}
+			io.onConnect(() => {
+				this.init();
+			});
+		});
 	}
+};
 </script>
 
-<style lang='scss' scoped>
-	.song-thumbnail {
-		display: block;
-		max-width: 50px;
-		margin: 0 auto;
+<style lang="scss" scoped>
+@import "styles/global.scss";
+
+.optionsColumn {
+	width: 140px;
+	button {
+		width: 35px;
 	}
+}
 
-	td { vertical-align: middle; }
+.song-thumbnail {
+	display: block;
+	max-width: 50px;
+	margin: 0 auto;
+}
 
-	.is-primary:focus { background-color: #029ce3 !important; }
+td {
+	vertical-align: middle;
+}
+
+.is-primary:focus {
+	background-color: $primary-color !important;
+}
 </style>

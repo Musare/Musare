@@ -2,6 +2,15 @@ body {
 	background-color: rgb(245, 245, 245);
 }
 
+.app {
+	min-height: 100vh;
+	position: relative;
+}
+
+.content-wrapper {
+	padding: 60px 0 calc(230px + 60px) 0;
+}
+
 .card {
 	background-color: white;
 	/*padding: 20px;*/
@@ -75,7 +84,7 @@ h6 {
 }
 
 .light-blue {
-	background-color: #03a9f4 !important;
+	background-color: #ff4545 !important;
 }
 
 .white {
@@ -92,7 +101,7 @@ a.nav-item.is-tab {
 }
 
 .button.is-info {
-	background-color: #03a9f4;
+	background-color: #ff4545;
 	border-width: 0;
 	color: #fff;
 }

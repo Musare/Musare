@@ -1,160 +1,213 @@
 <template>
-	<div class='sidebar' transition='slide' v-if='$parent.sidebars.playlist'>
-		<div class='inner-wrapper'>
-			<div class='title'>Playlists</div>
+	<div class="sidebar" transition="slide">
+		<div class="inner-wrapper">
+			<div class="title">
+				Playlists
+			</div>
 
-			<aside class='menu' v-if='playlists.length > 0'>
-				<ul class='menu-list'>
-					<li v-for='playlist in playlists'>
+			<aside v-if="playlists.length > 0" class="menu">
+				<ul class="menu-list">
+					<li v-for="(playlist, index) in playlists" :key="index">
 						<span>{{ playlist.displayName }}</span>
 						<!--Will play playlist in community station Kris-->
-						<div class='icons-group'>
-							<a href='#' @click='selectPlaylist(playlist._id)' v-if="isNotSelected(playlist._id) && !this.$parent.$parent.station.partyMode">
-								<i class='material-icons'>play_arrow</i>
+						<div class="icons-group">
+							<a
+								v-if="
+									isNotSelected(playlist._id) &&
+										!station.partyMode
+								"
+								href="#"
+								@click="selectPlaylist(playlist._id)"
+							>
+								<i class="material-icons">play_arrow</i>
 							</a>
-							<a href='#' @click='editPlaylist(playlist._id)'>
-								<i class='material-icons'>edit</i>
+							<a href="#" v-on:click="edit(playlist._id)">
+								<i class="material-icons">edit</i>
 							</a>
 						</div>
 					</li>
 				</ul>
 			</aside>
 
-			<div class='none-found' v-else>No Playlists found</div>
+			<div v-else class="none-found">
+				No Playlists found
+			</div>
 
-			<a class='button create-playlist' href='#' @click='$parent.modals.createPlaylist = !$parent.modals.createPlaylist'>Create Playlist</a>
+			<a
+				class="button create-playlist"
+				href="#"
+				@click="
+					openModal({ sector: 'station', modal: 'createPlaylist' })
+				"
+				>Create Playlist</a
+			>
 		</div>
 	</div>
 </template>
 
 <script>
-	import { Toast } from 'vue-roaster';
-	import { Edit } from '../Modals/Playlists/Edit.vue';
-	import io from '../../io';
+import { mapState, mapActions } from "vuex";
 
-	export default {
-		data() {
-			return {
-				playlists: []
-			}
+import Toast from "toasters";
+import io from "../../io";
+
+export default {
+	data() {
+		return {
+			playlists: []
+		};
+	},
+	computed: {
+		...mapState("modals", {
+			modals: state => state.modals.station
+		}),
+		...mapState({
+			station: state => state.station.station
+		})
+	},
+	methods: {
+		edit(id) {
+			this.editPlaylist(id);
+			this.openModal({ sector: "station", modal: "editPlaylist" });
 		},
-		methods: {
-			editPlaylist: function(id) {
-				this.$parent.editPlaylist(id);
-			},
-			selectPlaylist: function(id) {
-				this.socket.emit('stations.selectPrivatePlaylist', this.$parent.station._id, id, (res) => {
-					if (res.status === 'failure') return Toast.methods.addToast(res.message, 8000);
-					Toast.methods.addToast(res.message, 4000);
-				});
-			},
-			isNotSelected: function(id) {
-				let _this = this;
-				//TODO Also change this once it changes for a station
-				if (_this.$parent.station && _this.$parent.station.privatePlaylist === id) return false;
-				return true;
-			}
+		selectPlaylist(id) {
+			this.socket.emit(
+				"stations.selectPrivatePlaylist",
+				this.station._id,
+				id,
+				res => {
+					if (res.status === "failure")
+						return new Toast({
+							content: res.message,
+							timeout: 8000
+						});
+					return new Toast({ content: res.message, timeout: 4000 });
+				}
+			);
 		},
-		ready: function () {
-			// TODO: Update when playlist is removed/created
-			let _this = this;
-			io.getSocket((socket) => {
-				_this.socket = socket;
-				_this.socket.emit('playlists.indexForUser', res => {
-					if (res.status == 'success') _this.playlists = res.data;
-				});
-				_this.socket.on('event:playlist.create', (playlist) => {
-					_this.playlists.push(playlist);
-				});
-				_this.socket.on('event:playlist.delete', (playlistId) => {
-					_this.playlists.forEach((playlist, index) => {
-						if (playlist._id === playlistId) {
-							_this.playlists.splice(index, 1);
-						}
-					});
-				});
-				_this.socket.on('event:playlist.addSong', (data) => {
-					_this.playlists.forEach((playlist, index) => {
-						if (playlist._id === data.playlistId) {
-							_this.playlists[index].songs.push(data.song);
-						}
-					});
-				});
-				_this.socket.on('event:playlist.removeSong', (data) => {
-					_this.playlists.forEach((playlist, index) => {
-						if (playlist._id === data.playlistId) {
-							_this.playlists[index].songs.forEach((song, index2) => {
-								if (song._id === data.songId) {
-									_this.playlists[index].songs.splice(index2, 1);
-								}
-							});
-						}
-					});
-				});
-				_this.socket.on('event:playlist.updateDisplayName', (data) => {
-					_this.playlists.forEach((playlist, index) => {
-						if (playlist._id === data.playlistId) {
-							_this.playlists[index].displayName = data.displayName;
-						}
-					});
+		isNotSelected(id) {
+			// TODO Also change this once it changes for a station
+			if (this.station && this.station.privatePlaylist === id)
+				return false;
+			return true;
+		},
+		...mapActions("modals", ["openModal"]),
+		...mapActions("user/playlists", ["editPlaylist"])
+	},
+	mounted() {
+		// TODO: Update when playlist is removed/created
+		io.getSocket(socket => {
+			this.socket = socket;
+			this.socket.emit("playlists.indexForUser", res => {
+				if (res.status === "success") this.playlists = res.data;
+			});
+			this.socket.on("event:playlist.create", playlist => {
+				this.playlists.push(playlist);
+			});
+			this.socket.on("event:playlist.delete", playlistId => {
+				this.playlists.forEach((playlist, index) => {
+					if (playlist._id === playlistId) {
+						this.playlists.splice(index, 1);
+					}
 				});
 			});
-		}
+			this.socket.on("event:playlist.addSong", data => {
+				this.playlists.forEach((playlist, index) => {
+					if (playlist._id === data.playlistId) {
+						this.playlists[index].songs.push(data.song);
+					}
+				});
+			});
+			this.socket.on("event:playlist.removeSong", data => {
+				this.playlists.forEach((playlist, index) => {
+					if (playlist._id === data.playlistId) {
+						this.playlists[index].songs.forEach((song, index2) => {
+							if (song._id === data.songId) {
+								this.playlists[index].songs.splice(index2, 1);
+							}
+						});
+					}
+				});
+			});
+			this.socket.on("event:playlist.updateDisplayName", data => {
+				this.playlists.forEach((playlist, index) => {
+					if (playlist._id === data.playlistId) {
+						this.playlists[index].displayName = data.displayName;
+					}
+				});
+			});
+		});
 	}
+};
 </script>
 
-<style type='scss' scoped>
-	.sidebar {
-		position: fixed;
-		z-index: 1;
-		top: 0;
-		right: 0;
-		width: 300px;
-		height: 100vh;
-		background-color: #fff;
-		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
-	}
+<style lang="scss" scoped>
+@import "styles/global.scss";
 
-	.icons-group a {
-		display: flex;
-    	align-items: center;
-	}
+.sidebar {
+	position: fixed;
+	z-index: 1;
+	top: 0;
+	right: 0;
+	width: 300px;
+	height: 100vh;
+	background-color: $white;
+	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16),
+		0 2px 10px 0 rgba(0, 0, 0, 0.12);
+}
 
-	.menu-list li { align-items: center; }
+.icons-group a {
+	display: flex;
+	align-items: center;
+}
 
-	.inner-wrapper {	
-		top: 64px;
-		position: relative;
-	}
+.menu-list li {
+	align-items: center;
+}
 
-	.slide-transition {
-		transition: transform 0.6s ease-in-out;
-		transform: translateX(0);
-	}
+.inner-wrapper {
+	top: 60px;
+	position: relative;
+}
 
-	.slide-enter, .slide-leave { transform: translateX(100%); }
+.slide-transition {
+	transition: transform 0.6s ease-in-out;
+	transform: translateX(0);
+}
 
-	.title {
-		background-color: rgb(3, 169, 244);
-		text-align: center;
-		padding: 10px;
-		color: white;
-		font-weight: 600;
-	}
+.slide-enter,
+.slide-leave {
+	transform: translateX(100%);
+}
 
-	.create-playlist {
-		width: 100%;
-    	margin-top: 20px;
-		height: 40px;
-		border-radius: 0;
-		background: rgba(3, 169, 244, 1);
-    	color: #fff !important;
+.title {
+	background-color: rgb(3, 169, 244);
+	text-align: center;
+	padding: 10px;
+	color: $white;
+	font-weight: 600;
+}
+
+.create-playlist {
+	width: 100%;
+	margin-top: 20px;
+	height: 40px;
+	border-radius: 0;
+	background: rgba(3, 169, 244, 1);
+	color: $white !important;
+	border: 0;
+
+	&:active,
+	&:focus {
 		border: 0;
-
-		&:active, &:focus { border: 0; }
 	}
+}
 
-	.create-playlist:focus { background: #029ce3; }
+.create-playlist:focus {
+	background: $primary-color;
+}
 
-	.none-found { text-align: center; }
+.none-found {
+	text-align: center;
+}
 </style>
