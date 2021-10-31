@@ -41,6 +41,7 @@
 					class="button is-default"
 					ref="excluded-tab"
 					:class="{ selected: tab === 'excluded' }"
+					v-if="isOwnerOrAdmin()"
 					@click="showTab('excluded')"
 				>
 					Excluded
