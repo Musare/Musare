@@ -98,7 +98,7 @@ export default {
 	}
 
 	.thumbnail-and-info {
-		width: calc(100% - 160px);
+		min-width: 0;
 	}
 
 	.song-info {
@@ -106,7 +106,7 @@ export default {
 		flex-direction: column;
 		justify-content: center;
 		margin-left: 20px;
-		width: calc(100% - 65px);
+		min-width: 0;
 
 		.item-title {
 			font-size: 20px;

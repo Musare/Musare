@@ -652,9 +652,6 @@ export default {
 			margin-bottom: 10px;
 		}
 		.currently-playing.song-item {
-			.song-info {
-				width: calc(100% - 150px);
-			}
 			.thumbnail {
 				min-width: 130px;
 				width: 130px;

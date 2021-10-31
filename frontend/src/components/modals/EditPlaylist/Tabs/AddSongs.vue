@@ -212,12 +212,6 @@ export default {
 };
 </script>
 
-<style lang="scss">
-.youtube-tab .song-query-results .song-item .thumbnail-and-info {
-	width: calc(100% - 110px);
-}
-</style>
-
 <style lang="scss" scoped>
 .youtube-tab {
 	.song-query-results {

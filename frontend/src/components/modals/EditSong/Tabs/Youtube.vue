@@ -96,10 +96,6 @@ export default {
 		overflow: auto;
 
 		.search-query-item {
-			/deep/ .thumbnail-and-info {
-				width: calc(100% - 59px);
-			}
-
 			.icon-selected {
 				color: var(--green) !important;
 			}

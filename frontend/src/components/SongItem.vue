@@ -318,7 +318,7 @@ export default {
 	}
 
 	.thumbnail-and-info {
-		width: calc(100% - 90px);
+		min-width: 0;
 	}
 
 	.thumbnail {
@@ -333,7 +333,7 @@ export default {
 		flex-direction: column;
 		justify-content: center;
 		margin-left: 20px;
-		width: calc(100% - 10px);
+		min-width: 0;
 
 		*:not(i) {
 			margin: 0;
@@ -368,10 +368,6 @@ export default {
 
 	.edit-icon {
 		color: var(--primary-color);
-	}
-
-	&.with-duration .song-info {
-		width: calc(100% - 80px);
 	}
 }
 </style>

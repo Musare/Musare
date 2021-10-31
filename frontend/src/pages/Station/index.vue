@@ -2319,9 +2319,6 @@ export default {
 #currently-playing-container,
 #next-up-container {
 	.song-item {
-		.song-info {
-			width: calc(100% - 80px);
-		}
 		.thumbnail {
 			min-width: 130px;
 			width: 130px;
