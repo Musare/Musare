@@ -1033,7 +1033,6 @@ html {
 	flex-wrap: wrap;
 	border-radius: 5px;
 	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
-	transition: all ease-in-out 0.2s;
 
 	.card-content {
 		padding: 10px 10px 10px 15px;
