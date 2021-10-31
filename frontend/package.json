@@ -5,12 +5,12 @@
     "*.vue"
   ],
   "private": true,
-  "version": "2.1.0",
-  "description": "A modern, open-source, collaborative music app https://musare.com",
+  "version": "3.0.0",
+  "description": "An open-source collaborative music listening and catalogue curation application. Currently supporting YouTube based content.",
   "main": "main.js",
   "author": "Musare Team",
   "license": "GPL-3.0",
-  "repository": "https://github.com/Musare/MusareNode",
+  "repository": "https://github.com/Musare/Musare",
   "scripts": {
     "lint": "npx eslint src --ext .js,.vue",
     "dev": "npx webpack serve --config webpack.dev.js",

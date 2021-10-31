@@ -1,13 +1,13 @@
 {
   "name": "musare-backend",
   "private": true,
-  "version": "2.1.0",
+  "version": "3.0.0",
   "type": "module",
-  "description": "A modern, open-source, collaborative music app https://musare.com",
+  "description": "An open-source collaborative music listening and catalogue curation application. Currently supporting YouTube based content.",
   "main": "index.js",
   "author": "Musare Team",
   "license": "GPL-3.0",
-  "repository": "https://github.com/Musare/MusareNode",
+  "repository": "https://github.com/Musare/Musare",
   "scripts": {
     "dev": "nodemon --es-module-specifier-resolution=node",
     "docker:dev": "nodemon --es-module-specifier-resolution=node -L /opt/app",
