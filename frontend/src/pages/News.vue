@@ -18,9 +18,7 @@
 							:user-id="item.createdBy"
 							:alt="item.createdBy"
 							:link="true"
-						/>
-
-						<span :title="new Date(item.createdAt)">
+						/>&nbsp;<span :title="new Date(item.createdAt)">
 							{{
 								formatDistance(item.createdAt, new Date(), {
 									addSuffix: true

@@ -14,7 +14,7 @@
 						:user-id="news.createdBy"
 						:alt="news.createdBy"
 						:link="true" /></span
-				><span :title="new Date(news.createdAt)">
+				>&nbsp;<span :title="new Date(news.createdAt)">
 					{{
 						formatDistance(news.createdAt, new Date(), {
 							addSuffix: true
@@ -100,18 +100,6 @@ export default {
 	}
 };
 </script>
-
-<style lang="scss">
-.what-is-news-modal {
-	.modal-card {
-		.modal-card-foot {
-			span:not(:last-child) {
-				margin-right: 5px !important;
-			}
-		}
-	}
-}
-</style>
 
 <style lang="scss" scoped>
 .night-mode {
