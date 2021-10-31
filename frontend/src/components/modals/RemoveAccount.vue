@@ -148,7 +148,7 @@
 			</div>
 
 			<div v-if="step === 'export-data'">
-				DOWNLOAD A BACKUP OF YOUR DATa BEFORE ITS PERMENATNELY DELETED
+				DOWNLOAD A BACKUP OF YOUR DATA BEFORE ITS PERMENATNELY DELETED
 			</div>
 
 			<div
