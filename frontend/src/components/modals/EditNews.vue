@@ -229,7 +229,12 @@ export default {
 .night-mode {
 	#markdown-editor-and-preview textarea,
 	#markdown-editor-and-preview #preview {
-		border-color: #fff;
+		border-color: var(--grey-3);
+	}
+
+	#markdown-editor-and-preview textarea {
+		background-color: var(--dark-grey);
+		color: var(--white);
 	}
 }
 
