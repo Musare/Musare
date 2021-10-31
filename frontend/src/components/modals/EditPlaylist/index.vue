@@ -516,7 +516,7 @@ export default {
 					a.style.display = "none";
 					a.href = url;
 
-					a.download = `musare-privateplaylist-${
+					a.download = `musare-playlist-${
 						this.playlist._id
 					}-${new Date().toISOString()}.json`;
 
