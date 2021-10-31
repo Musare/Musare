@@ -1,11 +1,6 @@
 name: Musare Build and ESLint
 
-on:
-    push:
-        branches: [ polishing ]
-    pull_request:
-        branches: [ polishing ]
-    workflow_dispatch:
+on: [ push, pull_request, workflow_dispatch ]
 
 env:
     COMPOSE_PROJECT_NAME: musare
