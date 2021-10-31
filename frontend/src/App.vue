@@ -1226,12 +1226,14 @@ h4.section-title {
 }
 
 .news-item {
+	font-family: "Karla";
 	border-radius: 5px;
 	padding: 20px;
 	border: unset !important;
 	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
 
 	* {
+		font-family: Karla, Arial, sans-serif;
 		font-size: 16px;
 	}
 

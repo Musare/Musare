@@ -262,11 +262,12 @@ export default {
 		.item-title-description {
 			.item-title {
 				font-size: 20px;
+				font-family: Karla, Arial, sans-serif;
 			}
 
 			.item-description {
 				font-size: 14px;
-				line-height: 16px;
+				font-family: Karla, Arial, sans-serif;
 			}
 		}
 	}
