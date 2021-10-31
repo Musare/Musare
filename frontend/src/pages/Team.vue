@@ -177,7 +177,7 @@ export default {
 				{
 					name: "Jonathan Graham",
 					bio: `
-						<em>Gap-year student based in the UK hoping to study Computer Science at university in September.</em>
+						<em>Student based in the UK studying Computer Science at university.</em>
 						<br /><br />
 						Lead Developer, Designer and QA Tester.
 						`,
