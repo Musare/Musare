@@ -259,6 +259,7 @@ export default {
 	.left-part {
 		flex: 1;
 		padding: 12px;
+		min-width: 0;
 
 		.item-title {
 			margin: 0;
