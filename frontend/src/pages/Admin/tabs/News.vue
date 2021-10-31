@@ -32,15 +32,19 @@
 						</td>
 						<td class="news-item-markdown">{{ news.markdown }}</td>
 						<td id="options-column">
-							<button
-								class="button is-primary"
-								@click="edit(news._id)"
-							>
-								Edit
-							</button>
-							<confirm @confirm="remove(news._id)">
-								<button class="button is-danger">Remove</button>
-							</confirm>
+							<div>
+								<button
+									class="button is-primary"
+									@click="edit(news._id)"
+								>
+									Edit
+								</button>
+								<confirm @confirm="remove(news._id)">
+									<button class="button is-danger">
+										Remove
+									</button>
+								</confirm>
+							</div>
 						</td>
 					</tr>
 				</tbody>
@@ -208,10 +212,11 @@ td {
 }
 
 #options-column {
-	display: flex;
-
-	button {
-		margin-right: 5px;
+	> div {
+		display: flex;
+		button {
+			margin-right: 5px;
+		}
 	}
 }
 </style>
