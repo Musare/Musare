@@ -472,7 +472,7 @@ body.night-mode {
 
 	.toast {
 		font-weight: 600;
-	z-index: 10000 !important;
+		z-index: 10000 !important;
 	}
 }
 
@@ -486,6 +486,7 @@ body {
 	background-color: var(--light-grey);
 	color: var(--dark-grey);
 	height: 100%;
+	line-height: 1.428;
 	font-family: "Inter", Helvetica, Arial, sans-serif;
 }
 
