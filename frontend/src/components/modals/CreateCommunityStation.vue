@@ -1,7 +1,6 @@
 <template>
 	<modal title="Create Community Station">
 		<template #body>
-			<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
 			<label class="label">Name (unique lowercase station id)</label>
 			<p class="control">
 				<input
