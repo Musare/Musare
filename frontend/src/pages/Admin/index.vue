@@ -259,6 +259,19 @@ export default {
 	}
 }
 
+/deep/ .container {
+	position: relative;
+}
+
+/deep/ .box {
+	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
+	display: block;
+
+	&:not(:last-child) {
+		margin-bottom: 20px;
+	}
+}
+
 .main-container {
 	height: auto;
 }
@@ -272,6 +285,7 @@ export default {
 	overflow-y: hidden;
 	overflow-x: auto;
 	margin-bottom: 20px;
+	user-select: none;
 
 	ul {
 		display: flex;
@@ -338,6 +352,19 @@ export default {
 	.is-active .tab {
 		font-weight: 600;
 		border-width: 3px;
+	}
+}
+
+@media screen and (min-width: 980px) {
+	/deep/ .container {
+		margin: 0 auto;
+		max-width: 960px;
+	}
+}
+
+@media screen and (min-width: 1180px) {
+	/deep/ .container {
+		max-width: 1200px;
 	}
 }
 </style>

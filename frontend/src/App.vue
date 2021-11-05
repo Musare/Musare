@@ -678,6 +678,31 @@ a {
 	text-decoration: none;
 }
 
+table {
+	border-collapse: collapse;
+	width: 100%;
+
+	thead {
+		td {
+			border-width: 0 0 2px;
+		}
+	}
+
+	td {
+		border: 1px solid #dbdbdb;
+		border-width: 0 0 1px;
+		padding: 8px 10px;
+	}
+
+	tbody {
+		tr:last-child {
+			td {
+				border-bottom-width: 0;
+			}
+		}
+	}
+}
+
 .modal-card {
 	margin: 0 !important;
 }
@@ -1086,6 +1111,18 @@ button.delete:focus {
 }
 
 .button {
+	border: 1px solid #dbdbdb;
+	border-radius: 3px;
+	line-height: 24px;
+	align-items: center;
+	display: inline-flex;
+	font-size: 14px;
+	padding-left: 10px;
+	padding-right: 10px;
+	justify-content: center;
+	cursor: pointer;
+	user-select: none;
+
 	&:hover,
 	&:focus {
 		filter: brightness(95%);
@@ -1093,23 +1130,44 @@ button.delete:focus {
 
 	&.is-success {
 		background-color: var(--green) !important;
+		border-width: 0;
+		color: white;
 	}
 
 	&.is-primary {
 		background-color: var(--primary-color) !important;
+		border-width: 0;
+		color: white;
 	}
 
 	&.is-danger {
 		background-color: var(--red) !important;
+		border-width: 0;
+		color: white;
 	}
 
 	&.is-info {
 		background-color: var(--primary-color) !important;
+		border-width: 0;
+		color: white;
 	}
 
 	&.is-warning {
 		background-color: var(--yellow) !important;
+		border-width: 0;
+		color: white;
 	}
+}
+
+.input {
+	width: 100%;
+	padding-left: 8px;
+	padding-right: 8px;
+	line-height: 24px;
+	font-size: 14px;
+	border-radius: 3px;
+	box-shadow: inset 0 1px 2px rgba(10, 10, 10, 0.1);
+	border: 1px solid #dbdbdb;
 }
 
 .input,
