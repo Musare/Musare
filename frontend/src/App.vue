@@ -480,6 +480,7 @@ html {
 	overflow: auto !important;
 	height: 100%;
 	background-color: inherit;
+	font-size: 14px;
 }
 
 body {
@@ -487,6 +488,7 @@ body {
 	color: var(--dark-grey);
 	height: 100%;
 	line-height: 1.428;
+	font-size: 1rem;
 	font-family: "Inter", Helvetica, Arial, sans-serif;
 }
 

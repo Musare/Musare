@@ -267,6 +267,21 @@ export default {
 	padding-top: 10px;
 	margin-top: -10px;
 	background-color: var(--white);
+	display: flex;
+	line-height: 24px;
+	overflow-y: hidden;
+	overflow-x: auto;
+	margin-bottom: 20px;
+
+	ul {
+		display: flex;
+		align-items: center;
+		/* -webkit-box-flex: 1; */
+		flex-grow: 1;
+		flex-shrink: 0;
+		justify-content: center;
+	}
+
 	.unverifiedsongs {
 		color: var(--teal);
 		border-color: var(--teal);
@@ -311,6 +326,9 @@ export default {
 		transition: all 0.2s ease-in-out;
 		font-weight: 500;
 		border-bottom: solid 0px;
+		padding: 6px 12px;
+		display: flex;
+		margin-bottom: -1px;
 	}
 	.tab:hover {
 		border-width: 3px;
