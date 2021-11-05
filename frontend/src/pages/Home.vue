@@ -1140,8 +1140,6 @@ html {
 	}
 
 	&.createStation {
-		height: auto;
-
 		.card-image {
 			.image.is-square {
 				width: 120px;

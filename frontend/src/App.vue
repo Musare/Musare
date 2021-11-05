@@ -505,8 +505,23 @@ body {
 }
 
 .card {
-	background-color: white;
-	/*padding: 20px;*/
+	position: relative;
+	background-color: var(--white);
+	color: var(--dark-grey);
+
+	.card-image,
+	.card-image .image,
+	.card-header {
+		display: flex;
+		position: relative;
+	}
+	.card-image .image {
+		padding-top: 100%;
+	}
+
+	.card-content {
+		padding: 20px;
+	}
 }
 
 ul {
