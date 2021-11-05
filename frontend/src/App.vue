@@ -524,6 +524,12 @@ body {
 	}
 }
 
+.column {
+	display: flex;
+	flex: 1 1 0;
+	padding: 10px;
+}
+
 ul {
 	list-style: none;
 	margin: 0;
@@ -652,14 +658,17 @@ textarea {
 	display: flex;
 	flex-direction: column;
 
-	> .container {
-		flex: 1 0 auto;
+	&.main-container-modal-active {
+		height: 100% !important;
+		overflow: hidden !important;
 	}
-}
 
-.main-container.main-container-modal-active {
-	height: 100% !important;
-	overflow: hidden !important;
+	> .container {
+		position: relative;
+		flex: 1 0 auto;
+		margin: 0 auto;
+		max-width: 1200px;
+	}
 }
 
 a {
