@@ -164,6 +164,7 @@ export default {
 	background-color: var(--primary-color);
 	height: 64px;
 	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
+	z-index: 2;
 
 	&.transparent {
 		background-color: transparent !important;
