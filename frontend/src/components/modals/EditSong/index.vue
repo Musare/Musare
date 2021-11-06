@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<modal title="Edit Song" class="song-modal">
+		<modal title="Edit Song" class="song-modal" :wide="true" :split="true">
 			<template #body>
 				<div class="left-section">
 					<div class="top-section">
@@ -1620,42 +1620,8 @@ export default {
 	}
 }
 
-.song-modal {
-	&::v-deep {
-		.modal-card {
-			width: 1160px;
-			height: 100%;
-
-			.modal-card-body {
-				display: flex;
-				padding: 16px;
-
-				@media screen and (max-width: 1000px) {
-					flex-wrap: wrap;
-				}
-
-				> div {
-					display: flex;
-					height: 100%;
-					overflow: auto;
-				}
-			}
-
-			.modal-card-foot {
-				.right {
-					display: flex;
-					margin-left: auto;
-					margin-right: 0;
-				}
-			}
-		}
-	}
-}
-
 .left-section {
-	display: flex;
-	flex-direction: column;
-	margin-right: 16px;
+	flex-basis: unset !important;
 
 	.top-section {
 		display: flex;
@@ -2026,8 +1992,8 @@ export default {
 }
 
 .right-section {
-	display: flex;
-	flex-wrap: wrap;
+	flex-basis: unset !important;
+	flex-grow: 0 !important;
 
 	#tabs-container {
 		width: 376px;

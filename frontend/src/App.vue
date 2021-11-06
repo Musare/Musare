@@ -623,10 +623,6 @@ strong {
 	color: inherit;
 }
 
-.modal-card-title {
-	font-weight: 600;
-	font-family: "Inter", Helvetica, Arial, sans-serif;
-}
 
 p,
 button,
@@ -701,10 +697,6 @@ table {
 			}
 		}
 	}
-}
-
-.modal-card {
-	margin: 0 !important;
 }
 
 .absolute-a {

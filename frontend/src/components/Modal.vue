@@ -1,12 +1,20 @@
 <template>
 	<div class="modal is-active">
 		<div class="modal-background" @click="closeCurrentModal()" />
-		<div class="modal-card">
+		<div
+			:class="{
+				'modal-card': true,
+				'modal-wide': wide,
+				'modal-split': split
+			}"
+		>
 			<header class="modal-card-head">
 				<h2 class="modal-card-title is-marginless">
 					{{ title }}
 				</h2>
-				<button class="delete" @click="closeCurrentModal()" />
+				<span class="delete material-icons" @click="closeCurrentModal()"
+					>highlight_off</span
+				>
 			</header>
 			<section class="modal-card-body">
 				<slot name="body" />
@@ -23,7 +31,9 @@ import { mapActions } from "vuex";
 
 export default {
 	props: {
-		title: { type: String, default: "Modal" }
+		title: { type: String, default: "Modal" },
+		wide: { type: Boolean, default: false },
+		split: { type: Boolean, default: false }
 	},
 	mounted() {
 		this.type = this.toCamelCase(this.title);
@@ -41,8 +51,8 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-.night-mode {
+<style lang="scss">
+.night-mode .modal .modal-card {
 	.modal-card-head,
 	.modal-card-foot {
 		background-color: var(--dark-grey-3);
@@ -53,6 +63,7 @@ export default {
 		background-color: var(--dark-grey-4) !important;
 	}
 
+	.modal-card-head .delete.material-icons,
 	.modal-card-title {
 		color: var(--white);
 	}
@@ -74,44 +85,141 @@ export default {
 	}
 }
 
-.modal-card {
-	width: 800px;
-	font-size: 16px;
-}
+.modal {
+	display: flex;
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 1984;
+	justify-content: center;
+	align-items: center;
 
-p {
-	font-size: 17px;
-}
-
-.modal-card-title {
-	font-size: 27px;
-}
-
-.modal-card-foot {
-	overflow: initial;
-
-	&::v-deep {
-		& > div {
-			display: flex;
-			flex-grow: 1;
-			column-gap: 16px;
-		}
-
-		.right {
-			margin-left: auto;
-			justify-content: flex-end;
-			column-gap: 16px;
-		}
+	.modal-background {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		background-color: rgba(10, 10, 10, 0.85);
 	}
-}
 
-@media screen and (max-width: 650px) {
 	.modal-card {
-		max-height: 100vh;
-		height: 100%;
+		display: flex;
+		flex-direction: column;
+		position: relative;
+		width: 800px;
+		max-width: calc(100% - 40px);
+		max-height: calc(100vh - 40px);
+		overflow: auto;
+		margin: 0;
+		font-size: 16px;
+
+		&.modal-wide {
+			width: 1300px;
+		}
+
+		&.modal-split {
+			height: 100%;
+
+			.modal-card-body {
+				display: flex;
+				flex-wrap: wrap;
+				height: 100%;
+				row-gap: 24px;
+
+				.left-section,
+				.right-section {
+					flex-basis: 50%;
+					max-height: 100%;
+					overflow-y: auto;
+					flex-grow: 1;
+
+					.section {
+						display: flex;
+						flex-direction: column;
+						flex-grow: 1;
+						width: auto;
+						padding: 15px !important;
+						margin: 0 10px;
+					}
+
+					@media screen and (max-width: 1100px) {
+						flex-basis: 100%;
+						max-height: unset;
+					}
+				}
+			}
+		}
+
 		.modal-card-head,
 		.modal-card-foot {
-			border-radius: 0;
+			display: flex;
+			flex-shrink: 0;
+			position: relative;
+			justify-content: flex-start;
+			align-items: center;
+			padding: 20px;
+			background-color: var(--light-grey);
+		}
+
+		.modal-card-head {
+			border-radius: 5px 5px 0 0;
+
+			.modal-card-title {
+				display: flex;
+				flex: 1;
+				margin: 0;
+				font-size: 26px;
+				font-weight: 600;
+			}
+
+			.delete.material-icons {
+				font-size: 28px;
+				cursor: pointer;
+				&:hover,
+				&:focus {
+					filter: brightness(90%);
+				}
+			}
+		}
+
+		.modal-card-foot {
+			border-radius: 0 0 5px 5px;
+			overflow: initial;
+
+			& > div {
+				display: flex;
+				flex-grow: 1;
+				column-gap: 16px;
+			}
+
+			.right {
+				display: flex;
+				margin-left: auto;
+				margin-right: 0;
+				justify-content: flex-end;
+				column-gap: 16px;
+			}
+		}
+
+		.modal-card-body {
+			flex: 1;
+			flex-wrap: wrap;
+			padding: 20px;
+			overflow: auto;
+			background-color: var(--white);
+		}
+
+		@media screen and (max-width: 650px) {
+			max-height: 100vh;
+			height: 100%;
+			max-width: 100%;
+			.modal-card-head,
+			.modal-card-foot {
+				border-radius: 0;
+			}
 		}
 	}
 }
