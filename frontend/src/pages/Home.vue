@@ -517,6 +517,12 @@ export default {
 			handler() {
 				this.calculateFavoriteStations();
 			}
+		},
+		$route(to, from) {
+			if (from.path === "/login" || from.path === "/register")
+				this.closeModal(from.path.substr(1));
+			if (to.path === "/login" || to.path === "/register")
+				this.openModal(to.path.substr(1));
 		}
 	},
 	async mounted() {
@@ -524,10 +530,9 @@ export default {
 
 		if (
 			!this.loggedIn &&
-			(this.$route.path.toLowerCase() === "/login" ||
-				this.$route.path.toLowerCase() === "/register")
+			(this.$route.path === "/login" || this.$route.path === "/register")
 		)
-			this.openModal(this.$route.path.toLowerCase().substring(1));
+			this.openModal(this.$route.path.substring(1));
 
 		ws.onConnect(this.init);
 
@@ -771,7 +776,7 @@ export default {
 				res => new Toast(res.message)
 			);
 		},
-		...mapActions("modalVisibility", ["openModal"]),
+		...mapActions("modalVisibility", ["openModal", "closeModal"]),
 		...mapActions("station", ["updateIfStationIsFavorited"])
 	}
 };

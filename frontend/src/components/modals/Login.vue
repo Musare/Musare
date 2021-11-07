@@ -85,7 +85,10 @@
 				</div>
 
 				<p class="content-box-optional-helper">
-					<a @click="changeToRegisterModal()">
+					<router-link v-if="$route.path === '/login'" to="/register">
+						Don't have an account?
+					</router-link>
+					<a v-else @click="changeToRegisterModal()">
 						Don't have an account?
 					</a>
 				</p>
@@ -115,18 +118,6 @@ export default {
 		};
 	},
 	async mounted() {
-		console.log(this.$route.path);
-		if (this.$route.path.toLowerCase() === "/register") {
-			// this.$router.push({path: "/login"});
-			// await this.$router.push("login");
-			this.$router
-				.push("login")
-				// eslint-disable-next-line no-restricted-globals
-				.then(history.pushState({}, null, "/login"));
-			// eslint-disable-next-line no-restricted-globals
-			// history.pushState({}, null, "/login");
-		}
-
 		this.apiDomain = await lofig.get("backend.apiDomain");
 	},
 	methods: {
@@ -162,26 +153,14 @@ export default {
 				this.password.visible = false;
 			}
 		},
-		async changeToRegisterModal() {
-			// this.$router.push({path: "/register"});
-			// await this.$router.push("register");
-			this.$router
-				.push("register")
-				// eslint-disable-next-line no-restricted-globals
-				.then(history.pushState({}, null, "/register"));
-			// eslint-disable-next-line no-restricted-globals
-			// history.pushState({}, null, "/register");
+		changeToRegisterModal() {
 			this.closeLoginModal();
 			this.openModal("register");
 		},
 		async closeLoginModal() {
-			if (this.$route.path.toLowerCase() === "/login") {
-				// this.$router.push({path: "/"});
-				// await this.$router.push("/");
+			if (this.$route.path === "/login") {
 				// eslint-disable-next-line no-restricted-globals
-				this.$router.push("/").then(history.pushState({}, null, "/"));
-				// eslint-disable-next-line no-restricted-globals
-				// history.pushState({}, null, "/");
+				this.$router.push("").then(history.pushState({}, null, "/"));
 			}
 			this.closeModal("login");
 		},

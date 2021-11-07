@@ -77,8 +77,21 @@ const router = createRouter({
 	routes: [
 		{
 			path: "/",
-			alias: ["/login", "/register"],
 			component: () => import("@/pages/Home.vue")
+		},
+		{
+			path: "/login",
+			component: () => import("@/pages/Home.vue"),
+			meta: {
+				guestsOnly: true
+			}
+		},
+		{
+			path: "/register",
+			component: () => import("@/pages/Home.vue"),
+			meta: {
+				guestsOnly: true
+			}
 		},
 		{
 			path: "/404",

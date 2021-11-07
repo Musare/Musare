@@ -48,8 +48,8 @@ export default {
 				.replace(/ (.)/g, $1 => $1.toUpperCase())
 				.replace(/ /g, ""),
 		closeThisModal() {
-			this.closeCurrentModal();
 			this.$emit("closed");
+			this.closeCurrentModal();
 		},
 		...mapActions("modalVisibility", ["closeCurrentModal"])
 	}
