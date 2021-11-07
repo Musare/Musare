@@ -1,6 +1,6 @@
 <template>
 	<div class="modal is-active">
-		<div class="modal-background" @click="closeCurrentModal()" />
+		<div class="modal-background" @click="closeThisModal()" />
 		<div
 			:class="{
 				'modal-card': true,
@@ -12,7 +12,7 @@
 				<h2 class="modal-card-title is-marginless">
 					{{ title }}
 				</h2>
-				<span class="delete material-icons" @click="closeCurrentModal()"
+				<span class="delete material-icons" @click="closeThisModal()"
 					>highlight_off</span
 				>
 			</header>
@@ -35,6 +35,7 @@ export default {
 		wide: { type: Boolean, default: false },
 		split: { type: Boolean, default: false }
 	},
+	emits: ["closed"],
 	mounted() {
 		this.type = this.toCamelCase(this.title);
 	},
@@ -46,6 +47,10 @@ export default {
 				.replace(/[^\w\s]/g, "")
 				.replace(/ (.)/g, $1 => $1.toUpperCase())
 				.replace(/ /g, ""),
+		closeThisModal() {
+			this.closeCurrentModal();
+			this.$emit("closed");
+		},
 		...mapActions("modalVisibility", ["closeCurrentModal"])
 	}
 };

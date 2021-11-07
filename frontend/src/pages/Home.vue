@@ -522,6 +522,13 @@ export default {
 	async mounted() {
 		this.sitename = await lofig.get("siteSettings.sitename");
 
+		if (
+			!this.loggedIn &&
+			(this.$route.path.toLowerCase() === "/login" ||
+				this.$route.path.toLowerCase() === "/register")
+		)
+			this.openModal(this.$route.path.toLowerCase().substring(1));
+
 		ws.onConnect(this.init);
 
 		this.socket.on("event:station.created", res => {

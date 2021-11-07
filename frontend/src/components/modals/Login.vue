@@ -1,119 +1,96 @@
 <template>
 	<div>
-		<page-metadata title="Login" v-if="isPage" />
-		<div class="modal is-active">
-			<div class="modal-background" @click="closeLoginModal()" />
-			<div class="modal-card">
-				<header class="modal-card-head">
-					<p class="modal-card-title">Login</p>
-					<button
-						v-if="!isPage"
-						class="delete"
-						@click="closeLoginModal()"
-					/>
-				</header>
+		<modal title="Login" class="login-modal" @closed="closeLoginModal()">
+			<template #body>
+				<form>
+					<!-- email address -->
+					<p class="control">
+						<label class="label">Email</label>
+						<input
+							v-model="email"
+							class="input"
+							type="email"
+							placeholder="Email..."
+							@keypress="submitOnEnter(submitModal, $event)"
+						/>
+					</p>
 
-				<section class="modal-card-body">
-					<form>
-						<!-- email address -->
-						<p class="control">
-							<label class="label">Email</label>
-							<input
-								v-model="email"
-								class="input"
-								type="email"
-								placeholder="Email..."
-								@keypress="submitOnEnter(submitModal, $event)"
-							/>
-						</p>
+					<!-- password -->
+					<p class="control">
+						<label class="label">Password</label>
+					</p>
 
-						<!-- password -->
-						<p class="control">
-							<label class="label">Password</label>
-						</p>
-
-						<div id="password-visibility-container">
-							<input
-								v-model="password.value"
-								class="input"
-								type="password"
-								ref="password"
-								placeholder="Password..."
-								@input="checkForAutofill($event)"
-								@keypress="submitOnEnter(submitModal, $event)"
-							/>
-							<a @click="togglePasswordVisibility()">
-								<i class="material-icons">
-									{{
-										!password.visible
-											? "visibility"
-											: "visibility_off"
-									}}
-								</i>
-							</a>
-						</div>
-
-						<p class="content-box-optional-helper">
-							<router-link
-								id="forgot-password"
-								to="/reset_password"
-								@click="closeLoginModal()"
-							>
-								Forgot password?
-							</router-link>
-						</p>
-
-						<br />
-						<p>
-							By logging in you agree to our
-							<router-link to="/terms" @click="closeLoginModal()">
-								Terms of Service
-							</router-link>
-							and
-							<router-link
-								to="/privacy"
-								@click="closeLoginModal()"
-							>
-								Privacy Policy</router-link
-							>.
-						</p>
-					</form>
-				</section>
-
-				<footer class="modal-card-foot">
-					<div id="actions">
-						<button
-							class="button is-primary"
-							@click="submitModal()"
-						>
-							Login
-						</button>
-						<a
-							class="button is-github"
-							:href="apiDomain + '/auth/github/authorize'"
-							@click="githubRedirect()"
-						>
-							<div class="icon">
-								<img
-									class="invert"
-									src="/assets/social/github.svg"
-								/>
-							</div>
-							&nbsp;&nbsp;Login with GitHub
+					<div id="password-visibility-container">
+						<input
+							v-model="password.value"
+							class="input"
+							type="password"
+							ref="password"
+							placeholder="Password..."
+							@input="checkForAutofill($event)"
+							@keypress="submitOnEnter(submitModal, $event)"
+						/>
+						<a @click="togglePasswordVisibility()">
+							<i class="material-icons">
+								{{
+									!password.visible
+										? "visibility"
+										: "visibility_off"
+								}}
+							</i>
 						</a>
 					</div>
 
 					<p class="content-box-optional-helper">
-						<router-link to="/register" v-if="isPage">
-							Don't have an account?
+						<router-link
+							id="forgot-password"
+							to="/reset_password"
+							@click="closeLoginModal()"
+						>
+							Forgot password?
 						</router-link>
-						<a v-else @click="changeToRegisterModal()">
-							Don't have an account?
-						</a>
 					</p>
-				</footer>
-			</div>
-		</div>
+
+					<br />
+					<p>
+						By logging in you agree to our
+						<router-link to="/terms" @click="closeLoginModal()">
+							Terms of Service
+						</router-link>
+						and
+						<router-link to="/privacy" @click="closeLoginModal()">
+							Privacy Policy</router-link
+						>.
+					</p>
+				</form>
+			</template>
+			<template #footer>
+				<div id="actions">
+					<button class="button is-primary" @click="submitModal()">
+						Login
+					</button>
+					<a
+						class="button is-github"
+						:href="apiDomain + '/auth/github/authorize'"
+						@click="githubRedirect()"
+					>
+						<div class="icon">
+							<img
+								class="invert"
+								src="/assets/social/github.svg"
+							/>
+						</div>
+						&nbsp;&nbsp;Login with GitHub
+					</a>
+				</div>
+
+				<p class="content-box-optional-helper">
+					<a @click="changeToRegisterModal()">
+						Don't have an account?
+					</a>
+				</p>
+			</template>
+		</modal>
 	</div>
 </template>
 
@@ -121,8 +98,12 @@
 import { mapActions } from "vuex";
 
 import Toast from "toasters";
+import Modal from "../Modal.vue";
 
 export default {
+	components: {
+		Modal
+	},
 	data() {
 		return {
 			email: "",
@@ -130,14 +111,23 @@ export default {
 				value: "",
 				visible: false
 			},
-			apiDomain: "",
-			isPage: false
+			apiDomain: ""
 		};
 	},
 	async mounted() {
-		this.apiDomain = await lofig.get("backend.apiDomain");
+		console.log(this.$route.path);
+		if (this.$route.path.toLowerCase() === "/register") {
+			// this.$router.push({path: "/login"});
+			// await this.$router.push("login");
+			this.$router
+				.push("login")
+				// eslint-disable-next-line no-restricted-globals
+				.then(history.pushState({}, null, "/login"));
+			// eslint-disable-next-line no-restricted-globals
+			// history.pushState({}, null, "/login");
+		}
 
-		if (this.$route.path === "/login") this.isPage = true;
+		this.apiDomain = await lofig.get("backend.apiDomain");
 	},
 	methods: {
 		checkForAutofill(event) {
@@ -172,18 +162,31 @@ export default {
 				this.password.visible = false;
 			}
 		},
-		changeToRegisterModal() {
-			if (!this.isPage) {
-				this.closeLoginModal();
-				this.openModal("register");
-			}
+		async changeToRegisterModal() {
+			// this.$router.push({path: "/register"});
+			// await this.$router.push("register");
+			this.$router
+				.push("register")
+				// eslint-disable-next-line no-restricted-globals
+				.then(history.pushState({}, null, "/register"));
+			// eslint-disable-next-line no-restricted-globals
+			// history.pushState({}, null, "/register");
+			this.closeLoginModal();
+			this.openModal("register");
 		},
-		closeLoginModal() {
-			if (!this.isPage) this.closeModal("login");
+		async closeLoginModal() {
+			if (this.$route.path.toLowerCase() === "/login") {
+				// this.$router.push({path: "/"});
+				// await this.$router.push("/");
+				// eslint-disable-next-line no-restricted-globals
+				this.$router.push("/").then(history.pushState({}, null, "/"));
+				// eslint-disable-next-line no-restricted-globals
+				// history.pushState({}, null, "/");
+			}
+			this.closeModal("login");
 		},
 		githubRedirect() {
-			if (!this.isPage)
-				localStorage.setItem("github_redirect", this.$route.path);
+			localStorage.setItem("github_redirect", this.$route.path);
 		},
 		...mapActions("modalVisibility", ["closeModal", "openModal"]),
 		...mapActions("user/auth", ["login"])

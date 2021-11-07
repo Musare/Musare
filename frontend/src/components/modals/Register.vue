@@ -1,164 +1,148 @@
 <template>
 	<div>
-		<page-metadata title="Register" v-if="isPage" />
-		<div class="modal is-active">
-			<div class="modal-background" @click="closeRegisterModal()" />
-			<div class="modal-card">
-				<header class="modal-card-head">
-					<p class="modal-card-title">Register</p>
-					<button
-						v-if="!isPage"
-						class="delete"
-						@click="closeRegisterModal()"
+		<modal
+			title="Register"
+			class="register-modal"
+			@closed="closeRegisterModal()"
+		>
+			<template #body>
+				<!-- email address -->
+				<p class="control">
+					<label class="label">Email</label>
+					<input
+						v-model="email.value"
+						class="input"
+						type="email"
+						placeholder="Email..."
+						@keypress="
+							onInput('email') &
+								submitOnEnter(submitModal, $event)
+						"
+						@paste="onInput('email')"
+						autofocus
 					/>
-				</header>
-				<section class="modal-card-body">
-					<!-- email address -->
-					<p class="control">
-						<label class="label">Email</label>
-						<input
-							v-model="email.value"
-							class="input"
-							type="email"
-							placeholder="Email..."
-							@keypress="
-								onInput('email') &
-									submitOnEnter(submitModal, $event)
-							"
-							@paste="onInput('email')"
-							autofocus
-						/>
-					</p>
-					<transition name="fadein-helpbox">
-						<input-help-box
-							:entered="email.entered"
-							:valid="email.valid"
-							:message="email.message"
-						/>
-					</transition>
+				</p>
+				<transition name="fadein-helpbox">
+					<input-help-box
+						:entered="email.entered"
+						:valid="email.valid"
+						:message="email.message"
+					/>
+				</transition>
 
-					<!-- username -->
-					<p class="control">
-						<label class="label">Username</label>
-						<input
-							v-model="username.value"
-							class="input"
-							type="text"
-							placeholder="Username..."
-							@keypress="
-								onInput('username') &
-									submitOnEnter(submitModal, $event)
-							"
-							@paste="onInput('username')"
-						/>
-					</p>
-					<transition name="fadein-helpbox">
-						<input-help-box
-							:entered="username.entered"
-							:valid="username.valid"
-							:message="username.message"
-						/>
-					</transition>
+				<!-- username -->
+				<p class="control">
+					<label class="label">Username</label>
+					<input
+						v-model="username.value"
+						class="input"
+						type="text"
+						placeholder="Username..."
+						@keypress="
+							onInput('username') &
+								submitOnEnter(submitModal, $event)
+						"
+						@paste="onInput('username')"
+					/>
+				</p>
+				<transition name="fadein-helpbox">
+					<input-help-box
+						:entered="username.entered"
+						:valid="username.valid"
+						:message="username.message"
+					/>
+				</transition>
 
-					<!-- password -->
-					<p class="control">
-						<label class="label">Password</label>
-					</p>
+				<!-- password -->
+				<p class="control">
+					<label class="label">Password</label>
+				</p>
 
-					<div id="password-visibility-container">
-						<input
-							v-model="password.value"
-							class="input"
-							type="password"
-							ref="password"
-							placeholder="Password..."
-							@keypress="
-								onInput('password') &
-									submitOnEnter(submitModal, $event)
-							"
-							@paste="onInput('password')"
-						/>
-						<a @click="togglePasswordVisibility()">
-							<i class="material-icons">
-								{{
-									!password.visible
-										? "visibility"
-										: "visibility_off"
-								}}
-							</i>
-						</a>
-					</div>
+				<div id="password-visibility-container">
+					<input
+						v-model="password.value"
+						class="input"
+						type="password"
+						ref="password"
+						placeholder="Password..."
+						@keypress="
+							onInput('password') &
+								submitOnEnter(submitModal, $event)
+						"
+						@paste="onInput('password')"
+					/>
+					<a @click="togglePasswordVisibility()">
+						<i class="material-icons">
+							{{
+								!password.visible
+									? "visibility"
+									: "visibility_off"
+							}}
+						</i>
+					</a>
+				</div>
 
-					<transition name="fadein-helpbox">
-						<input-help-box
-							:valid="password.valid"
-							:entered="password.entered"
-							:message="password.message"
-						/>
-					</transition>
+				<transition name="fadein-helpbox">
+					<input-help-box
+						:valid="password.valid"
+						:entered="password.entered"
+						:message="password.message"
+					/>
+				</transition>
 
-					<br />
+				<br />
 
-					<p>
-						By registering you agree to our
-						<router-link to="/terms" @click="closeRegisterModal()">
-							Terms of Service
-						</router-link>
-						and
-						<router-link
-							to="/privacy"
-							@click="closeRegisterModal()"
-						>
-							Privacy Policy</router-link
-						>.
-					</p>
-				</section>
-				<footer class="modal-card-foot">
-					<div id="actions">
-						<button
-							class="button is-primary"
-							@click="submitModal()"
-						>
-							Register
-						</button>
-						<a
-							class="button is-github"
-							:href="apiDomain + '/auth/github/authorize'"
-							@click="githubRedirect()"
-						>
-							<div class="icon">
-								<img
-									class="invert"
-									src="/assets/social/github.svg"
-								/>
-							</div>
-							&nbsp;&nbsp;Register with GitHub
-						</a>
-					</div>
+				<p>
+					By registering you agree to our
+					<router-link to="/terms" @click="closeRegisterModal()">
+						Terms of Service
+					</router-link>
+					and
+					<router-link to="/privacy" @click="closeRegisterModal()">
+						Privacy Policy</router-link
+					>.
+				</p>
+			</template>
+			<template #footer>
+				<div id="actions">
+					<button class="button is-primary" @click="submitModal()">
+						Register
+					</button>
+					<a
+						class="button is-github"
+						:href="apiDomain + '/auth/github/authorize'"
+						@click="githubRedirect()"
+					>
+						<div class="icon">
+							<img
+								class="invert"
+								src="/assets/social/github.svg"
+							/>
+						</div>
+						&nbsp;&nbsp;Register with GitHub
+					</a>
+				</div>
 
-					<p class="content-box-optional-helper">
-						<router-link to="/login" v-if="isPage">
-							Already have an account?
-						</router-link>
-						<a v-else @click="changeToLoginModal()">
-							Already have an account?
-						</a>
-					</p>
-				</footer>
-			</div>
-		</div>
+				<p class="content-box-optional-helper">
+					<a @click="changeToLoginModal()">
+						Already have an account?
+					</a>
+				</p>
+			</template>
+		</modal>
 	</div>
 </template>
 
 <script>
 import { mapActions } from "vuex";
 import Toast from "toasters";
+import Modal from "../Modal.vue";
 
 import validation from "@/validation";
 import InputHelpBox from "../InputHelpBox.vue";
 
 export default {
-	components: { InputHelpBox },
+	components: { Modal, InputHelpBox },
 	data() {
 		return {
 			username: {
@@ -186,8 +170,7 @@ export default {
 				token: "",
 				enabled: false
 			},
-			apiDomain: "",
-			isPage: false
+			apiDomain: ""
 		};
 	},
 	watch: {
@@ -244,7 +227,17 @@ export default {
 		}
 	},
 	async mounted() {
-		if (this.$route.path === "/register") this.isPage = true;
+		console.log(this.$route.path);
+		if (this.$route.path.toLowerCase() === "/login") {
+			// this.$router.push({path: "/register"});
+			// await this.$router.push("register");
+			this.$router
+				.push("register")
+				// eslint-disable-next-line no-restricted-globals
+				.then(history.pushState({}, null, "/register"));
+			// eslint-disable-next-line no-restricted-globals
+			// history.pushState({}, null, "/register");
+		}
 
 		this.apiDomain = await lofig.get("backend.apiDomain");
 
@@ -286,13 +279,19 @@ export default {
 			}
 		},
 		changeToLoginModal() {
-			if (!this.isPage) {
-				this.closeRegisterModal();
-				this.openModal("login");
-			}
+			this.closeRegisterModal();
+			this.openModal("login");
 		},
-		closeRegisterModal() {
-			if (!this.isPage) this.closeModal("register");
+		async closeRegisterModal() {
+			if (this.$route.path.toLowerCase() === "/register") {
+				// this.$router.push({path: "/"});
+				// await this.$router.push("/");
+				// eslint-disable-next-line no-restricted-globals
+				this.$router.push("/").then(history.pushState({}, null, "/"));
+				// eslint-disable-next-line no-restricted-globals
+				// history.pushState({}, null, "/");
+			}
+			this.closeModal("register");
 		},
 		submitModal() {
 			if (
@@ -317,8 +316,7 @@ export default {
 			this[inputName].entered = true;
 		},
 		githubRedirect() {
-			if (!this.isPage)
-				localStorage.setItem("github_redirect", this.$route.path);
+			localStorage.setItem("github_redirect", this.$route.path);
 		},
 		...mapActions("modalVisibility", ["closeModal", "openModal"]),
 		...mapActions("user/auth", ["register"])
