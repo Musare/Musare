@@ -623,7 +623,6 @@ strong {
 	color: inherit;
 }
 
-
 p,
 button,
 input,
