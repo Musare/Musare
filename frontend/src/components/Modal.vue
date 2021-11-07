@@ -29,6 +29,8 @@
 <script>
 import { mapActions } from "vuex";
 
+import keyboardShortcuts from "@/keyboardShortcuts";
+
 export default {
 	props: {
 		title: { type: String, default: "Modal" },
@@ -38,6 +40,15 @@ export default {
 	emits: ["closed"],
 	mounted() {
 		this.type = this.toCamelCase(this.title);
+
+		keyboardShortcuts.registerShortcut("closeModal", {
+			keyCode: 27,
+			shift: false,
+			ctrl: false,
+			handler: () => {
+				this.closeThisModal();
+			}
+		});
 	},
 	methods: {
 		toCamelCase: str =>
