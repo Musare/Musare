@@ -908,7 +908,8 @@ export default {
 			socketConnected: null,
 			persistentToastCheckerInterval: null,
 			persistentToasts: [],
-			partyPlaylistLock: false
+			partyPlaylistLock: false,
+			christmas: false
 		};
 	},
 	computed: {
@@ -1040,6 +1041,8 @@ export default {
 		});
 
 		this.frontendDevMode = await lofig.get("mode");
+
+		this.christmas = await lofig.get("siteSettings.christmas");
 
 		this.socket.dispatch(
 			"stations.existsByName",
