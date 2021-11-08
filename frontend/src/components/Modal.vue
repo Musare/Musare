@@ -188,6 +188,7 @@ export default {
 		.modal-card-foot {
 			border-radius: 0 0 5px 5px;
 			overflow: initial;
+			column-gap: 16px;
 
 			& > div {
 				display: flex;
