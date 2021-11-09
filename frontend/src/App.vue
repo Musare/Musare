@@ -1284,6 +1284,10 @@ button.delete:focus {
 	&.is-expanded {
 		flex: 1;
 	}
+
+	&.has-addons {
+		display: flex;
+	}
 }
 
 .input-with-button {
