@@ -1107,14 +1107,36 @@ table {
 }
 
 .select {
+	position: relative;
+
 	&:after {
-		border-color: var(--primary-color);
-		border-width: 1.5px;
-		margin-top: -3px;
+		content: " ";
+		border: 1.5px solid var(--primary-color);
+		border-right: 0;
+		border-top: 0;
+		height: 7px;
+		pointer-events: none;
+		position: absolute;
+		transform: rotate(-45deg);
+		width: 7px;
+		margin-top: -6px;
+		right: 16px;
+		top: 50%;
 	}
 
 	select {
 		height: 36px;
+		background-color: var(--white);
+		border: 1px solid #dbdbdb;
+		color: #363636;
+		appearance: none;
+		border-radius: 3px;
+		font-size: 14px;
+		line-height: 24px;
+		padding-left: 8px;
+		position: relative;
+		padding-right: 36px;
+		cursor: pointer;
 	}
 }
 
