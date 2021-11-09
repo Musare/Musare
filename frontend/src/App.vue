@@ -666,6 +666,20 @@ textarea {
 	}
 }
 
+@media screen and (min-width: 980px) {
+	.container {
+		max-width: 960px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+}
+
+@media screen and (min-width: 1180px) {
+	.container {
+		max-width: 1200px;
+	}
+}
+
 .upper-container {
 	height: 100%;
 }
@@ -1088,6 +1102,10 @@ table {
 	}
 }
 
+.has-text-centered {
+	text-align: center;
+}
+
 .select {
 	&:after {
 		border-color: var(--primary-color);
@@ -1171,7 +1189,8 @@ button.delete:focus {
 	}
 }
 
-.input {
+.input,
+.textarea {
 	width: 100%;
 	padding-left: 8px;
 	padding-right: 8px;
@@ -1185,6 +1204,16 @@ button.delete:focus {
 .input,
 .button {
 	height: 36px;
+}
+
+.textarea {
+	display: block;
+	line-height: 1.2;
+	padding: 10px;
+	max-height: 600px;
+	min-height: 120px;
+	min-width: 100%;
+	resize: vertical;
 }
 
 .fadein-helpbox-enter-active {
