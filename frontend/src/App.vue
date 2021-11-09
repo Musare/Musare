@@ -733,6 +733,10 @@ table {
 	}
 }
 
+img {
+	max-width: 100%;
+}
+
 .absolute-a {
 	width: 100%;
 	height: 100%;
@@ -1164,6 +1168,8 @@ button.delete:focus {
 
 .button {
 	border: 1px solid #dbdbdb;
+	background-color: #fff;
+	color: #363636;
 	border-radius: 3px;
 	line-height: 24px;
 	align-items: center;
@@ -1207,7 +1213,7 @@ button.delete:focus {
 	&.is-warning {
 		background-color: var(--yellow) !important;
 		border-width: 0;
-		color: white;
+		color: rgba(0, 0, 0, 0.7);
 	}
 }
 
@@ -1236,6 +1242,14 @@ button.delete:focus {
 	min-height: 120px;
 	min-width: 100%;
 	resize: vertical;
+}
+
+.icon {
+	height: 24px;
+	width: 24px;
+	line-height: 24px;
+	margin-left: 4px;
+	margin-right: -2px;
 }
 
 .fadein-helpbox-enter-active {
