@@ -623,12 +623,33 @@ strong {
 	color: inherit;
 }
 
+hr {
+	background-color: #dbdbdb;
+	border: none;
+	height: 1px;
+}
+
 p,
 button,
 input,
 select,
 textarea {
 	font-family: "Inter", Helvetica, Arial, sans-serif;
+}
+
+input,
+select,
+textarea {
+	outline: none;
+}
+
+.label {
+	display: flex;
+	font-weight: 700;
+
+	&:not(:last-child) {
+		margin-bottom: 5px;
+	}
 }
 
 #page-title {
@@ -1190,6 +1211,14 @@ button.delete:focus {
 
 .control {
 	margin-bottom: 5px !important;
+
+	&.is-grouped {
+		display: flex;
+	}
+
+	&.is-expanded {
+		flex: 1;
+	}
 }
 
 .input-with-button {
