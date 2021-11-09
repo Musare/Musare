@@ -252,6 +252,7 @@ export default {
 </script>
 
 <style lang="scss">
+@import "normalize.css/normalize.css";
 @import "tippy.js/dist/tippy.css";
 @import "tippy.js/animations/scale.css";
 
