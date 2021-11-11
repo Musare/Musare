@@ -3,12 +3,11 @@
 		<page-metadata title="Admin | Stations" />
 		<div class="container">
 			<div class="button-row">
-				<button
-					class="button is-primary"
-					@click="clearEveryStationQueue()"
-				>
-					Clear every station queue
-				</button>
+				<confirm placement="bottom" @confirm="clearEveryStationQueue()">
+					<button class="button is-danger">
+						Clear every station queue
+					</button>
+				</confirm>
 			</div>
 			<table class="table is-striped">
 				<thead>
