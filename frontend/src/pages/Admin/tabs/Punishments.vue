@@ -57,46 +57,44 @@
 					</tr>
 				</tbody>
 			</table>
-			<div class="card is-fullwidth">
+			<div class="card">
 				<header class="card-header">
-					<p class="card-header-title">Ban an IP</p>
+					<p>Ban an IP</p>
 				</header>
 				<div class="card-content">
-					<div class="content">
-						<label class="label">Expires In</label>
-						<select v-model="ipBan.expiresAt">
-							<option value="1h">1 Hour</option>
-							<option value="12h">12 Hours</option>
-							<option value="1d">1 Day</option>
-							<option value="1w">1 Week</option>
-							<option value="1m">1 Month</option>
-							<option value="3m">3 Months</option>
-							<option value="6m">6 Months</option>
-							<option value="1y">1 Year</option>
-						</select>
-						<label class="label">IP</label>
-						<p class="control is-expanded">
-							<input
-								v-model="ipBan.ip"
-								class="input"
-								type="text"
-								placeholder="IP address (xxx.xxx.xxx.xxx)"
-							/>
-						</p>
-						<label class="label">Reason</label>
-						<p class="control is-expanded">
-							<input
-								v-model="ipBan.reason"
-								class="input"
-								type="text"
-								placeholder="Reason"
-							/>
-						</p>
-					</div>
+					<label class="label">Expires In</label>
+					<select v-model="ipBan.expiresAt">
+						<option value="1h">1 Hour</option>
+						<option value="12h">12 Hours</option>
+						<option value="1d">1 Day</option>
+						<option value="1w">1 Week</option>
+						<option value="1m">1 Month</option>
+						<option value="3m">3 Months</option>
+						<option value="6m">6 Months</option>
+						<option value="1y">1 Year</option>
+					</select>
+					<label class="label">IP</label>
+					<p class="control is-expanded">
+						<input
+							v-model="ipBan.ip"
+							class="input"
+							type="text"
+							placeholder="IP address (xxx.xxx.xxx.xxx)"
+						/>
+					</p>
+					<label class="label">Reason</label>
+					<p class="control is-expanded">
+						<input
+							v-model="ipBan.reason"
+							class="input"
+							type="text"
+							placeholder="Reason"
+						/>
+					</p>
+					<button class="button is-primary" @click="banIP()">
+						Ban IP
+					</button>
 				</div>
-				<footer class="card-footer">
-					<a class="card-footer-item" @click="banIP()">Ban IP</a>
-				</footer>
 			</div>
 		</div>
 		<view-punishment
@@ -209,14 +207,31 @@ export default {
 	.card {
 		background: var(--dark-grey-3);
 
-		.card-header {
-			box-shadow: 0 1px 2px rgba(10, 10, 10, 0.8);
-		}
-
 		p,
 		.label {
 			color: var(--light-grey-2);
 		}
+	}
+}
+
+.card {
+	display: flex;
+	flex-grow: 1;
+	flex-direction: column;
+	padding: 20px;
+	margin: 10px 0;
+	border-radius: 5px;
+	background-color: var(--white);
+	color: var(--dark-grey);
+	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
+
+	.card-header {
+		font-weight: 700;
+		padding-bottom: 10px;
+	}
+
+	.button.is-primary {
+		width: 100%;
 	}
 }
 

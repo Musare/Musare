@@ -5,57 +5,51 @@
 		<div class="container">
 			<div class="content-wrapper">
 				<h1 class="has-text-centered page-title">About</h1>
-				<div class="card is-fullwidth">
+				<div class="card">
 					<header class="card-header">
-						<p class="card-header-title">The project</p>
+						<p>The project</p>
 					</header>
 					<div class="card-content">
-						<div class="content">
-							<p>
-								Musare is an open-source music website where you
-								can listen to real-time genre specific music
-								stations, or join community stations created by
-								users.
-							</p>
-						</div>
+						<p>
+							Musare is an open-source music website where you can
+							listen to real-time genre specific music stations,
+							or join community stations created by users.
+						</p>
 					</div>
 				</div>
-				<div class="card is-fullwidth">
+				<div class="card">
 					<header class="card-header">
-						<p class="card-header-title">How you can help</p>
+						<p>How you can help</p>
 					</header>
 					<div class="card-content">
-						<div class="content">
-							<span>
-								There are multiple ways you can help us:
-								<ol>
-									<li>
-										Reporting bugs. No website is perfect,
-										but we try to eliminate as many bugs as
-										possible. If you find a bug, we would
-										highly appreciate it if you could create
-										an issue on the GitHub project with
-										steps to reproduce the issue, so we can
-										fix it as soon as possible.
-									</li>
-									<li>
-										Sending us feedback. Your comments
-										and/or suggestions are extremely
-										valuable to us. In order to improve we
-										need to know what you like, don't like
-										and what you might want on the website.
-									</li>
-									<li>
-										Sharing the joy. The more people
-										enjoying Musare, the better. Telling
-										your friends or relatives about Musare
-										would increase the amount of users we
-										have, which would motivate us and cause
-										Musare to grow faster.
-									</li>
-								</ol>
-							</span>
-						</div>
+						<span>
+							There are multiple ways you can help us:
+							<ol>
+								<li>
+									Reporting bugs. No website is perfect, but
+									we try to eliminate as many bugs as
+									possible. If you find a bug, we would highly
+									appreciate it if you could create an issue
+									on the GitHub project with steps to
+									reproduce the issue, so we can fix it as
+									soon as possible.
+								</li>
+								<li>
+									Sending us feedback. Your comments and/or
+									suggestions are extremely valuable to us. In
+									order to improve we need to know what you
+									like, don't like and what you might want on
+									the website.
+								</li>
+								<li>
+									Sharing the joy. The more people enjoying
+									Musare, the better. Telling your friends or
+									relatives about Musare would increase the
+									amount of users we have, which would
+									motivate us and cause Musare to grow faster.
+								</li>
+							</ol>
+						</span>
 					</div>
 				</div>
 			</div>
@@ -86,6 +80,20 @@ export default {
 }
 
 .card {
-	margin-top: 50px;
+	display: flex;
+	flex-grow: 1;
+	flex-direction: column;
+	padding: 20px;
+	margin: 10px 10px 50px 10px;
+	border-radius: 5px;
+	overflow: hidden;
+	background-color: var(--white);
+	color: var(--dark-grey);
+	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
+
+	.card-header {
+		font-weight: 700;
+		padding-bottom: 10px;
+	}
 }
 </style>

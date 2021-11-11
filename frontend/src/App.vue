@@ -507,26 +507,6 @@ body {
 	padding-top: 60px;
 }
 
-.card {
-	position: relative;
-	background-color: var(--white);
-	color: var(--dark-grey);
-
-	.card-image,
-	.card-image .image,
-	.card-header {
-		display: flex;
-		position: relative;
-	}
-	.card-image .image {
-		padding-top: 100%;
-	}
-
-	.card-content {
-		padding: 20px;
-	}
-}
-
 .column {
 	display: flex;
 	flex: 1 1 0;
@@ -537,6 +517,11 @@ ul {
 	list-style: none;
 	margin: 0;
 	display: block;
+}
+
+ol,
+ul {
+	margin-left: 2em;
 }
 
 h1,

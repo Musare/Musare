@@ -327,6 +327,9 @@ h2 {
 
 	.card {
 		display: inline-flex;
+		position: relative;
+		background-color: var(--white);
+		color: var(--dark-grey);
 		flex-direction: column;
 		width: calc(100% - 30px);
 		max-width: 400px;
@@ -336,6 +339,8 @@ h2 {
 		box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1),
 			0 0 0 1px rgba(10, 10, 10, 0.1);
 		.card-header {
+			display: flex;
+			position: relative;
 			line-height: 22.5px;
 			padding: 10px;
 			.profile-picture {
@@ -369,6 +374,8 @@ h2 {
 			display: flex;
 			flex-direction: column;
 			flex-grow: 1;
+			padding: 20px;
+
 			.bio {
 				font-size: 16px;
 				margin-bottom: 10px;
