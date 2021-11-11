@@ -457,6 +457,11 @@ CacheModule.runJob("SUB", {
 		});
 
 		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `manage-station.${stationId}`,
+			args: ["event:station.deleted"]
+		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `home`,
 			args: ["event:station.deleted", { data: { stationId } }]
 		});
