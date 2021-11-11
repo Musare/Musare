@@ -171,10 +171,7 @@
 						Clear and refill station queue
 					</a>
 				</confirm>
-				<confirm
-					v-if="station && station.type === 'community'"
-					@confirm="removeStation()"
-				>
+				<confirm @confirm="removeStation()">
 					<button class="button is-danger">Delete station</button>
 				</confirm>
 			</div>
