@@ -234,7 +234,7 @@
 				</div>
 				<a
 					v-if="loggedIn"
-					@click="openModal('createCommunityStation')"
+					@click="openModal('createStation')"
 					class="card station-card createStation"
 				>
 					<div class="card-image">
@@ -434,7 +434,7 @@
 			</div>
 			<main-footer />
 		</div>
-		<create-community-station v-if="modals.createCommunityStation" />
+		<create-station v-if="modals.createStation" />
 	</div>
 </template>
 
@@ -456,8 +456,8 @@ export default {
 		MainHeader,
 		MainFooter,
 		SongThumbnail,
-		CreateCommunityStation: defineAsyncComponent(() =>
-			import("@/components/modals/CreateCommunityStation.vue")
+		CreateStation: defineAsyncComponent(() =>
+			import("@/components/modals/CreateStation.vue")
 		),
 		UserIdToUsername,
 		draggable
