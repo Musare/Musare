@@ -588,7 +588,7 @@ h6 {
 }
 
 .white {
-	background-color: #ffffff !important;
+	background-color: var(--white) !important;
 }
 
 .btn-search {
@@ -602,7 +602,7 @@ a.nav-item.is-tab {
 
 .button.is-info {
 	border-width: 0;
-	color: #fff;
+	color: var(--white);
 }
 
 strong {
@@ -610,7 +610,7 @@ strong {
 }
 
 hr {
-	background-color: #dbdbdb;
+	background-color: var(--light-grey-2);
 	border: none;
 	height: 1px;
 }
@@ -705,7 +705,7 @@ table {
 	}
 
 	td {
-		border: 1px solid #dbdbdb;
+		border: 1px solid var(--light-grey-2);
 		border-width: 0 0 1px;
 		padding: 8px 10px;
 	}
@@ -1036,7 +1036,7 @@ img {
 					left: 0;
 					right: 0;
 					bottom: 0;
-					background-color: #ccc;
+					background-color: var(--light-grey-3);
 					transition: 0.2s;
 					border-radius: 34px;
 				}
@@ -1048,7 +1048,7 @@ img {
 					width: 16px;
 					left: 4px;
 					bottom: 4px;
-					background-color: white;
+					background-color: var(--white);
 					transition: 0.2s;
 					border-radius: 50%;
 				}
@@ -1117,8 +1117,8 @@ img {
 	select {
 		height: 36px;
 		background-color: var(--white);
-		border: 1px solid #dbdbdb;
-		color: #363636;
+		border: 1px solid var(--light-grey-2);
+		color: var(--dark-grey-2);
 		appearance: none;
 		border-radius: 3px;
 		font-size: 14px;
@@ -1153,9 +1153,9 @@ button.delete:focus {
 }
 
 .button {
-	border: 1px solid #dbdbdb;
-	background-color: #fff;
-	color: #363636;
+	border: 1px solid var(--light-grey-2);
+	background-color: var(--white);
+	color: var(--dark-grey-2);
 	border-radius: 3px;
 	line-height: 24px;
 	align-items: center;
@@ -1175,25 +1175,25 @@ button.delete:focus {
 	&.is-success {
 		background-color: var(--green) !important;
 		border-width: 0;
-		color: white;
+		color: var(--white);
 	}
 
 	&.is-primary {
 		background-color: var(--primary-color) !important;
 		border-width: 0;
-		color: white;
+		color: var(--white);
 	}
 
 	&.is-danger {
 		background-color: var(--red) !important;
 		border-width: 0;
-		color: white;
+		color: var(--white);
 	}
 
 	&.is-info {
 		background-color: var(--primary-color) !important;
 		border-width: 0;
-		color: white;
+		color: var(--white);
 	}
 
 	&.is-warning {
@@ -1212,7 +1212,7 @@ button.delete:focus {
 	font-size: 14px;
 	border-radius: 3px;
 	box-shadow: inset 0 1px 2px rgba(10, 10, 10, 0.1);
-	border: 1px solid #dbdbdb;
+	border: 1px solid var(--light-grey-2);
 }
 
 .input,
@@ -1671,8 +1671,8 @@ h4.section-title {
 
 	blockquote {
 		padding: 0px 15px;
-		color: #6a737d;
-		border-left: 0.25em solid #dfe2e5;
+		color: var(--grey-2);
+		border-left: 0.25em solid var(--light-grey-2);
 	}
 
 	code {
@@ -1709,7 +1709,7 @@ h4.section-title {
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background-color: #ccc;
+		background-color: var(--light-grey-3);
 		transition: 0.2s;
 		border-radius: 34px;
 	}
@@ -1721,7 +1721,7 @@ h4.section-title {
 		width: 16px;
 		left: 4px;
 		bottom: 4px;
-		background-color: white;
+		background-color: var(--white);
 		transition: 0.2s;
 		border-radius: 50%;
 	}

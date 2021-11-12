@@ -196,7 +196,7 @@ export default {
 	color: var(--primary-color) !important;
 
 	&:hover {
-		border-color: #dbdbdb !important;
+		border-color: var(--light-grey-2) !important;
 	}
 }
 </style>

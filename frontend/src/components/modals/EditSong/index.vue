@@ -1605,7 +1605,7 @@ export default {
 
 	.autosuggest-item {
 		background-color: var(--dark-grey) !important;
-		color: white !important;
+		color: var(--white) !important;
 		border-color: var(--dark-grey) !important;
 	}
 

@@ -290,7 +290,7 @@ export default {
 		// right: 0;
 		// top: 100%;
 		// position: absolute;
-		// background: white;
+		// background: var(--white);
 	}
 }
 
@@ -301,7 +301,7 @@ export default {
 	.nav-item {
 		&:hover,
 		&:focus {
-			border-top: 1px solid white;
+			border-top: 1px solid var(--white);
 			height: calc(100% - 1px);
 		}
 	}
@@ -319,7 +319,7 @@ export default {
 		right: 0;
 		top: 100%;
 		position: absolute;
-		background: white;
+		background: var(--white);
 	}
 
 	.nav-menu.is-active {

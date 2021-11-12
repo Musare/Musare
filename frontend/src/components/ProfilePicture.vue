@@ -59,7 +59,7 @@ export default {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background-color: #ddd;
+		background-color: var(--light-grey-2);
 		font-family: "Inter", sans-serif;
 		font-weight: 400;
 		user-select: none;
