@@ -1,5 +1,6 @@
 import async from "async";
 import mongoose from "mongoose";
+import config from "config";
 
 import { isLoginRequired, isOwnerRequired, isAdminRequired } from "./hooks";
 
@@ -2539,16 +2540,7 @@ export default {
 
 		data.name = data.name.toLowerCase();
 
-		const blacklist = [
-			"country",
-			"edm",
-			"musare",
-			"hip-hop",
-			"rap",
-			"top-hits",
-			"todays-hits",
-			"old-school",
-			"christmas",
+		let blacklist = [
 			"about",
 			"support",
 			"staff",
@@ -2565,7 +2557,6 @@ export default {
 			"p",
 			"official",
 			"o",
-			"trap",
 			"faq",
 			"team",
 			"donate",
@@ -2581,8 +2572,14 @@ export default {
 			"api",
 			"songs",
 			"playlists",
-			"playlist"
+			"playlist",
+			"albums",
+			"artists",
+			"artist",
+			"station"
 		];
+
+		if (config.get("blacklistedStationNames")) blacklist = [...blacklist, ...config.get("blacklistedStationNames")];
 
 		async.waterfall(
 			[

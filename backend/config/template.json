@@ -59,6 +59,7 @@
 		"secure": false,
 		"SIDname": "SID"
 	},
+	"blacklistedStationNames": ["musare"],
 	"skipConfigVersionCheck": false,
 	"skipDbDocumentsVersionCheck": false,
 	"debug": {
@@ -91,5 +92,5 @@
 			]
 		}
 	},
-	"configVersion": 6
+	"configVersion": 7
 }
