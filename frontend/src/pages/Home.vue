@@ -469,7 +469,8 @@ export default {
 			favoriteStations: [],
 			searchQuery: "",
 			sitename: "Musare",
-			orderOfFavoriteStations: []
+			orderOfFavoriteStations: [],
+			handledLoginRegisterRedirect: false
 		};
 	},
 	computed: {
@@ -517,12 +518,6 @@ export default {
 			handler() {
 				this.calculateFavoriteStations();
 			}
-		},
-		$route(to, from) {
-			if (from.path === "/login" || from.path === "/register")
-				this.closeModal(from.path.substr(1));
-			if (to.path === "/login" || to.path === "/register")
-				this.openModal(to.path.substr(1));
 		}
 	},
 	async mounted() {
@@ -530,9 +525,15 @@ export default {
 
 		if (
 			!this.loggedIn &&
-			(this.$route.path === "/login" || this.$route.path === "/register")
-		)
-			this.openModal(this.$route.path.substring(1));
+			this.$route.redirectedFrom &&
+			(this.$route.redirectedFrom.name === "login" ||
+				this.$route.redirectedFrom.name === "register") &&
+			!this.handledLoginRegisterRedirect
+		) {
+			// Makes sure the login/register modal isn't opened whenever the home page gets remounted due to a code change
+			this.handledLoginRegisterRedirect = true;
+			this.openModal(this.$route.redirectedFrom.name);
+		}
 
 		ws.onConnect(this.init);
 
@@ -776,7 +777,7 @@ export default {
 				res => new Toast(res.message)
 			);
 		},
-		...mapActions("modalVisibility", ["openModal", "closeModal"]),
+		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("station", ["updateIfStationIsFavorited"])
 	}
 };

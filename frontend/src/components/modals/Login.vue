@@ -85,10 +85,7 @@
 				</div>
 
 				<p class="content-box-optional-helper">
-					<router-link v-if="$route.path === '/login'" to="/register">
-						Don't have an account?
-					</router-link>
-					<a v-else @click="changeToRegisterModal()">
+					<a @click="changeToRegisterModal()">
 						Don't have an account?
 					</a>
 				</p>
@@ -157,11 +154,7 @@ export default {
 			this.closeLoginModal();
 			this.openModal("register");
 		},
-		async closeLoginModal() {
-			if (this.$route.path === "/login") {
-				// eslint-disable-next-line no-restricted-globals
-				this.$router.push("").then(history.pushState({}, null, "/"));
-			}
+		closeLoginModal() {
 			this.closeModal("login");
 		},
 		githubRedirect() {

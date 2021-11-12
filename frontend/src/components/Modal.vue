@@ -1,6 +1,6 @@
 <template>
 	<div class="modal is-active">
-		<div class="modal-background" @click="closeThisModal()" />
+		<div class="modal-background" @click="closeCurrentModal()" />
 		<div
 			:class="{
 				'modal-card': true,
@@ -12,7 +12,7 @@
 				<h2 class="modal-card-title is-marginless">
 					{{ title }}
 				</h2>
-				<span class="delete material-icons" @click="closeThisModal()"
+				<span class="delete material-icons" @click="closeCurrentModal()"
 					>highlight_off</span
 				>
 			</header>
@@ -29,26 +29,14 @@
 <script>
 import { mapActions } from "vuex";
 
-import keyboardShortcuts from "@/keyboardShortcuts";
-
 export default {
 	props: {
 		title: { type: String, default: "Modal" },
 		wide: { type: Boolean, default: false },
 		split: { type: Boolean, default: false }
 	},
-	emits: ["closed"],
 	mounted() {
 		this.type = this.toCamelCase(this.title);
-
-		keyboardShortcuts.registerShortcut("closeModal", {
-			keyCode: 27,
-			shift: false,
-			ctrl: false,
-			handler: () => {
-				this.closeThisModal();
-			}
-		});
 	},
 	methods: {
 		toCamelCase: str =>
@@ -58,10 +46,6 @@ export default {
 				.replace(/[^\w\s]/g, "")
 				.replace(/ (.)/g, $1 => $1.toUpperCase())
 				.replace(/ /g, ""),
-		closeThisModal() {
-			this.$emit("closed");
-			this.closeCurrentModal();
-		},
 		...mapActions("modalVisibility", ["closeCurrentModal"])
 	}
 };

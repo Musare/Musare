@@ -81,17 +81,13 @@ const router = createRouter({
 		},
 		{
 			path: "/login",
-			component: () => import("@/pages/Home.vue"),
-			meta: {
-				guestsOnly: true
-			}
+			name: "login",
+			redirect: "/"
 		},
 		{
 			path: "/register",
-			component: () => import("@/pages/Home.vue"),
-			meta: {
-				guestsOnly: true
-			}
+			name: "register",
+			redirect: "/"
 		},
 		{
 			path: "/404",

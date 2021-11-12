@@ -134,6 +134,16 @@ export default {
 			handler: () => this.toggleNightMode()
 		});
 
+		keyboardShortcuts.registerShortcut("closeModal", {
+			keyCode: 27,
+			shift: false,
+			ctrl: false,
+			handler: () => {
+				if (Object.keys(this.currentlyActive).length !== 0)
+					this.closeCurrentModal();
+			}
+		});
+
 		this.disconnectedMessage = new Toast({
 			content: "Could not connect to the server.",
 			persistent: true,
