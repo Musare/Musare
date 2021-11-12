@@ -184,16 +184,6 @@ export default {
 		justify-content: flex-end;
 	}
 
-	.nav-menu.is-active {
-		.nav-item {
-			color: var(--dark-grey-2);
-
-			&:hover {
-				color: var(--dark-grey-2);
-			}
-		}
-	}
-
 	a.nav-item.is-tab:hover {
 		border-bottom: none;
 		border-top: solid 1px var(--white);
@@ -324,6 +314,14 @@ export default {
 
 	.nav-menu.is-active {
 		display: block !important;
+
+		.nav-item {
+			color: var(--dark-grey-2);
+
+			&:hover {
+				color: var(--dark-grey-2);
+			}
+		}
 	}
 
 	.nav .nav-menu .grouped {
