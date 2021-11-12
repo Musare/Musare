@@ -80,6 +80,16 @@ const router = createRouter({
 			component: () => import("@/pages/Home.vue")
 		},
 		{
+			path: "/login",
+			name: "login",
+			redirect: "/"
+		},
+		{
+			path: "/register",
+			name: "register",
+			redirect: "/"
+		},
+		{
 			path: "/404",
 			alias: ["/:pathMatch(.*)*"],
 			component: () => import("@/pages/404.vue")
@@ -126,20 +136,6 @@ const router = createRouter({
 			component: () => import("@/pages/ResetPassword.vue"),
 			meta: {
 				loginRequired: true
-			}
-		},
-		{
-			path: "/login",
-			component: () => import("@/components/modals/Login.vue"),
-			meta: {
-				guestsOnly: true
-			}
-		},
-		{
-			path: "/register",
-			component: () => import("@/components/modals/Register.vue"),
-			meta: {
-				guestsOnly: true
 			}
 		},
 		{

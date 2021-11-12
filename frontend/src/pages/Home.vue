@@ -462,7 +462,8 @@ export default {
 			favoriteStations: [],
 			searchQuery: "",
 			sitename: "Musare",
-			orderOfFavoriteStations: []
+			orderOfFavoriteStations: [],
+			handledLoginRegisterRedirect: false
 		};
 	},
 	computed: {
@@ -514,6 +515,18 @@ export default {
 	},
 	async mounted() {
 		this.sitename = await lofig.get("siteSettings.sitename");
+
+		if (
+			!this.loggedIn &&
+			this.$route.redirectedFrom &&
+			(this.$route.redirectedFrom.name === "login" ||
+				this.$route.redirectedFrom.name === "register") &&
+			!this.handledLoginRegisterRedirect
+		) {
+			// Makes sure the login/register modal isn't opened whenever the home page gets remounted due to a code change
+			this.handledLoginRegisterRedirect = true;
+			this.openModal(this.$route.redirectedFrom.name);
+		}
 
 		ws.onConnect(this.init);
 
