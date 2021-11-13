@@ -424,7 +424,7 @@ export default {
 		}
 
 		.item {
-			overflow: initial;
+			overflow: hidden;
 
 			&:not(:last-of-type) {
 				margin-bottom: 10px;
