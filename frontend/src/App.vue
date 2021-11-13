@@ -1212,6 +1212,7 @@ button.delete:focus {
 	justify-content: center;
 	cursor: pointer;
 	user-select: none;
+	white-space: nowrap;
 
 	&:hover,
 	&:focus {
