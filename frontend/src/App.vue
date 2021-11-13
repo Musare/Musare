@@ -335,6 +335,11 @@ export default {
 	code {
 		background-color: var(--dark-grey-2) !important;
 	}
+
+	.button.is-dark {
+		background-color: var(--light-grey) !important;
+		color: var(--dark-grey-2) !important;
+	}
 }
 
 /* inter-regular - latin */
@@ -1209,6 +1214,12 @@ button.delete:focus {
 		background-color: var(--yellow) !important;
 		border-width: 0;
 		color: rgba(0, 0, 0, 0.7);
+	}
+
+	&.is-dark {
+		background-color: var(--dark-grey-2);
+		border-width: 0;
+		color: var(--light-grey);
 	}
 }
 
