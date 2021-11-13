@@ -56,7 +56,7 @@ export default {
 	.modal-card-head,
 	.modal-card-foot {
 		background-color: var(--dark-grey-3);
-		border-color: var(--dark-grey-2);
+		border: none;
 	}
 
 	.modal-card-body {
@@ -165,6 +165,7 @@ export default {
 		}
 
 		.modal-card-head {
+			border-bottom: 1px solid var(--light-grey-2);
 			border-radius: 5px 5px 0 0;
 
 			.modal-card-title {
@@ -186,6 +187,7 @@ export default {
 		}
 
 		.modal-card-foot {
+			border-top: 1px solid var(--light-grey-2);
 			border-radius: 0 0 5px 5px;
 			overflow: initial;
 			column-gap: 16px;
