@@ -488,7 +488,7 @@ body {
 	background-color: var(--light-grey);
 	color: var(--dark-grey);
 	height: 100%;
-	line-height: 1.428;
+	line-height: 1.4285714;
 	font-size: 1rem;
 	font-family: "Inter", Helvetica, Arial, sans-serif;
 }
@@ -517,11 +517,6 @@ ul {
 	list-style: none;
 	margin: 0;
 	display: block;
-}
-
-ol,
-ul {
-	margin-left: 2em;
 }
 
 h1,
@@ -573,6 +568,12 @@ h6 {
 	font-size: 1rem;
 	line-height: 110%;
 	margin: 0.5rem 0 0.4rem 0;
+}
+
+.content {
+	h4 {
+		line-height: 1.125;
+	}
 }
 
 .thin {

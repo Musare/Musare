@@ -96,4 +96,8 @@ export default {
 		padding-bottom: 10px;
 	}
 }
+
+ol {
+	margin-left: 2em;
+}
 </style>
