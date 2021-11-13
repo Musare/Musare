@@ -1547,6 +1547,10 @@ h4.section-title {
 	margin: 5px 0;
 }
 
+.steps-fade-leave-active {
+	display: none;
+}
+
 .steps-fade-enter-active,
 .steps-fade-leave-active {
 	transition: all 0.3s ease;
@@ -1603,25 +1607,19 @@ h4.section-title {
 
 /* This class is used for content-box in ResetPassword, but not in RemoveAccount. This is because ResetPassword uses transitions and RemoveAccount does not */
 .content-box-wrapper {
-	position: relative;
+	margin-top: 90px;
 	width: 100%;
 	display: flex;
-	flex-direction: column;
 	align-items: center;
-	min-height: 200px;
-
-	.content-box {
-		position: absolute;
-	}
 }
 
 .content-box {
-	margin-top: 90px;
 	border-radius: 3px;
 	background-color: var(--white);
 	border: 1px solid var(--dark-grey);
 	max-width: 580px;
 	padding: 40px;
+	flex: 1;
 
 	@media screen and (max-width: 300px) {
 		margin-top: 30px;
