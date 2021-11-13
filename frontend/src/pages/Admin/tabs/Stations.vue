@@ -15,7 +15,7 @@
 					</button>
 				</confirm>
 			</div>
-			<table class="table is-striped">
+			<table class="table">
 				<thead>
 					<tr>
 						<td>ID</td>

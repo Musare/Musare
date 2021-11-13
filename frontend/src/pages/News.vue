@@ -62,7 +62,7 @@ export default {
 		marked.use({
 			renderer: {
 				table(header, body) {
-					return `<table class="table is-striped">
+					return `<table class="table">
 					<thead>${header}</thead>
 					<tbody>${body}</tbody>
 					</table>`;
