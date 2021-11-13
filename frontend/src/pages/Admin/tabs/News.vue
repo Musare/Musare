@@ -7,7 +7,7 @@
 					Create News Item
 				</button>
 			</div>
-			<table class="table is-striped">
+			<table class="table">
 				<thead>
 					<tr>
 						<td>Status</td>

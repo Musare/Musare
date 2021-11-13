@@ -294,6 +294,7 @@ export default {
 		flex-grow: 1;
 		flex-shrink: 0;
 		justify-content: center;
+		border-bottom: 1px solid var(--light-grey-2);
 	}
 
 	.unverifiedsongs {

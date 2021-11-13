@@ -1172,6 +1172,32 @@ button.delete:focus {
 	}
 }
 
+.table {
+	background-color: var(--white);
+	color: var(--dark-grey);
+	width: 100%;
+	border-collapse: collapse;
+	border-spacing: 0;
+	border-radius: 5px;
+
+	thead th {
+		padding: 5px 10px;
+		text-align: left;
+		font-weight: 600;
+		color: var(--grey-3);
+	}
+
+	tr {
+		&:nth-child(even) {
+			background-color: #fafafa;
+		}
+		&:hover,
+		&:focus {
+			background-color: var(--light-grey);
+		}
+	}
+}
+
 .button {
 	border: 1px solid var(--light-grey-2);
 	background-color: var(--white);

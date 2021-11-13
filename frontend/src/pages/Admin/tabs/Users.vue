@@ -4,7 +4,7 @@
 		<div class="container">
 			<h2 v-if="dataRequests.length > 0">Data Requests</h2>
 
-			<table class="table is-striped" v-if="dataRequests.length > 0">
+			<table class="table" v-if="dataRequests.length > 0">
 				<thead>
 					<tr>
 						<td>User ID</td>
@@ -36,7 +36,7 @@
 
 			<h1 id="page-title">Users</h1>
 
-			<table class="table is-striped">
+			<table class="table">
 				<thead>
 					<tr>
 						<td class="ppRow">Profile Picture</td>
