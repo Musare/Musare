@@ -1482,7 +1482,6 @@ h4.section-title {
 }
 
 #forgot-password {
-	display: flex;
 	justify-content: flex-start;
 	margin: 5px 0;
 }
