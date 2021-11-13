@@ -515,6 +515,7 @@ body {
 .column {
 	display: flex;
 	flex: 1 1 0;
+	flex-direction: column;
 	padding: 10px;
 }
 
