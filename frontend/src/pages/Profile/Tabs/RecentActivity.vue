@@ -34,7 +34,7 @@
 			</div>
 		</div>
 		<div v-else>
-			<h3>No recent activity.</h3>
+			<h5>No recent activity.</h5>
 		</div>
 	</div>
 </template>

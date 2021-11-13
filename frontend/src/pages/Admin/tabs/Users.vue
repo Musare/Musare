@@ -200,6 +200,10 @@ export default {
 	}
 }
 
+#page-title {
+	margin: 30px 0;
+}
+
 h2 {
 	font-size: 30px;
 	text-align: center;
