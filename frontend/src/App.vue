@@ -698,6 +698,12 @@ textarea {
 a {
 	color: var(--primary-color);
 	text-decoration: none;
+	cursor: pointer;
+
+	&:hover,
+	&:focus {
+		filter: brightness(90%);
+	}
 }
 
 table {
@@ -1600,7 +1606,6 @@ h4.section-title {
 .content-box-optional-helper {
 	margin-top: 15px;
 	color: var(--primary-color);
-	text-decoration: underline;
 	font-size: 16px;
 
 	a {
