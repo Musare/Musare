@@ -141,6 +141,7 @@ export default {
 
 		.menu-list {
 			padding: 0 10px;
+			margin-left: 0;
 		}
 
 		li {
