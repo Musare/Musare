@@ -1332,6 +1332,10 @@ button.delete:focus {
 			border-radius: 0;
 			margin-right: -1px;
 
+			&:first-child {
+				border-radius: 3px 0 0 3px;
+			}
+
 			&:last-child {
 				border-radius: 0 3px 3px 0;
 				padding-left: 10px;
