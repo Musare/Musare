@@ -19,10 +19,7 @@
 				</div>
 
 				<div class="content-box-wrapper">
-					<transition-group
-						name="steps-fade"
-						mode="out-in"
-					>
+					<transition-group name="steps-fade" mode="out-in">
 						<div class="content-box">
 							<!-- Step 1 -- Enter email address -->
 							<div v-if="step === 1" key="1">
