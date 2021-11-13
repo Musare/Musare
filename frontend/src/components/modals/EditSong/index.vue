@@ -1618,6 +1618,19 @@ export default {
 		background: var(--dark-grey) !important;
 		color: var(--white) !important;
 	}
+
+	.left-section {
+		.edit-section {
+			.album-get-button,
+			.duration-fill-button,
+			.add-button {
+				&:focus,
+				&:hover {
+					border: none !important;
+				}
+			}
+		}
+	}
 }
 
 .modal-card-body {

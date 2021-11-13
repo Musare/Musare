@@ -1293,6 +1293,24 @@ button.delete:focus {
 
 	&.has-addons {
 		display: flex;
+
+		.button {
+			border-radius: 0;
+			margin-right: -1px;
+
+			&:last-child {
+				border-radius: 0 3px 3px 0;
+				padding-left: 10px;
+			}
+		}
+
+		.input {
+			margin-right: -1px;
+
+			&:first-child {
+				border-radius: 3px 0 0 3px;
+			}
+		}
 	}
 }
 
