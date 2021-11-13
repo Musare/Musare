@@ -1152,6 +1152,14 @@ button.delete:focus {
 	padding-right: 6px !important;
 }
 
+#tab-selection,
+.tab-selection {
+	overflow-x: auto;
+	.button {
+		white-space: nowrap;
+	}
+}
+
 .button {
 	border: 1px solid var(--light-grey-2);
 	background-color: var(--white);
