@@ -2579,7 +2579,7 @@ export default {
 			"station"
 		];
 
-		if (data.type === "community" && config.get("blacklistedCommunityStationNames "))
+		if (data.type === "community" && config.has("blacklistedCommunityStationNames"))
 			blacklist = [...blacklist, ...config.get("blacklistedCommunityStationNames")];
 
 		async.waterfall(
