@@ -898,13 +898,18 @@ export default {
 				this.song._id,
 				res => {
 					if (res.status === "success") {
-						const { song } = res.data;
+						let { song } = res.data;
+
+						if (this.song.prefill)
+							song = Object.assign(song, this.song.prefill);
+
 						if (this.song.discogs)
-							this.editSong({
+							song = {
 								...song,
 								discogs: this.song.discogs
-							});
-						else this.editSong(song);
+							};
+
+						this.editSong(song);
 
 						this.songDataLoaded = true;
 

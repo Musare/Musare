@@ -2,186 +2,232 @@
 	<div>
 		<modal title="Import Album" class="import-album-modal">
 			<template #body>
-				<div class="search-discogs-album">
-					<p class="control is-expanded">
-						<label class="label">Search query</label>
-						<input
-							class="input"
-							type="text"
-							ref="discogs-input"
-							v-model="discogsQuery"
-							@keyup.enter="searchDiscogsForPage(1)"
-							@change="onDiscogsQueryChange"
-							v-focus
-						/>
-					</p>
-					<button
-						class="button is-fullwidth is-info"
-						@click="searchDiscogsForPage(1)"
-					>
-						Search
-					</button>
-					<button
-						class="button is-fullwidth is-danger"
-						@click="clearDiscogsResults()"
-					>
-						Clear
-					</button>
-					<label class="label" v-if="discogs.apiResults.length > 0"
-						>API results</label
-					>
-					<div
-						class="api-results-container"
-						v-if="discogs.apiResults.length > 0"
-					>
-						<div
-							class="api-result"
-							v-for="(result, index) in discogs.apiResults"
-							:key="result.album.id"
-							tabindex="0"
-							@keydown.space.prevent
-							@keyup.enter="toggleAPIResult(index)"
+				<div class="tabs-container discogs-container">
+					<div class="tab-selection">
+						<button
+							class="button is-default"
+							:class="{ selected: discogsTab === 'search' }"
+							ref="discogs-search-tab"
+							@click="showDiscogsTab('search')"
 						>
-							<div class="top-container">
-								<img :src="result.album.albumArt" />
-								<div class="right-container">
-									<p class="album-title">
-										{{ result.album.title }}
-									</p>
-									<div class="bottom-row">
-										<img
-											src="/assets/arrow_up.svg"
-											v-if="result.expanded"
-											@click="toggleAPIResult(index)"
-										/>
-										<img
-											src="/assets/arrow_down.svg"
-											v-if="!result.expanded"
-											@click="toggleAPIResult(index)"
-										/>
-										<p class="type-year">
-											<span>{{ result.album.type }}</span>
-											•
-											<span>{{ result.album.year }}</span>
-										</p>
-									</div>
-								</div>
-							</div>
-							<div
-								class="bottom-container"
-								v-if="result.expanded"
-							>
-								<p class="bottom-container-field">
-									Artists:
-									<span>{{
-										result.album.artists.join(", ")
-									}}</span>
-								</p>
-								<p class="bottom-container-field">
-									Genres:
-									<span>{{
-										result.album.genres.join(", ")
-									}}</span>
-								</p>
-								<p class="bottom-container-field">
-									Data quality:
-									<span>{{ result.dataQuality }}</span>
-								</p>
-								<button
-									class="button is-primary"
-									@click="selectAlbum(result)"
-								>
-									Import album
-								</button>
-								<div class="tracks">
-									<div
-										class="track"
-										v-for="track in result.tracks"
-										:key="`${track.position}-${track.title}`"
-									>
-										<span>{{ track.position }}.</span>
-										<p>{{ track.title }}</p>
-									</div>
-								</div>
-							</div>
-						</div>
+							Search
+						</button>
+						<button
+							v-if="discogsAlbum && discogsAlbum.album"
+							class="button is-default"
+							:class="{ selected: discogsTab === 'selected' }"
+							ref="discogs-selected-tab"
+							@click="showDiscogsTab('selected')"
+						>
+							Selected
+						</button>
+						<button
+							v-else
+							class="button is-default"
+							content="No album selected"
+							v-tippy="{ theme: 'info' }"
+						>
+							Selected
+						</button>
 					</div>
-					<button
-						v-if="
-							discogs.apiResults.length > 0 &&
-							!discogs.disableLoadMore &&
-							discogs.page < discogs.pages
-						"
-						class="button is-fullwidth is-info discogs-load-more"
-						@click="loadNextDiscogsPage()"
+					<div
+						class="tab search-discogs-album"
+						v-show="discogsTab === 'search'"
 					>
-						Load more...
-					</button>
-				</div>
-				<div
-					class="discogs-album"
-					v-if="discogsAlbum && discogsAlbum.album"
-				>
-					<div class="top-container">
-						<img :src="discogsAlbum.album.albumArt" />
-						<div class="right-container">
-							<p class="album-title">
-								{{ discogsAlbum.album.title }}
-							</p>
-							<div class="bottom-row">
-								<img
-									src="/assets/arrow_up.svg"
-									v-if="discogsAlbum.expanded"
-									@click="toggleDiscogsAlbum()"
-								/>
-								<img
-									src="/assets/arrow_down.svg"
-									v-if="!discogsAlbum.expanded"
-									@click="toggleDiscogsAlbum()"
-								/>
-								<p class="type-year">
-									<span>{{ discogsAlbum.album.type }}</span>
-									•
-									<span>{{ discogsAlbum.album.year }}</span>
-								</p>
-							</div>
-						</div>
-					</div>
-					<div class="bottom-container" v-if="discogsAlbum.expanded">
-						<p class="bottom-container-field">
-							Artists:
-							<span>{{
-								discogsAlbum.album.artists.join(", ")
-							}}</span>
+						<p class="control is-expanded">
+							<label class="label">Search query</label>
+							<input
+								class="input"
+								type="text"
+								ref="discogs-input"
+								v-model="discogsQuery"
+								@keyup.enter="searchDiscogsForPage(1)"
+								@change="onDiscogsQueryChange"
+								v-focus
+							/>
 						</p>
-						<p class="bottom-container-field">
-							Genres:
-							<span>{{
-								discogsAlbum.album.genres.join(", ")
-							}}</span>
-						</p>
-						<p class="bottom-container-field">
-							Data quality:
-							<span>{{ discogsAlbum.dataQuality }}</span>
-						</p>
-						<div class="tracks">
+						<button
+							class="button is-fullwidth is-info"
+							@click="searchDiscogsForPage(1)"
+						>
+							Search
+						</button>
+						<button
+							class="button is-fullwidth is-danger"
+							@click="clearDiscogsResults()"
+						>
+							Clear
+						</button>
+						<label
+							class="label"
+							v-if="discogs.apiResults.length > 0"
+							>API results</label
+						>
+						<div
+							class="api-results-container"
+							v-if="discogs.apiResults.length > 0"
+						>
 							<div
-								class="track"
+								class="api-result"
+								v-for="(result, index) in discogs.apiResults"
+								:key="result.album.id"
 								tabindex="0"
-								v-for="track in discogsAlbum.tracks"
-								:key="`${track.position}-${track.title}`"
+								@keydown.space.prevent
+								@keyup.enter="toggleAPIResult(index)"
 							>
-								<span>{{ track.position }}.</span>
-								<p>{{ track.title }}</p>
+								<div class="top-container">
+									<img :src="result.album.albumArt" />
+									<div class="right-container">
+										<p class="album-title">
+											{{ result.album.title }}
+										</p>
+										<div class="bottom-row">
+											<img
+												src="/assets/arrow_up.svg"
+												v-if="result.expanded"
+												@click="toggleAPIResult(index)"
+											/>
+											<img
+												src="/assets/arrow_down.svg"
+												v-if="!result.expanded"
+												@click="toggleAPIResult(index)"
+											/>
+											<p class="type-year">
+												<span>{{
+													result.album.type
+												}}</span>
+												•
+												<span>{{
+													result.album.year
+												}}</span>
+											</p>
+										</div>
+									</div>
+								</div>
+								<div
+									class="bottom-container"
+									v-if="result.expanded"
+								>
+									<p class="bottom-container-field">
+										Artists:
+										<span>{{
+											result.album.artists.join(", ")
+										}}</span>
+									</p>
+									<p class="bottom-container-field">
+										Genres:
+										<span>{{
+											result.album.genres.join(", ")
+										}}</span>
+									</p>
+									<p class="bottom-container-field">
+										Data quality:
+										<span>{{ result.dataQuality }}</span>
+									</p>
+									<button
+										class="button is-primary"
+										@click="selectAlbum(result)"
+									>
+										Import album
+									</button>
+									<div class="tracks">
+										<div
+											class="track"
+											v-for="track in result.tracks"
+											:key="`${track.position}-${track.title}`"
+										>
+											<span>{{ track.position }}.</span>
+											<p>{{ track.title }}</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<button
+							v-if="
+								discogs.apiResults.length > 0 &&
+								!discogs.disableLoadMore &&
+								discogs.page < discogs.pages
+							"
+							class="
+								button
+								is-fullwidth is-info
+								discogs-load-more
+							"
+							@click="loadNextDiscogsPage()"
+						>
+							Load more...
+						</button>
+					</div>
+					<div
+						v-if="discogsAlbum && discogsAlbum.album"
+						class="tab discogs-album"
+						v-show="discogsTab === 'selected'"
+					>
+						<div class="top-container">
+							<img :src="discogsAlbum.album.albumArt" />
+							<div class="right-container">
+								<p class="album-title">
+									{{ discogsAlbum.album.title }}
+								</p>
+								<div class="bottom-row">
+									<img
+										src="/assets/arrow_up.svg"
+										v-if="discogsAlbum.expanded"
+										@click="toggleDiscogsAlbum()"
+									/>
+									<img
+										src="/assets/arrow_down.svg"
+										v-if="!discogsAlbum.expanded"
+										@click="toggleDiscogsAlbum()"
+									/>
+									<p class="type-year">
+										<span>{{
+											discogsAlbum.album.type
+										}}</span>
+										•
+										<span>{{
+											discogsAlbum.album.year
+										}}</span>
+									</p>
+								</div>
+							</div>
+						</div>
+						<div
+							class="bottom-container"
+							v-if="discogsAlbum.expanded"
+						>
+							<p class="bottom-container-field">
+								Artists:
+								<span>{{
+									discogsAlbum.album.artists.join(", ")
+								}}</span>
+							</p>
+							<p class="bottom-container-field">
+								Genres:
+								<span>{{
+									discogsAlbum.album.genres.join(", ")
+								}}</span>
+							</p>
+							<p class="bottom-container-field">
+								Data quality:
+								<span>{{ discogsAlbum.dataQuality }}</span>
+							</p>
+							<div class="tracks">
+								<div
+									class="track"
+									tabindex="0"
+									v-for="track in discogsAlbum.tracks"
+									:key="`${track.position}-${track.title}`"
+								>
+									<span>{{ track.position }}.</span>
+									<p>{{ track.title }}</p>
+								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-				<div class="break"></div>
-				<div
-					class="import-youtube-playlist"
-					v-if="discogsAlbum && discogsAlbum.album"
-				>
+				<div class="import-youtube-playlist">
 					<p class="control is-expanded">
 						<input
 							class="input"
@@ -262,6 +308,16 @@
 				<button class="button is-primary" @click="editSongs()">
 					Edit songs
 				</button>
+				<button
+					:class="{
+						button: true,
+						'is-success': prefillDiscogs,
+						'is-danger': !prefillDiscogs
+					}"
+					@click="togglePrefillDiscogs()"
+				>
+					Prefill Discogs
+				</button>
 			</template>
 		</modal>
 	</div>
@@ -272,6 +328,7 @@ import { mapState, mapGetters, mapActions } from "vuex";
 
 import draggable from "vuedraggable";
 import Toast from "toasters";
+import ws from "@/ws";
 
 import Modal from "../Modal.vue";
 
@@ -284,7 +341,6 @@ export default {
 	},
 	data() {
 		return {
-			stuff: false,
 			isImportingPlaylist: false,
 			trackSongs: [],
 			songsToEdit: [],
@@ -316,8 +372,10 @@ export default {
 			}
 		},
 		...mapState("modals/importAlbum", {
+			discogsTab: state => state.discogsTab,
 			discogsAlbum: state => state.discogsAlbum,
-			editingSongs: state => state.editingSongs
+			editingSongs: state => state.editingSongs,
+			prefillDiscogs: state => state.prefillDiscogs
 		}),
 		...mapState("modalVisibility", {
 			modals: state => state.modals
@@ -333,11 +391,23 @@ export default {
 		}
 		/* eslint-enable */
 	},
+	mounted() {
+		ws.onConnect(this.init);
+
+		this.socket.on("event:admin.song.updated", res => {
+			this.updateTrackSong(res.data.song);
+		});
+	},
 	beforeUnmount() {
 		this.selectDiscogsAlbum({});
 		this.setPlaylistSongs([]);
+		this.showDiscogsTab("search");
+		this.socket.dispatch("apis.leaveRoom", "import-album");
 	},
 	methods: {
+		init() {
+			this.socket.dispatch("apis.joinRoom", "import-album");
+		},
 		editSongs() {
 			this.updateEditingSongs(true);
 			this.songsToEdit = [];
@@ -361,12 +431,28 @@ export default {
 		},
 		editNextSong() {
 			if (this.editingSongs) {
-				this.editSong({
-					_id: this.songsToEdit[this.currentEditSongIndex].songId,
-					discogs: this.songsToEdit[this.currentEditSongIndex].discogs
-				});
-				this.currentEditSongIndex += 1;
-				this.openModal("editSong");
+				setTimeout(() => {
+					const song = {
+						_id: this.songsToEdit[this.currentEditSongIndex].songId,
+						discogs:
+							this.songsToEdit[this.currentEditSongIndex].discogs
+					};
+					if (song.discogs && this.prefillDiscogs)
+						song.prefill = {
+							title: song.discogs.track.title,
+							thumbnail: song.discogs.album.albumArt,
+							genres: JSON.parse(
+								JSON.stringify(song.discogs.album.genres)
+							),
+							artists: JSON.parse(
+								JSON.stringify(song.discogs.album.artists)
+							)
+						};
+					console.log(song);
+					this.editSong(song);
+					this.currentEditSongIndex += 1;
+					this.openModal("editSong");
+				}, 500);
 			}
 		},
 		log(evt) {
@@ -413,8 +499,12 @@ export default {
 					const songsAlreadyVerified =
 						res.songs.length - songs.length;
 					this.setPlaylistSongs(songs);
-					this.trackSongs = this.discogsAlbum.tracks.map(() => []);
-					this.tryToAutoMove();
+					if (this.discogsAlbum.tracks) {
+						this.trackSongs = this.discogsAlbum.tracks.map(
+							() => []
+						);
+						this.tryToAutoMove();
+					}
 					if (songsAlreadyVerified > 0)
 						new Toast(
 							`${songsAlreadyVerified} songs were already verified, skipping those.`
@@ -455,7 +545,10 @@ export default {
 		},
 		selectAlbum(result) {
 			this.selectDiscogsAlbum(result);
-			this.clearDiscogsResults();
+			this.trackSongs = this.discogsAlbum.tracks.map(() => []);
+			if (this.playlistSongs.length > 0) this.tryToAutoMove();
+			// this.clearDiscogsResults();
+			this.showDiscogsTab("selected");
 		},
 		toggleAPIResult(index) {
 			const apiResult = this.discogs.apiResults[index];
@@ -548,13 +641,31 @@ export default {
 			this.discogs.apiResults = [];
 			this.discogs.disableLoadMore = false;
 		},
+		updateTrackSong(updatedSong) {
+			this.updatePlaylistSong(updatedSong);
+			this.trackSongs.forEach((song, index) => {
+				if (song[0]._id === updatedSong._id)
+					this.trackSongs[index][0] = updatedSong;
+			});
+		},
+		...mapActions({
+			showDiscogsTab(dispatch, payload) {
+				if (this.$refs[`discogs-${payload}-tab`])
+					this.$refs[`discogs-${payload}-tab`].scrollIntoView({
+						block: "nearest"
+					});
+				return dispatch("modals/importAlbum/showDiscogsTab", payload);
+			}
+		}),
 		...mapActions("modals/importAlbum", [
 			"toggleDiscogsAlbum",
 			"setPlaylistSongs",
 			"updatePlaylistSongs",
 			"selectDiscogsAlbum",
 			"updateEditingSongs",
-			"resetPlaylistSongs"
+			"resetPlaylistSongs",
+			"togglePrefillDiscogs",
+			"updatePlaylistSong"
 		]),
 		...mapActions("modals/editSong", ["editSong"]),
 		...mapActions("modalVisibility", ["closeModal", "openModal"])
@@ -568,6 +679,19 @@ export default {
 	.discogs-album,
 	.import-youtube-playlist,
 	.track-boxes,
+	#tabs-container {
+		background-color: var(--dark-grey-3) !important;
+		border: 0 !important;
+		.tab {
+			border: 0 !important;
+		}
+	}
+
+	#tabs-container #tab-selection .button {
+		background: var(--dark-grey) !important;
+		color: var(--white) !important;
+	}
+
 	.api-result {
 		background-color: var(--dark-grey-3) !important;
 	}
@@ -612,6 +736,9 @@ export default {
 		.modal-card-foot {
 			.button {
 				margin: 0;
+				&:not(:first-of-type) {
+					margin-left: 5px;
+				}
 			}
 
 			div div {
@@ -636,208 +763,136 @@ export default {
 	margin-bottom: 16px;
 }
 
-.search-discogs-album {
-	width: 376px;
-	background-color: var(--light-grey);
-	border: 1px rgba(163, 224, 255, 0.75) solid;
-	border-radius: 5px;
-	padding: 16px;
-	overflow: auto;
+.tabs-container {
+	max-width: 376px;
 	height: 100%;
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
 
-	> label {
-		margin-top: 12px;
-	}
-
-	.top-container {
+	.tab-selection {
 		display: flex;
+		overflow-x: auto;
 
-		img {
-			height: 85px;
-			width: 85px;
-		}
+		.button {
+			border-radius: 5px 5px 0 0;
+			border: 0;
+			text-transform: uppercase;
+			font-size: 14px;
+			color: var(--dark-grey-3);
+			background-color: var(--light-grey-2);
+			flex-grow: 1;
+			height: 32px;
 
-		.right-container {
-			padding: 8px;
-			display: flex;
-			flex-direction: column;
-			flex: 1;
-
-			.album-title {
-				flex: 1;
-				font-weight: 600;
-			}
-
-			.bottom-row {
-				display: flex;
-				flex-flow: row;
-				line-height: 15px;
-
-				img {
-					height: 15px;
-					align-self: end;
-					flex: 1;
-					user-select: none;
-					-moz-user-select: none;
-					-ms-user-select: none;
-					-webkit-user-select: none;
-					cursor: pointer;
-				}
-
-				p {
-					text-align: right;
-				}
-
-				.type-year {
-					font-size: 13px;
-					align-self: end;
-				}
+			&:not(:first-of-type) {
+				margin-left: 5px;
 			}
 		}
-	}
 
-	.bottom-container {
-		padding: 12px;
-
-		.bottom-container-field {
-			line-height: 16px;
-			margin-bottom: 8px;
+		.selected {
+			background-color: var(--primary-color) !important;
+			color: var(--white) !important;
 			font-weight: 600;
-
-			span {
-				font-weight: 400;
-			}
-		}
-
-		.bottom-container-field:last-of-type {
-			margin-bottom: 8px;
 		}
 	}
-
-	.api-result {
-		background-color: var(--white);
-		border: 0.5px solid var(--primary-color);
-		border-radius: 5px;
-		margin-bottom: 16px;
-	}
-
-	button {
-		&:focus,
-		&:hover {
-			filter: contrast(0.75);
-		}
-	}
-
-	.tracks {
-		margin-top: 12px;
-
-		.track:first-child {
-			margin-top: 0;
-			border-radius: 3px 3px 0 0;
-		}
-
-		.track:last-child {
-			border-radius: 0 0 3px 3px;
-		}
-
-		.track {
-			border: 0.5px solid var(--black);
-			margin-top: -1px;
-			line-height: 16px;
-			display: flex;
-
-			span {
-				font-weight: 600;
-				display: inline-block;
-				margin-top: 7px;
-				margin-bottom: 7px;
-				margin-left: 7px;
-			}
-
-			p {
-				display: inline-block;
-				margin: 7px;
-				flex: 1;
-			}
-		}
-	}
-
-	.discogs-load-more {
-		margin-bottom: 8px;
+	.tab {
+		border: 1px solid var(--light-grey-3);
+		border-radius: 0 0 3px 3px;
+		padding: 15px;
+		height: calc(100% - 32px);
+		overflow: auto;
 	}
 }
 
-.discogs-album {
-	width: 376px;
-	background-color: var(--light-grey);
-	border: 1px rgba(163, 224, 255, 0.75) solid;
-	border-radius: 5px;
-	padding: 16px;
-	overflow: auto;
-	height: 100%;
+.tabs-container.discogs-container {
+	--primary-color: var(--purple);
 
-	.top-container {
-		display: flex;
-
-		img {
-			height: 85px;
-			width: 85px;
+	.search-discogs-album {
+		background-color: var(--light-grey);
+		border: 1px rgba(143, 40, 140, 0.75) solid;
+		> label {
+			margin-top: 12px;
 		}
 
-		.right-container {
-			padding: 8px;
+		.top-container {
 			display: flex;
-			flex-direction: column;
-			flex: 1;
 
-			.album-title {
-				flex: 1;
-				font-weight: 600;
+			img {
+				height: 85px;
+				width: 85px;
 			}
 
-			.bottom-row {
+			.right-container {
+				padding: 8px;
 				display: flex;
-				flex-flow: row;
-				line-height: 15px;
+				flex-direction: column;
+				flex: 1;
 
-				img {
-					height: 15px;
-					align-self: end;
+				.album-title {
 					flex: 1;
-					user-select: none;
-					-moz-user-select: none;
-					-ms-user-select: none;
-					-webkit-user-select: none;
-					cursor: pointer;
+					font-weight: 600;
 				}
 
-				p {
-					text-align: right;
-				}
+				.bottom-row {
+					display: flex;
+					flex-flow: row;
+					line-height: 15px;
 
-				.type-year {
-					font-size: 13px;
-					align-self: end;
+					img {
+						height: 15px;
+						align-self: end;
+						flex: 1;
+						user-select: none;
+						-moz-user-select: none;
+						-ms-user-select: none;
+						-webkit-user-select: none;
+						cursor: pointer;
+					}
+
+					p {
+						text-align: right;
+					}
+
+					.type-year {
+						font-size: 13px;
+						align-self: end;
+					}
 				}
 			}
 		}
-	}
 
-	.bottom-container {
-		padding: 12px;
+		.bottom-container {
+			padding: 12px;
 
-		.bottom-container-field {
-			line-height: 16px;
-			margin-bottom: 8px;
-			font-weight: 600;
+			.bottom-container-field {
+				line-height: 16px;
+				margin-bottom: 8px;
+				font-weight: 600;
 
-			span {
-				font-weight: 400;
+				span {
+					font-weight: 400;
+				}
+			}
+
+			.bottom-container-field:last-of-type {
+				margin-bottom: 8px;
 			}
 		}
 
-		.bottom-container-field:last-of-type {
-			margin-bottom: 0;
+		.api-result {
+			background-color: var(--white);
+			border: 0.5px solid var(--primary-color);
+			border-radius: 5px;
+			margin-bottom: 16px;
+		}
+
+		button {
+			margin: 5px 0;
+
+			&:focus,
+			&:hover {
+				filter: contrast(0.75);
+			}
 		}
 
 		.tracks {
@@ -872,10 +927,118 @@ export default {
 					flex: 1;
 				}
 			}
+		}
 
-			.track:hover,
-			.track:focus {
-				background-color: var(--light-grey);
+		.discogs-load-more {
+			margin-bottom: 8px;
+		}
+	}
+
+	.discogs-album {
+		background-color: var(--light-grey);
+		border: 1px rgba(143, 40, 140, 0.75) solid;
+
+		.top-container {
+			display: flex;
+
+			img {
+				height: 85px;
+				width: 85px;
+			}
+
+			.right-container {
+				padding: 8px;
+				display: flex;
+				flex-direction: column;
+				flex: 1;
+
+				.album-title {
+					flex: 1;
+					font-weight: 600;
+				}
+
+				.bottom-row {
+					display: flex;
+					flex-flow: row;
+					line-height: 15px;
+
+					img {
+						height: 15px;
+						align-self: end;
+						flex: 1;
+						user-select: none;
+						-moz-user-select: none;
+						-ms-user-select: none;
+						-webkit-user-select: none;
+						cursor: pointer;
+					}
+
+					p {
+						text-align: right;
+					}
+
+					.type-year {
+						font-size: 13px;
+						align-self: end;
+					}
+				}
+			}
+		}
+
+		.bottom-container {
+			padding: 12px;
+
+			.bottom-container-field {
+				line-height: 16px;
+				margin-bottom: 8px;
+				font-weight: 600;
+
+				span {
+					font-weight: 400;
+				}
+			}
+
+			.bottom-container-field:last-of-type {
+				margin-bottom: 0;
+			}
+
+			.tracks {
+				margin-top: 12px;
+
+				.track:first-child {
+					margin-top: 0;
+					border-radius: 3px 3px 0 0;
+				}
+
+				.track:last-child {
+					border-radius: 0 0 3px 3px;
+				}
+
+				.track {
+					border: 0.5px solid var(--black);
+					margin-top: -1px;
+					line-height: 16px;
+					display: flex;
+
+					span {
+						font-weight: 600;
+						display: inline-block;
+						margin-top: 7px;
+						margin-bottom: 7px;
+						margin-left: 7px;
+					}
+
+					p {
+						display: inline-block;
+						margin: 7px;
+						flex: 1;
+					}
+				}
+
+				.track:hover,
+				.track:focus {
+					background-color: var(--light-grey);
+				}
 			}
 		}
 	}
@@ -889,6 +1052,10 @@ export default {
 	padding: 16px;
 	overflow: auto;
 	height: 100%;
+
+	button {
+		margin: 5px 0;
+	}
 }
 
 .track-boxes {
