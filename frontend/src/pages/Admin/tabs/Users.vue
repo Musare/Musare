@@ -137,6 +137,12 @@ export default {
 				request => request._id !== res.data.dataRequestId
 			);
 		});
+
+		this.socket.on("event:user.removed", res => {
+			this.users = this.users.filter(
+				user => user._id !== res.data.userId
+			);
+		});
 	},
 	methods: {
 		edit(user) {
