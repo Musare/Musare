@@ -2,21 +2,21 @@
 	<modal
 		class="edit-news-modal"
 		:title="newsId ? 'Edit News' : 'Create News'"
+		:wide="true"
+		:split="true"
 	>
 		<template #body>
-			<div id="markdown-editor-and-preview">
-				<div class="column">
-					<p><strong>Markdown</strong></p>
-					<textarea v-model="markdown"></textarea>
-				</div>
-				<div class="column">
-					<p><strong>Preview</strong></p>
-					<div
-						class="news-item"
-						id="preview"
-						v-html="sanitize(marked(markdown))"
-					></div>
-				</div>
+			<div class="left-section">
+				<p><strong>Markdown</strong></p>
+				<textarea v-model="markdown"></textarea>
+			</div>
+			<div class="right-section">
+				<p><strong>Preview</strong></p>
+				<div
+					class="news-item"
+					id="preview"
+					v-html="sanitize(marked(markdown))"
+				></div>
 			</div>
 		</template>
 		<template #footer>
@@ -81,7 +81,7 @@ export default {
 	data() {
 		return {
 			markdown:
-				"# Header\n ## Sub-Header\n- **So**\n- _Many_\n- ~Points~\n\nOther things you want to say and [link](https://example.com).\n\n### Sub-Sub-Header\n> Oh look, a quote!\n\n`lil code`\n\n```\nbig code\n```\n",
+				"# Header\n## Sub-Header\n- **So**\n- _Many_\n- ~Points~\n\nOther things you want to say and [link](https://example.com).\n\n### Sub-Sub-Header\n> Oh look, a quote!\n\n`lil code`\n\n```\nbig code\n```\n",
 			status: "published",
 			createdBy: null,
 			createdAt: 0
@@ -95,7 +95,7 @@ export default {
 		marked.use({
 			renderer: {
 				table(header, body) {
-					return `<table class="table is-striped">
+					return `<table class="table">
 					<thead>${header}</thead>
 					<tbody>${body}</tbody>
 					</table>`;
@@ -211,50 +211,33 @@ export default {
 </script>
 
 <style lang="scss">
-.edit-news-modal {
-	.modal-card {
-		width: 1300px;
-		.modal-card-foot .right {
-			margin: auto 0 auto auto !important;
-
-			span:not(:last-child) {
-				margin-right: 0 !important;
-			}
-		}
-	}
+.edit-news-modal .modal-card .modal-card-foot .right {
+	column-gap: 5px;
 }
 </style>
 
 <style lang="scss" scoped>
 .night-mode {
-	#markdown-editor-and-preview textarea,
-	#markdown-editor-and-preview #preview {
+	.edit-news-modal .modal-card .modal-card-body textarea,
+	.edit-news-modal .modal-card .modal-card-body #preview {
 		border-color: var(--grey-3);
 	}
 
-	#markdown-editor-and-preview textarea {
+	.edit-news-modal .modal-card .modal-card-body textarea {
 		background-color: var(--dark-grey);
 		color: var(--white);
 	}
 }
-
-#markdown-editor-and-preview {
-	display: flex;
-	flex-wrap: wrap;
-
-	.column {
-		display: flex;
-		flex-direction: column;
-		width: 350px;
-		flex-grow: 1;
-		flex-basis: initial;
+.edit-news-modal .modal-card .modal-card-body {
+	.left-section,
+	.right-section {
+		padding: 10px;
 	}
 
 	textarea {
 		border: 0;
 		outline: none;
 		resize: none;
-		margin-right: 5px;
 		font-size: 16px;
 	}
 
@@ -268,8 +251,20 @@ export default {
 	#preview {
 		padding: 5px;
 		border: 1px solid var(--light-grey-3) !important;
-		border-radius: 3px;
-		height: 700px;
+		border-radius: 5px;
+		height: calc(100vh - 280px);
+		width: 100%;
+	}
+}
+
+.edit-news-modal .modal-card .modal-card-foot {
+	.control {
+		margin-bottom: 0 !important;
+	}
+
+	.right {
+		line-height: 36px;
+		column-gap: 0;
 	}
 }
 </style>

@@ -1,7 +1,7 @@
 <template>
 	<footer class="footer">
 		<div class="container">
-			<div class="footer-content has-text-centered">
+			<div class="footer-content">
 				<div id="footer-copyright">
 					<p>© Copyright Musare 2015 - 2021</p>
 				</div>
@@ -61,10 +61,15 @@ export default {
 	height: 160px;
 	font-size: 16px;
 
+	.container {
+		position: relative;
+	}
+
 	.footer-content {
 		display: flex;
 		align-items: center;
 		flex-direction: column;
+		text-align: center;
 
 		& > * {
 			margin: 5px 0;
@@ -86,6 +91,10 @@ export default {
 		width: 160px;
 		order: 1;
 		user-select: none;
+
+		img {
+			max-width: 100%;
+		}
 	}
 
 	#footer-links {

@@ -3,38 +3,48 @@
 		<page-metadata title="Admin | Playlists" />
 		<div class="container">
 			<div class="button-row">
-				<button
-					class="button is-primary"
-					@click="deleteOrphanedStationPlaylists()"
+				<confirm
+					placement="bottom"
+					@confirm="deleteOrphanedStationPlaylists()"
 				>
-					Delete orphaned station playlists
-				</button>
-				<button
-					class="button is-primary"
-					@click="deleteOrphanedGenrePlaylists()"
+					<button class="button is-danger">
+						Delete orphaned station playlists
+					</button>
+				</confirm>
+				<confirm
+					placement="bottom"
+					@confirm="deleteOrphanedGenrePlaylists()"
 				>
-					Delete orphaned genre playlists
-				</button>
-				<button
-					class="button is-primary"
-					@click="requestOrphanedPlaylistSongs()"
+					<button class="button is-danger">
+						Delete orphaned genre playlists
+					</button>
+				</confirm>
+				<confirm
+					placement="bottom"
+					@confirm="requestOrphanedPlaylistSongs()"
 				>
-					Request orphaned playlist songs
-				</button>
-				<button
-					class="button is-primary"
-					@click="clearAndRefillAllStationPlaylists()"
+					<button class="button is-danger">
+						Request orphaned playlist songs
+					</button>
+				</confirm>
+				<confirm
+					placement="bottom"
+					@confirm="clearAndRefillAllStationPlaylists()"
 				>
-					Clear and refill all station playlists
-				</button>
-				<button
-					class="button is-primary"
-					@click="clearAndRefillAllGenrePlaylists()"
+					<button class="button is-danger">
+						Clear and refill all station playlists
+					</button>
+				</confirm>
+				<confirm
+					placement="bottom"
+					@confirm="clearAndRefillAllGenrePlaylists()"
 				>
-					Clear and refill all genre playlists
-				</button>
+					<button class="button is-danger">
+						Clear and refill all genre playlists
+					</button>
+				</confirm>
 			</div>
-			<table class="table is-striped">
+			<table class="table">
 				<thead>
 					<tr>
 						<td>Display name</td>
@@ -94,6 +104,7 @@ import { mapState, mapActions, mapGetters } from "vuex";
 import { defineAsyncComponent } from "vue";
 
 import Toast from "toasters";
+import Confirm from "@/components/Confirm.vue";
 
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
@@ -111,7 +122,8 @@ export default {
 		),
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong")
-		)
+		),
+		Confirm
 	},
 	data() {
 		return {

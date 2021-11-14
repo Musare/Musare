@@ -78,7 +78,7 @@
 			</button>
 		</div>
 		<div v-else>
-			<h3>No playlists here.</h3>
+			<h5>No playlists here.</h5>
 		</div>
 	</div>
 </template>

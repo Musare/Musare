@@ -259,6 +259,19 @@ export default {
 	}
 }
 
+/deep/ .container {
+	position: relative;
+}
+
+/deep/ .box {
+	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
+	display: block;
+
+	&:not(:last-child) {
+		margin-bottom: 20px;
+	}
+}
+
 .main-container {
 	height: auto;
 }
@@ -267,6 +280,23 @@ export default {
 	padding-top: 10px;
 	margin-top: -10px;
 	background-color: var(--white);
+	display: flex;
+	line-height: 24px;
+	overflow-y: hidden;
+	overflow-x: auto;
+	margin-bottom: 20px;
+	user-select: none;
+
+	ul {
+		display: flex;
+		align-items: center;
+		/* -webkit-box-flex: 1; */
+		flex-grow: 1;
+		flex-shrink: 0;
+		justify-content: center;
+		border-bottom: 1px solid var(--light-grey-2);
+	}
+
 	.unverifiedsongs {
 		color: var(--teal);
 		border-color: var(--teal);
@@ -311,6 +341,9 @@ export default {
 		transition: all 0.2s ease-in-out;
 		font-weight: 500;
 		border-bottom: solid 0px;
+		padding: 6px 12px;
+		display: flex;
+		margin-bottom: -1px;
 	}
 	.tab:hover {
 		border-width: 3px;
@@ -320,6 +353,19 @@ export default {
 	.is-active .tab {
 		font-weight: 600;
 		border-width: 3px;
+	}
+}
+
+@media screen and (min-width: 980px) {
+	/deep/ .container {
+		margin: 0 auto;
+		max-width: 960px;
+	}
+}
+
+@media screen and (min-width: 1180px) {
+	/deep/ .container {
+		max-width: 1200px;
 	}
 }
 </style>

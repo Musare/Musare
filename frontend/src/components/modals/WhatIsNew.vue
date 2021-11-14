@@ -54,7 +54,7 @@ export default {
 		marked.use({
 			renderer: {
 				table(header, body) {
-					return `<table class="table is-striped">
+					return `<table class="table">
 					<thead>${header}</thead>
 					<tbody>${body}</tbody>
 					</table>`;
@@ -100,6 +100,12 @@ export default {
 	}
 };
 </script>
+
+<style lang="scss">
+.what-is-news-modal .modal-card .modal-card-foot {
+	column-gap: 0;
+}
+</style>
 
 <style lang="scss" scoped>
 .night-mode {

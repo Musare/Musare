@@ -1,11 +1,14 @@
 <template>
-	<modal title="Create Community Station">
+	<modal
+		:title="
+			official ? 'Create Official Station' : 'Create Community Station'
+		"
+	>
 		<template #body>
-			<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
 			<label class="label">Name (unique lowercase station id)</label>
 			<p class="control">
 				<input
-					v-model="newCommunity.name"
+					v-model="newStation.name"
 					class="input station-id"
 					type="text"
 					placeholder="Name..."
@@ -15,7 +18,7 @@
 			<label class="label">Display Name</label>
 			<p class="control">
 				<input
-					v-model="newCommunity.displayName"
+					v-model="newStation.displayName"
 					class="input"
 					type="text"
 					placeholder="Display name..."
@@ -24,7 +27,7 @@
 			<label class="label">Description</label>
 			<p class="control">
 				<input
-					v-model="newCommunity.description"
+					v-model="newStation.description"
 					class="input"
 					type="text"
 					placeholder="Description..."
@@ -47,9 +50,12 @@ import Modal from "../Modal.vue";
 
 export default {
 	components: { Modal },
+	props: {
+		official: { type: Boolean, default: false }
+	},
 	data() {
 		return {
-			newCommunity: {
+			newStation: {
 				name: "",
 				displayName: "",
 				description: ""
@@ -61,8 +67,8 @@ export default {
 	}),
 	methods: {
 		submitModal() {
-			this.newCommunity.name = this.newCommunity.name.toLowerCase();
-			const { name, displayName, description } = this.newCommunity;
+			this.newStation.name = this.newStation.name.toLowerCase();
+			const { name, displayName, description } = this.newStation;
 
 			if (!name || !displayName || !description)
 				return new Toast("Please fill in all fields");
@@ -102,14 +108,14 @@ export default {
 				"stations.create",
 				{
 					name,
-					type: "community",
+					type: this.official ? "official" : "community",
 					displayName,
 					description
 				},
 				res => {
 					if (res.status === "success") {
 						new Toast(`You have added the station successfully`);
-						this.closeModal("createCommunityStation");
+						this.closeModal("createStation");
 					} else new Toast(res.message);
 				}
 			);

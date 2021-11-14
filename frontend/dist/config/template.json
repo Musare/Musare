@@ -22,7 +22,7 @@
 		"logo_white": "/assets/white_wordmark.png",
 		"logo_blue": "/assets/blue_wordmark.png",
 		"sitename": "Musare",
-		"github": "https://github.com/Musare/MusareNode"
+		"github": "https://github.com/Musare/Musare"
 	},
 	"messages": {
 		"accountRemoval": "Your account will be deactivated instantly and your data will shortly be deleted by an admin."

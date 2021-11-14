@@ -233,7 +233,7 @@ export default {
 		background-color: var(--dark-grey-2) !important;
 
 		.report-sub-item {
-			border: 0.5px solid #fff !important;
+			border: 0.5px solid var(--white) !important;
 		}
 	}
 }

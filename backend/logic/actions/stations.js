@@ -1,5 +1,6 @@
 import async from "async";
 import mongoose from "mongoose";
+import config from "config";
 
 import { isLoginRequired, isOwnerRequired, isAdminRequired } from "./hooks";
 
@@ -453,6 +454,11 @@ CacheModule.runJob("SUB", {
 	cb: stationId => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
+			args: ["event:station.deleted"]
+		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `manage-station.${stationId}`,
 			args: ["event:station.deleted"]
 		});
 
@@ -2534,16 +2540,7 @@ export default {
 
 		data.name = data.name.toLowerCase();
 
-		const blacklist = [
-			"country",
-			"edm",
-			"musare",
-			"hip-hop",
-			"rap",
-			"top-hits",
-			"todays-hits",
-			"old-school",
-			"christmas",
+		let blacklist = [
 			"about",
 			"support",
 			"staff",
@@ -2560,7 +2557,6 @@ export default {
 			"p",
 			"official",
 			"o",
-			"trap",
 			"faq",
 			"team",
 			"donate",
@@ -2576,8 +2572,15 @@ export default {
 			"api",
 			"songs",
 			"playlists",
-			"playlist"
+			"playlist",
+			"albums",
+			"artists",
+			"artist",
+			"station"
 		];
+
+		if (data.type === "community" && config.get("blacklistedCommunityStationNames "))
+			blacklist = [...blacklist, ...config.get("blacklistedCommunityStationNames")];
 
 		async.waterfall(
 			[
@@ -2595,242 +2598,84 @@ export default {
 					);
 				},
 
-				// eslint-disable-next-line consistent-return
 				(station, next) => {
 					this.log(station);
 
 					if (station) return next("A station with that name or display name already exists.");
-					const { name, displayName, description, /* playlist, */ type, genres, blacklistedGenres } = data;
-					const stationId = mongoose.Types.ObjectId();
 
-					if (type === "official") {
+					if (blacklist.indexOf(data.name) !== -1)
+						return next("That name is blacklisted. Please use a different name.");
+
+					if (data.type === "official") {
 						return userModel.findOne({ _id: session.userId }, (err, user) => {
 							if (err) return next(err);
 							if (!user) return next("User not found.");
 							if (user.role !== "admin") return next("Admin required.");
-
-							return async.waterfall(
-								[
-									next => {
-										const playlists = [];
-										async.eachLimit(
-											genres,
-											1,
-											(genre, next) => {
-												PlaylistsModule.runJob(
-													"GET_GENRE_PLAYLIST",
-													{ genre, includeSongs: false },
-													this
-												)
-													.then(response => {
-														playlists.push(response.playlist);
-														next();
-													})
-													.catch(err => {
-														next(
-															`An error occurred when trying to get genre playlist for genre ${genre}. Error: ${err}.`
-														);
-													});
-											},
-											err => {
-												next(
-													err,
-													playlists.map(playlist => playlist._id.toString())
-												);
-											}
-										);
-									},
-
-									(genrePlaylistIds, next) => {
-										const playlists = [];
-										async.eachLimit(
-											blacklistedGenres,
-											1,
-											(genre, next) => {
-												PlaylistsModule.runJob(
-													"GET_GENRE_PLAYLIST",
-													{ genre, includeSongs: false },
-													this
-												)
-													.then(response => {
-														playlists.push(response.playlist);
-														next();
-													})
-													.catch(err => {
-														next(
-															`An error occurred when trying to get genre playlist for genre ${genre}. Error: ${err}.`
-														);
-													});
-											},
-											err => {
-												next(
-													err,
-													genrePlaylistIds,
-													playlists.map(playlist => playlist._id.toString())
-												);
-											}
-										);
-									},
-
-									(genrePlaylistIds, blacklistedGenrePlaylistIds, next) => {
-										const duplicateGenre =
-											genrePlaylistIds.length !== new Set(genrePlaylistIds).size;
-										const duplicateBlacklistedGenre =
-											genrePlaylistIds.length !== new Set(genrePlaylistIds).size;
-										const duplicateCross =
-											genrePlaylistIds.length + blacklistedGenrePlaylistIds.length !==
-											new Set([...genrePlaylistIds, ...blacklistedGenrePlaylistIds]).size;
-										if (duplicateGenre)
-											return next("You cannot have the same genre included twice.");
-										if (duplicateBlacklistedGenre)
-											return next("You cannot have the same blacklisted genre included twice.");
-										if (duplicateCross)
-											return next(
-												"You cannot have the same genre included and blacklisted at the same time."
-											);
-										return next(null, genrePlaylistIds, blacklistedGenrePlaylistIds);
-									}
-								],
-								(err, genrePlaylistIds, blacklistedGenrePlaylistIds) => {
-									if (err) return next(err);
-									return playlistModel.create(
-										{
-											isUserModifiable: false,
-											displayName: `Station - ${displayName}`,
-											songs: [],
-											createdBy: "Musare",
-											createdFor: `${stationId}`,
-											createdAt: Date.now(),
-											type: "station"
-										},
-
-										(err, playlist) => {
-											if (err) next(err);
-											else {
-												stationModel.create(
-													{
-														_id: stationId,
-														name,
-														displayName,
-														description,
-														type,
-														privacy: "private",
-														playlist: playlist._id,
-														currentSong: null,
-														partyMode: false,
-														playMode: "random"
-													},
-													(err, station) => {
-														next(
-															err,
-															station,
-															genrePlaylistIds,
-															blacklistedGenrePlaylistIds
-														);
-													}
-												);
-											}
-										}
-									);
-								}
-							);
+							return next();
 						});
 					}
-					if (type === "community") {
-						if (blacklist.indexOf(name) !== -1)
-							return next("That name is blacklisted. Please use a different name.");
-						return playlistModel.create(
-							{
-								isUserModifiable: false,
-								displayName: `Station - ${name}`,
-								songs: [],
-								createdBy: session.userId,
-								createdFor: `${stationId}`,
-								createdAt: Date.now(),
-								type: "station"
-							},
-
-							(err, playlist) => {
-								if (err) next(err);
-								else {
-									stationModel.create(
-										{
-											_id: stationId,
-											name,
-											displayName,
-											description,
-											playlist: playlist._id,
-											type,
-											privacy: "private",
-											owner: session.userId,
-											queue: [],
-											currentSong: null,
-											partyMode: true,
-											playMode: "random"
-										},
-										(err, station) => {
-											next(err, station, null, null);
-										}
-									);
-								}
-							}
-						);
-					}
+					return next();
 				},
 
-				(station, genrePlaylistIds, blacklistedGenrePlaylistIds, next) => {
-					if (station.type !== "official") return next(null, station);
-
-					const stationId = station._id;
-
-					return async.waterfall(
-						[
-							next => {
-								async.eachLimit(
-									genrePlaylistIds,
-									1,
-									(playlistId, next) => {
-										StationsModule.runJob("INCLUDE_PLAYLIST", { stationId, playlistId }, this)
-											.then(() => next())
-											.catch(next);
-									},
-									next
-								);
-							},
-
-							next => {
-								async.eachLimit(
-									blacklistedGenrePlaylistIds,
-									1,
-									(playlistId, next) => {
-										StationsModule.runJob("EXCLUDE_PLAYLIST", { stationId, playlistId }, this)
-											.then(() => next())
-											.catch(next);
-									},
-									next
-								);
-							},
-
-							next => {
-								PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
-								next();
-							}
-						],
-						async err => {
-							if (err) {
-								err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-								this.log(
-									"ERROR",
-									"STATIONS_CREATE",
-									`Created station ${stationId} successfully, but an error occurred during playing including/excluding. Error: ${err}`
-								);
-							}
-							next(null, station, err);
+				next => {
+					const stationId = mongoose.Types.ObjectId();
+					playlistModel.create(
+						{
+							isUserModifiable: false,
+							displayName: `Station - ${data.name}`,
+							songs: [],
+							createdBy: data.type === "official" ? "Musare" : session.userId,
+							createdFor: `${stationId}`,
+							createdAt: Date.now(),
+							type: "station"
+						},
+						(err, playlist) => {
+							next(err, playlist, stationId);
 						}
 					);
+				},
+
+				(playlist, stationId, next) => {
+					const { name, displayName, description, type } = data;
+					if (type === "official") {
+						stationModel.create(
+							{
+								_id: stationId,
+								name,
+								displayName,
+								description,
+								playlist: playlist._id,
+								type,
+								privacy: "private",
+								queue: [],
+								currentSong: null,
+								partyMode: false,
+								playMode: "random"
+							},
+							next
+						);
+					} else {
+						stationModel.create(
+							{
+								_id: stationId,
+								name,
+								displayName,
+								description,
+								playlist: playlist._id,
+								type,
+								privacy: "private",
+								owner: session.userId,
+								queue: [],
+								currentSong: null,
+								partyMode: true,
+								playMode: "random"
+							},
+							next
+						);
+					}
 				}
 			],
-			async (err, station, extraError) => {
+			async (err, station) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "STATIONS_CREATE", `Creating station failed. "${err}"`);
@@ -2852,17 +2697,10 @@ export default {
 						}
 					});
 
-					if (!extraError) {
-						cb({
-							status: "success",
-							message: "Successfully created station."
-						});
-					} else {
-						cb({
-							status: "success",
-							message: `Successfully created station, but with one error at the end: ${extraError}`
-						});
-					}
+					cb({
+						status: "success",
+						message: "Successfully created station."
+					});
 				}
 			}
 		);

@@ -692,13 +692,13 @@
 				</div>
 
 				<request-song v-if="modals.requestSong" />
-				<edit-playlist v-if="modals.editPlaylist" />
 				<create-playlist v-if="modals.createPlaylist" />
 				<manage-station
 					v-if="modals.manageStation"
 					:station-id="station._id"
 					sector="station"
 				/>
+				<edit-playlist v-if="modals.editPlaylist" />
 				<edit-song
 					v-if="modals.editSong"
 					song-type="songs"

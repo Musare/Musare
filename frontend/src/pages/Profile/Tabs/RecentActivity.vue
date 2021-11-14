@@ -11,7 +11,7 @@
 
 			<hr class="section-horizontal-rule" />
 
-			<div id="activity-items" @scroll="handleScroll">
+			<div id="activity-items">
 				<activity-item
 					class="item activity-item universal-item"
 					v-for="activity in activities"
@@ -34,7 +34,7 @@
 			</div>
 		</div>
 		<div v-else>
-			<h3>No recent activity.</h3>
+			<h5>No recent activity.</h5>
 		</div>
 	</div>
 </template>
@@ -77,6 +77,8 @@ export default {
 		})
 	},
 	mounted() {
+		window.addEventListener("scroll", this.handleScroll);
+
 		ws.onConnect(this.init);
 
 		this.socket.on("event:activity.updated", res => {
@@ -104,6 +106,9 @@ export default {
 			this.maxPosition = 1;
 			this.offsettedFromNextSet = 0;
 		});
+	},
+	unmounted() {
+		window.removeEventListener("scroll", this.handleScroll);
 	},
 	methods: {
 		init() {
@@ -145,14 +150,13 @@ export default {
 				}
 			);
 		},
-		handleScroll(event) {
-			const scrollPosition =
-				event.target.clientHeight + event.target.scrollTop;
-			const bottomPosition = event.target.scrollHeight;
+		handleScroll() {
+			const scrollPosition = document.body.clientHeight + window.scrollY;
+			const bottomPosition = document.body.scrollHeight;
 
 			if (this.loadAllSongs) return false;
 
-			if (scrollPosition + 100 >= bottomPosition) this.getSet();
+			if (scrollPosition + 400 >= bottomPosition) this.getSet();
 
 			return this.maxPosition === this.position;
 		},
@@ -165,12 +169,6 @@ export default {
 .night-mode #activity-items .activity-item {
 	background-color: var(--dark-grey-2) !important;
 	border: 0 !important;
-}
-
-#activity-items {
-	overflow: auto;
-	min-height: auto;
-	max-height: 570px;
 }
 
 .content a {

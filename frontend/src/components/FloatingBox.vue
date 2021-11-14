@@ -16,7 +16,9 @@
 		@mousedown.left="onResizeBox"
 	>
 		<div class="box-header item-draggable" @mousedown.left="onDragBox">
-			<button class="delete" @click.prevent="toggleBox()" />
+			<span class="delete material-icons" @click="toggleBox()"
+				>highlight_off</span
+			>
 		</div>
 		<div class="box-body">
 			<slot name="body"></slot>
@@ -143,6 +145,7 @@ export default {
 }
 
 .floating-box {
+	display: flex;
 	background-color: var(--white);
 	color: var(--black);
 	position: fixed;
@@ -155,6 +158,10 @@ export default {
 	min-width: 50px !important;
 	padding: 0;
 
+	&.column {
+		flex-direction: column;
+	}
+
 	.box-header {
 		z-index: 100000001;
 		background-color: var(--primary-color);
@@ -162,12 +169,17 @@ export default {
 		height: 24px;
 		width: 100%;
 
-		.delete {
+		.delete.material-icons {
 			position: absolute;
-			height: 20px;
-			width: 20px;
 			top: 2px;
 			right: 2px;
+			font-size: 20px;
+			color: var(--white);
+			cursor: pointer;
+			&:hover,
+			&:focus {
+				filter: brightness(90%);
+			}
 		}
 	}
 

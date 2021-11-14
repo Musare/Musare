@@ -1,6 +1,10 @@
 <template>
 	<div>
-		<modal class="report-modal" title="Report">
+		<modal
+			class="report-modal"
+			title="Report"
+			:wide="existingReports.length > 0"
+		>
 			<template #body>
 				<div class="report-modal-inner-container">
 					<div id="left-part">
@@ -431,18 +435,10 @@ export default {
 </script>
 
 <style lang="scss">
-.report-modal {
-	.modal-card {
-		width: 1050px;
-	}
-
-	.song-item {
-		.thumbnail {
-			min-width: 130px;
-			width: 130px;
-			height: 130px;
-		}
-	}
+.report-modal .song-item .thumbnail {
+	min-width: 130px;
+	width: 130px;
+	height: 130px;
 }
 </style>
 
@@ -477,6 +473,7 @@ export default {
 			margin-bottom: 20px;
 			padding: 20px;
 			background-color: var(--light-grey);
+			border-radius: 5px;
 		}
 	}
 
@@ -502,9 +499,18 @@ export default {
 }
 
 .columns {
+	display: flex;
+	flex-wrap: wrap;
 	margin-left: unset;
 	margin-right: unset;
 	margin-top: 20px;
+
+	.column {
+		flex-basis: 50%;
+		@media screen and (max-width: 900px) {
+			flex-basis: 100% !important;
+		}
+	}
 
 	.control {
 		display: flex;

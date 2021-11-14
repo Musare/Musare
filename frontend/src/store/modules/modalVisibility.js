@@ -7,7 +7,7 @@ const state = {
 		manageStation: false,
 		login: false,
 		register: false,
-		createCommunityStation: false,
+		createStation: false,
 		requestSong: false,
 		editPlaylist: false,
 		createPlaylist: false,

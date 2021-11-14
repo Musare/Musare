@@ -61,7 +61,9 @@
 							</confirm>
 							<confirm
 								v-if="
-									isOwnerOrAdmin() && !isExcluded(element._id)
+									station.type === 'community' &&
+									isOwnerOrAdmin() &&
+									!isExcluded(element._id)
 								"
 								@confirm="blacklistPlaylist(element._id)"
 							>

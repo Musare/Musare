@@ -3,209 +3,198 @@
 		:title="
 			userId === playlist.createdBy ? 'Edit Playlist' : 'View Playlist'
 		"
-		class="edit-playlist-modal"
+		:class="{
+			'edit-playlist-modal': true,
+			'view-only': !isEditable()
+		}"
+		:wide="true"
+		:split="true"
 	>
 		<template #body>
-			<div
-				:class="{
-					'view-only': !isEditable(),
-					'custom-modal-body': true
-				}"
-			>
-				<div class="first-section">
-					<div id="playlist-info-section" class="section">
-						<h3>{{ playlist.displayName }}</h3>
-						<h5>Song Count: {{ playlist.songs.length }}</h5>
-						<h5>Duration: {{ totalLength() }}</h5>
-					</div>
+			<div class="left-section">
+				<div id="playlist-info-section" class="section">
+					<h3>{{ playlist.displayName }}</h3>
+					<h5>Song Count: {{ playlist.songs.length }}</h5>
+					<h5>Duration: {{ totalLength() }}</h5>
+				</div>
 
-					<div class="tabs-container">
-						<div class="tab-selection">
-							<button
-								class="button is-default"
-								:class="{ selected: tab === 'settings' }"
-								ref="settings-tab"
-								@click="showTab('settings')"
-								v-if="
-									userId === playlist.createdBy ||
-									isEditable() ||
-									(playlist.type === 'genre' && isAdmin())
-								"
-							>
-								Settings
-							</button>
-							<button
-								class="button is-default"
-								:class="{ selected: tab === 'add-songs' }"
-								ref="add-songs-tab"
-								@click="showTab('add-songs')"
-								v-if="isEditable()"
-							>
-								Add Songs
-							</button>
-							<button
-								class="button is-default"
-								:class="{
-									selected: tab === 'import-playlists'
-								}"
-								ref="import-playlists-tab"
-								@click="showTab('import-playlists')"
-								v-if="isEditable()"
-							>
-								Import Playlists
-							</button>
-						</div>
-						<settings
-							class="tab"
-							v-show="tab === 'settings'"
+				<div class="tabs-container">
+					<div class="tab-selection">
+						<button
+							class="button is-default"
+							:class="{ selected: tab === 'settings' }"
+							ref="settings-tab"
+							@click="showTab('settings')"
 							v-if="
 								userId === playlist.createdBy ||
 								isEditable() ||
 								(playlist.type === 'genre' && isAdmin())
 							"
-						/>
-						<add-songs
-							class="tab"
-							v-show="tab === 'add-songs'"
+						>
+							Settings
+						</button>
+						<button
+							class="button is-default"
+							:class="{ selected: tab === 'add-songs' }"
+							ref="add-songs-tab"
+							@click="showTab('add-songs')"
 							v-if="isEditable()"
-						/>
-						<import-playlists
-							class="tab"
-							v-show="tab === 'import-playlists'"
+						>
+							Add Songs
+						</button>
+						<button
+							class="button is-default"
+							:class="{
+								selected: tab === 'import-playlists'
+							}"
+							ref="import-playlists-tab"
+							@click="showTab('import-playlists')"
 							v-if="isEditable()"
-						/>
+						>
+							Import Playlists
+						</button>
 					</div>
+					<settings
+						class="tab"
+						v-show="tab === 'settings'"
+						v-if="
+							userId === playlist.createdBy ||
+							isEditable() ||
+							(playlist.type === 'genre' && isAdmin())
+						"
+					/>
+					<add-songs
+						class="tab"
+						v-show="tab === 'add-songs'"
+						v-if="isEditable()"
+					/>
+					<import-playlists
+						class="tab"
+						v-show="tab === 'import-playlists'"
+						v-if="isEditable()"
+					/>
 				</div>
+			</div>
 
-				<div class="second-section">
-					<div id="rearrange-songs-section" class="section">
-						<div v-if="isEditable()">
-							<h4 class="section-title">Rearrange Songs</h4>
+			<div class="right-section">
+				<div id="rearrange-songs-section" class="section">
+					<div v-if="isEditable()">
+						<h4 class="section-title">Rearrange Songs</h4>
 
-							<p class="section-description">
-								Drag and drop songs to change their order
-							</p>
+						<p class="section-description">
+							Drag and drop songs to change their order
+						</p>
 
-							<hr class="section-horizontal-rule" />
-						</div>
+						<hr class="section-horizontal-rule" />
+					</div>
 
-						<aside class="menu">
-							<draggable
-								tag="transition-group"
-								:component-data="{
-									name: !drag
-										? 'draggable-list-transition'
-										: null
-								}"
-								v-if="playlistSongs.length > 0"
-								v-model="playlistSongs"
-								item-key="_id"
-								v-bind="dragOptions"
-								@start="drag = true"
-								@end="drag = false"
-								@change="repositionSong"
-							>
-								<template #item="{ element, index }">
-									<div class="menu-list scrollable-list">
-										<song-item
-											:song="element"
-											:class="{
-												'item-draggable': isEditable()
-											}"
-											:ref="`song-item-${index}`"
-										>
-											<template #tippyActions>
+					<aside class="menu">
+						<draggable
+							tag="transition-group"
+							:component-data="{
+								name: !drag ? 'draggable-list-transition' : null
+							}"
+							v-if="playlistSongs.length > 0"
+							v-model="playlistSongs"
+							item-key="_id"
+							v-bind="dragOptions"
+							@start="drag = true"
+							@end="drag = false"
+							@change="repositionSong"
+						>
+							<template #item="{ element, index }">
+								<div class="menu-list scrollable-list">
+									<song-item
+										:song="element"
+										:class="{
+											'item-draggable': isEditable()
+										}"
+										:ref="`song-item-${index}`"
+									>
+										<template #tippyActions>
+											<i
+												class="
+													material-icons
+													add-to-queue-icon
+												"
+												v-if="
+													station.partyMode &&
+													!station.locked
+												"
+												@click="
+													addSongToQueue(
+														element.youtubeId
+													)
+												"
+												content="Add Song to Queue"
+												v-tippy
+												>queue</i
+											>
+											<confirm
+												v-if="
+													userId ===
+														playlist.createdBy ||
+													isEditable()
+												"
+												placement="left"
+												@confirm="
+													removeSongFromPlaylist(
+														element.youtubeId
+													)
+												"
+											>
 												<i
 													class="
 														material-icons
-														add-to-queue-icon
+														delete-icon
 													"
-													v-if="
-														station.partyMode &&
-														!station.locked
-													"
-													@click="
-														addSongToQueue(
-															element.youtubeId
-														)
-													"
-													content="Add Song to Queue"
+													content="Remove Song from Playlist"
 													v-tippy
-													>queue</i
+													>delete_forever</i
 												>
-												<confirm
-													v-if="
-														userId ===
-															playlist.createdBy ||
-														isEditable()
-													"
-													placement="left"
-													@confirm="
-														removeSongFromPlaylist(
-															element.youtubeId
-														)
-													"
-												>
-													<i
-														class="
-															material-icons
-															delete-icon
-														"
-														content="Remove Song from Playlist"
-														v-tippy
-														>delete_forever</i
-													>
-												</confirm>
-												<i
-													class="material-icons"
-													v-if="
-														isEditable() &&
-														index > 0
-													"
-													@click="
-														moveSongToTop(
-															element,
-															index
-														)
-													"
-													content="Move to top of Playlist"
-													v-tippy
-													>vertical_align_top</i
-												>
-												<i
-													v-if="
-														isEditable() &&
-														playlistSongs.length -
-															1 !==
-															index
-													"
-													@click="
-														moveSongToBottom(
-															element,
-															index
-														)
-													"
-													class="material-icons"
-													content="Move to bottom of Playlist"
-													v-tippy
-													>vertical_align_bottom</i
-												>
-											</template>
-										</song-item>
-									</div>
-								</template>
-							</draggable>
-							<p
-								v-else-if="gettingSongs"
-								class="nothing-here-text"
-							>
-								Loading songs...
-							</p>
-							<p v-else class="nothing-here-text">
-								This playlist doesn't have any songs.
-							</p>
-						</aside>
-					</div>
+											</confirm>
+											<i
+												class="material-icons"
+												v-if="isEditable() && index > 0"
+												@click="
+													moveSongToTop(
+														element,
+														index
+													)
+												"
+												content="Move to top of Playlist"
+												v-tippy
+												>vertical_align_top</i
+											>
+											<i
+												v-if="
+													isEditable() &&
+													playlistSongs.length - 1 !==
+														index
+												"
+												@click="
+													moveSongToBottom(
+														element,
+														index
+													)
+												"
+												class="material-icons"
+												content="Move to bottom of Playlist"
+												v-tippy
+												>vertical_align_bottom</i
+											>
+										</template>
+									</song-item>
+								</div>
+							</template>
+						</draggable>
+						<p v-else-if="gettingSongs" class="nothing-here-text">
+							Loading songs...
+						</p>
+						<p v-else class="nothing-here-text">
+							This playlist doesn't have any songs.
+						</p>
+					</aside>
 				</div>
 			</div>
 		</template>
@@ -594,20 +583,6 @@ export default {
 };
 </script>
 
-<style lang="scss">
-.edit-playlist-modal {
-	.modal-card {
-		width: 1300px;
-		height: 100%;
-		overflow: auto;
-
-		.modal-card-body {
-			padding: 16px;
-		}
-	}
-}
-</style>
-
 <style lang="scss" scoped>
 .night-mode {
 	.label,
@@ -616,8 +591,8 @@ export default {
 		color: var(--light-grey-2);
 	}
 
-	.edit-playlist-modal.modal .modal-card-body .custom-modal-body {
-		.first-section {
+	.edit-playlist-modal.modal .modal-card-body {
+		.left-section {
 			#playlist-info-section {
 				background-color: var(--dark-grey-3) !important;
 				border: 0;
@@ -634,7 +609,7 @@ export default {
 				}
 			}
 		}
-		.second-section .section {
+		.right-section .section {
 			border-radius: 5px;
 		}
 	}
@@ -696,22 +671,19 @@ export default {
 }
 
 .edit-playlist-modal {
-	.custom-modal-body {
-		display: flex;
-		flex-wrap: wrap;
-		height: 100%;
-		row-gap: 24px;
+	&.view-only {
+		height: auto !important;
 
-		&.view-only {
-			height: auto !important;
+		.left-section {
+			flex-basis: 100% !important;
+		}
 
-			.first-section {
-				flex-basis: 100%;
-			}
+		.right-section {
+			max-height: unset !important;
+		}
 
-			/deep/ .section {
-				max-width: 100% !important;
-			}
+		/deep/ .section {
+			max-width: 100% !important;
 		}
 	}
 
@@ -719,15 +691,6 @@ export default {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-	}
-
-	/deep/ .section {
-		padding: 15px !important;
-		margin: 0 10px;
-		max-width: 100%;
-		display: flex;
-		flex-direction: column;
-		flex-grow: 1;
 	}
 
 	.label {
@@ -739,16 +702,7 @@ export default {
 		width: 150px;
 	}
 
-	.first-section {
-		flex-basis: 550px;
-		height: 100%;
-		overflow-y: auto;
-		flex-grow: 1;
-
-		/deep/ .section {
-			width: auto;
-		}
-
+	.left-section {
 		#playlist-info-section {
 			border: 1px solid var(--light-grey-3);
 			border-radius: 3px;
@@ -770,12 +724,7 @@ export default {
 		}
 	}
 
-	.second-section {
-		flex-basis: 650px;
-		height: 100%;
-		overflow-y: auto;
-		flex-grow: 1;
-
+	.right-section {
 		#rearrange-songs-section {
 			.scrollable-list:not(:last-of-type) {
 				margin-bottom: 10px;

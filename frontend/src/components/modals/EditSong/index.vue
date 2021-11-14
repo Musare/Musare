@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<modal title="Edit Song" class="song-modal">
+		<modal title="Edit Song" class="song-modal" :wide="true" :split="true">
 			<template #body>
 				<div class="left-section">
 					<div class="top-section">
@@ -1605,7 +1605,7 @@ export default {
 
 	.autosuggest-item {
 		background-color: var(--dark-grey) !important;
-		color: white !important;
+		color: var(--white) !important;
 		border-color: var(--dark-grey) !important;
 	}
 
@@ -1618,41 +1618,28 @@ export default {
 		background: var(--dark-grey) !important;
 		color: var(--white) !important;
 	}
-}
 
-.song-modal {
-	&::v-deep {
-		.modal-card {
-			width: 1160px;
-			height: 100%;
-
-			.modal-card-body {
-				display: flex;
-				padding: 16px;
-
-				@media screen and (max-width: 1000px) {
-					flex-wrap: wrap;
-				}
-
-				> div {
-					display: flex;
-					height: 100%;
-					overflow: auto;
-				}
-			}
-
-			.modal-card-foot {
-				.right {
-					display: flex;
-					margin-left: auto;
-					margin-right: 0;
+	.left-section {
+		.edit-section {
+			.album-get-button,
+			.duration-fill-button,
+			.add-button {
+				&:focus,
+				&:hover {
+					border: none !important;
 				}
 			}
 		}
 	}
 }
 
+.modal-card-body {
+	display: flex;
+}
+
 .left-section {
+	flex-basis: unset !important;
+	height: 100%;
 	display: flex;
 	flex-direction: column;
 	margin-right: 16px;
@@ -2026,8 +2013,10 @@ export default {
 }
 
 .right-section {
+	flex-basis: unset !important;
+	flex-grow: 0 !important;
 	display: flex;
-	flex-wrap: wrap;
+	height: 100%;
 
 	#tabs-container {
 		width: 376px;
