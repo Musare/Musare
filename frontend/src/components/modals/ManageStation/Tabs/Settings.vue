@@ -90,6 +90,14 @@
 								<i class="material-icons">palette</i>
 								Orange
 							</button>
+							<button
+								class="red"
+								v-if="station.theme !== 'red'"
+								@click="updateTheme('red')"
+							>
+								<i class="material-icons">palette</i>
+								Red
+							</button>
 						</template>
 					</tippy>
 				</div>
@@ -605,6 +613,10 @@ export default {
 
 			&.teal {
 				background-color: var(--teal);
+			}
+
+			&.red {
+				background-color: var(--red);
 			}
 
 			i {

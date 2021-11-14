@@ -202,6 +202,7 @@
 										width: `${seekerbarPercentage}%`
 									}"
 									:class="{
+										'christmas-seeker': christmas,
 										nyan:
 											currentSong &&
 											currentSong.youtubeId ===
@@ -908,7 +909,8 @@ export default {
 			socketConnected: null,
 			persistentToastCheckerInterval: null,
 			persistentToasts: [],
-			partyPlaylistLock: false
+			partyPlaylistLock: false,
+			christmas: false
 		};
 	},
 	computed: {
@@ -1040,6 +1042,8 @@ export default {
 		});
 
 		this.frontendDevMode = await lofig.get("mode");
+
+		this.christmas = await lofig.get("siteSettings.christmas");
 
 		this.socket.dispatch(
 			"stations.existsByName",
@@ -2811,6 +2815,25 @@ export default {
 	}
 	100% {
 		background-position: -200% 0%;
+	}
+}
+
+.christmas-seeker {
+	background: repeating-linear-gradient(
+		-45deg,
+		var(--white),
+		var(--white) 1rem,
+		var(--red) 1rem,
+		var(--red) 2rem
+	);
+
+	background-size: 200% 200%;
+	animation: christmas 10s linear infinite;
+}
+
+@keyframes christmas {
+	100% {
+		background-position: 100% 100%;
 	}
 }
 
