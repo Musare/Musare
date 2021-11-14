@@ -14,121 +14,22 @@ const YouTubeModule = moduleManager.modules.youtube;
 const PlaylistsModule = moduleManager.modules.playlists;
 
 CacheModule.runJob("SUB", {
-	channel: "song.newUnverifiedSong",
-	cb: async songId => {
+	channel: "song.updated",
+	cb: async data => {
 		const songModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "song"
 		});
 
-		songModel.findOne({ _id: songId }, (err, song) =>
+		songModel.findOne({ _id: data.songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOMS", {
-				rooms: ["admin.unverifiedSongs", `edit-song.${songId}`],
-				args: ["event:admin.unverifiedSong.created", { data: { song } }]
-			})
-		);
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "song.removedUnverifiedSong",
-	cb: songId => {
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: "admin.unverifiedSongs",
-			args: ["event:admin.unverifiedSong.deleted", { data: { songId } }]
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "song.updatedUnverifiedSong",
-	cb: async songId => {
-		const songModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "song"
-		});
-
-		songModel.findOne({ _id: songId }, (err, song) => {
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: "admin.unverifiedSongs",
-				args: ["event:admin.unverifiedSong.updated", { data: { song } }]
-			});
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "song.newVerifiedSong",
-	cb: async songId => {
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
-
-		songModel.findOne({ _id: songId }, (err, song) =>
-			WSModule.runJob("EMIT_TO_ROOMS", {
-				rooms: ["admin.songs", `edit-song.${songId}`],
-				args: ["event:admin.verifiedSong.created", { data: { song } }]
-			})
-		);
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "song.removedVerifiedSong",
-	cb: songId => {
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: "admin.songs",
-			args: ["event:admin.verifiedSong.deleted", { data: { songId } }]
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "song.updatedVerifiedSong",
-	cb: async songId => {
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
-		songModel.findOne({ _id: songId }, (err, song) => {
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: "admin.songs",
-				args: ["event:admin.verifiedSong.updated", { data: { song } }]
-			});
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "song.newHiddenSong",
-	cb: async songId => {
-		const songModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "song"
-		});
-
-		songModel.findOne({ _id: songId }, (err, song) =>
-			WSModule.runJob("EMIT_TO_ROOMS", {
-				rooms: ["admin.hiddenSongs", `edit-song.${songId}`],
-				args: ["event:admin.hiddenSong.created", { data: { song } }]
-			})
-		);
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "song.removedHiddenSong",
-	cb: songId => {
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: "admin.hiddenSongs",
-			args: ["event:admin.hiddenSong.deleted", { data: { songId } }]
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "song.updatedHiddenSong",
-	cb: async songId => {
-		const songModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "song"
-		});
-
-		songModel.findOne({ _id: songId }, (err, song) => {
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: "admin.hiddenSongs",
-				args: ["event:admin.hiddenSong.updated", { data: { song } }]
+				rooms: [
+					"import-album",
+					"admin.songs",
+					"admin.unverifiedSongs",
+					"admin.hiddenSongs",
+					`edit-song.${data.songId}`
+				],
+				args: ["event:admin.song.updated", { data: { song, oldStatus: data.oldStatus } }]
 			});
 		});
 	}
@@ -421,23 +322,6 @@ export default {
 
 				this.log("SUCCESS", "SONGS_UPDATE", `Successfully updated song "${songId}".`);
 
-				if (song.status === "verified") {
-					CacheModule.runJob("PUB", {
-						channel: "song.updatedVerifiedSong",
-						value: song._id
-					});
-				} else if (song.status === "unverified") {
-					CacheModule.runJob("PUB", {
-						channel: "song.updatedUnverifiedSong",
-						value: song._id
-					});
-				} else if (song.status === "hidden") {
-					CacheModule.runJob("PUB", {
-						channel: "song.updatedHiddenSong",
-						value: song._id
-					});
-				}
-
 				return cb({
 					status: "success",
 					message: "Song has been successfully updated",
@@ -684,11 +568,17 @@ export default {
 							.catch(() => {});
 					});
 
-					SongsModule.runJob("UPDATE_SONG", { songId: song._id });
+					song.artists.forEach(artist => {
+						PlaylistsModule.runJob("AUTOFILL_ARTIST_PLAYLIST", { artist })
+							.then(() => {})
+							.catch(() => {});
+					});
+
+					SongsModule.runJob("UPDATE_SONG", { songId: song._id, oldStatus });
 					next(null, song, oldStatus);
 				}
 			],
-			async (err, song, oldStatus) => {
+			async err => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "SONGS_VERIFY", `User "${session.userId}" failed to verify song. "${err}"`);
@@ -696,22 +586,6 @@ export default {
 				}
 
 				this.log("SUCCESS", "SONGS_VERIFY", `User "${session.userId}" successfully verified song "${songId}".`);
-
-				if (oldStatus === "hidden")
-					CacheModule.runJob("PUB", {
-						channel: "song.removedHiddenSong",
-						value: song._id
-					});
-
-				CacheModule.runJob("PUB", {
-					channel: "song.newVerifiedSong",
-					value: song._id
-				});
-
-				CacheModule.runJob("PUB", {
-					channel: "song.removedUnverifiedSong",
-					value: song._id
-				});
 
 				return cb({
 					status: "success",
@@ -756,7 +630,13 @@ export default {
 							.catch(() => {});
 					});
 
-					SongsModule.runJob("UPDATE_SONG", { songId });
+					song.artists.forEach(artist => {
+						PlaylistsModule.runJob("AUTOFILL_ARTIST_PLAYLIST", { artist })
+							.then(() => {})
+							.catch(() => {});
+					});
+
+					SongsModule.runJob("UPDATE_SONG", { songId, oldStatus: "verified" });
 
 					next(null);
 				}
@@ -775,16 +655,6 @@ export default {
 					"SONGS_UNVERIFY",
 					`User "${session.userId}" successfully unverified song "${songId}".`
 				);
-
-				CacheModule.runJob("PUB", {
-					channel: "song.newUnverifiedSong",
-					value: songId
-				});
-
-				CacheModule.runJob("PUB", {
-					channel: "song.removedVerifiedSong",
-					value: songId
-				});
 
 				return cb({
 					status: "success",

@@ -297,6 +297,7 @@ class _SongsModule extends CoreClass {
 	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {string} payload.songId - the id of the song we are trying to update
+	 * @param {string} payload.oldStatus - old status of song being updated (optional)
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	UPDATE_SONG(payload) {
@@ -460,6 +461,14 @@ class _SongsModule extends CoreClass {
 				],
 				(err, song) => {
 					if (err && err !== true) return reject(new Error(err));
+
+					if (!payload.oldStatus) payload.oldStatus = null;
+
+					CacheModule.runJob("PUB", {
+						channel: "song.updated",
+						value: { songId: song._id, oldStatus: payload.oldStatus }
+					});
+
 					return resolve(song);
 				}
 			)
@@ -946,11 +955,6 @@ class _SongsModule extends CoreClass {
 
 					SongsModule.runJob("UPDATE_SONG", { songId: song._id });
 
-					CacheModule.runJob("PUB", {
-						channel: "song.newUnverifiedSong",
-						value: song._id
-					});
-
 					return resolve({ song: trimmedSong });
 				}
 			);
@@ -979,36 +983,22 @@ class _SongsModule extends CoreClass {
 						if (!song) return next("This song does not exist.");
 						if (song.status === "hidden") return next("This song is already hidden.");
 						// TODO Add err object as first param of callback
-						return next();
+						return next(null, song.status);
 					},
 
-					next => {
-						SongsModule.SongModel.updateOne({ _id: songId }, { status: "hidden" }, next);
+					(oldStatus, next) => {
+						SongsModule.SongModel.updateOne({ _id: songId }, { status: "hidden" }, res =>
+							next(null, res, oldStatus)
+						);
 					},
 
-					(res, next) => {
-						SongsModule.runJob("UPDATE_SONG", { songId });
+					(res, oldStatus, next) => {
+						SongsModule.runJob("UPDATE_SONG", { songId, oldStatus });
 						next();
 					}
 				],
 				async err => {
 					if (err) reject(err);
-
-					CacheModule.runJob("PUB", {
-						channel: "song.newHiddenSong",
-						value: songId
-					});
-
-					CacheModule.runJob("PUB", {
-						channel: "song.removedUnverifiedSong",
-						value: songId
-					});
-
-					CacheModule.runJob("PUB", {
-						channel: "song.removedVerifiedSong",
-						value: songId
-					});
-
 					resolve();
 				}
 			);
@@ -1045,23 +1035,12 @@ class _SongsModule extends CoreClass {
 					},
 
 					(res, next) => {
-						SongsModule.runJob("UPDATE_SONG", { songId });
+						SongsModule.runJob("UPDATE_SONG", { songId, oldStatus: "hidden" });
 						next();
 					}
 				],
 				async err => {
 					if (err) reject(err);
-
-					CacheModule.runJob("PUB", {
-						channel: "song.newUnverifiedSong",
-						value: songId
-					});
-
-					CacheModule.runJob("PUB", {
-						channel: "song.removedHiddenSong",
-						value: songId
-					});
-
 					resolve();
 				}
 			);

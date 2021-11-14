@@ -391,17 +391,14 @@ export default {
 	mounted() {
 		ws.onConnect(this.init);
 
-		this.socket.on("event:admin.hiddenSong.created", res => {
-			console.log("CREATED");
-			this.addSong(res.data.song);
-		});
-
-		this.socket.on("event:admin.hiddenSong.deleted", res => {
-			this.removeSong(res.data.songId);
-		});
-
-		this.socket.on("event:admin.hiddenSong.updated", res => {
-			this.updateSong(res.data.song);
+		this.socket.on("event:admin.song.updated", res => {
+			const { song } = res.data;
+			if (res.data.oldStatus && res.data.oldStatus === "hidden") {
+				this.removeSong(song._id);
+			} else {
+				this.addSong(song);
+				this.updateSong(song);
+			}
 		});
 	},
 	methods: {

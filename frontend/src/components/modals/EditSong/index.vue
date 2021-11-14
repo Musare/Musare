@@ -673,25 +673,7 @@ export default {
 		this.volumeSliderValue = volume * 100;
 
 		this.socket.on(
-			"event:admin.hiddenSong.created",
-			res => {
-				if (res.data.song._id === this.song._id)
-					this.song.status = res.data.song.status;
-			},
-			{ modal: "editSong" }
-		);
-
-		this.socket.on(
-			"event:admin.unverifiedSong.created",
-			res => {
-				if (res.data.song._id === this.song._id)
-					this.song.status = res.data.song.status;
-			},
-			{ modal: "editSong" }
-		);
-
-		this.socket.on(
-			"event:admin.verifiedSong.created",
+			"event:admin.song.updated",
 			res => {
 				if (res.data.song._id === this.song._id)
 					this.song.status = res.data.song.status;

@@ -425,19 +425,17 @@ export default {
 		})
 	},
 	mounted() {
-		this.socket.on("event:admin.verifiedSong.created", res =>
-			this.addSong(res.data.song)
-		);
-
-		this.socket.on("event:admin.verifiedSong.deleted", res =>
-			this.removeSong(res.data.songId)
-		);
-
-		this.socket.on("event:admin.verifiedSong.updated", res =>
-			this.updateSong(res.data.song)
-		);
-
 		ws.onConnect(this.init);
+
+		this.socket.on("event:admin.song.updated", res => {
+			const { song } = res.data;
+			if (res.data.oldStatus && res.data.oldStatus === "verified") {
+				this.removeSong(song._id);
+			} else {
+				this.addSong(song);
+				this.updateSong(song);
+			}
+		});
 
 		if (this.$route.query.songId) {
 			this.socket.dispatch(
