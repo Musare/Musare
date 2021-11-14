@@ -47,7 +47,8 @@ export default {
 			socketConnected: true,
 			keyIsDown: false,
 			scrollPosition: { y: 0, x: 0 },
-			aModalIsOpen2: false
+			aModalIsOpen2: false,
+			broadcastChannel: null
 		};
 	},
 	computed: {
@@ -106,6 +107,20 @@ export default {
 			.addEventListener("change", e => {
 				if (e.matches === !this.nightmode) this.toggleNightMode();
 			});
+
+		if (!this.loggedIn) {
+			lofig.get("cookie.SIDname").then(sid => {
+				this.broadcastChannel = new BroadcastChannel(
+					`${sid}.user_login`
+				);
+				this.broadcastChannel.onmessage = data => {
+					if (data) {
+						this.broadcastChannel.close();
+						window.location.reload();
+					}
+				};
+			});
+		}
 
 		document.onkeydown = ev => {
 			const event = ev || window.event;
