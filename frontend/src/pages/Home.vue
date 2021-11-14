@@ -63,7 +63,25 @@
 								'--primary-color: var(--' + element.theme + ')'
 							"
 						>
-							<song-thumbnail :song="element.currentSong" />
+							<song-thumbnail :song="element.currentSong">
+								<template #icon v-if="isOwnerOrAdmin(element)">
+									<div class="icon-container">
+										<div
+											class="
+												material-icons
+												manage-station
+											"
+											@click.prevent="
+												manageStation(element._id)
+											"
+											content="Manage Station"
+											v-tippy
+										>
+											settings
+										</div>
+									</div>
+								</template>
+							</song-thumbnail>
 							<div class="card-content">
 								<div class="media">
 									<div class="media-left displayName">
@@ -287,7 +305,20 @@
 					}"
 					:style="'--primary-color: var(--' + station.theme + ')'"
 				>
-					<song-thumbnail :song="station.currentSong" />
+					<song-thumbnail :song="station.currentSong">
+						<template #icon v-if="isOwnerOrAdmin(station)">
+							<div class="icon-container">
+								<div
+									class="material-icons manage-station"
+									@click.prevent="manageStation(station._id)"
+									content="Manage Station"
+									v-tippy
+								>
+									settings
+								</div>
+							</div>
+						</template>
+					</song-thumbnail>
 					<div class="card-content">
 						<div class="media">
 							<div class="media-left displayName">
@@ -428,6 +459,11 @@
 			<main-footer />
 		</div>
 		<create-station v-if="modals.createStation" />
+		<manage-station
+			v-if="modals.manageStation"
+			:station-id="editingStationId"
+			sector="home"
+		/>
 	</div>
 </template>
 
@@ -452,6 +488,9 @@ export default {
 		CreateStation: defineAsyncComponent(() =>
 			import("@/components/modals/CreateStation.vue")
 		),
+		ManageStation: defineAsyncComponent(() =>
+			import("@/components/modals/ManageStation/index.vue")
+		),
 		UserIdToUsername,
 		draggable
 	},
@@ -463,13 +502,15 @@ export default {
 			searchQuery: "",
 			sitename: "Musare",
 			orderOfFavoriteStations: [],
-			handledLoginRegisterRedirect: false
+			handledLoginRegisterRedirect: false,
+			editingStationId: null
 		};
 	},
 	computed: {
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
 			userId: state => state.user.auth.userId,
+			role: state => state.user.auth.role,
 			modals: state => state.modalVisibility.modals
 		}),
 		...mapGetters({
@@ -726,7 +767,13 @@ export default {
 			this.socket.dispatch("apis.joinRoom", "home");
 		},
 		isOwner(station) {
-			return station.owner === this.userId;
+			return this.loggedIn && station.owner === this.userId;
+		},
+		isAdmin() {
+			return this.loggedIn && this.role === "admin";
+		},
+		isOwnerOrAdmin(station) {
+			return this.isOwner(station) || this.isAdmin();
 		},
 		isPlaying(station) {
 			return typeof station.currentSong.title !== "undefined";
@@ -769,6 +816,10 @@ export default {
 				recalculatedOrder,
 				res => new Toast(res.message)
 			);
+		},
+		manageStation(stationId) {
+			this.editingStationId = stationId;
+			this.openModal("manageStation");
 		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("station", ["updateIfStationIsFavorited"])
@@ -1124,6 +1175,39 @@ html {
 			display: flex;
 			position: relative;
 			padding-top: 100%;
+		}
+
+		.icon-container {
+			display: flex;
+			position: absolute;
+			z-index: 2;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
+
+			.material-icons.manage-station {
+				display: inline-flex;
+				opacity: 0;
+				background: var(--primary-color);
+				color: var(--white);
+				margin: auto;
+				font-size: 40px;
+				border-radius: 100%;
+				padding: 10px;
+				transition: all 0.2s ease-in-out;
+			}
+
+			&:hover,
+			&:focus {
+				.material-icons.manage-station {
+					opacity: 1;
+					&:hover,
+					&:focus {
+						filter: brightness(90%);
+					}
+				}
+			}
 		}
 	}
 

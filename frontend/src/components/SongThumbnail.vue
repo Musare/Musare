@@ -1,5 +1,6 @@
 <template>
 	<div class="thumbnail">
+		<slot name="icon" />
 		<div
 			v-if="
 				song.youtubeId &&
