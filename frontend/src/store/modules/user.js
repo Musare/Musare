@@ -92,12 +92,19 @@ const modules = {
 			login: ({ commit }, user) =>
 				new Promise((resolve, reject) => {
 					auth.login(user)
-						.then(() =>
+						.then(() => {
+							lofig.get("cookie.SIDname").then(sid => {
+								const bc = new BroadcastChannel(
+									`${sid}.user_login`
+								);
+								bc.postMessage(true);
+								bc.close();
+							});
 							resolve({
 								status: "success",
 								message: "Logged in!"
-							})
-						)
+							});
+						})
 						.catch(err => reject(new Error(err.message)));
 				}),
 			logout: () =>
