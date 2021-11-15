@@ -59,7 +59,7 @@
 		"secure": false,
 		"SIDname": "SID"
 	},
-	"blacklistedStationNames": ["musare"],
+	"blacklistedCommunityStationNames": ["musare"],
 	"skipConfigVersionCheck": false,
 	"skipDbDocumentsVersionCheck": false,
 	"debug": {
