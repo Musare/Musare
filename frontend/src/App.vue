@@ -227,6 +227,10 @@ export default {
 			this.changeNightmode(true);
 			this.enableNightmode();
 		}
+
+		lofig.get("siteSettings.christmas").then(christmas => {
+			if (christmas) this.enableChristmasMode();
+		});
 	},
 	methods: {
 		toggleNightMode() {
@@ -253,6 +257,11 @@ export default {
 			document
 				.getElementsByTagName("body")[0]
 				.classList.remove("night-mode");
+		},
+		enableChristmasMode: () => {
+			document
+				.getElementsByTagName("body")[0]
+				.classList.add("christmas-mode");
 		},
 		...mapActions("modalVisibility", ["closeCurrentModal"]),
 		...mapActions("user/preferences", [
@@ -355,6 +364,10 @@ export default {
 		background-color: var(--light-grey) !important;
 		color: var(--dark-grey-2) !important;
 	}
+}
+
+.christmas-mode {
+	--primary-color: var(--red);
 }
 
 /* inter-regular - latin */
