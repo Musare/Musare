@@ -198,9 +198,6 @@
 							<div id="seeker-bar-container">
 								<div
 									id="seeker-bar"
-									:style="{
-										width: `${seekerbarPercentage}%`
-									}"
 									:class="{
 										'christmas-seeker': christmas,
 										nyan:
@@ -209,6 +206,12 @@
 												'QH2-TGUlwu4'
 									}"
 								/>
+								<div
+									class="seeker-bar-cover"
+									:style="{
+										width: `calc(100% - ${seekerbarPercentage}%)`
+									}"
+								></div>
 								<img
 									v-if="
 										currentSong &&
@@ -2574,6 +2577,15 @@ export default {
 					left: 0;
 					bottom: 0;
 					position: absolute;
+					width: 100%;
+				}
+
+				.seeker-bar-cover {
+					position: absolute;
+					top: 0;
+					right: 0;
+					bottom: 0;
+					background-color: inherit;
 				}
 			}
 
@@ -2827,7 +2839,7 @@ export default {
 		var(--red) 2rem
 	);
 
-	background-size: 200% 200%;
+	background-size: 150% 200%;
 	animation: christmas 10s linear infinite;
 }
 
