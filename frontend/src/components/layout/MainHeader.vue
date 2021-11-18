@@ -67,7 +67,10 @@
 			</div>
 		</div>
 
-		<div class="christmas-lights">
+		<div
+			v-if="siteSettings.christmas"
+			:class="{ 'christmas-lights': true, loggedIn }"
+		>
 			<div class="christmas-wire"></div>
 			<span class="christmas-light"></span>
 			<div class="christmas-wire"></div>
@@ -329,6 +332,7 @@ export default {
 	top: 64px;
 	display: flex;
 	justify-content: space-around;
+	overflow: hidden;
 
 	.christmas-light {
 		height: 34px;
@@ -353,52 +357,52 @@ export default {
 
 		&:nth-of-type(1) {
 			transform: rotate(5deg);
-			background-color: red;
+			animation: christmas-lights 40s ease infinite;
 		}
 
 		&:nth-of-type(2) {
 			transform: rotate(-7deg);
-			background-color: cyan;
+			animation: christmas-lights 40s ease infinite -5s;
 		}
 
 		&:nth-of-type(3) {
 			transform: rotate(3deg);
-			background-color: yellow;
+			animation: christmas-lights 40s ease infinite -10s;
 		}
 
 		&:nth-of-type(4) {
 			transform: rotate(10deg);
-			background-color: magenta;
+			animation: christmas-lights 40s ease infinite -15s;
 		}
 
 		&:nth-of-type(5) {
 			transform: rotate(-3deg);
-			background-color: lime;
+			animation: christmas-lights 40s ease infinite -20s;
 		}
 
 		&:nth-of-type(6) {
 			transform: rotate(8deg);
-			background-color: orange;
+			animation: christmas-lights 40s ease infinite -25s;
 		}
 
 		&:nth-of-type(7) {
 			transform: rotate(-1deg);
-			background-color: cyan;
+			animation: christmas-lights 40s ease infinite -30s;
 		}
 
 		&:nth-of-type(8) {
 			transform: rotate(-4deg);
-			background-color: red;
+			animation: christmas-lights 40s ease infinite -35s;
 		}
 
 		&:nth-of-type(9) {
 			transform: rotate(3deg);
-			background-color: yellow;
+			animation: christmas-lights 40s ease infinite -40s;
 		}
 
 		&:nth-of-type(10) {
 			transform: rotate(-10deg);
-			background-color: magenta;
+			animation: christmas-lights 40s ease infinite -60s;
 		}
 	}
 
@@ -419,6 +423,42 @@ export default {
 
 		// border-radius: 50%;
 		// background-color: blue;
+	}
+}
+
+@keyframes christmas-lights {
+	0% {
+		background-color: magenta;
+	}
+	10% {
+		background-color: cyan;
+	}
+	20% {
+		background-color: lime;
+	}
+	30% {
+		background-color: yellow;
+	}
+	40% {
+		background-color: orange;
+	}
+	50% {
+		background-color: red;
+	}
+	60% {
+		background-color: magenta;
+	}
+	70% {
+		background-color: cyan;
+	}
+	80% {
+		background-color: lime;
+	}
+	90% {
+		background-color: orange;
+	}
+	100% {
+		background-color: magenta;
 	}
 }
 

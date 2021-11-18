@@ -6,6 +6,7 @@
 				:hide-logo="true"
 				:transparent="true"
 				:hide-logged-out="true"
+				class="home-nav"
 			/>
 			<div class="header" :class="{ loggedIn }">
 				<img class="background" src="/assets/homebg.jpeg" />
@@ -775,6 +776,16 @@ export default {
 	}
 };
 </script>
+
+<style lang="scss">
+.christmas-mode .home-nav .christmas-lights {
+	top: 35vh;
+
+	&.loggedIn {
+		top: 20vh;
+	}
+}
+</style>
 
 <style lang="scss" scoped>
 * {
