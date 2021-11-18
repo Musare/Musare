@@ -1,12 +1,11 @@
 <template>
 	<div>
 		<page-metadata title="Home" />
-		<div class="app">
+		<div class="app home-page">
 			<main-header
 				:hide-logo="true"
 				:transparent="true"
 				:hide-logged-out="true"
-				class="home-nav"
 			/>
 			<div class="header" :class="{ loggedIn }">
 				<img class="background" src="/assets/homebg.jpeg" />
@@ -778,11 +777,22 @@ export default {
 </script>
 
 <style lang="scss">
-.christmas-mode .home-nav .christmas-lights {
-	top: 35vh;
+.christmas-mode .home-page {
+	.header .overlay {
+		background: linear-gradient(
+			180deg,
+			rgba(231, 77, 60, 0.8) 0%,
+			rgba(231, 77, 60, 0.95) 31.25%,
+			rgba(231, 77, 60, 0.9) 54.17%,
+			rgba(231, 77, 60, 0.8) 100%
+		);
+	}
+	.christmas-lights {
+		top: 35vh;
 
-	&.loggedIn {
-		top: 20vh;
+		&.loggedIn {
+			top: 20vh;
+		}
 	}
 }
 </style>

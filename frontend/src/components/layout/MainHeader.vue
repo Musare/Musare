@@ -342,6 +342,9 @@ export default {
 		border-bottom-left-radius: 50%;
 		border-bottom-right-radius: 50%;
 		z-index: 2;
+		box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1),
+			0 0 10px rgba(10, 10, 10, 0.1);
+		animation: christmas-lights 30s ease infinite;
 
 		&::before {
 			content: "";
@@ -357,52 +360,51 @@ export default {
 
 		&:nth-of-type(1) {
 			transform: rotate(5deg);
-			animation: christmas-lights 40s ease infinite;
 		}
 
 		&:nth-of-type(2) {
 			transform: rotate(-7deg);
-			animation: christmas-lights 40s ease infinite -5s;
+			animation-delay: -5s;
 		}
 
 		&:nth-of-type(3) {
 			transform: rotate(3deg);
-			animation: christmas-lights 40s ease infinite -10s;
+			animation-delay: -10s;
 		}
 
 		&:nth-of-type(4) {
 			transform: rotate(10deg);
-			animation: christmas-lights 40s ease infinite -15s;
+			animation-delay: -15s;
 		}
 
 		&:nth-of-type(5) {
 			transform: rotate(-3deg);
-			animation: christmas-lights 40s ease infinite -20s;
+			animation-delay: -20s;
 		}
 
 		&:nth-of-type(6) {
 			transform: rotate(8deg);
-			animation: christmas-lights 40s ease infinite -25s;
+			animation-delay: -25s;
 		}
 
 		&:nth-of-type(7) {
 			transform: rotate(-1deg);
-			animation: christmas-lights 40s ease infinite -30s;
+			animation-delay: -30s;
 		}
 
 		&:nth-of-type(8) {
 			transform: rotate(-4deg);
-			animation: christmas-lights 40s ease infinite -35s;
+			animation-delay: -35s;
 		}
 
 		&:nth-of-type(9) {
 			transform: rotate(3deg);
-			animation: christmas-lights 40s ease infinite -40s;
+			animation-delay: -40s;
 		}
 
 		&:nth-of-type(10) {
 			transform: rotate(-10deg);
-			animation: christmas-lights 40s ease infinite -60s;
+			animation-delay: -45s;
 		}
 	}
 
