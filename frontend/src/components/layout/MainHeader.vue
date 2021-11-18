@@ -66,6 +66,30 @@
 				</p>
 			</div>
 		</div>
+
+		<div class="christmas-lights">
+			<div class="christmas-wire"></div>
+			<span class="christmas-light"></span>
+			<div class="christmas-wire"></div>
+			<span class="christmas-light"></span>
+			<div class="christmas-wire"></div>
+			<span class="christmas-light"></span>
+			<div class="christmas-wire"></div>
+			<span class="christmas-light"></span>
+			<div class="christmas-wire"></div>
+			<span class="christmas-light"></span>
+			<div class="christmas-wire"></div>
+			<span class="christmas-light"></span>
+			<div class="christmas-wire"></div>
+			<span class="christmas-light"></span>
+			<div class="christmas-wire"></div>
+			<span class="christmas-light"></span>
+			<div class="christmas-wire"></div>
+			<span class="christmas-light"></span>
+			<div class="christmas-wire"></div>
+			<span class="christmas-light"></span>
+			<div class="christmas-wire"></div>
+		</div>
 	</nav>
 </template>
 
@@ -294,6 +318,107 @@ export default {
 			border-top: 1px solid var(--white);
 			height: calc(100% - 1px);
 		}
+	}
+}
+
+.christmas-lights {
+	position: absolute;
+	width: 100%;
+	height: 50px;
+	left: 0;
+	top: 64px;
+	display: flex;
+	justify-content: space-around;
+
+	.christmas-light {
+		height: 34px;
+		width: 12px;
+		border-top-left-radius: 50%;
+		border-top-right-radius: 50%;
+		border-bottom-left-radius: 50%;
+		border-bottom-right-radius: 50%;
+		z-index: 2;
+
+		&::before {
+			content: "";
+			display: block;
+			width: 12px;
+			height: 12px;
+			background-color: rgb(6, 49, 19);
+			border-top-left-radius: 25%;
+			border-top-right-radius: 25%;
+			border-bottom-left-radius: 25%;
+			border-bottom-right-radius: 25%;
+		}
+
+		&:nth-of-type(1) {
+			transform: rotate(5deg);
+			background-color: red;
+		}
+
+		&:nth-of-type(2) {
+			transform: rotate(-7deg);
+			background-color: cyan;
+		}
+
+		&:nth-of-type(3) {
+			transform: rotate(3deg);
+			background-color: yellow;
+		}
+
+		&:nth-of-type(4) {
+			transform: rotate(10deg);
+			background-color: magenta;
+		}
+
+		&:nth-of-type(5) {
+			transform: rotate(-3deg);
+			background-color: lime;
+		}
+
+		&:nth-of-type(6) {
+			transform: rotate(8deg);
+			background-color: orange;
+		}
+
+		&:nth-of-type(7) {
+			transform: rotate(-1deg);
+			background-color: cyan;
+		}
+
+		&:nth-of-type(8) {
+			transform: rotate(-4deg);
+			background-color: red;
+		}
+
+		&:nth-of-type(9) {
+			transform: rotate(3deg);
+			background-color: yellow;
+		}
+
+		&:nth-of-type(10) {
+			transform: rotate(-10deg);
+			background-color: magenta;
+		}
+	}
+
+	.christmas-wire {
+		flex: 1;
+		margin-bottom: 15px;
+		z-index: 1;
+
+		// top: -15px;
+		// border-color: blue transparent transparent transparent;
+		border-top: 2px solid rgb(11, 88, 50);
+		border-radius: 50%;
+		margin-left: -7px;
+		margin-right: -7px;
+		transform: scaleY(-1);
+		transform-origin: 0% 20%;
+		// border-radius: 50%/100px 100px 0 0;
+
+		// border-radius: 50%;
+		// background-color: blue;
 	}
 }
 
