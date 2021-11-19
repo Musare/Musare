@@ -284,6 +284,32 @@
 										'border-radius': '25px'
 									}"
 								/>
+								<img
+									v-if="
+										christmas &&
+										currentSong &&
+										![
+											'QH2-TGUlwu4',
+											'DtVBCG6ThDk',
+											'sI66hcu9fIs',
+											'iYYRH4apXDo',
+											'tRcPA7Fzebw',
+											'jofNR_WkoCE',
+											'l9PxOanFjxQ',
+											'xKVcVSYmesU',
+											'60ItHLz5WEA',
+											'e6vkFbtSGm0'
+										].includes(currentSong.youtubeId)
+									"
+									src="https://openclipart.org/image/800px/312117"
+									:style="{
+										position: 'absolute',
+										top: `-30px`,
+										left: `calc(${seekerbarPercentage}% - 25px)`,
+										height: '50px',
+										transform: 'scaleX(-1)'
+									}"
+								/>
 							</div>
 							<div id="control-bar-container">
 								<div id="left-buttons">
