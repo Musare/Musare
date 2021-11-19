@@ -69,7 +69,7 @@
 
 		<christmas-lights
 			v-if="siteSettings.christmas"
-			:lights="Math.min(Math.floor(windowWidth / 175), 15)"
+			:lights="Math.min(Math.max(Math.floor(windowWidth / 175), 5), 15)"
 		/>
 	</nav>
 </template>
