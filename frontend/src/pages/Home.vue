@@ -794,6 +794,13 @@ export default {
 			top: 20vh;
 		}
 	}
+	.header {
+		&,
+		.background,
+		.overlay {
+			border-radius: unset;
+		}
+	}
 }
 </style>
 

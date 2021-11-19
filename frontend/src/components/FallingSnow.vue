@@ -10,21 +10,25 @@
 </template>
 
 <style lang="scss" scoped>
+.night-mode .winter-is-coming {
+	background: var(--black);
+}
+
 /*Snow courtesy of iamjamie on codepen.io (https://codepen.io/iamjamie/pen/wzbEXG)*/
 .winter-is-coming,
 .snow {
-	z-index: 0;
+	z-index: -1;
 	pointer-events: none;
 }
 
 .winter-is-coming {
 	overflow: hidden;
-	position: absolute;
+	position: fixed;
 	top: 0;
-	height: 100%;
-	width: 100%;
-	max-width: 100%;
-	background: transparent;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgb(240, 240, 240);
 }
 
 .snow {
