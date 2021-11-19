@@ -67,8 +67,6 @@ export default {
 			border-bottom-left-radius: 50%;
 			border-bottom-right-radius: 50%;
 			z-index: 2;
-			box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1),
-				0 0 10px rgba(10, 10, 10, 0.1);
 			animation: christmas-lights 30s ease infinite;
 
 			&::before {
@@ -151,24 +149,31 @@ export default {
 @keyframes christmas-lights {
 	0% {
 		background-color: magenta;
+		box-shadow: 0 5px 15px 3px rgba(255, 0, 255, 0.55);
 	}
 	17% {
 		background-color: cyan;
+		box-shadow: 0 5px 15px 3px rgba(0, 255, 255, 0.55);
 	}
 	34% {
 		background-color: lime;
+		box-shadow: 0 5px 15px 3px rgba(0, 255, 0, 0.55);
 	}
 	51% {
 		background-color: yellow;
+		box-shadow: 0 5px 15px 3px rgba(255, 255, 0, 0.55);
 	}
 	68% {
 		background-color: orange;
+		box-shadow: 0 5px 15px 3px rgba(255, 165, 0, 0.55);
 	}
 	85% {
 		background-color: red;
+		box-shadow: 0 5px 15px 3px rgba(255, 0, 0, 0.55);
 	}
 	100% {
 		background-color: magenta;
+		box-shadow: 0 5px 15px 3px rgba(255, 0, 255, 0.55);
 	}
 }
 </style>
