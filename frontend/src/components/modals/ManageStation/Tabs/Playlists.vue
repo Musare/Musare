@@ -837,7 +837,8 @@ export default {
 				count: 0,
 				resultsLeft: 0,
 				results: []
-			}
+			},
+			featuredPlaylists: []
 		};
 	},
 	computed: {
@@ -846,10 +847,6 @@ export default {
 		},
 		nextPageResultsCount() {
 			return Math.min(this.search.pageSize, this.resultsLeftCount);
-		},
-		featuredPlaylists() {
-			if (this.search.results) return this.search.results.slice(0, 3); // TEMP
-			return [];
 		},
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
@@ -892,6 +889,12 @@ export default {
 			this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
 				if (res.status === "success")
 					this.setPlaylists(res.data.playlists);
+				this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
+			});
+
+			this.socket.dispatch("playlists.indexFeaturedPlaylists", res => {
+				if (res.status === "success")
+					this.featuredPlaylists = res.data.playlists;
 				this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
 			});
 
