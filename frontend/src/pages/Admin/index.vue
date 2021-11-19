@@ -1,5 +1,5 @@
 <template>
-	<div class="app">
+	<div class="app admin-area">
 		<main-header />
 		<div class="tabs is-centered">
 			<ul>
@@ -228,6 +228,10 @@ export default {
 </script>
 
 <style lang="scss">
+.christmas-mode .admin-area .christmas-lights {
+	top: 102px;
+}
+
 .main-container .container {
 	.button-row {
 		display: flex;

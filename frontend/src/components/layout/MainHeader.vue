@@ -333,6 +333,7 @@ export default {
 	display: flex;
 	justify-content: space-around;
 	overflow: hidden;
+	pointer-events: none;
 
 	.christmas-light {
 		height: 34px;
@@ -415,7 +416,7 @@ export default {
 
 		// top: -15px;
 		// border-color: blue transparent transparent transparent;
-		border-top: 2px solid rgb(11, 88, 50);
+		border-top: 2px solid var(--primary-color);
 		border-radius: 50%;
 		margin-left: -7px;
 		margin-right: -7px;
