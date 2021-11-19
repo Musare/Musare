@@ -67,7 +67,10 @@
 			</div>
 		</div>
 
-		<christmas-lights v-if="siteSettings.christmas" />
+		<christmas-lights
+			v-if="siteSettings.christmas"
+			:lights="Math.min(Math.floor(windowWidth / 175), 15)"
+		/>
 	</nav>
 </template>
 
@@ -96,7 +99,8 @@ export default {
 				logo: "",
 				sitename: "",
 				christmas: false
-			}
+			},
+			windowWidth: 0
 		};
 	},
 	computed: {
@@ -140,8 +144,16 @@ export default {
 
 		this.frontendDomain = await lofig.get("frontendDomain");
 		this.siteSettings = await lofig.get("siteSettings");
+
+		this.$nextTick(() => {
+			this.onResize();
+			window.addEventListener("resize", this.onResize);
+		});
 	},
 	methods: {
+		onResize() {
+			this.windowWidth = window.innerWidth;
+		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("user/auth", ["logout"]),
 		...mapActions("user/preferences", ["changeNightmode"])

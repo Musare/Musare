@@ -15,7 +15,7 @@
 				<span class="delete material-icons" @click="closeCurrentModal()"
 					>highlight_off</span
 				>
-				<christmas-lights v-if="christmas" />
+				<christmas-lights v-if="christmas" small :lights="5" />
 			</header>
 			<section class="modal-card-body">
 				<slot name="body" />

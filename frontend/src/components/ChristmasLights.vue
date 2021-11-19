@@ -1,26 +1,16 @@
 <template>
-	<div :class="{ 'christmas-lights': true, loggedIn }">
+	<div
+		:class="{
+			'christmas-lights': true,
+			loggedIn,
+			'christmas-lights-small': small
+		}"
+	>
 		<div class="christmas-wire"></div>
-		<span class="christmas-light"></span>
-		<div class="christmas-wire"></div>
-		<span class="christmas-light"></span>
-		<div class="christmas-wire"></div>
-		<span class="christmas-light"></span>
-		<div class="christmas-wire"></div>
-		<span class="christmas-light"></span>
-		<div class="christmas-wire"></div>
-		<span class="christmas-light"></span>
-		<div class="christmas-wire"></div>
-		<span class="christmas-light"></span>
-		<div class="christmas-wire"></div>
-		<span class="christmas-light"></span>
-		<div class="christmas-wire"></div>
-		<span class="christmas-light"></span>
-		<div class="christmas-wire"></div>
-		<span class="christmas-light"></span>
-		<div class="christmas-wire"></div>
-		<span class="christmas-light"></span>
-		<div class="christmas-wire"></div>
+		<template v-for="n in lights" :key="n">
+			<span class="christmas-light"></span>
+			<div class="christmas-wire"></div>
+		</template>
 	</div>
 </template>
 
@@ -28,11 +18,16 @@
 import { mapState } from "vuex";
 
 export default {
+	props: {
+		small: { type: Boolean, default: false },
+		lights: { type: Number, default: 1 }
+	},
 	computed: {
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn
 		})
 	},
+
 	async mounted() {
 		this.christmas = await lofig.get("siteSettings.christmas");
 	}
@@ -51,6 +46,18 @@ export default {
 		justify-content: space-around;
 		overflow: hidden;
 		pointer-events: none;
+
+		&.christmas-lights-small {
+			.christmas-light {
+				height: 28px;
+				width: 10px;
+
+				&::before {
+					width: 10px;
+					height: 10px;
+				}
+			}
+		}
 
 		.christmas-light {
 			height: 34px;
