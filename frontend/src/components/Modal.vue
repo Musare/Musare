@@ -15,6 +15,32 @@
 				<span class="delete material-icons" @click="closeCurrentModal()"
 					>highlight_off</span
 				>
+				<div
+					v-if="christmas"
+					:class="{ 'christmas-lights': true, loggedIn }"
+				>
+					<div class="christmas-wire"></div>
+					<span class="christmas-light"></span>
+					<div class="christmas-wire"></div>
+					<span class="christmas-light"></span>
+					<div class="christmas-wire"></div>
+					<span class="christmas-light"></span>
+					<div class="christmas-wire"></div>
+					<span class="christmas-light"></span>
+					<div class="christmas-wire"></div>
+					<span class="christmas-light"></span>
+					<div class="christmas-wire"></div>
+					<span class="christmas-light"></span>
+					<div class="christmas-wire"></div>
+					<span class="christmas-light"></span>
+					<div class="christmas-wire"></div>
+					<span class="christmas-light"></span>
+					<div class="christmas-wire"></div>
+					<span class="christmas-light"></span>
+					<div class="christmas-wire"></div>
+					<span class="christmas-light"></span>
+					<div class="christmas-wire"></div>
+				</div>
 			</header>
 			<section class="modal-card-body">
 				<slot name="body" />
@@ -27,7 +53,7 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapState, mapActions } from "vuex";
 
 export default {
 	props: {
@@ -35,8 +61,19 @@ export default {
 		wide: { type: Boolean, default: false },
 		split: { type: Boolean, default: false }
 	},
-	mounted() {
+	data() {
+		return {
+			christmas: false
+		};
+	},
+	computed: {
+		...mapState({
+			loggedIn: state => state.user.auth.loggedIn
+		})
+	},
+	async mounted() {
 		this.type = this.toCamelCase(this.title);
+		this.christmas = await lofig.get("siteSettings.christmas");
 	},
 	methods: {
 		toCamelCase: str =>
