@@ -12,6 +12,7 @@
 			<register-modal v-if="modals.register" />
 			<create-playlist-modal v-if="modals.createPlaylist" />
 		</div>
+		<falling-snow v-if="christmas" />
 	</div>
 </template>
 
@@ -38,7 +39,10 @@ export default {
 		CreatePlaylistModal: defineAsyncComponent(() =>
 			import("@/components/modals/CreatePlaylist.vue")
 		),
-		Banned: defineAsyncComponent(() => import("@/pages/Banned.vue"))
+		Banned: defineAsyncComponent(() => import("@/pages/Banned.vue")),
+		FallingSnow: defineAsyncComponent(() =>
+			import("@/components/FallingSnow.vue")
+		)
 	},
 	replace: false,
 	data() {
@@ -48,7 +52,8 @@ export default {
 			keyIsDown: false,
 			scrollPosition: { y: 0, x: 0 },
 			aModalIsOpen2: false,
-			broadcastChannel: null
+			broadcastChannel: null,
+			christmas: false
 		};
 	},
 	computed: {
@@ -229,7 +234,10 @@ export default {
 		}
 
 		lofig.get("siteSettings.christmas").then(christmas => {
-			if (christmas) this.enableChristmasMode();
+			if (christmas) {
+				this.christmas = true;
+				this.enableChristmasMode();
+			}
 		});
 	},
 	methods: {
