@@ -788,10 +788,10 @@ export default {
 		);
 	}
 	.christmas-lights {
-		top: 35vh;
+		top: 35vh !important;
 
 		&.loggedIn {
-			top: 20vh;
+			top: 20vh !important;
 		}
 	}
 	.header {

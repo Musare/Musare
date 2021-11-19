@@ -537,9 +537,7 @@ export default {
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
-	 indexFeaturedPlaylists: isLoginRequired(async function indexMyPlaylists(session, cb) {
-		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
-
+	indexFeaturedPlaylists: isLoginRequired(async function indexMyPlaylists(session, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -570,18 +568,10 @@ export default {
 			async (err, playlists) => {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"PLAYLIST_INDEX_FEATURED",
-						`Indexing featured playlists failed. "${err}"`
-					);
+					this.log("ERROR", "PLAYLIST_INDEX_FEATURED", `Indexing featured playlists failed. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
-				this.log(
-					"SUCCESS",
-					"PLAYLIST_INDEX_FEATURED",
-					`Successfully indexed featured playlists.`
-				);
+				this.log("SUCCESS", "PLAYLIST_INDEX_FEATURED", `Successfully indexed featured playlists.`);
 				return cb({
 					status: "success",
 					data: { playlists }
