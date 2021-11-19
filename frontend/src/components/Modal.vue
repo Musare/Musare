@@ -245,7 +245,7 @@ export default {
 	}
 }
 
-.christmas-mode .modal .christmas-lights {
+.christmas-mode .modal .modal-card-head .christmas-lights {
 	top: 69px !important;
 }
 </style>

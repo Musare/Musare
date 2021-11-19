@@ -107,7 +107,7 @@ export default {
 
 			&:nth-of-type(6) {
 				transform: rotate(8deg);
-				animation-delay: -25s;
+				animation-delay: -65s;
 			}
 
 			&:nth-of-type(7) {
@@ -117,17 +117,42 @@ export default {
 
 			&:nth-of-type(8) {
 				transform: rotate(-4deg);
-				animation-delay: -40s;
+				animation-delay: -75s;
 			}
 
 			&:nth-of-type(9) {
 				transform: rotate(3deg);
-				animation-delay: -45s;
+				animation-delay: -60s;
 			}
 
 			&:nth-of-type(10) {
 				transform: rotate(-10deg);
+				animation-delay: -50s;
+			}
+
+			&:nth-of-type(11) {
+				transform: rotate(7deg);
 				animation-delay: -35s;
+			}
+
+			&:nth-of-type(12) {
+				transform: rotate(-3deg);
+				animation-delay: -70s;
+			}
+
+			&:nth-of-type(13) {
+				transform: rotate(2deg);
+				animation-delay: -25s;
+			}
+
+			&:nth-of-type(14) {
+				transform: rotate(9deg);
+				animation-delay: -45s;
+			}
+
+			&:nth-of-type(15) {
+				transform: rotate(-5deg);
+				animation-delay: -40s;
 			}
 		}
 

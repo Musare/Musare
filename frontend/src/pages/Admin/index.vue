@@ -229,7 +229,7 @@ export default {
 
 <style lang="scss">
 .christmas-mode .admin-area .christmas-lights {
-	top: 102px;
+	top: 102px !important;
 }
 
 .main-container .container {
