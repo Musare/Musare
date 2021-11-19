@@ -15,32 +15,7 @@
 				<span class="delete material-icons" @click="closeCurrentModal()"
 					>highlight_off</span
 				>
-				<div
-					v-if="christmas"
-					:class="{ 'christmas-lights': true, loggedIn }"
-				>
-					<div class="christmas-wire"></div>
-					<span class="christmas-light"></span>
-					<div class="christmas-wire"></div>
-					<span class="christmas-light"></span>
-					<div class="christmas-wire"></div>
-					<span class="christmas-light"></span>
-					<div class="christmas-wire"></div>
-					<span class="christmas-light"></span>
-					<div class="christmas-wire"></div>
-					<span class="christmas-light"></span>
-					<div class="christmas-wire"></div>
-					<span class="christmas-light"></span>
-					<div class="christmas-wire"></div>
-					<span class="christmas-light"></span>
-					<div class="christmas-wire"></div>
-					<span class="christmas-light"></span>
-					<div class="christmas-wire"></div>
-					<span class="christmas-light"></span>
-					<div class="christmas-wire"></div>
-					<span class="christmas-light"></span>
-					<div class="christmas-wire"></div>
-				</div>
+				<christmas-lights v-if="christmas" />
 			</header>
 			<section class="modal-card-body">
 				<slot name="body" />
@@ -54,8 +29,14 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+import { defineAsyncComponent } from "vue";
 
 export default {
+	components: {
+		ChristmasLights: defineAsyncComponent(() =>
+			import("@/components/ChristmasLights.vue")
+		)
+	},
 	props: {
 		title: { type: String, default: "Modal" },
 		wide: { type: Boolean, default: false },

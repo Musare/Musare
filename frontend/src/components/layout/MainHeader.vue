@@ -67,40 +67,21 @@
 			</div>
 		</div>
 
-		<div
-			v-if="siteSettings.christmas"
-			:class="{ 'christmas-lights': true, loggedIn }"
-		>
-			<div class="christmas-wire"></div>
-			<span class="christmas-light"></span>
-			<div class="christmas-wire"></div>
-			<span class="christmas-light"></span>
-			<div class="christmas-wire"></div>
-			<span class="christmas-light"></span>
-			<div class="christmas-wire"></div>
-			<span class="christmas-light"></span>
-			<div class="christmas-wire"></div>
-			<span class="christmas-light"></span>
-			<div class="christmas-wire"></div>
-			<span class="christmas-light"></span>
-			<div class="christmas-wire"></div>
-			<span class="christmas-light"></span>
-			<div class="christmas-wire"></div>
-			<span class="christmas-light"></span>
-			<div class="christmas-wire"></div>
-			<span class="christmas-light"></span>
-			<div class="christmas-wire"></div>
-			<span class="christmas-light"></span>
-			<div class="christmas-wire"></div>
-		</div>
+		<christmas-lights v-if="siteSettings.christmas" />
 	</nav>
 </template>
 
 <script>
 import Toast from "toasters";
 import { mapState, mapGetters, mapActions } from "vuex";
+import { defineAsyncComponent } from "vue";
 
 export default {
+	components: {
+		ChristmasLights: defineAsyncComponent(() =>
+			import("@/components/ChristmasLights.vue")
+		)
+	},
 	props: {
 		hideLogo: { type: Boolean, default: false },
 		transparent: { type: Boolean, default: false },
@@ -113,7 +94,8 @@ export default {
 			frontendDomain: "",
 			siteSettings: {
 				logo: "",
-				sitename: ""
+				sitename: "",
+				christmas: false
 			}
 		};
 	},
