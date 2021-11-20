@@ -303,6 +303,7 @@ export default {
 	--dark-orange: rgb(250, 50, 0);
 	--green: rgb(68, 189, 50);
 	--red: rgb(231, 77, 60);
+	--dark-red: rgb(235, 41, 19);
 	--white: rgb(255, 255, 255);
 	--black: rgb(0, 0, 0);
 	--light-grey: rgb(245, 245, 245);
@@ -502,7 +503,7 @@ export default {
 
 code {
 	background-color: var(--light-grey) !important;
-	color: var(--red) !important;
+	color: var(--dark-red) !important;
 }
 
 body.night-mode {
@@ -783,7 +784,7 @@ img {
 .alert {
 	padding: 20px;
 	color: var(--white);
-	background-color: var(--red);
+	background-color: var(--dark-red);
 	position: fixed;
 	top: 50px;
 	right: 50px;
@@ -888,7 +889,7 @@ img {
 }
 
 .tippy-box[data-theme~="confirm"] {
-	background-color: var(--red);
+	background-color: var(--dark-red);
 	border: 0;
 
 	.tippy-content {
@@ -956,7 +957,7 @@ img {
 
 	.stop-icon,
 	.delete-icon {
-		color: var(--red);
+		color: var(--dark-red);
 	}
 
 	.report-icon {
@@ -972,7 +973,7 @@ img {
 		}
 	}
 	&[data-theme~="confirm"] > .tippy-arrow::before {
-		border-top-color: var(--red);
+		border-top-color: var(--dark-red);
 	}
 }
 
@@ -985,7 +986,7 @@ img {
 		}
 	}
 	&[data-theme~="confirm"] > .tippy-arrow::before {
-		border-bottom-color: var(--red);
+		border-bottom-color: var(--dark-red);
 	}
 }
 
@@ -997,7 +998,7 @@ img {
 		}
 	}
 	&[data-theme~="confirm"] > .tippy-arrow::before {
-		border-left-color: var(--red);
+		border-left-color: var(--dark-red);
 	}
 }
 
@@ -1009,7 +1010,7 @@ img {
 		}
 	}
 	&[data-theme~="confirm"] > .tippy-arrow::before {
-		border-right-color: var(--red);
+		border-right-color: var(--dark-red);
 	}
 }
 
@@ -1269,7 +1270,7 @@ button.delete:focus {
 	}
 
 	&.is-danger {
-		background-color: var(--red) !important;
+		background-color: var(--dark-red) !important;
 		border-width: 0;
 		color: var(--white);
 	}
@@ -1548,7 +1549,7 @@ h4.section-title {
 
 		.stop-icon,
 		.delete-icon {
-			color: var(--red);
+			color: var(--dark-red);
 		}
 
 		.report-icon {

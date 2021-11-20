@@ -219,7 +219,7 @@ export default {
 		margin-left: 0px;
 
 		&.red {
-			background-color: var(--red);
+			background-color: var(--dark-red);
 		}
 
 		&.green {

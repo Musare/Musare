@@ -673,7 +673,7 @@ export default {
 		color: var(--green) !important;
 	}
 	.thumbDislike {
-		color: var(--red) !important;
+		color: var(--dark-red) !important;
 	}
 }
 

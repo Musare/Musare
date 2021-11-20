@@ -588,7 +588,7 @@ export default {
 			text-transform: capitalize;
 
 			&.red {
-				background-color: var(--red);
+				background-color: var(--dark-red);
 			}
 
 			&.green {
@@ -616,7 +616,7 @@ export default {
 			}
 
 			&.red {
-				background-color: var(--red);
+				background-color: var(--dark-red);
 			}
 
 			i {

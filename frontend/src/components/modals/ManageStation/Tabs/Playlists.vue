@@ -1151,7 +1151,7 @@ export default {
 }
 
 .excluded-icon {
-	color: var(--red);
+	color: var(--dark-red);
 }
 
 .included-icon {

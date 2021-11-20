@@ -2861,8 +2861,8 @@ export default {
 		-45deg,
 		var(--white),
 		var(--white) 1rem,
-		var(--red) 1rem,
-		var(--red) 2rem
+		var(--dark-red) 1rem,
+		var(--dark-red) 2rem
 	);
 
 	background-size: 150% 200%;
