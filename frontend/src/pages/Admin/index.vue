@@ -212,7 +212,11 @@ export default {
 					this.showTab("punishments");
 					break;
 				default:
-					this.showTab("verifiedsongs");
+					if (localStorage.getItem("lastAdminPage")) {
+						this.showTab(localStorage.getItem("lastAdminPage"));
+					} else {
+						this.showTab("verifiedsongs");
+					}
 			}
 		},
 		showTab(tab) {
@@ -222,6 +226,7 @@ export default {
 					block: "nearest"
 				});
 			this.currentTab = tab;
+			localStorage.setItem("lastAdminPage", tab);
 		}
 	}
 };
