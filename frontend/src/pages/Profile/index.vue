@@ -303,7 +303,7 @@ export default {
 		margin-left: 12px;
 
 		&.admin {
-			background-color: var(--red);
+			background-color: var(--dark-red);
 		}
 	}
 

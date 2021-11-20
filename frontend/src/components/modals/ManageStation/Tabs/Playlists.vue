@@ -48,6 +48,188 @@
 				</button>
 			</div>
 			<div class="tab" v-show="tab === 'search'">
+				<div v-if="featuredPlaylists.length > 0">
+					<label class="label"> Featured playlists </label>
+					<playlist-item
+						v-for="featuredPlaylist in featuredPlaylists"
+						:key="`featuredKey-${featuredPlaylist._id}`"
+						:playlist="featuredPlaylist"
+						:show-owner="true"
+					>
+						<template #item-icon>
+							<i
+								class="material-icons"
+								v-if="
+									isAllowedToParty() &&
+									isSelected(featuredPlaylist._id)
+								"
+								content="This playlist is currently selected"
+								v-tippy
+							>
+								radio
+							</i>
+							<i
+								class="material-icons"
+								v-else-if="
+									isOwnerOrAdmin() &&
+									isPlaylistMode() &&
+									isIncluded(featuredPlaylist._id)
+								"
+								content="This playlist is currently included"
+								v-tippy
+							>
+								play_arrow
+							</i>
+							<i
+								class="material-icons excluded-icon"
+								v-else-if="
+									isOwnerOrAdmin() &&
+									isExcluded(featuredPlaylist._id)
+								"
+								content="This playlist is currently excluded"
+								v-tippy
+							>
+								block
+							</i>
+							<i
+								class="material-icons"
+								v-else
+								:content="
+									isPartyMode()
+										? 'This playlist is currently not selected or excluded'
+										: 'This playlist is currently not included or excluded'
+								"
+								v-tippy
+							>
+								play_disabled
+							</i>
+						</template>
+
+						<template #actions>
+							<i
+								v-if="isExcluded(featuredPlaylist._id)"
+								class="material-icons stop-icon"
+								content="This playlist is blacklisted in this station"
+								v-tippy="{ theme: 'info' }"
+								>play_disabled</i
+							>
+							<confirm
+								v-if="
+									isPartyMode() &&
+									isSelected(featuredPlaylist._id)
+								"
+								@confirm="
+									deselectPartyPlaylist(featuredPlaylist._id)
+								"
+							>
+								<i
+									class="material-icons stop-icon"
+									content="Stop playing songs from this playlist"
+									v-tippy
+								>
+									stop
+								</i>
+							</confirm>
+							<confirm
+								v-if="
+									isOwnerOrAdmin() &&
+									isPlaylistMode() &&
+									isIncluded(featuredPlaylist._id)
+								"
+								@confirm="
+									removeIncludedPlaylist(featuredPlaylist._id)
+								"
+							>
+								<i
+									class="material-icons stop-icon"
+									content="Stop playing songs from this playlist"
+									v-tippy
+								>
+									stop
+								</i>
+							</confirm>
+							<i
+								v-if="
+									isPartyMode() &&
+									!isSelected(featuredPlaylist._id) &&
+									!isExcluded(featuredPlaylist._id)
+								"
+								@click="selectPartyPlaylist(featuredPlaylist)"
+								class="material-icons play-icon"
+								content="Request songs from this playlist"
+								v-tippy
+								>play_arrow</i
+							>
+							<i
+								v-if="
+									isOwnerOrAdmin() &&
+									isPlaylistMode() &&
+									!isIncluded(featuredPlaylist._id) &&
+									!isExcluded(featuredPlaylist._id)
+								"
+								@click="includePlaylist(featuredPlaylist)"
+								class="material-icons play-icon"
+								:content="'Play songs from this playlist'"
+								v-tippy
+								>play_arrow</i
+							>
+							<confirm
+								v-if="
+									isOwnerOrAdmin() &&
+									!isExcluded(featuredPlaylist._id)
+								"
+								@confirm="
+									blacklistPlaylist(featuredPlaylist._id)
+								"
+							>
+								<i
+									class="material-icons stop-icon"
+									content="Blacklist Playlist"
+									v-tippy
+									>block</i
+								>
+							</confirm>
+							<confirm
+								v-if="
+									isOwnerOrAdmin() &&
+									isExcluded(featuredPlaylist._id)
+								"
+								@confirm="
+									removeExcludedPlaylist(featuredPlaylist._id)
+								"
+							>
+								<i
+									class="material-icons stop-icon"
+									content="Stop blacklisting songs from this playlist"
+									v-tippy
+								>
+									stop
+								</i>
+							</confirm>
+							<i
+								v-if="featuredPlaylist.createdBy === myUserId"
+								@click="showPlaylist(featuredPlaylist._id)"
+								class="material-icons edit-icon"
+								content="Edit Playlist"
+								v-tippy
+								>edit</i
+							>
+							<i
+								v-if="
+									featuredPlaylist.createdBy !== myUserId &&
+									(featuredPlaylist.privacy === 'public' ||
+										isAdmin())
+								"
+								@click="showPlaylist(featuredPlaylist._id)"
+								class="material-icons edit-icon"
+								content="View Playlist"
+								v-tippy
+								>visibility</i
+							>
+						</template>
+					</playlist-item>
+					<br />
+				</div>
 				<label class="label"> Search for a public playlist </label>
 				<div class="control is-grouped input-with-button">
 					<p class="control is-expanded">
@@ -655,7 +837,8 @@ export default {
 				count: 0,
 				resultsLeft: 0,
 				results: []
-			}
+			},
+			featuredPlaylists: []
 		};
 	},
 	computed: {
@@ -707,6 +890,11 @@ export default {
 				if (res.status === "success")
 					this.setPlaylists(res.data.playlists);
 				this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
+			});
+
+			this.socket.dispatch("playlists.indexFeaturedPlaylists", res => {
+				if (res.status === "success")
+					this.featuredPlaylists = res.data.playlists;
 			});
 
 			this.socket.dispatch(
@@ -963,7 +1151,7 @@ export default {
 }
 
 .excluded-icon {
-	color: var(--red);
+	color: var(--dark-red);
 }
 
 .included-icon {

@@ -790,7 +790,7 @@ export default {
 						margin-left: auto;
 					}
 					&.skip-station {
-						color: var(--red);
+						color: var(--dark-red);
 					}
 					&.resume-station,
 					&.pause-station {

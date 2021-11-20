@@ -1,4 +1,5 @@
 import async from "async";
+import config from "config";
 
 import { isAdminRequired, isLoginRequired } from "./hooks";
 
@@ -522,6 +523,55 @@ export default {
 					"PLAYLIST_INDEX_FOR_ME",
 					`Successfully indexed playlists for user "${session.userId}".`
 				);
+				return cb({
+					status: "success",
+					data: { playlists }
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Gets all playlists playlists
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {Function} cb - gets called with the result
+	 */
+	indexFeaturedPlaylists: isLoginRequired(async function indexMyPlaylists(session, cb) {
+		async.waterfall(
+			[
+				next => {
+					const featuredPlaylistIds = config.get("featuredPlaylists");
+					if (featuredPlaylistIds.length === 0) next(true, []);
+					else next(null, featuredPlaylistIds);
+				},
+
+				(featuredPlaylistIds, next) => {
+					const featuredPlaylists = [];
+					async.eachLimit(
+						featuredPlaylistIds,
+						1,
+						(playlistId, next) => {
+							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+								.then(playlist => {
+									if (playlist.privacy === "public") featuredPlaylists.push(playlist);
+									next();
+								})
+								.catch(next);
+						},
+						err => {
+							next(err, featuredPlaylists);
+						}
+					);
+				}
+			],
+			async (err, playlists) => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "PLAYLIST_INDEX_FEATURED", `Indexing featured playlists failed. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "PLAYLIST_INDEX_FEATURED", `Successfully indexed featured playlists.`);
 				return cb({
 					status: "success",
 					data: { playlists }

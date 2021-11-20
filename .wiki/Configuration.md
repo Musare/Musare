@@ -41,6 +41,7 @@ Location: `backend/config/default.json`
 | `cookie.secure` | Should be `true` for SSL connections, and `false` for normal http connections. |
 | `cookie.SIDname` | Name of the cookie stored for sessions. |
 | `blacklistedCommunityStationNames ` | Array of blacklisted community station names. |
+| `featuredPlaylists ` | Array of featured playlist id's. Playlist privacy must be public. |
 | `skipConfigVersionCheck` | Skips checking if the config version is outdated or not. Should almost always be set to false. |
 | `skipDbDocumentsVersionCheck` | Skips checking if there are any DB documents outdated or not. Should almost always be set to false. |
 | `debug.stationIssue` | If set to `true` it will enable the `/debug_station` API endpoint on the backend, which provides information useful to debugging stations not skipping, as well as capure all jobs specified in `debug.captureJobs`. 
@@ -72,6 +73,7 @@ Location: `frontend/dist/config/default.json`
 | `siteSettings.logo_blue` | Path to the blue logo image, by default it is `/assets/blue_wordmark.png`. |
 | `siteSettings.sitename` | Should be the name of the site. |
 | `siteSettings.github` | URL of GitHub repository, defaults to `https://github.com/Musare/MusareNode`. |
+| `siteSettings.christmas` | Whether to enable christmas theming. |
 | `messages.accountRemoval` | Message to return to users on account removal. |
 | `shortcutOverrides` | Overwrite keyboard shortcuts, for example `"editSong.useAllDiscogs": { "keyCode": 68, "ctrl": true, "alt": true, "shift": false, "preventDefault": true }`. |
 | `skipConfigVersionCheck` | Skips checking if the config version is outdated or not. Should almost always be set to false. |

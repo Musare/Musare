@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<page-metadata title="Home" />
-		<div class="app">
+		<div class="app home-page">
 			<main-header
 				:hide-logo="true"
 				:transparent="true"
@@ -775,6 +775,34 @@ export default {
 	}
 };
 </script>
+
+<style lang="scss">
+.christmas-mode .home-page {
+	.header .overlay {
+		background: linear-gradient(
+			180deg,
+			rgba(231, 77, 60, 0.8) 0%,
+			rgba(231, 77, 60, 0.95) 31.25%,
+			rgba(231, 77, 60, 0.9) 54.17%,
+			rgba(231, 77, 60, 0.8) 100%
+		);
+	}
+	.christmas-lights {
+		top: 35vh !important;
+
+		&.loggedIn {
+			top: 20vh !important;
+		}
+	}
+	.header {
+		&,
+		.background,
+		.overlay {
+			border-radius: unset;
+		}
+	}
+}
+</style>
 
 <style lang="scss" scoped>
 * {

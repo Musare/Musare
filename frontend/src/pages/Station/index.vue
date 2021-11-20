@@ -198,16 +198,20 @@
 							<div id="seeker-bar-container">
 								<div
 									id="seeker-bar"
-									:style="{
-										width: `${seekerbarPercentage}%`
-									}"
 									:class="{
+										'christmas-seeker': christmas,
 										nyan:
 											currentSong &&
 											currentSong.youtubeId ===
 												'QH2-TGUlwu4'
 									}"
 								/>
+								<div
+									class="seeker-bar-cover"
+									:style="{
+										width: `calc(100% - ${seekerbarPercentage}%)`
+									}"
+								></div>
 								<img
 									v-if="
 										currentSong &&
@@ -278,6 +282,32 @@
 										width: '25px',
 										height: '25px',
 										'border-radius': '25px'
+									}"
+								/>
+								<img
+									v-if="
+										christmas &&
+										currentSong &&
+										![
+											'QH2-TGUlwu4',
+											'DtVBCG6ThDk',
+											'sI66hcu9fIs',
+											'iYYRH4apXDo',
+											'tRcPA7Fzebw',
+											'jofNR_WkoCE',
+											'l9PxOanFjxQ',
+											'xKVcVSYmesU',
+											'60ItHLz5WEA',
+											'e6vkFbtSGm0'
+										].includes(currentSong.youtubeId)
+									"
+									src="https://openclipart.org/image/800px/312117"
+									:style="{
+										position: 'absolute',
+										top: `-30px`,
+										left: `calc(${seekerbarPercentage}% - 25px)`,
+										height: '50px',
+										transform: 'scaleX(-1)'
 									}"
 								/>
 							</div>
@@ -908,7 +938,8 @@ export default {
 			socketConnected: null,
 			persistentToastCheckerInterval: null,
 			persistentToasts: [],
-			partyPlaylistLock: false
+			partyPlaylistLock: false,
+			christmas: false
 		};
 	},
 	computed: {
@@ -1040,6 +1071,8 @@ export default {
 		});
 
 		this.frontendDevMode = await lofig.get("mode");
+
+		this.christmas = await lofig.get("siteSettings.christmas");
 
 		this.socket.dispatch(
 			"stations.existsByName",
@@ -2570,6 +2603,15 @@ export default {
 					left: 0;
 					bottom: 0;
 					position: absolute;
+					width: 100%;
+				}
+
+				.seeker-bar-cover {
+					position: absolute;
+					top: 0;
+					right: 0;
+					bottom: 0;
+					background-color: inherit;
 				}
 			}
 
@@ -2811,6 +2853,25 @@ export default {
 	}
 	100% {
 		background-position: -200% 0%;
+	}
+}
+
+.christmas-seeker {
+	background: repeating-linear-gradient(
+		-45deg,
+		var(--white),
+		var(--white) 1rem,
+		var(--dark-red) 1rem,
+		var(--dark-red) 2rem
+	);
+
+	background-size: 150% 200%;
+	animation: christmas 10s linear infinite;
+}
+
+@keyframes christmas {
+	100% {
+		background-position: 100% 100%;
 	}
 }
 

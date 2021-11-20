@@ -15,6 +15,7 @@
 				<span class="delete material-icons" @click="closeCurrentModal()"
 					>highlight_off</span
 				>
+				<christmas-lights v-if="christmas" small :lights="5" />
 			</header>
 			<section class="modal-card-body">
 				<slot name="body" />
@@ -27,16 +28,33 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapState, mapActions } from "vuex";
+import { defineAsyncComponent } from "vue";
 
 export default {
+	components: {
+		ChristmasLights: defineAsyncComponent(() =>
+			import("@/components/ChristmasLights.vue")
+		)
+	},
 	props: {
 		title: { type: String, default: "Modal" },
 		wide: { type: Boolean, default: false },
 		split: { type: Boolean, default: false }
 	},
-	mounted() {
+	data() {
+		return {
+			christmas: false
+		};
+	},
+	computed: {
+		...mapState({
+			loggedIn: state => state.user.auth.loggedIn
+		})
+	},
+	async mounted() {
 		this.type = this.toCamelCase(this.title);
+		this.christmas = await lofig.get("siteSettings.christmas");
 	},
 	methods: {
 		toCamelCase: str =>
@@ -225,5 +243,9 @@ export default {
 			}
 		}
 	}
+}
+
+.christmas-mode .modal .modal-card-head .christmas-lights {
+	top: 69px !important;
 }
 </style>

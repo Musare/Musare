@@ -534,7 +534,7 @@ p {
 		}
 
 		.error-icon {
-			color: var(--red);
+			color: var(--dark-red);
 		}
 
 		.success-icon,

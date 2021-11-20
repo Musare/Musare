@@ -1845,7 +1845,7 @@ export default {
 		}
 
 		.duration-fill-button {
-			background-color: var(--red);
+			background-color: var(--dark-red);
 			color: var(--white);
 			width: 32px;
 			text-align: center;
