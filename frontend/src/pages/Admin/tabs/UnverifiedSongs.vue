@@ -407,19 +407,17 @@ export default {
 		})
 	},
 	mounted() {
-		this.socket.on("event:admin.unverifiedSong.created", res => {
-			this.addSong(res.data.song);
-		});
-
-		this.socket.on("event:admin.unverifiedSong.deleted", res => {
-			this.removeSong(res.data.songId);
-		});
-
-		this.socket.on("event:admin.unverifiedSong.updated", res => {
-			this.updateSong(res.data.song);
-		});
-
 		ws.onConnect(this.init);
+
+		this.socket.on("event:admin.song.updated", res => {
+			const { song } = res.data;
+			if (res.data.oldStatus && res.data.oldStatus === "unverified") {
+				this.removeSong(song._id);
+			} else {
+				this.addSong(song);
+				this.updateSong(song);
+			}
+		});
 	},
 	methods: {
 		edit(song) {

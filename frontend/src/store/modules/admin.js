@@ -27,7 +27,8 @@ const modules = {
 				state.songs = [];
 			},
 			addSong(state, song) {
-				state.songs.push(song);
+				if (!state.songs.find(s => s._id === song._id))
+					state.songs.push(song);
 			},
 			removeSong(state, songId) {
 				state.songs = state.songs.filter(song => song._id !== songId);
@@ -35,7 +36,7 @@ const modules = {
 			updateSong(state, updatedSong) {
 				state.songs.forEach((song, index) => {
 					if (song._id === updatedSong._id)
-						this.set(state.songs, index, updatedSong);
+						state.songs[index] = updatedSong;
 				});
 			}
 		}
@@ -58,7 +59,8 @@ const modules = {
 				state.songs = [];
 			},
 			addSong(state, song) {
-				state.songs.push(song);
+				if (!state.songs.find(s => s._id === song._id))
+					state.songs.push(song);
 			},
 			removeSong(state, songId) {
 				state.songs = state.songs.filter(song => song._id !== songId);
@@ -66,7 +68,7 @@ const modules = {
 			updateSong(state, updatedSong) {
 				state.songs.forEach((song, index) => {
 					if (song._id === updatedSong._id)
-						this.set(state.songs, index, updatedSong);
+						state.songs[index] = updatedSong;
 				});
 			}
 		}
@@ -89,7 +91,8 @@ const modules = {
 				state.songs = [];
 			},
 			addSong(state, song) {
-				state.songs.push(song);
+				if (!state.songs.find(s => s._id === song._id))
+					state.songs.push(song);
 			},
 			removeSong(state, songId) {
 				state.songs = state.songs.filter(song => song._id !== songId);
@@ -97,7 +100,7 @@ const modules = {
 			updateSong(state, updatedSong) {
 				state.songs.forEach((song, index) => {
 					if (song._id === updatedSong._id)
-						this.set(state.songs, index, updatedSong);
+						state.songs[index] = updatedSong;
 				});
 			}
 		}

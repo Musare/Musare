@@ -1292,6 +1292,11 @@ button.delete:focus {
 		border-width: 0;
 		color: var(--light-grey);
 	}
+
+	&.is-fullwidth {
+		display: flex;
+		width: 100%;
+	}
 }
 
 .input,

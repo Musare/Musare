@@ -43,6 +43,14 @@
 						Clear and refill all genre playlists
 					</button>
 				</confirm>
+				<confirm
+					placement="bottom"
+					@confirm="createMissingGenrePlaylists()"
+				>
+					<button class="button is-danger">
+						Create missing genre playlists
+					</button>
+				</confirm>
 			</div>
 			<table class="table">
 				<thead>
@@ -268,6 +276,20 @@ export default {
 							content: `Error: ${res.message}`,
 							timeout: 4000
 						});
+				}
+			);
+		},
+		createMissingGenrePlaylists() {
+			this.socket.dispatch(
+				"playlists.createMissingGenrePlaylists",
+				data => {
+					console.log(data.message);
+					if (data.status !== "success")
+						new Toast({
+							content: `Error: ${data.message}`,
+							timeout: 8000
+						});
+					else new Toast({ content: data.message, timeout: 4000 });
 				}
 			);
 		},

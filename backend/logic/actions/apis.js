@@ -129,7 +129,9 @@ export default {
 			room.startsWith("profile.") ||
 			room.startsWith("manage-station.") ||
 			room.startsWith("edit-song.") ||
-			room.startsWith("view-report.")
+			room.startsWith("view-report.") ||
+			room.startsWith("edit-user.") ||
+			room === "import-album"
 		) {
 			WSModule.runJob("SOCKET_JOIN_ROOM", {
 				socketId: session.socketId,
@@ -157,7 +159,8 @@ export default {
 			room.startsWith("profile.") ||
 			room.startsWith("manage-station.") ||
 			room.startsWith("edit-song.") ||
-			room.startsWith("view-report.")
+			room.startsWith("view-report.") ||
+			room === "import-album"
 		) {
 			WSModule.runJob("SOCKET_LEAVE_ROOM", {
 				socketId: session.socketId,
