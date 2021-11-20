@@ -1981,5 +1981,51 @@ export default {
 				});
 			}
 		);
+	}),
+
+	/**
+	 * Create missing genre playlists
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {Function} cb - gets called with the result
+	 */
+	createMissingGenrePlaylists: isAdminRequired(async function index(session, cb) {
+		async.waterfall(
+			[
+				next => {
+					PlaylistsModule.runJob("CREATE_MISSING_GENRE_PLAYLISTS", this)
+						.then(() => {
+							next();
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log(
+						"ERROR",
+						"PLAYLIST_CREATE_MISSING_GENRE_PLAYLISTS",
+						`Creating missing genre playlists failed for user "${session.userId}". "${err}"`
+					);
+
+					return cb({ status: "error", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_CREATE_MISSING_GENRE_PLAYLISTS",
+					`Successfully created missing genre playlists for user "${session.userId}".`
+				);
+
+				return cb({
+					status: "success",
+					message: "Missing genre playlists have been successfully created"
+				});
+			}
+		);
 	})
 };
