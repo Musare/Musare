@@ -52,7 +52,7 @@
 					<label class="label"> Featured playlists </label>
 					<playlist-item
 						v-for="featuredPlaylist in featuredPlaylists"
-						:key="`searchKey-${featuredPlaylist._id}`"
+						:key="`featuredKey-${featuredPlaylist._id}`"
 						:playlist="featuredPlaylist"
 						:show-owner="true"
 					>
@@ -895,7 +895,6 @@ export default {
 			this.socket.dispatch("playlists.indexFeaturedPlaylists", res => {
 				if (res.status === "success")
 					this.featuredPlaylists = res.data.playlists;
-				this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
 			});
 
 			this.socket.dispatch(
