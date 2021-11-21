@@ -568,12 +568,6 @@ export default {
 							.catch(() => {});
 					});
 
-					song.artists.forEach(artist => {
-						PlaylistsModule.runJob("AUTOFILL_ARTIST_PLAYLIST", { artist })
-							.then(() => {})
-							.catch(() => {});
-					});
-
 					SongsModule.runJob("UPDATE_SONG", { songId: song._id, oldStatus });
 					next(null, song, oldStatus);
 				}
@@ -626,12 +620,6 @@ export default {
 				(song, next) => {
 					song.genres.forEach(genre => {
 						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
-							.then(() => {})
-							.catch(() => {});
-					});
-
-					song.artists.forEach(artist => {
-						PlaylistsModule.runJob("AUTOFILL_ARTIST_PLAYLIST", { artist })
 							.then(() => {})
 							.catch(() => {});
 					});
