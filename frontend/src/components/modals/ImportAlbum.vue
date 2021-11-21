@@ -308,16 +308,20 @@
 				<button class="button is-primary" @click="editSongs()">
 					Edit songs
 				</button>
-				<button
-					:class="{
-						button: true,
-						'is-success': prefillDiscogs,
-						'is-danger': !prefillDiscogs
-					}"
-					@click="togglePrefillDiscogs()"
-				>
-					Prefill Discogs
-				</button>
+				<p class="is-expanded checkbox-control">
+					<label class="switch">
+						<input
+							type="checkbox"
+							id="prefill-discogs"
+							v-model="localPrefillDiscogs"
+						/>
+						<span class="slider round"></span>
+					</label>
+
+					<label for="prefill-discogs">
+						<p>Prefill Discogs</p>
+					</label>
+				</p>
 			</template>
 		</modal>
 	</div>
@@ -368,6 +372,17 @@ export default {
 				this.$store.commit(
 					"modals/importAlbum/updatePlaylistSongs",
 					playlistSongs
+				);
+			}
+		},
+		localPrefillDiscogs: {
+			get() {
+				return this.$store.state.modals.importAlbum.prefillDiscogs;
+			},
+			set(prefillDiscogs) {
+				this.$store.commit(
+					"modals/importAlbum/updatePrefillDiscogs",
+					prefillDiscogs
 				);
 			}
 		},
