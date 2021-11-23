@@ -539,7 +539,6 @@ export default {
 				"playlists.clearAndRefillStationPlaylist",
 				this.playlist._id,
 				data => {
-					console.log(data.message);
 					if (data.status !== "success")
 						new Toast({
 							content: `Error: ${data.message}`,

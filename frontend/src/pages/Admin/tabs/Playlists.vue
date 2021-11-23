@@ -283,7 +283,6 @@ export default {
 			this.socket.dispatch(
 				"playlists.createMissingGenrePlaylists",
 				data => {
-					console.log(data.message);
 					if (data.status !== "success")
 						new Toast({
 							content: `Error: ${data.message}`,
