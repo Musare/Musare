@@ -197,6 +197,8 @@ export default {
 			.delete.material-icons {
 				font-size: 28px;
 				cursor: pointer;
+				user-select: none;
+				-webkit-user-drag: none;
 				&:hover,
 				&:focus {
 					filter: brightness(90%);
