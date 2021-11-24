@@ -464,6 +464,11 @@
 			:station-id="editingStationId"
 			sector="home"
 		/>
+		<request-song v-if="modals.requestSong" />
+		<create-playlist v-if="modals.createPlaylist" />
+		<edit-playlist v-if="modals.editPlaylist" />
+		<edit-song v-if="modals.editSong" song-type="songs" sector="home" />
+		<report v-if="modals.report" />
 	</div>
 </template>
 
@@ -490,6 +495,21 @@ export default {
 		),
 		ManageStation: defineAsyncComponent(() =>
 			import("@/components/modals/ManageStation/index.vue")
+		),
+		RequestSong: defineAsyncComponent(() =>
+			import("@/components/modals/RequestSong.vue")
+		),
+		EditPlaylist: defineAsyncComponent(() =>
+			import("@/components/modals/EditPlaylist")
+		),
+		CreatePlaylist: defineAsyncComponent(() =>
+			import("@/components/modals/CreatePlaylist.vue")
+		),
+		Report: defineAsyncComponent(() =>
+			import("@/components/modals/Report.vue")
+		),
+		EditSong: defineAsyncComponent(() =>
+			import("@/components/modals/EditSong")
 		),
 		UserIdToUsername,
 		draggable
