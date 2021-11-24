@@ -1234,7 +1234,9 @@ export default {
 		this.socket.on("event:station.theme.updated", res => {
 			const { theme } = res.data;
 			this.station.theme = theme;
-			document.body.style.cssText = `--primary-color: var(--${theme})`;
+			document.getElementsByTagName(
+				"html"
+			)[0].style.cssText = `--primary-color: var(--${theme})`;
 		});
 
 		this.socket.on("event:station.name.updated", async res => {
@@ -1300,7 +1302,7 @@ export default {
 		}
 	},
 	beforeUnmount() {
-		document.body.style.cssText = "";
+		document.getElementsByTagName("html")[0].style.cssText = "";
 
 		if (this.mediasession) {
 			ms.removeListeners(0);
@@ -2078,7 +2080,9 @@ export default {
 							theme
 						});
 
-						document.body.style.cssText = `--primary-color: var(--${res.data.theme})`;
+						document.getElementsByTagName(
+							"html"
+						)[0].style.cssText = `--primary-color: var(--${res.data.theme})`;
 
 						this.setCurrentSong({
 							currentSong: res.data.currentSong,

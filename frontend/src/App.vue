@@ -258,17 +258,17 @@ export default {
 		},
 		enableNightmode: () => {
 			document
-				.getElementsByTagName("body")[0]
+				.getElementsByTagName("html")[0]
 				.classList.add("night-mode");
 		},
 		disableNightmode: () => {
 			document
-				.getElementsByTagName("body")[0]
+				.getElementsByTagName("html")[0]
 				.classList.remove("night-mode");
 		},
 		enableChristmasMode: () => {
 			document
-				.getElementsByTagName("body")[0]
+				.getElementsByTagName("html")[0]
 				.classList.add("christmas-mode");
 		},
 		...mapActions("modalVisibility", ["closeCurrentModal"]),
@@ -320,6 +320,10 @@ export default {
 }
 
 .night-mode {
+	body {
+		background-color: var(--black) !important;
+	}
+
 	div {
 		color: var(--light-grey-2);
 	}
@@ -504,10 +508,6 @@ export default {
 code {
 	background-color: var(--light-grey) !important;
 	color: var(--dark-red) !important;
-}
-
-body.night-mode {
-	background-color: var(--black) !important;
 }
 
 #toasts-container {
@@ -1851,5 +1851,37 @@ h4.section-title {
 	input:checked + .slider:before {
 		transform: translateX(16px);
 	}
+}
+
+html {
+	&,
+	* {
+		scrollbar-color: var(--primary-color) transparent;
+		scrollbar-width: thin;
+	}
+
+	&.night-mode {
+		&,
+		* {
+			scrollbar-color: var(--light-grey) transparent !important;
+		}
+
+		&::-webkit-scrollbar-thumb,
+		::-webkit-scrollbar-thumb {
+			background-color: var(--light-grey);
+		}
+	}
+}
+
+::-webkit-scrollbar {
+	width: 10px;
+}
+
+::-webkit-scrollbar-track {
+	background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background-color: var(--primary-color);
 }
 </style>

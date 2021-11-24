@@ -157,21 +157,4 @@ export default {
 		margin-bottom: 10px;
 	}
 }
-
-/deep/ ::-webkit-scrollbar {
-	width: 10px;
-}
-
-/deep/ ::-webkit-scrollbar-track {
-	background-color: var(--white);
-	border: 1px solid var(--light-grey-3);
-}
-
-/deep/ ::-webkit-scrollbar-thumb {
-	background-color: var(--dark-grey);
-
-	&:hover {
-		filter: brightness(95%);
-	}
-}
 </style>
