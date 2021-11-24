@@ -39,9 +39,14 @@
 	<script type='text/javascript' src='/vendor/can-autoplay.min.js'></script>
 	<script type='text/javascript' src='/vendor/lofig.1.3.4.min.js'></script>
 
-	<!--Musare version: <%= htmlWebpackPlugin.options.musareVersion %>-->
+	<!--Musare version: <%= htmlWebpackPlugin.options.debug.version %>-->
 	<script>
-		const MUSARE_VERSION = "<%= htmlWebpackPlugin.options.musareVersion %>";
+		const MUSARE_VERSION = "<%= htmlWebpackPlugin.options.debug.version %>";
+		const MUSARE_GIT_REMOTE = "<%= htmlWebpackPlugin.options.debug.git.remote %>";
+		const MUSARE_GIT_REMOTE_URL = "<%= htmlWebpackPlugin.options.debug.git.remoteUrl %>";
+		const MUSARE_GIT_BRANCH = "<%= htmlWebpackPlugin.options.debug.git.branch %>";
+		const MUSARE_GIT_LATEST_COMMIT = "<%= htmlWebpackPlugin.options.debug.git.latestCommit %>";
+		const MUSARE_GIT_LATEST_COMMIT_SHORT = "<%= htmlWebpackPlugin.options.debug.git.latestCommitShort %>";
 	</script>
 </head>
 

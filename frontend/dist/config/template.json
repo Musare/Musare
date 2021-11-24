@@ -37,6 +37,16 @@
 	// 		"preventDefault": true
 	// 	}
 	// },
+	"debug": {
+		"git": {
+			"remote": false,
+			"remoteUrl": false,
+			"branch": true,
+			"latestCommit": true,
+			"latestCommitShort": true
+		},
+		"version": true
+	},
 	"skipConfigVersionCheck": false,
-	"configVersion": 8
+	"configVersion": 9
 }
