@@ -13,6 +13,7 @@ Backend commands are inputted via STDIN or if using the Utility Script by using 
 | `runjob` | `module job_name json_encoded_payload` | Run a specified job in a specified module including a JSON encoded payload, and return response. |
 | `eval` | `some_javascript` | Execute JavaScript within the index.js context and return response. |
 | `lockdown` | | Lockdown backend. |
+| `version` | | Prints the Musare version and Git repository info. |
 | `stats` | `module` | Returns job statistics for a specified module. |
 
 ## Modules

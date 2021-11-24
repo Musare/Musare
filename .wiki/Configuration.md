@@ -76,8 +76,16 @@ Location: `frontend/dist/config/default.json`
 | `siteSettings.christmas` | Whether to enable christmas theming. |
 | `messages.accountRemoval` | Message to return to users on account removal. |
 | `shortcutOverrides` | Overwrite keyboard shortcuts, for example `"editSong.useAllDiscogs": { "keyCode": 68, "ctrl": true, "alt": true, "shift": false, "preventDefault": true }`. |
+| `debug.git.remote` | Allow the website/users to view the current Git repository's remote. [^1] |
+| `debug.git.remoteUrl` | Allow the website/users to view the current Git repository's remote URL. [^1] |
+| `debug.git.branch` | Allow the website/users to view the current Git repository's branch. [^1] |
+| `debug.git.latestCommit` | Allow the website/users to view the current Git repository's latest commit hash. [^1] |
+| `debug.git.latestCommitShort` | Allow the website/users to view the current Git repository's latest commit hash (short). [^1] |
+| `debug.version` | Allow the website/users to view the current package.json version. [^1] |
 | `skipConfigVersionCheck` | Skips checking if the config version is outdated or not. Should almost always be set to false. |
 | `configVersion` | Version of the config. Every time the template changes, you should change your config accordingly and update the configVersion. |
+
+[^1]: Requires a frontend restart to update. The data will be available from the frontend console and by the frontend code.
 
 ## Docker Environment
 Location: `.env`
