@@ -1,7 +1,8 @@
 const path = require("path");
 const { VueLoaderPlugin } = require("vue-loader");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const ESLintPlugin = require('eslint-webpack-plugin');
+const ESLintPlugin = require("eslint-webpack-plugin");
+const package_json = require("./package.json");
 
 module.exports = {
 	entry: "./src/main.js",
@@ -21,7 +22,8 @@ module.exports = {
 			hash: true,
 			template: "dist/index.tpl.html",
 			inject: "body",
-			filename: "index.html"
+			filename: "index.html",
+			musareVersion: package_json.version
 		}),
 		new ESLintPlugin()
 	],

@@ -3,6 +3,8 @@ import "./loadEnvVariables.js";
 import util from "util";
 import config from "config";
 
+import package_json from "./package.json";
+
 const REQUIRED_CONFIG_VERSION = 8;
 
 // eslint-disable-next-line
@@ -28,6 +30,14 @@ console.log = (...args) => {
 	});
 	if (!blacklisted) oldConsole.log.apply(null, args);
 };
+
+const MUSARE_VERSION = package_json.version;
+
+const printVersion = () => {
+	console.log(`Musare version: ${MUSARE_VERSION}.`);
+}
+
+printVersion();
 
 if (
 	(!config.has("configVersion") || config.get("configVersion") !== REQUIRED_CONFIG_VERSION) &&
@@ -274,6 +284,9 @@ function printTask(task, layer) {
 
 process.stdin.on("data", data => {
 	const command = data.toString().replace(/\r?\n|\r/g, "");
+	if (command === "version") {
+		printVersion();
+	}
 	if (command === "lockdown") {
 		console.log("Locking down.");
 		moduleManager._lockdown();
