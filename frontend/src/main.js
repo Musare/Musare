@@ -5,6 +5,7 @@ import VueTippy, { Tippy } from "vue-tippy";
 import { createRouter, createWebHistory } from "vue-router";
 
 import ws from "@/ws";
+import ms from "@/ms";
 import store from "./store";
 
 import AppComponent from "./App.vue";
@@ -219,6 +220,8 @@ lofig.folder = "../config/default.json";
 
 	const websocketsDomain = await lofig.get("backend.websocketsDomain");
 	ws.init(websocketsDomain);
+
+	ms.init();
 
 	ws.socket.on("ready", res => {
 		const { loggedIn, role, username, userId, email } = res.data;
