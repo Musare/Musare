@@ -928,11 +928,13 @@ html {
 .header {
 	display: flex;
 	height: 35vh;
+	min-height: 300px;
 	margin-top: -64px;
 	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 
 	img.background {
 		height: 35vh;
+		min-height: 300px;
 		width: 100%;
 		object-fit: cover;
 		object-position: center;
@@ -951,6 +953,7 @@ html {
 		);
 		position: absolute;
 		height: 35vh;
+		min-height: 300px;
 		width: 100%;
 		border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 		overflow: hidden;
@@ -962,8 +965,8 @@ html {
 		margin-left: auto;
 		margin-right: auto;
 		text-align: center;
-		height: 100%;
 		height: 35vh;
+		min-height: 300px;
 		.content {
 			position: absolute;
 			top: 50%;
@@ -1009,10 +1012,12 @@ html {
 	}
 	&.loggedIn {
 		height: 20vh;
+		min-height: 200px;
 		.overlay,
 		.content-container,
 		img.background {
 			height: 20vh;
+			min-height: 200px;
 		}
 	}
 }

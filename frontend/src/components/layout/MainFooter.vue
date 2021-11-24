@@ -90,10 +90,11 @@ export default {
 		margin-right: auto;
 		width: 160px;
 		order: 1;
-		user-select: none;
 
 		img {
 			max-width: 100%;
+			user-select: none;
+			-webkit-user-drag: none;
 		}
 	}
 

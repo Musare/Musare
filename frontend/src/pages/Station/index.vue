@@ -858,6 +858,7 @@ import Toast from "toasters";
 import { ContentLoader } from "vue-content-loader";
 
 import aw from "@/aw";
+import ms from "@/ms";
 import ws from "@/ws";
 import keyboardShortcuts from "@/keyboardShortcuts";
 
@@ -939,6 +940,7 @@ export default {
 			persistentToastCheckerInterval: null,
 			persistentToasts: [],
 			partyPlaylistLock: false,
+			mediasession: false,
 			christmas: false
 		};
 	},
@@ -1071,7 +1073,7 @@ export default {
 		});
 
 		this.frontendDevMode = await lofig.get("mode");
-
+		this.mediasession = await lofig.get("siteSettings.mediasession");
 		this.christmas = await lofig.get("siteSettings.christmas");
 
 		this.socket.dispatch(
@@ -1093,6 +1095,21 @@ export default {
 				}
 			}
 		);
+
+		ms.setListeners(0, {
+			play: () => {
+				if (this.isOwnerOrAdmin()) this.resumeStation();
+				else this.resumeLocalStation();
+			},
+			pause: () => {
+				if (this.isOwnerOrAdmin()) this.pauseStation();
+				else this.pauseLocalStation();
+			},
+			nexttrack: () => {
+				if (this.isOwnerOrAdmin()) this.skipStation();
+				else this.voteSkipStation();
+			}
+		});
 
 		this.socket.on("event:station.nextSong", res => {
 			const { currentSong, startedAt, paused, timePaused } = res.data;
@@ -1285,6 +1302,11 @@ export default {
 	beforeUnmount() {
 		document.body.style.cssText = "";
 
+		if (this.mediasession) {
+			ms.removeListeners(0);
+			ms.removeMediaSessionData(0);
+		}
+
 		/** Reset Songslist */
 		this.updateSongsList([]);
 
@@ -1324,6 +1346,18 @@ export default {
 		},
 		isOwnerOrAdmin() {
 			return this.isOwnerOnly() || this.isAdminOnly();
+		},
+		updateMediaSessionData(currentSong) {
+			if (currentSong) {
+				ms.setMediaSessionData(
+					0,
+					!this.localPaused && !this.stationPaused, // This should be improved later
+					this.currentSong.title,
+					this.currentSong.artists.join(", "),
+					null,
+					this.currentSong.thumbnail
+				);
+			} else ms.removeMediaSessionData(0);
 		},
 		removeFromQueue(youtubeId) {
 			window.socket.dispatch(
@@ -1398,6 +1432,8 @@ export default {
 			);
 
 			clearTimeout(window.stationNextSongTimeout);
+
+			if (this.mediasession) this.updateMediaSessionData(currentSong);
 
 			this.startedAt = startedAt;
 			this.updateStationPaused(paused);
@@ -1511,6 +1547,7 @@ export default {
 		},
 		youtubeReady() {
 			if (!this.player) {
+				ms.setYTReady(false);
 				this.player = new window.YT.Player("stationPlayer", {
 					height: 270,
 					width: 480,
@@ -1530,6 +1567,7 @@ export default {
 					events: {
 						onReady: () => {
 							this.playerReady = true;
+							ms.setYTReady(true);
 
 							let volume = parseInt(
 								localStorage.getItem("volume")
@@ -1808,6 +1846,8 @@ export default {
 			this.pauseLocalPlayer();
 		},
 		resumeLocalPlayer() {
+			if (this.mediasession)
+				this.updateMediaSessionData(this.currentSong);
 			if (!this.noSong) {
 				if (this.playerReady) {
 					this.player.seekTo(
@@ -1819,6 +1859,8 @@ export default {
 			}
 		},
 		pauseLocalPlayer() {
+			if (this.mediasession)
+				this.updateMediaSessionData(this.currentSong);
 			if (!this.noSong) {
 				this.timeBeforePause = this.getTimeElapsed();
 				if (this.playerReady) this.player.pauseVideo();
