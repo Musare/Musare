@@ -23,6 +23,7 @@
 		"logo_blue": "/assets/blue_wordmark.png",
 		"sitename": "Musare",
 		"github": "https://github.com/Musare/Musare",
+		"mediasession": false,
 		"christmas": false
 	},
 	"messages": {
@@ -38,5 +39,5 @@
 	// 	}
 	// },
 	"skipConfigVersionCheck": false,
-	"configVersion": 8
+	"configVersion": 9
 }

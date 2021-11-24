@@ -940,6 +940,7 @@ export default {
 			persistentToastCheckerInterval: null,
 			persistentToasts: [],
 			partyPlaylistLock: false,
+			mediasession: false,
 			christmas: false
 		};
 	},
@@ -1072,7 +1073,7 @@ export default {
 		});
 
 		this.frontendDevMode = await lofig.get("mode");
-
+		this.mediasession = await lofig.get("siteSettings.mediasession");
 		this.christmas = await lofig.get("siteSettings.christmas");
 
 		this.socket.dispatch(
@@ -1301,8 +1302,10 @@ export default {
 	beforeUnmount() {
 		document.body.style.cssText = "";
 
-		ms.removeListeners(0);
-		ms.removeMediaSessionData(0);
+		if (this.mediasession) {
+			ms.removeListeners(0);
+			ms.removeMediaSessionData(0);
+		}
 
 		/** Reset Songslist */
 		this.updateSongsList([]);
@@ -1430,7 +1433,7 @@ export default {
 
 			clearTimeout(window.stationNextSongTimeout);
 
-			this.updateMediaSessionData(currentSong);
+			if (this.mediasession) this.updateMediaSessionData(currentSong);
 
 			this.startedAt = startedAt;
 			this.updateStationPaused(paused);
@@ -1843,7 +1846,8 @@ export default {
 			this.pauseLocalPlayer();
 		},
 		resumeLocalPlayer() {
-			this.updateMediaSessionData(this.currentSong);
+			if (this.mediasession)
+				this.updateMediaSessionData(this.currentSong);
 			if (!this.noSong) {
 				if (this.playerReady) {
 					this.player.seekTo(
@@ -1855,7 +1859,8 @@ export default {
 			}
 		},
 		pauseLocalPlayer() {
-			this.updateMediaSessionData(this.currentSong);
+			if (this.mediasession)
+				this.updateMediaSessionData(this.currentSong);
 			if (!this.noSong) {
 				this.timeBeforePause = this.getTimeElapsed();
 				if (this.playerReady) this.player.pauseVideo();

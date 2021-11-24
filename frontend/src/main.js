@@ -10,7 +10,7 @@ import store from "./store";
 
 import AppComponent from "./App.vue";
 
-const REQUIRED_CONFIG_VERSION = 8;
+const REQUIRED_CONFIG_VERSION = 9;
 
 const handleMetadata = attrs => {
 	document.title = `Musare | ${attrs.title}`;
@@ -221,7 +221,7 @@ lofig.folder = "../config/default.json";
 	const websocketsDomain = await lofig.get("backend.websocketsDomain");
 	ws.init(websocketsDomain);
 
-	ms.init();
+	if (await lofig.get("siteSettings.mediasession")) ms.init();
 
 	ws.socket.on("ready", res => {
 		const { loggedIn, role, username, userId, email } = res.data;
