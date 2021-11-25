@@ -46,11 +46,11 @@
 							<p>{{ station.description }}</p>
 						</div>
 
-						<div id="admin-buttons" v-if="isOwnerOrAdmin()">
+						<div id="admin-buttons">
 							<!-- (Admin) Pause/Resume Button -->
 							<button
+								v-if="isOwnerOrAdmin() && stationPaused"
 								class="button is-danger"
-								v-if="stationPaused"
 								@click="resumeStation()"
 							>
 								<i class="material-icons icon-with-button"
@@ -59,9 +59,9 @@
 								<span> Resume Station </span>
 							</button>
 							<button
+								v-if="isOwnerOrAdmin() && !stationPaused"
 								class="button is-danger"
 								@click="pauseStation()"
-								v-else
 							>
 								<i class="material-icons icon-with-button"
 									>pause</i
@@ -71,6 +71,7 @@
 
 							<!-- (Admin) Skip Button -->
 							<button
+								v-if="isOwnerOrAdmin()"
 								class="button is-danger"
 								@click="skipStation()"
 							>
