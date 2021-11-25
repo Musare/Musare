@@ -428,33 +428,45 @@ export default {
 
 		this.socket.on(
 			"event:station.queue.updated",
-			res => this.updateSongsList(res.data.queue),
+			res => {
+				if (res.data.stationId === this.station._id)
+					this.updateSongsList(res.data.queue);
+			},
 			{ modal: "manageStation" }
 		);
 
 		this.socket.on(
 			"event:station.queue.song.repositioned",
-			res => this.repositionSongInList(res.data.song),
+			res => {
+				if (res.data.stationId === this.station._id)
+					this.repositionSongInList(res.data.song);
+			},
 			{ modal: "manageStation" }
 		);
 
 		this.socket.on(
 			"event:station.pause",
-			() => this.updateStationPaused(true),
+			res => {
+				if (res.data.stationId === this.station._id)
+					this.updateStationPaused(true);
+			},
 			{ modal: "manageStation" }
 		);
 
 		this.socket.on(
 			"event:station.resume",
-			() => this.updateStationPaused(false),
+			res => {
+				if (res.data.stationId === this.station._id)
+					this.updateStationPaused(false);
+			},
 			{ modal: "manageStation" }
 		);
 
 		this.socket.on(
 			"event:station.nextSong",
 			res => {
-				const { currentSong } = res.data;
-				this.updateCurrentSong(currentSong || {});
+				if (res.data.stationId === this.station._id)
+					this.updateCurrentSong(res.data.currentSong || {});
 			},
 			{ modal: "manageStation" }
 		);
