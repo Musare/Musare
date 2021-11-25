@@ -185,7 +185,17 @@
 								>
 									<i class="material-icons">edit</i>
 								</button>
+								<button
+									v-if="song.status !== 'verified'"
+									class="button is-success"
+									@click="verify(song._id)"
+									content="Verify Song"
+									v-tippy
+								>
+									<i class="material-icons">check_circle</i>
+								</button>
 								<confirm
+									v-if="song.status === 'verified'"
 									placement="left"
 									@confirm="unverify(song._id)"
 								>
@@ -197,6 +207,30 @@
 										<i class="material-icons">cancel</i>
 									</button>
 								</confirm>
+								<confirm
+									v-if="song.status !== 'hidden'"
+									placement="left"
+									@confirm="hide(song._id)"
+								>
+									<button
+										class="button is-danger"
+										content="Hide Song"
+										v-tippy
+									>
+										<i class="material-icons"
+											>visibility_off</i
+										>
+									</button>
+								</confirm>
+								<button
+									v-if="song.status === 'hidden'"
+									class="button is-success"
+									@click="unhide(song._id)"
+									content="Unhide Song"
+									v-tippy
+								>
+									<i class="material-icons">visibility</i>
+								</button>
 							</div>
 						</td>
 					</tr>
@@ -414,7 +448,7 @@ export default {
 		...mapState("modalVisibility", {
 			modals: state => state.modals
 		}),
-		...mapState("admin/verifiedSongs", {
+		...mapState("admin/songs", {
 			songs: state => state.songs
 		}),
 		...mapState("modals/editSong", {
@@ -429,12 +463,9 @@ export default {
 
 		this.socket.on("event:admin.song.updated", res => {
 			const { song } = res.data;
-			if (res.data.oldStatus && res.data.oldStatus === "verified") {
-				this.removeSong(song._id);
-			} else {
+			if (this.songs.filter(s => s._id === song._id).length === 0)
 				this.addSong(song);
-				this.updateSong(song);
-			}
+			else this.updateSong(song);
 		});
 
 		if (this.$route.query.songId) {
@@ -449,7 +480,7 @@ export default {
 		}
 
 		keyboardShortcuts.registerShortcut(
-			"verifiedSongs.toggleKeyboardShortcutsHelper",
+			"songs.toggleKeyboardShortcutsHelper",
 			{
 				keyCode: 191, // '/' key
 				ctrl: true,
@@ -461,7 +492,7 @@ export default {
 		);
 
 		keyboardShortcuts.registerShortcut(
-			"verifiedSongs.resetKeyboardShortcutsHelper",
+			"songs.resetKeyboardShortcutsHelper",
 			{
 				keyCode: 191, // '/' key
 				ctrl: true,
@@ -475,8 +506,8 @@ export default {
 	},
 	beforeUnmount() {
 		const shortcutNames = [
-			"verifiedSongs.toggleKeyboardShortcutsHelper",
-			"verifiedSongs.resetKeyboardShortcutsHelper"
+			"songs.toggleKeyboardShortcutsHelper",
+			"songs.resetKeyboardShortcutsHelper"
 		];
 
 		shortcutNames.forEach(shortcutName => {
@@ -488,8 +519,23 @@ export default {
 			this.editSong(song);
 			this.openModal("editSong");
 		},
+		verify(id) {
+			this.socket.dispatch("songs.verify", id, res => {
+				new Toast(res.message);
+			});
+		},
 		unverify(id) {
 			this.socket.dispatch("songs.unverify", id, res => {
+				new Toast(res.message);
+			});
+		},
+		hide(id) {
+			this.socket.dispatch("songs.hide", id, res => {
+				new Toast(res.message);
+			});
+		},
+		unhide(id) {
+			this.socket.dispatch("songs.unhide", id, res => {
 				new Toast(res.message);
 			});
 		},
@@ -505,21 +551,16 @@ export default {
 			if (this.position >= this.maxPosition) return;
 			this.isGettingSet = true;
 
-			this.socket.dispatch(
-				"songs.getSet",
-				this.position,
-				"verified",
-				res => {
-					if (res.status === "success") {
-						res.data.songs.forEach(song => {
-							this.addSong(song);
-						});
+			this.socket.dispatch("songs.getSet", this.position, res => {
+				if (res.status === "success") {
+					res.data.songs.forEach(song => {
+						this.addSong(song);
+					});
 
-						this.position += 1;
-						this.isGettingSet = false;
-					}
+					this.position += 1;
+					this.isGettingSet = false;
 				}
-			);
+			});
 		},
 		toggleArtistSelected(artist) {
 			if (this.artistFilterSelected.indexOf(artist) === -1)
@@ -562,7 +603,7 @@ export default {
 			if (this.songs.length > 0)
 				this.position = Math.ceil(this.songs.length / 15) + 1;
 
-			this.socket.dispatch("songs.length", "verified", res => {
+			this.socket.dispatch("songs.length", res => {
 				if (res.status === "success") {
 					this.maxPosition = Math.ceil(res.data.length / 15) + 1;
 					this.getSet();
@@ -571,7 +612,7 @@ export default {
 
 			this.socket.dispatch("apis.joinAdminRoom", "songs", () => {});
 		},
-		...mapActions("admin/verifiedSongs", [
+		...mapActions("admin/songs", [
 			"resetSongs",
 			"addSong",
 			"removeSong",
@@ -653,7 +694,9 @@ export default {
 	div {
 		button {
 			width: 35px;
-
+		}
+		> button,
+		> span {
 			&:not(:last-child) {
 				margin-right: 5px;
 			}

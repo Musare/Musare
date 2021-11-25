@@ -4,42 +4,13 @@
 		<div class="tabs is-centered">
 			<ul>
 				<li
-					:class="{ 'is-active': currentTab == 'hiddensongs' }"
-					ref="hiddensongs-tab"
-					@click="showTab('hiddensongs')"
+					:class="{ 'is-active': currentTab == 'songs' }"
+					ref="songs-tab"
+					@click="showTab('songs')"
 				>
-					<router-link
-						class="tab hiddensongs"
-						to="/admin/hiddensongs"
-					>
+					<router-link class="tab songs" to="/admin/songs">
 						<i class="material-icons">music_note</i>
-						<span>&nbsp;Hidden Songs</span>
-					</router-link>
-				</li>
-				<li
-					:class="{ 'is-active': currentTab == 'unverifiedsongs' }"
-					ref="unverifiedsongs-tab"
-					@click="showTab('unverifiedsongs')"
-				>
-					<router-link
-						class="tab unverifiedsongs"
-						to="/admin/unverifiedsongs"
-					>
-						<i class="material-icons">unpublished</i>
-						<span>&nbsp;Unverified Songs</span>
-					</router-link>
-				</li>
-				<li
-					:class="{ 'is-active': currentTab == 'verifiedsongs' }"
-					ref="verifiedsongs-tab"
-					@click="showTab('verifiedsongs')"
-				>
-					<router-link
-						class="tab verifiedsongs"
-						to="/admin/verifiedsongs"
-					>
-						<i class="material-icons">check_circle</i>
-						<span>&nbsp;Verified Songs</span>
+						<span>&nbsp;Songs</span>
 					</router-link>
 				</li>
 				<li
@@ -118,9 +89,7 @@
 			</ul>
 		</div>
 
-		<unverified-songs v-if="currentTab == 'unverifiedsongs'" />
-		<verified-songs v-if="currentTab == 'verifiedsongs'" />
-		<hidden-songs v-if="currentTab == 'hiddensongs'" />
+		<songs v-if="currentTab == 'songs'" />
 		<stations v-if="currentTab == 'stations'" />
 		<playlists v-if="currentTab == 'playlists'" />
 		<reports v-if="currentTab == 'reports'" />
@@ -140,15 +109,7 @@ import MainHeader from "@/components/layout/MainHeader.vue";
 export default {
 	components: {
 		MainHeader,
-		UnverifiedSongs: defineAsyncComponent(() =>
-			import("./tabs/UnverifiedSongs.vue")
-		),
-		VerifiedSongs: defineAsyncComponent(() =>
-			import("./tabs/VerifiedSongs.vue")
-		),
-		HiddenSongs: defineAsyncComponent(() =>
-			import("./tabs/HiddenSongs.vue")
-		),
+		Songs: defineAsyncComponent(() => import("./tabs/Songs.vue")),
 		Stations: defineAsyncComponent(() => import("./tabs/Stations.vue")),
 		Playlists: defineAsyncComponent(() => import("./tabs/Playlists.vue")),
 		Reports: defineAsyncComponent(() => import("./tabs/Reports.vue")),
@@ -181,14 +142,8 @@ export default {
 	methods: {
 		changeTab(path) {
 			switch (path) {
-				case "/admin/unverifiedsongs":
-					this.showTab("unverifiedsongs");
-					break;
-				case "/admin/verifiedsongs":
-					this.showTab("verifiedsongs");
-					break;
-				case "/admin/hiddensongs":
-					this.showTab("hiddensongs");
+				case "/admin/songs":
+					this.showTab("songs");
 					break;
 				case "/admin/stations":
 					this.showTab("stations");
@@ -215,7 +170,7 @@ export default {
 					if (localStorage.getItem("lastAdminPage")) {
 						this.showTab(localStorage.getItem("lastAdminPage"));
 					} else {
-						this.showTab("verifiedsongs");
+						this.showTab("songs");
 					}
 			}
 		},
@@ -306,17 +261,9 @@ export default {
 		border-bottom: 1px solid var(--light-grey-2);
 	}
 
-	.unverifiedsongs {
-		color: var(--teal);
-		border-color: var(--teal);
-	}
-	.verifiedsongs {
+	.songs {
 		color: var(--primary-color);
 		border-color: var(--primary-color);
-	}
-	.hiddensongs {
-		color: var(--grey);
-		border-color: var(--grey);
 	}
 	.stations {
 		color: var(--purple);

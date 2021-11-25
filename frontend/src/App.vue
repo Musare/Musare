@@ -1874,6 +1874,7 @@ html {
 }
 
 ::-webkit-scrollbar {
+	height: 10px;
 	width: 10px;
 }
 
@@ -1883,5 +1884,9 @@ html {
 
 ::-webkit-scrollbar-thumb {
 	background-color: var(--primary-color);
+}
+
+::-webkit-scrollbar-corner {
+	background-color: transparent;
 }
 </style>

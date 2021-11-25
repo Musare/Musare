@@ -150,29 +150,21 @@ export default {
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param cb
 	 */
-	length: isAdminRequired(async function length(session, status, cb) {
+	length: isAdminRequired(async function length(session, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
-					songModel.countDocuments({ status }, next);
+					songModel.countDocuments({}, next);
 				}
 			],
 			async (err, count) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"SONGS_LENGTH",
-						`Failed to get length from songs that have the status ${status}. "${err}"`
-					);
+					this.log("ERROR", "SONGS_LENGTH", `Failed to get length from songs. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
-				this.log(
-					"SUCCESS",
-					"SONGS_LENGTH",
-					`Got length from songs that have the status ${status} successfully.`
-				);
+				this.log("SUCCESS", "SONGS_LENGTH", `Got length from songs successfully.`);
 				return cb({ status: "success", message: "Successfully got length of songs.", data: { length: count } });
 			}
 		);
@@ -185,13 +177,13 @@ export default {
 	 * @param set - the set number to return
 	 * @param cb
 	 */
-	getSet: isAdminRequired(async function getSet(session, set, status, cb) {
+	getSet: isAdminRequired(async function getSet(session, set, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
 					songModel
-						.find({ status })
+						.find({})
 						.skip(15 * (set - 1))
 						.limit(15)
 						.exec(next);
@@ -200,14 +192,10 @@ export default {
 			async (err, songs) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"SONGS_GET_SET",
-						`Failed to get set from songs that have the status ${status}. "${err}"`
-					);
+					this.log("ERROR", "SONGS_GET_SET", `Failed to get set from songs. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
-				this.log("SUCCESS", "SONGS_GET_SET", `Got set from songs that have the status ${status} successfully.`);
+				this.log("SUCCESS", "SONGS_GET_SET", `Got set from songs successfully.`);
 				return cb({ status: "success", message: "Successfully got set of songs.", data: { songs } });
 			}
 		);

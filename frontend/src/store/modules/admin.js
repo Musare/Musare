@@ -9,71 +9,7 @@ const actions = {};
 const mutations = {};
 
 const modules = {
-	hiddenSongs: {
-		namespaced: true,
-		state: {
-			songs: []
-		},
-		getters: {},
-		actions: {
-			resetSongs: ({ commit }) => commit("resetSongs"),
-			addSong: ({ commit }, song) => commit("addSong", song),
-			removeSong: ({ commit }, songId) => commit("removeSong", songId),
-			updateSong: ({ commit }, updatedSong) =>
-				commit("updateSong", updatedSong)
-		},
-		mutations: {
-			resetSongs(state) {
-				state.songs = [];
-			},
-			addSong(state, song) {
-				if (!state.songs.find(s => s._id === song._id))
-					state.songs.push(song);
-			},
-			removeSong(state, songId) {
-				state.songs = state.songs.filter(song => song._id !== songId);
-			},
-			updateSong(state, updatedSong) {
-				state.songs.forEach((song, index) => {
-					if (song._id === updatedSong._id)
-						state.songs[index] = updatedSong;
-				});
-			}
-		}
-	},
-	unverifiedSongs: {
-		namespaced: true,
-		state: {
-			songs: []
-		},
-		getters: {},
-		actions: {
-			resetSongs: ({ commit }) => commit("resetSongs"),
-			addSong: ({ commit }, song) => commit("addSong", song),
-			removeSong: ({ commit }, songId) => commit("removeSong", songId),
-			updateSong: ({ commit }, updatedSong) =>
-				commit("updateSong", updatedSong)
-		},
-		mutations: {
-			resetSongs(state) {
-				state.songs = [];
-			},
-			addSong(state, song) {
-				if (!state.songs.find(s => s._id === song._id))
-					state.songs.push(song);
-			},
-			removeSong(state, songId) {
-				state.songs = state.songs.filter(song => song._id !== songId);
-			},
-			updateSong(state, updatedSong) {
-				state.songs.forEach((song, index) => {
-					if (song._id === updatedSong._id)
-						state.songs[index] = updatedSong;
-				});
-			}
-		}
-	},
-	verifiedSongs: {
+	songs: {
 		namespaced: true,
 		state: {
 			songs: []
