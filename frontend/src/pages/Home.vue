@@ -64,9 +64,10 @@
 							"
 						>
 							<song-thumbnail :song="element.currentSong">
-								<template #icon v-if="isOwnerOrAdmin(element)">
+								<template #icon>
 									<div class="icon-container">
 										<div
+											v-if="isOwnerOrAdmin(element)"
 											class="
 												material-icons
 												manage-station
@@ -78,6 +79,20 @@
 											v-tippy
 										>
 											settings
+										</div>
+										<div
+											v-else
+											class="
+												material-icons
+												manage-station
+											"
+											@click.prevent="
+												manageStation(element._id)
+											"
+											content="View Queue"
+											v-tippy
+										>
+											queue_music
 										</div>
 									</div>
 								</template>
@@ -306,15 +321,25 @@
 					:style="'--primary-color: var(--' + station.theme + ')'"
 				>
 					<song-thumbnail :song="station.currentSong">
-						<template #icon v-if="isOwnerOrAdmin(station)">
+						<template #icon>
 							<div class="icon-container">
 								<div
+									v-if="isOwnerOrAdmin(station)"
 									class="material-icons manage-station"
 									@click.prevent="manageStation(station._id)"
 									content="Manage Station"
 									v-tippy
 								>
 									settings
+								</div>
+								<div
+									v-else
+									class="material-icons manage-station"
+									@click.prevent="manageStation(station._id)"
+									content="View Queue"
+									v-tippy
+								>
+									queue_music
 								</div>
 							</div>
 						</template>

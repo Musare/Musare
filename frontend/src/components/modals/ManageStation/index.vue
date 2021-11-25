@@ -2,14 +2,16 @@
 	<modal
 		v-if="station"
 		:title="
-			!isOwnerOrAdmin() && station.partyMode
+			sector === 'home' && !isOwnerOrAdmin()
+				? 'View Queue'
+				: !isOwnerOrAdmin() && station.partyMode
 				? 'Add Song to Queue'
 				: 'Manage Station'
 		"
 		:style="`--primary-color: var(--${station.theme})`"
 		class="manage-station-modal"
-		:wide="true"
-		:split="true"
+		:wide="isOwnerOrAdmin() || sector !== 'home'"
+		:split="isOwnerOrAdmin() || sector !== 'home'"
 	>
 		<template #body v-if="station && station._id">
 			<div class="left-section">
@@ -90,50 +92,52 @@
 							</router-link>
 						</div>
 					</div>
-					<div class="tab-selection">
-						<button
+					<div v-if="isOwnerOrAdmin() || sector !== 'home'">
+						<div class="tab-selection">
+							<button
+								v-if="isOwnerOrAdmin()"
+								class="button is-default"
+								:class="{ selected: tab === 'settings' }"
+								ref="settings-tab"
+								@click="showTab('settings')"
+							>
+								Settings
+							</button>
+							<button
+								v-if="isAllowedToParty() || isOwnerOrAdmin()"
+								class="button is-default"
+								:class="{ selected: tab === 'playlists' }"
+								ref="playlists-tab"
+								@click="showTab('playlists')"
+							>
+								Playlists
+							</button>
+							<button
+								v-if="isAllowedToParty() || isOwnerOrAdmin()"
+								class="button is-default"
+								:class="{ selected: tab === 'songs' }"
+								ref="songs-tab"
+								@click="showTab('songs')"
+							>
+								Songs
+							</button>
+						</div>
+						<settings
 							v-if="isOwnerOrAdmin()"
-							class="button is-default"
-							:class="{ selected: tab === 'settings' }"
-							ref="settings-tab"
-							@click="showTab('settings')"
-						>
-							Settings
-						</button>
-						<button
+							class="tab"
+							v-show="tab === 'settings'"
+						/>
+						<playlists
 							v-if="isAllowedToParty() || isOwnerOrAdmin()"
-							class="button is-default"
-							:class="{ selected: tab === 'playlists' }"
-							ref="playlists-tab"
-							@click="showTab('playlists')"
-						>
-							Playlists
-						</button>
-						<button
+							class="tab"
+							v-show="tab === 'playlists'"
+						/>
+						<songs
 							v-if="isAllowedToParty() || isOwnerOrAdmin()"
-							class="button is-default"
-							:class="{ selected: tab === 'songs' }"
-							ref="songs-tab"
-							@click="showTab('songs')"
-						>
-							Songs
-						</button>
+							class="tab"
+							v-show="tab === 'songs'"
+						/>
 					</div>
-					<settings
-						v-if="isOwnerOrAdmin()"
-						class="tab"
-						v-show="tab === 'settings'"
-					/>
-					<playlists
-						v-if="isAllowedToParty() || isOwnerOrAdmin()"
-						class="tab"
-						v-show="tab === 'playlists'"
-					/>
-					<songs
-						v-if="isAllowedToParty() || isOwnerOrAdmin()"
-						class="tab"
-						v-show="tab === 'songs'"
-					/>
 				</div>
 			</div>
 			<div class="right-section">
@@ -687,10 +691,6 @@ export default {
 	height: 100%;
 
 	.left-section {
-		.section:first-child {
-			padding: 0 15px 15px !important;
-		}
-
 		#about-station-container {
 			padding: 20px;
 			display: flex;
@@ -802,6 +802,9 @@ export default {
 				margin-bottom: 10px;
 			}
 		}
+	}
+	&.modal-wide .left-section .section:first-child {
+		padding: 0 15px 15px !important;
 	}
 }
 </style>
