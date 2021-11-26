@@ -5,9 +5,9 @@
 				<div id="footer-copyright">
 					<p>© Copyright Musare 2015 - 2021</p>
 				</div>
-				<a id="footer-logo" href="/"
+				<router-link id="footer-logo" to="/"
 					><img src="/assets/blue_wordmark.png" alt="Musare"
-				/></a>
+				/></router-link>
 				<div id="footer-links">
 					<a :href="github" target="_blank" title="GitHub Repository"
 						>GitHub</a
