@@ -134,18 +134,18 @@ class _PlaylistsModule extends CoreClass {
 	// }
 
 	/**
-	 * Creates a playlist that is not generated or editable by a user e.g. liked songs playlist
+	 * Creates a playlist owned by a user
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.userId - the id of the user to create the playlist for
 	 * @param {string} payload.displayName - the display name of the playlist
+	 * @param {string} payload.type - the type of the playlist
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	CREATE_READ_ONLY_PLAYLIST(payload) {
+	CREATE_USER_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
 			PlaylistsModule.playlistModel.create(
 				{
-					isUserModifiable: false,
 					displayName: payload.displayName,
 					songs: [],
 					createdBy: payload.userId,
@@ -178,7 +178,6 @@ class _PlaylistsModule extends CoreClass {
 					if (err.message === "Playlist not found") {
 						PlaylistsModule.playlistModel.create(
 							{
-								isUserModifiable: false,
 								displayName: `Genre - ${payload.genre}`,
 								songs: [],
 								createdBy: "Musare",

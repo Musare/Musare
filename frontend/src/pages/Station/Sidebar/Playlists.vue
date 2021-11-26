@@ -174,7 +174,7 @@ export default {
 	methods: {
 		init() {
 			/** Get playlists for user */
-			this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
+			this.socket.dispatch("playlists.indexMyPlaylists", res => {
 				if (res.status === "success")
 					this.setPlaylists(res.data.playlists);
 				this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database

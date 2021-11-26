@@ -415,7 +415,7 @@ export default {
 
 					const match = {
 						createdBy: userId,
-						type: "user"
+						type: { $in: ["user", "user-liked", "user-disliked"] }
 					};
 
 					// if a playlist order exists
@@ -471,10 +471,9 @@ export default {
 	 * Gets all playlists for the user requesting it
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {boolean} showNonModifiablePlaylists - whether or not to show non modifiable playlists e.g. liked songs
 	 * @param {Function} cb - gets called with the result
 	 */
-	indexMyPlaylists: isLoginRequired(async function indexMyPlaylists(session, showNonModifiablePlaylists, cb) {
+	indexMyPlaylists: isLoginRequired(async function indexMyPlaylists(session, cb) {
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
@@ -489,11 +488,8 @@ export default {
 
 					const match = {
 						createdBy: session.userId,
-						type: "user"
+						type: { $in: ["user", "user-liked", "user-disliked"] }
 					};
-
-					// if non modifiable playlists should be shown as well
-					if (!showNonModifiablePlaylists) match.isUserModifiable = true;
 
 					// if a playlist order exists
 					if (orderOfPlaylists > 0) match._id = { $in: orderOfPlaylists };
@@ -788,67 +784,6 @@ export default {
 	},
 
 	/**
-	 * Shuffles songs in a private playlist
-	 *
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} playlistId - the id of the playlist we are updating
-	 * @param {Function} cb - gets called with the result
-	 */
-	shuffle: isLoginRequired(async function shuffle(session, playlistId, cb) {
-		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
-
-		async.waterfall(
-			[
-				next => {
-					if (!playlistId) return next("No playlist id.");
-					return playlistModel.findById(playlistId, next);
-				},
-
-				(playlist, next) => {
-					if (!playlist.isUserModifiable) return next("Playlist cannot be shuffled.");
-
-					return UtilsModule.runJob("SHUFFLE_SONG_POSITIONS", { array: playlist.songs }, this)
-						.then(result => next(null, result.array))
-						.catch(next);
-				},
-
-				(songs, next) => {
-					playlistModel.updateOne({ _id: playlistId }, { $set: { songs } }, { runValidators: true }, next);
-				},
-
-				(res, next) => {
-					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
-						.then(playlist => next(null, playlist))
-						.catch(next);
-				}
-			],
-			async (err, playlist) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"PLAYLIST_SHUFFLE",
-						`Updating private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log(
-					"SUCCESS",
-					"PLAYLIST_SHUFFLE",
-					`Successfully updated private playlist "${playlistId}" for user "${session.userId}".`
-				);
-
-				return cb({
-					status: "success",
-					message: "Successfully shuffled playlist.",
-					data: { playlist }
-				});
-			}
-		);
-	}),
-
-	/**
 	 * Changes the order (position) of a song in a playlist
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
@@ -1013,9 +948,21 @@ export default {
 								.catch(next);
 						}
 					);
+				},
+				(playlist, newSong, next) => {
+					if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
+						SongsModule.runJob("RECALCULATE_SONG_RATINGS", {
+							songId: newSong._id,
+							youtubeId: newSong.youtubeId
+						})
+							.then(ratings => next(null, playlist, newSong, ratings))
+							.catch(next);
+					} else {
+						next(null, playlist, newSong, null);
+					}
 				}
 			],
-			async (err, playlist, newSong) => {
+			async (err, playlist, newSong, ratings) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -1067,6 +1014,55 @@ export default {
 						privacy: playlist.privacy
 					}
 				});
+
+				if (ratings && (playlist.type === "user-liked" || playlist.type === "user-disliked")) {
+					const { _id, youtubeId, title, artists, thumbnail } = newSong;
+					const { likes, dislikes } = ratings;
+
+					SongsModule.runJob("UPDATE_SONG", { songId: _id });
+
+					if (playlist.type === "user-liked") {
+						CacheModule.runJob("PUB", {
+							channel: "song.like",
+							value: JSON.stringify({
+								youtubeId,
+								userId: session.userId,
+								likes,
+								dislikes
+							})
+						});
+
+						ActivitiesModule.runJob("ADD_ACTIVITY", {
+							userId: session.userId,
+							type: "song__like",
+							payload: {
+								message: `Liked song <youtubeId>${title} by ${artists.join(", ")}</youtubeId>`,
+								youtubeId,
+								thumbnail
+							}
+						});
+					} else {
+						CacheModule.runJob("PUB", {
+							channel: "song.dislike",
+							value: JSON.stringify({
+								youtubeId,
+								userId: session.userId,
+								likes,
+								dislikes
+							})
+						});
+
+						ActivitiesModule.runJob("ADD_ACTIVITY", {
+							userId: session.userId,
+							type: "song__dislike",
+							payload: {
+								message: `Disliked song <youtubeId>${title} by ${artists.join(", ")}</youtubeId>`,
+								youtubeId,
+								thumbnail
+							}
+						});
+					}
+				}
 
 				return cb({
 					status: "success",
@@ -1158,7 +1154,7 @@ export default {
 
 				(playlist, next) => {
 					if (!playlist || playlist.createdBy !== session.userId) return next("Playlist not found.");
-					if (!playlist.isUserModifiable) return next("Playlist cannot be modified.");
+					if (playlist.type !== "user") return next("Playlist cannot be modified.");
 
 					return next(null, playlist);
 				}
@@ -1246,9 +1242,11 @@ export default {
 					SongsModule.runJob("GET_SONG_FROM_YOUTUBE_ID", { youtubeId }, this)
 						.then(res =>
 							next(null, playlist, {
+								_id: res.song._id,
 								title: res.song.title,
 								thumbnail: res.song.thumbnail,
-								artists: res.song.artists
+								artists: res.song.artists,
+								youtubeId: res.song.youtubeId
 							})
 						)
 						.catch(() => {
@@ -1258,14 +1256,26 @@ export default {
 						});
 				},
 
-				(playlist, youtubeSong, next) => {
-					const songName = youtubeSong.artists
-						? `${youtubeSong.title} by ${youtubeSong.artists.join(", ")}`
-						: youtubeSong.title;
+				(playlist, newSong, next) => {
+					if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
+						SongsModule.runJob("RECALCULATE_SONG_RATINGS", {
+							songId: newSong._id,
+							youtubeId: newSong.youtubeId
+						})
+							.then(ratings => next(null, playlist, newSong, ratings))
+							.catch(next);
+					} else {
+						next(null, playlist, newSong, null);
+					}
+				},
+
+				(playlist, newSong, ratings, next) => {
+					const { _id, title, artists, thumbnail } = newSong;
+					const songName = artists ? `${title} by ${artists.join(", ")}` : title;
 
 					if (
-						playlist.displayName !== "Liked Songs" &&
-						playlist.displayName !== "Disliked Songs" &&
+						playlist.type !== "user-liked" &&
+						playlist.type !== "user-disliked" &&
 						playlist.privacy === "public"
 					) {
 						ActivitiesModule.runJob("ADD_ACTIVITY", {
@@ -1273,11 +1283,63 @@ export default {
 							type: "playlist__remove_song",
 							payload: {
 								message: `Removed <youtubeId>${songName}</youtubeId> from playlist <playlistId>${playlist.displayName}</playlistId>`,
-								thumbnail: youtubeSong.thumbnail,
+								thumbnail,
 								playlistId,
-								youtubeId
+								youtubeId: newSong.youtubeId
 							}
 						});
+					}
+
+					if (ratings && (playlist.type === "user-liked" || playlist.type === "user-disliked")) {
+						const { likes, dislikes } = ratings;
+
+						SongsModule.runJob("UPDATE_SONG", { songId: _id });
+
+						if (playlist.type === "user-liked") {
+							CacheModule.runJob("PUB", {
+								channel: "song.unlike",
+								value: JSON.stringify({
+									youtubeId: newSong.youtubeId,
+									userId: session.userId,
+									likes,
+									dislikes
+								})
+							});
+
+							ActivitiesModule.runJob("ADD_ACTIVITY", {
+								userId: session.userId,
+								type: "song__unlike",
+								payload: {
+									message: `Removed <youtubeId>${title} by ${artists.join(
+										", "
+									)}</youtubeId> from your Liked Songs`,
+									youtubeId: newSong.youtubeId,
+									thumbnail
+								}
+							});
+						} else {
+							CacheModule.runJob("PUB", {
+								channel: "song.undislike",
+								value: JSON.stringify({
+									youtubeId: newSong.youtubeId,
+									userId: session.userId,
+									likes,
+									dislikes
+								})
+							});
+
+							ActivitiesModule.runJob("ADD_ACTIVITY", {
+								userId: session.userId,
+								type: "song__undislike",
+								payload: {
+									message: `Removed <youtubeId>${title} by ${artists.join(
+										", "
+									)}</youtubeId> from your Disliked Songs`,
+									youtubeId: newSong.youtubeId,
+									thumbnail
+								}
+							});
+						}
 					}
 
 					return next(null, playlist);
@@ -1338,7 +1400,7 @@ export default {
 				},
 
 				(playlist, next) => {
-					if (!playlist.isUserModifiable) return next("Playlist cannot be modified.");
+					if (playlist.type !== "user") return next("Playlist cannot be modified.");
 					return next(null);
 				},
 
@@ -1421,7 +1483,7 @@ export default {
 
 				(playlist, next) => {
 					if (playlist.createdBy !== session.userId) return next("You do not own this playlist.");
-					if (!playlist.isUserModifiable) return next("Playlist cannot be removed.");
+					if (playlist.type !== "user") return next("Playlist cannot be removed.");
 					return next(null, playlist);
 				},
 
@@ -1501,7 +1563,7 @@ export default {
 				},
 
 				(playlist, next) => {
-					if (!playlist.isUserModifiable) return next("Playlist cannot be removed.");
+					if (playlist.type !== "user") return next("Playlist cannot be removed.");
 					return next(null, playlist);
 				},
 

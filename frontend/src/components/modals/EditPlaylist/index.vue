@@ -223,7 +223,16 @@
 						Clear and refill genre playlist
 					</a>
 				</confirm>
-				<confirm v-if="isEditable()" @confirm="removePlaylist()">
+				<confirm
+					v-if="
+						isEditable() &&
+						!(
+							playlist.type === 'user-liked' ||
+							playlist.type === 'user-liked'
+						)
+					"
+					@confirm="removePlaylist()"
+				>
 					<a class="button is-danger"> Remove Playlist </a>
 				</confirm>
 			</div>
@@ -370,7 +379,9 @@ export default {
 		},
 		isEditable() {
 			return (
-				this.playlist.isUserModifiable &&
+				(this.playlist.type === "user" ||
+					this.playlist.type === "user-liked" ||
+					this.playlist.type === "user-disliked") &&
 				(this.userId === this.playlist.createdBy ||
 					this.userRole === "admin")
 			);
@@ -430,22 +441,6 @@ export default {
 				length += song.duration;
 			});
 			return this.utils.formatTimeLong(length);
-		},
-		shuffle() {
-			this.socket.dispatch(
-				"playlists.shuffle",
-				this.playlist._id,
-				res => {
-					new Toast(res.message);
-					if (res.status === "success") {
-						this.updatePlaylistSongs(
-							res.data.playlist.songs.sort(
-								(a, b) => a.position - b.position
-							)
-						);
-					}
-				}
-			);
 		},
 		removeSongFromPlaylist(id) {
 			if (this.playlist.displayName === "Liked Songs")

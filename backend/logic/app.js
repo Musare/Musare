@@ -325,10 +325,10 @@ class _AppModule extends CoreClass {
 
 						// create a liked songs playlist for the new user
 						(userId, next) => {
-							PlaylistsModule.runJob("CREATE_READ_ONLY_PLAYLIST", {
+							PlaylistsModule.runJob("CREATE_USER_PLAYLIST", {
 								userId,
 								displayName: "Liked Songs",
-								type: "user"
+								type: "user-liked"
 							})
 								.then(likedSongsPlaylist => {
 									next(null, likedSongsPlaylist, userId);
@@ -338,10 +338,10 @@ class _AppModule extends CoreClass {
 
 						// create a disliked songs playlist for the new user
 						(likedSongsPlaylist, userId, next) => {
-							PlaylistsModule.runJob("CREATE_READ_ONLY_PLAYLIST", {
+							PlaylistsModule.runJob("CREATE_USER_PLAYLIST", {
 								userId,
 								displayName: "Disliked Songs",
-								type: "user"
+								type: "user-disliked"
 							})
 								.then(dislikedSongsPlaylist => {
 									next(null, { likedSongsPlaylist, dislikedSongsPlaylist }, userId);

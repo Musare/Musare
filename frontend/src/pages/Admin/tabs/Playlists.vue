@@ -57,7 +57,6 @@
 					<tr>
 						<td>Display name</td>
 						<td>Type</td>
-						<td>Is user modifiable</td>
 						<td>Privacy</td>
 						<td>Songs #</td>
 						<td>Playlist length</td>
@@ -72,7 +71,6 @@
 					<tr v-for="playlist in playlists" :key="playlist._id">
 						<td>{{ playlist.displayName }}</td>
 						<td>{{ playlist.type }}</td>
-						<td>{{ playlist.isUserModifiable }}</td>
 						<td>{{ playlist.privacy }}</td>
 						<td>{{ playlist.songs.length }}</td>
 						<td>{{ totalLengthForPlaylist(playlist.songs) }}</td>

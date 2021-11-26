@@ -2621,7 +2621,6 @@ export default {
 					const stationId = mongoose.Types.ObjectId();
 					playlistModel.create(
 						{
-							isUserModifiable: false,
 							displayName: `Station - ${data.name}`,
 							songs: [],
 							createdBy: data.type === "official" ? "Musare" : session.userId,
