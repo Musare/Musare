@@ -167,10 +167,16 @@ export default {
 					this.showTab("punishments");
 					break;
 				default:
-					if (localStorage.getItem("lastAdminPage")) {
-						this.showTab(localStorage.getItem("lastAdminPage"));
-					} else {
-						this.showTab("songs");
+					if (path.startsWith("/admin")) {
+						if (localStorage.getItem("lastAdminPage")) {
+							this.$router.push(
+								`/admin/${localStorage.getItem(
+									"lastAdminPage"
+								)}`
+							);
+						} else {
+							this.$router.push(`/admin/songs`);
+						}
 					}
 			}
 		},
