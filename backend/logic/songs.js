@@ -755,6 +755,50 @@ class _SongsModule extends CoreClass {
 	}
 
 	/**
+	 * Recalculates dislikes and likes for all songs
+	 *
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	RECALCULATE_ALL_SONG_RATINGS() {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						SongsModule.SongModel.find({}, { _id: true }, next);
+					},
+
+					(songs, next) => {
+						let index = 0;
+						const { length } = songs;
+						async.eachLimit(
+							songs,
+							2,
+							(song, next) => {
+								index += 1;
+								console.log(`Recalculating ratings for song #${index} out of ${length}: ${song._id}`);
+								SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id }, this)
+									.then(() => {
+										next();
+									})
+									.catch(err => {
+										next(err);
+									});
+							},
+							err => {
+								next(err);
+							}
+						);
+					}
+				],
+				err => {
+					if (err) return reject(new Error(err));
+					return resolve();
+				}
+			);
+		});
+	}
+
+	/**
 	 * Gets an array of all genres
 	 *
 	 * @returns {Promise} - returns a promise (resolve, reject)

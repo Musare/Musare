@@ -207,7 +207,7 @@ export default {
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param cb
 	 */
-	updateAll: isAdminRequired(async function length(session, cb) {
+	updateAll: isAdminRequired(async function updateAll(session, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -228,6 +228,41 @@ export default {
 				}
 				this.log("SUCCESS", "SONGS_UPDATE_ALL", `Updated all songs successfully.`);
 				return cb({ status: "success", message: "Successfully updated all songs." });
+			}
+		);
+	}),
+
+	/**
+	 * Recalculates all song ratings
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param cb
+	 */
+	recalculateAllRatings: isAdminRequired(async function recalculateAllRatings(session, cb) {
+		async.waterfall(
+			[
+				next => {
+					SongsModule.runJob("RECALCULATE_ALL_SONG_RATINGS", {}, this)
+						.then(() => {
+							next();
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"SONGS_RECALCULATE_ALL_RATINGS",
+						`Failed to recalculate all song ratings. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "SONGS_RECALCULATE_ALL_RATINGS", `Recalculated all song ratings successfully.`);
+				return cb({ status: "success", message: "Successfully recalculated all song ratings." });
 			}
 		);
 	}),

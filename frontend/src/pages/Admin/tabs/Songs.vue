@@ -32,6 +32,14 @@
 				<confirm placement="bottom" @confirm="updateAllSongs()">
 					<button class="button is-danger">Update all songs</button>
 				</confirm>
+				<confirm
+					placement="bottom"
+					@confirm="recalculateAllSongRatings()"
+				>
+					<button class="button is-danger">
+						Recalculate all song ratings
+					</button>
+				</confirm>
 			</div>
 			<br />
 			<div class="box">
@@ -542,6 +550,15 @@ export default {
 		updateAllSongs() {
 			new Toast("Updating all songs, this could take a very long time.");
 			this.socket.dispatch("songs.updateAll", res => {
+				if (res.status === "success") new Toast(res.message);
+				else new Toast(res.message);
+			});
+		},
+		recalculateAllSongRatings() {
+			new Toast(
+				"Recalculating all song ratings, this could take a bit of time."
+			);
+			this.socket.dispatch("songs.recalculateAllRatings", res => {
 				if (res.status === "success") new Toast(res.message);
 				else new Toast(res.message);
 			});
