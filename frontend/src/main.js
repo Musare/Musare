@@ -3,6 +3,7 @@ import { createApp } from "vue";
 
 import VueTippy, { Tippy } from "vue-tippy";
 import { createRouter, createWebHistory } from "vue-router";
+import "lofig";
 
 import ws from "@/ws";
 import ms from "@/ms";
