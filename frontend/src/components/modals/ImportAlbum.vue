@@ -658,9 +658,11 @@ export default {
 		},
 		updateTrackSong(updatedSong) {
 			this.updatePlaylistSong(updatedSong);
-			this.trackSongs.forEach((song, index) => {
-				if (song[0]._id === updatedSong._id)
-					this.trackSongs[index][0] = updatedSong;
+			this.trackSongs.forEach((songs, indexA) => {
+				songs.forEach((song, indexB) => {
+					if (song._id === updatedSong._id)
+						this.trackSongs[indexA][indexB] = updatedSong;
+				});
 			});
 		},
 		...mapActions({

@@ -71,6 +71,10 @@ export default {
 				if (song._id === updatedSong._id)
 					state.playlistSongs[index] = updatedSong;
 			});
+			state.originalPlaylistSongs.forEach((song, index) => {
+				if (song._id === updatedSong._id)
+					state.originalPlaylistSongs[index] = updatedSong;
+			});
 		}
 	}
 };
