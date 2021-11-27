@@ -78,8 +78,6 @@ export default {
 					async.each(
 						_reports,
 						(report, cb) => {
-							console.log(typeof report.createdBy);
-
 							userModel
 								.findById(report.createdBy)
 								.select({ avatar: -1, name: -1, username: -1 })
