@@ -442,6 +442,22 @@ export default {
 			});
 			return this.utils.formatTimeLong(length);
 		},
+		shuffle() {
+			this.socket.dispatch(
+				"playlists.shuffle",
+				this.playlist._id,
+				res => {
+					new Toast(res.message);
+					if (res.status === "success") {
+						this.updatePlaylistSongs(
+							res.data.playlist.songs.sort(
+								(a, b) => a.position - b.position
+							)
+						);
+					}
+				}
+			);
+		},
 		removeSongFromPlaylist(id) {
 			if (this.playlist.type === "user-liked")
 				return this.socket.dispatch("songs.unlike", id, res => {

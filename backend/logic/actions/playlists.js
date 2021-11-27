@@ -784,6 +784,67 @@ export default {
 	},
 
 	/**
+	 * Shuffles songs in a private playlist
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} playlistId - the id of the playlist we are updating
+	 * @param {Function} cb - gets called with the result
+	 */
+	shuffle: isLoginRequired(async function shuffle(session, playlistId, cb) {
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					if (!playlistId) return next("No playlist id.");
+					return playlistModel.findById(playlistId, next);
+				},
+
+				(playlist, next) => {
+					if (!playlist.isUserModifiable) return next("Playlist cannot be shuffled.");
+
+					return UtilsModule.runJob("SHUFFLE_SONG_POSITIONS", { array: playlist.songs }, this)
+						.then(result => next(null, result.array))
+						.catch(next);
+				},
+
+				(songs, next) => {
+					playlistModel.updateOne({ _id: playlistId }, { $set: { songs } }, { runValidators: true }, next);
+				},
+
+				(res, next) => {
+					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
+						.then(playlist => next(null, playlist))
+						.catch(next);
+				}
+			],
+			async (err, playlist) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"PLAYLIST_SHUFFLE",
+						`Updating private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_SHUFFLE",
+					`Successfully updated private playlist "${playlistId}" for user "${session.userId}".`
+				);
+
+				return cb({
+					status: "success",
+					message: "Successfully shuffled playlist.",
+					data: { playlist }
+				});
+			}
+		);
+	}),
+
+	/**
 	 * Changes the order (position) of a song in a playlist
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
