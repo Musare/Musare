@@ -775,7 +775,6 @@ class _SongsModule extends CoreClass {
 							2,
 							(song, next) => {
 								index += 1;
-								console.log(`Recalculating ratings for song #${index} out of ${length}: ${song._id}`);
 								SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id }, this)
 									.then(() => {
 										next();
