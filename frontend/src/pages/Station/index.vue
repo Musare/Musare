@@ -856,6 +856,7 @@ import { mapState, mapActions, mapGetters } from "vuex";
 import { defineAsyncComponent } from "vue";
 import Toast from "toasters";
 import { ContentLoader } from "vue-content-loader";
+import canAutoPlay from "can-autoplay";
 
 import aw from "@/aw";
 import ms from "@/ms";
@@ -1733,7 +1734,7 @@ export default {
 						2000
 					) {
 						this.lastTimeRequestedIfCanAutoplay = Date.now();
-						window.canAutoplay.video().then(({ result }) => {
+						canAutoPlay.video().then(({ result }) => {
 							if (result) {
 								this.attemptsToPlayVideo = 0;
 								this.canAutoplay = true;

@@ -42,6 +42,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.15.4",
+    "can-autoplay": "^3.0.2",
     "config": "^3.3.6",
     "date-fns": "^2.25.0",
     "dompurify": "^2.3.3",
