@@ -768,13 +768,10 @@ class _SongsModule extends CoreClass {
 					},
 
 					(songs, next) => {
-						let index = 0;
-						const { length } = songs;
 						async.eachLimit(
 							songs,
 							2,
 							(song, next) => {
-								index += 1;
 								SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id }, this)
 									.then(() => {
 										next();
