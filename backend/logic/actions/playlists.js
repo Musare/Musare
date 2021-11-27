@@ -979,7 +979,7 @@ export default {
 					`Successfully added song "${youtubeId}" to private playlist "${playlistId}" for user "${session.userId}".`
 				);
 
-				if (!isSet && playlist.displayName !== "Liked Songs" && playlist.displayName !== "Disliked Songs") {
+				if (!isSet && playlist.type !== "user-liked" && playlist.type !== "user-disliked") {
 					const songName = newSong.artists
 						? `${newSong.title} by ${newSong.artists.join(", ")}`
 						: newSong.title;

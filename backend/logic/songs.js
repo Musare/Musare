@@ -715,7 +715,7 @@ class _SongsModule extends CoreClass {
 				[
 					next => {
 						playlistModel.countDocuments(
-							{ songs: { $elemMatch: { youtubeId: payload.youtubeId } }, displayName: "Liked Songs" },
+							{ songs: { $elemMatch: { youtubeId: payload.youtubeId } }, type: "user-liked" },
 							(err, likes) => {
 								if (err) return next(err);
 								return next(null, likes);
@@ -725,7 +725,7 @@ class _SongsModule extends CoreClass {
 
 					(likes, next) => {
 						playlistModel.countDocuments(
-							{ songs: { $elemMatch: { youtubeId: payload.youtubeId } }, displayName: "Disliked Songs" },
+							{ songs: { $elemMatch: { youtubeId: payload.youtubeId } }, type: "user-disliked" },
 							(err, dislikes) => {
 								if (err) return next(err);
 								return next(err, { likes, dislikes });

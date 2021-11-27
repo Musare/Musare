@@ -443,12 +443,12 @@ export default {
 			return this.utils.formatTimeLong(length);
 		},
 		removeSongFromPlaylist(id) {
-			if (this.playlist.displayName === "Liked Songs")
+			if (this.playlist.type === "user-liked")
 				return this.socket.dispatch("songs.unlike", id, res => {
 					new Toast(res.message);
 				});
 
-			if (this.playlist.displayName === "Disliked Songs")
+			if (this.playlist.type === "user-disliked")
 				return this.socket.dispatch("songs.undislike", id, res => {
 					new Toast(res.message);
 				});

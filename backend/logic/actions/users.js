@@ -273,7 +273,7 @@ export default {
 				},
 
 				next => {
-					playlistModel.findOne({ createdBy: session.userId, displayName: "Liked Songs" }, next);
+					playlistModel.findOne({ createdBy: session.userId, type: "user-liked" }, next);
 				},
 
 				// get all liked songs (as the global rating values for these songs will need adjusted)
@@ -288,7 +288,7 @@ export default {
 				},
 
 				next => {
-					playlistModel.findOne({ createdBy: session.userId, displayName: "Disliked Songs" }, next);
+					playlistModel.findOne({ createdBy: session.userId, type: "user-disliked" }, next);
 				},
 
 				// get all disliked songs (as the global rating values for these songs will need adjusted)
@@ -441,7 +441,7 @@ export default {
 				},
 
 				next => {
-					playlistModel.findOne({ createdBy: userId, displayName: "Liked Songs" }, next);
+					playlistModel.findOne({ createdBy: userId, type: "user-liked" }, next);
 				},
 
 				// get all liked songs (as the global rating values for these songs will need adjusted)
@@ -456,7 +456,7 @@ export default {
 				},
 
 				next => {
-					playlistModel.findOne({ createdBy: userId, displayName: "Disliked Songs" }, next);
+					playlistModel.findOne({ createdBy: userId, type: "user-disliked" }, next);
 				},
 
 				// get all disliked songs (as the global rating values for these songs will need adjusted)
