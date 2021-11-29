@@ -76,6 +76,9 @@
 				</div>
 			</template>
 			<template #footer>
+				<confirm @confirm="resendVerificationEmail()">
+					<a class="button is-warning"> Resend verification email </a>
+				</confirm>
 				<confirm @confirm="removeSessions()">
 					<a class="button is-warning"> Remove all sessions </a>
 				</confirm>
@@ -227,6 +230,15 @@ export default {
 				this.user._id,
 				this.ban.reason,
 				this.ban.expiresAt,
+				res => {
+					new Toast(res.message);
+				}
+			);
+		},
+		resendVerificationEmail() {
+			this.socket.dispatch(
+				`users.resendVerifyEmail`,
+				this.user._id,
 				res => {
 					new Toast(res.message);
 				}

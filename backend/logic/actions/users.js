@@ -2659,6 +2659,62 @@ export default {
 	},
 
 	/**
+	 * Resends the verify email email
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} userId - the user id of the person to resend the email to
+	 * @param {Function} cb - gets called with the result
+	 */
+	 resendVerifyEmail: isAdminRequired(async function resendVerifyEmail(session, userId, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const verifyEmailSchema = await MailModule.runJob("GET_SCHEMA", { schemaName: "verifyEmail" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					return userModel.findOne({ _id: userId }, next);
+				},
+
+				(user, next) => {
+					if (!user) return next("User not found.");
+					if (user.email.verified) return next("The user's email is already verified.");
+					return next(null, user);
+				},
+
+				(user, next) => {
+					verifyEmailSchema(user.email.address, user.username, user.email.verificationToken, err => {
+						next(err);
+					});
+				}
+			],
+			async err => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log(
+						"ERROR",
+						"RESEND_VERIFY_EMAIL",
+						`Couldn't resend verify email for user "${userId}". '${err}'`
+					);
+
+					return cb({ status: "error", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"RESEND_VERIFY_EMAIL",
+					`Resent verify email for user "${userId}".`
+				);
+
+				return cb({
+					status: "success",
+					message: "Email resent successfully."
+				});
+			}
+		);
+	}),
+
+	/**
 	 * Bans a user by userId
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
