@@ -2547,6 +2547,83 @@ export default {
 	},
 
 	/**
+	 * Requests a password reset for a a user as an admin
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} email - the email of the user for which the password reset is intended
+	 * @param {Function} cb - gets called with the result
+	 */
+	 adminRequestPasswordReset: isAdminRequired(async function adminRequestPasswordReset(session, userId, cb) {
+		const code = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 8 }, this);
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+
+		const resetPasswordRequestSchema = await MailModule.runJob(
+			"GET_SCHEMA",
+			{ schemaName: "resetPasswordRequest" },
+			this
+		);
+
+		async.waterfall(
+			[
+				next => {
+					return userModel.findOne({ "_id": userId }, next);
+				},
+
+				(user, next) => {
+					if (!user) return next("User not found.");
+					if (!user.services.password || !user.services.password.password)
+						return next("User does not have a password set, and probably uses GitHub to log in.");
+					return next();
+				},
+
+				(next) => {
+					const expires = new Date();
+					expires.setDate(expires.getDate() + 1);
+					userModel.findOneAndUpdate(
+						{ _id: userId },
+						{
+							$set: {
+								"services.password.reset": {
+									code,
+									expires
+								}
+							}
+						},
+						{ runValidators: true },
+						next
+					);
+				},
+
+				(user, next) => {
+					resetPasswordRequestSchema(user.email.address, user.username, code, next);
+				}
+			],
+			async err => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"ADMINREQUEST_PASSWORD_RESET",
+						`User '${userId}' failed to get a password reset. '${err}'`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"ADMIN_REQUEST_PASSWORD_RESET",
+					`User '${userId}' successfully got sent a password reset.`
+				);
+
+				return cb({
+					status: "success",
+					message: "Successfully requested password reset for user."
+				});
+			}
+		);
+	}),
+
+	/**
 	 * Verifies a reset code
 	 *
 	 * @param {object} session - the session object automatically added by the websocket

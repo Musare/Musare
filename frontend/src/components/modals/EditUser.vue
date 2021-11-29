@@ -79,6 +79,9 @@
 				<confirm @confirm="resendVerificationEmail()">
 					<a class="button is-warning"> Resend verification email </a>
 				</confirm>
+				<confirm @confirm="requestPasswordReset()">
+					<a class="button is-warning"> Request password reset </a>
+				</confirm>
 				<confirm @confirm="removeSessions()">
 					<a class="button is-warning"> Remove all sessions </a>
 				</confirm>
@@ -238,6 +241,15 @@ export default {
 		resendVerificationEmail() {
 			this.socket.dispatch(
 				`users.resendVerifyEmail`,
+				this.user._id,
+				res => {
+					new Toast(res.message);
+				}
+			);
+		},
+		requestPasswordReset() {
+			this.socket.dispatch(
+				`users.adminRequestPasswordReset`,
 				this.user._id,
 				res => {
 					new Toast(res.message);
