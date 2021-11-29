@@ -2553,7 +2553,7 @@ export default {
 	 * @param {string} email - the email of the user for which the password reset is intended
 	 * @param {Function} cb - gets called with the result
 	 */
-	 adminRequestPasswordReset: isAdminRequired(async function adminRequestPasswordReset(session, userId, cb) {
+	adminRequestPasswordReset: isAdminRequired(async function adminRequestPasswordReset(session, userId, cb) {
 		const code = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 8 }, this);
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
@@ -2565,9 +2565,7 @@ export default {
 
 		async.waterfall(
 			[
-				next => {
-					return userModel.findOne({ "_id": userId }, next);
-				},
+				next => userModel.findOne({ _id: userId }, next),
 
 				(user, next) => {
 					if (!user) return next("User not found.");
@@ -2576,7 +2574,7 @@ export default {
 					return next();
 				},
 
-				(next) => {
+				next => {
 					const expires = new Date();
 					expires.setDate(expires.getDate() + 1);
 					userModel.findOneAndUpdate(
@@ -2742,15 +2740,13 @@ export default {
 	 * @param {string} userId - the user id of the person to resend the email to
 	 * @param {Function} cb - gets called with the result
 	 */
-	 resendVerifyEmail: isAdminRequired(async function resendVerifyEmail(session, userId, cb) {
+	resendVerifyEmail: isAdminRequired(async function resendVerifyEmail(session, userId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		const verifyEmailSchema = await MailModule.runJob("GET_SCHEMA", { schemaName: "verifyEmail" }, this);
 
 		async.waterfall(
 			[
-				next => {
-					return userModel.findOne({ _id: userId }, next);
-				},
+				next => userModel.findOne({ _id: userId }, next),
 
 				(user, next) => {
 					if (!user) return next("User not found.");
@@ -2777,11 +2773,7 @@ export default {
 					return cb({ status: "error", message: err });
 				}
 
-				this.log(
-					"SUCCESS",
-					"RESEND_VERIFY_EMAIL",
-					`Resent verify email for user "${userId}".`
-				);
+				this.log("SUCCESS", "RESEND_VERIFY_EMAIL", `Resent verify email for user "${userId}".`);
 
 				return cb({
 					status: "success",
