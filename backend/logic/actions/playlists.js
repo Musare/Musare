@@ -954,10 +954,28 @@ export default {
 										return next("That song is already in the playlist");
 									return nextSong();
 								},
-								err => next(err)
+								err => next(err, playlist)
 							);
 						})
 						.catch(next);
+				},
+
+				(playlist, next) => {
+					if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
+						const oppositeType = playlist.type === "user-liked" ? "user-disliked" : "user-liked";
+						const oppositePlaylistName = oppositeType === "user-liked" ? "Liked Songs" : "Disliked Songs";
+						playlistModel.count(
+							{ type: oppositeType, createdBy: session.userId, "songs.youtubeId": youtubeId },
+							(err, results) => {
+								if (err) next(err);
+								else if (results > 0)
+									next(
+										`That song is already in your ${oppositePlaylistName} playlist. A song cannot be in both the Liked Songs playlist and the Disliked Songs playlist at the same time.`
+									);
+								else next();
+							}
+						);
+					} else next();
 				},
 
 				next => {
@@ -1171,6 +1189,8 @@ export default {
 					let successful = 0;
 					let failed = 0;
 					let alreadyInPlaylist = 0;
+					let alreadyInLikedPlaylist = 0;
+					let alreadyInDislikedPlaylist = 0;
 
 					if (youtubeIds.length === 0) next();
 
@@ -1194,6 +1214,20 @@ export default {
 										addedSongs.push(youtubeId);
 									} else failed += 1;
 									if (res.message === "That song is already in the playlist") alreadyInPlaylist += 1;
+									else if (
+										res.message ===
+										"That song is already in your Liked Songs playlist. " +
+											"A song cannot be in both the Liked Songs playlist" +
+											" and the Disliked Songs playlist at the same time."
+									)
+										alreadyInLikedPlaylist += 1;
+									else if (
+										res.message ===
+										"That song is already in your Disliked Songs playlist. " +
+											"A song cannot be in both the Liked Songs playlist " +
+											"and the Disliked Songs playlist at the same time."
+									)
+										alreadyInDislikedPlaylist += 1;
 								})
 								.catch(() => {
 									failed += 1;
@@ -1201,7 +1235,13 @@ export default {
 								.finally(() => next());
 						},
 						() => {
-							addSongsStats = { successful, failed, alreadyInPlaylist };
+							addSongsStats = {
+								successful,
+								failed,
+								alreadyInPlaylist,
+								alreadyInLikedPlaylist,
+								alreadyInDislikedPlaylist
+							};
 							next(null);
 						}
 					);
@@ -1215,7 +1255,6 @@ export default {
 
 				(playlist, next) => {
 					if (!playlist || playlist.createdBy !== session.userId) return next("Playlist not found.");
-					if (playlist.type !== "user") return next("Playlist cannot be modified.");
 
 					return next(null, playlist);
 				}
@@ -1244,7 +1283,7 @@ export default {
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_IMPORT",
-					`Successfully imported a YouTube playlist to private playlist "${playlistId}" for user "${session.userId}". Videos in playlist: ${videosInPlaylistTotal}, songs in playlist: ${songsInPlaylistTotal}, songs successfully added: ${addSongsStats.successful}, songs failed: ${addSongsStats.failed}, already in playlist: ${addSongsStats.alreadyInPlaylist}.`
+					`Successfully imported a YouTube playlist to private playlist "${playlistId}" for user "${session.userId}". Videos in playlist: ${videosInPlaylistTotal}, songs in playlist: ${songsInPlaylistTotal}, songs successfully added: ${addSongsStats.successful}, songs failed: ${addSongsStats.failed}, already in playlist: ${addSongsStats.alreadyInPlaylist}, already in liked ${addSongsStats.alreadyInLikedPlaylist}, already in disliked ${addSongsStats.alreadyInDislikedPlaylist}.`
 				);
 
 				return cb({
@@ -1254,7 +1293,9 @@ export default {
 						songs: playlist.songs,
 						stats: {
 							videosInPlaylistTotal,
-							songsInPlaylistTotal
+							songsInPlaylistTotal,
+							alreadyInLikedPlaylist: addSongsStats.alreadyInLikedPlaylist,
+							alreadyInDislikedPlaylist: addSongsStats.alreadyInDislikedPlaylist
 						}
 					}
 				});

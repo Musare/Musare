@@ -459,16 +459,6 @@ export default {
 			);
 		},
 		removeSongFromPlaylist(id) {
-			if (this.playlist.type === "user-liked")
-				return this.socket.dispatch("songs.unlike", id, res => {
-					new Toast(res.message);
-				});
-
-			if (this.playlist.type === "user-disliked")
-				return this.socket.dispatch("songs.undislike", id, res => {
-					new Toast(res.message);
-				});
-
 			return this.socket.dispatch(
 				"playlists.removeSongFromPlaylist",
 				id,
