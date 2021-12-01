@@ -2859,19 +2859,17 @@ export default {
 .christmas-seeker {
 	background: repeating-linear-gradient(
 		-45deg,
-		var(--white),
-		var(--white) 1rem,
-		var(--dark-red) 1rem,
-		var(--dark-red) 2rem
+		var(--white) 0 1rem,
+		var(--dark-red) 1rem 2rem
 	);
 
-	background-size: 150% 200%;
+	background-size: 200% 200%;
 	animation: christmas 10s linear infinite;
 }
 
 @keyframes christmas {
 	100% {
-		background-position: 100% 100%;
+		background-position: 80% 100%;
 	}
 }
 
