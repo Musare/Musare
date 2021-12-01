@@ -207,6 +207,50 @@ class _SongsModule extends CoreClass {
 	}
 
 	/**
+	 * Gets songs data
+	 *
+	 * @param {object} payload - object containing the payload
+	 * @param {string} payload.page - the page
+	 * @param {string} payload.pageSize - the page size
+	 * @param {string} payload.properties - the properties to return for each song
+	 * @param {string} payload.sort - the sort object
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	 GET_DATA(payload) {
+		return new Promise((resolve, reject) => {
+			const { page, pageSize, properties, sort } = payload;
+			console.log("GET_DATA", payload);
+			async.waterfall(
+				[
+					next => {
+						SongsModule.SongModel
+							.find({})
+							.count((err, count) => {
+								next(err, count);
+							});
+					},
+
+					(count, next) => {
+						SongsModule.SongModel
+							.find({})
+							.sort(sort)
+							.skip(pageSize * (page - 1))
+							.limit(pageSize)
+							.select(properties.join(" "))
+							.exec((err, songs) => {
+								next(err, count, songs);
+							});
+					}
+				],
+				(err, count, songs) => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve({ data: songs, count });
+				}
+			)
+		});
+	}
+
+	/**
 	 * Makes sure that if a song is not currently in the songs db, to add it
 	 *
 	 * @param {object} payload - an object containing the payload

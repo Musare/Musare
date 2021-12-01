@@ -202,6 +202,46 @@ export default {
 	}),
 
 	/**
+	 * Gets songs, used in the admin songs page by the AdvancedTable component
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param page - the page
+	 * @param pageSize - the size per page
+	 * @param properties - the properties to return for each song
+	 * @param sort - the sort object
+	 * @param cb
+	 */
+	 getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, cb) {
+		async.waterfall(
+			[
+				next => {
+					SongsModule.runJob("GET_DATA", {
+						page,
+						pageSize,
+						properties,
+						sort
+					}, this)
+					.then(response => {
+						next(null, response);
+					})
+					.catch(err => {
+						next(err);
+					});
+				}
+			],
+			async (err, response) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "SONGS_GET_DATA", `Failed to get data from songs. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "SONGS_GET_DATA", `Got data from songs successfully.`);
+				return cb({ status: "success", message: "Successfully got data from songs.", data: response });
+			}
+		);
+	}),
+
+	/**
 	 * Updates all songs
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
