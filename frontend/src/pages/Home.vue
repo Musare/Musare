@@ -793,6 +793,10 @@ export default {
 		&.loggedIn {
 			top: 20vh !important;
 		}
+
+		@media only screen and (max-width: 550px) {
+			top: 45vh !important;
+		}
 	}
 	.header {
 		&,
