@@ -2864,7 +2864,7 @@ export default {
 	);
 
 	background-size: 200% 200%;
-	animation: christmas 10s linear infinite;
+	animation: christmas 20s linear infinite;
 }
 
 @keyframes christmas {
