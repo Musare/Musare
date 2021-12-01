@@ -39,7 +39,7 @@ export default {
 	.christmas-lights {
 		position: absolute;
 		width: 100%;
-		height: 50px;
+		height: 64px;
 		left: 0;
 		top: 64px;
 		display: flex;
