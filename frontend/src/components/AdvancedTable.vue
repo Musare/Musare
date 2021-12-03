@@ -48,7 +48,15 @@
 				</draggable>
 			</thead>
 			<tbody>
-				<tr v-for="item in data" :key="item._id">
+				<tr
+					v-for="(item, itemIndex) in data"
+					:key="item._id"
+					:class="{
+						selected: item.selected,
+						highlighted: item.highlighted
+					}"
+					@click="clickItem(itemIndex, $event)"
+				>
 					<td
 						v-for="column in sortedFilteredColumns"
 						:key="`${item._id}-${column.name}`"
@@ -150,6 +158,9 @@ export default {
 				column => this.enabledColumns.indexOf(column.name) !== -1
 			);
 		},
+		lastSelectedItemIndex() {
+			return this.data.findIndex(item => item.highlighted);
+		},
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
@@ -224,6 +235,53 @@ export default {
 				this.enabledColumns.push(column.name);
 			}
 			this.getData();
+		},
+		clickItem(itemIndex, event) {
+			const { shiftKey, ctrlKey } = event;
+			// Shift was pressed, so attempt to select all items between the clicked item and last clicked item
+			if (shiftKey) {
+				// If there is a last clicked item
+				if (this.lastSelectedItemIndex >= 0) {
+					// Clicked item is lower than last item, so select upwards until it reaches the last selected item
+					if (itemIndex > this.lastSelectedItemIndex) {
+						for (
+							let itemIndexUp = itemIndex;
+							itemIndexUp > this.lastSelectedItemIndex;
+							itemIndexUp -= 1
+						) {
+							this.data[itemIndexUp].selected = true;
+						}
+					}
+					// Clicked item is higher than last item, so select downwards until it reaches the last selected item
+					else if (itemIndex < this.lastSelectedItemIndex) {
+						for (
+							let itemIndexDown = itemIndex;
+							itemIndexDown < this.lastSelectedItemIndex;
+							itemIndexDown += 1
+						) {
+							this.data[itemIndexDown].selected = true;
+						}
+					}
+				}
+			}
+			// Ctrl was pressed, so toggle selected on the clicked item
+			else if (ctrlKey) {
+				this.data[itemIndex].selected = !this.data[itemIndex].selected;
+			}
+			// Neither ctrl nor shift were pressed, so unselect all items and set the clicked item to selected
+			else {
+				this.data = this.data.map(item => ({
+					...item,
+					selected: false
+				}));
+				this.data[itemIndex].selected = true;
+			}
+
+			// Set the last clicked item to no longer be highlighted, if it exists
+			if (this.lastSelectedItemIndex >= 0)
+				this.data[this.lastSelectedItemIndex].highlighted = false;
+			// Set the clicked item to be highlighted
+			this.data[itemIndex].highlighted = true;
 		}
 	}
 };
@@ -231,8 +289,30 @@ export default {
 
 <style lang="scss" scoped>
 .table {
-	.sortable {
-		cursor: pointer;
+	thead {
+		tr {
+			th {
+				&.sortable {
+					cursor: pointer;
+				}
+			}
+		}
+	}
+
+	tbody {
+		tr {
+			&.selected {
+				outline: 1px solid red;
+			}
+
+			&.highlighted {
+				outline: 1px solid blue;
+			}
+
+			&.selected.highlighted {
+				outline: 1px solid green;
+			}
+		}
 	}
 }
 </style>
