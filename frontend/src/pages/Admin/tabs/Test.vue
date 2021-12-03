@@ -3,10 +3,23 @@
 		<page-metadata title="Admin | Test" />
 		<div class="container">
 			<advanced-table :columns="columns" data-action="songs.getData">
-				<template #column-column1="slotProps">
+				<template #column-thumbnailImage="slotProps">
+					<img
+						class="song-thumbnail"
+						:src="slotProps.item.thumbnail"
+						onerror="this.src='/assets/notes-transparent.png'"
+					/>
+				</template>
+				<template #column-thumbnailUrl="slotProps">
+					{{ slotProps.item.thumbnail }}
+				</template>
+				<template #column-_id="slotProps">
+					{{ slotProps.item._id }}
+				</template>
+				<template #column-title="slotProps">
 					{{ slotProps.item.title }}
 				</template>
-				<template #column-column2="slotProps">
+				<template #column-artists="slotProps">
 					{{ slotProps.item.artists.join(", ") }}
 				</template>
 			</advanced-table>
@@ -25,18 +38,47 @@ export default {
 		return {
 			columns: [
 				{
-					name: "column1",
-					displayName: "Column 1",
-					properties: ["title"],
-					sortable: true,
-					sortProperty: "title"
+					name: "thumbnailImage",
+					displayName: "Thumbnail (Image)",
+					properties: ["thumbnail"],
+					sortable: false,
+					filterable: false
 				},
 				{
-					name: "column2",
-					displayName: "Column 2",
+					name: "_id",
+					displayName: "Musare Id",
+					properties: ["_id"],
+					sortable: true,
+					sortProperty: "_id",
+					filterable: true,
+					filterProperty: "_id"
+				},
+				{
+					name: "title",
+					displayName: "Title",
+					properties: ["title"],
+					sortable: true,
+					sortProperty: "title",
+					filterable: true,
+					filterProperty: "title"
+				},
+				{
+					name: "artists",
+					displayName: "Artists",
 					properties: ["artists"],
 					sortable: true,
-					sortProperty: "artists"
+					sortProperty: "artists",
+					filterable: true,
+					filterProperty: "artists"
+				},
+				{
+					name: "thumbnailUrl",
+					displayName: "Thumbnail (URL)",
+					properties: ["thumbnail"],
+					sortable: true,
+					sortProperty: "thumbnail",
+					filterable: true,
+					filterProperty: "thumbnail"
 				}
 			]
 		};
@@ -47,4 +89,10 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.song-thumbnail {
+	display: block;
+	max-width: 50px;
+	margin: 0 auto;
+}
+</style>

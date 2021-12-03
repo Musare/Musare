@@ -1,26 +1,56 @@
 <template>
 	<div>
+		<div>
+			<button
+				v-for="column in orderedColumns"
+				:key="column.name"
+				class="button"
+				@click="toggleColumnVisibility(column)"
+			>
+				{{
+					`${
+						this.enabledColumns.indexOf(column.name) !== -1
+							? "Hide"
+							: "Show"
+					} ${column.name} column`
+				}}
+			</button>
+		</div>
 		<table class="table">
 			<thead>
-				<tr>
-					<th
-						v-for="column in columns"
-						:key="column.name"
-						:class="{ sortable: column.sortable }"
-						@click="changeSort(column)"
-					>
-						{{ column.displayName }}
-						<span
-							v-if="column.sortable && sort[column.sortProperty]"
-							>({{ sort[column.sortProperty] }})</span
+				<draggable
+					item-key="name"
+					v-model="orderedColumns"
+					v-bind="columnDragOptions"
+					tag="tr"
+				>
+					<template #item="{ element: column }">
+						<th
+							:class="{ sortable: column.sortable }"
+							v-if="enabledColumns.indexOf(column.name) !== -1"
+							@click="changeSort(column)"
 						>
-					</th>
-				</tr>
+							{{ column.displayName }}
+							<span
+								v-if="
+									column.sortable && sort[column.sortProperty]
+								"
+								>({{ sort[column.sortProperty] }})</span
+							>
+							<input
+								v-if="column.sortable"
+								placeholder="Filter"
+								@click.stop
+								@keyup.enter="changeFilter(column, $event)"
+							/>
+						</th>
+					</template>
+				</draggable>
 			</thead>
 			<tbody>
 				<tr v-for="item in data" :key="item._id">
 					<td
-						v-for="column in columns"
+						v-for="column in sortedFilteredColumns"
 						:key="`${item._id}-${column.name}`"
 					>
 						<slot
@@ -66,12 +96,16 @@
 
 <script>
 import { mapGetters } from "vuex";
+import draggable from "vuedraggable";
 
 import Toast from "toasters";
 
 import ws from "@/ws";
 
 export default {
+	components: {
+		draggable
+	},
 	props: {
 		columns: { type: Array, default: null },
 		dataAction: { type: String, default: null }
@@ -82,25 +116,48 @@ export default {
 			pageSize: 10,
 			data: [],
 			count: 0, // TODO Rename
-			sort: {
-				title: "ascending"
+			sort: {},
+			filter: {},
+			orderedColumns: [],
+			enabledColumns: [],
+			columnDragOptions() {
+				return {
+					animation: 200,
+					group: "columns",
+					disabled: false,
+					ghostClass: "draggable-list-ghost",
+					filter: ".ignore-elements",
+					fallbackTolerance: 50
+				};
 			}
 		};
 	},
 	computed: {
 		properties() {
 			return Array.from(
-				new Set(this.columns.flatMap(column => column.properties))
+				new Set(
+					this.sortedFilteredColumns.flatMap(
+						column => column.properties
+					)
+				)
 			);
 		},
 		lastPage() {
 			return Math.ceil(this.count / this.pageSize);
+		},
+		sortedFilteredColumns() {
+			return this.orderedColumns.filter(
+				column => this.enabledColumns.indexOf(column.name) !== -1
+			);
 		},
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
+		this.orderedColumns = this.columns;
+		this.enabledColumns = this.columns.map(column => column.name);
+
 		ws.onConnect(this.init);
 	},
 	methods: {
@@ -114,6 +171,7 @@ export default {
 				this.pageSize,
 				this.properties,
 				this.sort,
+				this.filter,
 				res => {
 					console.log(111, res);
 					new Toast(res.message);
@@ -134,14 +192,38 @@ export default {
 		},
 		changeSort(column) {
 			if (column.sortable) {
-				if (this.sort[column.sortProperty] === undefined)
-					this.sort[column.sortProperty] = "ascending";
-				else if (this.sort[column.sortProperty] === "ascending")
-					this.sort[column.sortProperty] = "descending";
-				else if (this.sort[column.sortProperty] === "descending")
-					delete this.sort[column.sortProperty];
+				const { sortProperty } = column;
+				if (this.sort[sortProperty] === undefined)
+					this.sort[sortProperty] = "ascending";
+				else if (this.sort[sortProperty] === "ascending")
+					this.sort[sortProperty] = "descending";
+				else if (this.sort[sortProperty] === "descending")
+					delete this.sort[sortProperty];
 				this.getData();
 			}
+		},
+		changeFilter(column, event) {
+			if (column.filterable) {
+				const { value } = event.target;
+				const { filterProperty } = column;
+				if (this.filter[filterProperty] !== undefined && value === "") {
+					delete this.filter[filterProperty];
+				} else if (this.filter[filterProperty] !== value) {
+					this.filter[filterProperty] = value;
+				} else return;
+				this.getData();
+			}
+		},
+		toggleColumnVisibility(column) {
+			if (this.enabledColumns.indexOf(column.name) !== -1) {
+				this.enabledColumns.splice(
+					this.enabledColumns.indexOf(column.name),
+					1
+				);
+			} else {
+				this.enabledColumns.push(column.name);
+			}
+			this.getData();
 		}
 	}
 };
