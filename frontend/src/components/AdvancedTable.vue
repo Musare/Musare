@@ -2,7 +2,9 @@
 	<div>
 		<div>
 			<button
-				v-for="column in orderedColumns"
+				v-for="column in orderedColumns.filter(
+					c => c.name !== 'select'
+				)"
 				:key="column.name"
 				class="button"
 				@click="toggleColumnVisibility(column)"
@@ -16,61 +18,69 @@
 				}}
 			</button>
 		</div>
-		<table class="table">
-			<thead>
-				<draggable
-					item-key="name"
-					v-model="orderedColumns"
-					v-bind="columnDragOptions"
-					tag="tr"
-				>
-					<template #item="{ element: column }">
-						<th
-							:class="{ sortable: column.sortable }"
-							v-if="enabledColumns.indexOf(column.name) !== -1"
-							@click="changeSort(column)"
-						>
-							{{ column.displayName }}
-							<span
-								v-if="
-									column.sortable && sort[column.sortProperty]
-								"
-								>({{ sort[column.sortProperty] }})</span
-							>
-							<input
-								v-if="column.sortable"
-								placeholder="Filter"
-								@click.stop
-								@keyup.enter="changeFilter(column, $event)"
-							/>
-						</th>
-					</template>
-				</draggable>
-			</thead>
-			<tbody>
-				<tr
-					v-for="(item, itemIndex) in data"
-					:key="item._id"
-					:class="{
-						selected: item.selected,
-						highlighted: item.highlighted
-					}"
-					@click="clickItem(itemIndex, $event)"
-				>
-					<td
-						v-for="column in sortedFilteredColumns"
-						:key="`${item._id}-${column.name}`"
+		<div class="table-container">
+			<table class="table">
+				<thead>
+					<draggable
+						item-key="name"
+						v-model="orderedColumns"
+						v-bind="columnDragOptions"
+						tag="tr"
+						draggable=".item-draggable"
 					>
-						<slot
-							:name="`column-${column.name}`"
-							:item="item"
-						></slot>
-					</td>
-				</tr>
-			</tbody>
-		</table>
-		<br />
-		<div class="control">
+						<template #item="{ element: column }">
+							<th
+								:class="{
+									sortable: column.sortable,
+									'item-draggable': column.name !== 'select'
+								}"
+								v-if="
+									enabledColumns.indexOf(column.name) !== -1
+								"
+								@click="changeSort(column)"
+							>
+								{{ column.displayName }}
+								<span
+									v-if="
+										column.sortable &&
+										sort[column.sortProperty]
+									"
+									>({{ sort[column.sortProperty] }})</span
+								>
+								<input
+									v-if="column.sortable"
+									placeholder="Filter"
+									@click.stop
+									@keyup.enter="changeFilter(column, $event)"
+								/>
+							</th>
+						</template>
+					</draggable>
+				</thead>
+				<tbody>
+					<tr
+						v-for="(item, itemIndex) in data"
+						:key="item._id"
+						:class="{
+							selected: item.selected,
+							highlighted: item.highlighted
+						}"
+						@click="clickItem(itemIndex, $event)"
+					>
+						<td
+							v-for="column in sortedFilteredColumns"
+							:key="`${item._id}-${column.name}`"
+						>
+							<slot
+								:name="`column-${column.name}`"
+								:item="item"
+							></slot>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div class="row control">
 			<label class="label">Items per page</label>
 			<p class="control select">
 				<select v-model.number="pageSize" @change="getData()">
@@ -84,21 +94,47 @@
 				</select>
 			</p>
 		</div>
-		<br />
-		<p>Page {{ page }} / {{ lastPage }}</p>
-		<br />
-		<button class="button is-primary" @click="changePage(page - 1)">
-			Go to previous page</button
-		>&nbsp;
-		<button class="button is-primary" @click="changePage(page + 1)">
-			Go to next page</button
-		>&nbsp;
-		<button class="button is-primary" @click="changePage(1)">
-			Go to first page</button
-		>&nbsp;
-		<button class="button is-primary" @click="changePage(lastPage)">
-			Go to last page
-		</button>
+		<div class="row">
+			<button
+				v-if="page > 1"
+				class="button is-primary material-icons"
+				@click="changePage(1)"
+				content="First Page"
+				v-tippy
+			>
+				skip_previous
+			</button>
+			<button
+				v-if="page > 1"
+				class="button is-primary material-icons"
+				@click="changePage(page - 1)"
+				content="Previous Page"
+				v-tippy
+			>
+				fast_rewind
+			</button>
+
+			<p>Page {{ page }} / {{ lastPage }}</p>
+
+			<button
+				v-if="page < lastPage"
+				class="button is-primary material-icons"
+				@click="changePage(page + 1)"
+				content="Next Page"
+				v-tippy
+			>
+				fast_forward
+			</button>
+			<button
+				v-if="page < lastPage"
+				class="button is-primary material-icons"
+				@click="changePage(lastPage)"
+				content="Last Page"
+				v-tippy
+			>
+				skip_next
+			</button>
+		</div>
 	</div>
 </template>
 
@@ -166,8 +202,18 @@ export default {
 		})
 	},
 	mounted() {
-		this.orderedColumns = this.columns;
-		this.enabledColumns = this.columns.map(column => column.name);
+		const columns = [
+			{
+				name: "select",
+				displayName: "",
+				properties: [],
+				sortable: false,
+				filterable: false
+			},
+			...this.columns
+		];
+		this.orderedColumns = columns;
+		this.enabledColumns = columns.map(column => column.name);
 
 		ws.onConnect(this.init);
 	},
@@ -288,31 +334,94 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.table {
-	thead {
+.night-mode {
+	.table {
+		background-color: var(--dark-grey-3);
+		color: var(--light-grey-2);
+
 		tr {
-			th {
-				&.sortable {
-					cursor: pointer;
+			&:nth-child(even) {
+				background-color: var(--dark-grey-2);
+			}
+
+			&:hover,
+			&:focus,
+			&.highlighted {
+				background-color: var(--dark-grey);
+			}
+		}
+	}
+}
+
+.table-container {
+	border-radius: 5px;
+	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
+	overflow-x: auto;
+	margin: 10px 0;
+
+	table {
+		border-collapse: separate;
+
+		thead {
+			tr {
+				th {
+					&.sortable {
+						cursor: pointer;
+					}
+				}
+			}
+		}
+
+		tbody {
+			tr {
+				&.selected td:first-child {
+					border-left: 5px solid var(--primary-color);
+					padding-left: 0;
+				}
+
+				&.highlighted {
+					background-color: var(--light-grey);
+
+					td:first-child {
+						border-left: 5px solid var(--red);
+						padding-left: 0;
+					}
+				}
+
+				&.selected.highlighted td:first-child {
+					border-left: 5px solid var(--green);
+					padding-left: 0;
 				}
 			}
 		}
 	}
 
-	tbody {
-		tr {
-			&.selected {
-				outline: 1px solid red;
-			}
+	table thead tr th:first-child,
+	table tbody tr td:first-child {
+		position: sticky;
+		left: 0;
+		z-index: 2;
+		padding: 0;
+		padding-left: 5px;
+	}
+}
 
-			&.highlighted {
-				outline: 1px solid blue;
-			}
+.row {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	justify-content: center;
+	margin: 10px;
 
-			&.selected.highlighted {
-				outline: 1px solid green;
-			}
-		}
+	button {
+		font-size: 22px;
+		margin: auto 5px;
+	}
+
+	p,
+	label {
+		font-size: 18px;
+		margin: auto 5px;
 	}
 }
 </style>

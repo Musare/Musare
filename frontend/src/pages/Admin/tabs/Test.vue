@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<page-metadata title="Admin | Test" />
-		<div class="container">
+		<div class="admin-container">
 			<advanced-table :columns="columns" data-action="songs.getData">
 				<template #column-thumbnailImage="slotProps">
 					<img
@@ -90,6 +90,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.admin-container {
+	max-width: 1900px;
+	margin: 0 auto;
+	padding: 0 10px;
+}
+
 .song-thumbnail {
 	display: block;
 	max-width: 50px;

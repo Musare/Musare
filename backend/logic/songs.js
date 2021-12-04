@@ -217,7 +217,7 @@ class _SongsModule extends CoreClass {
 	 * @param {string} payload.filter - the filter object
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	 GET_DATA(payload) {
+	GET_DATA(payload) {
 		return new Promise((resolve, reject) => {
 			const { page, pageSize, properties, sort, filter } = payload;
 
@@ -225,7 +225,10 @@ class _SongsModule extends CoreClass {
 
 			const regexFilter = {};
 			for (const [filterKey, filterValue] of Object.entries(filter)) {
-				const isRegex = filterValue.length > 2 && filterValue.indexOf("/") === 0 && filterValue.lastIndexOf("/") === filterValue.length - 1;
+				const isRegex =
+					filterValue.length > 2 &&
+					filterValue.indexOf("/") === 0 &&
+					filterValue.lastIndexOf("/") === filterValue.length - 1;
 				let query;
 				if (isRegex) query = filterValue.slice(1, filterValue.length - 1);
 				else query = filterValue.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -236,16 +239,13 @@ class _SongsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						SongsModule.SongModel
-							.find({ ...regexFilter })
-							.count((err, count) => {
-								next(err, count);
-							});
+						SongsModule.SongModel.find({ ...regexFilter }).count((err, count) => {
+							next(err, count);
+						});
 					},
 
 					(count, next) => {
-						SongsModule.SongModel
-							.find({ ...regexFilter })
+						SongsModule.SongModel.find({ ...regexFilter })
 							.sort(sort)
 							.skip(pageSize * (page - 1))
 							.limit(pageSize)
@@ -259,7 +259,7 @@ class _SongsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve({ data: songs, count });
 				}
-			)
+			);
 		});
 	}
 

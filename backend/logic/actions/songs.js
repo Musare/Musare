@@ -212,23 +212,27 @@ export default {
 	 * @param filter - the filter object
 	 * @param cb
 	 */
-	 getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, filter, cb) {
+	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, filter, cb) {
 		async.waterfall(
 			[
 				next => {
-					SongsModule.runJob("GET_DATA", {
-						page,
-						pageSize,
-						properties,
-						sort,
-						filter
-					}, this)
-					.then(response => {
-						next(null, response);
-					})
-					.catch(err => {
-						next(err);
-					});
+					SongsModule.runJob(
+						"GET_DATA",
+						{
+							page,
+							pageSize,
+							properties,
+							sort,
+							filter
+						},
+						this
+					)
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
 				}
 			],
 			async (err, response) => {
