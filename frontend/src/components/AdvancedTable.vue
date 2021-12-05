@@ -18,181 +18,194 @@
 				}}
 			</button>
 		</div>
-		<div class="table-container">
-			<table class="table">
-				<thead>
-					<draggable
-						item-key="name"
-						v-model="orderedColumns"
-						v-bind="columnDragOptions"
-						tag="tr"
-						draggable=".item-draggable"
-					>
-						<template #item="{ element: column }">
-							<th
-								:class="{
-									sortable: column.sortable,
-									'item-draggable': column.name !== 'select'
-								}"
-								v-if="
-									enabledColumns.indexOf(column.name) !== -1
-								"
-							>
-								<span @click="changeSort(column)">
-									{{ column.displayName }}
-									<span
-										v-if="
-											column.sortable &&
-											sort[column.sortProperty]
-										"
-										>({{ sort[column.sortProperty] }})</span
-									>
-								</span>
-								<tippy
-									v-if="column.sortable"
-									:touch="true"
-									:interactive="true"
-									placement="bottom"
-									theme="search"
-									ref="search"
-									trigger="click"
-								>
-									<i
-										class="
-											material-icons
-											action-dropdown-icon
-										"
-										:content="`Filter by ${column.displayName}`"
-										v-tippy
-										@click.prevent="true"
-										>search</i
-									>
-
-									<template #content>
-										<div
-											class="
-												control
-												is-grouped
-												input-with-button
-											"
-										>
-											<p class="control is-expanded">
-												<input
-													class="input"
-													type="text"
-													:placeholder="`Filter by ${column.displayName}`"
-													:value="
-														column.filterProperty !==
-														null
-															? filter[
-																	column
-																		.filterProperty
-															  ]
-															: ''
-													"
-													@keyup.enter="
-														changeFilter(
-															column,
-															$event
-														)
-													"
-												/>
-											</p>
-											<p class="control">
-												<a class="button is-info">
-													<i
-														class="
-															material-icons
-															icon-with-button
-														"
-														>search</i
-													>
-												</a>
-											</p>
-										</div>
-									</template>
-								</tippy>
-							</th>
-						</template>
-					</draggable>
-				</thead>
-				<tbody>
-					<tr
-						v-for="(item, itemIndex) in data"
-						:key="item._id"
-						:class="{
-							selected: item.selected,
-							highlighted: item.highlighted
-						}"
-						@click="clickItem(itemIndex, $event)"
-					>
-						<td
-							v-for="column in sortedFilteredColumns"
-							:key="`${item._id}-${column.name}`"
+		<div class="table-outer-container">
+			<div class="table-container">
+				<table class="table">
+					<thead>
+						<draggable
+							item-key="name"
+							v-model="orderedColumns"
+							v-bind="columnDragOptions"
+							tag="tr"
+							draggable=".item-draggable"
 						>
-							<slot
-								:name="`column-${column.name}`"
-								:item="item"
-							></slot>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-		<div class="row control">
-			<label class="label">Items per page</label>
-			<p class="control select">
-				<select v-model.number="pageSize" @change="getData()">
-					<option value="10">10</option>
-					<option value="25">25</option>
-					<option value="50">50</option>
-					<option value="100">100</option>
-					<option value="250">250</option>
-					<option value="500">500</option>
-					<option value="1000">1000</option>
-				</select>
-			</p>
-		</div>
-		<div class="row">
-			<button
-				v-if="page > 1"
-				class="button is-primary material-icons"
-				@click="changePage(1)"
-				content="First Page"
-				v-tippy
-			>
-				skip_previous
-			</button>
-			<button
-				v-if="page > 1"
-				class="button is-primary material-icons"
-				@click="changePage(page - 1)"
-				content="Previous Page"
-				v-tippy
-			>
-				fast_rewind
-			</button>
+							<template #item="{ element: column }">
+								<th
+									:class="{
+										sortable: column.sortable,
+										'item-draggable':
+											column.name !== 'select'
+									}"
+									v-if="
+										enabledColumns.indexOf(column.name) !==
+										-1
+									"
+								>
+									<span @click="changeSort(column)">
+										{{ column.displayName }}
+										<span
+											v-if="
+												column.sortable &&
+												sort[column.sortProperty]
+											"
+											>({{
+												sort[column.sortProperty]
+											}})</span
+										>
+									</span>
+									<tippy
+										v-if="column.sortable"
+										:touch="true"
+										:interactive="true"
+										placement="bottom"
+										theme="search"
+										ref="search"
+										trigger="click"
+									>
+										<i
+											class="
+												material-icons
+												action-dropdown-icon
+											"
+											:content="`Filter by ${column.displayName}`"
+											v-tippy
+											@click.prevent="true"
+											>search</i
+										>
 
-			<p>Page {{ page }} / {{ lastPage }}</p>
+										<template #content>
+											<div
+												class="
+													control
+													is-grouped
+													input-with-button
+												"
+											>
+												<p class="control is-expanded">
+													<input
+														class="input"
+														type="text"
+														:placeholder="`Filter by ${column.displayName}`"
+														:value="
+															column.filterProperty !==
+															null
+																? filter[
+																		column
+																			.filterProperty
+																  ]
+																: ''
+														"
+														@keyup.enter="
+															changeFilter(
+																column,
+																$event
+															)
+														"
+													/>
+												</p>
+												<p class="control">
+													<a class="button is-info">
+														<i
+															class="
+																material-icons
+																icon-with-button
+															"
+															>search</i
+														>
+													</a>
+												</p>
+											</div>
+										</template>
+									</tippy>
+								</th>
+							</template>
+						</draggable>
+					</thead>
+					<tbody>
+						<tr
+							v-for="(item, itemIndex) in data"
+							:key="item._id"
+							:class="{
+								selected: item.selected,
+								highlighted: item.highlighted
+							}"
+							@click="clickItem(itemIndex, $event)"
+						>
+							<td
+								v-for="column in sortedFilteredColumns"
+								:key="`${item._id}-${column.name}`"
+							>
+								<slot
+									:name="`column-${column.name}`"
+									:item="item"
+								></slot>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<div class="table-footer">
+				<div>
+					<button
+						v-if="page > 1"
+						class="button is-primary material-icons"
+						@click="changePage(1)"
+						content="First Page"
+						v-tippy
+					>
+						skip_previous
+					</button>
+					<button
+						v-if="page > 1"
+						class="button is-primary material-icons"
+						@click="changePage(page - 1)"
+						content="Previous Page"
+						v-tippy
+					>
+						fast_rewind
+					</button>
 
-			<button
-				v-if="page < lastPage"
-				class="button is-primary material-icons"
-				@click="changePage(page + 1)"
-				content="Next Page"
-				v-tippy
-			>
-				fast_forward
-			</button>
-			<button
-				v-if="page < lastPage"
-				class="button is-primary material-icons"
-				@click="changePage(lastPage)"
-				content="Last Page"
-				v-tippy
-			>
-				skip_next
-			</button>
+					<p>Page {{ page }} / {{ lastPage }}</p>
+
+					<button
+						v-if="page < lastPage"
+						class="button is-primary material-icons"
+						@click="changePage(page + 1)"
+						content="Next Page"
+						v-tippy
+					>
+						fast_forward
+					</button>
+					<button
+						v-if="page < lastPage"
+						class="button is-primary material-icons"
+						@click="changePage(lastPage)"
+						content="Last Page"
+						v-tippy
+					>
+						skip_next
+					</button>
+				</div>
+				<div>
+					<div class="control">
+						<label class="label">Items per page</label>
+						<p class="control select">
+							<select
+								v-model.number="pageSize"
+								@change="getData()"
+							>
+								<option value="10">10</option>
+								<option value="25">25</option>
+								<option value="50">50</option>
+								<option value="100">100</option>
+								<option value="250">250</option>
+								<option value="500">500</option>
+								<option value="1000">1000</option>
+							</select>
+						</p>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 </template>
@@ -393,8 +406,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.night-mode {
-	.table {
+.night-mode .table-outer-container {
+	.table-container .table {
 		&,
 		thead th {
 			background-color: var(--dark-grey-3);
@@ -413,87 +426,109 @@ export default {
 			}
 		}
 	}
+
+	.table-footer {
+		background-color: var(--dark-grey-3);
+		color: var(--light-grey-2);
+	}
 }
 
-.table-container {
+.table-outer-container {
 	border-radius: 5px;
 	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
-	overflow-x: auto;
 	margin: 10px 0;
+	overflow: hidden;
 
-	table {
-		border-collapse: separate;
+	.table-container {
+		overflow-x: auto;
 
-		thead {
-			tr {
-				th {
-					&.sortable {
-						cursor: pointer;
-					}
+		table {
+			border-collapse: separate;
 
-					span > .material-icons {
-						font-size: 22px;
-						position: relative;
-						top: 6px;
+			thead {
+				tr {
+					th {
+						white-space: nowrap;
 
-						&:first-child {
-							margin-left: auto;
+						&.sortable {
+							cursor: pointer;
+						}
+
+						span > .material-icons {
+							font-size: 22px;
+							position: relative;
+							top: 6px;
+
+							&:first-child {
+								margin-left: auto;
+							}
 						}
 					}
 				}
 			}
-		}
 
-		tbody {
-			tr {
-				&.selected td:first-child {
-					border-left: 5px solid var(--primary-color);
-					padding-left: 0;
-				}
+			tbody {
+				tr {
+					&.selected td:first-child {
+						border-left: 5px solid var(--primary-color);
+						padding-left: 0;
+					}
 
-				&.highlighted {
-					background-color: var(--light-grey);
+					&.highlighted {
+						background-color: var(--light-grey);
 
-					td:first-child {
-						border-left: 5px solid var(--red);
+						td:first-child {
+							border-left: 5px solid var(--red);
+							padding-left: 0;
+						}
+					}
+
+					&.selected.highlighted td:first-child {
+						border-left: 5px solid var(--green);
 						padding-left: 0;
 					}
 				}
-
-				&.selected.highlighted td:first-child {
-					border-left: 5px solid var(--green);
-					padding-left: 0;
-				}
 			}
+		}
+
+		table thead tr th:first-child,
+		table tbody tr td:first-child {
+			position: sticky;
+			left: 0;
+			z-index: 2;
+			padding: 0;
+			padding-left: 5px;
 		}
 	}
 
-	table thead tr th:first-child,
-	table tbody tr td:first-child {
-		position: sticky;
-		left: 0;
-		z-index: 2;
-		padding: 0;
-		padding-left: 5px;
-	}
-}
+	.table-footer {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		line-height: 36px;
+		background-color: var(--white);
 
-.row {
-	display: flex;
-	flex-direction: row;
-	flex-wrap: wrap;
-	justify-content: center;
-	margin: 10px;
+		& > div:first-child,
+		div .control {
+			display: flex;
+			flex-direction: row;
+			margin-bottom: 0 !important;
 
-	button {
-		font-size: 22px;
-		margin: auto 5px;
-	}
-
-	p,
-	label {
-		font-size: 18px;
-		margin: auto 5px;
+			button {
+				margin: 5px;
+				font-size: 20px;
+			}
+			p,
+			label {
+				margin: 5px;
+				font-size: 14px;
+				font-weight: 600;
+			}
+			&.select::after {
+				top: 18px;
+			}
+		}
 	}
 }
 </style>
