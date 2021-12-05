@@ -135,6 +135,12 @@
 								<slot
 									:name="`column-${column.name}`"
 									:item="item"
+									v-if="
+										column.properties.every(
+											property =>
+												item[property] !== undefined
+										)
+									"
 								></slot>
 							</td>
 						</tr>
