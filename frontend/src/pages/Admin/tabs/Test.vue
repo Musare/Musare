@@ -69,6 +69,7 @@ export default {
 					filterable: false,
 					hidable: true,
 					defaultVisibility: "shown",
+					width: "50px",
 					draggable: true
 				},
 				{

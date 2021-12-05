@@ -33,6 +33,11 @@
 										sortable: column.sortable,
 										'item-draggable': column.draggable
 									}"
+									:style="{
+										minWidth: column.minWidth,
+										width: column.width,
+										maxWidth: column.maxWidth
+									}"
 									v-if="
 										shownColumns.indexOf(column.name) !== -1
 									"
@@ -237,6 +242,9 @@ export default {
 		hidable: Boolean for whether a column can be hidden
 		defaultVisibility: Default visibility for a column, either "shown" or "hidden"
 		draggable: Boolean for whether a column can be dragged/reordered
+		minWidth: Minimum width of column, e.g. 50px
+		width: Width of column, e.g. 100px
+		maxWidth: Maximum width of column, e.g. 150px
 		*/
 		columns: { type: Array, default: null },
 		dataAction: { type: String, default: null }
