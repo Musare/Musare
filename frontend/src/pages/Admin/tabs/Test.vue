@@ -44,7 +44,8 @@ export default {
 					sortable: false,
 					filterable: false,
 					hidable: true,
-					defaultVisibility: "shown"
+					defaultVisibility: "shown",
+					draggable: true
 				},
 				{
 					name: "_id",
@@ -55,7 +56,8 @@ export default {
 					filterable: true,
 					filterProperty: "_id",
 					hidable: true,
-					defaultVisibility: "shown"
+					defaultVisibility: "shown",
+					draggable: true
 				},
 				{
 					name: "title",
@@ -66,7 +68,8 @@ export default {
 					filterable: true,
 					filterProperty: "title",
 					hidable: true,
-					defaultVisibility: "shown"
+					defaultVisibility: "shown",
+					draggable: true
 				},
 				{
 					name: "artists",
@@ -77,7 +80,8 @@ export default {
 					filterable: true,
 					filterProperty: "artists",
 					hidable: true,
-					defaultVisibility: "shown"
+					defaultVisibility: "shown",
+					draggable: true
 				},
 				{
 					name: "thumbnailUrl",
@@ -88,7 +92,8 @@ export default {
 					filterable: true,
 					filterProperty: "thumbnail",
 					hidable: true,
-					defaultVisibility: "hidden"
+					defaultVisibility: "hidden",
+					draggable: true
 				}
 			]
 		};

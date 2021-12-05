@@ -31,8 +31,7 @@
 								<th
 									:class="{
 										sortable: column.sortable,
-										'item-draggable':
-											column.name !== 'select'
+										'item-draggable': column.draggable
 									}"
 									v-if="
 										shownColumns.indexOf(column.name) !== -1
@@ -237,6 +236,7 @@ export default {
 		filterProperty: The property the backend will filter on, e.g. title
 		hidable: Boolean for whether a column can be hidden
 		defaultVisibility: Default visibility for a column, either "shown" or "hidden"
+		draggable: Boolean for whether a column can be dragged/reordered
 		*/
 		columns: { type: Array, default: null },
 		dataAction: { type: String, default: null }
@@ -299,7 +299,8 @@ export default {
 				properties: [],
 				sortable: false,
 				filterable: false,
-				hidable: false
+				hidable: false,
+				draggable: false
 			},
 			...this.columns
 		];
