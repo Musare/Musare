@@ -18,6 +18,8 @@
 		</div>
 		<div class="table-outer-container">
 			<div class="table-container">
+				<div class="table-header">
+				</div>
 				<table class="table">
 					<thead>
 						<draggable
@@ -42,17 +44,41 @@
 										shownColumns.indexOf(column.name) !== -1
 									"
 								>
-									<span @click="changeSort(column)">
+									<span>
 										{{ column.displayName }}
+									</span>
+									<span
+										v-if="column.sortable"
+										:content="`Sort by ${column.displayName}`"
+										v-tippy
+									>
+										<span
+											v-if="!sort[column.sortProperty]"
+											class="material-icons"
+											@click="changeSort(column)"
+										>
+											unfold_more
+										</span>
 										<span
 											v-if="
-												column.sortable &&
-												sort[column.sortProperty]
+												sort[column.sortProperty] ===
+												'ascending'
 											"
-											>({{
-												sort[column.sortProperty]
-											}})</span
+											class="material-icons"
+											@click="changeSort(column)"
 										>
+											expand_less
+										</span>
+										<span
+											v-if="
+												sort[column.sortProperty] ===
+												'descending'
+											"
+											class="material-icons"
+											@click="changeSort(column)"
+										>
+											expand_more
+										</span>
 									</span>
 									<tippy
 										v-if="column.filterable"
@@ -471,6 +497,7 @@ export default {
 		}
 	}
 
+	.table-header,
 	.table-footer {
 		background-color: var(--dark-grey-3);
 		color: var(--light-grey-2);
@@ -492,20 +519,33 @@ export default {
 			thead {
 				tr {
 					th {
+						height: 40px;
+						line-height: 40px;
+						border: 1px solid var(--light-grey-2);
+						border-width: 1px 1px 1px 0;
+
+						&:first-child,
+						&:last-child {
+							border-width: 1px 0 1px;
+						}
+
 						&.sortable {
 							cursor: pointer;
 						}
 
-						span {
+						& > span {
+							float: right;
+
 							& > .material-icons {
 								font-size: 22px;
 								position: relative;
 								top: 6px;
 								cursor: pointer;
 							}
+
 							&:first-child {
+								float: left;
 								white-space: nowrap;
-								line-height: 32px;
 							}
 						}
 					}
@@ -532,17 +572,16 @@ export default {
 						border-left: 5px solid var(--green);
 						padding-left: 0;
 					}
-				}
-			}
 
-			th,
-			td {
-				border: 1px solid var(--light-grey-2);
-				border-width: 0 1px 1px 0;
+					td {
+						border: 1px solid var(--light-grey-2);
+						border-width: 0 1px 1px 0;
 
-				&:first-child,
-				&:last-child {
-					border-width: 0 0 1px;
+						&:first-child,
+						&:last-child {
+							border-width: 0 0 1px;
+						}
+					}
 				}
 			}
 		}
@@ -557,6 +596,7 @@ export default {
 		}
 	}
 
+	.table-header,
 	.table-footer {
 		display: flex;
 		flex-direction: row;
@@ -564,7 +604,13 @@ export default {
 		justify-content: space-between;
 		line-height: 36px;
 		background-color: var(--white);
+	}
 
+	.table-header .button {
+		margin: 5px;
+	}
+
+	.table-footer {
 		& > div:first-child,
 		div .control {
 			display: flex;
