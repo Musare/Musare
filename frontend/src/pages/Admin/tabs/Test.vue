@@ -42,7 +42,9 @@ export default {
 					displayName: "Thumbnail (Image)",
 					properties: ["thumbnail"],
 					sortable: false,
-					filterable: false
+					filterable: false,
+					hidable: true,
+					defaultVisibility: "shown"
 				},
 				{
 					name: "_id",
@@ -51,7 +53,9 @@ export default {
 					sortable: true,
 					sortProperty: "_id",
 					filterable: true,
-					filterProperty: "_id"
+					filterProperty: "_id",
+					hidable: true,
+					defaultVisibility: "shown"
 				},
 				{
 					name: "title",
@@ -60,7 +64,9 @@ export default {
 					sortable: true,
 					sortProperty: "title",
 					filterable: true,
-					filterProperty: "title"
+					filterProperty: "title",
+					hidable: true,
+					defaultVisibility: "shown"
 				},
 				{
 					name: "artists",
@@ -69,7 +75,9 @@ export default {
 					sortable: true,
 					sortProperty: "artists",
 					filterable: true,
-					filterProperty: "artists"
+					filterProperty: "artists",
+					hidable: true,
+					defaultVisibility: "shown"
 				},
 				{
 					name: "thumbnailUrl",
@@ -78,7 +86,9 @@ export default {
 					sortable: true,
 					sortProperty: "thumbnail",
 					filterable: true,
-					filterProperty: "thumbnail"
+					filterProperty: "thumbnail",
+					hidable: true,
+					defaultVisibility: "hidden"
 				}
 			]
 		};

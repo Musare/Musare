@@ -2,16 +2,14 @@
 	<div>
 		<div>
 			<button
-				v-for="column in orderedColumns.filter(
-					c => c.name !== 'select'
-				)"
+				v-for="column in hidableSortedColumns"
 				:key="column.name"
 				class="button"
 				@click="toggleColumnVisibility(column)"
 			>
 				{{
 					`${
-						this.enabledColumns.indexOf(column.name) !== -1
+						this.shownColumns.indexOf(column.name) !== -1
 							? "Hide"
 							: "Show"
 					} ${column.name} column`
@@ -37,8 +35,7 @@
 											column.name !== 'select'
 									}"
 									v-if="
-										enabledColumns.indexOf(column.name) !==
-										-1
+										shownColumns.indexOf(column.name) !== -1
 									"
 								>
 									<span @click="changeSort(column)">
@@ -223,6 +220,18 @@ export default {
 		draggable
 	},
 	props: {
+		/*
+		Column properties:
+		name: Unique lowercase name
+		displayName: Nice name for the column header
+		properties: The properties this column needs to show data
+		sortable: Boolean for whether the order of a particular column can be changed 
+		sortProperty: The property the backend will sort on if this column gets sorted, e.g. title
+		filterable: Boolean for whether or not a column can use a filter
+		filterProperty: The property the backend will filter on, e.g. title
+		hidable: Boolean for whether a column can be hidden
+		defaultVisibility: Default visibility for a column, either "shown" or "hidden"
+		*/
 		columns: { type: Array, default: null },
 		dataAction: { type: String, default: null }
 	},
@@ -235,7 +244,7 @@ export default {
 			sort: {},
 			filter: {},
 			orderedColumns: [],
-			enabledColumns: [],
+			shownColumns: [],
 			columnDragOptions() {
 				return {
 					animation: 200,
@@ -263,8 +272,11 @@ export default {
 		},
 		sortedFilteredColumns() {
 			return this.orderedColumns.filter(
-				column => this.enabledColumns.indexOf(column.name) !== -1
+				column => this.shownColumns.indexOf(column.name) !== -1
 			);
+		},
+		hidableSortedColumns() {
+			return this.orderedColumns.filter(column => column.hidable);
 		},
 		lastSelectedItemIndex() {
 			return this.data.findIndex(item => item.highlighted);
@@ -280,12 +292,16 @@ export default {
 				displayName: "",
 				properties: [],
 				sortable: false,
-				filterable: false
+				filterable: false,
+				hidable: false
 			},
 			...this.columns
 		];
 		this.orderedColumns = columns;
-		this.enabledColumns = columns.map(column => column.name);
+		// A column will be shown if the defaultVisibility is set to shown, OR if the defaultVisibility is not set to shown and hidable is false
+		this.shownColumns = columns
+			.filter(column => column.defaultVisibility !== "hidden")
+			.map(column => column.name);
 
 		ws.onConnect(this.init);
 	},
@@ -344,13 +360,13 @@ export default {
 			}
 		},
 		toggleColumnVisibility(column) {
-			if (this.enabledColumns.indexOf(column.name) !== -1) {
-				this.enabledColumns.splice(
-					this.enabledColumns.indexOf(column.name),
+			if (this.shownColumns.indexOf(column.name) !== -1) {
+				this.shownColumns.splice(
+					this.shownColumns.indexOf(column.name),
 					1
 				);
 			} else {
-				this.enabledColumns.push(column.name);
+				this.shownColumns.push(column.name);
 			}
 			this.getData();
 		},
