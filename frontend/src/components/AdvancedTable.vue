@@ -299,6 +299,11 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
+	watch: {
+		pageSize(pageSize) {
+			localStorage.setItem("adminPageSize", pageSize);
+		}
+	},
 	mounted() {
 		const columns = [
 			{
@@ -317,6 +322,14 @@ export default {
 		this.shownColumns = columns
 			.filter(column => column.defaultVisibility !== "hidden")
 			.map(column => column.name);
+
+		let pageSize = parseFloat(localStorage.getItem("adminPageSize"));
+		pageSize =
+			typeof pageSize === "number" && !Number.isNaN(pageSize)
+				? pageSize
+				: 10;
+		localStorage.setItem("adminPageSize", pageSize);
+		this.pageSize = pageSize;
 
 		ws.onConnect(this.init);
 	},
