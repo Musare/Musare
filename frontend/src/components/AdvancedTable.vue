@@ -19,6 +19,69 @@
 		<div class="table-outer-container">
 			<div class="table-container">
 				<div class="table-header">
+					<tippy
+						:touch="true"
+						:interactive="true"
+						placement="bottom"
+						theme="search"
+						ref="search"
+						trigger="click"
+					>
+						<a class="button is-info" click.prevent="true">
+							<i class="material-icons icon-with-button"
+								>search</i
+							>
+							Search
+						</a>
+
+						<template #content>
+							<div
+								v-for="(query, index) in advancedQuery"
+								:key="`query-${index}`"
+								class="control is-grouped"
+							>
+								<p class="control is-expanded">
+									<input
+										v-model="query.query"
+										class="input"
+										type="text"
+									/>
+								</p>
+								<div class="control select">
+									<select v-model="query.column">
+										<option
+											v-for="column in columns.filter(
+												c => c.name !== 'select'
+											)"
+											:key="column.name"
+											:value="column.name"
+										>
+											{{ column.displayName }}
+										</option>
+									</select>
+								</div>
+								<div class="control">
+									<i
+										class="material-icons icon-with-button"
+										@click="addQueryItem()"
+										>control_point</i
+									>
+									<i
+										v-if="advancedQuery.length > 1"
+										class="material-icons icon-with-button"
+										@click="removeQueryItem(index)"
+										>remove_circle_outline</i
+									>
+								</div>
+							</div>
+							<a class="button is-info">
+								<i class="material-icons icon-with-button"
+									>search</i
+								>
+								Search
+							</a>
+						</template>
+					</tippy>
 				</div>
 				<table class="table">
 					<thead>
@@ -294,7 +357,13 @@ export default {
 					filter: ".ignore-elements",
 					fallbackTolerance: 50
 				};
-			}
+			},
+			advancedQuery: [
+				{
+					query: "",
+					column: ""
+				}
+			]
 		};
 	},
 	computed: {
@@ -470,6 +539,15 @@ export default {
 				this.data[this.lastSelectedItemIndex].highlighted = false;
 			// Set the clicked item to be highlighted
 			this.data[itemIndex].highlighted = true;
+		},
+		addQueryItem() {
+			this.advancedQuery.push({
+				query: "",
+				column: ""
+			});
+		},
+		removeQueryItem(index) {
+			this.advancedQuery.splice(index, 1);
 		}
 	}
 };

@@ -1163,7 +1163,7 @@ img {
 	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
 	background-color: var(--white);
 	color: var(--dark-grey);
-	width: 300px;
+	width: 500px;
 
 	.tippy-content {
 		padding: 0;
