@@ -806,6 +806,7 @@ img {
 
 		&[data-theme~="songActions"],
 		&[data-theme~="addToPlaylist"],
+		&[data-theme~="search"],
 		&[data-theme~="stationSettings"] {
 			background-color: var(--dark-grey-2);
 			border: 0 !important;
@@ -843,11 +844,17 @@ img {
 				}
 			}
 		}
+
+		&[data-theme~="search"] {
+			background-color: var(--dark-grey-2);
+			border: 0 !important;
+		}
 	}
 
 	.tippy-box[data-placement^="top"] {
 		&[data-theme~="songActions"],
-		&[data-theme~="addToPlaylist"] {
+		&[data-theme~="addToPlaylist"],
+		&[data-theme~="search"] {
 			> .tippy-arrow::before {
 				border-top-color: var(--dark-grey-2);
 			}
@@ -857,6 +864,7 @@ img {
 	.tippy-box[data-placement^="bottom"] {
 		&[data-theme~="songActions"],
 		&[data-theme~="addToPlaylist"],
+		&[data-theme~="search"],
 		&[data-theme~="stationSettings"] {
 			> .tippy-arrow::before {
 				border-bottom-color: var(--dark-grey-2);
@@ -866,7 +874,8 @@ img {
 
 	.tippy-box[data-placement^="left"] {
 		&[data-theme~="songActions"],
-		&[data-theme~="addToPlaylist"] {
+		&[data-theme~="addToPlaylist"],
+		&[data-theme~="search"] {
 			> .tippy-arrow::before {
 				border-left-color: var(--dark-grey-2);
 			}
@@ -875,7 +884,8 @@ img {
 
 	.tippy-box[data-placement^="right"] {
 		&[data-theme~="songActions"],
-		&[data-theme~="addToPlaylist"] {
+		&[data-theme~="addToPlaylist"],
+		&[data-theme~="search"] {
 			> .tippy-arrow::before {
 				border-right-color: var(--dark-grey-2);
 			}
@@ -967,7 +977,8 @@ img {
 
 .tippy-box[data-placement^="top"] {
 	&[data-theme~="songActions"],
-	&[data-theme~="addToPlaylist"] {
+	&[data-theme~="addToPlaylist"],
+	&[data-theme~="search"] {
 		> .tippy-arrow::before {
 			border-top-color: var(--white);
 		}
@@ -980,7 +991,8 @@ img {
 .tippy-box[data-placement^="bottom"] {
 	&[data-theme~="songActions"],
 	&[data-theme~="addToPlaylist"],
-	&[data-theme~="stationSettings"] {
+	&[data-theme~="stationSettings"],
+	&[data-theme~="search"] {
 		> .tippy-arrow::before {
 			border-bottom-color: var(--white);
 		}
@@ -992,7 +1004,8 @@ img {
 
 .tippy-box[data-placement^="left"] {
 	&[data-theme~="songActions"],
-	&[data-theme~="addToPlaylist"] {
+	&[data-theme~="addToPlaylist"],
+	&[data-theme~="search"] {
 		> .tippy-arrow::before {
 			border-left-color: var(--white);
 		}
@@ -1004,7 +1017,8 @@ img {
 
 .tippy-box[data-placement^="right"] {
 	&[data-theme~="songActions"],
-	&[data-theme~="addToPlaylist"] {
+	&[data-theme~="addToPlaylist"],
+	&[data-theme~="search"] {
 		> .tippy-arrow::before {
 			border-right-color: var(--white);
 		}
@@ -1139,6 +1153,30 @@ img {
 	#create-playlist {
 		margin: 10px 10px 10px 10px;
 		width: unset;
+	}
+}
+
+.tippy-box[data-theme~="search"] {
+	font-size: 15px;
+	padding: 0;
+	border: 1px solid var(--light-grey-3);
+	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+	background-color: var(--white);
+	color: var(--dark-grey);
+	width: 300px;
+
+	.tippy-content {
+		padding: 0;
+
+		& > span {
+			display: flex;
+			flex-direction: column;
+			padding: 5px;
+
+			.control {
+				margin-bottom: 0 !important;
+			}
+		}
 	}
 }
 

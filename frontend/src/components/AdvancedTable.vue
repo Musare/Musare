@@ -37,22 +37,81 @@
 								v-if="
 									enabledColumns.indexOf(column.name) !== -1
 								"
-								@click="changeSort(column)"
 							>
-								{{ column.displayName }}
-								<span
-									v-if="
-										column.sortable &&
-										sort[column.sortProperty]
-									"
-									>({{ sort[column.sortProperty] }})</span
-								>
-								<input
+								<span @click="changeSort(column)">
+									{{ column.displayName }}
+									<span
+										v-if="
+											column.sortable &&
+											sort[column.sortProperty]
+										"
+										>({{ sort[column.sortProperty] }})</span
+									>
+								</span>
+								<tippy
 									v-if="column.sortable"
-									placeholder="Filter"
-									@click.stop
-									@keyup.enter="changeFilter(column, $event)"
-								/>
+									:touch="true"
+									:interactive="true"
+									placement="bottom"
+									theme="search"
+									ref="search"
+									trigger="click"
+								>
+									<i
+										class="
+											material-icons
+											action-dropdown-icon
+										"
+										:content="`Filter by ${column.displayName}`"
+										v-tippy
+										@click.prevent="true"
+										>search</i
+									>
+
+									<template #content>
+										<div
+											class="
+												control
+												is-grouped
+												input-with-button
+											"
+										>
+											<p class="control is-expanded">
+												<input
+													class="input"
+													type="text"
+													:placeholder="`Filter by ${column.displayName}`"
+													:value="
+														column.filterProperty !==
+														null
+															? filter[
+																	column
+																		.filterProperty
+															  ]
+															: ''
+													"
+													@keyup.enter="
+														changeFilter(
+															column,
+															$event
+														)
+													"
+												/>
+											</p>
+											<p class="control">
+												<a class="button is-info">
+													<i
+														class="
+															material-icons
+															icon-with-button
+														"
+														>search</i
+													>
+												</a>
+											</p>
+										</div>
+									</template>
+								</tippy>
 							</th>
 						</template>
 					</draggable>
@@ -336,8 +395,11 @@ export default {
 <style lang="scss" scoped>
 .night-mode {
 	.table {
-		background-color: var(--dark-grey-3);
-		color: var(--light-grey-2);
+		&,
+		thead th {
+			background-color: var(--dark-grey-3);
+			color: var(--light-grey-2);
+		}
 
 		tr {
 			&:nth-child(even) {
@@ -367,6 +429,16 @@ export default {
 				th {
 					&.sortable {
 						cursor: pointer;
+					}
+
+					span > .material-icons {
+						font-size: 22px;
+						position: relative;
+						top: 6px;
+
+						&:first-child {
+							margin-left: auto;
+						}
 					}
 				}
 			}
