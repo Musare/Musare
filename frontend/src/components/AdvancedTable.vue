@@ -55,7 +55,7 @@
 										>
 									</span>
 									<tippy
-										v-if="column.sortable"
+										v-if="column.filterable"
 										:touch="true"
 										:interactive="true"
 										placement="bottom"
@@ -492,19 +492,20 @@ export default {
 			thead {
 				tr {
 					th {
-						white-space: nowrap;
-
 						&.sortable {
 							cursor: pointer;
 						}
 
-						span > .material-icons {
-							font-size: 22px;
-							position: relative;
-							top: 6px;
-
+						span {
+							& > .material-icons {
+								font-size: 22px;
+								position: relative;
+								top: 6px;
+								cursor: pointer;
+							}
 							&:first-child {
-								margin-left: auto;
+								white-space: nowrap;
+								line-height: 32px;
 							}
 						}
 					}
@@ -531,6 +532,17 @@ export default {
 						border-left: 5px solid var(--green);
 						padding-left: 0;
 					}
+				}
+			}
+
+			th,
+			td {
+				border: 1px solid var(--light-grey-2);
+				border-width: 0 1px 1px 0;
+
+				&:first-child,
+				&:last-child {
+					border-width: 0 0 1px;
 				}
 			}
 		}
