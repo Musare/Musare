@@ -52,9 +52,23 @@
 											</option>
 										</select>
 									</div>
+									<div class="control select">
+										<select
+											v-if="query.filter.type"
+											v-model="query.type"
+										>
+											<option
+												v-for="type in filterTypes"
+												:key="type"
+												:value="type"
+											>
+												{{ type }}
+											</option>
+										</select>
+									</div>
 									<p class="control is-expanded">
 										<input
-											v-if="query.filter.type === 'regex'"
+											v-if="query.type === 'regex'"
 											v-model="query.regex"
 											class="input"
 											type="text"
@@ -326,7 +340,8 @@ export default {
 			advancedQuery: [
 				{
 					regex: "",
-					filter: {}
+					filter: {},
+					type: ""
 				}
 			]
 		};
@@ -354,6 +369,11 @@ export default {
 		},
 		lastSelectedItemIndex() {
 			return this.data.findIndex(item => item.highlighted);
+		},
+		filterTypes() {
+			return this.filters
+				.map(filter => filter.type)
+				.filter((f, index, self) => self.indexOf(f) === index);
 		},
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -501,7 +521,8 @@ export default {
 		addQueryItem() {
 			this.advancedQuery.push({
 				regex: "",
-				filter: {}
+				filter: {},
+				type: ""
 			});
 		},
 		removeQueryItem(index) {
