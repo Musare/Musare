@@ -19,69 +19,77 @@
 		<div class="table-outer-container">
 			<div class="table-container">
 				<div class="table-header">
-					<tippy
-						:touch="true"
-						:interactive="true"
-						placement="bottom"
-						theme="search"
-						ref="search"
-						trigger="click"
-					>
-						<a class="button is-info" click.prevent="true">
-							<i class="material-icons icon-with-button"
-								>search</i
-							>
-							Search
-						</a>
-
-						<template #content>
-							<div
-								v-for="(query, index) in advancedQuery"
-								:key="`query-${index}`"
-								class="control is-grouped"
-							>
-								<p class="control is-expanded">
-									<input
-										v-model="query.query"
-										class="input"
-										type="text"
-									/>
-								</p>
-								<div class="control select">
-									<select v-model="query.column">
-										<option
-											v-for="column in columns.filter(
-												c => c.name !== 'select'
-											)"
-											:key="column.name"
-											:value="column.name"
-										>
-											{{ column.displayName }}
-										</option>
-									</select>
-								</div>
-								<div class="control">
-									<i
-										class="material-icons icon-with-button"
-										@click="addQueryItem()"
-										>control_point</i
-									>
-									<i
-										v-if="advancedQuery.length > 1"
-										class="material-icons icon-with-button"
-										@click="removeQueryItem(index)"
-										>remove_circle_outline</i
-									>
-								</div>
-							</div>
-							<a class="button is-info">
+					<div class="table-buttons">
+						<tippy
+							:touch="true"
+							:interactive="true"
+							placement="bottom"
+							theme="search"
+							ref="search"
+							trigger="click"
+						>
+							<a class="button is-info" click.prevent="true">
 								<i class="material-icons icon-with-button"
 									>search</i
 								>
 								Search
 							</a>
-						</template>
-					</tippy>
+
+							<template #content>
+								<div
+									v-for="(query, index) in advancedQuery"
+									:key="`query-${index}`"
+									class="control is-grouped"
+								>
+									<p class="control is-expanded">
+										<input
+											v-model="query.query"
+											class="input"
+											type="text"
+										/>
+									</p>
+									<div class="control select">
+										<select v-model="query.column">
+											<option
+												v-for="column in columns.filter(
+													c => c.filterable
+												)"
+												:key="column.name"
+												:value="column.name"
+											>
+												{{ column.displayName }}
+											</option>
+										</select>
+									</div>
+									<div class="control">
+										<i
+											class="
+												material-icons
+												icon-with-button
+											"
+											@click="addQueryItem()"
+											>control_point</i
+										>
+										<i
+											v-if="advancedQuery.length > 1"
+											class="
+												material-icons
+												icon-with-button
+											"
+											@click="removeQueryItem(index)"
+											>remove_circle_outline</i
+										>
+									</div>
+								</div>
+								<a class="button is-info">
+									<i class="material-icons icon-with-button"
+										>search</i
+									>
+									Search
+								</a>
+							</template>
+						</tippy>
+					</div>
 				</div>
 				<table class="table">
 					<thead>
@@ -107,106 +115,122 @@
 										shownColumns.indexOf(column.name) !== -1
 									"
 								>
-									<span>
-										{{ column.displayName }}
-									</span>
-									<span
-										v-if="column.sortable"
-										:content="`Sort by ${column.displayName}`"
-										v-tippy
-									>
-										<span
-											v-if="!sort[column.sortProperty]"
-											class="material-icons"
-											@click="changeSort(column)"
-										>
-											unfold_more
+									<div>
+										<span>
+											{{ column.displayName }}
 										</span>
-										<span
-											v-if="
-												sort[column.sortProperty] ===
-												'ascending'
-											"
-											class="material-icons"
-											@click="changeSort(column)"
+										<tippy
+											v-if="column.filterable"
+											:touch="true"
+											:interactive="true"
+											placement="bottom"
+											theme="search"
+											ref="search"
+											trigger="click"
 										>
-											expand_less
-										</span>
-										<span
-											v-if="
-												sort[column.sortProperty] ===
-												'descending'
-											"
-											class="material-icons"
-											@click="changeSort(column)"
-										>
-											expand_more
-										</span>
-									</span>
-									<tippy
-										v-if="column.filterable"
-										:touch="true"
-										:interactive="true"
-										placement="bottom"
-										theme="search"
-										ref="search"
-										trigger="click"
-									>
-										<i
-											class="
-												material-icons
-												action-dropdown-icon
-											"
-											:content="`Filter by ${column.displayName}`"
-											v-tippy
-											@click.prevent="true"
-											>search</i
-										>
-
-										<template #content>
-											<div
+											<i
 												class="
-													control
-													is-grouped
-													input-with-button
+													material-icons
+													action-dropdown-icon
 												"
+												:content="`Filter by ${column.displayName}`"
+												v-tippy
+												@click.prevent="true"
+												>search</i
 											>
-												<p class="control is-expanded">
-													<input
-														class="input"
-														type="text"
-														:placeholder="`Filter by ${column.displayName}`"
-														:value="
-															column.filterProperty !==
-															null
-																? filter[
-																		column
-																			.filterProperty
-																  ]
-																: ''
+
+											<template #content>
+												<div
+													class="
+														control
+														is-grouped
+														input-with-button
+													"
+												>
+													<p
+														class="
+															control
+															is-expanded
 														"
-														@keyup.enter="
-															changeFilter(
-																column,
-																$event
-															)
-														"
-													/>
-												</p>
-												<p class="control">
-													<a class="button is-info">
-														<i
-															class="
-																material-icons
-																icon-with-button
+													>
+														<input
+															class="input"
+															type="text"
+															:placeholder="`Filter by ${column.displayName}`"
+															:value="
+																column.filterProperty !==
+																null
+																	? filter[
+																			column
+																				.filterProperty
+																	  ]
+																	: ''
 															"
-															>search</i
+															@keyup.enter="
+																changeFilter(
+																	column,
+																	$event
+																)
+															"
+														/>
+													</p>
+													<p class="control">
+														<a
+															class="
+																button
+																is-info
+															"
 														>
-													</a>
-												</p>
-											</div>
-										</template>
-									</tippy>
+															<i
+																class="
+																	material-icons
+																	icon-with-button
+																"
+																>search</i
+															>
+														</a>
+													</p>
+												</div>
+											</template>
+										</tippy>
+										<span
+											v-if="column.sortable"
+											:content="`Sort by ${column.displayName}`"
+											v-tippy
+										>
+											<span
+												v-if="
+													!sort[column.sortProperty]
+												"
+												class="material-icons"
+												@click="changeSort(column)"
+											>
+												unfold_more
+											</span>
+											<span
+												v-if="
+													sort[
+														column.sortProperty
+													] === 'ascending'
+												"
+												class="material-icons"
+												@click="changeSort(column)"
+											>
+												expand_less
+											</span>
+											<span
+												v-if="
+													sort[
+														column.sortProperty
+													] === 'descending'
+												"
+												class="material-icons"
+												@click="changeSort(column)"
+											>
+												expand_more
+											</span>
+										</span>
+									</div>
 								</th>
 							</template>
 						</draggable>
@@ -239,70 +263,70 @@
 						</tr>
 					</tbody>
 				</table>
-			</div>
-			<div class="table-footer">
-				<div>
-					<button
-						:class="{ disabled: page === 1 }"
-						class="button is-primary material-icons"
-						:disabled="page === 1"
-						@click="changePage(1)"
-						content="First Page"
-						v-tippy
-					>
-						skip_previous
-					</button>
-					<button
-						:class="{ disabled: page === 1 }"
-						class="button is-primary material-icons"
-						:disabled="page === 1"
-						@click="changePage(page - 1)"
-						content="Previous Page"
-						v-tippy
-					>
-						fast_rewind
-					</button>
+				<div class="table-footer">
+					<div class="page-controls">
+						<button
+							:class="{ disabled: page === 1 }"
+							class="button is-primary material-icons"
+							:disabled="page === 1"
+							@click="changePage(1)"
+							content="First Page"
+							v-tippy
+						>
+							skip_previous
+						</button>
+						<button
+							:class="{ disabled: page === 1 }"
+							class="button is-primary material-icons"
+							:disabled="page === 1"
+							@click="changePage(page - 1)"
+							content="Previous Page"
+							v-tippy
+						>
+							fast_rewind
+						</button>
 
-					<p>Page {{ page }} / {{ lastPage }}</p>
+						<p>Page {{ page }} / {{ lastPage }}</p>
 
-					<button
-						:class="{ disabled: page === lastPage }"
-						class="button is-primary material-icons"
-						:disabled="page === lastPage"
-						@click="changePage(page + 1)"
-						content="Next Page"
-						v-tippy
-					>
-						fast_forward
-					</button>
-					<button
-						:class="{ disabled: page === lastPage }"
-						class="button is-primary material-icons"
-						:disabled="page === lastPage"
-						@click="changePage(lastPage)"
-						content="Last Page"
-						v-tippy
-					>
-						skip_next
-					</button>
-				</div>
-				<div>
-					<div class="control">
-						<label class="label">Items per page</label>
-						<p class="control select">
-							<select
-								v-model.number="pageSize"
-								@change="changePageSize()"
-							>
-								<option value="10">10</option>
-								<option value="25">25</option>
-								<option value="50">50</option>
-								<option value="100">100</option>
-								<option value="250">250</option>
-								<option value="500">500</option>
-								<option value="1000">1000</option>
-							</select>
-						</p>
+						<button
+							:class="{ disabled: page === lastPage }"
+							class="button is-primary material-icons"
+							:disabled="page === lastPage"
+							@click="changePage(page + 1)"
+							content="Next Page"
+							v-tippy
+						>
+							fast_forward
+						</button>
+						<button
+							:class="{ disabled: page === lastPage }"
+							class="button is-primary material-icons"
+							:disabled="page === lastPage"
+							@click="changePage(lastPage)"
+							content="Last Page"
+							v-tippy
+						>
+							skip_next
+						</button>
+					</div>
+					<div class="page-size">
+						<div class="control">
+							<label class="label">Items per page</label>
+							<p class="control select">
+								<select
+									v-model.number="pageSize"
+									@change="changePageSize()"
+								>
+									<option value="10">10</option>
+									<option value="25">25</option>
+									<option value="50">50</option>
+									<option value="100">100</option>
+									<option value="250">250</option>
+									<option value="500">500</option>
+									<option value="1000">1000</option>
+								</select>
+							</p>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -609,19 +633,21 @@ export default {
 							cursor: pointer;
 						}
 
-						& > span {
-							float: right;
+						& > div {
+							display: flex;
+							white-space: nowrap;
 
-							& > .material-icons {
-								font-size: 22px;
-								position: relative;
-								top: 6px;
-								cursor: pointer;
-							}
+							& > span {
+								& > .material-icons {
+									font-size: 22px;
+									position: relative;
+									top: 6px;
+									cursor: pointer;
+								}
 
-							&:first-child {
-								float: left;
-								white-space: nowrap;
+								&:first-child {
+									margin-right: auto;
+								}
 							}
 						}
 					}
@@ -682,13 +708,13 @@ export default {
 		background-color: var(--white);
 	}
 
-	.table-header .button {
+	.table-header .table-buttons > span > .button {
 		margin: 5px;
 	}
 
 	.table-footer {
-		& > div:first-child,
-		div .control {
+		.page-controls,
+		.page-size > .control {
 			display: flex;
 			flex-direction: row;
 			margin-bottom: 0 !important;
@@ -697,12 +723,14 @@ export default {
 				margin: 5px;
 				font-size: 20px;
 			}
+
 			p,
 			label {
 				margin: 5px;
 				font-size: 14px;
 				font-weight: 600;
 			}
+
 			&.select::after {
 				top: 18px;
 			}
