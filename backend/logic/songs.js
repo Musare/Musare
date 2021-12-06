@@ -224,6 +224,7 @@ class _SongsModule extends CoreClass {
 			console.log("GET_DATA", payload);
 
 			const regexFilter = {};
+			// eslint-disable-next-line no-restricted-syntax
 			for (const [filterKey, filterValue] of Object.entries(filter)) {
 				const isRegex =
 					filterValue.length > 2 &&
