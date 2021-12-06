@@ -288,7 +288,7 @@
 						<p class="control select">
 							<select
 								v-model.number="pageSize"
-								@change="getData()"
+								@change="changePageSize()"
 							>
 								<option value="10">10</option>
 								<option value="25">25</option>
@@ -394,11 +394,6 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
-	watch: {
-		pageSize(pageSize) {
-			localStorage.setItem("adminPageSize", pageSize);
-		}
-	},
 	mounted() {
 		const columns = [
 			{
@@ -418,13 +413,8 @@ export default {
 			.filter(column => column.defaultVisibility !== "hidden")
 			.map(column => column.name);
 
-		let pageSize = parseFloat(localStorage.getItem("adminPageSize"));
-		pageSize =
-			typeof pageSize === "number" && !Number.isNaN(pageSize)
-				? pageSize
-				: 10;
-		localStorage.setItem("adminPageSize", pageSize);
-		this.pageSize = pageSize;
+		const pageSize = parseInt(localStorage.getItem("adminPageSize"));
+		if (!Number.isNaN(pageSize)) this.pageSize = pageSize;
 
 		ws.onConnect(this.init);
 	},
@@ -450,6 +440,10 @@ export default {
 					}
 				}
 			);
+		},
+		changePageSize() {
+			this.getData();
+			localStorage.setItem("adminPageSize", this.pageSize);
 		},
 		changePage(page) {
 			if (page < 1) return;
