@@ -243,8 +243,9 @@
 			<div class="table-footer">
 				<div>
 					<button
-						v-if="page > 1"
+						:class="{ disabled: page === 1 }"
 						class="button is-primary material-icons"
+						:disabled="page === 1"
 						@click="changePage(1)"
 						content="First Page"
 						v-tippy
@@ -252,8 +253,9 @@
 						skip_previous
 					</button>
 					<button
-						v-if="page > 1"
+						:class="{ disabled: page === 1 }"
 						class="button is-primary material-icons"
+						:disabled="page === 1"
 						@click="changePage(page - 1)"
 						content="Previous Page"
 						v-tippy
@@ -264,8 +266,9 @@
 					<p>Page {{ page }} / {{ lastPage }}</p>
 
 					<button
-						v-if="page < lastPage"
+						:class="{ disabled: page === lastPage }"
 						class="button is-primary material-icons"
+						:disabled="page === lastPage"
 						@click="changePage(page + 1)"
 						content="Next Page"
 						v-tippy
@@ -273,8 +276,9 @@
 						fast_forward
 					</button>
 					<button
-						v-if="page < lastPage"
+						:class="{ disabled: page === lastPage }"
 						class="button is-primary material-icons"
+						:disabled="page === lastPage"
 						@click="changePage(lastPage)"
 						content="Last Page"
 						v-tippy

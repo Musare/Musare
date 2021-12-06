@@ -1335,6 +1335,11 @@ button.delete:focus {
 		display: flex;
 		width: 100%;
 	}
+
+	&.disabled {
+		filter: grayscale(1);
+		cursor: not-allowed;
+	}
 }
 
 .input,
