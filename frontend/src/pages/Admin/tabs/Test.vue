@@ -2,7 +2,11 @@
 	<div>
 		<page-metadata title="Admin | Test" />
 		<div class="admin-container">
-			<advanced-table :columns="columns" data-action="songs.getData">
+			<advanced-table
+				:columns="columns"
+				:filters="filters"
+				data-action="songs.getData"
+			>
 				<template #column-thumbnailImage="slotProps">
 					<img
 						class="song-thumbnail"
@@ -66,7 +70,6 @@ export default {
 					displayName: "Thumb",
 					properties: ["thumbnail"],
 					sortable: false,
-					filterable: false,
 					hidable: true,
 					defaultVisibility: "shown",
 					width: "50px",
@@ -78,8 +81,6 @@ export default {
 					properties: ["_id"],
 					sortable: true,
 					sortProperty: "_id",
-					filterable: true,
-					filterProperty: "_id",
 					hidable: true,
 					defaultVisibility: "shown",
 					draggable: true
@@ -90,8 +91,6 @@ export default {
 					properties: ["youtubeId"],
 					sortable: true,
 					sortProperty: "youtubeId",
-					filterable: true,
-					filterProperty: "youtubeId",
 					hidable: true,
 					defaultVisibility: "shown",
 					draggable: true
@@ -102,8 +101,6 @@ export default {
 					properties: ["title"],
 					sortable: true,
 					sortProperty: "title",
-					filterable: true,
-					filterProperty: "title",
 					hidable: true,
 					defaultVisibility: "shown",
 					draggable: true
@@ -114,8 +111,6 @@ export default {
 					properties: ["artists"],
 					sortable: false,
 					sortProperty: "artists",
-					filterable: true,
-					filterProperty: "artists",
 					hidable: true,
 					defaultVisibility: "shown",
 					draggable: true
@@ -126,8 +121,6 @@ export default {
 					properties: ["genres"],
 					sortable: false,
 					sortProperty: "genres",
-					filterable: true,
-					filterProperty: "genres",
 					hidable: true,
 					defaultVisibility: "shown",
 					draggable: true
@@ -138,8 +131,6 @@ export default {
 					properties: ["thumbnail"],
 					sortable: true,
 					sortProperty: "thumbnail",
-					filterable: true,
-					filterProperty: "thumbnail",
 					hidable: true,
 					defaultVisibility: "hidden",
 					draggable: true
@@ -150,11 +141,46 @@ export default {
 					properties: ["requestedBy"],
 					sortable: true,
 					sortProperty: "requestedBy",
-					filterable: true,
-					filterProperty: "requestedBy",
 					hidable: true,
 					defaultVisibility: "shown",
 					draggable: true
+				}
+			],
+			filters: [
+				{
+					name: "_id",
+					displayName: "Musare ID",
+					type: "regex"
+				},
+				{
+					name: "youtubeId",
+					displayName: "YouTube ID",
+					type: "regex"
+				},
+				{
+					name: "title",
+					displayName: "Title",
+					type: "regex"
+				},
+				{
+					name: "artists",
+					displayName: "Artists",
+					type: "regex"
+				},
+				{
+					name: "genres",
+					displayName: "Genres",
+					type: "regex"
+				},
+				{
+					name: "thumbnailUrl",
+					displayName: "Thumbnail (URL)",
+					type: "regex"
+				},
+				{
+					name: "requestedBy",
+					displayName: "Requested By",
+					type: "regex"
 				}
 			]
 		};

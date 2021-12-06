@@ -28,7 +28,7 @@
 							ref="search"
 							trigger="click"
 						>
-							<a class="button is-info" click.prevent="true">
+							<a class="button is-info" @click.prevent="true">
 								<i class="material-icons icon-with-button"
 									>search</i
 								>
@@ -39,49 +39,61 @@
 								<div
 									v-for="(query, index) in advancedQuery"
 									:key="`query-${index}`"
-									class="control is-grouped"
+									class="advanced-query"
 								>
-									<p class="control is-expanded">
-										<input
-											v-model="query.query"
-											class="input"
-											type="text"
-										/>
-									</p>
 									<div class="control select">
-										<select v-model="query.column">
+										<select v-model="query.filter">
 											<option
-												v-for="column in columns.filter(
-													c => c.filterable
-												)"
-												:key="column.name"
-												:value="column.name"
+												v-for="f in filters"
+												:key="f.name"
+												:value="f"
 											>
-												{{ column.displayName }}
+												{{ f.displayName }}
 											</option>
 										</select>
 									</div>
+									<p class="control is-expanded">
+										<input
+											v-if="query.filter.type === 'regex'"
+											v-model="query.regex"
+											class="input"
+											type="text"
+											placeholder="Search value"
+											@keyup.enter="changeFilter()"
+										/>
+									</p>
 									<div class="control">
-										<i
+										<button
 											class="
+												button
 												material-icons
-												icon-with-button
+												is-success
 											"
 											@click="addQueryItem()"
-											>control_point</i
 										>
-										<i
-											v-if="advancedQuery.length > 1"
+											control_point
+										</button>
+									</div>
+									<div
+										v-if="advancedQuery.length > 1"
+										class="control"
+									>
+										<button
 											class="
+												button
 												material-icons
-												icon-with-button
+												is-danger
 											"
 											@click="removeQueryItem(index)"
-											>remove_circle_outline</i
 										>
+											remove_circle_outline
+										</button>
 									</div>
 								</div>
-								<a class="button is-info">
+								<a
+									class="button is-info"
+									@click="changeFilter()"
+								>
 									<i class="material-icons icon-with-button"
 										>search</i
 									>
@@ -119,80 +131,6 @@
 										<span>
 											{{ column.displayName }}
 										</span>
-										<tippy
-											v-if="column.filterable"
-											:touch="true"
-											:interactive="true"
-											placement="bottom"
-											theme="search"
-											ref="search"
-											trigger="click"
-										>
-											<i
-												class="
-													material-icons
-													action-dropdown-icon
-												"
-												:content="`Filter by ${column.displayName}`"
-												v-tippy
-												@click.prevent="true"
-												>search</i
-											>
-
-											<template #content>
-												<div
-													class="
-														control
-														is-grouped
-														input-with-button
-													"
-												>
-													<p
-														class="
-															control
-															is-expanded
-														"
-													>
-														<input
-															class="input"
-															type="text"
-															:placeholder="`Filter by ${column.displayName}`"
-															:value="
-																column.filterProperty !==
-																null
-																	? filter[
-																			column
-																				.filterProperty
-																	  ]
-																	: ''
-															"
-															@keyup.enter="
-																changeFilter(
-																	column,
-																	$event
-																)
-															"
-														/>
-													</p>
-													<p class="control">
-														<a
-															class="
-																button
-																is-info
-															"
-														>
-															<i
-																class="
-																	material-icons
-																	icon-with-button
-																"
-																>search</i
-															>
-														</a>
-													</p>
-												</div>
-											</template>
-										</tippy>
 										<span
 											v-if="column.sortable"
 											:content="`Sort by ${column.displayName}`"
@@ -354,8 +292,6 @@ export default {
 		properties: The properties this column needs to show data
 		sortable: Boolean for whether the order of a particular column can be changed 
 		sortProperty: The property the backend will sort on if this column gets sorted, e.g. title
-		filterable: Boolean for whether or not a column can use a filter
-		filterProperty: The property the backend will filter on, e.g. title
 		hidable: Boolean for whether a column can be hidden
 		defaultVisibility: Default visibility for a column, either "shown" or "hidden"
 		draggable: Boolean for whether a column can be dragged/reordered
@@ -364,6 +300,7 @@ export default {
 		maxWidth: Maximum width of column, e.g. 150px
 		*/
 		columns: { type: Array, default: null },
+		filters: { type: Array, default: null },
 		dataAction: { type: String, default: null }
 	},
 	data() {
@@ -388,8 +325,8 @@ export default {
 			},
 			advancedQuery: [
 				{
-					query: "",
-					column: ""
+					regex: "",
+					filter: {}
 				}
 			]
 		};
@@ -429,7 +366,6 @@ export default {
 				displayName: "",
 				properties: [],
 				sortable: false,
-				filterable: false,
 				hidable: false,
 				draggable: false
 			},
@@ -492,17 +428,17 @@ export default {
 				this.getData();
 			}
 		},
-		changeFilter(column, event) {
-			if (column.filterable) {
-				const { value } = event.target;
-				const { filterProperty } = column;
-				if (this.filter[filterProperty] !== undefined && value === "") {
-					delete this.filter[filterProperty];
-				} else if (this.filter[filterProperty] !== value) {
-					this.filter[filterProperty] = value;
-				} else return;
-				this.getData();
-			}
+		changeFilter() {
+			this.advancedQuery.forEach(query => {
+				const { regex } = query;
+				const { name } = query.filter;
+				if (this.filter[name] !== undefined && regex === "") {
+					delete this.filter[name];
+				} else if (this.filter[name] !== regex) {
+					this.filter[name] = regex;
+				}
+			});
+			this.getData();
 		},
 		toggleColumnVisibility(column) {
 			if (this.shownColumns.indexOf(column.name) !== -1) {
@@ -564,8 +500,8 @@ export default {
 		},
 		addQueryItem() {
 			this.advancedQuery.push({
-				query: "",
-				column: ""
+				regex: "",
+				filter: {}
 			});
 		},
 		removeQueryItem(index) {
@@ -734,6 +670,36 @@ export default {
 			&.select::after {
 				top: 18px;
 			}
+		}
+	}
+}
+
+.advanced-query {
+	display: flex;
+	margin-bottom: 5px;
+
+	& > .control {
+		& > input,
+		& > select,
+		& > .button {
+			border-radius: 0;
+		}
+		&:first-child {
+			& > input,
+			& > select,
+			& > .button {
+				border-radius: 5px 0 0 5px;
+			}
+		}
+		&:last-child {
+			& > input,
+			& > select,
+			& > .button {
+				border-radius: 0 5px 5px 0;
+			}
+		}
+		& > .button {
+			font-size: 22px;
 		}
 	}
 }
