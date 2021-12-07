@@ -1,284 +1,323 @@
 <template>
-	<div>
-		<div>
-			<button
-				v-for="column in hidableSortedColumns"
-				:key="column.name"
-				class="button"
-				@click="toggleColumnVisibility(column)"
-			>
-				{{
-					`${
-						this.shownColumns.indexOf(column.name) !== -1
-							? "Hide"
-							: "Show"
-					} ${column.name} column`
-				}}
-			</button>
-		</div>
-		<div class="table-outer-container">
-			<div class="table-container">
-				<div class="table-header">
-					<div class="table-buttons">
-						<tippy
-							:touch="true"
-							:interactive="true"
-							placement="bottom"
-							theme="search"
-							ref="search"
-							trigger="click"
-						>
-							<a class="button is-info" @click.prevent="true">
-								<i class="material-icons icon-with-button"
-									>search</i
-								>
-								Search
-							</a>
+	<div class="table-outer-container">
+		<div class="table-container">
+			<div class="table-header">
+				<tippy
+					v-if="filters.length > 0"
+					:touch="true"
+					:interactive="true"
+					placement="bottom"
+					theme="search"
+					ref="search"
+					trigger="click"
+				>
+					<a class="button is-info" @click.prevent="true">
+						<i class="material-icons icon-with-button">search</i>
+						Search
+					</a>
 
-							<template #content>
-								<div
-									v-for="(query, index) in advancedQuery"
-									:key="`query-${index}`"
-									class="advanced-query"
-								>
-									<div class="control select">
-										<select v-model="query.filter">
-											<option
-												v-for="f in filters"
-												:key="f.name"
-												:value="f"
-											>
-												{{ f.displayName }}
-											</option>
-										</select>
-									</div>
-									<div class="control select">
-										<select
-											v-if="query.filter.type"
-											v-model="query.type"
-										>
-											<option
-												v-for="type in filterTypes"
-												:key="type"
-												:value="type"
-											>
-												{{ type }}
-											</option>
-										</select>
-									</div>
-									<p class="control is-expanded">
-										<input
-											v-if="query.type === 'regex'"
-											v-model="query.regex"
-											class="input"
-											type="text"
-											placeholder="Search value"
-											@keyup.enter="changeFilter()"
-										/>
-									</p>
-									<div class="control">
-										<button
-											class="
-												button
-												material-icons
-												is-success
-											"
-											@click="addQueryItem()"
-										>
-											control_point
-										</button>
-									</div>
-									<div
-										v-if="advancedQuery.length > 1"
-										class="control"
-									>
-										<button
-											class="
-												button
-												material-icons
-												is-danger
-											"
-											@click="removeQueryItem(index)"
-										>
-											remove_circle_outline
-										</button>
-									</div>
-								</div>
-								<a
-									class="button is-info"
-									@click="changeFilter()"
-								>
-									<i class="material-icons icon-with-button"
-										>search</i
-									>
-									Search
-								</a>
-							</template>
-						</tippy>
-					</div>
-				</div>
-				<table class="table">
-					<thead>
-						<draggable
-							item-key="name"
-							v-model="orderedColumns"
-							v-bind="columnDragOptions"
-							tag="tr"
-							draggable=".item-draggable"
+					<template #content>
+						<div
+							v-for="(query, index) in advancedQuery"
+							:key="`query-${index}`"
+							class="advanced-query"
 						>
-							<template #item="{ element: column }">
-								<th
-									:class="{
-										sortable: column.sortable,
-										'item-draggable': column.draggable
-									}"
-									:style="{
-										minWidth: column.minWidth,
-										width: column.width,
-										maxWidth: column.maxWidth
-									}"
-									v-if="
-										shownColumns.indexOf(column.name) !== -1
-									"
+							<div class="control select">
+								<select v-model="query.filter">
+									<option
+										v-for="f in filters"
+										:key="f.name"
+										:value="f"
+									>
+										{{ f.displayName }}
+									</option>
+								</select>
+							</div>
+							<div class="control select">
+								<select
+									v-if="query.filter.type"
+									v-model="query.type"
 								>
-									<div>
-										<span>
-											{{ column.displayName }}
+									<option
+										v-for="type in filterTypes"
+										:key="type"
+										:value="type"
+									>
+										{{ type }}
+									</option>
+								</select>
+							</div>
+							<p class="control is-expanded">
+								<input
+									v-if="query.type === 'regex'"
+									v-model="query.regex"
+									class="input"
+									type="text"
+									placeholder="Search value"
+									@keyup.enter="changeFilter()"
+								/>
+							</p>
+							<div class="control">
+								<button
+									class="button material-icons is-success"
+									@click="addQueryItem()"
+								>
+									control_point
+								</button>
+							</div>
+							<div
+								v-if="advancedQuery.length > 1"
+								class="control"
+							>
+								<button
+									class="button material-icons is-danger"
+									@click="removeQueryItem(index)"
+								>
+									remove_circle_outline
+								</button>
+							</div>
+						</div>
+						<a class="button is-info" @click="changeFilter()">
+							<i class="material-icons icon-with-button"
+								>search</i
+							>
+							Search
+						</a>
+					</template>
+				</tippy>
+				<tippy
+					v-if="hidableSortedColumns.length > 0"
+					:touch="true"
+					:interactive="true"
+					placement="bottom"
+					theme="dropdown"
+					ref="toggleColumns"
+					trigger="click"
+				>
+					<a class="button is-info" @click.prevent="true">
+						<i class="material-icons icon-with-button"
+							>visibility</i
+						>
+						Toggle Columns
+					</a>
+
+					<template #content>
+						<div class="nav-dropdown-items">
+							<button
+								v-for="(column, index) in hidableSortedColumns"
+								:key="column.name"
+								class="nav-item"
+								@click.prevent="toggleColumnVisibility(column)"
+								:title="column.displayName"
+							>
+								<p class="control is-expanded checkbox-control">
+									<label class="switch">
+										<input
+											type="checkbox"
+											:id="index"
+											:checked="
+												shownColumns.indexOf(
+													column.name
+												) !== -1
+											"
+											@click="
+												toggleColumnVisibility(column)
+											"
+										/>
+										<span class="slider round"></span>
+									</label>
+									<label :for="index">
+										<span></span>
+										<p>{{ column.displayName }}</p>
+									</label>
+								</p>
+							</button>
+						</div>
+					</template>
+				</tippy>
+			</div>
+			<table class="table">
+				<thead>
+					<draggable
+						item-key="name"
+						v-model="orderedColumns"
+						v-bind="columnDragOptions"
+						tag="tr"
+						draggable=".item-draggable"
+					>
+						<template #item="{ element: column }">
+							<th
+								:class="{
+									sortable: column.sortable,
+									'item-draggable': column.draggable
+								}"
+								:style="{
+									minWidth: column.minWidth,
+									width: column.width,
+									maxWidth: column.maxWidth
+								}"
+								v-if="shownColumns.indexOf(column.name) !== -1"
+							>
+								<div>
+									<span>
+										{{ column.displayName }}
+									</span>
+									<span
+										v-if="column.sortable"
+										:content="`Sort by ${column.displayName}`"
+										v-tippy
+									>
+										<span
+											v-if="!sort[column.sortProperty]"
+											class="material-icons"
+											@click="changeSort(column)"
+										>
+											unfold_more
 										</span>
 										<span
-											v-if="column.sortable"
-											:content="`Sort by ${column.displayName}`"
-											v-tippy
+											v-if="
+												sort[column.sortProperty] ===
+												'ascending'
+											"
+											class="material-icons active"
+											@click="changeSort(column)"
 										>
-											<span
-												v-if="
-													!sort[column.sortProperty]
-												"
-												class="material-icons"
-												@click="changeSort(column)"
-											>
-												unfold_more
-											</span>
-											<span
-												v-if="
-													sort[
-														column.sortProperty
-													] === 'ascending'
-												"
-												class="material-icons"
-												@click="changeSort(column)"
-											>
-												expand_less
-											</span>
-											<span
-												v-if="
-													sort[
-														column.sortProperty
-													] === 'descending'
-												"
-												class="material-icons"
-												@click="changeSort(column)"
-											>
-												expand_more
-											</span>
+											expand_less
 										</span>
-									</div>
-								</th>
-							</template>
-						</draggable>
-					</thead>
-					<tbody>
-						<tr
-							v-for="(item, itemIndex) in data"
-							:key="item._id"
-							:class="{
-								selected: item.selected,
-								highlighted: item.highlighted
-							}"
-							@click="clickItem(itemIndex, $event)"
+										<span
+											v-if="
+												sort[column.sortProperty] ===
+												'descending'
+											"
+											class="material-icons active"
+											@click="changeSort(column)"
+										>
+											expand_more
+										</span>
+									</span>
+									<span
+										v-if="column.draggable"
+										content="Toggle Pinned Column"
+										v-tippy
+									>
+										<span
+											:class="{
+												'material-icons': true,
+												active: false
+											}"
+										>
+											push_pin
+										</span>
+									</span>
+									<span
+										v-if="column.hidable"
+										content="Hide Column"
+										v-tippy
+									>
+										<span
+											@click="
+												toggleColumnVisibility(column)
+											"
+											class="material-icons"
+										>
+											visibility_off
+										</span>
+									</span>
+								</div>
+							</th>
+						</template>
+					</draggable>
+				</thead>
+				<tbody>
+					<tr
+						v-for="(item, itemIndex) in data"
+						:key="item._id"
+						:class="{
+							selected: item.selected,
+							highlighted: item.highlighted
+						}"
+						@click="clickItem(itemIndex, $event)"
+					>
+						<td
+							v-for="column in sortedFilteredColumns"
+							:key="`${item._id}-${column.name}`"
 						>
-							<td
-								v-for="column in sortedFilteredColumns"
-								:key="`${item._id}-${column.name}`"
+							<slot
+								:name="`column-${column.name}`"
+								:item="item"
+								v-if="
+									column.properties.every(
+										property => item[property] !== undefined
+									)
+								"
+							></slot>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<div class="table-footer">
+				<div class="page-controls">
+					<button
+						:class="{ disabled: page === 1 }"
+						class="button is-primary material-icons"
+						:disabled="page === 1"
+						@click="changePage(1)"
+						content="First Page"
+						v-tippy
+					>
+						skip_previous
+					</button>
+					<button
+						:class="{ disabled: page === 1 }"
+						class="button is-primary material-icons"
+						:disabled="page === 1"
+						@click="changePage(page - 1)"
+						content="Previous Page"
+						v-tippy
+					>
+						fast_rewind
+					</button>
+
+					<p>Page {{ page }} / {{ lastPage }}</p>
+
+					<button
+						:class="{ disabled: page === lastPage }"
+						class="button is-primary material-icons"
+						:disabled="page === lastPage"
+						@click="changePage(page + 1)"
+						content="Next Page"
+						v-tippy
+					>
+						fast_forward
+					</button>
+					<button
+						:class="{ disabled: page === lastPage }"
+						class="button is-primary material-icons"
+						:disabled="page === lastPage"
+						@click="changePage(lastPage)"
+						content="Last Page"
+						v-tippy
+					>
+						skip_next
+					</button>
+				</div>
+				<div class="page-size">
+					<div class="control">
+						<label class="label">Items per page</label>
+						<p class="control select">
+							<select
+								v-model.number="pageSize"
+								@change="changePageSize()"
 							>
-								<slot
-									:name="`column-${column.name}`"
-									:item="item"
-									v-if="
-										column.properties.every(
-											property =>
-												item[property] !== undefined
-										)
-									"
-								></slot>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-				<div class="table-footer">
-					<div class="page-controls">
-						<button
-							:class="{ disabled: page === 1 }"
-							class="button is-primary material-icons"
-							:disabled="page === 1"
-							@click="changePage(1)"
-							content="First Page"
-							v-tippy
-						>
-							skip_previous
-						</button>
-						<button
-							:class="{ disabled: page === 1 }"
-							class="button is-primary material-icons"
-							:disabled="page === 1"
-							@click="changePage(page - 1)"
-							content="Previous Page"
-							v-tippy
-						>
-							fast_rewind
-						</button>
-
-						<p>Page {{ page }} / {{ lastPage }}</p>
-
-						<button
-							:class="{ disabled: page === lastPage }"
-							class="button is-primary material-icons"
-							:disabled="page === lastPage"
-							@click="changePage(page + 1)"
-							content="Next Page"
-							v-tippy
-						>
-							fast_forward
-						</button>
-						<button
-							:class="{ disabled: page === lastPage }"
-							class="button is-primary material-icons"
-							:disabled="page === lastPage"
-							@click="changePage(lastPage)"
-							content="Last Page"
-							v-tippy
-						>
-							skip_next
-						</button>
-					</div>
-					<div class="page-size">
-						<div class="control">
-							<label class="label">Items per page</label>
-							<p class="control select">
-								<select
-									v-model.number="pageSize"
-									@change="changePageSize()"
-								>
-									<option value="10">10</option>
-									<option value="25">25</option>
-									<option value="50">50</option>
-									<option value="100">100</option>
-									<option value="250">250</option>
-									<option value="500">500</option>
-									<option value="1000">1000</option>
-								</select>
-							</p>
-						</div>
+								<option value="10">10</option>
+								<option value="25">25</option>
+								<option value="50">50</option>
+								<option value="100">100</option>
+								<option value="250">250</option>
+								<option value="500">500</option>
+								<option value="1000">1000</option>
+							</select>
+						</p>
 					</div>
 				</div>
 			</div>
@@ -337,13 +376,7 @@ export default {
 					fallbackTolerance: 50
 				};
 			},
-			advancedQuery: [
-				{
-					regex: "",
-					filter: {},
-					type: ""
-				}
-			]
+			advancedQuery: []
 		};
 	},
 	computed: {
@@ -399,6 +432,13 @@ export default {
 
 		const pageSize = parseInt(localStorage.getItem("adminPageSize"));
 		if (!Number.isNaN(pageSize)) this.pageSize = pageSize;
+
+		if (this.filters.length > 0)
+			this.advancedQuery.push({
+				regex: "",
+				filter: this.filters[0],
+				type: this.filters[0].type
+			});
 
 		ws.onConnect(this.init);
 	},
@@ -519,11 +559,12 @@ export default {
 			this.data[itemIndex].highlighted = true;
 		},
 		addQueryItem() {
-			this.advancedQuery.push({
-				regex: "",
-				filter: {},
-				type: ""
-			});
+			if (this.filters.length > 0)
+				this.advancedQuery.push({
+					regex: "",
+					filter: this.filters[0],
+					type: this.filters[0].type
+				});
 		},
 		removeQueryItem(index) {
 			this.advancedQuery.splice(index, 1);
@@ -595,15 +636,27 @@ export default {
 							white-space: nowrap;
 
 							& > span {
+								margin-left: 5px;
+
+								&:first-child {
+									margin-left: 0;
+									margin-right: auto;
+								}
+
 								& > .material-icons {
 									font-size: 22px;
 									position: relative;
 									top: 6px;
 									cursor: pointer;
-								}
 
-								&:first-child {
-									margin-right: auto;
+									&.active {
+										color: var(--primary-color);
+									}
+
+									&:hover,
+									&:focus {
+										filter: brightness(90%);
+									}
 								}
 							}
 						}
@@ -665,7 +718,7 @@ export default {
 		background-color: var(--white);
 	}
 
-	.table-header .table-buttons > span > .button {
+	.table-header > span > .button {
 		margin: 5px;
 	}
 

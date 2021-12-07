@@ -4,7 +4,7 @@
 		:touch="true"
 		:interactive="true"
 		:placement="placement"
-		theme="addToPlaylist"
+		theme="dropdown"
 		ref="dropdown"
 		trigger="click"
 		append-to="parent"

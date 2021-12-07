@@ -560,7 +560,7 @@ export default {
 		display: flex;
 		flex-direction: column;
 
-		* >>> .tippy-box[data-theme~="addToPlaylist"] .tippy-content > span {
+		* >>> .tippy-box[data-theme~="dropdown"] .tippy-content > span {
 			max-width: 150px !important;
 		}
 
