@@ -182,7 +182,7 @@
 											class="material-icons active"
 											@click="changeSort(column)"
 										>
-											expand_less
+											expand_more
 										</span>
 										<span
 											v-if="
@@ -192,7 +192,7 @@
 											class="material-icons active"
 											@click="changeSort(column)"
 										>
-											expand_more
+											expand_less
 										</span>
 									</span>
 									<span
