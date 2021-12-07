@@ -493,6 +493,10 @@ export default {
 		},
 		toggleColumnVisibility(column) {
 			if (this.shownColumns.indexOf(column.name) !== -1) {
+				if (this.shownColumns.length <= 2)
+					return new Toast(
+						`Unable to hide column ${column.displayName}, there must be at least 1 visibile column`
+					);
 				this.shownColumns.splice(
 					this.shownColumns.indexOf(column.name),
 					1
