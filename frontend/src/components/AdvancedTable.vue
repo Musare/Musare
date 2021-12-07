@@ -32,28 +32,14 @@
 								</option>
 							</select>
 						</div>
-						<div class="control select">
-							<select
-								v-if="query.filter.type"
-								v-model="query.type"
-							>
-								<option
-									v-for="type in filterTypes"
-									:key="type"
-									:value="type"
-								>
-									{{ type }}
-								</option>
-							</select>
-						</div>
 						<p class="control is-expanded">
 							<input
-								v-if="query.type === 'regex'"
-								v-model="query.regex"
+								v-if="query.filter.type === 'regex'"
+								v-model="query.data"
 								class="input"
 								type="text"
 								placeholder="Search value"
-								@keyup.enter="changeFilter()"
+								@keyup.enter="getData()"
 							/>
 						</p>
 						<div class="control">
@@ -73,7 +59,7 @@
 							</button>
 						</div>
 					</div>
-					<a class="button is-info" @click="changeFilter()">
+					<a class="button is-info" @click="getData()">
 						<i class="material-icons icon-with-button">search</i>
 						Search
 					</a>
@@ -426,9 +412,8 @@ export default {
 
 		if (this.filters.length > 0)
 			this.advancedQuery.push({
-				regex: "",
-				filter: this.filters[0],
-				type: this.filters[0].type
+				data: "",
+				filter: {}
 			});
 
 		ws.onConnect(this.init);
@@ -444,7 +429,7 @@ export default {
 				this.pageSize,
 				this.properties,
 				this.sort,
-				this.filter,
+				this.advancedQuery,
 				res => {
 					console.log(111, res);
 					new Toast(res.message);
@@ -479,18 +464,6 @@ export default {
 				this.getData();
 			}
 		},
-		changeFilter() {
-			this.advancedQuery.forEach(query => {
-				const { regex } = query;
-				const { name } = query.filter;
-				if (this.filter[name] !== undefined && regex === "") {
-					delete this.filter[name];
-				} else if (this.filter[name] !== regex) {
-					this.filter[name] = regex;
-				}
-			});
-			this.getData();
-		},
 		toggleColumnVisibility(column) {
 			if (this.shownColumns.indexOf(column.name) !== -1) {
 				if (this.shownColumns.length <= 2)
@@ -504,7 +477,7 @@ export default {
 			} else {
 				this.shownColumns.push(column.name);
 			}
-			this.getData();
+			return this.getData();
 		},
 		clickItem(itemIndex, event) {
 			const { shiftKey, ctrlKey } = event;
@@ -556,9 +529,8 @@ export default {
 		addQueryItem() {
 			if (this.filters.length > 0)
 				this.advancedQuery.push({
-					regex: "",
-					filter: this.filters[0],
-					type: this.filters[0].type
+					data: "",
+					filter: {}
 				});
 		},
 		removeQueryItem(index) {

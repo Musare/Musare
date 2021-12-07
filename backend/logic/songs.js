@@ -214,27 +214,28 @@ class _SongsModule extends CoreClass {
 	 * @param {string} payload.pageSize - the page size
 	 * @param {string} payload.properties - the properties to return for each song
 	 * @param {string} payload.sort - the sort object
-	 * @param {string} payload.filter - the filter object
+	 * @param {string} payload.queries - the queries array
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_DATA(payload) {
 		return new Promise((resolve, reject) => {
-			const { page, pageSize, properties, sort, filter } = payload;
+			const { page, pageSize, properties, sort, queries } = payload;
 
 			console.log("GET_DATA", payload);
 
 			const regexFilter = {};
-			// eslint-disable-next-line no-restricted-syntax
-			for (const [filterKey, filterValue] of Object.entries(filter)) {
-				const isRegex =
-					filterValue.length > 2 &&
-					filterValue.indexOf("/") === 0 &&
-					filterValue.lastIndexOf("/") === filterValue.length - 1;
-				let query;
-				if (isRegex) query = filterValue.slice(1, filterValue.length - 1);
-				else query = filterValue.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&");
-				regexFilter[filterKey] = new RegExp(`${query}`, "i");
-			}
+			queries.forEach(query => {
+				const { data, filter } = query;
+				if (filter.type === "regex") {
+					let q;
+					if (data.length > 2 && data.indexOf("/") === 0 && data.lastIndexOf("/") === data.length - 1) {
+						q = data.slice(1, data.length - 1);
+					} else {
+						q = data.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&");
+					}
+					regexFilter[filter.name] = new RegExp(`${q}`, "i");
+				}
+			});
 			console.log(regexFilter);
 
 			async.waterfall(

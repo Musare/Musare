@@ -12,6 +12,7 @@
 						class="song-thumbnail"
 						:src="slotProps.item.thumbnail"
 						onerror="this.src='/assets/notes-transparent.png'"
+						loading="lazy"
 					/>
 				</template>
 				<template #column-thumbnailUrl="slotProps">
