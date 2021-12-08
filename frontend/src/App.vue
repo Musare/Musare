@@ -1103,6 +1103,10 @@ img {
 					background-color: var(--light-grey-3);
 					transition: 0.2s;
 					border-radius: 34px;
+
+					&.disabled {
+						cursor: not-allowed;
+					}
 				}
 
 				.slider:before {

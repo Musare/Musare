@@ -3,6 +3,7 @@
 		<page-metadata title="Admin | Test" />
 		<div class="admin-container">
 			<advanced-table
+				:column-default="columnDefault"
 				:columns="columns"
 				:filters="filters"
 				data-action="songs.getData"
@@ -65,86 +66,61 @@ export default {
 	},
 	data() {
 		return {
+			columnDefault: {
+				sortable: true,
+				hidable: true,
+				defaultVisibility: "shown",
+				draggable: true
+			},
 			columns: [
 				{
 					name: "thumbnailImage",
 					displayName: "Thumb",
 					properties: ["thumbnail"],
-					sortable: false,
-					hidable: true,
-					defaultVisibility: "shown",
-					width: "50px",
-					draggable: true
+					width: "50px"
 				},
 				{
 					name: "_id",
 					displayName: "Musare ID",
 					properties: ["_id"],
-					sortable: true,
-					sortProperty: "_id",
-					hidable: true,
-					defaultVisibility: "shown",
-					draggable: true
+					sortProperty: "_id"
 				},
 				{
 					name: "youtubeId",
 					displayName: "YouTube ID",
 					properties: ["youtubeId"],
-					sortable: true,
-					sortProperty: "youtubeId",
-					hidable: true,
-					defaultVisibility: "shown",
-					draggable: true
+					sortProperty: "youtubeId"
 				},
 				{
 					name: "title",
 					displayName: "Title",
 					properties: ["title"],
-					sortable: true,
-					sortProperty: "title",
-					hidable: true,
-					defaultVisibility: "shown",
-					draggable: true
+					sortProperty: "title"
 				},
 				{
 					name: "artists",
 					displayName: "Artists",
 					properties: ["artists"],
-					sortable: false,
-					sortProperty: "artists",
-					hidable: true,
-					defaultVisibility: "shown",
-					draggable: true
+					sortable: false
 				},
 				{
 					name: "genres",
 					displayName: "Genres",
 					properties: ["genres"],
-					sortable: false,
-					sortProperty: "genres",
-					hidable: true,
-					defaultVisibility: "shown",
-					draggable: true
+					sortable: false
 				},
 				{
 					name: "thumbnailUrl",
 					displayName: "Thumbnail (URL)",
 					properties: ["thumbnail"],
-					sortable: true,
 					sortProperty: "thumbnail",
-					hidable: true,
-					defaultVisibility: "hidden",
-					draggable: true
+					defaultVisibility: "hidden"
 				},
 				{
 					name: "requestedBy",
 					displayName: "Requested By",
 					properties: ["requestedBy"],
-					sortable: true,
-					sortProperty: "requestedBy",
-					hidable: true,
-					defaultVisibility: "shown",
-					draggable: true
+					sortProperty: "requestedBy"
 				}
 			],
 			filters: [

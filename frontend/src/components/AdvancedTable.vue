@@ -112,7 +112,13 @@
 												toggleColumnVisibility(column)
 											"
 										/>
-										<span class="slider round"></span>
+										<span
+											:class="{
+												slider: true,
+												round: true,
+												disabled: !column.hidable
+											}"
+										></span>
 									</label>
 									<label :for="index">
 										<span></span>
@@ -342,6 +348,7 @@ export default {
 		width: Width of column, e.g. 100px
 		maxWidth: Maximum width of column, e.g. 150px
 		*/
+		columnDefault: { type: Object, default: () => {} },
 		columns: { type: Array, default: null },
 		filters: { type: Array, default: null },
 		dataAction: { type: String, default: null }
@@ -414,7 +421,10 @@ export default {
 			},
 			...this.columns
 		];
-		this.orderedColumns = columns;
+		this.orderedColumns = columns.map(column => ({
+			...this.columnDefault,
+			...column
+		}));
 		// A column will be shown if the defaultVisibility is set to shown, OR if the defaultVisibility is not set to shown and hidable is false
 		this.shownColumns = columns
 			.filter(column => column.defaultVisibility !== "hidden")
