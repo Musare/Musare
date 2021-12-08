@@ -99,15 +99,19 @@
 			</ul>
 		</div>
 
-		<test v-if="currentTab == 'test'" />
-		<songs v-if="currentTab == 'songs'" />
-		<stations v-if="currentTab == 'stations'" />
-		<playlists v-if="currentTab == 'playlists'" />
-		<reports v-if="currentTab == 'reports'" />
-		<news v-if="currentTab == 'news'" />
-		<users v-if="currentTab == 'users'" />
-		<statistics v-if="currentTab == 'statistics'" />
-		<punishments v-if="currentTab == 'punishments'" />
+		<div class="admin-container">
+			<test v-if="currentTab == 'test'" />
+			<songs v-if="currentTab == 'songs'" />
+			<stations v-if="currentTab == 'stations'" />
+			<playlists v-if="currentTab == 'playlists'" />
+			<reports v-if="currentTab == 'reports'" />
+			<news v-if="currentTab == 'news'" />
+			<users v-if="currentTab == 'users'" />
+			<statistics v-if="currentTab == 'statistics'" />
+			<punishments v-if="currentTab == 'punishments'" />
+		</div>
+
+		<main-footer />
 	</div>
 </template>
 
@@ -116,10 +120,12 @@ import { mapGetters } from "vuex";
 import { defineAsyncComponent } from "vue";
 
 import MainHeader from "@/components/layout/MainHeader.vue";
+import MainFooter from "@/components/layout/MainFooter.vue";
 
 export default {
 	components: {
 		MainHeader,
+		MainFooter,
 		Test: defineAsyncComponent(() => import("./tabs/Test.vue")),
 		Songs: defineAsyncComponent(() => import("./tabs/Songs.vue")),
 		Stations: defineAsyncComponent(() => import("./tabs/Stations.vue")),
@@ -259,6 +265,11 @@ export default {
 
 .main-container {
 	height: auto;
+
+	.admin-container {
+		flex: 1 0 auto;
+		margin-bottom: 20px;
+	}
 }
 
 .tabs {
