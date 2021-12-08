@@ -1054,7 +1054,7 @@ img {
 	.nav-dropdown-items {
 		max-height: 220px;
 		overflow-y: auto;
-		padding: 10px 10px 0 10px;
+		padding: 10px;
 
 		.nav-item {
 			width: 100%;
@@ -1934,5 +1934,10 @@ html {
 
 ::-webkit-scrollbar-corner {
 	background-color: transparent;
+}
+
+:disabled,
+.disabled {
+	cursor: not-allowed;
 }
 </style>

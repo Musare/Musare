@@ -2406,6 +2406,13 @@ export default {
 		}
 	}
 }
+
+#control-bar-container
+	#right-buttons
+	.tippy-box[data-theme~="dropdown"]
+	.nav-dropdown-items {
+	padding-bottom: 0 !important;
+}
 </style>
 
 <style lang="scss" scoped>

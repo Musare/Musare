@@ -34,12 +34,12 @@
 						</div>
 						<p class="control is-expanded">
 							<input
-								v-if="query.filter.type === 'regex'"
 								v-model="query.data"
 								class="input"
 								type="text"
 								placeholder="Search value"
 								@keyup.enter="getData()"
+								:disabled="!query.filter.type"
 							/>
 						</p>
 						<div class="control">
@@ -71,44 +71,57 @@
 				:interactive="true"
 				placement="bottom"
 				theme="dropdown"
-				ref="toggleColumns"
+				ref="editColumns"
 				trigger="click"
 			>
 				<a class="button is-info" @click.prevent="true">
-					<i class="material-icons icon-with-button">visibility</i>
-					Toggle Columns
+					<i class="material-icons icon-with-button">tune</i>
+					Columns
 				</a>
 
 				<template #content>
-					<div class="nav-dropdown-items">
-						<button
-							v-for="(column, index) in hidableSortedColumns"
-							:key="column.name"
-							class="nav-item"
-							@click.prevent="toggleColumnVisibility(column)"
-							:title="column.displayName"
-						>
-							<p class="control is-expanded checkbox-control">
-								<label class="switch">
-									<input
-										type="checkbox"
-										:id="index"
-										:checked="
-											shownColumns.indexOf(
-												column.name
-											) !== -1
-										"
-										@click="toggleColumnVisibility(column)"
-									/>
-									<span class="slider round"></span>
-								</label>
-								<label :for="index">
-									<span></span>
-									<p>{{ column.displayName }}</p>
-								</label>
-							</p>
-						</button>
-					</div>
+					<draggable
+						item-key="name"
+						v-model="orderedColumns"
+						v-bind="columnDragOptions"
+						tag="div"
+						draggable=".item-draggable"
+						class="nav-dropdown-items"
+					>
+						<template #item="{ element: column }">
+							<button
+								v-if="column.name !== 'select'"
+								:class="{
+									sortable: column.sortable,
+									'item-draggable': column.draggable,
+									'nav-item': true
+								}"
+							>
+								<p class="control is-expanded checkbox-control">
+									<label class="switch">
+										<input
+											v-if="column.hidable"
+											type="checkbox"
+											:id="index"
+											:checked="
+												shownColumns.indexOf(
+													column.name
+												) !== -1
+											"
+											@click="
+												toggleColumnVisibility(column)
+											"
+										/>
+										<span class="slider round"></span>
+									</label>
+									<label :for="index">
+										<span></span>
+										<p>{{ column.displayName }}</p>
+									</label>
+								</p>
+							</button>
+						</template>
+					</draggable>
 				</template>
 			</tippy>
 		</div>
@@ -534,7 +547,8 @@ export default {
 				});
 		},
 		removeQueryItem(index) {
-			this.advancedQuery.splice(index, 1);
+			if (this.advancedQuery.length > 1)
+				this.advancedQuery.splice(index, 1);
 		}
 	}
 };
