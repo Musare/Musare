@@ -96,6 +96,7 @@
 									'item-draggable': column.draggable,
 									'nav-item': true
 								}"
+								@click.prevent="toggleColumnVisibility(column)"
 							>
 								<p class="control is-expanded checkbox-control">
 									<label class="switch">
@@ -159,6 +160,20 @@
 										{{ column.displayName }}
 									</span>
 									<span
+										v-if="column.draggable"
+										content="Toggle Pinned Column"
+										v-tippy
+									>
+										<span
+											:class="{
+												'material-icons': true,
+												active: false
+											}"
+										>
+											push_pin
+										</span>
+									</span>
+									<span
 										v-if="column.sortable"
 										:content="`Sort by ${column.displayName}`"
 										v-tippy
@@ -189,34 +204,6 @@
 											@click="changeSort(column)"
 										>
 											expand_less
-										</span>
-									</span>
-									<span
-										v-if="column.draggable"
-										content="Toggle Pinned Column"
-										v-tippy
-									>
-										<span
-											:class="{
-												'material-icons': true,
-												active: false
-											}"
-										>
-											push_pin
-										</span>
-									</span>
-									<span
-										v-if="column.hidable"
-										content="Hide Column"
-										v-tippy
-									>
-										<span
-											@click="
-												toggleColumnVisibility(column)
-											"
-											class="material-icons"
-										>
-											visibility_off
 										</span>
 									</span>
 								</div>
@@ -581,8 +568,13 @@ export default {
 			&:hover,
 			&:focus,
 			&.highlighted {
-				background-color: var(--dark-grey);
+				background-color: var(--dark-grey-4);
 			}
+		}
+
+		th,
+		td {
+			border-color: var(--dark-grey) !important;
 		}
 	}
 
@@ -679,6 +671,8 @@ export default {
 					td {
 						border: 1px solid var(--light-grey-2);
 						border-width: 0 1px 1px 0;
+						white-space: nowrap;
+						text-overflow: ellipsis;
 
 						&:first-child,
 						&:last-child {
