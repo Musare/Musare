@@ -70,7 +70,8 @@ export default {
 				sortable: true,
 				hidable: true,
 				defaultVisibility: "shown",
-				draggable: true
+				draggable: true,
+				resizable: true
 			},
 			columns: [
 				{

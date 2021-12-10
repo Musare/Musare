@@ -1,5 +1,8 @@
 <template>
-	<div class="table-outer-container">
+	<div
+		class="table-outer-container"
+		@mousemove="columnResizingMouseMove($event)"
+	>
 		<div class="table-header">
 			<tippy
 				v-if="filters.length > 0"
@@ -207,6 +210,15 @@
 										</span>
 									</span>
 								</div>
+								<div
+									class="resizer"
+									v-if="column.resizable"
+									@mousedown.prevent.stop="
+										columnResizingMouseDown(column, $event)
+									"
+									@mouseup="columnResizingMouseUp()"
+									@dblclick="columnResetWidth(column)"
+								></div>
 							</th>
 						</template>
 					</draggable>
@@ -330,7 +342,8 @@ export default {
 		sortProperty: The property the backend will sort on if this column gets sorted, e.g. title
 		hidable: Boolean for whether a column can be hidden
 		defaultVisibility: Default visibility for a column, either "shown" or "hidden"
-		draggable: Boolean for whether a column can be dragged/reordered
+		draggable: Boolean for whether a column can be dragged/reordered,
+		resizable: Boolean for whether a column can be resized
 		minWidth: Minimum width of column, e.g. 50px
 		width: Width of column, e.g. 100px
 		maxWidth: Maximum width of column, e.g. 150px
@@ -360,7 +373,8 @@ export default {
 					fallbackTolerance: 50
 				};
 			},
-			advancedQuery: []
+			advancedQuery: [],
+			resizing: {}
 		};
 	},
 	computed: {
@@ -404,7 +418,8 @@ export default {
 				properties: [],
 				sortable: false,
 				hidable: false,
-				draggable: false
+				draggable: false,
+				resizable: false
 			},
 			...this.columns
 		];
@@ -546,6 +561,31 @@ export default {
 		removeQueryItem(index) {
 			if (this.advancedQuery.length > 1)
 				this.advancedQuery.splice(index, 1);
+		},
+		columnResizingMouseDown(column, event) {
+			this.resizing.resizing = true;
+			this.resizing.resizingColumn = column;
+			this.resizing.width = event.target.parentElement.offsetWidth;
+			this.resizing.lastX = event.x;
+		},
+		columnResizingMouseMove(event) {
+			if (this.resizing.resizing) {
+				if (event.buttons !== 1) {
+					this.resizing.resizing = false;
+				}
+				this.resizing.width -= this.resizing.lastX - event.x;
+				this.resizing.lastX = event.x;
+				this.resizing.resizingColumn.minWidth = `${this.resizing.width}px`;
+				this.resizing.resizingColumn.maxWidth = `${this.resizing.width}px`;
+				console.log(`New width: ${this.resizing.width}px`);
+			}
+		},
+		columnResizingMouseUp() {
+			this.resizing.resizing = false;
+		},
+		columnResetWidth(column) {
+			// eslint-disable-next-line no-param-reassign
+			column.minWidth = column.maxWidth = "";
 		}
 	}
 };
@@ -604,6 +644,7 @@ export default {
 						line-height: 40px;
 						border: 1px solid var(--light-grey-2);
 						border-width: 1px 1px 1px 0;
+						position: relative;
 
 						&:first-child,
 						&:last-child {
@@ -642,6 +683,16 @@ export default {
 									}
 								}
 							}
+						}
+
+						.resizer {
+							height: 100%;
+							width: 8px;
+							background-color: black;
+							cursor: pointer;
+							position: absolute;
+							right: 0;
+							top: 0;
 						}
 					}
 				}
