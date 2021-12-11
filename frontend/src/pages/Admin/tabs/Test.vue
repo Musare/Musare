@@ -22,7 +22,9 @@
 					</a>
 				</template>
 				<template #column-_id="slotProps">
-					{{ slotProps.item._id }}
+					<span :title="slotProps.item._id">{{
+						slotProps.item._id
+					}}</span>
 				</template>
 				<template #column-youtubeId="slotProps">
 					<a
@@ -36,13 +38,19 @@
 					</a>
 				</template>
 				<template #column-title="slotProps">
-					{{ slotProps.item.title }}
+					<span :title="slotProps.item.title">{{
+						slotProps.item.title
+					}}</span>
 				</template>
 				<template #column-artists="slotProps">
-					{{ slotProps.item.artists.join(", ") }}
+					<span :title="slotProps.item.artists.join(', ')">{{
+						slotProps.item.artists.join(", ")
+					}}</span>
 				</template>
 				<template #column-genres="slotProps">
-					{{ slotProps.item.genres.join(", ") }}
+					<span :title="slotProps.item.genres.join(', ')">{{
+						slotProps.item.genres.join(", ")
+					}}</span>
 				</template>
 				<template #column-requestedBy="slotProps">
 					<user-id-to-username
@@ -71,14 +79,18 @@ export default {
 				hidable: true,
 				defaultVisibility: "shown",
 				draggable: true,
-				resizable: true
+				resizable: true,
+				minWidth: 200,
+				maxWidth: 600
 			},
 			columns: [
 				{
 					name: "thumbnailImage",
 					displayName: "Thumb",
 					properties: ["thumbnail"],
-					width: "150px",
+					minWidth: 120,
+					width: 120,
+					maxWidth: 120,
 					resizable: false
 				},
 				{
@@ -86,15 +98,15 @@ export default {
 					displayName: "Musare ID",
 					properties: ["_id"],
 					sortProperty: "_id",
-					width: "220px"
+					width: 220
 				},
 				{
 					name: "youtubeId",
 					displayName: "YouTube ID",
 					properties: ["youtubeId"],
 					sortProperty: "youtubeId",
-					minWidth: "155px",
-					width: "155px"
+					minWidth: 155,
+					width: 155
 				},
 				{
 					name: "title",
@@ -106,29 +118,27 @@ export default {
 					name: "artists",
 					displayName: "Artists",
 					properties: ["artists"],
-					sortable: false,
-					width: "300px"
+					sortable: false
 				},
 				{
 					name: "genres",
 					displayName: "Genres",
 					properties: ["genres"],
-					sortable: false,
-					width: "300px"
+					sortable: false
 				},
 				{
 					name: "thumbnailUrl",
 					displayName: "Thumbnail (URL)",
 					properties: ["thumbnail"],
 					sortProperty: "thumbnail",
-					defaultVisibility: "hidden",
-					width: "300px"
+					defaultVisibility: "hidden"
 				},
 				{
 					name: "requestedBy",
 					displayName: "Requested By",
 					properties: ["requestedBy"],
-					sortProperty: "requestedBy"
+					sortProperty: "requestedBy",
+					width: 200
 				}
 			],
 			filters: [

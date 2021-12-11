@@ -152,9 +152,9 @@
 									'item-draggable': column.draggable
 								}"
 								:style="{
-									minWidth: column.minWidth,
-									width: column.width,
-									maxWidth: column.maxWidth
+									minWidth: `${column.minWidth}px`,
+									width: `${column.width}px`,
+									maxWidth: `${column.maxWidth}px`
 								}"
 								v-if="shownColumns.indexOf(column.name) !== -1"
 							>
@@ -584,8 +584,30 @@ export default {
 				}
 				this.resizing.width -= this.resizing.lastX - event.x;
 				this.resizing.lastX = event.x;
-				this.resizing.resizingColumn.minWidth = `${this.resizing.width}px`;
-				this.resizing.resizingColumn.maxWidth = `${this.resizing.width}px`;
+				if (
+					this.resizing.resizingColumn.minWidth &&
+					this.resizing.resizingColumn.maxWidth
+				) {
+					this.resizing.resizingColumn.width = Math.max(
+						Math.min(
+							this.resizing.resizingColumn.maxWidth,
+							this.resizing.width
+						),
+						this.resizing.resizingColumn.minWidth
+					);
+				} else if (this.resizing.resizingColumn.minWidth) {
+					this.resizing.resizingColumn.width = Math.max(
+						this.resizing.width,
+						this.resizing.resizingColumn.minWidth
+					);
+				} else if (this.resizing.resizingColumn.maxWidth) {
+					this.resizing.resizingColumn.width = Math.min(
+						this.resizing.resizingColumn.maxWidth,
+						this.resizing.width
+					);
+				} else {
+					this.resizing.resizingColumn.width = this.resizing.width;
+				}
 				console.log(`New width: ${this.resizing.width}px`);
 			}
 		},
@@ -645,6 +667,7 @@ export default {
 
 		table {
 			border-collapse: separate;
+			table-layout: fixed;
 
 			thead {
 				tr {
@@ -735,22 +758,24 @@ export default {
 			position: relative;
 			white-space: nowrap;
 			text-overflow: ellipsis;
+			overflow: hidden;
 
 			&:first-child {
 				position: sticky;
 				left: 0;
 				z-index: 2;
+				width: 5px;
 				padding: 0;
 				padding-left: 5px;
 			}
 
 			.resizer {
 				height: 100%;
-				width: 4px;
+				width: 5px;
 				background-color: transparent;
 				cursor: col-resize;
 				position: absolute;
-				right: -2px;
+				right: 0;
 				top: 0;
 			}
 		}
