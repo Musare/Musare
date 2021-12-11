@@ -78,19 +78,23 @@ export default {
 					name: "thumbnailImage",
 					displayName: "Thumb",
 					properties: ["thumbnail"],
-					width: "50px"
+					width: "150px",
+					resizable: false
 				},
 				{
 					name: "_id",
 					displayName: "Musare ID",
 					properties: ["_id"],
-					sortProperty: "_id"
+					sortProperty: "_id",
+					width: "220px"
 				},
 				{
 					name: "youtubeId",
 					displayName: "YouTube ID",
 					properties: ["youtubeId"],
-					sortProperty: "youtubeId"
+					sortProperty: "youtubeId",
+					minWidth: "155px",
+					width: "155px"
 				},
 				{
 					name: "title",
@@ -102,20 +106,23 @@ export default {
 					name: "artists",
 					displayName: "Artists",
 					properties: ["artists"],
-					sortable: false
+					sortable: false,
+					width: "300px"
 				},
 				{
 					name: "genres",
 					displayName: "Genres",
 					properties: ["genres"],
-					sortable: false
+					sortable: false,
+					width: "300px"
 				},
 				{
 					name: "thumbnailUrl",
 					displayName: "Thumbnail (URL)",
 					properties: ["thumbnail"],
 					sortProperty: "thumbnail",
-					defaultVisibility: "hidden"
+					defaultVisibility: "hidden",
+					width: "300px"
 				},
 				{
 					name: "requestedBy",

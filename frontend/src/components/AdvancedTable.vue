@@ -246,6 +246,15 @@
 									)
 								"
 							></slot>
+							<div
+								class="resizer"
+								v-if="column.resizable"
+								@mousedown.prevent.stop="
+									columnResizingMouseDown(column, $event)
+								"
+								@mouseup="columnResizingMouseUp()"
+								@dblclick="columnResetWidth(column)"
+							></div>
 						</td>
 					</tr>
 				</tbody>
@@ -644,7 +653,6 @@ export default {
 						line-height: 40px;
 						border: 1px solid var(--light-grey-2);
 						border-width: 1px 1px 1px 0;
-						position: relative;
 
 						&:first-child,
 						&:last-child {
@@ -684,16 +692,6 @@ export default {
 								}
 							}
 						}
-
-						.resizer {
-							height: 100%;
-							width: 8px;
-							background-color: black;
-							cursor: pointer;
-							position: absolute;
-							right: 0;
-							top: 0;
-						}
 					}
 				}
 			}
@@ -722,8 +720,6 @@ export default {
 					td {
 						border: 1px solid var(--light-grey-2);
 						border-width: 0 1px 1px 0;
-						white-space: nowrap;
-						text-overflow: ellipsis;
 
 						&:first-child,
 						&:last-child {
@@ -734,13 +730,29 @@ export default {
 			}
 		}
 
-		table thead tr th:first-child,
-		table tbody tr td:first-child {
-			position: sticky;
-			left: 0;
-			z-index: 2;
-			padding: 0;
-			padding-left: 5px;
+		table thead tr th,
+		table tbody tr td {
+			position: relative;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+
+			&:first-child {
+				position: sticky;
+				left: 0;
+				z-index: 2;
+				padding: 0;
+				padding-left: 5px;
+			}
+
+			.resizer {
+				height: 100%;
+				width: 4px;
+				background-color: transparent;
+				cursor: col-resize;
+				position: absolute;
+				right: -2px;
+				top: 0;
+			}
 		}
 	}
 
