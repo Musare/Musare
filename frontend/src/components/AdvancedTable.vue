@@ -1,235 +1,299 @@
 <template>
-	<div
-		class="table-outer-container"
-		@mousemove="columnResizingMouseMove($event)"
-	>
-		<div class="table-header">
-			<tippy
-				v-if="filters.length > 0"
-				:touch="true"
-				:interactive="true"
-				placement="bottom"
-				theme="search"
-				ref="search"
-				trigger="click"
-			>
-				<a class="button is-info" @click.prevent="true">
-					<i class="material-icons icon-with-button">search</i>
-					Search
-				</a>
-
-				<template #content>
-					<div
-						v-for="(query, index) in advancedQuery"
-						:key="`query-${index}`"
-						class="advanced-query"
-					>
-						<div class="control select">
-							<select
-								v-model="query.filter"
-								@change="changeQueryFilter(index)"
-							>
-								<option
-									v-for="filter in filters"
-									:key="filter.name"
-									:value="filter"
-								>
-									{{ filter.displayName }}
-								</option>
-							</select>
-						</div>
-						<div class="control select">
-							<select v-model="query.filterType">
-								<option
-									v-for="filterType in filterTypes(
-										query.filter
-									)"
-									:key="filterType.name"
-									:value="filterType.name"
-									:selected="
-										query.filter.defaultFilterType ===
-										filterType.name
-									"
-								>
-									{{ filterType.displayName }}
-								</option>
-							</select>
-						</div>
-						<p class="control is-expanded">
-							<input
-								v-model="query.data"
-								class="input"
-								type="text"
-								placeholder="Search value"
-								@keyup.enter="getData()"
-								:disabled="!query.filterType"
-							/>
-						</p>
-						<div class="control">
-							<button
-								class="button material-icons is-success"
-								@click="addQueryItem()"
-							>
-								control_point
-							</button>
-						</div>
-						<div v-if="advancedQuery.length > 1" class="control">
-							<button
-								class="button material-icons is-danger"
-								@click="removeQueryItem(index)"
-							>
-								remove_circle_outline
-							</button>
-						</div>
-					</div>
-					<a class="button is-info" @click="getData()">
+	<div>
+		<div
+			class="table-outer-container"
+			@mousemove="columnResizingMouseMove($event)"
+		>
+			<div class="table-header">
+				<tippy
+					v-if="filters.length > 0"
+					:touch="true"
+					:interactive="true"
+					placement="bottom"
+					theme="search"
+					ref="search"
+					trigger="click"
+				>
+					<a class="button is-info" @click.prevent="true">
 						<i class="material-icons icon-with-button">search</i>
 						Search
 					</a>
-				</template>
-			</tippy>
-			<tippy
-				v-if="hidableSortedColumns.length > 0"
-				:touch="true"
-				:interactive="true"
-				placement="bottom"
-				theme="dropdown"
-				ref="editColumns"
-				trigger="click"
-			>
-				<a class="button is-info" @click.prevent="true">
-					<i class="material-icons icon-with-button">tune</i>
-					Columns
-				</a>
 
-				<template #content>
-					<draggable
-						item-key="name"
-						v-model="orderedColumns"
-						v-bind="columnDragOptions"
-						tag="div"
-						draggable=".item-draggable"
-						class="nav-dropdown-items"
-					>
-						<template #item="{ element: column }">
-							<button
-								v-if="column.name !== 'select'"
-								:class="{
-									sortable: column.sortable,
-									'item-draggable': column.draggable,
-									'nav-item': true
-								}"
-								@click.prevent="toggleColumnVisibility(column)"
-							>
-								<p class="control is-expanded checkbox-control">
-									<label class="switch">
-										<input
-											v-if="column.hidable"
-											type="checkbox"
-											:id="index"
-											:checked="
-												shownColumns.indexOf(
-													column.name
-												) !== -1
-											"
-											@click="
-												toggleColumnVisibility(column)
-											"
-										/>
-										<span
-											:class="{
-												slider: true,
-												round: true,
-												disabled: !column.hidable
-											}"
-										></span>
-									</label>
-									<label :for="index">
-										<span></span>
-										<p>{{ column.displayName }}</p>
-									</label>
-								</p>
-							</button>
-						</template>
-					</draggable>
-				</template>
-			</tippy>
-		</div>
-		<div class="table-container">
-			<table class="table">
-				<thead>
-					<draggable
-						item-key="name"
-						v-model="orderedColumns"
-						v-bind="columnDragOptions"
-						tag="tr"
-						draggable=".item-draggable"
-					>
-						<template #item="{ element: column }">
-							<th
-								:class="{
-									sortable: column.sortable,
-									'item-draggable': column.draggable
-								}"
-								:style="{
-									minWidth: `${column.minWidth}px`,
-									width: `${column.width}px`,
-									maxWidth: `${column.maxWidth}px`
-								}"
-								v-if="shownColumns.indexOf(column.name) !== -1"
-							>
-								<div>
-									<span>
-										{{ column.displayName }}
-									</span>
-									<span
-										v-if="column.draggable"
-										content="Toggle Pinned Column"
-										v-tippy
+					<template #content>
+						<div
+							v-for="(query, index) in advancedQuery"
+							:key="`query-${index}`"
+							class="advanced-query"
+						>
+							<div class="control select">
+								<select
+									v-model="query.filter"
+									@change="changeQueryFilter(index)"
+								>
+									<option
+										v-for="filter in filters"
+										:key="filter.name"
+										:value="filter"
 									>
-										<span
-											:class="{
-												'material-icons': true,
-												active: false
-											}"
-										>
-											push_pin
-										</span>
-									</span>
-									<span
-										v-if="column.sortable"
-										:content="`Sort by ${column.displayName}`"
-										v-tippy
+										{{ filter.displayName }}
+									</option>
+								</select>
+							</div>
+							<div class="control select">
+								<select v-model="query.filterType">
+									<option
+										v-for="filterType in filterTypes(
+											query.filter
+										)"
+										:key="filterType.name"
+										:value="filterType.name"
+										:selected="
+											query.filter.defaultFilterType ===
+											filterType.name
+										"
 									>
-										<span
-											v-if="!sort[column.sortProperty]"
-											class="material-icons"
-											@click="changeSort(column)"
-										>
-											unfold_more
+										{{ filterType.displayName }}
+									</option>
+								</select>
+							</div>
+							<p class="control is-expanded">
+								<input
+									v-model="query.data"
+									class="input"
+									type="text"
+									placeholder="Search value"
+									@keyup.enter="getData()"
+									:disabled="!query.filterType"
+								/>
+							</p>
+							<div class="control">
+								<button
+									class="button material-icons is-success"
+									@click="addQueryItem()"
+								>
+									control_point
+								</button>
+							</div>
+							<div
+								v-if="advancedQuery.length > 1"
+								class="control"
+							>
+								<button
+									class="button material-icons is-danger"
+									@click="removeQueryItem(index)"
+								>
+									remove_circle_outline
+								</button>
+							</div>
+						</div>
+						<a class="button is-info" @click="getData()">
+							<i class="material-icons icon-with-button"
+								>search</i
+							>
+							Search
+						</a>
+					</template>
+				</tippy>
+				<tippy
+					v-if="hidableSortedColumns.length > 0"
+					:touch="true"
+					:interactive="true"
+					placement="bottom"
+					theme="dropdown"
+					ref="editColumns"
+					trigger="click"
+				>
+					<a class="button is-info" @click.prevent="true">
+						<i class="material-icons icon-with-button">tune</i>
+						Columns
+					</a>
+
+					<template #content>
+						<draggable
+							item-key="name"
+							v-model="orderedColumns"
+							v-bind="columnDragOptions"
+							tag="div"
+							draggable=".item-draggable"
+							class="nav-dropdown-items"
+						>
+							<template #item="{ element: column }">
+								<button
+									v-if="column.name !== 'select'"
+									:class="{
+										sortable: column.sortable,
+										'item-draggable': column.draggable,
+										'nav-item': true
+									}"
+									@click.prevent="
+										toggleColumnVisibility(column)
+									"
+								>
+									<p
+										class="
+											control
+											is-expanded
+											checkbox-control
+										"
+									>
+										<label class="switch">
+											<input
+												v-if="column.hidable"
+												type="checkbox"
+												:id="index"
+												:checked="
+													shownColumns.indexOf(
+														column.name
+													) !== -1
+												"
+												@click="
+													toggleColumnVisibility(
+														column
+													)
+												"
+											/>
+											<span
+												:class="{
+													slider: true,
+													round: true,
+													disabled: !column.hidable
+												}"
+											></span>
+										</label>
+										<label :for="index">
+											<span></span>
+											<p>{{ column.displayName }}</p>
+										</label>
+									</p>
+								</button>
+							</template>
+						</draggable>
+					</template>
+				</tippy>
+			</div>
+			<div class="table-container">
+				<table class="table">
+					<thead>
+						<draggable
+							item-key="name"
+							v-model="orderedColumns"
+							v-bind="columnDragOptions"
+							tag="tr"
+							draggable=".item-draggable"
+						>
+							<template #item="{ element: column }">
+								<th
+									:class="{
+										sortable: column.sortable,
+										'item-draggable': column.draggable
+									}"
+									:style="{
+										minWidth: `${column.minWidth}px`,
+										width: `${column.width}px`,
+										maxWidth: `${column.maxWidth}px`
+									}"
+									v-if="
+										shownColumns.indexOf(column.name) !== -1
+									"
+								>
+									<div>
+										<span>
+											{{ column.displayName }}
 										</span>
 										<span
-											v-if="
-												sort[column.sortProperty] ===
-												'ascending'
-											"
-											class="material-icons active"
-											@click="changeSort(column)"
+											v-if="column.draggable"
+											content="Toggle Pinned Column"
+											v-tippy
+											@click="togglePinnedColumn(column)"
 										>
-											expand_more
+											<span
+												:class="{
+													'material-icons': true,
+													active: false
+												}"
+											>
+												push_pin
+											</span>
 										</span>
 										<span
-											v-if="
-												sort[column.sortProperty] ===
-												'descending'
-											"
-											class="material-icons active"
-											@click="changeSort(column)"
+											v-if="column.sortable"
+											:content="`Sort by ${column.displayName}`"
+											v-tippy
 										>
-											expand_less
+											<span
+												v-if="
+													!sort[column.sortProperty]
+												"
+												class="material-icons"
+												@click="changeSort(column)"
+											>
+												unfold_more
+											</span>
+											<span
+												v-if="
+													sort[
+														column.sortProperty
+													] === 'ascending'
+												"
+												class="material-icons active"
+												@click="changeSort(column)"
+											>
+												expand_more
+											</span>
+											<span
+												v-if="
+													sort[
+														column.sortProperty
+													] === 'descending'
+												"
+												class="material-icons active"
+												@click="changeSort(column)"
+											>
+												expand_less
+											</span>
 										</span>
-									</span>
-								</div>
+									</div>
+									<div
+										class="resizer"
+										v-if="column.resizable"
+										@mousedown.prevent.stop="
+											columnResizingMouseDown(
+												column,
+												$event
+											)
+										"
+										@mouseup="columnResizingMouseUp()"
+										@dblclick="columnResetWidth(column)"
+									></div>
+								</th>
+							</template>
+						</draggable>
+					</thead>
+					<tbody>
+						<tr
+							v-for="(item, itemIndex) in data"
+							:key="item._id"
+							:class="{
+								selected: item.selected,
+								highlighted: item.highlighted
+							}"
+							@click="clickItem(itemIndex, $event)"
+						>
+							<td
+								v-for="column in sortedFilteredColumns"
+								:key="`${item._id}-${column.name}`"
+							>
+								<slot
+									:name="`column-${column.name}`"
+									:item="item"
+									v-if="
+										column.properties.length === 0 ||
+										column.properties.every(
+											property =>
+												item[property] !== undefined
+										)
+									"
+								></slot>
 								<div
 									class="resizer"
 									v-if="column.resizable"
@@ -239,111 +303,106 @@
 									@mouseup="columnResizingMouseUp()"
 									@dblclick="columnResetWidth(column)"
 								></div>
-							</th>
-						</template>
-					</draggable>
-				</thead>
-				<tbody>
-					<tr
-						v-for="(item, itemIndex) in data"
-						:key="item._id"
-						:class="{
-							selected: item.selected,
-							highlighted: item.highlighted
-						}"
-						@click="clickItem(itemIndex, $event)"
-					>
-						<td
-							v-for="column in sortedFilteredColumns"
-							:key="`${item._id}-${column.name}`"
-						>
-							<slot
-								:name="`column-${column.name}`"
-								:item="item"
-								v-if="
-									column.properties.every(
-										property => item[property] !== undefined
-									)
-								"
-							></slot>
-							<div
-								class="resizer"
-								v-if="column.resizable"
-								@mousedown.prevent.stop="
-									columnResizingMouseDown(column, $event)
-								"
-								@mouseup="columnResizingMouseUp()"
-								@dblclick="columnResetWidth(column)"
-							></div>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-		<div class="table-footer">
-			<div class="page-controls">
-				<button
-					:class="{ disabled: page === 1 }"
-					class="button is-primary material-icons"
-					:disabled="page === 1"
-					@click="changePage(1)"
-					content="First Page"
-					v-tippy
-				>
-					skip_previous
-				</button>
-				<button
-					:class="{ disabled: page === 1 }"
-					class="button is-primary material-icons"
-					:disabled="page === 1"
-					@click="changePage(page - 1)"
-					content="Previous Page"
-					v-tippy
-				>
-					fast_rewind
-				</button>
-
-				<p>Page {{ page }} / {{ lastPage }}</p>
-
-				<button
-					:class="{ disabled: page === lastPage }"
-					class="button is-primary material-icons"
-					:disabled="page === lastPage"
-					@click="changePage(page + 1)"
-					content="Next Page"
-					v-tippy
-				>
-					fast_forward
-				</button>
-				<button
-					:class="{ disabled: page === lastPage }"
-					class="button is-primary material-icons"
-					:disabled="page === lastPage"
-					@click="changePage(lastPage)"
-					content="Last Page"
-					v-tippy
-				>
-					skip_next
-				</button>
+							</td>
+						</tr>
+					</tbody>
+				</table>
 			</div>
-			<div class="page-size">
-				<div class="control">
-					<label class="label">Items per page</label>
-					<p class="control select">
-						<select
-							v-model.number="pageSize"
-							@change="changePageSize()"
-						>
-							<option value="10">10</option>
-							<option value="25">25</option>
-							<option value="50">50</option>
-							<option value="100">100</option>
-							<option value="250">250</option>
-							<option value="500">500</option>
-							<option value="1000">1000</option>
-						</select>
-					</p>
+			<div class="table-footer">
+				<div class="page-controls">
+					<button
+						:class="{ disabled: page === 1 }"
+						class="button is-primary material-icons"
+						:disabled="page === 1"
+						@click="changePage(1)"
+						content="First Page"
+						v-tippy
+					>
+						skip_previous
+					</button>
+					<button
+						:class="{ disabled: page === 1 }"
+						class="button is-primary material-icons"
+						:disabled="page === 1"
+						@click="changePage(page - 1)"
+						content="Previous Page"
+						v-tippy
+					>
+						fast_rewind
+					</button>
+
+					<p>Page {{ page }} / {{ lastPage }}</p>
+
+					<button
+						:class="{ disabled: page === lastPage }"
+						class="button is-primary material-icons"
+						:disabled="page === lastPage"
+						@click="changePage(page + 1)"
+						content="Next Page"
+						v-tippy
+					>
+						fast_forward
+					</button>
+					<button
+						:class="{ disabled: page === lastPage }"
+						class="button is-primary material-icons"
+						:disabled="page === lastPage"
+						@click="changePage(lastPage)"
+						content="Last Page"
+						v-tippy
+					>
+						skip_next
+					</button>
 				</div>
+				<div class="page-size">
+					<div class="control">
+						<label class="label">Items per page</label>
+						<p class="control select">
+							<select
+								v-model.number="pageSize"
+								@change="changePageSize()"
+							>
+								<option value="10">10</option>
+								<option value="25">25</option>
+								<option value="50">50</option>
+								<option value="100">100</option>
+								<option value="250">250</option>
+								<option value="500">500</option>
+								<option value="1000">1000</option>
+							</select>
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div
+			v-if="selectedRows.length > 0"
+			class="bulk-popup"
+			:style="{
+				top: bulkPopup.top + 'px',
+				left: bulkPopup.left + 'px'
+			}"
+		>
+			<button
+				class="button is-primary"
+				:content="
+					selectedRows.length === 1
+						? `${selectedRows.length} row selected`
+						: `${selectedRows.length} rows selected`
+				"
+				v-tippy
+			>
+				{{ selectedRows.length }}
+			</button>
+			<slot name="bulk-actions" :item="selectedRows" />
+			<div class="right">
+				<slot name="bulk-actions-right" :item="selectedRows" />
+				<span
+					class="material-icons drag-icon"
+					@mousedown.left="onDragBox"
+				>
+					drag_indicator
+				</span>
 			</div>
 		</div>
 	</div>
@@ -416,6 +475,14 @@ export default {
 					name: "regex",
 					displayName: "Regex"
 				}
+			},
+			bulkPopup: {
+				top: 0,
+				left: 0,
+				pos1: 0,
+				pos2: 0,
+				pos3: 0,
+				pos4: 0
 			}
 		};
 	},
@@ -443,6 +510,9 @@ export default {
 		lastSelectedItemIndex() {
 			return this.data.findIndex(item => item.highlighted);
 		},
+		selectedRows() {
+			return this.data.filter(data => data.selected);
+		},
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
@@ -456,7 +526,10 @@ export default {
 				sortable: false,
 				hidable: false,
 				draggable: false,
-				resizable: false
+				resizable: false,
+				minWidth: 5,
+				width: 5,
+				maxWidth: 5
 			},
 			...this.columns
 		];
@@ -478,6 +551,9 @@ export default {
 				filter: {},
 				filterType: ""
 			});
+
+		this.bulkPopup.top = document.body.clientHeight - 56;
+		this.bulkPopup.left = document.body.clientWidth / 2 - 200;
 
 		ws.onConnect(this.init);
 	},
@@ -657,42 +733,85 @@ export default {
 		changeQueryFilter(index) {
 			this.advancedQuery[index].filterType =
 				this.advancedQuery[index].filter.defaultFilterType;
+		},
+		onDragBox(e) {
+			const e1 = e || window.event;
+			e1.preventDefault();
+
+			this.bulkPopup.pos3 = e1.clientX;
+			this.bulkPopup.pos4 = e1.clientY;
+
+			document.onmousemove = e => {
+				const e2 = e || window.event;
+				e2.preventDefault();
+				// calculate the new cursor position:
+				this.bulkPopup.pos1 = this.bulkPopup.pos3 - e.clientX;
+				this.bulkPopup.pos2 = this.bulkPopup.pos4 - e.clientY;
+				this.bulkPopup.pos3 = e.clientX;
+				this.bulkPopup.pos4 = e.clientY;
+				// set the element's new position:
+				this.bulkPopup.top -= this.bulkPopup.pos2;
+				this.bulkPopup.left -= this.bulkPopup.pos1;
+
+				if (this.bulkPopup.top < 0) this.bulkPopup.top = 0;
+				if (this.bulkPopup.top > document.body.clientHeight - 50)
+					this.bulkPopup.top = document.body.clientHeight - 50;
+				if (this.bulkPopup.left < 0) this.bulkPopup.left = 0;
+				if (this.bulkPopup.left > document.body.clientWidth - 400)
+					this.bulkPopup.left = document.body.clientWidth - 400;
+			};
+
+			document.onmouseup = () => {
+				document.onmouseup = null;
+				document.onmousemove = null;
+			};
 		}
 	}
 };
 </script>
 
 <style lang="scss" scoped>
-.night-mode .table-outer-container {
-	.table-container .table {
-		&,
-		thead th {
+.night-mode {
+	.table-outer-container {
+		.table-container .table {
+			&,
+			thead th {
+				background-color: var(--dark-grey-3);
+				color: var(--light-grey-2);
+			}
+
+			tr {
+				&:nth-child(even) {
+					background-color: var(--dark-grey-2);
+				}
+
+				&:hover,
+				&:focus,
+				&.highlighted {
+					background-color: var(--dark-grey-4);
+				}
+			}
+
+			th,
+			td {
+				border-color: var(--dark-grey) !important;
+			}
+		}
+
+		.table-header,
+		.table-footer {
 			background-color: var(--dark-grey-3);
 			color: var(--light-grey-2);
 		}
-
-		tr {
-			&:nth-child(even) {
-				background-color: var(--dark-grey-2);
-			}
-
-			&:hover,
-			&:focus,
-			&.highlighted {
-				background-color: var(--dark-grey-4);
-			}
-		}
-
-		th,
-		td {
-			border-color: var(--dark-grey) !important;
-		}
 	}
+	.bulk-popup {
+		border: 0;
+		background-color: var(--dark-grey-2);
+		color: var(--white);
 
-	.table-header,
-	.table-footer {
-		background-color: var(--dark-grey-3);
-		color: var(--light-grey-2);
+		.material-icons {
+			color: var(--white);
+		}
 	}
 }
 
@@ -804,7 +923,6 @@ export default {
 				position: sticky;
 				left: 0;
 				z-index: 2;
-				width: 5px;
 				padding: 0;
 				padding-left: 5px;
 			}
@@ -888,6 +1006,33 @@ export default {
 		& > .button {
 			font-size: 22px;
 		}
+	}
+}
+
+.bulk-popup {
+	display: flex;
+	position: fixed;
+	flex-direction: row;
+	width: 100%;
+	max-width: 400px;
+	line-height: 36px;
+	z-index: 5;
+	border: 1px solid var(--light-grey-3);
+	border-radius: 5px;
+	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+	background-color: var(--white);
+	color: var(--dark-grey);
+	padding: 5px;
+
+	.right {
+		margin-left: auto;
+	}
+
+	.drag-icon {
+		position: relative;
+		top: 5px;
+		color: var(--dark-grey);
+		cursor: move;
 	}
 }
 </style>

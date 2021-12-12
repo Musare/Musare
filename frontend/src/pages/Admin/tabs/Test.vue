@@ -58,6 +58,12 @@
 						:link="true"
 					/>
 				</template>
+				<!-- <template #bulk-actions="slotProps">
+					A {{ slotProps.item.length }}
+				</template>
+				<template #bulk-actions-right="slotProps">
+					B {{ slotProps.item.length }}
+				</template> -->
 			</advanced-table>
 		</div>
 	</div>
