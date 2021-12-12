@@ -215,11 +215,12 @@ class _SongsModule extends CoreClass {
 	 * @param {string} payload.properties - the properties to return for each song
 	 * @param {string} payload.sort - the sort object
 	 * @param {string} payload.queries - the queries array
+	 * @param {string} payload.operator - the operator for queries
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_DATA(payload) {
 		return new Promise((resolve, reject) => {
-			const { page, pageSize, properties, sort, queries } = payload;
+			const { page, pageSize, properties, sort, queries, operator } = payload;
 
 			console.log("GET_DATA", payload);
 
@@ -236,16 +237,20 @@ class _SongsModule extends CoreClass {
 				return newQuery;
 			});
 
+			const queryObject = {};
+			if (operator === "and") queryObject.$and = newQueries;
+			else queryObject.$or = newQueries;
+
 			async.waterfall(
 				[
 					next => {
-						SongsModule.SongModel.find({ $and: newQueries }).count((err, count) => {
+						SongsModule.SongModel.find(queryObject).count((err, count) => {
 							next(err, count);
 						});
 					},
 
 					(count, next) => {
-						SongsModule.SongModel.find({ $and: newQueries })
+						SongsModule.SongModel.find(queryObject)
 							.sort(sort)
 							.skip(pageSize * (page - 1))
 							.limit(pageSize)

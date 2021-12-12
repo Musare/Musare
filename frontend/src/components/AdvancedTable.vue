@@ -89,12 +89,40 @@
 								</button>
 							</div>
 						</div>
-						<a class="button is-info" @click="getData()">
-							<i class="material-icons icon-with-button"
-								>search</i
-							>
-							Search
-						</a>
+						<div class="advanced-query-bottom">
+							<div class="control select">
+								<select v-model="queryOperator">
+									<option
+										v-for="operator in queryOperators"
+										:key="operator.name"
+										:value="operator.name"
+									>
+										{{ operator.displayName }}
+									</option>
+								</select>
+							</div>
+							<div class="control is-expanded">
+								<button
+									class="button is-info"
+									@click="getData()"
+								>
+									<i class="material-icons icon-with-button"
+										>search</i
+									>
+									Search
+								</button>
+							</div>
+							<div class="control">
+								<button
+									class="button is-warning material-icons"
+									@click="resetQuery()"
+									content="Reset query"
+									v-tippy="{ theme: 'info' }"
+								>
+									refresh
+								</button>
+							</div>
+						</div>
 					</template>
 				</tippy>
 				<tippy
@@ -406,6 +434,7 @@
 				<span
 					class="material-icons drag-icon"
 					@mousedown.left="onDragBox"
+					@dblclick="resetBulkActionsPosition()"
 				>
 					drag_indicator
 				</span>
@@ -468,6 +497,17 @@ export default {
 				};
 			},
 			advancedQuery: [],
+			queryOperator: "or",
+			queryOperators: [
+				{
+					name: "or",
+					displayName: "OR"
+				},
+				{
+					name: "and",
+					displayName: "AND"
+				}
+			],
 			resizing: {},
 			allFilterTypes: {
 				contains: {
@@ -552,15 +592,9 @@ export default {
 		const pageSize = parseInt(localStorage.getItem("adminPageSize"));
 		if (!Number.isNaN(pageSize)) this.pageSize = pageSize;
 
-		if (this.filters.length > 0)
-			this.advancedQuery.push({
-				data: "",
-				filter: {},
-				filterType: ""
-			});
+		this.addQueryItem();
 
-		this.bulkPopup.top = document.body.clientHeight - 56;
-		this.bulkPopup.left = document.body.clientWidth / 2 - 200;
+		this.resetBulkActionsPosition();
 
 		ws.onConnect(this.init);
 	},
@@ -576,6 +610,7 @@ export default {
 				this.properties,
 				this.sort,
 				this.advancedQuery,
+				this.queryOperator,
 				res => {
 					console.log(111, res);
 					if (res.status === "success") {
@@ -684,16 +719,21 @@ export default {
 			this.data[itemIndex].highlighted = true;
 		},
 		addQueryItem() {
-			if (this.filters.length > 0)
-				this.advancedQuery.push({
-					data: "",
-					filter: {},
-					filterType: ""
-				});
+			this.advancedQuery.push({
+				data: "",
+				filter: {},
+				filterType: ""
+			});
 		},
 		removeQueryItem(index) {
 			if (this.advancedQuery.length > 1)
 				this.advancedQuery.splice(index, 1);
+		},
+		resetQuery() {
+			this.advancedQuery = [];
+			this.queryOperator = "or";
+			this.addQueryItem();
+			this.getData();
 		},
 		columnResizingMouseDown(column, event) {
 			this.resizing.resizing = true;
@@ -783,6 +823,10 @@ export default {
 				document.onmouseup = null;
 				document.onmousemove = null;
 			};
+		},
+		resetBulkActionsPosition() {
+			this.bulkPopup.top = document.body.clientHeight - 56;
+			this.bulkPopup.left = document.body.clientWidth / 2 - 200;
 		}
 	}
 };
@@ -988,8 +1032,11 @@ export default {
 }
 
 .advanced-query {
-	display: flex;
 	margin-bottom: 5px;
+}
+.advanced-query,
+.advanced-query-bottom {
+	display: flex;
 
 	& > .control {
 		& > input,
@@ -1015,6 +1062,10 @@ export default {
 			font-size: 22px;
 		}
 	}
+}
+.advanced-query-bottom .button {
+	font-size: 16px !important;
+	width: 100%;
 }
 
 .bulk-popup {

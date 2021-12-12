@@ -210,9 +210,10 @@ export default {
 	 * @param properties - the properties to return for each song
 	 * @param sort - the sort object
 	 * @param queries - the queries array
+	 * @param operator - the operator for queries
 	 * @param cb
 	 */
-	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, cb) {
+	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -223,7 +224,8 @@ export default {
 							pageSize,
 							properties,
 							sort,
-							queries
+							queries,
+							operator
 						},
 						this
 					)
