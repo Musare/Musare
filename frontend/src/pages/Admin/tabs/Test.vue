@@ -58,6 +58,16 @@
 						:link="true"
 					/>
 				</template>
+				<template #column-actions="slotProps">
+					<button
+						class="button is-primary"
+						@click.prevent="edit(slotProps.item)"
+						content="Edit Song"
+						v-tippy
+					>
+						<i class="material-icons">edit</i>
+					</button>
+				</template>
 				<!-- <template #bulk-actions="slotProps">
 					A {{ slotProps.item.length }}
 				</template>
@@ -66,17 +76,28 @@
 				</template> -->
 			</advanced-table>
 		</div>
+		<edit-song v-if="modals.editSong" song-type="songs" :key="song._id" />
+		<report v-if="modals.report" />
 	</div>
 </template>
 
 <script>
+import { mapState, mapActions } from "vuex";
+import { defineAsyncComponent } from "vue";
+
 import AdvancedTable from "@/components/AdvancedTable.vue";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
 export default {
 	components: {
 		AdvancedTable,
-		UserIdToUsername
+		UserIdToUsername,
+		EditSong: defineAsyncComponent(() =>
+			import("@/components/modals/EditSong")
+		),
+		Report: defineAsyncComponent(() =>
+			import("@/components/modals/Report.vue")
+		)
 	},
 	data() {
 		return {
@@ -95,6 +116,7 @@ export default {
 					name: "thumbnailImage",
 					displayName: "Thumb",
 					properties: ["thumbnail"],
+					sortable: false,
 					minWidth: 120,
 					width: 120,
 					maxWidth: 120,
@@ -146,6 +168,15 @@ export default {
 					properties: ["requestedBy"],
 					sortProperty: "requestedBy",
 					width: 200
+				},
+				{
+					name: "actions",
+					displayName: "Actions",
+					properties: ["_id"],
+					sortable: false,
+					hidable: false,
+					width: 100,
+					resizable: false
 				}
 			],
 			filters: [
@@ -201,9 +232,24 @@ export default {
 			]
 		};
 	},
+	computed: {
+		...mapState("modalVisibility", {
+			modals: state => state.modals
+		}),
+		...mapState("modals/editSong", {
+			song: state => state.song
+		})
+	},
 	mounted() {},
 	beforeUnmount() {},
-	methods: {}
+	methods: {
+		edit(song) {
+			this.editSong(song);
+			this.openModal("editSong");
+		},
+		...mapActions("modals/editSong", ["editSong"]),
+		...mapActions("modalVisibility", ["openModal"])
+	}
 };
 </script>
 

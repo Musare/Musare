@@ -40,7 +40,10 @@
 								</select>
 							</div>
 							<div class="control select">
-								<select v-model="query.filterType">
+								<select
+									v-model="query.filterType"
+									:disabled="!query.filterType"
+								>
 									<option
 										v-for="filterType in filterTypes(
 											query.filter
@@ -575,11 +578,12 @@ export default {
 				this.advancedQuery,
 				res => {
 					console.log(111, res);
-					new Toast(res.message);
 					if (res.status === "success") {
 						const { data, count } = res.data;
 						this.data = data;
 						this.count = count;
+					} else {
+						new Toast(res.message);
 					}
 				}
 			);
@@ -901,16 +905,6 @@ export default {
 
 					&.highlighted {
 						background-color: var(--light-grey);
-
-						td:first-child {
-							border-left: 5px solid var(--red);
-							padding-left: 0;
-						}
-					}
-
-					&.selected.highlighted td:first-child {
-						border-left: 5px solid var(--green);
-						padding-left: 0;
 					}
 
 					td {
