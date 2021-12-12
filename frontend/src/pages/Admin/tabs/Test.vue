@@ -145,37 +145,51 @@ export default {
 				{
 					name: "_id",
 					displayName: "Musare ID",
-					type: "regex"
+					property: "_id",
+					filterTypes: ["exact"],
+					defaultFilterType: "exact"
 				},
 				{
 					name: "youtubeId",
 					displayName: "YouTube ID",
-					type: "regex"
+					property: "youtubeId",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
 				},
 				{
 					name: "title",
 					displayName: "Title",
-					type: "regex"
+					property: "title",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
 				},
 				{
 					name: "artists",
 					displayName: "Artists",
-					type: "regex"
+					property: "artists",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
 				},
 				{
 					name: "genres",
 					displayName: "Genres",
-					type: "regex"
+					property: "genres",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
 				},
 				{
-					name: "thumbnailUrl",
-					displayName: "Thumbnail (URL)",
-					type: "regex"
+					name: "thumbnail",
+					displayName: "Thumbnail",
+					property: "thumbnail",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
 				},
 				{
 					name: "requestedBy",
 					displayName: "Requested By",
-					type: "regex"
+					property: "requestedBy",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
 				}
 			]
 		};

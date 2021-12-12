@@ -223,31 +223,29 @@ class _SongsModule extends CoreClass {
 
 			console.log("GET_DATA", payload);
 
-			const regexFilter = {};
-			queries.forEach(query => {
-				const { data, filter } = query;
-				if (filter.type === "regex") {
-					let q;
-					if (data.length > 2 && data.indexOf("/") === 0 && data.lastIndexOf("/") === data.length - 1) {
-						q = data.slice(1, data.length - 1);
-					} else {
-						q = data.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&");
-					}
-					regexFilter[filter.name] = new RegExp(`${q}`, "i");
+			const newQueries = queries.map(query => {
+				const { data, filter, filterType } = query;
+				const newQuery = {};
+				if (filterType === "regex") {
+					newQuery[filter.property] = new RegExp(`${data.splice(1, data.length - 1)}`, "i");
+				} else if (filterType === "contains") {
+					newQuery[filter.property] = new RegExp(`${data.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i");
+				} else if (filterType === "exact") {
+					newQuery[filter.property] = data.toString();
 				}
+				return newQuery;
 			});
-			console.log(regexFilter);
 
 			async.waterfall(
 				[
 					next => {
-						SongsModule.SongModel.find({ ...regexFilter }).count((err, count) => {
+						SongsModule.SongModel.find({ $and: newQueries }).count((err, count) => {
 							next(err, count);
 						});
 					},
 
 					(count, next) => {
-						SongsModule.SongModel.find({ ...regexFilter })
+						SongsModule.SongModel.find({ $and: newQueries })
 							.sort(sort)
 							.skip(pageSize * (page - 1))
 							.limit(pageSize)

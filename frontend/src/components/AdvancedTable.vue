@@ -25,13 +25,33 @@
 						class="advanced-query"
 					>
 						<div class="control select">
-							<select v-model="query.filter">
+							<select
+								v-model="query.filter"
+								@change="changeQueryFilter(index)"
+							>
 								<option
-									v-for="f in filters"
-									:key="f.name"
-									:value="f"
+									v-for="filter in filters"
+									:key="filter.name"
+									:value="filter"
 								>
-									{{ f.displayName }}
+									{{ filter.displayName }}
+								</option>
+							</select>
+						</div>
+						<div class="control select">
+							<select v-model="query.filterType">
+								<option
+									v-for="filterType in filterTypes(
+										query.filter
+									)"
+									:key="filterType.name"
+									:value="filterType.name"
+									:selected="
+										query.filter.defaultFilterType ===
+										filterType.name
+									"
+								>
+									{{ filterType.displayName }}
 								</option>
 							</select>
 						</div>
@@ -42,7 +62,7 @@
 								type="text"
 								placeholder="Search value"
 								@keyup.enter="getData()"
-								:disabled="!query.filter.type"
+								:disabled="!query.filterType"
 							/>
 						</p>
 						<div class="control">
@@ -369,7 +389,6 @@ export default {
 			data: [],
 			count: 0, // TODO Rename
 			sort: {},
-			filter: {},
 			orderedColumns: [],
 			shownColumns: [],
 			columnDragOptions() {
@@ -383,7 +402,21 @@ export default {
 				};
 			},
 			advancedQuery: [],
-			resizing: {}
+			resizing: {},
+			allFilterTypes: {
+				contains: {
+					name: "contains",
+					displayName: "Contains"
+				},
+				exact: {
+					name: "exact",
+					displayName: "Exact"
+				},
+				regex: {
+					name: "regex",
+					displayName: "Regex"
+				}
+			}
 		};
 	},
 	computed: {
@@ -409,11 +442,6 @@ export default {
 		},
 		lastSelectedItemIndex() {
 			return this.data.findIndex(item => item.highlighted);
-		},
-		filterTypes() {
-			return this.filters
-				.map(filter => filter.type)
-				.filter((f, index, self) => self.indexOf(f) === index);
 		},
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -447,7 +475,8 @@ export default {
 		if (this.filters.length > 0)
 			this.advancedQuery.push({
 				data: "",
-				filter: {}
+				filter: {},
+				filterType: ""
 			});
 
 		ws.onConnect(this.init);
@@ -564,7 +593,8 @@ export default {
 			if (this.filters.length > 0)
 				this.advancedQuery.push({
 					data: "",
-					filter: {}
+					filter: {},
+					filterType: ""
 				});
 		},
 		removeQueryItem(index) {
@@ -617,6 +647,16 @@ export default {
 		columnResetWidth(column) {
 			// eslint-disable-next-line no-param-reassign
 			column.minWidth = column.maxWidth = "";
+		},
+		filterTypes(filter) {
+			if (!filter || !filter.filterTypes) return [];
+			return filter.filterTypes.map(
+				filterType => this.allFilterTypes[filterType]
+			);
+		},
+		changeQueryFilter(index) {
+			this.advancedQuery[index].filterType =
+				this.advancedQuery[index].filter.defaultFilterType;
 		}
 	}
 };
