@@ -201,7 +201,7 @@
 											{{ column.displayName }}
 										</span>
 										<span
-											v-if="column.draggable"
+											v-if="column.pinable"
 											content="Toggle Pinned Column"
 											v-tippy
 											@click="togglePinnedColumn(column)"
@@ -209,7 +209,10 @@
 											<span
 												:class="{
 													'material-icons': true,
-													active: false
+													active:
+														pinnedColumns.indexOf(
+															column.name
+														) !== -1
 												}"
 											>
 												push_pin
@@ -450,6 +453,7 @@ export default {
 			sort: {},
 			orderedColumns: [],
 			shownColumns: [],
+			pinnedColumns: ["select"],
 			columnDragOptions() {
 				return {
 					animation: 200,
@@ -617,6 +621,16 @@ export default {
 				this.shownColumns.push(column.name);
 			}
 			return this.getData();
+		},
+		togglePinnedColumn(column) {
+			if (this.pinnedColumns.indexOf(column.name) !== -1) {
+				this.pinnedColumns.splice(
+					this.pinnedColumns.indexOf(column.name),
+					1
+				);
+			} else {
+				this.pinnedColumns.push(column.name);
+			}
 		},
 		clickItem(itemIndex, event) {
 			const { shiftKey, ctrlKey } = event;

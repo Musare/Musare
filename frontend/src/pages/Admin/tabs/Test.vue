@@ -86,6 +86,7 @@ export default {
 				defaultVisibility: "shown",
 				draggable: true,
 				resizable: true,
+				pinable: true,
 				minWidth: 200,
 				maxWidth: 600
 			},
