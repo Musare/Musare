@@ -76,7 +76,6 @@
 											class="input"
 											type="text"
 											placeholder="Search value"
-											@keyup.enter="getData()"
 											:disabled="!query.filterType"
 										/>
 									</p>
@@ -139,7 +138,7 @@
 								<div class="control is-expanded">
 									<button
 										class="button is-info"
-										@click="getData()"
+										@click="applyFilterAndGetData()"
 									>
 										<i
 											class="
@@ -159,7 +158,7 @@
 								<div class="control is-expanded">
 									<button
 										class="button is-info"
-										@click="getData()"
+										@click="applyFilterAndGetData()"
 									>
 										<i
 											class="
@@ -553,7 +552,9 @@ export default {
 				};
 			},
 			advancedQuery: [],
+			appliedFilters: [],
 			queryOperator: "or",
+			appliedFilterOperator: "or",
 			queryOperators: [
 				{
 					name: "or",
@@ -663,8 +664,8 @@ export default {
 				this.pageSize,
 				this.properties,
 				this.sort,
-				this.advancedQuery,
-				this.queryOperator,
+				this.appliedFilters,
+				this.appliedFilterOperator,
 				res => {
 					console.log(111, res);
 					if (res.status === "success") {
@@ -782,11 +783,6 @@ export default {
 		removeQueryItem(index) {
 			this.advancedQuery.splice(index, 1);
 		},
-		resetQuery() {
-			this.advancedQuery = [];
-			this.queryOperator = "or";
-			this.getData();
-		},
 		columnResizingMouseDown(column, event) {
 			this.resizing.resizing = true;
 			this.resizing.resizingColumn = column;
@@ -879,6 +875,13 @@ export default {
 		resetBulkActionsPosition() {
 			this.bulkPopup.top = document.body.clientHeight - 56;
 			this.bulkPopup.left = document.body.clientWidth / 2 - 200;
+		},
+		applyFilterAndGetData() {
+			this.appliedFilters = JSON.parse(
+				JSON.stringify(this.advancedQuery)
+			);
+			this.appliedFilterOperator = this.queryOperator;
+			this.getData();
 		}
 	}
 };

@@ -238,8 +238,10 @@ class _SongsModule extends CoreClass {
 			});
 
 			const queryObject = {};
-			if (operator === "and") queryObject.$and = newQueries;
-			else queryObject.$or = newQueries;
+			if (newQueries.length > 0) {
+				if (operator === "and") queryObject.$and = newQueries;
+				else if (operator === "or") queryObject.$or = newQueries;
+			}
 
 			async.waterfall(
 				[
