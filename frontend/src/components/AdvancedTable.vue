@@ -15,114 +15,102 @@
 						ref="search"
 						trigger="click"
 					>
-						<a class="button is-info" @click.prevent="true">
+						<button class="button is-info">
 							<i class="material-icons icon-with-button"
 								>filter_list</i
 							>
 							Filters
-						</a>
+						</button>
 
 						<template #content>
-							<div v-if="advancedQuery.length === 0">
-								<p>
-									There are no filters, would you like to add
-									one?
-								</p>
-							</div>
-							<div v-else>
-								<div
-									v-for="(query, index) in advancedQuery"
-									:key="`query-${index}`"
-									class="advanced-query"
-								>
-									<div class="control select">
-										<select
-											v-model="query.filter"
-											@change="changeQueryFilter(index)"
+							<div
+								v-for="(filter, index) in editingFilters"
+								:key="`filter-${index}`"
+								class="advanced-filter"
+							>
+								<div class="control select">
+									<select
+										v-model="filter.filter"
+										@change="changeFilterType(index)"
+									>
+										<option
+											v-for="type in filters"
+											:key="type.name"
+											:value="type"
 										>
-											<option
-												v-for="filter in filters"
-												:key="filter.name"
-												:value="filter"
-											>
-												{{ filter.displayName }}
-											</option>
-										</select>
-									</div>
-									<div class="control select">
-										<select
-											v-model="query.filterType"
-											:disabled="!query.filterType"
-										>
-											<option
-												v-for="filterType in filterTypes(
-													query.filter
-												)"
-												:key="filterType.name"
-												:value="filterType.name"
-												:selected="
-													query.filter
-														.defaultFilterType ===
-													filterType.name
-												"
-											>
-												{{ filterType.displayName }}
-											</option>
-										</select>
-									</div>
-									<p class="control is-expanded">
-										<input
-											v-model="query.data"
-											class="input"
-											type="text"
-											placeholder="Search value"
-											:disabled="!query.filterType"
-										/>
-									</p>
-									<div class="control">
-										<button
-											class="
-												button
-												material-icons
-												is-danger
+											{{ type.displayName }}
+										</option>
+									</select>
+								</div>
+								<div class="control select">
+									<select
+										v-model="filter.filterType"
+										:disabled="!filter.filterType"
+									>
+										<option
+											v-for="filterType in filterTypes(
+												filter.filter
+											)"
+											:key="filterType.name"
+											:value="filterType.name"
+											:selected="
+												filter.filter
+													.defaultFilterType ===
+												filterType.name
 											"
-											@click="removeQueryItem(index)"
 										>
-											remove_circle_outline
-										</button>
-									</div>
+											{{ filterType.displayName }}
+										</option>
+									</select>
+								</div>
+								<p class="control is-expanded">
+									<input
+										v-model="filter.data"
+										class="input"
+										type="text"
+										placeholder="Search value"
+										:disabled="!filter.filterType"
+									/>
+								</p>
+								<div class="control">
+									<button
+										class="button material-icons is-danger"
+										@click="removeFilterItem(index)"
+									>
+										remove_circle_outline
+									</button>
 								</div>
 							</div>
 							<div class="control is-grouped input-with-button">
 								<p class="control is-expanded">
 									<select v-model="addFilterValue">
 										<option
-											v-for="filter in filters"
-											:key="filter.name"
-											:value="filter"
+											v-for="type in filters"
+											:key="type.name"
+											:value="type"
 										>
-											{{ filter.displayName }}
+											{{ type.displayName }}
 										</option>
 									</select>
 								</p>
 								<p class="control">
 									<button
 										class="button is-info"
-										@click="addQueryItem()"
+										@click="addFilterItem()"
 									>
 										Add filter
 									</button>
 								</p>
 							</div>
-							<div v-if="advancedQuery.length > 1">
+							<div v-if="editingFilters.length > 1">
 								<p>
 									Would you like to use AND or OR as the
 									operator?
 								</p>
 								<div class="control select">
-									<select v-model="queryOperator">
+									<select v-model="filterOperator">
 										<option
-											v-for="operator in queryOperators"
+											v-for="operator in filterOperators"
 											:key="operator.name"
 											:value="operator.name"
 										>
@@ -132,8 +120,8 @@
 								</div>
 							</div>
 							<div
-								class="advanced-query-bottom"
-								v-if="advancedQuery.length > 0"
+								class="advanced-filter-bottom"
+								v-if="editingFilters.length > 0"
 							>
 								<div class="control is-expanded">
 									<button
@@ -152,8 +140,8 @@
 								</div>
 							</div>
 							<div
-								class="advanced-query-bottom"
-								v-else-if="advancedQuery.length === 0"
+								class="advanced-filter-bottom"
+								v-else-if="editingFilters.length === 0"
 							>
 								<div class="control is-expanded">
 									<button
@@ -167,15 +155,49 @@
 											"
 											>filter_list</i
 										>
-										Reset filters
+										Apply filters
 									</button>
 								</div>
 							</div>
 						</template>
 					</tippy>
-					<p v-tippy content="5 filters active">
-						5 <i class="material-icons">filter_list</i>
-					</p>
+					<tippy
+						v-if="appliedFilters.length > 0"
+						:touch="true"
+						:interactive="true"
+						theme="info"
+						ref="activeFilters"
+					>
+						<div class="filters-indicator">
+							{{ appliedFilters.length }}
+							<i class="material-icons" @click.prevent="true"
+								>filter_list</i
+							>
+						</div>
+
+						<template #content>
+							<p
+								v-for="(filter, index) in appliedFilters"
+								:key="`filter-${index}`"
+							>
+								{{ filter.filter.displayName }}
+								{{ filter.filterType }} {{ filter.data }}
+								{{
+									appliedFilters.length === index + 1
+										? ""
+										: filterOperator
+								}}
+							</p>
+						</template>
+					</tippy>
+					<i
+						v-else
+						class="filters-indicator material-icons"
+						content="No active filters"
+						v-tippy="{ theme: 'info' }"
+					>
+						filter_list_off
+					</i>
 				</div>
 				<div>
 					<tippy
@@ -551,11 +573,11 @@ export default {
 					fallbackTolerance: 50
 				};
 			},
-			advancedQuery: [],
+			editingFilters: [],
 			appliedFilters: [],
-			queryOperator: "or",
+			filterOperator: "or",
 			appliedFilterOperator: "or",
-			queryOperators: [
+			filterOperators: [
 				{
 					name: "or",
 					displayName: "OR"
@@ -773,15 +795,15 @@ export default {
 			// Set the clicked item to be highlighted
 			this.data[itemIndex].highlighted = true;
 		},
-		addQueryItem() {
-			this.advancedQuery.push({
+		addFilterItem() {
+			this.editingFilters.push({
 				data: "",
 				filter: this.addFilterValue,
 				filterType: this.addFilterValue.defaultFilterType
 			});
 		},
-		removeQueryItem(index) {
-			this.advancedQuery.splice(index, 1);
+		removeFilterItem(index) {
+			this.editingFilters.splice(index, 1);
 		},
 		columnResizingMouseDown(column, event) {
 			this.resizing.resizing = true;
@@ -836,9 +858,9 @@ export default {
 				filterType => this.allFilterTypes[filterType]
 			);
 		},
-		changeQueryFilter(index) {
-			this.advancedQuery[index].filterType =
-				this.advancedQuery[index].filter.defaultFilterType;
+		changeFilterType(index) {
+			this.editingFilters[index].filterType =
+				this.editingFilters[index].filter.defaultFilterType;
 		},
 		onDragBox(e) {
 			const e1 = e || window.event;
@@ -878,9 +900,9 @@ export default {
 		},
 		applyFilterAndGetData() {
 			this.appliedFilters = JSON.parse(
-				JSON.stringify(this.advancedQuery)
+				JSON.stringify(this.editingFilters)
 			);
-			this.appliedFilterOperator = this.queryOperator;
+			this.appliedFilterOperator = this.filterOperator;
 			this.getData();
 		}
 	}
@@ -1064,7 +1086,7 @@ export default {
 			margin: 5px;
 		}
 
-		> p {
+		.filters-indicator {
 			line-height: 46px;
 			display: flex;
 			align-items: center;
@@ -1098,11 +1120,11 @@ export default {
 	}
 }
 
-.advanced-query {
+.advanced-filter {
 	margin-bottom: 5px;
 }
-.advanced-query,
-.advanced-query-bottom {
+.advanced-filter,
+.advanced-filter-bottom {
 	display: flex;
 
 	& > .control {
@@ -1130,9 +1152,13 @@ export default {
 		}
 	}
 }
-.advanced-query-bottom .button {
-	font-size: 16px !important;
-	width: 100%;
+.advanced-filter-bottom {
+	margin-top: 5px;
+
+	.button {
+		font-size: 16px !important;
+		width: 100%;
+	}
 }
 
 .bulk-popup {
