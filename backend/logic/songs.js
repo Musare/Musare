@@ -241,6 +241,7 @@ class _SongsModule extends CoreClass {
 			if (newQueries.length > 0) {
 				if (operator === "and") queryObject.$and = newQueries;
 				else if (operator === "or") queryObject.$or = newQueries;
+				else if (operator === "nor") queryObject.$nor = newQueries;
 			}
 
 			async.waterfall(

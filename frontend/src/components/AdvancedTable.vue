@@ -23,10 +23,31 @@
 						</button>
 
 						<template #content>
+							<div class="control is-grouped input-with-button">
+								<p class="control select is-expanded">
+									<select v-model="addFilterValue">
+										<option
+											v-for="type in filters"
+											:key="type.name"
+											:value="type"
+										>
+											{{ type.displayName }}
+										</option>
+									</select>
+								</p>
+								<p class="control">
+									<button
+										class="button material-icons is-success"
+										@click="addFilterItem()"
+									>
+										control_point
+									</button>
+								</p>
+							</div>
 							<div
 								v-for="(filter, index) in editingFilters"
 								:key="`filter-${index}`"
-								class="advanced-filter"
+								class="control is-grouped is-expanded"
 							>
 								<div class="control select">
 									<select
@@ -81,33 +102,14 @@
 									</button>
 								</div>
 							</div>
-							<div class="control is-grouped input-with-button">
-								<p class="control is-expanded">
-									<select v-model="addFilterValue">
-										<option
-											v-for="type in filters"
-											:key="type.name"
-											:value="type"
-										>
-											{{ type.displayName }}
-										</option>
-									</select>
-								</p>
-								<p class="control">
-									<button
-										class="button is-info"
-										@click="addFilterItem()"
-									>
-										Add filter
-									</button>
-								</p>
-							</div>
-							<div v-if="editingFilters.length > 1">
-								<p>
-									Would you like to use AND or OR as the
-									operator?
-								</p>
-								<div class="control select">
+							<div
+								v-if="editingFilters.length > 1"
+								class="control is-expanded is-grouped"
+							>
+								<label class="control label"
+									>Filter operator</label
+								>
+								<div class="control select is-expanded">
 									<select v-model="filterOperator">
 										<option
 											v-for="operator in filterOperators"
@@ -585,6 +587,10 @@ export default {
 				{
 					name: "and",
 					displayName: "AND"
+				},
+				{
+					name: "nor",
+					displayName: "NOR"
 				}
 			],
 			resizing: {},
@@ -1120,30 +1126,44 @@ export default {
 	}
 }
 
-.advanced-filter {
-	margin-bottom: 5px;
-}
-.advanced-filter,
-.advanced-filter-bottom {
+.control.is-grouped {
 	display: flex;
 
 	& > .control {
+		&.label {
+			height: 36px;
+			background-color: var(--white);
+			border: 1px solid var(--light-grey-2);
+			color: var(--dark-grey-2);
+			appearance: none;
+			border-radius: 3px;
+			font-size: 14px;
+			line-height: 34px;
+			padding-left: 8px;
+			padding-right: 8px;
+		}
+		&.select.is-expanded > select {
+			width: 100%;
+		}
 		& > input,
 		& > select,
-		& > .button {
+		& > .button,
+		&.label {
 			border-radius: 0;
 		}
 		&:first-child {
 			& > input,
 			& > select,
-			& > .button {
+			& > .button,
+			&.label {
 				border-radius: 5px 0 0 5px;
 			}
 		}
 		&:last-child {
 			& > input,
 			& > select,
-			& > .button {
+			& > .button,
+			&.label {
 				border-radius: 0 5px 5px 0;
 			}
 		}
@@ -1153,11 +1173,15 @@ export default {
 	}
 }
 .advanced-filter-bottom {
-	margin-top: 5px;
+	display: flex;
 
 	.button {
 		font-size: 16px !important;
 		width: 100%;
+	}
+
+	.control {
+		margin: 0 !important;
 	}
 }
 
