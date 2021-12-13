@@ -1084,12 +1084,14 @@ export default {
 	padding: 5px;
 
 	.right {
+		display: flex;
+		flex-direction: row;
 		margin-left: auto;
 	}
 
 	.drag-icon {
 		position: relative;
-		top: 5px;
+		top: 6px;
 		color: var(--dark-grey);
 		cursor: move;
 	}

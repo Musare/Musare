@@ -58,21 +58,71 @@
 						:link="true"
 					/>
 				</template>
-				<template #column-actions="slotProps">
-					<button
-						class="button is-primary"
-						@click.prevent="edit(slotProps.item)"
-						content="Edit Song"
-						v-tippy
-					>
-						<i class="material-icons">edit</i>
-					</button>
+				<template #bulk-actions="slotProps">
+					<div class="song-bulk-actions">
+						<i
+							class="material-icons edit-songs-icon"
+							@click.prevent="editMany(slotProps.item)"
+							content="Edit Selected Songs"
+							v-tippy
+						>
+							edit
+						</i>
+						<i
+							class="material-icons verify-songs-icon"
+							@click.prevent="verifyMany(slotProps.item)"
+							content="Verify Selected Songs"
+							v-tippy
+						>
+							check_circle
+						</i>
+						<i
+							class="material-icons unverify-songs-icon"
+							@click.prevent="unverifyMany(slotProps.item)"
+							content="Unverify Selected Songs"
+							v-tippy
+						>
+							cancel
+						</i>
+						<i
+							class="material-icons tag-songs-icon"
+							@click.prevent="tagMany(slotProps.item)"
+							content="Tag Selected Songs"
+							v-tippy
+						>
+							local_offer
+						</i>
+						<i
+							class="material-icons artists-songs-icon"
+							@click.prevent="setArtists(slotProps.item)"
+							content="Set Artists for Selected Songs"
+							v-tippy
+						>
+							group
+						</i>
+						<i
+							class="material-icons genres-songs-icon"
+							@click.prevent="setGenres(slotProps.item)"
+							content="Set Genres to Selected Songs"
+							v-tippy
+						>
+							theater_comedy
+						</i>
+						<confirm
+							placement="left"
+							@confirm="deleteMany(slotProps.item)"
+						>
+							<i
+								class="material-icons delete-songs-icon"
+								content="Delete Selected Songs"
+								v-tippy
+							>
+								delete_forever
+							</i>
+						</confirm>
+					</div>
 				</template>
-				<!-- <template #bulk-actions="slotProps">
-					A {{ slotProps.item.length }}
-				</template>
-				<template #bulk-actions-right="slotProps">
-					B {{ slotProps.item.length }}
+				<!-- <template #bulk-actions-right="slotProps">
 				</template> -->
 			</advanced-table>
 		</div>
@@ -85,13 +135,16 @@
 import { mapState, mapActions } from "vuex";
 import { defineAsyncComponent } from "vue";
 
+import Toast from "toasters";
 import AdvancedTable from "@/components/AdvancedTable.vue";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
+import Confirm from "@/components/Confirm.vue";
 
 export default {
 	components: {
 		AdvancedTable,
 		UserIdToUsername,
+		Confirm,
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong")
 		),
@@ -168,15 +221,6 @@ export default {
 					properties: ["requestedBy"],
 					sortProperty: "requestedBy",
 					width: 200
-				},
-				{
-					name: "actions",
-					displayName: "Actions",
-					properties: ["_id"],
-					sortable: false,
-					hidable: false,
-					width: 100,
-					resizable: false
 				}
 			],
 			filters: [
@@ -243,9 +287,31 @@ export default {
 	mounted() {},
 	beforeUnmount() {},
 	methods: {
-		edit(song) {
-			this.editSong(song);
-			this.openModal("editSong");
+		editMany(selectedRows) {
+			if (selectedRows.length === 1) {
+				this.editSong(selectedRows[0]);
+				this.openModal("editSong");
+			} else {
+				new Toast("Bulk editing not yet implemented.");
+			}
+		},
+		verifyMany() {
+			new Toast("Bulk verifying not yet implemented.");
+		},
+		unverifyMany() {
+			new Toast("Bulk unverifying not yet implemented.");
+		},
+		tagMany() {
+			new Toast("Bulk tagging not yet implemented.");
+		},
+		setArtists() {
+			new Toast("Bulk setting artists not yet implemented.");
+		},
+		setGenres() {
+			new Toast("Bulk setting genres not yet implemented.");
+		},
+		deleteMany() {
+			new Toast("Bulk deleting not yet implemented.");
 		},
 		...mapActions("modals/editSong", ["editSong"]),
 		...mapActions("modalVisibility", ["openModal"])
@@ -264,5 +330,34 @@ export default {
 	display: block;
 	max-width: 50px;
 	margin: 0 auto;
+}
+
+.bulk-popup {
+	.song-bulk-actions {
+		display: flex;
+		flex-direction: row;
+		width: 100%;
+		justify-content: space-evenly;
+
+		.material-icons {
+			position: relative;
+			top: 6px;
+			margin-left: 5px;
+			cursor: pointer;
+			color: var(--primary-color);
+
+			&:hover,
+			&:focus {
+				filter: brightness(90%);
+			}
+		}
+		.verify-songs-icon {
+			color: var(--green);
+		}
+		.unverify-songs-icon,
+		.delete-songs-icon {
+			color: var(--dark-red);
+		}
+	}
 }
 </style>
