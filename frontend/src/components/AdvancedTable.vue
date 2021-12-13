@@ -5,202 +5,258 @@
 			@mousemove="columnResizingMouseMove($event)"
 		>
 			<div class="table-header">
-				<tippy
-					v-if="filters.length > 0"
-					:touch="true"
-					:interactive="true"
-					placement="bottom"
-					theme="search"
-					ref="search"
-					trigger="click"
-				>
-					<a class="button is-info" @click.prevent="true">
-						<i class="material-icons icon-with-button">search</i>
-						Search
-					</a>
+				<div>
+					<tippy
+						v-if="filters.length > 0"
+						:touch="true"
+						:interactive="true"
+						placement="bottom"
+						theme="search"
+						ref="search"
+						trigger="click"
+					>
+						<a class="button is-info" @click.prevent="true">
+							<i class="material-icons icon-with-button"
+								>filter_list</i
+							>
+							Filters
+						</a>
 
-					<template #content>
-						<div
-							v-for="(query, index) in advancedQuery"
-							:key="`query-${index}`"
-							class="advanced-query"
-						>
-							<div class="control select">
-								<select
-									v-model="query.filter"
-									@change="changeQueryFilter(index)"
-								>
-									<option
-										v-for="filter in filters"
-										:key="filter.name"
-										:value="filter"
-									>
-										{{ filter.displayName }}
-									</option>
-								</select>
+						<template #content>
+							<div v-if="advancedQuery.length === 0">
+								<p>
+									There are no filters, would you like to add
+									one?
+								</p>
 							</div>
-							<div class="control select">
-								<select
-									v-model="query.filterType"
-									:disabled="!query.filterType"
+							<div v-else>
+								<div
+									v-for="(query, index) in advancedQuery"
+									:key="`query-${index}`"
+									class="advanced-query"
 								>
-									<option
-										v-for="filterType in filterTypes(
-											query.filter
-										)"
-										:key="filterType.name"
-										:value="filterType.name"
-										:selected="
-											query.filter.defaultFilterType ===
-											filterType.name
-										"
-									>
-										{{ filterType.displayName }}
-									</option>
-								</select>
+									<div class="control select">
+										<select
+											v-model="query.filter"
+											@change="changeQueryFilter(index)"
+										>
+											<option
+												v-for="filter in filters"
+												:key="filter.name"
+												:value="filter"
+											>
+												{{ filter.displayName }}
+											</option>
+										</select>
+									</div>
+									<div class="control select">
+										<select
+											v-model="query.filterType"
+											:disabled="!query.filterType"
+										>
+											<option
+												v-for="filterType in filterTypes(
+													query.filter
+												)"
+												:key="filterType.name"
+												:value="filterType.name"
+												:selected="
+													query.filter
+														.defaultFilterType ===
+													filterType.name
+												"
+											>
+												{{ filterType.displayName }}
+											</option>
+										</select>
+									</div>
+									<p class="control is-expanded">
+										<input
+											v-model="query.data"
+											class="input"
+											type="text"
+											placeholder="Search value"
+											@keyup.enter="getData()"
+											:disabled="!query.filterType"
+										/>
+									</p>
+									<div class="control">
+										<button
+											class="
+												button
+												material-icons
+												is-danger
+											"
+											@click="removeQueryItem(index)"
+										>
+											remove_circle_outline
+										</button>
+									</div>
+								</div>
 							</div>
-							<p class="control is-expanded">
-								<input
-									v-model="query.data"
-									class="input"
-									type="text"
-									placeholder="Search value"
-									@keyup.enter="getData()"
-									:disabled="!query.filterType"
-								/>
-							</p>
-							<div class="control">
-								<button
-									class="button material-icons is-success"
-									@click="addQueryItem()"
-								>
-									control_point
-								</button>
+							<div class="control is-grouped input-with-button">
+								<p class="control is-expanded">
+									<select v-model="addFilterValue">
+										<option
+											v-for="filter in filters"
+											:key="filter.name"
+											:value="filter"
+										>
+											{{ filter.displayName }}
+										</option>
+									</select>
+								</p>
+								<p class="control">
+									<button
+										class="button is-info"
+										@click="addQueryItem()"
+									>
+										Add filter
+									</button>
+								</p>
+							</div>
+							<div v-if="advancedQuery.length > 1">
+								<p>
+									Would you like to use AND or OR as the
+									operator?
+								</p>
+								<div class="control select">
+									<select v-model="queryOperator">
+										<option
+											v-for="operator in queryOperators"
+											:key="operator.name"
+											:value="operator.name"
+										>
+											{{ operator.displayName }}
+										</option>
+									</select>
+								</div>
 							</div>
 							<div
-								v-if="advancedQuery.length > 1"
-								class="control"
+								class="advanced-query-bottom"
+								v-if="advancedQuery.length > 0"
 							>
-								<button
-									class="button material-icons is-danger"
-									@click="removeQueryItem(index)"
-								>
-									remove_circle_outline
-								</button>
-							</div>
-						</div>
-						<div class="advanced-query-bottom">
-							<div class="control select">
-								<select v-model="queryOperator">
-									<option
-										v-for="operator in queryOperators"
-										:key="operator.name"
-										:value="operator.name"
+								<div class="control is-expanded">
+									<button
+										class="button is-info"
+										@click="getData()"
 									>
-										{{ operator.displayName }}
-									</option>
-								</select>
+										<i
+											class="
+												material-icons
+												icon-with-button
+											"
+											>filter_list</i
+										>
+										Apply filters
+									</button>
+								</div>
 							</div>
-							<div class="control is-expanded">
-								<button
-									class="button is-info"
-									@click="getData()"
-								>
-									<i class="material-icons icon-with-button"
-										>search</i
+							<div
+								class="advanced-query-bottom"
+								v-else-if="advancedQuery.length === 0"
+							>
+								<div class="control is-expanded">
+									<button
+										class="button is-info"
+										@click="getData()"
 									>
-									Search
-								</button>
+										<i
+											class="
+												material-icons
+												icon-with-button
+											"
+											>filter_list</i
+										>
+										Reset filters
+									</button>
+								</div>
 							</div>
-							<div class="control">
-								<button
-									class="button is-warning material-icons"
-									@click="resetQuery()"
-									content="Reset query"
-									v-tippy="{ theme: 'info' }"
-								>
-									refresh
-								</button>
-							</div>
-						</div>
-					</template>
-				</tippy>
-				<tippy
-					v-if="hidableSortedColumns.length > 0"
-					:touch="true"
-					:interactive="true"
-					placement="bottom"
-					theme="dropdown"
-					ref="editColumns"
-					trigger="click"
-				>
-					<a class="button is-info" @click.prevent="true">
-						<i class="material-icons icon-with-button">tune</i>
-						Columns
-					</a>
+						</template>
+					</tippy>
+					<p v-tippy content="5 filters active">
+						5 <i class="material-icons">filter_list</i>
+					</p>
+				</div>
+				<div>
+					<tippy
+						v-if="hidableSortedColumns.length > 0"
+						:touch="true"
+						:interactive="true"
+						placement="bottom"
+						theme="dropdown"
+						ref="editColumns"
+						trigger="click"
+					>
+						<a class="button is-info" @click.prevent="true">
+							<i class="material-icons icon-with-button">tune</i>
+							Columns
+						</a>
 
-					<template #content>
-						<draggable
-							item-key="name"
-							v-model="orderedColumns"
-							v-bind="columnDragOptions"
-							tag="div"
-							draggable=".item-draggable"
-							class="nav-dropdown-items"
-						>
-							<template #item="{ element: column }">
-								<button
-									v-if="column.name !== 'select'"
-									:class="{
-										sortable: column.sortable,
-										'item-draggable': column.draggable,
-										'nav-item': true
-									}"
-									@click.prevent="
-										toggleColumnVisibility(column)
-									"
-								>
-									<p
-										class="
-											control
-											is-expanded
-											checkbox-control
+						<template #content>
+							<draggable
+								item-key="name"
+								v-model="orderedColumns"
+								v-bind="columnDragOptions"
+								tag="div"
+								draggable=".item-draggable"
+								class="nav-dropdown-items"
+							>
+								<template #item="{ element: column }">
+									<button
+										v-if="column.name !== 'select'"
+										:class="{
+											sortable: column.sortable,
+											'item-draggable': column.draggable,
+											'nav-item': true
+										}"
+										@click.prevent="
+											toggleColumnVisibility(column)
 										"
 									>
-										<label class="switch">
-											<input
-												v-if="column.hidable"
-												type="checkbox"
-												:id="index"
-												:checked="
-													shownColumns.indexOf(
-														column.name
-													) !== -1
-												"
-												@click="
-													toggleColumnVisibility(
-														column
-													)
-												"
-											/>
-											<span
-												:class="{
-													slider: true,
-													round: true,
-													disabled: !column.hidable
-												}"
-											></span>
-										</label>
-										<label :for="index">
-											<span></span>
-											<p>{{ column.displayName }}</p>
-										</label>
-									</p>
-								</button>
-							</template>
-						</draggable>
-					</template>
-				</tippy>
+										<p
+											class="
+												control
+												is-expanded
+												checkbox-control
+											"
+										>
+											<label class="switch">
+												<input
+													v-if="column.hidable"
+													type="checkbox"
+													:id="index"
+													:checked="
+														shownColumns.indexOf(
+															column.name
+														) !== -1
+													"
+													@click="
+														toggleColumnVisibility(
+															column
+														)
+													"
+												/>
+												<span
+													:class="{
+														slider: true,
+														round: true,
+														disabled:
+															!column.hidable
+													}"
+												></span>
+											</label>
+											<label :for="index">
+												<span></span>
+												<p>{{ column.displayName }}</p>
+											</label>
+										</p>
+									</button>
+								</template>
+							</draggable>
+						</template>
+					</tippy>
+				</div>
 			</div>
 			<div class="table-container">
 				<table class="table">
@@ -592,8 +648,6 @@ export default {
 		const pageSize = parseInt(localStorage.getItem("adminPageSize"));
 		if (!Number.isNaN(pageSize)) this.pageSize = pageSize;
 
-		this.addQueryItem();
-
 		this.resetBulkActionsPosition();
 
 		ws.onConnect(this.init);
@@ -721,18 +775,16 @@ export default {
 		addQueryItem() {
 			this.advancedQuery.push({
 				data: "",
-				filter: {},
-				filterType: ""
+				filter: this.addFilterValue,
+				filterType: this.addFilterValue.defaultFilterType
 			});
 		},
 		removeQueryItem(index) {
-			if (this.advancedQuery.length > 1)
-				this.advancedQuery.splice(index, 1);
+			this.advancedQuery.splice(index, 1);
 		},
 		resetQuery() {
 			this.advancedQuery = [];
 			this.queryOperator = "or";
-			this.addQueryItem();
 			this.getData();
 		},
 		columnResizingMouseDown(column, event) {
@@ -1001,8 +1053,20 @@ export default {
 		background-color: var(--white);
 	}
 
-	.table-header > span > .button {
-		margin: 5px;
+	.table-header > div {
+		display: flex;
+		flex-direction: row;
+
+		> span > .button {
+			margin: 5px;
+		}
+
+		> p {
+			line-height: 46px;
+			display: flex;
+			align-items: center;
+			column-gap: 4px;
+		}
 	}
 
 	.table-footer {
