@@ -11,9 +11,9 @@ export default {
 	explicit: { type: Boolean },
 	requestedBy: { type: String },
 	requestedAt: { type: Date },
-	verified: { type: Boolean, default: false },
 	verifiedBy: { type: String },
 	verifiedAt: { type: Date },
 	discogs: { type: Object },
-	documentVersion: { type: Number, default: 6, required: true }
+	status: { type: String, required: true, default: "hidden", enum: ["hidden", "unverified", "verified"] },
+	documentVersion: { type: Number, default: 5, required: true }
 };

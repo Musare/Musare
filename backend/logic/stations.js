@@ -538,7 +538,7 @@ class _StationsModule extends CoreClass {
 								"skipDuration",
 								"artists",
 								"thumbnail",
-								"verified"
+								"status"
 							]
 						})
 							.then(response => {
@@ -637,7 +637,7 @@ class _StationsModule extends CoreClass {
 											requestedBy: queueSong.requestedBy,
 											likes: song.likes,
 											dislikes: song.dislikes,
-											verified: song.verified
+											status: song.status
 										};
 
 										return next(null, newSong);
@@ -837,7 +837,7 @@ class _StationsModule extends CoreClass {
 								thumbnail: song.thumbnail,
 								requestedAt: song.requestedAt,
 								requestedBy: song.requestedBy,
-								verified: song.verified
+								status: song.status
 							};
 						}
 

@@ -508,7 +508,9 @@ export default {
 				true,
 				res => {
 					this.isImportingPlaylist = false;
-					const songs = res.songs.filter(song => !song.verified);
+					const songs = res.songs.filter(
+						song => song.status !== "verified"
+					);
 					const songsAlreadyVerified =
 						res.songs.length - songs.length;
 					this.setPlaylistSongs(songs);

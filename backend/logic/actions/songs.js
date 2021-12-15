@@ -22,7 +22,13 @@ CacheModule.runJob("SUB", {
 
 		songModel.findOne({ _id: data.songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOMS", {
-				rooms: ["import-album", "admin.songs", `edit-song.${data.songId}`],
+				rooms: [
+					"import-album",
+					"admin.songs",
+					"admin.unverifiedSongs",
+					"admin.hiddenSongs",
+					`edit-song.${data.songId}`
+				],
 				args: ["event:admin.song.updated", { data: { song, oldStatus: data.oldStatus } }]
 			});
 		});
@@ -547,6 +553,56 @@ export default {
 	}),
 
 	/**
+	 * Hides a song
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} songId - the song id of the song that gets hidden
+	 * @param {Function} cb - gets called with the result
+	 */
+	hide: isLoginRequired(async function add(session, songId, cb) {
+		SongsModule.runJob("HIDE_SONG", { songId }, this)
+			.then(() => {
+				this.log("SUCCESS", "SONGS_HIDE", `User "${session.userId}" successfully hid song "${songId}".`);
+				return cb({
+					status: "success",
+					message: "Successfully hid that song"
+				});
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "SONGS_HIDE", `Hiding song "${songId}" failed for user ${session.userId}. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
+	 * Unhides a song
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} songId - the song id of the song that gets hidden
+	 * @param {Function} cb - gets called with the result
+	 */
+	unhide: isLoginRequired(async function add(session, songId, cb) {
+		SongsModule.runJob("UNHIDE_SONG", { songId }, this)
+			.then(() => {
+				this.log("SUCCESS", "SONGS_UNHIDE", `User "${session.userId}" successfully unhid song "${songId}".`);
+				return cb({
+					status: "success",
+					message: "Successfully unhid that song"
+				});
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log(
+					"ERROR",
+					"SONGS_UNHIDE",
+					`Unhiding song "${songId}" failed for user ${session.userId}. "${err}"`
+				);
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
 	 * Verifies a song
 	 *
 	 * @param session
@@ -567,11 +623,11 @@ export default {
 				},
 
 				(song, next) => {
-					const oldStatus = false;
+					const oldStatus = song.status;
 
 					song.verifiedBy = session.userId;
 					song.verifiedAt = Date.now();
-					song.verified = true;
+					song.status = "verified";
 
 					song.save(err => next(err, song, oldStatus));
 				},
@@ -626,7 +682,7 @@ export default {
 				},
 
 				(song, next) => {
-					song.verified = false;
+					song.status = "unverified";
 					song.save(err => {
 						next(err, song);
 					});
@@ -639,7 +695,7 @@ export default {
 							.catch(() => {});
 					});
 
-					SongsModule.runJob("UPDATE_SONG", { songId, oldStatus: true });
+					SongsModule.runJob("UPDATE_SONG", { songId, oldStatus: "verified" });
 
 					next(null);
 				}

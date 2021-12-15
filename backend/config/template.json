@@ -7,6 +7,8 @@
 	"serverDomain": "http://localhost/backend",
 	"serverPort": 8080,
 	"registrationDisabled": true,
+	"hideAutomaticallyRequestedSongs": false,
+	"hideAnonymousSongs": false,
 	"sendDataRequestEmails": true,
 	"apis": {
 		"youtube": {
@@ -93,5 +95,5 @@
 			]
 		}
 	},
-	"configVersion": 9
+	"configVersion": 8
 }

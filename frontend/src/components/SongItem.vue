@@ -21,7 +21,7 @@
 						{{ song.title }}
 					</h4>
 					<i
-						v-if="song.verified"
+						v-if="song.status === 'verified'"
 						class="material-icons verified-song"
 						content="Verified Song"
 						v-tippy="{ theme: 'info' }"
