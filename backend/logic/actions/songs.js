@@ -851,8 +851,30 @@ export default {
 							{
 								session,
 								namespace: "playlists",
+								action: "removeSongFromPlaylist",
+								args: [youtubeId, user.dislikedSongsPlaylist]
+							},
+							this
+						)
+						.then(res => {
+							if (res.status === "error")
+								return next("Unable to remove song from the 'Disliked Songs' playlist.");
+							return next(null, song, user.likedSongsPlaylist);
+						})
+						.catch(err => next(err));
+
+					
+				},
+
+				(song, likedSongsPlaylist, next) => {
+					return this.module
+						.runJob(
+							"RUN_ACTION2",
+							{
+								session,
+								namespace: "playlists",
 								action: "addSongToPlaylist",
-								args: [false, youtubeId, user.likedSongsPlaylist]
+								args: [false, youtubeId, likedSongsPlaylist]
 							},
 							this
 						)
@@ -863,26 +885,6 @@ export default {
 								return next("Unable to add song to the 'Liked Songs' playlist.");
 							}
 
-							return next(null, song, user.dislikedSongsPlaylist);
-						})
-						.catch(err => next(err));
-				},
-
-				(song, dislikedSongsPlaylist, next) => {
-					this.module
-						.runJob(
-							"RUN_ACTION2",
-							{
-								session,
-								namespace: "playlists",
-								action: "removeSongFromPlaylist",
-								args: [youtubeId, dislikedSongsPlaylist]
-							},
-							this
-						)
-						.then(res => {
-							if (res.status === "error")
-								return next("Unable to remove song from the 'Disliked Songs' playlist.");
 							return next(null, song);
 						})
 						.catch(err => next(err));
@@ -894,7 +896,7 @@ export default {
 						.catch(err => next(err));
 				}
 			],
-			async (err, song, { likes, dislikes }) => {
+			async (err, song, ratings) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -904,6 +906,8 @@ export default {
 					);
 					return cb({ status: "error", message: err });
 				}
+
+				const { likes, dislikes } = ratings;
 
 				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
 
@@ -968,8 +972,30 @@ export default {
 							{
 								session,
 								namespace: "playlists",
+								action: "removeSongFromPlaylist",
+								args: [youtubeId, user.likedSongsPlaylist]
+							},
+							this
+						)
+						.then(res => {
+							if (res.status === "error")
+								return next("Unable to remove song from the 'Liked Songs' playlist.");
+							return next(null, song, user.dislikedSongsPlaylist);
+						})
+						.catch(err => next(err));
+
+					
+				},
+
+				(song, dislikedSongsPlaylist, next) => {
+					return this.module
+						.runJob(
+							"RUN_ACTION2",
+							{
+								session,
+								namespace: "playlists",
 								action: "addSongToPlaylist",
-								args: [false, youtubeId, user.dislikedSongsPlaylist]
+								args: [false, youtubeId, dislikedSongsPlaylist]
 							},
 							this
 						)
@@ -980,26 +1006,6 @@ export default {
 								return next("Unable to add song to the 'Disliked Songs' playlist.");
 							}
 
-							return next(null, song, user.likedSongsPlaylist);
-						})
-						.catch(err => next(err));
-				},
-
-				(song, likedSongsPlaylist, next) => {
-					this.module
-						.runJob(
-							"RUN_ACTION2",
-							{
-								session,
-								namespace: "playlists",
-								action: "removeSongFromPlaylist",
-								args: [youtubeId, likedSongsPlaylist]
-							},
-							this
-						)
-						.then(res => {
-							if (res.status === "error")
-								return next("Unable to remove song from the 'Liked Songs' playlist.");
 							return next(null, song);
 						})
 						.catch(err => next(err));
@@ -1011,7 +1017,7 @@ export default {
 						.catch(err => next(err));
 				}
 			],
-			async (err, song, { likes, dislikes }) => {
+			async (err, song, ratings) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -1021,6 +1027,8 @@ export default {
 					);
 					return cb({ status: "error", message: err });
 				}
+
+				const { likes, dislikes } = ratings;
 
 				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
 
@@ -1124,7 +1132,7 @@ export default {
 						.catch(err => next(err));
 				}
 			],
-			async (err, song, { likes, dislikes }) => {
+			async (err, song, ratings) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -1134,6 +1142,8 @@ export default {
 					);
 					return cb({ status: "error", message: err });
 				}
+
+				const { likes, dislikes } = ratings;
 
 				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
 
@@ -1239,7 +1249,7 @@ export default {
 						.catch(err => next(err));
 				}
 			],
-			async (err, song, { likes, dislikes }) => {
+			async (err, song, ratings) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -1249,6 +1259,8 @@ export default {
 					);
 					return cb({ status: "error", message: err });
 				}
+				
+				const { likes, dislikes } = ratings;
 
 				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
 
