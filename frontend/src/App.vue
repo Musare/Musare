@@ -1221,6 +1221,43 @@ img {
 	}
 }
 
+.checkbox {
+	input[type="checkbox"] {
+		height: 36px;
+		width: 36px;
+		background-color: var(--white);
+		border: 1px solid var(--light-grey-2);
+		appearance: none;
+		border-radius: 3px;
+		cursor: pointer;
+		position: relative;
+
+		&:checked {
+			&:before {
+				content: "";
+				position: absolute;
+				top: 5px;
+				right: 10px;
+				background-color: var(--primary-color);
+				width: 5px;
+				height: 25px;
+				transform: rotate(45deg);
+			}
+
+			&:after {
+				content: "";
+				position: absolute;
+				top: 16px;
+				left: 4px;
+				background-color: var(--primary-color);
+				width: 11px;
+				height: 6px;
+				transform: rotate(45deg);
+			}
+		}
+	}
+}
+
 .button:focus,
 .button:active {
 	border-color: var(--light-grey-2) !important;

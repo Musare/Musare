@@ -407,6 +407,15 @@
 										)
 									"
 								></slot>
+								<p
+									class="checkbox"
+									v-if="column.name === 'select'"
+								>
+									<input
+										type="checkbox"
+										:checked="item.selected"
+									/>
+								</p>
 								<div
 									class="resizer"
 									v-if="column.resizable"
@@ -659,9 +668,10 @@ export default {
 				hidable: false,
 				draggable: false,
 				resizable: false,
-				minWidth: 5,
-				width: 5,
-				maxWidth: 5
+				pinable: false,
+				minWidth: 56,
+				width: 56,
+				maxWidth: 56
 			},
 			...this.columns
 		];
@@ -981,7 +991,6 @@ export default {
 						border: 1px solid var(--light-grey-2);
 						border-width: 1px 1px 1px 0;
 
-						&:first-child,
 						&:last-child {
 							border-width: 1px 0 1px;
 						}
@@ -1025,11 +1034,6 @@ export default {
 
 			tbody {
 				tr {
-					&.selected td:first-child {
-						border-left: 5px solid var(--primary-color);
-						padding-left: 0;
-					}
-
 					&.highlighted {
 						background-color: var(--light-grey);
 					}
@@ -1038,7 +1042,6 @@ export default {
 						border: 1px solid var(--light-grey-2);
 						border-width: 0 1px 1px 0;
 
-						&:first-child,
 						&:last-child {
 							border-width: 0 0 1px;
 						}
@@ -1053,14 +1056,6 @@ export default {
 			white-space: nowrap;
 			text-overflow: ellipsis;
 			overflow: hidden;
-
-			&:first-child {
-				position: sticky;
-				left: 0;
-				z-index: 2;
-				padding: 0;
-				padding-left: 5px;
-			}
 
 			.resizer {
 				height: 100%;
