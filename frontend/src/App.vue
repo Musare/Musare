@@ -377,6 +377,16 @@ export default {
 		background-color: var(--light-grey) !important;
 		color: var(--dark-grey-2) !important;
 	}
+
+	.checkbox input[type="checkbox"] {
+		background-color: var(--dark-grey);
+		border-color: transparent;
+
+		&:checked:before,
+		&:checked:after {
+			background-color: var(--white);
+		}
+	}
 }
 
 .christmas-mode {
@@ -1222,9 +1232,12 @@ img {
 }
 
 .checkbox {
+	height: 25px;
+	width: 25px;
+
 	input[type="checkbox"] {
-		height: 36px;
-		width: 36px;
+		height: 25px;
+		width: 25px;
 		background-color: var(--white);
 		border: 1px solid var(--light-grey-2);
 		appearance: none;
@@ -1236,22 +1249,22 @@ img {
 			&:before {
 				content: "";
 				position: absolute;
-				top: 5px;
-				right: 10px;
+				top: 4px;
+				right: 7px;
 				background-color: var(--primary-color);
-				width: 5px;
-				height: 25px;
+				width: 4px;
+				height: 16px;
 				transform: rotate(45deg);
 			}
 
 			&:after {
 				content: "";
 				position: absolute;
-				top: 16px;
-				left: 4px;
+				top: 12px;
+				left: 2px;
 				background-color: var(--primary-color);
-				width: 11px;
-				height: 6px;
+				width: 10px;
+				height: 4px;
 				transform: rotate(45deg);
 			}
 		}

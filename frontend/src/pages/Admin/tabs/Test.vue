@@ -103,7 +103,7 @@
 						<i
 							class="material-icons genres-songs-icon"
 							@click.prevent="setGenres(slotProps.item)"
-							content="Set Genres to Selected Songs"
+							content="Set Genres for Selected Songs"
 							v-tippy
 						>
 							theater_comedy

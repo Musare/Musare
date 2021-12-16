@@ -5,7 +5,7 @@
 				isEditable() &&
 				!(
 					playlist.type === 'user-liked' ||
-					playlist.type === 'user-liked'
+					playlist.type === 'user-disliked'
 				)
 			"
 		>

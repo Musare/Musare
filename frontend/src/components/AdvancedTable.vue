@@ -183,7 +183,7 @@
 								:key="`filter-${index}`"
 							>
 								{{ filter.filter.displayName }}
-								{{ filter.filterType }} {{ filter.data }}
+								{{ filter.filterType }} "{{ filter.data }}"
 								{{
 									appliedFilters.length === index + 1
 										? ""
@@ -306,7 +306,20 @@
 										shownColumns.indexOf(column.name) !== -1
 									"
 								>
-									<div>
+									<p
+										v-if="column.name === 'select'"
+										class="checkbox"
+									>
+										<input
+											type="checkbox"
+											:checked="
+												data.length ===
+												selectedRows.length
+											"
+											@click="toggleAllRows()"
+										/>
+									</p>
+									<div v-else>
 										<span>
 											{{ column.displayName }}
 										</span>
@@ -390,7 +403,6 @@
 								selected: item.selected,
 								highlighted: item.highlighted
 							}"
-							@click="clickItem(itemIndex, $event)"
 						>
 							<td
 								v-for="column in sortedFilteredColumns"
@@ -414,6 +426,9 @@
 									<input
 										type="checkbox"
 										:checked="item.selected"
+										@click="
+											toggleSelectedRow(itemIndex, $event)
+										"
 									/>
 								</p>
 								<div
@@ -669,9 +684,9 @@ export default {
 				draggable: false,
 				resizable: false,
 				pinable: false,
-				minWidth: 56,
-				width: 56,
-				maxWidth: 56
+				minWidth: 47,
+				width: 47,
+				maxWidth: 47
 			},
 			...this.columns
 		];
@@ -764,8 +779,8 @@ export default {
 				this.pinnedColumns.push(column.name);
 			}
 		},
-		clickItem(itemIndex, event) {
-			const { shiftKey, ctrlKey } = event;
+		toggleSelectedRow(itemIndex, event) {
+			const { shiftKey } = event;
 			// Shift was pressed, so attempt to select all items between the clicked item and last clicked item
 			if (shiftKey) {
 				// If there is a last clicked item
@@ -791,18 +806,8 @@ export default {
 						}
 					}
 				}
-			}
-			// Ctrl was pressed, so toggle selected on the clicked item
-			else if (ctrlKey) {
+			} else {
 				this.data[itemIndex].selected = !this.data[itemIndex].selected;
-			}
-			// Neither ctrl nor shift were pressed, so unselect all items and set the clicked item to selected
-			else {
-				this.data = this.data.map(item => ({
-					...item,
-					selected: false
-				}));
-				this.data[itemIndex].selected = true;
 			}
 
 			// Set the last clicked item to no longer be highlighted, if it exists
@@ -810,6 +815,13 @@ export default {
 				this.data[this.lastSelectedItemIndex].highlighted = false;
 			// Set the clicked item to be highlighted
 			this.data[itemIndex].highlighted = true;
+		},
+		toggleAllRows() {
+			if (this.data.length > this.selectedRows.length) {
+				this.data = this.data.map(row => ({ ...row, selected: true }));
+			} else {
+				this.data = this.data.map(row => ({ ...row, selected: false }));
+			}
 		},
 		addFilterItem() {
 			this.editingFilters.push({

@@ -862,12 +862,10 @@ export default {
 							return next(null, song, user.likedSongsPlaylist);
 						})
 						.catch(err => next(err));
-
-					
 				},
 
-				(song, likedSongsPlaylist, next) => {
-					return this.module
+				(song, likedSongsPlaylist, next) =>
+					this.module
 						.runJob(
 							"RUN_ACTION2",
 							{
@@ -887,8 +885,7 @@ export default {
 
 							return next(null, song);
 						})
-						.catch(err => next(err));
-				},
+						.catch(err => next(err)),
 
 				(song, next) => {
 					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, youtubeId })
@@ -983,12 +980,10 @@ export default {
 							return next(null, song, user.dislikedSongsPlaylist);
 						})
 						.catch(err => next(err));
-
-					
 				},
 
-				(song, dislikedSongsPlaylist, next) => {
-					return this.module
+				(song, dislikedSongsPlaylist, next) =>
+					this.module
 						.runJob(
 							"RUN_ACTION2",
 							{
@@ -1008,8 +1003,7 @@ export default {
 
 							return next(null, song);
 						})
-						.catch(err => next(err));
-				},
+						.catch(err => next(err)),
 
 				(song, next) => {
 					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, youtubeId })
@@ -1259,7 +1253,7 @@ export default {
 					);
 					return cb({ status: "error", message: err });
 				}
-				
+
 				const { likes, dislikes } = ratings;
 
 				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
