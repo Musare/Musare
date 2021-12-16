@@ -293,6 +293,13 @@
 						>
 							<template #item="{ element: column }">
 								<th
+									v-if="
+										!(
+											column.name === 'select' &&
+											data.length === 0
+										) &&
+										shownColumns.indexOf(column.name) !== -1
+									"
 									:class="{
 										sortable: column.sortable,
 										'item-draggable': column.draggable
@@ -302,9 +309,6 @@
 										width: `${column.width}px`,
 										maxWidth: `${column.maxWidth}px`
 									}"
-									v-if="
-										shownColumns.indexOf(column.name) !== -1
-									"
 								>
 									<p
 										v-if="column.name === 'select'"
@@ -780,7 +784,7 @@ export default {
 			}
 		},
 		toggleSelectedRow(itemIndex, event) {
-			const { shiftKey } = event;
+			const { shiftKey, ctrlKey } = event;
 			// Shift was pressed, so attempt to select all items between the clicked item and last clicked item
 			if (shiftKey) {
 				// If there is a last clicked item
@@ -806,7 +810,35 @@ export default {
 						}
 					}
 				}
-			} else {
+			}
+			// Ctrl was pressed, so attempt to unselect all items between the clicked item and last clicked item
+			else if (ctrlKey) {
+				// If there is a last clicked item
+				if (this.lastSelectedItemIndex >= 0) {
+					// Clicked item is lower than last item, so unselect upwards until it reaches the last selected item
+					if (itemIndex > this.lastSelectedItemIndex) {
+						for (
+							let itemIndexUp = itemIndex;
+							itemIndexUp > this.lastSelectedItemIndex;
+							itemIndexUp -= 1
+						) {
+							this.data[itemIndexUp].selected = false;
+						}
+					}
+					// Clicked item is higher than last item, so unselect downwards until it reaches the last selected item
+					else if (itemIndex < this.lastSelectedItemIndex) {
+						for (
+							let itemIndexDown = itemIndex;
+							itemIndexDown < this.lastSelectedItemIndex;
+							itemIndexDown += 1
+						) {
+							this.data[itemIndexDown].selected = false;
+						}
+					}
+				}
+			}
+			// Neither ctrl nor shift were pressed, so toggle clicked item
+			else {
 				this.data[itemIndex].selected = !this.data[itemIndex].selected;
 			}
 
