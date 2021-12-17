@@ -170,7 +170,7 @@ export default {
 					properties: ["thumbnail"],
 					sortable: false,
 					minWidth: 120,
-					width: 120,
+					defaultWidth: 120,
 					maxWidth: 120,
 					resizable: false
 				},
@@ -179,15 +179,15 @@ export default {
 					displayName: "Musare ID",
 					properties: ["_id"],
 					sortProperty: "_id",
-					width: 220
+					defaultWidth: 220
 				},
 				{
 					name: "youtubeId",
 					displayName: "YouTube ID",
 					properties: ["youtubeId"],
 					sortProperty: "youtubeId",
-					minWidth: 155,
-					width: 155
+					minWidth: 120,
+					defaultWidth: 120
 				},
 				{
 					name: "title",
@@ -219,7 +219,7 @@ export default {
 					displayName: "Requested By",
 					properties: ["requestedBy"],
 					sortProperty: "requestedBy",
-					width: 200
+					defaultWidth: 200
 				}
 			],
 			filters: [

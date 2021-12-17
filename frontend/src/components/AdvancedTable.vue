@@ -227,7 +227,10 @@
 							>
 								<template #item="{ element: column }">
 									<button
-										v-if="column.name !== 'select'"
+										v-if="
+											column.name !== 'select' &&
+											column.name !== 'placeholder'
+										"
 										:class="{
 											sortable: column.sortable,
 											'item-draggable': column.draggable,
@@ -305,9 +308,15 @@
 										'item-draggable': column.draggable
 									}"
 									:style="{
-										minWidth: `${column.minWidth}px`,
-										width: `${column.width}px`,
-										maxWidth: `${column.maxWidth}px`
+										minWidth: Number.isNaN(column.minWidth)
+											? column.minWidth
+											: `${column.minWidth}px`,
+										width: Number.isNaN(column.width)
+											? column.width
+											: `${column.width}px`,
+										maxWidth: Number.isNaN(column.maxWidth)
+											? column.maxWidth
+											: `${column.maxWidth}px`
 									}"
 								>
 									<p
@@ -659,7 +668,7 @@ export default {
 		})
 	},
 	mounted() {
-		const columns = [
+		this.orderedColumns = [
 			{
 				name: "select",
 				displayName: "",
@@ -669,19 +678,33 @@ export default {
 				draggable: false,
 				resizable: false,
 				minWidth: 47,
-				width: 47,
+				defaultWidth: 47,
 				maxWidth: 47
 			},
-			...this.columns
+			...this.columns.map(column => ({
+				...this.columnDefault,
+				...column
+			})),
+			{
+				name: "placeholder",
+				displayName: "",
+				properties: [],
+				sortable: false,
+				hidable: false,
+				draggable: false,
+				resizable: false,
+				minWidth: "auto",
+				width: "auto",
+				maxWidth: "auto"
+			}
 		];
-		this.orderedColumns = columns.map(column => ({
-			...this.columnDefault,
-			...column
-		}));
+
 		// A column will be shown if the defaultVisibility is set to shown, OR if the defaultVisibility is not set to shown and hidable is false
-		this.shownColumns = columns
+		this.shownColumns = this.orderedColumns
 			.filter(column => column.defaultVisibility !== "hidden")
 			.map(column => column.name);
+
+		this.recalculateWidths();
 
 		const pageSize = parseInt(localStorage.getItem("adminPageSize"));
 		if (!Number.isNaN(pageSize)) this.pageSize = pageSize;
@@ -751,6 +774,7 @@ export default {
 			} else {
 				this.shownColumns.push(column.name);
 			}
+			this.recalculateWidths();
 			return this.getData();
 		},
 		toggleSelectedRow(itemIndex, event) {
@@ -872,6 +896,7 @@ export default {
 				} else {
 					this.resizing.resizingColumn.width = this.resizing.width;
 				}
+				this.resizing.width = this.resizing.resizingColumn.width;
 				console.log(`New width: ${this.resizing.width}px`);
 			}
 		},
@@ -879,8 +904,14 @@ export default {
 			this.resizing.resizing = false;
 		},
 		columnResetWidth(column) {
-			// eslint-disable-next-line no-param-reassign
-			column.minWidth = column.maxWidth = "";
+			const index = this.orderedColumns.indexOf(column);
+			if (column.defaultWidth && !Number.isNaN(column.defaultWidth))
+				this.orderedColumns[index].width = column.defaultWidth;
+			else if (
+				column.calculatedWidth &&
+				!Number.isNaN(column.calculatedWidth)
+			)
+				this.orderedColumns[index].width = column.calculatedWidth;
 		},
 		filterTypes(filter) {
 			if (!filter || !filter.filterTypes) return [];
@@ -934,6 +965,43 @@ export default {
 			);
 			this.appliedFilterOperator = this.filterOperator;
 			this.getData();
+		},
+		recalculateWidths() {
+			let noWidthCount = 0;
+			let calculatedWidth = 0;
+			this.orderedColumns.forEach(column => {
+				if (this.shownColumns.indexOf(column.name) !== -1)
+					if (Number.isFinite(column.width)) {
+						calculatedWidth += column.width;
+					} else if (Number.isFinite(column.defaultWidth)) {
+						calculatedWidth += column.defaultWidth;
+					} else {
+						noWidthCount += 1;
+					}
+			});
+			calculatedWidth = Math.round(
+				(Math.min(1880, document.body.clientWidth) - calculatedWidth) /
+					(noWidthCount - 1)
+			);
+			this.orderedColumns = this.orderedColumns.map(column => {
+				const orderedColumn = column;
+				if (
+					this.shownColumns.indexOf(orderedColumn.name) !== -1 &&
+					!Number.isFinite(orderedColumn.width)
+				) {
+					if (Number.isFinite(orderedColumn.defaultWidth)) {
+						orderedColumn.width = orderedColumn.defaultWidth;
+					} else {
+						// eslint-disable-next-line no-param-reassign
+						orderedColumn.width = orderedColumn.calculatedWidth =
+							Math.max(
+								orderedColumn.minWidth || 100,
+								calculatedWidth
+							);
+					}
+				}
+				return orderedColumn;
+			});
 		}
 	}
 };
