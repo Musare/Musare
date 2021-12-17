@@ -994,9 +994,12 @@ export default {
 					} else {
 						// eslint-disable-next-line no-param-reassign
 						orderedColumn.width = orderedColumn.calculatedWidth =
-							Math.max(
-								orderedColumn.minWidth || 100,
-								calculatedWidth
+							Math.min(
+								Math.max(
+									orderedColumn.minWidth || 100,
+									calculatedWidth
+								),
+								orderedColumn.maxWidth || 1000
 							);
 					}
 				}
