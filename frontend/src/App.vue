@@ -1177,8 +1177,8 @@ img {
 	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
 	background-color: var(--white);
 	color: var(--dark-grey);
-	width: 500px !important;
-	max-width: 1000px !important;
+	width: 100% !important;
+	max-width: 500px !important;
 	max-height: calc(100vh - 300px);
 	overflow-y: auto;
 

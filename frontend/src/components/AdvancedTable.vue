@@ -47,7 +47,11 @@
 							<div
 								v-for="(filter, index) in editingFilters"
 								:key="`filter-${index}`"
-								class="control is-grouped is-expanded"
+								class="
+									advanced-filter
+									control
+									is-grouped is-expanded
+								"
 							>
 								<div class="control select">
 									<select
@@ -1288,6 +1292,33 @@ export default {
 		}
 		& > .button {
 			font-size: 22px;
+		}
+	}
+
+	@media screen and (max-width: 500px) {
+		&.advanced-filter {
+			flex-wrap: wrap;
+			.control.select {
+				width: 50%;
+				select {
+					width: 100%;
+				}
+			}
+			.control {
+				margin-bottom: 0 !important;
+				&:nth-child(1) select {
+					border-radius: 5px 0 0 0;
+				}
+				&:nth-child(2) select {
+					border-radius: 0 5px 0 0;
+				}
+				&:nth-child(3) input {
+					border-radius: 0 0 0 5px;
+				}
+				&:nth-child(4) button {
+					border-radius: 0 0 5px 0;
+				}
+			}
 		}
 	}
 }
