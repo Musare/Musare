@@ -522,7 +522,7 @@
 						? `${selectedRows.length} row selected`
 						: `${selectedRows.length} rows selected`
 				"
-				v-tippy
+				v-tippy="{ theme: 'info' }"
 			>
 				{{ selectedRows.length }}
 			</button>
@@ -763,7 +763,7 @@ export default {
 		},
 		toggleColumnVisibility(column) {
 			if (this.shownColumns.indexOf(column.name) !== -1) {
-				if (this.shownColumns.length <= 2)
+				if (this.shownColumns.length <= 3)
 					return new Toast(
 						`Unable to hide column ${column.displayName}, there must be at least 1 visibile column`
 					);
@@ -979,7 +979,7 @@ export default {
 						noWidthCount += 1;
 					}
 			});
-			calculatedWidth = Math.round(
+			calculatedWidth = Math.floor(
 				(Math.min(1880, document.body.clientWidth) - calculatedWidth) /
 					(noWidthCount - 1)
 			);
@@ -1021,20 +1021,33 @@ export default {
 			}
 
 			tr {
+				th,
+				td {
+					border-color: var(--dark-grey) !important;
+
+					&:first-child {
+						background-color: var(--dark-grey-3) !important;
+					}
+				}
+
 				&:nth-child(even) {
-					background-color: var(--dark-grey-2);
+					&,
+					td:first-child {
+						background-color: var(--dark-grey-2) !important;
+					}
 				}
 
 				&:hover,
 				&:focus,
 				&.highlighted {
-					background-color: var(--dark-grey-4);
+					th,
+					td {
+						&,
+						&:first-child {
+							background-color: var(--dark-grey-4) !important;
+						}
+					}
 				}
-			}
-
-			th,
-			td {
-				border-color: var(--dark-grey) !important;
 			}
 		}
 
@@ -1135,21 +1148,47 @@ export default {
 			}
 		}
 
-		table thead tr th,
-		table tbody tr td {
-			position: relative;
-			white-space: nowrap;
-			text-overflow: ellipsis;
-			overflow: hidden;
+		table thead tr,
+		table tbody tr {
+			th,
+			td {
+				position: relative;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+				overflow: hidden;
 
-			.resizer {
-				height: 100%;
-				width: 5px;
-				background-color: transparent;
-				cursor: col-resize;
-				position: absolute;
-				right: 0;
-				top: 0;
+				&:first-child {
+					position: sticky;
+					left: 0;
+					background-color: var(--white);
+					z-index: 2;
+				}
+
+				.resizer {
+					height: 100%;
+					width: 5px;
+					background-color: transparent;
+					cursor: col-resize;
+					position: absolute;
+					right: 0;
+					top: 0;
+				}
+			}
+
+			&:nth-child(even) td:first-child {
+				background-color: #fafafa;
+			}
+
+			&:hover,
+			&:focus,
+			&.highlighted {
+				th,
+				td {
+					&,
+					&:first-child {
+						background-color: var(--light-grey);
+					}
+				}
 			}
 		}
 	}

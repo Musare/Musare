@@ -63,7 +63,7 @@
 						<i
 							class="material-icons edit-songs-icon"
 							@click.prevent="editMany(slotProps.item)"
-							content="Edit Selected Songs"
+							content="Edit Songs"
 							v-tippy
 						>
 							edit
@@ -71,7 +71,7 @@
 						<i
 							class="material-icons verify-songs-icon"
 							@click.prevent="verifyMany(slotProps.item)"
-							content="Verify Selected Songs"
+							content="Verify Songs"
 							v-tippy
 						>
 							check_circle
@@ -79,7 +79,7 @@
 						<i
 							class="material-icons unverify-songs-icon"
 							@click.prevent="unverifyMany(slotProps.item)"
-							content="Unverify Selected Songs"
+							content="Unverify Songs"
 							v-tippy
 						>
 							cancel
@@ -87,7 +87,7 @@
 						<i
 							class="material-icons tag-songs-icon"
 							@click.prevent="tagMany(slotProps.item)"
-							content="Tag Selected Songs"
+							content="Tag Songs"
 							v-tippy
 						>
 							local_offer
@@ -95,7 +95,7 @@
 						<i
 							class="material-icons artists-songs-icon"
 							@click.prevent="setArtists(slotProps.item)"
-							content="Set Artists for Selected Songs"
+							content="Set Artists"
 							v-tippy
 						>
 							group
@@ -103,7 +103,7 @@
 						<i
 							class="material-icons genres-songs-icon"
 							@click.prevent="setGenres(slotProps.item)"
-							content="Set Genres for Selected Songs"
+							content="Set Genres"
 							v-tippy
 						>
 							theater_comedy
@@ -114,7 +114,7 @@
 						>
 							<i
 								class="material-icons delete-songs-icon"
-								content="Delete Selected Songs"
+								content="Delete Songs"
 								v-tippy
 							>
 								delete_forever
@@ -169,9 +169,9 @@ export default {
 					displayName: "Thumb",
 					properties: ["thumbnail"],
 					sortable: false,
-					minWidth: 120,
-					defaultWidth: 120,
-					maxWidth: 120,
+					minWidth: 75,
+					defaultWidth: 75,
+					maxWidth: 75,
 					resizable: false
 				},
 				{
@@ -179,7 +179,8 @@ export default {
 					displayName: "Musare ID",
 					properties: ["_id"],
 					sortProperty: "_id",
-					defaultWidth: 220
+					minWidth: 215,
+					defaultWidth: 215
 				},
 				{
 					name: "youtubeId",
