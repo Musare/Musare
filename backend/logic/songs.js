@@ -228,7 +228,7 @@ class _SongsModule extends CoreClass {
 				const { data, filter, filterType } = query;
 				const newQuery = {};
 				if (filterType === "regex") {
-					newQuery[filter.property] = new RegExp(`${data.splice(1, data.length - 1)}`, "i");
+					newQuery[filter.property] = new RegExp(`${data.slice(1, data.length - 1)}`, "i");
 				} else if (filterType === "contains") {
 					newQuery[filter.property] = new RegExp(`${data.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i");
 				} else if (filterType === "exact") {
