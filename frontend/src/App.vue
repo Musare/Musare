@@ -868,6 +868,10 @@ img {
 			background-color: var(--dark-grey-2);
 			border: 0 !important;
 		}
+
+		&[data-theme~="info"] p {
+			color: var(--black) !important;
+		}
 	}
 
 	.tippy-box[data-placement^="top"] {
