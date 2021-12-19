@@ -984,6 +984,7 @@ export default {
 					}
 			});
 			calculatedWidth = Math.floor(
+				// max-width of table is 1880px
 				(Math.min(1880, document.body.clientWidth) - calculatedWidth) /
 					(noWidthCount - 1)
 			);
@@ -1000,10 +1001,10 @@ export default {
 						orderedColumn.width = orderedColumn.calculatedWidth =
 							Math.min(
 								Math.max(
-									orderedColumn.minWidth || 100,
+									orderedColumn.minWidth || 100, // fallback 100px min width
 									calculatedWidth
 								),
-								orderedColumn.maxWidth || 1000
+								orderedColumn.maxWidth || 1000 // fallback 1000px max width
 							);
 					}
 				}

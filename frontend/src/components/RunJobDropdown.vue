@@ -38,7 +38,6 @@
 				>
 					<button class="nav-item button" :title="job.name">
 						<i
-							@click="runJob(job)"
 							class="material-icons icon-with-button"
 							content="Run Job"
 							v-tippy
