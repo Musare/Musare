@@ -340,6 +340,15 @@ export default {
 		}
 	}
 
+	.control.has-addons .button {
+		background-color: var(--dark-grey-2);
+		border: 0;
+
+		i {
+			color: var(--white);
+		}
+	}
+
 	h1,
 	h2,
 	h3,

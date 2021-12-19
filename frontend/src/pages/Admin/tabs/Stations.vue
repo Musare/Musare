@@ -9,11 +9,7 @@
 				>
 					Create Station
 				</button>
-				<confirm placement="bottom" @confirm="clearEveryStationQueue()">
-					<button class="button is-danger">
-						Clear every station queue
-					</button>
-				</confirm>
+				<run-job-dropdown :jobs="jobs" />
 			</div>
 			<table class="table">
 				<thead>
@@ -99,6 +95,7 @@ import { defineAsyncComponent } from "vue";
 import Toast from "toasters";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
 import Confirm from "@/components/Confirm.vue";
+import RunJobDropdown from "@/components/RunJobDropdown.vue";
 import ws from "@/ws";
 
 export default {
@@ -125,11 +122,18 @@ export default {
 			import("@/components/modals/CreateStation.vue")
 		),
 		UserIdToUsername,
-		Confirm
+		Confirm,
+		RunJobDropdown
 	},
 	data() {
 		return {
-			editingStationId: ""
+			editingStationId: "",
+			jobs: [
+				{
+					name: "Clear every station queue",
+					socket: "stations.clearEveryStationQueue"
+				}
+			]
 		};
 	},
 	computed: {
@@ -165,12 +169,6 @@ export default {
 		manage(station) {
 			this.editingStationId = station._id;
 			this.openModal("manageStation");
-		},
-		clearEveryStationQueue() {
-			this.socket.dispatch("stations.clearEveryStationQueue", res => {
-				if (res.status === "success") new Toast(res.message);
-				else new Toast(`Error: ${res.message}`);
-			});
 		},
 		init() {
 			this.socket.dispatch("stations.index", res => {

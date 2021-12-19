@@ -29,17 +29,7 @@
 				>
 					Import album
 				</button>
-				<confirm placement="bottom" @confirm="updateAllSongs()">
-					<button class="button is-danger">Update all songs</button>
-				</confirm>
-				<confirm
-					placement="bottom"
-					@confirm="recalculateAllSongRatings()"
-				>
-					<button class="button is-danger">
-						Recalculate all song ratings
-					</button>
-				</confirm>
+				<run-job-dropdown :jobs="jobs" />
 			</div>
 			<br />
 			<div class="box">
@@ -337,6 +327,7 @@ import keyboardShortcuts from "@/keyboardShortcuts";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
 import FloatingBox from "@/components/FloatingBox.vue";
 import Confirm from "@/components/Confirm.vue";
+import RunJobDropdown from "@/components/RunJobDropdown.vue";
 
 import ScrollAndFetchHandler from "@/mixins/ScrollAndFetchHandler.vue";
 
@@ -358,7 +349,8 @@ export default {
 		),
 		UserIdToUsername,
 		FloatingBox,
-		Confirm
+		Confirm,
+		RunJobDropdown
 	},
 	mixins: [ScrollAndFetchHandler],
 	data() {
@@ -374,7 +366,17 @@ export default {
 			},
 			searchBoxShown: true,
 			filterArtistBoxShown: false,
-			filterGenreBoxShown: false
+			filterGenreBoxShown: false,
+			jobs: [
+				{
+					name: "Update all songs",
+					socket: "songs.updateAll"
+				},
+				{
+					name: "Recalculate all song ratings",
+					socket: "songs.recalculateAllRatings"
+				}
+			]
 		};
 	},
 	computed: {
@@ -545,22 +547,6 @@ export default {
 		unhide(id) {
 			this.socket.dispatch("songs.unhide", id, res => {
 				new Toast(res.message);
-			});
-		},
-		updateAllSongs() {
-			new Toast("Updating all songs, this could take a very long time.");
-			this.socket.dispatch("songs.updateAll", res => {
-				if (res.status === "success") new Toast(res.message);
-				else new Toast(res.message);
-			});
-		},
-		recalculateAllSongRatings() {
-			new Toast(
-				"Recalculating all song ratings, this could take a bit of time."
-			);
-			this.socket.dispatch("songs.recalculateAllRatings", res => {
-				if (res.status === "success") new Toast(res.message);
-				else new Toast(res.message);
 			});
 		},
 		getSet() {
