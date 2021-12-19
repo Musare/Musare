@@ -95,6 +95,7 @@
 										type="text"
 										placeholder="Search value"
 										:disabled="!filter.filterType"
+										@keydown.enter="applyFilterAndGetData()"
 									/>
 								</p>
 								<div class="control">
