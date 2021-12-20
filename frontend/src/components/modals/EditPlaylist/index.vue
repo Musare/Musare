@@ -130,7 +130,7 @@
 												v-tippy
 												>queue</i
 											>
-											<confirm
+											<quick-confirm
 												v-if="
 													userId ===
 														playlist.createdBy ||
@@ -152,7 +152,7 @@
 													v-tippy
 													>delete_forever</i
 												>
-											</confirm>
+											</quick-confirm>
 											<i
 												class="material-icons"
 												v-if="isEditable() && index > 0"
@@ -207,23 +207,23 @@
 				Download Playlist
 			</button>
 			<div class="right">
-				<confirm
+				<quick-confirm
 					v-if="playlist.type === 'station'"
 					@confirm="clearAndRefillStationPlaylist()"
 				>
 					<a class="button is-danger">
 						Clear and refill station playlist
 					</a>
-				</confirm>
-				<confirm
+				</quick-confirm>
+				<quick-confirm
 					v-if="playlist.type === 'genre'"
 					@confirm="clearAndRefillGenrePlaylist()"
 				>
 					<a class="button is-danger">
 						Clear and refill genre playlist
 					</a>
-				</confirm>
-				<confirm
+				</quick-confirm>
+				<quick-confirm
 					v-if="
 						isEditable() &&
 						!(
@@ -234,7 +234,7 @@
 					@confirm="removePlaylist()"
 				>
 					<a class="button is-danger"> Remove Playlist </a>
-				</confirm>
+				</quick-confirm>
 			</div>
 		</template>
 	</modal>
@@ -246,7 +246,7 @@ import draggable from "vuedraggable";
 import Toast from "toasters";
 
 import ws from "@/ws";
-import Confirm from "@/components/Confirm.vue";
+import QuickConfirm from "@/components/QuickConfirm.vue";
 import Modal from "../../Modal.vue";
 import SongItem from "../../SongItem.vue";
 
@@ -260,7 +260,7 @@ export default {
 	components: {
 		Modal,
 		draggable,
-		Confirm,
+		QuickConfirm,
 		SongItem,
 		Settings,
 		AddSongs,

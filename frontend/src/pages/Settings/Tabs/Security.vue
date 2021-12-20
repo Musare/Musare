@@ -125,18 +125,21 @@
 			<hr class="section-horizontal-rule" />
 
 			<div class="row">
-				<confirm v-if="isPasswordLinked" @confirm="unlinkPassword()">
+				<quick-confirm
+					v-if="isPasswordLinked"
+					@confirm="unlinkPassword()"
+				>
 					<a class="button is-danger">
 						<i class="material-icons icon-with-button">close</i>
 						Remove password
 					</a>
-				</confirm>
-				<confirm v-if="isGithubLinked" @confirm="unlinkGitHub()">
+				</quick-confirm>
+				<quick-confirm v-if="isGithubLinked" @confirm="unlinkGitHub()">
 					<a class="button is-danger">
 						<i class="material-icons icon-with-button">link_off</i>
 						Remove GitHub from account
 					</a>
-				</confirm>
+				</quick-confirm>
 			</div>
 
 			<div class="section-margin-bottom" />
@@ -150,14 +153,14 @@
 
 			<hr class="section-horizontal-rule" />
 			<div class="row">
-				<confirm @confirm="removeSessions()">
+				<quick-confirm @confirm="removeSessions()">
 					<a class="button is-warning">
 						<i class="material-icons icon-with-button"
 							>exit_to_app</i
 						>
 						Logout everywhere
 					</a>
-				</confirm>
+				</quick-confirm>
 			</div>
 		</div>
 	</div>
@@ -169,10 +172,10 @@ import { mapGetters, mapState } from "vuex";
 
 import InputHelpBox from "@/components/InputHelpBox.vue";
 import validation from "@/validation";
-import Confirm from "@/components/Confirm.vue";
+import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
-	components: { InputHelpBox, Confirm },
+	components: { InputHelpBox, QuickConfirm },
 	data() {
 		return {
 			apiDomain: "",

@@ -171,14 +171,14 @@
 				<span> Request Song </span>
 			</button>
 			<div v-if="isOwnerOrAdmin()" class="right">
-				<confirm @confirm="clearAndRefillStationQueue()">
+				<quick-confirm @confirm="clearAndRefillStationQueue()">
 					<a class="button is-danger">
 						Clear and refill station queue
 					</a>
-				</confirm>
-				<confirm @confirm="removeStation()">
+				</quick-confirm>
+				<quick-confirm @confirm="removeStation()">
 					<button class="button is-danger">Delete station</button>
-				</confirm>
+				</quick-confirm>
 			</div>
 		</template>
 	</modal>
@@ -189,7 +189,7 @@ import { mapState, mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 
-import Confirm from "@/components/Confirm.vue";
+import QuickConfirm from "@/components/QuickConfirm.vue";
 import Queue from "@/components/Queue.vue";
 import SongItem from "@/components/SongItem.vue";
 import Modal from "../../Modal.vue";
@@ -201,7 +201,7 @@ import Songs from "./Tabs/Songs.vue";
 export default {
 	components: {
 		Modal,
-		Confirm,
+		QuickConfirm,
 		Queue,
 		SongItem,
 		Settings,

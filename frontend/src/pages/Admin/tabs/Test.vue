@@ -108,7 +108,7 @@
 						>
 							theater_comedy
 						</i>
-						<confirm
+						<quick-confirm
 							placement="left"
 							@confirm="deleteMany(slotProps.item)"
 						>
@@ -119,7 +119,7 @@
 							>
 								delete_forever
 							</i>
-						</confirm>
+						</quick-confirm>
 					</div>
 				</template>
 				<!-- <template #bulk-actions-right="slotProps">
@@ -138,13 +138,13 @@ import { defineAsyncComponent } from "vue";
 import Toast from "toasters";
 import AdvancedTable from "@/components/AdvancedTable.vue";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
-import Confirm from "@/components/Confirm.vue";
+import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
 	components: {
 		AdvancedTable,
 		UserIdToUsername,
-		Confirm,
+		QuickConfirm,
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong")
 		),

@@ -30,7 +30,7 @@
 
 		<template #content>
 			<div class="nav-dropdown-items" v-if="jobs.length > 0">
-				<confirm
+				<quick-confirm
 					v-for="(job, index) in jobs"
 					:key="`job-${index}`"
 					placement="top"
@@ -45,7 +45,7 @@
 						>
 						<p>{{ job.name }}</p>
 					</button>
-				</confirm>
+				</quick-confirm>
 			</div>
 			<p v-else class="no-jobs">No jobs available.</p>
 		</template>
@@ -56,11 +56,11 @@
 import { mapGetters } from "vuex";
 
 import Toast from "toasters";
-import Confirm from "@/components/Confirm.vue";
+import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
 	components: {
-		Confirm
+		QuickConfirm
 	},
 	props: {
 		jobs: {

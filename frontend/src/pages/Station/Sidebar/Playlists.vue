@@ -40,7 +40,7 @@
 								v-tippy
 								>play_arrow</i
 							>
-							<confirm
+							<quick-confirm
 								v-if="
 									station.type === 'community' &&
 									(isOwnerOrAdmin() || station.partyMode) &&
@@ -58,8 +58,8 @@
 									v-tippy
 									>stop</i
 								>
-							</confirm>
-							<confirm
+							</quick-confirm>
+							<quick-confirm
 								v-if="
 									station.type === 'community' &&
 									isOwnerOrAdmin() &&
@@ -73,7 +73,7 @@
 									v-tippy
 									>block</i
 								>
-							</confirm>
+							</quick-confirm>
 							<i
 								@click="edit(element._id)"
 								class="material-icons edit-icon"
@@ -107,10 +107,10 @@ import ws from "@/ws";
 
 import PlaylistItem from "@/components/PlaylistItem.vue";
 import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
-import Confirm from "@/components/Confirm.vue";
+import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
-	components: { PlaylistItem, Confirm },
+	components: { PlaylistItem, QuickConfirm },
 	mixins: [SortablePlaylists],
 	computed: {
 		currentPlaylists() {

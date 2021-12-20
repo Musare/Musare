@@ -39,11 +39,11 @@
 								>
 									Edit
 								</button>
-								<confirm @confirm="remove(news._id)">
+								<quick-confirm @confirm="remove(news._id)">
 									<button class="button is-danger">
 										Remove
 									</button>
-								</confirm>
+								</quick-confirm>
 							</div>
 						</td>
 					</tr>
@@ -66,12 +66,12 @@ import Toast from "toasters";
 
 import ws from "@/ws";
 
-import Confirm from "@/components/Confirm.vue";
+import QuickConfirm from "@/components/QuickConfirm.vue";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
 export default {
 	components: {
-		Confirm,
+		QuickConfirm,
 		UserIdToUsername,
 		EditNews: defineAsyncComponent(() =>
 			import("@/components/modals/EditNews.vue")

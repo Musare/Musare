@@ -192,7 +192,7 @@
 								>
 									<i class="material-icons">check_circle</i>
 								</button>
-								<confirm
+								<quick-confirm
 									v-if="song.status === 'verified'"
 									placement="left"
 									@confirm="unverify(song._id)"
@@ -204,8 +204,8 @@
 									>
 										<i class="material-icons">cancel</i>
 									</button>
-								</confirm>
-								<confirm
+								</quick-confirm>
+								<quick-confirm
 									v-if="song.status !== 'hidden'"
 									placement="left"
 									@confirm="hide(song._id)"
@@ -219,7 +219,7 @@
 											>visibility_off</i
 										>
 									</button>
-								</confirm>
+								</quick-confirm>
 								<button
 									v-if="song.status === 'hidden'"
 									class="button is-success"
@@ -326,7 +326,7 @@ import keyboardShortcuts from "@/keyboardShortcuts";
 
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
 import FloatingBox from "@/components/FloatingBox.vue";
-import Confirm from "@/components/Confirm.vue";
+import QuickConfirm from "@/components/QuickConfirm.vue";
 import RunJobDropdown from "@/components/RunJobDropdown.vue";
 
 import ScrollAndFetchHandler from "@/mixins/ScrollAndFetchHandler.vue";
@@ -349,7 +349,7 @@ export default {
 		),
 		UserIdToUsername,
 		FloatingBox,
-		Confirm,
+		QuickConfirm,
 		RunJobDropdown
 	},
 	mixins: [ScrollAndFetchHandler],

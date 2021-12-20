@@ -65,9 +65,9 @@
 							<a class="button is-info" @click="manage(station)"
 								>Manage</a
 							>
-							<confirm @confirm="removeStation(index)">
+							<quick-confirm @confirm="removeStation(index)">
 								<a class="button is-danger">Remove</a>
-							</confirm>
+							</quick-confirm>
 						</td>
 					</tr>
 				</tbody>
@@ -94,7 +94,7 @@ import { defineAsyncComponent } from "vue";
 
 import Toast from "toasters";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
-import Confirm from "@/components/Confirm.vue";
+import QuickConfirm from "@/components/QuickConfirm.vue";
 import RunJobDropdown from "@/components/RunJobDropdown.vue";
 import ws from "@/ws";
 
@@ -122,7 +122,7 @@ export default {
 			import("@/components/modals/CreateStation.vue")
 		),
 		UserIdToUsername,
-		Confirm,
+		QuickConfirm,
 		RunJobDropdown
 	},
 	data() {

@@ -66,12 +66,12 @@
 		<hr class="section-horizontal-rule" />
 
 		<div class="row">
-			<confirm @confirm="removeActivities()">
+			<quick-confirm @confirm="removeActivities()">
 				<a class="button is-warning">
 					<i class="material-icons icon-with-button">cancel</i>
 					Clear my activities
 				</a>
-			</confirm>
+			</quick-confirm>
 
 			<a class="button is-danger" @click="openModal('removeAccount')">
 				<i class="material-icons icon-with-button">delete</i>
@@ -88,13 +88,13 @@ import Toast from "toasters";
 import InputHelpBox from "@/components/InputHelpBox.vue";
 import SaveButton from "@/components/SaveButton.vue";
 import validation from "@/validation";
-import Confirm from "@/components/Confirm.vue";
+import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
 	components: {
 		InputHelpBox,
 		SaveButton,
-		Confirm
+		QuickConfirm
 	},
 	data() {
 		return {

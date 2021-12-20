@@ -162,12 +162,12 @@
 				</p>
 
 				<div class="content-box-inputs">
-					<confirm placement="right" @confirm="remove()">
+					<quick-confirm placement="right" @confirm="remove()">
 						<button class="button">
 							<i class="material-icons">delete</i>
 							&nbsp;Remove Account
 						</button>
-					</confirm>
+					</quick-confirm>
 				</div>
 			</div>
 		</template>
@@ -179,11 +179,11 @@ import { mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 
-import Confirm from "@/components/Confirm.vue";
+import QuickConfirm from "@/components/QuickConfirm.vue";
 import Modal from "../Modal.vue";
 
 export default {
-	components: { Modal, Confirm },
+	components: { Modal, QuickConfirm },
 	data() {
 		return {
 			name: "RemoveAccount",
