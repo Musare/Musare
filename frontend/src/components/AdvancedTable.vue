@@ -735,7 +735,10 @@ export default {
 					console.log(111, res);
 					if (res.status === "success") {
 						const { data, count } = res.data;
-						this.data = data;
+						this.data = data.map(row => ({
+							...row,
+							selected: false
+						}));
 						this.count = count;
 					} else {
 						new Toast(res.message);
@@ -786,6 +789,8 @@ export default {
 			const { shiftKey, ctrlKey } = event;
 			// Shift was pressed, so attempt to select all items between the clicked item and last clicked item
 			if (shiftKey) {
+				// If the clicked item is already selected, prevent default, otherwise the checkbox will be unchecked
+				if (this.data[itemIndex].selected) event.preventDefault();
 				// If there is a last clicked item
 				if (this.lastSelectedItemIndex >= 0) {
 					// Clicked item is lower than last item, so select upwards until it reaches the last selected item
@@ -812,13 +817,15 @@ export default {
 			}
 			// Ctrl was pressed, so attempt to unselect all items between the clicked item and last clicked item
 			else if (ctrlKey) {
+				// If the clicked item is already unselected, prevent default, otherwise the checkbox will be checked
+				if (!this.data[itemIndex].selected) event.preventDefault();
 				// If there is a last clicked item
 				if (this.lastSelectedItemIndex >= 0) {
 					// Clicked item is lower than last item, so unselect upwards until it reaches the last selected item
 					if (itemIndex > this.lastSelectedItemIndex) {
 						for (
 							let itemIndexUp = itemIndex;
-							itemIndexUp > this.lastSelectedItemIndex;
+							itemIndexUp >= this.lastSelectedItemIndex;
 							itemIndexUp -= 1
 						) {
 							this.data[itemIndexUp].selected = false;
@@ -828,7 +835,7 @@ export default {
 					else if (itemIndex < this.lastSelectedItemIndex) {
 						for (
 							let itemIndexDown = itemIndex;
-							itemIndexDown < this.lastSelectedItemIndex;
+							itemIndexDown <= this.lastSelectedItemIndex;
 							itemIndexDown += 1
 						) {
 							this.data[itemIndexDown].selected = false;
