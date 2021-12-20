@@ -1069,6 +1069,12 @@ export default {
 			background-color: var(--dark-grey-3);
 			color: var(--light-grey-2);
 		}
+
+		.label.control {
+			background-color: var(--dark-grey) !important;
+			border-color: var(--grey-3) !important;
+			color: var(--white) !important;
+		}
 	}
 	.bulk-popup {
 		border: 0;
