@@ -229,6 +229,7 @@
 								tag="div"
 								draggable=".item-draggable"
 								class="nav-dropdown-items"
+								@change="columnOrderChanged"
 							>
 								<template #item="{ element: column }">
 									<button
@@ -298,6 +299,7 @@
 							v-bind="columnDragOptions"
 							tag="tr"
 							draggable=".item-draggable"
+							@change="columnOrderChanged"
 						>
 							<template #item="{ element: column }">
 								<th
@@ -564,7 +566,7 @@ export default {
 		name: Unique lowercase name
 		displayName: Nice name for the column header
 		properties: The properties this column needs to show data
-		sortable: Boolean for whether the order of a particular column can be changed 
+		sortable: Boolean for whether the order of a particular column can be changed
 		sortProperty: The property the backend will sort on if this column gets sorted, e.g. title
 		hidable: Boolean for whether a column can be hidden
 		defaultVisibility: Default visibility for a column, either "shown" or "hidden"
@@ -577,7 +579,8 @@ export default {
 		columnDefault: { type: Object, default: () => {} },
 		columns: { type: Array, default: null },
 		filters: { type: Array, default: null },
-		dataAction: { type: String, default: null }
+		dataAction: { type: String, default: null },
+		name: { type: String, default: null }
 	},
 	data() {
 		return {
@@ -673,6 +676,8 @@ export default {
 		})
 	},
 	mounted() {
+		const tableSettings = this.getTableSettings();
+
 		this.orderedColumns = [
 			{
 				name: "select",
@@ -702,17 +707,76 @@ export default {
 				width: "auto",
 				maxWidth: "auto"
 			}
-		];
+		].sort((columnA, columnB) => {
+			// Always places select column in the first position
+			if (columnA.name === "select") return -1;
+			// Always places placeholder column in the last position
+			if (columnB.name === "placeholder") return -1;
 
-		// A column will be shown if the defaultVisibility is set to shown, OR if the defaultVisibility is not set to shown and hidable is false
+			// If there are no table settings stored, use default ordering
+			if (!tableSettings || !tableSettings.columnOrder) return 0;
+
+			const indexA = tableSettings.columnOrder.indexOf(columnA.name);
+			const indexB = tableSettings.columnOrder.indexOf(columnA.name);
+
+			// If either of the columns is not stored in the table settings, use default ordering
+			if (indexA === -1 || indexB === -1) return 0;
+
+			return indexA - indexB;
+		});
+
 		this.shownColumns = this.orderedColumns
-			.filter(column => column.defaultVisibility !== "hidden")
+			.filter(column => {
+				// If table settings exist, use shownColumns from settings to determine which columns to show
+				if (tableSettings && tableSettings.shownColumns)
+					return (
+						tableSettings.shownColumns.indexOf(column.name) !== -1
+					);
+				// Table settings don't exist, only show if the default visibility isn't hidden
+				return column.defaultVisibility !== "hidden";
+			})
 			.map(column => column.name);
 
 		this.recalculateWidths();
 
-		const pageSize = parseInt(localStorage.getItem("adminPageSize"));
-		if (!Number.isNaN(pageSize)) this.pageSize = pageSize;
+		if (tableSettings) {
+			// If table settings' pageSize is an integer, use it for the pageSize
+			if (Number.isInteger(tableSettings?.pageSize))
+				this.pageSize = tableSettings.pageSize;
+
+			// If table settings' columnSort exists, sort all still existing columns based on table settings' columnSort object
+			if (tableSettings.columnSort) {
+				Object.entries(tableSettings.columnSort).forEach(
+					([columnName, sortDirection]) => {
+						if (
+							this.columns.find(
+								column => column.name === columnName
+							)
+						)
+							this.sort[columnName] = sortDirection;
+					}
+				);
+			}
+
+			if (
+				tableSettings.filter &&
+				tableSettings.filter.appliedFilters &&
+				tableSettings.filter.appliedFilterOperator
+			) {
+				const { appliedFilters, appliedFilterOperator } =
+					tableSettings.filter;
+				// Set the applied filter operator and filter operator to the value stored in table settings
+				this.appliedFilterOperator = this.filterOperator =
+					appliedFilterOperator;
+				// Set the applied filters and editing filters to the value stored in table settings, for all filters that are allowed
+				this.appliedFilters = this.editingFilters =
+					appliedFilters.filter(appliedFilter =>
+						this.filters.find(
+							filter => appliedFilter.filter.name === filter.name
+						)
+					);
+			}
+		}
 
 		this.resetBulkActionsPosition();
 
@@ -748,7 +812,7 @@ export default {
 		},
 		changePageSize() {
 			this.getData();
-			localStorage.setItem("adminPageSize", this.pageSize);
+			this.storeTableSettings();
 		},
 		changePage(page) {
 			if (page < 1) return;
@@ -767,6 +831,7 @@ export default {
 				else if (this.sort[sortProperty] === "descending")
 					delete this.sort[sortProperty];
 				this.getData();
+				this.storeTableSettings();
 			}
 		},
 		toggleColumnVisibility(column) {
@@ -783,7 +848,8 @@ export default {
 				this.shownColumns.push(column.name);
 			}
 			this.recalculateWidths();
-			return this.getData();
+			this.getData();
+			return this.storeTableSettings();
 		},
 		toggleSelectedRow(itemIndex, event) {
 			const { shiftKey, ctrlKey } = event;
@@ -977,6 +1043,7 @@ export default {
 			);
 			this.appliedFilterOperator = this.filterOperator;
 			this.getData();
+			this.storeTableSettings();
 		},
 		recalculateWidths() {
 			let noWidthCount = 0;
@@ -1018,6 +1085,29 @@ export default {
 				}
 				return orderedColumn;
 			});
+		},
+		columnOrderChanged() {
+			this.storeTableSettings();
+		},
+		getTableSettings() {
+			return JSON.parse(
+				localStorage.getItem(`advancedTableSettings:${this.name}`)
+			);
+		},
+		storeTableSettings() {
+			localStorage.setItem(
+				`advancedTableSettings:${this.name}`,
+				JSON.stringify({
+					pageSize: this.pageSize,
+					filter: {
+						appliedFilters: this.appliedFilters,
+						appliedFilterOperator: this.appliedFilterOperator
+					},
+					columnSort: this.sort,
+					columnOrder: this.orderedColumns.map(column => column.name),
+					shownColumns: this.shownColumns
+				})
+			);
 		}
 	}
 };

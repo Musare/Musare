@@ -7,6 +7,7 @@
 				:columns="columns"
 				:filters="filters"
 				data-action="songs.getData"
+				name="admin-test"
 			>
 				<template #column-thumbnailImage="slotProps">
 					<img
