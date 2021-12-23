@@ -108,7 +108,7 @@
 								</div>
 							</div>
 							<div
-								v-if="editingFilters.length > 1"
+								v-if="editingFilters.length > 0"
 								class="control is-expanded is-grouped"
 							>
 								<label class="control label"
