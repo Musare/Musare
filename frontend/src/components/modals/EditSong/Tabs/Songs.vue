@@ -61,7 +61,7 @@ export default {
 	},
 	mounted() {
 		this.musareSearch.query = this.song.title;
-		this.searchForMusareSongs(1);
+		this.searchForMusareSongs(1, false);
 	}
 };
 </script>
