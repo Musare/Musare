@@ -189,6 +189,12 @@
 								:key="`filter-${index}`"
 							>
 								{{ filter.filter.displayName }}
+								{{
+									appliedFilters.length === 1 &&
+									filterOperator === "nor"
+										? "not"
+										: ""
+								}}
 								{{ filter.filterType }} "{{ filter.data }}"
 								{{
 									appliedFilters.length === index + 1
