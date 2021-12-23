@@ -10,17 +10,38 @@
 						v-if="filters.length > 0"
 						:touch="true"
 						:interactive="true"
-						placement="bottom"
+						placement="bottom-start"
 						theme="search"
 						ref="search"
 						trigger="click"
+						@show="
+							() => {
+								showFiltersDropdown = true;
+							}
+						"
+						@hide="
+							() => {
+								showFiltersDropdown = false;
+							}
+						"
 					>
-						<button class="button is-info">
-							<i class="material-icons icon-with-button"
-								>filter_list</i
-							>
-							Filters
-						</button>
+						<div class="control has-addons" ref="trigger">
+							<button class="button is-primary">
+								<i class="material-icons icon-with-button"
+									>filter_list</i
+								>
+								Filters
+							</button>
+							<button class="button">
+								<i class="material-icons">
+									{{
+										showFiltersDropdown
+											? "expand_more"
+											: "expand_less"
+									}}
+								</i>
+							</button>
+						</div>
 
 						<template #content>
 							<div class="control is-grouped input-with-button">
@@ -218,15 +239,38 @@
 						v-if="hidableSortedColumns.length > 0"
 						:touch="true"
 						:interactive="true"
-						placement="bottom"
+						placement="bottom-end"
 						theme="dropdown"
 						ref="editColumns"
 						trigger="click"
+						@show="
+							() => {
+								showColumnsDropdown = true;
+							}
+						"
+						@hide="
+							() => {
+								showColumnsDropdown = false;
+							}
+						"
 					>
-						<a class="button is-info" @click.prevent="true">
-							<i class="material-icons icon-with-button">tune</i>
-							Columns
-						</a>
+						<div class="control has-addons" ref="trigger">
+							<button class="button is-primary">
+								<i class="material-icons icon-with-button"
+									>tune</i
+								>
+								Columns
+							</button>
+							<button class="button">
+								<i class="material-icons">
+									{{
+										showColumnsDropdown
+											? "expand_more"
+											: "expand_less"
+									}}
+								</i>
+							</button>
+						</div>
 
 						<template #content>
 							<draggable
@@ -649,7 +693,9 @@ export default {
 				pos3: 0,
 				pos4: 0
 			},
-			addFilterValue: null
+			addFilterValue: null,
+			showFiltersDropdown: false,
+			showColumnsDropdown: false
 		};
 	},
 	computed: {
@@ -1353,7 +1399,7 @@ export default {
 		display: flex;
 		flex-direction: row;
 
-		> span > .button {
+		> span > .control {
 			margin: 5px;
 		}
 
