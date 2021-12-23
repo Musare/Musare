@@ -989,6 +989,7 @@ export default {
 				}
 				this.resizing.width = this.resizing.resizingColumn.width;
 				console.log(`New width: ${this.resizing.width}px`);
+				this.storeTableSettings();
 			}
 		},
 		columnResizingMouseUp() {
@@ -1110,23 +1111,32 @@ export default {
 			);
 		},
 		storeTableSettings() {
-			localStorage.setItem(
-				`advancedTableSettings:${this.name}`,
-				JSON.stringify({
-					pageSize: this.pageSize,
-					filter: {
-						appliedFilters: this.appliedFilters,
-						appliedFilterOperator: this.appliedFilterOperator
-					},
-					columnSort: this.sort,
-					columnOrder: this.orderedColumns.map(column => column.name),
-					columnWidths: this.orderedColumns.map(column => ({
-						name: column.name,
-						width: column.width
-					})),
-					shownColumns: this.shownColumns
-				})
-			);
+			// Clear debounce timeout
+			if (this.storeTableSettingsDebounceTimeout)
+				clearTimeout(this.storeTableSettingsDebounceTimeout);
+
+			// Resizing calls this function a lot, so rather than saving dozens of times a second, use debouncing
+			this.storeTableSettingsDebounceTimeout = setTimeout(() => {
+				localStorage.setItem(
+					`advancedTableSettings:${this.name}`,
+					JSON.stringify({
+						pageSize: this.pageSize,
+						filter: {
+							appliedFilters: this.appliedFilters,
+							appliedFilterOperator: this.appliedFilterOperator
+						},
+						columnSort: this.sort,
+						columnOrder: this.orderedColumns.map(
+							column => column.name
+						),
+						columnWidths: this.orderedColumns.map(column => ({
+							name: column.name,
+							width: column.width
+						})),
+						shownColumns: this.shownColumns
+					})
+				);
+			}, 250);
 		}
 	}
 };
