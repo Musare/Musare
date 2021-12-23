@@ -37,6 +37,7 @@
 								</p>
 								<p class="control">
 									<button
+										:disabled="!addFilterValue"
 										class="button material-icons is-success"
 										@click="addFilterItem()"
 									>
