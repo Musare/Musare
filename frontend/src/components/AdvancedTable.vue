@@ -717,7 +717,7 @@ export default {
 			if (!tableSettings || !tableSettings.columnOrder) return 0;
 
 			const indexA = tableSettings.columnOrder.indexOf(columnA.name);
-			const indexB = tableSettings.columnOrder.indexOf(columnA.name);
+			const indexB = tableSettings.columnOrder.indexOf(columnB.name);
 
 			// If either of the columns is not stored in the table settings, use default ordering
 			if (indexA === -1 || indexB === -1) return 0;
@@ -756,6 +756,18 @@ export default {
 							this.sort[columnName] = sortDirection;
 					}
 				);
+			}
+
+			// If table settings' columnWidths exists, load the stored widths into the columns
+			if (tableSettings.columnWidths) {
+				this.orderedColumns = this.orderedColumns.map(orderedColumn => {
+					const columnWidth = tableSettings.columnWidths.find(
+						column => column.name === orderedColumn.name
+					)?.width;
+					if (columnWidth)
+						return { ...orderedColumn, width: columnWidth };
+					return orderedColumn;
+				});
 			}
 
 			if (
@@ -947,6 +959,7 @@ export default {
 			if (this.resizing.resizing) {
 				if (event.buttons !== 1) {
 					this.resizing.resizing = false;
+					this.storeTableSettings();
 				}
 				this.resizing.width -= this.resizing.lastX - event.x;
 				this.resizing.lastX = event.x;
@@ -980,6 +993,7 @@ export default {
 		},
 		columnResizingMouseUp() {
 			this.resizing.resizing = false;
+			this.storeTableSettings();
 		},
 		columnResetWidth(column) {
 			const index = this.orderedColumns.indexOf(column);
@@ -990,6 +1004,7 @@ export default {
 				!Number.isNaN(column.calculatedWidth)
 			)
 				this.orderedColumns[index].width = column.calculatedWidth;
+			this.storeTableSettings();
 		},
 		filterTypes(filter) {
 			if (!filter || !filter.filterTypes) return [];
@@ -1105,6 +1120,10 @@ export default {
 					},
 					columnSort: this.sort,
 					columnOrder: this.orderedColumns.map(column => column.name),
+					columnWidths: this.orderedColumns.map(column => ({
+						name: column.name,
+						width: column.width
+					})),
 					shownColumns: this.shownColumns
 				})
 			);
