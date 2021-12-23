@@ -2007,10 +2007,6 @@ export default {
 
 	#tabs-container {
 		width: 376px;
-		background-color: var(--light-grey);
-		border: 1px rgba(163, 224, 255, 0.75) solid;
-		border-radius: 5px;
-		overflow: auto;
 
 		#tab-selection {
 			display: flex;
@@ -2039,8 +2035,10 @@ export default {
 		}
 		.tab {
 			border: 1px solid var(--light-grey-3);
-			border-radius: 3px;
+			border-radius: 0 0 5px 5px;
 			padding: 15px;
+			height: calc(100% - 32px);
+			overflow: auto;
 		}
 	}
 }

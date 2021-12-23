@@ -67,31 +67,27 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.musare-songs-tab {
-	height: calc(100% - 32px);
+.musare-songs-tab #song-query-results {
+	height: calc(100% - 74px);
+	overflow: auto;
 
-	#song-query-results {
-		height: calc(100% - 74px);
-		overflow: auto;
-
-		.search-query-item {
-			.icon-selected {
-				color: var(--green) !important;
-			}
-
-			.icon-not-selected {
-				color: var(--grey) !important;
-			}
+	.search-query-item {
+		.icon-selected {
+			color: var(--green) !important;
 		}
 
-		.search-query-item:not(:last-of-type) {
-			margin-bottom: 10px;
+		.icon-not-selected {
+			color: var(--grey) !important;
 		}
+	}
 
-		.load-more-button {
-			width: 100%;
-			margin-top: 10px;
-		}
+	.search-query-item:not(:last-of-type) {
+		margin-bottom: 10px;
+	}
+
+	.load-more-button {
+		width: 100%;
+		margin-top: 10px;
 	}
 }
 </style>
