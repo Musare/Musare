@@ -642,7 +642,8 @@ export default {
 				pos2: 0,
 				pos3: 0,
 				pos4: 0
-			}
+			},
+			addFilterValue: null
 		};
 	},
 	computed: {
