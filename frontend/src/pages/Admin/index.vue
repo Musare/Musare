@@ -219,6 +219,7 @@ export default {
 	top: 102px !important;
 }
 
+.main-container .admin-tab,
 .main-container .container {
 	.button-row {
 		display: flex;
@@ -237,26 +238,10 @@ export default {
 	}
 }
 
-.main-container .admin-container {
+.main-container .admin-container .admin-tab {
 	max-width: 1900px;
 	margin: 0 auto;
 	padding: 0 10px;
-
-	.button-row {
-		display: flex;
-		flex-direction: row;
-		flex-wrap: wrap;
-		justify-content: center;
-		margin-bottom: 5px;
-
-		& > .button,
-		& > span {
-			margin: 5px 0;
-			&:not(:first-child) {
-				margin-left: 5px;
-			}
-		}
-	}
 }
 </style>
 

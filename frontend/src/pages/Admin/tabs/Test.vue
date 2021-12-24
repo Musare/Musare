@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<page-metadata title="Admin | Test" />
-		<div class="admin-container">
+		<div class="admin-tab">
 			<advanced-table
 				:column-default="columnDefault"
 				:columns="columns"
@@ -321,12 +321,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.admin-container {
-	max-width: 1900px;
-	margin: 0 auto;
-	padding: 0 10px;
-}
-
 .song-thumbnail {
 	display: block;
 	max-width: 50px;

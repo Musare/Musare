@@ -1,15 +1,8 @@
 <template>
 	<div>
 		<page-metadata title="Admin | Songs" />
-		<div class="admin-container">
+		<div class="admin-tab">
 			<div class="button-row">
-				<button
-					v-if="!loadAllSongs"
-					class="button is-primary"
-					@click="loadAll()"
-				>
-					Load all sets
-				</button>
 				<button
 					class="button is-primary"
 					@click="toggleKeyboardShortcutsHelper"
