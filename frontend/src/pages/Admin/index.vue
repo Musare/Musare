@@ -236,6 +236,28 @@ export default {
 		}
 	}
 }
+
+.main-container .admin-container {
+	max-width: 1900px;
+	margin: 0 auto;
+	padding: 0 10px;
+
+	.button-row {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		justify-content: center;
+		margin-bottom: 5px;
+
+		& > .button,
+		& > span {
+			margin: 5px 0;
+			&:not(:first-child) {
+				margin-left: 5px;
+			}
+		}
+	}
+}
 </style>
 
 <style lang="scss" scoped>

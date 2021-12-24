@@ -1165,8 +1165,8 @@ export default {
 					}
 			});
 			calculatedWidth = Math.floor(
-				// max-width of table is 1880px
-				(Math.min(1880, document.body.clientWidth) - calculatedWidth) /
+				// max-width of table is 1860px
+				(Math.min(1860, document.body.clientWidth) - calculatedWidth) /
 					(noWidthCount - 1)
 			);
 			this.orderedColumns = this.orderedColumns.map(column => {

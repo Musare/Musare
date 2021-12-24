@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<page-metadata title="Admin | Songs" />
-		<div class="container">
+		<div class="admin-container">
 			<div class="button-row">
 				<button
 					v-if="!loadAllSongs"
@@ -31,209 +31,143 @@
 				</button>
 				<run-job-dropdown :jobs="jobs" />
 			</div>
-			<br />
-			<div class="box">
-				<p @click="toggleSearchBox()">
-					Search
-					<i class="material-icons" v-show="searchBoxShown"
-						>expand_more</i
-					>
-					<i class="material-icons" v-show="!searchBoxShown"
-						>expand_less</i
-					>
-				</p>
-				<input
-					v-model="searchQuery"
-					type="text"
-					class="input"
-					placeholder="Search for Songs"
-					v-show="searchBoxShown"
-				/>
-			</div>
-			<div class="box">
-				<p @click="toggleFilterArtistsBox()">
-					Filter artists<i
-						class="material-icons"
-						v-show="filterArtistBoxShown"
-						>expand_more</i
-					>
-					<i class="material-icons" v-show="!filterArtistBoxShown"
-						>expand_less</i
-					>
-				</p>
-				<input
-					type="text"
-					class="input"
-					placeholder="Filter artist checkboxes"
-					v-model="artistFilterQuery"
-					v-show="filterArtistBoxShown"
-				/>
-				<label
-					v-for="artist in filteredArtists"
-					:key="artist"
-					v-show="filterArtistBoxShown"
-				>
-					<input
-						type="checkbox"
-						:checked="artistFilterSelected.indexOf(artist) !== -1"
-						@click="toggleArtistSelected(artist)"
+			<advanced-table
+				:column-default="columnDefault"
+				:columns="columns"
+				:filters="filters"
+				data-action="songs.getData"
+				name="admin-songs"
+			>
+				<template #column-thumbnailImage="slotProps">
+					<img
+						class="song-thumbnail"
+						:src="slotProps.item.thumbnail"
+						onerror="this.src='/assets/notes-transparent.png'"
+						loading="lazy"
 					/>
-					<span>{{ artist }}</span>
-				</label>
-			</div>
-			<div class="box">
-				<p @click="toggleFilterGenresBox()">
-					Filter genres<i
-						class="material-icons"
-						v-show="filterGenreBoxShown"
-						>expand_more</i
+				</template>
+				<template #column-thumbnailUrl="slotProps">
+					<a :href="slotProps.item.thumbnail" target="_blank">
+						{{ slotProps.item.thumbnail }}
+					</a>
+				</template>
+				<template #column-title="slotProps">
+					<span :title="slotProps.item.title">{{
+						slotProps.item.title
+					}}</span>
+				</template>
+				<template #column-artists="slotProps">
+					<span :title="slotProps.item.artists.join(', ')">{{
+						slotProps.item.artists.join(", ")
+					}}</span>
+				</template>
+				<template #column-genres="slotProps">
+					<span :title="slotProps.item.genres.join(', ')">{{
+						slotProps.item.genres.join(", ")
+					}}</span>
+				</template>
+				<template #column-likes="slotProps">
+					<span :title="slotProps.item.likes">{{
+						slotProps.item.likes
+					}}</span>
+				</template>
+				<template #column-dislikes="slotProps">
+					<span :title="slotProps.item.dislikes">{{
+						slotProps.item.dislikes
+					}}</span>
+				</template>
+				<template #column-_id="slotProps">
+					<span :title="slotProps.item._id">{{
+						slotProps.item._id
+					}}</span>
+				</template>
+				<template #column-youtubeId="slotProps">
+					<a
+						:href="
+							'https://www.youtube.com/watch?v=' +
+							`${slotProps.item.youtubeId}`
+						"
+						target="_blank"
 					>
-					<i class="material-icons" v-show="!filterGenreBoxShown"
-						>expand_less</i
-					>
-				</p>
-				<input
-					type="text"
-					class="input"
-					placeholder="Filter genre checkboxes"
-					v-model="genreFilterQuery"
-					v-show="filterGenreBoxShown"
-				/>
-				<label
-					v-for="genre in filteredGenres"
-					:key="genre"
-					v-show="filterGenreBoxShown"
-				>
-					<input
-						type="checkbox"
-						:checked="genreFilterSelected.indexOf(genre) !== -1"
-						@click="toggleGenreSelected(genre)"
+						{{ slotProps.item.youtubeId }}
+					</a>
+				</template>
+				<template #column-status="slotProps">
+					<span :title="slotProps.item.status">{{
+						slotProps.item.status
+					}}</span>
+				</template>
+				<template #column-requestedBy="slotProps">
+					<user-id-to-username
+						:user-id="slotProps.item.requestedBy"
+						:link="true"
 					/>
-					<span>{{ genre }}</span>
-				</label>
-			</div>
-			<p>
-				<span>Sets loaded: {{ setsLoaded }} / {{ maxSets }}</span>
-				<br />
-				<span>Loaded songs: {{ songs.length }}</span>
-			</p>
-			<br />
-			<table class="table">
-				<thead>
-					<tr>
-						<td>Thumbnail</td>
-						<td>Title</td>
-						<td>Artists</td>
-						<td>Genres</td>
-						<td class="likesColumn">
-							<i class="material-icons thumbLike">thumb_up</i>
-						</td>
-						<td class="dislikesColumn">
-							<i class="material-icons thumbDislike"
-								>thumb_down</i
+				</template>
+				<template #bulk-actions="slotProps">
+					<div class="song-bulk-actions">
+						<i
+							class="material-icons edit-songs-icon"
+							@click.prevent="editMany(slotProps.item)"
+							content="Edit Songs"
+							v-tippy
+						>
+							edit
+						</i>
+						<i
+							class="material-icons verify-songs-icon"
+							@click.prevent="verifyMany(slotProps.item)"
+							content="Verify Songs"
+							v-tippy
+						>
+							check_circle
+						</i>
+						<i
+							class="material-icons unverify-songs-icon"
+							@click.prevent="unverifyMany(slotProps.item)"
+							content="Unverify Songs"
+							v-tippy
+						>
+							cancel
+						</i>
+						<i
+							class="material-icons tag-songs-icon"
+							@click.prevent="tagMany(slotProps.item)"
+							content="Tag Songs"
+							v-tippy
+						>
+							local_offer
+						</i>
+						<i
+							class="material-icons artists-songs-icon"
+							@click.prevent="setArtists(slotProps.item)"
+							content="Set Artists"
+							v-tippy
+						>
+							group
+						</i>
+						<i
+							class="material-icons genres-songs-icon"
+							@click.prevent="setGenres(slotProps.item)"
+							content="Set Genres"
+							v-tippy
+						>
+							theater_comedy
+						</i>
+						<quick-confirm
+							placement="left"
+							@confirm="deleteMany(slotProps.item)"
+						>
+							<i
+								class="material-icons delete-songs-icon"
+								content="Delete Songs"
+								v-tippy
 							>
-						</td>
-						<td>ID / Youtube ID</td>
-						<td>Requested By</td>
-						<td>Options</td>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="song in filteredSongs" :key="song._id">
-						<td>
-							<img
-								class="song-thumbnail"
-								:src="song.thumbnail"
-								onerror="this.src='/assets/notes-transparent.png'"
-							/>
-						</td>
-						<td>
-							<strong>{{ song.title }}</strong>
-						</td>
-						<td>{{ song.artists.join(", ") }}</td>
-						<td>{{ song.genres.join(", ") }}</td>
-						<td>{{ song.likes }}</td>
-						<td>{{ song.dislikes }}</td>
-						<td>
-							{{ song._id }}
-							<br />
-							<a
-								:href="
-									'https://www.youtube.com/watch?v=' +
-									`${song.youtubeId}`
-								"
-								target="_blank"
-							>
-								{{ song.youtubeId }}</a
-							>
-						</td>
-						<td>
-							<user-id-to-username
-								:user-id="song.requestedBy"
-								:link="true"
-							/>
-						</td>
-						<td class="optionsColumn">
-							<div>
-								<button
-									class="button is-primary"
-									@click="edit(song)"
-									content="Edit Song"
-									v-tippy
-								>
-									<i class="material-icons">edit</i>
-								</button>
-								<button
-									v-if="song.status !== 'verified'"
-									class="button is-success"
-									@click="verify(song._id)"
-									content="Verify Song"
-									v-tippy
-								>
-									<i class="material-icons">check_circle</i>
-								</button>
-								<quick-confirm
-									v-if="song.status === 'verified'"
-									placement="left"
-									@confirm="unverify(song._id)"
-								>
-									<button
-										class="button is-danger"
-										content="Unverify Song"
-										v-tippy
-									>
-										<i class="material-icons">cancel</i>
-									</button>
-								</quick-confirm>
-								<quick-confirm
-									v-if="song.status !== 'hidden'"
-									placement="left"
-									@confirm="hide(song._id)"
-								>
-									<button
-										class="button is-danger"
-										content="Hide Song"
-										v-tippy
-									>
-										<i class="material-icons"
-											>visibility_off</i
-										>
-									</button>
-								</quick-confirm>
-								<button
-									v-if="song.status === 'hidden'"
-									class="button is-success"
-									@click="unhide(song._id)"
-									content="Unhide Song"
-									v-tippy
-								>
-									<i class="material-icons">visibility</i>
-								</button>
-							</div>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+								delete_forever
+							</i>
+						</quick-confirm>
+					</div>
+				</template>
+			</advanced-table>
 		</div>
 		<import-album v-if="modals.importAlbum" />
 		<edit-song v-if="modals.editSong" song-type="songs" :key="song._id" />
@@ -324,14 +258,11 @@ import Toast from "toasters";
 
 import keyboardShortcuts from "@/keyboardShortcuts";
 
+import AdvancedTable from "@/components/AdvancedTable.vue";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
 import FloatingBox from "@/components/FloatingBox.vue";
 import QuickConfirm from "@/components/QuickConfirm.vue";
 import RunJobDropdown from "@/components/RunJobDropdown.vue";
-
-import ScrollAndFetchHandler from "@/mixins/ScrollAndFetchHandler.vue";
-
-import ws from "@/ws";
 
 export default {
 	components: {
@@ -347,26 +278,182 @@ export default {
 		RequestSong: defineAsyncComponent(() =>
 			import("@/components/modals/RequestSong.vue")
 		),
+		AdvancedTable,
 		UserIdToUsername,
 		FloatingBox,
 		QuickConfirm,
 		RunJobDropdown
 	},
-	mixins: [ScrollAndFetchHandler],
 	data() {
 		return {
-			searchQuery: "",
-			artistFilterQuery: "",
-			artistFilterSelected: [],
-			genreFilterQuery: "",
-			genreFilterSelected: [],
-			editing: {
-				index: 0,
-				song: {}
+			columnDefault: {
+				sortable: true,
+				hidable: true,
+				defaultVisibility: "shown",
+				draggable: true,
+				resizable: true,
+				minWidth: 200,
+				maxWidth: 600
 			},
-			searchBoxShown: true,
-			filterArtistBoxShown: false,
-			filterGenreBoxShown: false,
+			columns: [
+				{
+					name: "thumbnailImage",
+					displayName: "Thumb",
+					properties: ["thumbnail"],
+					sortable: false,
+					minWidth: 75,
+					defaultWidth: 75,
+					maxWidth: 75,
+					resizable: false
+				},
+				{
+					name: "title",
+					displayName: "Title",
+					properties: ["title"],
+					sortProperty: "title"
+				},
+				{
+					name: "artists",
+					displayName: "Artists",
+					properties: ["artists"],
+					sortable: false
+				},
+				{
+					name: "genres",
+					displayName: "Genres",
+					properties: ["genres"],
+					sortable: false
+				},
+				{
+					name: "likes",
+					displayName: "Likes",
+					properties: ["likes"],
+					sortProperty: "likes",
+					minWidth: 100,
+					defaultWidth: 100,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "dislikes",
+					displayName: "Dislikes",
+					properties: ["dislikes"],
+					sortProperty: "dislikes",
+					minWidth: 100,
+					defaultWidth: 100,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "_id",
+					displayName: "Musare ID",
+					properties: ["_id"],
+					sortProperty: "_id",
+					minWidth: 215,
+					defaultWidth: 215
+				},
+				{
+					name: "youtubeId",
+					displayName: "YouTube ID",
+					properties: ["youtubeId"],
+					sortProperty: "youtubeId",
+					minWidth: 120,
+					defaultWidth: 120
+				},
+				{
+					name: "status",
+					displayName: "Status",
+					properties: ["status"],
+					sortProperty: "status",
+					defaultVisibility: "hidden",
+					minWidth: 120,
+					defaultWidth: 120
+				},
+				{
+					name: "thumbnailUrl",
+					displayName: "Thumbnail (URL)",
+					properties: ["thumbnail"],
+					sortProperty: "thumbnail",
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "requestedBy",
+					displayName: "Requested By",
+					properties: ["requestedBy"],
+					sortProperty: "requestedBy",
+					defaultWidth: 200
+				}
+			],
+			filters: [
+				{
+					name: "_id",
+					displayName: "Musare ID",
+					property: "_id",
+					filterTypes: ["exact"],
+					defaultFilterType: "exact"
+				},
+				{
+					name: "youtubeId",
+					displayName: "YouTube ID",
+					property: "youtubeId",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "title",
+					displayName: "Title",
+					property: "title",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "artists",
+					displayName: "Artists",
+					property: "artists",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "genres",
+					displayName: "Genres",
+					property: "genres",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "thumbnail",
+					displayName: "Thumbnail",
+					property: "thumbnail",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "requestedBy",
+					displayName: "Requested By",
+					property: "requestedBy",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "status",
+					displayName: "Status",
+					property: "status",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "exact"
+				},
+				{
+					name: "likes",
+					displayName: "Likes",
+					property: "likes",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "exact"
+				},
+				{
+					name: "dislikes",
+					displayName: "Dislikes",
+					property: "dislikes",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "exact"
+				}
+			],
 			jobs: [
 				{
 					name: "Update all songs",
@@ -380,86 +467,8 @@ export default {
 		};
 	},
 	computed: {
-		filteredSongs() {
-			return this.songs.filter(
-				song =>
-					JSON.stringify(Object.values(song))
-						.toLowerCase()
-						.indexOf(this.searchQuery.toLowerCase()) !== -1 &&
-					(this.artistFilterSelected.length === 0 ||
-						song.artists.some(
-							artist =>
-								this.artistFilterSelected
-									.map(artistFilterSelected =>
-										artistFilterSelected.toLowerCase()
-									)
-									.indexOf(artist.toLowerCase()) !== -1
-						)) &&
-					(this.genreFilterSelected.length === 0 ||
-						song.genres.some(
-							genre =>
-								this.genreFilterSelected
-									.map(genreFilterSelected =>
-										genreFilterSelected.toLowerCase()
-									)
-									.indexOf(genre.toLowerCase()) !== -1
-						))
-			);
-		},
-		artists() {
-			const artists = [];
-			this.songs.forEach(song => {
-				song.artists.forEach(artist => {
-					if (artists.indexOf(artist) === -1) artists.push(artist);
-				});
-			});
-			return artists.sort();
-		},
-		filteredArtists() {
-			return this.artists
-				.filter(
-					artist =>
-						this.artistFilterSelected.indexOf(artist) !== -1 ||
-						artist
-							.toLowerCase()
-							.indexOf(this.artistFilterQuery.toLowerCase()) !==
-							-1
-				)
-				.sort(
-					(a, b) =>
-						(this.artistFilterSelected.indexOf(a) === -1 ? 1 : 0) -
-						(this.artistFilterSelected.indexOf(b) === -1 ? 1 : 0)
-				);
-		},
-		genres() {
-			const genres = [];
-			this.songs.forEach(song => {
-				song.genres.forEach(genre => {
-					if (genres.indexOf(genre) === -1) genres.push(genre);
-				});
-			});
-			return genres.sort();
-		},
-		filteredGenres() {
-			return this.genres
-				.filter(
-					genre =>
-						this.genreFilterSelected.indexOf(genre) !== -1 ||
-						genre
-							.toLowerCase()
-							.indexOf(this.genreFilterQuery.toLowerCase()) !== -1
-				)
-				.sort(
-					(a, b) =>
-						(this.genreFilterSelected.indexOf(a) === -1 ? 1 : 0) -
-						(this.genreFilterSelected.indexOf(b) === -1 ? 1 : 0)
-				);
-		},
 		...mapState("modalVisibility", {
 			modals: state => state.modals
-		}),
-		...mapState("admin/songs", {
-			songs: state => state.songs
 		}),
 		...mapState("modals/editSong", {
 			song: state => state.song
@@ -469,21 +478,21 @@ export default {
 		})
 	},
 	mounted() {
-		ws.onConnect(this.init);
-
-		this.socket.on("event:admin.song.updated", res => {
-			const { song } = res.data;
-			if (this.songs.filter(s => s._id === song._id).length === 0)
-				this.addSong(song);
-			else this.updateSong(song);
-		});
+		// TODO: Implement song update events in advanced table
+		// this.socket.on("event:admin.song.updated", res => {
+		// 	const { song } = res.data;
+		// 	if (this.songs.filter(s => s._id === song._id).length === 0)
+		// 		this.addSong(song);
+		// 	else this.updateSong(song);
+		// });
 
 		if (this.$route.query.songId) {
 			this.socket.dispatch(
 				"songs.getSongFromSongId",
 				this.$route.query.songId,
 				res => {
-					if (res.status === "success") this.edit(res.data.song);
+					if (res.status === "success")
+						this.editMany([res.data.song]);
 					else new Toast("Song with that ID not found");
 				}
 			);
@@ -525,72 +534,51 @@ export default {
 		});
 	},
 	methods: {
-		edit(song) {
-			this.editSong(song);
-			this.openModal("editSong");
+		editMany(selectedRows) {
+			if (selectedRows.length === 1) {
+				this.editSong(selectedRows[0]);
+				this.openModal("editSong");
+			} else {
+				new Toast("Bulk editing not yet implemented.");
+			}
 		},
-		verify(id) {
-			this.socket.dispatch("songs.verify", id, res => {
-				new Toast(res.message);
-			});
-		},
-		unverify(id) {
-			this.socket.dispatch("songs.unverify", id, res => {
-				new Toast(res.message);
-			});
-		},
-		hide(id) {
-			this.socket.dispatch("songs.hide", id, res => {
-				new Toast(res.message);
-			});
-		},
-		unhide(id) {
-			this.socket.dispatch("songs.unhide", id, res => {
-				new Toast(res.message);
-			});
-		},
-		getSet() {
-			if (this.isGettingSet) return;
-			if (this.position >= this.maxPosition) return;
-			this.isGettingSet = true;
-
-			this.socket.dispatch("songs.getSet", this.position, res => {
-				if (res.status === "success") {
-					res.data.songs.forEach(song => {
-						this.addSong(song);
-					});
-
-					this.position += 1;
-					this.isGettingSet = false;
-				}
-			});
-		},
-		toggleArtistSelected(artist) {
-			if (this.artistFilterSelected.indexOf(artist) === -1)
-				this.artistFilterSelected.push(artist);
-			else
-				this.artistFilterSelected.splice(
-					this.artistFilterSelected.indexOf(artist),
-					1
+		verifyMany(selectedRows) {
+			if (selectedRows.length === 1) {
+				this.socket.dispatch(
+					"songs.verify",
+					selectedRows[0]._id,
+					res => {
+						new Toast(res.message);
+					}
 				);
+			} else {
+				new Toast("Bulk verifying not yet implemented.");
+			}
 		},
-		toggleGenreSelected(genre) {
-			if (this.genreFilterSelected.indexOf(genre) === -1)
-				this.genreFilterSelected.push(genre);
-			else
-				this.genreFilterSelected.splice(
-					this.genreFilterSelected.indexOf(genre),
-					1
+		unverifyMany(selectedRows) {
+			if (selectedRows.length === 1) {
+				this.socket.dispatch(
+					"songs.unverify",
+					selectedRows[0]._id,
+					res => {
+						new Toast(res.message);
+					}
 				);
+			} else {
+				new Toast("Bulk unverifying not yet implemented.");
+			}
 		},
-		toggleSearchBox() {
-			this.searchBoxShown = !this.searchBoxShown;
+		tagMany() {
+			new Toast("Bulk tagging not yet implemented.");
 		},
-		toggleFilterArtistsBox() {
-			this.filterArtistBoxShown = !this.filterArtistBoxShown;
+		setArtists() {
+			new Toast("Bulk setting artists not yet implemented.");
 		},
-		toggleFilterGenresBox() {
-			this.filterGenreBoxShown = !this.filterGenreBoxShown;
+		setGenres() {
+			new Toast("Bulk setting genres not yet implemented.");
+		},
+		deleteMany() {
+			new Toast("Bulk deleting not yet implemented.");
 		},
 		toggleKeyboardShortcutsHelper() {
 			this.$refs.keyboardShortcutsHelper.toggleBox();
@@ -598,143 +586,13 @@ export default {
 		resetKeyboardShortcutsHelper() {
 			this.$refs.keyboardShortcutsHelper.resetBox();
 		},
-		init() {
-			this.position = 1;
-			this.maxPosition = 1;
-			this.resetSongs();
-
-			if (this.songs.length > 0)
-				this.position = Math.ceil(this.songs.length / 15) + 1;
-
-			this.socket.dispatch("songs.length", res => {
-				if (res.status === "success") {
-					this.maxPosition = Math.ceil(res.data.length / 15) + 1;
-					this.getSet();
-				}
-			});
-
-			this.socket.dispatch("apis.joinAdminRoom", "songs", () => {});
-		},
-		...mapActions("admin/songs", [
-			"resetSongs",
-			"addSong",
-			"removeSong",
-			"updateSong"
-		]),
 		...mapActions("modals/editSong", ["editSong"]),
-		...mapActions("modalVisibility", ["openModal", "closeModal"])
+		...mapActions("modalVisibility", ["openModal"])
 	}
 };
 </script>
 
 <style lang="scss" scoped>
-.night-mode {
-	.box {
-		background-color: var(--dark-grey-3) !important;
-	}
-
-	.table {
-		color: var(--light-grey-2);
-		background-color: var(--dark-grey-3);
-
-		thead tr {
-			background: var(--dark-grey-3);
-			td {
-				color: var(--white);
-			}
-		}
-
-		tbody tr:hover {
-			background-color: var(--dark-grey-4) !important;
-		}
-
-		tbody tr:nth-child(even) {
-			background-color: var(--dark-grey-2);
-		}
-
-		strong {
-			color: var(--light-grey-2);
-		}
-	}
-}
-
-.box {
-	background-color: var(--light-grey);
-	border-radius: 5px;
-	padding: 8px 16px;
-
-	p {
-		text-align: center;
-		font-size: 24px;
-		user-select: none;
-		cursor: pointer;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-	}
-
-	input[type="text"] {
-		margin-top: 8px;
-		margin-bottom: 8px;
-	}
-
-	label {
-		margin-right: 8px;
-		display: inline-flex;
-		align-items: center;
-
-		input[type="checkbox"] {
-			margin-right: 2px;
-			height: 16px;
-			width: 16px;
-		}
-	}
-}
-
-.optionsColumn {
-	width: 100px;
-
-	div {
-		button {
-			width: 35px;
-		}
-		> button,
-		> span {
-			&:not(:last-child) {
-				margin-right: 5px;
-			}
-		}
-	}
-}
-
-.likesColumn,
-.dislikesColumn {
-	width: 40px;
-	i {
-		font-size: 20px;
-	}
-	.thumbLike {
-		color: var(--green) !important;
-	}
-	.thumbDislike {
-		color: var(--dark-red) !important;
-	}
-}
-
-.song-thumbnail {
-	display: block;
-	max-width: 50px;
-	margin: 0 auto;
-}
-
-td {
-	vertical-align: middle;
-
-	& > div {
-		display: inline-flex;
-	}
-}
-
 #keyboardShortcutsHelper {
 	.box-body {
 		.biggest {
@@ -751,7 +609,38 @@ td {
 	}
 }
 
-.is-primary:focus {
-	background-color: var(--primary-color) !important;
+.song-thumbnail {
+	display: block;
+	max-width: 50px;
+	margin: 0 auto;
+}
+
+.bulk-popup {
+	.song-bulk-actions {
+		display: flex;
+		flex-direction: row;
+		width: 100%;
+		justify-content: space-evenly;
+
+		.material-icons {
+			position: relative;
+			top: 6px;
+			margin-left: 5px;
+			cursor: pointer;
+			color: var(--primary-color);
+
+			&:hover,
+			&:focus {
+				filter: brightness(90%);
+			}
+		}
+		.verify-songs-icon {
+			color: var(--green);
+		}
+		.unverify-songs-icon,
+		.delete-songs-icon {
+			color: var(--dark-red);
+		}
+	}
 }
 </style>
