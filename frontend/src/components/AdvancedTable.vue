@@ -590,6 +590,7 @@
 				<span
 					class="material-icons drag-icon"
 					@mousedown.left="onDragBox"
+					@touchstart="onDragBox"
 					@dblclick="resetBulkActionsPosition()"
 				>
 					drag_indicator
@@ -1077,19 +1078,34 @@ export default {
 		},
 		onDragBox(e) {
 			const e1 = e || window.event;
+			const e1IsTouch = e1.type === "touchstart";
 			e1.preventDefault();
 
-			this.bulkPopup.pos3 = e1.clientX;
-			this.bulkPopup.pos4 = e1.clientY;
+			this.bulkPopup.pos3 = e1IsTouch
+				? e1.changedTouches[0].clientX
+				: e1.clientX;
+			this.bulkPopup.pos4 = e1IsTouch
+				? e1.changedTouches[0].clientY
+				: e1.clientY;
 
-			document.onmousemove = e => {
+			document.onmousemove = document.ontouchmove = e => {
 				const e2 = e || window.event;
-				e2.preventDefault();
+				const e2IsTouch = e2.type === "touchmove";
+				if (!e2IsTouch) e2.preventDefault();
+
+				// Get the clientX and clientY
+				const e2ClientX = e2IsTouch
+					? e2.changedTouches[0].clientX
+					: e2.clientX;
+				const e2ClientY = e2IsTouch
+					? e2.changedTouches[0].clientY
+					: e2.clientY;
+
 				// calculate the new cursor position:
-				this.bulkPopup.pos1 = this.bulkPopup.pos3 - e.clientX;
-				this.bulkPopup.pos2 = this.bulkPopup.pos4 - e.clientY;
-				this.bulkPopup.pos3 = e.clientX;
-				this.bulkPopup.pos4 = e.clientY;
+				this.bulkPopup.pos1 = this.bulkPopup.pos3 - e2ClientX;
+				this.bulkPopup.pos2 = this.bulkPopup.pos4 - e2ClientY;
+				this.bulkPopup.pos3 = e2ClientX;
+				this.bulkPopup.pos4 = e2ClientY;
 				// set the element's new position:
 				this.bulkPopup.top -= this.bulkPopup.pos2;
 				this.bulkPopup.left -= this.bulkPopup.pos1;
@@ -1102,9 +1118,11 @@ export default {
 					this.bulkPopup.left = document.body.clientWidth - 400;
 			};
 
-			document.onmouseup = () => {
+			document.onmouseup = document.ontouchend = () => {
 				document.onmouseup = null;
+				document.ontouchend = null;
 				document.onmousemove = null;
+				document.ontouchmove = null;
 			};
 		},
 		resetBulkActionsPosition() {
