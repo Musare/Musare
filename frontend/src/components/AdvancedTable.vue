@@ -379,19 +379,18 @@
 											: `${column.maxWidth}px`
 									}"
 								>
-									<p
-										v-if="column.name === 'select'"
-										class="checkbox"
-									>
-										<input
-											type="checkbox"
-											:checked="
-												data.length ===
-												selectedRows.length
-											"
-											@click="toggleAllRows()"
-										/>
-									</p>
+									<div v-if="column.name === 'select'">
+										<p class="checkbox">
+											<input
+												type="checkbox"
+												:checked="
+													data.length ===
+													selectedRows.length
+												"
+												@click="toggleAllRows()"
+											/>
+										</p>
+									</div>
 									<div v-else class="handle">
 										<span>
 											{{ column.displayName }}
@@ -1317,6 +1316,7 @@ export default {
 						line-height: 40px;
 						border: 1px solid var(--light-grey-2);
 						border-width: 1px 1px 1px 0;
+						padding: 0;
 
 						&:last-child {
 							border-width: 1px 0 1px;
@@ -1329,6 +1329,7 @@ export default {
 						& > div {
 							display: flex;
 							white-space: nowrap;
+							padding: 8px 10px;
 
 							& > span {
 								margin-left: 5px;
