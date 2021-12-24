@@ -212,7 +212,7 @@
 								{{ filter.filter.displayName }}
 								{{
 									appliedFilters.length === 1 &&
-									filterOperator === "nor"
+									appliedFilterOperator === "nor"
 										? "not"
 										: ""
 								}}
@@ -220,7 +220,7 @@
 								{{
 									appliedFilters.length === index + 1
 										? ""
-										: filterOperator
+										: appliedFilterOperator
 								}}
 							</p>
 						</template>
@@ -835,12 +835,16 @@ export default {
 				this.appliedFilterOperator = this.filterOperator =
 					appliedFilterOperator;
 				// Set the applied filters and editing filters to the value stored in table settings, for all filters that are allowed
-				this.appliedFilters = this.editingFilters =
-					appliedFilters.filter(appliedFilter =>
-						this.filters.find(
-							filter => appliedFilter.filter.name === filter.name
-						)
-					);
+				this.appliedFilters = appliedFilters.filter(appliedFilter =>
+					this.filters.find(
+						filter => appliedFilter.filter.name === filter.name
+					)
+				);
+				this.editingFilters = appliedFilters.filter(appliedFilter =>
+					this.filters.find(
+						filter => appliedFilter.filter.name === filter.name
+					)
+				);
 			}
 		}
 
