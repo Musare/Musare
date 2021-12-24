@@ -2,7 +2,8 @@
 	<div>
 		<div
 			class="table-outer-container"
-			@mousemove="columnResizingMouseMove($event)"
+			@mousemove="columnResizing($event)"
+			@touchmove="columnResizing($event)"
 		>
 			<div class="table-header">
 				<div>
@@ -349,6 +350,7 @@
 							v-model="orderedColumns"
 							v-bind="columnDragOptions"
 							tag="tr"
+							handle=".handle"
 							draggable=".item-draggable"
 							@change="columnOrderChanged"
 						>
@@ -390,7 +392,7 @@
 											@click="toggleAllRows()"
 										/>
 									</p>
-									<div v-else>
+									<div v-else class="handle">
 										<span>
 											{{ column.displayName }}
 										</span>
@@ -436,12 +438,13 @@
 										class="resizer"
 										v-if="column.resizable"
 										@mousedown.prevent.stop="
-											columnResizingMouseDown(
-												column,
-												$event
-											)
+											columnResizingStart(column, $event)
 										"
-										@mouseup="columnResizingMouseUp()"
+										@touchstart.prevent.stop="
+											columnResizingStart(column, $event)
+										"
+										@mouseup="columnResizingStop()"
+										@touchend="columnResizingStop()"
 										@dblclick="columnResetWidth(column)"
 									></div>
 								</th>
@@ -488,9 +491,13 @@
 									class="resizer"
 									v-if="column.resizable"
 									@mousedown.prevent.stop="
-										columnResizingMouseDown(column, $event)
+										columnResizingStart(column, $event)
 									"
-									@mouseup="columnResizingMouseUp()"
+									@touchstart.prevent.stop="
+										columnResizingStart(column, $event)
+									"
+									@mouseup="columnResizingStop()"
+									@touchend="columnResizingStop()"
 									@dblclick="columnResetWidth(column)"
 								></div>
 							</td>
@@ -1008,20 +1015,28 @@ export default {
 		removeFilterItem(index) {
 			this.editingFilters.splice(index, 1);
 		},
-		columnResizingMouseDown(column, event) {
+		columnResizingStart(column, event) {
+			const eventIsTouch = event.type === "touchstart";
 			this.resizing.resizing = true;
 			this.resizing.resizingColumn = column;
 			this.resizing.width = event.target.parentElement.offsetWidth;
-			this.resizing.lastX = event.x;
+			this.resizing.lastX = eventIsTouch
+				? event.targetTouches[0].clientX
+				: event.x;
 		},
-		columnResizingMouseMove(event) {
+		columnResizing(event) {
 			if (this.resizing.resizing) {
-				if (event.buttons !== 1) {
+				const eventIsTouch = event.type === "touchmove";
+				if (!eventIsTouch && event.buttons !== 1) {
 					this.resizing.resizing = false;
 					this.storeTableSettings();
 				}
-				this.resizing.width -= this.resizing.lastX - event.x;
-				this.resizing.lastX = event.x;
+				const x = eventIsTouch
+					? event.changedTouches[0].clientX
+					: event.x;
+
+				this.resizing.width -= this.resizing.lastX - x;
+				this.resizing.lastX = x;
 				if (
 					this.resizing.resizingColumn.minWidth &&
 					this.resizing.resizingColumn.maxWidth
@@ -1051,7 +1066,7 @@ export default {
 				this.storeTableSettings();
 			}
 		},
-		columnResizingMouseUp() {
+		columnResizingStop() {
 			this.resizing.resizing = false;
 			this.storeTableSettings();
 		},
