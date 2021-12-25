@@ -1156,7 +1156,10 @@ export default {
 			let calculatedWidth = 0;
 			this.orderedColumns.forEach(column => {
 				if (this.shownColumns.indexOf(column.name) !== -1)
-					if (Number.isFinite(column.width)) {
+					if (
+						Number.isFinite(column.width) &&
+						!Number.isFinite(column.calculatedWidth)
+					) {
 						calculatedWidth += column.width;
 					} else if (Number.isFinite(column.defaultWidth)) {
 						calculatedWidth += column.defaultWidth;
@@ -1165,29 +1168,28 @@ export default {
 					}
 			});
 			calculatedWidth = Math.floor(
-				// max-width of table is 1860px
-				(Math.min(1860, document.body.clientWidth) - calculatedWidth) /
+				// max-width of table is 1880px
+				(Math.min(1880, document.body.clientWidth) - calculatedWidth) /
 					(noWidthCount - 1)
 			);
 			this.orderedColumns = this.orderedColumns.map(column => {
 				const orderedColumn = column;
-				if (
-					this.shownColumns.indexOf(orderedColumn.name) !== -1 &&
-					!Number.isFinite(orderedColumn.width)
-				) {
+				if (this.shownColumns.indexOf(orderedColumn.name) !== -1) {
+					let newWidth;
 					if (Number.isFinite(orderedColumn.defaultWidth)) {
-						orderedColumn.width = orderedColumn.defaultWidth;
+						newWidth = orderedColumn.defaultWidth;
 					} else {
 						// eslint-disable-next-line no-param-reassign
-						orderedColumn.width = orderedColumn.calculatedWidth =
-							Math.min(
-								Math.max(
-									orderedColumn.minWidth || 100, // fallback 100px min width
-									calculatedWidth
-								),
-								orderedColumn.maxWidth || 1000 // fallback 1000px max width
-							);
+						newWidth = orderedColumn.calculatedWidth = Math.min(
+							Math.max(
+								orderedColumn.minWidth || 100, // fallback 100px min width
+								calculatedWidth
+							),
+							orderedColumn.maxWidth || 1000 // fallback 1000px max width
+						);
 					}
+					if (newWidth && !Number.isFinite(orderedColumn.width))
+						orderedColumn.width = newWidth;
 				}
 				return orderedColumn;
 			});
