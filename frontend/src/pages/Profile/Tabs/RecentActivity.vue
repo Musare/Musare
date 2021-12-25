@@ -154,8 +154,6 @@ export default {
 			const scrollPosition = document.body.clientHeight + window.scrollY;
 			const bottomPosition = document.body.scrollHeight;
 
-			if (this.loadAllSongs) return false;
-
 			if (scrollPosition + 400 >= bottomPosition) this.getSet();
 
 			return this.maxPosition === this.position;
