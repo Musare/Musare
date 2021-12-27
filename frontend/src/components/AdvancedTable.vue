@@ -739,6 +739,13 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
+	watch: {
+		selectedRows(newSelectedRows, oldSelectedRows) {
+			// If selected rows goes from zero to one or more selected, trigger onWindowResize, as otherwise the popup could be out of bounds
+			if (oldSelectedRows.length === 0 && newSelectedRows.length > 0)
+				this.onWindowResize();
+		}
+	},
 	mounted() {
 		const tableSettings = this.getTableSettings();
 
@@ -860,7 +867,15 @@ export default {
 
 		this.resetBulkActionsPosition();
 
+		this.$nextTick(() => {
+			this.onWindowResize();
+			window.addEventListener("resize", this.onWindowResize);
+		});
+
 		ws.onConnect(this.init);
+	},
+	unmounted() {
+		window.removeEventListener("resize", this.onWindowResize);
 	},
 	methods: {
 		init() {
@@ -1256,6 +1271,16 @@ export default {
 					})
 				);
 			}, 250);
+		},
+		onWindowResize() {
+			// Only change the position if the popup is actually visible
+			if (this.selectedRows.length === 0) return;
+			if (this.bulkPopup.top < 0) this.bulkPopup.top = 0;
+			if (this.bulkPopup.top > document.body.clientHeight - 50)
+				this.bulkPopup.top = document.body.clientHeight - 50;
+			if (this.bulkPopup.left < 0) this.bulkPopup.left = 0;
+			if (this.bulkPopup.left > document.body.clientWidth - 400)
+				this.bulkPopup.left = document.body.clientWidth - 400;
 		}
 	}
 };
