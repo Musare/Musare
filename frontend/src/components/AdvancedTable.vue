@@ -702,7 +702,9 @@ export default {
 			},
 			addFilterValue: null,
 			showFiltersDropdown: false,
-			showColumnsDropdown: false
+			showColumnsDropdown: false,
+			lastColumnResizerTapped: null,
+			lastColumnResizerTappedDate: 0
 		};
 	},
 	computed: {
@@ -1016,6 +1018,20 @@ export default {
 		},
 		columnResizingStart(column, event) {
 			const eventIsTouch = event.type === "touchstart";
+			if (eventIsTouch) {
+				// Handle double click from touch (if this method is called for the same column twice in a row within one second)
+				if (
+					this.lastColumnResizerTapped === column &&
+					Date.now() - this.lastColumnResizerTappedDate <= 1000
+				) {
+					this.columnResetWidth(column);
+					this.lastColumnResizerTapped = null;
+					this.lastColumnResizerTappedDate = 0;
+					return;
+				}
+				this.lastColumnResizerTapped = column;
+				this.lastColumnResizerTappedDate = Date.now();
+			}
 			this.resizing.resizing = true;
 			this.resizing.resizingColumn = column;
 			this.resizing.width = event.target.parentElement.offsetWidth;
