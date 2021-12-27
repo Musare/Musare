@@ -704,7 +704,8 @@ export default {
 			showFiltersDropdown: false,
 			showColumnsDropdown: false,
 			lastColumnResizerTapped: null,
-			lastColumnResizerTappedDate: 0
+			lastColumnResizerTappedDate: 0,
+			lastBulkActionsTappedDate: 0
 		};
 	},
 	computed: {
@@ -1110,6 +1111,16 @@ export default {
 			const e1 = e || window.event;
 			const e1IsTouch = e1.type === "touchstart";
 			e1.preventDefault();
+
+			if (e1IsTouch) {
+				// Handle double click from touch (if this method is twice in a row within one second)
+				if (Date.now() - this.lastBulkActionsTappedDate <= 1000) {
+					this.resetBulkActionsPosition();
+					this.lastBulkActionsTappedDate = 0;
+					return;
+				}
+				this.lastBulkActionsTappedDate = Date.now();
+			}
 
 			this.bulkPopup.pos3 = e1IsTouch
 				? e1.changedTouches[0].clientX
