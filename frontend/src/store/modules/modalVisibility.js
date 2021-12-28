@@ -18,7 +18,8 @@ const state = {
 		editSong: false,
 		importAlbum: false,
 		viewReport: false,
-		viewPunishment: false
+		viewPunishment: false,
+		confirm: false
 	},
 	currentlyActive: []
 };

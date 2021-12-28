@@ -109,18 +109,21 @@
 						>
 							theater_comedy
 						</i>
-						<quick-confirm
-							placement="left"
-							@confirm="deleteMany(slotProps.item)"
+						<i
+							class="material-icons delete-songs-icon"
+							@click.prevent="
+								confirmAction({
+									message:
+										'Removing this song will remove it from all playlists and cause a ratings recalculation.',
+									action: 'deleteMany',
+									params: slotProps.item
+								})
+							"
+							content="Delete Songs"
+							v-tippy
 						>
-							<i
-								class="material-icons delete-songs-icon"
-								content="Delete Songs"
-								v-tippy
-							>
-								delete_forever
-							</i>
-						</quick-confirm>
+							delete_forever
+						</i>
 					</div>
 				</template>
 				<!-- <template #bulk-actions-right="slotProps">
@@ -129,6 +132,11 @@
 		</div>
 		<edit-song v-if="modals.editSong" song-type="songs" :key="song._id" />
 		<report v-if="modals.report" />
+		<confirm
+			v-if="modals.confirm"
+			:confirm="confirm"
+			@confirmed="handleConfirmed()"
+		/>
 	</div>
 </template>
 
@@ -139,18 +147,19 @@ import { defineAsyncComponent } from "vue";
 import Toast from "toasters";
 import AdvancedTable from "@/components/AdvancedTable.vue";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
-import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
 	components: {
 		AdvancedTable,
 		UserIdToUsername,
-		QuickConfirm,
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong")
 		),
 		Report: defineAsyncComponent(() =>
 			import("@/components/modals/Report.vue")
+		),
+		Confirm: defineAsyncComponent(() =>
+			import("@/components/modals/Confirm.vue")
 		)
 	},
 	data() {
@@ -274,7 +283,12 @@ export default {
 					filterTypes: ["contains", "exact", "regex"],
 					defaultFilterType: "contains"
 				}
-			]
+			],
+			confirm: {
+				message: "",
+				action: "",
+				params: null
+			}
 		};
 	},
 	computed: {
@@ -314,7 +328,25 @@ export default {
 		deleteMany() {
 			new Toast("Bulk deleting not yet implemented.");
 		},
+		confirmAction(confirm) {
+			this.confirm = confirm;
+			this.updateConfirmMessage(confirm.message);
+			this.openModal("confirm");
+		},
+		handleConfirmed() {
+			const { action, params } = this.confirm;
+			if (typeof this[action] === "function") {
+				if (params) this[action](params);
+				else this[action]();
+			}
+			this.confirm = {
+				message: "",
+				action: "",
+				params: null
+			};
+		},
 		...mapActions("modals/editSong", ["editSong"]),
+		...mapActions("modals/confirm", ["updateConfirmMessage"]),
 		...mapActions("modalVisibility", ["openModal"])
 	}
 };

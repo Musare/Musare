@@ -17,6 +17,7 @@ import editUserModal from "./modules/modals/editUser";
 import viewPunishmentModal from "./modules/modals/viewPunishment";
 import viewReportModal from "./modules/modals/viewReport";
 import reportModal from "./modules/modals/report";
+import confirmModal from "./modules/modals/confirm";
 
 export default createStore({
 	modules: {
@@ -36,7 +37,8 @@ export default createStore({
 				editUser: editUserModal,
 				viewPunishment: viewPunishmentModal,
 				report: reportModal,
-				viewReport: viewReportModal
+				viewReport: viewReportModal,
+				confirm: confirmModal
 			}
 		}
 	},
