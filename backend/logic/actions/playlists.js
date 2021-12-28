@@ -259,6 +259,54 @@ export default {
 	}),
 
 	/**
+	 * Gets playlists, used in the admin playlists page by the AdvancedTable component
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param page - the page
+	 * @param pageSize - the size per page
+	 * @param properties - the properties to return for each playlist
+	 * @param sort - the sort object
+	 * @param queries - the queries array
+	 * @param operator - the operator for queries
+	 * @param cb
+	 */
+	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
+		async.waterfall(
+			[
+				next => {
+					PlaylistsModule.runJob(
+						"GET_DATA",
+						{
+							page,
+							pageSize,
+							properties,
+							sort,
+							queries,
+							operator
+						},
+						this
+					)
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async (err, response) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "PLAYLISTS_GET_DATA", `Failed to get data from playlists. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "PLAYLISTS_GET_DATA", `Got data from playlists successfully.`);
+				return cb({ status: "success", message: "Successfully got data from playlists.", data: response });
+			}
+		);
+	}),
+
+	/**
 	 * Searches through all playlists that can be included in a community station
 	 *
 	 * @param {object} session - the session object automatically added by the websocket

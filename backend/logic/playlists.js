@@ -869,6 +869,72 @@ class _PlaylistsModule extends CoreClass {
 	}
 
 	/**
+	 * Gets playlists data
+	 *
+	 * @param {object} payload - object containing the payload
+	 * @param {string} payload.page - the page
+	 * @param {string} payload.pageSize - the page size
+	 * @param {string} payload.properties - the properties to return for each playlist
+	 * @param {string} payload.sort - the sort object
+	 * @param {string} payload.queries - the queries array
+	 * @param {string} payload.operator - the operator for queries
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	GET_DATA(payload) {
+		return new Promise((resolve, reject) => {
+			const { page, pageSize, properties, sort, queries, operator } = payload;
+
+			console.log("GET_DATA", payload);
+
+			const newQueries = queries.map(query => {
+				const { data, filter, filterType } = query;
+				const newQuery = {};
+				if (filterType === "regex") {
+					newQuery[filter.property] = new RegExp(`${data.slice(1, data.length - 1)}`, "i");
+				} else if (filterType === "contains") {
+					newQuery[filter.property] = new RegExp(`${data.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i");
+				} else if (filterType === "exact") {
+					newQuery[filter.property] = data.toString();
+				}
+				return newQuery;
+			});
+
+			const queryObject = {};
+			if (newQueries.length > 0) {
+				if (operator === "and") queryObject.$and = newQueries;
+				else if (operator === "or") queryObject.$or = newQueries;
+				else if (operator === "nor") queryObject.$nor = newQueries;
+			}
+
+			async.waterfall(
+				[
+					next => {
+						PlaylistsModule.playlistModel.find(queryObject).count((err, count) => {
+							next(err, count);
+						});
+					},
+
+					(count, next) => {
+						PlaylistsModule.playlistModel
+							.find(queryObject)
+							.sort(sort)
+							.skip(pageSize * (page - 1))
+							.limit(pageSize)
+							.select(properties.join(" "))
+							.exec((err, playlists) => {
+								next(err, count, playlists);
+							});
+					}
+				],
+				(err, count, playlists) => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve({ data: playlists, count });
+				}
+			);
+		});
+	}
+
+	/**
 	 * Gets a playlist from id from Mongo and updates the cache with it
 	 *
 	 * @param {object} payload - object that contains the payload
