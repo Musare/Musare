@@ -611,6 +611,54 @@ export default {
 	},
 
 	/**
+	 * Gets stations, used in the admin stations page by the AdvancedTable component
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param page - the page
+	 * @param pageSize - the size per page
+	 * @param properties - the properties to return for each station
+	 * @param sort - the sort object
+	 * @param queries - the queries array
+	 * @param operator - the operator for queries
+	 * @param cb
+	 */
+	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
+		async.waterfall(
+			[
+				next => {
+					StationsModule.runJob(
+						"GET_DATA",
+						{
+							page,
+							pageSize,
+							properties,
+							sort,
+							queries,
+							operator
+						},
+						this
+					)
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async (err, response) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "STATIONS_GET_DATA", `Failed to get data from stations. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "STATIONS_GET_DATA", `Got data from stations successfully.`);
+				return cb({ status: "success", message: "Successfully got data from stations.", data: response });
+			}
+		);
+	}),
+
+	/**
 	 * Obtains basic metadata of a station in order to format an activity
 	 *
 	 * @param {object} session - user session
