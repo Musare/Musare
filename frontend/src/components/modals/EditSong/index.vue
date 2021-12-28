@@ -1,6 +1,11 @@
 <template>
 	<div>
-		<modal title="Edit Song" class="song-modal" :wide="true" :split="true">
+		<modal
+			title="Edit Song"
+			class="song-modal"
+			:size="'wide'"
+			:split="true"
+		>
 			<template #body>
 				<div class="left-section">
 					<div class="top-section">

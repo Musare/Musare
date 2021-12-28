@@ -3,7 +3,7 @@
 		<modal
 			class="report-modal"
 			title="Report"
-			:wide="existingReports.length > 0"
+			:size="existingReports.length > 0 ? 'wide' : null"
 		>
 			<template #body>
 				<div class="report-modal-inner-container">

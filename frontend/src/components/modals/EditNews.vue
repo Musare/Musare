@@ -2,7 +2,7 @@
 	<modal
 		class="edit-news-modal"
 		:title="newsId ? 'Edit News' : 'Create News'"
-		:wide="true"
+		:size="'wide'"
 		:split="true"
 	>
 		<template #body>

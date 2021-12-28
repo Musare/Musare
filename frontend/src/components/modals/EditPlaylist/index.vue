@@ -7,7 +7,7 @@
 			'edit-playlist-modal': true,
 			'view-only': !isEditable()
 		}"
-		:wide="isEditable()"
+		:size="isEditable() ? 'wide' : null"
 		:split="true"
 	>
 		<template #body>

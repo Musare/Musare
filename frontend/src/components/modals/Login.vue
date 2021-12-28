@@ -1,6 +1,11 @@
 <template>
 	<div>
-		<modal title="Login" class="login-modal" @closed="closeLoginModal()">
+		<modal
+			title="Login"
+			class="login-modal"
+			:size="'small'"
+			@closed="closeLoginModal()"
+		>
 			<template #body>
 				<form>
 					<!-- email address -->

@@ -10,7 +10,7 @@
 		"
 		:style="`--primary-color: var(--${station.theme})`"
 		class="manage-station-modal"
-		:wide="isOwnerOrAdmin() || sector !== 'home'"
+		:size="isOwnerOrAdmin() || sector !== 'home' ? 'wide' : null"
 		:split="isOwnerOrAdmin() || sector !== 'home'"
 	>
 		<template #body v-if="station && station._id">

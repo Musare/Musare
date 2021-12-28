@@ -4,7 +4,8 @@
 		<div
 			:class="{
 				'modal-card': true,
-				'modal-wide': wide,
+				'modal-small': size === 'small',
+				'modal-wide': size === 'wide',
 				'modal-split': split
 			}"
 		>
@@ -39,7 +40,7 @@ export default {
 	},
 	props: {
 		title: { type: String, default: "Modal" },
-		wide: { type: Boolean, default: false },
+		size: { type: String, default: null },
 		split: { type: Boolean, default: false }
 	},
 	data() {
@@ -133,6 +134,10 @@ export default {
 		overflow: auto;
 		margin: 0;
 		font-size: 16px;
+
+		&.modal-small {
+			width: 640px;
+		}
 
 		&.modal-wide {
 			width: 1300px;
