@@ -1979,6 +1979,16 @@ html {
 		::-webkit-scrollbar-thumb {
 			background-color: var(--light-grey);
 		}
+
+		::-webkit-scrollbar-track {
+			background-color: var(--dark-grey-3);
+		}
+	}
+
+	div {
+		::-webkit-scrollbar-track {
+			background-color: transparent !important;
+		}
 	}
 }
 
@@ -1988,7 +1998,7 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-	background-color: transparent;
+	background-color: var(--light-grey-2);
 }
 
 ::-webkit-scrollbar-thumb {
