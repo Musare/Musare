@@ -890,6 +890,7 @@ export default {
 	methods: {
 		init() {
 			this.getData();
+			this.setQuery();
 		},
 		getData() {
 			this.socket.dispatch(
@@ -1255,9 +1256,38 @@ export default {
 			this.storeTableSettings();
 		},
 		getTableSettings() {
-			return JSON.parse(
+			const urlTableSettings = {};
+			if (this.$route.query.pageSize)
+				urlTableSettings.pageSize = Number.parseInt(
+					this.$route.query.pageSize
+				);
+			if (this.$route.query.shownColumns)
+				urlTableSettings.shownColumns = JSON.parse(
+					this.$route.query.shownColumns
+				);
+			if (this.$route.query.columnOrder)
+				urlTableSettings.columnOrder = JSON.parse(
+					this.$route.query.columnOrder
+				);
+			if (this.$route.query.columnWidths)
+				urlTableSettings.columnWidths = JSON.parse(
+					this.$route.query.columnWidths
+				);
+			if (this.$route.query.columnSort)
+				urlTableSettings.columnSort = JSON.parse(
+					this.$route.query.columnSort
+				);
+			if (this.$route.query.filter)
+				urlTableSettings.filter = JSON.parse(this.$route.query.filter);
+
+			const localStorageTableSettings = JSON.parse(
 				localStorage.getItem(`advancedTableSettings:${this.name}`)
 			);
+
+			return {
+				...localStorageTableSettings,
+				...urlTableSettings
+			};
 		},
 		storeTableSettings() {
 			// Clear debounce timeout
@@ -1266,6 +1296,27 @@ export default {
 
 			// Resizing calls this function a lot, so rather than saving dozens of times a second, use debouncing
 			this.storeTableSettingsDebounceTimeout = setTimeout(() => {
+				this.$router.push({
+					query: {
+						pageSize: this.pageSize,
+						filter: JSON.stringify({
+							appliedFilters: this.appliedFilters,
+							appliedFilterOperator: this.appliedFilterOperator
+						}),
+						columnSort: JSON.stringify(this.sort),
+						columnOrder: JSON.stringify(
+							this.orderedColumns.map(column => column.name)
+						),
+						columnWidths: JSON.stringify(
+							this.orderedColumns.map(column => ({
+								name: column.name,
+								width: column.width
+							}))
+						),
+						shownColumns: JSON.stringify(this.shownColumns)
+					}
+				});
+
 				localStorage.setItem(
 					`advancedTableSettings:${this.name}`,
 					JSON.stringify({
