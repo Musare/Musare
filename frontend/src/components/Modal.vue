@@ -4,7 +4,7 @@
 		<div
 			:class="{
 				'modal-card': true,
-				'modal-small': size === 'small',
+				'modal-slim': size === 'slim',
 				'modal-wide': size === 'wide',
 				'modal-split': split
 			}"
@@ -140,7 +140,7 @@ export default {
 		margin: 0;
 		font-size: 16px;
 
-		&.modal-small {
+		&.modal-slim {
 			width: 640px;
 		}
 

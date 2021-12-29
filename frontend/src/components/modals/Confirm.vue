@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<modal class="confirm-modal" title="Confirm Action" :size="'small'">
+		<modal class="confirm-modal" title="Confirm Action" :size="'slim'">
 			<template #body>
 				<div class="confirm-modal-inner-container">
 					{{ message }}

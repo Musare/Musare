@@ -3,7 +3,7 @@
 		<modal
 			title="Login"
 			class="login-modal"
-			:size="'small'"
+			:size="'slim'"
 			@closed="closeLoginModal()"
 		>
 			<template #body>

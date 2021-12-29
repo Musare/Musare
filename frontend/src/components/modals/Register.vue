@@ -3,7 +3,7 @@
 		<modal
 			title="Register"
 			class="register-modal"
-			:size="'small'"
+			:size="'slim'"
 			@closed="closeRegisterModal()"
 		>
 			<template #body>
