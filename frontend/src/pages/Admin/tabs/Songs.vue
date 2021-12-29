@@ -31,6 +31,23 @@
 				data-action="songs.getData"
 				name="admin-songs"
 			>
+				<template #column-options="slotProps">
+					<div class="row-options">
+						<button
+							class="
+								button
+								is-primary
+								icon-with-button
+								material-icons
+							"
+							@click="editOne(slotProps.item)"
+							content="Edit Song"
+							v-tippy
+						>
+							edit
+						</button>
+					</div>
+				</template>
 				<template #column-thumbnailImage="slotProps">
 					<img
 						class="song-thumbnail"
@@ -97,7 +114,7 @@
 					/>
 				</template>
 				<template #bulk-actions="slotProps">
-					<div class="song-bulk-actions">
+					<div class="bulk-actions">
 						<i
 							class="material-icons edit-songs-icon"
 							@click.prevent="editMany(slotProps.item)"
@@ -151,7 +168,7 @@
 							@confirm="deleteMany(slotProps.item)"
 						>
 							<i
-								class="material-icons delete-songs-icon"
+								class="material-icons delete-icon"
 								content="Delete Songs"
 								v-tippy
 							>
@@ -289,6 +306,16 @@ export default {
 				maxWidth: 600
 			},
 			columns: [
+				{
+					name: "options",
+					displayName: "Edit",
+					properties: [],
+					sortable: false,
+					hidable: false,
+					resizable: false,
+					minWidth: 51,
+					defaultWidth: 51
+				},
 				{
 					name: "thumbnailImage",
 					displayName: "Thumb",
@@ -527,6 +554,10 @@ export default {
 		});
 	},
 	methods: {
+		editOne(song) {
+			this.editSong(song);
+			this.openModal("editSong");
+		},
 		editMany(selectedRows) {
 			if (selectedRows.length === 1) {
 				this.editSong(selectedRows[0]);
@@ -608,32 +639,12 @@ export default {
 	margin: 0 auto;
 }
 
-.bulk-popup {
-	.song-bulk-actions {
-		display: flex;
-		flex-direction: row;
-		width: 100%;
-		justify-content: space-evenly;
-
-		.material-icons {
-			position: relative;
-			top: 6px;
-			margin-left: 5px;
-			cursor: pointer;
-			color: var(--primary-color);
-
-			&:hover,
-			&:focus {
-				filter: brightness(90%);
-			}
-		}
-		.verify-songs-icon {
-			color: var(--green);
-		}
-		.unverify-songs-icon,
-		.delete-songs-icon {
-			color: var(--dark-red);
-		}
+.bulk-popup .bulk-actions {
+	.verify-songs-icon {
+		color: var(--green);
+	}
+	.unverify-songs-icon {
+		color: var(--dark-red);
 	}
 }
 </style>

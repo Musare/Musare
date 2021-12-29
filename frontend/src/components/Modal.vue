@@ -21,7 +21,12 @@
 			<section class="modal-card-body">
 				<slot name="body" />
 			</section>
-			<footer class="modal-card-foot" v-if="$slots['footer'] != null">
+			<footer
+				:class="{
+					'modal-card-foot': true,
+					blank: $slots['footer'] == null
+				}"
+			>
 				<slot name="footer" />
 			</footer>
 		</div>
@@ -229,6 +234,10 @@ export default {
 				margin-right: 0;
 				justify-content: flex-end;
 				column-gap: 16px;
+			}
+
+			&.blank {
+				padding: 10px;
 			}
 		}
 

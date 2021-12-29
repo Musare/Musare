@@ -18,6 +18,23 @@
 				data-action="stations.getData"
 				name="admin-stations"
 			>
+				<template #column-options="slotProps">
+					<div class="row-options">
+						<button
+							class="
+								button
+								is-primary
+								icon-with-button
+								material-icons
+							"
+							@click="edit(slotProps.item._id)"
+							content="Manage Station"
+							v-tippy
+						>
+							settings
+						</button>
+					</div>
+				</template>
 				<template #column-_id="slotProps">
 					<span :title="slotProps.item._id">{{
 						slotProps.item._id
@@ -53,30 +70,6 @@
 						:link="true"
 					/>
 				</template>
-				<template #bulk-actions="slotProps">
-					<div class="station-bulk-actions">
-						<i
-							class="material-icons edit-stations-icon"
-							@click.prevent="editMany(slotProps.item)"
-							content="Edit Stations"
-							v-tippy
-						>
-							edit
-						</i>
-						<quick-confirm
-							placement="left"
-							@confirm="deleteMany(slotProps.item)"
-						>
-							<i
-								class="material-icons delete-stations-icon"
-								content="Delete Stations"
-								v-tippy
-							>
-								delete_forever
-							</i>
-						</quick-confirm>
-					</div>
-				</template>
 			</advanced-table>
 		</div>
 
@@ -98,10 +91,8 @@
 import { mapState, mapActions, mapGetters } from "vuex";
 import { defineAsyncComponent } from "vue";
 
-import Toast from "toasters";
 import AdvancedTable from "@/components/AdvancedTable.vue";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
-import QuickConfirm from "@/components/QuickConfirm.vue";
 import RunJobDropdown from "@/components/RunJobDropdown.vue";
 
 export default {
@@ -129,7 +120,6 @@ export default {
 		),
 		AdvancedTable,
 		UserIdToUsername,
-		QuickConfirm,
 		RunJobDropdown
 	},
 	data() {
@@ -145,6 +135,16 @@ export default {
 				maxWidth: 600
 			},
 			columns: [
+				{
+					name: "options",
+					displayName: "Edit",
+					properties: ["_id"],
+					sortable: false,
+					hidable: false,
+					resizable: false,
+					minWidth: 51,
+					defaultWidth: 51
+				},
 				{
 					name: "_id",
 					displayName: "ID",
@@ -255,53 +255,11 @@ export default {
 		// );
 	},
 	methods: {
-		editMany(selectedRows) {
-			if (selectedRows.length === 1) {
-				this.editingStationId = selectedRows[0]._id;
-				this.openModal("manageStation");
-			} else {
-				new Toast("Bulk editing not yet implemented.");
-			}
-		},
-		deleteMany(selectedRows) {
-			if (selectedRows.length === 1) {
-				this.socket.dispatch(
-					"stations.remove",
-					selectedRows[0]._id,
-					res => new Toast(res.message)
-				);
-			} else {
-				new Toast("Bulk deleting not yet implemented.");
-			}
+		edit(stationId) {
+			this.editingStationId = stationId;
+			this.openModal("manageStation");
 		},
 		...mapActions("modalVisibility", ["openModal"])
 	}
 };
 </script>
-
-<style lang="scss" scoped>
-.bulk-popup {
-	.station-bulk-actions {
-		display: flex;
-		flex-direction: row;
-		width: 100%;
-		justify-content: space-evenly;
-
-		.material-icons {
-			position: relative;
-			top: 6px;
-			margin-left: 5px;
-			cursor: pointer;
-			color: var(--primary-color);
-
-			&:hover,
-			&:focus {
-				filter: brightness(90%);
-			}
-		}
-		.delete-stations-icon {
-			color: var(--dark-red);
-		}
-	}
-}
-</style>

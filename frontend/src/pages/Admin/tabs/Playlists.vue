@@ -12,6 +12,23 @@
 				data-action="playlists.getData"
 				name="admin-playlists"
 			>
+				<template #column-options="slotProps">
+					<div class="row-options">
+						<button
+							class="
+								button
+								is-primary
+								icon-with-button
+								material-icons
+							"
+							@click="edit(slotProps.item._id)"
+							content="Edit Playlist"
+							v-tippy
+						>
+							edit
+						</button>
+					</div>
+				</template>
 				<template #column-displayName="slotProps">
 					<span :title="slotProps.item.displayName">{{
 						slotProps.item.displayName
@@ -65,30 +82,6 @@
 						slotProps.item._id
 					}}</span>
 				</template>
-				<template #bulk-actions="slotProps">
-					<div class="playlist-bulk-actions">
-						<i
-							class="material-icons edit-playlists-icon"
-							@click.prevent="editMany(slotProps.item)"
-							content="Edit Playlists"
-							v-tippy
-						>
-							edit
-						</i>
-						<quick-confirm
-							placement="left"
-							@confirm="deleteMany(slotProps.item)"
-						>
-							<i
-								class="material-icons delete-playlists-icon"
-								content="Delete Playlists"
-								v-tippy
-							>
-								delete_forever
-							</i>
-						</quick-confirm>
-					</div>
-				</template>
 			</advanced-table>
 		</div>
 
@@ -102,12 +95,9 @@
 import { mapState, mapActions, mapGetters } from "vuex";
 import { defineAsyncComponent } from "vue";
 
-import Toast from "toasters";
-
 import AdvancedTable from "@/components/AdvancedTable.vue";
 import RunJobDropdown from "@/components/RunJobDropdown.vue";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
-import QuickConfirm from "@/components/QuickConfirm.vue";
 
 import utils from "../../../../js/utils";
 
@@ -124,8 +114,7 @@ export default {
 		),
 		AdvancedTable,
 		RunJobDropdown,
-		UserIdToUsername,
-		QuickConfirm
+		UserIdToUsername
 	},
 	data() {
 		return {
@@ -140,6 +129,16 @@ export default {
 				maxWidth: 600
 			},
 			columns: [
+				{
+					name: "options",
+					displayName: "Edit",
+					properties: ["_id"],
+					sortable: false,
+					hidable: false,
+					resizable: false,
+					minWidth: 51,
+					defaultWidth: 51
+				},
 				{
 					name: "displayName",
 					displayName: "Display Name",
@@ -326,16 +325,9 @@ export default {
 		// );
 	},
 	methods: {
-		editMany(selectedRows) {
-			if (selectedRows.length === 1) {
-				this.editPlaylist(selectedRows[0]._id);
-				this.openModal("editPlaylist");
-			} else {
-				new Toast("Bulk editing not yet implemented.");
-			}
-		},
-		deleteMany() {
-			new Toast("Bulk deleting not yet implemented.");
+		edit(playlistId) {
+			this.editPlaylist(playlistId);
+			this.openModal("editPlaylist");
 		},
 		getDateFormatted(createdAt) {
 			const date = new Date(createdAt);
@@ -358,30 +350,3 @@ export default {
 	}
 };
 </script>
-
-<style lang="scss" scoped>
-.bulk-popup {
-	.playlist-bulk-actions {
-		display: flex;
-		flex-direction: row;
-		width: 100%;
-		justify-content: space-evenly;
-
-		.material-icons {
-			position: relative;
-			top: 6px;
-			margin-left: 5px;
-			cursor: pointer;
-			color: var(--primary-color);
-
-			&:hover,
-			&:focus {
-				filter: brightness(90%);
-			}
-		}
-		.delete-playlists-icon {
-			color: var(--dark-red);
-		}
-	}
-}
-</style>

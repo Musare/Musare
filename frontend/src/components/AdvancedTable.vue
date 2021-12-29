@@ -307,7 +307,6 @@
 										>
 											<label class="switch">
 												<input
-													v-if="column.hidable"
 													type="checkbox"
 													:id="index"
 													:checked="
@@ -343,7 +342,12 @@
 				</div>
 			</div>
 			<div class="table-container">
-				<table class="table">
+				<table
+					:class="{
+						table: true,
+						'has-checkboxes': hasCheckboxes
+					}"
+				>
 					<thead>
 						<draggable
 							item-key="name"
@@ -572,7 +576,7 @@
 			</div>
 		</div>
 		<div
-			v-if="selectedRows.length > 0"
+			v-if="hasCheckboxes && selectedRows.length > 0"
 			class="bulk-popup"
 			:style="{
 				top: bulkPopup.top + 'px',
@@ -734,6 +738,12 @@ export default {
 		},
 		selectedRows() {
 			return this.data.filter(data => data.selected);
+		},
+		hasCheckboxes() {
+			return (
+				this.$slots["bulk-actions"] != null ||
+				this.$slots["bulk-actions-right"] != null
+			);
 		},
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -930,6 +940,7 @@ export default {
 			}
 		},
 		toggleColumnVisibility(column) {
+			if (!column.hidable) return false;
 			if (this.shownColumns.indexOf(column.name) !== -1) {
 				if (this.shownColumns.length <= 3)
 					return new Toast(
@@ -1197,7 +1208,10 @@ export default {
 			let noWidthCount = 0;
 			let calculatedWidth = 0;
 			this.orderedColumns.forEach(column => {
-				if (this.shownColumns.indexOf(column.name) !== -1)
+				if (
+					this.shownColumns.indexOf(column.name) !== -1 &&
+					(column.name !== "select" || this.hasCheckboxes)
+				)
 					if (
 						Number.isFinite(column.width) &&
 						!Number.isFinite(column.calculatedWidth)
@@ -1285,6 +1299,70 @@ export default {
 	}
 };
 </script>
+
+<style lang="scss">
+.table-container .table tbody td .row-options {
+	display: flex;
+	justify-content: space-between;
+
+	.icon-with-button {
+		height: 30px;
+		width: 30px;
+	}
+}
+
+.bulk-popup {
+	display: flex;
+	position: fixed;
+	flex-direction: row;
+	width: 100%;
+	max-width: 400px;
+	line-height: 36px;
+	z-index: 5;
+	border: 1px solid var(--light-grey-3);
+	border-radius: 5px;
+	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+	background-color: var(--white);
+	color: var(--dark-grey);
+	padding: 5px;
+
+	.right {
+		display: flex;
+		flex-direction: row;
+		margin-left: auto;
+	}
+
+	.drag-icon {
+		position: relative;
+		top: 6px;
+		color: var(--dark-grey);
+		cursor: move;
+	}
+
+	.bulk-actions {
+		display: flex;
+		flex-direction: row;
+		width: 100%;
+		justify-content: space-evenly;
+
+		.material-icons {
+			position: relative;
+			top: 6px;
+			margin-left: 5px;
+			cursor: pointer;
+			color: var(--primary-color);
+
+			&:hover,
+			&:focus {
+				filter: brightness(90%);
+			}
+		}
+		.delete-icon {
+			color: var(--dark-red);
+		}
+	}
+}
+</style>
 
 <style lang="scss" scoped>
 .night-mode {
@@ -1432,45 +1510,60 @@ export default {
 			}
 		}
 
-		table thead tr,
-		table tbody tr {
-			th,
-			td {
-				position: relative;
-				white-space: nowrap;
-				text-overflow: ellipsis;
-				overflow: hidden;
-
-				&:first-child {
-					position: sticky;
-					left: 0;
-					background-color: var(--white);
-					z-index: 2;
-				}
-
-				.resizer {
-					height: 100%;
-					width: 5px;
-					background-color: transparent;
-					cursor: col-resize;
-					position: absolute;
-					right: 0;
-					top: 0;
-				}
-			}
-
-			&:nth-child(even) td:first-child {
-				background-color: #fafafa;
-			}
-
-			&:hover,
-			&:focus,
-			&.highlighted {
+		table {
+			thead tr,
+			tbody tr {
 				th,
 				td {
-					&,
+					position: relative;
+					white-space: nowrap;
+					text-overflow: ellipsis;
+					overflow: hidden;
+
 					&:first-child {
-						background-color: var(--light-grey);
+						display: none;
+					}
+
+					.resizer {
+						height: 100%;
+						width: 5px;
+						background-color: transparent;
+						cursor: col-resize;
+						position: absolute;
+						right: 0;
+						top: 0;
+					}
+				}
+
+				&:nth-child(even) td:first-child {
+					background-color: #fafafa;
+				}
+
+				&:hover,
+				&:focus,
+				&.highlighted {
+					th,
+					td {
+						&,
+						&:first-child {
+							background-color: var(--light-grey);
+						}
+					}
+				}
+			}
+
+			&.has-checkboxes {
+				thead tr,
+				tbody tr {
+					th,
+					td {
+						&:first-child {
+							display: table-cell;
+							position: sticky;
+							left: 0;
+							background-color: var(--white);
+							z-index: 2;
+						}
 					}
 				}
 			}
@@ -1612,35 +1705,6 @@ export default {
 
 	.control {
 		margin: 0 !important;
-	}
-}
-
-.bulk-popup {
-	display: flex;
-	position: fixed;
-	flex-direction: row;
-	width: 100%;
-	max-width: 400px;
-	line-height: 36px;
-	z-index: 5;
-	border: 1px solid var(--light-grey-3);
-	border-radius: 5px;
-	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-	background-color: var(--white);
-	color: var(--dark-grey);
-	padding: 5px;
-
-	.right {
-		display: flex;
-		flex-direction: row;
-		margin-left: auto;
-	}
-
-	.drag-icon {
-		position: relative;
-		top: 6px;
-		color: var(--dark-grey);
-		cursor: move;
 	}
 }
 </style>
