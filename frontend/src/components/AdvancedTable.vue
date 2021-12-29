@@ -916,6 +916,7 @@ export default {
 			);
 		},
 		changePageSize() {
+			this.page = 1;
 			this.getData();
 			this.storeTableSettings();
 		},
