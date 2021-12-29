@@ -55,6 +55,11 @@
 						slotProps.item.type
 					}}</span>
 				</template>
+				<template #column-description="slotProps">
+					<span :title="slotProps.item.description">{{
+						slotProps.item.description
+					}}</span>
+				</template>
 				<template #column-privacy="slotProps">
 					<span :title="slotProps.item.privacy">{{
 						slotProps.item.privacy
@@ -69,6 +74,24 @@
 						:user-id="slotProps.item.owner"
 						:link="true"
 					/>
+				</template>
+				<template #column-stationMode="slotProps">
+					<span
+						:title="slotProps.item.partyMode ? 'Party' : 'Playlist'"
+						>{{
+							slotProps.item.partyMode ? "Party" : "Playlist"
+						}}</span
+					>
+				</template>
+				<template #column-playMode="slotProps">
+					<span :title="slotProps.item.playMode">{{
+						slotProps.item.playMode
+					}}</span>
+				</template>
+				<template #column-theme="slotProps">
+					<span :title="slotProps.item.theme">{{
+						slotProps.item.theme
+					}}</span>
 				</template>
 			</advanced-table>
 		</div>
@@ -166,6 +189,13 @@ export default {
 					sortProperty: "displayName"
 				},
 				{
+					name: "description",
+					displayName: "Description",
+					properties: ["description"],
+					sortProperty: "description",
+					defaultVisibility: "hidden"
+				},
+				{
 					name: "type",
 					displayName: "Type",
 					properties: ["type"],
@@ -183,6 +213,27 @@ export default {
 					properties: ["owner", "type"],
 					sortProperty: "owner",
 					defaultWidth: 150
+				},
+				{
+					name: "stationMode",
+					displayName: "Station Mode",
+					properties: ["partyMode"],
+					sortable: false,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "playMode",
+					displayName: "Play Mode",
+					properties: ["playMode"],
+					sortable: false,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "theme",
+					displayName: "Theme",
+					properties: ["theme"],
+					sortProperty: "theme",
+					defaultVisibility: "hidden"
 				}
 			],
 			filters: [
@@ -208,6 +259,13 @@ export default {
 					defaultFilterType: "contains"
 				},
 				{
+					name: "description",
+					displayName: "Description",
+					property: "description",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
 					name: "type",
 					displayName: "Type",
 					property: "type",
@@ -225,6 +283,20 @@ export default {
 					name: "owner",
 					displayName: "Owner",
 					property: "owner",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "playMode",
+					displayName: "Play Mode",
+					property: "playMode",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "theme",
+					displayName: "Theme",
+					property: "theme",
 					filterTypes: ["contains", "exact", "regex"],
 					defaultFilterType: "contains"
 				}
