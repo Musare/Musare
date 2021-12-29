@@ -1301,70 +1301,6 @@ export default {
 };
 </script>
 
-<style lang="scss">
-.table-container .table tbody td .row-options {
-	display: flex;
-	justify-content: space-between;
-
-	.icon-with-button {
-		height: 30px;
-		width: 30px;
-	}
-}
-
-.bulk-popup {
-	display: flex;
-	position: fixed;
-	flex-direction: row;
-	width: 100%;
-	max-width: 400px;
-	line-height: 36px;
-	z-index: 5;
-	border: 1px solid var(--light-grey-3);
-	border-radius: 5px;
-	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-	background-color: var(--white);
-	color: var(--dark-grey);
-	padding: 5px;
-
-	.right {
-		display: flex;
-		flex-direction: row;
-		margin-left: auto;
-	}
-
-	.drag-icon {
-		position: relative;
-		top: 6px;
-		color: var(--dark-grey);
-		cursor: move;
-	}
-
-	.bulk-actions {
-		display: flex;
-		flex-direction: row;
-		width: 100%;
-		justify-content: space-evenly;
-
-		.material-icons {
-			position: relative;
-			top: 6px;
-			margin-left: 5px;
-			cursor: pointer;
-			color: var(--primary-color);
-
-			&:hover,
-			&:focus {
-				filter: brightness(90%);
-			}
-		}
-		.delete-icon {
-			color: var(--dark-red);
-		}
-	}
-}
-</style>
-
 <style lang="scss" scoped>
 .night-mode {
 	.table-outer-container {
@@ -1505,6 +1441,16 @@ export default {
 
 						&:last-child {
 							border-width: 0 0 1px;
+						}
+
+						/deep/ .row-options {
+							display: flex;
+							justify-content: space-between;
+
+							.icon-with-button {
+								height: 30px;
+								width: 30px;
+							}
 						}
 					}
 				}
@@ -1706,6 +1652,58 @@ export default {
 
 	.control {
 		margin: 0 !important;
+	}
+}
+
+/deep/ .bulk-popup {
+	display: flex;
+	position: fixed;
+	flex-direction: row;
+	width: 100%;
+	max-width: 400px;
+	line-height: 36px;
+	z-index: 5;
+	border: 1px solid var(--light-grey-3);
+	border-radius: 5px;
+	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+	background-color: var(--white);
+	color: var(--dark-grey);
+	padding: 5px;
+
+	.right {
+		display: flex;
+		flex-direction: row;
+		margin-left: auto;
+	}
+
+	.drag-icon {
+		position: relative;
+		top: 6px;
+		color: var(--dark-grey);
+		cursor: move;
+	}
+
+	.bulk-actions {
+		display: flex;
+		flex-direction: row;
+		width: 100%;
+		justify-content: space-evenly;
+
+		.material-icons {
+			position: relative;
+			top: 6px;
+			margin-left: 5px;
+			cursor: pointer;
+			color: var(--primary-color);
+
+			&:hover,
+			&:focus {
+				filter: brightness(90%);
+			}
+		}
+		.delete-icon {
+			color: var(--dark-red);
+		}
 	}
 }
 </style>
