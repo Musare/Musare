@@ -822,6 +822,10 @@ export default {
 		this.recalculateWidths();
 
 		if (tableSettings) {
+			// If table settings' page is an integer, use it for the page
+			if (Number.isInteger(tableSettings?.page))
+				this.page = tableSettings.page;
+
 			// If table settings' pageSize is an integer, use it for the pageSize
 			if (Number.isInteger(tableSettings?.pageSize))
 				this.pageSize = tableSettings.pageSize;
@@ -887,11 +891,13 @@ export default {
 	},
 	unmounted() {
 		window.removeEventListener("resize", this.onWindowResize);
+		if (this.storeTableSettingsDebounceTimeout)
+			clearTimeout(this.storeTableSettingsDebounceTimeout);
 	},
 	methods: {
 		init() {
 			this.getData();
-			// this.setQuery();
+			this.setQuery();
 		},
 		getData() {
 			this.socket.dispatch(
@@ -928,6 +934,7 @@ export default {
 			if (page === this.page) return;
 			this.page = page;
 			this.getData();
+			this.setQuery();
 		},
 		changeSort(column) {
 			if (column.sortable) {
@@ -1258,6 +1265,8 @@ export default {
 		},
 		getTableSettings() {
 			const urlTableSettings = {};
+			if (this.$route.query.page)
+				urlTableSettings.page = Number.parseInt(this.$route.query.page);
 			if (this.$route.query.pageSize)
 				urlTableSettings.pageSize = Number.parseInt(
 					this.$route.query.pageSize
@@ -1297,47 +1306,56 @@ export default {
 
 			// Resizing calls this function a lot, so rather than saving dozens of times a second, use debouncing
 			this.storeTableSettingsDebounceTimeout = setTimeout(() => {
-				// this.$router.push({
-				// 	query: {
-				// 		pageSize: this.pageSize,
-				// 		filter: JSON.stringify({
-				// 			appliedFilters: this.appliedFilters,
-				// 			appliedFilterOperator: this.appliedFilterOperator
-				// 		}),
-				// 		columnSort: JSON.stringify(this.sort),
-				// 		columnOrder: JSON.stringify(
-				// 			this.orderedColumns.map(column => column.name)
-				// 		),
-				// 		columnWidths: JSON.stringify(
-				// 			this.orderedColumns.map(column => ({
-				// 				name: column.name,
-				// 				width: column.width
-				// 			}))
-				// 		),
-				// 		shownColumns: JSON.stringify(this.shownColumns)
-				// 	}
-				// });
-
-				localStorage.setItem(
-					`advancedTableSettings:${this.name}`,
-					JSON.stringify({
-						pageSize: this.pageSize,
-						filter: {
-							appliedFilters: this.appliedFilters,
-							appliedFilterOperator: this.appliedFilterOperator
-						},
-						columnSort: this.sort,
-						columnOrder: this.orderedColumns.map(
-							column => column.name
-						),
-						columnWidths: this.orderedColumns.map(column => ({
-							name: column.name,
-							width: column.width
-						})),
-						shownColumns: this.shownColumns
-					})
-				);
+				this.setQuery();
+				this.setLocalStorage();
 			}, 250);
+		},
+		setQuery() {
+			const queryObject = {
+				...this.$route.query,
+				page: this.page,
+				pageSize: this.pageSize,
+				filter: JSON.stringify({
+					appliedFilters: this.appliedFilters,
+					appliedFilterOperator: this.appliedFilterOperator
+				}),
+				columnSort: JSON.stringify(this.sort),
+				columnOrder: JSON.stringify(
+					this.orderedColumns.map(column => column.name)
+				),
+				columnWidths: JSON.stringify(
+					this.orderedColumns.map(column => ({
+						name: column.name,
+						width: column.width
+					}))
+				),
+				shownColumns: JSON.stringify(this.shownColumns)
+			};
+
+			const queryString = `?${Object.keys(queryObject)
+				.map(key => `${key}=${queryObject[key]}`)
+				.join("&")}`;
+
+			window.history.replaceState(null, null, queryString);
+		},
+		setLocalStorage() {
+			localStorage.setItem(
+				`advancedTableSettings:${this.name}`,
+				JSON.stringify({
+					pageSize: this.pageSize,
+					filter: {
+						appliedFilters: this.appliedFilters,
+						appliedFilterOperator: this.appliedFilterOperator
+					},
+					columnSort: this.sort,
+					columnOrder: this.orderedColumns.map(column => column.name),
+					columnWidths: this.orderedColumns.map(column => ({
+						name: column.name,
+						width: column.width
+					})),
+					shownColumns: this.shownColumns
+				})
+			);
 		},
 		onWindowResize() {
 			// Only change the position if the popup is actually visible
