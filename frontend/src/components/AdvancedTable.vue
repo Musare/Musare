@@ -643,7 +643,8 @@ export default {
 		filters: { type: Array, default: null },
 		dataAction: { type: String, default: null },
 		name: { type: String, default: null },
-		maxWidth: { type: Number, default: 1880 }
+		maxWidth: { type: Number, default: 1880 },
+		query: { type: Boolean, default: true }
 	},
 	data() {
 		return {
@@ -897,7 +898,7 @@ export default {
 	methods: {
 		init() {
 			this.getData();
-			this.setQuery();
+			if (this.query) this.setQuery();
 		},
 		getData() {
 			this.socket.dispatch(
@@ -934,7 +935,7 @@ export default {
 			if (page === this.page) return;
 			this.page = page;
 			this.getData();
-			this.setQuery();
+			if (this.query) this.setQuery();
 		},
 		changeSort(column) {
 			if (column.sortable) {
@@ -1265,30 +1266,36 @@ export default {
 		},
 		getTableSettings() {
 			const urlTableSettings = {};
-			if (this.$route.query.page)
-				urlTableSettings.page = Number.parseInt(this.$route.query.page);
-			if (this.$route.query.pageSize)
-				urlTableSettings.pageSize = Number.parseInt(
-					this.$route.query.pageSize
-				);
-			if (this.$route.query.shownColumns)
-				urlTableSettings.shownColumns = JSON.parse(
-					this.$route.query.shownColumns
-				);
-			if (this.$route.query.columnOrder)
-				urlTableSettings.columnOrder = JSON.parse(
-					this.$route.query.columnOrder
-				);
-			if (this.$route.query.columnWidths)
-				urlTableSettings.columnWidths = JSON.parse(
-					this.$route.query.columnWidths
-				);
-			if (this.$route.query.columnSort)
-				urlTableSettings.columnSort = JSON.parse(
-					this.$route.query.columnSort
-				);
-			if (this.$route.query.filter)
-				urlTableSettings.filter = JSON.parse(this.$route.query.filter);
+			if (this.query) {
+				if (this.$route.query.page)
+					urlTableSettings.page = Number.parseInt(
+						this.$route.query.page
+					);
+				if (this.$route.query.pageSize)
+					urlTableSettings.pageSize = Number.parseInt(
+						this.$route.query.pageSize
+					);
+				if (this.$route.query.shownColumns)
+					urlTableSettings.shownColumns = JSON.parse(
+						this.$route.query.shownColumns
+					);
+				if (this.$route.query.columnOrder)
+					urlTableSettings.columnOrder = JSON.parse(
+						this.$route.query.columnOrder
+					);
+				if (this.$route.query.columnWidths)
+					urlTableSettings.columnWidths = JSON.parse(
+						this.$route.query.columnWidths
+					);
+				if (this.$route.query.columnSort)
+					urlTableSettings.columnSort = JSON.parse(
+						this.$route.query.columnSort
+					);
+				if (this.$route.query.filter)
+					urlTableSettings.filter = JSON.parse(
+						this.$route.query.filter
+					);
+			}
 
 			const localStorageTableSettings = JSON.parse(
 				localStorage.getItem(`advancedTableSettings:${this.name}`)
@@ -1306,7 +1313,7 @@ export default {
 
 			// Resizing calls this function a lot, so rather than saving dozens of times a second, use debouncing
 			this.storeTableSettingsDebounceTimeout = setTimeout(() => {
-				this.setQuery();
+				if (this.query) this.setQuery();
 				this.setLocalStorage();
 			}, 250);
 		},

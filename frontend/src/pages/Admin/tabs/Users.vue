@@ -11,6 +11,7 @@
 				data-action="dataRequests.getData"
 				name="admin-data-requests"
 				max-width="1200"
+				:query="false"
 			>
 				<template #column-options="slotProps">
 					<div class="row-options">
