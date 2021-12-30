@@ -472,9 +472,14 @@
 									:item="item"
 									v-if="
 										column.properties.length === 0 ||
-										column.properties.every(
-											property =>
-												item[property] !== undefined
+										column.properties.every(property =>
+											property
+												.split('.')
+												.reduce(
+													(p, c) =>
+														(p && p[c]) || null,
+													item
+												)
 										)
 									"
 								></slot>

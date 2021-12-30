@@ -293,7 +293,7 @@ export default {
 					{
 						name: "githubId",
 						displayName: "GitHub ID",
-						properties: ["services"],
+						properties: ["services.github.id"],
 						sortProperty: "services.github.id",
 						minWidth: 115,
 						defaultWidth: 115
@@ -315,14 +315,14 @@ export default {
 					{
 						name: "emailAddress",
 						displayName: "Email Address",
-						properties: ["email"],
+						properties: ["email.address"],
 						sortProperty: "email.address",
 						defaultVisibility: "hidden"
 					},
 					{
 						name: "emailVerified",
 						displayName: "Email Verified",
-						properties: ["email"],
+						properties: ["email.verified"],
 						sortProperty: "email.verified",
 						defaultVisibility: "hidden",
 						minWidth: 140,
@@ -331,7 +331,7 @@ export default {
 					{
 						name: "songsRequested",
 						displayName: "Songs Requested",
-						properties: ["statistics"],
+						properties: ["statistics.songsRequested"],
 						sortProperty: "statistics.songsRequested",
 						minWidth: 170,
 						defaultWidth: 170
