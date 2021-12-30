@@ -187,13 +187,13 @@ export default {
 				}
 			],
 			filters: [
-				{
-					name: "status",
-					displayName: "Status",
-					property: "status",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
+				// {
+				// 	name: "status",
+				// 	displayName: "Status",
+				// 	property: "status",
+				// 	filterTypes: ["contains", "exact", "regex"],
+				// 	defaultFilterType: "contains"
+				// },
 				{
 					name: "type",
 					displayName: "Type",

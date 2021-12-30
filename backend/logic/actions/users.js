@@ -206,6 +206,29 @@ export default {
 		async.waterfall(
 			[
 				next => {
+					const invalidProperties = [...properties, ...queries.map(query => query.filter.property)].find(
+						property => {
+							if (
+								[
+									"services.password",
+									"services.password.password",
+									"services.password.reset.code",
+									"services.password.reset.expires",
+									"services.password.set.code",
+									"services.password.set.expires",
+									"services.github.access_token",
+									"services.email.verificationToken"
+								].includes(property)
+							)
+								return true;
+							return false;
+						}
+					);
+					if (invalidProperties) next("Invalid paramaters given.");
+					else next();
+				},
+
+				next => {
 					userModel.find(queryObject).count((err, count) => {
 						next(err, count);
 					});
