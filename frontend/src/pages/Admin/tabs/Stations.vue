@@ -170,7 +170,7 @@ export default {
 				},
 				{
 					name: "_id",
-					displayName: "ID",
+					displayName: "Station ID",
 					properties: ["_id"],
 					sortProperty: "_id",
 					minWidth: 230,
@@ -239,7 +239,7 @@ export default {
 			filters: [
 				{
 					name: "_id",
-					displayName: "ID",
+					displayName: "Station ID",
 					property: "_id",
 					filterTypes: ["exact"],
 					defaultFilterType: "exact"

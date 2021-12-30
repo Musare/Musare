@@ -642,7 +642,8 @@ export default {
 		columns: { type: Array, default: null },
 		filters: { type: Array, default: null },
 		dataAction: { type: String, default: null },
-		name: { type: String, default: null }
+		name: { type: String, default: null },
+		maxWidth: { type: Number, default: 1880 }
 	},
 	data() {
 		return {
@@ -890,7 +891,7 @@ export default {
 	methods: {
 		init() {
 			this.getData();
-			this.setQuery();
+			// this.setQuery();
 		},
 		getData() {
 			this.socket.dispatch(
@@ -1226,8 +1227,8 @@ export default {
 					}
 			});
 			calculatedWidth = Math.floor(
-				// max-width of table is 1880px
-				(Math.min(1880, document.body.clientWidth) - calculatedWidth) /
+				(Math.min(this.maxWidth, document.body.clientWidth) -
+					calculatedWidth) /
 					(noWidthCount - 1)
 			);
 			this.orderedColumns = this.orderedColumns.map(column => {
@@ -1296,26 +1297,26 @@ export default {
 
 			// Resizing calls this function a lot, so rather than saving dozens of times a second, use debouncing
 			this.storeTableSettingsDebounceTimeout = setTimeout(() => {
-				this.$router.push({
-					query: {
-						pageSize: this.pageSize,
-						filter: JSON.stringify({
-							appliedFilters: this.appliedFilters,
-							appliedFilterOperator: this.appliedFilterOperator
-						}),
-						columnSort: JSON.stringify(this.sort),
-						columnOrder: JSON.stringify(
-							this.orderedColumns.map(column => column.name)
-						),
-						columnWidths: JSON.stringify(
-							this.orderedColumns.map(column => ({
-								name: column.name,
-								width: column.width
-							}))
-						),
-						shownColumns: JSON.stringify(this.shownColumns)
-					}
-				});
+				// this.$router.push({
+				// 	query: {
+				// 		pageSize: this.pageSize,
+				// 		filter: JSON.stringify({
+				// 			appliedFilters: this.appliedFilters,
+				// 			appliedFilterOperator: this.appliedFilterOperator
+				// 		}),
+				// 		columnSort: JSON.stringify(this.sort),
+				// 		columnOrder: JSON.stringify(
+				// 			this.orderedColumns.map(column => column.name)
+				// 		),
+				// 		columnWidths: JSON.stringify(
+				// 			this.orderedColumns.map(column => ({
+				// 				name: column.name,
+				// 				width: column.width
+				// 			}))
+				// 		),
+				// 		shownColumns: JSON.stringify(this.shownColumns)
+				// 	}
+				// });
 
 				localStorage.setItem(
 					`advancedTableSettings:${this.name}`,

@@ -60,60 +60,72 @@ CacheModule.runJob("SUB", {
 
 export default {
 	/**
-	 * Gets all reports that haven't been yet resolved
+	 * Gets reports, used in the admin reports page by the AdvancedTable component
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {Function} cb - gets called with the result
+	 * @param page - the page
+	 * @param pageSize - the size per page
+	 * @param properties - the properties to return for each user
+	 * @param sort - the sort object
+	 * @param queries - the queries array
+	 * @param operator - the operator for queries
+	 * @param cb
 	 */
-	index: isAdminRequired(async function index(session, cb) {
+	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+
+		const newQueries = queries.map(query => {
+			const { data, filter, filterType } = query;
+			const newQuery = {};
+			if (filterType === "regex") {
+				newQuery[filter.property] = new RegExp(`${data.slice(1, data.length - 1)}`, "i");
+			} else if (filterType === "contains") {
+				newQuery[filter.property] = new RegExp(`${data.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i");
+			} else if (filterType === "exact") {
+				newQuery[filter.property] = data.toString();
+			}
+			return newQuery;
+		});
+
+		const queryObject = {};
+		if (newQueries.length > 0) {
+			if (operator === "and") queryObject.$and = newQueries;
+			else if (operator === "or") queryObject.$or = newQueries;
+			else if (operator === "nor") queryObject.$nor = newQueries;
+		}
 
 		async.waterfall(
 			[
-				next => reportModel.find({ resolved: false }).sort({ createdAt: "desc" }).exec(next),
-				(_reports, next) => {
-					const reports = [];
+				next => {
+					reportModel.find(queryObject).count((err, count) => {
+						next(err, count);
+					});
+				},
 
-					async.each(
-						_reports,
-						(report, cb) => {
-							userModel
-								.findById(report.createdBy)
-								.select({ avatar: -1, name: -1, username: -1 })
-								.exec((err, user) => {
-									if (!user)
-										reports.push({
-											...report._doc,
-											createdBy: { _id: report.createdBy }
-										});
-									else
-										reports.push({
-											...report._doc,
-											createdBy: {
-												avatar: user.avatar,
-												name: user.name,
-												username: user.username,
-												_id: report.createdBy
-											}
-										});
-
-									return cb(err);
-								});
-						},
-						err => next(err, reports)
-					);
+				(count, next) => {
+					reportModel
+						.find(queryObject)
+						.sort(sort)
+						.skip(pageSize * (page - 1))
+						.limit(pageSize)
+						.select(properties.join(" "))
+						.exec((err, reports) => {
+							next(err, count, reports);
+						});
 				}
 			],
-			async (err, reports) => {
-				if (err) {
+			async (err, count, reports) => {
+				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "REPORTS_INDEX", `Indexing reports failed. "${err}"`);
+					this.log("ERROR", "REPORTS_GET_DATA", `Failed to get data from reports. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
-
-				this.log("SUCCESS", "REPORTS_INDEX", "Indexing reports successful.");
-				return cb({ status: "success", data: { reports } });
+				this.log("SUCCESS", "REPORTS_GET_DATA", `Got data from reports successfully.`);
+				return cb({
+					status: "success",
+					message: "Successfully got data from reports.",
+					data: { data: reports, count }
+				});
 			}
 		);
 	}),

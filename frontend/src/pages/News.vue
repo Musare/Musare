@@ -102,7 +102,7 @@ export default {
 		sanitize,
 		formatDistance,
 		init() {
-			this.socket.dispatch("news.index", res => {
+			this.socket.dispatch("news.getPublished", res => {
 				if (res.status === "success") this.news = res.data.news;
 			});
 

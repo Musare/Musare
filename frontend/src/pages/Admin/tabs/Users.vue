@@ -2,90 +2,148 @@
 	<div>
 		<page-metadata title="Admin | Users" />
 		<div class="container">
-			<h2 v-if="dataRequests.length > 0">Data Requests</h2>
+			<h2>Data Requests</h2>
 
-			<table class="table" v-if="dataRequests.length > 0">
-				<thead>
-					<tr>
-						<td>User ID</td>
-						<td>Request Type</td>
-						<td>Options</td>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="(request, index) in dataRequests" :key="index">
-						<td>{{ request.userId }}</td>
-						<td>
-							{{
-								request.type === "remove"
-									? "Remove all associated data"
-									: request.type
-							}}
-						</td>
-						<td>
+			<advanced-table
+				:column-default="dataRequests.columnDefault"
+				:columns="dataRequests.columns"
+				:filters="dataRequests.filters"
+				data-action="dataRequests.getData"
+				name="admin-data-requests"
+				max-width="1200"
+			>
+				<template #column-options="slotProps">
+					<div class="row-options">
+						<quick-confirm
+							placement="right"
+							@confirm="resolveDataRequest(slotProps.item._id)"
+						>
 							<button
-								class="button is-primary"
-								@click="resolveDataRequest(request._id)"
+								class="
+									button
+									is-success
+									icon-with-button
+									material-icons
+								"
+								content="Resolve Data Request"
+								v-tippy
 							>
-								Resolve
+								done_all
 							</button>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+						</quick-confirm>
+					</div>
+				</template>
+				<template #column-type="slotProps">
+					<span
+						:title="
+							slotProps.item.type
+								? 'Remove all associated data'
+								: slotProps.item.type
+						"
+						>{{
+							slotProps.item.type
+								? "Remove all associated data"
+								: slotProps.item.type
+						}}</span
+					>
+				</template>
+				<template #column-userId="slotProps">
+					<span :title="slotProps.item.userId">{{
+						slotProps.item.userId
+					}}</span>
+				</template>
+				<template #column-_id="slotProps">
+					<span :title="slotProps.item._id">{{
+						slotProps.item._id
+					}}</span>
+				</template>
+			</advanced-table>
 
 			<h1 id="page-title">Users</h1>
 
-			<table class="table">
-				<thead>
-					<tr>
-						<td class="ppRow">Profile Picture</td>
-						<td>User ID</td>
-						<td>GitHub ID</td>
-						<td>Password</td>
-						<td>Username</td>
-						<td>Role</td>
-						<td>Email Address</td>
-						<td>Email Verified</td>
-						<td>Songs Requested</td>
-						<td>Options</td>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="user in users" :key="user._id">
-						<td>
-							<profile-picture
-								:avatar="user.avatar"
-								:name="user.name ? user.name : user.username"
-							/>
-						</td>
-						<td>{{ user._id }}</td>
-						<td v-if="user.services.github">
-							{{ user.services.github.id }}
-						</td>
-						<td v-else>Not Linked</td>
-						<td v-if="user.hasPassword">Yes</td>
-						<td v-else>Not Linked</td>
-						<td>
-							<a :href="'/u/' + user.username" target="_blank">{{
-								user.username
-							}}</a>
-						</td>
-						<td>{{ user.role }}</td>
-						<td>{{ user.email.address }}</td>
-						<td>{{ user.email.verified }}</td>
-						<td>{{ user.songsRequested }}</td>
-						<td>
-							<button
-								class="button is-primary"
-								@click="edit(user)"
-							>
-								Edit
-							</button>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+			<advanced-table
+				:column-default="users.columnDefault"
+				:columns="users.columns"
+				:filters="users.filters"
+				data-action="users.getData"
+				name="admin-users"
+				max-width="1200"
+			>
+				<template #column-options="slotProps">
+					<div class="row-options">
+						<button
+							class="
+								button
+								is-primary
+								icon-with-button
+								material-icons
+							"
+							@click="edit(slotProps.item._id)"
+							content="Edit User"
+							v-tippy
+						>
+							edit
+						</button>
+					</div>
+				</template>
+				<template #column-profilePicture="slotProps">
+					<profile-picture
+						:avatar="slotProps.item.avatar"
+						:name="
+							slotProps.item.name
+								? slotProps.item.name
+								: slotProps.item.username
+						"
+					/>
+				</template>
+				<template #column-name="slotProps">
+					<span :title="slotProps.item.name">{{
+						slotProps.item.name
+					}}</span>
+				</template>
+				<template #column-username="slotProps">
+					<span :title="slotProps.item.username">{{
+						slotProps.item.username
+					}}</span>
+				</template>
+				<template #column-_id="slotProps">
+					<span :title="slotProps.item._id">{{
+						slotProps.item._id
+					}}</span>
+				</template>
+				<template #column-githubId="slotProps">
+					<span
+						v-if="slotProps.item.services.github"
+						:title="slotProps.item.services.github.id"
+						>{{ slotProps.item.services.github.id }}</span
+					>
+				</template>
+				<!-- <template #column-hasPassword="slotProps">
+					<span :title="slotProps.item.hasPassword">{{
+						slotProps.item.hasPassword
+					}}</span>
+				</template> -->
+				<template #column-role="slotProps">
+					<span :title="slotProps.item.role">{{
+						slotProps.item.role
+					}}</span>
+				</template>
+				<template #column-emailAddress="slotProps">
+					<span :title="slotProps.item.email.address">{{
+						slotProps.item.email.address
+					}}</span>
+				</template>
+				<template #column-emailVerified="slotProps">
+					<span :title="slotProps.item.email.verified">{{
+						slotProps.item.email.verified
+					}}</span>
+				</template>
+				<template #column-songsRequested="slotProps">
+					<span :title="slotProps.item.statistics.songsRequested">{{
+						slotProps.item.statistics.songsRequested
+					}}</span>
+				</template>
+			</advanced-table>
 		</div>
 		<edit-user
 			v-if="modals.editUser"
@@ -100,21 +158,250 @@ import { mapState, mapActions, mapGetters } from "vuex";
 import { defineAsyncComponent } from "vue";
 import Toast from "toasters";
 
+import AdvancedTable from "@/components/AdvancedTable.vue";
 import ProfilePicture from "@/components/ProfilePicture.vue";
-import ws from "@/ws";
+import QuickConfirm from "@/components/QuickConfirm.vue";
+// import ws from "@/ws";
 
 export default {
 	components: {
 		EditUser: defineAsyncComponent(() =>
 			import("@/components/modals/EditUser.vue")
 		),
-		ProfilePicture
+		AdvancedTable,
+		ProfilePicture,
+		QuickConfirm
 	},
 	data() {
 		return {
 			editingUserId: "",
-			dataRequests: [],
-			users: []
+			dataRequests: {
+				columnDefault: {
+					sortable: true,
+					hidable: true,
+					defaultVisibility: "shown",
+					draggable: true,
+					resizable: true,
+					minWidth: 150,
+					maxWidth: 600
+				},
+				columns: [
+					{
+						name: "options",
+						displayName: "Edit",
+						properties: ["_id"],
+						sortable: false,
+						hidable: false,
+						resizable: false,
+						minWidth: 51,
+						defaultWidth: 51
+					},
+					{
+						name: "type",
+						displayName: "Type",
+						properties: ["type"],
+						sortProperty: "type"
+					},
+					{
+						name: "userId",
+						displayName: "User ID",
+						properties: ["userId"],
+						sortProperty: "userId"
+					},
+					{
+						name: "_id",
+						displayName: "Request ID",
+						properties: ["_id"],
+						sortProperty: "_id"
+					}
+				],
+				filters: [
+					{
+						name: "_id",
+						displayName: "Request ID",
+						property: "_id",
+						filterTypes: ["exact"],
+						defaultFilterType: "exact"
+					},
+					{
+						name: "userId",
+						displayName: "User ID",
+						property: "userId",
+						filterTypes: ["contains", "exact", "regex"],
+						defaultFilterType: "contains"
+					},
+					{
+						name: "type",
+						displayName: "Type",
+						property: "type",
+						filterTypes: ["contains", "exact", "regex"],
+						defaultFilterType: "contains"
+					}
+				]
+			},
+			users: {
+				columnDefault: {
+					sortable: true,
+					hidable: true,
+					defaultVisibility: "shown",
+					draggable: true,
+					resizable: true,
+					minWidth: 150,
+					maxWidth: 600
+				},
+				columns: [
+					{
+						name: "options",
+						displayName: "Edit",
+						properties: ["_id"],
+						sortable: false,
+						hidable: false,
+						resizable: false,
+						minWidth: 51,
+						defaultWidth: 51
+					},
+					{
+						name: "profilePicture",
+						displayName: "Image",
+						properties: ["avatar", "name", "username"],
+						sortable: false,
+						resizable: false,
+						minWidth: 71,
+						defaultWidth: 71
+					},
+					{
+						name: "name",
+						displayName: "Display Name",
+						properties: ["name"],
+						sortProperty: "name"
+					},
+					{
+						name: "username",
+						displayName: "Username",
+						properties: ["username"],
+						sortProperty: "username"
+					},
+					{
+						name: "_id",
+						displayName: "User ID",
+						properties: ["_id"],
+						sortProperty: "_id",
+						minWidth: 230,
+						defaultWidth: 230
+					},
+					{
+						name: "githubId",
+						displayName: "GitHub ID",
+						properties: ["services"],
+						sortProperty: "services.github.id",
+						minWidth: 115,
+						defaultWidth: 115
+					},
+					// {
+					// 	name: "hasPassword",
+					// 	displayName: "Has Password",
+					// 	properties: ["hasPassword"],
+					// 	sortProperty: "hasPassword"
+					// }
+					{
+						name: "role",
+						displayName: "Role",
+						properties: ["role"],
+						sortProperty: "role",
+						minWidth: 90,
+						defaultWidth: 90
+					},
+					{
+						name: "emailAddress",
+						displayName: "Email Address",
+						properties: ["email"],
+						sortProperty: "email.address",
+						defaultVisibility: "hidden"
+					},
+					{
+						name: "emailVerified",
+						displayName: "Email Verified",
+						properties: ["email"],
+						sortProperty: "email.verified",
+						defaultVisibility: "hidden",
+						minWidth: 140,
+						defaultWidth: 140
+					},
+					{
+						name: "songsRequested",
+						displayName: "Songs Requested",
+						properties: ["statistics"],
+						sortProperty: "statistics.songsRequested",
+						minWidth: 170,
+						defaultWidth: 170
+					}
+				],
+				filters: [
+					{
+						name: "_id",
+						displayName: "User ID",
+						property: "_id",
+						filterTypes: ["exact"],
+						defaultFilterType: "exact"
+					},
+					{
+						name: "name",
+						displayName: "Display Name",
+						property: "name",
+						filterTypes: ["contains", "exact", "regex"],
+						defaultFilterType: "contains"
+					},
+					{
+						name: "username",
+						displayName: "Username",
+						property: "username",
+						filterTypes: ["contains", "exact", "regex"],
+						defaultFilterType: "contains"
+					},
+					{
+						name: "githubId",
+						displayName: "GitHub ID",
+						property: "services.github.id",
+						filterTypes: ["contains", "exact", "regex"],
+						defaultFilterType: "contains"
+					},
+					// {
+					// 	name: "hasPassword",
+					// 	displayName: "Has Password",
+					// 	property: "hasPassword",
+					// 	filterTypes: ["contains", "exact", "regex"],
+					// 	defaultFilterType: "contains"
+					// },
+					{
+						name: "role",
+						displayName: "Role",
+						property: "role",
+						filterTypes: ["contains", "exact", "regex"],
+						defaultFilterType: "contains"
+					},
+					{
+						name: "emailAddress",
+						displayName: "Email Address",
+						property: "email.address",
+						filterTypes: ["contains", "exact", "regex"],
+						defaultFilterType: "contains"
+					},
+					{
+						name: "emailVerified",
+						displayName: "Email Verified",
+						property: "email.verified",
+						filterTypes: ["contains", "exact", "regex"],
+						defaultFilterType: "contains"
+					},
+					{
+						name: "songsRequested",
+						displayName: "Songs Requested",
+						property: "statistics.songsRequested",
+						filterTypes: ["contains", "exact", "regex"],
+						defaultFilterType: "contains"
+					}
+				]
+			}
 		};
 	},
 	computed: {
@@ -126,49 +413,40 @@ export default {
 		})
 	},
 	mounted() {
-		ws.onConnect(this.init);
-
-		this.socket.on("event:admin.dataRequests.created", res =>
-			this.dataRequests.push(res.data.request)
-		);
-
-		this.socket.on("event:admin.dataRequests.resolved", res => {
-			this.dataRequests = this.dataRequests.filter(
-				request => request._id !== res.data.dataRequestId
-			);
-		});
-
-		this.socket.on("event:user.removed", res => {
-			this.users = this.users.filter(
-				user => user._id !== res.data.userId
-			);
-		});
+		// ws.onConnect(this.init);
+		// this.socket.on("event:admin.dataRequests.created", res =>
+		// 	this.dataRequests.push(res.data.request)
+		// );
+		// this.socket.on("event:admin.dataRequests.resolved", res => {
+		// 	this.dataRequests = this.dataRequests.filter(
+		// 		request => request._id !== res.data.dataRequestId
+		// 	);
+		// });
+		// this.socket.on("event:user.removed", res => {
+		// 	this.users = this.users.filter(
+		// 		user => user._id !== res.data.userId
+		// 	);
+		// });
 	},
 	methods: {
-		edit(user) {
-			this.editingUserId = user._id;
+		edit(userId) {
+			this.editingUserId = userId;
 			this.openModal("editUser");
 		},
-		init() {
-			this.socket.dispatch("users.index", res => {
-				if (res.status === "success") {
-					this.users = res.data.users;
-					if (this.$route.query.userId) {
-						const user = this.users.find(
-							user => user._id === this.$route.query.userId
-						);
-						if (user) this.edit(user);
-					}
-				}
-			});
+		// init() {
+		// 	this.socket.dispatch("users.index", res => {
+		// 		if (res.status === "success") {
+		// 			if (this.$route.query.userId) {
+		// 				const user = res.data.users.find(
+		// 					user => user._id === this.$route.query.userId
+		// 				);
+		// 				if (user) this.edit(user._id);
+		// 			}
+		// 		}
+		// 	});
 
-			this.socket.dispatch("dataRequests.index", res => {
-				if (res.status === "success")
-					this.dataRequests = res.data.requests;
-			});
-
-			this.socket.dispatch("apis.joinAdminRoom", "users", () => {});
-		},
+		// 	this.socket.dispatch("apis.joinAdminRoom", "users", () => {});
+		// },
 		resolveDataRequest(id) {
 			this.socket.dispatch("dataRequests.resolve", id, res => {
 				if (res.status === "success") new Toast(res.message);
@@ -180,32 +458,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.night-mode {
-	.table {
-		color: var(--light-grey-2);
-		background-color: var(--dark-grey-3);
-
-		thead tr {
-			background: var(--dark-grey-3);
-			td {
-				color: var(--white);
-			}
-		}
-
-		tbody tr:hover {
-			background-color: var(--dark-grey-4) !important;
-		}
-
-		tbody tr:nth-child(even) {
-			background-color: var(--dark-grey-2);
-		}
-
-		strong {
-			color: var(--light-grey-2);
-		}
-	}
-}
-
 #page-title {
 	margin: 30px 0;
 }
@@ -226,17 +478,5 @@ h2 {
 
 /deep/ .profile-picture.using-initials span {
 	font-size: 20px; // 2/5th of .profile-picture height/width
-}
-
-td {
-	vertical-align: middle;
-
-	&.ppRow {
-		max-width: 50px;
-	}
-}
-
-.is-primary:focus {
-	background-color: var(--primary-color) !important;
 }
 </style>

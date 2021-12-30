@@ -232,33 +232,6 @@ CacheModule.runJob("SUB", {
 
 export default {
 	/**
-	 * Gets all playlists
-	 *
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {Function} cb - gets called with the result
-	 */
-	index: isAdminRequired(async function index(session, cb) {
-		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
-
-		async.waterfall(
-			[
-				next => {
-					playlistModel.find({}).sort({ createdAt: "desc" }).exec(next);
-				}
-			],
-			async (err, playlists) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "PLAYLISTS_INDEX", `Indexing playlists failed. "${err}"`);
-					return cb({ status: "error", message: err });
-				}
-				this.log("SUCCESS", "PLAYLISTS_INDEX", "Indexing playlists successful.");
-				return cb({ status: "success", data: { playlists } });
-			}
-		);
-	}),
-
-	/**
 	 * Gets playlists, used in the admin playlists page by the AdvancedTable component
 	 *
 	 * @param {object} session - the session object automatically added by the websocket

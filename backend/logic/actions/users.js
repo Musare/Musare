@@ -169,51 +169,72 @@ CacheModule.runJob("SUB", {
 
 export default {
 	/**
-	 * Lists all Users
+	 * Gets users, used in the admin users page by the AdvancedTable component
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {Function} cb - gets called with the result
+	 * @param page - the page
+	 * @param pageSize - the size per page
+	 * @param properties - the properties to return for each user
+	 * @param sort - the sort object
+	 * @param queries - the queries array
+	 * @param operator - the operator for queries
+	 * @param cb
 	 */
-	index: isAdminRequired(async function index(session, cb) {
+	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+
+		const newQueries = queries.map(query => {
+			const { data, filter, filterType } = query;
+			const newQuery = {};
+			if (filterType === "regex") {
+				newQuery[filter.property] = new RegExp(`${data.slice(1, data.length - 1)}`, "i");
+			} else if (filterType === "contains") {
+				newQuery[filter.property] = new RegExp(`${data.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i");
+			} else if (filterType === "exact") {
+				newQuery[filter.property] = data.toString();
+			}
+			return newQuery;
+		});
+
+		const queryObject = {};
+		if (newQueries.length > 0) {
+			if (operator === "and") queryObject.$and = newQueries;
+			else if (operator === "or") queryObject.$or = newQueries;
+			else if (operator === "nor") queryObject.$nor = newQueries;
+		}
 
 		async.waterfall(
 			[
 				next => {
-					userModel.find({}).exec(next);
+					userModel.find(queryObject).count((err, count) => {
+						next(err, count);
+					});
+				},
+
+				(count, next) => {
+					userModel
+						.find(queryObject)
+						.sort(sort)
+						.skip(pageSize * (page - 1))
+						.limit(pageSize)
+						.select(properties.join(" "))
+						.exec((err, users) => {
+							next(err, count, users);
+						});
 				}
 			],
-			async (err, users) => {
-				if (err) {
+			async (err, count, users) => {
+				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "USER_INDEX", `Indexing users failed. "${err}"`);
+					this.log("ERROR", "USERS_GET_DATA", `Failed to get data from users. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
-				this.log("SUCCESS", "USER_INDEX", `Indexing users successful.`);
-				const filteredUsers = [];
-				users.forEach(user => {
-					filteredUsers.push({
-						_id: user._id,
-						name: user.name,
-						username: user.username,
-						role: user.role,
-						liked: user.liked,
-						disliked: user.disliked,
-						songsRequested: user.statistics.songsRequested,
-						email: {
-							address: user.email.address,
-							verified: user.email.verified
-						},
-						avatar: {
-							type: user.avatar.type,
-							url: user.avatar.url,
-							color: user.avatar.color
-						},
-						hasPassword: !!user.services.password,
-						services: { github: user.services.github }
-					});
+				this.log("SUCCESS", "USERS_GET_DATA", `Got data from users successfully.`);
+				return cb({
+					status: "success",
+					message: "Successfully got data from users.",
+					data: { data: users, count }
 				});
-				return cb({ status: "success", data: { users: filteredUsers } });
 			}
 		);
 	}),

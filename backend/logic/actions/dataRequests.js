@@ -21,30 +21,72 @@ CacheModule.runJob("SUB", {
 
 export default {
 	/**
-	 * Gets all unresolved data requests
+	 * Gets data requests, used in the admin users page by the AdvancedTable component
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {Function} cb - gets called with the result
+	 * @param page - the page
+	 * @param pageSize - the size per page
+	 * @param properties - the properties to return for each data request
+	 * @param sort - the sort object
+	 * @param queries - the queries array
+	 * @param operator - the operator for queries
+	 * @param cb
 	 */
-	index: isAdminRequired(async function index(session, cb) {
+	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
 		const dataRequestModel = await DBModule.runJob("GET_MODEL", { modelName: "dataRequest" }, this);
+
+		const newQueries = queries.map(query => {
+			const { data, filter, filterType } = query;
+			const newQuery = {};
+			if (filterType === "regex") {
+				newQuery[filter.property] = new RegExp(`${data.slice(1, data.length - 1)}`, "i");
+			} else if (filterType === "contains") {
+				newQuery[filter.property] = new RegExp(`${data.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i");
+			} else if (filterType === "exact") {
+				newQuery[filter.property] = data.toString();
+			}
+			return newQuery;
+		});
+
+		const queryObject = {};
+		if (newQueries.length > 0) {
+			if (operator === "and") queryObject.$and = newQueries;
+			else if (operator === "or") queryObject.$or = newQueries;
+			else if (operator === "nor") queryObject.$nor = newQueries;
+		}
 
 		async.waterfall(
 			[
 				next => {
-					dataRequestModel.find({ resolved: false }).sort({ createdAt: "desc" }).exec(next);
+					dataRequestModel.find(queryObject).count((err, count) => {
+						next(err, count);
+					});
+				},
+
+				(count, next) => {
+					dataRequestModel
+						.find(queryObject)
+						.sort(sort)
+						.skip(pageSize * (page - 1))
+						.limit(pageSize)
+						.select(properties.join(" "))
+						.exec((err, dataRequests) => {
+							next(err, count, dataRequests);
+						});
 				}
 			],
-			async (err, requests) => {
-				if (err) {
+			async (err, count, dataRequests) => {
+				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "DATA_REQUESTS_INDEX", `Indexing data requests failed. "${err}"`);
+					this.log("ERROR", "DATA_REQUESTS_GET_DATA", `Failed to get data from data requests. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
-
-				this.log("SUCCESS", "DATA_REQUESTS_INDEX", `Indexing data requests successful.`, false);
-
-				return cb({ status: "success", data: { requests } });
+				this.log("SUCCESS", "DATA_REQUESTS_GET_DATA", `Got data from data requests successfully.`);
+				return cb({
+					status: "success",
+					message: "Successfully got data from data requests.",
+					data: { data: dataRequests, count }
+				});
 			}
 		);
 	}),

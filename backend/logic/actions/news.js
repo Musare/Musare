@@ -57,12 +57,83 @@ CacheModule.runJob("SUB", {
 
 export default {
 	/**
+	 * Gets news items, used in the admin news page by the AdvancedTable component
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param page - the page
+	 * @param pageSize - the size per page
+	 * @param properties - the properties to return for each news item
+	 * @param sort - the sort object
+	 * @param queries - the queries array
+	 * @param operator - the operator for queries
+	 * @param cb
+	 */
+	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
+		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" }, this);
+
+		const newQueries = queries.map(query => {
+			const { data, filter, filterType } = query;
+			const newQuery = {};
+			if (filterType === "regex") {
+				newQuery[filter.property] = new RegExp(`${data.slice(1, data.length - 1)}`, "i");
+			} else if (filterType === "contains") {
+				newQuery[filter.property] = new RegExp(`${data.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i");
+			} else if (filterType === "exact") {
+				newQuery[filter.property] = data.toString();
+			}
+			return newQuery;
+		});
+
+		const queryObject = {};
+		if (newQueries.length > 0) {
+			if (operator === "and") queryObject.$and = newQueries;
+			else if (operator === "or") queryObject.$or = newQueries;
+			else if (operator === "nor") queryObject.$nor = newQueries;
+		}
+
+		async.waterfall(
+			[
+				next => {
+					newsModel.find(queryObject).count((err, count) => {
+						next(err, count);
+					});
+				},
+
+				(count, next) => {
+					newsModel
+						.find(queryObject)
+						.sort(sort)
+						.skip(pageSize * (page - 1))
+						.limit(pageSize)
+						.select(properties.join(" "))
+						.exec((err, news) => {
+							next(err, count, news);
+						});
+				}
+			],
+			async (err, count, news) => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "NEWS_GET_DATA", `Failed to get data from news. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "NEWS_GET_DATA", `Got data from news successfully.`);
+				return cb({
+					status: "success",
+					message: "Successfully got data from news.",
+					data: { data: news, count }
+				});
+			}
+		);
+	}),
+
+	/**
 	 * Gets all news items that are published
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
-	async index(session, cb) {
+	async getPublished(session, cb) {
 		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" }, this);
 		async.waterfall(
 			[

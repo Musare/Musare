@@ -113,6 +113,22 @@
 						:link="true"
 					/>
 				</template>
+				<template #column-requestedAt="slotProps">
+					<span :title="new Date(slotProps.item.requestedAt)">{{
+						getDateFormatted(slotProps.item.requestedAt)
+					}}</span>
+				</template>
+				<template #column-verifiedBy="slotProps">
+					<user-id-to-username
+						:user-id="slotProps.item.verifiedBy"
+						:link="true"
+					/>
+				</template>
+				<template #column-verifiedAt="slotProps">
+					<span :title="new Date(slotProps.item.verifiedAt)">{{
+						getDateFormatted(slotProps.item.verifiedAt)
+					}}</span>
+				</template>
 				<template #bulk-actions="slotProps">
 					<div class="bulk-actions">
 						<i
@@ -364,7 +380,7 @@ export default {
 				},
 				{
 					name: "_id",
-					displayName: "Musare ID",
+					displayName: "Song ID",
 					properties: ["_id"],
 					sortProperty: "_id",
 					minWidth: 215,
@@ -399,13 +415,38 @@ export default {
 					displayName: "Requested By",
 					properties: ["requestedBy"],
 					sortProperty: "requestedBy",
-					defaultWidth: 200
+					defaultWidth: 200,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "requestedAt",
+					displayName: "Requested At",
+					properties: ["requestedAt"],
+					sortProperty: "requestedAt",
+					defaultWidth: 200,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "verifiedBy",
+					displayName: "Verified By",
+					properties: ["verifiedBy"],
+					sortProperty: "verifiedBy",
+					defaultWidth: 200,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "verifiedAt",
+					displayName: "Verified At",
+					properties: ["verifiedAt"],
+					sortProperty: "verifiedAt",
+					defaultWidth: 200,
+					defaultVisibility: "hidden"
 				}
 			],
 			filters: [
 				{
 					name: "_id",
-					displayName: "Musare ID",
+					displayName: "Song ID",
 					property: "_id",
 					filterTypes: ["exact"],
 					defaultFilterType: "exact"
@@ -453,6 +494,27 @@ export default {
 					defaultFilterType: "contains"
 				},
 				{
+					name: "requestedAt",
+					displayName: "Requested At",
+					property: "requestedAt",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "verifiedBy",
+					displayName: "Verified By",
+					property: "verifiedBy",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "verifiedAt",
+					displayName: "Verified At",
+					property: "verifiedAt",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
 					name: "status",
 					displayName: "Status",
 					property: "status",
@@ -470,6 +532,20 @@ export default {
 					name: "dislikes",
 					displayName: "Dislikes",
 					property: "dislikes",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "exact"
+				},
+				{
+					name: "duration",
+					displayName: "Duration",
+					property: "duration",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "exact"
+				},
+				{
+					name: "skipDuration",
+					displayName: "Skip Duration",
+					property: "skipDuration",
 					filterTypes: ["contains", "exact", "regex"],
 					defaultFilterType: "exact"
 				}
@@ -609,6 +685,15 @@ export default {
 		},
 		resetKeyboardShortcutsHelper() {
 			this.$refs.keyboardShortcutsHelper.resetBox();
+		},
+		getDateFormatted(createdAt) {
+			const date = new Date(createdAt);
+			const year = date.getFullYear();
+			const month = `${date.getMonth() + 1}`.padStart(2, 0);
+			const day = `${date.getDate()}`.padStart(2, 0);
+			const hour = `${date.getHours()}`.padStart(2, 0);
+			const minute = `${date.getMinutes()}`.padStart(2, 0);
+			return `${year}-${month}-${day} ${hour}:${minute}`;
 		},
 		...mapActions("modals/editSong", ["editSong"]),
 		...mapActions("modalVisibility", ["openModal"])

@@ -7,48 +7,68 @@
 					Create News Item
 				</button>
 			</div>
-			<table class="table">
-				<thead>
-					<tr>
-						<td>Status</td>
-						<td>Title</td>
-						<td>Author</td>
-						<td>Markdown</td>
-						<td>Options</td>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="news in news" :key="news._id">
-						<td class="news-item-status">{{ news.status }}</td>
-						<td>
-							<strong>{{ news.title }}</strong>
-						</td>
-						<td>
-							<user-id-to-username
-								:user-id="news.createdBy"
-								:alt="news.createdBy"
-								:link="true"
-							/>
-						</td>
-						<td class="news-item-markdown">{{ news.markdown }}</td>
-						<td id="options-column">
-							<div>
-								<button
-									class="button is-primary"
-									@click="edit(news._id)"
-								>
-									Edit
-								</button>
-								<quick-confirm @confirm="remove(news._id)">
-									<button class="button is-danger">
-										Remove
-									</button>
-								</quick-confirm>
-							</div>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+			<advanced-table
+				:column-default="columnDefault"
+				:columns="columns"
+				:filters="filters"
+				data-action="news.getData"
+				name="admin-news"
+				max-width="1200"
+			>
+				<template #column-options="slotProps">
+					<div class="row-options">
+						<button
+							class="
+								button
+								is-primary
+								icon-with-button
+								material-icons
+							"
+							@click="edit(slotProps.item._id)"
+							content="Edit News"
+							v-tippy
+						>
+							edit
+						</button>
+						<quick-confirm @confirm="remove(slotProps.item._id)">
+							<button
+								class="
+									button
+									is-danger
+									icon-with-button
+									material-icons
+								"
+								content="Remove News"
+								v-tippy
+							>
+								delete_forever
+							</button>
+						</quick-confirm>
+					</div>
+				</template>
+				<template #column-status="slotProps">
+					<span :title="slotProps.item.status">{{
+						slotProps.item.status
+					}}</span>
+				</template>
+				<template #column-title="slotProps">
+					<span :title="slotProps.item.title">{{
+						slotProps.item.title
+					}}</span>
+				</template>
+				<template #column-createdBy="slotProps">
+					<user-id-to-username
+						:user-id="slotProps.item.createdBy"
+						:alt="slotProps.item.createdBy"
+						:link="true"
+					/>
+				</template>
+				<template #column-markdown="slotProps">
+					<span :title="slotProps.item.markdown">{{
+						slotProps.item.markdown
+					}}</span>
+				</template>
+			</advanced-table>
 		</div>
 
 		<edit-news
@@ -64,13 +84,15 @@ import { mapActions, mapState, mapGetters } from "vuex";
 import { defineAsyncComponent } from "vue";
 import Toast from "toasters";
 
-import ws from "@/ws";
+// import ws from "@/ws";
 
+import AdvancedTable from "@/components/AdvancedTable.vue";
 import QuickConfirm from "@/components/QuickConfirm.vue";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
 export default {
 	components: {
+		AdvancedTable,
 		QuickConfirm,
 		UserIdToUsername,
 		EditNews: defineAsyncComponent(() =>
@@ -79,7 +101,84 @@ export default {
 	},
 	data() {
 		return {
-			editingNewsId: ""
+			editingNewsId: "",
+			columnDefault: {
+				sortable: true,
+				hidable: true,
+				defaultVisibility: "shown",
+				draggable: true,
+				resizable: true,
+				minWidth: 150,
+				maxWidth: 600
+			},
+			columns: [
+				{
+					name: "options",
+					displayName: "Edit",
+					properties: ["_id"],
+					sortable: false,
+					hidable: false,
+					resizable: false,
+					minWidth: 85,
+					defaultWidth: 85
+				},
+				{
+					name: "status",
+					displayName: "Status",
+					properties: ["status"],
+					sortProperty: "status",
+					defaultWidth: 150
+				},
+				{
+					name: "title",
+					displayName: "Title",
+					properties: ["title"],
+					sortProperty: "title"
+				},
+				{
+					name: "createdBy",
+					displayName: "Created By",
+					properties: ["createdBy"],
+					sortProperty: "createdBy",
+					defaultWidth: 150
+				},
+				{
+					name: "markdown",
+					displayName: "Markdown",
+					properties: ["markdown"],
+					sortProperty: "markdown"
+				}
+			],
+			filters: [
+				{
+					name: "status",
+					displayName: "Status",
+					property: "status",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "title",
+					displayName: "Title",
+					property: "title",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "createdBy",
+					displayName: "Created By",
+					property: "createdBy",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "markdown",
+					displayName: "Markdown",
+					property: "markdown",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				}
+			]
 		};
 	},
 	computed: {
@@ -94,19 +193,16 @@ export default {
 		})
 	},
 	mounted() {
-		this.socket.on("event:admin.news.created", res =>
-			this.addNews(res.data.news)
-		);
-
-		this.socket.on("event:admin.news.updated", res =>
-			this.updateNews(res.data.news)
-		);
-
-		this.socket.on("event:admin.news.deleted", res =>
-			this.removeNews(res.data.newsId)
-		);
-
-		ws.onConnect(this.init);
+		// this.socket.on("event:admin.news.created", res =>
+		// 	this.addNews(res.data.news)
+		// );
+		// this.socket.on("event:admin.news.updated", res =>
+		// 	this.updateNews(res.data.news)
+		// );
+		// this.socket.on("event:admin.news.deleted", res =>
+		// 	this.removeNews(res.data.newsId)
+		// );
+		// ws.onConnect(this.init);
 	},
 	methods: {
 		edit(id) {
@@ -121,13 +217,9 @@ export default {
 				res => new Toast(res.message)
 			);
 		},
-		init() {
-			this.socket.dispatch("news.index", res => {
-				if (res.status === "success") this.setNews(res.data.news);
-			});
-
-			this.socket.dispatch("apis.joinAdminRoom", "news");
-		},
+		// init() {
+		// 	this.socket.dispatch("apis.joinAdminRoom", "news");
+		// },
 		...mapActions("modalVisibility", ["openModal", "closeModal"]),
 		...mapActions("admin/news", [
 			"editNews",
@@ -139,84 +231,3 @@ export default {
 	}
 };
 </script>
-
-<style lang="scss" scoped>
-.night-mode {
-	.table {
-		color: var(--light-grey-2);
-		background-color: var(--dark-grey-3);
-
-		thead tr {
-			background: var(--dark-grey-3);
-			td {
-				color: var(--white);
-			}
-		}
-
-		tbody tr:hover {
-			background-color: var(--dark-grey-4) !important;
-		}
-
-		tbody tr:nth-child(even) {
-			background-color: var(--dark-grey-2);
-		}
-
-		strong {
-			color: var(--light-grey-2);
-		}
-	}
-
-	.card {
-		background: var(--dark-grey-3);
-
-		.card-header {
-			box-shadow: 0 1px 2px rgba(10, 10, 10, 0.8);
-		}
-
-		p,
-		.label {
-			color: var(--light-grey-2);
-		}
-	}
-}
-
-.tag:not(:last-child) {
-	margin-right: 5px;
-}
-
-td {
-	vertical-align: middle;
-
-	& > div {
-		display: inline-flex;
-	}
-}
-
-.is-info:focus {
-	background-color: var(--primary-color);
-}
-
-.card-footer-item {
-	color: var(--primary-color);
-}
-
-.news-item-status {
-	text-transform: capitalize;
-}
-
-.news-item-markdown {
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	overflow: hidden;
-	max-width: 400px;
-}
-
-#options-column {
-	> div {
-		display: flex;
-		button {
-			margin-right: 5px;
-		}
-	}
-}
-</style>
