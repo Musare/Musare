@@ -525,29 +525,53 @@ export default {
 					name: "likes",
 					displayName: "Likes",
 					property: "likes",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "exact"
+					filterTypes: [
+						"numberLesser",
+						"numberGreater",
+						"numberEquals",
+						"exact",
+						"regex"
+					],
+					defaultFilterType: "numberLesser"
 				},
 				{
 					name: "dislikes",
 					displayName: "Dislikes",
 					property: "dislikes",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "exact"
+					filterTypes: [
+						"numberLesser",
+						"numberGreater",
+						"numberEquals",
+						"exact",
+						"regex"
+					],
+					defaultFilterType: "numberLesser"
 				},
 				{
 					name: "duration",
 					displayName: "Duration",
 					property: "duration",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "exact"
+					filterTypes: [
+						"numberLesser",
+						"numberGreater",
+						"numberEquals",
+						"exact",
+						"regex"
+					],
+					defaultFilterType: "numberLesser"
 				},
 				{
 					name: "skipDuration",
 					displayName: "Skip Duration",
 					property: "skipDuration",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "exact"
+					filterTypes: [
+						"numberLesser",
+						"numberGreater",
+						"numberEquals",
+						"exact",
+						"regex"
+					],
+					defaultFilterType: "numberLesser"
 				}
 			],
 			jobs: [

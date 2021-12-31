@@ -124,6 +124,19 @@
 										type="datetime-local"
 									/>
 									<input
+										v-else-if="
+											filter.filterType &&
+											filter.filterType.startsWith(
+												'number'
+											)
+										"
+										v-model="filter.data"
+										class="input"
+										type="number"
+										:disabled="!filter.filterType"
+										@keydown.enter="applyFilterAndGetData()"
+									/>
+									<input
 										v-else
 										v-model="filter.data"
 										class="input"
@@ -725,6 +738,18 @@ export default {
 				datetimeAfter: {
 					name: "datetimeAfter",
 					displayName: "After"
+				},
+				numberLesser: {
+					name: "numberLesser",
+					displayName: "Less than"
+				},
+				numberGreater: {
+					name: "numberGreater",
+					displayName: "Greater than"
+				},
+				numberEquals: {
+					name: "numberEquals",
+					displayName: "Equals"
 				}
 			},
 			bulkPopup: {

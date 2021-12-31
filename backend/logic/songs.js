@@ -241,6 +241,12 @@ class _SongsModule extends CoreClass {
 								newQuery[filter.property] = { $lte: new Date(data) };
 							} else if (filterType === "datetimeAfter") {
 								newQuery[filter.property] = { $gte: new Date(data) };
+							} else if (filterType === "numberLesser") {
+								newQuery[filter.property] = { $lt: data };
+							} else if (filterType === "numberGreater") {
+								newQuery[filter.property] = { $gt: data };
+							} else if (filterType === "numberEquals") {
+								newQuery[filter.property] = { $eq: data };
 							}
 							return newQuery;
 						});

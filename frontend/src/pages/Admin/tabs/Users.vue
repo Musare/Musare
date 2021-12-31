@@ -398,8 +398,14 @@ export default {
 						name: "songsRequested",
 						displayName: "Songs Requested",
 						property: "statistics.songsRequested",
-						filterTypes: ["contains", "exact", "regex"],
-						defaultFilterType: "contains"
+						filterTypes: [
+							"numberLesser",
+							"numberGreater",
+							"numberEquals",
+							"exact",
+							"regex"
+						],
+						defaultFilterType: "numberLesser"
 					}
 				]
 			}
