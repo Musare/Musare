@@ -244,8 +244,8 @@ export default {
 					name: "createdAt",
 					displayName: "Created At",
 					property: "createdAt",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
+					filterTypes: ["datetimeBefore", "datetimeAfter"],
+					defaultFilterType: "datetimeBefore"
 				},
 				{
 					name: "createdFor",

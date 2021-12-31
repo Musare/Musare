@@ -422,6 +422,10 @@ class _StationsModule extends CoreClass {
 								);
 							} else if (filterType === "exact") {
 								newQuery[filter.property] = data.toString();
+							} else if (filterType === "datetimeBefore") {
+								newQuery[filter.property] = { $lte: new Date(data) };
+							} else if (filterType === "datetimeAfter") {
+								newQuery[filter.property] = { $gte: new Date(data) };
 							}
 							return newQuery;
 						});

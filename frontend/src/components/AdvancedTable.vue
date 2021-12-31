@@ -113,6 +113,18 @@
 								</div>
 								<p class="control is-expanded">
 									<input
+										v-if="
+											filter.filterType &&
+											filter.filterType.startsWith(
+												'datetime'
+											)
+										"
+										v-model="filter.data"
+										class="input"
+										type="datetime-local"
+									/>
+									<input
+										v-else
 										v-model="filter.data"
 										class="input"
 										type="text"
@@ -705,6 +717,14 @@ export default {
 				regex: {
 					name: "regex",
 					displayName: "Regex"
+				},
+				datetimeBefore: {
+					name: "datetimeBefore",
+					displayName: "Before"
+				},
+				datetimeAfter: {
+					name: "datetimeAfter",
+					displayName: "After"
 				}
 			},
 			bulkPopup: {

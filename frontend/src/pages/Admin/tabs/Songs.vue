@@ -497,8 +497,8 @@ export default {
 					name: "requestedAt",
 					displayName: "Requested At",
 					property: "requestedAt",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
+					filterTypes: ["datetimeBefore", "datetimeAfter"],
+					defaultFilterType: "datetimeBefore"
 				},
 				{
 					name: "verifiedBy",
@@ -511,8 +511,8 @@ export default {
 					name: "verifiedAt",
 					displayName: "Verified At",
 					property: "verifiedAt",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
+					filterTypes: ["datetimeBefore", "datetimeAfter"],
+					defaultFilterType: "datetimeBefore"
 				},
 				{
 					name: "status",
