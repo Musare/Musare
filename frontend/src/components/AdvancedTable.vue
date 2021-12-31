@@ -100,7 +100,7 @@
 												filter.filter
 											)"
 											:key="filterType.name"
-											:value="filterType.name"
+											:value="filterType"
 											:selected="
 												filter.filter
 													.defaultFilterType ===
@@ -114,8 +114,8 @@
 								<p class="control is-expanded">
 									<input
 										v-if="
-											filter.filterType &&
-											filter.filterType.startsWith(
+											filter.filterType.name &&
+											filter.filterType.name.startsWith(
 												'datetime'
 											)
 										"
@@ -125,8 +125,8 @@
 									/>
 									<input
 										v-else-if="
-											filter.filterType &&
-											filter.filterType.startsWith(
+											filter.filterType.name &&
+											filter.filterType.name.startsWith(
 												'number'
 											)
 										"
@@ -242,7 +242,10 @@
 										? "not"
 										: ""
 								}}
-								{{ filter.filterType }} "{{ filter.data }}"
+								{{
+									filter.filterType.displayName.toLowerCase()
+								}}
+								"{{ filter.data }}"
 								{{
 									appliedFilters.length === index + 1
 										? ""
@@ -961,7 +964,14 @@ export default {
 				this.pageSize,
 				this.properties,
 				this.sort,
-				this.appliedFilters,
+				JSON.parse(
+					JSON.stringify(
+						this.appliedFilters.map(filter => ({
+							...filter,
+							filterType: filter.filterType.name
+						}))
+					)
+				),
 				this.appliedFilterOperator,
 				res => {
 					console.log(111, res);
@@ -1102,7 +1112,8 @@ export default {
 			this.editingFilters.push({
 				data: "",
 				filter: this.addFilterValue,
-				filterType: this.addFilterValue.defaultFilterType
+				filterType:
+					this.allFilterTypes[this.addFilterValue.defaultFilterType]
 			});
 		},
 		removeFilterItem(index) {
@@ -1196,7 +1207,9 @@ export default {
 		},
 		changeFilterType(index) {
 			this.editingFilters[index].filterType =
-				this.editingFilters[index].filter.defaultFilterType;
+				this.allFilterTypes[
+					this.editingFilters[index].filter.defaultFilterType
+				];
 		},
 		onDragBox(e) {
 			const e1 = e || window.event;
