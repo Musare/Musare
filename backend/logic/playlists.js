@@ -882,39 +882,46 @@ class _PlaylistsModule extends CoreClass {
 	 */
 	GET_DATA(payload) {
 		return new Promise((resolve, reject) => {
-			const { page, pageSize, properties, sort, queries, operator } = payload;
-
-			console.log("GET_DATA", payload);
-
-			const newQueries = queries.map(query => {
-				const { data, filter, filterType } = query;
-				const newQuery = {};
-				if (filterType === "regex") {
-					newQuery[filter.property] = new RegExp(`${data.slice(1, data.length - 1)}`, "i");
-				} else if (filterType === "contains") {
-					newQuery[filter.property] = new RegExp(`${data.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i");
-				} else if (filterType === "exact") {
-					newQuery[filter.property] = data.toString();
-				}
-				return newQuery;
-			});
-
-			const queryObject = {};
-			if (newQueries.length > 0) {
-				if (operator === "and") queryObject.$and = newQueries;
-				else if (operator === "or") queryObject.$or = newQueries;
-				else if (operator === "nor") queryObject.$nor = newQueries;
-			}
-
 			async.waterfall(
 				[
 					next => {
+						const { queries, operator } = payload;
+
+						const newQueries = queries.map(query => {
+							const { data, filter, filterType } = query;
+							const newQuery = {};
+							if (filterType === "regex") {
+								newQuery[filter.property] = new RegExp(`${data.slice(1, data.length - 1)}`, "i");
+							} else if (filterType === "contains") {
+								newQuery[filter.property] = new RegExp(
+									`${data.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}`,
+									"i"
+								);
+							} else if (filterType === "exact") {
+								newQuery[filter.property] = data.toString();
+							}
+							return newQuery;
+						});
+
+						const queryObject = {};
+						if (newQueries.length > 0) {
+							if (operator === "and") queryObject.$and = newQueries;
+							else if (operator === "or") queryObject.$or = newQueries;
+							else if (operator === "nor") queryObject.$nor = newQueries;
+						}
+
+						next(null, queryObject);
+					},
+
+					(queryObject, next) => {
 						PlaylistsModule.playlistModel.find(queryObject).count((err, count) => {
-							next(err, count);
+							next(err, queryObject, count);
 						});
 					},
 
-					(count, next) => {
+					(queryObject, count, next) => {
+						const { page, pageSize, properties, sort } = payload;
+
 						PlaylistsModule.playlistModel
 							.find(queryObject)
 							.sort(sort)

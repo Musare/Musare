@@ -42,35 +42,42 @@ export default {
 	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
 		const punishmentModel = await DBModule.runJob("GET_MODEL", { modelName: "punishment" }, this);
 
-		const newQueries = queries.map(query => {
-			const { data, filter, filterType } = query;
-			const newQuery = {};
-			if (filterType === "regex") {
-				newQuery[filter.property] = new RegExp(`${data.slice(1, data.length - 1)}`, "i");
-			} else if (filterType === "contains") {
-				newQuery[filter.property] = new RegExp(`${data.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i");
-			} else if (filterType === "exact") {
-				newQuery[filter.property] = data.toString();
-			}
-			return newQuery;
-		});
-
-		const queryObject = {};
-		if (newQueries.length > 0) {
-			if (operator === "and") queryObject.$and = newQueries;
-			else if (operator === "or") queryObject.$or = newQueries;
-			else if (operator === "nor") queryObject.$nor = newQueries;
-		}
-
 		async.waterfall(
 			[
 				next => {
+					const newQueries = queries.map(query => {
+						const { data, filter, filterType } = query;
+						const newQuery = {};
+						if (filterType === "regex") {
+							newQuery[filter.property] = new RegExp(`${data.slice(1, data.length - 1)}`, "i");
+						} else if (filterType === "contains") {
+							newQuery[filter.property] = new RegExp(
+								`${data.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}`,
+								"i"
+							);
+						} else if (filterType === "exact") {
+							newQuery[filter.property] = data.toString();
+						}
+						return newQuery;
+					});
+
+					const queryObject = {};
+					if (newQueries.length > 0) {
+						if (operator === "and") queryObject.$and = newQueries;
+						else if (operator === "or") queryObject.$or = newQueries;
+						else if (operator === "nor") queryObject.$nor = newQueries;
+					}
+
+					next(null, queryObject);
+				},
+
+				(queryObject, next) => {
 					punishmentModel.find(queryObject).count((err, count) => {
-						next(err, count);
+						next(err, queryObject, count);
 					});
 				},
 
-				(count, next) => {
+				(queryObject, count, next) => {
 					punishmentModel
 						.find(queryObject)
 						.sort(sort)
