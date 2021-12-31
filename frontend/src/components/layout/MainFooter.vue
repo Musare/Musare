@@ -3,7 +3,7 @@
 		<div class="container">
 			<div class="footer-content">
 				<div id="footer-copyright">
-					<p>© Copyright Musare 2015 - 2021</p>
+					<p>© Copyright Musare 2015 - 2022</p>
 				</div>
 				<router-link id="footer-logo" to="/"
 					><img src="/assets/blue_wordmark.png" alt="Musare"
