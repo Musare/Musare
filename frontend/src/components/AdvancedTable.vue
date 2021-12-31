@@ -476,8 +476,12 @@
 											property
 												.split('.')
 												.reduce(
-													(p, c) =>
-														(p && p[c]) || null,
+													(previous, current) =>
+														(previous &&
+															previous[
+																current
+															]) ||
+														null,
 													item
 												)
 										)

@@ -414,6 +414,7 @@ export default {
 		})
 	},
 	mounted() {
+		if (this.$route.query.userId) this.edit(this.$route.query.userId);
 		// ws.onConnect(this.init);
 		// this.socket.on("event:admin.dataRequests.created", res =>
 		// 	this.dataRequests.push(res.data.request)
@@ -435,17 +436,6 @@ export default {
 			this.openModal("editUser");
 		},
 		// init() {
-		// 	this.socket.dispatch("users.index", res => {
-		// 		if (res.status === "success") {
-		// 			if (this.$route.query.userId) {
-		// 				const user = res.data.users.find(
-		// 					user => user._id === this.$route.query.userId
-		// 				);
-		// 				if (user) this.edit(user._id);
-		// 			}
-		// 		}
-		// 	});
-
 		// 	this.socket.dispatch("apis.joinAdminRoom", "users", () => {});
 		// },
 		resolveDataRequest(id) {
