@@ -30,6 +30,18 @@
 				:filters="filters"
 				data-action="songs.getData"
 				name="admin-songs"
+				:events="{
+					room: 'songs',
+					updated: {
+						event: 'admin.song.updated',
+						id: 'song._id',
+						item: 'song'
+					},
+					removed: {
+						event: 'admin.song.removed',
+						id: 'song._id'
+					}
+				}"
 			>
 				<template #column-options="slotProps">
 					<div class="row-options">
@@ -599,14 +611,6 @@ export default {
 		})
 	},
 	mounted() {
-		// TODO: Implement song update events in advanced table
-		// this.socket.on("event:admin.song.updated", res => {
-		// 	const { song } = res.data;
-		// 	if (this.songs.filter(s => s._id === song._id).length === 0)
-		// 		this.addSong(song);
-		// 	else this.updateSong(song);
-		// });
-
 		if (this.$route.query.songId) {
 			this.socket.dispatch(
 				"songs.getSongFromSongId",

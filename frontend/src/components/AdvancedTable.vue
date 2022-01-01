@@ -412,7 +412,7 @@
 									v-if="
 										!(
 											column.name === 'select' &&
-											data.length === 0
+											rows.length === 0
 										) &&
 										shownColumns.indexOf(column.name) !== -1
 									"
@@ -437,7 +437,7 @@
 											<input
 												type="checkbox"
 												:checked="
-													data.length ===
+													rows.length ===
 													selectedRows.length
 												"
 												@click="toggleAllRows()"
@@ -505,11 +505,13 @@
 					</thead>
 					<tbody>
 						<tr
-							v-for="(item, itemIndex) in data"
+							v-for="(item, itemIndex) in rows"
 							:key="item._id"
 							:class="{
 								selected: item.selected,
-								highlighted: item.highlighted
+								highlighted: item.highlighted,
+								updated: item.updated,
+								removed: item.removed
 							}"
 						>
 							<td
@@ -702,13 +704,14 @@ export default {
 		dataAction: { type: String, default: null },
 		name: { type: String, default: null },
 		maxWidth: { type: Number, default: 1880 },
-		query: { type: Boolean, default: true }
+		query: { type: Boolean, default: true },
+		events: { type: Object, default: () => {} }
 	},
 	data() {
 		return {
 			page: 1,
 			pageSize: 10,
-			data: [],
+			rows: [],
 			count: 0, // TODO Rename
 			sort: {},
 			orderedColumns: [],
@@ -818,10 +821,10 @@ export default {
 			return this.orderedColumns.filter(column => column.hidable);
 		},
 		lastSelectedItemIndex() {
-			return this.data.findIndex(item => item.highlighted);
+			return this.rows.findIndex(item => item.highlighted);
 		},
 		selectedRows() {
-			return this.data.filter(data => data.selected);
+			return this.rows.filter(row => row.selected);
 		},
 		hasCheckboxes() {
 			return (
@@ -971,6 +974,44 @@ export default {
 		});
 
 		ws.onConnect(this.init);
+
+		if (this.events && this.events.updated)
+			this.socket.on(`event:${this.events.updated.event}`, res => {
+				const index = this.rows
+					.map(row => row._id)
+					.indexOf(
+						this.events.updated.id
+							.split(".")
+							.reduce(
+								(previous, current) =>
+									(previous && previous[current]) || null,
+								res.data
+							)
+					);
+				const row = this.events.updated.item
+					.split(".")
+					.reduce(
+						(previous, current) =>
+							(previous && previous[current]) || null,
+						res.data
+					);
+				this.updateData(index, row);
+			});
+		if (this.events && this.events.removed)
+			this.socket.on(`event:${this.events.removed.event}`, res => {
+				const index = this.rows
+					.map(row => row._id)
+					.indexOf(
+						this.events.removed.id
+							.split(".")
+							.reduce(
+								(previous, current) =>
+									(previous && previous[current]) || null,
+								res.data
+							)
+					);
+				this.removeData(index);
+			});
 	},
 	unmounted() {
 		window.removeEventListener("resize", this.onWindowResize);
@@ -981,6 +1022,13 @@ export default {
 		init() {
 			this.getData();
 			if (this.query) this.setQuery();
+			if (this.events && this.events.room) {
+				this.socket.dispatch(
+					"apis.joinAdminRoom",
+					this.events.room,
+					() => {}
+				);
+			}
 		},
 		getData() {
 			this.socket.dispatch(
@@ -1002,7 +1050,7 @@ export default {
 					console.log(111, res);
 					if (res.status === "success") {
 						const { data, count } = res.data;
-						this.data = data.map(row => ({
+						this.rows = data.map(row => ({
 							...row,
 							selected: false
 						}));
@@ -1062,7 +1110,7 @@ export default {
 			// Shift was pressed, so attempt to select all items between the clicked item and last clicked item
 			if (shiftKey) {
 				// If the clicked item is already selected, prevent default, otherwise the checkbox will be unchecked
-				if (this.data[itemIndex].selected) event.preventDefault();
+				if (this.rows[itemIndex].selected) event.preventDefault();
 				// If there is a last clicked item
 				if (this.lastSelectedItemIndex >= 0) {
 					// Clicked item is lower than last item, so select upwards until it reaches the last selected item
@@ -1072,7 +1120,7 @@ export default {
 							itemIndexUp > this.lastSelectedItemIndex;
 							itemIndexUp -= 1
 						) {
-							this.data[itemIndexUp].selected = true;
+							this.rows[itemIndexUp].selected = true;
 						}
 					}
 					// Clicked item is higher than last item, so select downwards until it reaches the last selected item
@@ -1082,7 +1130,7 @@ export default {
 							itemIndexDown < this.lastSelectedItemIndex;
 							itemIndexDown += 1
 						) {
-							this.data[itemIndexDown].selected = true;
+							this.rows[itemIndexDown].selected = true;
 						}
 					}
 				}
@@ -1090,7 +1138,7 @@ export default {
 			// Ctrl was pressed, so attempt to unselect all items between the clicked item and last clicked item
 			else if (ctrlKey) {
 				// If the clicked item is already unselected, prevent default, otherwise the checkbox will be checked
-				if (!this.data[itemIndex].selected) event.preventDefault();
+				if (!this.rows[itemIndex].selected) event.preventDefault();
 				// If there is a last clicked item
 				if (this.lastSelectedItemIndex >= 0) {
 					// Clicked item is lower than last item, so unselect upwards until it reaches the last selected item
@@ -1100,7 +1148,7 @@ export default {
 							itemIndexUp >= this.lastSelectedItemIndex;
 							itemIndexUp -= 1
 						) {
-							this.data[itemIndexUp].selected = false;
+							this.rows[itemIndexUp].selected = false;
 						}
 					}
 					// Clicked item is higher than last item, so unselect downwards until it reaches the last selected item
@@ -1110,27 +1158,27 @@ export default {
 							itemIndexDown <= this.lastSelectedItemIndex;
 							itemIndexDown += 1
 						) {
-							this.data[itemIndexDown].selected = false;
+							this.rows[itemIndexDown].selected = false;
 						}
 					}
 				}
 			}
 			// Neither ctrl nor shift were pressed, so toggle clicked item
 			else {
-				this.data[itemIndex].selected = !this.data[itemIndex].selected;
+				this.rows[itemIndex].selected = !this.rows[itemIndex].selected;
 			}
 
 			// Set the last clicked item to no longer be highlighted, if it exists
 			if (this.lastSelectedItemIndex >= 0)
-				this.data[this.lastSelectedItemIndex].highlighted = false;
+				this.rows[this.lastSelectedItemIndex].highlighted = false;
 			// Set the clicked item to be highlighted
-			this.data[itemIndex].highlighted = true;
+			this.rows[itemIndex].highlighted = true;
 		},
 		toggleAllRows() {
-			if (this.data.length > this.selectedRows.length) {
-				this.data = this.data.map(row => ({ ...row, selected: true }));
+			if (this.rows.length > this.selectedRows.length) {
+				this.rows = this.rows.map(row => ({ ...row, selected: true }));
 			} else {
-				this.data = this.data.map(row => ({ ...row, selected: false }));
+				this.rows = this.rows.map(row => ({ ...row, selected: false }));
 			}
 		},
 		addFilterItem() {
@@ -1465,6 +1513,12 @@ export default {
 			if (this.bulkPopup.left < 0) this.bulkPopup.left = 0;
 			if (this.bulkPopup.left > document.body.clientWidth - 400)
 				this.bulkPopup.left = document.body.clientWidth - 400;
+		},
+		updateData(index, data) {
+			this.rows[index] = { ...this.rows[index], ...data, updated: true };
+		},
+		removeData(index) {
+			this.rows[index] = { ...this.rows[index], removed: true };
 		}
 	}
 };
