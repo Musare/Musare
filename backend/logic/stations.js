@@ -410,6 +410,7 @@ class _StationsModule extends CoreClass {
 					next => {
 						const { queries, operator } = payload;
 
+						let queryError;
 						const newQueries = queries.map(query => {
 							const { data, filter, filterType } = query;
 							const newQuery = {};
@@ -432,9 +433,19 @@ class _StationsModule extends CoreClass {
 								newQuery[filter.property] = { $gt: data };
 							} else if (filterType === "numberEquals") {
 								newQuery[filter.property] = { $eq: data };
+							} else if (filterType === "array") {
+								if (
+									(filter.property === "type" && !["official", "community"].includes(data)) ||
+									(filter.property === "privacy" &&
+										!["public", "unlisted", "private"].includes(data)) ||
+									(filter.property === "playMode" && !["random", "sequential"].includes(data))
+								)
+									queryError = `${data} is not a valid ${filter.property} value`;
+								else newQuery[filter.property] = data.toString();
 							}
 							return newQuery;
 						});
+						if (queryError) next(queryError);
 
 						const queryObject = {};
 						if (newQueries.length > 0) {

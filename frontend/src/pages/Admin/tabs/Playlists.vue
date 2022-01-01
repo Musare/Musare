@@ -230,8 +230,9 @@ export default {
 					name: "privacy",
 					displayName: "Privacy",
 					property: "privacy",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
+					filterTypes: ["array", "regex"],
+					defaultFilterType: "array",
+					filterValues: ["public", "private"]
 				},
 				{
 					name: "createdBy",

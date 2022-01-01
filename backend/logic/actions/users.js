@@ -186,6 +186,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
+					let queryError;
 					const newQueries = queries.map(query => {
 						const { data, filter, filterType } = query;
 						const newQuery = {};
@@ -208,9 +209,14 @@ export default {
 							newQuery[filter.property] = { $gt: data };
 						} else if (filterType === "numberEquals") {
 							newQuery[filter.property] = { $eq: data };
+						} else if (filterType === "array") {
+							if (filter.property === "role" && !["admin", "default"].includes(data))
+								queryError = `${data} is not a valid ${filter.property} value`;
+							else newQuery[filter.property] = data.toString();
 						}
 						return newQuery;
 					});
+					if (queryError) next(queryError);
 
 					const queryObject = {};
 					if (newQueries.length > 0) {

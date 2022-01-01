@@ -269,15 +269,17 @@ export default {
 					name: "type",
 					displayName: "Type",
 					property: "type",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
+					filterTypes: ["array", "regex"],
+					defaultFilterType: "array",
+					filterValues: ["official", "community"]
 				},
 				{
 					name: "privacy",
 					displayName: "Privacy",
 					property: "privacy",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
+					filterTypes: ["array", "regex"],
+					defaultFilterType: "array",
+					filterValues: ["public", "unlisted", "private"]
 				},
 				{
 					name: "owner",
@@ -290,8 +292,9 @@ export default {
 					name: "playMode",
 					displayName: "Play Mode",
 					property: "playMode",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
+					filterTypes: ["array", "regex"],
+					defaultFilterType: "array",
+					filterValues: ["random", "sequential"]
 				},
 				{
 					name: "theme",

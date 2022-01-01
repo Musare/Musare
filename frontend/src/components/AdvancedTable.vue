@@ -111,7 +111,28 @@
 										</option>
 									</select>
 								</div>
-								<p class="control is-expanded">
+								<div
+									v-if="
+										filter.filterType.name &&
+										filter.filterType.name === 'array'
+									"
+									class="control is-expanded select"
+								>
+									<select
+										v-model="filter.data"
+										:disabled="!filter.filterType"
+									>
+										<option
+											v-for="filterValue in filter.filter
+												.filterValues"
+											:key="filterValue"
+											:value="filterValue"
+										>
+											{{ filterValue }}
+										</option>
+									</select>
+								</div>
+								<p v-else class="control is-expanded">
 									<input
 										v-if="
 											filter.filterType.name &&
@@ -753,6 +774,10 @@ export default {
 				numberEquals: {
 					name: "numberEquals",
 					displayName: "Equals"
+				},
+				array: {
+					name: "array",
+					displayName: "Is"
 				}
 			},
 			bulkPopup: {

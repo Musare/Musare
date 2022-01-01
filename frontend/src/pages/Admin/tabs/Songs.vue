@@ -518,8 +518,9 @@ export default {
 					name: "status",
 					displayName: "Status",
 					property: "status",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "exact"
+					filterTypes: ["array", "regex"],
+					defaultFilterType: "array",
+					filterValues: ["verified", "unverified"]
 				},
 				{
 					name: "likes",

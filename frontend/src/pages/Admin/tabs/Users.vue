@@ -377,8 +377,9 @@ export default {
 						name: "role",
 						displayName: "Role",
 						property: "role",
-						filterTypes: ["contains", "exact", "regex"],
-						defaultFilterType: "contains"
+						filterTypes: ["array", "regex"],
+						defaultFilterType: "array",
+						filterValues: ["admin", "default"]
 					},
 					{
 						name: "emailAddress",
