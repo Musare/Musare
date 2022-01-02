@@ -555,8 +555,10 @@ export default {
 					displayName: "Likes",
 					property: "likes",
 					filterTypes: [
+						"numberLesserEqual",
 						"numberLesser",
 						"numberGreater",
+						"numberGreaterEqual",
 						"numberEquals",
 						"exact",
 						"regex"
@@ -568,8 +570,10 @@ export default {
 					displayName: "Dislikes",
 					property: "dislikes",
 					filterTypes: [
+						"numberLesserEqual",
 						"numberLesser",
 						"numberGreater",
+						"numberGreaterEqual",
 						"numberEquals",
 						"exact",
 						"regex"
@@ -581,8 +585,10 @@ export default {
 					displayName: "Duration",
 					property: "duration",
 					filterTypes: [
+						"numberLesserEqual",
 						"numberLesser",
 						"numberGreater",
+						"numberGreaterEqual",
 						"numberEquals",
 						"exact",
 						"regex"
@@ -594,8 +600,10 @@ export default {
 					displayName: "Skip Duration",
 					property: "skipDuration",
 					filterTypes: [
+						"numberLesserEqual",
 						"numberLesser",
 						"numberGreater",
+						"numberGreaterEqual",
 						"numberEquals",
 						"exact",
 						"regex"

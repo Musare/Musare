@@ -411,8 +411,10 @@ export default {
 						displayName: "Songs Requested",
 						property: "statistics.songsRequested",
 						filterTypes: [
+							"numberLesserEqual",
 							"numberLesser",
 							"numberGreater",
+							"numberGreaterEqual",
 							"numberEquals",
 							"exact",
 							"regex"

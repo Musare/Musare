@@ -427,10 +427,14 @@ class _StationsModule extends CoreClass {
 								newQuery[filter.property] = { $lte: new Date(data) };
 							} else if (filterType === "datetimeAfter") {
 								newQuery[filter.property] = { $gte: new Date(data) };
+							} else if (filterType === "numberLesserEqual") {
+								newQuery[filter.property] = { $lte: data };
 							} else if (filterType === "numberLesser") {
 								newQuery[filter.property] = { $lt: data };
 							} else if (filterType === "numberGreater") {
 								newQuery[filter.property] = { $gt: data };
+							} else if (filterType === "numberGreaterEqual") {
+								newQuery[filter.property] = { $gte: data };
 							} else if (filterType === "numberEquals") {
 								newQuery[filter.property] = { $eq: data };
 							} else if (filterType === "array") {

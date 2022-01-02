@@ -775,17 +775,25 @@ export default {
 					name: "datetimeAfter",
 					displayName: "After"
 				},
+				numberLesserEqual: {
+					name: "numberLesserEqual",
+					displayName: "<="
+				},
 				numberLesser: {
 					name: "numberLesser",
-					displayName: "Less than"
+					displayName: "<"
 				},
 				numberGreater: {
 					name: "numberGreater",
-					displayName: "Greater than"
+					displayName: ">"
+				},
+				numberGreaterEqual: {
+					name: "numberGreaterEqual",
+					displayName: ">="
 				},
 				numberEquals: {
 					name: "numberEquals",
-					displayName: "Equals"
+					displayName: "=="
 				},
 				array: {
 					name: "array",
