@@ -1022,12 +1022,19 @@ export default {
 		init() {
 			this.getData();
 			if (this.query) this.setQuery();
-			if (this.events && this.events.room) {
-				this.socket.dispatch(
-					"apis.joinAdminRoom",
-					this.events.room,
-					() => {}
-				);
+			if (this.events) {
+				if (this.events.room)
+					this.socket.dispatch(
+						"apis.joinRoom",
+						this.events.room,
+						() => {}
+					);
+				if (this.events.adminRoom)
+					this.socket.dispatch(
+						"apis.joinAdminRoom",
+						this.events.adminRoom,
+						() => {}
+					);
 			}
 		},
 		getData() {

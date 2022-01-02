@@ -30,18 +30,7 @@
 				:filters="filters"
 				data-action="songs.getData"
 				name="admin-songs"
-				:events="{
-					room: 'songs',
-					updated: {
-						event: 'admin.song.updated',
-						id: 'song._id',
-						item: 'song'
-					},
-					removed: {
-						event: 'admin.song.removed',
-						id: 'song._id'
-					}
-				}"
+				:events="events"
 			>
 				<template #column-options="slotProps">
 					<div class="row-options">
@@ -587,6 +576,18 @@ export default {
 					defaultFilterType: "numberLesser"
 				}
 			],
+			events: {
+				adminRoom: "songs",
+				updated: {
+					event: "admin.song.updated",
+					id: "song._id",
+					item: "song"
+				},
+				removed: {
+					event: "admin.song.removed",
+					id: "song._id"
+				}
+			},
 			jobs: [
 				{
 					name: "Update all songs",
