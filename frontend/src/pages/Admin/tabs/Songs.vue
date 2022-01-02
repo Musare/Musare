@@ -735,17 +735,13 @@ export default {
 			new Toast("Bulk setting genres not yet implemented.");
 		},
 		deleteMany(selectedRows) {
-			if (selectedRows.length === 1) {
-				this.socket.dispatch(
-					"songs.remove",
-					selectedRows[0]._id,
-					res => {
-						new Toast(res.message);
-					}
-				);
-			} else {
-				new Toast("Bulk deleting not yet implemented.");
-			}
+			this.socket.dispatch(
+				"songs.removeMany",
+				selectedRows.map(row => row._id),
+				res => {
+					new Toast(res.message);
+				}
+			);
 		},
 		toggleKeyboardShortcutsHelper() {
 			this.$refs.keyboardShortcutsHelper.toggleBox();

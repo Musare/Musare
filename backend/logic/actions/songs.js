@@ -398,21 +398,31 @@ export default {
 					playlistModel.find({ "songs._id": songId }, (err, playlists) => {
 						if (err) next(err);
 						else {
-							playlistModel.updateMany(
-								{ "songs._id": songId },
-								{ $pull: { songs: { _id: songId } } },
-								err => {
-									if (err) this.log("ERROR", err);
-									else {
-										async.eachLimit(playlists, 1, (playlist, next) => {
-											PlaylistsModule.runJob(
-												"UPDATE_PLAYLIST",
-												{ playlistId: playlist._id },
-												next
-											);
+							async.eachLimit(
+								playlists,
+								1,
+								(playlist, next) => {
+									WSModule.runJob(
+										"RUN_ACTION2",
+										{
+											session,
+											namespace: "playlists",
+											action: "removeSongFromPlaylist",
+											args: [song.youtubeId, playlist._id]
+										},
+										this
+									)
+										.then(res => {
+											if (res.status === "error") next(res.message);
+											else next();
+										})
+										.catch(err => {
+											next(err);
 										});
-										next(null, song);
-									}
+								},
+								err => {
+									if (err) next(err);
+									else next(null, song);
 								}
 							);
 						}
@@ -423,55 +433,80 @@ export default {
 					stationModel.find({ "queue._id": songId }, (err, stations) => {
 						if (err) next(err);
 						else {
-							stationModel.updateMany(
-								{ "queue._id": songId },
-								{ $pull: { queue: { _id: songId } } },
-								err => {
-									if (err) this.log("ERROR", err);
-									else {
-										async.eachLimit(stations, 1, (station, next) => {
-											StationsModule.runJob("UPDATE_STATION", { stationId: station._id }, next);
+							async.eachLimit(
+								stations,
+								1,
+								(station, next) => {
+									WSModule.runJob(
+										"RUN_ACTION2",
+										{
+											session,
+											namespace: "stations",
+											action: "removeFromQueue",
+											args: [station._id, song.youtubeId]
+										},
+										this
+									)
+										.then(res => {
+											if (res.status === "error") next(res.message);
+											else next();
+										})
+										.catch(err => {
+											next(err);
 										});
-										next(null, song);
-									}
+								},
+								err => {
+									if (err) next(err);
+									else next();
 								}
 							);
 						}
 					});
 				},
 
-				(song, next) => {
+				next => {
 					stationModel.find({ "currentSong._id": songId }, (err, stations) => {
 						if (err) next(err);
 						else {
-							async.eachLimit(stations, 1, (station, next) => {
-								StationsModule.runJob("SKIP_STATION", { stationId: station._id, natural: false }, next);
-							});
-							next(null, song);
+							async.eachLimit(
+								stations,
+								1,
+								(station, next) => {
+									StationsModule.runJob(
+										"SKIP_STATION",
+										{ stationId: station._id, natural: false },
+										this
+									)
+										.then(res => {
+											if (res.status === "error") next(res.message);
+											else next();
+										})
+										.catch(err => {
+											next(err);
+										});
+								},
+								err => {
+									if (err) next(err);
+									else next();
+								}
+							);
 						}
 					});
 				},
 
-				(song, next) => {
+				next => {
 					songModel.deleteOne({ _id: songId }, err => {
 						if (err) next(err);
-						else next(null, song);
+						else next();
 					});
 				},
 
-				(song, next) => {
+				next => {
 					CacheModule.runJob("HDEL", { table: "songs", key: songId }, this)
 						.then(() => {
 							next();
 						})
-						.catch(next)
-						.finally(() => {
-							song.genres.forEach(genre => {
-								PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
-									.then(() => {})
-									.catch(() => {});
-							});
-						});
+						.catch(next);
 				}
 			],
 			async err => {
@@ -493,6 +528,78 @@ export default {
 				return cb({
 					status: "success",
 					message: "Song has been successfully removed"
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Removes many songs
+	 *
+	 * @param session
+	 * @param songIds - array of song ids
+	 * @param cb
+	 */
+	removeMany: isAdminRequired(async function remove(session, songIds, cb) {
+		const successful = [];
+		const failed = [];
+
+		async.waterfall(
+			[
+				next => {
+					async.eachLimit(
+						songIds,
+						1,
+						(songId, next) => {
+							WSModule.runJob(
+								"RUN_ACTION2",
+								{
+									session,
+									namespace: "songs",
+									action: "remove",
+									args: [songId]
+								},
+								this
+							)
+								.then(res => {
+									if (res.status === "error") failed.push(songId);
+									else successful.push(songId);
+									next();
+								})
+								.catch(err => {
+									next(err);
+								});
+						},
+						err => {
+							if (err) next(err);
+							else next();
+						}
+					);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log("ERROR", "SONGS_REMOVE_MANY", `Failed to remove songs "${failed.join(", ")}". "${err}"`);
+
+					return cb({ status: "error", message: err });
+				}
+
+				let message = "";
+				if (successful.length === 1) message += `1 song has been successfully removed`;
+				else message += `${successful.length} songs have been successfully removed`;
+				if (failed.length > 0) {
+					this.log("ERROR", "SONGS_REMOVE_MANY", `Failed to remove songs "${failed.join(", ")}". "${err}"`);
+					if (failed.length === 1) message += `, failed to remove 1 song`;
+					else message += `, failed to remove ${failed.length} songs`;
+				}
+
+				this.log("SUCCESS", "SONGS_REMOVE_MANY", `${message} "${successful.join(", ")}"`);
+
+				return cb({
+					status: "success",
+					message
 				});
 			}
 		);

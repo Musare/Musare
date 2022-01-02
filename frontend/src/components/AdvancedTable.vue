@@ -1053,14 +1053,10 @@ export default {
 				this.pageSize,
 				this.properties,
 				this.sort,
-				JSON.parse(
-					JSON.stringify(
-						this.appliedFilters.map(filter => ({
-							...filter,
-							filterType: filter.filterType.name
-						}))
-					)
-				),
+				this.appliedFilters.map(filter => ({
+					...filter,
+					filterType: filter.filterType.name
+				})),
 				this.appliedFilterOperator,
 				res => {
 					console.log(111, res);
@@ -1377,6 +1373,7 @@ export default {
 				JSON.stringify(this.editingFilters)
 			);
 			this.appliedFilterOperator = this.filterOperator;
+			this.page = 1;
 			this.getData();
 			this.storeTableSettings();
 		},
