@@ -12,6 +12,7 @@ const SongsModule = moduleManager.modules.songs;
 const ActivitiesModule = moduleManager.modules.activities;
 const YouTubeModule = moduleManager.modules.youtube;
 const PlaylistsModule = moduleManager.modules.playlists;
+const StationsModule = moduleManager.modules.stations;
 
 CacheModule.runJob("SUB", {
 	channel: "song.updated",
@@ -22,15 +23,19 @@ CacheModule.runJob("SUB", {
 
 		songModel.findOne({ _id: data.songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOMS", {
-				rooms: [
-					"import-album",
-					"admin.songs",
-					"admin.unverifiedSongs",
-					"admin.hiddenSongs",
-					`edit-song.${data.songId}`
-				],
+				rooms: ["import-album", "admin.songs", `edit-song.${data.songId}`],
 				args: ["event:admin.song.updated", { data: { song, oldStatus: data.oldStatus } }]
 			});
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "song.removed",
+	cb: async data => {
+		WSModule.runJob("EMIT_TO_ROOMS", {
+			rooms: ["import-album", "admin.songs", `edit-song.${data.songId}`],
+			args: ["event:admin.song.removed", { data }]
 		});
 	}
 });
@@ -371,79 +376,127 @@ export default {
 		);
 	}),
 
-	// /**
-	//  * Removes a song
-	//  *
-	//  * @param session
-	//  * @param songId - the song id
-	//  * @param cb
-	//  */
-	// remove: isAdminRequired(async function remove(session, songId, cb) {
-	// 	const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
-	// 	let song = null;
-	// 	async.waterfall(
-	// 		[
-	// 			next => {
-	// 				songModel.findOne({ _id: songId }, next);
-	// 			},
+	/**
+	 * Removes a song
+	 *
+	 * @param session
+	 * @param songId - the song id
+	 * @param cb
+	 */
+	remove: isAdminRequired(async function remove(session, songId, cb) {
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 
-	// 			(_song, next) => {
-	// 				song = _song;
-	// 				songModel.deleteOne({ _id: songId }, next);
-	// 			},
+		async.waterfall(
+			[
+				next => {
+					songModel.findOne({ _id: songId }, next);
+				},
 
-	// 			(res, next) => {
-	// 				CacheModule.runJob("HDEL", { table: "songs", key: songId }, this)
-	// 					.then(() => {
-	// 						next();
-	// 					})
-	// 					.catch(next)
-	// 					.finally(() => {
-	// 						song.genres.forEach(genre => {
-	// 							PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
-	// 								.then(() => {})
-	// 								.catch(() => {});
-	// 						});
-	// 					});
-	// 			}
-	// 		],
-	// 		async err => {
-	// 			if (err) {
-	// 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				(song, next) => {
+					playlistModel.find({ "songs._id": songId }, (err, playlists) => {
+						if (err) next(err);
+						else {
+							playlistModel.updateMany(
+								{ "songs._id": songId },
+								{ $pull: { songs: { _id: songId } } },
+								err => {
+									if (err) this.log("ERROR", err);
+									else {
+										async.eachLimit(playlists, 1, (playlist, next) => {
+											PlaylistsModule.runJob(
+												"UPDATE_PLAYLIST",
+												{ playlistId: playlist._id },
+												next
+											);
+										});
+										next(null, song);
+									}
+								}
+							);
+						}
+					});
+				},
 
-	// 				this.log("ERROR", "SONGS_REMOVE", `Failed to remove song "${songId}". "${err}"`);
+				(song, next) => {
+					stationModel.find({ "queue._id": songId }, (err, stations) => {
+						if (err) next(err);
+						else {
+							stationModel.updateMany(
+								{ "queue._id": songId },
+								{ $pull: { queue: { _id: songId } } },
+								err => {
+									if (err) this.log("ERROR", err);
+									else {
+										async.eachLimit(stations, 1, (station, next) => {
+											StationsModule.runJob("UPDATE_STATION", { stationId: station._id }, next);
+										});
+										next(null, song);
+									}
+								}
+							);
+						}
+					});
+				},
 
-	// 				return cb({ status: "error", message: err });
-	// 			}
+				(song, next) => {
+					stationModel.find({ "currentSong._id": songId }, (err, stations) => {
+						if (err) next(err);
+						else {
+							async.eachLimit(stations, 1, (station, next) => {
+								StationsModule.runJob("SKIP_STATION", { stationId: station._id, natural: false }, next);
+							});
+							next(null, song);
+						}
+					});
+				},
 
-	// 			this.log("SUCCESS", "SONGS_REMOVE", `Successfully removed song "${songId}".`);
+				(song, next) => {
+					songModel.deleteOne({ _id: songId }, err => {
+						if (err) next(err);
+						else next(null, song);
+					});
+				},
 
-	// 			if (song.status === "verified") {
-	// 				CacheModule.runJob("PUB", {
-	// 					channel: "song.removedVerifiedSong",
-	// 					value: songId
-	// 				});
-	// 			}
-	// 			if (song.status === "unverified") {
-	// 				CacheModule.runJob("PUB", {
-	// 					channel: "song.removedUnverifiedSong",
-	// 					value: songId
-	// 				});
-	// 			}
-	// 			if (song.status === "hidden") {
-	// 				CacheModule.runJob("PUB", {
-	// 					channel: "song.removedHiddenSong",
-	// 					value: songId
-	// 				});
-	// 			}
+				(song, next) => {
+					CacheModule.runJob("HDEL", { table: "songs", key: songId }, this)
+						.then(() => {
+							next();
+						})
+						.catch(next)
+						.finally(() => {
+							song.genres.forEach(genre => {
+								PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
+									.then(() => {})
+									.catch(() => {});
+							});
+						});
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
-	// 			return cb({
-	// 				status: "success",
-	// 				message: "Song has been successfully removed"
-	// 			});
-	// 		}
-	// 	);
-	// }),
+					this.log("ERROR", "SONGS_REMOVE", `Failed to remove song "${songId}". "${err}"`);
+
+					return cb({ status: "error", message: err });
+				}
+
+				this.log("SUCCESS", "SONGS_REMOVE", `Successfully removed song "${songId}".`);
+
+				CacheModule.runJob("PUB", {
+					channel: "song.removed",
+					value: { songId }
+				});
+
+				return cb({
+					status: "success",
+					message: "Song has been successfully removed"
+				});
+			}
+		);
+	}),
 
 	/**
 	 * Searches through official songs

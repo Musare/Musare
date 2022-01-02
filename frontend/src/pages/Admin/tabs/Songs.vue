@@ -109,6 +109,16 @@
 						slotProps.item.status
 					}}</span>
 				</template>
+				<template #column-duration="slotProps">
+					<span :title="slotProps.item.duration">{{
+						slotProps.item.duration
+					}}</span>
+				</template>
+				<template #column-skipDuration="slotProps">
+					<span :title="slotProps.item.skipDuration">{{
+						slotProps.item.skipDuration
+					}}</span>
+				</template>
 				<template #column-requestedBy="slotProps">
 					<user-id-to-username
 						:user-id="slotProps.item.requestedBy"
@@ -413,6 +423,22 @@ export default {
 					defaultVisibility: "hidden"
 				},
 				{
+					name: "duration",
+					displayName: "Duration",
+					properties: ["duration"],
+					sortProperty: "duration",
+					defaultWidth: 200,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "skipDuration",
+					displayName: "Skip Duration",
+					properties: ["skipDuration"],
+					sortProperty: "skipDuration",
+					defaultWidth: 200,
+					defaultVisibility: "hidden"
+				},
+				{
 					name: "requestedBy",
 					displayName: "Requested By",
 					properties: ["requestedBy"],
@@ -586,7 +612,7 @@ export default {
 				},
 				removed: {
 					event: "admin.song.removed",
-					id: "song._id"
+					id: "songId"
 				}
 			},
 			jobs: [
@@ -708,8 +734,18 @@ export default {
 		setGenres() {
 			new Toast("Bulk setting genres not yet implemented.");
 		},
-		deleteMany() {
-			new Toast("Bulk deleting not yet implemented.");
+		deleteMany(selectedRows) {
+			if (selectedRows.length === 1) {
+				this.socket.dispatch(
+					"songs.remove",
+					selectedRows[0]._id,
+					res => {
+						new Toast(res.message);
+					}
+				);
+			} else {
+				new Toast("Bulk deleting not yet implemented.");
+			}
 		},
 		toggleKeyboardShortcutsHelper() {
 			this.$refs.keyboardShortcutsHelper.toggleBox();

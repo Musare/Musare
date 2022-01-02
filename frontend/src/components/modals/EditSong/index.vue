@@ -506,15 +506,18 @@
 						>
 							<i class="material-icons">visibility</i>
 						</button>
-						<!-- <quick-confirm placement="left" @confirm="remove(song._id)">
-						<button
-							class="button is-danger"
-							content="Remove Song"
-							v-tippy
+						<quick-confirm
+							placement="left"
+							@confirm="remove(song._id)"
 						>
-							<i class="material-icons">delete</i>
-						</button>
-					</quick-confirm> -->
+							<button
+								class="button is-danger"
+								content="Remove Song"
+								v-tippy
+							>
+								<i class="material-icons">delete</i>
+							</button>
+						</quick-confirm>
 					</div>
 				</div>
 			</template>
@@ -682,6 +685,19 @@ export default {
 			res => {
 				if (res.data.song._id === this.song._id)
 					this.song.status = res.data.song.status;
+			},
+			{ modal: "editSong" }
+		);
+
+		this.socket.on(
+			"event:admin.song.removed",
+			res => {
+				if (res.data.songId === this.song._id) {
+					this.closeModal("editSong");
+					setTimeout(() => {
+						window.focusedElementBefore.focus();
+					}, 500);
+				}
 			},
 			{ modal: "editSong" }
 		);
@@ -1548,11 +1564,11 @@ export default {
 				new Toast(res.message);
 			});
 		},
-		// remove(id) {
-		// 	this.socket.dispatch("songs.remove", id, res => {
-		// 		new Toast(res.message);
-		// 	});
-		// },
+		remove(id) {
+			this.socket.dispatch("songs.remove", id, res => {
+				new Toast(res.message);
+			});
+		},
 		...mapActions("modals/importAlbum", [
 			"selectDiscogsAlbum",
 			"updateEditingSongs"
