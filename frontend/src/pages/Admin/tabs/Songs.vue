@@ -42,6 +42,7 @@
 								material-icons
 							"
 							@click="editOne(slotProps.item)"
+							:disabled="slotProps.item.removed"
 							content="Edit Song"
 							v-tippy
 						>

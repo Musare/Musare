@@ -22,6 +22,7 @@
 								material-icons
 							"
 							@click="edit(slotProps.item._id)"
+							:disabled="slotProps.item.removed"
 							content="Edit Playlist"
 							v-tippy
 						>

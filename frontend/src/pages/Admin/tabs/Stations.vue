@@ -28,6 +28,7 @@
 								material-icons
 							"
 							@click="edit(slotProps.item._id)"
+							:disabled="slotProps.item.removed"
 							content="Manage Station"
 							v-tippy
 						>

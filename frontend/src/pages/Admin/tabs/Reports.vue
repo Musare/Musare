@@ -20,6 +20,7 @@
 								material-icons
 							"
 							@click="view(slotProps.item._id)"
+							:disabled="slotProps.item.removed"
 							content="View Report"
 							v-tippy
 						>
@@ -33,6 +34,7 @@
 								material-icons
 							"
 							@click="resolve(slotProps.item._id)"
+							:disabled="slotProps.item.removed"
 							content="Resolve Report"
 							v-tippy
 						>

@@ -30,7 +30,10 @@
 						>
 							edit
 						</button>
-						<quick-confirm @confirm="remove(slotProps.item._id)">
+						<quick-confirm
+							@confirm="remove(slotProps.item._id)"
+							:disabled="slotProps.item.removed"
+						>
 							<button
 								class="
 									button

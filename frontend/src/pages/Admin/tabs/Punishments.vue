@@ -20,6 +20,7 @@
 								material-icons
 							"
 							@click="view(slotProps.item._id)"
+							:disabled="slotProps.item.removed"
 							content="View Punishment"
 							v-tippy
 						>

@@ -437,7 +437,9 @@
 											<input
 												type="checkbox"
 												:checked="
-													rows.length ===
+													rows.filter(
+														row => !row.removed
+													).length ===
 													selectedRows.length
 												"
 												@click="toggleAllRows()"
@@ -548,8 +550,15 @@
 										@click="
 											toggleSelectedRow(itemIndex, $event)
 										"
+										:disabled="item.removed"
 									/>
 								</p>
+								<span
+									v-if="item.removed"
+									class="removed-overlay"
+									content="Item removed"
+									v-tippy="{ theme: 'info' }"
+								></span>
 								<div
 									class="resizer"
 									v-if="column.resizable"
@@ -1182,10 +1191,19 @@ export default {
 			this.rows[itemIndex].highlighted = true;
 		},
 		toggleAllRows() {
-			if (this.rows.length > this.selectedRows.length) {
-				this.rows = this.rows.map(row => ({ ...row, selected: true }));
+			if (
+				this.rows.filter(row => !row.removed).length >
+				this.selectedRows.length
+			) {
+				this.rows = this.rows.map(row => {
+					if (row.removed) return row;
+					return { ...row, selected: true };
+				});
 			} else {
-				this.rows = this.rows.map(row => ({ ...row, selected: false }));
+				this.rows = this.rows.map(row => {
+					if (row.removed) return row;
+					return { ...row, selected: false };
+				});
 			}
 		},
 		addFilterItem() {
@@ -1525,7 +1543,11 @@ export default {
 			this.rows[index] = { ...this.rows[index], ...data, updated: true };
 		},
 		removeData(index) {
-			this.rows[index] = { ...this.rows[index], removed: true };
+			this.rows[index] = {
+				...this.rows[index],
+				selected: false,
+				removed: true
+			};
 		}
 	}
 };
@@ -1681,6 +1703,21 @@ export default {
 								height: 30px;
 								width: 30px;
 							}
+						}
+					}
+
+					&.removed {
+						filter: grayscale(100%);
+						cursor: not-allowed;
+						user-select: none;
+
+						td .removed-overlay {
+							position: absolute;
+							top: 0;
+							left: 0;
+							bottom: 0;
+							right: 0;
+							z-index: 5;
 						}
 					}
 				}

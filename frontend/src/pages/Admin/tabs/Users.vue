@@ -18,6 +18,7 @@
 						<quick-confirm
 							placement="right"
 							@confirm="resolveDataRequest(slotProps.item._id)"
+							:disabled="slotProps.item.removed"
 						>
 							<button
 								class="
@@ -80,6 +81,7 @@
 								material-icons
 							"
 							@click="edit(slotProps.item._id)"
+							:disabled="slotProps.item.removed"
 							content="Edit User"
 							v-tippy
 						>
