@@ -12,6 +12,7 @@
 				name="admin-data-requests"
 				max-width="1200"
 				:query="false"
+				:events="dataRequests.events"
 			>
 				<template #column-options="slotProps">
 					<div class="row-options">
@@ -70,6 +71,7 @@
 				data-action="users.getData"
 				name="admin-users"
 				max-width="1200"
+				:events="users.events"
 			>
 				<template #column-options="slotProps">
 					<div class="row-options">
@@ -240,7 +242,14 @@ export default {
 						filterTypes: ["contains", "exact", "regex"],
 						defaultFilterType: "contains"
 					}
-				]
+				],
+				events: {
+					adminRoom: "users",
+					removed: {
+						event: "admin.dataRequests.resolved",
+						id: "dataRequestId"
+					}
+				}
 			},
 			users: {
 				columnDefault: {
@@ -410,7 +419,14 @@ export default {
 						],
 						defaultFilterType: "numberLesser"
 					}
-				]
+				],
+				events: {
+					adminRoom: "users",
+					removed: {
+						event: "user.removed",
+						id: "userId"
+					}
+				}
 			}
 		};
 	},
@@ -424,29 +440,12 @@ export default {
 	},
 	mounted() {
 		if (this.$route.query.userId) this.edit(this.$route.query.userId);
-		// ws.onConnect(this.init);
-		// this.socket.on("event:admin.dataRequests.created", res =>
-		// 	this.dataRequests.push(res.data.request)
-		// );
-		// this.socket.on("event:admin.dataRequests.resolved", res => {
-		// 	this.dataRequests = this.dataRequests.filter(
-		// 		request => request._id !== res.data.dataRequestId
-		// 	);
-		// });
-		// this.socket.on("event:user.removed", res => {
-		// 	this.users = this.users.filter(
-		// 		user => user._id !== res.data.userId
-		// 	);
-		// });
 	},
 	methods: {
 		edit(userId) {
 			this.editingUserId = userId;
 			this.openModal("editUser");
 		},
-		// init() {
-		// 	this.socket.dispatch("apis.joinAdminRoom", "users", () => {});
-		// },
 		resolveDataRequest(id) {
 			this.socket.dispatch("dataRequests.resolve", id, res => {
 				if (res.status === "success") new Toast(res.message);

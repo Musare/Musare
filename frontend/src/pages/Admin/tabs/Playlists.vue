@@ -11,6 +11,7 @@
 				:filters="filters"
 				data-action="playlists.getData"
 				name="admin-playlists"
+				:events="events"
 			>
 				<template #column-options="slotProps">
 					<div class="row-options">
@@ -257,6 +258,13 @@ export default {
 					defaultFilterType: "contains"
 				}
 			],
+			events: {
+				adminRoom: "playlists",
+				removed: {
+					event: "admin.playlist.deleted",
+					id: "playlistId"
+				}
+			},
 			jobs: [
 				{
 					name: "Delete orphaned station playlists",
@@ -295,12 +303,6 @@ export default {
 	},
 	mounted() {
 		// TODO
-		// this.socket.on("event:admin.playlist.created", res =>
-		// 	this.addPlaylist(res.data.playlist)
-		// );
-		// this.socket.on("event:admin.playlist.deleted", res =>
-		// 	this.removePlaylist(res.data.playlistId)
-		// );
 		// this.socket.on("event:admin.playlist.song.added", res =>
 		// 	this.addPlaylistSong({
 		// 		playlistId: res.data.playlistId,

@@ -17,6 +17,7 @@
 				:filters="filters"
 				data-action="stations.getData"
 				name="admin-stations"
+				:events="events"
 			>
 				<template #column-options="slotProps">
 					<div class="row-options">
@@ -305,6 +306,13 @@ export default {
 					defaultFilterType: "contains"
 				}
 			],
+			events: {
+				adminRoom: "stations",
+				removed: {
+					event: "admin.station.deleted",
+					id: "stationId"
+				}
+			},
 			jobs: [
 				{
 					name: "Clear every station queue",

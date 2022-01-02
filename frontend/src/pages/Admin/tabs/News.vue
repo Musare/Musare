@@ -14,6 +14,7 @@
 				data-action="news.getData"
 				name="admin-news"
 				max-width="1200"
+				:events="events"
 			>
 				<template #column-options="slotProps">
 					<div class="row-options">
@@ -86,8 +87,6 @@
 import { mapActions, mapState, mapGetters } from "vuex";
 import { defineAsyncComponent } from "vue";
 import Toast from "toasters";
-
-// import ws from "@/ws";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
 import QuickConfirm from "@/components/QuickConfirm.vue";
@@ -181,7 +180,19 @@ export default {
 					filterTypes: ["contains", "exact", "regex"],
 					defaultFilterType: "contains"
 				}
-			]
+			],
+			events: {
+				adminRoom: "news",
+				updated: {
+					event: "admin.news.updated",
+					id: "news._id",
+					item: "news"
+				},
+				removed: {
+					event: "admin.news.deleted",
+					id: "newsId"
+				}
+			}
 		};
 	},
 	computed: {
@@ -194,18 +205,6 @@ export default {
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
-	},
-	mounted() {
-		// this.socket.on("event:admin.news.created", res =>
-		// 	this.addNews(res.data.news)
-		// );
-		// this.socket.on("event:admin.news.updated", res =>
-		// 	this.updateNews(res.data.news)
-		// );
-		// this.socket.on("event:admin.news.deleted", res =>
-		// 	this.removeNews(res.data.newsId)
-		// );
-		// ws.onConnect(this.init);
 	},
 	methods: {
 		edit(id) {
@@ -220,17 +219,7 @@ export default {
 				res => new Toast(res.message)
 			);
 		},
-		// init() {
-		// 	this.socket.dispatch("apis.joinAdminRoom", "news");
-		// },
-		...mapActions("modalVisibility", ["openModal", "closeModal"]),
-		...mapActions("admin/news", [
-			"editNews",
-			"addNews",
-			"setNews",
-			"removeNews",
-			"updateNews"
-		])
+		...mapActions("modalVisibility", ["openModal", "closeModal"])
 	}
 };
 </script>

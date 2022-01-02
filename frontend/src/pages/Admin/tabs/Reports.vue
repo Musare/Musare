@@ -9,6 +9,7 @@
 				data-action="reports.getData"
 				name="admin-reports"
 				max-width="1200"
+				:events="events"
 			>
 				<template #column-options="slotProps">
 					<div class="row-options">
@@ -234,7 +235,14 @@ export default {
 					filterTypes: ["datetimeBefore", "datetimeAfter"],
 					defaultFilterType: "datetimeBefore"
 				}
-			]
+			],
+			events: {
+				adminRoom: "reports",
+				removed: {
+					event: "admin.report.resolved",
+					id: "reportId"
+				}
+			}
 		};
 	},
 	computed: {
@@ -245,21 +253,7 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
-	mounted() {
-		// ws.onConnect(this.init);
-		// this.socket.on("event:admin.report.resolved", res => {
-		// 	this.reports = this.reports.filter(
-		// 		report => report._id !== res.data.reportId
-		// 	);
-		// });
-		// this.socket.on("event:admin.report.created", res =>
-		// 	this.reports.unshift(res.data.report)
-		// );
-	},
 	methods: {
-		// init() {
-		// 	this.socket.dispatch("apis.joinAdminRoom", "reports", () => {});
-		// },
 		view(reportId) {
 			this.viewReport(reportId);
 			this.openModal("viewReport");
