@@ -791,6 +791,78 @@ export default {
 	}),
 
 	/**
+	 * Verify many songs
+	 *
+	 * @param session
+	 * @param songIds - array of song ids
+	 * @param cb
+	 */
+	verifyMany: isAdminRequired(async function verifyMany(session, songIds, cb) {
+		const successful = [];
+		const failed = [];
+
+		async.waterfall(
+			[
+				next => {
+					async.eachLimit(
+						songIds,
+						1,
+						(songId, next) => {
+							WSModule.runJob(
+								"RUN_ACTION2",
+								{
+									session,
+									namespace: "songs",
+									action: "verify",
+									args: [songId]
+								},
+								this
+							)
+								.then(res => {
+									if (res.status === "error") failed.push(songId);
+									else successful.push(songId);
+									next();
+								})
+								.catch(err => {
+									next(err);
+								});
+						},
+						err => {
+							if (err) next(err);
+							else next();
+						}
+					);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log("ERROR", "SONGS_VERIFY_MANY", `Failed to verify songs "${failed.join(", ")}". "${err}"`);
+
+					return cb({ status: "error", message: err });
+				}
+
+				let message = "";
+				if (successful.length === 1) message += `1 song has been successfully verified`;
+				else message += `${successful.length} songs have been successfully verified`;
+				if (failed.length > 0) {
+					this.log("ERROR", "SONGS_VERIFY_MANY", `Failed to verify songs "${failed.join(", ")}". "${err}"`);
+					if (failed.length === 1) message += `, failed to verify 1 song`;
+					else message += `, failed to verify ${failed.length} songs`;
+				}
+
+				this.log("SUCCESS", "SONGS_VERIFY_MANY", `${message} "${successful.join(", ")}"`);
+
+				return cb({
+					status: "success",
+					message
+				});
+			}
+		);
+	}),
+
+	/**
 	 * Un-verifies a song
 	 *
 	 * @param session
@@ -851,6 +923,86 @@ export default {
 			}
 		);
 		// TODO Check if video is in queue and Add the song to the appropriate stations
+	}),
+
+	/**
+	 * Unverify many songs
+	 *
+	 * @param session
+	 * @param songIds - array of song ids
+	 * @param cb
+	 */
+	unverifyMany: isAdminRequired(async function unverifyMany(session, songIds, cb) {
+		const successful = [];
+		const failed = [];
+
+		async.waterfall(
+			[
+				next => {
+					async.eachLimit(
+						songIds,
+						1,
+						(songId, next) => {
+							WSModule.runJob(
+								"RUN_ACTION2",
+								{
+									session,
+									namespace: "songs",
+									action: "unverify",
+									args: [songId]
+								},
+								this
+							)
+								.then(res => {
+									if (res.status === "error") failed.push(songId);
+									else successful.push(songId);
+									next();
+								})
+								.catch(err => {
+									next(err);
+								});
+						},
+						err => {
+							if (err) next(err);
+							else next();
+						}
+					);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log(
+						"ERROR",
+						"SONGS_UNVERIFY_MANY",
+						`Failed to unverify songs "${failed.join(", ")}". "${err}"`
+					);
+
+					return cb({ status: "error", message: err });
+				}
+
+				let message = "";
+				if (successful.length === 1) message += `1 song has been successfully unverified`;
+				else message += `${successful.length} songs have been successfully unverified`;
+				if (failed.length > 0) {
+					this.log(
+						"ERROR",
+						"SONGS_UNVERIFY_MANY",
+						`Failed to unverify songs "${failed.join(", ")}". "${err}"`
+					);
+					if (failed.length === 1) message += `, failed to unverify 1 song`;
+					else message += `, failed to unverify ${failed.length} songs`;
+				}
+
+				this.log("SUCCESS", "SONGS_UNVERIFY_MANY", `${message} "${successful.join(", ")}"`);
+
+				return cb({
+					status: "success",
+					message
+				});
+			}
+		);
 	}),
 
 	/**

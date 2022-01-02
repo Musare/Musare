@@ -700,30 +700,22 @@ export default {
 			}
 		},
 		verifyMany(selectedRows) {
-			if (selectedRows.length === 1) {
-				this.socket.dispatch(
-					"songs.verify",
-					selectedRows[0]._id,
-					res => {
-						new Toast(res.message);
-					}
-				);
-			} else {
-				new Toast("Bulk verifying not yet implemented.");
-			}
+			this.socket.dispatch(
+				"songs.verifyMany",
+				selectedRows.map(row => row._id),
+				res => {
+					new Toast(res.message);
+				}
+			);
 		},
 		unverifyMany(selectedRows) {
-			if (selectedRows.length === 1) {
-				this.socket.dispatch(
-					"songs.unverify",
-					selectedRows[0]._id,
-					res => {
-						new Toast(res.message);
-					}
-				);
-			} else {
-				new Toast("Bulk unverifying not yet implemented.");
-			}
+			this.socket.dispatch(
+				"songs.unverifyMany",
+				selectedRows.map(row => row._id),
+				res => {
+					new Toast(res.message);
+				}
+			);
 		},
 		tagMany() {
 			new Toast("Bulk tagging not yet implemented.");
