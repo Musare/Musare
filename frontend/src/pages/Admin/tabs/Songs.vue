@@ -546,8 +546,8 @@ export default {
 					name: "status",
 					displayName: "Status",
 					property: "status",
-					filterTypes: ["array", "regex"],
-					defaultFilterType: "array",
+					filterTypes: ["exact", "regex"],
+					defaultFilterType: "exact",
 					filterValues: ["verified", "unverified"]
 				},
 				{

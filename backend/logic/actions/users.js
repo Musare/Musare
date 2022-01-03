@@ -213,10 +213,6 @@ export default {
 							newQuery[filter.property] = { $gte: data };
 						} else if (filterType === "numberEquals") {
 							newQuery[filter.property] = { $eq: data };
-						} else if (filterType === "array") {
-							if (filter.property === "role" && !["admin", "default"].includes(data))
-								queryError = `${data} is not a valid ${filter.property} value`;
-							else newQuery[filter.property] = data.toString();
 						}
 						return newQuery;
 					});

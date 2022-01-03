@@ -914,10 +914,6 @@ class _PlaylistsModule extends CoreClass {
 								newQuery[filter.property] = { $gte: data };
 							} else if (filterType === "numberEquals") {
 								newQuery[filter.property] = { $eq: data };
-							} else if (filterType === "array") {
-								if (filter.property === "privacy" && !["public", "private"].includes(data))
-									queryError = `${data} is not a valid ${filter.property} value`;
-								else newQuery[filter.property] = data.toString();
 							}
 							return newQuery;
 						});

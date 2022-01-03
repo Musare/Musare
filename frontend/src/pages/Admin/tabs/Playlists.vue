@@ -232,8 +232,8 @@ export default {
 					name: "privacy",
 					displayName: "Privacy",
 					property: "privacy",
-					filterTypes: ["array", "regex"],
-					defaultFilterType: "array",
+					filterTypes: ["exact", "regex"],
+					defaultFilterType: "exact",
 					filterValues: ["public", "private"]
 				},
 				{

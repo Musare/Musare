@@ -114,7 +114,8 @@
 								<div
 									v-if="
 										filter.filterType.name &&
-										filter.filterType.name === 'array'
+										filter.filterType.name === 'exact' &&
+										filter.filter.filterValues
 									"
 									class="control is-expanded select"
 								>
@@ -794,10 +795,6 @@ export default {
 				numberEquals: {
 					name: "numberEquals",
 					displayName: "=="
-				},
-				array: {
-					name: "array",
-					displayName: "Is"
 				}
 			},
 			bulkPopup: {

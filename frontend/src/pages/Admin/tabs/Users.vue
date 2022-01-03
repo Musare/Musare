@@ -388,8 +388,8 @@ export default {
 						name: "role",
 						displayName: "Role",
 						property: "role",
-						filterTypes: ["array", "regex"],
-						defaultFilterType: "array",
+						filterTypes: ["exact", "regex"],
+						defaultFilterType: "exact",
 						filterValues: ["admin", "default"]
 					},
 					{

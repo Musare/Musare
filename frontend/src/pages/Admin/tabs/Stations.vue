@@ -271,16 +271,16 @@ export default {
 					name: "type",
 					displayName: "Type",
 					property: "type",
-					filterTypes: ["array", "regex"],
-					defaultFilterType: "array",
+					filterTypes: ["exact", "regex"],
+					defaultFilterType: "exact",
 					filterValues: ["official", "community"]
 				},
 				{
 					name: "privacy",
 					displayName: "Privacy",
 					property: "privacy",
-					filterTypes: ["array", "regex"],
-					defaultFilterType: "array",
+					filterTypes: ["exact", "regex"],
+					defaultFilterType: "exact",
 					filterValues: ["public", "unlisted", "private"]
 				},
 				{
@@ -294,8 +294,8 @@ export default {
 					name: "playMode",
 					displayName: "Play Mode",
 					property: "playMode",
-					filterTypes: ["array", "regex"],
-					defaultFilterType: "array",
+					filterTypes: ["exact", "regex"],
+					defaultFilterType: "exact",
 					filterValues: ["random", "sequential"]
 				},
 				{
