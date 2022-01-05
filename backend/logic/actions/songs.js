@@ -385,7 +385,6 @@ export default {
 	 */
 	remove: isAdminRequired(async function remove(session, songId, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
-		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 
 		async.waterfall(
@@ -395,11 +394,10 @@ export default {
 				},
 
 				(song, next) => {
-					playlistModel.find({ "songs._id": songId }, (err, playlists) => {
-						if (err) next(err);
-						else {
+					PlaylistsModule.runJob("GET_PLAYLISTS_WITH_SONG", { songId }, this)
+						.then(res => {
 							async.eachLimit(
-								playlists,
+								res.playlists,
 								1,
 								(playlist, next) => {
 									WSModule.runJob(
@@ -425,8 +423,8 @@ export default {
 									else next(null, song);
 								}
 							);
-						}
-					});
+						})
+						.catch(err => next(err));
 				},
 
 				(song, next) => {
@@ -448,7 +446,12 @@ export default {
 										this
 									)
 										.then(res => {
-											if (res.status === "error") next(res.message);
+											if (
+												res.status === "error" &&
+												res.message !== "Station not found" &&
+												res.message !== "Song is not currently in the queue."
+											)
+												next(res.message);
 											else next();
 										})
 										.catch(err => {
@@ -477,12 +480,12 @@ export default {
 										{ stationId: station._id, natural: false },
 										this
 									)
-										.then(res => {
-											if (res.status === "error") next(res.message);
-											else next();
+										.then(() => {
+											next();
 										})
 										.catch(err => {
-											next(err);
+											if (err.message === "Station not found.") next();
+											else next(err);
 										});
 								},
 								err => {
