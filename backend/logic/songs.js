@@ -222,11 +222,63 @@ class _SongsModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
-					next => {
+					// Creates pipeline array
+					next => next(null, []),
+
+					// If a filter exists for requestedBy, add requestedByUsername property to all documents
+					(pipeline, next) => {
+						const { queries } = payload;
+
+						// Check if a filter with the requestedBy property exists
+						const requestedByFilterExists = queries.map(query => query.filter.property).indexOf("requestedBy") !== -1;
+						// If no such filter exists, skip this function
+						if (!requestedByFilterExists) return next(null, pipeline);
+
+						// Adds requestedByOID field, which is an ObjectId version of requestedBy
+						pipeline.push({ $addFields: {
+							requestedByOID: { $convert: {
+								input: "$requestedBy",
+								to: "objectId",
+								onError: "unknown",
+								onNull: "unknown"
+							} }
+						} });
+
+						// Looks up user(s) with the same _id as the requestedByOID and puts the result in the requestedByUser field
+						pipeline.push({ $lookup: {
+							from: "users",
+							localField: "requestedByOID",
+							foreignField: "_id",
+							as: "requestedByUser"
+						} });
+
+						// Unwinds the requestedByUser array field into an object
+						pipeline.push({ $unwind: {
+							path: "$requestedByUser"
+						} });
+
+						// Adds requestedByUsername field from the requestedByUser username
+						pipeline.push({ $addFields: {
+							requestedByUsername: "$requestedByUser.username"
+						} });
+
+						// Removes the requestedByOID and requestedByUser property, just in case it doesn't get removed at a later stage
+						pipeline.push({
+							$project: {
+								requestedByOID: 0,
+								requestedByUser: 0,
+							}
+						});
+
+						return next(null, pipeline);
+					},
+
+					// Adds the match stage to aggregation pipeline, which is responsible for filtering
+					(pipeline, next) => {
 						const { queries, operator } = payload;
 
 						let queryError;
-						const newQueries = queries.map(query => {
+						const newQueries = queries.flatMap(query => {
 							const { data, filter, filterType } = query;
 							const newQuery = {};
 							if (filterType === "regex") {
@@ -253,6 +305,9 @@ class _SongsModule extends CoreClass {
 							} else if (filterType === "numberEquals") {
 								newQuery[filter.property] = { $eq: data };
 							}
+
+							if (filter.property === "requestedBy") return { $or: [ newQuery, { requestedByUsername: newQuery["requestedBy"] } ] };
+
 							return newQuery;
 						});
 						if (queryError) next(queryError);
@@ -264,26 +319,72 @@ class _SongsModule extends CoreClass {
 							else if (operator === "nor") queryObject.$nor = newQueries;
 						}
 
-						next(null, queryObject);
+						pipeline.push({ $match: queryObject });
+
+						next(null, pipeline);
 					},
 
-					(queryObject, next) => {
-						SongsModule.SongModel.find(queryObject).count((err, count) => {
-							next(err, queryObject, count);
+					// Adds sort stage to aggregation pipeline if there is at least one column being sorted, responsible for sorting data
+					(pipeline, next) => {
+						const { sort } = payload;
+						const newSort = Object.fromEntries(
+							Object.entries(sort).map(([property, direction]) => [
+								property,
+								direction === "ascending" ? 1 : -1
+							])
+						);
+						if (Object.keys(newSort).length > 0) pipeline.push({ $sort: newSort });
+						next(null, pipeline);
+					},
+
+					// Adds first project stage to aggregation pipeline, responsible for including only the requested properties
+					(pipeline, next) => {
+						const { properties } = payload;
+
+						pipeline.push({ $project: Object.fromEntries(properties.map(property => [property, 1])) });
+
+						next(null, pipeline);
+					},
+
+					// // Adds second project stage to aggregation pipeline, responsible for excluding some specific properties
+					// (pipeline, next) => {
+					// 	pipeline.push({
+					// 		$project: {
+					// 			title: 0
+					// 		}
+					// 	});
+
+					// 	next(null, pipeline);
+					// },
+
+					// Adds the facet stage to aggregation pipeline, responsible for returning a total document count, skipping and limitting the documents that will be returned
+					(pipeline, next) => {
+						const { page, pageSize } = payload;
+
+						pipeline.push({
+							$facet: {
+								count: [{ $count: "count" }],
+								documents: [{ $skip: pageSize * (page - 1) }, { $limit: pageSize }]
+							}
 						});
+
+						// console.log(pipeline);
+
+						next(null, pipeline);
 					},
 
-					(queryObject, count, next) => {
-						const { page, pageSize, properties, sort } = payload;
-
-						SongsModule.SongModel.find(queryObject)
-							.sort(sort)
-							.skip(pageSize * (page - 1))
-							.limit(pageSize)
-							.select(properties.join(" "))
-							.exec((err, songs) => {
-								next(err, count, songs);
-							});
+					// Executes the aggregation pipeline
+					(pipeline, next) => {
+						SongsModule.SongModel.aggregate(
+							pipeline
+						).exec((err, result) => {
+							if (err) return next(err);
+							if (result[0].count.length === 0) return next(null, 0, []);
+							const { count } = result[0].count[0];
+							const { documents } = result[0];
+							// console.log(111, err, result, count, documents[0]);
+							return next(null, count, documents);
+						});
 					}
 				],
 				(err, count, songs) => {
