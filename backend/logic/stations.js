@@ -403,15 +403,85 @@ class _StationsModule extends CoreClass {
 	 * @param {string} payload.operator - the operator for queries
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	GET_DATA(payload) {
+	 GET_DATA(payload) {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
-					next => {
+					// Creates pipeline array
+					next => next(null, []),
+
+					// If a filter exists for owner, add ownerUsername property to all documents
+					(pipeline, next) => {
+						const { queries } = payload;
+
+						// Check if a filter with the owner property exists
+						const ownerFilterExists =
+							queries.map(query => query.filter.property).indexOf("owner") !== -1;
+						// If no such filter exists, skip this function
+						if (!ownerFilterExists) return next(null, pipeline);
+
+						// Adds ownerOID field, which is an ObjectId version of owner
+						pipeline.push({
+							$addFields: {
+								ownerOID: {
+									$convert: {
+										input: "$owner",
+										to: "objectId",
+										onError: "unknown",
+										onNull: "unknown"
+									}
+								}
+							}
+						});
+
+						// Looks up user(s) with the same _id as the ownerOID and puts the result in the ownerUser field
+						pipeline.push({
+							$lookup: {
+								from: "users",
+								localField: "ownerOID",
+								foreignField: "_id",
+								as: "ownerUser"
+							}
+						});
+
+						// Unwinds the ownerUser array field into an object
+						pipeline.push({
+							$unwind: {
+								path: "$ownerUser",
+								preserveNullAndEmptyArrays: true
+							}
+						});
+
+						// Adds ownerUsername field from the ownerUser username, if owner doesn't exist then it's none, or if user/username doesn't exist then it's unknown
+						pipeline.push({
+							$addFields: {
+								ownerUsername: {
+									$cond: [
+										{ $eq: [ { $type: "$owner" }, "string" ] },
+										{ $ifNull: ["$ownerUser.username", "unknown"] },
+										"none"
+									]
+								}
+							}
+						});
+
+						// Removes the ownerOID and ownerUser property, just in case it doesn't get removed at a later stage
+						pipeline.push({
+							$project: {
+								ownerOID: 0,
+								ownerUser: 0
+							}
+						});
+
+						return next(null, pipeline);
+					},
+
+					// Adds the match stage to aggregation pipeline, which is responsible for filtering
+					(pipeline, next) => {
 						const { queries, operator } = payload;
 
 						let queryError;
-						const newQueries = queries.map(query => {
+						const newQueries = queries.flatMap(query => {
 							const { data, filter, filterType } = query;
 							const newQuery = {};
 							if (filterType === "regex") {
@@ -438,6 +508,10 @@ class _StationsModule extends CoreClass {
 							} else if (filterType === "numberEquals") {
 								newQuery[filter.property] = { $eq: data };
 							}
+
+							if (filter.property === "owner")
+								return { $or: [newQuery, { ownerUsername: newQuery.owner }] };
+
 							return newQuery;
 						});
 						if (queryError) next(queryError);
@@ -449,27 +523,61 @@ class _StationsModule extends CoreClass {
 							else if (operator === "nor") queryObject.$nor = newQueries;
 						}
 
-						next(null, queryObject);
+						pipeline.push({ $match: queryObject });
+
+						next(null, pipeline);
 					},
 
-					(queryObject, next) => {
-						StationsModule.stationModel.find(queryObject).count((err, count) => {
-							next(err, queryObject, count);
+					// Adds sort stage to aggregation pipeline if there is at least one column being sorted, responsible for sorting data
+					(pipeline, next) => {
+						const { sort } = payload;
+						const newSort = Object.fromEntries(
+							Object.entries(sort).map(([property, direction]) => [
+								property,
+								direction === "ascending" ? 1 : -1
+							])
+						);
+						if (Object.keys(newSort).length > 0) pipeline.push({ $sort: newSort });
+						next(null, pipeline);
+					},
+
+					// Adds first project stage to aggregation pipeline, responsible for including only the requested properties
+					(pipeline, next) => {
+						const { properties } = payload;
+
+						pipeline.push({ $project: Object.fromEntries(properties.map(property => [property, 1])) });
+
+						next(null, pipeline);
+					},
+
+					// Adds the facet stage to aggregation pipeline, responsible for returning a total document count, skipping and limitting the documents that will be returned
+					(pipeline, next) => {
+						const { page, pageSize } = payload;
+
+						pipeline.push({
+							$facet: {
+								count: [{ $count: "count" }],
+								documents: [{ $skip: pageSize * (page - 1) }, { $limit: pageSize }]
+							}
 						});
+
+						// console.dir(pipeline, { depth: 6 });
+
+						next(null, pipeline);
 					},
 
-					(queryObject, count, next) => {
-						const { page, pageSize, properties, sort } = payload;
-
-						StationsModule.stationModel
-							.find(queryObject)
-							.sort(sort)
-							.skip(pageSize * (page - 1))
-							.limit(pageSize)
-							.select(properties.join(" "))
-							.exec((err, stations) => {
-								next(err, count, stations);
-							});
+					// Executes the aggregation pipeline
+					(pipeline, next) => {
+						StationsModule.stationModel.aggregate(pipeline).exec((err, result) => {
+							// console.dir(err);
+							// console.dir(result, { depth: 6 });
+							if (err) return next(err);
+							if (result[0].count.length === 0) return next(null, 0, []);
+							const { count } = result[0].count[0];
+							const { documents } = result[0];
+							// console.log(111, err, result, count, documents[0]);
+							return next(null, count, documents);
+						});
 					}
 				],
 				(err, count, stations) => {

@@ -185,9 +185,13 @@ export default {
 
 		async.waterfall(
 			[
-				next => {
+				// Creates pipeline array
+				next => next(null, []),
+
+				// Adds the match stage to aggregation pipeline, which is responsible for filtering
+				(pipeline, next) => {
 					let queryError;
-					const newQueries = queries.map(query => {
+					const newQueries = queries.flatMap(query => {
 						const { data, filter, filterType } = query;
 						const newQuery = {};
 						if (filterType === "regex") {
@@ -214,6 +218,7 @@ export default {
 						} else if (filterType === "numberEquals") {
 							newQuery[filter.property] = { $eq: data };
 						}
+
 						return newQuery;
 					});
 					if (queryError) next(queryError);
@@ -225,48 +230,84 @@ export default {
 						else if (operator === "nor") queryObject.$nor = newQueries;
 					}
 
-					next(null, queryObject);
+					pipeline.push({ $match: queryObject });
+
+					next(null, pipeline);
 				},
 
-				(queryObject, next) => {
-					const invalidProperties = [...properties, ...queries.map(query => query.filter.property)].find(
-						property => {
-							if (
-								[
-									"services.password",
-									"services.password.password",
-									"services.password.reset.code",
-									"services.password.reset.expires",
-									"services.password.set.code",
-									"services.password.set.expires",
-									"services.github.access_token",
-									"services.email.verificationToken"
-								].includes(property)
-							)
-								return true;
-							return false;
-						}
+				// Adds sort stage to aggregation pipeline if there is at least one column being sorted, responsible for sorting data
+				(pipeline, next) => {
+					const newSort = Object.fromEntries(
+						Object.entries(sort).map(([property, direction]) => [
+							property,
+							direction === "ascending" ? 1 : -1
+						])
 					);
-					if (invalidProperties) next("Invalid paramaters given.");
-					else next(null, queryObject);
+					if (Object.keys(newSort).length > 0) pipeline.push({ $sort: newSort });
+					next(null, pipeline);
 				},
 
-				(queryObject, next) => {
-					userModel.find(queryObject).count((err, count) => {
-						next(err, queryObject, count);
+				// Adds first project stage to aggregation pipeline, responsible for including only the requested properties
+				(pipeline, next) => {
+					pipeline.push({ $project: Object.fromEntries(properties.map(property => [property, 1])) });
+
+					next(null, pipeline);
+				},
+
+				// Adds second project stage to aggregation pipeline, responsible for excluding some specific properties
+				(pipeline, next) => {
+					pipeline.push({
+						$project: {
+							"services.password.password": 0,
+							"services.password.reset.code": 0,
+							"services.password.reset.expires": 0,
+							"services.password.set.code": 0,
+							"services.password.set.expires": 0,
+							"services.github.access_token": 0,
+							"email.verificationToken": 0,
+						}
 					});
+
+					// [
+					// 	"services.password",
+					// 	"services.password.password",
+					// 	"services.password.reset.code",
+					// 	"services.password.reset.expires",
+					// 	"services.password.set.code",
+					// 	"services.password.set.expires",
+					// 	"services.github.access_token",
+					// 	"services.email.verificationToken"
+					// ]
+
+					next(null, pipeline);
 				},
 
-				(queryObject, count, next) => {
-					userModel
-						.find(queryObject)
-						.sort(sort)
-						.skip(pageSize * (page - 1))
-						.limit(pageSize)
-						.select(properties.join(" "))
-						.exec((err, users) => {
-							next(err, count, users);
-						});
+				// Adds the facet stage to aggregation pipeline, responsible for returning a total document count, skipping and limitting the documents that will be returned
+				(pipeline, next) => {
+					pipeline.push({
+						$facet: {
+							count: [{ $count: "count" }],
+							documents: [{ $skip: pageSize * (page - 1) }, { $limit: pageSize }]
+						}
+					});
+
+					// console.dir(pipeline, { depth: 6 });
+
+					next(null, pipeline);
+				},
+
+				// Executes the aggregation pipeline
+				(pipeline, next) => {
+					userModel.aggregate(pipeline).exec((err, result) => {
+						// console.dir(err);
+						console.dir(result, { depth: 6 });
+						if (err) return next(err);
+						if (result[0].count.length === 0) return next(null, 0, []);
+						const { count } = result[0].count[0];
+						const { documents } = result[0];
+						// console.log(111, err, result, count, documents[0]);
+						return next(null, count, documents);
+					});
 				}
 			],
 			async (err, count, users) => {

@@ -44,8 +44,137 @@ export default {
 
 		async.waterfall(
 			[
-				next => {
-					const newQueries = queries.map(query => {
+				// Creates pipeline array
+				next => next(null, []),
+
+				// If a filter exists for value, add valueUsername property to all documents
+				(pipeline, next) => {
+					// Check if a filter with the value property exists
+					const valueFilterExists =
+						queries.map(query => query.filter.property).indexOf("value") !== -1;
+					// If no such filter exists, skip this function
+					if (!valueFilterExists) return next(null, pipeline);
+
+					// Adds valueOID field, which is an ObjectId version of value
+					pipeline.push({
+						$addFields: {
+							valueOID: {
+								$convert: {
+									input: "$value",
+									to: "objectId",
+									onError: "unknown",
+									onNull: "unknown"
+								}
+							}
+						}
+					});
+
+					// Looks up user(s) with the same _id as the valueOID and puts the result in the valueUser field
+					pipeline.push({
+						$lookup: {
+							from: "users",
+							localField: "valueOID",
+							foreignField: "_id",
+							as: "valueUser"
+						}
+					});
+
+					// Unwinds the valueUser array field into an object
+					pipeline.push({
+						$unwind: {
+							path: "$valueUser",
+							preserveNullAndEmptyArrays: true
+						}
+					});
+
+					// Adds valueUsername field from the valueUser username, or unknown if it doesn't exist, or Musare if it's set to Musare
+					pipeline.push({
+						$addFields: {
+							valueUsername: {
+								$cond: [
+									{ $eq: [ "$type", "banUserId" ] },
+									{ $ifNull: ["$valueUser.username", "unknown"] },
+									null
+								]
+							}
+						}
+					});
+
+					// Removes the valueOID and valueUser property, just in case it doesn't get removed at a later stage
+					pipeline.push({
+						$project: {
+							valueOID: 0,
+							valueUser: 0
+						}
+					});
+
+					return next(null, pipeline);
+				},
+
+				// If a filter exists for punishedBy, add punishedByUsername property to all documents
+				(pipeline, next) => {
+					// Check if a filter with the punishedBy property exists
+					const punishedByFilterExists =
+						queries.map(query => query.filter.property).indexOf("punishedBy") !== -1;
+					// If no such filter exists, skip this function
+					if (!punishedByFilterExists) return next(null, pipeline);
+
+					// Adds punishedByOID field, which is an ObjectId version of punishedBy
+					pipeline.push({
+						$addFields: {
+							punishedByOID: {
+								$convert: {
+									input: "$punishedBy",
+									to: "objectId",
+									onError: "unknown",
+									onNull: "unknown"
+								}
+							}
+						}
+					});
+
+					// Looks up user(s) with the same _id as the punishedByOID and puts the result in the punishedByUser field
+					pipeline.push({
+						$lookup: {
+							from: "users",
+							localField: "punishedByOID",
+							foreignField: "_id",
+							as: "punishedByUser"
+						}
+					});
+
+					// Unwinds the punishedByUser array field into an object
+					pipeline.push({
+						$unwind: {
+							path: "$punishedByUser",
+							preserveNullAndEmptyArrays: true
+						}
+					});
+
+					// Adds punishedByUsername field from the punishedByUser username, or unknown if it doesn't exist
+					pipeline.push({
+						$addFields: {
+							punishedByUsername: {
+								$ifNull: ["$punishedByUser.username", "unknown"]
+							}
+						}
+					});
+
+					// Removes the punishedByOID and punishedByUser property, just in case it doesn't get removed at a later stage
+					pipeline.push({
+						$project: {
+							punishedByOID: 0,
+							punishedByUser: 0
+						}
+					});
+
+					return next(null, pipeline);
+				},
+
+				// Adds the match stage to aggregation pipeline, which is responsible for filtering
+				(pipeline, next) => {
+					let queryError;
+					const newQueries = queries.flatMap(query => {
 						const { data, filter, filterType } = query;
 						const newQuery = {};
 						if (filterType === "regex") {
@@ -72,8 +201,15 @@ export default {
 						} else if (filterType === "numberEquals") {
 							newQuery[filter.property] = { $eq: data };
 						}
+
+						if (filter.property === "value")
+							return { $or: [newQuery, { valueUsername: newQuery.value }] };
+						if (filter.property === "punishedBy")
+							return { $or: [newQuery, { punishedByUsername: newQuery.punishedBy }] };
+
 						return newQuery;
 					});
+					if (queryError) next(queryError);
 
 					const queryObject = {};
 					if (newQueries.length > 0) {
@@ -82,25 +218,56 @@ export default {
 						else if (operator === "nor") queryObject.$nor = newQueries;
 					}
 
-					next(null, queryObject);
+					pipeline.push({ $match: queryObject });
+
+					next(null, pipeline);
 				},
 
-				(queryObject, next) => {
-					punishmentModel.find(queryObject).count((err, count) => {
-						next(err, queryObject, count);
+				// Adds sort stage to aggregation pipeline if there is at least one column being sorted, responsible for sorting data
+				(pipeline, next) => {
+					const newSort = Object.fromEntries(
+						Object.entries(sort).map(([property, direction]) => [
+							property,
+							direction === "ascending" ? 1 : -1
+						])
+					);
+					if (Object.keys(newSort).length > 0) pipeline.push({ $sort: newSort });
+					next(null, pipeline);
+				},
+
+				// Adds first project stage to aggregation pipeline, responsible for including only the requested properties
+				(pipeline, next) => {
+					pipeline.push({ $project: Object.fromEntries(properties.map(property => [property, 1])) });
+
+					next(null, pipeline);
+				},
+
+				// Adds the facet stage to aggregation pipeline, responsible for returning a total document count, skipping and limitting the documents that will be returned
+				(pipeline, next) => {
+					pipeline.push({
+						$facet: {
+							count: [{ $count: "count" }],
+							documents: [{ $skip: pageSize * (page - 1) }, { $limit: pageSize }]
+						}
 					});
+
+					// console.dir(pipeline, { depth: 6 });
+
+					next(null, pipeline);
 				},
 
-				(queryObject, count, next) => {
-					punishmentModel
-						.find(queryObject)
-						.sort(sort)
-						.skip(pageSize * (page - 1))
-						.limit(pageSize)
-						.select(properties.join(" "))
-						.exec((err, punishments) => {
-							next(err, count, punishments);
-						});
+				// Executes the aggregation pipeline
+				(pipeline, next) => {
+					punishmentModel.aggregate(pipeline).exec((err, result) => {
+						// console.dir(err);
+						// console.dir(result, { depth: 6 });
+						if (err) return next(err);
+						if (result[0].count.length === 0) return next(null, 0, []);
+						const { count } = result[0].count[0];
+						const { documents } = result[0];
+						// console.log(111, err, result, count, documents[0]);
+						return next(null, count, documents);
+					});
 				}
 			],
 			async (err, count, punishments) => {
