@@ -264,7 +264,7 @@ export default {
 							"services.password.set.code": 0,
 							"services.password.set.expires": 0,
 							"services.github.access_token": 0,
-							"email.verificationToken": 0,
+							"email.verificationToken": 0
 						}
 					});
 

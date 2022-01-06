@@ -403,7 +403,7 @@ class _StationsModule extends CoreClass {
 	 * @param {string} payload.operator - the operator for queries
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	 GET_DATA(payload) {
+	GET_DATA(payload) {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
@@ -415,8 +415,7 @@ class _StationsModule extends CoreClass {
 						const { queries } = payload;
 
 						// Check if a filter with the owner property exists
-						const ownerFilterExists =
-							queries.map(query => query.filter.property).indexOf("owner") !== -1;
+						const ownerFilterExists = queries.map(query => query.filter.property).indexOf("owner") !== -1;
 						// If no such filter exists, skip this function
 						if (!ownerFilterExists) return next(null, pipeline);
 
@@ -457,7 +456,7 @@ class _StationsModule extends CoreClass {
 							$addFields: {
 								ownerUsername: {
 									$cond: [
-										{ $eq: [ { $type: "$owner" }, "string" ] },
+										{ $eq: [{ $type: "$owner" }, "string"] },
 										{ $ifNull: ["$ownerUser.username", "unknown"] },
 										"none"
 									]

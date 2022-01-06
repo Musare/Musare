@@ -929,7 +929,7 @@ class _PlaylistsModule extends CoreClass {
 							$addFields: {
 								createdByUsername: {
 									$cond: [
-										{ $eq: [ "$createdBy", "Musare" ] },
+										{ $eq: ["$createdBy", "Musare"] },
 										"Musare",
 										{ $ifNull: ["$createdByUser.username", "unknown"] }
 									]

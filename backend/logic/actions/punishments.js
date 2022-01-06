@@ -50,8 +50,7 @@ export default {
 				// If a filter exists for value, add valueUsername property to all documents
 				(pipeline, next) => {
 					// Check if a filter with the value property exists
-					const valueFilterExists =
-						queries.map(query => query.filter.property).indexOf("value") !== -1;
+					const valueFilterExists = queries.map(query => query.filter.property).indexOf("value") !== -1;
 					// If no such filter exists, skip this function
 					if (!valueFilterExists) return next(null, pipeline);
 
@@ -92,7 +91,7 @@ export default {
 						$addFields: {
 							valueUsername: {
 								$cond: [
-									{ $eq: [ "$type", "banUserId" ] },
+									{ $eq: ["$type", "banUserId"] },
 									{ $ifNull: ["$valueUser.username", "unknown"] },
 									null
 								]
@@ -202,8 +201,7 @@ export default {
 							newQuery[filter.property] = { $eq: data };
 						}
 
-						if (filter.property === "value")
-							return { $or: [newQuery, { valueUsername: newQuery.value }] };
+						if (filter.property === "value") return { $or: [newQuery, { valueUsername: newQuery.value }] };
 						if (filter.property === "punishedBy")
 							return { $or: [newQuery, { punishedByUsername: newQuery.punishedBy }] };
 
