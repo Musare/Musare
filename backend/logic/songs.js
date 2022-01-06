@@ -230,43 +230,119 @@ class _SongsModule extends CoreClass {
 						const { queries } = payload;
 
 						// Check if a filter with the requestedBy property exists
-						const requestedByFilterExists = queries.map(query => query.filter.property).indexOf("requestedBy") !== -1;
+						const requestedByFilterExists =
+							queries.map(query => query.filter.property).indexOf("requestedBy") !== -1;
 						// If no such filter exists, skip this function
 						if (!requestedByFilterExists) return next(null, pipeline);
 
 						// Adds requestedByOID field, which is an ObjectId version of requestedBy
-						pipeline.push({ $addFields: {
-							requestedByOID: { $convert: {
-								input: "$requestedBy",
-								to: "objectId",
-								onError: "unknown",
-								onNull: "unknown"
-							} }
-						} });
+						pipeline.push({
+							$addFields: {
+								requestedByOID: {
+									$convert: {
+										input: "$requestedBy",
+										to: "objectId",
+										onError: "unknown",
+										onNull: "unknown"
+									}
+								}
+							}
+						});
 
 						// Looks up user(s) with the same _id as the requestedByOID and puts the result in the requestedByUser field
-						pipeline.push({ $lookup: {
-							from: "users",
-							localField: "requestedByOID",
-							foreignField: "_id",
-							as: "requestedByUser"
-						} });
+						pipeline.push({
+							$lookup: {
+								from: "users",
+								localField: "requestedByOID",
+								foreignField: "_id",
+								as: "requestedByUser"
+							}
+						});
 
 						// Unwinds the requestedByUser array field into an object
-						pipeline.push({ $unwind: {
-							path: "$requestedByUser"
-						} });
+						pipeline.push({
+							$unwind: {
+								path: "$requestedByUser",
+								preserveNullAndEmptyArrays: true
+							}
+						});
 
-						// Adds requestedByUsername field from the requestedByUser username
-						pipeline.push({ $addFields: {
-							requestedByUsername: "$requestedByUser.username"
-						} });
+						// Adds requestedByUsername field from the requestedByUser username, or unknown if it doesn't exist
+						pipeline.push({
+							$addFields: {
+								requestedByUsername: {
+									$ifNull: ["$requestedByUser.username", "unknown"]
+								}
+							}
+						});
 
 						// Removes the requestedByOID and requestedByUser property, just in case it doesn't get removed at a later stage
 						pipeline.push({
 							$project: {
 								requestedByOID: 0,
-								requestedByUser: 0,
+								requestedByUser: 0
+							}
+						});
+
+						return next(null, pipeline);
+					},
+
+					// If a filter exists for createdBy, add createdByUsername property to all documents
+					(pipeline, next) => {
+						const { queries } = payload;
+
+						// Check if a filter with the createdBy property exists
+						const createdByFilterExists =
+							queries.map(query => query.filter.property).indexOf("createdBy") !== -1;
+						// If no such filter exists, skip this function
+						if (!createdByFilterExists) return next(null, pipeline);
+
+						// Adds createdByOID field, which is an ObjectId version of createdBy
+						pipeline.push({
+							$addFields: {
+								createdByOID: {
+									$convert: {
+										input: "$createdBy",
+										to: "objectId",
+										onError: "unknown",
+										onNull: "unknown"
+									}
+								}
+							}
+						});
+
+						// Looks up user(s) with the same _id as the createdByOID and puts the result in the createdByUser field
+						pipeline.push({
+							$lookup: {
+								from: "users",
+								localField: "createdByOID",
+								foreignField: "_id",
+								as: "createdByUser"
+							}
+						});
+
+						// Unwinds the createdByUser array field into an object
+						pipeline.push({
+							$unwind: {
+								path: "$createdByUser",
+								preserveNullAndEmptyArrays: true
+							}
+						});
+
+						// Adds createdByUsername field from the createdByUser username, or unknown if it doesn't exist
+						pipeline.push({
+							$addFields: {
+								createdByUsername: {
+									$ifNull: ["$createdByUser.username", "unknown"]
+								}
+							}
+						});
+
+						// Removes the createdByOID and createdByUser property, just in case it doesn't get removed at a later stage
+						pipeline.push({
+							$project: {
+								createdByOID: 0,
+								createdByUser: 0
 							}
 						});
 
@@ -306,7 +382,10 @@ class _SongsModule extends CoreClass {
 								newQuery[filter.property] = { $eq: data };
 							}
 
-							if (filter.property === "requestedBy") return { $or: [ newQuery, { requestedByUsername: newQuery["requestedBy"] } ] };
+							if (filter.property === "requestedBy")
+								return { $or: [newQuery, { requestedByUsername: newQuery.requestedBy }] };
+							if (filter.property === "createdBy")
+								return { $or: [newQuery, { createdByUsername: newQuery.createdBy }] };
 
 							return newQuery;
 						});
@@ -368,16 +447,16 @@ class _SongsModule extends CoreClass {
 							}
 						});
 
-						// console.log(pipeline);
+						// console.dir(pipeline, { depth: 6 });
 
 						next(null, pipeline);
 					},
 
 					// Executes the aggregation pipeline
 					(pipeline, next) => {
-						SongsModule.SongModel.aggregate(
-							pipeline
-						).exec((err, result) => {
+						SongsModule.SongModel.aggregate(pipeline).exec((err, result) => {
+							// console.dir(err);
+							// console.dir(result, { depth: 6 });
 							if (err) return next(err);
 							if (result[0].count.length === 0) return next(null, 0, []);
 							const { count } = result[0].count[0];
