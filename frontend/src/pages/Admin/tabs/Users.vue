@@ -123,11 +123,11 @@
 						>{{ slotProps.item.services.github.id }}</span
 					>
 				</template>
-				<!-- <template #column-hasPassword="slotProps">
+				<template #column-hasPassword="slotProps">
 					<span :title="slotProps.item.hasPassword">{{
 						slotProps.item.hasPassword
 					}}</span>
-				</template> -->
+				</template>
 				<template #column-role="slotProps">
 					<span :title="slotProps.item.role">{{
 						slotProps.item.role
@@ -309,12 +309,12 @@ export default {
 						minWidth: 115,
 						defaultWidth: 115
 					},
-					// {
-					// 	name: "hasPassword",
-					// 	displayName: "Has Password",
-					// 	properties: ["hasPassword"],
-					// 	sortProperty: "hasPassword"
-					// }
+					{
+						name: "hasPassword",
+						displayName: "Has Password",
+						properties: ["hasPassword"],
+						sortProperty: "hasPassword"
+					},
 					{
 						name: "role",
 						displayName: "Role",

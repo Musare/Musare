@@ -29,13 +29,7 @@
 					</div>
 				</template>
 				<template #column-status="slotProps">
-					<span>{{
-						slotProps.item.active &&
-						new Date(slotProps.item.expiresAt).getTime() >
-							Date.now()
-							? "Active"
-							: "Inactive"
-					}}</span>
+					<span>{{ slotProps.item.status }}</span>
 				</template>
 				<template #column-type="slotProps">
 					<span
@@ -163,7 +157,7 @@ export default {
 				{
 					name: "status",
 					displayName: "Status",
-					properties: ["active", "expiresAt"],
+					properties: ["status", "active", "expiresAt"],
 					sortable: false,
 					defaultWidth: 150
 				},

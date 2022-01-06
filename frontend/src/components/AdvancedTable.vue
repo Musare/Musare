@@ -531,11 +531,10 @@
 												.split('.')
 												.reduce(
 													(previous, current) =>
-														(previous &&
+														(previous !== null &&
 															previous[
 																current
-															]) ||
-														null,
+															]) !== null || null,
 													item
 												)
 										)
@@ -998,7 +997,9 @@ export default {
 							.split(".")
 							.reduce(
 								(previous, current) =>
-									(previous && previous[current]) || null,
+									(previous !== null &&
+										previous[current] !== null) ||
+									null,
 								res.data
 							)
 					);
@@ -1006,7 +1007,8 @@ export default {
 					.split(".")
 					.reduce(
 						(previous, current) =>
-							(previous && previous[current]) || null,
+							(previous !== null && previous[current] !== null) ||
+							null,
 						res.data
 					);
 				this.updateData(index, row);
@@ -1020,7 +1022,9 @@ export default {
 							.split(".")
 							.reduce(
 								(previous, current) =>
-									(previous && previous[current]) || null,
+									(previous !== null &&
+										previous[current] !== null) ||
+									null,
 								res.data
 							)
 					);

@@ -188,6 +188,28 @@ export default {
 				// Creates pipeline array
 				next => next(null, []),
 
+				// If a filter or property exists for hasPassword, add hasPassword property to all documents
+				(pipeline, next) => {
+					// Check if a filter with the hasPassword property exists
+					const hasPasswordFilterExists =
+						queries.map(query => query.filter.property).indexOf("hasPassword") !== -1;
+					// Check if a property with the hasPassword property exists
+					const hasPasswordPropertyExists = properties.indexOf("hasPassword") !== -1;
+					// If no such filter or property exists, skip this function
+					if (!hasPasswordFilterExists && !hasPasswordPropertyExists) return next(null, pipeline);
+
+					// Adds hasPassword field, set it to true if services.password.password is a string, false if not
+					pipeline.push({
+						$addFields: {
+							hasPassword: {
+								$cond: [{ $eq: [{ $type: "$services.password.password" }, "string"] }, true, false]
+							}
+						}
+					});
+
+					return next(null, pipeline);
+				},
+
 				// Adds the match stage to aggregation pipeline, which is responsible for filtering
 				(pipeline, next) => {
 					let queryError;
@@ -300,7 +322,7 @@ export default {
 				(pipeline, next) => {
 					userModel.aggregate(pipeline).exec((err, result) => {
 						// console.dir(err);
-						console.dir(result, { depth: 6 });
+						// console.dir(result, { depth: 6 });
 						if (err) return next(err);
 						if (result[0].count.length === 0) return next(null, 0, []);
 						const { count } = result[0].count[0];

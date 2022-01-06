@@ -47,6 +47,31 @@ export default {
 				// Creates pipeline array
 				next => next(null, []),
 
+				// If a filter or property exists for status, add status property to all documents
+				(pipeline, next) => {
+					// Check if a filter with the status property exists
+					const statusFilterExists = queries.map(query => query.filter.property).indexOf("status") !== -1;
+					// Check if a property with the status property exists
+					const statusPropertyExists = properties.indexOf("status") !== -1;
+					// If no such filter or property exists, skip this function
+					if (!statusFilterExists && !statusPropertyExists) return next(null, pipeline);
+
+					// Adds status field, set to Inactive if active is false, otherwise it sets it to Inactive if expiresAt has already passed, Active if not
+					pipeline.push({
+						$addFields: {
+							status: {
+								$cond: [
+									{ $eq: ["$active", true] },
+									{ $cond: [{ $gt: [new Date(), "$expiresAt"] }, "Inactive", "Active"] },
+									"Inactive"
+								]
+							}
+						}
+					});
+
+					return next(null, pipeline);
+				},
+
 				// If a filter exists for value, add valueUsername property to all documents
 				(pipeline, next) => {
 					// Check if a filter with the value property exists
@@ -258,7 +283,7 @@ export default {
 				(pipeline, next) => {
 					punishmentModel.aggregate(pipeline).exec((err, result) => {
 						// console.dir(err);
-						// console.dir(result, { depth: 6 });
+						console.dir(result, { depth: 6 });
 						if (err) return next(err);
 						if (result[0].count.length === 0) return next(null, 0, []);
 						const { count } = result[0].count[0];
