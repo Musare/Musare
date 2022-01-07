@@ -1473,7 +1473,7 @@ class _SongsModule extends CoreClass {
 	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	 GET_GENRES() {
+	GET_GENRES() {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
@@ -1494,7 +1494,7 @@ class _SongsModule extends CoreClass {
 	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	 GET_ARTISTS() {
+	GET_ARTISTS() {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[

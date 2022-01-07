@@ -1710,9 +1710,11 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					SongsModule.runJob("GET_GENRES", this).then(res => {
-						next(null, res.genres);
-					}).catch(next);
+					SongsModule.runJob("GET_GENRES", this)
+						.then(res => {
+							next(null, res.genres);
+						})
+						.catch(next);
 				}
 			],
 			async (err, genres) => {
@@ -1726,7 +1728,7 @@ export default {
 						status: "success",
 						message: "Successfully got genres.",
 						data: {
-							genres
+							items: genres
 						}
 					});
 				}
@@ -1740,13 +1742,15 @@ export default {
 	 * @param session
 	 * @param cb
 	 */
-	 getArtists: isAdminRequired(function getModule(session, cb) {
+	getArtists: isAdminRequired(function getModule(session, cb) {
 		async.waterfall(
 			[
 				next => {
-					SongsModule.runJob("GET_ARTISTS", this).then(res => {
-						next(null, res.artists);
-					}).catch(next);
+					SongsModule.runJob("GET_ARTISTS", this)
+						.then(res => {
+							next(null, res.artists);
+						})
+						.catch(next);
 				}
 			],
 			async (err, artists) => {
@@ -1760,7 +1764,7 @@ export default {
 						status: "success",
 						message: "Successfully got artists.",
 						data: {
-							artists
+							items: artists
 						}
 					});
 				}

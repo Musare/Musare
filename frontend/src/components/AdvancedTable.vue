@@ -173,7 +173,7 @@
 									<div
 										class="autosuggest-container"
 										v-if="
-											filter.filter.autocomplete &&
+											filter.filter.autosuggest &&
 											(autosuggest.inputFocussed[
 												filter.filter.name
 											] ||
@@ -1108,6 +1108,18 @@ export default {
 						() => {}
 					);
 			}
+			this.filters.forEach(filter => {
+				if (filter.autosuggest && filter.autosuggestDataAction) {
+					this.socket.dispatch(filter.autosuggestDataAction, res => {
+						if (res.status === "success") {
+							const { items } = res.data;
+							this.autosuggest.allItems[filter.name] = items;
+						} else {
+							new Toast(res.message);
+						}
+					});
+				}
+			});
 		},
 		getData() {
 			this.socket.dispatch(
@@ -1704,6 +1716,20 @@ export default {
 			color: var(--white);
 		}
 	}
+	.autosuggest-container {
+		background-color: var(--dark-grey) !important;
+
+		.autosuggest-item {
+			background-color: var(--dark-grey) !important;
+			color: var(--white) !important;
+			border-color: var(--dark-grey) !important;
+		}
+
+		.autosuggest-item:hover,
+		.autosuggest-item:focus {
+			background-color: var(--dark-grey-2) !important;
+		}
+	}
 }
 
 .table-outer-container {
@@ -1998,6 +2024,50 @@ export default {
 		}
 	}
 }
+
+.autosuggest-container {
+	position: absolute;
+	background: var(--white);
+	width: calc(100% + 1px);
+	top: 35px;
+	z-index: 200;
+	overflow: auto;
+	max-height: 98px;
+	clear: both;
+
+	.autosuggest-item {
+		padding: 8px;
+		display: block;
+		border: 1px solid var(--light-grey-2);
+		margin-top: -1px;
+		line-height: 16px;
+		cursor: pointer;
+		-webkit-user-select: none;
+		-ms-user-select: none;
+		-moz-user-select: none;
+		user-select: none;
+	}
+
+	.autosuggest-item:hover,
+	.autosuggest-item:focus {
+		background-color: var(--light-grey);
+	}
+
+	.autosuggest-item:first-child {
+		border-top: none;
+	}
+
+	.autosuggest-item:last-child {
+		border-radius: 0 0 3px 3px;
+	}
+}
+
+.advanced-filter {
+	.control {
+		position: relative;
+	}
+}
+
 .advanced-filter-bottom {
 	display: flex;
 

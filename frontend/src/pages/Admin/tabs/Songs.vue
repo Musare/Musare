@@ -498,7 +498,9 @@ export default {
 					displayName: "Artists",
 					property: "artists",
 					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
+					defaultFilterType: "contains",
+					autosuggest: true,
+					autosuggestDataAction: "songs.getArtists"
 				},
 				{
 					name: "genres",
@@ -506,8 +508,8 @@ export default {
 					property: "genres",
 					filterTypes: ["contains", "exact", "regex"],
 					defaultFilterType: "contains",
-					autocomplete: true,
-					autocompleteDataAction: "songs.getGenres"
+					autosuggest: true,
+					autosuggestDataAction: "songs.getGenres"
 				},
 				{
 					name: "thumbnail",
