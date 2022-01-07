@@ -222,8 +222,15 @@ export default {
 					name: "type",
 					displayName: "Type",
 					property: "type",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
+					filterTypes: ["exact", "regex"],
+					defaultFilterType: "exact",
+					filterValues: [
+						"genre",
+						"station",
+						"user",
+						"user-disliked",
+						"user-liked"
+					]
 				},
 				{
 					name: "privacy",
@@ -232,6 +239,36 @@ export default {
 					filterTypes: ["exact", "regex"],
 					defaultFilterType: "exact",
 					filterValues: ["public", "private"]
+				},
+				{
+					name: "songsCount",
+					displayName: "Songs Count",
+					property: "songsCount",
+					filterTypes: [
+						"numberLesserEqual",
+						"numberLesser",
+						"numberGreater",
+						"numberGreaterEqual",
+						"numberEquals",
+						"exact",
+						"regex"
+					],
+					defaultFilterType: "numberLesser"
+				},
+				{
+					name: "totalLength",
+					displayName: "Total Length",
+					property: "totalLength",
+					filterTypes: [
+						"numberLesserEqual",
+						"numberLesser",
+						"numberGreater",
+						"numberGreaterEqual",
+						"numberEquals",
+						"exact",
+						"regex"
+					],
+					defaultFilterType: "numberLesser"
 				},
 				{
 					name: "createdBy",

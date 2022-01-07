@@ -133,6 +133,21 @@
 										</option>
 									</select>
 								</div>
+								<div
+									v-else-if="
+										filter.filterType.name &&
+										filter.filterType.name === 'boolean'
+									"
+									class="control is-expanded select"
+								>
+									<select
+										v-model="filter.data"
+										:disabled="!filter.filterType"
+									>
+										<option :value="true">true</option>
+										<option :value="false">false</option>
+									</select>
+								</div>
 								<div v-else class="control is-expanded">
 									<input
 										v-if="
@@ -839,6 +854,10 @@ export default {
 				numberEquals: {
 					name: "numberEquals",
 					displayName: "=="
+				},
+				boolean: {
+					name: "boolean",
+					displayName: "Boolean"
 				}
 			},
 			bulkPopup: {
@@ -1831,7 +1850,7 @@ export default {
 							top: 0;
 							left: 0;
 							bottom: 0;
-							right: 0;
+							right: 5px;
 							z-index: 5;
 						}
 					}

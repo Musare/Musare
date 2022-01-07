@@ -378,7 +378,7 @@ class _SongsModule extends CoreClass {
 								newQuery[filter.property] = { $gt: data };
 							} else if (filterType === "numberGreaterEqual") {
 								newQuery[filter.property] = { $gte: data };
-							} else if (filterType === "numberEquals") {
+							} else if (filterType === "numberEquals" || filterType === "boolean") {
 								newQuery[filter.property] = { $eq: data };
 							}
 

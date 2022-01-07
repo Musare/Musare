@@ -377,13 +377,13 @@ export default {
 						filterTypes: ["contains", "exact", "regex"],
 						defaultFilterType: "contains"
 					},
-					// {
-					// 	name: "hasPassword",
-					// 	displayName: "Has Password",
-					// 	property: "hasPassword",
-					// 	filterTypes: ["contains", "exact", "regex"],
-					// 	defaultFilterType: "contains"
-					// },
+					{
+						name: "hasPassword",
+						displayName: "Has Password",
+						property: "hasPassword",
+						filterTypes: ["boolean"],
+						defaultFilterType: "boolean"
+					},
 					{
 						name: "role",
 						displayName: "Role",
@@ -403,8 +403,8 @@ export default {
 						name: "emailVerified",
 						displayName: "Email Verified",
 						property: "email.verified",
-						filterTypes: ["contains", "exact", "regex"],
-						defaultFilterType: "contains"
+						filterTypes: ["boolean"],
+						defaultFilterType: "boolean"
 					},
 					{
 						name: "songsRequested",

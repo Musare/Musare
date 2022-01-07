@@ -61,6 +61,22 @@
 						slotProps.item.reason
 					}}</span>
 				</template>
+				<template #column-punishedBy="slotProps">
+					<user-id-to-username
+						:user-id="slotProps.item.punishedBy"
+						:link="true"
+					/>
+				</template>
+				<template #column-punishedAt="slotProps">
+					<span :title="new Date(slotProps.item.punishedAt)">{{
+						getDateFormatted(slotProps.item.punishedAt)
+					}}</span>
+				</template>
+				<template #column-expiresAt="slotProps">
+					<span :title="new Date(slotProps.item.expiresAt)">{{
+						getDateFormatted(slotProps.item.expiresAt)
+					}}</span>
+				</template>
 			</advanced-table>
 			<div class="card">
 				<header class="card-header">
@@ -157,7 +173,7 @@ export default {
 				{
 					name: "status",
 					displayName: "Status",
-					properties: ["status", "active", "expiresAt"],
+					properties: ["status"],
 					sortable: false,
 					defaultWidth: 150
 				},
@@ -179,16 +195,41 @@ export default {
 					displayName: "Reason",
 					properties: ["reason"],
 					sortProperty: "reason"
+				},
+				{
+					name: "punishedBy",
+					displayName: "Punished By",
+					properties: ["punishedBy"],
+					sortProperty: "punishedBy",
+					defaultWidth: 200,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "punishedAt",
+					displayName: "Punished At",
+					properties: ["punishedAt"],
+					sortProperty: "punishedAt",
+					defaultWidth: 200,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "expiresAt",
+					displayName: "Expires At",
+					properties: ["expiresAt"],
+					sortProperty: "verifiedAt",
+					defaultWidth: 200,
+					defaultVisibility: "hidden"
 				}
 			],
 			filters: [
-				// {
-				// 	name: "status",
-				// 	displayName: "Status",
-				// 	property: "status",
-				// 	filterTypes: ["contains", "exact", "regex"],
-				// 	defaultFilterType: "contains"
-				// },
+				{
+					name: "status",
+					displayName: "Status",
+					property: "status",
+					filterTypes: ["exact", "regex"],
+					defaultFilterType: "exact",
+					filterValues: ["Active", "Inactive"]
+				},
 				{
 					name: "type",
 					displayName: "Type",
@@ -209,6 +250,27 @@ export default {
 					property: "reason",
 					filterTypes: ["contains", "exact", "regex"],
 					defaultFilterType: "contains"
+				},
+				{
+					name: "punishedBy",
+					displayName: "Punished By",
+					property: "punishedBy",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "punishedAt",
+					displayName: "Punished At",
+					property: "punishedAt",
+					filterTypes: ["datetimeBefore", "datetimeAfter"],
+					defaultFilterType: "datetimeBefore"
+				},
+				{
+					name: "expiresAt",
+					displayName: "Expires At",
+					property: "expiresAt",
+					filterTypes: ["datetimeBefore", "datetimeAfter"],
+					defaultFilterType: "datetimeBefore"
 				}
 			]
 		};
@@ -245,6 +307,15 @@ export default {
 					new Toast(res.message);
 				}
 			);
+		},
+		getDateFormatted(createdAt) {
+			const date = new Date(createdAt);
+			const year = date.getFullYear();
+			const month = `${date.getMonth() + 1}`.padStart(2, 0);
+			const day = `${date.getDate()}`.padStart(2, 0);
+			const hour = `${date.getHours()}`.padStart(2, 0);
+			const minute = `${date.getMinutes()}`.padStart(2, 0);
+			return `${year}-${month}-${day} ${hour}:${minute}`;
 		},
 		// init() {
 		// 	this.socket.dispatch("apis.joinAdminRoom", "punishments", () => {});
