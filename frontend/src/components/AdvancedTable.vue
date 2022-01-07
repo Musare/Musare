@@ -397,7 +397,8 @@
 									<button
 										v-if="
 											column.name !== 'select' &&
-											column.name !== 'placeholder'
+											column.name !== 'placeholder' &&
+											column.name !== 'updatedPlaceholder'
 										"
 										:class="{
 											sortable: column.sortable,
@@ -600,6 +601,18 @@
 										)
 									"
 								></slot>
+								<div
+									v-if="
+										column.name === 'updatedPlaceholder' &&
+										item.updated
+									"
+									class="updated-tooltip"
+									content="Row updated"
+									v-tippy="{
+										theme: 'info',
+										placement: 'right'
+									}"
+								></div>
 								<p
 									class="checkbox"
 									v-if="column.name === 'select'"
@@ -934,6 +947,18 @@ export default {
 
 		this.orderedColumns = [
 			{
+				name: "updatedPlaceholder",
+				displayName: "",
+				properties: [],
+				sortable: false,
+				hidable: false,
+				draggable: false,
+				resizable: false,
+				minWidth: 5,
+				width: 5,
+				maxWidth: 5
+			},
+			{
 				name: "select",
 				displayName: "",
 				properties: [],
@@ -962,8 +987,10 @@ export default {
 				maxWidth: "auto"
 			}
 		].sort((columnA, columnB) => {
+			// Always places updatedPlaceholder column in the first position
+			if (columnA.name === "updatedPlaceholder") return -1;
 			// Always places select column in the first position
-			if (columnA.name === "select") return -1;
+			// if (columnA.name === "select") return -1;
 			// Always places placeholder column in the last position
 			if (columnB.name === "placeholder") return -1;
 
@@ -1070,9 +1097,7 @@ export default {
 							.split(".")
 							.reduce(
 								(previous, current) =>
-									(previous !== null &&
-										previous[current] !== null) ||
-									null,
+									(previous && previous[current]) || null,
 								res.data
 							)
 					);
@@ -1080,8 +1105,7 @@ export default {
 					.split(".")
 					.reduce(
 						(previous, current) =>
-							(previous !== null && previous[current] !== null) ||
-							null,
+							(previous && previous[current]) || null,
 						res.data
 					);
 				this.updateData(index, row);
@@ -1095,9 +1119,7 @@ export default {
 							.split(".")
 							.reduce(
 								(previous, current) =>
-									(previous !== null &&
-										previous[current] !== null) ||
-									null,
+									(previous && previous[current]) || null,
 								res.data
 							)
 					);
@@ -1679,7 +1701,7 @@ export default {
 		.table-container .table {
 			&,
 			thead th {
-				background-color: var(--dark-grey-3);
+				background-color: var(--dark-grey-3) !important;
 				color: var(--light-grey-2);
 			}
 
@@ -1707,6 +1729,32 @@ export default {
 					td {
 						&,
 						&:first-child {
+							background-color: var(--dark-grey-4) !important;
+						}
+					}
+				}
+
+				&.updated td:first-child {
+					background-color: var(--primary-color) !important;
+				}
+			}
+
+			&.has-checkboxes tbody tr {
+				td:nth-child(2) {
+					background-color: var(--dark-grey-3) !important;
+				}
+				&:nth-child(even) td:nth-child(2) {
+					background-color: var(--dark-grey-2) !important;
+				}
+				&.updated td:first-child {
+					background-color: var(--primary-color) !important;
+				}
+				&:hover,
+				&:focus,
+				&.highlighted {
+					th,
+					td {
+						&:nth-child(2) {
 							background-color: var(--dark-grey-4) !important;
 						}
 					}
@@ -1821,6 +1869,12 @@ export default {
 						background-color: var(--light-grey);
 					}
 
+					&.updated {
+						td:first-child {
+							background-color: var(--primary-color) !important;
+						}
+					}
+
 					td {
 						border: 1px solid var(--light-grey-2);
 						border-width: 0 1px 1px 0;
@@ -1869,6 +1923,22 @@ export default {
 					overflow: hidden;
 
 					&:first-child {
+						display: table-cell;
+						position: sticky;
+						left: 0;
+						background-color: var(--white);
+						z-index: 2;
+
+						& > .updated-tooltip {
+							position: absolute;
+							top: 0;
+							left: 0;
+							bottom: 0;
+							right: 0;
+						}
+					}
+
+					&:nth-child(2) {
 						display: none;
 					}
 
@@ -1901,16 +1971,33 @@ export default {
 			}
 
 			&.has-checkboxes {
-				thead tr,
-				tbody tr {
-					th,
-					td {
-						&:first-child {
-							display: table-cell;
-							position: sticky;
-							left: 0;
-							background-color: var(--white);
-							z-index: 2;
+				thead,
+				tbody {
+					tr {
+						th,
+						td {
+							&:nth-child(2) {
+								display: table-cell;
+								position: sticky;
+								left: 5px;
+								background-color: var(--white);
+								z-index: 2;
+							}
+						}
+
+						&:hover,
+						&:focus,
+						&.highlighted {
+							th,
+							td {
+								&:nth-child(2) {
+									background-color: var(--light-grey);
+								}
+							}
+						}
+
+						&.updated td:first-child {
+							background-color: var(--primary-color);
 						}
 					}
 				}
