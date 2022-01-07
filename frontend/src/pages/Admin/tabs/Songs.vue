@@ -505,7 +505,9 @@ export default {
 					displayName: "Genres",
 					property: "genres",
 					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
+					defaultFilterType: "contains",
+					autocomplete: true,
+					autocompleteDataAction: "songs.getGenres"
 				},
 				{
 					name: "thumbnail",

@@ -133,7 +133,7 @@
 										</option>
 									</select>
 								</div>
-								<p v-else class="control is-expanded">
+								<div v-else class="control is-expanded">
 									<input
 										v-if="
 											filter.filterType.name &&
@@ -166,8 +166,53 @@
 										placeholder="Search value"
 										:disabled="!filter.filterType"
 										@keydown.enter="applyFilterAndGetData()"
+										@blur="blurFilterInput(filter)"
+										@focus="focusFilterInput(filter)"
+										@keydown="keydownFilterInput(filter)"
 									/>
-								</p>
+									<div
+										class="autosuggest-container"
+										v-if="
+											filter.filter.autocomplete &&
+											(autosuggest.inputFocussed[
+												filter.filter.name
+											] ||
+												autosuggest.containerFocussed[
+													filter.filter.name
+												]) &&
+											autosuggest.items[
+												filter.filter.name
+											]?.length > 0
+										"
+										@mouseover="
+											focusFilterAutosuggestContainer(
+												filter
+											)
+										"
+										@mouseleave="
+											blurFilterAutosuggestContainer(
+												filter
+											)
+										"
+									>
+										<span
+											class="autosuggest-item"
+											tabindex="0"
+											@click="
+												selectAutosuggestItem(
+													index,
+													filter,
+													item
+												)
+											"
+											v-for="item in autosuggest.items[
+												filter.filter.name
+											]"
+											:key="item"
+											>{{ item }}
+										</span>
+									</div>
+								</div>
 								<div class="control">
 									<button
 										class="button material-icons is-danger"
@@ -809,7 +854,16 @@ export default {
 			showColumnsDropdown: false,
 			lastColumnResizerTapped: null,
 			lastColumnResizerTappedDate: 0,
-			lastBulkActionsTappedDate: 0
+			lastBulkActionsTappedDate: 0,
+			autosuggest: {
+				inputFocussed: {},
+				containerFocussed: {},
+				keydownInputTimeout: {},
+				items: {},
+				allItems: {
+					genres: ["edm", "pop", "test"]
+				}
+			}
 		};
 	},
 	computed: {
@@ -1554,6 +1608,35 @@ export default {
 				selected: false,
 				removed: true
 			};
+		},
+		blurFilterInput(filter) {
+			this.autosuggest.inputFocussed[filter.filter.name] = false;
+		},
+		focusFilterInput(filter) {
+			this.autosuggest.inputFocussed[filter.filter.name] = true;
+		},
+		keydownFilterInput(filter) {
+			const { name } = filter.filter;
+			clearTimeout(this.autosuggest.keydownInputTimeout[name]);
+			this.autosuggest.keydownInputTimeout[name] = setTimeout(() => {
+				if (filter.data.length > 1) {
+					this.autosuggest.items[name] = this.autosuggest.allItems[
+						name
+					]?.filter(item =>
+						item.toLowerCase().startsWith(filter.data.toLowerCase())
+					);
+				} else this.autosuggest.items[name] = [];
+			}, 1000);
+		},
+		focusFilterAutosuggestContainer(filter) {
+			this.autosuggest.containerFocussed[filter.filter.name] = true;
+		},
+		blurFilterAutosuggestContainer(filter) {
+			this.autosuggest.containerFocussed[filter.filter.name] = false;
+		},
+		selectAutosuggestItem(index, filter, item) {
+			this.editingFilters[index].data = item;
+			this.autosuggest.items[filter.filter.name] = [];
 		}
 	}
 };

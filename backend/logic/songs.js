@@ -1467,6 +1467,48 @@ class _SongsModule extends CoreClass {
 				.catch(reject);
 		});
 	}
+
+	/**
+	 * Gets a list of all genres
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	 GET_GENRES() {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						SongsModule.SongModel.distinct("genres", next);
+					}
+				],
+				(err, genres) => {
+					if (err) reject(err);
+					resolve({ genres });
+				}
+			);
+		});
+	}
+
+	/**
+	 * Gets a list of all artists
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	 GET_ARTISTS() {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						SongsModule.SongModel.distinct("artists", next);
+					}
+				],
+				(err, artists) => {
+					if (err) reject(err);
+					resolve({ artists });
+				}
+			);
+		});
+	}
 }
 
 export default new _SongsModule();

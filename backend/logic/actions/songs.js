@@ -1627,7 +1627,6 @@ export default {
 	 * @param youtubeId - the youtube id
 	 * @param cb
 	 */
-
 	getOwnSongRatings: isLoginRequired(async function getOwnSongRatings(session, youtubeId, cb) {
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
@@ -1697,6 +1696,74 @@ export default {
 						disliked: isDisliked
 					}
 				});
+			}
+		);
+	}),
+
+	/**
+	 * Gets a list of all genres
+	 *
+	 * @param session
+	 * @param cb
+	 */
+	getGenres: isAdminRequired(function getModule(session, cb) {
+		async.waterfall(
+			[
+				next => {
+					SongsModule.runJob("GET_GENRES", this).then(res => {
+						next(null, res.genres);
+					}).catch(next);
+				}
+			],
+			async (err, genres) => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "GET_GENRES", `User ${session.userId} failed to get genres. '${err}'`);
+					cb({ status: "error", message: err });
+				} else {
+					this.log("SUCCESS", "GET_GENRES", `User ${session.userId} has successfully got the genres.`);
+					cb({
+						status: "success",
+						message: "Successfully got genres.",
+						data: {
+							genres
+						}
+					});
+				}
+			}
+		);
+	}),
+
+	/**
+	 * Gets a list of all artists
+	 *
+	 * @param session
+	 * @param cb
+	 */
+	 getArtists: isAdminRequired(function getModule(session, cb) {
+		async.waterfall(
+			[
+				next => {
+					SongsModule.runJob("GET_ARTISTS", this).then(res => {
+						next(null, res.artists);
+					}).catch(next);
+				}
+			],
+			async (err, artists) => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "GET_ARTISTS", `User ${session.userId} failed to get artists. '${err}'`);
+					cb({ status: "error", message: err });
+				} else {
+					this.log("SUCCESS", "GET_ARTISTS", `User ${session.userId} has successfully got the artists.`);
+					cb({
+						status: "success",
+						message: "Successfully got artists.",
+						data: {
+							artists
+						}
+					});
+				}
 			}
 		);
 	})
