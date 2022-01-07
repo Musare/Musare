@@ -283,7 +283,7 @@ export default {
 				(pipeline, next) => {
 					punishmentModel.aggregate(pipeline).exec((err, result) => {
 						// console.dir(err);
-						console.dir(result, { depth: 6 });
+						// console.dir(result, { depth: 6 });
 						if (err) return next(err);
 						if (result[0].count.length === 0) return next(null, 0, []);
 						const { count } = result[0].count[0];

@@ -882,6 +882,50 @@ class _PlaylistsModule extends CoreClass {
 					// Creates pipeline array
 					next => next(null, []),
 
+					// If a filter or property exists for totalLength, add totalLength property to all documents
+					(pipeline, next) => {
+						const { queries, properties } = payload;
+
+						// Check if a filter with the totalLength property exists
+						const totalLengthFilterExists =
+							queries.map(query => query.filter.property).indexOf("totalLength") !== -1;
+						// Check if a property with the totalLength property exists
+						const totalLengthPropertyExists = properties.indexOf("totalLength") !== -1;
+						// If no such filter or property exists, skip this function
+						if (!totalLengthFilterExists && !totalLengthPropertyExists) return next(null, pipeline);
+
+						// Adds totalLength field which is the sum of all durations of all songs in the songs array
+						pipeline.push({
+							$addFields: {
+								totalLength: { $sum: "$songs.duration" }
+							}
+						});
+
+						return next(null, pipeline);
+					},
+
+					// If a filter or property exists for songsCount, add songsCount property to all documents
+					(pipeline, next) => {
+						const { queries, properties } = payload;
+
+						// Check if a filter with the songsCount property exists
+						const songsCountFilterExists =
+							queries.map(query => query.filter.property).indexOf("songsCount") !== -1;
+						// Check if a property with the songsCount property exists
+						const songsCountPropertyExists = properties.indexOf("songsCount") !== -1;
+						// If no such filter or property exists, skip this function
+						if (!songsCountFilterExists && !songsCountPropertyExists) return next(null, pipeline);
+
+						// Adds songsCount field which is the length of the songs array
+						pipeline.push({
+							$addFields: {
+								songsCount: { $size: "$songs" }
+							}
+						});
+
+						return next(null, pipeline);
+					},
+
 					// If a filter exists for createdBy, add createdByUsername property to all documents
 					(pipeline, next) => {
 						const { queries } = payload;

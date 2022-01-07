@@ -47,17 +47,14 @@
 					}}</span>
 				</template>
 				<template #column-songsCount="slotProps">
-					<span :title="slotProps.item.songs.length">{{
-						slotProps.item.songs.length
+					<span :title="slotProps.item.songsCount">{{
+						slotProps.item.songsCount
 					}}</span>
 				</template>
 				<template #column-totalLength="slotProps">
-					<span
-						:title="totalLengthForPlaylist(slotProps.item.songs)"
-						>{{
-							totalLengthForPlaylist(slotProps.item.songs)
-						}}</span
-					>
+					<span :title="formatTimeLong(slotProps.item.totalLength)">{{
+						formatTimeLong(slotProps.item.totalLength)
+					}}</span>
 				</template>
 				<template #column-createdBy="slotProps">
 					<span v-if="slotProps.item.createdBy === 'Musare'"
@@ -162,16 +159,16 @@ export default {
 				{
 					name: "songsCount",
 					displayName: "Songs #",
-					properties: ["songs"],
-					sortable: false,
-					minWidth: 80,
-					defaultWidth: 80
+					properties: ["songsCount"],
+					sortProperty: "songsCount",
+					minWidth: 100,
+					defaultWidth: 100
 				},
 				{
 					name: "totalLength",
 					displayName: "Total Length",
-					properties: ["songs"],
-					sortable: false,
+					properties: ["totalLength"],
+					sortProperty: "totalLength",
 					minWidth: 250,
 					defaultWidth: 250
 				},
@@ -342,11 +339,7 @@ export default {
 			const minute = `${date.getMinutes()}`.padStart(2, 0);
 			return `${year}-${month}-${day} ${hour}:${minute}`;
 		},
-		totalLengthForPlaylist(songs) {
-			let length = 0;
-			songs.forEach(song => {
-				length += song.duration;
-			});
+		formatTimeLong(length) {
 			return this.utils.formatTimeLong(length);
 		},
 		...mapActions("modalVisibility", ["openModal"]),
