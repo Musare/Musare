@@ -159,14 +159,18 @@
 						>
 							check_circle
 						</i>
-						<i
-							class="material-icons unverify-songs-icon"
-							@click.prevent="unverifyMany(slotProps.item)"
-							content="Unverify Songs"
-							v-tippy
+						<quick-confirm
+							placement="left"
+							@confirm="unverifyMany(slotProps.item)"
 						>
-							cancel
-						</i>
+							<i
+								class="material-icons unverify-songs-icon"
+								content="Unverify Songs"
+								v-tippy
+							>
+								cancel
+							</i>
+						</quick-confirm>
 						<i
 							class="material-icons tag-songs-icon"
 							@click.prevent="tagMany(slotProps.item)"
