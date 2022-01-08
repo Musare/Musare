@@ -5,13 +5,6 @@
 			<div class="button-row">
 				<button
 					class="button is-primary"
-					@click="toggleKeyboardShortcutsHelper"
-					@dblclick="resetKeyboardShortcutsHelper"
-				>
-					Keyboard shortcuts helper
-				</button>
-				<button
-					class="button is-primary"
 					@click="openModal('requestSong')"
 				>
 					Request song
@@ -272,80 +265,6 @@
 		<report v-if="modals.report" />
 		<request-song v-if="modals.requestSong" />
 		<confirm v-if="modals.confirm" @confirmed="handleConfirmed()" />
-		<floating-box
-			id="keyboardShortcutsHelper"
-			ref="keyboardShortcutsHelper"
-		>
-			<template #body>
-				<div>
-					<div>
-						<span class="biggest"
-							><b>Keyboard shortcuts helper</b></span
-						>
-						<span
-							><b>Ctrl + /</b> - Toggles this keyboard shortcuts
-							helper</span
-						>
-						<span
-							><b>Ctrl + Shift + /</b> - Resets the position of
-							this keyboard shortcuts helper</span
-						>
-						<hr />
-					</div>
-					<div>
-						<span class="biggest"><b>Edit song modal</b></span>
-						<span class="bigger"><b>Navigation</b></span>
-						<span><b>Home</b> - Edit</span>
-						<span><b>End</b> - Edit</span>
-						<hr />
-					</div>
-					<div>
-						<span class="bigger"><b>Player controls</b></span>
-						<span class="bigger"
-							><i>Don't forget to turn off numlock!</i></span
-						>
-						<span><b>Numpad up/down</b> - Volume up/down 10%</span>
-						<span
-							><b>Ctrl + Numpad up/down</b> - Volume up/down
-							1%</span
-						>
-						<span><b>Numpad center</b> - Pause/resume</span>
-						<span><b>Ctrl + Numpad center</b> - Stop</span>
-						<span
-							><b>Numpad Right</b> - Skip to last 10 seconds</span
-						>
-						<hr />
-					</div>
-					<div>
-						<span class="bigger"><b>Form control</b></span>
-						<span
-							><b>Enter</b> - Executes blue button in that
-							input</span
-						>
-						<span
-							><b>Shift + Enter</b> - Executes purple/red button
-							in that input</span
-						>
-						<span
-							><b>Ctrl + Alt + D</b> - Fill in all Discogs
-							fields</span
-						>
-						<hr />
-					</div>
-					<div>
-						<span class="bigger"><b>Modal control</b></span>
-						<span><b>Ctrl + S</b> - Save</span>
-						<span><b>Ctrl + Alt + S</b> - Save and close</span>
-						<span
-							><b>Ctrl + Alt + V</b> - Save, verify and
-							close</span
-						>
-						<span><b>F4</b> - Close without saving</span>
-						<hr />
-					</div>
-				</div>
-			</template>
-		</floating-box>
 	</div>
 </template>
 
@@ -355,11 +274,8 @@ import { defineAsyncComponent } from "vue";
 
 import Toast from "toasters";
 
-import keyboardShortcuts from "@/keyboardShortcuts";
-
 import AdvancedTable from "@/components/AdvancedTable.vue";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
-import FloatingBox from "@/components/FloatingBox.vue";
 import QuickConfirm from "@/components/QuickConfirm.vue";
 import RunJobDropdown from "@/components/RunJobDropdown.vue";
 
@@ -382,7 +298,6 @@ export default {
 		),
 		AdvancedTable,
 		UserIdToUsername,
-		FloatingBox,
 		QuickConfirm,
 		RunJobDropdown
 	},
@@ -731,41 +646,6 @@ export default {
 				}
 			);
 		}
-
-		keyboardShortcuts.registerShortcut(
-			"songs.toggleKeyboardShortcutsHelper",
-			{
-				keyCode: 191, // '/' key
-				ctrl: true,
-				preventDefault: true,
-				handler: () => {
-					this.toggleKeyboardShortcutsHelper();
-				}
-			}
-		);
-
-		keyboardShortcuts.registerShortcut(
-			"songs.resetKeyboardShortcutsHelper",
-			{
-				keyCode: 191, // '/' key
-				ctrl: true,
-				shift: true,
-				preventDefault: true,
-				handler: () => {
-					this.resetKeyboardShortcutsHelper();
-				}
-			}
-		);
-	},
-	beforeUnmount() {
-		const shortcutNames = [
-			"songs.toggleKeyboardShortcutsHelper",
-			"songs.resetKeyboardShortcutsHelper"
-		];
-
-		shortcutNames.forEach(shortcutName => {
-			keyboardShortcuts.unregisterShortcut(shortcutName);
-		});
 	},
 	methods: {
 		editOne(song) {
@@ -831,12 +711,6 @@ export default {
 				}
 			);
 		},
-		toggleKeyboardShortcutsHelper() {
-			this.$refs.keyboardShortcutsHelper.toggleBox();
-		},
-		resetKeyboardShortcutsHelper() {
-			this.$refs.keyboardShortcutsHelper.resetBox();
-		},
 		getDateFormatted(createdAt) {
 			const date = new Date(createdAt);
 			const year = date.getFullYear();
@@ -871,22 +745,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-#keyboardShortcutsHelper {
-	.box-body {
-		.biggest {
-			font-size: 18px;
-		}
-
-		.bigger {
-			font-size: 16px;
-		}
-
-		span {
-			display: block;
-		}
-	}
-}
-
 .song-thumbnail {
 	display: block;
 	max-width: 50px;

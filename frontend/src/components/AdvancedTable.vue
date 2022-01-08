@@ -758,6 +758,7 @@ import draggable from "vuedraggable";
 
 import Toast from "toasters";
 
+import keyboardShortcuts from "@/keyboardShortcuts";
 import ws from "@/ws";
 
 export default {
@@ -787,6 +788,7 @@ export default {
 		name: { type: String, default: null },
 		maxWidth: { type: Number, default: 1880 },
 		query: { type: Boolean, default: true },
+		keyboardShortcuts: { type: Boolean, default: true },
 		events: { type: Object, default: () => {} }
 	},
 	data() {
@@ -1125,11 +1127,127 @@ export default {
 					);
 				this.removeData(index);
 			});
+
+		if (this.keyboardShortcuts) {
+			// Navigation section
+
+			// Page navigation section
+			keyboardShortcuts.registerShortcut("advancedTable.previousPage", {
+				keyCode: 37, // 'Left arrow' key
+				ctrl: true,
+				preventDefault: true,
+				handler: () => {
+					// Previous page
+					console.log("Previous page");
+				}
+			});
+
+			keyboardShortcuts.registerShortcut("advancedTable.nextPage", {
+				keyCode: 39, // 'Right arrow' key
+				ctrl: true,
+				preventDefault: true,
+				handler: () => {
+					// Next page
+					console.log("Next page");
+				}
+			});
+
+			keyboardShortcuts.registerShortcut("advancedTable.firstPage", {
+				keyCode: 37, // 'Left arrow' key
+				ctrl: true,
+				shift: true,
+				preventDefault: true,
+				handler: () => {
+					// First page
+					console.log("First page");
+				}
+			});
+
+			keyboardShortcuts.registerShortcut("advancedTable.lastPage", {
+				keyCode: 39, // 'Right arrow' key
+				ctrl: true,
+				shift: true,
+				preventDefault: true,
+				handler: () => {
+					// Last page
+					console.log("Last page");
+				}
+			});
+
+			// Reset localStorage section
+			keyboardShortcuts.registerShortcut(
+				"advancedTable.resetLocalStorage",
+				{
+					keyCode: 116, // 'F5' key
+					ctrl: true,
+					preventDefault: true,
+					handler: () => {
+						// Reset local storage
+						console.log("Reset local storage");
+					}
+				}
+			);
+
+			// Selecting section
+
+			// Popup actions section
+			for (let i = 1; i <= 9; i += 1) {
+				keyboardShortcuts.registerShortcut(
+					`advancedTable.executePopupAction${i}`,
+					{
+						keyCode: 48 + i, // '1-9' keys, where 49 is 1 and 57 is 9
+						ctrl: true,
+						preventDefault: true,
+						handler: () => {
+							// Execute popup action 1-9
+							console.log(`Execute popup action ${i}`);
+						}
+					}
+				);
+			}
+
+			keyboardShortcuts.registerShortcut(
+				`advancedTable.selectPopupAction1`,
+				{
+					keyCode: 48, // '0' key
+					ctrl: true,
+					preventDefault: true,
+					handler: () => {
+						// Select popup action 0
+						console.log(`Select popup action`);
+					}
+				}
+			);
+		}
 	},
 	unmounted() {
 		window.removeEventListener("resize", this.onWindowResize);
 		if (this.storeTableSettingsDebounceTimeout)
 			clearTimeout(this.storeTableSettingsDebounceTimeout);
+
+		if (this.keyboardShortcuts) {
+			const shortcutNames = [
+				"advancedTable.previousPage",
+				"advancedTable.nextPage",
+				"advancedTable.firstPage",
+				"advancedTable.lastPage",
+				"advancedTable.resetLocalStorage",
+				"advancedTable.executePopupAction1",
+				"advancedTable.executePopupAction2",
+				"advancedTable.executePopupAction3",
+				"advancedTable.executePopupAction4",
+				"advancedTable.executePopupAction5",
+				"advancedTable.executePopupAction6",
+				"advancedTable.executePopupAction7",
+				"advancedTable.executePopupAction8",
+				"advancedTable.executePopupAction9",
+				"advancedTable.selectPopupAction1"
+			];
+
+			shortcutNames.forEach(shortcutName => {
+				keyboardShortcuts.unregisterShortcut(shortcutName);
+			});
+		}
 	},
 	methods: {
 		init() {
