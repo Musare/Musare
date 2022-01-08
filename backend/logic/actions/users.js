@@ -182,11 +182,27 @@ export default {
 	 */
 	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const blacklistedProperties = [
+			"services.password.password",
+			"services.password.reset.code",
+			"services.password.reset.expires",
+			"services.password.set.code",
+			"services.password.set.expires",
+			"services.github.access_token",
+			"email.verificationToken"
+		];
 
 		async.waterfall(
 			[
 				// Creates pipeline array
 				next => next(null, []),
+
+				// If a query filter property is blacklisted throw error
+				(pipeline, next) => {
+					if (queries.filter(query => blacklistedProperties.includes(query.filter.property)).length > 0)
+						return next("Unable to filter by blacklisted property.");
+					return next(null, pipeline);
+				},
 
 				// If a filter or property exists for hasPassword, add hasPassword property to all documents
 				(pipeline, next) => {
@@ -279,27 +295,8 @@ export default {
 				// Adds second project stage to aggregation pipeline, responsible for excluding some specific properties
 				(pipeline, next) => {
 					pipeline.push({
-						$project: {
-							"services.password.password": 0,
-							"services.password.reset.code": 0,
-							"services.password.reset.expires": 0,
-							"services.password.set.code": 0,
-							"services.password.set.expires": 0,
-							"services.github.access_token": 0,
-							"email.verificationToken": 0
-						}
+						$project: Object.fromEntries(blacklistedProperties.map(property => [property, 0]))
 					});
-
-					// [
-					// 	"services.password",
-					// 	"services.password.password",
-					// 	"services.password.reset.code",
-					// 	"services.password.reset.expires",
-					// 	"services.password.set.code",
-					// 	"services.password.set.expires",
-					// 	"services.github.access_token",
-					// 	"services.email.verificationToken"
-					// ]
 
 					next(null, pipeline);
 				},
