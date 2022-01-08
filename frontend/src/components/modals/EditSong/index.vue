@@ -506,18 +506,26 @@
 						>
 							<i class="material-icons">visibility</i>
 						</button>
-						<quick-confirm
-							placement="left"
-							@confirm="remove(song._id)"
+						<button
+							class="
+								button
+								is-danger
+								icon-with-button
+								material-icons
+							"
+							@click.prevent="
+								confirmAction({
+									message:
+										'Removing this song will remove it from all playlists and cause a ratings recalculation.',
+									action: 'remove',
+									params: song._id
+								})
+							"
+							content="Delete Song"
+							v-tippy
 						>
-							<button
-								class="button is-danger"
-								content="Remove Song"
-								v-tippy
-							>
-								<i class="material-icons">delete</i>
-							</button>
-						</quick-confirm>
+							delete_forever
+						</button>
 					</div>
 				</div>
 			</template>
@@ -1590,6 +1598,7 @@ export default {
 			"updateSongField",
 			"updateReports"
 		]),
+		...mapActions("modals/confirm", ["updateConfirmMessage"]),
 		...mapActions("modalVisibility", ["closeModal", "openModal"])
 	}
 };

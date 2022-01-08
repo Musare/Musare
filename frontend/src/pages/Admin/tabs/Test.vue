@@ -132,11 +132,7 @@
 		</div>
 		<edit-song v-if="modals.editSong" song-type="songs" :key="song._id" />
 		<report v-if="modals.report" />
-		<confirm
-			v-if="modals.confirm"
-			:confirm="confirm"
-			@confirmed="handleConfirmed()"
-		/>
+		<confirm v-if="modals.confirm" @confirmed="handleConfirmed()" />
 	</div>
 </template>
 

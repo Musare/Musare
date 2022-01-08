@@ -22,9 +22,6 @@ import Modal from "../Modal.vue";
 
 export default {
 	components: { Modal },
-	props: {
-		confirm: { type: Object, default: () => {} }
-	},
 	computed: {
 		...mapState("modals/confirm", {
 			message: state => state.message

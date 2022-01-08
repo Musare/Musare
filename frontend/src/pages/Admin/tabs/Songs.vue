@@ -271,11 +271,7 @@
 		<edit-song v-if="modals.editSong" song-type="songs" :key="song._id" />
 		<report v-if="modals.report" />
 		<request-song v-if="modals.requestSong" />
-		<confirm
-			v-if="modals.confirm"
-			:confirm="confirm"
-			@confirmed="handleConfirmed()"
-		/>
+		<confirm v-if="modals.confirm" @confirmed="handleConfirmed()" />
 		<floating-box
 			id="keyboardShortcutsHelper"
 			ref="keyboardShortcutsHelper"
