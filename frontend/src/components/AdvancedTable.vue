@@ -852,23 +852,23 @@ export default {
 				},
 				numberLesserEqual: {
 					name: "numberLesserEqual",
-					displayName: "<="
+					displayName: "Less than or equal to"
 				},
 				numberLesser: {
 					name: "numberLesser",
-					displayName: "<"
+					displayName: "Less than"
 				},
 				numberGreater: {
 					name: "numberGreater",
-					displayName: ">"
+					displayName: "Greater than"
 				},
 				numberGreaterEqual: {
 					name: "numberGreaterEqual",
-					displayName: ">="
+					displayName: "Greater than or equal to"
 				},
 				numberEquals: {
 					name: "numberEquals",
-					displayName: "=="
+					displayName: "Equals"
 				},
 				boolean: {
 					name: "boolean",
@@ -2221,7 +2221,7 @@ export default {
 		}
 	}
 
-	@media screen and (max-width: 500px) {
+	@media screen and (max-width: 600px) {
 		&.advanced-filter {
 			flex-wrap: wrap;
 			.control.select {

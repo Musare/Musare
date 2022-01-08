@@ -1191,7 +1191,7 @@ img {
 	background-color: var(--white);
 	color: var(--dark-grey);
 	width: 100% !important;
-	max-width: 500px !important;
+	max-width: 600px !important;
 	max-height: calc(100vh - 300px);
 	overflow-y: auto;
 

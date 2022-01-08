@@ -89,6 +89,7 @@
 									params: slotProps.item._id
 								})
 							"
+							:disabled="slotProps.item.removed"
 							content="Delete Song"
 							v-tippy
 						>
@@ -316,7 +317,7 @@ export default {
 				{
 					name: "options",
 					displayName: "Options",
-					properties: ["_id", "status", "removed"],
+					properties: ["_id", "status"],
 					sortable: false,
 					hidable: false,
 					resizable: false,
