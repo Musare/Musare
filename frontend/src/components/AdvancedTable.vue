@@ -472,7 +472,10 @@
 							<template #item="{ element: column }">
 								<th
 									v-if="
-										shownColumns.indexOf(column.name) !== -1
+										shownColumns.indexOf(column.name) !==
+											-1 &&
+										(column.name !== 'updatedPlaceholder' ||
+											rows.length > 0)
 									"
 									:class="{
 										sortable: column.sortable,
@@ -956,31 +959,7 @@ export default {
 	mounted() {
 		const tableSettings = this.getTableSettings();
 
-		this.orderedColumns = [
-			{
-				name: "updatedPlaceholder",
-				displayName: "",
-				properties: [],
-				sortable: false,
-				hidable: false,
-				draggable: false,
-				resizable: false,
-				minWidth: 5,
-				width: 5,
-				maxWidth: 5
-			},
-			{
-				name: "select",
-				displayName: "",
-				properties: [],
-				sortable: false,
-				hidable: false,
-				draggable: false,
-				resizable: false,
-				minWidth: 47,
-				defaultWidth: 47,
-				maxWidth: 47
-			},
+		const columns = [
 			...this.columns.map(column => ({
 				...this.columnDefault,
 				...column
@@ -997,7 +976,37 @@ export default {
 				width: "auto",
 				maxWidth: "auto"
 			}
-		].sort((columnA, columnB) => {
+		];
+
+		if (this.hasCheckboxes)
+			columns.unshift({
+				name: "select",
+				displayName: "",
+				properties: [],
+				sortable: false,
+				hidable: false,
+				draggable: false,
+				resizable: false,
+				minWidth: 47,
+				defaultWidth: 47,
+				maxWidth: 47
+			});
+
+		if (this.events && this.events.updated)
+			columns.unshift({
+				name: "updatedPlaceholder",
+				displayName: "",
+				properties: [],
+				sortable: false,
+				hidable: false,
+				draggable: false,
+				resizable: false,
+				minWidth: 5,
+				width: 5,
+				maxWidth: 5
+			});
+
+		this.orderedColumns = columns.sort((columnA, columnB) => {
 			// Always places updatedPlaceholder column in the first position
 			if (columnA.name === "updatedPlaceholder") return -1;
 			// Always places select column in the first position
@@ -2069,10 +2078,6 @@ export default {
 							bottom: 0;
 							right: 0;
 						}
-					}
-
-					&:nth-child(2) {
-						display: none;
 					}
 
 					.resizer {
