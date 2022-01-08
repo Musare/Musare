@@ -81,20 +81,26 @@
 						>
 							check_circle
 						</button>
-						<quick-confirm @confirm="deleteOne(slotProps.item._id)">
-							<button
-								class="
-									button
-									is-danger
-									icon-with-button
-									material-icons
-								"
-								content="Delete Song"
-								v-tippy
-							>
-								delete_forever
-							</button>
-						</quick-confirm>
+						<button
+							class="
+								button
+								is-danger
+								icon-with-button
+								material-icons
+							"
+							@click.prevent="
+								confirmAction({
+									message:
+										'Removing this song will remove it from all playlists and cause a ratings recalculation.',
+									action: 'deleteOne',
+									params: slotProps.item._id
+								})
+							"
+							content="Delete Song"
+							v-tippy
+						>
+							delete_forever
+						</button>
 					</div>
 				</template>
 				<template #column-thumbnailImage="slotProps">
@@ -242,18 +248,21 @@
 						>
 							theater_comedy
 						</i>
-						<quick-confirm
-							placement="left"
-							@confirm="deleteMany(slotProps.item)"
+						<i
+							class="material-icons delete-icon"
+							@click.prevent="
+								confirmAction({
+									message:
+										'Removing these songs will remove them from all playlists and cause a ratings recalculation.',
+									action: 'deleteMany',
+									params: slotProps.item
+								})
+							"
+							content="Delete Songs"
+							v-tippy
 						>
-							<i
-								class="material-icons delete-icon"
-								content="Delete Songs"
-								v-tippy
-							>
-								delete_forever
-							</i>
-						</quick-confirm>
+							delete_forever
+						</i>
 					</div>
 				</template>
 			</advanced-table>
@@ -262,6 +271,11 @@
 		<edit-song v-if="modals.editSong" song-type="songs" :key="song._id" />
 		<report v-if="modals.report" />
 		<request-song v-if="modals.requestSong" />
+		<confirm
+			v-if="modals.confirm"
+			:confirm="confirm"
+			@confirmed="handleConfirmed()"
+		/>
 		<floating-box
 			id="keyboardShortcutsHelper"
 			ref="keyboardShortcutsHelper"
@@ -366,6 +380,9 @@ export default {
 		),
 		RequestSong: defineAsyncComponent(() =>
 			import("@/components/modals/RequestSong.vue")
+		),
+		Confirm: defineAsyncComponent(() =>
+			import("@/components/modals/Confirm.vue")
 		),
 		AdvancedTable,
 		UserIdToUsername,
@@ -687,7 +704,12 @@ export default {
 					name: "Recalculate all song ratings",
 					socket: "songs.recalculateAllRatings"
 				}
-			]
+			],
+			confirm: {
+				message: "",
+				action: "",
+				params: null
+			}
 		};
 	},
 	computed: {
@@ -828,7 +850,25 @@ export default {
 			const minute = `${date.getMinutes()}`.padStart(2, 0);
 			return `${year}-${month}-${day} ${hour}:${minute}`;
 		},
+		confirmAction(confirm) {
+			this.confirm = confirm;
+			this.updateConfirmMessage(confirm.message);
+			this.openModal("confirm");
+		},
+		handleConfirmed() {
+			const { action, params } = this.confirm;
+			if (typeof this[action] === "function") {
+				if (params) this[action](params);
+				else this[action]();
+			}
+			this.confirm = {
+				message: "",
+				action: "",
+				params: null
+			};
+		},
 		...mapActions("modals/editSong", ["editSong"]),
+		...mapActions("modals/confirm", ["updateConfirmMessage"]),
 		...mapActions("modalVisibility", ["openModal"])
 	}
 };
