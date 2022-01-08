@@ -472,10 +472,6 @@
 							<template #item="{ element: column }">
 								<th
 									v-if="
-										!(
-											column.name === 'select' &&
-											rows.length === 0
-										) &&
 										shownColumns.indexOf(column.name) !== -1
 									"
 									:class="{
@@ -497,6 +493,12 @@
 									<div v-if="column.name === 'select'">
 										<p class="checkbox">
 											<input
+												v-if="rows.length === 0"
+												type="checkbox"
+												disabled
+											/>
+											<input
+												v-else
 												type="checkbox"
 												:checked="
 													rows.filter(
@@ -650,6 +652,9 @@
 					</tbody>
 				</table>
 			</div>
+			<div v-if="rows.length === 0" class="table-no-results">
+				No results found
+			</div>
 			<div class="table-footer">
 				<div class="page-controls">
 					<button
@@ -673,10 +678,12 @@
 						fast_rewind
 					</button>
 
-					<p>Page {{ page }} / {{ lastPage }}</p>
+					<p>Page {{ page }} / {{ lastPage > 0 ? lastPage : 1 }}</p>
 
 					<button
-						:class="{ disabled: page === lastPage }"
+						:class="{
+							disabled: page === lastPage || lastPage === 0
+						}"
 						class="button is-primary material-icons"
 						:disabled="page === lastPage"
 						@click="changePage(page + 1)"
@@ -686,7 +693,9 @@
 						fast_forward
 					</button>
 					<button
-						:class="{ disabled: page === lastPage }"
+						:class="{
+							disabled: page === lastPage || lastPage === 0
+						}"
 						class="button is-primary material-icons"
 						:disabled="page === lastPage"
 						@click="changePage(lastPage)"
@@ -1886,6 +1895,12 @@ export default {
 			color: var(--light-grey-2);
 		}
 
+		.table-no-results {
+			background-color: var(--dark-grey-3);
+			color: var(--light-grey-2);
+			border-color: var(--dark-grey) !important;
+		}
+
 		.label.control {
 			background-color: var(--dark-grey) !important;
 			border-color: var(--grey-3) !important;
@@ -2172,6 +2187,16 @@ export default {
 				top: 18px;
 			}
 		}
+	}
+
+	.table-no-results {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		border-bottom: 1px solid var(--light-grey-2);
+		font-size: 18px;
+		line-height: 50px;
+		background-color: var(--white);
 	}
 }
 
