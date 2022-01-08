@@ -750,7 +750,6 @@
 			</button>
 			<slot name="bulk-actions" :item="selectedRows" />
 			<div class="right">
-				<slot name="bulk-actions-right" :item="selectedRows" />
 				<span
 					class="material-icons drag-icon"
 					@mousedown.left="onDragBox"
@@ -1633,10 +1632,7 @@ export default {
 			let noWidthCount = 0;
 			let calculatedWidth = 0;
 			this.orderedColumns.forEach(column => {
-				if (
-					this.shownColumns.indexOf(column.name) !== -1 &&
-					(column.name !== "select" || this.hasCheckboxes)
-				)
+				if (this.shownColumns.indexOf(column.name) !== -1)
 					if (
 						Number.isFinite(column.width) &&
 						!Number.isFinite(column.calculatedWidth)

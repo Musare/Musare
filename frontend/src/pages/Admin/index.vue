@@ -4,16 +4,6 @@
 		<div class="tabs is-centered">
 			<ul>
 				<li
-					:class="{ 'is-active': currentTab == 'test' }"
-					ref="test-tab"
-					@click="showTab('test')"
-				>
-					<router-link class="tab test" to="/admin/test">
-						<i class="material-icons">music_note</i>
-						<span>&nbsp;Test</span>
-					</router-link>
-				</li>
-				<li
 					:class="{ 'is-active': currentTab == 'songs' }"
 					ref="songs-tab"
 					@click="showTab('songs')"
@@ -100,7 +90,6 @@
 		</div>
 
 		<div class="admin-container">
-			<test v-if="currentTab == 'test'" />
 			<songs v-if="currentTab == 'songs'" />
 			<stations v-if="currentTab == 'stations'" />
 			<playlists v-if="currentTab == 'playlists'" />
@@ -200,7 +189,6 @@ export default {
 		MainHeader,
 		MainFooter,
 		FloatingBox,
-		Test: defineAsyncComponent(() => import("./tabs/Test.vue")),
 		Songs: defineAsyncComponent(() => import("./tabs/Songs.vue")),
 		Stations: defineAsyncComponent(() => import("./tabs/Stations.vue")),
 		Playlists: defineAsyncComponent(() => import("./tabs/Playlists.vue")),
@@ -268,9 +256,6 @@ export default {
 	methods: {
 		changeTab(path) {
 			switch (path) {
-				case "/admin/test":
-					this.showTab("test");
-					break;
 				case "/admin/songs":
 					this.showTab("songs");
 					break;
