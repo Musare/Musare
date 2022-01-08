@@ -1885,7 +1885,7 @@ export default {
 
 						/deep/ .row-options {
 							display: flex;
-							justify-content: space-between;
+							justify-content: space-evenly;
 
 							.icon-with-button {
 								height: 30px;

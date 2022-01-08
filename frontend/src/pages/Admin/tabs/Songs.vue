@@ -48,6 +48,53 @@
 						>
 							edit
 						</button>
+						<quick-confirm
+							v-if="slotProps.item.status === 'verified'"
+							@confirm="unverifyOne(slotProps.item._id)"
+						>
+							<button
+								class="
+									button
+									is-danger
+									icon-with-button
+									material-icons
+								"
+								:disabled="slotProps.item.removed"
+								content="Unverify Song"
+								v-tippy
+							>
+								cancel
+							</button>
+						</quick-confirm>
+						<button
+							v-else
+							class="
+								button
+								is-success
+								icon-with-button
+								material-icons
+							"
+							@click="verifyOne(slotProps.item._id)"
+							:disabled="slotProps.item.removed"
+							content="Verify Song"
+							v-tippy
+						>
+							check_circle
+						</button>
+						<quick-confirm @confirm="deleteOne(slotProps.item._id)">
+							<button
+								class="
+									button
+									is-danger
+									icon-with-button
+									material-icons
+								"
+								content="Delete Song"
+								v-tippy
+							>
+								delete_forever
+							</button>
+						</quick-confirm>
 					</div>
 				</template>
 				<template #column-thumbnailImage="slotProps">
@@ -340,13 +387,13 @@ export default {
 			columns: [
 				{
 					name: "options",
-					displayName: "Edit",
-					properties: [],
+					displayName: "Options",
+					properties: ["_id", "status", "removed"],
 					sortable: false,
 					hidable: false,
 					resizable: false,
-					minWidth: 51,
-					defaultWidth: 51
+					minWidth: 129,
+					defaultWidth: 129
 				},
 				{
 					name: "thumbnailImage",
@@ -715,6 +762,11 @@ export default {
 				new Toast("Bulk editing not yet implemented.");
 			}
 		},
+		verifyOne(songId) {
+			this.socket.dispatch("songs.verify", songId, res => {
+				new Toast(res.message);
+			});
+		},
 		verifyMany(selectedRows) {
 			this.socket.dispatch(
 				"songs.verifyMany",
@@ -723,6 +775,11 @@ export default {
 					new Toast(res.message);
 				}
 			);
+		},
+		unverifyOne(songId) {
+			this.socket.dispatch("songs.unverify", songId, res => {
+				new Toast(res.message);
+			});
 		},
 		unverifyMany(selectedRows) {
 			this.socket.dispatch(
@@ -741,6 +798,11 @@ export default {
 		},
 		setGenres() {
 			new Toast("Bulk setting genres not yet implemented.");
+		},
+		deleteOne(songId) {
+			this.socket.dispatch("songs.remove", songId, res => {
+				new Toast(res.message);
+			});
 		},
 		deleteMany(selectedRows) {
 			this.socket.dispatch(

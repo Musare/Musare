@@ -35,6 +35,23 @@
 						>
 							settings
 						</button>
+						<quick-confirm
+							@confirm="remove(slotProps.item._id)"
+							:disabled="slotProps.item.removed"
+						>
+							<button
+								class="
+									button
+									is-danger
+									icon-with-button
+									material-icons
+								"
+								content="Remove Station"
+								v-tippy
+							>
+								delete_forever
+							</button>
+						</quick-confirm>
 					</div>
 				</template>
 				<template #column-_id="slotProps">
@@ -116,7 +133,10 @@
 import { mapState, mapActions, mapGetters } from "vuex";
 import { defineAsyncComponent } from "vue";
 
+import Toast from "toasters";
+
 import AdvancedTable from "@/components/AdvancedTable.vue";
+import QuickConfirm from "@/components/QuickConfirm.vue";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
 import RunJobDropdown from "@/components/RunJobDropdown.vue";
 
@@ -144,6 +164,7 @@ export default {
 			import("@/components/modals/CreateStation.vue")
 		),
 		AdvancedTable,
+		QuickConfirm,
 		UserIdToUsername,
 		RunJobDropdown
 	},
@@ -162,13 +183,13 @@ export default {
 			columns: [
 				{
 					name: "options",
-					displayName: "Edit",
+					displayName: "Options",
 					properties: ["_id"],
 					sortable: false,
 					hidable: false,
 					resizable: false,
-					minWidth: 51,
-					defaultWidth: 51
+					minWidth: 85,
+					defaultWidth: 85
 				},
 				{
 					name: "_id",
@@ -329,19 +350,17 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
-	mounted() {
-		// TODO
-		// this.socket.on("event:admin.station.created", res =>
-		// 	this.stationAdded(res.data.station)
-		// );
-		// this.socket.on("event:admin.station.deleted", res =>
-		// 	this.stationRemoved(res.data.stationId)
-		// );
-	},
 	methods: {
 		edit(stationId) {
 			this.editingStationId = stationId;
 			this.openModal("manageStation");
+		},
+		remove(stationId) {
+			this.socket.dispatch(
+				"stations.remove",
+				stationId,
+				res => new Toast(res.message)
+			);
 		},
 		...mapActions("modalVisibility", ["openModal"])
 	}

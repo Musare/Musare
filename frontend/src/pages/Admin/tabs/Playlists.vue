@@ -130,13 +130,13 @@ export default {
 			columns: [
 				{
 					name: "options",
-					displayName: "Edit",
+					displayName: "Options",
 					properties: ["_id"],
 					sortable: false,
 					hidable: false,
 					resizable: false,
-					minWidth: 51,
-					defaultWidth: 51
+					minWidth: 76,
+					defaultWidth: 76
 				},
 				{
 					name: "displayName",

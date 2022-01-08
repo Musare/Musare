@@ -139,7 +139,7 @@ export default {
 			columns: [
 				{
 					name: "options",
-					displayName: "Edit",
+					displayName: "Options",
 					properties: ["_id"],
 					sortable: false,
 					hidable: false,
