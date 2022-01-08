@@ -1156,6 +1156,7 @@ export default {
 				handler: () => {
 					// Previous page
 					console.log("Previous page");
+					this.changePage(this.page - 1);
 				}
 			});
 
@@ -1166,6 +1167,7 @@ export default {
 				handler: () => {
 					// Next page
 					console.log("Next page");
+					this.changePage(this.page + 1);
 				}
 			});
 
@@ -1177,6 +1179,7 @@ export default {
 				handler: () => {
 					// First page
 					console.log("First page");
+					this.changePage(1);
 				}
 			});
 
@@ -1188,6 +1191,7 @@ export default {
 				handler: () => {
 					// Last page
 					console.log("Last page");
+					this.changePage(this.lastPage);
 				}
 			});
 
@@ -1201,6 +1205,10 @@ export default {
 					handler: () => {
 						// Reset local storage
 						console.log("Reset local storage");
+						localStorage.removeItem(
+							`advancedTableSettings:${this.name}`
+						);
+						this.$router.push({ query: {} });
 					}
 				}
 			);
