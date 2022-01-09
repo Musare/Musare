@@ -1068,7 +1068,7 @@ export default {
 					const columnWidth = tableSettings.columnWidths.find(
 						column => column.name === orderedColumn.name
 					)?.width;
-					if (columnWidth)
+					if (orderedColumn.resizable && columnWidth)
 						return { ...orderedColumn, width: columnWidth };
 					return orderedColumn;
 				});
