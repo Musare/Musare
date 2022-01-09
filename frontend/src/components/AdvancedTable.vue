@@ -1201,7 +1201,7 @@ export default {
 				{
 					keyCode: 116, // 'F5' key
 					ctrl: true,
-					preventDefault: true,
+					preventDefault: false,
 					handler: () => {
 						// Reset local storage
 						console.log("Reset local storage");
@@ -1391,7 +1391,8 @@ export default {
 							itemIndexUp > this.lastSelectedItemIndex;
 							itemIndexUp -= 1
 						) {
-							this.rows[itemIndexUp].selected = true;
+							if (!this.rows[itemIndexUp].removed)
+								this.rows[itemIndexUp].selected = true;
 						}
 					}
 					// Clicked item is higher than last item, so select downwards until it reaches the last selected item
@@ -1401,7 +1402,8 @@ export default {
 							itemIndexDown < this.lastSelectedItemIndex;
 							itemIndexDown += 1
 						) {
-							this.rows[itemIndexDown].selected = true;
+							if (!this.rows[itemIndexDown].removed)
+								this.rows[itemIndexDown].selected = true;
 						}
 					}
 				}
@@ -1419,7 +1421,8 @@ export default {
 							itemIndexUp >= this.lastSelectedItemIndex;
 							itemIndexUp -= 1
 						) {
-							this.rows[itemIndexUp].selected = false;
+							if (!this.rows[itemIndexUp].removed)
+								this.rows[itemIndexUp].selected = false;
 						}
 					}
 					// Clicked item is higher than last item, so unselect downwards until it reaches the last selected item
@@ -1429,7 +1432,8 @@ export default {
 							itemIndexDown <= this.lastSelectedItemIndex;
 							itemIndexDown += 1
 						) {
-							this.rows[itemIndexDown].selected = false;
+							if (!this.rows[itemIndexDown].removed)
+								this.rows[itemIndexDown].selected = false;
 						}
 					}
 				}
