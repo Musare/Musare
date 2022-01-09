@@ -391,7 +391,6 @@ export default {
 					displayName: "Status",
 					properties: ["status"],
 					sortProperty: "status",
-					defaultVisibility: "hidden",
 					minWidth: 120,
 					defaultWidth: 120
 				},

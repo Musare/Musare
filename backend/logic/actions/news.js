@@ -156,15 +156,17 @@ export default {
 						} else if (filterType === "datetimeAfter") {
 							newQuery[filter.property] = { $gte: new Date(data) };
 						} else if (filterType === "numberLesserEqual") {
-							newQuery[filter.property] = { $lte: data };
+							newQuery[filter.property] = { $lte: Number(data) };
 						} else if (filterType === "numberLesser") {
-							newQuery[filter.property] = { $lt: data };
+							newQuery[filter.property] = { $lt: Number(data) };
 						} else if (filterType === "numberGreater") {
-							newQuery[filter.property] = { $gt: data };
+							newQuery[filter.property] = { $gt: Number(data) };
 						} else if (filterType === "numberGreaterEqual") {
-							newQuery[filter.property] = { $gte: data };
-						} else if (filterType === "numberEquals" || filterType === "boolean") {
-							newQuery[filter.property] = { $eq: data };
+							newQuery[filter.property] = { $gte: Number(data) };
+						} else if (filterType === "numberEquals") {
+							newQuery[filter.property] = { $eq: Number(data) };
+						} else if (filterType === "boolean") {
+							newQuery[filter.property] = { $eq: !!data };
 						}
 
 						if (filter.property === "createdBy")
