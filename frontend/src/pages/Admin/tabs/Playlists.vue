@@ -91,7 +91,7 @@
 </template>
 
 <script>
-import { mapState, mapActions, mapGetters } from "vuex";
+import { mapState, mapActions } from "vuex";
 import { defineAsyncComponent } from "vue";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
@@ -326,37 +326,7 @@ export default {
 	computed: {
 		...mapState("modalVisibility", {
 			modals: state => state.modals
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
 		})
-	},
-	mounted() {
-		// TODO
-		// this.socket.on("event:admin.playlist.song.added", res =>
-		// 	this.addPlaylistSong({
-		// 		playlistId: res.data.playlistId,
-		// 		song: res.data.song
-		// 	})
-		// );
-		// this.socket.on("event:admin.playlist.song.removed", res =>
-		// 	this.removePlaylistSong({
-		// 		playlistId: res.data.playlistId,
-		// 		youtubeId: res.data.youtubeId
-		// 	})
-		// );
-		// this.socket.on("event:admin.playlist.displayName.updated", res =>
-		// 	this.updatePlaylistDisplayName({
-		// 		playlistId: res.data.playlistId,
-		// 		displayName: res.data.displayName
-		// 	})
-		// );
-		// this.socket.on("event:admin.playlist.privacy.updated", res =>
-		// 	this.updatePlaylistPrivacy({
-		// 		playlistId: res.data.playlistId,
-		// 		privacy: res.data.privacy
-		// 	})
-		// );
 	},
 	methods: {
 		edit(playlistId) {

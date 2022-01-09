@@ -131,8 +131,6 @@ import { mapState, mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
 import { defineAsyncComponent } from "vue";
 
-// import ws from "@/ws";
-
 import AdvancedTable from "@/components/AdvancedTable.vue";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
@@ -276,21 +274,12 @@ export default {
 		};
 	},
 	computed: {
-		sortedPunishments() {
-			return this.punishments;
-		},
 		...mapState("modalVisibility", {
 			modals: state => state.modals
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
-	},
-	mounted() {
-		// ws.onConnect(this.init);
-		// this.socket.on("event:admin.punishment.created", res =>
-		// 	this.punishments.push(res.data.punishment)
-		// );
 	},
 	methods: {
 		view(punishmentId) {
@@ -317,9 +306,6 @@ export default {
 			const minute = `${date.getMinutes()}`.padStart(2, 0);
 			return `${year}-${month}-${day} ${hour}:${minute}`;
 		},
-		// init() {
-		// 	this.socket.dispatch("apis.joinAdminRoom", "punishments", () => {});
-		// },
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("admin/punishments", ["viewPunishment"])
 	}

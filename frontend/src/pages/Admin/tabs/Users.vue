@@ -166,7 +166,6 @@ import Toast from "toasters";
 import AdvancedTable from "@/components/AdvancedTable.vue";
 import ProfilePicture from "@/components/ProfilePicture.vue";
 import QuickConfirm from "@/components/QuickConfirm.vue";
-// import ws from "@/ws";
 
 export default {
 	components: {

@@ -199,9 +199,6 @@ export default {
 		...mapState("modalVisibility", {
 			modals: state => state.modals
 		}),
-		...mapState("admin/news", {
-			news: state => state.news
-		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
@@ -219,7 +216,7 @@ export default {
 				res => new Toast(res.message)
 			);
 		},
-		...mapActions("modalVisibility", ["openModal", "closeModal"])
+		...mapActions("modalVisibility", ["openModal"])
 	}
 };
 </script>

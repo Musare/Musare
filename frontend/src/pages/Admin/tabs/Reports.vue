@@ -103,7 +103,7 @@
 </template>
 
 <script>
-import { mapState, mapActions, mapGetters } from "vuex";
+import { mapState, mapActions } from "vuex";
 import { defineAsyncComponent } from "vue";
 
 import Toast from "toasters";
@@ -248,9 +248,6 @@ export default {
 	computed: {
 		...mapState("modalVisibility", {
 			modals: state => state.modals
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
 		})
 	},
 	methods: {
