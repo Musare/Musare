@@ -114,7 +114,9 @@
 								<div
 									v-if="
 										filter.filterType.name &&
-										filter.filterType.name === 'exact' &&
+										(filter.filterType.name === 'exact' ||
+											filter.filterType.name ===
+												'boolean') &&
 										filter.filter.dropdown
 									"
 									class="control is-expanded select"

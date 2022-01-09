@@ -321,6 +321,17 @@ export default {
 					defaultFilterType: "contains"
 				},
 				{
+					name: "stationMode",
+					displayName: "Station Mode",
+					property: "partyMode",
+					filterTypes: ["boolean"],
+					defaultFilterType: "boolean",
+					dropdown: [
+						[true, "Party"],
+						[false, "Playlist"]
+					]
+				},
+				{
 					name: "playMode",
 					displayName: "Play Mode",
 					property: "playMode",
@@ -335,8 +346,15 @@ export default {
 					name: "theme",
 					displayName: "Theme",
 					property: "theme",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
+					filterTypes: ["exact", "regex"],
+					defaultFilterType: "exact",
+					dropdown: [
+						["blue", "Blue"],
+						["purple", "Purple"],
+						["teal", "Teal"],
+						["orange", "Orange"],
+						["red", "Red"]
+					]
 				}
 			],
 			events: {
