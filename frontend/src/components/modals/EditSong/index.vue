@@ -546,11 +546,13 @@
 				><span>Christian rock</span><span>Dubstep</span>
 			</template>
 		</floating-box>
+		<confirm v-if="modals.editSongConfirm" @confirmed="handleConfirmed()" />
 	</div>
 </template>
 
 <script>
 import { mapState, mapGetters, mapActions } from "vuex";
+import { defineAsyncComponent } from "vue";
 import Toast from "toasters";
 
 import aw from "@/aw";
@@ -577,7 +579,10 @@ export default {
 		Discogs,
 		Reports,
 		Youtube,
-		MusareSongs
+		MusareSongs,
+		Confirm: defineAsyncComponent(() =>
+			import("@/components/modals/Confirm.vue")
+		)
 	},
 	props: {
 		youtubeId: { type: String, default: null },
@@ -642,7 +647,12 @@ export default {
 				"Heavy Metal",
 				"Christian rock",
 				"Dubstep"
-			]
+			],
+			confirm: {
+				message: "",
+				action: "",
+				params: null
+			}
 		};
 	},
 	computed: {
@@ -1576,6 +1586,23 @@ export default {
 			this.socket.dispatch("songs.remove", id, res => {
 				new Toast(res.message);
 			});
+		},
+		confirmAction(confirm) {
+			this.confirm = confirm;
+			this.updateConfirmMessage(confirm.message);
+			this.openModal("editSongConfirm");
+		},
+		handleConfirmed() {
+			const { action, params } = this.confirm;
+			if (typeof this[action] === "function") {
+				if (params) this[action](params);
+				else this[action]();
+			}
+			this.confirm = {
+				message: "",
+				action: "",
+				params: null
+			};
 		},
 		...mapActions("modals/importAlbum", [
 			"selectDiscogsAlbum",

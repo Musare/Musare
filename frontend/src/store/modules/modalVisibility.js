@@ -19,7 +19,8 @@ const state = {
 		importAlbum: false,
 		viewReport: false,
 		viewPunishment: false,
-		confirm: false
+		confirm: false,
+		editSongConfirm: false
 	},
 	currentlyActive: []
 };

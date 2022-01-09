@@ -33,10 +33,10 @@ export default {
 	methods: {
 		confirmAction() {
 			this.$emit("confirmed");
-			this.closeModal("confirm");
+			this.closeCurrentModal();
 		},
 		...mapActions("modals/confirm", ["updateConfirmMessage"]),
-		...mapActions("modalVisibility", ["closeModal"])
+		...mapActions("modalVisibility", ["closeCurrentModal"])
 	}
 };
 </script>
