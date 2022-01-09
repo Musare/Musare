@@ -249,9 +249,7 @@ export default {
 						"numberLesser",
 						"numberGreater",
 						"numberGreaterEqual",
-						"numberEquals",
-						"exact",
-						"regex"
+						"numberEquals"
 					],
 					defaultFilterType: "numberLesser"
 				},
@@ -264,9 +262,7 @@ export default {
 						"numberLesser",
 						"numberGreater",
 						"numberGreaterEqual",
-						"numberEquals",
-						"exact",
-						"regex"
+						"numberEquals"
 					],
 					defaultFilterType: "numberLesser"
 				},

@@ -415,9 +415,7 @@ export default {
 							"numberLesser",
 							"numberGreater",
 							"numberGreaterEqual",
-							"numberEquals",
-							"exact",
-							"regex"
+							"numberEquals"
 						],
 						defaultFilterType: "numberLesser"
 					}
