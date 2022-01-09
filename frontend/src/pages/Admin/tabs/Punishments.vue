@@ -224,7 +224,7 @@ export default {
 					name: "status",
 					displayName: "Status",
 					property: "status",
-					filterTypes: ["exact", "regex"],
+					filterTypes: ["exact"],
 					defaultFilterType: "exact",
 					dropdown: [
 						["Active", "Active"],

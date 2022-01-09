@@ -294,7 +294,7 @@ export default {
 					name: "type",
 					displayName: "Type",
 					property: "type",
-					filterTypes: ["exact", "regex"],
+					filterTypes: ["exact"],
 					defaultFilterType: "exact",
 					dropdown: [
 						["official", "Official"],
@@ -305,7 +305,7 @@ export default {
 					name: "privacy",
 					displayName: "Privacy",
 					property: "privacy",
-					filterTypes: ["exact", "regex"],
+					filterTypes: ["exact"],
 					defaultFilterType: "exact",
 					dropdown: [
 						["public", "Public"],
@@ -335,7 +335,7 @@ export default {
 					name: "playMode",
 					displayName: "Play Mode",
 					property: "playMode",
-					filterTypes: ["exact", "regex"],
+					filterTypes: ["exact"],
 					defaultFilterType: "exact",
 					dropdown: [
 						["random", "Random"],
@@ -346,7 +346,7 @@ export default {
 					name: "theme",
 					displayName: "Theme",
 					property: "theme",
-					filterTypes: ["exact", "regex"],
+					filterTypes: ["exact"],
 					defaultFilterType: "exact",
 					dropdown: [
 						["blue", "Blue"],

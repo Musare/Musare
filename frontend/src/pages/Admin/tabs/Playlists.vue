@@ -222,7 +222,7 @@ export default {
 					name: "type",
 					displayName: "Type",
 					property: "type",
-					filterTypes: ["exact", "regex"],
+					filterTypes: ["exact"],
 					defaultFilterType: "exact",
 					dropdown: [
 						["genre", "Genre"],
@@ -236,7 +236,7 @@ export default {
 					name: "privacy",
 					displayName: "Privacy",
 					property: "privacy",
-					filterTypes: ["exact", "regex"],
+					filterTypes: ["exact"],
 					defaultFilterType: "exact",
 					dropdown: [
 						["public", "Public"],

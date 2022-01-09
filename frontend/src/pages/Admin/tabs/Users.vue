@@ -387,7 +387,7 @@ export default {
 						name: "role",
 						displayName: "Role",
 						property: "role",
-						filterTypes: ["exact", "regex"],
+						filterTypes: ["exact"],
 						defaultFilterType: "exact",
 						dropdown: [
 							["admin", "Admin"],
