@@ -235,8 +235,12 @@ export default {
 					name: "type",
 					displayName: "Type",
 					property: "type",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
+					filterTypes: ["exact"],
+					defaultFilterType: "exact",
+					dropdown: [
+						["banUserId", "User ID"],
+						["banUserIp", "IP Address"]
+					]
 				},
 				{
 					name: "value",

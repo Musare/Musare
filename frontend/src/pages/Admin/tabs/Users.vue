@@ -233,13 +233,6 @@ export default {
 						property: "userId",
 						filterTypes: ["contains", "exact", "regex"],
 						defaultFilterType: "contains"
-					},
-					{
-						name: "type",
-						displayName: "Type",
-						property: "type",
-						filterTypes: ["contains", "exact", "regex"],
-						defaultFilterType: "contains"
 					}
 				],
 				events: {
