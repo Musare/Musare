@@ -115,7 +115,7 @@
 									v-if="
 										filter.filterType.name &&
 										filter.filterType.name === 'exact' &&
-										filter.filter.filterValues
+										filter.filter.dropdown
 									"
 									class="control is-expanded select"
 								>
@@ -124,12 +124,14 @@
 										:disabled="!filter.filterType"
 									>
 										<option
-											v-for="filterValue in filter.filter
-												.filterValues"
-											:key="filterValue"
-											:value="filterValue"
+											v-for="[
+												dropdownValue,
+												dropdownDisplay
+											] in filter.filter.dropdown"
+											:key="dropdownValue"
+											:value="dropdownValue"
 										>
-											{{ filterValue }}
+											{{ dropdownDisplay }}
 										</option>
 									</select>
 								</div>

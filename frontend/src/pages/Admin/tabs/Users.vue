@@ -389,7 +389,10 @@ export default {
 						property: "role",
 						filterTypes: ["exact", "regex"],
 						defaultFilterType: "exact",
-						filterValues: ["admin", "default"]
+						dropdown: [
+							["admin", "Admin"],
+							["default", "Default"]
+						]
 					},
 					{
 						name: "emailAddress",

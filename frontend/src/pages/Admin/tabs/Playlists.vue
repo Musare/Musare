@@ -224,12 +224,12 @@ export default {
 					property: "type",
 					filterTypes: ["exact", "regex"],
 					defaultFilterType: "exact",
-					filterValues: [
-						"genre",
-						"station",
-						"user",
-						"user-disliked",
-						"user-liked"
+					dropdown: [
+						["genre", "Genre"],
+						["station", "Station"],
+						["user", "User"],
+						["user-disliked", "User Disliked"],
+						["user-liked", "User Liked"]
 					]
 				},
 				{
@@ -238,7 +238,10 @@ export default {
 					property: "privacy",
 					filterTypes: ["exact", "regex"],
 					defaultFilterType: "exact",
-					filterValues: ["public", "private"]
+					dropdown: [
+						["public", "Public"],
+						["private", "Private"]
+					]
 				},
 				{
 					name: "songsCount",

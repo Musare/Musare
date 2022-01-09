@@ -531,7 +531,10 @@ export default {
 					property: "status",
 					filterTypes: ["exact", "regex"],
 					defaultFilterType: "exact",
-					filterValues: ["verified", "unverified"]
+					dropdown: [
+						["verified", "Verified"],
+						["unverified", "Unverified"]
+					]
 				},
 				{
 					name: "likes",

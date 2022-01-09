@@ -104,7 +104,9 @@
 				</template>
 				<template #column-playMode="slotProps">
 					<span :title="slotProps.item.playMode">{{
-						slotProps.item.playMode
+						slotProps.item.playMode === "random"
+							? "Random"
+							: "Sequential"
 					}}</span>
 				</template>
 				<template #column-theme="slotProps">
@@ -294,7 +296,10 @@ export default {
 					property: "type",
 					filterTypes: ["exact", "regex"],
 					defaultFilterType: "exact",
-					filterValues: ["official", "community"]
+					dropdown: [
+						["official", "Official"],
+						["community", "Community"]
+					]
 				},
 				{
 					name: "privacy",
@@ -302,7 +307,11 @@ export default {
 					property: "privacy",
 					filterTypes: ["exact", "regex"],
 					defaultFilterType: "exact",
-					filterValues: ["public", "unlisted", "private"]
+					dropdown: [
+						["public", "Public"],
+						["unlisted", "Unlisted"],
+						["private", "Private"]
+					]
 				},
 				{
 					name: "owner",
@@ -317,7 +326,10 @@ export default {
 					property: "playMode",
 					filterTypes: ["exact", "regex"],
 					defaultFilterType: "exact",
-					filterValues: ["random", "sequential"]
+					dropdown: [
+						["random", "Random"],
+						["sequential", "Sequential"]
+					]
 				},
 				{
 					name: "theme",

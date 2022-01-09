@@ -226,7 +226,10 @@ export default {
 					property: "status",
 					filterTypes: ["exact", "regex"],
 					defaultFilterType: "exact",
-					filterValues: ["Active", "Inactive"]
+					dropdown: [
+						["Active", "Active"],
+						["Inactive", "Inactive"]
+					]
 				},
 				{
 					name: "type",
