@@ -222,6 +222,17 @@
 									</button>
 								</p>
 							</div>
+							<div class="youtube-id-container">
+								<label class="label">YouTube ID</label>
+								<p class="control">
+									<input
+										class="input"
+										type="text"
+										placeholder="Enter YouTube ID..."
+										v-model="song.youtubeId"
+									/>
+								</p>
+							</div>
 						</div>
 
 						<div class="control is-grouped">
@@ -376,16 +387,39 @@
 									</div>
 								</div>
 							</div>
-							<div class="youtube-id-container">
-								<label class="label">YouTube ID</label>
-								<p class="control">
+							<div class="tags-container">
+								<label class="label">Tags</label>
+								<p class="control has-addons">
 									<input
 										class="input"
 										type="text"
-										placeholder="Enter YouTube ID..."
-										v-model="song.youtubeId"
+										ref="new-tag"
+										v-model="tagInputValue"
+										placeholder="Add tag..."
+										@keyup.exact.enter="addTag('tags')"
 									/>
+									<button
+										class="button is-info add-button"
+										@click="addTag('tags')"
+									>
+										<i class="material-icons">add</i>
+									</button>
 								</p>
+								<div class="list-container">
+									<div
+										class="list-item"
+										v-for="tag in song.tags"
+										:key="tag"
+									>
+										<div
+											class="list-item-circle"
+											@click="removeTag('tags', tag)"
+										>
+											<i class="material-icons">close</i>
+										</div>
+										<p>{{ tag }}</p>
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -605,6 +639,7 @@ export default {
 			skipToLast10SecsPressed: false,
 			artistInputValue: "",
 			genreInputValue: "",
+			tagInputValue: "",
 			artistInputFocussed: false,
 			genreInputFocussed: false,
 			genreAutosuggestContainerFocussed: false,
@@ -1266,6 +1301,25 @@ export default {
 				return new Toast(error);
 			}
 
+			error = undefined;
+			song.tags.forEach(tag => {
+				if (
+					!new RegExp(
+						/^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/
+					).test(tag)
+				) {
+					error = "Invalid tag format.";
+					return error;
+				}
+
+				return false;
+			});
+
+			if (error) {
+				saveButtonRef.handleFailedSave();
+				return new Toast(error);
+			}
+
 			// Thumbnail
 			if (!validation.isLength(song.thumbnail, 1, 256)) {
 				saveButtonRef.handleFailedSave();
@@ -1464,6 +1518,17 @@ export default {
 				}
 				return new Toast("Artist cannot be empty");
 			}
+			if (type === "tags") {
+				const tag = value || this.tagInputValue;
+				if (this.song.tags.indexOf(tag) !== -1)
+					return new Toast("Tag already exists");
+				if (tag !== "") {
+					this.song.tags.push(tag);
+					this.tagInputValue = "";
+					return false;
+				}
+				return new Toast("Tag cannot be empty");
+			}
 
 			return false;
 		},
@@ -1472,6 +1537,8 @@ export default {
 				this.song.genres.splice(this.song.genres.indexOf(value), 1);
 			else if (type === "artists")
 				this.song.artists.splice(this.song.artists.indexOf(value), 1);
+			else if (type === "tags")
+				this.song.tags.splice(this.song.tags.indexOf(value), 1);
 		},
 		drawCanvas() {
 			const canvasElement = this.$refs.durationCanvas;
@@ -1938,7 +2005,12 @@ export default {
 		}
 
 		.album-art-container {
-			width: 100%;
+			margin-right: 16px;
+			width: calc((100% - 16px) / 3 * 2);
+		}
+
+		.youtube-id-container {
+			width: calc((100% - 16px) / 3);
 		}
 
 		.artists-container {
@@ -1969,8 +2041,9 @@ export default {
 			}
 		}
 
-		.youtube-id-container {
+		.tags-container {
 			width: calc((100% - 32px) / 3);
+			position: relative;
 		}
 
 		.list-item-circle {
