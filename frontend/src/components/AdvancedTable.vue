@@ -1048,9 +1048,12 @@ export default {
 		this.orderedColumns = columns.sort((columnA, columnB) => {
 			// Always places updatedPlaceholder column in the first position
 			if (columnA.name === "updatedPlaceholder") return -1;
-			// Always places select column in the first position
-			// if (columnA.name === "select") return -1;
+			if (columnB.name === "updatedPlaceholder") return 1;
+			// Always places select column in the second position
+			if (columnA.name === "select") return -1;
+			if (columnB.name === "select") return 1;
 			// Always places placeholder column in the last position
+			if (columnA.name === "placeholder") return 1;
 			if (columnB.name === "placeholder") return -1;
 
 			// If there are no table settings stored, use default ordering
