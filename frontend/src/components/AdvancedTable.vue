@@ -1609,8 +1609,15 @@ export default {
 			this.highlightRow(newItemIndex);
 		},
 		addFilterItem() {
+			let data = "";
+			if (this.addFilterValue.defaultFilterType.startsWith("datetime")) {
+				const now = new Date();
+				now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+				data = now.toISOString().slice(0, 16);
+			}
+
 			this.editingFilters.push({
-				data: "",
+				data,
 				filter: this.addFilterValue,
 				filterType:
 					this.allFilterTypes[this.addFilterValue.defaultFilterType]
