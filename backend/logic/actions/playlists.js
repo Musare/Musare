@@ -230,6 +230,24 @@ CacheModule.runJob("SUB", {
 	}
 });
 
+CacheModule.runJob("SUB", {
+	channel: "playlist.updated",
+	cb: async data => {
+		const playlistModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "playlist"
+		});
+
+		playlistModel.findOne({ _id: data.playlistId }, [ "_id", "displayName", "type", "privacy", "songs", "createdBy", "createdAt", "createdFor" ], (err, playlist) => {
+			const newPlaylist = { ...playlist._doc, songsCount: playlist.songs.length, songsLength: playlist.songs.reduce((previous, current) => ({ duration: previous.duration + current.duration })).duration };
+			delete newPlaylist["songs"];
+			WSModule.runJob("EMIT_TO_ROOMS", {
+				rooms: ["admin.playlists"],
+				args: ["event:admin.playlist.updated", { data: { playlist: newPlaylist } }]
+			});
+		});
+	}
+});
+
 export default {
 	/**
 	 * Gets playlists, used in the admin playlists page by the AdvancedTable component
@@ -1115,6 +1133,11 @@ export default {
 					}
 				});
 
+				CacheModule.runJob("PUB", {
+					channel: "playlist.updated",
+					value: { playlistId: playlistId }
+				});
+
 				if (ratings && (playlist.type === "user-liked" || playlist.type === "user-disliked")) {
 					const { _id, youtubeId, title, artists, thumbnail } = newSong;
 					const { likes, dislikes } = ratings;
@@ -1495,6 +1518,11 @@ export default {
 					}
 				});
 
+				CacheModule.runJob("PUB", {
+					channel: "playlist.updated",
+					value: { playlistId: playlistId }
+				});
+
 				return cb({
 					status: "success",
 					message: "Song has been successfully removed from playlist",
@@ -1567,6 +1595,11 @@ export default {
 						userId: session.userId,
 						privacy: playlist.privacy
 					}
+				});
+
+				CacheModule.runJob("PUB", {
+					channel: "playlist.updated",
+					value: { playlistId: playlistId }
 				});
 
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
@@ -1798,6 +1831,11 @@ export default {
 					}
 				});
 
+				CacheModule.runJob("PUB", {
+					channel: "playlist.updated",
+					value: { playlistId: playlistId }
+				});
+
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
 					userId: session.userId,
 					type: "playlist__edit_privacy",
@@ -1870,6 +1908,11 @@ export default {
 						}
 					});
 				}
+
+				CacheModule.runJob("PUB", {
+					channel: "playlist.updated",
+					value: { playlistId: playlistId }
+				});
 
 				return cb({
 					status: "success",

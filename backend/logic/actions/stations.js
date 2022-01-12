@@ -524,6 +524,22 @@ CacheModule.runJob("SUB", {
 	}
 });
 
+CacheModule.runJob("SUB", {
+	channel: "station.updated",
+	cb: async data => {
+		const stationModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "station"
+		});
+
+		stationModel.findOne({ _id: data.stationId }, [ "_id", "name", "displayName", "description", "type", "privacy", "owner", "partyMode", "playMode", "theme" ], (err, station) => {
+			WSModule.runJob("EMIT_TO_ROOMS", {
+				rooms: ["admin.stations"],
+				args: ["event:admin.station.updated", { data: { station } }]
+			});
+		});
+	}
+});
+
 export default {
 	/**
 	 * Get a list of all the stations
@@ -1272,6 +1288,10 @@ export default {
 						locked: station.locked
 					}
 				});
+				CacheModule.runJob("PUB", {
+					channel: "station.updated",
+					value: { stationId }
+				});
 				return cb({ status: "success", data: { locked: station.locked } });
 			}
 		);
@@ -1532,6 +1552,11 @@ export default {
 					value: { stationId, name: newName }
 				});
 
+				CacheModule.runJob("PUB", {
+					channel: "station.updated",
+					value: { stationId }
+				});
+
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
 					userId: session.userId,
 					type: "station__edit_name",
@@ -1610,6 +1635,11 @@ export default {
 					value: { stationId, displayName: newDisplayName }
 				});
 
+				CacheModule.runJob("PUB", {
+					channel: "station.updated",
+					value: { stationId }
+				});
+
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
 					userId: session.userId,
 					type: "station__edit_display_name",
@@ -1686,6 +1716,11 @@ export default {
 					value: { stationId, description: newDescription }
 				});
 
+				CacheModule.runJob("PUB", {
+					channel: "station.updated",
+					value: { stationId }
+				});
+
 				return cb({
 					status: "success",
 					message: "Successfully updated the description."
@@ -1755,6 +1790,11 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "station.privacyUpdate",
 					value: { stationId, previousPrivacy }
+				});
+
+				CacheModule.runJob("PUB", {
+					channel: "station.updated",
+					value: { stationId }
 				});
 
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
@@ -2201,6 +2241,11 @@ export default {
 					}
 				});
 
+				CacheModule.runJob("PUB", {
+					channel: "station.updated",
+					value: { stationId }
+				});
+
 				StationsModule.runJob("SKIP_STATION", { stationId, natural: false });
 
 				return cb({
@@ -2279,6 +2324,10 @@ export default {
 						playMode: newPlayMode
 					}
 				});
+				CacheModule.runJob("PUB", {
+					channel: "station.updated",
+					value: { stationId }
+				});
 				StationsModule.runJob("SKIP_STATION", { stationId, natural: false });
 				return cb({
 					status: "success",
@@ -2345,6 +2394,11 @@ export default {
 
 				CacheModule.runJob("PUB", {
 					channel: "station.themeUpdate",
+					value: { stationId }
+				});
+
+				CacheModule.runJob("PUB", {
+					channel: "station.updated",
 					value: { stationId }
 				});
 

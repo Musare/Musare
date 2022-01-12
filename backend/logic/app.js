@@ -216,6 +216,11 @@ class _AppModule extends CoreClass {
 												value: user._id
 											});
 
+											CacheModule.runJob("PUB", {
+												channel: "user.updated",
+												value: { userId: user._id }
+											});
+
 											res.redirect(`${config.get("domain")}/settings?tab=security`);
 										}
 									],

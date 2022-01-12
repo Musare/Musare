@@ -167,6 +167,24 @@ CacheModule.runJob("SUB", {
 	}
 });
 
+CacheModule.runJob("SUB", {
+	channel: "user.updated",
+	cb: async data => {
+		const userModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "user"
+		});
+
+		userModel.findOne({ _id: data.userId }, [ "_id", "name", "username", "avatar", "services.github.id", "role", "email.address", "email.verified", "statistics.songsRequested", "services.password.password" ], (err, user) => {
+			const newUser = { ...user._doc, hasPassword: !!user.services.password.password };
+			delete newUser.services["password"];
+			WSModule.runJob("EMIT_TO_ROOMS", {
+				rooms: ["admin.users", `edit-user.${data.userId}`],
+				args: ["event:admin.user.updated", { data: { user: newUser } }]
+			});
+		});
+	}
+});
+
 export default {
 	/**
 	 * Gets users, used in the admin users page by the AdvancedTable component
@@ -1786,6 +1804,11 @@ export default {
 					}
 				});
 
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: updatingUserId }
+				});
+
 				this.log(
 					"SUCCESS",
 					"UPDATE_USERNAME",
@@ -1896,6 +1919,11 @@ export default {
 					`Updated email for user "${updatingUserId}" to email "${newEmail}".`
 				);
 
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: updatingUserId }
+				});
+
 				return cb({
 					status: "success",
 					message: "Email updated successfully."
@@ -1961,6 +1989,11 @@ export default {
 				});
 
 				this.log("SUCCESS", "UPDATE_NAME", `Updated name for user "${updatingUserId}" to name "${newName}".`);
+
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: updatingUserId }
+				});
 
 				return cb({
 					status: "success",
@@ -2034,6 +2067,11 @@ export default {
 					`Updated location for user "${updatingUserId}" to location "${newLocation}".`
 				);
 
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: updatingUserId }
+				});
+
 				return cb({
 					status: "success",
 					message: "Location updated successfully"
@@ -2093,6 +2131,11 @@ export default {
 				});
 
 				this.log("SUCCESS", "UPDATE_BIO", `Updated bio for user "${updatingUserId}" to bio "${newBio}".`);
+
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: updatingUserId }
+				});
 
 				return cb({
 					status: "success",
@@ -2158,6 +2201,11 @@ export default {
 					`Updated avatar for user "${updatingUserId}" to type "${newAvatar.type} and color ${newAvatar.color}".`
 				);
 
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: updatingUserId }
+				});
+
 				return cb({
 					status: "success",
 					message: "Avatar updated successfully"
@@ -2216,6 +2264,11 @@ export default {
 					"UPDATE_ROLE",
 					`User "${session.userId}" updated the role of user "${updatingUserId}" to role "${newRole}".`
 				);
+
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: updatingUserId }
+				});
 
 				return cb({
 					status: "success",
@@ -2496,6 +2549,11 @@ export default {
 					value: session.userId
 				});
 
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: session.userId }
+				});
+
 				return cb({
 					status: "success",
 					message: "Successfully added password."
@@ -2543,6 +2601,11 @@ export default {
 					value: session.userId
 				});
 
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: session.userId }
+				});
+
 				return cb({
 					status: "success",
 					message: "Successfully unlinked password."
@@ -2588,6 +2651,11 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "user.unlinkGithub",
 					value: session.userId
+				});
+
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: session.userId }
 				});
 
 				return cb({
