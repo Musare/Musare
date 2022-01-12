@@ -1511,6 +1511,27 @@ class _SongsModule extends CoreClass {
 			);
 		});
 	}
+
+	/**
+	 * Gets a list of all tags
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	 GET_TAGS() {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						SongsModule.SongModel.distinct("tags", next);
+					}
+				],
+				(err, tags) => {
+					if (err) reject(err);
+					resolve({ tags });
+				}
+			);
+		});
+	}
 }
 
 export default new _SongsModule();

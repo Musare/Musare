@@ -1770,5 +1770,41 @@ export default {
 				}
 			}
 		);
-	})
+	}),
+
+	/**
+	 * Gets a list of all tags
+	 *
+	 * @param session
+	 * @param cb
+	 */
+	 getTags: isAdminRequired(function getModule(session, cb) {
+		async.waterfall(
+			[
+				next => {
+					SongsModule.runJob("GET_TAGS", this)
+						.then(res => {
+							next(null, res.tags);
+						})
+						.catch(next);
+				}
+			],
+			async (err, tags) => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "GET_TAGS", `User ${session.userId} failed to get tags. '${err}'`);
+					cb({ status: "error", message: err });
+				} else {
+					this.log("SUCCESS", "GET_TAGS", `User ${session.userId} has successfully got the tags.`);
+					cb({
+						status: "success",
+						message: "Successfully got tags.",
+						data: {
+							items: tags
+						}
+					});
+				}
+			}
+		);
+	}),
 };

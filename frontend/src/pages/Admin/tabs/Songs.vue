@@ -125,6 +125,11 @@
 						slotProps.item.genres.join(", ")
 					}}</span>
 				</template>
+				<template #column-tags="slotProps">
+					<span :title="slotProps.item.tags.join(', ')">{{
+						slotProps.item.tags.join(", ")
+					}}</span>
+				</template>
 				<template #column-likes="slotProps">
 					<span :title="slotProps.item.likes">{{
 						slotProps.item.likes
@@ -360,6 +365,12 @@ export default {
 					sortable: false
 				},
 				{
+					name: "tags",
+					displayName: "Tags",
+					properties: ["tags"],
+					sortable: false
+				},
+				{
 					name: "likes",
 					displayName: "Likes",
 					properties: ["likes"],
@@ -496,6 +507,15 @@ export default {
 					defaultFilterType: "contains",
 					autosuggest: true,
 					autosuggestDataAction: "songs.getGenres"
+				},
+				{
+					name: "tags",
+					displayName: "Tags",
+					property: "tags",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains",
+					autosuggest: true,
+					autosuggestDataAction: "songs.getTags"
 				},
 				{
 					name: "thumbnail",
