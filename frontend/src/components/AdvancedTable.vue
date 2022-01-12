@@ -185,7 +185,7 @@
 										placeholder="Search value"
 										:disabled="!filter.filterType"
 										@keydown.enter="applyFilterAndGetData()"
-										@blur="blurFilterInput(filter)"
+										@blur="blurFilterInput(filter, $event)"
 										@focus="focusFilterInput(filter)"
 										@keydown="keydownFilterInput(filter)"
 									/>
@@ -197,6 +197,9 @@
 												filter.filter.name
 											] ||
 												autosuggest.containerFocussed[
+													filter.filter.name
+												] ||
+												autosuggest.itemFocussed[
 													filter.filter.name
 												]) &&
 											autosuggest.items[
@@ -222,6 +225,22 @@
 													index,
 													filter,
 													item
+												)
+											"
+											@keyup.enter="
+												selectAutosuggestItem(
+													index,
+													filter,
+													item
+												)
+											"
+											@focus="
+												focusAutosuggestItem(filter)
+											"
+											@blur="
+												blurAutosuggestItem(
+													filter,
+													$event
 												)
 											"
 											v-for="item in autosuggest.items[
@@ -923,6 +942,7 @@ export default {
 			autosuggest: {
 				inputFocussed: {},
 				containerFocussed: {},
+				itemFocussed: {},
 				keydownInputTimeout: {},
 				items: {},
 				allItems: {
@@ -1906,7 +1926,12 @@ export default {
 				removed: true
 			};
 		},
-		blurFilterInput(filter) {
+		blurFilterInput(filter, event) {
+			if (
+				event.relatedTarget &&
+				event.relatedTarget.classList.contains("autosuggest-item")
+			)
+				this.autosuggest.itemFocussed[filter.filter.name] = true;
 			this.autosuggest.inputFocussed[filter.filter.name] = false;
 		},
 		focusFilterInput(filter) {
@@ -1934,6 +1959,16 @@ export default {
 		selectAutosuggestItem(index, filter, item) {
 			this.editingFilters[index].data = item;
 			this.autosuggest.items[filter.filter.name] = [];
+		},
+		focusAutosuggestItem(filter) {
+			this.autosuggest.itemFocussed[filter.filter.name] = true;
+		},
+		blurAutosuggestItem(filter, event) {
+			if (
+				!event.relatedTarget ||
+				!event.relatedTarget.classList.contains("autosuggest-item")
+			)
+				this.autosuggest.itemFocussed[filter.filter.name] = false;
 		}
 	}
 };
