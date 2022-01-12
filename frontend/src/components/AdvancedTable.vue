@@ -630,17 +630,25 @@
 									:item="item"
 									v-if="
 										column.properties.length === 0 ||
-										column.properties.every(property =>
-											property
-												.split('.')
-												.reduce(
-													(previous, current) =>
-														(previous !== null &&
+										column.properties.every(
+											property =>
+												property
+													.split('.')
+													.reduce(
+														(previous, current) =>
+															previous &&
 															previous[
 																current
-															]) !== null || null,
-													item
-												)
+															] !== null &&
+															previous[
+																current
+															] !== undefined
+																? previous[
+																		current
+																  ]
+																: null,
+														item
+													) !== null
 										)
 									"
 								></slot>
@@ -1159,7 +1167,11 @@ export default {
 							.split(".")
 							.reduce(
 								(previous, current) =>
-									(previous && previous[current]) || null,
+									previous &&
+									previous[current] !== null &&
+									previous[current] !== undefined
+										? previous[current]
+										: null,
 								res.data
 							)
 					);
@@ -1167,7 +1179,11 @@ export default {
 					.split(".")
 					.reduce(
 						(previous, current) =>
-							(previous && previous[current]) || null,
+							previous &&
+							previous[current] !== null &&
+							previous[current] !== undefined
+								? previous[current]
+								: null,
 						res.data
 					);
 				this.updateData(index, row);
@@ -1181,7 +1197,11 @@ export default {
 							.split(".")
 							.reduce(
 								(previous, current) =>
-									(previous && previous[current]) || null,
+									previous &&
+									previous[current] !== null &&
+									previous[current] !== undefined
+										? previous[current]
+										: null,
 								res.data
 							)
 					);
