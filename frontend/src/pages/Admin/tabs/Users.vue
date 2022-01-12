@@ -204,7 +204,7 @@ export default {
 						name: "type",
 						displayName: "Type",
 						properties: ["type"],
-						sortProperty: "type"
+						sortable: false
 					},
 					{
 						name: "userId",
@@ -417,6 +417,11 @@ export default {
 				],
 				events: {
 					adminRoom: "users",
+					updated: {
+						event: "admin.user.updated",
+						id: "user._id",
+						item: "user"
+					},
 					removed: {
 						event: "user.removed",
 						id: "userId"

@@ -174,14 +174,29 @@ CacheModule.runJob("SUB", {
 			modelName: "user"
 		});
 
-		userModel.findOne({ _id: data.userId }, [ "_id", "name", "username", "avatar", "services.github.id", "role", "email.address", "email.verified", "statistics.songsRequested", "services.password.password" ], (err, user) => {
-			const newUser = { ...user._doc, hasPassword: !!user.services.password.password };
-			delete newUser.services["password"];
-			WSModule.runJob("EMIT_TO_ROOMS", {
-				rooms: ["admin.users", `edit-user.${data.userId}`],
-				args: ["event:admin.user.updated", { data: { user: newUser } }]
-			});
-		});
+		userModel.findOne(
+			{ _id: data.userId },
+			[
+				"_id",
+				"name",
+				"username",
+				"avatar",
+				"services.github.id",
+				"role",
+				"email.address",
+				"email.verified",
+				"statistics.songsRequested",
+				"services.password.password"
+			],
+			(err, user) => {
+				const newUser = { ...user._doc, hasPassword: !!user.services.password.password };
+				delete newUser.services.password;
+				WSModule.runJob("EMIT_TO_ROOMS", {
+					rooms: ["admin.users", `edit-user.${data.userId}`],
+					args: ["event:admin.user.updated", { data: { user: newUser } }]
+				});
+			}
+		);
 	}
 });
 

@@ -293,6 +293,11 @@ export default {
 			],
 			events: {
 				adminRoom: "playlists",
+				updated: {
+					event: "admin.playlist.updated",
+					id: "playlist._id",
+					item: "playlist"
+				},
 				removed: {
 					event: "admin.playlist.deleted",
 					id: "playlistId"

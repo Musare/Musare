@@ -359,6 +359,11 @@ export default {
 			],
 			events: {
 				adminRoom: "stations",
+				updated: {
+					event: "admin.station.updated",
+					id: "station._id",
+					item: "station"
+				},
 				removed: {
 					event: "admin.station.deleted",
 					id: "stationId"

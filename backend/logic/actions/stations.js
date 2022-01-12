@@ -531,12 +531,16 @@ CacheModule.runJob("SUB", {
 			modelName: "station"
 		});
 
-		stationModel.findOne({ _id: data.stationId }, [ "_id", "name", "displayName", "description", "type", "privacy", "owner", "partyMode", "playMode", "theme" ], (err, station) => {
-			WSModule.runJob("EMIT_TO_ROOMS", {
-				rooms: ["admin.stations"],
-				args: ["event:admin.station.updated", { data: { station } }]
-			});
-		});
+		stationModel.findOne(
+			{ _id: data.stationId },
+			["_id", "name", "displayName", "description", "type", "privacy", "owner", "partyMode", "playMode", "theme"],
+			(err, station) => {
+				WSModule.runJob("EMIT_TO_ROOMS", {
+					rooms: ["admin.stations"],
+					args: ["event:admin.station.updated", { data: { station } }]
+				});
+			}
+		);
 	}
 });
 

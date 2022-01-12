@@ -237,14 +237,24 @@ CacheModule.runJob("SUB", {
 			modelName: "playlist"
 		});
 
-		playlistModel.findOne({ _id: data.playlistId }, [ "_id", "displayName", "type", "privacy", "songs", "createdBy", "createdAt", "createdFor" ], (err, playlist) => {
-			const newPlaylist = { ...playlist._doc, songsCount: playlist.songs.length, songsLength: playlist.songs.reduce((previous, current) => ({ duration: previous.duration + current.duration })).duration };
-			delete newPlaylist["songs"];
-			WSModule.runJob("EMIT_TO_ROOMS", {
-				rooms: ["admin.playlists"],
-				args: ["event:admin.playlist.updated", { data: { playlist: newPlaylist } }]
-			});
-		});
+		playlistModel.findOne(
+			{ _id: data.playlistId },
+			["_id", "displayName", "type", "privacy", "songs", "createdBy", "createdAt", "createdFor"],
+			(err, playlist) => {
+				const newPlaylist = {
+					...playlist._doc,
+					songsCount: playlist.songs.length,
+					songsLength: playlist.songs.reduce((previous, current) => ({
+						duration: previous.duration + current.duration
+					})).duration
+				};
+				delete newPlaylist.songs;
+				WSModule.runJob("EMIT_TO_ROOMS", {
+					rooms: ["admin.playlists"],
+					args: ["event:admin.playlist.updated", { data: { playlist: newPlaylist } }]
+				});
+			}
+		);
 	}
 });
 
@@ -1135,7 +1145,7 @@ export default {
 
 				CacheModule.runJob("PUB", {
 					channel: "playlist.updated",
-					value: { playlistId: playlistId }
+					value: { playlistId }
 				});
 
 				if (ratings && (playlist.type === "user-liked" || playlist.type === "user-disliked")) {
@@ -1520,7 +1530,7 @@ export default {
 
 				CacheModule.runJob("PUB", {
 					channel: "playlist.updated",
-					value: { playlistId: playlistId }
+					value: { playlistId }
 				});
 
 				return cb({
@@ -1599,7 +1609,7 @@ export default {
 
 				CacheModule.runJob("PUB", {
 					channel: "playlist.updated",
-					value: { playlistId: playlistId }
+					value: { playlistId }
 				});
 
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
@@ -1833,7 +1843,7 @@ export default {
 
 				CacheModule.runJob("PUB", {
 					channel: "playlist.updated",
-					value: { playlistId: playlistId }
+					value: { playlistId }
 				});
 
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
@@ -1911,7 +1921,7 @@ export default {
 
 				CacheModule.runJob("PUB", {
 					channel: "playlist.updated",
-					value: { playlistId: playlistId }
+					value: { playlistId }
 				});
 
 				return cb({
