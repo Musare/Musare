@@ -17,7 +17,7 @@ export default {
 		skipVotes: [{ type: String }],
 		requestedBy: { type: String },
 		requestedAt: { type: Date },
-		status: { type: String }
+		verified: { type: Boolean }
 	},
 	currentSongIndex: { type: Number, default: 0, required: true },
 	timePaused: { type: Number, default: 0, required: true },
@@ -36,7 +36,7 @@ export default {
 			thumbnail: { type: String },
 			requestedBy: { type: String },
 			requestedAt: { type: Date },
-			status: { type: String }
+			verified: { type: Boolean }
 		}
 	],
 	owner: { type: String },
@@ -45,5 +45,5 @@ export default {
 	theme: { type: String, enum: ["blue", "purple", "teal", "orange", "red"], default: "blue" },
 	includedPlaylists: [{ type: String }],
 	excludedPlaylists: [{ type: String }],
-	documentVersion: { type: Number, default: 6, required: true }
+	documentVersion: { type: Number, default: 7, required: true }
 };

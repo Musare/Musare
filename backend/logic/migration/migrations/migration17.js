@@ -18,7 +18,7 @@ export default async function migrate(MigrationModule) {
 					this.log("INFO", `Migration 17. Finding songs with document version 5.`);
 					songModel.updateMany(
 						{ documentVersion: 5 },
-						{ $set: { documentVersion: 6, "tags": [] } },
+						{ $set: { documentVersion: 6, tags: [] } },
 						(err, res) => {
 							if (err) next(err);
 							else {

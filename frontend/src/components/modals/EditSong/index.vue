@@ -497,7 +497,7 @@
 
 					<div class="right">
 						<button
-							v-if="song.status !== 'verified'"
+							v-if="!song.verified"
 							class="button is-success"
 							@click="verify(song._id)"
 							content="Verify Song"
@@ -506,7 +506,7 @@
 							<i class="material-icons">check_circle</i>
 						</button>
 						<quick-confirm
-							v-if="song.status === 'verified'"
+							v-if="song.verified"
 							placement="left"
 							@confirm="unverify(song._id)"
 						>
@@ -518,28 +518,6 @@
 								<i class="material-icons">cancel</i>
 							</button>
 						</quick-confirm>
-						<quick-confirm
-							v-if="song.status !== 'hidden'"
-							placement="left"
-							@confirm="hide(song._id)"
-						>
-							<button
-								class="button is-danger"
-								content="Hide Song"
-								v-tippy
-							>
-								<i class="material-icons">visibility_off</i>
-							</button>
-						</quick-confirm>
-						<button
-							v-if="song.status === 'hidden'"
-							class="button is-success"
-							@click="unhide(song._id)"
-							content="Unhide Song"
-							v-tippy
-						>
-							<i class="material-icons">visibility</i>
-						</button>
 						<button
 							class="
 								button
@@ -737,7 +715,7 @@ export default {
 			"event:admin.song.updated",
 			res => {
 				if (res.data.song._id === this.song._id)
-					this.song.status = res.data.song.status;
+					this.song.verified = res.data.song.verified;
 			},
 			{ modal: "editSong" }
 		);

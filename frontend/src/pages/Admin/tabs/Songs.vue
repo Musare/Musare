@@ -42,7 +42,7 @@
 							edit
 						</button>
 						<quick-confirm
-							v-if="slotProps.item.status === 'verified'"
+							v-if="slotProps.item.verified"
 							@confirm="unverifyOne(slotProps.item._id)"
 						>
 							<button
@@ -156,9 +156,9 @@
 						{{ slotProps.item.youtubeId }}
 					</a>
 				</template>
-				<template #column-status="slotProps">
-					<span :title="slotProps.item.status">{{
-						slotProps.item.status
+				<template #column-verified="slotProps">
+					<span :title="slotProps.item.verified">{{
+						slotProps.item.verified
 					}}</span>
 				</template>
 				<template #column-duration="slotProps">
@@ -329,7 +329,7 @@ export default {
 				{
 					name: "options",
 					displayName: "Options",
-					properties: ["_id", "status"],
+					properties: ["_id", "verified"],
 					sortable: false,
 					hidable: false,
 					resizable: false,
@@ -405,10 +405,10 @@ export default {
 					defaultWidth: 120
 				},
 				{
-					name: "status",
-					displayName: "Status",
-					properties: ["status"],
-					sortProperty: "status",
+					name: "verified",
+					displayName: "Verified",
+					properties: ["verified"],
+					sortProperty: "verified",
 					minWidth: 120,
 					defaultWidth: 120
 				},
@@ -553,15 +553,11 @@ export default {
 					defaultFilterType: "datetimeBefore"
 				},
 				{
-					name: "status",
-					displayName: "Status",
-					property: "status",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact",
-					dropdown: [
-						["verified", "Verified"],
-						["unverified", "Unverified"]
-					]
+					name: "verified",
+					displayName: "Verified",
+					property: "verified",
+					filterTypes: ["boolean"],
+					defaultFilterType: "boolean"
 				},
 				{
 					name: "likes",

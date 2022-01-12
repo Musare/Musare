@@ -356,7 +356,7 @@ class _PlaylistsModule extends CoreClass {
 	 */
 	ADD_SONG_TO_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
-			const { _id, youtubeId, title, artists, thumbnail, duration, status } = payload.song;
+			const { _id, youtubeId, title, artists, thumbnail, duration, verified } = payload.song;
 			const trimmedSong = {
 				_id,
 				youtubeId,
@@ -364,7 +364,7 @@ class _PlaylistsModule extends CoreClass {
 				artists,
 				thumbnail,
 				duration,
-				status
+				verified
 			};
 
 			PlaylistsModule.playlistModel.updateOne(
@@ -458,7 +458,7 @@ class _PlaylistsModule extends CoreClass {
 
 					(playlistId, _songs, next) => {
 						const songs = _songs.map(song => {
-							const { _id, youtubeId, title, artists, thumbnail, duration, status } = song;
+							const { _id, youtubeId, title, artists, thumbnail, duration, verified } = song;
 							return {
 								_id,
 								youtubeId,
@@ -466,7 +466,7 @@ class _PlaylistsModule extends CoreClass {
 								artists,
 								thumbnail,
 								duration,
-								status
+								verified
 							};
 						});
 

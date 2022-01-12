@@ -18,5 +18,5 @@ export default {
 	createdFor: { type: String },
 	privacy: { type: String, enum: ["public", "private"], default: "private" },
 	type: { type: String, enum: ["user", "user-liked", "user-disliked", "genre", "station"], required: true },
-	documentVersion: { type: Number, default: 5, required: true }
+	documentVersion: { type: Number, default: 6, required: true }
 };
