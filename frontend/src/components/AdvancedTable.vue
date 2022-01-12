@@ -2018,17 +2018,11 @@ export default {
 				th,
 				td {
 					border-color: var(--dark-grey) !important;
-
-					&:first-child {
-						background-color: var(--dark-grey-3) !important;
-					}
+					background-color: var(--dark-grey-3) !important;
 				}
 
-				&:nth-child(even) {
-					&,
-					td:first-child {
-						background-color: var(--dark-grey-2) !important;
-					}
+				&:nth-child(even) td {
+					background-color: var(--dark-grey-2) !important;
 				}
 
 				&:hover,
@@ -2036,10 +2030,7 @@ export default {
 				&.highlighted {
 					th,
 					td {
-						&,
-						&:first-child {
-							background-color: var(--dark-grey-4) !important;
-						}
+						background-color: var(--dark-grey-4) !important;
 					}
 				}
 
@@ -2180,7 +2171,7 @@ export default {
 
 			tbody {
 				tr {
-					&.highlighted {
+					&.highlighted td {
 						background-color: var(--light-grey);
 					}
 
@@ -2188,6 +2179,10 @@ export default {
 						td:first-child {
 							background-color: var(--primary-color) !important;
 						}
+					}
+
+					&:nth-child(even) td {
+						background-color: #fafafa;
 					}
 
 					td {
@@ -2236,12 +2231,12 @@ export default {
 					white-space: nowrap;
 					text-overflow: ellipsis;
 					overflow: hidden;
+					background-color: var(--white);
 
 					&:first-child {
 						display: table-cell;
 						position: sticky;
 						left: 0;
-						background-color: var(--white);
 						z-index: 2;
 
 						& > .updated-tooltip {
@@ -2264,19 +2259,12 @@ export default {
 					}
 				}
 
-				&:nth-child(even) td:first-child {
-					background-color: #fafafa;
-				}
-
 				&:hover,
 				&:focus,
 				&.highlighted {
 					th,
 					td {
-						&,
-						&:first-child {
-							background-color: var(--light-grey);
-						}
+						background-color: var(--light-grey);
 					}
 				}
 			}
@@ -2291,22 +2279,9 @@ export default {
 								display: table-cell;
 								position: sticky;
 								left: 5px;
-								background-color: var(--white);
 								z-index: 2;
 							}
 						}
-
-						&:hover,
-						&:focus,
-						&.highlighted {
-							th,
-							td {
-								&:nth-child(2) {
-									background-color: var(--light-grey);
-								}
-							}
-						}
-
 						&.updated td:first-child {
 							background-color: var(--primary-color);
 						}
