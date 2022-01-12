@@ -195,6 +195,7 @@
 							@click.prevent="editMany(slotProps.item)"
 							content="Edit Songs"
 							v-tippy
+							tabindex="0"
 						>
 							edit
 						</i>
@@ -203,12 +204,14 @@
 							@click.prevent="verifyMany(slotProps.item)"
 							content="Verify Songs"
 							v-tippy
+							tabindex="0"
 						>
 							check_circle
 						</i>
 						<quick-confirm
 							placement="left"
 							@confirm="unverifyMany(slotProps.item)"
+							tabindex="0"
 						>
 							<i
 								class="material-icons unverify-songs-icon"
@@ -223,6 +226,7 @@
 							@click.prevent="tagMany(slotProps.item)"
 							content="Tag Songs"
 							v-tippy
+							tabindex="0"
 						>
 							local_offer
 						</i>
@@ -231,6 +235,7 @@
 							@click.prevent="setArtists(slotProps.item)"
 							content="Set Artists"
 							v-tippy
+							tabindex="0"
 						>
 							group
 						</i>
@@ -239,6 +244,7 @@
 							@click.prevent="setGenres(slotProps.item)"
 							content="Set Genres"
 							v-tippy
+							tabindex="0"
 						>
 							theater_comedy
 						</i>
@@ -254,6 +260,7 @@
 							"
 							content="Delete Songs"
 							v-tippy
+							tabindex="0"
 						>
 							delete_forever
 						</i>

@@ -586,6 +586,21 @@
 								updated: item.updated,
 								removed: item.removed
 							}"
+							:ref="`row-${itemIndex}`"
+							tabindex="0"
+							@keydown.up.prevent
+							@keydown.down.prevent
+							@keydown.space.prevent
+							@click="highlightRow(itemIndex)"
+							@keyup.up.exact="highlightUp(itemIndex)"
+							@keyup.down.exact="highlightDown(itemIndex)"
+							@keyup.shift.up.exact="selectUp(itemIndex)"
+							@keyup.shift.down.exact="selectDown(itemIndex)"
+							@keyup.ctrl.up.exact="unselectUp(itemIndex)"
+							@keyup.ctrl.down.exact="unselectDown(itemIndex)"
+							@keyup.space.exact="
+								toggleSelectedRow(itemIndex, {})
+							"
 						>
 							<td
 								v-for="column in sortedFilteredColumns"
@@ -740,6 +755,7 @@
 				top: bulkPopup.top + 'px',
 				left: bulkPopup.left + 'px'
 			}"
+			ref="bulk-popup"
 		>
 			<button
 				class="button is-primary"
@@ -1159,7 +1175,6 @@ export default {
 				preventDefault: true,
 				handler: () => {
 					// Previous page
-					console.log("Previous page");
 					this.changePage(this.page - 1);
 				}
 			});
@@ -1170,7 +1185,6 @@ export default {
 				preventDefault: true,
 				handler: () => {
 					// Next page
-					console.log("Next page");
 					this.changePage(this.page + 1);
 				}
 			});
@@ -1182,7 +1196,6 @@ export default {
 				preventDefault: true,
 				handler: () => {
 					// First page
-					console.log("First page");
 					this.changePage(1);
 				}
 			});
@@ -1194,7 +1207,6 @@ export default {
 				preventDefault: true,
 				handler: () => {
 					// Last page
-					console.log("Last page");
 					this.changePage(this.lastPage);
 				}
 			});
@@ -1212,12 +1224,20 @@ export default {
 						localStorage.removeItem(
 							`advancedTableSettings:${this.name}`
 						);
-						this.$router.push({ query: {} });
+						this.$router.push({ query: "" });
 					}
 				}
 			);
 
 			// Selecting section
+			keyboardShortcuts.registerShortcut("advancedTable.selectAll", {
+				keyCode: 65, // 'A' key
+				ctrl: true,
+				preventDefault: true,
+				handler: () => {
+					this.toggleAllRows();
+				}
+			});
 
 			// Popup actions section
 			for (let i = 1; i <= 9; i += 1) {
@@ -1229,7 +1249,14 @@ export default {
 						preventDefault: true,
 						handler: () => {
 							// Execute popup action 1-9
-							console.log(`Execute popup action ${i}`);
+							if (this.selectedRows.length === 0) return;
+
+							const bulkActionsElement =
+								this.$refs["bulk-popup"].querySelector(
+									".bulk-actions"
+								);
+
+							bulkActionsElement.children[i - 1].click();
 						}
 					}
 				);
@@ -1243,7 +1270,16 @@ export default {
 					preventDefault: true,
 					handler: () => {
 						// Select popup action 0
-						console.log(`Select popup action`);
+						if (this.selectedRows.length === 0) return;
+
+						const bulkActionsElement =
+							this.$refs["bulk-popup"].querySelector(
+								".bulk-actions"
+							);
+
+						bulkActionsElement.children[
+							bulkActionsElement.children.length - 1
+						].focus();
 					}
 				}
 			);
@@ -1256,11 +1292,16 @@ export default {
 
 		if (this.keyboardShortcuts) {
 			const shortcutNames = [
+				// Navigation
 				"advancedTable.previousPage",
 				"advancedTable.nextPage",
 				"advancedTable.firstPage",
 				"advancedTable.lastPage",
+				// Reset localStorage
 				"advancedTable.resetLocalStorage",
+				// Selecting
+				"advancedTable.selectAll",
+				// Popup actions
 				"advancedTable.executePopupAction1",
 				"advancedTable.executePopupAction2",
 				"advancedTable.executePopupAction3",
@@ -1468,6 +1509,61 @@ export default {
 					return { ...row, selected: false };
 				});
 			}
+		},
+		highlightUp(itemIndex) {
+			if (itemIndex === 0) return;
+			const newItemIndex = itemIndex - 1;
+			this.highlightRow(newItemIndex);
+		},
+		highlightDown(itemIndex) {
+			if (itemIndex === this.rows.length - 1) return;
+			const newItemIndex = itemIndex + 1;
+			this.highlightRow(newItemIndex);
+		},
+		highlightRow(itemIndex) {
+			const rowElement = this.$refs[`row-${itemIndex}`];
+			// Set the last clicked item to no longer be highlighted, if it exists
+			if (this.lastSelectedItemIndex >= 0)
+				this.rows[this.lastSelectedItemIndex].highlighted = false;
+			if (rowElement) rowElement.focus();
+			// Set the item to be highlighted
+			this.rows[itemIndex].highlighted = true;
+		},
+		selectUp(itemIndex) {
+			if (itemIndex === 0) return;
+			const newItemIndex = itemIndex - 1;
+			if (!this.rows[itemIndex].removed)
+				this.rows[itemIndex].selected = true;
+			if (!this.rows[newItemIndex].removed)
+				this.rows[newItemIndex].selected = true;
+			this.highlightRow(newItemIndex);
+		},
+		selectDown(itemIndex) {
+			if (itemIndex === this.rows.length - 1) return;
+			const newItemIndex = itemIndex + 1;
+			if (!this.rows[itemIndex].removed)
+				this.rows[itemIndex].selected = true;
+			if (!this.rows[newItemIndex].removed)
+				this.rows[newItemIndex].selected = true;
+			this.highlightRow(newItemIndex);
+		},
+		unselectUp(itemIndex) {
+			if (itemIndex === 0) return;
+			const newItemIndex = itemIndex - 1;
+			if (!this.rows[itemIndex].removed)
+				this.rows[itemIndex].selected = false;
+			if (!this.rows[newItemIndex].removed)
+				this.rows[newItemIndex].selected = false;
+			this.highlightRow(newItemIndex);
+		},
+		unselectDown(itemIndex) {
+			if (itemIndex === this.rows.length - 1) return;
+			const newItemIndex = itemIndex + 1;
+			if (!this.rows[itemIndex].removed)
+				this.rows[itemIndex].selected = false;
+			if (!this.rows[newItemIndex].removed)
+				this.rows[newItemIndex].selected = false;
+			this.highlightRow(newItemIndex);
 		},
 		addFilterItem() {
 			this.editingFilters.push({
