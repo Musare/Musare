@@ -846,7 +846,18 @@ export default {
 			[
 				next => {
 					if (!playlistId) return next("No playlist id.");
-					return playlistModel.findById(playlistId, next);
+					return next();
+				},
+
+				next => {
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+						.then(playlist => {
+							if (!playlist || playlist.createdBy !== session.userId)
+								return next("Something went wrong when trying to get the playlist");
+
+							next(null, playlist);
+						})
+						.catch(next);
 				},
 
 				(playlist, next) => {
@@ -913,6 +924,17 @@ export default {
 					if (!playlistId) return next("Please provide a playlist.");
 					if (!song || !song.youtubeId) return next("You must provide a song to reposition.");
 					return next();
+				},
+
+				next => {
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+						.then(playlist => {
+							if (!playlist || playlist.createdBy !== session.userId)
+								return next("Something went wrong when trying to get the playlist");
+
+							next();
+						})
+						.catch(next);
 				},
 
 				// remove song from playlist
@@ -1374,6 +1396,17 @@ export default {
 					if (!youtubeId || typeof youtubeId !== "string") return next("Invalid song id.");
 					if (!playlistId || typeof youtubeId !== "string") return next("Invalid playlist id.");
 					return next();
+				},
+
+				next => {
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+						.then(playlist => {
+							if (!playlist || playlist.createdBy !== session.userId)
+								return next("Something went wrong when trying to get the playlist");
+							
+							next();
+						})
+						.catch(next);
 				},
 
 				// remove song from playlist
