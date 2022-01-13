@@ -136,7 +136,7 @@ export default {
 		width: 800px;
 		max-width: calc(100% - 40px);
 		max-height: calc(100vh - 40px);
-		overflow: auto;
+		overflow: visible;
 		margin: 0;
 		font-size: 16px;
 
