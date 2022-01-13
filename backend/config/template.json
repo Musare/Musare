@@ -45,6 +45,9 @@
 		"secure": false,
 		"enabled": false
 	},
+	"mail": {
+		"from": "Musare <noreply@localhost>"
+	},
 	"redis": {
 		"url": "redis://redis:6379/0",
 		"password": "PASSWORD"

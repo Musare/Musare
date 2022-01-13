@@ -32,6 +32,7 @@ Location: `backend/config/default.json`
 | `smtp.auth.pass` | SMTP Password |
 | `smtp.secure` | Whether SMTP is secured. |
 | `smtp.enabled` | Whether SMTP and sending emails is enabled. |
+| `mail.from` | The from field for mails sent from backend. |
 | `redis.url` | Should be left as default for Docker installations, else changed to `redis://localhost:6379/0`. |
 | `redis.password` | Redis password. |
 | `mongo.url` | For Docker replace temporary MongoDB musare user password with one specified in `.env`, and for non-Docker replace `@musare:27017` with `@localhost:27017`. |

@@ -12,7 +12,7 @@ import mail from "../index";
  */
 export default (to, userId, type, cb) => {
 	const data = {
-		from: "Musare <noreply@musare.com>",
+		from: config.get("mail.from"),
 		to,
 		subject: `Data Request - ${type}`,
 		html: `
