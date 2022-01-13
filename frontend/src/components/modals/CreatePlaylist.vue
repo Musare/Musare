@@ -130,6 +130,10 @@ li a {
 	}
 }
 
+.control.select {
+	width: min-content;
+}
+
 .label {
 	font-size: 1rem;
 }
