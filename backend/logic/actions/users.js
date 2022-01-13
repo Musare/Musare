@@ -232,10 +232,21 @@ export default {
 
 				// If a query filter property is blacklisted throw error
 				(pipeline, next) => {
-					if (queries.filter(query => blacklistedProperties.includes(query.filter.property)).length > 0)
+					if (
+						queries.some(query =>
+							blacklistedProperties.some(blacklistedProperty =>
+								blacklistedProperty.startsWith(query.filter.property)
+							)
+						)
+					)
 						return next("Unable to filter by blacklisted property.");
-					if (Object.keys(sort).filter(property => blacklistedProperties.includes(property)).length > 0)
+					if (
+						Object.keys(sort).some(property =>
+							blacklistedProperties.some(blacklistedProperty => blacklistedProperty.startsWith(property))
+						)
+					)
 						return next("Unable to sort by blacklisted property.");
+
 					return next(null, pipeline);
 				},
 
