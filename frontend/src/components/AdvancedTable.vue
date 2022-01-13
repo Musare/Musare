@@ -2171,10 +2171,6 @@ export default {
 
 			tbody {
 				tr {
-					&.highlighted td {
-						background-color: var(--light-grey);
-					}
-
 					&.updated {
 						td:first-child {
 							background-color: var(--primary-color) !important;
@@ -2182,7 +2178,7 @@ export default {
 					}
 
 					&:nth-child(even) td {
-						background-color: #fafafa;
+						background-color: rgb(250, 250, 250);
 					}
 
 					td {
@@ -2264,7 +2260,7 @@ export default {
 				&.highlighted {
 					th,
 					td {
-						background-color: var(--light-grey);
+						background-color: rgb(240, 240, 240);
 					}
 				}
 			}
@@ -2523,6 +2519,7 @@ export default {
 			margin-left: 5px;
 			cursor: pointer;
 			color: var(--primary-color);
+			height: 25px;
 
 			&:hover,
 			&:focus {
