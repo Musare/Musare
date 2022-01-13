@@ -119,9 +119,12 @@ export default {
 	}
 }
 
+.container {
+	width: calc(100% - 32px);
+}
+
 .section {
 	border: 1px solid var(--light-grey-3);
-	width: 1000px;
 	max-width: 100%;
 	margin-top: 50px;
 
