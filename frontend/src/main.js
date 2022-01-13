@@ -240,7 +240,7 @@ lofig.folder = "../config/default.json";
 		store.dispatch("user/auth/banUser", res.data.ban)
 	);
 
-	ws.socket.on("event:user.username.updated", res =>
+	ws.socket.on("keep.event:user.username.updated", res =>
 		store.dispatch("user/auth/updateUsername", res.data.username)
 	);
 

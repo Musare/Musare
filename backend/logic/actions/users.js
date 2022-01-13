@@ -64,7 +64,7 @@ CacheModule.runJob("SUB", {
 	cb: user => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: user._id }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:user.username.updated", { data: { username: user.username } });
+				socket.dispatch("keep.event:user.username.updated", { data: { username: user.username } });
 			});
 		});
 	}
