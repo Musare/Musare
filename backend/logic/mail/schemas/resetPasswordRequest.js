@@ -1,3 +1,4 @@
+import config from "config";
 import mail from "../index";
 
 /**

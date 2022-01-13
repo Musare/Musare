@@ -855,7 +855,7 @@ export default {
 							if (!playlist || playlist.createdBy !== session.userId)
 								return next("Something went wrong when trying to get the playlist");
 
-							next(null, playlist);
+							return next(null, playlist);
 						})
 						.catch(next);
 				},
@@ -932,7 +932,7 @@ export default {
 							if (!playlist || playlist.createdBy !== session.userId)
 								return next("Something went wrong when trying to get the playlist");
 
-							next();
+							return next();
 						})
 						.catch(next);
 				},
@@ -1403,8 +1403,8 @@ export default {
 						.then(playlist => {
 							if (!playlist || playlist.createdBy !== session.userId)
 								return next("Something went wrong when trying to get the playlist");
-							
-							next();
+
+							return next();
 						})
 						.catch(next);
 				},
