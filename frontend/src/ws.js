@@ -149,11 +149,12 @@ export default {
 			firstInit = false;
 			this.socket.on("ready", () => {
 				console.log("WS: SOCKET READY");
+
+				onConnect.forEach(cb => cb());
+
 				ready = true;
 
 				setTimeout(() => {
-					onConnect.forEach(cb => cb());
-
 					// dispatches that were attempted while the server was offline
 					pendingDispatches.forEach(cb => cb());
 					pendingDispatches = [];
