@@ -305,6 +305,7 @@ export default {
 #queue {
 	background-color: var(--white);
 	border-radius: 0 0 5px 5px;
+	user-select: none;
 
 	.actionable-button-hidden {
 		max-height: 100%;
