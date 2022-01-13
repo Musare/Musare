@@ -607,6 +607,7 @@
 							}"
 							:ref="`row-${itemIndex}`"
 							tabindex="0"
+							@blur="unhighlightRow(itemIndex)"
 							@keydown.up.prevent
 							@keydown.down.prevent
 							@keydown.space.prevent
@@ -1571,6 +1572,12 @@ export default {
 			if (rowElement) rowElement.focus();
 			// Set the item to be highlighted
 			this.rows[itemIndex].highlighted = true;
+		},
+		unhighlightRow(itemIndex) {
+			const rowElement = this.$refs[`row-${itemIndex}`];
+			if (rowElement) rowElement.blur();
+			// Set the item to no longer be highlighted
+			this.rows[itemIndex].highlighted = false;
 		},
 		selectUp(itemIndex) {
 			if (itemIndex === 0) return;
