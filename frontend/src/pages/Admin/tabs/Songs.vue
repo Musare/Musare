@@ -769,12 +769,23 @@ export default {
 	margin: 0 auto;
 }
 
-.bulk-popup .bulk-actions {
+/deep/ .bulk-popup .bulk-actions {
 	.verify-songs-icon {
 		color: var(--green);
 	}
-	.unverify-songs-icon {
-		color: var(--dark-red);
+	& > span {
+		position: relative;
+		top: 6px;
+		margin-left: 5px;
+		height: 25px;
+		& > div {
+			height: 25px;
+			& > .unverify-songs-icon {
+				color: var(--dark-red);
+				top: unset;
+				margin-left: unset;
+			}
+		}
 	}
 }
 </style>
