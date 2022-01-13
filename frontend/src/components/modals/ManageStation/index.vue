@@ -428,7 +428,7 @@ export default {
 		});
 
 		this.socket.on(
-			"event:station.queue.updated",
+			"event:manageStation.queue.updated",
 			res => {
 				if (res.data.stationId === this.station._id)
 					this.updateSongsList(res.data.queue);
@@ -437,7 +437,7 @@ export default {
 		);
 
 		this.socket.on(
-			"event:station.queue.song.repositioned",
+			"event:manageStation.queue.song.repositioned",
 			res => {
 				if (res.data.stationId === this.station._id)
 					this.repositionSongInList(res.data.song);
