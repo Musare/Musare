@@ -4,6 +4,7 @@ import ListenerHandler from "./classes/ListenerHandler.class";
 
 const onConnect = [];
 let ready = false;
+let firstInit = true;
 
 let pendingDispatches = [];
 
@@ -144,17 +145,20 @@ export default {
 			console.log("WS: SOCKET ERROR", err);
 		};
 
-		this.socket.on("ready", () => {
-			console.log("WS: SOCKET READY");
-			ready = true;
+		if (firstInit) {
+			firstInit = false;
+			this.socket.on("ready", () => {
+				console.log("WS: SOCKET READY");
+				ready = true;
 
-			setTimeout(() => {
-				onConnect.forEach(cb => cb());
+				setTimeout(() => {
+					onConnect.forEach(cb => cb());
 
-				// dispatches that were attempted while the server was offline
-				pendingDispatches.forEach(cb => cb());
-				pendingDispatches = [];
-			}, 150); // small delay between readyState being 1 and the server actually receiving dispatches
-		});
+					// dispatches that were attempted while the server was offline
+					pendingDispatches.forEach(cb => cb());
+					pendingDispatches = [];
+				}, 150); // small delay between readyState being 1 and the server actually receiving dispatches
+			});
+		}
 	}
 };
