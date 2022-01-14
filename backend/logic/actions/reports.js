@@ -72,8 +72,6 @@ export default {
 	 * @param cb
 	 */
 	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
-		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
-
 		async.waterfall(
 			[
 				next => {
@@ -89,7 +87,7 @@ export default {
 							modelName: "report",
 							blacklistedProperties: [],
 							specialProperties: {
-								"createdBy": [
+								createdBy: [
 									{
 										$addFields: {
 											createdByOID: {

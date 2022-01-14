@@ -287,21 +287,21 @@ export default {
 							modelName: "playlist",
 							blacklistedProperties: [],
 							specialProperties: {
-								"totalLength": [
+								totalLength: [
 									{
 										$addFields: {
 											totalLength: { $sum: "$songs.duration" }
 										}
 									}
 								],
-								"songsCount": [
+								songsCount: [
 									{
 										$addFields: {
 											songsCount: { $size: "$songs" }
 										}
 									}
 								],
-								"createdBy": [
+								createdBy: [
 									{
 										$addFields: {
 											createdByOID: {

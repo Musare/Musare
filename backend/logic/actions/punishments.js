@@ -40,8 +40,6 @@ export default {
 	 * @param cb
 	 */
 	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
-		const punishmentModel = await DBModule.runJob("GET_MODEL", { modelName: "punishment" }, this);
-
 		async.waterfall(
 			[
 				next => {
@@ -63,7 +61,13 @@ export default {
 											status: {
 												$cond: [
 													{ $eq: ["$active", true] },
-													{ $cond: [{ $gt: [new Date(), "$expiresAt"] }, "Inactive", "Active"] },
+													{
+														$cond: [
+															{ $gt: [new Date(), "$expiresAt"] },
+															"Inactive",
+															"Active"
+														]
+													},
 													"Inactive"
 												]
 											}
@@ -159,7 +163,9 @@ export default {
 							},
 							specialQueries: {
 								value: newQuery => ({ $or: [newQuery, { valueUsername: newQuery.value }] }),
-								punishedBy: newQuery => ({ $or: [newQuery, { punishedByUsername: newQuery.punishedBy }] })
+								punishedBy: newQuery => ({
+									$or: [newQuery, { punishedByUsername: newQuery.punishedBy }]
+								})
 							}
 						},
 						this

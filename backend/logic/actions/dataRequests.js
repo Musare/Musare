@@ -33,8 +33,6 @@ export default {
 	 * @param cb
 	 */
 	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
-		const dataRequestModel = await DBModule.runJob("GET_MODEL", { modelName: "dataRequest" }, this);
-
 		async.waterfall(
 			[
 				next => {
@@ -49,10 +47,8 @@ export default {
 							operator,
 							modelName: "dataRequest",
 							blacklistedProperties: [],
-							specialProperties: {
-							},
-							specialQueries: {
-							}
+							specialProperties: {},
+							specialQueries: {}
 						},
 						this
 					)

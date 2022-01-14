@@ -214,8 +214,6 @@ export default {
 	 * @param cb
 	 */
 	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-
 		async.waterfall(
 			[
 				next => {
@@ -243,14 +241,17 @@ export default {
 									{
 										$addFields: {
 											hasPassword: {
-												$cond: [{ $eq: [{ $type: "$services.password.password" }, "string"] }, true, false]
+												$cond: [
+													{ $eq: [{ $type: "$services.password.password" }, "string"] },
+													true,
+													false
+												]
 											}
 										}
 									}
 								]
 							},
-							specialQueries: {
-							}
+							specialQueries: {}
 						},
 						this
 					)

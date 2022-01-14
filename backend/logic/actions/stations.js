@@ -666,7 +666,7 @@ export default {
 							modelName: "station",
 							blacklistedProperties: [],
 							specialProperties: {
-								"owner": [
+								owner: [
 									{
 										$addFields: {
 											ownerOID: {

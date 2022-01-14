@@ -344,7 +344,9 @@ class _DBModule extends CoreClass {
 							return next("Unable to filter by blacklisted property.");
 						if (
 							Object.keys(sort).some(property =>
-								blacklistedProperties.some(blacklistedProperty => blacklistedProperty.startsWith(property))
+								blacklistedProperties.some(blacklistedProperty =>
+									blacklistedProperty.startsWith(property)
+								)
 							)
 						)
 							return next("Unable to sort by blacklisted property.");
@@ -361,7 +363,8 @@ class _DBModule extends CoreClass {
 							1,
 							([specialProperty, pipelineSteps], next) => {
 								// Check if a filter with the special property exists
-								const filterExists = queries.map(query => query.filter.property).indexOf(specialProperty) !== -1;
+								const filterExists =
+									queries.map(query => query.filter.property).indexOf(specialProperty) !== -1;
 								// Check if a property with the special property exists
 								const propertyExists = properties.indexOf(specialProperty) !== -1;
 								// If no such filter or property exists, skip this function
@@ -483,12 +486,14 @@ class _DBModule extends CoreClass {
 					(pipeline, next) => {
 						const { modelName } = payload;
 
-						DBModule.runJob("GET_MODEL", { modelName }, this).then(model => {
-							if (!model) return next("Invalid model.");
-							return next(null, pipeline, model);
-						}).catch(err => {
-							next(err);
-						});
+						DBModule.runJob("GET_MODEL", { modelName }, this)
+							.then(model => {
+								if (!model) return next("Invalid model.");
+								return next(null, pipeline, model);
+							})
+							.catch(err => {
+								next(err);
+							});
 					},
 
 					// Executes the aggregation pipeline

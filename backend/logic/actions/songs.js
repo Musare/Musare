@@ -203,7 +203,7 @@ export default {
 							modelName: "song",
 							blacklistedProperties: [],
 							specialProperties: {
-								"requestedBy": [
+								requestedBy: [
 									{
 										$addFields: {
 											requestedByOID: {
@@ -238,7 +238,7 @@ export default {
 										}
 									}
 								],
-								"verifiedBy": [
+								verifiedBy: [
 									{
 										$addFields: {
 											verifiedByOID: {
@@ -281,8 +281,12 @@ export default {
 								]
 							},
 							specialQueries: {
-								"requestedBy": newQuery => ({ $or: [newQuery, { requestedByUsername: newQuery.requestedBy }] }),
-								"verifiedBy": newQuery => ({ $or: [newQuery, { verifiedByUsername: newQuery.verifiedBy }] })
+								requestedBy: newQuery => ({
+									$or: [newQuery, { requestedByUsername: newQuery.requestedBy }]
+								}),
+								verifiedBy: newQuery => ({
+									$or: [newQuery, { verifiedByUsername: newQuery.verifiedBy }]
+								})
 							}
 						},
 						this
