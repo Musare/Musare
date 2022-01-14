@@ -654,7 +654,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					StationsModule.runJob(
+					DBModule.runJob(
 						"GET_DATA",
 						{
 							page,
@@ -662,7 +662,59 @@ export default {
 							properties,
 							sort,
 							queries,
-							operator
+							operator,
+							modelName: "station",
+							blacklistedProperties: [],
+							specialProperties: {
+								"owner": [
+									{
+										$addFields: {
+											ownerOID: {
+												$convert: {
+													input: "$owner",
+													to: "objectId",
+													onError: "unknown",
+													onNull: "unknown"
+												}
+											}
+										}
+									},
+									{
+										$lookup: {
+											from: "users",
+											localField: "ownerOID",
+											foreignField: "_id",
+											as: "ownerUser"
+										}
+									},
+									{
+										$unwind: {
+											path: "$ownerUser",
+											preserveNullAndEmptyArrays: true
+										}
+									},
+									{
+										$addFields: {
+											ownerUsername: {
+												$cond: [
+													{ $eq: [{ $type: "$owner" }, "string"] },
+													{ $ifNull: ["$ownerUser.username", "unknown"] },
+													"none"
+												]
+											}
+										}
+									},
+									{
+										$project: {
+											ownerOID: 0,
+											ownerUser: 0
+										}
+									}
+								]
+							},
+							specialQueries: {
+								owner: newQuery => ({ $or: [newQuery, { ownerUsername: newQuery.owner }] })
+							}
 						},
 						this
 					)

@@ -191,7 +191,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					SongsModule.runJob(
+					DBModule.runJob(
 						"GET_DATA",
 						{
 							page,
@@ -199,7 +199,91 @@ export default {
 							properties,
 							sort,
 							queries,
-							operator
+							operator,
+							modelName: "song",
+							blacklistedProperties: [],
+							specialProperties: {
+								"requestedBy": [
+									{
+										$addFields: {
+											requestedByOID: {
+												$convert: {
+													input: "$requestedBy",
+													to: "objectId",
+													onError: "unknown",
+													onNull: "unknown"
+												}
+											}
+										}
+									},
+									{
+										$lookup: {
+											from: "users",
+											localField: "requestedByOID",
+											foreignField: "_id",
+											as: "requestedByUser"
+										}
+									},
+									{
+										$addFields: {
+											requestedByUsername: {
+												$ifNull: ["$requestedByUser.username", "unknown"]
+											}
+										}
+									},
+									{
+										$project: {
+											requestedByOID: 0,
+											requestedByUser: 0
+										}
+									}
+								],
+								"verifiedBy": [
+									{
+										$addFields: {
+											verifiedByOID: {
+												$convert: {
+													input: "$verifiedBy",
+													to: "objectId",
+													onError: "unknown",
+													onNull: "unknown"
+												}
+											}
+										}
+									},
+									{
+										$lookup: {
+											from: "users",
+											localField: "verifiedByOID",
+											foreignField: "_id",
+											as: "verifiedByUser"
+										}
+									},
+									{
+										$unwind: {
+											path: "$verifiedByUser",
+											preserveNullAndEmptyArrays: true
+										}
+									},
+									{
+										$addFields: {
+											verifiedByUsername: {
+												$ifNull: ["$verifiedByUser.username", "unknown"]
+											}
+										}
+									},
+									{
+										$project: {
+											verifiedByOID: 0,
+											verifiedByUser: 0
+										}
+									}
+								]
+							},
+							specialQueries: {
+								"requestedBy": newQuery => ({ $or: [newQuery, { requestedByUsername: newQuery.requestedBy }] }),
+								"verifiedBy": newQuery => ({ $or: [newQuery, { verifiedByUsername: newQuery.verifiedBy }] })
+							}
 						},
 						this
 					)

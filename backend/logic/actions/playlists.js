@@ -275,7 +275,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					PlaylistsModule.runJob(
+					DBModule.runJob(
 						"GET_DATA",
 						{
 							page,
@@ -283,7 +283,73 @@ export default {
 							properties,
 							sort,
 							queries,
-							operator
+							operator,
+							modelName: "playlist",
+							blacklistedProperties: [],
+							specialProperties: {
+								"totalLength": [
+									{
+										$addFields: {
+											totalLength: { $sum: "$songs.duration" }
+										}
+									}
+								],
+								"songsCount": [
+									{
+										$addFields: {
+											songsCount: { $size: "$songs" }
+										}
+									}
+								],
+								"createdBy": [
+									{
+										$addFields: {
+											createdByOID: {
+												$convert: {
+													input: "$createdBy",
+													to: "objectId",
+													onError: "unknown",
+													onNull: "unknown"
+												}
+											}
+										}
+									},
+									{
+										$lookup: {
+											from: "users",
+											localField: "createdByOID",
+											foreignField: "_id",
+											as: "createdByUser"
+										}
+									},
+									{
+										$unwind: {
+											path: "$createdByUser",
+											preserveNullAndEmptyArrays: true
+										}
+									},
+									{
+										$addFields: {
+											createdByUsername: {
+												$cond: [
+													{ $eq: ["$createdBy", "Musare"] },
+													"Musare",
+													{ $ifNull: ["$createdByUser.username", "unknown"] }
+												]
+											}
+										}
+									},
+									{
+										$project: {
+											createdByOID: 0,
+											createdByUser: 0
+										}
+									}
+								]
+							},
+							specialQueries: {
+								createdBy: newQuery => ({ $or: [newQuery, { createdByUsername: newQuery.createdBy }] })
+							}
 						},
 						this
 					)

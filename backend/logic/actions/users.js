@@ -215,169 +215,54 @@ export default {
 	 */
 	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		const blacklistedProperties = [
-			"services.password.password",
-			"services.password.reset.code",
-			"services.password.reset.expires",
-			"services.password.set.code",
-			"services.password.set.expires",
-			"services.github.access_token",
-			"email.verificationToken"
-		];
 
 		async.waterfall(
 			[
-				// Creates pipeline array
-				next => next(null, []),
-
-				// If a query filter property is blacklisted throw error
-				(pipeline, next) => {
-					if (
-						queries.some(query =>
-							blacklistedProperties.some(blacklistedProperty =>
-								blacklistedProperty.startsWith(query.filter.property)
-							)
-						)
-					)
-						return next("Unable to filter by blacklisted property.");
-					if (
-						Object.keys(sort).some(property =>
-							blacklistedProperties.some(blacklistedProperty => blacklistedProperty.startsWith(property))
-						)
-					)
-						return next("Unable to sort by blacklisted property.");
-
-					return next(null, pipeline);
-				},
-
-				// If a filter or property exists for hasPassword, add hasPassword property to all documents
-				(pipeline, next) => {
-					// Check if a filter with the hasPassword property exists
-					const hasPasswordFilterExists =
-						queries.map(query => query.filter.property).indexOf("hasPassword") !== -1;
-					// Check if a property with the hasPassword property exists
-					const hasPasswordPropertyExists = properties.indexOf("hasPassword") !== -1;
-					// If no such filter or property exists, skip this function
-					if (!hasPasswordFilterExists && !hasPasswordPropertyExists) return next(null, pipeline);
-
-					// Adds hasPassword field, set it to true if services.password.password is a string, false if not
-					pipeline.push({
-						$addFields: {
-							hasPassword: {
-								$cond: [{ $eq: [{ $type: "$services.password.password" }, "string"] }, true, false]
+				next => {
+					DBModule.runJob(
+						"GET_DATA",
+						{
+							page,
+							pageSize,
+							properties,
+							sort,
+							queries,
+							operator,
+							modelName: "user",
+							blacklistedProperties: [
+								"services.password.password",
+								"services.password.reset.code",
+								"services.password.reset.expires",
+								"services.password.set.code",
+								"services.password.set.expires",
+								"services.github.access_token",
+								"email.verificationToken"
+							],
+							specialProperties: {
+								hasPassword: [
+									{
+										$addFields: {
+											hasPassword: {
+												$cond: [{ $eq: [{ $type: "$services.password.password" }, "string"] }, true, false]
+											}
+										}
+									}
+								]
+							},
+							specialQueries: {
 							}
-						}
-					});
-
-					return next(null, pipeline);
-				},
-
-				// Adds the match stage to aggregation pipeline, which is responsible for filtering
-				(pipeline, next) => {
-					let queryError;
-					const newQueries = queries.flatMap(query => {
-						const { data, filter, filterType } = query;
-						const newQuery = {};
-						if (filterType === "regex") {
-							newQuery[filter.property] = new RegExp(`${data.slice(1, data.length - 1)}`, "i");
-						} else if (filterType === "contains") {
-							newQuery[filter.property] = new RegExp(
-								`${data.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}`,
-								"i"
-							);
-						} else if (filterType === "exact") {
-							newQuery[filter.property] = data.toString();
-						} else if (filterType === "datetimeBefore") {
-							newQuery[filter.property] = { $lte: new Date(data) };
-						} else if (filterType === "datetimeAfter") {
-							newQuery[filter.property] = { $gte: new Date(data) };
-						} else if (filterType === "numberLesserEqual") {
-							newQuery[filter.property] = { $lte: Number(data) };
-						} else if (filterType === "numberLesser") {
-							newQuery[filter.property] = { $lt: Number(data) };
-						} else if (filterType === "numberGreater") {
-							newQuery[filter.property] = { $gt: Number(data) };
-						} else if (filterType === "numberGreaterEqual") {
-							newQuery[filter.property] = { $gte: Number(data) };
-						} else if (filterType === "numberEquals") {
-							newQuery[filter.property] = { $eq: Number(data) };
-						} else if (filterType === "boolean") {
-							newQuery[filter.property] = { $eq: !!data };
-						}
-
-						return newQuery;
-					});
-					if (queryError) next(queryError);
-
-					const queryObject = {};
-					if (newQueries.length > 0) {
-						if (operator === "and") queryObject.$and = newQueries;
-						else if (operator === "or") queryObject.$or = newQueries;
-						else if (operator === "nor") queryObject.$nor = newQueries;
-					}
-
-					pipeline.push({ $match: queryObject });
-
-					next(null, pipeline);
-				},
-
-				// Adds sort stage to aggregation pipeline if there is at least one column being sorted, responsible for sorting data
-				(pipeline, next) => {
-					const newSort = Object.fromEntries(
-						Object.entries(sort).map(([property, direction]) => [
-							property,
-							direction === "ascending" ? 1 : -1
-						])
-					);
-					if (Object.keys(newSort).length > 0) pipeline.push({ $sort: newSort });
-					next(null, pipeline);
-				},
-
-				// Adds first project stage to aggregation pipeline, responsible for including only the requested properties
-				(pipeline, next) => {
-					pipeline.push({ $project: Object.fromEntries(properties.map(property => [property, 1])) });
-
-					next(null, pipeline);
-				},
-
-				// Adds second project stage to aggregation pipeline, responsible for excluding some specific properties
-				(pipeline, next) => {
-					pipeline.push({
-						$project: Object.fromEntries(blacklistedProperties.map(property => [property, 0]))
-					});
-
-					next(null, pipeline);
-				},
-
-				// Adds the facet stage to aggregation pipeline, responsible for returning a total document count, skipping and limitting the documents that will be returned
-				(pipeline, next) => {
-					pipeline.push({
-						$facet: {
-							count: [{ $count: "count" }],
-							documents: [{ $skip: pageSize * (page - 1) }, { $limit: pageSize }]
-						}
-					});
-
-					// console.dir(pipeline, { depth: 6 });
-
-					next(null, pipeline);
-				},
-
-				// Executes the aggregation pipeline
-				(pipeline, next) => {
-					userModel.aggregate(pipeline).exec((err, result) => {
-						// console.dir(err);
-						// console.dir(result, { depth: 6 });
-						if (err) return next(err);
-						if (result[0].count.length === 0) return next(null, 0, []);
-						const { count } = result[0].count[0];
-						const { documents } = result[0];
-						// console.log(111, err, result, count, documents[0]);
-						return next(null, count, documents);
-					});
+						},
+						this
+					)
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
 				}
 			],
-			async (err, count, users) => {
+			async (err, response) => {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "USERS_GET_DATA", `Failed to get data from users. "${err}"`);
@@ -387,7 +272,7 @@ export default {
 				return cb({
 					status: "success",
 					message: "Successfully got data from users.",
-					data: { data: users, count }
+					data: response
 				});
 			}
 		);

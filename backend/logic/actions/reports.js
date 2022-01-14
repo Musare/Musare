@@ -76,169 +76,76 @@ export default {
 
 		async.waterfall(
 			[
-				// Creates pipeline array
-				next => next(null, []),
-
-				// If a filter exists for createdBy, add createdByUsername property to all documents
-				(pipeline, next) => {
-					// Check if a filter with the createdBy property exists
-					const createdByFilterExists =
-						queries.map(query => query.filter.property).indexOf("createdBy") !== -1;
-					// If no such filter exists, skip this function
-					if (!createdByFilterExists) return next(null, pipeline);
-
-					// Adds createdByOID field, which is an ObjectId version of createdBy
-					pipeline.push({
-						$addFields: {
-							createdByOID: {
-								$convert: {
-									input: "$createdBy",
-									to: "objectId",
-									onError: "unknown",
-									onNull: "unknown"
-								}
+				next => {
+					DBModule.runJob(
+						"GET_DATA",
+						{
+							page,
+							pageSize,
+							properties,
+							sort,
+							queries,
+							operator,
+							modelName: "report",
+							blacklistedProperties: [],
+							specialProperties: {
+								"createdBy": [
+									{
+										$addFields: {
+											createdByOID: {
+												$convert: {
+													input: "$createdBy",
+													to: "objectId",
+													onError: "unknown",
+													onNull: "unknown"
+												}
+											}
+										}
+									},
+									{
+										$lookup: {
+											from: "users",
+											localField: "createdByOID",
+											foreignField: "_id",
+											as: "createdByUser"
+										}
+									},
+									{
+										$unwind: {
+											path: "$createdByUser",
+											preserveNullAndEmptyArrays: true
+										}
+									},
+									{
+										$addFields: {
+											createdByUsername: {
+												$ifNull: ["$createdByUser.username", "unknown"]
+											}
+										}
+									},
+									{
+										$project: {
+											createdByOID: 0,
+											createdByUser: 0
+										}
+									}
+								]
+							},
+							specialQueries: {
+								createdBy: newQuery => ({ $or: [newQuery, { createdByUsername: newQuery.createdBy }] })
 							}
-						}
-					});
-
-					// Looks up user(s) with the same _id as the createdByOID and puts the result in the createdByUser field
-					pipeline.push({
-						$lookup: {
-							from: "users",
-							localField: "createdByOID",
-							foreignField: "_id",
-							as: "createdByUser"
-						}
-					});
-
-					// Unwinds the createdByUser array field into an object
-					pipeline.push({
-						$unwind: {
-							path: "$createdByUser",
-							preserveNullAndEmptyArrays: true
-						}
-					});
-
-					// Adds createdByUsername field from the createdByUser username, or unknown if it doesn't exist
-					pipeline.push({
-						$addFields: {
-							createdByUsername: {
-								$ifNull: ["$createdByUser.username", "unknown"]
-							}
-						}
-					});
-
-					// Removes the createdByOID and createdByUser property, just in case it doesn't get removed at a later stage
-					pipeline.push({
-						$project: {
-							createdByOID: 0,
-							createdByUser: 0
-						}
-					});
-
-					return next(null, pipeline);
-				},
-
-				// Adds the match stage to aggregation pipeline, which is responsible for filtering
-				(pipeline, next) => {
-					let queryError;
-					const newQueries = queries.flatMap(query => {
-						const { data, filter, filterType } = query;
-						const newQuery = {};
-						if (filterType === "regex") {
-							newQuery[filter.property] = new RegExp(`${data.slice(1, data.length - 1)}`, "i");
-						} else if (filterType === "contains") {
-							newQuery[filter.property] = new RegExp(
-								`${data.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}`,
-								"i"
-							);
-						} else if (filterType === "exact") {
-							newQuery[filter.property] = data.toString();
-						} else if (filterType === "datetimeBefore") {
-							newQuery[filter.property] = { $lte: new Date(data) };
-						} else if (filterType === "datetimeAfter") {
-							newQuery[filter.property] = { $gte: new Date(data) };
-						} else if (filterType === "numberLesserEqual") {
-							newQuery[filter.property] = { $lte: Number(data) };
-						} else if (filterType === "numberLesser") {
-							newQuery[filter.property] = { $lt: Number(data) };
-						} else if (filterType === "numberGreater") {
-							newQuery[filter.property] = { $gt: Number(data) };
-						} else if (filterType === "numberGreaterEqual") {
-							newQuery[filter.property] = { $gte: Number(data) };
-						} else if (filterType === "numberEquals") {
-							newQuery[filter.property] = { $eq: Number(data) };
-						} else if (filterType === "boolean") {
-							newQuery[filter.property] = { $eq: !!data };
-						}
-
-						if (filter.property === "createdBy")
-							return { $or: [newQuery, { createdByUsername: newQuery.createdBy }] };
-
-						return newQuery;
-					});
-					if (queryError) next(queryError);
-
-					const queryObject = {};
-					if (newQueries.length > 0) {
-						if (operator === "and") queryObject.$and = newQueries;
-						else if (operator === "or") queryObject.$or = newQueries;
-						else if (operator === "nor") queryObject.$nor = newQueries;
-					}
-
-					pipeline.push({ $match: queryObject });
-
-					next(null, pipeline);
-				},
-
-				// Adds sort stage to aggregation pipeline if there is at least one column being sorted, responsible for sorting data
-				(pipeline, next) => {
-					const newSort = Object.fromEntries(
-						Object.entries(sort).map(([property, direction]) => [
-							property,
-							direction === "ascending" ? 1 : -1
-						])
-					);
-					if (Object.keys(newSort).length > 0) pipeline.push({ $sort: newSort });
-					next(null, pipeline);
-				},
-
-				// Adds first project stage to aggregation pipeline, responsible for including only the requested properties
-				(pipeline, next) => {
-					pipeline.push({ $project: Object.fromEntries(properties.map(property => [property, 1])) });
-
-					next(null, pipeline);
-				},
-
-				// Adds the facet stage to aggregation pipeline, responsible for returning a total document count, skipping and limitting the documents that will be returned
-				(pipeline, next) => {
-					pipeline.push({
-						$facet: {
-							count: [{ $count: "count" }],
-							documents: [{ $skip: pageSize * (page - 1) }, { $limit: pageSize }]
-						}
-					});
-
-					// console.dir(pipeline, { depth: 6 });
-
-					next(null, pipeline);
-				},
-
-				// Executes the aggregation pipeline
-				(pipeline, next) => {
-					reportModel.aggregate(pipeline).exec((err, result) => {
-						// console.dir(err);
-						// console.dir(result, { depth: 6 });
-						if (err) return next(err);
-						if (result[0].count.length === 0) return next(null, 0, []);
-						const { count } = result[0].count[0];
-						const { documents } = result[0];
-						// console.log(111, err, result, count, documents[0]);
-						return next(null, count, documents);
-					});
+						},
+						this
+					)
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
 				}
 			],
-			async (err, count, reports) => {
+			async (err, response) => {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "REPORTS_GET_DATA", `Failed to get data from reports. "${err}"`);
@@ -248,7 +155,7 @@ export default {
 				return cb({
 					status: "success",
 					message: "Successfully got data from reports.",
-					data: { data: reports, count }
+					data: response
 				});
 			}
 		);
