@@ -39,7 +39,7 @@
 <script>
 import { formatDistance } from "date-fns";
 import { mapGetters } from "vuex";
-import marked from "marked";
+import { marked } from "marked";
 import { sanitize } from "dompurify";
 
 import ws from "@/ws";
