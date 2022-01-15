@@ -177,79 +177,18 @@
 										:disabled="!filter.filterType"
 										@keydown.enter="applyFilterAndGetData()"
 									/>
-									<input
+									<auto-suggest
 										v-else
 										v-model="filter.data"
-										class="input"
-										type="text"
 										placeholder="Search value"
 										:disabled="!filter.filterType"
-										@keydown.enter="applyFilterAndGetData()"
-										@blur="blurFilterInput(filter, $event)"
-										@focus="focusFilterInput(filter)"
-										@keydown="keydownFilterInput(filter)"
+										:all-items="
+											autosuggest.allItems[
+												filter.filter.name
+											]
+										"
+										@submitted="applyFilterAndGetData()"
 									/>
-									<div
-										class="autosuggest-container"
-										v-if="
-											filter.filter.autosuggest &&
-											(autosuggest.inputFocussed[
-												filter.filter.name
-											] ||
-												autosuggest.containerFocussed[
-													filter.filter.name
-												] ||
-												autosuggest.itemFocussed[
-													filter.filter.name
-												]) &&
-											autosuggest.items[
-												filter.filter.name
-											]?.length > 0
-										"
-										@mouseover="
-											focusFilterAutosuggestContainer(
-												filter
-											)
-										"
-										@mouseleave="
-											blurFilterAutosuggestContainer(
-												filter
-											)
-										"
-									>
-										<span
-											class="autosuggest-item"
-											tabindex="0"
-											@click="
-												selectAutosuggestItem(
-													index,
-													filter,
-													item
-												)
-											"
-											@keyup.enter="
-												selectAutosuggestItem(
-													index,
-													filter,
-													item
-												)
-											"
-											@focus="
-												focusAutosuggestItem(filter)
-											"
-											@blur="
-												blurAutosuggestItem(
-													filter,
-													$event
-												)
-											"
-											v-for="item in autosuggest.items[
-												filter.filter.name
-											]"
-											:key="item"
-											>{{ item }}
-										</span>
-									</div>
 								</div>
 								<div class="control">
 									<button
@@ -816,13 +755,15 @@ import { mapGetters } from "vuex";
 import draggable from "vuedraggable";
 
 import Toast from "toasters";
+import AutoSuggest from "@/components/AutoSuggest.vue";
 
 import keyboardShortcuts from "@/keyboardShortcuts";
 import ws from "@/ws";
 
 export default {
 	components: {
-		draggable
+		draggable,
+		AutoSuggest
 	},
 	props: {
 		/*
@@ -949,14 +890,7 @@ export default {
 			lastColumnResizerTappedDate: 0,
 			lastBulkActionsTappedDate: 0,
 			autosuggest: {
-				inputFocussed: {},
-				containerFocussed: {},
-				itemFocussed: {},
-				keydownInputTimeout: {},
-				items: {},
-				allItems: {
-					genres: ["edm", "pop", "test"]
-				}
+				allItems: {}
 			}
 		};
 	},
@@ -1962,50 +1896,6 @@ export default {
 				selected: false,
 				removed: true
 			};
-		},
-		blurFilterInput(filter, event) {
-			if (
-				event.relatedTarget &&
-				event.relatedTarget.classList.contains("autosuggest-item")
-			)
-				this.autosuggest.itemFocussed[filter.filter.name] = true;
-			this.autosuggest.inputFocussed[filter.filter.name] = false;
-		},
-		focusFilterInput(filter) {
-			this.autosuggest.inputFocussed[filter.filter.name] = true;
-		},
-		keydownFilterInput(filter) {
-			const { name } = filter.filter;
-			clearTimeout(this.autosuggest.keydownInputTimeout[name]);
-			this.autosuggest.keydownInputTimeout[name] = setTimeout(() => {
-				if (filter.data.length > 1) {
-					this.autosuggest.items[name] = this.autosuggest.allItems[
-						name
-					]?.filter(item =>
-						item.toLowerCase().startsWith(filter.data.toLowerCase())
-					);
-				} else this.autosuggest.items[name] = [];
-			}, 1000);
-		},
-		focusFilterAutosuggestContainer(filter) {
-			this.autosuggest.containerFocussed[filter.filter.name] = true;
-		},
-		blurFilterAutosuggestContainer(filter) {
-			this.autosuggest.containerFocussed[filter.filter.name] = false;
-		},
-		selectAutosuggestItem(index, filter, item) {
-			this.editingFilters[index].data = item;
-			this.autosuggest.items[filter.filter.name] = [];
-		},
-		focusAutosuggestItem(filter) {
-			this.autosuggest.itemFocussed[filter.filter.name] = true;
-		},
-		blurAutosuggestItem(filter, event) {
-			if (
-				!event.relatedTarget ||
-				!event.relatedTarget.classList.contains("autosuggest-item")
-			)
-				this.autosuggest.itemFocussed[filter.filter.name] = false;
 		}
 	}
 };
@@ -2094,20 +1984,6 @@ export default {
 
 		.material-icons {
 			color: var(--white);
-		}
-	}
-	.autosuggest-container {
-		background-color: var(--dark-grey) !important;
-
-		.autosuggest-item {
-			background-color: var(--dark-grey) !important;
-			color: var(--white) !important;
-			border-color: var(--dark-grey) !important;
-		}
-
-		.autosuggest-item:hover,
-		.autosuggest-item:focus {
-			background-color: var(--dark-grey-2) !important;
 		}
 	}
 }
@@ -2446,43 +2322,6 @@ export default {
 				}
 			}
 		}
-	}
-}
-
-.autosuggest-container {
-	position: absolute;
-	background: var(--white);
-	width: calc(100% + 1px);
-	top: 35px;
-	z-index: 200;
-	overflow: auto;
-	max-height: 98px;
-	clear: both;
-
-	.autosuggest-item {
-		padding: 8px;
-		display: block;
-		border: 1px solid var(--light-grey-2);
-		margin-top: -1px;
-		line-height: 16px;
-		cursor: pointer;
-		-webkit-user-select: none;
-		-ms-user-select: none;
-		-moz-user-select: none;
-		user-select: none;
-	}
-
-	.autosuggest-item:hover,
-	.autosuggest-item:focus {
-		background-color: var(--light-grey);
-	}
-
-	.autosuggest-item:first-child {
-		border-top: none;
-	}
-
-	.autosuggest-item:last-child {
-		border-radius: 0 0 3px 3px;
 	}
 }
 
