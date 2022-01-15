@@ -37,7 +37,7 @@
 					<div
 						v-for="(item, index) in items"
 						:key="`item-${item}`"
-						class="tag"
+						class="pill"
 					>
 						{{ item }}
 						<span
@@ -104,7 +104,7 @@ export default {
 	},
 	methods: {
 		init() {
-			if (this.type.autosuggest)
+			if (this.type.autosuggest && this.type.autosuggestDataAction)
 				this.socket.dispatch(this.type.autosuggestAction, res => {
 					if (res.status === "success") {
 						const { items } = res.data;
@@ -158,22 +158,8 @@ export default {
 	flex: 1;
 }
 
-.tag {
+.pill {
 	display: inline-flex;
-	margin: 5px;
-	padding: 5px 10px;
-	font-size: 14px;
-	font-weight: 600;
-	border-radius: 5px;
-	background-color: var(--primary-color);
-	color: var(--white);
-	transition: all 0.2s ease-in-out;
-
-	&:hover,
-	&:focus {
-		filter: brightness(90%);
-		transition: all 0.2s ease-in-out;
-	}
 
 	.remove-item {
 		font-size: 16px;

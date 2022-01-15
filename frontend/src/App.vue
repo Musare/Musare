@@ -396,6 +396,11 @@ export default {
 			background-color: var(--white);
 		}
 	}
+
+	.pill {
+		background-color: var(--dark-grey);
+		color: var(--primary-color);
+	}
 }
 
 .christmas-mode {
@@ -2012,5 +2017,27 @@ html {
 :disabled,
 .disabled {
 	cursor: not-allowed;
+}
+
+.pill {
+	background-color: var(--light-grey);
+	color: var(--primary-color);
+	padding: 5px 10px;
+	border-radius: 5px;
+	font-size: 14px;
+	font-weight: 600;
+	white-space: nowrap;
+	margin-top: 5px;
+	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
+	transition: all 0.2s ease-in-out;
+
+	&:hover,
+	&:focus {
+		filter: brightness(95%);
+	}
+
+	&:not(:last-of-type) {
+		margin-right: 5px;
+	}
 }
 </style>
