@@ -2304,19 +2304,29 @@ export default {
 		background-color: var(--white);
 	}
 
-	.table-header > div {
-		display: flex;
-		flex-direction: row;
+	.table-header {
+		& > div {
+			display: flex;
+			flex-direction: row;
 
-		> span > .control {
-			margin: 5px;
+			> span > .control {
+				margin: 5px;
+			}
+
+			.filters-indicator {
+				line-height: 46px;
+				display: flex;
+				align-items: center;
+				column-gap: 4px;
+			}
 		}
 
-		.filters-indicator {
-			line-height: 46px;
-			display: flex;
-			align-items: center;
-			column-gap: 4px;
+		@media screen and (max-width: 400px) {
+			flex-direction: column;
+
+			& > div {
+				justify-content: center;
+			}
 		}
 	}
 
@@ -2341,6 +2351,15 @@ export default {
 
 			&.select::after {
 				top: 18px;
+			}
+		}
+
+		@media screen and (max-width: 600px) {
+			flex-direction: column;
+
+			.page-controls,
+			.page-size > .control {
+				justify-content: center;
 			}
 		}
 	}
