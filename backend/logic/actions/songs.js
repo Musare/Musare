@@ -1744,7 +1744,7 @@ export default {
 	 * @param session
 	 * @param cb
 	 */
-	getGenres: isAdminRequired(function getModule(session, cb) {
+	getGenres: isAdminRequired(function getGenres(session, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1775,12 +1775,77 @@ export default {
 	}),
 
 	/**
+	 * Bulk update genres for selected songs
+	 *
+	 * @param session
+	 * @param method Whether to add, remove or replace genres
+	 * @param genres Array of genres to apply
+	 * @param songIds Array of songIds to apply genres to
+	 * @param cb
+	 */
+	editGenres: isAdminRequired(async function editGenres(session, method, genres, songIds, cb) {
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+		async.waterfall(
+			[
+				next => {
+					songModel.find({ _id: { $in: songIds } }, next);
+				},
+
+				(songs, next) => {
+					const songsFound = songs.map(song => song._id);
+					if (songsFound.length > 0) next(null, songsFound);
+					else next("None of the specified songs were found.");
+				},
+
+				(songsFound, next) => {
+					const query = {};
+					if (method === "add") {
+						query.$push = { genres: { $each: genres } };
+					} else if (method === "remove") {
+						query.$pullAll = { genres };
+					} else if (method === "replace") {
+						query.$set = { genres };
+					} else {
+						next("Invalid method.");
+					}
+
+					songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
+						if (err) next(err);
+						async.eachLimit(
+							songsFound,
+							1,
+							(songId, next) => {
+								SongsModule.runJob("UPDATE_SONG", { songId });
+								next();
+							},
+							next
+						);
+					});
+				}
+			],
+			async err => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "EDIT_GENRES", `User ${session.userId} failed to edit genres. '${err}'`);
+					cb({ status: "error", message: err });
+				} else {
+					this.log("SUCCESS", "EDIT_GENRES", `User ${session.userId} has successfully edited genres.`);
+					cb({
+						status: "success",
+						message: "Successfully edited genres."
+					});
+				}
+			}
+		);
+	}),
+
+	/**
 	 * Gets a list of all artists
 	 *
 	 * @param session
 	 * @param cb
 	 */
-	getArtists: isAdminRequired(function getModule(session, cb) {
+	getArtists: isAdminRequired(function getArtists(session, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1811,12 +1876,77 @@ export default {
 	}),
 
 	/**
+	 * Bulk update artists for selected songs
+	 *
+	 * @param session
+	 * @param method Whether to add, remove or replace artists
+	 * @param artists Array of artists to apply
+	 * @param songIds Array of songIds to apply artists to
+	 * @param cb
+	 */
+	editArtists: isAdminRequired(async function editArtists(session, method, artists, songIds, cb) {
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+		async.waterfall(
+			[
+				next => {
+					songModel.find({ _id: { $in: songIds } }, next);
+				},
+
+				(songs, next) => {
+					const songsFound = songs.map(song => song._id);
+					if (songsFound.length > 0) next(null, songsFound);
+					else next("None of the specified songs were found.");
+				},
+
+				(songsFound, next) => {
+					const query = {};
+					if (method === "add") {
+						query.$push = { artists: { $each: artists } };
+					} else if (method === "remove") {
+						query.$pullAll = { artists };
+					} else if (method === "replace") {
+						query.$set = { artists };
+					} else {
+						next("Invalid method.");
+					}
+
+					songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
+						if (err) next(err);
+						async.eachLimit(
+							songsFound,
+							1,
+							(songId, next) => {
+								SongsModule.runJob("UPDATE_SONG", { songId });
+								next();
+							},
+							next
+						);
+					});
+				}
+			],
+			async err => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "EDIT_ARTISTS", `User ${session.userId} failed to edit artists. '${err}'`);
+					cb({ status: "error", message: err });
+				} else {
+					this.log("SUCCESS", "EDIT_ARTISTS", `User ${session.userId} has successfully edited artists.`);
+					cb({
+						status: "success",
+						message: "Successfully edited artists."
+					});
+				}
+			}
+		);
+	}),
+
+	/**
 	 * Gets a list of all tags
 	 *
 	 * @param session
 	 * @param cb
 	 */
-	getTags: isAdminRequired(function getModule(session, cb) {
+	getTags: isAdminRequired(function getTags(session, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1840,6 +1970,71 @@ export default {
 						data: {
 							items: tags
 						}
+					});
+				}
+			}
+		);
+	}),
+
+	/**
+	 * Bulk update tags for selected songs
+	 *
+	 * @param session
+	 * @param method Whether to add, remove or replace tags
+	 * @param tags Array of tags to apply
+	 * @param songIds Array of songIds to apply tags to
+	 * @param cb
+	 */
+	editTags: isAdminRequired(async function editTags(session, method, tags, songIds, cb) {
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+		async.waterfall(
+			[
+				next => {
+					songModel.find({ _id: { $in: songIds } }, next);
+				},
+
+				(songs, next) => {
+					const songsFound = songs.map(song => song._id);
+					if (songsFound.length > 0) next(null, songsFound);
+					else next("None of the specified songs were found.");
+				},
+
+				(songsFound, next) => {
+					const query = {};
+					if (method === "add") {
+						query.$push = { tags: { $each: tags } };
+					} else if (method === "remove") {
+						query.$pullAll = { tags };
+					} else if (method === "replace") {
+						query.$set = { tags };
+					} else {
+						next("Invalid method.");
+					}
+
+					songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
+						if (err) next(err);
+						async.eachLimit(
+							songsFound,
+							1,
+							(songId, next) => {
+								SongsModule.runJob("UPDATE_SONG", { songId });
+								next();
+							},
+							next
+						);
+					});
+				}
+			],
+			async err => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "EDIT_TAGS", `User ${session.userId} failed to edit tags. '${err}'`);
+					cb({ status: "error", message: err });
+				} else {
+					this.log("SUCCESS", "EDIT_TAGS", `User ${session.userId} has successfully edited tags.`);
+					cb({
+						status: "success",
+						message: "Successfully edited tags."
 					});
 				}
 			}

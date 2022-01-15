@@ -20,7 +20,8 @@ const state = {
 		viewReport: false,
 		viewPunishment: false,
 		confirm: false,
-		editSongConfirm: false
+		editSongConfirm: false,
+		bulkActions: false
 	},
 	currentlyActive: []
 };
