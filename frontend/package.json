@@ -47,7 +47,7 @@
     "dompurify": "^2.3.3",
     "eslint-config-airbnb-base": "^14.2.1",
     "html-webpack-plugin": "^5.3.2",
-    "marked": "^3.0.7",
+    "marked": "^4.0.10",
     "normalize.css": "^8.0.1",
     "toasters": "^2.3.1",
     "vue": "^3.2.20",
