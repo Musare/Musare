@@ -13,13 +13,11 @@
 
 				<label class="label">{{ type.name.slice(0, -1) }}</label>
 				<div class="control is-grouped input-with-button">
-					<input
+					<auto-suggest
 						v-model="itemInput"
-						class="input"
-						type="text"
 						:placeholder="`Enter ${type.name} to ${method}`"
-						autocomplete="off"
-						@keypress.enter="addItem()"
+						:all-items="allItems"
+						@submitted="addItem()"
 					/>
 					<p class="control">
 						<button
@@ -72,9 +70,12 @@ import { mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
 
 import Modal from "../Modal.vue";
+import AutoSuggest from "@/components/AutoSuggest.vue";
+
+import ws from "@/ws";
 
 export default {
-	components: { Modal },
+	components: { Modal, AutoSuggest },
 	props: {
 		type: {
 			type: Object,
@@ -85,7 +86,8 @@ export default {
 		return {
 			method: "add",
 			items: [],
-			itemInput: null
+			itemInput: null,
+			allItems: []
 		};
 	},
 	computed: {
@@ -97,7 +99,21 @@ export default {
 		this.itemInput = null;
 		this.items = [];
 	},
+	mounted() {
+		ws.onConnect(this.init);
+	},
 	methods: {
+		init() {
+			if (this.type.autosuggest)
+				this.socket.dispatch(this.type.autosuggestAction, res => {
+					if (res.status === "success") {
+						const { items } = res.data;
+						this.allItems = items;
+					} else {
+						new Toast(res.message);
+					}
+				});
+		},
 		addItem() {
 			if (!this.itemInput) return;
 			if (this.type.regex && !this.type.regex.test(this.itemInput)) {
@@ -138,6 +154,10 @@ export default {
 	width: 100%;
 }
 
+.control.input-with-button > div {
+	flex: 1;
+}
+
 .tag {
 	display: inline-flex;
 	margin: 5px;
@@ -160,5 +180,10 @@ export default {
 		margin: auto 2px auto 5px;
 		cursor: pointer;
 	}
+}
+
+/deep/ .autosuggest-container {
+	width: calc(100% - 40px);
+	top: unset;
 }
 </style>

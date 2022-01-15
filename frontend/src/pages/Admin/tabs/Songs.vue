@@ -718,7 +718,9 @@ export default {
 				items: selectedRows.map(row => row._id),
 				regex: new RegExp(
 					/^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/
-				)
+				),
+				autosuggest: true,
+				autosuggestAction: "songs.getTags"
 			};
 			this.openModal("bulkActions");
 		},
@@ -727,7 +729,9 @@ export default {
 				name: "artists",
 				action: "songs.editArtists",
 				items: selectedRows.map(row => row._id),
-				regex: new RegExp(/^(?=.{1,64}$).*$/)
+				regex: new RegExp(/^(?=.{1,64}$).*$/),
+				autosuggest: true,
+				autosuggestAction: "songs.getArtists"
 			};
 			this.openModal("bulkActions");
 		},
@@ -736,7 +740,9 @@ export default {
 				name: "genres",
 				action: "songs.editGenres",
 				items: selectedRows.map(row => row._id),
-				regex: new RegExp(/^[\x00-\x7F]{1,32}$/)
+				regex: new RegExp(/^[\x00-\x7F]{1,32}$/),
+				autosuggest: true,
+				autosuggestAction: "songs.getGenres"
 			};
 			this.openModal("bulkActions");
 		},
