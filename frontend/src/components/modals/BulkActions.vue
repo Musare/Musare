@@ -100,9 +100,14 @@ export default {
 	methods: {
 		addItem() {
 			if (!this.itemInput) return;
-			if (!this.items.includes(this.itemInput))
+			if (this.type.regex && !this.type.regex.test(this.itemInput)) {
+				new Toast(`Invalid ${this.type.name} format.`);
+			} else if (this.items.includes(this.itemInput)) {
+				new Toast(`Duplicate ${this.type.name} specified.`);
+			} else {
 				this.items.push(this.itemInput);
-			this.itemInput = null;
+				this.itemInput = null;
+			}
 		},
 		removeItem(index) {
 			this.items.splice(index, 1);

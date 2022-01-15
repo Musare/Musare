@@ -715,7 +715,10 @@ export default {
 			this.bulkActionsType = {
 				name: "tags",
 				action: "songs.editTags",
-				items: selectedRows.map(row => row._id)
+				items: selectedRows.map(row => row._id),
+				regex: new RegExp(
+					/^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/
+				)
 			};
 			this.openModal("bulkActions");
 		},
@@ -723,7 +726,8 @@ export default {
 			this.bulkActionsType = {
 				name: "artists",
 				action: "songs.editArtists",
-				items: selectedRows.map(row => row._id)
+				items: selectedRows.map(row => row._id),
+				regex: new RegExp(/^(?=.{1,64}$).*$/)
 			};
 			this.openModal("bulkActions");
 		},
@@ -731,7 +735,8 @@ export default {
 			this.bulkActionsType = {
 				name: "genres",
 				action: "songs.editGenres",
-				items: selectedRows.map(row => row._id)
+				items: selectedRows.map(row => row._id),
+				regex: new RegExp(/^[\x00-\x7F]{1,32}$/)
 			};
 			this.openModal("bulkActions");
 		},
