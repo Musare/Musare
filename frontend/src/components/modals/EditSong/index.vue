@@ -248,16 +248,14 @@
 							<div class="artists-container">
 								<label class="label">Artists</label>
 								<p class="control has-addons">
-									<input
-										class="input"
-										type="text"
-										ref="new-artist"
+									<auto-suggest
 										v-model="artistInputValue"
+										ref="new-artist"
 										placeholder="Add artist..."
-										@blur="blurArtistInput()"
-										@focus="focusArtistInput()"
-										@keydown="keydownArtistInput()"
-										@keyup.exact.enter="addTag('artists')"
+										:all-items="
+											autosuggest.allItems.artists
+										"
+										@submitted="addTag('artists')"
 										@keyup.shift.enter="
 											getAlbumData('artists')
 										"
@@ -280,25 +278,6 @@
 										<i class="material-icons">add</i>
 									</button>
 								</p>
-								<div
-									class="autosuggest-container"
-									v-if="
-										(artistInputFocussed ||
-											artistAutosuggestContainerFocussed) &&
-										artistAutosuggestItems.length > 0
-									"
-									@mouseover="focusArtistContainer()"
-									@mouseleave="blurArtistContainer()"
-								>
-									<span
-										class="autosuggest-item"
-										tabindex="0"
-										@click="addTag('artists', item)"
-										v-for="item in artistAutosuggestItems"
-										:key="item"
-										>{{ item }}</span
-									>
-								</div>
 								<div class="list-container">
 									<div
 										class="list-item"
@@ -330,16 +309,12 @@
 									>
 								</label>
 								<p class="control has-addons">
-									<input
-										class="input"
-										type="text"
-										ref="new-genre"
+									<auto-suggest
 										v-model="genreInputValue"
+										ref="new-genre"
 										placeholder="Add genre..."
-										@blur="blurGenreInput()"
-										@focus="focusGenreInput()"
-										@keydown="keydownGenreInput()"
-										@keyup.exact.enter="addTag('genres')"
+										:all-items="autosuggest.allItems.genres"
+										@submitted="addTag('genres')"
 										@keyup.shift.enter="
 											getAlbumData('genres')
 										"
@@ -362,24 +337,6 @@
 										<i class="material-icons">add</i>
 									</button>
 								</p>
-								<div
-									class="autosuggest-container"
-									v-if="
-										(genreInputFocussed ||
-											genreAutosuggestContainerFocussed) &&
-										genreAutosuggestItems.length > 0
-									"
-									@mouseover="focusGenreContainer()"
-									@mouseleave="blurGenreContainer()"
-								>
-									<span
-										class="autosuggest-item"
-										@click="addTag('genres', item)"
-										v-for="item in genreAutosuggestItems"
-										:key="item"
-										>{{ item }}</span
-									>
-								</div>
 								<div class="list-container">
 									<div
 										class="list-item"
@@ -399,13 +356,12 @@
 							<div class="tags-container">
 								<label class="label">Tags</label>
 								<p class="control has-addons">
-									<input
-										class="input"
-										type="text"
-										ref="new-tag"
+									<auto-suggest
 										v-model="tagInputValue"
+										ref="new-tag"
 										placeholder="Add tag..."
-										@keyup.exact.enter="addTag('tags')"
+										:all-items="autosuggest.allItems.tags"
+										@submitted="addTag('tags')"
 									/>
 									<button
 										class="button is-info add-button"
@@ -553,18 +509,12 @@
 		</modal>
 		<floating-box id="genreHelper" ref="genreHelper" :column="false">
 			<template #body>
-				<span>Blues</span><span>Country</span><span>Disco</span
-				><span>Funk</span><span>Hip-Hop</span><span>Jazz</span
-				><span>Metal</span><span>Oldies</span><span>Other</span
-				><span>Pop</span><span>Rap</span><span>Reggae</span
-				><span>Rock</span><span>Techno</span><span>Trance</span
-				><span>Classical</span><span>Instrumental</span
-				><span>House</span><span>Electronic</span
-				><span>Christian Rap</span><span>Lo-Fi</span><span>Musical</span
-				><span>Rock 'n' Roll</span><span>Opera</span
-				><span>Drum & Bass</span><span>Club-House</span
-				><span>Indie</span><span>Heavy Metal</span
-				><span>Christian rock</span><span>Dubstep</span>
+				<span
+					v-for="item in autosuggest.allItems.genres"
+					:key="`genre-helper-${item}`"
+				>
+					{{ item }}
+				</span>
 			</template>
 		</floating-box>
 		<confirm v-if="modals.editSongConfirm" @confirmed="handleConfirmed()" />
@@ -585,6 +535,7 @@ import QuickConfirm from "@/components/QuickConfirm.vue";
 import Modal from "../../Modal.vue";
 import FloatingBox from "../../FloatingBox.vue";
 import SaveButton from "../../SaveButton.vue";
+import AutoSuggest from "@/components/AutoSuggest.vue";
 
 import Discogs from "./Tabs/Discogs.vue";
 import Reports from "./Tabs/Reports.vue";
@@ -597,6 +548,7 @@ export default {
 		FloatingBox,
 		SaveButton,
 		QuickConfirm,
+		AutoSuggest,
 		Discogs,
 		Reports,
 		Youtube,
@@ -626,53 +578,20 @@ export default {
 			artistInputValue: "",
 			genreInputValue: "",
 			tagInputValue: "",
-			artistInputFocussed: false,
-			genreInputFocussed: false,
-			genreAutosuggestContainerFocussed: false,
-			artistAutosuggestContainerFocussed: false,
-			keydownArtistInputTimeout: 0,
-			keydownGenreInputTimeout: 0,
-			artistAutosuggestItems: [],
-			genreAutosuggestItems: [],
 			activityWatchVideoDataInterval: null,
 			activityWatchVideoLastStatus: "",
 			activityWatchVideoLastStartDuration: "",
-			genres: [
-				"Blues",
-				"Country",
-				"Disco",
-				"Funk",
-				"Hip-Hop",
-				"Jazz",
-				"Metal",
-				"Oldies",
-				"Other",
-				"Pop",
-				"Rap",
-				"Reggae",
-				"Rock",
-				"Techno",
-				"Trance",
-				"Classical",
-				"Instrumental",
-				"House",
-				"Electronic",
-				"Christian Rap",
-				"Lo-Fi",
-				"Musical",
-				"Rock 'n' Roll",
-				"Opera",
-				"Drum & Bass",
-				"Club-House",
-				"Indie",
-				"Heavy Metal",
-				"Christian rock",
-				"Dubstep"
-			],
 			confirm: {
 				message: "",
 				action: "",
 				params: null
+			},
+			autosuggest: {
+				allItems: {
+					artists: [],
+					genres: [],
+					tags: []
+				}
 			}
 		};
 	},
@@ -703,7 +622,7 @@ export default {
 			this.drawCanvas();
 		},
 		/* eslint-enable */
-		songId: function (songId) {
+		songId(songId) {
 			console.log("NEW SONG ID", songId);
 			this.unloadSong();
 			this.loadSong(songId);
@@ -1095,6 +1014,20 @@ export default {
 				this.youtubeError = true;
 				this.youtubeErrorMessage = "Player could not be loaded.";
 			}
+
+			["artists", "genres", "tags"].forEach(type => {
+				this.socket.dispatch(
+					`songs.get${type.charAt(0).toUpperCase()}${type.slice(1)}`,
+					res => {
+						if (res.status === "success") {
+							const { items } = res.data;
+							this.autosuggest.allItems[type] = items;
+						} else {
+							new Toast(res.message);
+						}
+					}
+				);
+			});
 		},
 		unloadSong() {
 			this.songDataLoaded = false;
@@ -1112,7 +1045,7 @@ export default {
 				songId, // Was this.song._id
 				res => {
 					if (res.status === "success") {
-						let { song } = res.data;
+						const { song } = res.data;
 
 						// if (this.song.prefill)
 						// 	song = Object.assign(song, this.song.prefill);
@@ -1379,48 +1312,6 @@ export default {
 			this.song.duration =
 				this.youtubeVideoDuration - this.song.skipDuration;
 		},
-		blurArtistInput() {
-			this.artistInputFocussed = false;
-		},
-		focusArtistInput() {
-			this.artistInputFocussed = true;
-		},
-		blurArtistContainer() {
-			this.artistAutosuggestContainerFocussed = false;
-		},
-		focusArtistContainer() {
-			this.artistAutosuggestContainerFocussed = true;
-		},
-		keydownArtistInput() {
-			clearTimeout(this.keydownArtistInputTimeout);
-			this.keydownArtistInputTimeout = setTimeout(() => {
-				// Do things here to query the artist
-			}, 1000);
-		},
-		blurGenreInput() {
-			this.genreInputFocussed = false;
-		},
-		focusGenreInput() {
-			this.genreInputFocussed = true;
-		},
-		blurGenreContainer() {
-			this.genreAutosuggestContainerFocussed = false;
-		},
-		focusGenreContainer() {
-			this.genreAutosuggestContainerFocussed = true;
-		},
-		keydownGenreInput() {
-			clearTimeout(this.keydownGenreInputTimeout);
-			this.keydownGenreInputTimeout = setTimeout(() => {
-				if (this.genreInputValue.length > 1) {
-					this.genreAutosuggestItems = this.genres.filter(genre =>
-						genre
-							.toLowerCase()
-							.startsWith(this.genreInputValue.toLowerCase())
-					);
-				} else this.genreAutosuggestItems = [];
-			}, 1000);
-		},
 		settings(type) {
 			switch (type) {
 				default:
@@ -1494,7 +1385,6 @@ export default {
 				if (genre) {
 					this.song.genres.push(genre);
 					this.genreInputValue = "";
-					this.genreAutosuggestItems = [];
 					return false;
 				}
 
@@ -1507,7 +1397,6 @@ export default {
 				if (artist !== "") {
 					this.song.artists.push(artist);
 					this.artistInputValue = "";
-					this.artistAutosuggestItems = [];
 					return false;
 				}
 				return new Toast("Artist cannot be empty");
@@ -1704,21 +1593,6 @@ export default {
 		.tab {
 			border: 0 !important;
 		}
-	}
-
-	.autosuggest-container {
-		background-color: unset !important;
-	}
-
-	.autosuggest-item {
-		background-color: var(--dark-grey) !important;
-		color: var(--white) !important;
-		border-color: var(--dark-grey) !important;
-	}
-
-	.autosuggest-item:hover,
-	.autosuggest-item:focus {
-		background-color: var(--dark-grey-2) !important;
 	}
 
 	#tabs-container #tab-selection .button {
@@ -2085,43 +1959,6 @@ export default {
 		.list-item:last-child > p {
 			margin-bottom: 0;
 		}
-
-		.autosuggest-container {
-			position: absolute;
-			background: var(--white);
-			width: calc(100% + 1px);
-			top: 57px;
-			z-index: 200;
-			overflow: auto;
-			max-height: 100%;
-			clear: both;
-
-			.autosuggest-item {
-				padding: 8px;
-				display: block;
-				border: 1px solid var(--light-grey-2);
-				margin-top: -1px;
-				line-height: 16px;
-				cursor: pointer;
-				-webkit-user-select: none;
-				-ms-user-select: none;
-				-moz-user-select: none;
-				user-select: none;
-			}
-
-			.autosuggest-item:hover,
-			.autosuggest-item:focus {
-				background-color: var(--light-grey);
-			}
-
-			.autosuggest-item:first-child {
-				border-top: none;
-			}
-
-			.autosuggest-item:last-child {
-				border-radius: 0 0 3px 3px;
-			}
-		}
 	}
 }
 
@@ -2171,5 +2008,9 @@ export default {
 
 .modal-card-foot .is-primary {
 	width: 200px;
+}
+
+/deep/ .autosuggest-container {
+	top: unset;
 }
 </style>

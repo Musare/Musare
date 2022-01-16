@@ -300,7 +300,7 @@ export default {
 			import("@/components/modals/EditSong")
 		),
 		EditSongs: defineAsyncComponent(() =>
-			import("@/components/modals/EditSongs")
+			import("@/components/modals/EditSongs.vue")
 		),
 		Report: defineAsyncComponent(() =>
 			import("@/components/modals/Report.vue")
