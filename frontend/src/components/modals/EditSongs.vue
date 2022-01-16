@@ -1,5 +1,13 @@
 <template>
-	<edit-song v-if="currentSong" :song-id="currentSong._id" v-show="!closed">
+	<edit-song
+		:song-id="currentSong._id"
+		:bulk="true"
+		v-if="currentSong"
+		v-show="!closed"
+		@savedSuccess="onSavedSuccess"
+		@savedError="onSavedError"
+		@saving="onSaving"
+	>
 		<template #sidebar>
 			<div class="sidebar">
 				<header class="sidebar-head">
@@ -11,13 +19,13 @@
 				<section class="sidebar-body">
 					<div
 						class="item"
-						v-for="{ status, song } in items"
+						v-for="{ status, flagged, song } in items"
 						:key="song._id"
 					>
 						<i
-							class="material-icons item-icon todo-icon"
-							v-if="status === 'todo'"
-							>cancel</i
+							class="material-icons item-icon editing-icon"
+							v-if="currentSong._id === song._id"
+							>edit</i
 						>
 						<i
 							class="material-icons item-icon error-icon"
@@ -25,19 +33,24 @@
 							>error</i
 						>
 						<i
+							class="material-icons item-icon saving-icon"
+							v-else-if="status === 'saving'"
+							>pending<!--or we can use change_circle--></i
+						>
+						<i
+							class="material-icons item-icon flag-icon"
+							v-else-if="flagged"
+							>flag_circle</i
+						>
+						<i
 							class="material-icons item-icon done-icon"
 							v-else-if="status === 'done'"
 							>check_circle</i
 						>
 						<i
-							class="material-icons item-icon flag-icon"
-							v-else-if="status === 'flag'"
-							>flag_circle</i
-						>
-						<i
-							class="material-icons item-icon editing-icon"
-							v-else-if="status === 'editing'"
-							>edit</i
+							class="material-icons item-icon todo-icon"
+							v-else-if="status === 'todo'"
+							>cancel</i
 						>
 						<song-item
 							:song="song"
@@ -63,6 +76,16 @@
 						Close
 					</button>
 				</footer>
+			</div>
+		</template>
+		<template #footer-actions="slotProps">
+			<div>
+				<button class="button is-primary" @click="editNextSong()">
+					Next
+				</button>
+				<button class="button is-primary" @click="flagSong()">
+					Flag
+				</button>
 			</div>
 		</template>
 	</edit-song>
@@ -99,6 +122,11 @@ export default {
 		};
 	},
 	computed: {
+		editingItemIndex() {
+			return this.items.findIndex(
+				item => item.song._id === this.currentSong._id
+			);
+		},
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
@@ -106,19 +134,64 @@ export default {
 	async mounted() {
 		this.songIds.forEach(songId => {
 			this.socket.dispatch("songs.getSongFromSongId", songId, res => {
-				this.items.push({ status: "todo", song: res.data.song });
+				this.items.push({
+					status: "todo",
+					flagged: false,
+					song: res.data.song
+				});
 			});
 		});
 	},
 	methods: {
 		pickSong(song) {
 			this.currentSong = song;
-			this.items[
-				this.items.findIndex(item => item.song._id === song._id)
-			].status = "editing";
+			// this.items[
+			// 	this.items.findIndex(item => item.song._id === song._id)
+			// ].status = "editing";
 		},
 		closeEditSongs() {
 			this.closed = true;
+		},
+		editNextSong() {
+			const currentlyEditingSongIndex = this.editingItemIndex;
+			let newEditingSongIndex = -1;
+
+			for (
+				let i = currentlyEditingSongIndex + 1;
+				i < this.items.length;
+				i += 1
+			) {
+				if (this.items[i].status !== "done") {
+					newEditingSongIndex = i;
+					break;
+				}
+			}
+
+			if (newEditingSongIndex > -1)
+				this.pickSong(this.items[newEditingSongIndex].song);
+			// else edit no song
+		},
+		flagSong() {
+			if (this.editingItemIndex > -1)
+				this.items[this.editingItemIndex].flagged = true;
+		},
+		onSavedSuccess(songId) {
+			const itemIndex = this.items.findIndex(
+				item => item.song._id === songId
+			);
+			if (itemIndex > -1) this.items[itemIndex].status = "done";
+		},
+		onSavedError(songId) {
+			const itemIndex = this.items.findIndex(
+				item => item.song._id === songId
+			);
+			if (itemIndex > -1) this.items[itemIndex].status = "error";
+		},
+		onSaving(songId) {
+			const itemIndex = this.items.findIndex(
+				item => item.song._id === songId
+			);
+			if (itemIndex > -1) this.items[itemIndex].status = "saving";
 		},
 		...mapActions("modals/editSong", ["editSong"])
 	}
@@ -196,6 +269,10 @@ export default {
 
 			.error-icon {
 				color: var(--red);
+			}
+
+			.saving-icon {
+				color: var(--primary-color);
 			}
 
 			.todo-icon {

@@ -19,6 +19,7 @@ export default {
 	actions: {
 		showTab: ({ commit }, tab) => commit("showTab", tab),
 		editSong: ({ commit }, song) => commit("editSong", song),
+		unloadSong: ({ commit }) => commit("unloadSong"),
 		stopVideo: ({ commit }) => commit("stopVideo"),
 		loadVideoById: ({ commit }, id, skipDuration) =>
 			commit("loadVideoById", id, skipDuration),
@@ -48,6 +49,10 @@ export default {
 			if (song.discogs === undefined) song.discogs = null;
 			state.originalSong = JSON.parse(JSON.stringify(song));
 			state.song = { ...song };
+		},
+		unloadSong(state) {
+			state.originalSong = {};
+			state.song = {};
 		},
 		stopVideo(state) {
 			state.video.player.stopVideo();

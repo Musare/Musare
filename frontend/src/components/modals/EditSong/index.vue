@@ -436,6 +436,7 @@
 				</div>
 			</template>
 			<template #footer>
+				<slot name="footer-actions" :song="song" />
 				<div>
 					<save-button
 						ref="saveButton"
@@ -560,8 +561,10 @@ export default {
 	props: {
 		songId: { type: String, default: null },
 		discogsAlbum: { type: Object, default: null },
-		sector: { type: String, default: "admin" }
+		sector: { type: String, default: "admin" },
+		bulk: { type: Boolean, default: false }
 	},
+	emits: ["error", "savedSuccess", "savedError"],
 	data() {
 		return {
 			songDataLoaded: false,
@@ -879,10 +882,26 @@ export default {
 					this.video.player.stopVideo();
 					this.drawCanvas();
 				}
-				if (this.playerReady) {
-					this.youtubeVideoCurrentTime = this.video.player
-						.getCurrentTime()
-						?.toFixed(3);
+				if (
+					this.playerReady &&
+					this.video.player.getVideoData()?.video_id ===
+						this.song.youtubeId
+				) {
+					const currentTime = this.video.player.getCurrentTime();
+
+					if (currentTime !== undefined)
+						this.youtubeVideoCurrentTime = currentTime.toFixed(3);
+
+					if (this.youtubeVideoDuration === "0.000") {
+						const duration = this.video.player.getDuration();
+
+						if (duration !== undefined) {
+							this.youtubeVideoDuration = duration.toFixed(3);
+							this.youtubeVideoNote = "(~)";
+
+							this.drawCanvas();
+						}
+					}
 				}
 
 				if (this.video.paused === false) this.drawCanvas();
@@ -911,10 +930,10 @@ export default {
 							this.video.player.setVolume(volume);
 							if (volume > 0) this.video.player.unMute();
 
-							const duration = this.video.player.getDuration();
+							// const duration = this.video.player.getDuration();
 
-							this.youtubeVideoDuration = duration.toFixed(3);
-							this.youtubeVideoNote = "(~)";
+							// this.youtubeVideoDuration = duration.toFixed(3);
+							// this.youtubeVideoNote = "(~)";
 							this.playerReady = true;
 
 							if (this.song && this.song._id)
@@ -1033,10 +1052,14 @@ export default {
 			this.songDataLoaded = false;
 			if (this.video.player && this.video.player.stopVideo)
 				this.video.player.stopVideo();
+			this.resetSong();
+			this.youtubeVideoCurrentTime = "0.000";
+			this.youtubeVideoDuration = "0.000";
 			this.socket.dispatch(
 				"apis.leaveRoom",
 				`edit-song.${this.song._id}`
 			);
+			this.saveButtonRef.status = "default";
 		},
 		loadSong(songId) {
 			console.log(`LOAD SONG ${songId}`);
@@ -1070,11 +1093,24 @@ export default {
 						// console.log(this.video.player);
 						// console.log(this.video.player.loadVideoById);
 
-						if (this.video.player && this.video.player.cueVideoById)
+						if (
+							this.video.player &&
+							this.video.player.cueVideoById
+						) {
 							this.video.player.cueVideoById(
 								this.song.youtubeId,
 								this.song.skipDuration
 							);
+
+							// const duration = this.video.player.getDuration();
+
+							// if (duration !== undefined) {
+							// 	this.youtubeVideoDuration = duration.toFixed(3);
+							// 	this.youtubeVideoNote = "(~)";
+
+							// 	this.drawCanvas();
+							// }
+						}
 					} else {
 						new Toast("Song with that ID not found");
 						// this.closeModal("editSong");
@@ -1102,6 +1138,8 @@ export default {
 		save(songToCopy, verify, close) {
 			const song = JSON.parse(JSON.stringify(songToCopy));
 
+			this.$emit("saving", song._id);
+
 			let saveButtonRef = this.$refs.saveButton;
 			if (close && !verify) saveButtonRef = this.$refs.saveAndCloseButton;
 			else if (close && verify)
@@ -1109,16 +1147,19 @@ export default {
 
 			if (!this.youtubeError && this.youtubeVideoDuration === "0.000") {
 				saveButtonRef.handleFailedSave();
+				this.$emit("savedError", song._id);
 				return new Toast("The video appears to not be working.");
 			}
 
 			if (!song.title) {
 				saveButtonRef.handleFailedSave();
+				this.$emit("savedError", song._id);
 				return new Toast("Please fill in all fields");
 			}
 
 			if (!song.thumbnail) {
 				saveButtonRef.handleFailedSave();
+				this.$emit("savedError", song._id);
 				return new Toast("Please fill in all fields");
 			}
 
@@ -1150,6 +1191,7 @@ export default {
 				this.originalSong.youtubeId !== song.youtubeId
 			) {
 				saveButtonRef.handleFailedSave();
+				this.$emit("savedError", song._id);
 				return new Toast(
 					"You're not allowed to change the YouTube id while the player is not working"
 				);
@@ -1163,6 +1205,7 @@ export default {
 					this.originalSong.duration !== song.duration)
 			) {
 				saveButtonRef.handleFailedSave();
+				this.$emit("savedError", song._id);
 				return new Toast(
 					"Duration can't be higher than the length of the video"
 				);
@@ -1171,6 +1214,7 @@ export default {
 			// Title
 			if (!validation.isLength(song.title, 1, 100)) {
 				saveButtonRef.handleFailedSave();
+				this.$emit("savedError", song._id);
 				return new Toast(
 					"Title must have between 1 and 100 characters."
 				);
@@ -1179,6 +1223,7 @@ export default {
 			// Artists
 			if (song.artists.length < 1 || song.artists.length > 10) {
 				saveButtonRef.handleFailedSave();
+				this.$emit("savedError", song._id);
 				return new Toast(
 					"Invalid artists. You must have at least 1 artist and a maximum of 10 artists."
 				);
@@ -1201,6 +1246,7 @@ export default {
 
 			if (error) {
 				saveButtonRef.handleFailedSave();
+				this.$emit("savedError", song._id);
 				return new Toast(error);
 			}
 
@@ -1225,6 +1271,7 @@ export default {
 
 			if (error) {
 				saveButtonRef.handleFailedSave();
+				this.$emit("savedError", song._id);
 				return new Toast(error);
 			}
 
@@ -1244,18 +1291,21 @@ export default {
 
 			if (error) {
 				saveButtonRef.handleFailedSave();
+				this.$emit("savedError", song._id);
 				return new Toast(error);
 			}
 
 			// Thumbnail
 			if (!validation.isLength(song.thumbnail, 1, 256)) {
 				saveButtonRef.handleFailedSave();
+				this.$emit("savedError", song._id);
 				return new Toast(
 					"Thumbnail must have between 8 and 256 characters."
 				);
 			}
 			if (this.useHTTPS && song.thumbnail.indexOf("https://") !== 0) {
 				saveButtonRef.handleFailedSave();
+				this.$emit("savedError", song._id);
 				return new Toast('Thumbnail must start with "https://".');
 			}
 
@@ -1265,6 +1315,7 @@ export default {
 				song.thumbnail.indexOf("https://") !== 0
 			) {
 				saveButtonRef.handleFailedSave();
+				this.$emit("savedError", song._id);
 				return new Toast('Thumbnail must start with "http://".');
 			}
 
@@ -1276,6 +1327,11 @@ export default {
 				if (res.status === "success")
 					saveButtonRef.handleSuccessfulSave();
 				else saveButtonRef.handleFailedSave();
+
+				if (res.status === "success")
+					this.$emit("savedSuccess", song._id);
+				else if (res.status === "error")
+					this.$emit("savedError", song._id);
 
 				if (verify) this.verify(this.song._id);
 				if (close) this.closeModal("editSong");
@@ -1574,6 +1630,7 @@ export default {
 			"pauseVideo",
 			"getCurrentTime",
 			"editSong",
+			"resetSong",
 			"updateSongField",
 			"updateReports"
 		]),
