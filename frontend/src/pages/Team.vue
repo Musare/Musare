@@ -43,6 +43,7 @@
 								<a
 									v-for="project in member.projects"
 									:key="project"
+									class="pill"
 									:href="
 										'https://github.com/Musare/' +
 										project +
@@ -94,6 +95,7 @@
 								<a
 									v-for="project in member.projects"
 									:key="project"
+									class="pill"
 									:href="
 										'https://github.com/Musare/' +
 										project +
@@ -264,10 +266,6 @@ export default {
 			color: var(--light-grey-2);
 		}
 	}
-	.group .card .card-content .projects a,
-	.other-contributors div a {
-		background-color: var(--dark-grey);
-	}
 }
 
 .container {
@@ -384,18 +382,6 @@ h2 {
 				display: flex;
 				flex-wrap: wrap;
 				margin-top: auto;
-
-				a {
-					background: var(--light-grey);
-					height: 30px;
-					padding: 5px;
-					border-radius: 5px;
-					white-space: nowrap;
-					margin-top: 5px;
-					&:not(:last-of-type) {
-						margin-right: 5px;
-					}
-				}
 			}
 		}
 	}

@@ -220,7 +220,7 @@ export default {
 		.modal-card-foot {
 			border-top: 1px solid var(--light-grey-2);
 			border-radius: 0 0 5px 5px;
-			overflow: initial;
+			overflow-x: auto;
 			column-gap: 16px;
 
 			& > div {

@@ -228,8 +228,8 @@
 						</quick-confirm>
 						<i
 							class="material-icons tag-songs-icon"
-							@click.prevent="tagMany(slotProps.item)"
-							content="Tag Songs"
+							@click.prevent="setTags(slotProps.item)"
+							content="Set Tags"
 							v-tippy
 							tabindex="0"
 						>
@@ -278,6 +278,7 @@
 		<edit-songs />
 		<report v-if="modals.report" />
 		<request-song v-if="modals.requestSong" />
+		<bulk-actions v-if="modals.bulkActions" :type="bulkActionsType" />
 		<confirm v-if="modals.confirm" @confirmed="handleConfirmed()" />
 	</div>
 </template>
@@ -309,6 +310,9 @@ export default {
 		),
 		RequestSong: defineAsyncComponent(() =>
 			import("@/components/modals/RequestSong.vue")
+		),
+		BulkActions: defineAsyncComponent(() =>
+			import("@/components/modals/BulkActions.vue")
 		),
 		Confirm: defineAsyncComponent(() =>
 			import("@/components/modals/Confirm.vue")
@@ -642,7 +646,8 @@ export default {
 				message: "",
 				action: "",
 				params: null
-			}
+			},
+			bulkActionsType: null
 		};
 	},
 	computed: {
@@ -710,14 +715,40 @@ export default {
 				}
 			);
 		},
-		tagMany() {
-			new Toast("Bulk tagging not yet implemented.");
+		setTags(selectedRows) {
+			this.bulkActionsType = {
+				name: "tags",
+				action: "songs.editTags",
+				items: selectedRows.map(row => row._id),
+				regex: new RegExp(
+					/^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/
+				),
+				autosuggest: true,
+				autosuggestAction: "songs.getTags"
+			};
+			this.openModal("bulkActions");
 		},
-		setArtists() {
-			new Toast("Bulk setting artists not yet implemented.");
+		setArtists(selectedRows) {
+			this.bulkActionsType = {
+				name: "artists",
+				action: "songs.editArtists",
+				items: selectedRows.map(row => row._id),
+				regex: new RegExp(/^(?=.{1,64}$).*$/),
+				autosuggest: true,
+				autosuggestAction: "songs.getArtists"
+			};
+			this.openModal("bulkActions");
 		},
-		setGenres() {
-			new Toast("Bulk setting genres not yet implemented.");
+		setGenres(selectedRows) {
+			this.bulkActionsType = {
+				name: "genres",
+				action: "songs.editGenres",
+				items: selectedRows.map(row => row._id),
+				regex: new RegExp(/^[\x00-\x7F]{1,32}$/),
+				autosuggest: true,
+				autosuggestAction: "songs.getGenres"
+			};
+			this.openModal("bulkActions");
 		},
 		deleteOne(songId) {
 			this.socket.dispatch("songs.remove", songId, res => {

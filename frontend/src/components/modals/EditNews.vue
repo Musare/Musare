@@ -62,7 +62,7 @@
 
 <script>
 import { mapActions, mapGetters, mapState } from "vuex";
-import marked from "marked";
+import { marked } from "marked";
 import { sanitize } from "dompurify";
 import Toast from "toasters";
 import { formatDistance } from "date-fns";
