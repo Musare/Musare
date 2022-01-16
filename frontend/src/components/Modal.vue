@@ -1,6 +1,7 @@
 <template>
 	<div class="modal is-active">
 		<div class="modal-background" @click="closeCurrentModal()" />
+		<slot name="sidebar" />
 		<div
 			:class="{
 				'modal-card': true,

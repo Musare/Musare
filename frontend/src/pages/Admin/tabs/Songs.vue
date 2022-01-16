@@ -275,6 +275,7 @@
 		</div>
 		<import-album v-if="modals.importAlbum" />
 		<edit-song v-if="modals.editSong" song-type="songs" :key="song._id" />
+		<edit-songs />
 		<report v-if="modals.report" />
 		<request-song v-if="modals.requestSong" />
 		<confirm v-if="modals.confirm" @confirmed="handleConfirmed()" />
@@ -296,6 +297,9 @@ export default {
 	components: {
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong")
+		),
+		EditSongs: defineAsyncComponent(() =>
+			import("@/components/modals/EditSongs")
 		),
 		Report: defineAsyncComponent(() =>
 			import("@/components/modals/Report.vue")

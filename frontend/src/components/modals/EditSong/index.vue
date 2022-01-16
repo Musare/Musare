@@ -6,8 +6,17 @@
 			:size="'wide'"
 			:split="true"
 		>
+			<template #sidebar>
+				<slot name="sidebar" />
+			</template>
 			<template #body>
-				<div class="left-section">
+				<div v-if="!songId">
+					<h1>No song has been selected</h1>
+				</div>
+				<div v-if="songId && !songDataLoaded">
+					<h1>Song hasn't loaded yet</h1>
+				</div>
+				<div class="left-section" v-show="songDataLoaded">
 					<div class="top-section">
 						<div class="player-section">
 							<div id="editSongPlayer" />
@@ -597,7 +606,6 @@ export default {
 		)
 	},
 	props: {
-		youtubeId: { type: String, default: null },
 		songId: { type: String, default: null },
 		discogsAlbum: { type: Object, default: null },
 		sector: { type: String, default: "admin" }
@@ -693,8 +701,13 @@ export default {
 		},
 		"song.skipDuration": function () {
 			this.drawCanvas();
-		}
+		},
 		/* eslint-enable */
+		songId: function (songId) {
+			console.log("NEW SONG ID", songId);
+			this.unloadSong();
+			this.loadSong(songId);
+		}
 	},
 	async mounted() {
 		this.activityWatchVideoDataInterval = setInterval(() => {
@@ -897,12 +910,14 @@ export default {
 		*/
 	},
 	beforeUnmount() {
-		this.video.player.stopVideo();
+		this.unloadSong();
+
+		// this.video.player.stopVideo();
 		this.playerReady = false;
 		clearInterval(this.interval);
 		clearInterval(this.activityWatchVideoDataInterval);
 
-		this.socket.dispatch("apis.leaveRoom", `edit-song.${this.song._id}`);
+		// this.socket.dispatch("apis.leaveRoom", `edit-song.${this.song._id}`);
 
 		const shortcutNames = [
 			"editSong.pauseResume",
@@ -927,23 +942,190 @@ export default {
 	},
 	methods: {
 		init() {
+			if (this.songId) this.loadSong(this.songId);
+
+			this.interval = setInterval(() => {
+				if (
+					this.song.duration !== -1 &&
+					this.video.paused === false &&
+					this.playerReady &&
+					(this.video.player.getCurrentTime() -
+						this.song.skipDuration >
+						this.song.duration ||
+						(this.video.player.getCurrentTime() > 0 &&
+							this.video.player.getCurrentTime() >=
+								this.video.player.getDuration()))
+				) {
+					this.video.paused = true;
+					this.video.player.stopVideo();
+					this.drawCanvas();
+				}
+				if (this.playerReady) {
+					this.youtubeVideoCurrentTime = this.video.player
+						.getCurrentTime()
+						?.toFixed(3);
+				}
+
+				if (this.video.paused === false) this.drawCanvas();
+			}, 200);
+
+			if (window.YT && window.YT.Player) {
+				this.video.player = new window.YT.Player("editSongPlayer", {
+					height: 298,
+					width: 530,
+					videoId: null,
+					host: "https://www.youtube-nocookie.com",
+					playerVars: {
+						controls: 0,
+						iv_load_policy: 3,
+						rel: 0,
+						showinfo: 0,
+						autoplay: 0
+					},
+					startSeconds: this.song.skipDuration,
+					events: {
+						onReady: () => {
+							let volume = parseInt(
+								localStorage.getItem("volume")
+							);
+							volume = typeof volume === "number" ? volume : 20;
+							this.video.player.setVolume(volume);
+							if (volume > 0) this.video.player.unMute();
+
+							const duration = this.video.player.getDuration();
+
+							this.youtubeVideoDuration = duration.toFixed(3);
+							this.youtubeVideoNote = "(~)";
+							this.playerReady = true;
+
+							if (this.song && this.song._id)
+								this.video.player.cueVideoById(
+									this.song.youtubeId,
+									this.song.skipDuration
+								);
+
+							this.drawCanvas();
+						},
+						onStateChange: event => {
+							this.drawCanvas();
+
+							let skipToLast10SecsPressed = false;
+							if (
+								event.data === 1 &&
+								this.skipToLast10SecsPressed
+							) {
+								this.skipToLast10SecsPressed = false;
+								skipToLast10SecsPressed = true;
+							}
+
+							if (event.data === 1 && !skipToLast10SecsPressed) {
+								this.video.paused = false;
+								let youtubeDuration =
+									this.video.player.getDuration();
+								const newYoutubeVideoDuration =
+									youtubeDuration.toFixed(3);
+
+								const songDurationNumber = Number(
+									this.song.duration
+								);
+								const songDurationNumber2 =
+									Number(this.song.duration) + 1;
+								const songDurationNumber3 =
+									Number(this.song.duration) - 1;
+								const fixedSongDuration =
+									songDurationNumber.toFixed(3);
+								const fixedSongDuration2 =
+									songDurationNumber2.toFixed(3);
+								const fixedSongDuration3 =
+									songDurationNumber3.toFixed(3);
+
+								if (
+									this.youtubeVideoDuration !==
+										newYoutubeVideoDuration &&
+									(fixedSongDuration ===
+										this.youtubeVideoDuration ||
+										fixedSongDuration2 ===
+											this.youtubeVideoDuration ||
+										fixedSongDuration3 ===
+											this.youtubeVideoDuration)
+								)
+									this.song.duration =
+										newYoutubeVideoDuration;
+
+								this.youtubeVideoDuration =
+									newYoutubeVideoDuration;
+								this.youtubeVideoNote = "";
+
+								if (this.song.duration === -1)
+									this.song.duration = youtubeDuration;
+
+								youtubeDuration -= this.song.skipDuration;
+								if (this.song.duration > youtubeDuration + 1) {
+									this.video.player.stopVideo();
+									this.video.paused = true;
+									return new Toast(
+										"Video can't play. Specified duration is bigger than the YouTube song duration."
+									);
+								}
+								if (this.song.duration <= 0) {
+									this.video.player.stopVideo();
+									this.video.paused = true;
+									return new Toast(
+										"Video can't play. Specified duration has to be more than 0 seconds."
+									);
+								}
+
+								if (
+									this.video.player.getCurrentTime() <
+									this.song.skipDuration
+								) {
+									return this.video.player.seekTo(
+										this.song.skipDuration
+									);
+								}
+							} else if (event.data === 2) {
+								this.video.paused = true;
+							}
+
+							return false;
+						}
+					}
+				});
+			} else {
+				this.youtubeError = true;
+				this.youtubeErrorMessage = "Player could not be loaded.";
+			}
+		},
+		unloadSong() {
+			this.songDataLoaded = false;
+			if (this.video.player && this.video.player.stopVideo)
+				this.video.player.stopVideo();
+			this.socket.dispatch(
+				"apis.leaveRoom",
+				`edit-song.${this.song._id}`
+			);
+		},
+		loadSong(songId) {
+			console.log(`LOAD SONG ${songId}`);
 			this.socket.dispatch(
 				`songs.getSongFromSongId`,
-				this.song._id,
+				songId, // Was this.song._id
 				res => {
 					if (res.status === "success") {
 						let { song } = res.data;
 
-						if (this.song.prefill)
-							song = Object.assign(song, this.song.prefill);
+						// if (this.song.prefill)
+						// 	song = Object.assign(song, this.song.prefill);
 
-						if (this.song.discogs)
-							song = {
-								...song,
-								discogs: this.song.discogs
-							};
+						// if (this.song.discogs)
+						// 	song = {
+						// 		...song,
+						// 		discogs: this.song.discogs
+						// 	};
 
 						this.editSong(song);
+
+						console.log(321);
 
 						this.songDataLoaded = true;
 
@@ -952,183 +1134,17 @@ export default {
 							`edit-song.${this.song._id}`
 						);
 
-						this.interval = setInterval(() => {
-							if (
-								this.song.duration !== -1 &&
-								this.video.paused === false &&
-								this.playerReady &&
-								(this.video.player.getCurrentTime() -
-									this.song.skipDuration >
-									this.song.duration ||
-									(this.video.player.getCurrentTime() > 0 &&
-										this.video.player.getCurrentTime() >=
-											this.video.player.getDuration()))
-							) {
-								this.video.paused = true;
-								this.video.player.stopVideo();
-								this.drawCanvas();
-							}
-							if (this.playerReady) {
-								this.youtubeVideoCurrentTime = this.video.player
-									.getCurrentTime()
-									.toFixed(3);
-							}
+						// console.log(this.video.player);
+						// console.log(this.video.player.loadVideoById);
 
-							if (this.video.paused === false) this.drawCanvas();
-						}, 200);
-
-						if (window.YT && window.YT.Player) {
-							this.video.player = new window.YT.Player(
-								"editSongPlayer",
-								{
-									height: 298,
-									width: 530,
-									videoId: this.song.youtubeId,
-									host: "https://www.youtube-nocookie.com",
-									playerVars: {
-										controls: 0,
-										iv_load_policy: 3,
-										rel: 0,
-										showinfo: 0,
-										autoplay: 0
-									},
-									startSeconds: this.song.skipDuration,
-									events: {
-										onReady: () => {
-											let volume = parseInt(
-												localStorage.getItem("volume")
-											);
-											volume =
-												typeof volume === "number"
-													? volume
-													: 20;
-											this.video.player.setVolume(volume);
-											if (volume > 0)
-												this.video.player.unMute();
-
-											const duration =
-												this.video.player.getDuration();
-
-											this.youtubeVideoDuration =
-												duration.toFixed(3);
-											this.youtubeVideoNote = "(~)";
-											this.playerReady = true;
-
-											this.drawCanvas();
-										},
-										onStateChange: event => {
-											this.drawCanvas();
-
-											let skipToLast10SecsPressed = false;
-											if (
-												event.data === 1 &&
-												this.skipToLast10SecsPressed
-											) {
-												this.skipToLast10SecsPressed = false;
-												skipToLast10SecsPressed = true;
-											}
-
-											if (
-												event.data === 1 &&
-												!skipToLast10SecsPressed
-											) {
-												this.video.paused = false;
-												let youtubeDuration =
-													this.video.player.getDuration();
-												const newYoutubeVideoDuration =
-													youtubeDuration.toFixed(3);
-
-												const songDurationNumber =
-													Number(this.song.duration);
-												const songDurationNumber2 =
-													Number(this.song.duration) +
-													1;
-												const songDurationNumber3 =
-													Number(this.song.duration) -
-													1;
-												const fixedSongDuration =
-													songDurationNumber.toFixed(
-														3
-													);
-												const fixedSongDuration2 =
-													songDurationNumber2.toFixed(
-														3
-													);
-												const fixedSongDuration3 =
-													songDurationNumber3.toFixed(
-														3
-													);
-
-												if (
-													this
-														.youtubeVideoDuration !==
-														newYoutubeVideoDuration &&
-													(fixedSongDuration ===
-														this
-															.youtubeVideoDuration ||
-														fixedSongDuration2 ===
-															this
-																.youtubeVideoDuration ||
-														fixedSongDuration3 ===
-															this
-																.youtubeVideoDuration)
-												)
-													this.song.duration =
-														newYoutubeVideoDuration;
-
-												this.youtubeVideoDuration =
-													newYoutubeVideoDuration;
-												this.youtubeVideoNote = "";
-
-												if (this.song.duration === -1)
-													this.song.duration =
-														youtubeDuration;
-
-												youtubeDuration -=
-													this.song.skipDuration;
-												if (
-													this.song.duration >
-													youtubeDuration + 1
-												) {
-													this.video.player.stopVideo();
-													this.video.paused = true;
-													return new Toast(
-														"Video can't play. Specified duration is bigger than the YouTube song duration."
-													);
-												}
-												if (this.song.duration <= 0) {
-													this.video.player.stopVideo();
-													this.video.paused = true;
-													return new Toast(
-														"Video can't play. Specified duration has to be more than 0 seconds."
-													);
-												}
-
-												if (
-													this.video.player.getCurrentTime() <
-													this.song.skipDuration
-												) {
-													return this.video.player.seekTo(
-														this.song.skipDuration
-													);
-												}
-											} else if (event.data === 2) {
-												this.video.paused = true;
-											}
-
-											return false;
-										}
-									}
-								}
+						if (this.video.player && this.video.player.cueVideoById)
+							this.video.player.cueVideoById(
+								this.song.youtubeId,
+								this.song.skipDuration
 							);
-						} else {
-							this.youtubeError = true;
-							this.youtubeErrorMessage =
-								"Player could not be loaded.";
-						}
 					} else {
 						new Toast("Song with that ID not found");
-						this.closeModal("editSong");
+						// this.closeModal("editSong");
 					}
 				}
 			);
@@ -1519,6 +1535,8 @@ export default {
 				this.song.tags.splice(this.song.tags.indexOf(value), 1);
 		},
 		drawCanvas() {
+			if (!this.songDataLoaded) return;
+			console.log(111, this.songDataLoaded);
 			const canvasElement = this.$refs.durationCanvas;
 			const ctx = canvasElement.getContext("2d");
 
