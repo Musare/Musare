@@ -464,7 +464,7 @@ export default {
 							)
 						};
 					console.log(song);
-					this.editSong(song);
+					this.editSong(song._id);
 					this.currentEditSongIndex += 1;
 					this.openModal("editSong");
 				}, 500);

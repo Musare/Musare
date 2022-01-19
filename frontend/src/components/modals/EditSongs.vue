@@ -1,9 +1,7 @@
 <template>
 	<edit-song
-		:song-id="currentSong._id"
 		:bulk="true"
-		v-if="currentSong"
-		v-show="!closed"
+		v-if="!closed && currentSong"
 		@savedSuccess="onSavedSuccess"
 		@savedError="onSavedError"
 		@saving="onSaving"
@@ -144,6 +142,7 @@ export default {
 	},
 	methods: {
 		pickSong(song) {
+			this.editSong(song._id);
 			this.currentSong = song;
 			// this.items[
 			// 	this.items.findIndex(item => item.song._id === song._id)

@@ -676,12 +676,12 @@ export default {
 	},
 	methods: {
 		editOne(song) {
-			this.editSong(song);
+			this.editSong(song._id);
 			this.openModal("editSong");
 		},
 		editMany(selectedRows) {
 			if (selectedRows.length === 1) {
-				this.editSong(selectedRows[0]);
+				this.editSong(selectedRows[0]._id);
 				this.openModal("editSong");
 			} else {
 				new Toast("Bulk editing not yet implemented.");

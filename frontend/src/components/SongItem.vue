@@ -269,7 +269,7 @@ export default {
 		},
 		edit(song) {
 			this.hideTippyElements();
-			this.editSong(song);
+			this.editSong(song._id);
 			this.openModal("editSong");
 		},
 		...mapActions("modals/editSong", ["editSong"]),

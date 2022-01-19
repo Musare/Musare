@@ -1341,7 +1341,6 @@ export default {
 				})),
 				this.appliedFilterOperator,
 				res => {
-					console.log(111, res);
 					if (res.status === "success") {
 						const { data, count } = res.data;
 						this.rows = data.map(row => ({

@@ -559,7 +559,7 @@ export default {
 		)
 	},
 	props: {
-		songId: { type: String, default: null },
+		// songId: { type: String, default: null },
 		discogsAlbum: { type: Object, default: null },
 		sector: { type: String, default: "admin" },
 		bulk: { type: Boolean, default: false }
@@ -603,6 +603,7 @@ export default {
 			tab: state => state.tab,
 			video: state => state.video,
 			song: state => state.song,
+			songId: state => state.songId,
 			originalSong: state => state.originalSong,
 			reports: state => state.reports
 		}),
@@ -625,9 +626,9 @@ export default {
 			this.drawCanvas();
 		},
 		/* eslint-enable */
-		songId(songId) {
+		songId(songId, oldSongId) {
 			console.log("NEW SONG ID", songId);
-			this.unloadSong();
+			this.unloadSong(oldSongId);
 			this.loadSong(songId);
 		}
 	},
@@ -807,7 +808,7 @@ export default {
 		});
 
 		/*
-		
+
 		editSong.pauseResume - Num 5 - Pause/resume song
 		editSong.stopVideo - Ctrl - Num 5 - Stop
 		editSong.skipToLast10Secs - Num 6 - Skip to last 10 seconds
@@ -832,7 +833,7 @@ export default {
 		*/
 	},
 	beforeUnmount() {
-		this.unloadSong();
+		this.unloadSong(this.songId);
 
 		// this.video.player.stopVideo();
 		this.playerReady = false;
@@ -863,8 +864,12 @@ export default {
 		});
 	},
 	methods: {
-		init() {
+		init(why) {
 			if (this.songId) this.loadSong(this.songId);
+			else if (!this.bulk) {
+				new Toast("You can't open EditSong without editing a song");
+				return this.closeModal("editSong");
+			}
 
 			this.interval = setInterval(() => {
 				if (
@@ -884,7 +889,8 @@ export default {
 				}
 				if (
 					this.playerReady &&
-					this.video.player.getVideoData()?.video_id ===
+					this.video.player.getVideoData &&
+					this.video.player.getVideoData().video_id ===
 						this.song.youtubeId
 				) {
 					const currentTime = this.video.player.getCurrentTime();
@@ -1048,18 +1054,15 @@ export default {
 				);
 			});
 		},
-		unloadSong() {
+		unloadSong(songId) {
 			this.songDataLoaded = false;
 			if (this.video.player && this.video.player.stopVideo)
 				this.video.player.stopVideo();
-			this.resetSong();
+			// this.resetSong(songId);
 			this.youtubeVideoCurrentTime = "0.000";
 			this.youtubeVideoDuration = "0.000";
-			this.socket.dispatch(
-				"apis.leaveRoom",
-				`edit-song.${this.song._id}`
-			);
-			this.saveButtonRef.status = "default";
+			this.socket.dispatch("apis.leaveRoom", `edit-song.${songId}`);
+			if (this.$refs.saveButton) this.$refs.saveButton.status = "default";
 		},
 		loadSong(songId) {
 			console.log(`LOAD SONG ${songId}`);
@@ -1079,7 +1082,7 @@ export default {
 						// 		discogs: this.song.discogs
 						// 	};
 
-						this.editSong(song);
+						this.setSong(song);
 
 						console.log(321);
 
@@ -1113,7 +1116,7 @@ export default {
 						}
 					} else {
 						new Toast("Song with that ID not found");
-						// this.closeModal("editSong");
+						if (!this.bulk) this.closeModal("editSong");
 					}
 				}
 			);
@@ -1481,7 +1484,6 @@ export default {
 		},
 		drawCanvas() {
 			if (!this.songDataLoaded) return;
-			console.log(111, this.songDataLoaded);
 			const canvasElement = this.$refs.durationCanvas;
 			const ctx = canvasElement.getContext("2d");
 
@@ -1629,7 +1631,7 @@ export default {
 			"loadVideoById",
 			"pauseVideo",
 			"getCurrentTime",
-			"editSong",
+			"setSong",
 			"resetSong",
 			"updateSongField",
 			"updateReports"

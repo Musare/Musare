@@ -217,7 +217,7 @@ export default {
 			);
 		},
 		openSong() {
-			this.editSong({ _id: this.report.song._id });
+			this.editSong(this.report.song._id);
 			this.openModal("editSong");
 		},
 		...mapActions("admin/reports", ["indexReports", "resolveReport"]),

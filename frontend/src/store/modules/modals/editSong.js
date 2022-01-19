@@ -10,6 +10,7 @@ export default {
 			autoPlayed: false,
 			currentTime: 0
 		},
+		songId: "",
 		song: {},
 		originalSong: {},
 		reports: [],
@@ -18,8 +19,9 @@ export default {
 	getters: {},
 	actions: {
 		showTab: ({ commit }, tab) => commit("showTab", tab),
-		editSong: ({ commit }, song) => commit("editSong", song),
-		unloadSong: ({ commit }) => commit("unloadSong"),
+		editSong: ({ commit }, songId) => commit("editSong", songId),
+		setSong: ({ commit }, song) => commit("setSong", song),
+		resetSong: ({ commit }, songId) => commit("resetSong", songId),
 		stopVideo: ({ commit }) => commit("stopVideo"),
 		loadVideoById: ({ commit }, id, skipDuration) =>
 			commit("loadVideoById", id, skipDuration),
@@ -45,14 +47,22 @@ export default {
 		showTab(state, tab) {
 			state.tab = tab;
 		},
-		editSong(state, song) {
+		editSong(state, songId) {
+			state.songId = songId;
+		},
+		setSong(state, song) {
 			if (song.discogs === undefined) song.discogs = null;
 			state.originalSong = JSON.parse(JSON.stringify(song));
 			state.song = { ...song };
 		},
-		unloadSong(state) {
+		resetSong(state, songId) {
 			state.originalSong = {};
 			state.song = {};
+			if (state.songId === songId) this.songId = "";
+
+			// if (state.originalSong._id === songId) state.originalSong = {};
+			// if (state.song._id === songId) state.song = {};
+			// if (state.songId === songId) this.songId = "";
 		},
 		stopVideo(state) {
 			state.video.player.stopVideo();
