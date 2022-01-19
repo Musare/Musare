@@ -2271,6 +2271,7 @@ export default {
 			width: 100%;
 		}
 		& > input,
+		/deep/ & > div > input,
 		& > select,
 		& > .button,
 		&.label {
@@ -2308,16 +2309,20 @@ export default {
 			}
 			.control {
 				margin-bottom: 0 !important;
-				&:nth-child(1) select {
+				&:nth-child(1) > select {
 					border-radius: 5px 0 0 0;
 				}
-				&:nth-child(2) select {
+				&:nth-child(2) > select {
 					border-radius: 0 5px 0 0;
 				}
-				&:nth-child(3) input {
-					border-radius: 0 0 0 5px;
+				/deep/ &:nth-child(3) {
+					& > input,
+					& > div > input,
+					& > select {
+						border-radius: 0 0 0 5px;
+					}
 				}
-				&:nth-child(4) button {
+				&:nth-child(4) > button {
 					border-radius: 0 0 5px 0;
 				}
 			}
