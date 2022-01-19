@@ -10,11 +10,11 @@
 				<slot name="sidebar" />
 			</template>
 			<template #body>
-				<div v-if="!songId">
-					<h1>No song has been selected</h1>
+				<div v-if="!songId" class="notice-container">
+					<h4>No song has been selected</h4>
 				</div>
-				<div v-if="songId && !songDataLoaded">
-					<h1>Song hasn't loaded yet</h1>
+				<div v-if="songId && !songDataLoaded" class="notice-container">
+					<h4>Song hasn't loaded yet</h4>
 				</div>
 				<div class="left-section" v-show="songDataLoaded">
 					<div class="top-section">
@@ -1675,6 +1675,16 @@ export default {
 
 .modal-card-body {
 	display: flex;
+}
+
+.notice-container {
+	display: flex;
+	flex: 1;
+	justify-content: center;
+
+	h4 {
+		margin: auto;
+	}
 }
 
 .left-section {
