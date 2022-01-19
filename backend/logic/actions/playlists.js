@@ -1086,8 +1086,14 @@ export default {
 				next => {
 					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
-							if (!playlist || playlist.createdBy !== session.userId)
-								return next("Something went wrong when trying to get the playlist");
+							if (!playlist || playlist.createdBy !== session.userId) {
+								DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
+									userModel.findOne({ _id: session.userId }, (err, user) => {
+										if (user && user.role === "admin") return next();
+										return next("Something went wrong when trying to get the playlist");
+									});
+								});
+							}
 
 							return async.each(
 								playlist.songs,
@@ -1401,7 +1407,14 @@ export default {
 				},
 
 				(playlist, next) => {
-					if (!playlist || playlist.createdBy !== session.userId) return next("Playlist not found.");
+					if (!playlist || playlist.createdBy !== session.userId) {
+						return DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
+							userModel.findOne({ _id: session.userId }, (err, user) => {
+								if (user && user.role === "admin") return next(null, playlist);
+								return next("Something went wrong when trying to get the playlist");
+							});
+						});
+					}
 
 					return next(null, playlist);
 				}
