@@ -105,7 +105,7 @@ export default {
 	methods: {
 		init() {
 			if (this.type.autosuggest && this.type.autosuggestDataAction)
-				this.socket.dispatch(this.type.autosuggestAction, res => {
+				this.socket.dispatch(this.type.autosuggestDataAction, res => {
 					if (res.status === "success") {
 						const { items } = res.data;
 						this.allItems = items;
