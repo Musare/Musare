@@ -54,6 +54,10 @@ Every input needs validation, below is the required formatting of each value.
         - Length: From 1 to 32 characters.
         - Quantity: Min 1, max 16.
         - Regex: ```/^[\x00-\x7F]+$/```
+    - Tags
+        - Description: Any letter, numbers and underscores. Can be with out without data in square brackets. The base tag and data between brackets follow the same styling. If there's no data in between square brackets, there are no square brackets.
+        - Length: From 1 to 64 characters for the base part, 1 to 64 characters for data in square brackets.
+        - Regex: ```/^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/```
     - Thumbnail
         - Description: Valid url. If site is secure only https prepended urls are valid.
         - Length: From 1 to 256 characters.
