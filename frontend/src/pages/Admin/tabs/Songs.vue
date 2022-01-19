@@ -724,7 +724,7 @@ export default {
 					/^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/
 				),
 				autosuggest: true,
-				autosuggestAction: "songs.getTags"
+				autosuggestDataAction: "songs.getTags"
 			};
 			this.openModal("bulkActions");
 		},
@@ -735,7 +735,7 @@ export default {
 				items: selectedRows.map(row => row._id),
 				regex: new RegExp(/^(?=.{1,64}$).*$/),
 				autosuggest: true,
-				autosuggestAction: "songs.getArtists"
+				autosuggestDataAction: "songs.getArtists"
 			};
 			this.openModal("bulkActions");
 		},
@@ -746,7 +746,7 @@ export default {
 				items: selectedRows.map(row => row._id),
 				regex: new RegExp(/^[\x00-\x7F]{1,32}$/),
 				autosuggest: true,
-				autosuggestAction: "songs.getGenres"
+				autosuggestDataAction: "songs.getGenres"
 			};
 			this.openModal("bulkActions");
 		},
