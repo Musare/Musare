@@ -130,12 +130,12 @@ export default {
 		})
 	},
 	async mounted() {
-		this.songIds.forEach(songId => {
-			this.socket.dispatch("songs.getSongFromSongId", songId, res => {
+		this.socket.dispatch("songs.getSongsFromSongIds", this.songIds, res => {
+			res.data.songs.forEach(song => {
 				this.items.push({
 					status: "todo",
 					flagged: false,
-					song: res.data.song
+					song
 				});
 			});
 		});

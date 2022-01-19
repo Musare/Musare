@@ -406,6 +406,43 @@ export default {
 	}),
 
 	/**
+	 * Gets multiple songs from the Musare song ids
+	 * At this time only used in EditSongs
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {array} songIds - the song ids
+	 * @param {Function} cb
+	 */
+	 getSongsFromSongIds: isAdminRequired(function getSongFromSongId(session, songIds, cb) {
+		async.waterfall(
+			[
+				next => {
+					SongsModule.runJob("GET_SONGS", { songIds, properties: [
+						"youtubeId",
+						"title",
+						"artists",
+						"thumbnail",
+						"duration",
+						"verified",
+						"_id"
+					] }, this)
+						.then(response => next(null, response.songs))
+						.catch(err => next(err));
+				}
+			],
+			async (err, songs) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "SONGS_GET_SONGS_FROM_MUSARE_IDS", `Failed to get songs. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "SONGS_GET_SONGS_FROM_MUSARE_IDS", `Got songs successfully.`);
+				return cb({ status: "success", data: { songs } });
+			}
+		);
+	}),
+
+	/**
 	 * Updates a song
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
