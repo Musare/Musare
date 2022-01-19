@@ -1847,15 +1847,7 @@ export default {
 
 					songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
 						if (err) next(err);
-						async.eachLimit(
-							songsFound,
-							1,
-							(songId, next) => {
-								SongsModule.runJob("UPDATE_SONG", { songId });
-								next();
-							},
-							next
-						);
+						SongsModule.runJob("UPDATE_SONGS", { songIds: songsFound });
 					});
 				}
 			],
@@ -1948,15 +1940,7 @@ export default {
 
 					songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
 						if (err) next(err);
-						async.eachLimit(
-							songsFound,
-							1,
-							(songId, next) => {
-								SongsModule.runJob("UPDATE_SONG", { songId });
-								next();
-							},
-							next
-						);
+						SongsModule.runJob("UPDATE_SONGS", { songIds: songsFound });
 					});
 				}
 			],
@@ -2049,15 +2033,7 @@ export default {
 
 					songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
 						if (err) next(err);
-						async.eachLimit(
-							songsFound,
-							1,
-							(songId, next) => {
-								SongsModule.runJob("UPDATE_SONG", { songId });
-								next();
-							},
-							next
-						);
+						SongsModule.runJob("UPDATE_SONGS", { songIds: songsFound });
 					});
 				}
 			],
