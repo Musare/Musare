@@ -20,43 +20,78 @@
 						v-for="{ status, flagged, song } in items"
 						:key="song._id"
 					>
-						<i
-							class="material-icons item-icon editing-icon"
-							v-if="currentSong._id === song._id"
-							>edit</i
-						>
-						<i
-							class="material-icons item-icon error-icon"
-							v-else-if="status === 'error'"
-							>error</i
-						>
-						<i
-							class="material-icons item-icon saving-icon"
-							v-else-if="status === 'saving'"
-							>pending<!--or we can use change_circle--></i
-						>
-						<i
-							class="material-icons item-icon flag-icon"
-							v-else-if="flagged"
-							>flag_circle</i
-						>
-						<i
-							class="material-icons item-icon done-icon"
-							v-else-if="status === 'done'"
-							>check_circle</i
-						>
-						<i
-							class="material-icons item-icon todo-icon"
-							v-else-if="status === 'todo'"
-							>cancel</i
-						>
 						<song-item
 							:song="song"
 							:thumbnail="false"
 							:duration="false"
-							:disabled-actions="['report']"
+							:disabled-actions="
+								song.removed ? ['all'] : ['report', 'edit']
+							"
+							:class="{
+								updated: song.updated,
+								removed: song.removed
+							}"
 						>
-							<template #actions>
+							<template #leftIcon>
+								<i
+									v-if="currentSong._id === song._id"
+									class="
+										material-icons
+										item-icon
+										editing-icon
+									"
+									content="Currently editing song"
+									v-tippy="{ theme: 'info' }"
+									>edit</i
+								>
+								<i
+									v-else-if="song.removed"
+									class="
+										material-icons
+										item-icon
+										removed-icon
+									"
+									content="Song removed"
+									v-tippy="{ theme: 'info' }"
+									>delete_forever</i
+								>
+								<i
+									v-else-if="status === 'error'"
+									class="material-icons item-icon error-icon"
+									content="Error saving song"
+									v-tippy="{ theme: 'info' }"
+									>error</i
+								>
+								<i
+									v-else-if="status === 'saving'"
+									class="material-icons item-icon saving-icon"
+									content="Currently saving song"
+									v-tippy="{ theme: 'info' }"
+									>pending</i
+								>
+								<i
+									v-else-if="flagged"
+									class="material-icons item-icon flag-icon"
+									content="Song flagged"
+									v-tippy="{ theme: 'info' }"
+									>flag_circle</i
+								>
+								<i
+									v-else-if="status === 'done'"
+									class="material-icons item-icon done-icon"
+									content="Song marked complete"
+									v-tippy="{ theme: 'info' }"
+									>check_circle</i
+								>
+								<i
+									v-else-if="status === 'todo'"
+									class="material-icons item-icon todo-icon"
+									content="Song marked todo"
+									v-tippy="{ theme: 'info' }"
+									>cancel</i
+								>
+							</template>
+							<template v-if="!song.removed" #actions>
 								<i
 									class="material-icons edit-icon"
 									content="Edit Song"
@@ -130,6 +165,8 @@ export default {
 		})
 	},
 	async mounted() {
+		this.socket.dispatch("apis.joinRoom", "edit-songs");
+
 		this.socket.dispatch("songs.getSongsFromSongIds", this.songIds, res => {
 			res.data.songs.forEach(song => {
 				this.items.push({
@@ -139,6 +176,27 @@ export default {
 				});
 			});
 		});
+
+		this.socket.on(`event:admin.song.updated`, res => {
+			const index = this.items
+				.map(item => item.song._id)
+				.indexOf(res.data.song._id);
+			this.items[index].song = {
+				...this.items[index].song,
+				...res.data.song,
+				updated: true
+			};
+		});
+
+		this.socket.on(`event:admin.song.removed`, res => {
+			const index = this.items
+				.map(item => item.song._id)
+				.indexOf(res.songId);
+			this.items[index].song.removed = true;
+		});
+	},
+	beforeUnmount() {
+		this.socket.dispatch("apis.leaveRoom", "edit-songs");
 	},
 	methods: {
 		pickSong(song) {
@@ -261,33 +319,36 @@ export default {
 			align-items: center;
 			column-gap: 8px;
 
-			.item-icon {
-				font-size: 32px;
-				line-height: 32px;
-			}
+			/deep/ .song-item {
+				.item-icon {
+					margin-right: 10px;
+					cursor: pointer;
+				}
 
-			.error-icon {
-				color: var(--red);
-			}
+				.removed-icon,
+				.error-icon {
+					color: var(--red);
+				}
 
-			.saving-icon {
-				color: var(--primary-color);
-			}
+				.saving-icon,
+				.todo-icon,
+				.editing-icon {
+					color: var(--primary-color);
+				}
 
-			.todo-icon {
-				color: var(--primary-color);
-			}
+				.done-icon {
+					color: var(--green);
+				}
 
-			.done-icon {
-				color: var(--green);
-			}
+				.flag-icon {
+					color: var(--orange);
+				}
 
-			.flag-icon {
-				color: var(--orange);
-			}
-
-			.editing-icon {
-				color: var(--primary-color);
+				&.removed {
+					filter: grayscale(100%);
+					cursor: not-allowed;
+					user-select: none;
+				}
 			}
 		}
 	}

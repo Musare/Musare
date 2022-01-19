@@ -5,6 +5,7 @@
 		v-if="song"
 	>
 		<div class="thumbnail-and-info">
+			<slot v-if="$slots.leftIcon" name="leftIcon" />
 			<song-thumbnail :song="song" v-if="thumbnail" />
 			<div class="song-info">
 				<h6 v-if="header">{{ header }}</h6>

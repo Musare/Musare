@@ -23,7 +23,7 @@ CacheModule.runJob("SUB", {
 
 		songModel.findOne({ _id: data.songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOMS", {
-				rooms: ["import-album", "admin.songs", `edit-song.${data.songId}`],
+				rooms: ["import-album", "admin.songs", `edit-song.${data.songId}`, "edit-songs"],
 				args: ["event:admin.song.updated", { data: { song, oldStatus: data.oldStatus } }]
 			});
 		});
@@ -34,7 +34,7 @@ CacheModule.runJob("SUB", {
 	channel: "song.removed",
 	cb: async data => {
 		WSModule.runJob("EMIT_TO_ROOMS", {
-			rooms: ["import-album", "admin.songs", `edit-song.${data.songId}`],
+			rooms: ["import-album", "admin.songs", `edit-song.${data.songId}`, "edit-songs"],
 			args: ["event:admin.song.removed", { data }]
 		});
 	}
