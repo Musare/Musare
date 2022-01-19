@@ -995,9 +995,14 @@ export default {
 				next => {
 					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
-							if (!playlist || playlist.createdBy !== session.userId)
-								return next("Something went wrong when trying to get the playlist");
-
+							if (!playlist || playlist.createdBy !== session.userId) {
+								return DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
+									userModel.findOne({ _id: session.userId }, (err, user) => {
+										if (user && user.role === "admin") return next();
+										return next("Something went wrong when trying to get the playlist");
+									});
+								});
+							}
 							return next();
 						})
 						.catch(next);
@@ -1467,9 +1472,14 @@ export default {
 				next => {
 					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
-							if (!playlist || playlist.createdBy !== session.userId)
-								return next("Something went wrong when trying to get the playlist");
-
+							if (!playlist || playlist.createdBy !== session.userId) {
+								return DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
+									userModel.findOne({ _id: session.userId }, (err, user) => {
+										if (user && user.role === "admin") return next();
+										return next("Something went wrong when trying to get the playlist");
+									});
+								});
+							}
 							return next();
 						})
 						.catch(next);
