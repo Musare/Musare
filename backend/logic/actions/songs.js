@@ -23,7 +23,7 @@ CacheModule.runJob("SUB", {
 
 		songModel.findOne({ _id: data.songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOMS", {
-				rooms: ["import-album", "admin.songs", `edit-song.${data.songId}`],
+				rooms: ["import-album", "admin.songs", `edit-song.${data.songId}`, "edit-songs"],
 				args: ["event:admin.song.updated", { data: { song, oldStatus: data.oldStatus } }]
 			});
 		});
@@ -34,7 +34,7 @@ CacheModule.runJob("SUB", {
 	channel: "song.removed",
 	cb: async data => {
 		WSModule.runJob("EMIT_TO_ROOMS", {
-			rooms: ["import-album", "admin.songs", `edit-song.${data.songId}`],
+			rooms: ["import-album", "admin.songs", `edit-song.${data.songId}`, "edit-songs"],
 			args: ["event:admin.song.removed", { data }]
 		});
 	}
@@ -410,22 +410,21 @@ export default {
 	 * At this time only used in EditSongs
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {array} songIds - the song ids
+	 * @param {Array} songIds - the song ids
 	 * @param {Function} cb
 	 */
-	 getSongsFromSongIds: isAdminRequired(function getSongFromSongId(session, songIds, cb) {
+	getSongsFromSongIds: isAdminRequired(function getSongFromSongId(session, songIds, cb) {
 		async.waterfall(
 			[
 				next => {
-					SongsModule.runJob("GET_SONGS", { songIds, properties: [
-						"youtubeId",
-						"title",
-						"artists",
-						"thumbnail",
-						"duration",
-						"verified",
-						"_id"
-					] }, this)
+					SongsModule.runJob(
+						"GET_SONGS",
+						{
+							songIds,
+							properties: ["youtubeId", "title", "artists", "thumbnail", "duration", "verified", "_id"]
+						},
+						this
+					)
 						.then(response => next(null, response.songs))
 						.catch(err => next(err));
 				}
