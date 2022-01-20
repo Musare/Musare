@@ -12,9 +12,6 @@
 			<div class="sidebar">
 				<header class="sidebar-head">
 					<h2 class="sidebar-title is-marginless">Edit Queue</h2>
-					<!-- <span class="delete material-icons" @click="closeCurrentModal()"
-						>highlight_off</span
-					> -->
 				</header>
 				<section class="sidebar-body">
 					<div
@@ -46,6 +43,7 @@
 									"
 									content="Currently editing song"
 									v-tippy="{ theme: 'info' }"
+									@click="toggleDone(index)"
 									>edit</i
 								>
 								<i
@@ -64,6 +62,7 @@
 									class="material-icons item-icon error-icon"
 									content="Error saving song"
 									v-tippy="{ theme: 'info' }"
+									@click="toggleDone(index)"
 									>error</i
 								>
 								<i
@@ -78,6 +77,7 @@
 									class="material-icons item-icon flag-icon"
 									content="Song flagged"
 									v-tippy="{ theme: 'info' }"
+									@click="toggleDone(index)"
 									>flag_circle</i
 								>
 								<i
@@ -85,6 +85,7 @@
 									class="material-icons item-icon done-icon"
 									content="Song marked complete"
 									v-tippy="{ theme: 'info' }"
+									@click="toggleDone(index)"
 									>check_circle</i
 								>
 								<i
@@ -92,6 +93,7 @@
 									class="material-icons item-icon todo-icon"
 									content="Song marked todo"
 									v-tippy="{ theme: 'info' }"
+									@click="toggleDone(index)"
 									>cancel</i
 								>
 							</template>
@@ -274,7 +276,7 @@ export default {
 			const itemIndex = this.items.findIndex(
 				item => item.song._id === songId
 			);
-			if (itemIndex > -1) this.items[itemIndex].status = "done";
+			if (itemIndex > -1) this.toggleDone(itemIndex, "done");
 		},
 		onSavedError(songId) {
 			const itemIndex = this.items.findIndex(
@@ -287,6 +289,16 @@ export default {
 				item => item.song._id === songId
 			);
 			if (itemIndex > -1) this.items[itemIndex].status = "saving";
+		},
+		toggleDone(index, overwrite = null) {
+			const { status } = this.items[index];
+
+			if (status === "done" && overwrite !== "done")
+				this.items[index].status = "todo";
+			else {
+				this.items[index].status = "done";
+				this.items[index].flagged = false;
+			}
 		},
 		toggleFlagFilter() {
 			this.flagFilter = !this.flagFilter;
@@ -332,17 +344,6 @@ export default {
 			font-size: 26px;
 			font-weight: 600;
 		}
-
-		// .delete.material-icons {
-		// 	font-size: 28px;
-		// 	cursor: pointer;
-		// 	user-select: none;
-		// 	-webkit-user-drag: none;
-		// 	&:hover,
-		// 	&:focus {
-		// 		filter: brightness(90%);
-		// 	}
-		// }
 	}
 
 	.sidebar-body {
