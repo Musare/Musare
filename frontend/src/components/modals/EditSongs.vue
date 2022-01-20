@@ -8,7 +8,7 @@
 		@flagSong="flagSong"
 		@nextSong="editNextSong"
 	>
-		<template #sidebar>
+		<template v-if="items.length > 1" #sidebar>
 			<div class="sidebar">
 				<header class="sidebar-head">
 					<h2 class="sidebar-title is-marginless">Edit Queue</h2>
