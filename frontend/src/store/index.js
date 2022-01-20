@@ -10,6 +10,7 @@ import station from "./modules/station";
 import admin from "./modules/admin";
 
 import editSongModal from "./modules/modals/editSong";
+import editSongsModal from "./modules/modals/editSongs";
 import importAlbumModal from "./modules/modals/importAlbum";
 import editPlaylistModal from "./modules/modals/editPlaylist";
 import manageStationModal from "./modules/modals/manageStation";
@@ -31,6 +32,7 @@ export default createStore({
 			namespaced: true,
 			modules: {
 				editSong: editSongModal,
+				editSongs: editSongsModal,
 				importAlbum: importAlbumModal,
 				editPlaylist: editPlaylistModal,
 				manageStation: manageStationModal,

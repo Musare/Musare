@@ -111,7 +111,7 @@
 				</footer>
 			</div>
 		</template>
-		<template #footer-actions="slotProps">
+		<template #footer-actions>
 			<div>
 				<button class="button is-primary" @click="editNextSong()">
 					Next
@@ -141,14 +141,6 @@ export default {
 	props: {},
 	data() {
 		return {
-			songIds: [
-				"58c8513977eadd0bfc3afced",
-				"58c8513977eadd0bfc3afcf3",
-				"58c8513977eadd0bfc3afd0c",
-				"58c8513977eadd0bfc3afd19",
-				"61a208911a62abe1765ed027",
-				"61a63326e32fe2f3c76fad61"
-			],
 			items: [],
 			currentSong: {},
 			closed: false
@@ -160,6 +152,9 @@ export default {
 				item => item.song._id === this.currentSong._id
 			);
 		},
+		...mapState("modals/editSongs", {
+			songIds: state => state.songIds
+		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})

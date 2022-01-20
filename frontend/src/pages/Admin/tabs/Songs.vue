@@ -275,7 +275,7 @@
 		</div>
 		<import-album v-if="modals.importAlbum" />
 		<edit-song v-if="modals.editSong" song-type="songs" :key="song._id" />
-		<edit-songs />
+		<edit-songs v-if="modals.editSongs" />
 		<report v-if="modals.report" />
 		<request-song v-if="modals.requestSong" />
 		<bulk-actions v-if="modals.bulkActions" :type="bulkActionsType" />
@@ -680,12 +680,9 @@ export default {
 			this.openModal("editSong");
 		},
 		editMany(selectedRows) {
-			if (selectedRows.length === 1) {
-				this.editSong(selectedRows[0]._id);
-				this.openModal("editSong");
-			} else {
-				new Toast("Bulk editing not yet implemented.");
-			}
+			const songIds = selectedRows.map(row => row._id);
+			this.editSongs(songIds);
+			this.openModal("editSongs");
 		},
 		verifyOne(songId) {
 			this.socket.dispatch("songs.verify", songId, res => {
@@ -791,6 +788,7 @@ export default {
 			};
 		},
 		...mapActions("modals/editSong", ["editSong"]),
+		...mapActions("modals/editSongs", ["editSongs"]),
 		...mapActions("modals/confirm", ["updateConfirmMessage"]),
 		...mapActions("modalVisibility", ["openModal"])
 	}
