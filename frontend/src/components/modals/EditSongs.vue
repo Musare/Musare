@@ -163,6 +163,8 @@ export default {
 					song
 				});
 			});
+
+			this.editNextSong();
 		});
 
 		this.socket.on(`event:admin.song.updated`, res => {
