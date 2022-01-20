@@ -161,7 +161,11 @@
 					</button>
 				</footer>
 			</div>
-			<div v-if="sidebarMobileActive" class="sidebar-overlay"></div>
+			<div
+				v-if="sidebarMobileActive"
+				class="sidebar-overlay"
+				@click="toggleMobileSidebar()"
+			></div>
 		</template>
 	</edit-song>
 </template>
