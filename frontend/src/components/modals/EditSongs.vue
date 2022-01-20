@@ -153,7 +153,8 @@ export default {
 			);
 		},
 		...mapState("modals/editSongs", {
-			songIds: state => state.songIds
+			songIds: state => state.songIds,
+			songPrefillData: state => state.songPrefillData
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -195,7 +196,10 @@ export default {
 	},
 	methods: {
 		pickSong(song) {
-			this.editSong(song._id);
+			this.editSong({
+				songId: song._id,
+				prefill: this.songPrefillData[song._id]
+			});
 			this.currentSong = song;
 			// this.items[
 			// 	this.items.findIndex(item => item.song._id === song._id)

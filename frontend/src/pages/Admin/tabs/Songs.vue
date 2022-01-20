@@ -676,12 +676,14 @@ export default {
 	},
 	methods: {
 		editOne(song) {
-			this.editSong(song._id);
+			this.editSong({ songId: song._id });
 			this.openModal("editSong");
 		},
 		editMany(selectedRows) {
-			const songIds = selectedRows.map(row => row._id);
-			this.editSongs(songIds);
+			const songs = selectedRows.map(row => ({
+				songId: row._id
+			}));
+			this.editSongs(songs);
 			this.openModal("editSongs");
 		},
 		verifyOne(songId) {

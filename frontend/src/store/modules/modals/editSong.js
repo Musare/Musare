@@ -19,7 +19,7 @@ export default {
 	getters: {},
 	actions: {
 		showTab: ({ commit }, tab) => commit("showTab", tab),
-		editSong: ({ commit }, songId) => commit("editSong", songId),
+		editSong: ({ commit }, song) => commit("editSong", song),
 		setSong: ({ commit }, song) => commit("setSong", song),
 		resetSong: ({ commit }, songId) => commit("resetSong", songId),
 		stopVideo: ({ commit }) => commit("stopVideo"),
@@ -47,8 +47,9 @@ export default {
 		showTab(state, tab) {
 			state.tab = tab;
 		},
-		editSong(state, songId) {
-			state.songId = songId;
+		editSong(state, song) {
+			state.songId = song.songId;
+			state.prefillData = song.prefill ? song.prefill : {};
 		},
 		setSong(state, song) {
 			if (song.discogs === undefined) song.discogs = null;

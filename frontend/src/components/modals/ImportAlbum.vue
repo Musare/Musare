@@ -305,7 +305,7 @@
 				<button class="button is-primary" @click="tryToAutoMove()">
 					Try to auto move
 				</button>
-				<button class="button is-primary" @click="editSongs()">
+				<button class="button is-primary" @click="startEditingSongs()">
 					Edit songs
 				</button>
 				<p class="is-expanded checkbox-control">
@@ -348,7 +348,7 @@ export default {
 			isImportingPlaylist: false,
 			trackSongs: [],
 			songsToEdit: [],
-			currentEditSongIndex: 0,
+			// currentEditSongIndex: 0,
 			search: {
 				playlist: {
 					query: ""
@@ -399,13 +399,6 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
-	watch: {
-		/* eslint-disable */
-		"modals.editSong": function (value) {
-			if (!value) this.editNextSong();
-		}
-		/* eslint-enable */
-	},
 	mounted() {
 		ws.onConnect(this.init);
 
@@ -423,8 +416,7 @@ export default {
 		init() {
 			this.socket.dispatch("apis.joinRoom", "import-album");
 		},
-		editSongs() {
-			this.updateEditingSongs(true);
+		startEditingSongs() {
 			this.songsToEdit = [];
 			this.trackSongs.forEach((songs, index) => {
 				songs.forEach(song => {
@@ -436,39 +428,31 @@ export default {
 					delete discogsAlbum.expanded;
 					delete discogsAlbum.gotMoreInfo;
 
-					this.songsToEdit.push({
+					const songToEdit = {
 						songId: song._id,
-						discogs: discogsAlbum
-					});
+						prefill: {
+							discogs: discogsAlbum
+						}
+					};
+
+					if (this.prefillDiscogs) {
+						songToEdit.prefill.title = discogsAlbum.track.title;
+						songToEdit.prefill.thumbnail =
+							discogsAlbum.album.albumArt;
+						songToEdit.prefill.genres = JSON.parse(
+							JSON.stringify(discogsAlbum.album.genres)
+						);
+						songToEdit.prefill.artists = JSON.parse(
+							JSON.stringify(discogsAlbum.album.artists)
+						);
+					}
+
+					this.songsToEdit.push(songToEdit);
 				});
 			});
-			this.editNextSong();
-		},
-		editNextSong() {
-			if (this.editingSongs) {
-				setTimeout(() => {
-					const song = {
-						_id: this.songsToEdit[this.currentEditSongIndex].songId,
-						discogs:
-							this.songsToEdit[this.currentEditSongIndex].discogs
-					};
-					if (song.discogs && this.prefillDiscogs)
-						song.prefill = {
-							title: song.discogs.track.title,
-							thumbnail: song.discogs.album.albumArt,
-							genres: JSON.parse(
-								JSON.stringify(song.discogs.album.genres)
-							),
-							artists: JSON.parse(
-								JSON.stringify(song.discogs.album.artists)
-							)
-						};
-					console.log(song);
-					this.editSong(song._id);
-					this.currentEditSongIndex += 1;
-					this.openModal("editSong");
-				}, 500);
-			}
+
+			this.editSongs(this.songsToEdit);
+			this.openModal("editSongs");
 		},
 		log(evt) {
 			window.console.log(evt);
@@ -682,7 +666,7 @@ export default {
 			"togglePrefillDiscogs",
 			"updatePlaylistSong"
 		]),
-		...mapActions("modals/editSong", ["editSong"]),
+		...mapActions("modals/editSongs", ["editSongs"]),
 		...mapActions("modalVisibility", ["closeModal", "openModal"])
 	}
 };

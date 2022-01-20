@@ -453,14 +453,6 @@
 						@click="save(song, true, true)"
 					/>
 
-					<button
-						class="button is-danger"
-						@click="stopEditingSongs()"
-						v-if="modals.importAlbum && editingSongs"
-					>
-						Stop editing songs
-					</button>
-
 					<div class="right">
 						<button
 							v-if="!song.verified"
@@ -604,11 +596,9 @@ export default {
 			video: state => state.video,
 			song: state => state.song,
 			songId: state => state.songId,
+			prefillData: state => state.prefillData,
 			originalSong: state => state.originalSong,
 			reports: state => state.reports
-		}),
-		...mapState("modals/importAlbum", {
-			editingSongs: state => state.editingSongs
 		}),
 		...mapState("modalVisibility", {
 			modals: state => state.modals
@@ -1071,20 +1061,11 @@ export default {
 				songId, // Was this.song._id
 				res => {
 					if (res.status === "success") {
-						const { song } = res.data;
+						let { song } = res.data;
 
-						// if (this.song.prefill)
-						// 	song = Object.assign(song, this.song.prefill);
-
-						// if (this.song.discogs)
-						// 	song = {
-						// 		...song,
-						// 		discogs: this.song.discogs
-						// 	};
+						song = Object.assign(song, this.prefillData);
 
 						this.setSong(song);
-
-						console.log(321);
 
 						this.songDataLoaded = true;
 
@@ -1128,10 +1109,6 @@ export default {
 					this.updateReports(res.data.reports);
 				}
 			);
-		},
-		stopEditingSongs() {
-			this.updateEditingSongs(false);
-			this.closeModal("editSong");
 		},
 		importAlbum(result) {
 			this.selectDiscogsAlbum(result);
@@ -1614,10 +1591,7 @@ export default {
 				params: null
 			};
 		},
-		...mapActions("modals/importAlbum", [
-			"selectDiscogsAlbum",
-			"updateEditingSongs"
-		]),
+		...mapActions("modals/importAlbum", ["selectDiscogsAlbum"]),
 		...mapActions({
 			showTab(dispatch, payload) {
 				this.$refs[`${payload}-tab`].scrollIntoView({
