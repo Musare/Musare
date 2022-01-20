@@ -854,7 +854,7 @@ export default {
 		});
 	},
 	methods: {
-		init(why) {
+		init() {
 			if (this.songId) this.loadSong(this.songId);
 			else if (!this.bulk) {
 				new Toast("You can't open EditSong without editing a song");
@@ -1043,6 +1043,8 @@ export default {
 					}
 				);
 			});
+
+			return null;
 		},
 		unloadSong(songId) {
 			this.songDataLoaded = false;
