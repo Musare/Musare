@@ -5,6 +5,8 @@
 		@savedSuccess="onSavedSuccess"
 		@savedError="onSavedError"
 		@saving="onSaving"
+		@flagSong="flagSong"
+		@nextSong="editNextSong"
 	>
 		<template #sidebar>
 			<div class="sidebar">
@@ -109,16 +111,6 @@
 						Close
 					</button>
 				</footer>
-			</div>
-		</template>
-		<template #footer-actions>
-			<div>
-				<button class="button is-primary" @click="editNextSong()">
-					Next
-				</button>
-				<button class="button is-primary" @click="flagSong()">
-					Flag
-				</button>
 			</div>
 		</template>
 	</edit-song>

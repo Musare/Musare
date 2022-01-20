@@ -31,7 +31,10 @@ export default {
 				case "save-failure":
 					return `<i class="material-icons icon-with-button">error_outline</i>Failed to save`;
 				case "disabled":
+				case "saving":
 					return "Saving...";
+				case "verifying":
+					return "Verifying...";
 				default:
 					return this.defaultMessage
 						? this.defaultMessage
@@ -44,6 +47,8 @@ export default {
 					return "is-success";
 				case "save-failure":
 					return `is-danger`;
+				case "saving":
+				case "verifying":
 				case "disabled":
 					return "is-default";
 				default:

@@ -442,21 +442,36 @@
 				</div>
 			</template>
 			<template #footer>
-				<slot name="footer-actions" :song="song" />
+				<div v-if="bulk">
+					<button class="button is-primary" @click="editNextSong()">
+						Next
+					</button>
+					<button class="button is-primary" @click="flagSong()">
+						Flag
+					</button>
+				</div>
 				<div>
 					<save-button
 						ref="saveButton"
-						@clicked="save(song, false, false)"
+						@clicked="save(song, false, false, 'saveButton')"
 					/>
 					<save-button
 						ref="saveAndCloseButton"
-						default-message="Save and close"
-						@clicked="save(song, false, true)"
+						:default-message="
+							bulk ? `Save and next` : `Save and close`
+						"
+						@clicked="save(song, false, true, 'saveAndCloseButton')"
 					/>
 					<save-button
 						ref="saveVerifyAndCloseButton"
-						default-message="Save, verify and close"
-						@click="save(song, true, true)"
+						:default-message="
+							bulk
+								? `Save, verify and next`
+								: `Save, verify and close`
+						"
+						@click="
+							save(song, true, true, 'saveVerifyAndCloseButton')
+						"
 					/>
 
 					<div class="right">
@@ -562,7 +577,7 @@ export default {
 		sector: { type: String, default: "admin" },
 		bulk: { type: Boolean, default: false }
 	},
-	emits: ["error", "savedSuccess", "savedError"],
+	emits: ["error", "savedSuccess", "savedError", "flagSong", "nextSong"],
 	data() {
 		return {
 			songDataLoaded: false,
@@ -747,7 +762,7 @@ export default {
 			ctrl: true,
 			preventDefault: true,
 			handler: () => {
-				this.save(this.song, false, false);
+				this.save(this.song, false, false, "saveButton");
 			}
 		});
 
@@ -757,7 +772,7 @@ export default {
 			alt: true,
 			preventDefault: true,
 			handler: () => {
-				this.save(this.song, true);
+				this.save(this.song, false, true, "saveAndCloseButton");
 			}
 		});
 
@@ -769,6 +784,7 @@ export default {
 			preventDefault: true,
 			handler: () => {
 				// alert("not implemented yet");
+				this.save(this.song, true, true, "saveVerifyAndCloseButton");
 			}
 		});
 
@@ -1126,15 +1142,12 @@ export default {
 			this.openModal("importAlbum");
 			this.closeModal("editSong");
 		},
-		save(songToCopy, verify, close) {
+		save(songToCopy, verify, closeOrNext, saveButtonRefName) {
 			const song = JSON.parse(JSON.stringify(songToCopy));
 
 			this.$emit("saving", song._id);
 
-			let saveButtonRef = this.$refs.saveButton;
-			if (close && !verify) saveButtonRef = this.$refs.saveAndCloseButton;
-			else if (close && verify)
-				saveButtonRef = this.$refs.saveVerifyAndCloseButton;
+			const saveButtonRef = this.$refs[saveButtonRefName];
 
 			if (!this.youtubeError && this.youtubeVideoDuration === "0.000") {
 				saveButtonRef.handleFailedSave();
@@ -1310,23 +1323,49 @@ export default {
 				return new Toast('Thumbnail must start with "http://".');
 			}
 
-			saveButtonRef.status = "disabled";
+			saveButtonRef.status = "saving";
 
 			return this.socket.dispatch(`songs.update`, song._id, song, res => {
 				new Toast(res.message);
 
-				if (res.status === "success")
-					saveButtonRef.handleSuccessfulSave();
-				else saveButtonRef.handleFailedSave();
-
-				if (res.status === "success")
-					this.$emit("savedSuccess", song._id);
-				else if (res.status === "error")
+				if (res.status === "error") {
+					saveButtonRef.handleFailedSave();
 					this.$emit("savedError", song._id);
+					return;
+				}
 
-				if (verify) this.verify(this.song._id);
-				if (close) this.closeModal("editSong");
+				if (verify) {
+					saveButtonRef.status = "verifying";
+					this.verify(this.song._id, success => {
+						if (success) {
+							saveButtonRef.handleSuccessfulSave();
+							this.$emit("savedSuccess", song._id);
+
+							if (closeOrNext && this.bulk)
+								this.$emit("nextSong");
+							else if (closeOrNext) this.closeModal("editSong");
+						} else {
+							saveButtonRef.handleFailedSave();
+							this.$emit("savedError", song._id);
+						}
+					});
+					return;
+				}
+
+				saveButtonRef.handleSuccessfulSave();
+				this.$emit("savedSuccess", song._id);
+
+				if (!closeOrNext) return;
+
+				if (this.bulk) this.$emit("nextSong");
+				else this.closeModal("editSong");
 			});
+		},
+		editNextSong() {
+			this.$emit("nextSong");
+		},
+		flagSong() {
+			this.$emit("flagSong");
 		},
 		getAlbumData(type) {
 			if (!this.song.discogs) return;
@@ -1560,9 +1599,10 @@ export default {
 				this.activityWatchVideoLastStatus = "not_playing";
 			}
 		},
-		verify(id) {
+		verify(id, cb) {
 			this.socket.dispatch("songs.verify", id, res => {
 				new Toast(res.message);
+				if (cb) cb(res.status === "success");
 			});
 		},
 		unverify(id) {
