@@ -446,8 +446,8 @@
 					<button class="button is-primary" @click="editNextSong()">
 						Next
 					</button>
-					<button class="button is-primary" @click="flagSong()">
-						Flag
+					<button class="button is-primary" @click="toggleFlag()">
+						Toggle Flag
 					</button>
 				</div>
 				<div>
@@ -1364,8 +1364,8 @@ export default {
 		editNextSong() {
 			this.$emit("nextSong");
 		},
-		flagSong() {
-			this.$emit("flagSong");
+		toggleFlag() {
+			this.$emit("toggleFlag");
 		},
 		getAlbumData(type) {
 			if (!this.song.discogs) return;

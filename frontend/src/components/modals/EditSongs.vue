@@ -5,7 +5,7 @@
 		@savedSuccess="onSavedSuccess"
 		@savedError="onSavedError"
 		@saving="onSaving"
-		@flagSong="flagSong"
+		@toggleFlag="toggleFlag"
 		@nextSong="editNextSong"
 	>
 		<template v-if="items.length > 1" #sidebar>
@@ -19,7 +19,9 @@
 				<section class="sidebar-body">
 					<div
 						class="item"
-						v-for="{ status, flagged, song } in items"
+						v-for="(
+							{ status, flagged, song }, index
+						) in filteredItems"
 						:key="song._id"
 					>
 						<song-item
@@ -103,12 +105,37 @@
 									edit
 								</i>
 							</template>
+							<template #tippyActions>
+								<i
+									class="material-icons flag-icon"
+									:class="{ flagged }"
+									content="Toggle Flag"
+									v-tippy
+									@click="toggleFlag(index)"
+								>
+									flag_circle
+								</i>
+							</template>
 						</song-item>
 					</div>
+					<p v-if="filteredItems.length === 0" class="no-items">
+						{{
+							flagFilter
+								? "No flagged songs queued"
+								: "No songs queued"
+						}}
+					</p>
 				</section>
 				<footer class="sidebar-foot">
-					<button @click="closeEditSongs()" class="button is-primary">
-						Close
+					<button
+						@click="toggleFlagFilter()"
+						class="button is-primary"
+					>
+						{{
+							flagFilter
+								? "Show All Songs"
+								: "Show Only Flagged Songs"
+						}}
 					</button>
 				</footer>
 			</div>
@@ -135,7 +162,8 @@ export default {
 		return {
 			items: [],
 			currentSong: {},
-			closed: false
+			closed: false,
+			flagFilter: false
 		};
 	},
 	computed: {
@@ -143,6 +171,24 @@ export default {
 			return this.items.findIndex(
 				item => item.song._id === this.currentSong._id
 			);
+		},
+		filteredEditingItemIndex() {
+			return this.filteredItems.findIndex(
+				item => item.song._id === this.currentSong._id
+			);
+		},
+		filteredItems: {
+			get() {
+				return this.items.filter(item =>
+					this.flagFilter ? item.flagged : true
+				);
+			},
+			set(newItem) {
+				const index = this.items.findIndex(
+					item => item.song._id === newItem._id
+				);
+				this.item[index] = newItem;
+			}
 		},
 		...mapState("modals/editSongs", {
 			songIds: state => state.songIds,
@@ -203,27 +249,26 @@ export default {
 			this.closed = true;
 		},
 		editNextSong() {
-			const currentlyEditingSongIndex = this.editingItemIndex;
+			const currentlyEditingSongIndex = this.filteredEditingItemIndex;
 			let newEditingSongIndex = -1;
-
-			for (
-				let i = currentlyEditingSongIndex + 1;
-				i < this.items.length;
-				i += 1
-			) {
-				if (this.items[i].status !== "done") {
+			const index =
+				currentlyEditingSongIndex + 1 === this.filteredItems.length
+					? 0
+					: currentlyEditingSongIndex + 1;
+			for (let i = index; i < this.filteredItems.length; i += 1) {
+				if (!this.flagFilter || this.filteredItems[i].flagged) {
 					newEditingSongIndex = i;
 					break;
 				}
 			}
 
 			if (newEditingSongIndex > -1)
-				this.pickSong(this.items[newEditingSongIndex].song);
-			// else edit no song
+				this.pickSong(this.filteredItems[newEditingSongIndex].song);
 		},
-		flagSong() {
-			if (this.editingItemIndex > -1)
-				this.items[this.editingItemIndex].flagged = true;
+		toggleFlag(songIndex = null) {
+			const index = songIndex || this.editingItemIndex;
+			if (index > -1)
+				this.items[index].flagged = !this.items[index].flagged;
 		},
 		onSavedSuccess(songId) {
 			const itemIndex = this.items.findIndex(
@@ -242,6 +287,9 @@ export default {
 				item => item.song._id === songId
 			);
 			if (itemIndex > -1) this.items[itemIndex].status = "saving";
+		},
+		toggleFlagFilter() {
+			this.flagFilter = !this.flagFilter;
 		},
 		...mapActions("modals/editSong", ["editSong"])
 	}
@@ -335,6 +383,10 @@ export default {
 
 				.flag-icon {
 					color: var(--orange);
+
+					&.flagged {
+						color: var(--grey);
+					}
 				}
 
 				&.removed {
@@ -344,31 +396,20 @@ export default {
 				}
 			}
 		}
+
+		.no-items {
+			text-align: center;
+			font-size: 18px;
+		}
 	}
 
 	.sidebar-foot {
 		border-top: 1px solid var(--light-grey-2);
 		border-radius: 0 0 5px 5px;
-		overflow: initial;
-		column-gap: 16px;
 
-		// & > div {
-		// 	display: flex;
-		// 	flex-grow: 1;
-		// 	column-gap: 16px;
-		// }
-
-		// .right {
-		// 	display: flex;
-		// 	margin-left: auto;
-		// 	margin-right: 0;
-		// 	justify-content: flex-end;
-		// 	column-gap: 16px;
-		// }
-
-		// &.blank {
-		// 	padding: 10px;
-		// }
+		.button {
+			flex: 1;
+		}
 	}
 }
 </style>
