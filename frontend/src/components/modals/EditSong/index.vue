@@ -13,8 +13,14 @@
 				<div v-if="!songId" class="notice-container">
 					<h4>No song has been selected</h4>
 				</div>
-				<div v-if="songId && !songDataLoaded" class="notice-container">
+				<div
+					v-if="songId && !songDataLoaded && !songNotFound"
+					class="notice-container"
+				>
 					<h4>Song hasn't loaded yet</h4>
+				</div>
+				<div v-if="songId && songNotFound" class="notice-container">
+					<h4>Song was not found</h4>
 				</div>
 				<div class="left-section" v-show="songDataLoaded">
 					<div class="top-section">
@@ -587,7 +593,8 @@ export default {
 					genres: [],
 					tags: []
 				}
-			}
+			},
+			songNotFound: false
 		};
 	},
 	computed: {
@@ -1058,6 +1065,7 @@ export default {
 		},
 		loadSong(songId) {
 			console.log(`LOAD SONG ${songId}`);
+			this.songNotFound = false;
 			this.socket.dispatch(
 				`songs.getSongFromSongId`,
 				songId, // Was this.song._id
@@ -1099,6 +1107,7 @@ export default {
 						}
 					} else {
 						new Toast("Song with that ID not found");
+						if (this.bulk) this.songNotFound = true;
 						if (!this.bulk) this.closeModal("editSong");
 					}
 				}
