@@ -11,6 +11,7 @@
 			}"
 		>
 			<header class="modal-card-head">
+				<slot name="toggleMobileSidebar" />
 				<h2 class="modal-card-title is-marginless">
 					{{ title }}
 				</h2>

@@ -6,6 +6,9 @@
 			:size="'wide'"
 			:split="true"
 		>
+			<template #toggleMobileSidebar>
+				<slot name="toggleMobileSidebar" />
+			</template>
 			<template #sidebar>
 				<slot name="sidebar" />
 			</template>

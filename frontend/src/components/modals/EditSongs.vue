@@ -8,10 +8,30 @@
 		@toggleFlag="toggleFlag"
 		@nextSong="editNextSong"
 	>
+		<template #toggleMobileSidebar>
+			<i
+				class="material-icons toggle-sidebar-icon"
+				:content="`${
+					sidebarMobileActive ? 'Close' : 'Open'
+				} Edit Queue`"
+				v-tippy
+				@click="toggleMobileSidebar()"
+				>expand_circle_down</i
+			>
+		</template>
 		<template v-if="items.length > 1" #sidebar>
-			<div class="sidebar">
+			<div class="sidebar" :class="{ active: sidebarMobileActive }">
 				<header class="sidebar-head">
 					<h2 class="sidebar-title is-marginless">Edit Queue</h2>
+					<i
+						class="material-icons toggle-sidebar-icon"
+						:content="`${
+							sidebarMobileActive ? 'Close' : 'Open'
+						} Edit Queue`"
+						v-tippy
+						@click="toggleMobileSidebar()"
+						>expand_circle_down</i
+					>
 				</header>
 				<section class="sidebar-body">
 					<div
@@ -141,6 +161,7 @@
 					</button>
 				</footer>
 			</div>
+			<div v-if="sidebarMobileActive" class="sidebar-overlay"></div>
 		</template>
 	</edit-song>
 </template>
@@ -165,7 +186,8 @@ export default {
 			items: [],
 			currentSong: {},
 			closed: false,
-			flagFilter: false
+			flagFilter: false,
+			sidebarMobileActive: false
 		};
 	},
 	computed: {
@@ -303,14 +325,22 @@ export default {
 		toggleFlagFilter() {
 			this.flagFilter = !this.flagFilter;
 		},
+		toggleMobileSidebar() {
+			this.sidebarMobileActive = !this.sidebarMobileActive;
+		},
 		...mapActions("modals/editSong", ["editSong"])
 	}
 };
 </script>
 
 <style lang="scss" scoped>
+.toggle-sidebar-icon {
+	display: none;
+}
+
 .sidebar {
-	width: 350px;
+	width: 100%;
+	max-width: 350px;
 	z-index: 2000;
 	display: flex;
 	flex-direction: column;
@@ -319,7 +349,6 @@ export default {
 	max-height: calc(100vh - 40px);
 	overflow: auto;
 	margin-right: 8px;
-	// padding: 10px;
 	border-radius: 5px;
 
 	.sidebar-head,
@@ -411,6 +440,48 @@ export default {
 		.button {
 			flex: 1;
 		}
+	}
+
+	.sidebar-overlay {
+		display: none;
+	}
+}
+
+@media only screen and (max-width: 1580px) {
+	.toggle-sidebar-icon {
+		display: flex;
+		margin-right: 5px;
+		transform: rotate(90deg);
+		cursor: pointer;
+	}
+
+	.sidebar {
+		display: none;
+
+		&.active {
+			display: flex;
+			position: absolute;
+			z-index: 2010;
+			top: 20px;
+			left: 20px;
+
+			.sidebar-head .toggle-sidebar-icon {
+				display: flex;
+				margin-left: 5px;
+				transform: rotate(-90deg);
+			}
+		}
+	}
+
+	.sidebar-overlay {
+		display: flex;
+		position: absolute;
+		z-index: 2009;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: rgba(10, 10, 10, 0.85);
 	}
 }
 </style>
