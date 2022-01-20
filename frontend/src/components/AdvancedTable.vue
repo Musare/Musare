@@ -751,7 +751,7 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapGetters, mapState } from "vuex";
 import draggable from "vuedraggable";
 
 import Toast from "toasters";
@@ -927,6 +927,12 @@ export default {
 				this.$slots["bulk-actions-right"] != null
 			);
 		},
+		aModalIsOpen() {
+			return Object.keys(this.currentlyActive).length > 0;
+		},
+		...mapState({
+			currentlyActive: state => state.modalVisibility.currentlyActive
+		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
@@ -1150,9 +1156,16 @@ export default {
 			keyboardShortcuts.registerShortcut("advancedTable.previousPage", {
 				keyCode: 37, // 'Left arrow' key
 				ctrl: true,
-				preventDefault: true,
-				handler: () => {
+				preventDefault: false,
+				handler: event => {
 					// Previous page
+					if (this.aModalIsOpen) return;
+					if (
+						document.activeElement.nodeName === "INPUT" ||
+						document.activeElement.nodeName === "TEXTAREA"
+					)
+						return;
+					event.preventDefault();
 					this.changePage(this.page - 1);
 				}
 			});
@@ -1160,9 +1173,16 @@ export default {
 			keyboardShortcuts.registerShortcut("advancedTable.nextPage", {
 				keyCode: 39, // 'Right arrow' key
 				ctrl: true,
-				preventDefault: true,
-				handler: () => {
+				preventDefault: false,
+				handler: event => {
 					// Next page
+					if (this.aModalIsOpen) return;
+					if (
+						document.activeElement.nodeName === "INPUT" ||
+						document.activeElement.nodeName === "TEXTAREA"
+					)
+						return;
+					event.preventDefault();
 					this.changePage(this.page + 1);
 				}
 			});
@@ -1171,9 +1191,16 @@ export default {
 				keyCode: 37, // 'Left arrow' key
 				ctrl: true,
 				shift: true,
-				preventDefault: true,
-				handler: () => {
+				preventDefault: false,
+				handler: event => {
 					// First page
+					if (this.aModalIsOpen) return;
+					if (
+						document.activeElement.nodeName === "INPUT" ||
+						document.activeElement.nodeName === "TEXTAREA"
+					)
+						return;
+					event.preventDefault();
 					this.changePage(1);
 				}
 			});
@@ -1182,9 +1209,16 @@ export default {
 				keyCode: 39, // 'Right arrow' key
 				ctrl: true,
 				shift: true,
-				preventDefault: true,
-				handler: () => {
+				preventDefault: false,
+				handler: event => {
 					// Last page
+					if (this.aModalIsOpen) return;
+					if (
+						document.activeElement.nodeName === "INPUT" ||
+						document.activeElement.nodeName === "TEXTAREA"
+					)
+						return;
+					event.preventDefault();
 					this.changePage(this.lastPage);
 				}
 			});
@@ -1198,6 +1232,7 @@ export default {
 					preventDefault: false,
 					handler: () => {
 						// Reset local storage
+						if (this.aModalIsOpen) return;
 						console.log("Reset local storage");
 						localStorage.removeItem(
 							`advancedTableSettings:${this.name}`
@@ -1211,8 +1246,15 @@ export default {
 			keyboardShortcuts.registerShortcut("advancedTable.selectAll", {
 				keyCode: 65, // 'A' key
 				ctrl: true,
-				preventDefault: true,
-				handler: () => {
+				preventDefault: false,
+				handler: event => {
+					if (this.aModalIsOpen) return;
+					if (
+						document.activeElement.nodeName === "INPUT" ||
+						document.activeElement.nodeName === "TEXTAREA"
+					)
+						return;
+					event.preventDefault();
 					this.toggleAllRows();
 				}
 			});
@@ -1227,6 +1269,7 @@ export default {
 						preventDefault: true,
 						handler: () => {
 							// Execute popup action 1-9
+							if (this.aModalIsOpen) return;
 							if (this.selectedRows.length === 0) return;
 
 							const bulkActionsElement =
@@ -1248,6 +1291,7 @@ export default {
 					preventDefault: true,
 					handler: () => {
 						// Select popup action 0
+						if (this.aModalIsOpen) return;
 						if (this.selectedRows.length === 0) return;
 
 						const bulkActionsElement =
