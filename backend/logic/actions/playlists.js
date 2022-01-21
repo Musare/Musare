@@ -1102,8 +1102,7 @@ export default {
 					async.each(
 						playlist.songs,
 						(song, nextSong) => {
-							if (song.youtubeId === youtubeId)
-								return next("That song is already in the playlist");
+							if (song.youtubeId === youtubeId) return next("That song is already in the playlist");
 							return nextSong();
 						},
 						err => next(err, playlist)

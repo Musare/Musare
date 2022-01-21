@@ -283,7 +283,7 @@ class _YouTubeModule extends CoreClass {
 						YouTubeModule.log("ERROR", "GET_PLAYLIST", "Some error has occurred.", err.message);
 						reject(new Error(err.message));
 					} else {
-						resolve({ songs: response.filteredSongs ? response.filteredSongs.youtubeIds : response.songs });
+						resolve({ songs: response.filteredSongs ? response.filteredSongs.videoIds : response.songs });
 					}
 				}
 			);
@@ -400,14 +400,14 @@ class _YouTubeModule extends CoreClass {
 							return reject(new Error("An error has occured. Please try again later."));
 						}
 
-						const youtubeIds = [];
+						const videoIds = [];
 
 						res.data.items.forEach(item => {
-							const youtubeId = item.id;
+							const videoId = item.id;
 
 							if (!item.topicDetails) return;
 							if (item.topicDetails.topicCategories.indexOf("https://en.wikipedia.org/wiki/Music") !== -1)
-								youtubeIds.push(youtubeId);
+								videoIds.push(videoId);
 						});
 
 						return YouTubeModule.runJob(
@@ -415,7 +415,7 @@ class _YouTubeModule extends CoreClass {
 							{ videoIds: payload.videoIds, page: page + 1 },
 							this
 						)
-							.then(result => resolve({ youtubeIds: youtubeIds.concat(result.youtubeIds) }))
+							.then(result => resolve({ videoIds: videoIds.concat(result.videoIds) }))
 							.catch(err => reject(err));
 					})
 					.catch(err => {
