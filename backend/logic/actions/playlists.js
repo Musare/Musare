@@ -1089,23 +1089,25 @@ export default {
 							if (!playlist || playlist.createdBy !== session.userId) {
 								DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
 									userModel.findOne({ _id: session.userId }, (err, user) => {
-										if (user && user.role === "admin") return next();
+										if (user && user.role === "admin") return next(null, playlist);
 										return next("Something went wrong when trying to get the playlist");
 									});
 								});
-							}
-
-							return async.each(
-								playlist.songs,
-								(song, nextSong) => {
-									if (song.youtubeId === youtubeId)
-										return next("That song is already in the playlist");
-									return nextSong();
-								},
-								err => next(err, playlist)
-							);
+							} else next(null, playlist);
 						})
 						.catch(next);
+				},
+
+				(playlist, next) => {
+					async.each(
+						playlist.songs,
+						(song, nextSong) => {
+							if (song.youtubeId === youtubeId)
+								return next("That song is already in the playlist");
+							return nextSong();
+						},
+						err => next(err, playlist)
+					);
 				},
 
 				(playlist, next) => {
