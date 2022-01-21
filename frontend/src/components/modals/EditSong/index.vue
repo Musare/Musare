@@ -5,6 +5,8 @@
 			class="song-modal"
 			:size="'wide'"
 			:split="true"
+			:intercept-close="true"
+			@close="onCloseModal"
 		>
 			<template #toggleMobileSidebar>
 				<slot name="toggleMobileSidebar" />
@@ -580,7 +582,14 @@ export default {
 		sector: { type: String, default: "admin" },
 		bulk: { type: Boolean, default: false }
 	},
-	emits: ["error", "savedSuccess", "savedError", "flagSong", "nextSong"],
+	emits: [
+		"error",
+		"savedSuccess",
+		"savedError",
+		"flagSong",
+		"nextSong",
+		"close"
+	],
 	data() {
 		return {
 			songDataLoaded: false,
@@ -626,7 +635,8 @@ export default {
 			reports: state => state.reports
 		}),
 		...mapState("modalVisibility", {
-			modals: state => state.modals
+			modals: state => state.modals,
+			currentlyActive: state => state.currentlyActive
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -791,17 +801,6 @@ export default {
 			}
 		});
 
-		keyboardShortcuts.registerShortcut("editSong.close", {
-			keyCode: 115,
-			preventDefault: true,
-			handler: () => {
-				this.closeModal("editSong");
-				setTimeout(() => {
-					window.focusedElementBefore.focus();
-				}, 500);
-			}
-		});
-
 		keyboardShortcuts.registerShortcut("editSong.focusTitle", {
 			keyCode: 36,
 			preventDefault: true,
@@ -820,6 +819,18 @@ export default {
 				this.getAlbumData("albumArt");
 				this.getAlbumData("artists");
 				this.getAlbumData("genres");
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.closeModal", {
+			keyCode: 27,
+			handler: () => {
+				if (
+					this.currentlyActive[0] === "editSong" ||
+					this.currentlyActive[0] === "editSongs"
+				) {
+					this.onCloseModal();
+				}
 			}
 		});
 
@@ -871,8 +882,8 @@ export default {
 			"editSong.save",
 			"editSong.saveClose",
 			"editSong.saveVerifyClose",
-			"editSong.close",
-			"editSong.useAllDiscogs"
+			"editSong.useAllDiscogs",
+			"editSong.closeModal"
 		];
 
 		shortcutNames.forEach(shortcutName => {
@@ -1337,6 +1348,8 @@ export default {
 					return;
 				}
 
+				this.updateOriginalSong(song);
+
 				if (verify) {
 					saveButtonRef.status = "verifying";
 					this.verify(this.song._id, success => {
@@ -1645,6 +1658,32 @@ export default {
 				params: null
 			};
 		},
+		onCloseModal() {
+			const songStringified = JSON.stringify({
+				...this.song,
+				verified: null
+			});
+			const originalSongStringified = JSON.stringify({
+				...this.originalSong,
+				verified: null
+			});
+			const unsavedChanges = songStringified !== originalSongStringified;
+
+			if (unsavedChanges) {
+				return this.confirmAction({
+					message:
+						"You have unsaved changes. Are you sure you want to discard unsaved changes?",
+					action: "closeThisModal",
+					params: null
+				});
+			}
+
+			return this.closeThisModal();
+		},
+		closeThisModal() {
+			if (this.bulk) this.$emit("close");
+			else this.closeModal("editSong");
+		},
 		...mapActions("modals/importAlbum", ["selectDiscogsAlbum"]),
 		...mapActions({
 			showTab(dispatch, payload) {
@@ -1661,6 +1700,7 @@ export default {
 			"getCurrentTime",
 			"setSong",
 			"resetSong",
+			"updateOriginalSong",
 			"updateSongField",
 			"updateReports"
 		]),

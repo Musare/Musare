@@ -21,6 +21,8 @@ export default {
 		showTab: ({ commit }, tab) => commit("showTab", tab),
 		editSong: ({ commit }, song) => commit("editSong", song),
 		setSong: ({ commit }, song) => commit("setSong", song),
+		updateOriginalSong: ({ commit }, song) =>
+			commit("updateOriginalSong", song),
 		resetSong: ({ commit }, songId) => commit("resetSong", songId),
 		stopVideo: ({ commit }) => commit("stopVideo"),
 		loadVideoById: ({ commit }, id, skipDuration) =>
@@ -55,6 +57,9 @@ export default {
 			if (song.discogs === undefined) song.discogs = null;
 			state.originalSong = JSON.parse(JSON.stringify(song));
 			state.song = { ...song };
+		},
+		updateOriginalSong(state, song) {
+			state.originalSong = JSON.parse(JSON.stringify(song));
 		},
 		resetSong(state, songId) {
 			state.originalSong = {};

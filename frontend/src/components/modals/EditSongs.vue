@@ -1,173 +1,200 @@
 <template>
-	<edit-song
-		:bulk="true"
-		v-if="!closed && currentSong"
-		@savedSuccess="onSavedSuccess"
-		@savedError="onSavedError"
-		@saving="onSaving"
-		@toggleFlag="toggleFlag"
-		@nextSong="editNextSong"
-	>
-		<template #toggleMobileSidebar>
-			<i
-				class="material-icons toggle-sidebar-icon"
-				:content="`${
-					sidebarMobileActive ? 'Close' : 'Open'
-				} Edit Queue`"
-				v-tippy
-				@click="toggleMobileSidebar()"
-				>expand_circle_down</i
-			>
-		</template>
-		<template v-if="items.length > 1" #sidebar>
-			<div class="sidebar" :class="{ active: sidebarMobileActive }">
-				<header class="sidebar-head">
-					<h2 class="sidebar-title is-marginless">Edit Queue</h2>
-					<i
-						class="material-icons toggle-sidebar-icon"
-						:content="`${
-							sidebarMobileActive ? 'Close' : 'Open'
-						} Edit Queue`"
-						v-tippy
-						@click="toggleMobileSidebar()"
-						>expand_circle_down</i
-					>
-				</header>
-				<section class="sidebar-body">
-					<div
-						class="item"
-						v-for="(
-							{ status, flagged, song }, index
-						) in filteredItems"
-						:key="song._id"
-					>
-						<song-item
-							:song="song"
-							:thumbnail="false"
-							:duration="false"
-							:disabled-actions="
-								song.removed ? ['all'] : ['report', 'edit']
-							"
-							:class="{
-								updated: song.updated,
-								removed: song.removed
-							}"
+	<div>
+		<edit-song
+			:bulk="true"
+			v-if="currentSong"
+			@savedSuccess="onSavedSuccess"
+			@savedError="onSavedError"
+			@saving="onSaving"
+			@toggleFlag="toggleFlag"
+			@nextSong="editNextSong"
+			@close="onClose"
+		>
+			<template #toggleMobileSidebar>
+				<i
+					class="material-icons toggle-sidebar-icon"
+					:content="`${
+						sidebarMobileActive ? 'Close' : 'Open'
+					} Edit Queue`"
+					v-tippy
+					@click="toggleMobileSidebar()"
+					>expand_circle_down</i
+				>
+			</template>
+			<template v-if="items.length > 1" #sidebar>
+				<div class="sidebar" :class="{ active: sidebarMobileActive }">
+					<header class="sidebar-head">
+						<h2 class="sidebar-title is-marginless">Edit Queue</h2>
+						<i
+							class="material-icons toggle-sidebar-icon"
+							:content="`${
+								sidebarMobileActive ? 'Close' : 'Open'
+							} Edit Queue`"
+							v-tippy
+							@click="toggleMobileSidebar()"
+							>expand_circle_down</i
 						>
-							<template #leftIcon>
-								<i
-									v-if="currentSong._id === song._id"
-									class="
-										material-icons
-										item-icon
-										editing-icon
-									"
-									content="Currently editing song"
-									v-tippy="{ theme: 'info' }"
-									@click="toggleDone(index)"
-									>edit</i
-								>
-								<i
-									v-else-if="song.removed"
-									class="
-										material-icons
-										item-icon
-										removed-icon
-									"
-									content="Song removed"
-									v-tippy="{ theme: 'info' }"
-									>delete_forever</i
-								>
-								<i
-									v-else-if="status === 'error'"
-									class="material-icons item-icon error-icon"
-									content="Error saving song"
-									v-tippy="{ theme: 'info' }"
-									@click="toggleDone(index)"
-									>error</i
-								>
-								<i
-									v-else-if="status === 'saving'"
-									class="material-icons item-icon saving-icon"
-									content="Currently saving song"
-									v-tippy="{ theme: 'info' }"
-									>pending</i
-								>
-								<i
-									v-else-if="flagged"
-									class="material-icons item-icon flag-icon"
-									content="Song flagged"
-									v-tippy="{ theme: 'info' }"
-									@click="toggleDone(index)"
-									>flag_circle</i
-								>
-								<i
-									v-else-if="status === 'done'"
-									class="material-icons item-icon done-icon"
-									content="Song marked complete"
-									v-tippy="{ theme: 'info' }"
-									@click="toggleDone(index)"
-									>check_circle</i
-								>
-								<i
-									v-else-if="status === 'todo'"
-									class="material-icons item-icon todo-icon"
-									content="Song marked todo"
-									v-tippy="{ theme: 'info' }"
-									@click="toggleDone(index)"
-									>cancel</i
-								>
-							</template>
-							<template v-if="!song.removed" #actions>
-								<i
-									class="material-icons edit-icon"
-									content="Edit Song"
-									v-tippy
-									@click="pickSong(song)"
-								>
-									edit
-								</i>
-							</template>
-							<template #tippyActions>
-								<i
-									class="material-icons flag-icon"
-									:class="{ flagged }"
-									content="Toggle Flag"
-									v-tippy
-									@click="toggleFlag(index)"
-								>
-									flag_circle
-								</i>
-							</template>
-						</song-item>
-					</div>
-					<p v-if="filteredItems.length === 0" class="no-items">
-						{{
-							flagFilter
-								? "No flagged songs queued"
-								: "No songs queued"
-						}}
-					</p>
-				</section>
-				<footer class="sidebar-foot">
-					<button
-						@click="toggleFlagFilter()"
-						class="button is-primary"
-					>
-						{{
-							flagFilter
-								? "Show All Songs"
-								: "Show Only Flagged Songs"
-						}}
-					</button>
-				</footer>
-			</div>
-			<div
-				v-if="sidebarMobileActive"
-				class="sidebar-overlay"
-				@click="toggleMobileSidebar()"
-			></div>
-		</template>
-	</edit-song>
+					</header>
+					<section class="sidebar-body">
+						<div
+							class="item"
+							v-for="(
+								{ status, flagged, song }, index
+							) in filteredItems"
+							:key="song._id"
+						>
+							<song-item
+								:song="song"
+								:thumbnail="false"
+								:duration="false"
+								:disabled-actions="
+									song.removed ? ['all'] : ['report', 'edit']
+								"
+								:class="{
+									updated: song.updated,
+									removed: song.removed
+								}"
+							>
+								<template #leftIcon>
+									<i
+										v-if="currentSong._id === song._id"
+										class="
+											material-icons
+											item-icon
+											editing-icon
+										"
+										content="Currently editing song"
+										v-tippy="{ theme: 'info' }"
+										@click="toggleDone(index)"
+										>edit</i
+									>
+									<i
+										v-else-if="song.removed"
+										class="
+											material-icons
+											item-icon
+											removed-icon
+										"
+										content="Song removed"
+										v-tippy="{ theme: 'info' }"
+										>delete_forever</i
+									>
+									<i
+										v-else-if="status === 'error'"
+										class="
+											material-icons
+											item-icon
+											error-icon
+										"
+										content="Error saving song"
+										v-tippy="{ theme: 'info' }"
+										@click="toggleDone(index)"
+										>error</i
+									>
+									<i
+										v-else-if="status === 'saving'"
+										class="
+											material-icons
+											item-icon
+											saving-icon
+										"
+										content="Currently saving song"
+										v-tippy="{ theme: 'info' }"
+										>pending</i
+									>
+									<i
+										v-else-if="flagged"
+										class="
+											material-icons
+											item-icon
+											flag-icon
+										"
+										content="Song flagged"
+										v-tippy="{ theme: 'info' }"
+										@click="toggleDone(index)"
+										>flag_circle</i
+									>
+									<i
+										v-else-if="status === 'done'"
+										class="
+											material-icons
+											item-icon
+											done-icon
+										"
+										content="Song marked complete"
+										v-tippy="{ theme: 'info' }"
+										@click="toggleDone(index)"
+										>check_circle</i
+									>
+									<i
+										v-else-if="status === 'todo'"
+										class="
+											material-icons
+											item-icon
+											todo-icon
+										"
+										content="Song marked todo"
+										v-tippy="{ theme: 'info' }"
+										@click="toggleDone(index)"
+										>cancel</i
+									>
+								</template>
+								<template v-if="!song.removed" #actions>
+									<i
+										class="material-icons edit-icon"
+										content="Edit Song"
+										v-tippy
+										@click="pickSong(song)"
+									>
+										edit
+									</i>
+								</template>
+								<template #tippyActions>
+									<i
+										class="material-icons flag-icon"
+										:class="{ flagged }"
+										content="Toggle Flag"
+										v-tippy
+										@click="toggleFlag(index)"
+									>
+										flag_circle
+									</i>
+								</template>
+							</song-item>
+						</div>
+						<p v-if="filteredItems.length === 0" class="no-items">
+							{{
+								flagFilter
+									? "No flagged songs queued"
+									: "No songs queued"
+							}}
+						</p>
+					</section>
+					<footer class="sidebar-foot">
+						<button
+							@click="toggleFlagFilter()"
+							class="button is-primary"
+						>
+							{{
+								flagFilter
+									? "Show All Songs"
+									: "Show Only Flagged Songs"
+							}}
+						</button>
+					</footer>
+				</div>
+				<div
+					v-if="sidebarMobileActive"
+					class="sidebar-overlay"
+					@click="toggleMobileSidebar()"
+				></div>
+			</template>
+		</edit-song>
+		<confirm
+			v-if="modals.editSongsConfirm"
+			@confirmed="handleConfirmed()"
+		/>
+	</div>
 </template>
 
 <script>
@@ -182,6 +209,9 @@ export default {
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong")
 		),
+		Confirm: defineAsyncComponent(() =>
+			import("@/components/modals/Confirm.vue")
+		),
 		SongItem
 	},
 	props: {},
@@ -189,9 +219,13 @@ export default {
 		return {
 			items: [],
 			currentSong: {},
-			closed: false,
 			flagFilter: false,
-			sidebarMobileActive: false
+			sidebarMobileActive: false,
+			confirm: {
+				message: "",
+				action: "",
+				params: null
+			}
 		};
 	},
 	computed: {
@@ -221,6 +255,9 @@ export default {
 		...mapState("modals/editSongs", {
 			songIds: state => state.songIds,
 			songPrefillData: state => state.songPrefillData
+		}),
+		...mapState("modalVisibility", {
+			modals: state => state.modals
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -272,9 +309,6 @@ export default {
 			// this.items[
 			// 	this.items.findIndex(item => item.song._id === song._id)
 			// ].status = "editing";
-		},
-		closeEditSongs() {
-			this.closed = true;
 		},
 		editNextSong() {
 			const currentlyEditingSongIndex = this.filteredEditingItemIndex;
@@ -332,6 +366,51 @@ export default {
 		toggleMobileSidebar() {
 			this.sidebarMobileActive = !this.sidebarMobileActive;
 		},
+		confirmAction(confirm) {
+			this.confirm = confirm;
+			this.updateConfirmMessage(confirm.message);
+			this.openModal("editSongsConfirm");
+		},
+		handleConfirmed() {
+			const { action, params } = this.confirm;
+			if (typeof this[action] === "function") {
+				if (params) this[action](params);
+				else this[action]();
+			}
+			this.confirm = {
+				message: "",
+				action: "",
+				params: null
+			};
+		},
+		onClose() {
+			const doneItems = this.items.filter(
+				item => item.status === "done"
+			).length;
+			const flaggedItems = this.items.filter(item => item.flagged).length;
+			const notDoneItems = this.items.length - doneItems;
+
+			if (doneItems > 0 && notDoneItems > 0)
+				this.confirmAction({
+					message:
+						"You have songs which are not done yet. Are you sure you want to stop editing songs?",
+					action: "closeThisModal",
+					params: null
+				});
+			else if (flaggedItems > 0)
+				this.confirmAction({
+					message:
+						"You have songs which are flagged. Are you sure you want to stop editing songs?",
+					action: "closeThisModal",
+					params: null
+				});
+			else this.closeThisModal();
+		},
+		closeThisModal() {
+			this.closeModal("editSongs");
+		},
+		...mapActions("modals/confirm", ["updateConfirmMessage"]),
+		...mapActions("modalVisibility", ["openModal", "closeModal"]),
 		...mapActions("modals/editSong", ["editSong"])
 	}
 };

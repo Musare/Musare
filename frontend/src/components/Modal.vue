@@ -1,6 +1,6 @@
 <template>
 	<div class="modal is-active">
-		<div class="modal-background" @click="closeCurrentModal()" />
+		<div class="modal-background" @click="closeCurrentModalClick()" />
 		<slot name="sidebar" />
 		<div
 			:class="{
@@ -15,7 +15,9 @@
 				<h2 class="modal-card-title is-marginless">
 					{{ title }}
 				</h2>
-				<span class="delete material-icons" @click="closeCurrentModal()"
+				<span
+					class="delete material-icons"
+					@click="closeCurrentModalClick()"
 					>highlight_off</span
 				>
 				<christmas-lights v-if="christmas" small :lights="5" />
@@ -48,8 +50,10 @@ export default {
 	props: {
 		title: { type: String, default: "Modal" },
 		size: { type: String, default: null },
-		split: { type: Boolean, default: false }
+		split: { type: Boolean, default: false },
+		interceptClose: { type: Boolean, default: false }
 	},
+	emits: ["close"],
 	data() {
 		return {
 			christmas: false
@@ -65,6 +69,10 @@ export default {
 		this.christmas = await lofig.get("siteSettings.christmas");
 	},
 	methods: {
+		closeCurrentModalClick() {
+			if (this.interceptClose) this.$emit("close");
+			else this.closeCurrentModal();
+		},
 		toCamelCase: str =>
 			str
 				.toLowerCase()

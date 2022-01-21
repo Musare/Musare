@@ -159,7 +159,10 @@ export default {
 			shift: false,
 			ctrl: false,
 			handler: () => {
-				if (Object.keys(this.currentlyActive).length !== 0)
+				if (
+					Object.keys(this.currentlyActive).length !== 0 &&
+					this.currentlyActive[0] !== "editSong" && this.currentlyActive[0] !== "editSongs"
+				)
 					this.closeCurrentModal();
 			}
 		});
