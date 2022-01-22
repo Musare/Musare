@@ -198,7 +198,6 @@
 </template>
 
 <script>
-// eslint-disable-next-line no-unused-vars
 import { mapState, mapActions, mapGetters } from "vuex";
 import { defineAsyncComponent } from "vue";
 
@@ -312,9 +311,6 @@ export default {
 				prefill: this.songPrefillData[song._id]
 			});
 			this.currentSong = song;
-			// this.items[
-			// 	this.items.findIndex(item => item.song._id === song._id)
-			// ].status = "editing";
 		},
 		editNextSong() {
 			const currentlyEditingSongIndex = this.filteredEditingItemIndex;

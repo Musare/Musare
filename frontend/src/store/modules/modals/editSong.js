@@ -62,13 +62,10 @@ export default {
 			state.originalSong = JSON.parse(JSON.stringify(song));
 		},
 		resetSong(state, songId) {
-			state.originalSong = {};
-			state.song = {};
-			if (state.songId === songId) this.songId = "";
-
-			// if (state.originalSong._id === songId) state.originalSong = {};
-			// if (state.song._id === songId) state.song = {};
-			// if (state.songId === songId) this.songId = "";
+			if (state.songId === songId) state.songId = "";
+			if (state.song && state.song._id === songId) state.song = {};
+			if (state.originalSong && state.originalSong._id === songId)
+				state.originalSong = {};
 		},
 		stopVideo(state) {
 			state.video.player.stopVideo();

@@ -658,6 +658,7 @@ export default {
 		}
 	},
 	async mounted() {
+		console.log("MOUNTED");
 		this.activityWatchVideoDataInterval = setInterval(() => {
 			this.sendActivityWatchVideoData();
 		}, 1000);
@@ -860,14 +861,12 @@ export default {
 		*/
 	},
 	beforeUnmount() {
+		console.log("UNMOUNT");
 		this.unloadSong(this.songId);
 
-		// this.video.player.stopVideo();
 		this.playerReady = false;
 		clearInterval(this.interval);
 		clearInterval(this.activityWatchVideoDataInterval);
-
-		// this.socket.dispatch("apis.leaveRoom", `edit-song.${this.song._id}`);
 
 		const shortcutNames = [
 			"editSong.pauseResume",
@@ -963,10 +962,6 @@ export default {
 							this.video.player.setVolume(volume);
 							if (volume > 0) this.video.player.unMute();
 
-							// const duration = this.video.player.getDuration();
-
-							// this.youtubeVideoDuration = duration.toFixed(3);
-							// this.youtubeVideoNote = "(~)";
 							this.playerReady = true;
 
 							if (this.song && this.song._id)
@@ -1087,7 +1082,7 @@ export default {
 			this.songDataLoaded = false;
 			if (this.video.player && this.video.player.stopVideo)
 				this.video.player.stopVideo();
-			// this.resetSong(songId);
+			this.resetSong(songId);
 			this.youtubeVideoCurrentTime = "0.000";
 			this.youtubeVideoDuration = "0.000";
 			this.socket.dispatch("apis.leaveRoom", `edit-song.${songId}`);
@@ -1096,52 +1091,33 @@ export default {
 		loadSong(songId) {
 			console.log(`LOAD SONG ${songId}`);
 			this.songNotFound = false;
-			this.socket.dispatch(
-				`songs.getSongFromSongId`,
-				songId, // Was this.song._id
-				res => {
-					if (res.status === "success") {
-						let { song } = res.data;
+			this.socket.dispatch(`songs.getSongFromSongId`, songId, res => {
+				if (res.status === "success") {
+					let { song } = res.data;
 
-						song = Object.assign(song, this.prefillData);
+					song = Object.assign(song, this.prefillData);
 
-						this.setSong(song);
+					this.setSong(song);
 
-						this.songDataLoaded = true;
+					this.songDataLoaded = true;
 
-						this.socket.dispatch(
-							"apis.joinRoom",
-							`edit-song.${this.song._id}`
+					this.socket.dispatch(
+						"apis.joinRoom",
+						`edit-song.${this.song._id}`
+					);
+
+					if (this.video.player && this.video.player.cueVideoById) {
+						this.video.player.cueVideoById(
+							this.song.youtubeId,
+							this.song.skipDuration
 						);
-
-						// console.log(this.video.player);
-						// console.log(this.video.player.loadVideoById);
-
-						if (
-							this.video.player &&
-							this.video.player.cueVideoById
-						) {
-							this.video.player.cueVideoById(
-								this.song.youtubeId,
-								this.song.skipDuration
-							);
-
-							// const duration = this.video.player.getDuration();
-
-							// if (duration !== undefined) {
-							// 	this.youtubeVideoDuration = duration.toFixed(3);
-							// 	this.youtubeVideoNote = "(~)";
-
-							// 	this.drawCanvas();
-							// }
-						}
-					} else {
-						new Toast("Song with that ID not found");
-						if (this.bulk) this.songNotFound = true;
-						if (!this.bulk) this.closeModal("editSong");
 					}
+				} else {
+					new Toast("Song with that ID not found");
+					if (this.bulk) this.songNotFound = true;
+					if (!this.bulk) this.closeModal("editSong");
 				}
-			);
+			});
 
 			this.socket.dispatch(
 				"reports.getReportsForSong",

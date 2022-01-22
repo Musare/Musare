@@ -274,7 +274,7 @@
 			</advanced-table>
 		</div>
 		<import-album v-if="modals.importAlbum" />
-		<edit-song v-if="modals.editSong" song-type="songs" :key="song._id" />
+		<edit-song v-if="modals.editSong" song-type="songs" />
 		<edit-songs v-if="modals.editSongs" />
 		<report v-if="modals.report" />
 		<request-song v-if="modals.requestSong" />
