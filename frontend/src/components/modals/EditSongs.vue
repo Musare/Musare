@@ -328,15 +328,21 @@ export default {
 				this.pickSong(this.filteredItems[newEditingSongIndex].song);
 		},
 		toggleFlag(songIndex = null) {
-			const index = songIndex || this.editingItemIndex;
-			if (index > -1)
-				this.items[index].flagged = !this.items[index].flagged;
+			if (songIndex && songIndex > -1)
+				this.filteredItems[songIndex].flagged =
+					!this.filteredItems[songIndex].flagged;
+			else if (!songIndex && this.editingItemIndex > -1)
+				this.items[this.editingItemIndex].flagged =
+					!this.items[this.editingItemIndex].flagged;
 		},
 		onSavedSuccess(songId) {
 			const itemIndex = this.items.findIndex(
 				item => item.song._id === songId
 			);
-			if (itemIndex > -1) this.toggleDone(itemIndex, "done");
+			if (itemIndex > -1) {
+				this.items[itemIndex].status = "done";
+				this.items[itemIndex].flagged = false;
+			}
 		},
 		onSavedError(songId) {
 			const itemIndex = this.items.findIndex(
@@ -351,13 +357,13 @@ export default {
 			if (itemIndex > -1) this.items[itemIndex].status = "saving";
 		},
 		toggleDone(index, overwrite = null) {
-			const { status } = this.items[index];
+			const { status } = this.filteredItems[index];
 
 			if (status === "done" && overwrite !== "done")
-				this.items[index].status = "todo";
+				this.filteredItems[index].status = "todo";
 			else {
-				this.items[index].status = "done";
-				this.items[index].flagged = false;
+				this.filteredItems[index].status = "done";
+				this.filteredItems[index].flagged = false;
 			}
 		},
 		toggleFlagFilter() {
