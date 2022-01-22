@@ -455,8 +455,12 @@
 					<button class="button is-primary" @click="editNextSong()">
 						Next
 					</button>
-					<button class="button is-primary" @click="toggleFlag()">
-						Toggle Flag
+					<button
+						class="button is-primary"
+						@click="toggleFlag()"
+						v-if="songId"
+					>
+						{{ flagged ? "Unflag" : "Flag" }}
 					</button>
 				</div>
 				<div>
@@ -584,7 +588,8 @@ export default {
 		// songId: { type: String, default: null },
 		discogsAlbum: { type: Object, default: null },
 		sector: { type: String, default: "admin" },
-		bulk: { type: Boolean, default: false }
+		bulk: { type: Boolean, default: false },
+		flagged: { type: Boolean, default: false }
 	},
 	emits: [
 		"error",

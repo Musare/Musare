@@ -2,6 +2,7 @@
 	<div>
 		<edit-song
 			:bulk="true"
+			:flagged="currentSongFlagged"
 			v-if="currentSong"
 			@savedSuccess="onSavedSuccess"
 			@savedError="onSavedError"
@@ -253,6 +254,11 @@ export default {
 				this.item[index] = newItem;
 			}
 		},
+		currentSongFlagged() {
+			return this.items.find(
+				item => item.song._id === this.currentSong._id
+			)?.flagged;
+		},
 		...mapState("modals/editSongs", {
 			songIds: state => state.songIds,
 			songPrefillData: state => state.songPrefillData
@@ -330,12 +336,27 @@ export default {
 				this.pickSong(this.filteredItems[newEditingSongIndex].song);
 		},
 		toggleFlag(songIndex = null) {
-			if (songIndex && songIndex > -1)
+			if (songIndex && songIndex > -1) {
 				this.filteredItems[songIndex].flagged =
 					!this.filteredItems[songIndex].flagged;
-			else if (!songIndex && this.editingItemIndex > -1)
+				new Toast(
+					`Successfully ${
+						this.filteredItems[songIndex].flagged
+							? "flagged"
+							: "unflagged"
+					} song.`
+				);
+			} else if (!songIndex && this.editingItemIndex > -1) {
 				this.items[this.editingItemIndex].flagged =
 					!this.items[this.editingItemIndex].flagged;
+				new Toast(
+					`Successfully ${
+						this.items[this.editingItemIndex].flagged
+							? "flagged"
+							: "unflagged"
+					} song.`
+				);
+			}
 		},
 		onSavedSuccess(songId) {
 			const itemIndex = this.items.findIndex(
