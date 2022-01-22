@@ -618,6 +618,38 @@ export default {
 				action: "",
 				params: null
 			},
+			recommendedGenres: [
+				"Blues",
+				"Country",
+				"Disco",
+				"Funk",
+				"Hip-Hop",
+				"Jazz",
+				"Metal",
+				"Oldies",
+				"Other",
+				"Pop",
+				"Rap",
+				"Reggae",
+				"Rock",
+				"Techno",
+				"Trance",
+				"Classical",
+				"Instrumental",
+				"House",
+				"Electronic",
+				"Christian Rap",
+				"Lo-Fi",
+				"Musical",
+				"Rock 'n' Roll",
+				"Opera",
+				"Drum & Bass",
+				"Club-House",
+				"Indie",
+				"Heavy Metal",
+				"Christian rock",
+				"Dubstep"
+			],
 			autosuggest: {
 				allItems: {
 					artists: [],
@@ -1072,7 +1104,14 @@ export default {
 					res => {
 						if (res.status === "success") {
 							const { items } = res.data;
-							this.autosuggest.allItems[type] = items;
+							if (type === "genres")
+								this.autosuggest.allItems[type] = Array.from(
+									new Set([
+										...this.recommendedGenres,
+										...items
+									])
+								);
+							else this.autosuggest.allItems[type] = items;
 						} else {
 							new Toast(res.message);
 						}
