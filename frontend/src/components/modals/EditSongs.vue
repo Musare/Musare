@@ -21,7 +21,7 @@
 					>expand_circle_down</i
 				>
 			</template>
-			<template v-if="items.length > 1" #sidebar>
+			<template #sidebar>
 				<div class="sidebar" :class="{ active: sidebarMobileActive }">
 					<header class="sidebar-head">
 						<h2 class="sidebar-title is-marginless">Edit Queue</h2>

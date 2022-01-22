@@ -680,11 +680,14 @@ export default {
 			this.openModal("editSong");
 		},
 		editMany(selectedRows) {
-			const songs = selectedRows.map(row => ({
-				songId: row._id
-			}));
-			this.editSongs(songs);
-			this.openModal("editSongs");
+			if (selectedRows.length === 1) this.editOne(selectedRows[0]);
+			else {
+				const songs = selectedRows.map(row => ({
+					songId: row._id
+				}));
+				this.editSongs(songs);
+				this.openModal("editSongs");
+			}
 		},
 		verifyOne(songId) {
 			this.socket.dispatch("songs.verify", songId, res => {
