@@ -243,8 +243,8 @@ class _TasksModule extends CoreClass {
 								if (Date.now() - session.refreshDate > 60 * 60 * 24 * 30 * 1000) {
 									return WSModule.runJob("SOCKETS_FROM_SESSION_ID", {
 										sessionId: session.sessionId
-									}).then(response => {
-										if (response.sockets.length > 0) {
+									}).then(sockets => {
+										if (sockets.length > 0) {
 											session.refreshDate = Date.now();
 											CacheModule.runJob("HSET", {
 												table: "sessions",

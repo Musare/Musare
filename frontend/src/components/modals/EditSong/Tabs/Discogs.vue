@@ -115,6 +115,7 @@
 					</p>
 					<button
 						class="button is-primary"
+						:disabled="bulk"
 						@click="importAlbum(result)"
 					>
 						Import album
@@ -157,6 +158,9 @@ import Toast from "toasters";
 import keyboardShortcuts from "@/keyboardShortcuts";
 
 export default {
+	props: {
+		bulk: { type: Boolean, default: false }
+	},
 	data() {
 		return {
 			discogs: {

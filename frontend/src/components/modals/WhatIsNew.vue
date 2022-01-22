@@ -29,7 +29,7 @@
 
 <script>
 import { formatDistance } from "date-fns";
-import marked from "marked";
+import { marked } from "marked";
 import { sanitize } from "dompurify";
 import { mapGetters, mapActions } from "vuex";
 import ws from "@/ws";

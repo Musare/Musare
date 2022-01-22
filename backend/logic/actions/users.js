@@ -64,7 +64,7 @@ CacheModule.runJob("SUB", {
 	cb: user => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: user._id }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:user.username.updated", { data: { username: user.username } });
+				socket.dispatch("keep.event:user.username.updated", { data: { username: user.username } });
 			});
 		});
 	}
@@ -157,53 +157,124 @@ CacheModule.runJob("SUB", {
 	}
 });
 
+CacheModule.runJob("SUB", {
+	channel: "user.removeAccount",
+	cb: userId => {
+		WSModule.runJob("EMIT_TO_ROOMS", {
+			rooms: ["admin.users", `edit-user.${userId}`],
+			args: ["event:user.removed", { data: { userId } }]
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "user.updated",
+	cb: async data => {
+		const userModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "user"
+		});
+
+		userModel.findOne(
+			{ _id: data.userId },
+			[
+				"_id",
+				"name",
+				"username",
+				"avatar",
+				"services.github.id",
+				"role",
+				"email.address",
+				"email.verified",
+				"statistics.songsRequested",
+				"services.password.password"
+			],
+			(err, user) => {
+				const newUser = { ...user._doc, hasPassword: !!user.services.password.password };
+				delete newUser.services.password;
+				WSModule.runJob("EMIT_TO_ROOMS", {
+					rooms: ["admin.users", `edit-user.${data.userId}`],
+					args: ["event:admin.user.updated", { data: { user: newUser } }]
+				});
+			}
+		);
+	}
+});
+
 export default {
 	/**
-	 * Lists all Users
+	 * Gets users, used in the admin users page by the AdvancedTable component
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {Function} cb - gets called with the result
+	 * @param page - the page
+	 * @param pageSize - the size per page
+	 * @param properties - the properties to return for each user
+	 * @param sort - the sort object
+	 * @param queries - the queries array
+	 * @param operator - the operator for queries
+	 * @param cb
 	 */
-	index: isAdminRequired(async function index(session, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-
+	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
 		async.waterfall(
 			[
 				next => {
-					userModel.find({}).exec(next);
+					DBModule.runJob(
+						"GET_DATA",
+						{
+							page,
+							pageSize,
+							properties,
+							sort,
+							queries,
+							operator,
+							modelName: "user",
+							blacklistedProperties: [
+								"services.password.password",
+								"services.password.reset.code",
+								"services.password.reset.expires",
+								"services.password.set.code",
+								"services.password.set.expires",
+								"services.github.access_token",
+								"email.verificationToken"
+							],
+							specialProperties: {
+								hasPassword: [
+									{
+										$addFields: {
+											hasPassword: {
+												$cond: [
+													{ $eq: [{ $type: "$services.password.password" }, "string"] },
+													true,
+													false
+												]
+											}
+										}
+									}
+								]
+							},
+							specialQueries: {}
+						},
+						this
+					)
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
 				}
 			],
-			async (err, users) => {
-				if (err) {
+			async (err, response) => {
+				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "USER_INDEX", `Indexing users failed. "${err}"`);
+					this.log("ERROR", "USERS_GET_DATA", `Failed to get data from users. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
-				this.log("SUCCESS", "USER_INDEX", `Indexing users successful.`);
-				const filteredUsers = [];
-				users.forEach(user => {
-					filteredUsers.push({
-						_id: user._id,
-						name: user.name,
-						username: user.username,
-						role: user.role,
-						liked: user.liked,
-						disliked: user.disliked,
-						songsRequested: user.statistics.songsRequested,
-						email: {
-							address: user.email.address,
-							verified: user.email.verified
-						},
-						avatar: {
-							type: user.avatar.type,
-							url: user.avatar.url,
-							color: user.avatar.color
-						},
-						hasPassword: !!user.services.password,
-						services: { github: user.services.github }
-					});
+				this.log("SUCCESS", "USERS_GET_DATA", `Got data from users successfully.`);
+				return cb({
+					status: "success",
+					message: "Successfully got data from users.",
+					data: response
 				});
-				return cb({ status: "success", data: { users: filteredUsers } });
 			}
 		);
 	}),
@@ -263,7 +334,7 @@ export default {
 				},
 
 				next => {
-					playlistModel.findOne({ createdBy: session.userId, displayName: "Liked Songs" }, next);
+					playlistModel.findOne({ createdBy: session.userId, type: "user-liked" }, next);
 				},
 
 				// get all liked songs (as the global rating values for these songs will need adjusted)
@@ -278,7 +349,7 @@ export default {
 				},
 
 				next => {
-					playlistModel.findOne({ createdBy: session.userId, displayName: "Disliked Songs" }, next);
+					playlistModel.findOne({ createdBy: session.userId, type: "user-disliked" }, next);
 				},
 
 				// get all disliked songs (as the global rating values for these songs will need adjusted)
@@ -359,6 +430,175 @@ export default {
 					"USER_REMOVE",
 					`Successfully removed data and account for user "${session.userId}"`
 				);
+
+				CacheModule.runJob("PUB", {
+					channel: "user.removeAccount",
+					value: session.userId
+				});
+
+				return cb({
+					status: "success",
+					message: "Successfully removed data and account."
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Removes all data held on a user, including their ability to login, by userId
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} userId - the user id that is going to be banned
+	 * @param {Function} cb - gets called with the result
+	 */
+	adminRemove: isAdminRequired(async function adminRemove(session, userId, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const dataRequestModel = await DBModule.runJob("GET_MODEL", { modelName: "dataRequest" }, this);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+		const activityModel = await DBModule.runJob("GET_MODEL", { modelName: "activity" }, this);
+
+		const dataRequestEmail = await MailModule.runJob("GET_SCHEMA", { schemaName: "dataRequest" }, this);
+
+		const songsToAdjustRatings = [];
+
+		async.waterfall(
+			[
+				next => {
+					if (!userId) return next("You must provide a userId to remove.");
+					return next();
+				},
+				// activities related to the user
+				next => {
+					activityModel.deleteMany({ userId }, next);
+				},
+
+				// user's stations
+				(res, next) => {
+					stationModel.find({ owner: userId }, (err, stations) => {
+						if (err) return next(err);
+
+						return async.each(
+							stations,
+							(station, callback) => {
+								// delete the station
+								stationModel.deleteOne({ _id: station._id }, err => {
+									if (err) return callback(err);
+
+									// if applicable, delete the corresponding playlist for the station
+									if (station.playlist)
+										return PlaylistsModule.runJob("DELETE_PLAYLIST", {
+											playlistId: station.playlist
+										})
+											.then(() => callback())
+											.catch(callback);
+
+									return callback();
+								});
+							},
+							err => next(err)
+						);
+					});
+				},
+
+				next => {
+					playlistModel.findOne({ createdBy: userId, type: "user-liked" }, next);
+				},
+
+				// get all liked songs (as the global rating values for these songs will need adjusted)
+				(playlist, next) => {
+					if (!playlist) return next();
+
+					playlist.songs.forEach(song =>
+						songsToAdjustRatings.push({ songId: song._id, youtubeId: song.youtubeId })
+					);
+
+					return next();
+				},
+
+				next => {
+					playlistModel.findOne({ createdBy: userId, type: "user-disliked" }, next);
+				},
+
+				// get all disliked songs (as the global rating values for these songs will need adjusted)
+				(playlist, next) => {
+					if (!playlist) return next();
+
+					playlist.songs.forEach(song =>
+						songsToAdjustRatings.push({ songId: song._id, youtubeId: song.youtubeId })
+					);
+
+					return next();
+				},
+
+				// user's playlists
+				next => {
+					playlistModel.deleteMany({ createdBy: userId }, next);
+				},
+
+				(res, next) => {
+					async.each(
+						songsToAdjustRatings,
+						(song, next) => {
+							const { songId, youtubeId } = song;
+
+							SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId, youtubeId })
+								.then(() => next())
+								.catch(next);
+						},
+						err => next(err)
+					);
+				},
+
+				// user object
+				next => {
+					userModel.deleteMany({ _id: userId }, next);
+				},
+
+				// request data removal for user
+				(res, next) => {
+					dataRequestModel.create({ userId, type: "remove" }, next);
+				},
+
+				(request, next) => {
+					WSModule.runJob("EMIT_TO_ROOM", {
+						room: "admin.users",
+						args: ["event:admin.dataRequests.created", { data: { request } }]
+					});
+
+					return next();
+				},
+
+				next => userModel.find({ role: "admin" }, next),
+
+				// send email to all admins of a data removal request
+				(users, next) => {
+					if (!config.get("sendDataRequestEmails")) return next();
+					if (users.length === 0) return next();
+
+					const to = [];
+					users.forEach(user => to.push(user.email.address));
+
+					return dataRequestEmail(to, userId, "remove", err => next(err));
+				}
+			],
+			async err => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"USER_ADMIN_REMOVE",
+						`Removing data and account for user "${userId}" failed. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				this.log("SUCCESS", "USER_ADMIN_REMOVE", `Successfully removed data and account for user "${userId}"`);
+
+				CacheModule.runJob("PUB", {
+					channel: "user.removeAccount",
+					value: userId
+				});
 
 				return cb({
 					status: "success",
@@ -574,10 +814,10 @@ export default {
 
 				// create a liked songs playlist for the new user
 				(userId, next) => {
-					PlaylistsModule.runJob("CREATE_READ_ONLY_PLAYLIST", {
+					PlaylistsModule.runJob("CREATE_USER_PLAYLIST", {
 						userId,
 						displayName: "Liked Songs",
-						type: "user"
+						type: "user-liked"
 					})
 						.then(likedSongsPlaylist => {
 							next(null, likedSongsPlaylist, userId);
@@ -587,10 +827,10 @@ export default {
 
 				// create a disliked songs playlist for the new user
 				(likedSongsPlaylist, userId, next) => {
-					PlaylistsModule.runJob("CREATE_READ_ONLY_PLAYLIST", {
+					PlaylistsModule.runJob("CREATE_USER_PLAYLIST", {
 						userId,
 						displayName: "Disliked Songs",
-						type: "user"
+						type: "user-disliked"
 					})
 						.then(dislikedSongsPlaylist => {
 							next(null, { likedSongsPlaylist, dislikedSongsPlaylist }, userId);
@@ -1476,6 +1716,11 @@ export default {
 					}
 				});
 
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: updatingUserId }
+				});
+
 				this.log(
 					"SUCCESS",
 					"UPDATE_USERNAME",
@@ -1586,6 +1831,11 @@ export default {
 					`Updated email for user "${updatingUserId}" to email "${newEmail}".`
 				);
 
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: updatingUserId }
+				});
+
 				return cb({
 					status: "success",
 					message: "Email updated successfully."
@@ -1651,6 +1901,11 @@ export default {
 				});
 
 				this.log("SUCCESS", "UPDATE_NAME", `Updated name for user "${updatingUserId}" to name "${newName}".`);
+
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: updatingUserId }
+				});
 
 				return cb({
 					status: "success",
@@ -1724,6 +1979,11 @@ export default {
 					`Updated location for user "${updatingUserId}" to location "${newLocation}".`
 				);
 
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: updatingUserId }
+				});
+
 				return cb({
 					status: "success",
 					message: "Location updated successfully"
@@ -1783,6 +2043,11 @@ export default {
 				});
 
 				this.log("SUCCESS", "UPDATE_BIO", `Updated bio for user "${updatingUserId}" to bio "${newBio}".`);
+
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: updatingUserId }
+				});
 
 				return cb({
 					status: "success",
@@ -1848,6 +2113,11 @@ export default {
 					`Updated avatar for user "${updatingUserId}" to type "${newAvatar.type} and color ${newAvatar.color}".`
 				);
 
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: updatingUserId }
+				});
+
 				return cb({
 					status: "success",
 					message: "Avatar updated successfully"
@@ -1906,6 +2176,11 @@ export default {
 					"UPDATE_ROLE",
 					`User "${session.userId}" updated the role of user "${updatingUserId}" to role "${newRole}".`
 				);
+
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: updatingUserId }
+				});
 
 				return cb({
 					status: "success",
@@ -2186,6 +2461,11 @@ export default {
 					value: session.userId
 				});
 
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: session.userId }
+				});
+
 				return cb({
 					status: "success",
 					message: "Successfully added password."
@@ -2233,6 +2513,11 @@ export default {
 					value: session.userId
 				});
 
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: session.userId }
+				});
+
 				return cb({
 					status: "success",
 					message: "Successfully unlinked password."
@@ -2278,6 +2563,11 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "user.unlinkGithub",
 					value: session.userId
+				});
+
+				CacheModule.runJob("PUB", {
+					channel: "user.updated",
+					value: { userId: session.userId }
 				});
 
 				return cb({
@@ -2366,6 +2656,81 @@ export default {
 			}
 		);
 	},
+
+	/**
+	 * Requests a password reset for a a user as an admin
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} email - the email of the user for which the password reset is intended
+	 * @param {Function} cb - gets called with the result
+	 */
+	adminRequestPasswordReset: isAdminRequired(async function adminRequestPasswordReset(session, userId, cb) {
+		const code = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 8 }, this);
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+
+		const resetPasswordRequestSchema = await MailModule.runJob(
+			"GET_SCHEMA",
+			{ schemaName: "resetPasswordRequest" },
+			this
+		);
+
+		async.waterfall(
+			[
+				next => userModel.findOne({ _id: userId }, next),
+
+				(user, next) => {
+					if (!user) return next("User not found.");
+					if (!user.services.password || !user.services.password.password)
+						return next("User does not have a password set, and probably uses GitHub to log in.");
+					return next();
+				},
+
+				next => {
+					const expires = new Date();
+					expires.setDate(expires.getDate() + 1);
+					userModel.findOneAndUpdate(
+						{ _id: userId },
+						{
+							$set: {
+								"services.password.reset": {
+									code,
+									expires
+								}
+							}
+						},
+						{ runValidators: true },
+						next
+					);
+				},
+
+				(user, next) => {
+					resetPasswordRequestSchema(user.email.address, user.username, code, next);
+				}
+			],
+			async err => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"ADMINREQUEST_PASSWORD_RESET",
+						`User '${userId}' failed to get a password reset. '${err}'`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"ADMIN_REQUEST_PASSWORD_RESET",
+					`User '${userId}' successfully got sent a password reset.`
+				);
+
+				return cb({
+					status: "success",
+					message: "Successfully requested password reset for user."
+				});
+			}
+		);
+	}),
 
 	/**
 	 * Verifies a reset code
@@ -2478,6 +2843,56 @@ export default {
 			}
 		);
 	},
+
+	/**
+	 * Resends the verify email email
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} userId - the user id of the person to resend the email to
+	 * @param {Function} cb - gets called with the result
+	 */
+	resendVerifyEmail: isAdminRequired(async function resendVerifyEmail(session, userId, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const verifyEmailSchema = await MailModule.runJob("GET_SCHEMA", { schemaName: "verifyEmail" }, this);
+
+		async.waterfall(
+			[
+				next => userModel.findOne({ _id: userId }, next),
+
+				(user, next) => {
+					if (!user) return next("User not found.");
+					if (user.email.verified) return next("The user's email is already verified.");
+					return next(null, user);
+				},
+
+				(user, next) => {
+					verifyEmailSchema(user.email.address, user.username, user.email.verificationToken, err => {
+						next(err);
+					});
+				}
+			],
+			async err => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log(
+						"ERROR",
+						"RESEND_VERIFY_EMAIL",
+						`Couldn't resend verify email for user "${userId}". '${err}'`
+					);
+
+					return cb({ status: "error", message: err });
+				}
+
+				this.log("SUCCESS", "RESEND_VERIFY_EMAIL", `Resent verify email for user "${userId}".`);
+
+				return cb({
+					status: "success",
+					message: "Email resent successfully."
+				});
+			}
+		);
+	}),
 
 	/**
 	 * Bans a user by userId

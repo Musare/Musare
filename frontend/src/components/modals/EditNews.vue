@@ -2,7 +2,7 @@
 	<modal
 		class="edit-news-modal"
 		:title="newsId ? 'Edit News' : 'Create News'"
-		:wide="true"
+		:size="'wide'"
 		:split="true"
 	>
 		<template #body>
@@ -62,7 +62,7 @@
 
 <script>
 import { mapActions, mapGetters, mapState } from "vuex";
-import marked from "marked";
+import { marked } from "marked";
 import { sanitize } from "dompurify";
 import Toast from "toasters";
 import { formatDistance } from "date-fns";

@@ -6,10 +6,13 @@ export default {
 		discogsAlbum: {},
 		originalPlaylistSongs: [],
 		playlistSongs: [],
-		editingSongs: false
+		editingSongs: false,
+		discogsTab: "search",
+		prefillDiscogs: false
 	},
 	getters: {},
 	actions: {
+		showDiscogsTab: ({ commit }, tab) => commit("showDiscogsTab", tab),
 		selectDiscogsAlbum: ({ commit }, discogsAlbum) =>
 			commit("selectDiscogsAlbum", discogsAlbum),
 		toggleDiscogsAlbum: ({ commit }) => {
@@ -21,9 +24,16 @@ export default {
 			commit("updatePlaylistSongs", playlistSongs),
 		updateEditingSongs: ({ commit }, editingSongs) =>
 			commit("updateEditingSongs", editingSongs),
-		resetPlaylistSongs: ({ commit }) => commit("resetPlaylistSongs")
+		resetPlaylistSongs: ({ commit }) => commit("resetPlaylistSongs"),
+		updatePrefillDiscogs: ({ commit }, updatedPrefill) =>
+			commit("updatePrefillDiscogs", updatedPrefill),
+		updatePlaylistSong: ({ commit }, updatedSong) =>
+			commit("updatePlaylistSong", updatedSong)
 	},
 	mutations: {
+		showDiscogsTab(state, tab) {
+			state.discogsTab = tab;
+		},
 		selectDiscogsAlbum(state, discogsAlbum) {
 			state.discogsAlbum = JSON.parse(JSON.stringify(discogsAlbum));
 			if (state.discogsAlbum && state.discogsAlbum.tracks) {
@@ -52,6 +62,19 @@ export default {
 			state.playlistSongs = JSON.parse(
 				JSON.stringify(state.originalPlaylistSongs)
 			);
+		},
+		updatePrefillDiscogs(state, updatedPrefill) {
+			state.prefillDiscogs = updatedPrefill;
+		},
+		updatePlaylistSong(state, updatedSong) {
+			state.playlistSongs.forEach((song, index) => {
+				if (song._id === updatedSong._id)
+					state.playlistSongs[index] = updatedSong;
+			});
+			state.originalPlaylistSongs.forEach((song, index) => {
+				if (song._id === updatedSong._id)
+					state.originalPlaylistSongs[index] = updatedSong;
+			});
 		}
 	}
 };

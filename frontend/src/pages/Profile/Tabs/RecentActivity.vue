@@ -19,7 +19,7 @@
 					:activity="activity"
 				>
 					<template #actions>
-						<confirm
+						<quick-confirm
 							v-if="userId === myUserId"
 							@confirm="hideActivity(activity._id)"
 						>
@@ -28,7 +28,7 @@
 									>visibility_off</i
 								>
 							</a>
-						</confirm>
+						</quick-confirm>
 					</template>
 				</activity-item>
 			</div>
@@ -45,10 +45,10 @@ import Toast from "toasters";
 
 import ActivityItem from "@/components/ActivityItem.vue";
 import ws from "@/ws";
-import Confirm from "@/components/Confirm.vue";
+import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
-	components: { ActivityItem, Confirm },
+	components: { ActivityItem, QuickConfirm },
 	props: {
 		userId: {
 			type: String,
@@ -153,8 +153,6 @@ export default {
 		handleScroll() {
 			const scrollPosition = document.body.clientHeight + window.scrollY;
 			const bottomPosition = document.body.scrollHeight;
-
-			if (this.loadAllSongs) return false;
 
 			if (scrollPosition + 400 >= bottomPosition) this.getSet();
 

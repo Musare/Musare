@@ -60,62 +60,101 @@ CacheModule.runJob("SUB", {
 
 export default {
 	/**
-	 * Gets all reports that haven't been yet resolved
+	 * Gets reports, used in the admin reports page by the AdvancedTable component
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {Function} cb - gets called with the result
+	 * @param page - the page
+	 * @param pageSize - the size per page
+	 * @param properties - the properties to return for each user
+	 * @param sort - the sort object
+	 * @param queries - the queries array
+	 * @param operator - the operator for queries
+	 * @param cb
 	 */
-	index: isAdminRequired(async function index(session, cb) {
-		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-
+	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
 		async.waterfall(
 			[
-				next => reportModel.find({ resolved: false }).sort({ createdAt: "desc" }).exec(next),
-				(_reports, next) => {
-					const reports = [];
-
-					async.each(
-						_reports,
-						(report, cb) => {
-							console.log(typeof report.createdBy);
-
-							userModel
-								.findById(report.createdBy)
-								.select({ avatar: -1, name: -1, username: -1 })
-								.exec((err, user) => {
-									if (!user)
-										reports.push({
-											...report._doc,
-											createdBy: { _id: report.createdBy }
-										});
-									else
-										reports.push({
-											...report._doc,
-											createdBy: {
-												avatar: user.avatar,
-												name: user.name,
-												username: user.username,
-												_id: report.createdBy
+				next => {
+					DBModule.runJob(
+						"GET_DATA",
+						{
+							page,
+							pageSize,
+							properties,
+							sort,
+							queries,
+							operator,
+							modelName: "report",
+							blacklistedProperties: [],
+							specialProperties: {
+								createdBy: [
+									{
+										$addFields: {
+											createdByOID: {
+												$convert: {
+													input: "$createdBy",
+													to: "objectId",
+													onError: "unknown",
+													onNull: "unknown"
+												}
 											}
-										});
-
-									return cb(err);
-								});
+										}
+									},
+									{
+										$lookup: {
+											from: "users",
+											localField: "createdByOID",
+											foreignField: "_id",
+											as: "createdByUser"
+										}
+									},
+									{
+										$unwind: {
+											path: "$createdByUser",
+											preserveNullAndEmptyArrays: true
+										}
+									},
+									{
+										$addFields: {
+											createdByUsername: {
+												$ifNull: ["$createdByUser.username", "unknown"]
+											}
+										}
+									},
+									{
+										$project: {
+											createdByOID: 0,
+											createdByUser: 0
+										}
+									}
+								]
+							},
+							specialQueries: {
+								createdBy: newQuery => ({ $or: [newQuery, { createdByUsername: newQuery.createdBy }] })
+							}
 						},
-						err => next(err, reports)
-					);
+						this
+					)
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
 				}
 			],
-			async (err, reports) => {
-				if (err) {
+			async (err, response) => {
+				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "REPORTS_INDEX", `Indexing reports failed. "${err}"`);
+					this.log("ERROR", "REPORTS_GET_DATA", `Failed to get data from reports. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
-
-				this.log("SUCCESS", "REPORTS_INDEX", "Indexing reports successful.");
-				return cb({ status: "success", data: { reports } });
+				this.log("SUCCESS", "REPORTS_GET_DATA", `Got data from reports successfully.`);
+				return cb({
+					status: "success",
+					message: "Successfully got data from reports.",
+					data: response
+				});
 			}
 		);
 	}),

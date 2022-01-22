@@ -10,6 +10,7 @@ import station from "./modules/station";
 import admin from "./modules/admin";
 
 import editSongModal from "./modules/modals/editSong";
+import editSongsModal from "./modules/modals/editSongs";
 import importAlbumModal from "./modules/modals/importAlbum";
 import editPlaylistModal from "./modules/modals/editPlaylist";
 import manageStationModal from "./modules/modals/manageStation";
@@ -17,6 +18,7 @@ import editUserModal from "./modules/modals/editUser";
 import viewPunishmentModal from "./modules/modals/viewPunishment";
 import viewReportModal from "./modules/modals/viewReport";
 import reportModal from "./modules/modals/report";
+import confirmModal from "./modules/modals/confirm";
 
 export default createStore({
 	modules: {
@@ -30,13 +32,15 @@ export default createStore({
 			namespaced: true,
 			modules: {
 				editSong: editSongModal,
+				editSongs: editSongsModal,
 				importAlbum: importAlbumModal,
 				editPlaylist: editPlaylistModal,
 				manageStation: manageStationModal,
 				editUser: editUserModal,
 				viewPunishment: viewPunishmentModal,
 				report: reportModal,
-				viewReport: viewReportModal
+				viewReport: viewReportModal,
+				confirm: confirmModal
 			}
 		}
 	},

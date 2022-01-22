@@ -290,6 +290,7 @@ export default {
 				max-height: 38px;
 				color: var(--primary-color);
 				user-select: none;
+				-webkit-user-drag: none;
 			}
 		}
 	}

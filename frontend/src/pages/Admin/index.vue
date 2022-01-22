@@ -4,42 +4,13 @@
 		<div class="tabs is-centered">
 			<ul>
 				<li
-					:class="{ 'is-active': currentTab == 'hiddensongs' }"
-					ref="hiddensongs-tab"
-					@click="showTab('hiddensongs')"
+					:class="{ 'is-active': currentTab == 'songs' }"
+					ref="songs-tab"
+					@click="showTab('songs')"
 				>
-					<router-link
-						class="tab hiddensongs"
-						to="/admin/hiddensongs"
-					>
+					<router-link class="tab songs" to="/admin/songs">
 						<i class="material-icons">music_note</i>
-						<span>&nbsp;Hidden Songs</span>
-					</router-link>
-				</li>
-				<li
-					:class="{ 'is-active': currentTab == 'unverifiedsongs' }"
-					ref="unverifiedsongs-tab"
-					@click="showTab('unverifiedsongs')"
-				>
-					<router-link
-						class="tab unverifiedsongs"
-						to="/admin/unverifiedsongs"
-					>
-						<i class="material-icons">unpublished</i>
-						<span>&nbsp;Unverified Songs</span>
-					</router-link>
-				</li>
-				<li
-					:class="{ 'is-active': currentTab == 'verifiedsongs' }"
-					ref="verifiedsongs-tab"
-					@click="showTab('verifiedsongs')"
-				>
-					<router-link
-						class="tab verifiedsongs"
-						to="/admin/verifiedsongs"
-					>
-						<i class="material-icons">check_circle</i>
-						<span>&nbsp;Verified Songs</span>
+						<span>&nbsp;Songs</span>
 					</router-link>
 				</li>
 				<li
@@ -118,16 +89,88 @@
 			</ul>
 		</div>
 
-		<unverified-songs v-if="currentTab == 'unverifiedsongs'" />
-		<verified-songs v-if="currentTab == 'verifiedsongs'" />
-		<hidden-songs v-if="currentTab == 'hiddensongs'" />
-		<stations v-if="currentTab == 'stations'" />
-		<playlists v-if="currentTab == 'playlists'" />
-		<reports v-if="currentTab == 'reports'" />
-		<news v-if="currentTab == 'news'" />
-		<users v-if="currentTab == 'users'" />
-		<statistics v-if="currentTab == 'statistics'" />
-		<punishments v-if="currentTab == 'punishments'" />
+		<div class="admin-container">
+			<songs v-if="currentTab == 'songs'" />
+			<stations v-if="currentTab == 'stations'" />
+			<playlists v-if="currentTab == 'playlists'" />
+			<reports v-if="currentTab == 'reports'" />
+			<news v-if="currentTab == 'news'" />
+			<users v-if="currentTab == 'users'" />
+			<statistics v-if="currentTab == 'statistics'" />
+			<punishments v-if="currentTab == 'punishments'" />
+		</div>
+
+		<floating-box
+			id="keyboardShortcutsHelper"
+			ref="keyboardShortcutsHelper"
+		>
+			<template #body>
+				<div>
+					<div>
+						<span class="biggest"
+							><b>Keyboard shortcuts helper</b></span
+						>
+						<span
+							><b>Ctrl + /</b> - Toggles this keyboard shortcuts
+							helper</span
+						>
+						<span
+							><b>Ctrl + Shift + /</b> - Resets the position of
+							this keyboard shortcuts helper</span
+						>
+						<hr />
+					</div>
+					<div>
+						<span class="biggest"><b>Table</b></span>
+						<span class="bigger"><b>Navigation</b></span>
+						<span
+							><b>Up / Down arrow keys</b> - Move between
+							rows</span
+						>
+						<hr />
+					</div>
+					<div>
+						<span class="bigger"><b>Page navigation</b></span>
+						<span
+							><b>Ctrl + Left/Right arrow keys</b> - Previous/next
+							page</span
+						>
+						<span
+							><b>Ctrl + Shift + Left/Right arrow keys</b> -
+							First/last page</span
+						>
+						<hr />
+					</div>
+					<div>
+						<span class="bigger"><b>Reset localStorage</b></span>
+						<span><b>Ctrl + F5</b> - Resets localStorage</span>
+						<hr />
+					</div>
+					<div>
+						<span class="bigger"><b>Selecting</b></span>
+						<span><b>Space</b> - Selects/unselects a row</span>
+						<span><b>Ctrl + A</b> - Selects all rows</span>
+						<span
+							><b>Shift + Up/Down arrow keys</b> - Selects all
+							rows in between</span
+						>
+						<span
+							><b>Ctrl + Up/Down arrow keys</b> - Unselects all
+							rows in between</span
+						>
+						<hr />
+					</div>
+					<div>
+						<span class="bigger"><b>Popup actions</b></span>
+						<span><b>Ctrl + 1-9</b> - Execute action 1-9</span>
+						<span><b>Ctrl + 0</b> - Select action 1</span>
+						<hr />
+					</div>
+				</div>
+			</template>
+		</floating-box>
+
+		<main-footer />
 	</div>
 </template>
 
@@ -135,20 +178,18 @@
 import { mapGetters } from "vuex";
 import { defineAsyncComponent } from "vue";
 
+import keyboardShortcuts from "@/keyboardShortcuts";
+
 import MainHeader from "@/components/layout/MainHeader.vue";
+import MainFooter from "@/components/layout/MainFooter.vue";
+import FloatingBox from "@/components/FloatingBox.vue";
 
 export default {
 	components: {
 		MainHeader,
-		UnverifiedSongs: defineAsyncComponent(() =>
-			import("./tabs/UnverifiedSongs.vue")
-		),
-		VerifiedSongs: defineAsyncComponent(() =>
-			import("./tabs/VerifiedSongs.vue")
-		),
-		HiddenSongs: defineAsyncComponent(() =>
-			import("./tabs/HiddenSongs.vue")
-		),
+		MainFooter,
+		FloatingBox,
+		Songs: defineAsyncComponent(() => import("./tabs/Songs.vue")),
 		Stations: defineAsyncComponent(() => import("./tabs/Stations.vue")),
 		Playlists: defineAsyncComponent(() => import("./tabs/Playlists.vue")),
 		Reports: defineAsyncComponent(() => import("./tabs/Reports.vue")),
@@ -174,21 +215,49 @@ export default {
 	},
 	mounted() {
 		this.changeTab(this.$route.path);
+
+		keyboardShortcuts.registerShortcut(
+			"admin.toggleKeyboardShortcutsHelper",
+			{
+				keyCode: 191, // '/' key
+				ctrl: true,
+				preventDefault: true,
+				handler: () => {
+					this.toggleKeyboardShortcutsHelper();
+				}
+			}
+		);
+
+		keyboardShortcuts.registerShortcut(
+			"admin.resetKeyboardShortcutsHelper",
+			{
+				keyCode: 191, // '/' key
+				ctrl: true,
+				shift: true,
+				preventDefault: true,
+				handler: () => {
+					this.resetKeyboardShortcutsHelper();
+				}
+			}
+		);
 	},
 	beforeUnmount() {
 		this.socket.dispatch("apis.leaveRooms");
+
+		const shortcutNames = [
+			"admin.toggleKeyboardShortcutsHelper",
+			"admin.resetKeyboardShortcutsHelper"
+		];
+
+		shortcutNames.forEach(shortcutName => {
+			keyboardShortcuts.unregisterShortcut(shortcutName);
+		});
 	},
 	methods: {
 		changeTab(path) {
 			switch (path) {
-				case "/admin/unverifiedsongs":
-					this.showTab("unverifiedsongs");
-					break;
-				case "/admin/verifiedsongs":
-					this.showTab("verifiedsongs");
-					break;
-				case "/admin/hiddensongs":
-					this.showTab("hiddensongs");
+				case "/admin/songs":
+					this.showTab("songs");
 					break;
 				case "/admin/stations":
 					this.showTab("stations");
@@ -212,7 +281,17 @@ export default {
 					this.showTab("punishments");
 					break;
 				default:
-					this.showTab("verifiedsongs");
+					if (path.startsWith("/admin")) {
+						if (localStorage.getItem("lastAdminPage")) {
+							this.$router.push(
+								`/admin/${localStorage.getItem(
+									"lastAdminPage"
+								)}`
+							);
+						} else {
+							this.$router.push(`/admin/songs`);
+						}
+					}
 			}
 		},
 		showTab(tab) {
@@ -222,6 +301,13 @@ export default {
 					block: "nearest"
 				});
 			this.currentTab = tab;
+			localStorage.setItem("lastAdminPage", tab);
+		},
+		toggleKeyboardShortcutsHelper() {
+			this.$refs.keyboardShortcutsHelper.toggleBox();
+		},
+		resetKeyboardShortcutsHelper() {
+			this.$refs.keyboardShortcutsHelper.resetBox();
 		}
 	}
 };
@@ -232,6 +318,7 @@ export default {
 	top: 102px !important;
 }
 
+.main-container .admin-tab,
 .main-container .container {
 	.button-row {
 		display: flex;
@@ -248,6 +335,12 @@ export default {
 			}
 		}
 	}
+}
+
+.main-container .admin-container .admin-tab {
+	max-width: 1900px;
+	margin: 0 auto;
+	padding: 0 10px;
 }
 </style>
 
@@ -278,6 +371,11 @@ export default {
 
 .main-container {
 	height: auto;
+
+	.admin-container {
+		flex: 1 0 auto;
+		margin-bottom: 20px;
+	}
 }
 
 .tabs {
@@ -301,17 +399,9 @@ export default {
 		border-bottom: 1px solid var(--light-grey-2);
 	}
 
-	.unverifiedsongs {
-		color: var(--teal);
-		border-color: var(--teal);
-	}
-	.verifiedsongs {
+	.songs {
 		color: var(--primary-color);
 		border-color: var(--primary-color);
-	}
-	.hiddensongs {
-		color: var(--grey);
-		border-color: var(--grey);
 	}
 	.stations {
 		color: var(--purple);
@@ -357,6 +447,22 @@ export default {
 	.is-active .tab {
 		font-weight: 600;
 		border-width: 3px;
+	}
+}
+
+#keyboardShortcutsHelper {
+	.box-body {
+		.biggest {
+			font-size: 18px;
+		}
+
+		.bigger {
+			font-size: 16px;
+		}
+
+		span {
+			display: block;
+		}
 	}
 }
 

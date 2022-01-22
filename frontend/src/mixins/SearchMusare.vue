@@ -23,7 +23,7 @@ export default {
 		}
 	},
 	methods: {
-		searchForMusareSongs(page) {
+		searchForMusareSongs(page, toast = true) {
 			if (
 				this.musareSearch.page >= page ||
 				this.musareSearch.searchedQuery !== this.musareSearch.query
@@ -65,7 +65,7 @@ export default {
 						this.musareSearch.count = 0;
 						this.musareSearch.resultsLeft = 0;
 						this.musareSearch.pageSize = 0;
-						new Toast(res.message);
+						if (toast) new Toast(res.message);
 					}
 				}
 			);

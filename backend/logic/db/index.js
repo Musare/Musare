@@ -8,12 +8,12 @@ import CoreClass from "../../core";
 const REQUIRED_DOCUMENT_VERSIONS = {
 	activity: 2,
 	news: 2,
-	playlist: 4,
+	playlist: 6,
 	punishment: 1,
 	queueSong: 1,
 	report: 5,
-	song: 5,
-	station: 6,
+	song: 7,
+	station: 7,
 	user: 3
 };
 
@@ -199,6 +199,12 @@ class _DBModule extends CoreClass {
 					};
 					this.schemas.song.path("genres").validate(songGenres, "Invalid genres.");
 
+					const songTags = tags =>
+						tags.filter(tag =>
+							new RegExp(/^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/).test(tag)
+						).length === tags.length;
+					this.schemas.song.path("tags").validate(songTags, "Invalid tags.");
+
 					const songThumbnail = thumbnail => {
 						if (!isLength(thumbnail, 1, 256)) return false;
 						if (config.get("cookie.secure") === true) return thumbnail.startsWith("https://");
@@ -299,6 +305,216 @@ class _DBModule extends CoreClass {
 	GET_SCHEMA(payload) {
 		return new Promise(resolve => {
 			resolve(DBModule.schemas[payload.schemaName]);
+		});
+	}
+
+	/**
+	 * Gets data
+	 *
+	 * @param {object} payload - object containing the payload
+	 * @param {string} payload.page - the page
+	 * @param {string} payload.pageSize - the page size
+	 * @param {string} payload.properties - the properties to return for each song
+	 * @param {string} payload.sort - the sort object
+	 * @param {string} payload.queries - the queries array
+	 * @param {string} payload.operator - the operator for queries
+	 * @param {string} payload.modelName - the db collection modal name
+	 * @param {string} payload.blacklistedProperties - the properties that are not allowed to be returned, filtered by or sorted by
+	 * @param {string} payload.specialProperties - the special properties
+	 * @param {string} payload.specialQueries - the special queries
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	GET_DATA(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					// Creates pipeline array
+					next => next(null, []),
+
+					// If a query filter property or sort property is blacklisted, throw error
+					(pipeline, next) => {
+						const { sort, queries, blacklistedProperties } = payload;
+						if (
+							queries.some(query =>
+								blacklistedProperties.some(blacklistedProperty =>
+									blacklistedProperty.startsWith(query.filter.property)
+								)
+							)
+						)
+							return next("Unable to filter by blacklisted property.");
+						if (
+							Object.keys(sort).some(property =>
+								blacklistedProperties.some(blacklistedProperty =>
+									blacklistedProperty.startsWith(property)
+								)
+							)
+						)
+							return next("Unable to sort by blacklisted property.");
+
+						return next(null, pipeline);
+					},
+
+					// If a filter or property exists for a special property, add some custom pipeline steps
+					(pipeline, next) => {
+						const { properties, queries, specialProperties } = payload;
+
+						async.eachLimit(
+							Object.entries(specialProperties),
+							1,
+							([specialProperty, pipelineSteps], next) => {
+								// Check if a filter with the special property exists
+								const filterExists =
+									queries.map(query => query.filter.property).indexOf(specialProperty) !== -1;
+								// Check if a property with the special property exists
+								const propertyExists = properties.indexOf(specialProperty) !== -1;
+								// If no such filter or property exists, skip this function
+								if (!filterExists && !propertyExists) return next();
+								// Add the specified pipeline steps into the pipeline
+								pipeline.push(...pipelineSteps);
+								return next();
+							},
+							err => {
+								next(err, pipeline);
+							}
+						);
+					},
+
+					// Adds the match stage to aggregation pipeline, which is responsible for filtering
+					(pipeline, next) => {
+						const { queries, operator, specialQueries } = payload;
+
+						let queryError;
+						const newQueries = queries.flatMap(query => {
+							const { data, filter, filterType } = query;
+							const newQuery = {};
+							if (filterType === "regex") {
+								newQuery[filter.property] = new RegExp(`${data.slice(1, data.length - 1)}`, "i");
+							} else if (filterType === "contains") {
+								newQuery[filter.property] = new RegExp(
+									`${data.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}`,
+									"i"
+								);
+							} else if (filterType === "exact") {
+								newQuery[filter.property] = data.toString();
+							} else if (filterType === "datetimeBefore") {
+								newQuery[filter.property] = { $lte: new Date(data) };
+							} else if (filterType === "datetimeAfter") {
+								newQuery[filter.property] = { $gte: new Date(data) };
+							} else if (filterType === "numberLesserEqual") {
+								newQuery[filter.property] = { $lte: Number(data) };
+							} else if (filterType === "numberLesser") {
+								newQuery[filter.property] = { $lt: Number(data) };
+							} else if (filterType === "numberGreater") {
+								newQuery[filter.property] = { $gt: Number(data) };
+							} else if (filterType === "numberGreaterEqual") {
+								newQuery[filter.property] = { $gte: Number(data) };
+							} else if (filterType === "numberEquals") {
+								newQuery[filter.property] = { $eq: Number(data) };
+							} else if (filterType === "boolean") {
+								newQuery[filter.property] = { $eq: !!data };
+							}
+
+							if (specialQueries[filter.property]) {
+								return specialQueries[filter.property](newQuery);
+							}
+
+							return newQuery;
+						});
+						if (queryError) next(queryError);
+
+						const queryObject = {};
+						if (newQueries.length > 0) {
+							if (operator === "and") queryObject.$and = newQueries;
+							else if (operator === "or") queryObject.$or = newQueries;
+							else if (operator === "nor") queryObject.$nor = newQueries;
+						}
+
+						pipeline.push({ $match: queryObject });
+
+						next(null, pipeline);
+					},
+
+					// Adds sort stage to aggregation pipeline if there is at least one column being sorted, responsible for sorting data
+					(pipeline, next) => {
+						const { sort } = payload;
+						const newSort = Object.fromEntries(
+							Object.entries(sort).map(([property, direction]) => [
+								property,
+								direction === "ascending" ? 1 : -1
+							])
+						);
+						if (Object.keys(newSort).length > 0) pipeline.push({ $sort: newSort });
+						next(null, pipeline);
+					},
+
+					// Adds first project stage to aggregation pipeline, responsible for including only the requested properties
+					(pipeline, next) => {
+						const { properties } = payload;
+
+						pipeline.push({ $project: Object.fromEntries(properties.map(property => [property, 1])) });
+
+						next(null, pipeline);
+					},
+
+					// Adds second project stage to aggregation pipeline, responsible for excluding some specific properties
+					(pipeline, next) => {
+						const { blacklistedProperties } = payload;
+						if (blacklistedProperties.length > 0)
+							pipeline.push({
+								$project: Object.fromEntries(blacklistedProperties.map(property => [property, 0]))
+							});
+
+						next(null, pipeline);
+					},
+
+					// Adds the facet stage to aggregation pipeline, responsible for returning a total document count, skipping and limitting the documents that will be returned
+					(pipeline, next) => {
+						const { page, pageSize } = payload;
+
+						pipeline.push({
+							$facet: {
+								count: [{ $count: "count" }],
+								documents: [{ $skip: pageSize * (page - 1) }, { $limit: pageSize }]
+							}
+						});
+
+						// console.dir(pipeline, { depth: 6 });
+
+						next(null, pipeline);
+					},
+
+					(pipeline, next) => {
+						const { modelName } = payload;
+
+						DBModule.runJob("GET_MODEL", { modelName }, this)
+							.then(model => {
+								if (!model) return next("Invalid model.");
+								return next(null, pipeline, model);
+							})
+							.catch(err => {
+								next(err);
+							});
+					},
+
+					// Executes the aggregation pipeline
+					(pipeline, model, next) => {
+						model.aggregate(pipeline).exec((err, result) => {
+							// console.dir(err);
+							// console.dir(result, { depth: 6 });
+							if (err) return next(err);
+							if (result[0].count.length === 0) return next(null, 0, []);
+							const { count } = result[0].count[0];
+							const { documents } = result[0];
+							// console.log(111, err, result, count, documents[0]);
+							return next(null, count, documents);
+						});
+					}
+				],
+				(err, count, documents) => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve({ data: documents, count });
+				}
+			);
 		});
 	}
 

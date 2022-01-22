@@ -2,14 +2,16 @@
 	<modal
 		v-if="station"
 		:title="
-			!isOwnerOrAdmin() && station.partyMode
+			sector === 'home' && !isOwnerOrAdmin()
+				? 'View Queue'
+				: !isOwnerOrAdmin() && station.partyMode
 				? 'Add Song to Queue'
 				: 'Manage Station'
 		"
 		:style="`--primary-color: var(--${station.theme})`"
 		class="manage-station-modal"
-		:wide="true"
-		:split="true"
+		:size="isOwnerOrAdmin() || sector !== 'home' ? 'wide' : null"
+		:split="isOwnerOrAdmin() || sector !== 'home'"
 	>
 		<template #body v-if="station && station._id">
 			<div class="left-section">
@@ -44,11 +46,11 @@
 							<p>{{ station.description }}</p>
 						</div>
 
-						<div id="admin-buttons" v-if="isOwnerOrAdmin()">
+						<div id="admin-buttons">
 							<!-- (Admin) Pause/Resume Button -->
 							<button
+								v-if="isOwnerOrAdmin() && stationPaused"
 								class="button is-danger"
-								v-if="stationPaused"
 								@click="resumeStation()"
 							>
 								<i class="material-icons icon-with-button"
@@ -57,9 +59,9 @@
 								<span> Resume Station </span>
 							</button>
 							<button
+								v-if="isOwnerOrAdmin() && !stationPaused"
 								class="button is-danger"
 								@click="pauseStation()"
-								v-else
 							>
 								<i class="material-icons icon-with-button"
 									>pause</i
@@ -69,6 +71,7 @@
 
 							<!-- (Admin) Skip Button -->
 							<button
+								v-if="isOwnerOrAdmin()"
 								class="button is-danger"
 								@click="skipStation()"
 							>
@@ -90,50 +93,52 @@
 							</router-link>
 						</div>
 					</div>
-					<div class="tab-selection">
-						<button
+					<div v-if="isOwnerOrAdmin() || sector !== 'home'">
+						<div class="tab-selection">
+							<button
+								v-if="isOwnerOrAdmin()"
+								class="button is-default"
+								:class="{ selected: tab === 'settings' }"
+								ref="settings-tab"
+								@click="showTab('settings')"
+							>
+								Settings
+							</button>
+							<button
+								v-if="isAllowedToParty() || isOwnerOrAdmin()"
+								class="button is-default"
+								:class="{ selected: tab === 'playlists' }"
+								ref="playlists-tab"
+								@click="showTab('playlists')"
+							>
+								Playlists
+							</button>
+							<button
+								v-if="isAllowedToParty() || isOwnerOrAdmin()"
+								class="button is-default"
+								:class="{ selected: tab === 'songs' }"
+								ref="songs-tab"
+								@click="showTab('songs')"
+							>
+								Songs
+							</button>
+						</div>
+						<settings
 							v-if="isOwnerOrAdmin()"
-							class="button is-default"
-							:class="{ selected: tab === 'settings' }"
-							ref="settings-tab"
-							@click="showTab('settings')"
-						>
-							Settings
-						</button>
-						<button
+							class="tab"
+							v-show="tab === 'settings'"
+						/>
+						<playlists
 							v-if="isAllowedToParty() || isOwnerOrAdmin()"
-							class="button is-default"
-							:class="{ selected: tab === 'playlists' }"
-							ref="playlists-tab"
-							@click="showTab('playlists')"
-						>
-							Playlists
-						</button>
-						<button
+							class="tab"
+							v-show="tab === 'playlists'"
+						/>
+						<songs
 							v-if="isAllowedToParty() || isOwnerOrAdmin()"
-							class="button is-default"
-							:class="{ selected: tab === 'songs' }"
-							ref="songs-tab"
-							@click="showTab('songs')"
-						>
-							Songs
-						</button>
+							class="tab"
+							v-show="tab === 'songs'"
+						/>
 					</div>
-					<settings
-						v-if="isOwnerOrAdmin()"
-						class="tab"
-						v-show="tab === 'settings'"
-					/>
-					<playlists
-						v-if="isAllowedToParty() || isOwnerOrAdmin()"
-						class="tab"
-						v-show="tab === 'playlists'"
-					/>
-					<songs
-						v-if="isAllowedToParty() || isOwnerOrAdmin()"
-						class="tab"
-						v-show="tab === 'songs'"
-					/>
 				</div>
 			</div>
 			<div class="right-section">
@@ -166,14 +171,14 @@
 				<span> Request Song </span>
 			</button>
 			<div v-if="isOwnerOrAdmin()" class="right">
-				<confirm @confirm="clearAndRefillStationQueue()">
+				<quick-confirm @confirm="clearAndRefillStationQueue()">
 					<a class="button is-danger">
 						Clear and refill station queue
 					</a>
-				</confirm>
-				<confirm @confirm="removeStation()">
+				</quick-confirm>
+				<quick-confirm @confirm="removeStation()">
 					<button class="button is-danger">Delete station</button>
-				</confirm>
+				</quick-confirm>
 			</div>
 		</template>
 	</modal>
@@ -184,7 +189,7 @@ import { mapState, mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 
-import Confirm from "@/components/Confirm.vue";
+import QuickConfirm from "@/components/QuickConfirm.vue";
 import Queue from "@/components/Queue.vue";
 import SongItem from "@/components/SongItem.vue";
 import Modal from "../../Modal.vue";
@@ -196,7 +201,7 @@ import Songs from "./Tabs/Songs.vue";
 export default {
 	components: {
 		Modal,
-		Confirm,
+		QuickConfirm,
 		Queue,
 		SongItem,
 		Settings,
@@ -423,34 +428,46 @@ export default {
 		});
 
 		this.socket.on(
-			"event:station.queue.updated",
-			res => this.updateSongsList(res.data.queue),
+			"event:manageStation.queue.updated",
+			res => {
+				if (res.data.stationId === this.station._id)
+					this.updateSongsList(res.data.queue);
+			},
 			{ modal: "manageStation" }
 		);
 
 		this.socket.on(
-			"event:station.queue.song.repositioned",
-			res => this.repositionSongInList(res.data.song),
+			"event:manageStation.queue.song.repositioned",
+			res => {
+				if (res.data.stationId === this.station._id)
+					this.repositionSongInList(res.data.song);
+			},
 			{ modal: "manageStation" }
 		);
 
 		this.socket.on(
 			"event:station.pause",
-			() => this.updateStationPaused(true),
+			res => {
+				if (res.data.stationId === this.station._id)
+					this.updateStationPaused(true);
+			},
 			{ modal: "manageStation" }
 		);
 
 		this.socket.on(
 			"event:station.resume",
-			() => this.updateStationPaused(false),
+			res => {
+				if (res.data.stationId === this.station._id)
+					this.updateStationPaused(false);
+			},
 			{ modal: "manageStation" }
 		);
 
 		this.socket.on(
 			"event:station.nextSong",
 			res => {
-				const { currentSong } = res.data;
-				this.updateCurrentSong(currentSong || {});
+				if (res.data.stationId === this.station._id)
+					this.updateCurrentSong(res.data.currentSong || {});
 			},
 			{ modal: "manageStation" }
 		);
@@ -687,10 +704,6 @@ export default {
 	height: 100%;
 
 	.left-section {
-		.section:first-child {
-			padding: 0 15px 15px !important;
-		}
-
 		#about-station-container {
 			padding: 20px;
 			display: flex;
@@ -802,6 +815,9 @@ export default {
 				margin-bottom: 10px;
 			}
 		}
+	}
+	&.modal-wide .left-section .section:first-child {
+		padding: 0 15px 15px !important;
 	}
 }
 </style>

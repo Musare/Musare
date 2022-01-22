@@ -2,8 +2,11 @@ import "./loadEnvVariables.js";
 
 import util from "util";
 import config from "config";
+import fs from "fs";
 
-const REQUIRED_CONFIG_VERSION = 8;
+import package_json from "./package.json";
+
+const REQUIRED_CONFIG_VERSION = 9;
 
 // eslint-disable-next-line
 Array.prototype.remove = function (item) {
@@ -28,6 +31,28 @@ console.log = (...args) => {
 	});
 	if (!blacklisted) oldConsole.log.apply(null, args);
 };
+
+const MUSARE_VERSION = package_json.version;
+
+const printVersion = () => {
+	console.log(`Musare version: ${MUSARE_VERSION}.`);
+
+	try {
+		const head_contents = fs.readFileSync("app/.parent_git/HEAD").toString().replaceAll("\n", "");
+		const branch = new RegExp("ref: refs/heads/([\.A-Za-z0-9_-]+)").exec(head_contents)[1];
+		const config_contents = fs.readFileSync("app/.parent_git/config").toString().replaceAll("\t", "").split("\n");
+		const remote = new RegExp("remote = (.+)").exec(config_contents[config_contents.indexOf(`[branch "${branch}"]`) + 1])[1];
+		const remote_url = new RegExp("url = (.+)").exec(config_contents[config_contents.indexOf(`[remote "${remote}"]`) + 1])[1];
+		const latest_commit = fs.readFileSync(`app/.parent_git/refs/heads/${branch}`).toString().replaceAll("\n", "");
+		const latest_commit_short = latest_commit.substr(0, 7);
+
+		console.log(`Git branch: ${remote}/${branch}. Remote url: ${remote_url}. Latest commit: ${latest_commit} (${latest_commit_short}).`);
+	} catch(e) {
+		console.log(`Could not get Git info: ${e.message}.`);
+	}
+}
+
+printVersion();
 
 if (
 	(!config.has("configVersion") || config.get("configVersion") !== REQUIRED_CONFIG_VERSION) &&
@@ -274,6 +299,9 @@ function printTask(task, layer) {
 
 process.stdin.on("data", data => {
 	const command = data.toString().replace(/\r?\n|\r/g, "");
+	if (command === "version") {
+		printVersion();
+	}
 	if (command === "lockdown") {
 		console.log("Locking down.");
 		moduleManager._lockdown();

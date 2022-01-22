@@ -3,6 +3,7 @@ export default {
 	title: { type: String, required: true },
 	artists: [{ type: String, default: [] }],
 	genres: [{ type: String, default: [] }],
+	tags: [{ type: String, default: [] }],
 	duration: { type: Number, min: 1, required: true },
 	skipDuration: { type: Number, required: true, default: 0 },
 	thumbnail: { type: String },
@@ -11,9 +12,9 @@ export default {
 	explicit: { type: Boolean },
 	requestedBy: { type: String },
 	requestedAt: { type: Date },
+	verified: { type: Boolean, default: false },
 	verifiedBy: { type: String },
 	verifiedAt: { type: Date },
 	discogs: { type: Object },
-	status: { type: String, required: true, default: "hidden", enum: ["hidden", "unverified", "verified"] },
-	documentVersion: { type: Number, default: 5, required: true }
+	documentVersion: { type: Number, default: 7, required: true }
 };

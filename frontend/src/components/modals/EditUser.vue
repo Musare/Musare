@@ -76,9 +76,18 @@
 				</div>
 			</template>
 			<template #footer>
-				<button class="button is-warning" @click="removeSessions()">
-					<span>&nbsp;Remove all sessions</span>
-				</button>
+				<quick-confirm @confirm="resendVerificationEmail()">
+					<a class="button is-warning"> Resend verification email </a>
+				</quick-confirm>
+				<quick-confirm @confirm="requestPasswordReset()">
+					<a class="button is-warning"> Request password reset </a>
+				</quick-confirm>
+				<quick-confirm @confirm="removeSessions()">
+					<a class="button is-warning"> Remove all sessions </a>
+				</quick-confirm>
+				<quick-confirm @confirm="removeAccount()">
+					<a class="button is-danger"> Remove account </a>
+				</quick-confirm>
 			</template>
 		</modal>
 	</div>
@@ -91,9 +100,10 @@ import Toast from "toasters";
 import validation from "@/validation";
 import ws from "@/ws";
 import Modal from "../Modal.vue";
+import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
-	components: { Modal },
+	components: { Modal, QuickConfirm },
 	props: {
 		userId: { type: String, default: "" },
 		sector: { type: String, default: "admin" }
@@ -116,12 +126,33 @@ export default {
 	mounted() {
 		ws.onConnect(this.init);
 	},
+	beforeUnmount() {
+		this.socket.dispatch(
+			"apis.leaveRoom",
+			`edit-user.${this.userId}`,
+			() => {}
+		);
+	},
 	methods: {
 		init() {
 			this.socket.dispatch(`users.getUserFromId`, this.userId, res => {
 				if (res.status === "success") {
 					const user = res.data;
 					this.editUser(user);
+
+					this.socket.dispatch(
+						"apis.joinRoom",
+						`edit-user.${this.userId}`
+					);
+
+					this.socket.on(
+						"event:user.removed",
+						res => {
+							if (res.data.userId === this.userId)
+								this.closeModal("editUser");
+						},
+						{ modal: "editUser" }
+					);
 				} else {
 					new Toast("User with that ID not found");
 					this.closeModal("editUser");
@@ -206,6 +237,29 @@ export default {
 					new Toast(res.message);
 				}
 			);
+		},
+		resendVerificationEmail() {
+			this.socket.dispatch(
+				`users.resendVerifyEmail`,
+				this.user._id,
+				res => {
+					new Toast(res.message);
+				}
+			);
+		},
+		requestPasswordReset() {
+			this.socket.dispatch(
+				`users.adminRequestPasswordReset`,
+				this.user._id,
+				res => {
+					new Toast(res.message);
+				}
+			);
+		},
+		removeAccount() {
+			this.socket.dispatch(`users.adminRemove`, this.user._id, res => {
+				new Toast(res.message);
+			});
 		},
 		removeSessions() {
 			this.socket.dispatch(`users.removeSessions`, this.user._id, res => {

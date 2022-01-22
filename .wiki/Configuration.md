@@ -12,8 +12,6 @@ Location: `backend/config/default.json`
 | `serverDomain` | Should be the url where the backend will be accessible from, usually `http://localhost/backend` for docker or `http://localhost:8080` for non-Docker. |
 | `serverPort` | Should be the port where the backend will listen on, should always be `8080` for Docker, and is recommended for non-Docker. |
 | `registrationDisabled` | If set to true, users can't register accounts. |
-| `hideAutomaticallyRequestedSongs` | If `true` any automatically requested songs will be hidden. |
-| `hideAnonymousSongs` | If `true` any anonymously requested songs will be hidden. |
 | `sendDataRequestEmails` | If `true` all admin users will be sent an email if a data request is received. |
 | `apis.youtube.key` | YouTube Data API v3 key, obtained from [here](https://developers.google.com/youtube/v3/getting-started). |
 | `apis.youtube.rateLimit` | Minimum interval between YouTube API requests in milliseconds. |
@@ -34,6 +32,7 @@ Location: `backend/config/default.json`
 | `smtp.auth.pass` | SMTP Password |
 | `smtp.secure` | Whether SMTP is secured. |
 | `smtp.enabled` | Whether SMTP and sending emails is enabled. |
+| `mail.from` | The from field for mails sent from backend. |
 | `redis.url` | Should be left as default for Docker installations, else changed to `redis://localhost:6379/0`. |
 | `redis.password` | Redis password. |
 | `mongo.url` | For Docker replace temporary MongoDB musare user password with one specified in `.env`, and for non-Docker replace `@musare:27017` with `@localhost:27017`. |
@@ -73,11 +72,20 @@ Location: `frontend/dist/config/default.json`
 | `siteSettings.logo_blue` | Path to the blue logo image, by default it is `/assets/blue_wordmark.png`. |
 | `siteSettings.sitename` | Should be the name of the site. |
 | `siteSettings.github` | URL of GitHub repository, defaults to `https://github.com/Musare/MusareNode`. |
+| `siteSettings.mediasession` | Whether to enable mediasession functionality. |
 | `siteSettings.christmas` | Whether to enable christmas theming. |
 | `messages.accountRemoval` | Message to return to users on account removal. |
 | `shortcutOverrides` | Overwrite keyboard shortcuts, for example `"editSong.useAllDiscogs": { "keyCode": 68, "ctrl": true, "alt": true, "shift": false, "preventDefault": true }`. |
+| `debug.git.remote` | Allow the website/users to view the current Git repository's remote. [^1] |
+| `debug.git.remoteUrl` | Allow the website/users to view the current Git repository's remote URL. [^1] |
+| `debug.git.branch` | Allow the website/users to view the current Git repository's branch. [^1] |
+| `debug.git.latestCommit` | Allow the website/users to view the current Git repository's latest commit hash. [^1] |
+| `debug.git.latestCommitShort` | Allow the website/users to view the current Git repository's latest commit hash (short). [^1] |
+| `debug.version` | Allow the website/users to view the current package.json version. [^1] |
 | `skipConfigVersionCheck` | Skips checking if the config version is outdated or not. Should almost always be set to false. |
 | `configVersion` | Version of the config. Every time the template changes, you should change your config accordingly and update the configVersion. |
+
+[^1]: Requires a frontend restart to update. The data will be available from the frontend console and by the frontend code.
 
 ## Docker Environment
 Location: `.env`

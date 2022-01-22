@@ -129,7 +129,10 @@ export default {
 			room.startsWith("profile.") ||
 			room.startsWith("manage-station.") ||
 			room.startsWith("edit-song.") ||
-			room.startsWith("view-report.")
+			room.startsWith("view-report.") ||
+			room.startsWith("edit-user.") ||
+			room === "import-album" ||
+			room === "edit-songs"
 		) {
 			WSModule.runJob("SOCKET_JOIN_ROOM", {
 				socketId: session.socketId,
@@ -157,7 +160,9 @@ export default {
 			room.startsWith("profile.") ||
 			room.startsWith("manage-station.") ||
 			room.startsWith("edit-song.") ||
-			room.startsWith("view-report.")
+			room.startsWith("view-report.") ||
+			room === "import-album" ||
+			room === "edit-songs"
 		) {
 			WSModule.runJob("SOCKET_LEAVE_ROOM", {
 				socketId: session.socketId,
@@ -181,9 +186,7 @@ export default {
 	 */
 	joinAdminRoom: isAdminRequired((session, page, cb) => {
 		if (
-			page === "unverifiedSongs" ||
 			page === "songs" ||
-			page === "hiddenSongs" ||
 			page === "stations" ||
 			page === "reports" ||
 			page === "news" ||

@@ -28,33 +28,168 @@ CacheModule.runJob("SUB", {
 
 export default {
 	/**
-	 * Gets all punishments
+	 * Gets punishments, used in the admin punishments page by the AdvancedTable component
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {Function} cb - gets called with the result
+	 * @param page - the page
+	 * @param pageSize - the size per page
+	 * @param properties - the properties to return for each punishment
+	 * @param sort - the sort object
+	 * @param queries - the queries array
+	 * @param operator - the operator for queries
+	 * @param cb
 	 */
-	index: isAdminRequired(async function index(session, cb) {
-		const punishmentModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "punishment"
-			},
-			this
-		);
+	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
 		async.waterfall(
 			[
 				next => {
-					punishmentModel.find({}, next);
+					DBModule.runJob(
+						"GET_DATA",
+						{
+							page,
+							pageSize,
+							properties,
+							sort,
+							queries,
+							operator,
+							modelName: "punishment",
+							blacklistedProperties: [],
+							specialProperties: {
+								status: [
+									{
+										$addFields: {
+											status: {
+												$cond: [
+													{ $eq: ["$active", true] },
+													{
+														$cond: [
+															{ $gt: [new Date(), "$expiresAt"] },
+															"Inactive",
+															"Active"
+														]
+													},
+													"Inactive"
+												]
+											}
+										}
+									}
+								],
+								value: [
+									{
+										$addFields: {
+											valueOID: {
+												$convert: {
+													input: "$value",
+													to: "objectId",
+													onError: "unknown",
+													onNull: "unknown"
+												}
+											}
+										}
+									},
+									{
+										$lookup: {
+											from: "users",
+											localField: "valueOID",
+											foreignField: "_id",
+											as: "valueUser"
+										}
+									},
+									{
+										$unwind: {
+											path: "$valueUser",
+											preserveNullAndEmptyArrays: true
+										}
+									},
+									{
+										$addFields: {
+											valueUsername: {
+												$cond: [
+													{ $eq: ["$type", "banUserId"] },
+													{ $ifNull: ["$valueUser.username", "unknown"] },
+													null
+												]
+											}
+										}
+									},
+									{
+										$project: {
+											valueOID: 0,
+											valueUser: 0
+										}
+									}
+								],
+								punishedBy: [
+									{
+										$addFields: {
+											punishedByOID: {
+												$convert: {
+													input: "$punishedBy",
+													to: "objectId",
+													onError: "unknown",
+													onNull: "unknown"
+												}
+											}
+										}
+									},
+									{
+										$lookup: {
+											from: "users",
+											localField: "punishedByOID",
+											foreignField: "_id",
+											as: "punishedByUser"
+										}
+									},
+									{
+										$unwind: {
+											path: "$punishedByUser",
+											preserveNullAndEmptyArrays: true
+										}
+									},
+									{
+										$addFields: {
+											punishedByUsername: {
+												$ifNull: ["$punishedByUser.username", "unknown"]
+											}
+										}
+									},
+									{
+										$project: {
+											punishedByOID: 0,
+											punishedByUser: 0
+										}
+									}
+								]
+							},
+							specialQueries: {
+								value: newQuery => ({ $or: [newQuery, { valueUsername: newQuery.value }] }),
+								punishedBy: newQuery => ({
+									$or: [newQuery, { punishedByUsername: newQuery.punishedBy }]
+								})
+							}
+						},
+						this
+					)
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
 				}
 			],
-			async (err, punishments) => {
-				if (err) {
+			async (err, response) => {
+				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "PUNISHMENTS_INDEX", `Indexing punishments failed. "${err}"`);
+					this.log("ERROR", "PUNISHMENTS_GET_DATA", `Failed to get data from punishments. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
-				this.log("SUCCESS", "PUNISHMENTS_INDEX", "Indexing punishments successful.");
-				return cb({ status: "success", data: { punishments } });
+				this.log("SUCCESS", "PUNISHMENTS_GET_DATA", `Got data from punishments successfully.`);
+				return cb({
+					status: "success",
+					message: "Successfully got data from punishments.",
+					data: response
+				});
 			}
 		);
 	}),

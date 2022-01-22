@@ -10,6 +10,7 @@ export default {
 			autoPlayed: false,
 			currentTime: 0
 		},
+		songId: "",
 		song: {},
 		originalSong: {},
 		reports: [],
@@ -19,6 +20,10 @@ export default {
 	actions: {
 		showTab: ({ commit }, tab) => commit("showTab", tab),
 		editSong: ({ commit }, song) => commit("editSong", song),
+		setSong: ({ commit }, song) => commit("setSong", song),
+		updateOriginalSong: ({ commit }, song) =>
+			commit("updateOriginalSong", song),
+		resetSong: ({ commit }, songId) => commit("resetSong", songId),
 		stopVideo: ({ commit }) => commit("stopVideo"),
 		loadVideoById: ({ commit }, id, skipDuration) =>
 			commit("loadVideoById", id, skipDuration),
@@ -45,9 +50,22 @@ export default {
 			state.tab = tab;
 		},
 		editSong(state, song) {
+			state.songId = song.songId;
+			state.prefillData = song.prefill ? song.prefill : {};
+		},
+		setSong(state, song) {
 			if (song.discogs === undefined) song.discogs = null;
 			state.originalSong = JSON.parse(JSON.stringify(song));
 			state.song = { ...song };
+		},
+		updateOriginalSong(state, song) {
+			state.originalSong = JSON.parse(JSON.stringify(song));
+		},
+		resetSong(state, songId) {
+			if (state.songId === songId) state.songId = "";
+			if (state.song && state.song._id === songId) state.song = {};
+			if (state.originalSong && state.originalSong._id === songId)
+				state.originalSong = {};
 		},
 		stopVideo(state) {
 			state.video.player.stopVideo();

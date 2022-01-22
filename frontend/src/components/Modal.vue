@@ -1,18 +1,23 @@
 <template>
 	<div class="modal is-active">
-		<div class="modal-background" @click="closeCurrentModal()" />
+		<div class="modal-background" @click="closeCurrentModalClick()" />
+		<slot name="sidebar" />
 		<div
 			:class="{
 				'modal-card': true,
-				'modal-wide': wide,
+				'modal-slim': size === 'slim',
+				'modal-wide': size === 'wide',
 				'modal-split': split
 			}"
 		>
 			<header class="modal-card-head">
+				<slot name="toggleMobileSidebar" />
 				<h2 class="modal-card-title is-marginless">
 					{{ title }}
 				</h2>
-				<span class="delete material-icons" @click="closeCurrentModal()"
+				<span
+					class="delete material-icons"
+					@click="closeCurrentModalClick()"
 					>highlight_off</span
 				>
 				<christmas-lights v-if="christmas" small :lights="5" />
@@ -20,7 +25,12 @@
 			<section class="modal-card-body">
 				<slot name="body" />
 			</section>
-			<footer class="modal-card-foot" v-if="$slots['footer'] != null">
+			<footer
+				:class="{
+					'modal-card-foot': true,
+					blank: $slots['footer'] == null
+				}"
+			>
 				<slot name="footer" />
 			</footer>
 		</div>
@@ -39,9 +49,11 @@ export default {
 	},
 	props: {
 		title: { type: String, default: "Modal" },
-		wide: { type: Boolean, default: false },
-		split: { type: Boolean, default: false }
+		size: { type: String, default: null },
+		split: { type: Boolean, default: false },
+		interceptClose: { type: Boolean, default: false }
 	},
+	emits: ["close"],
 	data() {
 		return {
 			christmas: false
@@ -57,6 +69,10 @@ export default {
 		this.christmas = await lofig.get("siteSettings.christmas");
 	},
 	methods: {
+		closeCurrentModalClick() {
+			if (this.interceptClose) this.$emit("close");
+			else this.closeCurrentModal();
+		},
 		toCamelCase: str =>
 			str
 				.toLowerCase()
@@ -130,9 +146,13 @@ export default {
 		width: 800px;
 		max-width: calc(100% - 40px);
 		max-height: calc(100vh - 40px);
-		overflow: auto;
+		overflow: visible;
 		margin: 0;
 		font-size: 16px;
+
+		&.modal-slim {
+			width: 640px;
+		}
 
 		&.modal-wide {
 			width: 1300px;
@@ -197,6 +217,8 @@ export default {
 			.delete.material-icons {
 				font-size: 28px;
 				cursor: pointer;
+				user-select: none;
+				-webkit-user-drag: none;
 				&:hover,
 				&:focus {
 					filter: brightness(90%);
@@ -207,7 +229,7 @@ export default {
 		.modal-card-foot {
 			border-top: 1px solid var(--light-grey-2);
 			border-radius: 0 0 5px 5px;
-			overflow: initial;
+			overflow-x: auto;
 			column-gap: 16px;
 
 			& > div {
@@ -222,6 +244,10 @@ export default {
 				margin-right: 0;
 				justify-content: flex-end;
 				column-gap: 16px;
+			}
+
+			&.blank {
+				padding: 10px;
 			}
 		}
 

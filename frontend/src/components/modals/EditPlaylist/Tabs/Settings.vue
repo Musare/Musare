@@ -1,14 +1,14 @@
 <template>
 	<div class="settings-tab section">
-		<div v-if="isEditable()">
-			<h4 class="section-title">Edit Details</h4>
-
-			<p class="section-description">
-				Change the display name and privacy of the playlist
-			</p>
-
-			<hr class="section-horizontal-rule" />
-
+		<div
+			v-if="
+				isEditable() &&
+				!(
+					playlist.type === 'user-liked' ||
+					playlist.type === 'user-disliked'
+				)
+			"
+		>
 			<label class="label"> Change display name </label>
 
 			<div class="control is-grouped input-with-button">
@@ -32,12 +32,7 @@
 			</div>
 		</div>
 
-		<div
-			v-if="
-				userId === playlist.createdBy ||
-				(playlist.type === 'genre' && isAdmin())
-			"
-		>
+		<div v-if="isEditable() || (playlist.type === 'genre' && isAdmin())">
 			<label class="label"> Change privacy </label>
 			<div class="control is-grouped input-with-button">
 				<div class="control is-expanded select">
@@ -84,7 +79,9 @@ export default {
 	methods: {
 		isEditable() {
 			return (
-				this.playlist.isUserModifiable &&
+				(this.playlist.type === "user" ||
+					this.playlist.type === "user-liked" ||
+					this.playlist.type === "user-disliked") &&
 				(this.userId === this.playlist.createdBy ||
 					this.userRole === "admin")
 			);

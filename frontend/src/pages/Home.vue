@@ -63,7 +63,40 @@
 								'--primary-color: var(--' + element.theme + ')'
 							"
 						>
-							<song-thumbnail :song="element.currentSong" />
+							<song-thumbnail :song="element.currentSong">
+								<template #icon>
+									<div class="icon-container">
+										<div
+											v-if="isOwnerOrAdmin(element)"
+											class="
+												material-icons
+												manage-station
+											"
+											@click.prevent="
+												manageStation(element._id)
+											"
+											content="Manage Station"
+											v-tippy
+										>
+											settings
+										</div>
+										<div
+											v-else
+											class="
+												material-icons
+												manage-station
+											"
+											@click.prevent="
+												manageStation(element._id)
+											"
+											content="View Queue"
+											v-tippy
+										>
+											queue_music
+										</div>
+									</div>
+								</template>
+							</song-thumbnail>
 							<div class="card-content">
 								<div class="media">
 									<div class="media-left displayName">
@@ -287,7 +320,30 @@
 					}"
 					:style="'--primary-color: var(--' + station.theme + ')'"
 				>
-					<song-thumbnail :song="station.currentSong" />
+					<song-thumbnail :song="station.currentSong">
+						<template #icon>
+							<div class="icon-container">
+								<div
+									v-if="isOwnerOrAdmin(station)"
+									class="material-icons manage-station"
+									@click.prevent="manageStation(station._id)"
+									content="Manage Station"
+									v-tippy
+								>
+									settings
+								</div>
+								<div
+									v-else
+									class="material-icons manage-station"
+									@click.prevent="manageStation(station._id)"
+									content="View Queue"
+									v-tippy
+								>
+									queue_music
+								</div>
+							</div>
+						</template>
+					</song-thumbnail>
 					<div class="card-content">
 						<div class="media">
 							<div class="media-left displayName">
@@ -428,6 +484,16 @@
 			<main-footer />
 		</div>
 		<create-station v-if="modals.createStation" />
+		<manage-station
+			v-if="modals.manageStation"
+			:station-id="editingStationId"
+			sector="home"
+		/>
+		<request-song v-if="modals.requestSong" />
+		<create-playlist v-if="modals.createPlaylist" />
+		<edit-playlist v-if="modals.editPlaylist" />
+		<edit-song v-if="modals.editSong" song-type="songs" sector="home" />
+		<report v-if="modals.report" />
 	</div>
 </template>
 
@@ -452,6 +518,24 @@ export default {
 		CreateStation: defineAsyncComponent(() =>
 			import("@/components/modals/CreateStation.vue")
 		),
+		ManageStation: defineAsyncComponent(() =>
+			import("@/components/modals/ManageStation/index.vue")
+		),
+		RequestSong: defineAsyncComponent(() =>
+			import("@/components/modals/RequestSong.vue")
+		),
+		EditPlaylist: defineAsyncComponent(() =>
+			import("@/components/modals/EditPlaylist")
+		),
+		CreatePlaylist: defineAsyncComponent(() =>
+			import("@/components/modals/CreatePlaylist.vue")
+		),
+		Report: defineAsyncComponent(() =>
+			import("@/components/modals/Report.vue")
+		),
+		EditSong: defineAsyncComponent(() =>
+			import("@/components/modals/EditSong")
+		),
 		UserIdToUsername,
 		draggable
 	},
@@ -463,13 +547,15 @@ export default {
 			searchQuery: "",
 			sitename: "Musare",
 			orderOfFavoriteStations: [],
-			handledLoginRegisterRedirect: false
+			handledLoginRegisterRedirect: false,
+			editingStationId: null
 		};
 	},
 	computed: {
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
 			userId: state => state.user.auth.userId,
+			role: state => state.user.auth.role,
 			modals: state => state.modalVisibility.modals
 		}),
 		...mapGetters({
@@ -726,7 +812,13 @@ export default {
 			this.socket.dispatch("apis.joinRoom", "home");
 		},
 		isOwner(station) {
-			return station.owner === this.userId;
+			return this.loggedIn && station.owner === this.userId;
+		},
+		isAdmin() {
+			return this.loggedIn && this.role === "admin";
+		},
+		isOwnerOrAdmin(station) {
+			return this.isOwner(station) || this.isAdmin();
 		},
 		isPlaying(station) {
 			return typeof station.currentSong.title !== "undefined";
@@ -769,6 +861,10 @@ export default {
 				recalculatedOrder,
 				res => new Toast(res.message)
 			);
+		},
+		manageStation(stationId) {
+			this.editingStationId = stationId;
+			this.openModal("manageStation");
 		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("station", ["updateIfStationIsFavorited"])
@@ -881,11 +977,13 @@ html {
 .header {
 	display: flex;
 	height: 35vh;
+	min-height: 300px;
 	margin-top: -64px;
 	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 
 	img.background {
 		height: 35vh;
+		min-height: 300px;
 		width: 100%;
 		object-fit: cover;
 		object-position: center;
@@ -904,6 +1002,7 @@ html {
 		);
 		position: absolute;
 		height: 35vh;
+		min-height: 300px;
 		width: 100%;
 		border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 		overflow: hidden;
@@ -915,8 +1014,8 @@ html {
 		margin-left: auto;
 		margin-right: auto;
 		text-align: center;
-		height: 100%;
 		height: 35vh;
+		min-height: 300px;
 		.content {
 			position: absolute;
 			top: 50%;
@@ -962,10 +1061,12 @@ html {
 	}
 	&.loggedIn {
 		height: 20vh;
+		min-height: 200px;
 		.overlay,
 		.content-container,
 		img.background {
 			height: 20vh;
+			min-height: 200px;
 		}
 	}
 }
@@ -1156,6 +1257,39 @@ html {
 			display: flex;
 			position: relative;
 			padding-top: 100%;
+		}
+
+		.icon-container {
+			display: flex;
+			position: absolute;
+			z-index: 2;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
+
+			.material-icons.manage-station {
+				display: inline-flex;
+				opacity: 0;
+				background: var(--primary-color);
+				color: var(--white);
+				margin: auto;
+				font-size: 40px;
+				border-radius: 100%;
+				padding: 10px;
+				transition: all 0.2s ease-in-out;
+			}
+
+			&:hover,
+			&:focus {
+				.material-icons.manage-station {
+					opacity: 1;
+					&:hover,
+					&:focus {
+						filter: brightness(90%);
+					}
+				}
+			}
 		}
 	}
 

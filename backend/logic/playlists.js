@@ -110,42 +110,37 @@ class _PlaylistsModule extends CoreClass {
 		);
 	}
 
-	// /**
-	//  * Returns a list of playlists that include a specific song
-	//  *
-	//  * @param {object} payload - object that contains the payload
-	//  * @param {string} payload.songId - the song id
-	//  * @param {string} payload.includeSongs - include the songs
-	//  * @returns {Promise} - returns promise (reject, resolve)
-	//  */
-	// GET_PLAYLISTS_WITH_SONG(payload) {
-	// 	return new Promise((resolve, reject) => {
-	// 		async.waterfall([
-	// 			next => {
-	// 				const includeObject = payload.includeSongs ? null : { songs: false };
-	// 				PlaylistsModule.playlistModel.find({ "songs._id": payload.songId }, includeObject, next);
-	// 			},
-
-	// 			(playlists, next) => {
-	// 				console.log(playlists);
-	// 			}
-	// 		]);
-	// 	});
-	// }
+	/**
+	 * Returns a list of playlists that include a specific song
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.songId - the song id
+	 * @param {string} payload.includeSongs - include the songs
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_PLAYLISTS_WITH_SONG(payload) {
+		return new Promise((resolve, reject) => {
+			const includeObject = payload.includeSongs ? null : { songs: false };
+			PlaylistsModule.playlistModel.find({ "songs._id": payload.songId }, includeObject, (err, playlists) => {
+				if (err) reject(err);
+				else resolve({ playlists });
+			});
+		});
+	}
 
 	/**
-	 * Creates a playlist that is not generated or editable by a user e.g. liked songs playlist
+	 * Creates a playlist owned by a user
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.userId - the id of the user to create the playlist for
 	 * @param {string} payload.displayName - the display name of the playlist
+	 * @param {string} payload.type - the type of the playlist
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	CREATE_READ_ONLY_PLAYLIST(payload) {
+	CREATE_USER_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
 			PlaylistsModule.playlistModel.create(
 				{
-					isUserModifiable: false,
 					displayName: payload.displayName,
 					songs: [],
 					createdBy: payload.userId,
@@ -178,7 +173,6 @@ class _PlaylistsModule extends CoreClass {
 					if (err.message === "Playlist not found") {
 						PlaylistsModule.playlistModel.create(
 							{
-								isUserModifiable: false,
 								displayName: `Genre - ${payload.genre}`,
 								songs: [],
 								createdBy: "Musare",
@@ -362,7 +356,7 @@ class _PlaylistsModule extends CoreClass {
 	 */
 	ADD_SONG_TO_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
-			const { _id, youtubeId, title, artists, thumbnail, duration, status } = payload.song;
+			const { _id, youtubeId, title, artists, thumbnail, duration, verified } = payload.song;
 			const trimmedSong = {
 				_id,
 				youtubeId,
@@ -370,7 +364,7 @@ class _PlaylistsModule extends CoreClass {
 				artists,
 				thumbnail,
 				duration,
-				status
+				verified
 			};
 
 			PlaylistsModule.playlistModel.updateOne(
@@ -464,7 +458,7 @@ class _PlaylistsModule extends CoreClass {
 
 					(playlistId, _songs, next) => {
 						const songs = _songs.map(song => {
-							const { _id, youtubeId, title, artists, thumbnail, duration, status } = song;
+							const { _id, youtubeId, title, artists, thumbnail, duration, verified } = song;
 							return {
 								_id,
 								youtubeId,
@@ -472,7 +466,7 @@ class _PlaylistsModule extends CoreClass {
 								artists,
 								thumbnail,
 								duration,
-								status
+								verified
 							};
 						});
 

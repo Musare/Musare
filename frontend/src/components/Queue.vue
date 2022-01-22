@@ -36,7 +36,7 @@
 							v-if="isAdminOnly() || isOwnerOnly()"
 							#tippyActions
 						>
-							<confirm
+							<quick-confirm
 								v-if="isOwnerOnly() || isAdminOnly()"
 								placement="left"
 								@confirm="removeFromQueue(element.youtubeId)"
@@ -47,7 +47,7 @@
 									v-tippy
 									>delete_forever</i
 								>
-							</confirm>
+							</quick-confirm>
 							<i
 								class="material-icons"
 								v-if="index > 0"
@@ -141,10 +141,10 @@ import draggable from "vuedraggable";
 import Toast from "toasters";
 
 import SongItem from "@/components/SongItem.vue";
-import Confirm from "@/components/Confirm.vue";
+import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
-	components: { draggable, SongItem, Confirm },
+	components: { draggable, SongItem, QuickConfirm },
 	props: {
 		sector: {
 			type: String,
@@ -305,6 +305,7 @@ export default {
 #queue {
 	background-color: var(--white);
 	border-radius: 0 0 5px 5px;
+	user-select: none;
 
 	.actionable-button-hidden {
 		max-height: 100%;

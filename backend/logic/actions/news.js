@@ -57,12 +57,112 @@ CacheModule.runJob("SUB", {
 
 export default {
 	/**
+	 * Gets news items, used in the admin news page by the AdvancedTable component
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param page - the page
+	 * @param pageSize - the size per page
+	 * @param properties - the properties to return for each news item
+	 * @param sort - the sort object
+	 * @param queries - the queries array
+	 * @param operator - the operator for queries
+	 * @param cb
+	 */
+	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
+		async.waterfall(
+			[
+				next => {
+					DBModule.runJob(
+						"GET_DATA",
+						{
+							page,
+							pageSize,
+							properties,
+							sort,
+							queries,
+							operator,
+							modelName: "news",
+							blacklistedProperties: [],
+							specialProperties: {
+								createdBy: [
+									{
+										$addFields: {
+											createdByOID: {
+												$convert: {
+													input: "$createdBy",
+													to: "objectId",
+													onError: "unknown",
+													onNull: "unknown"
+												}
+											}
+										}
+									},
+									{
+										$lookup: {
+											from: "users",
+											localField: "createdByOID",
+											foreignField: "_id",
+											as: "createdByUser"
+										}
+									},
+									{
+										$unwind: {
+											path: "$createdByUser",
+											preserveNullAndEmptyArrays: true
+										}
+									},
+									{
+										$addFields: {
+											createdByUsername: {
+												$ifNull: ["$createdByUser.username", "unknown"]
+											}
+										}
+									},
+									{
+										$project: {
+											createdByOID: 0,
+											createdByUser: 0
+										}
+									}
+								]
+							},
+							specialQueries: {
+								createdBy: newQuery => ({ $or: [newQuery, { createdByUsername: newQuery.createdBy }] })
+							}
+						},
+						this
+					)
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async (err, response) => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "NEWS_GET_DATA", `Failed to get data from news. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "NEWS_GET_DATA", `Got data from news successfully.`);
+				return cb({
+					status: "success",
+					message: "Successfully got data from news.",
+					data: response
+				});
+			}
+		);
+	}),
+
+	/**
 	 * Gets all news items that are published
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
-	async index(session, cb) {
+	async getPublished(session, cb) {
 		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" }, this);
 		async.waterfall(
 			[

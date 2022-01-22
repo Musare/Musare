@@ -16,9 +16,14 @@ const state = {
 		editNews: false,
 		editUser: false,
 		editSong: false,
+		editSongs: false,
 		importAlbum: false,
 		viewReport: false,
-		viewPunishment: false
+		viewPunishment: false,
+		confirm: false,
+		editSongConfirm: false,
+		editSongsConfirm: false,
+		bulkActions: false
 	},
 	currentlyActive: []
 };
@@ -45,7 +50,8 @@ const actions = {
 const mutations = {
 	closeModal(state, modal) {
 		state.modals[modal] = false;
-		if (state.currentlyActive[0] === modal) state.currentlyActive.shift();
+		const index = state.currentlyActive.indexOf(modal);
+		if (index > -1) state.currentlyActive.splice(index, 1);
 	},
 	openModal(state, modal) {
 		state.modals[modal] = true;

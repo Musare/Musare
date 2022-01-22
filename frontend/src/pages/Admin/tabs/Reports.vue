@@ -2,78 +2,98 @@
 	<div>
 		<page-metadata title="Admin | Reports" />
 		<div class="container">
-			<table class="table">
-				<thead>
-					<tr>
-						<td>Summary</td>
-						<td>YouTube / Song ID</td>
-						<td>Categories Included</td>
-						<td>Options</td>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="report in reports" :key="report._id">
-						<td>
-							<report-info-item
-								:created-at="report.createdAt"
-								:created-by="report.createdBy"
-							/>
-						</td>
-						<td>
-							<span>
-								<a
-									:href="
-										'https://www.youtube.com/watch?v=' +
-										`${report.song.youtubeId}`
-									"
-									target="_blank"
-								>
-									{{ report.song.youtubeId }}</a
-								>
-								<br />
-								{{ report.song._id }}
-							</span>
-						</td>
-
-						<td id="categories-column">
-							<ul>
-								<li
-									v-for="category in getCategories(
-										report.issues
-									)"
-									:key="category"
-								>
-									{{ category }}
-								</li>
-							</ul>
-						</td>
-						<td id="options-column">
-							<button
-								class="button is-primary"
-								@click="view(report._id)"
-								content="Expand"
-								v-tippy
-							>
-								<i class="material-icons icon-with-button">
-									open_in_full
-								</i>
-								Expand
-							</button>
-							<button
-								class="button is-success"
-								@click="resolve(report._id)"
-								content="Resolve"
-								v-tippy
-							>
-								<i class="material-icons icon-with-button">
-									done_all
-								</i>
-								Resolve
-							</button>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+			<advanced-table
+				:column-default="columnDefault"
+				:columns="columns"
+				:filters="filters"
+				data-action="reports.getData"
+				name="admin-reports"
+				max-width="1200"
+				:events="events"
+			>
+				<template #column-options="slotProps">
+					<div class="row-options">
+						<button
+							class="
+								button
+								is-primary
+								icon-with-button
+								material-icons
+							"
+							@click="view(slotProps.item._id)"
+							:disabled="slotProps.item.removed"
+							content="View Report"
+							v-tippy
+						>
+							open_in_full
+						</button>
+						<button
+							class="
+								button
+								is-success
+								icon-with-button
+								material-icons
+							"
+							@click="resolve(slotProps.item._id)"
+							:disabled="slotProps.item.removed"
+							content="Resolve Report"
+							v-tippy
+						>
+							done_all
+						</button>
+					</div>
+				</template>
+				<template #column-_id="slotProps">
+					<span :title="slotProps.item._id">{{
+						slotProps.item._id
+					}}</span>
+				</template>
+				<template #column-songId="slotProps">
+					<span :title="slotProps.item.song._id">{{
+						slotProps.item.song._id
+					}}</span>
+				</template>
+				<template #column-songYoutubeId="slotProps">
+					<a
+						:href="
+							'https://www.youtube.com/watch?v=' +
+							`${slotProps.item.song.youtubeId}`
+						"
+						target="_blank"
+					>
+						{{ slotProps.item.song.youtubeId }}
+					</a>
+				</template>
+				<template #column-categories="slotProps">
+					<span
+						:title="
+							slotProps.item.issues
+								.map(issue => issue.category)
+								.join(', ')
+						"
+						>{{
+							slotProps.item.issues
+								.map(issue => issue.category)
+								.join(", ")
+						}}</span
+					>
+				</template>
+				<template #column-createdBy="slotProps">
+					<span v-if="slotProps.item.createdBy === 'Musare'"
+						>Musare</span
+					>
+					<user-id-to-username
+						v-else
+						:user-id="slotProps.item.createdBy"
+						:link="true"
+					/>
+				</template>
+				<template #column-createdAt="slotProps">
+					<span :title="new Date(slotProps.item.createdAt)">{{
+						getDateFormatted(slotProps.item.createdAt)
+					}}</span>
+				</template>
+			</advanced-table>
 		</div>
 
 		<view-report v-if="modals.viewReport" sector="admin" />
@@ -83,13 +103,13 @@
 </template>
 
 <script>
-import { mapState, mapActions, mapGetters } from "vuex";
+import { mapState, mapActions } from "vuex";
 import { defineAsyncComponent } from "vue";
 
 import Toast from "toasters";
-import ws from "@/ws";
 
-import ReportInfoItem from "@/components/ReportInfoItem.vue";
+import AdvancedTable from "@/components/AdvancedTable.vue";
+import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
 export default {
 	components: {
@@ -102,52 +122,135 @@ export default {
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong/index.vue")
 		),
-		ReportInfoItem
+		AdvancedTable,
+		UserIdToUsername
 	},
 	data() {
 		return {
-			reports: []
+			columnDefault: {
+				sortable: true,
+				hidable: true,
+				defaultVisibility: "shown",
+				draggable: true,
+				resizable: true,
+				minWidth: 150,
+				maxWidth: 600
+			},
+			columns: [
+				{
+					name: "options",
+					displayName: "Options",
+					properties: ["_id"],
+					sortable: false,
+					hidable: false,
+					resizable: false,
+					minWidth: 85,
+					defaultWidth: 85
+				},
+				{
+					name: "_id",
+					displayName: "Report ID",
+					properties: ["_id"],
+					sortProperty: "_id",
+					minWidth: 215,
+					defaultWidth: 215
+				},
+				{
+					name: "songId",
+					displayName: "Song ID",
+					properties: ["song"],
+					sortProperty: "song._id",
+					minWidth: 215,
+					defaultWidth: 215
+				},
+				{
+					name: "songYoutubeId",
+					displayName: "Song YouTube ID",
+					properties: ["song"],
+					sortProperty: "song.youtubeId",
+					minWidth: 165,
+					defaultWidth: 165
+				},
+				{
+					name: "categories",
+					displayName: "Categories",
+					properties: ["issues"],
+					sortable: false
+				},
+				{
+					name: "createdBy",
+					displayName: "Created By",
+					properties: ["createdBy"],
+					sortProperty: "createdBy",
+					defaultWidth: 150
+				},
+				{
+					name: "createdAt",
+					displayName: "Created At",
+					properties: ["createdAt"],
+					sortProperty: "createdAt",
+					defaultWidth: 150
+				}
+			],
+			filters: [
+				{
+					name: "_id",
+					displayName: "Report ID",
+					property: "_id",
+					filterTypes: ["exact"],
+					defaultFilterType: "exact"
+				},
+				{
+					name: "songId",
+					displayName: "Song ID",
+					property: "song._id",
+					filterTypes: ["exact"],
+					defaultFilterType: "exact"
+				},
+				{
+					name: "songYoutubeId",
+					displayName: "Song YouTube ID",
+					property: "song.youtubeId",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "categories",
+					displayName: "Categories",
+					property: "issues.category",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "createdBy",
+					displayName: "Created By",
+					property: "createdBy",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "createdAt",
+					displayName: "Created At",
+					property: "createdAt",
+					filterTypes: ["datetimeBefore", "datetimeAfter"],
+					defaultFilterType: "datetimeBefore"
+				}
+			],
+			events: {
+				adminRoom: "reports",
+				removed: {
+					event: "admin.report.resolved",
+					id: "reportId"
+				}
+			}
 		};
 	},
 	computed: {
 		...mapState("modalVisibility", {
 			modals: state => state.modals
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
 		})
 	},
-	mounted() {
-		ws.onConnect(this.init);
-
-		this.socket.on("event:admin.report.resolved", res => {
-			this.reports = this.reports.filter(
-				report => report._id !== res.data.reportId
-			);
-		});
-
-		this.socket.on("event:admin.report.created", res =>
-			this.reports.unshift(res.data.report)
-		);
-	},
 	methods: {
-		init() {
-			this.socket.dispatch("reports.index", res => {
-				if (res.status === "success") this.reports = res.data.reports;
-			});
-
-			this.socket.dispatch("apis.joinAdminRoom", "reports", () => {});
-		},
-		getCategories(issues) {
-			const categories = [];
-
-			issues.forEach(issue => {
-				if (categories.indexOf(issue.category) === -1)
-					categories.push(issue.category);
-			});
-
-			return categories;
-		},
 		view(reportId) {
 			this.viewReport(reportId);
 			this.openModal("viewReport");
@@ -160,57 +263,18 @@ export default {
 				})
 				.catch(err => new Toast(err.message));
 		},
+		getDateFormatted(createdAt) {
+			const date = new Date(createdAt);
+			const year = date.getFullYear();
+			const month = `${date.getMonth() + 1}`.padStart(2, 0);
+			const day = `${date.getDate()}`.padStart(2, 0);
+			const hour = `${date.getHours()}`.padStart(2, 0);
+			const minute = `${date.getMinutes()}`.padStart(2, 0);
+			return `${year}-${month}-${day} ${hour}:${minute}`;
+		},
 		...mapActions("modalVisibility", ["openModal", "closeModal"]),
 		...mapActions("admin/reports", ["resolveReport"]),
 		...mapActions("modals/viewReport", ["viewReport"])
 	}
 };
 </script>
-
-<style lang="scss" scoped>
-.night-mode {
-	.table {
-		color: var(--light-grey-2);
-		background-color: var(--dark-grey-3);
-
-		thead tr {
-			background: var(--dark-grey-3);
-			td {
-				color: var(--white);
-			}
-		}
-
-		tbody tr:hover {
-			background-color: var(--dark-grey-4) !important;
-		}
-
-		tbody tr:nth-child(even) {
-			background-color: var(--dark-grey-2);
-		}
-
-		strong {
-			color: var(--light-grey-2);
-		}
-	}
-}
-
-#options-column {
-	button:not(:last-of-type) {
-		margin-right: 5px;
-	}
-}
-
-#categories-column {
-	text-transform: capitalize;
-}
-
-td {
-	word-wrap: break-word;
-	max-width: 10vw;
-	vertical-align: middle;
-}
-
-li {
-	list-style: inside;
-}
-</style>

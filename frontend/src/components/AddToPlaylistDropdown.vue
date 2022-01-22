@@ -4,7 +4,7 @@
 		:touch="true"
 		:interactive="true"
 		:placement="placement"
-		theme="addToPlaylist"
+		theme="dropdown"
 		ref="dropdown"
 		trigger="click"
 		append-to="parent"
@@ -84,13 +84,9 @@ export default {
 			socket: "websockets/getSocket"
 		}),
 		...mapState({
+			playlists: state => state.user.playlists.playlists,
 			fetchedPlaylists: state => state.user.playlists.fetchedPlaylists
-		}),
-		playlists() {
-			return this.$store.state.user.playlists.playlists.filter(
-				playlist => playlist.isUserModifiable
-			);
-		}
+		})
 	},
 	mounted() {
 		ws.onConnect(this.init);
@@ -123,15 +119,11 @@ export default {
 	methods: {
 		init() {
 			if (!this.fetchedPlaylists)
-				this.socket.dispatch(
-					"playlists.indexMyPlaylists",
-					true,
-					res => {
-						if (res.status === "success")
-							if (!this.fetchedPlaylists)
-								this.setPlaylists(res.data.playlists);
-					}
-				);
+				this.socket.dispatch("playlists.indexMyPlaylists", res => {
+					if (res.status === "success")
+						if (!this.fetchedPlaylists)
+							this.setPlaylists(res.data.playlists);
+				});
 		},
 		toggleSongInPlaylist(playlistIndex) {
 			const playlist = this.playlists[playlistIndex];

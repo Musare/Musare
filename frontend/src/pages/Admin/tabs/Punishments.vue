@@ -2,61 +2,82 @@
 	<div>
 		<page-metadata title="Admin | Punishments" />
 		<div class="container">
-			<table class="table">
-				<thead>
-					<tr>
-						<td>Status</td>
-						<td>Type</td>
-						<td>Value</td>
-						<td>Reason</td>
-						<td>Options</td>
-					</tr>
-				</thead>
-				<tbody>
-					<tr
-						v-for="punishment in sortedPunishments"
-						:key="punishment._id"
+			<advanced-table
+				:column-default="columnDefault"
+				:columns="columns"
+				:filters="filters"
+				data-action="punishments.getData"
+				name="admin-punishments"
+				max-width="1200"
+			>
+				<template #column-options="slotProps">
+					<div class="row-options">
+						<button
+							class="
+								button
+								is-primary
+								icon-with-button
+								material-icons
+							"
+							@click="view(slotProps.item._id)"
+							:disabled="slotProps.item.removed"
+							content="View Punishment"
+							v-tippy
+						>
+							open_in_full
+						</button>
+					</div>
+				</template>
+				<template #column-status="slotProps">
+					<span>{{ slotProps.item.status }}</span>
+				</template>
+				<template #column-type="slotProps">
+					<span
+						:title="
+							slotProps.item.type === 'banUserId'
+								? 'User ID'
+								: 'IP Address'
+						"
+						>{{
+							slotProps.item.type === "banUserId"
+								? "User ID"
+								: "IP Address"
+						}}</span
 					>
-						<td>
-							{{
-								punishment.active &&
-								new Date(punishment.expiresAt).getTime() >
-									Date.now()
-									? "Active"
-									: "Inactive"
-							}}
-						</td>
-						<td v-if="punishment.type === 'banUserId'">User ID</td>
-						<td v-else>IP Address</td>
-						<td v-if="punishment.type === 'banUserId'">
-							<user-id-to-username
-								:user-id="punishment.value"
-								:alt="punishment.value"
-								:link="true"
-							/>
-							({{ punishment.value }})
-						</td>
-						<td v-else>
-							{{ punishment.value }}
-						</td>
-						<td>{{ punishment.reason }}</td>
-
-						<td>
-							<a
-								class="button is-primary"
-								@click="view(punishment)"
-								content="Expand"
-								v-tippy
-							>
-								<i class="material-icons icon-with-button">
-									open_in_full
-								</i>
-								Expand
-							</a>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+				</template>
+				<template #column-value="slotProps">
+					<user-id-to-username
+						v-if="slotProps.item.type === 'banUserId'"
+						:user-id="slotProps.item.value"
+						:alt="slotProps.item.value"
+						:link="true"
+					/>
+					<span v-else :title="slotProps.item.value">{{
+						slotProps.item.value
+					}}</span>
+				</template>
+				<template #column-reason="slotProps">
+					<span :title="slotProps.item.reason">{{
+						slotProps.item.reason
+					}}</span>
+				</template>
+				<template #column-punishedBy="slotProps">
+					<user-id-to-username
+						:user-id="slotProps.item.punishedBy"
+						:link="true"
+					/>
+				</template>
+				<template #column-punishedAt="slotProps">
+					<span :title="new Date(slotProps.item.punishedAt)">{{
+						getDateFormatted(slotProps.item.punishedAt)
+					}}</span>
+				</template>
+				<template #column-expiresAt="slotProps">
+					<span :title="new Date(slotProps.item.expiresAt)">{{
+						getDateFormatted(slotProps.item.expiresAt)
+					}}</span>
+				</template>
+			</advanced-table>
 			<div class="card">
 				<header class="card-header">
 					<p>Ban an IP</p>
@@ -110,8 +131,7 @@ import { mapState, mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
 import { defineAsyncComponent } from "vue";
 
-import ws from "@/ws";
-
+import AdvancedTable from "@/components/AdvancedTable.vue";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
 export default {
@@ -119,21 +139,148 @@ export default {
 		ViewPunishment: defineAsyncComponent(() =>
 			import("@/components/modals/ViewPunishment.vue")
 		),
+		AdvancedTable,
 		UserIdToUsername
 	},
 	data() {
 		return {
 			viewingPunishmentId: "",
-			punishments: [],
 			ipBan: {
 				expiresAt: "1h"
-			}
+			},
+			columnDefault: {
+				sortable: true,
+				hidable: true,
+				defaultVisibility: "shown",
+				draggable: true,
+				resizable: true,
+				minWidth: 150,
+				maxWidth: 600
+			},
+			columns: [
+				{
+					name: "options",
+					displayName: "Options",
+					properties: ["_id"],
+					sortable: false,
+					hidable: false,
+					resizable: false,
+					minWidth: 76,
+					defaultWidth: 76
+				},
+				{
+					name: "status",
+					displayName: "Status",
+					properties: ["status"],
+					sortable: false,
+					defaultWidth: 150
+				},
+				{
+					name: "type",
+					displayName: "Type",
+					properties: ["type"],
+					sortProperty: "type"
+				},
+				{
+					name: "value",
+					displayName: "Value",
+					properties: ["value"],
+					sortProperty: "value",
+					defaultWidth: 150
+				},
+				{
+					name: "reason",
+					displayName: "Reason",
+					properties: ["reason"],
+					sortProperty: "reason"
+				},
+				{
+					name: "punishedBy",
+					displayName: "Punished By",
+					properties: ["punishedBy"],
+					sortProperty: "punishedBy",
+					defaultWidth: 200,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "punishedAt",
+					displayName: "Punished At",
+					properties: ["punishedAt"],
+					sortProperty: "punishedAt",
+					defaultWidth: 200,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "expiresAt",
+					displayName: "Expires At",
+					properties: ["expiresAt"],
+					sortProperty: "verifiedAt",
+					defaultWidth: 200,
+					defaultVisibility: "hidden"
+				}
+			],
+			filters: [
+				{
+					name: "status",
+					displayName: "Status",
+					property: "status",
+					filterTypes: ["exact"],
+					defaultFilterType: "exact",
+					dropdown: [
+						["Active", "Active"],
+						["Inactive", "Inactive"]
+					]
+				},
+				{
+					name: "type",
+					displayName: "Type",
+					property: "type",
+					filterTypes: ["exact"],
+					defaultFilterType: "exact",
+					dropdown: [
+						["banUserId", "User ID"],
+						["banUserIp", "IP Address"]
+					]
+				},
+				{
+					name: "value",
+					displayName: "Value",
+					property: "value",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "reason",
+					displayName: "Reason",
+					property: "reason",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "punishedBy",
+					displayName: "Punished By",
+					property: "punishedBy",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "punishedAt",
+					displayName: "Punished At",
+					property: "punishedAt",
+					filterTypes: ["datetimeBefore", "datetimeAfter"],
+					defaultFilterType: "datetimeBefore"
+				},
+				{
+					name: "expiresAt",
+					displayName: "Expires At",
+					property: "expiresAt",
+					filterTypes: ["datetimeBefore", "datetimeAfter"],
+					defaultFilterType: "datetimeBefore"
+				}
+			]
 		};
 	},
 	computed: {
-		sortedPunishments() {
-			return this.punishments;
-		},
 		...mapState("modalVisibility", {
 			modals: state => state.modals
 		}),
@@ -141,16 +288,9 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
-	mounted() {
-		ws.onConnect(this.init);
-
-		this.socket.on("event:admin.punishment.created", res =>
-			this.punishments.push(res.data.punishment)
-		);
-	},
 	methods: {
-		view(punishment) {
-			this.viewingPunishmentId = punishment._id;
+		view(punishmentId) {
+			this.viewingPunishmentId = punishmentId;
 			this.openModal("viewPunishment");
 		},
 		banIP() {
@@ -164,13 +304,14 @@ export default {
 				}
 			);
 		},
-		init() {
-			this.socket.dispatch("punishments.index", res => {
-				if (res.status === "success")
-					this.punishments = res.data.punishments;
-			});
-
-			this.socket.dispatch("apis.joinAdminRoom", "punishments", () => {});
+		getDateFormatted(createdAt) {
+			const date = new Date(createdAt);
+			const year = date.getFullYear();
+			const month = `${date.getMonth() + 1}`.padStart(2, 0);
+			const day = `${date.getDate()}`.padStart(2, 0);
+			const hour = `${date.getHours()}`.padStart(2, 0);
+			const minute = `${date.getMinutes()}`.padStart(2, 0);
+			return `${year}-${month}-${day} ${hour}:${minute}`;
 		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("admin/punishments", ["viewPunishment"])
@@ -180,30 +321,6 @@ export default {
 
 <style lang="scss" scoped>
 .night-mode {
-	.table {
-		color: var(--light-grey-2);
-		background-color: var(--dark-grey-3);
-
-		thead tr {
-			background: var(--dark-grey-3);
-			td {
-				color: var(--white);
-			}
-		}
-
-		tbody tr:hover {
-			background-color: var(--dark-grey-4) !important;
-		}
-
-		tbody tr:nth-child(even) {
-			background-color: var(--dark-grey-2);
-		}
-
-		strong {
-			color: var(--light-grey-2);
-		}
-	}
-
 	.card {
 		background: var(--dark-grey-3);
 
@@ -233,12 +350,9 @@ export default {
 	.button.is-primary {
 		width: 100%;
 	}
-}
 
-td {
-	vertical-align: middle;
-}
-select {
-	margin-bottom: 10px;
+	select {
+		margin-bottom: 10px;
+	}
 }
 </style>

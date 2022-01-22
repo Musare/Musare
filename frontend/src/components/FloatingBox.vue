@@ -146,6 +146,7 @@ export default {
 
 .floating-box {
 	display: flex;
+	flex-direction: column;
 	background-color: var(--white);
 	color: var(--black);
 	position: fixed;
@@ -157,10 +158,6 @@ export default {
 	min-height: 50px !important;
 	min-width: 50px !important;
 	padding: 0;
-
-	&.column {
-		flex-direction: column;
-	}
 
 	.box-header {
 		z-index: 100000001;

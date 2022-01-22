@@ -3,11 +3,11 @@
 		<div class="container">
 			<div class="footer-content">
 				<div id="footer-copyright">
-					<p>© Copyright Musare 2015 - 2021</p>
+					<p>© Copyright Musare 2015 - 2022</p>
 				</div>
-				<a id="footer-logo" href="/"
+				<router-link id="footer-logo" to="/"
 					><img src="/assets/blue_wordmark.png" alt="Musare"
-				/></a>
+				/></router-link>
 				<div id="footer-links">
 					<a :href="github" target="_blank" title="GitHub Repository"
 						>GitHub</a
@@ -90,10 +90,11 @@ export default {
 		margin-right: auto;
 		width: 160px;
 		order: 1;
-		user-select: none;
 
 		img {
 			max-width: 100%;
+			user-select: none;
+			-webkit-user-drag: none;
 		}
 	}
 

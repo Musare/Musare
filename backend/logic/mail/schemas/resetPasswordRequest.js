@@ -1,3 +1,4 @@
+import config from "config";
 import mail from "../index";
 
 /**
@@ -10,7 +11,7 @@ import mail from "../index";
  */
 export default (to, username, code, cb) => {
 	const data = {
-		from: "Musare <noreply@musare.com>",
+		from: config.get("mail.from"),
 		to,
 		subject: "Password reset request",
 		html: `

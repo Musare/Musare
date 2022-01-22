@@ -21,30 +21,57 @@ CacheModule.runJob("SUB", {
 
 export default {
 	/**
-	 * Gets all unresolved data requests
+	 * Gets data requests, used in the admin users page by the AdvancedTable component
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {Function} cb - gets called with the result
+	 * @param page - the page
+	 * @param pageSize - the size per page
+	 * @param properties - the properties to return for each data request
+	 * @param sort - the sort object
+	 * @param queries - the queries array
+	 * @param operator - the operator for queries
+	 * @param cb
 	 */
-	index: isAdminRequired(async function index(session, cb) {
-		const dataRequestModel = await DBModule.runJob("GET_MODEL", { modelName: "dataRequest" }, this);
-
+	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
 		async.waterfall(
 			[
 				next => {
-					dataRequestModel.find({ resolved: false }).sort({ createdAt: "desc" }).exec(next);
+					DBModule.runJob(
+						"GET_DATA",
+						{
+							page,
+							pageSize,
+							properties,
+							sort,
+							queries,
+							operator,
+							modelName: "dataRequest",
+							blacklistedProperties: [],
+							specialProperties: {},
+							specialQueries: {}
+						},
+						this
+					)
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
 				}
 			],
-			async (err, requests) => {
-				if (err) {
+			async (err, response) => {
+				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "DATA_REQUESTS_INDEX", `Indexing data requests failed. "${err}"`);
+					this.log("ERROR", "DATA_REQUESTS_GET_DATA", `Failed to get data from data requests. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
-
-				this.log("SUCCESS", "DATA_REQUESTS_INDEX", `Indexing data requests successful.`, false);
-
-				return cb({ status: "success", data: { requests } });
+				this.log("SUCCESS", "DATA_REQUESTS_GET_DATA", `Got data from data requests successfully.`);
+				return cb({
+					status: "success",
+					message: "Successfully got data from data requests.",
+					data: response
+				});
 			}
 		);
 	}),

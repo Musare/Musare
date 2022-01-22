@@ -86,9 +86,32 @@ export default {
 					new Toast({ content: res.message, timeout: 20000 });
 					if (res.status === "success") {
 						isImportingPlaylist = false;
+
+						const {
+							songsInPlaylistTotal,
+							videosInPlaylistTotal,
+							alreadyInLikedPlaylist,
+							alreadyInDislikedPlaylist
+						} = res.data.stats;
+
 						if (this.youtubeSearch.playlist.isImportingOnlyMusic) {
 							new Toast({
-								content: `${res.data.stats.songsInPlaylistTotal} of the ${res.data.stats.videosInPlaylistTotal} videos in the playlist were songs.`,
+								content: `${songsInPlaylistTotal} of the ${videosInPlaylistTotal} videos in the playlist were songs.`,
+								timeout: 20000
+							});
+						}
+						if (
+							alreadyInLikedPlaylist > 0 ||
+							alreadyInDislikedPlaylist > 0
+						) {
+							let message = "";
+							if (alreadyInLikedPlaylist > 0) {
+								message = `${alreadyInLikedPlaylist} songs were already in your Liked Songs playlist. A song cannot be in both the Liked Songs playlist and the Disliked Songs playlist at the same time.`;
+							} else {
+								message = `${alreadyInDislikedPlaylist} songs were already in your Disliked Songs playlist. A song cannot be in both the Liked Songs playlist and the Disliked Songs playlist at the same time.`;
+							}
+							new Toast({
+								content: message,
 								timeout: 20000
 							});
 						}

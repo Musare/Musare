@@ -423,7 +423,7 @@ CacheModule.runJob("SUB", {
 
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `manage-station.${stationId}`,
-				args: ["event:station.queue.updated", { data: { stationId, queue: station.queue } }]
+				args: ["event:manageStation.queue.updated", { data: { stationId, queue: station.queue } }]
 			});
 		});
 	}
@@ -432,9 +432,17 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "station.repositionSongInQueue",
 	cb: res => {
-		WSModule.runJob("EMIT_TO_ROOMS", {
-			rooms: [`station.${res.stationId}`, `manage-station.${res.stationId}`],
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `station.${res.stationId}`,
 			args: ["event:station.queue.song.repositioned", { data: { song: res.song } }]
+		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `manage-station.${res.stationId}`,
+			args: [
+				"event:manageStation.queue.song.repositioned",
+				{ data: { stationId: res.stationId, song: res.song } }
+			]
 		});
 	}
 });
@@ -524,6 +532,26 @@ CacheModule.runJob("SUB", {
 	}
 });
 
+CacheModule.runJob("SUB", {
+	channel: "station.updated",
+	cb: async data => {
+		const stationModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "station"
+		});
+
+		stationModel.findOne(
+			{ _id: data.stationId },
+			["_id", "name", "displayName", "description", "type", "privacy", "owner", "partyMode", "playMode", "theme"],
+			(err, station) => {
+				WSModule.runJob("EMIT_TO_ROOMS", {
+					rooms: ["admin.stations"],
+					args: ["event:admin.station.updated", { data: { station } }]
+				});
+			}
+		);
+	}
+});
+
 export default {
 	/**
 	 * Get a list of all the stations
@@ -609,6 +637,106 @@ export default {
 			}
 		);
 	},
+
+	/**
+	 * Gets stations, used in the admin stations page by the AdvancedTable component
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param page - the page
+	 * @param pageSize - the size per page
+	 * @param properties - the properties to return for each station
+	 * @param sort - the sort object
+	 * @param queries - the queries array
+	 * @param operator - the operator for queries
+	 * @param cb
+	 */
+	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
+		async.waterfall(
+			[
+				next => {
+					DBModule.runJob(
+						"GET_DATA",
+						{
+							page,
+							pageSize,
+							properties,
+							sort,
+							queries,
+							operator,
+							modelName: "station",
+							blacklistedProperties: [],
+							specialProperties: {
+								owner: [
+									{
+										$addFields: {
+											ownerOID: {
+												$convert: {
+													input: "$owner",
+													to: "objectId",
+													onError: "unknown",
+													onNull: "unknown"
+												}
+											}
+										}
+									},
+									{
+										$lookup: {
+											from: "users",
+											localField: "ownerOID",
+											foreignField: "_id",
+											as: "ownerUser"
+										}
+									},
+									{
+										$unwind: {
+											path: "$ownerUser",
+											preserveNullAndEmptyArrays: true
+										}
+									},
+									{
+										$addFields: {
+											ownerUsername: {
+												$cond: [
+													{ $eq: [{ $type: "$owner" }, "string"] },
+													{ $ifNull: ["$ownerUser.username", "unknown"] },
+													"none"
+												]
+											}
+										}
+									},
+									{
+										$project: {
+											ownerOID: 0,
+											ownerUser: 0
+										}
+									}
+								]
+							},
+							specialQueries: {
+								owner: newQuery => ({ $or: [newQuery, { ownerUsername: newQuery.owner }] })
+							}
+						},
+						this
+					)
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async (err, response) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "STATIONS_GET_DATA", `Failed to get data from stations. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "STATIONS_GET_DATA", `Got data from stations successfully.`);
+				return cb({ status: "success", message: "Successfully got data from stations.", data: response });
+			}
+		);
+	}),
 
 	/**
 	 * Obtains basic metadata of a station in order to format an activity
@@ -1224,6 +1352,10 @@ export default {
 						locked: station.locked
 					}
 				});
+				CacheModule.runJob("PUB", {
+					channel: "station.updated",
+					value: { stationId }
+				});
 				return cb({ status: "success", data: { locked: station.locked } });
 			}
 		);
@@ -1484,6 +1616,11 @@ export default {
 					value: { stationId, name: newName }
 				});
 
+				CacheModule.runJob("PUB", {
+					channel: "station.updated",
+					value: { stationId }
+				});
+
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
 					userId: session.userId,
 					type: "station__edit_name",
@@ -1562,6 +1699,11 @@ export default {
 					value: { stationId, displayName: newDisplayName }
 				});
 
+				CacheModule.runJob("PUB", {
+					channel: "station.updated",
+					value: { stationId }
+				});
+
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
 					userId: session.userId,
 					type: "station__edit_display_name",
@@ -1638,6 +1780,11 @@ export default {
 					value: { stationId, description: newDescription }
 				});
 
+				CacheModule.runJob("PUB", {
+					channel: "station.updated",
+					value: { stationId }
+				});
+
 				return cb({
 					status: "success",
 					message: "Successfully updated the description."
@@ -1707,6 +1854,11 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "station.privacyUpdate",
 					value: { stationId, previousPrivacy }
+				});
+
+				CacheModule.runJob("PUB", {
+					channel: "station.updated",
+					value: { stationId }
 				});
 
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
@@ -2153,6 +2305,11 @@ export default {
 					}
 				});
 
+				CacheModule.runJob("PUB", {
+					channel: "station.updated",
+					value: { stationId }
+				});
+
 				StationsModule.runJob("SKIP_STATION", { stationId, natural: false });
 
 				return cb({
@@ -2231,6 +2388,10 @@ export default {
 						playMode: newPlayMode
 					}
 				});
+				CacheModule.runJob("PUB", {
+					channel: "station.updated",
+					value: { stationId }
+				});
 				StationsModule.runJob("SKIP_STATION", { stationId, natural: false });
 				return cb({
 					status: "success",
@@ -2297,6 +2458,11 @@ export default {
 
 				CacheModule.runJob("PUB", {
 					channel: "station.themeUpdate",
+					value: { stationId }
+				});
+
+				CacheModule.runJob("PUB", {
+					channel: "station.updated",
 					value: { stationId }
 				});
 
@@ -2621,7 +2787,6 @@ export default {
 					const stationId = mongoose.Types.ObjectId();
 					playlistModel.create(
 						{
-							isUserModifiable: false,
 							displayName: `Station - ${data.name}`,
 							songs: [],
 							createdBy: data.type === "official" ? "Musare" : session.userId,

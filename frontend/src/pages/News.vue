@@ -39,7 +39,7 @@
 <script>
 import { formatDistance } from "date-fns";
 import { mapGetters } from "vuex";
-import marked from "marked";
+import { marked } from "marked";
 import { sanitize } from "dompurify";
 
 import ws from "@/ws";
@@ -102,7 +102,7 @@ export default {
 		sanitize,
 		formatDistance,
 		init() {
-			this.socket.dispatch("news.index", res => {
+			this.socket.dispatch("news.getPublished", res => {
 				if (res.status === "success") this.news = res.data.news;
 			});
 
@@ -119,9 +119,12 @@ export default {
 	}
 }
 
+.container {
+	width: calc(100% - 32px);
+}
+
 .section {
 	border: 1px solid var(--light-grey-3);
-	width: 1000px;
 	max-width: 100%;
 	margin-top: 50px;
 
