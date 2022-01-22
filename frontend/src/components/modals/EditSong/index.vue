@@ -436,7 +436,11 @@
 								Songs
 							</button>
 						</div>
-						<discogs class="tab" v-show="tab === 'discogs'" />
+						<discogs
+							class="tab"
+							v-show="tab === 'discogs'"
+							:bulk="bulk"
+						/>
 						<reports class="tab" v-show="tab === 'reports'" />
 						<youtube class="tab" v-show="tab === 'youtube'" />
 						<musare-songs
