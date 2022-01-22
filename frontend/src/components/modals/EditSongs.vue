@@ -202,6 +202,8 @@
 import { mapState, mapActions, mapGetters } from "vuex";
 import { defineAsyncComponent } from "vue";
 
+import Toast from "toasters";
+
 import SongItem from "@/components/SongItem.vue";
 
 export default {
@@ -275,7 +277,10 @@ export default {
 				});
 			});
 
-			this.editNextSong();
+			if (this.items.length === 0) {
+				this.closeThisModal();
+				new Toast("You can't edit 0 songs.");
+			} else this.editNextSong();
 		});
 
 		this.socket.on(`event:admin.song.updated`, res => {
@@ -298,6 +303,7 @@ export default {
 	},
 	beforeUnmount() {
 		this.socket.dispatch("apis.leaveRoom", "edit-songs");
+		this.resetSongs();
 	},
 	methods: {
 		pickSong(song) {
@@ -417,7 +423,8 @@ export default {
 		},
 		...mapActions("modals/confirm", ["updateConfirmMessage"]),
 		...mapActions("modalVisibility", ["openModal", "closeModal"]),
-		...mapActions("modals/editSong", ["editSong"])
+		...mapActions("modals/editSong", ["editSong"]),
+		...mapActions("modals/editSongs", ["resetSongs"])
 	}
 };
 </script>

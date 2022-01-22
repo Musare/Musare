@@ -451,8 +451,12 @@ export default {
 				});
 			});
 
-			this.editSongs(this.songsToEdit);
-			this.openModal("editSongs");
+			if (this.songsToEdit.length === 0)
+				new Toast("You can't edit 0 songs.");
+			else {
+				this.editSongs(this.songsToEdit);
+				this.openModal("editSongs");
+			}
 		},
 		log(evt) {
 			window.console.log(evt);

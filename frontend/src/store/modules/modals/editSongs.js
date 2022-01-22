@@ -8,7 +8,8 @@ export default {
 	},
 	getters: {},
 	actions: {
-		editSongs: ({ commit }, songs) => commit("editSongs", songs)
+		editSongs: ({ commit }, songs) => commit("editSongs", songs),
+		resetSongs: ({ commit }) => commit("resetSongs")
 	},
 	mutations: {
 		editSongs(state, songs) {
@@ -19,6 +20,10 @@ export default {
 					song.prefill ? song.prefill : {}
 				])
 			);
+		},
+		resetSongs(state) {
+			state.songIds = [];
+			state.songPrefillData = {};
 		}
 	}
 };
