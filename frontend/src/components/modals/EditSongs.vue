@@ -417,6 +417,39 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.night-mode .sidebar {
+	.sidebar-head,
+	.sidebar-foot {
+		background-color: var(--dark-grey-3);
+		border: none;
+	}
+
+	.sidebar-body {
+		background-color: var(--dark-grey-4) !important;
+	}
+
+	.sidebar-head .toggle-sidebar-icon.material-icons,
+	.sidebar-title {
+		color: var(--white);
+	}
+
+	p,
+	label,
+	td,
+	th {
+		color: var(--light-grey-2) !important;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		color: var(--white) !important;
+	}
+}
+
 .toggle-sidebar-icon {
 	display: none;
 }
