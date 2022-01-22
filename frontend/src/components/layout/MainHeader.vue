@@ -23,6 +23,22 @@
 		</span>
 
 		<div class="nav-right nav-menu" :class="{ 'is-active': isMobile }">
+			<div class="nav-item" id="nightmode-toggle">
+				<span
+					:class="{
+						'material-icons': true,
+						'night-mode-toggle': true,
+						'night-mode-on': localNightmode
+					}"
+					@click="toggleNightmode()"
+					:content="`${
+						localNightmode ? 'Disable' : 'Enable'
+					} Night Mode`"
+					v-tippy
+				>
+					{{ localNightmode ? "dark_mode" : "light_mode" }}
+				</span>
+			</div>
 			<span v-if="loggedIn" class="grouped">
 				<router-link
 					v-if="role === 'admin'"
@@ -49,22 +65,6 @@
 				<a class="nav-item" @click="openModal('login')">Login</a>
 				<a class="nav-item" @click="openModal('register')">Register</a>
 			</span>
-			<div class="nav-item" id="nightmode-toggle">
-				<p class="is-expanded checkbox-control">
-					<label class="switch">
-						<input
-							type="checkbox"
-							id="instant-nightmode"
-							v-model="localNightmode"
-						/>
-						<span class="slider round"></span>
-					</label>
-
-					<label for="instant-nightmode">
-						<p>Nightmode</p>
-					</label>
-				</p>
-			</div>
 		</div>
 
 		<christmas-lights
@@ -92,7 +92,7 @@ export default {
 	},
 	data() {
 		return {
-			localNightmode: null,
+			localNightmode: false,
 			isMobile: false,
 			frontendDomain: "",
 			siteSettings: {
@@ -116,26 +116,9 @@ export default {
 		})
 	},
 	watch: {
-		localNightmode(newValue, oldValue) {
-			if (oldValue === null) return;
-
-			localStorage.setItem("nightmode", this.localNightmode);
-
-			if (this.loggedIn) {
-				this.socket.dispatch(
-					"users.updatePreferences",
-					{ nightmode: this.localNightmode },
-					res => {
-						if (res.status !== "success") new Toast(res.message);
-					}
-				);
-			}
-
-			this.changeNightmode(this.localNightmode);
-		},
 		nightmode(nightmode) {
 			if (this.localNightmode !== nightmode)
-				this.localNightmode = nightmode;
+				this.toggleNightmode(nightmode);
 		}
 	},
 	async mounted() {
@@ -151,6 +134,23 @@ export default {
 		});
 	},
 	methods: {
+		toggleNightmode(toggle) {
+			this.localNightmode = toggle || !this.localNightmode;
+
+			localStorage.setItem("nightmode", this.localNightmode);
+
+			if (this.loggedIn) {
+				this.socket.dispatch(
+					"users.updatePreferences",
+					{ nightmode: this.localNightmode },
+					res => {
+						if (res.status !== "success") new Toast(res.message);
+					}
+				);
+			}
+
+			this.changeNightmode(this.localNightmode);
+		},
 		onResize() {
 			this.windowWidth = window.innerWidth;
 		},
