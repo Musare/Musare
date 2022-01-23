@@ -2971,7 +2971,7 @@ export default {
 					)
 						.then(response => {
 							const { song } = response;
-							const { _id, title, skipDuration, artists, thumbnail, duration, status } = song;
+							const { _id, title, skipDuration, artists, thumbnail, duration, verified } = song;
 							next(
 								null,
 								{
@@ -2982,7 +2982,7 @@ export default {
 									artists,
 									thumbnail,
 									duration,
-									status
+									verified
 								},
 								station
 							);

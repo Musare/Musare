@@ -78,8 +78,36 @@ export default async function migrate(MigrationModule) {
 				},
 
 				next => {
+					playlistModel.updateMany({ documentVersion: 5 }, { $set: { documentVersion: 6 } }, (err, res) => {
+						if (err) next(err);
+						else {
+							this.log(
+								"INFO",
+								`Migration 18 (playlist). Matched: ${res.matchedCount}, modified: ${res.modifiedCount}, ok: ${res.ok}.`
+							);
+
+							next();
+						}
+					});
+				},
+
+				next => {
+					stationModel.updateMany({ documentVersion: 6 }, { $set: { documentVersion: 7 } }, (err, res) => {
+						if (err) next(err);
+						else {
+							this.log(
+								"INFO",
+								`Migration 18 (station). Matched: ${res.matchedCount}, modified: ${res.modifiedCount}, ok: ${res.ok}.`
+							);
+
+							next();
+						}
+					});
+				},
+
+				next => {
 					this.log("INFO", `Migration 18. Updating playlist songs and queue songs.`);
-					songModel.find({ documentVersion: 6 }, (err, songs) => {
+					songModel.find({ documentVersion: 7 }, (err, songs) => {
 						if (err) next(err);
 						else {
 							async.eachLimit(
@@ -110,7 +138,7 @@ export default async function migrate(MigrationModule) {
 										[
 											next => {
 												playlistModel.updateMany(
-													{ "songs._id": song._id, documentVersion: 5 },
+													{ "songs._id": song._id, documentVersion: 6 },
 													{ $set: { "songs.$": trimmedSong } },
 													next
 												);
@@ -118,7 +146,7 @@ export default async function migrate(MigrationModule) {
 
 											(res, next) => {
 												stationModel.updateMany(
-													{ "queue._id": song._id, documentVersion: 6 },
+													{ "queue._id": song._id, documentVersion: 7 },
 													{ $set: { "queue.$": trimmedSong } },
 													next
 												);
@@ -126,7 +154,7 @@ export default async function migrate(MigrationModule) {
 
 											(res, next) => {
 												stationModel.updateMany(
-													{ "currentSong._id": song._id, documentVersion: 6 },
+													{ "currentSong._id": song._id, documentVersion: 7 },
 													{ $set: { currentSong: null } },
 													next
 												);
@@ -141,34 +169,6 @@ export default async function migrate(MigrationModule) {
 									next(err);
 								}
 							);
-						}
-					});
-				},
-
-				next => {
-					playlistModel.updateMany({ documentVersion: 5 }, { $set: { documentVersion: 6 } }, (err, res) => {
-						if (err) next(err);
-						else {
-							this.log(
-								"INFO",
-								`Migration 18 (playlist). Matched: ${res.matchedCount}, modified: ${res.modifiedCount}, ok: ${res.ok}.`
-							);
-
-							next();
-						}
-					});
-				},
-
-				next => {
-					stationModel.updateMany({ documentVersion: 6 }, { $set: { documentVersion: 7 } }, (err, res) => {
-						if (err) next(err);
-						else {
-							this.log(
-								"INFO",
-								`Migration 18 (station). Matched: ${res.matchedCount}, modified: ${res.modifiedCount}, ok: ${res.ok}.`
-							);
-
-							next();
 						}
 					});
 				}
