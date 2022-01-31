@@ -130,8 +130,8 @@ export default async function migrate(MigrationModule) {
 										title,
 										artists,
 										thumbnail,
-										duration,
-										skipDuration,
+										duration: +duration,
+										skipDuration: +skipDuration,
 										verified
 									};
 									async.waterfall(
