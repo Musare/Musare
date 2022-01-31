@@ -872,7 +872,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 .christmas-mode .home-page {
 	.header .overlay {
 		background: linear-gradient(
@@ -904,7 +904,7 @@ export default {
 }
 </style>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 * {
 	box-sizing: border-box;
 }

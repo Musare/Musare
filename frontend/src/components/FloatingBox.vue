@@ -135,7 +135,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 .night-mode .floating-box {
 	background-color: var(--dark-grey-2) !important;
 	border: 0 !important;

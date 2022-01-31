@@ -128,7 +128,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 @media screen and (max-width: 1300px) {
 	.section {
 		max-width: 100% !important;

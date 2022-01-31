@@ -94,7 +94,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .nav-dropdown-items {
 	& > span:not(:last-child) .nav-item.button {
 		margin-bottom: 10px !important;

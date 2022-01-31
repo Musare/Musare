@@ -316,7 +316,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 #my-playlists {
 	background-color: var(--white);
 	margin-bottom: 20px;

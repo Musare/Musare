@@ -305,7 +305,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.modal-card,
 	.modal-card-head,
@@ -356,7 +356,7 @@ a {
 }
 </style>
 
-<style lang="scss">
+<style lang="less">
 .grecaptcha-badge {
 	z-index: 2000;
 }

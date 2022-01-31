@@ -33,7 +33,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .help {
 	margin-top: 0 !important;
 	margin-bottom: 10px !important;

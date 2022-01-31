@@ -85,7 +85,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 .night-mode .modal .modal-card {
 	.modal-card-head,
 	.modal-card-foot {

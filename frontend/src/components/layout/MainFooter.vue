@@ -38,7 +38,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	footer.footer,
 	footer.footer .container,

@@ -307,7 +307,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.report-items .report-item {
 		background-color: var(--dark-grey-3) !important;

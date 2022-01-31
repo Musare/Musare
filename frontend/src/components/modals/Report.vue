@@ -434,7 +434,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 .report-modal .song-item .thumbnail {
 	min-width: 130px;
 	width: 130px;
@@ -442,7 +442,7 @@ export default {
 }
 </style>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	@media screen and (max-width: 900px) {
 		#right-part {

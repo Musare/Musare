@@ -161,7 +161,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.nav {
 		background-color: var(--dark-grey-3) !important;

@@ -195,7 +195,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 @media only screen and (max-width: 1250px) {
 	.bottom-section .content {
 		width: 650px !important;

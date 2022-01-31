@@ -294,7 +294,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	#queue {
 		background-color: var(--dark-grey-3) !important;

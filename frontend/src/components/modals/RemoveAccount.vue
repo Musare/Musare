@@ -281,7 +281,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 .confirm-account-removal-modal {
 	.modal-card {
 		width: 650px;
@@ -289,7 +289,7 @@ export default {
 }
 </style>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 h2 {
 	margin: 0;
 }

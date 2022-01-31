@@ -101,13 +101,13 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 .what-is-news-modal .modal-card .modal-card-foot {
 	column-gap: 0;
 }
 </style>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.modal-card,
 	.modal-card-head,

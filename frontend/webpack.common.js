@@ -130,7 +130,7 @@ module.exports = {
 				exclude: /node_modules/
 			},
 			{
-				test: /\.scss$/,
+				test: /\.less$/i,
 				exclude: /node_modules/,
 				use: [
 					"vue-style-loader",
@@ -140,7 +140,7 @@ module.exports = {
 							url: false
 						}
 					},
-					"sass-loader"
+					"less-loader"
 				]
 			}
 		]

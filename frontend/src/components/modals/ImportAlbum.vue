@@ -676,7 +676,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 .night-mode {
 	.search-discogs-album,
 	.discogs-album,
@@ -757,7 +757,7 @@ export default {
 }
 </style>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .break {
 	flex-basis: 100%;
 	height: 0;

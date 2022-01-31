@@ -290,7 +290,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .control {
 	margin-bottom: 2px !important;
 }

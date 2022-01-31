@@ -446,7 +446,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode .sidebar {
 	.sidebar-head,
 	.sidebar-foot {

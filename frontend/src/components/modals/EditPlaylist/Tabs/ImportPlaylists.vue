@@ -123,7 +123,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 #playlist-import-type select {
 	border-radius: 0;
 }

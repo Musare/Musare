@@ -61,7 +61,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 .thumbnail {
 	min-width: 130px;
 	height: 130px;

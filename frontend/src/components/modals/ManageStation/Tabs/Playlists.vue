@@ -1142,7 +1142,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.tabs-container .tab-selection .button {
 		background: var(--dark-grey) !important;

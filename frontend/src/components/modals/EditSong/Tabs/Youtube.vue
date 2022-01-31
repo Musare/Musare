@@ -85,7 +85,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .youtube-tab #song-query-results {
 	height: calc(100% - 74px);
 	overflow: auto;

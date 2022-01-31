@@ -2387,7 +2387,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 #stationPlayer {
 	position: absolute;
 	top: 0;
@@ -2415,7 +2415,7 @@ export default {
 }
 </style>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 #page-loader-container {
 	height: inherit;
 

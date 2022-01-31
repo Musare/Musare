@@ -210,13 +210,13 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 .edit-news-modal .modal-card .modal-card-foot .right {
 	column-gap: 5px;
 }
 </style>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.edit-news-modal .modal-card .modal-card-body textarea,
 	.edit-news-modal .modal-card .modal-card-body #preview {

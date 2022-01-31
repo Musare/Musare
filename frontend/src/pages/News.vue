@@ -112,7 +112,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	p {
 		color: var(--light-grey-2);

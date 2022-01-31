@@ -9,7 +9,7 @@
 	</div>
 </template>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode .winter-is-coming {
 	background: var(--black);
 }

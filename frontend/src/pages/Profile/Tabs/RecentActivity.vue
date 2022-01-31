@@ -163,7 +163,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode #activity-items .activity-item {
 	background-color: var(--dark-grey-2) !important;
 	border: 0 !important;

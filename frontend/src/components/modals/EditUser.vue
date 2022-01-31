@@ -272,7 +272,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode .section {
 	background-color: transparent !important;
 }

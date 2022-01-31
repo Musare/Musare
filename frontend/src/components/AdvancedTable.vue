@@ -1944,7 +1944,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.table-outer-container {
 		.table-container .table {

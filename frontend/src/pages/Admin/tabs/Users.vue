@@ -456,7 +456,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 #page-title {
 	margin: 30px 0;
 }

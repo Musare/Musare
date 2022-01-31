@@ -654,7 +654,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 .manage-station-modal.modal .modal-card {
 	.tab > button {
 		width: 100%;
@@ -670,7 +670,7 @@ export default {
 }
 </style>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.manage-station-modal.modal .modal-card-body {
 		.left-section {

@@ -282,7 +282,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.song-item {
 		background-color: var(--dark-grey-2) !important;

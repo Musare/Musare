@@ -227,7 +227,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.report-sub-items {
 		background-color: var(--dark-grey-2) !important;

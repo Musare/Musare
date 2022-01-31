@@ -171,7 +171,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .no-playlists {
 	text-align: center;
 	margin-top: 10px;

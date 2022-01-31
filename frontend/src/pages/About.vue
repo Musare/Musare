@@ -68,7 +68,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.card {
 		background-color: var(--dark-grey-3);

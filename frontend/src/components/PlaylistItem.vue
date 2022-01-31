@@ -72,7 +72,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.playlist-item {
 		background-color: var(--dark-grey-2) !important;

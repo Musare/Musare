@@ -313,7 +313,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 .christmas-mode .admin-area .christmas-lights {
 	top: 102px !important;
 }
@@ -344,7 +344,7 @@ export default {
 }
 </style>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.tabs {
 		background-color: var(--dark-grey-2);

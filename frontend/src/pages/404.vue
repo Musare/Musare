@@ -23,7 +23,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .wrapper {
 	min-height: calc(100vh - 100px);
 	display: flex;

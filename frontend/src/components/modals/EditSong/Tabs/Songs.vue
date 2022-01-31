@@ -66,7 +66,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .musare-songs-tab #song-query-results {
 	height: calc(100% - 74px);
 	overflow: auto;

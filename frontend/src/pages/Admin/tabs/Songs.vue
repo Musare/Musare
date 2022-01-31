@@ -800,7 +800,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .song-thumbnail {
 	display: block;
 	max-width: 50px;

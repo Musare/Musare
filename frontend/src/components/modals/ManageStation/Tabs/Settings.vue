@@ -544,7 +544,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .station-settings {
 	.settings-buttons {
 		display: flex;
@@ -560,7 +560,7 @@ export default {
 		display: flex;
 		flex-direction: column;
 
-		* >>> .tippy-box[data-theme~="dropdown"] .tippy-content > span {
+		/deep/ * .tippy-box[data-theme~="dropdown"] .tippy-content > span {
 			max-width: 150px !important;
 		}
 

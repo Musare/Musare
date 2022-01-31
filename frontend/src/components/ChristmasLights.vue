@@ -34,7 +34,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .christmas-mode {
 	.christmas-lights {
 		position: absolute;
