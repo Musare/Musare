@@ -78,74 +78,6 @@ export default async function migrate(MigrationModule) {
 				},
 
 				next => {
-					this.log("INFO", `Migration 18. Updating playlist songs and queue songs.`);
-					songModel.find({ documentVersion: 6 }, (err, songs) => {
-						if (err) next(err);
-						else {
-							async.eachLimit(
-								songs.map(song => song._doc),
-								1,
-								(song, next) => {
-									const {
-										_id,
-										youtubeId,
-										title,
-										artists,
-										thumbnail,
-										duration,
-										skipDuration,
-										verified
-									} = song;
-									const trimmedSong = {
-										_id,
-										youtubeId,
-										title,
-										artists,
-										thumbnail,
-										duration,
-										skipDuration,
-										verified
-									};
-									async.waterfall(
-										[
-											next => {
-												playlistModel.updateMany(
-													{ "songs._id": song._id, documentVersion: 5 },
-													{ $set: { "songs.$": trimmedSong } },
-													next
-												);
-											},
-
-											(res, next) => {
-												stationModel.updateMany(
-													{ "queue._id": song._id, documentVersion: 6 },
-													{ $set: { "queue.$": trimmedSong } },
-													next
-												);
-											},
-
-											(res, next) => {
-												stationModel.updateMany(
-													{ "currentSong._id": song._id, documentVersion: 6 },
-													{ $set: { currentSong: null } },
-													next
-												);
-											}
-										],
-										err => {
-											next(err);
-										}
-									);
-								},
-								err => {
-									next(err);
-								}
-							);
-						}
-					});
-				},
-
-				next => {
 					playlistModel.updateMany({ documentVersion: 5 }, { $set: { documentVersion: 6 } }, (err, res) => {
 						if (err) next(err);
 						else {
@@ -169,6 +101,74 @@ export default async function migrate(MigrationModule) {
 							);
 
 							next();
+						}
+					});
+				},
+
+				next => {
+					this.log("INFO", `Migration 18. Updating playlist songs and queue songs.`);
+					songModel.find({ documentVersion: 7 }, (err, songs) => {
+						if (err) next(err);
+						else {
+							async.eachLimit(
+								songs.map(song => song._doc),
+								1,
+								(song, next) => {
+									const {
+										_id,
+										youtubeId,
+										title,
+										artists,
+										thumbnail,
+										duration,
+										skipDuration,
+										verified
+									} = song;
+									const trimmedSong = {
+										_id,
+										youtubeId,
+										title,
+										artists,
+										thumbnail,
+										duration: +duration,
+										skipDuration: +skipDuration,
+										verified
+									};
+									async.waterfall(
+										[
+											next => {
+												playlistModel.updateMany(
+													{ "songs._id": song._id, documentVersion: 6 },
+													{ $set: { "songs.$": trimmedSong } },
+													next
+												);
+											},
+
+											(res, next) => {
+												stationModel.updateMany(
+													{ "queue._id": song._id, documentVersion: 7 },
+													{ $set: { "queue.$": trimmedSong } },
+													next
+												);
+											},
+
+											(res, next) => {
+												stationModel.updateMany(
+													{ "currentSong._id": song._id, documentVersion: 7 },
+													{ $set: { currentSong: null } },
+													next
+												);
+											}
+										],
+										err => {
+											next(err);
+										}
+									);
+								},
+								err => {
+									next(err);
+								}
+							);
 						}
 					});
 				}
