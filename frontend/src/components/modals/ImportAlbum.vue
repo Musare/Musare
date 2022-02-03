@@ -149,11 +149,7 @@
 								!discogs.disableLoadMore &&
 								discogs.page < discogs.pages
 							"
-							class="
-								button
-								is-fullwidth is-info
-								discogs-load-more
-							"
+							class="button is-fullwidth is-info discogs-load-more"
 							@click="loadNextDiscogsPage()"
 						>
 							Load more...
@@ -470,7 +466,7 @@ export default {
 			if (!this.search.playlist.query)
 				return new Toast("Please enter a YouTube playlist URL.");
 
-			const regex = new RegExp(`[\\?&]list=([^&#]*)`);
+			const regex = /`[\\?&]list=([^&#]*)`/;
 			const splitQuery = regex.exec(this.search.playlist.query);
 
 			if (!splitQuery) {
@@ -561,7 +557,7 @@ export default {
 					.then(data => {
 						apiResult.album.artists = [];
 						apiResult.album.artistIds = [];
-						const artistRegex = new RegExp(" \\([0-9]+\\)$");
+						const artistRegex = /" \\([0-9]+\\)$"/;
 
 						apiResult.dataQuality = data.data_quality;
 						data.artists.forEach(artist => {

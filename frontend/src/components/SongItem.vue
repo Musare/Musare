@@ -109,10 +109,7 @@
 							>
 								<template #button>
 									<i
-										class="
-											material-icons
-											add-to-playlist-icon
-										"
+										class="material-icons add-to-playlist-icon"
 										content="Add Song to Playlist"
 										v-tippy
 										>playlist_add</i

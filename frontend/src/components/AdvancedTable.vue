@@ -70,11 +70,7 @@
 							<div
 								v-for="(filter, index) in editingFilters"
 								:key="`filter-${index}`"
-								class="
-									advanced-filter
-									control
-									is-grouped is-expanded
-								"
+								class="advanced-filter control is-grouped is-expanded"
 							>
 								<div class="control select">
 									<select
@@ -228,10 +224,7 @@
 										@click="applyFilterAndGetData()"
 									>
 										<i
-											class="
-												material-icons
-												icon-with-button
-											"
+											class="material-icons icon-with-button"
 											>filter_list</i
 										>
 										Apply filters
@@ -248,10 +241,7 @@
 										@click="applyFilterAndGetData()"
 									>
 										<i
-											class="
-												material-icons
-												icon-with-button
-											"
+											class="material-icons icon-with-button"
 											>filter_list</i
 										>
 										Apply filters
@@ -372,11 +362,7 @@
 										"
 									>
 										<p
-											class="
-												control
-												is-expanded
-												checkbox-control
-											"
+											class="control is-expanded checkbox-control"
 										>
 											<label class="switch">
 												<input

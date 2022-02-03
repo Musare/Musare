@@ -30,12 +30,12 @@ const modules = {
 		actions: {
 			/* eslint-disable-next-line no-unused-vars */
 			resolveReport: ({ commit }, reportId) =>
-				new Promise((resolve, reject) =>
+				new Promise((resolve, reject) => {
 					admin.reports
 						.resolve(reportId)
 						.then(res => resolve(res))
-						.catch(err => reject(new Error(err.message)))
-				)
+						.catch(err => reject(new Error(err.message)));
+				})
 		},
 		mutations: {}
 	},

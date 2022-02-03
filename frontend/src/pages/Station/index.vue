@@ -323,10 +323,7 @@
 										v-tippy
 									>
 										<i
-											class="
-												material-icons
-												icon-with-button
-											"
+											class="material-icons icon-with-button"
 										>
 											bug_report
 										</i>
@@ -362,10 +359,7 @@
 										v-tippy
 									>
 										<i
-											class="
-												material-icons
-												icon-with-button
-											"
+											class="material-icons icon-with-button"
 											>skip_next</i
 										>
 									</button>
@@ -377,10 +371,7 @@
 										v-tippy
 									>
 										<i
-											class="
-												material-icons
-												icon-with-button
-											"
+											class="material-icons icon-with-button"
 											>skip_next</i
 										>
 										{{ currentSong.skipVotes }}
@@ -392,10 +383,7 @@
 										v-tippy="{ theme: 'info' }"
 									>
 										<i
-											class="
-												material-icons
-												icon-with-button
-											"
+											class="material-icons icon-with-button"
 											>skip_next</i
 										>
 										{{ currentSong.skipVotes }}
@@ -464,10 +452,7 @@
 											v-tippy
 										>
 											<i
-												class="
-													material-icons
-													icon-with-button
-												"
+												class="material-icons icon-with-button"
 												:class="{
 													liked: currentSong.liked
 												}"
@@ -477,21 +462,14 @@
 
 										<!-- Dislike Song Button -->
 										<button
-											class="
-												button
-												is-danger
-												dislike-song
-											"
+											class="button is-danger dislike-song"
 											id="dislike-song"
 											@click="toggleDislike()"
 											content="Dislike Song"
 											v-tippy
 										>
 											<i
-												class="
-													material-icons
-													icon-with-button
-												"
+												class="material-icons icon-with-button"
 												:class="{
 													disliked:
 														currentSong.disliked
@@ -503,42 +481,26 @@
 									<div id="ratings" class="disabled" v-else>
 										<!-- Like Song Button -->
 										<button
-											class="
-												button
-												is-success
-												like-song
-												disabled
-											"
+											class="button is-success like-song disabled"
 											id="like-song"
 											content="Ratings have not been loaded yet"
 											v-tippy
 										>
 											<i
-												class="
-													material-icons
-													icon-with-button
-												"
+												class="material-icons icon-with-button"
 												>thumb_up_alt</i
 											>
 										</button>
 
 										<!-- Dislike Song Button -->
 										<button
-											class="
-												button
-												is-danger
-												dislike-song
-												disabled
-											"
+											class="button is-danger dislike-song disabled"
 											id="dislike-song"
 											content="Ratings have not been loaded yet"
 											v-tippy
 										>
 											<i
-												class="
-													material-icons
-													icon-with-button
-												"
+												class="material-icons icon-with-button"
 												>thumb_down_alt</i
 											>
 										</button>
@@ -557,15 +519,10 @@
 											>
 												<div class="control has-addons">
 													<button
-														class="
-															button
-															is-primary
-														"
+														class="button is-primary"
 													>
 														<i
-															class="
-																material-icons
-															"
+															class="material-icons"
 														>
 															playlist_add
 														</i>
@@ -575,9 +532,7 @@
 														id="dropdown-toggle"
 													>
 														<i
-															class="
-																material-icons
-															"
+															class="material-icons"
 														>
 															{{
 																showPlaylistDropdown
@@ -602,10 +557,7 @@
 											v-tippy="{ theme: 'info' }"
 										>
 											<i
-												class="
-													material-icons
-													icon-with-button
-												"
+												class="material-icons icon-with-button"
 												>thumb_up_alt</i
 											>{{ currentSong.likes }}
 										</button>
@@ -618,10 +570,7 @@
 											v-tippy="{ theme: 'info' }"
 										>
 											<i
-												class="
-													material-icons
-													icon-with-button
-												"
+												class="material-icons icon-with-button"
 												>thumb_down_alt</i
 											>{{ currentSong.dislikes }}
 										</button>
@@ -635,10 +584,7 @@
 											v-tippy="{ theme: 'info' }"
 										>
 											<i
-												class="
-													material-icons
-													icon-with-button
-												"
+												class="material-icons icon-with-button"
 												>thumb_up_alt</i
 											>
 										</button>
@@ -651,10 +597,7 @@
 											v-tippy="{ theme: 'info' }"
 										>
 											<i
-												class="
-													material-icons
-													icon-with-button
-												"
+												class="material-icons icon-with-button"
 												>thumb_down_alt</i
 											>
 										</button>
@@ -663,11 +606,7 @@
 									<div id="add-song-to-playlist">
 										<div class="control has-addons">
 											<button
-												class="
-													button
-													is-primary
-													disabled
-												"
+												class="button is-primary disabled"
 												content="Log in to add songs to playlist"
 												v-tippy="{ theme: 'info' }"
 											>

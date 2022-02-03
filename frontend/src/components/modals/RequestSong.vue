@@ -194,7 +194,7 @@ export default {
 			if (!this.youtubeSearch.playlist.query)
 				return new Toast("Please enter a YouTube playlist URL.");
 
-			const regex = new RegExp(`[\\?&]list=([^&#]*)`);
+			const regex = /`[\\?&]list=([^&#]*)`/;
 			const splitQuery = regex.exec(this.youtubeSearch.playlist.query);
 
 			if (!splitQuery) {

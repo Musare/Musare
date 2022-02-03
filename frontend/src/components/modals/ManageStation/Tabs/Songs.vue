@@ -75,10 +75,7 @@
 												song.youtubeId
 											) !== -1
 										"
-										class="
-											material-icons
-											added-to-playlist-icon
-										"
+										class="material-icons added-to-playlist-icon"
 										content="Song is already in queue"
 										v-tippy
 										>done</i
@@ -148,10 +145,7 @@
 											songsInQueue.indexOf(result.id) !==
 											-1
 										"
-										class="
-											material-icons
-											added-to-playlist-icon
-										"
+										class="material-icons added-to-playlist-icon"
 										content="Song is already in queue"
 										v-tippy
 										>done</i

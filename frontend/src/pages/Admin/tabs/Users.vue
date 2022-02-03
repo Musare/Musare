@@ -22,12 +22,7 @@
 							:disabled="slotProps.item.removed"
 						>
 							<button
-								class="
-									button
-									is-success
-									icon-with-button
-									material-icons
-								"
+								class="button is-success icon-with-button material-icons"
 								content="Resolve Data Request"
 								v-tippy
 							>
@@ -76,12 +71,7 @@
 				<template #column-options="slotProps">
 					<div class="row-options">
 						<button
-							class="
-								button
-								is-primary
-								icon-with-button
-								material-icons
-							"
+							class="button is-primary icon-with-button material-icons"
 							@click="edit(slotProps.item._id)"
 							:disabled="slotProps.item.removed"
 							content="Edit User"

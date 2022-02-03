@@ -68,10 +68,7 @@
 									<div class="icon-container">
 										<div
 											v-if="isOwnerOrAdmin(element)"
-											class="
-												material-icons
-												manage-station
-											"
+											class="material-icons manage-station"
 											@click.prevent="
 												manageStation(element._id)
 											"
@@ -82,10 +79,7 @@
 										</div>
 										<div
 											v-else
-											class="
-												material-icons
-												manage-station
-											"
+											class="material-icons manage-station"
 											@click.prevent="
 												manageStation(element._id)
 											"
@@ -127,10 +121,7 @@
 										<h5>{{ element.displayName }}</h5>
 										<i
 											v-if="element.type === 'official'"
-											class="
-												material-icons
-												verified-station
-											"
+											class="material-icons verified-station"
 											content="Verified Station"
 											v-tippy="{
 												theme: 'info'

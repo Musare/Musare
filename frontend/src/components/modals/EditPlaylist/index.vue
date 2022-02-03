@@ -113,10 +113,7 @@
 									>
 										<template #tippyActions>
 											<i
-												class="
-													material-icons
-													add-to-queue-icon
-												"
+												class="material-icons add-to-queue-icon"
 												v-if="
 													station.partyMode &&
 													!station.locked
@@ -144,10 +141,7 @@
 												"
 											>
 												<i
-													class="
-														material-icons
-														delete-icon
-													"
+													class="material-icons delete-icon"
 													content="Remove Song from Playlist"
 													v-tippy
 													>delete_forever</i

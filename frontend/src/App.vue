@@ -210,18 +210,14 @@ export default {
 		this.$router.isReady().then(() => {
 			if (this.$route.query.err) {
 				let { err } = this.$route.query;
-				err = err
-					.replace(new RegExp("<", "g"), "&lt;")
-					.replace(new RegExp(">", "g"), "&gt;");
+				err = err.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 				this.$router.push({ query: {} });
 				new Toast({ content: err, timeout: 20000 });
 			}
 
 			if (this.$route.query.msg) {
 				let { msg } = this.$route.query;
-				msg = msg
-					.replace(new RegExp("<", "g"), "&lt;")
-					.replace(new RegExp(">", "g"), "&gt;");
+				msg = msg.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 				this.$router.push({ query: {} });
 				new Toast({ content: msg, timeout: 20000 });
 			}

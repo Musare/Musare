@@ -59,11 +59,7 @@
 								<template #leftIcon>
 									<i
 										v-if="currentSong._id === song._id"
-										class="
-											material-icons
-											item-icon
-											editing-icon
-										"
+										class="material-icons item-icon editing-icon"
 										content="Currently editing song"
 										v-tippy="{ theme: 'info' }"
 										@click="toggleDone(index)"
@@ -71,22 +67,14 @@
 									>
 									<i
 										v-else-if="song.removed"
-										class="
-											material-icons
-											item-icon
-											removed-icon
-										"
+										class="material-icons item-icon removed-icon"
 										content="Song removed"
 										v-tippy="{ theme: 'info' }"
 										>delete_forever</i
 									>
 									<i
 										v-else-if="status === 'error'"
-										class="
-											material-icons
-											item-icon
-											error-icon
-										"
+										class="material-icons item-icon error-icon"
 										content="Error saving song"
 										v-tippy="{ theme: 'info' }"
 										@click="toggleDone(index)"
@@ -94,22 +82,14 @@
 									>
 									<i
 										v-else-if="status === 'saving'"
-										class="
-											material-icons
-											item-icon
-											saving-icon
-										"
+										class="material-icons item-icon saving-icon"
 										content="Currently saving song"
 										v-tippy="{ theme: 'info' }"
 										>pending</i
 									>
 									<i
 										v-else-if="flagged"
-										class="
-											material-icons
-											item-icon
-											flag-icon
-										"
+										class="material-icons item-icon flag-icon"
 										content="Song flagged"
 										v-tippy="{ theme: 'info' }"
 										@click="toggleDone(index)"
@@ -117,11 +97,7 @@
 									>
 									<i
 										v-else-if="status === 'done'"
-										class="
-											material-icons
-											item-icon
-											done-icon
-										"
+										class="material-icons item-icon done-icon"
 										content="Song marked complete"
 										v-tippy="{ theme: 'info' }"
 										@click="toggleDone(index)"
@@ -129,11 +105,7 @@
 									>
 									<i
 										v-else-if="status === 'todo'"
-										class="
-											material-icons
-											item-icon
-											todo-icon
-										"
+										class="material-icons item-icon todo-icon"
 										content="Song marked todo"
 										v-tippy="{ theme: 'info' }"
 										@click="toggleDone(index)"

@@ -28,12 +28,7 @@
 				<template #column-options="slotProps">
 					<div class="row-options">
 						<button
-							class="
-								button
-								is-primary
-								icon-with-button
-								material-icons
-							"
+							class="button is-primary icon-with-button material-icons"
 							@click="editOne(slotProps.item)"
 							:disabled="slotProps.item.removed"
 							content="Edit Song"
@@ -46,12 +41,7 @@
 							@confirm="unverifyOne(slotProps.item._id)"
 						>
 							<button
-								class="
-									button
-									is-danger
-									icon-with-button
-									material-icons
-								"
+								class="button is-danger icon-with-button material-icons"
 								:disabled="slotProps.item.removed"
 								content="Unverify Song"
 								v-tippy
@@ -61,12 +51,7 @@
 						</quick-confirm>
 						<button
 							v-else
-							class="
-								button
-								is-success
-								icon-with-button
-								material-icons
-							"
+							class="button is-success icon-with-button material-icons"
 							@click="verifyOne(slotProps.item._id)"
 							:disabled="slotProps.item.removed"
 							content="Verify Song"
@@ -75,12 +60,7 @@
 							check_circle
 						</button>
 						<button
-							class="
-								button
-								is-danger
-								icon-with-button
-								material-icons
-							"
+							class="button is-danger icon-with-button material-icons"
 							@click.prevent="
 								confirmAction({
 									message:
@@ -722,9 +702,7 @@ export default {
 				name: "tags",
 				action: "songs.editTags",
 				items: selectedRows.map(row => row._id),
-				regex: new RegExp(
-					/^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/
-				),
+				regex: /^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/,
 				autosuggest: true,
 				autosuggestDataAction: "songs.getTags"
 			};
@@ -735,7 +713,7 @@ export default {
 				name: "artists",
 				action: "songs.editArtists",
 				items: selectedRows.map(row => row._id),
-				regex: new RegExp(/^(?=.{1,64}$).*$/),
+				regex: /^(?=.{1,64}$).*$/,
 				autosuggest: true,
 				autosuggestDataAction: "songs.getArtists"
 			};
@@ -746,7 +724,7 @@ export default {
 				name: "genres",
 				action: "songs.editGenres",
 				items: selectedRows.map(row => row._id),
-				regex: new RegExp(/^[\x00-\x7F]{1,32}$/),
+				regex: /^[\x00-\x7F]{1,32}$/,
 				autosuggest: true,
 				autosuggestDataAction: "songs.getGenres"
 			};

@@ -511,12 +511,7 @@
 							</button>
 						</quick-confirm>
 						<button
-							class="
-								button
-								is-danger
-								icon-with-button
-								material-icons
-							"
+							class="button is-danger icon-with-button material-icons"
 							@click.prevent="
 								confirmAction({
 									message:
@@ -1320,9 +1315,9 @@ export default {
 			error = undefined;
 			song.tags.forEach(tag => {
 				if (
-					!new RegExp(
-						/^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/
-					).test(tag)
+					!/^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/.test(
+						tag
+					)
 				) {
 					error = "Invalid tag format.";
 					return error;
@@ -1440,8 +1435,6 @@ export default {
 		},
 		settings(type) {
 			switch (type) {
-				default:
-					break;
 				case "stop":
 					this.stopVideo();
 					this.pauseVideo(true);
@@ -1458,6 +1451,8 @@ export default {
 					this.video.player.seekTo(
 						this.song.duration - 10 + this.song.skipDuration
 					);
+					break;
+				default:
 					break;
 			}
 		},

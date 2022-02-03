@@ -50,11 +50,7 @@
 							:key="issueIndex"
 						>
 							<i
-								class="
-									material-icons
-									duration-icon
-									report-sub-item-left-icon
-								"
+								class="material-icons duration-icon report-sub-item-left-icon"
 								:content="issue.category"
 								v-tippy
 							>
@@ -74,10 +70,7 @@
 							</p>
 
 							<div
-								class="
-									report-sub-item-actions
-									universal-item-actions
-								"
+								class="report-sub-item-actions universal-item-actions"
 							>
 								<i
 									class="material-icons resolve-icon"
@@ -145,11 +138,7 @@
 							:key="issueIndex"
 						>
 							<i
-								class="
-									material-icons
-									duration-icon
-									report-sub-item-left-icon
-								"
+								class="material-icons duration-icon report-sub-item-left-icon"
 								:content="issue.category"
 								v-tippy
 							>
@@ -168,10 +157,7 @@
 							</p>
 
 							<div
-								class="
-									report-sub-item-actions
-									universal-item-actions
-								"
+								class="report-sub-item-actions universal-item-actions"
 							>
 								<i
 									class="material-icons resolve-icon"

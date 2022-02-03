@@ -22,12 +22,7 @@
 				<template #column-options="slotProps">
 					<div class="row-options">
 						<button
-							class="
-								button
-								is-primary
-								icon-with-button
-								material-icons
-							"
+							class="button is-primary icon-with-button material-icons"
 							@click="edit(slotProps.item._id)"
 							:disabled="slotProps.item.removed"
 							content="Manage Station"
@@ -40,12 +35,7 @@
 							:disabled="slotProps.item.removed"
 						>
 							<button
-								class="
-									button
-									is-danger
-									icon-with-button
-									material-icons
-								"
+								class="button is-danger icon-with-button material-icons"
 								content="Remove Station"
 								v-tippy
 							>

@@ -13,12 +13,7 @@
 				<template #column-options="slotProps">
 					<div class="row-options">
 						<button
-							class="
-								button
-								is-primary
-								icon-with-button
-								material-icons
-							"
+							class="button is-primary icon-with-button material-icons"
 							@click="view(slotProps.item._id)"
 							:disabled="slotProps.item.removed"
 							content="View Punishment"

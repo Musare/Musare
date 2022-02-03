@@ -202,7 +202,7 @@ export default {
 					.then(data => {
 						apiResult.album.artists = [];
 						apiResult.album.artistIds = [];
-						const artistRegex = new RegExp(" \\([0-9]+\\)$");
+						const artistRegex = /" \\([0-9]+\\)$"/;
 
 						apiResult.dataQuality = data.data_quality;
 						data.artists.forEach(artist => {

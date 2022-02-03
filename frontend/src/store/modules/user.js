@@ -33,60 +33,52 @@ const modules = {
 					const { username, email, password } = user;
 
 					if (!email || !username || !password)
-						return reject(new Error("Please fill in all fields"));
-
-					if (!validation.isLength(email, 3, 254))
-						return reject(
+						reject(new Error("Please fill in all fields"));
+					else if (!validation.isLength(email, 3, 254))
+						reject(
 							new Error(
 								"Email must have between 3 and 254 characters."
 							)
 						);
-
-					if (
+					else if (
 						email.indexOf("@") !== email.lastIndexOf("@") ||
 						!validation.regex.emailSimple.test(email)
 					)
-						return reject(new Error("Invalid email format."));
-
-					if (!validation.isLength(username, 2, 32))
-						return reject(
+						reject(new Error("Invalid email format."));
+					else if (!validation.isLength(username, 2, 32))
+						reject(
 							new Error(
 								"Username must have between 2 and 32 characters."
 							)
 						);
-
-					if (!validation.regex.azAZ09_.test(username))
-						return reject(
+					else if (!validation.regex.azAZ09_.test(username))
+						reject(
 							new Error(
 								"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _."
 							)
 						);
-
-					if (username.replaceAll(/[_]/g, "").length === 0)
-						return reject(
+					else if (username.replaceAll(/[_]/g, "").length === 0)
+						reject(
 							new Error(
 								"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _, and there has to be at least one letter or number."
 							)
 						);
-
-					if (!validation.isLength(password, 6, 200))
-						return reject(
+					else if (!validation.isLength(password, 6, 200))
+						reject(
 							new Error(
 								"Password must have between 6 and 200 characters."
 							)
 						);
-
-					if (!validation.regex.password.test(password))
-						return reject(
+					else if (!validation.regex.password.test(password))
+						reject(
 							new Error(
 								"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character."
 							)
 						);
-
-					return auth
-						.register(user)
-						.then(res => resolve(res))
-						.catch(err => reject(new Error(err.message)));
+					else
+						auth.register(user)
+							.then(res => resolve(res))
+							.catch(err => reject(new Error(err.message)));
 				}),
 			/* eslint-disable-next-line no-unused-vars */
 			login: ({ commit }, user) =>
@@ -108,12 +100,11 @@ const modules = {
 						.catch(err => reject(new Error(err.message)));
 				}),
 			logout: () =>
-				new Promise((resolve, reject) =>
-					auth
-						.logout()
+				new Promise((resolve, reject) => {
+					auth.logout()
 						.then(() => resolve())
-						.catch(() => reject())
-				),
+						.catch(() => reject());
+				}),
 			getUsernameFromId: ({ commit, state }, userId) =>
 				new Promise(resolve => {
 					if (typeof state.userIdMap[`Z${userId}`] !== "string") {

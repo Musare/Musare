@@ -89,10 +89,7 @@
 											@click="customIssues.push('')"
 										>
 											<i
-												class="
-													material-icons
-													icon-with-button
-												"
+												class="material-icons icon-with-button"
 												>add</i
 											>
 											<span> Add Custom Issue </span>
@@ -100,12 +97,7 @@
 									</div>
 
 									<div
-										class="
-											custom-issue
-											control
-											is-grouped
-											input-with-button
-										"
+										class="custom-issue control is-grouped input-with-button"
 										v-for="(issue, index) in customIssues"
 										:key="index"
 									>
