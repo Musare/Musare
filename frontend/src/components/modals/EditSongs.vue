@@ -43,6 +43,7 @@
 								{ status, flagged, song }, index
 							) in filteredItems"
 							:key="song._id"
+							:ref="`edit-songs-item-${song._id}`"
 						>
 							<song-item
 								:song="song"
@@ -304,8 +305,17 @@ export default {
 				}
 			}
 
-			if (newEditingSongIndex > -1)
-				this.pickSong(this.filteredItems[newEditingSongIndex].song);
+			if (newEditingSongIndex > -1) {
+				const nextSong = this.filteredItems[newEditingSongIndex].song;
+				this.pickSong(nextSong);
+				if (
+					this.$refs[`edit-songs-item-${nextSong._id}`] &&
+					this.$refs[`edit-songs-item-${nextSong._id}`][0]
+				)
+					this.$refs[
+						`edit-songs-item-${nextSong._id}`
+					][0].scrollIntoView();
+			}
 		},
 		toggleFlag(songIndex = null) {
 			if (songIndex && songIndex > -1) {
