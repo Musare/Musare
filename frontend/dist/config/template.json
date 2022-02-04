@@ -22,7 +22,9 @@
 		"logo_white": "/assets/white_wordmark.png",
 		"logo_blue": "/assets/blue_wordmark.png",
 		"sitename": "Musare",
-		"github": "https://github.com/Musare/Musare",
+		"footerLinks": {
+			"GitHub": "https://github.com/Musare/Musare"
+		},
 		"mediasession": false,
 		"christmas": false,
 		"registrationDisabled": false

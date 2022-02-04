@@ -9,16 +9,33 @@
 					><img src="/assets/blue_wordmark.png" alt="Musare"
 				/></router-link>
 				<div id="footer-links">
-					<a :href="github" target="_blank" title="GitHub Repository"
-						>GitHub</a
+					<a
+						v-for="(url, title, index) in filteredFooterLinks"
+						:key="`footer-link-${index}`"
+						:href="url"
+						target="_blank"
+						:title="title"
 					>
-					<router-link title="About Musare" to="/about"
+						{{ title }}
+					</a>
+					<router-link
+						v-if="getLink('about') === true"
+						title="About Musare"
+						to="/about"
 						>About</router-link
 					>
-					<router-link title="Musare Team" to="/team"
+					<router-link
+						v-if="getLink('team') === true"
+						title="Musare Team"
+						to="/team"
 						>Team</router-link
 					>
-					<router-link title="News" to="/news">News</router-link>
+					<router-link
+						v-if="getLink('news') === true"
+						title="News"
+						to="/news"
+						>News</router-link
+					>
 				</div>
 			</div>
 		</div>
@@ -29,11 +46,41 @@
 export default {
 	data() {
 		return {
-			github: ""
+			footerLinks: {}
 		};
 	},
+	computed: {
+		filteredFooterLinks() {
+			return Object.fromEntries(
+				Object.entries(this.footerLinks).filter(
+					([title, url]) =>
+						!(
+							["about", "team", "news"].includes(
+								title.toLowerCase()
+							) && typeof url === "boolean"
+						)
+				)
+			);
+		}
+	},
 	async mounted() {
-		this.github = await lofig.get("siteSettings.github");
+		lofig.get("siteSettings.footerLinks").then(footerLinks => {
+			this.footerLinks = {
+				about: true,
+				team: true,
+				news: true,
+				...footerLinks
+			};
+		});
+	},
+	methods: {
+		getLink(title) {
+			return this.footerLinks[
+				Object.keys(this.footerLinks).find(
+					key => key.toLowerCase() === title
+				)
+			];
+		}
 	}
 };
 </script>

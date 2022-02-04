@@ -71,7 +71,7 @@ Location: `frontend/dist/config/default.json`
 | `siteSettings.logo_white` | Path to the white logo image, by default it is `/assets/white_wordmark.png`. |
 | `siteSettings.logo_blue` | Path to the blue logo image, by default it is `/assets/blue_wordmark.png`. |
 | `siteSettings.sitename` | Should be the name of the site. |
-| `siteSettings.github` | URL of GitHub repository, defaults to `https://github.com/Musare/MusareNode`. |
+| `siteSettings.footerLinks` | Add custom links to footer by specifying `"title": "url"`, e.g. `"GitHub": "https://github.com/Musare/MusareNode"`. You can disable about, team and news links (but not the pages themselves) by setting them to false, e.g. `"about": false`. |
 | `siteSettings.mediasession` | Whether to enable mediasession functionality. |
 | `siteSettings.christmas` | Whether to enable christmas theming. |
 | `siteSettings.registrationDisabled` | If set to true, users can't register accounts. |
