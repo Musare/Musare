@@ -82,7 +82,7 @@
 
 				<!-- Import a playlist from youtube -->
 
-				<div v-if="station.type === 'official'">
+				<div v-if="station.type !== 'community'">
 					<hr class="section-horizontal-rule" />
 
 					<h4 class="section-title">Import a playlist</h4>
