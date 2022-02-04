@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 export default {
-	displayName: { type: String, min: 2, max: 32, required: true },
+	displayName: { type: String, min: 2, max: 32, trim: true, required: true },
 	songs: [
 		{
 			_id: { type: mongoose.Schema.Types.ObjectId, required: false },

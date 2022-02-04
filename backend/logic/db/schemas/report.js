@@ -12,7 +12,7 @@ export default {
 				required: true
 			},
 			title: { type: String, required: true },
-			description: { type: String, required: false },
+			description: { type: String, trim: true, required: false },
 			resolved: { type: Boolean, default: false, required: true }
 		}
 	],
