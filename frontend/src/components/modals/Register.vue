@@ -171,7 +171,8 @@ export default {
 				token: "",
 				enabled: false
 			},
-			apiDomain: ""
+			apiDomain: "",
+			registrationDisabled: false
 		};
 	},
 	watch: {
@@ -229,6 +230,16 @@ export default {
 	},
 	async mounted() {
 		this.apiDomain = await lofig.get("backend.apiDomain");
+
+		lofig
+			.get("siteSettings.registrationDisabled")
+			.then(registrationDisabled => {
+				this.registrationDisabled = registrationDisabled;
+				if (registrationDisabled) {
+					new Toast("Registration is disabled.");
+					this.closeModal("register");
+				}
+			});
 
 		lofig.get("recaptcha").then(obj => {
 			this.recaptcha.enabled = obj.enabled;

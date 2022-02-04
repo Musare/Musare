@@ -74,6 +74,7 @@ Location: `frontend/dist/config/default.json`
 | `siteSettings.github` | URL of GitHub repository, defaults to `https://github.com/Musare/MusareNode`. |
 | `siteSettings.mediasession` | Whether to enable mediasession functionality. |
 | `siteSettings.christmas` | Whether to enable christmas theming. |
+| `siteSettings.registrationDisabled` | If set to true, users can't register accounts. |
 | `messages.accountRemoval` | Message to return to users on account removal. |
 | `shortcutOverrides` | Overwrite keyboard shortcuts, for example `"editSong.useAllDiscogs": { "keyCode": 68, "ctrl": true, "alt": true, "shift": false, "preventDefault": true }`. |
 | `debug.git.remote` | Allow the website/users to view the current Git repository's remote. [^1] |

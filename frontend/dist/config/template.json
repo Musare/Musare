@@ -24,7 +24,8 @@
 		"sitename": "Musare",
 		"github": "https://github.com/Musare/Musare",
 		"mediasession": false,
-		"christmas": false
+		"christmas": false,
+		"registrationDisabled": false
 	},
 	"messages": {
 		"accountRemoval": "Your account will be deactivated instantly and your data will shortly be deleted by an admin."
@@ -49,5 +50,5 @@
 		"version": true
 	},
 	"skipConfigVersionCheck": false,
-	"configVersion": 9
+	"configVersion": 10
 }

@@ -15,7 +15,7 @@
 						<img
 							class="logo"
 							src="/assets/white_wordmark.png"
-							:alt="`${this.sitename}` || `Musare`"
+							:alt="`${this.siteSettings.sitename}` || `Musare`"
 						/>
 						<div v-if="!loggedIn" class="buttons">
 							<button
@@ -25,6 +25,7 @@
 								Login
 							</button>
 							<button
+								v-if="!siteSettings.registrationDisabled"
 								class="button register"
 								@click="openModal('register')"
 							>
@@ -536,7 +537,10 @@ export default {
 			stations: [],
 			favoriteStations: [],
 			searchQuery: "",
-			sitename: "Musare",
+			siteSettings: {
+				sitename: "Musare",
+				registrationDisabled: false
+			},
 			orderOfFavoriteStations: [],
 			handledLoginRegisterRedirect: false,
 			editingStationId: null
@@ -591,7 +595,7 @@ export default {
 		}
 	},
 	async mounted() {
-		this.sitename = await lofig.get("siteSettings.sitename");
+		this.siteSettings = await lofig.get("siteSettings");
 
 		if (
 			!this.loggedIn &&

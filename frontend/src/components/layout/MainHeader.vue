@@ -63,7 +63,12 @@
 			</span>
 			<span v-if="!loggedIn && !hideLoggedOut" class="grouped">
 				<a class="nav-item" @click="openModal('login')">Login</a>
-				<a class="nav-item" @click="openModal('register')">Register</a>
+				<a
+					v-if="!siteSettings.registrationDisabled"
+					class="nav-item"
+					@click="openModal('register')"
+					>Register</a
+				>
 			</span>
 		</div>
 
@@ -98,7 +103,8 @@ export default {
 			siteSettings: {
 				logo: "",
 				sitename: "",
-				christmas: false
+				christmas: false,
+				registrationDisabled: false
 			},
 			windowWidth: 0
 		};

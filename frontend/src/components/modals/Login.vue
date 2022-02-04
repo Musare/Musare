@@ -89,7 +89,10 @@
 					</a>
 				</div>
 
-				<p class="content-box-optional-helper">
+				<p
+					v-if="!registrationDisabled"
+					class="content-box-optional-helper"
+				>
 					<a @click="changeToRegisterModal()">
 						Don't have an account?
 					</a>
@@ -116,11 +119,15 @@ export default {
 				value: "",
 				visible: false
 			},
-			apiDomain: ""
+			apiDomain: "",
+			registrationDisabled: false
 		};
 	},
 	async mounted() {
 		this.apiDomain = await lofig.get("backend.apiDomain");
+		this.registrationDisabled = await lofig.get(
+			"siteSettings.registrationDisabled"
+		);
 	},
 	methods: {
 		checkForAutofill(event) {
