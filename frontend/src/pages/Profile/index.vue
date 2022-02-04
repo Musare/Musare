@@ -412,7 +412,7 @@ export default {
 		}
 	}
 
-	.content /deep/ {
+	/deep/ .content {
 		width: 800px;
 		max-width: 100%;
 		background-color: var(--white);
