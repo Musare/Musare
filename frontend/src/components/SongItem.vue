@@ -13,8 +13,15 @@
 					<h4
 						class="item-title"
 						:style="
-							song.artists && song.artists.length < 1
-								? { fontSize: '16px' }
+							!song.artists ||
+							(song.artists && song.artists.length < 1)
+								? {
+										display: '-webkit-inline-box',
+										fontSize: '16px',
+										whiteSpace: 'normal',
+										'-webkit-box-orient': 'vertical',
+										'-webkit-line-clamp': 2
+								  }
 								: null
 						"
 						:title="song.title"
