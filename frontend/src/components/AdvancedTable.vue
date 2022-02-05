@@ -867,7 +867,12 @@ export default {
 				pos1: 0,
 				pos2: 0,
 				pos3: 0,
-				pos4: 0
+				pos4: 0,
+				initial: {
+					top: null,
+					left: null
+				},
+				debounceTimeout: null
 			},
 			addFilterValue: null,
 			showFiltersDropdown: false,
@@ -1750,6 +1755,8 @@ export default {
 		resetBulkActionsPosition() {
 			this.bulkPopup.top = document.body.clientHeight - 56;
 			this.bulkPopup.left = document.body.clientWidth / 2 - 200;
+			this.bulkPopup.initial.top = this.bulkPopup.top;
+			this.bulkPopup.initial.left = this.bulkPopup.left;
 		},
 		applyFilterAndGetData() {
 			this.appliedFilters = JSON.parse(
@@ -1907,14 +1914,26 @@ export default {
 			);
 		},
 		onWindowResize() {
-			// Only change the position if the popup is actually visible
-			if (this.selectedRows.length === 0) return;
-			if (this.bulkPopup.top < 0) this.bulkPopup.top = 0;
-			if (this.bulkPopup.top > document.body.clientHeight - 50)
-				this.bulkPopup.top = document.body.clientHeight - 50;
-			if (this.bulkPopup.left < 0) this.bulkPopup.left = 0;
-			if (this.bulkPopup.left > document.body.clientWidth - 400)
-				this.bulkPopup.left = document.body.clientWidth - 400;
+			if (this.bulkPopup.debounceTimeout)
+				clearTimeout(this.bulkPopup.debounceTimeout);
+
+			this.bulkPopup.debounceTimeout = setTimeout(() => {
+				// Only change the position if the popup is actually visible
+				if (this.selectedRows.length === 0) return;
+				if (
+					this.bulkPopup.top === this.bulkPopup.initial.top &&
+					this.bulkPopup.left === this.bulkPopup.initial.left
+				)
+					this.resetBulkActionsPosition();
+				else {
+					if (this.bulkPopup.top < 0) this.bulkPopup.top = 0;
+					if (this.bulkPopup.top > document.body.clientHeight - 50)
+						this.bulkPopup.top = document.body.clientHeight - 50;
+					if (this.bulkPopup.left < 0) this.bulkPopup.left = 0;
+					if (this.bulkPopup.left > document.body.clientWidth - 400)
+						this.bulkPopup.left = document.body.clientWidth - 400;
+				}
+			}, 50);
 		},
 		updateData(index, data) {
 			this.rows[index] = { ...this.rows[index], ...data, updated: true };
