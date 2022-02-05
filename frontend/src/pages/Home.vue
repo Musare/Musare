@@ -879,14 +879,10 @@ export default {
 		);
 	}
 	.christmas-lights {
-		top: 35vh !important;
+		top: 300px !important;
 
 		&.loggedIn {
-			top: 20vh !important;
-		}
-
-		@media only screen and (max-width: 550px) {
-			top: 45vh !important;
+			top: 200px !important;
 		}
 	}
 	.header {
@@ -971,14 +967,12 @@ html {
 
 .header {
 	display: flex;
-	height: 35vh;
-	min-height: 300px;
+	height: 300px;
 	margin-top: -64px;
 	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 
 	img.background {
-		height: 35vh;
-		min-height: 300px;
+		height: 300px;
 		width: 100%;
 		object-fit: cover;
 		object-position: center;
@@ -996,8 +990,7 @@ html {
 			rgba(3, 169, 244, 0.8) 100%
 		);
 		position: absolute;
-		height: 35vh;
-		min-height: 300px;
+		height: 300px;
 		width: 100%;
 		border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 		overflow: hidden;
@@ -1009,8 +1002,7 @@ html {
 		margin-left: auto;
 		margin-right: auto;
 		text-align: center;
-		height: 35vh;
-		min-height: 300px;
+		height: 300px;
 		.content {
 			position: absolute;
 			top: 50%;
@@ -1055,24 +1047,11 @@ html {
 		}
 	}
 	&.loggedIn {
-		height: 20vh;
-		min-height: 200px;
+		height: 200px;
 		.overlay,
 		.content-container,
 		img.background {
-			height: 20vh;
-			min-height: 200px;
-		}
-	}
-}
-
-@media only screen and (max-width: 550px) {
-	.header {
-		height: 45vh;
-		.overlay,
-		.content-container,
-		img.background {
-			height: 45vh;
+			height: 200px;
 		}
 	}
 }
