@@ -1,5 +1,8 @@
 <template>
-	<nav class="nav is-info" :class="{ transparent }">
+	<nav
+		class="nav is-info"
+		:class="{ transparent, 'hide-logged-out': !loggedIn && hideLoggedOut }"
+	>
 		<div class="nav-left">
 			<router-link v-if="!hideLogo" class="nav-item is-brand" to="/">
 				<img
@@ -300,16 +303,6 @@ export default {
 			}
 		}
 	}
-
-	.nav-menu {
-		// box-shadow: 0 4px 7px rgb(10 10 10 / 10%);
-		// left: 0;
-		// display: block;
-		// right: 0;
-		// top: 100%;
-		// position: absolute;
-		// background: var(--white);
-	}
 }
 
 .grouped {
@@ -326,40 +319,42 @@ export default {
 }
 
 @media screen and (max-width: 768px) {
-	.nav-toggle {
-		display: block !important;
-	}
+	.nav:not(.hide-logged-out) {
+		.nav-toggle {
+			display: block !important;
+		}
 
-	.nav-menu {
-		display: none !important;
-		box-shadow: 0 4px 7px rgba(10, 10, 10, 0.1);
-		left: 0;
-		right: 0;
-		top: 100%;
-		position: absolute;
-		background: var(--white);
-	}
+		.nav-menu {
+			display: none !important;
+			box-shadow: 0 4px 7px rgba(10, 10, 10, 0.1);
+			left: 0;
+			right: 0;
+			top: 100%;
+			position: absolute;
+			background: var(--white);
+		}
 
-	.nav-menu.is-active {
-		display: block !important;
+		.nav-menu.is-active {
+			display: block !important;
 
-		.nav-item {
-			color: var(--dark-grey-2);
-
-			&:hover {
+			.nav-item {
 				color: var(--dark-grey-2);
+
+				&:hover {
+					color: var(--dark-grey-2);
+				}
 			}
 		}
-	}
 
-	.nav .nav-menu .grouped {
-		flex-direction: column;
-		.nav-item {
-			padding: 10px 20px;
-			&:hover,
-			&:focus {
-				border-top: 0;
-				height: unset;
+		.nav-menu .grouped {
+			flex-direction: column;
+			.nav-item {
+				padding: 10px 20px;
+				&:hover,
+				&:focus {
+					border-top: 0;
+					height: unset;
+				}
 			}
 		}
 	}
