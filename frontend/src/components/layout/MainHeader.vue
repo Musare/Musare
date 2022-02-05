@@ -177,7 +177,7 @@ export default {
 	}
 
 	@media screen and (max-width: 768px) {
-		.nav-menu {
+		.nav:not(.hide-logged-out) .nav-menu {
 			background-color: var(--dark-grey-3) !important;
 		}
 	}
