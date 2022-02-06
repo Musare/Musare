@@ -1,8 +1,8 @@
 <template>
-	<div class="thumbnail">
-		<slot name="icon" />
-		<div
-			v-if="
+	<div
+		:class="{
+			thumbnail: true,
+			'youtube-thumbnail':
 				song.youtubeId &&
 				(!song.thumbnail ||
 					(song.thumbnail &&
@@ -14,7 +14,10 @@
 								-1)) ||
 					song.thumbnail === 'empty' ||
 					song.thumbnail == null)
-			"
+		}"
+	>
+		<slot name="icon" />
+		<div
 			class="yt-thumbnail-bg"
 			:style="{
 				'background-image':
@@ -71,16 +74,11 @@ export default {
 	margin-left: -10px;
 
 	.yt-thumbnail-bg {
-		height: 100%;
-		width: 100%;
-		position: absolute;
-		top: 0;
-		filter: blur(1px);
-		background: url("/assets/notes-transparent.png") no-repeat center center;
+		display: none;
 	}
 
 	img {
-		height: auto;
+		height: 100%;
 		width: 100%;
 		margin-top: auto;
 		margin-bottom: auto;
@@ -90,6 +88,23 @@ export default {
 		bottom: 0;
 		left: 0;
 		right: 0;
+	}
+
+	&.youtube-thumbnail {
+		.yt-thumbnail-bg {
+			height: 100%;
+			width: 100%;
+			display: block;
+			position: absolute;
+			top: 0;
+			filter: blur(1px);
+			background: url("/assets/notes-transparent.png") no-repeat center
+				center;
+		}
+
+		img {
+			height: auto;
+		}
 	}
 }
 </style>
