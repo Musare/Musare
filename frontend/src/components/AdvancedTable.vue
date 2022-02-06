@@ -2038,7 +2038,7 @@ export default {
 
 .table-outer-container {
 	border-radius: @border-radius;
-	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
+	box-shadow: @box-shadow;
 	margin: 10px 0;
 	overflow: hidden;
 
@@ -2407,7 +2407,7 @@ export default {
 	z-index: 5;
 	border: 1px solid var(--light-grey-3);
 	border-radius: @border-radius;
-	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+	box-shadow: @box-shadow-dropdown;
 	background-color: var(--white);
 	color: var(--dark-grey);
 	padding: 5px;

@@ -147,6 +147,12 @@ export default {
 </script>
 
 <style lang="less" scoped>
+.night-mode {
+	.container .content {
+		box-shadow: 0 !important;
+	}
+}
+
 /deep/ .character-counter {
 	display: flex;
 	justify-content: flex-end;
@@ -167,6 +173,7 @@ export default {
 		background-color: var(--white);
 		padding: 30px 50px;
 		border-radius: @border-radius;
+		box-shadow: @box-shadow;
 	}
 
 	#sidebar-with-content {
@@ -201,7 +208,7 @@ export default {
 		a {
 			outline: none;
 			border: none;
-			box-shadow: none;
+			box-shadow: 0;
 			color: var(--primary-color);
 			font-size: 22px;
 			line-height: 26px;

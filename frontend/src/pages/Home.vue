@@ -1149,7 +1149,7 @@ html {
 	max-width: 400px;
 	flex-wrap: wrap;
 	border-radius: @border-radius;
-	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
+	box-shadow: @box-shadow;
 
 	.card-content {
 		display: flex;
@@ -1342,7 +1342,7 @@ html {
 }
 
 .station-card:hover {
-	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.3), 0 0 10px rgba(10, 10, 10, 0.3);
+	box-shadow: @box-shadow-hover;
 	transition: all ease-in-out 0.2s;
 }
 

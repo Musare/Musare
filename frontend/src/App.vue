@@ -820,8 +820,7 @@ img {
 .night-mode {
 	.tippy-box {
 		border: 1px solid var(--light-grey-3);
-		box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25),
-			0 10px 10px rgba(0, 0, 0, 0.22);
+		box-shadow: @box-shadow-dropdown;
 		background-color: var(--white);
 
 		.tippy-content {
@@ -953,7 +952,7 @@ img {
 	font-size: 15px;
 	padding: 5px 10px;
 	border: 1px solid var(--light-grey-3);
-	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+	box-shadow: @box-shadow-dropdown;
 	background-color: var(--white);
 
 	.button {
@@ -1058,7 +1057,7 @@ img {
 
 .tippy-box[data-theme~="stationSettings"] {
 	border: 1px solid var(--light-grey-3);
-	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+	box-shadow: @box-shadow-dropdown;
 	background-color: var(--white);
 
 	button:not(:last-of-type) {
@@ -1070,7 +1069,7 @@ img {
 	font-size: 15px;
 	padding: 0;
 	border: 1px solid var(--light-grey-3);
-	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+	box-shadow: @box-shadow-dropdown;
 	background-color: var(--white);
 	color: var(--dark-grey);
 	width: 350px;
@@ -1192,7 +1191,7 @@ img {
 	font-size: 15px;
 	padding: 0;
 	border: 1px solid var(--light-grey-3);
-	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+	box-shadow: @box-shadow-dropdown;
 	background-color: var(--white);
 	color: var(--dark-grey);
 	width: 100% !important;
@@ -1851,7 +1850,7 @@ h4.section-title {
 	border-radius: @border-radius;
 	padding: 20px;
 	border: unset !important;
-	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
+	box-shadow: @box-shadow;
 
 	* {
 		font-family: Karla, Arial, sans-serif;
@@ -2028,7 +2027,7 @@ html {
 	font-weight: 600;
 	white-space: nowrap;
 	margin-top: 5px;
-	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
+	box-shadow: @box-shadow;
 	transition: all 0.2s ease-in-out;
 
 	&:hover,

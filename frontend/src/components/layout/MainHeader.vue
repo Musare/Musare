@@ -326,7 +326,7 @@ export default {
 
 		.nav-menu {
 			display: none !important;
-			box-shadow: 0 4px 7px rgba(10, 10, 10, 0.1);
+			box-shadow: @box-shadow-dropdown;
 			left: 0;
 			right: 0;
 			top: 100%;

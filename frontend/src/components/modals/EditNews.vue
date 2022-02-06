@@ -244,7 +244,7 @@ export default {
 	#preview {
 		word-break: break-all;
 		overflow: auto;
-		box-shadow: none;
+		box-shadow: 0;
 	}
 
 	textarea,

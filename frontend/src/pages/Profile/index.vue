@@ -394,7 +394,7 @@ export default {
 		button {
 			outline: none;
 			border: none;
-			box-shadow: none;
+			box-shadow: 0;
 			color: var(--primary-color);
 			font-size: 22px;
 			line-height: 26px;
@@ -418,6 +418,7 @@ export default {
 		background-color: var(--white);
 		padding: 30px 50px;
 		border-radius: @border-radius;
+		box-shadow: @box-shadow;
 
 		h3 {
 			font-weight: 400;
@@ -453,6 +454,9 @@ export default {
 		.thumbnail
 		.activity-type-icon {
 		color: var(--light-grey-2);
+	}
+	/deep/ .content {
+		box-shadow: 0;
 	}
 }
 </style>

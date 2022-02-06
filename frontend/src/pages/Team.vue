@@ -307,8 +307,7 @@ h2 {
 			margin-top: 5px;
 			font-size: 16px;
 			text-align: center;
-			box-shadow: 0 1px 2px rgba(10, 10, 10, 0.1),
-				0 0 0 1px rgba(10, 10, 10, 0.1);
+			box-shadow: @box-shadow;
 			&:not(:last-of-type) {
 				margin-right: 5px;
 			}
@@ -334,8 +333,7 @@ h2 {
 		margin: 10px;
 		text-align: left;
 		border-radius: @border-radius;
-		box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1),
-			0 0 0 1px rgba(10, 10, 10, 0.1);
+		box-shadow: @box-shadow;
 		.card-header {
 			display: flex;
 			position: relative;
