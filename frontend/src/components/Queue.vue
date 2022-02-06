@@ -304,7 +304,7 @@ export default {
 
 #queue {
 	background-color: var(--white);
-	border-radius: 0 0 5px 5px;
+	border-radius: 0 0 @border-radius @border-radius;
 	user-select: none;
 
 	.actionable-button-hidden {

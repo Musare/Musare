@@ -126,7 +126,7 @@ export default {
 		align-items: center;
 		justify-content: space-evenly;
 		border: 1px solid var(--light-grey-3);
-		border-radius: 5px;
+		border-radius: @border-radius;
 
 		.checkbox-control .slider {
 			cursor: default;

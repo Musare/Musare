@@ -391,7 +391,7 @@ export default {
 	.selected-discogs-info {
 		background-color: var(--white);
 		border: 1px solid var(--light-grey-3);
-		border-radius: 3px;
+		border-radius: @border-radius;
 		margin-bottom: 16px;
 
 		.selected-discogs-info-none {
@@ -408,7 +408,7 @@ export default {
 		.api-result {
 			background-color: var(--white);
 			border: 0.5px solid var(--light-grey-3);
-			border-radius: 3px;
+			border-radius: @border-radius;
 			margin-bottom: 16px;
 		}
 	}
@@ -427,11 +427,11 @@ export default {
 
 		.track:first-child {
 			margin-top: 0;
-			border-radius: 3px 3px 0 0;
+			border-radius: @border-radius @border-radius 0 0;
 		}
 
 		.track:last-child {
-			border-radius: 0 0 3px 3px;
+			border-radius: 0 0 @border-radius @border-radius;
 		}
 
 		.track {

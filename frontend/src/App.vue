@@ -813,7 +813,7 @@ img {
 	top: 50px;
 	right: 50px;
 	font-size: 2em;
-	border-radius: 5px;
+	border-radius: @border-radius;
 	z-index: 10000000;
 }
 
@@ -1092,7 +1092,7 @@ img {
 			font-size: 15.5px;
 			min-height: 36px;
 			background: var(--light-grey);
-			border-radius: 5px;
+			border-radius: @border-radius;
 			cursor: pointer;
 
 			.checkbox-control {
@@ -1239,7 +1239,7 @@ img {
 		border: 1px solid var(--light-grey-2);
 		color: var(--dark-grey-2);
 		appearance: none;
-		border-radius: 3px;
+		border-radius: @border-radius;
 		font-size: 14px;
 		line-height: 24px;
 		padding-left: 8px;
@@ -1259,7 +1259,7 @@ img {
 		background-color: var(--white);
 		border: 1px solid var(--light-grey-2);
 		appearance: none;
-		border-radius: 3px;
+		border-radius: @border-radius;
 		cursor: pointer;
 		position: relative;
 
@@ -1325,7 +1325,7 @@ button.delete:focus {
 	width: 100%;
 	border-collapse: collapse;
 	border-spacing: 0;
-	border-radius: 5px;
+	border-radius: @border-radius;
 
 	thead th {
 		padding: 5px 10px;
@@ -1349,7 +1349,7 @@ button.delete:focus {
 	border: 1px solid var(--light-grey-2);
 	background-color: var(--white);
 	color: var(--dark-grey-2);
-	border-radius: 3px;
+	border-radius: @border-radius;
 	line-height: 24px;
 	align-items: center;
 	display: inline-flex;
@@ -1420,7 +1420,7 @@ button.delete:focus {
 	padding-right: 8px;
 	line-height: 24px;
 	font-size: 14px;
-	border-radius: 3px;
+	border-radius: @border-radius;
 	box-shadow: inset 0 1px 2px rgba(10, 10, 10, 0.1);
 	border: 1px solid var(--light-grey-2);
 }
@@ -1489,11 +1489,11 @@ button.delete:focus {
 			margin-right: -1px;
 
 			&:first-child {
-				border-radius: 3px 0 0 3px;
+				border-radius: @border-radius 0 0 @border-radius;
 			}
 
 			&:last-child {
-				border-radius: 0 3px 3px 0;
+				border-radius: 0 @border-radius @border-radius 0;
 				padding-left: 10px;
 			}
 		}
@@ -1502,7 +1502,7 @@ button.delete:focus {
 			margin-right: -1px;
 
 			&:first-child {
-				border-radius: 3px 0 0 3px;
+				border-radius: @border-radius 0 0 @border-radius;
 			}
 		}
 	}
@@ -1517,14 +1517,14 @@ button.delete:focus {
 	select {
 		width: 100%;
 		height: 36px;
-		border-radius: 3px 0 0 3px;
+		border-radius: @border-radius 0 0 @border-radius;
 		border-right: 0;
 		border-color: var(--light-grey-3);
 	}
 
 	.button {
 		height: 36px;
-		border-radius: 0 3px 3px 0;
+		border-radius: 0 @border-radius @border-radius 0;
 	}
 }
 
@@ -1589,14 +1589,14 @@ h4.section-title {
 	justify-content: space-between;
 	padding: 7.5px;
 	border: 1px solid var(--light-grey-3);
-	border-radius: 3px;
+	border-radius: @border-radius;
 	overflow: hidden;
 
 	.item-thumbnail {
 		width: 65px;
 		height: 65px;
 		margin: -7.5px;
-		border-radius: 3px 0 0 3px;
+		border-radius: @border-radius 0 0 @border-radius;
 	}
 
 	.item-title {
@@ -1776,7 +1776,7 @@ h4.section-title {
 }
 
 .content-box {
-	border-radius: 3px;
+	border-radius: @border-radius;
 	background-color: var(--white);
 	border: 1px solid var(--dark-grey);
 	max-width: 580px;
@@ -1848,7 +1848,7 @@ h4.section-title {
 
 .news-item {
 	font-family: "Karla";
-	border-radius: 5px;
+	border-radius: @border-radius;
 	padding: 20px;
 	border: unset !important;
 	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
@@ -2023,7 +2023,7 @@ html {
 	background-color: var(--light-grey);
 	color: var(--primary-color);
 	padding: 5px 10px;
-	border-radius: 5px;
+	border-radius: @border-radius;
 	font-size: 14px;
 	font-weight: 600;
 	white-space: nowrap;

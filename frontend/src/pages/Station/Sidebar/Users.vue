@@ -129,7 +129,7 @@ export default {
 #users {
 	background-color: var(--white);
 	margin-bottom: 20px;
-	border-radius: 0 0 5px 5px;
+	border-radius: 0 0 @border-radius @border-radius;
 	max-height: 100%;
 
 	.menu {
@@ -154,7 +154,7 @@ export default {
 				align-items: center;
 				padding: 5px 10px;
 				border: 0.5px var(--light-grey-3) solid;
-				border-radius: 3px;
+				border-radius: @border-radius;
 				cursor: pointer;
 
 				&:hover {

@@ -431,7 +431,7 @@ export default {
 
 	#playlist-info-section {
 		border: 1px solid var(--light-grey-3);
-		border-radius: 3px;
+		border-radius: @border-radius;
 		padding: 15px !important;
 		margin-bottom: 16px;
 

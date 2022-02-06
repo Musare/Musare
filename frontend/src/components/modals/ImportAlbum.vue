@@ -774,7 +774,7 @@ export default {
 		overflow-x: auto;
 
 		.button {
-			border-radius: 5px 5px 0 0;
+			border-radius: @border-radius @border-radius 0 0;
 			border: 0;
 			text-transform: uppercase;
 			font-size: 14px;
@@ -796,7 +796,7 @@ export default {
 	}
 	.tab {
 		border: 1px solid var(--light-grey-3);
-		border-radius: 0 0 3px 3px;
+		border-radius: 0 0 @border-radius @border-radius;
 		padding: 15px;
 		height: calc(100% - 32px);
 		overflow: auto;
@@ -881,7 +881,7 @@ export default {
 		.api-result {
 			background-color: var(--white);
 			border: 0.5px solid var(--primary-color);
-			border-radius: 5px;
+			border-radius: @border-radius;
 			margin-bottom: 16px;
 		}
 
@@ -899,11 +899,11 @@ export default {
 
 			.track:first-child {
 				margin-top: 0;
-				border-radius: 3px 3px 0 0;
+				border-radius: @border-radius @border-radius 0 0;
 			}
 
 			.track:last-child {
-				border-radius: 0 0 3px 3px;
+				border-radius: 0 0 @border-radius @border-radius;
 			}
 
 			.track {
@@ -1006,11 +1006,11 @@ export default {
 
 				.track:first-child {
 					margin-top: 0;
-					border-radius: 3px 3px 0 0;
+					border-radius: @border-radius @border-radius 0 0;
 				}
 
 				.track:last-child {
-					border-radius: 0 0 3px 3px;
+					border-radius: 0 0 @border-radius @border-radius;
 				}
 
 				.track {
@@ -1047,7 +1047,7 @@ export default {
 	width: 376px;
 	background-color: var(--light-grey);
 	border: 1px rgba(163, 224, 255, 0.75) solid;
-	border-radius: 5px;
+	border-radius: @border-radius;
 	padding: 16px;
 	overflow: auto;
 	height: 100%;
@@ -1061,18 +1061,18 @@ export default {
 	width: 376px;
 	background-color: var(--light-grey);
 	border: 1px rgba(163, 224, 255, 0.75) solid;
-	border-radius: 5px;
+	border-radius: @border-radius;
 	padding: 16px;
 	overflow: auto;
 	height: 100%;
 
 	.track-box:first-child {
 		margin-top: 0;
-		border-radius: 3px 3px 0 0;
+		border-radius: @border-radius @border-radius 0 0;
 	}
 
 	.track-box:last-child {
-		border-radius: 0 0 3px 3px;
+		border-radius: 0 0 @border-radius @border-radius;
 	}
 
 	.track-box {

@@ -275,7 +275,7 @@ export default {
 	max-height: 500px;
 	overflow: auto;
 	border: 1px solid var(--light-grey-3);
-	border-radius: 3px;
+	border-radius: @border-radius;
 
 	.search-query-item:not(:last-of-type) {
 		margin-bottom: 10px;

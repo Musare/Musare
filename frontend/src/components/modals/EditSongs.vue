@@ -477,7 +477,7 @@ export default {
 	max-height: calc(100vh - 40px);
 	overflow: auto;
 	margin-right: 8px;
-	border-radius: 5px;
+	border-radius: @border-radius;
 
 	.sidebar-head,
 	.sidebar-foot {
@@ -492,7 +492,7 @@ export default {
 
 	.sidebar-head {
 		border-bottom: 1px solid var(--light-grey-2);
-		border-radius: 5px 5px 0 0;
+		border-radius: @border-radius @border-radius 0 0;
 
 		.sidebar-title {
 			display: flex;
@@ -563,7 +563,7 @@ export default {
 
 	.sidebar-foot {
 		border-top: 1px solid var(--light-grey-2);
-		border-radius: 0 0 5px 5px;
+		border-radius: 0 0 @border-radius @border-radius;
 
 		.button {
 			flex: 1;

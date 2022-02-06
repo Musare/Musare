@@ -2461,7 +2461,7 @@ export default {
 		}
 
 		.quadrant {
-			border-radius: 5px;
+			border-radius: @border-radius;
 			margin: 10px;
 		}
 
@@ -2550,7 +2550,7 @@ export default {
 			display: flex;
 			flex-direction: column;
 			border: 1px solid var(--light-grey-3);
-			border-radius: 5px;
+			border-radius: @border-radius;
 			overflow: hidden;
 
 			&.nothing-here-text {
@@ -2798,7 +2798,7 @@ export default {
 							margin-bottom: 0 !important;
 							button.disabled {
 								filter: grayscale(0.4);
-								border-radius: 3px;
+								border-radius: @border-radius;
 								&::after {
 									margin-right: 100%;
 								}

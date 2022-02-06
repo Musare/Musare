@@ -1027,7 +1027,7 @@ html {
 				.register {
 					margin: 5px 10px;
 					padding: 10px 15px;
-					border-radius: 5px;
+					border-radius: @border-radius;
 					font-size: 18px;
 					width: 100%;
 					max-width: 250px;
@@ -1148,7 +1148,7 @@ html {
 	width: calc(100% - 30px);
 	max-width: 400px;
 	flex-wrap: wrap;
-	border-radius: 5px;
+	border-radius: @border-radius;
 	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
 
 	.card-content {

@@ -171,7 +171,7 @@ export default {
 	}
 
 	.autosuggest-item:last-child {
-		border-radius: 0 0 3px 3px;
+		border-radius: 0 0 @border-radius @border-radius;
 	}
 }
 </style>

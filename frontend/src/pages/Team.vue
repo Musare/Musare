@@ -302,7 +302,7 @@ h2 {
 		a {
 			background: var(--white);
 			padding: 10px;
-			border-radius: 5px;
+			border-radius: @border-radius;
 			white-space: nowrap;
 			margin-top: 5px;
 			font-size: 16px;
@@ -333,7 +333,7 @@ h2 {
 		max-width: 400px;
 		margin: 10px;
 		text-align: left;
-		border-radius: 5px;
+		border-radius: @border-radius;
 		box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1),
 			0 0 0 1px rgba(10, 10, 10, 0.1);
 		.card-header {

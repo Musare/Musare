@@ -299,7 +299,7 @@ export default {
 		font-size: 12px;
 		line-height: 14px;
 		height: 18px;
-		border-radius: 5px;
+		border-radius: @border-radius;
 		margin-left: 12px;
 
 		&.admin {
@@ -402,7 +402,7 @@ export default {
 			width: 100%;
 			text-align: left;
 			cursor: pointer;
-			border-radius: 5px;
+			border-radius: @border-radius;
 			background-color: transparent;
 
 			&.active {
@@ -417,7 +417,7 @@ export default {
 		max-width: 100%;
 		background-color: var(--white);
 		padding: 30px 50px;
-		border-radius: 3px;
+		border-radius: @border-radius;
 
 		h3 {
 			font-weight: 400;

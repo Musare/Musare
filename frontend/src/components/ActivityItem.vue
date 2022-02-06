@@ -205,7 +205,7 @@ export default {
 .activity-item {
 	height: 72px;
 	border: 0.5px var(--light-grey-3) solid;
-	border-radius: 3px;
+	border-radius: @border-radius;
 	padding: 0;
 
 	.thumbnail {

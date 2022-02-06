@@ -85,7 +85,7 @@ export default {
 	flex-direction: column;
 	padding: 20px;
 	margin: 10px 10px 50px 10px;
-	border-radius: 5px;
+	border-radius: @border-radius;
 	overflow: hidden;
 	background-color: var(--white);
 	color: var(--dark-grey);

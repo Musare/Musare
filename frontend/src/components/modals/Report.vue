@@ -443,7 +443,7 @@ export default {
 	}
 	.columns {
 		background-color: var(--dark-grey-3) !important;
-		border-radius: 5px;
+		border-radius: @border-radius;
 	}
 }
 
@@ -465,7 +465,7 @@ export default {
 			margin-bottom: 20px;
 			padding: 20px;
 			background-color: var(--light-grey);
-			border-radius: 5px;
+			border-radius: @border-radius;
 		}
 	}
 

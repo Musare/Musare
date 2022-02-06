@@ -354,7 +354,7 @@ export default {
 	.report-item {
 		background-color: var(--white);
 		border: 0.5px solid var(--primary-color);
-		border-radius: 5px;
+		border-radius: @border-radius;
 		padding: 8px;
 
 		&:not(:first-of-type) {
@@ -380,11 +380,11 @@ export default {
 				display: flex;
 
 				&:first-child {
-					border-radius: 3px 3px 0 0;
+					border-radius: @border-radius @border-radius 0 0;
 				}
 
 				&:last-child {
-					border-radius: 0 0 3px 3px;
+					border-radius: 0 0 @border-radius @border-radius;
 				}
 
 				&.report-sub-item-resolved {

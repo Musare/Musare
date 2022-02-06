@@ -1794,7 +1794,7 @@ export default {
 				width: 530px;
 				display: block;
 				border: 1px rgba(163, 224, 255, 0.75) solid;
-				border-radius: 5px 5px 0px 0px;
+				border-radius: @border-radius @border-radius 0px 0px;
 				display: flex;
 				align-items: center;
 
@@ -1808,7 +1808,7 @@ export default {
 
 			.player-footer {
 				border: 1px solid var(--light-grey-3);
-				border-radius: 0px 0px 3px 3px;
+				border-radius: 0px 0px @border-radius @border-radius;
 				display: flex;
 				justify-content: space-between;
 				height: 54px;
@@ -1971,7 +1971,7 @@ export default {
 		border: 1px solid var(--light-grey-3);
 		flex: 1;
 		margin-top: 16px;
-		border-radius: 3px;
+		border-radius: @border-radius;
 
 		.album-get-button {
 			background-color: var(--purple);
@@ -2132,7 +2132,7 @@ export default {
 			overflow-x: auto;
 
 			.button {
-				border-radius: 5px 5px 0 0;
+				border-radius: @border-radius @border-radius 0 0;
 				border: 0;
 				text-transform: uppercase;
 				font-size: 14px;
@@ -2154,7 +2154,7 @@ export default {
 		}
 		.tab {
 			border: 1px solid var(--light-grey-3);
-			border-radius: 0 0 5px 5px;
+			border-radius: 0 0 @border-radius @border-radius;
 			padding: 15px;
 			height: calc(100% - 32px);
 			overflow: auto;

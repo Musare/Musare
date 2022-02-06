@@ -251,7 +251,7 @@ export default {
 	#preview {
 		padding: 5px;
 		border: 1px solid var(--light-grey-3) !important;
-		border-radius: 5px;
+		border-radius: @border-radius;
 		height: calc(100vh - 280px);
 		width: 100%;
 	}

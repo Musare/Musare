@@ -604,7 +604,7 @@ export default {
 			}
 		}
 		.right-section .section {
-			border-radius: 5px;
+			border-radius: @border-radius;
 		}
 	}
 }
@@ -638,7 +638,7 @@ export default {
 		max-width: 100%;
 
 		.button {
-			border-radius: 5px 5px 0 0;
+			border-radius: @border-radius @border-radius 0 0;
 			border: 0;
 			text-transform: uppercase;
 			font-size: 14px;
@@ -660,7 +660,7 @@ export default {
 	}
 	.tab {
 		border: 1px solid var(--light-grey-3);
-		border-radius: 0 0 5px 5px;
+		border-radius: 0 0 @border-radius @border-radius;
 	}
 }
 
@@ -699,7 +699,7 @@ export default {
 	.left-section {
 		#playlist-info-section {
 			border: 1px solid var(--light-grey-3);
-			border-radius: 3px;
+			border-radius: @border-radius;
 			padding: 15px !important;
 
 			h3 {

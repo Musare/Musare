@@ -166,7 +166,7 @@ export default {
 	.content {
 		background-color: var(--white);
 		padding: 30px 50px;
-		border-radius: 3px;
+		border-radius: @border-radius;
 	}
 
 	#sidebar-with-content {
@@ -209,7 +209,7 @@ export default {
 			width: 100%;
 			text-align: left;
 			cursor: pointer;
-			border-radius: 5px;
+			border-radius: @border-radius;
 			background-color: transparent;
 			display: inline-block;
 

@@ -572,7 +572,7 @@ export default {
 			width: 100%;
 			height: 36px;
 			border: 0;
-			border-radius: 3px;
+			border-radius: @border-radius;
 			font-size: 18px;
 			color: var(--white);
 			box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);

@@ -692,7 +692,7 @@ export default {
 		}
 		.right-section .section,
 		#queue {
-			border-radius: 5px;
+			border-radius: @border-radius;
 			background-color: transparent !important;
 		}
 	}
@@ -709,7 +709,7 @@ export default {
 			display: flex;
 			flex-direction: column;
 			flex-grow: unset;
-			border-radius: 5px;
+			border-radius: @border-radius;
 			margin: 0 0 20px 0;
 			background-color: var(--white);
 			border: 1px solid var(--light-grey-3);
@@ -763,7 +763,7 @@ export default {
 			overflow-x: auto;
 
 			.button {
-				border-radius: 5px 5px 0 0;
+				border-radius: @border-radius @border-radius 0 0;
 				border: 0;
 				text-transform: uppercase;
 				font-size: 14px;
@@ -786,7 +786,7 @@ export default {
 		.tab {
 			border: 1px solid var(--light-grey-3);
 			padding: 15px;
-			border-radius: 0 0 5px 5px;
+			border-radius: 0 0 @border-radius @border-radius;
 		}
 	}
 	.right-section {

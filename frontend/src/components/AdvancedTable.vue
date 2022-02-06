@@ -2037,7 +2037,7 @@ export default {
 }
 
 .table-outer-container {
-	border-radius: 5px;
+	border-radius: @border-radius;
 	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
 	margin: 10px 0;
 	overflow: hidden;
@@ -2309,7 +2309,7 @@ export default {
 			border: 1px solid var(--light-grey-2);
 			color: var(--dark-grey-2);
 			appearance: none;
-			border-radius: 3px;
+			border-radius: @border-radius;
 			font-size: 14px;
 			line-height: 34px;
 			padding-left: 8px;
@@ -2330,7 +2330,7 @@ export default {
 			& > select,
 			& > .button,
 			&.label {
-				border-radius: 5px 0 0 5px;
+				border-radius: @border-radius 0 0 @border-radius;
 			}
 		}
 		&:last-child {
@@ -2338,7 +2338,7 @@ export default {
 			& > select,
 			& > .button,
 			&.label {
-				border-radius: 0 5px 5px 0;
+				border-radius: 0 @border-radius @border-radius 0;
 			}
 		}
 		& > .button {
@@ -2358,20 +2358,20 @@ export default {
 			.control {
 				margin-bottom: 0 !important;
 				&:nth-child(1) > select {
-					border-radius: 5px 0 0 0;
+					border-radius: @border-radius 0 0 0;
 				}
 				&:nth-child(2) > select {
-					border-radius: 0 5px 0 0;
+					border-radius: 0 @border-radius 0 0;
 				}
 				/deep/ &:nth-child(3) {
 					& > input,
 					& > div > input,
 					& > select {
-						border-radius: 0 0 0 5px;
+						border-radius: 0 0 0 @border-radius;
 					}
 				}
 				&:nth-child(4) > button {
-					border-radius: 0 0 5px 0;
+					border-radius: 0 0 @border-radius 0;
 				}
 			}
 		}
@@ -2406,7 +2406,7 @@ export default {
 	line-height: 36px;
 	z-index: 5;
 	border: 1px solid var(--light-grey-3);
-	border-radius: 5px;
+	border-radius: @border-radius;
 	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
 	background-color: var(--white);
 	color: var(--dark-grey);
