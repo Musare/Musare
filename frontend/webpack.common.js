@@ -19,7 +19,9 @@ const fetchVersionAndGitInfo = cb => {
 	};
 
 	try {
-		const packageJson = JSON.parse(fs.readFileSync("./package.json").toString());
+		const packageJson = JSON.parse(
+			fs.readFileSync("./package.json").toString()
+		);
 		const headContents = fs
 			.readFileSync(".parent_git/HEAD")
 			.toString()
@@ -62,27 +64,37 @@ const fetchVersionAndGitInfo = cb => {
 	}
 
 	cb(debug);
-}
+};
 
 fetchVersionAndGitInfo(() => {});
 
 class InsertDebugInfoPlugin {
 	apply(compiler) {
-		compiler.hooks.compilation.tap("InsertDebugInfoPlugin", (compilation) => {
-			HtmlWebpackPlugin.getHooks(compilation).beforeAssetTagGeneration.tapAsync("InsertDebugInfoPlugin", (data, cb) => {
-				fetchVersionAndGitInfo(debug => {
-					data.plugin.userOptions.debug.version = debug.version;
-					data.plugin.userOptions.debug.git.remote = debug.git.remote;
-					data.plugin.userOptions.debug.git.remoteUrl = debug.git.remoteUrl;
-					data.plugin.userOptions.debug.git.branch = debug.git.branch;
-					data.plugin.userOptions.debug.git.latestCommit = debug.git.latestCommit;
-					data.plugin.userOptions.debug.git.latestCommitShort = debug.git.latestCommitShort;
-					cb(null, data);
-				});
-			})
+		compiler.hooks.compilation.tap("InsertDebugInfoPlugin", compilation => {
+			HtmlWebpackPlugin.getHooks(
+				compilation
+			).beforeAssetTagGeneration.tapAsync(
+				"InsertDebugInfoPlugin",
+				(data, cb) => {
+					fetchVersionAndGitInfo(debug => {
+						data.plugin.userOptions.debug.version = debug.version;
+						data.plugin.userOptions.debug.git.remote =
+							debug.git.remote;
+						data.plugin.userOptions.debug.git.remoteUrl =
+							debug.git.remoteUrl;
+						data.plugin.userOptions.debug.git.branch =
+							debug.git.branch;
+						data.plugin.userOptions.debug.git.latestCommit =
+							debug.git.latestCommit;
+						data.plugin.userOptions.debug.git.latestCommitShort =
+							debug.git.latestCommitShort;
+						cb(null, data);
+					});
+				}
+			);
 		});
 	}
-  }
+}
 
 module.exports = {
 	entry: "./src/main.js",
@@ -140,7 +152,18 @@ module.exports = {
 							url: false
 						}
 					},
-					"less-loader"
+					"less-loader",
+					{
+						loader: "style-resources-loader",
+						options: {
+							patterns: [
+								path.resolve(
+									__dirname,
+									"./src/styles/variables.less"
+								)
+							]
+						}
+					}
 				]
 			}
 		]
