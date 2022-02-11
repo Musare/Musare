@@ -29,7 +29,7 @@ services:
       - backend
 
   mongo:
-    image: mongo:4.0
+    image: mongo:5.0
     ports:
       - "${MONGO_HOST}:${MONGO_PORT}:${MONGO_PORT}"
     environment:
@@ -48,7 +48,6 @@ services:
     image: redis
     ports:
       - "${REDIS_HOST}:${REDIS_PORT}:6379"
-    command: "--notify-keyspace-events Ex --requirepass ${REDIS_PASSWORD}
-      --appendonly yes"
+    command: "--notify-keyspace-events Ex --requirepass ${REDIS_PASSWORD} --appendonly yes"
     volumes:
       - .redis:/data
