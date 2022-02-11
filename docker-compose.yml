@@ -45,7 +45,7 @@ services:
       - ./.db:/data/db
 
   redis:
-    image: redis
+    image: redis:6.2
     ports:
       - "${REDIS_HOST}:${REDIS_PORT}:6379"
     command: "--notify-keyspace-events Ex --requirepass ${REDIS_PASSWORD} --appendonly yes"
