@@ -49,7 +49,7 @@ class _SongsModule extends CoreClass {
 
 		this.setStage(2);
 
-		return new Promise((resolve, reject) =>
+		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
 					next => {
@@ -115,8 +115,8 @@ class _SongsModule extends CoreClass {
 						reject(new Error(err));
 					} else resolve();
 				}
-			)
-		);
+			);
+		});
 	}
 
 	/**
@@ -127,7 +127,7 @@ class _SongsModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_SONG(payload) {
-		return new Promise((resolve, reject) =>
+		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
 					next => {
@@ -161,8 +161,8 @@ class _SongsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve({ song });
 				}
-			)
-		);
+			);
+		});
 	}
 
 	/**
@@ -174,7 +174,7 @@ class _SongsModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_SONGS(payload) {
-		return new Promise((resolve, reject) =>
+		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
 					next => {
@@ -201,8 +201,8 @@ class _SongsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve({ songs });
 				}
-			)
-		);
+			);
+		});
 	}
 
 	/**
@@ -215,7 +215,7 @@ class _SongsModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	ENSURE_SONG_EXISTS_BY_YOUTUBE_ID(payload) {
-		return new Promise((resolve, reject) =>
+		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
 					next => {
@@ -257,8 +257,8 @@ class _SongsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve({ song });
 				}
-			)
-		);
+			);
+		});
 	}
 
 	/**
@@ -269,7 +269,7 @@ class _SongsModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_SONG_FROM_YOUTUBE_ID(payload) {
-		return new Promise((resolve, reject) =>
+		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
 					next => {
@@ -280,8 +280,8 @@ class _SongsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve({ song });
 				}
-			)
-		);
+			);
+		});
 	}
 
 	/**
@@ -293,7 +293,7 @@ class _SongsModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	UPDATE_SONG(payload) {
-		return new Promise((resolve, reject) =>
+		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
 					next => {
@@ -463,8 +463,8 @@ class _SongsModule extends CoreClass {
 
 					return resolve(song);
 				}
-			)
-		);
+			);
+		});
 	}
 
 	/**
@@ -479,7 +479,7 @@ class _SongsModule extends CoreClass {
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 
-		return new Promise((resolve, reject) =>
+		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
 					// Get songs from Mongo
@@ -740,8 +740,8 @@ class _SongsModule extends CoreClass {
 
 					return resolve();
 				}
-			)
-		);
+			);
+		});
 	}
 
 	/**
@@ -750,7 +750,7 @@ class _SongsModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	UPDATE_ALL_SONGS() {
-		return new Promise((resolve, reject) =>
+		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
 					next => {
@@ -784,8 +784,8 @@ class _SongsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve();
 				}
-			)
-		);
+			);
+		});
 	}
 
 	// /**
@@ -880,7 +880,7 @@ class _SongsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	SEARCH(payload) {
-		return new Promise((resolve, reject) =>
+		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
 					next => {
@@ -962,8 +962,8 @@ class _SongsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve(data);
 				}
-			)
-		);
+			);
+		});
 	}
 
 	/**
@@ -1067,7 +1067,7 @@ class _SongsModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_ALL_GENRES() {
-		return new Promise((resolve, reject) =>
+		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
 					next => {
@@ -1092,8 +1092,8 @@ class _SongsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve({ genres });
 				}
-			)
-		);
+			);
+		});
 	}
 
 	/**
@@ -1104,7 +1104,7 @@ class _SongsModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_ALL_SONGS_WITH_GENRE(payload) {
-		return new Promise((resolve, reject) =>
+		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
 					next => {
@@ -1121,8 +1121,8 @@ class _SongsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve({ songs });
 				}
-			)
-		);
+			);
+		});
 	}
 
 	// runjob songs GET_ORPHANED_PLAYLIST_SONGS {}

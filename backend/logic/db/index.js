@@ -200,9 +200,8 @@ class _DBModule extends CoreClass {
 					this.schemas.song.path("genres").validate(songGenres, "Invalid genres.");
 
 					const songTags = tags =>
-						tags.filter(tag =>
-							new RegExp(/^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/).test(tag)
-						).length === tags.length;
+						tags.filter(tag => /^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/.test(tag))
+							.length === tags.length;
 					this.schemas.song.path("tags").validate(songTags, "Invalid tags.");
 
 					const songThumbnail = thumbnail => {

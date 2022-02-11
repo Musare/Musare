@@ -87,7 +87,7 @@ class _StationsModule extends CoreClass {
 		const stationModel = (this.stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }));
 		const stationSchema = (this.stationSchema = await CacheModule.runJob("GET_SCHEMA", { schemaName: "station" }));
 
-		return new Promise((resolve, reject) =>
+		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
 					next => {
@@ -183,8 +183,8 @@ class _StationsModule extends CoreClass {
 						resolve();
 					}
 				}
-			)
-		);
+			);
+		});
 	}
 
 	/**
@@ -364,7 +364,7 @@ class _StationsModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	async GET_STATION_BY_NAME(payload) {
-		return new Promise((resolve, reject) =>
+		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
 					next => {
@@ -387,8 +387,8 @@ class _StationsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve(station);
 				}
-			)
-		);
+			);
+		});
 	}
 
 	/**

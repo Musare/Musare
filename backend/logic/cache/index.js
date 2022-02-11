@@ -134,19 +134,29 @@ class _CacheModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			let { key } = payload;
 
-			if (!key) return reject(new Error("Invalid key!"));
-			if (!payload.table) return reject(new Error("Invalid table!"));
+			if (!key) {
+				reject(new Error("Invalid key!"));
+				return;
+			}
+			if (!payload.table) {
+				reject(new Error("Invalid table!"));
+				return;
+			}
 			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 
-			return CacheModule.client.hget(payload.table, key, (err, value) => {
-				if (err) return reject(new Error(err));
+			CacheModule.client.hget(payload.table, key, (err, value) => {
+				if (err) {
+					reject(new Error(err));
+					return;
+				}
 				try {
 					value = JSON.parse(value);
 				} catch (e) {
-					return reject(err);
+					reject(err);
+					return;
 				}
 
-				return resolve(value);
+				resolve(value);
 			});
 		});
 	}
@@ -163,14 +173,23 @@ class _CacheModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			let { key } = payload;
 
-			if (!payload.table) return reject(new Error("Invalid table!"));
-			if (!key) return reject(new Error("Invalid key!"));
+			if (!payload.table) {
+				reject(new Error("Invalid table!"));
+				return;
+			}
+			if (!key) {
+				reject(new Error("Invalid key!"));
+				return;
+			}
 
 			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 
-			return CacheModule.client.hdel(payload.table, key, err => {
-				if (err) return reject(new Error(err));
-				return resolve();
+			CacheModule.client.hdel(payload.table, key, err => {
+				if (err) {
+					reject(new Error(err));
+					return;
+				}
+				resolve();
 			});
 		});
 	}
@@ -185,17 +204,23 @@ class _CacheModule extends CoreClass {
 	 */
 	HGETALL(payload) {
 		return new Promise((resolve, reject) => {
-			if (!payload.table) return reject(new Error("Invalid table!"));
+			if (!payload.table) {
+				reject(new Error("Invalid table!"));
+				return;
+			}
 
-			return CacheModule.client.hgetall(payload.table, (err, obj) => {
-				if (err) return reject(new Error(err));
+			CacheModule.client.hgetall(payload.table, (err, obj) => {
+				if (err) {
+					reject(new Error(err));
+					return;
+				}
 				if (obj)
 					Object.keys(obj).forEach(key => {
 						obj[key] = JSON.parse(obj[key]);
 					});
 				else if (!obj) obj = [];
 
-				return resolve(obj);
+				resolve(obj);
 			});
 		});
 	}
@@ -213,12 +238,18 @@ class _CacheModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			let { value } = payload;
 
-			if (!payload.channel) return reject(new Error("Invalid channel!"));
-			if (!value) return reject(new Error("Invalid value!"));
+			if (!payload.channel) {
+				reject(new Error("Invalid channel!"));
+				return;
+			}
+			if (!value) {
+				reject(new Error("Invalid value!"));
+				return;
+			}
 
 			if (["object", "array"].includes(typeof value)) value = JSON.stringify(value);
 
-			return CacheModule.client.publish(payload.channel, value, err => {
+			CacheModule.client.publish(payload.channel, value, err => {
 				if (err) reject(err);
 				else resolve();
 			});
@@ -235,7 +266,10 @@ class _CacheModule extends CoreClass {
 	 */
 	SUB(payload) {
 		return new Promise((resolve, reject) => {
-			if (!payload.channel) return reject(new Error("Invalid channel!"));
+			if (!payload.channel) {
+				reject(new Error("Invalid channel!"));
+				return;
+			}
 
 			if (subs[payload.channel] === undefined) {
 				subs[payload.channel] = {
@@ -264,7 +298,7 @@ class _CacheModule extends CoreClass {
 
 			subs[payload.channel].cbs.push(payload.cb);
 
-			return resolve();
+			resolve();
 		});
 	}
 

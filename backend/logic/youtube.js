@@ -93,7 +93,7 @@ class _YouTubeModule extends CoreClass {
 
 		if (payload.pageToken) params.pageToken = payload.pageToken;
 
-		return new Promise((resolve, reject) =>
+		return new Promise((resolve, reject) => {
 			YouTubeModule.rateLimiter.continue().then(() => {
 				YouTubeModule.rateLimiter.restart();
 				YouTubeModule.axios
@@ -122,8 +122,8 @@ class _YouTubeModule extends CoreClass {
 						YouTubeModule.log("ERROR", "SEARCH", `${err.message}`);
 						return reject(new Error("An error has occured. Please try again later."));
 					});
-			})
-		);
+			});
+		});
 	}
 
 	/**
@@ -224,16 +224,17 @@ class _YouTubeModule extends CoreClass {
 	 */
 	GET_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
-			const regex = new RegExp(`[\\?&]list=([^&#]*)`);
+			const regex = /[\\?&]list=([^&#]*)/;
 			const splitQuery = regex.exec(payload.url);
 
 			if (!splitQuery) {
 				YouTubeModule.log("ERROR", "GET_PLAYLIST", "Invalid YouTube playlist URL query.");
-				return reject(new Error("Invalid playlist URL."));
+				reject(new Error("Invalid playlist URL."));
+				return;
 			}
 			const playlistId = splitQuery[1];
 
-			return async.waterfall(
+			async.waterfall(
 				[
 					next => {
 						let songs = [];
@@ -367,7 +368,8 @@ class _YouTubeModule extends CoreClass {
 			const localVideoIds = payload.videoIds.splice(page * 50, videosPerPage);
 
 			if (localVideoIds.length === 0) {
-				return resolve({ videoIds: [] });
+				resolve({ videoIds: [] });
+				return;
 			}
 
 			const params = {
@@ -377,7 +379,7 @@ class _YouTubeModule extends CoreClass {
 				maxResults: videosPerPage
 			};
 
-			return YouTubeModule.rateLimiter.continue().then(() => {
+			YouTubeModule.rateLimiter.continue().then(() => {
 				YouTubeModule.rateLimiter.restart();
 				YouTubeModule.axios
 					.get("https://www.googleapis.com/youtube/v3/videos", {
