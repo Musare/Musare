@@ -3,6 +3,7 @@ services:
 
   backend:
     build: ./backend
+    restart: unless-stopped
     ports:
       - "${BACKEND_HOST}:${BACKEND_PORT}:8080"
     volumes:
@@ -17,6 +18,7 @@ services:
 
   frontend:
     build: ./frontend
+    restart: unless-stopped
     ports:
       - "${FRONTEND_HOST}:${FRONTEND_PORT}:80"
     volumes:
@@ -30,6 +32,7 @@ services:
 
   mongo:
     image: mongo:5.0
+    restart: unless-stopped
     ports:
       - "${MONGO_HOST}:${MONGO_PORT}:${MONGO_PORT}"
     environment:
@@ -46,6 +49,7 @@ services:
 
   redis:
     image: redis:6.2
+    restart: unless-stopped
     ports:
       - "${REDIS_HOST}:${REDIS_PORT}:6379"
     command: "--notify-keyspace-events Ex --requirepass ${REDIS_PASSWORD} --appendonly yes"
