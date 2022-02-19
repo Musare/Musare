@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<modal
-			title="Edit Song"
+			:title="`${newSong ? 'Create' : 'Edit'} Song`"
 			class="song-modal"
 			:size="'wide'"
 			:split="true"
@@ -15,16 +15,21 @@
 				<slot name="sidebar" />
 			</template>
 			<template #body>
-				<div v-if="!songId" class="notice-container">
+				<div v-if="!songId && !newSong" class="notice-container">
 					<h4>No song has been selected</h4>
 				</div>
 				<div
-					v-if="songId && !songDataLoaded && !songNotFound"
+					v-if="
+						songId && !songDataLoaded && !songNotFound && !newSong
+					"
 					class="notice-container"
 				>
 					<h4>Song hasn't loaded yet</h4>
 				</div>
-				<div v-if="songId && songNotFound" class="notice-container">
+				<div
+					v-if="songId && songNotFound && !newSong"
+					class="notice-container"
+				>
 					<h4>Song was not found</h4>
 				</div>
 				<div class="left-section" v-show="songDataLoaded">
@@ -412,6 +417,7 @@
 								Discogs
 							</button>
 							<button
+								v-if="!newSong"
 								class="button is-default"
 								:class="{ selected: tab === 'reports' }"
 								ref="reports-tab"
@@ -441,7 +447,11 @@
 							v-show="tab === 'discogs'"
 							:bulk="bulk"
 						/>
-						<reports class="tab" v-show="tab === 'reports'" />
+						<reports
+							v-if="!newSong"
+							class="tab"
+							v-show="tab === 'reports'"
+						/>
 						<youtube class="tab" v-show="tab === 'youtube'" />
 						<musare-songs
 							class="tab"
@@ -463,7 +473,7 @@
 						{{ flagged ? "Unflag" : "Flag" }}
 					</button>
 				</div>
-				<div>
+				<div v-if="!newSong">
 					<save-button
 						ref="saveButton"
 						@clicked="save(song, false, false, 'saveButton')"
@@ -498,7 +508,7 @@
 							<i class="material-icons">check_circle</i>
 						</button>
 						<quick-confirm
-							v-if="song.verified"
+							v-else
 							placement="left"
 							@confirm="unverify(song._id)"
 						>
@@ -524,6 +534,35 @@
 							v-tippy
 						>
 							delete_forever
+						</button>
+					</div>
+				</div>
+				<div v-else>
+					<save-button
+						ref="createButton"
+						default-message="Create Song"
+						@clicked="
+							save(song, false, false, 'createButton', true)
+						"
+					/>
+					<div class="right">
+						<button
+							v-if="!song.verified"
+							class="button is-success"
+							@click="verify()"
+							content="Verify Song"
+							v-tippy
+						>
+							<i class="material-icons">check_circle</i>
+						</button>
+						<button
+							v-else
+							class="button is-danger"
+							@click="unverify()"
+							content="Unverify Song"
+							v-tippy
+						>
+							<i class="material-icons">cancel</i>
 						</button>
 					</div>
 				</div>
@@ -668,7 +707,8 @@ export default {
 			songId: state => state.songId,
 			prefillData: state => state.prefillData,
 			originalSong: state => state.originalSong,
-			reports: state => state.reports
+			reports: state => state.reports,
+			newSong: state => state.newSong
 		}),
 		...mapState("modalVisibility", {
 			modals: state => state.modals,
@@ -709,27 +749,29 @@ export default {
 		localStorage.setItem("volume", volume);
 		this.volumeSliderValue = volume * 100;
 
-		this.socket.on(
-			"event:admin.song.updated",
-			res => {
-				if (res.data.song._id === this.song._id)
-					this.song.verified = res.data.song.verified;
-			},
-			{ modal: "editSong" }
-		);
+		if (!this.newSong) {
+			this.socket.on(
+				"event:admin.song.updated",
+				res => {
+					if (res.data.song._id === this.song._id)
+						this.song.verified = res.data.song.verified;
+				},
+				{ modal: "editSong" }
+			);
 
-		this.socket.on(
-			"event:admin.song.removed",
-			res => {
-				if (res.data.songId === this.song._id) {
-					this.closeModal("editSong");
-					setTimeout(() => {
-						window.focusedElementBefore.focus();
-					}, 500);
-				}
-			},
-			{ modal: "editSong" }
-		);
+			this.socket.on(
+				"event:admin.song.removed",
+				res => {
+					if (res.data.songId === this.song._id) {
+						this.closeModal("editSong");
+						setTimeout(() => {
+							window.focusedElementBefore.focus();
+						}, 500);
+					}
+				},
+				{ modal: "editSong" }
+			);
+		}
 
 		keyboardShortcuts.registerShortcut("editSong.pauseResumeVideo", {
 			keyCode: 101,
@@ -898,7 +940,7 @@ export default {
 	},
 	beforeUnmount() {
 		console.log("UNMOUNT");
-		this.unloadSong(this.songId);
+		if (!this.newSong) this.unloadSong(this.songId);
 
 		this.playerReady = false;
 		clearInterval(this.interval);
@@ -927,7 +969,20 @@ export default {
 	},
 	methods: {
 		init() {
-			if (this.songId) this.loadSong(this.songId);
+			if (this.newSong) {
+				this.setSong({
+					youtubeId: "",
+					title: "",
+					artists: [],
+					genres: [],
+					tags: [],
+					duration: 0,
+					skipDuration: 0,
+					thumbnail: "",
+					verified: false
+				});
+				this.songDataLoaded = true;
+			} else if (this.songId) this.loadSong(this.songId);
 			else if (!this.bulk) {
 				new Toast("You can't open EditSong without editing a song");
 				return this.closeModal("editSong");
@@ -1175,28 +1230,34 @@ export default {
 			this.openModal("importAlbum");
 			this.closeModal("editSong");
 		},
-		save(songToCopy, verify, closeOrNext, saveButtonRefName) {
+		save(
+			songToCopy,
+			verify,
+			closeOrNext,
+			saveButtonRefName,
+			newSong = false
+		) {
 			const song = JSON.parse(JSON.stringify(songToCopy));
 
-			this.$emit("saving", song._id);
+			if (!newSong) this.$emit("saving", song._id);
 
 			const saveButtonRef = this.$refs[saveButtonRefName];
 
 			if (!this.youtubeError && this.youtubeVideoDuration === "0.000") {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast("The video appears to not be working.");
 			}
 
 			if (!song.title) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast("Please fill in all fields");
 			}
 
 			if (!song.thumbnail) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast("Please fill in all fields");
 			}
 
@@ -1224,11 +1285,12 @@ export default {
 
 			// Youtube Id
 			if (
+				!newSong &&
 				this.youtubeError &&
 				this.originalSong.youtubeId !== song.youtubeId
 			) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast(
 					"You're not allowed to change the YouTube id while the player is not working"
 				);
@@ -1238,11 +1300,11 @@ export default {
 			if (
 				Number(song.skipDuration) + Number(song.duration) >
 					this.youtubeVideoDuration &&
-				(!this.youtubeError ||
+				((!newSong && !this.youtubeError) ||
 					this.originalSong.duration !== song.duration)
 			) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast(
 					"Duration can't be higher than the length of the video"
 				);
@@ -1251,7 +1313,7 @@ export default {
 			// Title
 			if (!validation.isLength(song.title, 1, 100)) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast(
 					"Title must have between 1 and 100 characters."
 				);
@@ -1260,7 +1322,7 @@ export default {
 			// Artists
 			if (song.artists.length < 1 || song.artists.length > 10) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast(
 					"Invalid artists. You must have at least 1 artist and a maximum of 10 artists."
 				);
@@ -1283,7 +1345,7 @@ export default {
 
 			if (error) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast(error);
 			}
 
@@ -1308,7 +1370,7 @@ export default {
 
 			if (error) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast(error);
 			}
 
@@ -1328,21 +1390,21 @@ export default {
 
 			if (error) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast(error);
 			}
 
 			// Thumbnail
 			if (!validation.isLength(song.thumbnail, 1, 256)) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast(
 					"Thumbnail must have between 8 and 256 characters."
 				);
 			}
 			if (this.useHTTPS && song.thumbnail.indexOf("https://") !== 0) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast('Thumbnail must start with "https://".');
 			}
 
@@ -1352,12 +1414,25 @@ export default {
 				song.thumbnail.indexOf("https://") !== 0
 			) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast('Thumbnail must start with "http://".');
 			}
 
 			saveButtonRef.status = "saving";
 
+			if (newSong)
+				return this.socket.dispatch(`songs.create`, song, res => {
+					new Toast(res.message);
+
+					if (res.status === "error") {
+						saveButtonRef.handleFailedSave();
+						return;
+					}
+
+					saveButtonRef.handleSuccessfulSave();
+
+					this.closeModal("editSong");
+				});
 			return this.socket.dispatch(`songs.update`, song._id, song, res => {
 				new Toast(res.message);
 
@@ -1635,25 +1710,19 @@ export default {
 			}
 		},
 		verify(id, cb) {
-			this.socket.dispatch("songs.verify", id, res => {
-				new Toast(res.message);
-				if (cb) cb(res.status === "success");
-			});
+			if (this.newSong) this.song.verified = true;
+			else
+				this.socket.dispatch("songs.verify", id, res => {
+					new Toast(res.message);
+					if (cb) cb(res.status === "success");
+				});
 		},
 		unverify(id) {
-			this.socket.dispatch("songs.unverify", id, res => {
-				new Toast(res.message);
-			});
-		},
-		hide(id) {
-			this.socket.dispatch("songs.hide", id, res => {
-				new Toast(res.message);
-			});
-		},
-		unhide(id) {
-			this.socket.dispatch("songs.unhide", id, res => {
-				new Toast(res.message);
-			});
+			if (this.newSong) this.song.verified = false;
+			else
+				this.socket.dispatch("songs.unverify", id, res => {
+					new Toast(res.message);
+				});
 		},
 		remove(id) {
 			this.socket.dispatch("songs.remove", id, res => {
@@ -1732,7 +1801,7 @@ export default {
 <style lang="less" scoped>
 .night-mode {
 	.edit-section,
-	.player-footer,
+	.player-section,
 	#tabs-container {
 		background-color: var(--dark-grey-3) !important;
 		border: 0 !important;
@@ -1757,6 +1826,10 @@ export default {
 				}
 			}
 		}
+	}
+
+	#durationCanvas {
+		background-color: var(--dark-grey-2) !important;
 	}
 }
 
@@ -1788,14 +1861,18 @@ export default {
 			width: 530px;
 			display: flex;
 			flex-direction: column;
+			border: 1px solid var(--light-grey-3);
+			border-radius: @border-radius;
+			overflow: hidden;
+
+			#durationCanvas {
+				background-color: var(--light-grey-2);
+			}
 
 			.player-error {
+				display: flex;
 				height: 318px;
 				width: 530px;
-				display: block;
-				border: 1px rgba(163, 224, 255, 0.75) solid;
-				border-radius: @border-radius @border-radius 0px 0px;
-				display: flex;
 				align-items: center;
 
 				* {
@@ -1807,8 +1884,6 @@ export default {
 			}
 
 			.player-footer {
-				border: 1px solid var(--light-grey-3);
-				border-radius: 0px 0px @border-radius @border-radius;
 				display: flex;
 				justify-content: space-between;
 				height: 54px;

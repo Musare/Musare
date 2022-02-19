@@ -10,11 +10,12 @@ export default {
 			autoPlayed: false,
 			currentTime: 0
 		},
-		songId: "",
+		songId: null,
 		song: {},
 		originalSong: {},
 		reports: [],
-		tab: "discogs"
+		tab: "discogs",
+		newSong: false
 	},
 	getters: {},
 	actions: {
@@ -50,7 +51,8 @@ export default {
 			state.tab = tab;
 		},
 		editSong(state, song) {
-			state.songId = song.songId;
+			state.newSong = !!song.newSong;
+			state.songId = song.newSong ? null : song.songId;
 			state.prefillData = song.prefill ? song.prefill : {};
 		},
 		setSong(state, song) {

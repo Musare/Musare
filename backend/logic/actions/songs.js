@@ -442,6 +442,46 @@ export default {
 	}),
 
 	/**
+	 * Creates a song
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {object} newSong - the song object
+	 * @param {Function} cb
+	 */
+	create: isAdminRequired(async function create(session, newSong, cb) {
+		async.waterfall(
+			[
+				next => {
+					const song = new SongsModule.SongModel(newSong);
+					song.save({ validateBeforeSave: true }, err => {
+						if (err) return next(err, song);
+						return next(null, song);
+					});
+				}
+			],
+			async (err, song) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log("ERROR", "SONGS_CREATE", `Failed to create song "${JSON.stringify(song)}". "${err}"`);
+
+					return cb({ status: "error", message: err });
+				}
+
+				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
+
+				this.log("SUCCESS", "SONGS_CREATE", `Successfully created song "${song._id}".`);
+
+				return cb({
+					status: "success",
+					message: "Song has been successfully created",
+					data: { song }
+				});
+			}
+		);
+	}),
+
+	/**
 	 * Updates a song
 	 *
 	 * @param {object} session - the session object automatically added by the websocket

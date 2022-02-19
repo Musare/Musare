@@ -3,6 +3,9 @@
 		<page-metadata title="Admin | Songs" />
 		<div class="admin-tab">
 			<div class="button-row">
+				<button class="button is-primary" @click="create()">
+					Create song
+				</button>
 				<button
 					class="button is-primary"
 					@click="openModal('requestSong')"
@@ -655,6 +658,10 @@ export default {
 		}
 	},
 	methods: {
+		create() {
+			this.editSong({ newSong: true });
+			this.openModal("editSong");
+		},
 		editOne(song) {
 			this.editSong({ songId: song._id });
 			this.openModal("editSong");
