@@ -285,6 +285,38 @@ class _SongsModule extends CoreClass {
 	}
 
 	/**
+	 * Create song
+	 *
+	 * @param {object} payload - an object containing the payload
+	 * @param {string} payload.song - the song object
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	CREATE_SONG(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						const song = new SongsModule.SongModel(payload.song);
+						song.save({ validateBeforeSave: true }, err => {
+							if (err) return next(err, song);
+							return next(null, song);
+						});
+					},
+
+					(song, next) => {
+						SongsModule.runJob("UPDATE_SONG", { songId: song._id });
+						return next(null, song);
+					}
+				],
+				(err, song) => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve({ song });
+				}
+			);
+		});
+	}
+
+	/**
 	 * Gets a song from id from Mongo and updates the cache with it
 	 *
 	 * @param {object} payload - an object containing the payload

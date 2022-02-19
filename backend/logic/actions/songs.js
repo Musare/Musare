@@ -452,23 +452,19 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					const song = new SongsModule.SongModel(newSong);
-					song.save({ validateBeforeSave: true }, err => {
-						if (err) return next(err, song);
-						return next(null, song);
-					});
+					SongsModule.runJob("CREATE_SONG", { song: newSong }, this)
+						.then(song => next(null, song))
+						.catch(next);
 				}
 			],
 			async (err, song) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
-					this.log("ERROR", "SONGS_CREATE", `Failed to create song "${JSON.stringify(song)}". "${err}"`);
+					this.log("ERROR", "SONGS_CREATE", `Failed to create song "${JSON.stringify(newSong)}". "${err}"`);
 
 					return cb({ status: "error", message: err });
 				}
-
-				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
 
 				this.log("SUCCESS", "SONGS_CREATE", `Successfully created song "${song._id}".`);
 
