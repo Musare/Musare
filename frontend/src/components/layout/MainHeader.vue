@@ -26,14 +26,17 @@
 		</span>
 
 		<div class="nav-right nav-menu" :class="{ 'is-active': isMobile }">
-			<div class="nav-item" id="nightmode-toggle">
+			<div
+				class="nav-item"
+				id="nightmode-toggle"
+				@click="toggleNightmode()"
+			>
 				<span
 					:class="{
 						'material-icons': true,
 						'night-mode-toggle': true,
 						'night-mode-on': localNightmode
 					}"
-					@click="toggleNightmode()"
 					:content="`${
 						localNightmode ? 'Disable' : 'Enable'
 					} Night Mode`"
@@ -41,6 +44,7 @@
 				>
 					{{ localNightmode ? "dark_mode" : "light_mode" }}
 				</span>
+				<span class="night-mode-label">Toggle Night Mode</span>
 			</div>
 			<span v-if="loggedIn" class="grouped">
 				<router-link
@@ -302,6 +306,10 @@ export default {
 				-webkit-user-drag: none;
 			}
 		}
+
+		.night-mode-label {
+			display: none;
+		}
 	}
 }
 
@@ -335,7 +343,8 @@ export default {
 		}
 
 		.nav-menu.is-active {
-			display: block !important;
+			display: flex !important;
+			flex-direction: column-reverse;
 
 			.nav-item {
 				color: var(--dark-grey-2);
@@ -343,11 +352,18 @@ export default {
 				&:hover {
 					color: var(--dark-grey-2);
 				}
+
+				.night-mode-label {
+					display: inline;
+					margin-left: 5px;
+				}
 			}
 		}
 
-		.nav-menu .grouped {
-			flex-direction: column;
+		.nav-menu {
+			.grouped {
+				flex-direction: column;
+			}
 			.nav-item {
 				padding: 10px 20px;
 				&:hover,
