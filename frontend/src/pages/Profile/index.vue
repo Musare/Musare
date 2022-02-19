@@ -412,7 +412,7 @@ export default {
 		}
 	}
 
-	/deep/ .content {
+	:deep(.content) {
 		width: 800px;
 		max-width: 100%;
 		background-color: var(--white);
@@ -455,7 +455,7 @@ export default {
 		.activity-type-icon {
 		color: var(--light-grey-2);
 	}
-	/deep/ .content {
+	:deep(.content) {
 		box-shadow: 0;
 	}
 }

@@ -294,7 +294,7 @@ export default {
 	}
 }
 
-/deep/ #nav-dropdown {
+:deep(#nav-dropdown) {
 	margin-top: 36px;
 	width: 0;
 	height: 0;

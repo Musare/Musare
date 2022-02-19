@@ -2120,7 +2120,7 @@ export default {
 							border-width: 0 0 1px;
 						}
 
-						/deep/ .row-options {
+						:deep(.row-options) {
 							display: flex;
 							justify-content: space-evenly;
 
@@ -2319,7 +2319,7 @@ export default {
 			width: 100%;
 		}
 		& > input,
-		/deep/ & > div > input,
+		:deep(& > div > input),
 		& > select,
 		& > .button,
 		&.label {
@@ -2363,7 +2363,7 @@ export default {
 				&:nth-child(2) > select {
 					border-radius: 0 @border-radius 0 0;
 				}
-				/deep/ &:nth-child(3) {
+				:deep(&:nth-child(3)) {
 					& > input,
 					& > div > input,
 					& > select {
@@ -2397,7 +2397,7 @@ export default {
 	}
 }
 
-/deep/ .bulk-popup {
+:deep(.bulk-popup) {
 	display: flex;
 	position: fixed;
 	flex-direction: row;

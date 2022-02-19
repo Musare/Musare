@@ -153,7 +153,7 @@ export default {
 	}
 }
 
-/deep/ .character-counter {
+:deep(.character-counter) {
 	display: flex;
 	justify-content: flex-end;
 	height: 0;
@@ -163,7 +163,7 @@ export default {
 	margin-top: 32px;
 	padding: 24px;
 
-	/deep/ .row {
+	:deep(.row) {
 		*:not(:last-child) {
 			margin-right: 5px;
 		}
@@ -227,7 +227,7 @@ export default {
 		}
 	}
 
-	/deep/ .content {
+	:deep(.content) {
 		margin: 24px 0;
 		height: fit-content;
 

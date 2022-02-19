@@ -518,7 +518,7 @@ export default {
 			align-items: center;
 			column-gap: 8px;
 
-			/deep/ .song-item {
+			:deep(.song-item) {
 				.item-icon {
 					margin-right: 10px;
 					cursor: pointer;

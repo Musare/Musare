@@ -676,7 +676,7 @@ export default {
 			max-height: unset !important;
 		}
 
-		/deep/ .section {
+		:deep(.section) {
 			max-width: 100% !important;
 		}
 	}

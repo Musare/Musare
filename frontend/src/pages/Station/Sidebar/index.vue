@@ -114,17 +114,17 @@ export default {
 	}
 }
 
-/deep/ .nothing-here-text {
+:deep(.nothing-here-text) {
 	height: 100%;
 }
 
-/deep/ .tab {
+:deep(.tab) {
 	.nothing-here-text:not(:only-child) {
 		height: calc(100% - 40px);
 	}
 }
 
-/deep/ .tab-actionable-button {
+:deep(.tab-actionable-button) {
 	width: calc(100% - 20px);
 	height: 40px;
 	border-radius: @border-radius;
@@ -147,7 +147,7 @@ export default {
 	}
 }
 
-/deep/ .scrollable-list {
+:deep(.scrollable-list) {
 	width: 100%;
 	max-height: calc(100% - 40px - 20px);
 	overflow: auto;

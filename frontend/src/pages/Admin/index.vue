@@ -356,11 +356,11 @@ export default {
 	}
 }
 
-/deep/ .container {
+:deep(.container) {
 	position: relative;
 }
 
-/deep/ .box {
+:deep(.box) {
 	box-shadow: @box-shadow;
 	display: block;
 
@@ -467,14 +467,14 @@ export default {
 }
 
 @media screen and (min-width: 980px) {
-	/deep/ .container {
+	:deep(.container) {
 		margin: 0 auto;
 		max-width: 960px;
 	}
 }
 
 @media screen and (min-width: 1180px) {
-	/deep/ .container {
+	:deep(.container) {
 		max-width: 1200px;
 	}
 }

@@ -785,7 +785,7 @@ export default {
 	margin: 0 auto;
 }
 
-/deep/ .bulk-popup .bulk-actions {
+:deep(.bulk-popup .bulk-actions) {
 	.verify-songs-icon {
 		color: var(--green);
 	}

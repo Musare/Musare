@@ -3004,7 +3004,7 @@ export default {
 	}
 }
 
-/deep/ .nothing-here-text {
+:deep(.nothing-here-text) {
 	display: flex;
 	align-items: center;
 	justify-content: center;

@@ -2166,7 +2166,7 @@ export default {
 	width: 200px;
 }
 
-/deep/ .autosuggest-container {
+:deep(.autosuggest-container) {
 	top: unset;
 }
 </style>

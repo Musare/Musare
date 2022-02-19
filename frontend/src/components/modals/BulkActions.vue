@@ -168,7 +168,7 @@ export default {
 	}
 }
 
-/deep/ .autosuggest-container {
+:deep(.autosuggest-container) {
 	width: calc(100% - 40px);
 	top: unset;
 }

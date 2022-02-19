@@ -249,7 +249,7 @@ export default {
 		}
 	}
 
-	/deep/ .report-info-item {
+	:deep(.report-info-item) {
 		justify-content: flex-start;
 
 		.item-title-description {

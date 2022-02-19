@@ -345,7 +345,7 @@ h2 {
 				height: 45px;
 			}
 
-			/deep/ .profile-picture.using-initials span {
+			:deep(.profile-picture.using-initials span) {
 				font-size: calc(
 					45px / 5 * 2
 				); // 2/5th of .profile-picture height/width

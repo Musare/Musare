@@ -560,7 +560,7 @@ export default {
 		display: flex;
 		flex-direction: column;
 
-		/deep/ * .tippy-box[data-theme~="dropdown"] .tippy-content > span {
+		:deep(* .tippy-box[data-theme~="dropdown"] .tippy-content > span) {
 			max-width: 150px !important;
 		}
 
