@@ -652,9 +652,10 @@ export default {
 				this.stations.splice(stationIndex, 1);
 
 				if (station.isFavorited)
-					this.orderOfFavoriteStations.filter(
-						favoritedId => favoritedId !== stationId
-					);
+					this.orderOfFavoriteStations =
+						this.orderOfFavoriteStations.filter(
+							favoritedId => favoritedId !== stationId
+						);
 			}
 		});
 
