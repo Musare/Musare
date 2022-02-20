@@ -7,7 +7,7 @@ export default {
 	description: { type: String, minlength: 2, maxlength: 128, trim: true, required: true },
 	paused: { type: Boolean, default: false, required: true },
 	currentSong: {
-		_id: { type: String },
+		_id: { type: mongoose.Schema.Types.ObjectId, required: true },
 		youtubeId: { type: String },
 		title: { type: String },
 		artists: [{ type: String }],
@@ -28,6 +28,7 @@ export default {
 	locked: { type: Boolean, default: false },
 	queue: [
 		{
+			_id: { type: mongoose.Schema.Types.ObjectId, required: true },
 			youtubeId: { type: String, required: true },
 			title: { type: String },
 			artists: [{ type: String }],

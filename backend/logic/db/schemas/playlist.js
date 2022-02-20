@@ -4,13 +4,14 @@ export default {
 	displayName: { type: String, min: 2, max: 32, trim: true, required: true },
 	songs: [
 		{
-			_id: { type: mongoose.Schema.Types.ObjectId, required: false },
-			youtubeId: { type: String },
+			_id: { type: mongoose.Schema.Types.ObjectId, required: true },
+			youtubeId: { type: String, required: true },
 			title: { type: String },
+			artists: [{ type: String }],
 			duration: { type: Number },
-			thumbnail: { type: String, required: false },
-			artists: { type: Array, required: false },
-			status: { type: String }
+			skipDuration: { type: Number },
+			thumbnail: { type: String },
+			verified: { type: Boolean }
 		}
 	],
 	createdBy: { type: String, required: true },
