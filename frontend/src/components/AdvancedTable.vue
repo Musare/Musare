@@ -1537,13 +1537,19 @@ export default {
 			// Set the last clicked item to no longer be highlighted, if it exists
 			if (this.lastSelectedItemIndex >= 0)
 				this.rows[this.lastSelectedItemIndex].highlighted = false;
-			if (rowElement) rowElement.focus();
+			if (rowElement)
+				this.$nextTick(() => {
+					rowElement.focus();
+				});
 			// Set the item to be highlighted
 			this.rows[itemIndex].highlighted = true;
 		},
 		unhighlightRow(itemIndex) {
 			const rowElement = this.$refs[`row-${itemIndex}`];
-			if (rowElement) rowElement.blur();
+			if (rowElement)
+				this.$nextTick(() => {
+					rowElement.blur();
+				});
 			// Set the item to no longer be highlighted
 			this.rows[itemIndex].highlighted = false;
 		},
