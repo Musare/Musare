@@ -1136,9 +1136,7 @@ export default {
 									this.video.player.getCurrentTime() <
 									this.song.skipDuration
 								) {
-									return this.video.player.seekTo(
-										this.song.skipDuration
-									);
+									return this.seekTo(this.song.skipDuration);
 								}
 							} else if (event.data === 2) {
 								this.video.paused = true;
@@ -1522,8 +1520,7 @@ export default {
 					break;
 				case "skipToLast10Secs":
 					this.skipToLast10SecsPressed = true;
-					if (this.video.paused) this.pauseVideo(false);
-					this.video.player.seekTo(
+					this.seekTo(
 						this.song.duration - 10 + this.song.skipDuration
 					);
 					break;
@@ -1540,6 +1537,10 @@ export default {
 				this.loadVideoById(this.song.youtubeId, this.song.skipDuration);
 			}
 			this.settings("play");
+		},
+		seekTo(position) {
+			if (!this.video.paused) this.settings("play");
+			this.video.player.seekTo(position);
 		},
 		changeVolume() {
 			const volume = this.volumeSliderValue;
