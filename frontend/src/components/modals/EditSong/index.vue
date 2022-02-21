@@ -85,20 +85,6 @@
 									>
 										<i class="material-icons">stop</i>
 									</button>
-
-									<button
-										class="button is-success"
-										@click="settings('skipToLast10Secs')"
-										@keyup.enter="
-											settings('skipToLast10Secs')
-										"
-										content="Skip to last 10 secs"
-										v-tippy
-									>
-										<i class="material-icons"
-											>fast_forward</i
-										>
-									</button>
 								</div>
 								<div class="player-footer-center">
 									<span>
@@ -650,7 +636,6 @@ export default {
 			useHTTPS: false,
 			muted: false,
 			volumeSliderValue: 0,
-			skipToLast10SecsPressed: false,
 			artistInputValue: "",
 			genreInputValue: "",
 			tagInputValue: "",
@@ -1071,16 +1056,7 @@ export default {
 						onStateChange: event => {
 							this.drawCanvas();
 
-							let skipToLast10SecsPressed = false;
-							if (
-								event.data === 1 &&
-								this.skipToLast10SecsPressed
-							) {
-								this.skipToLast10SecsPressed = false;
-								skipToLast10SecsPressed = true;
-							}
-
-							if (event.data === 1 && !skipToLast10SecsPressed) {
+							if (event.data === 1) {
 								this.video.paused = false;
 								let youtubeDuration =
 									this.video.player.getDuration();
