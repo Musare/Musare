@@ -47,7 +47,12 @@
 								v-show="!youtubeError"
 								height="20"
 								width="530"
+								@click="setTrackPosition($event)"
 							/>
+							<div id="playerTrack">
+								<div class="skip-duration"></div>
+								<div class="real-duration"></div>
+							</div>
 							<div class="player-footer">
 								<div class="player-footer-left">
 									<button
@@ -1663,6 +1668,16 @@ export default {
 
 			ctx.fillStyle = currentDurationColor;
 			ctx.fillRect(widthCurrentTime, 0, 1, 20);
+		},
+		setTrackPosition(event) {
+			this.seekTo(
+				Number(
+					Number(this.video.player.getDuration()) *
+						((event.pageX -
+							event.target.getBoundingClientRect().left) /
+							530)
+				)
+			);
 		},
 		toggleGenreHelper() {
 			this.$refs.genreHelper.toggleBox();
