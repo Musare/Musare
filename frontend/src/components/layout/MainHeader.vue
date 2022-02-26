@@ -197,15 +197,10 @@ export default {
 	position: relative;
 	background-color: var(--primary-color);
 	height: 64px;
-	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 	z-index: 2;
 
 	&.transparent {
 		background-color: transparent !important;
-	}
-
-	@media (max-width: 650px) {
-		border-radius: 0;
 	}
 
 	.nav-left,
@@ -374,9 +369,5 @@ export default {
 			}
 		}
 	}
-}
-
-.christmas-mode .nav {
-	border-radius: 0 !important;
 }
 </style>

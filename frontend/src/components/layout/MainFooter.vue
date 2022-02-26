@@ -100,9 +100,7 @@ export default {
 	flex-shrink: 0;
 	height: auto;
 	padding: 20px;
-	border-radius: 33% 33% 0% 0% / 7% 7% 0% 0%;
-	box-shadow: 0 4px 8px 0 rgba(3, 169, 244, 0.4),
-		0 6px 20px 0 rgba(3, 169, 244, 0.2);
+	box-shadow: @box-shadow;
 	background-color: var(--white);
 	width: 100%;
 	height: 160px;
@@ -125,10 +123,6 @@ export default {
 		a:not(.button) {
 			border: 0;
 		}
-	}
-
-	@media (max-width: 650px) {
-		border-radius: 0;
 	}
 
 	#footer-logo {
