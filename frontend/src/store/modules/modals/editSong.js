@@ -8,7 +8,8 @@ export default {
 			paused: true,
 			playerReady: false,
 			autoPlayed: false,
-			currentTime: 0
+			currentTime: 0,
+			playbackRate: 1
 		},
 		songId: null,
 		song: {},
@@ -44,7 +45,8 @@ export default {
 		updateYoutubeId: ({ commit }, youtubeId) => {
 			commit("updateYoutubeId", youtubeId);
 			commit("loadVideoById", youtubeId, 0);
-		}
+		},
+		setPlaybackRate: ({ commit }, rate) => commit("setPlaybackRate", rate)
 	},
 	mutations: {
 		showTab(state, tab) {
@@ -113,6 +115,18 @@ export default {
 		},
 		updateYoutubeId(state, youtubeId) {
 			state.song.youtubeId = youtubeId;
+		},
+		setPlaybackRate(state, rate) {
+			if (rate) {
+				state.video.playbackRate = rate;
+				state.video.player.setPlaybackRate(rate);
+			} else if (
+				state.video.playbackRate !==
+				state.video.player.getPlaybackRate()
+			) {
+				state.video.player.setPlaybackRate(state.video.playbackRate);
+				state.video.playbackRate = state.video.player.getPlaybackRate();
+			}
 		}
 	}
 };

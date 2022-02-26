@@ -55,26 +55,112 @@
 							</div>
 							<div class="player-footer">
 								<div class="player-footer-left">
-									<button
-										class="button is-primary"
-										@click="play()"
-										@keyup.enter="play()"
-										v-if="video.paused"
-										content="Unpause Playback"
-										v-tippy
-									>
-										<i class="material-icons">play_arrow</i>
-									</button>
-									<button
-										class="button is-primary"
-										@click="settings('pause')"
-										@keyup.enter="settings('pause')"
-										v-else
-										content="Pause Playback"
-										v-tippy
-									>
-										<i class="material-icons">pause</i>
-									</button>
+									<div class="control has-addons">
+										<button
+											class="button is-primary"
+											@click="play()"
+											@keyup.enter="play()"
+											v-if="video.paused"
+											content="Unpause Playback"
+											v-tippy
+										>
+											<i class="material-icons"
+												>play_arrow</i
+											>
+										</button>
+										<button
+											class="button is-primary"
+											@click="settings('pause')"
+											@keyup.enter="settings('pause')"
+											v-else
+											content="Pause Playback"
+											v-tippy
+										>
+											<i class="material-icons">pause</i>
+										</button>
+										<tippy
+											class="playerRateDropdown"
+											:touch="true"
+											:interactive="true"
+											placement="bottom"
+											theme="dropdown"
+											ref="dropdown"
+											trigger="click"
+											append-to="parent"
+											@show="
+												() => {
+													showRateDropdown = true;
+												}
+											"
+											@hide="
+												() => {
+													showRateDropdown = false;
+												}
+											"
+										>
+											<button
+												ref="trigger"
+												class="button"
+												content="Set Playback Rate"
+												v-tippy
+											>
+												<i class="material-icons">
+													{{
+														showRateDropdown
+															? "expand_more"
+															: "expand_less"
+													}}
+												</i>
+											</button>
+
+											<template #content>
+												<div class="nav-dropdown-items">
+													<button
+														class="nav-item button"
+														:class="{
+															active:
+																video.playbackRate ===
+																0.5
+														}"
+														title="0.5x"
+														@click="
+															setPlaybackRate(0.5)
+														"
+													>
+														<p>0.5x</p>
+													</button>
+													<button
+														class="nav-item button"
+														:class="{
+															active:
+																video.playbackRate ===
+																1
+														}"
+														title="1x"
+														@click="
+															setPlaybackRate(1)
+														"
+													>
+														<p>1x</p>
+													</button>
+													<button
+														class="nav-item button"
+														:class="{
+															active:
+																video.playbackRate ===
+																2
+														}"
+														title="2x"
+														@click="
+															setPlaybackRate(2)
+														"
+													>
+														<p>2x</p>
+													</button>
+												</div>
+											</template>
+										</tippy>
+									</div>
 
 									<button
 										class="button is-danger"
@@ -686,7 +772,8 @@ export default {
 					tags: []
 				}
 			},
-			songNotFound: false
+			songNotFound: false,
+			showRateDropdown: false
 		};
 	},
 	computed: {
@@ -1051,6 +1138,8 @@ export default {
 									this.song.skipDuration
 								);
 
+							this.setPlaybackRate(null);
+
 							this.drawCanvas();
 						},
 						onStateChange: event => {
@@ -1119,6 +1208,8 @@ export default {
 								) {
 									return this.seekTo(this.song.skipDuration);
 								}
+
+								this.setPlaybackRate(null);
 							} else if (event.data === 2) {
 								this.video.paused = true;
 							}
@@ -1782,7 +1873,8 @@ export default {
 			"resetSong",
 			"updateOriginalSong",
 			"updateSongField",
-			"updateReports"
+			"updateReports",
+			"setPlaybackRate"
 		]),
 		...mapActions("modals/confirm", ["updateConfirmMessage"]),
 		...mapActions("modalVisibility", ["closeModal", "openModal"])
@@ -1891,11 +1983,30 @@ export default {
 				.player-footer-left {
 					flex: 1;
 
-					.button {
-						width: 75px;
+					& > .button:not(:first-child) {
+						margin-left: 5px;
+					}
 
-						&:not(:first-of-type) {
-							margin-left: 5px;
+					:deep(& > .control.has-addons) {
+						margin-left: 5px;
+						margin-bottom: unset !important;
+
+						.playerRateDropdown > .button {
+							font-size: 24px;
+						}
+
+						.tippy-box[data-theme~="dropdown"] {
+							max-width: 100px !important;
+
+							.nav-dropdown-items .nav-item {
+								justify-content: center !important;
+								border-radius: @border-radius !important;
+
+								&.active {
+									background-color: var(--primary-color);
+									color: var(--white);
+								}
+							}
 						}
 					}
 				}
