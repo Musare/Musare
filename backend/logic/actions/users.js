@@ -612,7 +612,7 @@ export default {
 	 * Logs user in
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} identifier - the email of the user
+	 * @param {string} identifier - the username or email of the user
 	 * @param {string} password - the plaintext of the user
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -625,9 +625,12 @@ export default {
 			[
 				// check if a user with the requested identifier exists
 				next => {
+					const query = {};
+					if (identifier.indexOf("@") !== -1) query["email.address"] = identifier;
+					else query.username = identifier;
 					userModel.findOne(
 						{
-							$or: [{ "email.address": identifier }]
+							$or: [query]
 						},
 						next
 					);

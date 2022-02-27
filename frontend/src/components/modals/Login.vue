@@ -10,12 +10,12 @@
 				<form>
 					<!-- email address -->
 					<p class="control">
-						<label class="label">Email</label>
+						<label class="label">Username/Email</label>
 						<input
 							v-model="email"
 							class="input"
 							type="email"
-							placeholder="Email..."
+							placeholder="Username/Email..."
 							@keypress="submitOnEnter(submitModal, $event)"
 						/>
 					</p>
