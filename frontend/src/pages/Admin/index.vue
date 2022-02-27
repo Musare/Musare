@@ -98,18 +98,6 @@
 								<i class="material-icons">library_music</i>
 								<span>Playlists</span>
 							</router-link>
-							<router-link
-								class="sidebar-item news"
-								to="/admin/news"
-								content="News"
-								v-tippy="{
-									theme: 'info',
-									onShow: () => !sidebarActive
-								}"
-							>
-								<i class="material-icons">chrome_reader_mode</i>
-								<span>News</span>
-							</router-link>
 							<div
 								v-if="
 									sidebarActive &&
@@ -154,6 +142,18 @@
 							>
 								<i class="material-icons">people</i>
 								<span>Users</span>
+							</router-link>
+							<router-link
+								class="sidebar-item news"
+								to="/admin/news"
+								content="News"
+								v-tippy="{
+									theme: 'info',
+									onShow: () => !sidebarActive
+								}"
+							>
+								<i class="material-icons">chrome_reader_mode</i>
+								<span>News</span>
 							</router-link>
 							<router-link
 								class="sidebar-item statistics"
@@ -468,6 +468,11 @@ export default {
 			display: flex;
 			min-width: 200px;
 			width: 200px;
+
+			@media screen and (max-width: 768px) {
+				min-width: 45px;
+				width: 45px;
+			}
 
 			.inner {
 				display: flex;
