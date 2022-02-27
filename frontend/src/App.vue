@@ -1905,6 +1905,10 @@ h4.section-title {
 	code {
 		font-style: italic;
 	}
+
+	hr {
+		margin: 10px 0;
+	}
 }
 .checkbox-control {
 	display: flex;
