@@ -479,13 +479,14 @@ class _StationsModule extends CoreClass {
 					},
 
 					(playlist, station, next) => {
+						const songs = playlist.songs.filter(song => song._id !== station.currentSong._id);
 						if (station.playMode === "random") {
-							UtilsModule.runJob("SHUFFLE", { array: playlist.songs }, this)
+							UtilsModule.runJob("SHUFFLE", { array: songs }, this)
 								.then(response => {
 									next(null, response.array, station);
 								})
 								.catch(next);
-						} else next(null, playlist.songs, station);
+						} else next(null, songs, station);
 					},
 
 					(_playlistSongs, station, next) => {
