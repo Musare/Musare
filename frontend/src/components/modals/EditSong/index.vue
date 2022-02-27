@@ -1287,13 +1287,9 @@ export default {
 				}
 			});
 
-			this.socket.dispatch(
-				"reports.getReportsForSong",
-				this.song._id,
-				res => {
-					this.updateReports(res.data.reports);
-				}
-			);
+			this.socket.dispatch("reports.getReportsForSong", songId, res => {
+				this.updateReports(res.data.reports);
+			});
 		},
 		importAlbum(result) {
 			this.selectDiscogsAlbum(result);
