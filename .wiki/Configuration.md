@@ -70,6 +70,7 @@ Location: `frontend/dist/config/default.json`
 | `cookie.SIDname` | Name of the cookie stored for sessions. |
 | `siteSettings.logo_white` | Path to the white logo image, by default it is `/assets/white_wordmark.png`. |
 | `siteSettings.logo_blue` | Path to the blue logo image, by default it is `/assets/blue_wordmark.png`. |
+| `siteSettings.logo_small` | Path to the small white logo image, by default it is `/assets/favicon/mstile-144x144.png`. |
 | `siteSettings.sitename` | Should be the name of the site. |
 | `siteSettings.footerLinks` | Add custom links to footer by specifying `"title": "url"`, e.g. `"GitHub": "https://github.com/Musare/Musare"`. You can disable about, team and news links (but not the pages themselves) by setting them to false, e.g. `"about": false`. |
 | `siteSettings.mediasession` | Whether to enable mediasession functionality. |

@@ -11,7 +11,7 @@ import store from "./store";
 
 import AppComponent from "./App.vue";
 
-const REQUIRED_CONFIG_VERSION = 10;
+const REQUIRED_CONFIG_VERSION = 11;
 
 const handleMetadata = attrs => {
 	document.title = `Musare | ${attrs.title}`;
@@ -148,7 +148,7 @@ const router = createRouter({
 			}
 		},
 		{
-			path: "/admin/:page",
+			path: "/admin/:page(.*)",
 			component: () => import("@/pages//Admin/index.vue"),
 			meta: {
 				adminRequired: true
@@ -202,7 +202,7 @@ router.beforeEach((to, from, next) => {
 
 app.use(router);
 
-lofig.folder = "../config/default.json";
+lofig.folder = "/config/default.json";
 
 (async () => {
 	lofig.fetchConfig().then(config => {

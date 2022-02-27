@@ -21,6 +21,7 @@
 	"siteSettings": {
 		"logo_white": "/assets/white_wordmark.png",
 		"logo_blue": "/assets/blue_wordmark.png",
+		"logo_small": "/assets/favicon/mstile-144x144.png",
 		"sitename": "Musare",
 		"footerLinks": {
 			"GitHub": "https://github.com/Musare/Musare"
@@ -52,5 +53,5 @@
 		"version": true
 	},
 	"skipConfigVersionCheck": false,
-	"configVersion": 10
+	"configVersion": 11
 }

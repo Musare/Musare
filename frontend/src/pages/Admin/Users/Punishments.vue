@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<page-metadata title="Admin | Punishments" />
+		<page-metadata title="Admin | Users | Punishments" />
 		<div class="container">
 			<advanced-table
 				:column-default="columnDefault"

@@ -93,7 +93,7 @@ import AdvancedTable from "@/components/AdvancedTable.vue";
 import RunJobDropdown from "@/components/RunJobDropdown.vue";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
-import utils from "../../../../js/utils";
+import utils from "../../../js/utils";
 
 export default {
 	components: {

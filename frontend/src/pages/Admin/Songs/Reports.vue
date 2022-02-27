@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<page-metadata title="Admin | Reports" />
+		<page-metadata title="Admin | Songs | Reports" />
 		<div class="container">
 			<advanced-table
 				:column-default="columnDefault"
