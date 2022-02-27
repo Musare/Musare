@@ -1,7 +1,10 @@
 <template>
 	<div class="app">
 		<div class="admin-area">
-			<main-header :hide-logo="true" />
+			<main-header
+				:hide-logo="true"
+				:class="{ 'admin-sidebar-active': sidebarActive }"
+			/>
 			<div class="admin-content">
 				<div
 					class="admin-sidebar"
@@ -451,6 +454,15 @@ export default {
 		display: flex;
 		flex-direction: column;
 		min-height: 100vh;
+
+		:deep(.nav) {
+			.nav-menu.is-active {
+				left: 45px;
+			}
+			&.admin-sidebar-active .nav-menu.is-active {
+				left: 200px;
+			}
+		}
 
 		.admin-sidebar {
 			display: flex;
