@@ -257,16 +257,19 @@ export default {
 	 */
 	async newest(session, cb) {
 		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" }, this);
-		async.waterfall([next => newsModel.findOne({}).sort({ createdAt: "desc" }).exec(next)], async (err, news) => {
-			if (err) {
-				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-				this.log("ERROR", "NEWS_NEWEST", `Getting the latest news failed. "${err}"`);
-				return cb({ status: "error", message: err });
-			}
+		async.waterfall(
+			[next => newsModel.findOne({ status: "published" }).sort({ createdAt: "desc" }).exec(next)],
+			async (err, news) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "NEWS_NEWEST", `Getting the latest news failed. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
 
-			this.log("SUCCESS", "NEWS_NEWEST", `Successfully got the latest news.`, false);
-			return cb({ status: "success", data: { news } });
-		});
+				this.log("SUCCESS", "NEWS_NEWEST", `Successfully got the latest news.`, false);
+				return cb({ status: "success", data: { news } });
+			}
+		);
 	},
 
 	/**
