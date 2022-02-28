@@ -7,7 +7,7 @@ export default {
 	description: { type: String, minlength: 2, maxlength: 128, trim: true, required: true },
 	paused: { type: Boolean, default: false, required: true },
 	currentSong: {
-		_id: { type: mongoose.Schema.Types.ObjectId, required: true },
+		_id: { type: mongoose.Schema.Types.ObjectId },
 		youtubeId: { type: String },
 		title: { type: String },
 		artists: [{ type: String }],
