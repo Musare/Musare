@@ -1436,7 +1436,7 @@ export default {
 		toggleSelectedRow(itemIndex, event) {
 			const { shiftKey, ctrlKey } = event;
 			// Shift was pressed, so attempt to select all items between the clicked item and last clicked item
-			if (shiftKey) {
+			if (shiftKey && !ctrlKey) {
 				// If the clicked item is already selected, prevent default, otherwise the checkbox will be unchecked
 				if (this.rows[itemIndex].selected) event.preventDefault();
 				// If there is a last clicked item
@@ -1466,7 +1466,7 @@ export default {
 				}
 			}
 			// Ctrl was pressed, so attempt to unselect all items between the clicked item and last clicked item
-			else if (ctrlKey) {
+			else if (!shiftKey && ctrlKey) {
 				// If the clicked item is already unselected, prevent default, otherwise the checkbox will be checked
 				if (!this.rows[itemIndex].selected) event.preventDefault();
 				// If there is a last clicked item
