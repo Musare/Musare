@@ -452,7 +452,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					SongsModule.runJob("CREATE_SONG", { song: newSong }, this)
+					SongsModule.runJob("CREATE_SONG", { song: newSong, userId: session.userId }, this)
 						.then(song => next(null, song))
 						.catch(next);
 				}
