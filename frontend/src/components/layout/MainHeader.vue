@@ -39,12 +39,12 @@
 					}"
 					:content="`${
 						localNightmode ? 'Disable' : 'Enable'
-					} Night Mode`"
+					} Nightmode`"
 					v-tippy
 				>
 					{{ localNightmode ? "dark_mode" : "light_mode" }}
 				</span>
-				<span class="night-mode-label">Toggle Night Mode</span>
+				<span class="night-mode-label">Toggle Nightmode</span>
 			</div>
 			<span v-if="loggedIn" class="grouped">
 				<router-link
