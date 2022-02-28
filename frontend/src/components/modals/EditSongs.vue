@@ -290,6 +290,11 @@ export default {
 				prefill: this.songPrefillData[song._id]
 			});
 			this.currentSong = song;
+			if (
+				this.$refs[`edit-songs-item-${song._id}`] &&
+				this.$refs[`edit-songs-item-${song._id}`][0]
+			)
+				this.$refs[`edit-songs-item-${song._id}`][0].scrollIntoView();
 		},
 		editNextSong() {
 			const currentlyEditingSongIndex = this.filteredEditingItemIndex;
@@ -308,13 +313,6 @@ export default {
 			if (newEditingSongIndex > -1) {
 				const nextSong = this.filteredItems[newEditingSongIndex].song;
 				this.pickSong(nextSong);
-				if (
-					this.$refs[`edit-songs-item-${nextSong._id}`] &&
-					this.$refs[`edit-songs-item-${nextSong._id}`][0]
-				)
-					this.$refs[
-						`edit-songs-item-${nextSong._id}`
-					][0].scrollIntoView();
 			}
 		},
 		toggleFlag(songIndex = null) {
