@@ -1472,7 +1472,7 @@ export default {
 				// If there is a last clicked item
 				if (this.lastSelectedItemIndex >= 0) {
 					// Clicked item is lower than last item, so unselect upwards until it reaches the last selected item
-					if (itemIndex > this.lastSelectedItemIndex) {
+					if (itemIndex >= this.lastSelectedItemIndex) {
 						for (
 							let itemIndexUp = itemIndex;
 							itemIndexUp >= this.lastSelectedItemIndex;
