@@ -49,10 +49,6 @@
 								width="530"
 								@click="setTrackPosition($event)"
 							/>
-							<div id="playerTrack">
-								<div class="skip-duration"></div>
-								<div class="real-duration"></div>
-							</div>
 							<div class="player-footer">
 								<div class="player-footer-left">
 									<div class="control has-addons">

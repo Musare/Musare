@@ -11,19 +11,12 @@
 				<h6 v-if="header">{{ header }}</h6>
 				<div class="song-title">
 					<h4
-						class="item-title"
-						:style="
-							!song.artists ||
-							(song.artists && song.artists.length < 1)
-								? {
-										display: '-webkit-inline-box',
-										fontSize: '16px',
-										whiteSpace: 'normal',
-										'-webkit-box-orient': 'vertical',
-										'-webkit-line-clamp': 2
-								  }
-								: null
-						"
+						:class="{
+							'item-title': true,
+							'no-artists':
+								!song.artists ||
+								(song.artists && song.artists.length < 1)
+						}"
 						:title="song.title"
 					>
 						{{ song.title }}
@@ -365,6 +358,14 @@ export default {
 
 			.verified-song {
 				margin-left: 5px;
+			}
+
+			.item-title.no-artists {
+				display: -webkit-inline-box;
+				font-size: 16px;
+				white-space: normal;
+				-webkit-box-orient: vertical;
+				-webkit-line-clamp: 2;
 			}
 		}
 

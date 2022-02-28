@@ -289,6 +289,7 @@ class _SongsModule extends CoreClass {
 	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {string} payload.song - the song object
+	 * @param {string} payload.userId - the user id of the person requesting the song
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	CREATE_SONG(payload) {
@@ -296,7 +297,27 @@ class _SongsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						const song = new SongsModule.SongModel(payload.song);
+						DBModule.runJob("GET_MODEL", { modelName: "user" }, this)
+							.then(UserModel => {
+								UserModel.findOne(
+									{ _id: payload.userId },
+									{ "preferences.anonymousSongRequests": 1 },
+									next
+								);
+							})
+							.catch(next);
+					},
+
+					(user, next) => {
+						const song = new SongsModule.SongModel({
+							...payload.song,
+							requestedBy: user.preferences.anonymousSongRequests ? null : payload.userId,
+							requestedAt: Date.now()
+						});
+						if (song.verified) {
+							song.verifiedBy = payload.userId;
+							song.verifiedAt = Date.now();
+						}
 						song.save({ validateBeforeSave: true }, err => {
 							if (err) return next(err, song);
 							return next(null, song);
