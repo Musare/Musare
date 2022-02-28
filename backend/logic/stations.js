@@ -479,14 +479,13 @@ class _StationsModule extends CoreClass {
 					},
 
 					(playlist, station, next) => {
-						const songs = playlist.songs.filter(song => song._id !== station.currentSong._id);
 						if (station.playMode === "random") {
-							UtilsModule.runJob("SHUFFLE", { array: songs }, this)
+							UtilsModule.runJob("SHUFFLE", { array: playlist.songs }, this)
 								.then(response => {
 									next(null, response.array, station);
 								})
 								.catch(next);
-						} else next(null, songs, station);
+						} else next(null, playlist.songs, station);
 					},
 
 					(_playlistSongs, station, next) => {
@@ -502,6 +501,9 @@ class _StationsModule extends CoreClass {
 						const currentYoutubeIds = station.queue.map(song => song.youtubeId);
 						const songsToAdd = [];
 						let lastSongAdded = null;
+
+						if (station.currentSong && station.currentSong.youtubeId)
+							currentYoutubeIds.push(station.currentSong.youtubeId);
 
 						playlistSongs.every(song => {
 							if (
