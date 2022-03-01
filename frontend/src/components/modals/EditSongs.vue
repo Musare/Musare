@@ -275,7 +275,7 @@ export default {
 		this.socket.on(`event:admin.song.removed`, res => {
 			const index = this.items
 				.map(item => item.song._id)
-				.indexOf(res.songId);
+				.indexOf(res.data.songId);
 			this.items[index].song.removed = true;
 		});
 	},
