@@ -185,9 +185,7 @@
 								<div
 									class="player-cannot-autoplay"
 									v-if="!canAutoplay"
-									@click="
-										increaseVolume() && decreaseVolume()
-									"
+									@click="increaseVolume()"
 								>
 									<p>
 										Please click anywhere on the screen for
@@ -401,37 +399,29 @@
 								</div>
 								<p id="volume-control" v-if="!isApple">
 									<i
-										v-if="muted"
 										class="material-icons"
 										@click="toggleMute()"
-										content="Unmute"
+										:content="`${
+											muted ? 'Unmute' : 'Mute'
+										}`"
 										v-tippy
-										>volume_mute</i
-									>
-									<i
-										v-else
-										class="material-icons"
-										@click="toggleMute()"
-										content="Mute"
-										v-tippy
-										>volume_down</i
+										>{{
+											muted
+												? "volume_mute"
+												: volumeSliderValue >= 50
+												? "volume_up"
+												: "volume_down"
+										}}</i
 									>
 									<input
 										v-model="volumeSliderValue"
 										type="range"
 										min="0"
-										max="10000"
+										max="100"
 										class="volume-slider active"
 										@change="changeVolume()"
 										@input="changeVolume()"
 									/>
-									<i
-										class="material-icons"
-										@click="increaseVolume()"
-										content="Increase Volume"
-										v-tippy
-										>volume_up</i
-									>
 								</p>
 								<div id="right-buttons" v-if="loggedIn">
 									<!-- Ratings (Like/Dislike) Buttons -->
@@ -1769,9 +1759,9 @@ export default {
 		},
 		changeVolume() {
 			const volume = this.volumeSliderValue;
-			localStorage.setItem("volume", volume / 100);
+			localStorage.setItem("volume", volume);
 			if (this.playerReady) {
-				this.player.setVolume(volume / 100);
+				this.player.setVolume(volume);
 				if (volume > 0) {
 					this.player.unMute();
 					localStorage.setItem("muted", false);
@@ -1856,10 +1846,10 @@ export default {
 					localStorage.getItem("volume")
 				);
 				const volume =
-					this.player.getVolume() * 100 <= 0 ? previousVolume : 0;
+					this.player.getVolume() <= 0 ? previousVolume : 0;
 				this.muted = !this.muted;
 				localStorage.setItem("muted", this.muted);
-				this.volumeSliderValue = volume * 100;
+				this.volumeSliderValue = volume;
 				this.player.setVolume(volume);
 				if (!this.muted) localStorage.setItem("volume", volume);
 			}
@@ -1875,7 +1865,7 @@ export default {
 					localStorage.setItem("muted", false);
 				}
 				if (volume > 100) volume = 100;
-				this.volumeSliderValue = volume * 100;
+				this.volumeSliderValue = volume;
 				this.player.setVolume(volume);
 				localStorage.setItem("volume", volume);
 			}
@@ -2112,7 +2102,7 @@ export default {
 								preventDefault: true,
 								handler: () => {
 									if (this.aModalIsOpen) return;
-									this.volumeSliderValue -= 1000;
+									this.volumeSliderValue -= 10;
 									this.changeVolume();
 								}
 							}
@@ -2127,7 +2117,7 @@ export default {
 								preventDefault: true,
 								handler: () => {
 									if (this.aModalIsOpen) return;
-									this.volumeSliderValue -= 100;
+									this.volumeSliderValue -= 1;
 									this.changeVolume();
 								}
 							}
@@ -2142,7 +2132,7 @@ export default {
 								preventDefault: true,
 								handler: () => {
 									if (this.aModalIsOpen) return;
-									this.volumeSliderValue += 1000;
+									this.volumeSliderValue += 10;
 									this.changeVolume();
 								}
 							}
@@ -2157,7 +2147,7 @@ export default {
 								preventDefault: true,
 								handler: () => {
 									if (this.aModalIsOpen) return;
-									this.volumeSliderValue += 100;
+									this.volumeSliderValue += 1;
 									this.changeVolume();
 								}
 							}
@@ -2711,7 +2701,7 @@ export default {
 						cursor: pointer;
 						box-shadow: 0;
 						background: var(--light-grey-3);
-						border-radius: 0;
+						border-radius: @border-radius;
 						border: 0;
 					}
 
@@ -2720,7 +2710,7 @@ export default {
 						border: 0;
 						height: 19px;
 						width: 19px;
-						border-radius: 15px;
+						border-radius: 100%;
 						background: var(--primary-color);
 						cursor: pointer;
 						-webkit-appearance: none;
@@ -2732,7 +2722,7 @@ export default {
 						cursor: pointer;
 						box-shadow: 0;
 						background: var(--light-grey-3);
-						border-radius: 1.3px;
+						border-radius: @border-radius;
 					}
 
 					input[type="range"]::-ms-fill-lower {
@@ -2754,7 +2744,7 @@ export default {
 						border: 0;
 						height: 15px;
 						width: 15px;
-						border-radius: 15px;
+						border-radius: 100%;
 						background: var(--primary-color);
 						cursor: pointer;
 						-webkit-appearance: none;

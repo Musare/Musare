@@ -183,37 +183,29 @@
 								<div class="player-footer-right">
 									<p id="volume-control">
 										<i
-											v-if="muted"
 											class="material-icons"
 											@click="toggleMute()"
-											content="Unmute"
+											:content="`${
+												muted ? 'Unmute' : 'Mute'
+											}`"
 											v-tippy
-											>volume_mute</i
-										>
-										<i
-											v-else
-											class="material-icons"
-											@click="toggleMute()"
-											content="Mute"
-											v-tippy
-											>volume_down</i
+											>{{
+												muted
+													? "volume_mute"
+													: volumeSliderValue >= 50
+													? "volume_up"
+													: "volume_down"
+											}}</i
 										>
 										<input
 											v-model="volumeSliderValue"
 											type="range"
 											min="0"
-											max="10000"
+											max="100"
 											class="volume-slider active"
 											@change="changeVolume()"
 											@input="changeVolume()"
 										/>
-										<i
-											class="material-icons"
-											@click="increaseVolume()"
-											content="Increase Volume"
-											v-tippy
-											>volume_up</i
-										>
 									</p>
 								</div>
 							</div>
@@ -825,7 +817,7 @@ export default {
 			handler: () => {
 				this.volumeSliderValue = Math.max(
 					0,
-					this.volumeSliderValue - 1000
+					this.volumeSliderValue - 10
 				);
 				this.changeVolume();
 			}
@@ -838,7 +830,7 @@ export default {
 			handler: () => {
 				this.volumeSliderValue = Math.max(
 					0,
-					this.volumeSliderValue - 100
+					this.volumeSliderValue - 1
 				);
 				this.changeVolume();
 			}
@@ -850,7 +842,7 @@ export default {
 			handler: () => {
 				this.volumeSliderValue = Math.min(
 					10000,
-					this.volumeSliderValue + 1000
+					this.volumeSliderValue + 10
 				);
 				this.changeVolume();
 			}
@@ -863,7 +855,7 @@ export default {
 			handler: () => {
 				this.volumeSliderValue = Math.min(
 					10000,
-					this.volumeSliderValue + 100
+					this.volumeSliderValue + 1
 				);
 				this.changeVolume();
 			}
@@ -1518,8 +1510,8 @@ export default {
 		},
 		changeVolume() {
 			const volume = this.volumeSliderValue;
-			localStorage.setItem("volume", volume / 100);
-			this.video.player.setVolume(volume / 100);
+			localStorage.setItem("volume", volume);
+			this.video.player.setVolume(volume);
 			if (volume > 0) {
 				this.video.player.unMute();
 				this.muted = false;
@@ -1528,9 +1520,9 @@ export default {
 		toggleMute() {
 			const previousVolume = parseFloat(localStorage.getItem("volume"));
 			const volume =
-				this.video.player.getVolume() * 100 <= 0 ? previousVolume : 0;
+				this.video.player.getVolume() <= 0 ? previousVolume : 0;
 			this.muted = !this.muted;
-			this.volumeSliderValue = volume * 100;
+			this.volumeSliderValue = volume;
 			this.video.player.setVolume(volume);
 			if (!this.muted) localStorage.setItem("volume", volume);
 		},
@@ -1539,7 +1531,7 @@ export default {
 			let volume = previousVolume + 5;
 			this.muted = false;
 			if (volume > 100) volume = 100;
-			this.volumeSliderValue = volume * 100;
+			this.volumeSliderValue = volume;
 			this.video.player.setVolume(volume);
 			localStorage.setItem("volume", volume);
 		},
@@ -1968,7 +1960,7 @@ export default {
 							cursor: pointer;
 							box-shadow: 0;
 							background: var(--light-grey-3);
-							border-radius: 0;
+							border-radius: @border-radius;
 							border: 0;
 						}
 
@@ -1977,7 +1969,7 @@ export default {
 							border: 0;
 							height: 19px;
 							width: 19px;
-							border-radius: 15px;
+							border-radius: 100%;
 							background: var(--primary-color);
 							cursor: pointer;
 							-webkit-appearance: none;
@@ -1989,7 +1981,7 @@ export default {
 							cursor: pointer;
 							box-shadow: 0;
 							background: var(--light-grey-3);
-							border-radius: 1.3px;
+							border-radius: @border-radius;
 						}
 
 						input[type="range"]::-ms-fill-lower {
@@ -2011,7 +2003,7 @@ export default {
 							border: 0;
 							height: 15px;
 							width: 15px;
-							border-radius: 15px;
+							border-radius: 100%;
 							background: var(--primary-color);
 							cursor: pointer;
 							-webkit-appearance: none;
