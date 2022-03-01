@@ -92,7 +92,7 @@
 
 					<br />
 
-					<div class="control is-grouped input-with-button">
+					<div class="control is-grouped">
 						<p class="control is-expanded">
 							<input
 								class="input"
@@ -102,20 +102,17 @@
 								@keyup.enter="importPlaylist()"
 							/>
 						</p>
-						<p class="control has-addons">
-							<span class="select" id="playlist-import-type">
-								<select
-									v-model="
-										youtubeSearch.playlist
-											.isImportingOnlyMusic
-									"
-								>
-									<option :value="false">Import all</option>
-									<option :value="true">
-										Import only music
-									</option>
-								</select>
-							</span>
+						<p id="playlist-import-type" class="control select">
+							<select
+								v-model="
+									youtubeSearch.playlist.isImportingOnlyMusic
+								"
+							>
+								<option :value="false">Import all</option>
+								<option :value="true">Import only music</option>
+							</select>
+						</p>
+						<p class="control">
 							<button
 								class="button is-info"
 								@click.prevent="importPlaylist()"

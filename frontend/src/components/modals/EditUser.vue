@@ -4,35 +4,43 @@
 			<template #body v-if="user && user._id">
 				<div class="section">
 					<label class="label"> Change username </label>
-					<p class="control has-addons">
-						<input
-							v-model="user.username"
-							class="input is-expanded"
-							type="text"
-							placeholder="Username"
-							autofocus
-						/>
-						<a class="button is-info" @click="updateUsername()"
-							>Update Username</a
-						>
+					<p class="control is-grouped">
+						<span class="control is-expanded">
+							<input
+								v-model="user.username"
+								class="input"
+								type="text"
+								placeholder="Username"
+								autofocus
+							/>
+						</span>
+						<span class="control">
+							<a class="button is-info" @click="updateUsername()"
+								>Update Username</a
+							>
+						</span>
 					</p>
 
 					<label class="label"> Change email address </label>
-					<p class="control has-addons">
-						<input
-							v-model="user.email.address"
-							class="input is-expanded"
-							type="text"
-							placeholder="Email Address"
-							autofocus
-						/>
-						<a class="button is-info" @click="updateEmail()"
-							>Update Email Address</a
-						>
+					<p class="control is-grouped">
+						<span class="control is-expanded">
+							<input
+								v-model="user.email.address"
+								class="input"
+								type="text"
+								placeholder="Email Address"
+								autofocus
+							/>
+						</span>
+						<span class="control">
+							<a class="button is-info" @click="updateEmail()"
+								>Update Email Address</a
+							>
+						</span>
 					</p>
 
 					<label class="label"> Change user role </label>
-					<div class="control is-grouped input-with-button">
+					<div class="control is-grouped">
 						<div class="control is-expanded select">
 							<select v-model="user.role">
 								<option>default</option>
@@ -49,8 +57,8 @@
 
 				<div class="section">
 					<label class="label"> Punish/Ban User </label>
-					<p class="control has-addons">
-						<span class="select">
+					<p class="control is-grouped">
+						<span class="control select">
 							<select v-model="ban.expiresAt">
 								<option value="1h">1 Hour</option>
 								<option value="12h">12 Hours</option>
@@ -62,16 +70,20 @@
 								<option value="1y">1 Year</option>
 							</select>
 						</span>
-						<input
-							v-model="ban.reason"
-							class="input is-expanded"
-							type="text"
-							placeholder="Ban reason"
-							autofocus
-						/>
-						<a class="button is-danger" @click="banUser()">
-							Ban user
-						</a>
+						<span class="control is-expanded">
+							<input
+								v-model="ban.reason"
+								class="input"
+								type="text"
+								placeholder="Ban reason"
+								autofocus
+							/>
+						</span>
+						<span class="control">
+							<a class="button is-danger" @click="banUser()">
+								Ban user
+							</a>
+						</span>
 					</p>
 				</div>
 			</template>
