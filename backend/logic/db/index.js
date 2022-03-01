@@ -232,7 +232,16 @@ class _DBModule extends CoreClass {
 					// 	return songs[0].duration <= 10800;
 					// }, "Max 3 hours per song.");
 
-					this.schemas.playlist.index({ createdFor: 1, type: 1 }, { unique: true });
+					this.models.activity.syncIndexes();
+					this.models.dataRequest.syncIndexes();
+					this.models.news.syncIndexes();
+					this.models.playlist.syncIndexes();
+					this.models.punishment.syncIndexes();
+					this.models.queueSong.syncIndexes();
+					this.models.report.syncIndexes();
+					this.models.song.syncIndexes();
+					this.models.station.syncIndexes();
+					this.models.user.syncIndexes();
 
 					if (config.get("skipDbDocumentsVersionCheck")) resolve();
 					else {
