@@ -2491,6 +2491,8 @@ export default {
 						margin: 0;
 						font-size: 36px;
 						line-height: 0.8;
+						text-overflow: ellipsis;
+						overflow: hidden;
 					}
 
 					i {
@@ -2510,8 +2512,13 @@ export default {
 				}
 
 				p {
+					display: -webkit-box;
 					max-width: 700px;
 					margin-bottom: 10px;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					-webkit-box-orient: vertical;
+					-webkit-line-clamp: 3;
 				}
 			}
 
