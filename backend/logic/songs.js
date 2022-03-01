@@ -492,7 +492,11 @@ class _SongsModule extends CoreClass {
 							song.genres,
 							1,
 							(genre, next) => {
-								PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre }, this)
+								PlaylistsModule.runJob(
+									"AUTOFILL_GENRE_PLAYLIST",
+									{ genre, createPlaylist: song.verified },
+									this
+								)
 									.then(() => {
 										next();
 									})
@@ -749,16 +753,17 @@ class _SongsModule extends CoreClass {
 						const genresToAutofill = new Set();
 
 						songs.forEach(song => {
-							song.genres.forEach(genre => {
-								genresToAutofill.add(genre);
-							});
+							if (song.verified)
+								song.genres.forEach(genre => {
+									genresToAutofill.add(genre);
+								});
 						});
 
 						async.eachLimit(
 							genresToAutofill,
 							1,
 							(genre, next) => {
-								PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre }, this)
+								PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre, createPlaylist: true }, this)
 									.then(() => {
 										next();
 									})

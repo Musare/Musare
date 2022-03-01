@@ -522,7 +522,10 @@ export default {
 								.concat(song.genres)
 								.filter((value, index, self) => self.indexOf(value) === index)
 								.forEach(genre => {
-									PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
+									PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", {
+										genre,
+										createPlaylist: song.verified
+									})
 										.then(() => {})
 										.catch(() => {});
 								});
@@ -892,7 +895,7 @@ export default {
 
 				(song, oldStatus, next) => {
 					song.genres.forEach(genre => {
-						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
+						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre, createPlaylist: true })
 							.then(() => {})
 							.catch(() => {});
 					});
@@ -1022,7 +1025,7 @@ export default {
 
 				(song, next) => {
 					song.genres.forEach(genre => {
-						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
+						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre, createPlaylist: false })
 							.then(() => {})
 							.catch(() => {});
 					});

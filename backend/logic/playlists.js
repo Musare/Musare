@@ -417,6 +417,7 @@ class _PlaylistsModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.genre - the genre
+	 * @param {string} payload.createPlaylist - create playlist if it doesn't exist, default false
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	AUTOFILL_GENRE_PLAYLIST(payload) {
@@ -434,13 +435,14 @@ class _PlaylistsModule extends CoreClass {
 							})
 							.catch(err => {
 								if (err.message === "Playlist not found") {
-									PlaylistsModule.runJob("CREATE_GENRE_PLAYLIST", { genre: payload.genre }, this)
-										.then(playlistId => {
-											next(null, playlistId);
-										})
-										.catch(err => {
-											next(err);
-										});
+									if (payload.createPlaylist)
+										PlaylistsModule.runJob("CREATE_GENRE_PLAYLIST", { genre: payload.genre }, this)
+											.then(playlistId => {
+												next(null, playlistId);
+											})
+											.catch(err => {
+												next(err);
+											});
 								} else next(err);
 							});
 					},
@@ -1121,7 +1123,7 @@ class _PlaylistsModule extends CoreClass {
 					},
 
 					(genre, next) => {
-						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre }, this)
+						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre, createPlaylist: true }, this)
 							.then(() => {
 								next();
 							})
