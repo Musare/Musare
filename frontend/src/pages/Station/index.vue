@@ -1470,7 +1470,7 @@ export default {
 					);
 				}
 			} else {
-				if (this.playerReady) this.player.pauseVideo();
+				if (this.playerReady) this.player.stopVideo();
 				this.updateNoSong(true);
 			}
 
