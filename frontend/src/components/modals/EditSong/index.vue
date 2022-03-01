@@ -1302,7 +1302,10 @@ export default {
 			}
 
 			// Artists
-			if (song.artists.length < 1 || song.artists.length > 10) {
+			if (
+				(song.verified && song.artists.length < 1) ||
+				song.artists.length > 10
+			) {
 				saveButtonRef.handleFailedSave();
 				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast(
@@ -1347,7 +1350,10 @@ export default {
 				return false;
 			});
 
-			if (song.genres.length < 1 || song.genres.length > 16)
+			if (
+				(song.verified && song.genres.length < 1) ||
+				song.genres.length > 16
+			)
 				error = "You must have between 1 and 16 genres.";
 
 			if (error) {
