@@ -2321,31 +2321,8 @@ export default {
 			padding-left: 8px;
 			padding-right: 8px;
 		}
-		&.select.is-expanded > select {
-			width: 100%;
-		}
-		& > input,
-		:deep(& > div > input),
-		& > select,
-		& > .button,
-		&.label {
+		:deep(& > div > input) {
 			border-radius: 0;
-		}
-		&:first-child {
-			& > input,
-			& > select,
-			& > .button,
-			&.label {
-				border-radius: @border-radius 0 0 @border-radius;
-			}
-		}
-		&:last-child {
-			& > input,
-			& > select,
-			& > .button,
-			&.label {
-				border-radius: 0 @border-radius @border-radius 0;
-			}
 		}
 		& > .button {
 			font-size: 22px;
