@@ -304,7 +304,6 @@ export default {
 	.api-result .tracks .track:focus,
 	.selected-discogs-info {
 		background-color: var(--dark-grey-2) !important;
-		border: 0 !important;
 	}
 
 	.label,
