@@ -768,7 +768,7 @@ export default {
 		volume =
 			typeof volume === "number" && !Number.isNaN(volume) ? volume : 20;
 		localStorage.setItem("volume", volume);
-		this.volumeSliderValue = volume * 100;
+		this.volumeSliderValue = volume;
 
 		if (!this.newSong) {
 			this.socket.on(
@@ -841,7 +841,7 @@ export default {
 			preventDefault: true,
 			handler: () => {
 				this.volumeSliderValue = Math.min(
-					10000,
+					100,
 					this.volumeSliderValue + 10
 				);
 				this.changeVolume();
@@ -854,7 +854,7 @@ export default {
 			preventDefault: true,
 			handler: () => {
 				this.volumeSliderValue = Math.min(
-					10000,
+					100,
 					this.volumeSliderValue + 1
 				);
 				this.changeVolume();
@@ -1672,7 +1672,7 @@ export default {
 						: null,
 					youtubeId: this.song.youtubeId,
 					muted: this.muted,
-					volume: this.volumeSliderValue / 100,
+					volume: this.volumeSliderValue,
 					startedDuration:
 						this.activityWatchVideoLastStartDuration <= 0
 							? 0

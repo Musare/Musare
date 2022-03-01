@@ -1220,7 +1220,7 @@ export default {
 		if (JSON.parse(localStorage.getItem("muted"))) {
 			this.muted = true;
 			this.player.setVolume(0);
-			this.volumeSliderValue = 0 * 100;
+			this.volumeSliderValue = 0;
 		} else {
 			let volume = parseFloat(localStorage.getItem("volume"));
 			volume =
@@ -1228,7 +1228,7 @@ export default {
 					? volume
 					: 20;
 			localStorage.setItem("volume", volume);
-			this.volumeSliderValue = volume * 100;
+			this.volumeSliderValue = volume;
 		}
 	},
 	beforeUnmount() {
@@ -2276,7 +2276,7 @@ export default {
 							: null,
 					youtubeId: this.currentSong.youtubeId,
 					muted: this.muted,
-					volume: this.volumeSliderValue / 100,
+					volume: this.volumeSliderValue,
 					startedDuration:
 						this.activityWatchVideoLastStartDuration <= 0
 							? 0
