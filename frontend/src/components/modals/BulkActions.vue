@@ -136,7 +136,8 @@ export default {
 				this.type.items,
 				res => {
 					new Toast(res.message);
-					this.closeModal("bulkActions");
+					if (res.status === "success")
+						this.closeModal("bulkActions");
 				}
 			);
 		},

@@ -1900,11 +1900,16 @@ export default {
 						query.$set = { genres };
 					} else {
 						next("Invalid method.");
+						return;
 					}
 
 					songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
-						if (err) next(err);
+						if (err) {
+							next(err);
+							return;
+						}
 						SongsModule.runJob("UPDATE_SONGS", { songIds: songsFound });
+						next();
 					});
 				}
 			],
@@ -1993,11 +1998,16 @@ export default {
 						query.$set = { artists };
 					} else {
 						next("Invalid method.");
+						return;
 					}
 
 					songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
-						if (err) next(err);
+						if (err) {
+							next(err);
+							return;
+						}
 						SongsModule.runJob("UPDATE_SONGS", { songIds: songsFound });
+						next();
 					});
 				}
 			],
@@ -2086,11 +2096,16 @@ export default {
 						query.$set = { tags };
 					} else {
 						next("Invalid method.");
+						return;
 					}
 
 					songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
-						if (err) next(err);
+						if (err) {
+							next(err);
+							return;
+						}
 						SongsModule.runJob("UPDATE_SONGS", { songIds: songsFound });
+						next();
 					});
 				}
 			],
