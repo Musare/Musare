@@ -331,6 +331,19 @@
 									/>
 								</p>
 							</div>
+							<div class="verified-container">
+								<label class="label">Verified</label>
+								<p class="is-expanded checkbox-control">
+									<label class="switch">
+										<input
+											type="checkbox"
+											id="verified"
+											v-model="song.verified"
+										/>
+										<span class="slider round"></span>
+									</label>
+								</p>
+							</div>
 						</div>
 
 						<div class="control is-grouped">
@@ -549,50 +562,17 @@
 				<div v-if="!newSong">
 					<save-button
 						ref="saveButton"
-						@clicked="save(song, false, false, 'saveButton')"
+						@clicked="save(song, false, 'saveButton')"
 					/>
 					<save-button
 						ref="saveAndCloseButton"
 						:default-message="
 							bulk ? `Save and next` : `Save and close`
 						"
-						@clicked="save(song, false, true, 'saveAndCloseButton')"
-					/>
-					<save-button
-						ref="saveVerifyAndCloseButton"
-						:default-message="
-							bulk
-								? `Save, verify and next`
-								: `Save, verify and close`
-						"
-						@click="
-							save(song, true, true, 'saveVerifyAndCloseButton')
-						"
+						@clicked="save(song, true, 'saveAndCloseButton')"
 					/>
 
 					<div class="right">
-						<button
-							v-if="!song.verified"
-							class="button is-success"
-							@click="verify(song._id)"
-							content="Verify Song"
-							v-tippy
-						>
-							<i class="material-icons">check_circle</i>
-						</button>
-						<quick-confirm
-							v-else
-							placement="left"
-							@confirm="unverify(song._id)"
-						>
-							<button
-								class="button is-danger"
-								content="Unverify Song"
-								v-tippy
-							>
-								<i class="material-icons">cancel</i>
-							</button>
-						</quick-confirm>
 						<button
 							class="button is-danger icon-with-button material-icons"
 							@click.prevent="
@@ -614,30 +594,8 @@
 					<save-button
 						ref="createButton"
 						default-message="Create Song"
-						@clicked="
-							save(song, false, false, 'createButton', true)
-						"
+						@clicked="save(song, false, 'createButton', true)"
 					/>
-					<div class="right">
-						<button
-							v-if="!song.verified"
-							class="button is-success"
-							@click="verify()"
-							content="Verify Song"
-							v-tippy
-						>
-							<i class="material-icons">check_circle</i>
-						</button>
-						<button
-							v-else
-							class="button is-danger"
-							@click="unverify()"
-							content="Unverify Song"
-							v-tippy
-						>
-							<i class="material-icons">cancel</i>
-						</button>
-					</div>
 				</div>
 			</template>
 		</modal>
@@ -665,7 +623,6 @@ import ws from "@/ws";
 import validation from "@/validation";
 import keyboardShortcuts from "@/keyboardShortcuts";
 
-import QuickConfirm from "@/components/QuickConfirm.vue";
 import Modal from "../../Modal.vue";
 import FloatingBox from "../../FloatingBox.vue";
 import SaveButton from "../../SaveButton.vue";
@@ -681,7 +638,6 @@ export default {
 		Modal,
 		FloatingBox,
 		SaveButton,
-		QuickConfirm,
 		AutoSuggest,
 		Discogs,
 		Reports,
@@ -824,15 +780,6 @@ export default {
 
 		if (!this.newSong) {
 			this.socket.on(
-				"event:admin.song.updated",
-				res => {
-					if (res.data.song._id === this.song._id)
-						this.song.verified = res.data.song.verified;
-				},
-				{ modal: "editSong" }
-			);
-
-			this.socket.on(
 				"event:admin.song.removed",
 				res => {
 					if (res.data.songId === this.song._id) {
@@ -927,7 +874,7 @@ export default {
 			ctrl: true,
 			preventDefault: true,
 			handler: () => {
-				this.save(this.song, false, false, "saveButton");
+				this.save(this.song, false, "saveButton");
 			}
 		});
 
@@ -937,19 +884,7 @@ export default {
 			alt: true,
 			preventDefault: true,
 			handler: () => {
-				this.save(this.song, false, true, "saveAndCloseButton");
-			}
-		});
-
-		// TODO
-		keyboardShortcuts.registerShortcut("editSong.saveVerifyClose", {
-			keyCode: 86,
-			ctrl: true,
-			alt: true,
-			preventDefault: true,
-			handler: () => {
-				// alert("not implemented yet");
-				this.save(this.song, true, true, "saveVerifyAndCloseButton");
+				this.save(this.song, true, "saveAndCloseButton");
 			}
 		});
 
@@ -1031,7 +966,6 @@ export default {
 			"editSong.focusDicogs",
 			"editSong.save",
 			"editSong.saveClose",
-			"editSong.saveVerifyClose",
 			"editSong.useAllDiscogs",
 			"editSong.closeModal"
 		];
@@ -1292,13 +1226,7 @@ export default {
 			this.openModal("importAlbum");
 			this.closeModal("editSong");
 		},
-		save(
-			songToCopy,
-			verify,
-			closeOrNext,
-			saveButtonRefName,
-			newSong = false
-		) {
+		save(songToCopy, closeOrNext, saveButtonRefName, newSong = false) {
 			const song = JSON.parse(JSON.stringify(songToCopy));
 
 			if (!newSong) this.$emit("saving", song._id);
@@ -1505,24 +1433,6 @@ export default {
 				}
 
 				this.updateOriginalSong(song);
-
-				if (verify) {
-					saveButtonRef.status = "verifying";
-					this.verify(this.song._id, success => {
-						if (success) {
-							saveButtonRef.handleSuccessfulSave();
-							this.$emit("savedSuccess", song._id);
-
-							if (closeOrNext && this.bulk)
-								this.$emit("nextSong");
-							else if (closeOrNext) this.closeModal("editSong");
-						} else {
-							saveButtonRef.handleFailedSave();
-							this.$emit("savedError", song._id);
-						}
-					});
-					return;
-				}
 
 				saveButtonRef.handleSuccessfulSave();
 				this.$emit("savedSuccess", song._id);
@@ -1784,21 +1694,6 @@ export default {
 				this.activityWatchVideoLastStatus = "not_playing";
 			}
 		},
-		verify(id, cb) {
-			if (this.newSong) this.song.verified = true;
-			else
-				this.socket.dispatch("songs.verify", id, res => {
-					new Toast(res.message);
-					if (cb) cb(res.status === "success");
-				});
-		},
-		unverify(id) {
-			if (this.newSong) this.song.verified = false;
-			else
-				this.socket.dispatch("songs.unverify", id, res => {
-					new Toast(res.message);
-				});
-		},
 		remove(id) {
 			this.socket.dispatch("songs.remove", id, res => {
 				new Toast(res.message);
@@ -1823,12 +1718,10 @@ export default {
 		},
 		onCloseModal() {
 			const songStringified = JSON.stringify({
-				...this.song,
-				verified: null
+				...this.song
 			});
 			const originalSongStringified = JSON.stringify({
-				...this.originalSong,
-				verified: null
+				...this.originalSong
 			});
 			const unsavedChanges = songStringified !== originalSongStringified;
 
@@ -2202,11 +2095,20 @@ export default {
 
 		.album-art-container {
 			margin-right: 16px;
-			width: calc((100% - 16px) / 3 * 2);
+			width: calc((100% - 16px) / 8 * 4);
 		}
 
 		.youtube-id-container {
-			width: calc((100% - 16px) / 3);
+			margin-right: 16px;
+			width: calc((100% - 16px) / 8 * 3);
+		}
+
+		.verified-container {
+			width: calc((100% - 16px) / 8);
+
+			.checkbox-control {
+				margin-top: 10px;
+			}
 		}
 
 		.artists-container {

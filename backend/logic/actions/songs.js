@@ -496,6 +496,22 @@ export default {
 
 				(_existingSong, next) => {
 					existingSong = _existingSong;
+
+					// Verify the song
+					if (existingSong.verified === false && song.verified === true) {
+						song.verifiedBy = session.userId;
+						song.verifiedAt = Date.now();
+					}
+					// Unverify the song
+					else if (existingSong.verified === true && song.verified === false) {
+						song.verifiedBy = null;
+						song.verifiedAt = null;
+					}
+
+					next();
+				},
+
+				next => {
 					songModel.updateOne({ _id: songId }, song, { runValidators: true }, next);
 				},
 
@@ -997,6 +1013,8 @@ export default {
 
 				(song, next) => {
 					song.verified = false;
+					song.verifiedBy = null;
+					song.verifiedAt = null;
 					song.save(err => {
 						next(err, song);
 					});
