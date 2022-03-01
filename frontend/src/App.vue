@@ -1474,6 +1474,34 @@ button.delete:focus {
 
 	&.is-grouped {
 		display: flex;
+
+		& > .control {
+			&.select.is-expanded > select {
+				width: 100%;
+			}
+			& > input,
+			& > select,
+			& > .button,
+			&.label {
+				border-radius: 0;
+			}
+			&:first-child {
+				& > input,
+				& > select,
+				& > .button,
+				&.label {
+					border-radius: @border-radius 0 0 @border-radius;
+				}
+			}
+			&:last-child {
+				& > input,
+				& > select,
+				& > .button,
+				&.label {
+					border-radius: 0 @border-radius @border-radius 0;
+				}
+			}
+		}
 	}
 
 	&.is-expanded {
