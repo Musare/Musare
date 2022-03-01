@@ -22,6 +22,16 @@
 						>
 							edit
 						</button>
+						<router-link
+							:to="{ path: `/u/${slotProps.item.username}` }"
+							target="_blank"
+							class="button is-primary icon-with-button material-icons"
+							:disabled="slotProps.item.removed"
+							content="View Profile"
+							v-tippy
+						>
+							person
+						</router-link>
 					</div>
 				</template>
 				<template #column-profilePicture="slotProps">
@@ -122,12 +132,12 @@ export default {
 				{
 					name: "options",
 					displayName: "Options",
-					properties: ["_id"],
+					properties: ["_id", "username"],
 					sortable: false,
 					hidable: false,
 					resizable: false,
-					minWidth: 76,
-					defaultWidth: 76
+					minWidth: 85,
+					defaultWidth: 85
 				},
 				{
 					name: "profilePicture",
