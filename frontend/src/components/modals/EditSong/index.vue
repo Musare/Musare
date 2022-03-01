@@ -1053,7 +1053,7 @@ export default {
 					startSeconds: this.song.skipDuration,
 					events: {
 						onReady: () => {
-							let volume = parseInt(
+							let volume = parseFloat(
 								localStorage.getItem("volume")
 							);
 							volume = typeof volume === "number" ? volume : 20;
@@ -1535,7 +1535,7 @@ export default {
 			if (!this.muted) localStorage.setItem("volume", volume);
 		},
 		increaseVolume() {
-			const previousVolume = parseInt(localStorage.getItem("volume"));
+			const previousVolume = parseFloat(localStorage.getItem("volume"));
 			let volume = previousVolume + 5;
 			this.muted = false;
 			if (volume > 100) volume = 100;

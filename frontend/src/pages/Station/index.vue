@@ -1511,7 +1511,7 @@ export default {
 							this.playerReady = true;
 							ms.setYTReady(true);
 
-							let volume = parseInt(
+							let volume = parseFloat(
 								localStorage.getItem("volume")
 							);
 
@@ -1866,7 +1866,9 @@ export default {
 		},
 		increaseVolume() {
 			if (this.playerReady) {
-				const previousVolume = parseInt(localStorage.getItem("volume"));
+				const previousVolume = parseFloat(
+					localStorage.getItem("volume")
+				);
 				let volume = previousVolume + 5;
 				if (previousVolume === 0) {
 					this.muted = false;
