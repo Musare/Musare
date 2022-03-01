@@ -999,8 +999,8 @@ export default {
 							this.video.player.getCurrentTime() >=
 								this.video.player.getDuration()))
 				) {
-					this.video.paused = true;
-					this.video.player.stopVideo();
+					this.stopVideo();
+					this.pauseVideo(true);
 					this.drawCanvas();
 				}
 				if (
@@ -1110,15 +1110,15 @@ export default {
 
 								youtubeDuration -= this.song.skipDuration;
 								if (this.song.duration > youtubeDuration + 1) {
-									this.video.player.stopVideo();
-									this.video.paused = true;
+									this.stopVideo();
+									this.pauseVideo(true);
 									return new Toast(
 										"Video can't play. Specified duration is bigger than the YouTube song duration."
 									);
 								}
 								if (this.song.duration <= 0) {
-									this.video.player.stopVideo();
-									this.video.paused = true;
+									this.stopVideo();
+									this.pauseVideo(true);
 									return new Toast(
 										"Video can't play. Specified duration has to be more than 0 seconds."
 									);
@@ -1170,8 +1170,8 @@ export default {
 		},
 		unloadSong(songId) {
 			this.songDataLoaded = false;
-			if (this.video.player && this.video.player.stopVideo)
-				this.video.player.stopVideo();
+			this.stopVideo();
+			this.pauseVideo(true);
 			this.resetSong(songId);
 			this.youtubeVideoCurrentTime = "0.000";
 			this.youtubeVideoDuration = "0.000";

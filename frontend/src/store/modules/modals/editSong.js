@@ -72,15 +72,21 @@ export default {
 				state.originalSong = {};
 		},
 		stopVideo(state) {
-			state.video.player.stopVideo();
+			if (state.video.player && state.video.player.stopVideo)
+				state.video.player.stopVideo();
 		},
 		loadVideoById(state, id, skipDuration) {
 			state.song.duration = -1;
 			state.video.player.loadVideoById(id, skipDuration);
 		},
 		pauseVideo(state, status) {
-			if (status) state.video.player.pauseVideo();
-			else state.video.player.playVideo();
+			if (
+				(state.video.player && state.video.player.pauseVideo) ||
+				state.video.playVideo
+			) {
+				if (status) state.video.player.pauseVideo();
+				else state.video.player.playVideo();
+			}
 			state.video.paused = status;
 		},
 		getCurrentTime(state, fixedVal) {
