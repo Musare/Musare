@@ -788,8 +788,10 @@ export default {
 <style lang="less" scoped>
 .song-thumbnail {
 	display: block;
-	max-width: 50px;
+	width: 50px;
+	height: 50px;
 	margin: 0 auto;
+	object-fit: contain;
 }
 
 :deep(.bulk-popup .bulk-actions) {
