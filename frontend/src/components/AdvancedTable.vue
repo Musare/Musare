@@ -37,8 +37,8 @@
 								<i class="material-icons">
 									{{
 										showFiltersDropdown
-											? "expand_more"
-											: "expand_less"
+											? "expand_less"
+											: "expand_more"
 									}}
 								</i>
 							</button>
@@ -328,8 +328,8 @@
 								<i class="material-icons">
 									{{
 										showColumnsDropdown
-											? "expand_more"
-											: "expand_less"
+											? "expand_less"
+											: "expand_more"
 									}}
 								</i>
 							</button>

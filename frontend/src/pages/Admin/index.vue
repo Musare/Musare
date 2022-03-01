@@ -36,15 +36,23 @@
 								<span>Minimise</span>
 							</div>
 							<div
-								v-if="
-									sidebarActive &&
-									currentTab.startsWith('songs')
-								"
-								class="sidebar-item with-children is-active"
+								v-if="sidebarActive"
+								class="sidebar-item with-children"
+								:class="{ 'is-active': childrenActive.songs }"
 							>
-								<span>
+								<span
+									@click="toggleChildren({ child: 'songs' })"
+								>
 									<i class="material-icons">music_note</i>
 									<span>Songs</span>
+									<i
+										class="material-icons toggle-sidebar-children"
+										>{{
+											childrenActive.songs
+												? "expand_less"
+												: "expand_more"
+										}}</i
+									>
 								</span>
 								<div class="sidebar-item-children">
 									<router-link
@@ -99,15 +107,23 @@
 								<span>Playlists</span>
 							</router-link>
 							<div
-								v-if="
-									sidebarActive &&
-									currentTab.startsWith('users')
-								"
-								class="sidebar-item with-children is-active"
+								v-if="sidebarActive"
+								class="sidebar-item with-children"
+								:class="{ 'is-active': childrenActive.users }"
 							>
-								<span>
+								<span
+									@click="toggleChildren({ child: 'users' })"
+								>
 									<i class="material-icons">people</i>
 									<span>Users</span>
+									<i
+										class="material-icons toggle-sidebar-children"
+										>{{
+											childrenActive.users
+												? "expand_less"
+												: "expand_more"
+										}}</i
+									>
 								</span>
 								<div class="sidebar-item-children">
 									<router-link
@@ -263,7 +279,7 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
 import { defineAsyncComponent } from "vue";
 
 import keyboardShortcuts from "@/keyboardShortcuts";
@@ -301,9 +317,12 @@ export default {
 			sidebarActive: true
 		};
 	},
-	computed: mapGetters({
-		socket: "websockets/getSocket"
-	}),
+	computed: {
+		...mapGetters({
+			socket: "websockets/getSocket"
+		}),
+		...mapState("admin", { childrenActive: state => state.childrenActive })
+	},
 	watch: {
 		$route(route) {
 			this.changeTab(route.path);
@@ -402,6 +421,10 @@ export default {
 			}
 		},
 		showTab(tab) {
+			if (this.currentTab.startsWith("songs"))
+				this.toggleChildren({ child: "songs", force: false });
+			else if (this.currentTab.startsWith("users"))
+				this.toggleChildren({ child: "users", force: false });
 			if (this.$refs[`${tab}-tab`])
 				this.$refs[`${tab}-tab`].scrollIntoView({
 					inline: "center",
@@ -409,6 +432,10 @@ export default {
 				});
 			this.currentTab = tab;
 			localStorage.setItem("lastAdminPage", tab);
+			if (tab.startsWith("songs"))
+				this.toggleChildren({ child: "songs", force: true });
+			else if (tab.startsWith("users"))
+				this.toggleChildren({ child: "users", force: true });
 		},
 		toggleKeyboardShortcutsHelper() {
 			this.$refs.keyboardShortcutsHelper.toggleBox();
@@ -419,7 +446,8 @@ export default {
 		toggleSidebar() {
 			this.sidebarActive = !this.sidebarActive;
 			localStorage.setItem("admin-sidebar-active", this.sidebarActive);
-		}
+		},
+		...mapActions("admin", ["toggleChildren"])
 	}
 };
 </script>
@@ -557,11 +585,16 @@ export default {
 							& > span {
 								display: flex;
 								line-height: 40px;
+								cursor: pointer;
 
 								& > .material-icons {
 									line-height: 40px;
 									margin-right: 5px;
 								}
+							}
+
+							.toggle-sidebar-children {
+								margin-left: 5px;
 							}
 
 							.sidebar-item-children {
@@ -578,6 +611,30 @@ export default {
 									margin-left: 30px;
 									font-size: 14px;
 									line-height: 30px;
+									position: relative;
+
+									&::before {
+										content: "";
+										position: absolute;
+										width: 1px;
+										height: 30px;
+										top: 0;
+										left: -20px;
+										background-color: var(--light-grey-3);
+									}
+									&:last-child::before {
+										height: 16px;
+									}
+
+									&::after {
+										content: "";
+										position: absolute;
+										width: 15px;
+										height: 1px;
+										top: 15px;
+										left: -20px;
+										background-color: var(--light-grey-3);
+									}
 								}
 							}
 						}

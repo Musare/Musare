@@ -3,11 +3,6 @@
 
 import admin from "@/api/admin/index";
 
-const state = {};
-const getters = {};
-const actions = {};
-const mutations = {};
-
 const modules = {
 	songs: {
 		namespaced: true,
@@ -64,9 +59,25 @@ const modules = {
 
 export default {
 	namespaced: true,
-	state,
-	getters,
-	actions,
-	mutations,
+	state: {
+		childrenActive: {
+			songs: false,
+			users: false
+		}
+	},
+	getters: {},
+	actions: {
+		toggleChildren({ commit }, payload) {
+			commit("toggleChildren", payload);
+		}
+	},
+	mutations: {
+		toggleChildren(state, payload) {
+			if (typeof payload.force === "undefined")
+				state.childrenActive[payload.child] =
+					!state.childrenActive[payload.child];
+			else state.childrenActive[payload.child] = payload.force;
+		}
+	},
 	modules
 };
