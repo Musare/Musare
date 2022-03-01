@@ -30,6 +30,14 @@ const modules = {
 						.resolve(reportId)
 						.then(res => resolve(res))
 						.catch(err => reject(new Error(err.message)));
+				}),
+			/* eslint-disable-next-line no-unused-vars */
+			removeReport: ({ commit }, reportId) =>
+				new Promise((resolve, reject) => {
+					admin.reports
+						.remove(reportId)
+						.then(res => resolve(res))
+						.catch(err => reject(new Error(err.message)));
 				})
 		},
 		mutations: {}

@@ -229,7 +229,7 @@ export default {
 			events: {
 				adminRoom: "reports",
 				removed: {
-					event: "admin.report.resolved",
+					event: "admin.report.removed",
 					id: "reportId"
 				}
 			}

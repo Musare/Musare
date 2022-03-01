@@ -93,6 +93,17 @@
 				</i>
 				Resolve
 			</button>
+			<div class="right">
+				<quick-confirm @confirm="remove()">
+					<button
+						class="button is-danger material-icons icon-with-button"
+						content="Delete Report"
+						v-tippy
+					>
+						delete_forever
+					</button>
+				</quick-confirm>
+			</div>
 		</template>
 	</modal>
 </template>
@@ -105,9 +116,10 @@ import ws from "@/ws";
 import Modal from "@/components/Modal.vue";
 import SongItem from "@/components/SongItem.vue";
 import ReportInfoItem from "@/components/ReportInfoItem.vue";
+import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
-	components: { Modal, SongItem, ReportInfoItem },
+	components: { Modal, SongItem, ReportInfoItem, QuickConfirm },
 	props: {
 		sector: { type: String, default: "admin" }
 	},
@@ -138,6 +150,12 @@ export default {
 
 		this.socket.on(
 			"event:admin.report.resolved",
+			() => this.closeModal("viewReport"),
+			{ modal: "viewReport" }
+		);
+
+		this.socket.on(
+			"event:admin.report.removed",
 			() => this.closeModal("viewReport"),
 			{ modal: "viewReport" }
 		);
@@ -199,6 +217,13 @@ export default {
 				})
 				.catch(err => new Toast(err.message));
 		},
+		remove() {
+			return this.removeReport(this.reportId)
+				.then(res => {
+					if (res.status === "success") this.closeModal("viewReport");
+				})
+				.catch(err => new Toast(err.message));
+		},
 		toggleIssue(issueId) {
 			this.socket.dispatch(
 				"reports.toggleIssue",
@@ -213,7 +238,11 @@ export default {
 			this.editSong({ songId: this.report.song._id });
 			this.openModal("editSong");
 		},
-		...mapActions("admin/reports", ["indexReports", "resolveReport"]),
+		...mapActions("admin/reports", [
+			"indexReports",
+			"resolveReport",
+			"removeReport"
+		]),
 		...mapActions("modals/editSong", ["editSong"]),
 		...mapActions("modalVisibility", ["closeModal", "openModal"])
 	}

@@ -58,6 +58,15 @@ CacheModule.runJob("SUB", {
 	}
 });
 
+CacheModule.runJob("SUB", {
+	channel: "report.remove",
+	cb: reportId =>
+		WSModule.runJob("EMIT_TO_ROOMS", {
+			rooms: ["admin.reports", `view-report.${reportId}`],
+			args: ["event:admin.report.removed", { data: { reportId } }]
+		})
+});
+
 export default {
 	/**
 	 * Gets reports, used in the admin reports page by the AdvancedTable component
@@ -537,6 +546,54 @@ export default {
 				return cb({
 					status: "success",
 					message: "Successfully created report"
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Removes a report
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {object} reportId - the id of the report item we want to remove
+	 * @param {Function} cb - gets called with the result
+	 */
+	remove: isAdminRequired(async function remove(session, reportId, cb) {
+		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					if (!reportId) return next("Please provide a report item id to remove.");
+					return next();
+				},
+
+				next => {
+					reportModel.deleteOne({ _id: reportId }, err => next(err));
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"REPORT_REMOVE",
+						`Removing report "${reportId}" failed for user "${session.userId}". "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				CacheModule.runJob("PUB", { channel: "report.remove", value: reportId });
+
+				this.log(
+					"SUCCESS",
+					"REPORT_REMOVE",
+					`Removing report "${reportId}" successful by user "${session.userId}".`
+				);
+
+				return cb({
+					status: "success",
+					message: "Successfully removed report"
 				});
 			}
 		);
