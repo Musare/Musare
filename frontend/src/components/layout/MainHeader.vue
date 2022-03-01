@@ -197,7 +197,7 @@ export default {
 	position: relative;
 	background-color: var(--primary-color);
 	height: 64px;
-	z-index: 2;
+	z-index: 3;
 
 	&.transparent {
 		background-color: transparent !important;
