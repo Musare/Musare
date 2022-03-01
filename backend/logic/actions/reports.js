@@ -25,10 +25,10 @@ CacheModule.runJob("SUB", {
 
 CacheModule.runJob("SUB", {
 	channel: "report.resolve",
-	cb: ({ reportId, songId }) =>
+	cb: ({ reportId, songId, resolved }) =>
 		WSModule.runJob("EMIT_TO_ROOMS", {
 			rooms: ["admin.reports", `edit-song.${songId}`, `view-report.${reportId}`],
-			args: ["event:admin.report.resolved", { data: { reportId } }]
+			args: ["event:admin.report.resolved", { data: { reportId, resolved } }]
 		})
 });
 
@@ -358,9 +358,10 @@ export default {
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} reportId - the id of the report that is getting resolved
+	 * @param {boolean} resolved - whether to set to resolved to true or false
 	 * @param {Function} cb - gets called with the result
 	 */
-	resolve: isAdminRequired(async function resolve(session, reportId, cb) {
+	resolve: isAdminRequired(async function resolve(session, reportId, resolved, cb) {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
 
 		async.waterfall(
@@ -372,7 +373,7 @@ export default {
 				(report, next) => {
 					if (!report) return next("Report not found.");
 
-					report.resolved = true;
+					report.resolved = resolved;
 
 					return report.save(err => {
 						if (err) return next(err.message);
@@ -386,21 +387,27 @@ export default {
 					this.log(
 						"ERROR",
 						"REPORTS_RESOLVE",
-						`Resolving report "${reportId}" failed by user "${session.userId}". "${err}"`
+						`${resolved ? "R" : "Unr"}esolving report "${reportId}" failed by user "${
+							session.userId
+						}". "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
 
 				CacheModule.runJob("PUB", {
 					channel: "report.resolve",
-					value: { reportId, songId }
+					value: { reportId, songId, resolved }
 				});
 
-				this.log("SUCCESS", "REPORTS_RESOLVE", `User "${session.userId}" resolved report "${reportId}".`);
+				this.log(
+					"SUCCESS",
+					"REPORTS_RESOLVE",
+					`User "${session.userId}" ${resolved ? "" : "un"}resolved report "${reportId}".`
+				);
 
 				return cb({
 					status: "success",
-					message: "Successfully resolved Report"
+					message: `Successfully ${resolved ? "" : "un"}resolved Report`
 				});
 			}
 		);

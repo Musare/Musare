@@ -24,10 +24,10 @@ const modules = {
 		getters: {},
 		actions: {
 			/* eslint-disable-next-line no-unused-vars */
-			resolveReport: ({ commit }, reportId) =>
+			resolveReport: ({ commit }, { reportId, value }) =>
 				new Promise((resolve, reject) => {
 					admin.reports
-						.resolve(reportId)
+						.resolve({ reportId, value })
 						.then(res => resolve(res))
 						.catch(err => reject(new Error(err.message)));
 				}),

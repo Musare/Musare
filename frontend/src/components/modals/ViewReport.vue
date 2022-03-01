@@ -73,25 +73,31 @@
 			</div>
 		</template>
 		<template #footer v-if="report && report._id">
-			<a class="button is-primary" @click="openSong()">
-				<i
-					class="material-icons icon-with-button"
-					content="Edit Song"
-					v-tippy
-				>
-					edit
-				</i>
-				Edit Song
+			<a
+				class="button is-primary material-icons icon-with-button"
+				@click="openSong()"
+				content="Edit Song"
+				v-tippy
+			>
+				edit
 			</a>
-			<button class="button is-success" @click="resolve()">
-				<i
-					class="material-icons icon-with-button"
-					content="Resolve"
-					v-tippy
-				>
-					done_all
-				</i>
-				Resolve
+			<button
+				v-if="report.resolved"
+				class="button is-danger material-icons icon-with-button"
+				@click="resolve(false)"
+				content="Unresolve"
+				v-tippy
+			>
+				remove_done
+			</button>
+			<button
+				v-else
+				class="button is-success material-icons icon-with-button"
+				@click="resolve(true)"
+				content="Resolve"
+				v-tippy
+			>
+				done_all
 			</button>
 			<div class="right">
 				<quick-confirm @confirm="remove()">
@@ -150,7 +156,9 @@ export default {
 
 		this.socket.on(
 			"event:admin.report.resolved",
-			() => this.closeModal("viewReport"),
+			res => {
+				this.report.resolved = res.data.resolved;
+			},
 			{ modal: "viewReport" }
 		);
 
@@ -210,10 +218,10 @@ export default {
 				}
 			});
 		},
-		resolve() {
-			return this.resolveReport(this.reportId)
+		resolve(value) {
+			return this.resolveReport({ reportId: this.reportId, value })
 				.then(res => {
-					if (res.status === "success") this.closeModal("viewReport");
+					if (res.status !== "success") new Toast(res.message);
 				})
 				.catch(err => new Toast(err.message));
 		},

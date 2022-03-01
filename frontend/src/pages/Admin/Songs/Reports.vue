@@ -22,15 +22,6 @@
 						>
 							open_in_full
 						</button>
-						<button
-							class="button is-success icon-with-button material-icons"
-							@click="resolve(slotProps.item._id)"
-							:disabled="slotProps.item.removed"
-							content="Resolve Report"
-							v-tippy
-						>
-							done_all
-						</button>
 					</div>
 				</template>
 				<template #column-_id="slotProps">
@@ -53,6 +44,11 @@
 					>
 						{{ slotProps.item.song.youtubeId }}
 					</a>
+				</template>
+				<template #column-resolved="slotProps">
+					<span :title="slotProps.item.resolved">{{
+						slotProps.item.resolved
+					}}</span>
 				</template>
 				<template #column-categories="slotProps">
 					<span
@@ -134,8 +130,8 @@ export default {
 					sortable: false,
 					hidable: false,
 					resizable: false,
-					minWidth: 85,
-					defaultWidth: 85
+					minWidth: 76,
+					defaultWidth: 76
 				},
 				{
 					name: "_id",
@@ -160,6 +156,12 @@ export default {
 					sortProperty: "song.youtubeId",
 					minWidth: 165,
 					defaultWidth: 165
+				},
+				{
+					name: "resolved",
+					displayName: "Resolved",
+					properties: ["resolved"],
+					sortProperty: "resolved"
 				},
 				{
 					name: "categories",
@@ -203,6 +205,13 @@ export default {
 					property: "song.youtubeId",
 					filterTypes: ["contains", "exact", "regex"],
 					defaultFilterType: "contains"
+				},
+				{
+					name: "resolved",
+					displayName: "Resolved",
+					property: "resolved",
+					filterTypes: ["boolean"],
+					defaultFilterType: "boolean"
 				},
 				{
 					name: "categories",
