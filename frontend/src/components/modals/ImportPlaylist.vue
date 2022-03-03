@@ -39,11 +39,27 @@
 				</div>
 			</div>
 		</template>
+		<template #footer>
+			<p class="is-expanded checkbox-control">
+				<label class="switch">
+					<input
+						type="checkbox"
+						id="edit-imported-songs"
+						v-model="localEditSongs"
+					/>
+					<span class="slider round"></span>
+				</label>
+
+				<label for="edit-imported-songs">
+					<p>Edit Songs</p>
+				</label>
+			</p>
+		</template>
 	</modal>
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
+import { mapActions, mapState, mapGetters } from "vuex";
 
 import Toast from "toasters";
 
@@ -55,6 +71,18 @@ export default {
 	components: { Modal },
 	mixins: [SearchYoutube],
 	computed: {
+		localEditSongs: {
+			get() {
+				return this.$store.state.modals.importPlaylist
+					.editImportedSongs;
+			},
+			set(editImportedSongs) {
+				this.$store.commit(
+					"modals/importPlaylist/updateEditImportedSongs",
+					editImportedSongs
+				);
+			}
+		},
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
 			station: state => state.station.station
@@ -98,13 +126,31 @@ export default {
 				res => {
 					isImportingPlaylist = false;
 
+					if (
+						this.localEditSongs &&
+						res.status === "success" &&
+						res.songs &&
+						res.songs.length > 0
+					) {
+						this.editSongs(
+							res.songs.map(song => ({
+								...song,
+								songId: song._id
+							}))
+						);
+						this.openModal("editSongs");
+					}
+
+					this.closeModal("importPlaylist");
 					return new Toast({
 						content: res.message,
 						timeout: 20000
 					});
 				}
 			);
-		}
+		},
+		...mapActions("modals/editSongs", ["editSongs"]),
+		...mapActions("modalVisibility", ["openModal", "closeModal"])
 	}
 };
 </script>
