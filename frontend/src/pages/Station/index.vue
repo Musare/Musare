@@ -650,7 +650,6 @@
 					</div>
 				</div>
 
-				<request-song v-if="modals.requestSong" />
 				<create-playlist v-if="modals.createPlaylist" />
 				<manage-station
 					v-if="modals.manageStation"
@@ -809,9 +808,6 @@ export default {
 		ContentLoader,
 		MainHeader,
 		MainFooter,
-		RequestSong: defineAsyncComponent(() =>
-			import("@/components/modals/RequestSong.vue")
-		),
 		EditPlaylist: defineAsyncComponent(() =>
 			import("@/components/modals/EditPlaylist")
 		),

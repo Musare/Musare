@@ -489,7 +489,6 @@
 			:station-id="editingStationId"
 			sector="home"
 		/>
-		<request-song v-if="modals.requestSong" />
 		<create-playlist v-if="modals.createPlaylist" />
 		<edit-playlist v-if="modals.editPlaylist" />
 		<edit-song v-if="modals.editSong" song-type="songs" sector="home" />
@@ -520,9 +519,6 @@ export default {
 		),
 		ManageStation: defineAsyncComponent(() =>
 			import("@/components/modals/ManageStation/index.vue")
-		),
-		RequestSong: defineAsyncComponent(() =>
-			import("@/components/modals/RequestSong.vue")
 		),
 		EditPlaylist: defineAsyncComponent(() =>
 			import("@/components/modals/EditPlaylist")

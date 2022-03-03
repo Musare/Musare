@@ -162,14 +162,6 @@
 			</div>
 		</template>
 		<template #footer>
-			<button
-				class="button is-primary tab-actionable-button"
-				v-if="loggedIn && station.type === 'official'"
-				@click="openModal('requestSong')"
-			>
-				<i class="material-icons icon-with-button">queue</i>
-				<span> Request Song </span>
-			</button>
 			<div v-if="isOwnerOrAdmin()" class="right">
 				<quick-confirm @confirm="clearAndRefillStationQueue()">
 					<a class="button is-danger">

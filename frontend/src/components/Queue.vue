@@ -89,16 +89,6 @@
 			<span> Add Song To Queue </span>
 		</button>
 		<button
-			class="button is-primary tab-actionable-button"
-			v-if="
-				sector === 'station' && loggedIn && station.type === 'official'
-			"
-			@click="openModal('requestSong')"
-		>
-			<i class="material-icons icon-with-button">queue</i>
-			<span> Request Song </span>
-		</button>
-		<button
 			class="button is-primary tab-actionable-button disabled"
 			v-if="
 				sector === 'station' &&

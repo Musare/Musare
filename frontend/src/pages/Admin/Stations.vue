@@ -107,7 +107,6 @@
 			</advanced-table>
 		</div>
 
-		<request-song v-if="modals.requestSong" />
 		<create-playlist v-if="modals.createPlaylist" />
 		<manage-station
 			v-if="modals.manageStation"
@@ -134,9 +133,6 @@ import RunJobDropdown from "@/components/RunJobDropdown.vue";
 
 export default {
 	components: {
-		RequestSong: defineAsyncComponent(() =>
-			import("@/components/modals/RequestSong.vue")
-		),
 		EditPlaylist: defineAsyncComponent(() =>
 			import("@/components/modals/EditPlaylist")
 		),

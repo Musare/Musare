@@ -8,9 +8,9 @@
 				</button>
 				<button
 					class="button is-primary"
-					@click="openModal('requestSong')"
+					@click="openModal('importPlaylist')"
 				>
-					Request song
+					Import playlist
 				</button>
 				<button
 					class="button is-primary"
@@ -260,7 +260,7 @@
 		<edit-song v-if="modals.editSong" song-type="songs" />
 		<edit-songs v-if="modals.editSongs" />
 		<report v-if="modals.report" />
-		<request-song v-if="modals.requestSong" />
+		<import-playlist v-if="modals.importPlaylist" />
 		<bulk-actions v-if="modals.bulkActions" :type="bulkActionsType" />
 		<confirm v-if="modals.confirm" @confirmed="handleConfirmed()" />
 	</div>
@@ -291,8 +291,8 @@ export default {
 		ImportAlbum: defineAsyncComponent(() =>
 			import("@/components/modals/ImportAlbum.vue")
 		),
-		RequestSong: defineAsyncComponent(() =>
-			import("@/components/modals/RequestSong.vue")
+		ImportPlaylist: defineAsyncComponent(() =>
+			import("@/components/modals/ImportPlaylist.vue")
 		),
 		BulkActions: defineAsyncComponent(() =>
 			import("@/components/modals/BulkActions.vue")
