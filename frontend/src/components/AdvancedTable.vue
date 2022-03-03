@@ -2334,9 +2334,6 @@ export default {
 			flex-wrap: wrap;
 			.control.select {
 				width: 50%;
-				select {
-					width: 100%;
-				}
 			}
 			.control {
 				margin-bottom: 0 !important;

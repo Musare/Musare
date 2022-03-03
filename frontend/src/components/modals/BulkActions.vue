@@ -151,10 +151,6 @@ export default {
 	text-transform: capitalize;
 }
 
-.select.is-expanded select {
-	width: 100%;
-}
-
 .control.input-with-button > div {
 	flex: 1;
 }

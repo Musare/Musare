@@ -79,16 +79,18 @@
 				</header>
 				<div class="card-content">
 					<label class="label">Expires In</label>
-					<select v-model="ipBan.expiresAt">
-						<option value="1h">1 Hour</option>
-						<option value="12h">12 Hours</option>
-						<option value="1d">1 Day</option>
-						<option value="1w">1 Week</option>
-						<option value="1m">1 Month</option>
-						<option value="3m">3 Months</option>
-						<option value="6m">6 Months</option>
-						<option value="1y">1 Year</option>
-					</select>
+					<p class="control select">
+						<select v-model="ipBan.expiresAt">
+							<option value="1h">1 Hour</option>
+							<option value="12h">12 Hours</option>
+							<option value="1d">1 Day</option>
+							<option value="1w">1 Week</option>
+							<option value="1m">1 Month</option>
+							<option value="3m">3 Months</option>
+							<option value="6m">6 Months</option>
+							<option value="1y">1 Year</option>
+						</select>
+					</p>
 					<label class="label">IP</label>
 					<p class="control is-expanded">
 						<input
@@ -344,10 +346,6 @@ export default {
 
 	.button.is-primary {
 		width: 100%;
-	}
-
-	select {
-		margin-bottom: 10px;
 	}
 }
 </style>
