@@ -1523,6 +1523,11 @@ button.delete:focus {
 				border-radius: 0 @border-radius @border-radius 0;
 				padding-left: 10px;
 			}
+
+			&.dropdown-toggle {
+				padding-left: 5px;
+				padding-right: 5px;
+			}
 		}
 
 		.input {

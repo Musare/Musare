@@ -33,7 +33,7 @@
 								>
 								Filters
 							</button>
-							<button class="button">
+							<button class="button dropdown-toggle">
 								<i class="material-icons">
 									{{
 										showFiltersDropdown
@@ -324,7 +324,7 @@
 								>
 								Columns
 							</button>
-							<button class="button">
+							<button class="button dropdown-toggle">
 								<i class="material-icons">
 									{{
 										showColumnsDropdown
