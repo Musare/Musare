@@ -83,39 +83,39 @@
 									>
 										<i class="material-icons">stop</i>
 									</button>
-									<div
-										class="control has-addons"
-										content="Set Playback Rate"
-										v-tippy
+									<tippy
+										class="playerRateDropdown"
+										:touch="true"
+										:interactive="true"
+										placement="bottom"
+										theme="dropdown"
+										ref="dropdown"
+										trigger="click"
+										append-to="parent"
+										@show="
+											() => {
+												showRateDropdown = true;
+											}
+										"
+										@hide="
+											() => {
+												showRateDropdown = false;
+											}
+										"
 									>
-										<button class="button is-success">
-											<i class="material-icons"
-												>fast_forward</i
-											>
-										</button>
-										<tippy
-											class="playerRateDropdown"
-											:touch="true"
-											:interactive="true"
-											placement="bottom"
-											theme="dropdown"
-											ref="dropdown"
-											trigger="click"
-											append-to="parent"
-											@show="
-												() => {
-													showRateDropdown = true;
-												}
-											"
-											@hide="
-												() => {
-													showRateDropdown = false;
-												}
-											"
+										<div
+											ref="trigger"
+											class="control has-addons"
+											content="Set Playback Rate"
+											v-tippy
 										>
+											<button class="button is-primary">
+												<i class="material-icons"
+													>fast_forward</i
+												>
+											</button>
 											<button
-												ref="trigger"
-												class="button"
+												class="button dropdown-toggle"
 											>
 												<i class="material-icons">
 													{{
@@ -125,55 +125,51 @@
 													}}
 												</i>
 											</button>
+										</div>
 
-											<template #content>
-												<div class="nav-dropdown-items">
-													<button
-														class="nav-item button"
-														:class="{
-															active:
-																video.playbackRate ===
-																0.5
-														}"
-														title="0.5x"
-														@click="
-															setPlaybackRate(0.5)
-														"
-													>
-														<p>0.5x</p>
-													</button>
-													<button
-														class="nav-item button"
-														:class="{
-															active:
-																video.playbackRate ===
-																1
-														}"
-														title="1x"
-														@click="
-															setPlaybackRate(1)
-														"
-													>
-														<p>1x</p>
-													</button>
-													<button
-														class="nav-item button"
-														:class="{
-															active:
-																video.playbackRate ===
-																2
-														}"
-														title="2x"
-														@click="
-															setPlaybackRate(2)
-														"
-													>
-														<p>2x</p>
-													</button>
-												</div>
-											</template>
-										</tippy>
-									</div>
+										<template #content>
+											<div class="nav-dropdown-items">
+												<button
+													class="nav-item button"
+													:class="{
+														active:
+															video.playbackRate ===
+															0.5
+													}"
+													title="0.5x"
+													@click="
+														setPlaybackRate(0.5)
+													"
+												>
+													<p>0.5x</p>
+												</button>
+												<button
+													class="nav-item button"
+													:class="{
+														active:
+															video.playbackRate ===
+															1
+													}"
+													title="1x"
+													@click="setPlaybackRate(1)"
+												>
+													<p>1x</p>
+												</button>
+												<button
+													class="nav-item button"
+													:class="{
+														active:
+															video.playbackRate ===
+															2
+													}"
+													title="2x"
+													@click="setPlaybackRate(2)"
+												>
+													<p>2x</p>
+												</button>
+											</div>
+										</template>
+									</tippy>
 								</div>
 								<div class="player-footer-center">
 									<span>
@@ -1876,25 +1872,29 @@ export default {
 						margin-left: 5px;
 					}
 
-					:deep(& > .control.has-addons) {
+					:deep(& > .playerRateDropdown) {
 						margin-left: 5px;
 						margin-bottom: unset !important;
 
-						.playerRateDropdown > .button {
-							font-size: 24px;
+						.control.has-addons {
+							margin-bottom: unset !important;
+
+							& > .button {
+								font-size: 24px;
+							}
 						}
+					}
 
-						.tippy-box[data-theme~="dropdown"] {
-							max-width: 100px !important;
+					:deep(.tippy-box[data-theme~="dropdown"]) {
+						max-width: 100px !important;
 
-							.nav-dropdown-items .nav-item {
-								justify-content: center !important;
-								border-radius: @border-radius !important;
+						.nav-dropdown-items .nav-item {
+							justify-content: center !important;
+							border-radius: @border-radius !important;
 
-								&.active {
-									background-color: var(--primary-color);
-									color: var(--white);
-								}
+							&.active {
+								background-color: var(--primary-color);
+								color: var(--white);
 							}
 						}
 					}
