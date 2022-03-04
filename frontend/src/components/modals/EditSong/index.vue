@@ -51,28 +51,44 @@
 							/>
 							<div class="player-footer">
 								<div class="player-footer-left">
-									<div class="control has-addons">
-										<button
-											class="button is-primary"
-											@click="play()"
-											@keyup.enter="play()"
-											v-if="video.paused"
-											content="Unpause Playback"
-											v-tippy
-										>
+									<button
+										class="button is-primary"
+										@click="play()"
+										@keyup.enter="play()"
+										v-if="video.paused"
+										content="Resume Playback"
+										v-tippy
+									>
+										<i class="material-icons">play_arrow</i>
+									</button>
+									<button
+										class="button is-primary"
+										@click="settings('pause')"
+										@keyup.enter="settings('pause')"
+										v-else
+										content="Pause Playback"
+										v-tippy
+									>
+										<i class="material-icons">pause</i>
+									</button>
+									<button
+										class="button is-danger"
+										@click="settings('stop')"
+										@keyup.enter="settings('stop')"
+										content="Stop Playback"
+										v-tippy
+									>
+										<i class="material-icons">stop</i>
+									</button>
+									<div
+										class="control has-addons"
+										content="Set Playback Rate"
+										v-tippy
+									>
+										<button class="button is-success">
 											<i class="material-icons"
-												>play_arrow</i
+												>fast_forward</i
 											>
-										</button>
-										<button
-											class="button is-primary"
-											@click="settings('pause')"
-											@keyup.enter="settings('pause')"
-											v-else
-											content="Pause Playback"
-											v-tippy
-										>
-											<i class="material-icons">pause</i>
 										</button>
 										<tippy
 											class="playerRateDropdown"
@@ -97,8 +113,6 @@
 											<button
 												ref="trigger"
 												class="button"
-												content="Set Playback Rate"
-												v-tippy
 											>
 												<i class="material-icons">
 													{{
@@ -157,16 +171,6 @@
 											</template>
 										</tippy>
 									</div>
-
-									<button
-										class="button is-danger"
-										@click="settings('stop')"
-										@keyup.enter="settings('stop')"
-										content="Stop Playback"
-										v-tippy
-									>
-										<i class="material-icons">stop</i>
-									</button>
 								</div>
 								<div class="player-footer-center">
 									<span>
