@@ -296,7 +296,17 @@
 
 						<div class="control is-grouped">
 							<div class="album-art-container">
-								<label class="label">Album art</label>
+								<label class="label">
+									Album art
+									<i
+										v-if="true"
+										class="material-icons thumbnail-warning"
+										content="Thumbnail not square, it will be stretched"
+										v-tippy="{ theme: 'info' }"
+									>
+										warning
+									</i>
+								</label>
 
 								<p class="control has-addons">
 									<input
@@ -2200,6 +2210,12 @@ export default {
 
 		.list-item:last-child > p {
 			margin-bottom: 0;
+		}
+
+		.thumbnail-warning {
+			color: var(--red);
+			font-size: 18px;
+			margin: auto 0 auto 5px;
 		}
 	}
 }
