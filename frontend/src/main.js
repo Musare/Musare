@@ -78,6 +78,7 @@ const router = createRouter({
 	history: createWebHistory(),
 	routes: [
 		{
+			name: "home",
 			path: "/",
 			component: () => import("@/pages/Home.vue")
 		},
@@ -166,6 +167,11 @@ router.beforeEach((to, from, next) => {
 	if (window.stationInterval) {
 		clearInterval(window.stationInterval);
 		window.stationInterval = 0;
+	}
+
+	if (from.name === "home" && to.name === "station") {
+		if (store.state.modalVisibility.modals.manageStation)
+			store.dispatch("modalVisibility/closeModal", "manageStation");
 	}
 
 	if (ws.socket && to.fullPath !== from.fullPath) {
