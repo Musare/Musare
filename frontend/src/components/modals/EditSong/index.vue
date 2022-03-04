@@ -1948,7 +1948,7 @@ export default {
 							cursor: pointer;
 							box-shadow: 0;
 							background: var(--light-grey-3);
-							border-radius: 0;
+							border-radius: @border-radius;
 							border: 0;
 						}
 
@@ -1957,7 +1957,7 @@ export default {
 							border: 0;
 							height: 19px;
 							width: 19px;
-							border-radius: 15px;
+							border-radius: 100%;
 							background: var(--primary-color);
 							cursor: pointer;
 							-webkit-appearance: none;
