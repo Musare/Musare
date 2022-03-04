@@ -41,7 +41,7 @@
 					<i
 						class="material-icons icon-not-selected"
 						v-else
-						@click.prevent="updateYoutubeId(result.id)"
+						@click.prevent="selectSong(result)"
 						key="not-selected"
 						>radio_button_unchecked
 					</i>
@@ -73,14 +73,27 @@ export default {
 	},
 	computed: {
 		...mapState("modals/editSong", {
-			song: state => state.song
+			song: state => state.song,
+			newSong: state => state.newSong
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
 	},
 	methods: {
-		...mapActions("modals/editSong", ["updateYoutubeId"])
+		selectSong(result) {
+			this.updateYoutubeId(result.id);
+
+			if (this.newSong) {
+				this.updateTitle(result.title);
+				this.updateThumbnail(result.thumbnail);
+			}
+		},
+		...mapActions("modals/editSong", [
+			"updateYoutubeId",
+			"updateTitle",
+			"updateThumbnail"
+		])
 	}
 };
 </script>

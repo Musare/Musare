@@ -35,7 +35,10 @@
 				>
 					<h4>Song was not found</h4>
 				</div>
-				<div class="left-section" v-show="songDataLoaded && !songDeleted">
+				<div
+					class="left-section"
+					v-show="songDataLoaded && !songDeleted"
+				>
 					<div class="top-section">
 						<div class="player-section">
 							<div id="editSongPlayer" />
@@ -222,7 +225,10 @@
 						/>
 					</div>
 
-					<div class="edit-section" v-if="songDataLoaded && !songDeleted">
+					<div
+						class="edit-section"
+						v-if="songDataLoaded && !songDeleted"
+					>
 						<div class="control is-grouped">
 							<div class="title-container">
 								<label class="label">Title</label>
@@ -486,7 +492,10 @@
 						</div>
 					</div>
 				</div>
-				<div class="right-section" v-if="songDataLoaded && !songDeleted">
+				<div
+					class="right-section"
+					v-if="songDataLoaded && !songDeleted"
+				>
 					<div id="tabs-container">
 						<div id="tab-selection">
 							<button
