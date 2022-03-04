@@ -18,6 +18,9 @@
 				<div v-if="!songId && !newSong" class="notice-container">
 					<h4>No song has been selected</h4>
 				</div>
+				<div v-if="songDeleted" class="notice-container">
+					<h4>The song you were editing has been deleted</h4>
+				</div>
 				<div
 					v-if="
 						songId && !songDataLoaded && !songNotFound && !newSong
@@ -32,7 +35,7 @@
 				>
 					<h4>Song was not found</h4>
 				</div>
-				<div class="left-section" v-show="songDataLoaded">
+				<div class="left-section" v-show="songDataLoaded && !songDeleted">
 					<div class="top-section">
 						<div class="player-section">
 							<div id="editSongPlayer" />
@@ -219,11 +222,11 @@
 							:src="song.thumbnail"
 							onerror="this.src='/assets/notes-transparent.png'"
 							ref="thumbnailElement"
-							v-if="songDataLoaded"
+							v-if="songDataLoaded && !songDeleted"
 						/>
 					</div>
 
-					<div class="edit-section" v-if="songDataLoaded">
+					<div class="edit-section" v-if="songDataLoaded && !songDeleted">
 						<div class="control is-grouped">
 							<div class="title-container">
 								<label class="label">Title</label>
@@ -487,7 +490,7 @@
 						</div>
 					</div>
 				</div>
-				<div class="right-section" v-if="songDataLoaded">
+				<div class="right-section" v-if="songDataLoaded && !songDeleted">
 					<div id="tabs-container">
 						<div id="tab-selection">
 							<button
@@ -550,12 +553,12 @@
 					<button
 						class="button is-primary"
 						@click="toggleFlag()"
-						v-if="songId"
+						v-if="songId && !songDeleted"
 					>
 						{{ flagged ? "Unflag" : "Flag" }}
 					</button>
 				</div>
-				<div v-if="!newSong">
+				<div v-if="!newSong && !songDeleted">
 					<save-button
 						ref="saveButton"
 						@clicked="save(song, false, 'saveButton')"
@@ -586,7 +589,7 @@
 						</button>
 					</div>
 				</div>
-				<div v-else>
+				<div v-else-if="newSong">
 					<save-button
 						ref="createButton"
 						default-message="Create Song"
@@ -661,6 +664,7 @@ export default {
 	data() {
 		return {
 			songDataLoaded: false,
+			songDeleted: false,
 			youtubeError: false,
 			youtubeErrorMessage: "",
 			focusedElementBefore: null,
@@ -779,13 +783,10 @@ export default {
 				"event:admin.song.removed",
 				res => {
 					if (res.data.songId === this.song._id) {
-						this.closeModal("editSong");
-						setTimeout(() => {
-							window.focusedElementBefore.focus();
-						}, 500);
+						this.songDeleted = true;
 					}
 				},
-				{ modal: "editSong" }
+				{ modal: this.bulk ? "editSongs" : "editSong" }
 			);
 		}
 
@@ -1174,6 +1175,7 @@ export default {
 		},
 		unloadSong(songId) {
 			this.songDataLoaded = false;
+			this.songDeleted = false;
 			this.stopVideo();
 			this.pauseVideo(true);
 			this.resetSong(songId);
