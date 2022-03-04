@@ -136,8 +136,9 @@ export default {
 				state.video.playbackRate = rate;
 				state.video.player.setPlaybackRate(rate);
 			} else if (
+				state.video.player.getPlaybackRate() !== undefined &&
 				state.video.playbackRate !==
-				state.video.player.getPlaybackRate()
+					state.video.player.getPlaybackRate()
 			) {
 				state.video.player.setPlaybackRate(state.video.playbackRate);
 				state.video.playbackRate = state.video.player.getPlaybackRate();
