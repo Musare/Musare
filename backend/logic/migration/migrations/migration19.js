@@ -19,7 +19,7 @@ export default async function migrate(MigrationModule) {
 					newsModel.updateMany(
 						{ documentVersion: 2 },
 						{
-							$set: { documentVersion: 3, showToNewUsers: false },
+							$set: { documentVersion: 3, showToNewUsers: false }
 						},
 						(err, res) => {
 							if (err) next(err);

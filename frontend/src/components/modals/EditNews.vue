@@ -126,8 +126,13 @@ export default {
 			if (this.newsId) {
 				this.socket.dispatch(`news.getNewsFromId`, this.newsId, res => {
 					if (res.status === "success") {
-						const { markdown, status, showToNewUsers, createdBy, createdAt } =
-							res.data.news;
+						const {
+							markdown,
+							status,
+							showToNewUsers,
+							createdBy,
+							createdAt
+						} = res.data.news;
 						this.markdown = markdown;
 						this.status = status;
 						this.showToNewUsers = showToNewUsers;

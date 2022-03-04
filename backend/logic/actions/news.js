@@ -253,13 +253,13 @@ export default {
 	 * Gets the latest news item
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {boolean} newUser - whether the user requesting the newest news is a new user
 	 * @param {Function} cb - gets called with the result
 	 */
 	async newest(session, newUser, cb) {
 		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" }, this);
 		const query = { status: "published" };
-		if (newUser)
-			query.showToNewUsers = true;
+		if (newUser) query.showToNewUsers = true;
 		async.waterfall(
 			[next => newsModel.findOne(query).sort({ createdAt: "desc" }).exec(next)],
 			async (err, news) => {
