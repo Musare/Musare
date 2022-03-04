@@ -46,6 +46,9 @@ export default {
 			commit("updateYoutubeId", youtubeId);
 			commit("loadVideoById", youtubeId, 0);
 		},
+		updateTitle: ({ commit }, title) => commit("updateTitle", title),
+		updateThumbnail: ({ commit }, thumbnail) =>
+			commit("updateThumbnail", thumbnail),
 		setPlaybackRate: ({ commit }, rate) => commit("setPlaybackRate", rate)
 	},
 	mutations: {
@@ -121,6 +124,12 @@ export default {
 		},
 		updateYoutubeId(state, youtubeId) {
 			state.song.youtubeId = youtubeId;
+		},
+		updateTitle(state, title) {
+			state.song.title = title;
+		},
+		updateThumbnail(state, thumbnail) {
+			state.song.thumbnail = thumbnail;
 		},
 		setPlaybackRate(state, rate) {
 			if (rate) {
