@@ -80,7 +80,7 @@ CacheModule.runJob("SUB", {
 			WSModule.runJob("EMIT_TO_ROOMS", {
 				rooms: ["admin.reports", `view-report.${reportId}`],
 				args: ["event:admin.report.updated", { data: { report } }]
-			})
+			});
 		});
 	}
 });
