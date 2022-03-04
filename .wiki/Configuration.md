@@ -110,8 +110,10 @@ The container port refers to the external docker container port, used to access 
 | `MONGO_ROOT_PASSWORD` | Password of the root/admin user for MongoDB. |
 | `MONGO_USER_USERNAME` | Application username for MongoDB. |
 | `MONGO_USER_PASSWORD` | Application password for MongoDB. |
+| `MONGO_DATA_LOCATION` | The location where MongoDB stores its data. Usually the `.db` folder inside the `Musare` folder. |
 | `REDIS_HOST` | Redis container host. |
 | `REDIS_PORT` | Redis container port. |
 | `REDIS_PASSWORD` | Redis password. |
+| `REDIS_DATA_LOCATION` | The location where Redis stores its data. Usually the `.redis` folder inside the `Musare` folder. |
 | `BACKUP_LOCATION` | Directory to store musare.sh backups. Defaults to `/backups` in script location. |
 | `BACKUP_NAME` | Name of musare.sh backup files. Defaults to `musare-$(date +"%Y-%m-%d-%s").dump`. |

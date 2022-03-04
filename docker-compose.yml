@@ -45,7 +45,7 @@ services:
       - MONGO_USER_PASSWORD=${MONGO_USER_PASSWORD}
     volumes:
       - ./tools/docker/setup-mongo.sh:/docker-entrypoint-initdb.d/setup-mongo.sh
-      - ./.db:/data/db
+      - ${MONGO_DATA_LOCATION}:/data/db
 
   redis:
     image: redis:6.2
@@ -54,4 +54,4 @@ services:
       - "${REDIS_HOST}:${REDIS_PORT}:6379"
     command: "--notify-keyspace-events Ex --requirepass ${REDIS_PASSWORD} --appendonly yes"
     volumes:
-      - .redis:/data
+      - ${REDIS_DATA_LOCATION}:/data
