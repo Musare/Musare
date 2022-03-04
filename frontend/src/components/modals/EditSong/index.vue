@@ -991,6 +991,7 @@ export default {
 					verified: false
 				});
 				this.songDataLoaded = true;
+				this.showTab("youtube");
 			} else if (this.songId) this.loadSong(this.songId);
 			else if (!this.bulk) {
 				new Toast("You can't open EditSong without editing a song");
@@ -1752,9 +1753,10 @@ export default {
 		...mapActions("modals/importAlbum", ["selectDiscogsAlbum"]),
 		...mapActions({
 			showTab(dispatch, payload) {
-				this.$refs[`${payload}-tab`].scrollIntoView({
-					block: "nearest"
-				});
+				if (this.$refs[`${payload}-tab`])
+					this.$refs[`${payload}-tab`].scrollIntoView({
+						block: "nearest"
+					});
 				return dispatch("modals/editSong/showTab", payload);
 			}
 		}),
