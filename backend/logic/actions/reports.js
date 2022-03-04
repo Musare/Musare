@@ -67,6 +67,24 @@ CacheModule.runJob("SUB", {
 		})
 });
 
+CacheModule.runJob("SUB", {
+	channel: "report.update",
+	cb: async data => {
+		const { reportId } = data;
+
+		const reportModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "report"
+		});
+
+		reportModel.findOne({ _id: reportId }, (err, report) => {
+			WSModule.runJob("EMIT_TO_ROOMS", {
+				rooms: ["admin.reports", `view-report.${reportId}`],
+				args: ["event:admin.report.updated", { data: { report } }]
+			})
+		});
+	}
+});
+
 export default {
 	/**
 	 * Gets reports, used in the admin reports page by the AdvancedTable component
@@ -399,6 +417,11 @@ export default {
 					value: { reportId, songId, resolved }
 				});
 
+				CacheModule.runJob("PUB", {
+					channel: "report.update",
+					value: { reportId }
+				});
+
 				this.log(
 					"SUCCESS",
 					"REPORTS_RESOLVE",
@@ -456,6 +479,11 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "report.issue.toggle",
 					value: { reportId, issueId, songId, resolved }
+				});
+
+				CacheModule.runJob("PUB", {
+					channel: "report.update",
+					value: { reportId }
 				});
 
 				this.log(

@@ -237,6 +237,11 @@ export default {
 			],
 			events: {
 				adminRoom: "reports",
+				updated: {
+					event: "admin.report.updated",
+					id: "report._id",
+					item: "report"
+				},
 				removed: {
 					event: "admin.report.removed",
 					id: "reportId"
