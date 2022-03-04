@@ -75,8 +75,10 @@ export default {
 				state.originalSong = {};
 		},
 		stopVideo(state) {
-			if (state.video.player && state.video.player.stopVideo)
-				state.video.player.stopVideo();
+			if (state.video.player && state.video.player.pauseVideo) {
+				state.video.player.pauseVideo();
+				state.video.player.seekTo(0);
+			}
 		},
 		loadVideoById(state, id, skipDuration) {
 			state.song.duration = -1;
