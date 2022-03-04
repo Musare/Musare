@@ -1503,7 +1503,6 @@ export default {
 					this.pauseVideo(false);
 					break;
 				case "skipToLast10Secs":
-					this.skipToLast10SecsPressed = true;
 					this.seekTo(
 						this.song.duration - 10 + this.song.skipDuration
 					);
