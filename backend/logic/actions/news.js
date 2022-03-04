@@ -255,10 +255,13 @@ export default {
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
-	async newest(session, cb) {
+	async newest(session, newUser, cb) {
 		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" }, this);
+		const query = { status: "published" };
+		if (newUser)
+			query.showToNewUsers = true;
 		async.waterfall(
-			[next => newsModel.findOne({ status: "published" }).sort({ createdAt: "desc" }).exec(next)],
+			[next => newsModel.findOne(query).sort({ createdAt: "desc" }).exec(next)],
 			async (err, news) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);

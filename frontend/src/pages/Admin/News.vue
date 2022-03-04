@@ -45,6 +45,11 @@
 						slotProps.item.status
 					}}</span>
 				</template>
+				<template #column-showToNewUsers="slotProps">
+					<span :title="slotProps.item.showToNewUsers">{{
+						slotProps.item.showToNewUsers
+					}}</span>
+				</template>
 				<template #column-title="slotProps">
 					<span :title="slotProps.item.title">{{
 						slotProps.item.title
@@ -122,6 +127,13 @@ export default {
 					defaultWidth: 150
 				},
 				{
+					name: "showToNewUsers",
+					displayName: "Show to new users",
+					properties: ["showToNewUsers"],
+					sortProperty: "showToNewUsers",
+					defaultWidth: 180
+				},
+				{
 					name: "title",
 					displayName: "Title",
 					properties: ["title"],
@@ -148,6 +160,13 @@ export default {
 					property: "status",
 					filterTypes: ["contains", "exact", "regex"],
 					defaultFilterType: "contains"
+				},
+				{
+					name: "showToNewUsers",
+					displayName: "Show to new users",
+					property: "showToNewUsers",
+					filterTypes: ["boolean"],
+					defaultFilterType: "boolean"
 				},
 				{
 					name: "title",

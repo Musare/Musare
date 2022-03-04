@@ -66,31 +66,38 @@ export default {
 	},
 	methods: {
 		init() {
-			this.socket.dispatch("news.newest", res => {
+			const newUser = !localStorage.hasOwnProperty("firstVisited");
+			this.socket.dispatch("news.newest", newUser, res => {
 				if (res.status !== "success") return;
 
 				const { news } = res.data;
 
 				this.news = news;
-				if (this.news && localStorage.getItem("firstVisited")) {
-					if (localStorage.getItem("whatIsNew")) {
-						if (
-							parseInt(localStorage.getItem("whatIsNew")) <
-							news.createdAt
-						) {
-							this.openModal("whatIsNew");
+				if (this.news) {
+					if (newUser) {
+						this.openModal("whatIsNew");
+					} else if (localStorage.getItem("firstVisited")) {
+						if (localStorage.getItem("whatIsNew")) {
+							if (
+								parseInt(localStorage.getItem("whatIsNew")) <
+								news.createdAt
+							) {
+								this.openModal("whatIsNew");
+								localStorage.setItem("whatIsNew", news.createdAt);
+							}
+						} else {
+							if (
+								parseInt(localStorage.getItem("firstVisited")) <
+								news.createdAt
+							)
+								this.openModal("whatIsNew");
 							localStorage.setItem("whatIsNew", news.createdAt);
 						}
-					} else {
-						if (
-							parseInt(localStorage.getItem("firstVisited")) <
-							news.createdAt
-						)
-							this.openModal("whatIsNew");
-						localStorage.setItem("whatIsNew", news.createdAt);
 					}
-				} else if (!localStorage.getItem("firstVisited"))
-					localStorage.setItem("firstVisited", Date.now());
+				}
+
+				if (!localStorage.getItem("firstVisited"))
+						localStorage.setItem("firstVisited", Date.now());
 			});
 		},
 		marked,

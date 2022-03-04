@@ -28,6 +28,21 @@
 					</select>
 				</p>
 
+				<p class="is-expanded checkbox-control">
+					<label class="switch">
+						<input
+							type="checkbox"
+							id="show-to-new-users"
+							v-model="showToNewUsers"
+						/>
+						<span class="slider round"></span>
+					</label>
+
+					<label for="show-to-new-users">
+						<p>Show to new users</p>
+					</label>
+				</p>
+
 				<save-button
 					ref="saveButton"
 					v-if="newsId"
@@ -83,6 +98,7 @@ export default {
 			markdown:
 				"# Header\n## Sub-Header\n- **So**\n- _Many_\n- ~Points~\n\nOther things you want to say and [link](https://example.com).\n\n### Sub-Sub-Header\n> Oh look, a quote!\n\n`lil code`\n\n```\nbig code\n```\n",
 			status: "published",
+			showToNewUsers: false,
 			createdBy: null,
 			createdAt: 0
 		};
@@ -110,10 +126,11 @@ export default {
 			if (this.newsId) {
 				this.socket.dispatch(`news.getNewsFromId`, this.newsId, res => {
 					if (res.status === "success") {
-						const { markdown, status, createdBy, createdAt } =
+						const { markdown, status, showToNewUsers, createdBy, createdAt } =
 							res.data.news;
 						this.markdown = markdown;
 						this.status = status;
+						this.showToNewUsers = showToNewUsers;
 						this.createdBy = createdBy;
 						this.createdAt = createdAt;
 					} else {
@@ -165,7 +182,8 @@ export default {
 				{
 					title,
 					markdown: this.markdown,
-					status: this.status
+					status: this.status,
+					showToNewUsers: this.showToNewUsers
 				},
 				res => {
 					new Toast(res.message);
@@ -190,7 +208,8 @@ export default {
 				{
 					title,
 					markdown: this.markdown,
-					status: this.status
+					status: this.status,
+					showToNewUsers: this.showToNewUsers
 				},
 				res => {
 					new Toast(res.message);
