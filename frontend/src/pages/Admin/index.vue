@@ -561,7 +561,7 @@ export default {
 						color: var(--primary-color);
 						background-color: var(--white);
 						border-bottom: 1px solid var(--light-grey-2);
-						transition: all 0.2s ease-in-out;
+						transition: filter 0.2s ease-in-out;
 
 						& > .material-icons {
 							line-height: 40px;
