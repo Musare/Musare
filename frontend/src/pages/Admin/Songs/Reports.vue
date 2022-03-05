@@ -22,6 +22,26 @@
 						>
 							open_in_full
 						</button>
+						<button
+							v-if="slotProps.item.resolved"
+							class="button is-danger material-icons icon-with-button"
+							@click="resolve(slotProps.item._id, false)"
+							:disabled="slotProps.item.removed"
+							content="Unresolve Report"
+							v-tippy
+						>
+							remove_done
+						</button>
+						<button
+							v-else
+							class="button is-success material-icons icon-with-button"
+							@click="resolve(slotProps.item._id, true)"
+							:disabled="slotProps.item.removed"
+							content="Resolve Report"
+							v-tippy
+						>
+							done_all
+						</button>
 					</div>
 				</template>
 				<template #column-_id="slotProps">
@@ -126,12 +146,12 @@ export default {
 				{
 					name: "options",
 					displayName: "Options",
-					properties: ["_id"],
+					properties: ["_id", "resolved"],
 					sortable: false,
 					hidable: false,
 					resizable: false,
-					minWidth: 76,
-					defaultWidth: 76
+					minWidth: 85,
+					defaultWidth: 85
 				},
 				{
 					name: "_id",
@@ -259,11 +279,10 @@ export default {
 			this.viewReport(reportId);
 			this.openModal("viewReport");
 		},
-		resolve(reportId) {
-			return this.resolveReport(reportId)
+		resolve(reportId, value) {
+			return this.resolveReport({ reportId, value })
 				.then(res => {
-					if (res.status === "success" && this.modals.viewReport)
-						this.closeModal("viewReport");
+					if (res.status !== "success") new Toast(res.message);
 				})
 				.catch(err => new Toast(err.message));
 		},
