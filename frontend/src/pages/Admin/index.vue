@@ -35,42 +35,7 @@
 								<i class="material-icons">menu_open</i>
 								<span>Minimise</span>
 							</div>
-							<div
-								v-if="sidebarActive"
-								class="sidebar-item with-children"
-								:class="{ 'is-active': childrenActive.songs }"
-							>
-								<span
-									@click="toggleChildren({ child: 'songs' })"
-								>
-									<i class="material-icons">music_note</i>
-									<span>Songs</span>
-									<i
-										class="material-icons toggle-sidebar-children"
-										>{{
-											childrenActive.songs
-												? "expand_less"
-												: "expand_more"
-										}}</i
-									>
-								</span>
-								<div class="sidebar-item-children">
-									<router-link
-										class="sidebar-item-child"
-										to="/admin/songs"
-									>
-										Songs
-									</router-link>
-									<router-link
-										class="sidebar-item-child"
-										to="/admin/songs/reports"
-									>
-										Reports
-									</router-link>
-								</div>
-							</div>
 							<router-link
-								v-else
 								class="sidebar-item songs"
 								to="/admin/songs"
 								content="Songs"
@@ -81,6 +46,18 @@
 							>
 								<i class="material-icons">music_note</i>
 								<span>Songs</span>
+							</router-link>
+							<router-link
+								class="sidebar-item reports"
+								to="/admin/reports"
+								content="Reports"
+								v-tippy="{
+									theme: 'info',
+									onShow: () => !sidebarActive
+								}"
+							>
+								<i class="material-icons">flag</i>
+								<span>Reports</span>
 							</router-link>
 							<router-link
 								class="sidebar-item stations"
@@ -111,19 +88,23 @@
 								class="sidebar-item with-children"
 								:class="{ 'is-active': childrenActive.users }"
 							>
-								<span
-									@click="toggleChildren({ child: 'users' })"
-								>
-									<i class="material-icons">people</i>
-									<span>Users</span>
+								<span>
+									<router-link to="/admin/users">
+										<i class="material-icons">people</i>
+										<span>Users</span>
+									</router-link>
 									<i
 										class="material-icons toggle-sidebar-children"
-										>{{
+										@click="
+											toggleChildren({ child: 'users' })
+										"
+									>
+										{{
 											childrenActive.users
 												? "expand_less"
 												: "expand_more"
-										}}</i
-									>
+										}}
+									</i>
 								</span>
 								<div class="sidebar-item-children">
 									<router-link
@@ -137,12 +118,6 @@
 										to="/admin/users/data-requests"
 									>
 										Data Requests
-									</router-link>
-									<router-link
-										class="sidebar-item-child"
-										to="/admin/users/punishments"
-									>
-										Punishments
 									</router-link>
 								</div>
 							</div>
@@ -158,6 +133,18 @@
 							>
 								<i class="material-icons">people</i>
 								<span>Users</span>
+							</router-link>
+							<router-link
+								class="sidebar-item punishments"
+								to="/admin/punishments"
+								content="Punishments"
+								v-tippy="{
+									theme: 'info',
+									onShow: () => !sidebarActive
+								}"
+							>
+								<i class="material-icons">gavel</i>
+								<span>Punishments</span>
 							</router-link>
 							<router-link
 								class="sidebar-item news"
@@ -413,9 +400,10 @@ export default {
 			.sidebar-item {
 				background-color: var(--dark-grey-2);
 				border-color: var(--dark-grey-3);
-				color: var(--white);
 
-				&.with-children .sidebar-item-child {
+				&,
+				&.with-children .sidebar-item-child,
+				&.with-children > span > a {
 					color: var(--white);
 				}
 			}
@@ -535,14 +523,19 @@ export default {
 								line-height: 40px;
 								cursor: pointer;
 
-								& > .material-icons {
+								& > a {
+									display: flex;
+								}
+
+								& > .material-icons,
+								& > a > .material-icons {
 									line-height: 40px;
 									margin-right: 5px;
 								}
 							}
 
 							.toggle-sidebar-children {
-								margin-left: 5px;
+								margin-left: auto;
 							}
 
 							.sidebar-item-children {
@@ -582,6 +575,10 @@ export default {
 										top: 15px;
 										left: -20px;
 										background-color: var(--light-grey-3);
+									}
+
+									&.router-link-active {
+										filter: brightness(95%);
 									}
 								}
 							}

@@ -69,7 +69,6 @@ export default {
 	namespaced: true,
 	state: {
 		childrenActive: {
-			songs: false,
 			users: false
 		}
 	},

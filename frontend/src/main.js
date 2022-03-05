@@ -147,12 +147,11 @@ const router = createRouter({
 			children: [
 				{
 					path: "songs",
-					alias: "",
-					component: () => import("@/pages/Admin/Songs/index.vue")
+					component: () => import("@/pages/Admin/Songs.vue")
 				},
 				{
-					path: "songs/reports",
-					component: () => import("@/pages/Admin/Songs/Reports.vue")
+					path: "reports",
+					component: () => import("@/pages/Admin/Reports.vue")
 				},
 				{
 					path: "stations",
@@ -172,9 +171,8 @@ const router = createRouter({
 						import("@/pages/Admin/Users/DataRequests.vue")
 				},
 				{
-					path: "users/punishments",
-					component: () =>
-						import("@/pages/Admin/Users/Punishments.vue")
+					path: "punishments",
+					component: () => import("@/pages/Admin/Punishments.vue")
 				},
 				{
 					path: "news",
