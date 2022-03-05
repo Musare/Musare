@@ -79,7 +79,7 @@
 				</header>
 				<div class="card-content">
 					<label class="label">Expires In</label>
-					<p class="control select">
+					<p class="control is-expanded select">
 						<select v-model="ipBan.expiresAt">
 							<option value="1h">1 Hour</option>
 							<option value="12h">12 Hours</option>

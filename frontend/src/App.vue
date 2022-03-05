@@ -1217,6 +1217,16 @@ img {
 .select {
 	position: relative;
 
+	&.is-expanded {
+		width: 100%;
+	}
+
+	&.disabled,
+	.disabled {
+		filter: grayscale(1);
+		cursor: not-allowed;
+	}
+
 	&:after {
 		content: " ";
 		border: 1.5px solid var(--primary-color);
@@ -1234,6 +1244,7 @@ img {
 
 	select {
 		height: 36px;
+		width: 100%;
 		background-color: var(--white);
 		border: 1px solid var(--light-grey-2);
 		color: var(--dark-grey-2);
