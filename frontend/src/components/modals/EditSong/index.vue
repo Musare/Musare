@@ -1532,7 +1532,7 @@ export default {
 			this.settings("play");
 		},
 		seekTo(position) {
-			if (!this.video.paused) this.settings("play");
+			this.settings("play");
 			this.video.player.seekTo(position);
 		},
 		changeVolume() {
