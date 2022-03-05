@@ -1,30 +1,13 @@
 <template>
 	<div class="app">
 		<div class="admin-area">
-			<main-header
-				:hide-logo="true"
-				:class="{ 'admin-sidebar-active': sidebarActive }"
-			/>
+			<main-header :class="{ 'admin-sidebar-active': sidebarActive }" />
 			<div class="admin-content">
 				<div
 					class="admin-sidebar"
 					:class="{ minimised: !sidebarActive }"
 				>
 					<div class="inner">
-						<div class="top">
-							<router-link class="sidebar-logo" to="/">
-								<img
-									class="full-logo"
-									:src="siteSettings.logo_white"
-									:alt="siteSettings.sitename || `Musare`"
-								/>
-								<img
-									class="minimised-logo"
-									:src="siteSettings.logo_small"
-									:alt="siteSettings.sitename[0] || `M`"
-								/>
-							</router-link>
-						</div>
 						<div class="bottom">
 							<div
 								class="sidebar-item toggle-sidebar"
@@ -445,42 +428,12 @@ export default {
 				overflow-y: auto;
 				width: 100%;
 				max-width: 200px;
-				position: fixed;
+				position: sticky;
 				top: 0;
 				bottom: 0;
 				left: 0;
 				z-index: 5;
 				box-shadow: @box-shadow;
-
-				.top {
-					display: flex;
-					background-color: var(--primary-color);
-					height: 64px;
-					min-height: 64px;
-
-					.sidebar-logo {
-						font-size: 2.1rem !important;
-						line-height: 38px !important;
-						font-family: Pacifico, cursive;
-						display: flex;
-						align-items: center;
-
-						img {
-							max-height: 38px;
-							color: var(--primary-color);
-							user-select: none;
-							-webkit-user-drag: none;
-						}
-
-						.full-logo {
-							padding: 0 20px;
-						}
-
-						.minimised-logo {
-							display: none;
-						}
-					}
-				}
 
 				.bottom {
 					display: flex;
