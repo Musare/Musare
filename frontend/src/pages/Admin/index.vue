@@ -188,17 +188,7 @@
 				</div>
 				<div class="admin-container">
 					<div class="admin-tab-container">
-						<songs v-if="currentTab == 'songs'" />
-						<reports v-if="currentTab == 'songs/reports'" />
-						<stations v-if="currentTab == 'stations'" />
-						<playlists v-if="currentTab == 'playlists'" />
-						<news v-if="currentTab == 'news'" />
-						<users v-if="currentTab == 'users'" />
-						<punishments v-if="currentTab == 'users/punishments'" />
-						<data-requests
-							v-if="currentTab == 'users/data-requests'"
-						/>
-						<statistics v-if="currentTab == 'statistics'" />
+						<router-view></router-view>
 					</div>
 
 					<main-footer />
@@ -280,7 +270,6 @@
 
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
-import { defineAsyncComponent } from "vue";
 
 import keyboardShortcuts from "@/keyboardShortcuts";
 
@@ -292,20 +281,7 @@ export default {
 	components: {
 		MainHeader,
 		MainFooter,
-		FloatingBox,
-		Songs: defineAsyncComponent(() => import("./Songs/index.vue")),
-		Reports: defineAsyncComponent(() => import("./Songs/Reports.vue")),
-		Stations: defineAsyncComponent(() => import("./Stations.vue")),
-		Playlists: defineAsyncComponent(() => import("./Playlists.vue")),
-		News: defineAsyncComponent(() => import("./News.vue")),
-		Users: defineAsyncComponent(() => import("./Users/index.vue")),
-		DataRequests: defineAsyncComponent(() =>
-			import("./Users/DataRequests.vue")
-		),
-		Punishments: defineAsyncComponent(() =>
-			import("./Users/Punishments.vue")
-		),
-		Statistics: defineAsyncComponent(() => import("./Statistics.vue"))
+		FloatingBox
 	},
 	data() {
 		return {
@@ -325,11 +301,19 @@ export default {
 	},
 	watch: {
 		$route(route) {
-			this.changeTab(route.path);
+			if (this.getTabFromPath(route.path)) this.onRouteChange();
 		}
 	},
 	async mounted() {
-		this.changeTab(this.$route.path);
+		if (this.getTabFromPath()) {
+			this.onRouteChange();
+		} else if (localStorage.getItem("lastAdminPage")) {
+			this.$router.push(
+				`/admin/${localStorage.getItem("lastAdminPage")}`
+			);
+		} else {
+			this.$router.push(`/admin/songs`);
+		}
 
 		this.siteSettings = await lofig.get("siteSettings");
 
@@ -377,64 +361,22 @@ export default {
 		});
 	},
 	methods: {
-		changeTab(path) {
-			switch (path) {
-				case "/admin/songs/reports":
-					this.showTab("songs/reports");
-					break;
-				case "/admin/songs":
-					this.showTab("songs");
-					break;
-				case "/admin/stations":
-					this.showTab("stations");
-					break;
-				case "/admin/playlists":
-					this.showTab("playlists");
-					break;
-				case "/admin/news":
-					this.showTab("news");
-					break;
-				case "/admin/users/data-requests":
-					this.showTab("users/data-requests");
-					break;
-				case "/admin/users/punishments":
-					this.showTab("users/punishments");
-					break;
-				case "/admin/users":
-					this.showTab("users");
-					break;
-				case "/admin/statistics":
-					this.showTab("statistics");
-					break;
-				default:
-					if (path.startsWith("/admin")) {
-						if (localStorage.getItem("lastAdminPage")) {
-							this.$router.push(
-								`/admin/${localStorage.getItem(
-									"lastAdminPage"
-								)}`
-							);
-						} else {
-							this.$router.push(`/admin/songs`);
-						}
-					}
-			}
-		},
-		showTab(tab) {
-			if (this.currentTab.startsWith("songs"))
+		onRouteChange() {
+			if (this.currentTab.startsWith("songs")) {
 				this.toggleChildren({ child: "songs", force: false });
-			else if (this.currentTab.startsWith("users"))
+			} else if (this.currentTab.startsWith("users")) {
 				this.toggleChildren({ child: "users", force: false });
-			if (this.$refs[`${tab}-tab`])
-				this.$refs[`${tab}-tab`].scrollIntoView({
+			}
+			this.currentTab = this.getTabFromPath();
+			if (this.$refs[`${this.currentTab}-tab`])
+				this.$refs[`${this.currentTab}-tab`].scrollIntoView({
 					inline: "center",
 					block: "nearest"
 				});
-			this.currentTab = tab;
-			localStorage.setItem("lastAdminPage", tab);
-			if (tab.startsWith("songs"))
+			localStorage.setItem("lastAdminPage", this.currentTab);
+			if (this.currentTab.startsWith("songs"))
 				this.toggleChildren({ child: "songs", force: true });
-			else if (tab.startsWith("users"))
+			else if (this.currentTab.startsWith("users"))
 				this.toggleChildren({ child: "users", force: true });
 		},
 		toggleKeyboardShortcutsHelper() {
@@ -446,6 +388,12 @@ export default {
 		toggleSidebar() {
 			this.sidebarActive = !this.sidebarActive;
 			localStorage.setItem("admin-sidebar-active", this.sidebarActive);
+		},
+		getTabFromPath(path) {
+			const localPath = path || this.$route.path;
+			return localPath.substr(0, 7) === "/admin/"
+				? localPath.substr(7, localPath.length)
+				: null;
 		},
 		...mapActions("admin", ["toggleChildren"])
 	}

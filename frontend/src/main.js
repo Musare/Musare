@@ -144,13 +144,47 @@ const router = createRouter({
 		{
 			path: "/admin",
 			component: () => import("@/pages/Admin/index.vue"),
-			meta: {
-				adminRequired: true
-			}
-		},
-		{
-			path: "/admin/:page(.*)",
-			component: () => import("@/pages//Admin/index.vue"),
+			children: [
+				{
+					path: "songs",
+					alias: "",
+					component: () => import("@/pages/Admin/Songs/index.vue")
+				},
+				{
+					path: "songs/reports",
+					component: () => import("@/pages/Admin/Songs/Reports.vue")
+				},
+				{
+					path: "stations",
+					component: () => import("@/pages/Admin/Stations.vue")
+				},
+				{
+					path: "playlists",
+					component: () => import("@/pages/Admin/Playlists.vue")
+				},
+				{
+					path: "users",
+					component: () => import("@/pages/Admin/Users/index.vue")
+				},
+				{
+					path: "users/data-requests",
+					component: () =>
+						import("@/pages/Admin/Users/DataRequests.vue")
+				},
+				{
+					path: "users/punishments",
+					component: () =>
+						import("@/pages/Admin/Users/Punishments.vue")
+				},
+				{
+					path: "news",
+					component: () => import("@/pages/Admin/News.vue")
+				},
+				{
+					path: "statistics",
+					component: () => import("@/pages/Admin/Statistics.vue")
+				}
+			],
 			meta: {
 				adminRequired: true
 			}
