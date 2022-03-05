@@ -221,6 +221,7 @@
 							:src="song.thumbnail"
 							onerror="this.src='/assets/notes-transparent.png'"
 							ref="thumbnailElement"
+							@load="onThumbnailLoad"
 							v-if="songDataLoaded && !songDeleted"
 						/>
 					</div>
@@ -299,7 +300,10 @@
 								<label class="label">
 									Album art
 									<i
-										v-if="true"
+										v-if="
+											thumbnailNotSquare &&
+											!thumbnailIsYouTubeThumbnail
+										"
 										class="material-icons thumbnail-warning"
 										content="Thumbnail not square, it will be stretched"
 										v-tippy="{ theme: 'info' }"
@@ -740,10 +744,20 @@ export default {
 				}
 			},
 			songNotFound: false,
-			showRateDropdown: false
+			showRateDropdown: false,
+			thumbnailNotSquare: false,
+			thumbnailWidth: null,
+			thumbnailHeight: null
 		};
 	},
 	computed: {
+		thumbnailIsYouTubeThumbnail() {
+			return (
+				this.songDataLoaded &&
+				this.song.thumbnail &&
+				this.song.thumbnail.startsWith("https://i.ytimg.com")
+			);
+		},
 		...mapState("modals/editSong", {
 			tab: state => state.tab,
 			video: state => state.video,
@@ -987,6 +1001,21 @@ export default {
 		});
 	},
 	methods: {
+		onThumbnailLoad() {
+			if (this.$refs.thumbnailElement) {
+				const thumbnailHeight =
+					this.$refs.thumbnailElement.naturalHeight;
+				const thumbnailWidth = this.$refs.thumbnailElement.naturalWidth;
+
+				this.thumbnailNotSquare = thumbnailHeight !== thumbnailWidth;
+				this.thumbnailHeight = thumbnailHeight;
+				this.thumbnailWidth = thumbnailWidth;
+			} else {
+				this.thumbnailNotSquare = false;
+				this.thumbnailHeight = null;
+				this.thumbnailWidth = null;
+			}
+		},
 		init() {
 			if (this.newSong) {
 				this.setSong({
@@ -1027,6 +1056,7 @@ export default {
 				if (
 					this.playerReady &&
 					this.video.player.getVideoData &&
+					this.video.player.getVideoData() &&
 					this.video.player.getVideoData().video_id ===
 						this.song.youtubeId
 				) {
@@ -1195,6 +1225,9 @@ export default {
 			this.stopVideo();
 			this.pauseVideo(true);
 			this.resetSong(songId);
+			this.thumbnailNotSquare = false;
+			this.thumbnailWidth = null;
+			this.thumbnailHeight = null;
 			this.youtubeVideoCurrentTime = "0.000";
 			this.youtubeVideoDuration = "0.000";
 			this.socket.dispatch("apis.leaveRoom", `edit-song.${songId}`);
