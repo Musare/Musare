@@ -159,7 +159,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
                     echo -e "${RED}Error: Mongo offline, please start to attach.${NC}"
                 else
                     echo -e "${YELLOW}Detach with CTRL+C${NC}"
-                    docker-compose exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}"
+                    docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry()" --shell
                 fi
             else
                 echo -e "${RED}Error: .env does not exist${NC}"
@@ -295,7 +295,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
                 if [[ -z $adminUser ]]; then
                     echo -e "${RED}Error: Username for new admin not provided.${NC}"
                 else
-                    docker-compose exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "db.users.update({username: '${adminUser}'}, {\$set: {role: 'admin'}})"
+                    docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry(); db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'admin'}})"
                 fi
             elif [[ $2 == "remove" ]]; then
                 if [[ -z $3 ]]; then
@@ -307,7 +307,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
                 if [[ -z $adminUser ]]; then
                     echo -e "${RED}Error: Username for new admin not provided.${NC}"
                 else
-                    docker-compose exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "db.users.update({username: '${adminUser}'}, {\$set: {role: 'default'}})"
+                    docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry(); db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'default'}})"
                 fi
             else
                 echo -e "${RED}Invalid command $2\n${YELLOW}Usage: $(basename "$0") admin [add,remove] username${NC}"
