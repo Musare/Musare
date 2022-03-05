@@ -425,9 +425,7 @@ export default {
 				display: flex;
 				flex-direction: column;
 				max-height: 100vh;
-				overflow-y: auto;
-				width: 100%;
-				max-width: 200px;
+				width: 200px;
 				position: sticky;
 				top: 0;
 				bottom: 0;
@@ -436,6 +434,8 @@ export default {
 				box-shadow: @box-shadow;
 
 				.bottom {
+					overflow-y: auto;
+					height: calc(100% - 64px);
 					display: flex;
 					flex-direction: column;
 					flex: 1 0 auto;
