@@ -435,7 +435,8 @@ export default {
 
 				.bottom {
 					overflow-y: auto;
-					height: calc(100% - 64px);
+					height: calc(100vh - 64px);
+					max-height: calc(100vh - 64px);
 					display: flex;
 					flex-direction: column;
 					flex: 1 0 auto;
