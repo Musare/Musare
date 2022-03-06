@@ -42,3 +42,31 @@ To install a new instance please see [Installation](./Installation.md).
     - Stop backend service.
     - Set `migration` to `false` in  `backend/config/default.json`
 9. Start backend and frontend services.
+
+# Upgrade/downgrade MongoDB
+
+Make sure to always look at the upgrade/downgrade instructions in the [MongoDB release notes](https://docs.mongodb.com/manual/release-notes) before, and always make a full backup of your data before proceeding.
+
+## Docker
+
+### Instructions
+1. Stop the backend (`./musare.sh stop backend`)
+2. Make a backup of MongoDB (`./musare.sh backup`)
+3. Stop and reset the mongo container and delete the database folder (`./musare.sh reset mongo`)
+    - Note: if your MongoDB database folder is not the `.db` folder inside the main Musare folder, you'll have to delete this folder yourself.
+4. Change the MongoDB version inside your .env file.
+5. Start the mongo container (`./musare.sh start mongo`)
+6. Import your backup of MongoDB (`./musare.sh restore`)
+    - Note: backups are stored inside the backups folder by default.
+7. Start the backend (`./musare.sh start backend`)
+
+## Non-Docker
+
+### Instructions
+1. Stop your backend
+2. Make a backup of MongoDB
+3. Stop and reset MongoDB
+4. Upgrade/downgrade MongoDB
+5. Start MongoDB
+6. Restore your MongoDB backup
+7. Start your backend
