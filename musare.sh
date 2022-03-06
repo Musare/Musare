@@ -40,7 +40,7 @@ handleServices()
 
 dockerCommand()
 {
-    validCommands=(start stop restart build ps)
+    validCommands=(start stop restart pull build ps)
     if [[ ${validCommands[*]} =~ (^|[[:space:]])"$2"($|[[:space:]]) ]]; then
         servicesString=$(handleServices "${@:3}")
         if [[ ${servicesString:0:1} == 1 ]]; then
@@ -57,7 +57,7 @@ dockerCommand()
                 # shellcheck disable=SC2086
                 docker-compose up -d ${servicesString}
             fi
-            if [[ ${2} == "build" || ${2} == "ps" ]]; then
+            if [[ ${2} == "pull" || ${2} == "build" || ${2} == "ps" ]]; then
                 # shellcheck disable=SC2086
                 docker-compose "${2}" ${servicesString}
             fi
@@ -91,6 +91,8 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
 
     build)
         echo -e "${CYAN}Musare | Build Services${NC}"
+        # shellcheck disable=SC2068
+        dockerCommand "$(basename "$0")" pull ${@:2}
         # shellcheck disable=SC2068
         dockerCommand "$(basename "$0")" build ${@:2}
         ;;
