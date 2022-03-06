@@ -8,7 +8,10 @@
 					:class="{ minimised: !sidebarActive }"
 				>
 					<div class="inner">
-						<div class="bottom">
+						<div
+							class="bottom"
+							:style="`padding-bottom: ${sidebarPadding}px`"
+						>
 							<div
 								class="sidebar-item toggle-sidebar"
 								@click="toggleSidebar()"
@@ -260,7 +263,8 @@ export default {
 				logo: "",
 				sitename: ""
 			},
-			sidebarActive: true
+			sidebarActive: true,
+			sidebarPadding: 0
 		};
 	},
 	computed: {
@@ -293,6 +297,9 @@ export default {
 		if (this.sidebarActive === null)
 			this.sidebarActive = !(document.body.clientWidth <= 768);
 
+		this.calculateSidebarPadding();
+		window.addEventListener("scroll", this.calculateSidebarPadding);
+
 		keyboardShortcuts.registerShortcut(
 			"admin.toggleKeyboardShortcutsHelper",
 			{
@@ -320,6 +327,8 @@ export default {
 	},
 	beforeUnmount() {
 		this.socket.dispatch("apis.leaveRooms");
+
+		window.removeEventListener("scroll", this.calculateSidebarPadding);
 
 		const shortcutNames = [
 			"admin.toggleKeyboardShortcutsHelper",
@@ -364,6 +373,12 @@ export default {
 			return localPath.substr(0, 7) === "/admin/"
 				? localPath.substr(7, localPath.length)
 				: null;
+		},
+		calculateSidebarPadding() {
+			const scrollTop =
+				document.documentElement.scrollTop || document.scrollTop || 0;
+			if (scrollTop <= 64) this.sidebarPadding = 64 - scrollTop;
+			else this.sidebarPadding = 0;
 		},
 		...mapActions("admin", ["toggleChildren"])
 	}
@@ -435,8 +450,8 @@ export default {
 
 				.bottom {
 					overflow-y: auto;
-					height: calc(100vh - 64px);
-					max-height: calc(100vh - 64px);
+					height: 100%;
+					max-height: 100%;
 					display: flex;
 					flex-direction: column;
 					flex: 1 0 auto;
