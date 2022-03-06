@@ -68,7 +68,7 @@
 
 ### Notes
 #### Breaking Changes
-This release includes a MongoDB update with breaking changes. Before upgrading please backup your database and reset it, and after upgrading restore it. Documentation on how to do this can be found in [.wiki/Utility_Script.md](.wiki/Utility_Script.md).
+This release makes the MongoDB version configurable in the .env file. Prior to this release, the MongoDB version was 4.0. We recommend upgrading to 5.0 or 4.4. Upgrade instructions can be found in [Upgrading](.wiki/Upgrading.md#Upgrade/downgradeMongoDB).
 
 Please run the Update All Songs job after upgrading to ensure playlist and station song data accuracy.
 
