@@ -1,6 +1,11 @@
 # Changelog
 
-## [v3.4.0] - Unreleased
+## [v3.4.0-rc1] - 2022-03-06
+
+### **Breaking Changes**
+This release makes the MongoDB version configurable in the .env file. Prior to this release, the MongoDB version was 4.0. We recommend upgrading to 5.0 or 4.4. Upgrade instructions can be found in [.wiki/Upgrading](.wiki/Upgrading.md#Upgrade/downgradeMongoDB).
+
+Please run the Update All Songs job after upgrading to ensure playlist and station song data accuracy.
 
 ### Added
 - feat: Scroll to next song item in Edit Songs queue
@@ -13,12 +18,18 @@
 - chore: Added CodeQL analysis GitHub action
 - feat: Ability to select track position in Edit Song player
 - feat: Ability to select playback rate in Edit Song player
-- refactor: Import playlist from admin/songs Request Song
 - feat: Login with username or email
 - chore: Added CHANGELOG.md
 - feat: Added view profile button to admin/users table
 - feat: Ability to delete reports
 - feat: Added resolved attribute to reports Advanced Table
+- feat: Option to edit songs after import in Import Playlist
+- feat: Configurable MongoDB and Redis Docker container data directories
+- feat: Ability to toggle report resolution status
+- feat: Ability to show news items to new users on first visit
+- feat: Added warning label to thumbnails in Edit Song if not square
+- chore: Added Upgrading wiki page
+- feat: Configurable MongoDB container image version
 
 ### Changed
 - refactor: Replaced night mode toggle slider in Main Header with day/night icons
@@ -33,6 +44,14 @@
 - refactor: Move Edit Song verify toggle button to in-form toggle switch
 - refactor: Volume slider styling improvements
 - refactor: Replaced admin secondary nav with sidebar
+- refactor: Moved Request Song import youtube playlist to Import Playlist modal
+- refactor: Select input styling consistency
+- refactor: Show notice that song has been deleted in Edit Song
+- refactor: Reduce dropdown toggle button width
+- refactor: Set title and thumbnail on YouTube video selection in Create Song
+- refactor: Show YouTube tab by default in Create Song
+- refactor: Move admin tab routing to vue router
+- refactor: Pull images in musare.sh build command
 
 ### Fixed
 - fix: Relative homepage header height causing overlay of content on non-standard resolutions
@@ -62,15 +81,12 @@
 - fix: Station info display name and description overflow horizontally
 - fix: Volume slider incorrect sensitivity
 - fix: Song thumbnail loading causes jumpiness on admin/songs
+- fix: Manage Station go to station throws an error
+- fix: Edit Song seekTo does not apply if video is stopped
 
 ### Removed
 - refactor: Removed skip to last 10s button from Edit Song player
-
-### Notes
-#### Breaking Changes
-This release makes the MongoDB version configurable in the .env file. Prior to this release, the MongoDB version was 4.0. We recommend upgrading to 5.0 or 4.4. Upgrade instructions can be found in [Upgrading](.wiki/Upgrading.md#Upgrade/downgradeMongoDB).
-
-Please run the Update All Songs job after upgrading to ensure playlist and station song data accuracy.
+- refactor: Removed Request Song modal
 
 ## [v3.3.1] - 2022-02-03
 
