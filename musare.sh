@@ -155,11 +155,16 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
             if [[ -f .env ]]; then
                 # shellcheck disable=SC1091
                 source .env
+                MONGO_VERSION_INT=${MONGO_VERSION:0:1}
                 if [[ -z $(docker-compose ps -q mongo) ]]; then
                     echo -e "${RED}Error: Mongo offline, please start to attach.${NC}"
                 else
                     echo -e "${YELLOW}Detach with CTRL+C${NC}"
-                    docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry()" --shell
+                    if [[ $MONGO_VERSION_INT -ge 5 ]]; then
+                        docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry()" --shell
+                    else
+                        docker-compose exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}"
+                    fi
                 fi
             else
                 echo -e "${RED}Error: .env does not exist${NC}"
@@ -285,6 +290,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         if [[ -f .env ]]; then
             # shellcheck disable=SC1091
             source .env
+            MONGO_VERSION_INT=${MONGO_VERSION:0:1}
             if [[ $2 == "add" ]]; then
                 if [[ -z $3 ]]; then
                     echo -e "${GREEN}Please enter the username of the user you wish to make an admin: ${NC}"
@@ -295,7 +301,11 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
                 if [[ -z $adminUser ]]; then
                     echo -e "${RED}Error: Username for new admin not provided.${NC}"
                 else
-                    docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry(); db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'admin'}})"
+                    if [[ $MONGO_VERSION_INT -ge 5 ]]; then
+                        docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry(); db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'admin'}})"
+                    else
+                        docker-compose exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'admin'}})"
+                    fi
                 fi
             elif [[ $2 == "remove" ]]; then
                 if [[ -z $3 ]]; then
@@ -307,7 +317,11 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
                 if [[ -z $adminUser ]]; then
                     echo -e "${RED}Error: Username for new admin not provided.${NC}"
                 else
-                    docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry(); db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'default'}})"
+                    if [[ $MONGO_VERSION_INT -ge 5 ]]; then
+                        docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry(); db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'default'}})"
+                    else
+                        docker-compose exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'default'}})"
+                    fi
                 fi
             else
                 echo -e "${RED}Invalid command $2\n${YELLOW}Usage: $(basename "$0") admin [add,remove] username${NC}"

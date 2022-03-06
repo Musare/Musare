@@ -111,6 +111,7 @@ The container port refers to the external docker container port, used to access 
 | `MONGO_USER_USERNAME` | Application username for MongoDB. |
 | `MONGO_USER_PASSWORD` | Application password for MongoDB. |
 | `MONGO_DATA_LOCATION` | The location where MongoDB stores its data. Usually the `.db` folder inside the `Musare` folder. |
+| `MONGO_VERSION` | The MongoDB version to use for scripts and docker-compose. Must be numerical. Currently supported MongoDB versions are 4.0, 4.2, 4.4 and 5.0. |
 | `REDIS_HOST` | Redis container host. |
 | `REDIS_PORT` | Redis container port. |
 | `REDIS_PASSWORD` | Redis password. |

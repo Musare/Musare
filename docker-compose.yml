@@ -31,7 +31,7 @@ services:
       - backend
 
   mongo:
-    image: mongo:5.0
+    image: mongo:${MONGO_VERSION}
     restart: ${RESTART_POLICY}
     ports:
       - "${MONGO_HOST}:${MONGO_PORT}:${MONGO_PORT}"
