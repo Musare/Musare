@@ -9,6 +9,7 @@
 				<a class="button is-info" @click.prevent="updateName()">Save</a>
 			</p>
 		</div>
+
 		<label class="label">Display Name</label>
 		<div class="control is-grouped input-with-button">
 			<p class="control is-expanded">
@@ -24,6 +25,7 @@
 				>
 			</p>
 		</div>
+
 		<label class="label">Description</label>
 		<div class="control is-grouped input-with-button">
 			<p class="control is-expanded">
@@ -43,282 +45,196 @@
 		<div class="settings-buttons">
 			<div class="small-section">
 				<label class="label">Theme</label>
-				<div class="button-wrapper">
-					<tippy
-						theme="stationSettings"
-						:interactive="true"
-						:touch="true"
-						placement="bottom"
-						trigger="click"
-						append-to="parent"
-					>
-						<button :class="station.theme">
-							<i class="material-icons">palette</i>
-							{{ station.theme }}
-						</button>
-
-						<template #content>
-							<button
-								class="blue"
-								v-if="station.theme !== 'blue'"
-								@click="updateTheme('blue')"
-							>
-								<i class="material-icons">palette</i>
-								Blue
-							</button>
-							<button
-								class="purple"
-								v-if="station.theme !== 'purple'"
-								@click="updateTheme('purple')"
-							>
-								<i class="material-icons">palette</i>
-								Purple
-							</button>
-							<button
-								class="teal"
-								v-if="station.theme !== 'teal'"
-								@click="updateTheme('teal')"
-							>
-								<i class="material-icons">palette</i>
-								Teal
-							</button>
-							<button
-								class="orange"
-								v-if="station.theme !== 'orange'"
-								@click="updateTheme('orange')"
-							>
-								<i class="material-icons">palette</i>
-								Orange
-							</button>
-							<button
-								class="red"
-								v-if="station.theme !== 'red'"
-								@click="updateTheme('red')"
-							>
-								<i class="material-icons">palette</i>
-								Red
-							</button>
-						</template>
-					</tippy>
+				<div class="control is-grouped input-with-button">
+					<p class="control is-expanded select">
+						<select v-model="station.theme">
+							<option value="blue" selected>Blue</option>
+							<option value="purple">Purple</option>
+							<option value="teal">Teal</option>
+							<option value="orange">Orange</option>
+							<option value="red">Red</option>
+						</select>
+					</p>
+					<p class="control">
+						<a class="button is-info" @click.prevent="updateTheme()"
+							>Save</a
+						>
+					</p>
 				</div>
 			</div>
 
 			<div class="small-section">
 				<label class="label">Privacy</label>
-				<div class="button-wrapper">
-					<tippy
-						theme="stationSettings"
-						:interactive="true"
-						:touch="true"
-						placement="bottom"
-						trigger="click"
-						append-to="parent"
-					>
-						<button :class="privacyButtons[station.privacy].style">
-							<i class="material-icons">{{
-								privacyButtons[station.privacy].iconName
-							}}</i>
-							{{ station.privacy }}
-						</button>
-
-						<template #content>
-							<button
-								class="green"
-								v-if="station.privacy !== 'public'"
-								@click="updatePrivacy('public')"
-							>
-								<i class="material-icons">{{
-									privacyButtons["public"].iconName
-								}}</i>
-								Public
-							</button>
-							<button
-								class="orange"
-								v-if="station.privacy !== 'unlisted'"
-								@click="updatePrivacy('unlisted')"
-							>
-								<i class="material-icons">{{
-									privacyButtons["unlisted"].iconName
-								}}</i>
-								Unlisted
-							</button>
-							<button
-								class="red"
-								v-if="station.privacy !== 'private'"
-								@click="updatePrivacy('private')"
-							>
-								<i class="material-icons">{{
-									privacyButtons["private"].iconName
-								}}</i>
-								Private
-							</button>
-						</template>
-					</tippy>
-				</div>
-			</div>
-
-			<div class="small-section">
-				<label class="label">Station Mode</label>
-				<div class="button-wrapper" v-if="station.type === 'community'">
-					<tippy
-						theme="stationSettings"
-						:interactive="true"
-						:touch="true"
-						placement="bottom"
-						trigger="click"
-						append-to="parent"
-					>
-						<button
-							:class="{
-								blue: !station.partyMode,
-								yellow: station.partyMode
-							}"
+				<div class="control is-grouped input-with-button">
+					<p class="control is-expanded select">
+						<select v-model="station.privacy">
+							<option value="public">Public</option>
+							<option value="unlisted">Unlisted</option>
+							<option value="private" selected>Private</option>
+						</select>
+					</p>
+					<p class="control">
+						<a
+							class="button is-info"
+							@click.prevent="updatePrivacy()"
+							>Save</a
 						>
-							<i class="material-icons">{{
-								station.partyMode
-									? "emoji_people"
-									: "playlist_play"
-							}}</i>
-							{{ station.partyMode ? "Party" : "Playlist" }}
-						</button>
-
-						<template #content>
-							<button
-								class="blue"
-								v-if="station.partyMode"
-								@click="updatePartyMode(false)"
-							>
-								<i class="material-icons">playlist_play</i>
-								Playlist
-							</button>
-							<button
-								class="yellow"
-								v-if="!station.partyMode"
-								@click="updatePartyMode(true)"
-							>
-								<i class="material-icons">emoji_people</i>
-								Party
-							</button>
-						</template>
-					</tippy>
-				</div>
-				<div v-else class="button-wrapper">
-					<button
-						class="blue"
-						content="Can not be changed on official stations."
-						v-tippy="{ theme: 'info' }"
-					>
-						<i class="material-icons">playlist_play</i>
-						Playlist
-					</button>
+					</p>
 				</div>
 			</div>
 
-			<div v-if="!station.partyMode" class="small-section">
-				<label class="label">Play Mode</label>
-				<div class="button-wrapper" v-if="station.type === 'community'">
-					<tippy
-						theme="stationSettings"
-						:interactive="true"
-						:touch="true"
-						placement="bottom"
-						trigger="click"
-						append-to="parent"
-					>
-						<button class="blue">
-							<i class="material-icons">{{
-								station.playMode === "random"
-									? "shuffle"
-									: "format_list_numbered"
-							}}</i>
-							{{
-								station.playMode === "random"
-									? "Random"
-									: "Sequential"
-							}}
-						</button>
-
-						<template #content>
-							<button
-								class="blue"
-								v-if="station.playMode === 'sequential'"
-								@click="updatePlayMode('random')"
-							>
-								<i class="material-icons">shuffle</i>
-								Random
-							</button>
-							<button
-								class="blue"
-								v-if="station.playMode === 'random'"
-								@click="updatePlayMode('sequential')"
-							>
-								<i class="material-icons"
-									>format_list_numbered</i
-								>
-								Sequential
-							</button>
-						</template>
-					</tippy>
-				</div>
-				<div v-else class="button-wrapper">
-					<button
-						class="blue"
-						content="Can not be changed on official stations."
-						v-tippy="{ theme: 'info' }"
-					>
-						<i class="material-icons">shuffle</i>
-						Random
-					</button>
-				</div>
-			</div>
+			<hr class="section-horizontal-rule" />
 
 			<div
-				v-if="
-					station.type === 'community' && station.partyMode === true
+				class="queue-settings"
+				:class="{ enabled: queue.enabled }"
+				style="
+					display: flex;
+					flex-wrap: wrap;
+					width: 100%;
+					margin: 5px 0;
 				"
-				class="small-section"
 			>
-				<label class="label">Queue lock</label>
-				<div class="button-wrapper">
-					<tippy
-						theme="stationSettings"
-						:interactive="true"
-						:touch="true"
-						placement="bottom"
-						trigger="click"
-						append-to="parent"
+				<div style="display: flex; width: 100%">
+					<label class="label" style="display: flex; flex-grow: 1"
+						>Queue requests</label
 					>
-						<button
-							:class="{
-								green: station.locked,
-								red: !station.locked
-							}"
-						>
-							<i class="material-icons">{{
-								station.locked ? "lock" : "lock_open"
-							}}</i>
-							{{ station.locked ? "Locked" : "Unlocked" }}
-						</button>
+					<p
+						class="is-expanded checkbox-control"
+						style="justify-content: end"
+					>
+						<label class="switch">
+							<input
+								type="checkbox"
+								id="toggle-queue"
+								v-model="queue.enabled"
+							/>
+							<span class="slider round"></span>
+						</label>
 
-						<template #content>
-							<button
-								class="green"
-								v-if="!station.locked"
-								@click="updateQueueLock(true)"
+						<label for="toggle-queue">
+							<p>
+								{{ queue.enabled ? "Disable" : "Enable" }}
+							</p>
+						</label>
+					</p>
+				</div>
+
+				<div v-if="queue.enabled" class="small-section">
+					<label class="label">Minimum access</label>
+					<div class="control is-grouped input-with-button">
+						<p class="control is-expanded select">
+							<select v-model="queue.access">
+								<option value="owner" selected>Owner</option>
+								<option value="user">User</option>
+							</select>
+						</p>
+						<p class="control">
+							<a
+								class="button is-info"
+								@click.prevent="updateQueuePrivacy()"
+								>Save</a
 							>
-								<i class="material-icons">lock</i>
-								Locked
-							</button>
-							<button
-								class="red"
-								v-if="station.locked"
-								@click="updateQueueLock(false)"
+						</p>
+					</div>
+				</div>
+
+				<div v-if="queue.enabled" class="small-section">
+					<label class="label">Lock</label>
+					<div class="control is-grouped input-with-button">
+						<p class="control is-expanded select">
+							<select v-model="station.locked">
+								<option value="true">Locked</option>
+								<option value="false" selected>Unlocked</option>
+							</select>
+						</p>
+						<p class="control">
+							<a
+								class="button is-info"
+								@click.prevent="updateQueueLock()"
+								>Save</a
 							>
-								<i class="material-icons">lock_open</i>
-								Unlocked
-							</button>
-						</template>
-					</tippy>
+						</p>
+					</div>
+				</div>
+			</div>
+
+			<hr class="section-horizontal-rule" />
+
+			<div
+				class="autofill-settings"
+				:class="{ enabled: autofill.enabled }"
+				style="
+					display: flex;
+					flex-wrap: wrap;
+					width: 100%;
+					margin: 5px 0;
+				"
+			>
+				<div style="display: flex; width: 100%">
+					<label class="label" style="display: flex; flex-grow: 1"
+						>Autofill</label
+					>
+					<p
+						class="is-expanded checkbox-control"
+						style="justify-content: end"
+					>
+						<label class="switch">
+							<input
+								type="checkbox"
+								id="toggle-autofill"
+								v-model="autofill.enabled"
+							/>
+							<span class="slider round"></span>
+						</label>
+
+						<label for="toggle-autofill">
+							<p>
+								{{ autofill.enabled ? "Disable" : "Enable" }}
+							</p>
+						</label>
+					</p>
+				</div>
+
+				<div v-if="autofill.enabled" class="small-section">
+					<label class="label">Song limit</label>
+					<div class="control is-grouped input-with-button">
+						<p class="control is-expanded">
+							<input
+								class="input"
+								type="number"
+								min="1"
+								max="30"
+								v-model="autofill.limit"
+							/>
+						</p>
+						<p class="control">
+							<a
+								class="button is-info"
+								@click.prevent="updateAutofillLimit()"
+								>Save</a
+							>
+						</p>
+					</div>
+				</div>
+
+				<div v-if="autofill.enabled" class="small-section">
+					<label class="label">Play mode</label>
+					<div class="control is-grouped input-with-button">
+						<p class="control is-expanded select">
+							<select v-model="station.playMode">
+								<option value="random" selected>Random</option>
+								<option value="sequential">Sequential</option>
+							</select>
+						</p>
+						<p class="control">
+							<a
+								class="button is-info"
+								@click.prevent="updatePlayMode()"
+								>Save</a
+							>
+						</p>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -348,6 +264,14 @@ export default {
 					style: "orange",
 					iconName: "link"
 				}
+			},
+			autofill: {
+				enabled: true,
+				limit: 30
+			},
+			queue: {
+				enabled: true,
+				access: "owner"
 			}
 		};
 	},
@@ -450,76 +374,57 @@ export default {
 				new Toast("Please make a change before saving.");
 			}
 		},
-		updateTheme(theme) {
-			if (this.station.theme !== theme) {
+		updateTheme() {
+			if (this.station.theme !== this.originalStation.theme) {
 				this.socket.dispatch(
 					"stations.updateTheme",
 					this.station._id,
-					theme,
+					this.station.theme,
 					res => {
 						new Toast(res.message);
 
 						if (res.status === "success") {
-							this.station.theme = theme;
-							this.originalStation.theme = theme;
+							this.originalStation.theme = this.station.theme;
 						}
 					}
 				);
 			}
 		},
-		updatePrivacy(privacy) {
-			if (this.station.privacy !== privacy) {
+		updatePrivacy() {
+			if (this.station.privacy !== this.originalStation.privacy) {
 				this.socket.dispatch(
 					"stations.updatePrivacy",
 					this.station._id,
-					privacy,
+					this.station.privacy,
 					res => {
 						new Toast(res.message);
 
 						if (res.status === "success") {
-							this.station.privacy = privacy;
-							this.originalStation.privacy = privacy;
+							this.originalStation.privacy = this.station.privacy;
 						}
 					}
 				);
 			}
 		},
-		updatePartyMode(partyMode) {
-			if (this.station.partyMode !== partyMode) {
-				this.socket.dispatch(
-					"stations.updatePartyMode",
-					this.station._id,
-					partyMode,
-					res => {
-						new Toast(res.message);
-
-						if (res.status === "success") {
-							this.station.partyMode = partyMode;
-							this.originalStation.partyMode = partyMode;
-						}
-					}
-				);
-			}
-		},
-		updatePlayMode(playMode) {
-			if (this.station.playMode !== playMode) {
+		updatePlayMode() {
+			if (this.station.playMode !== this.originalStation.playMode) {
 				this.socket.dispatch(
 					"stations.updatePlayMode",
 					this.station._id,
-					playMode,
+					this.station.playMode,
 					res => {
 						new Toast(res.message);
 
 						if (res.status === "success") {
-							this.station.playMode = playMode;
-							this.originalStation.playMode = playMode;
+							this.originalStation.playMode =
+								this.station.playMode;
 						}
 					}
 				);
 			}
 		},
-		updateQueueLock(locked) {
-			if (this.station.locked !== locked) {
+		updateQueueLock() {
+			if (this.station.locked !== this.originalStation.locked) {
 				this.socket.dispatch(
 					"stations.toggleLock",
 					this.station._id,
@@ -539,7 +444,9 @@ export default {
 					}
 				);
 			}
-		}
+		},
+		updateAutofillLimit() {},
+		updateQueuePrivacy() {}
 	}
 };
 </script>
@@ -550,10 +457,15 @@ export default {
 		display: flex;
 		justify-content: center;
 		flex-wrap: wrap;
+
 		.small-section {
 			width: calc(50% - 10px);
 			min-width: 150px;
 			margin: 5px auto;
+		}
+
+		.section-horizontal-rule {
+			width: 100%;
 		}
 	}
 	.button-wrapper {

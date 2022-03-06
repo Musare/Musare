@@ -11,6 +11,14 @@
 					Search
 				</button>
 				<button
+					class="button is-default"
+					ref="current-tab"
+					:class="{ selected: tab === 'current' }"
+					@click="showTab('current')"
+				>
+					Current
+				</button>
+				<button
 					v-if="station.type === 'community'"
 					class="button is-default"
 					ref="my-playlists-tab"
@@ -18,33 +26,6 @@
 					@click="showTab('my-playlists')"
 				>
 					My Playlists
-				</button>
-				<button
-					class="button is-default"
-					ref="party-tab"
-					:class="{ selected: tab === 'party' }"
-					v-if="isPartyMode()"
-					@click="showTab('party')"
-				>
-					Party
-				</button>
-				<button
-					class="button is-default"
-					ref="included-tab"
-					:class="{ selected: tab === 'included' }"
-					v-if="isPlaylistMode()"
-					@click="showTab('included')"
-				>
-					Included
-				</button>
-				<button
-					class="button is-default"
-					ref="excluded-tab"
-					:class="{ selected: tab === 'excluded' }"
-					v-if="isOwnerOrAdmin()"
-					@click="showTab('excluded')"
-				>
-					Excluded
 				</button>
 			</div>
 			<div class="tab" v-show="tab === 'search'">
@@ -59,22 +40,7 @@
 						<template #item-icon>
 							<i
 								class="material-icons"
-								v-if="
-									isAllowedToParty() &&
-									isSelected(featuredPlaylist._id)
-								"
-								content="This playlist is currently selected"
-								v-tippy
-							>
-								radio
-							</i>
-							<i
-								class="material-icons"
-								v-else-if="
-									isOwnerOrAdmin() &&
-									isPlaylistMode() &&
-									isIncluded(featuredPlaylist._id)
-								"
+								v-if="isIncluded(featuredPlaylist._id)"
 								content="This playlist is currently included"
 								v-tippy
 							>
@@ -82,10 +48,7 @@
 							</i>
 							<i
 								class="material-icons excluded-icon"
-								v-else-if="
-									isOwnerOrAdmin() &&
-									isExcluded(featuredPlaylist._id)
-								"
+								v-else-if="isExcluded(featuredPlaylist._id)"
 								content="This playlist is currently excluded"
 								v-tippy
 							>
@@ -94,11 +57,7 @@
 							<i
 								class="material-icons"
 								v-else
-								:content="
-									isPartyMode()
-										? 'This playlist is currently not selected or excluded'
-										: 'This playlist is currently not included or excluded'
-								"
+								content="This playlist is currently not included or excluded"
 								v-tippy
 							>
 								play_disabled
@@ -114,28 +73,7 @@
 								>play_disabled</i
 							>
 							<quick-confirm
-								v-if="
-									isPartyMode() &&
-									isSelected(featuredPlaylist._id)
-								"
-								@confirm="
-									deselectPartyPlaylist(featuredPlaylist._id)
-								"
-							>
-								<i
-									class="material-icons stop-icon"
-									content="Stop playing songs from this playlist"
-									v-tippy
-								>
-									stop
-								</i>
-							</quick-confirm>
-							<quick-confirm
-								v-if="
-									isOwnerOrAdmin() &&
-									isPlaylistMode() &&
-									isIncluded(featuredPlaylist._id)
-								"
+								v-if="isIncluded(featuredPlaylist._id)"
 								@confirm="
 									removeIncludedPlaylist(featuredPlaylist._id)
 								"
@@ -150,20 +88,6 @@
 							</quick-confirm>
 							<i
 								v-if="
-									isPartyMode() &&
-									!isSelected(featuredPlaylist._id) &&
-									!isExcluded(featuredPlaylist._id)
-								"
-								@click="selectPartyPlaylist(featuredPlaylist)"
-								class="material-icons play-icon"
-								content="Request songs from this playlist"
-								v-tippy
-								>play_arrow</i
-							>
-							<i
-								v-if="
-									isOwnerOrAdmin() &&
-									isPlaylistMode() &&
 									!isIncluded(featuredPlaylist._id) &&
 									!isExcluded(featuredPlaylist._id)
 								"
@@ -174,10 +98,7 @@
 								>play_arrow</i
 							>
 							<quick-confirm
-								v-if="
-									isOwnerOrAdmin() &&
-									!isExcluded(featuredPlaylist._id)
-								"
+								v-if="!isExcluded(featuredPlaylist._id)"
 								@confirm="
 									blacklistPlaylist(featuredPlaylist._id)
 								"
@@ -190,10 +111,7 @@
 								>
 							</quick-confirm>
 							<quick-confirm
-								v-if="
-									isOwnerOrAdmin() &&
-									isExcluded(featuredPlaylist._id)
-								"
+								v-if="isExcluded(featuredPlaylist._id)"
 								@confirm="
 									removeExcludedPlaylist(featuredPlaylist._id)
 								"
@@ -259,22 +177,7 @@
 						<template #item-icon>
 							<i
 								class="material-icons"
-								v-if="
-									isAllowedToParty() &&
-									isSelected(playlist._id)
-								"
-								content="This playlist is currently selected"
-								v-tippy
-							>
-								radio
-							</i>
-							<i
-								class="material-icons"
-								v-else-if="
-									isOwnerOrAdmin() &&
-									isPlaylistMode() &&
-									isIncluded(playlist._id)
-								"
+								v-if="isIncluded(playlist._id)"
 								content="This playlist is currently included"
 								v-tippy
 							>
@@ -282,9 +185,7 @@
 							</i>
 							<i
 								class="material-icons excluded-icon"
-								v-else-if="
-									isOwnerOrAdmin() && isExcluded(playlist._id)
-								"
+								v-else-if="isExcluded(playlist._id)"
 								content="This playlist is currently excluded"
 								v-tippy
 							>
@@ -293,11 +194,7 @@
 							<i
 								class="material-icons"
 								v-else
-								:content="
-									isPartyMode()
-										? 'This playlist is currently not selected or excluded'
-										: 'This playlist is currently not included or excluded'
-								"
+								content="This playlist is currently not included or excluded"
 								v-tippy
 							>
 								play_disabled
@@ -313,23 +210,7 @@
 								>play_disabled</i
 							>
 							<quick-confirm
-								v-if="isPartyMode() && isSelected(playlist._id)"
-								@confirm="deselectPartyPlaylist(playlist._id)"
-							>
-								<i
-									class="material-icons stop-icon"
-									content="Stop playing songs from this playlist"
-									v-tippy
-								>
-									stop
-								</i>
-							</quick-confirm>
-							<quick-confirm
-								v-if="
-									isOwnerOrAdmin() &&
-									isPlaylistMode() &&
-									isIncluded(playlist._id)
-								"
+								v-if="isIncluded(playlist._id)"
 								@confirm="removeIncludedPlaylist(playlist._id)"
 							>
 								<i
@@ -342,20 +223,6 @@
 							</quick-confirm>
 							<i
 								v-if="
-									isPartyMode() &&
-									!isSelected(playlist._id) &&
-									!isExcluded(playlist._id)
-								"
-								@click="selectPartyPlaylist(playlist)"
-								class="material-icons play-icon"
-								content="Request songs from this playlist"
-								v-tippy
-								>play_arrow</i
-							>
-							<i
-								v-if="
-									isOwnerOrAdmin() &&
-									isPlaylistMode() &&
 									!isIncluded(playlist._id) &&
 									!isExcluded(playlist._id)
 								"
@@ -366,10 +233,7 @@
 								>play_arrow</i
 							>
 							<quick-confirm
-								v-if="
-									isOwnerOrAdmin() &&
-									!isExcluded(playlist._id)
-								"
+								v-if="!isExcluded(playlist._id)"
 								@confirm="blacklistPlaylist(playlist._id)"
 							>
 								<i
@@ -380,9 +244,7 @@
 								>
 							</quick-confirm>
 							<quick-confirm
-								v-if="
-									isOwnerOrAdmin() && isExcluded(playlist._id)
-								"
+								v-if="isExcluded(playlist._id)"
 								@confirm="removeExcludedPlaylist(playlist._id)"
 							>
 								<i
@@ -459,22 +321,7 @@
 								<template #item-icon>
 									<i
 										class="material-icons"
-										v-if="
-											isAllowedToParty() &&
-											isSelected(element._id)
-										"
-										content="This playlist is currently selected"
-										v-tippy
-									>
-										radio
-									</i>
-									<i
-										class="material-icons"
-										v-else-if="
-											isOwnerOrAdmin() &&
-											isPlaylistMode() &&
-											isIncluded(element._id)
-										"
+										v-if="isIncluded(element._id)"
 										content="This playlist is currently included"
 										v-tippy
 									>
@@ -482,10 +329,7 @@
 									</i>
 									<i
 										class="material-icons excluded-icon"
-										v-else-if="
-											isOwnerOrAdmin() &&
-											isExcluded(element._id)
-										"
+										v-else-if="isExcluded(element._id)"
 										content="This playlist is currently excluded"
 										v-tippy
 									>
@@ -494,11 +338,7 @@
 									<i
 										class="material-icons"
 										v-else
-										:content="
-											isPartyMode()
-												? 'This playlist is currently not selected or excluded'
-												: 'This playlist is currently not included or excluded'
-										"
+										content="This playlist is currently not included or excluded"
 										v-tippy
 									>
 										play_disabled
@@ -508,18 +348,6 @@
 								<template #actions>
 									<i
 										v-if="
-											isPartyMode() &&
-											!isSelected(element._id)
-										"
-										@click="selectPartyPlaylist(element)"
-										class="material-icons play-icon"
-										content="Request songs from this playlist"
-										v-tippy
-										>play_arrow</i
-									>
-									<i
-										v-if="
-											isPlaylistMode() &&
 											isOwnerOrAdmin() &&
 											!isIncluded(element._id)
 										"
@@ -531,23 +359,6 @@
 									>
 									<quick-confirm
 										v-if="
-											isPartyMode() &&
-											isSelected(element._id)
-										"
-										@confirm="
-											deselectPartyPlaylist(element._id)
-										"
-									>
-										<i
-											class="material-icons stop-icon"
-											content="Stop requesting songs from this playlist"
-											v-tippy
-											>stop</i
-										>
-									</quick-confirm>
-									<quick-confirm
-										v-if="
-											isPlaylistMode() &&
 											isOwnerOrAdmin() &&
 											isIncluded(element._id)
 										"
@@ -612,79 +423,7 @@
 					You don't have any playlists!
 				</p>
 			</div>
-			<div class="tab" v-show="tab === 'party'" v-if="isPartyMode()">
-				<div v-if="partyPlaylists.length > 0">
-					<playlist-item
-						v-for="playlist in partyPlaylists"
-						:key="`key-${playlist._id}`"
-						:playlist="playlist"
-						:show-owner="true"
-					>
-						<template #item-icon>
-							<i
-								class="material-icons"
-								content="This playlist is currently selected"
-								v-tippy
-							>
-								radio
-							</i>
-						</template>
-
-						<template #actions>
-							<quick-confirm
-								v-if="isOwnerOrAdmin()"
-								@confirm="deselectPartyPlaylist(playlist._id)"
-							>
-								<i
-									class="material-icons stop-icon"
-									content="Stop playing songs from this playlist"
-									v-tippy
-								>
-									stop
-								</i>
-							</quick-confirm>
-							<quick-confirm
-								v-if="isOwnerOrAdmin()"
-								@confirm="blacklistPlaylist(playlist._id)"
-							>
-								<i
-									class="material-icons stop-icon"
-									content="Blacklist Playlist"
-									v-tippy
-									>block</i
-								>
-							</quick-confirm>
-							<i
-								v-if="playlist.createdBy === myUserId"
-								@click="showPlaylist(playlist._id)"
-								class="material-icons edit-icon"
-								content="Edit Playlist"
-								v-tippy
-								>edit</i
-							>
-							<i
-								v-if="
-									playlist.createdBy !== myUserId &&
-									(playlist.privacy === 'public' || isAdmin())
-								"
-								@click="showPlaylist(playlist._id)"
-								class="material-icons edit-icon"
-								content="View Playlist"
-								v-tippy
-								>visibility</i
-							>
-						</template>
-					</playlist-item>
-				</div>
-				<p v-else class="has-text-centered scrollable-list">
-					No playlists currently being played.
-				</p>
-			</div>
-			<div
-				class="tab"
-				v-show="tab === 'included'"
-				v-if="isPlaylistMode()"
-			>
+			<div class="tab" v-show="tab === 'current'">
 				<div v-if="includedPlaylists.length > 0">
 					<playlist-item
 						v-for="playlist in includedPlaylists"
@@ -752,62 +491,6 @@
 					No playlists currently included.
 				</p>
 			</div>
-			<div
-				class="tab"
-				v-show="tab === 'excluded'"
-				v-if="isOwnerOrAdmin()"
-			>
-				<div v-if="excludedPlaylists.length > 0">
-					<playlist-item
-						:playlist="playlist"
-						v-for="playlist in excludedPlaylists"
-						:key="`key-${playlist._id}`"
-					>
-						<template #item-icon>
-							<i
-								class="material-icons excluded-icon"
-								content="This playlist is currently excluded"
-								v-tippy
-							>
-								block
-							</i>
-						</template>
-
-						<template #actions>
-							<quick-confirm
-								@confirm="removeExcludedPlaylist(playlist._id)"
-							>
-								<i
-									class="material-icons stop-icon"
-									content="Stop blacklisting songs from this playlist
-							"
-									v-tippy
-									>stop</i
-								>
-							</quick-confirm>
-							<i
-								v-if="playlist.createdBy === userId"
-								@click="showPlaylist(playlist._id)"
-								class="material-icons edit-icon"
-								content="Edit Playlist"
-								v-tippy
-								>edit</i
-							>
-							<i
-								v-else
-								@click="showPlaylist(playlist._id)"
-								class="material-icons edit-icon"
-								content="View Playlist"
-								v-tippy
-								>visibility</i
-							>
-						</template>
-					</playlist-item>
-				</div>
-				<p v-else class="has-text-centered scrollable-list">
-					No playlists currently excluded.
-				</p>
-			</div>
 		</div>
 	</div>
 </template>
@@ -816,15 +499,15 @@ import { mapActions, mapState, mapGetters } from "vuex";
 import Toast from "toasters";
 import ws from "@/ws";
 
-import PlaylistItem from "@/components/PlaylistItem.vue";
 import QuickConfirm from "@/components/QuickConfirm.vue";
+import PlaylistItem from "@/components/PlaylistItem.vue";
 
 import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
 
 export default {
 	components: {
-		PlaylistItem,
-		QuickConfirm
+		QuickConfirm,
+		PlaylistItem
 	},
 	mixins: [SortablePlaylists],
 	data() {
@@ -879,8 +562,7 @@ export default {
 		}
 	},
 	mounted() {
-		if (this.station.type === "community" && this.station.partyMode)
-			this.showTab("search");
+		this.showTab("search");
 
 		ws.onConnect(this.init);
 	},

@@ -2902,7 +2902,6 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					if (!station.partyMode) return next("Station is not in party mode.");
 
 					if (station.locked) {
 						return userModel.findOne({ _id: session.userId }, (err, user) => {
@@ -2915,10 +2914,8 @@ export default {
 					return next(null, station);
 				},
 
-				(station, next) => {
-					if (station.type !== "community") return next("That station is not a community station.");
-
-					return StationsModule.runJob(
+				(station, next) =>
+					StationsModule.runJob(
 						"CAN_USER_VIEW_STATION",
 						{
 							station,
@@ -2930,8 +2927,7 @@ export default {
 							if (canView) return next(null, station);
 							return next("Insufficient permissions.");
 						})
-						.catch(err => next(err));
-				},
+						.catch(err => next(err)),
 
 				(station, next) => {
 					if (station.currentSong && station.currentSong.youtubeId === youtubeId)

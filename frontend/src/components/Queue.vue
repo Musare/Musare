@@ -22,10 +22,7 @@
 				<template #item="{ element, index }">
 					<song-item
 						:song="element"
-						:requested-by="
-							station.type === 'community' &&
-							station.partyMode === true
-						"
+						:requested-by="true"
 						:class="{
 							'item-draggable': isAdminOnly() || isOwnerOnly()
 						}"
@@ -77,37 +74,27 @@
 			v-if="
 				sector === 'station' &&
 				loggedIn &&
-				station.type === 'community' &&
-				station.partyMode &&
 				((station.locked && isOwnerOnly()) ||
 					!station.locked ||
 					(station.locked && isAdminOnly() && dismissedWarning))
 			"
-			@click="openModal('manageStation') & showManageStationTab('songs')"
+			@click="
+				openModal('manageStation') & showManageStationTab('request')
+			"
 		>
 			<i class="material-icons icon-with-button">queue</i>
 			<span> Add Song To Queue </span>
 		</button>
 		<button
 			class="button is-primary tab-actionable-button disabled"
-			v-if="
-				sector === 'station' &&
-				!loggedIn &&
-				((station.type === 'community' &&
-					station.partyMode &&
-					!station.locked) ||
-					station.type === 'official')
-			"
+			v-if="sector === 'station' && !loggedIn && !station.locked"
 			content="Login to add songs to queue"
 			v-tippy="{ theme: 'info' }"
 		>
 			<i class="material-icons icon-with-button">queue</i>
 			<span> Add Song To Queue </span>
 		</button>
-		<div
-			id="queue-locked"
-			v-if="station.type === 'community' && station.locked"
-		>
+		<div id="queue-locked" v-if="station.locked">
 			<button
 				v-if="isAdminOnly() && !isOwnerOnly() && !dismissedWarning"
 				class="button tab-actionable-button"

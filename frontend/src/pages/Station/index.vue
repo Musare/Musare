@@ -103,20 +103,6 @@
 											>star_border</i
 										>
 									</a>
-									<i
-										class="material-icons stationMode"
-										:content="
-											station.partyMode
-												? 'Station in Party mode'
-												: 'Station in Playlist mode'
-										"
-										v-tippy="{ theme: 'info' }"
-										>{{
-											station.partyMode
-												? "emoji_people"
-												: "playlist_play"
-										}}</i
-									>
 								</div>
 								<p>{{ station.description }}</p>
 							</div>
@@ -624,10 +610,7 @@
 								<song-item
 									:song="currentSong"
 									:duration="false"
-									:requested-by="
-										station.type === 'community' &&
-										station.partyMode === true
-									"
+									:requested-by="true"
 									header="Currently Playing.."
 								/>
 							</div>
@@ -639,10 +622,7 @@
 								<song-item
 									:song="nextSong"
 									:duration="false"
-									:requested-by="
-										station.type === 'community' &&
-										station.partyMode === true
-									"
+									:requested-by="true"
 									header="Next Up.."
 								/>
 							</div>
@@ -1150,11 +1130,6 @@ export default {
 		this.socket.on("event:privatePlaylist.deselected", () => {
 			if (this.station.type === "community")
 				this.station.privatePlaylist = null;
-		});
-
-		this.socket.on("event:station.partyMode.updated", res => {
-			if (this.station.type === "community")
-				this.station.partyMode = res.data.partyMode;
 		});
 
 		this.socket.on("event:station.theme.updated", res => {
@@ -1909,8 +1884,6 @@ export default {
 		addPartyPlaylistSongToQueue() {
 			if (
 				!this.partyPlaylistLock &&
-				this.station.type === "community" &&
-				this.station.partyMode === true &&
 				this.songsList.length < 50 &&
 				this.currentUserQueueSongs < 3 &&
 				this.partyPlaylists.length > 0

@@ -105,22 +105,31 @@
 								Settings
 							</button>
 							<button
-								v-if="isAllowedToParty() || isOwnerOrAdmin()"
+								v-if="isOwnerOrAdmin()"
 								class="button is-default"
-								:class="{ selected: tab === 'playlists' }"
-								ref="playlists-tab"
-								@click="showTab('playlists')"
+								:class="{ selected: tab === 'autofill' }"
+								ref="autofill-tab"
+								@click="showTab('autofill')"
 							>
-								Playlists
+								Autofill
 							</button>
 							<button
 								v-if="isAllowedToParty() || isOwnerOrAdmin()"
 								class="button is-default"
-								:class="{ selected: tab === 'songs' }"
-								ref="songs-tab"
-								@click="showTab('songs')"
+								:class="{ selected: tab === 'request' }"
+								ref="request-tab"
+								@click="showTab('request')"
 							>
-								Songs
+								Request
+							</button>
+							<button
+								v-if="isOwnerOrAdmin()"
+								class="button is-default"
+								:class="{ selected: tab === 'blacklist' }"
+								ref="blacklist-tab"
+								@click="showTab('blacklist')"
+							>
+								Blacklist
 							</button>
 						</div>
 						<settings
@@ -128,15 +137,20 @@
 							class="tab"
 							v-show="tab === 'settings'"
 						/>
-						<playlists
-							v-if="isAllowedToParty() || isOwnerOrAdmin()"
+						<autofill
+							v-if="isOwnerOrAdmin()"
 							class="tab"
-							v-show="tab === 'playlists'"
+							v-show="tab === 'autofill'"
 						/>
-						<songs
+						<request
 							v-if="isAllowedToParty() || isOwnerOrAdmin()"
 							class="tab"
-							v-show="tab === 'songs'"
+							v-show="tab === 'request'"
+						/>
+						<blacklist
+							v-if="isOwnerOrAdmin()"
+							class="tab"
+							v-show="tab === 'blacklist'"
 						/>
 					</div>
 				</div>
@@ -150,10 +164,7 @@
 					<song-item
 						v-if="currentSong._id"
 						:song="currentSong"
-						:requested-by="
-							station.type === 'community' &&
-							station.partyMode === true
-						"
+						:requested-by="true"
 						header="Currently Playing.."
 						class="currently-playing"
 					/>
@@ -187,8 +198,9 @@ import SongItem from "@/components/SongItem.vue";
 import Modal from "../../Modal.vue";
 
 import Settings from "./Tabs/Settings.vue";
-import Playlists from "./Tabs/Playlists.vue";
-import Songs from "./Tabs/Songs.vue";
+import Autofill from "./Tabs/Autofill.vue";
+import Request from "./Tabs/Request.vue";
+import Blacklist from "./Tabs/Blacklist.vue";
 
 export default {
 	components: {
@@ -197,8 +209,9 @@ export default {
 		Queue,
 		SongItem,
 		Settings,
-		Playlists,
-		Songs
+		Autofill,
+		Request,
+		Blacklist
 	},
 	props: {
 		stationId: { type: String, default: "" },

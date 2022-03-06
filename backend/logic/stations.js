@@ -556,6 +556,7 @@ class _StationsModule extends CoreClass {
 					(currentSongs, songsToAdd, currentSongIndex, next) => {
 						const newPlaylist = [...currentSongs, ...songsToAdd].map(song => {
 							if (!song._id) song._id = null;
+							song.requestedAt = Date.now();
 							return song;
 						});
 						next(null, newPlaylist, currentSongIndex);
@@ -750,80 +751,30 @@ class _StationsModule extends CoreClass {
 					(station, next) => {
 						if (!station) return next("Station not found.");
 
-						if (station.type === "community" && station.partyMode && station.queue.length === 0)
-							return next(null, null, station); // Community station with party mode enabled and no songs in the queue
-
-						if (station.type === "community" && station.partyMode && station.queue.length > 0) {
-							// Community station with party mode enabled and songs in the queue
-							if (station.paused) return next(null, null, station);
-
-							StationsModule.runJob("GET_NEXT_STATION_SONG", { stationId: station._id }, this)
-								.then(response => {
-									StationsModule.runJob(
-										"REMOVE_FIRST_QUEUE_SONG",
-										{ stationId: station._id },
-										this
-									).then(() => {
-										next(null, response.song, station);
-									});
-								})
-								.catch(err => {
-									if (err === "No songs available.") next(null, null, station);
-									else next(err);
-								});
-						}
-
-						if (station.type === "community" && !station.partyMode) {
-							StationsModule.runJob(
-								"FILL_UP_STATION_QUEUE_FROM_STATION_PLAYLIST",
-								{ stationId: station._id },
-								this
-							)
-								.then(() => {
-									StationsModule.runJob("GET_NEXT_STATION_SONG", { stationId: station._id }, this)
-										.then(response => {
-											StationsModule.runJob(
-												"REMOVE_FIRST_QUEUE_SONG",
-												{ stationId: station._id },
-												this
-											).then(() => {
+						StationsModule.runJob(
+							"FILL_UP_STATION_QUEUE_FROM_STATION_PLAYLIST",
+							{ stationId: station._id },
+							this
+						)
+							.then(() => {
+								StationsModule.runJob("GET_NEXT_STATION_SONG", { stationId: station._id }, this)
+									.then(response => {
+										StationsModule.runJob(
+											"REMOVE_FIRST_QUEUE_SONG",
+											{ stationId: station._id },
+											this
+										)
+											.then(() => {
 												next(null, response.song, station);
-											});
-										})
-										.catch(err => {
-											if (err === "No songs available.") next(null, null, station);
-											else next(err);
-										});
-								})
-								.catch(next);
-						}
-
-						if (station.type === "official") {
-							StationsModule.runJob(
-								"FILL_UP_STATION_QUEUE_FROM_STATION_PLAYLIST",
-								{ stationId: station._id },
-								this
-							)
-								.then(() => {
-									StationsModule.runJob("GET_NEXT_STATION_SONG", { stationId: station._id }, this)
-										.then(response => {
-											StationsModule.runJob(
-												"REMOVE_FIRST_QUEUE_SONG",
-												{ stationId: station._id },
-												this
-											)
-												.then(() => {
-													next(null, response.song, station);
-												})
-												.catch(next);
-										})
-										.catch(err => {
-											if (err === "No songs available.") next(null, null, station);
-											else next(err);
-										});
-								})
-								.catch(next);
-						}
+											})
+											.catch(next);
+									})
+									.catch(err => {
+										if (err === "No songs available.") next(null, null, station);
+										else next(err);
+									});
+							})
+							.catch(next);
 					},
 					(song, station, next) => {
 						const $set = {};

@@ -233,20 +233,6 @@
 								<span v-else class="songTitle"
 									>No Songs Playing</span
 								>
-								<i
-									class="material-icons stationMode"
-									:content="
-										element.partyMode
-											? 'Station in Party mode'
-											: 'Station in Playlist mode'
-									"
-									v-tippy="{ theme: 'info' }"
-									>{{
-										element.partyMode
-											? "emoji_people"
-											: "playlist_play"
-									}}</i
-								>
 							</div>
 						</router-link>
 					</template>
@@ -461,20 +447,6 @@
 							}}</span
 						>
 						<span v-else class="songTitle">No Songs Playing</span>
-						<i
-							class="material-icons stationMode"
-							:content="
-								station.partyMode
-									? 'Station in Party mode'
-									: 'Station in Playlist mode'
-							"
-							v-tippy="{ theme: 'info' }"
-							>{{
-								station.partyMode
-									? "emoji_people"
-									: "playlist_play"
-							}}</i
-						>
 					</div>
 				</router-link>
 				<h4 v-if="stations.length === 0">
@@ -702,15 +674,6 @@ export default {
 			);
 
 			if (station) station.theme = theme;
-		});
-
-		this.socket.on("event:station.partyMode.updated", res => {
-			const { stationId, partyMode } = res.data;
-			const station = this.stations.find(
-				station => station._id === stationId
-			);
-
-			if (station) station.partyMode = partyMode;
 		});
 
 		this.socket.on("event:station.nextSong", res => {

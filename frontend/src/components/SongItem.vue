@@ -37,17 +37,16 @@
 				>
 					{{ formatArtists() }}
 				</h5>
-				<p
-					class="song-request-time"
-					v-if="requestedBy && song.requestedBy"
-				>
+				<p class="song-request-time" v-if="requestedBy">
 					Requested by
 					<strong>
 						<user-id-to-username
+							v-if="song.requestedBy"
 							:key="song._id"
 							:user-id="song.requestedBy"
 							:link="true"
 						/>
+						<span v-else>station</span>
 						{{ formatedRequestedAt }}
 						ago
 					</strong>
@@ -222,11 +221,7 @@ export default {
 	},
 	methods: {
 		formatRequestedAt() {
-			if (
-				this.requestedBy &&
-				this.song.requestedBy &&
-				this.song.requestedAt
-			)
+			if (this.requestedBy && this.song.requestedAt)
 				this.formatedRequestedAt = this.formatDistance(
 					parseISO(this.song.requestedAt),
 					new Date()
@@ -301,7 +296,7 @@ export default {
 }
 
 .song-item {
-	min-height: 65px;
+	min-height: 70px;
 
 	&:not(:last-of-type) {
 		margin-bottom: 10px;
@@ -326,9 +321,9 @@ export default {
 	}
 
 	.thumbnail {
-		min-width: 65px;
-		width: 65px;
-		height: 65px;
+		min-width: 70px;
+		width: 70px;
+		height: 70px;
 		margin: -7.5px;
 		margin-right: calc(20px - 7.5px);
 	}
@@ -371,7 +366,6 @@ export default {
 
 		.song-request-time {
 			font-size: 12px;
-			margin-top: 7px;
 		}
 	}
 
