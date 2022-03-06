@@ -53,7 +53,6 @@ Make sure to always look at the upgrade/downgrade instructions in the [MongoDB r
 1. Stop the backend (`./musare.sh stop backend`)
 2. Make a backup of MongoDB (`./musare.sh backup`)
 3. Stop and reset the mongo container and delete the database folder (`./musare.sh reset mongo`)
-    - Note: if your MongoDB database folder is not the `.db` folder inside the main Musare folder, you'll have to delete this folder yourself.
 4. Change the MongoDB version inside your .env file.
 5. Start the mongo container (`./musare.sh start mongo`)
 6. Import your backup of MongoDB (`./musare.sh restore`)
