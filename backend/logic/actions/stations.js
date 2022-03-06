@@ -602,7 +602,7 @@ export default {
 											{
 												station,
 												userId: session.userId,
-												hideUnlisted: true
+												homeView: true
 											},
 											this
 										)
