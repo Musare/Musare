@@ -103,41 +103,55 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
 
     reset)
         echo -e "${CYAN}Musare | Reset Services${NC}"
-        servicesString=$(handleServices "${@:2}")
-        if [[ ${servicesString:0:1} == 1 && ${servicesString:2:4} == "all" ]]; then
-            echo -e "${GREEN}Are you sure you want to reset all data? ${YELLOW}[y,n]: ${NC}"
-            read -r confirm
-            if [[ "${confirm}" == y* ]]; then
-                docker-compose stop
-                docker-compose rm -v --force
-                if [[ -d ".redis" ]]; then
-                    rm -rf .redis
+        if [[ -f .env ]]; then
+            # shellcheck disable=SC1091
+            source .env
+            servicesString=$(handleServices "${@:2}")
+            if [[ ${servicesString:0:1} == 1 && ${servicesString:2:4} == "all" ]]; then
+                echo -e "${RED}Resetting will remove the ${REDIS_DATA_LOCATION} and ${MONGO_DATA_LOCATION} directories.${NC}"
+                echo -e "${GREEN}Are you sure you want to reset all data? ${YELLOW}[y,n]: ${NC}"
+                read -r confirm
+                if [[ "${confirm}" == y* ]]; then
+                    docker-compose stop
+                    docker-compose rm -v --force
+                    if [[ -d $REDIS_DATA_LOCATION ]]; then
+                        rm -rf $REDIS_DATA_LOCATION
+                    fi
+                    if [[ -d $MONGO_DATA_LOCATION ]]; then
+                        rm -rf $MONGO_DATA_LOCATION
+                    fi
+                else
+                    echo -e "${RED}Cancelled reset${NC}"
                 fi
-                if [[ -d ".db" ]]; then
-                    rm -rf .db
+            elif [[ ${servicesString:0:1} == 1 ]]; then
+                if [[ "${servicesString:2}" == *redis* && "${servicesString:2}" == *mongo* ]]; then
+                    echo -e "${RED}Resetting will remove the ${REDIS_DATA_LOCATION} and ${MONGO_DATA_LOCATION} directories.${NC}"
+                elif [[ "${servicesString:2}" == *redis* ]]; then
+                    echo -e "${RED}Resetting will remove the ${REDIS_DATA_LOCATION} directory.${NC}"
+                elif [[ "${servicesString:2}" == *mongo* ]]; then
+                    echo -e "${RED}Resetting will remove the ${MONGO_DATA_LOCATION} directory.${NC}"
+                fi
+                echo -e "${GREEN}Are you sure you want to reset all data for $(echo "${servicesString:2}" | tr ' ' ',')? ${YELLOW}[y,n]: ${NC}"
+                read -r confirm
+                if [[ "${confirm}" == y* ]]; then
+                    # shellcheck disable=SC2086
+                    docker-compose stop ${servicesString:2}
+                    # shellcheck disable=SC2086
+                    docker-compose rm -v --force ${servicesString:2}
+                    if [[ "${servicesString:2}" == *redis* && -d $REDIS_DATA_LOCATION ]]; then
+                        rm -rf $REDIS_DATA_LOCATION
+                    fi
+                    if [[ "${servicesString:2}" == *mongo* && -d $MONGO_DATA_LOCATION ]]; then
+                        rm -rf $MONGO_DATA_LOCATION
+                    fi
+                else
+                    echo -e "${RED}Cancelled reset${NC}"
                 fi
             else
-                echo -e "${RED}Cancelled reset${NC}"
-            fi
-        elif [[ ${servicesString:0:1} == 1 ]]; then
-            echo -e "${GREEN}Are you sure you want to reset all data for $(echo "${servicesString:2}" | tr ' ' ',')? ${YELLOW}[y,n]: ${NC}"
-            read -r confirm
-            if [[ "${confirm}" == y* ]]; then
-                # shellcheck disable=SC2086
-                docker-compose stop ${servicesString:2}
-                # shellcheck disable=SC2086
-                docker-compose rm -v --force ${servicesString:2}
-                if [[ "${servicesString:2}" == *redis* && -d ".redis" ]]; then
-                    rm -rf .redis
-                fi
-                if [[ "${servicesString:2}" == *mongo* && -d ".db" ]]; then
-                    rm -rf .db
-                fi
-            else
-                echo -e "${RED}Cancelled reset${NC}"
+                echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") build [backend, frontend, mongo, redis]${NC}"
             fi
         else
-            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") build [backend, frontend, mongo, redis]${NC}"
+            echo -e "${RED}Error: .env does not exist${NC}"
         fi
         ;;
 
