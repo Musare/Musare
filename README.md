@@ -10,6 +10,7 @@ A production demonstration instance of Musare can be found at [demo.musare.com](
 
 ## Documentation
 - [Installation](./.wiki/Installation.md)
+- [Upgrading](./.wiki/Upgrading.md)
 - [Configuration](./.wiki/Configuration.md)
 - [Utility Script](./.wiki/Utility_Script.md)
 - [Backend Commands](./.wiki/Backend_Commands.md)

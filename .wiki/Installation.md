@@ -1,6 +1,8 @@
 # Installation
 Musare can be installed with Docker (recommended) or without, guides for both installations can be found below.
 
+To update an existing installation please see [Upgrading](./Upgrading.md).
+
 ## Docker
 
 ### Dependencies
