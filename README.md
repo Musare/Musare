@@ -4,6 +4,8 @@
 
 Musare is an open-source collaborative music listening and catalogue curation application. Currently supporting YouTube based content.
 
+A production demonstration instance of Musare can be found at [demo.musare.com](https://demo.musare.com).
+
 ---
 
 ## Documentation
@@ -41,13 +43,14 @@ Musare is an open-source collaborative music listening and catalogue curation ap
     - Add songs to queue from verified catalogue or YouTube (party mode only)
 - **Song Management**
     - Verify songs to allow them to be searched for and played in official stations
-    - Hide songs to remove from unverified catalogue
-    - Import Album (WIP) to import songs in bulk
+    - Import Album to import songs in bulk
     - Discogs integration to import metadata
     - Ability for users to report issues with songs and admins to resolve
     - Configurable skip duration and song duration to cut intros and outros
-    - Request songs from YouTube in official stations or admin area
+    - Import YouTube playlists from admin area
     - Any song added to playlists or stations will be automatically requested
+    - Bulk admin management of songs
+    - Create songs from scratch
 - **Users**
     - Activity logs
     - Profile page showing public playlists and activity logs
@@ -64,7 +67,13 @@ Musare is an open-source collaborative music listening and catalogue curation ap
     - Admins can add/edit/remove news items
     - Markdown editor
 - **Dark Mode**
-
+- **Administration**
+    - Admin area to manage instance
+    - Configurable data tables
+        - Reorder, resize, sort by and toggle visibilty of columns
+        - Advanced queries
+    - Bulk management
+    - View backend statistics
 ---
 
 ## Contact
