@@ -1403,6 +1403,11 @@ export default {
 			[
 				next => {
 					userModel.findById(session.userId).select({ preferences: -1 }).exec(next);
+				},
+
+				(user, next) => {
+					if (!user) next("User not found");
+					else next(null, user);
 				}
 			],
 			async (err, { preferences }) => {

@@ -525,25 +525,29 @@ export default {
 					userModel.findById(userId).select({ "preferences.orderOfPlaylists": -1 }).exec(next);
 				},
 
-				({ preferences }, next) => {
-					const { orderOfPlaylists } = preferences;
+				(user, next) => {
+					if (!user) next("User not found");
+					else {
+						const { preferences } = user;
+						const { orderOfPlaylists } = preferences;
 
-					const match = {
-						createdBy: userId,
-						type: { $in: ["user", "user-liked", "user-disliked"] }
-					};
+						const match = {
+							createdBy: userId,
+							type: { $in: ["user", "user-liked", "user-disliked"] }
+						};
 
-					// if a playlist order exists
-					if (orderOfPlaylists > 0) match._id = { $in: orderOfPlaylists };
+						// if a playlist order exists
+						if (orderOfPlaylists > 0) match._id = { $in: orderOfPlaylists };
 
-					playlistModel
-						.aggregate()
-						.match(match)
-						.addFields({
-							weight: { $indexOfArray: [orderOfPlaylists, "$_id"] }
-						})
-						.sort({ weight: 1 })
-						.exec(next);
+						playlistModel
+							.aggregate()
+							.match(match)
+							.addFields({
+								weight: { $indexOfArray: [orderOfPlaylists, "$_id"] }
+							})
+							.sort({ weight: 1 })
+							.exec(next);
+					}
 				},
 
 				(playlists, next) => {
@@ -598,25 +602,29 @@ export default {
 					userModel.findById(session.userId).select({ "preferences.orderOfPlaylists": -1 }).exec(next);
 				},
 
-				({ preferences }, next) => {
-					const { orderOfPlaylists } = preferences;
+				(user, next) => {
+					if (!user) next("User not found");
+					else {
+						const { preferences } = user;
+						const { orderOfPlaylists } = preferences;
 
-					const match = {
-						createdBy: session.userId,
-						type: { $in: ["user", "user-liked", "user-disliked"] }
-					};
+						const match = {
+							createdBy: session.userId,
+							type: { $in: ["user", "user-liked", "user-disliked"] }
+						};
 
-					// if a playlist order exists
-					if (orderOfPlaylists > 0) match._id = { $in: orderOfPlaylists };
+						// if a playlist order exists
+						if (orderOfPlaylists > 0) match._id = { $in: orderOfPlaylists };
 
-					playlistModel
-						.aggregate()
-						.match(match)
-						.addFields({
-							weight: { $indexOfArray: [orderOfPlaylists, "$_id"] }
-						})
-						.sort({ weight: 1 })
-						.exec(next);
+						playlistModel
+							.aggregate()
+							.match(match)
+							.addFields({
+								weight: { $indexOfArray: [orderOfPlaylists, "$_id"] }
+							})
+							.sort({ weight: 1 })
+							.exec(next);
+					}
 				}
 			],
 			async (err, playlists) => {
