@@ -387,8 +387,23 @@ export default {
 					userModel.deleteMany({ _id: session.userId }, next);
 				},
 
-				// request data removal for user
+				// session
 				(res, next) => {
+					CacheModule.runJob("PUB", {
+						channel: "user.removeSessions",
+						value: session.userId
+					});
+
+					// temp fix, need to wait properly for the SUB/PUB refactor (on wekan)
+					setTimeout(() => {
+						CacheModule.runJob("HDEL", { table: "sessions", key: session.sessionId }, this)
+							.then(() => next())
+							.catch(next);
+					}, 50);
+				},
+
+				// request data removal for user
+				next => {
 					dataRequestModel.create({ userId: session.userId, type: "remove" }, next);
 				},
 
@@ -555,8 +570,23 @@ export default {
 					userModel.deleteMany({ _id: userId }, next);
 				},
 
-				// request data removal for user
+				// session
 				(res, next) => {
+					CacheModule.runJob("PUB", {
+						channel: "user.removeSessions",
+						value: session.userId
+					});
+
+					// temp fix, need to wait properly for the SUB/PUB refactor (on wekan)
+					setTimeout(() => {
+						CacheModule.runJob("HDEL", { table: "sessions", key: session.sessionId }, this)
+							.then(() => next())
+							.catch(next);
+					}, 50);
+				},
+
+				// request data removal for user
+				next => {
 					dataRequestModel.create({ userId, type: "remove" }, next);
 				},
 
