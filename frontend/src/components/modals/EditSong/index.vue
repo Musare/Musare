@@ -79,8 +79,10 @@
 									</button>
 									<button
 										class="button is-danger"
-										@click="settings('stop')"
-										@keyup.enter="settings('stop')"
+										@click.exact="settings('stop')"
+										@click.shift="settings('hardStop')"
+										@keyup.enter.exact="settings('stop')"
+										@keyup.shift.enter="settings('hardStop')"
 										content="Stop Playback"
 										v-tippy
 									>
@@ -837,6 +839,16 @@ export default {
 			}
 		});
 
+		keyboardShortcuts.registerShortcut("editSong.hardStopVideo", {
+			keyCode: 101,
+			ctrl: true,
+			shift: true,
+			preventDefault: true,
+			handler: () => {
+				this.settings("hardStop");
+			}
+		});
+
 		keyboardShortcuts.registerShortcut("editSong.skipToLast10Secs", {
 			keyCode: 102,
 			preventDefault: true,
@@ -951,6 +963,7 @@ export default {
 
 		editSong.pauseResume - Num 5 - Pause/resume song
 		editSong.stopVideo - Ctrl - Num 5 - Stop
+		editSong.hardStopVideo - Shift - Ctrl - Num 5 - Stop
 		editSong.skipToLast10Secs - Num 6 - Skip to last 10 seconds
 
 		editSong.lowerVolumeLarge - Num 2 - Volume down by 10
@@ -983,6 +996,7 @@ export default {
 		const shortcutNames = [
 			"editSong.pauseResume",
 			"editSong.stopVideo",
+			"editSong.hardStopVideo",
 			"editSong.skipToLast10Secs",
 			"editSong.lowerVolumeLarge",
 			"editSong.lowerVolumeSmall",
@@ -1539,6 +1553,10 @@ export default {
 					this.stopVideo();
 					this.pauseVideo(true);
 					break;
+				case "hardStop":
+					this.hardStopVideo();
+					this.pauseVideo(true);
+					break;
 				case "pause":
 					this.pauseVideo(true);
 					break;
@@ -1804,6 +1822,7 @@ export default {
 		}),
 		...mapActions("modals/editSong", [
 			"stopVideo",
+			"hardStopVideo",
 			"loadVideoById",
 			"pauseVideo",
 			"getCurrentTime",

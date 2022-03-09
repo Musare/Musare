@@ -27,6 +27,7 @@ export default {
 			commit("updateOriginalSong", song),
 		resetSong: ({ commit }, songId) => commit("resetSong", songId),
 		stopVideo: ({ commit }) => commit("stopVideo"),
+		hardStopVideo: ({ commit }) => commit("hardStopVideo"),
 		loadVideoById: ({ commit }, id, skipDuration) =>
 			commit("loadVideoById", id, skipDuration),
 		pauseVideo: ({ commit }, status) => commit("pauseVideo", status),
@@ -78,6 +79,11 @@ export default {
 			if (state.video.player && state.video.player.pauseVideo) {
 				state.video.player.pauseVideo();
 				state.video.player.seekTo(0);
+			}
+		},
+		hardStopVideo(state) {
+			if (state.video.player && state.video.player.stopVideo) {
+				state.video.player.stopVideo();
 			}
 		},
 		loadVideoById(state, id, skipDuration) {
