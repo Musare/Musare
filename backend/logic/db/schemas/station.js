@@ -45,6 +45,6 @@ export default {
 	playMode: { type: String, enum: ["random", "sequential"], default: "random" },
 	theme: { type: String, enum: ["blue", "purple", "teal", "orange", "red"], default: "blue" },
 	includedPlaylists: [{ type: String }],
-	excludedPlaylists: [{ type: String }],
+	blacklist: [{ type: mongoose.Schema.Types.ObjectId, ref: "playlists" }],
 	documentVersion: { type: Number, default: 7, required: true }
 };

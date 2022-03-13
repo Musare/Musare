@@ -16,7 +16,7 @@ const state = {
 	localPaused: false,
 	noSong: true,
 	includedPlaylists: [],
-	excludedPlaylists: []
+	blacklist: []
 };
 
 const getters = {};
@@ -67,8 +67,8 @@ const actions = {
 	setIncludedPlaylists: ({ commit }, includedPlaylists) => {
 		commit("setIncludedPlaylists", includedPlaylists);
 	},
-	setExcludedPlaylists: ({ commit }, excludedPlaylists) => {
-		commit("setExcludedPlaylists", excludedPlaylists);
+	setBlacklist: ({ commit }, blacklist) => {
+		commit("setBlacklist", blacklist);
 	},
 	updateCurrentSongRatings: ({ commit }, songRatings) => {
 		commit("updateCurrentSongRatings", songRatings);
@@ -104,7 +104,7 @@ const mutations = {
 		state.localPaused = false;
 		state.noSong = true;
 		state.includedPlaylists = [];
-		state.excludedPlaylists = [];
+		state.blacklist = [];
 	},
 	editStation(state, station) {
 		state.editing = { ...station };
@@ -159,8 +159,8 @@ const mutations = {
 	setIncludedPlaylists(state, includedPlaylists) {
 		state.includedPlaylists = JSON.parse(JSON.stringify(includedPlaylists));
 	},
-	setExcludedPlaylists(state, excludedPlaylists) {
-		state.excludedPlaylists = JSON.parse(JSON.stringify(excludedPlaylists));
+	setBlacklist(state, blacklist) {
+		state.blacklist = JSON.parse(JSON.stringify(blacklist));
 	},
 	updateCurrentSongRatings(state, songRatings) {
 		state.currentSong.likes = songRatings.likes;

@@ -486,7 +486,7 @@ class _PlaylistsModule extends CoreClass {
 					},
 
 					(playlistId, next) => {
-						StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST", { playlistId }, this)
+						StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_BLACKLIST_PLAYLIST", { playlistId }, this)
 							.then(response => {
 								async.eachLimit(
 									response.stationIds,
@@ -538,7 +538,7 @@ class _PlaylistsModule extends CoreClass {
 								.then(response => {
 									if (response.songs.length === 0) {
 										StationsModule.runJob(
-											"GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST",
+											"GET_STATIONS_THAT_INCLUDE_OR_BLACKLIST_PLAYLIST",
 											{ playlistId: playlist._id },
 											this
 										)
@@ -724,27 +724,27 @@ class _PlaylistsModule extends CoreClass {
 					},
 
 					(station, includedPlaylists, next) => {
-						const excludedPlaylists = [];
+						const blacklist = [];
 						async.eachLimit(
-							station.excludedPlaylists,
+							station.blacklist,
 							1,
 							(playlistId, next) => {
 								PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 									.then(playlist => {
-										excludedPlaylists.push(playlist);
+										blacklist.push(playlist);
 										next();
 									})
 									.catch(next);
 							},
 							err => {
-								next(err, station, includedPlaylists, excludedPlaylists);
+								next(err, station, includedPlaylists, blacklist);
 							}
 						);
 					},
 
-					(station, includedPlaylists, excludedPlaylists, next) => {
-						const excludedSongs = excludedPlaylists
-							.flatMap(excludedPlaylist => excludedPlaylist.songs)
+					(station, includedPlaylists, blacklist, next) => {
+						const blacklistedSongs = blacklist
+							.flatMap(blacklistedPlaylist => blacklistedPlaylist.songs)
 							.reduce(
 								(items, item) =>
 									items.find(x => x.youtubeId === item.youtubeId) ? [...items] : [...items, item],
@@ -757,7 +757,7 @@ class _PlaylistsModule extends CoreClass {
 									songs.find(x => x.youtubeId === song.youtubeId) ? [...songs] : [...songs, song],
 								[]
 							)
-							.filter(song => !excludedSongs.find(x => x.youtubeId === song.youtubeId));
+							.filter(song => !blacklistedSongs.find(x => x.youtubeId === song.youtubeId));
 
 						next(null, station, includedSongs);
 					},
@@ -943,7 +943,7 @@ class _PlaylistsModule extends CoreClass {
 
 					next => {
 						StationsModule.runJob(
-							"REMOVE_INCLUDED_OR_EXCLUDED_PLAYLIST_FROM_STATIONS",
+							"REMOVE_INCLUDED_OR_BLACKLISTED_PLAYLIST_FROM_STATIONS",
 							{ playlistId: payload.playlistId },
 							this
 						)

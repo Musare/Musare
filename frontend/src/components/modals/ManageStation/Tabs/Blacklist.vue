@@ -2,16 +2,16 @@
 	<div class="station-blacklist">
 		<div class="tabs-container">
 			<div class="tab" v-if="isOwnerOrAdmin()">
-				<div v-if="excludedPlaylists.length > 0">
+				<div v-if="blacklist.length > 0">
 					<playlist-item
 						:playlist="playlist"
-						v-for="playlist in excludedPlaylists"
+						v-for="playlist in blacklist"
 						:key="`key-${playlist._id}`"
 					>
 						<template #item-icon>
 							<i
-								class="material-icons excluded-icon"
-								content="This playlist is currently excluded"
+								class="material-icons blacklisted-icon"
+								content="This playlist is currently blacklisted"
 								v-tippy
 							>
 								block
@@ -20,7 +20,9 @@
 
 						<template #actions>
 							<quick-confirm
-								@confirm="removeExcludedPlaylist(playlist._id)"
+								@confirm="
+									removeBlacklistedPlaylist(playlist._id)
+								"
 							>
 								<i
 									class="material-icons stop-icon"
@@ -50,7 +52,7 @@
 					</playlist-item>
 				</div>
 				<p v-else class="has-text-centered scrollable-list">
-					No playlists currently excluded.
+					No playlists currently blacklisted.
 				</p>
 			</div>
 		</div>
@@ -83,7 +85,7 @@ export default {
 			originalStation: state => state.originalStation,
 			station: state => state.station,
 			includedPlaylists: state => state.includedPlaylists,
-			excludedPlaylists: state => state.excludedPlaylists
+			blacklist: state => state.blacklist
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -95,13 +97,12 @@ export default {
 	methods: {
 		init() {
 			this.socket.dispatch(
-				`stations.getStationExcludedPlaylistsById`,
+				`stations.getStationBlacklistById`,
 				this.station._id,
 				res => {
 					if (res.status === "success") {
-						this.station.excludedPlaylists = res.data.playlists;
-						this.originalStation.excludedPlaylists =
-							res.data.playlists;
+						this.station.blacklist = res.data.playlists;
+						this.originalStation.blacklist = res.data.playlists;
 					}
 				}
 			);
@@ -136,10 +137,10 @@ export default {
 				);
 			});
 		},
-		removeExcludedPlaylist(id) {
+		removeBlacklistedPlaylist(id) {
 			return new Promise(resolve => {
 				this.socket.dispatch(
-					"stations.removeExcludedPlaylist",
+					"stations.removeBlacklistedPlaylist",
 					this.station._id,
 					id,
 					res => {
@@ -156,9 +157,9 @@ export default {
 			});
 			return included;
 		},
-		isExcluded(id) {
+		isBlacklisted(id) {
 			let selected = false;
-			this.excludedPlaylists.forEach(playlist => {
+			this.blacklist.forEach(playlist => {
 				if (playlist._id === id) selected = true;
 			});
 			return selected;
@@ -167,7 +168,7 @@ export default {
 			if (this.isIncluded(id)) await this.removeIncludedPlaylist(id);
 
 			this.socket.dispatch(
-				"stations.excludePlaylist",
+				"stations.blacklistPlaylist",
 				this.station._id,
 				id,
 				res => {
@@ -182,7 +183,7 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.excluded-icon {
+.blacklisted-icon {
 	color: var(--dark-red);
 }
 

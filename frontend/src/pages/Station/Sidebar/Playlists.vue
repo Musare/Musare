@@ -17,7 +17,7 @@
 					<playlist-item :playlist="element" class="item-draggable">
 						<template #actions>
 							<i
-								v-if="isExcluded(element._id)"
+								v-if="isBlacklisted(element._id)"
 								class="material-icons stop-icon"
 								content="This playlist is blacklisted in this station"
 								v-tippy="{ theme: 'info' }"
@@ -28,7 +28,7 @@
 									station.type === 'community' &&
 									(isOwnerOrAdmin() || station.partyMode) &&
 									!isSelected(element._id) &&
-									!isExcluded(element._id)
+									!isBlacklisted(element._id)
 								"
 								@click="selectPlaylist(element)"
 								class="material-icons play-icon"
@@ -63,7 +63,7 @@
 								v-if="
 									station.type === 'community' &&
 									isOwnerOrAdmin() &&
-									!isExcluded(element._id)
+									!isBlacklisted(element._id)
 								"
 								@confirm="blacklistPlaylist(element._id)"
 							>
@@ -127,7 +127,7 @@ export default {
 		...mapState("station", {
 			partyPlaylists: state => state.partyPlaylists,
 			includedPlaylists: state => state.includedPlaylists,
-			excludedPlaylists: state => state.excludedPlaylists,
+			blacklist: state => state.blacklist,
 			songsList: state => state.songsList
 		}),
 		...mapGetters({
@@ -145,12 +145,12 @@ export default {
 			if (playlistIndex === -1) this.includedPlaylists.push(playlist);
 		});
 
-		this.socket.on("event:station.excludedPlaylist", res => {
+		this.socket.on("event:station.blacklistedPlaylist", res => {
 			const { playlist } = res.data;
-			const playlistIndex = this.excludedPlaylists
-				.map(excludedPlaylist => excludedPlaylist._id)
+			const playlistIndex = this.blacklist
+				.map(blacklistedPlaylist => blacklistedPlaylist._id)
 				.indexOf(playlist._id);
-			if (playlistIndex === -1) this.excludedPlaylists.push(playlist);
+			if (playlistIndex === -1) this.blacklist.push(playlist);
 		});
 
 		this.socket.on("event:station.removedIncludedPlaylist", res => {
@@ -162,13 +162,12 @@ export default {
 				this.includedPlaylists.splice(playlistIndex, 1);
 		});
 
-		this.socket.on("event:station.removedExcludedPlaylist", res => {
+		this.socket.on("event:station.removedBlacklistedPlaylist", res => {
 			const { playlistId } = res.data;
-			const playlistIndex = this.excludedPlaylists
+			const playlistIndex = this.blacklist
 				.map(playlist => playlist._id)
 				.indexOf(playlistId);
-			if (playlistIndex >= 0)
-				this.excludedPlaylists.splice(playlistIndex, 1);
+			if (playlistIndex >= 0) this.blacklist.splice(playlistIndex, 1);
 		});
 	},
 	methods: {
@@ -255,9 +254,9 @@ export default {
 			});
 			return selected;
 		},
-		isExcluded(id) {
+		isBlacklisted(id) {
 			let selected = false;
-			this.excludedPlaylists.forEach(playlist => {
+			this.blacklist.forEach(playlist => {
 				if (playlist._id === id) selected = true;
 			});
 			return selected;
@@ -266,7 +265,7 @@ export default {
 			if (this.isSelected(id)) await this.deselectPlaylist(id);
 
 			this.socket.dispatch(
-				"stations.excludePlaylist",
+				"stations.blacklistPlaylist",
 				this.station._id,
 				id,
 				res => {

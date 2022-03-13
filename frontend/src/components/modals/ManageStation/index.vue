@@ -230,7 +230,7 @@ export default {
 			songsList: state => state.songsList,
 			stationPlaylist: state => state.stationPlaylist,
 			includedPlaylists: state => state.includedPlaylists,
-			excludedPlaylists: state => state.excludedPlaylists,
+			blacklist: state => state.blacklist,
 			stationPaused: state => state.stationPaused,
 			currentSong: state => state.currentSong
 		}),
@@ -265,11 +265,11 @@ export default {
 				);
 
 				this.socket.dispatch(
-					"stations.getStationExcludedPlaylistsById",
+					"stations.getStationBlacklistById",
 					this.stationId,
 					res => {
 						if (res.status === "success")
-							this.setExcludedPlaylists(res.data.playlists);
+							this.setBlacklist(res.data.playlists);
 					}
 				);
 
@@ -380,14 +380,13 @@ export default {
 				);
 
 				this.socket.on(
-					"event:station.excludedPlaylist",
+					"event:station.blacklistedPlaylist",
 					res => {
 						const { playlist } = res.data;
-						const playlistIndex = this.excludedPlaylists
-							.map(excludedPlaylist => excludedPlaylist._id)
+						const playlistIndex = this.blacklist
+							.map(blacklistedPlaylist => blacklistedPlaylist._id)
 							.indexOf(playlist._id);
-						if (playlistIndex === -1)
-							this.excludedPlaylists.push(playlist);
+						if (playlistIndex === -1) this.blacklist.push(playlist);
 					},
 					{ modal: "manageStation" }
 				);
@@ -406,14 +405,14 @@ export default {
 				);
 
 				this.socket.on(
-					"event:station.removedExcludedPlaylist",
+					"event:station.removedBlacklistedPlaylist",
 					res => {
 						const { playlistId } = res.data;
-						const playlistIndex = this.excludedPlaylists
+						const playlistIndex = this.blacklist
 							.map(playlist => playlist._id)
 							.indexOf(playlistId);
 						if (playlistIndex >= 0)
-							this.excludedPlaylists.splice(playlistIndex, 1);
+							this.blacklist.splice(playlistIndex, 1);
 					},
 					{ modal: "manageStation" }
 				);
@@ -636,7 +635,7 @@ export default {
 		...mapActions("modals/manageStation", [
 			"editStation",
 			"setIncludedPlaylists",
-			"setExcludedPlaylists",
+			"setBlacklist",
 			"clearStation",
 			"updateSongsList",
 			"updateStationPlaylist",

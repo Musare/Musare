@@ -899,7 +899,7 @@ export default {
 			noSong: state => state.noSong,
 			partyPlaylists: state => state.partyPlaylists,
 			includedPlaylists: state => state.includedPlaylists,
-			excludedPlaylists: state => state.excludedPlaylists
+			blacklist: state => state.blacklist
 		}),
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
@@ -1948,7 +1948,7 @@ export default {
 							owner,
 							privatePlaylist,
 							includedPlaylists,
-							excludedPlaylists,
+							blacklist,
 							type,
 							genres,
 							blacklistedGenres,
@@ -1973,7 +1973,7 @@ export default {
 							owner,
 							privatePlaylist,
 							includedPlaylists,
-							excludedPlaylists,
+							blacklist,
 							type,
 							genres,
 							blacklistedGenres,
@@ -2009,13 +2009,11 @@ export default {
 						);
 
 						this.socket.dispatch(
-							"stations.getStationExcludedPlaylistsById",
+							"stations.getStationBlacklistById",
 							this.station._id,
 							res => {
 								if (res.status === "success") {
-									this.setExcludedPlaylists(
-										res.data.playlists
-									);
+									this.setBlacklist(res.data.playlists);
 								}
 							}
 						);
@@ -2277,7 +2275,7 @@ export default {
 			"updateNoSong",
 			"updateIfStationIsFavorited",
 			"setIncludedPlaylists",
-			"setExcludedPlaylists",
+			"setBlacklist",
 			"updateCurrentSongRatings",
 			"updateOwnCurrentSongRatings",
 			"updateCurrentSongSkipVotes"

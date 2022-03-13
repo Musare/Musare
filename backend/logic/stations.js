@@ -1169,9 +1169,9 @@ class _StationsModule extends CoreClass {
 						if (station.playlist === payload.playlistId) next("You cannot include the station playlist");
 						else if (station.includedPlaylists.indexOf(payload.playlistId) !== -1)
 							next("This playlist is already included");
-						else if (station.excludedPlaylists.indexOf(payload.playlistId) !== -1)
+						else if (station.blacklist.indexOf(payload.playlistId) !== -1)
 							next(
-								"This playlist is currently excluded, please remove it from there before including it"
+								"This playlist is currently blacklisted, please remove it from there before including it"
 							);
 						else
 							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId: payload.playlistId }, this)
@@ -1298,14 +1298,14 @@ class _StationsModule extends CoreClass {
 	}
 
 	/**
-	 * Adds a playlist to be excluded in a station
+	 * Add a playlist to station blacklist
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.stationId - the id of the station
 	 * @param {object} payload.playlistId - the id of the playlist
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	EXCLUDE_PLAYLIST(payload) {
+	BLACKLIST_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
@@ -1324,12 +1324,12 @@ class _StationsModule extends CoreClass {
 					},
 
 					(station, next) => {
-						if (station.playlist === payload.playlistId) next("You cannot exclude the station playlist");
-						else if (station.excludedPlaylists.indexOf(payload.playlistId) !== -1)
-							next("This playlist is already excluded");
+						if (station.playlist === payload.playlistId) next("You cannot blacklist the station playlist");
+						else if (station.blacklist.indexOf(payload.playlistId) !== -1)
+							next("This playlist is already blacklisted");
 						else if (station.includedPlaylists.indexOf(payload.playlistId) !== -1)
 							next(
-								"This playlist is currently included, please remove it from there before excluding it"
+								"This playlist is currently included, please remove it from there before blacklisting it"
 							);
 						else
 							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId: payload.playlistId }, this)
@@ -1349,7 +1349,7 @@ class _StationsModule extends CoreClass {
 						).then(stationModel => {
 							stationModel.updateOne(
 								{ _id: payload.stationId },
-								{ $push: { excludedPlaylists: payload.playlistId } },
+								{ $push: { blacklist: payload.playlistId } },
 								next
 							);
 						});
@@ -1382,14 +1382,14 @@ class _StationsModule extends CoreClass {
 	}
 
 	/**
-	 * Removes a playlist that is excluded in a station
+	 * Remove a playlist from station blacklist
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.stationId - the id of the station
 	 * @param {object} payload.playlistId - the id of the playlist
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	REMOVE_EXCLUDED_PLAYLIST(payload) {
+	REMOVE_BLACKLISTED_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
@@ -1408,8 +1408,8 @@ class _StationsModule extends CoreClass {
 					},
 
 					(station, next) => {
-						if (station.excludedPlaylists.indexOf(payload.playlistId) === -1)
-							next("This playlist isn't excluded");
+						if (station.blacklist.indexOf(payload.playlistId) === -1)
+							next("This playlist isn't blacklisted");
 						else next();
 					},
 
@@ -1423,7 +1423,7 @@ class _StationsModule extends CoreClass {
 						).then(stationModel => {
 							stationModel.updateOne(
 								{ _id: payload.stationId },
-								{ $pull: { excludedPlaylists: payload.playlistId } },
+								{ $pull: { blacklist: payload.playlistId } },
 								next
 							);
 						});
@@ -1456,13 +1456,13 @@ class _StationsModule extends CoreClass {
 	}
 
 	/**
-	 * Removes included or excluded playlist from a station
+	 * Removes included or blacklisted playlist from a station
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the playlist id
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	REMOVE_INCLUDED_OR_EXCLUDED_PLAYLIST_FROM_STATIONS(payload) {
+	REMOVE_INCLUDED_OR_BLACKLISTED_PLAYLIST_FROM_STATIONS(payload) {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
@@ -1474,15 +1474,12 @@ class _StationsModule extends CoreClass {
 					next => {
 						StationsModule.stationModel.updateMany(
 							{
-								$or: [
-									{ includedPlaylists: payload.playlistId },
-									{ excludedPlaylists: payload.playlistId }
-								]
+								$or: [{ includedPlaylists: payload.playlistId }, { blacklist: payload.playlistId }]
 							},
 							{
 								$pull: {
 									includedPlaylists: payload.playlistId,
-									excludedPlaylists: payload.playlistId
+									blacklist: payload.playlistId
 								}
 							},
 							err => {
@@ -1505,13 +1502,13 @@ class _StationsModule extends CoreClass {
 	}
 
 	/**
-	 * Gets stations that include or exclude a specific playlist
+	 * Gets stations that include or blacklist a specific playlist
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the playlist id
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST(payload) {
+	GET_STATIONS_THAT_INCLUDE_OR_BLACKLIST_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
 			DBModule.runJob(
 				"GET_MODEL",
@@ -1522,7 +1519,7 @@ class _StationsModule extends CoreClass {
 			).then(stationModel => {
 				stationModel.find(
 					{
-						$or: [{ includedPlaylists: payload.playlistId }, { excludedPlaylists: payload.playlistId }]
+						$or: [{ includedPlaylists: payload.playlistId }, { blacklist: payload.playlistId }]
 					},
 					(err, stations) => {
 						if (err) reject(err);

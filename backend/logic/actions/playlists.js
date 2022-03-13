@@ -1224,7 +1224,7 @@ export default {
 					});
 				}
 
-				StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST", { playlistId })
+				StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_BLACKLIST_PLAYLIST", { playlistId })
 					.then(response => {
 						response.stationIds.forEach(stationId => {
 							PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
@@ -1509,7 +1509,7 @@ export default {
 				},
 
 				(playlist, next) => {
-					StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST", { playlistId })
+					StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_BLACKLIST_PLAYLIST", { playlistId })
 						.then(response => {
 							response.stationIds.forEach(stationId => {
 								PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();

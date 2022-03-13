@@ -47,9 +47,9 @@
 								play_arrow
 							</i>
 							<i
-								class="material-icons excluded-icon"
-								v-else-if="isExcluded(featuredPlaylist._id)"
-								content="This playlist is currently excluded"
+								class="material-icons blacklisted-icon"
+								v-else-if="isBlacklisted(featuredPlaylist._id)"
+								content="This playlist is currently blacklisted"
 								v-tippy
 							>
 								block
@@ -57,7 +57,7 @@
 							<i
 								class="material-icons"
 								v-else
-								content="This playlist is currently not included or excluded"
+								content="This playlist is currently not included or blacklisted"
 								v-tippy
 							>
 								play_disabled
@@ -66,7 +66,7 @@
 
 						<template #actions>
 							<i
-								v-if="isExcluded(featuredPlaylist._id)"
+								v-if="isBlacklisted(featuredPlaylist._id)"
 								class="material-icons stop-icon"
 								content="This playlist is blacklisted in this station"
 								v-tippy="{ theme: 'info' }"
@@ -89,7 +89,7 @@
 							<i
 								v-if="
 									!isIncluded(featuredPlaylist._id) &&
-									!isExcluded(featuredPlaylist._id)
+									!isBlacklisted(featuredPlaylist._id)
 								"
 								@click="includePlaylist(featuredPlaylist)"
 								class="material-icons play-icon"
@@ -98,7 +98,7 @@
 								>play_arrow</i
 							>
 							<quick-confirm
-								v-if="!isExcluded(featuredPlaylist._id)"
+								v-if="!isBlacklisted(featuredPlaylist._id)"
 								@confirm="
 									blacklistPlaylist(featuredPlaylist._id)
 								"
@@ -111,9 +111,11 @@
 								>
 							</quick-confirm>
 							<quick-confirm
-								v-if="isExcluded(featuredPlaylist._id)"
+								v-if="isBlacklisted(featuredPlaylist._id)"
 								@confirm="
-									removeExcludedPlaylist(featuredPlaylist._id)
+									removeBlacklistedPlaylist(
+										featuredPlaylist._id
+									)
 								"
 							>
 								<i
@@ -184,9 +186,9 @@
 								play_arrow
 							</i>
 							<i
-								class="material-icons excluded-icon"
-								v-else-if="isExcluded(playlist._id)"
-								content="This playlist is currently excluded"
+								class="material-icons blacklisted-icon"
+								v-else-if="isBlacklisted(playlist._id)"
+								content="This playlist is currently blacklisted"
 								v-tippy
 							>
 								block
@@ -194,7 +196,7 @@
 							<i
 								class="material-icons"
 								v-else
-								content="This playlist is currently not included or excluded"
+								content="This playlist is currently not included or blacklisted"
 								v-tippy
 							>
 								play_disabled
@@ -203,7 +205,7 @@
 
 						<template #actions>
 							<i
-								v-if="isExcluded(playlist._id)"
+								v-if="isBlacklisted(playlist._id)"
 								class="material-icons stop-icon"
 								content="This playlist is blacklisted in this station"
 								v-tippy="{ theme: 'info' }"
@@ -224,7 +226,7 @@
 							<i
 								v-if="
 									!isIncluded(playlist._id) &&
-									!isExcluded(playlist._id)
+									!isBlacklisted(playlist._id)
 								"
 								@click="includePlaylist(playlist)"
 								class="material-icons play-icon"
@@ -233,7 +235,7 @@
 								>play_arrow</i
 							>
 							<quick-confirm
-								v-if="!isExcluded(playlist._id)"
+								v-if="!isBlacklisted(playlist._id)"
 								@confirm="blacklistPlaylist(playlist._id)"
 							>
 								<i
@@ -244,8 +246,10 @@
 								>
 							</quick-confirm>
 							<quick-confirm
-								v-if="isExcluded(playlist._id)"
-								@confirm="removeExcludedPlaylist(playlist._id)"
+								v-if="isBlacklisted(playlist._id)"
+								@confirm="
+									removeBlacklistedPlaylist(playlist._id)
+								"
 							>
 								<i
 									class="material-icons stop-icon"
@@ -328,9 +332,9 @@
 										play_arrow
 									</i>
 									<i
-										class="material-icons excluded-icon"
-										v-else-if="isExcluded(element._id)"
-										content="This playlist is currently excluded"
+										class="material-icons blacklisted-icon"
+										v-else-if="isBlacklisted(element._id)"
+										content="This playlist is currently blacklisted"
 										v-tippy
 									>
 										block
@@ -338,7 +342,7 @@
 									<i
 										class="material-icons"
 										v-else
-										content="This playlist is currently not included or excluded"
+										content="This playlist is currently not included or blacklisted"
 										v-tippy
 									>
 										play_disabled
@@ -376,7 +380,7 @@
 									<quick-confirm
 										v-if="
 											isOwnerOrAdmin() &&
-											!isExcluded(element._id)
+											!isBlacklisted(element._id)
 										"
 										@confirm="
 											blacklistPlaylist(element._id)
@@ -392,10 +396,12 @@
 									<quick-confirm
 										v-if="
 											isOwnerOrAdmin() &&
-											isExcluded(element._id)
+											isBlacklisted(element._id)
 										"
 										@confirm="
-											removeExcludedPlaylist(element._id)
+											removeBlacklistedPlaylist(
+												element._id
+											)
 										"
 									>
 										<i
@@ -542,7 +548,7 @@ export default {
 			originalStation: state => state.originalStation,
 			station: state => state.station,
 			includedPlaylists: state => state.includedPlaylists,
-			excludedPlaylists: state => state.excludedPlaylists,
+			blacklist: state => state.blacklist,
 			songsList: state => state.songsList
 		}),
 		...mapGetters({
@@ -592,13 +598,12 @@ export default {
 			);
 
 			this.socket.dispatch(
-				`stations.getStationExcludedPlaylistsById`,
+				`stations.getStationBlacklistById`,
 				this.station._id,
 				res => {
 					if (res.status === "success") {
-						this.station.excludedPlaylists = res.data.playlists;
-						this.originalStation.excludedPlaylists =
-							res.data.playlists;
+						this.station.blacklist = res.data.playlists;
+						this.originalStation.blacklist = res.data.playlists;
 					}
 				}
 			);
@@ -694,10 +699,10 @@ export default {
 				);
 			});
 		},
-		removeExcludedPlaylist(id) {
+		removeBlacklistedPlaylist(id) {
 			return new Promise(resolve => {
 				this.socket.dispatch(
-					"stations.removeExcludedPlaylist",
+					"stations.removeBlacklistedPlaylist",
 					this.station._id,
 					id,
 					res => {
@@ -721,9 +726,9 @@ export default {
 			});
 			return included;
 		},
-		isExcluded(id) {
+		isBlacklisted(id) {
 			let selected = false;
-			this.excludedPlaylists.forEach(playlist => {
+			this.blacklist.forEach(playlist => {
 				if (playlist._id === id) selected = true;
 			});
 			return selected;
@@ -774,7 +779,7 @@ export default {
 			if (this.isIncluded(id)) await this.removeIncludedPlaylist(id);
 
 			this.socket.dispatch(
-				"stations.excludePlaylist",
+				"stations.blacklistPlaylist",
 				this.station._id,
 				id,
 				res => {
@@ -832,7 +837,7 @@ export default {
 	}
 }
 
-.excluded-icon {
+.blacklisted-icon {
 	color: var(--dark-red);
 }
 

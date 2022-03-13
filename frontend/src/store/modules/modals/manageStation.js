@@ -8,7 +8,7 @@ export default {
 		station: {},
 		stationPlaylist: { songs: [] },
 		includedPlaylists: [],
-		excludedPlaylists: [],
+		blacklist: [],
 		songsList: [],
 		stationPaused: true,
 		currentSong: {}
@@ -19,8 +19,8 @@ export default {
 		editStation: ({ commit }, station) => commit("editStation", station),
 		setIncludedPlaylists: ({ commit }, includedPlaylists) =>
 			commit("setIncludedPlaylists", includedPlaylists),
-		setExcludedPlaylists: ({ commit }, excludedPlaylists) =>
-			commit("setExcludedPlaylists", excludedPlaylists),
+		setBlacklist: ({ commit }, blacklist) =>
+			commit("setBlacklist", blacklist),
 		clearStation: ({ commit }) => commit("clearStation"),
 		updateSongsList: ({ commit }, songsList) =>
 			commit("updateSongsList", songsList),
@@ -46,17 +46,15 @@ export default {
 				JSON.stringify(includedPlaylists)
 			);
 		},
-		setExcludedPlaylists(state, excludedPlaylists) {
-			state.excludedPlaylists = JSON.parse(
-				JSON.stringify(excludedPlaylists)
-			);
+		setBlacklist(state, blacklist) {
+			state.blacklist = JSON.parse(JSON.stringify(blacklist));
 		},
 		clearStation(state) {
 			state.originalStation = {};
 			state.station = {};
 			state.stationPlaylist = { songs: [] };
 			state.includedPlaylists = [];
-			state.excludedPlaylists = [];
+			state.blacklist = [];
 			state.songsList = [];
 			state.stationPaused = true;
 			state.currentSong = {};

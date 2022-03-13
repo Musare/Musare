@@ -160,14 +160,14 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
-	channel: "station.excludedPlaylist",
+	channel: "station.blacklistedPlaylist",
 	cb: data => {
 		const { stationId, playlistId } = data;
 
 		PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }).then(playlist =>
 			WSModule.runJob("EMIT_TO_ROOMS", {
 				rooms: [`station.${stationId}`, `manage-station.${stationId}`],
-				args: ["event:station.excludedPlaylist", { data: { stationId, playlist } }]
+				args: ["event:station.blacklistedPlaylist", { data: { stationId, playlist } }]
 			})
 		);
 	}
@@ -185,12 +185,12 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
-	channel: "station.removedExcludedPlaylist",
+	channel: "station.removedBlacklistedPlaylist",
 	cb: data => {
 		const { stationId, playlistId } = data;
 		WSModule.runJob("EMIT_TO_ROOMS", {
 			rooms: [`station.${stationId}`, `manage-station.${stationId}`],
-			args: ["event:station.removedExcludedPlaylist", { data: { stationId, playlistId } }]
+			args: ["event:station.removedBlacklistedPlaylist", { data: { stationId, playlistId } }]
 		});
 	}
 });
@@ -1009,7 +1009,7 @@ export default {
 						playMode: station.playMode,
 						owner: station.owner,
 						includedPlaylists: station.includedPlaylists,
-						excludedPlaylists: station.excludedPlaylists,
+						blacklist: station.blacklist,
 						theme: station.theme
 					};
 
@@ -1227,7 +1227,7 @@ export default {
 		);
 	},
 
-	getStationExcludedPlaylistsById(session, stationId, cb) {
+	getStationBlacklistById(session, stationId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1259,7 +1259,7 @@ export default {
 					const playlists = [];
 
 					async.eachLimit(
-						station.excludedPlaylists,
+						station.blacklist,
 						1,
 						(playlistId, next) => {
 							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
@@ -1283,15 +1283,15 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
-						"GET_STATION_EXCLUDED_PLAYLISTS_BY_ID",
-						`Getting station "${stationId}"'s excluded playlists failed. "${err}"`
+						"GET_STATION_BLACKLIST_BY_ID",
+						`Getting station "${stationId}"'s blacklist failed. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
-					"GET_STATION_EXCLUDED_PLAYLISTS_BY_ID",
-					`Got station "${stationId}"'s excluded playlists successfully.`
+					"GET_STATION_BLACKLIST_BY_ID",
+					`Got station "${stationId}"'s blacklist successfully.`
 				);
 				return cb({ status: "success", data: { playlists } });
 			}
@@ -1927,19 +1927,19 @@ export default {
 				},
 
 				(station, playlists, next) => {
-					const playlistsToRemoveFromExcluded = playlists.filter(
-						playlistId => station.excludedPlaylists.indexOf(playlistId) !== -1
+					const playlistsToRemoveFromBlacklist = playlists.filter(
+						playlistId => station.blacklist.indexOf(playlistId) !== -1
 					);
 					console.log(
-						`playlistsToRemoveFromExcluded: ${playlistsToRemoveFromExcluded.length}`,
-						playlistsToRemoveFromExcluded
+						`playlistsToRemoveFromBlacklist: ${playlistsToRemoveFromBlacklist.length}`,
+						playlistsToRemoveFromBlacklist
 					);
 
 					async.eachLimit(
-						playlistsToRemoveFromExcluded,
+						playlistsToRemoveFromBlacklist,
 						1,
 						(playlistId, next) => {
-							StationsModule.runJob("REMOVE_EXCLUDED_PLAYLIST", { stationId, playlistId }, this)
+							StationsModule.runJob("REMOVE_BLACKLISTED_PLAYLIST", { stationId, playlistId }, this)
 								.then(() => {
 									next();
 								})
@@ -2133,19 +2133,19 @@ export default {
 				},
 
 				(station, playlists, next) => {
-					const playlistsToRemoveFromExcluded = station.excludedPlaylists.filter(
+					const playlistsToRemoveFromBlacklist = station.blacklist.filter(
 						playlistId => playlists.indexOf(playlistId) === -1
 					);
 					console.log(
-						`playlistsToRemoveFromExcluded: ${playlistsToRemoveFromExcluded.length}`,
-						playlistsToRemoveFromExcluded
+						`playlistsToRemoveFromBlacklist: ${playlistsToRemoveFromBlacklist.length}`,
+						playlistsToRemoveFromBlacklist
 					);
 
 					async.eachLimit(
-						playlistsToRemoveFromExcluded,
+						playlistsToRemoveFromBlacklist,
 						1,
 						(playlistId, next) => {
-							StationsModule.runJob("REMOVE_EXCLUDED_PLAYLIST", { stationId, playlistId }, this)
+							StationsModule.runJob("REMOVE_BLACKLISTED_PLAYLIST", { stationId, playlistId }, this)
 								.then(() => {
 									next();
 								})
@@ -2158,19 +2158,19 @@ export default {
 				},
 
 				(station, playlists, next) => {
-					const playlistsToAddToExcluded = playlists.filter(
-						playlistId => station.excludedPlaylists.indexOf(playlistId) === -1
+					const playlistsToAddToBlacklist = playlists.filter(
+						playlistId => station.blacklist.indexOf(playlistId) === -1
 					);
 					console.log(
-						`playlistsToAddToExcluded: ${playlistsToAddToExcluded.length}`,
-						playlistsToAddToExcluded
+						`playlistsToAddToBlacklist: ${playlistsToAddToBlacklist.length}`,
+						playlistsToAddToBlacklist
 					);
 
 					async.eachLimit(
-						playlistsToAddToExcluded,
+						playlistsToAddToBlacklist,
 						1,
 						(playlistId, next) => {
-							StationsModule.runJob("EXCLUDE_PLAYLIST", { stationId, playlistId }, this)
+							StationsModule.runJob("BLACKLIST_PLAYLIST", { stationId, playlistId }, this)
 								.then(() => {
 									next();
 								})
@@ -2987,35 +2987,37 @@ export default {
 				},
 
 				(song, station, next) => {
-					const excludedPlaylists = [];
+					const blacklist = [];
 					async.eachLimit(
-						station.excludedPlaylists,
+						station.blacklist,
 						1,
 						(playlistId, next) => {
 							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 								.then(playlist => {
-									excludedPlaylists.push(playlist);
+									blacklist.push(playlist);
 									next();
 								})
 								.catch(next);
 						},
 						err => {
-							next(err, song, station, excludedPlaylists);
+							next(err, song, station, blacklist);
 						}
 					);
 				},
 
-				(song, station, excludedPlaylists, next) => {
-					const excludedSongs = excludedPlaylists
-						.flatMap(excludedPlaylist => excludedPlaylist.songs)
+				(song, station, blacklist, next) => {
+					const blacklistedSongs = blacklist
+						.flatMap(blacklistedPlaylist => blacklistedPlaylist.songs)
 						.reduce(
 							(items, item) =>
 								items.find(x => x.youtubeId === item.youtubeId) ? [...items] : [...items, item],
 							[]
 						);
 
-					if (excludedSongs.find(excludedSong => excludedSong._id.toString() === song._id.toString()))
-						next("That song is in an excluded playlist and cannot be played.");
+					if (
+						blacklistedSongs.find(blacklistedSong => blacklistedSong._id.toString() === song._id.toString())
+					)
+						next("That song is in an blacklisted playlist and cannot be played.");
 					else next(null, song, station);
 				},
 
@@ -3467,14 +3469,14 @@ export default {
 	}),
 
 	/**
-	 * Excludes a playlist in a station
+	 * Blacklist a playlist in a station
 	 *
 	 * @param session
 	 * @param stationId - the station id
 	 * @param playlistId - the playlist id
 	 * @param cb
 	 */
-	excludePlaylist: isOwnerRequired(async function excludePlaylist(session, stationId, playlistId, cb) {
+	blacklistPlaylist: isOwnerRequired(async function blacklistPlaylist(session, stationId, playlistId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -3485,13 +3487,13 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					if (station.excludedPlaylists.indexOf(playlistId) !== -1)
-						return next("That playlist is already excluded.");
+					if (station.blacklist.indexOf(playlistId) !== -1)
+						return next("That playlist is already blacklisted.");
 					return next();
 				},
 
 				next => {
-					StationsModule.runJob("EXCLUDE_PLAYLIST", { stationId, playlistId }, this)
+					StationsModule.runJob("BLACKLIST_PLAYLIST", { stationId, playlistId }, this)
 						.then(() => {
 							next();
 						})
@@ -3503,22 +3505,22 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
-						"STATIONS_EXCLUDE_PLAYLIST",
-						`Excluding playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
+						"STATIONS_BLACKLIST_PLAYLIST",
+						`Blacklisting playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
 
 				this.log(
 					"SUCCESS",
-					"STATIONS_EXCLUDE_PLAYLIST",
-					`Excluding playlist "${playlistId}" for station "${stationId}" successfully.`
+					"STATIONS_BLACKLIST_PLAYLIST",
+					`Blacklisting playlist "${playlistId}" for station "${stationId}" successfully.`
 				);
 
 				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 
 				CacheModule.runJob("PUB", {
-					channel: "station.excludedPlaylist",
+					channel: "station.blacklistedPlaylist",
 					value: {
 						playlistId,
 						stationId
@@ -3527,21 +3529,26 @@ export default {
 
 				return cb({
 					status: "success",
-					message: "Successfully excluded playlist."
+					message: "Successfully blacklisted playlist."
 				});
 			}
 		);
 	}),
 
 	/**
-	 * Remove excluded a playlist from a station
+	 * Remove blacklisted a playlist from a station
 	 *
 	 * @param session
 	 * @param stationId - the station id
 	 * @param playlistId - the playlist id
 	 * @param cb
 	 */
-	removeExcludedPlaylist: isOwnerRequired(async function removeExcludedPlaylist(session, stationId, playlistId, cb) {
+	removeBlacklistedPlaylist: isOwnerRequired(async function removeBlacklistedPlaylist(
+		session,
+		stationId,
+		playlistId,
+		cb
+	) {
 		async.waterfall(
 			[
 				next => {
@@ -3552,13 +3559,12 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					if (station.excludedPlaylists.indexOf(playlistId) === -1)
-						return next("That playlist is not excluded.");
+					if (station.blacklist.indexOf(playlistId) === -1) return next("That playlist is not blacklisted.");
 					return next();
 				},
 
 				next => {
-					StationsModule.runJob("REMOVE_EXCLUDED_PLAYLIST", { stationId, playlistId }, this)
+					StationsModule.runJob("REMOVE_BLACKLISTED_PLAYLIST", { stationId, playlistId }, this)
 						.then(() => {
 							next();
 						})
@@ -3570,22 +3576,22 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
-						"STATIONS_REMOVE_EXCLUDED_PLAYLIST",
-						`Removing excluded playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
+						"STATIONS_REMOVE_BLACKLISTED_PLAYLIST",
+						`Removing blacklisted playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
 
 				this.log(
 					"SUCCESS",
-					"STATIONS_REMOVE_EXCLUDED_PLAYLIST",
-					`Removing excluded playlist "${playlistId}" for station "${stationId}" successfully.`
+					"STATIONS_REMOVE_BLACKLISTED_PLAYLIST",
+					`Removing blacklisted playlist "${playlistId}" for station "${stationId}" successfully.`
 				);
 
 				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 
 				CacheModule.runJob("PUB", {
-					channel: "station.removedExcludedPlaylist",
+					channel: "station.removedBlacklistedPlaylist",
 					value: {
 						playlistId,
 						stationId
@@ -3594,7 +3600,7 @@ export default {
 
 				return cb({
 					status: "success",
-					message: "Successfully removed excluded playlist."
+					message: "Successfully removed blacklisted playlist."
 				});
 			}
 		);
