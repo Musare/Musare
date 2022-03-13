@@ -1530,7 +1530,7 @@ export default {
 					else next(null, user);
 				}
 			],
-			async (err, { preferences }) => {
+			async (err, user) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
@@ -1552,7 +1552,7 @@ export default {
 				return cb({
 					status: "success",
 					message: "Preferences successfully retrieved",
-					data: { preferences }
+					data: { preferences: user.preferences }
 				});
 			}
 		);
