@@ -346,7 +346,7 @@ export default {
 			events: {
 				adminRoom: "stations",
 				updated: {
-					event: "admin.station.updated",
+					event: "station.updated",
 					id: "station._id",
 					item: "station"
 				},

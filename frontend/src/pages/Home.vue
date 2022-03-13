@@ -635,45 +635,19 @@ export default {
 			if (station) station.userCount = res.data.userCount;
 		});
 
-		this.socket.on("event:station.privacy.updated", res => {
-			const station = this.stations.find(
-				station => station._id === res.data.stationId
-			);
+		this.socket.on("event:station.updated", res => {
+			const stationIndex = this.stations
+				.map(station => station._id)
+				.indexOf(res.data.station._id);
 
-			if (station) station.privacy = res.data.privacy;
-		});
+			if (stationIndex !== -1) {
+				this.stations[stationIndex] = {
+					...this.stations[stationIndex],
+					...res.data.station
+				};
 
-		this.socket.on("event:station.name.updated", res => {
-			const station = this.stations.find(
-				station => station._id === res.data.stationId
-			);
-
-			if (station) station.name = res.data.name;
-		});
-
-		this.socket.on("event:station.displayName.updated", res => {
-			const station = this.stations.find(
-				station => station._id === res.data.stationId
-			);
-
-			if (station) station.displayName = res.data.displayName;
-		});
-
-		this.socket.on("event:station.description.updated", res => {
-			const station = this.stations.find(
-				station => station._id === res.data.stationId
-			);
-
-			if (station) station.description = res.data.description;
-		});
-
-		this.socket.on("event:station.theme.updated", res => {
-			const { stationId, theme } = res.data;
-			const station = this.stations.find(
-				station => station._id === stationId
-			);
-
-			if (station) station.theme = theme;
+				this.calculateFavoriteStations();
+			}
 		});
 
 		this.socket.on("event:station.nextSong", res => {

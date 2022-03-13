@@ -301,67 +301,9 @@ export default {
 				);
 
 				this.socket.on(
-					"event:station.name.updated",
+					"event:station.updated",
 					res => {
-						this.station.name = res.data.name;
-					},
-					{ modal: "manageStation" }
-				);
-
-				this.socket.on(
-					"event:station.displayName.updated",
-					res => {
-						this.station.displayName = res.data.displayName;
-					},
-					{ modal: "manageStation" }
-				);
-
-				this.socket.on(
-					"event:station.description.updated",
-					res => {
-						this.station.description = res.data.description;
-					},
-					{ modal: "manageStation" }
-				);
-
-				this.socket.on(
-					"event:station.partyMode.updated",
-					res => {
-						if (this.station.type === "community")
-							this.station.partyMode = res.data.partyMode;
-					},
-					{ modal: "manageStation" }
-				);
-
-				this.socket.on(
-					"event:station.playMode.updated",
-					res => {
-						this.station.playMode = res.data.playMode;
-					},
-					{ modal: "manageStation" }
-				);
-
-				this.socket.on(
-					"event:station.theme.updated",
-					res => {
-						const { theme } = res.data;
-						this.station.theme = theme;
-					},
-					{ modal: "manageStation" }
-				);
-
-				this.socket.on(
-					"event:station.privacy.updated",
-					res => {
-						this.station.privacy = res.data.privacy;
-					},
-					{ modal: "manageStation" }
-				);
-
-				this.socket.on(
-					"event:station.queue.lock.toggled",
-					res => {
-						this.station.locked = res.data.locked;
+						this.updateStation(res.data.station);
 					},
 					{ modal: "manageStation" }
 				);
@@ -641,7 +583,8 @@ export default {
 			"updateStationPlaylist",
 			"repositionSongInList",
 			"updateStationPaused",
-			"updateCurrentSong"
+			"updateCurrentSong",
+			"updateStation"
 		]),
 		...mapActions({
 			showTab(dispatch, payload) {

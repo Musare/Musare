@@ -31,7 +31,8 @@ export default {
 		updateStationPaused: ({ commit }, stationPaused) =>
 			commit("updateStationPaused", stationPaused),
 		updateCurrentSong: ({ commit }, currentSong) =>
-			commit("updateCurrentSong", currentSong)
+			commit("updateCurrentSong", currentSong),
+		updateStation: ({ commit }, station) => commit("updateStation", station)
 	},
 	mutations: {
 		showTab(state, tab) {
@@ -87,6 +88,9 @@ export default {
 		},
 		updateCurrentSong(state, currentSong) {
 			state.currentSong = currentSong;
+		},
+		updateStation(state, station) {
+			state.station = { ...state.station, ...station };
 		}
 	}
 };

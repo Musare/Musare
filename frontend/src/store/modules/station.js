@@ -31,6 +31,9 @@ const actions = {
 	editStation: ({ commit }, station) => {
 		commit("editStation", station);
 	},
+	updateStation: ({ commit }, station) => {
+		commit("updateStation", station);
+	},
 	updateUserCount: ({ commit }, userCount) => {
 		commit("updateUserCount", userCount);
 	},
@@ -108,6 +111,9 @@ const mutations = {
 	},
 	editStation(state, station) {
 		state.editing = { ...station };
+	},
+	updateStation(state, station) {
+		state.station = { ...state.station, ...station };
 	},
 	updateUserCount(state, userCount) {
 		state.userCount = userCount;

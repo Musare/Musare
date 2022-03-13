@@ -1132,38 +1132,33 @@ export default {
 				this.station.privatePlaylist = null;
 		});
 
-		this.socket.on("event:station.theme.updated", res => {
-			const { theme } = res.data;
-			this.station.theme = theme;
-			document.getElementsByTagName(
-				"html"
-			)[0].style.cssText = `--primary-color: var(--${theme})`;
-		});
+		this.socket.on("event:station.updated", async res => {
+			const { name, theme } = res.data.station;
 
-		this.socket.on("event:station.name.updated", async res => {
-			this.station.name = res.data.name;
+			if (this.station.name !== name) {
+				await this.$router.push(
+					`${name}?${Object.keys(this.$route.query)
+						.map(
+							key =>
+								`${encodeURIComponent(
+									key
+								)}=${encodeURIComponent(
+									this.$route.query[key]
+								)}`
+						)
+						.join("&")}`
+				);
 
-			await this.$router.push(
-				`${res.data.name}?${Object.keys(this.$route.query)
-					.map(
-						key =>
-							`${encodeURIComponent(key)}=${encodeURIComponent(
-								this.$route.query[key]
-							)}`
-					)
-					.join("&")}`
-			);
+				// eslint-disable-next-line no-restricted-globals
+				history.replaceState({ ...history.state, ...{} }, null);
+			}
 
-			// eslint-disable-next-line no-restricted-globals
-			history.replaceState({ ...history.state, ...{} }, null);
-		});
+			if (this.station.theme !== theme)
+				document.getElementsByTagName(
+					"html"
+				)[0].style.cssText = `--primary-color: var(--${theme})`;
 
-		this.socket.on("event:station.displayName.updated", res => {
-			this.station.displayName = res.data.displayName;
-		});
-
-		this.socket.on("event:station.description.updated", res => {
-			this.station.description = res.data.description;
+			this.updateStation(res.data.station);
 		});
 
 		this.socket.on("event:station.users.updated", res =>
@@ -1173,10 +1168,6 @@ export default {
 		this.socket.on("event:station.userCount.updated", res =>
 			this.updateUserCount(res.data.userCount)
 		);
-
-		this.socket.on("event:station.queue.lock.toggled", res => {
-			this.station.locked = res.data.locked;
-		});
 
 		this.socket.on("event:user.station.favorited", res => {
 			if (res.data.stationId === this.station._id)
@@ -1717,17 +1708,6 @@ export default {
 			if (duration <= songDuration)
 				this.timeElapsed = utils.formatTime(duration);
 		},
-		toggleLock() {
-			window.socket.dispatch(
-				"stations.toggleLock",
-				this.station._id,
-				res => {
-					if (res.status === "success") {
-						new Toast("Successfully toggled the queue lock.");
-					} else new Toast(res.message);
-				}
-			);
-		},
 		changeVolume() {
 			const volume = this.volumeSliderValue;
 			localStorage.setItem("volume", volume);
@@ -2264,6 +2244,7 @@ export default {
 		...mapActions("station", [
 			"joinStation",
 			"leaveStation",
+			"updateStation",
 			"updateUserCount",
 			"updateUsers",
 			"updateCurrentSong",
