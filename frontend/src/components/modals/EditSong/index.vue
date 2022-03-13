@@ -82,7 +82,9 @@
 										@click.exact="settings('stop')"
 										@click.shift="settings('hardStop')"
 										@keyup.enter.exact="settings('stop')"
-										@keyup.shift.enter="settings('hardStop')"
+										@keyup.shift.enter="
+											settings('hardStop')
+										"
 										content="Stop Playback"
 										v-tippy
 									>

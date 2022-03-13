@@ -70,7 +70,11 @@ CacheModule.runJob("SUB", {
 											socket.dispatch("event:station.userCount.updated", {
 												data: { stationId, count }
 											});
-										else if (user && station.type === "community" && station.owner === session.userId)
+										else if (
+											user &&
+											station.type === "community" &&
+											station.owner === session.userId
+										)
 											socket.dispatch("event:station.userCount.updated", {
 												data: { stationId, count }
 											});
@@ -572,7 +576,7 @@ export default {
 				},
 
 				(user, next) => {
-					const favoriteStations = (user) ? user.favoriteStations : [];
+					const favoriteStations = user ? user.favoriteStations : [];
 					CacheModule.runJob("HGETALL", { table: "stations" }, this).then(stations =>
 						next(null, stations, favoriteStations)
 					);

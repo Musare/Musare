@@ -394,12 +394,57 @@ export default {
 						value: session.userId
 					});
 
-					// temp fix, need to wait properly for the SUB/PUB refactor (on wekan)
-					setTimeout(() => {
-						CacheModule.runJob("HDEL", { table: "sessions", key: session.sessionId }, this)
-							.then(() => next())
-							.catch(next);
-					}, 50);
+					async.waterfall(
+						[
+							next => {
+								CacheModule.runJob("HGETALL", { table: "sessions" }, this)
+									.then(sessions => {
+										next(null, sessions);
+									})
+									.catch(next);
+							},
+
+							(sessions, next) => {
+								if (!sessions) return next(null, [], {});
+
+								const keys = Object.keys(sessions);
+
+								return next(null, keys, sessions);
+							},
+
+							(keys, sessions, next) => {
+								// temp fix, need to wait properly for the SUB/PUB refactor (on wekan)
+								const { userId } = session;
+								setTimeout(
+									() =>
+										async.each(
+											keys,
+											(sessionId, callback) => {
+												const session = sessions[sessionId];
+
+												if (session && session.userId === userId) {
+													CacheModule.runJob(
+														"HDEL",
+														{
+															table: "sessions",
+															key: sessionId
+														},
+														this
+													)
+														.then(() => callback(null))
+														.catch(callback);
+												} else callback();
+											},
+											err => {
+												next(err);
+											}
+										),
+									50
+								);
+							}
+						],
+						next
+					);
 				},
 
 				// request data removal for user
@@ -577,12 +622,57 @@ export default {
 						value: session.userId
 					});
 
-					// temp fix, need to wait properly for the SUB/PUB refactor (on wekan)
-					setTimeout(() => {
-						CacheModule.runJob("HDEL", { table: "sessions", key: session.sessionId }, this)
-							.then(() => next())
-							.catch(next);
-					}, 50);
+					async.waterfall(
+						[
+							next => {
+								CacheModule.runJob("HGETALL", { table: "sessions" }, this)
+									.then(sessions => {
+										next(null, sessions);
+									})
+									.catch(next);
+							},
+
+							(sessions, next) => {
+								if (!sessions) return next(null, [], {});
+
+								const keys = Object.keys(sessions);
+
+								return next(null, keys, sessions);
+							},
+
+							(keys, sessions, next) => {
+								// temp fix, need to wait properly for the SUB/PUB refactor (on wekan)
+								const { userId } = session;
+								setTimeout(
+									() =>
+										async.each(
+											keys,
+											(sessionId, callback) => {
+												const session = sessions[sessionId];
+
+												if (session && session.userId === userId) {
+													CacheModule.runJob(
+														"HDEL",
+														{
+															table: "sessions",
+															key: sessionId
+														},
+														this
+													)
+														.then(() => callback(null))
+														.catch(callback);
+												} else callback();
+											},
+											err => {
+												next(err);
+											}
+										),
+									50
+								);
+							}
+						],
+						next
+					);
 				},
 
 				// request data removal for user
@@ -1162,7 +1252,7 @@ export default {
 								(sessionId, callback) => {
 									const session = sessions[sessionId];
 
-									if (session.userId === userId) {
+									if (session && session.userId === userId) {
 										// TODO Also maybe add this to this runJob
 										CacheModule.runJob("HDEL", {
 											table: "sessions",
@@ -1170,7 +1260,7 @@ export default {
 										})
 											.then(() => callback(null))
 											.catch(callback);
-									}
+									} else callback();
 								},
 								err => {
 									next(err);
