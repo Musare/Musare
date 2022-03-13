@@ -2,7 +2,8 @@
 
 const state = {
 	station: {},
-	partyPlaylists: [],
+	autoRequest: [],
+	autoRequestLock: false,
 	editing: {},
 	userCount: 0,
 	users: {
@@ -61,8 +62,11 @@ const actions = {
 	updateNoSong: ({ commit }, noSong) => {
 		commit("updateNoSong", noSong);
 	},
-	updatePartyPlaylists: ({ commit }, playlists) => {
-		commit("updatePartyPlaylists", playlists);
+	updateAutoRequest: ({ commit }, playlists) => {
+		commit("updateAutoRequest", playlists);
+	},
+	updateAutoRequestLock: ({ commit }, lock) => {
+		commit("updateAutoRequestLock", lock);
 	},
 	updateIfStationIsFavorited: ({ commit }, { isFavorited }) => {
 		commit("updateIfStationIsFavorited", isFavorited);
@@ -93,7 +97,8 @@ const mutations = {
 	},
 	leaveStation(state) {
 		state.station = {};
-		state.partyPlaylists = [];
+		state.autoRequest = [];
+		state.autoRequestLock = false;
 		state.editing = {};
 		state.userCount = 0;
 		state.users = {
@@ -156,8 +161,11 @@ const mutations = {
 	updateNoSong(state, noSong) {
 		state.noSong = noSong;
 	},
-	updatePartyPlaylists(state, playlists) {
-		state.partyPlaylists = playlists;
+	updateAutoRequest(state, playlists) {
+		state.autoRequest = playlists;
+	},
+	updateAutoRequestLock(state, lock) {
+		state.autoRequestLock = lock;
 	},
 	updateIfStationIsFavorited(state, isFavorited) {
 		state.station.isFavorited = isFavorited;

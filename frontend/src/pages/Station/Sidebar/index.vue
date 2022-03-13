@@ -16,25 +16,30 @@
 				Users
 			</button>
 			<button
-				v-if="loggedIn"
+				v-if="station.requests && station.requests.enabled && loggedIn"
 				class="button is-default"
-				:class="{ selected: tab === 'playlists' }"
-				@click="showTab('playlists')"
+				:class="{ selected: tab === 'requests' }"
+				@click="showTab('requests')"
 			>
-				My Playlists
+				Requests
 			</button>
 			<button
-				v-else
+				v-else-if="station.requests && station.requests.enabled"
 				class="button is-default"
-				content="Login to manage playlists"
+				content="Login to request songs"
 				v-tippy="{ theme: 'info' }"
 			>
-				My Playlists
+				Requests
 			</button>
 		</div>
 		<queue class="tab" v-show="tab === 'queue'" />
 		<users class="tab" v-show="tab === 'users'" />
-		<playlists class="tab" v-show="tab === 'playlists'" />
+		<request
+			v-if="station.requests && station.requests.enabled && loggedIn"
+			v-show="tab === 'requests'"
+			class="tab requests-tab"
+			sector="station"
+		/>
 	</div>
 </template>
 
@@ -44,10 +49,10 @@ import { mapActions, mapState } from "vuex";
 import Queue from "@/components/Queue.vue";
 import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 import Users from "./Users.vue";
-import Playlists from "./Playlists.vue";
+import Request from "@/components/Request.vue";
 
 export default {
-	components: { Queue, Users, Playlists },
+	components: { Queue, Users, Request },
 	mixins: [TabQueryHandler],
 	data() {
 		return {
@@ -55,6 +60,7 @@ export default {
 		};
 	},
 	computed: mapState({
+		station: state => state.station.station,
 		users: state => state.station.users,
 		userCount: state => state.station.userCount,
 		loggedIn: state => state.user.auth.loggedIn
@@ -63,7 +69,7 @@ export default {
 		if (
 			this.$route.query.tab === "queue" ||
 			this.$route.query.tab === "users" ||
-			this.$route.query.tab === "playlists"
+			this.$route.query.tab === "requests"
 		)
 			this.tab = this.$route.query.tab;
 	},
@@ -78,6 +84,11 @@ export default {
 	#tab-selection .button {
 		background: var(--dark-grey);
 		color: var(--white);
+	}
+
+	.tab.requests-tab {
+		background-color: var(--dark-grey-3) !important;
+		border: 0 !important;
 	}
 }
 
@@ -121,6 +132,15 @@ export default {
 :deep(.tab) {
 	.nothing-here-text:not(:only-child) {
 		height: calc(100% - 40px);
+	}
+
+	&.requests-tab {
+		background-color: var(--white);
+		margin-bottom: 20px;
+		border-radius: 0 0 @border-radius @border-radius;
+		max-height: 100%;
+		padding: 15px;
+		overflow-y: auto;
 	}
 }
 

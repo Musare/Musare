@@ -45,6 +45,14 @@ export default async function migrate(MigrationModule) {
 							);
 						}
 					});
+					stationModel.updateMany(
+						{ documentVersion: 7 },
+						{ $set: { "requests.enabled": true } },
+						(err, res) => {
+							this.log("INFO", `Migration 20. Stations found: ${res.modifiedCount}.`);
+							next(err);
+						}
+					);
 				}
 			],
 			err => {

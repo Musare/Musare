@@ -11,10 +11,19 @@
 					Songs
 				</button>
 				<button
+					v-if="sector === 'station'"
 					class="button is-default"
 					ref="autorequest-tab"
 					:class="{ selected: tab === 'autorequest' }"
 					@click="showTab('autorequest')"
+				>
+					Autorequest
+				</button>
+				<button
+					v-else
+					class="button is-default disabled"
+					content="Only available on station pages"
+					v-tippy
 				>
 					Autorequest
 				</button>
@@ -162,7 +171,7 @@
 					</div>
 				</div>
 			</div>
-			<div v-show="tab === 'autorequest'">
+			<div v-if="sector === 'station'" v-show="tab === 'autorequest'">
 				<div class="tab-selection">
 					<button
 						class="button is-default"
@@ -238,11 +247,7 @@
 								>
 								<quick-confirm
 									v-if="isSelected(featuredPlaylist._id)"
-									@confirm="
-										deselectPartyPlaylist(
-											featuredPlaylist._id
-										)
-									"
+									@confirm="deselect(featuredPlaylist._id)"
 								>
 									<i
 										class="material-icons stop-icon"
@@ -257,9 +262,7 @@
 										!isSelected(featuredPlaylist._id) &&
 										!isBlacklisted(featuredPlaylist._id)
 									"
-									@click="
-										selectPartyPlaylist(featuredPlaylist)
-									"
+									@click="select(featuredPlaylist)"
 									class="material-icons play-icon"
 									content="Request songs from this playlist"
 									v-tippy
@@ -393,9 +396,7 @@
 								>
 								<quick-confirm
 									v-if="isSelected(playlist._id)"
-									@confirm="
-										deselectPartyPlaylist(playlist._id)
-									"
+									@confirm="deselect(playlist._id)"
 								>
 									<i
 										class="material-icons stop-icon"
@@ -410,7 +411,7 @@
 										!isSelected(playlist._id) &&
 										!isBlacklisted(playlist._id)
 									"
-									@click="selectPartyPlaylist(playlist)"
+									@click="select(playlist)"
 									class="material-icons play-icon"
 									content="Request songs from this playlist"
 									v-tippy
@@ -544,9 +545,7 @@
 									<template #actions>
 										<i
 											v-if="!isSelected(element._id)"
-											@click="
-												selectPartyPlaylist(element)
-											"
+											@click="select(element)"
 											class="material-icons play-icon"
 											content="Request songs from this playlist"
 											v-tippy
@@ -554,11 +553,7 @@
 										>
 										<quick-confirm
 											v-if="isSelected(element._id)"
-											@confirm="
-												deselectPartyPlaylist(
-													element._id
-												)
-											"
+											@confirm="deselect(element._id)"
 										>
 											<i
 												class="material-icons stop-icon"
@@ -620,9 +615,9 @@
 					</p>
 				</div>
 				<div class="tab" v-show="childTab === 'current'">
-					<div v-if="partyPlaylists.length > 0">
+					<div v-if="autoRequest.length > 0">
 						<playlist-item
-							v-for="playlist in partyPlaylists"
+							v-for="playlist in autoRequest"
 							:key="`key-${playlist._id}`"
 							:playlist="playlist"
 							:show-owner="true"
@@ -640,9 +635,7 @@
 							<template #actions>
 								<quick-confirm
 									v-if="isOwnerOrAdmin()"
-									@confirm="
-										deselectPartyPlaylist(playlist._id)
-									"
+									@confirm="deselect(playlist._id)"
 								>
 									<i
 										class="material-icons stop-icon"
@@ -703,7 +696,7 @@ import ws from "@/ws";
 import QuickConfirm from "@/components/QuickConfirm.vue";
 import SongItem from "@/components/SongItem.vue";
 import PlaylistItem from "@/components/PlaylistItem.vue";
-import SearchQueryItem from "../../../SearchQueryItem.vue";
+import SearchQueryItem from "@/components/SearchQueryItem.vue";
 
 import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
 import SearchYoutube from "@/mixins/SearchYoutube.vue";
@@ -717,6 +710,9 @@ export default {
 		SearchQueryItem
 	},
 	mixins: [SortablePlaylists, SearchYoutube, SearchMusare],
+	props: {
+		sector: { type: String, default: "station" }
+	},
 	data() {
 		return {
 			tab: "songs",
@@ -751,19 +747,22 @@ export default {
 					.concat(this.station.currentSong.youtubeId);
 			return this.songsList.map(song => song.youtubeId);
 		},
-		...mapState({
-			loggedIn: state => state.user.auth.loggedIn,
-			role: state => state.user.auth.role,
-			userId: state => state.user.auth.userId,
-			partyPlaylists: state => state.station.partyPlaylists
+		currentUserQueueSongs() {
+			return this.songsList.filter(
+				queueSong => queueSong.requestedBy === this.userId
+			).length;
+		},
+		...mapState("user", {
+			loggedIn: state => state.auth.loggedIn,
+			role: state => state.auth.role,
+			userId: state => state.auth.userId
 		}),
-		...mapState("modals/manageStation", {
-			parentTab: state => state.tab,
-			originalStation: state => state.originalStation,
+		...mapState("station", {
 			station: state => state.station,
-			includedPlaylists: state => state.includedPlaylists,
-			blacklist: state => state.blacklist,
-			songsList: state => state.songsList
+			songsList: state => state.songsList,
+			autoRequest: state => state.autoRequest,
+			autoRequestLock: state => state.autoRequestLock,
+			blacklist: state => state.blacklist
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -773,6 +772,10 @@ export default {
 		this.showTab("songs");
 
 		ws.onConnect(this.init);
+
+		this.socket.on("event:station.queue.updated", () =>
+			this.autoRequestSong()
+		);
 	},
 	methods: {
 		init() {
@@ -788,24 +791,11 @@ export default {
 			});
 
 			this.socket.dispatch(
-				`stations.getStationIncludedPlaylistsById`,
-				this.station._id,
-				res => {
-					if (res.status === "success") {
-						this.station.includedPlaylists = res.data.playlists;
-						this.originalStation.includedPlaylists =
-							res.data.playlists;
-					}
-				}
-			);
-
-			this.socket.dispatch(
 				`stations.getStationBlacklistById`,
 				this.station._id,
 				res => {
 					if (res.status === "success") {
 						this.station.blacklist = res.data.playlists;
-						this.originalStation.blacklist = res.data.playlists;
 					}
 				}
 			);
@@ -835,10 +825,10 @@ export default {
 			this.editPlaylist(playlistId);
 			this.openModal("editPlaylist");
 		},
-		selectPartyPlaylist(playlist) {
+		select(playlist) {
 			if (!this.isSelected(playlist.id)) {
-				this.partyPlaylists.push(playlist);
-				this.addPartyPlaylistSongToQueue();
+				this.autoRequest.push(playlist);
+				this.autoRequestSong();
 				new Toast(
 					"Successfully selected playlist to auto request songs."
 				);
@@ -846,13 +836,13 @@ export default {
 				new Toast("Error: Playlist already selected.");
 			}
 		},
-		deselectPartyPlaylist(id) {
+		deselect(id) {
 			return new Promise(resolve => {
 				let selected = false;
-				this.partyPlaylists.forEach((playlist, index) => {
+				this.autoRequest.forEach((playlist, index) => {
 					if (playlist._id === id) {
 						selected = true;
-						this.partyPlaylists.splice(index, 1);
+						this.autoRequest.splice(index, 1);
 					}
 				});
 				if (selected) {
@@ -879,7 +869,7 @@ export default {
 		},
 		isSelected(id) {
 			let selected = false;
-			this.partyPlaylists.forEach(playlist => {
+			this.autoRequest.forEach(playlist => {
 				if (playlist._id === id) selected = true;
 			});
 			return selected;
@@ -945,17 +935,16 @@ export default {
 				}
 			);
 		},
-		addPartyPlaylistSongToQueue() {
+		autoRequestSong() {
 			if (
+				!this.autoRequestLock &&
 				this.songsList.length < 50 &&
-				this.songsList.filter(
-					queueSong => queueSong.requestedBy === this.userId
-				).length < 3 &&
-				this.partyPlaylists
+				this.currentUserQueueSongs < 3 &&
+				this.autoRequest.length > 0
 			) {
 				const selectedPlaylist =
-					this.partyPlaylists[
-						Math.floor(Math.random() * this.partyPlaylists.length)
+					this.autoRequest[
+						Math.floor(Math.random() * this.autoRequest.length)
 					];
 				if (selectedPlaylist._id && selectedPlaylist.songs.length > 0) {
 					const selectedSong =
@@ -965,13 +954,15 @@ export default {
 							)
 						];
 					if (selectedSong.youtubeId) {
+						this.autoRequestLock = true;
 						this.socket.dispatch(
 							"stations.addToQueue",
 							this.station._id,
 							selectedSong.youtubeId,
 							data => {
+								this.autoRequestLock = false;
 								if (data.status !== "success")
-									this.addPartyPlaylistSongToQueue();
+									this.autoRequestSong();
 							}
 						);
 					}
@@ -997,7 +988,7 @@ export default {
 				}
 			);
 		},
-		...mapActions("station", ["updatePartyPlaylists"]),
+		...mapActions("station", ["updateAutoRequest"]),
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("user/playlists", ["editPlaylist", "setPlaylists"])
 	}
@@ -1022,6 +1013,10 @@ export default {
 
 .selected-icon {
 	color: var(--purple);
+}
+
+#create-new-playlist-button {
+	width: 100%;
 }
 
 .station-playlists {

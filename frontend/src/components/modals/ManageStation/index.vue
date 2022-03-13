@@ -4,7 +4,7 @@
 		:title="
 			sector === 'home' && !isOwnerOrAdmin()
 				? 'View Queue'
-				: !isOwnerOrAdmin() && station.partyMode
+				: !isOwnerOrAdmin()
 				? 'Add Song to Queue'
 				: 'Manage Station'
 		"
@@ -28,20 +28,6 @@
 								>
 									check_circle
 								</i>
-								<i
-									class="material-icons stationMode"
-									:content="
-										station.partyMode
-											? 'Station in Party mode'
-											: 'Station in Playlist mode'
-									"
-									v-tippy
-									>{{
-										station.partyMode
-											? "emoji_people"
-											: "playlist_play"
-									}}</i
-								>
 							</div>
 							<p>{{ station.description }}</p>
 						</div>
@@ -114,7 +100,10 @@
 								Autofill
 							</button>
 							<button
-								v-if="isAllowedToParty() || isOwnerOrAdmin()"
+								v-if="
+									station.requests.enabled &&
+									(isAllowedToParty() || isOwnerOrAdmin())
+								"
 								class="button is-default"
 								:class="{ selected: tab === 'request' }"
 								ref="request-tab"
@@ -143,9 +132,13 @@
 							v-show="tab === 'autofill'"
 						/>
 						<request
-							v-if="isAllowedToParty() || isOwnerOrAdmin()"
+							v-if="
+								station.requests.enabled &&
+								(isAllowedToParty() || isOwnerOrAdmin())
+							"
 							class="tab"
 							v-show="tab === 'request'"
+							:sector="sector"
 						/>
 						<blacklist
 							v-if="isOwnerOrAdmin()"
@@ -199,7 +192,7 @@ import Modal from "../../Modal.vue";
 
 import Settings from "./Tabs/Settings.vue";
 import Autofill from "./Tabs/Autofill.vue";
-import Request from "./Tabs/Request.vue";
+import Request from "@/components/Request.vue";
 import Blacklist from "./Tabs/Blacklist.vue";
 
 export default {
@@ -244,8 +237,7 @@ export default {
 				const { station } = res.data;
 				this.editStation(station);
 
-				if (!this.isOwnerOrAdmin() && this.station.partyMode)
-					this.showTab("songs");
+				if (!this.isOwnerOrAdmin()) this.showTab("songs");
 
 				const currentSong = res.data.station.currentSong
 					? res.data.station.currentSong
@@ -509,23 +501,12 @@ export default {
 		isOwnerOrAdmin() {
 			return this.isOwner() || this.isAdmin();
 		},
-		isPartyMode() {
-			return (
-				this.station &&
-				this.station.type === "community" &&
-				this.station.partyMode
-			);
-		},
 		isAllowedToParty() {
 			return (
 				this.station &&
-				this.isPartyMode() &&
 				(!this.station.locked || this.isOwnerOrAdmin()) &&
 				this.loggedIn
 			);
-		},
-		isPlaylistMode() {
-			return this.station && !this.isPartyMode();
 		},
 		removeStation() {
 			this.socket.dispatch("stations.remove", this.station._id, res => {

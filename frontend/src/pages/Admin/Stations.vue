@@ -84,14 +84,6 @@
 						:link="true"
 					/>
 				</template>
-				<template #column-stationMode="slotProps">
-					<span
-						:title="slotProps.item.partyMode ? 'Party' : 'Playlist'"
-						>{{
-							slotProps.item.partyMode ? "Party" : "Playlist"
-						}}</span
-					>
-				</template>
 				<template #column-playMode="slotProps">
 					<span :title="slotProps.item.playMode">{{
 						slotProps.item.playMode === "random"
@@ -226,13 +218,6 @@ export default {
 					defaultWidth: 150
 				},
 				{
-					name: "stationMode",
-					displayName: "Station Mode",
-					properties: ["partyMode"],
-					sortable: false,
-					defaultVisibility: "hidden"
-				},
-				{
 					name: "playMode",
 					displayName: "Play Mode",
 					properties: ["playMode"],
@@ -305,17 +290,6 @@ export default {
 					property: "owner",
 					filterTypes: ["contains", "exact", "regex"],
 					defaultFilterType: "contains"
-				},
-				{
-					name: "stationMode",
-					displayName: "Station Mode",
-					property: "partyMode",
-					filterTypes: ["boolean"],
-					defaultFilterType: "boolean",
-					dropdown: [
-						[true, "Party"],
-						[false, "Playlist"]
-					]
 				},
 				{
 					name: "playMode",

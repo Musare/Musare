@@ -321,7 +321,7 @@ CacheModule.runJob("SUB", {
 
 		stationModel.findOne(
 			{ _id: stationId },
-			["_id", "name", "displayName", "description", "type", "privacy", "owner", "partyMode", "playMode", "theme"],
+			["_id", "name", "displayName", "description", "type", "privacy", "owner", "requests", "playMode", "theme"],
 			(err, station) => {
 				WSModule.runJob("EMIT_TO_ROOMS", {
 					rooms: [`station.${stationId}`, `manage-station.${stationId}`, "admin.stations"],
@@ -818,7 +818,7 @@ export default {
 						name: station.name,
 						privacy: station.privacy,
 						locked: station.locked,
-						partyMode: station.partyMode,
+						requests: station.requests,
 						playMode: station.playMode,
 						owner: station.owner,
 						includedPlaylists: station.includedPlaylists,
@@ -946,7 +946,7 @@ export default {
 						name: station.name,
 						privacy: station.privacy,
 						locked: station.locked,
-						partyMode: station.partyMode,
+						requests: station.requests,
 						playMode: station.playMode,
 						owner: station.owner,
 						theme: station.theme,
@@ -1709,7 +1709,6 @@ export default {
 								privacy: "private",
 								queue: [],
 								currentSong: null,
-								partyMode: false,
 								playMode: "random"
 							},
 							next
@@ -1727,7 +1726,6 @@ export default {
 								owner: session.userId,
 								queue: [],
 								currentSong: null,
-								partyMode: true,
 								playMode: "random"
 							},
 							next

@@ -114,10 +114,7 @@
 										<template #tippyActions>
 											<i
 												class="material-icons add-to-queue-icon"
-												v-if="
-													station.partyMode &&
-													!station.locked
-												"
+												v-if="!station.locked"
 												@click="
 													addSongToQueue(
 														element.youtubeId

@@ -69,46 +69,6 @@
 		<p class="nothing-here-text" v-else>
 			There are no songs currently queued
 		</p>
-		<button
-			class="button is-primary tab-actionable-button"
-			v-if="
-				sector === 'station' &&
-				loggedIn &&
-				((station.locked && isOwnerOnly()) ||
-					!station.locked ||
-					(station.locked && isAdminOnly() && dismissedWarning))
-			"
-			@click="
-				openModal('manageStation') & showManageStationTab('request')
-			"
-		>
-			<i class="material-icons icon-with-button">queue</i>
-			<span> Add Song To Queue </span>
-		</button>
-		<button
-			class="button is-primary tab-actionable-button disabled"
-			v-if="sector === 'station' && !loggedIn && !station.locked"
-			content="Login to add songs to queue"
-			v-tippy="{ theme: 'info' }"
-		>
-			<i class="material-icons icon-with-button">queue</i>
-			<span> Add Song To Queue </span>
-		</button>
-		<div id="queue-locked" v-if="station.locked">
-			<button
-				v-if="isAdminOnly() && !isOwnerOnly() && !dismissedWarning"
-				class="button tab-actionable-button"
-				@click="dismissedWarning = true"
-			>
-				THIS STATION'S QUEUE IS LOCKED.
-			</button>
-			<button
-				v-if="!isAdminOnly() && !isOwnerOnly()"
-				class="button tab-actionable-button"
-			>
-				THIS STATION'S QUEUE IS LOCKED.
-			</button>
-		</div>
 	</div>
 </template>
 
@@ -130,7 +90,6 @@ export default {
 	},
 	data() {
 		return {
-			dismissedWarning: false,
 			actionableButtonVisible: false,
 			drag: false
 		};

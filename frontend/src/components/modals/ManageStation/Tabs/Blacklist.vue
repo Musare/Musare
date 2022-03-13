@@ -78,8 +78,7 @@ export default {
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
 			role: state => state.user.auth.role,
-			userId: state => state.user.auth.userId,
-			partyPlaylists: state => state.station.partyPlaylists
+			userId: state => state.user.auth.userId
 		}),
 		...mapState("modals/manageStation", {
 			originalStation: state => state.originalStation,

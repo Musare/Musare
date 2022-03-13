@@ -158,7 +158,7 @@
 			</div>
 		</div>
 
-		<hr />
+		<hr class="section-horizontal-rule" />
 
 		<button class="control is-expanded button is-primary" @click="update()">
 			Save Changes
@@ -207,7 +207,7 @@ export default {
 		this.local = {
 			...this.station,
 			requests: {
-				enabled: true,
+				enabled: this.station.requests.enabled,
 				access: "owner"
 			},
 			autofill: {

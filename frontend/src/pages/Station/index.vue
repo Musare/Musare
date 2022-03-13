@@ -678,7 +678,8 @@
 				<span><b>Local paused</b>: {{ localPaused }}</span>
 				<span><b>Station paused</b>: {{ stationPaused }}</span>
 				<span
-					><b>Party playlists selected</b>: {{ partyPlaylists }}</span
+					><b>Auto requesting playlists</b>:
+					{{ autoRequest.join(", ") }}</span
 				>
 				<span><b>Skip votes loaded</b>: {{ skipVotesLoaded }}</span>
 				<span
@@ -845,7 +846,6 @@ export default {
 			socketConnected: null,
 			persistentToastCheckerInterval: null,
 			persistentToasts: [],
-			partyPlaylistLock: false,
 			mediasession: false,
 			christmas: false
 		};
@@ -897,7 +897,7 @@ export default {
 			stationPaused: state => state.stationPaused,
 			localPaused: state => state.localPaused,
 			noSong: state => state.noSong,
-			partyPlaylists: state => state.partyPlaylists,
+			autoRequest: state => state.autoRequest,
 			includedPlaylists: state => state.includedPlaylists,
 			blacklist: state => state.blacklist
 		}),
@@ -1098,8 +1098,6 @@ export default {
 					: null;
 
 			this.updateNextSong(nextSong);
-
-			this.addPartyPlaylistSongToQueue();
 		});
 
 		this.socket.on("event:station.queue.song.repositioned", res => {
@@ -1861,40 +1859,6 @@ export default {
 				}
 			);
 		},
-		addPartyPlaylistSongToQueue() {
-			if (
-				!this.partyPlaylistLock &&
-				this.songsList.length < 50 &&
-				this.currentUserQueueSongs < 3 &&
-				this.partyPlaylists.length > 0
-			) {
-				const selectedPlaylist =
-					this.partyPlaylists[
-						Math.floor(Math.random() * this.partyPlaylists.length)
-					];
-				if (selectedPlaylist._id && selectedPlaylist.songs.length > 0) {
-					const selectedSong =
-						selectedPlaylist.songs[
-							Math.floor(
-								Math.random() * selectedPlaylist.songs.length
-							)
-						];
-					if (selectedSong.youtubeId) {
-						this.partyPlaylistLock = true;
-						this.socket.dispatch(
-							"stations.addToQueue",
-							this.station._id,
-							selectedSong.youtubeId,
-							data => {
-								this.partyPlaylistLock = false;
-								if (data.status !== "success")
-									this.addPartyPlaylistSongToQueue();
-							}
-						);
-					}
-				}
-			}
-		},
 		togglePlayerDebugBox() {
 			this.$refs.playerDebugBox.toggleBox();
 		},
@@ -1924,7 +1888,6 @@ export default {
 							description,
 							privacy,
 							locked,
-							partyMode,
 							owner,
 							privatePlaylist,
 							includedPlaylists,
@@ -1933,7 +1896,8 @@ export default {
 							genres,
 							blacklistedGenres,
 							isFavorited,
-							theme
+							theme,
+							requests
 						} = res.data;
 
 						// change url to use station name instead of station id
@@ -1949,7 +1913,6 @@ export default {
 							description,
 							privacy,
 							locked,
-							partyMode,
 							owner,
 							privatePlaylist,
 							includedPlaylists,
@@ -1958,7 +1921,8 @@ export default {
 							genres,
 							blacklistedGenres,
 							isFavorited,
-							theme
+							theme,
+							requests
 						});
 
 						document.getElementsByTagName(

@@ -26,35 +26,27 @@
 							<i
 								v-if="
 									station.type === 'community' &&
-									(isOwnerOrAdmin() || station.partyMode) &&
+									isOwnerOrAdmin() &&
 									!isSelected(element._id) &&
 									!isBlacklisted(element._id)
 								"
 								@click="selectPlaylist(element)"
 								class="material-icons play-icon"
-								:content="
-									station.partyMode
-										? 'Request songs from this playlist'
-										: 'Play songs from this playlist'
-								"
+								content="Request songs from this playlist"
 								v-tippy
 								>play_arrow</i
 							>
 							<quick-confirm
 								v-if="
 									station.type === 'community' &&
-									(isOwnerOrAdmin() || station.partyMode) &&
+									isOwnerOrAdmin() &&
 									isSelected(element._id)
 								"
 								@confirm="deselectPlaylist(element._id)"
 							>
 								<i
 									class="material-icons stop-icon"
-									:content="
-										station.partyMode
-											? 'Stop requesting songs from this playlist'
-											: 'Stop playing songs from this playlist'
-									"
+									content="Stop requesting songs from this playlist"
 									v-tippy
 									>stop</i
 								>
@@ -114,8 +106,7 @@ export default {
 	mixins: [SortablePlaylists],
 	computed: {
 		currentPlaylists() {
-			if (this.station.type === "community" && this.station.partyMode)
-				return this.partyPlaylists;
+			if (this.station.type === "community") return this.autoRequest;
 
 			return this.includedPlaylists;
 		},
@@ -125,7 +116,7 @@ export default {
 			loggedIn: state => state.user.auth.loggedIn
 		}),
 		...mapState("station", {
-			partyPlaylists: state => state.partyPlaylists,
+			autoRequest: state => state.autoRequest,
 			includedPlaylists: state => state.includedPlaylists,
 			blacklist: state => state.blacklist,
 			songsList: state => state.songsList
@@ -193,10 +184,9 @@ export default {
 			this.openModal("editPlaylist");
 		},
 		selectPlaylist(playlist) {
-			if (this.station.type === "community" && this.station.partyMode) {
+			if (this.station.type === "community") {
 				if (!this.isSelected(playlist.id)) {
-					this.partyPlaylists.push(playlist);
-					this.addPartyPlaylistSongToQueue();
+					this.autoRequest.push(playlist);
 					new Toast(
 						"Successfully selected playlist to auto request songs."
 					);
@@ -216,15 +206,12 @@ export default {
 		},
 		deselectPlaylist(id) {
 			return new Promise(resolve => {
-				if (
-					this.station.type === "community" &&
-					this.station.partyMode
-				) {
+				if (this.station.type === "community") {
 					let selected = false;
 					this.currentPlaylists.forEach((playlist, index) => {
 						if (playlist._id === id) {
 							selected = true;
-							this.partyPlaylists.splice(index, 1);
+							this.autoRequest.splice(index, 1);
 						}
 					});
 					if (selected) {
@@ -273,42 +260,6 @@ export default {
 				}
 			);
 		},
-		addPartyPlaylistSongToQueue() {
-			if (
-				this.station.type === "community" &&
-				this.station.partyMode === true &&
-				this.songsList.length < 50 &&
-				this.songsList.filter(
-					queueSong => queueSong.requestedBy === this.userId
-				).length < 3 &&
-				this.partyPlaylists
-			) {
-				const selectedPlaylist =
-					this.partyPlaylists[
-						Math.floor(Math.random() * this.partyPlaylists.length)
-					];
-				if (selectedPlaylist._id && selectedPlaylist.songs.length > 0) {
-					const selectedSong =
-						selectedPlaylist.songs[
-							Math.floor(
-								Math.random() * selectedPlaylist.songs.length
-							)
-						];
-					if (selectedSong.youtubeId) {
-						this.socket.dispatch(
-							"stations.addToQueue",
-							this.station._id,
-							selectedSong.youtubeId,
-							data => {
-								if (data.status !== "success")
-									this.addPartyPlaylistSongToQueue();
-							}
-						);
-					}
-				}
-			}
-		},
-		...mapActions("station", ["updatePartyPlaylists"]),
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("user/playlists", ["editPlaylist", "setPlaylists"])
 	}
