@@ -1,5 +1,18 @@
 # Changelog
 
+## [v3.4.0-rc2] - 2022-03-19
+
+### Added
+- feat: Re-added ability to hard stop player in Edit Song
+
+## Changed
+- refactor: Delete user sessions when account is deleted
+
+### Fixed
+- fix: Changing password in Settings does not create success toast
+- fix: Invalid user sessions could sometimes break actions
+- fix: Add To Playlist Dropdown create playlist button not full width
+
 ## [v3.4.0-rc1] - 2022-03-06
 
 ### **Breaking Changes**
