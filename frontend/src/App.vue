@@ -1183,7 +1183,7 @@ img {
 
 	#create-playlist {
 		margin: 10px 10px 10px 10px;
-		width: unset;
+		width: calc(100% - 20px);
 	}
 }
 
