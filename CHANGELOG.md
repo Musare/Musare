@@ -5,7 +5,7 @@
 ### Added
 - feat: Re-added ability to hard stop player in Edit Song
 
-## Changed
+### Changed
 - refactor: Delete user sessions when account is deleted
 
 ### Fixed
