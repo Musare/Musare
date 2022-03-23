@@ -934,7 +934,8 @@ export default {
 			if (
 				!this.autoRequestLock &&
 				this.songsList.length < 50 &&
-				this.currentUserQueueSongs < this.station.requests.limit &&
+				this.currentUserQueueSongs <
+					this.station.requests.limit * 0.5 &&
 				this.autoRequest.length > 0
 			) {
 				const selectedPlaylist =
