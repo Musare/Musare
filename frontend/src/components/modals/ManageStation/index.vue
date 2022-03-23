@@ -231,13 +231,22 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
+	watch: {
+		// eslint-disable-next-line
+		"station.requests": function (requests) {
+			if (this.tab === "request" && requests && !requests.enabled) {
+				if (this.isOwnerOrAdmin()) this.showTab("settings");
+				else this.closeModal("manageStation");
+			}
+		},
+	},
 	mounted() {
 		this.socket.dispatch(`stations.getStationById`, this.stationId, res => {
 			if (res.status === "success") {
 				const { station } = res.data;
 				this.editStation(station);
 
-				if (!this.isOwnerOrAdmin()) this.showTab("songs");
+				if (!this.isOwnerOrAdmin()) this.showTab("request");
 
 				const currentSong = res.data.station.currentSong
 					? res.data.station.currentSong

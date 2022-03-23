@@ -190,7 +190,6 @@
 						Current
 					</button>
 					<button
-						v-if="station.type === 'community'"
 						class="button is-default"
 						ref="my-playlists-child-tab"
 						:class="{ selected: childTab === 'my-playlists' }"
@@ -480,11 +479,7 @@
 						</button>
 					</div>
 				</div>
-				<div
-					v-if="station.type === 'community'"
-					class="tab"
-					v-show="childTab === 'my-playlists'"
-				>
+				<div class="tab" v-show="childTab === 'my-playlists'">
 					<button
 						class="button is-primary"
 						id="create-new-playlist-button"

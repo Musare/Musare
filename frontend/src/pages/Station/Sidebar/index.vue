@@ -18,10 +18,10 @@
 			<button
 				v-if="station.requests && station.requests.enabled && loggedIn"
 				class="button is-default"
-				:class="{ selected: tab === 'requests' }"
-				@click="showTab('requests')"
+				:class="{ selected: tab === 'request' }"
+				@click="showTab('request')"
 			>
-				Requests
+				Request
 			</button>
 			<button
 				v-else-if="station.requests && station.requests.enabled"
@@ -29,14 +29,14 @@
 				content="Login to request songs"
 				v-tippy="{ theme: 'info' }"
 			>
-				Requests
+				Request
 			</button>
 		</div>
 		<queue class="tab" v-show="tab === 'queue'" />
 		<users class="tab" v-show="tab === 'users'" />
 		<request
 			v-if="station.requests && station.requests.enabled && loggedIn"
-			v-show="tab === 'requests'"
+			v-show="tab === 'request'"
 			class="tab requests-tab"
 			sector="station"
 		/>
@@ -65,11 +65,18 @@ export default {
 		userCount: state => state.station.userCount,
 		loggedIn: state => state.user.auth.loggedIn
 	}),
+	watch: {
+		// eslint-disable-next-line
+		"station.requests": function (requests) {
+			if (this.tab === "request" && requests && !requests.enabled)
+				this.showTab("queue");
+		}
+	},
 	mounted() {
 		if (
 			this.$route.query.tab === "queue" ||
 			this.$route.query.tab === "users" ||
-			this.$route.query.tab === "requests"
+			this.$route.query.tab === "request"
 		)
 			this.tab = this.$route.query.tab;
 	},
