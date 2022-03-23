@@ -1917,6 +1917,21 @@ export default {
 				(song, station, next) => {
 					song.requestedBy = session.userId;
 					song.requestedAt = Date.now();
+					return next(null, song, station);
+				},
+
+				(song, station, next) => {
+					if (station.queue.length === 0) return next(null, song);
+					let totalSongs = 0;
+					station.queue.forEach(song => {
+						if (session.userId === song.requestedBy) {
+							totalSongs += 1;
+						}
+					});
+
+					if (totalSongs > station.requests.limit)
+						return next(`The max amount of songs per user is ${station.requests.limit}.`);
+
 					return next(null, song);
 				},
 

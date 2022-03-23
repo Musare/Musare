@@ -939,7 +939,7 @@ export default {
 			if (
 				!this.autoRequestLock &&
 				this.songsList.length < 50 &&
-				this.currentUserQueueSongs < 3 &&
+				this.currentUserQueueSongs < this.station.requests.limit &&
 				this.autoRequest.length > 0
 			) {
 				const selectedPlaylist =
@@ -954,13 +954,13 @@ export default {
 							)
 						];
 					if (selectedSong.youtubeId) {
-						this.autoRequestLock = true;
+						this.updateAutoRequestLock(true);
 						this.socket.dispatch(
 							"stations.addToQueue",
 							this.station._id,
 							selectedSong.youtubeId,
 							data => {
-								this.autoRequestLock = false;
+								this.updateAutoRequestLock(false);
 								if (data.status !== "success")
 									this.autoRequestSong();
 							}
@@ -989,6 +989,10 @@ export default {
 			);
 		},
 		...mapActions("station", ["updateAutoRequest"]),
+		...mapActions("station", [
+			"updateAutoRequest",
+			"updateAutoRequestLock"
+		]),
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("user/playlists", ["editPlaylist", "setPlaylists"])
 	}

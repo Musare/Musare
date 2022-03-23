@@ -42,7 +42,8 @@ export default {
 	],
 	owner: { type: String },
 	requests: {
-		enabled: { type: Boolean, default: true }
+		enabled: { type: Boolean, default: true },
+		limit: { type: Number, min: 1, max: 50, default: 3 }
 	},
 	playMode: { type: String, enum: ["random", "sequential"], default: "random" },
 	theme: { type: String, enum: ["blue", "purple", "teal", "orange", "red"], default: "blue" },

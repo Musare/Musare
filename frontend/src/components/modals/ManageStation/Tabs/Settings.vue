@@ -81,13 +81,26 @@
 					</p>
 				</div>
 
-				<div v-if="local.requests.enabled" class="control is-expanded">
+				<div v-if="local.requests.enabled" class="small-section">
 					<label class="label">Minimum access</label>
 					<div class="control is-expanded select">
 						<select v-model="local.requests.access">
 							<option value="owner" selected>Owner</option>
 							<option value="user">User</option>
 						</select>
+					</div>
+				</div>
+
+				<div v-if="local.requests.enabled" class="small-section">
+					<label class="label">Per user request limit</label>
+					<div class="control is-expanded">
+						<input
+							class="input"
+							type="number"
+							min="1"
+							max="50"
+							v-model="local.requests.limit"
+						/>
 					</div>
 				</div>
 			</div>
@@ -140,7 +153,7 @@
 							class="input"
 							type="number"
 							min="1"
-							max="30"
+							max="50"
 							v-model="local.autofill.limit"
 						/>
 					</div>
@@ -184,7 +197,8 @@ export default {
 				privacy: "private",
 				requests: {
 					enabled: true,
-					access: "owner"
+					access: "owner",
+					limit: 3
 				},
 				autofill: {
 					enabled: true,
@@ -208,7 +222,8 @@ export default {
 			...this.station,
 			requests: {
 				enabled: this.station.requests.enabled,
-				access: "owner"
+				access: "owner",
+				limit: this.station.requests.limit
 			},
 			autofill: {
 				enabled: true,
