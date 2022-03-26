@@ -174,8 +174,12 @@ export default {
 		margin-bottom: 20px;
 		border-radius: 0 0 @border-radius @border-radius;
 		max-height: 100%;
-		padding: 15px;
+		padding: 10px;
 		overflow-y: auto;
+
+		.scrollable-list {
+			padding: 10px 0;
+		}
 	}
 }
 

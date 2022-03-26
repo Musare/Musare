@@ -123,10 +123,11 @@
 							class="tab"
 							v-show="tab === 'settings'"
 						/>
-						<autofill
+						<playlist-tab-base
 							v-if="isOwnerOrAdmin()"
 							class="tab"
 							v-show="tab === 'autofill'"
+							:type="'autofill'"
 						/>
 						<request
 							v-if="canRequest()"
@@ -134,11 +135,19 @@
 							v-show="tab === 'request'"
 							:sector="sector"
 						/>
-						<blacklist
+						<playlist-tab-base
 							v-if="isOwnerOrAdmin()"
 							class="tab"
 							v-show="tab === 'blacklist'"
-						/>
+							:type="'blacklist'"
+						>
+							<template #info>
+								<p>
+									Blacklist a playlist to prevent all songs
+									within from playing in this station.
+								</p>
+							</template>
+						</playlist-tab-base>
 					</div>
 				</div>
 			</div>
@@ -184,10 +193,9 @@ import Queue from "@/components/Queue.vue";
 import SongItem from "@/components/SongItem.vue";
 import Modal from "../../Modal.vue";
 
-import Settings from "./Tabs/Settings.vue";
-import Autofill from "./Tabs/Autofill.vue";
+import Settings from "./Settings.vue";
+import PlaylistTabBase from "@/components/PlaylistTabBase.vue";
 import Request from "@/components/Request.vue";
-import Blacklist from "./Tabs/Blacklist.vue";
 
 export default {
 	components: {
@@ -196,9 +204,8 @@ export default {
 		Queue,
 		SongItem,
 		Settings,
-		Autofill,
-		Request,
-		Blacklist
+		PlaylistTabBase,
+		Request
 	},
 	props: {
 		stationId: { type: String, default: "" },
