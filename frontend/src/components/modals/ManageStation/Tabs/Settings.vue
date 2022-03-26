@@ -40,26 +40,13 @@
 				</div>
 			</div>
 
-			<hr class="section-horizontal-rule" />
-
 			<div
 				class="requests-settings"
 				:class="{ enabled: local.requests.enabled }"
-				style="
-					display: flex;
-					flex-wrap: wrap;
-					width: 100%;
-					margin: 5px 0;
-				"
 			>
-				<div style="display: flex; width: 100%">
-					<label class="label" style="display: flex; flex-grow: 1"
-						>Requests</label
-					>
-					<p
-						class="is-expanded checkbox-control"
-						style="justify-content: end"
-					>
+				<div class="toggle-row">
+					<label class="label">Requests</label>
+					<p class="is-expanded checkbox-control">
 						<label class="switch">
 							<input
 								type="checkbox"
@@ -73,8 +60,8 @@
 							<p>
 								{{
 									local.requests.enabled
-										? "Disable"
-										: "Enable"
+										? "Enabled"
+										: "Disabled"
 								}}
 							</p>
 						</label>
@@ -105,26 +92,13 @@
 				</div>
 			</div>
 
-			<hr class="section-horizontal-rule" />
-
 			<div
 				class="autofill-settings"
 				:class="{ enabled: local.autofill.enabled }"
-				style="
-					display: flex;
-					flex-wrap: wrap;
-					width: 100%;
-					margin: 5px 0;
-				"
 			>
-				<div style="display: flex; width: 100%">
-					<label class="label" style="display: flex; flex-grow: 1"
-						>Autofill</label
-					>
-					<p
-						class="is-expanded checkbox-control"
-						style="justify-content: end"
-					>
+				<div class="toggle-row">
+					<label class="label">Autofill</label>
+					<p class="is-expanded checkbox-control">
 						<label class="switch">
 							<input
 								type="checkbox"
@@ -138,8 +112,8 @@
 							<p>
 								{{
 									local.autofill.enabled
-										? "Disable"
-										: "Enable"
+										? "Enabled"
+										: "Disabled"
 								}}
 							</p>
 						</label>
@@ -170,8 +144,6 @@
 				</div>
 			</div>
 		</div>
-
-		<hr class="section-horizontal-rule" />
 
 		<button class="control is-expanded button is-primary" @click="update()">
 			Save Changes
@@ -280,6 +252,13 @@ export default {
 </script>
 
 <style lang="less" scoped>
+.night-mode {
+	.requests-settings,
+	.autofill-settings {
+		background-color: var(--dark-grey-2) !important;
+	}
+}
+
 .station-settings {
 	.settings-buttons {
 		display: flex;
@@ -290,78 +269,55 @@ export default {
 			width: calc(50% - 10px);
 			min-width: 150px;
 			margin: 5px auto;
-		}
 
-		.section-horizontal-rule {
-			width: 100%;
+			&:nth-child(odd) {
+				margin-left: 0;
+			}
+			&:nth-child(even) {
+				margin-right: 0;
+			}
 		}
 	}
-	.button-wrapper {
+
+	.requests-settings,
+	.autofill-settings {
 		display: flex;
-		flex-direction: column;
+		flex-wrap: wrap;
+		width: 100%;
+		margin: 10px 0;
+		padding: 10px;
+		background-color: var(--light-grey);
+		border-radius: @border-radius;
+		box-shadow: @box-shadow;
 
-		:deep(* .tippy-box[data-theme~="dropdown"] .tippy-content > span) {
-			max-width: 150px !important;
-		}
-
-		.tippy-content span button {
-			width: 150px;
-		}
-
-		button {
-			width: 100%;
-			height: 36px;
-			border: 0;
-			border-radius: @border-radius;
-			font-size: 18px;
-			color: var(--white);
-			box-shadow: @box-shadow;
+		.toggle-row {
 			display: flex;
-			text-align: center;
-			justify-content: center;
-			-ms-flex-align: center;
-			align-items: center;
-			-moz-user-select: none;
-			user-select: none;
-			cursor: pointer;
-			padding: 0;
-			text-transform: capitalize;
+			width: 100%;
+			line-height: 36px;
 
-			&.red {
-				background-color: var(--dark-red);
+			.label {
+				font-size: 18px;
+				margin: 0;
 			}
+		}
 
-			&.green {
-				background-color: var(--green);
+		.label {
+			display: flex;
+			flex-grow: 1;
+		}
+
+		.checkbox-control {
+			justify-content: end;
+		}
+
+		.small-section {
+			&:nth-child(even) {
+				margin-left: 0;
+				margin-right: auto;
 			}
-
-			&.blue {
-				background-color: var(--blue);
-			}
-
-			&.orange {
-				background-color: var(--orange);
-			}
-
-			&.yellow {
-				background-color: var(--yellow);
-			}
-
-			&.purple {
-				background-color: var(--purple);
-			}
-
-			&.teal {
-				background-color: var(--teal);
-			}
-
-			&.red {
-				background-color: var(--dark-red);
-			}
-
-			i {
-				font-size: 20px;
-				margin-right: 4px;
+			&:nth-child(odd) {
+				margin-left: auto;
+				margin-right: 0;
 			}
 		}
 	}
