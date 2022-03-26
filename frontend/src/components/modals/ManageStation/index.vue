@@ -100,10 +100,7 @@
 								Autofill
 							</button>
 							<button
-								v-if="
-									station.requests.enabled &&
-									(isAllowedToParty() || isOwnerOrAdmin())
-								"
+								v-if="canRequest()"
 								class="button is-default"
 								:class="{ selected: tab === 'request' }"
 								ref="request-tab"
@@ -132,10 +129,7 @@
 							v-show="tab === 'autofill'"
 						/>
 						<request
-							v-if="
-								station.requests.enabled &&
-								(isAllowedToParty() || isOwnerOrAdmin())
-							"
+							v-if="canRequest()"
 							class="tab"
 							v-show="tab === 'request'"
 							:sector="sector"
@@ -234,7 +228,7 @@ export default {
 	watch: {
 		// eslint-disable-next-line
 		"station.requests": function (requests) {
-			if (this.tab === "request" && requests && !requests.enabled) {
+			if (this.tab === "request" && !this.canRequest()) {
 				if (this.isOwnerOrAdmin()) this.showTab("settings");
 				else this.closeModal("manageStation");
 			}
@@ -510,11 +504,15 @@ export default {
 		isOwnerOrAdmin() {
 			return this.isOwner() || this.isAdmin();
 		},
-		isAllowedToParty() {
+		canRequest() {
 			return (
 				this.station &&
-				(!this.station.locked || this.isOwnerOrAdmin()) &&
-				this.loggedIn
+				this.loggedIn &&
+				this.station.requests &&
+				this.station.requests.enabled &&
+				(this.station.requests.access === "user" ||
+					(this.station.requests.access === "owner" &&
+						this.isOwnerOrAdmin()))
 			);
 		},
 		removeStation() {

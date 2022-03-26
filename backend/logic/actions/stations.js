@@ -817,7 +817,6 @@ export default {
 						displayName: station.displayName,
 						name: station.name,
 						privacy: station.privacy,
-						locked: station.locked,
 						requests: station.requests,
 						playMode: station.playMode,
 						owner: station.owner,
@@ -945,7 +944,6 @@ export default {
 						displayName: station.displayName,
 						name: station.name,
 						privacy: station.privacy,
-						locked: station.locked,
 						requests: station.requests,
 						playMode: station.playMode,
 						owner: station.owner,
@@ -1795,11 +1793,16 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
+					if (!station.requests.enabled) return next("Requests are disabled in this station.");
 
-					if (station.locked) {
+					if (
+						station.requests.access === "owner" ||
+						(station.requests.access === "user" && station.privacy === "private")
+					) {
 						return userModel.findOne({ _id: session.userId }, (err, user) => {
+							if (err) return next(err);
 							if (user.role !== "admin" && station.owner !== session.userId)
-								return next("Only owners and admins can add songs to a locked queue.");
+								return next("You do not have permission to add songs to queue.");
 							return next(null, station);
 						});
 					}
@@ -1929,7 +1932,7 @@ export default {
 						}
 					});
 
-					if (totalSongs > station.requests.limit)
+					if (totalSongs >= station.requests.limit)
 						return next(`The max amount of songs per user is ${station.requests.limit}.`);
 
 					return next(null, song);

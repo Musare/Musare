@@ -114,7 +114,18 @@
 										<template #tippyActions>
 											<i
 												class="material-icons add-to-queue-icon"
-												v-if="!station.locked"
+												v-if="
+													station.requests.enabled &&
+													(station.requests.access ===
+														'user' ||
+														(station.requests
+															.access ===
+															'owner' &&
+															(userRole ===
+																'admin' ||
+																station.owner ===
+																	userId)))
+												"
 												@click="
 													addSongToQueue(
 														element.youtubeId

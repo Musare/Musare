@@ -25,7 +25,6 @@ export default {
 	startedAt: { type: Number, default: 0, required: true },
 	playlist: { type: mongoose.Schema.Types.ObjectId, required: true },
 	privacy: { type: String, enum: ["public", "unlisted", "private"], default: "private" },
-	locked: { type: Boolean, default: false },
 	queue: [
 		{
 			_id: { type: mongoose.Schema.Types.ObjectId, required: true },
@@ -43,6 +42,7 @@ export default {
 	owner: { type: String },
 	requests: {
 		enabled: { type: Boolean, default: true },
+		access: { type: String, enum: ["owner", "user"], default: "owner" },
 		limit: { type: Number, min: 1, max: 50, default: 3 }
 	},
 	playMode: { type: String, enum: ["random", "sequential"], default: "random" },

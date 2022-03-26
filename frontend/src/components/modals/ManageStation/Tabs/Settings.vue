@@ -220,11 +220,6 @@ export default {
 	mounted() {
 		this.local = {
 			...this.station,
-			requests: {
-				enabled: this.station.requests.enabled,
-				access: "owner",
-				limit: this.station.requests.limit
-			},
 			autofill: {
 				enabled: true,
 				limit: 30,

@@ -28,11 +28,7 @@
 					Autorequest
 				</button>
 			</div>
-			<div
-				class="tab"
-				v-show="tab === 'songs'"
-				v-if="isOwnerOrAdmin() || !station.locked"
-			>
+			<div class="tab" v-show="tab === 'songs'">
 				<div class="musare-songs">
 					<label class="label"> Search for a song on Musare </label>
 					<div class="control is-grouped input-with-button">

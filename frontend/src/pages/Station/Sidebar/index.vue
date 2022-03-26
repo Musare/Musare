@@ -16,7 +16,7 @@
 				Users
 			</button>
 			<button
-				v-if="station.requests && station.requests.enabled && loggedIn"
+				v-if="canRequest()"
 				class="button is-default"
 				:class="{ selected: tab === 'request' }"
 				@click="showTab('request')"
@@ -24,7 +24,9 @@
 				Request
 			</button>
 			<button
-				v-else-if="station.requests && station.requests.enabled"
+				v-else-if="
+					!loggedIn && station.requests && station.requests.enabled
+				"
 				class="button is-default"
 				content="Login to request songs"
 				v-tippy="{ theme: 'info' }"
@@ -35,7 +37,7 @@
 		<queue class="tab" v-show="tab === 'queue'" />
 		<users class="tab" v-show="tab === 'users'" />
 		<request
-			v-if="station.requests && station.requests.enabled && loggedIn"
+			v-if="canRequest()"
 			v-show="tab === 'request'"
 			class="tab requests-tab"
 			sector="station"
@@ -63,12 +65,14 @@ export default {
 		station: state => state.station.station,
 		users: state => state.station.users,
 		userCount: state => state.station.userCount,
-		loggedIn: state => state.user.auth.loggedIn
+		userId: state => state.user.auth.userId,
+		loggedIn: state => state.user.auth.loggedIn,
+		role: state => state.user.auth.role
 	}),
 	watch: {
 		// eslint-disable-next-line
 		"station.requests": function (requests) {
-			if (this.tab === "request" && requests && !requests.enabled)
+			if (this.tab === "request" && !this.canRequest())
 				this.showTab("queue");
 		}
 	},
@@ -81,6 +85,30 @@ export default {
 			this.tab = this.$route.query.tab;
 	},
 	methods: {
+		isOwner() {
+			return (
+				this.loggedIn &&
+				this.station &&
+				this.userId === this.station.owner
+			);
+		},
+		isAdmin() {
+			return this.loggedIn && this.role === "admin";
+		},
+		isOwnerOrAdmin() {
+			return this.isOwner() || this.isAdmin();
+		},
+		canRequest() {
+			return (
+				this.station &&
+				this.loggedIn &&
+				this.station.requests &&
+				this.station.requests.enabled &&
+				(this.station.requests.access === "user" ||
+					(this.station.requests.access === "owner" &&
+						this.isOwnerOrAdmin()))
+			);
+		},
 		...mapActions("modalVisibility", ["openModal"])
 	}
 };
