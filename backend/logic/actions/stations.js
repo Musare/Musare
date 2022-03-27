@@ -66,11 +66,15 @@ CacheModule.runJob("SUB", {
 									this
 								).then(userModel =>
 									userModel.findOne({ _id: session.userId }, (err, user) => {
-										if (user.role === "admin")
+										if (user && user.role === "admin")
 											socket.dispatch("event:station.userCount.updated", {
 												data: { stationId, count }
 											});
-										else if (station.type === "community" && station.owner === session.userId)
+										else if (
+											user &&
+											station.type === "community" &&
+											station.owner === session.userId
+										)
 											socket.dispatch("event:station.userCount.updated", {
 												data: { stationId, count }
 											});
@@ -302,9 +306,9 @@ CacheModule.runJob("SUB", {
 						}).then(session => {
 							if (session) {
 								userModel.findOne({ _id: session.userId }, (err, user) => {
-									if (user.role === "admin")
+									if (user && user.role === "admin")
 										socket.dispatch("event:station.created", { data: { station } });
-									else if (station.type === "community" && station.owner === session.userId)
+									else if (user && station.type === "community" && station.owner === session.userId)
 										socket.dispatch("event:station.created", { data: { station } });
 								});
 							}
@@ -390,7 +394,8 @@ export default {
 					return next(null, { favoriteStations: [] });
 				},
 
-				({ favoriteStations }, next) => {
+				(user, next) => {
+					const favoriteStations = user ? user.favoriteStations : [];
 					CacheModule.runJob("HGETALL", { table: "stations" }, this).then(stations =>
 						next(null, stations, favoriteStations)
 					);

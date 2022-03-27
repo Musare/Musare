@@ -2,6 +2,111 @@
 
 ## [v3.5.0-dev] - Unreleased
 
+## [v3.4.0] - 2022-03-27
+
+### **Breaking Changes**
+This release makes the MongoDB version configurable in the .env file. Prior to this release, the MongoDB version was 4.0. We recommend upgrading to 5.0 or 4.4. Upgrade instructions can be found in [.wiki/Upgrading](.wiki/Upgrading.md#Upgrade/downgradeMongoDB).
+
+Please run the Update All Songs job after upgrading to ensure playlist and station song data accuracy.
+
+### Added
+- feat: Scroll to next song item in Edit Songs queue
+- feat: Reset Advanced Table bulk actions popup position on screen resize if in initial position
+- feat: Global LESS variables
+- refactor: Configurable Main Footer links
+- feat: Configurable Docker container restart policy
+- feat: Backend job to create a song
+- feat: Create song from scratch with Edit Song
+- chore: Added CodeQL analysis GitHub action
+- feat: Ability to select track position in Edit Song player
+- feat: Ability to select playback rate in Edit Song player
+- feat: Login with username or email
+- chore: Added CHANGELOG.md
+- feat: Added view profile button to admin/users table
+- feat: Ability to delete reports
+- feat: Added resolved attribute to reports Advanced Table
+- feat: Option to edit songs after import in Import Playlist
+- feat: Configurable MongoDB and Redis Docker container data directories
+- feat: Ability to toggle report resolution status
+- feat: Ability to show news items to new users on first visit
+- feat: Added warning label to thumbnails in Edit Song if not square
+- chore: Added Upgrading wiki page
+- feat: Configurable MongoDB container image version
+
+### Changed
+- refactor: Replaced night mode toggle slider in Main Header with day/night icons
+- refactor: Replaced SASS/SCCS with LESS
+- refactor: Hide registration buttons and prevent opening register modal if registration is disabled
+- refactor: Trim certain user modifiable strings in playlists, songs, reports and stations
+- refactor: Allow title to wrap to a 2nd line if no there are no artists in Song Item
+- refactor: Consistent border-radius
+- refactor: Consistent box-shadow
+- refactor: Replace deprecated /deep/ selector with :deep()
+- chore: Update frontend and backend packages, and docker images
+- refactor: Move Edit Song verify toggle button to in-form toggle switch
+- refactor: Volume slider styling improvements
+- refactor: Replaced admin secondary nav with sidebar
+- refactor: Moved Request Song import youtube playlist to Import Playlist modal
+- refactor: Select input styling consistency
+- refactor: Show notice that song has been deleted in Edit Song
+- refactor: Reduce dropdown toggle button width
+- refactor: Set title and thumbnail on YouTube video selection in Create Song
+- refactor: Show YouTube tab by default in Create Song
+- refactor: Move admin tab routing to vue router
+- refactor: Pull images in musare.sh build command
+- refactor: Delete user sessions when account is deleted
+
+### Fixed
+- fix: Relative homepage header height causing overlay of content on non-standard resolutions
+- fix: Unable to toggle nightmode on mobile logged out on homepage
+- fix: Station card top row should not wrap
+- fix: Advanced Table CTRL/SHIFT select rows does not work
+- fix: Station not automatically removed from favorite stations on homepage on deletion
+- fix: Playlist songs do not contain verified attribute
+- fix: Newest news should only fetch published items
+- fix: Deleting a song as an admin adds activity item that you deleted a song from genre playlists
+- fix: News item divider has no top/bottom margin
+- fix: Edit Song failing to fetch song reports
+- fix: Station refill can include current song
+- fix: Lofig can not be loaded from deep path
+- fix: CTRL/SHIFT+select Advanced Table rows no longer working
+- fix: Entering station with volume previously set to 0 is handled as muted
+- fix: Genre playlists are created even if the song is unverified
+- fix: Importing YouTube playlist throws URL invalid
+- fix: Song validation should not require genres or artists for unverified songs
+- fix: Station player not unloaded if queue runs empty
+- fix: Edit Song player state not reset on close or next song
+- fix: Playlists could sometimes not be created due to restrictive MongoDB index
+- fix: Add tags to songs doesn't give any feedback to the user
+- fix: AdvancedTable checkboxes overlay mobile navbar dropdown
+- fix: Nightmode -> EditSong -> Discogs API Result release on hover style is messed up
+- fix: Station creation validation always failing
+- fix: Station info display name and description overflow horizontally
+- fix: Volume slider incorrect sensitivity
+- fix: Song thumbnail loading causes jumpiness on admin/songs
+- fix: Manage Station go to station throws an error
+- fix: Edit Song seekTo does not apply if video is stopped
+- fix: Changing password in Settings does not create success toast
+- fix: Invalid user sessions could sometimes break actions
+- fix: Add To Playlist Dropdown create playlist button not full width
+
+### Removed
+- refactor: Removed skip to last 10s button from Edit Song player
+- refactor: Removed Request Song modal
+
+## [v3.4.0-rc2] - 2022-03-19
+
+### Added
+- feat: Re-added ability to hard stop player in Edit Song
+
+### Changed
+- refactor: Delete user sessions when account is deleted
+
+### Fixed
+- fix: Changing password in Settings does not create success toast
+- fix: Invalid user sessions could sometimes break actions
+- fix: Add To Playlist Dropdown create playlist button not full width
+
 ## [v3.4.0-rc1] - 2022-03-06
 
 ### **Breaking Changes**

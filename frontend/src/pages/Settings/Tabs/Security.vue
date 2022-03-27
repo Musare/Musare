@@ -254,7 +254,7 @@ export default {
 				res => {
 					if (res.status !== "success") new Toast(res.message);
 					else {
-						this.validation.prevPassword.value = "";
+						this.validation.oldPassword.value = "";
 						this.validation.newPassword.value = "";
 
 						new Toast("Successfully changed password.");
