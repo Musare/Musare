@@ -159,34 +159,41 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
 
     attach)
         echo -e "${CYAN}Musare | Attach${NC}"
-        if [[ $2 == "backend" ]]; then
-            containerId=$(docker-compose ps -q backend)
-            if [[ -z $containerId ]]; then
-                echo -e "${RED}Error: Backend offline, please start to attach.${NC}"
-            else
-                echo -e "${YELLOW}Detach with CTRL+P+Q${NC}"
-                docker attach "$containerId"
-            fi
-        elif [[ $2 == "mongo" ]]; then
-            if [[ -f .env ]]; then
-                # shellcheck disable=SC1091
-                source .env
+        if [[ -f .env ]]; then
+            # shellcheck disable=SC1091
+            source .env
+            if [[ $2 == "backend" ]]; then
+                containerId=$(docker-compose ps -q backend)
+                if [[ -z $containerId ]]; then
+                    echo -e "${RED}Error: Backend offline, please start to attach.${NC}"
+                else
+                    echo -e "${YELLOW}Detach with CTRL+P+Q${NC}"
+                    docker attach "$containerId"
+                fi
+            elif [[ $2 == "mongo" ]]; then
                 MONGO_VERSION_INT=${MONGO_VERSION:0:1}
                 if [[ -z $(docker-compose ps -q mongo) ]]; then
                     echo -e "${RED}Error: Mongo offline, please start to attach.${NC}"
                 else
-                    echo -e "${YELLOW}Detach with CTRL+C${NC}"
+                    echo -e "${YELLOW}Detach with CTRL+D${NC}"
                     if [[ $MONGO_VERSION_INT -ge 5 ]]; then
                         docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry()" --shell
                     else
                         docker-compose exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}"
                     fi
                 fi
+            elif [[ $2 == "redis" ]]; then
+                if [[ -z $(docker-compose ps -q redis) ]]; then
+                    echo -e "${RED}Error: Redis offline, please start to attach.${NC}"
+                else
+                    echo -e "${YELLOW}Detach with CTRL+C${NC}"
+                    docker-compose exec redis redis-cli -a "${REDIS_PASSWORD}"
+                fi
             else
-                echo -e "${RED}Error: .env does not exist${NC}"
+                echo -e "${RED}Invalid service $2\n${YELLOW}Usage: $(basename "$0") attach [backend,mongo,redis]${NC}"
             fi
         else
-            echo -e "${RED}Invalid service $2\n${YELLOW}Usage: $(basename "$0") attach [backend,mongo]${NC}"
+            echo -e "${RED}Error: .env does not exist${NC}"
         fi
         ;;
 
@@ -355,7 +362,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         echo -e "${YELLOW}status - Service status${NC}"
         echo -e "${YELLOW}logs - View logs for services${NC}"
         echo -e "${YELLOW}update - Update Musare${NC}"
-        echo -e "${YELLOW}attach [backend,mongo] - Attach to backend service or mongo shell${NC}"
+        echo -e "${YELLOW}attach [backend,mongo,redis] - Attach to backend service, mongo or redis shell${NC}"
         echo -e "${YELLOW}build - Build services${NC}"
         echo -e "${YELLOW}eslint - Run eslint on frontend and/or backend${NC}"
         echo -e "${YELLOW}backup - Backup database data to file${NC}"
@@ -374,7 +381,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         echo -e "${YELLOW}status - Service status${NC}"
         echo -e "${YELLOW}logs - View logs for services${NC}"
         echo -e "${YELLOW}update - Update Musare${NC}"
-        echo -e "${YELLOW}attach [backend,mongo] - Attach to backend service or mongo shell${NC}"
+        echo -e "${YELLOW}attach [backend,mongo,redis] - Attach to backend service, mongo or redis shell${NC}"
         echo -e "${YELLOW}build - Build services${NC}"
         echo -e "${YELLOW}eslint - Run eslint on frontend and/or backend${NC}"
         echo -e "${YELLOW}backup - Backup database data to file${NC}"
