@@ -1353,7 +1353,7 @@ export default {
 				},
 
 				(station, previousStation, next) => {
-					if (newStation.autofill.enabled && !previousStation.autofill.enabled)
+					if (newStation.autofill.enabled && newStation.autofill !== previousStation.autofill)
 						StationsModule.runJob("AUTOFILL_STATION", { stationId }, this)
 							.then(() => {
 								CacheModule.runJob("PUB", {
@@ -1363,7 +1363,11 @@ export default {
 									.then(() => next(null, station, previousStation))
 									.catch(next);
 							})
-							.catch(next);
+							.catch(err => {
+								if (err === "Autofill is disabled in this station" || err === "Autofill limit reached")
+									next(null, station, previousStation);
+								else next(err);
+							});
 					else next(null, station, previousStation);
 				},
 

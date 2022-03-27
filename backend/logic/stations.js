@@ -465,9 +465,13 @@ class _StationsModule extends CoreClass {
 					(playlist, next) => {
 						StationsModule.runJob("GET_STATION", { stationId }, this)
 							.then(station => {
-								if (!station.autofill.enabled) next("Autofill is disabled in this station");
+								if (!station.autofill.enabled) return next("Autofill is disabled in this station");
+								if (station.autofill.limit <= station.queue.filter(song => !song.requestedBy).length)
+									return next("Autofill limit reached");
+
 								if (ignoreExistingQueue) station.queue = [];
-								next(null, playlist, station);
+
+								return next(null, playlist, station);
 							})
 							.catch(next);
 					},
@@ -490,7 +494,8 @@ class _StationsModule extends CoreClass {
 								playlistSongs = [...playlistSongs, ...songsToAddToEnd];
 							}
 						}
-						const songsStillNeeded = 50 - station.queue.length;
+						const currentRequests = station.queue.filter(song => !song.requestedBy).length;
+						const songsStillNeeded = station.autofill.limit - currentRequests;
 						const currentSongs = station.queue;
 						const currentYoutubeIds = station.queue.map(song => song.youtubeId);
 						const songsToAdd = [];
@@ -747,7 +752,14 @@ class _StationsModule extends CoreClass {
 						if (station.autofill.enabled)
 							return StationsModule.runJob("AUTOFILL_STATION", { stationId: station._id }, this)
 								.then(() => next(null, station))
-								.catch(next);
+								.catch(err => {
+									if (
+										err === "Autofill is disabled in this station" ||
+										err === "Autofill limit reached"
+									)
+										return next(null, station);
+									return next(err);
+								});
 						return next(null, station);
 					},
 
@@ -818,6 +830,8 @@ class _StationsModule extends CoreClass {
 					}
 				],
 				async (err, station) => {
+					if (err === "Autofill limit reached") return resolve({ station });
+
 					if (err) {
 						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 						StationsModule.log("ERROR", `Skipping station "${payload.stationId}" failed. "${err}"`);
@@ -1592,7 +1606,7 @@ class _StationsModule extends CoreClass {
 								next();
 							})
 							.catch(err => {
-								if (err === "Autofill is disabled in this station")
+								if (err === "Autofill is disabled in this station" || err === "Autofill limit reached")
 									StationsModule.stationModel
 										.updateOne({ _id: payload.stationId }, { $set: { queue: [] } }, this)
 										.then(() => next())
