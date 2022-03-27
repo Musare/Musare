@@ -13,7 +13,7 @@ const REQUIRED_DOCUMENT_VERSIONS = {
 	queueSong: 1,
 	report: 5,
 	song: 7,
-	station: 7,
+	station: 8,
 	user: 3
 };
 

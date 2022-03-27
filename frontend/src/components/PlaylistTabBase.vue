@@ -22,7 +22,9 @@
 					Current
 				</button>
 				<button
-					v-if="station.type === 'community'"
+					v-if="
+						type === 'autorequest' || station.type === 'community'
+					"
 					class="button is-default"
 					ref="my-playlists-tab"
 					:class="{ selected: tab === 'my-playlists' }"
@@ -210,7 +212,7 @@
 					</playlist-item>
 					<br />
 				</div>
-				<label class="label"> Search for a public playlist </label>
+				<label class="label">Search for a playlist</label>
 				<div class="control is-grouped input-with-button">
 					<p class="control is-expanded">
 						<input
@@ -455,7 +457,7 @@
 				</p>
 			</div>
 			<div
-				v-if="station.type === 'community'"
+				v-if="type === 'autorequest' || station.type === 'community'"
 				class="tab"
 				v-show="tab === 'my-playlists'"
 			>
@@ -932,7 +934,7 @@ export default {
 
 			const { query } = this.search;
 			const action =
-				this.station.type === "official"
+				this.station.type === "official" && this.type !== "autorequest"
 					? "playlists.searchOfficial"
 					: "playlists.searchCommunity";
 

@@ -281,7 +281,6 @@ export default {
 		width: 100%;
 		margin: 10px 0;
 		padding: 10px;
-		background-color: var(--light-grey);
 		border-radius: @border-radius;
 		box-shadow: @box-shadow;
 

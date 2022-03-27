@@ -17,52 +17,10 @@ export default async function migrate(MigrationModule) {
 			[
 				next => {
 					this.log("INFO", `Migration 20. Finding stations with document version 7.`);
-					stationModel.find({ documentVersion: 7, excludedPlaylists: { $exists: true } }, (err, stations) => {
-						if (err) next(err);
-						else {
-							async.eachLimit(
-								stations.map(station => station._doc),
-								1,
-								(station, next) => {
-									stationModel.updateOne(
-										{ _id: station._id },
-										{
-											$unset: { excludedPlaylists: "" },
-											$set: {
-												blacklist: station.excludedPlaylists.map(playlist =>
-													mongoose.Types.ObjectId(playlist)
-												) /* ,
-												documentVersion: 8 */
-											}
-										},
-										next
-									);
-								},
-								err => {
-									this.log("INFO", `Migration 20. Stations found: ${stations.length}.`);
-									next(err);
-								}
-							);
-						}
-					});
-					stationModel.updateMany(
-						{ documentVersion: 7 },
-						{
-							$set: {
-								requests: {
-									enabled: true,
-									access: "owner",
-									limit: 3
-								}
-							}
-						},
-						(err, res) => {
-							this.log("INFO", `Migration 20. Stations found: ${res.modifiedCount}.`);
-							next(err);
-						}
-					);
 					stationModel.find(
-						{ documentVersion: 7, includedPlaylists: { $exists: true }, playMode: { $exists: true } },
+						{
+							documentVersion: 7
+						},
 						(err, stations) => {
 							if (err) next(err);
 							else {
@@ -73,16 +31,31 @@ export default async function migrate(MigrationModule) {
 										stationModel.updateOne(
 											{ _id: station._id },
 											{
-												$unset: { includedPlaylists: "", playMode: "" },
+												$unset: {
+													includedPlaylists: "",
+													excludedPlaylists: "",
+													playMode: "",
+													partyMode: "",
+													locked: ""
+												},
 												$set: {
 													autofill: {
-														enabled: true,
+														enabled: !station.partyMode,
 														playlists: station.includedPlaylists.map(playlist =>
 															mongoose.Types.ObjectId(playlist)
 														),
-														limit: 3,
+														limit: 30,
 														mode: station.playMode
-													}
+													},
+													requests: {
+														enabled: station.partyMode,
+														access: station.locked ? "owner" : "user",
+														limit: 5
+													},
+													blacklist: station.excludedPlaylists.map(playlist =>
+														mongoose.Types.ObjectId(playlist)
+													),
+													documentVersion: 8
 												}
 											},
 											next
