@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<page-metadata title="Admin | Punishments" />
+		<page-metadata title="Admin | Users | Punishments" />
 		<div class="container">
 			<advanced-table
 				:column-default="columnDefault"
@@ -13,12 +13,7 @@
 				<template #column-options="slotProps">
 					<div class="row-options">
 						<button
-							class="
-								button
-								is-primary
-								icon-with-button
-								material-icons
-							"
+							class="button is-primary icon-with-button material-icons"
 							@click="view(slotProps.item._id)"
 							:disabled="slotProps.item.removed"
 							content="View Punishment"
@@ -84,16 +79,18 @@
 				</header>
 				<div class="card-content">
 					<label class="label">Expires In</label>
-					<select v-model="ipBan.expiresAt">
-						<option value="1h">1 Hour</option>
-						<option value="12h">12 Hours</option>
-						<option value="1d">1 Day</option>
-						<option value="1w">1 Week</option>
-						<option value="1m">1 Month</option>
-						<option value="3m">3 Months</option>
-						<option value="6m">6 Months</option>
-						<option value="1y">1 Year</option>
-					</select>
+					<p class="control is-expanded select">
+						<select v-model="ipBan.expiresAt">
+							<option value="1h">1 Hour</option>
+							<option value="12h">12 Hours</option>
+							<option value="1d">1 Day</option>
+							<option value="1w">1 Week</option>
+							<option value="1m">1 Month</option>
+							<option value="3m">3 Months</option>
+							<option value="6m">6 Months</option>
+							<option value="1y">1 Year</option>
+						</select>
+					</p>
 					<label class="label">IP</label>
 					<p class="control is-expanded">
 						<input
@@ -319,7 +316,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.card {
 		background: var(--dark-grey-3);
@@ -337,10 +334,10 @@ export default {
 	flex-direction: column;
 	padding: 20px;
 	margin: 10px 0;
-	border-radius: 5px;
+	border-radius: @border-radius;
 	background-color: var(--white);
 	color: var(--dark-grey);
-	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
+	box-shadow: @box-shadow;
 
 	.card-header {
 		font-weight: 700;
@@ -349,10 +346,6 @@ export default {
 
 	.button.is-primary {
 		width: 100%;
-	}
-
-	select {
-		margin-bottom: 10px;
 	}
 }
 </style>

@@ -1,6 +1,8 @@
 # Installation
 Musare can be installed with Docker (recommended) or without, guides for both installations can be found below.
 
+To update an existing installation please see [Upgrading](./Upgrading.md).
+
 ## Docker
 
 ### Dependencies
@@ -9,8 +11,8 @@ Musare can be installed with Docker (recommended) or without, guides for both in
 - [docker-compose](https://docs.docker.com/compose/install/)
 
 ### Instructions
-1. `git clone https://github.com/Musare/MusareNode.git`
-2. `cd MusareNode`
+1. `git clone https://github.com/Musare/Musare.git`
+2. `cd Musare`
 3. `cp backend/config/template.json backend/config/default.json` and configure as per [Configuration](./Configuration.md#Backend)
 4. `cp frontend/dist/config/template.json frontend/dist/config/default.json` and configure as per [Configuration](./Configuration.md#Frontend)
 5. `cp .env.example .env` and configure as per [Configuration](./Configuration.md#Docker-Environment).
@@ -43,8 +45,8 @@ Run this command in your shell. You will have to do this command for every shell
     - [webpack](https://webpack.js.org/guides/installation/#global-installation)
 
 ### Instructions
-1. `git clone https://github.com/Musare/MusareNode.git`
-2. `cd MusareNode`
+1. `git clone https://github.com/Musare/Musare.git`
+2. `cd Musare`
 3. [Setup MongoDB](#Setting-up-MongoDB)
 4. [Setup Redis](#Setting-up-Redis)
 5. `cp backend/config/template.json backend/config/default.json` and configure as per [Configuration](./Configuration.md#Backend)
@@ -70,7 +72,7 @@ Run this command in your shell. You will have to do this command for every shell
     1. In the root directory, create a folder called `.database`
     2. Create a file called `startMongo.cmd` in the root directory with the contents:
 
-        `"C:\Program Files\MongoDB\Server\4.0\bin\mongod.exe" --dbpath "C:\Path\To\MusareNode\.database"`
+        `"C:\Program Files\MongoDB\Server\4.0\bin\mongod.exe" --dbpath "C:\Path\To\Musare\.database"`
 
         Make sure to adjust your paths accordingly.
     3. Start the database by executing the script `startMongo.cmd` you just made

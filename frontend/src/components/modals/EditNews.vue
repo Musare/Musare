@@ -28,6 +28,21 @@
 					</select>
 				</p>
 
+				<p class="is-expanded checkbox-control">
+					<label class="switch">
+						<input
+							type="checkbox"
+							id="show-to-new-users"
+							v-model="showToNewUsers"
+						/>
+						<span class="slider round"></span>
+					</label>
+
+					<label for="show-to-new-users">
+						<p>Show to new users</p>
+					</label>
+				</p>
+
 				<save-button
 					ref="saveButton"
 					v-if="newsId"
@@ -83,6 +98,7 @@ export default {
 			markdown:
 				"# Header\n## Sub-Header\n- **So**\n- _Many_\n- ~Points~\n\nOther things you want to say and [link](https://example.com).\n\n### Sub-Sub-Header\n> Oh look, a quote!\n\n`lil code`\n\n```\nbig code\n```\n",
 			status: "published",
+			showToNewUsers: false,
 			createdBy: null,
 			createdAt: 0
 		};
@@ -110,10 +126,16 @@ export default {
 			if (this.newsId) {
 				this.socket.dispatch(`news.getNewsFromId`, this.newsId, res => {
 					if (res.status === "success") {
-						const { markdown, status, createdBy, createdAt } =
-							res.data.news;
+						const {
+							markdown,
+							status,
+							showToNewUsers,
+							createdBy,
+							createdAt
+						} = res.data.news;
 						this.markdown = markdown;
 						this.status = status;
+						this.showToNewUsers = showToNewUsers;
 						this.createdBy = createdBy;
 						this.createdAt = createdAt;
 					} else {
@@ -165,7 +187,8 @@ export default {
 				{
 					title,
 					markdown: this.markdown,
-					status: this.status
+					status: this.status,
+					showToNewUsers: this.showToNewUsers
 				},
 				res => {
 					new Toast(res.message);
@@ -190,7 +213,8 @@ export default {
 				{
 					title,
 					markdown: this.markdown,
-					status: this.status
+					status: this.status,
+					showToNewUsers: this.showToNewUsers
 				},
 				res => {
 					new Toast(res.message);
@@ -210,13 +234,13 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 .edit-news-modal .modal-card .modal-card-foot .right {
 	column-gap: 5px;
 }
 </style>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.edit-news-modal .modal-card .modal-card-body textarea,
 	.edit-news-modal .modal-card .modal-card-body #preview {
@@ -244,14 +268,14 @@ export default {
 	#preview {
 		word-break: break-all;
 		overflow: auto;
-		box-shadow: none;
+		box-shadow: 0;
 	}
 
 	textarea,
 	#preview {
 		padding: 5px;
 		border: 1px solid var(--light-grey-3) !important;
-		border-radius: 5px;
+		border-radius: @border-radius;
 		height: calc(100vh - 280px);
 		width: 100%;
 	}

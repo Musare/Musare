@@ -15,7 +15,7 @@
 						<img
 							class="logo"
 							src="/assets/white_wordmark.png"
-							:alt="`${this.sitename}` || `Musare`"
+							:alt="`${this.siteSettings.sitename}` || `Musare`"
 						/>
 						<div v-if="!loggedIn" class="buttons">
 							<button
@@ -25,6 +25,7 @@
 								Login
 							</button>
 							<button
+								v-if="!siteSettings.registrationDisabled"
 								class="button register"
 								@click="openModal('register')"
 							>
@@ -63,43 +64,37 @@
 								'--primary-color: var(--' + element.theme + ')'
 							"
 						>
-							<song-thumbnail :song="element.currentSong">
-								<template #icon>
-									<div class="icon-container">
-										<div
-											v-if="isOwnerOrAdmin(element)"
-											class="
-												material-icons
-												manage-station
-											"
-											@click.prevent="
-												manageStation(element._id)
-											"
-											content="Manage Station"
-											v-tippy
-										>
-											settings
-										</div>
-										<div
-											v-else
-											class="
-												material-icons
-												manage-station
-											"
-											@click.prevent="
-												manageStation(element._id)
-											"
-											content="View Queue"
-											v-tippy
-										>
-											queue_music
-										</div>
-									</div>
-								</template>
-							</song-thumbnail>
 							<div class="card-content">
+								<song-thumbnail :song="element.currentSong">
+									<template #icon>
+										<div class="icon-container">
+											<div
+												v-if="isOwnerOrAdmin(element)"
+												class="material-icons manage-station"
+												@click.prevent="
+													manageStation(element._id)
+												"
+												content="Manage Station"
+												v-tippy
+											>
+												settings
+											</div>
+											<div
+												v-else
+												class="material-icons manage-station"
+												@click.prevent="
+													manageStation(element._id)
+												"
+												content="View Queue"
+												v-tippy
+											>
+												queue_music
+											</div>
+										</div>
+									</template>
+								</song-thumbnail>
 								<div class="media">
-									<div class="media-left displayName">
+									<div class="displayName">
 										<i
 											v-if="
 												loggedIn && !element.isFavorited
@@ -127,10 +122,7 @@
 										<h5>{{ element.displayName }}</h5>
 										<i
 											v-if="element.type === 'official'"
-											class="
-												material-icons
-												verified-station
-											"
+											class="material-icons verified-station"
 											content="Verified Station"
 											v-tippy="{
 												theme: 'info'
@@ -139,56 +131,61 @@
 											check_circle
 										</i>
 									</div>
-								</div>
-
-								<div class="content">
-									{{ element.description }}
-								</div>
-								<div class="under-content">
-									<p class="hostedBy">
-										Hosted by
-										<span class="host">
-											<span
+									<div class="content">
+										{{ element.description }}
+									</div>
+									<div class="under-content">
+										<p class="hostedBy">
+											Hosted by
+											<span class="host">
+												<span
+													v-if="
+														element.type ===
+														'official'
+													"
+													title="Musare"
+													>Musare</span
+												>
+												<user-id-to-username
+													v-else
+													:user-id="element.owner"
+													:link="true"
+												/>
+											</span>
+										</p>
+										<div class="icons">
+											<i
 												v-if="
-													element.type === 'official'
+													element.type ===
+														'community' &&
+													isOwner(element)
 												"
-												title="Musare"
-												>Musare</span
+												class="homeIcon material-icons"
+												content="This is your station."
+												v-tippy="{ theme: 'info' }"
+												>home</i
 											>
-											<user-id-to-username
-												v-else
-												:user-id="element.owner"
-												:link="true"
-											/>
-										</span>
-									</p>
-									<div class="icons">
-										<i
-											v-if="
-												element.type === 'community' &&
-												isOwner(element)
-											"
-											class="homeIcon material-icons"
-											content="This is your station."
-											v-tippy="{ theme: 'info' }"
-											>home</i
-										>
-										<i
-											v-if="element.privacy === 'private'"
-											class="privateIcon material-icons"
-											content="This station is not visible to other users."
-											v-tippy="{ theme: 'info' }"
-											>lock</i
-										>
-										<i
-											v-if="
-												element.privacy === 'unlisted'
-											"
-											class="unlistedIcon material-icons"
-											content="Unlisted Station"
-											v-tippy="{ theme: 'info' }"
-											>link</i
-										>
+											<i
+												v-if="
+													element.privacy ===
+													'private'
+												"
+												class="privateIcon material-icons"
+												content="This station is not visible to other users."
+												v-tippy="{ theme: 'info' }"
+												>lock</i
+											>
+											<i
+												v-if="
+													element.privacy ===
+													'unlisted'
+												"
+												class="unlistedIcon material-icons"
+												content="Unlisted Station"
+												v-tippy="{ theme: 'info' }"
+												>link</i
+											>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -266,20 +263,19 @@
 					@click="openModal('createStation')"
 					class="station-card createStation"
 				>
-					<div class="thumbnail">
-						<figure class="image">
-							<i class="material-icons">radio</i>
-						</figure>
-					</div>
 					<div class="card-content">
+						<div class="thumbnail">
+							<figure class="image">
+								<i class="material-icons">radio</i>
+							</figure>
+						</div>
 						<div class="media">
-							<div class="media-left displayName">
+							<div class="displayName">
 								<h5>Create Station</h5>
 							</div>
-						</div>
-
-						<div class="content">
-							Click here to create your own station!
+							<div class="content">
+								Click here to create your own station!
+							</div>
 						</div>
 					</div>
 					<div class="bottomBar"></div>
@@ -289,19 +285,20 @@
 					@click="openModal('login')"
 					class="station-card createStation"
 				>
-					<div class="thumbnail">
-						<figure class="image">
-							<i class="material-icons">radio</i>
-						</figure>
-					</div>
 					<div class="card-content">
+						<div class="thumbnail">
+							<figure class="image">
+								<i class="material-icons">radio</i>
+							</figure>
+						</div>
 						<div class="media">
-							<div class="media-left displayName">
+							<div class="displayName">
 								<h5>Create Station</h5>
 							</div>
+							<div class="content">
+								Login to create a station!
+							</div>
 						</div>
-
-						<div class="content">Login to create a station!</div>
 					</div>
 					<div class="bottomBar"></div>
 				</a>
@@ -320,33 +317,37 @@
 					}"
 					:style="'--primary-color: var(--' + station.theme + ')'"
 				>
-					<song-thumbnail :song="station.currentSong">
-						<template #icon>
-							<div class="icon-container">
-								<div
-									v-if="isOwnerOrAdmin(station)"
-									class="material-icons manage-station"
-									@click.prevent="manageStation(station._id)"
-									content="Manage Station"
-									v-tippy
-								>
-									settings
-								</div>
-								<div
-									v-else
-									class="material-icons manage-station"
-									@click.prevent="manageStation(station._id)"
-									content="View Queue"
-									v-tippy
-								>
-									queue_music
-								</div>
-							</div>
-						</template>
-					</song-thumbnail>
 					<div class="card-content">
+						<song-thumbnail :song="station.currentSong">
+							<template #icon>
+								<div class="icon-container">
+									<div
+										v-if="isOwnerOrAdmin(station)"
+										class="material-icons manage-station"
+										@click.prevent="
+											manageStation(station._id)
+										"
+										content="Manage Station"
+										v-tippy
+									>
+										settings
+									</div>
+									<div
+										v-else
+										class="material-icons manage-station"
+										@click.prevent="
+											manageStation(station._id)
+										"
+										content="View Queue"
+										v-tippy
+									>
+										queue_music
+									</div>
+								</div>
+							</template>
+						</song-thumbnail>
 						<div class="media">
-							<div class="media-left displayName">
+							<div class="displayName">
 								<i
 									v-if="loggedIn && !station.isFavorited"
 									@click.prevent="
@@ -377,52 +378,51 @@
 									check_circle
 								</i>
 							</div>
-						</div>
-
-						<div class="content">
-							{{ station.description }}
-						</div>
-						<div class="under-content">
-							<p class="hostedBy">
-								Hosted by
-								<span class="host">
-									<span
-										v-if="station.type === 'official'"
-										title="Musare"
-										>Musare</span
+							<div class="content">
+								{{ station.description }}
+							</div>
+							<div class="under-content">
+								<p class="hostedBy">
+									Hosted by
+									<span class="host">
+										<span
+											v-if="station.type === 'official'"
+											title="Musare"
+											>Musare</span
+										>
+										<user-id-to-username
+											v-else
+											:user-id="station.owner"
+											:link="true"
+										/>
+									</span>
+								</p>
+								<div class="icons">
+									<i
+										v-if="
+											station.type === 'community' &&
+											isOwner(station)
+										"
+										class="homeIcon material-icons"
+										content="This is your station."
+										v-tippy="{ theme: 'info' }"
+										>home</i
 									>
-									<user-id-to-username
-										v-else
-										:user-id="station.owner"
-										:link="true"
-									/>
-								</span>
-							</p>
-							<div class="icons">
-								<i
-									v-if="
-										station.type === 'community' &&
-										isOwner(station)
-									"
-									class="homeIcon material-icons"
-									content="This is your station."
-									v-tippy="{ theme: 'info' }"
-									>home</i
-								>
-								<i
-									v-if="station.privacy === 'private'"
-									class="privateIcon material-icons"
-									content="This station is not visible to other users."
-									v-tippy="{ theme: 'info' }"
-									>lock</i
-								>
-								<i
-									v-if="station.privacy === 'unlisted'"
-									class="unlistedIcon material-icons"
-									content="Unlisted Station"
-									v-tippy="{ theme: 'info' }"
-									>link</i
-								>
+									<i
+										v-if="station.privacy === 'private'"
+										class="privateIcon material-icons"
+										content="This station is not visible to other users."
+										v-tippy="{ theme: 'info' }"
+										>lock</i
+									>
+									<i
+										v-if="station.privacy === 'unlisted'"
+										class="unlistedIcon material-icons"
+										content="Unlisted Station"
+										v-tippy="{ theme: 'info' }"
+										>link</i
+									>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -489,7 +489,6 @@
 			:station-id="editingStationId"
 			sector="home"
 		/>
-		<request-song v-if="modals.requestSong" />
 		<create-playlist v-if="modals.createPlaylist" />
 		<edit-playlist v-if="modals.editPlaylist" />
 		<edit-song v-if="modals.editSong" song-type="songs" sector="home" />
@@ -521,9 +520,6 @@ export default {
 		ManageStation: defineAsyncComponent(() =>
 			import("@/components/modals/ManageStation/index.vue")
 		),
-		RequestSong: defineAsyncComponent(() =>
-			import("@/components/modals/RequestSong.vue")
-		),
 		EditPlaylist: defineAsyncComponent(() =>
 			import("@/components/modals/EditPlaylist")
 		),
@@ -545,7 +541,10 @@ export default {
 			stations: [],
 			favoriteStations: [],
 			searchQuery: "",
-			sitename: "Musare",
+			siteSettings: {
+				sitename: "Musare",
+				registrationDisabled: false
+			},
 			orderOfFavoriteStations: [],
 			handledLoginRegisterRedirect: false,
 			editingStationId: null
@@ -600,7 +599,7 @@ export default {
 		}
 	},
 	async mounted() {
-		this.sitename = await lofig.get("siteSettings.sitename");
+		this.siteSettings = await lofig.get("siteSettings");
 
 		if (
 			!this.loggedIn &&
@@ -649,9 +648,10 @@ export default {
 				this.stations.splice(stationIndex, 1);
 
 				if (station.isFavorited)
-					this.orderOfFavoriteStations.filter(
-						favoritedId => favoritedId !== stationId
-					);
+					this.orderOfFavoriteStations =
+						this.orderOfFavoriteStations.filter(
+							favoritedId => favoritedId !== stationId
+						);
 			}
 		});
 
@@ -872,7 +872,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 .christmas-mode .home-page {
 	.header .overlay {
 		background: linear-gradient(
@@ -884,14 +884,10 @@ export default {
 		);
 	}
 	.christmas-lights {
-		top: 35vh !important;
+		top: 300px !important;
 
 		&.loggedIn {
-			top: 20vh !important;
-		}
-
-		@media only screen and (max-width: 550px) {
-			top: 45vh !important;
+			top: 200px !important;
 		}
 	}
 	.header {
@@ -904,7 +900,7 @@ export default {
 }
 </style>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 * {
 	box-sizing: border-box;
 }
@@ -919,6 +915,18 @@ html {
 		margin: 0;
 		padding: 0;
 	}
+
+	@media only screen and (min-width: 1200px) {
+		font-size: 15px;
+	}
+
+	@media only screen and (min-width: 992px) {
+		font-size: 14.5px;
+	}
+
+	@media only screen and (min-width: 0) {
+		font-size: 14px;
+	}
 }
 
 .night-mode {
@@ -931,59 +939,39 @@ html {
 			rgba(34, 34, 34, 0.8) 100%
 		);
 	}
-	.station-card,
-	.card-content,
-	.card-content div {
+	.station-card {
 		background-color: var(--dark-grey-3);
+
+		.thumbnail {
+			background-color: var(--dark-grey-2);
+
+			i {
+				user-select: none;
+				-webkit-user-select: none;
+			}
+		}
+
+		.card-content .media {
+			.icons i,
+			.under-content .hostedBy {
+				color: var(--light-grey-2) !important;
+			}
+		}
 	}
 
-	.card-content .icons i,
 	.group-title i {
 		color: var(--light-grey-2);
-	}
-
-	.thumbnail i {
-		user-select: none;
-		-webkit-user-select: none;
-	}
-
-	.thumbnail {
-		background-color: var(--dark-grey-2);
-	}
-
-	.card-content .under-content .hostedBy {
-		color: var(--light-grey-2);
-	}
-}
-
-@media only screen and (min-width: 1200px) {
-	html {
-		font-size: 15px;
-	}
-}
-
-@media only screen and (min-width: 992px) {
-	html {
-		font-size: 14.5px;
-	}
-}
-
-@media only screen and (min-width: 0) {
-	html {
-		font-size: 14px;
 	}
 }
 
 .header {
 	display: flex;
-	height: 35vh;
-	min-height: 300px;
+	height: 300px;
 	margin-top: -64px;
 	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 
 	img.background {
-		height: 35vh;
-		min-height: 300px;
+		height: 300px;
 		width: 100%;
 		object-fit: cover;
 		object-position: center;
@@ -1001,8 +989,7 @@ html {
 			rgba(3, 169, 244, 0.8) 100%
 		);
 		position: absolute;
-		height: 35vh;
-		min-height: 300px;
+		height: 300px;
 		width: 100%;
 		border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 		overflow: hidden;
@@ -1014,8 +1001,7 @@ html {
 		margin-left: auto;
 		margin-right: auto;
 		text-align: center;
-		height: 35vh;
-		min-height: 300px;
+		height: 300px;
 		.content {
 			position: absolute;
 			top: 50%;
@@ -1040,7 +1026,7 @@ html {
 				.register {
 					margin: 5px 10px;
 					padding: 10px 15px;
-					border-radius: 5px;
+					border-radius: @border-radius;
 					font-size: 18px;
 					width: 100%;
 					max-width: 250px;
@@ -1060,86 +1046,11 @@ html {
 		}
 	}
 	&.loggedIn {
-		height: 20vh;
-		min-height: 200px;
+		height: 200px;
 		.overlay,
 		.content-container,
 		img.background {
-			height: 20vh;
-			min-height: 200px;
-		}
-	}
-}
-
-@media only screen and (max-width: 550px) {
-	.header {
-		height: 45vh;
-		.overlay,
-		.content-container,
-		img.background {
-			height: 45vh;
-		}
-	}
-}
-
-.under-content {
-	height: 20px;
-	position: relative;
-	line-height: 1;
-	font-size: 24px;
-	display: flex;
-	align-items: center;
-	text-align: left;
-	margin-top: 10px;
-
-	p {
-		font-size: 15px;
-		line-height: 15px;
-		display: inline;
-	}
-
-	i {
-		font-size: 20px;
-	}
-
-	* {
-		z-index: 10;
-		position: relative;
-	}
-
-	.icons {
-		position: absolute;
-		right: 0;
-
-		.material-icons {
-			font-size: 22px;
-		}
-		.material-icons:first-child {
-			margin-left: 5px;
-		}
-		.unlistedIcon {
-			color: var(--orange);
-		}
-		.privateIcon {
-			color: var(--dark-pink);
-		}
-		.homeIcon {
-			color: var(--light-purple);
-		}
-	}
-
-	.hostedBy {
-		font-weight: 400;
-		font-size: 12px;
-		color: var(--black);
-		.host,
-		.host a {
-			font-weight: 400;
-			color: var(--primary-color);
-			&:hover,
-			&:focus {
-				filter: brightness(90%);
-			}
+			height: 200px;
 		}
 	}
 }
@@ -1147,17 +1058,6 @@ html {
 .app {
 	display: flex;
 	flex-direction: column;
-}
-
-.users-count {
-	font-size: 20px;
-	position: relative;
-	top: -4px;
-}
-
-.group {
-	min-height: 64px;
-	flex: 1 0 auto;
 }
 
 .station-card {
@@ -1174,22 +1074,69 @@ html {
 	width: calc(100% - 30px);
 	max-width: 400px;
 	flex-wrap: wrap;
-	border-radius: 5px;
-	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
+	border-radius: @border-radius;
+	box-shadow: @box-shadow;
 
 	.card-content {
 		display: flex;
-		position: relative;
-		padding: 10px 10px 10px 15px;
-		display: flex;
-		flex-direction: column;
+		flex-direction: row;
 		flex-grow: 1;
-		-webkit-line-clamp: 2;
+
+		.thumbnail {
+			display: flex;
+			position: relative;
+			min-width: 120px;
+			width: 120px;
+			height: 120px;
+			margin: 0;
+
+			.image {
+				display: flex;
+				position: relative;
+				padding-top: 100%;
+			}
+
+			.icon-container {
+				display: flex;
+				position: absolute;
+				z-index: 2;
+				top: 0;
+				bottom: 0;
+				left: 0;
+				right: 0;
+
+				.material-icons.manage-station {
+					display: inline-flex;
+					opacity: 0;
+					background: var(--primary-color);
+					color: var(--white);
+					margin: auto;
+					font-size: 40px;
+					border-radius: 100%;
+					padding: 10px;
+					transition: all 0.2s ease-in-out;
+				}
+
+				&:hover,
+				&:focus {
+					.material-icons.manage-station {
+						opacity: 1;
+						&:hover,
+						&:focus {
+							filter: brightness(90%);
+						}
+					}
+				}
+			}
+		}
 
 		.media {
 			display: flex;
-			align-items: center;
-			margin-bottom: 0;
+			position: relative;
+			padding: 10px 10px 10px 15px;
+			flex-direction: column;
+			flex-grow: 1;
+			-webkit-line-clamp: 2;
 
 			.displayName {
 				display: flex;
@@ -1228,65 +1175,79 @@ html {
 					color: var(--primary-color);
 				}
 			}
-		}
 
-		.content {
-			word-wrap: break-word;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			display: -webkit-box;
-			-webkit-box-orient: vertical;
-			-webkit-line-clamp: 3;
-			line-height: 20px;
-			flex-grow: 1;
-			text-align: left;
-			word-wrap: break-word;
-			margin-bottom: 0;
-		}
-	}
-
-	.thumbnail {
-		display: flex;
-		position: relative;
-		min-width: 120px;
-		width: 120px;
-		height: 120px;
-		margin: 0;
-
-		.image {
-			display: flex;
-			position: relative;
-			padding-top: 100%;
-		}
-
-		.icon-container {
-			display: flex;
-			position: absolute;
-			z-index: 2;
-			top: 0;
-			bottom: 0;
-			left: 0;
-			right: 0;
-
-			.material-icons.manage-station {
-				display: inline-flex;
-				opacity: 0;
-				background: var(--primary-color);
-				color: var(--white);
-				margin: auto;
-				font-size: 40px;
-				border-radius: 100%;
-				padding: 10px;
-				transition: all 0.2s ease-in-out;
+			.content {
+				word-wrap: break-word;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				display: -webkit-box;
+				-webkit-box-orient: vertical;
+				-webkit-line-clamp: 3;
+				line-height: 20px;
+				flex-grow: 1;
+				text-align: left;
+				word-wrap: break-word;
+				margin-bottom: 0;
 			}
 
-			&:hover,
-			&:focus {
-				.material-icons.manage-station {
-					opacity: 1;
-					&:hover,
-					&:focus {
-						filter: brightness(90%);
+			.under-content {
+				height: 20px;
+				position: relative;
+				line-height: 1;
+				font-size: 24px;
+				display: flex;
+				align-items: center;
+				text-align: left;
+				margin-top: 10px;
+
+				p {
+					font-size: 15px;
+					line-height: 15px;
+					display: inline;
+				}
+
+				i {
+					font-size: 20px;
+				}
+
+				* {
+					z-index: 10;
+					position: relative;
+				}
+
+				.icons {
+					position: absolute;
+					right: 0;
+
+					.material-icons {
+						font-size: 22px;
+					}
+					.material-icons:first-child {
+						margin-left: 5px;
+					}
+					.unlistedIcon {
+						color: var(--orange);
+					}
+					.privateIcon {
+						color: var(--dark-pink);
+					}
+					.homeIcon {
+						color: var(--light-purple);
+					}
+				}
+
+				.hostedBy {
+					font-weight: 400;
+					font-size: 12px;
+					color: var(--black);
+					.host,
+					.host a {
+						font-weight: 400;
+						color: var(--primary-color);
+						&:hover,
+						&:focus {
+							filter: brightness(90%);
+						}
 					}
 				}
 			}
@@ -1326,81 +1287,51 @@ html {
 	}
 
 	&.createStation {
-		.thumbnail {
-			.image {
-				width: 120px;
-
-				@media screen and (max-width: 330px) {
-					width: 50px;
+		.card-content {
+			.thumbnail {
+				.image {
+					width: 120px;
 
 					.material-icons {
-						font-size: 35px !important;
+						position: absolute;
+						top: 25px;
+						bottom: 25px;
+						left: 0;
+						right: 0;
+						text-align: center;
+						font-size: 70px;
+						color: var(--primary-color);
 					}
 				}
-
-				.material-icons {
-					position: absolute;
-					top: 25px;
-					bottom: 25px;
-					left: 0;
-					right: 0;
-					text-align: center;
-					font-size: 70px;
-					color: var(--primary-color);
-				}
 			}
-		}
-		.card-content {
-			width: min-content;
 
 			.media {
-				margin-top: auto;
+				margin: auto 0;
+
 				.displayName h5 {
 					font-weight: 600;
 				}
-			}
-			.content {
-				flex-grow: unset;
-				margin-bottom: auto;
+				.content {
+					flex-grow: unset;
+					margin-bottom: auto;
+				}
 			}
 		}
 	}
-}
 
-.station-card:hover {
-	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.3), 0 0 10px rgba(10, 10, 10, 0.3);
-	transition: all ease-in-out 0.2s;
-}
-
-.community-button {
-	cursor: pointer;
-	transition: 0.25s ease color;
-	font-size: 30px;
-	color: var(--dark-grey);
-}
-
-.community-button:hover {
-	color: var(--primary-color);
-}
-
-.station-privacy {
-	text-transform: capitalize;
-}
-
-.label {
-	display: flex;
-}
-
-.g-recaptcha {
-	display: flex;
-	justify-content: center;
-	margin-top: 20px;
+	&:hover {
+		box-shadow: @box-shadow-hover;
+		transition: all ease-in-out 0.2s;
+	}
 }
 
 .group {
+	flex: 1 0 auto;
 	text-align: center;
 	width: 100%;
 	margin: 10px 0;
+	min-height: 64px;
+
 	.group-title {
 		display: flex;
 		align-items: center;

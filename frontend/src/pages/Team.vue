@@ -258,7 +258,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.group .card {
 		background-color: var(--dark-grey-3);
@@ -302,13 +302,12 @@ h2 {
 		a {
 			background: var(--white);
 			padding: 10px;
-			border-radius: 5px;
+			border-radius: @border-radius;
 			white-space: nowrap;
 			margin-top: 5px;
 			font-size: 16px;
 			text-align: center;
-			box-shadow: 0 1px 2px rgba(10, 10, 10, 0.1),
-				0 0 0 1px rgba(10, 10, 10, 0.1);
+			box-shadow: @box-shadow;
 			&:not(:last-of-type) {
 				margin-right: 5px;
 			}
@@ -333,9 +332,8 @@ h2 {
 		max-width: 400px;
 		margin: 10px;
 		text-align: left;
-		border-radius: 5px;
-		box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1),
-			0 0 0 1px rgba(10, 10, 10, 0.1);
+		border-radius: @border-radius;
+		box-shadow: @box-shadow;
 		.card-header {
 			display: flex;
 			position: relative;
@@ -347,7 +345,7 @@ h2 {
 				height: 45px;
 			}
 
-			/deep/ .profile-picture.using-initials span {
+			:deep(.profile-picture.using-initials span) {
 				font-size: calc(
 					45px / 5 * 2
 				); // 2/5th of .profile-picture height/width

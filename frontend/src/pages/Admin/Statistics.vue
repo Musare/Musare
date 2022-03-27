@@ -211,7 +211,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.table {
 		color: var(--light-grey-2);
@@ -266,10 +266,10 @@ td {
 	flex-direction: column;
 	padding: 20px;
 	margin: 10px;
-	border-radius: 5px;
+	border-radius: @border-radius;
 	background-color: var(--white);
 	color: var(--dark-grey);
-	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
+	box-shadow: @box-shadow;
 
 	.card-header {
 		font-weight: 700;

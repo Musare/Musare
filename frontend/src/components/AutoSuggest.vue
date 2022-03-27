@@ -122,7 +122,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode .autosuggest-container {
 	background-color: var(--dark-grey) !important;
 
@@ -171,7 +171,7 @@ export default {
 	}
 
 	.autosuggest-item:last-child {
-		border-radius: 0 0 3px 3px;
+		border-radius: 0 0 @border-radius @border-radius;
 	}
 }
 </style>

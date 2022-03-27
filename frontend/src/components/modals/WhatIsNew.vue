@@ -66,14 +66,17 @@ export default {
 	},
 	methods: {
 		init() {
-			this.socket.dispatch("news.newest", res => {
+			const newUser = !localStorage.getItem("firstVisited");
+			this.socket.dispatch("news.newest", newUser, res => {
 				if (res.status !== "success") return;
 
 				const { news } = res.data;
 
 				this.news = news;
-				if (this.news && localStorage.getItem("firstVisited")) {
-					if (localStorage.getItem("whatIsNew")) {
+				if (this.news) {
+					if (newUser) {
+						this.openModal("whatIsNew");
+					} else if (localStorage.getItem("whatIsNew")) {
 						if (
 							parseInt(localStorage.getItem("whatIsNew")) <
 							news.createdAt
@@ -89,7 +92,9 @@ export default {
 							this.openModal("whatIsNew");
 						localStorage.setItem("whatIsNew", news.createdAt);
 					}
-				} else if (!localStorage.getItem("firstVisited"))
+				}
+
+				if (!localStorage.getItem("firstVisited"))
 					localStorage.setItem("firstVisited", Date.now());
 			});
 		},
@@ -101,13 +106,13 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 .what-is-news-modal .modal-card .modal-card-foot {
 	column-gap: 0;
 }
 </style>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.modal-card,
 	.modal-card-head,

@@ -387,8 +387,68 @@ export default {
 					userModel.deleteMany({ _id: session.userId }, next);
 				},
 
-				// request data removal for user
+				// session
 				(res, next) => {
+					CacheModule.runJob("PUB", {
+						channel: "user.removeSessions",
+						value: session.userId
+					});
+
+					async.waterfall(
+						[
+							next => {
+								CacheModule.runJob("HGETALL", { table: "sessions" }, this)
+									.then(sessions => {
+										next(null, sessions);
+									})
+									.catch(next);
+							},
+
+							(sessions, next) => {
+								if (!sessions) return next(null, [], {});
+
+								const keys = Object.keys(sessions);
+
+								return next(null, keys, sessions);
+							},
+
+							(keys, sessions, next) => {
+								// temp fix, need to wait properly for the SUB/PUB refactor (on wekan)
+								const { userId } = session;
+								setTimeout(
+									() =>
+										async.each(
+											keys,
+											(sessionId, callback) => {
+												const session = sessions[sessionId];
+
+												if (session && session.userId === userId) {
+													CacheModule.runJob(
+														"HDEL",
+														{
+															table: "sessions",
+															key: sessionId
+														},
+														this
+													)
+														.then(() => callback(null))
+														.catch(callback);
+												} else callback();
+											},
+											err => {
+												next(err);
+											}
+										),
+									50
+								);
+							}
+						],
+						next
+					);
+				},
+
+				// request data removal for user
+				next => {
 					dataRequestModel.create({ userId: session.userId, type: "remove" }, next);
 				},
 
@@ -555,8 +615,68 @@ export default {
 					userModel.deleteMany({ _id: userId }, next);
 				},
 
-				// request data removal for user
+				// session
 				(res, next) => {
+					CacheModule.runJob("PUB", {
+						channel: "user.removeSessions",
+						value: session.userId
+					});
+
+					async.waterfall(
+						[
+							next => {
+								CacheModule.runJob("HGETALL", { table: "sessions" }, this)
+									.then(sessions => {
+										next(null, sessions);
+									})
+									.catch(next);
+							},
+
+							(sessions, next) => {
+								if (!sessions) return next(null, [], {});
+
+								const keys = Object.keys(sessions);
+
+								return next(null, keys, sessions);
+							},
+
+							(keys, sessions, next) => {
+								// temp fix, need to wait properly for the SUB/PUB refactor (on wekan)
+								const { userId } = session;
+								setTimeout(
+									() =>
+										async.each(
+											keys,
+											(sessionId, callback) => {
+												const session = sessions[sessionId];
+
+												if (session && session.userId === userId) {
+													CacheModule.runJob(
+														"HDEL",
+														{
+															table: "sessions",
+															key: sessionId
+														},
+														this
+													)
+														.then(() => callback(null))
+														.catch(callback);
+												} else callback();
+											},
+											err => {
+												next(err);
+											}
+										),
+									50
+								);
+							}
+						],
+						next
+					);
+				},
+
+				// request data removal for user
+				next => {
 					dataRequestModel.create({ userId, type: "remove" }, next);
 				},
 
@@ -612,7 +732,7 @@ export default {
 	 * Logs user in
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} identifier - the email of the user
+	 * @param {string} identifier - the username or email of the user
 	 * @param {string} password - the plaintext of the user
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -625,9 +745,12 @@ export default {
 			[
 				// check if a user with the requested identifier exists
 				next => {
+					const query = {};
+					if (identifier.indexOf("@") !== -1) query["email.address"] = identifier;
+					else query.username = identifier;
 					userModel.findOne(
 						{
-							$or: [{ "email.address": identifier }]
+							$or: [query]
 						},
 						next
 					);
@@ -1129,7 +1252,7 @@ export default {
 								(sessionId, callback) => {
 									const session = sessions[sessionId];
 
-									if (session.userId === userId) {
+									if (session && session.userId === userId) {
 										// TODO Also maybe add this to this runJob
 										CacheModule.runJob("HDEL", {
 											table: "sessions",
@@ -1137,7 +1260,7 @@ export default {
 										})
 											.then(() => callback(null))
 											.catch(callback);
-									}
+									} else callback();
 								},
 								err => {
 									next(err);
@@ -1400,9 +1523,14 @@ export default {
 			[
 				next => {
 					userModel.findById(session.userId).select({ preferences: -1 }).exec(next);
+				},
+
+				(user, next) => {
+					if (!user) next("User not found");
+					else next(null, user);
 				}
 			],
-			async (err, { preferences }) => {
+			async (err, user) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
@@ -1424,7 +1552,7 @@ export default {
 				return cb({
 					status: "success",
 					message: "Preferences successfully retrieved",
-					data: { preferences }
+					data: { preferences: user.preferences }
 				});
 			}
 		);

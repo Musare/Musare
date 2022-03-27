@@ -89,16 +89,6 @@
 			<span> Add Song To Queue </span>
 		</button>
 		<button
-			class="button is-primary tab-actionable-button"
-			v-if="
-				sector === 'station' && loggedIn && station.type === 'official'
-			"
-			@click="openModal('requestSong')"
-		>
-			<i class="material-icons icon-with-button">queue</i>
-			<span> Request Song </span>
-		</button>
-		<button
 			class="button is-primary tab-actionable-button disabled"
 			v-if="
 				sector === 'station' &&
@@ -294,7 +284,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	#queue {
 		background-color: var(--dark-grey-3) !important;
@@ -304,7 +294,7 @@ export default {
 
 #queue {
 	background-color: var(--white);
-	border-radius: 0 0 5px 5px;
+	border-radius: 0 0 @border-radius @border-radius;
 	user-select: none;
 
 	.actionable-button-hidden {

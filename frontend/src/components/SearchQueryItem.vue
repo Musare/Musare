@@ -45,7 +45,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 .search-query-actions-enter-active,
 .musare-search-query-actions-enter-active,
 .youtube-search-query-actions-enter-active {
@@ -73,7 +73,7 @@ export default {
 }
 </style>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.search-query-item {
 		background-color: var(--dark-grey-2) !important;

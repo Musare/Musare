@@ -16,12 +16,7 @@
 				<template #column-options="slotProps">
 					<div class="row-options">
 						<button
-							class="
-								button
-								is-primary
-								icon-with-button
-								material-icons
-							"
+							class="button is-primary icon-with-button material-icons"
 							@click="edit(slotProps.item._id)"
 							:disabled="slotProps.item.removed"
 							content="Edit Playlist"
@@ -98,7 +93,7 @@ import AdvancedTable from "@/components/AdvancedTable.vue";
 import RunJobDropdown from "@/components/RunJobDropdown.vue";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
-import utils from "../../../../js/utils";
+import utils from "../../../js/utils";
 
 export default {
 	components: {

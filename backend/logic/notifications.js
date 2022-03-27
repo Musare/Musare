@@ -212,12 +212,14 @@ class _NotificationsModule extends CoreClass {
 			if (
 				payload.unique &&
 				!!NotificationsModule.subscriptions.find(subscription => subscription.originalName === payload.name)
-			)
-				return resolve({
+			) {
+				resolve({
 					subscription: NotificationsModule.subscriptions.find(
 						subscription => subscription.originalName === payload.name
 					)
 				});
+				return;
+			}
 
 			const subscription = {
 				originalName: payload.name,
@@ -227,7 +229,7 @@ class _NotificationsModule extends CoreClass {
 
 			NotificationsModule.subscriptions.push(subscription);
 
-			return resolve({ subscription });
+			resolve({ subscription });
 		});
 	}
 

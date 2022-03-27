@@ -487,7 +487,7 @@ class _AppModule extends CoreClass {
 				);
 			});
 
-			return resolve();
+			resolve();
 		});
 	}
 

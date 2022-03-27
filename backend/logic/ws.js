@@ -86,7 +86,7 @@ class _WSModule extends CoreClass {
 
 			this.setStage(4);
 
-			return resolve();
+			resolve();
 		});
 	}
 
@@ -96,7 +96,9 @@ class _WSModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	WS() {
-		return new Promise(resolve => resolve(WSModule._io));
+		return new Promise(resolve => {
+			resolve(WSModule._io);
+		});
 	}
 
 	/**
@@ -117,7 +119,7 @@ class _WSModule extends CoreClass {
 				});
 
 			// socket doesn't exist
-			return resolve();
+			resolve();
 		});
 	}
 
@@ -134,7 +136,7 @@ class _WSModule extends CoreClass {
 			const sockets = [];
 
 			if (clients) {
-				return async.each(
+				async.each(
 					Object.keys(clients),
 					(id, next) => {
 						const { session } = clients[id];
@@ -143,9 +145,10 @@ class _WSModule extends CoreClass {
 					},
 					() => resolve(sockets)
 				);
+				return;
 			}
 
-			return resolve();
+			resolve();
 		});
 	}
 
@@ -160,7 +163,7 @@ class _WSModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			const sockets = [];
 
-			return async.eachLimit(
+			async.eachLimit(
 				WSModule._io.clients,
 				1,
 				(socket, next) => {
@@ -198,7 +201,7 @@ class _WSModule extends CoreClass {
 
 			const sockets = [];
 
-			return async.each(
+			async.each(
 				Object.keys(clients),
 				(id, next) => {
 					const { session } = clients[id];
@@ -228,7 +231,7 @@ class _WSModule extends CoreClass {
 			const sockets = [];
 
 			if (clients) {
-				return async.each(
+				async.each(
 					Object.keys(clients),
 					(id, next) => {
 						const { session } = clients[id];
@@ -237,9 +240,10 @@ class _WSModule extends CoreClass {
 					},
 					() => resolve(sockets)
 				);
+				return;
 			}
 
-			return resolve();
+			resolve();
 		});
 	}
 
@@ -257,7 +261,7 @@ class _WSModule extends CoreClass {
 				WSModule.rooms[room] = WSModule.rooms[room].filter(participant => participant !== payload.socketId);
 			});
 
-			return resolve();
+			resolve();
 		});
 	}
 
@@ -277,7 +281,7 @@ class _WSModule extends CoreClass {
 					participant => participant !== payload.socketId
 				);
 
-			return resolve();
+			resolve();
 		});
 	}
 
@@ -297,7 +301,7 @@ class _WSModule extends CoreClass {
 				if (WSModule.rooms[room].indexOf(socketId) === -1) WSModule.rooms[room].push(socketId);
 			} else WSModule.rooms[room] = [socketId];
 
-			return resolve();
+			resolve();
 		});
 	}
 
@@ -312,15 +316,17 @@ class _WSModule extends CoreClass {
 	async EMIT_TO_ROOM(payload) {
 		return new Promise(resolve => {
 			// if the room exists
-			if (WSModule.rooms[payload.room] && WSModule.rooms[payload.room].length > 0)
-				return WSModule.rooms[payload.room].forEach(async socketId => {
+			if (WSModule.rooms[payload.room] && WSModule.rooms[payload.room].length > 0) {
+				WSModule.rooms[payload.room].forEach(async socketId => {
 					// get every socketId (and thus every socket) in the room, and dispatch to each
 					const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);
 					if (socket) socket.dispatch(...payload.args);
-					return resolve();
+					resolve();
 				});
+				return;
+			}
 
-			return resolve();
+			resolve();
 		});
 	}
 
@@ -333,16 +339,16 @@ class _WSModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async EMIT_TO_ROOMS(payload) {
-		return new Promise(resolve =>
+		return new Promise(resolve => {
 			async.each(
 				payload.rooms,
 				(room, next) => {
 					WSModule.runJob("EMIT_TO_ROOM", { room, args: payload.args });
-					return next();
+					next();
 				},
 				() => resolve()
-			)
-		);
+			);
+		});
 	}
 
 	/**
@@ -364,7 +370,7 @@ class _WSModule extends CoreClass {
 			if (WSModule.rooms[room]) WSModule.rooms[room].push(socketId);
 			else WSModule.rooms[room] = [socketId];
 
-			return resolve();
+			resolve();
 		});
 	}
 
@@ -394,7 +400,7 @@ class _WSModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	SOCKETS_LEAVE_SONG_ROOMS(payload) {
-		return new Promise(resolve =>
+		return new Promise(resolve => {
 			Promise.allSettled(
 				payload.sockets.map(async socketId => {
 					const rooms = await WSModule.runJob("GET_ROOMS_FOR_SOCKET", { socketId }, this);
@@ -404,8 +410,8 @@ class _WSModule extends CoreClass {
 							WSModule.rooms[room] = WSModule.rooms[room].filter(participant => participant !== socketId);
 					});
 				})
-			).then(() => resolve())
-		);
+			).then(() => resolve());
+		});
 	}
 
 	/**
@@ -417,8 +423,8 @@ class _WSModule extends CoreClass {
 	 */
 	async GET_SOCKETS_FOR_ROOM(payload) {
 		return new Promise(resolve => {
-			if (WSModule.rooms[payload.room]) return resolve(WSModule.rooms[payload.room]);
-			return resolve([]);
+			if (WSModule.rooms[payload.room]) resolve(WSModule.rooms[payload.room]);
+			else resolve([]);
 		});
 	}
 
@@ -437,7 +443,7 @@ class _WSModule extends CoreClass {
 				if (WSModule.rooms[room].includes(payload.socketId)) rooms.push(room);
 			});
 
-			return resolve(rooms);
+			resolve(rooms);
 		});
 	}
 
@@ -454,7 +460,7 @@ class _WSModule extends CoreClass {
 
 			socket.ip = req.headers["x-forwarded-for"] || "0..0.0";
 
-			return async.waterfall(
+			async.waterfall(
 				[
 					next => {
 						if (!req.headers.cookie) return next("No cookie exists yet.");
@@ -557,7 +563,9 @@ class _WSModule extends CoreClass {
 
 				socket.dispatch("keep.event:banned", { data: { ban: socket.banishment.ban } });
 
-				return socket.close(); // close socket connection
+				socket.close(); // close socket connection
+
+				return;
 			}
 
 			WSModule.log("INFO", "IO_CONNECTION", `User connected. IP: ${socket.ip}.${sessionInfo}`);
@@ -652,7 +660,7 @@ class _WSModule extends CoreClass {
 				});
 			});
 
-			return resolve();
+			resolve();
 		});
 	}
 

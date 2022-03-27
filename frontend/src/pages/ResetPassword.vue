@@ -39,11 +39,7 @@
 
 								<div class="content-box-inputs">
 									<div
-										class="
-											control
-											is-grouped
-											input-with-button
-										"
+										class="control is-grouped input-with-button"
 									>
 										<p class="control is-expanded">
 											<input
@@ -63,10 +59,7 @@
 												@click="submitEmail()"
 											>
 												<i
-													class="
-														material-icons
-														icon-with-button
-													"
+													class="material-icons icon-with-button"
 													>mail</i
 												>Request
 											</button>
@@ -108,11 +101,7 @@
 
 								<div class="content-box-inputs">
 									<div
-										class="
-											control
-											is-grouped
-											input-with-button
-										"
+										class="control is-grouped input-with-button"
 									>
 										<p class="control is-expanded">
 											<input
@@ -130,10 +119,7 @@
 												@click="verifyCode()"
 											>
 												<i
-													class="
-														material-icons
-														icon-with-button
-													"
+													class="material-icons icon-with-button"
 													>vpn_key</i
 												>Verify
 											</button>
@@ -483,7 +469,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.label {
 		color: var(--light-grey-2);

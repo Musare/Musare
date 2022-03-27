@@ -269,7 +269,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .content .control {
 	margin-bottom: 15px;
 }
@@ -306,7 +306,7 @@ export default {
 			height: 50px;
 		}
 
-		/deep/ .profile-picture.using-initials span {
+		:deep(.profile-picture.using-initials span) {
 			font-size: 20px; // 2/5th of .profile-picture height/width
 		}
 	}

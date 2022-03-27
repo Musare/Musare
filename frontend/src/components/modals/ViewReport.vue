@@ -28,11 +28,7 @@
 						:key="issueIndex"
 					>
 						<i
-							class="
-								material-icons
-								duration-icon
-								report-sub-item-left-icon
-							"
+							class="material-icons duration-icon report-sub-item-left-icon"
 							:content="issue.category"
 							v-tippy
 						>
@@ -51,10 +47,7 @@
 						</p>
 
 						<div
-							class="
-								report-sub-item-actions
-								universal-item-actions
-							"
+							class="report-sub-item-actions universal-item-actions"
 						>
 							<i
 								class="material-icons resolve-icon"
@@ -80,26 +73,43 @@
 			</div>
 		</template>
 		<template #footer v-if="report && report._id">
-			<a class="button is-primary" @click="openSong()">
-				<i
-					class="material-icons icon-with-button"
-					content="Edit Song"
-					v-tippy
-				>
-					edit
-				</i>
-				Edit Song
+			<a
+				class="button is-primary material-icons icon-with-button"
+				@click="openSong()"
+				content="Edit Song"
+				v-tippy
+			>
+				edit
 			</a>
-			<button class="button is-success" @click="resolve()">
-				<i
-					class="material-icons icon-with-button"
-					content="Resolve"
-					v-tippy
-				>
-					done_all
-				</i>
-				Resolve
+			<button
+				v-if="report.resolved"
+				class="button is-danger material-icons icon-with-button"
+				@click="resolve(false)"
+				content="Unresolve"
+				v-tippy
+			>
+				remove_done
 			</button>
+			<button
+				v-else
+				class="button is-success material-icons icon-with-button"
+				@click="resolve(true)"
+				content="Resolve"
+				v-tippy
+			>
+				done_all
+			</button>
+			<div class="right">
+				<quick-confirm @confirm="remove()">
+					<button
+						class="button is-danger material-icons icon-with-button"
+						content="Delete Report"
+						v-tippy
+					>
+						delete_forever
+					</button>
+				</quick-confirm>
+			</div>
 		</template>
 	</modal>
 </template>
@@ -112,9 +122,10 @@ import ws from "@/ws";
 import Modal from "@/components/Modal.vue";
 import SongItem from "@/components/SongItem.vue";
 import ReportInfoItem from "@/components/ReportInfoItem.vue";
+import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
-	components: { Modal, SongItem, ReportInfoItem },
+	components: { Modal, SongItem, ReportInfoItem, QuickConfirm },
 	props: {
 		sector: { type: String, default: "admin" }
 	},
@@ -145,6 +156,14 @@ export default {
 
 		this.socket.on(
 			"event:admin.report.resolved",
+			res => {
+				this.report.resolved = res.data.resolved;
+			},
+			{ modal: "viewReport" }
+		);
+
+		this.socket.on(
+			"event:admin.report.removed",
 			() => this.closeModal("viewReport"),
 			{ modal: "viewReport" }
 		);
@@ -199,8 +218,15 @@ export default {
 				}
 			});
 		},
-		resolve() {
-			return this.resolveReport(this.reportId)
+		resolve(value) {
+			return this.resolveReport({ reportId: this.reportId, value })
+				.then(res => {
+					if (res.status !== "success") new Toast(res.message);
+				})
+				.catch(err => new Toast(err.message));
+		},
+		remove() {
+			return this.removeReport(this.reportId)
 				.then(res => {
 					if (res.status === "success") this.closeModal("viewReport");
 				})
@@ -220,14 +246,18 @@ export default {
 			this.editSong({ songId: this.report.song._id });
 			this.openModal("editSong");
 		},
-		...mapActions("admin/reports", ["indexReports", "resolveReport"]),
+		...mapActions("admin/reports", [
+			"indexReports",
+			"resolveReport",
+			"removeReport"
+		]),
 		...mapActions("modals/editSong", ["editSong"]),
 		...mapActions("modalVisibility", ["closeModal", "openModal"])
 	}
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.report-sub-items {
 		background-color: var(--dark-grey-2) !important;
@@ -256,7 +286,7 @@ export default {
 		}
 	}
 
-	/deep/ .report-info-item {
+	:deep(.report-info-item) {
 		justify-content: flex-start;
 
 		.item-title-description {
@@ -283,11 +313,11 @@ export default {
 			display: flex;
 
 			&:first-child {
-				border-radius: 3px 3px 0 0;
+				border-radius: @border-radius @border-radius 0 0;
 			}
 
 			&:last-child {
-				border-radius: 0 0 3px 3px;
+				border-radius: 0 0 @border-radius @border-radius;
 			}
 
 			&.report-sub-item-resolved {

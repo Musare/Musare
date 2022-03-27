@@ -3,11 +3,14 @@
 		<page-metadata title="Admin | Songs" />
 		<div class="admin-tab">
 			<div class="button-row">
+				<button class="button is-primary" @click="create()">
+					Create song
+				</button>
 				<button
 					class="button is-primary"
-					@click="openModal('requestSong')"
+					@click="openModal('importPlaylist')"
 				>
-					Request song
+					Import playlist
 				</button>
 				<button
 					class="button is-primary"
@@ -28,12 +31,7 @@
 				<template #column-options="slotProps">
 					<div class="row-options">
 						<button
-							class="
-								button
-								is-primary
-								icon-with-button
-								material-icons
-							"
+							class="button is-primary icon-with-button material-icons"
 							@click="editOne(slotProps.item)"
 							:disabled="slotProps.item.removed"
 							content="Edit Song"
@@ -46,12 +44,7 @@
 							@confirm="unverifyOne(slotProps.item._id)"
 						>
 							<button
-								class="
-									button
-									is-danger
-									icon-with-button
-									material-icons
-								"
+								class="button is-danger icon-with-button material-icons"
 								:disabled="slotProps.item.removed"
 								content="Unverify Song"
 								v-tippy
@@ -61,12 +54,7 @@
 						</quick-confirm>
 						<button
 							v-else
-							class="
-								button
-								is-success
-								icon-with-button
-								material-icons
-							"
+							class="button is-success icon-with-button material-icons"
 							@click="verifyOne(slotProps.item._id)"
 							:disabled="slotProps.item.removed"
 							content="Verify Song"
@@ -75,12 +63,7 @@
 							check_circle
 						</button>
 						<button
-							class="
-								button
-								is-danger
-								icon-with-button
-								material-icons
-							"
+							class="button is-danger icon-with-button material-icons"
 							@click.prevent="
 								confirmAction({
 									message:
@@ -277,7 +260,7 @@
 		<edit-song v-if="modals.editSong" song-type="songs" />
 		<edit-songs v-if="modals.editSongs" />
 		<report v-if="modals.report" />
-		<request-song v-if="modals.requestSong" />
+		<import-playlist v-if="modals.importPlaylist" />
 		<bulk-actions v-if="modals.bulkActions" :type="bulkActionsType" />
 		<confirm v-if="modals.confirm" @confirmed="handleConfirmed()" />
 	</div>
@@ -308,8 +291,8 @@ export default {
 		ImportAlbum: defineAsyncComponent(() =>
 			import("@/components/modals/ImportAlbum.vue")
 		),
-		RequestSong: defineAsyncComponent(() =>
-			import("@/components/modals/RequestSong.vue")
+		ImportPlaylist: defineAsyncComponent(() =>
+			import("@/components/modals/ImportPlaylist.vue")
 		),
 		BulkActions: defineAsyncComponent(() =>
 			import("@/components/modals/BulkActions.vue")
@@ -675,6 +658,10 @@ export default {
 		}
 	},
 	methods: {
+		create() {
+			this.editSong({ newSong: true });
+			this.openModal("editSong");
+		},
 		editOne(song) {
 			this.editSong({ songId: song._id });
 			this.openModal("editSong");
@@ -722,9 +709,7 @@ export default {
 				name: "tags",
 				action: "songs.editTags",
 				items: selectedRows.map(row => row._id),
-				regex: new RegExp(
-					/^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/
-				),
+				regex: /^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/,
 				autosuggest: true,
 				autosuggestDataAction: "songs.getTags"
 			};
@@ -735,7 +720,7 @@ export default {
 				name: "artists",
 				action: "songs.editArtists",
 				items: selectedRows.map(row => row._id),
-				regex: new RegExp(/^(?=.{1,64}$).*$/),
+				regex: /^(?=.{1,64}$).*$/,
 				autosuggest: true,
 				autosuggestDataAction: "songs.getArtists"
 			};
@@ -746,7 +731,7 @@ export default {
 				name: "genres",
 				action: "songs.editGenres",
 				items: selectedRows.map(row => row._id),
-				regex: new RegExp(/^[\x00-\x7F]{1,32}$/),
+				regex: /^[\x00-\x7F]{1,32}$/,
 				autosuggest: true,
 				autosuggestDataAction: "songs.getGenres"
 			};
@@ -800,14 +785,16 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .song-thumbnail {
 	display: block;
-	max-width: 50px;
+	width: 50px;
+	height: 50px;
 	margin: 0 auto;
+	object-fit: contain;
 }
 
-/deep/ .bulk-popup .bulk-actions {
+:deep(.bulk-popup .bulk-actions) {
 	.verify-songs-icon {
 		color: var(--green);
 	}

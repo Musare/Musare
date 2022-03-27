@@ -11,7 +11,7 @@ import store from "./store";
 
 import AppComponent from "./App.vue";
 
-const REQUIRED_CONFIG_VERSION = 9;
+const REQUIRED_CONFIG_VERSION = 11;
 
 const handleMetadata = attrs => {
 	document.title = `Musare | ${attrs.title}`;
@@ -78,6 +78,7 @@ const router = createRouter({
 	history: createWebHistory(),
 	routes: [
 		{
+			name: "home",
 			path: "/",
 			component: () => import("@/pages/Home.vue")
 		},
@@ -143,13 +144,45 @@ const router = createRouter({
 		{
 			path: "/admin",
 			component: () => import("@/pages/Admin/index.vue"),
-			meta: {
-				adminRequired: true
-			}
-		},
-		{
-			path: "/admin/:page",
-			component: () => import("@/pages//Admin/index.vue"),
+			children: [
+				{
+					path: "songs",
+					component: () => import("@/pages/Admin/Songs.vue")
+				},
+				{
+					path: "reports",
+					component: () => import("@/pages/Admin/Reports.vue")
+				},
+				{
+					path: "stations",
+					component: () => import("@/pages/Admin/Stations.vue")
+				},
+				{
+					path: "playlists",
+					component: () => import("@/pages/Admin/Playlists.vue")
+				},
+				{
+					path: "users",
+					component: () => import("@/pages/Admin/Users/index.vue")
+				},
+				{
+					path: "users/data-requests",
+					component: () =>
+						import("@/pages/Admin/Users/DataRequests.vue")
+				},
+				{
+					path: "punishments",
+					component: () => import("@/pages/Admin/Punishments.vue")
+				},
+				{
+					path: "news",
+					component: () => import("@/pages/Admin/News.vue")
+				},
+				{
+					path: "statistics",
+					component: () => import("@/pages/Admin/Statistics.vue")
+				}
+			],
 			meta: {
 				adminRequired: true
 			}
@@ -166,6 +199,11 @@ router.beforeEach((to, from, next) => {
 	if (window.stationInterval) {
 		clearInterval(window.stationInterval);
 		window.stationInterval = 0;
+	}
+
+	if (from.name === "home" && to.name === "station") {
+		if (store.state.modalVisibility.modals.manageStation)
+			store.dispatch("modalVisibility/closeModal", "manageStation");
 	}
 
 	if (ws.socket && to.fullPath !== from.fullPath) {
@@ -202,7 +240,7 @@ router.beforeEach((to, from, next) => {
 
 app.use(router);
 
-lofig.folder = "../config/default.json";
+lofig.folder = "/config/default.json";
 
 (async () => {
 	lofig.fetchConfig().then(config => {

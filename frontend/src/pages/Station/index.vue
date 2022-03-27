@@ -185,9 +185,7 @@
 								<div
 									class="player-cannot-autoplay"
 									v-if="!canAutoplay"
-									@click="
-										increaseVolume() && decreaseVolume()
-									"
+									@click="increaseVolume()"
 								>
 									<p>
 										Please click anywhere on the screen for
@@ -323,10 +321,7 @@
 										v-tippy
 									>
 										<i
-											class="
-												material-icons
-												icon-with-button
-											"
+											class="material-icons icon-with-button"
 										>
 											bug_report
 										</i>
@@ -362,10 +357,7 @@
 										v-tippy
 									>
 										<i
-											class="
-												material-icons
-												icon-with-button
-											"
+											class="material-icons icon-with-button"
 											>skip_next</i
 										>
 									</button>
@@ -377,10 +369,7 @@
 										v-tippy
 									>
 										<i
-											class="
-												material-icons
-												icon-with-button
-											"
+											class="material-icons icon-with-button"
 											>skip_next</i
 										>
 										{{ currentSong.skipVotes }}
@@ -392,10 +381,7 @@
 										v-tippy="{ theme: 'info' }"
 									>
 										<i
-											class="
-												material-icons
-												icon-with-button
-											"
+											class="material-icons icon-with-button"
 											>skip_next</i
 										>
 										{{ currentSong.skipVotes }}
@@ -413,37 +399,29 @@
 								</div>
 								<p id="volume-control" v-if="!isApple">
 									<i
-										v-if="muted"
 										class="material-icons"
 										@click="toggleMute()"
-										content="Unmute"
+										:content="`${
+											muted ? 'Unmute' : 'Mute'
+										}`"
 										v-tippy
-										>volume_mute</i
-									>
-									<i
-										v-else
-										class="material-icons"
-										@click="toggleMute()"
-										content="Mute"
-										v-tippy
-										>volume_down</i
+										>{{
+											muted
+												? "volume_mute"
+												: volumeSliderValue >= 50
+												? "volume_up"
+												: "volume_down"
+										}}</i
 									>
 									<input
 										v-model="volumeSliderValue"
 										type="range"
 										min="0"
-										max="10000"
+										max="100"
 										class="volume-slider active"
 										@change="changeVolume()"
 										@input="changeVolume()"
 									/>
-									<i
-										class="material-icons"
-										@click="increaseVolume()"
-										content="Increase Volume"
-										v-tippy
-										>volume_up</i
-									>
 								</p>
 								<div id="right-buttons" v-if="loggedIn">
 									<!-- Ratings (Like/Dislike) Buttons -->
@@ -464,10 +442,7 @@
 											v-tippy
 										>
 											<i
-												class="
-													material-icons
-													icon-with-button
-												"
+												class="material-icons icon-with-button"
 												:class="{
 													liked: currentSong.liked
 												}"
@@ -477,21 +452,14 @@
 
 										<!-- Dislike Song Button -->
 										<button
-											class="
-												button
-												is-danger
-												dislike-song
-											"
+											class="button is-danger dislike-song"
 											id="dislike-song"
 											@click="toggleDislike()"
 											content="Dislike Song"
 											v-tippy
 										>
 											<i
-												class="
-													material-icons
-													icon-with-button
-												"
+												class="material-icons icon-with-button"
 												:class="{
 													disliked:
 														currentSong.disliked
@@ -503,42 +471,26 @@
 									<div id="ratings" class="disabled" v-else>
 										<!-- Like Song Button -->
 										<button
-											class="
-												button
-												is-success
-												like-song
-												disabled
-											"
+											class="button is-success like-song disabled"
 											id="like-song"
 											content="Ratings have not been loaded yet"
 											v-tippy
 										>
 											<i
-												class="
-													material-icons
-													icon-with-button
-												"
+												class="material-icons icon-with-button"
 												>thumb_up_alt</i
 											>
 										</button>
 
 										<!-- Dislike Song Button -->
 										<button
-											class="
-												button
-												is-danger
-												dislike-song
-												disabled
-											"
+											class="button is-danger dislike-song disabled"
 											id="dislike-song"
 											content="Ratings have not been loaded yet"
 											v-tippy
 										>
 											<i
-												class="
-													material-icons
-													icon-with-button
-												"
+												class="material-icons icon-with-button"
 												>thumb_down_alt</i
 											>
 										</button>
@@ -557,15 +509,10 @@
 											>
 												<div class="control has-addons">
 													<button
-														class="
-															button
-															is-primary
-														"
+														class="button is-primary"
 													>
 														<i
-															class="
-																material-icons
-															"
+															class="material-icons"
 														>
 															playlist_add
 														</i>
@@ -575,9 +522,7 @@
 														id="dropdown-toggle"
 													>
 														<i
-															class="
-																material-icons
-															"
+															class="material-icons"
 														>
 															{{
 																showPlaylistDropdown
@@ -602,10 +547,7 @@
 											v-tippy="{ theme: 'info' }"
 										>
 											<i
-												class="
-													material-icons
-													icon-with-button
-												"
+												class="material-icons icon-with-button"
 												>thumb_up_alt</i
 											>{{ currentSong.likes }}
 										</button>
@@ -618,10 +560,7 @@
 											v-tippy="{ theme: 'info' }"
 										>
 											<i
-												class="
-													material-icons
-													icon-with-button
-												"
+												class="material-icons icon-with-button"
 												>thumb_down_alt</i
 											>{{ currentSong.dislikes }}
 										</button>
@@ -635,10 +574,7 @@
 											v-tippy="{ theme: 'info' }"
 										>
 											<i
-												class="
-													material-icons
-													icon-with-button
-												"
+												class="material-icons icon-with-button"
 												>thumb_up_alt</i
 											>
 										</button>
@@ -651,10 +587,7 @@
 											v-tippy="{ theme: 'info' }"
 										>
 											<i
-												class="
-													material-icons
-													icon-with-button
-												"
+												class="material-icons icon-with-button"
 												>thumb_down_alt</i
 											>
 										</button>
@@ -663,11 +596,7 @@
 									<div id="add-song-to-playlist">
 										<div class="control has-addons">
 											<button
-												class="
-													button
-													is-primary
-													disabled
-												"
+												class="button is-primary disabled"
 												content="Log in to add songs to playlist"
 												v-tippy="{ theme: 'info' }"
 											>
@@ -721,7 +650,6 @@
 					</div>
 				</div>
 
-				<request-song v-if="modals.requestSong" />
 				<create-playlist v-if="modals.createPlaylist" />
 				<manage-station
 					v-if="modals.manageStation"
@@ -880,9 +808,6 @@ export default {
 		ContentLoader,
 		MainHeader,
 		MainFooter,
-		RequestSong: defineAsyncComponent(() =>
-			import("@/components/modals/RequestSong.vue")
-		),
 		EditPlaylist: defineAsyncComponent(() =>
 			import("@/components/modals/EditPlaylist")
 		),
@@ -1291,7 +1216,7 @@ export default {
 		if (JSON.parse(localStorage.getItem("muted"))) {
 			this.muted = true;
 			this.player.setVolume(0);
-			this.volumeSliderValue = 0 * 100;
+			this.volumeSliderValue = 0;
 		} else {
 			let volume = parseFloat(localStorage.getItem("volume"));
 			volume =
@@ -1299,7 +1224,7 @@ export default {
 					? volume
 					: 20;
 			localStorage.setItem("volume", volume);
-			this.volumeSliderValue = volume * 100;
+			this.volumeSliderValue = volume;
 		}
 	},
 	beforeUnmount() {
@@ -1541,7 +1466,7 @@ export default {
 					);
 				}
 			} else {
-				if (this.playerReady) this.player.pauseVideo();
+				if (this.playerReady) this.player.stopVideo();
 				this.updateNoSong(true);
 			}
 
@@ -1572,7 +1497,7 @@ export default {
 							this.playerReady = true;
 							ms.setYTReady(true);
 
-							let volume = parseInt(
+							let volume = parseFloat(
 								localStorage.getItem("volume")
 							);
 
@@ -1830,9 +1755,9 @@ export default {
 		},
 		changeVolume() {
 			const volume = this.volumeSliderValue;
-			localStorage.setItem("volume", volume / 100);
+			localStorage.setItem("volume", volume);
 			if (this.playerReady) {
-				this.player.setVolume(volume / 100);
+				this.player.setVolume(volume);
 				if (volume > 0) {
 					this.player.unMute();
 					localStorage.setItem("muted", false);
@@ -1917,24 +1842,26 @@ export default {
 					localStorage.getItem("volume")
 				);
 				const volume =
-					this.player.getVolume() * 100 <= 0 ? previousVolume : 0;
+					this.player.getVolume() <= 0 ? previousVolume : 0;
 				this.muted = !this.muted;
 				localStorage.setItem("muted", this.muted);
-				this.volumeSliderValue = volume * 100;
+				this.volumeSliderValue = volume;
 				this.player.setVolume(volume);
 				if (!this.muted) localStorage.setItem("volume", volume);
 			}
 		},
 		increaseVolume() {
 			if (this.playerReady) {
-				const previousVolume = parseInt(localStorage.getItem("volume"));
+				const previousVolume = parseFloat(
+					localStorage.getItem("volume")
+				);
 				let volume = previousVolume + 5;
 				if (previousVolume === 0) {
 					this.muted = false;
 					localStorage.setItem("muted", false);
 				}
 				if (volume > 100) volume = 100;
-				this.volumeSliderValue = volume * 100;
+				this.volumeSliderValue = volume;
 				this.player.setVolume(volume);
 				localStorage.setItem("volume", volume);
 			}
@@ -2171,7 +2098,7 @@ export default {
 								preventDefault: true,
 								handler: () => {
 									if (this.aModalIsOpen) return;
-									this.volumeSliderValue -= 1000;
+									this.volumeSliderValue -= 10;
 									this.changeVolume();
 								}
 							}
@@ -2186,7 +2113,7 @@ export default {
 								preventDefault: true,
 								handler: () => {
 									if (this.aModalIsOpen) return;
-									this.volumeSliderValue -= 100;
+									this.volumeSliderValue -= 1;
 									this.changeVolume();
 								}
 							}
@@ -2201,7 +2128,7 @@ export default {
 								preventDefault: true,
 								handler: () => {
 									if (this.aModalIsOpen) return;
-									this.volumeSliderValue += 1000;
+									this.volumeSliderValue += 10;
 									this.changeVolume();
 								}
 							}
@@ -2216,7 +2143,7 @@ export default {
 								preventDefault: true,
 								handler: () => {
 									if (this.aModalIsOpen) return;
-									this.volumeSliderValue += 100;
+									this.volumeSliderValue += 1;
 									this.changeVolume();
 								}
 							}
@@ -2345,7 +2272,7 @@ export default {
 							: null,
 					youtubeId: this.currentSong.youtubeId,
 					muted: this.muted,
-					volume: this.volumeSliderValue / 100,
+					volume: this.volumeSliderValue,
 					startedDuration:
 						this.activityWatchVideoLastStartDuration <= 0
 							? 0
@@ -2387,7 +2314,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 #stationPlayer {
 	position: absolute;
 	top: 0;
@@ -2415,7 +2342,7 @@ export default {
 }
 </style>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 #page-loader-container {
 	height: inherit;
 
@@ -2522,7 +2449,7 @@ export default {
 		}
 
 		.quadrant {
-			border-radius: 5px;
+			border-radius: @border-radius;
 			margin: 10px;
 		}
 
@@ -2550,6 +2477,8 @@ export default {
 						margin: 0;
 						font-size: 36px;
 						line-height: 0.8;
+						text-overflow: ellipsis;
+						overflow: hidden;
 					}
 
 					i {
@@ -2569,8 +2498,13 @@ export default {
 				}
 
 				p {
+					display: -webkit-box;
 					max-width: 700px;
 					margin-bottom: 10px;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					-webkit-box-orient: vertical;
+					-webkit-line-clamp: 3;
 				}
 			}
 
@@ -2611,7 +2545,7 @@ export default {
 			display: flex;
 			flex-direction: column;
 			border: 1px solid var(--light-grey-3);
-			border-radius: 5px;
+			border-radius: @border-radius;
 			overflow: hidden;
 
 			&.nothing-here-text {
@@ -2741,7 +2675,7 @@ export default {
 						cursor: pointer;
 						box-shadow: 0;
 						background: var(--light-grey-3);
-						border-radius: 0;
+						border-radius: @border-radius;
 						border: 0;
 					}
 
@@ -2750,7 +2684,7 @@ export default {
 						border: 0;
 						height: 19px;
 						width: 19px;
-						border-radius: 15px;
+						border-radius: 100%;
 						background: var(--primary-color);
 						cursor: pointer;
 						-webkit-appearance: none;
@@ -2763,7 +2697,7 @@ export default {
 						cursor: pointer;
 						box-shadow: 0;
 						background: var(--light-grey-3);
-						border-radius: 0;
+						border-radius: @border-radius;
 						border: 0;
 					}
 
@@ -2772,7 +2706,7 @@ export default {
 						border: 0;
 						height: 19px;
 						width: 19px;
-						border-radius: 15px;
+						border-radius: 100%;
 						background: var(--primary-color);
 						cursor: pointer;
 						-webkit-appearance: none;
@@ -2784,7 +2718,7 @@ export default {
 						cursor: pointer;
 						box-shadow: 0;
 						background: var(--light-grey-3);
-						border-radius: 1.3px;
+						border-radius: @border-radius;
 					}
 
 					input[type="range"]::-ms-fill-lower {
@@ -2806,7 +2740,7 @@ export default {
 						border: 0;
 						height: 15px;
 						width: 15px;
-						border-radius: 15px;
+						border-radius: 100%;
 						background: var(--primary-color);
 						cursor: pointer;
 						-webkit-appearance: none;
@@ -2859,7 +2793,7 @@ export default {
 							margin-bottom: 0 !important;
 							button.disabled {
 								filter: grayscale(0.4);
-								border-radius: 3px;
+								border-radius: @border-radius;
 								&::after {
 									margin-right: 100%;
 								}
@@ -3065,7 +2999,7 @@ export default {
 	}
 }
 
-/deep/ .nothing-here-text {
+:deep(.nothing-here-text) {
 	display: flex;
 	align-items: center;
 	justify-content: center;

@@ -8,13 +8,15 @@ export default {
 			paused: true,
 			playerReady: false,
 			autoPlayed: false,
-			currentTime: 0
+			currentTime: 0,
+			playbackRate: 1
 		},
-		songId: "",
+		songId: null,
 		song: {},
 		originalSong: {},
 		reports: [],
-		tab: "discogs"
+		tab: "discogs",
+		newSong: false
 	},
 	getters: {},
 	actions: {
@@ -25,6 +27,7 @@ export default {
 			commit("updateOriginalSong", song),
 		resetSong: ({ commit }, songId) => commit("resetSong", songId),
 		stopVideo: ({ commit }) => commit("stopVideo"),
+		hardStopVideo: ({ commit }) => commit("hardStopVideo"),
 		loadVideoById: ({ commit }, id, skipDuration) =>
 			commit("loadVideoById", id, skipDuration),
 		pauseVideo: ({ commit }, status) => commit("pauseVideo", status),
@@ -43,14 +46,19 @@ export default {
 		updateYoutubeId: ({ commit }, youtubeId) => {
 			commit("updateYoutubeId", youtubeId);
 			commit("loadVideoById", youtubeId, 0);
-		}
+		},
+		updateTitle: ({ commit }, title) => commit("updateTitle", title),
+		updateThumbnail: ({ commit }, thumbnail) =>
+			commit("updateThumbnail", thumbnail),
+		setPlaybackRate: ({ commit }, rate) => commit("setPlaybackRate", rate)
 	},
 	mutations: {
 		showTab(state, tab) {
 			state.tab = tab;
 		},
 		editSong(state, song) {
-			state.songId = song.songId;
+			state.newSong = !!song.newSong;
+			state.songId = song.newSong ? null : song.songId;
 			state.prefillData = song.prefill ? song.prefill : {};
 		},
 		setSong(state, song) {
@@ -68,15 +76,28 @@ export default {
 				state.originalSong = {};
 		},
 		stopVideo(state) {
-			state.video.player.stopVideo();
+			if (state.video.player && state.video.player.pauseVideo) {
+				state.video.player.pauseVideo();
+				state.video.player.seekTo(0);
+			}
+		},
+		hardStopVideo(state) {
+			if (state.video.player && state.video.player.stopVideo) {
+				state.video.player.stopVideo();
+			}
 		},
 		loadVideoById(state, id, skipDuration) {
 			state.song.duration = -1;
 			state.video.player.loadVideoById(id, skipDuration);
 		},
 		pauseVideo(state, status) {
-			if (status) state.video.player.pauseVideo();
-			else state.video.player.playVideo();
+			if (
+				(state.video.player && state.video.player.pauseVideo) ||
+				state.video.playVideo
+			) {
+				if (status) state.video.player.pauseVideo();
+				else state.video.player.playVideo();
+			}
 			state.video.paused = status;
 		},
 		getCurrentTime(state, fixedVal) {
@@ -111,6 +132,25 @@ export default {
 		},
 		updateYoutubeId(state, youtubeId) {
 			state.song.youtubeId = youtubeId;
+		},
+		updateTitle(state, title) {
+			state.song.title = title;
+		},
+		updateThumbnail(state, thumbnail) {
+			state.song.thumbnail = thumbnail;
+		},
+		setPlaybackRate(state, rate) {
+			if (rate) {
+				state.video.playbackRate = rate;
+				state.video.player.setPlaybackRate(rate);
+			} else if (
+				state.video.player.getPlaybackRate() !== undefined &&
+				state.video.playbackRate !==
+					state.video.player.getPlaybackRate()
+			) {
+				state.video.player.setPlaybackRate(state.video.playbackRate);
+				state.video.playbackRate = state.video.player.getPlaybackRate();
+			}
 		}
 	}
 };

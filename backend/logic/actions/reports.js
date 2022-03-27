@@ -25,10 +25,10 @@ CacheModule.runJob("SUB", {
 
 CacheModule.runJob("SUB", {
 	channel: "report.resolve",
-	cb: ({ reportId, songId }) =>
+	cb: ({ reportId, songId, resolved }) =>
 		WSModule.runJob("EMIT_TO_ROOMS", {
 			rooms: ["admin.reports", `edit-song.${songId}`, `view-report.${reportId}`],
-			args: ["event:admin.report.resolved", { data: { reportId } }]
+			args: ["event:admin.report.resolved", { data: { reportId, resolved } }]
 		})
 });
 
@@ -54,6 +54,33 @@ CacheModule.runJob("SUB", {
 						args: ["event:admin.report.created", { data: { report } }]
 					});
 				});
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "report.remove",
+	cb: reportId =>
+		WSModule.runJob("EMIT_TO_ROOMS", {
+			rooms: ["admin.reports", `view-report.${reportId}`],
+			args: ["event:admin.report.removed", { data: { reportId } }]
+		})
+});
+
+CacheModule.runJob("SUB", {
+	channel: "report.update",
+	cb: async data => {
+		const { reportId } = data;
+
+		const reportModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "report"
+		});
+
+		reportModel.findOne({ _id: reportId }, (err, report) => {
+			WSModule.runJob("EMIT_TO_ROOMS", {
+				rooms: ["admin.reports", `view-report.${reportId}`],
+				args: ["event:admin.report.updated", { data: { report } }]
+			});
 		});
 	}
 });
@@ -349,9 +376,10 @@ export default {
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} reportId - the id of the report that is getting resolved
+	 * @param {boolean} resolved - whether to set to resolved to true or false
 	 * @param {Function} cb - gets called with the result
 	 */
-	resolve: isAdminRequired(async function resolve(session, reportId, cb) {
+	resolve: isAdminRequired(async function resolve(session, reportId, resolved, cb) {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
 
 		async.waterfall(
@@ -363,7 +391,7 @@ export default {
 				(report, next) => {
 					if (!report) return next("Report not found.");
 
-					report.resolved = true;
+					report.resolved = resolved;
 
 					return report.save(err => {
 						if (err) return next(err.message);
@@ -377,21 +405,32 @@ export default {
 					this.log(
 						"ERROR",
 						"REPORTS_RESOLVE",
-						`Resolving report "${reportId}" failed by user "${session.userId}". "${err}"`
+						`${resolved ? "R" : "Unr"}esolving report "${reportId}" failed by user "${
+							session.userId
+						}". "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
 
 				CacheModule.runJob("PUB", {
 					channel: "report.resolve",
-					value: { reportId, songId }
+					value: { reportId, songId, resolved }
 				});
 
-				this.log("SUCCESS", "REPORTS_RESOLVE", `User "${session.userId}" resolved report "${reportId}".`);
+				CacheModule.runJob("PUB", {
+					channel: "report.update",
+					value: { reportId }
+				});
+
+				this.log(
+					"SUCCESS",
+					"REPORTS_RESOLVE",
+					`User "${session.userId}" ${resolved ? "" : "un"}resolved report "${reportId}".`
+				);
 
 				return cb({
 					status: "success",
-					message: "Successfully resolved Report"
+					message: `Successfully ${resolved ? "" : "un"}resolved Report`
 				});
 			}
 		);
@@ -440,6 +479,11 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "report.issue.toggle",
 					value: { reportId, issueId, songId, resolved }
+				});
+
+				CacheModule.runJob("PUB", {
+					channel: "report.update",
+					value: { reportId }
 				});
 
 				this.log(
@@ -537,6 +581,54 @@ export default {
 				return cb({
 					status: "success",
 					message: "Successfully created report"
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Removes a report
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {object} reportId - the id of the report item we want to remove
+	 * @param {Function} cb - gets called with the result
+	 */
+	remove: isAdminRequired(async function remove(session, reportId, cb) {
+		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					if (!reportId) return next("Please provide a report item id to remove.");
+					return next();
+				},
+
+				next => {
+					reportModel.deleteOne({ _id: reportId }, err => next(err));
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"REPORT_REMOVE",
+						`Removing report "${reportId}" failed for user "${session.userId}". "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				CacheModule.runJob("PUB", { channel: "report.remove", value: reportId });
+
+				this.log(
+					"SUCCESS",
+					"REPORT_REMOVE",
+					`Removing report "${reportId}" successful by user "${session.userId}".`
+				);
+
+				return cb({
+					status: "success",
+					message: "Successfully removed report"
 				});
 			}
 		);

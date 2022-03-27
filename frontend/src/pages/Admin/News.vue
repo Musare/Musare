@@ -19,12 +19,7 @@
 				<template #column-options="slotProps">
 					<div class="row-options">
 						<button
-							class="
-								button
-								is-primary
-								icon-with-button
-								material-icons
-							"
+							class="button is-primary icon-with-button material-icons"
 							@click="edit(slotProps.item._id)"
 							content="Edit News"
 							v-tippy
@@ -36,12 +31,7 @@
 							:disabled="slotProps.item.removed"
 						>
 							<button
-								class="
-									button
-									is-danger
-									icon-with-button
-									material-icons
-								"
+								class="button is-danger icon-with-button material-icons"
 								content="Remove News"
 								v-tippy
 							>
@@ -53,6 +43,11 @@
 				<template #column-status="slotProps">
 					<span :title="slotProps.item.status">{{
 						slotProps.item.status
+					}}</span>
+				</template>
+				<template #column-showToNewUsers="slotProps">
+					<span :title="slotProps.item.showToNewUsers">{{
+						slotProps.item.showToNewUsers
 					}}</span>
 				</template>
 				<template #column-title="slotProps">
@@ -132,6 +127,13 @@ export default {
 					defaultWidth: 150
 				},
 				{
+					name: "showToNewUsers",
+					displayName: "Show to new users",
+					properties: ["showToNewUsers"],
+					sortProperty: "showToNewUsers",
+					defaultWidth: 180
+				},
+				{
 					name: "title",
 					displayName: "Title",
 					properties: ["title"],
@@ -158,6 +160,13 @@ export default {
 					property: "status",
 					filterTypes: ["contains", "exact", "regex"],
 					defaultFilterType: "contains"
+				},
+				{
+					name: "showToNewUsers",
+					displayName: "Show to new users",
+					property: "showToNewUsers",
+					filterTypes: ["boolean"],
+					defaultFilterType: "boolean"
 				},
 				{
 					name: "title",

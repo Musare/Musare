@@ -17,7 +17,9 @@ class _UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	initialize() {
-		return new Promise(resolve => resolve());
+		return new Promise(resolve => {
+			resolve();
+		});
 	}
 
 	/**
@@ -31,7 +33,10 @@ class _UtilsModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			const cookies = {};
 
-			if (typeof payload.cookieString !== "string") return reject(new Error("Cookie string is not a string"));
+			if (typeof payload.cookieString !== "string") {
+				reject(new Error("Cookie string is not a string"));
+				return;
+			}
 
 			// eslint-disable-next-line array-callback-return
 			payload.cookieString.split("; ").map(cookie => {
@@ -41,7 +46,7 @@ class _UtilsModule extends CoreClass {
 				);
 			});
 
-			return resolve(cookies);
+			resolve(cookies);
 		});
 	}
 
@@ -76,12 +81,13 @@ class _UtilsModule extends CoreClass {
 					this
 				);
 			} catch (err) {
-				return reject(err);
+				reject(err);
+				return;
 			}
 
 			delete cookies[payload.cookieName];
 
-			return resolve();
+			resolve();
 		});
 	}
 
@@ -135,7 +141,9 @@ class _UtilsModule extends CoreClass {
 			randomChars.push(chars[randomNums[i]]);
 		}
 
-		return new Promise(resolve => resolve(randomChars.join("")));
+		return new Promise(resolve => {
+			resolve(randomChars.join(""));
+		});
 	}
 
 	/**
@@ -148,9 +156,9 @@ class _UtilsModule extends CoreClass {
 	 */
 	GET_RANDOM_NUMBER(payload) {
 		// min, max
-		return new Promise(resolve =>
-			resolve(Math.floor(Math.random() * (payload.max - payload.min + 1)) + payload.min)
-		);
+		return new Promise(resolve => {
+			resolve(Math.floor(Math.random() * (payload.max - payload.min + 1)) + payload.min);
+		});
 	}
 
 	/**
@@ -342,7 +350,9 @@ class _UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	DEBUG() {
-		return new Promise(resolve => resolve());
+		return new Promise(resolve => {
+			resolve();
+		});
 	}
 }
 

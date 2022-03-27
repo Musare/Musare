@@ -1,103 +1,172 @@
 <template>
-	<div class="app admin-area">
-		<main-header />
-		<div class="tabs is-centered">
-			<ul>
-				<li
-					:class="{ 'is-active': currentTab == 'songs' }"
-					ref="songs-tab"
-					@click="showTab('songs')"
+	<div class="app">
+		<div class="admin-area">
+			<main-header :class="{ 'admin-sidebar-active': sidebarActive }" />
+			<div class="admin-content">
+				<div
+					class="admin-sidebar"
+					:class="{ minimised: !sidebarActive }"
 				>
-					<router-link class="tab songs" to="/admin/songs">
-						<i class="material-icons">music_note</i>
-						<span>&nbsp;Songs</span>
-					</router-link>
-				</li>
-				<li
-					:class="{ 'is-active': currentTab == 'stations' }"
-					ref="stations-tab"
-					@click="showTab('stations')"
-				>
-					<router-link class="tab stations" to="/admin/stations">
-						<i class="material-icons">radio</i>
-						<span>&nbsp;Stations</span>
-					</router-link>
-				</li>
-				<li
-					:class="{ 'is-active': currentTab == 'playlists' }"
-					ref="playlists-tab"
-					@click="showTab('playlists')"
-				>
-					<router-link class="tab playlists" to="/admin/playlists">
-						<i class="material-icons">library_music</i>
-						<span>&nbsp;Playlists</span>
-					</router-link>
-				</li>
-				<li
-					:class="{ 'is-active': currentTab == 'reports' }"
-					ref="reports-tab"
-					@click="showTab('reports')"
-				>
-					<router-link class="tab reports" to="/admin/reports">
-						<i class="material-icons">flag</i>
-						<span>&nbsp;Reports</span>
-					</router-link>
-				</li>
-				<li
-					:class="{ 'is-active': currentTab == 'news' }"
-					ref="news-tab"
-					@click="showTab('news')"
-				>
-					<router-link class="tab news" to="/admin/news">
-						<i class="material-icons">chrome_reader_mode</i>
-						<span>&nbsp;News</span>
-					</router-link>
-				</li>
-				<li
-					:class="{ 'is-active': currentTab == 'users' }"
-					ref="users-tab"
-					@click="showTab('users')"
-				>
-					<router-link class="tab users" to="/admin/users">
-						<i class="material-icons">people</i>
-						<span>&nbsp;Users</span>
-					</router-link>
-				</li>
-				<li
-					:class="{ 'is-active': currentTab == 'statistics' }"
-					ref="statistics-tab"
-					@click="showTab('statistics')"
-				>
-					<router-link class="tab statistics" to="/admin/statistics">
-						<i class="material-icons">show_chart</i>
-						<span>&nbsp;Statistics</span>
-					</router-link>
-				</li>
-				<li
-					:class="{ 'is-active': currentTab == 'punishments' }"
-					ref="punishments-tab"
-					@click="showTab('punishments')"
-				>
-					<router-link
-						class="tab punishments"
-						to="/admin/punishments"
-					>
-						<i class="material-icons">gavel</i>
-						<span>&nbsp;Punishments</span>
-					</router-link>
-				</li>
-			</ul>
-		</div>
+					<div class="inner">
+						<div
+							class="bottom"
+							:style="`padding-bottom: ${sidebarPadding}px`"
+						>
+							<div
+								class="sidebar-item toggle-sidebar"
+								@click="toggleSidebar()"
+								content="Expand"
+								v-tippy="{ onShow: () => !sidebarActive }"
+							>
+								<i class="material-icons">menu_open</i>
+								<span>Minimise</span>
+							</div>
+							<router-link
+								class="sidebar-item songs"
+								to="/admin/songs"
+								content="Songs"
+								v-tippy="{
+									theme: 'info',
+									onShow: () => !sidebarActive
+								}"
+							>
+								<i class="material-icons">music_note</i>
+								<span>Songs</span>
+							</router-link>
+							<router-link
+								class="sidebar-item reports"
+								to="/admin/reports"
+								content="Reports"
+								v-tippy="{
+									theme: 'info',
+									onShow: () => !sidebarActive
+								}"
+							>
+								<i class="material-icons">flag</i>
+								<span>Reports</span>
+							</router-link>
+							<router-link
+								class="sidebar-item stations"
+								to="/admin/stations"
+								content="Stations"
+								v-tippy="{
+									theme: 'info',
+									onShow: () => !sidebarActive
+								}"
+							>
+								<i class="material-icons">radio</i>
+								<span>Stations</span>
+							</router-link>
+							<router-link
+								class="sidebar-item playlists"
+								to="/admin/playlists"
+								content="Playlists"
+								v-tippy="{
+									theme: 'info',
+									onShow: () => !sidebarActive
+								}"
+							>
+								<i class="material-icons">library_music</i>
+								<span>Playlists</span>
+							</router-link>
+							<div
+								v-if="sidebarActive"
+								class="sidebar-item with-children"
+								:class="{ 'is-active': childrenActive.users }"
+							>
+								<span>
+									<router-link to="/admin/users">
+										<i class="material-icons">people</i>
+										<span>Users</span>
+									</router-link>
+									<i
+										class="material-icons toggle-sidebar-children"
+										@click="
+											toggleChildren({ child: 'users' })
+										"
+									>
+										{{
+											childrenActive.users
+												? "expand_less"
+												: "expand_more"
+										}}
+									</i>
+								</span>
+								<div class="sidebar-item-children">
+									<router-link
+										class="sidebar-item-child"
+										to="/admin/users"
+									>
+										Users
+									</router-link>
+									<router-link
+										class="sidebar-item-child"
+										to="/admin/users/data-requests"
+									>
+										Data Requests
+									</router-link>
+								</div>
+							</div>
+							<router-link
+								v-else
+								class="sidebar-item users"
+								to="/admin/users"
+								content="Users"
+								v-tippy="{
+									theme: 'info',
+									onShow: () => !sidebarActive
+								}"
+							>
+								<i class="material-icons">people</i>
+								<span>Users</span>
+							</router-link>
+							<router-link
+								class="sidebar-item punishments"
+								to="/admin/punishments"
+								content="Punishments"
+								v-tippy="{
+									theme: 'info',
+									onShow: () => !sidebarActive
+								}"
+							>
+								<i class="material-icons">gavel</i>
+								<span>Punishments</span>
+							</router-link>
+							<router-link
+								class="sidebar-item news"
+								to="/admin/news"
+								content="News"
+								v-tippy="{
+									theme: 'info',
+									onShow: () => !sidebarActive
+								}"
+							>
+								<i class="material-icons">chrome_reader_mode</i>
+								<span>News</span>
+							</router-link>
+							<router-link
+								class="sidebar-item statistics"
+								to="/admin/statistics"
+								content="Statistics"
+								v-tippy="{
+									theme: 'info',
+									onShow: () => !sidebarActive
+								}"
+							>
+								<i class="material-icons">show_chart</i>
+								<span>Statistics</span>
+							</router-link>
+						</div>
+					</div>
+				</div>
+				<div class="admin-container">
+					<div class="admin-tab-container">
+						<router-view></router-view>
+					</div>
 
-		<div class="admin-container">
-			<songs v-if="currentTab == 'songs'" />
-			<stations v-if="currentTab == 'stations'" />
-			<playlists v-if="currentTab == 'playlists'" />
-			<reports v-if="currentTab == 'reports'" />
-			<news v-if="currentTab == 'news'" />
-			<users v-if="currentTab == 'users'" />
-			<statistics v-if="currentTab == 'statistics'" />
-			<punishments v-if="currentTab == 'punishments'" />
+					<main-footer />
+				</div>
+			</div>
 		</div>
 
 		<floating-box
@@ -169,14 +238,11 @@
 				</div>
 			</template>
 		</floating-box>
-
-		<main-footer />
 	</div>
 </template>
 
 <script>
-import { mapGetters } from "vuex";
-import { defineAsyncComponent } from "vue";
+import { mapState, mapActions, mapGetters } from "vuex";
 
 import keyboardShortcuts from "@/keyboardShortcuts";
 
@@ -188,33 +254,51 @@ export default {
 	components: {
 		MainHeader,
 		MainFooter,
-		FloatingBox,
-		Songs: defineAsyncComponent(() => import("./tabs/Songs.vue")),
-		Stations: defineAsyncComponent(() => import("./tabs/Stations.vue")),
-		Playlists: defineAsyncComponent(() => import("./tabs/Playlists.vue")),
-		Reports: defineAsyncComponent(() => import("./tabs/Reports.vue")),
-		News: defineAsyncComponent(() => import("./tabs/News.vue")),
-		Users: defineAsyncComponent(() => import("./tabs/Users.vue")),
-		Statistics: defineAsyncComponent(() => import("./tabs/Statistics.vue")),
-		Punishments: defineAsyncComponent(() =>
-			import("./tabs/Punishments.vue")
-		)
+		FloatingBox
 	},
 	data() {
 		return {
-			currentTab: ""
+			currentTab: "",
+			siteSettings: {
+				logo: "",
+				sitename: ""
+			},
+			sidebarActive: true,
+			sidebarPadding: 0
 		};
 	},
-	computed: mapGetters({
-		socket: "websockets/getSocket"
-	}),
+	computed: {
+		...mapGetters({
+			socket: "websockets/getSocket"
+		}),
+		...mapState("admin", { childrenActive: state => state.childrenActive })
+	},
 	watch: {
 		$route(route) {
-			this.changeTab(route.path);
+			if (this.getTabFromPath(route.path)) this.onRouteChange();
 		}
 	},
-	mounted() {
-		this.changeTab(this.$route.path);
+	async mounted() {
+		if (this.getTabFromPath()) {
+			this.onRouteChange();
+		} else if (localStorage.getItem("lastAdminPage")) {
+			this.$router.push(
+				`/admin/${localStorage.getItem("lastAdminPage")}`
+			);
+		} else {
+			this.$router.push(`/admin/songs`);
+		}
+
+		this.siteSettings = await lofig.get("siteSettings");
+
+		this.sidebarActive = JSON.parse(
+			localStorage.getItem("admin-sidebar-active")
+		);
+		if (this.sidebarActive === null)
+			this.sidebarActive = !(document.body.clientWidth <= 768);
+
+		this.calculateSidebarPadding();
+		window.addEventListener("scroll", this.calculateSidebarPadding);
 
 		keyboardShortcuts.registerShortcut(
 			"admin.toggleKeyboardShortcutsHelper",
@@ -244,6 +328,8 @@ export default {
 	beforeUnmount() {
 		this.socket.dispatch("apis.leaveRooms");
 
+		window.removeEventListener("scroll", this.calculateSidebarPadding);
+
 		const shortcutNames = [
 			"admin.toggleKeyboardShortcutsHelper",
 			"admin.resetKeyboardShortcutsHelper"
@@ -254,199 +340,310 @@ export default {
 		});
 	},
 	methods: {
-		changeTab(path) {
-			switch (path) {
-				case "/admin/songs":
-					this.showTab("songs");
-					break;
-				case "/admin/stations":
-					this.showTab("stations");
-					break;
-				case "/admin/playlists":
-					this.showTab("playlists");
-					break;
-				case "/admin/reports":
-					this.showTab("reports");
-					break;
-				case "/admin/news":
-					this.showTab("news");
-					break;
-				case "/admin/users":
-					this.showTab("users");
-					break;
-				case "/admin/statistics":
-					this.showTab("statistics");
-					break;
-				case "/admin/punishments":
-					this.showTab("punishments");
-					break;
-				default:
-					if (path.startsWith("/admin")) {
-						if (localStorage.getItem("lastAdminPage")) {
-							this.$router.push(
-								`/admin/${localStorage.getItem(
-									"lastAdminPage"
-								)}`
-							);
-						} else {
-							this.$router.push(`/admin/songs`);
-						}
-					}
+		onRouteChange() {
+			if (this.currentTab.startsWith("songs")) {
+				this.toggleChildren({ child: "songs", force: false });
+			} else if (this.currentTab.startsWith("users")) {
+				this.toggleChildren({ child: "users", force: false });
 			}
-		},
-		showTab(tab) {
-			if (this.$refs[`${tab}-tab`])
-				this.$refs[`${tab}-tab`].scrollIntoView({
+			this.currentTab = this.getTabFromPath();
+			if (this.$refs[`${this.currentTab}-tab`])
+				this.$refs[`${this.currentTab}-tab`].scrollIntoView({
 					inline: "center",
 					block: "nearest"
 				});
-			this.currentTab = tab;
-			localStorage.setItem("lastAdminPage", tab);
+			localStorage.setItem("lastAdminPage", this.currentTab);
+			if (this.currentTab.startsWith("songs"))
+				this.toggleChildren({ child: "songs", force: true });
+			else if (this.currentTab.startsWith("users"))
+				this.toggleChildren({ child: "users", force: true });
 		},
 		toggleKeyboardShortcutsHelper() {
 			this.$refs.keyboardShortcutsHelper.toggleBox();
 		},
 		resetKeyboardShortcutsHelper() {
 			this.$refs.keyboardShortcutsHelper.resetBox();
-		}
+		},
+		toggleSidebar() {
+			this.sidebarActive = !this.sidebarActive;
+			localStorage.setItem("admin-sidebar-active", this.sidebarActive);
+		},
+		getTabFromPath(path) {
+			const localPath = path || this.$route.path;
+			return localPath.substr(0, 7) === "/admin/"
+				? localPath.substr(7, localPath.length)
+				: null;
+		},
+		calculateSidebarPadding() {
+			const scrollTop =
+				document.documentElement.scrollTop || document.scrollTop || 0;
+			if (scrollTop <= 64) this.sidebarPadding = 64 - scrollTop;
+			else this.sidebarPadding = 0;
+		},
+		...mapActions("admin", ["toggleChildren"])
 	}
 };
 </script>
 
-<style lang="scss">
-.christmas-mode .admin-area .christmas-lights {
-	top: 102px !important;
-}
+<style lang="less" scoped>
+.night-mode {
+	.main-container .admin-area .admin-sidebar .inner {
+		.top {
+			background-color: var(--dark-grey-3);
+		}
 
-.main-container .admin-tab,
-.main-container .container {
-	.button-row {
-		display: flex;
-		flex-direction: row;
-		flex-wrap: wrap;
-		justify-content: center;
-		margin-bottom: 5px;
+		.bottom {
+			background-color: var(--dark-grey-2);
 
-		& > .button,
-		& > span {
-			margin: 5px 0;
-			&:not(:first-child) {
-				margin-left: 5px;
+			.sidebar-item {
+				background-color: var(--dark-grey-2);
+				border-color: var(--dark-grey-3);
+
+				&,
+				&.with-children .sidebar-item-child,
+				&.with-children > span > a {
+					color: var(--white);
+				}
 			}
 		}
-	}
-}
-
-.main-container .admin-container .admin-tab {
-	max-width: 1900px;
-	margin: 0 auto;
-	padding: 0 10px;
-}
-</style>
-
-<style lang="scss" scoped>
-.night-mode {
-	.tabs {
-		background-color: var(--dark-grey-2);
-		border: 0;
-
-		ul {
-			border-bottom: 0;
-		}
-	}
-}
-
-/deep/ .container {
-	position: relative;
-}
-
-/deep/ .box {
-	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
-	display: block;
-
-	&:not(:last-child) {
-		margin-bottom: 20px;
 	}
 }
 
 .main-container {
 	height: auto;
 
-	.admin-container {
-		flex: 1 0 auto;
-		margin-bottom: 20px;
+	.admin-area {
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
+
+		:deep(.nav) {
+			.nav-menu.is-active {
+				left: 45px;
+			}
+			&.admin-sidebar-active .nav-menu.is-active {
+				left: 200px;
+			}
+		}
+
+		.admin-sidebar {
+			display: flex;
+			min-width: 200px;
+			width: 200px;
+
+			@media screen and (max-width: 768px) {
+				min-width: 45px;
+				width: 45px;
+			}
+
+			.inner {
+				display: flex;
+				flex-direction: column;
+				max-height: 100vh;
+				width: 200px;
+				position: sticky;
+				top: 0;
+				bottom: 0;
+				left: 0;
+				z-index: 5;
+				box-shadow: @box-shadow;
+
+				.bottom {
+					overflow-y: auto;
+					height: 100%;
+					max-height: 100%;
+					display: flex;
+					flex-direction: column;
+					flex: 1 0 auto;
+					background-color: var(--white);
+
+					.sidebar-item {
+						display: flex;
+						padding: 0 20px;
+						line-height: 40px;
+						font-size: 16px;
+						font-weight: 600;
+						color: var(--primary-color);
+						background-color: var(--white);
+						border-bottom: 1px solid var(--light-grey-2);
+						transition: filter 0.2s ease-in-out;
+
+						& > .material-icons {
+							line-height: 40px;
+							margin-right: 5px;
+						}
+
+						&:hover,
+						&:focus,
+						&.router-link-active,
+						&.is-active {
+							filter: brightness(95%);
+						}
+
+						&.toggle-sidebar {
+							cursor: pointer;
+							font-weight: 400;
+						}
+
+						&.with-children {
+							flex-direction: column;
+							& > span {
+								display: flex;
+								line-height: 40px;
+								cursor: pointer;
+
+								& > a {
+									display: flex;
+								}
+
+								& > .material-icons,
+								& > a > .material-icons {
+									line-height: 40px;
+									margin-right: 5px;
+								}
+							}
+
+							.toggle-sidebar-children {
+								margin-left: auto;
+							}
+
+							.sidebar-item-children {
+								display: none;
+							}
+
+							&.is-active .sidebar-item-children {
+								display: flex;
+								flex-direction: column;
+
+								.sidebar-item-child {
+									display: flex;
+									flex-direction: column;
+									margin-left: 30px;
+									font-size: 14px;
+									line-height: 30px;
+									position: relative;
+
+									&::before {
+										content: "";
+										position: absolute;
+										width: 1px;
+										height: 30px;
+										top: 0;
+										left: -20px;
+										background-color: var(--light-grey-3);
+									}
+									&:last-child::before {
+										height: 16px;
+									}
+
+									&::after {
+										content: "";
+										position: absolute;
+										width: 15px;
+										height: 1px;
+										top: 15px;
+										left: -20px;
+										background-color: var(--light-grey-3);
+									}
+
+									&.router-link-active {
+										filter: brightness(95%);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			&.minimised {
+				min-width: 45px;
+				width: 45px;
+
+				.inner {
+					max-width: 45px;
+
+					.top {
+						justify-content: center;
+
+						.full-logo {
+							display: none;
+						}
+
+						.minimised-logo {
+							display: flex;
+						}
+					}
+
+					.sidebar-item {
+						justify-content: center;
+						padding: 0;
+
+						& > span {
+							display: none;
+						}
+					}
+				}
+			}
+		}
+
+		.admin-content {
+			display: flex;
+			flex-direction: row;
+			flex-grow: 1;
+
+			.admin-container {
+				display: flex;
+				flex-direction: column;
+				flex-grow: 1;
+				overflow: hidden;
+
+				:deep(.admin-tab-container) {
+					display: flex;
+					flex-direction: column;
+					flex: 1 0 auto;
+					padding: 10px 10px 20px 10px;
+
+					.admin-tab {
+						max-width: 1900px;
+						margin: 0 auto;
+						padding: 0 10px;
+					}
+
+					.admin-tab,
+					.container {
+						.button-row {
+							display: flex;
+							flex-direction: row;
+							flex-wrap: wrap;
+							justify-content: center;
+							margin-bottom: 5px;
+
+							& > .button,
+							& > span {
+								margin: 5px 0;
+								&:not(:first-child) {
+									margin-left: 5px;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 }
 
-.tabs {
-	padding-top: 10px;
-	margin-top: -10px;
-	background-color: var(--white);
-	display: flex;
-	line-height: 24px;
-	overflow-y: hidden;
-	overflow-x: auto;
-	margin-bottom: 20px;
-	user-select: none;
+:deep(.container) {
+	position: relative;
+}
 
-	ul {
-		display: flex;
-		align-items: center;
-		/* -webkit-box-flex: 1; */
-		flex-grow: 1;
-		flex-shrink: 0;
-		justify-content: center;
-		border-bottom: 1px solid var(--light-grey-2);
-	}
+:deep(.box) {
+	box-shadow: @box-shadow;
+	display: block;
 
-	.songs {
-		color: var(--primary-color);
-		border-color: var(--primary-color);
-	}
-	.stations {
-		color: var(--purple);
-		border-color: var(--purple);
-	}
-	.playlists {
-		color: var(--light-purple);
-		border-color: var(--light-purple);
-	}
-	.reports {
-		color: var(--yellow);
-		border-color: var(--yellow);
-	}
-	.news {
-		color: var(--light-pink);
-		border-color: var(--light-pink);
-	}
-	.users {
-		color: var(--dark-pink);
-		border-color: var(--dark-pink);
-	}
-	.statistics {
-		color: var(--orange);
-		border-color: var(--orange);
-	}
-	.punishments {
-		color: var(--dark-orange);
-		border-color: var(--dark-orange);
-	}
-	.tab {
-		transition: all 0.2s ease-in-out;
-		font-weight: 500;
-		border-bottom: solid 0px;
-		padding: 6px 12px;
-		display: flex;
-		margin-bottom: -1px;
-	}
-	.tab:hover {
-		border-width: 3px;
-		transition: all 0.2s ease-in-out;
-		font-weight: 600;
-	}
-	.is-active .tab {
-		font-weight: 600;
-		border-width: 3px;
+	&:not(:last-child) {
+		margin-bottom: 20px;
 	}
 }
 
@@ -467,14 +664,14 @@ export default {
 }
 
 @media screen and (min-width: 980px) {
-	/deep/ .container {
+	:deep(.container) {
 		margin: 0 auto;
 		max-width: 960px;
 	}
 }
 
 @media screen and (min-width: 1180px) {
-	/deep/ .container {
+	:deep(.container) {
 		max-width: 1200px;
 	}
 }

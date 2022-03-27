@@ -442,6 +442,42 @@ export default {
 	}),
 
 	/**
+	 * Creates a song
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {object} newSong - the song object
+	 * @param {Function} cb
+	 */
+	create: isAdminRequired(async function create(session, newSong, cb) {
+		async.waterfall(
+			[
+				next => {
+					SongsModule.runJob("CREATE_SONG", { song: newSong, userId: session.userId }, this)
+						.then(song => next(null, song))
+						.catch(next);
+				}
+			],
+			async (err, song) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log("ERROR", "SONGS_CREATE", `Failed to create song "${JSON.stringify(newSong)}". "${err}"`);
+
+					return cb({ status: "error", message: err });
+				}
+
+				this.log("SUCCESS", "SONGS_CREATE", `Successfully created song "${song._id}".`);
+
+				return cb({
+					status: "success",
+					message: "Song has been successfully created",
+					data: { song }
+				});
+			}
+		);
+	}),
+
+	/**
 	 * Updates a song
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
@@ -460,6 +496,22 @@ export default {
 
 				(_existingSong, next) => {
 					existingSong = _existingSong;
+
+					// Verify the song
+					if (existingSong.verified === false && song.verified === true) {
+						song.verifiedBy = session.userId;
+						song.verifiedAt = Date.now();
+					}
+					// Unverify the song
+					else if (existingSong.verified === true && song.verified === false) {
+						song.verifiedBy = null;
+						song.verifiedAt = null;
+					}
+
+					next();
+				},
+
+				next => {
 					songModel.updateOne({ _id: songId }, song, { runValidators: true }, next);
 				},
 
@@ -470,7 +522,10 @@ export default {
 								.concat(song.genres)
 								.filter((value, index, self) => self.indexOf(value) === index)
 								.forEach(genre => {
-									PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
+									PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", {
+										genre,
+										createPlaylist: song.verified
+									})
 										.then(() => {})
 										.catch(() => {});
 								});
@@ -840,7 +895,7 @@ export default {
 
 				(song, oldStatus, next) => {
 					song.genres.forEach(genre => {
-						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
+						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre, createPlaylist: true })
 							.then(() => {})
 							.catch(() => {});
 					});
@@ -961,6 +1016,8 @@ export default {
 
 				(song, next) => {
 					song.verified = false;
+					song.verifiedBy = null;
+					song.verifiedAt = null;
 					song.save(err => {
 						next(err, song);
 					});
@@ -968,7 +1025,7 @@ export default {
 
 				(song, next) => {
 					song.genres.forEach(genre => {
-						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
+						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre, createPlaylist: false })
 							.then(() => {})
 							.catch(() => {});
 					});
@@ -1843,11 +1900,16 @@ export default {
 						query.$set = { genres };
 					} else {
 						next("Invalid method.");
+						return;
 					}
 
 					songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
-						if (err) next(err);
+						if (err) {
+							next(err);
+							return;
+						}
 						SongsModule.runJob("UPDATE_SONGS", { songIds: songsFound });
+						next();
 					});
 				}
 			],
@@ -1936,11 +1998,16 @@ export default {
 						query.$set = { artists };
 					} else {
 						next("Invalid method.");
+						return;
 					}
 
 					songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
-						if (err) next(err);
+						if (err) {
+							next(err);
+							return;
+						}
 						SongsModule.runJob("UPDATE_SONGS", { songIds: songsFound });
+						next();
 					});
 				}
 			],
@@ -2029,11 +2096,16 @@ export default {
 						query.$set = { tags };
 					} else {
 						next("Invalid method.");
+						return;
 					}
 
 					songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
-						if (err) next(err);
+						if (err) {
+							next(err);
+							return;
+						}
 						SongsModule.runJob("UPDATE_SONGS", { songIds: songsFound });
+						next();
 					});
 				}
 			],

@@ -21,10 +21,14 @@
 	"siteSettings": {
 		"logo_white": "/assets/white_wordmark.png",
 		"logo_blue": "/assets/blue_wordmark.png",
+		"logo_small": "/assets/favicon/mstile-144x144.png",
 		"sitename": "Musare",
-		"github": "https://github.com/Musare/Musare",
+		"footerLinks": {
+			"GitHub": "https://github.com/Musare/Musare"
+		},
 		"mediasession": false,
-		"christmas": false
+		"christmas": false,
+		"registrationDisabled": false
 	},
 	"messages": {
 		"accountRemoval": "Your account will be deactivated instantly and your data will shortly be deleted by an admin."
@@ -49,5 +53,5 @@
 		"version": true
 	},
 	"skipConfigVersionCheck": false,
-	"configVersion": 9
+	"configVersion": 11
 }

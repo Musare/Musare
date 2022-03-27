@@ -50,11 +50,7 @@
 							:key="issueIndex"
 						>
 							<i
-								class="
-									material-icons
-									duration-icon
-									report-sub-item-left-icon
-								"
+								class="material-icons duration-icon report-sub-item-left-icon"
 								:content="issue.category"
 								v-tippy
 							>
@@ -74,10 +70,7 @@
 							</p>
 
 							<div
-								class="
-									report-sub-item-actions
-									universal-item-actions
-								"
+								class="report-sub-item-actions universal-item-actions"
 							>
 								<i
 									class="material-icons resolve-icon"
@@ -145,11 +138,7 @@
 							:key="issueIndex"
 						>
 							<i
-								class="
-									material-icons
-									duration-icon
-									report-sub-item-left-icon
-								"
+								class="material-icons duration-icon report-sub-item-left-icon"
 								:content="issue.category"
 								v-tippy
 							>
@@ -168,10 +157,7 @@
 							</p>
 
 							<div
-								class="
-									report-sub-item-actions
-									universal-item-actions
-								"
+								class="report-sub-item-actions universal-item-actions"
 							>
 								<i
 									class="material-icons resolve-icon"
@@ -307,7 +293,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.report-items .report-item {
 		background-color: var(--dark-grey-3) !important;
@@ -368,7 +354,7 @@ export default {
 	.report-item {
 		background-color: var(--white);
 		border: 0.5px solid var(--primary-color);
-		border-radius: 5px;
+		border-radius: @border-radius;
 		padding: 8px;
 
 		&:not(:first-of-type) {
@@ -394,11 +380,11 @@ export default {
 				display: flex;
 
 				&:first-child {
-					border-radius: 3px 3px 0 0;
+					border-radius: @border-radius @border-radius 0 0;
 				}
 
 				&:last-child {
-					border-radius: 0 0 3px 3px;
+					border-radius: 0 0 @border-radius @border-radius;
 				}
 
 				&.report-sub-item-resolved {

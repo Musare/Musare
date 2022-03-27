@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<page-metadata title="Admin | Reports" />
+		<page-metadata title="Admin | Songs | Reports" />
 		<div class="container">
 			<advanced-table
 				:column-default="columnDefault"
@@ -14,12 +14,7 @@
 				<template #column-options="slotProps">
 					<div class="row-options">
 						<button
-							class="
-								button
-								is-primary
-								icon-with-button
-								material-icons
-							"
+							class="button is-primary icon-with-button material-icons"
 							@click="view(slotProps.item._id)"
 							:disabled="slotProps.item.removed"
 							content="View Report"
@@ -28,13 +23,19 @@
 							open_in_full
 						</button>
 						<button
-							class="
-								button
-								is-success
-								icon-with-button
-								material-icons
-							"
-							@click="resolve(slotProps.item._id)"
+							v-if="slotProps.item.resolved"
+							class="button is-danger material-icons icon-with-button"
+							@click="resolve(slotProps.item._id, false)"
+							:disabled="slotProps.item.removed"
+							content="Unresolve Report"
+							v-tippy
+						>
+							remove_done
+						</button>
+						<button
+							v-else
+							class="button is-success material-icons icon-with-button"
+							@click="resolve(slotProps.item._id, true)"
 							:disabled="slotProps.item.removed"
 							content="Resolve Report"
 							v-tippy
@@ -63,6 +64,11 @@
 					>
 						{{ slotProps.item.song.youtubeId }}
 					</a>
+				</template>
+				<template #column-resolved="slotProps">
+					<span :title="slotProps.item.resolved">{{
+						slotProps.item.resolved
+					}}</span>
 				</template>
 				<template #column-categories="slotProps">
 					<span
@@ -140,7 +146,7 @@ export default {
 				{
 					name: "options",
 					displayName: "Options",
-					properties: ["_id"],
+					properties: ["_id", "resolved"],
 					sortable: false,
 					hidable: false,
 					resizable: false,
@@ -170,6 +176,12 @@ export default {
 					sortProperty: "song.youtubeId",
 					minWidth: 165,
 					defaultWidth: 165
+				},
+				{
+					name: "resolved",
+					displayName: "Resolved",
+					properties: ["resolved"],
+					sortProperty: "resolved"
 				},
 				{
 					name: "categories",
@@ -215,6 +227,13 @@ export default {
 					defaultFilterType: "contains"
 				},
 				{
+					name: "resolved",
+					displayName: "Resolved",
+					property: "resolved",
+					filterTypes: ["boolean"],
+					defaultFilterType: "boolean"
+				},
+				{
 					name: "categories",
 					displayName: "Categories",
 					property: "issues.category",
@@ -238,8 +257,13 @@ export default {
 			],
 			events: {
 				adminRoom: "reports",
+				updated: {
+					event: "admin.report.updated",
+					id: "report._id",
+					item: "report"
+				},
 				removed: {
-					event: "admin.report.resolved",
+					event: "admin.report.removed",
 					id: "reportId"
 				}
 			}
@@ -255,11 +279,10 @@ export default {
 			this.viewReport(reportId);
 			this.openModal("viewReport");
 		},
-		resolve(reportId) {
-			return this.resolveReport(reportId)
+		resolve(reportId, value) {
+			return this.resolveReport({ reportId, value })
 				.then(res => {
-					if (res.status === "success" && this.modals.viewReport)
-						this.closeModal("viewReport");
+					if (res.status !== "success") new Toast(res.message);
 				})
 				.catch(err => new Toast(err.message));
 		},

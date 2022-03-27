@@ -33,12 +33,12 @@
 								>
 								Filters
 							</button>
-							<button class="button">
+							<button class="button dropdown-toggle">
 								<i class="material-icons">
 									{{
 										showFiltersDropdown
-											? "expand_more"
-											: "expand_less"
+											? "expand_less"
+											: "expand_more"
 									}}
 								</i>
 							</button>
@@ -70,11 +70,7 @@
 							<div
 								v-for="(filter, index) in editingFilters"
 								:key="`filter-${index}`"
-								class="
-									advanced-filter
-									control
-									is-grouped is-expanded
-								"
+								class="advanced-filter control is-grouped is-expanded"
 							>
 								<div class="control select">
 									<select
@@ -228,10 +224,7 @@
 										@click="applyFilterAndGetData()"
 									>
 										<i
-											class="
-												material-icons
-												icon-with-button
-											"
+											class="material-icons icon-with-button"
 											>filter_list</i
 										>
 										Apply filters
@@ -248,10 +241,7 @@
 										@click="applyFilterAndGetData()"
 									>
 										<i
-											class="
-												material-icons
-												icon-with-button
-											"
+											class="material-icons icon-with-button"
 											>filter_list</i
 										>
 										Apply filters
@@ -334,12 +324,12 @@
 								>
 								Columns
 							</button>
-							<button class="button">
+							<button class="button dropdown-toggle">
 								<i class="material-icons">
 									{{
 										showColumnsDropdown
-											? "expand_more"
-											: "expand_less"
+											? "expand_less"
+											: "expand_more"
 									}}
 								</i>
 							</button>
@@ -372,11 +362,7 @@
 										"
 									>
 										<p
-											class="
-												control
-												is-expanded
-												checkbox-control
-											"
+											class="control is-expanded checkbox-control"
 										>
 											<label class="switch">
 												<input
@@ -881,7 +867,12 @@ export default {
 				pos1: 0,
 				pos2: 0,
 				pos3: 0,
-				pos4: 0
+				pos4: 0,
+				initial: {
+					top: null,
+					left: null
+				},
+				debounceTimeout: null
 			},
 			addFilterValue: null,
 			showFiltersDropdown: false,
@@ -1445,7 +1436,7 @@ export default {
 		toggleSelectedRow(itemIndex, event) {
 			const { shiftKey, ctrlKey } = event;
 			// Shift was pressed, so attempt to select all items between the clicked item and last clicked item
-			if (shiftKey) {
+			if (shiftKey && !ctrlKey) {
 				// If the clicked item is already selected, prevent default, otherwise the checkbox will be unchecked
 				if (this.rows[itemIndex].selected) event.preventDefault();
 				// If there is a last clicked item
@@ -1475,13 +1466,13 @@ export default {
 				}
 			}
 			// Ctrl was pressed, so attempt to unselect all items between the clicked item and last clicked item
-			else if (ctrlKey) {
+			else if (!shiftKey && ctrlKey) {
 				// If the clicked item is already unselected, prevent default, otherwise the checkbox will be checked
 				if (!this.rows[itemIndex].selected) event.preventDefault();
 				// If there is a last clicked item
 				if (this.lastSelectedItemIndex >= 0) {
 					// Clicked item is lower than last item, so unselect upwards until it reaches the last selected item
-					if (itemIndex > this.lastSelectedItemIndex) {
+					if (itemIndex >= this.lastSelectedItemIndex) {
 						for (
 							let itemIndexUp = itemIndex;
 							itemIndexUp >= this.lastSelectedItemIndex;
@@ -1546,13 +1537,19 @@ export default {
 			// Set the last clicked item to no longer be highlighted, if it exists
 			if (this.lastSelectedItemIndex >= 0)
 				this.rows[this.lastSelectedItemIndex].highlighted = false;
-			if (rowElement) rowElement.focus();
+			if (rowElement)
+				this.$nextTick(() => {
+					rowElement.focus();
+				});
 			// Set the item to be highlighted
 			this.rows[itemIndex].highlighted = true;
 		},
 		unhighlightRow(itemIndex) {
 			const rowElement = this.$refs[`row-${itemIndex}`];
-			if (rowElement) rowElement.blur();
+			if (rowElement)
+				this.$nextTick(() => {
+					rowElement.blur();
+				});
 			// Set the item to no longer be highlighted
 			this.rows[itemIndex].highlighted = false;
 		},
@@ -1764,6 +1761,8 @@ export default {
 		resetBulkActionsPosition() {
 			this.bulkPopup.top = document.body.clientHeight - 56;
 			this.bulkPopup.left = document.body.clientWidth / 2 - 200;
+			this.bulkPopup.initial.top = this.bulkPopup.top;
+			this.bulkPopup.initial.left = this.bulkPopup.left;
 		},
 		applyFilterAndGetData() {
 			this.appliedFilters = JSON.parse(
@@ -1921,14 +1920,26 @@ export default {
 			);
 		},
 		onWindowResize() {
-			// Only change the position if the popup is actually visible
-			if (this.selectedRows.length === 0) return;
-			if (this.bulkPopup.top < 0) this.bulkPopup.top = 0;
-			if (this.bulkPopup.top > document.body.clientHeight - 50)
-				this.bulkPopup.top = document.body.clientHeight - 50;
-			if (this.bulkPopup.left < 0) this.bulkPopup.left = 0;
-			if (this.bulkPopup.left > document.body.clientWidth - 400)
-				this.bulkPopup.left = document.body.clientWidth - 400;
+			if (this.bulkPopup.debounceTimeout)
+				clearTimeout(this.bulkPopup.debounceTimeout);
+
+			this.bulkPopup.debounceTimeout = setTimeout(() => {
+				// Only change the position if the popup is actually visible
+				if (this.selectedRows.length === 0) return;
+				if (
+					this.bulkPopup.top === this.bulkPopup.initial.top &&
+					this.bulkPopup.left === this.bulkPopup.initial.left
+				)
+					this.resetBulkActionsPosition();
+				else {
+					if (this.bulkPopup.top < 0) this.bulkPopup.top = 0;
+					if (this.bulkPopup.top > document.body.clientHeight - 50)
+						this.bulkPopup.top = document.body.clientHeight - 50;
+					if (this.bulkPopup.left < 0) this.bulkPopup.left = 0;
+					if (this.bulkPopup.left > document.body.clientWidth - 400)
+						this.bulkPopup.left = document.body.clientWidth - 400;
+				}
+			}, 50);
 		},
 		updateData(index, data) {
 			this.rows[index] = { ...this.rows[index], ...data, updated: true };
@@ -1944,7 +1955,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.table-outer-container {
 		.table-container .table {
@@ -2032,8 +2043,8 @@ export default {
 }
 
 .table-outer-container {
-	border-radius: 5px;
-	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
+	border-radius: @border-radius;
+	box-shadow: @box-shadow;
 	margin: 10px 0;
 	overflow: hidden;
 
@@ -2115,7 +2126,7 @@ export default {
 							border-width: 0 0 1px;
 						}
 
-						/deep/ .row-options {
+						:deep(.row-options) {
 							display: flex;
 							justify-content: space-evenly;
 
@@ -2304,37 +2315,14 @@ export default {
 			border: 1px solid var(--light-grey-2);
 			color: var(--dark-grey-2);
 			appearance: none;
-			border-radius: 3px;
+			border-radius: @border-radius;
 			font-size: 14px;
 			line-height: 34px;
 			padding-left: 8px;
 			padding-right: 8px;
 		}
-		&.select.is-expanded > select {
-			width: 100%;
-		}
-		& > input,
-		/deep/ & > div > input,
-		& > select,
-		& > .button,
-		&.label {
+		:deep(& > div > input) {
 			border-radius: 0;
-		}
-		&:first-child {
-			& > input,
-			& > select,
-			& > .button,
-			&.label {
-				border-radius: 5px 0 0 5px;
-			}
-		}
-		&:last-child {
-			& > input,
-			& > select,
-			& > .button,
-			&.label {
-				border-radius: 0 5px 5px 0;
-			}
 		}
 		& > .button {
 			font-size: 22px;
@@ -2346,27 +2334,24 @@ export default {
 			flex-wrap: wrap;
 			.control.select {
 				width: 50%;
-				select {
-					width: 100%;
-				}
 			}
 			.control {
 				margin-bottom: 0 !important;
 				&:nth-child(1) > select {
-					border-radius: 5px 0 0 0;
+					border-radius: @border-radius 0 0 0;
 				}
 				&:nth-child(2) > select {
-					border-radius: 0 5px 0 0;
+					border-radius: 0 @border-radius 0 0;
 				}
-				/deep/ &:nth-child(3) {
+				:deep(&:nth-child(3)) {
 					& > input,
 					& > div > input,
 					& > select {
-						border-radius: 0 0 0 5px;
+						border-radius: 0 0 0 @border-radius;
 					}
 				}
 				&:nth-child(4) > button {
-					border-radius: 0 0 5px 0;
+					border-radius: 0 0 @border-radius 0;
 				}
 			}
 		}
@@ -2392,7 +2377,7 @@ export default {
 	}
 }
 
-/deep/ .bulk-popup {
+:deep(.bulk-popup) {
 	display: flex;
 	position: fixed;
 	flex-direction: row;
@@ -2401,8 +2386,8 @@ export default {
 	line-height: 36px;
 	z-index: 5;
 	border: 1px solid var(--light-grey-3);
-	border-radius: 5px;
-	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+	border-radius: @border-radius;
+	box-shadow: @box-shadow-dropdown;
 	background-color: var(--white);
 	color: var(--dark-grey);
 	padding: 5px;

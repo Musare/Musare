@@ -525,25 +525,29 @@ export default {
 					userModel.findById(userId).select({ "preferences.orderOfPlaylists": -1 }).exec(next);
 				},
 
-				({ preferences }, next) => {
-					const { orderOfPlaylists } = preferences;
+				(user, next) => {
+					if (!user) next("User not found");
+					else {
+						const { preferences } = user;
+						const { orderOfPlaylists } = preferences;
 
-					const match = {
-						createdBy: userId,
-						type: { $in: ["user", "user-liked", "user-disliked"] }
-					};
+						const match = {
+							createdBy: userId,
+							type: { $in: ["user", "user-liked", "user-disliked"] }
+						};
 
-					// if a playlist order exists
-					if (orderOfPlaylists > 0) match._id = { $in: orderOfPlaylists };
+						// if a playlist order exists
+						if (orderOfPlaylists > 0) match._id = { $in: orderOfPlaylists };
 
-					playlistModel
-						.aggregate()
-						.match(match)
-						.addFields({
-							weight: { $indexOfArray: [orderOfPlaylists, "$_id"] }
-						})
-						.sort({ weight: 1 })
-						.exec(next);
+						playlistModel
+							.aggregate()
+							.match(match)
+							.addFields({
+								weight: { $indexOfArray: [orderOfPlaylists, "$_id"] }
+							})
+							.sort({ weight: 1 })
+							.exec(next);
+					}
 				},
 
 				(playlists, next) => {
@@ -598,25 +602,29 @@ export default {
 					userModel.findById(session.userId).select({ "preferences.orderOfPlaylists": -1 }).exec(next);
 				},
 
-				({ preferences }, next) => {
-					const { orderOfPlaylists } = preferences;
+				(user, next) => {
+					if (!user) next("User not found");
+					else {
+						const { preferences } = user;
+						const { orderOfPlaylists } = preferences;
 
-					const match = {
-						createdBy: session.userId,
-						type: { $in: ["user", "user-liked", "user-disliked"] }
-					};
+						const match = {
+							createdBy: session.userId,
+							type: { $in: ["user", "user-liked", "user-disliked"] }
+						};
 
-					// if a playlist order exists
-					if (orderOfPlaylists > 0) match._id = { $in: orderOfPlaylists };
+						// if a playlist order exists
+						if (orderOfPlaylists > 0) match._id = { $in: orderOfPlaylists };
 
-					playlistModel
-						.aggregate()
-						.match(match)
-						.addFields({
-							weight: { $indexOfArray: [orderOfPlaylists, "$_id"] }
-						})
-						.sort({ weight: 1 })
-						.exec(next);
+						playlistModel
+							.aggregate()
+							.match(match)
+							.addFields({
+								weight: { $indexOfArray: [orderOfPlaylists, "$_id"] }
+							})
+							.sort({ weight: 1 })
+							.exec(next);
+					}
 				}
 			],
 			async (err, playlists) => {
@@ -1207,22 +1215,21 @@ export default {
 					`Successfully added song "${youtubeId}" to private playlist "${playlistId}" for user "${session.userId}".`
 				);
 
-				if (!isSet && playlist.type !== "user-liked" && playlist.type !== "user-disliked") {
+				if (!isSet && playlist.type === "user" && playlist.privacy === "public") {
 					const songName = newSong.artists
 						? `${newSong.title} by ${newSong.artists.join(", ")}`
 						: newSong.title;
 
-					if (playlist.privacy === "public")
-						ActivitiesModule.runJob("ADD_ACTIVITY", {
-							userId: session.userId,
-							type: "playlist__add_song",
-							payload: {
-								message: `Added <youtubeId>${songName}</youtubeId> to playlist <playlistId>${playlist.displayName}</playlistId>`,
-								thumbnail: newSong.thumbnail,
-								playlistId,
-								youtubeId
-							}
-						});
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
+						userId: session.userId,
+						type: "playlist__add_song",
+						payload: {
+							message: `Added <youtubeId>${songName}</youtubeId> to playlist <playlistId>${playlist.displayName}</playlistId>`,
+							thumbnail: newSong.thumbnail,
+							playlistId,
+							youtubeId
+						}
+					});
 				}
 
 				StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST", { playlistId })
@@ -1552,11 +1559,7 @@ export default {
 					const { _id, title, artists, thumbnail } = newSong;
 					const songName = artists ? `${title} by ${artists.join(", ")}` : title;
 
-					if (
-						playlist.type !== "user-liked" &&
-						playlist.type !== "user-disliked" &&
-						playlist.privacy === "public"
-					) {
+					if (playlist.type === "user" && playlist.privacy === "public") {
 						ActivitiesModule.runJob("ADD_ACTIVITY", {
 							userId: session.userId,
 							type: "playlist__remove_song",

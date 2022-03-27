@@ -195,7 +195,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 @media only screen and (max-width: 1250px) {
 	.bottom-section .content {
 		width: 650px !important;
@@ -299,7 +299,7 @@ export default {
 		font-size: 12px;
 		line-height: 14px;
 		height: 18px;
-		border-radius: 5px;
+		border-radius: @border-radius;
 		margin-left: 12px;
 
 		&.admin {
@@ -394,7 +394,7 @@ export default {
 		button {
 			outline: none;
 			border: none;
-			box-shadow: none;
+			box-shadow: 0;
 			color: var(--primary-color);
 			font-size: 22px;
 			line-height: 26px;
@@ -402,7 +402,7 @@ export default {
 			width: 100%;
 			text-align: left;
 			cursor: pointer;
-			border-radius: 5px;
+			border-radius: @border-radius;
 			background-color: transparent;
 
 			&.active {
@@ -412,12 +412,13 @@ export default {
 		}
 	}
 
-	.content /deep/ {
+	:deep(.content) {
 		width: 800px;
 		max-width: 100%;
 		background-color: var(--white);
 		padding: 30px 50px;
-		border-radius: 3px;
+		border-radius: @border-radius;
+		box-shadow: @box-shadow;
 
 		h3 {
 			font-weight: 400;
@@ -453,6 +454,9 @@ export default {
 		.thumbnail
 		.activity-type-icon {
 		color: var(--light-grey-2);
+	}
+	:deep(.content) {
+		box-shadow: 0;
 	}
 }
 </style>

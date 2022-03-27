@@ -202,7 +202,7 @@ export default {
 					.then(data => {
 						apiResult.album.artists = [];
 						apiResult.album.artistIds = [];
-						const artistRegex = new RegExp(" \\([0-9]+\\)$");
+						const artistRegex = /\\([0-9]+\\)$/;
 
 						apiResult.dataQuality = data.data_quality;
 						data.artists.forEach(artist => {
@@ -293,7 +293,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.api-section,
 	.api-result {
@@ -304,7 +304,6 @@ export default {
 	.api-result .tracks .track:focus,
 	.selected-discogs-info {
 		background-color: var(--dark-grey-2) !important;
-		border: 0 !important;
 	}
 
 	.label,
@@ -391,7 +390,7 @@ export default {
 	.selected-discogs-info {
 		background-color: var(--white);
 		border: 1px solid var(--light-grey-3);
-		border-radius: 3px;
+		border-radius: @border-radius;
 		margin-bottom: 16px;
 
 		.selected-discogs-info-none {
@@ -408,7 +407,7 @@ export default {
 		.api-result {
 			background-color: var(--white);
 			border: 0.5px solid var(--light-grey-3);
-			border-radius: 3px;
+			border-radius: @border-radius;
 			margin-bottom: 16px;
 		}
 	}
@@ -427,11 +426,11 @@ export default {
 
 		.track:first-child {
 			margin-top: 0;
-			border-radius: 3px 3px 0 0;
+			border-radius: @border-radius @border-radius 0 0;
 		}
 
 		.track:last-child {
-			border-radius: 0 0 3px 3px;
+			border-radius: 0 0 @border-radius @border-radius;
 		}
 
 		.track {

@@ -10,12 +10,12 @@
 				<form>
 					<!-- email address -->
 					<p class="control">
-						<label class="label">Email</label>
+						<label class="label">Username/Email</label>
 						<input
 							v-model="email"
 							class="input"
 							type="email"
-							placeholder="Email..."
+							placeholder="Username/Email..."
 							@keypress="submitOnEnter(submitModal, $event)"
 						/>
 					</p>
@@ -89,7 +89,10 @@
 					</a>
 				</div>
 
-				<p class="content-box-optional-helper">
+				<p
+					v-if="!registrationDisabled"
+					class="content-box-optional-helper"
+				>
 					<a @click="changeToRegisterModal()">
 						Don't have an account?
 					</a>
@@ -116,11 +119,15 @@ export default {
 				value: "",
 				visible: false
 			},
-			apiDomain: ""
+			apiDomain: "",
+			registrationDisabled: false
 		};
 	},
 	async mounted() {
 		this.apiDomain = await lofig.get("backend.apiDomain");
+		this.registrationDisabled = await lofig.get(
+			"siteSettings.registrationDisabled"
+		);
 	},
 	methods: {
 		checkForAutofill(event) {
@@ -171,7 +178,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.modal-card,
 	.modal-card-head,

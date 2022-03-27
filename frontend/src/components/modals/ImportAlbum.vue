@@ -149,11 +149,7 @@
 								!discogs.disableLoadMore &&
 								discogs.page < discogs.pages
 							"
-							class="
-								button
-								is-fullwidth is-info
-								discogs-load-more
-							"
+							class="button is-fullwidth is-info discogs-load-more"
 							@click="loadNextDiscogsPage()"
 						>
 							Load more...
@@ -470,7 +466,7 @@ export default {
 			if (!this.search.playlist.query)
 				return new Toast("Please enter a YouTube playlist URL.");
 
-			const regex = new RegExp(`[\\?&]list=([^&#]*)`);
+			const regex = /[\\?&]list=([^&#]*)/;
 			const splitQuery = regex.exec(this.search.playlist.query);
 
 			if (!splitQuery) {
@@ -561,7 +557,7 @@ export default {
 					.then(data => {
 						apiResult.album.artists = [];
 						apiResult.album.artistIds = [];
-						const artistRegex = new RegExp(" \\([0-9]+\\)$");
+						const artistRegex = /\\([0-9]+\\)$/;
 
 						apiResult.dataQuality = data.data_quality;
 						data.artists.forEach(artist => {
@@ -676,7 +672,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 .night-mode {
 	.search-discogs-album,
 	.discogs-album,
@@ -757,7 +753,7 @@ export default {
 }
 </style>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .break {
 	flex-basis: 100%;
 	height: 0;
@@ -778,7 +774,7 @@ export default {
 		overflow-x: auto;
 
 		.button {
-			border-radius: 5px 5px 0 0;
+			border-radius: @border-radius @border-radius 0 0;
 			border: 0;
 			text-transform: uppercase;
 			font-size: 14px;
@@ -800,7 +796,7 @@ export default {
 	}
 	.tab {
 		border: 1px solid var(--light-grey-3);
-		border-radius: 0 0 3px 3px;
+		border-radius: 0 0 @border-radius @border-radius;
 		padding: 15px;
 		height: calc(100% - 32px);
 		overflow: auto;
@@ -885,7 +881,7 @@ export default {
 		.api-result {
 			background-color: var(--white);
 			border: 0.5px solid var(--primary-color);
-			border-radius: 5px;
+			border-radius: @border-radius;
 			margin-bottom: 16px;
 		}
 
@@ -903,11 +899,11 @@ export default {
 
 			.track:first-child {
 				margin-top: 0;
-				border-radius: 3px 3px 0 0;
+				border-radius: @border-radius @border-radius 0 0;
 			}
 
 			.track:last-child {
-				border-radius: 0 0 3px 3px;
+				border-radius: 0 0 @border-radius @border-radius;
 			}
 
 			.track {
@@ -1010,11 +1006,11 @@ export default {
 
 				.track:first-child {
 					margin-top: 0;
-					border-radius: 3px 3px 0 0;
+					border-radius: @border-radius @border-radius 0 0;
 				}
 
 				.track:last-child {
-					border-radius: 0 0 3px 3px;
+					border-radius: 0 0 @border-radius @border-radius;
 				}
 
 				.track {
@@ -1051,7 +1047,7 @@ export default {
 	width: 376px;
 	background-color: var(--light-grey);
 	border: 1px rgba(163, 224, 255, 0.75) solid;
-	border-radius: 5px;
+	border-radius: @border-radius;
 	padding: 16px;
 	overflow: auto;
 	height: 100%;
@@ -1065,18 +1061,18 @@ export default {
 	width: 376px;
 	background-color: var(--light-grey);
 	border: 1px rgba(163, 224, 255, 0.75) solid;
-	border-radius: 5px;
+	border-radius: @border-radius;
 	padding: 16px;
 	overflow: auto;
 	height: 100%;
 
 	.track-box:first-child {
 		margin-top: 0;
-		border-radius: 3px 3px 0 0;
+		border-radius: @border-radius @border-radius 0 0;
 	}
 
 	.track-box:last-child {
-		border-radius: 0 0 3px 3px;
+		border-radius: 0 0 @border-radius @border-radius;
 	}
 
 	.track-box {

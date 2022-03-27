@@ -9,16 +9,33 @@
 					><img src="/assets/blue_wordmark.png" alt="Musare"
 				/></router-link>
 				<div id="footer-links">
-					<a :href="github" target="_blank" title="GitHub Repository"
-						>GitHub</a
+					<a
+						v-for="(url, title, index) in filteredFooterLinks"
+						:key="`footer-link-${index}`"
+						:href="url"
+						target="_blank"
+						:title="title"
 					>
-					<router-link title="About Musare" to="/about"
+						{{ title }}
+					</a>
+					<router-link
+						v-if="getLink('about') === true"
+						title="About Musare"
+						to="/about"
 						>About</router-link
 					>
-					<router-link title="Musare Team" to="/team"
+					<router-link
+						v-if="getLink('team') === true"
+						title="Musare Team"
+						to="/team"
 						>Team</router-link
 					>
-					<router-link title="News" to="/news">News</router-link>
+					<router-link
+						v-if="getLink('news') === true"
+						title="News"
+						to="/news"
+						>News</router-link
+					>
 				</div>
 			</div>
 		</div>
@@ -29,16 +46,46 @@
 export default {
 	data() {
 		return {
-			github: ""
+			footerLinks: {}
 		};
 	},
+	computed: {
+		filteredFooterLinks() {
+			return Object.fromEntries(
+				Object.entries(this.footerLinks).filter(
+					([title, url]) =>
+						!(
+							["about", "team", "news"].includes(
+								title.toLowerCase()
+							) && typeof url === "boolean"
+						)
+				)
+			);
+		}
+	},
 	async mounted() {
-		this.github = await lofig.get("siteSettings.github");
+		lofig.get("siteSettings.footerLinks").then(footerLinks => {
+			this.footerLinks = {
+				about: true,
+				team: true,
+				news: true,
+				...footerLinks
+			};
+		});
+	},
+	methods: {
+		getLink(title) {
+			return this.footerLinks[
+				Object.keys(this.footerLinks).find(
+					key => key.toLowerCase() === title
+				)
+			];
+		}
 	}
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	footer.footer,
 	footer.footer .container,
@@ -53,9 +100,7 @@ export default {
 	flex-shrink: 0;
 	height: auto;
 	padding: 20px;
-	border-radius: 33% 33% 0% 0% / 7% 7% 0% 0%;
-	box-shadow: 0 4px 8px 0 rgba(3, 169, 244, 0.4),
-		0 6px 20px 0 rgba(3, 169, 244, 0.2);
+	box-shadow: @box-shadow;
 	background-color: var(--white);
 	width: 100%;
 	height: 160px;
@@ -78,10 +123,6 @@ export default {
 		a:not(.button) {
 			border: 0;
 		}
-	}
-
-	@media (max-width: 650px) {
-		border-radius: 0;
 	}
 
 	#footer-logo {

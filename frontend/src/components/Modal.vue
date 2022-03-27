@@ -85,7 +85,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 .night-mode .modal .modal-card {
 	.modal-card-head,
 	.modal-card-foot {
@@ -204,7 +204,7 @@ export default {
 
 		.modal-card-head {
 			border-bottom: 1px solid var(--light-grey-2);
-			border-radius: 5px 5px 0 0;
+			border-radius: @border-radius @border-radius 0 0;
 
 			.modal-card-title {
 				display: flex;
@@ -228,7 +228,7 @@ export default {
 
 		.modal-card-foot {
 			border-top: 1px solid var(--light-grey-2);
-			border-radius: 0 0 5px 5px;
+			border-radius: 0 0 @border-radius @border-radius;
 			overflow-x: auto;
 			column-gap: 16px;
 

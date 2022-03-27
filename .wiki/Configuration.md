@@ -70,10 +70,12 @@ Location: `frontend/dist/config/default.json`
 | `cookie.SIDname` | Name of the cookie stored for sessions. |
 | `siteSettings.logo_white` | Path to the white logo image, by default it is `/assets/white_wordmark.png`. |
 | `siteSettings.logo_blue` | Path to the blue logo image, by default it is `/assets/blue_wordmark.png`. |
+| `siteSettings.logo_small` | Path to the small white logo image, by default it is `/assets/favicon/mstile-144x144.png`. |
 | `siteSettings.sitename` | Should be the name of the site. |
-| `siteSettings.github` | URL of GitHub repository, defaults to `https://github.com/Musare/MusareNode`. |
+| `siteSettings.footerLinks` | Add custom links to footer by specifying `"title": "url"`, e.g. `"GitHub": "https://github.com/Musare/Musare"`. You can disable about, team and news links (but not the pages themselves) by setting them to false, e.g. `"about": false`. |
 | `siteSettings.mediasession` | Whether to enable mediasession functionality. |
 | `siteSettings.christmas` | Whether to enable christmas theming. |
+| `siteSettings.registrationDisabled` | If set to true, users can't register accounts. |
 | `messages.accountRemoval` | Message to return to users on account removal. |
 | `shortcutOverrides` | Overwrite keyboard shortcuts, for example `"editSong.useAllDiscogs": { "keyCode": 68, "ctrl": true, "alt": true, "shift": false, "preventDefault": true }`. |
 | `debug.git.remote` | Allow the website/users to view the current Git repository's remote. [^1] |
@@ -97,6 +99,7 @@ The container port refers to the external docker container port, used to access 
 | Property | Description |
 | --- | --- |
 | `COMPOSE_PROJECT_NAME` | Should be a unique name for this installation, especially if you have multiple instances of Musare on the same machine. |
+| `RESTART_POLICY` | Restart policy for docker containers, values can be found [here](https://docs.docker.com/config/containers/start-containers-automatically/). |
 | `BACKEND_HOST` | Backend container host. |
 | `BACKEND_PORT` | Backend container port. |
 | `FRONTEND_HOST` | Frontend container host. |
@@ -107,8 +110,11 @@ The container port refers to the external docker container port, used to access 
 | `MONGO_ROOT_PASSWORD` | Password of the root/admin user for MongoDB. |
 | `MONGO_USER_USERNAME` | Application username for MongoDB. |
 | `MONGO_USER_PASSWORD` | Application password for MongoDB. |
+| `MONGO_DATA_LOCATION` | The location where MongoDB stores its data. Usually the `.db` folder inside the `Musare` folder. |
+| `MONGO_VERSION` | The MongoDB version to use for scripts and docker-compose. Must be numerical. Currently supported MongoDB versions are 4.0, 4.2, 4.4 and 5.0. |
 | `REDIS_HOST` | Redis container host. |
 | `REDIS_PORT` | Redis container port. |
 | `REDIS_PASSWORD` | Redis password. |
+| `REDIS_DATA_LOCATION` | The location where Redis stores its data. Usually the `.redis` folder inside the `Musare` folder. |
 | `BACKUP_LOCATION` | Directory to store musare.sh backups. Defaults to `/backups` in script location. |
 | `BACKUP_NAME` | Name of musare.sh backup files. Defaults to `musare-$(date +"%Y-%m-%d-%s").dump`. |

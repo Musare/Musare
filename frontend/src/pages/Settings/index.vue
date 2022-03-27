@@ -146,8 +146,14 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-/deep/ .character-counter {
+<style lang="less" scoped>
+.night-mode {
+	.container .content {
+		box-shadow: 0 !important;
+	}
+}
+
+:deep(.character-counter) {
 	display: flex;
 	justify-content: flex-end;
 	height: 0;
@@ -157,7 +163,7 @@ export default {
 	margin-top: 32px;
 	padding: 24px;
 
-	/deep/ .row {
+	:deep(.row) {
 		*:not(:last-child) {
 			margin-right: 5px;
 		}
@@ -166,7 +172,8 @@ export default {
 	.content {
 		background-color: var(--white);
 		padding: 30px 50px;
-		border-radius: 3px;
+		border-radius: @border-radius;
+		box-shadow: @box-shadow;
 	}
 
 	#sidebar-with-content {
@@ -201,7 +208,7 @@ export default {
 		a {
 			outline: none;
 			border: none;
-			box-shadow: none;
+			box-shadow: 0;
 			color: var(--primary-color);
 			font-size: 22px;
 			line-height: 26px;
@@ -209,7 +216,7 @@ export default {
 			width: 100%;
 			text-align: left;
 			cursor: pointer;
-			border-radius: 5px;
+			border-radius: @border-radius;
 			background-color: transparent;
 			display: inline-block;
 
@@ -220,7 +227,7 @@ export default {
 		}
 	}
 
-	/deep/ .content {
+	:deep(.content) {
 		margin: 24px 0;
 		height: fit-content;
 

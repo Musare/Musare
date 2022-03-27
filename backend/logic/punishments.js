@@ -30,7 +30,7 @@ class _PunishmentsModule extends CoreClass {
 		this.punishmentModel = this.PunishmentModel = await DBModule.runJob("GET_MODEL", { modelName: "punishment" });
 		this.punishmentSchemaCache = await CacheModule.runJob("GET_SCHEMA", { schemaName: "punishment" });
 
-		return new Promise((resolve, reject) =>
+		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
 					next => {
@@ -98,8 +98,8 @@ class _PunishmentsModule extends CoreClass {
 						reject(new Error(formattedErr));
 					} else resolve();
 				}
-			)
-		);
+			);
+		});
 	}
 
 	/**
@@ -168,7 +168,7 @@ class _PunishmentsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_PUNISHMENT(payload) {
-		return new Promise((resolve, reject) =>
+		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
 					next => {
@@ -212,8 +212,8 @@ class _PunishmentsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve(punishment);
 				}
-			)
-		);
+			);
+		});
 	}
 
 	/**
@@ -261,7 +261,7 @@ class _PunishmentsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	ADD_PUNISHMENT(payload) {
-		return new Promise((resolve, reject) =>
+		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
 					next => {
@@ -298,8 +298,8 @@ class _PunishmentsModule extends CoreClass {
 					if (err) return reject(new Error(err));
 					return resolve(punishment);
 				}
-			)
-		);
+			);
+		});
 	}
 }
 

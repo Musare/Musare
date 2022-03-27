@@ -41,6 +41,7 @@
 			"error"
 		],
 		"vue/order-in-components": 2,
-		"vue/no-v-for-template-key": 0
+		"vue/no-v-for-template-key": 0,
+		"vue/multi-word-component-names": 0
 	}
 }

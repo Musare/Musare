@@ -316,11 +316,11 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 #my-playlists {
 	background-color: var(--white);
 	margin-bottom: 20px;
-	border-radius: 0 0 5px 5px;
+	border-radius: 0 0 @border-radius @border-radius;
 	max-height: 100%;
 }
 
@@ -352,7 +352,7 @@ export default {
 .create-playlist {
 	width: 100%;
 	height: 40px;
-	border-radius: 5px;
+	border-radius: @border-radius;
 	border: 0;
 
 	&:active,

@@ -1,5 +1,5 @@
 <template>
-	<modal title="Create Playlist">
+	<modal title="Create Playlist" :size="'slim'">
 		<template #body>
 			<p class="control is-expanded">
 				<label class="label">Display Name</label>
@@ -15,7 +15,7 @@
 
 			<div class="control" id="privacy-selection">
 				<label class="label">Privacy</label>
-				<p class="control select">
+				<p class="control is-expanded select">
 					<select v-model="playlist.privacy">
 						<option value="private">Private</option>
 						<option value="public" selected>Public</option>
@@ -97,44 +97,3 @@ export default {
 	}
 };
 </script>
-
-<style lang="scss" scoped>
-.menu {
-	padding: 0 20px;
-}
-
-.menu-list li {
-	display: flex;
-	justify-content: space-between;
-}
-
-.menu-list a:hover {
-	color: var(--black) !important;
-}
-
-li a {
-	display: flex;
-	align-items: center;
-}
-
-#privacy-selection {
-	margin-top: 15px;
-}
-
-.controls {
-	display: flex;
-
-	a {
-		display: flex;
-		align-items: center;
-	}
-}
-
-.control.select {
-	width: min-content;
-}
-
-.label {
-	font-size: 1rem;
-}
-</style>

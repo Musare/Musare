@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<modal
-			title="Edit Song"
+			:title="`${newSong ? 'Create' : 'Edit'} Song`"
 			class="song-modal"
 			:size="'wide'"
 			:split="true"
@@ -15,19 +15,30 @@
 				<slot name="sidebar" />
 			</template>
 			<template #body>
-				<div v-if="!songId" class="notice-container">
+				<div v-if="!songId && !newSong" class="notice-container">
 					<h4>No song has been selected</h4>
 				</div>
+				<div v-if="songDeleted" class="notice-container">
+					<h4>The song you were editing has been deleted</h4>
+				</div>
 				<div
-					v-if="songId && !songDataLoaded && !songNotFound"
+					v-if="
+						songId && !songDataLoaded && !songNotFound && !newSong
+					"
 					class="notice-container"
 				>
 					<h4>Song hasn't loaded yet</h4>
 				</div>
-				<div v-if="songId && songNotFound" class="notice-container">
+				<div
+					v-if="songId && songNotFound && !newSong"
+					class="notice-container"
+				>
 					<h4>Song was not found</h4>
 				</div>
-				<div class="left-section" v-show="songDataLoaded">
+				<div
+					class="left-section"
+					v-show="songDataLoaded && !songDeleted"
+				>
 					<div class="top-section">
 						<div class="player-section">
 							<div id="editSongPlayer" />
@@ -42,6 +53,7 @@
 								v-show="!youtubeError"
 								height="20"
 								width="530"
+								@click="setTrackPosition($event)"
 							/>
 							<div class="player-footer">
 								<div class="player-footer-left">
@@ -50,7 +62,7 @@
 										@click="play()"
 										@keyup.enter="play()"
 										v-if="video.paused"
-										content="Unpause Playback"
+										content="Resume Playback"
 										v-tippy
 									>
 										<i class="material-icons">play_arrow</i>
@@ -65,30 +77,106 @@
 									>
 										<i class="material-icons">pause</i>
 									</button>
-
 									<button
 										class="button is-danger"
-										@click="settings('stop')"
-										@keyup.enter="settings('stop')"
+										@click.exact="settings('stop')"
+										@click.shift="settings('hardStop')"
+										@keyup.enter.exact="settings('stop')"
+										@keyup.shift.enter="
+											settings('hardStop')
+										"
 										content="Stop Playback"
 										v-tippy
 									>
 										<i class="material-icons">stop</i>
 									</button>
-
-									<button
-										class="button is-success"
-										@click="settings('skipToLast10Secs')"
-										@keyup.enter="
-											settings('skipToLast10Secs')
+									<tippy
+										class="playerRateDropdown"
+										:touch="true"
+										:interactive="true"
+										placement="bottom"
+										theme="dropdown"
+										ref="dropdown"
+										trigger="click"
+										append-to="parent"
+										@show="
+											() => {
+												showRateDropdown = true;
+											}
 										"
-										content="Skip to last 10 secs"
-										v-tippy
+										@hide="
+											() => {
+												showRateDropdown = false;
+											}
+										"
 									>
-										<i class="material-icons"
-											>fast_forward</i
+										<div
+											ref="trigger"
+											class="control has-addons"
+											content="Set Playback Rate"
+											v-tippy
 										>
-									</button>
+											<button class="button is-primary">
+												<i class="material-icons"
+													>fast_forward</i
+												>
+											</button>
+											<button
+												class="button dropdown-toggle"
+											>
+												<i class="material-icons">
+													{{
+														showRateDropdown
+															? "expand_more"
+															: "expand_less"
+													}}
+												</i>
+											</button>
+										</div>
+
+										<template #content>
+											<div class="nav-dropdown-items">
+												<button
+													class="nav-item button"
+													:class="{
+														active:
+															video.playbackRate ===
+															0.5
+													}"
+													title="0.5x"
+													@click="
+														setPlaybackRate(0.5)
+													"
+												>
+													<p>0.5x</p>
+												</button>
+												<button
+													class="nav-item button"
+													:class="{
+														active:
+															video.playbackRate ===
+															1
+													}"
+													title="1x"
+													@click="setPlaybackRate(1)"
+												>
+													<p>1x</p>
+												</button>
+												<button
+													class="nav-item button"
+													:class="{
+														active:
+															video.playbackRate ===
+															2
+													}"
+													title="2x"
+													@click="setPlaybackRate(2)"
+												>
+													<p>2x</p>
+												</button>
+											</div>
+										</template>
+									</tippy>
 								</div>
 								<div class="player-footer-center">
 									<span>
@@ -105,37 +193,29 @@
 								<div class="player-footer-right">
 									<p id="volume-control">
 										<i
-											v-if="muted"
 											class="material-icons"
 											@click="toggleMute()"
-											content="Unmute"
+											:content="`${
+												muted ? 'Unmute' : 'Mute'
+											}`"
 											v-tippy
-											>volume_mute</i
-										>
-										<i
-											v-else
-											class="material-icons"
-											@click="toggleMute()"
-											content="Mute"
-											v-tippy
-											>volume_down</i
+											>{{
+												muted
+													? "volume_mute"
+													: volumeSliderValue >= 50
+													? "volume_up"
+													: "volume_down"
+											}}</i
 										>
 										<input
 											v-model="volumeSliderValue"
 											type="range"
 											min="0"
-											max="10000"
+											max="100"
 											class="volume-slider active"
 											@change="changeVolume()"
 											@input="changeVolume()"
 										/>
-										<i
-											class="material-icons"
-											@click="increaseVolume()"
-											content="Increase Volume"
-											v-tippy
-											>volume_up</i
-										>
 									</p>
 								</div>
 							</div>
@@ -145,11 +225,15 @@
 							:src="song.thumbnail"
 							onerror="this.src='/assets/notes-transparent.png'"
 							ref="thumbnailElement"
-							v-if="songDataLoaded"
+							@load="onThumbnailLoad"
+							v-if="songDataLoaded && !songDeleted"
 						/>
 					</div>
 
-					<div class="edit-section" v-if="songDataLoaded">
+					<div
+						class="edit-section"
+						v-if="songDataLoaded && !songDeleted"
+					>
 						<div class="control is-grouped">
 							<div class="title-container">
 								<label class="label">Title</label>
@@ -217,7 +301,20 @@
 
 						<div class="control is-grouped">
 							<div class="album-art-container">
-								<label class="label">Album art</label>
+								<label class="label">
+									Album art
+									<i
+										v-if="
+											thumbnailNotSquare &&
+											!thumbnailIsYouTubeThumbnail
+										"
+										class="material-icons thumbnail-warning"
+										content="Thumbnail not square, it will be stretched"
+										v-tippy="{ theme: 'info' }"
+									>
+										warning
+									</i>
+								</label>
 
 								<p class="control has-addons">
 									<input
@@ -251,6 +348,19 @@
 										placeholder="Enter YouTube ID..."
 										v-model="song.youtubeId"
 									/>
+								</p>
+							</div>
+							<div class="verified-container">
+								<label class="label">Verified</label>
+								<p class="is-expanded checkbox-control">
+									<label class="switch">
+										<input
+											type="checkbox"
+											id="verified"
+											v-model="song.verified"
+										/>
+										<span class="slider round"></span>
+									</label>
 								</p>
 							</div>
 						</div>
@@ -400,7 +510,10 @@
 						</div>
 					</div>
 				</div>
-				<div class="right-section" v-if="songDataLoaded">
+				<div
+					class="right-section"
+					v-if="songDataLoaded && !songDeleted"
+				>
 					<div id="tabs-container">
 						<div id="tab-selection">
 							<button
@@ -412,6 +525,7 @@
 								Discogs
 							</button>
 							<button
+								v-if="!newSong"
 								class="button is-default"
 								:class="{ selected: tab === 'reports' }"
 								ref="reports-tab"
@@ -441,7 +555,11 @@
 							v-show="tab === 'discogs'"
 							:bulk="bulk"
 						/>
-						<reports class="tab" v-show="tab === 'reports'" />
+						<reports
+							v-if="!newSong"
+							class="tab"
+							v-show="tab === 'reports'"
+						/>
 						<youtube class="tab" v-show="tab === 'youtube'" />
 						<musare-songs
 							class="tab"
@@ -458,65 +576,27 @@
 					<button
 						class="button is-primary"
 						@click="toggleFlag()"
-						v-if="songId"
+						v-if="songId && !songDeleted"
 					>
 						{{ flagged ? "Unflag" : "Flag" }}
 					</button>
 				</div>
-				<div>
+				<div v-if="!newSong && !songDeleted">
 					<save-button
 						ref="saveButton"
-						@clicked="save(song, false, false, 'saveButton')"
+						@clicked="save(song, false, 'saveButton')"
 					/>
 					<save-button
 						ref="saveAndCloseButton"
 						:default-message="
 							bulk ? `Save and next` : `Save and close`
 						"
-						@clicked="save(song, false, true, 'saveAndCloseButton')"
-					/>
-					<save-button
-						ref="saveVerifyAndCloseButton"
-						:default-message="
-							bulk
-								? `Save, verify and next`
-								: `Save, verify and close`
-						"
-						@click="
-							save(song, true, true, 'saveVerifyAndCloseButton')
-						"
+						@clicked="save(song, true, 'saveAndCloseButton')"
 					/>
 
 					<div class="right">
 						<button
-							v-if="!song.verified"
-							class="button is-success"
-							@click="verify(song._id)"
-							content="Verify Song"
-							v-tippy
-						>
-							<i class="material-icons">check_circle</i>
-						</button>
-						<quick-confirm
-							v-if="song.verified"
-							placement="left"
-							@confirm="unverify(song._id)"
-						>
-							<button
-								class="button is-danger"
-								content="Unverify Song"
-								v-tippy
-							>
-								<i class="material-icons">cancel</i>
-							</button>
-						</quick-confirm>
-						<button
-							class="
-								button
-								is-danger
-								icon-with-button
-								material-icons
-							"
+							class="button is-danger icon-with-button material-icons"
 							@click.prevent="
 								confirmAction({
 									message:
@@ -531,6 +611,13 @@
 							delete_forever
 						</button>
 					</div>
+				</div>
+				<div v-else-if="newSong">
+					<save-button
+						ref="createButton"
+						default-message="Create Song"
+						@clicked="save(song, false, 'createButton', true)"
+					/>
 				</div>
 			</template>
 		</modal>
@@ -558,7 +645,6 @@ import ws from "@/ws";
 import validation from "@/validation";
 import keyboardShortcuts from "@/keyboardShortcuts";
 
-import QuickConfirm from "@/components/QuickConfirm.vue";
 import Modal from "../../Modal.vue";
 import FloatingBox from "../../FloatingBox.vue";
 import SaveButton from "../../SaveButton.vue";
@@ -574,7 +660,6 @@ export default {
 		Modal,
 		FloatingBox,
 		SaveButton,
-		QuickConfirm,
 		AutoSuggest,
 		Discogs,
 		Reports,
@@ -602,6 +687,7 @@ export default {
 	data() {
 		return {
 			songDataLoaded: false,
+			songDeleted: false,
 			youtubeError: false,
 			youtubeErrorMessage: "",
 			focusedElementBefore: null,
@@ -611,7 +697,6 @@ export default {
 			useHTTPS: false,
 			muted: false,
 			volumeSliderValue: 0,
-			skipToLast10SecsPressed: false,
 			artistInputValue: "",
 			genreInputValue: "",
 			tagInputValue: "",
@@ -662,10 +747,21 @@ export default {
 					tags: []
 				}
 			},
-			songNotFound: false
+			songNotFound: false,
+			showRateDropdown: false,
+			thumbnailNotSquare: false,
+			thumbnailWidth: null,
+			thumbnailHeight: null
 		};
 	},
 	computed: {
+		thumbnailIsYouTubeThumbnail() {
+			return (
+				this.songDataLoaded &&
+				this.song.thumbnail &&
+				this.song.thumbnail.startsWith("https://i.ytimg.com")
+			);
+		},
 		...mapState("modals/editSong", {
 			tab: state => state.tab,
 			video: state => state.video,
@@ -673,7 +769,8 @@ export default {
 			songId: state => state.songId,
 			prefillData: state => state.prefillData,
 			originalSong: state => state.originalSong,
-			reports: state => state.reports
+			reports: state => state.reports,
+			newSong: state => state.newSong
 		}),
 		...mapState("modalVisibility", {
 			modals: state => state.modals,
@@ -712,29 +809,19 @@ export default {
 		volume =
 			typeof volume === "number" && !Number.isNaN(volume) ? volume : 20;
 		localStorage.setItem("volume", volume);
-		this.volumeSliderValue = volume * 100;
+		this.volumeSliderValue = volume;
 
-		this.socket.on(
-			"event:admin.song.updated",
-			res => {
-				if (res.data.song._id === this.song._id)
-					this.song.verified = res.data.song.verified;
-			},
-			{ modal: "editSong" }
-		);
-
-		this.socket.on(
-			"event:admin.song.removed",
-			res => {
-				if (res.data.songId === this.song._id) {
-					this.closeModal("editSong");
-					setTimeout(() => {
-						window.focusedElementBefore.focus();
-					}, 500);
-				}
-			},
-			{ modal: "editSong" }
-		);
+		if (!this.newSong) {
+			this.socket.on(
+				"event:admin.song.removed",
+				res => {
+					if (res.data.songId === this.song._id) {
+						this.songDeleted = true;
+					}
+				},
+				{ modal: this.bulk ? "editSongs" : "editSong" }
+			);
+		}
 
 		keyboardShortcuts.registerShortcut("editSong.pauseResumeVideo", {
 			keyCode: 101,
@@ -754,6 +841,16 @@ export default {
 			}
 		});
 
+		keyboardShortcuts.registerShortcut("editSong.hardStopVideo", {
+			keyCode: 101,
+			ctrl: true,
+			shift: true,
+			preventDefault: true,
+			handler: () => {
+				this.settings("hardStop");
+			}
+		});
+
 		keyboardShortcuts.registerShortcut("editSong.skipToLast10Secs", {
 			keyCode: 102,
 			preventDefault: true,
@@ -768,7 +865,7 @@ export default {
 			handler: () => {
 				this.volumeSliderValue = Math.max(
 					0,
-					this.volumeSliderValue - 1000
+					this.volumeSliderValue - 10
 				);
 				this.changeVolume();
 			}
@@ -781,7 +878,7 @@ export default {
 			handler: () => {
 				this.volumeSliderValue = Math.max(
 					0,
-					this.volumeSliderValue - 100
+					this.volumeSliderValue - 1
 				);
 				this.changeVolume();
 			}
@@ -792,8 +889,8 @@ export default {
 			preventDefault: true,
 			handler: () => {
 				this.volumeSliderValue = Math.min(
-					10000,
-					this.volumeSliderValue + 1000
+					100,
+					this.volumeSliderValue + 10
 				);
 				this.changeVolume();
 			}
@@ -805,8 +902,8 @@ export default {
 			preventDefault: true,
 			handler: () => {
 				this.volumeSliderValue = Math.min(
-					10000,
-					this.volumeSliderValue + 100
+					100,
+					this.volumeSliderValue + 1
 				);
 				this.changeVolume();
 			}
@@ -817,7 +914,7 @@ export default {
 			ctrl: true,
 			preventDefault: true,
 			handler: () => {
-				this.save(this.song, false, false, "saveButton");
+				this.save(this.song, false, "saveButton");
 			}
 		});
 
@@ -827,19 +924,7 @@ export default {
 			alt: true,
 			preventDefault: true,
 			handler: () => {
-				this.save(this.song, false, true, "saveAndCloseButton");
-			}
-		});
-
-		// TODO
-		keyboardShortcuts.registerShortcut("editSong.saveVerifyClose", {
-			keyCode: 86,
-			ctrl: true,
-			alt: true,
-			preventDefault: true,
-			handler: () => {
-				// alert("not implemented yet");
-				this.save(this.song, true, true, "saveVerifyAndCloseButton");
+				this.save(this.song, true, "saveAndCloseButton");
 			}
 		});
 
@@ -880,6 +965,7 @@ export default {
 
 		editSong.pauseResume - Num 5 - Pause/resume song
 		editSong.stopVideo - Ctrl - Num 5 - Stop
+		editSong.hardStopVideo - Shift - Ctrl - Num 5 - Stop
 		editSong.skipToLast10Secs - Num 6 - Skip to last 10 seconds
 
 		editSong.lowerVolumeLarge - Num 2 - Volume down by 10
@@ -903,7 +989,7 @@ export default {
 	},
 	beforeUnmount() {
 		console.log("UNMOUNT");
-		this.unloadSong(this.songId);
+		if (!this.newSong) this.unloadSong(this.songId);
 
 		this.playerReady = false;
 		clearInterval(this.interval);
@@ -912,6 +998,7 @@ export default {
 		const shortcutNames = [
 			"editSong.pauseResume",
 			"editSong.stopVideo",
+			"editSong.hardStopVideo",
 			"editSong.skipToLast10Secs",
 			"editSong.lowerVolumeLarge",
 			"editSong.lowerVolumeSmall",
@@ -921,7 +1008,6 @@ export default {
 			"editSong.focusDicogs",
 			"editSong.save",
 			"editSong.saveClose",
-			"editSong.saveVerifyClose",
 			"editSong.useAllDiscogs",
 			"editSong.closeModal"
 		];
@@ -931,8 +1017,37 @@ export default {
 		});
 	},
 	methods: {
+		onThumbnailLoad() {
+			if (this.$refs.thumbnailElement) {
+				const thumbnailHeight =
+					this.$refs.thumbnailElement.naturalHeight;
+				const thumbnailWidth = this.$refs.thumbnailElement.naturalWidth;
+
+				this.thumbnailNotSquare = thumbnailHeight !== thumbnailWidth;
+				this.thumbnailHeight = thumbnailHeight;
+				this.thumbnailWidth = thumbnailWidth;
+			} else {
+				this.thumbnailNotSquare = false;
+				this.thumbnailHeight = null;
+				this.thumbnailWidth = null;
+			}
+		},
 		init() {
-			if (this.songId) this.loadSong(this.songId);
+			if (this.newSong) {
+				this.setSong({
+					youtubeId: "",
+					title: "",
+					artists: [],
+					genres: [],
+					tags: [],
+					duration: 0,
+					skipDuration: 0,
+					thumbnail: "",
+					verified: false
+				});
+				this.songDataLoaded = true;
+				this.showTab("youtube");
+			} else if (this.songId) this.loadSong(this.songId);
 			else if (!this.bulk) {
 				new Toast("You can't open EditSong without editing a song");
 				return this.closeModal("editSong");
@@ -950,13 +1065,14 @@ export default {
 							this.video.player.getCurrentTime() >=
 								this.video.player.getDuration()))
 				) {
-					this.video.paused = true;
-					this.video.player.stopVideo();
+					this.stopVideo();
+					this.pauseVideo(true);
 					this.drawCanvas();
 				}
 				if (
 					this.playerReady &&
 					this.video.player.getVideoData &&
+					this.video.player.getVideoData() &&
 					this.video.player.getVideoData().video_id ===
 						this.song.youtubeId
 				) {
@@ -996,7 +1112,7 @@ export default {
 					startSeconds: this.song.skipDuration,
 					events: {
 						onReady: () => {
-							let volume = parseInt(
+							let volume = parseFloat(
 								localStorage.getItem("volume")
 							);
 							volume = typeof volume === "number" ? volume : 20;
@@ -1011,21 +1127,14 @@ export default {
 									this.song.skipDuration
 								);
 
+							this.setPlaybackRate(null);
+
 							this.drawCanvas();
 						},
 						onStateChange: event => {
 							this.drawCanvas();
 
-							let skipToLast10SecsPressed = false;
-							if (
-								event.data === 1 &&
-								this.skipToLast10SecsPressed
-							) {
-								this.skipToLast10SecsPressed = false;
-								skipToLast10SecsPressed = true;
-							}
-
-							if (event.data === 1 && !skipToLast10SecsPressed) {
+							if (event.data === 1) {
 								this.video.paused = false;
 								let youtubeDuration =
 									this.video.player.getDuration();
@@ -1068,15 +1177,15 @@ export default {
 
 								youtubeDuration -= this.song.skipDuration;
 								if (this.song.duration > youtubeDuration + 1) {
-									this.video.player.stopVideo();
-									this.video.paused = true;
+									this.stopVideo();
+									this.pauseVideo(true);
 									return new Toast(
 										"Video can't play. Specified duration is bigger than the YouTube song duration."
 									);
 								}
 								if (this.song.duration <= 0) {
-									this.video.player.stopVideo();
-									this.video.paused = true;
+									this.stopVideo();
+									this.pauseVideo(true);
 									return new Toast(
 										"Video can't play. Specified duration has to be more than 0 seconds."
 									);
@@ -1086,10 +1195,10 @@ export default {
 									this.video.player.getCurrentTime() <
 									this.song.skipDuration
 								) {
-									return this.video.player.seekTo(
-										this.song.skipDuration
-									);
+									return this.seekTo(this.song.skipDuration);
 								}
+
+								this.setPlaybackRate(null);
 							} else if (event.data === 2) {
 								this.video.paused = true;
 							}
@@ -1128,9 +1237,13 @@ export default {
 		},
 		unloadSong(songId) {
 			this.songDataLoaded = false;
-			if (this.video.player && this.video.player.stopVideo)
-				this.video.player.stopVideo();
+			this.songDeleted = false;
+			this.stopVideo();
+			this.pauseVideo(true);
 			this.resetSong(songId);
+			this.thumbnailNotSquare = false;
+			this.thumbnailWidth = null;
+			this.thumbnailHeight = null;
 			this.youtubeVideoCurrentTime = "0.000";
 			this.youtubeVideoDuration = "0.000";
 			this.socket.dispatch("apis.leaveRoom", `edit-song.${songId}`);
@@ -1167,41 +1280,37 @@ export default {
 				}
 			});
 
-			this.socket.dispatch(
-				"reports.getReportsForSong",
-				this.song._id,
-				res => {
-					this.updateReports(res.data.reports);
-				}
-			);
+			this.socket.dispatch("reports.getReportsForSong", songId, res => {
+				this.updateReports(res.data.reports);
+			});
 		},
 		importAlbum(result) {
 			this.selectDiscogsAlbum(result);
 			this.openModal("importAlbum");
 			this.closeModal("editSong");
 		},
-		save(songToCopy, verify, closeOrNext, saveButtonRefName) {
+		save(songToCopy, closeOrNext, saveButtonRefName, newSong = false) {
 			const song = JSON.parse(JSON.stringify(songToCopy));
 
-			this.$emit("saving", song._id);
+			if (!newSong) this.$emit("saving", song._id);
 
 			const saveButtonRef = this.$refs[saveButtonRefName];
 
 			if (!this.youtubeError && this.youtubeVideoDuration === "0.000") {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast("The video appears to not be working.");
 			}
 
 			if (!song.title) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast("Please fill in all fields");
 			}
 
 			if (!song.thumbnail) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast("Please fill in all fields");
 			}
 
@@ -1229,11 +1338,12 @@ export default {
 
 			// Youtube Id
 			if (
+				!newSong &&
 				this.youtubeError &&
 				this.originalSong.youtubeId !== song.youtubeId
 			) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast(
 					"You're not allowed to change the YouTube id while the player is not working"
 				);
@@ -1243,11 +1353,11 @@ export default {
 			if (
 				Number(song.skipDuration) + Number(song.duration) >
 					this.youtubeVideoDuration &&
-				(!this.youtubeError ||
+				((!newSong && !this.youtubeError) ||
 					this.originalSong.duration !== song.duration)
 			) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast(
 					"Duration can't be higher than the length of the video"
 				);
@@ -1256,16 +1366,19 @@ export default {
 			// Title
 			if (!validation.isLength(song.title, 1, 100)) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast(
 					"Title must have between 1 and 100 characters."
 				);
 			}
 
 			// Artists
-			if (song.artists.length < 1 || song.artists.length > 10) {
+			if (
+				(song.verified && song.artists.length < 1) ||
+				song.artists.length > 10
+			) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast(
 					"Invalid artists. You must have at least 1 artist and a maximum of 10 artists."
 				);
@@ -1288,7 +1401,7 @@ export default {
 
 			if (error) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast(error);
 			}
 
@@ -1308,21 +1421,24 @@ export default {
 				return false;
 			});
 
-			if (song.genres.length < 1 || song.genres.length > 16)
+			if (
+				(song.verified && song.genres.length < 1) ||
+				song.genres.length > 16
+			)
 				error = "You must have between 1 and 16 genres.";
 
 			if (error) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast(error);
 			}
 
 			error = undefined;
 			song.tags.forEach(tag => {
 				if (
-					!new RegExp(
-						/^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/
-					).test(tag)
+					!/^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/.test(
+						tag
+					)
 				) {
 					error = "Invalid tag format.";
 					return error;
@@ -1333,21 +1449,21 @@ export default {
 
 			if (error) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast(error);
 			}
 
 			// Thumbnail
 			if (!validation.isLength(song.thumbnail, 1, 256)) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast(
 					"Thumbnail must have between 8 and 256 characters."
 				);
 			}
 			if (this.useHTTPS && song.thumbnail.indexOf("https://") !== 0) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast('Thumbnail must start with "https://".');
 			}
 
@@ -1357,12 +1473,25 @@ export default {
 				song.thumbnail.indexOf("https://") !== 0
 			) {
 				saveButtonRef.handleFailedSave();
-				this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song._id);
 				return new Toast('Thumbnail must start with "http://".');
 			}
 
 			saveButtonRef.status = "saving";
 
+			if (newSong)
+				return this.socket.dispatch(`songs.create`, song, res => {
+					new Toast(res.message);
+
+					if (res.status === "error") {
+						saveButtonRef.handleFailedSave();
+						return;
+					}
+
+					saveButtonRef.handleSuccessfulSave();
+
+					this.closeModal("editSong");
+				});
 			return this.socket.dispatch(`songs.update`, song._id, song, res => {
 				new Toast(res.message);
 
@@ -1373,24 +1502,6 @@ export default {
 				}
 
 				this.updateOriginalSong(song);
-
-				if (verify) {
-					saveButtonRef.status = "verifying";
-					this.verify(this.song._id, success => {
-						if (success) {
-							saveButtonRef.handleSuccessfulSave();
-							this.$emit("savedSuccess", song._id);
-
-							if (closeOrNext && this.bulk)
-								this.$emit("nextSong");
-							else if (closeOrNext) this.closeModal("editSong");
-						} else {
-							saveButtonRef.handleFailedSave();
-							this.$emit("savedError", song._id);
-						}
-					});
-					return;
-				}
 
 				saveButtonRef.handleSuccessfulSave();
 				this.$emit("savedSuccess", song._id);
@@ -1440,10 +1551,12 @@ export default {
 		},
 		settings(type) {
 			switch (type) {
-				default:
-					break;
 				case "stop":
 					this.stopVideo();
+					this.pauseVideo(true);
+					break;
+				case "hardStop":
+					this.hardStopVideo();
 					this.pauseVideo(true);
 					break;
 				case "pause":
@@ -1453,11 +1566,11 @@ export default {
 					this.pauseVideo(false);
 					break;
 				case "skipToLast10Secs":
-					this.skipToLast10SecsPressed = true;
-					if (this.video.paused) this.pauseVideo(false);
-					this.video.player.seekTo(
+					this.seekTo(
 						this.song.duration - 10 + this.song.skipDuration
 					);
+					break;
+				default:
 					break;
 			}
 		},
@@ -1471,10 +1584,14 @@ export default {
 			}
 			this.settings("play");
 		},
+		seekTo(position) {
+			this.settings("play");
+			this.video.player.seekTo(position);
+		},
 		changeVolume() {
 			const volume = this.volumeSliderValue;
-			localStorage.setItem("volume", volume / 100);
-			this.video.player.setVolume(volume / 100);
+			localStorage.setItem("volume", volume);
+			this.video.player.setVolume(volume);
 			if (volume > 0) {
 				this.video.player.unMute();
 				this.muted = false;
@@ -1483,18 +1600,18 @@ export default {
 		toggleMute() {
 			const previousVolume = parseFloat(localStorage.getItem("volume"));
 			const volume =
-				this.video.player.getVolume() * 100 <= 0 ? previousVolume : 0;
+				this.video.player.getVolume() <= 0 ? previousVolume : 0;
 			this.muted = !this.muted;
-			this.volumeSliderValue = volume * 100;
+			this.volumeSliderValue = volume;
 			this.video.player.setVolume(volume);
 			if (!this.muted) localStorage.setItem("volume", volume);
 		},
 		increaseVolume() {
-			const previousVolume = parseInt(localStorage.getItem("volume"));
+			const previousVolume = parseFloat(localStorage.getItem("volume"));
 			let volume = previousVolume + 5;
 			this.muted = false;
 			if (volume > 100) volume = 100;
-			this.volumeSliderValue = volume * 100;
+			this.volumeSliderValue = volume;
 			this.video.player.setVolume(volume);
 			localStorage.setItem("volume", volume);
 		},
@@ -1593,6 +1710,16 @@ export default {
 			ctx.fillStyle = currentDurationColor;
 			ctx.fillRect(widthCurrentTime, 0, 1, 20);
 		},
+		setTrackPosition(event) {
+			this.seekTo(
+				Number(
+					Number(this.video.player.getDuration()) *
+						((event.pageX -
+							event.target.getBoundingClientRect().left) /
+							530)
+				)
+			);
+		},
 		toggleGenreHelper() {
 			this.$refs.genreHelper.toggleBox();
 		},
@@ -1625,7 +1752,7 @@ export default {
 						: null,
 					youtubeId: this.song.youtubeId,
 					muted: this.muted,
-					volume: this.volumeSliderValue / 100,
+					volume: this.volumeSliderValue,
 					startedDuration:
 						this.activityWatchVideoLastStartDuration <= 0
 							? 0
@@ -1638,27 +1765,6 @@ export default {
 			} else {
 				this.activityWatchVideoLastStatus = "not_playing";
 			}
-		},
-		verify(id, cb) {
-			this.socket.dispatch("songs.verify", id, res => {
-				new Toast(res.message);
-				if (cb) cb(res.status === "success");
-			});
-		},
-		unverify(id) {
-			this.socket.dispatch("songs.unverify", id, res => {
-				new Toast(res.message);
-			});
-		},
-		hide(id) {
-			this.socket.dispatch("songs.hide", id, res => {
-				new Toast(res.message);
-			});
-		},
-		unhide(id) {
-			this.socket.dispatch("songs.unhide", id, res => {
-				new Toast(res.message);
-			});
 		},
 		remove(id) {
 			this.socket.dispatch("songs.remove", id, res => {
@@ -1684,12 +1790,10 @@ export default {
 		},
 		onCloseModal() {
 			const songStringified = JSON.stringify({
-				...this.song,
-				verified: null
+				...this.song
 			});
 			const originalSongStringified = JSON.stringify({
-				...this.originalSong,
-				verified: null
+				...this.originalSong
 			});
 			const unsavedChanges = songStringified !== originalSongStringified;
 
@@ -1711,14 +1815,16 @@ export default {
 		...mapActions("modals/importAlbum", ["selectDiscogsAlbum"]),
 		...mapActions({
 			showTab(dispatch, payload) {
-				this.$refs[`${payload}-tab`].scrollIntoView({
-					block: "nearest"
-				});
+				if (this.$refs[`${payload}-tab`])
+					this.$refs[`${payload}-tab`].scrollIntoView({
+						block: "nearest"
+					});
 				return dispatch("modals/editSong/showTab", payload);
 			}
 		}),
 		...mapActions("modals/editSong", [
 			"stopVideo",
+			"hardStopVideo",
 			"loadVideoById",
 			"pauseVideo",
 			"getCurrentTime",
@@ -1726,7 +1832,8 @@ export default {
 			"resetSong",
 			"updateOriginalSong",
 			"updateSongField",
-			"updateReports"
+			"updateReports",
+			"setPlaybackRate"
 		]),
 		...mapActions("modals/confirm", ["updateConfirmMessage"]),
 		...mapActions("modalVisibility", ["closeModal", "openModal"])
@@ -1734,10 +1841,10 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.edit-section,
-	.player-footer,
+	.player-section,
 	#tabs-container {
 		background-color: var(--dark-grey-3) !important;
 		border: 0 !important;
@@ -1762,6 +1869,10 @@ export default {
 				}
 			}
 		}
+	}
+
+	#durationCanvas {
+		background-color: var(--dark-grey-2) !important;
 	}
 }
 
@@ -1793,14 +1904,18 @@ export default {
 			width: 530px;
 			display: flex;
 			flex-direction: column;
+			border: 1px solid var(--light-grey-3);
+			border-radius: @border-radius;
+			overflow: hidden;
+
+			#durationCanvas {
+				background-color: var(--light-grey-2);
+			}
 
 			.player-error {
+				display: flex;
 				height: 318px;
 				width: 530px;
-				display: block;
-				border: 1px rgba(163, 224, 255, 0.75) solid;
-				border-radius: 5px 5px 0px 0px;
-				display: flex;
 				align-items: center;
 
 				* {
@@ -1812,8 +1927,6 @@ export default {
 			}
 
 			.player-footer {
-				border: 1px solid var(--light-grey-3);
-				border-radius: 0px 0px 3px 3px;
 				display: flex;
 				justify-content: space-between;
 				height: 54px;
@@ -1829,11 +1942,34 @@ export default {
 				.player-footer-left {
 					flex: 1;
 
-					.button {
-						width: 75px;
+					& > .button:not(:first-child) {
+						margin-left: 5px;
+					}
 
-						&:not(:first-of-type) {
-							margin-left: 5px;
+					:deep(& > .playerRateDropdown) {
+						margin-left: 5px;
+						margin-bottom: unset !important;
+
+						.control.has-addons {
+							margin-bottom: unset !important;
+
+							& > .button {
+								font-size: 24px;
+							}
+						}
+					}
+
+					:deep(.tippy-box[data-theme~="dropdown"]) {
+						max-width: 100px !important;
+
+						.nav-dropdown-items .nav-item {
+							justify-content: center !important;
+							border-radius: @border-radius !important;
+
+							&.active {
+								background-color: var(--primary-color);
+								color: var(--white);
+							}
 						}
 					}
 				}
@@ -1888,7 +2024,7 @@ export default {
 							cursor: pointer;
 							box-shadow: 0;
 							background: var(--light-grey-3);
-							border-radius: 0;
+							border-radius: @border-radius;
 							border: 0;
 						}
 
@@ -1897,7 +2033,7 @@ export default {
 							border: 0;
 							height: 19px;
 							width: 19px;
-							border-radius: 15px;
+							border-radius: 100%;
 							background: var(--primary-color);
 							cursor: pointer;
 							-webkit-appearance: none;
@@ -1910,7 +2046,7 @@ export default {
 							cursor: pointer;
 							box-shadow: 0;
 							background: var(--light-grey-3);
-							border-radius: 0;
+							border-radius: @border-radius;
 							border: 0;
 						}
 
@@ -1919,7 +2055,7 @@ export default {
 							border: 0;
 							height: 19px;
 							width: 19px;
-							border-radius: 15px;
+							border-radius: 100%;
 							background: var(--primary-color);
 							cursor: pointer;
 							-webkit-appearance: none;
@@ -1931,7 +2067,7 @@ export default {
 							cursor: pointer;
 							box-shadow: 0;
 							background: var(--light-grey-3);
-							border-radius: 1.3px;
+							border-radius: @border-radius;
 						}
 
 						input[type="range"]::-ms-fill-lower {
@@ -1953,7 +2089,7 @@ export default {
 							border: 0;
 							height: 15px;
 							width: 15px;
-							border-radius: 15px;
+							border-radius: 100%;
 							background: var(--primary-color);
 							cursor: pointer;
 							-webkit-appearance: none;
@@ -1976,7 +2112,7 @@ export default {
 		border: 1px solid var(--light-grey-3);
 		flex: 1;
 		margin-top: 16px;
-		border-radius: 3px;
+		border-radius: @border-radius;
 
 		.album-get-button {
 			background-color: var(--purple);
@@ -2037,11 +2173,20 @@ export default {
 
 		.album-art-container {
 			margin-right: 16px;
-			width: calc((100% - 16px) / 3 * 2);
+			width: calc((100% - 16px) / 8 * 4);
 		}
 
 		.youtube-id-container {
-			width: calc((100% - 16px) / 3);
+			margin-right: 16px;
+			width: calc((100% - 16px) / 8 * 3);
+		}
+
+		.verified-container {
+			width: calc((100% - 16px) / 8);
+
+			.checkbox-control {
+				margin-top: 10px;
+			}
 		}
 
 		.artists-container {
@@ -2120,6 +2265,12 @@ export default {
 		.list-item:last-child > p {
 			margin-bottom: 0;
 		}
+
+		.thumbnail-warning {
+			color: var(--red);
+			font-size: 18px;
+			margin: auto 0 auto 5px;
+		}
 	}
 }
 
@@ -2137,7 +2288,7 @@ export default {
 			overflow-x: auto;
 
 			.button {
-				border-radius: 5px 5px 0 0;
+				border-radius: @border-radius @border-radius 0 0;
 				border: 0;
 				text-transform: uppercase;
 				font-size: 14px;
@@ -2159,7 +2310,7 @@ export default {
 		}
 		.tab {
 			border: 1px solid var(--light-grey-3);
-			border-radius: 0 0 5px 5px;
+			border-radius: 0 0 @border-radius @border-radius;
 			padding: 15px;
 			height: calc(100% - 32px);
 			overflow: auto;
@@ -2171,7 +2322,7 @@ export default {
 	width: 200px;
 }
 
-/deep/ .autosuggest-container {
+:deep(.autosuggest-container) {
 	top: unset;
 }
 </style>

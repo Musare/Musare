@@ -3,11 +3,6 @@
 
 import admin from "@/api/admin/index";
 
-const state = {};
-const getters = {};
-const actions = {};
-const mutations = {};
-
 const modules = {
 	songs: {
 		namespaced: true,
@@ -29,13 +24,21 @@ const modules = {
 		getters: {},
 		actions: {
 			/* eslint-disable-next-line no-unused-vars */
-			resolveReport: ({ commit }, reportId) =>
-				new Promise((resolve, reject) =>
+			resolveReport: ({ commit }, { reportId, value }) =>
+				new Promise((resolve, reject) => {
 					admin.reports
-						.resolve(reportId)
+						.resolve({ reportId, value })
 						.then(res => resolve(res))
-						.catch(err => reject(new Error(err.message)))
-				)
+						.catch(err => reject(new Error(err.message)));
+				}),
+			/* eslint-disable-next-line no-unused-vars */
+			removeReport: ({ commit }, reportId) =>
+				new Promise((resolve, reject) => {
+					admin.reports
+						.remove(reportId)
+						.then(res => resolve(res))
+						.catch(err => reject(new Error(err.message)));
+				})
 		},
 		mutations: {}
 	},
@@ -64,9 +67,24 @@ const modules = {
 
 export default {
 	namespaced: true,
-	state,
-	getters,
-	actions,
-	mutations,
+	state: {
+		childrenActive: {
+			users: false
+		}
+	},
+	getters: {},
+	actions: {
+		toggleChildren({ commit }, payload) {
+			commit("toggleChildren", payload);
+		}
+	},
+	mutations: {
+		toggleChildren(state, payload) {
+			if (typeof payload.force === "undefined")
+				state.childrenActive[payload.child] =
+					!state.childrenActive[payload.child];
+			else state.childrenActive[payload.child] = payload.force;
+		}
+	},
 	modules
 };

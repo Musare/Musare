@@ -253,20 +253,26 @@ export default {
 	 * Gets the latest news item
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {boolean} newUser - whether the user requesting the newest news is a new user
 	 * @param {Function} cb - gets called with the result
 	 */
-	async newest(session, cb) {
+	async newest(session, newUser, cb) {
 		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" }, this);
-		async.waterfall([next => newsModel.findOne({}).sort({ createdAt: "desc" }).exec(next)], async (err, news) => {
-			if (err) {
-				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-				this.log("ERROR", "NEWS_NEWEST", `Getting the latest news failed. "${err}"`);
-				return cb({ status: "error", message: err });
-			}
+		const query = { status: "published" };
+		if (newUser) query.showToNewUsers = true;
+		async.waterfall(
+			[next => newsModel.findOne(query).sort({ createdAt: "desc" }).exec(next)],
+			async (err, news) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "NEWS_NEWEST", `Getting the latest news failed. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
 
-			this.log("SUCCESS", "NEWS_NEWEST", `Successfully got the latest news.`, false);
-			return cb({ status: "success", data: { news } });
-		});
+				this.log("SUCCESS", "NEWS_NEWEST", `Successfully got the latest news.`, false);
+				return cb({ status: "success", data: { news } });
+			}
+		);
 	},
 
 	/**

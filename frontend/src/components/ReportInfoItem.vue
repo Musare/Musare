@@ -63,7 +63,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.report-info-item {
 		background-color: var(--dark-grey) !important;
@@ -78,7 +78,7 @@ export default {
 		height: 45px;
 		margin-right: 10px;
 
-		/deep/ .profile-picture.using-initials span {
+		:deep(.profile-picture.using-initials span) {
 			font-size: calc(
 				45px / 5 * 2
 			); // 2/5th of .profile-picture height/width

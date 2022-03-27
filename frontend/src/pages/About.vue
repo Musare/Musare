@@ -68,7 +68,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.card {
 		background-color: var(--dark-grey-3);
@@ -85,11 +85,11 @@ export default {
 	flex-direction: column;
 	padding: 20px;
 	margin: 10px 10px 50px 10px;
-	border-radius: 5px;
+	border-radius: @border-radius;
 	overflow: hidden;
 	background-color: var(--white);
 	color: var(--dark-grey);
-	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
+	box-shadow: @box-shadow;
 
 	.card-header {
 		font-weight: 700;

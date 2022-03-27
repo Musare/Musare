@@ -45,7 +45,9 @@ class _MailModule extends CoreClass {
 				}
 			});
 
-		return new Promise(resolve => resolve());
+		return new Promise(resolve => {
+			resolve();
+		});
 	}
 
 	/**
@@ -57,8 +59,8 @@ class _MailModule extends CoreClass {
 	 */
 	SEND_MAIL(payload) {
 		return new Promise((resolve, reject) => {
-			if (MailModule.enabled)
-				return MailModule.transporter
+			if (MailModule.enabled) {
+				MailModule.transporter
 					.sendMail(payload.data)
 					.then(info => {
 						MailModule.log("SUCCESS", "MAIL_SEND", `Successfully sent email ${info.messageId}`);
@@ -68,8 +70,10 @@ class _MailModule extends CoreClass {
 						MailModule.log("ERROR", "MAIL_SEND", `Failed to send email. ${err}`);
 						return reject();
 					});
+				return;
+			}
 
-			return resolve();
+			resolve();
 		});
 	}
 

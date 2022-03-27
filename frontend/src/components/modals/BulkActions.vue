@@ -136,7 +136,8 @@ export default {
 				this.type.items,
 				res => {
 					new Toast(res.message);
-					this.closeModal("bulkActions");
+					if (res.status === "success")
+						this.closeModal("bulkActions");
 				}
 			);
 		},
@@ -145,13 +146,9 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .label {
 	text-transform: capitalize;
-}
-
-.select.is-expanded select {
-	width: 100%;
 }
 
 .control.input-with-button > div {
@@ -168,7 +165,7 @@ export default {
 	}
 }
 
-/deep/ .autosuggest-container {
+:deep(.autosuggest-container) {
 	width: calc(100% - 40px);
 	top: unset;
 }

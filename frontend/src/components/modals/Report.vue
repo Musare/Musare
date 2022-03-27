@@ -89,10 +89,7 @@
 											@click="customIssues.push('')"
 										>
 											<i
-												class="
-													material-icons
-													icon-with-button
-												"
+												class="material-icons icon-with-button"
 												>add</i
 											>
 											<span> Add Custom Issue </span>
@@ -100,12 +97,7 @@
 									</div>
 
 									<div
-										class="
-											custom-issue
-											control
-											is-grouped
-											input-with-button
-										"
+										class="custom-issue control is-grouped input-with-button"
 										v-for="(issue, index) in customIssues"
 										:key="index"
 									>
@@ -434,7 +426,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 .report-modal .song-item .thumbnail {
 	min-width: 130px;
 	width: 130px;
@@ -442,7 +434,7 @@ export default {
 }
 </style>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	@media screen and (max-width: 900px) {
 		#right-part {
@@ -451,7 +443,7 @@ export default {
 	}
 	.columns {
 		background-color: var(--dark-grey-3) !important;
-		border-radius: 5px;
+		border-radius: @border-radius;
 	}
 }
 
@@ -473,7 +465,7 @@ export default {
 			margin-bottom: 20px;
 			padding: 20px;
 			background-color: var(--light-grey);
-			border-radius: 5px;
+			border-radius: @border-radius;
 		}
 	}
 

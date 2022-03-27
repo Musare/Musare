@@ -191,7 +191,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
 .activity-item-link {
 	color: var(--primary-color) !important;
 
@@ -201,11 +201,11 @@ export default {
 }
 </style>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .activity-item {
 	height: 72px;
 	border: 0.5px var(--light-grey-3) solid;
-	border-radius: 3px;
+	border-radius: @border-radius;
 	padding: 0;
 
 	.thumbnail {

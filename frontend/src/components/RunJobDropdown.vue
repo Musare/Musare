@@ -21,7 +21,7 @@
 	>
 		<div class="control has-addons" ref="trigger">
 			<button class="button is-primary">Run Job</button>
-			<button class="button">
+			<button class="button dropdown-toggle">
 				<i class="material-icons">
 					{{ showJobDropdown ? "expand_more" : "expand_less" }}
 				</i>
@@ -94,7 +94,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .nav-dropdown-items {
 	& > span:not(:last-child) .nav-item.button {
 		margin-bottom: 10px !important;

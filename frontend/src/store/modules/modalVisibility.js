@@ -8,7 +8,7 @@ const state = {
 		login: false,
 		register: false,
 		createStation: false,
-		requestSong: false,
+		importPlaylist: false,
 		editPlaylist: false,
 		createPlaylist: false,
 		report: false,

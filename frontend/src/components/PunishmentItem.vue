@@ -103,7 +103,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.punishment-item {
 		background-color: var(--dark-grey-2) !important;
@@ -126,7 +126,7 @@ export default {
 		align-items: center;
 		justify-content: space-evenly;
 		border: 1px solid var(--light-grey-3);
-		border-radius: 5px;
+		border-radius: @border-radius;
 
 		.checkbox-control .slider {
 			cursor: default;

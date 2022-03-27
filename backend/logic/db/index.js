@@ -7,7 +7,7 @@ import CoreClass from "../../core";
 
 const REQUIRED_DOCUMENT_VERSIONS = {
 	activity: 2,
-	news: 2,
+	news: 3,
 	playlist: 6,
 	punishment: 1,
 	queueSong: 1,
@@ -200,9 +200,8 @@ class _DBModule extends CoreClass {
 					this.schemas.song.path("genres").validate(songGenres, "Invalid genres.");
 
 					const songTags = tags =>
-						tags.filter(tag =>
-							new RegExp(/^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/).test(tag)
-						).length === tags.length;
+						tags.filter(tag => /^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/.test(tag))
+							.length === tags.length;
 					this.schemas.song.path("tags").validate(songTags, "Invalid tags.");
 
 					const songThumbnail = thumbnail => {
@@ -233,7 +232,16 @@ class _DBModule extends CoreClass {
 					// 	return songs[0].duration <= 10800;
 					// }, "Max 3 hours per song.");
 
-					this.schemas.playlist.index({ createdFor: 1, type: 1 }, { unique: true });
+					this.models.activity.syncIndexes();
+					this.models.dataRequest.syncIndexes();
+					this.models.news.syncIndexes();
+					this.models.playlist.syncIndexes();
+					this.models.punishment.syncIndexes();
+					this.models.queueSong.syncIndexes();
+					this.models.report.syncIndexes();
+					this.models.song.syncIndexes();
+					this.models.station.syncIndexes();
+					this.models.user.syncIndexes();
 
 					if (config.get("skipDbDocumentsVersionCheck")) resolve();
 					else {

@@ -75,10 +75,7 @@
 												song.youtubeId
 											) !== -1
 										"
-										class="
-											material-icons
-											added-to-playlist-icon
-										"
+										class="material-icons added-to-playlist-icon"
 										content="Song is already in queue"
 										v-tippy
 										>done</i
@@ -148,10 +145,7 @@
 											songsInQueue.indexOf(result.id) !==
 											-1
 										"
-										class="
-											material-icons
-											added-to-playlist-icon
-										"
+										class="material-icons added-to-playlist-icon"
 										content="Song is already in queue"
 										v-tippy
 										>done</i
@@ -378,7 +372,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode {
 	.tabs-container .tab-selection .button {
 		background: var(--dark-grey) !important;
@@ -437,7 +431,7 @@ export default {
 
 	#playlist-info-section {
 		border: 1px solid var(--light-grey-3);
-		border-radius: 3px;
+		border-radius: @border-radius;
 		padding: 15px !important;
 		margin-bottom: 16px;
 

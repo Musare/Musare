@@ -43,6 +43,7 @@
 								{ status, flagged, song }, index
 							) in filteredItems"
 							:key="song._id"
+							:ref="`edit-songs-item-${song._id}`"
 						>
 							<song-item
 								:song="song"
@@ -59,11 +60,7 @@
 								<template #leftIcon>
 									<i
 										v-if="currentSong._id === song._id"
-										class="
-											material-icons
-											item-icon
-											editing-icon
-										"
+										class="material-icons item-icon editing-icon"
 										content="Currently editing song"
 										v-tippy="{ theme: 'info' }"
 										@click="toggleDone(index)"
@@ -71,22 +68,14 @@
 									>
 									<i
 										v-else-if="song.removed"
-										class="
-											material-icons
-											item-icon
-											removed-icon
-										"
+										class="material-icons item-icon removed-icon"
 										content="Song removed"
 										v-tippy="{ theme: 'info' }"
 										>delete_forever</i
 									>
 									<i
 										v-else-if="status === 'error'"
-										class="
-											material-icons
-											item-icon
-											error-icon
-										"
+										class="material-icons item-icon error-icon"
 										content="Error saving song"
 										v-tippy="{ theme: 'info' }"
 										@click="toggleDone(index)"
@@ -94,22 +83,14 @@
 									>
 									<i
 										v-else-if="status === 'saving'"
-										class="
-											material-icons
-											item-icon
-											saving-icon
-										"
+										class="material-icons item-icon saving-icon"
 										content="Currently saving song"
 										v-tippy="{ theme: 'info' }"
 										>pending</i
 									>
 									<i
 										v-else-if="flagged"
-										class="
-											material-icons
-											item-icon
-											flag-icon
-										"
+										class="material-icons item-icon flag-icon"
 										content="Song flagged"
 										v-tippy="{ theme: 'info' }"
 										@click="toggleDone(index)"
@@ -117,11 +98,7 @@
 									>
 									<i
 										v-else-if="status === 'done'"
-										class="
-											material-icons
-											item-icon
-											done-icon
-										"
+										class="material-icons item-icon done-icon"
 										content="Song marked complete"
 										v-tippy="{ theme: 'info' }"
 										@click="toggleDone(index)"
@@ -129,11 +106,7 @@
 									>
 									<i
 										v-else-if="status === 'todo'"
-										class="
-											material-icons
-											item-icon
-											todo-icon
-										"
+										class="material-icons item-icon todo-icon"
 										content="Song marked todo"
 										v-tippy="{ theme: 'info' }"
 										@click="toggleDone(index)"
@@ -302,7 +275,7 @@ export default {
 		this.socket.on(`event:admin.song.removed`, res => {
 			const index = this.items
 				.map(item => item.song._id)
-				.indexOf(res.songId);
+				.indexOf(res.data.songId);
 			this.items[index].song.removed = true;
 		});
 	},
@@ -317,6 +290,11 @@ export default {
 				prefill: this.songPrefillData[song._id]
 			});
 			this.currentSong = song;
+			if (
+				this.$refs[`edit-songs-item-${song._id}`] &&
+				this.$refs[`edit-songs-item-${song._id}`][0]
+			)
+				this.$refs[`edit-songs-item-${song._id}`][0].scrollIntoView();
 		},
 		editNextSong() {
 			const currentlyEditingSongIndex = this.filteredEditingItemIndex;
@@ -332,8 +310,10 @@ export default {
 				}
 			}
 
-			if (newEditingSongIndex > -1)
-				this.pickSong(this.filteredItems[newEditingSongIndex].song);
+			if (newEditingSongIndex > -1) {
+				const nextSong = this.filteredItems[newEditingSongIndex].song;
+				this.pickSong(nextSong);
+			}
 		},
 		toggleFlag(songIndex = null) {
 			if (songIndex && songIndex > -1) {
@@ -446,7 +426,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .night-mode .sidebar {
 	.sidebar-head,
 	.sidebar-foot {
@@ -495,7 +475,7 @@ export default {
 	max-height: calc(100vh - 40px);
 	overflow: auto;
 	margin-right: 8px;
-	border-radius: 5px;
+	border-radius: @border-radius;
 
 	.sidebar-head,
 	.sidebar-foot {
@@ -510,7 +490,7 @@ export default {
 
 	.sidebar-head {
 		border-bottom: 1px solid var(--light-grey-2);
-		border-radius: 5px 5px 0 0;
+		border-radius: @border-radius @border-radius 0 0;
 
 		.sidebar-title {
 			display: flex;
@@ -536,7 +516,7 @@ export default {
 			align-items: center;
 			column-gap: 8px;
 
-			/deep/ .song-item {
+			:deep(.song-item) {
 				.item-icon {
 					margin-right: 10px;
 					cursor: pointer;
@@ -581,7 +561,7 @@ export default {
 
 	.sidebar-foot {
 		border-top: 1px solid var(--light-grey-2);
-		border-radius: 0 0 5px 5px;
+		border-radius: 0 0 @border-radius @border-radius;
 
 		.button {
 			flex: 1;
