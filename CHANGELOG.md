@@ -2,6 +2,25 @@
 
 ## [v3.5.0-dev] - Unreleased
 
+### Added
+- feat: Station autofill configurable limit
+- feat: Station requests configurable access level
+- feat: Station requests configurable per user request limit
+- feat: Added redis attach command to musare.sh
+
+### Changed
+- refactor: No longer showing unlisted stations on homepage if not owned by user
+- refactor: Renamed station excludedPlaylists to blacklist
+- refactor: Unified station update functions and events
+- refactor: Replaced Manage Station settings dropdowns with select elements
+- refactor: Use a local object to edit stations before saving
+- refactor: Replace station modes with 2 modules which are independently toggleable and configurable on every station
+    - Autofill: Replaces playlist mode, owners select songs to autofill queue. Also includes old playMode functionality
+    - Requests: Replaces party mode, users can request songs or auto request from playlists
+
+### Removed
+- refactor: Removed station queue lock
+
 ## [v3.4.0] - 2022-03-27
 
 ### **Breaking Changes**
