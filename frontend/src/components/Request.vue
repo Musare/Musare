@@ -205,6 +205,51 @@ export default {
 		};
 	},
 	computed: {
+		station: {
+			get() {
+				if (this.sector === "manageStation")
+					return this.$store.state.modals.manageStation.station;
+				return this.$store.state.station.station;
+			},
+			set(station) {
+				if (this.sector === "manageStation")
+					this.$store.commit(
+						"modals/manageStation/updateStation",
+						station
+					);
+				else this.$store.commit("station/updateStation", station);
+			}
+		},
+		blacklist: {
+			get() {
+				if (this.sector === "manageStation")
+					return this.$store.state.modals.manageStation.blacklist;
+				return this.$store.state.station.blacklist;
+			},
+			set(blacklist) {
+				if (this.sector === "manageStation")
+					this.$store.commit(
+						"modals/manageStation/setBlacklist",
+						blacklist
+					);
+				else this.$store.commit("station/setBlacklist", blacklist);
+			}
+		},
+		songsList: {
+			get() {
+				if (this.sector === "manageStation")
+					return this.$store.state.modals.manageStation.songsList;
+				return this.$store.state.station.songsList;
+			},
+			set(songsList) {
+				if (this.sector === "manageStation")
+					this.$store.commit(
+						"modals/manageStation/updateSongsList",
+						songsList
+					);
+				else this.$store.commit("station/updateSongsList", songsList);
+			}
+		},
 		musareResultsLeftCount() {
 			return this.musareSearch.count - this.musareSearch.results.length;
 		},
@@ -232,11 +277,8 @@ export default {
 			userId: state => state.auth.userId
 		}),
 		...mapState("station", {
-			station: state => state.station,
-			songsList: state => state.songsList,
 			autoRequest: state => state.autoRequest,
-			autoRequestLock: state => state.autoRequestLock,
-			blacklist: state => state.blacklist
+			autoRequestLock: state => state.autoRequestLock
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"

@@ -133,7 +133,7 @@
 							v-if="canRequest()"
 							class="tab"
 							v-show="tab === 'request'"
-							:sector="sector"
+							:sector="'manageStation'"
 						/>
 						<playlist-tab-base
 							v-if="isOwnerOrAdmin()"
