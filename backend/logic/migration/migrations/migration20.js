@@ -47,10 +47,53 @@ export default async function migrate(MigrationModule) {
 					});
 					stationModel.updateMany(
 						{ documentVersion: 7 },
-						{ $set: { "requests.enabled": true } },
+						{
+							$set: {
+								requests: {
+									enabled: true,
+									access: "owner",
+									limit: 3
+								}
+							}
+						},
 						(err, res) => {
 							this.log("INFO", `Migration 20. Stations found: ${res.modifiedCount}.`);
 							next(err);
+						}
+					);
+					stationModel.find(
+						{ documentVersion: 7, includedPlaylists: { $exists: true }, playMode: { $exists: true } },
+						(err, stations) => {
+							if (err) next(err);
+							else {
+								async.eachLimit(
+									stations.map(station => station._doc),
+									1,
+									(station, next) => {
+										stationModel.updateOne(
+											{ _id: station._id },
+											{
+												$unset: { includedPlaylists: "", playMode: "" },
+												$set: {
+													autofill: {
+														enabled: true,
+														playlists: station.includedPlaylists.map(playlist =>
+															mongoose.Types.ObjectId(playlist)
+														),
+														limit: 3,
+														mode: station.playMode
+													}
+												}
+											},
+											next
+										);
+									},
+									err => {
+										this.log("INFO", `Migration 20. Stations found: ${stations.length}.`);
+										next(err);
+									}
+								);
+							}
 						}
 					);
 				}

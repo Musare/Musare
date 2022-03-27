@@ -486,7 +486,7 @@ class _PlaylistsModule extends CoreClass {
 					},
 
 					(playlistId, next) => {
-						StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_BLACKLIST_PLAYLIST", { playlistId }, this)
+						StationsModule.runJob("GET_STATIONS_THAT_AUTOFILL_OR_BLACKLIST_PLAYLIST", { playlistId }, this)
 							.then(response => {
 								async.eachLimit(
 									response.stationIds,
@@ -538,7 +538,7 @@ class _PlaylistsModule extends CoreClass {
 								.then(response => {
 									if (response.songs.length === 0) {
 										StationsModule.runJob(
-											"GET_STATIONS_THAT_INCLUDE_OR_BLACKLIST_PLAYLIST",
+											"GET_STATIONS_THAT_AUTOFILL_OR_BLACKLIST_PLAYLIST",
 											{ playlistId: playlist._id },
 											this
 										)
@@ -705,25 +705,25 @@ class _PlaylistsModule extends CoreClass {
 					},
 
 					(station, next) => {
-						const includedPlaylists = [];
+						const playlists = [];
 						async.eachLimit(
-							station.includedPlaylists,
+							station.autofill.playlists,
 							1,
 							(playlistId, next) => {
 								PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 									.then(playlist => {
-										includedPlaylists.push(playlist);
+										playlists.push(playlist);
 										next();
 									})
 									.catch(next);
 							},
 							err => {
-								next(err, station, includedPlaylists);
+								next(err, station, playlists);
 							}
 						);
 					},
 
-					(station, includedPlaylists, next) => {
+					(station, playlists, next) => {
 						const blacklist = [];
 						async.eachLimit(
 							station.blacklist,
@@ -737,12 +737,12 @@ class _PlaylistsModule extends CoreClass {
 									.catch(next);
 							},
 							err => {
-								next(err, station, includedPlaylists, blacklist);
+								next(err, station, playlists, blacklist);
 							}
 						);
 					},
 
-					(station, includedPlaylists, blacklist, next) => {
+					(station, playlists, blacklist, next) => {
 						const blacklistedSongs = blacklist
 							.flatMap(blacklistedPlaylist => blacklistedPlaylist.songs)
 							.reduce(
@@ -750,8 +750,8 @@ class _PlaylistsModule extends CoreClass {
 									items.find(x => x.youtubeId === item.youtubeId) ? [...items] : [...items, item],
 								[]
 							);
-						const includedSongs = includedPlaylists
-							.flatMap(includedPlaylist => includedPlaylist.songs)
+						const includedSongs = playlists
+							.flatMap(playlist => playlist.songs)
 							.reduce(
 								(songs, song) =>
 									songs.find(x => x.youtubeId === song.youtubeId) ? [...songs] : [...songs, song],
@@ -943,7 +943,7 @@ class _PlaylistsModule extends CoreClass {
 
 					next => {
 						StationsModule.runJob(
-							"REMOVE_INCLUDED_OR_BLACKLISTED_PLAYLIST_FROM_STATIONS",
+							"REMOVE_AUTOFILLED_OR_BLACKLISTED_PLAYLIST_FROM_STATIONS",
 							{ playlistId: payload.playlistId },
 							this
 						)

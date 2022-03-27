@@ -41,6 +41,7 @@
 			</div>
 
 			<div
+				v-if="local.requests"
 				class="requests-settings"
 				:class="{ enabled: local.requests.enabled }"
 			>
@@ -93,6 +94,7 @@
 			</div>
 
 			<div
+				v-if="local.autofill"
 				class="autofill-settings"
 				:class="{ enabled: local.autofill.enabled }"
 			>
@@ -190,14 +192,7 @@ export default {
 		})
 	},
 	mounted() {
-		this.local = {
-			...this.station,
-			autofill: {
-				enabled: true,
-				limit: 30,
-				mode: this.station.playMode
-			}
-		};
+		this.local = this.station;
 	},
 	methods: {
 		update() {

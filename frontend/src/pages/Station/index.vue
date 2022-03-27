@@ -898,7 +898,7 @@ export default {
 			localPaused: state => state.localPaused,
 			noSong: state => state.noSong,
 			autoRequest: state => state.autoRequest,
-			includedPlaylists: state => state.includedPlaylists,
+			autofill: state => state.autofill,
 			blacklist: state => state.blacklist
 		}),
 		...mapState({
@@ -1118,16 +1118,6 @@ export default {
 					skipVotes: this.currentSong.skipVotes + 1,
 					skipVotesCurrent: null
 				});
-		});
-
-		this.socket.on("event:privatePlaylist.selected", res => {
-			if (this.station.type === "community")
-				this.station.privatePlaylist = res.data.playlistId;
-		});
-
-		this.socket.on("event:privatePlaylist.deselected", () => {
-			if (this.station.type === "community")
-				this.station.privatePlaylist = null;
 		});
 
 		this.socket.on("event:station.updated", async res => {
@@ -1888,12 +1878,9 @@ export default {
 							description,
 							privacy,
 							owner,
-							privatePlaylist,
-							includedPlaylists,
+							autofill,
 							blacklist,
 							type,
-							genres,
-							blacklistedGenres,
 							isFavorited,
 							theme,
 							requests
@@ -1912,12 +1899,9 @@ export default {
 							description,
 							privacy,
 							owner,
-							privatePlaylist,
-							includedPlaylists,
+							autofill,
 							blacklist,
 							type,
-							genres,
-							blacklistedGenres,
 							isFavorited,
 							theme,
 							requests
@@ -1939,11 +1923,11 @@ export default {
 						this.updateUsers(res.data.users);
 
 						this.socket.dispatch(
-							"stations.getStationIncludedPlaylistsById",
+							"stations.getStationAutofillPlaylistsById",
 							this.station._id,
 							res => {
 								if (res.status === "success") {
-									this.setIncludedPlaylists(
+									this.setAutofillPlaylists(
 										res.data.playlists
 									);
 								}
@@ -2217,7 +2201,7 @@ export default {
 			"updateLocalPaused",
 			"updateNoSong",
 			"updateIfStationIsFavorited",
-			"setIncludedPlaylists",
+			"setAutofillPlaylists",
 			"setBlacklist",
 			"updateCurrentSongRatings",
 			"updateOwnCurrentSongRatings",

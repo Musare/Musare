@@ -66,7 +66,7 @@
 				</template>
 			</draggable>
 		</div>
-		<p class="nothing-here-text" v-else>
+		<p class="nothing-here-text has-text-centered" v-else>
 			There are no songs currently queued
 		</p>
 	</div>

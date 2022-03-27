@@ -45,9 +45,13 @@ export default {
 		access: { type: String, enum: ["owner", "user"], default: "owner" },
 		limit: { type: Number, min: 1, max: 50, default: 3 }
 	},
-	playMode: { type: String, enum: ["random", "sequential"], default: "random" },
+	autofill: {
+		enabled: { type: Boolean, default: true },
+		playlists: [{ type: mongoose.Schema.Types.ObjectId, ref: "playlists" }],
+		limit: { type: Number, min: 1, max: 50, default: 3 },
+		mode: { type: String, enum: ["random", "sequential"], default: "random" }
+	},
 	theme: { type: String, enum: ["blue", "purple", "teal", "orange", "red"], default: "blue" },
-	includedPlaylists: [{ type: String }],
 	blacklist: [{ type: mongoose.Schema.Types.ObjectId, ref: "playlists" }],
 	documentVersion: { type: Number, default: 7, required: true }
 };

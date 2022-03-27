@@ -108,7 +108,7 @@ export default {
 		currentPlaylists() {
 			if (this.station.type === "community") return this.autoRequest;
 
-			return this.includedPlaylists;
+			return this.autofill;
 		},
 		...mapState({
 			role: state => state.user.auth.role,
@@ -117,7 +117,7 @@ export default {
 		}),
 		...mapState("station", {
 			autoRequest: state => state.autoRequest,
-			includedPlaylists: state => state.includedPlaylists,
+			autofill: state => state.autofill,
 			blacklist: state => state.blacklist,
 			songsList: state => state.songsList
 		}),
@@ -128,12 +128,12 @@ export default {
 	mounted() {
 		ws.onConnect(this.init);
 
-		this.socket.on("event:station.includedPlaylist", res => {
+		this.socket.on("event:station.autofillPlaylist", res => {
 			const { playlist } = res.data;
-			const playlistIndex = this.includedPlaylists
-				.map(includedPlaylist => includedPlaylist._id)
+			const playlistIndex = this.autofill
+				.map(autofillPlaylist => autofillPlaylist._id)
 				.indexOf(playlist._id);
-			if (playlistIndex === -1) this.includedPlaylists.push(playlist);
+			if (playlistIndex === -1) this.autofill.push(playlist);
 		});
 
 		this.socket.on("event:station.blacklistedPlaylist", res => {
@@ -144,13 +144,12 @@ export default {
 			if (playlistIndex === -1) this.blacklist.push(playlist);
 		});
 
-		this.socket.on("event:station.removedIncludedPlaylist", res => {
+		this.socket.on("event:station.removedAutofillPlaylist", res => {
 			const { playlistId } = res.data;
-			const playlistIndex = this.includedPlaylists
+			const playlistIndex = this.autofill
 				.map(playlist => playlist._id)
 				.indexOf(playlistId);
-			if (playlistIndex >= 0)
-				this.includedPlaylists.splice(playlistIndex, 1);
+			if (playlistIndex >= 0) this.autofill.splice(playlistIndex, 1);
 		});
 
 		this.socket.on("event:station.removedBlacklistedPlaylist", res => {
@@ -195,7 +194,7 @@ export default {
 				}
 			} else {
 				this.socket.dispatch(
-					"stations.includePlaylist",
+					"stations.autofillPlaylist",
 					this.station._id,
 					playlist._id,
 					res => {
@@ -223,7 +222,7 @@ export default {
 					}
 				} else {
 					this.socket.dispatch(
-						"stations.removeIncludedPlaylist",
+						"stations.removeAutofillPlaylist",
 						this.station._id,
 						id,
 						res => {

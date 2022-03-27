@@ -63,23 +63,16 @@ class _StationsModule extends CoreClass {
 							stationId
 						}).then();
 					}
-				});
-			}
-		});
 
-		CacheModule.runJob("SUB", {
-			channel: "station.newOfficialPlaylist",
-			cb: async stationId => {
-				CacheModule.runJob("HGET", {
-					table: "officialPlaylists",
-					key: stationId
-				}).then(playlistObj => {
-					if (playlistObj) {
-						WSModule.runJob("EMIT_TO_ROOM", {
-							room: `station.${stationId}`,
-							args: ["event:newOfficialPlaylist", { data: { playlist: playlistObj.songs } }]
-						});
-					}
+					WSModule.runJob("EMIT_TO_ROOM", {
+						room: `station.${stationId}`,
+						args: ["event:station.queue.updated", { data: { queue: station.queue } }]
+					});
+
+					WSModule.runJob("EMIT_TO_ROOM", {
+						room: `manage-station.${stationId}`,
+						args: ["event:manageStation.queue.updated", { data: { stationId, queue: station.queue } }]
+					});
 				});
 			}
 		});
@@ -449,14 +442,14 @@ class _StationsModule extends CoreClass {
 	}
 
 	/**
-	 * Fills up the official station playlist queue using the songs from the official station playlist
+	 * Autofill station queue from station playlist
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the id of the station
 	 * @param {string} payload.ignoreExistingQueue - ignore the existing queue songs, replacing the old queue with a completely fresh one
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	FILL_UP_STATION_QUEUE_FROM_STATION_PLAYLIST(payload) {
+	AUTOFILL_STATION(payload) {
 		return new Promise((resolve, reject) => {
 			const { stationId, ignoreExistingQueue } = payload;
 			async.waterfall(
@@ -472,6 +465,7 @@ class _StationsModule extends CoreClass {
 					(playlist, next) => {
 						StationsModule.runJob("GET_STATION", { stationId }, this)
 							.then(station => {
+								if (!station.autofill.enabled) next("Autofill is disabled in this station");
 								if (ignoreExistingQueue) station.queue = [];
 								next(null, playlist, station);
 							})
@@ -479,7 +473,7 @@ class _StationsModule extends CoreClass {
 					},
 
 					(playlist, station, next) => {
-						if (station.playMode === "random") {
+						if (station.autofill.mode === "random") {
 							UtilsModule.runJob("SHUFFLE", { array: playlist.songs }, this)
 								.then(response => {
 									next(null, response.array, station);
@@ -490,7 +484,7 @@ class _StationsModule extends CoreClass {
 
 					(_playlistSongs, station, next) => {
 						let playlistSongs = JSON.parse(JSON.stringify(_playlistSongs));
-						if (station.playMode === "sequential") {
+						if (station.autofill.mode === "sequential") {
 							if (station.currentSongIndex <= playlistSongs.length) {
 								const songsToAddToEnd = playlistSongs.splice(0, station.currentSongIndex);
 								playlistSongs = [...playlistSongs, ...songsToAddToEnd];
@@ -520,7 +514,7 @@ class _StationsModule extends CoreClass {
 
 						let { currentSongIndex } = station;
 
-						if (station.playMode === "sequential" && lastSongAdded) {
+						if (station.autofill.mode === "sequential" && lastSongAdded) {
 							const indexOfLastSong = _playlistSongs
 								.map(song => song.youtubeId)
 								.indexOf(lastSongAdded.youtubeId);
@@ -747,34 +741,29 @@ class _StationsModule extends CoreClass {
 							.catch(next);
 					},
 
-					// eslint-disable-next-line consistent-return
 					(station, next) => {
 						if (!station) return next("Station not found.");
 
-						StationsModule.runJob(
-							"FILL_UP_STATION_QUEUE_FROM_STATION_PLAYLIST",
-							{ stationId: station._id },
-							this
-						)
-							.then(() => {
-								StationsModule.runJob("GET_NEXT_STATION_SONG", { stationId: station._id }, this)
-									.then(response => {
-										StationsModule.runJob(
-											"REMOVE_FIRST_QUEUE_SONG",
-											{ stationId: station._id },
-											this
-										)
-											.then(() => {
-												next(null, response.song, station);
-											})
-											.catch(next);
+						if (station.autofill.enabled)
+							return StationsModule.runJob("AUTOFILL_STATION", { stationId: station._id }, this)
+								.then(() => next(null, station))
+								.catch(next);
+						return next(null, station);
+					},
+
+					(station, next) => {
+						StationsModule.runJob("GET_NEXT_STATION_SONG", { stationId: station._id }, this)
+							.then(response => {
+								StationsModule.runJob("REMOVE_FIRST_QUEUE_SONG", { stationId: station._id }, this)
+									.then(() => {
+										next(null, response.song, station);
 									})
-									.catch(err => {
-										if (err === "No songs available.") next(null, null, station);
-										else next(err);
-									});
+									.catch(next);
 							})
-							.catch(next);
+							.catch(err => {
+								if (err === "No songs available.") next(null, null, station);
+								else next(err);
+							});
 					},
 					(song, station, next) => {
 						const $set = {};
@@ -1140,14 +1129,14 @@ class _StationsModule extends CoreClass {
 	}
 
 	/**
-	 * Adds a playlist to be included in a station
+	 * Adds a playlist to autofill a station
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {object} payload.stationId - the id of the station to include the playlist in
-	 * @param {object} payload.playlistId - the id of the playlist to be included
+	 * @param {object} payload.stationId - the id of the station
+	 * @param {object} payload.playlistId - the id of the playlist
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	INCLUDE_PLAYLIST(payload) {
+	AUTOFILL_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
@@ -1166,13 +1155,11 @@ class _StationsModule extends CoreClass {
 					},
 
 					(station, next) => {
-						if (station.playlist === payload.playlistId) next("You cannot include the station playlist");
-						else if (station.includedPlaylists.indexOf(payload.playlistId) !== -1)
-							next("This playlist is already included");
+						if (station.playlist === payload.playlistId) next("You cannot autofill the station playlist");
+						else if (station.autofill.playlists.indexOf(payload.playlistId) !== -1)
+							next("This playlist is already autofilling");
 						else if (station.blacklist.indexOf(payload.playlistId) !== -1)
-							next(
-								"This playlist is currently blacklisted, please remove it from there before including it"
-							);
+							next("This playlist is currently blacklisted");
 						else
 							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId: payload.playlistId }, this)
 								.then(() => {
@@ -1191,7 +1178,7 @@ class _StationsModule extends CoreClass {
 						).then(stationModel => {
 							stationModel.updateOne(
 								{ _id: payload.stationId },
-								{ $push: { includedPlaylists: payload.playlistId } },
+								{ $push: { "autofill.playlists": payload.playlistId } },
 								next
 							);
 						});
@@ -1224,14 +1211,14 @@ class _StationsModule extends CoreClass {
 	}
 
 	/**
-	 * Removes a playlist that is included in a station
+	 * Removes a playlist from autofill
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.stationId - the id of the station
 	 * @param {object} payload.playlistId - the id of the playlist
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	REMOVE_INCLUDED_PLAYLIST(payload) {
+	REMOVE_AUTOFILL_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
@@ -1250,8 +1237,8 @@ class _StationsModule extends CoreClass {
 					},
 
 					(station, next) => {
-						if (station.includedPlaylists.indexOf(payload.playlistId) === -1)
-							next("This playlist isn't included");
+						if (station.autofill.playlists.indexOf(payload.playlistId) === -1)
+							next("This playlist isn't autofilling");
 						else next();
 					},
 
@@ -1265,7 +1252,7 @@ class _StationsModule extends CoreClass {
 						).then(stationModel => {
 							stationModel.updateOne(
 								{ _id: payload.stationId },
-								{ $pull: { includedPlaylists: payload.playlistId } },
+								{ $pull: { "autofill.playlists": payload.playlistId } },
 								next
 							);
 						});
@@ -1327,9 +1314,9 @@ class _StationsModule extends CoreClass {
 						if (station.playlist === payload.playlistId) next("You cannot blacklist the station playlist");
 						else if (station.blacklist.indexOf(payload.playlistId) !== -1)
 							next("This playlist is already blacklisted");
-						else if (station.includedPlaylists.indexOf(payload.playlistId) !== -1)
+						else if (station.autofill.playlists.indexOf(payload.playlistId) !== -1)
 							next(
-								"This playlist is currently included, please remove it from there before blacklisting it"
+								"This playlist is currently autofilling, please remove it from there before blacklisting it"
 							);
 						else
 							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId: payload.playlistId }, this)
@@ -1456,13 +1443,13 @@ class _StationsModule extends CoreClass {
 	}
 
 	/**
-	 * Removes included or blacklisted playlist from a station
+	 * Removes autofilled or blacklisted playlist from a station
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the playlist id
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	REMOVE_INCLUDED_OR_BLACKLISTED_PLAYLIST_FROM_STATIONS(payload) {
+	REMOVE_AUTOFILLED_OR_BLACKLISTED_PLAYLIST_FROM_STATIONS(payload) {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
@@ -1474,11 +1461,11 @@ class _StationsModule extends CoreClass {
 					next => {
 						StationsModule.stationModel.updateMany(
 							{
-								$or: [{ includedPlaylists: payload.playlistId }, { blacklist: payload.playlistId }]
+								$or: [{ "autofill.playlists": payload.playlistId }, { blacklist: payload.playlistId }]
 							},
 							{
 								$pull: {
-									includedPlaylists: payload.playlistId,
+									"autofill.playlists": payload.playlistId,
 									blacklist: payload.playlistId
 								}
 							},
@@ -1502,13 +1489,13 @@ class _StationsModule extends CoreClass {
 	}
 
 	/**
-	 * Gets stations that include or blacklist a specific playlist
+	 * Gets stations that autofill or blacklist a specific playlist
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the playlist id
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	GET_STATIONS_THAT_INCLUDE_OR_BLACKLIST_PLAYLIST(payload) {
+	GET_STATIONS_THAT_AUTOFILL_OR_BLACKLIST_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
 			DBModule.runJob(
 				"GET_MODEL",
@@ -1519,7 +1506,7 @@ class _StationsModule extends CoreClass {
 			).then(stationModel => {
 				stationModel.find(
 					{
-						$or: [{ includedPlaylists: payload.playlistId }, { blacklist: payload.playlistId }]
+						$or: [{ "autofill.playlists": payload.playlistId }, { blacklist: payload.playlistId }]
 					},
 					(err, stations) => {
 						if (err) reject(err);
@@ -1579,19 +1566,19 @@ class _StationsModule extends CoreClass {
 	}
 
 	/**
-	 * Clears and refills a station queue
+	 * Resets a station queue
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the station id
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	CLEAR_AND_REFILL_STATION_QUEUE(payload) {
+	RESET_QUEUE(payload) {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
 					next => {
 						StationsModule.runJob(
-							"FILL_UP_STATION_QUEUE_FROM_STATION_PLAYLIST",
+							"AUTOFILL_STATION",
 							{ stationId: payload.stationId, ignoreExistingQueue: true },
 							this
 						)
@@ -1605,8 +1592,28 @@ class _StationsModule extends CoreClass {
 								next();
 							})
 							.catch(err => {
-								next(err);
+								if (err === "Autofill is disabled in this station")
+									StationsModule.stationModel
+										.updateOne({ _id: payload.stationId }, { $set: { queue: [] } }, this)
+										.then(() => next())
+										.catch(next);
+								else next(err);
 							});
+					},
+
+					next => {
+						StationsModule.runJob("UPDATE_STATION", { stationId: payload.stationId }, this)
+							.then(() => next())
+							.catch(next);
+					},
+
+					next => {
+						CacheModule.runJob("PUB", {
+							channel: "station.queueUpdate",
+							value: payload.stationId
+						})
+							.then(() => next())
+							.catch(next);
 					}
 				],
 				err => {

@@ -16,7 +16,7 @@ const state = {
 	stationPaused: true,
 	localPaused: false,
 	noSong: true,
-	includedPlaylists: [],
+	autofill: [],
 	blacklist: []
 };
 
@@ -71,8 +71,8 @@ const actions = {
 	updateIfStationIsFavorited: ({ commit }, { isFavorited }) => {
 		commit("updateIfStationIsFavorited", isFavorited);
 	},
-	setIncludedPlaylists: ({ commit }, includedPlaylists) => {
-		commit("setIncludedPlaylists", includedPlaylists);
+	setAutofillPlaylists: ({ commit }, autofillPlaylists) => {
+		commit("setAutofillPlaylists", autofillPlaylists);
 	},
 	setBlacklist: ({ commit }, blacklist) => {
 		commit("setBlacklist", blacklist);
@@ -111,7 +111,7 @@ const mutations = {
 		state.stationPaused = true;
 		state.localPaused = false;
 		state.noSong = true;
-		state.includedPlaylists = [];
+		state.autofill = [];
 		state.blacklist = [];
 	},
 	editStation(state, station) {
@@ -170,8 +170,8 @@ const mutations = {
 	updateIfStationIsFavorited(state, isFavorited) {
 		state.station.isFavorited = isFavorited;
 	},
-	setIncludedPlaylists(state, includedPlaylists) {
-		state.includedPlaylists = JSON.parse(JSON.stringify(includedPlaylists));
+	setAutofillPlaylists(state, autofillPlaylists) {
+		state.autofill = JSON.parse(JSON.stringify(autofillPlaylists));
 	},
 	setBlacklist(state, blacklist) {
 		state.blacklist = JSON.parse(JSON.stringify(blacklist));

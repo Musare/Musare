@@ -91,7 +91,9 @@
 								Settings
 							</button>
 							<button
-								v-if="isOwnerOrAdmin()"
+								v-if="
+									isOwnerOrAdmin() && station.autofill.enabled
+								"
 								class="button is-default"
 								:class="{ selected: tab === 'autofill' }"
 								ref="autofill-tab"
@@ -124,7 +126,7 @@
 							v-show="tab === 'settings'"
 						/>
 						<playlist-tab-base
-							v-if="isOwnerOrAdmin()"
+							v-if="isOwnerOrAdmin() && station.autofill.enabled"
 							class="tab"
 							v-show="tab === 'autofill'"
 							:type="'autofill'"
@@ -170,10 +172,8 @@
 		</template>
 		<template #footer>
 			<div v-if="isOwnerOrAdmin()" class="right">
-				<quick-confirm @confirm="clearAndRefillStationQueue()">
-					<a class="button is-danger">
-						Clear and refill station queue
-					</a>
+				<quick-confirm @confirm="resetQueue()">
+					<a class="button is-danger">Reset queue</a>
 				</quick-confirm>
 				<quick-confirm @confirm="removeStation()">
 					<button class="button is-danger">Delete station</button>
@@ -223,7 +223,7 @@ export default {
 			originalStation: state => state.originalStation,
 			songsList: state => state.songsList,
 			stationPlaylist: state => state.stationPlaylist,
-			includedPlaylists: state => state.includedPlaylists,
+			autofill: state => state.autofill,
 			blacklist: state => state.blacklist,
 			stationPaused: state => state.stationPaused,
 			currentSong: state => state.currentSong
@@ -239,6 +239,11 @@ export default {
 				if (this.isOwnerOrAdmin()) this.showTab("settings");
 				else this.closeModal("manageStation");
 			}
+		},
+		// eslint-disable-next-line
+		"station.autofill": function (autofill) {
+			if (this.tab === "autofill" && autofill && !autofill.enabled)
+				this.showTab("settings");
 		}
 	},
 	mounted() {
@@ -258,11 +263,11 @@ export default {
 				this.updateStationPaused(res.data.station.paused);
 
 				this.socket.dispatch(
-					"stations.getStationIncludedPlaylistsById",
+					"stations.getStationAutofillPlaylistsById",
 					this.stationId,
 					res => {
 						if (res.status === "success")
-							this.setIncludedPlaylists(res.data.playlists);
+							this.setAutofillPlaylists(res.data.playlists);
 					}
 				);
 
@@ -311,14 +316,13 @@ export default {
 				);
 
 				this.socket.on(
-					"event:station.includedPlaylist",
+					"event:station.autofillPlaylist",
 					res => {
 						const { playlist } = res.data;
-						const playlistIndex = this.includedPlaylists
-							.map(includedPlaylist => includedPlaylist._id)
+						const playlistIndex = this.autofill
+							.map(autofillPlaylist => autofillPlaylist._id)
 							.indexOf(playlist._id);
-						if (playlistIndex === -1)
-							this.includedPlaylists.push(playlist);
+						if (playlistIndex === -1) this.autofill.push(playlist);
 					},
 					{ modal: "manageStation" }
 				);
@@ -336,14 +340,14 @@ export default {
 				);
 
 				this.socket.on(
-					"event:station.removedIncludedPlaylist",
+					"event:station.removedAutofillPlaylist",
 					res => {
 						const { playlistId } = res.data;
-						const playlistIndex = this.includedPlaylists
+						const playlistIndex = this.autofill
 							.map(playlist => playlist._id)
 							.indexOf(playlistId);
 						if (playlistIndex >= 0)
-							this.includedPlaylists.splice(playlistIndex, 1);
+							this.autofill.splice(playlistIndex, 1);
 					},
 					{ modal: "manageStation" }
 				);
@@ -555,9 +559,9 @@ export default {
 				}
 			);
 		},
-		clearAndRefillStationQueue() {
+		resetQueue() {
 			this.socket.dispatch(
-				"stations.clearAndRefillStationQueue",
+				"stations.resetQueue",
 				this.station._id,
 				res => {
 					if (res.status !== "success")
@@ -571,7 +575,7 @@ export default {
 		},
 		...mapActions("modals/manageStation", [
 			"editStation",
-			"setIncludedPlaylists",
+			"setAutofillPlaylists",
 			"setBlacklist",
 			"clearStation",
 			"updateSongsList",

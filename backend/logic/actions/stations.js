@@ -85,14 +85,14 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
-	channel: "station.includedPlaylist",
+	channel: "station.autofillPlaylist",
 	cb: data => {
 		const { stationId, playlistId } = data;
 
 		PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }).then(playlist =>
 			WSModule.runJob("EMIT_TO_ROOMS", {
 				rooms: [`station.${stationId}`, `manage-station.${stationId}`],
-				args: ["event:station.includedPlaylist", { data: { stationId, playlist } }]
+				args: ["event:station.autofillPlaylist", { data: { stationId, playlist } }]
 			})
 		);
 	}
@@ -113,12 +113,12 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
-	channel: "station.removedIncludedPlaylist",
+	channel: "station.removedAutofillPlaylist",
 	cb: data => {
 		const { stationId, playlistId } = data;
 		WSModule.runJob("EMIT_TO_ROOMS", {
 			rooms: [`station.${stationId}`, `manage-station.${stationId}`],
-			args: ["event:station.removedIncludedPlaylist", { data: { stationId, playlistId } }]
+			args: ["event:station.removedAutofillPlaylist", { data: { stationId, playlistId } }]
 		});
 	}
 });
@@ -194,6 +194,12 @@ CacheModule.runJob("SUB", {
 	channel: "station.queueUpdate",
 	cb: stationId => {
 		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
+			if (!station.currentSong && station.queue.length > 0) {
+				StationsModule.runJob("INITIALIZE_STATION", {
+					stationId
+				}).then();
+			}
+
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
 				args: ["event:station.queue.updated", { data: { queue: station.queue } }]
@@ -321,7 +327,7 @@ CacheModule.runJob("SUB", {
 
 		stationModel.findOne(
 			{ _id: stationId },
-			["_id", "name", "displayName", "description", "type", "privacy", "owner", "requests", "playMode", "theme"],
+			["_id", "name", "displayName", "description", "type", "privacy", "owner", "requests", "autofill", "theme"],
 			(err, station) => {
 				WSModule.runJob("EMIT_TO_ROOMS", {
 					rooms: [`station.${stationId}`, `manage-station.${stationId}`, "admin.stations"],
@@ -818,9 +824,8 @@ export default {
 						name: station.name,
 						privacy: station.privacy,
 						requests: station.requests,
-						playMode: station.playMode,
+						autofill: station.autofill,
 						owner: station.owner,
-						includedPlaylists: station.includedPlaylists,
 						blacklist: station.blacklist,
 						theme: station.theme
 					};
@@ -945,7 +950,7 @@ export default {
 						name: station.name,
 						privacy: station.privacy,
 						requests: station.requests,
-						playMode: station.playMode,
+						autofill: station.autofill,
 						owner: station.owner,
 						theme: station.theme,
 						paused: station.paused,
@@ -967,7 +972,7 @@ export default {
 		);
 	},
 
-	getStationIncludedPlaylistsById(session, stationId, cb) {
+	getStationAutofillPlaylistsById(session, stationId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -999,7 +1004,7 @@ export default {
 					const playlists = [];
 
 					async.eachLimit(
-						station.includedPlaylists,
+						station.autofill.playlists,
 						1,
 						(playlistId, next) => {
 							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
@@ -1023,15 +1028,15 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
-						"GET_STATION_INCLUDED_PLAYLISTS_BY_ID",
-						`Getting station "${stationId}"'s included playlists failed. "${err}"`
+						"GET_STATION_AUTOFILL_PLAYLISTS_BY_ID",
+						`Getting station "${stationId}"'s autofilling playlists failed. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
-					"GET_STATION_INCLUDED_PLAYLISTS_BY_ID",
-					`Got station "${stationId}"'s included playlists successfully.`
+					"GET_STATION_AUTOFILL_PLAYLISTS_BY_ID",
+					`Got station "${stationId}"'s autofilling playlists successfully.`
 				);
 				return cb({ status: "success", data: { playlists } });
 			}
@@ -1340,6 +1345,21 @@ export default {
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
 						.then(station => next(null, station, previousStation))
 						.catch(next);
+				},
+
+				(station, previousStation, next) => {
+					if (newStation.autofill.enabled && !previousStation.autofill.enabled)
+						StationsModule.runJob("AUTOFILL_STATION", { stationId }, this)
+							.then(() => {
+								CacheModule.runJob("PUB", {
+									channel: "station.queueUpdate",
+									value: stationId
+								})
+									.then(() => next(null, station, previousStation))
+									.catch(next);
+							})
+							.catch(next);
+					else next(null, station, previousStation);
 				},
 
 				(station, previousStation, next) => {
@@ -1706,8 +1726,7 @@ export default {
 								type,
 								privacy: "private",
 								queue: [],
-								currentSong: null,
-								playMode: "random"
+								currentSong: null
 							},
 							next
 						);
@@ -1723,8 +1742,7 @@ export default {
 								privacy: "private",
 								owner: session.userId,
 								queue: [],
-								currentSong: null,
-								playMode: "random"
+								currentSong: null
 							},
 							next
 						);
@@ -2244,14 +2262,14 @@ export default {
 	}),
 
 	/**
-	 * Includes a playlist in a station
+	 * Autofill a playlist in a station
 	 *
 	 * @param session
 	 * @param stationId - the station id
 	 * @param playlistId - the playlist id
 	 * @param cb
 	 */
-	includePlaylist: isOwnerRequired(async function includePlaylist(session, stationId, playlistId, cb) {
+	autofillPlaylist: isOwnerRequired(async function autofillPlaylist(session, stationId, playlistId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -2262,15 +2280,15 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					if (station.includedPlaylists.indexOf(playlistId) !== -1)
-						return next("That playlist is already included.");
-					if (station.playMode === "sequential" && station.includedPlaylists.length > 0)
-						return next("Error: Only 1 playlist can be included in sequential play mode.");
+					if (station.autofill.playlists.indexOf(playlistId) !== -1)
+						return next("That playlist is already autofilling.");
+					if (station.autofill.mode === "sequential" && station.autofill.playlists.length > 0)
+						return next("Error: Only 1 playlist can be autofilling in sequential mode.");
 					return next();
 				},
 
 				next => {
-					StationsModule.runJob("INCLUDE_PLAYLIST", { stationId, playlistId }, this)
+					StationsModule.runJob("AUTOFILL_PLAYLIST", { stationId, playlistId }, this)
 						.then(() => {
 							next();
 						})
@@ -2282,7 +2300,7 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
-						"STATIONS_INCLUDE_PLAYLIST",
+						"STATIONS_AUTOFILL_PLAYLIST",
 						`Including playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
 					);
 					return cb({ status: "error", message: err });
@@ -2290,14 +2308,14 @@ export default {
 
 				this.log(
 					"SUCCESS",
-					"STATIONS_INCLUDE_PLAYLIST",
+					"STATIONS_AUTOFILL_PLAYLIST",
 					`Including playlist "${playlistId}" for station "${stationId}" successfully.`
 				);
 
 				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 
 				CacheModule.runJob("PUB", {
-					channel: "station.includedPlaylist",
+					channel: "station.autofillPlaylist",
 					value: {
 						playlistId,
 						stationId
@@ -2306,21 +2324,21 @@ export default {
 
 				return cb({
 					status: "success",
-					message: "Successfully included playlist."
+					message: "Successfully added autofill playlist."
 				});
 			}
 		);
 	}),
 
 	/**
-	 * Remove included a playlist from a station
+	 * Remove autofilled playlist from a station
 	 *
 	 * @param session
 	 * @param stationId - the station id
 	 * @param playlistId - the playlist id
 	 * @param cb
 	 */
-	removeIncludedPlaylist: isOwnerRequired(async function removeIncludedPlaylist(session, stationId, playlistId, cb) {
+	removeAutofillPlaylist: isOwnerRequired(async function removeAutofillPlaylist(session, stationId, playlistId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -2331,13 +2349,13 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					if (station.includedPlaylists.indexOf(playlistId) === -1)
-						return next("That playlist is not included.");
+					if (station.autofill.playlists.indexOf(playlistId) === -1)
+						return next("That playlist is not autofilling.");
 					return next();
 				},
 
 				next => {
-					StationsModule.runJob("REMOVE_INCLUDED_PLAYLIST", { stationId, playlistId }, this)
+					StationsModule.runJob("REMOVE_AUTOFILL_PLAYLIST", { stationId, playlistId }, this)
 						.then(() => {
 							next();
 						})
@@ -2349,22 +2367,22 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
-						"STATIONS_REMOVE_INCLUDED_PLAYLIST",
-						`Removing included playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
+						"STATIONS_REMOVE_AUTOFILL_PLAYLIST",
+						`Removing autofill playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
 
 				this.log(
 					"SUCCESS",
-					"STATIONS_REMOVE_INCLUDED_PLAYLIST",
-					`Removing included playlist "${playlistId}" for station "${stationId}" successfully.`
+					"STATIONS_REMOVE_AUTOFILL_PLAYLIST",
+					`Removing autofill playlist "${playlistId}" for station "${stationId}" successfully.`
 				);
 
 				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 
 				CacheModule.runJob("PUB", {
-					channel: "station.removedIncludedPlaylist",
+					channel: "station.removedAutofillPlaylist",
 					value: {
 						playlistId,
 						stationId
@@ -2373,7 +2391,7 @@ export default {
 
 				return cb({
 					status: "success",
-					message: "Successfully removed included playlist."
+					message: "Successfully removed autofill playlist."
 				});
 			}
 		);
@@ -2666,17 +2684,17 @@ export default {
 	}),
 
 	/**
-	 * Clears and refills a station queue
+	 * Reset a station queue
 	 *
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - gets called with the result
 	 */
-	clearAndRefillStationQueue: isAdminRequired(async function clearAndRefillStationQueue(session, stationId, cb) {
+	resetQueue: isAdminRequired(async function resetQueue(session, stationId, cb) {
 		async.waterfall(
 			[
 				next => {
-					StationsModule.runJob("CLEAR_AND_REFILL_STATION_QUEUE", { stationId }, this)
+					StationsModule.runJob("RESET_QUEUE", { stationId }, this)
 						.then(() => next())
 						.catch(next);
 				}
@@ -2684,19 +2702,11 @@ export default {
 			async err => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"CLEAR_AND_REFILL_STATION_QUEUE",
-						`Clearing and refilling station queue failed. "${err}"`
-					);
+					this.log("ERROR", "RESET_QUEUE", `Resetting station queue failed. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
-				this.log(
-					"SUCCESS",
-					"CLEAR_AND_REFILL_STATION_QUEUE",
-					"Clearing and refilling station queue was successful."
-				);
-				return cb({ status: "success", message: "Successfully cleared and refilled station queue." });
+				this.log("SUCCESS", "RESET_QUEUE", "Resetting station queue was successful.");
+				return cb({ status: "success", message: "Successfully reset station queue." });
 			}
 		);
 	}),

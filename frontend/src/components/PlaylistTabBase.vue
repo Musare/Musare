@@ -451,7 +451,7 @@
 					</playlist-item>
 				</div>
 				<p v-else class="has-text-centered scrollable-list">
-					No playlists currently included.
+					No playlists currently {{ label("present") }}.
 				</p>
 			</div>
 			<div
@@ -722,7 +722,7 @@ export default {
 		}),
 		...mapState("modals/manageStation", {
 			originalStation: state => state.originalStation,
-			includedPlaylists: state => state.includedPlaylists
+			autofill: state => state.autofill
 		}),
 		...mapState("station", {
 			autoRequest: state => state.autoRequest
@@ -751,12 +751,13 @@ export default {
 
 			if (this.type === "autofill")
 				this.socket.dispatch(
-					`stations.getStationIncludedPlaylistsById`,
+					`stations.getStationAutofillPlaylistsById`,
 					this.station._id,
 					res => {
 						if (res.status === "success") {
-							this.station.includedPlaylists = res.data.playlists;
-							this.originalStation.includedPlaylists =
+							this.station.autofill.playlists =
+								res.data.playlists;
+							this.originalStation.autofill.playlists =
 								res.data.playlists;
 						}
 					}
@@ -808,7 +809,7 @@ export default {
 		selectedPlaylists(typeOverwrite) {
 			const type = typeOverwrite || this.type;
 
-			if (type === "autofill") return this.includedPlaylists;
+			if (type === "autofill") return this.autofill;
 			if (type === "blacklist") return this.blacklist;
 			if (type === "autorequest") return this.autoRequest;
 			return [];
@@ -824,7 +825,7 @@ export default {
 			if (type === "autofill")
 				return new Promise(resolve => {
 					this.socket.dispatch(
-						"stations.includePlaylist",
+						"stations.autofillPlaylist",
 						this.station._id,
 						playlist._id,
 						res => {
@@ -868,7 +869,7 @@ export default {
 			if (type === "autofill")
 				return new Promise(resolve => {
 					this.socket.dispatch(
-						"stations.removeIncludedPlaylist",
+						"stations.removeAutofillPlaylist",
 						this.station._id,
 						playlistId,
 						res => {
@@ -975,14 +976,6 @@ export default {
 
 .blacklisted-icon {
 	color: var(--dark-red);
-}
-
-.included-icon {
-	color: var(--green);
-}
-
-.selected-icon {
-	color: var(--purple);
 }
 
 .playlist-tab-base {
