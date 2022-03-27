@@ -239,7 +239,7 @@ export default {
 				if (this.isOwnerOrAdmin()) this.showTab("settings");
 				else this.closeModal("manageStation");
 			}
-		},
+		}
 	},
 	mounted() {
 		this.socket.dispatch(`stations.getStationById`, this.stationId, res => {
