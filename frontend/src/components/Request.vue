@@ -11,7 +11,7 @@
 					Songs
 				</button>
 				<button
-					v-if="sector === 'station'"
+					v-if="!disableAutoRequest"
 					class="button is-default"
 					ref="autorequest-tab"
 					:class="{ selected: tab === 'autorequest' }"
@@ -167,7 +167,7 @@
 				</div>
 			</div>
 			<playlist-tab-base
-				v-if="sector === 'station'"
+				v-if="!disableAutoRequest"
 				class="tab"
 				v-show="tab === 'autorequest'"
 				:type="'autorequest'"
@@ -197,7 +197,8 @@ export default {
 	},
 	mixins: [SearchYoutube, SearchMusare],
 	props: {
-		sector: { type: String, default: "station" }
+		sector: { type: String, default: "station" },
+		disableAutoRequest: { type: Boolean, default: false }
 	},
 	data() {
 		return {

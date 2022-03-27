@@ -136,6 +136,7 @@
 							class="tab"
 							v-show="tab === 'request'"
 							:sector="'manageStation'"
+							:disable-auto-request="sector !== 'station'"
 						/>
 						<playlist-tab-base
 							v-if="isOwnerOrAdmin()"
