@@ -1121,32 +1121,37 @@ export default {
 		});
 
 		this.socket.on("event:station.updated", async res => {
-			const { name, theme } = res.data.station;
+			const { name, theme, privacy } = res.data.station;
 
-			if (this.station.name !== name) {
-				await this.$router.push(
-					`${name}?${Object.keys(this.$route.query)
-						.map(
-							key =>
-								`${encodeURIComponent(
-									key
-								)}=${encodeURIComponent(
-									this.$route.query[key]
-								)}`
-						)
-						.join("&")}`
-				);
+			if (!this.isOwnerOrAdmin() && privacy === "private") {
+				window.location.href =
+					"/?msg=The station you were in was made private.";
+			} else {
+				if (this.station.name !== name) {
+					await this.$router.push(
+						`${name}?${Object.keys(this.$route.query)
+							.map(
+								key =>
+									`${encodeURIComponent(
+										key
+									)}=${encodeURIComponent(
+										this.$route.query[key]
+									)}`
+							)
+							.join("&")}`
+					);
 
-				// eslint-disable-next-line no-restricted-globals
-				history.replaceState({ ...history.state, ...{} }, null);
+					// eslint-disable-next-line no-restricted-globals
+					history.replaceState({ ...history.state, ...{} }, null);
+				}
+
+				if (this.station.theme !== theme)
+					document.getElementsByTagName(
+						"html"
+					)[0].style.cssText = `--primary-color: var(--${theme})`;
+
+				this.updateStation(res.data.station);
 			}
-
-			if (this.station.theme !== theme)
-				document.getElementsByTagName(
-					"html"
-				)[0].style.cssText = `--primary-color: var(--${theme})`;
-
-			this.updateStation(res.data.station);
 		});
 
 		this.socket.on("event:station.users.updated", res =>
