@@ -11,6 +11,14 @@ NC='\033[0m'
 scriptLocation=$(dirname -- "$(readlink -fn -- "$0"; echo x)")
 cd "${scriptLocation%x}" || exit
 
+if [[ -f .env ]]; then
+    # shellcheck disable=SC1091
+    source .env
+else
+    echo -e "${RED}Error: .env does not exist${NC}"
+    exit 2
+fi
+
 handleServices()
 {
     validServices=(backend frontend mongo redis)
@@ -49,17 +57,22 @@ dockerCommand()
             else
                 servicesString=${servicesString:2}
             fi
+            if [[ ${CONTAINER_MODE} == "dev" ]]; then
+                composeFiles="-f docker-compose.yml -f docker-compose.dev.yml"
+            else
+                composeFiles="-f docker-compose.yml"
+            fi
             if [[ ${2} == "stop" || ${2} == "restart" ]]; then
                 # shellcheck disable=SC2086
-                docker-compose stop ${servicesString}
+                docker-compose ${composeFiles} stop ${servicesString}
             fi
             if [[ ${2} == "start" || ${2} == "restart" ]]; then
                 # shellcheck disable=SC2086
-                docker-compose up -d ${servicesString}
+                docker-compose ${composeFiles} up -d ${servicesString}
             fi
             if [[ ${2} == "pull" || ${2} == "build" || ${2} == "ps" ]]; then
                 # shellcheck disable=SC2086
-                docker-compose "${2}" ${servicesString}
+                docker-compose ${composeFiles} "${2}" ${servicesString}
             fi
         else
             echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: ${1} restart [backend, frontend, mongo, redis]${NC}"
@@ -105,95 +118,83 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
 
     reset)
         echo -e "${CYAN}Musare | Reset Services${NC}"
-        if [[ -f .env ]]; then
-            # shellcheck disable=SC1091
-            source .env
-            servicesString=$(handleServices "${@:2}")
-            if [[ ${servicesString:0:1} == 1 && ${servicesString:2:4} == "all" ]]; then
-                echo -e "${RED}Resetting will remove the ${REDIS_DATA_LOCATION} and ${MONGO_DATA_LOCATION} directories.${NC}"
-                echo -e "${GREEN}Are you sure you want to reset all data? ${YELLOW}[y,n]: ${NC}"
-                read -r confirm
-                if [[ "${confirm}" == y* ]]; then
-                    docker-compose stop
-                    docker-compose rm -v --force
-                    if [[ -d $REDIS_DATA_LOCATION ]]; then
-                        rm -rf $REDIS_DATA_LOCATION
-                    fi
-                    if [[ -d $MONGO_DATA_LOCATION ]]; then
-                        rm -rf $MONGO_DATA_LOCATION
-                    fi
-                else
-                    echo -e "${RED}Cancelled reset${NC}"
+        servicesString=$(handleServices "${@:2}")
+        if [[ ${servicesString:0:1} == 1 && ${servicesString:2:4} == "all" ]]; then
+            echo -e "${RED}Resetting will remove the ${REDIS_DATA_LOCATION} and ${MONGO_DATA_LOCATION} directories.${NC}"
+            echo -e "${GREEN}Are you sure you want to reset all data? ${YELLOW}[y,n]: ${NC}"
+            read -r confirm
+            if [[ "${confirm}" == y* ]]; then
+                docker-compose stop
+                docker-compose rm -v --force
+                if [[ -d $REDIS_DATA_LOCATION ]]; then
+                    rm -rf "${REDIS_DATA_LOCATION}"
                 fi
-            elif [[ ${servicesString:0:1} == 1 ]]; then
-                if [[ "${servicesString:2}" == *redis* && "${servicesString:2}" == *mongo* ]]; then
-                    echo -e "${RED}Resetting will remove the ${REDIS_DATA_LOCATION} and ${MONGO_DATA_LOCATION} directories.${NC}"
-                elif [[ "${servicesString:2}" == *redis* ]]; then
-                    echo -e "${RED}Resetting will remove the ${REDIS_DATA_LOCATION} directory.${NC}"
-                elif [[ "${servicesString:2}" == *mongo* ]]; then
-                    echo -e "${RED}Resetting will remove the ${MONGO_DATA_LOCATION} directory.${NC}"
-                fi
-                echo -e "${GREEN}Are you sure you want to reset all data for $(echo "${servicesString:2}" | tr ' ' ',')? ${YELLOW}[y,n]: ${NC}"
-                read -r confirm
-                if [[ "${confirm}" == y* ]]; then
-                    # shellcheck disable=SC2086
-                    docker-compose stop ${servicesString:2}
-                    # shellcheck disable=SC2086
-                    docker-compose rm -v --force ${servicesString:2}
-                    if [[ "${servicesString:2}" == *redis* && -d $REDIS_DATA_LOCATION ]]; then
-                        rm -rf $REDIS_DATA_LOCATION
-                    fi
-                    if [[ "${servicesString:2}" == *mongo* && -d $MONGO_DATA_LOCATION ]]; then
-                        rm -rf $MONGO_DATA_LOCATION
-                    fi
-                else
-                    echo -e "${RED}Cancelled reset${NC}"
+                if [[ -d $MONGO_DATA_LOCATION ]]; then
+                    rm -rf "${MONGO_DATA_LOCATION}"
                 fi
             else
-                echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") build [backend, frontend, mongo, redis]${NC}"
+                echo -e "${RED}Cancelled reset${NC}"
+            fi
+        elif [[ ${servicesString:0:1} == 1 ]]; then
+            if [[ "${servicesString:2}" == *redis* && "${servicesString:2}" == *mongo* ]]; then
+                echo -e "${RED}Resetting will remove the ${REDIS_DATA_LOCATION} and ${MONGO_DATA_LOCATION} directories.${NC}"
+            elif [[ "${servicesString:2}" == *redis* ]]; then
+                echo -e "${RED}Resetting will remove the ${REDIS_DATA_LOCATION} directory.${NC}"
+            elif [[ "${servicesString:2}" == *mongo* ]]; then
+                echo -e "${RED}Resetting will remove the ${MONGO_DATA_LOCATION} directory.${NC}"
+            fi
+            echo -e "${GREEN}Are you sure you want to reset all data for $(echo "${servicesString:2}" | tr ' ' ',')? ${YELLOW}[y,n]: ${NC}"
+            read -r confirm
+            if [[ "${confirm}" == y* ]]; then
+                # shellcheck disable=SC2086
+                docker-compose stop ${servicesString:2}
+                # shellcheck disable=SC2086
+                docker-compose rm -v --force ${servicesString:2}
+                if [[ "${servicesString:2}" == *redis* && -d $REDIS_DATA_LOCATION ]]; then
+                    rm -rf "${REDIS_DATA_LOCATION}"
+                fi
+                if [[ "${servicesString:2}" == *mongo* && -d $MONGO_DATA_LOCATION ]]; then
+                    rm -rf "${MONGO_DATA_LOCATION}"
+                fi
+            else
+                echo -e "${RED}Cancelled reset${NC}"
             fi
         else
-            echo -e "${RED}Error: .env does not exist${NC}"
+            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") build [backend, frontend, mongo, redis]${NC}"
         fi
         ;;
 
     attach)
         echo -e "${CYAN}Musare | Attach${NC}"
-        if [[ -f .env ]]; then
-            # shellcheck disable=SC1091
-            source .env
-            if [[ $2 == "backend" ]]; then
-                containerId=$(docker-compose ps -q backend)
-                if [[ -z $containerId ]]; then
-                    echo -e "${RED}Error: Backend offline, please start to attach.${NC}"
-                else
-                    echo -e "${YELLOW}Detach with CTRL+P+Q${NC}"
-                    docker attach "$containerId"
-                fi
-            elif [[ $2 == "mongo" ]]; then
-                MONGO_VERSION_INT=${MONGO_VERSION:0:1}
-                if [[ -z $(docker-compose ps -q mongo) ]]; then
-                    echo -e "${RED}Error: Mongo offline, please start to attach.${NC}"
-                else
-                    echo -e "${YELLOW}Detach with CTRL+D${NC}"
-                    if [[ $MONGO_VERSION_INT -ge 5 ]]; then
-                        docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry()" --shell
-                    else
-                        docker-compose exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}"
-                    fi
-                fi
-            elif [[ $2 == "redis" ]]; then
-                if [[ -z $(docker-compose ps -q redis) ]]; then
-                    echo -e "${RED}Error: Redis offline, please start to attach.${NC}"
-                else
-                    echo -e "${YELLOW}Detach with CTRL+C${NC}"
-                    docker-compose exec redis redis-cli -a "${REDIS_PASSWORD}"
-                fi
+        if [[ $2 == "backend" ]]; then
+            containerId=$(docker-compose ps -q backend)
+            if [[ -z $containerId ]]; then
+                echo -e "${RED}Error: Backend offline, please start to attach.${NC}"
             else
-                echo -e "${RED}Invalid service $2\n${YELLOW}Usage: $(basename "$0") attach [backend,mongo,redis]${NC}"
+                echo -e "${YELLOW}Detach with CTRL+P+Q${NC}"
+                docker attach "$containerId"
+            fi
+        elif [[ $2 == "mongo" ]]; then
+            MONGO_VERSION_INT=${MONGO_VERSION:0:1}
+            if [[ -z $(docker-compose ps -q mongo) ]]; then
+                echo -e "${RED}Error: Mongo offline, please start to attach.${NC}"
+            else
+                echo -e "${YELLOW}Detach with CTRL+D${NC}"
+                if [[ $MONGO_VERSION_INT -ge 5 ]]; then
+                    docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry()" --shell
+                else
+                    docker-compose exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}"
+                fi
+            fi
+        elif [[ $2 == "redis" ]]; then
+            if [[ -z $(docker-compose ps -q redis) ]]; then
+                echo -e "${RED}Error: Redis offline, please start to attach.${NC}"
+            else
+                echo -e "${YELLOW}Detach with CTRL+C${NC}"
+                docker-compose exec redis redis-cli -a "${REDIS_PASSWORD}"
             fi
         else
-            echo -e "${RED}Error: .env does not exist${NC}"
+            echo -e "${RED}Invalid service $2\n${YELLOW}Usage: $(basename "$0") attach [backend,mongo,redis]${NC}"
         fi
         ;;
 
@@ -206,14 +207,14 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         fi
         case $2 in
             frontend)
-                docker-compose exec frontend npx eslint app/src --ext .js,.vue $fix
+                docker-compose exec frontend npx eslint src --ext .js,.vue $fix
                 ;;
             backend)
                 docker-compose exec backend npx eslint app/logic $fix
                 ;;
             ""|fix|--fix)
-                docker-compose exec frontend npx eslint app/src --ext .js,.vue $fix
-                docker-compose exec backend npx eslint app/logic $fix
+                docker-compose exec frontend npx eslint src --ext .js,.vue $fix
+                docker-compose exec backend npx eslint logic $fix
                 ;;
             *)
                 echo -e "${RED}Invalid service $2\n${YELLOW}Usage: $(basename "$0") eslint [backend, frontend] [fix]${NC}"
@@ -259,98 +260,80 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
 
     backup)
         echo -e "${CYAN}Musare | Backup${NC}"
-        if [[ -f .env ]]; then
-            # shellcheck disable=SC1091
-            source .env
-            if [[ -z "${BACKUP_LOCATION}" ]]; then
-                backupLocation="${scriptLocation%x}/backups"
-            else
-                backupLocation="${BACKUP_LOCATION%/}"
-            fi
-            if [[ ! -d "${backupLocation}" ]]; then
-                echo -e "${YELLOW}Creating backup directory at ${backupLocation}${NC}"
-                mkdir "${backupLocation}"
-            fi
-            if [[ -z "${BACKUP_NAME}" ]]; then
-                backupLocation="${backupLocation}/musare-$(date +"%Y-%m-%d-%s").dump"
-            else
-                backupLocation="${backupLocation}/${BACKUP_NAME}"
-            fi
-            echo -e "${YELLOW}Creating backup at ${backupLocation}${NC}"
-            docker-compose exec -T mongo sh -c "mongodump --authenticationDatabase musare -u ${MONGO_USER_USERNAME} -p ${MONGO_USER_PASSWORD} -d musare --archive" > "${backupLocation}"
+        if [[ -z "${BACKUP_LOCATION}" ]]; then
+            backupLocation="${scriptLocation%x}/backups"
         else
-            echo -e "${RED}Error: .env does not exist${NC}"
+            backupLocation="${BACKUP_LOCATION%/}"
         fi
+        if [[ ! -d "${backupLocation}" ]]; then
+            echo -e "${YELLOW}Creating backup directory at ${backupLocation}${NC}"
+            mkdir "${backupLocation}"
+        fi
+        if [[ -z "${BACKUP_NAME}" ]]; then
+            backupLocation="${backupLocation}/musare-$(date +"%Y-%m-%d-%s").dump"
+        else
+            backupLocation="${backupLocation}/${BACKUP_NAME}"
+        fi
+        echo -e "${YELLOW}Creating backup at ${backupLocation}${NC}"
+        docker-compose exec -T mongo sh -c "mongodump --authenticationDatabase musare -u ${MONGO_USER_USERNAME} -p ${MONGO_USER_PASSWORD} -d musare --archive" > "${backupLocation}"
         ;;
 
     restore)
         echo -e "${CYAN}Musare | Restore${NC}"
-        if [[ -f .env ]]; then
-            # shellcheck disable=SC1091
-            source .env
-            if [[ -z $2 ]]; then
-                echo -e "${GREEN}Please enter the full path of the dump you wish to restore: ${NC}"
-                read -r restoreFile
-            else
-                restoreFile=$2
-            fi
-            if [[ -z ${restoreFile} ]]; then
-                echo -e "${RED}Error: no restore path given, cancelled restoration.${NC}"
-            elif [[ -d ${restoreFile} ]]; then
-                echo -e "${RED}Error: restore path given is a directory, cancelled restoration.${NC}"
-            elif [[ ! -f ${restoreFile} ]]; then
-                echo -e "${RED}Error: no file at restore path given, cancelled restoration.${NC}"
-            else
-                docker-compose exec -T mongo sh -c "mongorestore --authenticationDatabase musare -u ${MONGO_USER_USERNAME} -p ${MONGO_USER_PASSWORD} --archive" < "${restoreFile}"
-            fi
+        if [[ -z $2 ]]; then
+            echo -e "${GREEN}Please enter the full path of the dump you wish to restore: ${NC}"
+            read -r restoreFile
         else
-            echo -e "${RED}Error: .env does not exist${NC}"
+            restoreFile=$2
+        fi
+        if [[ -z ${restoreFile} ]]; then
+            echo -e "${RED}Error: no restore path given, cancelled restoration.${NC}"
+        elif [[ -d ${restoreFile} ]]; then
+            echo -e "${RED}Error: restore path given is a directory, cancelled restoration.${NC}"
+        elif [[ ! -f ${restoreFile} ]]; then
+            echo -e "${RED}Error: no file at restore path given, cancelled restoration.${NC}"
+        else
+            docker-compose exec -T mongo sh -c "mongorestore --authenticationDatabase musare -u ${MONGO_USER_USERNAME} -p ${MONGO_USER_PASSWORD} --archive" < "${restoreFile}"
         fi
         ;;
 
     admin)
         echo -e "${CYAN}Musare | Add Admin${NC}"
-        if [[ -f .env ]]; then
-            # shellcheck disable=SC1091
-            source .env
-            MONGO_VERSION_INT=${MONGO_VERSION:0:1}
-            if [[ $2 == "add" ]]; then
-                if [[ -z $3 ]]; then
-                    echo -e "${GREEN}Please enter the username of the user you wish to make an admin: ${NC}"
-                    read -r adminUser
-                else
-                    adminUser=$3
-                fi
-                if [[ -z $adminUser ]]; then
-                    echo -e "${RED}Error: Username for new admin not provided.${NC}"
-                else
-                    if [[ $MONGO_VERSION_INT -ge 5 ]]; then
-                        docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry(); db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'admin'}})"
-                    else
-                        docker-compose exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'admin'}})"
-                    fi
-                fi
-            elif [[ $2 == "remove" ]]; then
-                if [[ -z $3 ]]; then
-                    echo -e "${GREEN}Please enter the username of the user you wish to remove as admin: ${NC}"
-                    read -r adminUser
-                else
-                    adminUser=$3
-                fi
-                if [[ -z $adminUser ]]; then
-                    echo -e "${RED}Error: Username for new admin not provided.${NC}"
-                else
-                    if [[ $MONGO_VERSION_INT -ge 5 ]]; then
-                        docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry(); db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'default'}})"
-                    else
-                        docker-compose exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'default'}})"
-                    fi
-                fi
+        MONGO_VERSION_INT=${MONGO_VERSION:0:1}
+        if [[ $2 == "add" ]]; then
+            if [[ -z $3 ]]; then
+                echo -e "${GREEN}Please enter the username of the user you wish to make an admin: ${NC}"
+                read -r adminUser
             else
-                echo -e "${RED}Invalid command $2\n${YELLOW}Usage: $(basename "$0") admin [add,remove] username${NC}"
+                adminUser=$3
+            fi
+            if [[ -z $adminUser ]]; then
+                echo -e "${RED}Error: Username for new admin not provided.${NC}"
+            else
+                if [[ $MONGO_VERSION_INT -ge 5 ]]; then
+                    docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry(); db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'admin'}})"
+                else
+                    docker-compose exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'admin'}})"
+                fi
+            fi
+        elif [[ $2 == "remove" ]]; then
+            if [[ -z $3 ]]; then
+                echo -e "${GREEN}Please enter the username of the user you wish to remove as admin: ${NC}"
+                read -r adminUser
+            else
+                adminUser=$3
+            fi
+            if [[ -z $adminUser ]]; then
+                echo -e "${RED}Error: Username for new admin not provided.${NC}"
+            else
+                if [[ $MONGO_VERSION_INT -ge 5 ]]; then
+                    docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry(); db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'default'}})"
+                else
+                    docker-compose exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'default'}})"
+                fi
             fi
         else
-            echo -e "${RED}Error: .env does not exist${NC}"
+            echo -e "${RED}Invalid command $2\n${YELLOW}Usage: $(basename "$0") admin [add,remove] username${NC}"
         fi
         ;;
 

@@ -1,0 +1,20 @@
+services:
+  backend:
+    ports:
+      - "${BACKEND_HOST}:${BACKEND_PORT}:8080"
+    volumes:
+      - ./backend:/opt/app
+
+  frontend:
+    volumes:
+      - ./frontend:/opt/app
+
+  mongo:
+    ports:
+      - "${MONGO_HOST}:${MONGO_PORT}:${MONGO_PORT}"
+
+  redis:
+    ports:
+      - "${REDIS_HOST}:${REDIS_PORT}:6379"
+    volumes:
+      - ${REDIS_DATA_LOCATION}:/data

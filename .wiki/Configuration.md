@@ -100,11 +100,12 @@ The container port refers to the external docker container port, used to access 
 | --- | --- |
 | `COMPOSE_PROJECT_NAME` | Should be a unique name for this installation, especially if you have multiple instances of Musare on the same machine. |
 | `RESTART_POLICY` | Restart policy for docker containers, values can be found [here](https://docs.docker.com/config/containers/start-containers-automatically/). |
+| `CONTAINER_MODE` | Should be either `prod` or `dev`.  |
 | `BACKEND_HOST` | Backend container host. |
 | `BACKEND_PORT` | Backend container port. |
 | `FRONTEND_HOST` | Frontend container host. |
 | `FRONTEND_PORT` | Frontend container port. |
-| `FRONTEND_MODE` | Should be either `dev` or `prod`. |
+| `FRONTEND_MODE` | Should be either `prod` or `dev`. |
 | `MONGO_HOST` | Mongo container host. |
 | `MONGO_PORT` | Mongo container port. |
 | `MONGO_ROOT_PASSWORD` | Password of the root/admin user for MongoDB. |
