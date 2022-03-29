@@ -175,14 +175,12 @@ export default {
 						type: "text",
 						color: "purple"
 					}
-				},
+				}
+			],
+			previousTeam: [
 				{
 					name: "Jonathan Graham",
-					bio: `
-						<em>Student based in the UK studying Computer Science at university.</em>
-						<br /><br />
-						Lead Developer, Designer and QA Tester.
-						`,
+					bio: "Lead Developer, Designer and QA Tester.",
 					projects: [
 						"MusareMeteor",
 						"MusareReact",
@@ -190,16 +188,10 @@ export default {
 						"vue-roaster",
 						"lofig"
 					],
-					active: "Aug 2016 - present",
+					active: "Aug 2016 - Mar 2022",
 					github: "jonathan-grah",
-					link: "https://jgraham.dev",
-					avatar: {
-						type: "text",
-						color: "blue"
-					}
-				}
-			],
-			previousTeam: [
+					link: "https://jgraham.dev"
+				},
 				{
 					name: "Akira Laine",
 					bio: "Co-Founder, Lead Developer, Designer and QA Tester.",
