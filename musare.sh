@@ -210,7 +210,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
                 docker-compose exec frontend npx eslint src --ext .js,.vue $fix
                 ;;
             backend)
-                docker-compose exec backend npx eslint app/logic $fix
+                docker-compose exec backend npx eslint logic $fix
                 ;;
             ""|fix|--fix)
                 docker-compose exec frontend npx eslint src --ext .js,.vue $fix
