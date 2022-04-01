@@ -19,13 +19,23 @@ else
     exit 2
 fi
 
-if [[ ! -x "$(command -v docker)" || ! -x "$(command -v docker-compose)" ]]; then
-    if [[ -x "$(command -v docker)" && ! -x "$(command -v docker-compose)" ]]; then
-        echo -e "${RED}Error: docker-compose not installed.${NC}"
-    elif [[ ! -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
-        echo -e "${RED}Error: docker not installed.${NC}"
+if [[ -z ${DOCKER_COMMAND} ]]; then
+    DOCKER_COMMAND="docker"
+elif [[ ${DOCKER_COMMAND} != "docker" && ${DOCKER_COMMAND} != "podman" ]]; then
+    echo -e "${RED}Error: Invalid DOCKER_COMMAND${NC}"
+    exit 1
+fi
+
+docker="${DOCKER_COMMAND}"
+dockerCompose="${DOCKER_COMMAND}-compose"
+
+if [[ ! -x "$(command -v ${docker})" || ! -x "$(command -v ${dockerCompose})" ]]; then
+    if [[ -x "$(command -v ${docker})" && ! -x "$(command -v ${dockerCompose})" ]]; then
+        echo -e "${RED}Error: ${dockerCompose} not installed.${NC}"
+    elif [[ ! -x "$(command -v ${docker})" && -x "$(command -v ${dockerCompose})" ]]; then
+        echo -e "${RED}Error: ${docker} not installed.${NC}"
     else
-        echo -e "${RED}Error: docker and docker-compose not installed.${NC}"
+        echo -e "${RED}Error: ${docker} and ${dockerCompose} not installed.${NC}"
     fi
     exit 1
 fi
@@ -57,7 +67,7 @@ handleServices()
     fi
 }
 
-dockerCommand()
+runDockerCommand()
 {
     validCommands=(start stop restart pull build ps logs)
     if [[ ${validCommands[*]} =~ (^|[[:space:]])"$2"($|[[:space:]]) ]]; then
@@ -75,15 +85,15 @@ dockerCommand()
             fi
             if [[ ${2} == "stop" || ${2} == "restart" ]]; then
                 # shellcheck disable=SC2086
-                docker-compose ${composeFiles} stop ${servicesString}
+                ${dockerCompose} ${composeFiles} stop ${servicesString}
             fi
             if [[ ${2} == "start" || ${2} == "restart" ]]; then
                 # shellcheck disable=SC2086
-                docker-compose ${composeFiles} up -d ${servicesString}
+                ${dockerCompose} ${composeFiles} up -d ${servicesString}
             fi
             if [[ ${2} == "pull" || ${2} == "build" || ${2} == "ps" || ${2} == "logs" ]]; then
                 # shellcheck disable=SC2086
-                docker-compose ${composeFiles} "${2}" ${servicesString}
+                ${dockerCompose} ${composeFiles} "${2}" ${servicesString}
             fi
             exitValue=$?
             if [[ ${exitValue} -gt 0 ]]; then
@@ -94,7 +104,7 @@ dockerCommand()
             exit 1
         fi
     else
-        echo -e "${RED}Error: Invalid dockerCommand input${NC}"
+        echo -e "${RED}Error: Invalid runDockerCommand input${NC}"
         exit 1
     fi
 }
@@ -103,33 +113,33 @@ case $1 in
     start)
         echo -e "${CYAN}Musare | Start Services${NC}"
         # shellcheck disable=SC2068
-        dockerCommand "$(basename "$0")" start ${@:2}
+        runDockerCommand "$(basename "$0")" start ${@:2}
         ;;
 
     stop)
         echo -e "${CYAN}Musare | Stop Services${NC}"
         # shellcheck disable=SC2068
-        dockerCommand "$(basename "$0")" stop ${@:2}
+        runDockerCommand "$(basename "$0")" stop ${@:2}
         ;;
 
     restart)
         echo -e "${CYAN}Musare | Restart Services${NC}"
         # shellcheck disable=SC2068
-        dockerCommand "$(basename "$0")" restart ${@:2}
+        runDockerCommand "$(basename "$0")" restart ${@:2}
         ;;
 
     build)
         echo -e "${CYAN}Musare | Build Services${NC}"
         # shellcheck disable=SC2068
-        dockerCommand "$(basename "$0")" pull ${@:2}
+        runDockerCommand "$(basename "$0")" pull ${@:2}
         # shellcheck disable=SC2068
-        dockerCommand "$(basename "$0")" build ${@:2}
+        runDockerCommand "$(basename "$0")" build ${@:2}
         ;;
 
     status)
         echo -e "${CYAN}Musare | Service Status${NC}"
         # shellcheck disable=SC2068
-        dockerCommand "$(basename "$0")" ps ${@:2}
+        runDockerCommand "$(basename "$0")" ps ${@:2}
         ;;
 
     reset)
@@ -140,8 +150,8 @@ case $1 in
             echo -e "${GREEN}Are you sure you want to reset all data? ${YELLOW}[y,n]: ${NC}"
             read -r confirm
             if [[ "${confirm}" == y* ]]; then
-                dockerCommand "$(basename "$0")" stop
-                docker-compose rm -v --force
+                runDockerCommand "$(basename "$0")" stop
+                ${dockerCompose} rm -v --force
                 if [[ -d $REDIS_DATA_LOCATION ]]; then
                     rm -rf "${REDIS_DATA_LOCATION}"
                 fi
@@ -163,9 +173,9 @@ case $1 in
             read -r confirm
             if [[ "${confirm}" == y* ]]; then
                 # shellcheck disable=SC2086
-                dockerCommand "$(basename "$0")" stop ${servicesString:2}
+                runDockerCommand "$(basename "$0")" stop ${servicesString:2}
                 # shellcheck disable=SC2086
-                docker-compose rm -v --force ${servicesString:2}
+                ${dockerCompose} rm -v --force ${servicesString:2}
                 if [[ "${servicesString:2}" == *redis* && -d $REDIS_DATA_LOCATION ]]; then
                     rm -rf "${REDIS_DATA_LOCATION}"
                 fi
@@ -184,34 +194,34 @@ case $1 in
     attach)
         echo -e "${CYAN}Musare | Attach${NC}"
         if [[ $2 == "backend" ]]; then
-            containerId=$(docker-compose ps -q backend)
+            containerId=$(${dockerCompose} ps -q backend)
             if [[ -z $containerId ]]; then
                 echo -e "${RED}Error: Backend offline, please start to attach.${NC}"
                 exit 1
             else
                 echo -e "${YELLOW}Detach with CTRL+P+Q${NC}"
-                docker attach "$containerId"
+                ${docker} attach "$containerId"
             fi
         elif [[ $2 == "mongo" ]]; then
             MONGO_VERSION_INT=${MONGO_VERSION:0:1}
-            if [[ -z $(docker-compose ps -q mongo) ]]; then
+            if [[ -z $(${dockerCompose} ps -q mongo) ]]; then
                 echo -e "${RED}Error: Mongo offline, please start to attach.${NC}"
                 exit 1
             else
                 echo -e "${YELLOW}Detach with CTRL+D${NC}"
                 if [[ $MONGO_VERSION_INT -ge 5 ]]; then
-                    docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry()" --shell
+                    ${dockerCompose} exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry()" --shell
                 else
-                    docker-compose exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}"
+                    ${dockerCompose} exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}"
                 fi
             fi
         elif [[ $2 == "redis" ]]; then
-            if [[ -z $(docker-compose ps -q redis) ]]; then
+            if [[ -z $(${dockerCompose} ps -q redis) ]]; then
                 echo -e "${RED}Error: Redis offline, please start to attach.${NC}"
                 exit 1
             else
                 echo -e "${YELLOW}Detach with CTRL+C${NC}"
-                docker-compose exec redis redis-cli -a "${REDIS_PASSWORD}"
+                ${dockerCompose} exec redis redis-cli -a "${REDIS_PASSWORD}"
             fi
         else
             echo -e "${RED}Invalid service $2\n${YELLOW}Usage: $(basename "$0") attach [backend,mongo,redis]${NC}"
@@ -228,17 +238,17 @@ case $1 in
         fi
         case $2 in
             frontend)
-                docker-compose exec frontend npx eslint src --ext .js,.vue $fix
+                ${dockerCompose} exec frontend npx eslint src --ext .js,.vue $fix
                 exitValue=$?
                 ;;
             backend)
-                docker-compose exec backend npx eslint logic $fix
+                ${dockerCompose} exec backend npx eslint logic $fix
                 exitValue=$?
                 ;;
             ""|fix|--fix)
-                docker-compose exec frontend npx eslint src --ext .js,.vue $fix
+                ${dockerCompose} exec frontend npx eslint src --ext .js,.vue $fix
                 frontendExitValue=$?
-                docker-compose exec backend npx eslint logic $fix
+                ${dockerCompose} exec backend npx eslint logic $fix
                 backendExitValue=$?
                 if [[ ${frontendExitValue} -gt 0 || ${backendExitValue} -gt 0 ]]; then
                     exitValue=1
@@ -276,8 +286,8 @@ case $1 in
                 if [[ ${exitValue} -gt 0 ]]; then
                     exit ${exitValue}
                 fi
-                dockerCommand "$(basename "$0")" build
-                dockerCommand "$(basename "$0")" restart
+                runDockerCommand "$(basename "$0")" build
+                runDockerCommand "$(basename "$0")" restart
                 echo -e "${GREEN}Updated!${NC}"
                 if [[ -n $dbChange ]]; then
                     echo -e "${RED}Database schema has changed, please run migration!${NC}"
@@ -298,7 +308,7 @@ case $1 in
     logs)
         echo -e "${CYAN}Musare | Logs${NC}"
         # shellcheck disable=SC2068
-        dockerCommand "$(basename "$0")" logs ${@:2}
+        runDockerCommand "$(basename "$0")" logs ${@:2}
         ;;
 
     backup)
@@ -318,7 +328,7 @@ case $1 in
             backupLocation="${backupLocation}/${BACKUP_NAME}"
         fi
         echo -e "${YELLOW}Creating backup at ${backupLocation}${NC}"
-        docker-compose exec -T mongo sh -c "mongodump --authenticationDatabase musare -u ${MONGO_USER_USERNAME} -p ${MONGO_USER_PASSWORD} -d musare --archive" > "${backupLocation}"
+        ${dockerCompose} exec -T mongo sh -c "mongodump --authenticationDatabase musare -u ${MONGO_USER_USERNAME} -p ${MONGO_USER_PASSWORD} -d musare --archive" > "${backupLocation}"
         ;;
 
     restore)
@@ -339,7 +349,7 @@ case $1 in
             echo -e "${RED}Error: no file at restore path given, cancelled restoration.${NC}"
             exit 1
         else
-            docker-compose exec -T mongo sh -c "mongorestore --authenticationDatabase musare -u ${MONGO_USER_USERNAME} -p ${MONGO_USER_PASSWORD} --archive" < "${restoreFile}"
+            ${dockerCompose} exec -T mongo sh -c "mongorestore --authenticationDatabase musare -u ${MONGO_USER_USERNAME} -p ${MONGO_USER_PASSWORD} --archive" < "${restoreFile}"
         fi
         ;;
 
@@ -358,9 +368,9 @@ case $1 in
                 exit 1
             else
                 if [[ $MONGO_VERSION_INT -ge 5 ]]; then
-                    docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry(); db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'admin'}})"
+                    ${dockerCompose} exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry(); db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'admin'}})"
                 else
-                    docker-compose exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'admin'}})"
+                    ${dockerCompose} exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'admin'}})"
                 fi
             fi
         elif [[ $2 == "remove" ]]; then
@@ -375,9 +385,9 @@ case $1 in
                 exit 1
             else
                 if [[ $MONGO_VERSION_INT -ge 5 ]]; then
-                    docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry(); db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'default'}})"
+                    ${dockerCompose} exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry(); db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'default'}})"
                 else
-                    docker-compose exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'default'}})"
+                    ${dockerCompose} exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'default'}})"
                 fi
             fi
         else

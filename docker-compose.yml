@@ -27,7 +27,7 @@ services:
       - backend
 
   mongo:
-    image: mongo:${MONGO_VERSION}
+    image: docker.io/mongo:${MONGO_VERSION}
     restart: ${RESTART_POLICY}
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
@@ -42,6 +42,6 @@ services:
       - ${MONGO_DATA_LOCATION}:/data/db
 
   redis:
-    image: redis:6.2
+    image: docker.io/redis:6.2
     restart: ${RESTART_POLICY}
     command: "--notify-keyspace-events Ex --requirepass ${REDIS_PASSWORD} --appendonly yes"

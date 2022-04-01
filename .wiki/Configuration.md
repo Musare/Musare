@@ -101,6 +101,7 @@ The container port refers to the external docker container port, used to access 
 | `COMPOSE_PROJECT_NAME` | Should be a unique name for this installation, especially if you have multiple instances of Musare on the same machine. |
 | `RESTART_POLICY` | Restart policy for docker containers, values can be found [here](https://docs.docker.com/config/containers/start-containers-automatically/). |
 | `CONTAINER_MODE` | Should be either `prod` or `dev`.  |
+| `DOCKER_COMMAND` | Should be either `docker` or `podman`.  |
 | `BACKEND_HOST` | Backend container host. |
 | `BACKEND_PORT` | Backend container port. |
 | `FRONTEND_HOST` | Frontend container host. |
