@@ -67,7 +67,7 @@ A production demonstration instance of Musare can be found at [demo.musare.com](
 - **News**
     - Admins can add/edit/remove news items
     - Markdown editor
-- **Dark Mode**
+- **Night Mode**
 - **Administration**
     - Admin area to manage instance
     - Configurable data tables
