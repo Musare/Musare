@@ -9,7 +9,7 @@ GREEN='\033[0;32m'
 NC='\033[0m'
 
 scriptLocation=$(dirname -- "$(readlink -fn -- "$0"; echo x)")
-cd "${scriptLocation%x}" || exit
+cd "${scriptLocation%x}" || exit 1
 
 if [[ -f .env ]]; then
     # shellcheck disable=SC1091
@@ -17,6 +17,17 @@ if [[ -f .env ]]; then
 else
     echo -e "${RED}Error: .env does not exist${NC}"
     exit 2
+fi
+
+if [[ ! -x "$(command -v docker)" || ! -x "$(command -v docker-compose)" ]]; then
+    if [[ -x "$(command -v docker)" && ! -x "$(command -v docker-compose)" ]]; then
+        echo -e "${RED}Error: docker-compose not installed.${NC}"
+    elif [[ ! -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
+        echo -e "${RED}Error: docker not installed.${NC}"
+    else
+        echo -e "${RED}Error: docker and docker-compose not installed.${NC}"
+    fi
+    exit 1
 fi
 
 handleServices()
@@ -48,7 +59,7 @@ handleServices()
 
 dockerCommand()
 {
-    validCommands=(start stop restart pull build ps)
+    validCommands=(start stop restart pull build ps logs)
     if [[ ${validCommands[*]} =~ (^|[[:space:]])"$2"($|[[:space:]]) ]]; then
         servicesString=$(handleServices "${@:3}")
         if [[ ${servicesString:0:1} == 1 ]]; then
@@ -70,20 +81,25 @@ dockerCommand()
                 # shellcheck disable=SC2086
                 docker-compose ${composeFiles} up -d ${servicesString}
             fi
-            if [[ ${2} == "pull" || ${2} == "build" || ${2} == "ps" ]]; then
+            if [[ ${2} == "pull" || ${2} == "build" || ${2} == "ps" || ${2} == "logs" ]]; then
                 # shellcheck disable=SC2086
                 docker-compose ${composeFiles} "${2}" ${servicesString}
             fi
+            exitValue=$?
+            if [[ ${exitValue} -gt 0 ]]; then
+                exit ${exitValue}
+            fi
         else
             echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: ${1} restart [backend, frontend, mongo, redis]${NC}"
+            exit 1
         fi
     else
         echo -e "${RED}Error: Invalid dockerCommand input${NC}"
+        exit 1
     fi
 }
 
-if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
-    case $1 in
+case $1 in
     start)
         echo -e "${CYAN}Musare | Start Services${NC}"
         # shellcheck disable=SC2068
@@ -124,7 +140,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
             echo -e "${GREEN}Are you sure you want to reset all data? ${YELLOW}[y,n]: ${NC}"
             read -r confirm
             if [[ "${confirm}" == y* ]]; then
-                docker-compose stop
+                dockerCommand "$(basename "$0")" stop
                 docker-compose rm -v --force
                 if [[ -d $REDIS_DATA_LOCATION ]]; then
                     rm -rf "${REDIS_DATA_LOCATION}"
@@ -147,7 +163,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
             read -r confirm
             if [[ "${confirm}" == y* ]]; then
                 # shellcheck disable=SC2086
-                docker-compose stop ${servicesString:2}
+                dockerCommand "$(basename "$0")" stop ${servicesString:2}
                 # shellcheck disable=SC2086
                 docker-compose rm -v --force ${servicesString:2}
                 if [[ "${servicesString:2}" == *redis* && -d $REDIS_DATA_LOCATION ]]; then
@@ -161,6 +177,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
             fi
         else
             echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") build [backend, frontend, mongo, redis]${NC}"
+            exit 1
         fi
         ;;
 
@@ -170,6 +187,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
             containerId=$(docker-compose ps -q backend)
             if [[ -z $containerId ]]; then
                 echo -e "${RED}Error: Backend offline, please start to attach.${NC}"
+                exit 1
             else
                 echo -e "${YELLOW}Detach with CTRL+P+Q${NC}"
                 docker attach "$containerId"
@@ -178,6 +196,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
             MONGO_VERSION_INT=${MONGO_VERSION:0:1}
             if [[ -z $(docker-compose ps -q mongo) ]]; then
                 echo -e "${RED}Error: Mongo offline, please start to attach.${NC}"
+                exit 1
             else
                 echo -e "${YELLOW}Detach with CTRL+D${NC}"
                 if [[ $MONGO_VERSION_INT -ge 5 ]]; then
@@ -189,12 +208,14 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         elif [[ $2 == "redis" ]]; then
             if [[ -z $(docker-compose ps -q redis) ]]; then
                 echo -e "${RED}Error: Redis offline, please start to attach.${NC}"
+                exit 1
             else
                 echo -e "${YELLOW}Detach with CTRL+C${NC}"
                 docker-compose exec redis redis-cli -a "${REDIS_PASSWORD}"
             fi
         else
             echo -e "${RED}Invalid service $2\n${YELLOW}Usage: $(basename "$0") attach [backend,mongo,redis]${NC}"
+            exit 1
         fi
         ;;
 
@@ -208,23 +229,40 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         case $2 in
             frontend)
                 docker-compose exec frontend npx eslint src --ext .js,.vue $fix
+                exitValue=$?
                 ;;
             backend)
                 docker-compose exec backend npx eslint logic $fix
+                exitValue=$?
                 ;;
             ""|fix|--fix)
                 docker-compose exec frontend npx eslint src --ext .js,.vue $fix
+                frontendExitValue=$?
                 docker-compose exec backend npx eslint logic $fix
+                backendExitValue=$?
+                if [[ ${frontendExitValue} -gt 0 || ${backendExitValue} -gt 0 ]]; then
+                    exitValue=1
+                else
+                    exitValue=0
+                fi
                 ;;
             *)
                 echo -e "${RED}Invalid service $2\n${YELLOW}Usage: $(basename "$0") eslint [backend, frontend] [fix]${NC}"
+                exitValue=1
                 ;;
         esac
+        if [[ ${exitValue} -gt 0 ]]; then
+            exit ${exitValue}
+        fi
         ;;
 
     update)
         echo -e "${CYAN}Musare | Update${NC}"
         git fetch
+        exitValue=$?
+        if [[ ${exitValue} -gt 0 ]]; then
+            exit ${exitValue}
+        fi
         if [[ $(git rev-parse HEAD) == $(git rev-parse @\{u\}) ]]; then
             echo -e "${GREEN}Already up to date${NC}"
         else
@@ -234,9 +272,12 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
             if [[ ( $2 == "auto" && -z $dbChange && -z $fcChange && -z $bcChange ) || -z $2 ]]; then
                 echo -e "${CYAN}Updating...${NC}"
                 git pull
-                docker-compose build
-                docker-compose stop
-                docker-compose up -d
+                exitValue=$?
+                if [[ ${exitValue} -gt 0 ]]; then
+                    exit ${exitValue}
+                fi
+                dockerCommand "$(basename "$0")" build
+                dockerCommand "$(basename "$0")" restart
                 echo -e "${GREEN}Updated!${NC}"
                 if [[ -n $dbChange ]]; then
                     echo -e "${RED}Database schema has changed, please run migration!${NC}"
@@ -249,13 +290,15 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
                 fi
             elif [[ $2 == "auto" ]]; then
                 echo -e "${RED}Auto Update Failed! Database and/or config has changed!${NC}"
+                exit 1
             fi
         fi
         ;;
 
     logs)
         echo -e "${CYAN}Musare | Logs${NC}"
-        docker-compose logs "${@:2}"
+        # shellcheck disable=SC2068
+        dockerCommand "$(basename "$0")" logs ${@:2}
         ;;
 
     backup)
@@ -288,10 +331,13 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         fi
         if [[ -z ${restoreFile} ]]; then
             echo -e "${RED}Error: no restore path given, cancelled restoration.${NC}"
+            exit 1
         elif [[ -d ${restoreFile} ]]; then
             echo -e "${RED}Error: restore path given is a directory, cancelled restoration.${NC}"
+            exit 1
         elif [[ ! -f ${restoreFile} ]]; then
             echo -e "${RED}Error: no file at restore path given, cancelled restoration.${NC}"
+            exit 1
         else
             docker-compose exec -T mongo sh -c "mongorestore --authenticationDatabase musare -u ${MONGO_USER_USERNAME} -p ${MONGO_USER_PASSWORD} --archive" < "${restoreFile}"
         fi
@@ -309,6 +355,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
             fi
             if [[ -z $adminUser ]]; then
                 echo -e "${RED}Error: Username for new admin not provided.${NC}"
+                exit 1
             else
                 if [[ $MONGO_VERSION_INT -ge 5 ]]; then
                     docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry(); db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'admin'}})"
@@ -325,6 +372,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
             fi
             if [[ -z $adminUser ]]; then
                 echo -e "${RED}Error: Username for new admin not provided.${NC}"
+                exit 1
             else
                 if [[ $MONGO_VERSION_INT -ge 5 ]]; then
                     docker-compose exec mongo mongosh musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "disableTelemetry(); db.users.updateOne({username: '${adminUser}'}, {\$set: {role: 'default'}})"
@@ -334,6 +382,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
             fi
         else
             echo -e "${RED}Invalid command $2\n${YELLOW}Usage: $(basename "$0") admin [add,remove] username${NC}"
+            exit 1
         fi
         ;;
 
@@ -371,13 +420,6 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         echo -e "${YELLOW}restore - Restore database data from backup file${NC}"
         echo -e "${YELLOW}reset - Reset service data${NC}"
         echo -e "${YELLOW}admin [add,remove] - Assign/unassign admin role to/from a user${NC}"
+        exit 1
         ;;
-
-    esac
-elif [[ -x "$(command -v docker)" && ! -x "$(command -v docker-compose)" ]]; then
-    echo -e "${RED}Error: docker-compose not installed.${NC}"
-elif [[ ! -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
-    echo -e "${RED}Error: docker not installed.${NC}"
-else
-    echo -e "${RED}Error: docker and docker-compose not installed.${NC}"
-fi
+esac
