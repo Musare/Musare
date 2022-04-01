@@ -42,6 +42,16 @@
 								delete_forever
 							</button>
 						</quick-confirm>
+						<router-link
+							:to="{ path: `/${slotProps.item.name}` }"
+							target="_blank"
+							class="button is-primary icon-with-button material-icons"
+							:disabled="slotProps.item.removed"
+							content="View Station"
+							v-tippy
+						>
+							radio
+						</router-link>
 					</div>
 				</template>
 				<template #column-_id="slotProps">
@@ -164,12 +174,12 @@ export default {
 				{
 					name: "options",
 					displayName: "Options",
-					properties: ["_id"],
+					properties: ["_id", "name"],
 					sortable: false,
 					hidable: false,
 					resizable: false,
-					minWidth: 85,
-					defaultWidth: 85
+					minWidth: 129,
+					defaultWidth: 129
 				},
 				{
 					name: "_id",
