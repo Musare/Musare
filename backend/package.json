@@ -25,7 +25,7 @@
     "cors": "^2.8.5",
     "express": "^4.17.2",
     "moment": "^2.29.1",
-    "mongoose": "^6.2.3",
+    "mongoose": "^6.2.9",
     "nodemailer": "^6.7.2",
     "oauth": "^0.9.15",
     "redis": "^3.1.2",
