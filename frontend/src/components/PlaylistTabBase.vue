@@ -644,14 +644,12 @@ import { mapActions, mapState, mapGetters } from "vuex";
 import Toast from "toasters";
 import ws from "@/ws";
 
-import QuickConfirm from "@/components/QuickConfirm.vue";
 import PlaylistItem from "@/components/PlaylistItem.vue";
 
 import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
 
 export default {
 	components: {
-		QuickConfirm,
 		PlaylistItem
 	},
 	mixins: [SortablePlaylists],

@@ -204,10 +204,9 @@ import ws from "@/ws";
 import ViewReport from "@/components/modals/ViewReport.vue";
 import SongItem from "@/components/SongItem.vue";
 import ReportInfoItem from "@/components/ReportInfoItem.vue";
-import Modal from "../Modal.vue";
 
 export default {
-	components: { Modal, ViewReport, SongItem, ReportInfoItem },
+	components: { ViewReport, SongItem, ReportInfoItem },
 	data() {
 		return {
 			icons: {

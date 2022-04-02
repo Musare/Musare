@@ -119,13 +119,11 @@ import { mapActions, mapGetters, mapState } from "vuex";
 import Toast from "toasters";
 import ws from "@/ws";
 
-import Modal from "@/components/Modal.vue";
 import SongItem from "@/components/SongItem.vue";
 import ReportInfoItem from "@/components/ReportInfoItem.vue";
-import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
-	components: { Modal, SongItem, ReportInfoItem, QuickConfirm },
+	components: { SongItem, ReportInfoItem },
 	props: {
 		sector: { type: String, default: "admin" }
 	},

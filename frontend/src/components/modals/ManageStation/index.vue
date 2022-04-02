@@ -189,10 +189,8 @@ import { mapState, mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 
-import QuickConfirm from "@/components/QuickConfirm.vue";
 import Queue from "@/components/Queue.vue";
 import SongItem from "@/components/SongItem.vue";
-import Modal from "../../Modal.vue";
 
 import Settings from "./Settings.vue";
 import PlaylistTabBase from "@/components/PlaylistTabBase.vue";
@@ -200,8 +198,6 @@ import Request from "@/components/Request.vue";
 
 export default {
 	components: {
-		Modal,
-		QuickConfirm,
 		Queue,
 		SongItem,
 		Settings,

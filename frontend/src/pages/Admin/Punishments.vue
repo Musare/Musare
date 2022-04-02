@@ -129,15 +129,13 @@ import Toast from "toasters";
 import { defineAsyncComponent } from "vue";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
-import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
 export default {
 	components: {
 		ViewPunishment: defineAsyncComponent(() =>
 			import("@/components/modals/ViewPunishment.vue")
 		),
-		AdvancedTable,
-		UserIdToUsername
+		AdvancedTable
 	},
 	data() {
 		return {

@@ -91,7 +91,6 @@ import { defineAsyncComponent } from "vue";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
 import RunJobDropdown from "@/components/RunJobDropdown.vue";
-import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
 import utils from "../../../js/utils";
 
@@ -107,8 +106,7 @@ export default {
 			import("@/components/modals/EditSong")
 		),
 		AdvancedTable,
-		RunJobDropdown,
-		UserIdToUsername
+		RunJobDropdown
 	},
 	data() {
 		return {

@@ -330,12 +330,10 @@ import draggable from "vuedraggable";
 import Toast from "toasters";
 import ws from "@/ws";
 
-import Modal from "../Modal.vue";
-
 import SongItem from "../SongItem.vue";
 
 export default {
-	components: { Modal, SongItem, draggable },
+	components: { SongItem, draggable },
 	props: {
 		sector: { type: String, default: "admin" }
 	},

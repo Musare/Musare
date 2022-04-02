@@ -78,10 +78,9 @@ import draggable from "vuedraggable";
 import Toast from "toasters";
 
 import SongItem from "@/components/SongItem.vue";
-import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
-	components: { draggable, SongItem, QuickConfirm },
+	components: { draggable, SongItem },
 	props: {
 		sector: {
 			type: String,

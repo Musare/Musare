@@ -645,7 +645,6 @@ import ws from "@/ws";
 import validation from "@/validation";
 import keyboardShortcuts from "@/keyboardShortcuts";
 
-import Modal from "../../Modal.vue";
 import FloatingBox from "../../FloatingBox.vue";
 import SaveButton from "../../SaveButton.vue";
 import AutoSuggest from "@/components/AutoSuggest.vue";
@@ -657,7 +656,6 @@ import MusareSongs from "./Tabs/Songs.vue";
 
 export default {
 	components: {
-		Modal,
 		FloatingBox,
 		SaveButton,
 		AutoSuggest,

@@ -46,10 +46,8 @@ import { mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 import validation from "@/validation";
-import Modal from "../Modal.vue";
 
 export default {
-	components: { Modal },
 	props: {
 		official: { type: Boolean, default: false }
 	},

@@ -111,11 +111,8 @@ import { mapState, mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
 import validation from "@/validation";
 import ws from "@/ws";
-import Modal from "../Modal.vue";
-import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
-	components: { Modal, QuickConfirm },
 	props: {
 		userId: { type: String, default: "" },
 		sector: { type: String, default: "admin" }

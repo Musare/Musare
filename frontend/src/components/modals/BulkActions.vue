@@ -69,13 +69,12 @@ import { mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 
-import Modal from "../Modal.vue";
 import AutoSuggest from "@/components/AutoSuggest.vue";
 
 import ws from "@/ws";
 
 export default {
-	components: { Modal, AutoSuggest },
+	components: { AutoSuggest },
 	props: {
 		type: {
 			type: Object,

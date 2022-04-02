@@ -477,7 +477,6 @@ import Toast from "toasters";
 import MainHeader from "@/components/layout/MainHeader.vue";
 import MainFooter from "@/components/layout/MainFooter.vue";
 import SongThumbnail from "@/components/SongThumbnail.vue";
-import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
 import ws from "@/ws";
 
@@ -504,7 +503,6 @@ export default {
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong")
 		),
-		UserIdToUsername,
 		draggable
 	},
 	data() {

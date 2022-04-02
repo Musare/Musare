@@ -99,10 +99,9 @@ import ws from "@/ws";
 
 import PlaylistItem from "@/components/PlaylistItem.vue";
 import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
-import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
-	components: { PlaylistItem, QuickConfirm },
+	components: { PlaylistItem },
 	mixins: [SortablePlaylists],
 	computed: {
 		currentPlaylists() {

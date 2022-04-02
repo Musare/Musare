@@ -45,10 +45,9 @@ import Toast from "toasters";
 
 import ActivityItem from "@/components/ActivityItem.vue";
 import ws from "@/ws";
-import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
-	components: { ActivityItem, QuickConfirm },
+	components: { ActivityItem },
 	props: {
 		userId: {
 			type: String,

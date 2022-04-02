@@ -62,12 +62,10 @@ import { mapGetters } from "vuex";
 import Toast from "toasters";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
-import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
 	components: {
-		AdvancedTable,
-		QuickConfirm
+		AdvancedTable
 	},
 	data() {
 		return {

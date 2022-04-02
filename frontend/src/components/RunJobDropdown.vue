@@ -56,12 +56,8 @@
 import { mapGetters } from "vuex";
 
 import Toast from "toasters";
-import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
-	components: {
-		QuickConfirm
-	},
 	props: {
 		jobs: {
 			type: Array,

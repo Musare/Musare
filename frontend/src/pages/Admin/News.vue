@@ -84,14 +84,10 @@ import { defineAsyncComponent } from "vue";
 import Toast from "toasters";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
-import QuickConfirm from "@/components/QuickConfirm.vue";
-import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
 export default {
 	components: {
 		AdvancedTable,
-		QuickConfirm,
-		UserIdToUsername,
 		EditNews: defineAsyncComponent(() =>
 			import("@/components/modals/EditNews.vue")
 		)

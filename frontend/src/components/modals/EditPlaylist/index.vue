@@ -248,8 +248,6 @@ import draggable from "vuedraggable";
 import Toast from "toasters";
 
 import ws from "@/ws";
-import QuickConfirm from "@/components/QuickConfirm.vue";
-import Modal from "../../Modal.vue";
 import SongItem from "../../SongItem.vue";
 
 import Settings from "./Tabs/Settings.vue";
@@ -260,9 +258,7 @@ import utils from "../../../../js/utils";
 
 export default {
 	components: {
-		Modal,
 		draggable,
-		QuickConfirm,
 		SongItem,
 		Settings,
 		AddSongs,

@@ -75,10 +75,7 @@
 import { mapActions } from "vuex";
 import { format, formatDistance, parseISO } from "date-fns";
 
-import UserIdToUsername from "@/components/UserIdToUsername.vue";
-
 export default {
-	components: { UserIdToUsername },
 	props: {
 		punishment: { type: Object, default: () => {} }
 	},

@@ -18,10 +18,8 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
-import Modal from "../Modal.vue";
 
 export default {
-	components: { Modal },
 	emits: ["confirmed"],
 	data() {
 		return {

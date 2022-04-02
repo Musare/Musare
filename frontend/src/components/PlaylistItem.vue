@@ -39,11 +39,9 @@
 </template>
 
 <script>
-import UserIdToUsername from "@/components/UserIdToUsername.vue";
 import utils from "../../js/utils";
 
 export default {
-	components: { UserIdToUsername },
 	props: {
 		playlist: { type: Object, default: () => {} },
 		showOwner: { type: Boolean, default: false }

@@ -37,10 +37,8 @@ import { mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 import validation from "@/validation";
-import Modal from "../Modal.vue";
 
 export default {
-	components: { Modal },
 	data() {
 		return {
 			playlist: {

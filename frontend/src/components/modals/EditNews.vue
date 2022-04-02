@@ -82,13 +82,11 @@ import { sanitize } from "dompurify";
 import Toast from "toasters";
 import { formatDistance } from "date-fns";
 
-import UserIdToUsername from "@/components/UserIdToUsername.vue";
 import ws from "@/ws";
 import SaveButton from "../SaveButton.vue";
-import Modal from "../Modal.vue";
 
 export default {
-	components: { Modal, SaveButton, UserIdToUsername },
+	components: { SaveButton },
 	props: {
 		newsId: { type: String, default: "" },
 		sector: { type: String, default: "admin" }

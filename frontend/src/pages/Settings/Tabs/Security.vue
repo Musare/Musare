@@ -172,10 +172,9 @@ import { mapGetters, mapState } from "vuex";
 
 import InputHelpBox from "@/components/InputHelpBox.vue";
 import validation from "@/validation";
-import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
-	components: { InputHelpBox, QuickConfirm },
+	components: { InputHelpBox },
 	data() {
 		return {
 			apiDomain: "",

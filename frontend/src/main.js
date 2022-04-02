@@ -53,6 +53,17 @@ app.component("PageMetadata", {
 	}
 });
 
+const globalComponents = require.context(
+	"@/components/global/",
+	true,
+	/\.vue$/i
+);
+globalComponents.keys().forEach(componentFilePath => {
+	const componentName = componentFilePath.split("/").pop().split(".")[0];
+	const component = globalComponents(componentFilePath);
+	app.component(componentName, component.default || component);
+});
+
 app.directive("scroll", {
 	mounted(el, binding) {
 		const f = evt => {

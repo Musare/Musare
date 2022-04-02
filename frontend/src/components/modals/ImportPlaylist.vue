@@ -65,10 +65,7 @@ import Toast from "toasters";
 
 import SearchYoutube from "@/mixins/SearchYoutube.vue";
 
-import Modal from "../Modal.vue";
-
 export default {
-	components: { Modal },
 	mixins: [SearchYoutube],
 	computed: {
 		localEditSongs: {

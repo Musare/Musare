@@ -162,12 +162,11 @@ import { mapActions, mapState } from "vuex";
 import { formatDistance, parseISO } from "date-fns";
 
 import AddToPlaylistDropdown from "./AddToPlaylistDropdown.vue";
-import UserIdToUsername from "./UserIdToUsername.vue";
 import SongThumbnail from "./SongThumbnail.vue";
 import utils from "../../js/utils";
 
 export default {
-	components: { UserIdToUsername, AddToPlaylistDropdown, SongThumbnail },
+	components: { AddToPlaylistDropdown, SongThumbnail },
 	props: {
 		song: {
 			type: Object,

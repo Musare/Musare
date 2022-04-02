@@ -34,11 +34,7 @@ import { sanitize } from "dompurify";
 import { mapGetters, mapActions } from "vuex";
 import ws from "@/ws";
 
-import UserIdToUsername from "@/components/UserIdToUsername.vue";
-import Modal from "../Modal.vue";
-
 export default {
-	components: { Modal, UserIdToUsername },
 	data() {
 		return {
 			isModalActive: false,

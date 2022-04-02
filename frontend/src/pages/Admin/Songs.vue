@@ -273,8 +273,6 @@ import { defineAsyncComponent } from "vue";
 import Toast from "toasters";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
-import UserIdToUsername from "@/components/UserIdToUsername.vue";
-import QuickConfirm from "@/components/QuickConfirm.vue";
 import RunJobDropdown from "@/components/RunJobDropdown.vue";
 
 export default {
@@ -301,8 +299,6 @@ export default {
 			import("@/components/modals/Confirm.vue")
 		),
 		AdvancedTable,
-		UserIdToUsername,
-		QuickConfirm,
 		RunJobDropdown
 	},
 	data() {

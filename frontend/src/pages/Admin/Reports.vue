@@ -115,7 +115,6 @@ import { defineAsyncComponent } from "vue";
 import Toast from "toasters";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
-import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
 export default {
 	components: {
@@ -128,8 +127,7 @@ export default {
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong/index.vue")
 		),
-		AdvancedTable,
-		UserIdToUsername
+		AdvancedTable
 	},
 	data() {
 		return {

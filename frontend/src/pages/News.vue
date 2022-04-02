@@ -46,10 +46,9 @@ import ws from "@/ws";
 
 import MainHeader from "@/components/layout/MainHeader.vue";
 import MainFooter from "@/components/layout/MainFooter.vue";
-import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
 export default {
-	components: { MainHeader, MainFooter, UserIdToUsername },
+	components: { MainHeader, MainFooter },
 	data() {
 		return {
 			news: []
