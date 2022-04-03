@@ -24,9 +24,7 @@
 				Request
 			</button>
 			<button
-				v-else-if="
-					!loggedIn && station.requests && station.requests.enabled
-				"
+				v-else-if="canRequest(false)"
 				class="button is-default"
 				content="Login to request songs"
 				v-tippy="{ theme: 'info' }"
@@ -98,10 +96,10 @@ export default {
 		isOwnerOrAdmin() {
 			return this.isOwner() || this.isAdmin();
 		},
-		canRequest() {
+		canRequest(loggedIn = true) {
 			return (
 				this.station &&
-				this.loggedIn &&
+				(!loggedIn || this.loggedIn) &&
 				this.station.requests &&
 				this.station.requests.enabled &&
 				(this.station.requests.access === "user" ||
