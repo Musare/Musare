@@ -94,16 +94,39 @@
 						:link="true"
 					/>
 				</template>
-				<template #column-playMode="slotProps">
-					<span :title="slotProps.item.playMode">{{
-						slotProps.item.playMode === "random"
-							? "Random"
-							: "Sequential"
-					}}</span>
-				</template>
 				<template #column-theme="slotProps">
 					<span :title="slotProps.item.theme">{{
 						slotProps.item.theme
+					}}</span>
+				</template>
+				<template #column-requestsEnabled="slotProps">
+					<span :title="slotProps.item.requests.enabled">{{
+						slotProps.item.requests.enabled
+					}}</span>
+				</template>
+				<template #column-requestsAccess="slotProps">
+					<span :title="slotProps.item.requests.access">{{
+						slotProps.item.requests.access
+					}}</span>
+				</template>
+				<template #column-requestsLimit="slotProps">
+					<span :title="slotProps.item.requests.limit">{{
+						slotProps.item.requests.limit
+					}}</span>
+				</template>
+				<template #column-autofillEnabled="slotProps">
+					<span :title="slotProps.item.autofill.enabled">{{
+						slotProps.item.autofill.enabled
+					}}</span>
+				</template>
+				<template #column-autofillLimit="slotProps">
+					<span :title="slotProps.item.autofill.limit">{{
+						slotProps.item.autofill.limit
+					}}</span>
+				</template>
+				<template #column-autofillMode="slotProps">
+					<span :title="slotProps.item.autofill.mode">{{
+						slotProps.item.autofill.mode
 					}}</span>
 				</template>
 			</advanced-table>
@@ -224,17 +247,64 @@ export default {
 					defaultWidth: 150
 				},
 				{
-					name: "playMode",
-					displayName: "Play Mode",
-					properties: ["playMode"],
-					sortable: false,
-					defaultVisibility: "hidden"
-				},
-				{
 					name: "theme",
 					displayName: "Theme",
 					properties: ["theme"],
 					sortProperty: "theme",
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "requestsEnabled",
+					displayName: "Requests Enabled",
+					properties: ["requests.enabled"],
+					sortProperty: "requests.enabled",
+					minWidth: 180,
+					defaultWidth: 180,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "requestsAccess",
+					displayName: "Requests Access",
+					properties: ["requests.access"],
+					sortProperty: "requests.access",
+					minWidth: 180,
+					defaultWidth: 180,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "requestsLimit",
+					displayName: "Requests Limit",
+					properties: ["requests.limit"],
+					sortProperty: "requests.limit",
+					minWidth: 180,
+					defaultWidth: 180,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "autofillEnabled",
+					displayName: "Autofill Enabled",
+					properties: ["autofill.enabled"],
+					sortProperty: "autofill.enabled",
+					minWidth: 180,
+					defaultWidth: 180,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "autofillLimit",
+					displayName: "Autofill Limit",
+					properties: ["autofill.limit"],
+					sortProperty: "autofill.limit",
+					minWidth: 180,
+					defaultWidth: 180,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "autofillMode",
+					displayName: "Autofill Mode",
+					properties: ["autofill.mode"],
+					sortProperty: "autofill.mode",
+					minWidth: 180,
+					defaultWidth: 180,
 					defaultVisibility: "hidden"
 				}
 			],
@@ -298,17 +368,6 @@ export default {
 					defaultFilterType: "contains"
 				},
 				{
-					name: "playMode",
-					displayName: "Play Mode",
-					property: "playMode",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact",
-					dropdown: [
-						["random", "Random"],
-						["sequential", "Sequential"]
-					]
-				},
-				{
 					name: "theme",
 					displayName: "Theme",
 					property: "theme",
@@ -320,6 +379,68 @@ export default {
 						["teal", "Teal"],
 						["orange", "Orange"],
 						["red", "Red"]
+					]
+				},
+				{
+					name: "requestsEnabled",
+					displayName: "Requests Enabled",
+					property: "requests.enabled",
+					filterTypes: ["boolean"],
+					defaultFilterType: "boolean"
+				},
+				{
+					name: "requestsAccess",
+					displayName: "Requests Access",
+					property: "requests.access",
+					filterTypes: ["exact"],
+					defaultFilterType: "exact",
+					dropdown: [
+						["owner", "Owner"],
+						["user", "User"]
+					]
+				},
+				{
+					name: "requestsLimit",
+					displayName: "Requests Limit",
+					property: "requests.limit",
+					filterTypes: [
+						"numberLesserEqual",
+						"numberLesser",
+						"numberGreater",
+						"numberGreaterEqual",
+						"numberEquals"
+					],
+					defaultFilterType: "numberLesser"
+				},
+				{
+					name: "autofillEnabled",
+					displayName: "Autofill Enabled",
+					property: "autofill.enabled",
+					filterTypes: ["boolean"],
+					defaultFilterType: "boolean"
+				},
+				{
+					name: "autofillLimit",
+					displayName: "Autofill Limit",
+					property: "autofill.limit",
+					filterTypes: [
+						"numberLesserEqual",
+						"numberLesser",
+						"numberGreater",
+						"numberGreaterEqual",
+						"numberEquals"
+					],
+					defaultFilterType: "numberLesser"
+				},
+				{
+					name: "autofillMode",
+					displayName: "Autofill Mode",
+					property: "autofill.mode",
+					filterTypes: ["exact"],
+					defaultFilterType: "exact",
+					dropdown: [
+						["random", "Random"],
+						["sequential", "Sequential"]
 					]
 				}
 			],
