@@ -757,7 +757,7 @@ export default {
 			return (
 				this.songDataLoaded &&
 				this.song.thumbnail &&
-				this.song.thumbnail.startsWith("https://i.ytimg.com")
+				this.song.thumbnail.startsWith("https://i.ytimg.com/")
 			);
 		},
 		...mapState("modals/editSong", {
