@@ -130,12 +130,10 @@
 </template>
 
 <script>
-import MainHeader from "@/components/layout/MainHeader.vue";
-import MainFooter from "@/components/layout/MainFooter.vue";
 import ProfilePicture from "@/components/ProfilePicture.vue";
 
 export default {
-	components: { MainHeader, MainFooter, ProfilePicture },
+	components: { ProfilePicture },
 	data() {
 		return {
 			currentTeam: [

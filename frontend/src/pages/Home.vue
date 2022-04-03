@@ -506,16 +506,12 @@ import { defineAsyncComponent } from "vue";
 import draggable from "vuedraggable";
 import Toast from "toasters";
 
-import MainHeader from "@/components/layout/MainHeader.vue";
-import MainFooter from "@/components/layout/MainFooter.vue";
 import SongThumbnail from "@/components/SongThumbnail.vue";
 
 import ws from "@/ws";
 
 export default {
 	components: {
-		MainHeader,
-		MainFooter,
 		SongThumbnail,
 		CreateStation: defineAsyncComponent(() =>
 			import("@/components/modals/CreateStation.vue")

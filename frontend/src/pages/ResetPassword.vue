@@ -285,14 +285,12 @@
 import Toast from "toasters";
 import { mapGetters, mapState } from "vuex";
 
-import MainHeader from "@/components/layout/MainHeader.vue";
-import MainFooter from "@/components/layout/MainFooter.vue";
 import InputHelpBox from "@/components/InputHelpBox.vue";
 
 import validation from "@/validation";
 
 export default {
-	components: { MainHeader, MainFooter, InputHelpBox },
+	components: { InputHelpBox },
 	props: {
 		mode: {
 			default: "reset",

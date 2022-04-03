@@ -246,14 +246,10 @@ import { mapState, mapActions, mapGetters } from "vuex";
 
 import keyboardShortcuts from "@/keyboardShortcuts";
 
-import MainHeader from "@/components/layout/MainHeader.vue";
-import MainFooter from "@/components/layout/MainFooter.vue";
 import FloatingBox from "@/components/FloatingBox.vue";
 
 export default {
 	components: {
-		MainHeader,
-		MainFooter,
 		FloatingBox
 	},
 	data() {

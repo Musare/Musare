@@ -114,16 +114,12 @@ import ws from "@/ws";
 import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 
 import ProfilePicture from "@/components/ProfilePicture";
-import MainHeader from "@/components/layout/MainHeader";
-import MainFooter from "@/components/layout/MainFooter.vue";
 
 import RecentActivity from "./Tabs/RecentActivity.vue";
 import Playlists from "./Tabs/Playlists.vue";
 
 export default {
 	components: {
-		MainHeader,
-		MainFooter,
 		ProfilePicture,
 		RecentActivity,
 		Playlists,

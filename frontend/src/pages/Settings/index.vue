@@ -55,13 +55,8 @@ import ws from "@/ws";
 
 import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 
-import MainHeader from "@/components/layout/MainHeader.vue";
-import MainFooter from "@/components/layout/MainFooter.vue";
-
 export default {
 	components: {
-		MainHeader,
-		MainFooter,
 		SecuritySettings: defineAsyncComponent(() =>
 			import("./Tabs/Security.vue")
 		),
