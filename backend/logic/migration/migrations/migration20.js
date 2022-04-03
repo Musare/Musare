@@ -39,17 +39,24 @@ export default async function migrate(MigrationModule) {
 													locked: ""
 												},
 												$set: {
+													queue: station.queue.map(song => {
+														if (!song.requestedAt) song.requestedAt = Date.now();
+														return song;
+													}),
 													autofill: {
 														enabled: !station.partyMode,
 														playlists: station.includedPlaylists.map(playlist =>
 															mongoose.Types.ObjectId(playlist)
 														),
 														limit: 30,
-														mode: station.playMode
+														mode: station.playMode ? station.playMode : "random"
 													},
 													requests: {
-														enabled: station.partyMode,
-														access: station.locked ? "owner" : "user",
+														enabled: !!station.partyMode,
+														access:
+															station.locked || station.type === "official"
+																? "owner"
+																: "user",
 														limit: 5
 													},
 													blacklist: station.excludedPlaylists.map(playlist =>
