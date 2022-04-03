@@ -147,8 +147,12 @@
 														element.type ===
 														'official'
 													"
-													title="Musare"
-													>Musare</span
+													:title="
+														siteSettings.sitename
+													"
+													>{{
+														siteSettings.sitename
+													}}</span
 												>
 												<user-id-to-username
 													v-else
@@ -385,8 +389,8 @@
 									<span class="host">
 										<span
 											v-if="station.type === 'official'"
-											title="Musare"
-											>Musare</span
+											:title="siteSettings.sitename"
+											>{{ siteSettings.sitename }}</span
 										>
 										<user-id-to-username
 											v-else

@@ -1472,9 +1472,7 @@ export default {
 							// on ios, playback will be forcibly paused locally
 							if (this.isApple) {
 								this.updateLocalPaused(true);
-								new Toast(
-									"Please click play manually to use Musare on iOS."
-								);
+								new Toast("Please click play manually on iOS.");
 							}
 						},
 						onError: err => {

@@ -100,9 +100,7 @@
 
 		<div v-if="!isGithubLinked">
 			<h4 class="section-title">Link your GitHub account</h4>
-			<p class="section-description">
-				Link your Musare account with GitHub
-			</p>
+			<p class="section-description">Link your account to GitHub</p>
 
 			<hr class="section-horizontal-rule" />
 

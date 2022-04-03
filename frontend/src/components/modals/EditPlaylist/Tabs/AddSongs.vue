@@ -1,7 +1,7 @@
 <template>
 	<div class="youtube-tab section">
 		<div>
-			<label class="label"> Search for a song on Musare </label>
+			<label class="label"> Search for a song on {{ sitename }}</label>
 			<div class="control is-grouped input-with-button">
 				<p class="control is-expanded">
 					<input
@@ -151,6 +151,11 @@ import SearchQueryItem from "@/components/SearchQueryItem.vue";
 export default {
 	components: { SearchQueryItem, SongItem },
 	mixins: [SearchYoutube, SearchMusare],
+	data() {
+		return {
+			sitename: "Musare"
+		};
+	},
 	computed: {
 		...mapState("modals/editPlaylist", {
 			playlist: state => state.playlist
@@ -207,6 +212,9 @@ export default {
 				})
 			);
 		}
+	},
+	async mounted() {
+		this.sitename = await lofig.get("siteSettings.sitename");
 	}
 };
 </script>
