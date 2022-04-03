@@ -217,7 +217,6 @@ export default {
 		...mapState("modals/manageStation", {
 			tab: state => state.tab,
 			station: state => state.station,
-			originalStation: state => state.originalStation,
 			songsList: state => state.songsList,
 			stationPlaylist: state => state.stationPlaylist,
 			autofill: state => state.autofill,

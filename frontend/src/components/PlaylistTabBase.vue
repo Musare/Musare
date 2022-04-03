@@ -721,7 +721,6 @@ export default {
 			userId: state => state.user.auth.userId
 		}),
 		...mapState("modals/manageStation", {
-			originalStation: state => state.originalStation,
 			autofill: state => state.autofill
 		}),
 		...mapState("station", {
@@ -757,8 +756,6 @@ export default {
 						if (res.status === "success") {
 							this.station.autofill.playlists =
 								res.data.playlists;
-							this.originalStation.autofill.playlists =
-								res.data.playlists;
 						}
 					}
 				);
@@ -769,7 +766,6 @@ export default {
 				res => {
 					if (res.status === "success") {
 						this.station.blacklist = res.data.playlists;
-						this.originalStation.blacklist = res.data.playlists;
 					}
 				}
 			);

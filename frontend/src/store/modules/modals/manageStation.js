@@ -4,7 +4,6 @@ export default {
 	namespaced: true,
 	state: {
 		tab: "settings",
-		originalStation: {},
 		station: {},
 		stationPlaylist: { songs: [] },
 		autofill: [],
@@ -39,7 +38,6 @@ export default {
 			state.tab = tab;
 		},
 		editStation(state, station) {
-			state.originalStation = JSON.parse(JSON.stringify(station));
 			state.station = JSON.parse(JSON.stringify(station));
 		},
 		setAutofillPlaylists(state, autofillPlaylists) {
@@ -49,7 +47,6 @@ export default {
 			state.blacklist = JSON.parse(JSON.stringify(blacklist));
 		},
 		clearStation(state) {
-			state.originalStation = {};
 			state.station = {};
 			state.stationPlaylist = { songs: [] };
 			state.autofill = [];

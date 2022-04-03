@@ -2,24 +2,32 @@
 	<div class="station-settings">
 		<label class="label">Name</label>
 		<div class="control is-expanded">
-			<input class="input" type="text" v-model="local.name" />
+			<input class="input" type="text" v-model="localStation.name" />
 		</div>
 
 		<label class="label">Display Name</label>
 		<div class="control is-expanded">
-			<input class="input" type="text" v-model="local.displayName" />
+			<input
+				class="input"
+				type="text"
+				v-model="localStation.displayName"
+			/>
 		</div>
 
 		<label class="label">Description</label>
 		<div class="control is-expanded">
-			<input class="input" type="text" v-model="local.description" />
+			<input
+				class="input"
+				type="text"
+				v-model="localStation.description"
+			/>
 		</div>
 
 		<div class="settings-buttons">
 			<div class="small-section">
 				<label class="label">Theme</label>
 				<div class="control is-expanded select">
-					<select v-model="local.theme">
+					<select v-model="localStation.theme">
 						<option value="blue" selected>Blue</option>
 						<option value="purple">Purple</option>
 						<option value="teal">Teal</option>
@@ -32,7 +40,7 @@
 			<div class="small-section">
 				<label class="label">Privacy</label>
 				<div class="control is-expanded select">
-					<select v-model="local.privacy">
+					<select v-model="localStation.privacy">
 						<option value="public">Public</option>
 						<option value="unlisted">Unlisted</option>
 						<option value="private" selected>Private</option>
@@ -41,9 +49,9 @@
 			</div>
 
 			<div
-				v-if="local.requests"
+				v-if="localStation.requests"
 				class="requests-settings"
-				:class="{ enabled: local.requests.enabled }"
+				:class="{ enabled: localStation.requests.enabled }"
 			>
 				<div class="toggle-row">
 					<label class="label">Requests</label>
@@ -52,7 +60,7 @@
 							<input
 								type="checkbox"
 								id="toggle-requests"
-								v-model="local.requests.enabled"
+								v-model="localStation.requests.enabled"
 							/>
 							<span class="slider round"></span>
 						</label>
@@ -60,7 +68,7 @@
 						<label for="toggle-requests">
 							<p>
 								{{
-									local.requests.enabled
+									localStation.requests.enabled
 										? "Enabled"
 										: "Disabled"
 								}}
@@ -69,17 +77,17 @@
 					</p>
 				</div>
 
-				<div v-if="local.requests.enabled" class="small-section">
+				<div v-if="localStation.requests.enabled" class="small-section">
 					<label class="label">Minimum access</label>
 					<div class="control is-expanded select">
-						<select v-model="local.requests.access">
+						<select v-model="localStation.requests.access">
 							<option value="owner" selected>Owner</option>
 							<option value="user">User</option>
 						</select>
 					</div>
 				</div>
 
-				<div v-if="local.requests.enabled" class="small-section">
+				<div v-if="localStation.requests.enabled" class="small-section">
 					<label class="label">Per user request limit</label>
 					<div class="control is-expanded">
 						<input
@@ -87,16 +95,16 @@
 							type="number"
 							min="1"
 							max="50"
-							v-model="local.requests.limit"
+							v-model="localStation.requests.limit"
 						/>
 					</div>
 				</div>
 			</div>
 
 			<div
-				v-if="local.autofill"
+				v-if="localStation.autofill"
 				class="autofill-settings"
-				:class="{ enabled: local.autofill.enabled }"
+				:class="{ enabled: localStation.autofill.enabled }"
 			>
 				<div class="toggle-row">
 					<label class="label">Autofill</label>
@@ -105,7 +113,7 @@
 							<input
 								type="checkbox"
 								id="toggle-autofill"
-								v-model="local.autofill.enabled"
+								v-model="localStation.autofill.enabled"
 							/>
 							<span class="slider round"></span>
 						</label>
@@ -113,7 +121,7 @@
 						<label for="toggle-autofill">
 							<p>
 								{{
-									local.autofill.enabled
+									localStation.autofill.enabled
 										? "Enabled"
 										: "Disabled"
 								}}
@@ -122,7 +130,7 @@
 					</p>
 				</div>
 
-				<div v-if="local.autofill.enabled" class="small-section">
+				<div v-if="localStation.autofill.enabled" class="small-section">
 					<label class="label">Song limit</label>
 					<div class="control is-expanded">
 						<input
@@ -130,15 +138,15 @@
 							type="number"
 							min="1"
 							max="50"
-							v-model="local.autofill.limit"
+							v-model="localStation.autofill.limit"
 						/>
 					</div>
 				</div>
 
-				<div v-if="local.autofill.enabled" class="small-section">
+				<div v-if="localStation.autofill.enabled" class="small-section">
 					<label class="label">Play mode</label>
 					<div class="control is-expanded select">
-						<select v-model="local.autofill.mode">
+						<select v-model="localStation.autofill.mode">
 							<option value="random" selected>Random</option>
 							<option value="sequential">Sequential</option>
 						</select>
@@ -154,7 +162,7 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
+import { mapState, mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 
@@ -163,7 +171,7 @@ import validation from "@/validation";
 export default {
 	data() {
 		return {
-			local: {
+			localStation: {
 				name: "",
 				displayName: "",
 				description: "",
@@ -184,64 +192,59 @@ export default {
 	},
 	computed: {
 		...mapState("modals/manageStation", {
-			station: state => state.station,
-			originalStation: state => state.originalStation
+			station: state => state.station
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
-		this.local = this.station;
+		this.localStation = JSON.parse(JSON.stringify(this.station));
 	},
 	methods: {
 		update() {
-			if (this.originalStation !== this.local) {
-				const { name, displayName, description } = this.local;
+			const { name, displayName, description } = this.localStation;
 
-				if (!validation.isLength(name, 2, 16))
-					new Toast("Name must have between 2 and 16 characters.");
-				else if (!validation.regex.az09_.test(name))
-					new Toast(
-						"Invalid name format. Allowed characters: a-z, 0-9 and _."
-					);
-				else if (!validation.isLength(displayName, 2, 32))
-					new Toast(
-						"Display name must have between 2 and 32 characters."
-					);
-				else if (!validation.regex.ascii.test(displayName))
-					new Toast(
-						"Invalid display name format. Only ASCII characters are allowed."
-					);
-				else if (!validation.isLength(description, 2, 200))
-					new Toast(
-						"Description must have between 2 and 200 characters."
-					);
-				else if (
-					description
-						.split("")
-						.filter(character => character.charCodeAt(0) === 21328)
-						.length !== 0
-				)
-					new Toast("Invalid description format.");
-				else
-					this.socket.dispatch(
-						"stations.update",
-						this.station._id,
-						this.local,
-						res => {
-							new Toast(res.message);
+			if (!validation.isLength(name, 2, 16))
+				new Toast("Name must have between 2 and 16 characters.");
+			else if (!validation.regex.az09_.test(name))
+				new Toast(
+					"Invalid name format. Allowed characters: a-z, 0-9 and _."
+				);
+			else if (!validation.isLength(displayName, 2, 32))
+				new Toast(
+					"Display name must have between 2 and 32 characters."
+				);
+			else if (!validation.regex.ascii.test(displayName))
+				new Toast(
+					"Invalid display name format. Only ASCII characters are allowed."
+				);
+			else if (!validation.isLength(description, 2, 200))
+				new Toast(
+					"Description must have between 2 and 200 characters."
+				);
+			else if (
+				description
+					.split("")
+					.filter(character => character.charCodeAt(0) === 21328)
+					.length !== 0
+			)
+				new Toast("Invalid description format.");
+			else
+				this.socket.dispatch(
+					"stations.update",
+					this.station._id,
+					this.localStation,
+					res => {
+						new Toast(res.message);
 
-							if (res.status === "success") {
-								this.station = this.local;
-								this.originalStation = this.local;
-							}
+						if (res.status === "success") {
+							this.editStation(this.localStation);
 						}
-					);
-			} else {
-				new Toast("Please make a change before saving.");
-			}
-		}
+					}
+				);
+		},
+		...mapActions("modals/manageStation", ["editStation"])
 	}
 };
 </script>
