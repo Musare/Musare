@@ -1368,7 +1368,10 @@ export default {
 				},
 
 				(station, previousStation, next) => {
-					if (newStation.autofill.enabled && newStation.autofill !== previousStation.autofill)
+					if (
+						newStation.autofill.enabled &&
+						JSON.stringify(newStation.autofill) !== JSON.stringify(previousStation.autofill)
+					)
 						StationsModule.runJob("AUTOFILL_STATION", { stationId }, this)
 							.then(() => {
 								CacheModule.runJob("PUB", {
