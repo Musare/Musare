@@ -1341,7 +1341,22 @@ export default {
 				},
 
 				(previousStation, next) => {
-					stationModel.updateOne({ _id: stationId }, newStation, { runValidators: true }, err => {
+					const { name, displayName, description, privacy, requests, autofill, theme } = newStation;
+					const { enabled, limit, mode } = autofill;
+					// This object makes sure only certain properties can be changed by a user
+					const setObject = {
+						name,
+						displayName,
+						description,
+						privacy,
+						requests,
+						"autofill.enabled": enabled,
+						"autofill.limit": limit,
+						"autofill.mode": mode,
+						theme
+					};
+
+					stationModel.updateOne({ _id: stationId }, { $set: setObject }, { runValidators: true }, err => {
 						next(err, previousStation);
 					});
 				},
