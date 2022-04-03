@@ -203,46 +203,85 @@ export default {
 	},
 	methods: {
 		update() {
-			const { name, displayName, description } = this.localStation;
-
-			if (!validation.isLength(name, 2, 16))
-				new Toast("Name must have between 2 and 16 characters.");
-			else if (!validation.regex.az09_.test(name))
-				new Toast(
-					"Invalid name format. Allowed characters: a-z, 0-9 and _."
-				);
-			else if (!validation.isLength(displayName, 2, 32))
-				new Toast(
-					"Display name must have between 2 and 32 characters."
-				);
-			else if (!validation.regex.ascii.test(displayName))
-				new Toast(
-					"Invalid display name format. Only ASCII characters are allowed."
-				);
-			else if (!validation.isLength(description, 2, 200))
-				new Toast(
-					"Description must have between 2 and 200 characters."
-				);
-			else if (
-				description
-					.split("")
-					.filter(character => character.charCodeAt(0) === 21328)
-					.length !== 0
-			)
-				new Toast("Invalid description format.");
-			else
-				this.socket.dispatch(
-					"stations.update",
-					this.station._id,
-					this.localStation,
-					res => {
-						new Toast(res.message);
-
-						if (res.status === "success") {
-							this.editStation(this.localStation);
-						}
+			if (
+				JSON.stringify({
+					name: this.localStation.name,
+					displayName: this.localStation.displayName,
+					description: this.localStation.description,
+					theme: this.localStation.theme,
+					privacy: this.localStation.privacy,
+					requests: {
+						enabled: this.localStation.requests.enabled,
+						access: this.localStation.requests.access,
+						limit: this.localStation.requests.limit
+					},
+					autofill: {
+						enabled: this.localStation.autofill.enabled,
+						limit: this.localStation.autofill.limit,
+						mode: this.localStation.autofill.mode
 					}
-				);
+				}) !==
+				JSON.stringify({
+					name: this.station.name,
+					displayName: this.station.displayName,
+					description: this.station.description,
+					theme: this.station.theme,
+					privacy: this.station.privacy,
+					requests: {
+						enabled: this.station.requests.enabled,
+						access: this.station.requests.access,
+						limit: this.station.requests.limit
+					},
+					autofill: {
+						enabled: this.station.autofill.enabled,
+						limit: this.station.autofill.limit,
+						mode: this.station.autofill.mode
+					}
+				})
+			) {
+				const { name, displayName, description } = this.localStation;
+
+				if (!validation.isLength(name, 2, 16))
+					new Toast("Name must have between 2 and 16 characters.");
+				else if (!validation.regex.az09_.test(name))
+					new Toast(
+						"Invalid name format. Allowed characters: a-z, 0-9 and _."
+					);
+				else if (!validation.isLength(displayName, 2, 32))
+					new Toast(
+						"Display name must have between 2 and 32 characters."
+					);
+				else if (!validation.regex.ascii.test(displayName))
+					new Toast(
+						"Invalid display name format. Only ASCII characters are allowed."
+					);
+				else if (!validation.isLength(description, 2, 200))
+					new Toast(
+						"Description must have between 2 and 200 characters."
+					);
+				else if (
+					description
+						.split("")
+						.filter(character => character.charCodeAt(0) === 21328)
+						.length !== 0
+				)
+					new Toast("Invalid description format.");
+				else
+					this.socket.dispatch(
+						"stations.update",
+						this.station._id,
+						this.localStation,
+						res => {
+							new Toast(res.message);
+
+							if (res.status === "success") {
+								this.editStation(this.localStation);
+							}
+						}
+					);
+			} else {
+				new Toast("Please make a change before saving.");
+			}
 		},
 		...mapActions("modals/manageStation", ["editStation"])
 	}
