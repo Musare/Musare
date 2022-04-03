@@ -234,7 +234,8 @@ export default {
 		"station.requests": function (requests) {
 			if (this.tab === "request" && !this.canRequest()) {
 				if (this.isOwnerOrAdmin()) this.showTab("settings");
-				else this.closeModal("manageStation");
+				else if (!(this.sector === "home" && !this.isOwnerOrAdmin()))
+					this.closeModal("manageStation");
 			}
 		},
 		// eslint-disable-next-line
