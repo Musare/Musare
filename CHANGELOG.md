@@ -7,6 +7,9 @@
 - feat: Station requests configurable access level
 - feat: Station requests configurable per user request limit
 - feat: Added redis attach command to musare.sh
+- feat: Added podman support to musare.sh
+- feat: Added view station button to admin/stations
+- feat: Added info icon component
 
 ### Changed
 - refactor: No longer showing unlisted stations on homepage if not owned by user
@@ -17,6 +20,16 @@
 - refactor: Replace station modes with 2 modules which are independently toggleable and configurable on every station
     - Autofill: Replaces playlist mode, owners select songs to autofill queue. Also includes old playMode functionality
     - Requests: Replaces party mode, users can request songs or auto request from playlists
+- refactor: Update active team
+- refactor: Separate docker container modes
+- refactor: Improve musare.sh exit code usage and other tweaks
+- refactor: Made Modal, QuickConfirm and UserIdToUsername global components
+- refactor: Use crypto random values instead of math.random to create UUID
+- refactor: Added trailing slash to URL startsWith check
+- chore: Updated frontend package-lock.json version from 1 to 2
+
+### Fixed
+- fix: Changing station privacy does not kick out newly-unauthorized users
 
 ### Removed
 - refactor: Removed station queue lock
