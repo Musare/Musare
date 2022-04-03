@@ -68,12 +68,17 @@ export default {
 		if (!enabled) {
 			uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
 				/[xy]/g,
-				c => {
-					// eslint-disable-next-line
-					const r = (Math.random() * 16) | 0;
-					// eslint-disable-next-line
-					const v = c == "x" ? r : (r & 0x3) | 0x8;
-					return v.toString(16);
+				symbol => {
+					let array;
+
+					if (symbol === "y") {
+						array = ["8", "9", "a", "b"];
+						return array[Math.floor(Math.random() * array.length)];
+					}
+
+					array = new Uint8Array(1);
+					window.crypto.getRandomValues(array);
+					return (array[0] % 16).toString(16);
 				}
 			);
 
