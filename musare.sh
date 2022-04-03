@@ -109,6 +109,16 @@ runDockerCommand()
     fi
 }
 
+getContainerId()
+{
+    if [[ ${DOCKER_COMMAND} == "docker" ]]; then
+        containerId=$(${dockerCompose} ps -q "${1}")
+    else
+        containerId=$(${dockerCompose} ps | awk "/${1}/ {print \$1}")
+    fi
+    echo "${containerId}"
+}
+
 case $1 in
     start)
         echo -e "${CYAN}Musare | Start Services${NC}"
@@ -194,7 +204,7 @@ case $1 in
     attach)
         echo -e "${CYAN}Musare | Attach${NC}"
         if [[ $2 == "backend" ]]; then
-            containerId=$(${dockerCompose} ps -q backend)
+            containerId=$(getContainerId backend)
             if [[ -z $containerId ]]; then
                 echo -e "${RED}Error: Backend offline, please start to attach.${NC}"
                 exit 1
@@ -204,7 +214,7 @@ case $1 in
             fi
         elif [[ $2 == "mongo" ]]; then
             MONGO_VERSION_INT=${MONGO_VERSION:0:1}
-            if [[ -z $(${dockerCompose} ps -q mongo) ]]; then
+            if [[ -z $(getContainerId mongo) ]]; then
                 echo -e "${RED}Error: Mongo offline, please start to attach.${NC}"
                 exit 1
             else
@@ -216,7 +226,7 @@ case $1 in
                 fi
             fi
         elif [[ $2 == "redis" ]]; then
-            if [[ -z $(${dockerCompose} ps -q redis) ]]; then
+            if [[ -z $(getContainerId redis) ]]; then
                 echo -e "${RED}Error: Redis offline, please start to attach.${NC}"
                 exit 1
             else
