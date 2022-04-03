@@ -19,5 +19,6 @@ export default {
 .material-icons.info-icon {
 	font-size: 14px;
 	margin: auto 5px;
+	cursor: help;
 }
 </style>

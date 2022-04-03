@@ -678,9 +678,25 @@
 				<span><b>Local paused</b>: {{ localPaused }}</span>
 				<span><b>Station paused</b>: {{ stationPaused }}</span>
 				<span
-					><b>Auto requesting playlists</b>:
-					{{ autoRequest.join(", ") }}</span
+					><b>Requests enabled</b>:
+					{{ station.requests.enabled }}</span
 				>
+				<span
+					><b>Requests access</b>: {{ station.requests.access }}</span
+				>
+				<span><b>Requests limit</b>: {{ station.requests.limit }}</span>
+				<span
+					><b>Auto requesting playlists</b>:
+					{{
+						autoRequest.map(playlist => playlist._id).join(", ")
+					}}</span
+				>
+				<span
+					><b>Autofill enabled</b>:
+					{{ station.autofill.enabled }}</span
+				>
+				<span><b>Autofill limit</b>: {{ station.autofill.limit }}</span>
+				<span><b>Autofill mode</b>: {{ station.autofill.mode }}</span>
 				<span><b>Skip votes loaded</b>: {{ skipVotesLoaded }}</span>
 				<span
 					><b>Skip votes current</b>:
