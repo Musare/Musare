@@ -248,17 +248,17 @@ case $1 in
         fi
         case $2 in
             frontend)
-                ${dockerCompose} exec frontend npx eslint src --ext .js,.vue $fix
+                ${dockerCompose} exec -T frontend npx eslint src --ext .js,.vue $fix
                 exitValue=$?
                 ;;
             backend)
-                ${dockerCompose} exec backend npx eslint logic $fix
+                ${dockerCompose} exec -T backend npx eslint logic $fix
                 exitValue=$?
                 ;;
             ""|fix|--fix)
-                ${dockerCompose} exec frontend npx eslint src --ext .js,.vue $fix
+                ${dockerCompose} exec -T frontend npx eslint src --ext .js,.vue $fix
                 frontendExitValue=$?
-                ${dockerCompose} exec backend npx eslint logic $fix
+                ${dockerCompose} exec -T backend npx eslint logic $fix
                 backendExitValue=$?
                 if [[ ${frontendExitValue} -gt 0 || ${backendExitValue} -gt 0 ]]; then
                     exitValue=1

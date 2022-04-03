@@ -37,6 +37,6 @@ jobs:
             - name: Start Musare
               run: ./musare.sh start
             - name: ESlint Backend
-              run: docker-compose exec -T backend npx eslint logic
+              run: ./musare.sh eslint backend
             - name: ESLint Frontend
-              run: docker-compose exec -T frontend npx eslint src --ext .js,.vue
+              run: ./musare.sh eslint frontend
