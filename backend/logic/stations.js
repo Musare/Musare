@@ -466,7 +466,10 @@ class _StationsModule extends CoreClass {
 						StationsModule.runJob("GET_STATION", { stationId }, this)
 							.then(station => {
 								if (!station.autofill.enabled) return next("Autofill is disabled in this station");
-								if (station.autofill.limit <= station.queue.filter(song => !song.requestedBy).length)
+								if (
+									!ignoreExistingQueue &&
+									station.autofill.limit <= station.queue.filter(song => !song.requestedBy).length
+								)
 									return next("Autofill limit reached");
 
 								if (ignoreExistingQueue) station.queue = [];
@@ -777,6 +780,7 @@ class _StationsModule extends CoreClass {
 								else next(err);
 							});
 					},
+
 					(song, station, next) => {
 						const $set = {};
 
@@ -808,12 +812,6 @@ class _StationsModule extends CoreClass {
 
 							return StationsModule.runJob("UPDATE_STATION", { stationId: station._id }, this)
 								.then(station => {
-									CacheModule.runJob("PUB", {
-										channel: "station.queueUpdate",
-										value: payload.stationId
-									})
-										.then()
-										.catch();
 									next(null, station, song);
 								})
 								.catch(next);
@@ -827,7 +825,35 @@ class _StationsModule extends CoreClass {
 							station.currentSong.skipVotes = 0;
 						}
 						next(null, station);
-					}
+					},
+
+					(station, next) => {
+						if (station.autofill.enabled)
+							return StationsModule.runJob("AUTOFILL_STATION", { stationId: station._id }, this)
+								.then(() => next(null, station))
+								.catch(err => {
+									if (
+										err === "Autofill is disabled in this station" ||
+										err === "Autofill limit reached"
+									)
+										return next(null, station);
+									return next(err);
+								});
+						return next(null, station);
+					},
+
+					(station, next) =>
+						StationsModule.runJob("UPDATE_STATION", { stationId: station._id }, this)
+							.then(station => {
+								CacheModule.runJob("PUB", {
+									channel: "station.queueUpdate",
+									value: payload.stationId
+								})
+									.then()
+									.catch();
+								next(null, station);
+							})
+							.catch(next)
 				],
 				async (err, station) => {
 					if (err === "Autofill limit reached") return resolve({ station });
