@@ -39,7 +39,7 @@ const printVersion = () => {
 
 	try {
 		const head_contents = fs.readFileSync(".parent_git/HEAD").toString().replaceAll("\n", "");
-		const branch = new RegExp("ref: refs/heads/([\.A-Za-z0-9_-]+)").exec(head_contents)[1];
+		const branch = new RegExp("ref: refs/heads/([A-Za-z0-9_-.]+)").exec(head_contents)[1];
 		const config_contents = fs.readFileSync(".parent_git/config").toString().replaceAll("\t", "").split("\n");
 		const remote = new RegExp("remote = (.+)").exec(config_contents[config_contents.indexOf(`[branch "${branch}"]`) + 1])[1];
 		const remote_url = new RegExp("url = (.+)").exec(config_contents[config_contents.indexOf(`[remote "${remote}"]`) + 1])[1];
