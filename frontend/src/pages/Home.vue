@@ -233,6 +233,14 @@
 								<span v-else class="songTitle"
 									>No Songs Playing</span
 								>
+								<i
+									v-if="canRequest(element)"
+									class="material-icons"
+									content="You can request songs in this station"
+									v-tippy="{ theme: 'info' }"
+								>
+									queue
+								</i>
 							</div>
 						</router-link>
 					</template>
@@ -447,6 +455,14 @@
 							}}</span
 						>
 						<span v-else class="songTitle">No Songs Playing</span>
+						<i
+							v-if="canRequest(station)"
+							class="material-icons"
+							content="You can request songs in this station"
+							v-tippy="{ theme: 'info' }"
+						>
+							queue
+						</i>
 					</div>
 				</router-link>
 				<h4 v-if="stations.length === 0">
@@ -754,6 +770,17 @@ export default {
 		},
 		isOwnerOrAdmin(station) {
 			return this.isOwner(station) || this.isAdmin();
+		},
+		canRequest(station) {
+			return (
+				station &&
+				this.loggedIn &&
+				station.requests &&
+				station.requests.enabled &&
+				(station.requests.access === "user" ||
+					(station.requests.access === "owner" &&
+						this.isOwnerOrAdmin(station)))
+			);
 		},
 		isPlaying(station) {
 			return typeof station.currentSong.title !== "undefined";
