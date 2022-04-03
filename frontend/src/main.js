@@ -13,8 +13,16 @@ import AppComponent from "./App.vue";
 
 const REQUIRED_CONFIG_VERSION = 11;
 
+lofig.folder = "../config/default.json";
+
 const handleMetadata = attrs => {
-	document.title = `Musare | ${attrs.title}`;
+	lofig.get("siteSettings.sitename").then(siteName => {
+		if (siteName) {
+			document.title = `${siteName} | ${attrs.title}`;
+		} else {
+			document.title = `Musare | ${attrs.title}`;
+		}
+	});
 };
 
 const app = createApp(AppComponent);

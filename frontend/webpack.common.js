@@ -111,6 +111,7 @@ module.exports = {
 	plugins: [
 		new VueLoaderPlugin(),
 		new HtmlWebpackPlugin({
+			title: config.get("siteSettings.sitename"),
 			hash: true,
 			template: "dist/index.tpl.html",
 			inject: "body",

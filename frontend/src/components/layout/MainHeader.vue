@@ -6,9 +6,11 @@
 		<div class="nav-left">
 			<router-link v-if="!hideLogo" class="nav-item is-brand" to="/">
 				<img
+					v-if="siteSettings.sitename === 'Musare'"
 					:src="siteSettings.logo_white"
 					:alt="siteSettings.sitename || `Musare`"
 				/>
+				<span v-else>{{ siteSettings.sitename }}</span>
 			</router-link>
 		</div>
 
@@ -108,7 +110,7 @@ export default {
 			isMobile: false,
 			frontendDomain: "",
 			siteSettings: {
-				logo: "",
+				logo_white: "",
 				sitename: "",
 				christmas: false,
 				registrationDisabled: false
