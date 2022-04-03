@@ -172,7 +172,7 @@ export default {
 		margin-bottom: 20px;
 		border-radius: 0 0 @border-radius @border-radius;
 		max-height: 100%;
-		padding: 10px;
+		padding: 15px 10px;
 		overflow-y: auto;
 
 		.scrollable-list {

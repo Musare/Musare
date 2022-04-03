@@ -130,7 +130,14 @@
 							class="tab"
 							v-show="tab === 'autofill'"
 							:type="'autofill'"
-						/>
+						>
+							<template #info>
+								<p>
+									Select playlists to automatically add songs
+									within to queue
+								</p>
+							</template>
+						</playlist-tab-base>
 						<request
 							v-if="canRequest()"
 							class="tab"
@@ -735,7 +742,7 @@ export default {
 		}
 		.tab {
 			border: 1px solid var(--light-grey-3);
-			padding: 15px;
+			padding: 15px 10px;
 			border-radius: 0 0 @border-radius @border-radius;
 		}
 	}

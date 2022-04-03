@@ -1,5 +1,9 @@
 <template>
 	<div class="station-playlists">
+		<p class="top-info has-text-centered">
+			Search for songs to add to queue or auto request songs from
+			playlists
+		</p>
 		<div class="tabs-container">
 			<div class="tab-selection">
 				<button
@@ -369,6 +373,11 @@ export default {
 }
 
 .station-playlists {
+	.top-info {
+		font-size: 15px;
+		margin-bottom: 15px;
+	}
+
 	.tabs-container {
 		.tab-selection {
 			display: flex;

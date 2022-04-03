@@ -54,7 +54,12 @@
 				:class="{ enabled: localStation.requests.enabled }"
 			>
 				<div class="toggle-row">
-					<label class="label">Requests</label>
+					<label class="label">
+						Requests
+						<info-icon
+							tooltip="Allow users to add songs to queue"
+						/>
+					</label>
 					<p class="is-expanded checkbox-control">
 						<label class="switch">
 							<input
@@ -107,7 +112,10 @@
 				:class="{ enabled: localStation.autofill.enabled }"
 			>
 				<div class="toggle-row">
-					<label class="label">Autofill</label>
+					<label class="label">
+						Autofill
+						<info-icon tooltip="Fill station queue with songs" />
+					</label>
 					<p class="is-expanded checkbox-control">
 						<label class="switch">
 							<input
