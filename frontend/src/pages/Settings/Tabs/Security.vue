@@ -100,7 +100,9 @@
 
 		<div v-if="!isGithubLinked">
 			<h4 class="section-title">Link your GitHub account</h4>
-			<p class="section-description">Link your account to GitHub</p>
+			<p class="section-description">
+				Link your {{ sitename }} account with GitHub
+			</p>
 
 			<hr class="section-horizontal-rule" />
 
@@ -176,6 +178,7 @@ export default {
 	data() {
 		return {
 			apiDomain: "",
+			sitename: "Musare",
 			validation: {
 				oldPassword: {
 					value: "",
@@ -221,6 +224,7 @@ export default {
 	},
 	async mounted() {
 		this.apiDomain = await lofig.get("backend.apiDomain");
+		this.sitename = await lofig.get("siteSettings.sitename");
 	},
 	methods: {
 		togglePasswordVisibility(ref) {

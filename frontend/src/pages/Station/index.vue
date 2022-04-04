@@ -858,7 +858,8 @@ export default {
 			persistentToastCheckerInterval: null,
 			persistentToasts: [],
 			mediasession: false,
-			christmas: false
+			christmas: false,
+			sitename: "Musare"
 		};
 	},
 	computed: {
@@ -992,6 +993,7 @@ export default {
 		this.frontendDevMode = await lofig.get("mode");
 		this.mediasession = await lofig.get("siteSettings.mediasession");
 		this.christmas = await lofig.get("siteSettings.christmas");
+		this.sitename = await lofig.get("siteSettings.sitename");
 
 		this.socket.dispatch(
 			"stations.existsByName",
@@ -1483,7 +1485,9 @@ export default {
 							// on ios, playback will be forcibly paused locally
 							if (this.isApple) {
 								this.updateLocalPaused(true);
-								new Toast("Please click play manually on iOS.");
+								new Toast(
+									`Please click play manually to use ${this.sitename} on iOS.`
+								);
 							}
 						},
 						onError: err => {
