@@ -96,10 +96,10 @@ export default {
 		isOwnerOrAdmin() {
 			return this.isOwner() || this.isAdmin();
 		},
-		canRequest(loggedIn = true) {
+		canRequest(requireLogin = true) {
 			return (
 				this.station &&
-				(!loggedIn || this.loggedIn) &&
+				(!requireLogin || this.loggedIn) &&
 				this.station.requests &&
 				this.station.requests.enabled &&
 				(this.station.requests.access === "user" ||

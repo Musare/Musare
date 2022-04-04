@@ -784,10 +784,10 @@ export default {
 		isOwnerOrAdmin(station) {
 			return this.isOwner(station) || this.isAdmin();
 		},
-		canRequest(station, loggedIn = true) {
+		canRequest(station, requireLogin = true) {
 			return (
 				station &&
-				(!loggedIn || this.loggedIn) &&
+				(!requireLogin || this.loggedIn) &&
 				station.requests &&
 				station.requests.enabled &&
 				(station.requests.access === "user" ||
