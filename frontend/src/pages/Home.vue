@@ -497,6 +497,7 @@
 		<edit-playlist v-if="modals.editPlaylist" />
 		<edit-song v-if="modals.editSong" song-type="songs" sector="home" />
 		<report v-if="modals.report" />
+		<modal-manager />
 	</div>
 </template>
 
@@ -508,10 +509,13 @@ import Toast from "toasters";
 
 import SongThumbnail from "@/components/SongThumbnail.vue";
 
+import ModalManager from "@/components/ModalManager.vue";
+
 import ws from "@/ws";
 
 export default {
 	components: {
+		ModalManager,
 		SongThumbnail,
 		CreateStation: defineAsyncComponent(() =>
 			import("@/components/modals/CreateStation.vue")

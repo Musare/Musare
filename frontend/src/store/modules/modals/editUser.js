@@ -2,15 +2,20 @@
 
 export default {
 	namespaced: true,
-	state: {
+	state: () => ({
+		userId: null,
 		user: {}
-	},
+	}),
 	getters: {},
 	actions: {
-		editUser: ({ commit }, user) => commit("editUser", user)
+		editUser: ({ commit }, userId) => commit("editUser", userId),
+		setUser: ({ commit }, user) => commit("setUser", user)
 	},
 	mutations: {
-		editUser(state, user) {
+		editUser(state, userId) {
+			state.userId = userId;
+		},
+		setUser(state, user) {
 			state.user = user;
 		}
 	}

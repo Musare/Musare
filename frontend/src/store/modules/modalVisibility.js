@@ -1,6 +1,8 @@
 /* eslint no-param-reassign: 0 */
 import ws from "@/ws";
 
+import editUserModal from "./modals/editUser";
+
 const state = {
 	modals: {
 		whatIsNew: false,
@@ -25,8 +27,14 @@ const state = {
 		editSongsConfirm: false,
 		bulkActions: false
 	},
-	currentlyActive: []
+	currentlyActive: [],
+	new: {
+		activeModals: [],
+		modalMap: {}
+	}
 };
+
+const migratedModals = ["editUser"];
 
 const getters = {};
 
@@ -39,9 +47,27 @@ const actions = {
 
 		commit("closeModal", modal);
 	},
-	openModal: ({ commit }, modal) => {
-		commit("openModal", modal);
-	},
+	openModal: ({ commit }, modal) =>
+		new Promise(resolve => {
+			const uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+				/[xy]/g,
+				symbol => {
+					let array;
+
+					if (symbol === "y") {
+						array = ["8", "9", "a", "b"];
+						return array[Math.floor(Math.random() * array.length)];
+					}
+
+					array = new Uint8Array(1);
+					window.crypto.getRandomValues(array);
+					return (array[0] % 16).toString(16);
+				}
+			);
+
+			commit("openModal", { modal, uuid });
+			resolve({ uuid });
+		}),
 	closeCurrentModal: ({ commit }) => {
 		commit("closeCurrentModal");
 	}
@@ -49,20 +75,53 @@ const actions = {
 
 const mutations = {
 	closeModal(state, modal) {
-		state.modals[modal] = false;
-		const index = state.currentlyActive.indexOf(modal);
-		if (index > -1) state.currentlyActive.splice(index, 1);
+		if (migratedModals.indexOf(modal) === -1) {
+			state.modals[modal] = false;
+			const index = state.currentlyActive.indexOf(modal);
+			if (index > -1) state.currentlyActive.splice(index, 1);
+		}
 	},
-	openModal(state, modal) {
-		state.modals[modal] = true;
-		state.currentlyActive.unshift(modal);
+	openModal(state, { modal, uuid }) {
+		if (migratedModals.indexOf(modal) === -1) {
+			state.modals[modal] = true;
+			state.currentlyActive.push(modal);
+		} else {
+			state.new.modalMap[uuid] = modal;
+			state.new.activeModals.push(uuid);
+			state.currentlyActive.push(`${modal}-${uuid}`);
+
+			this.registerModule(["modals", "editUser", uuid], editUserModal);
+		}
 	},
 	closeCurrentModal(state) {
+		const currentlyActiveModal =
+			state.currentlyActive[state.currentlyActive.length - 1];
+		// TODO: make sure to only destroy/register modal listeners for a unique modal
 		// remove any websocket listeners for the modal
-		ws.destroyModalListeners(state.currentlyActive[0]);
+		ws.destroyModalListeners(currentlyActiveModal);
 
-		state.modals[state.currentlyActive[0]] = false;
-		state.currentlyActive.shift();
+		if (
+			migratedModals.indexOf(
+				currentlyActiveModal.substring(
+					0,
+					currentlyActiveModal.indexOf("-")
+				)
+			) === -1
+		) {
+			state.modals[currentlyActiveModal] = false;
+			state.currentlyActive.pop();
+		} else {
+			state.currentlyActive.pop();
+			state.new.activeModals.pop();
+			// const modal = currentlyActiveModal.substring(
+			// 	0,
+			// 	currentlyActiveModal.indexOf("-")
+			// );
+			const uuid = currentlyActiveModal.substring(
+				currentlyActiveModal.indexOf("-") + 1
+			);
+			delete state.new.modalMap[uuid];
+		}
 	}
 };
 

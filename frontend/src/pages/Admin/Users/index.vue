@@ -93,11 +93,6 @@
 				</template>
 			</advanced-table>
 		</div>
-		<edit-user
-			v-if="modals.editUser"
-			:user-id="editingUserId"
-			sector="admin"
-		/>
 	</div>
 </template>
 
@@ -118,7 +113,6 @@ export default {
 	},
 	data() {
 		return {
-			editingUserId: "",
 			columnDefault: {
 				sortable: true,
 				hidable: true,
@@ -314,8 +308,12 @@ export default {
 	},
 	methods: {
 		edit(userId) {
-			this.editingUserId = userId;
-			this.openModal("editUser");
+			this.openModal("editUser").then(({ uuid }) => {
+				this.$store.dispatch(
+					`modals/editUser/${uuid}/editUser`,
+					userId
+				);
+			});
 		},
 		...mapActions("modalVisibility", ["openModal"])
 	}
