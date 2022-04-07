@@ -112,6 +112,26 @@ import Toast from "toasters";
 import validation from "@/validation";
 import ws from "@/ws";
 
+const mapModalState = function(namespace, map) {
+	const modalState = {};
+	Object.entries(map).forEach(([mapKey, mapValue]) => {
+		modalState[mapKey] = function() {
+			return mapValue(namespace.replace("MODAL_UUID", this.modalUuid).split("/").reduce((a, b) => a[b], this.$store.state));
+		}
+	});
+	return modalState;
+}
+
+const mapModalActions = function(namespace, map) {
+	const modalState = {};
+	map.forEach(mapValue => {
+		modalState[mapValue] = function(value) {
+			return this.$store.dispatch(`${namespace.replace("MODAL_UUID", this.modalUuid)}/${mapValue}`, value);
+		}
+	});
+	return modalState;
+}
+
 export default {
 	props: {
 		modalUuid: { type: String, default: "" }
@@ -124,12 +144,10 @@ export default {
 		};
 	},
 	computed: {
-		userId() {
-			return this.$store.state.modals.editUser[this.modalUuid].userId;
-		},
-		user() {
-			return this.$store.state.modals.editUser[this.modalUuid].user;
-		},
+		...mapModalState("modals/editUser/MODAL_UUID", {
+			userId: state => state.userId,
+			user: state => state.user
+		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
@@ -162,10 +180,7 @@ export default {
 					res => {
 						if (res.status === "success") {
 							const user = res.data;
-							this.$store.dispatch(
-								`modals/editUser/${this.modalUuid}/setUser`,
-								user
-							);
+							this.setUser(user);
 
 							this.socket.dispatch(
 								"apis.joinRoom",
@@ -294,6 +309,7 @@ export default {
 				new Toast(res.message);
 			});
 		},
+		...mapModalActions("modals/editUser/MODAL_UUID", ["setUser"]),
 		...mapActions("modalVisibility", ["closeModal"])
 	}
 };
