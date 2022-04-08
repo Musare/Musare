@@ -308,12 +308,7 @@ export default {
 	},
 	methods: {
 		edit(userId) {
-			this.openModal("editUser").then(({ uuid }) => {
-				this.$store.dispatch(
-					`modals/editUser/${uuid}/editUser`,
-					userId
-				);
-			});
+			this.openModal({ modal: "editUser", data: { userId } });
 		},
 		...mapActions("modalVisibility", ["openModal"])
 	}

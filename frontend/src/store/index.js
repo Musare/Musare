@@ -15,11 +15,14 @@ import importAlbumModal from "./modules/modals/importAlbum";
 import importPlaylistModal from "./modules/modals/importPlaylist";
 import editPlaylistModal from "./modules/modals/editPlaylist";
 import manageStationModal from "./modules/modals/manageStation";
-import editUserModal from "./modules/modals/editUser";
 import viewPunishmentModal from "./modules/modals/viewPunishment";
 import viewReportModal from "./modules/modals/viewReport";
 import reportModal from "./modules/modals/report";
 import confirmModal from "./modules/modals/confirm";
+
+const emptyModule = {
+	namespaced: true
+};
 
 export default createStore({
 	modules: {
@@ -38,7 +41,7 @@ export default createStore({
 				importPlaylist: importPlaylistModal,
 				editPlaylist: editPlaylistModal,
 				manageStation: manageStationModal,
-				editUser: editUserModal,
+				editUser: emptyModule,
 				viewPunishment: viewPunishmentModal,
 				report: reportModal,
 				viewReport: viewReportModal,

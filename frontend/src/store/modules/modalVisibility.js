@@ -1,7 +1,7 @@
 /* eslint no-param-reassign: 0 */
 import ws from "@/ws";
 
-import editUserModal from "./modals/editUser";
+import editUser from "./modals/editUser";
 
 const state = {
 	modals: {
@@ -16,7 +16,6 @@ const state = {
 		report: false,
 		removeAccount: false,
 		editNews: false,
-		editUser: false,
 		editSong: false,
 		editSongs: false,
 		importAlbum: false,
@@ -34,7 +33,9 @@ const state = {
 	}
 };
 
-const migratedModals = ["editUser"];
+const modalModules = {
+	editUser
+};
 
 const getters = {};
 
@@ -47,7 +48,7 @@ const actions = {
 
 		commit("closeModal", modal);
 	},
-	openModal: ({ commit }, modal) =>
+	openModal: ({ commit }, data) =>
 		new Promise(resolve => {
 			const uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
 				/[xy]/g,
@@ -65,7 +66,7 @@ const actions = {
 				}
 			);
 
-			commit("openModal", { modal, uuid });
+			commit("openModal", { ...data, uuid });
 			resolve({ uuid });
 		}),
 	closeCurrentModal: ({ commit }) => {
@@ -75,14 +76,14 @@ const actions = {
 
 const mutations = {
 	closeModal(state, modal) {
-		if (migratedModals.indexOf(modal) === -1) {
+		if (!modalModules[modal]) {
 			state.modals[modal] = false;
 			const index = state.currentlyActive.indexOf(modal);
 			if (index > -1) state.currentlyActive.splice(index, 1);
 		}
 	},
-	openModal(state, { modal, uuid }) {
-		if (migratedModals.indexOf(modal) === -1) {
+	async openModal(state, { modal, uuid, data }) {
+		if (!modalModules[modal]) {
 			state.modals[modal] = true;
 			state.currentlyActive.push(modal);
 		} else {
@@ -90,7 +91,8 @@ const mutations = {
 			state.new.activeModals.push(uuid);
 			state.currentlyActive.push(`${modal}-${uuid}`);
 
-			this.registerModule(["modals", "editUser", uuid], editUserModal);
+			this.registerModule(["modals", modal, uuid], modalModules[modal]);
+			this.dispatch(`modals/${modal}/${uuid}/init`, data);
 		}
 	},
 	closeCurrentModal(state) {
@@ -101,12 +103,12 @@ const mutations = {
 		ws.destroyModalListeners(currentlyActiveModal);
 
 		if (
-			migratedModals.indexOf(
+			!modalModules[
 				currentlyActiveModal.substring(
 					0,
 					currentlyActiveModal.indexOf("-")
 				)
-			) === -1
+			]
 		) {
 			state.modals[currentlyActiveModal] = false;
 			state.currentlyActive.pop();

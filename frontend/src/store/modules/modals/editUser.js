@@ -8,11 +8,11 @@ export default {
 	}),
 	getters: {},
 	actions: {
-		editUser: ({ commit }, userId) => commit("editUser", userId),
+		init: ({ commit }, data) => commit("init", data),
 		setUser: ({ commit }, user) => commit("setUser", user)
 	},
 	mutations: {
-		editUser(state, userId) {
+		init(state, { userId }) {
 			state.userId = userId;
 		},
 		setUser(state, user) {
