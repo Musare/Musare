@@ -112,25 +112,7 @@ import Toast from "toasters";
 import validation from "@/validation";
 import ws from "@/ws";
 
-const mapModalState = function(namespace, map) {
-	const modalState = {};
-	Object.entries(map).forEach(([mapKey, mapValue]) => {
-		modalState[mapKey] = function() {
-			return mapValue(namespace.replace("MODAL_UUID", this.modalUuid).split("/").reduce((a, b) => a[b], this.$store.state));
-		}
-	});
-	return modalState;
-}
-
-const mapModalActions = function(namespace, map) {
-	const modalState = {};
-	map.forEach(mapValue => {
-		modalState[mapValue] = function(value) {
-			return this.$store.dispatch(`${namespace.replace("MODAL_UUID", this.modalUuid)}/${mapValue}`, value);
-		}
-	});
-	return modalState;
-}
+import { mapModalState, mapModalActions } from "@/vuex_helpers";
 
 export default {
 	props: {

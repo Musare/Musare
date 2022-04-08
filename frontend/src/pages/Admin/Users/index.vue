@@ -98,16 +98,12 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
-import { defineAsyncComponent } from "vue";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
 import ProfilePicture from "@/components/ProfilePicture.vue";
 
 export default {
 	components: {
-		EditUser: defineAsyncComponent(() =>
-			import("@/components/modals/EditUser.vue")
-		),
 		AdvancedTable,
 		ProfilePicture
 	},

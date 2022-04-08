@@ -11,22 +11,13 @@
 
 <script>
 import { mapState } from "vuex";
-import { defineAsyncComponent } from "vue";
 
-const mapModalComponents = (baseDirectory, map) => {
-	const modalComponents = {};
-	Object.entries(map).forEach(([mapKey, mapValue]) => {
-		modalComponents[mapKey] = function() {
-			return defineAsyncComponent(() => import(`${baseDirectory}/${mapValue}`));
-		}
-	});
-	return modalComponents;
-}
+import { mapModalComponents } from "@/vuex_helpers";
 
 export default {
 	computed: {
-		...mapModalComponents("./modals", {
-			"editUser": "EditUser.vue"
+		...mapModalComponents("./components/modals", {
+			editUser: "EditUser.vue"
 		}),
 		...mapState("modalVisibility", {
 			activeModals: state => state.new.activeModals,
