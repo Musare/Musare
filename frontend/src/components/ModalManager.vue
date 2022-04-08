@@ -17,7 +17,9 @@ import { mapModalComponents } from "@/vuex_helpers";
 export default {
 	computed: {
 		...mapModalComponents("./components/modals", {
-			editUser: "EditUser.vue"
+			editUser: "EditUser.vue",
+			login: "Login.vue",
+			register: "Register.vue"
 		}),
 		...mapState("modalVisibility", {
 			activeModals: state => state.new.activeModals,

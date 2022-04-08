@@ -7,8 +7,6 @@ const state = {
 	modals: {
 		whatIsNew: false,
 		manageStation: false,
-		login: false,
-		register: false,
 		createStation: false,
 		importPlaylist: false,
 		editPlaylist: false,
@@ -37,6 +35,30 @@ const modalModules = {
 	editUser
 };
 
+const migratedModules = {
+	whatIsNew: false,
+	manageStation: false,
+	login: true,
+	register: true,
+	createStation: false,
+	importPlaylist: false,
+	editPlaylist: false,
+	createPlaylist: false,
+	report: false,
+	removeAccount: false,
+	editNews: false,
+	editSong: false,
+	editSongs: false,
+	editUser: true,
+	importAlbum: false,
+	viewReport: false,
+	viewPunishment: false,
+	confirm: false,
+	editSongConfirm: false,
+	editSongsConfirm: false,
+	bulkActions: false
+};
+
 const getters = {};
 
 const actions = {
@@ -48,7 +70,7 @@ const actions = {
 
 		commit("closeModal", modal);
 	},
-	openModal: ({ commit }, data) =>
+	openModal: ({ commit }, dataOrModal) =>
 		new Promise(resolve => {
 			const uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
 				/[xy]/g,
@@ -66,7 +88,9 @@ const actions = {
 				}
 			);
 
-			commit("openModal", { ...data, uuid });
+			if (typeof dataOrModal === "string")
+				commit("openModal", { modal: dataOrModal, uuid });
+			else commit("openModal", { ...dataOrModal, uuid });
 			resolve({ uuid });
 		}),
 	closeCurrentModal: ({ commit }) => {
@@ -76,14 +100,28 @@ const actions = {
 
 const mutations = {
 	closeModal(state, modal) {
-		if (!modalModules[modal]) {
+		if (!migratedModules[modal]) {
 			state.modals[modal] = false;
 			const index = state.currentlyActive.indexOf(modal);
 			if (index > -1) state.currentlyActive.splice(index, 1);
+		} else {
+			Object.entries(state.new.modalMap).forEach(([uuid, _modal]) => {
+				if (modal === _modal) {
+					state.new.activeModals.splice(
+						state.new.activeModals.indexOf(uuid),
+						1
+					);
+					state.currentlyActive.splice(
+						state.currentlyActive.indexOf(`${modal}-${uuid}`),
+						1
+					);
+					delete state.new.modalMap[uuid];
+				}
+			});
 		}
 	},
-	async openModal(state, { modal, uuid, data }) {
-		if (!modalModules[modal]) {
+	openModal(state, { modal, uuid, data }) {
+		if (!migratedModules[modal]) {
 			state.modals[modal] = true;
 			state.currentlyActive.push(modal);
 		} else {
@@ -91,8 +129,13 @@ const mutations = {
 			state.new.activeModals.push(uuid);
 			state.currentlyActive.push(`${modal}-${uuid}`);
 
-			this.registerModule(["modals", modal, uuid], modalModules[modal]);
-			this.dispatch(`modals/${modal}/${uuid}/init`, data);
+			if (modalModules[modal]) {
+				this.registerModule(
+					["modals", modal, uuid],
+					modalModules[modal]
+				);
+				this.dispatch(`modals/${modal}/${uuid}/init`, data);
+			}
 		}
 	},
 	closeCurrentModal(state) {
@@ -103,7 +146,7 @@ const mutations = {
 		ws.destroyModalListeners(currentlyActiveModal);
 
 		if (
-			!modalModules[
+			!migratedModules[
 				currentlyActiveModal.substring(
 					0,
 					currentlyActiveModal.indexOf("-")

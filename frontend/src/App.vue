@@ -8,8 +8,6 @@
 				:class="{ 'main-container-modal-active': aModalIsOpen2 }"
 			/>
 			<what-is-new v-show="modals.whatIsNew" />
-			<login-modal v-if="modals.login" />
-			<register-modal v-if="modals.register" />
 			<create-playlist-modal v-if="modals.createPlaylist" />
 		</div>
 		<falling-snow v-if="christmas" />
@@ -29,12 +27,6 @@ export default {
 	components: {
 		WhatIsNew: defineAsyncComponent(() =>
 			import("@/components/modals/WhatIsNew.vue")
-		),
-		LoginModal: defineAsyncComponent(() =>
-			import("@/components/modals/Login.vue")
-		),
-		RegisterModal: defineAsyncComponent(() =>
-			import("@/components/modals/Register.vue")
 		),
 		CreatePlaylistModal: defineAsyncComponent(() =>
 			import("@/components/modals/CreatePlaylist.vue")
