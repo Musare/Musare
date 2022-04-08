@@ -1,7 +1,7 @@
 <template>
 	<modal
 		class="edit-news-modal"
-		:title="newsId ? 'Edit News' : 'Create News'"
+		:title="createNews ? 'Create News' : 'Edit News'"
 		:size="'wide'"
 		:split="true"
 	>
@@ -45,14 +45,14 @@
 
 				<save-button
 					ref="saveButton"
-					v-if="newsId"
-					@clicked="newsId ? update(false) : create(false)"
+					v-if="createNews"
+					@clicked="createNews ? create(false) : update(false)"
 				/>
 
 				<save-button
 					ref="saveAndCloseButton"
 					default-message="Save and close"
-					@clicked="newsId ? update(true) : create(true)"
+					@clicked="createNews ? create(true) : update(true)"
 				/>
 				<div class="right" v-if="createdAt > 0">
 					<span>
@@ -76,7 +76,7 @@
 </template>
 
 <script>
-import { mapActions, mapGetters, mapState } from "vuex";
+import { mapActions, mapGetters } from "vuex";
 import { marked } from "marked";
 import { sanitize } from "dompurify";
 import Toast from "toasters";
@@ -85,11 +85,12 @@ import { formatDistance } from "date-fns";
 import ws from "@/ws";
 import SaveButton from "../SaveButton.vue";
 
+import { mapModalState } from "@/vuex_helpers";
+
 export default {
 	components: { SaveButton },
 	props: {
-		newsId: { type: String, default: "" },
-		sector: { type: String, default: "admin" }
+		modalUuid: { type: String, default: "" }
 	},
 	data() {
 		return {
@@ -102,7 +103,11 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modals/editNews", { news: state => state.news }),
+		...mapModalState("modals/editNews/MODAL_UUID", {
+			createNews: state => state.createNews,
+			newsId: state => state.newsId,
+			sector: state => state.sector
+		}),
 		...mapGetters({ socket: "websockets/getSocket" })
 	},
 	mounted() {
@@ -119,9 +124,13 @@ export default {
 
 		ws.onConnect(this.init);
 	},
+	beforeUnmount() {
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule(["modals", "editNews", this.modalUuid]);
+	},
 	methods: {
 		init() {
-			if (this.newsId) {
+			if (this.newsId && !this.createNews) {
 				this.socket.dispatch(`news.getNewsFromId`, this.newsId, res => {
 					if (res.status === "success") {
 						const {
@@ -222,12 +231,7 @@ export default {
 			);
 		},
 		formatDistance,
-		...mapActions("modalVisibility", ["closeModal"]),
-		...mapActions("modals/editNews", [
-			"editNews",
-			"addChange",
-			"removeChange"
-		])
+		...mapActions("modalVisibility", ["closeModal"])
 	}
 };
 </script>

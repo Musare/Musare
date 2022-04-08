@@ -4,6 +4,7 @@ import ws from "@/ws";
 import editUser from "./modals/editUser";
 import whatIsNew from "./modals/whatIsNew";
 import createStation from "./modals/createStation";
+import editNews from "./modals/editNews";
 
 const state = {
 	modals: {
@@ -13,7 +14,6 @@ const state = {
 		createPlaylist: false,
 		report: false,
 		removeAccount: false,
-		editNews: false,
 		editSong: false,
 		editSongs: false,
 		importAlbum: false,
@@ -34,7 +34,8 @@ const state = {
 const modalModules = {
 	editUser,
 	whatIsNew,
-	createStation
+	createStation,
+	editNews
 };
 
 const migratedModules = {
@@ -48,7 +49,7 @@ const migratedModules = {
 	createPlaylist: false,
 	report: false,
 	removeAccount: false,
-	editNews: false,
+	editNews: true,
 	editSong: false,
 	editSongs: false,
 	editUser: true,
