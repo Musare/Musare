@@ -487,7 +487,6 @@
 			</div>
 			<main-footer />
 		</div>
-		<create-station v-if="modals.createStation" />
 		<manage-station
 			v-if="modals.manageStation"
 			:station-id="editingStationId"
@@ -517,9 +516,6 @@ export default {
 	components: {
 		ModalManager,
 		SongThumbnail,
-		CreateStation: defineAsyncComponent(() =>
-			import("@/components/modals/CreateStation.vue")
-		),
 		ManageStation: defineAsyncComponent(() =>
 			import("@/components/modals/ManageStation/index.vue")
 		),

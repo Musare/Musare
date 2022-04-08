@@ -21,6 +21,7 @@ export default {
 			login: "Login.vue",
 			register: "Register.vue",
 			whatIsNew: "WhatIsNew.vue",
+			createStation: "CreateStation.vue"
 		}),
 		...mapState("modalVisibility", {
 			activeModals: state => state.new.activeModals,

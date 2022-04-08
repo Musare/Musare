@@ -45,11 +45,13 @@
 import { mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
+import { mapModalState } from "@/vuex_helpers";
+
 import validation from "@/validation";
 
 export default {
 	props: {
-		official: { type: Boolean, default: false }
+		modalUuid: { type: String, default: "" }
 	},
 	data() {
 		return {
@@ -60,9 +62,22 @@ export default {
 			}
 		};
 	},
-	computed: mapGetters({
-		socket: "websockets/getSocket"
-	}),
+	computed: {
+		...mapModalState("modals/createStation/MODAL_UUID", {
+			official: state => state.official
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
+		})
+	},
+	beforeUnmount() {
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule([
+			"modals",
+			"createStation",
+			this.modalUuid
+		]);
+	},
 	methods: {
 		submitModal() {
 			this.newStation.name = this.newStation.name.toLowerCase();

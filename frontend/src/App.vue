@@ -196,13 +196,16 @@ export default {
 
 				if (news) {
 					if (newUser) {
-						this.openModal({ modal: "whatIsNew", data: { news }});
+						this.openModal({ modal: "whatIsNew", data: { news } });
 					} else if (localStorage.getItem("whatIsNew")) {
 						if (
 							parseInt(localStorage.getItem("whatIsNew")) <
 							news.createdAt
 						) {
-							this.openModal({ modal: "whatIsNew", data: { news }});
+							this.openModal({
+								modal: "whatIsNew",
+								data: { news }
+							});
 							localStorage.setItem("whatIsNew", news.createdAt);
 						}
 					} else {
@@ -210,7 +213,10 @@ export default {
 							parseInt(localStorage.getItem("firstVisited")) <
 							news.createdAt
 						)
-							this.openModal({ modal: "whatIsNew", data: { news }});
+							this.openModal({
+								modal: "whatIsNew",
+								data: { news }
+							});
 						localStorage.setItem("whatIsNew", news.createdAt);
 					}
 				}

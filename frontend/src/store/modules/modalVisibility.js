@@ -3,11 +3,11 @@ import ws from "@/ws";
 
 import editUser from "./modals/editUser";
 import whatIsNew from "./modals/whatIsNew";
+import createStation from "./modals/createStation";
 
 const state = {
 	modals: {
 		manageStation: false,
-		createStation: false,
 		importPlaylist: false,
 		editPlaylist: false,
 		createPlaylist: false,
@@ -33,7 +33,8 @@ const state = {
 
 const modalModules = {
 	editUser,
-	whatIsNew
+	whatIsNew,
+	createStation
 };
 
 const migratedModules = {
@@ -41,7 +42,7 @@ const migratedModules = {
 	manageStation: false,
 	login: true,
 	register: true,
-	createStation: false,
+	createStation: true,
 	importPlaylist: false,
 	editPlaylist: false,
 	createPlaylist: false,

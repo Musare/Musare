@@ -43,6 +43,7 @@ export default createStore({
 				manageStation: manageStationModal,
 				editUser: emptyModule,
 				whatIsNew: emptyModule,
+				createStation: emptyModule,
 				viewPunishment: viewPunishmentModal,
 				report: reportModal,
 				viewReport: viewReportModal,

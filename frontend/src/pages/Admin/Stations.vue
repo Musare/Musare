@@ -5,7 +5,12 @@
 			<div class="button-row">
 				<button
 					class="button is-primary"
-					@click="openModal('createStation')"
+					@click="
+						openModal({
+							modal: 'createStation',
+							data: { official: true }
+						})
+					"
 				>
 					Create Station
 				</button>
@@ -141,7 +146,6 @@
 		<edit-playlist v-if="modals.editPlaylist" />
 		<edit-song v-if="modals.editSong" song-type="songs" sector="admin" />
 		<report v-if="modals.report" />
-		<create-station v-if="modals.createStation" :official="true" />
 	</div>
 </template>
 
@@ -170,9 +174,6 @@ export default {
 		),
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong")
-		),
-		CreateStation: defineAsyncComponent(() =>
-			import("@/components/modals/CreateStation.vue")
 		),
 		AdvancedTable,
 		RunJobDropdown
