@@ -1,8 +1,8 @@
 <template>
 	<div>
 		<div v-for="activeModalUuid in activeModals" :key="activeModalUuid">
-			<edit-user
-				v-if="modalMap[activeModalUuid] === 'editUser'"
+			<component
+				:is="this[modalMap[activeModalUuid]]"
 				:modal-uuid="activeModalUuid"
 			/>
 		</div>
@@ -13,13 +13,21 @@
 import { mapState } from "vuex";
 import { defineAsyncComponent } from "vue";
 
+const mapModalComponents = (baseDirectory, map) => {
+	const modalComponents = {};
+	Object.entries(map).forEach(([mapKey, mapValue]) => {
+		modalComponents[mapKey] = function() {
+			return defineAsyncComponent(() => import(`${baseDirectory}/${mapValue}`));
+		}
+	});
+	return modalComponents;
+}
+
 export default {
-	components: {
-		EditUser: defineAsyncComponent(() =>
-			import("@/components/modals/EditUser.vue")
-		)
-	},
 	computed: {
+		...mapModalComponents("./modals", {
+			"editUser": "EditUser.vue"
+		}),
 		...mapState("modalVisibility", {
 			activeModals: state => state.new.activeModals,
 			modalMap: state => state.new.modalMap
