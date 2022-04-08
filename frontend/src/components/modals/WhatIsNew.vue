@@ -1,49 +1,44 @@
 <template>
-	<div v-if="news !== null">
-		<modal title="News" class="what-is-news-modal">
-			<template #body>
-				<div
-					class="section news-item"
-					v-html="sanitize(marked(news.markdown))"
-				></div>
-			</template>
-			<template #footer>
-				<span v-if="news.createdBy">
-					By
-					<user-id-to-username
-						:user-id="news.createdBy"
-						:alt="news.createdBy"
-						:link="true" /></span
-				>&nbsp;<span :title="new Date(news.createdAt)">
-					{{
-						formatDistance(news.createdAt, new Date(), {
-							addSuffix: true
-						})
-					}}
-				</span>
-			</template>
-		</modal>
-	</div>
-	<div v-else></div>
+	<modal title="News" class="what-is-news-modal">
+		<template #body>
+			<div
+				class="section news-item"
+				v-html="sanitize(marked(news.markdown))"
+			></div>
+		</template>
+		<template #footer>
+			<span v-if="news.createdBy">
+				By
+				<user-id-to-username
+					:user-id="news.createdBy"
+					:alt="news.createdBy"
+					:link="true" /></span
+			>&nbsp;<span :title="new Date(news.createdAt)">
+				{{
+					formatDistance(news.createdAt, new Date(), {
+						addSuffix: true
+					})
+				}}
+			</span>
+		</template>
+	</modal>
 </template>
 
 <script>
 import { formatDistance } from "date-fns";
 import { marked } from "marked";
 import { sanitize } from "dompurify";
-import { mapGetters, mapActions } from "vuex";
-import ws from "@/ws";
+import { mapActions } from "vuex";
+
+import { mapModalState } from "@/vuex_helpers";
 
 export default {
-	data() {
-		return {
-			isModalActive: false,
-			news: null
-		};
+	props: {
+		modalUuid: { type: String, default: "" }
 	},
 	computed: {
-		...mapGetters({
-			socket: "websockets/getSocket"
+		...mapModalState("modals/whatIsNew/MODAL_UUID", {
+			news: state => state.news
 		})
 	},
 	mounted() {
@@ -57,43 +52,12 @@ export default {
 				}
 			}
 		});
-
-		ws.onConnect(this.init);
+	},
+	beforeUnmount() {
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule(["modals", "whatIsNew", this.modalUuid]);
 	},
 	methods: {
-		init() {
-			const newUser = !localStorage.getItem("firstVisited");
-			this.socket.dispatch("news.newest", newUser, res => {
-				if (res.status !== "success") return;
-
-				const { news } = res.data;
-
-				this.news = news;
-				if (this.news) {
-					if (newUser) {
-						this.openModal("whatIsNew");
-					} else if (localStorage.getItem("whatIsNew")) {
-						if (
-							parseInt(localStorage.getItem("whatIsNew")) <
-							news.createdAt
-						) {
-							this.openModal("whatIsNew");
-							localStorage.setItem("whatIsNew", news.createdAt);
-						}
-					} else {
-						if (
-							parseInt(localStorage.getItem("firstVisited")) <
-							news.createdAt
-						)
-							this.openModal("whatIsNew");
-						localStorage.setItem("whatIsNew", news.createdAt);
-					}
-				}
-
-				if (!localStorage.getItem("firstVisited"))
-					localStorage.setItem("firstVisited", Date.now());
-			});
-		},
 		marked,
 		sanitize,
 		formatDistance,

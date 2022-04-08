@@ -42,6 +42,7 @@ export default createStore({
 				editPlaylist: editPlaylistModal,
 				manageStation: manageStationModal,
 				editUser: emptyModule,
+				whatIsNew: emptyModule,
 				viewPunishment: viewPunishmentModal,
 				report: reportModal,
 				viewReport: viewReportModal,

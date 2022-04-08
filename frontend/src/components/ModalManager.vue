@@ -19,7 +19,8 @@ export default {
 		...mapModalComponents("./components/modals", {
 			editUser: "EditUser.vue",
 			login: "Login.vue",
-			register: "Register.vue"
+			register: "Register.vue",
+			whatIsNew: "WhatIsNew.vue",
 		}),
 		...mapState("modalVisibility", {
 			activeModals: state => state.new.activeModals,

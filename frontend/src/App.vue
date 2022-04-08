@@ -7,7 +7,6 @@
 				class="main-container"
 				:class="{ 'main-container-modal-active': aModalIsOpen2 }"
 			/>
-			<what-is-new v-show="modals.whatIsNew" />
 			<create-playlist-modal v-if="modals.createPlaylist" />
 		</div>
 		<falling-snow v-if="christmas" />
@@ -25,9 +24,6 @@ import keyboardShortcuts from "./keyboardShortcuts";
 
 export default {
 	components: {
-		WhatIsNew: defineAsyncComponent(() =>
-			import("@/components/modals/WhatIsNew.vue")
-		),
 		CreatePlaylistModal: defineAsyncComponent(() =>
 			import("@/components/modals/CreatePlaylist.vue")
 		),
@@ -191,6 +187,37 @@ export default {
 			this.socket.on("keep.event:user.session.deleted", () =>
 				window.location.reload()
 			);
+
+			const newUser = !localStorage.getItem("firstVisited");
+			this.socket.dispatch("news.newest", newUser, res => {
+				if (res.status !== "success") return;
+
+				const { news } = res.data;
+
+				if (news) {
+					if (newUser) {
+						this.openModal({ modal: "whatIsNew", data: { news }});
+					} else if (localStorage.getItem("whatIsNew")) {
+						if (
+							parseInt(localStorage.getItem("whatIsNew")) <
+							news.createdAt
+						) {
+							this.openModal({ modal: "whatIsNew", data: { news }});
+							localStorage.setItem("whatIsNew", news.createdAt);
+						}
+					} else {
+						if (
+							parseInt(localStorage.getItem("firstVisited")) <
+							news.createdAt
+						)
+							this.openModal({ modal: "whatIsNew", data: { news }});
+						localStorage.setItem("whatIsNew", news.createdAt);
+					}
+				}
+
+				if (!localStorage.getItem("firstVisited"))
+					localStorage.setItem("firstVisited", Date.now());
+			});
 		});
 
 		ws.onDisconnect(true, () => {
@@ -263,7 +290,7 @@ export default {
 				.getElementsByTagName("html")[0]
 				.classList.add("christmas-mode");
 		},
-		...mapActions("modalVisibility", ["closeCurrentModal"]),
+		...mapActions("modalVisibility", ["closeCurrentModal", "openModal"]),
 		...mapActions("user/preferences", [
 			"changeNightmode",
 			"changeAutoSkipDisliked",

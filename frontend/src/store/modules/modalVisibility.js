@@ -2,10 +2,10 @@
 import ws from "@/ws";
 
 import editUser from "./modals/editUser";
+import whatIsNew from "./modals/whatIsNew";
 
 const state = {
 	modals: {
-		whatIsNew: false,
 		manageStation: false,
 		createStation: false,
 		importPlaylist: false,
@@ -32,11 +32,12 @@ const state = {
 };
 
 const modalModules = {
-	editUser
+	editUser,
+	whatIsNew
 };
 
 const migratedModules = {
-	whatIsNew: false,
+	whatIsNew: true,
 	manageStation: false,
 	login: true,
 	register: true,
@@ -126,8 +127,6 @@ const mutations = {
 			state.currentlyActive.push(modal);
 		} else {
 			state.new.modalMap[uuid] = modal;
-			state.new.activeModals.push(uuid);
-			state.currentlyActive.push(`${modal}-${uuid}`);
 
 			if (modalModules[modal]) {
 				this.registerModule(
@@ -136,6 +135,9 @@ const mutations = {
 				);
 				this.dispatch(`modals/${modal}/${uuid}/init`, data);
 			}
+
+			state.new.activeModals.push(uuid);
+			state.currentlyActive.push(`${modal}-${uuid}`);
 		}
 	},
 	closeCurrentModal(state) {
