@@ -260,7 +260,6 @@
 		<edit-song v-if="modals.editSong" song-type="songs" />
 		<edit-songs v-if="modals.editSongs" />
 		<report v-if="modals.report" />
-		<bulk-actions v-if="modals.bulkActions" :type="bulkActionsType" />
 		<confirm v-if="modals.confirm" @confirmed="handleConfirmed()" />
 	</div>
 </template>
@@ -287,9 +286,6 @@ export default {
 		),
 		ImportAlbum: defineAsyncComponent(() =>
 			import("@/components/modals/ImportAlbum.vue")
-		),
-		BulkActions: defineAsyncComponent(() =>
-			import("@/components/modals/BulkActions.vue")
 		),
 		Confirm: defineAsyncComponent(() =>
 			import("@/components/modals/Confirm.vue")
@@ -621,8 +617,7 @@ export default {
 				message: "",
 				action: "",
 				params: null
-			},
-			bulkActionsType: null
+			}
 		};
 	},
 	computed: {
@@ -697,37 +692,49 @@ export default {
 			);
 		},
 		setTags(selectedRows) {
-			this.bulkActionsType = {
-				name: "tags",
-				action: "songs.editTags",
-				items: selectedRows.map(row => row._id),
-				regex: /^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/,
-				autosuggest: true,
-				autosuggestDataAction: "songs.getTags"
-			};
-			this.openModal("bulkActions");
+			this.openModal({
+				modal: "bulkActions",
+				data: {
+					type: {
+						name: "tags",
+						action: "songs.editTags",
+						items: selectedRows.map(row => row._id),
+						regex: /^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/,
+						autosuggest: true,
+						autosuggestDataAction: "songs.getTags"
+					}
+				}
+			});
 		},
 		setArtists(selectedRows) {
-			this.bulkActionsType = {
-				name: "artists",
-				action: "songs.editArtists",
-				items: selectedRows.map(row => row._id),
-				regex: /^(?=.{1,64}$).*$/,
-				autosuggest: true,
-				autosuggestDataAction: "songs.getArtists"
-			};
-			this.openModal("bulkActions");
+			this.openModal({
+				modal: "bulkActions",
+				data: {
+					type: {
+						name: "artists",
+						action: "songs.editArtists",
+						items: selectedRows.map(row => row._id),
+						regex: /^(?=.{1,64}$).*$/,
+						autosuggest: true,
+						autosuggestDataAction: "songs.getArtists"
+					}
+				}
+			});
 		},
 		setGenres(selectedRows) {
-			this.bulkActionsType = {
-				name: "genres",
-				action: "songs.editGenres",
-				items: selectedRows.map(row => row._id),
-				regex: /^[\x00-\x7F]{1,32}$/,
-				autosuggest: true,
-				autosuggestDataAction: "songs.getGenres"
-			};
-			this.openModal("bulkActions");
+			this.openModal({
+				modal: "bulkActions",
+				data: {
+					type: {
+						name: "genres",
+						action: "songs.editGenres",
+						items: selectedRows.map(row => row._id),
+						regex: /^[\x00-\x7F]{1,32}$/,
+						autosuggest: true,
+						autosuggestDataAction: "songs.getGenres"
+					}
+				}
+			});
 		},
 		deleteOne(songId) {
 			this.socket.dispatch("songs.remove", songId, res => {

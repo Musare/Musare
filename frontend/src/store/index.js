@@ -43,7 +43,8 @@ export default createStore({
 				viewPunishment: viewPunishmentModal,
 				report: emptyModule,
 				viewReport: emptyModule,
-				confirm: confirmModal
+				confirm: confirmModal,
+				bulkActions: emptyModule
 			}
 		}
 	},

@@ -28,7 +28,8 @@ export default {
 			editPlaylist: "EditPlaylist/index.vue",
 			createPlaylist: "CreatePlaylist.vue",
 			report: "Report.vue",
-			viewReport: "ViewReport.vue"
+			viewReport: "ViewReport.vue",
+			bulkActions: "BulkActions.vue"
 		}),
 		...mapState("modalVisibility", {
 			activeModals: state => state.new.activeModals,
