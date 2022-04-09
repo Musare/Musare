@@ -493,7 +493,6 @@
 			sector="home"
 		/>
 		<create-playlist v-if="modals.createPlaylist" />
-		<edit-playlist v-if="modals.editPlaylist" />
 		<edit-song v-if="modals.editSong" song-type="songs" sector="home" />
 		<report v-if="modals.report" />
 		<modal-manager />
@@ -518,9 +517,6 @@ export default {
 		SongThumbnail,
 		ManageStation: defineAsyncComponent(() =>
 			import("@/components/modals/ManageStation/index.vue")
-		),
-		EditPlaylist: defineAsyncComponent(() =>
-			import("@/components/modals/EditPlaylist")
 		),
 		CreatePlaylist: defineAsyncComponent(() =>
 			import("@/components/modals/CreatePlaylist.vue")

@@ -67,7 +67,12 @@
 								>
 							</quick-confirm>
 							<i
-								@click="edit(element._id)"
+								@click="
+									openModal({
+										modal: 'editPlaylist',
+										data: { playlistId: element._id }
+									})
+								"
 								class="material-icons edit-icon"
 								content="Edit Playlist"
 								v-tippy
@@ -177,10 +182,6 @@ export default {
 		isOwnerOrAdmin() {
 			return this.isOwner() || this.isAdmin();
 		},
-		edit(id) {
-			this.editPlaylist(id);
-			this.openModal("editPlaylist");
-		},
 		selectPlaylist(playlist) {
 			if (this.station.type === "community") {
 				if (!this.isSelected(playlist.id)) {
@@ -259,7 +260,7 @@ export default {
 			);
 		},
 		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions("user/playlists", ["editPlaylist", "setPlaylists"])
+		...mapActions("user/playlists", ["setPlaylists"])
 	}
 };
 </script>

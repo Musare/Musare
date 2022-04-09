@@ -49,7 +49,12 @@
 						<template #actions>
 							<i
 								v-if="myUserId === userId"
-								@click="showPlaylist(element._id)"
+								@click="
+									openModal({
+										modal: 'editPlaylist',
+										data: { playlistId: element._id }
+									})
+								"
 								class="material-icons edit-icon"
 								content="Edit Playlist"
 								v-tippy
@@ -57,7 +62,12 @@
 							>
 							<i
 								v-else
-								@click="showPlaylist(element._id)"
+								@click="
+									openModal({
+										modal: 'editPlaylist',
+										data: { playlistId: element._id }
+									})
+								"
 								class="material-icons view-icon"
 								content="View Playlist"
 								v-tippy
@@ -152,12 +162,8 @@ export default {
 		);
 	},
 	methods: {
-		showPlaylist(playlistId) {
-			this.editPlaylist(playlistId);
-			this.openModal("editPlaylist");
-		},
 		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions("user/playlists", ["editPlaylist", "setPlaylists"])
+		...mapActions("user/playlists", ["setPlaylists"])
 	}
 };
 </script>

@@ -1,6 +1,5 @@
 <template>
 	<div v-if="isUser">
-		<edit-playlist v-if="modals.editPlaylist" />
 		<view-report v-if="modals.viewReport" />
 		<edit-song v-if="modals.editSong" song-type="songs" />
 		<report v-if="modals.report" />
@@ -123,9 +122,6 @@ export default {
 		ProfilePicture,
 		RecentActivity,
 		Playlists,
-		EditPlaylist: defineAsyncComponent(() =>
-			import("@/components/modals/EditPlaylist")
-		),
 		Report: defineAsyncComponent(() =>
 			import("@/components/modals/Report.vue")
 		),

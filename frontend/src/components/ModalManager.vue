@@ -24,7 +24,8 @@ export default {
 			createStation: "CreateStation.vue",
 			editNews: "EditNews.vue",
 			manageStation: "ManageStation/index.vue",
-			importPlaylist: "ImportPlaylist.vue"
+			importPlaylist: "ImportPlaylist.vue",
+			editPlaylist: "EditPlaylist/index.vue"
 		}),
 		...mapState("modalVisibility", {
 			activeModals: state => state.new.activeModals,

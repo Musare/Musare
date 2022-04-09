@@ -190,7 +190,14 @@
 							</quick-confirm>
 							<i
 								v-if="featuredPlaylist.createdBy === myUserId"
-								@click="showPlaylist(featuredPlaylist._id)"
+								@click="
+									openModal({
+										modal: 'editPlaylist',
+										data: {
+											playlistId: featuredPlaylist._id
+										}
+									})
+								"
 								class="material-icons edit-icon"
 								content="Edit Playlist"
 								v-tippy
@@ -202,7 +209,14 @@
 									(featuredPlaylist.privacy === 'public' ||
 										isAdmin())
 								"
-								@click="showPlaylist(featuredPlaylist._id)"
+								@click="
+									openModal({
+										modal: 'editPlaylist',
+										data: {
+											playlistId: featuredPlaylist._id
+										}
+									})
+								"
 								class="material-icons edit-icon"
 								content="View Playlist"
 								v-tippy
@@ -360,7 +374,12 @@
 							</quick-confirm>
 							<i
 								v-if="playlist.createdBy === myUserId"
-								@click="showPlaylist(playlist._id)"
+								@click="
+									openModal({
+										modal: 'editPlaylist',
+										data: { playlistId: playlist._id }
+									})
+								"
 								class="material-icons edit-icon"
 								content="Edit Playlist"
 								v-tippy
@@ -371,7 +390,12 @@
 									playlist.createdBy !== myUserId &&
 									(playlist.privacy === 'public' || isAdmin())
 								"
-								@click="showPlaylist(playlist._id)"
+								@click="
+									openModal({
+										modal: 'editPlaylist',
+										data: { playlistId: playlist._id }
+									})
+								"
 								class="material-icons edit-icon"
 								content="View Playlist"
 								v-tippy
@@ -432,7 +456,12 @@
 							</quick-confirm>
 							<i
 								v-if="playlist.createdBy === myUserId"
-								@click="showPlaylist(playlist._id)"
+								@click="
+									openModal({
+										modal: 'editPlaylist',
+										data: { playlistId: playlist._id }
+									})
+								"
 								class="material-icons edit-icon"
 								content="Edit Playlist"
 								v-tippy
@@ -443,7 +472,12 @@
 									playlist.createdBy !== myUserId &&
 									(playlist.privacy === 'public' || isAdmin())
 								"
-								@click="showPlaylist(playlist._id)"
+								@click="
+									openModal({
+										modal: 'editPlaylist',
+										data: { playlistId: playlist._id }
+									})
+								"
 								class="material-icons edit-icon"
 								content="View Playlist"
 								v-tippy
@@ -620,7 +654,14 @@
 										</i>
 									</quick-confirm>
 									<i
-										@click="showPlaylist(element._id)"
+										@click="
+											openModal({
+												modal: 'editPlaylist',
+												data: {
+													playlistId: element._id
+												}
+											})
+										"
 										class="material-icons edit-icon"
 										content="Edit Playlist"
 										v-tippy
@@ -792,10 +833,6 @@ export default {
 		isOwnerOrAdmin() {
 			return this.isOwner() || this.isAdmin();
 		},
-		showPlaylist(playlistId) {
-			this.editPlaylist(playlistId);
-			this.openModal("editPlaylist");
-		},
 		label(tense = "future", typeOverwrite = null, capitalize = false) {
 			let label = typeOverwrite || this.type;
 
@@ -962,7 +999,7 @@ export default {
 			});
 		},
 		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions("user/playlists", ["editPlaylist", "setPlaylists"])
+		...mapActions("user/playlists", ["setPlaylists"])
 	}
 };
 </script>

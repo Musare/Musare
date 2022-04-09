@@ -615,8 +615,7 @@ export default {
 				);
 			}
 		}),
-		...mapActions("modalVisibility", ["openModal", "closeModal"]),
-		...mapActions("user/playlists", ["editPlaylist"])
+		...mapActions("modalVisibility", ["openModal", "closeModal"])
 	}
 };
 </script>

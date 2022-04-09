@@ -140,7 +140,9 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
+import { mapGetters } from "vuex";
+
+import { mapModalState } from "@/vuex_helpers";
 
 import SearchYoutube from "@/mixins/SearchYoutube.vue";
 import SearchMusare from "@/mixins/SearchMusare.vue";
@@ -151,13 +153,16 @@ import SearchQueryItem from "@/components/SearchQueryItem.vue";
 export default {
 	components: { SearchQueryItem, SongItem },
 	mixins: [SearchYoutube, SearchMusare],
+	props: {
+		modalUuid: { type: String, default: "" }
+	},
 	data() {
 		return {
 			sitename: "Musare"
 		};
 	},
 	computed: {
-		...mapState("modals/editPlaylist", {
+		...mapModalState("modals/editPlaylist/MODAL_UUID", {
 			playlist: state => state.playlist
 		}),
 		...mapGetters({

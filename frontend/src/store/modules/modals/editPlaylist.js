@@ -3,11 +3,13 @@
 export default {
 	namespaced: true,
 	state: {
+		playlistId: null,
 		tab: "settings",
 		playlist: { songs: [] }
 	},
 	getters: {},
 	actions: {
+		init: ({ commit }, data) => commit("init", data),
 		showTab: ({ commit }, tab) => commit("showTab", tab),
 		setPlaylist: ({ commit }, playlist) => commit("setPlaylist", playlist),
 		clearPlaylist: ({ commit }) => commit("clearPlaylist"),
@@ -18,6 +20,9 @@ export default {
 		repositionedSong: ({ commit }, song) => commit("repositionedSong", song)
 	},
 	mutations: {
+		init(state, { playlistId }) {
+			state.playlistId = playlistId;
+		},
 		showTab(state, tab) {
 			state.tab = tab;
 		},

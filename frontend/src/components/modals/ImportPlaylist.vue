@@ -90,6 +90,14 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
+	beforeUnmount() {
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule([
+			"modals",
+			"importPlaylist",
+			this.modalUuid
+		]);
+	},
 	methods: {
 		importPlaylist() {
 			let isImportingPlaylist = true;

@@ -68,7 +68,7 @@ export default {
 			if (playlistId) {
 				message = message.replace(
 					/<playlistId>(.*)<\/playlistId>/g,
-					`<a href='#' class='activity-item-link' @click='showPlaylist("${playlistId}")'>$1</a>`
+					`<a href='#' class='activity-item-link' @click='openModal({modal:'editPlaylist', data: {"${playlistId}"}})'>$1</a>`
 				);
 			}
 
@@ -82,7 +82,7 @@ export default {
 			return {
 				template: `<p>${message}</p>`,
 				methods: {
-					showPlaylist: this.showPlaylist,
+					openModal: this.openModal,
 					showReport: this.showReport
 				}
 			};
@@ -178,11 +178,6 @@ export default {
 			this.viewReport(reportId);
 			this.openModal("viewReport");
 		},
-		showPlaylist(playlistId) {
-			this.editPlaylist(playlistId);
-			this.openModal("editPlaylist");
-		},
-		...mapActions("user/playlists", ["editPlaylist"]),
 		formatDistance,
 		parseISO,
 		...mapActions("modalVisibility", ["openModal"]),

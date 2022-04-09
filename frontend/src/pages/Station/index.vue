@@ -636,7 +636,6 @@
 					:station-id="station._id"
 					sector="station"
 				/>
-				<edit-playlist v-if="modals.editPlaylist" />
 				<edit-song
 					v-if="modals.editSong"
 					song-type="songs"
@@ -800,9 +799,6 @@ import StationSidebar from "./Sidebar/index.vue";
 export default {
 	components: {
 		ContentLoader,
-		EditPlaylist: defineAsyncComponent(() =>
-			import("@/components/modals/EditPlaylist")
-		),
 		CreatePlaylist: defineAsyncComponent(() =>
 			import("@/components/modals/CreatePlaylist.vue")
 		),

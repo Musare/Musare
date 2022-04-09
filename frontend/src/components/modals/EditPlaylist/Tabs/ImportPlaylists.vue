@@ -32,18 +32,22 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
+import { mapGetters } from "vuex";
 import Toast from "toasters";
 
+import { mapModalState } from "@/vuex_helpers";
 import SearchYoutube from "@/mixins/SearchYoutube.vue";
 
 export default {
 	mixins: [SearchYoutube],
+	props: {
+		modalUuid: { type: String, default: "" }
+	},
 	data() {
 		return {};
 	},
 	computed: {
-		...mapState("modals/editPlaylist", {
+		...mapModalState("modals/editPlaylist/MODAL_UUID", {
 			playlist: state => state.playlist
 		}),
 		...mapGetters({

@@ -58,14 +58,18 @@
 import { mapState, mapGetters /* , mapActions */ } from "vuex";
 import Toast from "toasters";
 
+import { mapModalState } from "@/vuex_helpers";
 import validation from "@/validation";
 
 export default {
+	props: {
+		modalUuid: { type: String, default: "" }
+	},
 	data() {
 		return {};
 	},
 	computed: {
-		...mapState("modals/editPlaylist", {
+		...mapModalState("modals/editPlaylist/MODAL_UUID", {
 			playlist: state => state.playlist
 		}),
 		...mapGetters({

@@ -83,15 +83,16 @@ export default {
 						this.closeModal("createPlaylist");
 
 						if (!window.addToPlaylistDropdown) {
-							this.editPlaylist(res.data.playlistId);
-							this.openModal("editPlaylist");
+							this.openModal({
+								modal: "editPlaylist",
+								data: { playlistId: res.data.playlistId }
+							});
 						}
 					}
 				}
 			);
 		},
-		...mapActions("modalVisibility", ["closeModal", "openModal"]),
-		...mapActions("user/playlists", ["editPlaylist"])
+		...mapActions("modalVisibility", ["closeModal", "openModal"])
 	}
 };
 </script>
