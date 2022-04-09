@@ -1,6 +1,6 @@
 <template>
 	<div class="musare-songs-tab">
-		<label class="label"> Search for a song on Musare </label>
+		<label class="label"> Search for a song on {{ sitename }} </label>
 		<div class="control is-grouped input-with-button">
 			<p class="control is-expanded">
 				<input
@@ -49,7 +49,9 @@ export default {
 	},
 	mixins: [SearchMusare],
 	data() {
-		return {};
+		return {
+			sitename: "Musare"
+		};
 	},
 	computed: {
 		...mapState("modals/editSong", {
@@ -59,7 +61,9 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
-	mounted() {
+	async mounted() {
+		this.sitename = await lofig.get("siteSettings.sitename");
+
 		this.musareSearch.query = this.song.title;
 		this.searchForMusareSongs(1, false);
 	}

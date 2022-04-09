@@ -34,7 +34,9 @@
 			</div>
 			<div class="tab" v-show="tab === 'songs'">
 				<div class="musare-songs">
-					<label class="label"> Search for a song on Musare </label>
+					<label class="label">
+						Search for a song on {{ sitename }}
+					</label>
 					<div class="control is-grouped input-with-button">
 						<p class="control is-expanded">
 							<input
@@ -208,7 +210,8 @@ export default {
 	},
 	data() {
 		return {
-			tab: "songs"
+			tab: "songs",
+			sitename: "Musare"
 		};
 	},
 	computed: {
@@ -297,7 +300,9 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
-	mounted() {
+	async mounted() {
+		this.sitename = await lofig.get("siteSettings.sitename");
+
 		this.showTab("songs");
 
 		this.socket.on("event:station.queue.updated", () =>
