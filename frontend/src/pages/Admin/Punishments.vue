@@ -14,7 +14,12 @@
 					<div class="row-options">
 						<button
 							class="button is-primary icon-with-button material-icons"
-							@click="view(slotProps.item._id)"
+							@click="
+								openModal({
+									modal: 'viewPunishment',
+									data: { punishmentId: slotProps.item._id }
+								})
+							"
 							:disabled="slotProps.item.removed"
 							content="View Punishment"
 							v-tippy
@@ -115,31 +120,21 @@
 				</div>
 			</div>
 		</div>
-		<view-punishment
-			v-if="modals.viewPunishment"
-			:punishment-id="viewingPunishmentId"
-			sector="admin"
-		/>
 	</div>
 </template>
 
 <script>
 import { mapState, mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
-import { defineAsyncComponent } from "vue";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
 
 export default {
 	components: {
-		ViewPunishment: defineAsyncComponent(() =>
-			import("@/components/modals/ViewPunishment.vue")
-		),
 		AdvancedTable
 	},
 	data() {
 		return {
-			viewingPunishmentId: "",
 			ipBan: {
 				expiresAt: "1h"
 			},
@@ -284,10 +279,6 @@ export default {
 		})
 	},
 	methods: {
-		view(punishmentId) {
-			this.viewingPunishmentId = punishmentId;
-			this.openModal("viewPunishment");
-		},
 		banIP() {
 			this.socket.dispatch(
 				"punishments.banIP",
@@ -308,8 +299,7 @@ export default {
 			const minute = `${date.getMinutes()}`.padStart(2, 0);
 			return `${year}-${month}-${day} ${hour}:${minute}`;
 		},
-		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions("admin/punishments", ["viewPunishment"])
+		...mapActions("modalVisibility", ["openModal"])
 	}
 };
 </script>

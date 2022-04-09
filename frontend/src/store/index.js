@@ -12,7 +12,6 @@ import admin from "./modules/admin";
 import editSongModal from "./modules/modals/editSong";
 import editSongsModal from "./modules/modals/editSongs";
 import importAlbumModal from "./modules/modals/importAlbum";
-import viewPunishmentModal from "./modules/modals/viewPunishment";
 import confirmModal from "./modules/modals/confirm";
 
 const emptyModule = {
@@ -40,7 +39,7 @@ export default createStore({
 				whatIsNew: emptyModule,
 				createStation: emptyModule,
 				editNews: emptyModule,
-				viewPunishment: viewPunishmentModal,
+				viewPunishment: emptyModule,
 				report: emptyModule,
 				viewReport: emptyModule,
 				confirm: confirmModal,

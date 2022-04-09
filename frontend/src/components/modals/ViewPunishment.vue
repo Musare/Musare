@@ -9,19 +9,19 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 import { format, formatDistance, parseISO } from "date-fns";
 
 import Toast from "toasters";
 import ws from "@/ws";
+import { mapModalState, mapModalActions } from "@/vuex_helpers";
 
 import PunishmentItem from "../PunishmentItem.vue";
 
 export default {
 	components: { PunishmentItem },
 	props: {
-		punishmentId: { type: String, default: "" },
-		sector: { type: String, default: "admin" }
+		modalUuid: { type: String, default: "" }
 	},
 	data() {
 		return {
@@ -29,7 +29,8 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modals/viewPunishment", {
+		...mapModalState("modals/viewPunishment/MODAL_UUID", {
+			punishmentId: state => state.punishmentId,
 			punishment: state => state.punishment
 		}),
 		...mapGetters({
@@ -38,6 +39,14 @@ export default {
 	},
 	mounted() {
 		ws.onConnect(this.init);
+	},
+	beforeUnmount() {
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule([
+			"modals",
+			"viewPunishment",
+			this.modalUuid
+		]);
 	},
 	methods: {
 		init() {
@@ -56,7 +65,9 @@ export default {
 			);
 		},
 		...mapActions("modalVisibility", ["closeModal"]),
-		...mapActions("modals/viewPunishment", ["viewPunishment"]),
+		...mapModalActions("modals/viewPunishment/MODAL_UUID", [
+			"viewPunishment"
+		]),
 		format,
 		formatDistance,
 		parseISO

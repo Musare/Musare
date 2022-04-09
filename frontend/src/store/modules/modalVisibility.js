@@ -11,6 +11,7 @@ import editPlaylist from "./modals/editPlaylist";
 import report from "./modals/report";
 import viewReport from "./modals/viewReport";
 import bulkActions from "./modals/bulkActions";
+import viewPunishment from "./modals/viewPunishment";
 
 const state = {
 	modals: {
@@ -18,7 +19,6 @@ const state = {
 		editSong: false,
 		editSongs: false,
 		importAlbum: false,
-		viewPunishment: false,
 		confirm: false,
 		editSongConfirm: false,
 		editSongsConfirm: false
@@ -40,7 +40,8 @@ const modalModules = {
 	editPlaylist,
 	report,
 	viewReport,
-	bulkActions
+	bulkActions,
+	viewPunishment
 };
 
 const migratedModules = {
@@ -60,7 +61,7 @@ const migratedModules = {
 	editUser: true,
 	importAlbum: false,
 	viewReport: true,
-	viewPunishment: false,
+	viewPunishment: true,
 	confirm: false,
 	editSongConfirm: false,
 	editSongsConfirm: false,
