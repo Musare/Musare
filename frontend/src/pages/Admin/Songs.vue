@@ -256,10 +256,8 @@
 				</template>
 			</advanced-table>
 		</div>
-		<import-album v-if="modals.importAlbum" />
 		<edit-song v-if="modals.editSong" song-type="songs" />
 		<edit-songs v-if="modals.editSongs" />
-		<report v-if="modals.report" />
 		<confirm v-if="modals.confirm" @confirmed="handleConfirmed()" />
 	</div>
 </template>
@@ -280,12 +278,6 @@ export default {
 		),
 		EditSongs: defineAsyncComponent(() =>
 			import("@/components/modals/EditSongs.vue")
-		),
-		Report: defineAsyncComponent(() =>
-			import("@/components/modals/Report.vue")
-		),
-		ImportAlbum: defineAsyncComponent(() =>
-			import("@/components/modals/ImportAlbum.vue")
 		),
 		Confirm: defineAsyncComponent(() =>
 			import("@/components/modals/Confirm.vue")

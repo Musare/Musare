@@ -11,7 +11,6 @@ import admin from "./modules/admin";
 
 import editSongModal from "./modules/modals/editSong";
 import editSongsModal from "./modules/modals/editSongs";
-import importAlbumModal from "./modules/modals/importAlbum";
 import confirmModal from "./modules/modals/confirm";
 
 const emptyModule = {
@@ -31,7 +30,7 @@ export default createStore({
 			modules: {
 				editSong: editSongModal,
 				editSongs: editSongsModal,
-				importAlbum: importAlbumModal,
+				importAlbum: emptyModule,
 				importPlaylist: emptyModule,
 				editPlaylist: emptyModule,
 				manageStation: emptyModule,

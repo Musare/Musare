@@ -329,13 +329,14 @@ import { mapState, mapGetters, mapActions } from "vuex";
 import draggable from "vuedraggable";
 import Toast from "toasters";
 import ws from "@/ws";
+import { mapModalState, mapModalActions } from "@/vuex_helpers";
 
 import SongItem from "../SongItem.vue";
 
 export default {
 	components: { SongItem, draggable },
 	props: {
-		sector: { type: String, default: "admin" }
+		modalUuid: { type: String, default: "" }
 	},
 	data() {
 		return {
@@ -360,27 +361,29 @@ export default {
 	computed: {
 		playlistSongs: {
 			get() {
-				return this.$store.state.modals.importAlbum.playlistSongs;
+				return this.$store.state.modals.importAlbum[this.modalUuid]
+					.playlistSongs;
 			},
 			set(playlistSongs) {
 				this.$store.commit(
-					"modals/importAlbum/updatePlaylistSongs",
+					`modals/importAlbum/${this.modalUuid}/updatePlaylistSongs`,
 					playlistSongs
 				);
 			}
 		},
 		localPrefillDiscogs: {
 			get() {
-				return this.$store.state.modals.importAlbum.prefillDiscogs;
+				return this.$store.state.modals.importAlbum[this.modalUuid]
+					.prefillDiscogs;
 			},
 			set(prefillDiscogs) {
 				this.$store.commit(
-					"modals/importAlbum/updatePrefillDiscogs",
+					`modals/importAlbum/${this.modalUuid}/updatePrefillDiscogs`,
 					prefillDiscogs
 				);
 			}
 		},
-		...mapState("modals/importAlbum", {
+		...mapModalState("modals/importAlbum/MODAL_UUID", {
 			discogsTab: state => state.discogsTab,
 			discogsAlbum: state => state.discogsAlbum,
 			editingSongs: state => state.editingSongs,
@@ -405,6 +408,8 @@ export default {
 		this.setPlaylistSongs([]);
 		this.showDiscogsTab("search");
 		this.socket.dispatch("apis.leaveRoom", "import-album");
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule(["modals", "importAlbum", this.modalUuid]);
 	},
 	methods: {
 		init() {
@@ -651,10 +656,13 @@ export default {
 					this.$refs[`discogs-${payload}-tab`].scrollIntoView({
 						block: "nearest"
 					});
-				return dispatch("modals/importAlbum/showDiscogsTab", payload);
+				return dispatch(
+					`modals/importAlbum/${this.modalUuid}/showDiscogsTab`,
+					payload
+				);
 			}
 		}),
-		...mapActions("modals/importAlbum", [
+		...mapModalActions("modals/importAlbum/MODAL_UUID", [
 			"toggleDiscogsAlbum",
 			"setPlaylistSongs",
 			"updatePlaylistSongs",
