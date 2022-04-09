@@ -3,6 +3,8 @@
 export default {
 	namespaced: true,
 	state: {
+		stationId: null,
+		sector: "admin",
 		tab: "settings",
 		station: {},
 		stationPlaylist: { songs: [] },
@@ -14,6 +16,7 @@ export default {
 	},
 	getters: {},
 	actions: {
+		init: ({ commit }, data) => commit("init", data),
 		showTab: ({ commit }, tab) => commit("showTab", tab),
 		editStation: ({ commit }, station) => commit("editStation", station),
 		setAutofillPlaylists: ({ commit }, autofillPlaylists) =>
@@ -34,6 +37,10 @@ export default {
 		updateStation: ({ commit }, station) => commit("updateStation", station)
 	},
 	mutations: {
+		init(state, { stationId, sector }) {
+			state.stationId = stationId;
+			if (sector) state.sector = sector;
+		},
 		showTab(state, tab) {
 			state.tab = tab;
 		},

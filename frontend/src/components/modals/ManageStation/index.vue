@@ -124,12 +124,14 @@
 							v-if="isOwnerOrAdmin()"
 							class="tab"
 							v-show="tab === 'settings'"
+							:modal-uuid="modalUuid"
 						/>
 						<playlist-tab-base
 							v-if="isOwnerOrAdmin() && station.autofill.enabled"
 							class="tab"
 							v-show="tab === 'autofill'"
 							:type="'autofill'"
+							:modal-uuid="modalUuid"
 						>
 							<template #info>
 								<p>
@@ -144,12 +146,14 @@
 							v-show="tab === 'request'"
 							:sector="'manageStation'"
 							:disable-auto-request="sector !== 'station'"
+							:modal-uuid="modalUuid"
 						/>
 						<playlist-tab-base
 							v-if="isOwnerOrAdmin()"
 							class="tab"
 							v-show="tab === 'blacklist'"
 							:type="'blacklist'"
+							:modal-uuid="modalUuid"
 						>
 							<template #info>
 								<p>
@@ -174,7 +178,7 @@
 						header="Currently Playing.."
 						class="currently-playing"
 					/>
-					<queue sector="manageStation" />
+					<queue :modal-uuid="modalUuid" sector="manageStation" />
 				</div>
 			</div>
 		</template>
@@ -196,6 +200,8 @@ import { mapState, mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 
+import { mapModalState, mapModalActions } from "@/vuex_helpers";
+
 import Queue from "@/components/Queue.vue";
 import SongItem from "@/components/SongItem.vue";
 
@@ -212,8 +218,7 @@ export default {
 		Request
 	},
 	props: {
-		stationId: { type: String, default: "" },
-		sector: { type: String, default: "admin" }
+		modalUuid: { type: String, default: "" }
 	},
 	computed: {
 		...mapState({
@@ -221,7 +226,9 @@ export default {
 			userId: state => state.user.auth.userId,
 			role: state => state.user.auth.role
 		}),
-		...mapState("modals/manageStation", {
+		...mapModalState("modals/manageStation/MODAL_UUID", {
+			stationId: state => state.stationId,
+			sector: state => state.sector,
 			tab: state => state.tab,
 			station: state => state.station,
 			songsList: state => state.songsList,
@@ -504,6 +511,13 @@ export default {
 
 		if (this.isOwnerOrAdmin()) this.showTab("settings");
 		this.clearStation();
+
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule([
+			"modals",
+			"manageStation",
+			this.modalUuid
+		]);
 	},
 	methods: {
 		isOwner() {
@@ -577,7 +591,7 @@ export default {
 				}
 			);
 		},
-		...mapActions("modals/manageStation", [
+		...mapModalActions("modals/manageStation/MODAL_UUID", [
 			"editStation",
 			"setAutofillPlaylists",
 			"setBlacklist",
@@ -595,7 +609,10 @@ export default {
 					this.$refs[`${payload}-tab`].scrollIntoView({
 						block: "nearest"
 					}); // Only works if the ref exists, which it doesn't always
-				return dispatch("modals/manageStation/showTab", payload);
+				return dispatch(
+					`modals/manageStation/${this.modalUuid}/showTab`,
+					payload
+				);
 			}
 		}),
 		...mapActions("modalVisibility", ["openModal", "closeModal"]),

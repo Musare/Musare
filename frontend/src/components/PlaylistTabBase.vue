@@ -654,6 +654,7 @@ export default {
 	},
 	mixins: [SortablePlaylists],
 	props: {
+		modalUuid: { type: String, default: "" },
 		type: {
 			type: String,
 			default: ""
@@ -682,13 +683,15 @@ export default {
 		station: {
 			get() {
 				if (this.sector === "manageStation")
-					return this.$store.state.modals.manageStation.station;
+					return this.$store.state.modals.manageStation[
+						this.modalUuid
+					].station;
 				return this.$store.state.station.station;
 			},
 			set(station) {
 				if (this.sector === "manageStation")
 					this.$store.commit(
-						"modals/manageStation/updateStation",
+						`modals/manageStation/${this.modalUuid}/updateStation`,
 						station
 					);
 				else this.$store.commit("station/updateStation", station);
@@ -697,13 +700,15 @@ export default {
 		blacklist: {
 			get() {
 				if (this.sector === "manageStation")
-					return this.$store.state.modals.manageStation.blacklist;
+					return this.$store.state.modals.manageStation[
+						this.modalUuid
+					].blacklist;
 				return this.$store.state.station.blacklist;
 			},
 			set(blacklist) {
 				if (this.sector === "manageStation")
 					this.$store.commit(
-						"modals/manageStation/setBlacklist",
+						`modals/manageStation/${this.modalUuid}/setBlacklist`,
 						blacklist
 					);
 				else this.$store.commit("station/setBlacklist", blacklist);

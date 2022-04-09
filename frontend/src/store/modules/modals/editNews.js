@@ -13,9 +13,9 @@ export default {
 	},
 	mutations: {
 		init(state, { createNews, newsId, sector }) {
-			state.createNews = createNews;
-			state.newsId = newsId;
-			state.sector = sector;
+			if (createNews) state.createNews = createNews;
+			if (newsId) state.newsId = newsId;
+			if (sector) state.sector = sector;
 		}
 	}
 };

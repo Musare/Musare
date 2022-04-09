@@ -22,7 +22,8 @@ export default {
 			register: "Register.vue",
 			whatIsNew: "WhatIsNew.vue",
 			createStation: "CreateStation.vue",
-			editNews: "EditNews.vue"
+			editNews: "EditNews.vue",
+			manageStation: "ManageStation/index.vue"
 		}),
 		...mapState("modalVisibility", {
 			activeModals: state => state.new.activeModals,

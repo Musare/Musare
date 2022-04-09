@@ -14,7 +14,6 @@ import editSongsModal from "./modules/modals/editSongs";
 import importAlbumModal from "./modules/modals/importAlbum";
 import importPlaylistModal from "./modules/modals/importPlaylist";
 import editPlaylistModal from "./modules/modals/editPlaylist";
-import manageStationModal from "./modules/modals/manageStation";
 import viewPunishmentModal from "./modules/modals/viewPunishment";
 import viewReportModal from "./modules/modals/viewReport";
 import reportModal from "./modules/modals/report";
@@ -40,7 +39,7 @@ export default createStore({
 				importAlbum: importAlbumModal,
 				importPlaylist: importPlaylistModal,
 				editPlaylist: editPlaylistModal,
-				manageStation: manageStationModal,
+				manageStation: emptyModule,
 				editUser: emptyModule,
 				whatIsNew: emptyModule,
 				createStation: emptyModule,

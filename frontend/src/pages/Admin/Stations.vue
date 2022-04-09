@@ -28,7 +28,15 @@
 					<div class="row-options">
 						<button
 							class="button is-primary icon-with-button material-icons"
-							@click="edit(slotProps.item._id)"
+							@click="
+								openModal({
+									modal: 'manageStation',
+									data: {
+										stationId: slotProps.item._id,
+										sector: 'admin'
+									}
+								})
+							"
 							:disabled="slotProps.item.removed"
 							content="Manage Station"
 							v-tippy
@@ -138,11 +146,6 @@
 		</div>
 
 		<create-playlist v-if="modals.createPlaylist" />
-		<manage-station
-			v-if="modals.manageStation"
-			:station-id="editingStationId"
-			sector="admin"
-		/>
 		<edit-playlist v-if="modals.editPlaylist" />
 		<edit-song v-if="modals.editSong" song-type="songs" sector="admin" />
 		<report v-if="modals.report" />
@@ -165,9 +168,6 @@ export default {
 		),
 		CreatePlaylist: defineAsyncComponent(() =>
 			import("@/components/modals/CreatePlaylist.vue")
-		),
-		ManageStation: defineAsyncComponent(() =>
-			import("@/components/modals/ManageStation/index.vue")
 		),
 		Report: defineAsyncComponent(() =>
 			import("@/components/modals/Report.vue")
@@ -474,10 +474,6 @@ export default {
 		})
 	},
 	methods: {
-		edit(stationId) {
-			this.editingStationId = stationId;
-			this.openModal("manageStation");
-		},
 		remove(stationId) {
 			this.socket.dispatch(
 				"stations.remove",

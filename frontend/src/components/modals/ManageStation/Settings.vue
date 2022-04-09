@@ -170,13 +170,17 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from "vuex";
+import { mapGetters } from "vuex";
 
 import Toast from "toasters";
 
+import { mapModalState, mapModalActions } from "@/vuex_helpers";
 import validation from "@/validation";
 
 export default {
+	props: {
+		modalUuid: { type: String, default: "" }
+	},
 	data() {
 		return {
 			localStation: {
@@ -199,7 +203,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modals/manageStation", {
+		...mapModalState("modals/manageStation/MODAL_UUID", {
 			station: state => state.station
 		}),
 		...mapGetters({
@@ -291,7 +295,7 @@ export default {
 				new Toast("Please make a change before saving.");
 			}
 		},
-		...mapActions("modals/manageStation", ["editStation"])
+		...mapModalActions("modals/manageStation/MODAL_UUID", ["editStation"])
 	}
 };
 </script>

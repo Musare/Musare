@@ -177,6 +177,7 @@
 				:type="'autorequest'"
 				:sector="sector"
 				@selected="autoRequestSong()"
+				:modal-uuid="modalUuid"
 			/>
 		</div>
 	</div>
@@ -201,6 +202,7 @@ export default {
 	},
 	mixins: [SearchYoutube, SearchMusare],
 	props: {
+		modalUuid: { type: String, default: "" },
 		sector: { type: String, default: "station" },
 		disableAutoRequest: { type: Boolean, default: false }
 	},
@@ -213,13 +215,15 @@ export default {
 		station: {
 			get() {
 				if (this.sector === "manageStation")
-					return this.$store.state.modals.manageStation.station;
+					return this.$store.state.modals.manageStation[
+						this.modalUuid
+					].station;
 				return this.$store.state.station.station;
 			},
 			set(station) {
 				if (this.sector === "manageStation")
 					this.$store.commit(
-						"modals/manageStation/updateStation",
+						`modals/manageStation/${this.modalUuid}/updateStation`,
 						station
 					);
 				else this.$store.commit("station/updateStation", station);
@@ -228,13 +232,15 @@ export default {
 		blacklist: {
 			get() {
 				if (this.sector === "manageStation")
-					return this.$store.state.modals.manageStation.blacklist;
+					return this.$store.state.modals.manageStation[
+						this.modalUuid
+					].blacklist;
 				return this.$store.state.station.blacklist;
 			},
 			set(blacklist) {
 				if (this.sector === "manageStation")
 					this.$store.commit(
-						"modals/manageStation/setBlacklist",
+						`modals/manageStation/${this.modalUuid}/setBlacklist`,
 						blacklist
 					);
 				else this.$store.commit("station/setBlacklist", blacklist);
@@ -243,13 +249,15 @@ export default {
 		songsList: {
 			get() {
 				if (this.sector === "manageStation")
-					return this.$store.state.modals.manageStation.songsList;
+					return this.$store.state.modals.manageStation[
+						this.modalUuid
+					].songsList;
 				return this.$store.state.station.songsList;
 			},
 			set(songsList) {
 				if (this.sector === "manageStation")
 					this.$store.commit(
-						"modals/manageStation/updateSongsList",
+						`modals/manageStation/${this.modalUuid}/updateSongsList`,
 						songsList
 					);
 				else this.$store.commit("station/updateSongsList", songsList);

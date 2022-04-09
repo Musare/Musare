@@ -5,10 +5,10 @@ import editUser from "./modals/editUser";
 import whatIsNew from "./modals/whatIsNew";
 import createStation from "./modals/createStation";
 import editNews from "./modals/editNews";
+import manageStation from "./modals/manageStation";
 
 const state = {
 	modals: {
-		manageStation: false,
 		importPlaylist: false,
 		editPlaylist: false,
 		createPlaylist: false,
@@ -35,12 +35,13 @@ const modalModules = {
 	editUser,
 	whatIsNew,
 	createStation,
-	editNews
+	editNews,
+	manageStation
 };
 
 const migratedModules = {
 	whatIsNew: true,
-	manageStation: false,
+	manageStation: true,
 	login: true,
 	register: true,
 	createStation: true,
