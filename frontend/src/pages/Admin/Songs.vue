@@ -260,7 +260,6 @@
 		<edit-song v-if="modals.editSong" song-type="songs" />
 		<edit-songs v-if="modals.editSongs" />
 		<report v-if="modals.report" />
-		<import-playlist v-if="modals.importPlaylist" />
 		<bulk-actions v-if="modals.bulkActions" :type="bulkActionsType" />
 		<confirm v-if="modals.confirm" @confirmed="handleConfirmed()" />
 	</div>
@@ -288,9 +287,6 @@ export default {
 		),
 		ImportAlbum: defineAsyncComponent(() =>
 			import("@/components/modals/ImportAlbum.vue")
-		),
-		ImportPlaylist: defineAsyncComponent(() =>
-			import("@/components/modals/ImportPlaylist.vue")
 		),
 		BulkActions: defineAsyncComponent(() =>
 			import("@/components/modals/BulkActions.vue")

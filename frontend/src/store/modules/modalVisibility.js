@@ -6,10 +6,10 @@ import whatIsNew from "./modals/whatIsNew";
 import createStation from "./modals/createStation";
 import editNews from "./modals/editNews";
 import manageStation from "./modals/manageStation";
+import importPlaylist from "./modals/importPlaylist";
 
 const state = {
 	modals: {
-		importPlaylist: false,
 		editPlaylist: false,
 		createPlaylist: false,
 		report: false,
@@ -36,7 +36,8 @@ const modalModules = {
 	whatIsNew,
 	createStation,
 	editNews,
-	manageStation
+	manageStation,
+	importPlaylist
 };
 
 const migratedModules = {
@@ -45,7 +46,7 @@ const migratedModules = {
 	login: true,
 	register: true,
 	createStation: true,
-	importPlaylist: false,
+	importPlaylist: true,
 	editPlaylist: false,
 	createPlaylist: false,
 	report: false,
@@ -136,7 +137,7 @@ const mutations = {
 					["modals", modal, uuid],
 					modalModules[modal]
 				);
-				this.dispatch(`modals/${modal}/${uuid}/init`, data);
+				if (data) this.dispatch(`modals/${modal}/${uuid}/init`, data);
 			}
 
 			state.new.activeModals.push(uuid);

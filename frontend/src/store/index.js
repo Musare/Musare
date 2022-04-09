@@ -12,7 +12,6 @@ import admin from "./modules/admin";
 import editSongModal from "./modules/modals/editSong";
 import editSongsModal from "./modules/modals/editSongs";
 import importAlbumModal from "./modules/modals/importAlbum";
-import importPlaylistModal from "./modules/modals/importPlaylist";
 import editPlaylistModal from "./modules/modals/editPlaylist";
 import viewPunishmentModal from "./modules/modals/viewPunishment";
 import viewReportModal from "./modules/modals/viewReport";
@@ -37,7 +36,7 @@ export default createStore({
 				editSong: editSongModal,
 				editSongs: editSongsModal,
 				importAlbum: importAlbumModal,
-				importPlaylist: importPlaylistModal,
+				importPlaylist: emptyModule,
 				editPlaylist: editPlaylistModal,
 				manageStation: emptyModule,
 				editUser: emptyModule,

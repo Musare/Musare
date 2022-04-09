@@ -23,7 +23,8 @@ export default {
 			whatIsNew: "WhatIsNew.vue",
 			createStation: "CreateStation.vue",
 			editNews: "EditNews.vue",
-			manageStation: "ManageStation/index.vue"
+			manageStation: "ManageStation/index.vue",
+			importPlaylist: "ImportPlaylist.vue"
 		}),
 		...mapState("modalVisibility", {
 			activeModals: state => state.new.activeModals,

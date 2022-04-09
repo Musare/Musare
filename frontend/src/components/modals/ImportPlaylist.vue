@@ -67,22 +67,24 @@ import SearchYoutube from "@/mixins/SearchYoutube.vue";
 
 export default {
 	mixins: [SearchYoutube],
+	props: {
+		modalUuid: { type: String, default: "" }
+	},
 	computed: {
 		localEditSongs: {
 			get() {
-				return this.$store.state.modals.importPlaylist
+				return this.$store.state.modals.importPlaylist[this.modalUuid]
 					.editImportedSongs;
 			},
 			set(editImportedSongs) {
 				this.$store.commit(
-					"modals/importPlaylist/updateEditImportedSongs",
+					`modals/importPlaylist/${this.modalUuid}/updateEditImportedSongs`,
 					editImportedSongs
 				);
 			}
 		},
 		...mapState({
-			loggedIn: state => state.user.auth.loggedIn,
-			station: state => state.station.station
+			loggedIn: state => state.user.auth.loggedIn
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -138,7 +140,7 @@ export default {
 						this.openModal("editSongs");
 					}
 
-					this.closeModal("importPlaylist");
+					this.closeCurrentModal();
 					return new Toast({
 						content: res.message,
 						timeout: 20000
@@ -147,7 +149,7 @@ export default {
 			);
 		},
 		...mapActions("modals/editSongs", ["editSongs"]),
-		...mapActions("modalVisibility", ["openModal", "closeModal"])
+		...mapActions("modalVisibility", ["openModal", "closeCurrentModal"])
 	}
 };
 </script>
