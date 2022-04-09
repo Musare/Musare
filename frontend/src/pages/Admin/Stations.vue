@@ -145,7 +145,6 @@
 			</advanced-table>
 		</div>
 
-		<create-playlist v-if="modals.createPlaylist" />
 		<edit-song v-if="modals.editSong" song-type="songs" sector="admin" />
 		<report v-if="modals.report" />
 	</div>
@@ -162,9 +161,6 @@ import RunJobDropdown from "@/components/RunJobDropdown.vue";
 
 export default {
 	components: {
-		CreatePlaylist: defineAsyncComponent(() =>
-			import("@/components/modals/CreatePlaylist.vue")
-		),
 		Report: defineAsyncComponent(() =>
 			import("@/components/modals/Report.vue")
 		),

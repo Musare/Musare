@@ -7,7 +7,6 @@
 				class="main-container"
 				:class="{ 'main-container-modal-active': aModalIsOpen2 }"
 			/>
-			<create-playlist-modal v-if="modals.createPlaylist" />
 		</div>
 		<falling-snow v-if="christmas" />
 	</div>
@@ -24,9 +23,6 @@ import keyboardShortcuts from "./keyboardShortcuts";
 
 export default {
 	components: {
-		CreatePlaylistModal: defineAsyncComponent(() =>
-			import("@/components/modals/CreatePlaylist.vue")
-		),
 		Banned: defineAsyncComponent(() => import("@/pages/Banned.vue")),
 		FallingSnow: defineAsyncComponent(() =>
 			import("@/components/FallingSnow.vue")

@@ -39,6 +39,9 @@ import Toast from "toasters";
 import validation from "@/validation";
 
 export default {
+	props: {
+		modalUuid: { type: String, default: "" }
+	},
 	data() {
 		return {
 			playlist: {
@@ -51,6 +54,14 @@ export default {
 	computed: mapGetters({
 		socket: "websockets/getSocket"
 	}),
+	beforeUnmount() {
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule([
+			"modals",
+			"createPlaylist",
+			this.modalUuid
+		]);
+	},
 	unmounted() {
 		if (window.addToPlaylistDropdown)
 			window.addToPlaylistDropdown.tippy.setProps({

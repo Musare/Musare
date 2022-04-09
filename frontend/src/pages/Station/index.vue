@@ -630,7 +630,6 @@
 					</div>
 				</div>
 
-				<create-playlist v-if="modals.createPlaylist" />
 				<manage-station
 					v-if="modals.manageStation"
 					:station-id="station._id"
@@ -799,9 +798,6 @@ import StationSidebar from "./Sidebar/index.vue";
 export default {
 	components: {
 		ContentLoader,
-		CreatePlaylist: defineAsyncComponent(() =>
-			import("@/components/modals/CreatePlaylist.vue")
-		),
 		ManageStation: defineAsyncComponent(() =>
 			import("@/components/modals/ManageStation/index.vue")
 		),

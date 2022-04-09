@@ -11,7 +11,6 @@ import editPlaylist from "./modals/editPlaylist";
 
 const state = {
 	modals: {
-		createPlaylist: false,
 		report: false,
 		removeAccount: false,
 		editSong: false,
@@ -49,7 +48,7 @@ const migratedModules = {
 	createStation: true,
 	importPlaylist: true,
 	editPlaylist: true,
-	createPlaylist: false,
+	createPlaylist: true,
 	report: false,
 	removeAccount: false,
 	editNews: true,
