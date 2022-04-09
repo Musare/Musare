@@ -42,8 +42,6 @@
 			</div>
 		</div>
 		<main-footer />
-
-		<remove-account v-if="modals.removeAccount" />
 	</div>
 </template>
 
@@ -68,9 +66,6 @@ export default {
 		),
 		PreferencesSettings: defineAsyncComponent(() =>
 			import("./Tabs/Preferences.vue")
-		),
-		RemoveAccount: defineAsyncComponent(() =>
-			import("@/components/modals/RemoveAccount.vue")
 		)
 	},
 	mixins: [TabQueryHandler],

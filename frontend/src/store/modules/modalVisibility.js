@@ -15,7 +15,6 @@ import viewPunishment from "./modals/viewPunishment";
 
 const state = {
 	modals: {
-		removeAccount: false,
 		editSong: false,
 		editSongs: false,
 		importAlbum: false,
@@ -54,7 +53,7 @@ const migratedModules = {
 	editPlaylist: true,
 	createPlaylist: true,
 	report: true,
-	removeAccount: false,
+	removeAccount: true,
 	editNews: true,
 	editSong: false,
 	editSongs: false,

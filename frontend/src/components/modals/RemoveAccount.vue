@@ -180,6 +180,9 @@ import { mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 
 export default {
+	props: {
+		modalUuid: { type: String, default: "" }
+	},
 	data() {
 		return {
 			name: "RemoveAccount",
