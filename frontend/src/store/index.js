@@ -13,8 +13,6 @@ import editSongModal from "./modules/modals/editSong";
 import editSongsModal from "./modules/modals/editSongs";
 import importAlbumModal from "./modules/modals/importAlbum";
 import viewPunishmentModal from "./modules/modals/viewPunishment";
-import viewReportModal from "./modules/modals/viewReport";
-import reportModal from "./modules/modals/report";
 import confirmModal from "./modules/modals/confirm";
 
 const emptyModule = {
@@ -37,15 +35,14 @@ export default createStore({
 				importAlbum: importAlbumModal,
 				importPlaylist: emptyModule,
 				editPlaylist: emptyModule,
-				createPlaylist: emptyModule,
 				manageStation: emptyModule,
 				editUser: emptyModule,
 				whatIsNew: emptyModule,
 				createStation: emptyModule,
 				editNews: emptyModule,
 				viewPunishment: viewPunishmentModal,
-				report: reportModal,
-				viewReport: viewReportModal,
+				report: emptyModule,
+				viewReport: emptyModule,
 				confirm: confirmModal
 			}
 		}

@@ -54,14 +54,6 @@ export default {
 	computed: mapGetters({
 		socket: "websockets/getSocket"
 	}),
-	beforeUnmount() {
-		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-		this.$store.unregisterModule([
-			"modals",
-			"createPlaylist",
-			this.modalUuid
-		]);
-	},
 	unmounted() {
 		if (window.addToPlaylistDropdown)
 			window.addToPlaylistDropdown.tippy.setProps({

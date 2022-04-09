@@ -115,9 +115,10 @@
 </template>
 
 <script>
-import { mapActions, mapGetters, mapState } from "vuex";
+import { mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 import ws from "@/ws";
+import { mapModalState } from "@/vuex_helpers";
 
 import SongItem from "@/components/SongItem.vue";
 import ReportInfoItem from "@/components/ReportInfoItem.vue";
@@ -125,7 +126,7 @@ import ReportInfoItem from "@/components/ReportInfoItem.vue";
 export default {
 	components: { SongItem, ReportInfoItem },
 	props: {
-		sector: { type: String, default: "admin" }
+		modalUuid: { type: String, default: "" }
 	},
 	data() {
 		return {
@@ -142,8 +143,8 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modals/viewReport", {
-			reportId: state => state.viewingReportId
+		...mapModalState("modals/viewReport/MODAL_UUID", {
+			reportId: state => state.reportId
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -182,6 +183,8 @@ export default {
 	},
 	beforeUnmount() {
 		this.socket.dispatch("apis.leaveRoom", `view-report.${this.reportId}`);
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule(["modals", "viewReport", this.modalUuid]);
 	},
 	methods: {
 		init() {

@@ -3,14 +3,14 @@
 export default {
 	namespaced: true,
 	state: {
-		viewingReportId: ""
+		reportId: ""
 	},
 	actions: {
-		viewReport: ({ commit }, reportId) => commit("viewReport", reportId)
+		init: ({ commit }, data) => commit("init", data)
 	},
 	mutations: {
-		viewReport(state, reportId) {
-			state.viewingReportId = reportId;
+		init(state, { reportId }) {
+			state.reportId = reportId;
 		}
 	}
 };

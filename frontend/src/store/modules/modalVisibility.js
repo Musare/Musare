@@ -8,15 +8,15 @@ import editNews from "./modals/editNews";
 import manageStation from "./modals/manageStation";
 import importPlaylist from "./modals/importPlaylist";
 import editPlaylist from "./modals/editPlaylist";
+import report from "./modals/report";
+import viewReport from "./modals/viewReport";
 
 const state = {
 	modals: {
-		report: false,
 		removeAccount: false,
 		editSong: false,
 		editSongs: false,
 		importAlbum: false,
-		viewReport: false,
 		viewPunishment: false,
 		confirm: false,
 		editSongConfirm: false,
@@ -37,7 +37,9 @@ const modalModules = {
 	editNews,
 	manageStation,
 	importPlaylist,
-	editPlaylist
+	editPlaylist,
+	report,
+	viewReport
 };
 
 const migratedModules = {
@@ -49,14 +51,14 @@ const migratedModules = {
 	importPlaylist: true,
 	editPlaylist: true,
 	createPlaylist: true,
-	report: false,
+	report: true,
 	removeAccount: false,
 	editNews: true,
 	editSong: false,
 	editSongs: false,
 	editUser: true,
 	importAlbum: false,
-	viewReport: false,
+	viewReport: true,
 	viewPunishment: false,
 	confirm: false,
 	editSongConfirm: false,

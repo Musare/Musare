@@ -15,7 +15,12 @@
 					<div class="row-options">
 						<button
 							class="button is-primary icon-with-button material-icons"
-							@click="view(slotProps.item._id)"
+							@click="
+								openModal({
+									modal: 'viewReport',
+									data: { reportId: slotProps.item._id }
+								})
+							"
 							:disabled="slotProps.item.removed"
 							content="View Report"
 							v-tippy
@@ -102,7 +107,6 @@
 			</advanced-table>
 		</div>
 
-		<view-report v-if="modals.viewReport" sector="admin" />
 		<edit-song v-if="modals.editSong" song-type="songs" />
 		<report v-if="modals.report" />
 	</div>
@@ -118,9 +122,6 @@ import AdvancedTable from "@/components/AdvancedTable.vue";
 
 export default {
 	components: {
-		ViewReport: defineAsyncComponent(() =>
-			import("@/components/modals/ViewReport.vue")
-		),
 		Report: defineAsyncComponent(() =>
 			import("@/components/modals/Report.vue")
 		),
@@ -273,10 +274,6 @@ export default {
 		})
 	},
 	methods: {
-		view(reportId) {
-			this.viewReport(reportId);
-			this.openModal("viewReport");
-		},
 		resolve(reportId, value) {
 			return this.resolveReport({ reportId, value })
 				.then(res => {
@@ -294,8 +291,7 @@ export default {
 			return `${year}-${month}-${day} ${hour}:${minute}`;
 		},
 		...mapActions("modalVisibility", ["openModal", "closeModal"]),
-		...mapActions("admin/reports", ["resolveReport"]),
-		...mapActions("modals/viewReport", ["viewReport"])
+		...mapActions("admin/reports", ["resolveReport"])
 	}
 };
 </script>

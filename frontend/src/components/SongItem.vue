@@ -256,8 +256,7 @@ export default {
 		},
 		report(song) {
 			this.hideTippyElements();
-			this.reportSong(song);
-			this.openModal("report");
+			this.openModal({ modal: "report", data: { song } });
 		},
 		edit(song) {
 			this.hideTippyElements();
@@ -265,7 +264,6 @@ export default {
 			this.openModal("editSong");
 		},
 		...mapActions("modals/editSong", ["editSong"]),
-		...mapActions("modals/report", ["reportSong"]),
 		...mapActions("modalVisibility", ["openModal"]),
 		formatDistance,
 		parseISO
