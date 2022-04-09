@@ -350,6 +350,10 @@ export default {
 			display: flex;
 			flex-direction: row;
 
+			.item-title {
+				font-size: 18px;
+			}
+
 			.verified-song {
 				margin-left: 5px;
 			}
@@ -363,8 +367,15 @@ export default {
 			}
 		}
 
+		.item-description {
+			line-height: 120%;
+		}
+
 		.song-request-time {
-			font-size: 12px;
+			font-size: 11px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
 		}
 	}
 
