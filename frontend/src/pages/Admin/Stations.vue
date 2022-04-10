@@ -146,7 +146,6 @@
 		</div>
 
 		<edit-song v-if="modals.editSong" song-type="songs" sector="admin" />
-		<report v-if="modals.report" />
 	</div>
 </template>
 
@@ -161,9 +160,6 @@ import RunJobDropdown from "@/components/RunJobDropdown.vue";
 
 export default {
 	components: {
-		Report: defineAsyncComponent(() =>
-			import("@/components/modals/Report.vue")
-		),
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong")
 		),

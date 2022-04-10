@@ -1,5 +1,6 @@
 <template>
 	<div class="upper-container">
+		<modal-manager />
 		<banned v-if="banned" />
 		<div v-else class="upper-container">
 			<router-view
@@ -23,6 +24,9 @@ import keyboardShortcuts from "./keyboardShortcuts";
 
 export default {
 	components: {
+		ModalManager: defineAsyncComponent(() =>
+			import("@/components/ModalManager.vue")
+		),
 		Banned: defineAsyncComponent(() => import("@/pages/Banned.vue")),
 		FallingSnow: defineAsyncComponent(() =>
 			import("@/components/FallingSnow.vue")

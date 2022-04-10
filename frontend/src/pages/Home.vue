@@ -76,7 +76,14 @@
 												v-if="isOwnerOrAdmin(element)"
 												class="material-icons manage-station"
 												@click.prevent="
-													manageStation(element._id)
+													openModal({
+														modal: 'manageStation',
+														data: {
+															stationId:
+																element._id,
+															sector: 'home'
+														}
+													})
 												"
 												content="Manage Station"
 												v-tippy
@@ -87,7 +94,14 @@
 												v-else
 												class="material-icons manage-station"
 												@click.prevent="
-													manageStation(element._id)
+													openModal({
+														modal: 'manageStation',
+														data: {
+															stationId:
+																element._id,
+															sector: 'home'
+														}
+													})
 												"
 												content="View Queue"
 												v-tippy
@@ -327,7 +341,13 @@
 										v-if="isOwnerOrAdmin(station)"
 										class="material-icons manage-station"
 										@click.prevent="
-											manageStation(station._id)
+											openModal({
+												modal: 'manageStation',
+												data: {
+													stationId: station._id,
+													sector: 'home'
+												}
+											})
 										"
 										content="Manage Station"
 										v-tippy
@@ -338,7 +358,13 @@
 										v-else
 										class="material-icons manage-station"
 										@click.prevent="
-											manageStation(station._id)
+											openModal({
+												modal: 'manageStation',
+												data: {
+													stationId: station._id,
+													sector: 'home'
+												}
+											})
 										"
 										content="View Queue"
 										v-tippy
@@ -487,14 +513,7 @@
 			</div>
 			<main-footer />
 		</div>
-		<manage-station
-			v-if="modals.manageStation"
-			:station-id="editingStationId"
-			sector="home"
-		/>
 		<edit-song v-if="modals.editSong" song-type="songs" sector="home" />
-		<report v-if="modals.report" />
-		<modal-manager />
 	</div>
 </template>
 
@@ -506,20 +525,11 @@ import Toast from "toasters";
 
 import SongThumbnail from "@/components/SongThumbnail.vue";
 
-import ModalManager from "@/components/ModalManager.vue";
-
 import ws from "@/ws";
 
 export default {
 	components: {
-		ModalManager,
 		SongThumbnail,
-		ManageStation: defineAsyncComponent(() =>
-			import("@/components/modals/ManageStation/index.vue")
-		),
-		Report: defineAsyncComponent(() =>
-			import("@/components/modals/Report.vue")
-		),
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong")
 		),
@@ -828,10 +838,6 @@ export default {
 				recalculatedOrder,
 				res => new Toast(res.message)
 			);
-		},
-		manageStation(stationId) {
-			this.editingStationId = stationId;
-			this.openModal("manageStation");
 		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("station", ["updateIfStationIsFavorited"])

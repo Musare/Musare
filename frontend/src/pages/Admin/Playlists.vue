@@ -85,7 +85,6 @@
 		</div>
 
 		<edit-song v-if="modals.editSong" song-type="songs" />
-		<report v-if="modals.report" />
 	</div>
 </template>
 
@@ -100,9 +99,6 @@ import utils from "../../../js/utils";
 
 export default {
 	components: {
-		Report: defineAsyncComponent(() =>
-			import("@/components/modals/Report.vue")
-		),
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong")
 		),

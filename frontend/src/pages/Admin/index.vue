@@ -238,7 +238,6 @@
 				</div>
 			</template>
 		</floating-box>
-		<modal-manager />
 	</div>
 </template>
 
@@ -249,12 +248,9 @@ import keyboardShortcuts from "@/keyboardShortcuts";
 
 import FloatingBox from "@/components/FloatingBox.vue";
 
-import ModalManager from "@/components/ModalManager.vue";
-
 export default {
 	components: {
-		FloatingBox,
-		ModalManager
+		FloatingBox
 	},
 	data() {
 		return {

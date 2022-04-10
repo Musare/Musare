@@ -144,7 +144,15 @@
 								<!-- (Admin) Station Settings Button -->
 								<button
 									class="button is-primary"
-									@click="openModal('manageStation')"
+									@click="
+										openModal({
+											modal: 'manageStation',
+											data: {
+												stationId: station._id,
+												sector: 'station'
+											}
+										})
+									"
 								>
 									<i class="material-icons icon-with-button"
 										>settings</i
@@ -630,17 +638,11 @@
 					</div>
 				</div>
 
-				<manage-station
-					v-if="modals.manageStation"
-					:station-id="station._id"
-					sector="station"
-				/>
 				<edit-song
 					v-if="modals.editSong"
 					song-type="songs"
 					sector="station"
 				/>
-				<report v-if="modals.report" />
 			</div>
 
 			<main-footer />
@@ -798,12 +800,6 @@ import StationSidebar from "./Sidebar/index.vue";
 export default {
 	components: {
 		ContentLoader,
-		ManageStation: defineAsyncComponent(() =>
-			import("@/components/modals/ManageStation/index.vue")
-		),
-		Report: defineAsyncComponent(() =>
-			import("@/components/modals/Report.vue")
-		),
 		Z404,
 		FloatingBox,
 		StationSidebar,

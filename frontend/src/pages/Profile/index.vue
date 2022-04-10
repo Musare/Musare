@@ -1,7 +1,6 @@
 <template>
 	<div v-if="isUser">
 		<edit-song v-if="modals.editSong" song-type="songs" />
-		<report v-if="modals.report" />
 
 		<page-metadata :title="`Profile | ${user.username}`" />
 		<main-header />
@@ -121,9 +120,6 @@ export default {
 		ProfilePicture,
 		RecentActivity,
 		Playlists,
-		Report: defineAsyncComponent(() =>
-			import("@/components/modals/Report.vue")
-		),
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong")
 		)
