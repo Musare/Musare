@@ -11,7 +11,6 @@ import admin from "./modules/admin";
 
 import editSongModal from "./modules/modals/editSong";
 import editSongsModal from "./modules/modals/editSongs";
-import confirmModal from "./modules/modals/confirm";
 
 const emptyModule = {
 	namespaced: true
@@ -41,7 +40,7 @@ export default createStore({
 				viewPunishment: emptyModule,
 				report: emptyModule,
 				viewReport: emptyModule,
-				confirm: confirmModal,
+				confirm: emptyModule,
 				bulkActions: emptyModule
 			}
 		}

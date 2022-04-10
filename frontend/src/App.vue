@@ -1,6 +1,5 @@
 <template>
 	<div class="upper-container">
-		<modal-manager />
 		<banned v-if="banned" />
 		<div v-else class="upper-container">
 			<router-view
@@ -10,6 +9,7 @@
 			/>
 		</div>
 		<falling-snow v-if="christmas" />
+		<modal-manager />
 	</div>
 </template>
 

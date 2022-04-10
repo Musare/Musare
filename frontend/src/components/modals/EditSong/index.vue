@@ -631,13 +631,11 @@
 				</span>
 			</template>
 		</floating-box>
-		<confirm v-if="modals.editSongConfirm" @confirmed="handleConfirmed()" />
 	</div>
 </template>
 
 <script>
 import { mapState, mapGetters, mapActions } from "vuex";
-import { defineAsyncComponent } from "vue";
 import Toast from "toasters";
 
 import aw from "@/aw";
@@ -662,10 +660,7 @@ export default {
 		Discogs,
 		Reports,
 		Youtube,
-		MusareSongs,
-		Confirm: defineAsyncComponent(() =>
-			import("@/components/modals/Confirm.vue")
-		)
+		MusareSongs
 	},
 	props: {
 		// songId: { type: String, default: null },
@@ -701,11 +696,6 @@ export default {
 			activityWatchVideoDataInterval: null,
 			activityWatchVideoLastStatus: "",
 			activityWatchVideoLastStartDuration: "",
-			confirm: {
-				message: "",
-				action: "",
-				params: null
-			},
 			recommendedGenres: [
 				"Blues",
 				"Country",
@@ -1769,22 +1759,22 @@ export default {
 				new Toast(res.message);
 			});
 		},
-		confirmAction(confirm) {
-			this.confirm = confirm;
-			this.updateConfirmMessage(confirm.message);
-			this.openModal("editSongConfirm");
+		confirmAction({ message, action, params }) {
+			this.openModal({
+				modal: "confirm",
+				data: {
+					message,
+					action,
+					params,
+					onCompleted: this.handleConfirmed
+				}
+			});
 		},
-		handleConfirmed() {
-			const { action, params } = this.confirm;
+		handleConfirmed({ action, params }) {
 			if (typeof this[action] === "function") {
 				if (params) this[action](params);
 				else this[action]();
 			}
-			this.confirm = {
-				message: "",
-				action: "",
-				params: null
-			};
 		},
 		onCloseModal() {
 			const songStringified = JSON.stringify({
@@ -1833,7 +1823,6 @@ export default {
 			"updateReports",
 			"setPlaybackRate"
 		]),
-		...mapActions("modals/confirm", ["updateConfirmMessage"]),
 		...mapActions("modalVisibility", ["closeModal", "openModal"])
 	}
 };

@@ -17,35 +17,30 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapActions } from "vuex";
+
+import { mapModalState, mapModalActions } from "@/vuex_helpers";
 
 export default {
-	emits: ["confirmed"],
-	data() {
-		return {
-			modalName: ""
-		};
+	props: {
+		modalUuid: { type: String, default: "" }
 	},
 	computed: {
-		...mapState("modalVisibility", {
-			currentlyActive: state => state.currentlyActive
-		}),
-		...mapState("modals/confirm", {
+		...mapModalState("modals/confirm/MODAL_UUID", {
 			message: state => state.message
 		})
 	},
-	mounted() {
-		// eslint-disable-next-line
-		this.modalName = this.currentlyActive[0];
+	beforeUnmount() {
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule(["modals", "confirm", this.modalUuid]);
 	},
 	methods: {
 		confirmAction() {
-			this.updateConfirmMessage("");
-			this.$emit("confirmed");
-			this.closeModal(this.modalName);
+			this.confirm();
+			this.closeCurrentModal();
 		},
-		...mapActions("modals/confirm", ["updateConfirmMessage"]),
-		...mapActions("modalVisibility", ["closeModal"])
+		...mapModalActions("modals/confirm/MODAL_UUID", ["confirm"]),
+		...mapActions("modalVisibility", ["closeCurrentModal"])
 	}
 };
 </script>

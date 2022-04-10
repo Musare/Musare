@@ -164,10 +164,6 @@
 				></div>
 			</template>
 		</edit-song>
-		<confirm
-			v-if="modals.editSongsConfirm"
-			@confirmed="handleConfirmed()"
-		/>
 	</div>
 </template>
 
@@ -184,9 +180,6 @@ export default {
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong")
 		),
-		Confirm: defineAsyncComponent(() =>
-			import("@/components/modals/Confirm.vue")
-		),
 		SongItem
 	},
 	props: {},
@@ -195,12 +188,7 @@ export default {
 			items: [],
 			currentSong: {},
 			flagFilter: false,
-			sidebarMobileActive: false,
-			confirm: {
-				message: "",
-				action: "",
-				params: null
-			}
+			sidebarMobileActive: false
 		};
 	},
 	computed: {
@@ -375,22 +363,22 @@ export default {
 		toggleMobileSidebar() {
 			this.sidebarMobileActive = !this.sidebarMobileActive;
 		},
-		confirmAction(confirm) {
-			this.confirm = confirm;
-			this.updateConfirmMessage(confirm.message);
-			this.openModal("editSongsConfirm");
+		confirmAction({ message, action, params }) {
+			this.openModal({
+				modal: "confirm",
+				data: {
+					message,
+					action,
+					params,
+					onCompleted: this.handleConfirmed
+				}
+			});
 		},
-		handleConfirmed() {
-			const { action, params } = this.confirm;
+		handleConfirmed({ action, params }) {
 			if (typeof this[action] === "function") {
 				if (params) this[action](params);
 				else this[action]();
 			}
-			this.confirm = {
-				message: "",
-				action: "",
-				params: null
-			};
 		},
 		onClose() {
 			const doneItems = this.items.filter(
@@ -418,7 +406,6 @@ export default {
 		closeThisModal() {
 			this.closeModal("editSongs");
 		},
-		...mapActions("modals/confirm", ["updateConfirmMessage"]),
 		...mapActions("modalVisibility", ["openModal", "closeModal"]),
 		...mapActions("modals/editSong", ["editSong"]),
 		...mapActions("modals/editSongs", ["resetSongs"])

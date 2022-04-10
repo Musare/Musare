@@ -258,7 +258,6 @@
 		</div>
 		<edit-song v-if="modals.editSong" song-type="songs" />
 		<edit-songs v-if="modals.editSongs" />
-		<confirm v-if="modals.confirm" @confirmed="handleConfirmed()" />
 	</div>
 </template>
 
@@ -278,9 +277,6 @@ export default {
 		),
 		EditSongs: defineAsyncComponent(() =>
 			import("@/components/modals/EditSongs.vue")
-		),
-		Confirm: defineAsyncComponent(() =>
-			import("@/components/modals/Confirm.vue")
 		),
 		AdvancedTable,
 		RunJobDropdown
@@ -604,12 +600,7 @@ export default {
 					name: "Recalculate all song ratings",
 					socket: "songs.recalculateAllRatings"
 				}
-			],
-			confirm: {
-				message: "",
-				action: "",
-				params: null
-			}
+			]
 		};
 	},
 	computed: {
@@ -751,22 +742,22 @@ export default {
 			const minute = `${date.getMinutes()}`.padStart(2, 0);
 			return `${year}-${month}-${day} ${hour}:${minute}`;
 		},
-		confirmAction(confirm) {
-			this.confirm = confirm;
-			this.updateConfirmMessage(confirm.message);
-			this.openModal("confirm");
+		confirmAction({ message, action, params }) {
+			this.openModal({
+				modal: "confirm",
+				data: {
+					message,
+					action,
+					params,
+					onCompleted: this.handleConfirmed
+				}
+			});
 		},
-		handleConfirmed() {
-			const { action, params } = this.confirm;
+		handleConfirmed({ action, params }) {
 			if (typeof this[action] === "function") {
 				if (params) this[action](params);
 				else this[action]();
 			}
-			this.confirm = {
-				message: "",
-				action: "",
-				params: null
-			};
 		},
 		...mapActions("modals/editSong", ["editSong"]),
 		...mapActions("modals/editSongs", ["editSongs"]),

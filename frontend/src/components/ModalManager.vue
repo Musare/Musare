@@ -32,7 +32,8 @@ export default {
 			bulkActions: "BulkActions.vue",
 			viewPunishment: "ViewPunishment.vue",
 			removeAccount: "RemoveAccount.vue",
-			importAlbum: "ImportAlbum.vue"
+			importAlbum: "ImportAlbum.vue",
+			confirm: "Confirm.vue"
 		}),
 		...mapState("modalVisibility", {
 			activeModals: state => state.new.activeModals,
