@@ -51,7 +51,8 @@ export default {
 	},
 	mixins: [SearchMusare],
 	props: {
-		modalUuid: { type: String, default: "" }
+		modalUuid: { type: String, default: "" },
+		modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
 	},
 	data() {
 		return {
@@ -59,7 +60,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapModalState("modals/editSong/MODAL_UUID", {
+		...mapModalState("MODAL_MODULE_PATH", {
 			song: state => state.song
 		}),
 		...mapGetters({

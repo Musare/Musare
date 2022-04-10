@@ -161,6 +161,10 @@ import keyboardShortcuts from "@/keyboardShortcuts";
 export default {
 	props: {
 		modalUuid: { type: String, default: "" },
+		modalModulePath: {
+			type: String,
+			default: "modals/editSong/MODAL_UUID"
+		},
 		bulk: { type: Boolean, default: false }
 	},
 	data() {
@@ -175,7 +179,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapModalState("modals/editSong/MODAL_UUID", {
+		...mapModalState("MODAL_MODULE_PATH", {
 			song: state => state.song
 		}),
 		...mapGetters({
@@ -290,7 +294,7 @@ export default {
 
 			this.selectDiscogsInfo(apiResult);
 		},
-		...mapModalActions("modals/editSong/MODAL_UUID", ["selectDiscogsInfo"])
+		...mapModalActions("MODAL_MODULE_PATH", ["selectDiscogsInfo"])
 	}
 };
 </script>

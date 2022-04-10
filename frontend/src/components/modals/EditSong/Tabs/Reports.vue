@@ -198,7 +198,8 @@ import ReportInfoItem from "@/components/ReportInfoItem.vue";
 export default {
 	components: { ReportInfoItem },
 	props: {
-		modalUuid: { type: String, default: "" }
+		modalUuid: { type: String, default: "" },
+		modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
 	},
 	data() {
 		return {
@@ -214,7 +215,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapModalState("modals/editSong/MODAL_UUID", {
+		...mapModalState("MODAL_MODULE_PATH", {
 			reports: state => state.reports
 		}),
 		...mapGetters({
@@ -291,7 +292,7 @@ export default {
 				}
 			);
 		},
-		...mapModalActions("modals/editSong/MODAL_UUID", ["resolveReport"]),
+		...mapModalActions("MODAL_MODULE_PATH", ["resolveReport"]),
 		...mapActions("modalVisibility", ["closeModal"])
 	}
 };

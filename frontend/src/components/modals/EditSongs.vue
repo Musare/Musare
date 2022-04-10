@@ -1,6 +1,7 @@
 <template>
 	<div>
 		<edit-song
+			:modal-module-path="`modals/editSongs/${this.modalUuid}/editSong`"
 			:bulk="true"
 			:flagged="currentSongFlagged"
 			v-if="currentSong"
@@ -176,6 +177,8 @@ import { mapModalState, mapModalActions } from "@/vuex_helpers";
 
 import SongItem from "@/components/SongItem.vue";
 
+import editSong from "@/store/modules/modals/editSong";
+
 export default {
 	components: {
 		EditSong: defineAsyncComponent(() =>
@@ -237,6 +240,11 @@ export default {
 	async mounted() {
 		this.socket.dispatch("apis.joinRoom", "edit-songs");
 
+		this.$store.registerModule(
+			["modals", "editSongs", this.modalUuid, "editSong"],
+			editSong
+		);
+
 		this.socket.dispatch("songs.getSongsFromSongIds", this.songIds, res => {
 			res.data.songs.forEach(song => {
 				this.items.push({
@@ -272,7 +280,8 @@ export default {
 	},
 	beforeUnmount() {
 		this.socket.dispatch("apis.leaveRoom", "edit-songs");
-		// this.resetSongs();
+	},
+	unmounted() {
 		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
 		this.$store.unregisterModule(["modals", "editSongs", this.modalUuid]);
 	},
@@ -412,7 +421,9 @@ export default {
 			this.closeCurrentModal();
 		},
 		...mapActions("modalVisibility", ["openModal", "closeCurrentModal"]),
-		...mapActions("modals/editSong", ["editSong"]),
+		...mapModalActions("modals/editSongs/MODAL_UUID/editSong", [
+			"editSong"
+		]),
 		...mapModalActions("modals/editSongs/MODAL_UUID", ["resetSongs"])
 	}
 };

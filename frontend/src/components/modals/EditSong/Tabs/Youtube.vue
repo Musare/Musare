@@ -71,13 +71,14 @@ export default {
 	components: { SearchQueryItem },
 	mixins: [SearchYoutube],
 	props: {
-		modalUuid: { type: String, default: "" }
+		modalUuid: { type: String, default: "" },
+		modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
 	},
 	data() {
 		return {};
 	},
 	computed: {
-		...mapModalState("modals/editSong/MODAL_UUID", {
+		...mapModalState("MODAL_MODULE_PATH", {
 			song: state => state.song,
 			newSong: state => state.newSong
 		}),
@@ -94,7 +95,7 @@ export default {
 				this.updateThumbnail(result.thumbnail);
 			}
 		},
-		...mapModalActions("modals/editSong/MODAL_UUID", [
+		...mapModalActions("MODAL_MODULE_PATH", [
 			"updateYoutubeId",
 			"updateTitle",
 			"updateThumbnail"

@@ -555,22 +555,26 @@
 							v-show="tab === 'discogs'"
 							:bulk="bulk"
 							:modal-uuid="modalUuid"
+							:modal-module-path="modalModulePath"
 						/>
 						<reports
 							v-if="!newSong"
 							class="tab"
 							v-show="tab === 'reports'"
 							:modal-uuid="modalUuid"
+							:modal-module-path="modalModulePath"
 						/>
 						<youtube
 							class="tab"
 							v-show="tab === 'youtube'"
 							:modal-uuid="modalUuid"
+							:modal-module-path="modalModulePath"
 						/>
 						<musare-songs
 							class="tab"
 							v-show="tab === 'musare-songs'"
 							:modal-uuid="modalUuid"
+							:modal-module-path="modalModulePath"
 						/>
 					</div>
 				</div>
@@ -674,6 +678,10 @@ export default {
 	props: {
 		// songId: { type: String, default: null },
 		modalUuid: { type: String, default: "" },
+		modalModulePath: {
+			type: String,
+			default: "modals/editSong/MODAL_UUID"
+		},
 		discogsAlbum: { type: Object, default: null },
 		bulk: { type: Boolean, default: false },
 		flagged: { type: Boolean, default: false }
@@ -759,7 +767,7 @@ export default {
 				this.song.thumbnail.startsWith("https://i.ytimg.com/")
 			);
 		},
-		...mapModalState("modals/editSong/MODAL_UUID", {
+		...mapModalState("MODAL_MODULE_PATH", {
 			tab: state => state.tab,
 			video: state => state.video,
 			song: state => state.song,
@@ -1013,8 +1021,14 @@ export default {
 			keyboardShortcuts.unregisterShortcut(shortcutName);
 		});
 
-		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-		this.$store.unregisterModule(["modals", "editSong", this.modalUuid]);
+		if (!this.bulk) {
+			// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+			this.$store.unregisterModule([
+				"modals",
+				"editSong",
+				this.modalUuid
+			]);
+		}
 	},
 	methods: {
 		onThumbnailLoad() {
@@ -1820,12 +1834,15 @@ export default {
 						block: "nearest"
 					});
 				return dispatch(
-					`modals/editSong/${this.modalUuid}/showTab`,
+					`${this.modalModulePath.replace(
+						"MODAL_UUID",
+						this.modalUuid
+					)}/showTab`,
 					payload
 				);
 			}
 		}),
-		...mapModalActions("modals/editSong/MODAL_UUID", [
+		...mapModalActions("MODAL_MODULE_PATH", [
 			"stopVideo",
 			"hardStopVideo",
 			"loadVideoById",
