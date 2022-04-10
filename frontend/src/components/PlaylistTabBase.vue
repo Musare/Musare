@@ -685,6 +685,8 @@ import { mapActions, mapState, mapGetters } from "vuex";
 import Toast from "toasters";
 import ws from "@/ws";
 
+import { mapModalState } from "@/vuex_helpers";
+
 import PlaylistItem from "@/components/PlaylistItem.vue";
 
 import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
@@ -766,7 +768,7 @@ export default {
 			role: state => state.user.auth.role,
 			userId: state => state.user.auth.userId
 		}),
-		...mapState("modals/manageStation", {
+		...mapModalState("modals/manageStation/MODAL_UUID", {
 			autofill: state => state.autofill
 		}),
 		...mapState("station", {
