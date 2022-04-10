@@ -9,8 +9,6 @@ import modalVisibility from "./modules/modalVisibility";
 import station from "./modules/station";
 import admin from "./modules/admin";
 
-import editSongModal from "./modules/modals/editSong";
-
 const emptyModule = {
 	namespaced: true
 };
@@ -26,7 +24,7 @@ export default createStore({
 		modals: {
 			namespaced: true,
 			modules: {
-				editSong: editSongModal,
+				editSong: emptyModule,
 				editSongs: emptyModule,
 				importAlbum: emptyModule,
 				importPlaylist: emptyModule,

@@ -256,13 +256,11 @@
 				</template>
 			</advanced-table>
 		</div>
-		<edit-song v-if="modals.editSong" song-type="songs" />
 	</div>
 </template>
 
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
-import { defineAsyncComponent } from "vue";
 
 import Toast from "toasters";
 
@@ -271,9 +269,6 @@ import RunJobDropdown from "@/components/RunJobDropdown.vue";
 
 export default {
 	components: {
-		EditSong: defineAsyncComponent(() =>
-			import("@/components/modals/EditSong")
-		),
 		AdvancedTable,
 		RunJobDropdown
 	},
@@ -625,12 +620,16 @@ export default {
 	},
 	methods: {
 		create() {
-			this.editSong({ newSong: true });
-			this.openModal("editSong");
+			this.openModal({
+				modal: "editSong",
+				data: { song: { newSong: true } }
+			});
 		},
 		editOne(song) {
-			this.editSong({ songId: song._id });
-			this.openModal("editSong");
+			this.openModal({
+				modal: "editSong",
+				data: { song: { songId: song._id } }
+			});
 		},
 		editMany(selectedRows) {
 			if (selectedRows.length === 1) this.editOne(selectedRows[0]);
@@ -754,8 +753,6 @@ export default {
 				else this[action]();
 			}
 		},
-		...mapActions("modals/editSong", ["editSong"]),
-		...mapActions("modals/confirm", ["updateConfirmMessage"]),
 		...mapActions("modalVisibility", ["openModal"])
 	}
 };

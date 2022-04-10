@@ -59,7 +59,9 @@
 </template>
 
 <script>
-import { mapGetters, mapState, mapActions } from "vuex";
+import { mapGetters } from "vuex";
+
+import { mapModalState, mapModalActions } from "@/vuex_helpers";
 
 import SearchYoutube from "@/mixins/SearchYoutube.vue";
 
@@ -68,11 +70,14 @@ import SearchQueryItem from "../../../SearchQueryItem.vue";
 export default {
 	components: { SearchQueryItem },
 	mixins: [SearchYoutube],
+	props: {
+		modalUuid: { type: String, default: "" }
+	},
 	data() {
 		return {};
 	},
 	computed: {
-		...mapState("modals/editSong", {
+		...mapModalState("modals/editSong/MODAL_UUID", {
 			song: state => state.song,
 			newSong: state => state.newSong
 		}),
@@ -89,7 +94,7 @@ export default {
 				this.updateThumbnail(result.thumbnail);
 			}
 		},
-		...mapActions("modals/editSong", [
+		...mapModalActions("modals/editSong/MODAL_UUID", [
 			"updateYoutubeId",
 			"updateTitle",
 			"updateThumbnail"

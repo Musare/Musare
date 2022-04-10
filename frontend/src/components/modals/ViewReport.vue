@@ -244,15 +244,16 @@ export default {
 			);
 		},
 		openSong() {
-			this.editSong({ songId: this.report.song._id });
-			this.openModal("editSong");
+			this.openModal({
+				modal: "editSong",
+				data: { song: { songId: this.report.song._id } }
+			});
 		},
 		...mapActions("admin/reports", [
 			"indexReports",
 			"resolveReport",
 			"removeReport"
 		]),
-		...mapActions("modals/editSong", ["editSong"]),
 		...mapActions("modalVisibility", ["closeModal", "openModal"])
 	}
 };

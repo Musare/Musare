@@ -144,14 +144,11 @@
 				</template>
 			</advanced-table>
 		</div>
-
-		<edit-song v-if="modals.editSong" song-type="songs" sector="admin" />
 	</div>
 </template>
 
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
-import { defineAsyncComponent } from "vue";
 
 import Toast from "toasters";
 
@@ -160,9 +157,6 @@ import RunJobDropdown from "@/components/RunJobDropdown.vue";
 
 export default {
 	components: {
-		EditSong: defineAsyncComponent(() =>
-			import("@/components/modals/EditSong")
-		),
 		AdvancedTable,
 		RunJobDropdown
 	},

@@ -151,14 +151,16 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from "vuex";
+import { mapGetters } from "vuex";
 
 import Toast from "toasters";
+import { mapModalState, mapModalActions } from "@/vuex_helpers";
 
 import keyboardShortcuts from "@/keyboardShortcuts";
 
 export default {
 	props: {
+		modalUuid: { type: String, default: "" },
 		bulk: { type: Boolean, default: false }
 	},
 	data() {
@@ -173,7 +175,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modals/editSong", {
+		...mapModalState("modals/editSong/MODAL_UUID", {
 			song: state => state.song
 		}),
 		...mapGetters({
@@ -288,7 +290,7 @@ export default {
 
 			this.selectDiscogsInfo(apiResult);
 		},
-		...mapActions("modals/editSong", ["selectDiscogsInfo"])
+		...mapModalActions("modals/editSong/MODAL_UUID", ["selectDiscogsInfo"])
 	}
 };
 </script>

@@ -260,10 +260,11 @@ export default {
 		},
 		edit(song) {
 			this.hideTippyElements();
-			this.editSong({ songId: song._id });
-			this.openModal("editSong");
+			this.openModal({
+				modal: "editSong",
+				data: { song: { songId: song._id } }
+			});
 		},
-		...mapActions("modals/editSong", ["editSong"]),
 		...mapActions("modalVisibility", ["openModal"]),
 		formatDistance,
 		parseISO

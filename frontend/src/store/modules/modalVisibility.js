@@ -15,11 +15,10 @@ import viewPunishment from "./modals/viewPunishment";
 import importAlbum from "./modals/importAlbum";
 import confirm from "./modals/confirm";
 import editSongs from "./modals/editSongs";
+import editSong from "./modals/editSong";
 
 const state = {
-	modals: {
-		editSong: false
-	},
+	modals: {},
 	currentlyActive: [],
 	new: {
 		activeModals: [],
@@ -41,7 +40,8 @@ const modalModules = {
 	viewPunishment,
 	importAlbum,
 	confirm,
-	editSongs
+	editSongs,
+	editSong
 };
 
 const migratedModules = {
@@ -56,7 +56,7 @@ const migratedModules = {
 	report: true,
 	removeAccount: true,
 	editNews: true,
-	editSong: false,
+	editSong: true,
 	editSongs: true,
 	editUser: true,
 	importAlbum: true,

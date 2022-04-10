@@ -554,16 +554,23 @@
 							class="tab"
 							v-show="tab === 'discogs'"
 							:bulk="bulk"
+							:modal-uuid="modalUuid"
 						/>
 						<reports
 							v-if="!newSong"
 							class="tab"
 							v-show="tab === 'reports'"
+							:modal-uuid="modalUuid"
 						/>
-						<youtube class="tab" v-show="tab === 'youtube'" />
+						<youtube
+							class="tab"
+							v-show="tab === 'youtube'"
+							:modal-uuid="modalUuid"
+						/>
 						<musare-songs
 							class="tab"
 							v-show="tab === 'musare-songs'"
+							:modal-uuid="modalUuid"
 						/>
 					</div>
 				</div>
@@ -638,6 +645,8 @@
 import { mapState, mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
 
+import { mapModalState, mapModalActions } from "@/vuex_helpers";
+
 import aw from "@/aw";
 import ws from "@/ws";
 import validation from "@/validation";
@@ -664,8 +673,8 @@ export default {
 	},
 	props: {
 		// songId: { type: String, default: null },
+		modalUuid: { type: String, default: "" },
 		discogsAlbum: { type: Object, default: null },
-		sector: { type: String, default: "admin" },
 		bulk: { type: Boolean, default: false },
 		flagged: { type: Boolean, default: false }
 	},
@@ -750,7 +759,7 @@ export default {
 				this.song.thumbnail.startsWith("https://i.ytimg.com/")
 			);
 		},
-		...mapState("modals/editSong", {
+		...mapModalState("modals/editSong/MODAL_UUID", {
 			tab: state => state.tab,
 			video: state => state.video,
 			song: state => state.song,
@@ -1003,6 +1012,9 @@ export default {
 		shortcutNames.forEach(shortcutName => {
 			keyboardShortcuts.unregisterShortcut(shortcutName);
 		});
+
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule(["modals", "editSong", this.modalUuid]);
 	},
 	methods: {
 		onThumbnailLoad() {
@@ -1807,10 +1819,13 @@ export default {
 					this.$refs[`${payload}-tab`].scrollIntoView({
 						block: "nearest"
 					});
-				return dispatch("modals/editSong/showTab", payload);
+				return dispatch(
+					`modals/editSong/${this.modalUuid}/showTab`,
+					payload
+				);
 			}
 		}),
-		...mapActions("modals/editSong", [
+		...mapModalActions("modals/editSong/MODAL_UUID", [
 			"stopVideo",
 			"hardStopVideo",
 			"loadVideoById",

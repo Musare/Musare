@@ -188,14 +188,18 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
+import { mapModalState, mapModalActions } from "@/vuex_helpers";
 
 import ReportInfoItem from "@/components/ReportInfoItem.vue";
 
 export default {
 	components: { ReportInfoItem },
+	props: {
+		modalUuid: { type: String, default: "" }
+	},
 	data() {
 		return {
 			tab: "sort-by-report",
@@ -210,7 +214,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modals/editSong", {
+		...mapModalState("modals/editSong/MODAL_UUID", {
 			reports: state => state.reports
 		}),
 		...mapGetters({
@@ -287,7 +291,7 @@ export default {
 				}
 			);
 		},
-		...mapActions("modals/editSong", ["resolveReport"]),
+		...mapModalActions("modals/editSong/MODAL_UUID", ["resolveReport"]),
 		...mapActions("modalVisibility", ["closeModal"])
 	}
 };

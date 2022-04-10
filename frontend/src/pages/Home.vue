@@ -513,13 +513,11 @@
 			</div>
 			<main-footer />
 		</div>
-		<edit-song v-if="modals.editSong" song-type="songs" sector="home" />
 	</div>
 </template>
 
 <script>
 import { mapState, mapGetters, mapActions } from "vuex";
-import { defineAsyncComponent } from "vue";
 import draggable from "vuedraggable";
 import Toast from "toasters";
 
@@ -530,9 +528,6 @@ import ws from "@/ws";
 export default {
 	components: {
 		SongThumbnail,
-		EditSong: defineAsyncComponent(() =>
-			import("@/components/modals/EditSong")
-		),
 		draggable
 	},
 	data() {

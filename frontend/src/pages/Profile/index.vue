@@ -1,7 +1,5 @@
 <template>
 	<div v-if="isUser">
-		<edit-song v-if="modals.editSong" song-type="songs" />
-
 		<page-metadata :title="`Profile | ${user.username}`" />
 		<main-header />
 		<div class="container">
@@ -105,7 +103,6 @@
 <script>
 import { mapState, mapGetters } from "vuex";
 import { format, parseISO } from "date-fns";
-import { defineAsyncComponent } from "vue";
 import ws from "@/ws";
 
 import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
@@ -119,10 +116,7 @@ export default {
 	components: {
 		ProfilePicture,
 		RecentActivity,
-		Playlists,
-		EditSong: defineAsyncComponent(() =>
-			import("@/components/modals/EditSong")
-		)
+		Playlists
 	},
 	mixins: [TabQueryHandler],
 	data() {

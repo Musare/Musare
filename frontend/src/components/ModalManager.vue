@@ -34,7 +34,8 @@ export default {
 			removeAccount: "RemoveAccount.vue",
 			importAlbum: "ImportAlbum.vue",
 			confirm: "Confirm.vue",
-			editSongs: "EditSongs.vue"
+			editSongs: "EditSongs.vue",
+			editSong: "EditSong/index.vue"
 		}),
 		...mapState("modalVisibility", {
 			activeModals: state => state.new.activeModals,

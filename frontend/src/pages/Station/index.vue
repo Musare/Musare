@@ -637,12 +637,6 @@
 						</div>
 					</div>
 				</div>
-
-				<edit-song
-					v-if="modals.editSong"
-					song-type="songs"
-					sector="station"
-				/>
 			</div>
 
 			<main-footer />
@@ -778,7 +772,6 @@
 
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
-import { defineAsyncComponent } from "vue";
 import Toast from "toasters";
 import { ContentLoader } from "vue-content-loader";
 import canAutoPlay from "can-autoplay";
@@ -804,9 +797,6 @@ export default {
 		FloatingBox,
 		StationSidebar,
 		AddToPlaylistDropdown,
-		EditSong: defineAsyncComponent(() =>
-			import("@/components/modals/EditSong")
-		),
 		SongItem
 	},
 	data() {

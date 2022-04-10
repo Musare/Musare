@@ -20,6 +20,7 @@ export default {
 	},
 	getters: {},
 	actions: {
+		init: ({ commit }, { song }) => commit("editSong", song),
 		showTab: ({ commit }, tab) => commit("showTab", tab),
 		editSong: ({ commit }, song) => commit("editSong", song),
 		setSong: ({ commit }, song) => commit("setSong", song),

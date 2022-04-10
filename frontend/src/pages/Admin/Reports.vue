@@ -106,14 +106,11 @@
 				</template>
 			</advanced-table>
 		</div>
-
-		<edit-song v-if="modals.editSong" song-type="songs" />
 	</div>
 </template>
 
 <script>
 import { mapState, mapActions } from "vuex";
-import { defineAsyncComponent } from "vue";
 
 import Toast from "toasters";
 
@@ -121,9 +118,6 @@ import AdvancedTable from "@/components/AdvancedTable.vue";
 
 export default {
 	components: {
-		EditSong: defineAsyncComponent(() =>
-			import("@/components/modals/EditSong/index.vue")
-		),
 		AdvancedTable
 	},
 	data() {

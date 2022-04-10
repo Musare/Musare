@@ -37,7 +37,9 @@
 </template>
 
 <script>
-import { mapGetters, mapState } from "vuex";
+import { mapGetters } from "vuex";
+
+import { mapModalState } from "@/vuex_helpers";
 
 import SearchMusare from "@/mixins/SearchMusare.vue";
 
@@ -48,13 +50,16 @@ export default {
 		SongItem
 	},
 	mixins: [SearchMusare],
+	props: {
+		modalUuid: { type: String, default: "" }
+	},
 	data() {
 		return {
 			sitename: "Musare"
 		};
 	},
 	computed: {
-		...mapState("modals/editSong", {
+		...mapModalState("modals/editSong/MODAL_UUID", {
 			song: state => state.song
 		}),
 		...mapGetters({
