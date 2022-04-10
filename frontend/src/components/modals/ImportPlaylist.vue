@@ -139,13 +139,15 @@ export default {
 						res.songs &&
 						res.songs.length > 0
 					) {
-						this.editSongs(
-							res.songs.map(song => ({
-								...song,
-								songId: song._id
-							}))
-						);
-						this.openModal("editSongs");
+						this.openModal({
+							modal: "editSongs",
+							data: {
+								songs: res.songs.map(song => ({
+									...song,
+									songId: song._id
+								}))
+							}
+						});
 					}
 
 					this.closeCurrentModal();
@@ -156,7 +158,6 @@ export default {
 				}
 			);
 		},
-		...mapActions("modals/editSongs", ["editSongs"]),
 		...mapActions("modalVisibility", ["openModal", "closeCurrentModal"])
 	}
 };

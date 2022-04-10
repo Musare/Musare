@@ -453,8 +453,10 @@ export default {
 			if (this.songsToEdit.length === 0)
 				new Toast("You can't edit 0 songs.");
 			else {
-				this.editSongs(this.songsToEdit);
-				this.openModal("editSongs");
+				this.openModal({
+					modal: "editSongs",
+					data: { songs: this.songsToEdit }
+				});
 			}
 		},
 		log(evt) {

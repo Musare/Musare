@@ -8,11 +8,11 @@ export default {
 	},
 	getters: {},
 	actions: {
-		editSongs: ({ commit }, songs) => commit("editSongs", songs),
-		resetSongs: ({ commit }) => commit("resetSongs")
+		init: ({ commit }, data) => commit("init", data)
+		// resetSongs: ({ commit }) => commit("resetSongs")
 	},
 	mutations: {
-		editSongs(state, songs) {
+		init(state, { songs }) {
 			state.songIds = songs.map(song => song.songId);
 			state.songPrefillData = Object.fromEntries(
 				songs.map(song => [
@@ -20,10 +20,10 @@ export default {
 					song.prefill ? song.prefill : {}
 				])
 			);
-		},
-		resetSongs(state) {
-			state.songIds = [];
-			state.songPrefillData = {};
 		}
+		// resetSongs(state) {
+		// 	state.songIds = [];
+		// 	state.songPrefillData = {};
+		// }
 	}
 };

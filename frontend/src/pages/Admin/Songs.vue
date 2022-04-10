@@ -257,7 +257,6 @@
 			</advanced-table>
 		</div>
 		<edit-song v-if="modals.editSong" song-type="songs" />
-		<edit-songs v-if="modals.editSongs" />
 	</div>
 </template>
 
@@ -274,9 +273,6 @@ export default {
 	components: {
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong")
-		),
-		EditSongs: defineAsyncComponent(() =>
-			import("@/components/modals/EditSongs.vue")
 		),
 		AdvancedTable,
 		RunJobDropdown
@@ -642,8 +638,7 @@ export default {
 				const songs = selectedRows.map(row => ({
 					songId: row._id
 				}));
-				this.editSongs(songs);
-				this.openModal("editSongs");
+				this.openModal({ modal: "editSongs", data: { songs } });
 			}
 		},
 		verifyOne(songId) {
@@ -760,7 +755,6 @@ export default {
 			}
 		},
 		...mapActions("modals/editSong", ["editSong"]),
-		...mapActions("modals/editSongs", ["editSongs"]),
 		...mapActions("modals/confirm", ["updateConfirmMessage"]),
 		...mapActions("modalVisibility", ["openModal"])
 	}

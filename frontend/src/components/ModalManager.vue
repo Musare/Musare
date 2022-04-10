@@ -33,7 +33,8 @@ export default {
 			viewPunishment: "ViewPunishment.vue",
 			removeAccount: "RemoveAccount.vue",
 			importAlbum: "ImportAlbum.vue",
-			confirm: "Confirm.vue"
+			confirm: "Confirm.vue",
+			editSongs: "EditSongs.vue"
 		}),
 		...mapState("modalVisibility", {
 			activeModals: state => state.new.activeModals,

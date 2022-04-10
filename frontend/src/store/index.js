@@ -10,7 +10,6 @@ import station from "./modules/station";
 import admin from "./modules/admin";
 
 import editSongModal from "./modules/modals/editSong";
-import editSongsModal from "./modules/modals/editSongs";
 
 const emptyModule = {
 	namespaced: true
@@ -28,7 +27,7 @@ export default createStore({
 			namespaced: true,
 			modules: {
 				editSong: editSongModal,
-				editSongs: editSongsModal,
+				editSongs: emptyModule,
 				importAlbum: emptyModule,
 				importPlaylist: emptyModule,
 				editPlaylist: emptyModule,

@@ -172,6 +172,7 @@ import { mapState, mapActions, mapGetters } from "vuex";
 import { defineAsyncComponent } from "vue";
 
 import Toast from "toasters";
+import { mapModalState, mapModalActions } from "@/vuex_helpers";
 
 import SongItem from "@/components/SongItem.vue";
 
@@ -182,7 +183,9 @@ export default {
 		),
 		SongItem
 	},
-	props: {},
+	props: {
+		modalUuid: { type: String, default: "" }
+	},
 	data() {
 		return {
 			items: [],
@@ -220,7 +223,7 @@ export default {
 				item => item.song._id === this.currentSong._id
 			)?.flagged;
 		},
-		...mapState("modals/editSongs", {
+		...mapModalState("modals/editSongs/MODAL_UUID", {
 			songIds: state => state.songIds,
 			songPrefillData: state => state.songPrefillData
 		}),
@@ -269,7 +272,9 @@ export default {
 	},
 	beforeUnmount() {
 		this.socket.dispatch("apis.leaveRoom", "edit-songs");
-		this.resetSongs();
+		// this.resetSongs();
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule(["modals", "editSongs", this.modalUuid]);
 	},
 	methods: {
 		pickSong(song) {
@@ -404,11 +409,11 @@ export default {
 			else this.closeThisModal();
 		},
 		closeThisModal() {
-			this.closeModal("editSongs");
+			this.closeCurrentModal();
 		},
-		...mapActions("modalVisibility", ["openModal", "closeModal"]),
+		...mapActions("modalVisibility", ["openModal", "closeCurrentModal"]),
 		...mapActions("modals/editSong", ["editSong"]),
-		...mapActions("modals/editSongs", ["resetSongs"])
+		...mapModalActions("modals/editSongs/MODAL_UUID", ["resetSongs"])
 	}
 };
 </script>
