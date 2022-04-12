@@ -118,6 +118,8 @@
 											<i
 												class="material-icons add-to-queue-icon"
 												v-if="
+													station &&
+													station.requests &&
 													station.requests.enabled &&
 													(station.requests.access ===
 														'user' ||
