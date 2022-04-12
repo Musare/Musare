@@ -170,7 +170,7 @@
 </template>
 
 <script>
-import { mapState, mapActions, mapGetters } from "vuex";
+import { mapActions, mapGetters } from "vuex";
 import { defineAsyncComponent } from "vue";
 
 import Toast from "toasters";
@@ -230,9 +230,6 @@ export default {
 		...mapModalState("modals/editSongs/MODAL_UUID", {
 			songIds: state => state.songIds,
 			songPrefillData: state => state.songPrefillData
-		}),
-		...mapState("modalVisibility", {
-			modals: state => state.modals
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"

@@ -203,7 +203,7 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
 import ws from "@/ws";
 import { mapModalState } from "@/vuex_helpers";
@@ -350,9 +350,6 @@ export default {
 	computed: {
 		...mapModalState("modals/report/MODAL_UUID", {
 			song: state => state.song
-		}),
-		...mapState("modalVisibility", {
-			modals: state => state.modals
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"

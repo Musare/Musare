@@ -66,9 +66,6 @@ export default {
 	},
 	computed: {
 		...mapState({
-			...mapState("modalVisibility", {
-				modals: state => state.modals
-			}),
 			myUserId: state => state.user.auth.userId
 		}),
 		...mapGetters({

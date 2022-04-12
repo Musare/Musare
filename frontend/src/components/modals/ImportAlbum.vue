@@ -324,7 +324,7 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 
 import draggable from "vuedraggable";
 import Toast from "toasters";
@@ -388,9 +388,6 @@ export default {
 			discogsAlbum: state => state.discogsAlbum,
 			editingSongs: state => state.editingSongs,
 			prefillDiscogs: state => state.prefillDiscogs
-		}),
-		...mapState("modalVisibility", {
-			modals: state => state.modals
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"

@@ -148,7 +148,7 @@
 </template>
 
 <script>
-import { mapState, mapActions, mapGetters } from "vuex";
+import { mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 
@@ -448,9 +448,6 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modalVisibility", {
-			modals: state => state.modals
-		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})

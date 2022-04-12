@@ -110,7 +110,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapActions } from "vuex";
 
 import Toast from "toasters";
 
@@ -257,11 +257,6 @@ export default {
 				}
 			}
 		};
-	},
-	computed: {
-		...mapState("modalVisibility", {
-			modals: state => state.modals
-		})
 	},
 	methods: {
 		resolve(reportId, value) {

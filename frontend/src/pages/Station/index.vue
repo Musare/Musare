@@ -903,17 +903,18 @@ export default {
 		})
 	},
 	async mounted() {
-		this.editSongModalWatcher = this.$store.watch(
-			state => state.modals.editSong.video.paused,
-			paused => {
-				if (paused && !this.beforeEditSongModalLocalPaused) {
-					this.resumeLocalStation();
-				} else if (!paused) {
-					this.beforeEditSongModalLocalPaused = this.localPaused;
-					this.pauseLocalStation();
-				}
-			}
-		);
+		// TODO fix
+		// this.editSongModalWatcher = this.$store.watch(
+		// 	state => state.modals.editSong.video.paused,
+		// 	paused => {
+		// 		if (paused && !this.beforeEditSongModalLocalPaused) {
+		// 			this.resumeLocalStation();
+		// 		} else if (!paused) {
+		// 			this.beforeEditSongModalLocalPaused = this.localPaused;
+		// 			this.pauseLocalStation();
+		// 		}
+		// 	}
+		// );
 
 		window.scrollTo(0, 0);
 

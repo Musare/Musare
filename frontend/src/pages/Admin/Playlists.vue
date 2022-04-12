@@ -87,7 +87,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapActions } from "vuex";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
 import RunJobDropdown from "@/components/RunJobDropdown.vue";
@@ -314,11 +314,6 @@ export default {
 				}
 			]
 		};
-	},
-	computed: {
-		...mapState("modalVisibility", {
-			modals: state => state.modals
-		})
 	},
 	methods: {
 		getDateFormatted(createdAt) {

@@ -124,7 +124,7 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
@@ -271,9 +271,6 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modalVisibility", {
-			modals: state => state.modals
-		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})

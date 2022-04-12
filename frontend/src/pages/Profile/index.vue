@@ -130,10 +130,7 @@ export default {
 	computed: {
 		...mapState({
 			role: state => state.user.auth.role,
-			myUserId: state => state.user.auth.userId,
-			...mapState("modalVisibility", {
-				modals: state => state.modals
-			})
+			myUserId: state => state.user.auth.userId
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"

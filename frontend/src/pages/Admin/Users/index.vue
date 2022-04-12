@@ -97,7 +97,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapActions } from "vuex";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
 import ProfilePicture from "@/components/ProfilePicture.vue";
@@ -293,11 +293,6 @@ export default {
 				}
 			}
 		};
-	},
-	computed: {
-		...mapState("modalVisibility", {
-			modals: state => state.modals
-		})
 	},
 	mounted() {
 		if (this.$route.query.userId) this.edit(this.$route.query.userId);

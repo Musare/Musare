@@ -595,9 +595,6 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modalVisibility", {
-			modals: state => state.modals
-		}),
 		...mapState("modals/editSong", {
 			song: state => state.song
 		}),

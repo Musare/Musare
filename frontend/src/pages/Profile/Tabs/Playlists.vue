@@ -92,7 +92,7 @@
 </template>
 
 <script>
-import { mapActions, mapState, mapGetters } from "vuex";
+import { mapActions, mapGetters } from "vuex";
 
 import PlaylistItem from "@/components/PlaylistItem.vue";
 import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
@@ -114,11 +114,6 @@ export default {
 		}
 	},
 	computed: {
-		...mapState({
-			...mapState("modalVisibility", {
-				modals: state => state.modals
-			})
-		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})

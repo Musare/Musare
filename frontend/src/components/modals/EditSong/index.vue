@@ -778,7 +778,6 @@ export default {
 			newSong: state => state.newSong
 		}),
 		...mapState("modalVisibility", {
-			modals: state => state.modals,
 			activeModals: state => state.activeModals
 		}),
 		...mapGetters({
