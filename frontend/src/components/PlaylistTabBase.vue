@@ -894,7 +894,7 @@ export default {
 			}
 			if (type === "autorequest")
 				return new Promise(resolve => {
-					this.autoRequest.push(playlist);
+					this.addPlaylistToAutoRequest(playlist);
 					new Toast(
 						"Successfully selected playlist to auto request songs."
 					);
@@ -932,20 +932,9 @@ export default {
 				});
 			if (type === "autorequest")
 				return new Promise(resolve => {
-					let selected = false;
-					this.autoRequest.forEach((playlist, index) => {
-						if (playlist._id === playlistId) {
-							selected = true;
-							this.autoRequest.splice(index, 1);
-						}
-					});
-					if (selected) {
-						new Toast("Successfully deselected playlist.");
-						resolve();
-					} else {
-						new Toast("Playlist not selected.");
-						resolve();
-					}
+					this.removePlaylistFromAutoRequest(playlistId);
+					new Toast("Successfully deselected playlist.");
+					resolve();
 				});
 			return false;
 		},
@@ -1001,7 +990,11 @@ export default {
 			});
 		},
 		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions("user/playlists", ["setPlaylists"])
+		...mapActions("user/playlists", ["setPlaylists"]),
+		...mapActions("station", [
+			"addPlaylistToAutoRequest",
+			"removePlaylistFromAutoRequest"
+		])
 	}
 };
 </script>

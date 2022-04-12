@@ -88,6 +88,12 @@ const actions = {
 		{ skipVotes, skipVotesCurrent }
 	) => {
 		commit("updateCurrentSongSkipVotes", { skipVotes, skipVotesCurrent });
+	},
+	addPlaylistToAutoRequest: ({ commit }, playlist) => {
+		commit("addPlaylistToAutoRequest", playlist);
+	},
+	removePlaylistFromAutoRequest: ({ commit }, playlistId) => {
+		commit("removePlaylistFromAutoRequest", playlistId);
 	}
 };
 
@@ -188,6 +194,16 @@ const mutations = {
 		state.currentSong.skipVotes = skipVotes;
 		if (skipVotesCurrent !== null)
 			state.currentSong.skipVotesCurrent = skipVotesCurrent;
+	},
+	addPlaylistToAutoRequest(state, playlist) {
+		state.autoRequest.push(playlist);
+	},
+	removePlaylistFromAutoRequest(state, playlistId) {
+		state.autoRequest.forEach((playlist, index) => {
+			if (playlist._id === playlistId) {
+				state.autoRequest.splice(index, 1);
+			}
+		});
 	}
 };
 

@@ -805,6 +805,7 @@ export default {
 			localPaused: state => state.localPaused,
 			noSong: state => state.noSong,
 			autoRequest: state => state.autoRequest,
+			autoRequestLock: state => state.autoRequestLock,
 			autofill: state => state.autofill,
 			blacklist: state => state.blacklist
 		}),
@@ -818,6 +819,11 @@ export default {
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
+	},
+	watch: {
+		"autoRequest.length": function autoRequestWatcher() {
+			this.autoRequestSong();
+		}
 	},
 	async mounted() {
 		this.editSongModalWatcher = this.$store.watch(
@@ -961,6 +967,8 @@ export default {
 			this.timePaused = res.data.timePaused;
 			this.updateStationPaused(false);
 			if (!this.localPaused) this.resumeLocalPlayer();
+
+			this.autoRequestSong();
 		});
 
 		this.socket.on("event:station.deleted", () => {
@@ -1018,6 +1026,8 @@ export default {
 					: null;
 
 			this.updateNextSong(nextSong);
+
+			this.autoRequestSong();
 		});
 
 		this.socket.on("event:station.queue.song.repositioned", res => {
@@ -1165,6 +1175,50 @@ export default {
 					this.currentSong.thumbnail
 				);
 			} else ms.removeMediaSessionData(0);
+		},
+		autoRequestSong() {
+			if (
+				!this.autoRequestLock &&
+				this.songsList.length < 50 &&
+				this.currentUserQueueSongs <
+					this.station.requests.limit * 0.5 &&
+				this.autoRequest.length > 0
+			) {
+				const selectedPlaylist =
+					this.autoRequest[
+						Math.floor(Math.random() * this.autoRequest.length)
+					];
+				if (selectedPlaylist._id && selectedPlaylist.songs.length > 0) {
+					const selectedSong =
+						selectedPlaylist.songs[
+							Math.floor(
+								Math.random() * selectedPlaylist.songs.length
+							)
+						];
+					if (selectedSong.youtubeId) {
+						this.updateAutoRequestLock(true);
+						this.socket.dispatch(
+							"stations.addToQueue",
+							this.station._id,
+							selectedSong.youtubeId,
+							data => {
+								this.updateAutoRequestLock(false);
+								if (data.status !== "success") {
+									setTimeout(
+										() => {
+											this.autoRequestSong();
+										},
+										data.message ===
+											"That song is already in the queue."
+											? 5000
+											: 1000
+									);
+								}
+							}
+						);
+					}
+				}
+			}
 		},
 		removeFromQueue(youtubeId) {
 			window.socket.dispatch(
@@ -2130,7 +2184,8 @@ export default {
 			"setBlacklist",
 			"updateCurrentSongRatings",
 			"updateOwnCurrentSongRatings",
-			"updateCurrentSongSkipVotes"
+			"updateCurrentSongSkipVotes",
+			"updateAutoRequestLock"
 		]),
 		...mapActions("modals/editSong", ["stopVideo"])
 	}

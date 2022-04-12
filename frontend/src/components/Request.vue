@@ -178,14 +178,13 @@
 				v-show="tab === 'autorequest'"
 				:type="'autorequest'"
 				:sector="sector"
-				@selected="autoRequestSong()"
 				:modal-uuid="modalUuid"
 			/>
 		</div>
 	</div>
 </template>
 <script>
-import { mapActions, mapState, mapGetters } from "vuex";
+import { mapState, mapGetters } from "vuex";
 
 import Toast from "toasters";
 
@@ -292,10 +291,6 @@ export default {
 			role: state => state.auth.role,
 			userId: state => state.auth.userId
 		}),
-		...mapState("station", {
-			autoRequest: state => state.autoRequest,
-			autoRequestLock: state => state.autoRequestLock
-		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
@@ -304,50 +299,11 @@ export default {
 		this.sitename = await lofig.get("siteSettings.sitename");
 
 		this.showTab("songs");
-
-		this.socket.on("event:station.queue.updated", () =>
-			this.autoRequestSong()
-		);
 	},
 	methods: {
 		showTab(tab) {
 			this.$refs[`${tab}-tab`].scrollIntoView({ block: "nearest" });
 			this.tab = tab;
-		},
-		autoRequestSong() {
-			if (
-				!this.autoRequestLock &&
-				this.songsList.length < 50 &&
-				this.currentUserQueueSongs <
-					this.station.requests.limit * 0.5 &&
-				this.autoRequest.length > 0
-			) {
-				const selectedPlaylist =
-					this.autoRequest[
-						Math.floor(Math.random() * this.autoRequest.length)
-					];
-				if (selectedPlaylist._id && selectedPlaylist.songs.length > 0) {
-					const selectedSong =
-						selectedPlaylist.songs[
-							Math.floor(
-								Math.random() * selectedPlaylist.songs.length
-							)
-						];
-					if (selectedSong.youtubeId) {
-						this.updateAutoRequestLock(true);
-						this.socket.dispatch(
-							"stations.addToQueue",
-							this.station._id,
-							selectedSong.youtubeId,
-							data => {
-								this.updateAutoRequestLock(false);
-								if (data.status !== "success")
-									this.autoRequestSong();
-							}
-						);
-					}
-				}
-			}
 		},
 		addSongToQueue(youtubeId, index) {
 			this.socket.dispatch(
@@ -367,8 +323,7 @@ export default {
 					}
 				}
 			);
-		},
-		...mapActions("station", ["updateAutoRequest", "updateAutoRequestLock"])
+		}
 	}
 };
 </script>
