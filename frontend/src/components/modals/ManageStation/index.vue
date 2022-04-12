@@ -16,68 +16,12 @@
 		<template #body v-if="station && station._id">
 			<div class="left-section">
 				<div class="section">
-					<div id="about-station-container">
-						<div id="station-info">
-							<div id="station-name">
-								<h1>{{ station.displayName }}</h1>
-								<i
-									v-if="station.type === 'official'"
-									class="material-icons verified-station"
-									content="Verified Station"
-									v-tippy
-								>
-									check_circle
-								</i>
-							</div>
-							<p>{{ station.description }}</p>
-						</div>
-
-						<div id="admin-buttons">
-							<!-- (Admin) Pause/Resume Button -->
-							<button
-								v-if="isOwnerOrAdmin() && stationPaused"
-								class="button is-danger"
-								@click="resumeStation()"
-							>
-								<i class="material-icons icon-with-button"
-									>play_arrow</i
-								>
-								<span> Resume Station </span>
-							</button>
-							<button
-								v-if="isOwnerOrAdmin() && !stationPaused"
-								class="button is-danger"
-								@click="pauseStation()"
-							>
-								<i class="material-icons icon-with-button"
-									>pause</i
-								>
-								<span> Pause Station </span>
-							</button>
-
-							<!-- (Admin) Skip Button -->
-							<button
-								v-if="isOwnerOrAdmin()"
-								class="button is-danger"
-								@click="skipStation()"
-							>
-								<i class="material-icons icon-with-button"
-									>skip_next</i
-								>
-								<span> Force Skip </span>
-							</button>
-
-							<router-link
-								v-if="sector !== 'station' && station.name"
-								:to="{
-									name: 'station',
-									params: { id: station.name }
-								}"
-								class="button is-primary"
-							>
-								Go To Station
-							</router-link>
-						</div>
+					<div class="station-info-box-wrapper">
+						<station-info-box
+							:station="station"
+							:station-paused="stationPaused"
+							:show-go-to-station="true"
+						/>
 					</div>
 					<div v-if="isOwnerOrAdmin() || sector !== 'home'">
 						<div class="tab-selection">
@@ -204,6 +148,7 @@ import { mapModalState, mapModalActions } from "@/vuex_helpers";
 
 import Queue from "@/components/Queue.vue";
 import SongItem from "@/components/SongItem.vue";
+import StationInfoBox from "@/components/StationInfoBox.vue";
 
 import Settings from "./Settings.vue";
 import PlaylistTabBase from "@/components/PlaylistTabBase.vue";
@@ -213,6 +158,7 @@ export default {
 	components: {
 		Queue,
 		SongItem,
+		StationInfoBox,
 		Settings,
 		PlaylistTabBase,
 		Request
@@ -381,6 +327,24 @@ export default {
 					() => {
 						new Toast(`The station you were editing was deleted.`);
 						this.closeModal("manageStation");
+					},
+					{ modalUuid: this.modalUuid }
+				);
+
+				this.socket.on(
+					"event:user.station.favorited",
+					res => {
+						if (res.data.stationId === this.stationId)
+							this.updateIsFavorited(true);
+					},
+					{ modalUuid: this.modalUuid }
+				);
+
+				this.socket.on(
+					"event:user.station.unfavorited",
+					res => {
+						if (res.data.stationId === this.stationId)
+							this.updateIsFavorited(false);
 					},
 					{ modalUuid: this.modalUuid }
 				);
@@ -601,7 +565,8 @@ export default {
 			"repositionSongInList",
 			"updateStationPaused",
 			"updateCurrentSong",
-			"updateStation"
+			"updateStation",
+			"updateIsFavorited"
 		]),
 		...mapActions({
 			showTab(dispatch, payload) {
@@ -640,8 +605,7 @@ export default {
 .night-mode {
 	.manage-station-modal.modal .modal-card-body {
 		.left-section {
-			#about-station-container {
-				background-color: var(--dark-grey-3) !important;
+			.station-info-box-wrapper {
 				border: 0;
 			}
 			.section {
@@ -670,65 +634,14 @@ export default {
 	height: 100%;
 
 	.left-section {
-		#about-station-container {
-			padding: 20px;
-			display: flex;
-			flex-direction: column;
-			flex-grow: unset;
+		.section {
+			row-gap: 20px;
+		}
+
+		.station-info-box-wrapper {
 			border-radius: @border-radius;
-			margin: 0 0 20px 0;
-			background-color: var(--white);
 			border: 1px solid var(--light-grey-3);
-
-			#station-info {
-				#station-name {
-					flex-direction: row !important;
-					display: flex;
-					flex-direction: row;
-					max-width: 100%;
-
-					h1 {
-						margin: 0;
-						font-size: 36px;
-						line-height: 0.8;
-						text-overflow: ellipsis;
-						overflow: hidden;
-					}
-
-					i {
-						margin-left: 10px;
-						font-size: 30px;
-						color: var(--yellow);
-						&.stationMode {
-							padding-left: 10px;
-							margin-left: auto;
-							color: var(--primary-color);
-						}
-					}
-
-					.verified-station {
-						color: var(--primary-color);
-					}
-				}
-
-				p {
-					display: -webkit-box;
-					max-width: 700px;
-					margin-bottom: 10px;
-					overflow: hidden;
-					text-overflow: ellipsis;
-					-webkit-box-orient: vertical;
-					-webkit-line-clamp: 3;
-				}
-			}
-
-			#admin-buttons {
-				display: flex;
-
-				.button {
-					margin: 3px;
-				}
-			}
+			overflow: hidden;
 		}
 
 		.tab-selection {

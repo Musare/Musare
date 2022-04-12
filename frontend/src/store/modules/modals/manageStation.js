@@ -34,7 +34,10 @@ export default {
 			commit("updateStationPaused", stationPaused),
 		updateCurrentSong: ({ commit }, currentSong) =>
 			commit("updateCurrentSong", currentSong),
-		updateStation: ({ commit }, station) => commit("updateStation", station)
+		updateStation: ({ commit }, station) =>
+			commit("updateStation", station),
+		updateIsFavorited: ({ commit }, isFavorited) =>
+			commit("updateIsFavorited", isFavorited)
 	},
 	mutations: {
 		init(state, { stationId, sector }) {
@@ -93,6 +96,9 @@ export default {
 		},
 		updateStation(state, station) {
 			state.station = { ...state.station, ...station };
+		},
+		updateIsFavorited(state, isFavorited) {
+			state.station.isFavorited = isFavorited;
 		}
 	}
 };

@@ -68,98 +68,13 @@
 					:class="{ 'nothing-here': noSong }"
 				>
 					<div id="station-left-column" class="column">
-						<div id="about-station-container" class="quadrant">
-							<div id="station-info">
-								<div class="row" id="station-name">
-									<h1>{{ station.displayName }}</h1>
-									<i
-										v-if="station.type === 'official'"
-										class="material-icons verified-station"
-										content="Verified Station"
-										v-tippy
-									>
-										check_circle
-									</i>
-									<a>
-										<!-- Favorite Station Button -->
-										<i
-											v-if="
-												loggedIn && station.isFavorited
-											"
-											@click.prevent="unfavoriteStation()"
-											content="Unfavorite Station"
-											v-tippy
-											class="material-icons"
-											>star</i
-										>
-										<i
-											v-if="
-												loggedIn && !station.isFavorited
-											"
-											@click.prevent="favoriteStation()"
-											class="material-icons"
-											content="Favorite Station"
-											v-tippy
-											>star_border</i
-										>
-									</a>
-								</div>
-								<p>{{ station.description }}</p>
-							</div>
-
-							<div id="admin-buttons" v-if="isOwnerOrAdmin()">
-								<!-- (Admin) Pause/Resume Button -->
-								<button
-									class="button is-danger"
-									v-if="stationPaused"
-									@click="resumeStation()"
-								>
-									<i class="material-icons icon-with-button"
-										>play_arrow</i
-									>
-									<span> Resume Station </span>
-								</button>
-								<button
-									class="button is-danger"
-									@click="pauseStation()"
-									v-else
-								>
-									<i class="material-icons icon-with-button"
-										>pause</i
-									>
-									<span> Pause Station </span>
-								</button>
-
-								<!-- (Admin) Skip Button -->
-								<button
-									class="button is-danger"
-									@click="skipStation()"
-								>
-									<i class="material-icons icon-with-button"
-										>skip_next</i
-									>
-									<span> Force Skip </span>
-								</button>
-
-								<!-- (Admin) Station Settings Button -->
-								<button
-									class="button is-primary"
-									@click="
-										openModal({
-											modal: 'manageStation',
-											data: {
-												stationId: station._id,
-												sector: 'station'
-											}
-										})
-									"
-								>
-									<i class="material-icons icon-with-button"
-										>settings</i
-									>
-									<span> Manage Station </span>
-								</button>
-							</div>
+						<!-- div with quadrant class -->
+						<div class="quadrant">
+							<station-info-box
+								:station="station"
+								:station-paused="stationPaused"
+								:show-manage-station="true"
+							/>
 						</div>
 						<div id="sidebar-container" class="quadrant">
 							<station-sidebar />
@@ -782,6 +697,7 @@ import ws from "@/ws";
 import keyboardShortcuts from "@/keyboardShortcuts";
 
 import FloatingBox from "@/components/FloatingBox.vue";
+import StationInfoBox from "@/components/StationInfoBox.vue";
 import AddToPlaylistDropdown from "@/components/AddToPlaylistDropdown.vue";
 import SongItem from "@/components/SongItem.vue";
 import Z404 from "../404.vue";
@@ -795,6 +711,7 @@ export default {
 		ContentLoader,
 		Z404,
 		FloatingBox,
+		StationInfoBox,
 		StationSidebar,
 		AddToPlaylistDropdown,
 		SongItem
@@ -2301,7 +2218,6 @@ export default {
 .night-mode {
 	#currently-playing-container,
 	#next-up-container,
-	#about-station-container,
 	#control-bar-container,
 	.player-container {
 		background-color: var(--dark-grey-3) !important;
@@ -2357,6 +2273,7 @@ export default {
 		.quadrant {
 			border-radius: @border-radius;
 			margin: 10px;
+			overflow: hidden;
 		}
 
 		.quadrant:not(#sidebar-container) {
@@ -2367,60 +2284,6 @@ export default {
 		#station-left-column,
 		#station-right-column {
 			padding: 0;
-		}
-
-		#about-station-container {
-			padding: 20px;
-			display: flex;
-			flex-direction: column;
-			flex-grow: unset;
-
-			#station-info {
-				#station-name {
-					flex-direction: row !important;
-
-					h1 {
-						margin: 0;
-						font-size: 36px;
-						line-height: 0.8;
-						text-overflow: ellipsis;
-						overflow: hidden;
-					}
-
-					i {
-						margin-left: 10px;
-						font-size: 30px;
-						color: var(--yellow);
-						&.stationMode {
-							padding-left: 10px;
-							margin-left: auto;
-							color: var(--primary-color);
-						}
-					}
-
-					.verified-station {
-						color: var(--primary-color);
-					}
-				}
-
-				p {
-					display: -webkit-box;
-					max-width: 700px;
-					margin-bottom: 10px;
-					overflow: hidden;
-					text-overflow: ellipsis;
-					-webkit-box-orient: vertical;
-					-webkit-line-clamp: 3;
-				}
-			}
-
-			#admin-buttons {
-				display: flex;
-
-				.button {
-					margin: 3px;
-				}
-			}
 		}
 
 		#current-next-row {

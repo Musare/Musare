@@ -947,6 +947,27 @@ export default {
 				},
 
 				(station, next) => {
+					// only relevant if user logged in
+					if (session.userId) {
+						return StationsModule.runJob(
+							"HAS_USER_FAVORITED_STATION",
+							{
+								userId: session.userId,
+								stationId
+							},
+							this
+						)
+							.then(isStationFavorited => {
+								station.isFavorited = isStationFavorited;
+								return next(null, station);
+							})
+							.catch(err => next(err));
+					}
+
+					return next(null, station);
+				},
+
+				(station, next) => {
 					const data = {
 						_id: station._id,
 						type: station.type,
@@ -959,7 +980,8 @@ export default {
 						owner: station.owner,
 						theme: station.theme,
 						paused: station.paused,
-						currentSong: station.currentSong
+						currentSong: station.currentSong,
+						isFavorited: station.isFavorited
 					};
 
 					next(null, data);
