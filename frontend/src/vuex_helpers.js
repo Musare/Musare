@@ -6,7 +6,12 @@ const mapModalState = (namespace, map) => {
 		modalState[mapKey] = function func() {
 			return mapValue(
 				namespace
-					.replace("MODAL_MODULE_PATH", this.modalModulePath)
+					.replace(
+						"MODAL_MODULE_PATH",
+						namespace.indexOf("MODAL_MODULE_PATH") !== -1
+							? this.modalModulePath
+							: null
+					)
 					.replace("MODAL_UUID", this.modalUuid)
 					.split("/")
 					.reduce((a, b) => a[b], this.$store.state)
@@ -22,7 +27,12 @@ const mapModalActions = (namespace, map) => {
 		modalState[mapValue] = function func(value) {
 			return this.$store.dispatch(
 				`${namespace
-					.replace("MODAL_MODULE_PATH", this.modalModulePath)
+					.replace(
+						"MODAL_MODULE_PATH",
+						namespace.indexOf("MODAL_MODULE_PATH") !== -1
+							? this.modalModulePath
+							: null
+					)
 					.replace("MODAL_UUID", this.modalUuid)}/${mapValue}`,
 				value
 			);
