@@ -903,18 +903,29 @@ export default {
 		})
 	},
 	async mounted() {
-		// TODO fix
-		// this.editSongModalWatcher = this.$store.watch(
-		// 	state => state.modals.editSong.video.paused,
-		// 	paused => {
-		// 		if (paused && !this.beforeEditSongModalLocalPaused) {
-		// 			this.resumeLocalStation();
-		// 		} else if (!paused) {
-		// 			this.beforeEditSongModalLocalPaused = this.localPaused;
-		// 			this.pauseLocalStation();
-		// 		}
-		// 	}
-		// );
+		this.editSongModalWatcher = this.$store.watch(
+			state =>
+				state.modalVisibility.activeModals.length > 0 &&
+				state.modalVisibility.modals[
+					state.modalVisibility.activeModals[
+						state.modalVisibility.activeModals.length - 1
+					]
+				] === "editSong"
+					? state.modals.editSong[
+							state.modalVisibility.activeModals[
+								state.modalVisibility.activeModals.length - 1
+							]
+					  ].video.paused
+					: null,
+			paused => {
+				if (paused && !this.beforeEditSongModalLocalPaused) {
+					this.resumeLocalStation();
+				} else if (!paused) {
+					this.beforeEditSongModalLocalPaused = this.localPaused;
+					this.pauseLocalStation();
+				}
+			}
+		);
 
 		window.scrollTo(0, 0);
 
