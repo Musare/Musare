@@ -52,11 +52,11 @@ export default {
 		});
 	},
 
-	destroyModalListeners(modal) {
+	destroyModalListeners(modalUuid) {
 		// destroy all listeners for a specific modal
 		Object.keys(this.socket.dispatcher.listeners).forEach(type =>
 			this.socket.dispatcher.listeners[type].forEach((element, index) => {
-				if (element.options && element.options.modal === modal)
+				if (element.options && element.options.modalUuid === modalUuid)
 					this.socket.dispatcher.listeners[type].splice(index, 1);
 			})
 		);
