@@ -779,7 +779,7 @@ export default {
 		}),
 		...mapState("modalVisibility", {
 			modals: state => state.modals,
-			currentlyActive: state => state.currentlyActive
+			activeModals: state => state.activeModals
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -824,7 +824,7 @@ export default {
 						this.songDeleted = true;
 					}
 				},
-				{ modal: this.bulk ? "editSongs" : "editSong" }
+				{ modalUuid: this.modalUuid }
 			);
 		}
 
@@ -958,8 +958,12 @@ export default {
 			keyCode: 27,
 			handler: () => {
 				if (
-					this.currentlyActive[0] === "editSong" ||
-					this.currentlyActive[0] === "editSongs"
+					this.modals[
+						this.activeModals[this.activeModals.length - 1]
+					] === "editSong" ||
+					this.modals[
+						this.activeModals[this.activeModals.length - 1]
+					] === "editSongs"
 				) {
 					this.onCloseModal();
 				}

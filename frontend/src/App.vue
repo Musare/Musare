@@ -52,7 +52,7 @@ export default {
 			userId: state => state.user.auth.userId,
 			banned: state => state.user.auth.banned,
 			modals: state => state.modalVisibility.modals,
-			currentlyActive: state => state.modalVisibility.currentlyActive,
+			activeModals: state => state.modalVisibility.activeModals,
 			nightmode: state => state.user.preferences.nightmode,
 			activityWatch: state => state.user.preferences.activityWatch
 		}),
@@ -60,7 +60,7 @@ export default {
 			socket: "websockets/getSocket"
 		}),
 		aModalIsOpen() {
-			return Object.keys(this.currentlyActive).length > 0;
+			return Object.keys(this.activeModals).length > 0;
 		}
 	},
 	watch: {
@@ -148,9 +148,13 @@ export default {
 			ctrl: false,
 			handler: () => {
 				if (
-					Object.keys(this.currentlyActive).length !== 0 &&
-					this.currentlyActive[0] !== "editSong" &&
-					this.currentlyActive[0] !== "editSongs"
+					Object.keys(this.activeModals).length !== 0 &&
+					this.modals[
+						this.activeModals[this.activeModals.length - 1]
+					] !== "editSong" &&
+					this.modals[
+						this.activeModals[this.activeModals.length - 1]
+					] !== "editSongs"
 				)
 					this.closeCurrentModal();
 			}

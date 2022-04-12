@@ -158,13 +158,13 @@ export default {
 			res => {
 				this.report.resolved = res.data.resolved;
 			},
-			{ modal: "viewReport" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
 			"event:admin.report.removed",
 			() => this.closeModal("viewReport"),
-			{ modal: "viewReport" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
@@ -178,7 +178,7 @@ export default {
 					issue.resolved = res.data.resolved;
 				}
 			},
-			{ modal: "viewReport" }
+			{ modalUuid: this.modalUuid }
 		);
 	},
 	beforeUnmount() {

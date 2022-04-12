@@ -245,13 +245,13 @@ export default {
 		this.socket.on(
 			"event:admin.report.created",
 			res => this.reports.unshift(res.data.report),
-			{ modal: "editSong" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
 			"event:admin.report.resolved",
 			res => this.resolveReport(res.data.reportId),
-			{ modal: "editSong" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
@@ -267,7 +267,7 @@ export default {
 					}
 				});
 			},
-			{ modal: "editSong" }
+			{ modalUuid: this.modalUuid }
 		);
 	},
 	methods: {

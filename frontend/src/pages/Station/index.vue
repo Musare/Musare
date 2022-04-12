@@ -865,7 +865,7 @@ export default {
 			);
 		},
 		aModalIsOpen() {
-			return Object.keys(this.currentlyActive).length > 0;
+			return Object.keys(this.activeModals).length > 0;
 		},
 		currentUserQueueSongs() {
 			return this.songsList.filter(
@@ -874,7 +874,7 @@ export default {
 		},
 		...mapState("modalVisibility", {
 			modals: state => state.modals,
-			currentlyActive: state => state.currentlyActive
+			activeModals: state => state.activeModals
 		}),
 		...mapState("modals/editSong", {
 			video: state => state.video

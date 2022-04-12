@@ -323,7 +323,7 @@ export default {
 					res => {
 						this.updateStation(res.data.station);
 					},
-					{ modal: "manageStation" }
+					{ modalUuid: this.modalUuid }
 				);
 
 				this.socket.on(
@@ -335,7 +335,7 @@ export default {
 							.indexOf(playlist._id);
 						if (playlistIndex === -1) this.autofill.push(playlist);
 					},
-					{ modal: "manageStation" }
+					{ modalUuid: this.modalUuid }
 				);
 
 				this.socket.on(
@@ -347,7 +347,7 @@ export default {
 							.indexOf(playlist._id);
 						if (playlistIndex === -1) this.blacklist.push(playlist);
 					},
-					{ modal: "manageStation" }
+					{ modalUuid: this.modalUuid }
 				);
 
 				this.socket.on(
@@ -360,7 +360,7 @@ export default {
 						if (playlistIndex >= 0)
 							this.autofill.splice(playlistIndex, 1);
 					},
-					{ modal: "manageStation" }
+					{ modalUuid: this.modalUuid }
 				);
 
 				this.socket.on(
@@ -373,7 +373,7 @@ export default {
 						if (playlistIndex >= 0)
 							this.blacklist.splice(playlistIndex, 1);
 					},
-					{ modal: "manageStation" }
+					{ modalUuid: this.modalUuid }
 				);
 
 				this.socket.on(
@@ -382,7 +382,7 @@ export default {
 						new Toast(`The station you were editing was deleted.`);
 						this.closeModal("manageStation");
 					},
-					{ modal: "manageStation" }
+					{ modalUuid: this.modalUuid }
 				);
 			} else {
 				new Toast(`Station with that ID not found`);
@@ -396,7 +396,7 @@ export default {
 				if (res.data.stationId === this.station._id)
 					this.updateSongsList(res.data.queue);
 			},
-			{ modal: "manageStation" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
@@ -405,7 +405,7 @@ export default {
 				if (res.data.stationId === this.station._id)
 					this.repositionSongInList(res.data.song);
 			},
-			{ modal: "manageStation" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
@@ -414,7 +414,7 @@ export default {
 				if (res.data.stationId === this.station._id)
 					this.updateStationPaused(true);
 			},
-			{ modal: "manageStation" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
@@ -423,7 +423,7 @@ export default {
 				if (res.data.stationId === this.station._id)
 					this.updateStationPaused(false);
 			},
-			{ modal: "manageStation" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
@@ -432,7 +432,7 @@ export default {
 				if (res.data.stationId === this.station._id)
 					this.updateCurrentSong(res.data.currentSong || {});
 			},
-			{ modal: "manageStation" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		if (this.isOwnerOrAdmin()) {
@@ -443,7 +443,7 @@ export default {
 						this.stationPlaylist.songs.push(res.data.song);
 				},
 				{
-					modal: "manageStation"
+					modalUuid: this.modalUuid
 				}
 			);
 
@@ -459,7 +459,7 @@ export default {
 					}
 				},
 				{
-					modal: "manageStation"
+					modalUuid: this.modalUuid
 				}
 			);
 
@@ -497,7 +497,7 @@ export default {
 					}
 				},
 				{
-					modal: "manageStation"
+					modalUuid: this.modalUuid
 				}
 			);
 		}

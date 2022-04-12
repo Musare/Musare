@@ -175,7 +175,7 @@ export default {
 									if (res.data.userId === this.userId)
 										this.closeModal("editUser");
 								},
-								{ modal: "editUser" }
+								{ modalUuid: this.modalUuid }
 							);
 						} else {
 							new Toast("User with that ID not found");

@@ -2,7 +2,7 @@
 	<div>
 		<div v-for="activeModalUuid in activeModals" :key="activeModalUuid">
 			<component
-				:is="this[modalMap[activeModalUuid]]"
+				:is="this[modals[activeModalUuid]]"
 				:modal-uuid="activeModalUuid"
 			/>
 		</div>
@@ -38,8 +38,8 @@ export default {
 			editSong: "EditSong/index.vue"
 		}),
 		...mapState("modalVisibility", {
-			activeModals: state => state.new.activeModals,
-			modalMap: state => state.new.modalMap
+			activeModals: state => state.activeModals,
+			modals: state => state.modals
 		})
 	}
 };

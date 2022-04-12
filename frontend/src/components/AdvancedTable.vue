@@ -919,10 +919,10 @@ export default {
 			);
 		},
 		aModalIsOpen() {
-			return Object.keys(this.currentlyActive).length > 0;
+			return Object.keys(this.activeModals).length > 0;
 		},
 		...mapState({
-			currentlyActive: state => state.modalVisibility.currentlyActive
+			activeModals: state => state.modalVisibility.activeModals
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"

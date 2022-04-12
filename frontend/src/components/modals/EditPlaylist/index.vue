@@ -328,7 +328,7 @@ export default {
 				if (this.playlist._id === res.data.playlistId)
 					this.addSong(res.data.song);
 			},
-			{ modal: "editPlaylist" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
@@ -339,7 +339,7 @@ export default {
 					this.removeSong(res.data.youtubeId);
 				}
 			},
-			{ modal: "editPlaylist" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
@@ -353,7 +353,7 @@ export default {
 					this.setPlaylist(playlist);
 				}
 			},
-			{ modal: "editPlaylist" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
@@ -367,7 +367,7 @@ export default {
 					}
 				}
 			},
-			{ modal: "editPlaylist" }
+			{ modalUuid: this.modalUuid }
 		);
 	},
 	beforeUnmount() {

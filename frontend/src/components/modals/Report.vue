@@ -368,7 +368,7 @@ export default {
 					report => report._id !== res.data.reportId
 				);
 			},
-			{ modal: "report" }
+			{ modalUuid: this.modalUuid }
 		);
 	},
 	beforeUnmount() {

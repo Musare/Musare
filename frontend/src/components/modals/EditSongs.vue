@@ -2,6 +2,7 @@
 	<div>
 		<edit-song
 			:modal-module-path="`modals/editSongs/${this.modalUuid}/editSong`"
+			:modal-uuid="this.modalUuid"
 			:bulk="true"
 			:flagged="currentSongFlagged"
 			v-if="currentSong"

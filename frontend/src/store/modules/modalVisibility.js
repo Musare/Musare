@@ -19,11 +19,7 @@ import editSong from "./modals/editSong";
 
 const state = {
 	modals: {},
-	currentlyActive: [],
-	new: {
-		activeModals: [],
-		modalMap: {}
-	}
+	activeModals: []
 };
 
 const modalModules = {
@@ -42,28 +38,6 @@ const modalModules = {
 	confirm,
 	editSongs,
 	editSong
-};
-
-const migratedModules = {
-	whatIsNew: true,
-	manageStation: true,
-	login: true,
-	register: true,
-	createStation: true,
-	importPlaylist: true,
-	editPlaylist: true,
-	createPlaylist: true,
-	report: true,
-	removeAccount: true,
-	editNews: true,
-	editSong: true,
-	editSongs: true,
-	editUser: true,
-	importAlbum: true,
-	viewReport: true,
-	viewPunishment: true,
-	confirm: true,
-	bulkActions: true
 };
 
 const getters = {};
@@ -107,74 +81,33 @@ const actions = {
 
 const mutations = {
 	closeModal(state, modal) {
-		if (!migratedModules[modal]) {
-			state.modals[modal] = false;
-			const index = state.currentlyActive.indexOf(modal);
-			if (index > -1) state.currentlyActive.splice(index, 1);
-		} else {
-			Object.entries(state.new.modalMap).forEach(([uuid, _modal]) => {
-				if (modal === _modal) {
-					state.new.activeModals.splice(
-						state.new.activeModals.indexOf(uuid),
-						1
-					);
-					state.currentlyActive.splice(
-						state.currentlyActive.indexOf(`${modal}-${uuid}`),
-						1
-					);
-					delete state.new.modalMap[uuid];
-				}
-			});
-		}
+		Object.entries(state.modals).forEach(([uuid, _modal]) => {
+			if (modal === _modal) {
+				state.activeModals.splice(state.activeModals.indexOf(uuid), 1);
+				delete state.modals[uuid];
+			}
+		});
 	},
 	openModal(state, { modal, uuid, data }) {
-		if (!migratedModules[modal]) {
-			state.modals[modal] = true;
-			state.currentlyActive.push(modal);
-		} else {
-			state.new.modalMap[uuid] = modal;
+		state.modals[uuid] = modal;
 
-			if (modalModules[modal]) {
-				this.registerModule(
-					["modals", modal, uuid],
-					modalModules[modal]
-				);
-				if (data) this.dispatch(`modals/${modal}/${uuid}/init`, data);
-			}
-
-			state.new.activeModals.push(uuid);
-			state.currentlyActive.push(`${modal}-${uuid}`);
+		if (modalModules[modal]) {
+			this.registerModule(["modals", modal, uuid], modalModules[modal]);
+			if (data) this.dispatch(`modals/${modal}/${uuid}/init`, data);
 		}
+
+		state.activeModals.push(uuid);
 	},
 	closeCurrentModal(state) {
-		const currentlyActiveModal =
-			state.currentlyActive[state.currentlyActive.length - 1];
+		const currentlyActiveModalUuid =
+			state.activeModals[state.activeModals.length - 1];
 		// TODO: make sure to only destroy/register modal listeners for a unique modal
 		// remove any websocket listeners for the modal
-		ws.destroyModalListeners(currentlyActiveModal);
+		ws.destroyModalListeners(currentlyActiveModalUuid);
 
-		if (
-			!migratedModules[
-				currentlyActiveModal.substring(
-					0,
-					currentlyActiveModal.indexOf("-")
-				)
-			]
-		) {
-			state.modals[currentlyActiveModal] = false;
-			state.currentlyActive.pop();
-		} else {
-			state.currentlyActive.pop();
-			state.new.activeModals.pop();
-			// const modal = currentlyActiveModal.substring(
-			// 	0,
-			// 	currentlyActiveModal.indexOf("-")
-			// );
-			const uuid = currentlyActiveModal.substring(
-				currentlyActiveModal.indexOf("-") + 1
-			);
-			delete state.new.modalMap[uuid];
-		}
+		state.activeModals.pop();
+
+		delete state.modals[currentlyActiveModalUuid];
 	}
 };
 
