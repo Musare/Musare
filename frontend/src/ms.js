@@ -1,3 +1,6 @@
+/* eslint-disable-next-line no-redeclare */
+/* global MediaMetadata */
+
 export default {
 	mediaSessionData: {},
 	listeners: {},
