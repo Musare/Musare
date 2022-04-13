@@ -1,5 +1,3 @@
-/* global MediaMetadata */
-
 export default {
 	mediaSessionData: {},
 	listeners: {},
