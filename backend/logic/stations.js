@@ -964,7 +964,6 @@ class _StationsModule extends CoreClass {
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.station - the station object of the station in question
 	 * @param {string} payload.userId - the id of the user in question
-	 * @param {boolean} payload.homeView - whether to modify output for homepage usage
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	CAN_USER_VIEW_STATION(payload) {
@@ -972,8 +971,8 @@ class _StationsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						if (payload.station.privacy === "public") return next(true);
-						if (payload.station.privacy === "unlisted" && !payload.homeView) return next(true);
+						if (payload.station.privacy === "public" || payload.station.privacy === "unlisted")
+							return next(true);
 						if (!payload.userId) return next("Not allowed");
 
 						return next();
@@ -987,9 +986,8 @@ class _StationsModule extends CoreClass {
 
 					(user, next) => {
 						if (!user) return next("Not allowed");
-						if (!payload.homeView && user.role === "admin") return next(true);
+						if (user.role === "admin" || payload.station.owner === payload.userId) return next(true);
 						if (payload.station.type === "official") return next("Not allowed");
-						if (payload.station.owner === payload.userId) return next(true);
 
 						return next("Not allowed");
 					}

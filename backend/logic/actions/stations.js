@@ -380,9 +380,10 @@ export default {
 	 * Get a list of all the stations
 	 *
 	 * @param {object} session - user session
+	 * @param {boolean} adminFilter - whether to filter out stations admins do not own
 	 * @param {Function} cb - callback
 	 */
-	async index(session, cb) {
+	async index(session, adminFilter, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 
 		async.waterfall(
@@ -425,12 +426,33 @@ export default {
 											"CAN_USER_VIEW_STATION",
 											{
 												station,
-												userId: session.userId,
-												homeView: true
+												userId: session.userId
 											},
 											this
 										)
-											.then(exists => callback(null, exists))
+											.then(exists => {
+												if (exists && session.userId && station.privacy !== "public") {
+													DBModule.runJob("GET_MODEL", { modelName: "user" }, this)
+														.then(userModel => {
+															userModel.findOne({ _id: session.userId }, (err, user) => {
+																if (err) return callback(err);
+																if (
+																	(user.role !== "admin" &&
+																		station.owner !== session.userId) ||
+																	(adminFilter &&
+																		user.role === "admin" &&
+																		station.owner !== session.userId)
+																) {
+																	return callback(null, false);
+																}
+																return callback(null, exists);
+															});
+														})
+														.catch(callback);
+												} else if (exists && !session.userId && station.privacy !== "public")
+													return callback(null, false);
+												else return callback(null, exists);
+											})
 											.catch(callback);
 									}
 								],

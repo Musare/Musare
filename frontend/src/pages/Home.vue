@@ -597,6 +597,8 @@ export default {
 	async mounted() {
 		this.siteSettings = await lofig.get("siteSettings");
 
+		// if (this.$route.query.query) this.searchQuery = this.$route.query.query;
+
 		if (
 			!this.loggedIn &&
 			this.$route.redirectedFrom &&
@@ -745,30 +747,34 @@ export default {
 	},
 	methods: {
 		init() {
-			this.socket.dispatch("stations.index", res => {
-				this.stations = [];
+			this.socket.dispatch(
+				"stations.index",
+				this.$route.query.adminFilter !== "false",
+				res => {
+					this.stations = [];
 
-				if (res.status === "success") {
-					res.data.stations.forEach(station => {
-						const modifiableStation = station;
+					if (res.status === "success") {
+						res.data.stations.forEach(station => {
+							const modifiableStation = station;
 
-						if (!modifiableStation.currentSong)
-							modifiableStation.currentSong = {
-								thumbnail: "/assets/notes-transparent.png"
-							};
+							if (!modifiableStation.currentSong)
+								modifiableStation.currentSong = {
+									thumbnail: "/assets/notes-transparent.png"
+								};
 
-						if (
-							modifiableStation.currentSong &&
-							!modifiableStation.currentSong.thumbnail
-						)
-							modifiableStation.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.youtubeId}/mqdefault.jpg`;
+							if (
+								modifiableStation.currentSong &&
+								!modifiableStation.currentSong.thumbnail
+							)
+								modifiableStation.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.youtubeId}/mqdefault.jpg`;
 
-						this.stations.push(modifiableStation);
-					});
+							this.stations.push(modifiableStation);
+						});
 
-					this.orderOfFavoriteStations = res.data.favorited;
+						this.orderOfFavoriteStations = res.data.favorited;
+					}
 				}
-			});
+			);
 
 			this.socket.dispatch("apis.joinRoom", "home");
 		},
