@@ -32,7 +32,7 @@ A production demonstration instance of Musare can be found at [demo.musare.com](
     - Requests - Toggleable module to allow users to add songs to the queue
         - Configurable access level and per user request limit
         - Automatically request songs from selected playlists
-        - Ability to search for songs from verified catalogue or Youtube
+        - Ability to search for songs from verified catalogue or YouTube
     - Autofill - Toggleable module to allow owners to configure automatic filling of the queue from selected playlists
         - Configurable song limit
         - Play mode option to randomly play many playlists, or sequentially play one playlist
