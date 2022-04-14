@@ -37,6 +37,15 @@
 								Settings
 							</button>
 							<button
+								v-if="canRequest()"
+								class="button is-default"
+								:class="{ selected: tab === 'request' }"
+								ref="request-tab"
+								@click="showTab('request')"
+							>
+								Request
+							</button>
+							<button
 								v-if="
 									isOwnerOrAdmin() && station.autofill.enabled
 								"
@@ -46,15 +55,6 @@
 								@click="showTab('autofill')"
 							>
 								Autofill
-							</button>
-							<button
-								v-if="canRequest()"
-								class="button is-default"
-								:class="{ selected: tab === 'request' }"
-								ref="request-tab"
-								@click="showTab('request')"
-							>
-								Request
 							</button>
 							<button
 								v-if="isOwnerOrAdmin()"
@@ -73,6 +73,14 @@
 							:modal-uuid="modalUuid"
 							ref="settingsTabComponent"
 						/>
+						<request
+							v-if="canRequest()"
+							class="tab"
+							v-show="tab === 'request'"
+							:sector="'manageStation'"
+							:disable-auto-request="sector !== 'station'"
+							:modal-uuid="modalUuid"
+						/>
 						<playlist-tab-base
 							v-if="isOwnerOrAdmin() && station.autofill.enabled"
 							class="tab"
@@ -87,14 +95,6 @@
 								</p>
 							</template>
 						</playlist-tab-base>
-						<request
-							v-if="canRequest()"
-							class="tab"
-							v-show="tab === 'request'"
-							:sector="'manageStation'"
-							:disable-auto-request="sector !== 'station'"
-							:modal-uuid="modalUuid"
-						/>
 						<playlist-tab-base
 							v-if="isOwnerOrAdmin()"
 							class="tab"
