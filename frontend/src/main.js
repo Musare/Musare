@@ -162,6 +162,7 @@ const router = createRouter({
 		},
 		{
 			path: "/admin",
+			name: "admin",
 			component: () => import("@/pages/Admin/index.vue"),
 			children: [
 				{
@@ -220,7 +221,7 @@ router.beforeEach((to, from, next) => {
 		window.stationInterval = 0;
 	}
 
-	if (from.name === "home" && to.name === "station") {
+	if (to.name === "station") {
 		store.dispatch("modalVisibility/closeModal", "manageStation");
 	}
 
