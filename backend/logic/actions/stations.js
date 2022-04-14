@@ -78,7 +78,7 @@ CacheModule.runJob("SUB", {
 											socket.dispatch("event:station.userCount.updated", {
 												data: { stationId, count }
 											});
-									})
+									});
 								});
 						});
 					}
