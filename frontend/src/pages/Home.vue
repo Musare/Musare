@@ -524,6 +524,7 @@ import Toast from "toasters";
 import SongThumbnail from "@/components/SongThumbnail.vue";
 
 import ws from "@/ws";
+import keyboardShortcuts from "@/keyboardShortcuts";
 
 export default {
 	components: {
@@ -597,7 +598,8 @@ export default {
 	async mounted() {
 		this.siteSettings = await lofig.get("siteSettings");
 
-		// if (this.$route.query.query) this.searchQuery = this.$route.query.query;
+		if (this.$route.query.searchQuery)
+			this.searchQuery = this.$route.query.query;
 
 		if (
 			!this.loggedIn &&
@@ -741,15 +743,43 @@ export default {
 		this.socket.on("event:user.orderOfFavoriteStations.updated", res => {
 			this.orderOfFavoriteStations = res.data.order;
 		});
+
+		if (this.isAdmin()) {
+			// ctrl + alt + f
+			keyboardShortcuts.registerShortcut("home.toggleAdminFilter", {
+				keyCode: 70,
+				ctrl: true,
+				alt: true,
+				handler: () => {
+					if (this.$route.query.adminFilter === undefined)
+						this.$router.push({
+							query: { ...this.$route.query, adminFilter: null }
+						});
+					else
+						this.$router.push({
+							query: {
+								...this.$route.query,
+								adminFilter: undefined
+							}
+						});
+				}
+			});
+		}
 	},
 	beforeUnmount() {
 		this.socket.dispatch("apis.leaveRoom", "home", () => {});
+
+		const shortcutNames = ["home.toggleAdminFilter"];
+
+		shortcutNames.forEach(shortcutName => {
+			keyboardShortcuts.unregisterShortcut(shortcutName);
+		});
 	},
 	methods: {
 		init() {
 			this.socket.dispatch(
 				"stations.index",
-				this.$route.query.adminFilter !== "false",
+				this.$route.query.adminFilter === undefined,
 				res => {
 					this.stations = [];
 
