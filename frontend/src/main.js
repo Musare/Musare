@@ -221,8 +221,7 @@ router.beforeEach((to, from, next) => {
 	}
 
 	if (from.name === "home" && to.name === "station") {
-		if (store.state.modalVisibility.modals.manageStation)
-			store.dispatch("modalVisibility/closeModal", "manageStation");
+		store.dispatch("modalVisibility/closeModal", "manageStation");
 	}
 
 	if (ws.socket && to.fullPath !== from.fullPath) {
