@@ -327,6 +327,12 @@
 										"
 									/>
 									<button
+										class="button youtube-get-button"
+										@click="getYouTubeData('albumArt')"
+									>
+										<div class="youtube-icon"></div>
+									</button>
+									<button
 										class="button album-get-button"
 										@click="getAlbumData('albumArt')"
 									>
@@ -1562,6 +1568,13 @@ export default {
 					)
 				});
 		},
+		getYouTubeData(type) {
+			if (type === "albumArt")
+				this.updateSongField({
+					field: "thumbnail",
+					value: `https://img.youtube.com/vi/${this.song.youtubeId}/mqdefault.jpg`
+				});
+		},
 		fillDuration() {
 			this.song.duration =
 				this.youtubeVideoDuration - this.song.skipDuration;
@@ -1884,6 +1897,7 @@ export default {
 		.edit-section {
 			.album-get-button,
 			.duration-fill-button,
+			.youtube-get-button,
 			.add-button {
 				&:focus,
 				&:hover {
@@ -2144,7 +2158,8 @@ export default {
 			border-width: 0;
 		}
 
-		.duration-fill-button {
+		.duration-fill-button,
+		.youtube-get-button {
 			background-color: var(--dark-red);
 			color: var(--white);
 			width: 32px;
@@ -2163,11 +2178,21 @@ export default {
 
 		.album-get-button,
 		.duration-fill-button,
+		.youtube-get-button,
 		.add-button {
 			&:focus,
 			&:hover {
 				filter: contrast(0.75);
 				border: 1px solid var(--black) !important;
+			}
+		}
+
+		.youtube-get-button {
+			padding-left: 4px;
+			padding-right: 4px;
+
+			.youtube-icon {
+				background: var(--white);
 			}
 		}
 
