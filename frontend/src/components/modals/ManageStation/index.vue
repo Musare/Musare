@@ -22,7 +22,7 @@
 						<station-info-box
 							:station="station"
 							:station-paused="stationPaused"
-							:show-go-to-station="true"
+							:show-go-to-station="sector !== 'station'"
 						/>
 					</div>
 					<div v-if="isOwnerOrAdmin() || sector !== 'home'">
@@ -559,7 +559,12 @@ export default {
 			);
 		},
 		onCloseModal() {
-			this.$refs.settingsTabComponent.onCloseModal();
+			if (this.sector !== "home")
+				this.$refs.settingsTabComponent.onCloseModal();
+			else {
+				console.log("ON CLOSE MODAL FROM WITHIN MANAGESTATION");
+				this.closeModal("manageStation");
+			}
 		},
 		...mapModalActions("modals/manageStation/MODAL_UUID", [
 			"editStation",
@@ -640,14 +645,11 @@ export default {
 	height: 100%;
 
 	.left-section {
-		.section {
-			row-gap: 20px;
-		}
-
 		.station-info-box-wrapper {
 			border-radius: @border-radius;
 			border: 1px solid var(--light-grey-3);
 			overflow: hidden;
+			margin-bottom: 20px;
 		}
 
 		.tab-selection {
