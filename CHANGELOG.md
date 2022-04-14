@@ -1,6 +1,6 @@
 # Changelog
 
-## [v3.5.0-dev] - Unreleased
+## [v3.5.0-rc1] - 2022-04-14
 
 ### Added
 - feat: Station autofill configurable limit
@@ -12,21 +12,25 @@
 - feat: Added info icon component
 
 ### Changed
-- refactor: No longer showing unlisted stations on homepage if not owned by user
+- refactor: No longer showing unlisted stations on homepage if not owned by user unless toggled by admin
 - refactor: Renamed station excludedPlaylists to blacklist
 - refactor: Unified station update functions and events
 - refactor: Replaced Manage Station settings dropdowns with select elements
 - refactor: Use a local object to edit stations before saving
 - refactor: Replace station modes with 2 modules which are independently toggleable and configurable on every station
-    - Autofill: Replaces playlist mode, owners select songs to autofill queue. Also includes old playMode functionality
     - Requests: Replaces party mode, users can request songs or auto request from playlists
+    - Autofill: Replaces playlist mode, owners select songs to autofill queue. Also includes old playMode and includedPlaylist functionality
 - refactor: Update active team
 - refactor: Separate docker container modes
 - refactor: Improve musare.sh exit code usage and other tweaks
-- refactor: Made Modal, QuickConfirm and UserIdToUsername global components
+- refactor: Made Main Header/Footer, Modal, QuickConfirm and UserIdToUsername global components
 - refactor: Use crypto random values instead of math.random to create UUID
 - refactor: Added trailing slash to URL startsWith check
 - chore: Updated frontend package-lock.json version from 1 to 2
+- refactor: Increased site name configuration usage
+- refactor: Disable pseudo-tty for musare.sh eslint commands
+- refactor: Migrated all modals to new more modular system
+- refactor: Made station info box a component for Station and Manage Station
 
 ### Fixed
 - fix: Changing station privacy does not kick out newly-unauthorized users
