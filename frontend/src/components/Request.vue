@@ -1,8 +1,7 @@
 <template>
 	<div class="station-playlists">
 		<p class="top-info has-text-centered">
-			Search for songs to add to queue or auto request songs from
-			playlists
+			Add songs to the queue or automatically request songs from playlists
 		</p>
 		<div class="tabs-container">
 			<div class="tab-selection">

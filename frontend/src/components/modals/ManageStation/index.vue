@@ -83,7 +83,7 @@
 							<template #info>
 								<p>
 									Select playlists to automatically add songs
-									within to queue
+									within to the queue
 								</p>
 							</template>
 						</playlist-tab-base>
@@ -105,7 +105,7 @@
 							<template #info>
 								<p>
 									Blacklist a playlist to prevent all songs
-									within from playing in this station.
+									within from playing in this station
 								</p>
 							</template>
 						</playlist-tab-base>

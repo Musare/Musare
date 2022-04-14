@@ -57,7 +57,7 @@
 					<label class="label">
 						Requests
 						<info-icon
-							tooltip="Allow users to add songs to queue"
+							tooltip="Allow users to add songs to the queue"
 						/>
 					</label>
 					<p class="is-expanded checkbox-control">
@@ -114,7 +114,9 @@
 				<div class="toggle-row">
 					<label class="label">
 						Autofill
-						<info-icon tooltip="Fill station queue with songs" />
+						<info-icon
+							tooltip="Automatically fill the queue with songs"
+						/>
 					</label>
 					<p class="is-expanded checkbox-control">
 						<label class="switch">
