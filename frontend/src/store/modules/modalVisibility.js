@@ -83,6 +83,7 @@ const mutations = {
 	closeModal(state, modal) {
 		Object.entries(state.modals).forEach(([uuid, _modal]) => {
 			if (modal === _modal) {
+				ws.destroyModalListeners(uuid);
 				state.activeModals.splice(state.activeModals.indexOf(uuid), 1);
 				delete state.modals[uuid];
 			}
