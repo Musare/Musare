@@ -296,7 +296,6 @@ export default {
 			}
 		},
 		onCloseModal() {
-			console.log("ON CLOSE MODAL FROM WITHIN MANAGESTATION/SETTINGS");
 			this.closeModal("manageStation");
 		},
 		...mapModalActions("modals/manageStation/MODAL_UUID", ["editStation"]),

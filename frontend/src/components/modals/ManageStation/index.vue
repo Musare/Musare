@@ -559,12 +559,9 @@ export default {
 			);
 		},
 		onCloseModal() {
-			if (this.sector !== "home")
+			if (this.isOwnerOrAdmin() || this.sector !== "home")
 				this.$refs.settingsTabComponent.onCloseModal();
-			else {
-				console.log("ON CLOSE MODAL FROM WITHIN MANAGESTATION");
-				this.closeModal("manageStation");
-			}
+			else this.closeModal("manageStation");
 		},
 		...mapModalActions("modals/manageStation/MODAL_UUID", [
 			"editStation",
