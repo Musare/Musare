@@ -367,7 +367,7 @@
 											<label class="switch">
 												<input
 													type="checkbox"
-													:id="index"
+													:id="`column-dropdown-checkbox-${column.name}`"
 													:checked="
 														shownColumns.indexOf(
 															column.name
@@ -388,7 +388,9 @@
 													}"
 												></span>
 											</label>
-											<label :for="index">
+											<label
+												:for="`column-dropdown-checkbox-${column.name}`"
+											>
 												<span></span>
 												<p>{{ column.displayName }}</p>
 											</label>
