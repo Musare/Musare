@@ -32,7 +32,7 @@ module.exports = merge(common, {
 				ui: {
 					name: false,
 					test(module) {
-						return (
+						return module.resource && (
 							module.resource.includes("Modal.vue") ||
 							module.resource.includes(
 								"AddToPlaylistDropdown.vue"
