@@ -64,7 +64,7 @@ CacheModule.runJob("SUB", {
 										modelName: "user"
 									},
 									this
-								).then(userModel =>
+								).then(userModel => {
 									userModel.findOne({ _id: session.userId }, (err, user) => {
 										if (user && user.role === "admin")
 											socket.dispatch("event:station.userCount.updated", {
@@ -79,7 +79,7 @@ CacheModule.runJob("SUB", {
 												data: { stationId, count }
 											});
 									})
-								);
+								});
 						});
 					}
 				});
