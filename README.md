@@ -29,21 +29,26 @@ A production demonstration instance of Musare can be found at [demo.musare.com](
     - Add songs from verified catalogue or YouTube
     - Ability to download in JSON format
 - **Stations**
-    - Playlist mode to listen to selected playlists
-    - Party mode to allow other users to add songs to queue
+    - Requests - Toggleable module to allow users to add songs to the queue
+        - Configurable access level and per user request limit
+        - Automatically request songs from selected playlists
+        - Ability to search for songs from verified catalogue or Youtube
+    - Autofill - Toggleable module to allow owners to configure automatic filling of the queue from selected playlists
+        - Configurable song limit
+        - Play mode option to randomly play many playlists, or sequentially play one playlist
+        - Ability to search for playlists on Musare
     - Ability to blacklist playlists to prevent songs within from playing
     - Themes
     - Privacy configuration
     - Favoriting
-    - Official stations controlled by admins (playlist mode only)
+    - Official stations controlled by admins
     - User created and controlled stations
     - Pause playback just in local session
     - Station-wide pausing by admins or owners
     - Vote to skip songs
     - Force skipping song by admins or owners
-    - Add songs to queue from verified catalogue or YouTube (party mode only)
 - **Song Management**
-    - Verify songs to allow them to be searched for and played in official stations
+    - Verify songs to allow them to be searched for and added to automatically generated genre playlists
     - Import Album to import songs in bulk
     - Discogs integration to import metadata
     - Ability for users to report issues with songs and admins to resolve
