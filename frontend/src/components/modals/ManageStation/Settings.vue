@@ -170,7 +170,7 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 
@@ -295,7 +295,12 @@ export default {
 				new Toast("Please make a change before saving.");
 			}
 		},
-		...mapModalActions("modals/manageStation/MODAL_UUID", ["editStation"])
+		onCloseModal() {
+			console.log("ON CLOSE MODAL FROM WITHIN MANAGESTATION/SETTINGS");
+			this.closeModal("manageStation");
+		},
+		...mapModalActions("modals/manageStation/MODAL_UUID", ["editStation"]),
+		...mapActions("modalVisibility", ["closeModal"])
 	}
 };
 </script>
