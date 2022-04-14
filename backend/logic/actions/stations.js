@@ -450,8 +450,8 @@ export default {
 														})
 														.catch(callback);
 												} else if (exists && !session.userId && station.privacy !== "public")
-													return callback(null, false);
-												else return callback(null, exists);
+													callback(null, false);
+												else callback(null, exists);
 											})
 											.catch(callback);
 									}
