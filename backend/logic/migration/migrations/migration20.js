@@ -4,13 +4,14 @@ import mongoose from "mongoose";
 /**
  * Migration 20
  *
- * Migration for station overhaul (WIP)
+ * Migration for station overhaul and preventing migration18 from always running
  *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */
 export default async function migrate(MigrationModule) {
 	const stationModel = await MigrationModule.runJob("GET_MODEL", { modelName: "station" }, this);
+	const songModel = await MigrationModule.runJob("GET_MODEL", { modelName: "song" }, this);
 
 	return new Promise((resolve, reject) => {
 		async.waterfall(
@@ -76,6 +77,20 @@ export default async function migrate(MigrationModule) {
 							}
 						}
 					);
+				},
+
+				next => {
+					songModel.updateMany({ documentVersion: 7 }, { $set: { documentVersion: 8 } }, (err, res) => {
+						if (err) next(err);
+						else {
+							this.log(
+								"INFO",
+								`Migration 20 (songs). Matched: ${res.matchedCount}, modified: ${res.modifiedCount}, ok: ${res.ok}.`
+							);
+
+							next();
+						}
+					});
 				}
 			],
 			err => {
