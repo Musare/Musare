@@ -743,28 +743,6 @@ export default {
 		this.socket.on("event:user.orderOfFavoriteStations.updated", res => {
 			this.orderOfFavoriteStations = res.data.order;
 		});
-
-		if (this.isAdmin()) {
-			// ctrl + alt + f
-			keyboardShortcuts.registerShortcut("home.toggleAdminFilter", {
-				keyCode: 70,
-				ctrl: true,
-				alt: true,
-				handler: () => {
-					if (this.$route.query.adminFilter === undefined)
-						this.$router.push({
-							query: { ...this.$route.query, adminFilter: null }
-						});
-					else
-						this.$router.push({
-							query: {
-								...this.$route.query,
-								adminFilter: undefined
-							}
-						});
-				}
-			});
-		}
 	},
 	beforeUnmount() {
 		this.socket.dispatch("apis.leaveRoom", "home", () => {});
@@ -807,6 +785,31 @@ export default {
 			);
 
 			this.socket.dispatch("apis.joinRoom", "home");
+
+			if (this.isAdmin()) {
+				// ctrl + alt + f
+				keyboardShortcuts.registerShortcut("home.toggleAdminFilter", {
+					keyCode: 70,
+					ctrl: true,
+					alt: true,
+					handler: () => {
+						if (this.$route.query.adminFilter === undefined)
+							this.$router.push({
+								query: {
+									...this.$route.query,
+									adminFilter: null
+								}
+							});
+						else
+							this.$router.push({
+								query: {
+									...this.$route.query,
+									adminFilter: undefined
+								}
+							});
+					}
+				});
+			}
 		},
 		isOwner(station) {
 			return this.loggedIn && station.owner === this.userId;
