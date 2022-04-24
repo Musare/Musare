@@ -1,5 +1,20 @@
 # Changelog
 
+## [v3.5.0-rc2] - 2022-04-24
+
+## Added
+- chore: Added docker-compose.override.yml documentation
+
+### Fixed
+- fix: Unable to compile frontend in production mode
+- fix: Homepage admin filter keyboard shortcut not always registering
+- fix: Docker will create folders if default.json files do not exist
+- fix: Station info box has white corners in dark mode
+- fix: Advanced Table filter operator label border-radius not squared on right
+- fix: Prevent migration 18 running once migration 20 has been run
+- fix: docker-compose.override.yml not included in musare.sh commands
+- fix: musare.sh reset container not passing full servicesString
+
 ## [v3.5.0-rc1] - 2022-04-14
 
 ### Added
