@@ -120,3 +120,17 @@ The container port refers to the external docker container port, used to access 
 | `REDIS_DATA_LOCATION` | The location where Redis stores its data. Usually the `.redis` folder inside the `Musare` folder. |
 | `BACKUP_LOCATION` | Directory to store musare.sh backups. Defaults to `/backups` in script location. |
 | `BACKUP_NAME` | Name of musare.sh backup files. Defaults to `musare-$(date +"%Y-%m-%d-%s").dump`. |
+
+## Docker-compose override
+You may want to override the docker-compose files in some specific cases. For this, you can create a `docker-compose.override.yml` file.  
+### Run backend on its own domain
+One example usecase for the override is to expose the backend port so you can run it separately from the frontend. An example file for this is as follows:
+
+```yml
+services:
+  backend:
+    ports:
+      - "${BACKEND_HOST}:${BACKEND_PORT}:8080"
+```
+
+This assumes that you have also set `BACKEND_PORT` inside your `.env` file.
