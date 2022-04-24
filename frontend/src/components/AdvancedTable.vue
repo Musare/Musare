@@ -2317,7 +2317,6 @@ export default {
 			border: 1px solid var(--light-grey-2);
 			color: var(--dark-grey-2);
 			appearance: none;
-			border-radius: @border-radius;
 			font-size: 14px;
 			line-height: 34px;
 			padding-left: 8px;
