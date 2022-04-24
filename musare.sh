@@ -78,11 +78,15 @@ runDockerCommand()
             else
                 servicesString=${servicesString:2}
             fi
+
+            composeFiles="-f docker-compose.yml"
             if [[ ${CONTAINER_MODE} == "dev" ]]; then
-                composeFiles="-f docker-compose.yml -f docker-compose.dev.yml"
-            else
-                composeFiles="-f docker-compose.yml"
+                composeFiles="${composeFiles} -f docker-compose.dev.yml"
             fi
+            if [[ -f docker-compose.override.yml ]]; then
+                composeFiles="${composeFiles} -f docker-compose.override.yml"
+            fi
+
             if [[ ${2} == "stop" || ${2} == "restart" ]]; then
                 # shellcheck disable=SC2086
                 ${dockerCompose} ${composeFiles} stop ${servicesString}
@@ -95,6 +99,7 @@ runDockerCommand()
                 # shellcheck disable=SC2086
                 ${dockerCompose} ${composeFiles} "${2}" ${servicesString}
             fi
+
             exitValue=$?
             if [[ ${exitValue} -gt 0 ]]; then
                 exit ${exitValue}
