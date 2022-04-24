@@ -7,7 +7,7 @@ services:
     volumes:
       - ./.git:/opt/app/.parent_git:ro
       - /opt/app/node_modules
-      - ./backend/config/default.json:/opt/app/config/default.json
+      - ./backend/config:/opt/app/config
     links:
       - mongo
       - redis
@@ -22,7 +22,7 @@ services:
     volumes:
       - ./.git:/opt/app/.parent_git:ro
       - /opt/app/node_modules
-      - ./frontend/dist/config/default.json:/opt/app/dist/config/default.json
+      - ./frontend/dist/config:/opt/app/dist/config
     environment:
       - FRONTEND_MODE=${FRONTEND_MODE}
     links:
