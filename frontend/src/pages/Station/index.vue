@@ -2274,6 +2274,7 @@ export default {
 	#currently-playing-container,
 	#next-up-container,
 	#control-bar-container,
+	.quadrant:not(#sidebar-container),
 	.player-container {
 		background-color: var(--dark-grey-3) !important;
 	}
