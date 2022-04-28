@@ -558,7 +558,7 @@ class _StationsModule extends CoreClass {
 					(currentSongs, songsToAdd, currentSongIndex, next) => {
 						const newPlaylist = [...currentSongs, ...songsToAdd].map(song => {
 							if (!song._id) song._id = null;
-							song.requestedAt = Date.now();
+							if (!song.requestedAt) song.requestedAt = Date.now();
 							return song;
 						});
 						next(null, newPlaylist, currentSongIndex);
