@@ -5,6 +5,7 @@ const config = require("config");
 const { VueLoaderPlugin } = require("vue-loader");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const ESLintPlugin = require("eslint-webpack-plugin");
+const { DefinePlugin } = require("webpack");
 
 const fetchVersionAndGitInfo = cb => {
 	const debug = {
@@ -111,6 +112,7 @@ module.exports = {
 	plugins: [
 		new VueLoaderPlugin(),
 		new HtmlWebpackPlugin({
+			title: config.get("siteSettings.sitename"),
 			hash: true,
 			template: "dist/index.tpl.html",
 			inject: "body",
@@ -127,7 +129,11 @@ module.exports = {
 			}
 		}),
 		new ESLintPlugin(),
-		new InsertDebugInfoPlugin()
+		new InsertDebugInfoPlugin(),
+		new DefinePlugin({
+			__VUE_OPTIONS_API__: true,
+			__VUE_PROD_DEVTOOLS__: false
+		})
 	],
 	module: {
 		rules: [

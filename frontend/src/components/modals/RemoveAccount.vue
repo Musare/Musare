@@ -179,11 +179,10 @@ import { mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 
-import QuickConfirm from "@/components/QuickConfirm.vue";
-import Modal from "../Modal.vue";
-
 export default {
-	components: { Modal, QuickConfirm },
+	props: {
+		modalUuid: { type: String, default: "" }
+	},
 	data() {
 		return {
 			name: "RemoveAccount",

@@ -13,8 +13,16 @@ import AppComponent from "./App.vue";
 
 const REQUIRED_CONFIG_VERSION = 11;
 
+lofig.folder = "../config/default.json";
+
 const handleMetadata = attrs => {
-	document.title = `Musare | ${attrs.title}`;
+	lofig.get("siteSettings.sitename").then(siteName => {
+		if (siteName) {
+			document.title = `${siteName} | ${attrs.title}`;
+		} else {
+			document.title = `Musare | ${attrs.title}`;
+		}
+	});
 };
 
 const app = createApp(AppComponent);
@@ -51,6 +59,17 @@ app.component("PageMetadata", {
 	render() {
 		return null;
 	}
+});
+
+const globalComponents = require.context(
+	"@/components/global/",
+	true,
+	/\.vue$/i
+);
+globalComponents.keys().forEach(componentFilePath => {
+	const componentName = componentFilePath.split("/").pop().split(".")[0];
+	const component = globalComponents(componentFilePath);
+	app.component(componentName, component.default || component);
 });
 
 app.directive("scroll", {
@@ -143,6 +162,7 @@ const router = createRouter({
 		},
 		{
 			path: "/admin",
+			name: "admin",
 			component: () => import("@/pages/Admin/index.vue"),
 			children: [
 				{
@@ -201,10 +221,11 @@ router.beforeEach((to, from, next) => {
 		window.stationInterval = 0;
 	}
 
-	if (from.name === "home" && to.name === "station") {
-		if (store.state.modalVisibility.modals.manageStation)
-			store.dispatch("modalVisibility/closeModal", "manageStation");
-	}
+	// if (to.name === "station") {
+	// 	store.dispatch("modalVisibility/closeModal", "manageStation");
+	// }
+
+	store.dispatch("modalVisibility/closeAllModals");
 
 	if (ws.socket && to.fullPath !== from.fullPath) {
 		ws.clearCallbacks();

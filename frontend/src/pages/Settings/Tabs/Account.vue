@@ -88,13 +88,11 @@ import Toast from "toasters";
 import InputHelpBox from "@/components/InputHelpBox.vue";
 import SaveButton from "@/components/SaveButton.vue";
 import validation from "@/validation";
-import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
 	components: {
 		InputHelpBox,
-		SaveButton,
-		QuickConfirm
+		SaveButton
 	},
 	data() {
 		return {

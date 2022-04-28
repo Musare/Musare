@@ -16,25 +16,30 @@
 				Users
 			</button>
 			<button
-				v-if="loggedIn"
+				v-if="canRequest()"
 				class="button is-default"
-				:class="{ selected: tab === 'playlists' }"
-				@click="showTab('playlists')"
+				:class="{ selected: tab === 'request' }"
+				@click="showTab('request')"
 			>
-				My Playlists
+				Request
 			</button>
 			<button
-				v-else
+				v-else-if="canRequest(false)"
 				class="button is-default"
-				content="Login to manage playlists"
+				content="Login to request songs"
 				v-tippy="{ theme: 'info' }"
 			>
-				My Playlists
+				Request
 			</button>
 		</div>
 		<queue class="tab" v-show="tab === 'queue'" />
 		<users class="tab" v-show="tab === 'users'" />
-		<playlists class="tab" v-show="tab === 'playlists'" />
+		<request
+			v-if="canRequest()"
+			v-show="tab === 'request'"
+			class="tab requests-tab"
+			sector="station"
+		/>
 	</div>
 </template>
 
@@ -44,10 +49,10 @@ import { mapActions, mapState } from "vuex";
 import Queue from "@/components/Queue.vue";
 import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 import Users from "./Users.vue";
-import Playlists from "./Playlists.vue";
+import Request from "@/components/Request.vue";
 
 export default {
-	components: { Queue, Users, Playlists },
+	components: { Queue, Users, Request },
 	mixins: [TabQueryHandler],
 	data() {
 		return {
@@ -55,19 +60,53 @@ export default {
 		};
 	},
 	computed: mapState({
+		station: state => state.station.station,
 		users: state => state.station.users,
 		userCount: state => state.station.userCount,
-		loggedIn: state => state.user.auth.loggedIn
+		userId: state => state.user.auth.userId,
+		loggedIn: state => state.user.auth.loggedIn,
+		role: state => state.user.auth.role
 	}),
+	watch: {
+		// eslint-disable-next-line
+		"station.requests": function (requests) {
+			if (this.tab === "request" && !this.canRequest())
+				this.showTab("queue");
+		}
+	},
 	mounted() {
 		if (
 			this.$route.query.tab === "queue" ||
 			this.$route.query.tab === "users" ||
-			this.$route.query.tab === "playlists"
+			this.$route.query.tab === "request"
 		)
 			this.tab = this.$route.query.tab;
 	},
 	methods: {
+		isOwner() {
+			return (
+				this.loggedIn &&
+				this.station &&
+				this.userId === this.station.owner
+			);
+		},
+		isAdmin() {
+			return this.loggedIn && this.role === "admin";
+		},
+		isOwnerOrAdmin() {
+			return this.isOwner() || this.isAdmin();
+		},
+		canRequest(requireLogin = true) {
+			return (
+				this.station &&
+				(!requireLogin || this.loggedIn) &&
+				this.station.requests &&
+				this.station.requests.enabled &&
+				(this.station.requests.access === "user" ||
+					(this.station.requests.access === "owner" &&
+						this.isOwnerOrAdmin()))
+			);
+		},
 		...mapActions("modalVisibility", ["openModal"])
 	}
 };
@@ -78,6 +117,11 @@ export default {
 	#tab-selection .button {
 		background: var(--dark-grey);
 		color: var(--white);
+	}
+
+	.tab.requests-tab {
+		background-color: var(--dark-grey-3) !important;
+		border: 0 !important;
 	}
 }
 
@@ -121,6 +165,19 @@ export default {
 :deep(.tab) {
 	.nothing-here-text:not(:only-child) {
 		height: calc(100% - 40px);
+	}
+
+	&.requests-tab {
+		background-color: var(--white);
+		margin-bottom: 20px;
+		border-radius: 0 0 @border-radius @border-radius;
+		max-height: 100%;
+		padding: 15px 10px;
+		overflow-y: auto;
+
+		.scrollable-list {
+			padding: 10px 0;
+		}
 	}
 }
 

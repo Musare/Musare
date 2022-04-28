@@ -64,7 +64,7 @@ CacheModule.runJob("SUB", {
 										modelName: "user"
 									},
 									this
-								).then(userModel =>
+								).then(userModel => {
 									userModel.findOne({ _id: session.userId }, (err, user) => {
 										if (user && user.role === "admin")
 											socket.dispatch("event:station.userCount.updated", {
@@ -78,8 +78,8 @@ CacheModule.runJob("SUB", {
 											socket.dispatch("event:station.userCount.updated", {
 												data: { stationId, count }
 											});
-									})
-								);
+									});
+								});
 						});
 					}
 				});
@@ -89,112 +89,51 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
-	channel: "station.queueLockToggled",
-	cb: data => {
-		const { stationId, locked } = data;
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `station.${stationId}`,
-			args: ["event:station.queue.lock.toggled", { data: { locked } }]
-		});
-
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `manage-station.${stationId}`,
-			args: ["event:station.queue.lock.toggled", { data: { stationId, locked } }]
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "station.updatePartyMode",
-	cb: data => {
-		const { stationId, partyMode } = data;
-		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `station.${stationId}`,
-				args: ["event:station.partyMode.updated", { data: { partyMode } }]
-			});
-
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `manage-station.${stationId}`,
-				args: ["event:station.partyMode.updated", { data: { stationId, partyMode } }]
-			});
-
-			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
-				room: `home`,
-				station
-			}).then(response => {
-				const { socketsThatCan } = response;
-				socketsThatCan.forEach(socket => {
-					socket.dispatch("event:station.partyMode.updated", { data: { stationId, partyMode } });
-				});
-			});
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "station.newPlayMode",
-	cb: data => {
-		const { stationId, playMode } = data;
-
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `station.${stationId}`,
-			args: ["event:station.playMode.updated", { data: { playMode } }]
-		});
-
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `manage-station.${stationId}`,
-			args: ["event:station.playMode.updated", { data: { stationId, playMode } }]
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "station.includedPlaylist",
+	channel: "station.autofillPlaylist",
 	cb: data => {
 		const { stationId, playlistId } = data;
 
 		PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }).then(playlist =>
 			WSModule.runJob("EMIT_TO_ROOMS", {
 				rooms: [`station.${stationId}`, `manage-station.${stationId}`],
-				args: ["event:station.includedPlaylist", { data: { stationId, playlist } }]
+				args: ["event:station.autofillPlaylist", { data: { stationId, playlist } }]
 			})
 		);
 	}
 });
 
 CacheModule.runJob("SUB", {
-	channel: "station.excludedPlaylist",
+	channel: "station.blacklistedPlaylist",
 	cb: data => {
 		const { stationId, playlistId } = data;
 
 		PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }).then(playlist =>
 			WSModule.runJob("EMIT_TO_ROOMS", {
 				rooms: [`station.${stationId}`, `manage-station.${stationId}`],
-				args: ["event:station.excludedPlaylist", { data: { stationId, playlist } }]
+				args: ["event:station.blacklistedPlaylist", { data: { stationId, playlist } }]
 			})
 		);
 	}
 });
 
 CacheModule.runJob("SUB", {
-	channel: "station.removedIncludedPlaylist",
+	channel: "station.removedAutofillPlaylist",
 	cb: data => {
 		const { stationId, playlistId } = data;
 		WSModule.runJob("EMIT_TO_ROOMS", {
 			rooms: [`station.${stationId}`, `manage-station.${stationId}`],
-			args: ["event:station.removedIncludedPlaylist", { data: { stationId, playlistId } }]
+			args: ["event:station.removedAutofillPlaylist", { data: { stationId, playlistId } }]
 		});
 	}
 });
 
 CacheModule.runJob("SUB", {
-	channel: "station.removedExcludedPlaylist",
+	channel: "station.removedBlacklistedPlaylist",
 	cb: data => {
 		const { stationId, playlistId } = data;
 		WSModule.runJob("EMIT_TO_ROOMS", {
 			rooms: [`station.${stationId}`, `manage-station.${stationId}`],
-			args: ["event:station.removedExcludedPlaylist", { data: { stationId, playlistId } }]
+			args: ["event:station.removedBlacklistedPlaylist", { data: { stationId, playlistId } }]
 		});
 	}
 });
@@ -256,170 +195,15 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
-	channel: "station.privacyUpdate",
-	cb: response => {
-		const { stationId, previousPrivacy } = response;
-		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
-			if (previousPrivacy !== station.privacy) {
-				if (station.privacy === "public") {
-					// Station became public
-
-					WSModule.runJob("EMIT_TO_ROOM", {
-						room: "home",
-						args: ["event:station.created", { data: { station } }]
-					});
-				} else if (previousPrivacy === "public") {
-					// Station became hidden
-
-					StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
-						room: `home`,
-						station
-					}).then(response => {
-						const { socketsThatCan, socketsThatCannot } = response;
-						socketsThatCan.forEach(socket => {
-							socket.dispatch("event:station.privacy.updated", {
-								data: { stationId, privacy: station.privacy }
-							});
-						});
-						socketsThatCannot.forEach(socket => {
-							socket.dispatch("event:station.deleted", { data: { stationId } });
-						});
-					});
-				} else {
-					// Station was hidden and is still hidden
-
-					StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
-						room: `home`,
-						station
-					}).then(response => {
-						const { socketsThatCan } = response;
-						socketsThatCan.forEach(socket => {
-							socket.dispatch("event:station.privacy.updated", {
-								data: { stationId, privacy: station.privacy }
-							});
-						});
-					});
-				}
-			}
-
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `station.${stationId}`,
-				args: ["event:station.privacy.updated", { data: { privacy: station.privacy } }]
-			});
-
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `manage-station.${stationId}`,
-				args: ["event:station.privacy.updated", { data: { stationId, privacy: station.privacy } }]
-			});
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "station.nameUpdate",
-	cb: res => {
-		const { stationId, name } = res;
-
-		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
-			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
-				room: `home`,
-				station
-			}).then(response => {
-				const { socketsThatCan } = response;
-				socketsThatCan.forEach(socket =>
-					socket.dispatch("event:station.name.updated", { data: { stationId, name } })
-				);
-			});
-		});
-
-		WSModule.runJob("EMIT_TO_ROOMS", {
-			rooms: [`station.${stationId}`, `manage-station.${stationId}`],
-			args: ["event:station.name.updated", { data: { stationId, name } }]
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "station.displayNameUpdate",
-	cb: response => {
-		const { stationId, displayName } = response;
-
-		StationsModule.runJob("GET_STATION", { stationId }).then(station =>
-			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
-				room: `home`,
-				station
-			}).then(response => {
-				const { socketsThatCan } = response;
-				socketsThatCan.forEach(socket =>
-					socket.dispatch("event:station.displayName.updated", { data: { stationId, displayName } })
-				);
-			})
-		);
-
-		WSModule.runJob("EMIT_TO_ROOMS", {
-			rooms: [`station.${stationId}`, `manage-station.${stationId}`],
-			args: ["event:station.displayName.updated", { data: { stationId, displayName } }]
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "station.descriptionUpdate",
-	cb: response => {
-		const { stationId, description } = response;
-
-		StationsModule.runJob("GET_STATION", { stationId }).then(station =>
-			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
-				room: `home`,
-				station
-			}).then(response => {
-				const { socketsThatCan } = response;
-				socketsThatCan.forEach(socket =>
-					socket.dispatch("event:station.description.updated", { data: { stationId, description } })
-				);
-			})
-		);
-
-		WSModule.runJob("EMIT_TO_ROOMS", {
-			rooms: [`station.${stationId}`, `manage-station.${stationId}`],
-			args: ["event:station.description.updated", { data: { stationId, description } }]
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "station.themeUpdate",
-	cb: res => {
-		const { stationId } = res;
-
-		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `station.${stationId}`,
-				args: ["event:station.theme.updated", { data: { theme: station.theme } }]
-			});
-
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `manage-station.${stationId}`,
-				args: ["event:station.theme.updated", { data: { stationId, theme: station.theme } }]
-			});
-
-			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
-				room: `home`,
-				station
-			}).then(res => {
-				const { socketsThatCan } = res;
-				socketsThatCan.forEach(socket => {
-					socket.dispatch("event:station.theme.updated", { data: { stationId, theme: station.theme } });
-				});
-			});
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
 	channel: "station.queueUpdate",
 	cb: stationId => {
 		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
+			if (!station.currentSong && station.queue.length > 0) {
+				StationsModule.runJob("INITIALIZE_STATION", {
+					stationId
+				}).then();
+			}
+
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
 				args: ["event:station.queue.updated", { data: { queue: station.queue } }]
@@ -543,14 +327,49 @@ CacheModule.runJob("SUB", {
 			modelName: "station"
 		});
 
+		const { stationId } = data;
+
 		stationModel.findOne(
-			{ _id: data.stationId },
-			["_id", "name", "displayName", "description", "type", "privacy", "owner", "partyMode", "playMode", "theme"],
+			{ _id: stationId },
+			["_id", "name", "displayName", "description", "type", "privacy", "owner", "requests", "autofill", "theme"],
 			(err, station) => {
 				WSModule.runJob("EMIT_TO_ROOMS", {
-					rooms: ["admin.stations"],
-					args: ["event:admin.station.updated", { data: { station } }]
+					rooms: [`station.${stationId}`, `manage-station.${stationId}`, "admin.stations"],
+					args: ["event:station.updated", { data: { station } }]
 				});
+
+				StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
+					room: `home`,
+					station
+				}).then(response => {
+					const { socketsThatCan } = response;
+					socketsThatCan.forEach(socket => {
+						socket.dispatch("event:station.updated", { data: { station } });
+					});
+				});
+
+				if (data.previousStation && data.previousStation.privacy !== station.privacy) {
+					if (station.privacy === "public") {
+						// Station became public
+
+						WSModule.runJob("EMIT_TO_ROOM", {
+							room: "home",
+							args: ["event:station.created", { data: { station } }]
+						});
+					} else if (data.previousStation.privacy === "public") {
+						// Station became hidden
+
+						StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
+							room: `home`,
+							station
+						}).then(response => {
+							const { socketsThatCannot } = response;
+							socketsThatCannot.forEach(socket => {
+								socket.dispatch("event:station.deleted", { data: { stationId } });
+							});
+						});
+					}
+				}
 			}
 		);
 	}
@@ -561,9 +380,10 @@ export default {
 	 * Get a list of all the stations
 	 *
 	 * @param {object} session - user session
+	 * @param {boolean} adminFilter - whether to filter out stations admins do not own
 	 * @param {Function} cb - callback
 	 */
-	async index(session, cb) {
+	async index(session, adminFilter, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 
 		async.waterfall(
@@ -606,12 +426,33 @@ export default {
 											"CAN_USER_VIEW_STATION",
 											{
 												station,
-												userId: session.userId,
-												hideUnlisted: true
+												userId: session.userId
 											},
 											this
 										)
-											.then(exists => callback(null, exists))
+											.then(exists => {
+												if (exists && session.userId && station.privacy !== "public") {
+													DBModule.runJob("GET_MODEL", { modelName: "user" }, this)
+														.then(userModel => {
+															userModel.findOne({ _id: session.userId }, (err, user) => {
+																if (err) return callback(err);
+																if (
+																	(user.role !== "admin" &&
+																		station.owner !== session.userId) ||
+																	(adminFilter &&
+																		user.role === "admin" &&
+																		station.owner !== session.userId)
+																) {
+																	return callback(null, false);
+																}
+																return callback(null, exists);
+															});
+														})
+														.catch(callback);
+												} else if (exists && !session.userId && station.privacy !== "public")
+													callback(null, false);
+												else callback(null, exists);
+											})
 											.catch(callback);
 									}
 								],
@@ -1009,12 +850,10 @@ export default {
 						displayName: station.displayName,
 						name: station.name,
 						privacy: station.privacy,
-						locked: station.locked,
-						partyMode: station.partyMode,
-						playMode: station.playMode,
+						requests: station.requests,
+						autofill: station.autofill,
 						owner: station.owner,
-						includedPlaylists: station.includedPlaylists,
-						excludedPlaylists: station.excludedPlaylists,
+						blacklist: station.blacklist,
 						theme: station.theme
 					};
 
@@ -1130,6 +969,27 @@ export default {
 				},
 
 				(station, next) => {
+					// only relevant if user logged in
+					if (session.userId) {
+						return StationsModule.runJob(
+							"HAS_USER_FAVORITED_STATION",
+							{
+								userId: session.userId,
+								stationId
+							},
+							this
+						)
+							.then(isStationFavorited => {
+								station.isFavorited = isStationFavorited;
+								return next(null, station);
+							})
+							.catch(err => next(err));
+					}
+
+					return next(null, station);
+				},
+
+				(station, next) => {
 					const data = {
 						_id: station._id,
 						type: station.type,
@@ -1137,13 +997,13 @@ export default {
 						displayName: station.displayName,
 						name: station.name,
 						privacy: station.privacy,
-						locked: station.locked,
-						partyMode: station.partyMode,
-						playMode: station.playMode,
+						requests: station.requests,
+						autofill: station.autofill,
 						owner: station.owner,
 						theme: station.theme,
 						paused: station.paused,
-						currentSong: station.currentSong
+						currentSong: station.currentSong,
+						isFavorited: station.isFavorited
 					};
 
 					next(null, data);
@@ -1161,7 +1021,7 @@ export default {
 		);
 	},
 
-	getStationIncludedPlaylistsById(session, stationId, cb) {
+	getStationAutofillPlaylistsById(session, stationId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1193,7 +1053,7 @@ export default {
 					const playlists = [];
 
 					async.eachLimit(
-						station.includedPlaylists,
+						station.autofill.playlists,
 						1,
 						(playlistId, next) => {
 							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
@@ -1217,22 +1077,22 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
-						"GET_STATION_INCLUDED_PLAYLISTS_BY_ID",
-						`Getting station "${stationId}"'s included playlists failed. "${err}"`
+						"GET_STATION_AUTOFILL_PLAYLISTS_BY_ID",
+						`Getting station "${stationId}"'s autofilling playlists failed. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
-					"GET_STATION_INCLUDED_PLAYLISTS_BY_ID",
-					`Got station "${stationId}"'s included playlists successfully.`
+					"GET_STATION_AUTOFILL_PLAYLISTS_BY_ID",
+					`Got station "${stationId}"'s autofilling playlists successfully.`
 				);
 				return cb({ status: "success", data: { playlists } });
 			}
 		);
 	},
 
-	getStationExcludedPlaylistsById(session, stationId, cb) {
+	getStationBlacklistById(session, stationId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1264,7 +1124,7 @@ export default {
 					const playlists = [];
 
 					async.eachLimit(
-						station.excludedPlaylists,
+						station.blacklist,
 						1,
 						(playlistId, next) => {
 							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
@@ -1288,83 +1148,20 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
-						"GET_STATION_EXCLUDED_PLAYLISTS_BY_ID",
-						`Getting station "${stationId}"'s excluded playlists failed. "${err}"`
+						"GET_STATION_BLACKLIST_BY_ID",
+						`Getting station "${stationId}"'s blacklist failed. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
-					"GET_STATION_EXCLUDED_PLAYLISTS_BY_ID",
-					`Got station "${stationId}"'s excluded playlists successfully.`
+					"GET_STATION_BLACKLIST_BY_ID",
+					`Got station "${stationId}"'s blacklist successfully.`
 				);
 				return cb({ status: "success", data: { playlists } });
 			}
 		);
 	},
-
-	/**
-	 * Toggles if a station is locked
-	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param cb
-	 */
-	toggleLock: isOwnerRequired(async function toggleLock(session, stationId, cb) {
-		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
-
-		async.waterfall(
-			[
-				next => {
-					StationsModule.runJob("GET_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
-						.catch(next);
-				},
-
-				(station, next) => {
-					stationModel.updateOne({ _id: stationId }, { $set: { locked: !station.locked } }, next);
-				},
-
-				(res, next) => {
-					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
-						.catch(next);
-				}
-			],
-			async (err, station) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"STATIONS_UPDATE_LOCKED_STATUS",
-						`Toggling the queue lock for station "${stationId}" failed. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-				this.log(
-					"SUCCESS",
-					"STATIONS_UPDATE_LOCKED_STATUS",
-					`Toggled the queue lock for station "${stationId}" successfully to "${station.locked}".`
-				);
-				CacheModule.runJob("PUB", {
-					channel: "station.queueLockToggled",
-					value: {
-						stationId,
-						locked: station.locked
-					}
-				});
-				CacheModule.runJob("PUB", {
-					channel: "station.updated",
-					value: { stationId }
-				});
-				return cb({ status: "success", data: { locked: station.locked } });
-			}
-		);
-	}),
 
 	/**
 	 * Votes to skip a station
@@ -1570,246 +1367,16 @@ export default {
 	},
 
 	/**
-	 * Updates a station's name
+	 * Updates a station's settings
 	 *
 	 * @param session
 	 * @param stationId - the station id
-	 * @param newName - the new station name
+	 * @param station - updated station object
 	 * @param cb
 	 */
-	updateName: isOwnerRequired(async function updateName(session, stationId, newName, cb) {
-		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
-
-		async.waterfall(
-			[
-				next => {
-					stationModel.updateOne(
-						{ _id: stationId },
-						{ $set: { name: newName } },
-						{ runValidators: true },
-						next
-					);
-				},
-
-				(res, next) => {
-					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => next(null, station))
-						.catch(next);
-				}
-			],
-			async (err, station) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-
-					this.log(
-						"ERROR",
-						"STATIONS_UPDATE_NAME",
-						`Updating station "${stationId}" name to "${newName}" failed. "${err}"`
-					);
-
-					return cb({ status: "error", message: err });
-				}
-
-				this.log(
-					"SUCCESS",
-					"STATIONS_UPDATE_NAME",
-					`Updated station "${stationId}" name to "${newName}" successfully.`
-				);
-
-				CacheModule.runJob("PUB", {
-					channel: "station.nameUpdate",
-					value: { stationId, name: newName }
-				});
-
-				CacheModule.runJob("PUB", {
-					channel: "station.updated",
-					value: { stationId }
-				});
-
-				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: session.userId,
-					type: "station__edit_name",
-					payload: {
-						message: `Changed name of station <stationId>${station.displayName}</stationId> to ${newName}`,
-						stationId
-					}
-				});
-
-				return cb({
-					status: "success",
-					message: "Successfully updated the name."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Updates a station's display name
-	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param newDisplayName - the new station display name
-	 * @param cb
-	 */
-	updateDisplayName: isOwnerRequired(async function updateDisplayName(session, stationId, newDisplayName, cb) {
+	update: isOwnerRequired(async function update(session, stationId, newStation, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
-
-		async.waterfall(
-			[
-				next => {
-					stationModel.updateOne(
-						{ _id: stationId },
-						{ $set: { displayName: newDisplayName } },
-						{ runValidators: true },
-						next
-					);
-				},
-
-				(res, next) => {
-					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => next(null, station))
-						.catch(next);
-				},
-
-				(station, next) => {
-					playlistModel.updateOne(
-						{ _id: station.playlist },
-						{ $set: { displayName: `Station - ${station.displayName}` } },
-						err => {
-							next(err, station);
-						}
-					);
-				}
-			],
-			async err => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"STATIONS_UPDATE_DISPLAY_NAME",
-						`Updating station "${stationId}" displayName to "${newDisplayName}" failed. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log(
-					"SUCCESS",
-					"STATIONS_UPDATE_DISPLAY_NAME",
-					`Updated station "${stationId}" displayName to "${newDisplayName}" successfully.`
-				);
-
-				CacheModule.runJob("PUB", {
-					channel: "station.displayNameUpdate",
-					value: { stationId, displayName: newDisplayName }
-				});
-
-				CacheModule.runJob("PUB", {
-					channel: "station.updated",
-					value: { stationId }
-				});
-
-				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: session.userId,
-					type: "station__edit_display_name",
-					payload: {
-						message: `Changed display name of station <stationId>${newDisplayName}</stationId>`,
-						stationId
-					}
-				});
-
-				return cb({
-					status: "success",
-					message: "Successfully updated the display name."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Updates a station's description
-	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param newDescription - the new station description
-	 * @param cb
-	 */
-	updateDescription: isOwnerRequired(async function updateDescription(session, stationId, newDescription, cb) {
-		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
-
-		async.waterfall(
-			[
-				next => {
-					stationModel.updateOne(
-						{ _id: stationId },
-						{ $set: { description: newDescription } },
-						{ runValidators: true },
-						next
-					);
-				},
-
-				(res, next) => {
-					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => next(null, station))
-						.catch(next);
-				}
-			],
-			async (err, station) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"STATIONS_UPDATE_DESCRIPTION",
-						`Updating station "${stationId}" description to "${newDescription}" failed. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log(
-					"SUCCESS",
-					"STATIONS_UPDATE_DESCRIPTION",
-					`Updated station "${stationId}" description to "${newDescription}" successfully.`
-				);
-
-				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: session.userId,
-					type: "station__edit_description",
-					payload: {
-						message: `Changed description of station <stationId>${station.displayName}</stationId> to ${newDescription}`,
-						stationId
-					}
-				});
-
-				CacheModule.runJob("PUB", {
-					channel: "station.descriptionUpdate",
-					value: { stationId, description: newDescription }
-				});
-
-				CacheModule.runJob("PUB", {
-					channel: "station.updated",
-					value: { stationId }
-				});
-
-				return cb({
-					status: "success",
-					message: "Successfully updated the description."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Updates a station's privacy
-	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param newPrivacy - the new station privacy
-	 * @param cb
-	 */
-	updatePrivacy: isOwnerRequired(async function updatePrivacy(session, stationId, newPrivacy, cb) {
-		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
-
-		let previousPrivacy = null;
 
 		async.waterfall(
 			[
@@ -1817,672 +1384,84 @@ export default {
 					stationModel.findOne({ _id: stationId }, next);
 				},
 
-				(station, next) => {
-					if (!station) next("No station found.");
-					else {
-						previousPrivacy = station.privacy;
-						next();
-					}
+				(previousStation, next) => {
+					const { name, displayName, description, privacy, requests, autofill, theme } = newStation;
+					const { enabled, limit, mode } = autofill;
+					// This object makes sure only certain properties can be changed by a user
+					const setObject = {
+						name,
+						displayName,
+						description,
+						privacy,
+						requests,
+						"autofill.enabled": enabled,
+						"autofill.limit": limit,
+						"autofill.mode": mode,
+						theme
+					};
+
+					stationModel.updateOne({ _id: stationId }, { $set: setObject }, { runValidators: true }, err => {
+						next(err, previousStation);
+					});
 				},
 
-				next => {
-					stationModel.updateOne(
-						{ _id: stationId },
-						{ $set: { privacy: newPrivacy } },
-						{ runValidators: true },
-						next
-					);
-				},
-
-				(res, next) => {
+				(previousStation, next) => {
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => next(null, station))
+						.then(station => next(null, station, previousStation))
 						.catch(next);
+				},
+
+				(station, previousStation, next) => {
+					if (
+						newStation.autofill.enabled &&
+						JSON.stringify(newStation.autofill) !== JSON.stringify(previousStation.autofill)
+					)
+						StationsModule.runJob("AUTOFILL_STATION", { stationId }, this)
+							.then(() => {
+								CacheModule.runJob("PUB", {
+									channel: "station.queueUpdate",
+									value: stationId
+								})
+									.then(() => next(null, station, previousStation))
+									.catch(next);
+							})
+							.catch(err => {
+								if (err === "Autofill is disabled in this station" || err === "Autofill limit reached")
+									next(null, station, previousStation);
+								else next(err);
+							});
+					else next(null, station, previousStation);
+				},
+
+				(station, previousStation, next) => {
+					playlistModel.updateOne(
+						{ _id: station.playlist },
+						{ $set: { displayName: `Station - ${station.displayName}` } },
+						err => {
+							next(err, station, previousStation);
+						}
+					);
 				}
 			],
-			async (err, station) => {
+			async (err, station, previousStation) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"STATIONS_UPDATE_PRIVACY",
-						`Updating station "${stationId}" privacy to "${newPrivacy}" failed. "${err}"`
-					);
+
+					this.log("ERROR", "STATIONS_UPDATE", `Updating station "${stationId}" failed. "${err}"`);
+
 					return cb({ status: "error", message: err });
 				}
-				this.log(
-					"SUCCESS",
-					"STATIONS_UPDATE_PRIVACY",
-					`Updated station "${stationId}" privacy to "${newPrivacy}" successfully.`
-				);
 
-				CacheModule.runJob("PUB", {
-					channel: "station.privacyUpdate",
-					value: { stationId, previousPrivacy }
-				});
+				this.log("SUCCESS", "STATIONS_UPDATE", `Updated station "${stationId}" successfully.`);
 
 				CacheModule.runJob("PUB", {
 					channel: "station.updated",
-					value: { stationId }
-				});
-
-				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: session.userId,
-					type: "station__edit_privacy",
-					payload: {
-						message: `Changed privacy of station <stationId>${station.displayName}</stationId> to ${newPrivacy}`,
-						stationId
-					}
+					value: { stationId, previousStation }
 				});
 
 				return cb({
 					status: "success",
-					message: "Successfully updated the privacy."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Updates a station's genres
-	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param newGenres - the new station genres
-	 * @param cb
-	 */
-	updateGenres: isOwnerRequired(async function updateGenres(session, stationId, newGenres, cb) {
-		async.waterfall(
-			[
-				next => {
-					StationsModule.runJob("GET_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
-						.catch(next);
-				},
-
-				(station, next) => {
-					const playlists = [];
-					async.eachLimit(
-						newGenres,
-						1,
-						(genre, next) => {
-							PlaylistsModule.runJob("GET_GENRE_PLAYLIST", { genre, includeSongs: false }, this)
-								.then(response => {
-									playlists.push(response.playlist);
-									next();
-								})
-								.catch(err => {
-									if (err.message === "Playlist not found")
-										next(
-											`The genre playlist for "${genre}" was not found. Please ensure that this genre playlist exists.`
-										);
-									else next(err);
-								});
-						},
-						err => {
-							next(
-								err,
-								station,
-								playlists.map(playlist => playlist._id.toString())
-							);
-						}
-					);
-				},
-
-				(station, playlists, next) => {
-					const playlistsToRemoveFromExcluded = playlists.filter(
-						playlistId => station.excludedPlaylists.indexOf(playlistId) !== -1
-					);
-					console.log(
-						`playlistsToRemoveFromExcluded: ${playlistsToRemoveFromExcluded.length}`,
-						playlistsToRemoveFromExcluded
-					);
-
-					async.eachLimit(
-						playlistsToRemoveFromExcluded,
-						1,
-						(playlistId, next) => {
-							StationsModule.runJob("REMOVE_EXCLUDED_PLAYLIST", { stationId, playlistId }, this)
-								.then(() => {
-									next();
-								})
-								.catch(next);
-						},
-						err => {
-							next(err, station, playlists);
-						}
-					);
-				},
-
-				(station, playlists, next) => {
-					const playlistsToRemoveFromIncluded = station.includedPlaylists.filter(
-						playlistId => playlists.indexOf(playlistId) === -1
-					);
-					console.log(
-						`playlistsToRemoveFromIncluded: ${playlistsToRemoveFromIncluded.length}`,
-						playlistsToRemoveFromIncluded
-					);
-
-					async.eachLimit(
-						playlistsToRemoveFromIncluded,
-						1,
-						(playlistId, next) => {
-							StationsModule.runJob("REMOVE_INCLUDED_PLAYLIST", { stationId, playlistId }, this)
-								.then(() => {
-									next();
-								})
-								.catch(next);
-						},
-						err => {
-							next(err, station, playlists);
-						}
-					);
-				},
-
-				(station, playlists, next) => {
-					const playlistsToAddToIncluded = playlists.filter(
-						playlistId => station.includedPlaylists.indexOf(playlistId) === -1
-					);
-					console.log(
-						`playlistsToAddToIncluded: ${playlistsToAddToIncluded.length}`,
-						playlistsToAddToIncluded
-					);
-
-					async.eachLimit(
-						playlistsToAddToIncluded,
-						1,
-						(playlistId, next) => {
-							StationsModule.runJob("INCLUDE_PLAYLIST", { stationId, playlistId }, this)
-								.then(() => {
-									next();
-								})
-								.catch(next);
-						},
-						err => {
-							next(err);
-						}
-					);
-				},
-
-				next => {
-					PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
-					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => next(null, station))
-						.catch(next);
-				}
-			],
-			async (err, station) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					this.log(
-						"ERROR",
-						"STATIONS_UPDATE_GENRES",
-						`Updating station "${stationId}" genres to "${newGenres}" failed. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log(
-					"SUCCESS",
-					"STATIONS_UPDATE_GENRES",
-					`Updated station "${stationId}" genres to "${newGenres}" successfully.`
-				);
-
-				if (newGenres.length > 0) {
-					ActivitiesModule.runJob("ADD_ACTIVITY", {
-						userId: session.userId,
-						type: "station__edit_genres",
-						payload: {
-							message: `Updated genres of station <stationId>${station.displayName}</stationId> to 
-							${newGenres.join(", ")}`,
-							stationId
-						}
-					});
-				} else {
-					ActivitiesModule.runJob("ADD_ACTIVITY", {
-						userId: session.userId,
-						type: "station__edit_genres",
-						payload: {
-							message: `Removed all genres of station <stationId>${station.displayName}</stationId>`,
-							stationId
-						}
-					});
-				}
-
-				return cb({
-					status: "success",
-					message: "Successfully updated the genres."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Updates a station's blacklisted genres
-	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param newBlacklistedGenres - the new station blacklisted genres
-	 * @param cb
-	 */
-	updateBlacklistedGenres: isOwnerRequired(async function updateBlacklistedGenres(
-		session,
-		stationId,
-		newBlacklistedGenres,
-		cb
-	) {
-		async.waterfall(
-			[
-				next => {
-					StationsModule.runJob("GET_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
-						.catch(next);
-				},
-
-				(station, next) => {
-					const playlists = [];
-					async.eachLimit(
-						newBlacklistedGenres,
-						1,
-						(genre, next) => {
-							PlaylistsModule.runJob("GET_GENRE_PLAYLIST", { genre, includeSongs: false }, this)
-								.then(response => {
-									playlists.push(response.playlist);
-									next();
-								})
-								.catch(err => {
-									if (err.message === "Playlist not found")
-										next(
-											`The genre playlist for "${genre}" was not found. Please ensure that this genre playlist exists.`
-										);
-									else next(err);
-								});
-						},
-						err => {
-							next(
-								err,
-								station,
-								playlists.map(playlist => playlist._id.toString())
-							);
-						}
-					);
-				},
-
-				(station, playlists, next) => {
-					const playlistsToRemoveFromIncluded = playlists.filter(
-						playlistId => station.includedPlaylists.indexOf(playlistId) !== -1
-					);
-					console.log(
-						`playlistsToRemoveFromIncluded: ${playlistsToRemoveFromIncluded.length}`,
-						playlistsToRemoveFromIncluded
-					);
-
-					async.eachLimit(
-						playlistsToRemoveFromIncluded,
-						1,
-						(playlistId, next) => {
-							StationsModule.runJob("REMOVE_INCLUDED_PLAYLIST", { stationId, playlistId }, this)
-								.then(() => {
-									next();
-								})
-								.catch(next);
-						},
-						err => {
-							next(err, station, playlists);
-						}
-					);
-				},
-
-				(station, playlists, next) => {
-					const playlistsToRemoveFromExcluded = station.excludedPlaylists.filter(
-						playlistId => playlists.indexOf(playlistId) === -1
-					);
-					console.log(
-						`playlistsToRemoveFromExcluded: ${playlistsToRemoveFromExcluded.length}`,
-						playlistsToRemoveFromExcluded
-					);
-
-					async.eachLimit(
-						playlistsToRemoveFromExcluded,
-						1,
-						(playlistId, next) => {
-							StationsModule.runJob("REMOVE_EXCLUDED_PLAYLIST", { stationId, playlistId }, this)
-								.then(() => {
-									next();
-								})
-								.catch(next);
-						},
-						err => {
-							next(err, station, playlists);
-						}
-					);
-				},
-
-				(station, playlists, next) => {
-					const playlistsToAddToExcluded = playlists.filter(
-						playlistId => station.excludedPlaylists.indexOf(playlistId) === -1
-					);
-					console.log(
-						`playlistsToAddToExcluded: ${playlistsToAddToExcluded.length}`,
-						playlistsToAddToExcluded
-					);
-
-					async.eachLimit(
-						playlistsToAddToExcluded,
-						1,
-						(playlistId, next) => {
-							StationsModule.runJob("EXCLUDE_PLAYLIST", { stationId, playlistId }, this)
-								.then(() => {
-									next();
-								})
-								.catch(next);
-						},
-						err => {
-							next(err);
-						}
-					);
-				},
-
-				next => {
-					PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
-					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => next(null, station))
-						.catch(next);
-				}
-			],
-			async (err, station) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"STATIONS_UPDATE_BLACKLISTED_GENRES",
-						`Updating station "${stationId}" blacklisted genres to "${newBlacklistedGenres}" failed. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log(
-					"SUCCESS",
-					"STATIONS_UPDATE_BLACKLISTED_GENRES",
-					`Updated station "${stationId}" blacklisted genres to "${newBlacklistedGenres}" successfully.`
-				);
-
-				if (newBlacklistedGenres.length > 0) {
-					ActivitiesModule.runJob("ADD_ACTIVITY", {
-						userId: session.userId,
-						type: "station__edit_blacklisted_genres",
-						payload: {
-							message: `Updated blacklisted genres of station <stationId>${
-								station.displayName
-							}</stationId> to ${newBlacklistedGenres.join(", ")}`,
-							stationId
-						}
-					});
-				} else {
-					ActivitiesModule.runJob("ADD_ACTIVITY", {
-						userId: session.userId,
-						type: "station__edit_blacklisted_genres",
-						payload: {
-							message: `Removed all blacklisted genres of station <stationId>${station.displayName}</stationId>`,
-							stationId
-						}
-					});
-				}
-
-				return cb({
-					status: "success",
-					message: "Successfully updated the blacklisted genres."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Updates a station's party mode
-	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param newPartyMode - the new station party mode
-	 * @param cb
-	 */
-	updatePartyMode: isOwnerRequired(async function updatePartyMode(session, stationId, newPartyMode, cb) {
-		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
-
-		async.waterfall(
-			[
-				next => {
-					StationsModule.runJob("GET_STATION", { stationId }, this)
-						.then(station => next(null, station))
-						.catch(next);
-				},
-
-				(station, next) => {
-					if (!station) return next("Station not found.");
-					if (station.partyMode === newPartyMode)
-						return next(`The party mode was already ${newPartyMode ? "enabled." : "disabled."}`);
-					return stationModel.updateOne(
-						{ _id: stationId },
-						{ $set: { partyMode: newPartyMode, queue: [] } },
-						{ runValidators: true },
-						next
-					);
-				},
-
-				(res, next) => {
-					CacheModule.runJob("PUB", {
-						channel: "station.queueUpdate",
-						value: stationId
-					})
-						.then(() => {})
-						.catch(next);
-
-					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => next(null, station))
-						.catch(next);
-				}
-			],
-			async err => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"STATIONS_UPDATE_PARTY_MODE",
-						`Updating station "${stationId}" party mode to "${newPartyMode}" failed. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log(
-					"SUCCESS",
-					"STATIONS_UPDATE_PARTY_MODE",
-					`Updated station "${stationId}" party mode to "${newPartyMode}" successfully.`
-				);
-
-				CacheModule.runJob("PUB", {
-					channel: "station.updatePartyMode",
-					value: {
-						stationId,
-						partyMode: newPartyMode
-					}
-				});
-
-				CacheModule.runJob("PUB", {
-					channel: "station.updated",
-					value: { stationId }
-				});
-
-				StationsModule.runJob("SKIP_STATION", { stationId, natural: false });
-
-				return cb({
-					status: "success",
-					message: "Successfully updated the party mode."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Updates a station's play mode
-	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param newPlayMode - the new station play mode
-	 * @param cb
-	 */
-	updatePlayMode: isOwnerRequired(async function updatePartyMode(session, stationId, newPlayMode, cb) {
-		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
-
-		async.waterfall(
-			[
-				next => {
-					StationsModule.runJob("GET_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
-						.catch(next);
-				},
-
-				(station, next) => {
-					if (!station) return next("Station not found.");
-					if (station.newPlayMode === newPlayMode) return next(`The play mode was already ${newPlayMode}`);
-					return stationModel.updateOne(
-						{ _id: stationId },
-						{ $set: { playMode: newPlayMode, queue: [] } },
-						{ runValidators: true },
-						next
-					);
-				},
-
-				(res, next) => {
-					CacheModule.runJob("PUB", {
-						channel: "station.queueUpdate",
-						value: stationId
-					})
-						.then()
-						.catch();
-					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
-						.catch(next);
-				}
-			],
-			async err => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"STATIONS_UPDATE_PLAY_MODE",
-						`Updating station "${stationId}" play mode to "${newPlayMode}" failed. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-				this.log(
-					"SUCCESS",
-					"STATIONS_UPDATE_PLAY_MODE",
-					`Updated station "${stationId}" play mode to "${newPlayMode}" successfully.`
-				);
-				CacheModule.runJob("PUB", {
-					channel: "station.newPlayMode",
-					value: {
-						stationId,
-						playMode: newPlayMode
-					}
-				});
-				CacheModule.runJob("PUB", {
-					channel: "station.updated",
-					value: { stationId }
-				});
-				StationsModule.runJob("SKIP_STATION", { stationId, natural: false });
-				return cb({
-					status: "success",
-					message: "Successfully updated the play mode."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Updates a station's theme
-	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param newTheme - the new station theme
-	 * @param cb
-	 */
-	updateTheme: isOwnerRequired(async function updateTheme(session, stationId, newTheme, cb) {
-		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
-
-		async.waterfall(
-			[
-				next => {
-					StationsModule.runJob("GET_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
-						.catch(next);
-				},
-
-				(station, next) => {
-					if (!station) return next("Station not found.");
-					if (station.theme === newTheme) return next("No change in theme.");
-					return stationModel.updateOne(
-						{ _id: stationId },
-						{ $set: { theme: newTheme } },
-						{ runValidators: true },
-						next
-					);
-				},
-
-				(res, next) => {
-					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => next(null, station))
-						.catch(next);
-				}
-			],
-			async (err, station) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"STATIONS_UPDATE_THEME",
-						`Updating station "${stationId}" theme to "${newTheme}" failed. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log(
-					"SUCCESS",
-					"STATIONS_UPDATE_THEME",
-					`Updated station "${stationId}" theme to "${newTheme}" successfully.`
-				);
-
-				CacheModule.runJob("PUB", {
-					channel: "station.themeUpdate",
-					value: { stationId }
-				});
-
-				CacheModule.runJob("PUB", {
-					channel: "station.updated",
-					value: { stationId }
-				});
-
-				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: session.userId,
-					type: "station__edit_theme",
-					payload: {
-						message: `Changed theme of station <stationId>${station.displayName}</stationId> to ${newTheme}`,
-						stationId
-					}
-				});
-
-				return cb({
-					status: "success",
-					message: "Successfully updated the theme."
+					message: "Successfully updated the station."
 				});
 			}
 		);
@@ -2818,9 +1797,7 @@ export default {
 								type,
 								privacy: "private",
 								queue: [],
-								currentSong: null,
-								partyMode: false,
-								playMode: "random"
+								currentSong: null
 							},
 							next
 						);
@@ -2836,9 +1813,7 @@ export default {
 								privacy: "private",
 								owner: session.userId,
 								queue: [],
-								currentSong: null,
-								partyMode: true,
-								playMode: "random"
+								currentSong: null
 							},
 							next
 						);
@@ -2907,12 +1882,16 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					if (!station.partyMode) return next("Station is not in party mode.");
+					if (!station.requests.enabled) return next("Requests are disabled in this station.");
 
-					if (station.locked) {
+					if (
+						station.requests.access === "owner" ||
+						(station.requests.access === "user" && station.privacy === "private")
+					) {
 						return userModel.findOne({ _id: session.userId }, (err, user) => {
+							if (err) return next(err);
 							if (user.role !== "admin" && station.owner !== session.userId)
-								return next("Only owners and admins can add songs to a locked queue.");
+								return next("You do not have permission to add songs to queue.");
 							return next(null, station);
 						});
 					}
@@ -2920,10 +1899,8 @@ export default {
 					return next(null, station);
 				},
 
-				(station, next) => {
-					if (station.type !== "community") return next("That station is not a community station.");
-
-					return StationsModule.runJob(
+				(station, next) =>
+					StationsModule.runJob(
 						"CAN_USER_VIEW_STATION",
 						{
 							station,
@@ -2935,8 +1912,7 @@ export default {
 							if (canView) return next(null, station);
 							return next("Insufficient permissions.");
 						})
-						.catch(err => next(err));
-				},
+						.catch(err => next(err)),
 
 				(station, next) => {
 					if (station.currentSong && station.currentSong.youtubeId === youtubeId)
@@ -2996,41 +1972,58 @@ export default {
 				},
 
 				(song, station, next) => {
-					const excludedPlaylists = [];
+					const blacklist = [];
 					async.eachLimit(
-						station.excludedPlaylists,
+						station.blacklist,
 						1,
 						(playlistId, next) => {
 							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 								.then(playlist => {
-									excludedPlaylists.push(playlist);
+									blacklist.push(playlist);
 									next();
 								})
 								.catch(next);
 						},
 						err => {
-							next(err, song, station, excludedPlaylists);
+							next(err, song, station, blacklist);
 						}
 					);
 				},
 
-				(song, station, excludedPlaylists, next) => {
-					const excludedSongs = excludedPlaylists
-						.flatMap(excludedPlaylist => excludedPlaylist.songs)
+				(song, station, blacklist, next) => {
+					const blacklistedSongs = blacklist
+						.flatMap(blacklistedPlaylist => blacklistedPlaylist.songs)
 						.reduce(
 							(items, item) =>
 								items.find(x => x.youtubeId === item.youtubeId) ? [...items] : [...items, item],
 							[]
 						);
 
-					if (excludedSongs.find(excludedSong => excludedSong._id.toString() === song._id.toString()))
-						next("That song is in an excluded playlist and cannot be played.");
+					if (
+						blacklistedSongs.find(blacklistedSong => blacklistedSong._id.toString() === song._id.toString())
+					)
+						next("That song is in an blacklisted playlist and cannot be played.");
 					else next(null, song, station);
 				},
 
 				(song, station, next) => {
 					song.requestedBy = session.userId;
 					song.requestedAt = Date.now();
+					return next(null, song, station);
+				},
+
+				(song, station, next) => {
+					if (station.queue.length === 0) return next(null, song);
+					let totalSongs = 0;
+					station.queue.forEach(song => {
+						if (session.userId === song.requestedBy) {
+							totalSongs += 1;
+						}
+					});
+
+					if (totalSongs >= station.requests.limit)
+						return next(`The max amount of songs per user is ${station.requests.limit}.`);
+
 					return next(null, song);
 				},
 
@@ -3340,14 +2333,14 @@ export default {
 	}),
 
 	/**
-	 * Includes a playlist in a station
+	 * Autofill a playlist in a station
 	 *
 	 * @param session
 	 * @param stationId - the station id
 	 * @param playlistId - the playlist id
 	 * @param cb
 	 */
-	includePlaylist: isOwnerRequired(async function includePlaylist(session, stationId, playlistId, cb) {
+	autofillPlaylist: isOwnerRequired(async function autofillPlaylist(session, stationId, playlistId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -3358,15 +2351,15 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					if (station.includedPlaylists.indexOf(playlistId) !== -1)
-						return next("That playlist is already included.");
-					if (station.playMode === "sequential" && station.includedPlaylists.length > 0)
-						return next("Error: Only 1 playlist can be included in sequential play mode.");
+					if (station.autofill.playlists.indexOf(playlistId) !== -1)
+						return next("That playlist is already autofilling.");
+					if (station.autofill.mode === "sequential" && station.autofill.playlists.length > 0)
+						return next("Error: Only 1 playlist can be autofilling in sequential mode.");
 					return next();
 				},
 
 				next => {
-					StationsModule.runJob("INCLUDE_PLAYLIST", { stationId, playlistId }, this)
+					StationsModule.runJob("AUTOFILL_PLAYLIST", { stationId, playlistId }, this)
 						.then(() => {
 							next();
 						})
@@ -3378,7 +2371,7 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
-						"STATIONS_INCLUDE_PLAYLIST",
+						"STATIONS_AUTOFILL_PLAYLIST",
 						`Including playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
 					);
 					return cb({ status: "error", message: err });
@@ -3386,14 +2379,14 @@ export default {
 
 				this.log(
 					"SUCCESS",
-					"STATIONS_INCLUDE_PLAYLIST",
+					"STATIONS_AUTOFILL_PLAYLIST",
 					`Including playlist "${playlistId}" for station "${stationId}" successfully.`
 				);
 
 				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 
 				CacheModule.runJob("PUB", {
-					channel: "station.includedPlaylist",
+					channel: "station.autofillPlaylist",
 					value: {
 						playlistId,
 						stationId
@@ -3402,21 +2395,21 @@ export default {
 
 				return cb({
 					status: "success",
-					message: "Successfully included playlist."
+					message: "Successfully added autofill playlist."
 				});
 			}
 		);
 	}),
 
 	/**
-	 * Remove included a playlist from a station
+	 * Remove autofilled playlist from a station
 	 *
 	 * @param session
 	 * @param stationId - the station id
 	 * @param playlistId - the playlist id
 	 * @param cb
 	 */
-	removeIncludedPlaylist: isOwnerRequired(async function removeIncludedPlaylist(session, stationId, playlistId, cb) {
+	removeAutofillPlaylist: isOwnerRequired(async function removeAutofillPlaylist(session, stationId, playlistId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -3427,13 +2420,13 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					if (station.includedPlaylists.indexOf(playlistId) === -1)
-						return next("That playlist is not included.");
+					if (station.autofill.playlists.indexOf(playlistId) === -1)
+						return next("That playlist is not autofilling.");
 					return next();
 				},
 
 				next => {
-					StationsModule.runJob("REMOVE_INCLUDED_PLAYLIST", { stationId, playlistId }, this)
+					StationsModule.runJob("REMOVE_AUTOFILL_PLAYLIST", { stationId, playlistId }, this)
 						.then(() => {
 							next();
 						})
@@ -3445,22 +2438,22 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
-						"STATIONS_REMOVE_INCLUDED_PLAYLIST",
-						`Removing included playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
+						"STATIONS_REMOVE_AUTOFILL_PLAYLIST",
+						`Removing autofill playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
 
 				this.log(
 					"SUCCESS",
-					"STATIONS_REMOVE_INCLUDED_PLAYLIST",
-					`Removing included playlist "${playlistId}" for station "${stationId}" successfully.`
+					"STATIONS_REMOVE_AUTOFILL_PLAYLIST",
+					`Removing autofill playlist "${playlistId}" for station "${stationId}" successfully.`
 				);
 
 				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 
 				CacheModule.runJob("PUB", {
-					channel: "station.removedIncludedPlaylist",
+					channel: "station.removedAutofillPlaylist",
 					value: {
 						playlistId,
 						stationId
@@ -3469,21 +2462,21 @@ export default {
 
 				return cb({
 					status: "success",
-					message: "Successfully removed included playlist."
+					message: "Successfully removed autofill playlist."
 				});
 			}
 		);
 	}),
 
 	/**
-	 * Excludes a playlist in a station
+	 * Blacklist a playlist in a station
 	 *
 	 * @param session
 	 * @param stationId - the station id
 	 * @param playlistId - the playlist id
 	 * @param cb
 	 */
-	excludePlaylist: isOwnerRequired(async function excludePlaylist(session, stationId, playlistId, cb) {
+	blacklistPlaylist: isOwnerRequired(async function blacklistPlaylist(session, stationId, playlistId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -3494,13 +2487,13 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					if (station.excludedPlaylists.indexOf(playlistId) !== -1)
-						return next("That playlist is already excluded.");
+					if (station.blacklist.indexOf(playlistId) !== -1)
+						return next("That playlist is already blacklisted.");
 					return next();
 				},
 
 				next => {
-					StationsModule.runJob("EXCLUDE_PLAYLIST", { stationId, playlistId }, this)
+					StationsModule.runJob("BLACKLIST_PLAYLIST", { stationId, playlistId }, this)
 						.then(() => {
 							next();
 						})
@@ -3512,22 +2505,22 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
-						"STATIONS_EXCLUDE_PLAYLIST",
-						`Excluding playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
+						"STATIONS_BLACKLIST_PLAYLIST",
+						`Blacklisting playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
 
 				this.log(
 					"SUCCESS",
-					"STATIONS_EXCLUDE_PLAYLIST",
-					`Excluding playlist "${playlistId}" for station "${stationId}" successfully.`
+					"STATIONS_BLACKLIST_PLAYLIST",
+					`Blacklisting playlist "${playlistId}" for station "${stationId}" successfully.`
 				);
 
 				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 
 				CacheModule.runJob("PUB", {
-					channel: "station.excludedPlaylist",
+					channel: "station.blacklistedPlaylist",
 					value: {
 						playlistId,
 						stationId
@@ -3536,147 +2529,21 @@ export default {
 
 				return cb({
 					status: "success",
-					message: "Successfully excluded playlist."
+					message: "Successfully blacklisted playlist."
 				});
 			}
 		);
 	}),
 
 	/**
-	 * Remove excluded a playlist from a station
+	 * Remove blacklisted a playlist from a station
 	 *
 	 * @param session
 	 * @param stationId - the station id
 	 * @param playlistId - the playlist id
 	 * @param cb
 	 */
-	removeExcludedPlaylist: isOwnerRequired(async function removeExcludedPlaylist(session, stationId, playlistId, cb) {
-		async.waterfall(
-			[
-				next => {
-					StationsModule.runJob("GET_STATION", { stationId }, this)
-						.then(station => next(null, station))
-						.catch(next);
-				},
-
-				(station, next) => {
-					if (!station) return next("Station not found.");
-					if (station.excludedPlaylists.indexOf(playlistId) === -1)
-						return next("That playlist is not excluded.");
-					return next();
-				},
-
-				next => {
-					StationsModule.runJob("REMOVE_EXCLUDED_PLAYLIST", { stationId, playlistId }, this)
-						.then(() => {
-							next();
-						})
-						.catch(next);
-				}
-			],
-			async err => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"STATIONS_REMOVE_EXCLUDED_PLAYLIST",
-						`Removing excluded playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log(
-					"SUCCESS",
-					"STATIONS_REMOVE_EXCLUDED_PLAYLIST",
-					`Removing excluded playlist "${playlistId}" for station "${stationId}" successfully.`
-				);
-
-				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
-
-				CacheModule.runJob("PUB", {
-					channel: "station.removedExcludedPlaylist",
-					value: {
-						playlistId,
-						stationId
-					}
-				});
-
-				return cb({
-					status: "success",
-					message: "Successfully removed excluded playlist."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Selects a private playlist for a station
-	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param playlistId - the private playlist id
-	 * @param cb
-	 */
-	selectPrivatePlaylist: isOwnerRequired(async function selectPrivatePlaylist(session, stationId, playlistId, cb) {
-		async.waterfall(
-			[
-				next => {
-					StationsModule.runJob("GET_STATION", { stationId }, this)
-						.then(station => next(null, station))
-						.catch(next);
-				},
-
-				(station, next) => {
-					if (!station) return next("Station not found.");
-					if (station.type !== "community") return next("Station is not a community station.");
-					if (station.includedPlaylists.indexOf(playlistId) !== -1)
-						return next("That playlist is already included.");
-					return next();
-				},
-
-				next => {
-					StationsModule.runJob("INCLUDE_PLAYLIST", { stationId, playlistId }, this)
-						.then(() => {
-							next();
-						})
-						.catch(next);
-				}
-			],
-			async err => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"STATIONS_SELECT_PRIVATE_PLAYLIST",
-						`Selecting private playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log(
-					"SUCCESS",
-					"STATIONS_SELECT_PRIVATE_PLAYLIST",
-					`Selected private playlist "${playlistId}" for station "${stationId}" successfully.`
-				);
-
-				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
-
-				return cb({
-					status: "success",
-					message: "Successfully selected playlist."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Deselects the private playlist selected in a station
-	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param cb
-	 */
-	deselectPrivatePlaylist: isOwnerRequired(async function deselectPrivatePlaylist(
+	removeBlacklistedPlaylist: isOwnerRequired(async function removeBlacklistedPlaylist(
 		session,
 		stationId,
 		playlistId,
@@ -3686,22 +2553,18 @@ export default {
 			[
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				},
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					if (station.type !== "community") return next("Station is not a community station.");
-					if (station.includedPlaylists.indexOf(playlistId) === -1)
-						return next("That playlist is not included.");
+					if (station.blacklist.indexOf(playlistId) === -1) return next("That playlist is not blacklisted.");
 					return next();
 				},
 
 				next => {
-					StationsModule.runJob("REMOVE_INCLUDED_PLAYLIST", { stationId, playlistId }, this)
+					StationsModule.runJob("REMOVE_BLACKLISTED_PLAYLIST", { stationId, playlistId }, this)
 						.then(() => {
 							next();
 						})
@@ -3713,23 +2576,31 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
-						"STATIONS_DESELECT_PRIVATE_PLAYLIST",
-						`Deselecting private playlist for station "${stationId}" failed. "${err}"`
+						"STATIONS_REMOVE_BLACKLISTED_PLAYLIST",
+						`Removing blacklisted playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
 
 				this.log(
 					"SUCCESS",
-					"STATIONS_DESELECT_PRIVATE_PLAYLIST",
-					`Deselected private playlist for station "${stationId}" successfully.`
+					"STATIONS_REMOVE_BLACKLISTED_PLAYLIST",
+					`Removing blacklisted playlist "${playlistId}" for station "${stationId}" successfully.`
 				);
 
 				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 
+				CacheModule.runJob("PUB", {
+					channel: "station.removedBlacklistedPlaylist",
+					value: {
+						playlistId,
+						stationId
+					}
+				});
+
 				return cb({
 					status: "success",
-					message: "Successfully deselected playlist."
+					message: "Successfully removed blacklisted playlist."
 				});
 			}
 		);
@@ -3884,17 +2755,17 @@ export default {
 	}),
 
 	/**
-	 * Clears and refills a station queue
+	 * Reset a station queue
 	 *
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - gets called with the result
 	 */
-	clearAndRefillStationQueue: isAdminRequired(async function clearAndRefillStationQueue(session, stationId, cb) {
+	resetQueue: isAdminRequired(async function resetQueue(session, stationId, cb) {
 		async.waterfall(
 			[
 				next => {
-					StationsModule.runJob("CLEAR_AND_REFILL_STATION_QUEUE", { stationId }, this)
+					StationsModule.runJob("RESET_QUEUE", { stationId }, this)
 						.then(() => next())
 						.catch(next);
 				}
@@ -3902,19 +2773,11 @@ export default {
 			async err => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"CLEAR_AND_REFILL_STATION_QUEUE",
-						`Clearing and refilling station queue failed. "${err}"`
-					);
+					this.log("ERROR", "RESET_QUEUE", `Resetting station queue failed. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
-				this.log(
-					"SUCCESS",
-					"CLEAR_AND_REFILL_STATION_QUEUE",
-					"Clearing and refilling station queue was successful."
-				);
-				return cb({ status: "success", message: "Successfully cleared and refilled station queue." });
+				this.log("SUCCESS", "RESET_QUEUE", "Resetting station queue was successful.");
+				return cb({ status: "success", message: "Successfully reset station queue." });
 			}
 		);
 	}),

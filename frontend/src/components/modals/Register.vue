@@ -137,13 +137,12 @@
 <script>
 import { mapActions } from "vuex";
 import Toast from "toasters";
-import Modal from "../Modal.vue";
 
 import validation from "@/validation";
 import InputHelpBox from "../InputHelpBox.vue";
 
 export default {
-	components: { Modal, InputHelpBox },
+	components: { InputHelpBox },
 	data() {
 		return {
 			username: {

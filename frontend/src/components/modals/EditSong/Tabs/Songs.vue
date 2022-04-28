@@ -1,6 +1,6 @@
 <template>
 	<div class="musare-songs-tab">
-		<label class="label"> Search for a song on Musare </label>
+		<label class="label"> Search for a song on {{ sitename }} </label>
 		<div class="control is-grouped input-with-button">
 			<p class="control is-expanded">
 				<input
@@ -37,7 +37,9 @@
 </template>
 
 <script>
-import { mapGetters, mapState } from "vuex";
+import { mapGetters } from "vuex";
+
+import { mapModalState } from "@/vuex_helpers";
 
 import SearchMusare from "@/mixins/SearchMusare.vue";
 
@@ -48,18 +50,26 @@ export default {
 		SongItem
 	},
 	mixins: [SearchMusare],
+	props: {
+		modalUuid: { type: String, default: "" },
+		modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
+	},
 	data() {
-		return {};
+		return {
+			sitename: "Musare"
+		};
 	},
 	computed: {
-		...mapState("modals/editSong", {
+		...mapModalState("MODAL_MODULE_PATH", {
 			song: state => state.song
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
 	},
-	mounted() {
+	async mounted() {
+		this.sitename = await lofig.get("siteSettings.sitename");
+
 		this.musareSearch.query = this.song.title;
 		this.searchForMusareSongs(1, false);
 	}

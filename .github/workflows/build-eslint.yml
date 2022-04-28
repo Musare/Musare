@@ -4,6 +4,8 @@ on: [ push, pull_request, workflow_dispatch ]
 
 env:
     COMPOSE_PROJECT_NAME: musare
+    RESTART_POLICY: unless-stopped
+    CONTAINER_MODE: prod
     BACKEND_HOST: 127.0.0.1
     BACKEND_PORT: 8080
     FRONTEND_HOST: 127.0.0.1
@@ -28,13 +30,13 @@ jobs:
             - uses: actions/checkout@v2
             - name: Build Musare
               run: |
+                  cp .env.example .env
                   cp backend/config/template.json backend/config/default.json
                   cp frontend/dist/config/template.json frontend/dist/config/default.json
-                  docker-compose build
-                  docker-compose pull
+                  ./musare.sh build
             - name: Start Musare
-              run: docker-compose up -d
+              run: ./musare.sh start
             - name: ESlint Backend
-              run: docker-compose exec -T backend /bin/bash -c "npx eslint app/logic"
+              run: ./musare.sh eslint backend
             - name: ESLint Frontend
-              run: docker-compose exec -T frontend /bin/bash -c "cd app && npm run lint"
+              run: ./musare.sh eslint frontend

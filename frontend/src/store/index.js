@@ -9,17 +9,9 @@ import modalVisibility from "./modules/modalVisibility";
 import station from "./modules/station";
 import admin from "./modules/admin";
 
-import editSongModal from "./modules/modals/editSong";
-import editSongsModal from "./modules/modals/editSongs";
-import importAlbumModal from "./modules/modals/importAlbum";
-import importPlaylistModal from "./modules/modals/importPlaylist";
-import editPlaylistModal from "./modules/modals/editPlaylist";
-import manageStationModal from "./modules/modals/manageStation";
-import editUserModal from "./modules/modals/editUser";
-import viewPunishmentModal from "./modules/modals/viewPunishment";
-import viewReportModal from "./modules/modals/viewReport";
-import reportModal from "./modules/modals/report";
-import confirmModal from "./modules/modals/confirm";
+const emptyModule = {
+	namespaced: true
+};
 
 export default createStore({
 	modules: {
@@ -32,17 +24,21 @@ export default createStore({
 		modals: {
 			namespaced: true,
 			modules: {
-				editSong: editSongModal,
-				editSongs: editSongsModal,
-				importAlbum: importAlbumModal,
-				importPlaylist: importPlaylistModal,
-				editPlaylist: editPlaylistModal,
-				manageStation: manageStationModal,
-				editUser: editUserModal,
-				viewPunishment: viewPunishmentModal,
-				report: reportModal,
-				viewReport: viewReportModal,
-				confirm: confirmModal
+				editSong: emptyModule,
+				editSongs: emptyModule,
+				importAlbum: emptyModule,
+				importPlaylist: emptyModule,
+				editPlaylist: emptyModule,
+				manageStation: emptyModule,
+				editUser: emptyModule,
+				whatIsNew: emptyModule,
+				createStation: emptyModule,
+				editNews: emptyModule,
+				viewPunishment: emptyModule,
+				report: emptyModule,
+				viewReport: emptyModule,
+				confirm: emptyModule,
+				bulkActions: emptyModule
 			}
 		}
 	},

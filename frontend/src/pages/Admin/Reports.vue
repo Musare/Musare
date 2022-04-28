@@ -15,7 +15,12 @@
 					<div class="row-options">
 						<button
 							class="button is-primary icon-with-button material-icons"
-							@click="view(slotProps.item._id)"
+							@click="
+								openModal({
+									modal: 'viewReport',
+									data: { reportId: slotProps.item._id }
+								})
+							"
 							:disabled="slotProps.item.removed"
 							content="View Report"
 							v-tippy
@@ -101,35 +106,19 @@
 				</template>
 			</advanced-table>
 		</div>
-
-		<view-report v-if="modals.viewReport" sector="admin" />
-		<edit-song v-if="modals.editSong" song-type="songs" />
-		<report v-if="modals.report" />
 	</div>
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
-import { defineAsyncComponent } from "vue";
+import { mapActions } from "vuex";
 
 import Toast from "toasters";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
-import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
 export default {
 	components: {
-		ViewReport: defineAsyncComponent(() =>
-			import("@/components/modals/ViewReport.vue")
-		),
-		Report: defineAsyncComponent(() =>
-			import("@/components/modals/Report.vue")
-		),
-		EditSong: defineAsyncComponent(() =>
-			import("@/components/modals/EditSong/index.vue")
-		),
-		AdvancedTable,
-		UserIdToUsername
+		AdvancedTable
 	},
 	data() {
 		return {
@@ -269,16 +258,7 @@ export default {
 			}
 		};
 	},
-	computed: {
-		...mapState("modalVisibility", {
-			modals: state => state.modals
-		})
-	},
 	methods: {
-		view(reportId) {
-			this.viewReport(reportId);
-			this.openModal("viewReport");
-		},
 		resolve(reportId, value) {
 			return this.resolveReport({ reportId, value })
 				.then(res => {
@@ -296,8 +276,7 @@ export default {
 			return `${year}-${month}-${day} ${hour}:${minute}`;
 		},
 		...mapActions("modalVisibility", ["openModal", "closeModal"]),
-		...mapActions("admin/reports", ["resolveReport"]),
-		...mapActions("modals/viewReport", ["viewReport"])
+		...mapActions("admin/reports", ["resolveReport"])
 	}
 };
 </script>

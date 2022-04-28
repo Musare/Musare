@@ -191,12 +191,10 @@ const modules = {
 	playlists: {
 		namespaced: true,
 		state: {
-			editing: "",
 			playlists: [],
 			fetchedPlaylists: false
 		},
 		actions: {
-			editPlaylist: ({ commit }, id) => commit("editPlaylist", id),
 			setPlaylists: ({ commit }, playlists) =>
 				commit("setPlaylists", playlists),
 			updatePlaylists: ({ commit }, playlists) =>
@@ -207,9 +205,6 @@ const modules = {
 				commit("removePlaylist", playlistId)
 		},
 		mutations: {
-			editPlaylist(state, id) {
-				state.editing = id;
-			},
 			setPlaylists(state, playlists) {
 				state.fetchedPlaylists = true;
 				state.playlists = playlists;

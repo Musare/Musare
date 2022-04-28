@@ -3,7 +3,15 @@
 		<page-metadata title="Admin | News" />
 		<div class="container">
 			<div class="button-row">
-				<button class="is-primary button" @click="edit()">
+				<button
+					class="is-primary button"
+					@click="
+						openModal({
+							modal: 'editNews',
+							data: { createNews: true }
+						})
+					"
+				>
 					Create News Item
 				</button>
 			</div>
@@ -20,7 +28,12 @@
 					<div class="row-options">
 						<button
 							class="button is-primary icon-with-button material-icons"
-							@click="edit(slotProps.item._id)"
+							@click="
+								openModal({
+									modal: 'editNews',
+									data: { newsId: slotProps.item._id }
+								})
+							"
 							content="Edit News"
 							v-tippy
 						>
@@ -69,32 +82,18 @@
 				</template>
 			</advanced-table>
 		</div>
-
-		<edit-news
-			v-if="modals.editNews"
-			:news-id="editingNewsId"
-			sector="admin"
-		/>
 	</div>
 </template>
 
 <script>
-import { mapActions, mapState, mapGetters } from "vuex";
-import { defineAsyncComponent } from "vue";
+import { mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
-import QuickConfirm from "@/components/QuickConfirm.vue";
-import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
 export default {
 	components: {
-		AdvancedTable,
-		QuickConfirm,
-		UserIdToUsername,
-		EditNews: defineAsyncComponent(() =>
-			import("@/components/modals/EditNews.vue")
-		)
+		AdvancedTable
 	},
 	data() {
 		return {
@@ -205,19 +204,11 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modalVisibility", {
-			modals: state => state.modals
-		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
 	},
 	methods: {
-		edit(id) {
-			if (id) this.editingNewsId = id;
-			else this.editingNewsId = "";
-			this.openModal("editNews");
-		},
 		remove(id) {
 			this.socket.dispatch(
 				"news.remove",

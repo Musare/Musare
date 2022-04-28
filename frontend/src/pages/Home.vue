@@ -13,10 +13,14 @@
 				<div class="content-container">
 					<div class="content">
 						<img
+							v-if="siteSettings.sitename === 'Musare'"
+							:src="siteSettings.logo_white"
+							:alt="siteSettings.sitename || `Musare`"
 							class="logo"
-							src="/assets/white_wordmark.png"
-							:alt="`${this.siteSettings.sitename}` || `Musare`"
 						/>
+						<span v-else class="logo">{{
+							siteSettings.sitename
+						}}</span>
 						<div v-if="!loggedIn" class="buttons">
 							<button
 								class="button login"
@@ -72,7 +76,14 @@
 												v-if="isOwnerOrAdmin(element)"
 												class="material-icons manage-station"
 												@click.prevent="
-													manageStation(element._id)
+													openModal({
+														modal: 'manageStation',
+														data: {
+															stationId:
+																element._id,
+															sector: 'home'
+														}
+													})
 												"
 												content="Manage Station"
 												v-tippy
@@ -83,7 +94,14 @@
 												v-else
 												class="material-icons manage-station"
 												@click.prevent="
-													manageStation(element._id)
+													openModal({
+														modal: 'manageStation',
+														data: {
+															stationId:
+																element._id,
+															sector: 'home'
+														}
+													})
 												"
 												content="View Queue"
 												v-tippy
@@ -143,8 +161,12 @@
 														element.type ===
 														'official'
 													"
-													title="Musare"
-													>Musare</span
+													:title="
+														siteSettings.sitename
+													"
+													>{{
+														siteSettings.sitename
+													}}</span
 												>
 												<user-id-to-username
 													v-else
@@ -234,19 +256,13 @@
 									>No Songs Playing</span
 								>
 								<i
-									class="material-icons stationMode"
-									:content="
-										element.partyMode
-											? 'Station in Party mode'
-											: 'Station in Playlist mode'
-									"
+									v-if="canRequest(element)"
+									class="material-icons"
+									content="You can request songs in this station"
 									v-tippy="{ theme: 'info' }"
-									>{{
-										element.partyMode
-											? "emoji_people"
-											: "playlist_play"
-									}}</i
 								>
+									queue
+								</i>
 							</div>
 						</router-link>
 					</template>
@@ -325,7 +341,13 @@
 										v-if="isOwnerOrAdmin(station)"
 										class="material-icons manage-station"
 										@click.prevent="
-											manageStation(station._id)
+											openModal({
+												modal: 'manageStation',
+												data: {
+													stationId: station._id,
+													sector: 'home'
+												}
+											})
 										"
 										content="Manage Station"
 										v-tippy
@@ -336,7 +358,13 @@
 										v-else
 										class="material-icons manage-station"
 										@click.prevent="
-											manageStation(station._id)
+											openModal({
+												modal: 'manageStation',
+												data: {
+													stationId: station._id,
+													sector: 'home'
+												}
+											})
 										"
 										content="View Queue"
 										v-tippy
@@ -387,8 +415,8 @@
 									<span class="host">
 										<span
 											v-if="station.type === 'official'"
-											title="Musare"
-											>Musare</span
+											:title="siteSettings.sitename"
+											>{{ siteSettings.sitename }}</span
 										>
 										<user-id-to-username
 											v-else
@@ -462,19 +490,21 @@
 						>
 						<span v-else class="songTitle">No Songs Playing</span>
 						<i
-							class="material-icons stationMode"
-							:content="
-								station.partyMode
-									? 'Station in Party mode'
-									: 'Station in Playlist mode'
-							"
+							v-if="canRequest(station)"
+							class="material-icons"
+							content="You can request songs in this station"
 							v-tippy="{ theme: 'info' }"
-							>{{
-								station.partyMode
-									? "emoji_people"
-									: "playlist_play"
-							}}</i
 						>
+							queue
+						</i>
+						<i
+							v-else-if="canRequest(station, false)"
+							class="material-icons"
+							content="Login to request songs in this station"
+							v-tippy="{ theme: 'info' }"
+						>
+							queue
+						</i>
 					</div>
 				</router-link>
 				<h4 v-if="stations.length === 0">
@@ -483,56 +513,22 @@
 			</div>
 			<main-footer />
 		</div>
-		<create-station v-if="modals.createStation" />
-		<manage-station
-			v-if="modals.manageStation"
-			:station-id="editingStationId"
-			sector="home"
-		/>
-		<create-playlist v-if="modals.createPlaylist" />
-		<edit-playlist v-if="modals.editPlaylist" />
-		<edit-song v-if="modals.editSong" song-type="songs" sector="home" />
-		<report v-if="modals.report" />
 	</div>
 </template>
 
 <script>
 import { mapState, mapGetters, mapActions } from "vuex";
-import { defineAsyncComponent } from "vue";
 import draggable from "vuedraggable";
 import Toast from "toasters";
 
-import MainHeader from "@/components/layout/MainHeader.vue";
-import MainFooter from "@/components/layout/MainFooter.vue";
 import SongThumbnail from "@/components/SongThumbnail.vue";
-import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
 import ws from "@/ws";
+import keyboardShortcuts from "@/keyboardShortcuts";
 
 export default {
 	components: {
-		MainHeader,
-		MainFooter,
 		SongThumbnail,
-		CreateStation: defineAsyncComponent(() =>
-			import("@/components/modals/CreateStation.vue")
-		),
-		ManageStation: defineAsyncComponent(() =>
-			import("@/components/modals/ManageStation/index.vue")
-		),
-		EditPlaylist: defineAsyncComponent(() =>
-			import("@/components/modals/EditPlaylist")
-		),
-		CreatePlaylist: defineAsyncComponent(() =>
-			import("@/components/modals/CreatePlaylist.vue")
-		),
-		Report: defineAsyncComponent(() =>
-			import("@/components/modals/Report.vue")
-		),
-		EditSong: defineAsyncComponent(() =>
-			import("@/components/modals/EditSong")
-		),
-		UserIdToUsername,
 		draggable
 	},
 	data() {
@@ -542,6 +538,7 @@ export default {
 			favoriteStations: [],
 			searchQuery: "",
 			siteSettings: {
+				logo_white: "",
 				sitename: "Musare",
 				registrationDisabled: false
 			},
@@ -600,6 +597,9 @@ export default {
 	},
 	async mounted() {
 		this.siteSettings = await lofig.get("siteSettings");
+
+		if (this.$route.query.searchQuery)
+			this.searchQuery = this.$route.query.query;
 
 		if (
 			!this.loggedIn &&
@@ -663,54 +663,19 @@ export default {
 			if (station) station.userCount = res.data.userCount;
 		});
 
-		this.socket.on("event:station.privacy.updated", res => {
-			const station = this.stations.find(
-				station => station._id === res.data.stationId
-			);
+		this.socket.on("event:station.updated", res => {
+			const stationIndex = this.stations
+				.map(station => station._id)
+				.indexOf(res.data.station._id);
 
-			if (station) station.privacy = res.data.privacy;
-		});
+			if (stationIndex !== -1) {
+				this.stations[stationIndex] = {
+					...this.stations[stationIndex],
+					...res.data.station
+				};
 
-		this.socket.on("event:station.name.updated", res => {
-			const station = this.stations.find(
-				station => station._id === res.data.stationId
-			);
-
-			if (station) station.name = res.data.name;
-		});
-
-		this.socket.on("event:station.displayName.updated", res => {
-			const station = this.stations.find(
-				station => station._id === res.data.stationId
-			);
-
-			if (station) station.displayName = res.data.displayName;
-		});
-
-		this.socket.on("event:station.description.updated", res => {
-			const station = this.stations.find(
-				station => station._id === res.data.stationId
-			);
-
-			if (station) station.description = res.data.description;
-		});
-
-		this.socket.on("event:station.theme.updated", res => {
-			const { stationId, theme } = res.data;
-			const station = this.stations.find(
-				station => station._id === stationId
-			);
-
-			if (station) station.theme = theme;
-		});
-
-		this.socket.on("event:station.partyMode.updated", res => {
-			const { stationId, partyMode } = res.data;
-			const station = this.stations.find(
-				station => station._id === stationId
-			);
-
-			if (station) station.partyMode = partyMode;
+				this.calculateFavoriteStations();
+			}
 		});
 
 		this.socket.on("event:station.nextSong", res => {
@@ -778,36 +743,70 @@ export default {
 		this.socket.on("event:user.orderOfFavoriteStations.updated", res => {
 			this.orderOfFavoriteStations = res.data.order;
 		});
+
+		// ctrl + alt + f
+		keyboardShortcuts.registerShortcut("home.toggleAdminFilter", {
+			keyCode: 70,
+			ctrl: true,
+			alt: true,
+			handler: () => {
+				if (this.isAdmin())
+					if (this.$route.query.adminFilter === undefined)
+						this.$router.push({
+							query: {
+								...this.$route.query,
+								adminFilter: null
+							}
+						});
+					else
+						this.$router.push({
+							query: {
+								...this.$route.query,
+								adminFilter: undefined
+							}
+						});
+			}
+		});
 	},
 	beforeUnmount() {
 		this.socket.dispatch("apis.leaveRoom", "home", () => {});
+
+		const shortcutNames = ["home.toggleAdminFilter"];
+
+		shortcutNames.forEach(shortcutName => {
+			keyboardShortcuts.unregisterShortcut(shortcutName);
+		});
 	},
 	methods: {
 		init() {
-			this.socket.dispatch("stations.index", res => {
-				this.stations = [];
+			this.socket.dispatch(
+				"stations.index",
+				this.$route.query.adminFilter === undefined,
+				res => {
+					this.stations = [];
 
-				if (res.status === "success") {
-					res.data.stations.forEach(station => {
-						const modifiableStation = station;
+					if (res.status === "success") {
+						res.data.stations.forEach(station => {
+							const modifiableStation = station;
 
-						if (!modifiableStation.currentSong)
-							modifiableStation.currentSong = {
-								thumbnail: "/assets/notes-transparent.png"
-							};
+							if (!modifiableStation.currentSong)
+								modifiableStation.currentSong = {
+									thumbnail: "/assets/notes-transparent.png"
+								};
 
-						if (
-							modifiableStation.currentSong &&
-							!modifiableStation.currentSong.thumbnail
-						)
-							modifiableStation.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.youtubeId}/mqdefault.jpg`;
+							if (
+								modifiableStation.currentSong &&
+								!modifiableStation.currentSong.thumbnail
+							)
+								modifiableStation.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.youtubeId}/mqdefault.jpg`;
 
-						this.stations.push(modifiableStation);
-					});
+							this.stations.push(modifiableStation);
+						});
 
-					this.orderOfFavoriteStations = res.data.favorited;
+						this.orderOfFavoriteStations = res.data.favorited;
+					}
 				}
-			});
+			);
 
 			this.socket.dispatch("apis.joinRoom", "home");
 		},
@@ -819,6 +818,17 @@ export default {
 		},
 		isOwnerOrAdmin(station) {
 			return this.isOwner(station) || this.isAdmin();
+		},
+		canRequest(station, requireLogin = true) {
+			return (
+				station &&
+				(!requireLogin || this.loggedIn) &&
+				station.requests &&
+				station.requests.enabled &&
+				(station.requests.access === "user" ||
+					(station.requests.access === "owner" &&
+						this.isOwnerOrAdmin(station)))
+			);
 		},
 		isPlaying(station) {
 			return typeof station.currentSong.title !== "undefined";
@@ -861,10 +871,6 @@ export default {
 				recalculatedOrder,
 				res => new Toast(res.message)
 			);
-		},
-		manageStation(stationId) {
-			this.editingStationId = stationId;
-			this.openModal("manageStation");
 		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("station", ["updateIfStationIsFavorited"])
@@ -1009,12 +1015,13 @@ html {
 			right: 0;
 			transform: translateY(-50%);
 			background-color: transparent !important;
-			img.logo {
+			.logo {
 				max-height: 90px;
-				font-size: 40px;
+				font-size: 50px;
 				color: var(--white);
 				font-family: Pacifico, cursive;
 				user-select: none;
+				white-space: nowrap;
 			}
 			.buttons {
 				display: flex;

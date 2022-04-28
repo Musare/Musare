@@ -101,7 +101,7 @@
 		<div v-if="!isGithubLinked">
 			<h4 class="section-title">Link your GitHub account</h4>
 			<p class="section-description">
-				Link your Musare account with GitHub
+				Link your {{ sitename }} account with GitHub
 			</p>
 
 			<hr class="section-horizontal-rule" />
@@ -172,13 +172,13 @@ import { mapGetters, mapState } from "vuex";
 
 import InputHelpBox from "@/components/InputHelpBox.vue";
 import validation from "@/validation";
-import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
-	components: { InputHelpBox, QuickConfirm },
+	components: { InputHelpBox },
 	data() {
 		return {
 			apiDomain: "",
+			sitename: "Musare",
 			validation: {
 				oldPassword: {
 					value: "",
@@ -224,6 +224,7 @@ export default {
 	},
 	async mounted() {
 		this.apiDomain = await lofig.get("backend.apiDomain");
+		this.sitename = await lofig.get("siteSettings.sitename");
 	},
 	methods: {
 		togglePasswordVisibility(ref) {

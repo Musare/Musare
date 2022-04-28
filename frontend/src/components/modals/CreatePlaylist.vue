@@ -37,10 +37,11 @@ import { mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 import validation from "@/validation";
-import Modal from "../Modal.vue";
 
 export default {
-	components: { Modal },
+	props: {
+		modalUuid: { type: String, default: "" }
+	},
 	data() {
 		return {
 			playlist: {
@@ -85,15 +86,16 @@ export default {
 						this.closeModal("createPlaylist");
 
 						if (!window.addToPlaylistDropdown) {
-							this.editPlaylist(res.data.playlistId);
-							this.openModal("editPlaylist");
+							this.openModal({
+								modal: "editPlaylist",
+								data: { playlistId: res.data.playlistId }
+							});
 						}
 					}
 				}
 			);
 		},
-		...mapActions("modalVisibility", ["closeModal", "openModal"]),
-		...mapActions("user/playlists", ["editPlaylist"])
+		...mapActions("modalVisibility", ["closeModal", "openModal"])
 	}
 };
 </script>

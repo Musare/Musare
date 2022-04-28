@@ -1,10 +1,5 @@
 <template>
 	<div v-if="isUser">
-		<edit-playlist v-if="modals.editPlaylist" />
-		<view-report v-if="modals.viewReport" />
-		<edit-song v-if="modals.editSong" song-type="songs" />
-		<report v-if="modals.report" />
-
 		<page-metadata :title="`Profile | ${user.username}`" />
 		<main-header />
 		<div class="container">
@@ -108,37 +103,20 @@
 <script>
 import { mapState, mapGetters } from "vuex";
 import { format, parseISO } from "date-fns";
-import { defineAsyncComponent } from "vue";
 import ws from "@/ws";
 
 import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 
 import ProfilePicture from "@/components/ProfilePicture";
-import MainHeader from "@/components/layout/MainHeader";
-import MainFooter from "@/components/layout/MainFooter.vue";
 
 import RecentActivity from "./Tabs/RecentActivity.vue";
 import Playlists from "./Tabs/Playlists.vue";
 
 export default {
 	components: {
-		MainHeader,
-		MainFooter,
 		ProfilePicture,
 		RecentActivity,
-		Playlists,
-		EditPlaylist: defineAsyncComponent(() =>
-			import("@/components/modals/EditPlaylist")
-		),
-		Report: defineAsyncComponent(() =>
-			import("@/components/modals/Report.vue")
-		),
-		ViewReport: defineAsyncComponent(() =>
-			import("@/components/modals/ViewReport.vue")
-		),
-		EditSong: defineAsyncComponent(() =>
-			import("@/components/modals/EditSong")
-		)
+		Playlists
 	},
 	mixins: [TabQueryHandler],
 	data() {
@@ -152,10 +130,7 @@ export default {
 	computed: {
 		...mapState({
 			role: state => state.user.auth.role,
-			myUserId: state => state.user.auth.userId,
-			...mapState("modalVisibility", {
-				modals: state => state.modals
-			})
+			myUserId: state => state.user.auth.userId
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"

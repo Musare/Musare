@@ -3,24 +3,26 @@
 export default {
 	namespaced: true,
 	state: {
+		stationId: null,
+		sector: "admin",
 		tab: "settings",
-		originalStation: {},
 		station: {},
 		stationPlaylist: { songs: [] },
-		includedPlaylists: [],
-		excludedPlaylists: [],
+		autofill: [],
+		blacklist: [],
 		songsList: [],
 		stationPaused: true,
 		currentSong: {}
 	},
 	getters: {},
 	actions: {
+		init: ({ commit }, data) => commit("init", data),
 		showTab: ({ commit }, tab) => commit("showTab", tab),
 		editStation: ({ commit }, station) => commit("editStation", station),
-		setIncludedPlaylists: ({ commit }, includedPlaylists) =>
-			commit("setIncludedPlaylists", includedPlaylists),
-		setExcludedPlaylists: ({ commit }, excludedPlaylists) =>
-			commit("setExcludedPlaylists", excludedPlaylists),
+		setAutofillPlaylists: ({ commit }, autofillPlaylists) =>
+			commit("setAutofillPlaylists", autofillPlaylists),
+		setBlacklist: ({ commit }, blacklist) =>
+			commit("setBlacklist", blacklist),
 		clearStation: ({ commit }) => commit("clearStation"),
 		updateSongsList: ({ commit }, songsList) =>
 			commit("updateSongsList", songsList),
@@ -31,32 +33,34 @@ export default {
 		updateStationPaused: ({ commit }, stationPaused) =>
 			commit("updateStationPaused", stationPaused),
 		updateCurrentSong: ({ commit }, currentSong) =>
-			commit("updateCurrentSong", currentSong)
+			commit("updateCurrentSong", currentSong),
+		updateStation: ({ commit }, station) =>
+			commit("updateStation", station),
+		updateIsFavorited: ({ commit }, isFavorited) =>
+			commit("updateIsFavorited", isFavorited)
 	},
 	mutations: {
+		init(state, { stationId, sector }) {
+			state.stationId = stationId;
+			if (sector) state.sector = sector;
+		},
 		showTab(state, tab) {
 			state.tab = tab;
 		},
 		editStation(state, station) {
-			state.originalStation = JSON.parse(JSON.stringify(station));
 			state.station = JSON.parse(JSON.stringify(station));
 		},
-		setIncludedPlaylists(state, includedPlaylists) {
-			state.includedPlaylists = JSON.parse(
-				JSON.stringify(includedPlaylists)
-			);
+		setAutofillPlaylists(state, autofillPlaylists) {
+			state.autofill = JSON.parse(JSON.stringify(autofillPlaylists));
 		},
-		setExcludedPlaylists(state, excludedPlaylists) {
-			state.excludedPlaylists = JSON.parse(
-				JSON.stringify(excludedPlaylists)
-			);
+		setBlacklist(state, blacklist) {
+			state.blacklist = JSON.parse(JSON.stringify(blacklist));
 		},
 		clearStation(state) {
-			state.originalStation = {};
 			state.station = {};
 			state.stationPlaylist = { songs: [] };
-			state.includedPlaylists = [];
-			state.excludedPlaylists = [];
+			state.autofill = [];
+			state.blacklist = [];
 			state.songsList = [];
 			state.stationPaused = true;
 			state.currentSong = {};
@@ -89,6 +93,12 @@ export default {
 		},
 		updateCurrentSong(state, currentSong) {
 			state.currentSong = currentSong;
+		},
+		updateStation(state, station) {
+			state.station = { ...state.station, ...station };
+		},
+		updateIsFavorited(state, isFavorited) {
+			state.station.isFavorited = isFavorited;
 		}
 	}
 };

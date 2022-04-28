@@ -61,14 +61,14 @@ export default {
 			if (reportId) {
 				message = message.replace(
 					/<reportId>(.*)<\/reportId>/g,
-					`<a href='#' class='activity-item-link' @click='showReport("${reportId}")'>report</a>`
+					`<a href='#' class='activity-item-link' @click='openModal({ modal: "viewReport", data: { reportId: "${reportId}" } })'>report</a>`
 				);
 			}
 
 			if (playlistId) {
 				message = message.replace(
 					/<playlistId>(.*)<\/playlistId>/g,
-					`<a href='#' class='activity-item-link' @click='showPlaylist("${playlistId}")'>$1</a>`
+					`<a href='#' class='activity-item-link' @click='openModal({ modal: "editPlaylist", data: { playlistId: "${playlistId}" } })'>$1</a>`
 				);
 			}
 
@@ -82,8 +82,7 @@ export default {
 			return {
 				template: `<p>${message}</p>`,
 				methods: {
-					showPlaylist: this.showPlaylist,
-					showReport: this.showReport
+					openModal: this.openModal
 				}
 			};
 		},
@@ -174,19 +173,9 @@ export default {
 
 			return icons[this.activity.type];
 		},
-		showReport(reportId) {
-			this.viewReport(reportId);
-			this.openModal("viewReport");
-		},
-		showPlaylist(playlistId) {
-			this.editPlaylist(playlistId);
-			this.openModal("editPlaylist");
-		},
-		...mapActions("user/playlists", ["editPlaylist"]),
 		formatDistance,
 		parseISO,
-		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions("modals/viewReport", ["viewReport"])
+		...mapActions("modalVisibility", ["openModal"])
 	}
 };
 </script>

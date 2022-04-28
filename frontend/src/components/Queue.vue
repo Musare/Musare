@@ -22,10 +22,7 @@
 				<template #item="{ element, index }">
 					<song-item
 						:song="element"
-						:requested-by="
-							station.type === 'community' &&
-							station.partyMode === true
-						"
+						:requested-by="true"
 						:class="{
 							'item-draggable': isAdminOnly() || isOwnerOnly()
 						}"
@@ -69,59 +66,9 @@
 				</template>
 			</draggable>
 		</div>
-		<p class="nothing-here-text" v-else>
+		<p class="nothing-here-text has-text-centered" v-else>
 			There are no songs currently queued
 		</p>
-		<button
-			class="button is-primary tab-actionable-button"
-			v-if="
-				sector === 'station' &&
-				loggedIn &&
-				station.type === 'community' &&
-				station.partyMode &&
-				((station.locked && isOwnerOnly()) ||
-					!station.locked ||
-					(station.locked && isAdminOnly() && dismissedWarning))
-			"
-			@click="openModal('manageStation') & showManageStationTab('songs')"
-		>
-			<i class="material-icons icon-with-button">queue</i>
-			<span> Add Song To Queue </span>
-		</button>
-		<button
-			class="button is-primary tab-actionable-button disabled"
-			v-if="
-				sector === 'station' &&
-				!loggedIn &&
-				((station.type === 'community' &&
-					station.partyMode &&
-					!station.locked) ||
-					station.type === 'official')
-			"
-			content="Login to add songs to queue"
-			v-tippy="{ theme: 'info' }"
-		>
-			<i class="material-icons icon-with-button">queue</i>
-			<span> Add Song To Queue </span>
-		</button>
-		<div
-			id="queue-locked"
-			v-if="station.type === 'community' && station.locked"
-		>
-			<button
-				v-if="isAdminOnly() && !isOwnerOnly() && !dismissedWarning"
-				class="button tab-actionable-button"
-				@click="dismissedWarning = true"
-			>
-				THIS STATION'S QUEUE IS LOCKED.
-			</button>
-			<button
-				v-if="!isAdminOnly() && !isOwnerOnly()"
-				class="button tab-actionable-button"
-			>
-				THIS STATION'S QUEUE IS LOCKED.
-			</button>
-		</div>
 	</div>
 </template>
 
@@ -131,11 +78,11 @@ import draggable from "vuedraggable";
 import Toast from "toasters";
 
 import SongItem from "@/components/SongItem.vue";
-import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
-	components: { draggable, SongItem, QuickConfirm },
+	components: { draggable, SongItem },
 	props: {
+		modalUuid: { type: String, default: "" },
 		sector: {
 			type: String,
 			default: "station"
@@ -143,22 +90,40 @@ export default {
 	},
 	data() {
 		return {
-			dismissedWarning: false,
 			actionableButtonVisible: false,
 			drag: false
 		};
 	},
 	computed: {
+		station: {
+			get() {
+				if (this.sector === "manageStation")
+					return this.$store.state.modals.manageStation[
+						this.modalUuid
+					].station;
+				return this.$store.state.station.station;
+			},
+			set(station) {
+				if (this.sector === "manageStation")
+					this.$store.commit(
+						`modals/manageStation/${this.modalUuid}/updateStation`,
+						station
+					);
+				else this.$store.commit("station/updateStation", station);
+			}
+		},
 		queue: {
 			get() {
 				if (this.sector === "manageStation")
-					return this.$store.state.modals.manageStation.songsList;
+					return this.$store.state.modals.manageStation[
+						this.modalUuid
+					].songsList;
 				return this.$store.state.station.songsList;
 			},
 			set(queue) {
 				if (this.sector === "manageStation")
 					this.$store.commit(
-						"modals/manageStation/updateSongsList",
+						`modals/manageStation/${this.modalUuid}/updateSongsList`,
 						queue
 					);
 				else this.$store.commit("station/updateSongsList", queue);
@@ -176,16 +141,6 @@ export default {
 			loggedIn: state => state.user.auth.loggedIn,
 			userId: state => state.user.auth.userId,
 			userRole: state => state.user.auth.role,
-			station(state) {
-				return this.sector === "station"
-					? state.station.station
-					: state.modals.manageStation.station;
-			},
-			songsList(state) {
-				return this.sector === "station"
-					? state.station.songsList
-					: state.modals.manageStation.songsList;
-			},
 			noSong: state => state.station.noSong
 		}),
 		...mapGetters({
@@ -261,7 +216,7 @@ export default {
 				moved: {
 					element: song,
 					oldIndex: index,
-					newIndex: this.songsList.length
+					newIndex: this.queue.length
 				}
 			});
 		},

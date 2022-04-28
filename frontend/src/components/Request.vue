@@ -1,43 +1,41 @@
 <template>
-	<div class="songs">
+	<div class="station-playlists">
+		<p class="top-info has-text-centered">
+			Add songs to the queue or automatically request songs from playlists
+		</p>
 		<div class="tabs-container">
 			<div class="tab-selection">
 				<button
 					class="button is-default"
-					:class="{ selected: tab === 'search' }"
-					v-if="isAllowedToParty()"
-					@click="showTab('search')"
+					ref="songs-tab"
+					:class="{ selected: tab === 'songs' }"
+					@click="showTab('songs')"
 				>
-					Search
+					Songs
 				</button>
 				<button
+					v-if="!disableAutoRequest"
 					class="button is-default"
-					:class="{ selected: tab === 'included' }"
-					v-if="isOwnerOrAdmin() && isPlaylistMode()"
-					@click="showTab('included')"
+					ref="autorequest-tab"
+					:class="{ selected: tab === 'autorequest' }"
+					@click="showTab('autorequest')"
 				>
-					Included
+					Autorequest
 				</button>
 				<button
-					class="button is-default"
-					:class="{ selected: tab === 'excluded' }"
-					v-if="isOwnerOrAdmin()"
-					@click="showTab('excluded')"
+					v-else
+					class="button is-default disabled"
+					content="Only available on station pages"
+					v-tippy
 				>
-					Excluded
+					Autorequest
 				</button>
 			</div>
-			<div
-				class="tab"
-				v-show="tab === 'search'"
-				v-if="
-					station.type === 'community' &&
-					station.partyMode &&
-					(isOwnerOrAdmin() || !station.locked)
-				"
-			>
+			<div class="tab" v-show="tab === 'songs'">
 				<div class="musare-songs">
-					<label class="label"> Search for a song on Musare </label>
+					<label class="label">
+						Search for a song on {{ sitename }}
+					</label>
 					<div class="control is-grouped input-with-button">
 						<p class="control is-expanded">
 							<input
@@ -92,11 +90,11 @@
 							</template>
 						</song-item>
 						<button
-							v-if="resultsLeftCount > 0"
+							v-if="musareResultsLeftCount > 0"
 							class="button is-primary load-more-button"
 							@click="searchForMusareSongs(musareSearch.page + 1)"
 						>
-							Load {{ nextPageResultsCount }} more results
+							Load {{ nextPageMusareResultsCount }} more results
 						</button>
 					</div>
 				</div>
@@ -173,89 +171,107 @@
 					</div>
 				</div>
 			</div>
-			<div
+			<playlist-tab-base
+				v-if="!disableAutoRequest"
 				class="tab"
-				v-show="tab === 'included'"
-				v-if="
-					isOwnerOrAdmin() &&
-					!(station.type === 'community' && station.partyMode)
-				"
-			>
-				<div v-if="stationPlaylist.songs.length > 0">
-					<div id="playlist-info-section">
-						<h5>Song Count: {{ stationPlaylist.songs.length }}</h5>
-						<h5>Duration: {{ totalLength(stationPlaylist) }}</h5>
-					</div>
-					<song-item
-						v-for="song in stationPlaylist.songs"
-						:key="song._id"
-						:song="song"
-					>
-					</song-item>
-				</div>
-				<p v-else class="has-text-centered scrollable-list">
-					No songs currently included. To include songs, include a
-					playlist.
-				</p>
-			</div>
-			<div
-				class="tab"
-				v-show="tab === 'excluded'"
-				v-if="isOwnerOrAdmin()"
-			>
-				<div v-if="excludedSongs.length > 0">
-					<div id="playlist-info-section" class="section">
-						<h5>Song Count: {{ excludedSongs.length }}</h5>
-					</div>
-					<song-item
-						v-for="song in excludedSongs"
-						:key="song._id"
-						:song="song"
-					>
-					</song-item>
-				</div>
-				<p v-else class="has-text-centered scrollable-list">
-					No songs currently excluded. To excluded songs, exclude a
-					playlist.
-				</p>
-			</div>
+				v-show="tab === 'autorequest'"
+				:type="'autorequest'"
+				:sector="sector"
+				:modal-uuid="modalUuid"
+			/>
 		</div>
 	</div>
 </template>
-
 <script>
 import { mapState, mapGetters } from "vuex";
 
 import Toast from "toasters";
-import SearchYoutube from "@/mixins/SearchYoutube.vue";
-import SearchMusare from "@/mixins/SearchMusare.vue";
 
 import SongItem from "@/components/SongItem.vue";
-import SearchQueryItem from "../../../SearchQueryItem.vue";
+import SearchQueryItem from "@/components/SearchQueryItem.vue";
+import PlaylistTabBase from "@/components/PlaylistTabBase.vue";
 
-import utils from "../../../../../js/utils";
+import SearchYoutube from "@/mixins/SearchYoutube.vue";
+import SearchMusare from "@/mixins/SearchMusare.vue";
 
 export default {
 	components: {
 		SongItem,
-		SearchQueryItem
+		SearchQueryItem,
+		PlaylistTabBase
 	},
 	mixins: [SearchYoutube, SearchMusare],
+	props: {
+		modalUuid: { type: String, default: "" },
+		sector: { type: String, default: "station" },
+		disableAutoRequest: { type: Boolean, default: false }
+	},
 	data() {
 		return {
-			utils,
-			tab: "search"
+			tab: "songs",
+			sitename: "Musare"
 		};
 	},
 	computed: {
-		excludedSongs() {
-			return this.excludedPlaylists
-				.map(playlist => playlist.songs)
-				.flat()
-				.filter((song, index, self) => self.indexOf(song) === index);
+		station: {
+			get() {
+				if (this.sector === "manageStation")
+					return this.$store.state.modals.manageStation[
+						this.modalUuid
+					].station;
+				return this.$store.state.station.station;
+			},
+			set(station) {
+				if (this.sector === "manageStation")
+					this.$store.commit(
+						`modals/manageStation/${this.modalUuid}/updateStation`,
+						station
+					);
+				else this.$store.commit("station/updateStation", station);
+			}
 		},
-		excludedSongIds() {
-			return this.excludedSongs.map(excludedSong => excludedSong._id);
+		blacklist: {
+			get() {
+				if (this.sector === "manageStation")
+					return this.$store.state.modals.manageStation[
+						this.modalUuid
+					].blacklist;
+				return this.$store.state.station.blacklist;
+			},
+			set(blacklist) {
+				if (this.sector === "manageStation")
+					this.$store.commit(
+						`modals/manageStation/${this.modalUuid}/setBlacklist`,
+						blacklist
+					);
+				else this.$store.commit("station/setBlacklist", blacklist);
+			}
+		},
+		songsList: {
+			get() {
+				if (this.sector === "manageStation")
+					return this.$store.state.modals.manageStation[
+						this.modalUuid
+					].songsList;
+				return this.$store.state.station.songsList;
+			},
+			set(songsList) {
+				if (this.sector === "manageStation")
+					this.$store.commit(
+						`modals/manageStation/${this.modalUuid}/updateSongsList`,
+						songsList
+					);
+				else this.$store.commit("station/updateSongsList", songsList);
+			}
+		},
+		musareResultsLeftCount() {
+			return this.musareSearch.count - this.musareSearch.results.length;
+		},
+		nextPageMusareResultsCount() {
+			return Math.min(
+				this.musareSearch.pageSize,
+				this.musareResultsLeftCount
+			);
 		},
 		songsInQueue() {
 			if (this.station.currentSong)
@@ -264,109 +280,48 @@ export default {
 					.concat(this.station.currentSong.youtubeId);
 			return this.songsList.map(song => song.youtubeId);
 		},
-		...mapState({
-			loggedIn: state => state.user.auth.loggedIn,
-			userId: state => state.user.auth.userId,
-			role: state => state.user.auth.role
-		}),
-		...mapState("modals/manageStation", {
-			parentTab: state => state.tab,
-			station: state => state.station,
-			originalStation: state => state.originalStation,
-			songsList: state => state.songsList,
-			excludedPlaylists: state => state.excludedPlaylists,
-			stationPlaylist: state => state.stationPlaylist
+		currentUserQueueSongs() {
+			return this.songsList.filter(
+				queueSong => queueSong.requestedBy === this.userId
+			).length;
+		},
+		...mapState("user", {
+			loggedIn: state => state.auth.loggedIn,
+			role: state => state.auth.role,
+			userId: state => state.auth.userId
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
 	},
-	watch: {
-		// eslint-disable-next-line func-names
-		parentTab(value) {
-			if (value === "songs") {
-				if (this.tab === "search" && this.isPlaylistMode()) {
-					this.showTab("included");
-				} else if (this.tab === "included" && this.isPartyMode()) {
-					this.showTab("search");
-				}
-			}
-		}
+	async mounted() {
+		this.sitename = await lofig.get("siteSettings.sitename");
+
+		this.showTab("songs");
 	},
 	methods: {
 		showTab(tab) {
+			this.$refs[`${tab}-tab`].scrollIntoView({ block: "nearest" });
 			this.tab = tab;
 		},
-		isOwner() {
-			return (
-				this.loggedIn &&
-				this.station &&
-				this.userId === this.station.owner
-			);
-		},
-		isAdmin() {
-			return this.loggedIn && this.role === "admin";
-		},
-		isOwnerOrAdmin() {
-			return this.isOwner() || this.isAdmin();
-		},
-		isPartyMode() {
-			return (
-				this.station &&
-				this.station.type === "community" &&
-				this.station.partyMode
-			);
-		},
-		isAllowedToParty() {
-			return (
-				this.station &&
-				this.isPartyMode() &&
-				(!this.station.locked || this.isOwnerOrAdmin()) &&
-				this.loggedIn
-			);
-		},
-		isPlaylistMode() {
-			return this.station && !this.isPartyMode();
-		},
-		totalLength(playlist) {
-			let length = 0;
-			playlist.songs.forEach(song => {
-				length += song.duration;
-			});
-			return this.utils.formatTimeLong(length);
-		},
 		addSongToQueue(youtubeId, index) {
-			if (this.station.type === "community") {
-				this.socket.dispatch(
-					"stations.addToQueue",
-					this.station._id,
-					youtubeId,
-					res => {
-						if (res.status !== "success")
-							new Toast(`Error: ${res.message}`);
-						else {
-							if (index)
-								this.youtubeSearch.songs.results[
-									index
-								].isAddedToQueue = true;
-
-							new Toast(res.message);
-						}
-					}
-				);
-			} else {
-				this.socket.dispatch("songs.request", youtubeId, res => {
+			this.socket.dispatch(
+				"stations.addToQueue",
+				this.station._id,
+				youtubeId,
+				res => {
 					if (res.status !== "success")
 						new Toast(`Error: ${res.message}`);
 					else {
-						this.youtubeSearch.songs.results[
-							index
-						].isAddedToQueue = true;
+						if (index)
+							this.youtubeSearch.songs.results[
+								index
+							].isAddedToQueue = true;
 
 						new Toast(res.message);
 					}
-				});
-			}
+				}
+			);
 		}
 	}
 };
@@ -380,11 +335,21 @@ export default {
 	}
 }
 
-.songs {
+:deep(#create-new-playlist-button) {
+	width: 100%;
+}
+
+.station-playlists {
+	.top-info {
+		font-size: 15px;
+		margin-bottom: 15px;
+	}
+
 	.tabs-container {
 		.tab-selection {
 			display: flex;
 			overflow-x: auto;
+
 			.button {
 				border-radius: 0;
 				border: 0;
@@ -407,9 +372,8 @@ export default {
 			}
 		}
 		.tab {
-			padding: 15px 0;
+			padding: 10px 0;
 			border-radius: 0;
-			.playlist-item:not(:last-of-type),
 			.item.item-draggable:not(:last-of-type) {
 				margin-bottom: 10px;
 			}
@@ -419,35 +383,13 @@ export default {
 			}
 		}
 	}
+}
 
-	.musare-songs,
-	.universal-item:not(:last-of-type) {
+.youtube-search {
+	margin-top: 10px;
+
+	.search-query-item:not(:last-of-type) {
 		margin-bottom: 10px;
-	}
-	.load-more-button {
-		width: 100%;
-		margin-top: 10px;
-	}
-
-	#playlist-info-section {
-		border: 1px solid var(--light-grey-3);
-		border-radius: @border-radius;
-		padding: 15px !important;
-		margin-bottom: 16px;
-
-		h3 {
-			font-weight: 600;
-			font-size: 30px;
-		}
-
-		h5 {
-			font-size: 18px;
-		}
-
-		h3,
-		h5 {
-			margin: 0;
-		}
 	}
 }
 </style>

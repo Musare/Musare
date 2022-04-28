@@ -68,104 +68,13 @@
 					:class="{ 'nothing-here': noSong }"
 				>
 					<div id="station-left-column" class="column">
-						<div id="about-station-container" class="quadrant">
-							<div id="station-info">
-								<div class="row" id="station-name">
-									<h1>{{ station.displayName }}</h1>
-									<i
-										v-if="station.type === 'official'"
-										class="material-icons verified-station"
-										content="Verified Station"
-										v-tippy
-									>
-										check_circle
-									</i>
-									<a>
-										<!-- Favorite Station Button -->
-										<i
-											v-if="
-												loggedIn && station.isFavorited
-											"
-											@click.prevent="unfavoriteStation()"
-											content="Unfavorite Station"
-											v-tippy
-											class="material-icons"
-											>star</i
-										>
-										<i
-											v-if="
-												loggedIn && !station.isFavorited
-											"
-											@click.prevent="favoriteStation()"
-											class="material-icons"
-											content="Favorite Station"
-											v-tippy
-											>star_border</i
-										>
-									</a>
-									<i
-										class="material-icons stationMode"
-										:content="
-											station.partyMode
-												? 'Station in Party mode'
-												: 'Station in Playlist mode'
-										"
-										v-tippy="{ theme: 'info' }"
-										>{{
-											station.partyMode
-												? "emoji_people"
-												: "playlist_play"
-										}}</i
-									>
-								</div>
-								<p>{{ station.description }}</p>
-							</div>
-
-							<div id="admin-buttons" v-if="isOwnerOrAdmin()">
-								<!-- (Admin) Pause/Resume Button -->
-								<button
-									class="button is-danger"
-									v-if="stationPaused"
-									@click="resumeStation()"
-								>
-									<i class="material-icons icon-with-button"
-										>play_arrow</i
-									>
-									<span> Resume Station </span>
-								</button>
-								<button
-									class="button is-danger"
-									@click="pauseStation()"
-									v-else
-								>
-									<i class="material-icons icon-with-button"
-										>pause</i
-									>
-									<span> Pause Station </span>
-								</button>
-
-								<!-- (Admin) Skip Button -->
-								<button
-									class="button is-danger"
-									@click="skipStation()"
-								>
-									<i class="material-icons icon-with-button"
-										>skip_next</i
-									>
-									<span> Force Skip </span>
-								</button>
-
-								<!-- (Admin) Station Settings Button -->
-								<button
-									class="button is-primary"
-									@click="openModal('manageStation')"
-								>
-									<i class="material-icons icon-with-button"
-										>settings</i
-									>
-									<span> Manage Station </span>
-								</button>
-							</div>
+						<!-- div with quadrant class -->
+						<div class="quadrant">
+							<station-info-box
+								:station="station"
+								:station-paused="stationPaused"
+								:show-manage-station="true"
+							/>
 						</div>
 						<div id="sidebar-container" class="quadrant">
 							<station-sidebar />
@@ -624,10 +533,7 @@
 								<song-item
 									:song="currentSong"
 									:duration="false"
-									:requested-by="
-										station.type === 'community' &&
-										station.partyMode === true
-									"
+									:requested-by="true"
 									header="Currently Playing.."
 								/>
 							</div>
@@ -639,30 +545,13 @@
 								<song-item
 									:song="nextSong"
 									:duration="false"
-									:requested-by="
-										station.type === 'community' &&
-										station.partyMode === true
-									"
+									:requested-by="true"
 									header="Next Up.."
 								/>
 							</div>
 						</div>
 					</div>
 				</div>
-
-				<create-playlist v-if="modals.createPlaylist" />
-				<manage-station
-					v-if="modals.manageStation"
-					:station-id="station._id"
-					sector="station"
-				/>
-				<edit-playlist v-if="modals.editPlaylist" />
-				<edit-song
-					v-if="modals.editSong"
-					song-type="songs"
-					sector="station"
-				/>
-				<report v-if="modals.report" />
 			</div>
 
 			<main-footer />
@@ -698,8 +587,25 @@
 				<span><b>Local paused</b>: {{ localPaused }}</span>
 				<span><b>Station paused</b>: {{ stationPaused }}</span>
 				<span
-					><b>Party playlists selected</b>: {{ partyPlaylists }}</span
+					><b>Requests enabled</b>:
+					{{ station.requests.enabled }}</span
 				>
+				<span
+					><b>Requests access</b>: {{ station.requests.access }}</span
+				>
+				<span><b>Requests limit</b>: {{ station.requests.limit }}</span>
+				<span
+					><b>Auto requesting playlists</b>:
+					{{
+						autoRequest.map(playlist => playlist._id).join(", ")
+					}}</span
+				>
+				<span
+					><b>Autofill enabled</b>:
+					{{ station.autofill.enabled }}</span
+				>
+				<span><b>Autofill limit</b>: {{ station.autofill.limit }}</span>
+				<span><b>Autofill mode</b>: {{ station.autofill.mode }}</span>
 				<span><b>Skip votes loaded</b>: {{ skipVotesLoaded }}</span>
 				<span
 					><b>Skip votes current</b>:
@@ -781,7 +687,6 @@
 
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
-import { defineAsyncComponent } from "vue";
 import Toast from "toasters";
 import { ContentLoader } from "vue-content-loader";
 import canAutoPlay from "can-autoplay";
@@ -791,10 +696,8 @@ import ms from "@/ms";
 import ws from "@/ws";
 import keyboardShortcuts from "@/keyboardShortcuts";
 
-import MainHeader from "@/components/layout/MainHeader.vue";
-import MainFooter from "@/components/layout/MainFooter.vue";
-
 import FloatingBox from "@/components/FloatingBox.vue";
+import StationInfoBox from "@/components/StationInfoBox.vue";
 import AddToPlaylistDropdown from "@/components/AddToPlaylistDropdown.vue";
 import SongItem from "@/components/SongItem.vue";
 import Z404 from "../404.vue";
@@ -806,27 +709,11 @@ import StationSidebar from "./Sidebar/index.vue";
 export default {
 	components: {
 		ContentLoader,
-		MainHeader,
-		MainFooter,
-		EditPlaylist: defineAsyncComponent(() =>
-			import("@/components/modals/EditPlaylist")
-		),
-		CreatePlaylist: defineAsyncComponent(() =>
-			import("@/components/modals/CreatePlaylist.vue")
-		),
-		ManageStation: defineAsyncComponent(() =>
-			import("@/components/modals/ManageStation/index.vue")
-		),
-		Report: defineAsyncComponent(() =>
-			import("@/components/modals/Report.vue")
-		),
 		Z404,
 		FloatingBox,
+		StationInfoBox,
 		StationSidebar,
 		AddToPlaylistDropdown,
-		EditSong: defineAsyncComponent(() =>
-			import("@/components/modals/EditSong")
-		),
 		SongItem
 	},
 	data() {
@@ -865,9 +752,9 @@ export default {
 			socketConnected: null,
 			persistentToastCheckerInterval: null,
 			persistentToasts: [],
-			partyPlaylistLock: false,
 			mediasession: false,
-			christmas: false
+			christmas: false,
+			sitename: "Musare"
 		};
 	},
 	computed: {
@@ -895,7 +782,7 @@ export default {
 			);
 		},
 		aModalIsOpen() {
-			return Object.keys(this.currentlyActive).length > 0;
+			return Object.keys(this.activeModals).length > 0;
 		},
 		currentUserQueueSongs() {
 			return this.songsList.filter(
@@ -904,7 +791,7 @@ export default {
 		},
 		...mapState("modalVisibility", {
 			modals: state => state.modals,
-			currentlyActive: state => state.currentlyActive
+			activeModals: state => state.activeModals
 		}),
 		...mapState("modals/editSong", {
 			video: state => state.video
@@ -917,9 +804,10 @@ export default {
 			stationPaused: state => state.stationPaused,
 			localPaused: state => state.localPaused,
 			noSong: state => state.noSong,
-			partyPlaylists: state => state.partyPlaylists,
-			includedPlaylists: state => state.includedPlaylists,
-			excludedPlaylists: state => state.excludedPlaylists
+			autoRequest: state => state.autoRequest,
+			autoRequestLock: state => state.autoRequestLock,
+			autofill: state => state.autofill,
+			blacklist: state => state.blacklist
 		}),
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
@@ -932,9 +820,26 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
+	watch: {
+		"autoRequest.length": function autoRequestWatcher() {
+			this.autoRequestSong();
+		}
+	},
 	async mounted() {
 		this.editSongModalWatcher = this.$store.watch(
-			state => state.modals.editSong.video.paused,
+			state =>
+				state.modalVisibility.activeModals.length > 0 &&
+				state.modalVisibility.modals[
+					state.modalVisibility.activeModals[
+						state.modalVisibility.activeModals.length - 1
+					]
+				] === "editSong"
+					? state.modals.editSong[
+							state.modalVisibility.activeModals[
+								state.modalVisibility.activeModals.length - 1
+							]
+					  ].video.paused
+					: null,
 			paused => {
 				if (paused && !this.beforeEditSongModalLocalPaused) {
 					this.resumeLocalStation();
@@ -1001,6 +906,7 @@ export default {
 		this.frontendDevMode = await lofig.get("mode");
 		this.mediasession = await lofig.get("siteSettings.mediasession");
 		this.christmas = await lofig.get("siteSettings.christmas");
+		this.sitename = await lofig.get("siteSettings.sitename");
 
 		this.socket.dispatch(
 			"stations.existsByName",
@@ -1061,6 +967,8 @@ export default {
 			this.timePaused = res.data.timePaused;
 			this.updateStationPaused(false);
 			if (!this.localPaused) this.resumeLocalPlayer();
+
+			this.autoRequestSong();
 		});
 
 		this.socket.on("event:station.deleted", () => {
@@ -1119,7 +1027,7 @@ export default {
 
 			this.updateNextSong(nextSong);
 
-			this.addPartyPlaylistSongToQueue();
+			this.autoRequestSong();
 		});
 
 		this.socket.on("event:station.queue.song.repositioned", res => {
@@ -1142,53 +1050,38 @@ export default {
 				});
 		});
 
-		this.socket.on("event:privatePlaylist.selected", res => {
-			if (this.station.type === "community")
-				this.station.privatePlaylist = res.data.playlistId;
-		});
+		this.socket.on("event:station.updated", async res => {
+			const { name, theme, privacy } = res.data.station;
 
-		this.socket.on("event:privatePlaylist.deselected", () => {
-			if (this.station.type === "community")
-				this.station.privatePlaylist = null;
-		});
+			if (!this.isOwnerOrAdmin() && privacy === "private") {
+				window.location.href =
+					"/?msg=The station you were in was made private.";
+			} else {
+				if (this.station.name !== name) {
+					await this.$router.push(
+						`${name}?${Object.keys(this.$route.query)
+							.map(
+								key =>
+									`${encodeURIComponent(
+										key
+									)}=${encodeURIComponent(
+										this.$route.query[key]
+									)}`
+							)
+							.join("&")}`
+					);
 
-		this.socket.on("event:station.partyMode.updated", res => {
-			if (this.station.type === "community")
-				this.station.partyMode = res.data.partyMode;
-		});
+					// eslint-disable-next-line no-restricted-globals
+					history.replaceState({ ...history.state, ...{} }, null);
+				}
 
-		this.socket.on("event:station.theme.updated", res => {
-			const { theme } = res.data;
-			this.station.theme = theme;
-			document.getElementsByTagName(
-				"html"
-			)[0].style.cssText = `--primary-color: var(--${theme})`;
-		});
+				if (this.station.theme !== theme)
+					document.getElementsByTagName(
+						"html"
+					)[0].style.cssText = `--primary-color: var(--${theme})`;
 
-		this.socket.on("event:station.name.updated", async res => {
-			this.station.name = res.data.name;
-
-			await this.$router.push(
-				`${res.data.name}?${Object.keys(this.$route.query)
-					.map(
-						key =>
-							`${encodeURIComponent(key)}=${encodeURIComponent(
-								this.$route.query[key]
-							)}`
-					)
-					.join("&")}`
-			);
-
-			// eslint-disable-next-line no-restricted-globals
-			history.replaceState({ ...history.state, ...{} }, null);
-		});
-
-		this.socket.on("event:station.displayName.updated", res => {
-			this.station.displayName = res.data.displayName;
-		});
-
-		this.socket.on("event:station.description.updated", res => {
-			this.station.description = res.data.description;
+				this.updateStation(res.data.station);
+			}
 		});
 
 		this.socket.on("event:station.users.updated", res =>
@@ -1198,10 +1091,6 @@ export default {
 		this.socket.on("event:station.userCount.updated", res =>
 			this.updateUserCount(res.data.userCount)
 		);
-
-		this.socket.on("event:station.queue.lock.toggled", res => {
-			this.station.locked = res.data.locked;
-		});
 
 		this.socket.on("event:user.station.favorited", res => {
 			if (res.data.stationId === this.station._id)
@@ -1286,6 +1175,50 @@ export default {
 					this.currentSong.thumbnail
 				);
 			} else ms.removeMediaSessionData(0);
+		},
+		autoRequestSong() {
+			if (
+				!this.autoRequestLock &&
+				this.songsList.length < 50 &&
+				this.currentUserQueueSongs <
+					this.station.requests.limit * 0.5 &&
+				this.autoRequest.length > 0
+			) {
+				const selectedPlaylist =
+					this.autoRequest[
+						Math.floor(Math.random() * this.autoRequest.length)
+					];
+				if (selectedPlaylist._id && selectedPlaylist.songs.length > 0) {
+					const selectedSong =
+						selectedPlaylist.songs[
+							Math.floor(
+								Math.random() * selectedPlaylist.songs.length
+							)
+						];
+					if (selectedSong.youtubeId) {
+						this.updateAutoRequestLock(true);
+						this.socket.dispatch(
+							"stations.addToQueue",
+							this.station._id,
+							selectedSong.youtubeId,
+							data => {
+								this.updateAutoRequestLock(false);
+								if (data.status !== "success") {
+									setTimeout(
+										() => {
+											this.autoRequestSong();
+										},
+										data.message ===
+											"That song is already in the queue."
+											? 5000
+											: 1000
+									);
+								}
+							}
+						);
+					}
+				}
+			}
 		},
 		removeFromQueue(youtubeId) {
 			window.socket.dispatch(
@@ -1514,7 +1447,7 @@ export default {
 							if (this.isApple) {
 								this.updateLocalPaused(true);
 								new Toast(
-									"Please click play manually to use Musare on iOS."
+									`Please click play manually to use ${this.sitename} on iOS.`
 								);
 							}
 						},
@@ -1742,17 +1675,6 @@ export default {
 			if (duration <= songDuration)
 				this.timeElapsed = utils.formatTime(duration);
 		},
-		toggleLock() {
-			window.socket.dispatch(
-				"stations.toggleLock",
-				this.station._id,
-				res => {
-					if (res.status === "success") {
-						new Toast("Successfully toggled the queue lock.");
-					} else new Toast(res.message);
-				}
-			);
-		},
 		changeVolume() {
 			const volume = this.volumeSliderValue;
 			localStorage.setItem("volume", volume);
@@ -1906,42 +1828,6 @@ export default {
 				}
 			);
 		},
-		addPartyPlaylistSongToQueue() {
-			if (
-				!this.partyPlaylistLock &&
-				this.station.type === "community" &&
-				this.station.partyMode === true &&
-				this.songsList.length < 50 &&
-				this.currentUserQueueSongs < 3 &&
-				this.partyPlaylists.length > 0
-			) {
-				const selectedPlaylist =
-					this.partyPlaylists[
-						Math.floor(Math.random() * this.partyPlaylists.length)
-					];
-				if (selectedPlaylist._id && selectedPlaylist.songs.length > 0) {
-					const selectedSong =
-						selectedPlaylist.songs[
-							Math.floor(
-								Math.random() * selectedPlaylist.songs.length
-							)
-						];
-					if (selectedSong.youtubeId) {
-						this.partyPlaylistLock = true;
-						this.socket.dispatch(
-							"stations.addToQueue",
-							this.station._id,
-							selectedSong.youtubeId,
-							data => {
-								this.partyPlaylistLock = false;
-								if (data.status !== "success")
-									this.addPartyPlaylistSongToQueue();
-							}
-						);
-					}
-				}
-			}
-		},
 		togglePlayerDebugBox() {
 			this.$refs.playerDebugBox.toggleBox();
 		},
@@ -1970,17 +1856,13 @@ export default {
 							name,
 							description,
 							privacy,
-							locked,
-							partyMode,
 							owner,
-							privatePlaylist,
-							includedPlaylists,
-							excludedPlaylists,
+							autofill,
+							blacklist,
 							type,
-							genres,
-							blacklistedGenres,
 							isFavorited,
-							theme
+							theme,
+							requests
 						} = res.data;
 
 						// change url to use station name instead of station id
@@ -1995,17 +1877,13 @@ export default {
 							displayName,
 							description,
 							privacy,
-							locked,
-							partyMode,
 							owner,
-							privatePlaylist,
-							includedPlaylists,
-							excludedPlaylists,
+							autofill,
+							blacklist,
 							type,
-							genres,
-							blacklistedGenres,
 							isFavorited,
-							theme
+							theme,
+							requests
 						});
 
 						document.getElementsByTagName(
@@ -2024,11 +1902,11 @@ export default {
 						this.updateUsers(res.data.users);
 
 						this.socket.dispatch(
-							"stations.getStationIncludedPlaylistsById",
+							"stations.getStationAutofillPlaylistsById",
 							this.station._id,
 							res => {
 								if (res.status === "success") {
-									this.setIncludedPlaylists(
+									this.setAutofillPlaylists(
 										res.data.playlists
 									);
 								}
@@ -2036,13 +1914,11 @@ export default {
 						);
 
 						this.socket.dispatch(
-							"stations.getStationExcludedPlaylistsById",
+							"stations.getStationBlacklistById",
 							this.station._id,
 							res => {
 								if (res.status === "success") {
-									this.setExcludedPlaylists(
-										res.data.playlists
-									);
+									this.setBlacklist(res.data.playlists);
 								}
 							}
 						);
@@ -2293,6 +2169,7 @@ export default {
 		...mapActions("station", [
 			"joinStation",
 			"leaveStation",
+			"updateStation",
 			"updateUserCount",
 			"updateUsers",
 			"updateCurrentSong",
@@ -2303,11 +2180,12 @@ export default {
 			"updateLocalPaused",
 			"updateNoSong",
 			"updateIfStationIsFavorited",
-			"setIncludedPlaylists",
-			"setExcludedPlaylists",
+			"setAutofillPlaylists",
+			"setBlacklist",
 			"updateCurrentSongRatings",
 			"updateOwnCurrentSongRatings",
-			"updateCurrentSongSkipVotes"
+			"updateCurrentSongSkipVotes",
+			"updateAutoRequestLock"
 		]),
 		...mapActions("modals/editSong", ["stopVideo"])
 	}
@@ -2395,8 +2273,8 @@ export default {
 .night-mode {
 	#currently-playing-container,
 	#next-up-container,
-	#about-station-container,
 	#control-bar-container,
+	.quadrant:not(#sidebar-container),
 	.player-container {
 		background-color: var(--dark-grey-3) !important;
 	}
@@ -2451,6 +2329,7 @@ export default {
 		.quadrant {
 			border-radius: @border-radius;
 			margin: 10px;
+			overflow: hidden;
 		}
 
 		.quadrant:not(#sidebar-container) {
@@ -2461,60 +2340,6 @@ export default {
 		#station-left-column,
 		#station-right-column {
 			padding: 0;
-		}
-
-		#about-station-container {
-			padding: 20px;
-			display: flex;
-			flex-direction: column;
-			flex-grow: unset;
-
-			#station-info {
-				#station-name {
-					flex-direction: row !important;
-
-					h1 {
-						margin: 0;
-						font-size: 36px;
-						line-height: 0.8;
-						text-overflow: ellipsis;
-						overflow: hidden;
-					}
-
-					i {
-						margin-left: 10px;
-						font-size: 30px;
-						color: var(--yellow);
-						&.stationMode {
-							padding-left: 10px;
-							margin-left: auto;
-							color: var(--primary-color);
-						}
-					}
-
-					.verified-station {
-						color: var(--primary-color);
-					}
-				}
-
-				p {
-					display: -webkit-box;
-					max-width: 700px;
-					margin-bottom: 10px;
-					overflow: hidden;
-					text-overflow: ellipsis;
-					-webkit-box-orient: vertical;
-					-webkit-line-clamp: 3;
-				}
-			}
-
-			#admin-buttons {
-				display: flex;
-
-				.button {
-					margin: 3px;
-				}
-			}
 		}
 
 		#current-next-row {

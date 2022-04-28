@@ -1,7 +1,5 @@
 <template>
 	<div class="content playlists-tab">
-		<create-playlist v-if="modals.createPlaylist" />
-
 		<div v-if="playlists.length > 0">
 			<h4 class="section-title">
 				{{ myUserId === userId ? "My" : null }}
@@ -49,7 +47,12 @@
 						<template #actions>
 							<i
 								v-if="myUserId === userId"
-								@click="showPlaylist(element._id)"
+								@click="
+									openModal({
+										modal: 'editPlaylist',
+										data: { playlistId: element._id }
+									})
+								"
 								class="material-icons edit-icon"
 								content="Edit Playlist"
 								v-tippy
@@ -57,7 +60,12 @@
 							>
 							<i
 								v-else
-								@click="showPlaylist(element._id)"
+								@click="
+									openModal({
+										modal: 'editPlaylist',
+										data: { playlistId: element._id }
+									})
+								"
 								class="material-icons view-icon"
 								content="View Playlist"
 								v-tippy
@@ -84,8 +92,7 @@
 </template>
 
 <script>
-import { mapActions, mapState, mapGetters } from "vuex";
-import { defineAsyncComponent } from "vue";
+import { mapActions, mapGetters } from "vuex";
 
 import PlaylistItem from "@/components/PlaylistItem.vue";
 import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
@@ -93,10 +100,7 @@ import ws from "@/ws";
 
 export default {
 	components: {
-		PlaylistItem,
-		CreatePlaylist: defineAsyncComponent(() =>
-			import("@/components/modals/CreatePlaylist.vue")
-		)
+		PlaylistItem
 	},
 	mixins: [SortablePlaylists],
 	props: {
@@ -110,11 +114,6 @@ export default {
 		}
 	},
 	computed: {
-		...mapState({
-			...mapState("modalVisibility", {
-				modals: state => state.modals
-			})
-		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
@@ -152,12 +151,8 @@ export default {
 		);
 	},
 	methods: {
-		showPlaylist(playlistId) {
-			this.editPlaylist(playlistId);
-			this.openModal("editPlaylist");
-		},
 		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions("user/playlists", ["editPlaylist", "setPlaylists"])
+		...mapActions("user/playlists", ["setPlaylists"])
 	}
 };
 </script>

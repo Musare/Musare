@@ -62,16 +62,19 @@
 							isEditable() ||
 							(playlist.type === 'genre' && isAdmin())
 						"
+						:modal-uuid="modalUuid"
 					/>
 					<add-songs
 						class="tab"
 						v-show="tab === 'add-songs'"
 						v-if="isEditable()"
+						:modal-uuid="modalUuid"
 					/>
 					<import-playlists
 						class="tab"
 						v-show="tab === 'import-playlists'"
 						v-if="isEditable()"
+						:modal-uuid="modalUuid"
 					/>
 				</div>
 			</div>
@@ -115,8 +118,18 @@
 											<i
 												class="material-icons add-to-queue-icon"
 												v-if="
-													station.partyMode &&
-													!station.locked
+													station &&
+													station.requests &&
+													station.requests.enabled &&
+													(station.requests.access ===
+														'user' ||
+														(station.requests
+															.access ===
+															'owner' &&
+															(userRole ===
+																'admin' ||
+																station.owner ===
+																	userId)))
 												"
 												@click="
 													addSongToQueue(
@@ -239,9 +252,8 @@ import { mapState, mapGetters, mapActions } from "vuex";
 import draggable from "vuedraggable";
 import Toast from "toasters";
 
+import { mapModalState, mapModalActions } from "@/vuex_helpers";
 import ws from "@/ws";
-import QuickConfirm from "@/components/QuickConfirm.vue";
-import Modal from "../../Modal.vue";
 import SongItem from "../../SongItem.vue";
 
 import Settings from "./Tabs/Settings.vue";
@@ -252,13 +264,14 @@ import utils from "../../../../js/utils";
 
 export default {
 	components: {
-		Modal,
 		draggable,
-		QuickConfirm,
 		SongItem,
 		Settings,
 		AddSongs,
 		ImportPlaylists
+	},
+	props: {
+		modalUuid: { type: String, default: "" }
 	},
 	data() {
 		return {
@@ -272,20 +285,19 @@ export default {
 		...mapState("station", {
 			station: state => state.station
 		}),
-		...mapState("user/playlists", {
-			editing: state => state.editing
-		}),
-		...mapState("modals/editPlaylist", {
+		...mapModalState("modals/editPlaylist/MODAL_UUID", {
+			playlistId: state => state.playlistId,
 			tab: state => state.tab,
 			playlist: state => state.playlist
 		}),
 		playlistSongs: {
 			get() {
-				return this.$store.state.modals.editPlaylist.playlist.songs;
+				return this.$store.state.modals.editPlaylist[this.modalUuid]
+					.playlist.songs;
 			},
 			set(value) {
 				this.$store.commit(
-					"modals/editPlaylist/updatePlaylistSongs",
+					`modals/editPlaylist/${this.modalUuid}/updatePlaylistSongs`,
 					value
 				);
 			}
@@ -316,7 +328,7 @@ export default {
 				if (this.playlist._id === res.data.playlistId)
 					this.addSong(res.data.song);
 			},
-			{ modal: "editPlaylist" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
@@ -327,7 +339,7 @@ export default {
 					this.removeSong(res.data.youtubeId);
 				}
 			},
-			{ modal: "editPlaylist" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
@@ -341,7 +353,7 @@ export default {
 					this.setPlaylist(playlist);
 				}
 			},
-			{ modal: "editPlaylist" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
@@ -355,21 +367,31 @@ export default {
 					}
 				}
 			},
-			{ modal: "editPlaylist" }
+			{ modalUuid: this.modalUuid }
 		);
 	},
 	beforeUnmount() {
 		this.clearPlaylist();
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule([
+			"modals",
+			"editPlaylist",
+			this.modalUuid
+		]);
 	},
 	methods: {
 		init() {
 			this.gettingSongs = true;
-			this.socket.dispatch("playlists.getPlaylist", this.editing, res => {
-				if (res.status === "success") {
-					this.setPlaylist(res.data.playlist);
-				} else new Toast(res.message);
-				this.gettingSongs = false;
-			});
+			this.socket.dispatch(
+				"playlists.getPlaylist",
+				this.playlistId,
+				res => {
+					if (res.status === "success") {
+						this.setPlaylist(res.data.playlist);
+					} else new Toast(res.message);
+					this.gettingSongs = false;
+				}
+			);
 		},
 		isEditable() {
 			return (
@@ -562,10 +584,13 @@ export default {
 				this.$refs[`${payload}-tab`].scrollIntoView({
 					block: "nearest"
 				});
-				return dispatch("modals/editPlaylist/showTab", payload);
+				return dispatch(
+					`modals/editPlaylist/${this.modalUuid}/showTab`,
+					payload
+				);
 			}
 		}),
-		...mapActions("modals/editPlaylist", [
+		...mapModalActions("modals/editPlaylist/MODAL_UUID", [
 			"setPlaylist",
 			"clearPlaylist",
 			"addSong",

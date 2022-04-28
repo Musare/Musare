@@ -367,7 +367,7 @@
 											<label class="switch">
 												<input
 													type="checkbox"
-													:id="index"
+													:id="`column-dropdown-checkbox-${column.name}`"
 													:checked="
 														shownColumns.indexOf(
 															column.name
@@ -388,7 +388,9 @@
 													}"
 												></span>
 											</label>
-											<label :for="index">
+											<label
+												:for="`column-dropdown-checkbox-${column.name}`"
+											>
 												<span></span>
 												<p>{{ column.displayName }}</p>
 											</label>
@@ -919,10 +921,10 @@ export default {
 			);
 		},
 		aModalIsOpen() {
-			return Object.keys(this.currentlyActive).length > 0;
+			return Object.keys(this.activeModals).length > 0;
 		},
 		...mapState({
-			currentlyActive: state => state.modalVisibility.currentlyActive
+			activeModals: state => state.modalVisibility.activeModals
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -2315,7 +2317,6 @@ export default {
 			border: 1px solid var(--light-grey-2);
 			color: var(--dark-grey-2);
 			appearance: none;
-			border-radius: @border-radius;
 			font-size: 14px;
 			line-height: 34px;
 			padding-left: 8px;

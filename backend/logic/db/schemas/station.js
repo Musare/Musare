@@ -25,7 +25,6 @@ export default {
 	startedAt: { type: Number, default: 0, required: true },
 	playlist: { type: mongoose.Schema.Types.ObjectId, required: true },
 	privacy: { type: String, enum: ["public", "unlisted", "private"], default: "private" },
-	locked: { type: Boolean, default: false },
 	queue: [
 		{
 			_id: { type: mongoose.Schema.Types.ObjectId, required: true },
@@ -41,10 +40,18 @@ export default {
 		}
 	],
 	owner: { type: String },
-	partyMode: { type: Boolean },
-	playMode: { type: String, enum: ["random", "sequential"], default: "random" },
+	requests: {
+		enabled: { type: Boolean, default: true },
+		access: { type: String, enum: ["owner", "user"], default: "owner" },
+		limit: { type: Number, min: 1, max: 50, default: 5 }
+	},
+	autofill: {
+		enabled: { type: Boolean, default: true },
+		playlists: [{ type: mongoose.Schema.Types.ObjectId, ref: "playlists" }],
+		limit: { type: Number, min: 1, max: 50, default: 30 },
+		mode: { type: String, enum: ["random", "sequential"], default: "random" }
+	},
 	theme: { type: String, enum: ["blue", "purple", "teal", "orange", "red"], default: "blue" },
-	includedPlaylists: [{ type: String }],
-	excludedPlaylists: [{ type: String }],
-	documentVersion: { type: Number, default: 7, required: true }
+	blacklist: [{ type: mongoose.Schema.Types.ObjectId, ref: "playlists" }],
+	documentVersion: { type: Number, default: 8, required: true }
 };

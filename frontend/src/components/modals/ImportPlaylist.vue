@@ -65,31 +65,38 @@ import Toast from "toasters";
 
 import SearchYoutube from "@/mixins/SearchYoutube.vue";
 
-import Modal from "../Modal.vue";
-
 export default {
-	components: { Modal },
 	mixins: [SearchYoutube],
+	props: {
+		modalUuid: { type: String, default: "" }
+	},
 	computed: {
 		localEditSongs: {
 			get() {
-				return this.$store.state.modals.importPlaylist
+				return this.$store.state.modals.importPlaylist[this.modalUuid]
 					.editImportedSongs;
 			},
 			set(editImportedSongs) {
 				this.$store.commit(
-					"modals/importPlaylist/updateEditImportedSongs",
+					`modals/importPlaylist/${this.modalUuid}/updateEditImportedSongs`,
 					editImportedSongs
 				);
 			}
 		},
 		...mapState({
-			loggedIn: state => state.user.auth.loggedIn,
-			station: state => state.station.station
+			loggedIn: state => state.user.auth.loggedIn
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
+	},
+	beforeUnmount() {
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule([
+			"modals",
+			"importPlaylist",
+			this.modalUuid
+		]);
 	},
 	methods: {
 		importPlaylist() {
@@ -132,16 +139,18 @@ export default {
 						res.songs &&
 						res.songs.length > 0
 					) {
-						this.editSongs(
-							res.songs.map(song => ({
-								...song,
-								songId: song._id
-							}))
-						);
-						this.openModal("editSongs");
+						this.openModal({
+							modal: "editSongs",
+							data: {
+								songs: res.songs.map(song => ({
+									...song,
+									songId: song._id
+								}))
+							}
+						});
 					}
 
-					this.closeModal("importPlaylist");
+					this.closeCurrentModal();
 					return new Toast({
 						content: res.message,
 						timeout: 20000
@@ -149,8 +158,7 @@ export default {
 				}
 			);
 		},
-		...mapActions("modals/editSongs", ["editSongs"]),
-		...mapActions("modalVisibility", ["openModal", "closeModal"])
+		...mapActions("modalVisibility", ["openModal", "closeCurrentModal"])
 	}
 };
 </script>

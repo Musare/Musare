@@ -1,6 +1,8 @@
 <template>
 	<div>
 		<edit-song
+			:modal-module-path="`modals/editSongs/${this.modalUuid}/editSong`"
+			:modal-uuid="this.modalUuid"
 			:bulk="true"
 			:flagged="currentSongFlagged"
 			v-if="currentSong"
@@ -164,43 +166,36 @@
 				></div>
 			</template>
 		</edit-song>
-		<confirm
-			v-if="modals.editSongsConfirm"
-			@confirmed="handleConfirmed()"
-		/>
 	</div>
 </template>
 
 <script>
-import { mapState, mapActions, mapGetters } from "vuex";
+import { mapActions, mapGetters } from "vuex";
 import { defineAsyncComponent } from "vue";
 
 import Toast from "toasters";
+import { mapModalState, mapModalActions } from "@/vuex_helpers";
 
 import SongItem from "@/components/SongItem.vue";
+
+import editSong from "@/store/modules/modals/editSong";
 
 export default {
 	components: {
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong")
 		),
-		Confirm: defineAsyncComponent(() =>
-			import("@/components/modals/Confirm.vue")
-		),
 		SongItem
 	},
-	props: {},
+	props: {
+		modalUuid: { type: String, default: "" }
+	},
 	data() {
 		return {
 			items: [],
 			currentSong: {},
 			flagFilter: false,
-			sidebarMobileActive: false,
-			confirm: {
-				message: "",
-				action: "",
-				params: null
-			}
+			sidebarMobileActive: false
 		};
 	},
 	computed: {
@@ -232,12 +227,9 @@ export default {
 				item => item.song._id === this.currentSong._id
 			)?.flagged;
 		},
-		...mapState("modals/editSongs", {
+		...mapModalState("modals/editSongs/MODAL_UUID", {
 			songIds: state => state.songIds,
 			songPrefillData: state => state.songPrefillData
-		}),
-		...mapState("modalVisibility", {
-			modals: state => state.modals
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -245,6 +237,11 @@ export default {
 	},
 	async mounted() {
 		this.socket.dispatch("apis.joinRoom", "edit-songs");
+
+		this.$store.registerModule(
+			["modals", "editSongs", this.modalUuid, "editSong"],
+			editSong
+		);
 
 		this.socket.dispatch("songs.getSongsFromSongIds", this.songIds, res => {
 			res.data.songs.forEach(song => {
@@ -281,7 +278,10 @@ export default {
 	},
 	beforeUnmount() {
 		this.socket.dispatch("apis.leaveRoom", "edit-songs");
-		this.resetSongs();
+	},
+	unmounted() {
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule(["modals", "editSongs", this.modalUuid]);
 	},
 	methods: {
 		pickSong(song) {
@@ -375,22 +375,22 @@ export default {
 		toggleMobileSidebar() {
 			this.sidebarMobileActive = !this.sidebarMobileActive;
 		},
-		confirmAction(confirm) {
-			this.confirm = confirm;
-			this.updateConfirmMessage(confirm.message);
-			this.openModal("editSongsConfirm");
+		confirmAction({ message, action, params }) {
+			this.openModal({
+				modal: "confirm",
+				data: {
+					message,
+					action,
+					params,
+					onCompleted: this.handleConfirmed
+				}
+			});
 		},
-		handleConfirmed() {
-			const { action, params } = this.confirm;
+		handleConfirmed({ action, params }) {
 			if (typeof this[action] === "function") {
 				if (params) this[action](params);
 				else this[action]();
 			}
-			this.confirm = {
-				message: "",
-				action: "",
-				params: null
-			};
 		},
 		onClose() {
 			const doneItems = this.items.filter(
@@ -416,12 +416,13 @@ export default {
 			else this.closeThisModal();
 		},
 		closeThisModal() {
-			this.closeModal("editSongs");
+			this.closeCurrentModal();
 		},
-		...mapActions("modals/confirm", ["updateConfirmMessage"]),
-		...mapActions("modalVisibility", ["openModal", "closeModal"]),
-		...mapActions("modals/editSong", ["editSong"]),
-		...mapActions("modals/editSongs", ["resetSongs"])
+		...mapActions("modalVisibility", ["openModal", "closeCurrentModal"]),
+		...mapModalActions("modals/editSongs/MODAL_UUID/editSong", [
+			"editSong"
+		]),
+		...mapModalActions("modals/editSongs/MODAL_UUID", ["resetSongs"])
 	}
 };
 </script>

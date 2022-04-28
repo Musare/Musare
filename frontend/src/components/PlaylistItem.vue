@@ -16,8 +16,10 @@
 			</p>
 			<p class="item-description">
 				<span v-if="showOwner"
-					><a v-if="playlist.createdBy === 'Musare'" title="Musare"
-						>Musare</a
+					><a
+						v-if="playlist.createdBy === 'Musare'"
+						:title="sitename"
+						>{{ sitename }}</a
 					><user-id-to-username
 						v-else
 						:user-id="playlist.createdBy"
@@ -39,18 +41,17 @@
 </template>
 
 <script>
-import UserIdToUsername from "@/components/UserIdToUsername.vue";
 import utils from "../../js/utils";
 
 export default {
-	components: { UserIdToUsername },
 	props: {
 		playlist: { type: Object, default: () => {} },
 		showOwner: { type: Boolean, default: false }
 	},
 	data() {
 		return {
-			utils
+			utils,
+			sitename: "Musare"
 		};
 	},
 	computed: {
@@ -59,6 +60,9 @@ export default {
 				this.playlist.songs.length
 			} ${this.playlist.songs.length === 1 ? "song" : "songs"}`;
 		}
+	},
+	async mounted() {
+		this.sitename = await lofig.get("siteSettings.sitename");
 	},
 	methods: {
 		totalLength(playlist) {

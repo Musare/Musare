@@ -115,19 +115,18 @@
 </template>
 
 <script>
-import { mapActions, mapGetters, mapState } from "vuex";
+import { mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 import ws from "@/ws";
+import { mapModalState } from "@/vuex_helpers";
 
-import Modal from "@/components/Modal.vue";
 import SongItem from "@/components/SongItem.vue";
 import ReportInfoItem from "@/components/ReportInfoItem.vue";
-import QuickConfirm from "@/components/QuickConfirm.vue";
 
 export default {
-	components: { Modal, SongItem, ReportInfoItem, QuickConfirm },
+	components: { SongItem, ReportInfoItem },
 	props: {
-		sector: { type: String, default: "admin" }
+		modalUuid: { type: String, default: "" }
 	},
 	data() {
 		return {
@@ -144,8 +143,8 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modals/viewReport", {
-			reportId: state => state.viewingReportId
+		...mapModalState("modals/viewReport/MODAL_UUID", {
+			reportId: state => state.reportId
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -159,13 +158,13 @@ export default {
 			res => {
 				this.report.resolved = res.data.resolved;
 			},
-			{ modal: "viewReport" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
 			"event:admin.report.removed",
 			() => this.closeModal("viewReport"),
-			{ modal: "viewReport" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
@@ -179,11 +178,13 @@ export default {
 					issue.resolved = res.data.resolved;
 				}
 			},
-			{ modal: "viewReport" }
+			{ modalUuid: this.modalUuid }
 		);
 	},
 	beforeUnmount() {
 		this.socket.dispatch("apis.leaveRoom", `view-report.${this.reportId}`);
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule(["modals", "viewReport", this.modalUuid]);
 	},
 	methods: {
 		init() {
@@ -243,15 +244,16 @@ export default {
 			);
 		},
 		openSong() {
-			this.editSong({ songId: this.report.song._id });
-			this.openModal("editSong");
+			this.openModal({
+				modal: "editSong",
+				data: { song: { songId: this.report.song._id } }
+			});
 		},
 		...mapActions("admin/reports", [
 			"indexReports",
 			"resolveReport",
 			"removeReport"
 		]),
-		...mapActions("modals/editSong", ["editSong"]),
 		...mapActions("modalVisibility", ["closeModal", "openModal"])
 	}
 };

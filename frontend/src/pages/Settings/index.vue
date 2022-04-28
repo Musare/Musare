@@ -42,26 +42,19 @@
 			</div>
 		</div>
 		<main-footer />
-
-		<remove-account v-if="modals.removeAccount" />
 	</div>
 </template>
 
 <script>
-import { mapActions, mapGetters, mapState } from "vuex";
+import { mapActions, mapGetters } from "vuex";
 import { defineAsyncComponent } from "vue";
 import Toast from "toasters";
 import ws from "@/ws";
 
 import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 
-import MainHeader from "@/components/layout/MainHeader.vue";
-import MainFooter from "@/components/layout/MainFooter.vue";
-
 export default {
 	components: {
-		MainHeader,
-		MainFooter,
 		SecuritySettings: defineAsyncComponent(() =>
 			import("./Tabs/Security.vue")
 		),
@@ -73,9 +66,6 @@ export default {
 		),
 		PreferencesSettings: defineAsyncComponent(() =>
 			import("./Tabs/Preferences.vue")
-		),
-		RemoveAccount: defineAsyncComponent(() =>
-			import("@/components/modals/RemoveAccount.vue")
 		)
 	},
 	mixins: [TabQueryHandler],
@@ -87,9 +77,6 @@ export default {
 	computed: {
 		...mapGetters({
 			socket: "websockets/getSocket"
-		}),
-		...mapState("modalVisibility", {
-			modals: state => state.modals
 		})
 	},
 	mounted() {

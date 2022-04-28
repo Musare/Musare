@@ -100,11 +100,13 @@ The container port refers to the external docker container port, used to access 
 | --- | --- |
 | `COMPOSE_PROJECT_NAME` | Should be a unique name for this installation, especially if you have multiple instances of Musare on the same machine. |
 | `RESTART_POLICY` | Restart policy for docker containers, values can be found [here](https://docs.docker.com/config/containers/start-containers-automatically/). |
+| `CONTAINER_MODE` | Should be either `prod` or `dev`.  |
+| `DOCKER_COMMAND` | Should be either `docker` or `podman`.  |
 | `BACKEND_HOST` | Backend container host. |
 | `BACKEND_PORT` | Backend container port. |
 | `FRONTEND_HOST` | Frontend container host. |
 | `FRONTEND_PORT` | Frontend container port. |
-| `FRONTEND_MODE` | Should be either `dev` or `prod`. |
+| `FRONTEND_MODE` | Should be either `prod` or `dev`. |
 | `MONGO_HOST` | Mongo container host. |
 | `MONGO_PORT` | Mongo container port. |
 | `MONGO_ROOT_PASSWORD` | Password of the root/admin user for MongoDB. |
@@ -118,3 +120,17 @@ The container port refers to the external docker container port, used to access 
 | `REDIS_DATA_LOCATION` | The location where Redis stores its data. Usually the `.redis` folder inside the `Musare` folder. |
 | `BACKUP_LOCATION` | Directory to store musare.sh backups. Defaults to `/backups` in script location. |
 | `BACKUP_NAME` | Name of musare.sh backup files. Defaults to `musare-$(date +"%Y-%m-%d-%s").dump`. |
+
+## Docker-compose override
+You may want to override the docker-compose files in some specific cases. For this, you can create a `docker-compose.override.yml` file.  
+### Run backend on its own domain
+One example usecase for the override is to expose the backend port so you can run it separately from the frontend. An example file for this is as follows:
+
+```yml
+services:
+  backend:
+    ports:
+      - "${BACKEND_HOST}:${BACKEND_PORT}:8080"
+```
+
+This assumes that you have also set `BACKEND_PORT` inside your `.env` file.

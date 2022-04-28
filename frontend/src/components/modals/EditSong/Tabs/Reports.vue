@@ -188,14 +188,19 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
+import { mapModalState, mapModalActions } from "@/vuex_helpers";
 
 import ReportInfoItem from "@/components/ReportInfoItem.vue";
 
 export default {
 	components: { ReportInfoItem },
+	props: {
+		modalUuid: { type: String, default: "" },
+		modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
+	},
 	data() {
 		return {
 			tab: "sort-by-report",
@@ -210,7 +215,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modals/editSong", {
+		...mapModalState("MODAL_MODULE_PATH", {
 			reports: state => state.reports
 		}),
 		...mapGetters({
@@ -240,13 +245,13 @@ export default {
 		this.socket.on(
 			"event:admin.report.created",
 			res => this.reports.unshift(res.data.report),
-			{ modal: "editSong" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
 			"event:admin.report.resolved",
 			res => this.resolveReport(res.data.reportId),
-			{ modal: "editSong" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
@@ -262,7 +267,7 @@ export default {
 					}
 				});
 			},
-			{ modal: "editSong" }
+			{ modalUuid: this.modalUuid }
 		);
 	},
 	methods: {
@@ -287,7 +292,7 @@ export default {
 				}
 			);
 		},
-		...mapActions("modals/editSong", ["resolveReport"]),
+		...mapModalActions("MODAL_MODULE_PATH", ["resolveReport"]),
 		...mapActions("modalVisibility", ["closeModal"])
 	}
 };

@@ -1,7 +1,7 @@
 <template>
 	<div class="youtube-tab section">
 		<div>
-			<label class="label"> Search for a song on Musare </label>
+			<label class="label"> Search for a song on {{ sitename }}</label>
 			<div class="control is-grouped input-with-button">
 				<p class="control is-expanded">
 					<input
@@ -140,7 +140,9 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
+import { mapGetters } from "vuex";
+
+import { mapModalState } from "@/vuex_helpers";
 
 import SearchYoutube from "@/mixins/SearchYoutube.vue";
 import SearchMusare from "@/mixins/SearchMusare.vue";
@@ -151,8 +153,16 @@ import SearchQueryItem from "@/components/SearchQueryItem.vue";
 export default {
 	components: { SearchQueryItem, SongItem },
 	mixins: [SearchYoutube, SearchMusare],
+	props: {
+		modalUuid: { type: String, default: "" }
+	},
+	data() {
+		return {
+			sitename: "Musare"
+		};
+	},
 	computed: {
-		...mapState("modals/editPlaylist", {
+		...mapModalState("modals/editPlaylist/MODAL_UUID", {
 			playlist: state => state.playlist
 		}),
 		...mapGetters({
@@ -207,6 +217,9 @@ export default {
 				})
 			);
 		}
+	},
+	async mounted() {
+		this.sitename = await lofig.get("siteSettings.sitename");
 	}
 };
 </script>

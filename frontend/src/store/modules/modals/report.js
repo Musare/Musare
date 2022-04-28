@@ -6,10 +6,10 @@ export default {
 		song: {}
 	},
 	actions: {
-		reportSong: ({ commit }, song) => commit("reportSong", song)
+		init: ({ commit }, data) => commit("init", data)
 	},
 	mutations: {
-		reportSong(state, song) {
+		init(state, { song }) {
 			state.song = song;
 		}
 	}

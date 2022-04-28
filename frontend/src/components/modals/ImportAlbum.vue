@@ -324,20 +324,19 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 
 import draggable from "vuedraggable";
 import Toast from "toasters";
 import ws from "@/ws";
-
-import Modal from "../Modal.vue";
+import { mapModalState, mapModalActions } from "@/vuex_helpers";
 
 import SongItem from "../SongItem.vue";
 
 export default {
-	components: { Modal, SongItem, draggable },
+	components: { SongItem, draggable },
 	props: {
-		sector: { type: String, default: "admin" }
+		modalUuid: { type: String, default: "" }
 	},
 	data() {
 		return {
@@ -362,34 +361,33 @@ export default {
 	computed: {
 		playlistSongs: {
 			get() {
-				return this.$store.state.modals.importAlbum.playlistSongs;
+				return this.$store.state.modals.importAlbum[this.modalUuid]
+					.playlistSongs;
 			},
 			set(playlistSongs) {
 				this.$store.commit(
-					"modals/importAlbum/updatePlaylistSongs",
+					`modals/importAlbum/${this.modalUuid}/updatePlaylistSongs`,
 					playlistSongs
 				);
 			}
 		},
 		localPrefillDiscogs: {
 			get() {
-				return this.$store.state.modals.importAlbum.prefillDiscogs;
+				return this.$store.state.modals.importAlbum[this.modalUuid]
+					.prefillDiscogs;
 			},
 			set(prefillDiscogs) {
 				this.$store.commit(
-					"modals/importAlbum/updatePrefillDiscogs",
+					`modals/importAlbum/${this.modalUuid}/updatePrefillDiscogs`,
 					prefillDiscogs
 				);
 			}
 		},
-		...mapState("modals/importAlbum", {
+		...mapModalState("modals/importAlbum/MODAL_UUID", {
 			discogsTab: state => state.discogsTab,
 			discogsAlbum: state => state.discogsAlbum,
 			editingSongs: state => state.editingSongs,
 			prefillDiscogs: state => state.prefillDiscogs
-		}),
-		...mapState("modalVisibility", {
-			modals: state => state.modals
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -407,6 +405,8 @@ export default {
 		this.setPlaylistSongs([]);
 		this.showDiscogsTab("search");
 		this.socket.dispatch("apis.leaveRoom", "import-album");
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule(["modals", "importAlbum", this.modalUuid]);
 	},
 	methods: {
 		init() {
@@ -450,8 +450,10 @@ export default {
 			if (this.songsToEdit.length === 0)
 				new Toast("You can't edit 0 songs.");
 			else {
-				this.editSongs(this.songsToEdit);
-				this.openModal("editSongs");
+				this.openModal({
+					modal: "editSongs",
+					data: { songs: this.songsToEdit }
+				});
 			}
 		},
 		log(evt) {
@@ -653,10 +655,13 @@ export default {
 					this.$refs[`discogs-${payload}-tab`].scrollIntoView({
 						block: "nearest"
 					});
-				return dispatch("modals/importAlbum/showDiscogsTab", payload);
+				return dispatch(
+					`modals/importAlbum/${this.modalUuid}/showDiscogsTab`,
+					payload
+				);
 			}
 		}),
-		...mapActions("modals/importAlbum", [
+		...mapModalActions("modals/importAlbum/MODAL_UUID", [
 			"toggleDiscogsAlbum",
 			"setPlaylistSongs",
 			"updatePlaylistSongs",

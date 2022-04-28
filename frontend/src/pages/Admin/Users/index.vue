@@ -93,32 +93,22 @@
 				</template>
 			</advanced-table>
 		</div>
-		<edit-user
-			v-if="modals.editUser"
-			:user-id="editingUserId"
-			sector="admin"
-		/>
 	</div>
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
-import { defineAsyncComponent } from "vue";
+import { mapActions } from "vuex";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
 import ProfilePicture from "@/components/ProfilePicture.vue";
 
 export default {
 	components: {
-		EditUser: defineAsyncComponent(() =>
-			import("@/components/modals/EditUser.vue")
-		),
 		AdvancedTable,
 		ProfilePicture
 	},
 	data() {
 		return {
-			editingUserId: "",
 			columnDefault: {
 				sortable: true,
 				hidable: true,
@@ -304,18 +294,12 @@ export default {
 			}
 		};
 	},
-	computed: {
-		...mapState("modalVisibility", {
-			modals: state => state.modals
-		})
-	},
 	mounted() {
 		if (this.$route.query.userId) this.edit(this.$route.query.userId);
 	},
 	methods: {
 		edit(userId) {
-			this.editingUserId = userId;
-			this.openModal("editUser");
+			this.openModal({ modal: "editUser", data: { userId } });
 		},
 		...mapActions("modalVisibility", ["openModal"])
 	}

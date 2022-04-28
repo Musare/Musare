@@ -5,9 +5,14 @@
 				<div id="footer-copyright">
 					<p>© Copyright Musare 2015 - 2022</p>
 				</div>
-				<router-link id="footer-logo" to="/"
-					><img src="/assets/blue_wordmark.png" alt="Musare"
-				/></router-link>
+				<router-link id="footer-logo" to="/">
+					<img
+						v-if="siteSettings.sitename === 'Musare'"
+						:src="siteSettings.logo_blue"
+						:alt="siteSettings.sitename || `Musare`"
+					/>
+					<span v-else>{{ siteSettings.sitename }}</span>
+				</router-link>
 				<div id="footer-links">
 					<a
 						v-for="(url, title, index) in filteredFooterLinks"
@@ -46,13 +51,17 @@
 export default {
 	data() {
 		return {
-			footerLinks: {}
+			siteSettings: {
+				logo_blue: "/assets/blue_wordmark.png",
+				sitename: "Musare",
+				footerLinks: {}
+			}
 		};
 	},
 	computed: {
 		filteredFooterLinks() {
 			return Object.fromEntries(
-				Object.entries(this.footerLinks).filter(
+				Object.entries(this.siteSettings.footerLinks).filter(
 					([title, url]) =>
 						!(
 							["about", "team", "news"].includes(
@@ -64,19 +73,22 @@ export default {
 		}
 	},
 	async mounted() {
-		lofig.get("siteSettings.footerLinks").then(footerLinks => {
-			this.footerLinks = {
-				about: true,
-				team: true,
-				news: true,
-				...footerLinks
+		lofig.get("siteSettings").then(siteSettings => {
+			this.siteSettings = {
+				...siteSettings,
+				footerLinks: {
+					about: true,
+					team: true,
+					news: true,
+					...siteSettings.footerLinks
+				}
 			};
 		});
 	},
 	methods: {
 		getLink(title) {
-			return this.footerLinks[
-				Object.keys(this.footerLinks).find(
+			return this.siteSettings.footerLinks[
+				Object.keys(this.siteSettings.footerLinks).find(
 					key => key.toLowerCase() === title
 				)
 			];
@@ -131,9 +143,16 @@ export default {
 		margin-right: auto;
 		width: 160px;
 		order: 1;
+		user-select: none;
+		font-size: 2.5rem !important;
+		line-height: 50px !important;
+		font-family: Pacifico, cursive;
+		color: var(--primary-color);
+		white-space: nowrap;
 
 		img {
 			max-width: 100%;
+			color: var(--primary-color);
 			user-select: none;
 			-webkit-user-drag: none;
 		}
@@ -147,15 +166,15 @@ export default {
 		}
 
 		a {
-			padding: 0 7px 0 4px;
+			padding: 0 5px;
 			color: var(--primary-color);
 
 			&:first-of-type {
-				padding: 0 7px 0 0;
+				padding: 0 5px 0 0;
 			}
 
 			&:last-of-type {
-				padding: 0 0 0 7px;
+				padding: 0 0 0 5px;
 			}
 
 			&:hover {

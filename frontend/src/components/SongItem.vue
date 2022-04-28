@@ -37,17 +37,16 @@
 				>
 					{{ formatArtists() }}
 				</h5>
-				<p
-					class="song-request-time"
-					v-if="requestedBy && song.requestedBy"
-				>
+				<p class="song-request-time" v-if="requestedBy">
 					Requested by
 					<strong>
 						<user-id-to-username
+							v-if="song.requestedBy"
 							:key="song._id"
 							:user-id="song.requestedBy"
 							:link="true"
 						/>
+						<span v-else>station</span>
 						{{ formatedRequestedAt }}
 						ago
 					</strong>
@@ -163,12 +162,11 @@ import { mapActions, mapState } from "vuex";
 import { formatDistance, parseISO } from "date-fns";
 
 import AddToPlaylistDropdown from "./AddToPlaylistDropdown.vue";
-import UserIdToUsername from "./UserIdToUsername.vue";
 import SongThumbnail from "./SongThumbnail.vue";
 import utils from "../../js/utils";
 
 export default {
-	components: { UserIdToUsername, AddToPlaylistDropdown, SongThumbnail },
+	components: { AddToPlaylistDropdown, SongThumbnail },
 	props: {
 		song: {
 			type: Object,
@@ -222,11 +220,7 @@ export default {
 	},
 	methods: {
 		formatRequestedAt() {
-			if (
-				this.requestedBy &&
-				this.song.requestedBy &&
-				this.song.requestedAt
-			)
+			if (this.requestedBy && this.song.requestedAt)
 				this.formatedRequestedAt = this.formatDistance(
 					parseISO(this.song.requestedAt),
 					new Date()
@@ -262,16 +256,15 @@ export default {
 		},
 		report(song) {
 			this.hideTippyElements();
-			this.reportSong(song);
-			this.openModal("report");
+			this.openModal({ modal: "report", data: { song } });
 		},
 		edit(song) {
 			this.hideTippyElements();
-			this.editSong({ songId: song._id });
-			this.openModal("editSong");
+			this.openModal({
+				modal: "editSong",
+				data: { song: { songId: song._id } }
+			});
 		},
-		...mapActions("modals/editSong", ["editSong"]),
-		...mapActions("modals/report", ["reportSong"]),
 		...mapActions("modalVisibility", ["openModal"]),
 		formatDistance,
 		parseISO
@@ -301,7 +294,7 @@ export default {
 }
 
 .song-item {
-	min-height: 65px;
+	min-height: 70px;
 
 	&:not(:last-of-type) {
 		margin-bottom: 10px;
@@ -326,9 +319,9 @@ export default {
 	}
 
 	.thumbnail {
-		min-width: 65px;
-		width: 65px;
-		height: 65px;
+		min-width: 70px;
+		width: 70px;
+		height: 70px;
 		margin: -7.5px;
 		margin-right: calc(20px - 7.5px);
 	}
@@ -356,6 +349,10 @@ export default {
 			display: flex;
 			flex-direction: row;
 
+			.item-title {
+				font-size: 18px;
+			}
+
 			.verified-song {
 				margin-left: 5px;
 			}
@@ -369,9 +366,15 @@ export default {
 			}
 		}
 
+		.item-description {
+			line-height: 120%;
+		}
+
 		.song-request-time {
-			font-size: 12px;
-			margin-top: 7px;
+			font-size: 11px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
 		}
 	}
 

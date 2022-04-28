@@ -69,18 +69,15 @@ import { mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 
-import Modal from "../Modal.vue";
 import AutoSuggest from "@/components/AutoSuggest.vue";
 
 import ws from "@/ws";
+import { mapModalState } from "@/vuex_helpers";
 
 export default {
-	components: { Modal, AutoSuggest },
+	components: { AutoSuggest },
 	props: {
-		type: {
-			type: Object,
-			default: () => {}
-		}
+		modalUuid: { type: String, default: "" }
 	},
 	data() {
 		return {
@@ -91,6 +88,9 @@ export default {
 		};
 	},
 	computed: {
+		...mapModalState("modals/bulkActions/MODAL_UUID", {
+			type: state => state.type
+		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
@@ -98,6 +98,8 @@ export default {
 	beforeUnmount() {
 		this.itemInput = null;
 		this.items = [];
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule(["modals", "bulkActions", this.modalUuid]);
 	},
 	mounted() {
 		ws.onConnect(this.init);

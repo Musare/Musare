@@ -106,19 +106,17 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 import validation from "@/validation";
 import ws from "@/ws";
-import Modal from "../Modal.vue";
-import QuickConfirm from "@/components/QuickConfirm.vue";
+
+import { mapModalState, mapModalActions } from "@/vuex_helpers";
 
 export default {
-	components: { Modal, QuickConfirm },
 	props: {
-		userId: { type: String, default: "" },
-		sector: { type: String, default: "admin" }
+		modalUuid: { type: String, default: "" }
 	},
 	data() {
 		return {
@@ -128,12 +126,20 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modals/editUser", {
+		...mapModalState("modals/editUser/MODAL_UUID", {
+			userId: state => state.userId,
 			user: state => state.user
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
+	},
+	watch: {
+		// When the userId changes, run init. There can be a delay between the modal opening and the required data (userId) being available
+		userId() {
+			// Note: is it possible for this to run before the socket is ready?
+			this.init();
+		}
 	},
 	mounted() {
 		ws.onConnect(this.init);
@@ -144,32 +150,39 @@ export default {
 			`edit-user.${this.userId}`,
 			() => {}
 		);
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule(["modals", "editUser", this.modalUuid]);
 	},
 	methods: {
 		init() {
-			this.socket.dispatch(`users.getUserFromId`, this.userId, res => {
-				if (res.status === "success") {
-					const user = res.data;
-					this.editUser(user);
+			if (this.userId)
+				this.socket.dispatch(
+					`users.getUserFromId`,
+					this.userId,
+					res => {
+						if (res.status === "success") {
+							const user = res.data;
+							this.setUser(user);
 
-					this.socket.dispatch(
-						"apis.joinRoom",
-						`edit-user.${this.userId}`
-					);
+							this.socket.dispatch(
+								"apis.joinRoom",
+								`edit-user.${this.userId}`
+							);
 
-					this.socket.on(
-						"event:user.removed",
-						res => {
-							if (res.data.userId === this.userId)
-								this.closeModal("editUser");
-						},
-						{ modal: "editUser" }
-					);
-				} else {
-					new Toast("User with that ID not found");
-					this.closeModal("editUser");
-				}
-			});
+							this.socket.on(
+								"event:user.removed",
+								res => {
+									if (res.data.userId === this.userId)
+										this.closeModal("editUser");
+								},
+								{ modalUuid: this.modalUuid }
+							);
+						} else {
+							new Toast("User with that ID not found");
+							this.closeModal("editUser");
+						}
+					}
+				);
 		},
 		updateUsername() {
 			const { username } = this.user;
@@ -278,7 +291,7 @@ export default {
 				new Toast(res.message);
 			});
 		},
-		...mapActions("modals/editUser", ["editUser"]),
+		...mapModalActions("modals/editUser/MODAL_UUID", ["setUser"]),
 		...mapActions("modalVisibility", ["closeModal"])
 	}
 };

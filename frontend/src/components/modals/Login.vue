@@ -106,12 +106,8 @@
 import { mapActions } from "vuex";
 
 import Toast from "toasters";
-import Modal from "../Modal.vue";
 
 export default {
-	components: {
-		Modal
-	},
 	data() {
 		return {
 			email: "",

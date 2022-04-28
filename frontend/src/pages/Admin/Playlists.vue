@@ -17,7 +17,12 @@
 					<div class="row-options">
 						<button
 							class="button is-primary icon-with-button material-icons"
-							@click="edit(slotProps.item._id)"
+							@click="
+								openModal({
+									modal: 'editPlaylist',
+									data: { playlistId: slotProps.item._id }
+								})
+							"
 							:disabled="slotProps.item.removed"
 							content="Edit Playlist"
 							v-tippy
@@ -78,37 +83,21 @@
 				</template>
 			</advanced-table>
 		</div>
-
-		<edit-playlist v-if="modals.editPlaylist" sector="admin" />
-		<edit-song v-if="modals.editSong" song-type="songs" />
-		<report v-if="modals.report" />
 	</div>
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
-import { defineAsyncComponent } from "vue";
+import { mapActions } from "vuex";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
 import RunJobDropdown from "@/components/RunJobDropdown.vue";
-import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
 import utils from "../../../js/utils";
 
 export default {
 	components: {
-		EditPlaylist: defineAsyncComponent(() =>
-			import("@/components/modals/EditPlaylist")
-		),
-		Report: defineAsyncComponent(() =>
-			import("@/components/modals/Report.vue")
-		),
-		EditSong: defineAsyncComponent(() =>
-			import("@/components/modals/EditSong")
-		),
 		AdvancedTable,
-		RunJobDropdown,
-		UserIdToUsername
+		RunJobDropdown
 	},
 	data() {
 		return {
@@ -326,16 +315,7 @@ export default {
 			]
 		};
 	},
-	computed: {
-		...mapState("modalVisibility", {
-			modals: state => state.modals
-		})
-	},
 	methods: {
-		edit(playlistId) {
-			this.editPlaylist(playlistId);
-			this.openModal("editPlaylist");
-		},
 		getDateFormatted(createdAt) {
 			const date = new Date(createdAt);
 			const year = date.getFullYear();
@@ -348,8 +328,7 @@ export default {
 		formatTimeLong(length) {
 			return this.utils.formatTimeLong(length);
 		},
-		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions("user/playlists", ["editPlaylist"])
+		...mapActions("modalVisibility", ["openModal"])
 	}
 };
 </script>

@@ -256,53 +256,20 @@
 				</template>
 			</advanced-table>
 		</div>
-		<import-album v-if="modals.importAlbum" />
-		<edit-song v-if="modals.editSong" song-type="songs" />
-		<edit-songs v-if="modals.editSongs" />
-		<report v-if="modals.report" />
-		<import-playlist v-if="modals.importPlaylist" />
-		<bulk-actions v-if="modals.bulkActions" :type="bulkActionsType" />
-		<confirm v-if="modals.confirm" @confirmed="handleConfirmed()" />
 	</div>
 </template>
 
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
-import { defineAsyncComponent } from "vue";
 
 import Toast from "toasters";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
-import UserIdToUsername from "@/components/UserIdToUsername.vue";
-import QuickConfirm from "@/components/QuickConfirm.vue";
 import RunJobDropdown from "@/components/RunJobDropdown.vue";
 
 export default {
 	components: {
-		EditSong: defineAsyncComponent(() =>
-			import("@/components/modals/EditSong")
-		),
-		EditSongs: defineAsyncComponent(() =>
-			import("@/components/modals/EditSongs.vue")
-		),
-		Report: defineAsyncComponent(() =>
-			import("@/components/modals/Report.vue")
-		),
-		ImportAlbum: defineAsyncComponent(() =>
-			import("@/components/modals/ImportAlbum.vue")
-		),
-		ImportPlaylist: defineAsyncComponent(() =>
-			import("@/components/modals/ImportPlaylist.vue")
-		),
-		BulkActions: defineAsyncComponent(() =>
-			import("@/components/modals/BulkActions.vue")
-		),
-		Confirm: defineAsyncComponent(() =>
-			import("@/components/modals/Confirm.vue")
-		),
 		AdvancedTable,
-		UserIdToUsername,
-		QuickConfirm,
 		RunJobDropdown
 	},
 	data() {
@@ -624,19 +591,10 @@ export default {
 					name: "Recalculate all song ratings",
 					socket: "songs.recalculateAllRatings"
 				}
-			],
-			confirm: {
-				message: "",
-				action: "",
-				params: null
-			},
-			bulkActionsType: null
+			]
 		};
 	},
 	computed: {
-		...mapState("modalVisibility", {
-			modals: state => state.modals
-		}),
 		...mapState("modals/editSong", {
 			song: state => state.song
 		}),
@@ -659,12 +617,16 @@ export default {
 	},
 	methods: {
 		create() {
-			this.editSong({ newSong: true });
-			this.openModal("editSong");
+			this.openModal({
+				modal: "editSong",
+				data: { song: { newSong: true } }
+			});
 		},
 		editOne(song) {
-			this.editSong({ songId: song._id });
-			this.openModal("editSong");
+			this.openModal({
+				modal: "editSong",
+				data: { song: { songId: song._id } }
+			});
 		},
 		editMany(selectedRows) {
 			if (selectedRows.length === 1) this.editOne(selectedRows[0]);
@@ -672,8 +634,7 @@ export default {
 				const songs = selectedRows.map(row => ({
 					songId: row._id
 				}));
-				this.editSongs(songs);
-				this.openModal("editSongs");
+				this.openModal({ modal: "editSongs", data: { songs } });
 			}
 		},
 		verifyOne(songId) {
@@ -705,37 +666,49 @@ export default {
 			);
 		},
 		setTags(selectedRows) {
-			this.bulkActionsType = {
-				name: "tags",
-				action: "songs.editTags",
-				items: selectedRows.map(row => row._id),
-				regex: /^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/,
-				autosuggest: true,
-				autosuggestDataAction: "songs.getTags"
-			};
-			this.openModal("bulkActions");
+			this.openModal({
+				modal: "bulkActions",
+				data: {
+					type: {
+						name: "tags",
+						action: "songs.editTags",
+						items: selectedRows.map(row => row._id),
+						regex: /^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/,
+						autosuggest: true,
+						autosuggestDataAction: "songs.getTags"
+					}
+				}
+			});
 		},
 		setArtists(selectedRows) {
-			this.bulkActionsType = {
-				name: "artists",
-				action: "songs.editArtists",
-				items: selectedRows.map(row => row._id),
-				regex: /^(?=.{1,64}$).*$/,
-				autosuggest: true,
-				autosuggestDataAction: "songs.getArtists"
-			};
-			this.openModal("bulkActions");
+			this.openModal({
+				modal: "bulkActions",
+				data: {
+					type: {
+						name: "artists",
+						action: "songs.editArtists",
+						items: selectedRows.map(row => row._id),
+						regex: /^(?=.{1,64}$).*$/,
+						autosuggest: true,
+						autosuggestDataAction: "songs.getArtists"
+					}
+				}
+			});
 		},
 		setGenres(selectedRows) {
-			this.bulkActionsType = {
-				name: "genres",
-				action: "songs.editGenres",
-				items: selectedRows.map(row => row._id),
-				regex: /^[\x00-\x7F]{1,32}$/,
-				autosuggest: true,
-				autosuggestDataAction: "songs.getGenres"
-			};
-			this.openModal("bulkActions");
+			this.openModal({
+				modal: "bulkActions",
+				data: {
+					type: {
+						name: "genres",
+						action: "songs.editGenres",
+						items: selectedRows.map(row => row._id),
+						regex: /^[\x00-\x7F]{1,32}$/,
+						autosuggest: true,
+						autosuggestDataAction: "songs.getGenres"
+					}
+				}
+			});
 		},
 		deleteOne(songId) {
 			this.socket.dispatch("songs.remove", songId, res => {
@@ -760,26 +733,23 @@ export default {
 			const minute = `${date.getMinutes()}`.padStart(2, 0);
 			return `${year}-${month}-${day} ${hour}:${minute}`;
 		},
-		confirmAction(confirm) {
-			this.confirm = confirm;
-			this.updateConfirmMessage(confirm.message);
-			this.openModal("confirm");
+		confirmAction({ message, action, params }) {
+			this.openModal({
+				modal: "confirm",
+				data: {
+					message,
+					action,
+					params,
+					onCompleted: this.handleConfirmed
+				}
+			});
 		},
-		handleConfirmed() {
-			const { action, params } = this.confirm;
+		handleConfirmed({ action, params }) {
 			if (typeof this[action] === "function") {
 				if (params) this[action](params);
 				else this[action]();
 			}
-			this.confirm = {
-				message: "",
-				action: "",
-				params: null
-			};
 		},
-		...mapActions("modals/editSong", ["editSong"]),
-		...mapActions("modals/editSongs", ["editSongs"]),
-		...mapActions("modals/confirm", ["updateConfirmMessage"]),
 		...mapActions("modalVisibility", ["openModal"])
 	}
 };

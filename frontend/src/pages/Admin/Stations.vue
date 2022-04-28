@@ -5,7 +5,12 @@
 			<div class="button-row">
 				<button
 					class="button is-primary"
-					@click="openModal('createStation')"
+					@click="
+						openModal({
+							modal: 'createStation',
+							data: { official: true }
+						})
+					"
 				>
 					Create Station
 				</button>
@@ -23,7 +28,15 @@
 					<div class="row-options">
 						<button
 							class="button is-primary icon-with-button material-icons"
-							@click="edit(slotProps.item._id)"
+							@click="
+								openModal({
+									modal: 'manageStation',
+									data: {
+										stationId: slotProps.item._id,
+										sector: 'admin'
+									}
+								})
+							"
 							:disabled="slotProps.item.removed"
 							content="Manage Station"
 							v-tippy
@@ -42,6 +55,16 @@
 								delete_forever
 							</button>
 						</quick-confirm>
+						<router-link
+							:to="{ path: `/${slotProps.item.name}` }"
+							target="_blank"
+							class="button is-primary icon-with-button material-icons"
+							:disabled="slotProps.item.removed"
+							content="View Station"
+							v-tippy
+						>
+							radio
+						</router-link>
 					</div>
 				</template>
 				<template #column-_id="slotProps">
@@ -84,76 +107,57 @@
 						:link="true"
 					/>
 				</template>
-				<template #column-stationMode="slotProps">
-					<span
-						:title="slotProps.item.partyMode ? 'Party' : 'Playlist'"
-						>{{
-							slotProps.item.partyMode ? "Party" : "Playlist"
-						}}</span
-					>
-				</template>
-				<template #column-playMode="slotProps">
-					<span :title="slotProps.item.playMode">{{
-						slotProps.item.playMode === "random"
-							? "Random"
-							: "Sequential"
-					}}</span>
-				</template>
 				<template #column-theme="slotProps">
 					<span :title="slotProps.item.theme">{{
 						slotProps.item.theme
 					}}</span>
 				</template>
+				<template #column-requestsEnabled="slotProps">
+					<span :title="slotProps.item.requests.enabled">{{
+						slotProps.item.requests.enabled
+					}}</span>
+				</template>
+				<template #column-requestsAccess="slotProps">
+					<span :title="slotProps.item.requests.access">{{
+						slotProps.item.requests.access
+					}}</span>
+				</template>
+				<template #column-requestsLimit="slotProps">
+					<span :title="slotProps.item.requests.limit">{{
+						slotProps.item.requests.limit
+					}}</span>
+				</template>
+				<template #column-autofillEnabled="slotProps">
+					<span :title="slotProps.item.autofill.enabled">{{
+						slotProps.item.autofill.enabled
+					}}</span>
+				</template>
+				<template #column-autofillLimit="slotProps">
+					<span :title="slotProps.item.autofill.limit">{{
+						slotProps.item.autofill.limit
+					}}</span>
+				</template>
+				<template #column-autofillMode="slotProps">
+					<span :title="slotProps.item.autofill.mode">{{
+						slotProps.item.autofill.mode
+					}}</span>
+				</template>
 			</advanced-table>
 		</div>
-
-		<create-playlist v-if="modals.createPlaylist" />
-		<manage-station
-			v-if="modals.manageStation"
-			:station-id="editingStationId"
-			sector="admin"
-		/>
-		<edit-playlist v-if="modals.editPlaylist" />
-		<edit-song v-if="modals.editSong" song-type="songs" sector="admin" />
-		<report v-if="modals.report" />
-		<create-station v-if="modals.createStation" :official="true" />
 	</div>
 </template>
 
 <script>
-import { mapState, mapActions, mapGetters } from "vuex";
-import { defineAsyncComponent } from "vue";
+import { mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
-import QuickConfirm from "@/components/QuickConfirm.vue";
-import UserIdToUsername from "@/components/UserIdToUsername.vue";
 import RunJobDropdown from "@/components/RunJobDropdown.vue";
 
 export default {
 	components: {
-		EditPlaylist: defineAsyncComponent(() =>
-			import("@/components/modals/EditPlaylist")
-		),
-		CreatePlaylist: defineAsyncComponent(() =>
-			import("@/components/modals/CreatePlaylist.vue")
-		),
-		ManageStation: defineAsyncComponent(() =>
-			import("@/components/modals/ManageStation/index.vue")
-		),
-		Report: defineAsyncComponent(() =>
-			import("@/components/modals/Report.vue")
-		),
-		EditSong: defineAsyncComponent(() =>
-			import("@/components/modals/EditSong")
-		),
-		CreateStation: defineAsyncComponent(() =>
-			import("@/components/modals/CreateStation.vue")
-		),
 		AdvancedTable,
-		QuickConfirm,
-		UserIdToUsername,
 		RunJobDropdown
 	},
 	data() {
@@ -172,12 +176,12 @@ export default {
 				{
 					name: "options",
 					displayName: "Options",
-					properties: ["_id"],
+					properties: ["_id", "name"],
 					sortable: false,
 					hidable: false,
 					resizable: false,
-					minWidth: 85,
-					defaultWidth: 85
+					minWidth: 129,
+					defaultWidth: 129
 				},
 				{
 					name: "_id",
@@ -226,24 +230,64 @@ export default {
 					defaultWidth: 150
 				},
 				{
-					name: "stationMode",
-					displayName: "Station Mode",
-					properties: ["partyMode"],
-					sortable: false,
-					defaultVisibility: "hidden"
-				},
-				{
-					name: "playMode",
-					displayName: "Play Mode",
-					properties: ["playMode"],
-					sortable: false,
-					defaultVisibility: "hidden"
-				},
-				{
 					name: "theme",
 					displayName: "Theme",
 					properties: ["theme"],
 					sortProperty: "theme",
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "requestsEnabled",
+					displayName: "Requests Enabled",
+					properties: ["requests.enabled"],
+					sortProperty: "requests.enabled",
+					minWidth: 180,
+					defaultWidth: 180,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "requestsAccess",
+					displayName: "Requests Access",
+					properties: ["requests.access"],
+					sortProperty: "requests.access",
+					minWidth: 180,
+					defaultWidth: 180,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "requestsLimit",
+					displayName: "Requests Limit",
+					properties: ["requests.limit"],
+					sortProperty: "requests.limit",
+					minWidth: 180,
+					defaultWidth: 180,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "autofillEnabled",
+					displayName: "Autofill Enabled",
+					properties: ["autofill.enabled"],
+					sortProperty: "autofill.enabled",
+					minWidth: 180,
+					defaultWidth: 180,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "autofillLimit",
+					displayName: "Autofill Limit",
+					properties: ["autofill.limit"],
+					sortProperty: "autofill.limit",
+					minWidth: 180,
+					defaultWidth: 180,
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "autofillMode",
+					displayName: "Autofill Mode",
+					properties: ["autofill.mode"],
+					sortProperty: "autofill.mode",
+					minWidth: 180,
+					defaultWidth: 180,
 					defaultVisibility: "hidden"
 				}
 			],
@@ -307,28 +351,6 @@ export default {
 					defaultFilterType: "contains"
 				},
 				{
-					name: "stationMode",
-					displayName: "Station Mode",
-					property: "partyMode",
-					filterTypes: ["boolean"],
-					defaultFilterType: "boolean",
-					dropdown: [
-						[true, "Party"],
-						[false, "Playlist"]
-					]
-				},
-				{
-					name: "playMode",
-					displayName: "Play Mode",
-					property: "playMode",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact",
-					dropdown: [
-						["random", "Random"],
-						["sequential", "Sequential"]
-					]
-				},
-				{
 					name: "theme",
 					displayName: "Theme",
 					property: "theme",
@@ -341,12 +363,74 @@ export default {
 						["orange", "Orange"],
 						["red", "Red"]
 					]
+				},
+				{
+					name: "requestsEnabled",
+					displayName: "Requests Enabled",
+					property: "requests.enabled",
+					filterTypes: ["boolean"],
+					defaultFilterType: "boolean"
+				},
+				{
+					name: "requestsAccess",
+					displayName: "Requests Access",
+					property: "requests.access",
+					filterTypes: ["exact"],
+					defaultFilterType: "exact",
+					dropdown: [
+						["owner", "Owner"],
+						["user", "User"]
+					]
+				},
+				{
+					name: "requestsLimit",
+					displayName: "Requests Limit",
+					property: "requests.limit",
+					filterTypes: [
+						"numberLesserEqual",
+						"numberLesser",
+						"numberGreater",
+						"numberGreaterEqual",
+						"numberEquals"
+					],
+					defaultFilterType: "numberLesser"
+				},
+				{
+					name: "autofillEnabled",
+					displayName: "Autofill Enabled",
+					property: "autofill.enabled",
+					filterTypes: ["boolean"],
+					defaultFilterType: "boolean"
+				},
+				{
+					name: "autofillLimit",
+					displayName: "Autofill Limit",
+					property: "autofill.limit",
+					filterTypes: [
+						"numberLesserEqual",
+						"numberLesser",
+						"numberGreater",
+						"numberGreaterEqual",
+						"numberEquals"
+					],
+					defaultFilterType: "numberLesser"
+				},
+				{
+					name: "autofillMode",
+					displayName: "Autofill Mode",
+					property: "autofill.mode",
+					filterTypes: ["exact"],
+					defaultFilterType: "exact",
+					dropdown: [
+						["random", "Random"],
+						["sequential", "Sequential"]
+					]
 				}
 			],
 			events: {
 				adminRoom: "stations",
 				updated: {
-					event: "admin.station.updated",
+					event: "station.updated",
 					id: "station._id",
 					item: "station"
 				},
@@ -364,18 +448,11 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modalVisibility", {
-			modals: state => state.modals
-		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
 	},
 	methods: {
-		edit(stationId) {
-			this.editingStationId = stationId;
-			this.openModal("manageStation");
-		},
 		remove(stationId) {
 			this.socket.dispatch(
 				"stations.remove",

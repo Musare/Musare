@@ -7,12 +7,9 @@
 				class="main-container"
 				:class="{ 'main-container-modal-active': aModalIsOpen2 }"
 			/>
-			<what-is-new v-show="modals.whatIsNew" />
-			<login-modal v-if="modals.login" />
-			<register-modal v-if="modals.register" />
-			<create-playlist-modal v-if="modals.createPlaylist" />
 		</div>
 		<falling-snow v-if="christmas" />
+		<modal-manager />
 	</div>
 </template>
 
@@ -27,17 +24,8 @@ import keyboardShortcuts from "./keyboardShortcuts";
 
 export default {
 	components: {
-		WhatIsNew: defineAsyncComponent(() =>
-			import("@/components/modals/WhatIsNew.vue")
-		),
-		LoginModal: defineAsyncComponent(() =>
-			import("@/components/modals/Login.vue")
-		),
-		RegisterModal: defineAsyncComponent(() =>
-			import("@/components/modals/Register.vue")
-		),
-		CreatePlaylistModal: defineAsyncComponent(() =>
-			import("@/components/modals/CreatePlaylist.vue")
+		ModalManager: defineAsyncComponent(() =>
+			import("@/components/ModalManager.vue")
 		),
 		Banned: defineAsyncComponent(() => import("@/pages/Banned.vue")),
 		FallingSnow: defineAsyncComponent(() =>
@@ -64,7 +52,7 @@ export default {
 			userId: state => state.user.auth.userId,
 			banned: state => state.user.auth.banned,
 			modals: state => state.modalVisibility.modals,
-			currentlyActive: state => state.modalVisibility.currentlyActive,
+			activeModals: state => state.modalVisibility.activeModals,
 			nightmode: state => state.user.preferences.nightmode,
 			activityWatch: state => state.user.preferences.activityWatch
 		}),
@@ -72,7 +60,7 @@ export default {
 			socket: "websockets/getSocket"
 		}),
 		aModalIsOpen() {
-			return Object.keys(this.currentlyActive).length > 0;
+			return Object.keys(this.activeModals).length > 0;
 		}
 	},
 	watch: {
@@ -160,9 +148,13 @@ export default {
 			ctrl: false,
 			handler: () => {
 				if (
-					Object.keys(this.currentlyActive).length !== 0 &&
-					this.currentlyActive[0] !== "editSong" &&
-					this.currentlyActive[0] !== "editSongs"
+					Object.keys(this.activeModals).length !== 0 &&
+					this.modals[
+						this.activeModals[this.activeModals.length - 1]
+					] !== "editSong" &&
+					this.modals[
+						this.activeModals[this.activeModals.length - 1]
+					] !== "editSongs"
 				)
 					this.closeCurrentModal();
 			}
@@ -199,6 +191,43 @@ export default {
 			this.socket.on("keep.event:user.session.deleted", () =>
 				window.location.reload()
 			);
+
+			const newUser = !localStorage.getItem("firstVisited");
+			this.socket.dispatch("news.newest", newUser, res => {
+				if (res.status !== "success") return;
+
+				const { news } = res.data;
+
+				if (news) {
+					if (newUser) {
+						this.openModal({ modal: "whatIsNew", data: { news } });
+					} else if (localStorage.getItem("whatIsNew")) {
+						if (
+							parseInt(localStorage.getItem("whatIsNew")) <
+							news.createdAt
+						) {
+							this.openModal({
+								modal: "whatIsNew",
+								data: { news }
+							});
+							localStorage.setItem("whatIsNew", news.createdAt);
+						}
+					} else {
+						if (
+							parseInt(localStorage.getItem("firstVisited")) <
+							news.createdAt
+						)
+							this.openModal({
+								modal: "whatIsNew",
+								data: { news }
+							});
+						localStorage.setItem("whatIsNew", news.createdAt);
+					}
+				}
+
+				if (!localStorage.getItem("firstVisited"))
+					localStorage.setItem("firstVisited", Date.now());
+			});
 		});
 
 		ws.onDisconnect(true, () => {
@@ -271,7 +300,7 @@ export default {
 				.getElementsByTagName("html")[0]
 				.classList.add("christmas-mode");
 		},
-		...mapActions("modalVisibility", ["closeCurrentModal"]),
+		...mapActions("modalVisibility", ["closeCurrentModal", "openModal"]),
 		...mapActions("user/preferences", [
 			"changeNightmode",
 			"changeAutoSkipDisliked",

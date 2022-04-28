@@ -327,6 +327,12 @@
 										"
 									/>
 									<button
+										class="button youtube-get-button"
+										@click="getYouTubeData('albumArt')"
+									>
+										<div class="youtube-icon"></div>
+									</button>
+									<button
 										class="button album-get-button"
 										@click="getAlbumData('albumArt')"
 									>
@@ -554,16 +560,27 @@
 							class="tab"
 							v-show="tab === 'discogs'"
 							:bulk="bulk"
+							:modal-uuid="modalUuid"
+							:modal-module-path="modalModulePath"
 						/>
 						<reports
 							v-if="!newSong"
 							class="tab"
 							v-show="tab === 'reports'"
+							:modal-uuid="modalUuid"
+							:modal-module-path="modalModulePath"
 						/>
-						<youtube class="tab" v-show="tab === 'youtube'" />
+						<youtube
+							class="tab"
+							v-show="tab === 'youtube'"
+							:modal-uuid="modalUuid"
+							:modal-module-path="modalModulePath"
+						/>
 						<musare-songs
 							class="tab"
 							v-show="tab === 'musare-songs'"
+							:modal-uuid="modalUuid"
+							:modal-module-path="modalModulePath"
 						/>
 					</div>
 				</div>
@@ -631,21 +648,20 @@
 				</span>
 			</template>
 		</floating-box>
-		<confirm v-if="modals.editSongConfirm" @confirmed="handleConfirmed()" />
 	</div>
 </template>
 
 <script>
 import { mapState, mapGetters, mapActions } from "vuex";
-import { defineAsyncComponent } from "vue";
 import Toast from "toasters";
+
+import { mapModalState, mapModalActions } from "@/vuex_helpers";
 
 import aw from "@/aw";
 import ws from "@/ws";
 import validation from "@/validation";
 import keyboardShortcuts from "@/keyboardShortcuts";
 
-import Modal from "../../Modal.vue";
 import FloatingBox from "../../FloatingBox.vue";
 import SaveButton from "../../SaveButton.vue";
 import AutoSuggest from "@/components/AutoSuggest.vue";
@@ -657,22 +673,22 @@ import MusareSongs from "./Tabs/Songs.vue";
 
 export default {
 	components: {
-		Modal,
 		FloatingBox,
 		SaveButton,
 		AutoSuggest,
 		Discogs,
 		Reports,
 		Youtube,
-		MusareSongs,
-		Confirm: defineAsyncComponent(() =>
-			import("@/components/modals/Confirm.vue")
-		)
+		MusareSongs
 	},
 	props: {
 		// songId: { type: String, default: null },
+		modalUuid: { type: String, default: "" },
+		modalModulePath: {
+			type: String,
+			default: "modals/editSong/MODAL_UUID"
+		},
 		discogsAlbum: { type: Object, default: null },
-		sector: { type: String, default: "admin" },
 		bulk: { type: Boolean, default: false },
 		flagged: { type: Boolean, default: false }
 	},
@@ -703,11 +719,6 @@ export default {
 			activityWatchVideoDataInterval: null,
 			activityWatchVideoLastStatus: "",
 			activityWatchVideoLastStartDuration: "",
-			confirm: {
-				message: "",
-				action: "",
-				params: null
-			},
 			recommendedGenres: [
 				"Blues",
 				"Country",
@@ -759,10 +770,10 @@ export default {
 			return (
 				this.songDataLoaded &&
 				this.song.thumbnail &&
-				this.song.thumbnail.startsWith("https://i.ytimg.com")
+				this.song.thumbnail.startsWith("https://i.ytimg.com/")
 			);
 		},
-		...mapState("modals/editSong", {
+		...mapModalState("MODAL_MODULE_PATH", {
 			tab: state => state.tab,
 			video: state => state.video,
 			song: state => state.song,
@@ -773,8 +784,7 @@ export default {
 			newSong: state => state.newSong
 		}),
 		...mapState("modalVisibility", {
-			modals: state => state.modals,
-			currentlyActive: state => state.currentlyActive
+			activeModals: state => state.activeModals
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -819,7 +829,7 @@ export default {
 						this.songDeleted = true;
 					}
 				},
-				{ modal: this.bulk ? "editSongs" : "editSong" }
+				{ modalUuid: this.modalUuid }
 			);
 		}
 
@@ -953,8 +963,12 @@ export default {
 			keyCode: 27,
 			handler: () => {
 				if (
-					this.currentlyActive[0] === "editSong" ||
-					this.currentlyActive[0] === "editSongs"
+					this.modals[
+						this.activeModals[this.activeModals.length - 1]
+					] === "editSong" ||
+					this.modals[
+						this.activeModals[this.activeModals.length - 1]
+					] === "editSongs"
 				) {
 					this.onCloseModal();
 				}
@@ -1015,6 +1029,15 @@ export default {
 		shortcutNames.forEach(shortcutName => {
 			keyboardShortcuts.unregisterShortcut(shortcutName);
 		});
+
+		if (!this.bulk) {
+			// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+			this.$store.unregisterModule([
+				"modals",
+				"editSong",
+				this.modalUuid
+			]);
+		}
 	},
 	methods: {
 		onThumbnailLoad() {
@@ -1545,6 +1568,13 @@ export default {
 					)
 				});
 		},
+		getYouTubeData(type) {
+			if (type === "albumArt")
+				this.updateSongField({
+					field: "thumbnail",
+					value: `https://img.youtube.com/vi/${this.song.youtubeId}/mqdefault.jpg`
+				});
+		},
 		fillDuration() {
 			this.song.duration =
 				this.youtubeVideoDuration - this.song.skipDuration;
@@ -1771,22 +1801,22 @@ export default {
 				new Toast(res.message);
 			});
 		},
-		confirmAction(confirm) {
-			this.confirm = confirm;
-			this.updateConfirmMessage(confirm.message);
-			this.openModal("editSongConfirm");
+		confirmAction({ message, action, params }) {
+			this.openModal({
+				modal: "confirm",
+				data: {
+					message,
+					action,
+					params,
+					onCompleted: this.handleConfirmed
+				}
+			});
 		},
-		handleConfirmed() {
-			const { action, params } = this.confirm;
+		handleConfirmed({ action, params }) {
 			if (typeof this[action] === "function") {
 				if (params) this[action](params);
 				else this[action]();
 			}
-			this.confirm = {
-				message: "",
-				action: "",
-				params: null
-			};
 		},
 		onCloseModal() {
 			const songStringified = JSON.stringify({
@@ -1819,10 +1849,16 @@ export default {
 					this.$refs[`${payload}-tab`].scrollIntoView({
 						block: "nearest"
 					});
-				return dispatch("modals/editSong/showTab", payload);
+				return dispatch(
+					`${this.modalModulePath.replace(
+						"MODAL_UUID",
+						this.modalUuid
+					)}/showTab`,
+					payload
+				);
 			}
 		}),
-		...mapActions("modals/editSong", [
+		...mapModalActions("MODAL_MODULE_PATH", [
 			"stopVideo",
 			"hardStopVideo",
 			"loadVideoById",
@@ -1835,7 +1871,6 @@ export default {
 			"updateReports",
 			"setPlaybackRate"
 		]),
-		...mapActions("modals/confirm", ["updateConfirmMessage"]),
 		...mapActions("modalVisibility", ["closeModal", "openModal"])
 	}
 };
@@ -1862,6 +1897,7 @@ export default {
 		.edit-section {
 			.album-get-button,
 			.duration-fill-button,
+			.youtube-get-button,
 			.add-button {
 				&:focus,
 				&:hover {
@@ -2122,7 +2158,8 @@ export default {
 			border-width: 0;
 		}
 
-		.duration-fill-button {
+		.duration-fill-button,
+		.youtube-get-button {
 			background-color: var(--dark-red);
 			color: var(--white);
 			width: 32px;
@@ -2141,11 +2178,21 @@ export default {
 
 		.album-get-button,
 		.duration-fill-button,
+		.youtube-get-button,
 		.add-button {
 			&:focus,
 			&:hover {
 				filter: contrast(0.75);
 				border: 1px solid var(--black) !important;
+			}
+		}
+
+		.youtube-get-button {
+			padding-left: 4px;
+			padding-right: 4px;
+
+			.youtube-icon {
+				background: var(--white);
 			}
 		}
 

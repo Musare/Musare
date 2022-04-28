@@ -4,7 +4,7 @@
 		:title="
 			sector === 'home' && !isOwnerOrAdmin()
 				? 'View Queue'
-				: !isOwnerOrAdmin() && station.partyMode
+				: !isOwnerOrAdmin()
 				? 'Add Song to Queue'
 				: 'Manage Station'
 		"
@@ -12,86 +12,18 @@
 		class="manage-station-modal"
 		:size="isOwnerOrAdmin() || sector !== 'home' ? 'wide' : null"
 		:split="isOwnerOrAdmin() || sector !== 'home'"
+		:intercept-close="true"
+		@close="onCloseModal"
 	>
 		<template #body v-if="station && station._id">
 			<div class="left-section">
 				<div class="section">
-					<div id="about-station-container">
-						<div id="station-info">
-							<div id="station-name">
-								<h1>{{ station.displayName }}</h1>
-								<i
-									v-if="station.type === 'official'"
-									class="material-icons verified-station"
-									content="Verified Station"
-									v-tippy
-								>
-									check_circle
-								</i>
-								<i
-									class="material-icons stationMode"
-									:content="
-										station.partyMode
-											? 'Station in Party mode'
-											: 'Station in Playlist mode'
-									"
-									v-tippy
-									>{{
-										station.partyMode
-											? "emoji_people"
-											: "playlist_play"
-									}}</i
-								>
-							</div>
-							<p>{{ station.description }}</p>
-						</div>
-
-						<div id="admin-buttons">
-							<!-- (Admin) Pause/Resume Button -->
-							<button
-								v-if="isOwnerOrAdmin() && stationPaused"
-								class="button is-danger"
-								@click="resumeStation()"
-							>
-								<i class="material-icons icon-with-button"
-									>play_arrow</i
-								>
-								<span> Resume Station </span>
-							</button>
-							<button
-								v-if="isOwnerOrAdmin() && !stationPaused"
-								class="button is-danger"
-								@click="pauseStation()"
-							>
-								<i class="material-icons icon-with-button"
-									>pause</i
-								>
-								<span> Pause Station </span>
-							</button>
-
-							<!-- (Admin) Skip Button -->
-							<button
-								v-if="isOwnerOrAdmin()"
-								class="button is-danger"
-								@click="skipStation()"
-							>
-								<i class="material-icons icon-with-button"
-									>skip_next</i
-								>
-								<span> Force Skip </span>
-							</button>
-
-							<router-link
-								v-if="sector !== 'station' && station.name"
-								:to="{
-									name: 'station',
-									params: { id: station.name }
-								}"
-								class="button is-primary"
-							>
-								Go To Station
-							</router-link>
-						</div>
+					<div class="station-info-box-wrapper">
+						<station-info-box
+							:station="station"
+							:station-paused="stationPaused"
+							:show-go-to-station="sector !== 'station'"
+						/>
 					</div>
 					<div v-if="isOwnerOrAdmin() || sector !== 'home'">
 						<div class="tab-selection">
@@ -105,39 +37,78 @@
 								Settings
 							</button>
 							<button
-								v-if="isAllowedToParty() || isOwnerOrAdmin()"
+								v-if="canRequest()"
 								class="button is-default"
-								:class="{ selected: tab === 'playlists' }"
-								ref="playlists-tab"
-								@click="showTab('playlists')"
+								:class="{ selected: tab === 'request' }"
+								ref="request-tab"
+								@click="showTab('request')"
 							>
-								Playlists
+								Request
 							</button>
 							<button
-								v-if="isAllowedToParty() || isOwnerOrAdmin()"
+								v-if="
+									isOwnerOrAdmin() && station.autofill.enabled
+								"
 								class="button is-default"
-								:class="{ selected: tab === 'songs' }"
-								ref="songs-tab"
-								@click="showTab('songs')"
+								:class="{ selected: tab === 'autofill' }"
+								ref="autofill-tab"
+								@click="showTab('autofill')"
 							>
-								Songs
+								Autofill
+							</button>
+							<button
+								v-if="isOwnerOrAdmin()"
+								class="button is-default"
+								:class="{ selected: tab === 'blacklist' }"
+								ref="blacklist-tab"
+								@click="showTab('blacklist')"
+							>
+								Blacklist
 							</button>
 						</div>
 						<settings
 							v-if="isOwnerOrAdmin()"
 							class="tab"
 							v-show="tab === 'settings'"
+							:modal-uuid="modalUuid"
+							ref="settingsTabComponent"
 						/>
-						<playlists
-							v-if="isAllowedToParty() || isOwnerOrAdmin()"
+						<request
+							v-if="canRequest()"
 							class="tab"
-							v-show="tab === 'playlists'"
+							v-show="tab === 'request'"
+							:sector="'manageStation'"
+							:disable-auto-request="sector !== 'station'"
+							:modal-uuid="modalUuid"
 						/>
-						<songs
-							v-if="isAllowedToParty() || isOwnerOrAdmin()"
+						<playlist-tab-base
+							v-if="isOwnerOrAdmin() && station.autofill.enabled"
 							class="tab"
-							v-show="tab === 'songs'"
-						/>
+							v-show="tab === 'autofill'"
+							:type="'autofill'"
+							:modal-uuid="modalUuid"
+						>
+							<template #info>
+								<p>
+									Select playlists to automatically add songs
+									within to the queue
+								</p>
+							</template>
+						</playlist-tab-base>
+						<playlist-tab-base
+							v-if="isOwnerOrAdmin()"
+							class="tab"
+							v-show="tab === 'blacklist'"
+							:type="'blacklist'"
+							:modal-uuid="modalUuid"
+						>
+							<template #info>
+								<p>
+									Blacklist a playlist to prevent all songs
+									within from playing in this station
+								</p>
+							</template>
+						</playlist-tab-base>
 					</div>
 				</div>
 			</div>
@@ -150,23 +121,18 @@
 					<song-item
 						v-if="currentSong._id"
 						:song="currentSong"
-						:requested-by="
-							station.type === 'community' &&
-							station.partyMode === true
-						"
+						:requested-by="true"
 						header="Currently Playing.."
 						class="currently-playing"
 					/>
-					<queue sector="manageStation" />
+					<queue :modal-uuid="modalUuid" sector="manageStation" />
 				</div>
 			</div>
 		</template>
 		<template #footer>
 			<div v-if="isOwnerOrAdmin()" class="right">
-				<quick-confirm @confirm="clearAndRefillStationQueue()">
-					<a class="button is-danger">
-						Clear and refill station queue
-					</a>
+				<quick-confirm @confirm="resetQueue()">
+					<a class="button is-danger">Reset queue</a>
 				</quick-confirm>
 				<quick-confirm @confirm="removeStation()">
 					<button class="button is-danger">Delete station</button>
@@ -181,28 +147,27 @@ import { mapState, mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 
-import QuickConfirm from "@/components/QuickConfirm.vue";
+import { mapModalState, mapModalActions } from "@/vuex_helpers";
+
 import Queue from "@/components/Queue.vue";
 import SongItem from "@/components/SongItem.vue";
-import Modal from "../../Modal.vue";
+import StationInfoBox from "@/components/StationInfoBox.vue";
 
-import Settings from "./Tabs/Settings.vue";
-import Playlists from "./Tabs/Playlists.vue";
-import Songs from "./Tabs/Songs.vue";
+import Settings from "./Settings.vue";
+import PlaylistTabBase from "@/components/PlaylistTabBase.vue";
+import Request from "@/components/Request.vue";
 
 export default {
 	components: {
-		Modal,
-		QuickConfirm,
 		Queue,
 		SongItem,
+		StationInfoBox,
 		Settings,
-		Playlists,
-		Songs
+		PlaylistTabBase,
+		Request
 	},
 	props: {
-		stationId: { type: String, default: "" },
-		sector: { type: String, default: "admin" }
+		modalUuid: { type: String, default: "" }
 	},
 	computed: {
 		...mapState({
@@ -210,14 +175,15 @@ export default {
 			userId: state => state.user.auth.userId,
 			role: state => state.user.auth.role
 		}),
-		...mapState("modals/manageStation", {
+		...mapModalState("modals/manageStation/MODAL_UUID", {
+			stationId: state => state.stationId,
+			sector: state => state.sector,
 			tab: state => state.tab,
 			station: state => state.station,
-			originalStation: state => state.originalStation,
 			songsList: state => state.songsList,
 			stationPlaylist: state => state.stationPlaylist,
-			includedPlaylists: state => state.includedPlaylists,
-			excludedPlaylists: state => state.excludedPlaylists,
+			autofill: state => state.autofill,
+			blacklist: state => state.blacklist,
 			stationPaused: state => state.stationPaused,
 			currentSong: state => state.currentSong
 		}),
@@ -225,14 +191,28 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
+	watch: {
+		// eslint-disable-next-line
+		"station.requests": function (requests) {
+			if (this.tab === "request" && !this.canRequest()) {
+				if (this.isOwnerOrAdmin()) this.showTab("settings");
+				else if (!(this.sector === "home" && !this.isOwnerOrAdmin()))
+					this.closeModal("manageStation");
+			}
+		},
+		// eslint-disable-next-line
+		"station.autofill": function (autofill) {
+			if (this.tab === "autofill" && autofill && !autofill.enabled)
+				this.showTab("settings");
+		}
+	},
 	mounted() {
 		this.socket.dispatch(`stations.getStationById`, this.stationId, res => {
 			if (res.status === "success") {
 				const { station } = res.data;
 				this.editStation(station);
 
-				if (!this.isOwnerOrAdmin() && this.station.partyMode)
-					this.showTab("songs");
+				if (!this.isOwnerOrAdmin()) this.showTab("request");
 
 				const currentSong = res.data.station.currentSong
 					? res.data.station.currentSong
@@ -243,20 +223,20 @@ export default {
 				this.updateStationPaused(res.data.station.paused);
 
 				this.socket.dispatch(
-					"stations.getStationIncludedPlaylistsById",
+					"stations.getStationAutofillPlaylistsById",
 					this.stationId,
 					res => {
 						if (res.status === "success")
-							this.setIncludedPlaylists(res.data.playlists);
+							this.setAutofillPlaylists(res.data.playlists);
 					}
 				);
 
 				this.socket.dispatch(
-					"stations.getStationExcludedPlaylistsById",
+					"stations.getStationBlacklistById",
 					this.stationId,
 					res => {
 						if (res.status === "success")
-							this.setExcludedPlaylists(res.data.playlists);
+							this.setBlacklist(res.data.playlists);
 					}
 				);
 
@@ -288,121 +268,61 @@ export default {
 				);
 
 				this.socket.on(
-					"event:station.name.updated",
+					"event:station.updated",
 					res => {
-						this.station.name = res.data.name;
+						this.updateStation(res.data.station);
 					},
-					{ modal: "manageStation" }
+					{ modalUuid: this.modalUuid }
 				);
 
 				this.socket.on(
-					"event:station.displayName.updated",
-					res => {
-						this.station.displayName = res.data.displayName;
-					},
-					{ modal: "manageStation" }
-				);
-
-				this.socket.on(
-					"event:station.description.updated",
-					res => {
-						this.station.description = res.data.description;
-					},
-					{ modal: "manageStation" }
-				);
-
-				this.socket.on(
-					"event:station.partyMode.updated",
-					res => {
-						if (this.station.type === "community")
-							this.station.partyMode = res.data.partyMode;
-					},
-					{ modal: "manageStation" }
-				);
-
-				this.socket.on(
-					"event:station.playMode.updated",
-					res => {
-						this.station.playMode = res.data.playMode;
-					},
-					{ modal: "manageStation" }
-				);
-
-				this.socket.on(
-					"event:station.theme.updated",
-					res => {
-						const { theme } = res.data;
-						this.station.theme = theme;
-					},
-					{ modal: "manageStation" }
-				);
-
-				this.socket.on(
-					"event:station.privacy.updated",
-					res => {
-						this.station.privacy = res.data.privacy;
-					},
-					{ modal: "manageStation" }
-				);
-
-				this.socket.on(
-					"event:station.queue.lock.toggled",
-					res => {
-						this.station.locked = res.data.locked;
-					},
-					{ modal: "manageStation" }
-				);
-
-				this.socket.on(
-					"event:station.includedPlaylist",
+					"event:station.autofillPlaylist",
 					res => {
 						const { playlist } = res.data;
-						const playlistIndex = this.includedPlaylists
-							.map(includedPlaylist => includedPlaylist._id)
+						const playlistIndex = this.autofill
+							.map(autofillPlaylist => autofillPlaylist._id)
 							.indexOf(playlist._id);
-						if (playlistIndex === -1)
-							this.includedPlaylists.push(playlist);
+						if (playlistIndex === -1) this.autofill.push(playlist);
 					},
-					{ modal: "manageStation" }
+					{ modalUuid: this.modalUuid }
 				);
 
 				this.socket.on(
-					"event:station.excludedPlaylist",
+					"event:station.blacklistedPlaylist",
 					res => {
 						const { playlist } = res.data;
-						const playlistIndex = this.excludedPlaylists
-							.map(excludedPlaylist => excludedPlaylist._id)
+						const playlistIndex = this.blacklist
+							.map(blacklistedPlaylist => blacklistedPlaylist._id)
 							.indexOf(playlist._id);
-						if (playlistIndex === -1)
-							this.excludedPlaylists.push(playlist);
+						if (playlistIndex === -1) this.blacklist.push(playlist);
 					},
-					{ modal: "manageStation" }
+					{ modalUuid: this.modalUuid }
 				);
 
 				this.socket.on(
-					"event:station.removedIncludedPlaylist",
+					"event:station.removedAutofillPlaylist",
 					res => {
 						const { playlistId } = res.data;
-						const playlistIndex = this.includedPlaylists
+						const playlistIndex = this.autofill
 							.map(playlist => playlist._id)
 							.indexOf(playlistId);
 						if (playlistIndex >= 0)
-							this.includedPlaylists.splice(playlistIndex, 1);
+							this.autofill.splice(playlistIndex, 1);
 					},
-					{ modal: "manageStation" }
+					{ modalUuid: this.modalUuid }
 				);
 
 				this.socket.on(
-					"event:station.removedExcludedPlaylist",
+					"event:station.removedBlacklistedPlaylist",
 					res => {
 						const { playlistId } = res.data;
-						const playlistIndex = this.excludedPlaylists
+						const playlistIndex = this.blacklist
 							.map(playlist => playlist._id)
 							.indexOf(playlistId);
 						if (playlistIndex >= 0)
-							this.excludedPlaylists.splice(playlistIndex, 1);
+							this.blacklist.splice(playlistIndex, 1);
 					},
-					{ modal: "manageStation" }
+					{ modalUuid: this.modalUuid }
 				);
 
 				this.socket.on(
@@ -411,7 +331,25 @@ export default {
 						new Toast(`The station you were editing was deleted.`);
 						this.closeModal("manageStation");
 					},
-					{ modal: "manageStation" }
+					{ modalUuid: this.modalUuid }
+				);
+
+				this.socket.on(
+					"event:user.station.favorited",
+					res => {
+						if (res.data.stationId === this.stationId)
+							this.updateIsFavorited(true);
+					},
+					{ modalUuid: this.modalUuid }
+				);
+
+				this.socket.on(
+					"event:user.station.unfavorited",
+					res => {
+						if (res.data.stationId === this.stationId)
+							this.updateIsFavorited(false);
+					},
+					{ modalUuid: this.modalUuid }
 				);
 			} else {
 				new Toast(`Station with that ID not found`);
@@ -425,7 +363,7 @@ export default {
 				if (res.data.stationId === this.station._id)
 					this.updateSongsList(res.data.queue);
 			},
-			{ modal: "manageStation" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
@@ -434,7 +372,7 @@ export default {
 				if (res.data.stationId === this.station._id)
 					this.repositionSongInList(res.data.song);
 			},
-			{ modal: "manageStation" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
@@ -443,7 +381,7 @@ export default {
 				if (res.data.stationId === this.station._id)
 					this.updateStationPaused(true);
 			},
-			{ modal: "manageStation" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
@@ -452,7 +390,7 @@ export default {
 				if (res.data.stationId === this.station._id)
 					this.updateStationPaused(false);
 			},
-			{ modal: "manageStation" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		this.socket.on(
@@ -461,7 +399,7 @@ export default {
 				if (res.data.stationId === this.station._id)
 					this.updateCurrentSong(res.data.currentSong || {});
 			},
-			{ modal: "manageStation" }
+			{ modalUuid: this.modalUuid }
 		);
 
 		if (this.isOwnerOrAdmin()) {
@@ -472,7 +410,7 @@ export default {
 						this.stationPlaylist.songs.push(res.data.song);
 				},
 				{
-					modal: "manageStation"
+					modalUuid: this.modalUuid
 				}
 			);
 
@@ -488,7 +426,7 @@ export default {
 					}
 				},
 				{
-					modal: "manageStation"
+					modalUuid: this.modalUuid
 				}
 			);
 
@@ -526,7 +464,7 @@ export default {
 					}
 				},
 				{
-					modal: "manageStation"
+					modalUuid: this.modalUuid
 				}
 			);
 		}
@@ -540,6 +478,13 @@ export default {
 
 		if (this.isOwnerOrAdmin()) this.showTab("settings");
 		this.clearStation();
+
+		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+		this.$store.unregisterModule([
+			"modals",
+			"manageStation",
+			this.modalUuid
+		]);
 	},
 	methods: {
 		isOwner() {
@@ -555,23 +500,16 @@ export default {
 		isOwnerOrAdmin() {
 			return this.isOwner() || this.isAdmin();
 		},
-		isPartyMode() {
+		canRequest() {
 			return (
 				this.station &&
-				this.station.type === "community" &&
-				this.station.partyMode
+				this.loggedIn &&
+				this.station.requests &&
+				this.station.requests.enabled &&
+				(this.station.requests.access === "user" ||
+					(this.station.requests.access === "owner" &&
+						this.isOwnerOrAdmin()))
 			);
-		},
-		isAllowedToParty() {
-			return (
-				this.station &&
-				this.isPartyMode() &&
-				(!this.station.locked || this.isOwnerOrAdmin()) &&
-				this.loggedIn
-			);
-		},
-		isPlaylistMode() {
-			return this.station && !this.isPartyMode();
 		},
 		removeStation() {
 			this.socket.dispatch("stations.remove", this.station._id, res => {
@@ -606,9 +544,9 @@ export default {
 				}
 			);
 		},
-		clearAndRefillStationQueue() {
+		resetQueue() {
 			this.socket.dispatch(
-				"stations.clearAndRefillStationQueue",
+				"stations.resetQueue",
 				this.station._id,
 				res => {
 					if (res.status !== "success")
@@ -620,16 +558,23 @@ export default {
 				}
 			);
 		},
-		...mapActions("modals/manageStation", [
+		onCloseModal() {
+			if (this.isOwnerOrAdmin() || this.sector !== "home")
+				this.$refs.settingsTabComponent.onCloseModal();
+			else this.closeModal("manageStation");
+		},
+		...mapModalActions("modals/manageStation/MODAL_UUID", [
 			"editStation",
-			"setIncludedPlaylists",
-			"setExcludedPlaylists",
+			"setAutofillPlaylists",
+			"setBlacklist",
 			"clearStation",
 			"updateSongsList",
 			"updateStationPlaylist",
 			"repositionSongInList",
 			"updateStationPaused",
-			"updateCurrentSong"
+			"updateCurrentSong",
+			"updateStation",
+			"updateIsFavorited"
 		]),
 		...mapActions({
 			showTab(dispatch, payload) {
@@ -637,11 +582,13 @@ export default {
 					this.$refs[`${payload}-tab`].scrollIntoView({
 						block: "nearest"
 					}); // Only works if the ref exists, which it doesn't always
-				return dispatch("modals/manageStation/showTab", payload);
+				return dispatch(
+					`modals/manageStation/${this.modalUuid}/showTab`,
+					payload
+				);
 			}
 		}),
-		...mapActions("modalVisibility", ["openModal", "closeModal"]),
-		...mapActions("user/playlists", ["editPlaylist"])
+		...mapActions("modalVisibility", ["openModal", "closeModal"])
 	}
 };
 </script>
@@ -666,8 +613,7 @@ export default {
 .night-mode {
 	.manage-station-modal.modal .modal-card-body {
 		.left-section {
-			#about-station-container {
-				background-color: var(--dark-grey-3) !important;
+			.station-info-box-wrapper {
 				border: 0;
 			}
 			.section {
@@ -696,65 +642,11 @@ export default {
 	height: 100%;
 
 	.left-section {
-		#about-station-container {
-			padding: 20px;
-			display: flex;
-			flex-direction: column;
-			flex-grow: unset;
+		.station-info-box-wrapper {
 			border-radius: @border-radius;
-			margin: 0 0 20px 0;
-			background-color: var(--white);
 			border: 1px solid var(--light-grey-3);
-
-			#station-info {
-				#station-name {
-					flex-direction: row !important;
-					display: flex;
-					flex-direction: row;
-					max-width: 100%;
-
-					h1 {
-						margin: 0;
-						font-size: 36px;
-						line-height: 0.8;
-						text-overflow: ellipsis;
-						overflow: hidden;
-					}
-
-					i {
-						margin-left: 10px;
-						font-size: 30px;
-						color: var(--yellow);
-						&.stationMode {
-							padding-left: 10px;
-							margin-left: auto;
-							color: var(--primary-color);
-						}
-					}
-
-					.verified-station {
-						color: var(--primary-color);
-					}
-				}
-
-				p {
-					display: -webkit-box;
-					max-width: 700px;
-					margin-bottom: 10px;
-					overflow: hidden;
-					text-overflow: ellipsis;
-					-webkit-box-orient: vertical;
-					-webkit-line-clamp: 3;
-				}
-			}
-
-			#admin-buttons {
-				display: flex;
-
-				.button {
-					margin: 3px;
-				}
-			}
+			overflow: hidden;
+			margin-bottom: 20px;
 		}
 
 		.tab-selection {
@@ -784,7 +676,7 @@ export default {
 		}
 		.tab {
 			border: 1px solid var(--light-grey-3);
-			padding: 15px;
+			padding: 15px 10px;
 			border-radius: 0 0 @border-radius @border-radius;
 		}
 	}
