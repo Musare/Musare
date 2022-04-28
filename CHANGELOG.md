@@ -1,8 +1,21 @@
 # Changelog
 
+## [v3.5.0] - 2022-04-28
+
+This release includes all changes from v3.5.0-rc1 and v3.5.0-rc2, in addition to the following. Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Changed
+- refactor: close all modals upon route change
+
+### Fixed
+- fix: Autofilling station queue would reset requestedAt
+- fix: Station time elapsed would show false if 0
+
 ## [v3.5.0-rc2] - 2022-04-24
 
-## Added
+This release includes all changes from v3.5.0-rc1, in addition to the following.
+
+### Added
 - chore: Added docker-compose.override.yml documentation
 
 ### Fixed
