@@ -221,9 +221,11 @@ router.beforeEach((to, from, next) => {
 		window.stationInterval = 0;
 	}
 
-	if (to.name === "station") {
-		store.dispatch("modalVisibility/closeModal", "manageStation");
-	}
+	// if (to.name === "station") {
+	// 	store.dispatch("modalVisibility/closeModal", "manageStation");
+	// }
+
+	store.dispatch("modalVisibility/closeAllModals");
 
 	if (ws.socket && to.fullPath !== from.fullPath) {
 		ws.clearCallbacks();

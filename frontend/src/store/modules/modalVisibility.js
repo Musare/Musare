@@ -76,6 +76,9 @@ const actions = {
 		}),
 	closeCurrentModal: ({ commit }) => {
 		commit("closeCurrentModal");
+	},
+	closeAllModals: ({ commit }) => {
+		commit("closeAllModals");
 	}
 };
 
@@ -109,6 +112,14 @@ const mutations = {
 		state.activeModals.pop();
 
 		delete state.modals[currentlyActiveModalUuid];
+	},
+	closeAllModals(state) {
+		state.activeModals.forEach(modalUuid => {
+			ws.destroyModalListeners(modalUuid);
+		});
+
+		state.activeModals = [];
+		state.modals = {};
 	}
 };
 
