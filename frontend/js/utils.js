@@ -11,8 +11,8 @@ export default {
 			.join("");
 	},
 	formatTime: originalDuration => {
-		if (originalDuration) {
-			if (originalDuration < 0) return "0:00";
+		if (typeof originalDuration === "number") {
+			if (originalDuration <= 0) return "0:00";
 
 			let duration = originalDuration;
 			let hours = Math.floor(duration / (60 * 60));
