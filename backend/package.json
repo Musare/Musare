@@ -10,7 +10,7 @@
   "repository": "https://github.com/Musare/Musare",
   "scripts": {
     "dev": "nodemon --es-module-specifier-resolution=node",
-    "docker:dev": "nodemon --es-module-specifier-resolution=node -L /opt/app",
+    "docker:dev": "nodemon --es-module-specifier-resolution=node --legacy-watch --no-stdin /opt/app",
     "docker:prod": "node --es-module-specifier-resolution=node /opt/app",
     "lint": "npx eslint logic"
   },

@@ -313,6 +313,7 @@ export default class CoreClass {
 		this.priorities = options && options.priorities ? options.priorities : {};
 		this.stage = 0;
 		this.jobStatistics = {};
+		this.jobNames = [];
 
 		this.logRules = config.get("customLoggingPerModule")[name]
 			? config.get("customLoggingPerModule")[name]
@@ -434,6 +435,7 @@ export default class CoreClass {
 				averageTiming: new MovingAverageCalculator()
 			};
 		});
+		this.jobNames = jobNames;
 	}
 
 	/**

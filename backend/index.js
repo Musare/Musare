@@ -297,8 +297,43 @@ function printTask(task, layer) {
 	});
 }
 
-process.stdin.on("data", data => {
-	const command = data.toString().replace(/\r?\n|\r/g, "");
+import * as readline from 'node:readline';
+
+var rl = readline.createInterface({
+	input: process.stdin,
+	output: process.stdout,
+	completer: function(command) {
+		const parts = command.split(" ");
+		const commands = ["version", "lockdown", "status", "running ", "queued ", "paused ", "stats ", "jobinfo ", "runjob ", "eval "];
+		if (parts.length === 1) {
+			const hits = commands.filter(c => c.startsWith(parts[0]));
+			return [hits.length ? hits : commands, command];
+		} else if (parts.length === 2) {
+			if (["queued", "running", "paused", "runjob", "stats"].indexOf(parts[0]) !== -1) {
+				const modules = Object.keys(moduleManager.modules);
+				const hits = modules.filter(module => module.startsWith(parts[1])).map(module => `${parts[0]} ${module}${parts[0] === "runjob" ? " " : ""}`);
+				return  [hits.length ? hits : modules, command];
+			} else {
+				return [];
+			}
+		} else if (parts.length === 3) {
+			if (parts[0] === "runjob") {
+				const modules = Object.keys(moduleManager.modules);
+				if (modules.indexOf(parts[1]) !== -1) {
+					const jobs = moduleManager.modules[parts[1]].jobNames;
+					const hits = jobs.filter(job => job.startsWith(parts[2])).map(job => `${parts[0]} ${parts[1]} ${job} `);
+					return  [hits.length ? hits : jobs, command];
+				}
+			} else {
+				return [];
+			}
+		} else {
+			return [];
+		}
+	}
+});
+
+rl.on("line",function(command) {
 	if (command === "version") {
 		printVersion();
 	}
