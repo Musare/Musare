@@ -1,6 +1,7 @@
 import config from "config";
 
 import async from "async";
+import mongoose from "mongoose";
 
 import axios from "axios";
 import bcrypt from "bcrypt";
@@ -1559,19 +1560,20 @@ export default {
 	}),
 
 	/**
-	 * Gets user object from username (only a few properties)
+	 * Gets user object from ObjectId or username (only a few properties)
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} username - the username of the user we are trying to find
+	 * @param {string} identifier - the ObjectId or username of the user we are trying to find
 	 * @param {Function} cb - gets called with the result
 	 */
-	findByUsername: async function findByUsername(session, username, cb) {
+	getBasicUser: async function getBasicUser(session, identifier, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
 			[
 				next => {
-					userModel.findOne({ username: new RegExp(`^${username}$`, "i") }, next);
+					if (mongoose.Types.ObjectId.isValid(identifier)) userModel.findOne({ _id: identifier }, next);
+					else userModel.findOne({ username: new RegExp(`^${identifier}$`, "i") }, next);
 				},
 
 				(account, next) => {
@@ -1583,12 +1585,12 @@ export default {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
-					this.log("ERROR", "FIND_BY_USERNAME", `User not found for username "${username}". "${err}"`);
+					this.log("ERROR", "GET_BASIC_USER", `User not found for "${identifier}". "${err}"`);
 
 					return cb({ status: "error", message: err });
 				}
 
-				this.log("SUCCESS", "FIND_BY_USERNAME", `User found for username "${username}".`);
+				this.log("SUCCESS", "GET_BASIC_USER", `User found for "${identifier}".`);
 
 				return cb({
 					status: "success",
@@ -1605,51 +1607,6 @@ export default {
 				});
 			}
 		);
-	},
-
-	/**
-	 * Gets a username from an userId
-	 *
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} userId - the userId of the person we are trying to get the username from
-	 * @param {Function} cb - gets called with the result
-	 */
-	async getUsernameFromId(session, userId, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		userModel
-			.findById(userId)
-			.then(user => {
-				if (user) {
-					this.log("SUCCESS", "GET_USERNAME_FROM_ID", `Found username for userId "${userId}".`);
-
-					return cb({
-						status: "success",
-						data: { username: user.username }
-					});
-				}
-
-				this.log(
-					"ERROR",
-					"GET_USERNAME_FROM_ID",
-					`Getting the username from userId "${userId}" failed. User not found.`
-				);
-
-				return cb({
-					status: "error",
-					message: "Couldn't find the user."
-				});
-			})
-			.catch(async err => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"GET_USERNAME_FROM_ID",
-						`Getting the username from userId "${userId}" failed. "${err}"`
-					);
-					cb({ status: "error", message: err });
-				}
-			});
 	},
 
 	/**

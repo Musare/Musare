@@ -93,11 +93,7 @@
 					<span v-if="slotProps.item.createdBy === 'Musare'"
 						>Musare</span
 					>
-					<user-id-to-username
-						v-else
-						:user-id="slotProps.item.createdBy"
-						:link="true"
-					/>
+					<user-link v-else :user-id="slotProps.item.createdBy" />
 				</template>
 				<template #column-createdAt="slotProps">
 					<span :title="new Date(slotProps.item.createdAt)">{{

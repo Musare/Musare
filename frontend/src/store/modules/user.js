@@ -105,38 +105,38 @@ const modules = {
 						.then(() => resolve())
 						.catch(() => reject());
 				}),
-			getUsernameFromId: ({ commit, state }, userId) =>
+			getBasicUser: ({ commit, state }, userId) =>
 				new Promise(resolve => {
 					if (typeof state.userIdMap[`Z${userId}`] !== "string") {
 						if (state.userIdRequested[`Z${userId}`] !== true) {
 							commit("requestingUserId", userId);
 							ws.socket.dispatch(
-								"users.getUsernameFromId",
+								"users.getBasicUser",
 								userId,
 								res => {
 									if (res.status === "success") {
-										const { username } = res.data;
+										const user = res.data;
 
 										commit("mapUserId", {
 											userId,
-											username
+											user
 										});
 
 										state.pendingUserIdCallbacks[
 											`Z${userId}`
-										].forEach(cb => cb(username));
+										].forEach(cb => cb(user));
 
 										commit("clearPendingCallbacks", userId);
 
-										return resolve(username);
+										return resolve(user);
 									}
 									return resolve();
 								}
 							);
 						} else {
-							commit("pendingUsername", {
+							commit("pendingUser", {
 								userId,
-								callback: username => resolve(username)
+								callback: user => resolve(user)
 							});
 						}
 					} else {
@@ -163,7 +163,7 @@ const modules = {
 				if (!state.pendingUserIdCallbacks[`Z${userId}`])
 					state.pendingUserIdCallbacks[`Z${userId}`] = [];
 			},
-			pendingUsername(state, data) {
+			pendingUser(state, data) {
 				state.pendingUserIdCallbacks[`Z${data.userId}`].push(
 					data.callback
 				);

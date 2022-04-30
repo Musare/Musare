@@ -40,11 +40,10 @@
 				<p class="song-request-time" v-if="requestedBy">
 					Requested by
 					<strong>
-						<user-id-to-username
+						<user-link
 							v-if="song.requestedBy"
 							:key="song._id"
 							:user-id="song.requestedBy"
-							:link="true"
 						/>
 						<span v-else>station</span>
 						{{ formatedRequestedAt }}

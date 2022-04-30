@@ -155,10 +155,7 @@
 					}}</span>
 				</template>
 				<template #column-requestedBy="slotProps">
-					<user-id-to-username
-						:user-id="slotProps.item.requestedBy"
-						:link="true"
-					/>
+					<user-link :user-id="slotProps.item.requestedBy" />
 				</template>
 				<template #column-requestedAt="slotProps">
 					<span :title="new Date(slotProps.item.requestedAt)">{{
@@ -166,10 +163,7 @@
 					}}</span>
 				</template>
 				<template #column-verifiedBy="slotProps">
-					<user-id-to-username
-						:user-id="slotProps.item.verifiedBy"
-						:link="true"
-					/>
+					<user-link :user-id="slotProps.item.verifiedBy" />
 				</template>
 				<template #column-verifiedAt="slotProps">
 					<span :title="new Date(slotProps.item.verifiedAt)">{{

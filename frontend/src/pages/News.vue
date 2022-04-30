@@ -14,10 +14,9 @@
 					<div class="info">
 						<hr />
 						By
-						<user-id-to-username
+						<user-link
 							:user-id="item.createdBy"
 							:alt="item.createdBy"
-							:link="true"
 						/>&nbsp;<span :title="new Date(item.createdAt)">
 							{{
 								formatDistance(item.createdAt, new Date(), {

@@ -9,10 +9,9 @@
 		<template #footer>
 			<span v-if="news.createdBy">
 				By
-				<user-id-to-username
+				<user-link
 					:user-id="news.createdBy"
-					:alt="news.createdBy"
-					:link="true" /></span
+					:alt="news.createdBy" /></span
 			>&nbsp;<span :title="new Date(news.createdAt)">
 				{{
 					formatDistance(news.createdAt, new Date(), {

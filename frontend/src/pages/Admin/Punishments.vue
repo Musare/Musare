@@ -46,11 +46,10 @@
 					>
 				</template>
 				<template #column-value="slotProps">
-					<user-id-to-username
+					<user-link
 						v-if="slotProps.item.type === 'banUserId'"
 						:user-id="slotProps.item.value"
 						:alt="slotProps.item.value"
-						:link="true"
 					/>
 					<span v-else :title="slotProps.item.value">{{
 						slotProps.item.value
@@ -62,10 +61,7 @@
 					}}</span>
 				</template>
 				<template #column-punishedBy="slotProps">
-					<user-id-to-username
-						:user-id="slotProps.item.punishedBy"
-						:link="true"
-					/>
+					<user-link :user-id="slotProps.item.punishedBy" />
 				</template>
 				<template #column-punishedAt="slotProps">
 					<span :title="new Date(slotProps.item.punishedAt)">{{

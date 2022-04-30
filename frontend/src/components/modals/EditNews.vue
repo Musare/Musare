@@ -57,10 +57,9 @@
 				<div class="right" v-if="createdAt > 0">
 					<span>
 						By
-						<user-id-to-username
+						<user-link
 							:user-id="createdBy"
 							:alt="createdBy"
-							:link="true"
 						/> </span
 					>&nbsp;<span :title="new Date(createdAt)">
 						{{

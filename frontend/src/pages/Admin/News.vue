@@ -69,10 +69,9 @@
 					}}</span>
 				</template>
 				<template #column-createdBy="slotProps">
-					<user-id-to-username
+					<user-link
 						:user-id="slotProps.item.createdBy"
 						:alt="slotProps.item.createdBy"
-						:link="true"
 					/>
 				</template>
 				<template #column-markdown="slotProps">

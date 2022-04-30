@@ -168,10 +168,9 @@
 														siteSettings.sitename
 													}}</span
 												>
-												<user-id-to-username
+												<user-link
 													v-else
 													:user-id="element.owner"
-													:link="true"
 												/>
 											</span>
 										</p>
@@ -418,10 +417,9 @@
 											:title="siteSettings.sitename"
 											>{{ siteSettings.sitename }}</span
 										>
-										<user-id-to-username
+										<user-link
 											v-else
 											:user-id="station.owner"
-											:link="true"
 										/>
 									</span>
 								</p>

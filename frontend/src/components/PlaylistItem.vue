@@ -20,11 +20,7 @@
 						v-if="playlist.createdBy === 'Musare'"
 						:title="sitename"
 						>{{ sitename }}</a
-					><user-id-to-username
-						v-else
-						:user-id="playlist.createdBy"
-						:link="true"
-					/>
+					><user-link v-else :user-id="playlist.createdBy" />
 					•
 				</span>
 				<span :title="playlistLength">

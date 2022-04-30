@@ -101,11 +101,7 @@
 					<span v-if="slotProps.item.type === 'official'"
 						>Musare</span
 					>
-					<user-id-to-username
-						v-else
-						:user-id="slotProps.item.owner"
-						:link="true"
-					/>
+					<user-link v-else :user-id="slotProps.item.owner" />
 				</template>
 				<template #column-theme="slotProps">
 					<span :title="slotProps.item.theme">{{
