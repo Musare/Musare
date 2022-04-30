@@ -44,10 +44,10 @@
 					>
 						<profile-picture
 							:avatar="user.avatar"
-							:name="user.name ? user.name : user.username"
+							:name="user.name || user.username"
 						/>
 
-						{{ user.username }}
+						{{ user.name || user.username }}
 					</router-link>
 				</li>
 			</ul>
