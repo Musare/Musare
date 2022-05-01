@@ -550,6 +550,7 @@ export default class CoreClass {
 
 			if (previousStatus === "QUEUED") {
 				if (!options.isQuiet) this.log("INFO", `Job ${job.name} (${job.toString()}) is queued, so calling it`);
+				// TODO check if job exists
 				this[job.name]
 					.apply(job, [job.payload])
 					.then(response => {

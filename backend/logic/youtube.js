@@ -75,7 +75,7 @@ const quotas = [
 // 	}
 // ];
 
-const quotaExceeded = apiCalls => {
+const isQuotaExceeded = apiCalls => {
 	const reversedApiCalls = apiCalls.slice().reverse();
 	const sortedQuotas = quotas.sort((a, b) => a.limit > b.limit);
 
@@ -111,7 +111,7 @@ const quotaExceeded = apiCalls => {
 	return quotaExceeded;
 };
 
-const quotaStatus = apiCalls => {
+const getQuotaStatus = apiCalls => {
 	const reversedApiCalls = apiCalls.slice().reverse();
 	const sortedQuotas = quotas.sort((a, b) => a.limit > b.limit);
 	const status = {};
@@ -280,6 +280,46 @@ class _YouTubeModule extends CoreClass {
 				})
 				.catch(err => {
 					YouTubeModule.log("ERROR", "GET_SONG", `${err.message}`);
+					return reject(new Error("An error has occured. Please try again later."));
+				});
+		});
+	}
+
+	/**
+	 * Gets the id of the channel upload playlist
+	 * 
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.channelId - the id of the YouTube channel
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_CHANNEL_UPLOADS_PLAYLIST_ID(payload) {
+		return new Promise((resolve, reject) => {
+			const params = {
+				part: "contentDetails",
+				id: payload.channelId
+			};
+
+			YouTubeModule.runJob(
+				"API_GET_CHANNELS",
+				{
+					params
+				},
+				this
+			)
+				.then(({ response }) => {
+					const { data } = response;
+
+					if (data.items.length === 0) return reject(new Error("Channel not found."));
+
+					const playlistId = data.items[0].contentDetails.relatedPlaylists.uploads;
+
+					return resolve({ playlistId });
+				})
+				.catch(err => {
+					YouTubeModule.log("ERROR", "GET_CHANNEL_UPLOADS_PLAYLIST_ID", `${err.message}`);
+					if (err.message === "Request failed with status code 404") {
+						return reject(new Error("Channel not found. Is the channel public/unlisted?"));
+					}
 					return reject(new Error("An error has occured. Please try again later."));
 				});
 		});
@@ -513,6 +553,31 @@ class _YouTubeModule extends CoreClass {
 		});
 	}
 
+	API_GET_CHANNELS(payload) {
+		return new Promise((resolve, reject) => {
+			const { params } = payload;
+
+			YouTubeModule.runJob(
+				"API_CALL",
+				{
+					url: "https://www.googleapis.com/youtube/v3/channels",
+					params: {
+						key: config.get("apis.youtube.key"),
+						...params
+					},
+					quotaCost: 1
+				},
+				this
+			)
+				.then(response => {
+					resolve(response);
+				})
+				.catch(err => {
+					reject(err);
+				});
+		});
+	}
+
 	API_SEARCH(payload) {
 		return new Promise((resolve, reject) => {
 			const { params } = payload;
@@ -542,7 +607,7 @@ class _YouTubeModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			const { url, params, quotaCost } = payload;
 
-			const quotaExceeded = quotaExceeded(YouTubeModule.apiCalls);
+			const quotaExceeded = isQuotaExceeded(YouTubeModule.apiCalls);
 
 			if (quotaExceeded) reject(new Error("Quota has been exceeded. Please wait a while."));
 			else {
