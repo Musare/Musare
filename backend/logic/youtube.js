@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import async from "async";
 import config from "config";
 
@@ -39,6 +41,113 @@ class RateLimitter {
 
 let YouTubeModule;
 
+const quotas = [
+	{
+		type: "QUERIES_PER_DAY",
+		limit: 10000
+	},
+	{
+		type: "QUERIES_PER_MINUTE",
+		limit: 1800000
+	},
+	{
+		type: "QUERIES_PER_100_SECONDS",
+		limit: 3000000
+	}
+];
+
+// const dummyApiCalls = [
+// 	{
+// 		quotaCost: 100,
+// 		date: new Date(new Date() - (1000 * 120))
+// 	},
+// 	{
+// 		quotaCost: 2,
+// 		date: new Date(new Date() - (1000 * 120))
+// 	},
+// 	{
+// 		quotaCost: 1,
+// 		date: new Date()
+// 	},
+// 	{
+// 		quotaCost: 100,
+// 		date: new Date()
+// 	}
+// ];
+
+const quotaExceeded = apiCalls => {
+	const reversedApiCalls = apiCalls.slice().reverse();
+	const sortedQuotas = quotas.sort((a, b) => a.limit > b.limit);
+
+	let quotaExceeded = false;
+
+	for (const quota of sortedQuotas) {
+		let quotaUsed = 0;
+		let dateCutoff = null;
+
+		if (quota.type === "QUERIES_PER_MINUTE") dateCutoff = new Date() - 1000 * 60;
+		else if (quota.type === "QUERIES_PER_100_SECONDS") dateCutoff = new Date() - 1000 * 100;
+		else if (quota.type === "QUERIES_PER_DAY") {
+			// Quota resets at midnight PT, this is my best guess to convert the current date to the last midnight PT
+			dateCutoff = new Date();
+			dateCutoff.setUTCMilliseconds(0);
+			dateCutoff.setUTCSeconds(0);
+			dateCutoff.setUTCMinutes(0);
+			dateCutoff.setUTCHours(dateCutoff.getUTCHours() - 7);
+			dateCutoff.setUTCHours(0);
+		}
+
+		for (const apiCall of reversedApiCalls) {
+			if (apiCall.date >= dateCutoff) quotaUsed += apiCall.quotaCost;
+			else break;
+		}
+
+		if (quotaUsed >= quota.limit) {
+			quotaExceeded = true;
+			break;
+		}
+	}
+
+	return quotaExceeded;
+};
+
+const quotaStatus = apiCalls => {
+	const reversedApiCalls = apiCalls.slice().reverse();
+	const sortedQuotas = quotas.sort((a, b) => a.limit > b.limit);
+	const status = {};
+
+	for (const quota of sortedQuotas) {
+		status[quota.type] = {
+			quotaUsed: 0,
+			limit: quota.limit,
+			quotaExceeded: false
+		};
+		let dateCutoff = null;
+
+		if (quota.type === "QUERIES_PER_MINUTE") dateCutoff = new Date() - 1000 * 60;
+		else if (quota.type === "QUERIES_PER_100_SECONDS") dateCutoff = new Date() - 1000 * 100;
+		else if (quota.type === "QUERIES_PER_DAY") {
+			// Quota resets at midnight PT, this is my best guess to convert the current date to the last midnight PT
+			dateCutoff = new Date();
+			dateCutoff.setUTCMilliseconds(0);
+			dateCutoff.setUTCSeconds(0);
+			dateCutoff.setUTCMinutes(0);
+			dateCutoff.setUTCHours(dateCutoff.getUTCHours() - 7);
+			dateCutoff.setUTCHours(0);
+		}
+
+		for (const apiCall of reversedApiCalls) {
+			if (apiCall.date >= dateCutoff) status[quota.type].quotaUsed += apiCall.quotaCost;
+			else break;
+		}
+
+		if (status[quota.type].quotaUsed >= quota.limit && !status[quota.type].quotaExceeded)
+			status[quota.type].quotaExceeded = true;
+	}
+
+	return status;
+};
+
 class _YouTubeModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
@@ -70,6 +179,8 @@ class _YouTubeModule extends CoreClass {
 			};
 			rax.attach(this.axios);
 
+			this.apiCalls = [];
+
 			resolve();
 		});
 	}
@@ -86,7 +197,6 @@ class _YouTubeModule extends CoreClass {
 		const params = {
 			part: "snippet",
 			q: payload.query,
-			key: config.get("apis.youtube.key"),
 			type: "video",
 			maxResults: 10
 		};
@@ -94,35 +204,22 @@ class _YouTubeModule extends CoreClass {
 		if (payload.pageToken) params.pageToken = payload.pageToken;
 
 		return new Promise((resolve, reject) => {
-			YouTubeModule.rateLimiter.continue().then(() => {
-				YouTubeModule.rateLimiter.restart();
-				YouTubeModule.axios
-					.get("https://www.googleapis.com/youtube/v3/search", {
-						params,
-						raxConfig: {
-							onRetryAttempt: err => {
-								const cfg = rax.getConfig(err);
-								YouTubeModule.log(
-									"ERROR",
-									"SEARCH",
-									`Attempt #${cfg.currentRetryAttempt}. Error: ${err.message}`
-								);
-							}
-						}
-					})
-					.then(res => {
-						if (res.data.err) {
-							YouTubeModule.log("ERROR", "SEARCH", `${res.data.error.message}`);
-							return reject(new Error("An error has occured. Please try again later."));
-						}
+			YouTubeModule.runJob(
+				"API_SEARCH",
+				{
+					params
+				},
+				this
+			)
+				.then(({ response }) => {
+					const { data } = response;
 
-						return resolve(res.data);
-					})
-					.catch(err => {
-						YouTubeModule.log("ERROR", "SEARCH", `${err.message}`);
-						return reject(new Error("An error has occured. Please try again later."));
-					});
-			});
+					return resolve(data);
+				})
+				.catch(err => {
+					YouTubeModule.log("ERROR", "SEARCH", `${err.message}`);
+					return reject(new Error("An error has occured. Please try again later."));
+				});
 		});
 	}
 
@@ -137,80 +234,54 @@ class _YouTubeModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			const params = {
 				part: "snippet,contentDetails,statistics,status",
-				id: payload.youtubeId,
-				key: config.get("apis.youtube.key")
+				id: payload.youtubeId
 			};
 
-			if (payload.pageToken) params.pageToken = payload.pageToken;
+			YouTubeModule.runJob("API_GET_VIDEOS", { params }, this)
+				.then(({ response }) => {
+					const { data } = response;
+					if (data.items[0] === undefined)
+						return reject(new Error("The specified video does not exist or cannot be publicly accessed."));
 
-			YouTubeModule.rateLimiter.continue().then(() => {
-				YouTubeModule.rateLimiter.restart();
-				YouTubeModule.axios
-					.get("https://www.googleapis.com/youtube/v3/videos", {
-						params,
-						timeout: YouTubeModule.requestTimeout,
-						raxConfig: {
-							onRetryAttempt: err => {
-								const cfg = rax.getConfig(err);
-								YouTubeModule.log(
-									"ERROR",
-									"GET_SONG",
-									`Attempt #${cfg.currentRetryAttempt}. Error: ${err.message}`
-								);
-							}
-						}
-					})
-					.then(res => {
-						if (res.data.error) {
-							YouTubeModule.log("ERROR", "GET_SONG", `${res.data.error.message}`);
-							return reject(new Error("An error has occured. Please try again later."));
-						}
+					// TODO Clean up duration converter
+					let dur = data.items[0].contentDetails.duration;
 
-						if (res.data.items[0] === undefined)
-							return reject(
-								new Error("The specified video does not exist or cannot be publicly accessed.")
-							);
+					dur = dur.replace("PT", "");
 
-						// TODO Clean up duration converter
-						let dur = res.data.items[0].contentDetails.duration;
+					let duration = 0;
 
-						dur = dur.replace("PT", "");
-
-						let duration = 0;
-
-						dur = dur.replace(/([\d]*)H/, (v, v2) => {
-							v2 = Number(v2);
-							duration = v2 * 60 * 60;
-							return "";
-						});
-
-						dur = dur.replace(/([\d]*)M/, (v, v2) => {
-							v2 = Number(v2);
-							duration += v2 * 60;
-							return "";
-						});
-
-						// eslint-disable-next-line no-unused-vars
-						dur = dur.replace(/([\d]*)S/, (v, v2) => {
-							v2 = Number(v2);
-							duration += v2;
-							return "";
-						});
-
-						const song = {
-							youtubeId: res.data.items[0].id,
-							title: res.data.items[0].snippet.title,
-							thumbnail: res.data.items[0].snippet.thumbnails.default.url,
-							duration
-						};
-
-						return resolve({ song });
-					})
-					.catch(err => {
-						YouTubeModule.log("ERROR", "GET_SONG", `${err.message}`);
-						return reject(new Error("An error has occured. Please try again later."));
+					dur = dur.replace(/([\d]*)H/, (v, v2) => {
+						v2 = Number(v2);
+						duration = v2 * 60 * 60;
+						return "";
 					});
-			});
+
+					dur = dur.replace(/([\d]*)M/, (v, v2) => {
+						v2 = Number(v2);
+						duration += v2 * 60;
+						return "";
+					});
+
+					// eslint-disable-next-line no-unused-vars
+					dur = dur.replace(/([\d]*)S/, (v, v2) => {
+						v2 = Number(v2);
+						duration += v2;
+						return "";
+					});
+
+					const song = {
+						youtubeId: data.items[0].id,
+						title: data.items[0].snippet.title,
+						thumbnail: data.items[0].snippet.thumbnails.default.url,
+						duration
+					};
+
+					return resolve({ song });
+				})
+				.catch(err => {
+					YouTubeModule.log("ERROR", "GET_SONG", `${err.message}`);
+					return reject(new Error("An error has occured. Please try again later."));
+				});
 		});
 	}
 
@@ -305,49 +376,34 @@ class _YouTubeModule extends CoreClass {
 			const params = {
 				part: "contentDetails",
 				playlistId: payload.playlistId,
-				key: config.get("apis.youtube.key"),
 				maxResults: 50
 			};
 
 			if (payload.nextPageToken) params.pageToken = payload.nextPageToken;
 
-			YouTubeModule.rateLimiter.continue().then(() => {
-				YouTubeModule.rateLimiter.restart();
-				YouTubeModule.axios
-					.get("https://www.googleapis.com/youtube/v3/playlistItems", {
-						params,
-						timeout: YouTubeModule.requestTimeout,
-						raxConfig: {
-							onRetryAttempt: err => {
-								const cfg = rax.getConfig(err);
-								YouTubeModule.log(
-									"ERROR",
-									"GET_PLAYLIST_PAGE",
-									`Attempt #${cfg.currentRetryAttempt}. Error: ${err.message}`
-								);
-							}
-						}
-					})
-					.then(res => {
-						if (res.data.err) {
-							YouTubeModule.log("ERROR", "GET_PLAYLIST_PAGE", `${res.data.error.message}`);
-							return reject(new Error("An error has occured. Please try again later."));
-						}
+			YouTubeModule.runJob(
+				"GET_PLAYLIST_ITEMS",
+				{
+					params
+				},
+				this
+			)
+				.then(({ response }) => {
+					const { data } = response;
 
-						const songs = res.data.items;
+					const songs = data.items;
 
-						if (res.data.nextPageToken) return resolve({ nextPageToken: res.data.nextPageToken, songs });
+					if (data.nextPageToken) return resolve({ nextPageToken: data.nextPageToken, songs });
 
-						return resolve({ songs });
-					})
-					.catch(err => {
-						YouTubeModule.log("ERROR", "GET_PLAYLIST_PAGE", `${err.message}`);
-						if (err.message === "Request failed with status code 404") {
-							return reject(new Error("Playlist not found. Is the playlist public/unlisted?"));
-						}
-						return reject(new Error("An error has occured. Please try again later."));
-					});
-			});
+					return resolve({ songs });
+				})
+				.catch(err => {
+					YouTubeModule.log("ERROR", "GET_PLAYLIST_PAGE", `${err.message}`);
+					if (err.message === "Request failed with status code 404") {
+						return reject(new Error("Playlist not found. Is the playlist public/unlisted?"));
+					}
+					return reject(new Error("An error has occured. Please try again later."));
+				});
 		});
 	}
 
@@ -375,56 +431,142 @@ class _YouTubeModule extends CoreClass {
 			const params = {
 				part: "topicDetails",
 				id: localVideoIds.join(","),
-				key: config.get("apis.youtube.key"),
 				maxResults: videosPerPage
 			};
 
-			YouTubeModule.rateLimiter.continue().then(() => {
-				YouTubeModule.rateLimiter.restart();
+			YouTubeModule.runJob("API_GET_VIDEOS", { params }, this)
+				.then(({ response }) => {
+					const { data } = response;
+
+					const videoIds = [];
+
+					data.items.forEach(item => {
+						const videoId = item.id;
+
+						if (!item.topicDetails) return;
+						if (item.topicDetails.topicCategories.indexOf("https://en.wikipedia.org/wiki/Music") !== -1)
+							videoIds.push(videoId);
+					});
+
+					return YouTubeModule.runJob(
+						"FILTER_MUSIC_VIDEOS",
+						{ videoIds: payload.videoIds, page: page + 1 },
+						this
+					)
+						.then(result => resolve({ videoIds: videoIds.concat(result.videoIds) }))
+						.catch(err => reject(err));
+				})
+				.catch(err => {
+					YouTubeModule.log("ERROR", "FILTER_MUSIC_VIDEOS", `${err.message}`);
+					return reject(new Error("Failed to find playlist from YouTube"));
+				});
+		});
+	}
+
+	API_GET_VIDEOS(payload) {
+		return new Promise((resolve, reject) => {
+			const { params } = payload;
+
+			YouTubeModule.runJob(
+				"API_CALL",
+				{
+					url: "https://www.googleapis.com/youtube/v3/videos",
+					params: {
+						key: config.get("apis.youtube.key"),
+						...params
+					},
+					quotaCost: 1
+				},
+				this
+			)
+				.then(response => {
+					resolve(response);
+				})
+				.catch(err => {
+					reject(err);
+				});
+		});
+	}
+
+	API_GET_PLAYLIST_ITEMS(payload) {
+		return new Promise((resolve, reject) => {
+			const { params } = payload;
+
+			YouTubeModule.runJob(
+				"API_CALL",
+				{
+					url: "https://www.googleapis.com/youtube/v3/playlistItems",
+					params: {
+						key: config.get("apis.youtube.key"),
+						...params
+					},
+					quotaCost: 1
+				},
+				this
+			)
+				.then(response => {
+					resolve(response);
+				})
+				.catch(err => {
+					reject(err);
+				});
+		});
+	}
+
+	API_SEARCH(payload) {
+		return new Promise((resolve, reject) => {
+			const { params } = payload;
+
+			YouTubeModule.runJob(
+				"API_CALL",
+				{
+					url: "https://www.googleapis.com/youtube/v3/search",
+					params: {
+						key: config.get("apis.youtube.key"),
+						...params
+					},
+					quotaCost: 100
+				},
+				this
+			)
+				.then(response => {
+					resolve(response);
+				})
+				.catch(err => {
+					reject(err);
+				});
+		});
+	}
+
+	API_CALL(payload) {
+		return new Promise((resolve, reject) => {
+			const { url, params, quotaCost } = payload;
+
+			const quotaExceeded = quotaExceeded(YouTubeModule.apiCalls);
+
+			if (quotaExceeded) reject(new Error("Quota has been exceeded. Please wait a while."));
+			else {
+				YouTubeModule.apiCalls.push({
+					quotaCost,
+					date: new Date()
+				});
+
 				YouTubeModule.axios
-					.get("https://www.googleapis.com/youtube/v3/videos", {
+					.get(url, {
 						params,
-						timeout: YouTubeModule.requestTimeout,
-						raxConfig: {
-							onRetryAttempt: err => {
-								const cfg = rax.getConfig(err);
-								YouTubeModule.log(
-									"ERROR",
-									"FILTER_MUSIC_VIDEOS",
-									`Attempt #${cfg.currentRetryAttempt}. Error: ${err.message}`
-								);
-							}
-						}
+						timeout: YouTubeModule.requestTimeout
 					})
-					.then(res => {
-						if (res.data.err) {
-							YouTubeModule.log("ERROR", "FILTER_MUSIC_VIDEOS", `${res.data.error.message}`);
-							return reject(new Error("An error has occured. Please try again later."));
+					.then(response => {
+						if (response.data.error) {
+							reject(new Error(response.data.error));
+						} else {
+							resolve({ response });
 						}
-
-						const videoIds = [];
-
-						res.data.items.forEach(item => {
-							const videoId = item.id;
-
-							if (!item.topicDetails) return;
-							if (item.topicDetails.topicCategories.indexOf("https://en.wikipedia.org/wiki/Music") !== -1)
-								videoIds.push(videoId);
-						});
-
-						return YouTubeModule.runJob(
-							"FILTER_MUSIC_VIDEOS",
-							{ videoIds: payload.videoIds, page: page + 1 },
-							this
-						)
-							.then(result => resolve({ videoIds: videoIds.concat(result.videoIds) }))
-							.catch(err => reject(err));
 					})
 					.catch(err => {
-						YouTubeModule.log("ERROR", "FILTER_MUSIC_VIDEOS", `${err.message}`);
-						return reject(new Error("Failed to find playlist from YouTube"));
+						reject(err);
 					});
-			});
+			}
 		});
 	}
 }

@@ -424,6 +424,12 @@ rl.on("line",function(command) {
 		const response = eval(evalCommand);
 		console.log(`Eval response: `, response);
 	}
+	if (command.startsWith("debug")) {
+		moduleManager.modules["youtube"].apiCalls.forEach(apiCall => {
+			// console.log(`${apiCall.date.toISOString()} - ${apiCall.url} - ${apiCall.quotaCost} - ${JSON.stringify(apiCall.params)}`);
+			console.log(apiCall);
+		});
+	}
 });
 
 export default moduleManager;
