@@ -119,7 +119,10 @@ const modules = {
 
 										commit("mapUserId", {
 											userId,
-											user
+											user: {
+												name: user.name,
+												username: user.username
+											}
 										});
 
 										state.pendingUserIdCallbacks[
@@ -155,7 +158,7 @@ const modules = {
 		},
 		mutations: {
 			mapUserId(state, data) {
-				state.userIdMap[`Z${data.userId}`] = data.username;
+				state.userIdMap[`Z${data.userId}`] = data.user;
 				state.userIdRequested[`Z${data.userId}`] = false;
 			},
 			requestingUserId(state, userId) {
