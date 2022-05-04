@@ -1,8 +1,8 @@
 <template>
 	<div>
 		<edit-song
-			:modal-module-path="`modals/editSongs/${this.modalUuid}/editSong`"
-			:modal-uuid="this.modalUuid"
+			:modal-module-path="`modals/editSongs/${modalUuid}/editSong`"
+			:modal-uuid="modalUuid"
 			:bulk="true"
 			:flagged="currentSongFlagged"
 			v-if="currentSong"
@@ -258,23 +258,31 @@ export default {
 			} else this.editNextSong();
 		});
 
-		this.socket.on(`event:admin.song.updated`, res => {
-			const index = this.items
-				.map(item => item.song._id)
-				.indexOf(res.data.song._id);
-			this.items[index].song = {
-				...this.items[index].song,
-				...res.data.song,
-				updated: true
-			};
-		});
+		this.socket.on(
+			`event:admin.song.updated`,
+			res => {
+				const index = this.items
+					.map(item => item.song._id)
+					.indexOf(res.data.song._id);
+				this.items[index].song = {
+					...this.items[index].song,
+					...res.data.song,
+					updated: true
+				};
+			},
+			{ modalUuid: this.modalUuid }
+		);
 
-		this.socket.on(`event:admin.song.removed`, res => {
-			const index = this.items
-				.map(item => item.song._id)
-				.indexOf(res.data.songId);
-			this.items[index].song.removed = true;
-		});
+		this.socket.on(
+			`event:admin.song.removed`,
+			res => {
+				const index = this.items
+					.map(item => item.song._id)
+					.indexOf(res.data.songId);
+				this.items[index].song.removed = true;
+			},
+			{ modalUuid: this.modalUuid }
+		);
 	},
 	beforeUnmount() {
 		this.socket.dispatch("apis.leaveRoom", "edit-songs");
