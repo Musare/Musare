@@ -548,6 +548,8 @@ export default class CoreClass {
 
 			if (previousStatus === "QUEUED") {
 				if (!options.isQuiet) this.log("INFO", `Job ${job.name} (${job.toString()}) is queued, so calling it`);
+
+				if (this[job.name])
 				this[job.name]
 					.apply(job, [job.payload])
 					.then(response => {
@@ -625,6 +627,8 @@ export default class CoreClass {
 						}
 						resolve();
 					});
+				else
+					this.log("ERROR", `Job not found! ${job.name}`)
 			} else {
 				this.log(
 					"INFO",
