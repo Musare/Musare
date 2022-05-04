@@ -1893,6 +1893,16 @@ export default {
 				(songsFound, next) => {
 					const query = {};
 					if (method === "add") {
+						songModel.updateMany(
+							{ _id: { $in: songsFound } },
+							{ $pullAll: { genres } },
+							{ runValidators: true },
+							err => {
+								if (err) {
+									next(err);
+								}
+							}
+						);
 						query.$push = { genres: { $each: genres } };
 					} else if (method === "remove") {
 						query.$pullAll = { genres };
@@ -1991,6 +2001,16 @@ export default {
 				(songsFound, next) => {
 					const query = {};
 					if (method === "add") {
+						songModel.updateMany(
+							{ _id: { $in: songsFound } },
+							{ $pullAll: { artists } },
+							{ runValidators: true },
+							err => {
+								if (err) {
+									next(err);
+								}
+							}
+						);
 						query.$push = { artists: { $each: artists } };
 					} else if (method === "remove") {
 						query.$pullAll = { artists };
@@ -2089,6 +2109,16 @@ export default {
 				(songsFound, next) => {
 					const query = {};
 					if (method === "add") {
+						songModel.updateMany(
+							{ _id: { $in: songsFound } },
+							{ $pullAll: { tags } },
+							{ runValidators: true },
+							err => {
+								if (err) {
+									next(err);
+								}
+							}
+						);
 						query.$push = { tags: { $each: tags } };
 					} else if (method === "remove") {
 						query.$pullAll = { tags };
