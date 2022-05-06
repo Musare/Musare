@@ -1848,10 +1848,16 @@ export default {
 		},
 		onCloseModal() {
 			const songStringified = JSON.stringify({
-				...this.song
+				...this.song,
+				...{
+					duration: Number(this.song.duration).toFixed(3)
+				}
 			});
 			const originalSongStringified = JSON.stringify({
-				...this.originalSong
+				...this.originalSong,
+				...{
+					duration: Number(this.originalSong.duration).toFixed(3)
+				}
 			});
 			const unsavedChanges = songStringified !== originalSongStringified;
 
