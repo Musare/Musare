@@ -1535,7 +1535,9 @@ export default {
 			this.highlightRow(newItemIndex);
 		},
 		highlightRow(itemIndex) {
-			const rowElement = this.$refs[`row-${itemIndex}`];
+			const rowElement = this.$refs[`row-${itemIndex}`]
+				? this.$refs[`row-${itemIndex}`][0]
+				: null;
 			// Set the last clicked item to no longer be highlighted, if it exists
 			if (this.lastSelectedItemIndex >= 0)
 				this.rows[this.lastSelectedItemIndex].highlighted = false;
@@ -1547,7 +1549,9 @@ export default {
 			this.rows[itemIndex].highlighted = true;
 		},
 		unhighlightRow(itemIndex) {
-			const rowElement = this.$refs[`row-${itemIndex}`];
+			const rowElement = this.$refs[`row-${itemIndex}`]
+				? this.$refs[`row-${itemIndex}`][0]
+				: null;
 			if (rowElement)
 				this.$nextTick(() => {
 					rowElement.blur();
