@@ -244,9 +244,12 @@ CacheModule.runJob("SUB", {
 				const newPlaylist = {
 					...playlist._doc,
 					songsCount: playlist.songs.length,
-					songsLength: playlist.songs.reduce((previous, current) => ({
-						duration: previous.duration + current.duration
-					})).duration
+					songsLength: playlist.songs.reduce(
+						(previous, current) => ({
+							duration: previous.duration + current.duration
+						}),
+						{ duration: 0 }
+					).duration
 				};
 				delete newPlaylist.songs;
 				WSModule.runJob("EMIT_TO_ROOMS", {
