@@ -1191,7 +1191,6 @@ export default {
 									else failed += 1;
 									if (res.message === "This song is already in the database.") alreadyInDatabase += 1;
 									if (res.song) songs[index] = res.song;
-									else failed += 1;
 								})
 								.catch(() => {
 									failed += 1;
