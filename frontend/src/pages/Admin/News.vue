@@ -21,7 +21,7 @@
 				:filters="filters"
 				data-action="news.getData"
 				name="admin-news"
-				max-width="1200"
+				:max-width="1200"
 				:events="events"
 			>
 				<template #column-options="slotProps">

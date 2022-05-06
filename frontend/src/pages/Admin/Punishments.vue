@@ -8,7 +8,7 @@
 				:filters="filters"
 				data-action="punishments.getData"
 				name="admin-punishments"
-				max-width="1200"
+				:max-width="1200"
 			>
 				<template #column-options="slotProps">
 					<div class="row-options">
