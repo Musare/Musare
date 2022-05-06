@@ -1104,12 +1104,22 @@ export default {
 					if (currentTime !== undefined)
 						this.youtubeVideoCurrentTime = currentTime.toFixed(3);
 
-					if (this.youtubeVideoDuration === "0.000") {
+					if (this.youtubeVideoDuration.indexOf(".000") !== -1) {
 						const duration = this.video.player.getDuration();
 
 						if (duration !== undefined) {
+							if (
+								`${this.youtubeVideoDuration}` ===
+								`${Number(this.song.duration).toFixed(3)}`
+							)
+								this.song.duration = duration.toFixed(3);
+
 							this.youtubeVideoDuration = duration.toFixed(3);
-							this.youtubeVideoNote = "(~)";
+							if (
+								this.youtubeVideoDuration.indexOf(".000") !== -1
+							)
+								this.youtubeVideoNote = "(~)";
+							else this.youtubeVideoNote = "";
 
 							this.drawCanvas();
 						}
@@ -1164,39 +1174,56 @@ export default {
 								const newYoutubeVideoDuration =
 									youtubeDuration.toFixed(3);
 
-								const songDurationNumber = Number(
-									this.song.duration
-								);
-								const songDurationNumber2 =
-									Number(this.song.duration) + 1;
-								const songDurationNumber3 =
-									Number(this.song.duration) - 1;
-								const fixedSongDuration =
-									songDurationNumber.toFixed(3);
-								const fixedSongDuration2 =
-									songDurationNumber2.toFixed(3);
-								const fixedSongDuration3 =
-									songDurationNumber3.toFixed(3);
-
 								if (
-									this.youtubeVideoDuration !==
-										newYoutubeVideoDuration &&
-									(fixedSongDuration ===
-										this.youtubeVideoDuration ||
-										fixedSongDuration2 ===
-											this.youtubeVideoDuration ||
-										fixedSongDuration3 ===
-											this.youtubeVideoDuration)
-								)
-									this.song.duration =
-										newYoutubeVideoDuration;
+									this.youtubeVideoDuration.indexOf(
+										".000"
+									) !== -1 &&
+									`${this.youtubeVideoDuration}` !==
+										`${newYoutubeVideoDuration}`
+								) {
+									const songDurationNumber = Number(
+										this.song.duration
+									);
+									const songDurationNumber2 =
+										Number(this.song.duration) + 1;
+									const songDurationNumber3 =
+										Number(this.song.duration) - 1;
+									const fixedSongDuration =
+										songDurationNumber.toFixed(3);
+									const fixedSongDuration2 =
+										songDurationNumber2.toFixed(3);
+									const fixedSongDuration3 =
+										songDurationNumber3.toFixed(3);
 
-								this.youtubeVideoDuration =
-									newYoutubeVideoDuration;
-								this.youtubeVideoNote = "";
+									if (
+										`${this.youtubeVideoDuration}` ===
+											`${Number(
+												this.song.duration
+											).toFixed(3)}` &&
+										(fixedSongDuration ===
+											this.youtubeVideoDuration ||
+											fixedSongDuration2 ===
+												this.youtubeVideoDuration ||
+											fixedSongDuration3 ===
+												this.youtubeVideoDuration)
+									)
+										this.song.duration =
+											newYoutubeVideoDuration;
+
+									this.youtubeVideoDuration =
+										newYoutubeVideoDuration;
+									if (
+										this.youtubeVideoDuration.indexOf(
+											".000"
+										) !== -1
+									)
+										this.youtubeVideoNote = "(~)";
+									else this.youtubeVideoNote = "";
+								}
 
 								if (this.song.duration === -1)
-									this.song.duration = youtubeDuration;
+									this.song.duration =
+										this.youtubeVideoDuration;
 
 								youtubeDuration -= this.song.skipDuration;
 								if (this.song.duration > youtubeDuration + 1) {
@@ -1269,6 +1296,7 @@ export default {
 			this.thumbnailHeight = null;
 			this.youtubeVideoCurrentTime = "0.000";
 			this.youtubeVideoDuration = "0.000";
+			this.youtubeVideoNote = "";
 			this.socket.dispatch("apis.leaveRoom", `edit-song.${songId}`);
 			if (this.$refs.saveButton) this.$refs.saveButton.status = "default";
 		},
@@ -1820,10 +1848,16 @@ export default {
 		},
 		onCloseModal() {
 			const songStringified = JSON.stringify({
-				...this.song
+				...this.song,
+				...{
+					duration: Number(this.song.duration).toFixed(3)
+				}
 			});
 			const originalSongStringified = JSON.stringify({
-				...this.originalSong
+				...this.originalSong,
+				...{
+					duration: Number(this.originalSong.duration).toFixed(3)
+				}
 			});
 			const unsavedChanges = songStringified !== originalSongStringified;
 

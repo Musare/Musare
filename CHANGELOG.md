@@ -1,5 +1,23 @@
 # Changelog
 
+## [v3.5.1] - 2022-05-06
+
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Fixed
+- fix: Songs requestSet could return null songs
+- fix: Prevent adding duplicate items with bulk actions
+- fix: Throw error if unknown job is called
+- fix: EditSongs missing modalUuid socker parameter
+- fix: Unable to focus/blur AdvancedTable rows
+- fix: EditSong song duration can reset on video state change
+- fix: Backend exception if an empty playlist is updated
+- fix: False-positive like/dislike playlist activity
+- fix: Removed debug console.log
+- fix: Station current/next song items requestedAt not updated on song changing
+- fix: AdvancedTable max-width not a number
+- fix: AdvancedTable history.replaceState throws warning
+
 ## [v3.5.0] - 2022-04-28
 
 This release includes all changes from v3.5.0-rc1 and v3.5.0-rc2, in addition to the following. Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).

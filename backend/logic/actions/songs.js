@@ -1191,7 +1191,6 @@ export default {
 									else failed += 1;
 									if (res.message === "This song is already in the database.") alreadyInDatabase += 1;
 									if (res.song) songs[index] = res.song;
-									else songs[index] = null;
 								})
 								.catch(() => {
 									failed += 1;
@@ -1272,7 +1271,7 @@ export default {
 							this
 						)
 						.then(res => {
-							if (res.status === "error")
+							if (res.status === "error" && res.message !== "Song wasn't in playlist.")
 								return next("Unable to remove song from the 'Disliked Songs' playlist.");
 							return next(null, song, user.likedSongsPlaylist);
 						})
@@ -1390,7 +1389,7 @@ export default {
 							this
 						)
 						.then(res => {
-							if (res.status === "error")
+							if (res.status === "error" && res.message !== "Song wasn't in playlist.")
 								return next("Unable to remove song from the 'Liked Songs' playlist.");
 							return next(null, song, user.dislikedSongsPlaylist);
 						})
@@ -1528,7 +1527,7 @@ export default {
 							this
 						)
 						.then(res => {
-							if (res.status === "error")
+							if (res.status === "error" && res.message !== "Song wasn't in playlist.")
 								return next("Unable to remove song from the 'Liked Songs' playlist.");
 							return next(null, song);
 						})
@@ -1625,7 +1624,7 @@ export default {
 							this
 						)
 						.then(res => {
-							if (res.status === "error")
+							if (res.status === "error" && res.message !== "Song wasn't in playlist.")
 								return next("Unable to remove song from the 'Disliked Songs' playlist.");
 							return next(null, song, user.likedSongsPlaylist);
 						})
@@ -1893,7 +1892,7 @@ export default {
 				(songsFound, next) => {
 					const query = {};
 					if (method === "add") {
-						query.$push = { genres: { $each: genres } };
+						query.$addToSet = { genres: { $each: genres } };
 					} else if (method === "remove") {
 						query.$pullAll = { genres };
 					} else if (method === "replace") {
@@ -1991,7 +1990,7 @@ export default {
 				(songsFound, next) => {
 					const query = {};
 					if (method === "add") {
-						query.$push = { artists: { $each: artists } };
+						query.$addToSet = { artists: { $each: artists } };
 					} else if (method === "remove") {
 						query.$pullAll = { artists };
 					} else if (method === "replace") {
@@ -2089,7 +2088,7 @@ export default {
 				(songsFound, next) => {
 					const query = {};
 					if (method === "add") {
-						query.$push = { tags: { $each: tags } };
+						query.$addToSet = { tags: { $each: tags } };
 					} else if (method === "remove") {
 						query.$pullAll = { tags };
 					} else if (method === "replace") {

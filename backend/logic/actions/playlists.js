@@ -244,9 +244,12 @@ CacheModule.runJob("SUB", {
 				const newPlaylist = {
 					...playlist._doc,
 					songsCount: playlist.songs.length,
-					songsLength: playlist.songs.reduce((previous, current) => ({
-						duration: previous.duration + current.duration
-					})).duration
+					songsLength: playlist.songs.reduce(
+						(previous, current) => ({
+							duration: previous.duration + current.duration
+						}),
+						{ duration: 0 }
+					).duration
 				};
 				delete newPlaylist.songs;
 				WSModule.runJob("EMIT_TO_ROOMS", {
@@ -1511,9 +1514,11 @@ export default {
 
 				// update cache representation of the playlist
 				(res, next) => {
-					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
-						.then(playlist => next(null, playlist))
-						.catch(next);
+					if (res.modifiedCount === 1)
+						PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
+							.then(playlist => next(null, playlist))
+							.catch(next);
+					else next("Song wasn't in playlist.");
 				},
 
 				(playlist, next) => {

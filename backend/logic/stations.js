@@ -657,7 +657,6 @@ class _StationsModule extends CoreClass {
 					}
 				],
 				(err, song) => {
-					if (err) console.log(33333, err, payload);
 					if (err) reject(err);
 					else resolve({ song });
 				}
