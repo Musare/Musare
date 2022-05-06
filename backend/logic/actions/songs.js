@@ -1271,7 +1271,7 @@ export default {
 							this
 						)
 						.then(res => {
-							if (res.status === "error")
+							if (res.status === "error" && res.message !== "Song wasn't in playlist.")
 								return next("Unable to remove song from the 'Disliked Songs' playlist.");
 							return next(null, song, user.likedSongsPlaylist);
 						})
@@ -1389,7 +1389,7 @@ export default {
 							this
 						)
 						.then(res => {
-							if (res.status === "error")
+							if (res.status === "error" && res.message !== "Song wasn't in playlist.")
 								return next("Unable to remove song from the 'Liked Songs' playlist.");
 							return next(null, song, user.dislikedSongsPlaylist);
 						})
@@ -1527,7 +1527,7 @@ export default {
 							this
 						)
 						.then(res => {
-							if (res.status === "error")
+							if (res.status === "error" && res.message !== "Song wasn't in playlist.")
 								return next("Unable to remove song from the 'Liked Songs' playlist.");
 							return next(null, song);
 						})
@@ -1624,7 +1624,7 @@ export default {
 							this
 						)
 						.then(res => {
-							if (res.status === "error")
+							if (res.status === "error" && res.message !== "Song wasn't in playlist.")
 								return next("Unable to remove song from the 'Disliked Songs' playlist.");
 							return next(null, song, user.likedSongsPlaylist);
 						})

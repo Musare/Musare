@@ -1514,9 +1514,11 @@ export default {
 
 				// update cache representation of the playlist
 				(res, next) => {
-					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
-						.then(playlist => next(null, playlist))
-						.catch(next);
+					if (res.modifiedCount === 1)
+						PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
+							.then(playlist => next(null, playlist))
+							.catch(next);
+					else next("Song wasn't in playlist.");
 				},
 
 				(playlist, next) => {
