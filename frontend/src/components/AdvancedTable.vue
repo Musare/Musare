@@ -1904,7 +1904,11 @@ export default {
 				.map(key => `${key}=${queryObject[key]}`)
 				.join("&")}`;
 
-			window.history.replaceState(null, null, queryString);
+			window.history.replaceState(
+				window.history.state,
+				null,
+				queryString
+			);
 		},
 		setLocalStorage() {
 			localStorage.setItem(
