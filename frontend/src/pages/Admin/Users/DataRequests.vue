@@ -8,7 +8,7 @@
 				:filters="filters"
 				data-action="dataRequests.getData"
 				name="admin-data-requests"
-				max-width="1200"
+				:max-width="1200"
 				:events="events"
 			>
 				<template #column-options="slotProps">
