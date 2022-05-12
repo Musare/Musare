@@ -1,5 +1,6 @@
 import async from "async";
 
+// eslint-disable-next-line
 import moduleManager from "../../../index";
 
 const CacheModule = moduleManager.modules.cache;
