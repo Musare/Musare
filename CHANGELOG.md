@@ -1,5 +1,14 @@
 # Changelog
 
+## [v3.5.2] - 2022-05-12
+
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Fixed
+- fix: Assert package.json import as json
+- fix: Limited NodeJS version to v16.15
+- fix: Temporarily disabled eslint for moduleManager import
+
 ## [v3.5.1] - 2022-05-06
 
 Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
@@ -8,7 +17,7 @@ Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
 - fix: Songs requestSet could return null songs
 - fix: Prevent adding duplicate items with bulk actions
 - fix: Throw error if unknown job is called
-- fix: EditSongs missing modalUuid socker parameter
+- fix: EditSongs missing modalUuid socket parameter
 - fix: Unable to focus/blur AdvancedTable rows
 - fix: EditSong song duration can reset on video state change
 - fix: Backend exception if an empty playlist is updated
