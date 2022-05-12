@@ -4,6 +4,7 @@ import config from "config";
 
 import { isLoginRequired, isOwnerRequired, isAdminRequired } from "./hooks";
 
+// eslint-disable-next-line
 import moduleManager from "../../index";
 
 const DBModule = moduleManager.modules.db;

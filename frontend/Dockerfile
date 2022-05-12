@@ -1,4 +1,4 @@
-FROM node:16
+FROM node:16.15
 
 RUN apt-get update
 RUN apt-get install nginx -y

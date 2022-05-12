@@ -4,7 +4,7 @@ import util from "util";
 import config from "config";
 import fs from "fs";
 
-import package_json from "./package.json";
+import package_json from "./package.json" assert { type: "json" };
 
 const REQUIRED_CONFIG_VERSION = 9;
 
