@@ -2,6 +2,7 @@ import async from "async";
 
 import { isAdminRequired, isLoginRequired } from "./hooks";
 
+// eslint-disable-next-line
 import moduleManager from "../../index";
 
 const DBModule = moduleManager.modules.db;

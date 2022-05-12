@@ -2,6 +2,7 @@ import async from "async";
 
 import { isAdminRequired } from "./hooks";
 
+// eslint-disable-next-line
 import moduleManager from "../../index";
 
 const UtilsModule = moduleManager.modules.utils;

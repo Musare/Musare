@@ -7,6 +7,7 @@ import bcrypt from "bcrypt";
 import sha256 from "sha256";
 import { isAdminRequired, isLoginRequired } from "./hooks";
 
+// eslint-disable-next-line
 import moduleManager from "../../index";
 
 const DBModule = moduleManager.modules.db;
