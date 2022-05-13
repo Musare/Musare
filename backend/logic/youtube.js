@@ -329,6 +329,99 @@ class _YouTubeModule extends CoreClass {
 	}
 
 	/**
+	 * Gets the id of the channel from the custom URL
+	 * 
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.customUrl - the customUrl of the YouTube channel
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	 GET_CHANNEL_ID_FROM_CUSTOM_URL(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						const params = {
+							part: "snippet",
+							type: "channel",
+							maxResults: 50
+						};
+			
+						params.q = payload.customUrl;
+			
+						YouTubeModule.runJob(
+							"API_SEARCH",
+							{
+								params
+							},
+							this
+						)
+							.then(({ response }) => {
+								const { data } = response;
+			
+								if (data.pageInfo.totalResults === 0) return next("Channel not found.");
+
+								const channelIds = data.items.map(item => item.id.channelId);
+			
+								return next(null, channelIds);
+							})
+							.catch(err => {
+								next(err);
+							});
+					},
+
+					(channelIds, next) => {
+						const params = {
+							part: "snippet",
+							id: channelIds.join(","),
+							maxResults: 50
+						};
+						
+						YouTubeModule.runJob(
+							"API_GET_CHANNELS",
+							{
+								params
+							},
+							this
+						)
+							.then(({ response }) => {
+								const { data } = response;
+			
+								if (data.pageInfo.totalResults === 0) return next("Channel not found.");
+
+								let channelId = null;
+								for (const item of data.items) {
+									if (item.snippet.customUrl && item.snippet.customUrl.toLowerCase() === payload.customUrl.toLowerCase()) {
+										channelId = item.id;
+										break;
+									}
+								}
+
+								if (!channelId) return next("Channel not found.");
+			
+								return next(null, channelId);
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				],
+				(channelId, err) => {
+					if (err) {
+						YouTubeModule.log("ERROR", "GET_CHANNEL_ID_FROM_CUSTOM_URL", `${err.message}`);
+						if (err.message === "Request failed with status code 404") {
+							return reject(new Error("Channel not found. Is the channel public/unlisted?"));
+						}
+						return reject(new Error("An error has occured. Please try again later."));
+					}
+
+					return resolve({ channelId });
+				}
+			);
+			
+		});
+	}
+
+	/**
 	 * Returns an array of songs taken from a YouTube playlist
 	 *
 	 * @param {object} payload - object that contains the payload
