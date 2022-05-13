@@ -289,15 +289,18 @@ class _YouTubeModule extends CoreClass {
 	 * Gets the id of the channel upload playlist
 	 * 
 	 * @param {object} payload - object that contains the payload
-	 * @param {string} payload.channelId - the id of the YouTube channel
+	 * @param {string} payload.id - the id of the YouTube channel. Optional: can be left out if specifying a username.
+	 * @param {string} payload.username - the username of the YouTube channel. Only gets used if no id is specified.
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_CHANNEL_UPLOADS_PLAYLIST_ID(payload) {
 		return new Promise((resolve, reject) => {
 			const params = {
-				part: "contentDetails",
-				id: payload.channelId
+				part: "id,contentDetails"
 			};
+
+			if (payload.id) params.id = payload.id;
+			else params.forUsername = payload.username;
 
 			YouTubeModule.runJob(
 				"API_GET_CHANNELS",
@@ -309,7 +312,7 @@ class _YouTubeModule extends CoreClass {
 				.then(({ response }) => {
 					const { data } = response;
 
-					if (data.items.length === 0) return reject(new Error("Channel not found."));
+					if (data.pageInfo.totalResults === 0) return reject(new Error("Channel not found."));
 
 					const playlistId = data.items[0].contentDetails.relatedPlaylists.uploads;
 
@@ -403,7 +406,7 @@ class _YouTubeModule extends CoreClass {
 	}
 
 	/**
-	 * Returns a a page from a YouTube playlist. Is used internally by GET_PLAYLIST.
+	 * Returns a a page from a YouTube playlist. Is used internally by GET_PLAYLIST and GET_CHANNEL.
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {boolean} payload.playlistId - the playlist id to get videos from
@@ -500,6 +503,104 @@ class _YouTubeModule extends CoreClass {
 					YouTubeModule.log("ERROR", "FILTER_MUSIC_VIDEOS", `${err.message}`);
 					return reject(new Error("Failed to find playlist from YouTube"));
 				});
+		});
+	}
+
+	/**
+	 * Returns an array of songs taken from a YouTube channel
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {boolean} payload.musicOnly - whether to return music videos or all videos in the channel
+	 * @param {string} payload.url - the url of the YouTube channel
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	 GET_CHANNEL(payload) {
+		return new Promise((resolve, reject) => {
+			const regex = /\.[\w]+\/(?:(?:channel\/(UC[0-9A-Za-z_-]{21}[AQgw]))|(?:user\/?([\w-]+))|(?:c\/?([\w-]+))|(?:\/?([\w-]+)))/;
+			const splitQuery = regex.exec(payload.url);
+
+			if (!splitQuery) {
+				YouTubeModule.log("ERROR", "GET_CHANNEL", "Invalid YouTube channel URL query.");
+				reject(new Error("Invalid playlist URL."));
+				return;
+			}
+			const channelId = splitQuery[1];
+			const channelUsername = splitQuery[2];
+			const channelCustomUrl = splitQuery[3]; // NOTE: not supported yet
+			const channelUsernameOrCustomUrl = splitQuery[4]; // NOTE: customUrl not supported yet
+
+			console.log(`Channel id: ${channelId}`);
+			console.log(`Channel username: ${channelUsername}`);
+			console.log(`Channel custom URL: ${channelCustomUrl}`);
+			console.log(`Channel username or custom URL: ${channelUsernameOrCustomUrl}`);
+
+			async.waterfall(
+				[
+					next => {
+						const payload = {};
+						if (channelId) payload.id = channelId;
+						else if (channelUsername || channelUsernameOrCustomUrl) payload.username = channelUsername;
+						else return next("No id/username given.");
+
+						return YouTubeModule.runJob("GET_CHANNEL_UPLOADS_PLAYLIST_ID", payload, this)
+							.then(({ playlistId }) => {
+								next(null, playlistId);
+							})
+							.catch(err => next(err));
+					},
+
+					next => {
+						let songs = [];
+						let nextPageToken = "";
+
+						async.whilst(
+							next => {
+								YouTubeModule.log(
+									"INFO",
+									`Getting channel progress for job (${this.toString()}): ${
+										songs.length
+									} songs gotten so far. Is there a next page: ${nextPageToken !== undefined}.`
+								);
+								next(null, nextPageToken !== undefined);
+							},
+							next => {
+								// Add 250ms delay between each job request
+								setTimeout(() => {
+									YouTubeModule.runJob("GET_PLAYLIST_PAGE", { playlistId, nextPageToken }, this)
+										.then(response => {
+											songs = songs.concat(response.songs);
+											nextPageToken = response.nextPageToken;
+											next();
+										})
+										.catch(err => next(err));
+								}, 250);
+							},
+							err => next(err, songs)
+						);
+					},
+
+					(songs, next) =>
+						next(
+							null,
+							songs.map(song => song.contentDetails.videoId)
+						),
+
+					(songs, next) => {
+						if (!payload.musicOnly) return next(true, { songs });
+						return YouTubeModule.runJob("FILTER_MUSIC_VIDEOS", { videoIds: songs.slice() }, this)
+							.then(filteredSongs => next(null, { filteredSongs, songs }))
+							.catch(next);
+					}
+				],
+				(err, response) => {
+					if (err && err !== true) {
+						YouTubeModule.log("ERROR", "GET_CHANNEL", "Some error has occurred.", err.message);
+						reject(new Error(err.message));
+					} else {
+						resolve({ songs: response.filteredSongs ? response.filteredSongs.videoIds : response.songs });
+					}
+				}
+			);
 		});
 	}
 
