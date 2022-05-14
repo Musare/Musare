@@ -2009,7 +2009,6 @@ export default {
 }
 
 .left-section {
-	flex-basis: unset !important;
 	height: 100%;
 	display: flex;
 	flex-direction: column;
@@ -2232,9 +2231,10 @@ export default {
 	}
 
 	.edit-section {
-		width: 735px;
+		display: flex;
+		flex-wrap: wrap;
+		flex-grow: 1;
 		border: 1px solid var(--light-grey-3);
-		flex: 1;
 		margin-top: 16px;
 		border-radius: @border-radius;
 
@@ -2449,6 +2449,26 @@ export default {
 			padding: 15px;
 			height: calc(100% - 32px);
 			overflow: auto;
+		}
+	}
+}
+
+@media screen and (max-width: 1100px) {
+	.left-section,
+	.right-section {
+		height: unset;
+		max-height: unset;
+	}
+
+	.left-section {
+		margin-right: 0;
+	}
+
+	.right-section {
+		flex-basis: 100% !important;
+
+		#tabs-container {
+			width: 100%;
 		}
 	}
 }
