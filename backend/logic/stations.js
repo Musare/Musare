@@ -709,6 +709,98 @@ class _StationsModule extends CoreClass {
 	}
 
 	/**
+	 * Process vote to skips for a station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - the id of the station to process
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	PROCESS_VOTE_SKIPS(payload) {
+		return new Promise((resolve, reject) => {
+			StationsModule.log("INFO", `Processing vote skips for station ${payload.stationId}.`);
+
+			async.waterfall(
+				[
+					next => {
+						StationsModule.runJob(
+							"GET_STATION",
+							{
+								stationId: payload.stationId
+							},
+							this
+						)
+							.then(station => next(null, station))
+							.catch(next);
+					},
+
+					(station, next) => {
+						if (!station) return next("Station not found.");
+						return next(null, station);
+					},
+
+					(station, next) => {
+						WSModule.runJob("GET_SOCKETS_FOR_ROOM", { room: `station.${station._id}` }, this)
+							.then(sockets => next(null, station, sockets))
+							.catch(next);
+					},
+
+					(station, sockets, next) => {
+						const skipVotes = station.currentSong.skipVotes.length;
+						let shouldSkip = false;
+
+						if (sockets.length <= skipVotes) {
+							if (!station.paused) shouldSkip = true;
+							return next(null, shouldSkip);
+						}
+
+						const users = [];
+
+						return async.each(
+							sockets,
+							(socketId, next) => {
+								WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this)
+									.then(socket => {
+										if (socket && socket.session && socket.session.userId) {
+											if (!users.includes(socket.session.userId))
+												users.push(socket.session.userId);
+										}
+										return next();
+									})
+									.catch(next);
+							},
+							err => {
+								if (err) return next(err);
+
+								if (!station.paused && users.length <= skipVotes) shouldSkip = true;
+								return next(null, shouldSkip);
+							}
+						);
+					},
+
+					(shouldSkip, next) => {
+						if (shouldSkip)
+							StationsModule.runJob(
+								"SKIP_STATION",
+								{
+									stationId: payload.stationId,
+									natural: false
+								},
+								this
+							)
+								.then(() => next())
+								.catch(next);
+						else next();
+					}
+				],
+				err => {
+					if (err) reject(err);
+					else resolve();
+				}
+			);
+		});
+	}
+
+	/**
 	 * Skips a station
 	 *
 	 * @param {object} payload - object that contains the payload

@@ -1174,9 +1174,6 @@ export default {
 	voteSkip: isLoginRequired(async function voteSkip(session, stationId, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 
-		let skipVotes = 0;
-		let shouldSkip = false;
-
 		async.waterfall(
 			[
 				next => {
@@ -1220,43 +1217,10 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					return next(null, station);
-				},
 
-				(station, next) => {
-					skipVotes = station.currentSong.skipVotes.length;
-					WSModule.runJob("GET_SOCKETS_FOR_ROOM", { room: `station.${stationId}` }, this)
-						.then(sockets => next(null, sockets))
+					return StationsModule.runJob("PROCESS_VOTE_SKIPS", { stationId }, this)
+						.then(() => next())
 						.catch(next);
-				},
-
-				(sockets, next) => {
-					if (sockets.length <= skipVotes) {
-						shouldSkip = true;
-						return next();
-					}
-
-					const users = [];
-
-					return async.each(
-						sockets,
-						(socketId, next) => {
-							WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this)
-								.then(socket => {
-									if (socket && socket.session && socket.session.userId) {
-										if (!users.includes(socket.session.userId)) users.push(socket.session.userId);
-									}
-									return next();
-								})
-								.catch(next);
-						},
-						err => {
-							if (err) return next(err);
-
-							if (users.length <= skipVotes) shouldSkip = true;
-							return next();
-						}
-					);
 				}
 			],
 			async err => {
@@ -1271,10 +1235,6 @@ export default {
 					channel: "station.voteSkipSong",
 					value: stationId
 				});
-
-				if (shouldSkip) {
-					StationsModule.runJob("SKIP_STATION", { stationId, natural: false });
-				}
 
 				return cb({
 					status: "success",
@@ -1505,9 +1465,7 @@ export default {
 
 				(res, next) => {
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(() => next())
 						.catch(next);
 				}
 			],
@@ -1574,9 +1532,13 @@ export default {
 
 				(res, next) => {
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(() => next())
+						.catch(next);
+				},
+
+				next => {
+					StationsModule.runJob("PROCESS_VOTE_SKIPS", { stationId }, this)
+						.then(() => next())
 						.catch(next);
 				}
 			],
