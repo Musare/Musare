@@ -419,6 +419,16 @@
 										"
 									/>
 									<button
+										class="button youtube-get-button"
+										@click="getYouTubeData('author')"
+									>
+										<div
+											class="youtube-icon"
+											v-tippy
+											content="Fill from YouTube"
+										></div>
+									</button>
+									<button
 										class="button album-get-button"
 										@click="getAlbumData('artists')"
 									>
@@ -1645,7 +1655,7 @@ export default {
 						});
 					else throw new Error("No title found");
 				} catch (e) {
-					new Toast("Unable to fetch YouTube title");
+					new Toast("Unable to fetch YouTube video title");
 				}
 			}
 			if (type === "thumbnail")
@@ -1653,6 +1663,20 @@ export default {
 					field: "thumbnail",
 					value: `https://img.youtube.com/vi/${this.song.youtubeId}/mqdefault.jpg`
 				});
+			if (type === "author") {
+				try {
+					const { author } = this.video.player.getVideoData();
+
+					if (author)
+						this.updateSongField({
+							field: "artists",
+							value: [author]
+						});
+					else throw new Error("No video author found");
+				} catch (e) {
+					new Toast("Unable to fetch YouTube video author");
+				}
+			}
 		},
 		fillDuration() {
 			this.song.duration =
