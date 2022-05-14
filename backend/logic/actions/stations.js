@@ -2124,7 +2124,20 @@ export default {
 
 				(res, next) => {
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => next(null, station))
+						.then(station => {
+							if (station.autofill.enabled)
+								StationsModule.runJob("AUTOFILL_STATION", { stationId }, this)
+									.then(() => next(null, station))
+									.catch(err => {
+										if (
+											err === "Autofill is disabled in this station" ||
+											err === "Autofill limit reached"
+										)
+											return next(null, station);
+										return next(err);
+									});
+							else next(null, station);
+						})
 						.catch(next);
 				}
 			],
