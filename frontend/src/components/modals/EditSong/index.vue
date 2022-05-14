@@ -253,6 +253,16 @@
 										"
 									/>
 									<button
+										class="button youtube-get-button"
+										@click="getYouTubeData('title')"
+									>
+										<div
+											class="youtube-icon"
+											v-tippy
+											content="Fill from YouTube"
+										></div>
+									</button>
+									<button
 										class="button album-get-button"
 										@click="getAlbumData('title')"
 									>
@@ -1621,6 +1631,20 @@ export default {
 				});
 		},
 		getYouTubeData(type) {
+			if (type === "title") {
+				try {
+					const { title } = this.video.player.getVideoData();
+
+					if (title)
+						this.updateSongField({
+							field: "title",
+							value: title
+						});
+					else throw new Error("No title found");
+				} catch (e) {
+					new Toast("Unable to fetch YouTube title");
+				}
+			}
 			if (type === "thumbnail")
 				this.updateSongField({
 					field: "thumbnail",
