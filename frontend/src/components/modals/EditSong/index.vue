@@ -220,13 +220,17 @@
 								</div>
 							</div>
 						</div>
-						<img
+						<song-thumbnail
+							v-if="songDataLoaded && !songDeleted"
+							:song="song"
 							class="thumbnail-preview"
+						/>
+						<img
+							v-if="songDataLoaded && !songDeleted"
+							class="thumbnail-dummy"
 							:src="song.thumbnail"
-							onerror="this.src='/assets/notes-transparent.png'"
 							ref="thumbnailElement"
 							@load="onThumbnailLoad"
-							v-if="songDataLoaded && !songDeleted"
 						/>
 					</div>
 
@@ -302,11 +306,11 @@
 						<div class="control is-grouped">
 							<div class="album-art-container">
 								<label class="label">
-									Album art
+									Thumbnail
 									<i
 										v-if="
 											thumbnailNotSquare &&
-											!thumbnailIsYouTubeThumbnail
+											!isYoutubeThumbnail
 										"
 										class="material-icons thumbnail-warning"
 										content="Thumbnail not square, it will be stretched"
@@ -321,16 +325,20 @@
 										class="input"
 										type="text"
 										v-model="song.thumbnail"
-										placeholder="Enter link to album art..."
+										placeholder="Enter link to thumbnail..."
 										@keyup.shift.enter="
 											getAlbumData('albumArt')
 										"
 									/>
 									<button
 										class="button youtube-get-button"
-										@click="getYouTubeData('albumArt')"
+										@click="getYouTubeData('thumbnail')"
 									>
-										<div class="youtube-icon"></div>
+										<div
+											class="youtube-icon"
+											v-tippy
+											content="Fill from YouTube"
+										></div>
 									</button>
 									<button
 										class="button album-get-button"
@@ -665,6 +673,7 @@ import keyboardShortcuts from "@/keyboardShortcuts";
 import FloatingBox from "../../FloatingBox.vue";
 import SaveButton from "../../SaveButton.vue";
 import AutoSuggest from "@/components/AutoSuggest.vue";
+import SongThumbnail from "@/components/SongThumbnail.vue";
 
 import Discogs from "./Tabs/Discogs.vue";
 import Reports from "./Tabs/Reports.vue";
@@ -676,6 +685,7 @@ export default {
 		FloatingBox,
 		SaveButton,
 		AutoSuggest,
+		SongThumbnail,
 		Discogs,
 		Reports,
 		Youtube,
@@ -766,11 +776,25 @@ export default {
 		};
 	},
 	computed: {
-		thumbnailIsYouTubeThumbnail() {
+		isYoutubeThumbnail() {
 			return (
 				this.songDataLoaded &&
-				this.song.thumbnail &&
-				this.song.thumbnail.startsWith("https://i.ytimg.com/")
+				this.song.youtubeId &&
+				(!this.song.thumbnail ||
+					(this.song.thumbnail &&
+						(this.song.thumbnail.lastIndexOf(
+							"notes-transparent"
+						) !== -1 ||
+							this.song.thumbnail.lastIndexOf(
+								"/assets/notes.png"
+							) !== -1 ||
+							this.song.thumbnail.lastIndexOf("i.ytimg.com") !==
+								-1 ||
+							this.song.thumbnail.lastIndexOf(
+								"img.youtube.com"
+							) !== -1)) ||
+					this.song.thumbnail === "empty" ||
+					this.song.thumbnail == null)
 			);
 		},
 		...mapModalState("MODAL_MODULE_PATH", {
@@ -1597,7 +1621,7 @@ export default {
 				});
 		},
 		getYouTubeData(type) {
-			if (type === "albumArt")
+			if (type === "thumbnail")
 				this.updateSongField({
 					field: "thumbnail",
 					value: `https://img.youtube.com/vi/${this.song.youtubeId}/mqdefault.jpg`
@@ -2170,10 +2194,16 @@ export default {
 			}
 		}
 
-		.thumbnail-preview {
+		:deep(.thumbnail-preview) {
 			width: 189px;
 			height: 189px;
 			margin-left: 16px;
+		}
+
+		.thumbnail-dummy {
+			opacity: 0;
+			height: 10px;
+			width: 10px;
 		}
 	}
 
