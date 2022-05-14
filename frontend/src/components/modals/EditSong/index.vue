@@ -225,6 +225,7 @@
 							:song="song"
 							:fallback="false"
 							class="thumbnail-preview"
+							@loadError="onThumbnailLoadError"
 						/>
 						<img
 							v-if="!isYoutubeThumbnail && !songDeleted"
@@ -325,6 +326,17 @@
 										"
 										class="material-icons thumbnail-warning"
 										content="Thumbnail not square, it will be stretched"
+										v-tippy="{ theme: 'info' }"
+									>
+										warning
+									</i>
+									<i
+										v-if="
+											thumbnailLoadError &&
+											!isYoutubeThumbnail
+										"
+										class="material-icons thumbnail-warning"
+										content="Error loading thumbnail"
 										v-tippy="{ theme: 'info' }"
 									>
 										warning
@@ -781,7 +793,8 @@ export default {
 			showRateDropdown: false,
 			thumbnailNotSquare: false,
 			thumbnailWidth: null,
-			thumbnailHeight: null
+			thumbnailHeight: null,
+			thumbnailLoadError: false
 		};
 	},
 	computed: {
@@ -1075,6 +1088,9 @@ export default {
 				this.thumbnailHeight = null;
 				this.thumbnailWidth = null;
 			}
+		},
+		onThumbnailLoadError(error) {
+			this.thumbnailLoadError = error !== 0;
 		},
 		init() {
 			if (this.newSong) {

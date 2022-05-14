@@ -7,7 +7,7 @@
 	>
 		<slot name="icon" />
 		<div
-			v-if="loadError < 2 && isYoutubeThumbnail"
+			v-if="-1 < loadError < 2 && isYoutubeThumbnail"
 			class="yt-thumbnail-bg"
 			:style="{
 				'background-image':
@@ -17,16 +17,16 @@
 			}"
 		></div>
 		<img
-			v-if="loadError < 2 && isYoutubeThumbnail"
+			v-if="-1 < loadError < 2 && isYoutubeThumbnail"
 			loading="lazy"
 			:src="`https://img.youtube.com/vi/${song.youtubeId}/mqdefault.jpg`"
-			@error="onerror"
+			@error="onLoadError"
 		/>
 		<img
-			v-else-if="loadError === 0"
+			v-else-if="loadError <= 0"
 			loading="lazy"
 			:src="song.thumbnail"
-			@error="onerror"
+			@error="onLoadError"
 		/>
 		<img v-else loading="lazy" src="/assets/notes-transparent.png" />
 	</div>
@@ -44,6 +44,7 @@ export default {
 			default: true
 		}
 	},
+	emits: ["loadError"],
 	data() {
 		return {
 			loadError: 0
@@ -74,14 +75,21 @@ export default {
 	watch: {
 		song() {
 			this.loadError = 0;
+			this.$emit("loadError", this.loadError);
 		}
 	},
 	methods: {
-		onerror() {
-			if (this.fallback)
-				if (this.loadError === 0 && !this.isYoutubeThumbnail)
-					this.loadError = 1;
-				else this.loadError = 2;
+		onLoadError() {
+			// Error codes
+			// -1 - Error occured, fallback disabled
+			// 0 - No errors
+			// 1 - Error occured with thumbnail, fallback enabled
+			// 2 - Error occured with youtube thumbnail, fallback enabled
+			if (!this.fallback) this.loadError = -1;
+			else if (this.loadError === 0 && !this.isYoutubeThumbnail)
+				this.loadError = 1;
+			else this.loadError = 2;
+			this.$emit("loadError", this.loadError);
 		}
 	}
 };
