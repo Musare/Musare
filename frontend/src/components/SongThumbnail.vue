@@ -2,18 +2,7 @@
 	<div
 		:class="{
 			thumbnail: true,
-			'youtube-thumbnail':
-				song.youtubeId &&
-				(!song.thumbnail ||
-					(song.thumbnail &&
-						(song.thumbnail.lastIndexOf('notes-transparent') !==
-							-1 ||
-							song.thumbnail.lastIndexOf('/assets/notes.png') !==
-								-1 ||
-							song.thumbnail.lastIndexOf('i.ytimg.com') !==
-								-1)) ||
-					song.thumbnail === 'empty' ||
-					song.thumbnail == null)
+			'youtube-thumbnail': isYoutubeThumbnail
 		}"
 	>
 		<slot name="icon" />
@@ -27,19 +16,7 @@
 			}"
 		></div>
 		<img
-			v-if="
-				song.youtubeId &&
-				(!song.thumbnail ||
-					(song.thumbnail &&
-						(song.thumbnail.lastIndexOf('notes-transparent') !==
-							-1 ||
-							song.thumbnail.lastIndexOf('/assets/notes.png') !==
-								-1 ||
-							song.thumbnail.lastIndexOf('i.ytimg.com') !==
-								-1)) ||
-					song.thumbnail === 'empty' ||
-					song.thumbnail == null)
-			"
+			v-if="isYoutubeThumbnail"
 			loading="lazy"
 			:src="`https://img.youtube.com/vi/${song.youtubeId}/mqdefault.jpg`"
 			onerror="this.src='/assets/notes-transparent.png'"
@@ -59,6 +36,28 @@ export default {
 		song: {
 			type: Object,
 			default: () => {}
+		}
+	},
+	computed: {
+		isYoutubeThumbnail() {
+			return (
+				this.song.youtubeId &&
+				(!this.song.thumbnail ||
+					(this.song.thumbnail &&
+						(this.song.thumbnail.lastIndexOf(
+							"notes-transparent"
+						) !== -1 ||
+							this.song.thumbnail.lastIndexOf(
+								"/assets/notes.png"
+							) !== -1 ||
+							this.song.thumbnail.lastIndexOf("i.ytimg.com") !==
+								-1 ||
+							this.song.thumbnail.lastIndexOf(
+								"img.youtube.com"
+							) !== -1)) ||
+					this.song.thumbnail === "empty" ||
+					this.song.thumbnail == null)
+			);
 		}
 	}
 };
