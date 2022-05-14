@@ -1389,10 +1389,10 @@ export default {
 
 								if (
 									this.autoSkipDisliked &&
-									res.data.disliked === true
+									res.data.disliked === true &&
+									!(this.localPaused || this.stationPaused)
 								) {
-									this.voteSkipStation();
-									new Toast(
+									this.voteSkipStation(
 										"Automatically voted to skip disliked song."
 									);
 								}
@@ -1457,12 +1457,12 @@ export default {
 							console.log("error with youtube video", err);
 
 							if (err.data === 150 && this.loggedIn) {
-								new Toast(
-									"Automatically voted to skip as this song isn't available for you."
-								);
-
-								// automatically vote to skip
-								this.voteSkipStation();
+								if (!(this.localPaused || this.stationPaused)) {
+									// automatically vote to skip
+									this.voteSkipStation(
+										"Automatically voted to skip as this song isn't available for you."
+									);
+								}
 
 								// persistent message while song is playing
 								const persistentToast = new Toast({
@@ -1732,7 +1732,7 @@ export default {
 				}
 			);
 		},
-		voteSkipStation() {
+		voteSkipStation(message) {
 			this.socket.dispatch(
 				"stations.voteSkip",
 				this.station._id,
@@ -1741,7 +1741,8 @@ export default {
 						new Toast(`Error: ${data.message}`);
 					else
 						new Toast(
-							"Successfully voted to skip the current song."
+							message ||
+								"Successfully voted to skip the current song."
 						);
 				}
 			);
