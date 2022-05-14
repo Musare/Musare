@@ -7,6 +7,7 @@
 	>
 		<slot name="icon" />
 		<div
+			v-if="loadError < 2 && isYoutubeThumbnail"
 			class="yt-thumbnail-bg"
 			:style="{
 				'background-image':
@@ -16,17 +17,18 @@
 			}"
 		></div>
 		<img
-			v-if="isYoutubeThumbnail"
+			v-if="loadError < 2 && isYoutubeThumbnail"
 			loading="lazy"
 			:src="`https://img.youtube.com/vi/${song.youtubeId}/mqdefault.jpg`"
-			onerror="this.src='/assets/notes-transparent.png'"
+			@error="onerror"
 		/>
 		<img
-			v-else
+			v-else-if="loadError === 0"
 			loading="lazy"
 			:src="song.thumbnail"
-			onerror="this.src='/assets/notes-transparent.png'"
+			@error="onerror"
 		/>
+		<img v-else loading="lazy" src="/assets/notes-transparent.png" />
 	</div>
 </template>
 
@@ -36,28 +38,50 @@ export default {
 		song: {
 			type: Object,
 			default: () => {}
+		},
+		fallback: {
+			type: Boolean,
+			default: true
 		}
+	},
+	data() {
+		return {
+			loadError: 0
+		};
 	},
 	computed: {
 		isYoutubeThumbnail() {
 			return (
 				this.song.youtubeId &&
-				(!this.song.thumbnail ||
-					(this.song.thumbnail &&
-						(this.song.thumbnail.lastIndexOf(
-							"notes-transparent"
-						) !== -1 ||
-							this.song.thumbnail.lastIndexOf(
-								"/assets/notes.png"
-							) !== -1 ||
-							this.song.thumbnail.lastIndexOf("i.ytimg.com") !==
-								-1 ||
-							this.song.thumbnail.lastIndexOf(
-								"img.youtube.com"
-							) !== -1)) ||
-					this.song.thumbnail === "empty" ||
-					this.song.thumbnail == null)
+				((this.song.thumbnail &&
+					(this.song.thumbnail.lastIndexOf("i.ytimg.com") !== -1 ||
+						this.song.thumbnail.lastIndexOf("img.youtube.com") !==
+							-1)) ||
+					(this.fallback &&
+						(!this.song.thumbnail ||
+							(this.song.thumbnail &&
+								(this.song.thumbnail.lastIndexOf(
+									"notes-transparent"
+								) !== -1 ||
+									this.song.thumbnail.lastIndexOf(
+										"/assets/notes.png"
+									) !== -1 ||
+									this.song.thumbnail === "empty")) ||
+							this.loadError === 1)))
 			);
+		}
+	},
+	watch: {
+		song() {
+			this.loadError = 0;
+		}
+	},
+	methods: {
+		onerror() {
+			if (this.fallback)
+				if (this.loadError === 0 && !this.isYoutubeThumbnail)
+					this.loadError = 1;
+				else this.loadError = 2;
 		}
 	}
 };

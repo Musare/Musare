@@ -223,10 +223,11 @@
 						<song-thumbnail
 							v-if="songDataLoaded && !songDeleted"
 							:song="song"
+							:fallback="false"
 							class="thumbnail-preview"
 						/>
 						<img
-							v-if="songDataLoaded && !songDeleted"
+							v-if="!isYoutubeThumbnail && !songDeleted"
 							class="thumbnail-dummy"
 							:src="song.thumbnail"
 							ref="thumbnailElement"
@@ -683,7 +684,6 @@ import keyboardShortcuts from "@/keyboardShortcuts";
 import FloatingBox from "../../FloatingBox.vue";
 import SaveButton from "../../SaveButton.vue";
 import AutoSuggest from "@/components/AutoSuggest.vue";
-import SongThumbnail from "@/components/SongThumbnail.vue";
 
 import Discogs from "./Tabs/Discogs.vue";
 import Reports from "./Tabs/Reports.vue";
@@ -695,7 +695,6 @@ export default {
 		FloatingBox,
 		SaveButton,
 		AutoSuggest,
-		SongThumbnail,
 		Discogs,
 		Reports,
 		Youtube,
@@ -790,21 +789,9 @@ export default {
 			return (
 				this.songDataLoaded &&
 				this.song.youtubeId &&
-				(!this.song.thumbnail ||
-					(this.song.thumbnail &&
-						(this.song.thumbnail.lastIndexOf(
-							"notes-transparent"
-						) !== -1 ||
-							this.song.thumbnail.lastIndexOf(
-								"/assets/notes.png"
-							) !== -1 ||
-							this.song.thumbnail.lastIndexOf("i.ytimg.com") !==
-								-1 ||
-							this.song.thumbnail.lastIndexOf(
-								"img.youtube.com"
-							) !== -1)) ||
-					this.song.thumbnail === "empty" ||
-					this.song.thumbnail == null)
+				this.song.thumbnail &&
+				(this.song.thumbnail.lastIndexOf("i.ytimg.com") !== -1 ||
+					this.song.thumbnail.lastIndexOf("img.youtube.com") !== -1)
 			);
 		},
 		...mapModalState("MODAL_MODULE_PATH", {

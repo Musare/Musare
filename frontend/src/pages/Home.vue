@@ -519,14 +519,11 @@ import { mapState, mapGetters, mapActions } from "vuex";
 import draggable from "vuedraggable";
 import Toast from "toasters";
 
-import SongThumbnail from "@/components/SongThumbnail.vue";
-
 import ws from "@/ws";
 import keyboardShortcuts from "@/keyboardShortcuts";
 
 export default {
 	components: {
-		SongThumbnail,
 		draggable
 	},
 	data() {

@@ -161,11 +161,10 @@ import { mapActions, mapState } from "vuex";
 import { formatDistance, parseISO } from "date-fns";
 
 import AddToPlaylistDropdown from "./AddToPlaylistDropdown.vue";
-import SongThumbnail from "./SongThumbnail.vue";
 import utils from "../../js/utils";
 
 export default {
-	components: { AddToPlaylistDropdown, SongThumbnail },
+	components: { AddToPlaylistDropdown },
 	props: {
 		song: {
 			type: Object,

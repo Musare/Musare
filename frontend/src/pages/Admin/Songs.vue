@@ -81,11 +81,9 @@
 					</div>
 				</template>
 				<template #column-thumbnailImage="slotProps">
-					<img
+					<song-thumbnail
 						class="song-thumbnail"
-						:src="slotProps.item.thumbnail"
-						onerror="this.src='/assets/notes-transparent.png'"
-						loading="lazy"
+						:song="slotProps.item"
 					/>
 				</template>
 				<template #column-thumbnailUrl="slotProps">
@@ -750,12 +748,12 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.song-thumbnail {
-	display: block;
+:deep(.song-thumbnail) {
 	width: 50px;
 	height: 50px;
+	min-width: 50px;
+	min-height: 50px;
 	margin: 0 auto;
-	object-fit: contain;
 }
 
 :deep(.bulk-popup .bulk-actions) {
