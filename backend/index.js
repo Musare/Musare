@@ -406,7 +406,7 @@ rl.on("line",function(command) {
 		const parts = command.split(" ");
 		const module = parts[1];
 		const jobName = parts[2];
-		const payload = JSON.parse(parts[3]);
+		const payload = parts.length < 4 ? {} : JSON.parse(parts[3]);
 
 		moduleManager.modules[module]
 			.runJob(jobName, payload)
