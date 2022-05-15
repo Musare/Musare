@@ -6,82 +6,110 @@
 			<p>Import songs from YouTube playlists or channels</p>
 			<hr class="section-horizontal-rule" />
 
-			<div class="start-new-import">
-				<h4>Start New Import</h4>
-				<hr class="section-horizontal-rule" />
+			<div class="section-row">
+				<div class="left-section">
+					<div class="section">
+						<h4>Start New Import</h4>
+						<hr class="section-horizontal-rule" />
 
-				<div v-if="createImport.stage === 1" class="stage">
-					<label class="label">Import Method</label>
-					<div class="control is-expanded select">
-						<select v-model="createImport.importMethod">
-							<option value="youtube">YouTube</option>
-						</select>
-					</div>
+						<div v-if="createImport.stage === 1" class="stage">
+							<label class="label">Import Method</label>
+							<div class="control is-expanded select">
+								<select v-model="createImport.importMethod">
+									<option value="youtube">YouTube</option>
+								</select>
+							</div>
 
-					<div class="control is-expanded">
-						<button
-							class="button is-info next-form"
-							@click.prevent="submitCreateImport(1)"
+							<div class="control is-expanded">
+								<button
+									class="button is-primary"
+									@click.prevent="submitCreateImport(1)"
+								>
+									<i class="material-icons">navigate_next</i>
+									Next
+								</button>
+							</div>
+						</div>
+
+						<div
+							v-else-if="
+								createImport.stage === 2 &&
+								createImport.importMethod === 'youtube'
+							"
+							class="stage"
 						>
-							<i class="material-icons icon-with-button"
-								>navigate_next</i
-							>
-							Next
-						</button>
+							<label class="label"
+								>YouTube URL
+								<info-icon
+									content="YouTube playlist or channel URLs may be provided"
+							/></label>
+							<div class="control is-expanded">
+								<input
+									class="input"
+									type="text"
+									placeholder="YouTube Playlist or Channel URL"
+									v-model="createImport.youtubeUrl"
+								/>
+							</div>
+
+							<label class="label"
+								>Import Music Only<info-icon
+									content="Only import videos from YouTube identified as music"
+							/></label>
+							<div class="control is-expanded select">
+								<select
+									v-model="createImport.isImportingOnlyMusic"
+								>
+									<option :value="false">false</option>
+									<option :value="true">true</option>
+								</select>
+							</div>
+
+							<div class="control is-grouped">
+								<button
+									class="control button is-danger"
+									@click.prevent="prevCreateImport(2)"
+								>
+									<i class="material-icons"
+										>navigate_before</i
+									>
+									Go Back
+								</button>
+								<button
+									class="control is-expanded button is-primary"
+									@click.prevent="submitCreateImport(2)"
+								>
+									<i class="material-icons icon-with-button"
+										>publish</i
+									>
+									Import
+								</button>
+							</div>
+						</div>
+
+						<div v-if="createImport.stage === 3" class="stage">
+							<p class="has-text-centered import-started">
+								Import Started
+							</p>
+
+							<div class="control is-expanded">
+								<button
+									class="button is-info"
+									@click.prevent="submitCreateImport(3)"
+								>
+									<i class="material-icons icon-with-button"
+										>restart_alt</i
+									>
+									Start Again
+								</button>
+							</div>
+						</div>
 					</div>
 				</div>
-
-				<div
-					v-else-if="
-						createImport.stage === 2 &&
-						createImport.importMethod === 'youtube'
-					"
-					class="stage"
-				>
-					<label class="label">YouTube URL</label>
-					<div class="control is-expanded">
-						<input
-							class="input"
-							type="text"
-							placeholder="YouTube Playlist or Channel URL"
-							v-model="createImport.youtubeUrl"
-						/>
-					</div>
-
-					<label class="label">Video Type</label>
-					<div class="control is-expanded select">
-						<select v-model="createImport.isImportingOnlyMusic">
-							<option :value="false">Import all</option>
-							<option :value="true">Import only music</option>
-						</select>
-					</div>
-
-					<div class="control is-expanded">
-						<button
-							class="button is-info"
-							@click.prevent="submitCreateImport(2)"
-						>
-							<i class="material-icons icon-with-button"
-								>publish</i
-							>
-							Import
-						</button>
-					</div>
-				</div>
-
-				<div v-if="createImport.stage === 3" class="stage">
-					<p>Import Started</p>
-
-					<div class="control is-expanded">
-						<button
-							class="button is-info"
-							@click.prevent="submitCreateImport(3)"
-						>
-							<i class="material-icons icon-with-button"
-								>restart_alt</i
-							>
-							Start Again
-						</button>
+				<div class="right-section">
+					<div class="section">
+						<h4>Manage Imports</h4>
+						<hr class="section-horizontal-rule" />
 					</div>
 				</div>
 			</div>
@@ -113,8 +141,6 @@ export default {
 	},
 	methods: {
 		submitCreateImport(stage) {
-			console.log(111, `Submitted stage ${stage}`, this.createImport);
-
 			if (stage === 2) {
 				const playlistRegex = /[\\?&]list=([^&#]*)/;
 				const channelRegex =
@@ -144,6 +170,9 @@ export default {
 					"https://www.youtube.com/channel/UCio_FVgKVgqcHrRiXDpnqbw",
 				isImportingOnlyMusic: false
 			};
+		},
+		prevCreateImport(stage) {
+			if (stage === 2) this.createImport.stage = 1;
 		},
 		importFromYoutube() {
 			let isImportingPlaylist = true;
@@ -187,8 +216,11 @@ export default {
 		color: var(--light-grey-2);
 	}
 
-	.start-new-import {
-		background-color: var(--dark-grey-2) !important;
+	.left-section,
+	.right-section {
+		.section {
+			background-color: var(--dark-grey-2) !important;
+		}
 	}
 }
 
@@ -211,24 +243,81 @@ export default {
 		margin: 10px 0;
 	}
 
-	.start-new-import {
-		max-width: 600px;
-		margin: 10px 0;
-		padding: 10px;
-		border-radius: 5px;
-		box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1),
-			0 0 0 1px rgba(10, 10, 10, 0.1);
+	.section-row {
+		display: flex;
+		flex-wrap: wrap;
+		height: 100%;
 
-		h4 {
-			font-size: 22px;
-			margin: 5px 0;
+		.left-section,
+		.right-section {
+			max-height: 100%;
+			overflow-y: auto;
+			flex-grow: 1;
+
+			.section {
+				display: flex;
+				flex-direction: column;
+				flex-grow: 1;
+				width: auto;
+				margin: 5px;
+				padding: 15px;
+				border-radius: 5px;
+				box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1),
+					0 0 0 1px rgba(10, 10, 10, 0.1);
+
+				h4 {
+					font-size: 22px;
+					margin: 0;
+				}
+
+				.control.is-expanded {
+					.button {
+						width: 100%;
+					}
+
+					&:not(:last-of-type) {
+						margin-bottom: 10px !important;
+					}
+
+					&:last-of-type {
+						margin-bottom: 0 !important;
+					}
+				}
+
+				.control.is-grouped > .button {
+					&:not(:last-child) {
+						border-radius: 5px 0 0 5px;
+					}
+
+					&:last-child {
+						border-radius: 0 5px 5px 0;
+					}
+				}
+			}
 		}
 
-		.control.is-expanded .button {
-			width: 100%;
+		.left-section {
+			max-width: 600px;
 
-			&.next-form .material-icons {
-				font-size: 24px;
+			.section .import-started {
+				font-size: 18px;
+				font-weight: 600;
+				margin-bottom: 10px;
+			}
+		}
+
+		@media screen and (max-width: 1100px) {
+			.left-section,
+			.right-section {
+				flex-basis: 100%;
+				max-height: unset;
+			}
+
+			.left-section {
+				max-width: unset;
+				.section {
+					margin-bottom: 10px;
+				}
 			}
 		}
 	}
