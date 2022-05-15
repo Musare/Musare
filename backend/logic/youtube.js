@@ -40,6 +40,8 @@ class RateLimitter {
 }
 
 let YouTubeModule;
+let CacheModule;
+let DBModule;
 
 const quotas = [
 	{
@@ -55,25 +57,6 @@ const quotas = [
 		limit: 3000000
 	}
 ];
-
-// const dummyApiCalls = [
-// 	{
-// 		quotaCost: 100,
-// 		date: new Date(new Date() - (1000 * 120))
-// 	},
-// 	{
-// 		quotaCost: 2,
-// 		date: new Date(new Date() - (1000 * 120))
-// 	},
-// 	{
-// 		quotaCost: 1,
-// 		date: new Date()
-// 	},
-// 	{
-// 		quotaCost: 100,
-// 		date: new Date()
-// 	}
-// ];
 
 const isQuotaExceeded = apiCalls => {
 	const reversedApiCalls = apiCalls.slice().reverse();
@@ -111,43 +94,6 @@ const isQuotaExceeded = apiCalls => {
 	return quotaExceeded;
 };
 
-const getQuotaStatus = apiCalls => {
-	const reversedApiCalls = apiCalls.slice().reverse();
-	const sortedQuotas = quotas.sort((a, b) => a.limit > b.limit);
-	const status = {};
-
-	for (const quota of sortedQuotas) {
-		status[quota.type] = {
-			quotaUsed: 0,
-			limit: quota.limit,
-			quotaExceeded: false
-		};
-		let dateCutoff = null;
-
-		if (quota.type === "QUERIES_PER_MINUTE") dateCutoff = new Date() - 1000 * 60;
-		else if (quota.type === "QUERIES_PER_100_SECONDS") dateCutoff = new Date() - 1000 * 100;
-		else if (quota.type === "QUERIES_PER_DAY") {
-			// Quota resets at midnight PT, this is my best guess to convert the current date to the last midnight PT
-			dateCutoff = new Date();
-			dateCutoff.setUTCMilliseconds(0);
-			dateCutoff.setUTCSeconds(0);
-			dateCutoff.setUTCMinutes(0);
-			dateCutoff.setUTCHours(dateCutoff.getUTCHours() - 7);
-			dateCutoff.setUTCHours(0);
-		}
-
-		for (const apiCall of reversedApiCalls) {
-			if (apiCall.date >= dateCutoff) status[quota.type].quotaUsed += apiCall.quotaCost;
-			else break;
-		}
-
-		if (status[quota.type].quotaUsed >= quota.limit && !status[quota.type].quotaExceeded)
-			status[quota.type].quotaExceeded = true;
-	}
-
-	return status;
-};
-
 class _YouTubeModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
@@ -167,7 +113,14 @@ class _YouTubeModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	initialize() {
-		return new Promise(resolve => {
+		return new Promise(async resolve => {
+			CacheModule = this.moduleManager.modules.cache;
+			DBModule = this.moduleManager.modules.db;
+
+			this.youtubeApiRequestModel = this.YoutubeApiRequestModel = await DBModule.runJob("GET_MODEL", {
+				modelName: "youtubeApiRequest"
+			});
+
 			this.rateLimiter = new RateLimitter(config.get("apis.youtube.rateLimit"));
 			this.requestTimeout = config.get("apis.youtube.requestTimeout");
 
@@ -179,9 +132,16 @@ class _YouTubeModule extends CoreClass {
 			};
 			rax.attach(this.axios);
 
-			this.apiCalls = [];
-
-			resolve();
+			this.youtubeApiRequestModel
+				.find({ $gte: new Date() - 2 * 24 * 60 * 60 * 1000 }, { date: true, quotaCost: true, _id: false })
+				.sort({ date: 1 })
+				.exec((err, youtubeApiRequests) => {
+					if (err) console.log("Couldn't load YouTube API requests.");
+					else {
+						this.apiCalls = youtubeApiRequests;
+						resolve();
+					}
+				});
 		});
 	}
 
@@ -220,6 +180,45 @@ class _YouTubeModule extends CoreClass {
 					YouTubeModule.log("ERROR", "SEARCH", `${err.message}`);
 					return reject(new Error("An error has occured. Please try again later."));
 				});
+		});
+	}
+
+	GET_QUOTA_STATUS() {
+		return new Promise(resolve => {
+			const reversedApiCalls = YouTubeModule.apiCalls.slice().reverse();
+			const sortedQuotas = quotas.sort((a, b) => a.limit > b.limit);
+			const status = {};
+
+			for (const quota of sortedQuotas) {
+				status[quota.type] = {
+					quotaUsed: 0,
+					limit: quota.limit,
+					quotaExceeded: false
+				};
+				let dateCutoff = null;
+
+				if (quota.type === "QUERIES_PER_MINUTE") dateCutoff = new Date() - 1000 * 60;
+				else if (quota.type === "QUERIES_PER_100_SECONDS") dateCutoff = new Date() - 1000 * 100;
+				else if (quota.type === "QUERIES_PER_DAY") {
+					// Quota resets at midnight PT, this is my best guess to convert the current date to the last midnight PT
+					dateCutoff = new Date();
+					dateCutoff.setUTCMilliseconds(0);
+					dateCutoff.setUTCSeconds(0);
+					dateCutoff.setUTCMinutes(0);
+					dateCutoff.setUTCHours(dateCutoff.getUTCHours() - 7);
+					dateCutoff.setUTCHours(0);
+				}
+
+				for (const apiCall of reversedApiCalls) {
+					if (apiCall.date >= dateCutoff) status[quota.type].quotaUsed += apiCall.quotaCost;
+					else break;
+				}
+
+				if (status[quota.type].quotaUsed >= quota.limit && !status[quota.type].quotaExceeded)
+					status[quota.type].quotaExceeded = true;
+			}
+
+			resolve({ status });
 		});
 	}
 
@@ -287,7 +286,7 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Gets the id of the channel upload playlist
-	 * 
+	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.id - the id of the YouTube channel. Optional: can be left out if specifying a username.
 	 * @param {string} payload.username - the username of the YouTube channel. Only gets used if no id is specified.
@@ -330,12 +329,12 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Gets the id of the channel from the custom URL
-	 * 
+	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.customUrl - the customUrl of the YouTube channel
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	 GET_CHANNEL_ID_FROM_CUSTOM_URL(payload) {
+	GET_CHANNEL_ID_FROM_CUSTOM_URL(payload) {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
@@ -345,9 +344,9 @@ class _YouTubeModule extends CoreClass {
 							type: "channel",
 							maxResults: 50
 						};
-			
+
 						params.q = payload.customUrl;
-			
+
 						YouTubeModule.runJob(
 							"API_SEARCH",
 							{
@@ -357,11 +356,11 @@ class _YouTubeModule extends CoreClass {
 						)
 							.then(({ response }) => {
 								const { data } = response;
-			
+
 								if (data.pageInfo.totalResults === 0) return next("Channel not found.");
 
 								const channelIds = data.items.map(item => item.id.channelId);
-			
+
 								return next(null, channelIds);
 							})
 							.catch(err => {
@@ -375,7 +374,7 @@ class _YouTubeModule extends CoreClass {
 							id: channelIds.join(","),
 							maxResults: 50
 						};
-						
+
 						YouTubeModule.runJob(
 							"API_GET_CHANNELS",
 							{
@@ -385,19 +384,22 @@ class _YouTubeModule extends CoreClass {
 						)
 							.then(({ response }) => {
 								const { data } = response;
-			
+
 								if (data.pageInfo.totalResults === 0) return next("Channel not found.");
 
 								let channelId = null;
 								for (const item of data.items) {
-									if (item.snippet.customUrl && item.snippet.customUrl.toLowerCase() === payload.customUrl.toLowerCase()) {
+									if (
+										item.snippet.customUrl &&
+										item.snippet.customUrl.toLowerCase() === payload.customUrl.toLowerCase()
+									) {
 										channelId = item.id;
 										break;
 									}
 								}
 
 								if (!channelId) return next("Channel not found.");
-			
+
 								return next(null, channelId);
 							})
 							.catch(err => {
@@ -417,7 +419,6 @@ class _YouTubeModule extends CoreClass {
 					return resolve({ channelId });
 				}
 			);
-			
 		});
 	}
 
@@ -607,9 +608,10 @@ class _YouTubeModule extends CoreClass {
 	 * @param {string} payload.url - the url of the YouTube channel
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	 GET_CHANNEL(payload) {
+	GET_CHANNEL(payload) {
 		return new Promise((resolve, reject) => {
-			const regex = /\.[\w]+\/(?:(?:channel\/(UC[0-9A-Za-z_-]{21}[AQgw]))|(?:user\/?([\w-]+))|(?:c\/?([\w-]+))|(?:\/?([\w-]+)))/;
+			const regex =
+				/\.[\w]+\/(?:(?:channel\/(UC[0-9A-Za-z_-]{21}[AQgw]))|(?:user\/?([\w-]+))|(?:c\/?([\w-]+))|(?:\/?([\w-]+)))/;
 			const splitQuery = regex.exec(payload.url);
 
 			if (!splitQuery) {
@@ -805,10 +807,26 @@ class _YouTubeModule extends CoreClass {
 
 			if (quotaExceeded) reject(new Error("Quota has been exceeded. Please wait a while."));
 			else {
-				YouTubeModule.apiCalls.push({
-					quotaCost,
-					date: new Date()
+				const youtubeApiRequest = new YouTubeModule.YoutubeApiRequestModel({
+					url,
+					date: Date.now(),
+					quotaCost
 				});
+
+				youtubeApiRequest.save();
+
+				const { key, ...keylessParams } = payload.params;
+				CacheModule.runJob(
+					"HSET",
+					{
+						table: "youtubeApiRequestParams",
+						key: youtubeApiRequest._id.toString(),
+						value: JSON.stringify(keylessParams)
+					},
+					this
+				).then();
+
+				YouTubeModule.apiCalls.push({ date: youtubeApiRequest.date, quotaCost });
 
 				YouTubeModule.axios
 					.get(url, {
@@ -819,6 +837,16 @@ class _YouTubeModule extends CoreClass {
 						if (response.data.error) {
 							reject(new Error(response.data.error));
 						} else {
+							CacheModule.runJob(
+								"HSET",
+								{
+									table: "youtubeApiRequestResults",
+									key: youtubeApiRequest._id.toString(),
+									value: JSON.stringify(response.data)
+								},
+								this
+							).then();
+
 							resolve({ response });
 						}
 					})
