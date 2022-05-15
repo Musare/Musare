@@ -1152,18 +1152,23 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					YouTubeModule.runJob(
-						"GET_PLAYLIST",
-						{
-							url,
-							musicOnly
-						},
-						this
-					)
-						.then(res => {
-							next(null, res.songs);
-						})
-						.catch(next);
+					const playlistRegex = /[\\?&]list=([^&#]*)/;
+					const channelRegex =
+						/\.[\w]+\/(?:(?:channel\/(UC[0-9A-Za-z_-]{21}[AQgw]))|(?:user\/?([\w-]+))|(?:c\/?([\w-]+))|(?:\/?([\w-]+)))/;
+					if (playlistRegex.exec(url) || channelRegex.exec(url))
+						YouTubeModule.runJob(
+							playlistRegex.exec(url) ? "GET_PLAYLIST" : "GET_CHANNEL",
+							{
+								url,
+								musicOnly
+							},
+							this
+						)
+							.then(res => {
+								next(null, res.songs);
+							})
+							.catch(next);
+					else next("Invalid YouTube URL.");
 				},
 				(youtubeIds, next) => {
 					let successful = 0;

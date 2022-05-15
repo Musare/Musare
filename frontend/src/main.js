@@ -167,7 +167,11 @@ const router = createRouter({
 			children: [
 				{
 					path: "songs",
-					component: () => import("@/pages/Admin/Songs.vue")
+					component: () => import("@/pages/Admin/Songs/index.vue")
+				},
+				{
+					path: "songs/import",
+					component: () => import("@/pages/Admin/Songs/Import.vue")
 				},
 				{
 					path: "reports",

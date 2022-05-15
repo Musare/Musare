@@ -21,7 +21,46 @@
 								<i class="material-icons">menu_open</i>
 								<span>Minimise</span>
 							</div>
+							<div
+								v-if="sidebarActive"
+								class="sidebar-item with-children"
+								:class="{ 'is-active': childrenActive.songs }"
+							>
+								<span>
+									<router-link to="/admin/songs">
+										<i class="material-icons">music_note</i>
+										<span>Songs</span>
+									</router-link>
+									<i
+										class="material-icons toggle-sidebar-children"
+										@click="
+											toggleChildren({ child: 'songs' })
+										"
+									>
+										{{
+											childrenActive.songs
+												? "expand_less"
+												: "expand_more"
+										}}
+									</i>
+								</span>
+								<div class="sidebar-item-children">
+									<router-link
+										class="sidebar-item-child"
+										to="/admin/songs"
+									>
+										Songs
+									</router-link>
+									<router-link
+										class="sidebar-item-child"
+										to="/admin/songs/import"
+									>
+										Import
+									</router-link>
+								</div>
+							</div>
 							<router-link
+								v-else
 								class="sidebar-item songs"
 								to="/admin/songs"
 								content="Songs"

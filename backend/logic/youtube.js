@@ -519,7 +519,7 @@ class _YouTubeModule extends CoreClass {
 			if (payload.nextPageToken) params.pageToken = payload.nextPageToken;
 
 			YouTubeModule.runJob(
-				"GET_PLAYLIST_ITEMS",
+				"API_GET_PLAYLIST_ITEMS",
 				{
 					params
 				},
@@ -644,7 +644,7 @@ class _YouTubeModule extends CoreClass {
 							.catch(err => next(err));
 					},
 
-					next => {
+					(playlistId, next) => {
 						let songs = [];
 						let nextPageToken = "";
 
