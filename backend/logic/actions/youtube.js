@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 import { isAdminRequired } from "./hooks";
 
 // eslint-disable-next-line
@@ -49,7 +51,10 @@ export default {
 	 * @returns {{status: string, data: object}}
 	 */
 	getApiRequest: isAdminRequired(function getApiRequest(session, apiRequestId, cb) {
-		YouTubeModule.runJob("GET_API_REQUEST", { apiRequestId }, this)
+		if (!mongoose.Types.ObjectId.isValid(apiRequestId))
+			return cb({ status: "error", message: "Api request id is not a valid ObjectId." });
+
+		return YouTubeModule.runJob("GET_API_REQUEST", { apiRequestId }, this)
 			.then(response => {
 				this.log(
 					"SUCCESS",

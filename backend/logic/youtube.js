@@ -907,34 +907,53 @@ class _YouTubeModule extends CoreClass {
 	GET_API_REQUEST(payload) {
 		return new Promise((resolve, reject) => {
 			const { apiRequestId } = payload;
-			// TODO validate apiRequestId
-			// TODO better error handling/waterfall
+			
+			async.waterfall(
+				[
+					next => {
+						YouTubeModule.youtubeApiRequestModel
+							.findOne({ _id: apiRequestId })
+							.exec(next);
+					},
 
-			YouTubeModule.youtubeApiRequestModel
-				.findOne({ _id: apiRequestId })
-				.exec((err, apiRequest) => {
-					if (err) reject(new Error("Couldn't load YouTube API requests."));
-					else {
-						CacheModule.runJob("HGET", {
-							table: "youtubeApiRequestParams",
-							key: apiRequestId.toString()
-						}).then(apiRequestParams => {
-							CacheModule.runJob("HGET", {
+					(apiRequest, next) => {
+						CacheModule.runJob(
+							"HGET",
+							{
+								table: "youtubeApiRequestParams",
+								key: apiRequestId.toString()
+							},
+							this
+						).then(apiRequestParams => {
+							next(null, {
+								...apiRequest._doc,
+								params: apiRequestParams
+							});
+						}
+						).catch(err => next(err));
+					},
+
+					(apiRequest, next) => {
+						CacheModule.runJob(
+							"HGET",
+							{
 								table: "youtubeApiRequestResults",
 								key: apiRequestId.toString()
-							}).then(apiRequestResults => {
-								resolve({
-									apiRequest: {
-										...apiRequest._doc,
-										params: apiRequestParams,
-										results: apiRequestResults
-									}
-								});
+							},
+							this
+						).then(apiRequestResults => {
+							next(null, {
+								...apiRequest,
+								results: apiRequestResults
 							});
-						});
+						}).catch(err => next(err));
 					}
-				});
-
+				],
+				(err, apiRequest) => {
+					if (err) reject(new Error(err));
+					else resolve({ apiRequest });
+				}
+			);
 		});
 	}
 }
