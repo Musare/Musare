@@ -87,6 +87,13 @@
 					</ul>
 					<span v-else>None/Not found</span>
 				</div>
+				<div>
+					<b>Results:</b>
+					<vue-json-pretty
+						:data="currentApiRequest.results"
+						:show-length="true"
+					></vue-json-pretty>
+				</div>
 				<p><b>Date:</b> {{ currentApiRequest.date }}</p>
 				<p><b>Quota cost:</b> {{ currentApiRequest.quotaCost }}</p>
 			</div>
@@ -95,12 +102,17 @@
 </template>
 
 <script>
+import VueJsonPretty from "vue-json-pretty";
+import "vue-json-pretty/lib/styles.css";
+
 import { mapGetters } from "vuex";
 
 import ws from "@/ws";
 
 export default {
-	components: {},
+	components: {
+		VueJsonPretty
+	},
 	data() {
 		return {
 			quotaStatus: {},

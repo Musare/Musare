@@ -896,11 +896,17 @@ class _YouTubeModule extends CoreClass {
 							table: "youtubeApiRequestParams",
 							key: apiRequestId.toString()
 						}).then(apiRequestParams => {
-							resolve({
-								apiRequest: {
-									...apiRequest._doc,
-									params: apiRequestParams
-								}
+							CacheModule.runJob("HGET", {
+								table: "youtubeApiRequestResults",
+								key: apiRequestId.toString()
+							}).then(apiRequestResults => {
+								resolve({
+									apiRequest: {
+										...apiRequest._doc,
+										params: apiRequestParams,
+										results: apiRequestResults
+									}
+								});
 							});
 						});
 					}
