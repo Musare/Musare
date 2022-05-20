@@ -205,6 +205,10 @@ const router = createRouter({
 				{
 					path: "statistics",
 					component: () => import("@/pages/Admin/Statistics.vue")
+				},
+				{
+					path: "youtube",
+					component: () => import("@/pages/Admin/YouTube.vue")
 				}
 			],
 			meta: {

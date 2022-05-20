@@ -195,6 +195,18 @@
 								<i class="material-icons">show_chart</i>
 								<span>Statistics</span>
 							</router-link>
+							<router-link
+								class="sidebar-item youtube"
+								to="/admin/youtube"
+								content="YouTube"
+								v-tippy="{
+									theme: 'info',
+									onShow: () => !sidebarActive
+								}"
+							>
+								<i class="material-icons">circle</i>
+								<span>YouTube</span>
+							</router-link>
 						</div>
 					</div>
 				</div>

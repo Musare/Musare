@@ -133,7 +133,7 @@ class _YouTubeModule extends CoreClass {
 			rax.attach(this.axios);
 
 			this.youtubeApiRequestModel
-				.find({ $gte: new Date() - 2 * 24 * 60 * 60 * 1000 }, { date: true, quotaCost: true, _id: false })
+				.find({ date: { $gte: new Date() - 2 * 24 * 60 * 60 * 1000 } }, { date: true, quotaCost: true, _id: false })
 				.sort({ date: 1 })
 				.exec((err, youtubeApiRequests) => {
 					if (err) console.log("Couldn't load YouTube API requests.");
@@ -183,42 +183,52 @@ class _YouTubeModule extends CoreClass {
 		});
 	}
 
-	GET_QUOTA_STATUS() {
-		return new Promise(resolve => {
-			const reversedApiCalls = YouTubeModule.apiCalls.slice().reverse();
-			const sortedQuotas = quotas.sort((a, b) => a.limit > b.limit);
-			const status = {};
+	GET_QUOTA_STATUS(payload) {
+		return new Promise((resolve, reject) => {
+			const fromDate = payload.fromDate ? new Date(payload.fromDate) : new Date();
 
-			for (const quota of sortedQuotas) {
-				status[quota.type] = {
-					quotaUsed: 0,
-					limit: quota.limit,
-					quotaExceeded: false
-				};
-				let dateCutoff = null;
+			YouTubeModule.youtubeApiRequestModel
+				.find({ date: { $gte: fromDate - 2 * 24 * 60 * 60 * 1000, $lte: fromDate } }, { date: true, quotaCost: true, _id: false })
+				.sort({ date: 1 })
+				.exec((err, youtubeApiRequests) => {
+					if (err) reject(new Error("Couldn't load YouTube API requests."));
+					else {
+						const reversedApiCalls = youtubeApiRequests.slice().reverse();
+						const sortedQuotas = quotas.sort((a, b) => a.limit > b.limit);
+						const status = {};
 
-				if (quota.type === "QUERIES_PER_MINUTE") dateCutoff = new Date() - 1000 * 60;
-				else if (quota.type === "QUERIES_PER_100_SECONDS") dateCutoff = new Date() - 1000 * 100;
-				else if (quota.type === "QUERIES_PER_DAY") {
-					// Quota resets at midnight PT, this is my best guess to convert the current date to the last midnight PT
-					dateCutoff = new Date();
-					dateCutoff.setUTCMilliseconds(0);
-					dateCutoff.setUTCSeconds(0);
-					dateCutoff.setUTCMinutes(0);
-					dateCutoff.setUTCHours(dateCutoff.getUTCHours() - 7);
-					dateCutoff.setUTCHours(0);
-				}
+						for (const quota of sortedQuotas) {
+							status[quota.type] = {
+								quotaUsed: 0,
+								limit: quota.limit,
+								quotaExceeded: false
+							};
+							let dateCutoff = null;
 
-				for (const apiCall of reversedApiCalls) {
-					if (apiCall.date >= dateCutoff) status[quota.type].quotaUsed += apiCall.quotaCost;
-					else break;
-				}
+							if (quota.type === "QUERIES_PER_MINUTE") dateCutoff = new Date(fromDate) - 1000 * 60;
+							else if (quota.type === "QUERIES_PER_100_SECONDS") dateCutoff = new Date(fromDate) - 1000 * 100;
+							else if (quota.type === "QUERIES_PER_DAY") {
+								// Quota resets at midnight PT, this is my best guess to convert the current date to the last midnight PT
+								dateCutoff = new Date(fromDate);
+								dateCutoff.setUTCMilliseconds(0);
+								dateCutoff.setUTCSeconds(0);
+								dateCutoff.setUTCMinutes(0);
+								dateCutoff.setUTCHours(dateCutoff.getUTCHours() - 7);
+								dateCutoff.setUTCHours(0);
+							}
 
-				if (status[quota.type].quotaUsed >= quota.limit && !status[quota.type].quotaExceeded)
-					status[quota.type].quotaExceeded = true;
-			}
+							for (const apiCall of reversedApiCalls) {
+								if (apiCall.date >= dateCutoff) status[quota.type].quotaUsed += apiCall.quotaCost;
+								else break;
+							}
 
-			resolve({ status });
+							if (status[quota.type].quotaUsed >= quota.limit && !status[quota.type].quotaExceeded)
+								status[quota.type].quotaExceeded = true;
+						}
+
+						resolve({ status });
+					}
+				});
 		});
 	}
 
@@ -452,8 +462,7 @@ class _YouTubeModule extends CoreClass {
 							next => {
 								YouTubeModule.log(
 									"INFO",
-									`Getting playlist progress for job (${this.toString()}): ${
-										songs.length
+									`Getting playlist progress for job (${this.toString()}): ${songs.length
 									} songs gotten so far. Is there a next page: ${nextPageToken !== undefined}.`
 								);
 								next(null, nextPageToken !== undefined);
@@ -652,8 +661,7 @@ class _YouTubeModule extends CoreClass {
 							next => {
 								YouTubeModule.log(
 									"INFO",
-									`Getting channel progress for job (${this.toString()}): ${
-										songs.length
+									`Getting channel progress for job (${this.toString()}): ${songs.length
 									} songs gotten so far. Is there a next page: ${nextPageToken !== undefined}.`
 								);
 								next(null, nextPageToken !== undefined);
@@ -854,6 +862,50 @@ class _YouTubeModule extends CoreClass {
 						reject(err);
 					});
 			}
+		});
+	}
+
+	GET_API_REQUESTS(payload) {
+		return new Promise((resolve, reject) => {
+			const fromDate = payload.fromDate ? new Date(payload.fromDate) : new Date();
+
+			YouTubeModule.youtubeApiRequestModel
+				.find({ date: { $lte: fromDate } })
+				.sort({ date: -1 })
+				.exec((err, youtubeApiRequests) => {
+					if (err) reject(new Error("Couldn't load YouTube API requests."));
+					else {
+						resolve({ apiRequests: youtubeApiRequests });
+					}
+				});
+		});
+	}
+
+	GET_API_REQUEST(payload) {
+		return new Promise((resolve, reject) => {
+			const { apiRequestId } = payload;
+			// TODO validate apiRequestId
+			// TODO better error handling/waterfall
+
+			YouTubeModule.youtubeApiRequestModel
+				.findOne({ _id: apiRequestId })
+				.exec((err, apiRequest) => {
+					if (err) reject(new Error("Couldn't load YouTube API requests."));
+					else {
+						CacheModule.runJob("HGET", {
+							table: "youtubeApiRequestParams",
+							key: apiRequestId.toString()
+						}).then(apiRequestParams => {
+							resolve({
+								apiRequest: {
+									...apiRequest._doc,
+									params: apiRequestParams
+								}
+							});
+						});
+					}
+				});
+
 		});
 	}
 }
