@@ -417,7 +417,7 @@ class _YouTubeModule extends CoreClass {
 							});
 					}
 				],
-				(channelId, err) => {
+				(err, channelId) => {
 					if (err) {
 						YouTubeModule.log("ERROR", "GET_CHANNEL_ID_FROM_CUSTOM_URL", `${err.message}`);
 						if (err.message === "Request failed with status code 404") {
@@ -630,8 +630,8 @@ class _YouTubeModule extends CoreClass {
 			}
 			const channelId = splitQuery[1];
 			const channelUsername = splitQuery[2];
-			const channelCustomUrl = splitQuery[3]; // NOTE: not supported yet
-			const channelUsernameOrCustomUrl = splitQuery[4]; // NOTE: customUrl not supported yet
+			const channelCustomUrl = splitQuery[3];
+			const channelUsernameOrCustomUrl = splitQuery[4];
 
 			console.log(`Channel id: ${channelId}`);
 			console.log(`Channel username: ${channelUsername}`);
@@ -640,15 +640,38 @@ class _YouTubeModule extends CoreClass {
 
 			async.waterfall(
 				[
+
 					next => {
 						const payload = {};
 						if (channelId) payload.id = channelId;
-						else if (channelUsername || channelUsernameOrCustomUrl) payload.username = channelUsername;
-						else return next("No id/username given.");
+						else if (channelUsername) payload.username = channelUsername;
+						else return next(null, true, null);
 
 						return YouTubeModule.runJob("GET_CHANNEL_UPLOADS_PLAYLIST_ID", payload, this)
 							.then(({ playlistId }) => {
-								next(null, playlistId);
+								next(null, false, playlistId);
+							})
+							.catch(err => {
+								if (err.message === "Channel not found. Is the channel public/unlisted?") next(null, true, null);
+								else next(err);
+							});
+					},
+
+					(getUsernameFromCustomUrl, playlistId, next) => {
+						if (!getUsernameFromCustomUrl) return next(null, playlistId);
+
+						const payload = {};
+						if (channelCustomUrl) payload.customUrl = channelCustomUrl;
+						else if (channelUsernameOrCustomUrl) payload.customUrl = channelUsernameOrCustomUrl;
+						else next("No proper URL provided.");
+
+						YouTubeModule.runJob("GET_CHANNEL_ID_FROM_CUSTOM_URL", payload, this)
+							.then(({ channelId }) => {
+								YouTubeModule.runJob("GET_CHANNEL_UPLOADS_PLAYLIST_ID", { id: channelId }, this)
+									.then(({ playlistId }) => {
+										next(null, playlistId);
+									})
+									.catch(err => next(err));
 							})
 							.catch(err => next(err));
 					},
