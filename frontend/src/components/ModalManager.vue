@@ -30,6 +30,7 @@ export default {
 			report: "Report.vue",
 			viewReport: "ViewReport.vue",
 			bulkActions: "BulkActions.vue",
+			viewApiRequest: "ViewApiRequest.vue",
 			viewPunishment: "ViewPunishment.vue",
 			removeAccount: "RemoveAccount.vue",
 			importAlbum: "ImportAlbum.vue",

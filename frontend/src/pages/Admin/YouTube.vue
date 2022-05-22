@@ -80,45 +80,10 @@
 				</template>
 			</advanced-table>
 		</div>
-		<div class="card" v-if="currentApiRequest">
-			<h4>API Request</h4>
-			<hr class="section-horizontal-rule" />
-			<div class="card-content">
-				<p><b>ID:</b> {{ currentApiRequest._id }}</p>
-				<p><b>URL:</b> {{ currentApiRequest.url }}</p>
-				<div>
-					<b>Params:</b>
-					<ul v-if="currentApiRequest.params">
-						<li
-							v-for="[paramKey, paramValue] in Object.entries(
-								currentApiRequest.params
-							)"
-							:key="paramKey"
-						>
-							<b>{{ paramKey }}</b
-							>: {{ paramValue }}
-						</li>
-					</ul>
-					<span v-else>None/Not found</span>
-				</div>
-				<div>
-					<b>Results:</b>
-					<vue-json-pretty
-						:data="currentApiRequest.results"
-						:show-length="true"
-					></vue-json-pretty>
-				</div>
-				<p><b>Date:</b> {{ currentApiRequest.date }}</p>
-				<p><b>Quota cost:</b> {{ currentApiRequest.quotaCost }}</p>
-			</div>
-		</div>
 	</div>
 </template>
 
 <script>
-import VueJsonPretty from "vue-json-pretty";
-import "vue-json-pretty/lib/styles.css";
-
 import { mapActions, mapGetters } from "vuex";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
@@ -127,13 +92,11 @@ import ws from "@/ws";
 
 export default {
 	components: {
-		VueJsonPretty,
 		AdvancedTable
 	},
 	data() {
 		return {
 			quotaStatus: {},
-			currentApiRequest: null,
 			fromDate: null,
 			columnDefault: {
 				sortable: true,
@@ -242,20 +205,6 @@ export default {
 						this.quotaStatus = res.data.status;
 				}
 			);
-
-			if (this.$route.query.apiRequestId) {
-				this.socket.dispatch(
-					"youtube.getApiRequest",
-					this.$route.query.apiRequestId,
-					res => {
-						if (res.status === "success")
-							this.currentApiRequest = res.data.apiRequest;
-					}
-				);
-			}
-		},
-		round(number) {
-			return Math.round(number);
 		},
 		getDateFormatted(createdAt) {
 			const date = new Date(createdAt);
@@ -304,10 +253,5 @@ td {
 
 .is-primary:focus {
 	background-color: var(--primary-color) !important;
-}
-
-ul {
-	list-style-type: disc;
-	padding-left: 20px;
 }
 </style>

@@ -11,6 +11,7 @@ import editPlaylist from "./modals/editPlaylist";
 import report from "./modals/report";
 import viewReport from "./modals/viewReport";
 import bulkActions from "./modals/bulkActions";
+import viewApiRequest from "./modals/viewApiRequest";
 import viewPunishment from "./modals/viewPunishment";
 import importAlbum from "./modals/importAlbum";
 import confirm from "./modals/confirm";
@@ -33,6 +34,7 @@ const modalModules = {
 	report,
 	viewReport,
 	bulkActions,
+	viewApiRequest,
 	viewPunishment,
 	importAlbum,
 	confirm,

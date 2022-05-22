@@ -41,7 +41,16 @@ export default {
 	 * @param operator - the operator for queries
 	 * @param cb
 	 */
-	 getApiRequests: isAdminRequired(async function getApiRequests(session, page, pageSize, properties, sort, queries, operator, cb) {
+	getApiRequests: isAdminRequired(async function getApiRequests(
+		session,
+		page,
+		pageSize,
+		properties,
+		sort,
+		queries,
+		operator,
+		cb
+	) {
 		async.waterfall(
 			[
 				next => {
