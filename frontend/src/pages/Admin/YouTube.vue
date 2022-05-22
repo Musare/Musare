@@ -1,12 +1,17 @@
 <template>
 	<div class="admin-tab container">
 		<page-metadata title="Admin | YouTube" />
-		<div class="card">
-			<h1>YouTube API</h1>
-			<p>
-				Analyze YouTube quota usage and API requests made on this
-				instance
-			</p>
+		<div class="card tab-info">
+			<div class="info-row">
+				<h1>YouTube API</h1>
+				<p>
+					Analyze YouTube quota usage and API requests made on this
+					instance
+				</p>
+			</div>
+			<div class="button-row">
+				<run-job-dropdown :jobs="jobs" />
+			</div>
 		</div>
 		<div class="card charts">
 			<div class="chart">
@@ -103,6 +108,7 @@
 import { mapActions, mapGetters } from "vuex";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
+import RunJobDropdown from "@/components/RunJobDropdown.vue";
 import LineChart from "@/components/LineChart.vue";
 
 import ws from "@/ws";
@@ -110,6 +116,7 @@ import ws from "@/ws";
 export default {
 	components: {
 		AdvancedTable,
+		RunJobDropdown,
 		LineChart
 	},
 	data() {
@@ -240,7 +247,13 @@ export default {
 						}
 					]
 				}
-			}
+			},
+			jobs: [
+				{
+					name: "Reset stored API requests",
+					socket: "youtube.resetStoredApiRequests"
+				}
+			]
 		};
 	},
 	computed: mapGetters({

@@ -121,5 +121,23 @@ export default {
 				);
 				return cb({ status: "error", message: err });
 			});
+	}),
+
+	/**
+	 * Reset stored API requests
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	 resetStoredApiRequests: isAdminRequired(function resetStoredApiRequests(session, cb) {
+		YouTubeModule.runJob("RESET_STORED_API_REQUESTS", {}, this)
+			.then(response => {
+				this.log("SUCCESS", "YOUTUBE_RESET_STORED_API_REQUESTS", `Resetting stored API requests was successful.`);
+				return cb({ status: "success", message: "Successfully reset stored YouTube API requests" });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "YOUTUBE_RESET_STORED_API_REQUESTS", `Resetting stored API requests failed. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
 	})
 };
