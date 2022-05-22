@@ -55,6 +55,7 @@
 				:column-default="columnDefault"
 				:columns="columns"
 				:filters="filters"
+				:events="events"
 				data-action="youtube.getApiRequests"
 				name="admin-youtube-api-requests"
 				:max-width="1140"
@@ -67,7 +68,9 @@
 								openModal({
 									modal: 'viewApiRequest',
 									data: {
-										requestId: slotProps.item._id
+										requestId: slotProps.item._id,
+										removeAction:
+											'youtube.removeStoredApiRequest'
 									}
 								})
 							"
@@ -77,6 +80,18 @@
 						>
 							open_in_full
 						</button>
+						<quick-confirm
+							@confirm="removeApiRequest(slotProps.item._id)"
+							:disabled="slotProps.item.removed"
+						>
+							<button
+								class="button is-danger icon-with-button material-icons"
+								content="Remove API Request"
+								v-tippy
+							>
+								delete_forever
+							</button>
+						</quick-confirm>
 					</div>
 				</template>
 				<template #column-_id="slotProps">
@@ -106,6 +121,8 @@
 
 <script>
 import { mapActions, mapGetters } from "vuex";
+
+import Toast from "toasters";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
 import RunJobDropdown from "@/components/RunJobDropdown.vue";
@@ -137,10 +154,11 @@ export default {
 					name: "options",
 					displayName: "Options",
 					properties: ["_id"],
+					sortable: false,
 					hidable: false,
 					resizable: false,
-					minWidth: 76,
-					defaultWidth: 76
+					minWidth: 85,
+					defaultWidth: 85
 				},
 				{
 					name: "quotaCost",
@@ -209,6 +227,13 @@ export default {
 					defaultFilterType: "contains"
 				}
 			],
+			events: {
+				adminRoom: "youtube",
+				removed: {
+					event: "admin.youtubeApiRequest.removed",
+					id: "requestId"
+				}
+			},
 			charts: {
 				quotaUsage: {
 					labels: [
@@ -284,6 +309,13 @@ export default {
 			const hour = `${date.getHours()}`.padStart(2, 0);
 			const minute = `${date.getMinutes()}`.padStart(2, 0);
 			return `${year}-${month}-${day} ${hour}:${minute}`;
+		},
+		removeApiRequest(requestId) {
+			this.socket.dispatch(
+				"youtube.removeStoredApiRequest",
+				requestId,
+				res => new Toast(res.message)
+			);
 		},
 		...mapActions("modalVisibility", ["openModal"])
 	}

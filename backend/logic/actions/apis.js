@@ -132,6 +132,7 @@ export default {
 			room.startsWith("edit-song.") ||
 			room.startsWith("view-report.") ||
 			room.startsWith("edit-user.") ||
+			room.startsWith("view-api-request.") ||
 			room === "import-album" ||
 			room === "edit-songs"
 		) {
@@ -194,7 +195,8 @@ export default {
 			page === "playlists" ||
 			page === "users" ||
 			page === "statistics" ||
-			page === "punishments"
+			page === "punishments" ||
+			page === "youtube"
 		) {
 			WSModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session.socketId }).then(() => {
 				WSModule.runJob("SOCKET_JOIN_ROOM", {

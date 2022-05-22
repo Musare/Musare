@@ -9,6 +9,23 @@ import moduleManager from "../../index";
 const DBModule = moduleManager.modules.db;
 const UtilsModule = moduleManager.modules.utils;
 const YouTubeModule = moduleManager.modules.youtube;
+const WSModule = moduleManager.modules.ws;
+const CacheModule = moduleManager.modules.cache;
+
+CacheModule.runJob("SUB", {
+	channel: "youtube.removeYoutubeApiRequest",
+	cb: requestId => {
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `view-api-request.${requestId}`,
+			args: ["event:youtubeApiRequest.removed"]
+		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: "admin.youtube",
+			args: ["event:admin.youtubeApiRequest.removed", { data: { requestId } }]
+		});
+	}
+});
 
 export default {
 	/**
@@ -128,15 +145,55 @@ export default {
 	 *
 	 * @returns {{status: string, data: object}}
 	 */
-	 resetStoredApiRequests: isAdminRequired(function resetStoredApiRequests(session, cb) {
+	resetStoredApiRequests: isAdminRequired(function resetStoredApiRequests(session, cb) {
 		YouTubeModule.runJob("RESET_STORED_API_REQUESTS", {}, this)
-			.then(response => {
-				this.log("SUCCESS", "YOUTUBE_RESET_STORED_API_REQUESTS", `Resetting stored API requests was successful.`);
+			.then(() => {
+				this.log(
+					"SUCCESS",
+					"YOUTUBE_RESET_STORED_API_REQUESTS",
+					`Resetting stored API requests was successful.`
+				);
 				return cb({ status: "success", message: "Successfully reset stored YouTube API requests" });
 			})
 			.catch(async err => {
 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-				this.log("ERROR", "YOUTUBE_RESET_STORED_API_REQUESTS", `Resetting stored API requests failed. "${err}"`);
+				this.log(
+					"ERROR",
+					"YOUTUBE_RESET_STORED_API_REQUESTS",
+					`Resetting stored API requests failed. "${err}"`
+				);
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
+	 * Remove stored API requests
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	removeStoredApiRequest: isAdminRequired(function removeStoredApiRequest(session, requestId, cb) {
+		YouTubeModule.runJob("REMOVE_STORED_API_REQUEST", { requestId }, this)
+			.then(() => {
+				this.log(
+					"SUCCESS",
+					"YOUTUBE_REMOVE_STORED_API_REQUEST",
+					`Removing stored API request "${requestId}" was successful.`
+				);
+
+				CacheModule.runJob("PUB", {
+					channel: "youtube.removeYoutubeApiRequest",
+					value: requestId
+				});
+
+				return cb({ status: "success", message: "Successfully removed stored YouTube API request" });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log(
+					"ERROR",
+					"YOUTUBE_REMOVE_STORED_API_REQUEST",
+					`Removing stored API request "${requestId}" failed. "${err}"`
+				);
 				return cb({ status: "error", message: err });
 			});
 	})

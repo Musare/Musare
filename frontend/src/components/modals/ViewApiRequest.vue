@@ -33,6 +33,11 @@
 				<p><b>Quota cost:</b> {{ request.quotaCost }}</p>
 			</div>
 		</template>
+		<template #footer>
+			<quick-confirm v-if="removeAction" @confirm="remove()">
+				<a class="button is-danger"> Remove API request</a>
+			</quick-confirm>
+		</template>
 	</modal>
 </template>
 
@@ -61,7 +66,8 @@ export default {
 	computed: {
 		...mapModalState("modals/viewApiRequest/MODAL_UUID", {
 			requestId: state => state.requestId,
-			request: state => state.request
+			request: state => state.request,
+			removeAction: state => state.removeAction
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -71,6 +77,12 @@ export default {
 		ws.onConnect(this.init);
 	},
 	beforeUnmount() {
+		this.socket.dispatch(
+			"apis.leaveRoom",
+			`view-api-request.${this.requestId}`,
+			() => {}
+		);
+
 		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
 		this.$store.unregisterModule([
 			"modals",
@@ -89,12 +101,37 @@ export default {
 						const { apiRequest } = res.data;
 						this.viewApiRequest(apiRequest);
 						this.loaded = true;
+
+						this.socket.dispatch(
+							"apis.joinRoom",
+							`view-api-request.${this.requestId}`
+						);
+
+						this.socket.on(
+							"event:youtubeApiRequest.removed",
+							() => {
+								new Toast("This API request was removed.");
+								this.closeCurrentModal();
+							},
+							{ modalUuid: this.modalUuid }
+						);
 					} else {
 						new Toast("API request with that ID not found");
 						this.closeCurrentModal();
 					}
 				}
 			);
+		},
+		remove() {
+			if (this.removeAction)
+				this.socket.dispatch(this.removeAction, this.requestId, res => {
+					if (res.status === "success") {
+						new Toast("API request successfully removed.");
+						this.closeCurrentModal();
+					} else {
+						new Toast("API request with that ID not found.");
+					}
+				});
 		},
 		...mapModalActions("modals/viewApiRequest/MODAL_UUID", [
 			"viewApiRequest"

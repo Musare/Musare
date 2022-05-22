@@ -967,6 +967,17 @@ class _YouTubeModule extends CoreClass {
 			});
 		});
 	}
+
+	REMOVE_STORED_API_REQUEST(payload) {
+		return new Promise((resolve, reject) => {
+			YouTubeModule.youtubeApiRequestModel.deleteOne({_id: payload.requestId}, err => {
+				if (err) reject(new Error("Couldn't remove stored YouTube API request."));
+				else {
+					resolve();
+				}
+			});
+		});
+	}
 }
 
 export default new _YouTubeModule();

@@ -4,7 +4,8 @@ export default {
 	namespaced: true,
 	state: {
 		requestId: null,
-		request: {}
+		request: {},
+		removeAction: null
 	},
 	getters: {},
 	actions: {
@@ -13,8 +14,9 @@ export default {
 			commit("viewApiRequest", request)
 	},
 	mutations: {
-		init(state, { requestId }) {
+		init(state, { requestId, removeAction }) {
 			state.requestId = requestId;
+			state.removeAction = removeAction;
 		},
 		viewApiRequest(state, request) {
 			state.request = request;
