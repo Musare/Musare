@@ -1,10 +1,12 @@
 import mongoose from "mongoose";
+import async from "async";
 
 import { isAdminRequired } from "./hooks";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
 
+const DBModule = moduleManager.modules.db;
 const UtilsModule = moduleManager.modules.utils;
 const YouTubeModule = moduleManager.modules.youtube;
 
@@ -28,21 +30,59 @@ export default {
 	}),
 
 	/**
-	 * Returns api requests
+	 * Gets api requests, used in the admin youtube page by the AdvancedTable component
 	 *
-	 * @returns {{status: string, data: object}}
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param page - the page
+	 * @param pageSize - the size per page
+	 * @param properties - the properties to return for each news item
+	 * @param sort - the sort object
+	 * @param queries - the queries array
+	 * @param operator - the operator for queries
+	 * @param cb
 	 */
-	getApiRequests: isAdminRequired(function getApiRequests(session, fromDate, cb) {
-		YouTubeModule.runJob("GET_API_REQUESTS", { fromDate }, this)
-			.then(response => {
-				this.log("SUCCESS", "YOUTUBE_GET_API_REQUESTS", `Getting api requests was successful.`);
-				return cb({ status: "success", data: { apiRequests: response.apiRequests } });
-			})
-			.catch(async err => {
-				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-				this.log("ERROR", "YOUTUBE_GET_API_REQUESTS", `Getting api requests failed. "${err}"`);
-				return cb({ status: "error", message: err });
-			});
+	 getApiRequests: isAdminRequired(async function getApiRequests(session, page, pageSize, properties, sort, queries, operator, cb) {
+		async.waterfall(
+			[
+				next => {
+					DBModule.runJob(
+						"GET_DATA",
+						{
+							page,
+							pageSize,
+							properties,
+							sort,
+							queries,
+							operator,
+							modelName: "youtubeApiRequest",
+							blacklistedProperties: [],
+							specialProperties: {},
+							specialQueries: {}
+						},
+						this
+					)
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async (err, response) => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "YOUTUBE_GET_API_REQUESTS", `Failed to get YouTube api requests. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "YOUTUBE_GET_API_REQUESTS", `Fetched YouTube api requests successfully.`);
+				return cb({
+					status: "success",
+					message: "Successfully fetched YouTube api requests.",
+					data: response
+				});
+			}
+		);
 	}),
 
 	/**

@@ -30,42 +30,55 @@
 		<div class="card">
 			<h4>API Requests</h4>
 			<hr class="section-horizontal-rule" />
-			<div class="card-content">
-				<p v-if="fromDate">As of {{ fromDate }}</p>
-				<table class="table">
-					<thead>
-						<tr>
-							<th>Date</th>
-							<th>Quota cost</th>
-							<th>URL</th>
-							<th>Request ID</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr
-							v-for="apiRequest in apiRequests"
-							:key="apiRequest._id"
+			<advanced-table
+				:column-default="columnDefault"
+				:columns="columns"
+				:filters="filters"
+				data-action="youtube.getApiRequests"
+				name="admin-youtube-api-requests"
+				:max-width="1140"
+			>
+				<template #column-options="slotProps">
+					<div class="row-options">
+						<button
+							class="button is-primary icon-with-button material-icons"
+							@click="
+								openModal({
+									modal: 'viewApiRequest',
+									data: {
+										requestId: slotProps.item._id
+									}
+								})
+							"
+							:disabled="slotProps.item.removed"
+							content="View API Request"
+							v-tippy
 						>
-							<td>
-								<router-link
-									:to="`?fromDate=${apiRequest.date}`"
-								>
-									{{ apiRequest.date }}
-								</router-link>
-							</td>
-							<td>{{ apiRequest.quotaCost }}</td>
-							<td>{{ apiRequest.url }}</td>
-							<td>
-								<router-link
-									:to="`?apiRequestId=${apiRequest._id}`"
-								>
-									{{ apiRequest._id }}
-								</router-link>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
+							open_in_full
+						</button>
+					</div>
+				</template>
+				<template #column-_id="slotProps">
+					<span :title="slotProps.item._id">{{
+						slotProps.item._id
+					}}</span>
+				</template>
+				<template #column-quotaCost="slotProps">
+					<span :title="slotProps.item.quotaCost">{{
+						slotProps.item.quotaCost
+					}}</span>
+				</template>
+				<template #column-timestamp="slotProps">
+					<span :title="new Date(slotProps.item.date)">{{
+						getDateFormatted(slotProps.item.date)
+					}}</span>
+				</template>
+				<template #column-url="slotProps">
+					<span :title="slotProps.item.url">{{
+						slotProps.item.url
+					}}</span>
+				</template>
+			</advanced-table>
 		</div>
 		<div class="card" v-if="currentApiRequest">
 			<h4>API Request</h4>
@@ -106,20 +119,108 @@
 import VueJsonPretty from "vue-json-pretty";
 import "vue-json-pretty/lib/styles.css";
 
-import { mapGetters } from "vuex";
+import { mapActions, mapGetters } from "vuex";
+
+import AdvancedTable from "@/components/AdvancedTable.vue";
 
 import ws from "@/ws";
 
 export default {
 	components: {
-		VueJsonPretty
+		VueJsonPretty,
+		AdvancedTable
 	},
 	data() {
 		return {
 			quotaStatus: {},
-			apiRequests: [],
 			currentApiRequest: null,
-			fromDate: null
+			fromDate: null,
+			columnDefault: {
+				sortable: true,
+				hidable: true,
+				defaultVisibility: "shown",
+				draggable: true,
+				resizable: true,
+				minWidth: 150,
+				maxWidth: 600
+			},
+			columns: [
+				{
+					name: "options",
+					displayName: "Options",
+					properties: ["_id"],
+					hidable: false,
+					resizable: false,
+					minWidth: 76,
+					defaultWidth: 76
+				},
+				{
+					name: "quotaCost",
+					displayName: "Quota Cost",
+					properties: ["quotaCost"],
+					sortProperty: ["quotaCost"],
+					minWidth: 150,
+					defaultWidth: 150
+				},
+				{
+					name: "timestamp",
+					displayName: "Timestamp",
+					properties: ["date"],
+					sortProperty: ["date"],
+					minWidth: 150,
+					defaultWidth: 150
+				},
+				{
+					name: "url",
+					displayName: "URL",
+					properties: ["url"],
+					sortProperty: ["url"]
+				},
+				{
+					name: "_id",
+					displayName: "Request ID",
+					properties: ["_id"],
+					sortProperty: ["_id"],
+					minWidth: 230,
+					defaultWidth: 230
+				}
+			],
+			filters: [
+				{
+					name: "_id",
+					displayName: "Request ID",
+					property: "_id",
+					filterTypes: ["exact"],
+					defaultFilterType: "exact"
+				},
+				{
+					name: "quotaCost",
+					displayName: "Quota Cost",
+					property: "quotaCost",
+					filterTypes: [
+						"numberLesserEqual",
+						"numberLesser",
+						"numberGreater",
+						"numberGreaterEqual",
+						"numberEquals"
+					],
+					defaultFilterType: "numberLesser"
+				},
+				{
+					name: "timestamp",
+					displayName: "Timestamp",
+					property: "date",
+					filterTypes: ["datetimeBefore", "datetimeAfter"],
+					defaultFilterType: "datetimeBefore"
+				},
+				{
+					name: "url",
+					displayName: "URL",
+					property: "url",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				}
+			]
 		};
 	},
 	computed: mapGetters({
@@ -142,15 +243,6 @@ export default {
 				}
 			);
 
-			this.socket.dispatch(
-				"youtube.getApiRequests",
-				this.fromDate,
-				res => {
-					if (res.status === "success")
-						this.apiRequests = res.data.apiRequests;
-				}
-			);
-
 			if (this.$route.query.apiRequestId) {
 				this.socket.dispatch(
 					"youtube.getApiRequest",
@@ -164,7 +256,17 @@ export default {
 		},
 		round(number) {
 			return Math.round(number);
-		}
+		},
+		getDateFormatted(createdAt) {
+			const date = new Date(createdAt);
+			const year = date.getFullYear();
+			const month = `${date.getMonth() + 1}`.padStart(2, 0);
+			const day = `${date.getDate()}`.padStart(2, 0);
+			const hour = `${date.getHours()}`.padStart(2, 0);
+			const minute = `${date.getMinutes()}`.padStart(2, 0);
+			return `${year}-${month}-${day} ${hour}:${minute}`;
+		},
+		...mapActions("modalVisibility", ["openModal"])
 	}
 };
 </script>

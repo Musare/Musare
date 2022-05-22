@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<divage-metadata title="Admin | Songs | Import" />
+		<page-metadata title="Admin | Songs | Import" />
 		<div class="admin-tab import-tab">
 			<div class="card">
 				<h1>Import Songs</h1>

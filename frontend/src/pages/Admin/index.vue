@@ -204,7 +204,7 @@
 									onShow: () => !sidebarActive
 								}"
 							>
-								<i class="material-icons">circle</i>
+								<i class="material-icons">smart_display</i>
 								<span>YouTube</span>
 							</router-link>
 						</div>
