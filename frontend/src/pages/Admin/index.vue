@@ -434,22 +434,36 @@ export default {
 
 <style lang="less" scoped>
 .night-mode {
-	.main-container .admin-area .admin-sidebar .inner {
-		.top {
-			background-color: var(--dark-grey-3);
+	.main-container .admin-area {
+		.admin-sidebar .inner {
+			.top {
+				background-color: var(--dark-grey-3);
+			}
+
+			.bottom {
+				background-color: var(--dark-grey-2);
+
+				.sidebar-item {
+					background-color: var(--dark-grey-2);
+					border-color: var(--dark-grey-3);
+
+					&,
+					&.with-children .sidebar-item-child,
+					&.with-children > span > a {
+						color: var(--white);
+					}
+				}
+			}
 		}
 
-		.bottom {
-			background-color: var(--dark-grey-2);
+		:deep(.admin-content .admin-container .admin-tab-container) {
+			.admin-tab {
+				.card {
+					background-color: var(--dark-grey-3);
 
-			.sidebar-item {
-				background-color: var(--dark-grey-2);
-				border-color: var(--dark-grey-3);
-
-				&,
-				&.with-children .sidebar-item-child,
-				&.with-children > span > a {
-					color: var(--white);
+					p {
+						color: var(--light-grey-2);
+					}
 				}
 			}
 		}
@@ -652,26 +666,81 @@ export default {
 					padding: 10px 10px 20px 10px;
 
 					.admin-tab {
+						display: flex;
+						flex-direction: column;
+						width: 100%;
 						max-width: 1900px;
 						margin: 0 auto;
 						padding: 0 10px;
-					}
 
-					.admin-tab,
-					.container {
-						.button-row {
+						.card {
 							display: flex;
-							flex-direction: row;
-							flex-wrap: wrap;
-							justify-content: center;
-							margin-bottom: 5px;
+							flex-grow: 1;
+							flex-direction: column;
+							padding: 20px;
+							margin: 10px 0;
+							border-radius: @border-radius;
+							background-color: var(--white);
+							color: var(--dark-grey);
+							box-shadow: @box-shadow;
 
-							& > .button,
-							& > span {
-								margin: 5px 0;
-								&:not(:first-child) {
-									margin-left: 5px;
+							h1 {
+								font-size: 36px;
+								margin: 0 0 5px 0;
+							}
+
+							h4 {
+								font-size: 22px;
+								margin: 0;
+							}
+
+							hr {
+								margin: 10px 0;
+							}
+
+							&.tab-info {
+								flex-direction: row;
+								flex-wrap: wrap;
+
+								.info-row {
+									display: flex;
+									flex-grow: 1;
+									flex-direction: column;
 								}
+
+								.button-row {
+									display: flex;
+									flex-direction: row;
+									flex-wrap: wrap;
+									justify-content: center;
+									margin: auto 0;
+									padding: 5px 0;
+
+									& > .button,
+									& > span {
+										margin: auto 0;
+										&:not(:first-child) {
+											margin-left: 5px;
+										}
+									}
+
+									& > span > .control.has-addons {
+										margin-bottom: 0 !important;
+									}
+								}
+							}
+						}
+
+						@media screen and (min-width: 980px) {
+							&.container {
+								margin: 0 auto;
+								max-width: 960px;
+							}
+						}
+
+						@media screen and (min-width: 1180px) {
+							&.container {
+								max-width: 1200px;
 							}
 						}
 					}
@@ -679,10 +748,6 @@ export default {
 			}
 		}
 	}
-}
-
-:deep(.container) {
-	position: relative;
 }
 
 :deep(.box) {
@@ -707,19 +772,6 @@ export default {
 		span {
 			display: block;
 		}
-	}
-}
-
-@media screen and (min-width: 980px) {
-	:deep(.container) {
-		margin: 0 auto;
-		max-width: 960px;
-	}
-}
-
-@media screen and (min-width: 1180px) {
-	:deep(.container) {
-		max-width: 1200px;
 	}
 }
 </style>

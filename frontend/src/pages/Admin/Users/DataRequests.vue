@@ -1,59 +1,63 @@
 <template>
-	<div>
+	<div class="admin-tab container">
 		<page-metadata title="Admin | Users | Data Requests" />
-		<div class="container">
-			<advanced-table
-				:column-default="columnDefault"
-				:columns="columns"
-				:filters="filters"
-				data-action="dataRequests.getData"
-				name="admin-data-requests"
-				:max-width="1200"
-				:events="events"
-			>
-				<template #column-options="slotProps">
-					<div class="row-options">
-						<quick-confirm
-							placement="right"
-							@confirm="resolveDataRequest(slotProps.item._id)"
-							:disabled="slotProps.item.removed"
-						>
-							<button
-								class="button is-success icon-with-button material-icons"
-								content="Resolve Data Request"
-								v-tippy
-							>
-								done_all
-							</button>
-						</quick-confirm>
-					</div>
-				</template>
-				<template #column-type="slotProps">
-					<span
-						:title="
-							slotProps.item.type
-								? 'Remove all associated data'
-								: slotProps.item.type
-						"
-						>{{
-							slotProps.item.type
-								? "Remove all associated data"
-								: slotProps.item.type
-						}}</span
-					>
-				</template>
-				<template #column-userId="slotProps">
-					<span :title="slotProps.item.userId">{{
-						slotProps.item.userId
-					}}</span>
-				</template>
-				<template #column-_id="slotProps">
-					<span :title="slotProps.item._id">{{
-						slotProps.item._id
-					}}</span>
-				</template>
-			</advanced-table>
+		<div class="card tab-info">
+			<div class="info-row">
+				<h1>Data Requests</h1>
+				<p>Manage data requests made by users</p>
+			</div>
 		</div>
+		<advanced-table
+			:column-default="columnDefault"
+			:columns="columns"
+			:filters="filters"
+			data-action="dataRequests.getData"
+			name="admin-data-requests"
+			:max-width="1200"
+			:events="events"
+		>
+			<template #column-options="slotProps">
+				<div class="row-options">
+					<quick-confirm
+						placement="right"
+						@confirm="resolveDataRequest(slotProps.item._id)"
+						:disabled="slotProps.item.removed"
+					>
+						<button
+							class="button is-success icon-with-button material-icons"
+							content="Resolve Data Request"
+							v-tippy
+						>
+							done_all
+						</button>
+					</quick-confirm>
+				</div>
+			</template>
+			<template #column-type="slotProps">
+				<span
+					:title="
+						slotProps.item.type
+							? 'Remove all associated data'
+							: slotProps.item.type
+					"
+					>{{
+						slotProps.item.type
+							? "Remove all associated data"
+							: slotProps.item.type
+					}}</span
+				>
+			</template>
+			<template #column-userId="slotProps">
+				<span :title="slotProps.item.userId">{{
+					slotProps.item.userId
+				}}</span>
+			</template>
+			<template #column-_id="slotProps">
+				<span :title="slotProps.item._id">{{
+					slotProps.item._id
+				}}</span>
+			</template>
+		</advanced-table>
 	</div>
 </template>
 

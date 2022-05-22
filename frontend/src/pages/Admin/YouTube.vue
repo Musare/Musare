@@ -1,10 +1,16 @@
 <template>
-	<div class="container">
+	<div class="admin-tab container">
 		<page-metadata title="Admin | YouTube" />
 		<div class="card">
-			<header class="card-header">
-				<p>Quota stats</p>
-			</header>
+			<h1>YouTube API</h1>
+			<p>
+				Analyze YouTube quota usage and API requests made on this
+				instance
+			</p>
+		</div>
+		<div class="card">
+			<h4>Quota Stats</h4>
+			<hr class="section-horizontal-rule" />
 			<div class="card-content">
 				<p v-if="fromDate">As of {{ fromDate }}</p>
 				<div
@@ -18,15 +24,12 @@
 					<p>Quota used: {{ quotaObject.quotaUsed }}</p>
 					<p>Limit: {{ quotaObject.limit }}</p>
 					<p>Quota exceeded: {{ quotaObject.quotaExceeded }}</p>
-					<br />
 				</div>
 			</div>
 		</div>
-		<br />
 		<div class="card">
-			<header class="card-header">
-				<p>API requests</p>
-			</header>
+			<h4>API Requests</h4>
+			<hr class="section-horizontal-rule" />
 			<div class="card-content">
 				<p v-if="fromDate">As of {{ fromDate }}</p>
 				<table class="table">
@@ -64,11 +67,9 @@
 				</table>
 			</div>
 		</div>
-		<br />
 		<div class="card" v-if="currentApiRequest">
-			<header class="card-header">
-				<p>API request</p>
-			</header>
+			<h4>API Request</h4>
+			<hr class="section-horizontal-rule" />
 			<div class="card-content">
 				<p><b>ID:</b> {{ currentApiRequest._id }}</p>
 				<p><b>URL:</b> {{ currentApiRequest.url }}</p>
@@ -193,14 +194,6 @@ export default {
 			color: var(--light-grey-2);
 		}
 	}
-
-	.card {
-		background-color: var(--dark-grey-3);
-
-		p {
-			color: var(--light-grey-2);
-		}
-	}
 }
 
 td {
@@ -214,22 +207,5 @@ td {
 ul {
 	list-style-type: disc;
 	padding-left: 20px;
-}
-
-.card {
-	display: flex;
-	flex-grow: 1;
-	flex-direction: column;
-	padding: 20px;
-	margin: 10px;
-	border-radius: @border-radius;
-	background-color: var(--white);
-	color: var(--dark-grey);
-	box-shadow: @box-shadow;
-
-	.card-header {
-		font-weight: 700;
-		padding-bottom: 10px;
-	}
 }
 </style>

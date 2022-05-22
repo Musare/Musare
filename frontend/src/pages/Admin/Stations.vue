@@ -1,7 +1,11 @@
 <template>
-	<div>
+	<div class="admin-tab">
 		<page-metadata title="Admin | Stations" />
-		<div class="admin-tab">
+		<div class="card tab-info">
+			<div class="info-row">
+				<h1>Stations</h1>
+				<p>Manage stations or create an official station</p>
+			</div>
 			<div class="button-row">
 				<button
 					class="button is-primary"
@@ -16,130 +20,128 @@
 				</button>
 				<run-job-dropdown :jobs="jobs" />
 			</div>
-			<advanced-table
-				:column-default="columnDefault"
-				:columns="columns"
-				:filters="filters"
-				data-action="stations.getData"
-				name="admin-stations"
-				:events="events"
-			>
-				<template #column-options="slotProps">
-					<div class="row-options">
-						<button
-							class="button is-primary icon-with-button material-icons"
-							@click="
-								openModal({
-									modal: 'manageStation',
-									data: {
-										stationId: slotProps.item._id,
-										sector: 'admin'
-									}
-								})
-							"
-							:disabled="slotProps.item.removed"
-							content="Manage Station"
-							v-tippy
-						>
-							settings
-						</button>
-						<quick-confirm
-							@confirm="remove(slotProps.item._id)"
-							:disabled="slotProps.item.removed"
-						>
-							<button
-								class="button is-danger icon-with-button material-icons"
-								content="Remove Station"
-								v-tippy
-							>
-								delete_forever
-							</button>
-						</quick-confirm>
-						<router-link
-							:to="{ path: `/${slotProps.item.name}` }"
-							target="_blank"
-							class="button is-primary icon-with-button material-icons"
-							:disabled="slotProps.item.removed"
-							content="View Station"
-							v-tippy
-						>
-							radio
-						</router-link>
-					</div>
-				</template>
-				<template #column-_id="slotProps">
-					<span :title="slotProps.item._id">{{
-						slotProps.item._id
-					}}</span>
-				</template>
-				<template #column-name="slotProps">
-					<span :title="slotProps.item.name">{{
-						slotProps.item.name
-					}}</span>
-				</template>
-				<template #column-displayName="slotProps">
-					<span :title="slotProps.item.displayName">{{
-						slotProps.item.displayName
-					}}</span>
-				</template>
-				<template #column-type="slotProps">
-					<span :title="slotProps.item.type">{{
-						slotProps.item.type
-					}}</span>
-				</template>
-				<template #column-description="slotProps">
-					<span :title="slotProps.item.description">{{
-						slotProps.item.description
-					}}</span>
-				</template>
-				<template #column-privacy="slotProps">
-					<span :title="slotProps.item.privacy">{{
-						slotProps.item.privacy
-					}}</span>
-				</template>
-				<template #column-owner="slotProps">
-					<span v-if="slotProps.item.type === 'official'"
-						>Musare</span
-					>
-					<user-link v-else :user-id="slotProps.item.owner" />
-				</template>
-				<template #column-theme="slotProps">
-					<span :title="slotProps.item.theme">{{
-						slotProps.item.theme
-					}}</span>
-				</template>
-				<template #column-requestsEnabled="slotProps">
-					<span :title="slotProps.item.requests.enabled">{{
-						slotProps.item.requests.enabled
-					}}</span>
-				</template>
-				<template #column-requestsAccess="slotProps">
-					<span :title="slotProps.item.requests.access">{{
-						slotProps.item.requests.access
-					}}</span>
-				</template>
-				<template #column-requestsLimit="slotProps">
-					<span :title="slotProps.item.requests.limit">{{
-						slotProps.item.requests.limit
-					}}</span>
-				</template>
-				<template #column-autofillEnabled="slotProps">
-					<span :title="slotProps.item.autofill.enabled">{{
-						slotProps.item.autofill.enabled
-					}}</span>
-				</template>
-				<template #column-autofillLimit="slotProps">
-					<span :title="slotProps.item.autofill.limit">{{
-						slotProps.item.autofill.limit
-					}}</span>
-				</template>
-				<template #column-autofillMode="slotProps">
-					<span :title="slotProps.item.autofill.mode">{{
-						slotProps.item.autofill.mode
-					}}</span>
-				</template>
-			</advanced-table>
 		</div>
+		<advanced-table
+			:column-default="columnDefault"
+			:columns="columns"
+			:filters="filters"
+			data-action="stations.getData"
+			name="admin-stations"
+			:events="events"
+		>
+			<template #column-options="slotProps">
+				<div class="row-options">
+					<button
+						class="button is-primary icon-with-button material-icons"
+						@click="
+							openModal({
+								modal: 'manageStation',
+								data: {
+									stationId: slotProps.item._id,
+									sector: 'admin'
+								}
+							})
+						"
+						:disabled="slotProps.item.removed"
+						content="Manage Station"
+						v-tippy
+					>
+						settings
+					</button>
+					<quick-confirm
+						@confirm="remove(slotProps.item._id)"
+						:disabled="slotProps.item.removed"
+					>
+						<button
+							class="button is-danger icon-with-button material-icons"
+							content="Remove Station"
+							v-tippy
+						>
+							delete_forever
+						</button>
+					</quick-confirm>
+					<router-link
+						:to="{ path: `/${slotProps.item.name}` }"
+						target="_blank"
+						class="button is-primary icon-with-button material-icons"
+						:disabled="slotProps.item.removed"
+						content="View Station"
+						v-tippy
+					>
+						radio
+					</router-link>
+				</div>
+			</template>
+			<template #column-_id="slotProps">
+				<span :title="slotProps.item._id">{{
+					slotProps.item._id
+				}}</span>
+			</template>
+			<template #column-name="slotProps">
+				<span :title="slotProps.item.name">{{
+					slotProps.item.name
+				}}</span>
+			</template>
+			<template #column-displayName="slotProps">
+				<span :title="slotProps.item.displayName">{{
+					slotProps.item.displayName
+				}}</span>
+			</template>
+			<template #column-type="slotProps">
+				<span :title="slotProps.item.type">{{
+					slotProps.item.type
+				}}</span>
+			</template>
+			<template #column-description="slotProps">
+				<span :title="slotProps.item.description">{{
+					slotProps.item.description
+				}}</span>
+			</template>
+			<template #column-privacy="slotProps">
+				<span :title="slotProps.item.privacy">{{
+					slotProps.item.privacy
+				}}</span>
+			</template>
+			<template #column-owner="slotProps">
+				<span v-if="slotProps.item.type === 'official'">Musare</span>
+				<user-link v-else :user-id="slotProps.item.owner" />
+			</template>
+			<template #column-theme="slotProps">
+				<span :title="slotProps.item.theme">{{
+					slotProps.item.theme
+				}}</span>
+			</template>
+			<template #column-requestsEnabled="slotProps">
+				<span :title="slotProps.item.requests.enabled">{{
+					slotProps.item.requests.enabled
+				}}</span>
+			</template>
+			<template #column-requestsAccess="slotProps">
+				<span :title="slotProps.item.requests.access">{{
+					slotProps.item.requests.access
+				}}</span>
+			</template>
+			<template #column-requestsLimit="slotProps">
+				<span :title="slotProps.item.requests.limit">{{
+					slotProps.item.requests.limit
+				}}</span>
+			</template>
+			<template #column-autofillEnabled="slotProps">
+				<span :title="slotProps.item.autofill.enabled">{{
+					slotProps.item.autofill.enabled
+				}}</span>
+			</template>
+			<template #column-autofillLimit="slotProps">
+				<span :title="slotProps.item.autofill.limit">{{
+					slotProps.item.autofill.limit
+				}}</span>
+			</template>
+			<template #column-autofillMode="slotProps">
+				<span :title="slotProps.item.autofill.mode">{{
+					slotProps.item.autofill.mode
+				}}</span>
+			</template>
+		</advanced-table>
 	</div>
 </template>
 

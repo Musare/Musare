@@ -1,10 +1,15 @@
 <template>
-	<div class="container">
+	<div class="admin-tab container">
 		<page-metadata title="Admin | Statistics" />
+		<div class="card tab-info">
+			<div class="info-row">
+				<h1>Statistics</h1>
+				<p>Analyze backend server job statistics</p>
+			</div>
+		</div>
 		<div class="card">
-			<header class="card-header">
-				<p>Average Logs</p>
-			</header>
+			<h4>Average Logs</h4>
+			<hr class="section-horizontal-rule" />
 			<div class="card-content">
 				<table class="table">
 					<thead>
@@ -40,93 +45,85 @@
 				</table>
 			</div>
 		</div>
-		<br />
-		<div v-if="module">
-			<div class="card">
-				<header class="card-header">
-					<p>Running tasks</p>
-				</header>
-				<div class="card-content">
-					<table class="table">
-						<thead>
-							<tr>
-								<th>Name</th>
-								<th>Payload</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr
-								v-for="job in module.runningTasks"
-								:key="JSON.stringify(job)"
-							>
-								<td>{{ job.name }}</td>
-								<td>
-									{{ JSON.stringify(job.payload) }}
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
-			<div class="card">
-				<header class="card-header">
-					<p>Paused tasks</p>
-				</header>
-				<div class="card-content">
-					<table class="table">
-						<thead>
-							<tr>
-								<th>Name</th>
-								<th>Payload</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr
-								v-for="job in module.pausedTasks"
-								:key="JSON.stringify(job)"
-							>
-								<td>{{ job.name }}</td>
-								<td>
-									{{ JSON.stringify(job.payload) }}
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
-			<div class="card">
-				<header class="card-header">
-					<p>Queued tasks</p>
-				</header>
-				<div class="card-content">
-					<table class="table">
-						<thead>
-							<tr>
-								<th>Name</th>
-								<th>Payload</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr
-								v-for="job in module.queuedTasks"
-								:key="JSON.stringify(job)"
-							>
-								<td>{{ job.name }}</td>
-								<td>
-									{{ JSON.stringify(job.payload) }}
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
+		<div v-if="module" class="card">
+			<h4>Running Tasks</h4>
+			<hr class="section-horizontal-rule" />
+			<div class="card-content">
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Payload</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="job in module.runningTasks"
+							:key="JSON.stringify(job)"
+						>
+							<td>{{ job.name }}</td>
+							<td>
+								{{ JSON.stringify(job.payload) }}
+							</td>
+						</tr>
+					</tbody>
+				</table>
 			</div>
 		</div>
-		<br />
+		<div v-if="module" class="card">
+			<h4>Paused Tasks</h4>
+			<hr class="section-horizontal-rule" />
+			<div class="card-content">
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Payload</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="job in module.pausedTasks"
+							:key="JSON.stringify(job)"
+						>
+							<td>{{ job.name }}</td>
+							<td>
+								{{ JSON.stringify(job.payload) }}
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<div v-if="module" class="card">
+			<h4>Queued Tasks</h4>
+			<hr class="section-horizontal-rule" />
+			<div class="card-content">
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Payload</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="job in module.queuedTasks"
+							:key="JSON.stringify(job)"
+						>
+							<td>{{ job.name }}</td>
+							<td>
+								{{ JSON.stringify(job.payload) }}
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
 		<div v-if="module">
 			<div class="card">
-				<header class="card-header">
-					<p>Average Logs</p>
-				</header>
+				<h4>Average Logs</h4>
+				<hr class="section-horizontal-rule" />
 				<div class="card-content">
 					<table class="table">
 						<thead>
@@ -236,44 +233,9 @@ export default {
 			color: var(--light-grey-2);
 		}
 	}
-
-	.card {
-		background-color: var(--dark-grey-3);
-
-		p {
-			color: var(--light-grey-2);
-		}
-	}
-}
-
-.user-avatar {
-	display: block;
-	max-width: 50px;
-	margin: 0 auto;
 }
 
 td {
 	vertical-align: middle;
-}
-
-.is-primary:focus {
-	background-color: var(--primary-color) !important;
-}
-
-.card {
-	display: flex;
-	flex-grow: 1;
-	flex-direction: column;
-	padding: 20px;
-	margin: 10px;
-	border-radius: @border-radius;
-	background-color: var(--white);
-	color: var(--dark-grey);
-	box-shadow: @box-shadow;
-
-	.card-header {
-		font-weight: 700;
-		padding-bottom: 10px;
-	}
 }
 </style>

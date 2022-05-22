@@ -1,7 +1,11 @@
 <template>
-	<div>
+	<div class="admin-tab">
 		<page-metadata title="Admin | Songs" />
-		<div class="admin-tab">
+		<div class="card tab-info">
+			<div class="info-row">
+				<h1>Songs</h1>
+				<p>Create, edit and manage songs in the catalogue</p>
+			</div>
 			<div class="button-row">
 				<button class="button is-primary" @click="create()">
 					Create song
@@ -20,234 +24,231 @@
 				</button>
 				<run-job-dropdown :jobs="jobs" />
 			</div>
-			<advanced-table
-				:column-default="columnDefault"
-				:columns="columns"
-				:filters="filters"
-				data-action="songs.getData"
-				name="admin-songs"
-				:events="events"
-			>
-				<template #column-options="slotProps">
-					<div class="row-options">
-						<button
-							class="button is-primary icon-with-button material-icons"
-							@click="editOne(slotProps.item)"
-							:disabled="slotProps.item.removed"
-							content="Edit Song"
-							v-tippy
-						>
-							edit
-						</button>
-						<quick-confirm
-							v-if="slotProps.item.verified"
-							@confirm="unverifyOne(slotProps.item._id)"
-						>
-							<button
-								class="button is-danger icon-with-button material-icons"
-								:disabled="slotProps.item.removed"
-								content="Unverify Song"
-								v-tippy
-							>
-								cancel
-							</button>
-						</quick-confirm>
-						<button
-							v-else
-							class="button is-success icon-with-button material-icons"
-							@click="verifyOne(slotProps.item._id)"
-							:disabled="slotProps.item.removed"
-							content="Verify Song"
-							v-tippy
-						>
-							check_circle
-						</button>
+		</div>
+		<advanced-table
+			:column-default="columnDefault"
+			:columns="columns"
+			:filters="filters"
+			data-action="songs.getData"
+			name="admin-songs"
+			:events="events"
+		>
+			<template #column-options="slotProps">
+				<div class="row-options">
+					<button
+						class="button is-primary icon-with-button material-icons"
+						@click="editOne(slotProps.item)"
+						:disabled="slotProps.item.removed"
+						content="Edit Song"
+						v-tippy
+					>
+						edit
+					</button>
+					<quick-confirm
+						v-if="slotProps.item.verified"
+						@confirm="unverifyOne(slotProps.item._id)"
+					>
 						<button
 							class="button is-danger icon-with-button material-icons"
-							@click.prevent="
-								confirmAction({
-									message:
-										'Removing this song will remove it from all playlists and cause a ratings recalculation.',
-									action: 'deleteOne',
-									params: slotProps.item._id
-								})
-							"
 							:disabled="slotProps.item.removed"
-							content="Delete Song"
+							content="Unverify Song"
 							v-tippy
 						>
-							delete_forever
+							cancel
 						</button>
-					</div>
-				</template>
-				<template #column-thumbnailImage="slotProps">
-					<song-thumbnail
-						class="song-thumbnail"
-						:song="slotProps.item"
-					/>
-				</template>
-				<template #column-thumbnailUrl="slotProps">
-					<a :href="slotProps.item.thumbnail" target="_blank">
-						{{ slotProps.item.thumbnail }}
-					</a>
-				</template>
-				<template #column-title="slotProps">
-					<span :title="slotProps.item.title">{{
-						slotProps.item.title
-					}}</span>
-				</template>
-				<template #column-artists="slotProps">
-					<span :title="slotProps.item.artists.join(', ')">{{
-						slotProps.item.artists.join(", ")
-					}}</span>
-				</template>
-				<template #column-genres="slotProps">
-					<span :title="slotProps.item.genres.join(', ')">{{
-						slotProps.item.genres.join(", ")
-					}}</span>
-				</template>
-				<template #column-tags="slotProps">
-					<span :title="slotProps.item.tags.join(', ')">{{
-						slotProps.item.tags.join(", ")
-					}}</span>
-				</template>
-				<template #column-likes="slotProps">
-					<span :title="slotProps.item.likes">{{
-						slotProps.item.likes
-					}}</span>
-				</template>
-				<template #column-dislikes="slotProps">
-					<span :title="slotProps.item.dislikes">{{
-						slotProps.item.dislikes
-					}}</span>
-				</template>
-				<template #column-_id="slotProps">
-					<span :title="slotProps.item._id">{{
-						slotProps.item._id
-					}}</span>
-				</template>
-				<template #column-youtubeId="slotProps">
-					<a
-						:href="
-							'https://www.youtube.com/watch?v=' +
-							`${slotProps.item.youtubeId}`
-						"
-						target="_blank"
+					</quick-confirm>
+					<button
+						v-else
+						class="button is-success icon-with-button material-icons"
+						@click="verifyOne(slotProps.item._id)"
+						:disabled="slotProps.item.removed"
+						content="Verify Song"
+						v-tippy
 					>
-						{{ slotProps.item.youtubeId }}
-					</a>
-				</template>
-				<template #column-verified="slotProps">
-					<span :title="slotProps.item.verified">{{
-						slotProps.item.verified
-					}}</span>
-				</template>
-				<template #column-duration="slotProps">
-					<span :title="slotProps.item.duration">{{
-						slotProps.item.duration
-					}}</span>
-				</template>
-				<template #column-skipDuration="slotProps">
-					<span :title="slotProps.item.skipDuration">{{
-						slotProps.item.skipDuration
-					}}</span>
-				</template>
-				<template #column-requestedBy="slotProps">
-					<user-link :user-id="slotProps.item.requestedBy" />
-				</template>
-				<template #column-requestedAt="slotProps">
-					<span :title="new Date(slotProps.item.requestedAt)">{{
-						getDateFormatted(slotProps.item.requestedAt)
-					}}</span>
-				</template>
-				<template #column-verifiedBy="slotProps">
-					<user-link :user-id="slotProps.item.verifiedBy" />
-				</template>
-				<template #column-verifiedAt="slotProps">
-					<span :title="new Date(slotProps.item.verifiedAt)">{{
-						getDateFormatted(slotProps.item.verifiedAt)
-					}}</span>
-				</template>
-				<template #bulk-actions="slotProps">
-					<div class="bulk-actions">
+						check_circle
+					</button>
+					<button
+						class="button is-danger icon-with-button material-icons"
+						@click.prevent="
+							confirmAction({
+								message:
+									'Removing this song will remove it from all playlists and cause a ratings recalculation.',
+								action: 'deleteOne',
+								params: slotProps.item._id
+							})
+						"
+						:disabled="slotProps.item.removed"
+						content="Delete Song"
+						v-tippy
+					>
+						delete_forever
+					</button>
+				</div>
+			</template>
+			<template #column-thumbnailImage="slotProps">
+				<song-thumbnail class="song-thumbnail" :song="slotProps.item" />
+			</template>
+			<template #column-thumbnailUrl="slotProps">
+				<a :href="slotProps.item.thumbnail" target="_blank">
+					{{ slotProps.item.thumbnail }}
+				</a>
+			</template>
+			<template #column-title="slotProps">
+				<span :title="slotProps.item.title">{{
+					slotProps.item.title
+				}}</span>
+			</template>
+			<template #column-artists="slotProps">
+				<span :title="slotProps.item.artists.join(', ')">{{
+					slotProps.item.artists.join(", ")
+				}}</span>
+			</template>
+			<template #column-genres="slotProps">
+				<span :title="slotProps.item.genres.join(', ')">{{
+					slotProps.item.genres.join(", ")
+				}}</span>
+			</template>
+			<template #column-tags="slotProps">
+				<span :title="slotProps.item.tags.join(', ')">{{
+					slotProps.item.tags.join(", ")
+				}}</span>
+			</template>
+			<template #column-likes="slotProps">
+				<span :title="slotProps.item.likes">{{
+					slotProps.item.likes
+				}}</span>
+			</template>
+			<template #column-dislikes="slotProps">
+				<span :title="slotProps.item.dislikes">{{
+					slotProps.item.dislikes
+				}}</span>
+			</template>
+			<template #column-_id="slotProps">
+				<span :title="slotProps.item._id">{{
+					slotProps.item._id
+				}}</span>
+			</template>
+			<template #column-youtubeId="slotProps">
+				<a
+					:href="
+						'https://www.youtube.com/watch?v=' +
+						`${slotProps.item.youtubeId}`
+					"
+					target="_blank"
+				>
+					{{ slotProps.item.youtubeId }}
+				</a>
+			</template>
+			<template #column-verified="slotProps">
+				<span :title="slotProps.item.verified">{{
+					slotProps.item.verified
+				}}</span>
+			</template>
+			<template #column-duration="slotProps">
+				<span :title="slotProps.item.duration">{{
+					slotProps.item.duration
+				}}</span>
+			</template>
+			<template #column-skipDuration="slotProps">
+				<span :title="slotProps.item.skipDuration">{{
+					slotProps.item.skipDuration
+				}}</span>
+			</template>
+			<template #column-requestedBy="slotProps">
+				<user-link :user-id="slotProps.item.requestedBy" />
+			</template>
+			<template #column-requestedAt="slotProps">
+				<span :title="new Date(slotProps.item.requestedAt)">{{
+					getDateFormatted(slotProps.item.requestedAt)
+				}}</span>
+			</template>
+			<template #column-verifiedBy="slotProps">
+				<user-link :user-id="slotProps.item.verifiedBy" />
+			</template>
+			<template #column-verifiedAt="slotProps">
+				<span :title="new Date(slotProps.item.verifiedAt)">{{
+					getDateFormatted(slotProps.item.verifiedAt)
+				}}</span>
+			</template>
+			<template #bulk-actions="slotProps">
+				<div class="bulk-actions">
+					<i
+						class="material-icons edit-songs-icon"
+						@click.prevent="editMany(slotProps.item)"
+						content="Edit Songs"
+						v-tippy
+						tabindex="0"
+					>
+						edit
+					</i>
+					<i
+						class="material-icons verify-songs-icon"
+						@click.prevent="verifyMany(slotProps.item)"
+						content="Verify Songs"
+						v-tippy
+						tabindex="0"
+					>
+						check_circle
+					</i>
+					<quick-confirm
+						placement="left"
+						@confirm="unverifyMany(slotProps.item)"
+						tabindex="0"
+					>
 						<i
-							class="material-icons edit-songs-icon"
-							@click.prevent="editMany(slotProps.item)"
-							content="Edit Songs"
+							class="material-icons unverify-songs-icon"
+							content="Unverify Songs"
 							v-tippy
-							tabindex="0"
 						>
-							edit
+							cancel
 						</i>
-						<i
-							class="material-icons verify-songs-icon"
-							@click.prevent="verifyMany(slotProps.item)"
-							content="Verify Songs"
-							v-tippy
-							tabindex="0"
-						>
-							check_circle
-						</i>
-						<quick-confirm
-							placement="left"
-							@confirm="unverifyMany(slotProps.item)"
-							tabindex="0"
-						>
-							<i
-								class="material-icons unverify-songs-icon"
-								content="Unverify Songs"
-								v-tippy
-							>
-								cancel
-							</i>
-						</quick-confirm>
-						<i
-							class="material-icons tag-songs-icon"
-							@click.prevent="setTags(slotProps.item)"
-							content="Set Tags"
-							v-tippy
-							tabindex="0"
-						>
-							local_offer
-						</i>
-						<i
-							class="material-icons artists-songs-icon"
-							@click.prevent="setArtists(slotProps.item)"
-							content="Set Artists"
-							v-tippy
-							tabindex="0"
-						>
-							group
-						</i>
-						<i
-							class="material-icons genres-songs-icon"
-							@click.prevent="setGenres(slotProps.item)"
-							content="Set Genres"
-							v-tippy
-							tabindex="0"
-						>
-							theater_comedy
-						</i>
-						<i
-							class="material-icons delete-icon"
-							@click.prevent="
-								confirmAction({
-									message:
-										'Removing these songs will remove them from all playlists and cause a ratings recalculation.',
-									action: 'deleteMany',
-									params: slotProps.item
-								})
-							"
-							content="Delete Songs"
-							v-tippy
-							tabindex="0"
-						>
-							delete_forever
-						</i>
-					</div>
-				</template>
-			</advanced-table>
-		</div>
+					</quick-confirm>
+					<i
+						class="material-icons tag-songs-icon"
+						@click.prevent="setTags(slotProps.item)"
+						content="Set Tags"
+						v-tippy
+						tabindex="0"
+					>
+						local_offer
+					</i>
+					<i
+						class="material-icons artists-songs-icon"
+						@click.prevent="setArtists(slotProps.item)"
+						content="Set Artists"
+						v-tippy
+						tabindex="0"
+					>
+						group
+					</i>
+					<i
+						class="material-icons genres-songs-icon"
+						@click.prevent="setGenres(slotProps.item)"
+						content="Set Genres"
+						v-tippy
+						tabindex="0"
+					>
+						theater_comedy
+					</i>
+					<i
+						class="material-icons delete-icon"
+						@click.prevent="
+							confirmAction({
+								message:
+									'Removing these songs will remove them from all playlists and cause a ratings recalculation.',
+								action: 'deleteMany',
+								params: slotProps.item
+							})
+						"
+						content="Delete Songs"
+						v-tippy
+						tabindex="0"
+					>
+						delete_forever
+					</i>
+				</div>
+			</template>
+		</advanced-table>
 	</div>
 </template>
 

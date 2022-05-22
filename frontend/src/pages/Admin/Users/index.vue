@@ -1,98 +1,102 @@
 <template>
-	<div>
+	<div class="admin-tab container">
 		<page-metadata title="Admin | Users" />
-		<div class="container">
-			<advanced-table
-				:column-default="columnDefault"
-				:columns="columns"
-				:filters="filters"
-				data-action="users.getData"
-				name="admin-users"
-				:max-width="1200"
-				:events="events"
-			>
-				<template #column-options="slotProps">
-					<div class="row-options">
-						<button
-							class="button is-primary icon-with-button material-icons"
-							@click="edit(slotProps.item._id)"
-							:disabled="slotProps.item.removed"
-							content="Edit User"
-							v-tippy
-						>
-							edit
-						</button>
-						<router-link
-							:to="{ path: `/u/${slotProps.item.username}` }"
-							target="_blank"
-							class="button is-primary icon-with-button material-icons"
-							:disabled="slotProps.item.removed"
-							content="View Profile"
-							v-tippy
-						>
-							person
-						</router-link>
-					</div>
-				</template>
-				<template #column-profilePicture="slotProps">
-					<profile-picture
-						:avatar="slotProps.item.avatar"
-						:name="
-							slotProps.item.name
-								? slotProps.item.name
-								: slotProps.item.username
-						"
-					/>
-				</template>
-				<template #column-name="slotProps">
-					<span :title="slotProps.item.name">{{
-						slotProps.item.name
-					}}</span>
-				</template>
-				<template #column-username="slotProps">
-					<span :title="slotProps.item.username">{{
-						slotProps.item.username
-					}}</span>
-				</template>
-				<template #column-_id="slotProps">
-					<span :title="slotProps.item._id">{{
-						slotProps.item._id
-					}}</span>
-				</template>
-				<template #column-githubId="slotProps">
-					<span
-						v-if="slotProps.item.services.github"
-						:title="slotProps.item.services.github.id"
-						>{{ slotProps.item.services.github.id }}</span
-					>
-				</template>
-				<template #column-hasPassword="slotProps">
-					<span :title="slotProps.item.hasPassword">{{
-						slotProps.item.hasPassword
-					}}</span>
-				</template>
-				<template #column-role="slotProps">
-					<span :title="slotProps.item.role">{{
-						slotProps.item.role
-					}}</span>
-				</template>
-				<template #column-emailAddress="slotProps">
-					<span :title="slotProps.item.email.address">{{
-						slotProps.item.email.address
-					}}</span>
-				</template>
-				<template #column-emailVerified="slotProps">
-					<span :title="slotProps.item.email.verified">{{
-						slotProps.item.email.verified
-					}}</span>
-				</template>
-				<template #column-songsRequested="slotProps">
-					<span :title="slotProps.item.statistics.songsRequested">{{
-						slotProps.item.statistics.songsRequested
-					}}</span>
-				</template>
-			</advanced-table>
+		<div class="card tab-info">
+			<div class="info-row">
+				<h1>Users</h1>
+				<p>Manage users</p>
+			</div>
 		</div>
+		<advanced-table
+			:column-default="columnDefault"
+			:columns="columns"
+			:filters="filters"
+			data-action="users.getData"
+			name="admin-users"
+			:max-width="1200"
+			:events="events"
+		>
+			<template #column-options="slotProps">
+				<div class="row-options">
+					<button
+						class="button is-primary icon-with-button material-icons"
+						@click="edit(slotProps.item._id)"
+						:disabled="slotProps.item.removed"
+						content="Edit User"
+						v-tippy
+					>
+						edit
+					</button>
+					<router-link
+						:to="{ path: `/u/${slotProps.item.username}` }"
+						target="_blank"
+						class="button is-primary icon-with-button material-icons"
+						:disabled="slotProps.item.removed"
+						content="View Profile"
+						v-tippy
+					>
+						person
+					</router-link>
+				</div>
+			</template>
+			<template #column-profilePicture="slotProps">
+				<profile-picture
+					:avatar="slotProps.item.avatar"
+					:name="
+						slotProps.item.name
+							? slotProps.item.name
+							: slotProps.item.username
+					"
+				/>
+			</template>
+			<template #column-name="slotProps">
+				<span :title="slotProps.item.name">{{
+					slotProps.item.name
+				}}</span>
+			</template>
+			<template #column-username="slotProps">
+				<span :title="slotProps.item.username">{{
+					slotProps.item.username
+				}}</span>
+			</template>
+			<template #column-_id="slotProps">
+				<span :title="slotProps.item._id">{{
+					slotProps.item._id
+				}}</span>
+			</template>
+			<template #column-githubId="slotProps">
+				<span
+					v-if="slotProps.item.services.github"
+					:title="slotProps.item.services.github.id"
+					>{{ slotProps.item.services.github.id }}</span
+				>
+			</template>
+			<template #column-hasPassword="slotProps">
+				<span :title="slotProps.item.hasPassword">{{
+					slotProps.item.hasPassword
+				}}</span>
+			</template>
+			<template #column-role="slotProps">
+				<span :title="slotProps.item.role">{{
+					slotProps.item.role
+				}}</span>
+			</template>
+			<template #column-emailAddress="slotProps">
+				<span :title="slotProps.item.email.address">{{
+					slotProps.item.email.address
+				}}</span>
+			</template>
+			<template #column-emailVerified="slotProps">
+				<span :title="slotProps.item.email.verified">{{
+					slotProps.item.email.verified
+				}}</span>
+			</template>
+			<template #column-songsRequested="slotProps">
+				<span :title="slotProps.item.statistics.songsRequested">{{
+					slotProps.item.statistics.songsRequested
+				}}</span>
+			</template>
+		</advanced-table>
 	</div>
 </template>
 
