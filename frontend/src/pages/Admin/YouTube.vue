@@ -8,6 +8,22 @@
 				instance
 			</p>
 		</div>
+		<div class="card charts">
+			<div class="chart">
+				<h4 class="has-text-centered">Quota Usage</h4>
+				<line-chart
+					chart-id="youtube-quota-usage"
+					:data="charts.quotaUsage"
+				/>
+			</div>
+			<div class="chart">
+				<h4 class="has-text-centered">API Requests</h4>
+				<line-chart
+					chart-id="youtube-api-requests"
+					:data="charts.apiRequests"
+				/>
+			</div>
+		</div>
 		<div class="card">
 			<h4>Quota Stats</h4>
 			<hr class="section-horizontal-rule" />
@@ -87,12 +103,14 @@
 import { mapActions, mapGetters } from "vuex";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
+import LineChart from "@/components/LineChart.vue";
 
 import ws from "@/ws";
 
 export default {
 	components: {
-		AdvancedTable
+		AdvancedTable,
+		LineChart
 	},
 	data() {
 		return {
@@ -183,7 +201,46 @@ export default {
 					filterTypes: ["contains", "exact", "regex"],
 					defaultFilterType: "contains"
 				}
-			]
+			],
+			charts: {
+				quotaUsage: {
+					labels: [
+						"Mon",
+						"Tues",
+						"Wed",
+						"Thurs",
+						"Fri",
+						"Sat",
+						"Sun"
+					],
+					datasets: [
+						{
+							label: "Type A",
+							data: [300, 122, 0, 67, 23, 280, 185],
+							fill: true,
+							borderColor: "rgb(2, 166, 242)"
+						}
+					]
+				},
+				apiRequests: {
+					labels: [
+						"Mon",
+						"Tues",
+						"Wed",
+						"Thurs",
+						"Fri",
+						"Sat",
+						"Sun"
+					],
+					datasets: [
+						{
+							label: "Type A",
+							data: [30, 6, 0, 9, 4, 26, 19],
+							borderColor: "rgb(2, 166, 242)"
+						}
+					]
+				}
+			}
 		};
 	},
 	computed: mapGetters({
@@ -253,5 +310,25 @@ td {
 
 .is-primary:focus {
 	background-color: var(--primary-color) !important;
+}
+
+.card.charts {
+	flex-direction: row !important;
+
+	.chart {
+		width: 50%;
+	}
+
+	@media screen and (max-width: 1100px) {
+		flex-direction: column !important;
+
+		.chart {
+			width: unset;
+
+			&:not(:first-child) {
+				margin-top: 10px;
+			}
+		}
+	}
 }
 </style>
