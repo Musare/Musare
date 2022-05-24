@@ -145,25 +145,65 @@ export default {
 	 *
 	 * @returns {{status: string, data: object}}
 	 */
-	resetStoredApiRequests: isAdminRequired(function resetStoredApiRequests(session, cb) {
-		YouTubeModule.runJob("RESET_STORED_API_REQUESTS", {}, this)
-			.then(() => {
+	resetStoredApiRequests: isAdminRequired(async function resetStoredApiRequests(session, cb) {
+		async.waterfall(
+			[
+				next => {
+					YouTubeModule.youtubeApiRequestModel.find({}, next);
+				},
+
+				(apiRequests, next) => {
+					YouTubeModule.runJob("RESET_STORED_API_REQUESTS", {}, this)
+						.then(() => next(null, apiRequests))
+						.catch(err => next(err));
+				},
+
+				(apiRequests, next) => {
+					async.eachLimit(
+						apiRequests.map(apiRequest => apiRequest._id),
+						1,
+						(requestId, next) => {
+							CacheModule.runJob(
+								"PUB",
+								{
+									channel: "youtube.removeYoutubeApiRequest",
+									value: requestId
+								},
+								this
+							)
+								.then(() => {
+									next();
+								})
+								.catch(err => {
+									next(err);
+								});
+						},
+						err => {
+							if (err) next(err);
+							else next();
+						}
+					);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"YOUTUBE_RESET_STORED_API_REQUESTS",
+						`Resetting stored API requests failed. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
 				this.log(
 					"SUCCESS",
 					"YOUTUBE_RESET_STORED_API_REQUESTS",
 					`Resetting stored API requests was successful.`
 				);
 				return cb({ status: "success", message: "Successfully reset stored YouTube API requests" });
-			})
-			.catch(async err => {
-				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-				this.log(
-					"ERROR",
-					"YOUTUBE_RESET_STORED_API_REQUESTS",
-					`Resetting stored API requests failed. "${err}"`
-				);
-				return cb({ status: "error", message: err });
-			});
+			}
+		);
 	}),
 
 	/**
