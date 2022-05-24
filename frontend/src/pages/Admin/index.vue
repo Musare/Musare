@@ -694,6 +694,11 @@ export default {
 								margin: 0;
 							}
 
+							h5 {
+								font-size: 18px;
+								margin: 0;
+							}
+
 							hr {
 								margin: 10px 0;
 							}
