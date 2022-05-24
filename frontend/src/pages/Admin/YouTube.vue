@@ -32,19 +32,23 @@
 		<div class="card">
 			<h4>Quota Stats</h4>
 			<hr class="section-horizontal-rule" />
-			<div class="card-content">
-				<p v-if="fromDate">As of {{ fromDate }}</p>
+			<div class="quotas">
 				<div
 					v-for="[quotaName, quotaObject] in Object.entries(
 						quotaStatus
 					)"
 					:key="quotaName"
+					class="card quota"
 				>
-					<p>{{ quotaName }}</p>
-					<hr />
-					<p>Quota used: {{ quotaObject.quotaUsed }}</p>
-					<p>Limit: {{ quotaObject.limit }}</p>
-					<p>Quota exceeded: {{ quotaObject.quotaExceeded }}</p>
+					<h5>{{ quotaName.replace(/_/g, " ").toLowerCase() }}</h5>
+					<p>
+						<strong>Quota used:</strong> {{ quotaObject.quotaUsed }}
+					</p>
+					<p><strong>Limit:</strong> {{ quotaObject.limit }}</p>
+					<p>
+						<strong>Quota exceeded:</strong>
+						{{ quotaObject.quotaExceeded }}
+					</p>
 				</div>
 			</div>
 		</div>
@@ -323,7 +327,7 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.night-mode {
+.night-mode .admin-tab {
 	.table {
 		color: var(--light-grey-2);
 		background-color: var(--dark-grey-3);
@@ -340,38 +344,76 @@ export default {
 		}
 
 		tbody tr:nth-child(even) {
-			background-color: var(--dark-grey-2);
+			background-color: var(--dark-grey-2) !important;
 		}
 
 		strong {
 			color: var(--light-grey-2);
 		}
 	}
+
+	.card .quotas .card.quota {
+		background-color: var(--dark-grey-2) !important;
+	}
 }
 
-td {
-	vertical-align: middle;
-}
-
-.is-primary:focus {
-	background-color: var(--primary-color) !important;
-}
-
-.card.charts {
-	flex-direction: row !important;
-
-	.chart {
-		width: 50%;
+.admin-tab {
+	td {
+		vertical-align: middle;
 	}
 
-	@media screen and (max-width: 1100px) {
-		flex-direction: column !important;
+	.is-primary:focus {
+		background-color: var(--primary-color) !important;
+	}
 
-		.chart {
-			width: unset;
+	.card {
+		&.charts {
+			flex-direction: row !important;
 
-			&:not(:first-child) {
-				margin-top: 10px;
+			.chart {
+				width: 50%;
+			}
+
+			@media screen and (max-width: 1100px) {
+				flex-direction: column !important;
+
+				.chart {
+					width: unset;
+
+					&:not(:first-child) {
+						margin-top: 10px;
+					}
+				}
+			}
+		}
+
+		.quotas {
+			display: flex;
+			flex-direction: row !important;
+			row-gap: 10px;
+			column-gap: 10px;
+
+			.card.quota {
+				background-color: var(--light-grey-2) !important;
+				padding: 10px !important;
+				flex-basis: 33.33%;
+
+				&:not(:last-child) {
+					margin-right: 10px;
+				}
+
+				h5 {
+					text-transform: capitalize;
+					margin-bottom: 5px !important;
+				}
+			}
+
+			@media screen and (max-width: 1100px) {
+				flex-direction: column !important;
+
+				.card.quota {
+					flex-basis: unset;
+				}
 			}
 		}
 	}
