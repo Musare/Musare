@@ -17,6 +17,9 @@ Location: `backend/config/default.json`
 | `apis.youtube.rateLimit` | Minimum interval between YouTube API requests in milliseconds. |
 | `apis.youtube.requestTimeout` | YouTube API requests timeout in milliseconds. |
 | `apis.youtube.retryAmount` | The amount of retries to perform of a failed YouTube API request. |
+| `apis.youtube.quotas.perDay` | Configure YouTube API quota per day. |
+| `apis.youtube.quotas.perMinute` | Configure YouTube API quota per minute. |
+| `apis.youtube.quotas.per100Seconds` | Configure YouTube API quota per day. |
 | `apis.recaptcha.secret` | ReCaptcha Site v3 secret, obtained from [here](https://www.google.com/recaptcha/admin). |
 | `apis.recaptcha.enabled` | Whether to enable ReCaptcha at email registration. |
 | `apis.github.client` | GitHub OAuth Application client, obtained from [here](https://github.com/settings/developers). |

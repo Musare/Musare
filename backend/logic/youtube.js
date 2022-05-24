@@ -46,15 +46,18 @@ let DBModule;
 const quotas = [
 	{
 		type: "QUERIES_PER_DAY",
-		limit: 10000
+		title: "Queries Per Day",
+		limit: config.get("apis.youtube.quotas.perDay")
 	},
 	{
 		type: "QUERIES_PER_MINUTE",
-		limit: 1800000
+		title: "Queries Per Minute",
+		limit: config.get("apis.youtube.quotas.perMinute")
 	},
 	{
 		type: "QUERIES_PER_100_SECONDS",
-		limit: 3000000
+		title: "Queries Per 100 Seconds",
+		limit: config.get("apis.youtube.quotas.per100Seconds")
 	}
 ];
 
@@ -199,6 +202,7 @@ class _YouTubeModule extends CoreClass {
 
 						for (const quota of sortedQuotas) {
 							status[quota.type] = {
+								title: quota.title,
 								quotaUsed: 0,
 								limit: quota.limit,
 								quotaExceeded: false

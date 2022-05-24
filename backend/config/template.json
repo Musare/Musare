@@ -13,7 +13,12 @@
 			"key": "",
 			"rateLimit": 500,
 			"requestTimeout": 5000,
-			"retryAmount": 2
+			"retryAmount": 2,
+			"quotas": {
+				"perDay": 10000,
+				"perMinute": 1800000,
+				"per100Seconds": 3000000
+			}
 		},
 		"recaptcha": {
 			"secret": "",
@@ -96,5 +101,5 @@
 			]
 		}
 	},
-	"configVersion": 9
+	"configVersion": 10
 }

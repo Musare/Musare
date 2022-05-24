@@ -40,7 +40,7 @@
 					:key="quotaName"
 					class="card quota"
 				>
-					<h5>{{ quotaName.replace(/_/g, " ").toLowerCase() }}</h5>
+					<h5>{{ quotaObject.title }}</h5>
 					<p>
 						<strong>Quota used:</strong> {{ quotaObject.quotaUsed }}
 					</p>
@@ -403,7 +403,6 @@ export default {
 				}
 
 				h5 {
-					text-transform: capitalize;
 					margin-bottom: 5px !important;
 				}
 			}
