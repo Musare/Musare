@@ -226,6 +226,34 @@ class _CacheModule extends CoreClass {
 	}
 
 	/**
+	 * Deletes a single value
+	 *
+	 * @param {object} payload - object containing payload
+	 * @param {string} payload.key - name of the key to delete
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	DEL(payload) {
+		return new Promise((resolve, reject) => {
+			let { key } = payload;
+
+			if (!key) {
+				reject(new Error("Invalid key!"));
+				return;
+			}
+
+			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
+
+			CacheModule.client.del(key, err => {
+				if (err) {
+					reject(new Error(err));
+					return;
+				}
+				resolve();
+			});
+		});
+	}
+
+	/**
 	 * Publish a message to a channel, caches the redis client connection
 	 *
 	 * @param {object} payload - object containing payload
