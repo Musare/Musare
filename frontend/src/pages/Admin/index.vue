@@ -144,6 +144,12 @@
 									>
 										Data Requests
 									</router-link>
+									<router-link
+										class="sidebar-item-child"
+										to="/admin/users/punishments"
+									>
+										Punishments
+									</router-link>
 								</div>
 							</div>
 							<router-link
@@ -158,18 +164,6 @@
 							>
 								<i class="material-icons">people</i>
 								<span>Users</span>
-							</router-link>
-							<router-link
-								class="sidebar-item punishments"
-								to="/admin/punishments"
-								content="Punishments"
-								v-tippy="{
-									theme: 'info',
-									onShow: () => !sidebarActive
-								}"
-							>
-								<i class="material-icons">gavel</i>
-								<span>Punishments</span>
 							</router-link>
 							<router-link
 								class="sidebar-item news"

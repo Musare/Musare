@@ -195,8 +195,9 @@ const router = createRouter({
 						import("@/pages/Admin/Users/DataRequests.vue")
 				},
 				{
-					path: "punishments",
-					component: () => import("@/pages/Admin/Punishments.vue")
+					path: "users/punishments",
+					component: () =>
+						import("@/pages/Admin/Users/Punishments.vue")
 				},
 				{
 					path: "news",
