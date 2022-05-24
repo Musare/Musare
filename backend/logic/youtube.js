@@ -959,23 +959,82 @@ class _YouTubeModule extends CoreClass {
 
 	RESET_STORED_API_REQUESTS(payload) {
 		return new Promise((resolve, reject) => {
-			YouTubeModule.youtubeApiRequestModel.deleteMany({}, err => {
-				if (err) reject(new Error("Couldn't reset stored YouTube API requests."));
-				else {
-					resolve();
+			async.waterfall(
+				[
+					next => {
+						YouTubeModule.youtubeApiRequestModel.deleteMany({}, err => {
+							if (err) next("Couldn't reset stored YouTube API requests.");
+							else {
+								next();
+							}
+						});
+					},
+
+					next => {
+						CacheModule.runJob(
+							"DEL",
+							{key: "youtubeApiRequestParams"},
+							this
+						).then(next).catch(err => next(err));
+					},
+
+					next => {
+						CacheModule.runJob(
+							"DEL",
+							{key: "youtubeApiRequestResults"},
+							this
+						).then(next).catch(err => next(err));
+					}
+				],
+				err => {
+					if (err) reject(new Error(err));
+					else resolve();
 				}
-			});
+			);
 		});
 	}
 
 	REMOVE_STORED_API_REQUEST(payload) {
 		return new Promise((resolve, reject) => {
-			YouTubeModule.youtubeApiRequestModel.deleteOne({_id: payload.requestId}, err => {
-				if (err) reject(new Error("Couldn't remove stored YouTube API request."));
-				else {
-					resolve();
+			
+			async.waterfall(
+				[
+					next => {
+						YouTubeModule.youtubeApiRequestModel.deleteOne({_id: payload.requestId}, err => {
+							if (err) next("Couldn't remove stored YouTube API request.");
+							else {
+								next();
+							}
+						});
+					},
+
+					next => {
+						CacheModule.runJob(
+							"HDEL",
+							{
+								table: "youtubeApiRequestParams",
+								key: payload.requestId.toString()
+							},
+							this
+						).then(next).catch(err => next(err));
+					},
+
+					next => {
+						CacheModule.runJob(
+							"HDEL",
+							{
+								table: "youtubeApiRequestResults",
+								key: payload.requestId.toString()
+							},
+							this
+						).then(next).catch(err => next(err));
+					}
+				],
+				err => {
+					if (err) reject(new Error(err));
+					else resolve();
 				}
-			});
+			);
 		});
 	}
 }
