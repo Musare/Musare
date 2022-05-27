@@ -1667,11 +1667,7 @@ export default {
 				try {
 					const { author } = this.video.player.getVideoData();
 
-					if (author)
-						this.updateSongField({
-							field: "artists",
-							value: [author]
-						});
+					if (author) this.artistInputValue = author;
 					else throw new Error("No video author found");
 				} catch (e) {
 					new Toast("Unable to fetch YouTube video author");
