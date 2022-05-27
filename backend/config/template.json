@@ -14,11 +14,23 @@
 			"rateLimit": 500,
 			"requestTimeout": 5000,
 			"retryAmount": 2,
-			"quotas": {
-				"perDay": 10000,
-				"perMinute": 1800000,
-				"per100Seconds": 3000000
-			}
+			"quotas": [
+				{
+					"type": "QUERIES_PER_DAY",
+					"title": "Queries Per Day",
+					"limit": 10000
+				},
+				{
+					"type": "QUERIES_PER_MINUTE",
+					"title": "Queries Per Minute",
+					"limit": 1800000
+				},
+				{
+					"type": "QUERIES_PER_100_SECONDS",
+					"title": "Queries Per 100 Seconds",
+					"limit": 3000000
+				}
+			]
 		},
 		"recaptcha": {
 			"secret": "",

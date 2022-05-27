@@ -43,26 +43,9 @@ let YouTubeModule;
 let CacheModule;
 let DBModule;
 
-const quotas = [
-	{
-		type: "QUERIES_PER_DAY",
-		title: "Queries Per Day",
-		limit: config.get("apis.youtube.quotas.perDay")
-	},
-	{
-		type: "QUERIES_PER_MINUTE",
-		title: "Queries Per Minute",
-		limit: config.get("apis.youtube.quotas.perMinute")
-	},
-	{
-		type: "QUERIES_PER_100_SECONDS",
-		title: "Queries Per 100 Seconds",
-		limit: config.get("apis.youtube.quotas.per100Seconds")
-	}
-];
-
 const isQuotaExceeded = apiCalls => {
 	const reversedApiCalls = apiCalls.slice().reverse();
+	const quotas = config.get("apis.youtube.quotas");
 	const sortedQuotas = quotas.sort((a, b) => a.limit > b.limit);
 
 	let quotaExceeded = false;
@@ -197,6 +180,7 @@ class _YouTubeModule extends CoreClass {
 					if (err) reject(new Error("Couldn't load YouTube API requests."));
 					else {
 						const reversedApiCalls = youtubeApiRequests.slice().reverse();
+						const quotas = config.get("apis.youtube.quotas");
 						const sortedQuotas = quotas.sort((a, b) => a.limit > b.limit);
 						const status = {};
 
