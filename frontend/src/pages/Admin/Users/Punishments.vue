@@ -1,6 +1,6 @@
 <template>
 	<div class="admin-tab container">
-		<page-metadata title="Admin | Punishments" />
+		<page-metadata title="Admin | Users | Punishments" />
 		<div class="card tab-info">
 			<div class="info-row">
 				<h1>Punishments</h1>

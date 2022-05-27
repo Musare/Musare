@@ -3,7 +3,7 @@
 		class="runJobDropdown"
 		:touch="true"
 		:interactive="true"
-		placement="bottom-start"
+		placement="bottom-end"
 		theme="dropdown"
 		ref="dropdown"
 		trigger="click"

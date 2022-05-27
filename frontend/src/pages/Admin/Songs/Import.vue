@@ -12,7 +12,7 @@
 					<h4>Start New Import</h4>
 					<hr class="section-horizontal-rule" />
 
-					<div v-if="createImport.stage === 1" class="stage">
+					<div v-if="false && createImport.stage === 1" class="stage">
 						<label class="label">Import Method</label>
 						<div class="control is-expanded select">
 							<select v-model="createImport.importMethod">
@@ -52,25 +52,26 @@
 							/>
 						</div>
 
-						<label class="label"
-							>Import Music Only<info-icon
-								content="Only import videos from YouTube identified as music"
-						/></label>
-						<div class="control is-expanded select">
-							<select v-model="createImport.isImportingOnlyMusic">
-								<option :value="false">false</option>
-								<option :value="true">true</option>
-							</select>
+						<div class="control is-expanded checkbox-control">
+							<label class="switch">
+								<input
+									type="checkbox"
+									id="import-music-only"
+									v-model="createImport.isImportingOnlyMusic"
+								/>
+								<span class="slider round"></span>
+							</label>
+
+							<label class="label" for="import-music-only">
+								Import Music Only
+								<info-icon
+									content="Only import videos from YouTube identified as music"
+									@click.prevent
+								/>
+							</label>
 						</div>
 
-						<div class="control is-grouped">
-							<button
-								class="control button is-danger"
-								@click.prevent="prevCreateImport(2)"
-							>
-								<i class="material-icons">navigate_before</i>
-								Go Back
-							</button>
+						<div class="control is-expanded">
 							<button
 								class="control is-expanded button is-primary"
 								@click.prevent="submitCreateImport(2)"
@@ -119,7 +120,7 @@ export default {
 	data() {
 		return {
 			createImport: {
-				stage: 1,
+				stage: 2,
 				importMethod: "youtube",
 				youtubeUrl:
 					"https://www.youtube.com/playlist?list=PL3-sRm8xAzY9gpXTMGVHJWy_FMD67NBed",
@@ -157,7 +158,7 @@ export default {
 		},
 		resetCreateImport() {
 			this.createImport = {
-				stage: 1,
+				stage: 2,
 				importMethod: "youtube",
 				youtubeUrl:
 					"https://www.youtube.com/channel/UCio_FVgKVgqcHrRiXDpnqbw",
@@ -241,6 +242,10 @@ export default {
 		.left-section {
 			max-width: 600px;
 			margin-right: 20px !important;
+
+			.checkbox-control label.label {
+				margin-left: 10px;
+			}
 
 			.import-started {
 				font-size: 18px;
