@@ -33,6 +33,10 @@ CacheModule.runJob("SUB", {
 		const videos = Array.isArray(videoIds) ? videoIds : [videoIds];
 		videos.forEach(videoId => {
 			WSModule.runJob("EMIT_TO_ROOM", {
+				room: `view-youtube-video.${videoId}`,
+				args: ["event:youtubeVideo.removed"]
+			});
+
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.youtubeVideos",
 				args: ["event:admin.youtubeVideo.removed", { data: { videoId } }]

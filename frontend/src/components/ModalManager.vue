@@ -36,7 +36,8 @@ export default {
 			importAlbum: "ImportAlbum.vue",
 			confirm: "Confirm.vue",
 			editSongs: "EditSongs.vue",
-			editSong: "EditSong/index.vue"
+			editSong: "EditSong/index.vue",
+			viewYoutubeVideo: "ViewYoutubeVideo.vue"
 		}),
 		...mapState("modalVisibility", {
 			activeModals: state => state.activeModals,

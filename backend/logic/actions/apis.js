@@ -133,6 +133,7 @@ export default {
 			room.startsWith("view-report.") ||
 			room.startsWith("edit-user.") ||
 			room.startsWith("view-api-request.") ||
+			room.startsWith("view-youtube-video.") ||
 			room === "import-album" ||
 			room === "edit-songs"
 		) {

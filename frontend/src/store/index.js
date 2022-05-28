@@ -39,7 +39,8 @@ export default createStore({
 				report: emptyModule,
 				viewReport: emptyModule,
 				confirm: emptyModule,
-				bulkActions: emptyModule
+				bulkActions: emptyModule,
+				viewYoutubeVideo: emptyModule
 			}
 		}
 	},
