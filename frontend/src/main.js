@@ -209,7 +209,11 @@ const router = createRouter({
 				},
 				{
 					path: "youtube",
-					component: () => import("@/pages/Admin/YouTube.vue")
+					component: () => import("@/pages/Admin/YouTube/index.vue")
+				},
+				{
+					path: "youtube/videos",
+					component: () => import("@/pages/Admin/YouTube/Videos.vue")
 				}
 			],
 			meta: {

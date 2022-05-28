@@ -1260,8 +1260,14 @@ class _SongsModule extends CoreClass {
 						// TODO Add err object as first param of callback
 
 						return YouTubeModule.runJob("GET_SONG", { youtubeId }, this)
-							.then(response => {
-								const { song } = response;
+							.then(response => next(null, user, response.song))
+							.catch(next);
+					},
+					(user, youtubeVideo, next) =>
+						YouTubeModule.runJob("CREATE_VIDEOS", { youtubeVideos: youtubeVideo }, this)
+							.then(() => {
+								const song = youtubeVideo;
+								delete song.author;
 								song.artists = [];
 								song.genres = [];
 								song.skipDuration = 0;
@@ -1271,8 +1277,7 @@ class _SongsModule extends CoreClass {
 								song.verified = false;
 								next(null, song);
 							})
-							.catch(next);
-					},
+							.catch(next),
 					(newSong, next) => {
 						const song = new SongsModule.SongModel(newSong);
 						song.save({ validateBeforeSave: false }, err => {

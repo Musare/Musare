@@ -189,7 +189,48 @@
 								<i class="material-icons">show_chart</i>
 								<span>Statistics</span>
 							</router-link>
+							<div
+								v-if="sidebarActive"
+								class="sidebar-item with-children"
+								:class="{ 'is-active': childrenActive.youtube }"
+							>
+								<span>
+									<router-link to="/admin/youtube">
+										<i class="material-icons"
+											>smart_display</i
+										>
+										<span>YouTube</span>
+									</router-link>
+									<i
+										class="material-icons toggle-sidebar-children"
+										@click="
+											toggleChildren({ child: 'youtube' })
+										"
+									>
+										{{
+											childrenActive.youtube
+												? "expand_less"
+												: "expand_more"
+										}}
+									</i>
+								</span>
+								<div class="sidebar-item-children">
+									<router-link
+										class="sidebar-item-child"
+										to="/admin/youtube"
+									>
+										YouTube
+									</router-link>
+									<router-link
+										class="sidebar-item-child"
+										to="/admin/youtube/videos"
+									>
+										Videos
+									</router-link>
+								</div>
+							</div>
 							<router-link
+								v-else
 								class="sidebar-item youtube"
 								to="/admin/youtube"
 								content="YouTube"
@@ -386,6 +427,8 @@ export default {
 				this.toggleChildren({ child: "songs", force: false });
 			} else if (this.currentTab.startsWith("users")) {
 				this.toggleChildren({ child: "users", force: false });
+			} else if (this.currentTab.startsWith("youtube")) {
+				this.toggleChildren({ child: "youtube", force: false });
 			}
 			this.currentTab = this.getTabFromPath();
 			if (this.$refs[`${this.currentTab}-tab`])
@@ -398,6 +441,8 @@ export default {
 				this.toggleChildren({ child: "songs", force: true });
 			else if (this.currentTab.startsWith("users"))
 				this.toggleChildren({ child: "users", force: true });
+			else if (this.currentTab.startsWith("youtube"))
+				this.toggleChildren({ child: "youtube", force: true });
 		},
 		toggleKeyboardShortcutsHelper() {
 			this.$refs.keyboardShortcutsHelper.toggleBox();

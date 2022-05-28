@@ -70,7 +70,8 @@ export default {
 	state: {
 		childrenActive: {
 			songs: false,
-			users: false
+			users: false,
+			youtube: false
 		}
 	},
 	getters: {},

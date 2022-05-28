@@ -27,6 +27,20 @@ CacheModule.runJob("SUB", {
 	}
 });
 
+CacheModule.runJob("SUB", {
+	channel: "youtube.removeVideos",
+	cb: videoIds => {
+		const videos = Array.isArray(videoIds) ? videoIds : [videoIds];
+		videos.forEach(videoId => {
+			WSModule.runJob("EMIT_TO_ROOM", {
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: "admin.youtubeVideos",
+				args: ["event:admin.youtubeVideo.removed", { data: { videoId } }]
+			});
+		});
+	}
+});
+
 export default {
 	/**
 	 * Returns details about the YouTube quota usage
@@ -234,6 +248,114 @@ export default {
 					"YOUTUBE_REMOVE_STORED_API_REQUEST",
 					`Removing stored API request "${requestId}" failed. "${err}"`
 				);
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
+	 * Gets videos, used in the admin youtube page by the AdvancedTable component
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param page - the page
+	 * @param pageSize - the size per page
+	 * @param properties - the properties to return for each news item
+	 * @param sort - the sort object
+	 * @param queries - the queries array
+	 * @param operator - the operator for queries
+	 * @param cb
+	 */
+	getVideos: isAdminRequired(async function getVideos(
+		session,
+		page,
+		pageSize,
+		properties,
+		sort,
+		queries,
+		operator,
+		cb
+	) {
+		async.waterfall(
+			[
+				next => {
+					DBModule.runJob(
+						"GET_DATA",
+						{
+							page,
+							pageSize,
+							properties,
+							sort,
+							queries,
+							operator,
+							modelName: "youtubeVideo",
+							blacklistedProperties: [],
+							specialProperties: {},
+							specialQueries: {}
+						},
+						this
+					)
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async (err, response) => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "YOUTUBE_GET_VIDEOS", `Failed to get YouTube videos. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "YOUTUBE_GET_VIDEOS", `Fetched YouTube videos successfully.`);
+				return cb({
+					status: "success",
+					message: "Successfully fetched YouTube videos.",
+					data: response
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Get a YouTube video
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	getVideo: isAdminRequired(function getVideo(session, identifier, cb) {
+		YouTubeModule.runJob("GET_VIDEO", { identifier }, this)
+			.then(res => {
+				this.log("SUCCESS", "YOUTUBE_GET_VIDEO", `Fetching video was successful.`);
+
+				return cb({ status: "success", message: "Successfully fetched YouTube video", data: res.video });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "YOUTUBE_GET_VIDEO", `Fetching video failed. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
+	 * Remove YouTube videos
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	removeVideos: isAdminRequired(function removeVideos(session, videoIds, cb) {
+		YouTubeModule.runJob("REMOVE_VIDEOS", { videoIds }, this)
+			.then(() => {
+				this.log("SUCCESS", "YOUTUBE_REMOVE_VIDEOS", `Removing videos was successful.`);
+
+				CacheModule.runJob("PUB", {
+					channel: "youtube.removeVideos",
+					value: videoIds
+				});
+
+				return cb({ status: "success", message: "Successfully removed YouTube videos" });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "YOUTUBE_REMOVE_VIDEOS", `Removing videos failed. "${err}"`);
 				return cb({ status: "error", message: err });
 			});
 	})

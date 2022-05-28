@@ -1,5 +1,6 @@
 /* eslint-disable */
 
+import mongoose from "mongoose";
 import async from "async";
 import config from "config";
 
@@ -45,7 +46,7 @@ let DBModule;
 
 const isQuotaExceeded = apiCalls => {
 	const reversedApiCalls = apiCalls.slice().reverse();
-	const quotas = config.get("apis.youtube.quotas");
+	const quotas = config.get("apis.youtube.quotas").slice();
 	const sortedQuotas = quotas.sort((a, b) => a.limit > b.limit);
 
 	let quotaExceeded = false;
@@ -84,7 +85,7 @@ class _YouTubeModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("youtube", {
-			concurrency: 1,
+			concurrency: 10,
 			priorities: {
 				GET_PLAYLIST: 11
 			}
@@ -105,6 +106,10 @@ class _YouTubeModule extends CoreClass {
 
 			this.youtubeApiRequestModel = this.YoutubeApiRequestModel = await DBModule.runJob("GET_MODEL", {
 				modelName: "youtubeApiRequest"
+			});
+
+			this.youtubeVideoModel = this.YoutubeVideoModel = await DBModule.runJob("GET_MODEL", {
+				modelName: "youtubeVideo"
 			});
 
 			this.rateLimiter = new RateLimitter(config.get("apis.youtube.rateLimit"));
@@ -180,7 +185,7 @@ class _YouTubeModule extends CoreClass {
 					if (err) reject(new Error("Couldn't load YouTube API requests."));
 					else {
 						const reversedApiCalls = youtubeApiRequests.slice().reverse();
-						const quotas = config.get("apis.youtube.quotas");
+						const quotas = config.get("apis.youtube.quotas").slice();
 						const sortedQuotas = quotas.sort((a, b) => a.limit > b.limit);
 						const status = {};
 
@@ -269,6 +274,7 @@ class _YouTubeModule extends CoreClass {
 					const song = {
 						youtubeId: data.items[0].id,
 						title: data.items[0].snippet.title,
+						author: data.items[0].snippet.channelTitle,
 						thumbnail: data.items[0].snippet.thumbnails.default.url,
 						duration
 					};
@@ -1023,6 +1029,90 @@ class _YouTubeModule extends CoreClass {
 					else resolve();
 				}
 			);
+		});
+	}
+
+	/**
+	 * Create YouTube videos
+	 *
+	 * @param {object} payload - an object containing the payload
+	 * @param {string} payload.youtubeVideos - the youtubeVideo object or array of
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	CREATE_VIDEOS(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						let youtubeVideos = payload.youtubeVideos;
+						if (typeof youtubeVideos !== "object") next("Invalid youtubeVideos type");
+						else {
+							if (!Array.isArray(youtubeVideos)) youtubeVideos = [youtubeVideos];
+							YouTubeModule.youtubeVideoModel.insertMany(youtubeVideos, next);
+						}
+					}
+				],
+				(err, youtubeVideos) => {
+					if (err) reject(new Error(err));
+					else resolve({ youtubeVideos });
+				}
+			)
+		});
+	}
+
+	/**
+	 * Get YouTube video
+	 *
+	 * @param {object} payload - an object containing the payload
+	 * @param {string} payload.identifier - the youtube video ObjectId or YouTube ID
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	 GET_VIDEO(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						const query = mongoose.Types.ObjectId.isValid(payload.identifier) ?
+							{ _id: payload.identifier } :
+							{ youtubeId: payload.identifier };
+
+						return YouTubeModule.youtubeVideoModel.findOne(query, next);
+					}
+				],
+				(err, video) => {
+					if (err) reject(new Error(err));
+					else resolve({ video });
+				}
+			)
+		});
+	}
+
+	/**
+	 * Remove YouTube videos
+	 *
+	 * @param {object} payload - an object containing the payload
+	 * @param {string} payload.videoIds - Array of youtubeVideo ObjectIds
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	 REMOVE_VIDEOS(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						let videoIds = payload.videoIds;
+						if (!Array.isArray(videoIds)) videoIds = [videoIds];
+						if (!videoIds.every(videoId => mongoose.Types.ObjectId.isValid(videoId)))
+							next("One or more videoIds are not a valid ObjectId.");
+						else {
+							YouTubeModule.youtubeVideoModel.deleteMany({_id: { $in: videoIds }}, next);
+						}
+					}
+				],
+				err => {
+					if (err) reject(new Error(err));
+					else resolve();
+				}
+			)
 		});
 	}
 }

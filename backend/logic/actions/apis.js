@@ -196,7 +196,8 @@ export default {
 			page === "users" ||
 			page === "statistics" ||
 			page === "punishments" ||
-			page === "youtube"
+			page === "youtube" ||
+			page === "youtubeVideos"
 		) {
 			WSModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session.socketId }).then(() => {
 				WSModule.runJob("SOCKET_JOIN_ROOM", {
