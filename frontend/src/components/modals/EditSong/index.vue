@@ -41,15 +41,15 @@
 				>
 					<div class="top-section">
 						<div class="player-section">
-							<div id="editSongPlayer" />
+							<div :id="`editSongPlayer-${modalUuid}`" />
 
 							<div v-show="youtubeError" class="player-error">
 								<h2>{{ youtubeErrorMessage }}</h2>
 							</div>
 
 							<canvas
-								ref="durationCanvas"
-								id="durationCanvas"
+								:ref="`durationCanvas-${modalUuid}`"
+								class="duration-canvas"
 								v-show="!youtubeError"
 								height="20"
 								width="530"
@@ -1177,133 +1177,142 @@ export default {
 			}, 200);
 
 			if (window.YT && window.YT.Player) {
-				this.video.player = new window.YT.Player("editSongPlayer", {
-					height: 298,
-					width: 530,
-					videoId: null,
-					host: "https://www.youtube-nocookie.com",
-					playerVars: {
-						controls: 0,
-						iv_load_policy: 3,
-						rel: 0,
-						showinfo: 0,
-						autoplay: 0
-					},
-					startSeconds: this.song.skipDuration,
-					events: {
-						onReady: () => {
-							let volume = parseFloat(
-								localStorage.getItem("volume")
-							);
-							volume = typeof volume === "number" ? volume : 20;
-							this.video.player.setVolume(volume);
-							if (volume > 0) this.video.player.unMute();
-
-							this.playerReady = true;
-
-							if (this.song && this.song._id)
-								this.video.player.cueVideoById(
-									this.song.youtubeId,
-									this.song.skipDuration
-								);
-
-							this.setPlaybackRate(null);
-
-							this.drawCanvas();
+				this.video.player = new window.YT.Player(
+					`editSongPlayer-${this.modalUuid}`,
+					{
+						height: 298,
+						width: 530,
+						videoId: null,
+						host: "https://www.youtube-nocookie.com",
+						playerVars: {
+							controls: 0,
+							iv_load_policy: 3,
+							rel: 0,
+							showinfo: 0,
+							autoplay: 0
 						},
-						onStateChange: event => {
-							this.drawCanvas();
+						startSeconds: this.song.skipDuration,
+						events: {
+							onReady: () => {
+								let volume = parseFloat(
+									localStorage.getItem("volume")
+								);
+								volume =
+									typeof volume === "number" ? volume : 20;
+								this.video.player.setVolume(volume);
+								if (volume > 0) this.video.player.unMute();
 
-							if (event.data === 1) {
-								this.video.paused = false;
-								let youtubeDuration =
-									this.video.player.getDuration();
-								const newYoutubeVideoDuration =
-									youtubeDuration.toFixed(3);
+								this.playerReady = true;
 
-								if (
-									this.youtubeVideoDuration.indexOf(
-										".000"
-									) !== -1 &&
-									`${this.youtubeVideoDuration}` !==
-										`${newYoutubeVideoDuration}`
-								) {
-									const songDurationNumber = Number(
-										this.song.duration
+								if (this.song && this.song._id)
+									this.video.player.cueVideoById(
+										this.song.youtubeId,
+										this.song.skipDuration
 									);
-									const songDurationNumber2 =
-										Number(this.song.duration) + 1;
-									const songDurationNumber3 =
-										Number(this.song.duration) - 1;
-									const fixedSongDuration =
-										songDurationNumber.toFixed(3);
-									const fixedSongDuration2 =
-										songDurationNumber2.toFixed(3);
-									const fixedSongDuration3 =
-										songDurationNumber3.toFixed(3);
 
-									if (
-										`${this.youtubeVideoDuration}` ===
-											`${Number(
-												this.song.duration
-											).toFixed(3)}` &&
-										(fixedSongDuration ===
-											this.youtubeVideoDuration ||
-											fixedSongDuration2 ===
-												this.youtubeVideoDuration ||
-											fixedSongDuration3 ===
-												this.youtubeVideoDuration)
-									)
-										this.song.duration =
-											newYoutubeVideoDuration;
+								this.setPlaybackRate(null);
 
-									this.youtubeVideoDuration =
-										newYoutubeVideoDuration;
+								this.drawCanvas();
+							},
+							onStateChange: event => {
+								this.drawCanvas();
+
+								if (event.data === 1) {
+									this.video.paused = false;
+									let youtubeDuration =
+										this.video.player.getDuration();
+									const newYoutubeVideoDuration =
+										youtubeDuration.toFixed(3);
+
 									if (
 										this.youtubeVideoDuration.indexOf(
 											".000"
-										) !== -1
-									)
-										this.youtubeVideoNote = "(~)";
-									else this.youtubeVideoNote = "";
+										) !== -1 &&
+										`${this.youtubeVideoDuration}` !==
+											`${newYoutubeVideoDuration}`
+									) {
+										const songDurationNumber = Number(
+											this.song.duration
+										);
+										const songDurationNumber2 =
+											Number(this.song.duration) + 1;
+										const songDurationNumber3 =
+											Number(this.song.duration) - 1;
+										const fixedSongDuration =
+											songDurationNumber.toFixed(3);
+										const fixedSongDuration2 =
+											songDurationNumber2.toFixed(3);
+										const fixedSongDuration3 =
+											songDurationNumber3.toFixed(3);
+
+										if (
+											`${this.youtubeVideoDuration}` ===
+												`${Number(
+													this.song.duration
+												).toFixed(3)}` &&
+											(fixedSongDuration ===
+												this.youtubeVideoDuration ||
+												fixedSongDuration2 ===
+													this.youtubeVideoDuration ||
+												fixedSongDuration3 ===
+													this.youtubeVideoDuration)
+										)
+											this.song.duration =
+												newYoutubeVideoDuration;
+
+										this.youtubeVideoDuration =
+											newYoutubeVideoDuration;
+										if (
+											this.youtubeVideoDuration.indexOf(
+												".000"
+											) !== -1
+										)
+											this.youtubeVideoNote = "(~)";
+										else this.youtubeVideoNote = "";
+									}
+
+									if (this.song.duration === -1)
+										this.song.duration =
+											this.youtubeVideoDuration;
+
+									youtubeDuration -= this.song.skipDuration;
+									if (
+										this.song.duration >
+										youtubeDuration + 1
+									) {
+										this.stopVideo();
+										this.pauseVideo(true);
+										return new Toast(
+											"Video can't play. Specified duration is bigger than the YouTube song duration."
+										);
+									}
+									if (this.song.duration <= 0) {
+										this.stopVideo();
+										this.pauseVideo(true);
+										return new Toast(
+											"Video can't play. Specified duration has to be more than 0 seconds."
+										);
+									}
+
+									if (
+										this.video.player.getCurrentTime() <
+										this.song.skipDuration
+									) {
+										return this.seekTo(
+											this.song.skipDuration
+										);
+									}
+
+									this.setPlaybackRate(null);
+								} else if (event.data === 2) {
+									this.video.paused = true;
 								}
 
-								if (this.song.duration === -1)
-									this.song.duration =
-										this.youtubeVideoDuration;
-
-								youtubeDuration -= this.song.skipDuration;
-								if (this.song.duration > youtubeDuration + 1) {
-									this.stopVideo();
-									this.pauseVideo(true);
-									return new Toast(
-										"Video can't play. Specified duration is bigger than the YouTube song duration."
-									);
-								}
-								if (this.song.duration <= 0) {
-									this.stopVideo();
-									this.pauseVideo(true);
-									return new Toast(
-										"Video can't play. Specified duration has to be more than 0 seconds."
-									);
-								}
-
-								if (
-									this.video.player.getCurrentTime() <
-									this.song.skipDuration
-								) {
-									return this.seekTo(this.song.skipDuration);
-								}
-
-								this.setPlaybackRate(null);
-							} else if (event.data === 2) {
-								this.video.paused = true;
+								return false;
 							}
-
-							return false;
 						}
 					}
-				});
+				);
 			} else {
 				this.youtubeError = true;
 				this.youtubeErrorMessage = "Player could not be loaded.";
@@ -1797,7 +1806,8 @@ export default {
 		},
 		drawCanvas() {
 			if (!this.songDataLoaded) return;
-			const canvasElement = this.$refs.durationCanvas;
+			const canvasElement =
+				this.$refs[`durationCanvas-${this.modalUuid}`];
 			const ctx = canvasElement.getContext("2d");
 
 			const videoDuration = Number(this.youtubeVideoDuration);
@@ -2012,7 +2022,7 @@ export default {
 		}
 	}
 
-	#durationCanvas {
+	.duration-canvas {
 		background-color: var(--dark-grey-2) !important;
 	}
 }
@@ -2048,7 +2058,7 @@ export default {
 			border-radius: @border-radius;
 			overflow: hidden;
 
-			#durationCanvas {
+			.duration-canvas {
 				background-color: var(--light-grey-2);
 			}
 

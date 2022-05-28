@@ -326,8 +326,8 @@ export default {
 	 *
 	 * @returns {{status: string, data: object}}
 	 */
-	getVideo: isAdminRequired(function getVideo(session, identifier, cb) {
-		YouTubeModule.runJob("GET_VIDEO", { identifier }, this)
+	getVideo: isAdminRequired(function getVideo(session, identifier, createMissing, cb) {
+		YouTubeModule.runJob("GET_VIDEO", { identifier, createMissing }, this)
 			.then(res => {
 				this.log("SUCCESS", "YOUTUBE_GET_VIDEO", `Fetching video was successful.`);
 

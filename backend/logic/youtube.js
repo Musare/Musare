@@ -1065,6 +1065,7 @@ class _YouTubeModule extends CoreClass {
 	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {string} payload.identifier - the youtube video ObjectId or YouTube ID
+	 * @param {string} payload.createMissing - attempt to fetch and create video if not in db
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	 GET_VIDEO(payload) {
@@ -1077,6 +1078,24 @@ class _YouTubeModule extends CoreClass {
 							{ youtubeId: payload.identifier };
 
 						return YouTubeModule.youtubeVideoModel.findOne(query, next);
+					},
+
+					(video, next) => {
+						if (video) return next(null, video, false);
+						if (mongoose.Types.ObjectId.isValid(payload.identifier) || !payload.createMissing) return next("YouTube video not found.");
+						return YouTubeModule.runJob("GET_SONG", { youtubeId: payload.identifier }, this)
+							.then(response => next(null, false, response.song))
+							.catch(next);
+					},
+
+					(video, youtubeVideo, next) => {
+						if (video) return next(null, video);
+						return YouTubeModule.runJob("CREATE_VIDEOS", { youtubeVideos: youtubeVideo }, this)
+							.then(res => {
+								if (res.youtubeVideos.length === 1) next(null, res.youtubeVideos[0])
+								else next("YouTube video not found.")
+							})
+							.catch(next);
 					}
 				],
 				(err, video) => {

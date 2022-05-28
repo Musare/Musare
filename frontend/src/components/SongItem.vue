@@ -79,15 +79,21 @@
 
 					<template #content>
 						<div class="icons-group">
-							<a
+							<i
 								v-if="disabledActions.indexOf('youtube') === -1"
-								target="_blank"
-								:href="`https://www.youtube.com/watch?v=${song.youtubeId}`"
-								content="View on Youtube"
+								@click="
+									openModal({
+										modal: 'viewYoutubeVideo',
+										data: {
+											videoId: song.youtubeId
+										}
+									})
+								"
+								content="View YouTube Video"
 								v-tippy
 							>
 								<div class="youtube-icon"></div>
-							</a>
+							</i>
 							<i
 								v-if="disabledActions.indexOf('report') === -1"
 								class="material-icons report-icon"

@@ -1263,6 +1263,7 @@ class _SongsModule extends CoreClass {
 							.then(response => next(null, user, response.song))
 							.catch(next);
 					},
+
 					(user, youtubeVideo, next) =>
 						YouTubeModule.runJob("CREATE_VIDEOS", { youtubeVideos: youtubeVideo }, this)
 							.then(() => {
