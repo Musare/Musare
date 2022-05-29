@@ -107,16 +107,6 @@
 					slotProps.item.tags.join(", ")
 				}}</span>
 			</template>
-			<template #column-likes="slotProps">
-				<span :title="slotProps.item.likes">{{
-					slotProps.item.likes
-				}}</span>
-			</template>
-			<template #column-dislikes="slotProps">
-				<span :title="slotProps.item.dislikes">{{
-					slotProps.item.dislikes
-				}}</span>
-			</template>
 			<template #column-_id="slotProps">
 				<span :title="slotProps.item._id">{{
 					slotProps.item._id
@@ -316,24 +306,6 @@ export default {
 					sortable: false
 				},
 				{
-					name: "likes",
-					displayName: "Likes",
-					properties: ["likes"],
-					sortProperty: "likes",
-					minWidth: 100,
-					defaultWidth: 100,
-					defaultVisibility: "hidden"
-				},
-				{
-					name: "dislikes",
-					displayName: "Dislikes",
-					properties: ["dislikes"],
-					sortProperty: "dislikes",
-					minWidth: 100,
-					defaultWidth: 100,
-					defaultVisibility: "hidden"
-				},
-				{
 					name: "_id",
 					displayName: "Song ID",
 					properties: ["_id"],
@@ -505,32 +477,6 @@ export default {
 					defaultFilterType: "boolean"
 				},
 				{
-					name: "likes",
-					displayName: "Likes",
-					property: "likes",
-					filterTypes: [
-						"numberLesserEqual",
-						"numberLesser",
-						"numberGreater",
-						"numberGreaterEqual",
-						"numberEquals"
-					],
-					defaultFilterType: "numberLesser"
-				},
-				{
-					name: "dislikes",
-					displayName: "Dislikes",
-					property: "dislikes",
-					filterTypes: [
-						"numberLesserEqual",
-						"numberLesser",
-						"numberGreater",
-						"numberGreaterEqual",
-						"numberEquals"
-					],
-					defaultFilterType: "numberLesser"
-				},
-				{
 					name: "duration",
 					displayName: "Duration",
 					property: "duration",
@@ -575,8 +521,8 @@ export default {
 					socket: "songs.updateAll"
 				},
 				{
-					name: "Recalculate all song ratings",
-					socket: "songs.recalculateAllRatings"
+					name: "Recalculate all ratings",
+					socket: "ratings.recalculateAll"
 				}
 			]
 		};

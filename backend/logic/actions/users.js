@@ -17,9 +17,9 @@ const WSModule = moduleManager.modules.ws;
 const CacheModule = moduleManager.modules.cache;
 const MailModule = moduleManager.modules.mail;
 const PunishmentsModule = moduleManager.modules.punishments;
-const SongsModule = moduleManager.modules.songs;
 const ActivitiesModule = moduleManager.modules.activities;
 const PlaylistsModule = moduleManager.modules.playlists;
+const RatingsModule = moduleManager.modules.ratings;
 
 CacheModule.runJob("SUB", {
 	channel: "user.updatePreferences",
@@ -358,9 +358,7 @@ export default {
 				(playlist, next) => {
 					if (!playlist) return next();
 
-					playlist.songs.forEach(song =>
-						songsToAdjustRatings.push({ songId: song._id, youtubeId: song.youtubeId })
-					);
+					playlist.songs.forEach(song => songsToAdjustRatings.push({ youtubeId: song.youtubeId }));
 
 					return next();
 				},
@@ -374,9 +372,9 @@ export default {
 					async.each(
 						songsToAdjustRatings,
 						(song, next) => {
-							const { songId, youtubeId } = song;
+							const { youtubeId } = song;
 
-							SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId, youtubeId })
+							RatingsModule.runJob("RECALCULATE_RATINGS", { youtubeId })
 								.then(() => next())
 								.catch(next);
 						},
@@ -586,9 +584,7 @@ export default {
 				(playlist, next) => {
 					if (!playlist) return next();
 
-					playlist.songs.forEach(song =>
-						songsToAdjustRatings.push({ songId: song._id, youtubeId: song.youtubeId })
-					);
+					playlist.songs.forEach(song => songsToAdjustRatings.push({ youtubeId: song.youtubeId }));
 
 					return next();
 				},
@@ -602,9 +598,9 @@ export default {
 					async.each(
 						songsToAdjustRatings,
 						(song, next) => {
-							const { songId, youtubeId } = song;
+							const { youtubeId } = song;
 
-							SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId, youtubeId })
+							RatingsModule.runJob("RECALCULATE_RATINGS", { youtubeId })
 								.then(() => next())
 								.catch(next);
 						},

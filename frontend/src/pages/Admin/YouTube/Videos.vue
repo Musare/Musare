@@ -6,6 +6,9 @@
 				<h1>YouTube Videos</h1>
 				<p>Manage YouTube video cache</p>
 			</div>
+			<div class="button-row">
+				<run-job-dropdown :jobs="jobs" />
+			</div>
 		</div>
 		<advanced-table
 			:column-default="columnDefault"
@@ -130,10 +133,12 @@ import { mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 
 import AdvancedTable from "@/components/AdvancedTable.vue";
+import RunJobDropdown from "@/components/RunJobDropdown.vue";
 
 export default {
 	components: {
-		AdvancedTable
+		AdvancedTable,
+		RunJobDropdown
 	},
 	data() {
 		return {
@@ -272,7 +277,13 @@ export default {
 					event: "admin.youtubeVideo.removed",
 					id: "videoId"
 				}
-			}
+			},
+			jobs: [
+				{
+					name: "Recalculate all ratings",
+					socket: "ratings.recalculateAll"
+				}
+			]
 		};
 	},
 	computed: {

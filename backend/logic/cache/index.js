@@ -37,7 +37,8 @@ class _CacheModule extends CoreClass {
 			officialPlaylist: await importSchema("officialPlaylist"),
 			song: await importSchema("song"),
 			punishment: await importSchema("punishment"),
-			recentActivity: await importSchema("recentActivity")
+			recentActivity: await importSchema("recentActivity"),
+			ratings: await importSchema("ratings")
 		};
 
 		return new Promise((resolve, reject) => {

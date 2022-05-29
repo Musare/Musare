@@ -10,6 +10,7 @@ import news from "./news";
 import punishments from "./punishments";
 import utils from "./utils";
 import youtube from "./youtube";
+import ratings from "./ratings";
 
 export default {
 	apis,
@@ -23,5 +24,6 @@ export default {
 	news,
 	punishments,
 	utils,
-	youtube
+	youtube,
+	ratings
 };

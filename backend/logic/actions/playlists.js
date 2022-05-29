@@ -15,6 +15,7 @@ const CacheModule = moduleManager.modules.cache;
 const PlaylistsModule = moduleManager.modules.playlists;
 const YouTubeModule = moduleManager.modules.youtube;
 const ActivitiesModule = moduleManager.modules.activities;
+const RatingsModule = moduleManager.modules.ratings;
 
 CacheModule.runJob("SUB", {
 	channel: "playlist.create",
@@ -1191,8 +1192,7 @@ export default {
 				},
 				(playlist, newSong, next) => {
 					if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
-						SongsModule.runJob("RECALCULATE_SONG_RATINGS", {
-							songId: newSong._id,
+						RatingsModule.runJob("RECALCULATE_RATINGS", {
 							youtubeId: newSong.youtubeId
 						})
 							.then(ratings => next(null, playlist, newSong, ratings))
@@ -1553,8 +1553,7 @@ export default {
 
 				(playlist, newSong, next) => {
 					if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
-						SongsModule.runJob("RECALCULATE_SONG_RATINGS", {
-							songId: newSong._id,
+						RatingsModule.runJob("RECALCULATE_RATINGS", {
 							youtubeId: newSong.youtubeId
 						})
 							.then(ratings => next(null, playlist, newSong, ratings))

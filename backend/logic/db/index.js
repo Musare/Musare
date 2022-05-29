@@ -12,11 +12,12 @@ const REQUIRED_DOCUMENT_VERSIONS = {
 	punishment: 1,
 	queueSong: 1,
 	report: 5,
-	song: 8,
+	song: 9,
 	station: 8,
 	user: 3,
 	youtubeApiRequest: 1,
-	youtubeVideo: 1
+	youtubeVideo: 1,
+	ratings: 1
 };
 
 const regex = {
@@ -72,7 +73,8 @@ class _DBModule extends CoreClass {
 						report: {},
 						punishment: {},
 						youtubeApiRequest: {},
-						youtubeVideo: {}
+						youtubeVideo: {},
+						ratings: {}
 					};
 
 					const importSchema = schemaName =>
@@ -95,6 +97,7 @@ class _DBModule extends CoreClass {
 					await importSchema("punishment");
 					await importSchema("youtubeApiRequest");
 					await importSchema("youtubeVideo");
+					await importSchema("ratings");
 
 					this.models = {
 						song: mongoose.model("song", this.schemas.song),
@@ -108,7 +111,8 @@ class _DBModule extends CoreClass {
 						report: mongoose.model("report", this.schemas.report),
 						punishment: mongoose.model("punishment", this.schemas.punishment),
 						youtubeApiRequest: mongoose.model("youtubeApiRequest", this.schemas.youtubeApiRequest),
-						youtubeVideo: mongoose.model("youtubeVideo", this.schemas.youtubeVideo)
+						youtubeVideo: mongoose.model("youtubeVideo", this.schemas.youtubeVideo),
+						ratings: mongoose.model("ratings", this.schemas.ratings)
 					};
 
 					mongoose.connection.on("error", err => {
@@ -252,6 +256,7 @@ class _DBModule extends CoreClass {
 					this.models.user.syncIndexes();
 					this.models.youtubeApiRequest.syncIndexes();
 					this.models.youtubeVideo.syncIndexes();
+					this.models.ratings.syncIndexes();
 
 					if (config.get("skipDbDocumentsVersionCheck")) resolve();
 					else {
