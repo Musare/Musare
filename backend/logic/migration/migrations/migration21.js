@@ -54,7 +54,8 @@ export default async function migrate(MigrationModule) {
 											{
 												$set: {
 													likes,
-													dislikes
+													dislikes,
+													documentVersion: 1
 												}
 											},
 											{ upsert: true },
