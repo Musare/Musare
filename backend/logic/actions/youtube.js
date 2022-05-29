@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import async from "async";
 
-import { isAdminRequired } from "./hooks";
+import { isAdminRequired, isLoginRequired } from "./hooks";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -326,7 +326,7 @@ export default {
 	 *
 	 * @returns {{status: string, data: object}}
 	 */
-	getVideo: isAdminRequired(function getVideo(session, identifier, createMissing, cb) {
+	getVideo: isLoginRequired(function getVideo(session, identifier, createMissing, cb) {
 		YouTubeModule.runJob("GET_VIDEO", { identifier, createMissing }, this)
 			.then(res => {
 				this.log("SUCCESS", "YOUTUBE_GET_VIDEO", `Fetching video was successful.`);
@@ -360,6 +360,40 @@ export default {
 			.catch(async err => {
 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 				this.log("ERROR", "YOUTUBE_REMOVE_VIDEOS", `Removing videos failed. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
+	 * Requests a set of YouTube videos
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} url - the url of the the YouTube playlist
+	 * @param {boolean} musicOnly - whether to only get music from the playlist
+	 * @param {boolean} musicOnly - whether to return videos
+	 * @param {Function} cb - gets called with the result
+	 */
+	requestSet: isLoginRequired(function requestSet(session, url, musicOnly, returnVideos, cb) {
+		YouTubeModule.runJob("REQUEST_SET", { url, musicOnly, returnVideos }, this)
+			.then(response => {
+				this.log(
+					"SUCCESS",
+					"REQUEST_SET",
+					`Successfully imported a YouTube playlist to be requested for user "${session.userId}".`
+				);
+				return cb({
+					status: "success",
+					message: `Playlist is done importing. ${response.successful} were added succesfully, ${response.failed} failed (${response.alreadyInDatabase} were already in database)`,
+					videos: returnVideos ? response.videos : null
+				});
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log(
+					"ERROR",
+					"REQUEST_SET",
+					`Importing a YouTube playlist to be requested failed for user "${session.userId}". "${err}"`
+				);
 				return cb({ status: "error", message: err });
 			});
 	})

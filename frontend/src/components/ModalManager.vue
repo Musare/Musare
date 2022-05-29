@@ -24,7 +24,6 @@ export default {
 			createStation: "CreateStation.vue",
 			editNews: "EditNews.vue",
 			manageStation: "ManageStation/index.vue",
-			importPlaylist: "ImportPlaylist.vue",
 			editPlaylist: "EditPlaylist/index.vue",
 			createPlaylist: "CreatePlaylist.vue",
 			report: "Report.vue",

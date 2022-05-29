@@ -10,17 +10,6 @@ let YouTubeModule;
 let StationsModule;
 let PlaylistsModule;
 
-class ErrorWithData extends Error {
-	/**
-	 * @param {string} message - the error message
-	 * @param {object} data - the error data
-	 */
-	constructor(message, data) {
-		super(message);
-		this.data = data;
-	}
-}
-
 class _SongsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
@@ -225,30 +214,33 @@ class _SongsModule extends CoreClass {
 					(song, next) => {
 						if (song && song.duration > 0) next(true, song);
 						else {
-							YouTubeModule.runJob("GET_SONG", { youtubeId: payload.youtubeId }, this)
+							YouTubeModule.runJob(
+								"GET_VIDEO",
+								{ identifier: payload.youtubeId, createMissing: true },
+								this
+							)
 								.then(response => {
-									next(null, song, response.song);
+									const { youtubeId, title, author, duration } = response.video;
+									next(null, song, { youtubeId, title, artists: [author], duration });
 								})
 								.catch(next);
 						}
 					},
 
-					(song, youtubeSong, next) => {
+					(song, youtubeVideo, next) => {
 						if (song && song.duration <= 0) {
-							song.duration = youtubeSong.duration;
+							song.duration = youtubeVideo.duration;
 							song.save({ validateBeforeSave: true }, err => {
-								if (err) return next(err, song);
-								return next(null, song);
+								if (err) next(err, song);
+								next(null, song);
 							});
 						} else {
-							const song = new SongsModule.SongModel({
-								...youtubeSong,
+							next(null, {
+								...youtubeVideo,
+								skipDuration: 0,
 								requestedBy: payload.userId,
-								requestedAt: Date.now()
-							});
-							song.save({ validateBeforeSave: true }, err => {
-								if (err) return next(err, song);
-								return next(null, song);
+								requestedAt: Date.now(),
+								verified: false
 							});
 						}
 					}
@@ -1226,110 +1218,6 @@ class _SongsModule extends CoreClass {
 			});
 		});
 	}
-
-	/**
-	 * Requests a song, adding it to the DB
-	 *
-	 * @param {object} payload - The payload
-	 * @param {string} payload.youtubeId - The YouTube song id of the song
-	 * @param {string} payload.userId - The user id of the person requesting the song
-	 * @returns {Promise} - returns promise (reject, resolve)
-	 */
-	REQUEST_SONG(payload) {
-		return new Promise((resolve, reject) => {
-			const { youtubeId, userId } = payload;
-			const requestedAt = Date.now();
-
-			async.waterfall(
-				[
-					next => {
-						DBModule.runJob("GET_MODEL", { modelName: "user" }, this)
-							.then(UserModel => {
-								UserModel.findOne({ _id: userId }, { "preferences.anonymousSongRequests": 1 }, next);
-							})
-							.catch(next);
-					},
-
-					(user, next) => {
-						SongsModule.SongModel.findOne({ youtubeId }, (err, song) => next(err, user, song));
-					},
-
-					// Get YouTube data from id
-					(user, song, next) => {
-						if (song) return next("This song is already in the database.", song);
-						// TODO Add err object as first param of callback
-
-						return YouTubeModule.runJob("GET_SONG", { youtubeId }, this)
-							.then(response => next(null, user, response.song))
-							.catch(next);
-					},
-
-					(user, youtubeVideo, next) =>
-						YouTubeModule.runJob("CREATE_VIDEOS", { youtubeVideos: youtubeVideo }, this)
-							.then(() => {
-								const song = youtubeVideo;
-								delete song.author;
-								song.artists = [];
-								song.genres = [];
-								song.skipDuration = 0;
-								song.explicit = false;
-								song.requestedBy = user.preferences.anonymousSongRequests ? null : userId;
-								song.requestedAt = requestedAt;
-								song.verified = false;
-								next(null, song);
-							})
-							.catch(next),
-					(newSong, next) => {
-						const song = new SongsModule.SongModel(newSong);
-						song.save({ validateBeforeSave: false }, err => {
-							if (err) return next(err, song);
-							return next(null, song);
-						});
-					},
-					(song, next) => {
-						DBModule.runJob("GET_MODEL", { modelName: "user" }, this)
-							.then(UserModel => {
-								UserModel.findOne({ _id: userId }, (err, user) => {
-									if (err) return next(err);
-									if (!user) return next(null, song);
-
-									user.statistics.songsRequested += 1;
-
-									return user.save(err => {
-										if (err) return next(err);
-										return next(null, song);
-									});
-								});
-							})
-							.catch(next);
-					}
-				],
-				async (err, song) => {
-					if (err && err !== "This song is already in the database.") return reject(err);
-
-					const { _id, youtubeId, title, artists, thumbnail, duration, verified } = song;
-					const trimmedSong = {
-						_id,
-						youtubeId,
-						title,
-						artists,
-						thumbnail,
-						duration,
-						verified
-					};
-
-					if (err && err === "This song is already in the database.")
-						return reject(new ErrorWithData(err, { song: trimmedSong }));
-
-					SongsModule.runJob("UPDATE_SONG", { songId: song._id });
-
-					return resolve({ song: trimmedSong });
-				}
-			);
-		});
-	}
-
-	// runjob songs REQUEST_ORPHANED_PLAYLIST_SONGS {}
 
 	/**
 	 * Requests all orphaned playlist songs, adding them to the database

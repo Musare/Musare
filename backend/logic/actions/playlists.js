@@ -1163,7 +1163,7 @@ export default {
 					)
 						.then(response => {
 							const { song } = response;
-							const { _id, title, artists, thumbnail, duration, status } = song;
+							const { _id, title, artists, thumbnail, duration, verified } = song;
 							next(null, {
 								_id,
 								youtubeId,
@@ -1171,7 +1171,7 @@ export default {
 								artists,
 								thumbnail,
 								duration,
-								status
+								verified
 							});
 						})
 						.catch(next);
@@ -1542,8 +1542,11 @@ export default {
 							})
 						)
 						.catch(() => {
-							YouTubeModule.runJob("GET_SONG", { youtubeId }, this)
-								.then(response => next(null, playlist, response.song))
+							YouTubeModule.runJob("GET_VIDEO", { identifier: youtubeId, createMissing: true }, this)
+								.then(response => {
+									const { youtubeId, title, author, duration } = response.video;
+									next(null, playlist, { youtubeId, title, artists: [author], duration });
+								})
 								.catch(next);
 						});
 				},

@@ -184,7 +184,7 @@ export default {
 			}, 750);
 
 			return this.socket.dispatch(
-				"songs.requestSet",
+				"youtube.requestSet",
 				this.createImport.youtubeUrl,
 				this.createImport.isImportingOnlyMusic,
 				true,

@@ -624,36 +624,35 @@ class _StationsModule extends CoreClass {
 					},
 
 					(queueSong, next) => {
-						if (!queueSong._id) next(null, queueSong);
-						else
-							SongsModule.runJob("GET_SONG", { songId: queueSong._id }, this)
-								.then(response => {
-									const { song } = response;
-
-									if (song) {
-										const newSong = {
-											_id: song._id,
-											youtubeId: song.youtubeId,
-											title: song.title,
-											artists: song.artists,
-											duration: song.duration,
-											skipDuration: song.skipDuration,
-											thumbnail: song.thumbnail,
-											requestedAt: queueSong.requestedAt,
-											requestedBy: queueSong.requestedBy,
-											likes: song.likes,
-											dislikes: song.dislikes,
-											verified: song.verified
-										};
-
-										return next(null, newSong);
-									}
-
-									return next(null, song);
-								})
-								.catch(err => {
-									next(err);
+						SongsModule.runJob(
+							"ENSURE_SONG_EXISTS_BY_YOUTUBE_ID",
+							{
+								youtubeId: queueSong.youtubeId,
+								userId: null,
+								automaticallyRequested: true
+							},
+							this
+						)
+							.then(response => {
+								const { song } = response;
+								const { _id, youtubeId, title, skipDuration, artists, thumbnail, duration, verified } =
+									song;
+								next(null, {
+									_id,
+									youtubeId,
+									title,
+									skipDuration,
+									artists,
+									thumbnail,
+									duration,
+									verified,
+									requestedAt: queueSong.requestedAt,
+									requestedBy: queueSong.requestedBy,
+									likes: song.likes || 0,
+									dislikes: song.dislikes || 0
 								});
+							})
+							.catch(next);
 					}
 				],
 				(err, song) => {

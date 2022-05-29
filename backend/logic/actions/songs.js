@@ -11,7 +11,6 @@ const WSModule = moduleManager.modules.ws;
 const CacheModule = moduleManager.modules.cache;
 const SongsModule = moduleManager.modules.songs;
 const ActivitiesModule = moduleManager.modules.activities;
-const YouTubeModule = moduleManager.modules.youtube;
 const PlaylistsModule = moduleManager.modules.playlists;
 const StationsModule = moduleManager.modules.stations;
 
@@ -832,39 +831,6 @@ export default {
 	}),
 
 	/**
-	 * Requests a song
-	 *
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} youtubeId - the youtube id of the song that gets requested
-	 * @param {string} returnSong - returns the simple song
-	 * @param {Function} cb - gets called with the result
-	 */
-	request: isLoginRequired(async function add(session, youtubeId, returnSong, cb) {
-		SongsModule.runJob("REQUEST_SONG", { youtubeId, userId: session.userId }, this)
-			.then(response => {
-				this.log(
-					"SUCCESS",
-					"SONGS_REQUEST",
-					`User "${session.userId}" successfully requested song "${youtubeId}".`
-				);
-				return cb({
-					status: "success",
-					message: "Successfully requested that song",
-					song: returnSong ? response.song : null
-				});
-			})
-			.catch(async _err => {
-				const err = await UtilsModule.runJob("GET_ERROR", { error: _err }, this);
-				this.log(
-					"ERROR",
-					"SONGS_REQUEST",
-					`Requesting song "${youtubeId}" failed for user ${session.userId}. "${err}"`
-				);
-				return cb({ status: "error", message: err, song: returnSong && _err.data ? _err.data.song : null });
-			});
-	}),
-
-	/**
 	 * Verifies a song
 	 *
 	 * @param session
@@ -1135,106 +1101,6 @@ export default {
 				return cb({
 					status: "success",
 					message
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Requests a set of songs
-	 *
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} url - the url of the the YouTube playlist
-	 * @param {boolean} musicOnly - whether to only get music from the playlist
-	 * @param {Function} cb - gets called with the result
-	 */
-	requestSet: isLoginRequired(function requestSet(session, url, musicOnly, returnSongs, cb) {
-		async.waterfall(
-			[
-				next => {
-					const playlistRegex = /[\\?&]list=([^&#]*)/;
-					const channelRegex =
-						/\.[\w]+\/(?:(?:channel\/(UC[0-9A-Za-z_-]{21}[AQgw]))|(?:user\/?([\w-]+))|(?:c\/?([\w-]+))|(?:\/?([\w-]+)))/;
-					if (playlistRegex.exec(url) || channelRegex.exec(url))
-						YouTubeModule.runJob(
-							playlistRegex.exec(url) ? "GET_PLAYLIST" : "GET_CHANNEL",
-							{
-								url,
-								musicOnly
-							},
-							this
-						)
-							.then(res => {
-								next(null, res.songs);
-							})
-							.catch(next);
-					else next("Invalid YouTube URL.");
-				},
-				(youtubeIds, next) => {
-					let successful = 0;
-					let songs = {};
-					let failed = 0;
-					let alreadyInDatabase = 0;
-
-					if (youtubeIds.length === 0) next();
-
-					async.eachOfLimit(
-						youtubeIds,
-						1,
-						(youtubeId, index, next) => {
-							WSModule.runJob(
-								"RUN_ACTION2",
-								{
-									session,
-									namespace: "songs",
-									action: "request",
-									args: [youtubeId, returnSongs]
-								},
-								this
-							)
-								.then(res => {
-									if (res.status === "success") successful += 1;
-									else failed += 1;
-									if (res.message === "This song is already in the database.") alreadyInDatabase += 1;
-									if (res.song) songs[index] = res.song;
-								})
-								.catch(() => {
-									failed += 1;
-								})
-								.finally(() => {
-									next();
-								});
-						},
-						() => {
-							if (returnSongs)
-								songs = Object.keys(songs)
-									.sort()
-									.map(key => songs[key]);
-
-							next(null, { successful, failed, alreadyInDatabase, songs });
-						}
-					);
-				}
-			],
-			async (err, response) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"REQUEST_SET",
-						`Importing a YouTube playlist to be requested failed for user "${session.userId}". "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-				this.log(
-					"SUCCESS",
-					"REQUEST_SET",
-					`Successfully imported a YouTube playlist to be requested for user "${session.userId}".`
-				);
-				return cb({
-					status: "success",
-					message: `Playlist is done importing. ${response.successful} were added succesfully, ${response.failed} failed (${response.alreadyInDatabase} were already in database)`,
-					songs: returnSongs ? response.songs : null
 				});
 			}
 		);

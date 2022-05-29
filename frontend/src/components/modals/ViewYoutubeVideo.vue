@@ -53,7 +53,7 @@
 					class="duration-canvas"
 					v-show="!player.error"
 					height="20"
-					:width="530"
+					:width="canvasWidth"
 					@click="setTrackPosition($event)"
 				/>
 				<div class="player-footer">
@@ -234,6 +234,7 @@ import { mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 
+import aw from "@/aw";
 import ws from "@/ws";
 import { mapModalState, mapModalActions } from "@/vuex_helpers";
 
@@ -243,7 +244,11 @@ export default {
 	},
 	data() {
 		return {
-			loaded: false
+			loaded: false,
+			canvasWidth: 760,
+			activityWatchVideoDataInterval: null,
+			activityWatchVideoLastStatus: "",
+			activityWatchVideoLastStartDuration: ""
 		};
 	},
 	computed: {
@@ -267,6 +272,7 @@ export default {
 		this.player.playerReady = false;
 		this.player.videoNote = "";
 		clearInterval(this.interval);
+		clearInterval(this.activityWatchVideoDataInterval);
 		this.loaded = false;
 
 		this.socket.dispatch(
@@ -357,6 +363,13 @@ export default {
 
 							if (this.player.paused === false) this.drawCanvas();
 						}, 200);
+
+						this.activityWatchVideoDataInterval = setInterval(
+							() => {
+								this.sendActivityWatchVideoData();
+							},
+							1000
+						);
 
 						if (window.YT && window.YT.Player) {
 							this.player.player = new window.YT.Player(
@@ -640,7 +653,8 @@ export default {
 			const duration = Number(this.video.duration);
 			const afterDuration = videoDuration - duration;
 
-			const width = 530;
+			this.canvasWidth = Math.min(document.body.clientWidth - 40, 760);
+			const width = this.canvasWidth;
 
 			const currentTime =
 				this.player.player && this.player.player.getCurrentTime
@@ -670,9 +684,37 @@ export default {
 					Number(this.player.player.getDuration()) *
 						((event.pageX -
 							event.target.getBoundingClientRect().left) /
-							530)
+							this.canvasWidth)
 				)
 			);
+		},
+		sendActivityWatchVideoData() {
+			if (!this.player.paused) {
+				if (this.activityWatchVideoLastStatus !== "playing") {
+					this.activityWatchVideoLastStatus = "playing";
+					this.activityWatchVideoLastStartDuration = Math.floor(
+						parseFloat(this.player.currentTime)
+					);
+				}
+
+				const videoData = {
+					title: this.video.title,
+					artists: this.video.author,
+					youtubeId: this.video.youtubeId,
+					muted: this.player.muted,
+					volume: this.player.volume,
+					startedDuration:
+						this.activityWatchVideoLastStartDuration <= 0
+							? 0
+							: this.activityWatchVideoLastStartDuration,
+					source: `viewYoutubeVideo#${this.video.youtubeId}`,
+					hostname: window.location.hostname
+				};
+
+				aw.sendVideoData(videoData);
+			} else {
+				this.activityWatchVideoLastStatus = "not_playing";
+			}
 		},
 		...mapModalActions("modals/viewYoutubeVideo/MODAL_UUID", [
 			"updatePlayer",

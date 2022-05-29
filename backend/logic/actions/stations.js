@@ -1962,9 +1962,7 @@ export default {
 							[]
 						);
 
-					if (
-						blacklistedSongs.find(blacklistedSong => blacklistedSong._id.toString() === song._id.toString())
-					)
+					if (blacklistedSongs.find(blacklistedSong => blacklistedSong.youtubeId === song.youtubeId))
 						next("That song is in an blacklisted playlist and cannot be played.");
 					else next(null, song, station);
 				},

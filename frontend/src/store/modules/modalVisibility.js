@@ -6,7 +6,6 @@ import whatIsNew from "./modals/whatIsNew";
 import createStation from "./modals/createStation";
 import editNews from "./modals/editNews";
 import manageStation from "./modals/manageStation";
-import importPlaylist from "./modals/importPlaylist";
 import editPlaylist from "./modals/editPlaylist";
 import report from "./modals/report";
 import viewReport from "./modals/viewReport";
@@ -30,7 +29,6 @@ const modalModules = {
 	createStation,
 	editNews,
 	manageStation,
-	importPlaylist,
 	editPlaylist,
 	report,
 	viewReport,

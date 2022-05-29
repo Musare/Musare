@@ -27,7 +27,7 @@ export default {
 	privacy: { type: String, enum: ["public", "unlisted", "private"], default: "private" },
 	queue: [
 		{
-			_id: { type: mongoose.Schema.Types.ObjectId, required: true },
+			_id: { type: mongoose.Schema.Types.ObjectId },
 			youtubeId: { type: String, required: true },
 			title: { type: String },
 			artists: [{ type: String }],

@@ -95,7 +95,10 @@
 								<div class="youtube-icon"></div>
 							</i>
 							<i
-								v-if="disabledActions.indexOf('report') === -1"
+								v-if="
+									song._id &&
+									disabledActions.indexOf('report') === -1
+								"
 								class="material-icons report-icon"
 								@click="report(song)"
 								content="Report Song"
@@ -123,6 +126,7 @@
 							<i
 								v-if="
 									loggedIn &&
+									song._id &&
 									userRole === 'admin' &&
 									disabledActions.indexOf('edit') === -1
 								"

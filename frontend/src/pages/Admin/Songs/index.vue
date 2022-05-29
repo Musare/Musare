@@ -12,12 +12,6 @@
 				</button>
 				<button
 					class="button is-primary"
-					@click="openModal('importPlaylist')"
-				>
-					Import playlist
-				</button>
-				<button
-					class="button is-primary"
 					@click="openModal('importAlbum')"
 				>
 					Import album

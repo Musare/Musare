@@ -40,10 +40,7 @@ export default {
 			state.video = video;
 		},
 		updatePlayer(state, player) {
-			console.log(1212, player, state.player);
-			// state.player = player;
 			state.player = Object.assign(state.player, player);
-			console.log(1313, state.player);
 		},
 		stopVideo(state) {
 			if (state.player.player && state.player.player.pauseVideo) {

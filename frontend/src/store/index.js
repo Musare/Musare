@@ -27,7 +27,6 @@ export default createStore({
 				editSong: emptyModule,
 				editSongs: emptyModule,
 				importAlbum: emptyModule,
-				importPlaylist: emptyModule,
 				editPlaylist: emptyModule,
 				manageStation: emptyModule,
 				editUser: emptyModule,
