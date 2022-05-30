@@ -1367,7 +1367,9 @@ export default {
 					"ratings.getRatings",
 					currentSong.youtubeId,
 					res => {
-						if (currentSong._id === this.currentSong._id) {
+						if (
+							currentSong.youtubeId === this.currentSong.youtubeId
+						) {
 							const { likes, dislikes } = res.data;
 							this.updateCurrentSongRatings({ likes, dislikes });
 						}

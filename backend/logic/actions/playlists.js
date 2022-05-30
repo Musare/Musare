@@ -10,12 +10,10 @@ const DBModule = moduleManager.modules.db;
 const UtilsModule = moduleManager.modules.utils;
 const WSModule = moduleManager.modules.ws;
 const SongsModule = moduleManager.modules.songs;
-const StationsModule = moduleManager.modules.stations;
 const CacheModule = moduleManager.modules.cache;
 const PlaylistsModule = moduleManager.modules.playlists;
 const YouTubeModule = moduleManager.modules.youtube;
 const ActivitiesModule = moduleManager.modules.activities;
-const RatingsModule = moduleManager.modules.ratings;
 
 CacheModule.runJob("SUB", {
 	channel: "playlist.create",
@@ -1112,17 +1110,6 @@ export default {
 				},
 
 				(playlist, next) => {
-					async.each(
-						playlist.songs,
-						(song, nextSong) => {
-							if (song.youtubeId === youtubeId) return next("That song is already in the playlist");
-							return nextSong();
-						},
-						err => next(err, playlist)
-					);
-				},
-
-				(playlist, next) => {
 					if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
 						const oppositeType = playlist.type === "user-liked" ? "user-disliked" : "user-liked";
 						const oppositePlaylistName = oppositeType === "user-liked" ? "Liked Songs" : "Disliked Songs";
@@ -1141,65 +1128,12 @@ export default {
 				},
 
 				next => {
-					DBModule.runJob("GET_MODEL", { modelName: "user" }, this)
-						.then(UserModel => {
-							UserModel.findOne(
-								{ _id: session.userId },
-								{ "preferences.anonymousSongRequests": 1 },
-								next
-							);
+					PlaylistsModule.runJob("ADD_SONG_TO_PLAYLIST", { playlistId, youtubeId }, this)
+						.then(res => {
+							const { playlist, song, ratings } = res;
+							next(null, playlist, song, ratings);
 						})
 						.catch(next);
-				},
-
-				(user, next) => {
-					SongsModule.runJob(
-						"ENSURE_SONG_EXISTS_BY_YOUTUBE_ID",
-						{
-							youtubeId,
-							userId: user.preferences.anonymousSongRequests ? null : session.userId,
-							automaticallyRequested: true
-						},
-						this
-					)
-						.then(response => {
-							const { song } = response;
-							const { _id, title, artists, thumbnail, duration, verified } = song;
-							next(null, {
-								_id,
-								youtubeId,
-								title,
-								artists,
-								thumbnail,
-								duration,
-								verified
-							});
-						})
-						.catch(next);
-				},
-				(newSong, next) => {
-					playlistModel.updateOne(
-						{ _id: playlistId },
-						{ $push: { songs: newSong } },
-						{ runValidators: true },
-						err => {
-							if (err) return next(err);
-							return PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
-								.then(playlist => next(null, playlist, newSong))
-								.catch(next);
-						}
-					);
-				},
-				(playlist, newSong, next) => {
-					if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
-						RatingsModule.runJob("RECALCULATE_RATINGS", {
-							youtubeId: newSong.youtubeId
-						})
-							.then(ratings => next(null, playlist, newSong, ratings))
-							.catch(next);
-					} else {
-						next(null, playlist, newSong, null);
-					}
 				}
 			],
 			async (err, playlist, newSong, ratings) => {
@@ -1235,14 +1169,6 @@ export default {
 						}
 					});
 				}
-
-				StationsModule.runJob("GET_STATIONS_THAT_AUTOFILL_OR_BLACKLIST_PLAYLIST", { playlistId })
-					.then(response => {
-						response.stationIds.forEach(stationId => {
-							PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
-						});
-					})
-					.catch();
 
 				CacheModule.runJob("PUB", {
 					channel: "playlist.addSong",
@@ -1484,8 +1410,6 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	removeSongFromPlaylist: isLoginRequired(async function removeSongFromPlaylist(session, youtubeId, playlistId, cb) {
-		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
-
 		async.waterfall(
 			[
 				next => {
@@ -1500,38 +1424,18 @@ export default {
 							if (!playlist || playlist.createdBy !== session.userId) {
 								return DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
 									userModel.findOne({ _id: session.userId }, (err, user) => {
-										if (user && user.role === "admin") return next();
+										if (user && user.role === "admin") return next(null, playlist);
 										return next("Something went wrong when trying to get the playlist");
 									});
 								});
 							}
-							return next();
+							return next(null, playlist);
 						})
 						.catch(next);
 				},
 
-				// remove song from playlist
-				next => playlistModel.updateOne({ _id: playlistId }, { $pull: { songs: { youtubeId } } }, next),
-
-				// update cache representation of the playlist
-				(res, next) => {
-					if (res.modifiedCount === 1)
-						PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
-							.then(playlist => next(null, playlist))
-							.catch(next);
-					else next("Song wasn't in playlist.");
-				},
-
 				(playlist, next) => {
-					StationsModule.runJob("GET_STATIONS_THAT_AUTOFILL_OR_BLACKLIST_PLAYLIST", { playlistId })
-						.then(response => {
-							response.stationIds.forEach(stationId => {
-								PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
-							});
-						})
-						.catch();
-
-					SongsModule.runJob("GET_SONG_FROM_YOUTUBE_ID", { youtubeId }, this)
+					SongsModule.runJob("ENSURE_SONG_EXISTS_BY_YOUTUBE_ID", { youtubeId }, this)
 						.then(res =>
 							next(null, playlist, {
 								_id: res.song._id,
@@ -1541,26 +1445,16 @@ export default {
 								youtubeId: res.song.youtubeId
 							})
 						)
-						.catch(() => {
-							YouTubeModule.runJob("GET_VIDEO", { identifier: youtubeId, createMissing: true }, this)
-								.then(response => {
-									const { youtubeId, title, author, duration } = response.video;
-									next(null, playlist, { youtubeId, title, artists: [author], duration });
-								})
-								.catch(next);
-						});
+						.catch(next);
 				},
 
 				(playlist, newSong, next) => {
-					if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
-						RatingsModule.runJob("RECALCULATE_RATINGS", {
-							youtubeId: newSong.youtubeId
+					PlaylistsModule.runJob("REMOVE_FROM_PLAYLIST", { playlistId, youtubeId }, this)
+						.then(res => {
+							const { ratings } = res;
+							next(null, playlist, newSong, ratings);
 						})
-							.then(ratings => next(null, playlist, newSong, ratings))
-							.catch(next);
-					} else {
-						next(null, playlist, newSong, null);
-					}
+						.catch(next);
 				},
 
 				(playlist, newSong, ratings, next) => {
@@ -1660,11 +1554,6 @@ export default {
 						userId: session.userId,
 						privacy: playlist.privacy
 					}
-				});
-
-				CacheModule.runJob("PUB", {
-					channel: "playlist.updated",
-					value: { playlistId }
 				});
 
 				return cb({

@@ -44,6 +44,10 @@ let YouTubeModule;
 let CacheModule;
 let DBModule;
 let RatingsModule;
+let SongsModule;
+let StationsModule;
+let PlaylistsModule;
+let WSModule;
 
 const isQuotaExceeded = apiCalls => {
 	const reversedApiCalls = apiCalls.slice().reverse();
@@ -105,6 +109,10 @@ class _YouTubeModule extends CoreClass {
 			CacheModule = this.moduleManager.modules.cache;
 			DBModule = this.moduleManager.modules.db;
 			RatingsModule = this.moduleManager.modules.ratings;
+			SongsModule = this.moduleManager.modules.songs;
+			StationsModule = this.moduleManager.modules.stations;
+			PlaylistsModule = this.moduleManager.modules.playlists;
+			WSModule = this.moduleManager.modules.ws;
 
 			this.youtubeApiRequestModel = this.YoutubeApiRequestModel = await DBModule.runJob("GET_MODEL", {
 				modelName: "youtubeApiRequest"
@@ -1126,15 +1134,110 @@ class _YouTubeModule extends CoreClass {
 						if (!videoIds.every(videoId => mongoose.Types.ObjectId.isValid(videoId)))
 							next("One or more videoIds are not a valid ObjectId.");
 						else {
-							YouTubeModule.youtubeVideoModel.find({_id: { $in: videoIds }}, next);
+							YouTubeModule.youtubeVideoModel.find({_id: { $in: videoIds }}, (err, videos) => {
+								if (err) next(err);
+								else next(null, videos.map(video => video.youtubeId));
+							});
 						}
 					},
 
-					(videos, next) => {
-						const youtubeIds = videos.map(video => video.youtubeId);
-						RatingsModule.runJob("REMOVE_RATINGS", { youtubeIds }, this)
-							.then(() => next())
+					(youtubeIds, next) => {
+						SongsModule.SongModel.find({ youtubeId: { $in: youtubeIds } }, (err, songs) => {
+							if (err) next(err);
+							else {
+								next(null, youtubeIds.filter(youtubeId => !songs.find(song => song.youtubeId === youtubeId)));
+							}
+						});
+					},
+
+					(youtubeIds, next) => {
+						RatingsModule.runJob("REMOVE_RATINGS",{youtubeIds},this)
+							.then(() => next(null, youtubeIds))
 							.catch(next);
+					},
+
+					(youtubeIds, next) => {
+						async.eachLimit(
+							youtubeIds,
+							2,
+							(youtubeId, next) => {
+								async.waterfall(
+									[
+										next => {
+											PlaylistsModule.playlistModel.find({ "songs.youtubeId": youtubeId }, (err, playlists) => {
+												if (err) next(err);
+												else {
+													async.eachLimit(
+														playlists,
+														1,
+														(playlist, next) => {
+															PlaylistsModule.runJob("REMOVE_FROM_PLAYLIST", { playlistId: playlist._id, youtubeId }, this)
+																.then(() => next())
+																.catch(next);
+														},
+														next
+													);
+												}
+											});
+										},
+						
+										next => {
+											StationsModule.stationModel.find({ "queue.youtubeId": youtubeId }, (err, stations) => {
+												if (err) next(err);
+												else {
+													async.eachLimit(
+														stations,
+														1,
+														(station, next) => {
+															StationsModule.runJob("REMOVE_FROM_QUEUE", { stationId: station._id, youtubeId }, this)
+																.then(() => next())
+																.catch(err => {
+																	if (
+																		err === "Station not found" ||
+																		err === "Song is not currently in the queue."
+																	)
+																		next();
+																	else next(err);
+																});
+														},
+														next
+													);
+												}
+											});
+										},
+						
+										next => {
+											StationsModule.stationModel.find({ "currentSong.youtubeId": youtubeId }, (err, stations) => {
+												if (err) next(err);
+												else {
+													async.eachLimit(
+														stations,
+														1,
+														(station, next) => {
+															StationsModule.runJob(
+																"SKIP_STATION",
+																{ stationId: station._id, natural: false },
+																this
+															)
+																.then(() => {
+																	next();
+																})
+																.catch(err => {
+																	if (err.message === "Station not found.") next();
+																	else next(err);
+																});
+														},
+														next
+													);
+												}
+											});
+										}
+									],
+									next
+								);
+							},
+							next
+						);
 					},
 
 					next => {

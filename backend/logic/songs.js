@@ -256,29 +256,6 @@ class _SongsModule extends CoreClass {
 	}
 
 	/**
-	 * Gets a song by youtube id
-	 *
-	 * @param {object} payload - an object containing the payload
-	 * @param {string} payload.youtubeId - the youtube id of the song we are trying to get
-	 * @returns {Promise} - returns a promise (resolve, reject)
-	 */
-	GET_SONG_FROM_YOUTUBE_ID(payload) {
-		return new Promise((resolve, reject) => {
-			async.waterfall(
-				[
-					next => {
-						SongsModule.SongModel.findOne({ youtubeId: payload.youtubeId }, next);
-					}
-				],
-				(err, song) => {
-					if (err && err !== true) return reject(new Error(err));
-					return resolve({ song });
-				}
-			);
-		});
-	}
-
-	/**
 	 * Create song
 	 *
 	 * @param {object} payload - an object containing the payload

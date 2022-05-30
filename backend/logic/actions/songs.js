@@ -471,27 +471,19 @@ export default {
 								stations,
 								1,
 								(station, next) => {
-									WSModule.runJob(
-										"RUN_ACTION2",
-										{
-											session,
-											namespace: "stations",
-											action: "removeFromQueue",
-											args: [station._id, song.youtubeId]
-										},
+									StationsModule.runJob(
+										"REMOVE_FROM_QUEUE",
+										{ stationId: station._id, youtubeId: song.youtubeId },
 										this
 									)
-										.then(res => {
-											if (
-												res.status === "error" &&
-												res.message !== "Station not found" &&
-												res.message !== "Song is not currently in the queue."
-											)
-												next(res.message);
-											else next();
-										})
+										.then(() => next())
 										.catch(err => {
-											next(err);
+											if (
+												err === "Station not found" ||
+												err === "Song is not currently in the queue."
+											)
+												next();
+											else next(err);
 										});
 								},
 								err => {

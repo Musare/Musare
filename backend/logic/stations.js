@@ -534,25 +534,40 @@ class _StationsModule extends CoreClass {
 					},
 
 					(currentSongs, songsToAdd, currentSongIndex, next) => {
-						SongsModule.runJob("GET_SONGS", {
-							songIds: songsToAdd.map(song => song._id),
-							properties: [
-								"youtubeId",
-								"title",
-								"duration",
-								"skipDuration",
-								"artists",
-								"thumbnail",
-								"verified"
-							]
-						})
-							.then(response => {
-								const newSongsToAdd = songsToAdd.map(song =>
-									response.songs.find(newSong => newSong._id.toString() === song._id.toString())
-								);
-								next(null, currentSongs, newSongsToAdd, currentSongIndex);
-							})
-							.catch(err => next(err));
+						const songs = [];
+						async.eachLimit(
+							songsToAdd.map(song => song.youtubeId),
+							2,
+							(youtubeId, next) => {
+								SongsModule.runJob("ENSURE_SONG_EXISTS_BY_YOUTUBE_ID", { youtubeId }, this)
+									.then(response => {
+										const { song } = response;
+										const { _id, title, artists, thumbnail, duration, skipDuration, verified } =
+											song;
+										songs.push({
+											_id,
+											youtubeId,
+											title,
+											artists,
+											thumbnail,
+											duration,
+											skipDuration,
+											verified
+										});
+										next();
+									})
+									.catch(next);
+							},
+							err => {
+								if (err) next(err);
+								else {
+									const newSongsToAdd = songsToAdd.map(song =>
+										songs.find(newSong => newSong._id.toString() === song._id.toString())
+									);
+									next(null, currentSongs, newSongsToAdd, currentSongIndex);
+								}
+							}
+						);
 					},
 
 					(currentSongs, songsToAdd, currentSongIndex, next) => {
@@ -893,25 +908,23 @@ class _StationsModule extends CoreClass {
 						$set.startedAt = Date.now();
 						$set.timePaused = 0;
 						if (station.paused) $set.pausedAt = Date.now();
-						next(null, $set, song, station);
+						next(null, $set, station);
 					},
 
-					($set, song, station, next) => {
+					($set, station, next) => {
 						StationsModule.stationModel.updateOne({ _id: station._id }, { $set }, err => {
 							if (err) return next(err);
 
 							return StationsModule.runJob("UPDATE_STATION", { stationId: station._id }, this)
 								.then(station => {
-									next(null, station, song);
+									next(null, station);
 								})
 								.catch(next);
 						});
 					},
 
-					(station, song, next) => {
+					(station, next) => {
 						if (station.currentSong !== null && station.currentSong.youtubeId !== undefined) {
-							station.currentSong.likes = song.likes;
-							station.currentSong.dislikes = song.dislikes;
 							station.currentSong.skipVotes = 0;
 						}
 						next(null, station);
@@ -1297,19 +1310,11 @@ class _StationsModule extends CoreClass {
 					},
 
 					next => {
-						DBModule.runJob(
-							"GET_MODEL",
-							{
-								modelName: "station"
-							},
-							this
-						).then(stationModel => {
-							stationModel.updateOne(
-								{ _id: payload.stationId },
-								{ $push: { "autofill.playlists": payload.playlistId } },
-								next
-							);
-						});
+						StationsModule.stationModel.updateOne(
+							{ _id: payload.stationId },
+							{ $push: { "autofill.playlists": payload.playlistId } },
+							next
+						);
 					},
 
 					(res, next) => {
@@ -1371,19 +1376,11 @@ class _StationsModule extends CoreClass {
 					},
 
 					next => {
-						DBModule.runJob(
-							"GET_MODEL",
-							{
-								modelName: "station"
-							},
-							this
-						).then(stationModel => {
-							stationModel.updateOne(
-								{ _id: payload.stationId },
-								{ $pull: { "autofill.playlists": payload.playlistId } },
-								next
-							);
-						});
+						StationsModule.stationModel.updateOne(
+							{ _id: payload.stationId },
+							{ $pull: { "autofill.playlists": payload.playlistId } },
+							next
+						);
 					},
 
 					(res, next) => {
@@ -1455,19 +1452,11 @@ class _StationsModule extends CoreClass {
 					},
 
 					next => {
-						DBModule.runJob(
-							"GET_MODEL",
-							{
-								modelName: "station"
-							},
-							this
-						).then(stationModel => {
-							stationModel.updateOne(
-								{ _id: payload.stationId },
-								{ $push: { blacklist: payload.playlistId } },
-								next
-							);
-						});
+						StationsModule.stationModel.updateOne(
+							{ _id: payload.stationId },
+							{ $push: { blacklist: payload.playlistId } },
+							next
+						);
 					},
 
 					(res, next) => {
@@ -1529,19 +1518,11 @@ class _StationsModule extends CoreClass {
 					},
 
 					next => {
-						DBModule.runJob(
-							"GET_MODEL",
-							{
-								modelName: "station"
-							},
-							this
-						).then(stationModel => {
-							stationModel.updateOne(
-								{ _id: payload.stationId },
-								{ $pull: { blacklist: payload.playlistId } },
-								next
-							);
-						});
+						StationsModule.stationModel.updateOne(
+							{ _id: payload.stationId },
+							{ $pull: { blacklist: payload.playlistId } },
+							next
+						);
 					},
 
 					(res, next) => {
@@ -1743,6 +1724,263 @@ class _StationsModule extends CoreClass {
 							.then(() => next())
 							.catch(next);
 					}
+				],
+				err => {
+					if (err) reject(err);
+					else resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Add to a station queue
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - the station id
+	 * @param {string} payload.youtubeId - the youtube id
+	 * @param {string} payload.requestUser - the requesting user id
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	ADD_TO_QUEUE(payload) {
+		return new Promise((resolve, reject) => {
+			const { stationId, youtubeId, requestUser } = payload;
+			async.waterfall(
+				[
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId }, this)
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
+
+					(station, next) => {
+						if (!station) return next("Station not found.");
+						if (!station.requests.enabled) return next("Requests are disabled in this station.");
+						if (station.currentSong && station.currentSong.youtubeId === youtubeId)
+							return next("That song is currently playing.");
+						if (station.queue.find(song => song.youtubeId === youtubeId))
+							return next("That song is already in the queue.");
+
+						return next(null, station);
+					},
+
+					(station, next) => {
+						SongsModule.runJob("ENSURE_SONG_EXISTS_BY_YOUTUBE_ID", { youtubeId }, this)
+							.then(response => {
+								const { song } = response;
+								const { _id, title, skipDuration, artists, thumbnail, duration, verified } = song;
+								next(
+									null,
+									{
+										_id,
+										youtubeId,
+										title,
+										skipDuration,
+										artists,
+										thumbnail,
+										duration,
+										verified
+									},
+									station
+								);
+							})
+							.catch(next);
+					},
+
+					(song, station, next) => {
+						const blacklist = [];
+						async.eachLimit(
+							station.blacklist,
+							1,
+							(playlistId, next) => {
+								PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+									.then(playlist => {
+										blacklist.push(playlist);
+										next();
+									})
+									.catch(next);
+							},
+							err => {
+								next(err, song, station, blacklist);
+							}
+						);
+					},
+
+					(song, station, blacklist, next) => {
+						const blacklistedSongs = blacklist
+							.flatMap(blacklistedPlaylist => blacklistedPlaylist.songs)
+							.reduce(
+								(items, item) =>
+									items.find(x => x.youtubeId === item.youtubeId) ? [...items] : [...items, item],
+								[]
+							);
+
+						if (blacklistedSongs.find(blacklistedSong => blacklistedSong.youtubeId === song.youtubeId))
+							next("That song is in an blacklisted playlist and cannot be played.");
+						else next(null, song, station);
+					},
+
+					(song, station, next) => {
+						song.requestedBy = requestUser;
+						song.requestedAt = Date.now();
+						if (station.queue.length === 0) return next(null, song);
+						if (
+							requestUser &&
+							station.queue.filter(queueSong => queueSong.requestedBy === song.requestedBy).length >=
+								station.requests.limit
+						)
+							return next(`The max amount of songs per user is ${station.requests.limit}.`);
+						return next(null, song);
+					},
+
+					// (song, station, next) => {
+					// 	song.requestedBy = session.userId;
+					// 	song.requestedAt = Date.now();
+					// 	let totalDuration = 0;
+					// 	station.queue.forEach(song => {
+					// 		totalDuration += song.duration;
+					// 	});
+					// 	if (totalDuration >= 3600 * 3) return next("The max length of the queue is 3 hours.");
+					// 	return next(null, song, station);
+					// },
+
+					// (song, station, next) => {
+					// 	if (station.queue.length === 0) return next(null, song, station);
+					// 	let totalDuration = 0;
+					// 	const userId = station.queue[station.queue.length - 1].requestedBy;
+					// 	station.queue.forEach(song => {
+					// 		if (userId === song.requestedBy) {
+					// 			totalDuration += song.duration;
+					// 		}
+					// 	});
+
+					// 	if (totalDuration >= 900) return next("The max length of songs per user is 15 minutes.");
+					// 	return next(null, song, station);
+					// },
+
+					// (song, station, next) => {
+					// 	if (station.queue.length === 0) return next(null, song);
+					// 	let totalSongs = 0;
+					// 	const userId = station.queue[station.queue.length - 1].requestedBy;
+					// 	station.queue.forEach(song => {
+					// 		if (userId === song.requestedBy) {
+					// 			totalSongs += 1;
+					// 		}
+					// 	});
+
+					// 	if (totalSongs <= 2) return next(null, song);
+					// 	if (totalSongs > 3)
+					// 		return next("The max amount of songs per user is 3, and only 2 in a row is allowed.");
+					// 	if (
+					// 		station.queue[station.queue.length - 2].requestedBy !== userId ||
+					// 		station.queue[station.queue.length - 3] !== userId
+					// 	)
+					// 		return next("The max amount of songs per user is 3, and only 2 in a row is allowed.");
+
+					// 	return next(null, song);
+					// },
+
+					(song, next) => {
+						StationsModule.stationModel.updateOne(
+							{ _id: stationId },
+							{ $push: { queue: song } },
+							{ runValidators: true },
+							next
+						);
+					},
+
+					(res, next) => {
+						StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+							.then(() => next())
+							.catch(next);
+					},
+
+					next => {
+						CacheModule.runJob(
+							"PUB",
+							{
+								channel: "station.queueUpdate",
+								value: stationId
+							},
+							this
+						)
+							.then(() => next())
+							.catch(next);
+					}
+				],
+				err => {
+					if (err) reject(err);
+					else resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Remove from a station queue
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - the station id
+	 * @param {string} payload.youtubeId - the youtube id
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	REMOVE_FROM_QUEUE(payload) {
+		return new Promise((resolve, reject) => {
+			const { stationId, youtubeId } = payload;
+			async.waterfall(
+				[
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId }, this)
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
+
+					(station, next) => {
+						if (!station) return next("Station not found.");
+						if (!station.queue.find(song => song.youtubeId === youtubeId))
+							return next("That song is not currently in the queue.");
+
+						return StationsModule.stationModel.updateOne(
+							{ _id: stationId },
+							{ $pull: { queue: { youtubeId } } },
+							next
+						);
+					},
+
+					(res, next) => {
+						StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+							.then(station => {
+								if (station.autofill.enabled)
+									StationsModule.runJob("AUTOFILL_STATION", { stationId }, this)
+										.then(() => next())
+										.catch(err => {
+											if (
+												err === "Autofill is disabled in this station" ||
+												err === "Autofill limit reached"
+											)
+												return next();
+											return next(err);
+										});
+								else next();
+							})
+							.catch(next);
+					},
+
+					next =>
+						CacheModule.runJob(
+							"PUB",
+							{
+								channel: "station.queueUpdate",
+								value: stationId
+							},
+							this
+						)
+							.then(() => next())
+							.catch(next)
 				],
 				err => {
 					if (err) reject(err);
