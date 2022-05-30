@@ -12,6 +12,7 @@ const CacheModule = moduleManager.modules.cache;
 const SongsModule = moduleManager.modules.songs;
 const PlaylistsModule = moduleManager.modules.playlists;
 const StationsModule = moduleManager.modules.stations;
+const RatingsModule = moduleManager.modules.ratings;
 
 CacheModule.runJob("SUB", {
 	channel: "song.updated",
@@ -495,14 +496,14 @@ export default {
 								},
 								err => {
 									if (err) next(err);
-									else next();
+									else next(null, song);
 								}
 							);
 						}
 					});
 				},
 
-				next => {
+				(song, next) => {
 					stationModel.find({ "currentSong._id": songId }, (err, stations) => {
 						if (err) next(err);
 						else {
@@ -525,11 +526,17 @@ export default {
 								},
 								err => {
 									if (err) next(err);
-									else next();
+									else next(null, song);
 								}
 							);
 						}
 					});
+				},
+
+				(song, next) => {
+					RatingsModule.runJob("REMOVE_RATINGS", { youtubeIds: song.youtubeId }, this)
+						.then(() => next())
+						.catch(next);
 				},
 
 				next => {

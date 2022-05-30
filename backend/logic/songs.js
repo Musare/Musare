@@ -9,6 +9,7 @@ let UtilsModule;
 let YouTubeModule;
 let StationsModule;
 let PlaylistsModule;
+let RatingsModule;
 
 class _SongsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -32,6 +33,7 @@ class _SongsModule extends CoreClass {
 		YouTubeModule = this.moduleManager.modules.youtube;
 		StationsModule = this.moduleManager.modules.stations;
 		PlaylistsModule = this.moduleManager.modules.playlists;
+		RatingsModule = this.moduleManager.modules.ratings;
 
 		this.SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		this.SongSchemaCache = await CacheModule.runJob("GET_SCHEMA", { schemaName: "song" });
@@ -319,6 +321,12 @@ class _SongsModule extends CoreClass {
 					(song, next) => {
 						SongsModule.runJob("UPDATE_SONG", { songId: song._id });
 						return next(null, song);
+					},
+
+					(song, next) => {
+						RatingsModule.runJob("RECALCULATE_RATINGS", { youtubeId: song.youtubeId }, this)
+							.then(() => next(null, song))
+							.catch(next);
 					}
 				],
 				(err, song) => {

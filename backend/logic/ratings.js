@@ -216,6 +216,7 @@ class _RatingsModule extends CoreClass {
 	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.youtubeId - the youtube id
+	 * @param {string} payload.createMissing - whether to create missing ratings
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_RATINGS(payload) {
@@ -233,8 +234,8 @@ class _RatingsModule extends CoreClass {
 					},
 
 					(ratings, next) => {
-						if (ratings) {
-							CacheModule.runJob(
+						if (ratings)
+							return CacheModule.runJob(
 								"HSET",
 								{
 									table: "ratings",
@@ -242,13 +243,67 @@ class _RatingsModule extends CoreClass {
 									value: ratings
 								},
 								this
-							).then(ratings => next(null, ratings));
-						} else next("Ratings not found.");
-					}
+							).then(ratings => next(true, ratings));
+
+						if (!payload.createMissing) return next("Ratings not found.");
+
+						return RatingsModule.runJob("RECALCULATE_RATINGS", { youtubeId: payload.youtubeId }, this)
+							.then(() => next())
+							.catch(next);
+					},
+
+					next =>
+						RatingsModule.runJob("GET_RATINGS", { youtubeId: payload.youtubeId }, this)
+							.then(res => next(null, res.ratings))
+							.catch(next)
 				],
 				(err, ratings) => {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve({ ratings });
+				}
+			);
+		});
+	}
+
+	/**
+	 * Remove ratings by id from the cache and Mongo
+	 *
+	 * @param {object} payload - object containing the payload
+	 * @param {string} payload.youtubeIds - the youtube id
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	REMOVE_RATINGS(payload) {
+		return new Promise((resolve, reject) => {
+			let { youtubeIds } = payload;
+			if (!Array.isArray(youtubeIds)) youtubeIds = [youtubeIds];
+
+			async.eachLimit(
+				youtubeIds,
+				1,
+				(youtubeId, next) => {
+					async.waterfall(
+						[
+							next => {
+								RatingsModule.RatingsModel.deleteOne({ youtubeId }, err => {
+									if (err) next(err);
+									else next();
+								});
+							},
+
+							next => {
+								CacheModule.runJob("HDEL", { table: "ratings", key: youtubeId }, this)
+									.then(() => {
+										next();
+									})
+									.catch(next);
+							}
+						],
+						next
+					);
+				},
+				err => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve();
 				}
 			);
 		});

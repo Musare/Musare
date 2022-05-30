@@ -691,7 +691,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					RatingsModule.runJob("GET_RATINGS", { youtubeId }, this)
+					RatingsModule.runJob("GET_RATINGS", { youtubeId, createMissing: true }, this)
 						.then(res => next(null, res.ratings))
 						.catch(next);
 				},

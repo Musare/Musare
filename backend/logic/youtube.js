@@ -43,6 +43,7 @@ class RateLimitter {
 let YouTubeModule;
 let CacheModule;
 let DBModule;
+let RatingsModule;
 
 const isQuotaExceeded = apiCalls => {
 	const reversedApiCalls = apiCalls.slice().reverse();
@@ -103,6 +104,7 @@ class _YouTubeModule extends CoreClass {
 		return new Promise(async resolve => {
 			CacheModule = this.moduleManager.modules.cache;
 			DBModule = this.moduleManager.modules.db;
+			RatingsModule = this.moduleManager.modules.ratings;
 
 			this.youtubeApiRequestModel = this.YoutubeApiRequestModel = await DBModule.runJob("GET_MODEL", {
 				modelName: "youtubeApiRequest"
@@ -987,6 +989,23 @@ class _YouTubeModule extends CoreClass {
 							if (!Array.isArray(youtubeVideos)) youtubeVideos = [youtubeVideos];
 							YouTubeModule.youtubeVideoModel.insertMany(youtubeVideos, next);
 						}
+					},
+
+					(youtubeVideos, next) => {
+						const youtubeIds = youtubeVideos.map(video => video.youtubeId);
+						async.eachLimit(
+							youtubeIds,
+							2,
+							(youtubeId, next) => {
+								RatingsModule.runJob("RECALCULATE_RATINGS", { youtubeId }, this)
+									.then(() => next())
+									.catch(next);
+							},
+							err => {
+								if (err) next(err);
+								else next(null, youtubeVideos);
+							}
+						);
 					}
 				],
 				(err, youtubeVideos) => {
@@ -1098,16 +1117,28 @@ class _YouTubeModule extends CoreClass {
 	 */
 	 REMOVE_VIDEOS(payload) {
 		return new Promise((resolve, reject) => {
+			let videoIds = payload.videoIds;
+			if (!Array.isArray(videoIds)) videoIds = [videoIds];
+
 			async.waterfall(
 				[
 					next => {
-						let videoIds = payload.videoIds;
-						if (!Array.isArray(videoIds)) videoIds = [videoIds];
 						if (!videoIds.every(videoId => mongoose.Types.ObjectId.isValid(videoId)))
 							next("One or more videoIds are not a valid ObjectId.");
 						else {
-							YouTubeModule.youtubeVideoModel.deleteMany({_id: { $in: videoIds }}, next);
+							YouTubeModule.youtubeVideoModel.find({_id: { $in: videoIds }}, next);
 						}
+					},
+
+					(videos, next) => {
+						const youtubeIds = videos.map(video => video.youtubeId);
+						RatingsModule.runJob("REMOVE_RATINGS", { youtubeIds }, this)
+							.then(() => next())
+							.catch(next);
+					},
+
+					next => {
+						YouTubeModule.youtubeVideoModel.deleteMany({_id: { $in: videoIds }}, next);
 					}
 				],
 				err => {
