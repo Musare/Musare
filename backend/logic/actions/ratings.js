@@ -205,12 +205,12 @@ export default {
 							},
 							this
 						)
-						.then(res => {
-							if (res.status === "error" && res.message !== "Song wasn't in playlist.")
+						.then(() => next(null, song, user.likedSongsPlaylist))
+						.catch(res => {
+							if (!(res.message && res.message === "That song is not currently in the playlist."))
 								return next("Unable to remove song from the 'Disliked Songs' playlist.");
 							return next(null, song, user.likedSongsPlaylist);
-						})
-						.catch(err => next(err));
+						});
 				},
 
 				(song, likedSongsPlaylist, next) =>
@@ -225,16 +225,12 @@ export default {
 							},
 							this
 						)
-						.then(res => {
-							if (res.status === "error") {
-								if (res.message === "That song is already in the playlist")
-									return next("You have already liked this song.");
-								return next("Unable to add song to the 'Liked Songs' playlist.");
-							}
-
-							return next(null, song);
-						})
-						.catch(err => next(err)),
+						.then(() => next(null, song))
+						.catch(res => {
+							if (res.message && res.message === "That song is already in the playlist")
+								return next("You have already liked this song.");
+							return next("Unable to add song to the 'Liked Songs' playlist.");
+						}),
 
 				(song, next) => {
 					RatingsModule.runJob("RECALCULATE_RATINGS", { youtubeId })
@@ -337,12 +333,12 @@ export default {
 							},
 							this
 						)
-						.then(res => {
-							if (res.status === "error" && res.message !== "Song wasn't in playlist.")
+						.then(() => next(null, song, user.dislikedSongsPlaylist))
+						.catch(res => {
+							if (!(res.message && res.message === "That song is not currently in the playlist."))
 								return next("Unable to remove song from the 'Liked Songs' playlist.");
 							return next(null, song, user.dislikedSongsPlaylist);
-						})
-						.catch(err => next(err));
+						});
 				},
 
 				(song, dislikedSongsPlaylist, next) =>
@@ -357,16 +353,12 @@ export default {
 							},
 							this
 						)
-						.then(res => {
-							if (res.status === "error") {
-								if (res.message === "That song is already in the playlist")
-									return next("You have already disliked this song.");
-								return next("Unable to add song to the 'Disliked Songs' playlist.");
-							}
-
-							return next(null, song);
-						})
-						.catch(err => next(err)),
+						.then(() => next(null, song))
+						.catch(res => {
+							if (res.message && res.message === "That song is already in the playlist")
+								return next("You have already disliked this song.");
+							return next("Unable to add song to the 'Disliked Songs' playlist.");
+						}),
 
 				(song, next) => {
 					RatingsModule.runJob("RECALCULATE_RATINGS", { youtubeId })
@@ -489,12 +481,12 @@ export default {
 							},
 							this
 						)
-						.then(res => {
-							if (res.status === "error" && res.message !== "Song wasn't in playlist.")
+						.then(() => next(null, song))
+						.catch(res => {
+							if (!(res.message && res.message === "That song is not currently in the playlist."))
 								return next("Unable to remove song from the 'Liked Songs' playlist.");
 							return next(null, song);
-						})
-						.catch(err => next(err));
+						});
 				},
 
 				(song, next) => {
@@ -600,12 +592,12 @@ export default {
 							},
 							this
 						)
-						.then(res => {
-							if (res.status === "error" && res.message !== "Song wasn't in playlist.")
+						.then(() => next(null, song, user.likedSongsPlaylist))
+						.catch(res => {
+							if (!(res.message && res.message === "That song is not currently in the playlist."))
 								return next("Unable to remove song from the 'Disliked Songs' playlist.");
 							return next(null, song, user.likedSongsPlaylist);
-						})
-						.catch(err => next(err));
+						});
 				},
 
 				(song, likedSongsPlaylist, next) => {

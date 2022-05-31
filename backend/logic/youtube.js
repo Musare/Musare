@@ -114,6 +114,39 @@ class _YouTubeModule extends CoreClass {
 			PlaylistsModule = this.moduleManager.modules.playlists;
 			WSModule = this.moduleManager.modules.ws;
 
+			CacheModule.runJob("SUB", {
+				channel: "youtube.removeYoutubeApiRequest",
+				cb: requestId => {
+					WSModule.runJob("EMIT_TO_ROOM", {
+						room: `view-api-request.${requestId}`,
+						args: ["event:youtubeApiRequest.removed"]
+					});
+			
+					WSModule.runJob("EMIT_TO_ROOM", {
+						room: "admin.youtube",
+						args: ["event:admin.youtubeApiRequest.removed", { data: { requestId } }]
+					});
+				}
+			});
+
+			CacheModule.runJob("SUB", {
+				channel: "youtube.removeVideos",
+				cb: videoIds => {
+					const videos = Array.isArray(videoIds) ? videoIds : [videoIds];
+					videos.forEach(videoId => {
+						WSModule.runJob("EMIT_TO_ROOM", {
+							room: `view-youtube-video.${videoId}`,
+							args: ["event:youtubeVideo.removed"]
+						});
+			
+						WSModule.runJob("EMIT_TO_ROOM", {
+							room: "admin.youtubeVideos",
+							args: ["event:admin.youtubeVideo.removed", { data: { videoId } }]
+						});
+					});
+				}
+			});
+
 			this.youtubeApiRequestModel = this.YoutubeApiRequestModel = await DBModule.runJob("GET_MODEL", {
 				modelName: "youtubeApiRequest"
 			});
@@ -903,28 +936,59 @@ class _YouTubeModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
+						YouTubeModule.youtubeApiRequestModel.find({}, next);
+					},
+
+					(apiRequests, next) => {
 						YouTubeModule.youtubeApiRequestModel.deleteMany({}, err => {
 							if (err) next("Couldn't reset stored YouTube API requests.");
 							else {
-								next();
+								next(null, apiRequests);
 							}
 						});
 					},
 
-					next => {
+					(apiRequests, next) => {
 						CacheModule.runJob(
 							"DEL",
 							{key: "youtubeApiRequestParams"},
 							this
-						).then(next).catch(err => next(err));
+						).then(() => next(null, apiRequests)).catch(err => next(err));
 					},
 
-					next => {
+					(apiRequests, next) => {
 						CacheModule.runJob(
 							"DEL",
 							{key: "youtubeApiRequestResults"},
 							this
-						).then(next).catch(err => next(err));
+						).then(() => next(null, apiRequests)).catch(err => next(err));
+					},
+
+					(apiRequests, next) => {
+						async.eachLimit(
+							apiRequests.map(apiRequest => apiRequest._id),
+							1,
+							(requestId, next) => {
+								CacheModule.runJob(
+									"PUB",
+									{
+										channel: "youtube.removeYoutubeApiRequest",
+										value: requestId
+									},
+									this
+								)
+									.then(() => {
+										next();
+									})
+									.catch(err => {
+										next(err);
+									});
+							},
+							err => {
+								if (err) next(err);
+								else next();
+							}
+						);
 					}
 				],
 				err => {
@@ -969,6 +1033,13 @@ class _YouTubeModule extends CoreClass {
 							},
 							this
 						).then(next).catch(err => next(err));
+					},
+
+					next => {
+						CacheModule.runJob("PUB", {
+							channel: "youtube.removeYoutubeApiRequest",
+							value: requestId
+						}).then(next).catch(err => next(err));;
 					}
 				],
 				err => {
@@ -1242,6 +1313,13 @@ class _YouTubeModule extends CoreClass {
 
 					next => {
 						YouTubeModule.youtubeVideoModel.deleteMany({_id: { $in: videoIds }}, next);
+					},
+
+					(res, next) => {
+						CacheModule.runJob("PUB", {
+							channel: "youtube.removeVideos",
+							value: videoIds
+						}).then(next).catch(err => next(err));
 					}
 				],
 				err => {

@@ -85,7 +85,7 @@
 									openModal({
 										modal: 'viewYoutubeVideo',
 										data: {
-											videoId: song.youtubeId
+											youtubeId: song.youtubeId
 										}
 									})
 								"

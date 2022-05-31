@@ -139,7 +139,7 @@ class _RatingsModule extends CoreClass {
 					},
 
 					({ likes, dislikes }, next) => {
-						RatingsModule.RatingsModel.updateOne(
+						RatingsModule.RatingsModel.findOneAndUpdate(
 							{ youtubeId: payload.youtubeId },
 							{
 								$set: {
@@ -147,9 +147,23 @@ class _RatingsModule extends CoreClass {
 									dislikes
 								}
 							},
-							{ upsert: true },
-							err => next(err, { likes, dislikes })
+							{ new: true, upsert: true },
+							next
 						);
+					},
+
+					(ratings, next) => {
+						CacheModule.runJob(
+							"HSET",
+							{
+								table: "ratings",
+								key: payload.youtubeId,
+								value: ratings
+							},
+							this
+						)
+							.then(ratings => next(null, ratings))
+							.catch(next);
 					}
 				],
 				(err, { likes, dislikes }) => {

@@ -9,41 +9,6 @@ import moduleManager from "../../index";
 const DBModule = moduleManager.modules.db;
 const UtilsModule = moduleManager.modules.utils;
 const YouTubeModule = moduleManager.modules.youtube;
-const WSModule = moduleManager.modules.ws;
-const CacheModule = moduleManager.modules.cache;
-
-CacheModule.runJob("SUB", {
-	channel: "youtube.removeYoutubeApiRequest",
-	cb: requestId => {
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `view-api-request.${requestId}`,
-			args: ["event:youtubeApiRequest.removed"]
-		});
-
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: "admin.youtube",
-			args: ["event:admin.youtubeApiRequest.removed", { data: { requestId } }]
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "youtube.removeVideos",
-	cb: videoIds => {
-		const videos = Array.isArray(videoIds) ? videoIds : [videoIds];
-		videos.forEach(videoId => {
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `view-youtube-video.${videoId}`,
-				args: ["event:youtubeVideo.removed"]
-			});
-
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: "admin.youtubeVideos",
-				args: ["event:admin.youtubeVideo.removed", { data: { videoId } }]
-			});
-		});
-	}
-});
 
 export default {
 	/**
@@ -164,64 +129,24 @@ export default {
 	 * @returns {{status: string, data: object}}
 	 */
 	resetStoredApiRequests: isAdminRequired(async function resetStoredApiRequests(session, cb) {
-		async.waterfall(
-			[
-				next => {
-					YouTubeModule.youtubeApiRequestModel.find({}, next);
-				},
-
-				(apiRequests, next) => {
-					YouTubeModule.runJob("RESET_STORED_API_REQUESTS", {}, this)
-						.then(() => next(null, apiRequests))
-						.catch(err => next(err));
-				},
-
-				(apiRequests, next) => {
-					async.eachLimit(
-						apiRequests.map(apiRequest => apiRequest._id),
-						1,
-						(requestId, next) => {
-							CacheModule.runJob(
-								"PUB",
-								{
-									channel: "youtube.removeYoutubeApiRequest",
-									value: requestId
-								},
-								this
-							)
-								.then(() => {
-									next();
-								})
-								.catch(err => {
-									next(err);
-								});
-						},
-						err => {
-							if (err) next(err);
-							else next();
-						}
-					);
-				}
-			],
-			async err => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"YOUTUBE_RESET_STORED_API_REQUESTS",
-						`Resetting stored API requests failed. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
+		YouTubeModule.runJob("RESET_STORED_API_REQUESTS", {}, this)
+			.then(() => {
 				this.log(
 					"SUCCESS",
 					"YOUTUBE_RESET_STORED_API_REQUESTS",
 					`Resetting stored API requests was successful.`
 				);
 				return cb({ status: "success", message: "Successfully reset stored YouTube API requests" });
-			}
-		);
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log(
+					"ERROR",
+					"YOUTUBE_RESET_STORED_API_REQUESTS",
+					`Resetting stored API requests failed. "${err}"`
+				);
+				return cb({ status: "error", message: err });
+			});
 	}),
 
 	/**
@@ -237,11 +162,6 @@ export default {
 					"YOUTUBE_REMOVE_STORED_API_REQUEST",
 					`Removing stored API request "${requestId}" was successful.`
 				);
-
-				CacheModule.runJob("PUB", {
-					channel: "youtube.removeYoutubeApiRequest",
-					value: requestId
-				});
 
 				return cb({ status: "success", message: "Successfully removed stored YouTube API request" });
 			})
@@ -349,11 +269,6 @@ export default {
 		YouTubeModule.runJob("REMOVE_VIDEOS", { videoIds }, this)
 			.then(() => {
 				this.log("SUCCESS", "YOUTUBE_REMOVE_VIDEOS", `Removing videos was successful.`);
-
-				CacheModule.runJob("PUB", {
-					channel: "youtube.removeVideos",
-					value: videoIds
-				});
 
 				return cb({ status: "success", message: "Successfully removed YouTube videos" });
 			})

@@ -254,6 +254,7 @@ export default {
 	computed: {
 		...mapModalState("modals/viewYoutubeVideo/MODAL_UUID", {
 			videoId: state => state.videoId,
+			youtubeId: state => state.youtubeId,
 			video: state => state.video,
 			player: state => state.player
 		}),
@@ -293,7 +294,7 @@ export default {
 			this.loaded = false;
 			this.socket.dispatch(
 				"youtube.getVideo",
-				this.videoId,
+				this.videoId || this.youtubeId,
 				true,
 				res => {
 					if (res.status === "success") {

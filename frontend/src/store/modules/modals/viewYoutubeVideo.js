@@ -4,6 +4,7 @@ export default {
 	namespaced: true,
 	state: {
 		videoId: null,
+		youtubeId: null,
 		video: {},
 		player: {
 			error: false,
@@ -33,10 +34,13 @@ export default {
 		setPlaybackRate: ({ commit }, rate) => commit("setPlaybackRate", rate)
 	},
 	mutations: {
-		init(state, { videoId }) {
+		init(state, { videoId, youtubeId }) {
 			state.videoId = videoId;
+			state.youtubeId = youtubeId;
 		},
 		viewYoutubeVideo(state, video) {
+			state.videoId = state.videoId || video._id;
+			state.youtubeId = video.youtubeId || video.youtubeId;
 			state.video = video;
 		},
 		updatePlayer(state, player) {
