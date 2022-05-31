@@ -30,6 +30,24 @@ export default {
 	}),
 
 	/**
+	 * Returns YouTube quota chart data
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	getQuotaChartData: isAdminRequired(function getQuotaChartData(session, cb) {
+		YouTubeModule.runJob("GET_QUOTA_CHART_DATA", {}, this)
+			.then(data => {
+				this.log("SUCCESS", "YOUTUBE_GET_QUOTA_CHART_DATA", `Getting quota chart data was successful.`);
+				return cb({ status: "success", data });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "YOUTUBE_GET_QUOTA_CHART_DATA", `Getting quota chart data failed. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
 	 * Gets api requests, used in the admin youtube page by the AdvancedTable component
 	 *
 	 * @param {object} session - the session object automatically added by the websocket

@@ -268,6 +268,50 @@ class _YouTubeModule extends CoreClass {
 		});
 	}
 
+	GET_QUOTA_CHART_DATA(payload) {
+		return new Promise((resolve, reject) => {
+			const fromDate = new Date(new Date() - (8 * 24 * 60 * 60 * 1000));
+			YouTubeModule.youtubeApiRequestModel.aggregate([
+				{
+					$match: { date: { $gte: fromDate } }
+				},
+				{
+					$group: {
+						_id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+						usage: { $sum: "$quotaCost" },
+						count: { $sum: 1 }
+					}
+				},
+				{
+					$sort: { _id: 1 }
+				},
+				{
+					$project: { date: "$_id", usage: 1, count: 1 }
+				}
+			]).exec((err, data) => {
+				if (err) return reject(err);
+				return resolve({
+					quotaUsage: {
+						labels: data.map(row => row.date),
+						datasets: [{
+							label: "All",
+							data: data.map(row => row.usage),
+							borderColor: "rgb(2, 166, 242)"
+						}]
+					},
+					apiRequests: {
+						labels: data.map(row => row.date),
+						datasets: [{
+							label: "All",
+							data: data.map(row => row.count),
+							borderColor: "rgb(2, 166, 242)"
+						}]
+					}
+				});
+			});
+		});
+	}
+
 	/**
 	 * Gets the id of the channel upload playlist
 	 *

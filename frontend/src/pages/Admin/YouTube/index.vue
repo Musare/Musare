@@ -13,10 +13,11 @@
 				<run-job-dropdown :jobs="jobs" />
 			</div>
 		</div>
-		<div class="card charts">
+		<div v-if="charts" class="card charts">
 			<div class="chart">
 				<h4 class="has-text-centered">Quota Usage</h4>
 				<line-chart
+					v-if="charts.quotaUsage"
 					chart-id="youtube-quota-usage"
 					:data="charts.quotaUsage"
 				/>
@@ -24,6 +25,7 @@
 			<div class="chart">
 				<h4 class="has-text-centered">API Requests</h4>
 				<line-chart
+					v-if="charts.apiRequests"
 					chart-id="youtube-api-requests"
 					:data="charts.apiRequests"
 				/>
@@ -239,43 +241,8 @@ export default {
 				}
 			},
 			charts: {
-				quotaUsage: {
-					labels: [
-						"Mon",
-						"Tues",
-						"Wed",
-						"Thurs",
-						"Fri",
-						"Sat",
-						"Sun"
-					],
-					datasets: [
-						{
-							label: "Type A",
-							data: [300, 122, 0, 67, 23, 280, 185],
-							fill: true,
-							borderColor: "rgb(2, 166, 242)"
-						}
-					]
-				},
-				apiRequests: {
-					labels: [
-						"Mon",
-						"Tues",
-						"Wed",
-						"Thurs",
-						"Fri",
-						"Sat",
-						"Sun"
-					],
-					datasets: [
-						{
-							label: "Type A",
-							data: [30, 6, 0, 9, 4, 26, 19],
-							borderColor: "rgb(2, 166, 242)"
-						}
-					]
-				}
+				quotaUsage: null,
+				apiRequests: null
 			},
 			jobs: [
 				{
@@ -304,6 +271,10 @@ export default {
 						this.quotaStatus = res.data.status;
 				}
 			);
+
+			this.socket.dispatch("youtube.getQuotaChartData", res => {
+				if (res.status === "success") this.charts = res.data;
+			});
 		},
 		getDateFormatted(createdAt) {
 			const date = new Date(createdAt);
