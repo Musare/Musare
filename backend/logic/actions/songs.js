@@ -12,7 +12,6 @@ const CacheModule = moduleManager.modules.cache;
 const SongsModule = moduleManager.modules.songs;
 const PlaylistsModule = moduleManager.modules.playlists;
 const StationsModule = moduleManager.modules.stations;
-const RatingsModule = moduleManager.modules.ratings;
 const YouTubeModule = moduleManager.modules.youtube;
 
 CacheModule.runJob("SUB", {
@@ -432,15 +431,16 @@ export default {
 
 				(song, next) => {
 					YouTubeModule.runJob("GET_VIDEO", { identifier: song.youtubeId, createMissing: true }, this)
-						.then(video => next(null, video))
-						.catch(next);
+						.then(res => next(null, song, res.video))
+						.catch(() => next(null, song, false));
 				},
 
-				(youtubeVideo, next) => {
+				(song, youtubeVideo, next) => {
 					PlaylistsModule.runJob("GET_PLAYLISTS_WITH_SONG", { songId }, this)
 						.then(res =>
 							next(
 								null,
+								song,
 								youtubeVideo,
 								res.playlists.map(playlist => playlist._id)
 							)
@@ -448,8 +448,9 @@ export default {
 						.catch(next);
 				},
 
-				(youtubeVideo, playlistIds, next) => {
-					PlaylistsModule.playlistModel.updateMany(
+				(song, youtubeVideo, playlistIds, next) => {
+					if (!youtubeVideo) return next(null, song, youtubeVideo, playlistIds);
+					return PlaylistsModule.playlistModel.updateMany(
 						{ "songs._id": songId },
 						{
 							$set: {
@@ -464,43 +465,81 @@ export default {
 						},
 						err => {
 							if (err) next(err);
-							next(null, youtubeVideo, playlistIds);
+							next(null, song, youtubeVideo, playlistIds);
 						}
 					);
 				},
 
-				(youtubeVideo, playlistIds, next) => {
+				(song, youtubeVideo, playlistIds, next) => {
 					async.eachLimit(
 						playlistIds,
 						1,
 						(playlistId, next) => {
-							PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
-								.then(() => next())
-								.catch(next);
+							async.waterfall(
+								[
+									next => {
+										if (youtubeVideo) next();
+										else
+											WSModule.runJob(
+												"RUN_ACTION2",
+												{
+													session,
+													namespace: "playlists",
+													action: "removeSongFromPlaylist",
+													args: [song.youtubeId, playlistId]
+												},
+												this
+											)
+												.then(res => {
+													if (res.status === "error") next(res.message);
+													else next();
+												})
+												.catch(err => {
+													next(err);
+												});
+									},
+
+									next => {
+										PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
+											.then(() => next())
+											.catch(next);
+									}
+								],
+								next
+							);
 						},
 						err => {
 							if (err) next(err);
-							else next(null, youtubeVideo);
+							else next(null, song, youtubeVideo);
 						}
 					);
 				},
 
-				(youtubeVideo, next) => {
-					stationModel.find(
-						{ $or: [{ "queue._id": songId }, { "currentSong._id": songId }] },
-						(err, stations) => {
-							if (err) next(err);
-							next(
-								null,
-								youtubeVideo,
-								stations.map(station => station._id)
-							);
-						}
-					);
+				(song, youtubeVideo, next) => {
+					stationModel.find({ "queue._id": songId }, (err, stations) => {
+						if (err) next(err);
+						next(
+							null,
+							song,
+							youtubeVideo,
+							stations.map(station => station._id)
+						);
+					});
 				},
 
-				(youtubeVideo, stationIds, next) => {
-					stationModel.updateMany(
+				(song, youtubeVideo, stationIds, next) => {
+					stationModel.find({ "currentSong._id": songId }, (err, stations) => {
+						if (err) next(err);
+						next(null, song, youtubeVideo, {
+							queue: stationIds,
+							current: stations.map(station => station._id)
+						});
+					});
+				},
+
+				(song, youtubeVideo, stationIds, next) => {
+					if (!youtubeVideo) return next(null, song, youtubeVideo, stationIds);
+					return stationModel.updateMany(
 						{ "queue._id": songId },
 						{
 							$set: {
@@ -515,13 +554,14 @@ export default {
 						},
 						err => {
 							if (err) next(err);
-							next(null, youtubeVideo, stationIds);
+							next(null, song, youtubeVideo, stationIds);
 						}
 					);
 				},
 
-				(youtubeVideo, stationIds, next) => {
-					stationModel.updateMany(
+				(song, youtubeVideo, stationIds, next) => {
+					if (!youtubeVideo) return next(null, song, youtubeVideo, stationIds);
+					return stationModel.updateMany(
 						{ "currentSong._id": songId },
 						{
 							$set: {
@@ -536,16 +576,56 @@ export default {
 						},
 						err => {
 							if (err) next(err);
-							next(null, stationIds);
+							next(null, song, youtubeVideo, stationIds);
 						}
 					);
 				},
 
-				(stationIds, next) => {
+				(song, youtubeVideo, stationIds, next) => {
 					async.eachLimit(
-						stationIds,
+						stationIds.queue,
 						1,
 						(stationId, next) => {
+							if (!youtubeVideo)
+								StationsModule.runJob(
+									"REMOVE_FROM_QUEUE",
+									{ stationId, youtubeId: song.youtubeId },
+									this
+								)
+									.then(() => next())
+									.catch(err => {
+										if (
+											err === "Station not found" ||
+											err === "Song is not currently in the queue."
+										)
+											next();
+										else next(err);
+									});
+							StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+								.then(() => next())
+								.catch(next);
+						},
+						err => {
+							if (err) next(err);
+							else next(null, youtubeVideo, stationIds);
+						}
+					);
+				},
+
+				(youtubeVideo, stationIds, next) => {
+					async.eachLimit(
+						stationIds.current,
+						1,
+						(stationId, next) => {
+							if (!youtubeVideo)
+								StationsModule.runJob("SKIP_STATION", { stationId, natural: false }, this)
+									.then(() => {
+										next();
+									})
+									.catch(err => {
+										if (err.message === "Station not found.") next();
+										else next(err);
+									});
 							StationsModule.runJob("UPDATE_STATION", { stationId }, this)
 								.then(() => next())
 								.catch(next);
