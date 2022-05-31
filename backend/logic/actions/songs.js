@@ -431,118 +431,130 @@ export default {
 				},
 
 				(song, next) => {
+					YouTubeModule.runJob("GET_VIDEO", { identifier: song.youtubeId, createMissing: true }, this)
+						.then(video => next(null, video))
+						.catch(next);
+				},
+
+				(youtubeVideo, next) => {
 					PlaylistsModule.runJob("GET_PLAYLISTS_WITH_SONG", { songId }, this)
-						.then(res => {
-							async.eachLimit(
-								res.playlists,
-								1,
-								(playlist, next) => {
-									WSModule.runJob(
-										"RUN_ACTION2",
-										{
-											session,
-											namespace: "playlists",
-											action: "removeSongFromPlaylist",
-											args: [song.youtubeId, playlist._id]
-										},
-										this
-									)
-										.then(res => {
-											if (res.status === "error") next(res.message);
-											else next();
-										})
-										.catch(err => {
-											next(err);
-										});
-								},
-								err => {
-									if (err) next(err);
-									else next(null, song);
-								}
-							);
-						})
-						.catch(err => next(err));
-				},
-
-				(song, next) => {
-					stationModel.find({ "queue._id": songId }, (err, stations) => {
-						if (err) next(err);
-						else {
-							async.eachLimit(
-								stations,
-								1,
-								(station, next) => {
-									StationsModule.runJob(
-										"REMOVE_FROM_QUEUE",
-										{ stationId: station._id, youtubeId: song.youtubeId },
-										this
-									)
-										.then(() => next())
-										.catch(err => {
-											if (
-												err === "Station not found" ||
-												err === "Song is not currently in the queue."
-											)
-												next();
-											else next(err);
-										});
-								},
-								err => {
-									if (err) next(err);
-									else next(null, song);
-								}
-							);
-						}
-					});
-				},
-
-				(song, next) => {
-					stationModel.find({ "currentSong._id": songId }, (err, stations) => {
-						if (err) next(err);
-						else {
-							async.eachLimit(
-								stations,
-								1,
-								(station, next) => {
-									StationsModule.runJob(
-										"SKIP_STATION",
-										{ stationId: station._id, natural: false },
-										this
-									)
-										.then(() => {
-											next();
-										})
-										.catch(err => {
-											if (err.message === "Station not found.") next();
-											else next(err);
-										});
-								},
-								err => {
-									if (err) next(err);
-									else next(null, song);
-								}
-							);
-						}
-					});
-				},
-
-				(song, next) => {
-					RatingsModule.runJob("REMOVE_RATINGS", { youtubeIds: song.youtubeId }, this)
-						.then(() => next(null, song.youtubeId))
+						.then(res =>
+							next(
+								null,
+								youtubeVideo,
+								res.playlists.map(playlist => playlist._id)
+							)
+						)
 						.catch(next);
 				},
 
-				(youtubeId, next) => {
-					YouTubeModule.youtubeVideoModel.findOne({ youtubeId }, (err, video) => {
-						if (err) next(err);
-						else next(null, video._id);
-					});
+				(youtubeVideo, playlistIds, next) => {
+					PlaylistsModule.playlistModel.updateMany(
+						{ "songs._id": songId },
+						{
+							$set: {
+								"songs.$._id": null,
+								"songs.$.title": youtubeVideo.title,
+								"songs.$.artists": [youtubeVideo.author],
+								"songs.$.duration": youtubeVideo.duration,
+								"songs.$.skipDuration": 0,
+								"songs.$.thumbnail": youtubeVideo.thumbnail,
+								"songs.$.verified": false
+							}
+						},
+						err => {
+							if (err) next(err);
+							next(null, youtubeVideo, playlistIds);
+						}
+					);
 				},
 
-				(videoIds, next) => {
-					YouTubeModule.runJob("REMOVE_VIDEOS", { videoIds }, this)
-						.then(() => next())
-						.catch(next);
+				(youtubeVideo, playlistIds, next) => {
+					async.eachLimit(
+						playlistIds,
+						1,
+						(playlistId, next) => {
+							PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
+								.then(() => next())
+								.catch(next);
+						},
+						err => {
+							if (err) next(err);
+							else next(null, youtubeVideo);
+						}
+					);
+				},
+
+				(youtubeVideo, next) => {
+					stationModel.find(
+						{ $or: [{ "queue._id": songId }, { "currentSong._id": songId }] },
+						(err, stations) => {
+							if (err) next(err);
+							next(
+								null,
+								youtubeVideo,
+								stations.map(station => station._id)
+							);
+						}
+					);
+				},
+
+				(youtubeVideo, stationIds, next) => {
+					stationModel.updateMany(
+						{ "queue._id": songId },
+						{
+							$set: {
+								"queue.$._id": null,
+								"queue.$.title": youtubeVideo.title,
+								"queue.$.artists": [youtubeVideo.author],
+								"queue.$.duration": youtubeVideo.duration,
+								"queue.$.skipDuration": 0,
+								"queue.$.thumbnail": youtubeVideo.thumbnail,
+								"queue.$.verified": false
+							}
+						},
+						err => {
+							if (err) next(err);
+							next(null, youtubeVideo, stationIds);
+						}
+					);
+				},
+
+				(youtubeVideo, stationIds, next) => {
+					stationModel.updateMany(
+						{ "currentSong._id": songId },
+						{
+							$set: {
+								"currentSong._id": null,
+								"currentSong.title": youtubeVideo.title,
+								"currentSong.artists": [youtubeVideo.author],
+								// "currentSong.duration": youtubeVideo.duration,
+								// "currentSong.skipDuration": 0,
+								"currentSong.thumbnail": youtubeVideo.thumbnail,
+								"currentSong.verified": false
+							}
+						},
+						err => {
+							if (err) next(err);
+							next(null, stationIds);
+						}
+					);
+				},
+
+				(stationIds, next) => {
+					async.eachLimit(
+						stationIds,
+						1,
+						(stationId, next) => {
+							StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+								.then(() => next())
+								.catch(next);
+						},
+						err => {
+							if (err) next(err);
+							else next();
+						}
+					);
 				},
 
 				next => {

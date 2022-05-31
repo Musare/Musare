@@ -1216,7 +1216,9 @@ class _YouTubeModule extends CoreClass {
 						SongsModule.SongModel.find({ youtubeId: { $in: youtubeIds } }, (err, songs) => {
 							if (err) next(err);
 							else {
-								next(null, youtubeIds.filter(youtubeId => !songs.find(song => song.youtubeId === youtubeId)));
+								const filteredIds = youtubeIds.filter(youtubeId => !songs.find(song => song.youtubeId === youtubeId));
+								if (filteredIds.length < youtubeIds.length) next("One or more videos are attached to songs.");
+								else next(null, filteredIds);
 							}
 						});
 					},
