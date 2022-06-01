@@ -100,17 +100,24 @@ class _YouTubeModule extends CoreClass {
 	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	initialize() {
-		// eslint-disable-next-line no-async-promise-executor
-		return new Promise(async resolve => {
-			CacheModule = this.moduleManager.modules.cache;
-			DBModule = this.moduleManager.modules.db;
-			RatingsModule = this.moduleManager.modules.ratings;
-			SongsModule = this.moduleManager.modules.songs;
-			StationsModule = this.moduleManager.modules.stations;
-			PlaylistsModule = this.moduleManager.modules.playlists;
-			WSModule = this.moduleManager.modules.ws;
+	async initialize() {
+		CacheModule = this.moduleManager.modules.cache;
+		DBModule = this.moduleManager.modules.db;
+		RatingsModule = this.moduleManager.modules.ratings;
+		SongsModule = this.moduleManager.modules.songs;
+		StationsModule = this.moduleManager.modules.stations;
+		PlaylistsModule = this.moduleManager.modules.playlists;
+		WSModule = this.moduleManager.modules.ws;
 
+		this.youtubeApiRequestModel = this.YoutubeApiRequestModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "youtubeApiRequest"
+		});
+
+		this.youtubeVideoModel = this.YoutubeVideoModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "youtubeVideo"
+		});
+
+		return new Promise(resolve => {
 			CacheModule.runJob("SUB", {
 				channel: "youtube.removeYoutubeApiRequest",
 				cb: requestId => {
@@ -142,14 +149,6 @@ class _YouTubeModule extends CoreClass {
 						});
 					});
 				}
-			});
-
-			this.youtubeApiRequestModel = this.YoutubeApiRequestModel = await DBModule.runJob("GET_MODEL", {
-				modelName: "youtubeApiRequest"
-			});
-
-			this.youtubeVideoModel = this.YoutubeVideoModel = await DBModule.runJob("GET_MODEL", {
-				modelName: "youtubeVideo"
 			});
 
 			this.rateLimiter = new RateLimitter(config.get("apis.youtube.rateLimit"));
@@ -1312,8 +1311,7 @@ class _YouTubeModule extends CoreClass {
 									return "";
 								});
 
-								// eslint-disable-next-line no-unused-vars
-								dur = dur.replace(/([\d]*)S/, (v, v2) => {
+								dur.replace(/([\d]*)S/, (v, v2) => {
 									v2 = Number(v2);
 									duration += v2;
 									return "";
