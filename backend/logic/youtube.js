@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 import mongoose from "mongoose";
 import async from "async";
 import config from "config";
@@ -56,7 +54,7 @@ const isQuotaExceeded = apiCalls => {
 
 	let quotaExceeded = false;
 
-	for (const quota of sortedQuotas) {
+	sortedQuotas.forEach(quota => {
 		let quotaUsed = 0;
 		let dateCutoff = null;
 
@@ -72,16 +70,14 @@ const isQuotaExceeded = apiCalls => {
 			dateCutoff.setUTCHours(0);
 		}
 
-		for (const apiCall of reversedApiCalls) {
+		reversedApiCalls.forEach(apiCall => {
 			if (apiCall.date >= dateCutoff) quotaUsed += apiCall.quotaCost;
-			else break;
-		}
+		});
 
 		if (quotaUsed >= quota.limit) {
 			quotaExceeded = true;
-			break;
 		}
-	}
+	});
 
 	return quotaExceeded;
 };
@@ -105,6 +101,7 @@ class _YouTubeModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	initialize() {
+		// eslint-disable-next-line no-async-promise-executor
 		return new Promise(async resolve => {
 			CacheModule = this.moduleManager.modules.cache;
 			DBModule = this.moduleManager.modules.db;
@@ -121,7 +118,7 @@ class _YouTubeModule extends CoreClass {
 						room: `view-api-request.${requestId}`,
 						args: ["event:youtubeApiRequest.removed"]
 					});
-			
+
 					WSModule.runJob("EMIT_TO_ROOM", {
 						room: "admin.youtube",
 						args: ["event:admin.youtubeApiRequest.removed", { data: { requestId } }]
@@ -138,7 +135,7 @@ class _YouTubeModule extends CoreClass {
 							room: `view-youtube-video.${videoId}`,
 							args: ["event:youtubeVideo.removed"]
 						});
-			
+
 						WSModule.runJob("EMIT_TO_ROOM", {
 							room: "admin.youtubeVideos",
 							args: ["event:admin.youtubeVideo.removed", { data: { videoId } }]
@@ -167,7 +164,10 @@ class _YouTubeModule extends CoreClass {
 			rax.attach(this.axios);
 
 			this.youtubeApiRequestModel
-				.find({ date: { $gte: new Date() - 2 * 24 * 60 * 60 * 1000 } }, { date: true, quotaCost: true, _id: false })
+				.find(
+					{ date: { $gte: new Date() - 2 * 24 * 60 * 60 * 1000 } },
+					{ date: true, quotaCost: true, _id: false }
+				)
 				.sort({ date: 1 })
 				.exec((err, youtubeApiRequests) => {
 					if (err) console.log("Couldn't load YouTube API requests.");
@@ -217,12 +217,22 @@ class _YouTubeModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Returns details about the YouTube quota usage
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.fromDate - date to select requests up to
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	GET_QUOTA_STATUS(payload) {
 		return new Promise((resolve, reject) => {
 			const fromDate = payload.fromDate ? new Date(payload.fromDate) : new Date();
 
 			YouTubeModule.youtubeApiRequestModel
-				.find({ date: { $gte: fromDate - 2 * 24 * 60 * 60 * 1000, $lte: fromDate } }, { date: true, quotaCost: true, _id: false })
+				.find(
+					{ date: { $gte: fromDate - 2 * 24 * 60 * 60 * 1000, $lte: fromDate } },
+					{ date: true, quotaCost: true, _id: false }
+				)
 				.sort({ date: 1 })
 				.exec((err, youtubeApiRequests) => {
 					if (err) reject(new Error("Couldn't load YouTube API requests."));
@@ -232,7 +242,7 @@ class _YouTubeModule extends CoreClass {
 						const sortedQuotas = quotas.sort((a, b) => a.limit > b.limit);
 						const status = {};
 
-						for (const quota of sortedQuotas) {
+						sortedQuotas.forEach(quota => {
 							status[quota.type] = {
 								title: quota.title,
 								quotaUsed: 0,
@@ -242,7 +252,8 @@ class _YouTubeModule extends CoreClass {
 							let dateCutoff = null;
 
 							if (quota.type === "QUERIES_PER_MINUTE") dateCutoff = new Date(fromDate) - 1000 * 60;
-							else if (quota.type === "QUERIES_PER_100_SECONDS") dateCutoff = new Date(fromDate) - 1000 * 100;
+							else if (quota.type === "QUERIES_PER_100_SECONDS")
+								dateCutoff = new Date(fromDate) - 1000 * 100;
 							else if (quota.type === "QUERIES_PER_DAY") {
 								// Quota resets at midnight PT, this is my best guess to convert the current date to the last midnight PT
 								dateCutoff = new Date(fromDate);
@@ -253,14 +264,13 @@ class _YouTubeModule extends CoreClass {
 								dateCutoff.setUTCHours(0);
 							}
 
-							for (const apiCall of reversedApiCalls) {
+							reversedApiCalls.forEach(apiCall => {
 								if (apiCall.date >= dateCutoff) status[quota.type].quotaUsed += apiCall.quotaCost;
-								else break;
-							}
+							});
 
 							if (status[quota.type].quotaUsed >= quota.limit && !status[quota.type].quotaExceeded)
 								status[quota.type].quotaExceeded = true;
-						}
+						});
 
 						resolve({ status });
 					}
@@ -268,12 +278,17 @@ class _YouTubeModule extends CoreClass {
 		});
 	}
 
-	GET_QUOTA_CHART_DATA(payload) {
+	/**
+	 * Returns YouTube quota chart data
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_QUOTA_CHART_DATA() {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
 					next => {
-						const fromDate = new Date(new Date() - (6 * 24 * 60 * 60 * 1000));
+						const fromDate = new Date(new Date() - 6 * 24 * 60 * 60 * 1000);
 						fromDate.setUTCHours(0, 0, 0);
 						const dates = [];
 						const tempDate = new Date(fromDate.getTime());
@@ -285,56 +300,58 @@ class _YouTubeModule extends CoreClass {
 					},
 
 					(fromDate, dates, next) => {
-						YouTubeModule.youtubeApiRequestModel.aggregate([
-							{
-								$match: { date: { $gte: fromDate } }
-							},
-							{
-								$group: {
-									_id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
-									usage: { $sum: "$quotaCost" },
-									count: { $sum: 1 }
+						YouTubeModule.youtubeApiRequestModel
+							.aggregate([
+								{
+									$match: { date: { $gte: fromDate } }
+								},
+								{
+									$group: {
+										_id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+										usage: { $sum: "$quotaCost" },
+										count: { $sum: 1 }
+									}
+								},
+								{
+									$sort: { _id: 1 }
+								},
+								{
+									$project: { date: "$_id", usage: 1, count: 1 }
 								}
-							},
-							{
-								$sort: { _id: 1 }
-							},
-							{
-								$project: { date: "$_id", usage: 1, count: 1 }
-							}
-						]).exec((err, data) => {
-							if (err) next(err);
-							else next(null, dates, data);
-						});
+							])
+							.exec((err, data) => {
+								if (err) next(err);
+								else next(null, dates, data);
+							});
 					},
 
 					(dates, data, next) => {
-						const filteredData = dates.map(
-							date => {
-								const dayData = data.find(
-									row => new Date(row.date).getDate() === date.getDate()
-								);
-								if (dayData) return { date, usage: dayData.usage, count: dayData.count };
-								return { date, usage: 0, count: 0 };
-							}
-						);
+						const filteredData = dates.map(date => {
+							const dayData = data.find(row => new Date(row.date).getDate() === date.getDate());
+							if (dayData) return { date, usage: dayData.usage, count: dayData.count };
+							return { date, usage: 0, count: 0 };
+						});
 						const friendlyDates = dates.map(date => date.toISOString().split("T")[0]);
 						next(null, {
 							quotaUsage: {
 								labels: friendlyDates,
-								datasets: [{
-									label: "All",
-									data: filteredData.map(row => row.usage),
-									borderColor: "rgb(2, 166, 242)"
-								}]
+								datasets: [
+									{
+										label: "All",
+										data: filteredData.map(row => row.usage),
+										borderColor: "rgb(2, 166, 242)"
+									}
+								]
 							},
 							apiRequests: {
 								labels: friendlyDates,
-								datasets: [{
-									label: "All",
-									data: filteredData.map(row => row.count),
-									borderColor: "rgb(2, 166, 242)"
-								}]
+								datasets: [
+									{
+										label: "All",
+										data: filteredData.map(row => row.count),
+										borderColor: "rgb(2, 166, 242)"
+									}
+								]
 							}
 						});
 					}
@@ -451,15 +468,14 @@ class _YouTubeModule extends CoreClass {
 								if (data.pageInfo.totalResults === 0) return next("Channel not found.");
 
 								let channelId = null;
-								for (const item of data.items) {
+								data.items.forEach(item => {
 									if (
 										item.snippet.customUrl &&
 										item.snippet.customUrl.toLowerCase() === payload.customUrl.toLowerCase()
 									) {
 										channelId = item.id;
-										break;
 									}
-								}
+								});
 
 								if (!channelId) return next("Channel not found.");
 
@@ -515,7 +531,8 @@ class _YouTubeModule extends CoreClass {
 							next => {
 								YouTubeModule.log(
 									"INFO",
-									`Getting playlist progress for job (${this.toString()}): ${songs.length
+									`Getting playlist progress for job (${this.toString()}): ${
+										songs.length
 									} songs gotten so far. Is there a next page: ${nextPageToken !== undefined}.`
 								);
 								next(null, nextPageToken !== undefined);
@@ -693,7 +710,6 @@ class _YouTubeModule extends CoreClass {
 
 			async.waterfall(
 				[
-
 					next => {
 						const payload = {};
 						if (channelId) payload.id = channelId;
@@ -705,7 +721,8 @@ class _YouTubeModule extends CoreClass {
 								next(null, false, playlistId);
 							})
 							.catch(err => {
-								if (err.message === "Channel not found. Is the channel public/unlisted?") next(null, true, null);
+								if (err.message === "Channel not found. Is the channel public/unlisted?")
+									next(null, true, null);
 								else next(err);
 							});
 					},
@@ -716,9 +733,9 @@ class _YouTubeModule extends CoreClass {
 						const payload = {};
 						if (channelCustomUrl) payload.customUrl = channelCustomUrl;
 						else if (channelUsernameOrCustomUrl) payload.customUrl = channelUsernameOrCustomUrl;
-						else next("No proper URL provided.");
+						else return next("No proper URL provided.");
 
-						YouTubeModule.runJob("GET_CHANNEL_ID_FROM_CUSTOM_URL", payload, this)
+						return YouTubeModule.runJob("GET_CHANNEL_ID_FROM_CUSTOM_URL", payload, this)
 							.then(({ channelId }) => {
 								YouTubeModule.runJob("GET_CHANNEL_UPLOADS_PLAYLIST_ID", { id: channelId }, this)
 									.then(({ playlistId }) => {
@@ -737,7 +754,8 @@ class _YouTubeModule extends CoreClass {
 							next => {
 								YouTubeModule.log(
 									"INFO",
-									`Getting channel progress for job (${this.toString()}): ${songs.length
+									`Getting channel progress for job (${this.toString()}): ${
+										songs.length
 									} songs gotten so far. Is there a next page: ${nextPageToken !== undefined}.`
 								);
 								next(null, nextPageToken !== undefined);
@@ -783,6 +801,13 @@ class _YouTubeModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Perform YouTube API get videos request
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.params - request parameters
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	API_GET_VIDEOS(payload) {
 		return new Promise((resolve, reject) => {
 			const { params } = payload;
@@ -808,6 +833,13 @@ class _YouTubeModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Perform YouTube API get playlist items request
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.params - request parameters
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	API_GET_PLAYLIST_ITEMS(payload) {
 		return new Promise((resolve, reject) => {
 			const { params } = payload;
@@ -833,6 +865,13 @@ class _YouTubeModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Perform YouTube API get channels request
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.params - request parameters
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	API_GET_CHANNELS(payload) {
 		return new Promise((resolve, reject) => {
 			const { params } = payload;
@@ -858,6 +897,13 @@ class _YouTubeModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Perform YouTube API search request
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.params - request parameters
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	API_SEARCH(payload) {
 		return new Promise((resolve, reject) => {
 			const { params } = payload;
@@ -883,6 +929,15 @@ class _YouTubeModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Perform YouTube API call
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.url - request url
+	 * @param {object} payload.params - request parameters
+	 * @param {object} payload.quotaCost - request quotaCost
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	API_CALL(payload) {
 		return new Promise((resolve, reject) => {
 			const { url, params, quotaCost } = payload;
@@ -941,6 +996,13 @@ class _YouTubeModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Fetch all api requests
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.fromDate - data to fetch requests up to
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	GET_API_REQUESTS(payload) {
 		return new Promise((resolve, reject) => {
 			const fromDate = payload.fromDate ? new Date(payload.fromDate) : new Date();
@@ -957,16 +1019,21 @@ class _YouTubeModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Fetch an api request
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.apiRequestId - the api request id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	GET_API_REQUEST(payload) {
 		return new Promise((resolve, reject) => {
 			const { apiRequestId } = payload;
-			
+
 			async.waterfall(
 				[
 					next => {
-						YouTubeModule.youtubeApiRequestModel
-							.findOne({ _id: apiRequestId })
-							.exec(next);
+						YouTubeModule.youtubeApiRequestModel.findOne({ _id: apiRequestId }).exec(next);
 					},
 
 					(apiRequest, next) => {
@@ -977,13 +1044,14 @@ class _YouTubeModule extends CoreClass {
 								key: apiRequestId.toString()
 							},
 							this
-						).then(apiRequestParams => {
-							next(null, {
-								...apiRequest._doc,
-								params: apiRequestParams
-							});
-						}
-						).catch(err => next(err));
+						)
+							.then(apiRequestParams => {
+								next(null, {
+									...apiRequest._doc,
+									params: apiRequestParams
+								});
+							})
+							.catch(err => next(err));
 					},
 
 					(apiRequest, next) => {
@@ -994,12 +1062,14 @@ class _YouTubeModule extends CoreClass {
 								key: apiRequestId.toString()
 							},
 							this
-						).then(apiRequestResults => {
-							next(null, {
-								...apiRequest,
-								results: apiRequestResults
-							});
-						}).catch(err => next(err));
+						)
+							.then(apiRequestResults => {
+								next(null, {
+									...apiRequest,
+									results: apiRequestResults
+								});
+							})
+							.catch(err => next(err));
 					}
 				],
 				(err, apiRequest) => {
@@ -1010,7 +1080,12 @@ class _YouTubeModule extends CoreClass {
 		});
 	}
 
-	RESET_STORED_API_REQUESTS(payload) {
+	/**
+	 * Removed all stored api requests from mongo and redis
+	 *
+	 * 	 @returns {Promise} - returns promise (reject, resolve)
+	 */
+	RESET_STORED_API_REQUESTS() {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
@@ -1028,19 +1103,15 @@ class _YouTubeModule extends CoreClass {
 					},
 
 					(apiRequests, next) => {
-						CacheModule.runJob(
-							"DEL",
-							{key: "youtubeApiRequestParams"},
-							this
-						).then(() => next(null, apiRequests)).catch(err => next(err));
+						CacheModule.runJob("DEL", { key: "youtubeApiRequestParams" }, this)
+							.then(() => next(null, apiRequests))
+							.catch(err => next(err));
 					},
 
 					(apiRequests, next) => {
-						CacheModule.runJob(
-							"DEL",
-							{key: "youtubeApiRequestResults"},
-							this
-						).then(() => next(null, apiRequests)).catch(err => next(err));
+						CacheModule.runJob("DEL", { key: "youtubeApiRequestResults" }, this)
+							.then(() => next(null, apiRequests))
+							.catch(err => next(err));
 					},
 
 					(apiRequests, next) => {
@@ -1078,13 +1149,19 @@ class _YouTubeModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Remove a stored api request
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.requestId - the api request id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	REMOVE_STORED_API_REQUEST(payload) {
 		return new Promise((resolve, reject) => {
-			
 			async.waterfall(
 				[
 					next => {
-						YouTubeModule.youtubeApiRequestModel.deleteOne({_id: payload.requestId}, err => {
+						YouTubeModule.youtubeApiRequestModel.deleteOne({ _id: payload.requestId }, err => {
 							if (err) next("Couldn't remove stored YouTube API request.");
 							else {
 								next();
@@ -1100,7 +1177,9 @@ class _YouTubeModule extends CoreClass {
 								key: payload.requestId.toString()
 							},
 							this
-						).then(next).catch(err => next(err));
+						)
+							.then(next)
+							.catch(err => next(err));
 					},
 
 					next => {
@@ -1111,14 +1190,18 @@ class _YouTubeModule extends CoreClass {
 								key: payload.requestId.toString()
 							},
 							this
-						).then(next).catch(err => next(err));
+						)
+							.then(next)
+							.catch(err => next(err));
 					},
 
 					next => {
 						CacheModule.runJob("PUB", {
 							channel: "youtube.removeYoutubeApiRequest",
-							value: requestId
-						}).then(next).catch(err => next(err));;
+							value: payload.requestId.toString()
+						})
+							.then(next)
+							.catch(err => next(err));
 					}
 				],
 				err => {
@@ -1141,7 +1224,7 @@ class _YouTubeModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						let youtubeVideos = payload.youtubeVideos;
+						let { youtubeVideos } = payload;
 						if (typeof youtubeVideos !== "object") next("Invalid youtubeVideos type");
 						else {
 							if (!Array.isArray(youtubeVideos)) youtubeVideos = [youtubeVideos];
@@ -1170,7 +1253,7 @@ class _YouTubeModule extends CoreClass {
 					if (err) reject(new Error(err));
 					else resolve({ youtubeVideos });
 				}
-			)
+			);
 		});
 	}
 
@@ -1182,59 +1265,60 @@ class _YouTubeModule extends CoreClass {
 	 * @param {string} payload.createMissing - attempt to fetch and create video if not in db
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	 GET_VIDEO(payload) {
+	GET_VIDEO(payload) {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
 					next => {
-						const query = mongoose.Types.ObjectId.isValid(payload.identifier) ?
-							{ _id: payload.identifier } :
-							{ youtubeId: payload.identifier };
+						const query = mongoose.Types.ObjectId.isValid(payload.identifier)
+							? { _id: payload.identifier }
+							: { youtubeId: payload.identifier };
 
 						return YouTubeModule.youtubeVideoModel.findOne(query, next);
 					},
 
 					(video, next) => {
 						if (video) return next(null, video, false);
-						if (mongoose.Types.ObjectId.isValid(payload.identifier) || !payload.createMissing) return next("YouTube video not found.");
+						if (mongoose.Types.ObjectId.isValid(payload.identifier) || !payload.createMissing)
+							return next("YouTube video not found.");
 
 						const params = {
 							part: "snippet,contentDetails,statistics,status",
 							id: payload.identifier
 						};
-				
+
 						return YouTubeModule.runJob("API_GET_VIDEOS", { params }, this)
 							.then(({ response }) => {
 								const { data } = response;
 								if (data.items[0] === undefined)
 									return next("The specified video does not exist or cannot be publicly accessed.");
-			
+
 								// TODO Clean up duration converter
 								let dur = data.items[0].contentDetails.duration;
-			
+
 								dur = dur.replace("PT", "");
-			
+
 								let duration = 0;
-			
+
 								dur = dur.replace(/([\d]*)H/, (v, v2) => {
 									v2 = Number(v2);
 									duration = v2 * 60 * 60;
 									return "";
 								});
-			
+
 								dur = dur.replace(/([\d]*)M/, (v, v2) => {
 									v2 = Number(v2);
 									duration += v2 * 60;
 									return "";
 								});
-			
+
 								// eslint-disable-next-line no-unused-vars
 								dur = dur.replace(/([\d]*)S/, (v, v2) => {
 									v2 = Number(v2);
 									duration += v2;
 									return "";
 								});
-			
+
 								const youtubeVideo = {
 									youtubeId: data.items[0].id,
 									title: data.items[0].snippet.title,
@@ -1242,7 +1326,7 @@ class _YouTubeModule extends CoreClass {
 									thumbnail: data.items[0].snippet.thumbnails.default.url,
 									duration
 								};
-			
+
 								return next(null, false, youtubeVideo);
 							})
 							.catch(next);
@@ -1252,8 +1336,8 @@ class _YouTubeModule extends CoreClass {
 						if (video) return next(null, video, true);
 						return YouTubeModule.runJob("CREATE_VIDEOS", { youtubeVideos: youtubeVideo }, this)
 							.then(res => {
-								if (res.youtubeVideos.length === 1) next(null, res.youtubeVideos[0], false)
-								else next("YouTube video not found.")
+								if (res.youtubeVideos.length === 1) next(null, res.youtubeVideos[0], false);
+								else next("YouTube video not found.");
 							})
 							.catch(next);
 					}
@@ -1262,7 +1346,7 @@ class _YouTubeModule extends CoreClass {
 					if (err) reject(new Error(err));
 					else resolve({ video, existing });
 				}
-			)
+			);
 		});
 	}
 
@@ -1273,9 +1357,9 @@ class _YouTubeModule extends CoreClass {
 	 * @param {string} payload.videoIds - Array of youtubeVideo ObjectIds
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	 REMOVE_VIDEOS(payload) {
+	REMOVE_VIDEOS(payload) {
 		return new Promise((resolve, reject) => {
-			let videoIds = payload.videoIds;
+			let { videoIds } = payload;
 			if (!Array.isArray(videoIds)) videoIds = [videoIds];
 
 			async.waterfall(
@@ -1284,9 +1368,13 @@ class _YouTubeModule extends CoreClass {
 						if (!videoIds.every(videoId => mongoose.Types.ObjectId.isValid(videoId)))
 							next("One or more videoIds are not a valid ObjectId.");
 						else {
-							YouTubeModule.youtubeVideoModel.find({_id: { $in: videoIds }}, (err, videos) => {
+							YouTubeModule.youtubeVideoModel.find({ _id: { $in: videoIds } }, (err, videos) => {
 								if (err) next(err);
-								else next(null, videos.map(video => video.youtubeId));
+								else
+									next(
+										null,
+										videos.map(video => video.youtubeId)
+									);
 							});
 						}
 					},
@@ -1295,15 +1383,18 @@ class _YouTubeModule extends CoreClass {
 						SongsModule.SongModel.find({ youtubeId: { $in: youtubeIds } }, (err, songs) => {
 							if (err) next(err);
 							else {
-								const filteredIds = youtubeIds.filter(youtubeId => !songs.find(song => song.youtubeId === youtubeId));
-								if (filteredIds.length < youtubeIds.length) next("One or more videos are attached to songs.");
+								const filteredIds = youtubeIds.filter(
+									youtubeId => !songs.find(song => song.youtubeId === youtubeId)
+								);
+								if (filteredIds.length < youtubeIds.length)
+									next("One or more videos are attached to songs.");
 								else next(null, filteredIds);
 							}
 						});
 					},
 
 					(youtubeIds, next) => {
-						RatingsModule.runJob("REMOVE_RATINGS",{youtubeIds},this)
+						RatingsModule.runJob("REMOVE_RATINGS", { youtubeIds }, this)
 							.then(() => next(null, youtubeIds))
 							.catch(next);
 					},
@@ -1316,73 +1407,92 @@ class _YouTubeModule extends CoreClass {
 								async.waterfall(
 									[
 										next => {
-											PlaylistsModule.playlistModel.find({ "songs.youtubeId": youtubeId }, (err, playlists) => {
-												if (err) next(err);
-												else {
-													async.eachLimit(
-														playlists,
-														1,
-														(playlist, next) => {
-															PlaylistsModule.runJob("REMOVE_FROM_PLAYLIST", { playlistId: playlist._id, youtubeId }, this)
-																.then(() => next())
-																.catch(next);
-														},
-														next
-													);
+											PlaylistsModule.playlistModel.find(
+												{ "songs.youtubeId": youtubeId },
+												(err, playlists) => {
+													if (err) next(err);
+													else {
+														async.eachLimit(
+															playlists,
+															1,
+															(playlist, next) => {
+																PlaylistsModule.runJob(
+																	"REMOVE_FROM_PLAYLIST",
+																	{ playlistId: playlist._id, youtubeId },
+																	this
+																)
+																	.then(() => next())
+																	.catch(next);
+															},
+															next
+														);
+													}
 												}
-											});
+											);
 										},
-						
+
 										next => {
-											StationsModule.stationModel.find({ "queue.youtubeId": youtubeId }, (err, stations) => {
-												if (err) next(err);
-												else {
-													async.eachLimit(
-														stations,
-														1,
-														(station, next) => {
-															StationsModule.runJob("REMOVE_FROM_QUEUE", { stationId: station._id, youtubeId }, this)
-																.then(() => next())
-																.catch(err => {
-																	if (
-																		err === "Station not found" ||
-																		err === "Song is not currently in the queue."
-																	)
+											StationsModule.stationModel.find(
+												{ "queue.youtubeId": youtubeId },
+												(err, stations) => {
+													if (err) next(err);
+													else {
+														async.eachLimit(
+															stations,
+															1,
+															(station, next) => {
+																StationsModule.runJob(
+																	"REMOVE_FROM_QUEUE",
+																	{ stationId: station._id, youtubeId },
+																	this
+																)
+																	.then(() => next())
+																	.catch(err => {
+																		if (
+																			err === "Station not found" ||
+																			err ===
+																				"Song is not currently in the queue."
+																		)
+																			next();
+																		else next(err);
+																	});
+															},
+															next
+														);
+													}
+												}
+											);
+										},
+
+										next => {
+											StationsModule.stationModel.find(
+												{ "currentSong.youtubeId": youtubeId },
+												(err, stations) => {
+													if (err) next(err);
+													else {
+														async.eachLimit(
+															stations,
+															1,
+															(station, next) => {
+																StationsModule.runJob(
+																	"SKIP_STATION",
+																	{ stationId: station._id, natural: false },
+																	this
+																)
+																	.then(() => {
 																		next();
-																	else next(err);
-																});
-														},
-														next
-													);
+																	})
+																	.catch(err => {
+																		if (err.message === "Station not found.")
+																			next();
+																		else next(err);
+																	});
+															},
+															next
+														);
+													}
 												}
-											});
-										},
-						
-										next => {
-											StationsModule.stationModel.find({ "currentSong.youtubeId": youtubeId }, (err, stations) => {
-												if (err) next(err);
-												else {
-													async.eachLimit(
-														stations,
-														1,
-														(station, next) => {
-															StationsModule.runJob(
-																"SKIP_STATION",
-																{ stationId: station._id, natural: false },
-																this
-															)
-																.then(() => {
-																	next();
-																})
-																.catch(err => {
-																	if (err.message === "Station not found.") next();
-																	else next(err);
-																});
-														},
-														next
-													);
-												}
-											});
+											);
 										}
 									],
 									next
@@ -1393,21 +1503,23 @@ class _YouTubeModule extends CoreClass {
 					},
 
 					next => {
-						YouTubeModule.youtubeVideoModel.deleteMany({_id: { $in: videoIds }}, next);
+						YouTubeModule.youtubeVideoModel.deleteMany({ _id: { $in: videoIds } }, next);
 					},
 
 					(res, next) => {
 						CacheModule.runJob("PUB", {
 							channel: "youtube.removeVideos",
 							value: videoIds
-						}).then(next).catch(err => next(err));
+						})
+							.then(next)
+							.catch(err => next(err));
 					}
 				],
 				err => {
 					if (err) reject(new Error(err));
 					else resolve();
 				}
-			)
+			);
 		});
 	}
 
@@ -1420,7 +1532,7 @@ class _YouTubeModule extends CoreClass {
 	 * @param {boolean} payload.returnVideos - whether to return videos
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	 REQUEST_SET(payload) {
+	REQUEST_SET(payload) {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
@@ -1449,9 +1561,9 @@ class _YouTubeModule extends CoreClass {
 						let videos = {};
 						let failed = 0;
 						let alreadyInDatabase = 0;
-	
+
 						if (youtubeIds.length === 0) next();
-	
+
 						async.eachOfLimit(
 							youtubeIds,
 							1,
@@ -1474,7 +1586,7 @@ class _YouTubeModule extends CoreClass {
 									videos = Object.keys(videos)
 										.sort()
 										.map(key => videos[key]);
-	
+
 								next(null, { successful, failed, alreadyInDatabase, videos });
 							}
 						);
@@ -1484,7 +1596,7 @@ class _YouTubeModule extends CoreClass {
 					if (err) reject(new Error(err));
 					else resolve(response);
 				}
-			)
+			);
 		});
 	}
 }
