@@ -270,45 +270,80 @@ class _YouTubeModule extends CoreClass {
 
 	GET_QUOTA_CHART_DATA(payload) {
 		return new Promise((resolve, reject) => {
-			const fromDate = new Date(new Date() - (8 * 24 * 60 * 60 * 1000));
-			YouTubeModule.youtubeApiRequestModel.aggregate([
-				{
-					$match: { date: { $gte: fromDate } }
-				},
-				{
-					$group: {
-						_id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
-						usage: { $sum: "$quotaCost" },
-						count: { $sum: 1 }
-					}
-				},
-				{
-					$sort: { _id: 1 }
-				},
-				{
-					$project: { date: "$_id", usage: 1, count: 1 }
-				}
-			]).exec((err, data) => {
-				if (err) return reject(err);
-				return resolve({
-					quotaUsage: {
-						labels: data.map(row => row.date),
-						datasets: [{
-							label: "All",
-							data: data.map(row => row.usage),
-							borderColor: "rgb(2, 166, 242)"
-						}]
+			async.waterfall(
+				[
+					next => {
+						const fromDate = new Date(new Date() - (6 * 24 * 60 * 60 * 1000));
+						fromDate.setUTCHours(0, 0, 0);
+						const dates = [];
+						const tempDate = new Date(fromDate.getTime());
+						while (dates.length < 7) {
+							dates.push(new Date(tempDate));
+							tempDate.setDate(tempDate.getDate() + 1);
+						}
+						next(null, fromDate, dates);
 					},
-					apiRequests: {
-						labels: data.map(row => row.date),
-						datasets: [{
-							label: "All",
-							data: data.map(row => row.count),
-							borderColor: "rgb(2, 166, 242)"
-						}]
+
+					(fromDate, dates, next) => {
+						YouTubeModule.youtubeApiRequestModel.aggregate([
+							{
+								$match: { date: { $gte: fromDate } }
+							},
+							{
+								$group: {
+									_id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+									usage: { $sum: "$quotaCost" },
+									count: { $sum: 1 }
+								}
+							},
+							{
+								$sort: { _id: 1 }
+							},
+							{
+								$project: { date: "$_id", usage: 1, count: 1 }
+							}
+						]).exec((err, data) => {
+							if (err) next(err);
+							else next(null, dates, data);
+						});
+					},
+
+					(dates, data, next) => {
+						const filteredData = dates.map(
+							date => {
+								const dayData = data.find(
+									row => new Date(row.date).getDate() === date.getDate()
+								);
+								if (dayData) return { date, usage: dayData.usage, count: dayData.count };
+								return { date, usage: 0, count: 0 };
+							}
+						);
+						const friendlyDates = dates.map(date => date.toISOString().split("T")[0]);
+						next(null, {
+							quotaUsage: {
+								labels: friendlyDates,
+								datasets: [{
+									label: "All",
+									data: filteredData.map(row => row.usage),
+									borderColor: "rgb(2, 166, 242)"
+								}]
+							},
+							apiRequests: {
+								labels: friendlyDates,
+								datasets: [{
+									label: "All",
+									data: filteredData.map(row => row.count),
+									borderColor: "rgb(2, 166, 242)"
+								}]
+							}
+						});
 					}
-				});
-			});
+				],
+				(err, data) => {
+					if (err) reject(err);
+					else resolve(data);
+				}
+			);
 		});
 	}
 
