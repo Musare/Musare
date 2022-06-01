@@ -17,6 +17,8 @@ const onDisconnect = {
 const CB_REFS = {};
 let CB_REF = 0;
 
+const PROGRESS_CB_REFS = {};
+
 export default {
 	socket: null,
 	dispatcher: null,
@@ -43,6 +45,14 @@ export default {
 				id.indexOf("$event:keep.") === -1
 			)
 				delete CB_REFS[id];
+		});
+
+		Object.keys(PROGRESS_CB_REFS).forEach(id => {
+			if (
+				id.indexOf("$event:") !== -1 &&
+				id.indexOf("$event:keep.") === -1
+			)
+				delete PROGRESS_CB_REFS[id];
 		});
 
 		// destroy all listeners that aren't site-wide
@@ -82,20 +92,31 @@ export default {
 			}
 
 			dispatch(...args) {
-				CB_REF += 1;
-
 				if (this.readyState !== 1)
 					return pendingDispatches.push(() =>
 						waitForConnectionToDispatch(...args)
 					);
 
-				const cb = args[args.length - 1];
+				const lastArg = args[args.length - 1];
 
-				if (typeof cb === "function") {
-					CB_REFS[CB_REF] = cb;
+				if (typeof lastArg === "function") {
+					CB_REF += 1;
+					CB_REFS[CB_REF] = lastArg;
 
 					return this.send(
 						JSON.stringify([...args.slice(0, -1), { CB_REF }])
+					);
+				}
+				if (typeof lastArg === "object") {
+					CB_REF += 1;
+					CB_REFS[CB_REF] = lastArg.cb;
+					PROGRESS_CB_REFS[CB_REF] = lastArg.onProgress;
+
+					return this.send(
+						JSON.stringify([
+							...args.slice(0, -1),
+							{ CB_REF, onProgress: true }
+						])
 					);
 				}
 
@@ -118,6 +139,10 @@ export default {
 				const CB_REF = data.shift(0);
 				CB_REFS[CB_REF](...data);
 				return delete CB_REFS[CB_REF];
+			}
+			if (name === "PROGRESS_CB_REF") {
+				const PROGRESS_CB_REF = data.shift(0);
+				PROGRESS_CB_REFS[PROGRESS_CB_REF](...data);
 			}
 
 			if (name === "ERROR") console.log("WS: SOCKET ERROR:", data[0]);

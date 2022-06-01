@@ -1,4 +1,5 @@
 import config from "config";
+import { EventEmitter } from "events";
 
 class DeferredPromise {
 	// eslint-disable-next-line require-jsdoc
@@ -169,7 +170,7 @@ class Queue {
 
 class Job {
 	// eslint-disable-next-line require-jsdoc
-	constructor(name, payload, onFinish, module, parentJob) {
+	constructor(name, payload, onFinish, module, parentJob, options) {
 		this.name = name;
 		this.payload = payload;
 		this.response = null;
@@ -186,6 +187,10 @@ class Job {
 		});
 		this.status = "INITIALIZED";
 		this.task = null;
+		this.onProgress = options.onProgress;
+		this.lastProgressData = null;
+		this.lastProgressTime = Date.now();
+		this.lastProgressTimeout = null;
 	}
 
 	/**
@@ -257,6 +262,33 @@ class Job {
 	log(...args) {
 		args.splice(1, 0, this.name); // Adds the name of the job as the first argument (after INFO/SUCCESS/ERROR).
 		this.module.log(...args);
+	}
+
+	/**
+	 * 
+	 * @param {data} data - Data to publish upon progress
+	 */
+	publishProgress(data) {
+		if (this.onProgress) {
+			this.lastProgressData = data;
+			if (data.status === "update") {
+				if ((Date.now() - this.lastProgressTime) > 1000) {
+					this.lastProgressTime = Date.now();
+				} else {
+					if (this.lastProgressTimeout) clearTimeout(this.lastProgressTimeout);
+					this.lastProgressTimeout = setTimeout(() => {
+						this.lastProgressTime = Date.now();
+						this.lastProgressTimeout = null;
+						this.onProgress.emit("progress", data);
+					}, Date.now() - this.lastProgressTime);
+					return;
+				}
+			} else if (data.status === "success" || data.status === "error")
+				if (this.lastProgressTimeout) clearTimeout(this.lastProgressTimeout);
+			
+
+			this.onProgress.emit("progress", data);
+		} else this.log("Progress published, but no onProgress specified.")
 	}
 }
 
@@ -475,9 +507,15 @@ export default class CoreClass {
 		} else _priority = priority;
 
 		if (!_options) _options = { isQuiet: false };
+		if (_options && typeof _options.onProgress === "function") {
+			const onProgress = new EventEmitter();
+			onProgress.on("progress", _options.onProgress);
+			_options.onProgress = onProgress;
+		}
+		if (!_options.onProgress && parentJob) _options.onProgress = parentJob.onProgress;
 
 		const deferredPromise = new DeferredPromise();
-		const job = new Job(name, payload, deferredPromise, this, _parentJob);
+		const job = new Job(name, payload, deferredPromise, this, _parentJob, { onProgress: _options.onProgress });
 
 		this.log("INFO", `Queuing job ${name} (${job.toString()})`);
 

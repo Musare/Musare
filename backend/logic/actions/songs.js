@@ -1310,6 +1310,12 @@ export default {
 	 */
 	editTags: isAdminRequired(async function editTags(session, method, tags, songIds, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+
+		this.publishProgress({
+			status: "started",
+			message: "Updating tags."
+		});
+
 		async.waterfall(
 			[
 				next => {
@@ -1335,13 +1341,29 @@ export default {
 						return;
 					}
 
+					this.publishProgress({
+						status: "update",
+						message: "Updating tags in MongoDB."
+					});
 					songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
 						if (err) {
 							next(err);
 							return;
 						}
-						SongsModule.runJob("UPDATE_SONGS", { songIds: songsFound });
-						next();
+
+						SongsModule.runJob(
+							"UPDATE_SONGS",
+							{
+								songIds: songsFound
+							},
+							this
+						)
+							.then(() => {
+								next();
+							})
+							.catch(() => {
+								next();
+							});
 					});
 				}
 			],
@@ -1349,9 +1371,17 @@ export default {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "EDIT_TAGS", `User ${session.userId} failed to edit tags. '${err}'`);
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					cb({ status: "error", message: err });
 				} else {
 					this.log("SUCCESS", "EDIT_TAGS", `User ${session.userId} has successfully edited tags.`);
+					this.publishProgress({
+						status: "success",
+						message: "Successfully edited tags."
+					});
 					cb({
 						status: "success",
 						message: "Successfully edited tags."

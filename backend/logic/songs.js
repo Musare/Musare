@@ -520,12 +520,16 @@ class _SongsModule extends CoreClass {
 					next => {
 						const { songIds } = payload;
 
+						this.publishProgress({ status: "update", message: `Updating songs (stage 1)` });
+
 						SongsModule.SongModel.find({ _id: songIds }, next);
 					},
 
 					// Any songs that were not in Mongo, remove from cache, if they're in the cache
 					(songs, next) => {
 						const { songIds } = payload;
+
+						this.publishProgress({ status: "update", message: `Updating songs (stage 2)` });
 
 						async.eachLimit(
 							songIds,
@@ -548,6 +552,8 @@ class _SongsModule extends CoreClass {
 
 					// Adds/updates all songs in the cache
 					(songs, next) => {
+						this.publishProgress({ status: "update", message: `Updating songs (stage 3)` });
+
 						async.eachLimit(
 							songs,
 							1,
@@ -574,6 +580,8 @@ class _SongsModule extends CoreClass {
 
 					// Updates all playlists that the songs are in by setting the new trimmed song
 					(songs, next) => {
+						this.publishProgress({ status: "update", message: `Updating songs (stage 4)` });
+
 						const trimmedSongs = songs.map(song => {
 							const { _id, youtubeId, title, artists, thumbnail, duration, verified } = song;
 							return {
@@ -626,6 +634,8 @@ class _SongsModule extends CoreClass {
 
 					// Updates all playlists that the songs are in
 					(songs, playlistsToUpdate, next) => {
+						this.publishProgress({ status: "update", message: `Updating songs (stage 5)` });
+
 						async.eachLimit(
 							playlistsToUpdate,
 							1,
@@ -652,6 +662,8 @@ class _SongsModule extends CoreClass {
 
 					// Updates all station queues that the songs are in by setting the new trimmed song
 					(songs, next) => {
+						this.publishProgress({ status: "update", message: `Updating songs (stage 6)` });
+
 						const stationsToUpdate = new Set();
 
 						async.eachLimit(
@@ -701,6 +713,8 @@ class _SongsModule extends CoreClass {
 
 					// Updates all playlists that the songs are in
 					(songs, stationsToUpdate, next) => {
+						this.publishProgress({ status: "update", message: `Updating songs (stage 7)` });
+
 						async.eachLimit(
 							stationsToUpdate,
 							1,
@@ -727,6 +741,8 @@ class _SongsModule extends CoreClass {
 
 					// Autofill the genre playlists of all genres of all songs
 					(songs, next) => {
+						this.publishProgress({ status: "update", message: `Updating songs (stage 8)` });
+
 						const genresToAutofill = new Set();
 
 						songs.forEach(song => {
@@ -754,6 +770,8 @@ class _SongsModule extends CoreClass {
 
 					// Send event that the song was updated
 					(songs, next) => {
+						this.publishProgress({ status: "update", message: `Updating songs (stage 9)` });
+
 						async.eachLimit(
 							songs,
 							1,

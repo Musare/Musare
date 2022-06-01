@@ -131,15 +131,38 @@ export default {
 			this.items.splice(index, 1);
 		},
 		applyChanges() {
+			let toast;
+
 			this.socket.dispatch(
 				this.type.action,
 				this.method,
 				this.items,
 				this.type.items,
-				res => {
-					new Toast(res.message);
-					if (res.status === "success")
-						this.closeModal("bulkActions");
+				{
+					cb: () => {
+						// new Toast(res.message);
+						// if (res.status === "success")
+						// 	this.closeModal("bulkActions");
+					},
+					onProgress: res => {
+						if (!toast) {
+							toast = new Toast({
+								content: res.message,
+								persistent: true,
+								interactable: false
+							});
+						} else {
+							toast.content = res.message;
+						}
+						if (
+							res.status === "success" ||
+							res.status === "error"
+						) {
+							setTimeout(() => {
+								toast.destroy();
+							}, 4000);
+						}
+					}
 				}
 			);
 		},
