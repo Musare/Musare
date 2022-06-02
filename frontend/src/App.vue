@@ -10,6 +10,7 @@
 		</div>
 		<falling-snow v-if="christmas" />
 		<modal-manager />
+		<long-jobs />
 	</div>
 </template>
 
@@ -26,6 +27,9 @@ export default {
 	components: {
 		ModalManager: defineAsyncComponent(() =>
 			import("@/components/ModalManager.vue")
+		),
+		LongJobs: defineAsyncComponent(() =>
+			import("@/components/LongJobs.vue")
 		),
 		Banned: defineAsyncComponent(() => import("@/pages/Banned.vue")),
 		FallingSnow: defineAsyncComponent(() =>

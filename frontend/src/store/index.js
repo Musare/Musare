@@ -8,6 +8,7 @@ import settings from "./modules/settings";
 import modalVisibility from "./modules/modalVisibility";
 import station from "./modules/station";
 import admin from "./modules/admin";
+import longJobs from "./modules/longJobs";
 
 const emptyModule = {
 	namespaced: true
@@ -41,7 +42,8 @@ export default createStore({
 				bulkActions: emptyModule,
 				viewYoutubeVideo: emptyModule
 			}
-		}
+		},
+		longJobs
 	},
 	strict: false
 });

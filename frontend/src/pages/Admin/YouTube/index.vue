@@ -365,7 +365,7 @@ export default {
 			column-gap: 10px;
 
 			.card.quota {
-				background-color: var(--light-grey-2) !important;
+				background-color: var(--light-grey) !important;
 				padding: 10px !important;
 				flex-basis: 33.33%;
 

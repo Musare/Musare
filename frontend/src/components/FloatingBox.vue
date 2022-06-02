@@ -6,7 +6,7 @@
 			column
 		}"
 		:id="id"
-		v-if="shown"
+		v-if="persist || shown"
 		:style="{
 			width: width + 'px',
 			height: height + 'px',
@@ -16,7 +16,12 @@
 		@mousedown.left="onResizeBox"
 	>
 		<div class="box-header item-draggable" @mousedown.left="onDragBox">
-			<span class="delete material-icons" @click="toggleBox()"
+			<span class="drag material-icons">drag_indicator</span>
+			<span v-if="title" class="box-title">{{ title }}</span>
+			<span
+				v-if="!persist"
+				class="delete material-icons"
+				@click="toggleBox()"
 				>highlight_off</span
 			>
 		</div>
@@ -30,7 +35,9 @@
 export default {
 	props: {
 		id: { type: String, default: null },
-		column: { type: Boolean, default: true }
+		column: { type: Boolean, default: true },
+		title: { type: String, default: null },
+		persist: { type: Boolean, default: false }
 	},
 	data() {
 		return {
@@ -160,22 +167,36 @@ export default {
 	padding: 0;
 
 	.box-header {
-		z-index: 100000001;
-		background-color: var(--primary-color);
-		display: block;
-		height: 24px;
+		display: flex;
+		height: 30px;
 		width: 100%;
+		background-color: var(--primary-color);
+		color: var(--white);
+		z-index: 100000001;
 
-		.delete.material-icons {
-			position: absolute;
-			top: 2px;
-			right: 2px;
+		.box-title {
+			font-size: 16px;
+			font-weight: 600;
+			line-height: 30px;
+			margin-right: 5px;
+		}
+
+		.material-icons {
 			font-size: 20px;
-			color: var(--white);
-			cursor: pointer;
+			line-height: 30px;
+
 			&:hover,
 			&:focus {
 				filter: brightness(90%);
+			}
+
+			&.drag {
+				margin: 0 5px;
+			}
+
+			&.delete {
+				margin: 0 5px 0 auto;
+				cursor: pointer;
 			}
 		}
 	}
@@ -184,7 +205,7 @@ export default {
 		display: flex;
 		flex-wrap: wrap;
 		padding: 10px;
-		height: calc(100% - 24px); /* 24px is the height of the box-header */
+		height: calc(100% - 30px); /* 30px is the height of the box-header */
 		overflow: auto;
 
 		span {
