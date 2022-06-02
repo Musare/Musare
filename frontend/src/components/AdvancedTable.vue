@@ -707,8 +707,8 @@
 			v-if="hasCheckboxes && selectedRows.length > 0"
 			class="bulk-popup"
 			:style="{
-				top: bulkPopup.top + 'px',
-				left: bulkPopup.left + 'px'
+				top: dragBox.top + 'px',
+				left: dragBox.left + 'px'
 			}"
 			ref="bulk-popup"
 		>
@@ -729,7 +729,7 @@
 					class="material-icons drag-icon"
 					@mousedown.left="onDragBox"
 					@touchstart="onDragBox"
-					@dblclick="resetBulkActionsPosition()"
+					@dblclick="resetBoxPosition()"
 				>
 					drag_indicator
 				</span>
@@ -745,6 +745,8 @@ import draggable from "vuedraggable";
 import Toast from "toasters";
 import AutoSuggest from "@/components/AutoSuggest.vue";
 
+import DragBox from "@/mixins/DragBox.vue";
+
 import keyboardShortcuts from "@/keyboardShortcuts";
 import ws from "@/ws";
 
@@ -753,6 +755,7 @@ export default {
 		draggable,
 		AutoSuggest
 	},
+	mixins: [DragBox],
 	props: {
 		/*
 		Column properties:
@@ -863,19 +866,6 @@ export default {
 					displayName: "Boolean"
 				}
 			},
-			bulkPopup: {
-				top: 0,
-				left: 0,
-				pos1: 0,
-				pos2: 0,
-				pos3: 0,
-				pos4: 0,
-				initial: {
-					top: null,
-					left: null
-				},
-				debounceTimeout: null
-			},
 			addFilterValue: null,
 			showFiltersDropdown: false,
 			showColumnsDropdown: false,
@@ -884,7 +874,9 @@ export default {
 			lastBulkActionsTappedDate: 0,
 			autosuggest: {
 				allItems: {}
-			}
+			},
+			storeTableSettingsDebounceTimeout: null,
+			windowResizeDebounceTimeout: null
 		};
 	},
 	computed: {
@@ -1082,8 +1074,6 @@ export default {
 				);
 			}
 		}
-
-		this.resetBulkActionsPosition();
 
 		this.$nextTick(() => {
 			this.onWindowResize();
@@ -1304,6 +1294,8 @@ export default {
 		window.removeEventListener("resize", this.onWindowResize);
 		if (this.storeTableSettingsDebounceTimeout)
 			clearTimeout(this.storeTableSettingsDebounceTimeout);
+		if (this.windowResizeDebounceTimeout)
+			clearTimeout(this.windowResizeDebounceTimeout);
 
 		if (this.keyboardShortcuts) {
 			const shortcutNames = [
@@ -1705,71 +1697,6 @@ export default {
 					this.editingFilters[index].filter.defaultFilterType
 				];
 		},
-		onDragBox(e) {
-			const e1 = e || window.event;
-			const e1IsTouch = e1.type === "touchstart";
-			e1.preventDefault();
-
-			if (e1IsTouch) {
-				// Handle double click from touch (if this method is twice in a row within one second)
-				if (Date.now() - this.lastBulkActionsTappedDate <= 1000) {
-					this.resetBulkActionsPosition();
-					this.lastBulkActionsTappedDate = 0;
-					return;
-				}
-				this.lastBulkActionsTappedDate = Date.now();
-			}
-
-			this.bulkPopup.pos3 = e1IsTouch
-				? e1.changedTouches[0].clientX
-				: e1.clientX;
-			this.bulkPopup.pos4 = e1IsTouch
-				? e1.changedTouches[0].clientY
-				: e1.clientY;
-
-			document.onmousemove = document.ontouchmove = e => {
-				const e2 = e || window.event;
-				const e2IsTouch = e2.type === "touchmove";
-				if (!e2IsTouch) e2.preventDefault();
-
-				// Get the clientX and clientY
-				const e2ClientX = e2IsTouch
-					? e2.changedTouches[0].clientX
-					: e2.clientX;
-				const e2ClientY = e2IsTouch
-					? e2.changedTouches[0].clientY
-					: e2.clientY;
-
-				// calculate the new cursor position:
-				this.bulkPopup.pos1 = this.bulkPopup.pos3 - e2ClientX;
-				this.bulkPopup.pos2 = this.bulkPopup.pos4 - e2ClientY;
-				this.bulkPopup.pos3 = e2ClientX;
-				this.bulkPopup.pos4 = e2ClientY;
-				// set the element's new position:
-				this.bulkPopup.top -= this.bulkPopup.pos2;
-				this.bulkPopup.left -= this.bulkPopup.pos1;
-
-				if (this.bulkPopup.top < 0) this.bulkPopup.top = 0;
-				if (this.bulkPopup.top > document.body.clientHeight - 50)
-					this.bulkPopup.top = document.body.clientHeight - 50;
-				if (this.bulkPopup.left < 0) this.bulkPopup.left = 0;
-				if (this.bulkPopup.left > document.body.clientWidth - 400)
-					this.bulkPopup.left = document.body.clientWidth - 400;
-			};
-
-			document.onmouseup = document.ontouchend = () => {
-				document.onmouseup = null;
-				document.ontouchend = null;
-				document.onmousemove = null;
-				document.ontouchmove = null;
-			};
-		},
-		resetBulkActionsPosition() {
-			this.bulkPopup.top = document.body.clientHeight - 56;
-			this.bulkPopup.left = document.body.clientWidth / 2 - 200;
-			this.bulkPopup.initial.top = this.bulkPopup.top;
-			this.bulkPopup.initial.left = this.bulkPopup.left;
-		},
 		applyFilterAndGetData() {
 			this.appliedFilters = JSON.parse(
 				JSON.stringify(this.editingFilters)
@@ -1930,25 +1857,22 @@ export default {
 			);
 		},
 		onWindowResize() {
-			if (this.bulkPopup.debounceTimeout)
-				clearTimeout(this.bulkPopup.debounceTimeout);
+			if (this.windowResizeDebounceTimeout)
+				clearTimeout(this.windowResizeDebounceTimeout);
 
-			this.bulkPopup.debounceTimeout = setTimeout(() => {
+			this.windowResizeDebounceTimeout = setTimeout(() => {
 				// Only change the position if the popup is actually visible
 				if (this.selectedRows.length === 0) return;
-				if (
-					this.bulkPopup.top === this.bulkPopup.initial.top &&
-					this.bulkPopup.left === this.bulkPopup.initial.left
-				)
-					this.resetBulkActionsPosition();
-				else {
-					if (this.bulkPopup.top < 0) this.bulkPopup.top = 0;
-					if (this.bulkPopup.top > document.body.clientHeight - 50)
-						this.bulkPopup.top = document.body.clientHeight - 50;
-					if (this.bulkPopup.left < 0) this.bulkPopup.left = 0;
-					if (this.bulkPopup.left > document.body.clientWidth - 400)
-						this.bulkPopup.left = document.body.clientWidth - 400;
-				}
+
+				this.setInitialBox(
+					{
+						top: document.body.clientHeight - 56,
+						left: document.body.clientWidth / 2 - 200,
+						width: 400,
+						height: 50
+					},
+					true
+				);
 			}, 50);
 		},
 		updateData(index, data) {

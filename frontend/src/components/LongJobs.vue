@@ -5,6 +5,10 @@
 		id="longJobs"
 		ref="longJobs"
 		:persist="true"
+		initial="align-bottom"
+		:min-width="200"
+		:max-width="400"
+		:min-height="200"
 	>
 		<template #body>
 			<div class="active-jobs">
@@ -101,9 +105,6 @@ export default {
 }
 
 #longJobs {
-	min-width: 200px !important;
-	max-width: 400px !important;
-	min-height: 200px !important;
 	z-index: 5000 !important;
 
 	.active-jobs {

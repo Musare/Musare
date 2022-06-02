@@ -8,15 +8,17 @@
 		:id="id"
 		v-if="persist || shown"
 		:style="{
-			width: width + 'px',
-			height: height + 'px',
-			top: top + 'px',
-			left: left + 'px'
+			width: dragBox.width + 'px',
+			height: dragBox.height + 'px',
+			top: dragBox.top + 'px',
+			left: dragBox.left + 'px'
 		}"
 		@mousedown.left="onResizeBox"
 	>
 		<div class="box-header item-draggable" @mousedown.left="onDragBox">
-			<span class="drag material-icons">drag_indicator</span>
+			<span class="drag material-icons" @dblclick="resetBoxPosition()"
+				>drag_indicator</span
+			>
 			<span v-if="title" class="box-title">{{ title }}</span>
 			<span
 				v-if="!persist"
@@ -32,64 +34,46 @@
 </template>
 
 <script>
+import DragBox from "@/mixins/DragBox.vue";
+
 export default {
+	mixins: [DragBox],
 	props: {
 		id: { type: String, default: null },
 		column: { type: Boolean, default: true },
 		title: { type: String, default: null },
-		persist: { type: Boolean, default: false }
+		persist: { type: Boolean, default: false },
+		initial: { type: String, default: "align-top" },
+		minWidth: { type: Number, default: 100 },
+		maxWidth: { type: Number, default: 1000 },
+		minHeight: { type: Number, default: 100 },
+		maxHeight: { type: Number, default: 1000 }
 	},
 	data() {
 		return {
-			width: 200,
-			height: 200,
-			top: 0,
-			left: 0,
-			shown: false,
-			pos1: 0,
-			pos2: 0,
-			pos3: 0,
-			pos4: 0
+			shown: false
 		};
 	},
 	mounted() {
+		let initial = {
+			top: 10,
+			left: 10,
+			width: 200,
+			height: 400
+		};
 		if (this.id !== null && localStorage[`box:${this.id}`]) {
 			const json = JSON.parse(localStorage.getItem(`box:${this.id}`));
-			this.height = json.height;
-			this.width = json.width;
-			this.top = json.top;
-			this.left = json.left;
+			initial = { ...initial, ...json };
 			this.shown = json.shown;
+		} else {
+			initial.top =
+				this.initial === "align-bottom"
+					? document.body.clientHeight - 10 - initial.height
+					: 10;
 		}
+		this.setInitialBox(initial, true);
 	},
 	methods: {
-		onDragBox(e) {
-			const e1 = e || window.event;
-			e1.preventDefault();
-
-			this.pos3 = e1.clientX;
-			this.pos4 = e1.clientY;
-
-			document.onmousemove = e => {
-				const e2 = e || window.event;
-				e2.preventDefault();
-				// calculate the new cursor position:
-				this.pos1 = this.pos3 - e.clientX;
-				this.pos2 = this.pos4 - e.clientY;
-				this.pos3 = e.clientX;
-				this.pos4 = e.clientY;
-				// set the element's new position:
-				this.top -= this.pos2;
-				this.left -= this.pos1;
-			};
-
-			document.onmouseup = () => {
-				document.onmouseup = null;
-				document.onmousemove = null;
-
-				this.saveBox();
-			};
-		},
 		onResizeBox(e) {
 			if (e.target !== this.$refs.box) return;
 
@@ -98,17 +82,30 @@ export default {
 
 				const { height, width } = e.target.style;
 
-				this.height = Number(
-					height
-						.split("")
-						.splice(0, height.length - 2)
-						.join("")
+				this.dragBox.height = Math.min(
+					Math.max(
+						Number(
+							height
+								.split("")
+								.splice(0, height.length - 2)
+								.join("")
+						),
+						this.minHeight
+					),
+					this.maxHeight
 				);
-				this.width = Number(
-					width
-						.split("")
-						.splice(0, width.length - 2)
-						.join("")
+
+				this.dragBox.width = Math.min(
+					Math.max(
+						Number(
+							width
+								.split("")
+								.splice(0, width.length - 2)
+								.join("")
+						),
+						this.minWidth
+					),
+					this.maxWidth
 				);
 
 				this.saveBox();
@@ -118,11 +115,9 @@ export default {
 			this.shown = !this.shown;
 			this.saveBox();
 		},
-		resetBox() {
-			this.top = 0;
-			this.left = 0;
-			this.width = 200;
-			this.height = 200;
+		resetBoxDimensions() {
+			this.dragBox.width = 200;
+			this.dragBox.height = 200;
 			this.saveBox();
 		},
 		saveBox() {
@@ -130,13 +125,23 @@ export default {
 			localStorage.setItem(
 				`box:${this.id}`,
 				JSON.stringify({
-					height: this.height,
-					width: this.width,
-					top: this.top,
-					left: this.left,
+					height: this.dragBox.height,
+					width: this.dragBox.width,
+					top: this.dragBox.top,
+					left: this.dragBox.left,
 					shown: this.shown
 				})
 			);
+			this.setInitialBox({
+				top:
+					this.initial === "align-bottom"
+						? document.body.clientHeight - 10 - this.dragBox.height
+						: 10,
+				left: 10
+			});
+		},
+		onDragBoxUpdate() {
+			this.saveBox();
 		}
 	}
 };
@@ -162,8 +167,6 @@ export default {
 	overflow: auto;
 	border: 1px solid var(--light-grey-2);
 	border-radius: @border-radius;
-	min-height: 50px !important;
-	min-width: 50px !important;
 	padding: 0;
 
 	.box-header {
