@@ -17,47 +17,66 @@
 					:key="`activeJob-${job.id}`"
 					class="active-job"
 				>
+					<i
+						v-if="
+							job.status === 'started' || job.status === 'update'
+						"
+						class="material-icons"
+						content="In Progress"
+						v-tippy="{ theme: 'info', placement: 'right' }"
+					>
+						pending
+					</i>
+					<i
+						v-else-if="job.status === 'success'"
+						class="material-icons success"
+						content="Complete"
+						v-tippy="{ theme: 'info', placement: 'right' }"
+					>
+						check_circle
+					</i>
+					<i
+						v-else
+						class="material-icons error"
+						content="Failed"
+						v-tippy="{ theme: 'info', placement: 'right' }"
+					>
+						error
+					</i>
 					<div class="name" :title="job.name">{{ job.name }}</div>
 					<div class="actions">
 						<i
-							v-if="
-								job.status === 'started' ||
-								job.status === 'update'
-							"
-							class="material-icons"
-							content="In Progress"
-							v-tippy="{ theme: 'info' }"
-						>
-							pending
-						</i>
-						<i
-							v-else-if="job.status === 'success'"
-							class="material-icons success"
-							content="Complete"
-							v-tippy="{ theme: 'info' }"
-						>
-							check_circle
-						</i>
-						<i
-							v-else
-							class="material-icons error"
-							content="Failed"
-							v-tippy="{ theme: 'info' }"
-						>
-							error
-						</i>
-						<i class="material-icons" content="View Log" v-tippy>
-							description
-						</i>
-						<i
 							class="material-icons clear"
-							:class="{ disabled: job.status !== 'success' }"
+							:class="{
+								disabled: !(
+									job.status === 'success' ||
+									job.status === 'error'
+								)
+							}"
 							content="Clear"
-							v-tippy
+							v-tippy="{ placement: 'left' }"
 							@click="remove(job)"
 						>
 							remove_circle
 						</i>
+						<tippy
+							:touch="true"
+							:interactive="true"
+							placement="left"
+							ref="longJobMessage"
+							:append-to="body"
+						>
+							<i class="material-icons">chat</i>
+
+							<template #content>
+								<div class="long-job-message">
+									<strong>Latest Update:</strong>
+									<span :title="job.message">{{
+										job.message
+									}}</span>
+								</div>
+							</template>
+						</tippy>
 					</div>
 				</div>
 			</div>
@@ -76,7 +95,8 @@ export default {
 	},
 	data() {
 		return {
-			minimise: true
+			minimise: true,
+			body: document.body
 		};
 	},
 	computed: {
@@ -95,12 +115,18 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.night-mode #longJobs {
-	.active-jobs {
-		.active-job {
-			background-color: var(--dark-grey);
-			border: 0;
+.night-mode {
+	#longJobs {
+		.active-jobs {
+			.active-job {
+				background-color: var(--dark-grey);
+				border: 0;
+			}
 		}
+	}
+
+	.long-job-message {
+		color: var(--black);
 	}
 }
 
@@ -133,31 +159,60 @@ export default {
 				margin-right: auto;
 			}
 
+			.material-icons {
+				font-size: 20px;
+				color: var(--primary-color);
+				margin: auto 5px auto 0;
+				cursor: pointer;
+
+				&.success {
+					color: var(--green);
+				}
+
+				&.error,
+				&.clear {
+					color: var(--red);
+				}
+
+				&.disabled {
+					color: var(--light-grey-3);
+					cursor: not-allowed;
+				}
+			}
+
 			.actions {
 				display: flex;
 
 				.material-icons {
-					font-size: 20px;
-					color: var(--primary-color);
 					margin: auto 0 auto 5px;
-					cursor: pointer;
+				}
 
-					&.success {
-						color: var(--green);
-					}
-
-					&.error,
-					&.clear {
-						color: var(--red);
-					}
-
-					&.disabled {
-						color: var(--light-grey-3);
-						cursor: not-allowed;
-					}
+				& > span {
+					display: flex;
+					padding: 0;
 				}
 			}
 		}
+	}
+}
+
+.long-job-message {
+	display: flex;
+	flex-direction: column;
+
+	strong {
+		font-size: 12px;
+	}
+
+	span {
+		display: -webkit-inline-box;
+		text-overflow: ellipsis;
+		white-space: normal;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		overflow: hidden;
+		max-width: 200px;
+		font-size: 12px;
 	}
 }
 </style>

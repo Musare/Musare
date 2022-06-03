@@ -679,7 +679,12 @@
 				</div>
 			</template>
 		</modal>
-		<floating-box id="genreHelper" ref="genreHelper" :column="false">
+		<floating-box
+			id="genreHelper"
+			ref="genreHelper"
+			:column="false"
+			title="Song Genres List"
+		>
 			<template #body>
 				<span
 					v-for="item in autosuggest.allItems.genres"

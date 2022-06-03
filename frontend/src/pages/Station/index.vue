@@ -559,7 +559,11 @@
 			<main-footer />
 		</div>
 
-		<floating-box id="player-debug-box" ref="playerDebugBox">
+		<floating-box
+			id="player-debug-box"
+			ref="playerDebugBox"
+			title="Station Debug"
+		>
 			<template #body>
 				<span><b>No song</b>: {{ noSong }}</span>
 				<span><b>Song id</b>: {{ currentSong._id }}</span>
@@ -645,6 +649,7 @@
 		<floating-box
 			id="keyboardShortcutsHelper"
 			ref="keyboardShortcutsHelper"
+			title="Station Keyboard Shortcuts"
 		>
 			<template #body>
 				<div>

@@ -19,7 +19,9 @@
 			<span class="drag material-icons" @dblclick="resetBoxPosition()"
 				>drag_indicator</span
 			>
-			<span v-if="title" class="box-title">{{ title }}</span>
+			<span v-if="title" class="box-title" :title="title">{{
+				title
+			}}</span>
 			<span
 				v-if="!persist"
 				class="delete material-icons"
@@ -51,7 +53,8 @@ export default {
 	},
 	data() {
 		return {
-			shown: false
+			shown: false,
+			debounceTimeout: null
 		};
 	},
 	mounted() {
@@ -68,44 +71,53 @@ export default {
 		} else {
 			initial.top =
 				this.initial === "align-bottom"
-					? document.body.clientHeight - 10 - initial.height
+					? Math.max(
+							document.body.clientHeight - 10 - initial.height,
+							0
+					  )
 					: 10;
 		}
 		this.setInitialBox(initial, true);
+
+		this.$nextTick(() => {
+			this.onWindowResize();
+			window.addEventListener("resize", this.onWindowResize);
+		});
+	},
+	unmounted() {
+		window.removeEventListener("resize", this.onWindowResize);
+		if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
 	},
 	methods: {
+		setBoxDimensions(width, height) {
+			this.dragBox.height = Math.min(
+				Math.max(height, this.minHeight),
+				this.maxHeight,
+				document.body.clientHeight
+			);
+
+			this.dragBox.width = Math.min(
+				Math.max(width, this.minWidth),
+				this.maxWidth,
+				document.body.clientWidth
+			);
+		},
 		onResizeBox(e) {
 			if (e.target !== this.$refs.box) return;
 
 			document.onmouseup = () => {
 				document.onmouseup = null;
 
-				const { height, width } = e.target.style;
-
-				this.dragBox.height = Math.min(
-					Math.max(
-						Number(
-							height
-								.split("")
-								.splice(0, height.length - 2)
-								.join("")
-						),
-						this.minHeight
-					),
-					this.maxHeight
-				);
-
-				this.dragBox.width = Math.min(
-					Math.max(
-						Number(
-							width
-								.split("")
-								.splice(0, width.length - 2)
-								.join("")
-						),
-						this.minWidth
-					),
-					this.maxWidth
+				const { width, height } = e.target.style;
+				this.setBoxDimensions(
+					width
+						.split("")
+						.splice(0, width.length - 2)
+						.join(""),
+					height
+						.split("")
+						.splice(0, height.length - 2)
+						.join("")
 				);
 
 				this.saveBox();
@@ -116,8 +128,7 @@ export default {
 			this.saveBox();
 		},
 		resetBoxDimensions() {
-			this.dragBox.width = 200;
-			this.dragBox.height = 200;
+			this.setBoxDimensions(200, 200);
 			this.saveBox();
 		},
 		saveBox() {
@@ -135,13 +146,27 @@ export default {
 			this.setInitialBox({
 				top:
 					this.initial === "align-bottom"
-						? document.body.clientHeight - 10 - this.dragBox.height
+						? Math.max(
+								document.body.clientHeight -
+									10 -
+									this.dragBox.height,
+								0
+						  )
 						: 10,
 				left: 10
 			});
 		},
 		onDragBoxUpdate() {
-			this.saveBox();
+			this.onWindowResize();
+		},
+		onWindowResize() {
+			if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
+
+			this.debounceTimeout = setTimeout(() => {
+				const { width, height } = this.dragBox;
+				this.setBoxDimensions(width + 0, height + 0);
+				this.saveBox();
+			}, 50);
 		}
 	}
 };
@@ -182,6 +207,9 @@ export default {
 			font-weight: 600;
 			line-height: 30px;
 			margin-right: 5px;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			overflow: hidden;
 		}
 
 		.material-icons {

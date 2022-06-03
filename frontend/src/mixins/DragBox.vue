@@ -87,20 +87,20 @@ export default {
 				this.dragBox.top -= this.dragBox.pos2;
 				this.dragBox.left -= this.dragBox.pos1;
 
-				if (this.dragBox.top < 0) this.dragBox.top = 0;
 				if (
 					this.dragBox.top >
 					document.body.clientHeight - this.dragBox.height
 				)
 					this.dragBox.top =
 						document.body.clientHeight - this.dragBox.height;
-				if (this.dragBox.left < 0) this.dragBox.left = 0;
+				if (this.dragBox.top < 0) this.dragBox.top = 0;
 				if (
 					this.dragBox.left >
 					document.body.clientWidth - this.dragBox.width
 				)
 					this.dragBox.left =
 						document.body.clientWidth - this.dragBox.width;
+				if (this.dragBox.left < 0) this.dragBox.left = 0;
 			};
 
 			document.onmouseup = document.ontouchend = () => {
@@ -131,20 +131,20 @@ export default {
 				)
 					this.resetBoxPosition();
 				else {
-					if (this.dragBox.top < 0) this.dragBox.top = 0;
 					if (
 						this.dragBox.top >
 						document.body.clientHeight - this.dragBox.height
 					)
 						this.dragBox.top =
 							document.body.clientHeight - this.dragBox.height;
-					if (this.dragBox.left < 0) this.dragBox.left = 0;
+					if (this.dragBox.top < 0) this.dragBox.top = 0;
 					if (
 						this.dragBox.left >
 						document.body.clientWidth - this.dragBox.width
 					)
 						this.dragBox.left =
 							document.body.clientWidth - this.dragBox.width;
+					if (this.dragBox.left < 0) this.dragBox.left = 0;
 
 					if (typeof this.onDragBoxUpdate === "function")
 						this.onDragBoxUpdate();

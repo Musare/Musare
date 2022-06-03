@@ -6,7 +6,7 @@ const state = {
 			id: 1,
 			name: "test",
 			status: "success",
-			log: [{ status: "success", message: "test" }]
+			message: "test"
 		}
 	]
 };
@@ -24,17 +24,16 @@ const mutations = {
 			state.activeJobs.push({
 				id,
 				name,
-				status,
-				log: [{ status, message }]
+				status
 			});
 		else
 			state.activeJobs.forEach((activeJob, index) => {
 				if (activeJob.id === id) {
 					state.activeJobs[index] = {
 						...state.activeJobs[index],
-						status
+						status,
+						message
 					};
-					state.activeJobs[index].log.push({ status, message });
 				}
 			});
 	},

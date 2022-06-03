@@ -258,6 +258,7 @@
 		<floating-box
 			id="keyboardShortcutsHelper"
 			ref="keyboardShortcutsHelper"
+			title="Admin Keyboard Shortcuts"
 		>
 			<template #body>
 				<div>
