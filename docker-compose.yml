@@ -2,8 +2,10 @@ version: "3.8"
 
 services:
   backend:
-    build: ./backend
-    restart: ${RESTART_POLICY}
+    build:
+      context: ./backend
+      target: musare_backend
+    restart: ${RESTART_POLICY:-unless-stopped}
     volumes:
       - ./.git:/opt/app/.parent_git:ro
       - /opt/app/node_modules
@@ -15,35 +17,41 @@ services:
     tty: true
 
   frontend:
-    build: ./frontend
-    restart: ${RESTART_POLICY}
+    build:
+      context: ./frontend
+      target: musare_frontend
+      args:
+        FRONTEND_MODE: "${FRONTEND_MODE:-prod}"
+    restart: ${RESTART_POLICY:-unless-stopped}
     ports:
-      - "${FRONTEND_HOST}:${FRONTEND_PORT}:80"
+      - "${FRONTEND_HOST:-0.0.0.0}:${FRONTEND_PORT:-80}:80"
     volumes:
       - ./.git:/opt/app/.parent_git:ro
       - /opt/app/node_modules
       - ./frontend/dist/config:/opt/app/dist/config
     environment:
-      - FRONTEND_MODE=${FRONTEND_MODE}
+      - FRONTEND_MODE=${FRONTEND_MODE:-prod}
     links:
       - backend
 
   mongo:
     image: docker.io/mongo:${MONGO_VERSION}
-    restart: ${RESTART_POLICY}
+    restart: ${RESTART_POLICY:-unless-stopped}
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
       - MONGO_INITDB_DATABASE=musare
-      - MONGO_PORT=${MONGO_PORT}
+      - MONGO_PORT=${MONGO_PORT:-27017}
       - MONGO_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
       - MONGO_USER_USERNAME=${MONGO_USER_USERNAME}
       - MONGO_USER_PASSWORD=${MONGO_USER_PASSWORD}
     volumes:
       - ./tools/docker/setup-mongo.sh:/docker-entrypoint-initdb.d/setup-mongo.sh
-      - ${MONGO_DATA_LOCATION}:/data/db
+      - ${MONGO_DATA_LOCATION:-./db}:/data/db
 
   redis:
     image: docker.io/redis:6.2
-    restart: ${RESTART_POLICY}
+    restart: ${RESTART_POLICY:-unless-stopped}
     command: "--notify-keyspace-events Ex --requirepass ${REDIS_PASSWORD} --appendonly yes"
+    volumes:
+      - /data

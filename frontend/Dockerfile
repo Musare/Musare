@@ -1,4 +1,7 @@
-FROM node:16.15
+FROM node:16.15 AS musare_frontend
+
+ARG FRONTEND_MODE=prod
+ENV FRONTEND_MODE=${FRONTEND_MODE}
 
 RUN apt-get update
 RUN apt-get install nginx -y
@@ -17,6 +20,11 @@ COPY . /opt/app
 
 RUN mkdir -p /run/nginx
 
-RUN chmod u+x bootstrap.sh
+RUN bash -c '[[ "${FRONTEND_MODE}" = "prod" ]] && npm run prod' || exit 0
 
-CMD bash /opt/app/bootstrap.sh
+RUN chmod u+x entrypoint.sh
+
+ENTRYPOINT bash /opt/app/entrypoint.sh
+
+EXPOSE 80/tcp
+EXPOSE 80/udp
