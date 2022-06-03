@@ -355,7 +355,10 @@ class _SongsModule extends CoreClass {
 	 * @param {string} payload.oldStatus - old status of song being updated (optional)
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	UPDATE_SONG(payload) {
+	async UPDATE_SONG(payload) {
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
@@ -381,120 +384,113 @@ class _SongsModule extends CoreClass {
 							},
 							this
 						)
-							.then(song => {
-								next(null, song);
+							.then(() => {
+								const { _id, youtubeId, title, artists, thumbnail, duration, skipDuration, verified } =
+									song;
+								next(null, {
+									_id,
+									youtubeId,
+									title,
+									artists,
+									thumbnail,
+									duration,
+									skipDuration,
+									verified
+								});
 							})
 							.catch(next);
 					},
 
 					(song, next) => {
-						const { _id, youtubeId, title, artists, thumbnail, duration, verified } = song;
-						const trimmedSong = {
-							_id,
-							youtubeId,
-							title,
-							artists,
-							thumbnail,
-							duration,
-							verified
-						};
-						this.log("INFO", `Going to update playlists now for song ${_id}`);
-						DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this)
-							.then(playlistModel => {
-								playlistModel.updateMany(
-									{ "songs._id": song._id },
-									{ $set: { "songs.$": trimmedSong } },
-									err => {
-										if (err) next(err);
-										else
-											playlistModel.find({ "songs._id": song._id }, (err, playlists) => {
-												if (err) next(err);
-												else {
-													async.eachLimit(
-														playlists,
-														1,
-														(playlist, next) => {
-															PlaylistsModule.runJob(
-																"UPDATE_PLAYLIST",
-																{
-																	playlistId: playlist._id
-																},
-																this
-															)
-																.then(() => {
-																	next();
-																})
-																.catch(err => {
-																	next(err);
-																});
-														},
-														err => {
-															if (err) next(err);
-															else next(null, song);
-														}
-													);
-												}
-											});
-									}
-								);
-							})
-							.catch(err => {
-								next(err);
-							});
+						playlistModel.updateMany({ "songs._id": song._id }, { $set: { "songs.$": song } }, err => {
+							if (err) next(err);
+							else next(null, song);
+						});
 					},
 
 					(song, next) => {
-						const { _id, youtubeId, title, artists, thumbnail, duration, verified } = song;
-						this.log("INFO", `Going to update stations now for song ${_id}`);
-						DBModule.runJob("GET_MODEL", { modelName: "station" }, this)
-							.then(stationModel => {
-								stationModel.updateMany(
-									{ "queue._id": song._id },
-									{
-										$set: {
-											"queue.$.youtubeId": youtubeId,
-											"queue.$.title": title,
-											"queue.$.artists": artists,
-											"queue.$.thumbnail": thumbnail,
-											"queue.$.duration": duration,
-											"queue.$.verified": verified
-										}
+						playlistModel.updateMany(
+							{ "songs.youtubeId": song.youtubeId },
+							{ $set: { "songs.$": song } },
+							err => {
+								if (err) next(err);
+								else next(null, song);
+							}
+						);
+					},
+
+					(song, next) => {
+						playlistModel.find({ "songs._id": song._id }, (err, playlists) => {
+							if (err) next(err);
+							else {
+								async.eachLimit(
+									playlists,
+									1,
+									(playlist, next) => {
+										PlaylistsModule.runJob(
+											"UPDATE_PLAYLIST",
+											{
+												playlistId: playlist._id
+											},
+											this
+										)
+											.then(() => {
+												next();
+											})
+											.catch(err => {
+												next(err);
+											});
 									},
 									err => {
-										if (err) this.log("ERROR", err);
-										else
-											stationModel.find({ "queue._id": song._id }, (err, stations) => {
-												if (err) next(err);
-												else {
-													async.eachLimit(
-														stations,
-														1,
-														(station, next) => {
-															StationsModule.runJob(
-																"UPDATE_STATION",
-																{ stationId: station._id },
-																this
-															)
-																.then(() => {
-																	next();
-																})
-																.catch(err => {
-																	next(err);
-																});
-														},
-														err => {
-															if (err) next(err);
-															else next(null, song);
-														}
-													);
-												}
-											});
+										if (err) next(err);
+										else next(null, song);
 									}
 								);
-							})
-							.catch(err => {
-								next(err);
-							});
+							}
+						});
+					},
+
+					(song, next) => {
+						stationModel.updateMany({ "queue._id": song._id }, { $set: { "queue.$": song } }, err => {
+							if (err) next(err);
+							else next(null, song);
+						});
+					},
+
+					(song, next) => {
+						stationModel.updateMany(
+							{ "queue.youtubeId": song.youtubeId },
+							{ $set: { "queue.$": song } },
+							err => {
+								if (err) next(err);
+								else next(null, song);
+							}
+						);
+					},
+
+					(song, next) => {
+						stationModel.find({ "queue._id": song._id }, (err, stations) => {
+							if (err) next(err);
+							else {
+								async.eachLimit(
+									stations,
+									1,
+									(station, next) => {
+										StationsModule.runJob("UPDATE_STATION", { stationId: station._id }, this)
+											.then(() => {
+												next();
+											})
+											.catch(err => {
+												next(err);
+											});
+									},
+									err => {
+										if (err) next(err);
+										else next(null, song);
+									}
+								);
+							}
+						});
 					},
 
 					(song, next) => {

@@ -212,19 +212,31 @@
 		</template>
 		<template #footer>
 			<button
-				class="button is-danger icon-with-button material-icons"
+				class="button is-primary icon-with-button material-icons"
 				@click.prevent="
-					confirmAction({
-						message:
-							'Removing this video will remove it from all playlists and cause a ratings recalculation.',
-						action: 'remove'
-					})
+					openModal({ modal: 'editSong', data: { song: video } })
 				"
-				content="Delete Video"
+				content="Create/edit song from video"
 				v-tippy
 			>
-				delete_forever
+				music_note
 			</button>
+			<div class="right">
+				<button
+					class="button is-danger icon-with-button material-icons"
+					@click.prevent="
+						confirmAction({
+							message:
+								'Removing this video will remove it from all playlists and cause a ratings recalculation.',
+							action: 'remove'
+						})
+					"
+					content="Delete Video"
+					v-tippy
+				>
+					delete_forever
+				</button>
+			</div>
 		</template>
 	</modal>
 </template>
