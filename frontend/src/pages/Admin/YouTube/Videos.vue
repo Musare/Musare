@@ -38,6 +38,15 @@
 						open_in_full
 					</button>
 					<button
+						class="button is-primary icon-with-button material-icons"
+						@click="editOne(slotProps.item)"
+						:disabled="slotProps.item.removed"
+						content="Create/edit song from video"
+						v-tippy
+					>
+						music_note
+					</button>
+					<button
 						class="button is-danger icon-with-button material-icons"
 						@click.prevent="
 							confirmAction({
@@ -99,7 +108,7 @@
 					<i
 						class="material-icons create-songs-icon"
 						@click.prevent="editMany(slotProps.item)"
-						content="Create songs from videos"
+						content="Create/edit songs from videos"
 						v-tippy
 						tabindex="0"
 					>
@@ -159,8 +168,8 @@ export default {
 					sortable: false,
 					hidable: false,
 					resizable: false,
-					minWidth: 85,
-					defaultWidth: 85
+					minWidth: 129,
+					defaultWidth: 129
 				},
 				{
 					name: "thumbnailImage",
@@ -295,14 +304,14 @@ export default {
 		editOne(song) {
 			this.openModal({
 				modal: "editSong",
-				data: { song: { songId: song._id } }
+				data: { song }
 			});
 		},
 		editMany(selectedRows) {
 			if (selectedRows.length === 1) this.editOne(selectedRows[0]);
 			else {
 				const songs = selectedRows.map(row => ({
-					songId: row._id
+					youtubeId: row.youtubeId
 				}));
 				this.openModal({ modal: "editSongs", data: { songs } });
 			}

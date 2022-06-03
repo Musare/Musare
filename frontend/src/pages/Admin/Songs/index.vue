@@ -558,14 +558,14 @@ export default {
 		editOne(song) {
 			this.openModal({
 				modal: "editSong",
-				data: { song: { songId: song._id } }
+				data: { song }
 			});
 		},
 		editMany(selectedRows) {
 			if (selectedRows.length === 1) this.editOne(selectedRows[0]);
 			else {
 				const songs = selectedRows.map(row => ({
-					songId: row._id
+					youtubeId: row.youtubeId
 				}));
 				this.openModal({ modal: "editSongs", data: { songs } });
 			}

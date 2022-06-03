@@ -3,7 +3,7 @@
 export default {
 	namespaced: true,
 	state: {
-		songIds: [],
+		youtubeIds: [],
 		songPrefillData: {}
 	},
 	getters: {},
@@ -13,16 +13,16 @@ export default {
 	},
 	mutations: {
 		init(state, { songs }) {
-			state.songIds = songs.map(song => song.songId);
+			state.youtubeIds = songs.map(song => song.youtubeId);
 			state.songPrefillData = Object.fromEntries(
 				songs.map(song => [
-					song.songId,
+					song.youtubeId,
 					song.prefill ? song.prefill : {}
 				])
 			);
 		}
 		// resetSongs(state) {
-		// 	state.songIds = [];
+		// 	state.youtubeIds = [];
 		// 	state.songPrefillData = {};
 		// }
 	}

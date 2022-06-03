@@ -15,7 +15,7 @@
 				<slot name="sidebar" />
 			</template>
 			<template #body>
-				<div v-if="!songId && !newSong" class="notice-container">
+				<div v-if="!youtubeId && !newSong" class="notice-container">
 					<h4>No song has been selected</h4>
 				</div>
 				<div v-if="songDeleted" class="notice-container">
@@ -23,14 +23,17 @@
 				</div>
 				<div
 					v-if="
-						songId && !songDataLoaded && !songNotFound && !newSong
+						youtubeId &&
+						!songDataLoaded &&
+						!songNotFound &&
+						!newSong
 					"
 					class="notice-container"
 				>
 					<h4>Song hasn't loaded yet</h4>
 				</div>
 				<div
-					v-if="songId && songNotFound && !newSong"
+					v-if="youtubeId && songNotFound && !newSong"
 					class="notice-container"
 				>
 					<h4>Song was not found</h4>
@@ -634,7 +637,7 @@
 					<button
 						class="button is-primary"
 						@click="toggleFlag()"
-						v-if="songId && !songDeleted"
+						v-if="youtubeId && !songDeleted"
 					>
 						{{ flagged ? "Unflag" : "Flag" }}
 					</button>
@@ -675,6 +678,15 @@
 						ref="createButton"
 						default-message="Create Song"
 						@clicked="save(song, false, 'createButton', true)"
+					/>
+					<save-button
+						ref="createAndCloseButton"
+						:default-message="
+							bulk ? `Create and next` : `Create and close`
+						"
+						@clicked="
+							save(song, true, 'createAndCloseButton', true)
+						"
 					/>
 				</div>
 			</template>
@@ -826,7 +838,7 @@ export default {
 			tab: state => state.tab,
 			video: state => state.video,
 			song: state => state.song,
-			songId: state => state.songId,
+			youtubeId: state => state.youtubeId,
 			prefillData: state => state.prefillData,
 			originalSong: state => state.originalSong,
 			reports: state => state.reports,
@@ -848,10 +860,10 @@ export default {
 			this.drawCanvas();
 		},
 		/* eslint-enable */
-		songId(songId, oldSongId) {
-			console.log("NEW SONG ID", songId);
-			this.unloadSong(oldSongId);
-			this.loadSong(songId);
+		youtubeId(youtubeId, oldYoutubeId) {
+			console.log("NEW YOUTUBE ID", youtubeId);
+			this.unloadSong(oldYoutubeId);
+			this.loadSong(youtubeId);
 		}
 	},
 	async mounted() {
@@ -870,17 +882,15 @@ export default {
 		localStorage.setItem("volume", volume);
 		this.volumeSliderValue = volume;
 
-		if (!this.newSong) {
-			this.socket.on(
-				"event:admin.song.removed",
-				res => {
-					if (res.data.songId === this.song._id) {
-						this.songDeleted = true;
-					}
-				},
-				{ modalUuid: this.modalUuid }
-			);
-		}
+		this.socket.on(
+			"event:admin.song.removed",
+			res => {
+				if (res.data.songId === this.song._id) {
+					this.songDeleted = true;
+				}
+			},
+			{ modalUuid: this.modalUuid }
+		);
 
 		keyboardShortcuts.registerShortcut("editSong.pauseResumeVideo", {
 			keyCode: 101,
@@ -1052,7 +1062,7 @@ export default {
 	},
 	beforeUnmount() {
 		console.log("UNMOUNT");
-		if (!this.newSong) this.unloadSong(this.songId);
+		this.unloadSong(this.youtubeId, this.song._id);
 
 		this.playerReady = false;
 		clearInterval(this.interval);
@@ -1108,7 +1118,7 @@ export default {
 			this.thumbnailLoadError = error !== 0;
 		},
 		init() {
-			if (this.newSong) {
+			if (this.newSong && !this.youtubeId) {
 				this.setSong({
 					youtubeId: "",
 					title: "",
@@ -1122,7 +1132,7 @@ export default {
 				});
 				this.songDataLoaded = true;
 				this.showTab("youtube");
-			} else if (this.songId) this.loadSong(this.songId);
+			} else if (this.youtubeId) this.loadSong(this.youtubeId);
 			else if (!this.bulk) {
 				new Toast("You can't open EditSong without editing a song");
 				return this.closeModal("editSong");
@@ -1346,12 +1356,12 @@ export default {
 
 			return null;
 		},
-		unloadSong(songId) {
+		unloadSong(youtubeId, songId) {
 			this.songDataLoaded = false;
 			this.songDeleted = false;
 			this.stopVideo();
 			this.pauseVideo(true);
-			this.resetSong(songId);
+			this.resetSong(youtubeId);
 			this.thumbnailNotSquare = false;
 			this.thumbnailWidth = null;
 			this.thumbnailHeight = null;
@@ -1361,40 +1371,52 @@ export default {
 			this.socket.dispatch("apis.leaveRoom", `edit-song.${songId}`);
 			if (this.$refs.saveButton) this.$refs.saveButton.status = "default";
 		},
-		loadSong(songId) {
-			console.log(`LOAD SONG ${songId}`);
+		loadSong(youtubeId) {
+			console.log(`LOAD SONG ${youtubeId}`);
 			this.songNotFound = false;
-			this.socket.dispatch(`songs.getSongFromSongId`, songId, res => {
-				if (res.status === "success") {
-					let { song } = res.data;
+			this.socket.dispatch(
+				`songs.getSongsFromYoutubeIds`,
+				[youtubeId],
+				res => {
+					const { songs } = res.data;
+					if (res.status === "success" && songs.length > 0) {
+						let song = songs[0];
+						song = Object.assign(song, this.prefillData);
 
-					song = Object.assign(song, this.prefillData);
+						this.setSong(song);
 
-					this.setSong(song);
+						this.songDataLoaded = true;
 
-					this.songDataLoaded = true;
-
-					this.socket.dispatch(
-						"apis.joinRoom",
-						`edit-song.${this.song._id}`
-					);
-
-					if (this.video.player && this.video.player.cueVideoById) {
-						this.video.player.cueVideoById(
-							this.song.youtubeId,
-							this.song.skipDuration
+						this.socket.dispatch(
+							"apis.joinRoom",
+							`edit-song.${this.song._id}`
 						);
-					}
-				} else {
-					new Toast("Song with that ID not found");
-					if (this.bulk) this.songNotFound = true;
-					if (!this.bulk) this.closeModal("editSong");
-				}
-			});
 
-			this.socket.dispatch("reports.getReportsForSong", songId, res => {
-				this.updateReports(res.data.reports);
-			});
+						if (
+							this.video.player &&
+							this.video.player.cueVideoById
+						) {
+							this.video.player.cueVideoById(
+								this.youtubeId,
+								song.skipDuration
+							);
+						}
+					} else {
+						new Toast("Song with that ID not found");
+						if (this.bulk) this.songNotFound = true;
+						if (!this.bulk) this.closeModal("editSong");
+					}
+				}
+			);
+
+			if (!this.newSong)
+				this.socket.dispatch(
+					"reports.getReportsForSong",
+					this.song._id,
+					res => {
+						this.updateReports(res.data.reports);
+					}
+				);
 		},
 		importAlbum(result) {
 			this.selectDiscogsAlbum(result);
@@ -1404,25 +1426,27 @@ export default {
 		save(songToCopy, closeOrNext, saveButtonRefName, newSong = false) {
 			const song = JSON.parse(JSON.stringify(songToCopy));
 
-			if (!newSong) this.$emit("saving", song._id);
+			if (!newSong || this.bulk) this.$emit("saving", song.youtubeId);
 
 			const saveButtonRef = this.$refs[saveButtonRefName];
 
 			if (!this.youtubeError && this.youtubeVideoDuration === "0.000") {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song.youtubeId);
 				return new Toast("The video appears to not be working.");
 			}
 
 			if (!song.title) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast("Please fill in all fields");
 			}
 
 			if (!song.thumbnail) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast("Please fill in all fields");
 			}
 
@@ -1455,7 +1479,8 @@ export default {
 				this.originalSong.youtubeId !== song.youtubeId
 			) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast(
 					"You're not allowed to change the YouTube id while the player is not working"
 				);
@@ -1465,11 +1490,12 @@ export default {
 			if (
 				Number(song.skipDuration) + Number(song.duration) >
 					this.youtubeVideoDuration &&
-				((!newSong && !this.youtubeError) ||
+				(((!newSong || this.bulk) && !this.youtubeError) ||
 					this.originalSong.duration !== song.duration)
 			) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast(
 					"Duration can't be higher than the length of the video"
 				);
@@ -1478,7 +1504,8 @@ export default {
 			// Title
 			if (!validation.isLength(song.title, 1, 100)) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast(
 					"Title must have between 1 and 100 characters."
 				);
@@ -1490,7 +1517,8 @@ export default {
 				song.artists.length > 10
 			) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast(
 					"Invalid artists. You must have at least 1 artist and a maximum of 10 artists."
 				);
@@ -1513,25 +1541,27 @@ export default {
 
 			if (error) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast(error);
 			}
 
 			// Genres
 			error = undefined;
-			song.genres.forEach(genre => {
-				if (!validation.isLength(genre, 1, 32)) {
-					error = "Genre must have between 1 and 32 characters.";
-					return error;
-				}
-				if (!validation.regex.ascii.test(genre)) {
-					error =
-						"Invalid genre format. Only ascii characters are allowed.";
-					return error;
-				}
+			if (song.verified && song.genres.length < 1)
+				song.genres.forEach(genre => {
+					if (!validation.isLength(genre, 1, 32)) {
+						error = "Genre must have between 1 and 32 characters.";
+						return error;
+					}
+					if (!validation.regex.ascii.test(genre)) {
+						error =
+							"Invalid genre format. Only ascii characters are allowed.";
+						return error;
+					}
 
-				return false;
-			});
+					return false;
+				});
 
 			if (
 				(song.verified && song.genres.length < 1) ||
@@ -1541,7 +1571,8 @@ export default {
 
 			if (error) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast(error);
 			}
 
@@ -1561,21 +1592,24 @@ export default {
 
 			if (error) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast(error);
 			}
 
 			// Thumbnail
 			if (!validation.isLength(song.thumbnail, 1, 256)) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast(
 					"Thumbnail must have between 8 and 256 characters."
 				);
 			}
 			if (this.useHTTPS && song.thumbnail.indexOf("https://") !== 0) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast('Thumbnail must start with "https://".');
 			}
 
@@ -1585,7 +1619,8 @@ export default {
 				song.thumbnail.indexOf("https://") !== 0
 			) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast('Thumbnail must start with "http://".');
 			}
 
@@ -1597,26 +1632,34 @@ export default {
 
 					if (res.status === "error") {
 						saveButtonRef.handleFailedSave();
+						this.$emit("savedError", song.youtubeId);
 						return;
 					}
 
 					saveButtonRef.handleSuccessfulSave();
+					this.$emit("savedSuccess", song.youtubeId);
 
-					this.closeModal("editSong");
+					if (!closeOrNext) {
+						this.loadSong(song.youtubeId);
+						return;
+					}
+
+					if (this.bulk) this.$emit("nextSong");
+					else this.closeModal("editSong");
 				});
 			return this.socket.dispatch(`songs.update`, song._id, song, res => {
 				new Toast(res.message);
 
 				if (res.status === "error") {
 					saveButtonRef.handleFailedSave();
-					this.$emit("savedError", song._id);
+					this.$emit("savedError", song.youtubeId);
 					return;
 				}
 
 				this.updateOriginalSong(song);
 
 				saveButtonRef.handleSuccessfulSave();
-				this.$emit("savedSuccess", song._id);
+				this.$emit("savedSuccess", song.youtubeId);
 
 				if (!closeOrNext) return;
 

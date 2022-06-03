@@ -44,8 +44,8 @@
 							v-for="(
 								{ status, flagged, song }, index
 							) in filteredItems"
-							:key="song._id"
-							:ref="`edit-songs-item-${song._id}`"
+							:key="song.youtubeId"
+							:ref="`edit-songs-item-${song.youtubeId}`"
 						>
 							<song-item
 								:song="song"
@@ -61,7 +61,10 @@
 							>
 								<template #leftIcon>
 									<i
-										v-if="currentSong._id === song._id"
+										v-if="
+											currentSong.youtubeId ===
+												song.youtubeId && !song.removed
+										"
 										class="material-icons item-icon editing-icon"
 										content="Currently editing song"
 										v-tippy="{ theme: 'info' }"
@@ -201,12 +204,12 @@ export default {
 	computed: {
 		editingItemIndex() {
 			return this.items.findIndex(
-				item => item.song._id === this.currentSong._id
+				item => item.song.youtubeId === this.currentSong.youtubeId
 			);
 		},
 		filteredEditingItemIndex() {
 			return this.filteredItems.findIndex(
-				item => item.song._id === this.currentSong._id
+				item => item.song.youtubeId === this.currentSong.youtubeId
 			);
 		},
 		filteredItems: {
@@ -217,18 +220,18 @@ export default {
 			},
 			set(newItem) {
 				const index = this.items.findIndex(
-					item => item.song._id === newItem._id
+					item => item.song.youtubeId === newItem.youtubeId
 				);
 				this.item[index] = newItem;
 			}
 		},
 		currentSongFlagged() {
 			return this.items.find(
-				item => item.song._id === this.currentSong._id
+				item => item.song.youtubeId === this.currentSong.youtubeId
 			)?.flagged;
 		},
 		...mapModalState("modals/editSongs/MODAL_UUID", {
-			songIds: state => state.songIds,
+			youtubeIds: state => state.youtubeIds,
 			songPrefillData: state => state.songPrefillData
 		}),
 		...mapGetters({
@@ -243,27 +246,46 @@ export default {
 			editSong
 		);
 
-		this.socket.dispatch("songs.getSongsFromSongIds", this.songIds, res => {
-			res.data.songs.forEach(song => {
-				this.items.push({
-					status: "todo",
-					flagged: false,
-					song
+		this.socket.dispatch(
+			"songs.getSongsFromYoutubeIds",
+			this.youtubeIds,
+			res => {
+				res.data.songs.forEach(song => {
+					this.items.push({
+						status: "todo",
+						flagged: false,
+						song
+					});
 				});
-			});
 
-			if (this.items.length === 0) {
-				this.closeThisModal();
-				new Toast("You can't edit 0 songs.");
-			} else this.editNextSong();
-		});
+				if (this.items.length === 0) {
+					this.closeThisModal();
+					new Toast("You can't edit 0 songs.");
+				} else this.editNextSong();
+			}
+		);
+
+		this.socket.on(
+			`event:admin.song.created`,
+			res => {
+				const index = this.items
+					.map(item => item.song.youtubeId)
+					.indexOf(res.data.song.youtubeId);
+				this.items[index].song = {
+					...this.items[index].song,
+					...res.data.song,
+					created: true
+				};
+			},
+			{ modalUuid: this.modalUuid }
+		);
 
 		this.socket.on(
 			`event:admin.song.updated`,
 			res => {
 				const index = this.items
-					.map(item => item.song._id)
-					.indexOf(res.data.song._id);
+					.map(item => item.song.youtubeId)
+					.indexOf(res.data.song.youtubeId);
 				this.items[index].song = {
 					...this.items[index].song,
 					...res.data.song,
@@ -294,15 +316,17 @@ export default {
 	methods: {
 		pickSong(song) {
 			this.editSong({
-				songId: song._id,
-				prefill: this.songPrefillData[song._id]
+				youtubeId: song.youtubeId,
+				prefill: this.songPrefillData[song.youtubeId]
 			});
 			this.currentSong = song;
 			if (
-				this.$refs[`edit-songs-item-${song._id}`] &&
-				this.$refs[`edit-songs-item-${song._id}`][0]
+				this.$refs[`edit-songs-item-${song.youtubeId}`] &&
+				this.$refs[`edit-songs-item-${song.youtubeId}`][0]
 			)
-				this.$refs[`edit-songs-item-${song._id}`][0].scrollIntoView();
+				this.$refs[
+					`edit-songs-item-${song.youtubeId}`
+				][0].scrollIntoView();
 		},
 		editNextSong() {
 			const currentlyEditingSongIndex = this.filteredEditingItemIndex;
@@ -320,7 +344,8 @@ export default {
 
 			if (newEditingSongIndex > -1) {
 				const nextSong = this.filteredItems[newEditingSongIndex].song;
-				this.pickSong(nextSong);
+				if (nextSong.removed) this.editNextSong();
+				else this.pickSong(nextSong);
 			}
 		},
 		toggleFlag(songIndex = null) {
@@ -346,24 +371,24 @@ export default {
 				);
 			}
 		},
-		onSavedSuccess(songId) {
+		onSavedSuccess(youtubeId) {
 			const itemIndex = this.items.findIndex(
-				item => item.song._id === songId
+				item => item.song.youtubeId === youtubeId
 			);
 			if (itemIndex > -1) {
 				this.items[itemIndex].status = "done";
 				this.items[itemIndex].flagged = false;
 			}
 		},
-		onSavedError(songId) {
+		onSavedError(youtubeId) {
 			const itemIndex = this.items.findIndex(
-				item => item.song._id === songId
+				item => item.song.youtubeId === youtubeId
 			);
 			if (itemIndex > -1) this.items[itemIndex].status = "error";
 		},
-		onSaving(songId) {
+		onSaving(youtubeId) {
 			const itemIndex = this.items.findIndex(
-				item => item.song._id === songId
+				item => item.song.youtubeId === youtubeId
 			);
 			if (itemIndex > -1) this.items[itemIndex].status = "saving";
 		},

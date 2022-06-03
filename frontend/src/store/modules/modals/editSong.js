@@ -11,7 +11,7 @@ export default {
 			currentTime: 0,
 			playbackRate: 1
 		},
-		songId: null,
+		youtubeId: null,
 		song: {},
 		originalSong: {},
 		reports: [],
@@ -26,7 +26,7 @@ export default {
 		setSong: ({ commit }, song) => commit("setSong", song),
 		updateOriginalSong: ({ commit }, song) =>
 			commit("updateOriginalSong", song),
-		resetSong: ({ commit }, songId) => commit("resetSong", songId),
+		resetSong: ({ commit }, youtubeId) => commit("resetSong", youtubeId),
 		stopVideo: ({ commit }) => commit("stopVideo"),
 		hardStopVideo: ({ commit }) => commit("hardStopVideo"),
 		loadVideoById: ({ commit }, id, skipDuration) =>
@@ -58,22 +58,28 @@ export default {
 			state.tab = tab;
 		},
 		editSong(state, song) {
-			state.newSong = !!song.newSong;
-			state.songId = song.newSong ? null : song.songId;
+			state.newSong = !!song.newSong || !song._id;
+			state.youtubeId = song.newSong ? null : song.youtubeId;
 			state.prefillData = song.prefill ? song.prefill : {};
 		},
 		setSong(state, song) {
 			if (song.discogs === undefined) song.discogs = null;
 			state.originalSong = JSON.parse(JSON.stringify(song));
 			state.song = { ...song };
+			state.newSong = !song._id;
+			state.youtubeId = song.youtubeId;
 		},
 		updateOriginalSong(state, song) {
 			state.originalSong = JSON.parse(JSON.stringify(song));
 		},
-		resetSong(state, songId) {
-			if (state.songId === songId) state.songId = "";
-			if (state.song && state.song._id === songId) state.song = {};
-			if (state.originalSong && state.originalSong._id === songId)
+		resetSong(state, youtubeId) {
+			if (state.youtubeId === youtubeId) state.youtubeId = "";
+			if (state.song && state.song.youtubeId === youtubeId)
+				state.song = {};
+			if (
+				state.originalSong &&
+				state.originalSong.youtubeId === youtubeId
+			)
 				state.originalSong = {};
 		},
 		stopVideo(state) {

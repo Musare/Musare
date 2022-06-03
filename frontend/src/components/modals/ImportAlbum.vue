@@ -425,7 +425,7 @@ export default {
 					delete discogsAlbum.gotMoreInfo;
 
 					const songToEdit = {
-						songId: song._id,
+						youtubeId: song.youtubeId,
 						prefill: {
 							discogs: discogsAlbum
 						}

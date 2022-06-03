@@ -10,6 +10,7 @@ let YouTubeModule;
 let StationsModule;
 let PlaylistsModule;
 let RatingsModule;
+let WSModule;
 
 class _SongsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -34,6 +35,7 @@ class _SongsModule extends CoreClass {
 		StationsModule = this.moduleManager.modules.stations;
 		PlaylistsModule = this.moduleManager.modules.playlists;
 		RatingsModule = this.moduleManager.modules.ratings;
+		WSModule = this.moduleManager.modules.ws;
 
 		this.SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		this.SongSchemaCache = await CacheModule.runJob("GET_SCHEMA", { schemaName: "song" });
@@ -41,6 +43,15 @@ class _SongsModule extends CoreClass {
 		this.setStage(2);
 
 		return new Promise((resolve, reject) => {
+			CacheModule.runJob("SUB", {
+				channel: "song.created",
+				cb: async data =>
+					WSModule.runJob("EMIT_TO_ROOMS", {
+						rooms: ["import-album", `edit-song.${data.song._id}`, "edit-songs"],
+						args: ["event:admin.song.created", { data }]
+					})
+			});
+
 			async.waterfall(
 				[
 					next => {
@@ -160,31 +171,44 @@ class _SongsModule extends CoreClass {
 	 * Gets songs by id from Mongo
 	 *
 	 * @param {object} payload - object containing the payload
-	 * @param {string} payload.songIds - the ids of the songs we are trying to get
-	 * @param {string} payload.properties - the properties to return
+	 * @param {string} payload.youtubeIds - the youtube ids of the songs we are trying to get
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_SONGS(payload) {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
-					next => {
-						if (!payload.songIds.every(songId => mongoose.Types.ObjectId.isValid(songId)))
-							next("One or more songIds are not a valid ObjectId.");
-						else next();
-					},
+					next => SongsModule.SongModel.find({ youtubeId: { $in: payload.youtubeIds } }, next),
 
-					next => {
-						const includeProperties = {};
-						payload.properties.forEach(property => {
-							includeProperties[property] = true;
-						});
-						return SongsModule.SongModel.find(
-							{
-								_id: { $in: payload.songIds }
-							},
-							includeProperties,
-							next
+					(songs, next) => {
+						const youtubeIds = payload.youtubeIds.filter(
+							youtubeId => !songs.find(song => song.youtubeId === youtubeId)
+						);
+						return YouTubeModule.youtubeVideoModel.find(
+							{ youtubeId: { $in: youtubeIds } },
+							(err, videos) => {
+								if (err) next(err);
+								else {
+									const youtubeVideos = videos.map(video => {
+										const { youtubeId, title, author, duration, thumbnail } = video;
+										return {
+											youtubeId,
+											title,
+											artists: [author],
+											genres: [],
+											tags: [],
+											duration,
+											skipDuration: 0,
+											thumbnail:
+												thumbnail || `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`,
+											requestedBy: null,
+											requestedAt: Date.now(),
+											verified: false
+										};
+									});
+									next(null, [...songs, ...youtubeVideos]);
+								}
+							}
 						);
 					}
 				],
@@ -302,6 +326,15 @@ class _SongsModule extends CoreClass {
 
 					(song, next) => {
 						RatingsModule.runJob("RECALCULATE_RATINGS", { youtubeId: song.youtubeId }, this)
+							.then(() => next(null, song))
+							.catch(next);
+					},
+
+					(song, next) => {
+						CacheModule.runJob("PUB", {
+							channel: "song.created",
+							value: { song }
+						})
 							.then(() => next(null, song))
 							.catch(next);
 					}

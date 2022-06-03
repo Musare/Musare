@@ -270,7 +270,7 @@ export default {
 			this.hideTippyElements();
 			this.openModal({
 				modal: "editSong",
-				data: { song: { songId: song._id } }
+				data: { song }
 			});
 		},
 		...mapActions("modalVisibility", ["openModal"]),

@@ -246,7 +246,7 @@ export default {
 		openSong() {
 			this.openModal({
 				modal: "editSong",
-				data: { song: { songId: this.report.song._id } }
+				data: { song: this.report.song }
 			});
 		},
 		...mapActions("admin/reports", [

@@ -267,17 +267,17 @@ export default {
 	 * At this time only used in EditSongs
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {Array} songIds - the song ids
+	 * @param {Array} youtubeIds - the song ids
 	 * @param {Function} cb
 	 */
-	getSongsFromSongIds: isAdminRequired(function getSongFromSongId(session, songIds, cb) {
+	getSongsFromYoutubeIds: isAdminRequired(function getSongsFromYoutubeIds(session, youtubeIds, cb) {
 		async.waterfall(
 			[
 				next => {
 					SongsModule.runJob(
 						"GET_SONGS",
 						{
-							songIds,
+							youtubeIds,
 							properties: ["youtubeId", "title", "artists", "thumbnail", "duration", "verified", "_id"]
 						},
 						this
