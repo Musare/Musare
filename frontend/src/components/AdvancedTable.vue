@@ -708,7 +708,9 @@
 			class="bulk-popup"
 			:style="{
 				top: dragBox.top + 'px',
-				left: dragBox.left + 'px'
+				left: dragBox.left + 'px',
+				width: dragBox.width + 'px',
+				height: dragBox.height + 'px'
 			}"
 			ref="bulk-popup"
 		>
@@ -780,7 +782,8 @@ export default {
 		maxWidth: { type: Number, default: 1880 },
 		query: { type: Boolean, default: true },
 		keyboardShortcuts: { type: Boolean, default: true },
-		events: { type: Object, default: () => {} }
+		events: { type: Object, default: () => {} },
+		bulkActions: { type: Object, default: () => {} }
 	},
 	data() {
 		return {
@@ -1864,12 +1867,21 @@ export default {
 				// Only change the position if the popup is actually visible
 				if (this.selectedRows.length === 0) return;
 
+				const bulkActions = {
+					height: 46,
+					width: 400,
+					...this.bulkActions
+				};
+
 				this.setInitialBox(
 					{
-						top: document.body.clientHeight - 56,
-						left: document.body.clientWidth / 2 - 200,
-						width: 400,
-						height: 50
+						top:
+							document.body.clientHeight -
+							bulkActions.height -
+							10,
+						left:
+							(document.body.clientWidth - bulkActions.width) / 2,
+						...bulkActions
 					},
 					true
 				);

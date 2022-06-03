@@ -18,6 +18,7 @@
 			data-action="youtube.getVideos"
 			name="admin-youtube-videos"
 			:max-width="1140"
+			:bulk-actions="{ width: 150 }"
 		>
 			<template #column-options="slotProps">
 				<div class="row-options">
