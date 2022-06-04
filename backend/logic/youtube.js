@@ -1651,9 +1651,13 @@ class _YouTubeModule extends CoreClass {
 
 					(youtubeIds, next) => {
 						let successful = 0;
-						let videos = {};
 						let failed = 0;
 						let alreadyInDatabase = 0;
+
+						let videos = {};
+
+						const successfulVideoIds = [];
+						const failedVideoIds = [];
 
 						if (youtubeIds.length === 0) next();
 
@@ -1664,11 +1668,14 @@ class _YouTubeModule extends CoreClass {
 								YouTubeModule.runJob("GET_VIDEO", { identifier: youtubeId, createMissing: true }, this)
 									.then(res => {
 										successful += 1;
+										successfulVideoIds.push(youtubeId);
+
 										if (res.existing) alreadyInDatabase += 1;
 										if (res.video) videos[index] = res.video;
 									})
 									.catch(() => {
 										failed += 1;
+										failedVideoIds.push(youtubeId);
 									})
 									.finally(() => {
 										next2();
@@ -1680,7 +1687,14 @@ class _YouTubeModule extends CoreClass {
 										.sort()
 										.map(key => videos[key]);
 
-								next(null, { successful, failed, alreadyInDatabase, videos });
+								next(null, {
+									successful,
+									failed,
+									alreadyInDatabase,
+									videos,
+									successfulVideoIds,
+									failedVideoIds
+								});
 							}
 						);
 					}

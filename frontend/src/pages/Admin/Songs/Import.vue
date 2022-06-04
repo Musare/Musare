@@ -134,14 +134,14 @@ export default {
 		})
 	},
 	mounted() {
-		this.socket.dispatch("youtube.getRequestSetAdminLongJobs", {
-			cb: res => {
-				console.log(111, res);
-			},
-			onProgress: res => {
-				console.log(222, res);
-			}
-		});
+		// this.socket.dispatch("youtube.getRequestSetAdminLongJobs", {
+		// 	cb: res => {
+		// 		console.log(111, res);
+		// 	},
+		// 	onProgress: res => {
+		// 		console.log(222, res);
+		// 	}
+		// });
 	},
 	methods: {
 		submitCreateImport(stage) {
