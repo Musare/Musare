@@ -8,7 +8,7 @@ let SongsModule;
 let CacheModule;
 let DBModule;
 let UtilsModule;
-let RatingsModule;
+let MediaModule;
 let WSModule;
 
 class _PlaylistsModule extends CoreClass {
@@ -32,7 +32,7 @@ class _PlaylistsModule extends CoreClass {
 		DBModule = this.moduleManager.modules.db;
 		UtilsModule = this.moduleManager.modules.utils;
 		SongsModule = this.moduleManager.modules.songs;
-		RatingsModule = this.moduleManager.modules.ratings;
+		MediaModule = this.moduleManager.modules.media;
 		WSModule = this.moduleManager.modules.ws;
 
 		this.playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" });
@@ -407,7 +407,7 @@ class _PlaylistsModule extends CoreClass {
 					},
 
 					next => {
-						SongsModule.runJob("ENSURE_SONG_EXISTS_BY_YOUTUBE_ID", { youtubeId }, this)
+						MediaModule.runJob("GET_MEDIA", { youtubeId }, this)
 							.then(response => {
 								const { song } = response;
 								const { _id, title, artists, thumbnail, duration, verified } = song;
@@ -460,7 +460,7 @@ class _PlaylistsModule extends CoreClass {
 
 					(playlist, newSong, next) => {
 						if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
-							RatingsModule.runJob("RECALCULATE_RATINGS", {
+							MediaModule.runJob("RECALCULATE_RATINGS", {
 								youtubeId: newSong.youtubeId
 							})
 								.then(ratings => next(null, playlist, newSong, ratings))
@@ -539,7 +539,7 @@ class _PlaylistsModule extends CoreClass {
 
 					(playlist, next) => {
 						if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
-							RatingsModule.runJob("RECALCULATE_RATINGS", { youtubeId })
+							MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
 								.then(ratings => next(null, playlist, ratings))
 								.catch(next);
 						} else next(null, playlist, null);

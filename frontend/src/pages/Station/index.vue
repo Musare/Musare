@@ -1369,7 +1369,7 @@ export default {
 				);
 
 				this.socket.dispatch(
-					"ratings.getRatings",
+					"media.getRatings",
 					currentSong.youtubeId,
 					res => {
 						if (
@@ -1383,7 +1383,7 @@ export default {
 
 				if (this.loggedIn) {
 					this.socket.dispatch(
-						"ratings.getOwnRatings",
+						"media.getOwnRatings",
 						currentSong.youtubeId,
 						res => {
 							console.log("getOwnSongRatings", res);
@@ -1801,7 +1801,7 @@ export default {
 		toggleLike() {
 			if (this.currentSong.liked)
 				this.socket.dispatch(
-					"ratings.unlike",
+					"media.unlike",
 					this.currentSong.youtubeId,
 					res => {
 						if (res.status !== "success")
@@ -1810,7 +1810,7 @@ export default {
 				);
 			else
 				this.socket.dispatch(
-					"ratings.like",
+					"media.like",
 					this.currentSong.youtubeId,
 					res => {
 						if (res.status !== "success")
@@ -1821,7 +1821,7 @@ export default {
 		toggleDislike() {
 			if (this.currentSong.disliked)
 				return this.socket.dispatch(
-					"ratings.undislike",
+					"media.undislike",
 					this.currentSong.youtubeId,
 					res => {
 						if (res.status !== "success")
@@ -1830,7 +1830,7 @@ export default {
 				);
 
 			return this.socket.dispatch(
-				"ratings.dislike",
+				"media.dislike",
 				this.currentSong.youtubeId,
 				res => {
 					if (res.status !== "success")

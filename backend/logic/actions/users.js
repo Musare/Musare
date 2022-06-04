@@ -19,7 +19,7 @@ const MailModule = moduleManager.modules.mail;
 const PunishmentsModule = moduleManager.modules.punishments;
 const ActivitiesModule = moduleManager.modules.activities;
 const PlaylistsModule = moduleManager.modules.playlists;
-const RatingsModule = moduleManager.modules.ratings;
+const MediaModule = moduleManager.modules.media;
 
 CacheModule.runJob("SUB", {
 	channel: "user.updatePreferences",
@@ -374,7 +374,7 @@ export default {
 						(song, next) => {
 							const { youtubeId } = song;
 
-							RatingsModule.runJob("RECALCULATE_RATINGS", { youtubeId })
+							MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
 								.then(() => next())
 								.catch(next);
 						},
@@ -600,7 +600,7 @@ export default {
 						(song, next) => {
 							const { youtubeId } = song;
 
-							RatingsModule.runJob("RECALCULATE_RATINGS", { youtubeId })
+							MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
 								.then(() => next())
 								.catch(next);
 						},

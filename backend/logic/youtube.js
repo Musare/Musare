@@ -41,7 +41,7 @@ class RateLimitter {
 let YouTubeModule;
 let CacheModule;
 let DBModule;
-let RatingsModule;
+let MediaModule;
 let SongsModule;
 let StationsModule;
 let PlaylistsModule;
@@ -103,7 +103,7 @@ class _YouTubeModule extends CoreClass {
 	async initialize() {
 		CacheModule = this.moduleManager.modules.cache;
 		DBModule = this.moduleManager.modules.db;
-		RatingsModule = this.moduleManager.modules.ratings;
+		MediaModule = this.moduleManager.modules.media;
 		SongsModule = this.moduleManager.modules.songs;
 		StationsModule = this.moduleManager.modules.stations;
 		PlaylistsModule = this.moduleManager.modules.playlists;
@@ -1332,7 +1332,7 @@ class _YouTubeModule extends CoreClass {
 							youtubeIds,
 							2,
 							(youtubeId, next) => {
-								RatingsModule.runJob("RECALCULATE_RATINGS", { youtubeId }, this)
+								MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId }, this)
 									.then(() => next())
 									.catch(next);
 							},
@@ -1487,7 +1487,7 @@ class _YouTubeModule extends CoreClass {
 					},
 
 					(youtubeIds, next) => {
-						RatingsModule.runJob("REMOVE_RATINGS", { youtubeIds }, this)
+						MediaModule.runJob("REMOVE_RATINGS", { youtubeIds }, this)
 							.then(() => next(null, youtubeIds))
 							.catch(next);
 					},

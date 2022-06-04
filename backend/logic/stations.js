@@ -7,9 +7,9 @@ let CacheModule;
 let DBModule;
 let UtilsModule;
 let WSModule;
-let SongsModule;
 let PlaylistsModule;
 let NotificationsModule;
+let MediaModule;
 
 class _StationsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -29,9 +29,9 @@ class _StationsModule extends CoreClass {
 		DBModule = this.moduleManager.modules.db;
 		UtilsModule = this.moduleManager.modules.utils;
 		WSModule = this.moduleManager.modules.ws;
-		SongsModule = this.moduleManager.modules.songs;
 		PlaylistsModule = this.moduleManager.modules.playlists;
 		NotificationsModule = this.moduleManager.modules.notifications;
+		MediaModule = this.moduleManager.modules.media;
 
 		this.userList = {};
 		this.usersPerStation = {};
@@ -539,7 +539,7 @@ class _StationsModule extends CoreClass {
 							songsToAdd.map(song => song.youtubeId),
 							2,
 							(youtubeId, next) => {
-								SongsModule.runJob("ENSURE_SONG_EXISTS_BY_YOUTUBE_ID", { youtubeId }, this)
+								MediaModule.runJob("GET_MEDIA", { youtubeId }, this)
 									.then(response => {
 										const { song } = response;
 										const { _id, title, artists, thumbnail, duration, skipDuration, verified } =
@@ -639,12 +639,10 @@ class _StationsModule extends CoreClass {
 					},
 
 					(queueSong, next) => {
-						SongsModule.runJob(
-							"ENSURE_SONG_EXISTS_BY_YOUTUBE_ID",
+						MediaModule.runJob(
+							"GET_MEDIA",
 							{
-								youtubeId: queueSong.youtubeId,
-								userId: null,
-								automaticallyRequested: true
+								youtubeId: queueSong.youtubeId
 							},
 							this
 						)
@@ -1767,7 +1765,7 @@ class _StationsModule extends CoreClass {
 					},
 
 					(station, next) => {
-						SongsModule.runJob("ENSURE_SONG_EXISTS_BY_YOUTUBE_ID", { youtubeId }, this)
+						MediaModule.runJob("GET_MEDIA", { youtubeId }, this)
 							.then(response => {
 								const { song } = response;
 								const { _id, title, skipDuration, artists, thumbnail, duration, verified } = song;

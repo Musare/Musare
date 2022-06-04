@@ -1,23 +1,23 @@
 import async from "async";
 import CoreClass from "../core";
 
-let RatingsModule;
+let MediaModule;
 let CacheModule;
 let DBModule;
 let UtilsModule;
 let YouTubeModule;
 let SongsModule;
 
-class _RatingsModule extends CoreClass {
+class _MediaModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
-		super("ratings");
+		super("media");
 
-		RatingsModule = this;
+		MediaModule = this;
 	}
 
 	/**
-	 * Initialises the ratings module
+	 * Initialises the media module
 	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
@@ -57,7 +57,7 @@ class _RatingsModule extends CoreClass {
 						return async.each(
 							youtubeIds,
 							(youtubeId, next) => {
-								RatingsModule.RatingsModel.findOne({ youtubeId }, (err, rating) => {
+								MediaModule.RatingsModel.findOne({ youtubeId }, (err, rating) => {
 									if (err) next(err);
 									else if (!rating)
 										CacheModule.runJob("HDEL", {
@@ -75,7 +75,7 @@ class _RatingsModule extends CoreClass {
 
 					next => {
 						this.setStage(4);
-						RatingsModule.RatingsModel.find({}, next);
+						MediaModule.RatingsModel.find({}, next);
 					},
 
 					(ratings, next) => {
@@ -86,7 +86,7 @@ class _RatingsModule extends CoreClass {
 								CacheModule.runJob("HSET", {
 									table: "ratings",
 									key: rating.youtubeId,
-									value: RatingsModule.RatingsSchemaCache(rating)
+									value: MediaModule.RatingsSchemaCache(rating)
 								})
 									.then(() => next())
 									.catch(next);
@@ -139,7 +139,7 @@ class _RatingsModule extends CoreClass {
 					},
 
 					({ likes, dislikes }, next) => {
-						RatingsModule.RatingsModel.findOneAndUpdate(
+						MediaModule.RatingsModel.findOneAndUpdate(
 							{ youtubeId: payload.youtubeId },
 							{
 								$set: {
@@ -203,7 +203,7 @@ class _RatingsModule extends CoreClass {
 							youtubeIds,
 							2,
 							(youtubeId, next) => {
-								RatingsModule.runJob("RECALCULATE_RATINGS", { youtubeId }, this)
+								MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId }, this)
 									.then(() => {
 										next();
 									})
@@ -244,7 +244,7 @@ class _RatingsModule extends CoreClass {
 
 					(ratings, next) => {
 						if (ratings) return next(true, ratings);
-						return RatingsModule.RatingsModel.findOne({ youtubeId: payload.youtubeId }, next);
+						return MediaModule.RatingsModel.findOne({ youtubeId: payload.youtubeId }, next);
 					},
 
 					(ratings, next) => {
@@ -261,13 +261,13 @@ class _RatingsModule extends CoreClass {
 
 						if (!payload.createMissing) return next("Ratings not found.");
 
-						return RatingsModule.runJob("RECALCULATE_RATINGS", { youtubeId: payload.youtubeId }, this)
+						return MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId: payload.youtubeId }, this)
 							.then(() => next())
 							.catch(next);
 					},
 
 					next =>
-						RatingsModule.runJob("GET_RATINGS", { youtubeId: payload.youtubeId }, this)
+						MediaModule.runJob("GET_RATINGS", { youtubeId: payload.youtubeId }, this)
 							.then(res => next(null, res.ratings))
 							.catch(next)
 				],
@@ -298,7 +298,7 @@ class _RatingsModule extends CoreClass {
 					async.waterfall(
 						[
 							next => {
-								RatingsModule.RatingsModel.deleteOne({ youtubeId }, err => {
+								MediaModule.RatingsModel.deleteOne({ youtubeId }, err => {
 									if (err) next(err);
 									else next();
 								});
@@ -322,6 +322,64 @@ class _RatingsModule extends CoreClass {
 			);
 		});
 	}
+
+	/**
+	 * Get song or youtube video by youtubeId
+	 *
+	 * @param {object} payload - an object containing the payload
+	 * @param {string} payload.youtubeId - the youtube id of the song/video
+	 * @param {string} payload.userId - the user id
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	GET_MEDIA(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						SongsModule.SongModel.findOne({ youtubeId: payload.youtubeId }, next);
+					},
+
+					(song, next) => {
+						if (song && song.duration > 0) next(true, song);
+						else {
+							YouTubeModule.runJob(
+								"GET_VIDEO",
+								{ identifier: payload.youtubeId, createMissing: true },
+								this
+							)
+								.then(response => {
+									const { youtubeId, title, author, duration } = response.video;
+									next(null, song, { youtubeId, title, artists: [author], duration });
+								})
+								.catch(next);
+						}
+					},
+
+					(song, youtubeVideo, next) => {
+						if (song && song.duration <= 0) {
+							song.duration = youtubeVideo.duration;
+							song.save({ validateBeforeSave: true }, err => {
+								if (err) next(err, song);
+								next(null, song);
+							});
+						} else {
+							next(null, {
+								...youtubeVideo,
+								skipDuration: 0,
+								requestedBy: payload.userId,
+								requestedAt: Date.now(),
+								verified: false
+							});
+						}
+					}
+				],
+				(err, song) => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve({ song });
+				}
+			);
+		});
+	}
 }
 
-export default new _RatingsModule();
+export default new _MediaModule();

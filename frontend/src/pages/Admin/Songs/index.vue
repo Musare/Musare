@@ -522,7 +522,7 @@ export default {
 				},
 				{
 					name: "Recalculate all ratings",
-					socket: "ratings.recalculateAll"
+					socket: "media.recalculateAllRatings"
 				}
 			]
 		};

@@ -11,7 +11,7 @@ const WSModule = moduleManager.modules.ws;
 const CacheModule = moduleManager.modules.cache;
 const SongsModule = moduleManager.modules.songs;
 const ActivitiesModule = moduleManager.modules.activities;
-const RatingsModule = moduleManager.modules.ratings;
+const MediaModule = moduleManager.modules.media;
 
 CacheModule.runJob("SUB", {
 	channel: "ratings.like",
@@ -128,11 +128,11 @@ export default {
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param cb
 	 */
-	recalculateAll: isAdminRequired(async function recalculateAll(session, cb) {
+	recalculateAllRatings: isAdminRequired(async function recalculateAllRatings(session, cb) {
 		async.waterfall(
 			[
 				next => {
-					RatingsModule.runJob("RECALCULATE_ALL_RATINGS", {}, this)
+					MediaModule.runJob("RECALCULATE_ALL_RATINGS", {}, this)
 						.then(() => {
 							next();
 						})
@@ -144,10 +144,10 @@ export default {
 			async err => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "RATINGS_RECALCULATE_ALL", `Failed to recalculate all ratings. "${err}"`);
+					this.log("ERROR", "MEDIA_RECALCULATE_ALL_RATINGS", `Failed to recalculate all ratings. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
-				this.log("SUCCESS", "RATINGS_RECALCULATE_ALL", `Recalculated all ratings successfully.`);
+				this.log("SUCCESS", "MEDIA_RECALCULATE_ALL_RATINGS", `Recalculated all ratings successfully.`);
 				return cb({ status: "success", message: "Successfully recalculated all ratings." });
 			}
 		);
@@ -166,8 +166,8 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					SongsModule.runJob(
-						"ENSURE_SONG_EXISTS_BY_YOUTUBE_ID",
+					MediaModule.runJob(
+						"GET_MEDIA",
 						{
 							youtubeId
 						},
@@ -233,7 +233,7 @@ export default {
 						}),
 
 				(song, next) => {
-					RatingsModule.runJob("RECALCULATE_RATINGS", { youtubeId })
+					MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
 						.then(ratings => next(null, song, ratings))
 						.catch(err => next(err));
 				}
@@ -243,7 +243,7 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
-						"RATINGS_LIKE",
+						"MEDIA_RATINGS_LIKE",
 						`User "${session.userId}" failed to like song ${youtubeId}. "${err}"`
 					);
 					return cb({ status: "error", message: err });
@@ -294,8 +294,8 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					SongsModule.runJob(
-						"ENSURE_SONG_EXISTS_BY_YOUTUBE_ID",
+					MediaModule.runJob(
+						"GET_MEDIA",
 						{
 							youtubeId
 						},
@@ -361,7 +361,7 @@ export default {
 						}),
 
 				(song, next) => {
-					RatingsModule.runJob("RECALCULATE_RATINGS", { youtubeId })
+					MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
 						.then(ratings => next(null, song, ratings))
 						.catch(err => next(err));
 				}
@@ -371,7 +371,7 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
-						"RATINGS_DISLIKE",
+						"MEDIA_RATINGS_DISLIKE",
 						`User "${session.userId}" failed to dislike song ${youtubeId}. "${err}"`
 					);
 					return cb({ status: "error", message: err });
@@ -422,8 +422,8 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					SongsModule.runJob(
-						"ENSURE_SONG_EXISTS_BY_YOUTUBE_ID",
+					MediaModule.runJob(
+						"GET_MEDIA",
 						{
 							youtubeId
 						},
@@ -490,7 +490,7 @@ export default {
 				},
 
 				(song, next) => {
-					RatingsModule.runJob("RECALCULATE_RATINGS", { youtubeId })
+					MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
 						.then(ratings => next(null, song, ratings))
 						.catch(err => next(err));
 				}
@@ -500,7 +500,7 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
-						"RATINGS_UNDISLIKE",
+						"MEDIA_RATINGS_UNDISLIKE",
 						`User "${session.userId}" failed to undislike song ${youtubeId}. "${err}"`
 					);
 					return cb({ status: "error", message: err });
@@ -553,8 +553,8 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					SongsModule.runJob(
-						"ENSURE_SONG_EXISTS_BY_YOUTUBE_ID",
+					MediaModule.runJob(
+						"GET_MEDIA",
 						{
 							youtubeId
 						},
@@ -621,7 +621,7 @@ export default {
 				},
 
 				(song, next) => {
-					RatingsModule.runJob("RECALCULATE_RATINGS", { youtubeId })
+					MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
 						.then(ratings => next(null, song, ratings))
 						.catch(err => next(err));
 				}
@@ -631,7 +631,7 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
-						"RATINGS_UNLIKE",
+						"MEDIA_RATINGS_UNLIKE",
 						`User "${session.userId}" failed to unlike song ${youtubeId}. "${err}"`
 					);
 					return cb({ status: "error", message: err });
@@ -683,7 +683,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					RatingsModule.runJob("GET_RATINGS", { youtubeId, createMissing: true }, this)
+					MediaModule.runJob("GET_RATINGS", { youtubeId, createMissing: true }, this)
 						.then(res => next(null, res.ratings))
 						.catch(next);
 				},
@@ -700,7 +700,7 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
-						"RATINGS_GET_RATINGS",
+						"MEDIA_GET_RATINGS",
 						`User "${session.userId}" failed to get ratings for ${youtubeId}. "${err}"`
 					);
 					return cb({ status: "error", message: err });
@@ -732,8 +732,8 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					SongsModule.runJob(
-						"ENSURE_SONG_EXISTS_BY_YOUTUBE_ID",
+					MediaModule.runJob(
+						"GET_MEDIA",
 						{
 							youtubeId
 						},
@@ -784,7 +784,7 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
-						"RATINGS_GET_OWN_RATINGS",
+						"MEDIA_GET_OWN_RATINGS",
 						`User "${session.userId}" failed to get ratings for ${youtubeId}. "${err}"`
 					);
 					return cb({ status: "error", message: err });

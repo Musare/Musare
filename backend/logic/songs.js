@@ -9,7 +9,7 @@ let UtilsModule;
 let YouTubeModule;
 let StationsModule;
 let PlaylistsModule;
-let RatingsModule;
+let MediaModule;
 let WSModule;
 
 class _SongsModule extends CoreClass {
@@ -34,7 +34,7 @@ class _SongsModule extends CoreClass {
 		YouTubeModule = this.moduleManager.modules.youtube;
 		StationsModule = this.moduleManager.modules.stations;
 		PlaylistsModule = this.moduleManager.modules.playlists;
-		RatingsModule = this.moduleManager.modules.ratings;
+		MediaModule = this.moduleManager.modules.media;
 		WSModule = this.moduleManager.modules.ws;
 
 		this.SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
@@ -221,65 +221,6 @@ class _SongsModule extends CoreClass {
 	}
 
 	/**
-	 * Makes sure that if a song is not currently in the songs db, to add it
-	 *
-	 * @param {object} payload - an object containing the payload
-	 * @param {string} payload.youtubeId - the youtube song id of the song we are trying to ensure is in the songs db
-	 * @param {string} payload.userId - the youtube song id of the song we are trying to ensure is in the songs db
-	 * @param {string} payload.automaticallyRequested - whether the song was automatically requested or not
-	 * @returns {Promise} - returns a promise (resolve, reject)
-	 */
-	ENSURE_SONG_EXISTS_BY_YOUTUBE_ID(payload) {
-		return new Promise((resolve, reject) => {
-			async.waterfall(
-				[
-					next => {
-						SongsModule.SongModel.findOne({ youtubeId: payload.youtubeId }, next);
-					},
-
-					(song, next) => {
-						if (song && song.duration > 0) next(true, song);
-						else {
-							YouTubeModule.runJob(
-								"GET_VIDEO",
-								{ identifier: payload.youtubeId, createMissing: true },
-								this
-							)
-								.then(response => {
-									const { youtubeId, title, author, duration } = response.video;
-									next(null, song, { youtubeId, title, artists: [author], duration });
-								})
-								.catch(next);
-						}
-					},
-
-					(song, youtubeVideo, next) => {
-						if (song && song.duration <= 0) {
-							song.duration = youtubeVideo.duration;
-							song.save({ validateBeforeSave: true }, err => {
-								if (err) next(err, song);
-								next(null, song);
-							});
-						} else {
-							next(null, {
-								...youtubeVideo,
-								skipDuration: 0,
-								requestedBy: payload.userId,
-								requestedAt: Date.now(),
-								verified: false
-							});
-						}
-					}
-				],
-				(err, song) => {
-					if (err && err !== true) return reject(new Error(err));
-					return resolve({ song });
-				}
-			);
-		});
-	}
-
-	/**
 	 * Create song
 	 *
 	 * @param {object} payload - an object containing the payload
@@ -325,7 +266,7 @@ class _SongsModule extends CoreClass {
 					},
 
 					(song, next) => {
-						RatingsModule.runJob("RECALCULATE_RATINGS", { youtubeId: song.youtubeId }, this)
+						MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId: song.youtubeId }, this)
 							.then(() => next(null, song))
 							.catch(next);
 					},
@@ -1184,19 +1125,9 @@ class _SongsModule extends CoreClass {
 										},
 
 										next => {
-											SongsModule.runJob(
-												"ENSURE_SONG_EXISTS_BY_SONG_ID",
-												{ youtubeId, automaticallyRequested: true },
-												this
-											)
-												.then(() => next())
+											MediaModule.runJob("GET_MEDIA", { youtubeId }, this)
+												.then(res => next(null, res.song))
 												.catch(next);
-										},
-
-										next => {
-											console.log(444, youtubeId);
-
-											SongsModule.SongModel.findOne({ youtubeId }, next);
 										},
 
 										(song, next) => {

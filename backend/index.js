@@ -259,7 +259,7 @@ if (!config.get("migration")) {
 	moduleManager.addModule("punishments");
 	moduleManager.addModule("songs");
 	moduleManager.addModule("stations");
-	moduleManager.addModule("ratings");
+	moduleManager.addModule("media");
 	moduleManager.addModule("tasks");
 	moduleManager.addModule("utils");
 	moduleManager.addModule("youtube");

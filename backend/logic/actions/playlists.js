@@ -14,6 +14,7 @@ const CacheModule = moduleManager.modules.cache;
 const PlaylistsModule = moduleManager.modules.playlists;
 const YouTubeModule = moduleManager.modules.youtube;
 const ActivitiesModule = moduleManager.modules.activities;
+const MediaModule = moduleManager.modules.media;
 
 CacheModule.runJob("SUB", {
 	channel: "playlist.create",
@@ -1435,7 +1436,7 @@ export default {
 				},
 
 				(playlist, next) => {
-					SongsModule.runJob("ENSURE_SONG_EXISTS_BY_YOUTUBE_ID", { youtubeId }, this)
+					MediaModule.runJob("GET_MEDIA", { youtubeId }, this)
 						.then(res =>
 							next(null, playlist, {
 								_id: res.song._id,
@@ -1481,7 +1482,7 @@ export default {
 
 						if (playlist.type === "user-liked") {
 							CacheModule.runJob("PUB", {
-								channel: "song.unlike",
+								channel: "ratings.unlike",
 								value: JSON.stringify({
 									youtubeId: newSong.youtubeId,
 									userId: session.userId,
