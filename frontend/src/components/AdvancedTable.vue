@@ -879,7 +879,8 @@ export default {
 				allItems: {}
 			},
 			storeTableSettingsDebounceTimeout: null,
-			windowResizeDebounceTimeout: null
+			windowResizeDebounceTimeout: null,
+			lastSelectedItemIndex: 0
 		};
 	},
 	computed: {
@@ -902,9 +903,6 @@ export default {
 		},
 		hidableSortedColumns() {
 			return this.orderedColumns.filter(column => column.hidable);
-		},
-		lastSelectedItemIndex() {
-			return this.rows.findIndex(item => item.highlighted);
 		},
 		selectedRows() {
 			return this.rows.filter(row => row.selected);
@@ -1436,6 +1434,7 @@ export default {
 			if (shiftKey && !ctrlKey) {
 				// If the clicked item is already selected, prevent default, otherwise the checkbox will be unchecked
 				if (this.rows[itemIndex].selected) event.preventDefault();
+				this.rows[itemIndex].selected = true;
 				// If there is a last clicked item
 				if (this.lastSelectedItemIndex >= 0) {
 					// Clicked item is lower than last item, so select upwards until it reaches the last selected item
@@ -1466,6 +1465,7 @@ export default {
 			else if (!shiftKey && ctrlKey) {
 				// If the clicked item is already unselected, prevent default, otherwise the checkbox will be checked
 				if (!this.rows[itemIndex].selected) event.preventDefault();
+				this.rows[itemIndex].selected = false;
 				// If there is a last clicked item
 				if (this.lastSelectedItemIndex >= 0) {
 					// Clicked item is lower than last item, so unselect upwards until it reaches the last selected item
@@ -1497,11 +1497,11 @@ export default {
 				this.rows[itemIndex].selected = !this.rows[itemIndex].selected;
 			}
 
+			this.rows[itemIndex].highlighted = this.rows[itemIndex].selected;
 			// Set the last clicked item to no longer be highlighted, if it exists
 			if (this.lastSelectedItemIndex >= 0)
 				this.rows[this.lastSelectedItemIndex].highlighted = false;
-			// Set the clicked item to be highlighted
-			this.rows[itemIndex].highlighted = true;
+			this.lastSelectedItemIndex = itemIndex;
 		},
 		toggleAllRows() {
 			if (
