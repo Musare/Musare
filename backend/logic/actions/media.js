@@ -802,5 +802,70 @@ export default {
 				});
 			}
 		);
+	}),
+
+	/**
+	 * Gets importJobs, used in the admin import page by the AdvancedTable component
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param page - the page
+	 * @param pageSize - the size per page
+	 * @param properties - the properties to return for each news item
+	 * @param sort - the sort object
+	 * @param queries - the queries array
+	 * @param operator - the operator for queries
+	 * @param cb
+	 */
+	getImportJobs: isAdminRequired(async function getImportJobs(
+		session,
+		page,
+		pageSize,
+		properties,
+		sort,
+		queries,
+		operator,
+		cb
+	) {
+		async.waterfall(
+			[
+				next => {
+					DBModule.runJob(
+						"GET_DATA",
+						{
+							page,
+							pageSize,
+							properties,
+							sort,
+							queries,
+							operator,
+							modelName: "importJob",
+							blacklistedProperties: [],
+							specialProperties: {},
+							specialQueries: {}
+						},
+						this
+					)
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async (err, response) => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "MEDIA_GET_IMPORT_JOBS", `Failed to get import jobs. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "MEDIA_GET_IMPORT_JOBS", `Fetched import jobs successfully.`);
+				return cb({
+					status: "success",
+					message: "Successfully fetched import jobs.",
+					data: response
+				});
+			}
+		);
 	})
 };

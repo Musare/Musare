@@ -105,6 +105,125 @@
 				<div class="card right-section">
 					<h4>Manage Imports</h4>
 					<hr class="section-horizontal-rule" />
+					<advanced-table
+						:column-default="columnDefault"
+						:columns="columns"
+						:filters="filters"
+						:events="events"
+						data-action="media.getImportJobs"
+						name="admin-songs-import"
+						:max-width="1060"
+					>
+						<template #column-options="slotProps">
+							<div class="row-options">
+								<button
+									class="button is-primary icon-with-button material-icons"
+									:disabled="
+										slotProps.item.removed ||
+										slotProps.item.status !== 'success'
+									"
+									content="Manage imported videos"
+									v-tippy
+								>
+									table_view
+								</button>
+								<button
+									class="button is-primary icon-with-button material-icons"
+									@click="
+										editSongs(
+											slotProps.item.response
+												.successfulVideoIds
+										)
+									"
+									:disabled="
+										slotProps.item.removed ||
+										slotProps.item.status !== 'success'
+									"
+									content="Create/edit song from videos"
+									v-tippy
+								>
+									music_note
+								</button>
+								<button
+									class="button is-danger icon-with-button material-icons"
+									@click.prevent="
+										confirmAction({
+											message:
+												'Note: Removing an import will not remove any videos or songs.',
+											action: 'removeImportJob',
+											params: slotProps.item
+										})
+									"
+									:disabled="
+										slotProps.item.removed ||
+										slotProps.item.status === 'in-progress'
+									"
+									content="Remove Import"
+									v-tippy
+								>
+									delete_forever
+								</button>
+							</div>
+						</template>
+						<template #column-type="slotProps">
+							<span :title="slotProps.item.type">{{
+								slotProps.item.type
+							}}</span>
+						</template>
+						<template #column-requestedBy="slotProps">
+							<user-link :user-id="slotProps.item.requestedBy" />
+						</template>
+						<template #column-requestedAt="slotProps">
+							<span
+								:title="new Date(slotProps.item.requestedAt)"
+								>{{
+									getDateFormatted(slotProps.item.requestedAt)
+								}}</span
+							>
+						</template>
+						<template #column-successful="slotProps">
+							<span :title="slotProps.item.response.successful">{{
+								slotProps.item.response.successful
+							}}</span>
+						</template>
+						<template #column-alreadyInDatabase="slotProps">
+							<span
+								:title="
+									slotProps.item.response.alreadyInDatabase
+								"
+								>{{
+									slotProps.item.response.alreadyInDatabase
+								}}</span
+							>
+						</template>
+						<template #column-failed="slotProps">
+							<span :title="slotProps.item.response.failed">{{
+								slotProps.item.response.failed
+							}}</span>
+						</template>
+						<template #column-status="slotProps">
+							<span :title="slotProps.item.status">{{
+								slotProps.item.status
+							}}</span>
+						</template>
+						<template #column-url="slotProps">
+							<a
+								:href="slotProps.item.query.url"
+								target="_blank"
+								>{{ slotProps.item.query.url }}</a
+							>
+						</template>
+						<template #column-musicOnly="slotProps">
+							<span :title="slotProps.item.query.musicOnly">{{
+								slotProps.item.query.musicOnly
+							}}</span>
+						</template>
+						<template #column-_id="slotProps">
+							<span :title="slotProps.item._id">{{
+								slotProps.item._id
+							}}</span>
+						</template>
+					</advanced-table>
 				</div>
 			</div>
 		</div>
@@ -112,11 +231,16 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 
+import AdvancedTable from "@/components/AdvancedTable.vue";
+
 export default {
+	components: {
+		AdvancedTable
+	},
 	data() {
 		return {
 			createImport: {
@@ -125,7 +249,209 @@ export default {
 				youtubeUrl:
 					"https://www.youtube.com/playlist?list=PL3-sRm8xAzY9gpXTMGVHJWy_FMD67NBed",
 				isImportingOnlyMusic: false
-			}
+			},
+			columnDefault: {
+				sortable: true,
+				hidable: true,
+				defaultVisibility: "shown",
+				draggable: true,
+				resizable: true,
+				minWidth: 200,
+				maxWidth: 600
+			},
+			columns: [
+				{
+					name: "options",
+					displayName: "Options",
+					properties: ["_id", "status"],
+					sortable: false,
+					hidable: false,
+					resizable: false,
+					minWidth: 129,
+					defaultWidth: 129
+				},
+				{
+					name: "type",
+					displayName: "Type",
+					properties: ["type"],
+					sortProperty: "type",
+					minWidth: 120,
+					defaultWidth: 120
+				},
+				{
+					name: "requestedBy",
+					displayName: "Requested By",
+					properties: ["requestedBy"],
+					sortProperty: "requestedBy"
+				},
+				{
+					name: "requestedAt",
+					displayName: "Requested At",
+					properties: ["requestedAt"],
+					sortProperty: "requestedAt"
+				},
+				{
+					name: "successful",
+					displayName: "Successful",
+					properties: ["response"],
+					sortProperty: "response.successful",
+					minWidth: 120,
+					defaultWidth: 120
+				},
+				{
+					name: "alreadyInDatabase",
+					displayName: "Existing",
+					properties: ["response"],
+					sortProperty: "response.alreadyInDatabase",
+					minWidth: 120,
+					defaultWidth: 120
+				},
+				{
+					name: "failed",
+					displayName: "Failed",
+					properties: ["response"],
+					sortProperty: "response.failed",
+					minWidth: 120,
+					defaultWidth: 120
+				},
+				{
+					name: "status",
+					displayName: "Status",
+					properties: ["status"],
+					sortProperty: "status",
+					defaultVisibility: "hidden"
+				},
+				{
+					name: "url",
+					displayName: "URL",
+					properties: ["query.url"],
+					sortProperty: "query.url"
+				},
+				{
+					name: "musicOnly",
+					displayName: "Music Only",
+					properties: ["query.musicOnly"],
+					sortProperty: "query.musicOnly",
+					minWidth: 120,
+					defaultWidth: 120
+				},
+				{
+					name: "_id",
+					displayName: "Import ID",
+					properties: ["_id"],
+					sortProperty: "_id",
+					minWidth: 215,
+					defaultWidth: 215,
+					defaultVisibility: "hidden"
+				}
+			],
+			filters: [
+				{
+					name: "_id",
+					displayName: "Import ID",
+					property: "_id",
+					filterTypes: ["exact"],
+					defaultFilterType: "exact"
+				},
+				{
+					name: "type",
+					displayName: "Type",
+					property: "type",
+					filterTypes: ["exact"],
+					defaultFilterType: "exact",
+					dropdown: [["youtube", "YouTube"]]
+				},
+				{
+					name: "requestedBy",
+					displayName: "Requested By",
+					property: "requestedBy",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "requestedAt",
+					displayName: "Requested At",
+					property: "requestedAt",
+					filterTypes: ["datetimeBefore", "datetimeAfter"],
+					defaultFilterType: "datetimeBefore"
+				},
+				{
+					name: "response.successful",
+					displayName: "Successful",
+					property: "response.successful",
+					filterTypes: [
+						"numberLesserEqual",
+						"numberLesser",
+						"numberGreater",
+						"numberGreaterEqual",
+						"numberEquals"
+					],
+					defaultFilterType: "numberLesser"
+				},
+				{
+					name: "response.alreadyInDatabase",
+					displayName: "Existing",
+					property: "response.alreadyInDatabase",
+					filterTypes: [
+						"numberLesserEqual",
+						"numberLesser",
+						"numberGreater",
+						"numberGreaterEqual",
+						"numberEquals"
+					],
+					defaultFilterType: "numberLesser"
+				},
+				{
+					name: "response.failed",
+					displayName: "Failed",
+					property: "response.failed",
+					filterTypes: [
+						"numberLesserEqual",
+						"numberLesser",
+						"numberGreater",
+						"numberGreaterEqual",
+						"numberEquals"
+					],
+					defaultFilterType: "numberLesser"
+				},
+				{
+					name: "status",
+					displayName: "Status",
+					property: "status",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "url",
+					displayName: "URL",
+					property: "query.url",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				},
+				{
+					name: "musicOnly",
+					displayName: "Music Only",
+					property: "query.musicOnly",
+					filterTypes: ["exact"],
+					defaultFilterType: "exact",
+					dropdown: [
+						[true, "True"],
+						[false, "False"]
+					]
+				},
+				{
+					name: "status",
+					displayName: "Status",
+					property: "status",
+					filterTypes: ["exact"],
+					defaultFilterType: "exact",
+					dropdown: [
+						["success", "Success"],
+						["in-progress", "In Progress"],
+						["failed", "Failed"]
+					]
+				}
+			]
 		};
 	},
 	computed: {
@@ -210,7 +536,40 @@ export default {
 					onProgress: console.log
 				}
 			);
-		}
+		},
+		getDateFormatted(createdAt) {
+			const date = new Date(createdAt);
+			const year = date.getFullYear();
+			const month = `${date.getMonth() + 1}`.padStart(2, 0);
+			const day = `${date.getDate()}`.padStart(2, 0);
+			const hour = `${date.getHours()}`.padStart(2, 0);
+			const minute = `${date.getMinutes()}`.padStart(2, 0);
+			return `${year}-${month}-${day} ${hour}:${minute}`;
+		},
+		editSongs(videos) {
+			const songs = videos.map(youtubeId => ({ youtubeId }));
+			if (songs.length === 1)
+				this.openModal({ modal: "editSong", data: { song: songs[0] } });
+			else this.openModal({ modal: "editSongs", data: { songs } });
+		},
+		confirmAction({ message, action, params }) {
+			this.openModal({
+				modal: "confirm",
+				data: {
+					message,
+					action,
+					params,
+					onCompleted: this.handleConfirmed
+				}
+			});
+		},
+		handleConfirmed({ action, params }) {
+			if (typeof this[action] === "function") {
+				if (params) this[action](params);
+				else this[action]();
+			}
+		},
+		...mapActions("modalVisibility", ["openModal"])
 	}
 };
 </script>
@@ -253,7 +612,8 @@ export default {
 		}
 
 		.left-section {
-			max-width: 600px;
+			height: 100%;
+			max-width: 400px;
 			margin-right: 20px !important;
 
 			.checkbox-control label.label {
@@ -267,7 +627,11 @@ export default {
 			}
 		}
 
-		@media screen and (max-width: 1100px) {
+		.right-section {
+			max-width: calc(100% - 400px);
+		}
+
+		@media screen and (max-width: 1200px) {
 			.card {
 				flex-basis: 100%;
 				max-height: unset;
@@ -276,6 +640,10 @@ export default {
 					max-width: unset;
 					margin-right: 0 !important;
 					margin-bottom: 10px !important;
+				}
+
+				&.right-section {
+					max-width: unset;
 				}
 			}
 		}
