@@ -421,11 +421,32 @@ class _YouTubeModule extends CoreClass {
 							channels: "rgb(2, 242, 166)",
 							playlistItems: "rgb(242, 166, 2)"
 						};
-						chartData.datasets = datasetTypes.map(datasetType => ({
-							label: datasetType,
-							backgroundColor: colors[datasetType],
-							data: timeRanges.map(timeRange => timeRange.data[datasetType])
-						}));
+						chartData.datasets = datasetTypes.map(datasetType => {
+							let label;
+							switch (datasetType) {
+								case "total":
+									label = "Total";
+									break;
+								case "videos":
+									label = "Videos";
+									break;
+								case "search":
+									label = "Search";
+									break;
+								case "playlistItems":
+									label = "Playlist Items";
+									break;
+								default:
+									label = datasetType;
+							}
+							return {
+								label,
+								borderColor: colors[datasetType],
+								backgroundColor: colors[datasetType],
+								data: timeRanges.map(timeRange => timeRange.data[datasetType])
+							};
+						});
+
 						next(null, chartData);
 					}
 				],

@@ -131,7 +131,6 @@ export default {
 			this.items.splice(index, 1);
 		},
 		applyChanges() {
-			let toast;
 			let id;
 			let title;
 
@@ -147,24 +146,6 @@ export default {
 						// 	this.closeCurrentModal();
 					},
 					onProgress: res => {
-						if (!toast) {
-							toast = new Toast({
-								content: res.message,
-								persistent: true,
-								interactable: false
-							});
-						} else {
-							toast.content = res.message;
-						}
-						if (
-							res.status === "success" ||
-							res.status === "error"
-						) {
-							setTimeout(() => {
-								toast.destroy();
-							}, 4000);
-						}
-
 						if (res.status === "started") {
 							id = res.id;
 							title = res.title;
