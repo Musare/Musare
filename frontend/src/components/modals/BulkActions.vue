@@ -132,7 +132,8 @@ export default {
 		},
 		applyChanges() {
 			let toast;
-			const id = Date.now();
+			let id;
+			let title;
 
 			this.socket.dispatch(
 				this.type.action,
@@ -164,12 +165,18 @@ export default {
 							}, 4000);
 						}
 
-						if (res.status === "started") this.closeCurrentModal();
-						this.setJob({
-							id,
-							name: `Bulk ${this.method} ${this.type.name}`,
-							...res
-						});
+						if (res.status === "started") {
+							id = res.id;
+							title = res.title;
+							this.closeCurrentModal();
+						}
+
+						if (id)
+							this.setJob({
+								id,
+								name: title,
+								...res
+							});
 					}
 				}
 			);

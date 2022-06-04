@@ -191,6 +191,9 @@ class Job {
 		this.lastProgressData = null;
 		this.lastProgressTime = Date.now();
 		this.lastProgressTimeout = null;
+		this.longJob = false;
+		this.longJobTitle = "";
+		this.longJobStatus = "";
 	}
 
 	/**
@@ -264,31 +267,50 @@ class Job {
 		this.module.log(...args);
 	}
 
+	keepLongJob() {
+		this.longJob = true;
+	}
+
+	forgetLongJob() {
+		this.longJob = false;
+		this.module.moduleManager.jobManager.removeJob(this);
+	}
+
 	/**
 	 * 
 	 * @param {data} data - Data to publish upon progress
 	 */
-	publishProgress(data) {
-		if (this.onProgress) {
-			this.lastProgressData = data;
-			if (data.status === "update") {
-				if ((Date.now() - this.lastProgressTime) > 1000) {
-					this.lastProgressTime = Date.now();
+	publishProgress(data, notALongJob) {
+		if (this.longJob || notALongJob) {
+			if (this.onProgress) {
+				if (notALongJob) {
+					this.onProgress.emit("progress", data);
 				} else {
-					if (this.lastProgressTimeout) clearTimeout(this.lastProgressTimeout);
-					this.lastProgressTimeout = setTimeout(() => {
-						this.lastProgressTime = Date.now();
-						this.lastProgressTimeout = null;
-						this.onProgress.emit("progress", data);
-					}, Date.now() - this.lastProgressTime);
-					return;
-				}
-			} else if (data.status === "success" || data.status === "error")
-				if (this.lastProgressTimeout) clearTimeout(this.lastProgressTimeout);
-			
+					this.lastProgressData = data;
 
-			this.onProgress.emit("progress", data);
-		} else this.log("Progress published, but no onProgress specified.")
+					if (data.status === "update") {
+						if ((Date.now() - this.lastProgressTime) > 1000) {
+							this.lastProgressTime = Date.now();
+						} else {
+							if (this.lastProgressTimeout) clearTimeout(this.lastProgressTimeout);
+							this.lastProgressTimeout = setTimeout(() => {
+								this.lastProgressTime = Date.now();
+								this.lastProgressTimeout = null;
+								this.onProgress.emit("progress", data);
+							}, Date.now() - this.lastProgressTime);
+							return;
+						}
+					} else if (data.status === "success" || data.status === "error")
+						if (this.lastProgressTimeout) clearTimeout(this.lastProgressTimeout);
+
+					if (data.title)	this.longJobTitle = data.title;
+
+					this.onProgress.emit("progress", data);
+				}
+			} else this.log("Progress published, but no onProgress specified.")
+		} else {
+			this.parentJob.publishProgress(data);
+		}
 	}
 }
 
@@ -636,7 +658,7 @@ export default class CoreClass {
 							const executionTime = endTime - startTime;
 							this.jobStatistics[job.name].total += 1;
 							this.jobStatistics[job.name].averageTiming.update(executionTime);
-							this.moduleManager.jobManager.removeJob(job);
+							if (!job.longJob) this.moduleManager.jobManager.removeJob(job);
 							job.cleanup();
 
 							if (!job.parentJob) {

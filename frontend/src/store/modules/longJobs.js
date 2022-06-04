@@ -2,12 +2,12 @@
 
 const state = {
 	activeJobs: [
-		{
-			id: 1,
-			name: "test",
-			status: "success",
-			message: "test"
-		}
+		// {
+		// 	id: 1,
+		// 	name: "test",
+		// 	status: "success",
+		// 	message: "test"
+		// }
 	]
 };
 
@@ -15,6 +15,7 @@ const getters = {};
 
 const actions = {
 	setJob: ({ commit }, job) => commit("setJob", job),
+	setJobs: ({ commit }, jobs) => commit("setJobs", jobs),
 	removeJob: ({ commit }, job) => commit("removeJob", job)
 };
 
@@ -36,6 +37,9 @@ const mutations = {
 					};
 				}
 			});
+	},
+	setJobs(state, jobs) {
+		state.activeJobs = jobs;
 	},
 	removeJob(state, jobId) {
 		state.activeJobs.forEach((activeJob, index) => {

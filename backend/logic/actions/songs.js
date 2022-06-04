@@ -1311,10 +1311,14 @@ export default {
 	editTags: isAdminRequired(async function editTags(session, method, tags, songIds, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 
+		this.keepLongJob();
 		this.publishProgress({
 			status: "started",
-			message: "Updating tags."
+			title: "Bulk editing tags",
+			message: "Updating tags.",
+			id: this.toString()
 		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
 
 		async.waterfall(
 			[

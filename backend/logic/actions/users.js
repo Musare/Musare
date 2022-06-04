@@ -1607,6 +1607,137 @@ export default {
 	},
 
 	/**
+	 * Updates the order of a user's playlists
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {Function} cb - gets called with the result
+	 */
+	getLongJobs: isLoginRequired(async function getLongJobs(session, cb) {
+		async.waterfall(
+			[
+				next => {
+					CacheModule.runJob(
+						"LRANGE",
+						{
+							key: `longJobs.${session.userId}`
+						},
+						this
+					)
+						.then(longJobUuids => next(null, longJobUuids))
+						.catch(next);
+				},
+
+				(longJobUuids, next) => {
+					next(
+						null,
+						longJobUuids
+							.map(longJobUuid => moduleManager.jobManager.getJob(longJobUuid))
+							.filter(longJob => !!longJob)
+					);
+				},
+
+				(longJobs, next) => {
+					longJobs.forEach(longJob => {
+						longJob.onProgress.on("progress", data => {
+							this.publishProgress(
+								{
+									id: longJob.toString(),
+									...data
+								},
+								true
+							);
+						});
+					});
+
+					next(
+						null,
+						longJobs.map(longJob => ({
+							id: longJob.toString(),
+							name: longJob.longJobTitle,
+							status: longJob.lastProgressData.status,
+							message: longJob.lastProgressData.message
+						}))
+					);
+				}
+			],
+			async (err, longJobs) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log("ERROR", "GET_LONG_JOBS", `Couldn't get long jobs for user "${session.userId}". "${err}"`);
+
+					return cb({ status: "error", message: err });
+				}
+
+				this.log("SUCCESS", "GET_LONG_JOBS", `Got long jobs for user "${session.userId}".`);
+
+				return cb({
+					status: "success",
+					data: {
+						longJobs
+					}
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Updates the order of a user's playlists
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} jobId - array of playlist ids (with a specific order)
+	 * @param {Function} cb - gets called with the result
+	 */
+	removeLongJob: isLoginRequired(async function removeLongJob(session, jobId, cb) {
+		async.waterfall(
+			[
+				next => {
+					CacheModule.runJob(
+						"LREM",
+						{
+							key: `longJobs.${session.userId}`,
+							value: jobId
+						},
+						this
+					)
+						.then(() => next())
+						.catch(next);
+				},
+
+				next => {
+					const job = moduleManager.jobManager.getJob(jobId);
+					if (job && job.status === "FINISHED") job.forgetLongJob();
+					next();
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log(
+						"ERROR",
+						"REMOVE_LONG_JOB",
+						`Couldn't remove long job for user "${session.userId}" with id ${jobId}. "${err}"`
+					);
+
+					return cb({ status: "error", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"REMOVE_LONG_JOB",
+					`Removed long job for user "${session.userId}" with id ${jobId}.`
+				);
+
+				return cb({
+					status: "success",
+					message: "Removed long job successfully."
+				});
+			}
+		);
+	}),
+
+	/**
 	 * Gets a user from a userId
 	 *
 	 * @param {object} session - the session object automatically added by the websocket

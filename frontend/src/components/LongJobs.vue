@@ -85,7 +85,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
 
 import FloatingBox from "@/components/FloatingBox.vue";
 
@@ -102,14 +102,34 @@ export default {
 	computed: {
 		...mapState("longJobs", {
 			activeJobs: state => state.activeJobs
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
+	},
+	mounted() {
+		this.socket.dispatch("users.getLongJobs", {
+			cb: res => {
+				if (res.status === "success") {
+					this.setJobs(res.data.longJobs);
+				} else console.log(res.message);
+			},
+			onProgress: res => {
+				this.setJob(res);
+			}
+		});
 	},
 	methods: {
 		remove(job) {
-			if (job.status === "success" || job.status === "error")
-				this.removeJob(job.id);
+			if (job.status === "success" || job.status === "error") {
+				this.socket.dispatch("users.removeLongJob", job.id, res => {
+					if (res.status === "success") {
+						this.removeJob(job.id);
+					} else console.log(res.message);
+				});
+			}
 		},
-		...mapActions("longJobs", ["removeJob"])
+		...mapActions("longJobs", ["setJob", "setJobs", "removeJob"])
 	}
 };
 </script>

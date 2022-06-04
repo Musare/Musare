@@ -332,6 +332,84 @@ class _CacheModule extends CoreClass {
 	}
 
 	/**
+	 * Gets a full list from Redis
+	 *
+	 * @param {object} payload - object containing payload
+	 * @param {string} payload.key - name of the table to get the value from (table === redis hash)
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	LRANGE(payload) {
+		return new Promise((resolve, reject) => {
+			let { key } = payload;
+
+			if (!key) {
+				reject(new Error("Invalid key!"));
+				return;
+			}
+			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
+
+			CacheModule.client.LRANGE(key, 0, -1, (err, list) => {
+				if (err) {
+					reject(new Error(err));
+					return;
+				}
+
+				resolve(list);
+			});
+		});
+	}
+
+	/**
+	 * Adds a value to a list in Redis
+	 *
+	 * @param {object} payload - object containing payload
+	 * @param {string} payload.key -  name of the list
+	 * @param {*} payload.value - the value we want to set
+	 * @param {boolean} [payload.stringifyJson=true] - stringify 'value' if it's an Object or Array
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	RPUSH(payload) {
+		return new Promise((resolve, reject) => {
+			let { key } = payload;
+			let { value } = payload;
+
+			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
+			// automatically stringify objects and arrays into JSON
+			if (["object", "array"].includes(typeof value)) value = JSON.stringify(value);
+
+			CacheModule.client.RPUSH(key, value, err => {
+				if (err) return reject(new Error(err));
+				return resolve();
+			});
+		});
+	}
+
+	/**
+	 * Removes a value from a list in Redis
+	 *
+	 * @param {object} payload - object containing payload
+	 * @param {string} payload.key -  name of the list
+	 * @param {*} payload.value - the value we want to remove
+	 * @param {boolean} [payload.stringifyJson=true] - stringify 'value' if it's an Object or Array
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	LREM(payload) {
+		return new Promise((resolve, reject) => {
+			let { key } = payload;
+			let { value } = payload;
+
+			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
+			// automatically stringify objects and arrays into JSON
+			if (["object", "array"].includes(typeof value)) value = JSON.stringify(value);
+
+			CacheModule.client.LREM(key, 1, value, err => {
+				if (err) return reject(new Error(err));
+				return resolve();
+			});
+		});
+	}
+
+	/**
 	 * Returns a redis schema
 	 *
 	 * @param {object} payload - object containing the payload

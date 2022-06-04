@@ -72,17 +72,17 @@ if (config.debug && config.debug.traceUnhandledPromises === true) {
 class JobManager {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
-		this.runningJobs = {};
+		this.jobs = {};
 	}
 
 	/**
-	 * Adds a job to the list of running jobs
+	 * Adds a job to the list of jobs
 	 *
 	 * @param {object} job - the job object
 	 */
 	addJob(job) {
-		if (!this.runningJobs[job.module.name]) this.runningJobs[job.module.name] = {};
-		this.runningJobs[job.module.name][job.toString()] = job;
+		if (!this.jobs[job.module.name]) this.jobs[job.module.name] = {};
+		this.jobs[job.module.name][job.toString()] = job;
 	}
 
 	/**
@@ -91,8 +91,9 @@ class JobManager {
 	 * @param {object} job - the job object
 	 */
 	removeJob(job) {
-		if (!this.runningJobs[job.module.name]) this.runningJobs[job.module.name] = {};
-		delete this.runningJobs[job.module.name][job.toString()];
+		return;
+		if (!this.jobs[job.module.name]) this.jobs[job.module.name] = {};
+		delete this.jobs[job.module.name][job.toString()];
 	}
 
 	/**
@@ -103,8 +104,8 @@ class JobManager {
 	 */
 	getJob(uuid) {
 		let job = null;
-		Object.keys(this.runningJobs).forEach(moduleName => {
-			if (this.runningJobs[moduleName][uuid]) job = this.runningJobs[moduleName][uuid];
+		Object.keys(this.jobs).forEach(moduleName => {
+			if (this.jobs[moduleName][uuid]) job = this.jobs[moduleName][uuid];
 		});
 		return job;
 	}
