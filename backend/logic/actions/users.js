@@ -1638,15 +1638,16 @@ export default {
 
 				(longJobs, next) => {
 					longJobs.forEach(longJob => {
-						longJob.onProgress.on("progress", data => {
-							this.publishProgress(
-								{
-									id: longJob.toString(),
-									...data
-								},
-								true
-							);
-						});
+						if (longJob.onProgress)
+							longJob.onProgress.on("progress", data => {
+								this.publishProgress(
+									{
+										id: longJob.toString(),
+										...data
+									},
+									true
+								);
+							});
 					});
 
 					next(

@@ -7,6 +7,7 @@ import { isAdminRequired, isLoginRequired } from "./hooks";
 import moduleManager from "../../index";
 
 const DBModule = moduleManager.modules.db;
+const CacheModule = moduleManager.modules.cache;
 const UtilsModule = moduleManager.modules.utils;
 const YouTubeModule = moduleManager.modules.youtube;
 
@@ -345,5 +346,183 @@ export default {
 				);
 				return cb({ status: "error", message: err });
 			});
+	}),
+
+	/**
+	 * Requests a set of YouTube videos as an admin
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} url - the url of the the YouTube playlist
+	 * @param {boolean} musicOnly - whether to only get music from the playlist
+	 * @param {boolean} musicOnly - whether to return videos
+	 * @param {Function} cb - gets called with the result
+	 */
+	requestSetAdmin: isAdminRequired(async function requestSetAdmin(session, url, musicOnly, returnVideos, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Import playlist",
+			message: "Importing playlist.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.requestSetAdmin`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"HSET",
+			{
+				table: `requestSetAdmin`,
+				key: this.toString(),
+				value: { payload: { url, musicOnly, returnVideos }, response: null }
+			},
+			this
+		);
+
+		YouTubeModule.runJob("REQUEST_SET", { url, musicOnly, returnVideos }, this)
+			.then(async response => {
+				this.log(
+					"SUCCESS",
+					"REQUEST_SET_ADMIN",
+					`Successfully imported a YouTube playlist to be requested for admin "${session.userId}".`
+				);
+				this.publishProgress({
+					status: "success",
+					message: `Playlist is done importing. ${response.successful} were added succesfully, ${response.failed} failed (${response.alreadyInDatabase} were already in database)`
+				});
+				await CacheModule.runJob(
+					"HSET",
+					{
+						table: `requestSetAdmin`,
+						key: this.toString(),
+						value: { payload: { url, musicOnly, returnVideos }, response }
+					},
+					this
+				);
+				return cb({
+					status: "success",
+					message: `Playlist is done importing. ${response.successful} were added succesfully, ${response.failed} failed (${response.alreadyInDatabase} were already in database)`,
+					videos: returnVideos ? response.videos : null
+				});
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log(
+					"ERROR",
+					"REQUEST_SET_ADMIN",
+					`Importing a YouTube playlist to be requested failed for admin "${session.userId}". "${err}"`
+				);
+				this.publishProgress({
+					status: "error",
+					message: err
+				});
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
+	 * Gets request set admin long jobs
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {Function} cb - gets called with the result
+	 */
+	getRequestSetAdminLongJobs: isLoginRequired(async function getRequestSetAdminLongJobs(session, cb) {
+		async.waterfall(
+			[
+				next => {
+					CacheModule.runJob(
+						"LRANGE",
+						{
+							key: `longJobs.requestSetAdmin`
+						},
+						this
+					)
+						.then(longJobUuids => next(null, longJobUuids))
+						.catch(next);
+				},
+
+				(longJobUuids, next) => {
+					next(
+						null,
+						longJobUuids.map(longJobUuid => ({
+							job: moduleManager.jobManager.getJob(longJobUuid),
+							uuid: longJobUuid
+						}))
+					);
+				},
+
+				(longJobs, next) => {
+					async.eachLimit(
+						longJobs,
+						1,
+						(longJob, next) => {
+							CacheModule.runJob("HGET", { table: "requestSetAdmin", key: longJob.uuid }, this)
+								.then(value => {
+									if (value) {
+										const { payload, response } = value;
+										longJob.payload = payload;
+										longJob.response = response;
+									}
+									next();
+								})
+								.catch(console.log);
+						},
+						err => {
+							next(err, longJobs);
+						}
+					);
+				},
+
+				(longJobs, next) => {
+					longJobs.forEach(({ job }) => {
+						if (job && job.onProgress)
+							job.onProgress.on("progress", data => {
+								this.publishProgress(
+									{
+										id: job.toString(),
+										...data
+									},
+									true
+								);
+							});
+					});
+
+					next(
+						null,
+						longJobs.map(({ job, uuid, payload, response }) => ({
+							id: uuid,
+							name: job ? job.longJobTitle : "",
+							status: job ? job.lastProgressData.status : "",
+							message: job ? job.lastProgressData.message : "",
+							payload,
+							response
+						}))
+					);
+				}
+			],
+			async (err, longJobs) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log(
+						"ERROR",
+						"GET_REQUEST_SET_ADMIN_LONG_JOBS",
+						`Couldn't get request set admin long jobs for user "${session.userId}". "${err}"`
+					);
+
+					return cb({ status: "error", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"GET_REQUEST_SET_ADMIN_LONG_JOBS",
+					`Got request set admin  long jobs for user "${session.userId}".`
+				);
+
+				return cb({
+					status: "success",
+					data: {
+						longJobs
+					}
+				});
+			}
+		);
 	})
 };

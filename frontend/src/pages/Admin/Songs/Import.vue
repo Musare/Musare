@@ -133,6 +133,16 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
+	mounted() {
+		this.socket.dispatch("youtube.getRequestSetAdminLongJobs", {
+			cb: res => {
+				console.log(111, res);
+			},
+			onProgress: res => {
+				console.log(222, res);
+			}
+		});
+	},
 	methods: {
 		submitCreateImport(stage) {
 			if (stage === 2) {
@@ -184,17 +194,20 @@ export default {
 			}, 750);
 
 			return this.socket.dispatch(
-				"youtube.requestSet",
+				"youtube.requestSetAdmin",
 				this.createImport.youtubeUrl,
 				this.createImport.isImportingOnlyMusic,
 				true,
-				res => {
-					isImportingPlaylist = false;
+				{
+					cb: res => {
+						isImportingPlaylist = false;
 
-					return new Toast({
-						content: res.message,
-						timeout: 20000
-					});
+						return new Toast({
+							content: res.message,
+							timeout: 20000
+						});
+					},
+					onProgress: console.log
 				}
 			);
 		}
