@@ -280,84 +280,157 @@ class _YouTubeModule extends CoreClass {
 	/**
 	 * Returns YouTube quota chart data
 	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.timePeriod - either hours or days
+	 * @param {string} payload.startDate - beginning date
+	 * @param {string} payload.endDate - end date
+	 * @param {string} payload.dataType - either usage or count
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	GET_QUOTA_CHART_DATA() {
+	GET_QUOTA_CHART_DATA(payload) {
 		return new Promise((resolve, reject) => {
+			const { timePeriod, startDate, endDate, dataType } = payload;
+
+			// const timePeriod = "hours";
+			// const startDate = new Date("2022-05-20 00:00:00");
+			// const endDate = new Date("2022-05-21 00:00:00");
+
+			// const timePeriod = "days";
+			// const startDate = new Date("2022-05-15 00:00:00");
+			// const endDate = new Date("2022-05-21 00:00:00");
+			// const endDate = new Date("2022-05-30 00:00:00");
+
+			// const dataType = "usage";
+			// const dataType = "count";
+
 			async.waterfall(
 				[
 					next => {
-						const fromDate = new Date(new Date() - 6 * 24 * 60 * 60 * 1000);
-						fromDate.setUTCHours(0, 0, 0);
-						const dates = [];
-						const tempDate = new Date(fromDate.getTime());
-						while (dates.length < 7) {
-							dates.push(new Date(tempDate));
-							tempDate.setDate(tempDate.getDate() + 1);
+						let timeRanges = [];
+						const lastDate = new Date(startDate);
+						if (timePeriod === "hours") {
+							startDate.setMinutes(0, 0, 0);
+							endDate.setMinutes(0, 0, 0);
+							do {
+								const newDate = new Date(lastDate.getTime() + 1000 * 60 * 60);
+
+								timeRanges.push({
+									startDate: new Date(lastDate),
+									endDate: newDate
+								});
+
+								lastDate.setTime(newDate.getTime());
+							} while (lastDate.getTime() < endDate.getTime());
+							if (timeRanges.length === 0 || timeRanges.length > 24)
+								return next("No valid time ranges specified.");
+							timeRanges = timeRanges.map(timeRange => ({
+								...timeRange,
+								label: `${timeRange.startDate.getHours().toString().padStart(2, "0")}:00`
+							}));
+						} else if (timePeriod === "days") {
+							startDate.setHours(0, 0, 0, 0);
+							endDate.setHours(0, 0, 0, 0);
+							do {
+								const newDate = new Date(lastDate.getTime() + 1000 * 60 * 60 * 24);
+
+								timeRanges.push({
+									startDate: new Date(lastDate),
+									endDate: newDate
+								});
+
+								lastDate.setTime(newDate.getTime());
+							} while (lastDate.getTime() < endDate.getTime());
+							if (timeRanges.length === 0 || timeRanges.length > 31)
+								return next("No valid time ranges specified.");
+							const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+							if (timeRanges.length <= 7)
+								timeRanges = timeRanges.map(timeRange => ({
+									...timeRange,
+									label: days[timeRange.startDate.getDay()]
+								}));
+							else
+								timeRanges = timeRanges.map(timeRange => ({
+									...timeRange,
+									label: `${timeRange.startDate.getDate().toString().padStart(2, "0")}-${(
+										timeRange.startDate.getMonth() + 1
+									)
+										.toString()
+										.padStart(2, "0")}`
+								}));
 						}
-						next(null, fromDate, dates);
+
+						return next(null, timeRanges);
 					},
 
-					(fromDate, dates, next) => {
+					(timeRanges, next) => {
 						YouTubeModule.youtubeApiRequestModel
-							.aggregate([
-								{
-									$match: { date: { $gte: fromDate } }
-								},
-								{
-									$group: {
-										_id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
-										usage: { $sum: "$quotaCost" },
-										count: { $sum: 1 }
-									}
-								},
-								{
-									$sort: { _id: 1 }
-								},
-								{
-									$project: { date: "$_id", usage: 1, count: 1 }
-								}
-							])
-							.exec((err, data) => {
-								if (err) next(err);
-								else next(null, dates, data);
+							.find({
+								date: { $gte: startDate, $lte: endDate }
+							})
+							.sort({ date: 1 })
+							.exec((err, youtubeApiRequests) => {
+								next(err, timeRanges, youtubeApiRequests);
 							});
 					},
 
-					(dates, data, next) => {
-						const filteredData = dates.map(date => {
-							const dayData = data.find(row => new Date(row.date).getDate() === date.getDate());
-							if (dayData) return { date, usage: dayData.usage, count: dayData.count };
-							return { date, usage: 0, count: 0 };
-						});
-						const friendlyDates = dates.map(date => date.toISOString().split("T")[0]);
-						next(null, {
-							quotaUsage: {
-								labels: friendlyDates,
-								datasets: [
-									{
-										label: "All",
-										data: filteredData.map(row => row.usage),
-										borderColor: "rgb(2, 166, 242)"
+					(timeRanges, youtubeApiRequests, next) => {
+						const regex = /https:\/\/www\.googleapis\.com\/youtube\/v3\/(.+)/;
+						const requestTypes = Object.fromEntries(
+							youtubeApiRequests
+								.map(youtubeApiRequest => regex.exec(youtubeApiRequest.url)[1])
+								.filter((requestType, index, array) => array.indexOf(requestType) === index)
+								.map(requestType => [requestType, 0])
+						);
+						timeRanges = timeRanges.map(timeRange => ({
+							...timeRange,
+							data: { total: 0, ...requestTypes }
+						}));
+
+						youtubeApiRequests.forEach(youtubeApiRequest => {
+							timeRanges.forEach(timeRange => {
+								if (
+									timeRange.startDate <= youtubeApiRequest.date &&
+									timeRange.endDate >= youtubeApiRequest.date
+								) {
+									const requestType = regex.exec(youtubeApiRequest.url)[1];
+									if (!timeRange.data[requestType]) timeRange.data[requestType] = 0;
+
+									if (dataType === "usage") {
+										timeRange.data[requestType] += youtubeApiRequest.quotaCost;
+										timeRange.data.total += youtubeApiRequest.quotaCost;
+									} else if (dataType === "count") {
+										timeRange.data[requestType] += 1;
+										timeRange.data.total += 1;
 									}
-								]
-							},
-							apiRequests: {
-								labels: friendlyDates,
-								datasets: [
-									{
-										label: "All",
-										data: filteredData.map(row => row.count),
-										borderColor: "rgb(2, 166, 242)"
-									}
-								]
-							}
+								}
+							});
 						});
+
+						next(null, timeRanges);
+					},
+
+					(timeRanges, next) => {
+						const chartData = {};
+						chartData.labels = timeRanges.map(timeRange => timeRange.label);
+						const datasetTypes = Object.keys(timeRanges[0].data);
+						const colors = {
+							total: "rgb(2, 166, 242)",
+							videos: "rgb(166, 2, 242)",
+							search: "rgb(242, 2, 166)",
+							channels: "rgb(2, 242, 166)",
+							playlistItems: "rgb(242, 166, 2)"
+						};
+						chartData.datasets = datasetTypes.map(datasetType => ({
+							label: datasetType,
+							backgroundColor: colors[datasetType],
+							data: timeRanges.map(timeRange => timeRange.data[datasetType])
+						}));
+						next(null, chartData);
 					}
 				],
-				(err, data) => {
+				(err, chartData) => {
 					if (err) reject(err);
-					else resolve(data);
+					else resolve(chartData);
 				}
 			);
 		});

@@ -272,9 +272,29 @@ export default {
 				}
 			);
 
-			this.socket.dispatch("youtube.getQuotaChartData", res => {
-				if (res.status === "success") this.charts = res.data;
-			});
+			this.socket.dispatch(
+				"youtube.getQuotaChartData",
+				"days",
+				new Date().setDate(new Date().getDate() - 6),
+				new Date().setDate(new Date().getDate() + 1),
+				"usage",
+				res => {
+					if (res.status === "success")
+						this.charts.quotaUsage = res.data;
+				}
+			);
+
+			this.socket.dispatch(
+				"youtube.getQuotaChartData",
+				"days",
+				new Date().setDate(new Date().getDate() - 6),
+				new Date().setDate(new Date().getDate() + 1),
+				"count",
+				res => {
+					if (res.status === "success")
+						this.charts.apiRequests = res.data;
+				}
+			);
 		},
 		getDateFormatted(createdAt) {
 			const date = new Date(createdAt);

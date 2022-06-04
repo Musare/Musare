@@ -32,10 +32,26 @@ export default {
 	/**
 	 * Returns YouTube quota chart data
 	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param timePeriod - either hours or days
+	 * @param startDate - beginning date
+	 * @param endDate - end date
+	 * @param dataType - either usage or count
 	 * @returns {{status: string, data: object}}
 	 */
-	getQuotaChartData: isAdminRequired(function getQuotaChartData(session, cb) {
-		YouTubeModule.runJob("GET_QUOTA_CHART_DATA", {}, this)
+	getQuotaChartData: isAdminRequired(function getQuotaChartData(
+		session,
+		timePeriod,
+		startDate,
+		endDate,
+		dataType,
+		cb
+	) {
+		YouTubeModule.runJob(
+			"GET_QUOTA_CHART_DATA",
+			{ timePeriod, startDate: new Date(startDate), endDate: new Date(endDate), dataType },
+			this
+		)
 			.then(data => {
 				this.log("SUCCESS", "YOUTUBE_GET_QUOTA_CHART_DATA", `Getting quota chart data was successful.`);
 				return cb({ status: "success", data });
