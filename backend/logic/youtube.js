@@ -307,10 +307,10 @@ class _YouTubeModule extends CoreClass {
 				[
 					next => {
 						let timeRanges = [];
-						const lastDate = new Date(startDate);
 						if (timePeriod === "hours") {
 							startDate.setMinutes(0, 0, 0);
 							endDate.setMinutes(0, 0, 0);
+							const lastDate = new Date(startDate);
 							do {
 								const newDate = new Date(lastDate.getTime() + 1000 * 60 * 60);
 
@@ -330,6 +330,7 @@ class _YouTubeModule extends CoreClass {
 						} else if (timePeriod === "days") {
 							startDate.setHours(0, 0, 0, 0);
 							endDate.setHours(0, 0, 0, 0);
+							const lastDate = new Date(startDate);
 							do {
 								const newDate = new Date(lastDate.getTime() + 1000 * 60 * 60 * 24);
 
