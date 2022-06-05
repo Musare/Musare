@@ -473,16 +473,6 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
-	mounted() {
-		// this.socket.dispatch("youtube.getRequestSetAdminLongJobs", {
-		// 	cb: res => {
-		// 		console.log(111, res);
-		// 	},
-		// 	onProgress: res => {
-		// 		console.log(222, res);
-		// 	}
-		// });
-	},
 	methods: {
 		openAdvancedTable(importJob) {
 			const filter = {
@@ -491,7 +481,7 @@ export default {
 						data: importJob._id,
 						filter: {
 							name: "importJob",
-							displayName: "Import%20job",
+							displayName: "Import Job",
 							property: "importJob",
 							filterTypes: ["special"],
 							defaultFilterType: "special"

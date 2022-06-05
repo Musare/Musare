@@ -33,6 +33,7 @@ export default {
 	},
 	mutations: {
 		init(state, { songs }) {
+			state.originalPlaylistSongs = JSON.parse(JSON.stringify(songs));
 			state.playlistSongs = JSON.parse(JSON.stringify(songs));
 		},
 		showDiscogsTab(state, tab) {

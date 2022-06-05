@@ -286,7 +286,7 @@ export default {
 				},
 				{
 					name: "importJob",
-					displayName: "Import job",
+					displayName: "Import Job",
 					property: "importJob",
 					filterTypes: ["special"],
 					defaultFilterType: "special"
