@@ -562,7 +562,7 @@ class _StationsModule extends CoreClass {
 								if (err) next(err);
 								else {
 									const newSongsToAdd = songsToAdd.map(song =>
-										songs.find(newSong => newSong._id.toString() === song._id.toString())
+										songs.find(newSong => newSong.youtubeId === song.youtubeId)
 									);
 									next(null, currentSongs, newSongsToAdd, currentSongIndex);
 								}
