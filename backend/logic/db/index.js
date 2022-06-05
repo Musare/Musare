@@ -408,7 +408,7 @@ class _DBModule extends CoreClass {
 
 					// Adds the match stage to aggregation pipeline, which is responsible for filtering
 					(pipeline, next) => {
-						const { queries, operator, specialQueries } = payload;
+						const { queries, operator, specialQueries, specialFilters } = payload;
 
 						let queryError;
 						const newQueries = queries.flatMap(query => {
@@ -439,6 +439,9 @@ class _DBModule extends CoreClass {
 								newQuery[filter.property] = { $eq: Number(data) };
 							} else if (filterType === "boolean") {
 								newQuery[filter.property] = { $eq: !!data };
+							} else if (filterType === "special") {
+								pipeline.push(...specialFilters[filter.property](data));
+								newQuery[filter.property] = { $eq: true };
 							}
 
 							if (specialQueries[filter.property]) {

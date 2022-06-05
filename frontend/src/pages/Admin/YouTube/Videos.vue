@@ -274,6 +274,13 @@ export default {
 					property: "createdAt",
 					filterTypes: ["datetimeBefore", "datetimeAfter"],
 					defaultFilterType: "datetimeBefore"
+				},
+				{
+					name: "importJob",
+					displayName: "Import job",
+					property: "importJob",
+					filterTypes: ["special"],
+					defaultFilterType: "special"
 				}
 			],
 			events: {

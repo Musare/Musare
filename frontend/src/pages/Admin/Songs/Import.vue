@@ -42,7 +42,8 @@
 							>YouTube URL
 							<info-icon
 								content="YouTube playlist or channel URLs may be provided"
-						/></label>
+							/>
+						</label>
 						<div class="control is-expanded">
 							<input
 								class="input"
@@ -118,6 +119,7 @@
 							<div class="row-options">
 								<button
 									class="button is-primary icon-with-button material-icons"
+									@click="openAdvancedTable(slotProps.item)"
 									:disabled="
 										slotProps.item.removed ||
 										slotProps.item.status !== 'success'
@@ -470,6 +472,28 @@ export default {
 		// });
 	},
 	methods: {
+		openAdvancedTable(importJob) {
+			const filter = {
+				appliedFilters: [
+					{
+						data: importJob._id,
+						filter: {
+							name: "importJob",
+							displayName: "Import%20job",
+							property: "importJob",
+							filterTypes: ["special"],
+							defaultFilterType: "special"
+						},
+						filterType: { name: "special", displayName: "Special" }
+					}
+				],
+				appliedFilterOperator: "or"
+			};
+			this.$router.push({
+				path: `/admin/youtube/videos`,
+				query: { filter: JSON.stringify(filter) }
+			});
+		},
 		submitCreateImport(stage) {
 			if (stage === 2) {
 				const playlistRegex = /[\\?&]list=([^&#]*)/;

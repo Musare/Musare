@@ -867,6 +867,10 @@ export default {
 				boolean: {
 					name: "boolean",
 					displayName: "Boolean"
+				},
+				special: {
+					name: "special",
+					displayName: "Special"
 				}
 			},
 			addFilterValue: null,

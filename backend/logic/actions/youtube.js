@@ -248,7 +248,46 @@ export default {
 							modelName: "youtubeVideo",
 							blacklistedProperties: [],
 							specialProperties: {},
-							specialQueries: {}
+							specialQueries: {},
+							specialFilters: {
+								importJob: importJobId => [
+									{
+										$lookup: {
+											from: "importjobs",
+											let: { youtubeId: "$youtubeId" },
+											pipeline: [
+												{
+													$match: {
+														_id: mongoose.Types.ObjectId(importJobId)
+													}
+												},
+												{
+													$addFields: {
+														importJob: {
+															$in: ["$$youtubeId", "$response.successfulVideoIds"]
+														}
+													}
+												},
+												{
+													$project: {
+														importJob: 1,
+														_id: 0
+													}
+												}
+											],
+											as: "importJob"
+										}
+									},
+									{
+										$unwind: "$importJob"
+									},
+									{
+										$set: {
+											importJob: "$importJob.importJob"
+										}
+									}
+								]
+							}
 						},
 						this
 					)
