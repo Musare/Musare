@@ -1,7 +1,14 @@
 /* eslint no-param-reassign: 0 */
 
 const state = {
-	activeJobs: [],
+	activeJobs: [
+		// {
+		// 	id: 1,
+		// 	name: "test",
+		// 	status: "success",
+		// 	message: "test"
+		// }
+	],
 	removedJobIds: []
 };
 
@@ -20,8 +27,7 @@ const mutations = {
 				state.activeJobs.push({
 					id,
 					name,
-					status,
-					message
+					status
 				});
 			else
 				state.activeJobs.forEach((activeJob, index) => {

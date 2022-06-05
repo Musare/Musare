@@ -224,6 +224,22 @@
 					</div>
 				</div>
 				<div class="import-youtube-playlist">
+					<p class="control is-expanded">
+						<input
+							class="input"
+							type="text"
+							placeholder="Enter YouTube Playlist URL here..."
+							v-model="search.playlist.query"
+							@keyup.enter="importPlaylist()"
+						/>
+					</p>
+					<button
+						class="button is-fullwidth is-info"
+						@click="importPlaylist()"
+					>
+						<i class="material-icons icon-with-button">publish</i
+						>Import
+					</button>
 					<button
 						class="button is-fullwidth is-danger"
 						@click="resetTrackSongs()"
@@ -327,6 +343,12 @@ export default {
 			isImportingPlaylist: false,
 			trackSongs: [],
 			songsToEdit: [],
+			// currentEditSongIndex: 0,
+			search: {
+				playlist: {
+					query: ""
+				}
+			},
 			discogsQuery: "",
 			discogs: {
 				apiResults: [],
@@ -436,6 +458,59 @@ export default {
 		},
 		log(evt) {
 			window.console.log(evt);
+		},
+		importPlaylist() {
+			if (this.isImportingPlaylist)
+				return new Toast("A playlist is already importing.");
+			this.isImportingPlaylist = true;
+
+			// import query is blank
+			if (!this.search.playlist.query)
+				return new Toast("Please enter a YouTube playlist URL.");
+
+			const regex = /[\\?&]list=([^&#]*)/;
+			const splitQuery = regex.exec(this.search.playlist.query);
+
+			if (!splitQuery) {
+				return new Toast({
+					content: "Please enter a valid YouTube playlist URL.",
+					timeout: 4000
+				});
+			}
+
+			// don't give starting import message instantly in case of instant error
+			setTimeout(() => {
+				if (this.isImportingPlaylist) {
+					new Toast(
+						"Starting to import your playlist. This can take some time to do."
+					);
+				}
+			}, 750);
+
+			return this.socket.dispatch(
+				"songs.requestSet",
+				this.search.playlist.query,
+				false,
+				true,
+				res => {
+					this.isImportingPlaylist = false;
+					const songs = res.songs.filter(song => !song.verified);
+					const songsAlreadyVerified =
+						res.songs.length - songs.length;
+					this.setPlaylistSongs(songs);
+					if (this.discogsAlbum.tracks) {
+						this.trackSongs = this.discogsAlbum.tracks.map(
+							() => []
+						);
+						this.tryToAutoMove();
+					}
+					if (songsAlreadyVerified > 0)
+						new Toast(
+							`${songsAlreadyVerified} songs were already verified, skipping those.`
+						);
+					return new Toast({ content: res.message, timeout: 20000 });
+				}
+			);
 		},
 		tryToAutoMove() {
 			const { tracks } = this.discogsAlbum;

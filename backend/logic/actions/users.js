@@ -220,8 +220,11 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "longJob.added",
 	cb: ({ jobId, userId }) => {
+		console.log(1111, jobId, userId);
 		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
+			console.log(2222, sockets.length);
 			sockets.forEach(socket => {
+				console.log(3333);
 				socket.dispatch("keep.event:longJob.added", {
 					data: {
 						jobId

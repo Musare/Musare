@@ -19,6 +19,8 @@ export default {
 		toggleDiscogsAlbum: ({ commit }) => {
 			commit("toggleDiscogsAlbum");
 		},
+		setPlaylistSongs: ({ commit }, playlistSongs) =>
+			commit("setPlaylistSongs", playlistSongs),
 		updatePlaylistSongs: ({ commit }, playlistSongs) =>
 			commit("updatePlaylistSongs", playlistSongs),
 		updateEditingSongs: ({ commit }, editingSongs) =>
@@ -31,7 +33,6 @@ export default {
 	},
 	mutations: {
 		init(state, { songs }) {
-			state.originalPlaylistSongs = JSON.parse(JSON.stringify(songs));
 			state.playlistSongs = JSON.parse(JSON.stringify(songs));
 		},
 		showDiscogsTab(state, tab) {
@@ -48,6 +49,12 @@ export default {
 		},
 		toggleDiscogsAlbum(state) {
 			state.discogsAlbum.expanded = !state.discogsAlbum.expanded;
+		},
+		setPlaylistSongs(state, playlistSongs) {
+			state.originalPlaylistSongs = JSON.parse(
+				JSON.stringify(playlistSongs)
+			);
+			state.playlistSongs = JSON.parse(JSON.stringify(playlistSongs));
 		},
 		updatePlaylistSongs(state, playlistSongs) {
 			state.playlistSongs = JSON.parse(JSON.stringify(playlistSongs));
