@@ -2376,6 +2376,10 @@ export default {
 		.delete-icon {
 			color: var(--dark-red);
 		}
+
+		.import-album-icon {
+			color: var(--purple);
+		}
 	}
 }
 </style>

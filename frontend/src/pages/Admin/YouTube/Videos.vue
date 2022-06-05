@@ -116,6 +116,15 @@
 						music_note
 					</i>
 					<i
+						class="material-icons import-album-icon"
+						@click.prevent="importAlbum(slotProps.item)"
+						content="Import album from videos"
+						v-tippy
+						tabindex="0"
+					>
+						album
+					</i>
+					<i
 						class="material-icons delete-icon"
 						@click.prevent="
 							confirmAction({
@@ -323,6 +332,17 @@ export default {
 				}));
 				this.openModal({ modal: "editSongs", data: { songs } });
 			}
+		},
+		importAlbum(selectedRows) {
+			const songs = selectedRows.map(
+				({ youtubeId, title, author, duration }) => ({
+					youtubeId,
+					title,
+					artists: [author],
+					duration
+				})
+			);
+			this.openModal({ modal: "importAlbum", data: { songs } });
 		},
 		removeVideos(videoIds) {
 			this.socket.dispatch(
