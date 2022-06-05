@@ -188,6 +188,15 @@
 						</i>
 					</quick-confirm>
 					<i
+						class="material-icons import-album-icon"
+						@click.prevent="importAlbum(slotProps.item)"
+						content="Import Album"
+						v-tippy
+						tabindex="0"
+					>
+						album
+					</i>
+					<i
 						class="material-icons tag-songs-icon"
 						@click.prevent="setTags(slotProps.item)"
 						content="Set Tags"
@@ -264,7 +273,7 @@ export default {
 				{
 					name: "options",
 					displayName: "Options",
-					properties: ["_id", "verified"],
+					properties: ["_id", "verified", "youtubeId"],
 					sortable: false,
 					hidable: false,
 					resizable: false,
@@ -595,6 +604,21 @@ export default {
 				selectedRows.map(row => row._id),
 				res => {
 					new Toast(res.message);
+				}
+			);
+		},
+		importAlbum(selectedRows) {
+			const youtubeIds = selectedRows.map(({ youtubeId }) => youtubeId);
+			this.socket.dispatch(
+				"songs.getSongsFromYoutubeIds",
+				youtubeIds,
+				res => {
+					if (res.status === "success") {
+						this.openModal({
+							modal: "importAlbum",
+							data: { songs: res.data.songs }
+						});
+					}
 				}
 			);
 		},

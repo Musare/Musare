@@ -174,7 +174,7 @@ export default {
 				{
 					name: "options",
 					displayName: "Options",
-					properties: ["_id"],
+					properties: ["_id", "youtubeId"],
 					sortable: false,
 					hidable: false,
 					resizable: false,
@@ -334,15 +334,19 @@ export default {
 			}
 		},
 		importAlbum(selectedRows) {
-			const songs = selectedRows.map(
-				({ youtubeId, title, author, duration }) => ({
-					youtubeId,
-					title,
-					artists: [author],
-					duration
-				})
+			const youtubeIds = selectedRows.map(({ youtubeId }) => youtubeId);
+			this.socket.dispatch(
+				"songs.getSongsFromYoutubeIds",
+				youtubeIds,
+				res => {
+					if (res.status === "success") {
+						this.openModal({
+							modal: "importAlbum",
+							data: { songs: res.data.songs }
+						});
+					} else new Toast("Could not get songs.");
+				}
 			);
-			this.openModal({ modal: "importAlbum", data: { songs } });
 		},
 		removeVideos(videoIds) {
 			this.socket.dispatch(
