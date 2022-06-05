@@ -1,3 +1,4 @@
+import async from "async";
 import config from "config";
 import redis from "redis";
 import mongoose from "mongoose";
@@ -62,6 +63,15 @@ class _CacheModule extends CoreClass {
 						this.setStatus("FAILED");
 					}
 				}
+			});
+
+			// TODO move to a better place
+			CacheModule.runJob("KEYS", { pattern: "longJobs.*" }).then(keys => {
+				async.eachLimit(keys, 1, (key, next) => {
+					CacheModule.runJob("DEL", { key }).finally(() => {
+						next();
+					});
+				});
 			});
 
 			this.client.on("error", err => {
@@ -405,6 +415,24 @@ class _CacheModule extends CoreClass {
 			CacheModule.client.LREM(key, 1, value, err => {
 				if (err) return reject(new Error(err));
 				return resolve();
+			});
+		});
+	}
+
+	/**
+	 * Gets a list of keys in Redis with a matching pattern
+	 *
+	 * @param {object} payload - object containing payload
+	 * @param {string} payload.pattern -  pattern to search for
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	KEYS(payload) {
+		return new Promise((resolve, reject) => {
+			const { pattern } = payload;
+
+			CacheModule.client.KEYS(pattern, (err, keys) => {
+				if (err) return reject(new Error(err));
+				return resolve(keys);
 			});
 		});
 	}
