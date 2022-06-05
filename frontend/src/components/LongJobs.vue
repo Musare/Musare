@@ -118,6 +118,24 @@ export default {
 				this.setJob(res);
 			}
 		});
+
+		this.socket.on("keep.event:longJob.removed", ({ data }) => {
+			this.removeJob(data.jobId);
+		});
+
+		this.socket.on("keep.event:longJob.added", ({ data }) => {
+			if (!this.activeJobs.find(activeJob => activeJob.id === data.jobId))
+				this.socket.dispatch("users.getLongJob", data.jobId, {
+					cb: res => {
+						if (res.status === "success") {
+							this.setJob(res.data.longJob);
+						} else console.log(res.message);
+					},
+					onProgress: res => {
+						this.setJob(res);
+					}
+				});
+		});
 	},
 	methods: {
 		remove(job) {

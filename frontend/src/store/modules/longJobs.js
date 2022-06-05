@@ -8,7 +8,8 @@ const state = {
 		// 	status: "success",
 		// 	message: "test"
 		// }
-	]
+	],
+	removedJobIds: []
 };
 
 const getters = {};
@@ -21,22 +22,23 @@ const actions = {
 
 const mutations = {
 	setJob(state, { id, name, status, message }) {
-		if (status === "started")
-			state.activeJobs.push({
-				id,
-				name,
-				status
-			});
-		else
-			state.activeJobs.forEach((activeJob, index) => {
-				if (activeJob.id === id) {
-					state.activeJobs[index] = {
-						...state.activeJobs[index],
-						status,
-						message
-					};
-				}
-			});
+		if (state.removedJobIds.indexOf(id) === -1)
+			if (!state.activeJobs.find(activeJob => activeJob.id === id))
+				state.activeJobs.push({
+					id,
+					name,
+					status
+				});
+			else
+				state.activeJobs.forEach((activeJob, index) => {
+					if (activeJob.id === id) {
+						state.activeJobs[index] = {
+							...state.activeJobs[index],
+							status,
+							message
+						};
+					}
+				});
 	},
 	setJobs(state, jobs) {
 		state.activeJobs = jobs;
@@ -45,6 +47,7 @@ const mutations = {
 		state.activeJobs.forEach((activeJob, index) => {
 			if (activeJob.id === jobId) {
 				state.activeJobs.splice(index, 1);
+				state.removedJobIds.push(jobId);
 			}
 		});
 	}

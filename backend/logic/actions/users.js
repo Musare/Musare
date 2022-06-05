@@ -202,6 +202,39 @@ CacheModule.runJob("SUB", {
 	}
 });
 
+CacheModule.runJob("SUB", {
+	channel: "longJob.removed",
+	cb: ({ jobId, userId }) => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
+			sockets.forEach(socket => {
+				socket.dispatch("keep.event:longJob.removed", {
+					data: {
+						jobId
+					}
+				});
+			});
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "longJob.added",
+	cb: ({ jobId, userId }) => {
+		console.log(1111, jobId, userId);
+		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
+			console.log(2222, sockets.length);
+			sockets.forEach(socket => {
+				console.log(3333);
+				socket.dispatch("keep.event:longJob.added", {
+					data: {
+						jobId
+					}
+				});
+			});
+		});
+	}
+});
+
 export default {
 	/**
 	 * Gets users, used in the admin users page by the AdvancedTable component
@@ -1607,7 +1640,7 @@ export default {
 	},
 
 	/**
-	 * Updates the order of a user's playlists
+	 * Gets a list of long jobs, including onprogress events when those long jobs have progress
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
@@ -1683,7 +1716,81 @@ export default {
 	}),
 
 	/**
-	 * Updates the order of a user's playlists
+	 * Gets a specific long job, including onprogress events when that long job has progress
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} jobId - the if id the long job
+	 * @param {Function} cb - gets called with the result
+	 */
+	getLongJob: isLoginRequired(async function getLongJobs(session, jobId, cb) {
+		async.waterfall(
+			[
+				next => {
+					CacheModule.runJob(
+						"LRANGE",
+						{
+							key: `longJobs.${session.userId}`
+						},
+						this
+					)
+						.then(longJobUuids => next(null, longJobUuids))
+						.catch(next);
+				},
+
+				(longJobUuids, next) => {
+					if (longJobUuids.indexOf(jobId) === -1) return next("Long job not found.");
+					const longJob = moduleManager.jobManager.getJob(jobId);
+					if (!longJob) return next("Long job not found.");
+					return next(null, longJob);
+				},
+
+				(longJob, next) => {
+					if (longJob.onProgress)
+						longJob.onProgress.on("progress", data => {
+							this.publishProgress(
+								{
+									id: longJob.toString(),
+									...data
+								},
+								true
+							);
+						});
+
+					next(null, {
+						id: longJob.toString(),
+						name: longJob.longJobTitle,
+						status: longJob.lastProgressData.status,
+						message: longJob.lastProgressData.message
+					});
+				}
+			],
+			async (err, longJob) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log(
+						"ERROR",
+						"GET_LONG_JOB",
+						`Couldn't get long job for user "${session.userId}" with id "${jobId}". "${err}"`
+					);
+
+					return cb({ status: "error", message: err });
+				}
+
+				this.log("SUCCESS", "GET_LONG_JOB", `Got long job for user "${session.userId}" with id "${jobId}".`);
+
+				return cb({
+					status: "success",
+					data: {
+						longJob
+					}
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Removes active long job for a user
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} jobId - array of playlist ids (with a specific order)
@@ -1729,6 +1836,11 @@ export default {
 					"REMOVE_LONG_JOB",
 					`Removed long job for user "${session.userId}" with id ${jobId}.`
 				);
+
+				CacheModule.runJob("PUB", {
+					channel: "longJob.removed",
+					value: { jobId, userId: session.userId }
+				});
 
 				return cb({
 					status: "success",

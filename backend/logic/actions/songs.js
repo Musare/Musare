@@ -1319,6 +1319,14 @@ export default {
 			id: this.toString()
 		});
 		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
 
 		async.waterfall(
 			[
