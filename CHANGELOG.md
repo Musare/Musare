@@ -1,5 +1,47 @@
 # Changelog
 
+## [v3.6.0-rc1] - 2022-06-05
+
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Added
+- feat: Added tab-completion to backend commands
+- feat: Added YouTube quota usage tracking
+- feat: Added YouTube API requests tracking, caching and management
+- feat: Added YouTube channel import functionality
+- feat: Added YouTube title and artists prefill button to Edit Song modal
+- feat: Warn if thumbnail fails to load in Edit Song modal
+- feat: Added Import Songs admin page
+- feat: Added YouTube API requests admin page with charts and an advanced table
+- feat: Added YouTube videos admin page with an advanced table
+- feat: Added View API Request modal
+- feat: Added View YouTube Video modal
+- feat: Added long jobs handling and monitoring
+
+### Changed
+- refactor: Display user display names instead of usernames in links and station user list
+- refactor: Use YouTube thumbnail as a fallback to song thumbnails
+- refactor: Use song thumbnail component in Edit Song modal, with fallback disabled
+- refactor: Edit Song positioning and styling tweaks
+- refactor: Moved vote skip processing to dedicated job
+- refactor: Prevent auto vote to skip if locally paused
+- refactor: Added info header card to admin pages
+- refactor: Allowed for song style usage of YouTube videos in playlists and station queues
+- refactor: Moved ratings to dedicated model within media module, with YouTube video support
+- refactor: Replace songs with YouTube videos in playlists, station queues and ratings on removal
+- refactor: Moved drag box handling to mixin
+- refactor: Floating box logic and styling improvements
+- refactor: Added support for creation of songs from YouTube videos in Edit Song(s) modals
+- refactor: Compile production frontend as part of docker image build
+- refactor: Changed default frontend docker mode to prod
+- refactor: Import Album can now use a selection of songs or YouTube videos in addition to YouTube playlist importing.
+
+### Fixed
+- fix: musare.sh attach not working with podman-compose
+- fix: Station autofill not run after removal from queue
+- fix: AdvancedTable multi-row select with left ctrl/shift doesnt work
+- fix: YouTube search actions don't require login
+
 ## [v3.5.2] - 2022-05-12
 
 Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
