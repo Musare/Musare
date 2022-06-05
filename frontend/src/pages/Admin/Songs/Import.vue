@@ -41,7 +41,7 @@
 						<label class="label"
 							>YouTube URL
 							<info-icon
-								content="YouTube playlist or channel URLs may be provided"
+								tooltip="YouTube playlist or channel URLs may be provided"
 							/>
 						</label>
 						<div class="control is-expanded">
@@ -66,7 +66,7 @@
 							<label class="label" for="import-music-only">
 								Import Music Only
 								<info-icon
-									content="Only import videos from YouTube identified as music"
+									tooltip="Only import videos from YouTube identified as music"
 									@click.prevent
 								/>
 							</label>
