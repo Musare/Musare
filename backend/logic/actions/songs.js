@@ -278,7 +278,16 @@ export default {
 						"GET_SONGS",
 						{
 							youtubeIds,
-							properties: ["youtubeId", "title", "artists", "thumbnail", "duration", "verified", "_id"]
+							properties: [
+								"youtubeId",
+								"title",
+								"artists",
+								"thumbnail",
+								"duration",
+								"verified",
+								"_id",
+								"youtubeVideoId"
+							]
 						},
 						this
 					)

@@ -147,6 +147,11 @@ class _YouTubeModule extends CoreClass {
 							room: "admin.youtubeVideos",
 							args: ["event:admin.youtubeVideo.removed", { data: { videoId } }]
 						});
+
+						WSModule.runJob("EMIT_TO_ROOMS", {
+							rooms: ["import-album", "edit-songs"],
+							args: ["event:admin.youtubeVideo.removed", { videoId }]
+						});
 					});
 				}
 			});

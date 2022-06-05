@@ -305,6 +305,17 @@ export default {
 			},
 			{ modalUuid: this.modalUuid }
 		);
+
+		this.socket.on(
+			`event:admin.youtubeVideo.removed`,
+			res => {
+				const index = this.items
+					.map(item => item.song.youtubeVideoId)
+					.indexOf(res.videoId);
+				if (index !== -1) this.items[index].song.removed = true;
+			},
+			{ modalUuid: this.modalUuid }
+		);
 	},
 	beforeUnmount() {
 		this.socket.dispatch("apis.leaveRoom", "edit-songs");

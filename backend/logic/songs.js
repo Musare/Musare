@@ -203,7 +203,8 @@ class _SongsModule extends CoreClass {
 												thumbnail || `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`,
 											requestedBy: null,
 											requestedAt: Date.now(),
-											verified: false
+											verified: false,
+											youtubeVideoId: video._id
 										};
 									});
 									next(null, [...songs, ...youtubeVideos]);
