@@ -147,6 +147,23 @@
 									music_note
 								</button>
 								<button
+									class="button icon-with-button material-icons import-album-icon"
+									@click="
+										importAlbum(
+											slotProps.item.response
+												.successfulVideoIds
+										)
+									"
+									:disabled="
+										slotProps.item.removed ||
+										slotProps.item.status !== 'success'
+									"
+									content="Import album from videos"
+									v-tippy
+								>
+									album
+								</button>
+								<button
 									class="button is-danger icon-with-button material-icons"
 									@click.prevent="
 										confirmAction({
@@ -269,8 +286,8 @@ export default {
 					sortable: false,
 					hidable: false,
 					resizable: false,
-					minWidth: 129,
-					defaultWidth: 129
+					minWidth: 160,
+					defaultWidth: 160
 				},
 				{
 					name: "type",
@@ -575,6 +592,20 @@ export default {
 				this.openModal({ modal: "editSong", data: { song: songs[0] } });
 			else this.openModal({ modal: "editSongs", data: { songs } });
 		},
+		importAlbum(youtubeIds) {
+			this.socket.dispatch(
+				"songs.getSongsFromYoutubeIds",
+				youtubeIds,
+				res => {
+					if (res.status === "success") {
+						this.openModal({
+							modal: "importAlbum",
+							data: { songs: res.data.songs }
+						});
+					} else new Toast("Could not get songs.");
+				}
+			);
+		},
 		removeImportJob(jobId) {
 			this.socket.dispatch("media.removeImportJobs", jobId, res => {
 				new Toast(res.message);
@@ -658,6 +689,13 @@ export default {
 
 		.right-section {
 			max-width: calc(100% - 400px);
+
+			.row-options .material-icons.import-album-icon {
+				background-color: var(--purple);
+				color: var(--white);
+				border-color: var(--purple);
+				font-size: 20px;
+			}
 		}
 
 		@media screen and (max-width: 1200px) {
