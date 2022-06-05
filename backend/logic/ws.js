@@ -634,8 +634,9 @@ class _WSModule extends CoreClass {
 
 				if (!namespace) return socket.dispatch("ERROR", "Invalid namespace.");
 				if (!action) return socket.dispatch("ERROR", "Invalid action.");
-				if (!WSModule.actions[namespace]) return socket.dispatch("ERROR", "Namespace not found.");
-				if (!WSModule.actions[namespace][action]) return socket.dispatch("ERROR", "Action not found.");
+				if (!WSModule.actions[namespace]) return socket.dispatch("ERROR", `Namespace ${namespace} not found.`);
+				if (!WSModule.actions[namespace][action])
+					return socket.dispatch("ERROR", `Action ${namespace}.${action} not found.`);
 
 				if (data[data.length - 1].CB_REF) {
 					const { CB_REF, onProgress } = data[data.length - 1];
