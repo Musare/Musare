@@ -2367,6 +2367,7 @@ export default {
 
 		> div {
 			margin: 16px !important;
+			width: 100%;
 		}
 
 		input {
@@ -2389,7 +2390,7 @@ export default {
 
 		.album-art-container {
 			margin-right: 16px;
-			width: calc((100% - 16px) / 8 * 4);
+			width: 100%;
 		}
 
 		.youtube-id-container {
