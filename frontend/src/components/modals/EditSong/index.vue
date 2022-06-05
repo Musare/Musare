@@ -1712,7 +1712,9 @@ export default {
 						});
 					else throw new Error("No title found");
 				} catch (e) {
-					new Toast("Unable to fetch YouTube video title");
+					new Toast(
+						"Unable to fetch YouTube video title. Try starting the video."
+					);
 				}
 			}
 			if (type === "thumbnail")
@@ -1727,7 +1729,9 @@ export default {
 					if (author) this.artistInputValue = author;
 					else throw new Error("No video author found");
 				} catch (e) {
-					new Toast("Unable to fetch YouTube video author");
+					new Toast(
+						"Unable to fetch YouTube video author. Try starting the video."
+					);
 				}
 			}
 		},
