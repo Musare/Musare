@@ -1219,7 +1219,7 @@ export default {
 
 								this.playerReady = true;
 
-								if (this.song && this.song._id)
+								if (this.song && this.song.youtubeId)
 									this.video.player.cueVideoById(
 										this.song.youtubeId,
 										this.song.skipDuration
