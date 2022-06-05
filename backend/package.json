@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "async": "^3.2.3",
-    "axios": "^0.26.1",
+    "axios": "^0.27.2",
     "bcrypt": "^5.0.1",
     "bluebird": "^3.7.2",
     "body-parser": "^1.20.0",
@@ -29,7 +29,7 @@
     "nodemailer": "^6.7.5",
     "oauth": "^0.9.15",
     "redis": "^3.1.2",
-    "retry-axios": "^2.6.0",
+    "retry-axios": "^3.0.0",
     "sha256": "^0.2.0",
     "socks": "^2.6.2",
     "underscore": "^1.13.4",
