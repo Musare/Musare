@@ -790,6 +790,7 @@ class _SongsModule extends CoreClass {
 							(song, next) => {
 								index += 1;
 								console.log(`Updating song #${index} out of ${length}: ${song._id}`);
+								this.publishProgress({ status: "update", message: `Updating song "${song._id}"` });
 								SongsModule.runJob("UPDATE_SONG", { songId: song._id }, this)
 									.then(() => {
 										next();
@@ -1118,6 +1119,10 @@ class _SongsModule extends CoreClass {
 								async.waterfall(
 									[
 										next => {
+											this.publishProgress({
+												status: "update",
+												message: `Requesting "${youtubeId}"`
+											});
 											console.log(
 												youtubeId,
 												`this is song ${youtubeIds.indexOf(youtubeId) + 1}/${youtubeIds.length}`

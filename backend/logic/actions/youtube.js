@@ -165,6 +165,23 @@ export default {
 	 * @returns {{status: string, data: object}}
 	 */
 	resetStoredApiRequests: isAdminRequired(async function resetStoredApiRequests(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Reset stored API requests",
+			message: "Resetting stored API requests.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		YouTubeModule.runJob("RESET_STORED_API_REQUESTS", {}, this)
 			.then(() => {
 				this.log(
@@ -172,6 +189,10 @@ export default {
 					"YOUTUBE_RESET_STORED_API_REQUESTS",
 					`Resetting stored API requests was successful.`
 				);
+				this.publishProgress({
+					status: "success",
+					message: "Successfully reset stored YouTube API requests."
+				});
 				return cb({ status: "success", message: "Successfully reset stored YouTube API requests" });
 			})
 			.catch(async err => {
@@ -181,6 +202,10 @@ export default {
 					"YOUTUBE_RESET_STORED_API_REQUESTS",
 					`Resetting stored API requests failed. "${err}"`
 				);
+				this.publishProgress({
+					status: "error",
+					message: err
+				});
 				return cb({ status: "error", message: err });
 			});
 	}),
@@ -340,16 +365,40 @@ export default {
 	 *
 	 * @returns {{status: string, data: object}}
 	 */
-	removeVideos: isAdminRequired(function removeVideos(session, videoIds, cb) {
+	removeVideos: isAdminRequired(async function removeVideos(session, videoIds, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Bulk remove YouTube videos",
+			message: "Bulk removing YouTube videos.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		YouTubeModule.runJob("REMOVE_VIDEOS", { videoIds }, this)
 			.then(() => {
 				this.log("SUCCESS", "YOUTUBE_REMOVE_VIDEOS", `Removing videos was successful.`);
-
+				this.publishProgress({
+					status: "success",
+					message: "Successfully removed YouTube videos."
+				});
 				return cb({ status: "success", message: "Successfully removed YouTube videos" });
 			})
 			.catch(async err => {
 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 				this.log("ERROR", "YOUTUBE_REMOVE_VIDEOS", `Removing videos failed. "${err}"`);
+				this.publishProgress({
+					status: "error",
+					message: err
+				});
 				return cb({ status: "error", message: err });
 			});
 	}),

@@ -754,6 +754,7 @@ class _PlaylistsModule extends CoreClass {
 						response.playlists,
 						1,
 						(playlist, next) => {
+							this.publishProgress({ status: "update", message: `Deleting "${playlist._id}"` });
 							PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId: playlist._id }, this)
 								.then(() => {
 									this.log("INFO", "Deleting orphaned genre playlist");
@@ -827,6 +828,7 @@ class _PlaylistsModule extends CoreClass {
 						response.playlists,
 						1,
 						(playlist, next) => {
+							this.publishProgress({ status: "update", message: `Deleting "${playlist._id}"` });
 							PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId: playlist._id }, this)
 								.then(() => {
 									this.log("INFO", "Deleting orphaned station playlist");

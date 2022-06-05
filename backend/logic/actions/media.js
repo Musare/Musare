@@ -129,6 +129,23 @@ export default {
 	 * @param cb
 	 */
 	recalculateAllRatings: isAdminRequired(async function recalculateAllRatings(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Recalculate all ratings",
+			message: "Recalculating all ratings.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -145,9 +162,17 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "MEDIA_RECALCULATE_ALL_RATINGS", `Failed to recalculate all ratings. "${err}"`);
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "MEDIA_RECALCULATE_ALL_RATINGS", `Recalculated all ratings successfully.`);
+				this.publishProgress({
+					status: "success",
+					message: "Successfully recalculated all ratings."
+				});
 				return cb({ status: "success", message: "Successfully recalculated all ratings." });
 			}
 		);

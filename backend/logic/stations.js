@@ -1644,6 +1644,10 @@ class _StationsModule extends CoreClass {
 											stations,
 											1,
 											(station, next) => {
+												this.publishProgress({
+													status: "update",
+													message: `Updating station "${station._id}"`
+												});
 												StationsModule.runJob("UPDATE_STATION", {
 													stationId: station._id
 												})

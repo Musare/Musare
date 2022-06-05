@@ -2469,6 +2469,23 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	clearEveryStationQueue: isAdminRequired(async function clearEveryStationQueue(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Clear every station queue",
+			message: "Clearing every station queue.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -2481,9 +2498,17 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "CLEAR_EVERY_STATION_QUEUE", `Clearing every station queue failed. "${err}"`);
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "CLEAR_EVERY_STATION_QUEUE", "Clearing every station queue was successful.");
+				this.publishProgress({
+					status: "success",
+					message: "Successfully cleared every station queue."
+				});
 				return cb({ status: "success", message: "Successfully cleared every station queue." });
 			}
 		);

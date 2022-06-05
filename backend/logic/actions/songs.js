@@ -210,6 +210,23 @@ export default {
 	 * @param cb
 	 */
 	updateAll: isAdminRequired(async function updateAll(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Update all songs",
+			message: "Updating all songs.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -226,9 +243,17 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "SONGS_UPDATE_ALL", `Failed to update all songs. "${err}"`);
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "SONGS_UPDATE_ALL", `Updated all songs successfully.`);
+				this.publishProgress({
+					status: "success",
+					message: "Successfully updated all songs."
+				});
 				return cb({ status: "success", message: "Successfully updated all songs." });
 			}
 		);
@@ -696,6 +721,23 @@ export default {
 		const successful = [];
 		const failed = [];
 
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Bulk remove songs",
+			message: "Removing songs.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -703,6 +745,7 @@ export default {
 						songIds,
 						1,
 						(songId, next) => {
+							this.publishProgress({ status: "update", message: `Removing song "${songId}"` });
 							WSModule.runJob(
 								"RUN_ACTION2",
 								{
@@ -735,6 +778,11 @@ export default {
 
 					this.log("ERROR", "SONGS_REMOVE_MANY", `Failed to remove songs "${failed.join(", ")}". "${err}"`);
 
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
+
 					return cb({ status: "error", message: err });
 				}
 
@@ -748,6 +796,11 @@ export default {
 				}
 
 				this.log("SUCCESS", "SONGS_REMOVE_MANY", `${message} "${successful.join(", ")}"`);
+
+				this.publishProgress({
+					status: "success",
+					message
+				});
 
 				return cb({
 					status: "success",
@@ -870,6 +923,23 @@ export default {
 		const successful = [];
 		const failed = [];
 
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Bulk verifying songs",
+			message: "Verifying songs.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -877,6 +947,7 @@ export default {
 						songIds,
 						1,
 						(songId, next) => {
+							this.publishProgress({ status: "update", message: `Verifying song "${songId}"` });
 							WSModule.runJob(
 								"RUN_ACTION2",
 								{
@@ -908,7 +979,10 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
 					this.log("ERROR", "SONGS_VERIFY_MANY", `Failed to verify songs "${failed.join(", ")}". "${err}"`);
-
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					return cb({ status: "error", message: err });
 				}
 
@@ -922,7 +996,10 @@ export default {
 				}
 
 				this.log("SUCCESS", "SONGS_VERIFY_MANY", `${message} "${successful.join(", ")}"`);
-
+				this.publishProgress({
+					status: "success",
+					message
+				});
 				return cb({
 					status: "success",
 					message
@@ -1007,6 +1084,23 @@ export default {
 		const successful = [];
 		const failed = [];
 
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Bulk unverifying songs",
+			message: "Unverifying songs.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -1014,6 +1108,7 @@ export default {
 						songIds,
 						1,
 						(songId, next) => {
+							this.publishProgress({ status: "update", message: `Unverifying song "${songId}"` });
 							WSModule.runJob(
 								"RUN_ACTION2",
 								{
@@ -1049,7 +1144,10 @@ export default {
 						"SONGS_UNVERIFY_MANY",
 						`Failed to unverify songs "${failed.join(", ")}". "${err}"`
 					);
-
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					return cb({ status: "error", message: err });
 				}
 
@@ -1067,7 +1165,10 @@ export default {
 				}
 
 				this.log("SUCCESS", "SONGS_UNVERIFY_MANY", `${message} "${successful.join(", ")}"`);
-
+				this.publishProgress({
+					status: "success",
+					message
+				});
 				return cb({
 					status: "success",
 					message
@@ -1123,6 +1224,24 @@ export default {
 	 */
 	editGenres: isAdminRequired(async function editGenres(session, method, genres, songIds, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Bulk editing genres",
+			message: "Updating genres.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -1148,6 +1267,10 @@ export default {
 						return;
 					}
 
+					this.publishProgress({
+						status: "update",
+						message: "Updating genres in MongoDB."
+					});
 					songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
 						if (err) {
 							next(err);
@@ -1162,9 +1285,17 @@ export default {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "EDIT_GENRES", `User ${session.userId} failed to edit genres. '${err}'`);
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					cb({ status: "error", message: err });
 				} else {
 					this.log("SUCCESS", "EDIT_GENRES", `User ${session.userId} has successfully edited genres.`);
+					this.publishProgress({
+						status: "success",
+						message: "Successfully edited genres."
+					});
 					cb({
 						status: "success",
 						message: "Successfully edited genres."
@@ -1221,6 +1352,24 @@ export default {
 	 */
 	editArtists: isAdminRequired(async function editArtists(session, method, artists, songIds, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Bulk editing artists",
+			message: "Updating artists.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -1246,6 +1395,10 @@ export default {
 						return;
 					}
 
+					this.publishProgress({
+						status: "update",
+						message: "Updating artists in MongoDB."
+					});
 					songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
 						if (err) {
 							next(err);
@@ -1260,9 +1413,17 @@ export default {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "EDIT_ARTISTS", `User ${session.userId} failed to edit artists. '${err}'`);
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					cb({ status: "error", message: err });
 				} else {
 					this.log("SUCCESS", "EDIT_ARTISTS", `User ${session.userId} has successfully edited artists.`);
+					this.publishProgress({
+						status: "success",
+						message: "Successfully edited artists."
+					});
 					cb({
 						status: "success",
 						message: "Successfully edited artists."

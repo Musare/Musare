@@ -56,7 +56,8 @@ export default {
 	},
 	methods: {
 		importPlaylist() {
-			let isImportingPlaylist = true;
+			let id;
+			let title;
 
 			// import query is blank
 			if (!this.youtubeSearch.playlist.query)
@@ -72,53 +73,25 @@ export default {
 				});
 			}
 
-			// don't give starting import message instantly in case of instant error
-			setTimeout(() => {
-				if (isImportingPlaylist) {
-					new Toast(
-						"Starting to import your playlist. This can take some time to do."
-					);
-				}
-			}, 750);
-
 			return this.socket.dispatch(
 				"playlists.addSetToPlaylist",
 				this.youtubeSearch.playlist.query,
 				this.playlist._id,
 				this.youtubeSearch.playlist.isImportingOnlyMusic,
-				res => {
-					new Toast({ content: res.message, timeout: 20000 });
-					if (res.status === "success") {
-						isImportingPlaylist = false;
-
-						const {
-							songsInPlaylistTotal,
-							videosInPlaylistTotal,
-							alreadyInLikedPlaylist,
-							alreadyInDislikedPlaylist
-						} = res.data.stats;
-
-						if (this.youtubeSearch.playlist.isImportingOnlyMusic) {
-							new Toast({
-								content: `${songsInPlaylistTotal} of the ${videosInPlaylistTotal} videos in the playlist were songs.`,
-								timeout: 20000
-							});
+				{
+					cb: () => {},
+					onProgress: res => {
+						if (res.status === "started") {
+							id = res.id;
+							title = res.title;
 						}
-						if (
-							alreadyInLikedPlaylist > 0 ||
-							alreadyInDislikedPlaylist > 0
-						) {
-							let message = "";
-							if (alreadyInLikedPlaylist > 0) {
-								message = `${alreadyInLikedPlaylist} songs were already in your Liked Songs playlist. A song cannot be in both the Liked Songs playlist and the Disliked Songs playlist at the same time.`;
-							} else {
-								message = `${alreadyInDislikedPlaylist} songs were already in your Disliked Songs playlist. A song cannot be in both the Liked Songs playlist and the Disliked Songs playlist at the same time.`;
-							}
-							new Toast({
-								content: message,
-								timeout: 20000
+
+						if (id)
+							this.setJob({
+								id,
+								name: title,
+								...res
 							});
-						}
 					}
 				}
 			);

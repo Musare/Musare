@@ -226,6 +226,10 @@ class _MediaModule extends CoreClass {
 							youtubeIds,
 							2,
 							(youtubeId, next) => {
+								this.publishProgress({
+									status: "update",
+									message: `Recalculating ratings for ${youtubeId}`
+								});
 								MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId }, this)
 									.then(() => {
 										next();

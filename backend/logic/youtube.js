@@ -1189,10 +1189,12 @@ class _YouTubeModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
+						this.publishProgress({ status: "update", message: `Resetting stored API requests (stage 1)` });
 						YouTubeModule.youtubeApiRequestModel.find({}, next);
 					},
 
 					(apiRequests, next) => {
+						this.publishProgress({ status: "update", message: `Resetting stored API requests (stage 2)` });
 						YouTubeModule.youtubeApiRequestModel.deleteMany({}, err => {
 							if (err) next("Couldn't reset stored YouTube API requests.");
 							else {
@@ -1202,18 +1204,21 @@ class _YouTubeModule extends CoreClass {
 					},
 
 					(apiRequests, next) => {
+						this.publishProgress({ status: "update", message: `Resetting stored API requests (stage 3)` });
 						CacheModule.runJob("DEL", { key: "youtubeApiRequestParams" }, this)
 							.then(() => next(null, apiRequests))
 							.catch(err => next(err));
 					},
 
 					(apiRequests, next) => {
+						this.publishProgress({ status: "update", message: `Resetting stored API requests (stage 4)` });
 						CacheModule.runJob("DEL", { key: "youtubeApiRequestResults" }, this)
 							.then(() => next(null, apiRequests))
 							.catch(err => next(err));
 					},
 
 					(apiRequests, next) => {
+						this.publishProgress({ status: "update", message: `Resetting stored API requests (stage 5)` });
 						async.eachLimit(
 							apiRequests.map(apiRequest => apiRequest._id),
 							1,
@@ -1466,6 +1471,7 @@ class _YouTubeModule extends CoreClass {
 						if (!videoIds.every(videoId => mongoose.Types.ObjectId.isValid(videoId)))
 							next("One or more videoIds are not a valid ObjectId.");
 						else {
+							this.publishProgress({ status: "update", message: `Removing video (stage 1)` });
 							YouTubeModule.youtubeVideoModel.find({ _id: { $in: videoIds } }, (err, videos) => {
 								if (err) next(err);
 								else
@@ -1478,6 +1484,7 @@ class _YouTubeModule extends CoreClass {
 					},
 
 					(youtubeIds, next) => {
+						this.publishProgress({ status: "update", message: `Removing video (stage 2)` });
 						SongsModule.SongModel.find({ youtubeId: { $in: youtubeIds } }, (err, songs) => {
 							if (err) next(err);
 							else {
@@ -1492,12 +1499,14 @@ class _YouTubeModule extends CoreClass {
 					},
 
 					(youtubeIds, next) => {
+						this.publishProgress({ status: "update", message: `Removing video (stage 3)` });
 						MediaModule.runJob("REMOVE_RATINGS", { youtubeIds }, this)
 							.then(() => next(null, youtubeIds))
 							.catch(next);
 					},
 
 					(youtubeIds, next) => {
+						this.publishProgress({ status: "update", message: `Removing video (stage 4)` });
 						async.eachLimit(
 							youtubeIds,
 							2,
@@ -1601,10 +1610,12 @@ class _YouTubeModule extends CoreClass {
 					},
 
 					next => {
+						this.publishProgress({ status: "update", message: `Removing video (stage 5)` });
 						YouTubeModule.youtubeVideoModel.deleteMany({ _id: { $in: videoIds } }, next);
 					},
 
 					(res, next) => {
+						this.publishProgress({ status: "update", message: `Removing video (stage 6)` });
 						CacheModule.runJob("PUB", {
 							channel: "youtube.removeVideos",
 							value: videoIds

@@ -349,11 +349,25 @@ export default {
 			);
 		},
 		removeVideos(videoIds) {
-			this.socket.dispatch(
-				"youtube.removeVideos",
-				videoIds,
-				res => new Toast(res.message)
-			);
+			let id;
+			let title;
+
+			this.socket.dispatch("youtube.removeVideos", videoIds, {
+				cb: () => {},
+				onProgress: res => {
+					if (res.status === "started") {
+						id = res.id;
+						title = res.title;
+					}
+
+					if (id)
+						this.setJob({
+							id,
+							name: title,
+							...res
+						});
+				}
+			});
 		},
 		getDateFormatted(createdAt) {
 			const date = new Date(createdAt);

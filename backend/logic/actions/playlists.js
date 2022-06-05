@@ -1253,16 +1253,34 @@ export default {
 	 * @param {boolean} musicOnly - whether to only add music to the playlist
 	 * @param {Function} cb - gets called with the result
 	 */
-	addSetToPlaylist: isLoginRequired(function addSetToPlaylist(session, url, playlistId, musicOnly, cb) {
+	addSetToPlaylist: isLoginRequired(async function addSetToPlaylist(session, url, playlistId, musicOnly, cb) {
 		let videosInPlaylistTotal = 0;
 		let songsInPlaylistTotal = 0;
 		let addSongsStats = null;
 
 		const addedSongs = [];
 
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Import YouTube playlist",
+			message: "Importing YouTube playlist.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
+					this.publishProgress({ status: "update", message: `Importing YouTube playlist (stage 1)` });
 					YouTubeModule.runJob("GET_PLAYLIST", { url, musicOnly }, this)
 						.then(res => {
 							if (res.filteredSongs) {
@@ -1278,6 +1296,7 @@ export default {
 						});
 				},
 				(youtubeIds, next) => {
+					this.publishProgress({ status: "update", message: `Importing YouTube playlist (stage 2)` });
 					let successful = 0;
 					let failed = 0;
 					let alreadyInPlaylist = 0;
@@ -1340,12 +1359,14 @@ export default {
 				},
 
 				next => {
+					this.publishProgress({ status: "update", message: `Importing YouTube playlist (stage 3)` });
 					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 						.then(playlist => next(null, playlist))
 						.catch(next);
 				},
 
 				(playlist, next) => {
+					this.publishProgress({ status: "update", message: `Importing YouTube playlist (stage 4)` });
 					if (!playlist || playlist.createdBy !== session.userId) {
 						return DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
 							userModel.findOne({ _id: session.userId }, (err, user) => {
@@ -1366,6 +1387,10 @@ export default {
 						"PLAYLIST_IMPORT",
 						`Importing a YouTube playlist to private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					return cb({ status: "error", message: err });
 				}
 
@@ -1384,7 +1409,10 @@ export default {
 					"PLAYLIST_IMPORT",
 					`Successfully imported a YouTube playlist to private playlist "${playlistId}" for user "${session.userId}". Videos in playlist: ${videosInPlaylistTotal}, songs in playlist: ${songsInPlaylistTotal}, songs successfully added: ${addSongsStats.successful}, songs failed: ${addSongsStats.failed}, already in playlist: ${addSongsStats.alreadyInPlaylist}, already in liked ${addSongsStats.alreadyInLikedPlaylist}, already in disliked ${addSongsStats.alreadyInDislikedPlaylist}.`
 				);
-
+				this.publishProgress({
+					status: "success",
+					message: `Playlist has been imported. ${addSongsStats.successful} were added successfully, ${addSongsStats.failed} failed (${addSongsStats.alreadyInPlaylist} were already in the playlist)`
+				});
 				return cb({
 					status: "success",
 					message: `Playlist has been imported. ${addSongsStats.successful} were added successfully, ${addSongsStats.failed} failed (${addSongsStats.alreadyInPlaylist} were already in the playlist)`,
@@ -1963,6 +1991,23 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	deleteOrphanedStationPlaylists: isAdminRequired(async function index(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Delete orphaned station playlists",
+			message: "Deleting orphaned station playlists.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -1979,6 +2024,10 @@ export default {
 						"PLAYLISTS_DELETE_ORPHANED_STATION_PLAYLISTS",
 						`Deleting orphaned station playlists failed. "${err}"`
 					);
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					return cb({ status: "error", message: err });
 				}
 				this.log(
@@ -1986,6 +2035,10 @@ export default {
 					"PLAYLISTS_DELETE_ORPHANED_STATION_PLAYLISTS",
 					"Deleting orphaned station playlists successful."
 				);
+				this.publishProgress({
+					status: "success",
+					message: "Successfully deleted orphaned station playlists."
+				});
 				return cb({ status: "success", message: "Successfully deleted orphaned station playlists." });
 			}
 		);
@@ -1998,6 +2051,23 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	deleteOrphanedGenrePlaylists: isAdminRequired(async function index(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Delete orphaned genre playlists",
+			message: "Deleting orphaned genre playlists.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -2014,6 +2084,10 @@ export default {
 						"PLAYLISTS_DELETE_ORPHANED_GENRE_PLAYLISTS",
 						`Deleting orphaned genre playlists failed. "${err}"`
 					);
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					return cb({ status: "error", message: err });
 				}
 				this.log(
@@ -2021,6 +2095,10 @@ export default {
 					"PLAYLISTS_DELETE_ORPHANED_GENRE_PLAYLISTS",
 					"Deleting orphaned genre playlists successful."
 				);
+				this.publishProgress({
+					status: "success",
+					message: "Successfully deleted orphaned genre playlists."
+				});
 				return cb({ status: "success", message: "Successfully deleted orphaned genre playlists." });
 			}
 		);
@@ -2033,6 +2111,23 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	requestOrphanedPlaylistSongs: isAdminRequired(async function index(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Request orphaned playlist songs",
+			message: "Requesting orphaned playlist songs.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -2049,6 +2144,10 @@ export default {
 						"REQUEST_ORPHANED_PLAYLIST_SONGS",
 						`Requesting orphaned playlist songs failed. "${err}"`
 					);
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					return cb({ status: "error", message: err });
 				}
 				this.log(
@@ -2056,6 +2155,10 @@ export default {
 					"REQUEST_ORPHANED_PLAYLIST_SONGS",
 					"Requesting orphaned playlist songs was successful."
 				);
+				this.publishProgress({
+					status: "success",
+					message: "Successfully requested orphaned playlist songs."
+				});
 				return cb({ status: "success", message: "Successfully requested orphaned playlist songs." });
 			}
 		);
@@ -2168,6 +2271,23 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	clearAndRefillAllStationPlaylists: isAdminRequired(async function index(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Clear and refill all station playlists",
+			message: "Clearing and refilling all station playlists.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -2185,6 +2305,10 @@ export default {
 						playlists,
 						1,
 						(playlist, next) => {
+							this.publishProgress({
+								status: "update",
+								message: `Clearing and refilling "${playlist._id}"`
+							});
 							PlaylistsModule.runJob(
 								"CLEAR_AND_REFILL_STATION_PLAYLIST",
 								{ playlistId: playlist._id },
@@ -2210,7 +2334,10 @@ export default {
 						"PLAYLIST_CLEAR_AND_REFILL_ALL_STATION_PLAYLISTS",
 						`Clearing and refilling all station playlists failed for user "${session.userId}". "${err}"`
 					);
-
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					return cb({ status: "error", message: err });
 				}
 
@@ -2219,7 +2346,10 @@ export default {
 					"PLAYLIST_CLEAR_AND_REFILL_ALL_STATION_PLAYLISTS",
 					`Successfully cleared and refilled all station playlists for user "${session.userId}".`
 				);
-
+				this.publishProgress({
+					status: "success",
+					message: "Playlists have been successfully cleared and refilled."
+				});
 				return cb({
 					status: "success",
 					message: "Playlists have been successfully cleared and refilled"
@@ -2235,6 +2365,23 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	clearAndRefillAllGenrePlaylists: isAdminRequired(async function index(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Clear and refill all genre playlists",
+			message: "Clearing and refilling all genre playlists.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -2252,6 +2399,10 @@ export default {
 						playlists,
 						1,
 						(playlist, next) => {
+							this.publishProgress({
+								status: "update",
+								message: `Clearing and refilling "${playlist._id}"`
+							});
 							PlaylistsModule.runJob(
 								"CLEAR_AND_REFILL_GENRE_PLAYLIST",
 								{ playlistId: playlist._id },
@@ -2277,7 +2428,10 @@ export default {
 						"PLAYLIST_CLEAR_AND_REFILL_ALL_GENRE_PLAYLISTS",
 						`Clearing and refilling all genre playlists failed for user "${session.userId}". "${err}"`
 					);
-
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					return cb({ status: "error", message: err });
 				}
 
@@ -2286,7 +2440,10 @@ export default {
 					"PLAYLIST_CLEAR_AND_REFILL_ALL_GENRE_PLAYLISTS",
 					`Successfully cleared and refilled all genre playlists for user "${session.userId}".`
 				);
-
+				this.publishProgress({
+					status: "success",
+					message: "Playlists have been successfully cleared and refilled."
+				});
 				return cb({
 					status: "success",
 					message: "Playlists have been successfully cleared and refilled"
@@ -2302,6 +2459,23 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	createMissingGenrePlaylists: isAdminRequired(async function index(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Create missing genre playlists",
+			message: "Creating missing genre playlists.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -2323,7 +2497,10 @@ export default {
 						"PLAYLIST_CREATE_MISSING_GENRE_PLAYLISTS",
 						`Creating missing genre playlists failed for user "${session.userId}". "${err}"`
 					);
-
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					return cb({ status: "error", message: err });
 				}
 
@@ -2332,7 +2509,10 @@ export default {
 					"PLAYLIST_CREATE_MISSING_GENRE_PLAYLISTS",
 					`Successfully created missing genre playlists for user "${session.userId}".`
 				);
-
+				this.publishProgress({
+					status: "success",
+					message: "Missing genre playlists have been successfully created."
+				});
 				return cb({
 					status: "success",
 					message: "Missing genre playlists have been successfully created"

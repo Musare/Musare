@@ -55,8 +55,6 @@
 <script>
 import { mapGetters } from "vuex";
 
-import Toast from "toasters";
-
 export default {
 	props: {
 		jobs: {
@@ -76,14 +74,24 @@ export default {
 	},
 	methods: {
 		runJob(job) {
-			new Toast(`Running job: ${job.name}`);
-			this.socket.dispatch(job.socket, data => {
-				if (data.status !== "success")
-					new Toast({
-						content: `Error: ${data.message}`,
-						timeout: 8000
-					});
-				else new Toast({ content: data.message, timeout: 4000 });
+			let id;
+			let title;
+
+			this.socket.dispatch(job.socket, {
+				cb: () => {},
+				onProgress: res => {
+					if (res.status === "started") {
+						id = res.id;
+						title = res.title;
+					}
+
+					if (id)
+						this.setJob({
+							id,
+							name: title,
+							...res
+						});
+				}
 			});
 		}
 	}

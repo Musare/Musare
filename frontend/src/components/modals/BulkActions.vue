@@ -140,11 +140,7 @@ export default {
 				this.items,
 				this.type.items,
 				{
-					cb: () => {
-						// new Toast(res.message);
-						// if (res.status === "success")
-						// 	this.closeCurrentModal();
-					},
+					cb: () => {},
 					onProgress: res => {
 						if (res.status === "started") {
 							id = res.id;

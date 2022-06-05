@@ -585,11 +585,27 @@ export default {
 			});
 		},
 		verifyMany(selectedRows) {
+			let id;
+			let title;
+
 			this.socket.dispatch(
 				"songs.verifyMany",
 				selectedRows.map(row => row._id),
-				res => {
-					new Toast(res.message);
+				{
+					cb: () => {},
+					onProgress: res => {
+						if (res.status === "started") {
+							id = res.id;
+							title = res.title;
+						}
+
+						if (id)
+							this.setJob({
+								id,
+								name: title,
+								...res
+							});
+					}
 				}
 			);
 		},
@@ -599,11 +615,27 @@ export default {
 			});
 		},
 		unverifyMany(selectedRows) {
+			let id;
+			let title;
+
 			this.socket.dispatch(
 				"songs.unverifyMany",
 				selectedRows.map(row => row._id),
-				res => {
-					new Toast(res.message);
+				{
+					cb: () => {},
+					onProgress: res => {
+						if (res.status === "started") {
+							id = res.id;
+							title = res.title;
+						}
+
+						if (id)
+							this.setJob({
+								id,
+								name: title,
+								...res
+							});
+					}
 				}
 			);
 		},
@@ -673,11 +705,27 @@ export default {
 			});
 		},
 		deleteMany(selectedRows) {
+			let id;
+			let title;
+
 			this.socket.dispatch(
 				"songs.removeMany",
 				selectedRows.map(row => row._id),
-				res => {
-					new Toast(res.message);
+				{
+					cb: () => {},
+					onProgress: res => {
+						if (res.status === "started") {
+							id = res.id;
+							title = res.title;
+						}
+
+						if (id)
+							this.setJob({
+								id,
+								name: title,
+								...res
+							});
+					}
 				}
 			);
 		},
