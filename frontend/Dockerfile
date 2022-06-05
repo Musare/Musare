@@ -6,7 +6,7 @@ ENV FRONTEND_MODE=${FRONTEND_MODE}
 RUN apt-get update
 RUN apt-get install nginx -y
 
-RUN npm install -g webpack@5.72.0 webpack-cli@4.9.2
+RUN npm install -g webpack@5.73.0 webpack-cli@4.9.2
 
 RUN mkdir -p /opt/app
 WORKDIR /opt/app
