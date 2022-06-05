@@ -198,7 +198,8 @@ export default {
 			page === "statistics" ||
 			page === "punishments" ||
 			page === "youtube" ||
-			page === "youtubeVideos"
+			page === "youtubeVideos" ||
+			page === "import"
 		) {
 			WSModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session.socketId }).then(() => {
 				WSModule.runJob("SOCKET_JOIN_ROOM", {

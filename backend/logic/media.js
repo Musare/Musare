@@ -7,6 +7,7 @@ let DBModule;
 let UtilsModule;
 let YouTubeModule;
 let SongsModule;
+let WSModule;
 
 class _MediaModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -29,13 +30,35 @@ class _MediaModule extends CoreClass {
 		UtilsModule = this.moduleManager.modules.utils;
 		YouTubeModule = this.moduleManager.modules.youtube;
 		SongsModule = this.moduleManager.modules.songs;
+		WSModule = this.moduleManager.modules.ws;
 
 		this.RatingsModel = await DBModule.runJob("GET_MODEL", { modelName: "ratings" });
 		this.RatingsSchemaCache = await CacheModule.runJob("GET_SCHEMA", { schemaName: "ratings" });
+		this.ImportJobModel = await DBModule.runJob("GET_MODEL", { modelName: "importJob" });
 
 		this.setStage(2);
 
 		return new Promise((resolve, reject) => {
+			CacheModule.runJob("SUB", {
+				channel: "importJob.updated",
+				cb: importJob => {
+					WSModule.runJob("EMIT_TO_ROOM", {
+						room: "admin.import",
+						args: ["event:admin.importJob.updated", { data: { importJob } }]
+					});
+				}
+			});
+
+			CacheModule.runJob("SUB", {
+				channel: "importJob.removed",
+				cb: jobId => {
+					WSModule.runJob("EMIT_TO_ROOM", {
+						room: "admin.import",
+						args: ["event:admin.importJob.removed", { data: { jobId } }]
+					});
+				}
+			});
+
 			async.waterfall(
 				[
 					next => {
@@ -376,6 +399,96 @@ class _MediaModule extends CoreClass {
 				(err, song) => {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve({ song });
+				}
+			);
+		});
+	}
+
+	/**
+	 * Remove import job by id from Mongo
+	 *
+	 * @param {object} payload - object containing the payload
+	 * @param {string} payload.jobIds - the job ids
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	UPDATE_IMPORT_JOBS(payload) {
+		return new Promise((resolve, reject) => {
+			let { jobIds } = payload;
+			if (!Array.isArray(jobIds)) jobIds = [jobIds];
+
+			async.waterfall(
+				[
+					next => {
+						MediaModule.ImportJobModel.find({ _id: { $in: jobIds } }, next);
+					},
+
+					(importJobs, next) => {
+						async.eachLimit(
+							importJobs,
+							1,
+							(importJob, next) => {
+								CacheModule.runJob("PUB", {
+									channel: "importJob.updated",
+									value: importJob
+								})
+									.then(() => next())
+									.catch(next);
+							},
+							err => {
+								if (err) next(err);
+								else next(null, importJobs);
+							}
+						);
+					}
+				],
+				(err, importJobs) => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve({ importJobs });
+				}
+			);
+		});
+	}
+
+	/**
+	 * Remove import job by id from Mongo
+	 *
+	 * @param {object} payload - object containing the payload
+	 * @param {string} payload.jobIds - the job ids
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	REMOVE_IMPORT_JOBS(payload) {
+		return new Promise((resolve, reject) => {
+			let { jobIds } = payload;
+			if (!Array.isArray(jobIds)) jobIds = [jobIds];
+
+			async.waterfall(
+				[
+					next => {
+						MediaModule.ImportJobModel.deleteMany({ _id: { $in: jobIds } }, err => {
+							if (err) next(err);
+							else next();
+						});
+					},
+
+					next => {
+						async.eachLimit(
+							jobIds,
+							1,
+							(jobId, next) => {
+								CacheModule.runJob("PUB", {
+									channel: "importJob.removed",
+									value: jobId
+								})
+									.then(() => next())
+									.catch(next);
+							},
+							next
+						);
+					}
+				],
+				err => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve();
 				}
 			);
 		});

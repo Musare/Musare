@@ -153,7 +153,7 @@
 											message:
 												'Note: Removing an import will not remove any videos or songs.',
 											action: 'removeImportJob',
-											params: slotProps.item
+											params: slotProps.item._id
 										})
 									"
 									:disabled="
@@ -453,7 +453,19 @@ export default {
 						["failed", "Failed"]
 					]
 				}
-			]
+			],
+			events: {
+				adminRoom: "import",
+				updated: {
+					event: "admin.importJob.updated",
+					id: "importJob._id",
+					item: "importJob"
+				},
+				removed: {
+					event: "admin.importJob.removed",
+					id: "jobId"
+				}
+			}
 		};
 	},
 	computed: {
@@ -529,19 +541,11 @@ export default {
 			if (stage === 2) this.createImport.stage = 1;
 		},
 		importFromYoutube() {
-			let isImportingPlaylist = true;
-
 			if (!this.createImport.youtubeUrl)
 				return new Toast("Please enter a YouTube URL.");
 
-			// don't give starting import message instantly in case of instant error
-			setTimeout(() => {
-				if (isImportingPlaylist) {
-					new Toast(
-						"Starting to import your playlist. This can take some time to do."
-					);
-				}
-			}, 750);
+			let id;
+			let title;
 
 			return this.socket.dispatch(
 				"youtube.requestSetAdmin",
@@ -549,15 +553,20 @@ export default {
 				this.createImport.isImportingOnlyMusic,
 				true,
 				{
-					cb: res => {
-						isImportingPlaylist = false;
+					cb: () => {},
+					onProgress: res => {
+						if (res.status === "started") {
+							id = res.id;
+							title = res.title;
+						}
 
-						return new Toast({
-							content: res.message,
-							timeout: 20000
-						});
-					},
-					onProgress: console.log
+						if (id)
+							this.setJob({
+								id,
+								name: title,
+								...res
+							});
+					}
 				}
 			);
 		},
@@ -576,6 +585,11 @@ export default {
 				this.openModal({ modal: "editSong", data: { song: songs[0] } });
 			else this.openModal({ modal: "editSongs", data: { songs } });
 		},
+		removeImportJob(jobId) {
+			this.socket.dispatch("media.removeImportJobs", jobId, res => {
+				new Toast(res.message);
+			});
+		},
 		confirmAction({ message, action, params }) {
 			this.openModal({
 				modal: "confirm",
@@ -593,7 +607,8 @@ export default {
 				else this[action]();
 			}
 		},
-		...mapActions("modalVisibility", ["openModal"])
+		...mapActions("modalVisibility", ["openModal"]),
+		...mapActions("longJobs", ["setJob"])
 	}
 };
 </script>

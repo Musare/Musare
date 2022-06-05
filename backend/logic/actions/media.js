@@ -867,5 +867,24 @@ export default {
 				});
 			}
 		);
+	}),
+
+	/**
+	 * Remove import jobs
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	removeImportJobs: isAdminRequired(function removeImportJobs(session, jobIds, cb) {
+		MediaModule.runJob("REMOVE_IMPORT_JOBS", { jobIds }, this)
+			.then(() => {
+				this.log("SUCCESS", "MEDIA_REMOVE_IMPORT_JOBS", `Removing import jobs was successful.`);
+
+				return cb({ status: "success", message: "Successfully removed import jobs" });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "MEDIA_REMOVE_IMPORT_JOBS", `Removing import jobs failed. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
 	})
 };

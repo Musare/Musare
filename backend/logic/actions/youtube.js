@@ -10,6 +10,7 @@ const DBModule = moduleManager.modules.db;
 const CacheModule = moduleManager.modules.cache;
 const UtilsModule = moduleManager.modules.utils;
 const YouTubeModule = moduleManager.modules.youtube;
+const MediaModule = moduleManager.modules.media;
 
 export default {
 	/**
@@ -461,7 +462,11 @@ export default {
 							}
 						},
 						err => {
-							next(err, importJob, response);
+							if (err) next(err, importJob);
+							else
+								MediaModule.runJob("UPDATE_IMPORT_JOBS", { jobIds: importJob._id })
+									.then(() => next(null, importJob, response))
+									.catch(error => next(error, importJob));
 						}
 					);
 				}
@@ -475,6 +480,7 @@ export default {
 						`Importing a YouTube playlist to be requested failed for admin "${session.userId}". "${err}"`
 					);
 					importJobModel.updateOne({ _id: importJob._id }, { $set: { status: "error" } });
+					MediaModule.runJob("UPDATE_IMPORT_JOBS", { jobIds: importJob._id });
 					return cb({ status: "error", message: err });
 				}
 
