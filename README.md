@@ -25,14 +25,14 @@ A production demonstration instance of Musare can be found at [demo.musare.com](
     - Automatically generated playlists for genres
     - Privacy configuration
     - Liked and Disliked songs playlists per user
-    - Bulk import songs from YouTube playlist
-    - Add songs from verified catalogue or YouTube
+    - Bulk import videos from YouTube playlist
+    - Add songs from verified catalogue or YouTube videos
     - Ability to download in JSON format
 - **Stations**
     - Requests - Toggleable module to allow users to add songs to the queue
         - Configurable access level and per user request limit
         - Automatically request songs from selected playlists
-        - Ability to search for songs from verified catalogue or YouTube
+        - Ability to search for songs from verified catalogue or YouTube videos
     - Autofill - Toggleable module to allow owners to configure automatic filling of the queue from selected playlists
         - Configurable song limit
         - Play mode option to randomly play many playlists, or sequentially play one playlist
@@ -49,14 +49,17 @@ A production demonstration instance of Musare can be found at [demo.musare.com](
     - Force skipping song by admins or owners
 - **Song Management**
     - Verify songs to allow them to be searched for and added to automatically generated genre playlists
-    - Import Album to import songs in bulk
     - Discogs integration to import metadata
     - Ability for users to report issues with songs and admins to resolve
     - Configurable skip duration and song duration to cut intros and outros
-    - Import YouTube playlists from admin area
-    - Any song added to playlists or stations will be automatically requested
+    - Import YouTube playlists or channels from admin area
+    - Import Album to associate Discogs album data with media in bulk
     - Bulk admin management of songs
-    - Create songs from scratch
+    - Create songs from scratch or from YouTube videos
+- **YouTube**
+    - Monitor and manage API requests and quota usage
+    - Configure API quota limits
+    - YouTube video management
 - **Users**
     - Activity logs
     - Profile page showing public playlists and activity logs
