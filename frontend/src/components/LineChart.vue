@@ -40,6 +40,7 @@ ChartJS.register(
 
 export default {
 	name: "LineChart",
+	// eslint-disable-next-line vue/no-reserved-component-names
 	components: { Line },
 	props: {
 		chartId: {
