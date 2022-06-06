@@ -91,7 +91,6 @@ class JobManager {
 	 * @param {object} job - the job object
 	 */
 	removeJob(job) {
-		return;
 		if (!this.jobs[job.module.name]) this.jobs[job.module.name] = {};
 		delete this.jobs[job.module.name][job.toString()];
 	}
