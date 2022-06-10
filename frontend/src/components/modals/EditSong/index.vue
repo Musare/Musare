@@ -1401,9 +1401,9 @@ export default {
 
 						this.songDataLoaded = true;
 
-						this.socket.dispatch(
+						if (song._id) this.socket.dispatch(
 							"apis.joinRoom",
-							`edit-song.${this.song._id}`
+							`edit-song.${song._id}`
 						);
 
 						if (
@@ -1411,7 +1411,7 @@ export default {
 							this.video.player.cueVideoById
 						) {
 							this.video.player.cueVideoById(
-								this.youtubeId,
+								youtubeId,
 								song.skipDuration
 							);
 						}
