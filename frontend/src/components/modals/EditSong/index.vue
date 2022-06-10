@@ -866,8 +866,11 @@ export default {
 			this.loadSong(youtubeId);
 		}
 	},
+	beforeMount() {
+		console.log("EDITSONG BEFOREMOUNT");
+	},
 	async mounted() {
-		console.log("MOUNTED");
+		console.log("EDITSONG MOUNTED");
 		this.activityWatchVideoDataInterval = setInterval(() => {
 			this.sendActivityWatchVideoData();
 		}, 1000);
@@ -1061,7 +1064,7 @@ export default {
 		*/
 	},
 	beforeUnmount() {
-		console.log("UNMOUNT");
+		console.log("EDITSONG BEFOREUNMOUNT");
 		this.unloadSong(this.youtubeId, this.song._id);
 
 		this.playerReady = false;
@@ -1096,7 +1099,18 @@ export default {
 				"editSong",
 				this.modalUuid
 			]);
+		} else {
+			console.log("UNREGISTER EDITSONG");
+			this.$store.unregisterModule([
+				"modals",
+				"editSongs",
+				this.modalUuid,
+				"editSong"
+			]);
 		}
+	},
+	unmounted() {
+		console.log("EDITSONG UNMOUNTED");
 	},
 	methods: {
 		onThumbnailLoad() {

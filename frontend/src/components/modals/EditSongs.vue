@@ -238,13 +238,17 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
-	async mounted() {
-		this.socket.dispatch("apis.joinRoom", "edit-songs");
-
+	beforeMount() {
+		console.log("EDITSONGS BEFOREMOUNT");
 		this.$store.registerModule(
 			["modals", "editSongs", this.modalUuid, "editSong"],
 			editSong
 		);
+	},
+	async mounted() {
+		console.log("EDITSONGS MOUNTED");
+
+		this.socket.dispatch("apis.joinRoom", "edit-songs");
 
 		this.socket.dispatch(
 			"songs.getSongsFromYoutubeIds",
@@ -318,9 +322,11 @@ export default {
 		);
 	},
 	beforeUnmount() {
+		console.log("EDITSONGS BEFORE UNMOUNT");
 		this.socket.dispatch("apis.leaveRoom", "edit-songs");
 	},
 	unmounted() {
+		console.log("EDITSONGS UNMOUNTED");
 		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
 		this.$store.unregisterModule(["modals", "editSongs", this.modalUuid]);
 	},
