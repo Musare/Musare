@@ -231,7 +231,11 @@
 							@loadError="onThumbnailLoadError"
 						/>
 						<img
-							v-if="!isYoutubeThumbnail && !songDeleted"
+							v-if="
+								!isYoutubeThumbnail &&
+								songDataLoaded &&
+								!songDeleted
+							"
 							class="thumbnail-dummy"
 							:src="song.thumbnail"
 							ref="thumbnailElement"
@@ -1873,9 +1877,9 @@ export default {
 				this.song.tags.splice(this.song.tags.indexOf(value), 1);
 		},
 		drawCanvas() {
-			if (!this.songDataLoaded) return;
 			const canvasElement =
 				this.$refs[`durationCanvas-${this.modalUuid}`];
+			if (!this.songDataLoaded || !canvasElement) return;
 			const ctx = canvasElement.getContext("2d");
 
 			const videoDuration = Number(this.youtubeVideoDuration);

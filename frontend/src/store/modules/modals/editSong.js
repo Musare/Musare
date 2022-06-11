@@ -59,7 +59,7 @@ export default {
 		},
 		editSong(state, song) {
 			state.newSong = !!song.newSong || !song._id;
-			state.youtubeId = song.newSong ? null : song.youtubeId;
+			state.youtubeId = song.youtubeId || null;
 			state.prefillData = song.prefill ? song.prefill : {};
 		},
 		setSong(state, song) {
