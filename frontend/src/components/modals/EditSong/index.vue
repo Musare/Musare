@@ -1132,7 +1132,7 @@ export default {
 			this.thumbnailLoadError = error !== 0;
 		},
 		init() {
-			if (this.newSong && !this.youtubeId) {
+			if (this.newSong && !this.youtubeId && !this.bulk) {
 				this.setSong({
 					youtubeId: "",
 					title: "",
@@ -1382,7 +1382,8 @@ export default {
 			this.youtubeVideoCurrentTime = "0.000";
 			this.youtubeVideoDuration = "0.000";
 			this.youtubeVideoNote = "";
-			this.socket.dispatch("apis.leaveRoom", `edit-song.${songId}`);
+			if (songId)
+				this.socket.dispatch("apis.leaveRoom", `edit-song.${songId}`);
 			if (this.$refs.saveButton) this.$refs.saveButton.status = "default";
 		},
 		loadSong(youtubeId) {
@@ -1401,10 +1402,11 @@ export default {
 
 						this.songDataLoaded = true;
 
-						if (song._id) this.socket.dispatch(
-							"apis.joinRoom",
-							`edit-song.${song._id}`
-						);
+						if (song._id)
+							this.socket.dispatch(
+								"apis.joinRoom",
+								`edit-song.${song._id}`
+							);
 
 						if (
 							this.video.player &&
