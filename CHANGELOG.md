@@ -1,5 +1,12 @@
 # Changelog
 
+## [v3.6.0] - 2022-06-12
+
+This release includes all changes from v3.6.0-rc1, in addition to the following. Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Fixed
+- fix: Removed tag="transition-group" from draggable components
+
 ## [v3.6.0-rc1] - 2022-06-05
 
 Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
