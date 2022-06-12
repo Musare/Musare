@@ -2,7 +2,6 @@
 	<div id="my-playlists">
 		<div class="menu-list scrollable-list" v-if="playlists.length > 0">
 			<draggable
-				tag="transition-group"
 				:component-data="{
 					name: !drag ? 'draggable-list-transition' : null
 				}"
