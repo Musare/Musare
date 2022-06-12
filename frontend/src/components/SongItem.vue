@@ -40,11 +40,10 @@
 				<p class="song-request-time" v-if="requestedBy">
 					Requested by
 					<strong>
-						<user-id-to-username
+						<user-link
 							v-if="song.requestedBy"
 							:key="song._id"
 							:user-id="song.requestedBy"
-							:link="true"
 						/>
 						<span v-else>station</span>
 						{{ formatedRequestedAt }}
@@ -80,17 +79,26 @@
 
 					<template #content>
 						<div class="icons-group">
-							<a
+							<i
 								v-if="disabledActions.indexOf('youtube') === -1"
-								target="_blank"
-								:href="`https://www.youtube.com/watch?v=${song.youtubeId}`"
-								content="View on Youtube"
+								@click="
+									openModal({
+										modal: 'viewYoutubeVideo',
+										data: {
+											youtubeId: song.youtubeId
+										}
+									})
+								"
+								content="View YouTube Video"
 								v-tippy
 							>
 								<div class="youtube-icon"></div>
-							</a>
+							</i>
 							<i
-								v-if="disabledActions.indexOf('report') === -1"
+								v-if="
+									song._id &&
+									disabledActions.indexOf('report') === -1
+								"
 								class="material-icons report-icon"
 								@click="report(song)"
 								content="Report Song"
@@ -118,6 +126,7 @@
 							<i
 								v-if="
 									loggedIn &&
+									song._id &&
 									userRole === 'admin' &&
 									disabledActions.indexOf('edit') === -1
 								"
@@ -162,11 +171,10 @@ import { mapActions, mapState } from "vuex";
 import { formatDistance, parseISO } from "date-fns";
 
 import AddToPlaylistDropdown from "./AddToPlaylistDropdown.vue";
-import SongThumbnail from "./SongThumbnail.vue";
 import utils from "../../js/utils";
 
 export default {
-	components: { AddToPlaylistDropdown, SongThumbnail },
+	components: { AddToPlaylistDropdown },
 	props: {
 		song: {
 			type: Object,
@@ -262,7 +270,7 @@ export default {
 			this.hideTippyElements();
 			this.openModal({
 				modal: "editSong",
-				data: { song: { songId: song._id } }
+				data: { song }
 			});
 		},
 		...mapActions("modalVisibility", ["openModal"]),

@@ -1,6 +1,7 @@
 import config from "config";
 
 import async from "async";
+import mongoose from "mongoose";
 
 import axios from "axios";
 import bcrypt from "bcrypt";
@@ -16,9 +17,9 @@ const WSModule = moduleManager.modules.ws;
 const CacheModule = moduleManager.modules.cache;
 const MailModule = moduleManager.modules.mail;
 const PunishmentsModule = moduleManager.modules.punishments;
-const SongsModule = moduleManager.modules.songs;
 const ActivitiesModule = moduleManager.modules.activities;
 const PlaylistsModule = moduleManager.modules.playlists;
+const MediaModule = moduleManager.modules.media;
 
 CacheModule.runJob("SUB", {
 	channel: "user.updatePreferences",
@@ -201,6 +202,36 @@ CacheModule.runJob("SUB", {
 	}
 });
 
+CacheModule.runJob("SUB", {
+	channel: "longJob.removed",
+	cb: ({ jobId, userId }) => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
+			sockets.forEach(socket => {
+				socket.dispatch("keep.event:longJob.removed", {
+					data: {
+						jobId
+					}
+				});
+			});
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "longJob.added",
+	cb: ({ jobId, userId }) => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
+			sockets.forEach(socket => {
+				socket.dispatch("keep.event:longJob.added", {
+					data: {
+						jobId
+					}
+				});
+			});
+		});
+	}
+});
+
 export default {
 	/**
 	 * Gets users, used in the admin users page by the AdvancedTable component
@@ -357,9 +388,7 @@ export default {
 				(playlist, next) => {
 					if (!playlist) return next();
 
-					playlist.songs.forEach(song =>
-						songsToAdjustRatings.push({ songId: song._id, youtubeId: song.youtubeId })
-					);
+					playlist.songs.forEach(song => songsToAdjustRatings.push({ youtubeId: song.youtubeId }));
 
 					return next();
 				},
@@ -373,9 +402,9 @@ export default {
 					async.each(
 						songsToAdjustRatings,
 						(song, next) => {
-							const { songId, youtubeId } = song;
+							const { youtubeId } = song;
 
-							SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId, youtubeId })
+							MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
 								.then(() => next())
 								.catch(next);
 						},
@@ -585,9 +614,7 @@ export default {
 				(playlist, next) => {
 					if (!playlist) return next();
 
-					playlist.songs.forEach(song =>
-						songsToAdjustRatings.push({ songId: song._id, youtubeId: song.youtubeId })
-					);
+					playlist.songs.forEach(song => songsToAdjustRatings.push({ youtubeId: song.youtubeId }));
 
 					return next();
 				},
@@ -601,9 +628,9 @@ export default {
 					async.each(
 						songsToAdjustRatings,
 						(song, next) => {
-							const { songId, youtubeId } = song;
+							const { youtubeId } = song;
 
-							SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId, youtubeId })
+							MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
 								.then(() => next())
 								.catch(next);
 						},
@@ -1560,19 +1587,20 @@ export default {
 	}),
 
 	/**
-	 * Gets user object from username (only a few properties)
+	 * Gets user object from ObjectId or username (only a few properties)
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} username - the username of the user we are trying to find
+	 * @param {string} identifier - the ObjectId or username of the user we are trying to find
 	 * @param {Function} cb - gets called with the result
 	 */
-	findByUsername: async function findByUsername(session, username, cb) {
+	getBasicUser: async function getBasicUser(session, identifier, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
 			[
 				next => {
-					userModel.findOne({ username: new RegExp(`^${username}$`, "i") }, next);
+					if (mongoose.Types.ObjectId.isValid(identifier)) userModel.findOne({ _id: identifier }, next);
+					else userModel.findOne({ username: new RegExp(`^${identifier}$`, "i") }, next);
 				},
 
 				(account, next) => {
@@ -1584,12 +1612,12 @@ export default {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
-					this.log("ERROR", "FIND_BY_USERNAME", `User not found for username "${username}". "${err}"`);
+					this.log("ERROR", "GET_BASIC_USER", `User not found for "${identifier}". "${err}"`);
 
 					return cb({ status: "error", message: err });
 				}
 
-				this.log("SUCCESS", "FIND_BY_USERNAME", `User found for username "${username}".`);
+				this.log("SUCCESS", "GET_BASIC_USER", `User found for "${identifier}".`);
 
 				return cb({
 					status: "success",
@@ -1609,49 +1637,215 @@ export default {
 	},
 
 	/**
-	 * Gets a username from an userId
+	 * Gets a list of long jobs, including onprogress events when those long jobs have progress
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} userId - the userId of the person we are trying to get the username from
 	 * @param {Function} cb - gets called with the result
 	 */
-	async getUsernameFromId(session, userId, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		userModel
-			.findById(userId)
-			.then(user => {
-				if (user) {
-					this.log("SUCCESS", "GET_USERNAME_FROM_ID", `Found username for userId "${userId}".`);
+	getLongJobs: isLoginRequired(async function getLongJobs(session, cb) {
+		async.waterfall(
+			[
+				next => {
+					CacheModule.runJob(
+						"LRANGE",
+						{
+							key: `longJobs.${session.userId}`
+						},
+						this
+					)
+						.then(longJobUuids => next(null, longJobUuids))
+						.catch(next);
+				},
 
-					return cb({
-						status: "success",
-						data: { username: user.username }
+				(longJobUuids, next) => {
+					next(
+						null,
+						longJobUuids
+							.map(longJobUuid => moduleManager.jobManager.getJob(longJobUuid))
+							.filter(longJob => !!longJob)
+					);
+				},
+
+				(longJobs, next) => {
+					longJobs.forEach(longJob => {
+						if (longJob.onProgress)
+							longJob.onProgress.on("progress", data => {
+								this.publishProgress(
+									{
+										id: longJob.toString(),
+										...data
+									},
+									true
+								);
+							});
 					});
+
+					next(
+						null,
+						longJobs.map(longJob => ({
+							id: longJob.toString(),
+							name: longJob.longJobTitle,
+							status: longJob.lastProgressData.status,
+							message: longJob.lastProgressData.message
+						}))
+					);
+				}
+			],
+			async (err, longJobs) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log("ERROR", "GET_LONG_JOBS", `Couldn't get long jobs for user "${session.userId}". "${err}"`);
+
+					return cb({ status: "error", message: err });
+				}
+
+				this.log("SUCCESS", "GET_LONG_JOBS", `Got long jobs for user "${session.userId}".`);
+
+				return cb({
+					status: "success",
+					data: {
+						longJobs
+					}
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Gets a specific long job, including onprogress events when that long job has progress
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} jobId - the if id the long job
+	 * @param {Function} cb - gets called with the result
+	 */
+	getLongJob: isLoginRequired(async function getLongJobs(session, jobId, cb) {
+		async.waterfall(
+			[
+				next => {
+					CacheModule.runJob(
+						"LRANGE",
+						{
+							key: `longJobs.${session.userId}`
+						},
+						this
+					)
+						.then(longJobUuids => next(null, longJobUuids))
+						.catch(next);
+				},
+
+				(longJobUuids, next) => {
+					if (longJobUuids.indexOf(jobId) === -1) return next("Long job not found.");
+					const longJob = moduleManager.jobManager.getJob(jobId);
+					if (!longJob) return next("Long job not found.");
+					return next(null, longJob);
+				},
+
+				(longJob, next) => {
+					if (longJob.onProgress)
+						longJob.onProgress.on("progress", data => {
+							this.publishProgress(
+								{
+									id: longJob.toString(),
+									...data
+								},
+								true
+							);
+						});
+
+					next(null, {
+						id: longJob.toString(),
+						name: longJob.longJobTitle,
+						status: longJob.lastProgressData.status,
+						message: longJob.lastProgressData.message
+					});
+				}
+			],
+			async (err, longJob) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log(
+						"ERROR",
+						"GET_LONG_JOB",
+						`Couldn't get long job for user "${session.userId}" with id "${jobId}". "${err}"`
+					);
+
+					return cb({ status: "error", message: err });
+				}
+
+				this.log("SUCCESS", "GET_LONG_JOB", `Got long job for user "${session.userId}" with id "${jobId}".`);
+
+				return cb({
+					status: "success",
+					data: {
+						longJob
+					}
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Removes active long job for a user
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} jobId - array of playlist ids (with a specific order)
+	 * @param {Function} cb - gets called with the result
+	 */
+	removeLongJob: isLoginRequired(async function removeLongJob(session, jobId, cb) {
+		async.waterfall(
+			[
+				next => {
+					CacheModule.runJob(
+						"LREM",
+						{
+							key: `longJobs.${session.userId}`,
+							value: jobId
+						},
+						this
+					)
+						.then(() => next())
+						.catch(next);
+				},
+
+				next => {
+					const job = moduleManager.jobManager.getJob(jobId);
+					if (job && job.status === "FINISHED") job.forgetLongJob();
+					next();
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log(
+						"ERROR",
+						"REMOVE_LONG_JOB",
+						`Couldn't remove long job for user "${session.userId}" with id ${jobId}. "${err}"`
+					);
+
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
-					"ERROR",
-					"GET_USERNAME_FROM_ID",
-					`Getting the username from userId "${userId}" failed. User not found.`
+					"SUCCESS",
+					"REMOVE_LONG_JOB",
+					`Removed long job for user "${session.userId}" with id ${jobId}.`
 				);
 
-				return cb({
-					status: "error",
-					message: "Couldn't find the user."
+				CacheModule.runJob("PUB", {
+					channel: "longJob.removed",
+					value: { jobId, userId: session.userId }
 				});
-			})
-			.catch(async err => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"GET_USERNAME_FROM_ID",
-						`Getting the username from userId "${userId}" failed. "${err}"`
-					);
-					cb({ status: "error", message: err });
-				}
-			});
-	},
+
+				return cb({
+					status: "success",
+					message: "Removed long job successfully."
+				});
+			}
+		);
+	}),
 
 	/**
 	 * Gets a user from a userId

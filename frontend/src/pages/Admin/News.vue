@@ -1,7 +1,11 @@
 <template>
-	<div>
+	<div class="admin-tab container">
 		<page-metadata title="Admin | News" />
-		<div class="container">
+		<div class="card tab-info">
+			<div class="info-row">
+				<h1>News</h1>
+				<p>Create and update news items</p>
+			</div>
 			<div class="button-row">
 				<button
 					class="is-primary button"
@@ -15,73 +19,72 @@
 					Create News Item
 				</button>
 			</div>
-			<advanced-table
-				:column-default="columnDefault"
-				:columns="columns"
-				:filters="filters"
-				data-action="news.getData"
-				name="admin-news"
-				:max-width="1200"
-				:events="events"
-			>
-				<template #column-options="slotProps">
-					<div class="row-options">
+		</div>
+		<advanced-table
+			:column-default="columnDefault"
+			:columns="columns"
+			:filters="filters"
+			data-action="news.getData"
+			name="admin-news"
+			:max-width="1200"
+			:events="events"
+		>
+			<template #column-options="slotProps">
+				<div class="row-options">
+					<button
+						class="button is-primary icon-with-button material-icons"
+						@click="
+							openModal({
+								modal: 'editNews',
+								data: { newsId: slotProps.item._id }
+							})
+						"
+						content="Edit News"
+						v-tippy
+					>
+						edit
+					</button>
+					<quick-confirm
+						@confirm="remove(slotProps.item._id)"
+						:disabled="slotProps.item.removed"
+					>
 						<button
-							class="button is-primary icon-with-button material-icons"
-							@click="
-								openModal({
-									modal: 'editNews',
-									data: { newsId: slotProps.item._id }
-								})
-							"
-							content="Edit News"
+							class="button is-danger icon-with-button material-icons"
+							content="Remove News"
 							v-tippy
 						>
-							edit
+							delete_forever
 						</button>
-						<quick-confirm
-							@confirm="remove(slotProps.item._id)"
-							:disabled="slotProps.item.removed"
-						>
-							<button
-								class="button is-danger icon-with-button material-icons"
-								content="Remove News"
-								v-tippy
-							>
-								delete_forever
-							</button>
-						</quick-confirm>
-					</div>
-				</template>
-				<template #column-status="slotProps">
-					<span :title="slotProps.item.status">{{
-						slotProps.item.status
-					}}</span>
-				</template>
-				<template #column-showToNewUsers="slotProps">
-					<span :title="slotProps.item.showToNewUsers">{{
-						slotProps.item.showToNewUsers
-					}}</span>
-				</template>
-				<template #column-title="slotProps">
-					<span :title="slotProps.item.title">{{
-						slotProps.item.title
-					}}</span>
-				</template>
-				<template #column-createdBy="slotProps">
-					<user-id-to-username
-						:user-id="slotProps.item.createdBy"
-						:alt="slotProps.item.createdBy"
-						:link="true"
-					/>
-				</template>
-				<template #column-markdown="slotProps">
-					<span :title="slotProps.item.markdown">{{
-						slotProps.item.markdown
-					}}</span>
-				</template>
-			</advanced-table>
-		</div>
+					</quick-confirm>
+				</div>
+			</template>
+			<template #column-status="slotProps">
+				<span :title="slotProps.item.status">{{
+					slotProps.item.status
+				}}</span>
+			</template>
+			<template #column-showToNewUsers="slotProps">
+				<span :title="slotProps.item.showToNewUsers">{{
+					slotProps.item.showToNewUsers
+				}}</span>
+			</template>
+			<template #column-title="slotProps">
+				<span :title="slotProps.item.title">{{
+					slotProps.item.title
+				}}</span>
+			</template>
+			<template #column-createdBy="slotProps">
+				<user-link
+					:user-id="slotProps.item.createdBy"
+					:alt="slotProps.item.createdBy"
+				/>
+			</template>
+			<template #column-markdown="slotProps">
+				<span :title="slotProps.item.markdown">{{
+					slotProps.item.markdown
+				}}</span>
+			</template>
+		</advanced-table>
 	</div>
 </template>
 

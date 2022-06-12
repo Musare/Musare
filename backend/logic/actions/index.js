@@ -9,6 +9,8 @@ import reports from "./reports";
 import news from "./news";
 import punishments from "./punishments";
 import utils from "./utils";
+import youtube from "./youtube";
+import media from "./media";
 
 export default {
 	apis,
@@ -21,5 +23,7 @@ export default {
 	reports,
 	news,
 	punishments,
-	utils
+	utils,
+	youtube,
+	media
 };

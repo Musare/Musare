@@ -6,17 +6,26 @@
 			column
 		}"
 		:id="id"
-		v-if="shown"
+		v-if="persist || shown"
 		:style="{
-			width: width + 'px',
-			height: height + 'px',
-			top: top + 'px',
-			left: left + 'px'
+			width: dragBox.width + 'px',
+			height: dragBox.height + 'px',
+			top: dragBox.top + 'px',
+			left: dragBox.left + 'px'
 		}"
 		@mousedown.left="onResizeBox"
 	>
 		<div class="box-header item-draggable" @mousedown.left="onDragBox">
-			<span class="delete material-icons" @click="toggleBox()"
+			<span class="drag material-icons" @dblclick="resetBoxPosition()"
+				>drag_indicator</span
+			>
+			<span v-if="title" class="box-title" :title="title">{{
+				title
+			}}</span>
+			<span
+				v-if="!persist"
+				class="delete material-icons"
+				@click="toggleBox()"
 				>highlight_off</span
 			>
 		</div>
@@ -27,61 +36,71 @@
 </template>
 
 <script>
+import DragBox from "@/mixins/DragBox.vue";
+
 export default {
+	mixins: [DragBox],
 	props: {
 		id: { type: String, default: null },
-		column: { type: Boolean, default: true }
+		column: { type: Boolean, default: true },
+		title: { type: String, default: null },
+		persist: { type: Boolean, default: false },
+		initial: { type: String, default: "align-top" },
+		minWidth: { type: Number, default: 100 },
+		maxWidth: { type: Number, default: 1000 },
+		minHeight: { type: Number, default: 100 },
+		maxHeight: { type: Number, default: 1000 }
 	},
 	data() {
 		return {
-			width: 200,
-			height: 200,
-			top: 0,
-			left: 0,
 			shown: false,
-			pos1: 0,
-			pos2: 0,
-			pos3: 0,
-			pos4: 0
+			debounceTimeout: null
 		};
 	},
 	mounted() {
+		let initial = {
+			top: 10,
+			left: 10,
+			width: 200,
+			height: 400
+		};
 		if (this.id !== null && localStorage[`box:${this.id}`]) {
 			const json = JSON.parse(localStorage.getItem(`box:${this.id}`));
-			this.height = json.height;
-			this.width = json.width;
-			this.top = json.top;
-			this.left = json.left;
+			initial = { ...initial, ...json };
 			this.shown = json.shown;
+		} else {
+			initial.top =
+				this.initial === "align-bottom"
+					? Math.max(
+							document.body.clientHeight - 10 - initial.height,
+							0
+					  )
+					: 10;
 		}
+		this.setInitialBox(initial, true);
+
+		this.$nextTick(() => {
+			this.onWindowResize();
+			window.addEventListener("resize", this.onWindowResize);
+		});
+	},
+	unmounted() {
+		window.removeEventListener("resize", this.onWindowResize);
+		if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
 	},
 	methods: {
-		onDragBox(e) {
-			const e1 = e || window.event;
-			e1.preventDefault();
+		setBoxDimensions(width, height) {
+			this.dragBox.height = Math.min(
+				Math.max(height, this.minHeight),
+				this.maxHeight,
+				document.body.clientHeight
+			);
 
-			this.pos3 = e1.clientX;
-			this.pos4 = e1.clientY;
-
-			document.onmousemove = e => {
-				const e2 = e || window.event;
-				e2.preventDefault();
-				// calculate the new cursor position:
-				this.pos1 = this.pos3 - e.clientX;
-				this.pos2 = this.pos4 - e.clientY;
-				this.pos3 = e.clientX;
-				this.pos4 = e.clientY;
-				// set the element's new position:
-				this.top -= this.pos2;
-				this.left -= this.pos1;
-			};
-
-			document.onmouseup = () => {
-				document.onmouseup = null;
-				document.onmousemove = null;
-
-				this.saveBox();
-			};
+			this.dragBox.width = Math.min(
+				Math.max(width, this.minWidth),
+				this.maxWidth,
+				document.body.clientWidth
+			);
 		},
 		onResizeBox(e) {
 			if (e.target !== this.$refs.box) return;
@@ -89,18 +108,15 @@ export default {
 			document.onmouseup = () => {
 				document.onmouseup = null;
 
-				const { height, width } = e.target.style;
-
-				this.height = Number(
-					height
-						.split("")
-						.splice(0, height.length - 2)
-						.join("")
-				);
-				this.width = Number(
+				const { width, height } = e.target.style;
+				this.setBoxDimensions(
 					width
 						.split("")
 						.splice(0, width.length - 2)
+						.join(""),
+					height
+						.split("")
+						.splice(0, height.length - 2)
 						.join("")
 				);
 
@@ -111,11 +127,8 @@ export default {
 			this.shown = !this.shown;
 			this.saveBox();
 		},
-		resetBox() {
-			this.top = 0;
-			this.left = 0;
-			this.width = 200;
-			this.height = 200;
+		resetBoxDimensions() {
+			this.setBoxDimensions(200, 200);
 			this.saveBox();
 		},
 		saveBox() {
@@ -123,13 +136,37 @@ export default {
 			localStorage.setItem(
 				`box:${this.id}`,
 				JSON.stringify({
-					height: this.height,
-					width: this.width,
-					top: this.top,
-					left: this.left,
+					height: this.dragBox.height,
+					width: this.dragBox.width,
+					top: this.dragBox.top,
+					left: this.dragBox.left,
 					shown: this.shown
 				})
 			);
+			this.setInitialBox({
+				top:
+					this.initial === "align-bottom"
+						? Math.max(
+								document.body.clientHeight -
+									10 -
+									this.dragBox.height,
+								0
+						  )
+						: 10,
+				left: 10
+			});
+		},
+		onDragBoxUpdate() {
+			this.onWindowResize();
+		},
+		onWindowResize() {
+			if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
+
+			this.debounceTimeout = setTimeout(() => {
+				const { width, height } = this.dragBox;
+				this.setBoxDimensions(width + 0, height + 0);
+				this.saveBox();
+			}, 50);
 		}
 	}
 };
@@ -155,27 +192,42 @@ export default {
 	overflow: auto;
 	border: 1px solid var(--light-grey-2);
 	border-radius: @border-radius;
-	min-height: 50px !important;
-	min-width: 50px !important;
 	padding: 0;
 
 	.box-header {
-		z-index: 100000001;
-		background-color: var(--primary-color);
-		display: block;
-		height: 24px;
+		display: flex;
+		height: 30px;
 		width: 100%;
+		background-color: var(--primary-color);
+		color: var(--white);
+		z-index: 100000001;
 
-		.delete.material-icons {
-			position: absolute;
-			top: 2px;
-			right: 2px;
+		.box-title {
+			font-size: 16px;
+			font-weight: 600;
+			line-height: 30px;
+			margin-right: 5px;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			overflow: hidden;
+		}
+
+		.material-icons {
 			font-size: 20px;
-			color: var(--white);
-			cursor: pointer;
+			line-height: 30px;
+
 			&:hover,
 			&:focus {
 				filter: brightness(90%);
+			}
+
+			&.drag {
+				margin: 0 5px;
+			}
+
+			&.delete {
+				margin: 0 5px 0 auto;
+				cursor: pointer;
 			}
 		}
 	}
@@ -184,7 +236,7 @@ export default {
 		display: flex;
 		flex-wrap: wrap;
 		padding: 10px;
-		height: calc(100% - 24px); /* 24px is the height of the box-header */
+		height: calc(100% - 30px); /* 30px is the height of the box-header */
 		overflow: auto;
 
 		span {

@@ -6,16 +6,17 @@ import whatIsNew from "./modals/whatIsNew";
 import createStation from "./modals/createStation";
 import editNews from "./modals/editNews";
 import manageStation from "./modals/manageStation";
-import importPlaylist from "./modals/importPlaylist";
 import editPlaylist from "./modals/editPlaylist";
 import report from "./modals/report";
 import viewReport from "./modals/viewReport";
 import bulkActions from "./modals/bulkActions";
+import viewApiRequest from "./modals/viewApiRequest";
 import viewPunishment from "./modals/viewPunishment";
 import importAlbum from "./modals/importAlbum";
 import confirm from "./modals/confirm";
 import editSongs from "./modals/editSongs";
 import editSong from "./modals/editSong";
+import viewYoutubeVideo from "./modals/viewYoutubeVideo";
 
 const state = {
 	modals: {},
@@ -28,16 +29,17 @@ const modalModules = {
 	createStation,
 	editNews,
 	manageStation,
-	importPlaylist,
 	editPlaylist,
 	report,
 	viewReport,
 	bulkActions,
+	viewApiRequest,
 	viewPunishment,
 	importAlbum,
 	confirm,
 	editSongs,
-	editSong
+	editSong,
+	viewYoutubeVideo
 };
 
 const getters = {};

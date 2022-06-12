@@ -15,7 +15,7 @@
 				<slot name="sidebar" />
 			</template>
 			<template #body>
-				<div v-if="!songId && !newSong" class="notice-container">
+				<div v-if="!youtubeId && !newSong" class="notice-container">
 					<h4>No song has been selected</h4>
 				</div>
 				<div v-if="songDeleted" class="notice-container">
@@ -23,14 +23,17 @@
 				</div>
 				<div
 					v-if="
-						songId && !songDataLoaded && !songNotFound && !newSong
+						youtubeId &&
+						!songDataLoaded &&
+						!songNotFound &&
+						!newSong
 					"
 					class="notice-container"
 				>
 					<h4>Song hasn't loaded yet</h4>
 				</div>
 				<div
-					v-if="songId && songNotFound && !newSong"
+					v-if="youtubeId && songNotFound && !newSong"
 					class="notice-container"
 				>
 					<h4>Song was not found</h4>
@@ -41,15 +44,15 @@
 				>
 					<div class="top-section">
 						<div class="player-section">
-							<div id="editSongPlayer" />
+							<div :id="`editSongPlayer-${modalUuid}`" />
 
 							<div v-show="youtubeError" class="player-error">
 								<h2>{{ youtubeErrorMessage }}</h2>
 							</div>
 
 							<canvas
-								ref="durationCanvas"
-								id="durationCanvas"
+								:ref="`durationCanvas-${modalUuid}`"
+								class="duration-canvas"
 								v-show="!youtubeError"
 								height="20"
 								width="530"
@@ -220,13 +223,23 @@
 								</div>
 							</div>
 						</div>
-						<img
+						<song-thumbnail
+							v-if="songDataLoaded && !songDeleted"
+							:song="song"
+							:fallback="false"
 							class="thumbnail-preview"
+							@loadError="onThumbnailLoadError"
+						/>
+						<img
+							v-if="
+								!isYoutubeThumbnail &&
+								songDataLoaded &&
+								!songDeleted
+							"
+							class="thumbnail-dummy"
 							:src="song.thumbnail"
-							onerror="this.src='/assets/notes-transparent.png'"
 							ref="thumbnailElement"
 							@load="onThumbnailLoad"
-							v-if="songDataLoaded && !songDeleted"
 						/>
 					</div>
 
@@ -248,6 +261,16 @@
 											getAlbumData('title')
 										"
 									/>
+									<button
+										class="button youtube-get-button"
+										@click="getYouTubeData('title')"
+									>
+										<div
+											class="youtube-icon"
+											v-tippy
+											content="Fill from YouTube"
+										></div>
+									</button>
 									<button
 										class="button album-get-button"
 										@click="getAlbumData('title')"
@@ -302,14 +325,25 @@
 						<div class="control is-grouped">
 							<div class="album-art-container">
 								<label class="label">
-									Album art
+									Thumbnail
 									<i
 										v-if="
 											thumbnailNotSquare &&
-											!thumbnailIsYouTubeThumbnail
+											!isYoutubeThumbnail
 										"
 										class="material-icons thumbnail-warning"
 										content="Thumbnail not square, it will be stretched"
+										v-tippy="{ theme: 'info' }"
+									>
+										warning
+									</i>
+									<i
+										v-if="
+											thumbnailLoadError &&
+											!isYoutubeThumbnail
+										"
+										class="material-icons thumbnail-warning"
+										content="Error loading thumbnail"
 										v-tippy="{ theme: 'info' }"
 									>
 										warning
@@ -321,16 +355,20 @@
 										class="input"
 										type="text"
 										v-model="song.thumbnail"
-										placeholder="Enter link to album art..."
+										placeholder="Enter link to thumbnail..."
 										@keyup.shift.enter="
 											getAlbumData('albumArt')
 										"
 									/>
 									<button
 										class="button youtube-get-button"
-										@click="getYouTubeData('albumArt')"
+										@click="getYouTubeData('thumbnail')"
 									>
-										<div class="youtube-icon"></div>
+										<div
+											class="youtube-icon"
+											v-tippy
+											content="Fill from YouTube"
+										></div>
 									</button>
 									<button
 										class="button album-get-button"
@@ -387,6 +425,16 @@
 											getAlbumData('artists')
 										"
 									/>
+									<button
+										class="button youtube-get-button"
+										@click="getYouTubeData('author')"
+									>
+										<div
+											class="youtube-icon"
+											v-tippy
+											content="Fill from YouTube"
+										></div>
+									</button>
 									<button
 										class="button album-get-button"
 										@click="getAlbumData('artists')"
@@ -593,7 +641,7 @@
 					<button
 						class="button is-primary"
 						@click="toggleFlag()"
-						v-if="songId && !songDeleted"
+						v-if="youtubeId && !songDeleted"
 					>
 						{{ flagged ? "Unflag" : "Flag" }}
 					</button>
@@ -635,10 +683,24 @@
 						default-message="Create Song"
 						@clicked="save(song, false, 'createButton', true)"
 					/>
+					<save-button
+						ref="createAndCloseButton"
+						:default-message="
+							bulk ? `Create and next` : `Create and close`
+						"
+						@clicked="
+							save(song, true, 'createAndCloseButton', true)
+						"
+					/>
 				</div>
 			</template>
 		</modal>
-		<floating-box id="genreHelper" ref="genreHelper" :column="false">
+		<floating-box
+			id="genreHelper"
+			ref="genreHelper"
+			:column="false"
+			title="Song Genres List"
+		>
 			<template #body>
 				<span
 					v-for="item in autosuggest.allItems.genres"
@@ -762,22 +824,25 @@ export default {
 			showRateDropdown: false,
 			thumbnailNotSquare: false,
 			thumbnailWidth: null,
-			thumbnailHeight: null
+			thumbnailHeight: null,
+			thumbnailLoadError: false
 		};
 	},
 	computed: {
-		thumbnailIsYouTubeThumbnail() {
+		isYoutubeThumbnail() {
 			return (
 				this.songDataLoaded &&
+				this.song.youtubeId &&
 				this.song.thumbnail &&
-				this.song.thumbnail.startsWith("https://i.ytimg.com/")
+				(this.song.thumbnail.lastIndexOf("i.ytimg.com") !== -1 ||
+					this.song.thumbnail.lastIndexOf("img.youtube.com") !== -1)
 			);
 		},
 		...mapModalState("MODAL_MODULE_PATH", {
 			tab: state => state.tab,
 			video: state => state.video,
 			song: state => state.song,
-			songId: state => state.songId,
+			youtubeId: state => state.youtubeId,
 			prefillData: state => state.prefillData,
 			originalSong: state => state.originalSong,
 			reports: state => state.reports,
@@ -799,14 +864,17 @@ export default {
 			this.drawCanvas();
 		},
 		/* eslint-enable */
-		songId(songId, oldSongId) {
-			console.log("NEW SONG ID", songId);
-			this.unloadSong(oldSongId);
-			this.loadSong(songId);
+		youtubeId(youtubeId, oldYoutubeId) {
+			console.log("NEW YOUTUBE ID", youtubeId);
+			this.unloadSong(oldYoutubeId);
+			this.loadSong(youtubeId);
 		}
 	},
+	beforeMount() {
+		console.log("EDITSONG BEFOREMOUNT");
+	},
 	async mounted() {
-		console.log("MOUNTED");
+		console.log("EDITSONG MOUNTED");
 		this.activityWatchVideoDataInterval = setInterval(() => {
 			this.sendActivityWatchVideoData();
 		}, 1000);
@@ -821,17 +889,15 @@ export default {
 		localStorage.setItem("volume", volume);
 		this.volumeSliderValue = volume;
 
-		if (!this.newSong) {
-			this.socket.on(
-				"event:admin.song.removed",
-				res => {
-					if (res.data.songId === this.song._id) {
-						this.songDeleted = true;
-					}
-				},
-				{ modalUuid: this.modalUuid }
-			);
-		}
+		this.socket.on(
+			"event:admin.song.removed",
+			res => {
+				if (res.data.songId === this.song._id) {
+					this.songDeleted = true;
+				}
+			},
+			{ modalUuid: this.modalUuid }
+		);
 
 		keyboardShortcuts.registerShortcut("editSong.pauseResumeVideo", {
 			keyCode: 101,
@@ -1002,8 +1068,8 @@ export default {
 		*/
 	},
 	beforeUnmount() {
-		console.log("UNMOUNT");
-		if (!this.newSong) this.unloadSong(this.songId);
+		console.log("EDITSONG BEFOREUNMOUNT");
+		this.unloadSong(this.youtubeId, this.song._id);
 
 		this.playerReady = false;
 		clearInterval(this.interval);
@@ -1037,7 +1103,18 @@ export default {
 				"editSong",
 				this.modalUuid
 			]);
+		} else {
+			console.log("UNREGISTER EDITSONG");
+			this.$store.unregisterModule([
+				"modals",
+				"editSongs",
+				this.modalUuid,
+				"editSong"
+			]);
 		}
+	},
+	unmounted() {
+		console.log("EDITSONG UNMOUNTED");
 	},
 	methods: {
 		onThumbnailLoad() {
@@ -1055,8 +1132,11 @@ export default {
 				this.thumbnailWidth = null;
 			}
 		},
+		onThumbnailLoadError(error) {
+			this.thumbnailLoadError = error !== 0;
+		},
 		init() {
-			if (this.newSong) {
+			if (this.newSong && !this.youtubeId && !this.bulk) {
 				this.setSong({
 					youtubeId: "",
 					title: "",
@@ -1070,7 +1150,7 @@ export default {
 				});
 				this.songDataLoaded = true;
 				this.showTab("youtube");
-			} else if (this.songId) this.loadSong(this.songId);
+			} else if (this.youtubeId) this.loadSong(this.youtubeId);
 			else if (!this.bulk) {
 				new Toast("You can't open EditSong without editing a song");
 				return this.closeModal("editSong");
@@ -1130,133 +1210,142 @@ export default {
 			}, 200);
 
 			if (window.YT && window.YT.Player) {
-				this.video.player = new window.YT.Player("editSongPlayer", {
-					height: 298,
-					width: 530,
-					videoId: null,
-					host: "https://www.youtube-nocookie.com",
-					playerVars: {
-						controls: 0,
-						iv_load_policy: 3,
-						rel: 0,
-						showinfo: 0,
-						autoplay: 0
-					},
-					startSeconds: this.song.skipDuration,
-					events: {
-						onReady: () => {
-							let volume = parseFloat(
-								localStorage.getItem("volume")
-							);
-							volume = typeof volume === "number" ? volume : 20;
-							this.video.player.setVolume(volume);
-							if (volume > 0) this.video.player.unMute();
-
-							this.playerReady = true;
-
-							if (this.song && this.song._id)
-								this.video.player.cueVideoById(
-									this.song.youtubeId,
-									this.song.skipDuration
-								);
-
-							this.setPlaybackRate(null);
-
-							this.drawCanvas();
+				this.video.player = new window.YT.Player(
+					`editSongPlayer-${this.modalUuid}`,
+					{
+						height: 298,
+						width: 530,
+						videoId: null,
+						host: "https://www.youtube-nocookie.com",
+						playerVars: {
+							controls: 0,
+							iv_load_policy: 3,
+							rel: 0,
+							showinfo: 0,
+							autoplay: 0
 						},
-						onStateChange: event => {
-							this.drawCanvas();
+						startSeconds: this.song.skipDuration,
+						events: {
+							onReady: () => {
+								let volume = parseFloat(
+									localStorage.getItem("volume")
+								);
+								volume =
+									typeof volume === "number" ? volume : 20;
+								this.video.player.setVolume(volume);
+								if (volume > 0) this.video.player.unMute();
 
-							if (event.data === 1) {
-								this.video.paused = false;
-								let youtubeDuration =
-									this.video.player.getDuration();
-								const newYoutubeVideoDuration =
-									youtubeDuration.toFixed(3);
+								this.playerReady = true;
 
-								if (
-									this.youtubeVideoDuration.indexOf(
-										".000"
-									) !== -1 &&
-									`${this.youtubeVideoDuration}` !==
-										`${newYoutubeVideoDuration}`
-								) {
-									const songDurationNumber = Number(
-										this.song.duration
+								if (this.song && this.song.youtubeId)
+									this.video.player.cueVideoById(
+										this.song.youtubeId,
+										this.song.skipDuration
 									);
-									const songDurationNumber2 =
-										Number(this.song.duration) + 1;
-									const songDurationNumber3 =
-										Number(this.song.duration) - 1;
-									const fixedSongDuration =
-										songDurationNumber.toFixed(3);
-									const fixedSongDuration2 =
-										songDurationNumber2.toFixed(3);
-									const fixedSongDuration3 =
-										songDurationNumber3.toFixed(3);
 
-									if (
-										`${this.youtubeVideoDuration}` ===
-											`${Number(
-												this.song.duration
-											).toFixed(3)}` &&
-										(fixedSongDuration ===
-											this.youtubeVideoDuration ||
-											fixedSongDuration2 ===
-												this.youtubeVideoDuration ||
-											fixedSongDuration3 ===
-												this.youtubeVideoDuration)
-									)
-										this.song.duration =
-											newYoutubeVideoDuration;
+								this.setPlaybackRate(null);
 
-									this.youtubeVideoDuration =
-										newYoutubeVideoDuration;
+								this.drawCanvas();
+							},
+							onStateChange: event => {
+								this.drawCanvas();
+
+								if (event.data === 1) {
+									this.video.paused = false;
+									let youtubeDuration =
+										this.video.player.getDuration();
+									const newYoutubeVideoDuration =
+										youtubeDuration.toFixed(3);
+
 									if (
 										this.youtubeVideoDuration.indexOf(
 											".000"
-										) !== -1
-									)
-										this.youtubeVideoNote = "(~)";
-									else this.youtubeVideoNote = "";
+										) !== -1 &&
+										`${this.youtubeVideoDuration}` !==
+											`${newYoutubeVideoDuration}`
+									) {
+										const songDurationNumber = Number(
+											this.song.duration
+										);
+										const songDurationNumber2 =
+											Number(this.song.duration) + 1;
+										const songDurationNumber3 =
+											Number(this.song.duration) - 1;
+										const fixedSongDuration =
+											songDurationNumber.toFixed(3);
+										const fixedSongDuration2 =
+											songDurationNumber2.toFixed(3);
+										const fixedSongDuration3 =
+											songDurationNumber3.toFixed(3);
+
+										if (
+											`${this.youtubeVideoDuration}` ===
+												`${Number(
+													this.song.duration
+												).toFixed(3)}` &&
+											(fixedSongDuration ===
+												this.youtubeVideoDuration ||
+												fixedSongDuration2 ===
+													this.youtubeVideoDuration ||
+												fixedSongDuration3 ===
+													this.youtubeVideoDuration)
+										)
+											this.song.duration =
+												newYoutubeVideoDuration;
+
+										this.youtubeVideoDuration =
+											newYoutubeVideoDuration;
+										if (
+											this.youtubeVideoDuration.indexOf(
+												".000"
+											) !== -1
+										)
+											this.youtubeVideoNote = "(~)";
+										else this.youtubeVideoNote = "";
+									}
+
+									if (this.song.duration === -1)
+										this.song.duration =
+											this.youtubeVideoDuration;
+
+									youtubeDuration -= this.song.skipDuration;
+									if (
+										this.song.duration >
+										youtubeDuration + 1
+									) {
+										this.stopVideo();
+										this.pauseVideo(true);
+										return new Toast(
+											"Video can't play. Specified duration is bigger than the YouTube song duration."
+										);
+									}
+									if (this.song.duration <= 0) {
+										this.stopVideo();
+										this.pauseVideo(true);
+										return new Toast(
+											"Video can't play. Specified duration has to be more than 0 seconds."
+										);
+									}
+
+									if (
+										this.video.player.getCurrentTime() <
+										this.song.skipDuration
+									) {
+										return this.seekTo(
+											this.song.skipDuration
+										);
+									}
+
+									this.setPlaybackRate(null);
+								} else if (event.data === 2) {
+									this.video.paused = true;
 								}
 
-								if (this.song.duration === -1)
-									this.song.duration =
-										this.youtubeVideoDuration;
-
-								youtubeDuration -= this.song.skipDuration;
-								if (this.song.duration > youtubeDuration + 1) {
-									this.stopVideo();
-									this.pauseVideo(true);
-									return new Toast(
-										"Video can't play. Specified duration is bigger than the YouTube song duration."
-									);
-								}
-								if (this.song.duration <= 0) {
-									this.stopVideo();
-									this.pauseVideo(true);
-									return new Toast(
-										"Video can't play. Specified duration has to be more than 0 seconds."
-									);
-								}
-
-								if (
-									this.video.player.getCurrentTime() <
-									this.song.skipDuration
-								) {
-									return this.seekTo(this.song.skipDuration);
-								}
-
-								this.setPlaybackRate(null);
-							} else if (event.data === 2) {
-								this.video.paused = true;
+								return false;
 							}
-
-							return false;
 						}
 					}
-				});
+				);
 			} else {
 				this.youtubeError = true;
 				this.youtubeErrorMessage = "Player could not be loaded.";
@@ -1285,55 +1374,69 @@ export default {
 
 			return null;
 		},
-		unloadSong(songId) {
+		unloadSong(youtubeId, songId) {
 			this.songDataLoaded = false;
 			this.songDeleted = false;
 			this.stopVideo();
 			this.pauseVideo(true);
-			this.resetSong(songId);
+			this.resetSong(youtubeId);
 			this.thumbnailNotSquare = false;
 			this.thumbnailWidth = null;
 			this.thumbnailHeight = null;
 			this.youtubeVideoCurrentTime = "0.000";
 			this.youtubeVideoDuration = "0.000";
 			this.youtubeVideoNote = "";
-			this.socket.dispatch("apis.leaveRoom", `edit-song.${songId}`);
+			if (songId)
+				this.socket.dispatch("apis.leaveRoom", `edit-song.${songId}`);
 			if (this.$refs.saveButton) this.$refs.saveButton.status = "default";
 		},
-		loadSong(songId) {
-			console.log(`LOAD SONG ${songId}`);
+		loadSong(youtubeId) {
+			console.log(`LOAD SONG ${youtubeId}`);
 			this.songNotFound = false;
-			this.socket.dispatch(`songs.getSongFromSongId`, songId, res => {
-				if (res.status === "success") {
-					let { song } = res.data;
+			this.socket.dispatch(
+				`songs.getSongsFromYoutubeIds`,
+				[youtubeId],
+				res => {
+					const { songs } = res.data;
+					if (res.status === "success" && songs.length > 0) {
+						let song = songs[0];
+						song = Object.assign(song, this.prefillData);
 
-					song = Object.assign(song, this.prefillData);
+						this.setSong(song);
 
-					this.setSong(song);
+						this.songDataLoaded = true;
 
-					this.songDataLoaded = true;
+						if (song._id)
+							this.socket.dispatch(
+								"apis.joinRoom",
+								`edit-song.${song._id}`
+							);
 
-					this.socket.dispatch(
-						"apis.joinRoom",
-						`edit-song.${this.song._id}`
-					);
-
-					if (this.video.player && this.video.player.cueVideoById) {
-						this.video.player.cueVideoById(
-							this.song.youtubeId,
-							this.song.skipDuration
-						);
+						if (
+							this.video.player &&
+							this.video.player.cueVideoById
+						) {
+							this.video.player.cueVideoById(
+								youtubeId,
+								song.skipDuration
+							);
+						}
+					} else {
+						new Toast("Song with that ID not found");
+						if (this.bulk) this.songNotFound = true;
+						if (!this.bulk) this.closeModal("editSong");
 					}
-				} else {
-					new Toast("Song with that ID not found");
-					if (this.bulk) this.songNotFound = true;
-					if (!this.bulk) this.closeModal("editSong");
 				}
-			});
+			);
 
-			this.socket.dispatch("reports.getReportsForSong", songId, res => {
-				this.updateReports(res.data.reports);
-			});
+			if (!this.newSong)
+				this.socket.dispatch(
+					"reports.getReportsForSong",
+					this.song._id,
+					res => {
+						this.updateReports(res.data.reports);
+					}
+				);
 		},
 		importAlbum(result) {
 			this.selectDiscogsAlbum(result);
@@ -1343,25 +1446,27 @@ export default {
 		save(songToCopy, closeOrNext, saveButtonRefName, newSong = false) {
 			const song = JSON.parse(JSON.stringify(songToCopy));
 
-			if (!newSong) this.$emit("saving", song._id);
+			if (!newSong || this.bulk) this.$emit("saving", song.youtubeId);
 
 			const saveButtonRef = this.$refs[saveButtonRefName];
 
 			if (!this.youtubeError && this.youtubeVideoDuration === "0.000") {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong) this.$emit("savedError", song.youtubeId);
 				return new Toast("The video appears to not be working.");
 			}
 
 			if (!song.title) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast("Please fill in all fields");
 			}
 
 			if (!song.thumbnail) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast("Please fill in all fields");
 			}
 
@@ -1394,7 +1499,8 @@ export default {
 				this.originalSong.youtubeId !== song.youtubeId
 			) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast(
 					"You're not allowed to change the YouTube id while the player is not working"
 				);
@@ -1404,11 +1510,12 @@ export default {
 			if (
 				Number(song.skipDuration) + Number(song.duration) >
 					this.youtubeVideoDuration &&
-				((!newSong && !this.youtubeError) ||
+				(((!newSong || this.bulk) && !this.youtubeError) ||
 					this.originalSong.duration !== song.duration)
 			) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast(
 					"Duration can't be higher than the length of the video"
 				);
@@ -1417,7 +1524,8 @@ export default {
 			// Title
 			if (!validation.isLength(song.title, 1, 100)) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast(
 					"Title must have between 1 and 100 characters."
 				);
@@ -1429,7 +1537,8 @@ export default {
 				song.artists.length > 10
 			) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast(
 					"Invalid artists. You must have at least 1 artist and a maximum of 10 artists."
 				);
@@ -1452,25 +1561,27 @@ export default {
 
 			if (error) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast(error);
 			}
 
 			// Genres
 			error = undefined;
-			song.genres.forEach(genre => {
-				if (!validation.isLength(genre, 1, 32)) {
-					error = "Genre must have between 1 and 32 characters.";
-					return error;
-				}
-				if (!validation.regex.ascii.test(genre)) {
-					error =
-						"Invalid genre format. Only ascii characters are allowed.";
-					return error;
-				}
+			if (song.verified && song.genres.length < 1)
+				song.genres.forEach(genre => {
+					if (!validation.isLength(genre, 1, 32)) {
+						error = "Genre must have between 1 and 32 characters.";
+						return error;
+					}
+					if (!validation.regex.ascii.test(genre)) {
+						error =
+							"Invalid genre format. Only ascii characters are allowed.";
+						return error;
+					}
 
-				return false;
-			});
+					return false;
+				});
 
 			if (
 				(song.verified && song.genres.length < 1) ||
@@ -1480,7 +1591,8 @@ export default {
 
 			if (error) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast(error);
 			}
 
@@ -1500,21 +1612,24 @@ export default {
 
 			if (error) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast(error);
 			}
 
 			// Thumbnail
 			if (!validation.isLength(song.thumbnail, 1, 256)) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast(
 					"Thumbnail must have between 8 and 256 characters."
 				);
 			}
 			if (this.useHTTPS && song.thumbnail.indexOf("https://") !== 0) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast('Thumbnail must start with "https://".');
 			}
 
@@ -1524,7 +1639,8 @@ export default {
 				song.thumbnail.indexOf("https://") !== 0
 			) {
 				saveButtonRef.handleFailedSave();
-				if (!newSong) this.$emit("savedError", song._id);
+				if (!newSong || this.bulk)
+					this.$emit("savedError", song.youtubeId);
 				return new Toast('Thumbnail must start with "http://".');
 			}
 
@@ -1536,26 +1652,34 @@ export default {
 
 					if (res.status === "error") {
 						saveButtonRef.handleFailedSave();
+						this.$emit("savedError", song.youtubeId);
 						return;
 					}
 
 					saveButtonRef.handleSuccessfulSave();
+					this.$emit("savedSuccess", song.youtubeId);
 
-					this.closeModal("editSong");
+					if (!closeOrNext) {
+						this.loadSong(song.youtubeId);
+						return;
+					}
+
+					if (this.bulk) this.$emit("nextSong");
+					else this.closeModal("editSong");
 				});
 			return this.socket.dispatch(`songs.update`, song._id, song, res => {
 				new Toast(res.message);
 
 				if (res.status === "error") {
 					saveButtonRef.handleFailedSave();
-					this.$emit("savedError", song._id);
+					this.$emit("savedError", song.youtubeId);
 					return;
 				}
 
 				this.updateOriginalSong(song);
 
 				saveButtonRef.handleSuccessfulSave();
-				this.$emit("savedSuccess", song._id);
+				this.$emit("savedSuccess", song.youtubeId);
 
 				if (!closeOrNext) return;
 
@@ -1597,11 +1721,39 @@ export default {
 				});
 		},
 		getYouTubeData(type) {
-			if (type === "albumArt")
+			if (type === "title") {
+				try {
+					const { title } = this.video.player.getVideoData();
+
+					if (title)
+						this.updateSongField({
+							field: "title",
+							value: title
+						});
+					else throw new Error("No title found");
+				} catch (e) {
+					new Toast(
+						"Unable to fetch YouTube video title. Try starting the video."
+					);
+				}
+			}
+			if (type === "thumbnail")
 				this.updateSongField({
 					field: "thumbnail",
 					value: `https://img.youtube.com/vi/${this.song.youtubeId}/mqdefault.jpg`
 				});
+			if (type === "author") {
+				try {
+					const { author } = this.video.player.getVideoData();
+
+					if (author) this.artistInputValue = author;
+					else throw new Error("No video author found");
+				} catch (e) {
+					new Toast(
+						"Unable to fetch YouTube video author. Try starting the video."
+					);
+				}
+			}
 		},
 		fillDuration() {
 			this.song.duration =
@@ -1725,8 +1877,9 @@ export default {
 				this.song.tags.splice(this.song.tags.indexOf(value), 1);
 		},
 		drawCanvas() {
-			if (!this.songDataLoaded) return;
-			const canvasElement = this.$refs.durationCanvas;
+			const canvasElement =
+				this.$refs[`durationCanvas-${this.modalUuid}`];
+			if (!this.songDataLoaded || !canvasElement) return;
 			const ctx = canvasElement.getContext("2d");
 
 			const videoDuration = Number(this.youtubeVideoDuration);
@@ -1941,7 +2094,7 @@ export default {
 		}
 	}
 
-	#durationCanvas {
+	.duration-canvas {
 		background-color: var(--dark-grey-2) !important;
 	}
 }
@@ -1961,7 +2114,6 @@ export default {
 }
 
 .left-section {
-	flex-basis: unset !important;
 	height: 100%;
 	display: flex;
 	flex-direction: column;
@@ -1978,7 +2130,7 @@ export default {
 			border-radius: @border-radius;
 			overflow: hidden;
 
-			#durationCanvas {
+			.duration-canvas {
 				background-color: var(--light-grey-2);
 			}
 
@@ -2170,17 +2322,24 @@ export default {
 			}
 		}
 
-		.thumbnail-preview {
+		:deep(.thumbnail-preview) {
 			width: 189px;
 			height: 189px;
 			margin-left: 16px;
 		}
+
+		.thumbnail-dummy {
+			opacity: 0;
+			height: 10px;
+			width: 10px;
+		}
 	}
 
 	.edit-section {
-		width: 735px;
+		display: flex;
+		flex-wrap: wrap;
+		flex-grow: 1;
 		border: 1px solid var(--light-grey-3);
-		flex: 1;
 		margin-top: 16px;
 		border-radius: @border-radius;
 
@@ -2232,6 +2391,7 @@ export default {
 
 		> div {
 			margin: 16px !important;
+			width: 100%;
 		}
 
 		input {
@@ -2254,7 +2414,7 @@ export default {
 
 		.album-art-container {
 			margin-right: 16px;
-			width: calc((100% - 16px) / 8 * 4);
+			width: 100%;
 		}
 
 		.youtube-id-container {
@@ -2395,6 +2555,26 @@ export default {
 			padding: 15px;
 			height: calc(100% - 32px);
 			overflow: auto;
+		}
+	}
+}
+
+@media screen and (max-width: 1100px) {
+	.left-section,
+	.right-section {
+		height: unset;
+		max-height: unset;
+	}
+
+	.left-section {
+		margin-right: 0;
+	}
+
+	.right-section {
+		flex-basis: 100% !important;
+
+		#tabs-container {
+			width: 100%;
 		}
 	}
 }

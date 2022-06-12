@@ -1,4 +1,5 @@
 import config from "config";
+import { EventEmitter } from "events";
 
 class DeferredPromise {
 	// eslint-disable-next-line require-jsdoc
@@ -169,7 +170,7 @@ class Queue {
 
 class Job {
 	// eslint-disable-next-line require-jsdoc
-	constructor(name, payload, onFinish, module, parentJob) {
+	constructor(name, payload, onFinish, module, parentJob, options) {
 		this.name = name;
 		this.payload = payload;
 		this.response = null;
@@ -186,6 +187,13 @@ class Job {
 		});
 		this.status = "INITIALIZED";
 		this.task = null;
+		this.onProgress = options.onProgress;
+		this.lastProgressData = null;
+		this.lastProgressTime = Date.now();
+		this.lastProgressTimeout = null;
+		this.longJob = false;
+		this.longJobTitle = "";
+		this.longJobStatus = "";
 	}
 
 	/**
@@ -258,6 +266,52 @@ class Job {
 		args.splice(1, 0, this.name); // Adds the name of the job as the first argument (after INFO/SUCCESS/ERROR).
 		this.module.log(...args);
 	}
+
+	keepLongJob() {
+		this.longJob = true;
+	}
+
+	forgetLongJob() {
+		this.longJob = false;
+		this.module.moduleManager.jobManager.removeJob(this);
+	}
+
+	/**
+	 * 
+	 * @param {data} data - Data to publish upon progress
+	 */
+	publishProgress(data, notALongJob) {
+		if (this.longJob || notALongJob) {
+			if (this.onProgress) {
+				if (notALongJob) {
+					this.onProgress.emit("progress", data);
+				} else {
+					this.lastProgressData = data;
+
+					if (data.status === "update") {
+						if ((Date.now() - this.lastProgressTime) > 1000) {
+							this.lastProgressTime = Date.now();
+						} else {
+							if (this.lastProgressTimeout) clearTimeout(this.lastProgressTimeout);
+							this.lastProgressTimeout = setTimeout(() => {
+								this.lastProgressTime = Date.now();
+								this.lastProgressTimeout = null;
+								this.onProgress.emit("progress", data);
+							}, Date.now() - this.lastProgressTime);
+							return;
+						}
+					} else if (data.status === "success" || data.status === "error")
+						if (this.lastProgressTimeout) clearTimeout(this.lastProgressTimeout);
+
+					if (data.title)	this.longJobTitle = data.title;
+
+					this.onProgress.emit("progress", data);
+				}
+			} else this.log("Progress published, but no onProgress specified.")
+		} else {
+			this.parentJob.publishProgress(data);
+		}
+	}
 }
 
 class MovingAverageCalculator {
@@ -313,6 +367,7 @@ export default class CoreClass {
 		this.priorities = options && options.priorities ? options.priorities : {};
 		this.stage = 0;
 		this.jobStatistics = {};
+		this.jobNames = [];
 
 		this.logRules = config.get("customLoggingPerModule")[name]
 			? config.get("customLoggingPerModule")[name]
@@ -434,6 +489,7 @@ export default class CoreClass {
 				averageTiming: new MovingAverageCalculator()
 			};
 		});
+		this.jobNames = jobNames;
 	}
 
 	/**
@@ -473,9 +529,15 @@ export default class CoreClass {
 		} else _priority = priority;
 
 		if (!_options) _options = { isQuiet: false };
+		if (_options && typeof _options.onProgress === "function") {
+			const onProgress = new EventEmitter();
+			onProgress.on("progress", _options.onProgress);
+			_options.onProgress = onProgress;
+		}
+		if (!_options.onProgress && parentJob) _options.onProgress = parentJob.onProgress;
 
 		const deferredPromise = new DeferredPromise();
-		const job = new Job(name, payload, deferredPromise, this, _parentJob);
+		const job = new Job(name, payload, deferredPromise, this, _parentJob, { onProgress: _options.onProgress });
 
 		this.log("INFO", `Queuing job ${name} (${job.toString()})`);
 
@@ -550,83 +612,83 @@ export default class CoreClass {
 				if (!options.isQuiet) this.log("INFO", `Job ${job.name} (${job.toString()}) is queued, so calling it`);
 
 				if (this[job.name])
-				this[job.name]
-					.apply(job, [job.payload])
-					.then(response => {
-						if (!options.isQuiet) this.log("INFO", `Ran job ${job.name} (${job.toString()}) successfully`);
-						job.setStatus("FINISHED");
-						job.setResponse(response);
-						this.jobStatistics[job.name].successful += 1;
-						job.setResponseType("RESOLVE");
-						if (
-							config.debug &&
-							config.debug.stationIssue === true &&
-							config.debug.captureJobs &&
-							config.debug.captureJobs.indexOf(job.name) !== -1
-						) {
-							this.moduleManager.debugJobs.completed.push({
-								status: "success",
-								job,
-								priority: job.task.priority,
-								response
-							});
-						}
-					})
-					.catch(error => {
-						this.log("INFO", `Running job ${job.name} (${job.toString()}) failed`);
-						job.setStatus("FINISHED");
-						job.setResponse(error);
-						job.setResponseType("REJECT");
-						this.jobStatistics[job.name].failed += 1;
-						if (
-							config.debug &&
-							config.debug.stationIssue === true &&
-							config.debug.captureJobs &&
-							config.debug.captureJobs.indexOf(job.name) !== -1
-						) {
-							this.moduleManager.debugJobs.completed.push({
-								status: "error",
-								job,
-								error
-							});
-						}
-					})
-					.finally(() => {
-						const endTime = Date.now();
-						const executionTime = endTime - startTime;
-						this.jobStatistics[job.name].total += 1;
-						this.jobStatistics[job.name].averageTiming.update(executionTime);
-						this.moduleManager.jobManager.removeJob(job);
-						job.cleanup();
+					this[job.name]
+						.apply(job, [job.payload])
+						.then(response => {
+							if (!options.isQuiet) this.log("INFO", `Ran job ${job.name} (${job.toString()}) successfully`);
+							job.setStatus("FINISHED");
+							job.setResponse(response);
+							this.jobStatistics[job.name].successful += 1;
+							job.setResponseType("RESOLVE");
+							if (
+								config.debug &&
+								config.debug.stationIssue === true &&
+								config.debug.captureJobs &&
+								config.debug.captureJobs.indexOf(job.name) !== -1
+							) {
+								this.moduleManager.debugJobs.completed.push({
+									status: "success",
+									job,
+									priority: job.task.priority,
+									response
+								});
+							}
+						})
+						.catch(error => {
+							this.log("INFO", `Running job ${job.name} (${job.toString()}) failed`);
+							job.setStatus("FINISHED");
+							job.setResponse(error);
+							job.setResponseType("REJECT");
+							this.jobStatistics[job.name].failed += 1;
+							if (
+								config.debug &&
+								config.debug.stationIssue === true &&
+								config.debug.captureJobs &&
+								config.debug.captureJobs.indexOf(job.name) !== -1
+							) {
+								this.moduleManager.debugJobs.completed.push({
+									status: "error",
+									job,
+									error
+								});
+							}
+						})
+						.finally(() => {
+							const endTime = Date.now();
+							const executionTime = endTime - startTime;
+							this.jobStatistics[job.name].total += 1;
+							this.jobStatistics[job.name].averageTiming.update(executionTime);
+							if (!job.longJob) this.moduleManager.jobManager.removeJob(job);
+							job.cleanup();
 
-						if (!job.parentJob) {
-							if (job.responseType === "RESOLVE") {
-								job.onFinish.resolve(job.response);
-								job.responseType = "RESOLVED";
-							} else if (job.responseType === "REJECT") {
-								job.onFinish.reject(job.response);
-								job.responseType = "REJECTED";
+							if (!job.parentJob) {
+								if (job.responseType === "RESOLVE") {
+									job.onFinish.resolve(job.response);
+									job.responseType = "RESOLVED";
+								} else if (job.responseType === "REJECT") {
+									job.onFinish.reject(job.response);
+									job.responseType = "REJECTED";
+								}
+							} else if (
+								job.parentJob &&
+								job.parentJob.childJobs.find(childJob =>
+									childJob ? childJob.status !== "FINISHED" : true
+								) === undefined
+							) {
+								if (job.parentJob.status !== "WAITING_ON_CHILD_JOB") {
+									this.log(
+										"ERROR",
+										`Job ${
+											job.parentJob.name
+										} (${job.parentJob.toString()}) had a child job complete even though it is not waiting on a child job. This should never happen.`
+									);
+								} else {
+									job.parentJob.setStatus("REQUEUED");
+									job.parentJob.module.jobQueue.resumeRunningJob(job.parentJob);
+								}
 							}
-						} else if (
-							job.parentJob &&
-							job.parentJob.childJobs.find(childJob =>
-								childJob ? childJob.status !== "FINISHED" : true
-							) === undefined
-						) {
-							if (job.parentJob.status !== "WAITING_ON_CHILD_JOB") {
-								this.log(
-									"ERROR",
-									`Job ${
-										job.parentJob.name
-									} (${job.parentJob.toString()}) had a child job complete even though it is not waiting on a child job. This should never happen.`
-								);
-							} else {
-								job.parentJob.setStatus("REQUEUED");
-								job.parentJob.module.jobQueue.resumeRunningJob(job.parentJob);
-							}
-						}
-						resolve();
-					});
+							resolve();
+						});
 				else
 					this.log("ERROR", `Job not found! ${job.name}`)
 			} else {

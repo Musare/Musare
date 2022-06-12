@@ -24,18 +24,19 @@ export default {
 			createStation: "CreateStation.vue",
 			editNews: "EditNews.vue",
 			manageStation: "ManageStation/index.vue",
-			importPlaylist: "ImportPlaylist.vue",
 			editPlaylist: "EditPlaylist/index.vue",
 			createPlaylist: "CreatePlaylist.vue",
 			report: "Report.vue",
 			viewReport: "ViewReport.vue",
 			bulkActions: "BulkActions.vue",
+			viewApiRequest: "ViewApiRequest.vue",
 			viewPunishment: "ViewPunishment.vue",
 			removeAccount: "RemoveAccount.vue",
 			importAlbum: "ImportAlbum.vue",
 			confirm: "Confirm.vue",
 			editSongs: "EditSongs.vue",
-			editSong: "EditSong/index.vue"
+			editSong: "EditSong/index.vue",
+			viewYoutubeVideo: "ViewYoutubeVideo.vue"
 		}),
 		...mapState("modalVisibility", {
 			activeModals: state => state.activeModals,

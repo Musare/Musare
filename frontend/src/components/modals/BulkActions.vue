@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<modal title="Bulk Actions" class="bulk-actions-modal">
+		<modal title="Bulk Actions" class="bulk-actions-modal" size="slim">
 			<template #body>
 				<label class="label">Method</label>
 				<div class="control is-expanded select">
@@ -131,19 +131,35 @@ export default {
 			this.items.splice(index, 1);
 		},
 		applyChanges() {
+			let id;
+			let title;
+
 			this.socket.dispatch(
 				this.type.action,
 				this.method,
 				this.items,
 				this.type.items,
-				res => {
-					new Toast(res.message);
-					if (res.status === "success")
-						this.closeModal("bulkActions");
+				{
+					cb: () => {},
+					onProgress: res => {
+						if (res.status === "started") {
+							id = res.id;
+							title = res.title;
+							this.closeCurrentModal();
+						}
+
+						if (id)
+							this.setJob({
+								id,
+								name: title,
+								...res
+							});
+					}
 				}
 			);
 		},
-		...mapActions("modalVisibility", ["closeModal"])
+		...mapActions("modalVisibility", ["closeCurrentModal"]),
+		...mapActions("longJobs", ["setJob"])
 	}
 };
 </script>

@@ -458,7 +458,7 @@ class _WSModule extends CoreClass {
 			const { socket, req } = payload;
 			let SID = "";
 
-			socket.ip = req.headers["x-forwarded-for"] || "0..0.0";
+			socket.ip = req.headers["x-forwarded-for"] || "0.0.0.0";
 
 			async.waterfall(
 				[
@@ -634,17 +634,21 @@ class _WSModule extends CoreClass {
 
 				if (!namespace) return socket.dispatch("ERROR", "Invalid namespace.");
 				if (!action) return socket.dispatch("ERROR", "Invalid action.");
-				if (!WSModule.actions[namespace]) return socket.dispatch("ERROR", "Namespace not found.");
-				if (!WSModule.actions[namespace][action]) return socket.dispatch("ERROR", "Action not found.");
+				if (!WSModule.actions[namespace]) return socket.dispatch("ERROR", `Namespace ${namespace} not found.`);
+				if (!WSModule.actions[namespace][action])
+					return socket.dispatch("ERROR", `Action ${namespace}.${action} not found.`);
 
 				if (data[data.length - 1].CB_REF) {
-					const { CB_REF } = data[data.length - 1];
+					const { CB_REF, onProgress } = data[data.length - 1];
 					data.pop();
 
-					return socket.actions.emit(data.shift(0), [...data, res => socket.dispatch("CB_REF", CB_REF, res)]);
+					return socket.actions.emit(data.shift(0), {
+						args: [...data, res => socket.dispatch("CB_REF", CB_REF, res)],
+						onProgress: onProgress ? res => socket.dispatch("PROGRESS_CB_REF", CB_REF, res) : null
+					});
 				}
 
-				return socket.actions.emit(data.shift(0), data);
+				return socket.actions.emit(data.shift(0), { args: data });
 			};
 
 			// have the socket listen for each action
@@ -654,9 +658,9 @@ class _WSModule extends CoreClass {
 					const name = `${namespace}.${action}`;
 
 					// listen for this action to be called
-					socket.listen(name, async args =>
-						WSModule.runJob("RUN_ACTION", { socket, namespace, action, args })
-					);
+					socket.listen(name, async ({ args, onProgress }) => {
+						WSModule.runJob("RUN_ACTION", { socket, namespace, action, args }, { onProgress });
+					});
 				});
 			});
 

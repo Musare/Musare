@@ -10,10 +10,9 @@ const UtilsModule = moduleManager.modules.utils;
 const WSModule = moduleManager.modules.ws;
 const CacheModule = moduleManager.modules.cache;
 const SongsModule = moduleManager.modules.songs;
-const ActivitiesModule = moduleManager.modules.activities;
-const YouTubeModule = moduleManager.modules.youtube;
 const PlaylistsModule = moduleManager.modules.playlists;
 const StationsModule = moduleManager.modules.stations;
+const YouTubeModule = moduleManager.modules.youtube;
 
 CacheModule.runJob("SUB", {
 	channel: "song.updated",
@@ -37,114 +36,6 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("EMIT_TO_ROOMS", {
 			rooms: ["import-album", "admin.songs", `edit-song.${data.songId}`, "edit-songs"],
 			args: ["event:admin.song.removed", { data }]
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "song.like",
-	cb: data => {
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `song.${data.youtubeId}`,
-			args: [
-				"event:song.liked",
-				{
-					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
-				}
-			]
-		});
-
-		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:song.ratings.updated", {
-					data: {
-						youtubeId: data.youtubeId,
-						liked: true,
-						disliked: false
-					}
-				});
-			});
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "song.dislike",
-	cb: data => {
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `song.${data.youtubeId}`,
-			args: [
-				"event:song.disliked",
-				{
-					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
-				}
-			]
-		});
-
-		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:song.ratings.updated", {
-					data: {
-						youtubeId: data.youtubeId,
-						liked: false,
-						disliked: true
-					}
-				});
-			});
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "song.unlike",
-	cb: data => {
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `song.${data.youtubeId}`,
-			args: [
-				"event:song.unliked",
-				{
-					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
-				}
-			]
-		});
-
-		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:song.ratings.updated", {
-					data: {
-						youtubeId: data.youtubeId,
-						liked: false,
-						disliked: false
-					}
-				});
-			});
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "song.undislike",
-	cb: data => {
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `song.${data.youtubeId}`,
-			args: [
-				"event:song.undisliked",
-				{
-					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
-				}
-			]
-		});
-
-		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:song.ratings.updated", {
-					data: {
-						youtubeId: data.youtubeId,
-						liked: false,
-						disliked: false
-					}
-				});
-			});
 		});
 	}
 });
@@ -319,6 +210,23 @@ export default {
 	 * @param cb
 	 */
 	updateAll: isAdminRequired(async function updateAll(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Update all songs",
+			message: "Updating all songs.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -335,45 +243,18 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "SONGS_UPDATE_ALL", `Failed to update all songs. "${err}"`);
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "SONGS_UPDATE_ALL", `Updated all songs successfully.`);
+				this.publishProgress({
+					status: "success",
+					message: "Successfully updated all songs."
+				});
 				return cb({ status: "success", message: "Successfully updated all songs." });
-			}
-		);
-	}),
-
-	/**
-	 * Recalculates all song ratings
-	 *
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param cb
-	 */
-	recalculateAllRatings: isAdminRequired(async function recalculateAllRatings(session, cb) {
-		async.waterfall(
-			[
-				next => {
-					SongsModule.runJob("RECALCULATE_ALL_SONG_RATINGS", {}, this)
-						.then(() => {
-							next();
-						})
-						.catch(err => {
-							next(err);
-						});
-				}
-			],
-			async err => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"SONGS_RECALCULATE_ALL_RATINGS",
-						`Failed to recalculate all song ratings. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-				this.log("SUCCESS", "SONGS_RECALCULATE_ALL_RATINGS", `Recalculated all song ratings successfully.`);
-				return cb({ status: "success", message: "Successfully recalculated all song ratings." });
 			}
 		);
 	}),
@@ -411,18 +292,27 @@ export default {
 	 * At this time only used in EditSongs
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {Array} songIds - the song ids
+	 * @param {Array} youtubeIds - the song ids
 	 * @param {Function} cb
 	 */
-	getSongsFromSongIds: isAdminRequired(function getSongFromSongId(session, songIds, cb) {
+	getSongsFromYoutubeIds: isAdminRequired(function getSongsFromYoutubeIds(session, youtubeIds, cb) {
 		async.waterfall(
 			[
 				next => {
 					SongsModule.runJob(
 						"GET_SONGS",
 						{
-							songIds,
-							properties: ["youtubeId", "title", "artists", "thumbnail", "duration", "verified", "_id"]
+							youtubeIds,
+							properties: [
+								"youtubeId",
+								"title",
+								"artists",
+								"thumbnail",
+								"duration",
+								"verified",
+								"_id",
+								"youtubeVideoId"
+							]
 						},
 						this
 					)
@@ -574,107 +464,211 @@ export default {
 				},
 
 				(song, next) => {
-					PlaylistsModule.runJob("GET_PLAYLISTS_WITH_SONG", { songId }, this)
-						.then(res => {
-							async.eachLimit(
-								res.playlists,
-								1,
-								(playlist, next) => {
-									WSModule.runJob(
-										"RUN_ACTION2",
-										{
-											session,
-											namespace: "playlists",
-											action: "removeSongFromPlaylist",
-											args: [song.youtubeId, playlist._id]
-										},
-										this
-									)
-										.then(res => {
-											if (res.status === "error") next(res.message);
-											else next();
-										})
-										.catch(err => {
-											next(err);
-										});
-								},
-								err => {
-									if (err) next(err);
-									else next(null, song);
-								}
-							);
-						})
-						.catch(err => next(err));
+					YouTubeModule.runJob("GET_VIDEO", { identifier: song.youtubeId, createMissing: true }, this)
+						.then(res => next(null, song, res.video))
+						.catch(() => next(null, song, false));
 				},
 
-				(song, next) => {
+				(song, youtubeVideo, next) => {
+					PlaylistsModule.runJob("GET_PLAYLISTS_WITH_SONG", { songId }, this)
+						.then(res =>
+							next(
+								null,
+								song,
+								youtubeVideo,
+								res.playlists.map(playlist => playlist._id)
+							)
+						)
+						.catch(next);
+				},
+
+				(song, youtubeVideo, playlistIds, next) => {
+					if (!youtubeVideo) return next(null, song, youtubeVideo, playlistIds);
+					return PlaylistsModule.playlistModel.updateMany(
+						{ "songs._id": songId },
+						{
+							$set: {
+								"songs.$._id": null,
+								"songs.$.title": youtubeVideo.title,
+								"songs.$.artists": [youtubeVideo.author],
+								"songs.$.duration": youtubeVideo.duration,
+								"songs.$.skipDuration": 0,
+								"songs.$.thumbnail": youtubeVideo.thumbnail,
+								"songs.$.verified": false
+							}
+						},
+						err => {
+							if (err) next(err);
+							next(null, song, youtubeVideo, playlistIds);
+						}
+					);
+				},
+
+				(song, youtubeVideo, playlistIds, next) => {
+					async.eachLimit(
+						playlistIds,
+						1,
+						(playlistId, next) => {
+							async.waterfall(
+								[
+									next => {
+										if (youtubeVideo) next();
+										else
+											WSModule.runJob(
+												"RUN_ACTION2",
+												{
+													session,
+													namespace: "playlists",
+													action: "removeSongFromPlaylist",
+													args: [song.youtubeId, playlistId]
+												},
+												this
+											)
+												.then(res => {
+													if (res.status === "error") next(res.message);
+													else next();
+												})
+												.catch(err => {
+													next(err);
+												});
+									},
+
+									next => {
+										PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
+											.then(() => next())
+											.catch(next);
+									}
+								],
+								next
+							);
+						},
+						err => {
+							if (err) next(err);
+							else next(null, song, youtubeVideo);
+						}
+					);
+				},
+
+				(song, youtubeVideo, next) => {
 					stationModel.find({ "queue._id": songId }, (err, stations) => {
 						if (err) next(err);
-						else {
-							async.eachLimit(
-								stations,
-								1,
-								(station, next) => {
-									WSModule.runJob(
-										"RUN_ACTION2",
-										{
-											session,
-											namespace: "stations",
-											action: "removeFromQueue",
-											args: [station._id, song.youtubeId]
-										},
-										this
-									)
-										.then(res => {
-											if (
-												res.status === "error" &&
-												res.message !== "Station not found" &&
-												res.message !== "Song is not currently in the queue."
-											)
-												next(res.message);
-											else next();
-										})
-										.catch(err => {
-											next(err);
-										});
-								},
-								err => {
-									if (err) next(err);
-									else next();
-								}
-							);
-						}
+						next(
+							null,
+							song,
+							youtubeVideo,
+							stations.map(station => station._id)
+						);
 					});
 				},
 
-				next => {
+				(song, youtubeVideo, stationIds, next) => {
 					stationModel.find({ "currentSong._id": songId }, (err, stations) => {
 						if (err) next(err);
-						else {
-							async.eachLimit(
-								stations,
-								1,
-								(station, next) => {
-									StationsModule.runJob(
-										"SKIP_STATION",
-										{ stationId: station._id, natural: false },
-										this
-									)
-										.then(() => {
-											next();
-										})
-										.catch(err => {
-											if (err.message === "Station not found.") next();
-											else next(err);
-										});
-								},
-								err => {
-									if (err) next(err);
-									else next();
-								}
-							);
-						}
+						next(null, song, youtubeVideo, {
+							queue: stationIds,
+							current: stations.map(station => station._id)
+						});
 					});
+				},
+
+				(song, youtubeVideo, stationIds, next) => {
+					if (!youtubeVideo) return next(null, song, youtubeVideo, stationIds);
+					return stationModel.updateMany(
+						{ "queue._id": songId },
+						{
+							$set: {
+								"queue.$._id": null,
+								"queue.$.title": youtubeVideo.title,
+								"queue.$.artists": [youtubeVideo.author],
+								"queue.$.duration": youtubeVideo.duration,
+								"queue.$.skipDuration": 0,
+								"queue.$.thumbnail": youtubeVideo.thumbnail,
+								"queue.$.verified": false
+							}
+						},
+						err => {
+							if (err) next(err);
+							next(null, song, youtubeVideo, stationIds);
+						}
+					);
+				},
+
+				(song, youtubeVideo, stationIds, next) => {
+					if (!youtubeVideo) return next(null, song, youtubeVideo, stationIds);
+					return stationModel.updateMany(
+						{ "currentSong._id": songId },
+						{
+							$set: {
+								"currentSong._id": null,
+								"currentSong.title": youtubeVideo.title,
+								"currentSong.artists": [youtubeVideo.author],
+								// "currentSong.duration": youtubeVideo.duration,
+								// "currentSong.skipDuration": 0,
+								"currentSong.thumbnail": youtubeVideo.thumbnail,
+								"currentSong.verified": false
+							}
+						},
+						err => {
+							if (err) next(err);
+							next(null, song, youtubeVideo, stationIds);
+						}
+					);
+				},
+
+				(song, youtubeVideo, stationIds, next) => {
+					async.eachLimit(
+						stationIds.queue,
+						1,
+						(stationId, next) => {
+							if (!youtubeVideo)
+								StationsModule.runJob(
+									"REMOVE_FROM_QUEUE",
+									{ stationId, youtubeId: song.youtubeId },
+									this
+								)
+									.then(() => next())
+									.catch(err => {
+										if (
+											err === "Station not found" ||
+											err === "Song is not currently in the queue."
+										)
+											next();
+										else next(err);
+									});
+							StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+								.then(() => next())
+								.catch(next);
+						},
+						err => {
+							if (err) next(err);
+							else next(null, youtubeVideo, stationIds);
+						}
+					);
+				},
+
+				(youtubeVideo, stationIds, next) => {
+					async.eachLimit(
+						stationIds.current,
+						1,
+						(stationId, next) => {
+							if (!youtubeVideo)
+								StationsModule.runJob("SKIP_STATION", { stationId, natural: false }, this)
+									.then(() => {
+										next();
+									})
+									.catch(err => {
+										if (err.message === "Station not found.") next();
+										else next(err);
+									});
+							StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+								.then(() => next())
+								.catch(next);
+						},
+						err => {
+							if (err) next(err);
+							else next();
+						}
+					);
 				},
 
 				next => {
@@ -727,6 +721,23 @@ export default {
 		const successful = [];
 		const failed = [];
 
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Bulk remove songs",
+			message: "Removing songs.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -734,6 +745,7 @@ export default {
 						songIds,
 						1,
 						(songId, next) => {
+							this.publishProgress({ status: "update", message: `Removing song "${songId}"` });
 							WSModule.runJob(
 								"RUN_ACTION2",
 								{
@@ -766,6 +778,11 @@ export default {
 
 					this.log("ERROR", "SONGS_REMOVE_MANY", `Failed to remove songs "${failed.join(", ")}". "${err}"`);
 
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
+
 					return cb({ status: "error", message: err });
 				}
 
@@ -779,6 +796,11 @@ export default {
 				}
 
 				this.log("SUCCESS", "SONGS_REMOVE_MANY", `${message} "${successful.join(", ")}"`);
+
+				this.publishProgress({
+					status: "success",
+					message
+				});
 
 				return cb({
 					status: "success",
@@ -829,39 +851,6 @@ export default {
 				return cb({ status: "success", data });
 			}
 		);
-	}),
-
-	/**
-	 * Requests a song
-	 *
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} youtubeId - the youtube id of the song that gets requested
-	 * @param {string} returnSong - returns the simple song
-	 * @param {Function} cb - gets called with the result
-	 */
-	request: isLoginRequired(async function add(session, youtubeId, returnSong, cb) {
-		SongsModule.runJob("REQUEST_SONG", { youtubeId, userId: session.userId }, this)
-			.then(response => {
-				this.log(
-					"SUCCESS",
-					"SONGS_REQUEST",
-					`User "${session.userId}" successfully requested song "${youtubeId}".`
-				);
-				return cb({
-					status: "success",
-					message: "Successfully requested that song",
-					song: returnSong ? response.song : null
-				});
-			})
-			.catch(async _err => {
-				const err = await UtilsModule.runJob("GET_ERROR", { error: _err }, this);
-				this.log(
-					"ERROR",
-					"SONGS_REQUEST",
-					`Requesting song "${youtubeId}" failed for user ${session.userId}. "${err}"`
-				);
-				return cb({ status: "error", message: err, song: returnSong && _err.data ? _err.data.song : null });
-			});
 	}),
 
 	/**
@@ -934,6 +923,23 @@ export default {
 		const successful = [];
 		const failed = [];
 
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Bulk verifying songs",
+			message: "Verifying songs.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -941,6 +947,7 @@ export default {
 						songIds,
 						1,
 						(songId, next) => {
+							this.publishProgress({ status: "update", message: `Verifying song "${songId}"` });
 							WSModule.runJob(
 								"RUN_ACTION2",
 								{
@@ -972,7 +979,10 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
 					this.log("ERROR", "SONGS_VERIFY_MANY", `Failed to verify songs "${failed.join(", ")}". "${err}"`);
-
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					return cb({ status: "error", message: err });
 				}
 
@@ -986,7 +996,10 @@ export default {
 				}
 
 				this.log("SUCCESS", "SONGS_VERIFY_MANY", `${message} "${successful.join(", ")}"`);
-
+				this.publishProgress({
+					status: "success",
+					message
+				});
 				return cb({
 					status: "success",
 					message
@@ -1071,6 +1084,23 @@ export default {
 		const successful = [];
 		const failed = [];
 
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Bulk unverifying songs",
+			message: "Unverifying songs.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -1078,6 +1108,7 @@ export default {
 						songIds,
 						1,
 						(songId, next) => {
+							this.publishProgress({ status: "update", message: `Unverifying song "${songId}"` });
 							WSModule.runJob(
 								"RUN_ACTION2",
 								{
@@ -1113,7 +1144,10 @@ export default {
 						"SONGS_UNVERIFY_MANY",
 						`Failed to unverify songs "${failed.join(", ")}". "${err}"`
 					);
-
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					return cb({ status: "error", message: err });
 				}
 
@@ -1131,701 +1165,13 @@ export default {
 				}
 
 				this.log("SUCCESS", "SONGS_UNVERIFY_MANY", `${message} "${successful.join(", ")}"`);
-
-				return cb({
+				this.publishProgress({
 					status: "success",
 					message
 				});
-			}
-		);
-	}),
-
-	/**
-	 * Requests a set of songs
-	 *
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} url - the url of the the YouTube playlist
-	 * @param {boolean} musicOnly - whether to only get music from the playlist
-	 * @param {Function} cb - gets called with the result
-	 */
-	requestSet: isLoginRequired(function requestSet(session, url, musicOnly, returnSongs, cb) {
-		async.waterfall(
-			[
-				next => {
-					YouTubeModule.runJob(
-						"GET_PLAYLIST",
-						{
-							url,
-							musicOnly
-						},
-						this
-					)
-						.then(res => {
-							next(null, res.songs);
-						})
-						.catch(next);
-				},
-				(youtubeIds, next) => {
-					let successful = 0;
-					let songs = {};
-					let failed = 0;
-					let alreadyInDatabase = 0;
-
-					if (youtubeIds.length === 0) next();
-
-					async.eachOfLimit(
-						youtubeIds,
-						1,
-						(youtubeId, index, next) => {
-							WSModule.runJob(
-								"RUN_ACTION2",
-								{
-									session,
-									namespace: "songs",
-									action: "request",
-									args: [youtubeId, returnSongs]
-								},
-								this
-							)
-								.then(res => {
-									if (res.status === "success") successful += 1;
-									else failed += 1;
-									if (res.message === "This song is already in the database.") alreadyInDatabase += 1;
-									if (res.song) songs[index] = res.song;
-								})
-								.catch(() => {
-									failed += 1;
-								})
-								.finally(() => {
-									next();
-								});
-						},
-						() => {
-							if (returnSongs)
-								songs = Object.keys(songs)
-									.sort()
-									.map(key => songs[key]);
-
-							next(null, { successful, failed, alreadyInDatabase, songs });
-						}
-					);
-				}
-			],
-			async (err, response) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"REQUEST_SET",
-						`Importing a YouTube playlist to be requested failed for user "${session.userId}". "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-				this.log(
-					"SUCCESS",
-					"REQUEST_SET",
-					`Successfully imported a YouTube playlist to be requested for user "${session.userId}".`
-				);
 				return cb({
 					status: "success",
-					message: `Playlist is done importing. ${response.successful} were added succesfully, ${response.failed} failed (${response.alreadyInDatabase} were already in database)`,
-					songs: returnSongs ? response.songs : null
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Likes a song
-	 *
-	 * @param session
-	 * @param youtubeId - the youtube id
-	 * @param cb
-	 */
-	like: isLoginRequired(async function like(session, youtubeId, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
-
-		async.waterfall(
-			[
-				next => songModel.findOne({ youtubeId }, next),
-
-				(song, next) => {
-					if (!song) return next("No song found with that id.");
-					return next(null, song);
-				},
-
-				(song, next) => userModel.findOne({ _id: session.userId }, (err, user) => next(err, song, user)),
-
-				(song, user, next) => {
-					if (!user) return next("User does not exist.");
-
-					return this.module
-						.runJob(
-							"RUN_ACTION2",
-							{
-								session,
-								namespace: "playlists",
-								action: "removeSongFromPlaylist",
-								args: [youtubeId, user.dislikedSongsPlaylist]
-							},
-							this
-						)
-						.then(res => {
-							if (res.status === "error" && res.message !== "Song wasn't in playlist.")
-								return next("Unable to remove song from the 'Disliked Songs' playlist.");
-							return next(null, song, user.likedSongsPlaylist);
-						})
-						.catch(err => next(err));
-				},
-
-				(song, likedSongsPlaylist, next) =>
-					this.module
-						.runJob(
-							"RUN_ACTION2",
-							{
-								session,
-								namespace: "playlists",
-								action: "addSongToPlaylist",
-								args: [false, youtubeId, likedSongsPlaylist]
-							},
-							this
-						)
-						.then(res => {
-							if (res.status === "error") {
-								if (res.message === "That song is already in the playlist")
-									return next("You have already liked this song.");
-								return next("Unable to add song to the 'Liked Songs' playlist.");
-							}
-
-							return next(null, song);
-						})
-						.catch(err => next(err)),
-
-				(song, next) => {
-					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, youtubeId })
-						.then(ratings => next(null, song, ratings))
-						.catch(err => next(err));
-				}
-			],
-			async (err, song, ratings) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"SONGS_LIKE",
-						`User "${session.userId}" failed to like song ${youtubeId}. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				const { likes, dislikes } = ratings;
-
-				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
-
-				CacheModule.runJob("PUB", {
-					channel: "song.like",
-					value: JSON.stringify({
-						youtubeId,
-						userId: session.userId,
-						likes,
-						dislikes
-					})
-				});
-
-				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: session.userId,
-					type: "song__like",
-					payload: {
-						message: `Liked song <youtubeId>${song.title} by ${song.artists.join(", ")}</youtubeId>`,
-						youtubeId,
-						thumbnail: song.thumbnail
-					}
-				});
-
-				return cb({
-					status: "success",
-					message: "You have successfully liked this song."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Dislikes a song
-	 *
-	 * @param session
-	 * @param youtubeId - the youtube id
-	 * @param cb
-	 */
-	dislike: isLoginRequired(async function dislike(session, youtubeId, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
-
-		async.waterfall(
-			[
-				next => {
-					songModel.findOne({ youtubeId }, next);
-				},
-
-				(song, next) => {
-					if (!song) return next("No song found with that id.");
-					return next(null, song);
-				},
-
-				(song, next) => userModel.findOne({ _id: session.userId }, (err, user) => next(err, song, user)),
-
-				(song, user, next) => {
-					if (!user) return next("User does not exist.");
-
-					return this.module
-						.runJob(
-							"RUN_ACTION2",
-							{
-								session,
-								namespace: "playlists",
-								action: "removeSongFromPlaylist",
-								args: [youtubeId, user.likedSongsPlaylist]
-							},
-							this
-						)
-						.then(res => {
-							if (res.status === "error" && res.message !== "Song wasn't in playlist.")
-								return next("Unable to remove song from the 'Liked Songs' playlist.");
-							return next(null, song, user.dislikedSongsPlaylist);
-						})
-						.catch(err => next(err));
-				},
-
-				(song, dislikedSongsPlaylist, next) =>
-					this.module
-						.runJob(
-							"RUN_ACTION2",
-							{
-								session,
-								namespace: "playlists",
-								action: "addSongToPlaylist",
-								args: [false, youtubeId, dislikedSongsPlaylist]
-							},
-							this
-						)
-						.then(res => {
-							if (res.status === "error") {
-								if (res.message === "That song is already in the playlist")
-									return next("You have already disliked this song.");
-								return next("Unable to add song to the 'Disliked Songs' playlist.");
-							}
-
-							return next(null, song);
-						})
-						.catch(err => next(err)),
-
-				(song, next) => {
-					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, youtubeId })
-						.then(ratings => next(null, song, ratings))
-						.catch(err => next(err));
-				}
-			],
-			async (err, song, ratings) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"SONGS_DISLIKE",
-						`User "${session.userId}" failed to dislike song ${youtubeId}. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				const { likes, dislikes } = ratings;
-
-				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
-
-				CacheModule.runJob("PUB", {
-					channel: "song.dislike",
-					value: JSON.stringify({
-						youtubeId,
-						userId: session.userId,
-						likes,
-						dislikes
-					})
-				});
-
-				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: session.userId,
-					type: "song__dislike",
-					payload: {
-						message: `Disliked song <youtubeId>${song.title} by ${song.artists.join(", ")}</youtubeId>`,
-						youtubeId,
-						thumbnail: song.thumbnail
-					}
-				});
-
-				return cb({
-					status: "success",
-					message: "You have successfully disliked this song."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Undislikes a song
-	 *
-	 * @param session
-	 * @param youtubeId - the youtube id
-	 * @param cb
-	 */
-	undislike: isLoginRequired(async function undislike(session, youtubeId, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
-
-		async.waterfall(
-			[
-				next => {
-					songModel.findOne({ youtubeId }, next);
-				},
-
-				(song, next) => {
-					if (!song) return next("No song found with that id.");
-					return next(null, song);
-				},
-
-				(song, next) => userModel.findOne({ _id: session.userId }, (err, user) => next(err, song, user)),
-
-				(song, user, next) => {
-					if (!user) return next("User does not exist.");
-
-					return this.module
-						.runJob(
-							"RUN_ACTION2",
-							{
-								session,
-								namespace: "playlists",
-								action: "removeSongFromPlaylist",
-								args: [youtubeId, user.dislikedSongsPlaylist]
-							},
-							this
-						)
-						.then(res => {
-							if (res.status === "error")
-								return next("Unable to remove song from the 'Disliked Songs' playlist.");
-							return next(null, song, user.likedSongsPlaylist);
-						})
-						.catch(err => next(err));
-				},
-
-				(song, likedSongsPlaylist, next) => {
-					this.module
-						.runJob(
-							"RUN_ACTION2",
-							{
-								session,
-								namespace: "playlists",
-								action: "removeSongFromPlaylist",
-								args: [youtubeId, likedSongsPlaylist]
-							},
-							this
-						)
-						.then(res => {
-							if (res.status === "error" && res.message !== "Song wasn't in playlist.")
-								return next("Unable to remove song from the 'Liked Songs' playlist.");
-							return next(null, song);
-						})
-						.catch(err => next(err));
-				},
-
-				(song, next) => {
-					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, youtubeId })
-						.then(ratings => next(null, song, ratings))
-						.catch(err => next(err));
-				}
-			],
-			async (err, song, ratings) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"SONGS_UNDISLIKE",
-						`User "${session.userId}" failed to undislike song ${youtubeId}. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				const { likes, dislikes } = ratings;
-
-				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
-
-				CacheModule.runJob("PUB", {
-					channel: "song.undislike",
-					value: JSON.stringify({
-						youtubeId,
-						userId: session.userId,
-						likes,
-						dislikes
-					})
-				});
-
-				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: session.userId,
-					type: "song__undislike",
-					payload: {
-						message: `Removed <youtubeId>${song.title} by ${song.artists.join(
-							", "
-						)}</youtubeId> from your Disliked Songs`,
-						youtubeId,
-						thumbnail: song.thumbnail
-					}
-				});
-
-				return cb({
-					status: "success",
-					message: "You have successfully undisliked this song."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Unlikes a song
-	 *
-	 * @param session
-	 * @param youtubeId - the youtube id
-	 * @param cb
-	 */
-	unlike: isLoginRequired(async function unlike(session, youtubeId, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
-
-		async.waterfall(
-			[
-				next => {
-					songModel.findOne({ youtubeId }, next);
-				},
-
-				(song, next) => {
-					if (!song) return next("No song found with that id.");
-					return next(null, song);
-				},
-
-				(song, next) => userModel.findOne({ _id: session.userId }, (err, user) => next(err, song, user)),
-
-				(song, user, next) => {
-					if (!user) return next("User does not exist.");
-
-					return this.module
-						.runJob(
-							"RUN_ACTION2",
-							{
-								session,
-								namespace: "playlists",
-								action: "removeSongFromPlaylist",
-								args: [youtubeId, user.dislikedSongsPlaylist]
-							},
-							this
-						)
-						.then(res => {
-							if (res.status === "error" && res.message !== "Song wasn't in playlist.")
-								return next("Unable to remove song from the 'Disliked Songs' playlist.");
-							return next(null, song, user.likedSongsPlaylist);
-						})
-						.catch(err => next(err));
-				},
-
-				(song, likedSongsPlaylist, next) => {
-					this.module
-						.runJob(
-							"RUN_ACTION2",
-							{
-								session,
-								namespace: "playlists",
-								action: "removeSongFromPlaylist",
-								args: [youtubeId, likedSongsPlaylist]
-							},
-							this
-						)
-						.then(res => {
-							if (res.status === "error")
-								return next("Unable to remove song from the 'Liked Songs' playlist.");
-							return next(null, song);
-						})
-						.catch(err => next(err));
-				},
-
-				(song, next) => {
-					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, youtubeId })
-						.then(ratings => next(null, song, ratings))
-						.catch(err => next(err));
-				}
-			],
-			async (err, song, ratings) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"SONGS_UNLIKE",
-						`User "${session.userId}" failed to unlike song ${youtubeId}. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				const { likes, dislikes } = ratings;
-
-				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
-
-				CacheModule.runJob("PUB", {
-					channel: "song.unlike",
-					value: JSON.stringify({
-						youtubeId,
-						userId: session.userId,
-						likes,
-						dislikes
-					})
-				});
-
-				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: session.userId,
-					type: "song__unlike",
-					payload: {
-						message: `Removed <youtubeId>${song.title} by ${song.artists.join(
-							", "
-						)}</youtubeId> from your Liked Songs`,
-						youtubeId,
-						thumbnail: song.thumbnail
-					}
-				});
-
-				return cb({
-					status: "success",
-					message: "You have successfully unliked this song."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Gets song ratings
-	 *
-	 * @param session
-	 * @param songId - the Musare song id
-	 * @param cb
-	 */
-
-	getSongRatings: isLoginRequired(async function getSongRatings(session, songId, cb) {
-		async.waterfall(
-			[
-				next => {
-					SongsModule.runJob("GET_SONG", { songId }, this)
-						.then(res => next(null, res.song))
-						.catch(next);
-				},
-
-				(song, next) => {
-					next(null, {
-						likes: song.likes,
-						dislikes: song.dislikes
-					});
-				}
-			],
-			async (err, ratings) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"SONGS_GET_RATINGS",
-						`User "${session.userId}" failed to get ratings for ${songId}. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				const { likes, dislikes } = ratings;
-
-				return cb({
-					status: "success",
-					data: {
-						likes,
-						dislikes
-					}
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Gets user's own song ratings
-	 *
-	 * @param session
-	 * @param youtubeId - the youtube id
-	 * @param cb
-	 */
-	getOwnSongRatings: isLoginRequired(async function getOwnSongRatings(session, youtubeId, cb) {
-		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
-
-		async.waterfall(
-			[
-				next => songModel.findOne({ youtubeId }, next),
-				(song, next) => {
-					if (!song) return next("No song found with that id.");
-					return next(null);
-				},
-
-				next =>
-					playlistModel.findOne(
-						{ createdBy: session.userId, displayName: "Liked Songs" },
-						(err, playlist) => {
-							if (err) return next(err);
-							if (!playlist) return next("'Liked Songs' playlist does not exist.");
-
-							let isLiked = false;
-
-							Object.values(playlist.songs).forEach(song => {
-								// song is found in 'liked songs' playlist
-								if (song.youtubeId === youtubeId) isLiked = true;
-							});
-
-							return next(null, isLiked);
-						}
-					),
-
-				(isLiked, next) =>
-					playlistModel.findOne(
-						{ createdBy: session.userId, displayName: "Disliked Songs" },
-						(err, playlist) => {
-							if (err) return next(err);
-							if (!playlist) return next("'Disliked Songs' playlist does not exist.");
-
-							const ratings = { isLiked, isDisliked: false };
-
-							Object.values(playlist.songs).forEach(song => {
-								// song is found in 'disliked songs' playlist
-								if (song.youtubeId === youtubeId) ratings.isDisliked = true;
-							});
-
-							return next(null, ratings);
-						}
-					)
-			],
-			async (err, ratings) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"SONGS_GET_OWN_RATINGS",
-						`User "${session.userId}" failed to get ratings for ${youtubeId}. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				const { isLiked, isDisliked } = ratings;
-
-				return cb({
-					status: "success",
-					data: {
-						youtubeId,
-						liked: isLiked,
-						disliked: isDisliked
-					}
+					message
 				});
 			}
 		);
@@ -1878,6 +1224,24 @@ export default {
 	 */
 	editGenres: isAdminRequired(async function editGenres(session, method, genres, songIds, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Bulk editing genres",
+			message: "Updating genres.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -1903,6 +1267,10 @@ export default {
 						return;
 					}
 
+					this.publishProgress({
+						status: "update",
+						message: "Updating genres in MongoDB."
+					});
 					songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
 						if (err) {
 							next(err);
@@ -1917,9 +1285,17 @@ export default {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "EDIT_GENRES", `User ${session.userId} failed to edit genres. '${err}'`);
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					cb({ status: "error", message: err });
 				} else {
 					this.log("SUCCESS", "EDIT_GENRES", `User ${session.userId} has successfully edited genres.`);
+					this.publishProgress({
+						status: "success",
+						message: "Successfully edited genres."
+					});
 					cb({
 						status: "success",
 						message: "Successfully edited genres."
@@ -1976,6 +1352,24 @@ export default {
 	 */
 	editArtists: isAdminRequired(async function editArtists(session, method, artists, songIds, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Bulk editing artists",
+			message: "Updating artists.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -2001,6 +1395,10 @@ export default {
 						return;
 					}
 
+					this.publishProgress({
+						status: "update",
+						message: "Updating artists in MongoDB."
+					});
 					songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
 						if (err) {
 							next(err);
@@ -2015,9 +1413,17 @@ export default {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "EDIT_ARTISTS", `User ${session.userId} failed to edit artists. '${err}'`);
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					cb({ status: "error", message: err });
 				} else {
 					this.log("SUCCESS", "EDIT_ARTISTS", `User ${session.userId} has successfully edited artists.`);
+					this.publishProgress({
+						status: "success",
+						message: "Successfully edited artists."
+					});
 					cb({
 						status: "success",
 						message: "Successfully edited artists."
@@ -2074,6 +1480,24 @@ export default {
 	 */
 	editTags: isAdminRequired(async function editTags(session, method, tags, songIds, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Bulk editing tags",
+			message: "Updating tags.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		async.waterfall(
 			[
 				next => {
@@ -2099,13 +1523,29 @@ export default {
 						return;
 					}
 
+					this.publishProgress({
+						status: "update",
+						message: "Updating tags in MongoDB."
+					});
 					songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
 						if (err) {
 							next(err);
 							return;
 						}
-						SongsModule.runJob("UPDATE_SONGS", { songIds: songsFound });
-						next();
+
+						SongsModule.runJob(
+							"UPDATE_SONGS",
+							{
+								songIds: songsFound
+							},
+							this
+						)
+							.then(() => {
+								next();
+							})
+							.catch(() => {
+								next();
+							});
 					});
 				}
 			],
@@ -2113,9 +1553,17 @@ export default {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "EDIT_TAGS", `User ${session.userId} failed to edit tags. '${err}'`);
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
 					cb({ status: "error", message: err });
 				} else {
 					this.log("SUCCESS", "EDIT_TAGS", `User ${session.userId} has successfully edited tags.`);
+					this.publishProgress({
+						status: "success",
+						message: "Successfully edited tags."
+					});
 					cb({
 						status: "success",
 						message: "Successfully edited tags."

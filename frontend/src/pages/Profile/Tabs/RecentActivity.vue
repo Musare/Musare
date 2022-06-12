@@ -109,8 +109,8 @@ export default {
 	methods: {
 		init() {
 			if (this.myUserId !== this.userId)
-				this.getUsernameFromId(this.userId).then(username => {
-					if (username) this.username = username;
+				this.getBasicUser(this.userId).then(user => {
+					if (user && user.username) this.username = user.username;
 				});
 
 			this.socket.dispatch("activities.length", this.userId, res => {
@@ -154,7 +154,7 @@ export default {
 
 			return this.maxPosition === this.position;
 		},
-		...mapActions("user/auth", ["getUsernameFromId"])
+		...mapActions("user/auth", ["getBasicUser"])
 	}
 };
 </script>

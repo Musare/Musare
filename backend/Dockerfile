@@ -1,4 +1,4 @@
-FROM node:16.15
+FROM node:16.15 AS musare_backend
 
 RUN npm install -g nodemon
 
@@ -12,4 +12,7 @@ RUN npm install
 
 COPY . /opt/app
 
-CMD npm run docker:dev
+ENTRYPOINT npm run docker:dev
+
+EXPOSE 8080/tcp
+EXPOSE 8080/udp

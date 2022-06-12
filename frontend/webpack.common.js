@@ -112,7 +112,9 @@ module.exports = {
 	plugins: [
 		new VueLoaderPlugin(),
 		new HtmlWebpackPlugin({
-			title: config.get("siteSettings.sitename"),
+			title: config.has("siteSettings.sitename")
+				? config.get("siteSettings.sitename")
+				: "Musare",
 			hash: true,
 			template: "dist/index.tpl.html",
 			inject: "body",
@@ -146,6 +148,10 @@ module.exports = {
 				test: /\.js$/,
 				loader: "babel-loader",
 				exclude: /node_modules/
+			},
+			{
+				test: /\.css$/,
+				use: ["style-loader", "css-loader"]
 			},
 			{
 				test: /\.less$/i,

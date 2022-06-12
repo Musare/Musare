@@ -7,9 +7,9 @@ let CacheModule;
 let DBModule;
 let UtilsModule;
 let WSModule;
-let SongsModule;
 let PlaylistsModule;
 let NotificationsModule;
+let MediaModule;
 
 class _StationsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -29,9 +29,9 @@ class _StationsModule extends CoreClass {
 		DBModule = this.moduleManager.modules.db;
 		UtilsModule = this.moduleManager.modules.utils;
 		WSModule = this.moduleManager.modules.ws;
-		SongsModule = this.moduleManager.modules.songs;
 		PlaylistsModule = this.moduleManager.modules.playlists;
 		NotificationsModule = this.moduleManager.modules.notifications;
+		MediaModule = this.moduleManager.modules.media;
 
 		this.userList = {};
 		this.usersPerStation = {};
@@ -534,25 +534,40 @@ class _StationsModule extends CoreClass {
 					},
 
 					(currentSongs, songsToAdd, currentSongIndex, next) => {
-						SongsModule.runJob("GET_SONGS", {
-							songIds: songsToAdd.map(song => song._id),
-							properties: [
-								"youtubeId",
-								"title",
-								"duration",
-								"skipDuration",
-								"artists",
-								"thumbnail",
-								"verified"
-							]
-						})
-							.then(response => {
-								const newSongsToAdd = songsToAdd.map(song =>
-									response.songs.find(newSong => newSong._id.toString() === song._id.toString())
-								);
-								next(null, currentSongs, newSongsToAdd, currentSongIndex);
-							})
-							.catch(err => next(err));
+						const songs = [];
+						async.eachLimit(
+							songsToAdd.map(song => song.youtubeId),
+							2,
+							(youtubeId, next) => {
+								MediaModule.runJob("GET_MEDIA", { youtubeId }, this)
+									.then(response => {
+										const { song } = response;
+										const { _id, title, artists, thumbnail, duration, skipDuration, verified } =
+											song;
+										songs.push({
+											_id,
+											youtubeId,
+											title,
+											artists,
+											thumbnail,
+											duration,
+											skipDuration,
+											verified
+										});
+										next();
+									})
+									.catch(next);
+							},
+							err => {
+								if (err) next(err);
+								else {
+									const newSongsToAdd = songsToAdd.map(song =>
+										songs.find(newSong => newSong.youtubeId === song.youtubeId)
+									);
+									next(null, currentSongs, newSongsToAdd, currentSongIndex);
+								}
+							}
+						);
 					},
 
 					(currentSongs, songsToAdd, currentSongIndex, next) => {
@@ -624,36 +639,33 @@ class _StationsModule extends CoreClass {
 					},
 
 					(queueSong, next) => {
-						if (!queueSong._id) next(null, queueSong);
-						else
-							SongsModule.runJob("GET_SONG", { songId: queueSong._id }, this)
-								.then(response => {
-									const { song } = response;
-
-									if (song) {
-										const newSong = {
-											_id: song._id,
-											youtubeId: song.youtubeId,
-											title: song.title,
-											artists: song.artists,
-											duration: song.duration,
-											skipDuration: song.skipDuration,
-											thumbnail: song.thumbnail,
-											requestedAt: queueSong.requestedAt,
-											requestedBy: queueSong.requestedBy,
-											likes: song.likes,
-											dislikes: song.dislikes,
-											verified: song.verified
-										};
-
-										return next(null, newSong);
-									}
-
-									return next(null, song);
-								})
-								.catch(err => {
-									next(err);
+						MediaModule.runJob(
+							"GET_MEDIA",
+							{
+								youtubeId: queueSong.youtubeId
+							},
+							this
+						)
+							.then(response => {
+								const { song } = response;
+								const { _id, youtubeId, title, skipDuration, artists, thumbnail, duration, verified } =
+									song;
+								next(null, {
+									_id,
+									youtubeId,
+									title,
+									skipDuration,
+									artists,
+									thumbnail,
+									duration,
+									verified,
+									requestedAt: queueSong.requestedAt,
+									requestedBy: queueSong.requestedBy,
+									likes: song.likes || 0,
+									dislikes: song.dislikes || 0
 								});
+							})
+							.catch(next);
 					}
 				],
 				(err, song) => {
@@ -698,6 +710,98 @@ class _StationsModule extends CoreClass {
 										.catch(next);
 							}
 						);
+					}
+				],
+				err => {
+					if (err) reject(err);
+					else resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Process vote to skips for a station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - the id of the station to process
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	PROCESS_VOTE_SKIPS(payload) {
+		return new Promise((resolve, reject) => {
+			StationsModule.log("INFO", `Processing vote skips for station ${payload.stationId}.`);
+
+			async.waterfall(
+				[
+					next => {
+						StationsModule.runJob(
+							"GET_STATION",
+							{
+								stationId: payload.stationId
+							},
+							this
+						)
+							.then(station => next(null, station))
+							.catch(next);
+					},
+
+					(station, next) => {
+						if (!station) return next("Station not found.");
+						return next(null, station);
+					},
+
+					(station, next) => {
+						WSModule.runJob("GET_SOCKETS_FOR_ROOM", { room: `station.${station._id}` }, this)
+							.then(sockets => next(null, station, sockets))
+							.catch(next);
+					},
+
+					(station, sockets, next) => {
+						const skipVotes = station.currentSong.skipVotes.length;
+						let shouldSkip = false;
+
+						if (sockets.length <= skipVotes) {
+							if (!station.paused) shouldSkip = true;
+							return next(null, shouldSkip);
+						}
+
+						const users = [];
+
+						return async.each(
+							sockets,
+							(socketId, next) => {
+								WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this)
+									.then(socket => {
+										if (socket && socket.session && socket.session.userId) {
+											if (!users.includes(socket.session.userId))
+												users.push(socket.session.userId);
+										}
+										return next();
+									})
+									.catch(next);
+							},
+							err => {
+								if (err) return next(err);
+
+								if (!station.paused && users.length <= skipVotes) shouldSkip = true;
+								return next(null, shouldSkip);
+							}
+						);
+					},
+
+					(shouldSkip, next) => {
+						if (shouldSkip)
+							StationsModule.runJob(
+								"SKIP_STATION",
+								{
+									stationId: payload.stationId,
+									natural: false
+								},
+								this
+							)
+								.then(() => next())
+								.catch(next);
+						else next();
 					}
 				],
 				err => {
@@ -802,25 +906,23 @@ class _StationsModule extends CoreClass {
 						$set.startedAt = Date.now();
 						$set.timePaused = 0;
 						if (station.paused) $set.pausedAt = Date.now();
-						next(null, $set, song, station);
+						next(null, $set, station);
 					},
 
-					($set, song, station, next) => {
+					($set, station, next) => {
 						StationsModule.stationModel.updateOne({ _id: station._id }, { $set }, err => {
 							if (err) return next(err);
 
 							return StationsModule.runJob("UPDATE_STATION", { stationId: station._id }, this)
 								.then(station => {
-									next(null, station, song);
+									next(null, station);
 								})
 								.catch(next);
 						});
 					},
 
-					(station, song, next) => {
+					(station, next) => {
 						if (station.currentSong !== null && station.currentSong.youtubeId !== undefined) {
-							station.currentSong.likes = song.likes;
-							station.currentSong.dislikes = song.dislikes;
 							station.currentSong.skipVotes = 0;
 						}
 						next(null, station);
@@ -1206,19 +1308,11 @@ class _StationsModule extends CoreClass {
 					},
 
 					next => {
-						DBModule.runJob(
-							"GET_MODEL",
-							{
-								modelName: "station"
-							},
-							this
-						).then(stationModel => {
-							stationModel.updateOne(
-								{ _id: payload.stationId },
-								{ $push: { "autofill.playlists": payload.playlistId } },
-								next
-							);
-						});
+						StationsModule.stationModel.updateOne(
+							{ _id: payload.stationId },
+							{ $push: { "autofill.playlists": payload.playlistId } },
+							next
+						);
 					},
 
 					(res, next) => {
@@ -1280,19 +1374,11 @@ class _StationsModule extends CoreClass {
 					},
 
 					next => {
-						DBModule.runJob(
-							"GET_MODEL",
-							{
-								modelName: "station"
-							},
-							this
-						).then(stationModel => {
-							stationModel.updateOne(
-								{ _id: payload.stationId },
-								{ $pull: { "autofill.playlists": payload.playlistId } },
-								next
-							);
-						});
+						StationsModule.stationModel.updateOne(
+							{ _id: payload.stationId },
+							{ $pull: { "autofill.playlists": payload.playlistId } },
+							next
+						);
 					},
 
 					(res, next) => {
@@ -1364,19 +1450,11 @@ class _StationsModule extends CoreClass {
 					},
 
 					next => {
-						DBModule.runJob(
-							"GET_MODEL",
-							{
-								modelName: "station"
-							},
-							this
-						).then(stationModel => {
-							stationModel.updateOne(
-								{ _id: payload.stationId },
-								{ $push: { blacklist: payload.playlistId } },
-								next
-							);
-						});
+						StationsModule.stationModel.updateOne(
+							{ _id: payload.stationId },
+							{ $push: { blacklist: payload.playlistId } },
+							next
+						);
 					},
 
 					(res, next) => {
@@ -1438,19 +1516,11 @@ class _StationsModule extends CoreClass {
 					},
 
 					next => {
-						DBModule.runJob(
-							"GET_MODEL",
-							{
-								modelName: "station"
-							},
-							this
-						).then(stationModel => {
-							stationModel.updateOne(
-								{ _id: payload.stationId },
-								{ $pull: { blacklist: payload.playlistId } },
-								next
-							);
-						});
+						StationsModule.stationModel.updateOne(
+							{ _id: payload.stationId },
+							{ $pull: { blacklist: payload.playlistId } },
+							next
+						);
 					},
 
 					(res, next) => {
@@ -1574,6 +1644,10 @@ class _StationsModule extends CoreClass {
 											stations,
 											1,
 											(station, next) => {
+												this.publishProgress({
+													status: "update",
+													message: `Updating station "${station._id}"`
+												});
 												StationsModule.runJob("UPDATE_STATION", {
 													stationId: station._id
 												})
@@ -1652,6 +1726,263 @@ class _StationsModule extends CoreClass {
 							.then(() => next())
 							.catch(next);
 					}
+				],
+				err => {
+					if (err) reject(err);
+					else resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Add to a station queue
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - the station id
+	 * @param {string} payload.youtubeId - the youtube id
+	 * @param {string} payload.requestUser - the requesting user id
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	ADD_TO_QUEUE(payload) {
+		return new Promise((resolve, reject) => {
+			const { stationId, youtubeId, requestUser } = payload;
+			async.waterfall(
+				[
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId }, this)
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
+
+					(station, next) => {
+						if (!station) return next("Station not found.");
+						if (!station.requests.enabled) return next("Requests are disabled in this station.");
+						if (station.currentSong && station.currentSong.youtubeId === youtubeId)
+							return next("That song is currently playing.");
+						if (station.queue.find(song => song.youtubeId === youtubeId))
+							return next("That song is already in the queue.");
+
+						return next(null, station);
+					},
+
+					(station, next) => {
+						MediaModule.runJob("GET_MEDIA", { youtubeId }, this)
+							.then(response => {
+								const { song } = response;
+								const { _id, title, skipDuration, artists, thumbnail, duration, verified } = song;
+								next(
+									null,
+									{
+										_id,
+										youtubeId,
+										title,
+										skipDuration,
+										artists,
+										thumbnail,
+										duration,
+										verified
+									},
+									station
+								);
+							})
+							.catch(next);
+					},
+
+					(song, station, next) => {
+						const blacklist = [];
+						async.eachLimit(
+							station.blacklist,
+							1,
+							(playlistId, next) => {
+								PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+									.then(playlist => {
+										blacklist.push(playlist);
+										next();
+									})
+									.catch(next);
+							},
+							err => {
+								next(err, song, station, blacklist);
+							}
+						);
+					},
+
+					(song, station, blacklist, next) => {
+						const blacklistedSongs = blacklist
+							.flatMap(blacklistedPlaylist => blacklistedPlaylist.songs)
+							.reduce(
+								(items, item) =>
+									items.find(x => x.youtubeId === item.youtubeId) ? [...items] : [...items, item],
+								[]
+							);
+
+						if (blacklistedSongs.find(blacklistedSong => blacklistedSong.youtubeId === song.youtubeId))
+							next("That song is in an blacklisted playlist and cannot be played.");
+						else next(null, song, station);
+					},
+
+					(song, station, next) => {
+						song.requestedBy = requestUser;
+						song.requestedAt = Date.now();
+						if (station.queue.length === 0) return next(null, song);
+						if (
+							requestUser &&
+							station.queue.filter(queueSong => queueSong.requestedBy === song.requestedBy).length >=
+								station.requests.limit
+						)
+							return next(`The max amount of songs per user is ${station.requests.limit}.`);
+						return next(null, song);
+					},
+
+					// (song, station, next) => {
+					// 	song.requestedBy = session.userId;
+					// 	song.requestedAt = Date.now();
+					// 	let totalDuration = 0;
+					// 	station.queue.forEach(song => {
+					// 		totalDuration += song.duration;
+					// 	});
+					// 	if (totalDuration >= 3600 * 3) return next("The max length of the queue is 3 hours.");
+					// 	return next(null, song, station);
+					// },
+
+					// (song, station, next) => {
+					// 	if (station.queue.length === 0) return next(null, song, station);
+					// 	let totalDuration = 0;
+					// 	const userId = station.queue[station.queue.length - 1].requestedBy;
+					// 	station.queue.forEach(song => {
+					// 		if (userId === song.requestedBy) {
+					// 			totalDuration += song.duration;
+					// 		}
+					// 	});
+
+					// 	if (totalDuration >= 900) return next("The max length of songs per user is 15 minutes.");
+					// 	return next(null, song, station);
+					// },
+
+					// (song, station, next) => {
+					// 	if (station.queue.length === 0) return next(null, song);
+					// 	let totalSongs = 0;
+					// 	const userId = station.queue[station.queue.length - 1].requestedBy;
+					// 	station.queue.forEach(song => {
+					// 		if (userId === song.requestedBy) {
+					// 			totalSongs += 1;
+					// 		}
+					// 	});
+
+					// 	if (totalSongs <= 2) return next(null, song);
+					// 	if (totalSongs > 3)
+					// 		return next("The max amount of songs per user is 3, and only 2 in a row is allowed.");
+					// 	if (
+					// 		station.queue[station.queue.length - 2].requestedBy !== userId ||
+					// 		station.queue[station.queue.length - 3] !== userId
+					// 	)
+					// 		return next("The max amount of songs per user is 3, and only 2 in a row is allowed.");
+
+					// 	return next(null, song);
+					// },
+
+					(song, next) => {
+						StationsModule.stationModel.updateOne(
+							{ _id: stationId },
+							{ $push: { queue: song } },
+							{ runValidators: true },
+							next
+						);
+					},
+
+					(res, next) => {
+						StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+							.then(() => next())
+							.catch(next);
+					},
+
+					next => {
+						CacheModule.runJob(
+							"PUB",
+							{
+								channel: "station.queueUpdate",
+								value: stationId
+							},
+							this
+						)
+							.then(() => next())
+							.catch(next);
+					}
+				],
+				err => {
+					if (err) reject(err);
+					else resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Remove from a station queue
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - the station id
+	 * @param {string} payload.youtubeId - the youtube id
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	REMOVE_FROM_QUEUE(payload) {
+		return new Promise((resolve, reject) => {
+			const { stationId, youtubeId } = payload;
+			async.waterfall(
+				[
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId }, this)
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
+
+					(station, next) => {
+						if (!station) return next("Station not found.");
+						if (!station.queue.find(song => song.youtubeId === youtubeId))
+							return next("That song is not currently in the queue.");
+
+						return StationsModule.stationModel.updateOne(
+							{ _id: stationId },
+							{ $pull: { queue: { youtubeId } } },
+							next
+						);
+					},
+
+					(res, next) => {
+						StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+							.then(station => {
+								if (station.autofill.enabled)
+									StationsModule.runJob("AUTOFILL_STATION", { stationId }, this)
+										.then(() => next())
+										.catch(err => {
+											if (
+												err === "Autofill is disabled in this station" ||
+												err === "Autofill limit reached"
+											)
+												return next();
+											return next(err);
+										});
+								else next();
+							})
+							.catch(next);
+					},
+
+					next =>
+						CacheModule.runJob(
+							"PUB",
+							{
+								channel: "station.queueUpdate",
+								value: stationId
+							},
+							this
+						)
+							.then(() => next())
+							.catch(next)
 				],
 				err => {
 					if (err) reject(err);

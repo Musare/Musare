@@ -1,3 +1,4 @@
+import async from "async";
 import config from "config";
 import redis from "redis";
 import mongoose from "mongoose";
@@ -37,7 +38,8 @@ class _CacheModule extends CoreClass {
 			officialPlaylist: await importSchema("officialPlaylist"),
 			song: await importSchema("song"),
 			punishment: await importSchema("punishment"),
-			recentActivity: await importSchema("recentActivity")
+			recentActivity: await importSchema("recentActivity"),
+			ratings: await importSchema("ratings")
 		};
 
 		return new Promise((resolve, reject) => {
@@ -61,6 +63,15 @@ class _CacheModule extends CoreClass {
 						this.setStatus("FAILED");
 					}
 				}
+			});
+
+			// TODO move to a better place
+			CacheModule.runJob("KEYS", { pattern: "longJobs.*" }).then(keys => {
+				async.eachLimit(keys, 1, (key, next) => {
+					CacheModule.runJob("DEL", { key }).finally(() => {
+						next();
+					});
+				});
 			});
 
 			this.client.on("error", err => {
@@ -226,6 +237,34 @@ class _CacheModule extends CoreClass {
 	}
 
 	/**
+	 * Deletes a single value
+	 *
+	 * @param {object} payload - object containing payload
+	 * @param {string} payload.key - name of the key to delete
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	DEL(payload) {
+		return new Promise((resolve, reject) => {
+			let { key } = payload;
+
+			if (!key) {
+				reject(new Error("Invalid key!"));
+				return;
+			}
+
+			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
+
+			CacheModule.client.del(key, err => {
+				if (err) {
+					reject(new Error(err));
+					return;
+				}
+				resolve();
+			});
+		});
+	}
+
+	/**
 	 * Publish a message to a channel, caches the redis client connection
 	 *
 	 * @param {object} payload - object containing payload
@@ -299,6 +338,102 @@ class _CacheModule extends CoreClass {
 			subs[payload.channel].cbs.push(payload.cb);
 
 			resolve();
+		});
+	}
+
+	/**
+	 * Gets a full list from Redis
+	 *
+	 * @param {object} payload - object containing payload
+	 * @param {string} payload.key - name of the table to get the value from (table === redis hash)
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	LRANGE(payload) {
+		return new Promise((resolve, reject) => {
+			let { key } = payload;
+
+			if (!key) {
+				reject(new Error("Invalid key!"));
+				return;
+			}
+			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
+
+			CacheModule.client.LRANGE(key, 0, -1, (err, list) => {
+				if (err) {
+					reject(new Error(err));
+					return;
+				}
+
+				resolve(list);
+			});
+		});
+	}
+
+	/**
+	 * Adds a value to a list in Redis
+	 *
+	 * @param {object} payload - object containing payload
+	 * @param {string} payload.key -  name of the list
+	 * @param {*} payload.value - the value we want to set
+	 * @param {boolean} [payload.stringifyJson=true] - stringify 'value' if it's an Object or Array
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	RPUSH(payload) {
+		return new Promise((resolve, reject) => {
+			let { key } = payload;
+			let { value } = payload;
+
+			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
+			// automatically stringify objects and arrays into JSON
+			if (["object", "array"].includes(typeof value)) value = JSON.stringify(value);
+
+			CacheModule.client.RPUSH(key, value, err => {
+				if (err) return reject(new Error(err));
+				return resolve();
+			});
+		});
+	}
+
+	/**
+	 * Removes a value from a list in Redis
+	 *
+	 * @param {object} payload - object containing payload
+	 * @param {string} payload.key -  name of the list
+	 * @param {*} payload.value - the value we want to remove
+	 * @param {boolean} [payload.stringifyJson=true] - stringify 'value' if it's an Object or Array
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	LREM(payload) {
+		return new Promise((resolve, reject) => {
+			let { key } = payload;
+			let { value } = payload;
+
+			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
+			// automatically stringify objects and arrays into JSON
+			if (["object", "array"].includes(typeof value)) value = JSON.stringify(value);
+
+			CacheModule.client.LREM(key, 1, value, err => {
+				if (err) return reject(new Error(err));
+				return resolve();
+			});
+		});
+	}
+
+	/**
+	 * Gets a list of keys in Redis with a matching pattern
+	 *
+	 * @param {object} payload - object containing payload
+	 * @param {string} payload.pattern -  pattern to search for
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	KEYS(payload) {
+		return new Promise((resolve, reject) => {
+			const { pattern } = payload;
+
+			CacheModule.client.KEYS(pattern, (err, keys) => {
+				if (err) return reject(new Error(err));
+				return resolve(keys);
+			});
 		});
 	}
 

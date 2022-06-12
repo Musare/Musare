@@ -8,6 +8,7 @@ import settings from "./modules/settings";
 import modalVisibility from "./modules/modalVisibility";
 import station from "./modules/station";
 import admin from "./modules/admin";
+import longJobs from "./modules/longJobs";
 
 const emptyModule = {
 	namespaced: true
@@ -27,20 +28,22 @@ export default createStore({
 				editSong: emptyModule,
 				editSongs: emptyModule,
 				importAlbum: emptyModule,
-				importPlaylist: emptyModule,
 				editPlaylist: emptyModule,
 				manageStation: emptyModule,
 				editUser: emptyModule,
 				whatIsNew: emptyModule,
 				createStation: emptyModule,
 				editNews: emptyModule,
+				viewApiRequest: emptyModule,
 				viewPunishment: emptyModule,
 				report: emptyModule,
 				viewReport: emptyModule,
 				confirm: emptyModule,
-				bulkActions: emptyModule
+				bulkActions: emptyModule,
+				viewYoutubeVideo: emptyModule
 			}
-		}
+		},
+		longJobs
 	},
 	strict: false
 });

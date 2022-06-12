@@ -4,7 +4,7 @@ export default {
 	displayName: { type: String, min: 2, max: 32, trim: true, required: true },
 	songs: [
 		{
-			_id: { type: mongoose.Schema.Types.ObjectId, required: true },
+			_id: { type: mongoose.Schema.Types.ObjectId },
 			youtubeId: { type: String, required: true },
 			title: { type: String },
 			artists: [{ type: String }],

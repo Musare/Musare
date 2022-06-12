@@ -15,10 +15,9 @@
 		<div class="item-title-description">
 			<h2 v-if="punishment.type === 'banUserId'" class="item-title">
 				<strong>Punishment</strong> for user
-				<user-id-to-username
+				<user-link
 					:user-id="punishment.value"
 					:alt="punishment.value"
-					:link="true"
 				/>
 			</h2>
 			<h2 class="item-title" v-else>
@@ -45,7 +44,7 @@
 				</li>
 				<li class="item-description">
 					Punished by
-					<user-id-to-username
+					<user-link
 						:user-id="punishment.punishedBy"
 						:alt="punishment.punishedBy"
 					/>

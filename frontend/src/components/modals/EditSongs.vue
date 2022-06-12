@@ -40,103 +40,114 @@
 					</header>
 					<section class="sidebar-body">
 						<div
-							class="item"
-							v-for="(
-								{ status, flagged, song }, index
-							) in filteredItems"
-							:key="song._id"
-							:ref="`edit-songs-item-${song._id}`"
+							v-show="filteredItems.length > 0"
+							class="edit-songs-items"
 						>
-							<song-item
-								:song="song"
-								:thumbnail="false"
-								:duration="false"
-								:disabled-actions="
-									song.removed ? ['all'] : ['report', 'edit']
-								"
-								:class="{
-									updated: song.updated,
-									removed: song.removed
-								}"
+							<div
+								class="item"
+								v-for="(
+									{ status, flagged, song }, index
+								) in filteredItems"
+								:key="`edit-songs-item-${index}`"
+								:ref="`edit-songs-item-${song.youtubeId}`"
 							>
-								<template #leftIcon>
-									<i
-										v-if="currentSong._id === song._id"
-										class="material-icons item-icon editing-icon"
-										content="Currently editing song"
-										v-tippy="{ theme: 'info' }"
-										@click="toggleDone(index)"
-										>edit</i
-									>
-									<i
-										v-else-if="song.removed"
-										class="material-icons item-icon removed-icon"
-										content="Song removed"
-										v-tippy="{ theme: 'info' }"
-										>delete_forever</i
-									>
-									<i
-										v-else-if="status === 'error'"
-										class="material-icons item-icon error-icon"
-										content="Error saving song"
-										v-tippy="{ theme: 'info' }"
-										@click="toggleDone(index)"
-										>error</i
-									>
-									<i
-										v-else-if="status === 'saving'"
-										class="material-icons item-icon saving-icon"
-										content="Currently saving song"
-										v-tippy="{ theme: 'info' }"
-										>pending</i
-									>
-									<i
-										v-else-if="flagged"
-										class="material-icons item-icon flag-icon"
-										content="Song flagged"
-										v-tippy="{ theme: 'info' }"
-										@click="toggleDone(index)"
-										>flag_circle</i
-									>
-									<i
-										v-else-if="status === 'done'"
-										class="material-icons item-icon done-icon"
-										content="Song marked complete"
-										v-tippy="{ theme: 'info' }"
-										@click="toggleDone(index)"
-										>check_circle</i
-									>
-									<i
-										v-else-if="status === 'todo'"
-										class="material-icons item-icon todo-icon"
-										content="Song marked todo"
-										v-tippy="{ theme: 'info' }"
-										@click="toggleDone(index)"
-										>cancel</i
-									>
-								</template>
-								<template v-if="!song.removed" #actions>
-									<i
-										class="material-icons edit-icon"
-										content="Edit Song"
-										v-tippy
-										@click="pickSong(song)"
-									>
-										edit
-									</i>
-								</template>
-								<template #tippyActions>
-									<i
-										class="material-icons flag-icon"
-										:class="{ flagged }"
-										content="Toggle Flag"
-										v-tippy
-										@click="toggleFlag(index)"
-									>
-										flag_circle
-									</i>
-								</template>
-							</song-item>
+								<song-item
+									:song="song"
+									:thumbnail="false"
+									:duration="false"
+									:disabled-actions="
+										song.removed
+											? ['all']
+											: ['report', 'edit']
+									"
+									:class="{
+										updated: song.updated,
+										removed: song.removed
+									}"
+								>
+									<template #leftIcon>
+										<i
+											v-if="
+												currentSong.youtubeId ===
+													song.youtubeId &&
+												!song.removed
+											"
+											class="material-icons item-icon editing-icon"
+											content="Currently editing song"
+											v-tippy="{ theme: 'info' }"
+											@click="toggleDone(index)"
+											>edit</i
+										>
+										<i
+											v-else-if="song.removed"
+											class="material-icons item-icon removed-icon"
+											content="Song removed"
+											v-tippy="{ theme: 'info' }"
+											>delete_forever</i
+										>
+										<i
+											v-else-if="status === 'error'"
+											class="material-icons item-icon error-icon"
+											content="Error saving song"
+											v-tippy="{ theme: 'info' }"
+											@click="toggleDone(index)"
+											>error</i
+										>
+										<i
+											v-else-if="status === 'saving'"
+											class="material-icons item-icon saving-icon"
+											content="Currently saving song"
+											v-tippy="{ theme: 'info' }"
+											>pending</i
+										>
+										<i
+											v-else-if="flagged"
+											class="material-icons item-icon flag-icon"
+											content="Song flagged"
+											v-tippy="{ theme: 'info' }"
+											@click="toggleDone(index)"
+											>flag_circle</i
+										>
+										<i
+											v-else-if="status === 'done'"
+											class="material-icons item-icon done-icon"
+											content="Song marked complete"
+											v-tippy="{ theme: 'info' }"
+											@click="toggleDone(index)"
+											>check_circle</i
+										>
+										<i
+											v-else-if="status === 'todo'"
+											class="material-icons item-icon todo-icon"
+											content="Song marked todo"
+											v-tippy="{ theme: 'info' }"
+											@click="toggleDone(index)"
+											>cancel</i
+										>
+									</template>
+									<template v-if="!song.removed" #actions>
+										<i
+											class="material-icons edit-icon"
+											content="Edit Song"
+											v-tippy
+											@click="pickSong(song)"
+										>
+											edit
+										</i>
+									</template>
+									<template #tippyActions>
+										<i
+											class="material-icons flag-icon"
+											:class="{ flagged }"
+											content="Toggle Flag"
+											v-tippy
+											@click="toggleFlag(index)"
+										>
+											flag_circle
+										</i>
+									</template>
+								</song-item>
+							</div>
 						</div>
 						<p v-if="filteredItems.length === 0" class="no-items">
 							{{
@@ -201,12 +212,12 @@ export default {
 	computed: {
 		editingItemIndex() {
 			return this.items.findIndex(
-				item => item.song._id === this.currentSong._id
+				item => item.song.youtubeId === this.currentSong.youtubeId
 			);
 		},
 		filteredEditingItemIndex() {
 			return this.filteredItems.findIndex(
-				item => item.song._id === this.currentSong._id
+				item => item.song.youtubeId === this.currentSong.youtubeId
 			);
 		},
 		filteredItems: {
@@ -217,58 +228,82 @@ export default {
 			},
 			set(newItem) {
 				const index = this.items.findIndex(
-					item => item.song._id === newItem._id
+					item => item.song.youtubeId === newItem.youtubeId
 				);
 				this.item[index] = newItem;
 			}
 		},
 		currentSongFlagged() {
 			return this.items.find(
-				item => item.song._id === this.currentSong._id
+				item => item.song.youtubeId === this.currentSong.youtubeId
 			)?.flagged;
 		},
 		...mapModalState("modals/editSongs/MODAL_UUID", {
-			songIds: state => state.songIds,
+			youtubeIds: state => state.youtubeIds,
 			songPrefillData: state => state.songPrefillData
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
 	},
-	async mounted() {
-		this.socket.dispatch("apis.joinRoom", "edit-songs");
-
+	beforeMount() {
+		console.log("EDITSONGS BEFOREMOUNT");
 		this.$store.registerModule(
 			["modals", "editSongs", this.modalUuid, "editSong"],
 			editSong
 		);
+	},
+	async mounted() {
+		console.log("EDITSONGS MOUNTED");
 
-		this.socket.dispatch("songs.getSongsFromSongIds", this.songIds, res => {
-			res.data.songs.forEach(song => {
-				this.items.push({
-					status: "todo",
-					flagged: false,
-					song
-				});
-			});
+		this.socket.dispatch("apis.joinRoom", "edit-songs");
 
-			if (this.items.length === 0) {
-				this.closeThisModal();
-				new Toast("You can't edit 0 songs.");
-			} else this.editNextSong();
-		});
+		this.socket.dispatch(
+			"songs.getSongsFromYoutubeIds",
+			this.youtubeIds,
+			res => {
+				if (res.data.songs.length === 0) {
+					this.closeThisModal();
+					new Toast("You can't edit 0 songs.");
+				} else {
+					this.items = res.data.songs.map(song => ({
+						status: "todo",
+						flagged: false,
+						song
+					}));
+					this.editNextSong();
+				}
+			}
+		);
+
+		this.socket.on(
+			`event:admin.song.created`,
+			res => {
+				const index = this.items
+					.map(item => item.song.youtubeId)
+					.indexOf(res.data.song.youtubeId);
+				if (index >= 0)
+					this.items[index].song = {
+						...this.items[index].song,
+						...res.data.song,
+						created: true
+					};
+			},
+			{ modalUuid: this.modalUuid }
+		);
 
 		this.socket.on(
 			`event:admin.song.updated`,
 			res => {
 				const index = this.items
-					.map(item => item.song._id)
-					.indexOf(res.data.song._id);
-				this.items[index].song = {
-					...this.items[index].song,
-					...res.data.song,
-					updated: true
-				};
+					.map(item => item.song.youtubeId)
+					.indexOf(res.data.song.youtubeId);
+				if (index >= 0)
+					this.items[index].song = {
+						...this.items[index].song,
+						...res.data.song,
+						updated: true
+					};
 			},
 			{ modalUuid: this.modalUuid }
 		);
@@ -279,30 +314,45 @@ export default {
 				const index = this.items
 					.map(item => item.song._id)
 					.indexOf(res.data.songId);
-				this.items[index].song.removed = true;
+				if (index >= 0) this.items[index].song.removed = true;
+			},
+			{ modalUuid: this.modalUuid }
+		);
+
+		this.socket.on(
+			`event:admin.youtubeVideo.removed`,
+			res => {
+				const index = this.items
+					.map(item => item.song.youtubeVideoId)
+					.indexOf(res.videoId);
+				if (index >= 0) this.items[index].song.removed = true;
 			},
 			{ modalUuid: this.modalUuid }
 		);
 	},
 	beforeUnmount() {
+		console.log("EDITSONGS BEFORE UNMOUNT");
 		this.socket.dispatch("apis.leaveRoom", "edit-songs");
 	},
 	unmounted() {
+		console.log("EDITSONGS UNMOUNTED");
 		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
 		this.$store.unregisterModule(["modals", "editSongs", this.modalUuid]);
 	},
 	methods: {
 		pickSong(song) {
 			this.editSong({
-				songId: song._id,
-				prefill: this.songPrefillData[song._id]
+				youtubeId: song.youtubeId,
+				prefill: this.songPrefillData[song.youtubeId]
 			});
 			this.currentSong = song;
 			if (
-				this.$refs[`edit-songs-item-${song._id}`] &&
-				this.$refs[`edit-songs-item-${song._id}`][0]
+				this.$refs[`edit-songs-item-${song.youtubeId}`] &&
+				this.$refs[`edit-songs-item-${song.youtubeId}`][0]
 			)
-				this.$refs[`edit-songs-item-${song._id}`][0].scrollIntoView();
+				this.$refs[
+					`edit-songs-item-${song.youtubeId}`
+				][0].scrollIntoView();
 		},
 		editNextSong() {
 			const currentlyEditingSongIndex = this.filteredEditingItemIndex;
@@ -320,7 +370,8 @@ export default {
 
 			if (newEditingSongIndex > -1) {
 				const nextSong = this.filteredItems[newEditingSongIndex].song;
-				this.pickSong(nextSong);
+				if (nextSong.removed) this.editNextSong();
+				else this.pickSong(nextSong);
 			}
 		},
 		toggleFlag(songIndex = null) {
@@ -346,24 +397,24 @@ export default {
 				);
 			}
 		},
-		onSavedSuccess(songId) {
+		onSavedSuccess(youtubeId) {
 			const itemIndex = this.items.findIndex(
-				item => item.song._id === songId
+				item => item.song.youtubeId === youtubeId
 			);
 			if (itemIndex > -1) {
 				this.items[itemIndex].status = "done";
 				this.items[itemIndex].flagged = false;
 			}
 		},
-		onSavedError(songId) {
+		onSavedError(youtubeId) {
 			const itemIndex = this.items.findIndex(
-				item => item.song._id === songId
+				item => item.song.youtubeId === youtubeId
 			);
 			if (itemIndex > -1) this.items[itemIndex].status = "error";
 		},
-		onSaving(songId) {
+		onSaving(youtubeId) {
 			const itemIndex = this.items.findIndex(
-				item => item.song._id === songId
+				item => item.song.youtubeId === youtubeId
 			);
 			if (itemIndex > -1) this.items[itemIndex].status = "saving";
 		},
@@ -519,45 +570,51 @@ export default {
 		overflow: auto;
 		padding: 10px;
 
-		.item {
+		.edit-songs-items {
 			display: flex;
-			flex-direction: row;
-			align-items: center;
-			column-gap: 8px;
+			flex-direction: column;
+			row-gap: 8px;
 
-			:deep(.song-item) {
-				.item-icon {
-					margin-right: 10px;
-					cursor: pointer;
-				}
+			.item {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				column-gap: 8px;
 
-				.removed-icon,
-				.error-icon {
-					color: var(--red);
-				}
-
-				.saving-icon,
-				.todo-icon,
-				.editing-icon {
-					color: var(--primary-color);
-				}
-
-				.done-icon {
-					color: var(--green);
-				}
-
-				.flag-icon {
-					color: var(--orange);
-
-					&.flagged {
-						color: var(--grey);
+				:deep(.song-item) {
+					.item-icon {
+						margin-right: 10px;
+						cursor: pointer;
 					}
-				}
 
-				&.removed {
-					filter: grayscale(100%);
-					cursor: not-allowed;
-					user-select: none;
+					.removed-icon,
+					.error-icon {
+						color: var(--red);
+					}
+
+					.saving-icon,
+					.todo-icon,
+					.editing-icon {
+						color: var(--primary-color);
+					}
+
+					.done-icon {
+						color: var(--green);
+					}
+
+					.flag-icon {
+						color: var(--orange);
+
+						&.flagged {
+							color: var(--grey);
+						}
+					}
+
+					&.removed {
+						filter: grayscale(100%);
+						cursor: not-allowed;
+						user-select: none;
+					}
 				}
 			}
 		}

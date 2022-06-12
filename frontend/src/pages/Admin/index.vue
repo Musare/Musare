@@ -21,7 +21,46 @@
 								<i class="material-icons">menu_open</i>
 								<span>Minimise</span>
 							</div>
+							<div
+								v-if="sidebarActive"
+								class="sidebar-item with-children"
+								:class="{ 'is-active': childrenActive.songs }"
+							>
+								<span>
+									<router-link to="/admin/songs">
+										<i class="material-icons">music_note</i>
+										<span>Songs</span>
+									</router-link>
+									<i
+										class="material-icons toggle-sidebar-children"
+										@click="
+											toggleChildren({ child: 'songs' })
+										"
+									>
+										{{
+											childrenActive.songs
+												? "expand_less"
+												: "expand_more"
+										}}
+									</i>
+								</span>
+								<div class="sidebar-item-children">
+									<router-link
+										class="sidebar-item-child"
+										to="/admin/songs"
+									>
+										Songs
+									</router-link>
+									<router-link
+										class="sidebar-item-child"
+										to="/admin/songs/import"
+									>
+										Import
+									</router-link>
+								</div>
+							</div>
 							<router-link
+								v-else
 								class="sidebar-item songs"
 								to="/admin/songs"
 								content="Songs"
@@ -105,6 +144,12 @@
 									>
 										Data Requests
 									</router-link>
+									<router-link
+										class="sidebar-item-child"
+										to="/admin/users/punishments"
+									>
+										Punishments
+									</router-link>
 								</div>
 							</div>
 							<router-link
@@ -119,18 +164,6 @@
 							>
 								<i class="material-icons">people</i>
 								<span>Users</span>
-							</router-link>
-							<router-link
-								class="sidebar-item punishments"
-								to="/admin/punishments"
-								content="Punishments"
-								v-tippy="{
-									theme: 'info',
-									onShow: () => !sidebarActive
-								}"
-							>
-								<i class="material-icons">gavel</i>
-								<span>Punishments</span>
 							</router-link>
 							<router-link
 								class="sidebar-item news"
@@ -156,6 +189,59 @@
 								<i class="material-icons">show_chart</i>
 								<span>Statistics</span>
 							</router-link>
+							<div
+								v-if="sidebarActive"
+								class="sidebar-item with-children"
+								:class="{ 'is-active': childrenActive.youtube }"
+							>
+								<span>
+									<router-link to="/admin/youtube">
+										<i class="material-icons"
+											>smart_display</i
+										>
+										<span>YouTube</span>
+									</router-link>
+									<i
+										class="material-icons toggle-sidebar-children"
+										@click="
+											toggleChildren({ child: 'youtube' })
+										"
+									>
+										{{
+											childrenActive.youtube
+												? "expand_less"
+												: "expand_more"
+										}}
+									</i>
+								</span>
+								<div class="sidebar-item-children">
+									<router-link
+										class="sidebar-item-child"
+										to="/admin/youtube"
+									>
+										YouTube
+									</router-link>
+									<router-link
+										class="sidebar-item-child"
+										to="/admin/youtube/videos"
+									>
+										Videos
+									</router-link>
+								</div>
+							</div>
+							<router-link
+								v-else
+								class="sidebar-item youtube"
+								to="/admin/youtube"
+								content="YouTube"
+								v-tippy="{
+									theme: 'info',
+									onShow: () => !sidebarActive
+								}"
+							>
+								<i class="material-icons">smart_display</i>
+								<span>YouTube</span>
+							</router-link>
 						</div>
 					</div>
 				</div>
@@ -172,6 +258,7 @@
 		<floating-box
 			id="keyboardShortcutsHelper"
 			ref="keyboardShortcutsHelper"
+			title="Admin Keyboard Shortcuts"
 		>
 			<template #body>
 				<div>
@@ -341,6 +428,8 @@ export default {
 				this.toggleChildren({ child: "songs", force: false });
 			} else if (this.currentTab.startsWith("users")) {
 				this.toggleChildren({ child: "users", force: false });
+			} else if (this.currentTab.startsWith("youtube")) {
+				this.toggleChildren({ child: "youtube", force: false });
 			}
 			this.currentTab = this.getTabFromPath();
 			if (this.$refs[`${this.currentTab}-tab`])
@@ -353,6 +442,8 @@ export default {
 				this.toggleChildren({ child: "songs", force: true });
 			else if (this.currentTab.startsWith("users"))
 				this.toggleChildren({ child: "users", force: true });
+			else if (this.currentTab.startsWith("youtube"))
+				this.toggleChildren({ child: "youtube", force: true });
 		},
 		toggleKeyboardShortcutsHelper() {
 			this.$refs.keyboardShortcutsHelper.toggleBox();
@@ -383,22 +474,36 @@ export default {
 
 <style lang="less" scoped>
 .night-mode {
-	.main-container .admin-area .admin-sidebar .inner {
-		.top {
-			background-color: var(--dark-grey-3);
+	.main-container .admin-area {
+		.admin-sidebar .inner {
+			.top {
+				background-color: var(--dark-grey-3);
+			}
+
+			.bottom {
+				background-color: var(--dark-grey-2);
+
+				.sidebar-item {
+					background-color: var(--dark-grey-2);
+					border-color: var(--dark-grey-3);
+
+					&,
+					&.with-children .sidebar-item-child,
+					&.with-children > span > a {
+						color: var(--white);
+					}
+				}
+			}
 		}
 
-		.bottom {
-			background-color: var(--dark-grey-2);
+		:deep(.admin-content .admin-container .admin-tab-container) {
+			.admin-tab {
+				.card {
+					background-color: var(--dark-grey-3);
 
-			.sidebar-item {
-				background-color: var(--dark-grey-2);
-				border-color: var(--dark-grey-3);
-
-				&,
-				&.with-children .sidebar-item-child,
-				&.with-children > span > a {
-					color: var(--white);
+					p {
+						color: var(--light-grey-2);
+					}
 				}
 			}
 		}
@@ -601,26 +706,86 @@ export default {
 					padding: 10px 10px 20px 10px;
 
 					.admin-tab {
+						display: flex;
+						flex-direction: column;
+						width: 100%;
 						max-width: 1900px;
 						margin: 0 auto;
 						padding: 0 10px;
-					}
 
-					.admin-tab,
-					.container {
-						.button-row {
+						.card {
 							display: flex;
-							flex-direction: row;
-							flex-wrap: wrap;
-							justify-content: center;
-							margin-bottom: 5px;
+							flex-grow: 1;
+							flex-direction: column;
+							padding: 20px;
+							margin: 10px 0;
+							border-radius: @border-radius;
+							background-color: var(--white);
+							color: var(--dark-grey);
+							box-shadow: @box-shadow;
 
-							& > .button,
-							& > span {
-								margin: 5px 0;
-								&:not(:first-child) {
-									margin-left: 5px;
+							h1 {
+								font-size: 36px;
+								margin: 0 0 5px 0;
+							}
+
+							h4 {
+								font-size: 22px;
+								margin: 0;
+							}
+
+							h5 {
+								font-size: 18px;
+								margin: 0;
+							}
+
+							hr {
+								margin: 10px 0;
+							}
+
+							&.tab-info {
+								flex-direction: row;
+								flex-wrap: wrap;
+
+								.info-row {
+									display: flex;
+									flex-grow: 1;
+									flex-direction: column;
 								}
+
+								.button-row {
+									display: flex;
+									flex-direction: row;
+									flex-wrap: wrap;
+									justify-content: center;
+									margin: auto 0;
+									padding: 5px 0;
+
+									& > .button,
+									& > span {
+										margin: auto 0;
+										&:not(:first-child) {
+											margin-left: 5px;
+										}
+									}
+
+									& > span > .control.has-addons {
+										margin-bottom: 0 !important;
+									}
+								}
+							}
+						}
+
+						@media screen and (min-width: 980px) {
+							&.container {
+								margin: 0 auto;
+								max-width: 960px;
+							}
+						}
+
+						@media screen and (min-width: 1180px) {
+							&.container {
+								max-width: 1200px;
 							}
 						}
 					}
@@ -628,10 +793,6 @@ export default {
 			}
 		}
 	}
-}
-
-:deep(.container) {
-	position: relative;
 }
 
 :deep(.box) {
@@ -656,19 +817,6 @@ export default {
 		span {
 			display: block;
 		}
-	}
-}
-
-@media screen and (min-width: 980px) {
-	:deep(.container) {
-		margin: 0 auto;
-		max-width: 960px;
-	}
-}
-
-@media screen and (min-width: 1180px) {
-	:deep(.container) {
-		max-width: 1200px;
 	}
 }
 </style>

@@ -8,6 +8,8 @@ let SongsModule;
 let CacheModule;
 let DBModule;
 let UtilsModule;
+let MediaModule;
+let WSModule;
 
 class _PlaylistsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -30,9 +32,38 @@ class _PlaylistsModule extends CoreClass {
 		DBModule = this.moduleManager.modules.db;
 		UtilsModule = this.moduleManager.modules.utils;
 		SongsModule = this.moduleManager.modules.songs;
+		MediaModule = this.moduleManager.modules.media;
+		WSModule = this.moduleManager.modules.ws;
 
 		this.playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" });
 		this.playlistSchemaCache = await CacheModule.runJob("GET_SCHEMA", { schemaName: "playlist" });
+
+		CacheModule.runJob("SUB", {
+			channel: "playlist.updated",
+			cb: async data => {
+				PlaylistsModule.playlistModel.findOne(
+					{ _id: data.playlistId },
+					["_id", "displayName", "type", "privacy", "songs", "createdBy", "createdAt", "createdFor"],
+					(err, playlist) => {
+						const newPlaylist = {
+							...playlist._doc,
+							songsCount: playlist.songs.length,
+							songsLength: playlist.songs.reduce(
+								(previous, current) => ({
+									duration: previous.duration + current.duration
+								}),
+								{ duration: 0 }
+							).duration
+						};
+						delete newPlaylist.songs;
+						WSModule.runJob("EMIT_TO_ROOM", {
+							room: "admin.playlists",
+							args: ["event:admin.playlist.updated", { data: { playlist: newPlaylist } }]
+						});
+					}
+				);
+			}
+		});
 
 		this.setStage(2);
 
@@ -351,35 +382,184 @@ class _PlaylistsModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the playlist id
-	 * @param {string} payload.song - the song
+	 * @param {string} payload.youtubeId - the youtube id
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	ADD_SONG_TO_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
-			const { _id, youtubeId, title, artists, thumbnail, duration, verified } = payload.song;
-			const trimmedSong = {
-				_id,
-				youtubeId,
-				title,
-				artists,
-				thumbnail,
-				duration,
-				verified
-			};
+			const { playlistId, youtubeId } = payload;
 
-			PlaylistsModule.playlistModel.updateOne(
-				{ _id: payload.playlistId },
-				{ $push: { songs: trimmedSong } },
-				{ runValidators: true },
-				err => {
-					if (err) reject(new Error(err));
-					else {
-						PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId: payload.playlistId }, this)
-							.then(() => resolve())
-							.catch(err => {
-								reject(new Error(err));
-							});
+			async.waterfall(
+				[
+					next => {
+						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+							.then(playlist => {
+								next(null, playlist);
+							})
+							.catch(next);
+					},
+
+					(playlist, next) => {
+						if (!playlist) return next("Playlist not found.");
+						if (playlist.songs.find(song => song.youtubeId === youtubeId))
+							return next("That song is already in the playlist.");
+						return next();
+					},
+
+					next => {
+						MediaModule.runJob("GET_MEDIA", { youtubeId }, this)
+							.then(response => {
+								const { song } = response;
+								const { _id, title, artists, thumbnail, duration, verified } = song;
+								next(null, {
+									_id,
+									youtubeId,
+									title,
+									artists,
+									thumbnail,
+									duration,
+									verified
+								});
+							})
+							.catch(next);
+					},
+
+					(newSong, next) => {
+						PlaylistsModule.playlistModel.updateOne(
+							{ _id: playlistId },
+							{ $push: { songs: newSong } },
+							{ runValidators: true },
+							err => {
+								if (err) return next(err);
+								return PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
+									.then(playlist => next(null, playlist, newSong))
+									.catch(next);
+							}
+						);
+					},
+
+					(playlist, newSong, next) => {
+						StationsModule.runJob("GET_STATIONS_THAT_AUTOFILL_OR_BLACKLIST_PLAYLIST", { playlistId })
+							.then(response => {
+								async.each(
+									response.stationIds,
+									(stationId, next) => {
+										PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId })
+											.then()
+											.catch();
+										next();
+									},
+									err => {
+										if (err) next(err);
+										else next(null, playlist, newSong);
+									}
+								);
+							})
+							.catch(next);
+					},
+
+					(playlist, newSong, next) => {
+						if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
+							MediaModule.runJob("RECALCULATE_RATINGS", {
+								youtubeId: newSong.youtubeId
+							})
+								.then(ratings => next(null, playlist, newSong, ratings))
+								.catch(next);
+						} else {
+							next(null, playlist, newSong, null);
+						}
 					}
+				],
+				(err, playlist, song, ratings) => {
+					if (err) reject(err);
+					else resolve({ playlist, song, ratings });
+				}
+			);
+		});
+	}
+
+	/**
+	 * Remove from playlist
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.playlistId - the playlist id
+	 * @param {string} payload.youtubeId - the youtube id
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	REMOVE_FROM_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			const { playlistId, youtubeId } = payload;
+			async.waterfall(
+				[
+					next => {
+						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+							.then(playlist => {
+								next(null, playlist);
+							})
+							.catch(next);
+					},
+
+					(playlist, next) => {
+						if (!playlist) return next("Playlist not found.");
+						if (!playlist.songs.find(song => song.youtubeId === youtubeId))
+							return next("That song is not currently in the playlist.");
+
+						return PlaylistsModule.playlistModel.updateOne(
+							{ _id: playlistId },
+							{ $pull: { songs: { youtubeId } } },
+							next
+						);
+					},
+
+					(res, next) => {
+						PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
+							.then(playlist => next(null, playlist))
+							.catch(next);
+					},
+
+					(playlist, next) => {
+						StationsModule.runJob("GET_STATIONS_THAT_AUTOFILL_OR_BLACKLIST_PLAYLIST", { playlistId })
+							.then(response => {
+								async.each(
+									response.stationIds,
+									(stationId, next) => {
+										PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId })
+											.then()
+											.catch();
+										next();
+									},
+									err => {
+										if (err) next(err);
+										else next(null, playlist);
+									}
+								);
+							})
+							.catch(next);
+					},
+
+					(playlist, next) => {
+						if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
+							MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
+								.then(ratings => next(null, playlist, ratings))
+								.catch(next);
+						} else next(null, playlist, null);
+					},
+
+					(playlist, ratings, next) =>
+						CacheModule.runJob(
+							"PUB",
+							{
+								channel: "playlist.updated",
+								value: { playlistId }
+							},
+							this
+						)
+							.then(() => next(null, playlist, ratings))
+							.catch(next)
+				],
+				(err, playlist, ratings) => {
+					if (err) reject(err);
+					else resolve({ playlist, ratings });
 				}
 			);
 		});
@@ -574,6 +754,7 @@ class _PlaylistsModule extends CoreClass {
 						response.playlists,
 						1,
 						(playlist, next) => {
+							this.publishProgress({ status: "update", message: `Deleting "${playlist._id}"` });
 							PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId: playlist._id }, this)
 								.then(() => {
 									this.log("INFO", "Deleting orphaned genre playlist");
@@ -647,6 +828,7 @@ class _PlaylistsModule extends CoreClass {
 						response.playlists,
 						1,
 						(playlist, next) => {
+							this.publishProgress({ status: "update", message: `Deleting "${playlist._id}"` });
 							PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId: playlist._id }, this)
 								.then(() => {
 									this.log("INFO", "Deleting orphaned station playlist");

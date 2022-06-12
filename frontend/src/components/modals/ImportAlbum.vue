@@ -425,7 +425,7 @@ export default {
 					delete discogsAlbum.gotMoreInfo;
 
 					const songToEdit = {
-						songId: song._id,
+						youtubeId: song.youtubeId,
 						prefill: {
 							discogs: discogsAlbum
 						}
@@ -488,26 +488,39 @@ export default {
 			}, 750);
 
 			return this.socket.dispatch(
-				"songs.requestSet",
+				"youtube.requestSet",
 				this.search.playlist.query,
 				false,
 				true,
 				res => {
 					this.isImportingPlaylist = false;
-					const songs = res.songs.filter(song => !song.verified);
-					const songsAlreadyVerified =
-						res.songs.length - songs.length;
-					this.setPlaylistSongs(songs);
-					if (this.discogsAlbum.tracks) {
-						this.trackSongs = this.discogsAlbum.tracks.map(
-							() => []
-						);
-						this.tryToAutoMove();
-					}
-					if (songsAlreadyVerified > 0)
-						new Toast(
-							`${songsAlreadyVerified} songs were already verified, skipping those.`
-						);
+					const youtubeIds = res.videos.map(video => video.youtubeId);
+
+					this.socket.dispatch(
+						"songs.getSongsFromYoutubeIds",
+						youtubeIds,
+						res => {
+							if (res.status === "success") {
+								const songs = res.data.songs.filter(
+									song => !song.verified
+								);
+								const songsAlreadyVerified =
+									res.data.songs.length - songs.length;
+								this.setPlaylistSongs(songs);
+								if (this.discogsAlbum.tracks) {
+									this.trackSongs =
+										this.discogsAlbum.tracks.map(() => []);
+									this.tryToAutoMove();
+								}
+								if (songsAlreadyVerified > 0)
+									new Toast(
+										`${songsAlreadyVerified} songs were already verified, skipping those.`
+									);
+							}
+							new Toast("Could not get songs.");
+						}
+					);
+
 					return new Toast({ content: res.message, timeout: 20000 });
 				}
 			);

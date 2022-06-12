@@ -1,123 +1,122 @@
 <template>
-	<div>
+	<div class="admin-tab container">
 		<page-metadata title="Admin | Users | Punishments" />
-		<div class="container">
-			<advanced-table
-				:column-default="columnDefault"
-				:columns="columns"
-				:filters="filters"
-				data-action="punishments.getData"
-				name="admin-punishments"
-				:max-width="1200"
-			>
-				<template #column-options="slotProps">
-					<div class="row-options">
-						<button
-							class="button is-primary icon-with-button material-icons"
-							@click="
-								openModal({
-									modal: 'viewPunishment',
-									data: { punishmentId: slotProps.item._id }
-								})
-							"
-							:disabled="slotProps.item.removed"
-							content="View Punishment"
-							v-tippy
-						>
-							open_in_full
-						</button>
-					</div>
-				</template>
-				<template #column-status="slotProps">
-					<span>{{ slotProps.item.status }}</span>
-				</template>
-				<template #column-type="slotProps">
-					<span
-						:title="
-							slotProps.item.type === 'banUserId'
-								? 'User ID'
-								: 'IP Address'
+		<div class="card tab-info">
+			<div class="info-row">
+				<h1>Punishments</h1>
+				<p>Manage punishments or ban an IP</p>
+			</div>
+		</div>
+		<advanced-table
+			:column-default="columnDefault"
+			:columns="columns"
+			:filters="filters"
+			data-action="punishments.getData"
+			name="admin-punishments"
+			:max-width="1200"
+		>
+			<template #column-options="slotProps">
+				<div class="row-options">
+					<button
+						class="button is-primary icon-with-button material-icons"
+						@click="
+							openModal({
+								modal: 'viewPunishment',
+								data: { punishmentId: slotProps.item._id }
+							})
 						"
-						>{{
-							slotProps.item.type === "banUserId"
-								? "User ID"
-								: "IP Address"
-						}}</span
+						:disabled="slotProps.item.removed"
+						content="View Punishment"
+						v-tippy
 					>
-				</template>
-				<template #column-value="slotProps">
-					<user-id-to-username
-						v-if="slotProps.item.type === 'banUserId'"
-						:user-id="slotProps.item.value"
-						:alt="slotProps.item.value"
-						:link="true"
-					/>
-					<span v-else :title="slotProps.item.value">{{
-						slotProps.item.value
-					}}</span>
-				</template>
-				<template #column-reason="slotProps">
-					<span :title="slotProps.item.reason">{{
-						slotProps.item.reason
-					}}</span>
-				</template>
-				<template #column-punishedBy="slotProps">
-					<user-id-to-username
-						:user-id="slotProps.item.punishedBy"
-						:link="true"
-					/>
-				</template>
-				<template #column-punishedAt="slotProps">
-					<span :title="new Date(slotProps.item.punishedAt)">{{
-						getDateFormatted(slotProps.item.punishedAt)
-					}}</span>
-				</template>
-				<template #column-expiresAt="slotProps">
-					<span :title="new Date(slotProps.item.expiresAt)">{{
-						getDateFormatted(slotProps.item.expiresAt)
-					}}</span>
-				</template>
-			</advanced-table>
-			<div class="card">
-				<header class="card-header">
-					<p>Ban an IP</p>
-				</header>
-				<div class="card-content">
-					<label class="label">Expires In</label>
-					<p class="control is-expanded select">
-						<select v-model="ipBan.expiresAt">
-							<option value="1h">1 Hour</option>
-							<option value="12h">12 Hours</option>
-							<option value="1d">1 Day</option>
-							<option value="1w">1 Week</option>
-							<option value="1m">1 Month</option>
-							<option value="3m">3 Months</option>
-							<option value="6m">6 Months</option>
-							<option value="1y">1 Year</option>
-						</select>
-					</p>
-					<label class="label">IP</label>
-					<p class="control is-expanded">
-						<input
-							v-model="ipBan.ip"
-							class="input"
-							type="text"
-							placeholder="IP address (xxx.xxx.xxx.xxx)"
-						/>
-					</p>
-					<label class="label">Reason</label>
-					<p class="control is-expanded">
-						<input
-							v-model="ipBan.reason"
-							class="input"
-							type="text"
-							placeholder="Reason"
-						/>
-					</p>
-					<button class="button is-primary" @click="banIP()">
-						Ban IP
+						open_in_full
 					</button>
 				</div>
+			</template>
+			<template #column-status="slotProps">
+				<span>{{ slotProps.item.status }}</span>
+			</template>
+			<template #column-type="slotProps">
+				<span
+					:title="
+						slotProps.item.type === 'banUserId'
+							? 'User ID'
+							: 'IP Address'
+					"
+					>{{
+						slotProps.item.type === "banUserId"
+							? "User ID"
+							: "IP Address"
+					}}</span
+				>
+			</template>
+			<template #column-value="slotProps">
+				<user-link
+					v-if="slotProps.item.type === 'banUserId'"
+					:user-id="slotProps.item.value"
+					:alt="slotProps.item.value"
+				/>
+				<span v-else :title="slotProps.item.value">{{
+					slotProps.item.value
+				}}</span>
+			</template>
+			<template #column-reason="slotProps">
+				<span :title="slotProps.item.reason">{{
+					slotProps.item.reason
+				}}</span>
+			</template>
+			<template #column-punishedBy="slotProps">
+				<user-link :user-id="slotProps.item.punishedBy" />
+			</template>
+			<template #column-punishedAt="slotProps">
+				<span :title="new Date(slotProps.item.punishedAt)">{{
+					getDateFormatted(slotProps.item.punishedAt)
+				}}</span>
+			</template>
+			<template #column-expiresAt="slotProps">
+				<span :title="new Date(slotProps.item.expiresAt)">{{
+					getDateFormatted(slotProps.item.expiresAt)
+				}}</span>
+			</template>
+		</advanced-table>
+		<div class="card">
+			<h4>Ban an IP</h4>
+			<hr class="section-horizontal-rule" />
+			<div class="card-content">
+				<label class="label">Expires In</label>
+				<p class="control is-expanded select">
+					<select v-model="ipBan.expiresAt">
+						<option value="1h">1 Hour</option>
+						<option value="12h">12 Hours</option>
+						<option value="1d">1 Day</option>
+						<option value="1w">1 Week</option>
+						<option value="1m">1 Month</option>
+						<option value="3m">3 Months</option>
+						<option value="6m">6 Months</option>
+						<option value="1y">1 Year</option>
+					</select>
+				</p>
+				<label class="label">IP</label>
+				<p class="control is-expanded">
+					<input
+						v-model="ipBan.ip"
+						class="input"
+						type="text"
+						placeholder="IP address (xxx.xxx.xxx.xxx)"
+					/>
+				</p>
+				<label class="label">Reason</label>
+				<p class="control is-expanded">
+					<input
+						v-model="ipBan.reason"
+						class="input"
+						type="text"
+						placeholder="Reason"
+					/>
+				</p>
+				<button class="button is-primary" @click="banIP()">
+					Ban IP
+				</button>
 			</div>
 		</div>
 	</div>
@@ -302,35 +301,7 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.night-mode {
-	.card {
-		background: var(--dark-grey-3);
-
-		p,
-		.label {
-			color: var(--light-grey-2);
-		}
-	}
-}
-
-.card {
-	display: flex;
-	flex-grow: 1;
-	flex-direction: column;
-	padding: 20px;
-	margin: 10px 0;
-	border-radius: @border-radius;
-	background-color: var(--white);
-	color: var(--dark-grey);
-	box-shadow: @box-shadow;
-
-	.card-header {
-		font-weight: 700;
-		padding-bottom: 10px;
-	}
-
-	.button.is-primary {
-		width: 100%;
-	}
+.card .button.is-primary {
+	width: 100%;
 }
 </style>

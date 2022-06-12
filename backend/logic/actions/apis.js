@@ -2,7 +2,7 @@ import config from "config";
 import async from "async";
 import axios from "axios";
 
-import { isAdminRequired } from "./hooks";
+import { isAdminRequired, isLoginRequired } from "./hooks";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -20,7 +20,7 @@ export default {
 	 * @param {Function} cb - callback
 	 * @returns {{status: string, data: object}} - returns an object
 	 */
-	searchYoutube(session, query, cb) {
+	searchYoutube: isLoginRequired(function searchYoutube(session, query, cb) {
 		return YouTubeModule.runJob("SEARCH", { query }, this)
 			.then(data => {
 				this.log("SUCCESS", "APIS_SEARCH_YOUTUBE", `Searching YouTube successful with query "${query}".`);
@@ -31,7 +31,7 @@ export default {
 				this.log("ERROR", "APIS_SEARCH_YOUTUBE", `Searching youtube failed with query "${query}". "${err}"`);
 				return cb({ status: "error", message: err });
 			});
-	},
+	}),
 
 	/**
 	 * Fetches a specific page of search results from Youtube's API
@@ -42,7 +42,7 @@ export default {
 	 * @param {Function} cb - callback
 	 * @returns {{status: string, data: object}} - returns an object
 	 */
-	searchYoutubeForPage(session, query, pageToken, cb) {
+	searchYoutubeForPage: isLoginRequired(function searchYoutubeForPage(session, query, pageToken, cb) {
 		return YouTubeModule.runJob("SEARCH", { query, pageToken }, this)
 			.then(data => {
 				this.log(
@@ -61,7 +61,7 @@ export default {
 				);
 				return cb({ status: "error", message: err });
 			});
-	},
+	}),
 
 	/**
 	 * Gets Discogs data
@@ -132,6 +132,8 @@ export default {
 			room.startsWith("edit-song.") ||
 			room.startsWith("view-report.") ||
 			room.startsWith("edit-user.") ||
+			room.startsWith("view-api-request.") ||
+			room.startsWith("view-youtube-video.") ||
 			room === "import-album" ||
 			room === "edit-songs"
 		) {
@@ -194,7 +196,10 @@ export default {
 			page === "playlists" ||
 			page === "users" ||
 			page === "statistics" ||
-			page === "punishments"
+			page === "punishments" ||
+			page === "youtube" ||
+			page === "youtubeVideos" ||
+			page === "import"
 		) {
 			WSModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session.socketId }).then(() => {
 				WSModule.runJob("SOCKET_JOIN_ROOM", {

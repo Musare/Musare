@@ -1,88 +1,86 @@
 <template>
-	<div>
+	<div class="admin-tab">
 		<page-metadata title="Admin | Playlists" />
-		<div class="admin-tab">
+		<div class="card tab-info">
+			<div class="info-row">
+				<h1>Playlist</h1>
+				<p>Manage playlists</p>
+			</div>
 			<div class="button-row">
 				<run-job-dropdown :jobs="jobs" />
 			</div>
-			<advanced-table
-				:column-default="columnDefault"
-				:columns="columns"
-				:filters="filters"
-				data-action="playlists.getData"
-				name="admin-playlists"
-				:events="events"
-			>
-				<template #column-options="slotProps">
-					<div class="row-options">
-						<button
-							class="button is-primary icon-with-button material-icons"
-							@click="
-								openModal({
-									modal: 'editPlaylist',
-									data: { playlistId: slotProps.item._id }
-								})
-							"
-							:disabled="slotProps.item.removed"
-							content="Edit Playlist"
-							v-tippy
-						>
-							edit
-						</button>
-					</div>
-				</template>
-				<template #column-displayName="slotProps">
-					<span :title="slotProps.item.displayName">{{
-						slotProps.item.displayName
-					}}</span>
-				</template>
-				<template #column-type="slotProps">
-					<span :title="slotProps.item.type">{{
-						slotProps.item.type
-					}}</span>
-				</template>
-				<template #column-privacy="slotProps">
-					<span :title="slotProps.item.privacy">{{
-						slotProps.item.privacy
-					}}</span>
-				</template>
-				<template #column-songsCount="slotProps">
-					<span :title="slotProps.item.songsCount">{{
-						slotProps.item.songsCount
-					}}</span>
-				</template>
-				<template #column-totalLength="slotProps">
-					<span :title="formatTimeLong(slotProps.item.totalLength)">{{
-						formatTimeLong(slotProps.item.totalLength)
-					}}</span>
-				</template>
-				<template #column-createdBy="slotProps">
-					<span v-if="slotProps.item.createdBy === 'Musare'"
-						>Musare</span
-					>
-					<user-id-to-username
-						v-else
-						:user-id="slotProps.item.createdBy"
-						:link="true"
-					/>
-				</template>
-				<template #column-createdAt="slotProps">
-					<span :title="new Date(slotProps.item.createdAt)">{{
-						getDateFormatted(slotProps.item.createdAt)
-					}}</span>
-				</template>
-				<template #column-createdFor="slotProps">
-					<span :title="slotProps.item.createdFor">{{
-						slotProps.item.createdFor
-					}}</span>
-				</template>
-				<template #column-_id="slotProps">
-					<span :title="slotProps.item._id">{{
-						slotProps.item._id
-					}}</span>
-				</template>
-			</advanced-table>
 		</div>
+		<advanced-table
+			:column-default="columnDefault"
+			:columns="columns"
+			:filters="filters"
+			data-action="playlists.getData"
+			name="admin-playlists"
+			:events="events"
+		>
+			<template #column-options="slotProps">
+				<div class="row-options">
+					<button
+						class="button is-primary icon-with-button material-icons"
+						@click="
+							openModal({
+								modal: 'editPlaylist',
+								data: { playlistId: slotProps.item._id }
+							})
+						"
+						:disabled="slotProps.item.removed"
+						content="Edit Playlist"
+						v-tippy
+					>
+						edit
+					</button>
+				</div>
+			</template>
+			<template #column-displayName="slotProps">
+				<span :title="slotProps.item.displayName">{{
+					slotProps.item.displayName
+				}}</span>
+			</template>
+			<template #column-type="slotProps">
+				<span :title="slotProps.item.type">{{
+					slotProps.item.type
+				}}</span>
+			</template>
+			<template #column-privacy="slotProps">
+				<span :title="slotProps.item.privacy">{{
+					slotProps.item.privacy
+				}}</span>
+			</template>
+			<template #column-songsCount="slotProps">
+				<span :title="slotProps.item.songsCount">{{
+					slotProps.item.songsCount
+				}}</span>
+			</template>
+			<template #column-totalLength="slotProps">
+				<span :title="formatTimeLong(slotProps.item.totalLength)">{{
+					formatTimeLong(slotProps.item.totalLength)
+				}}</span>
+			</template>
+			<template #column-createdBy="slotProps">
+				<span v-if="slotProps.item.createdBy === 'Musare'">Musare</span>
+				<user-link v-else :user-id="slotProps.item.createdBy" />
+			</template>
+			<template #column-createdAt="slotProps">
+				<span :title="new Date(slotProps.item.createdAt)">{{
+					getDateFormatted(slotProps.item.createdAt)
+				}}</span>
+			</template>
+			<template #column-createdFor="slotProps">
+				<span :title="slotProps.item.createdFor">{{
+					slotProps.item.createdFor
+				}}</span>
+			</template>
+			<template #column-_id="slotProps">
+				<span :title="slotProps.item._id">{{
+					slotProps.item._id
+				}}</span>
+			</template>
+		</advanced-table>
 	</div>
 </template>
 

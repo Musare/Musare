@@ -8,7 +8,6 @@
 			}"
 		>
 			<draggable
-				tag="transition-group"
 				:component-data="{
 					name: !drag ? 'draggable-list-transition' : null
 				}"

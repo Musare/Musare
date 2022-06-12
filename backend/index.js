@@ -6,7 +6,7 @@ import fs from "fs";
 
 import package_json from "./package.json" assert { type: "json" };
 
-const REQUIRED_CONFIG_VERSION = 9;
+const REQUIRED_CONFIG_VERSION = 10;
 
 // eslint-disable-next-line
 Array.prototype.remove = function (item) {
@@ -72,17 +72,17 @@ if (config.debug && config.debug.traceUnhandledPromises === true) {
 class JobManager {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
-		this.runningJobs = {};
+		this.jobs = {};
 	}
 
 	/**
-	 * Adds a job to the list of running jobs
+	 * Adds a job to the list of jobs
 	 *
 	 * @param {object} job - the job object
 	 */
 	addJob(job) {
-		if (!this.runningJobs[job.module.name]) this.runningJobs[job.module.name] = {};
-		this.runningJobs[job.module.name][job.toString()] = job;
+		if (!this.jobs[job.module.name]) this.jobs[job.module.name] = {};
+		this.jobs[job.module.name][job.toString()] = job;
 	}
 
 	/**
@@ -91,8 +91,8 @@ class JobManager {
 	 * @param {object} job - the job object
 	 */
 	removeJob(job) {
-		if (!this.runningJobs[job.module.name]) this.runningJobs[job.module.name] = {};
-		delete this.runningJobs[job.module.name][job.toString()];
+		if (!this.jobs[job.module.name]) this.jobs[job.module.name] = {};
+		delete this.jobs[job.module.name][job.toString()];
 	}
 
 	/**
@@ -103,8 +103,8 @@ class JobManager {
 	 */
 	getJob(uuid) {
 		let job = null;
-		Object.keys(this.runningJobs).forEach(moduleName => {
-			if (this.runningJobs[moduleName][uuid]) job = this.runningJobs[moduleName][uuid];
+		Object.keys(this.jobs).forEach(moduleName => {
+			if (this.jobs[moduleName][uuid]) job = this.jobs[moduleName][uuid];
 		});
 		return job;
 	}
@@ -258,6 +258,7 @@ if (!config.get("migration")) {
 	moduleManager.addModule("punishments");
 	moduleManager.addModule("songs");
 	moduleManager.addModule("stations");
+	moduleManager.addModule("media");
 	moduleManager.addModule("tasks");
 	moduleManager.addModule("utils");
 	moduleManager.addModule("youtube");
@@ -297,8 +298,43 @@ function printTask(task, layer) {
 	});
 }
 
-process.stdin.on("data", data => {
-	const command = data.toString().replace(/\r?\n|\r/g, "");
+import * as readline from 'node:readline';
+
+var rl = readline.createInterface({
+	input: process.stdin,
+	output: process.stdout,
+	completer: function(command) {
+		const parts = command.split(" ");
+		const commands = ["version", "lockdown", "status", "running ", "queued ", "paused ", "stats ", "jobinfo ", "runjob ", "eval "];
+		if (parts.length === 1) {
+			const hits = commands.filter(c => c.startsWith(parts[0]));
+			return [hits.length ? hits : commands, command];
+		} else if (parts.length === 2) {
+			if (["queued", "running", "paused", "runjob", "stats"].indexOf(parts[0]) !== -1) {
+				const modules = Object.keys(moduleManager.modules);
+				const hits = modules.filter(module => module.startsWith(parts[1])).map(module => `${parts[0]} ${module}${parts[0] === "runjob" ? " " : ""}`);
+				return  [hits.length ? hits : modules, command];
+			} else {
+				return [];
+			}
+		} else if (parts.length === 3) {
+			if (parts[0] === "runjob") {
+				const modules = Object.keys(moduleManager.modules);
+				if (modules.indexOf(parts[1]) !== -1) {
+					const jobs = moduleManager.modules[parts[1]].jobNames;
+					const hits = jobs.filter(job => job.startsWith(parts[2])).map(job => `${parts[0]} ${parts[1]} ${job} `);
+					return  [hits.length ? hits : jobs, command];
+				}
+			} else {
+				return [];
+			}
+		} else {
+			return [];
+		}
+	}
+});
+
+rl.on("line",function(command) {
 	if (command === "version") {
 		printVersion();
 	}
@@ -371,7 +407,7 @@ process.stdin.on("data", data => {
 		const parts = command.split(" ");
 		const module = parts[1];
 		const jobName = parts[2];
-		const payload = JSON.parse(parts[3]);
+		const payload = parts.length < 4 ? {} : JSON.parse(parts[3]);
 
 		moduleManager.modules[module]
 			.runJob(jobName, payload)
@@ -388,6 +424,12 @@ process.stdin.on("data", data => {
 		// eslint-disable-next-line no-eval
 		const response = eval(evalCommand);
 		console.log(`Eval response: `, response);
+	}
+	if (command.startsWith("debug")) {
+		moduleManager.modules["youtube"].apiCalls.forEach(apiCall => {
+			// console.log(`${apiCall.date.toISOString()} - ${apiCall.url} - ${apiCall.quotaCost} - ${JSON.stringify(apiCall.params)}`);
+			console.log(apiCall);
+		});
 	}
 });
 

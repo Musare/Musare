@@ -12,6 +12,7 @@ export default {
 	},
 	getters: {},
 	actions: {
+		init: ({ commit }, data) => commit("init", data),
 		showDiscogsTab: ({ commit }, tab) => commit("showDiscogsTab", tab),
 		selectDiscogsAlbum: ({ commit }, discogsAlbum) =>
 			commit("selectDiscogsAlbum", discogsAlbum),
@@ -31,6 +32,10 @@ export default {
 			commit("updatePlaylistSong", updatedSong)
 	},
 	mutations: {
+		init(state, { songs }) {
+			state.originalPlaylistSongs = JSON.parse(JSON.stringify(songs));
+			state.playlistSongs = JSON.parse(JSON.stringify(songs));
+		},
 		showDiscogsTab(state, tab) {
 			state.discogsTab = tab;
 		},

@@ -559,7 +559,11 @@
 			<main-footer />
 		</div>
 
-		<floating-box id="player-debug-box" ref="playerDebugBox">
+		<floating-box
+			id="player-debug-box"
+			ref="playerDebugBox"
+			title="Station Debug"
+		>
 			<template #body>
 				<span><b>No song</b>: {{ noSong }}</span>
 				<span><b>Song id</b>: {{ currentSong._id }}</span>
@@ -645,6 +649,7 @@
 		<floating-box
 			id="keyboardShortcutsHelper"
 			ref="keyboardShortcutsHelper"
+			title="Station Keyboard Shortcuts"
 		>
 			<template #body>
 				<div>
@@ -978,7 +983,7 @@ export default {
 			return true;
 		});
 
-		this.socket.on("event:song.liked", res => {
+		this.socket.on("event:ratings.liked", res => {
 			if (!this.noSong) {
 				if (res.data.youtubeId === this.currentSong.youtubeId) {
 					this.updateCurrentSongRatings(res.data);
@@ -986,7 +991,7 @@ export default {
 			}
 		});
 
-		this.socket.on("event:song.disliked", res => {
+		this.socket.on("event:ratings.disliked", res => {
 			if (!this.noSong) {
 				if (res.data.youtubeId === this.currentSong.youtubeId) {
 					this.updateCurrentSongRatings(res.data);
@@ -994,7 +999,7 @@ export default {
 			}
 		});
 
-		this.socket.on("event:song.unliked", res => {
+		this.socket.on("event:ratings.unliked", res => {
 			if (!this.noSong) {
 				if (res.data.youtubeId === this.currentSong.youtubeId) {
 					this.updateCurrentSongRatings(res.data);
@@ -1002,7 +1007,7 @@ export default {
 			}
 		});
 
-		this.socket.on("event:song.undisliked", res => {
+		this.socket.on("event:ratings.undisliked", res => {
 			if (!this.noSong) {
 				if (res.data.youtubeId === this.currentSong.youtubeId) {
 					this.updateCurrentSongRatings(res.data);
@@ -1010,7 +1015,7 @@ export default {
 			}
 		});
 
-		this.socket.on("event:song.ratings.updated", res => {
+		this.socket.on("event:ratings.updated", res => {
 			if (!this.noSong) {
 				if (res.data.youtubeId === this.currentSong.youtubeId) {
 					this.updateOwnCurrentSongRatings(res.data);
@@ -1364,10 +1369,12 @@ export default {
 				);
 
 				this.socket.dispatch(
-					"songs.getSongRatings",
-					currentSong._id,
+					"media.getRatings",
+					currentSong.youtubeId,
 					res => {
-						if (currentSong._id === this.currentSong._id) {
+						if (
+							currentSong.youtubeId === this.currentSong.youtubeId
+						) {
 							const { likes, dislikes } = res.data;
 							this.updateCurrentSongRatings({ likes, dislikes });
 						}
@@ -1376,7 +1383,7 @@ export default {
 
 				if (this.loggedIn) {
 					this.socket.dispatch(
-						"songs.getOwnSongRatings",
+						"media.getOwnRatings",
 						currentSong.youtubeId,
 						res => {
 							console.log("getOwnSongRatings", res);
@@ -1389,10 +1396,10 @@ export default {
 
 								if (
 									this.autoSkipDisliked &&
-									res.data.disliked === true
+									res.data.disliked === true &&
+									!(this.localPaused || this.stationPaused)
 								) {
-									this.voteSkipStation();
-									new Toast(
+									this.voteSkipStation(
 										"Automatically voted to skip disliked song."
 									);
 								}
@@ -1457,12 +1464,12 @@ export default {
 							console.log("error with youtube video", err);
 
 							if (err.data === 150 && this.loggedIn) {
-								new Toast(
-									"Automatically voted to skip as this song isn't available for you."
-								);
-
-								// automatically vote to skip
-								this.voteSkipStation();
+								if (!(this.localPaused || this.stationPaused)) {
+									// automatically vote to skip
+									this.voteSkipStation(
+										"Automatically voted to skip as this song isn't available for you."
+									);
+								}
 
 								// persistent message while song is playing
 								const persistentToast = new Toast({
@@ -1732,7 +1739,7 @@ export default {
 				}
 			);
 		},
-		voteSkipStation() {
+		voteSkipStation(message) {
 			this.socket.dispatch(
 				"stations.voteSkip",
 				this.station._id,
@@ -1741,7 +1748,8 @@ export default {
 						new Toast(`Error: ${data.message}`);
 					else
 						new Toast(
-							"Successfully voted to skip the current song."
+							message ||
+								"Successfully voted to skip the current song."
 						);
 				}
 			);
@@ -1793,7 +1801,7 @@ export default {
 		toggleLike() {
 			if (this.currentSong.liked)
 				this.socket.dispatch(
-					"songs.unlike",
+					"media.unlike",
 					this.currentSong.youtubeId,
 					res => {
 						if (res.status !== "success")
@@ -1802,7 +1810,7 @@ export default {
 				);
 			else
 				this.socket.dispatch(
-					"songs.like",
+					"media.like",
 					this.currentSong.youtubeId,
 					res => {
 						if (res.status !== "success")
@@ -1813,7 +1821,7 @@ export default {
 		toggleDislike() {
 			if (this.currentSong.disliked)
 				return this.socket.dispatch(
-					"songs.undislike",
+					"media.undislike",
 					this.currentSong.youtubeId,
 					res => {
 						if (res.status !== "success")
@@ -1822,7 +1830,7 @@ export default {
 				);
 
 			return this.socket.dispatch(
-				"songs.dislike",
+				"media.dislike",
 				this.currentSong.youtubeId,
 				res => {
 					if (res.status !== "success")

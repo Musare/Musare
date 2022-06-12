@@ -148,7 +148,7 @@ export default {
 	methods: {
 		init() {
 			this.socket.dispatch(
-				"users.findByUsername",
+				"users.getBasicUser",
 				this.$route.params.username,
 				res => {
 					if (res.status === "error") this.$router.push("/404");

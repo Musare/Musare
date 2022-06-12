@@ -167,7 +167,11 @@ const router = createRouter({
 			children: [
 				{
 					path: "songs",
-					component: () => import("@/pages/Admin/Songs.vue")
+					component: () => import("@/pages/Admin/Songs/index.vue")
+				},
+				{
+					path: "songs/import",
+					component: () => import("@/pages/Admin/Songs/Import.vue")
 				},
 				{
 					path: "reports",
@@ -191,8 +195,9 @@ const router = createRouter({
 						import("@/pages/Admin/Users/DataRequests.vue")
 				},
 				{
-					path: "punishments",
-					component: () => import("@/pages/Admin/Punishments.vue")
+					path: "users/punishments",
+					component: () =>
+						import("@/pages/Admin/Users/Punishments.vue")
 				},
 				{
 					path: "news",
@@ -201,6 +206,14 @@ const router = createRouter({
 				{
 					path: "statistics",
 					component: () => import("@/pages/Admin/Statistics.vue")
+				},
+				{
+					path: "youtube",
+					component: () => import("@/pages/Admin/YouTube/index.vue")
+				},
+				{
+					path: "youtube/videos",
+					component: () => import("@/pages/Admin/YouTube/Videos.vue")
 				}
 			],
 			meta: {

@@ -120,7 +120,7 @@ getContainerId()
     if [[ ${DOCKER_COMMAND} == "docker" ]]; then
         containerId=$(${dockerCompose} ps -q "${1}")
     else
-        containerId=$(${dockerCompose} ps | awk "/${1}/ {print \$1}")
+        containerId=$(${dockerCompose} ps | sed '0,/CONTAINER/d' | awk "/${1}/ {print \$1;exit}")
     fi
     echo "${containerId}"
 }
