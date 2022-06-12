@@ -265,8 +265,7 @@ export default {
 			createImport: {
 				stage: 2,
 				importMethod: "youtube",
-				youtubeUrl:
-					"https://www.youtube.com/playlist?list=PL3-sRm8xAzY9gpXTMGVHJWy_FMD67NBed",
+				youtubeUrl: "",
 				isImportingOnlyMusic: false
 			},
 			columnDefault: {
@@ -539,8 +538,7 @@ export default {
 			this.createImport = {
 				stage: 2,
 				importMethod: "youtube",
-				youtubeUrl:
-					"https://www.youtube.com/channel/UCio_FVgKVgqcHrRiXDpnqbw",
+				youtubeUrl: "",
 				isImportingOnlyMusic: false
 			};
 		},
