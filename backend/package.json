@@ -43,6 +43,8 @@
     "eslint-plugin-jsdoc": "^39.3.2",
     "eslint-plugin-prettier": "^4.0.0",
     "prettier": "2.6.2",
-    "trace-unhandled": "^2.0.1"
+    "trace-unhandled": "^2.0.1",
+    "ts-node": "^10.8.1",
+    "typescript": "^4.7.3"
   }
 }

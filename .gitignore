@@ -21,6 +21,7 @@ lerna-debug.log
 # Backend
 backend/node_modules/
 backend/config/default.json
+backend/build
 
 # Frontend
 frontend/bundle-stats.json
