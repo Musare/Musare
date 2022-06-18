@@ -155,7 +155,10 @@ export default {
 	server: {
 		host: "0.0.0.0",
 		port: config.get("devServer.port"),
-		strictPort: true
+		strictPort: true,
+		hmr: {
+			clientPort: config.get("devServer.clientPort")
+		}
 	},
 	build: {
 		outDir: "../build"

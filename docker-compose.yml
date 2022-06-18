@@ -23,14 +23,15 @@ services:
       args:
         FRONTEND_MODE: "${FRONTEND_MODE:-prod}"
     restart: ${RESTART_POLICY:-unless-stopped}
+    user: root
     ports:
       - "${FRONTEND_HOST:-0.0.0.0}:${FRONTEND_PORT:-80}:80"
     volumes:
       - ./.git:/opt/app/.parent_git:ro
-      - /opt/app/node_modules
       - ./frontend/dist/config:/opt/app/dist/config
     environment:
       - FRONTEND_MODE=${FRONTEND_MODE:-prod}
+      - CONTAINER_MODE=${CONTAINER_MODE:-prod}
     links:
       - backend
 

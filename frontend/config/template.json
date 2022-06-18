@@ -9,7 +9,7 @@
 	},
 	"devServer": {
 		"port": "81",
-		"webSocketURL": "ws://localhost/ws"
+		"clientPort": "80"
 	},
 	"frontendDomain": "http://localhost",
 	"mode": "development",
