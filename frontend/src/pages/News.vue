@@ -39,7 +39,7 @@
 import { formatDistance } from "date-fns";
 import { mapGetters } from "vuex";
 import { marked } from "marked";
-import { sanitize } from "dompurify";
+import DOMPurify from "dompurify";
 
 import ws from "@/ws";
 
@@ -93,7 +93,7 @@ export default {
 	},
 	methods: {
 		marked,
-		sanitize,
+		sanitize: DOMPurify.sanitize,
 		formatDistance,
 		init() {
 			this.socket.dispatch("news.getPublished", res => {

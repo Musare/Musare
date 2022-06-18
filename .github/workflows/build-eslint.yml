@@ -32,7 +32,7 @@ jobs:
               run: |
                   cp .env.example .env
                   cp backend/config/template.json backend/config/default.json
-                  cp frontend/dist/config/template.json frontend/dist/config/default.json
+                  cp frontend/config/template.json frontend/config/default.json
                   ./musare.sh build
             - name: Start Musare
               run: ./musare.sh start
