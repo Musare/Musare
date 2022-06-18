@@ -11,9 +11,11 @@ import store from "./store";
 
 import AppComponent from "./App.vue";
 
+import defaultConfigURL from "../config/default.json?url";
+
 const REQUIRED_CONFIG_VERSION = 11;
 
-lofig.folder = "../config/default.json";
+lofig.folder = defaultConfigURL;
 
 const handleMetadata = attrs => {
 	lofig.get("siteSettings.sitename").then(siteName => {
@@ -61,16 +63,14 @@ app.component("PageMetadata", {
 	}
 });
 
-const globalComponents = require.context(
-	"@/components/global/",
-	true,
-	/\.vue$/i
+const globalComponents = import.meta.glob("@/components/global/*.vue");
+Object.entries(globalComponents).forEach(
+	async ([componentFilePath, definition]) => {
+		const componentName = componentFilePath.split("/").pop().split(".")[0];
+		const component = await definition();
+		app.component(componentName, component.default);
+	}
 );
-globalComponents.keys().forEach(componentFilePath => {
-	const componentName = componentFilePath.split("/").pop().split(".")[0];
-	const component = globalComponents(componentFilePath);
-	app.component(componentName, component.default || component);
-});
 
 app.directive("scroll", {
 	mounted(el, binding) {
@@ -274,7 +274,7 @@ router.beforeEach((to, from, next) => {
 
 app.use(router);
 
-lofig.folder = "/config/default.json";
+lofig.folder = defaultConfigURL;
 
 (async () => {
 	lofig.fetchConfig().then(config => {

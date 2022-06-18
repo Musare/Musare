@@ -107,7 +107,7 @@ import ws from "@/ws";
 
 import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 
-import ProfilePicture from "@/components/ProfilePicture";
+import ProfilePicture from "@/components/ProfilePicture.vue";
 
 import RecentActivity from "./Tabs/RecentActivity.vue";
 import Playlists from "./Tabs/Playlists.vue";
