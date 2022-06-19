@@ -259,7 +259,7 @@ import Settings from "./Tabs/Settings.vue";
 import AddSongs from "./Tabs/AddSongs.vue";
 import ImportPlaylists from "./Tabs/ImportPlaylists.vue";
 
-import utils from "../../../../js/utils";
+import utils from "@/utils";
 
 export default {
 	components: {

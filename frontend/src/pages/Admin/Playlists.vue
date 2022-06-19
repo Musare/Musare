@@ -90,7 +90,7 @@ import { mapActions } from "vuex";
 import AdvancedTable from "@/components/AdvancedTable.vue";
 import RunJobDropdown from "@/components/RunJobDropdown.vue";
 
-import utils from "../../../js/utils";
+import utils from "@/utils";
 
 export default {
 	components: {

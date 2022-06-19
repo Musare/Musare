@@ -14,7 +14,7 @@
   "scripts": {
     "lint": "npx eslint src --ext .js,.vue",
     "dev": "npx vite",
-    "prod": "npx vite build"
+    "prod": "npx vite build --emptyOutDir"
   },
   "devDependencies": {
     "@vue/compiler-sfc": "^3.2.36",

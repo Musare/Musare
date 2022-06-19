@@ -171,7 +171,7 @@ import { mapActions, mapState } from "vuex";
 import { formatDistance, parseISO } from "date-fns";
 
 import AddToPlaylistDropdown from "./AddToPlaylistDropdown.vue";
-import utils from "../../js/utils";
+import utils from "@/utils";
 
 export default {
 	components: { AddToPlaylistDropdown },
