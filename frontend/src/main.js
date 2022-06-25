@@ -13,7 +13,7 @@ import AppComponent from "./App.vue";
 
 import defaultConfigURL from "../config/default.json?url";
 
-const REQUIRED_CONFIG_VERSION = 11;
+const REQUIRED_CONFIG_VERSION = 12;
 
 lofig.folder = defaultConfigURL;
 
