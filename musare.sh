@@ -245,8 +245,8 @@ case $1 in
         fi
         ;;
 
-    eslint)
-        echo -e "${CYAN}Musare | ESLint${NC}"
+    lint|eslint)
+        echo -e "${CYAN}Musare | Lint${NC}"
         fix=""
         if [[ $2 == "fix" || $3 == "fix" || $2 == "--fix" || $3 == "--fix" ]]; then
             fix="--fix"
@@ -261,19 +261,25 @@ case $1 in
                 ${dockerCompose} exec -T backend npx eslint logic $fix
                 exitValue=$?
                 ;;
+            docs)
+                ${docker} run -v "${scriptLocation}":/workdir ghcr.io/igorshubovych/markdownlint-cli:latest ".wiki" "*.md" $fix
+                exitValue=$?
+                ;;
             ""|fix|--fix)
                 ${dockerCompose} exec -T frontend npx eslint src --ext .js,.vue $fix
                 frontendExitValue=$?
                 ${dockerCompose} exec -T backend npx eslint logic $fix
                 backendExitValue=$?
-                if [[ ${frontendExitValue} -gt 0 || ${backendExitValue} -gt 0 ]]; then
+                ${docker} run -v "${scriptLocation}":/workdir ghcr.io/igorshubovych/markdownlint-cli:latest ".wiki" "*.md" $fix
+                docsExitValue=$?
+                if [[ ${frontendExitValue} -gt 0 || ${backendExitValue} -gt 0 || ${docsExitValue} -gt 0 ]]; then
                     exitValue=1
                 else
                     exitValue=0
                 fi
                 ;;
             *)
-                echo -e "${RED}Invalid service $2\n${YELLOW}Usage: $(basename "$0") eslint [backend, frontend] [fix]${NC}"
+                echo -e "${RED}Invalid service $2\n${YELLOW}Usage: $(basename "$0") lint [backend, frontend, docs] [fix]${NC}"
                 exitValue=1
                 ;;
         esac
@@ -422,7 +428,7 @@ case $1 in
         echo -e "${YELLOW}update - Update Musare${NC}"
         echo -e "${YELLOW}attach [backend,mongo,redis] - Attach to backend service, mongo or redis shell${NC}"
         echo -e "${YELLOW}build - Build services${NC}"
-        echo -e "${YELLOW}eslint - Run eslint on frontend and/or backend${NC}"
+        echo -e "${YELLOW}lint - Run lint on frontend, backend and/or docs${NC}"
         echo -e "${YELLOW}backup - Backup database data to file${NC}"
         echo -e "${YELLOW}restore - Restore database data from backup file${NC}"
         echo -e "${YELLOW}reset - Reset service data${NC}"
@@ -441,7 +447,7 @@ case $1 in
         echo -e "${YELLOW}update - Update Musare${NC}"
         echo -e "${YELLOW}attach [backend,mongo,redis] - Attach to backend service, mongo or redis shell${NC}"
         echo -e "${YELLOW}build - Build services${NC}"
-        echo -e "${YELLOW}eslint - Run eslint on frontend and/or backend${NC}"
+        echo -e "${YELLOW}lint - Run lint on frontend, backend and/or docs${NC}"
         echo -e "${YELLOW}backup - Backup database data to file${NC}"
         echo -e "${YELLOW}restore - Restore database data from backup file${NC}"
         echo -e "${YELLOW}reset - Reset service data${NC}"

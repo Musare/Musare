@@ -1,4 +1,4 @@
-name: Musare Build and ESLint
+name: Musare Build and Lint
 
 on: [ push, pull_request, workflow_dispatch ]
 
@@ -24,7 +24,7 @@ env:
     REDIS_DATA_LOCATION: .redis
 
 jobs:
-    build-eslint:
+    build-lint:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v2
@@ -36,7 +36,9 @@ jobs:
                   ./musare.sh build
             - name: Start Musare
               run: ./musare.sh start
-            - name: ESlint Backend
-              run: ./musare.sh eslint backend
-            - name: ESLint Frontend
-              run: ./musare.sh eslint frontend
+            - name: Backend Lint
+              run: ./musare.sh lint backend
+            - name: Frontend Lint
+              run: ./musare.sh lint frontend
+            - name: Docs Lint
+              run: ./musare.sh lint docs

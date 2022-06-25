@@ -20,7 +20,7 @@ Linux (Bash):
 | `update` | `[auto]` | Update Musare. When auto is specified the update will be cancelled if there are any changes requiring manual intervention, allowing you to run this unattended. |
 | `attach` | `<backend,mongo,redis>` | Attach to backend server, mongodb or redis shell. |
 | `build` | `[frontend backend]` | Build service(s). |
-| `eslint` | `[frontend backend] [fix]` | Run eslint on frontend and/or backend. Specify fix to auto fix issues where possible. |
+| `lint` | `[frontend backend docs] [fix]` | Run lint on frontend, backend and/or docs. Specify fix to auto fix issues where possible. |
 | `backup` | | Backup database data to file. Configured in .env file. |
 | `restore` | `[file]` | Restore database from file. If file is not specified you will be prompted. |
 | `reset` | `[frontend backend redis mongo]` | Reset all data for service(s). |
