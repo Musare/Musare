@@ -3,6 +3,7 @@ FROM node:16.15 AS musare_frontend
 ARG FRONTEND_MODE=prod
 ENV FRONTEND_MODE=${FRONTEND_MODE}
 ENV SUPPRESS_NO_CONFIG_WARNING=1
+ENV NODE_CONFIG_DIR=./dist/config
 
 RUN apt-get update
 RUN apt-get install nginx -y
