@@ -35,7 +35,7 @@ export default {
 									domain = ` domain=${cookie.domain};`;
 
 								document.cookie = `${cookie.SIDname}=${res.SID
-									}; expires=${date.toGMTString()}; ${domain}${secure}path=/`;
+									}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
 
 								return resolve({
 									status: "success",
@@ -71,7 +71,7 @@ export default {
 							domain = ` domain=${cookie.domain};`;
 
 						document.cookie = `${cookie.SIDname}=${res.data.SID
-							}; expires=${date.toGMTString()}; ${domain}${secure}path=/`;
+							}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
 
 						return resolve({ status: "success" });
 					});
