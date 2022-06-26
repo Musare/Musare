@@ -16,7 +16,7 @@ import { mapModalComponents } from "@/vuex_helpers";
 
 export default {
 	computed: {
-		...mapModalComponents("./components/modals", {
+		...mapModalComponents("components/modals", {
 			editUser: "EditUser.vue",
 			login: "Login.vue",
 			register: "Register.vue",

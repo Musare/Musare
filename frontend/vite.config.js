@@ -1,5 +1,6 @@
 import path from "path";
 import vue from "@vitejs/plugin-vue";
+import dynamicImport from "vite-plugin-dynamic-import";
 import config from "config";
 import fs from "fs";
 
@@ -156,7 +157,7 @@ export default {
 			debug.git.latestCommitShort
 		)
 	},
-	plugins: [vue(), htmlPlugin()],
+	plugins: [vue(), htmlPlugin(), dynamicImport()],
 	css: {
 		preprocessorOptions: {
 			less: {
