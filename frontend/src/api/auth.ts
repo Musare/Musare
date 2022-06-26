@@ -23,7 +23,7 @@ export default {
 								const date = new Date();
 								date.setTime(
 									new Date().getTime() +
-										2 * 365 * 24 * 60 * 60 * 1000
+									2 * 365 * 24 * 60 * 60 * 1000
 								);
 
 								const secure = cookie.secure
@@ -34,9 +34,8 @@ export default {
 								if (cookie.domain !== "localhost")
 									domain = ` domain=${cookie.domain};`;
 
-								document.cookie = `${cookie.SIDname}=${
-									res.SID
-								}; expires=${date.toGMTString()}; ${domain}${secure}path=/`;
+								document.cookie = `${cookie.SIDname}=${res.SID
+									}; expires=${date.toGMTString()}; ${domain}${secure}path=/`;
 
 								return resolve({
 									status: "success",
@@ -71,9 +70,8 @@ export default {
 						if (cookie.domain !== "localhost")
 							domain = ` domain=${cookie.domain};`;
 
-						document.cookie = `${cookie.SIDname}=${
-							res.data.SID
-						}; expires=${date.toGMTString()}; ${domain}${secure}path=/`;
+						document.cookie = `${cookie.SIDname}=${res.data.SID
+							}; expires=${date.toGMTString()}; ${domain}${secure}path=/`;
 
 						return resolve({ status: "success" });
 					});
