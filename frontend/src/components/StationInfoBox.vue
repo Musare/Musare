@@ -1,3 +1,64 @@
+<script setup lang="ts">
+import { computed } from "vue";
+import { useStore } from "vuex";
+import Toast from "toasters";
+
+const store = useStore();
+
+const props = defineProps({
+	station: { type: Object, default: null },
+	stationPaused: { type: Boolean, default: null },
+	showManageStation: { type: Boolean, default: false },
+	showGoToStation: { type: Boolean, default: false }
+});
+
+const loggedIn = computed(() => store.state.user.auth.loggedIn);
+const userId = computed(() => store.state.user.auth.userId);
+const role = computed(() => store.state.user.auth.role);
+const { socket } = store.state.websockets;
+
+const isOwnerOnly = () =>
+	loggedIn.value && userId.value === props.station.owner;
+const isAdminOnly = () => loggedIn.value && role.value === "admin";
+const isOwnerOrAdmin = () => isOwnerOnly() || isAdminOnly();
+
+const resumeStation = () => {
+	socket.dispatch("stations.resume", props.station._id, data => {
+		if (data.status !== "success") new Toast(`Error: ${data.message}`);
+		else new Toast("Successfully resumed the station.");
+	});
+};
+const pauseStation = () => {
+	socket.dispatch("stations.pause", props.station._id, data => {
+		if (data.status !== "success") new Toast(`Error: ${data.message}`);
+		else new Toast("Successfully paused the station.");
+	});
+};
+const skipStation = () => {
+	socket.dispatch("stations.forceSkip", props.station._id, data => {
+		if (data.status !== "success") new Toast(`Error: ${data.message}`);
+		else new Toast("Successfully skipped the station's current song.");
+	});
+};
+const favoriteStation = () => {
+	socket.dispatch("stations.favoriteStation", props.station._id, res => {
+		if (res.status === "success") {
+			new Toast("Successfully favorited station.");
+		} else new Toast(res.message);
+	});
+};
+const unfavoriteStation = () => {
+	socket.dispatch("stations.unfavoriteStation", props.station._id, res => {
+		if (res.status === "success") {
+			new Toast("Successfully unfavorited station.");
+		} else new Toast(res.message);
+	});
+};
+
+const openModal = payload =>
+	store.dispatch("modalVisibility/openModal", payload);
+</script>
+
 <template>
 	<div class="about-station-container">
 		<div class="station-info">
@@ -93,96 +154,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapGetters, mapState, mapActions } from "vuex";
-import Toast from "toasters";
-
-export default {
-	props: {
-		station: { type: Object, default: null },
-		stationPaused: { type: Boolean, default: null },
-		showManageStation: { type: Boolean, default: false },
-		showGoToStation: { type: Boolean, default: false }
-	},
-	data() {
-		return {};
-	},
-	computed: {
-		...mapState({
-			loggedIn: state => state.user.auth.loggedIn,
-			userId: state => state.user.auth.userId,
-			role: state => state.user.auth.role
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	mounted() {},
-	methods: {
-		isOwnerOnly() {
-			return this.loggedIn && this.userId === this.station.owner;
-		},
-		isAdminOnly() {
-			return this.loggedIn && this.role === "admin";
-		},
-		isOwnerOrAdmin() {
-			return this.isOwnerOnly() || this.isAdminOnly();
-		},
-		resumeStation() {
-			this.socket.dispatch("stations.resume", this.station._id, data => {
-				if (data.status !== "success")
-					new Toast(`Error: ${data.message}`);
-				else new Toast("Successfully resumed the station.");
-			});
-		},
-		pauseStation() {
-			this.socket.dispatch("stations.pause", this.station._id, data => {
-				if (data.status !== "success")
-					new Toast(`Error: ${data.message}`);
-				else new Toast("Successfully paused the station.");
-			});
-		},
-		skipStation() {
-			this.socket.dispatch(
-				"stations.forceSkip",
-				this.station._id,
-				data => {
-					if (data.status !== "success")
-						new Toast(`Error: ${data.message}`);
-					else
-						new Toast(
-							"Successfully skipped the station's current song."
-						);
-				}
-			);
-		},
-		favoriteStation() {
-			this.socket.dispatch(
-				"stations.favoriteStation",
-				this.station._id,
-				res => {
-					if (res.status === "success") {
-						new Toast("Successfully favorited station.");
-					} else new Toast(res.message);
-				}
-			);
-		},
-		unfavoriteStation() {
-			this.socket.dispatch(
-				"stations.unfavoriteStation",
-				this.station._id,
-				res => {
-					if (res.status === "success") {
-						new Toast("Successfully unfavorited station.");
-					} else new Toast(res.message);
-				}
-			);
-		},
-		...mapActions("modalVisibility", ["openModal"])
-	}
-};
-</script>
 
 <style lang="less">
 .night-mode {
