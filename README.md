@@ -2,7 +2,8 @@
 
 # Musare
 
-Musare is an open-source collaborative music listening and catalogue curation application. Currently supporting YouTube based content.
+Musare is an open-source collaborative music listening and catalogue curation
+application. Currently supporting YouTube based content.
 
 A production demonstration instance of Musare can be found at [demo.musare.com](https://demo.musare.com).
 
@@ -35,9 +36,11 @@ A production demonstration instance of Musare can be found at [demo.musare.com](
     - Configurable access level and per user request limit
     - Automatically request songs from selected playlists
     - Ability to search for songs from verified catalogue or YouTube videos
-  - Autofill - Toggleable module to allow owners to configure automatic filling of the queue from selected playlists
+  - Autofill - Toggleable module to allow owners to configure automatic filling
+  of the queue from selected playlists
     - Configurable song limit
-    - Play mode option to randomly play many playlists, or sequentially play one playlist
+    - Play mode option to randomly play many playlists, or sequentially play one
+    playlist
     - Ability to search for playlists on Musare
   - Ability to blacklist playlists to prevent songs within from playing
   - Themes
@@ -50,7 +53,8 @@ A production demonstration instance of Musare can be found at [demo.musare.com](
   - Vote to skip songs
   - Force skipping song by admins or owners
 - **Song Management**
-  - Verify songs to allow them to be searched for and added to automatically generated genre playlists
+  - Verify songs to allow them to be searched for and added to automatically
+  generated genre playlists
   - Discogs integration to import metadata
   - Ability for users to report issues with songs and admins to resolve
   - Configurable skip duration and song duration to cut intros and outros

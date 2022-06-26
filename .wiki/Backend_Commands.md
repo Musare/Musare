@@ -1,6 +1,7 @@
 # Backend Commands
 
-Backend commands are inputted via STDIN or if using the Utility Script by using `./musare.sh attach backend`.
+Backend commands are inputted via STDIN or if using the Utility Script by using
+`./musare.sh attach backend`.
 
 ## Commands
 
@@ -20,7 +21,8 @@ Backend commands are inputted via STDIN or if using the Utility Script by using 
 
 ## Modules
 
-When specifying a module please use all lowercase. The available modules are as follows:
+When specifying a module please use all lowercase.
+The available modules are as follows:
 
 - Cache
 - DB

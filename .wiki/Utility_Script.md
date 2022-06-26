@@ -1,8 +1,10 @@
 # Utility Script
 
-The utility script is a tool that allows for the simple management of a Musare Docker instance.
+The utility script is a tool that allows for the simple management of a Musare
+Docker instance.
 
-Please follow the [Docker Installation Guide](./Installation.md#Docker) before using this script.
+Please follow the [Docker Installation Guide](./Installation.md#Docker) before
+using this script.
 
 ## Usage
 
@@ -32,4 +34,7 @@ Linux (Bash):
 
 ### Services
 
-There are currently 4 services; frontend, backend, redis and mongo. Where services is a parameter you can specify any of these, or multiple seperated by spaces, for example `./musare.sh restart frontend backend` to restart the frontend and backend. If no services are specified all will be selected.
+There are currently 4 services; frontend, backend, redis and mongo. Where
+services is a parameter you can specify any of these, or multiple seperated by
+spaces, for example `./musare.sh restart frontend backend` to restart the
+frontend and backend. If no services are specified all will be selected.
