@@ -11,7 +11,10 @@ import store from "./store";
 
 import AppComponent from "./App.vue";
 
-import defaultConfigURL from "../config/default.json?url";
+const defaultConfigURL = new URL(
+	"config/default.json",
+	import.meta.url
+).toString();
 
 const REQUIRED_CONFIG_VERSION = 12;
 

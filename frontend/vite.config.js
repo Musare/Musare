@@ -119,6 +119,18 @@ const htmlPlugin = () => ({
 
 const mode = process.env.FRONTEND_MODE || "development";
 
+let server = null;
+
+if (mode === "development")
+	server = {
+		host: "0.0.0.0",
+		port: config.get("devServer.port"),
+		strictPort: true,
+		hmr: {
+			clientPort: config.get("devServer.hmrClientPort")
+		}
+	};
+
 export default {
 	mode,
 	root: "src",
@@ -152,14 +164,7 @@ export default {
 			}
 		}
 	},
-	server: {
-		host: "0.0.0.0",
-		port: config.get("devServer.port"),
-		strictPort: true,
-		hmr: {
-			clientPort: config.get("devServer.hmrClientPort")
-		}
-	},
+	server,
 	build: {
 		outDir: "../build"
 	}
