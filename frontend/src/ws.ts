@@ -78,6 +78,8 @@ export default {
 			this.socket.dispatch(...args);
 
 		class CustomWebSocket extends WebSocket {
+			dispatcher: ListenerHandler;
+
 			constructor() {
 				super(url);
 				this.dispatcher = new ListenerHandler();

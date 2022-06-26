@@ -100,7 +100,7 @@ const modules = {
 						.catch(err => reject(new Error(err.message)));
 				}),
 			logout: () =>
-				new Promise((resolve, reject) => {
+				new Promise<void>((resolve, reject) => {
 					auth.logout()
 						.then(() => resolve())
 						.catch(() => reject());
@@ -133,7 +133,7 @@ const modules = {
 
 										return resolve(user);
 									}
-									return resolve();
+									return resolve(null);
 								}
 							);
 						} else {

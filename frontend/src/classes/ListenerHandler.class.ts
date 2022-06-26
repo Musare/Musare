@@ -1,4 +1,8 @@
 export default class ListenerHandler extends EventTarget {
+	listeners: {
+		[name: string]: Array<{ cb: (event: any) => void, options: { replaceable: boolean } }>
+	}
+
 	constructor() {
 		super();
 		this.listeners = {};

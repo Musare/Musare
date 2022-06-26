@@ -4,7 +4,7 @@ const mapModalState = (namespace, map) => {
 	const modalState = {};
 	// console.log("MAP MODAL STATE", namespace);
 
-	Object.entries(map).forEach(([mapKey, mapValue]) => {
+	Object.entries(map).forEach(([mapKey, mapValue]: [string, (value: object) => void]) => {
 		modalState[mapKey] = function func() {
 			// console.log(
 			// 	321,
