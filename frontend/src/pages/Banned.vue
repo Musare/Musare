@@ -1,3 +1,13 @@
+<script setup lang="ts">
+import { computed } from "vue";
+import { formatDistance } from "date-fns";
+import { useStore } from "vuex";
+
+const store = useStore();
+
+const ban = computed(() => store.state.user.auth.ban);
+</script>
+
 <template>
 	<div class="container">
 		<page-metadata title="Banned" />
@@ -14,17 +24,6 @@
 		</h5>
 	</div>
 </template>
-<script>
-import { mapState } from "vuex";
-import { formatDistance } from "date-fns"; // eslint-disable-line no-unused-vars
-
-export default {
-	computed: mapState({
-		ban: state => state.user.auth.ban
-	}),
-	methods: { formatDistance }
-};
-</script>
 
 <style lang="less" scoped>
 .container {
