@@ -17,6 +17,8 @@
     "prod": "npx vite build --emptyOutDir"
   },
   "devDependencies": {
+    "@babel/core": "^7.18.5",
+    "@babel/eslint-parser": "^7.18.2",
     "@vue/compiler-sfc": "^3.2.36",
     "eslint": "^8.17.0",
     "eslint-config-prettier": "^8.5.0",
