@@ -31,6 +31,7 @@ Linux (Bash):
 | `restore` | `[file]` | Restore database from file. If file is not specified you will be prompted. |
 | `reset` | `[frontend backend redis mongo]` | Reset all data for service(s). |
 | `admin` | `<add,remove> [username]` | Assign/unassign admin role to/from user. If the username is not specified you will be prompted. |
+| `typescript` | `[frontend backend]` | Run TypeScript checks on frontend and/or backend. |
 
 ### Services
 
