@@ -66,7 +66,9 @@ const mapModalComponents = (baseDirectory, map) => {
 	const modalComponents = {};
 	Object.entries(map).forEach(([mapKey, mapValue]) => {
 		modalComponents[mapKey] = () =>
-			defineAsyncComponent(() => import(`${baseDirectory}/${mapValue}`));
+			defineAsyncComponent(() =>
+				import(`./${baseDirectory}/${mapValue}`)
+			);
 	});
 	return modalComponents;
 };

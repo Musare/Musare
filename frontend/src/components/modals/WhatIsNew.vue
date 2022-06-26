@@ -26,7 +26,7 @@
 <script>
 import { formatDistance } from "date-fns";
 import { marked } from "marked";
-import { sanitize } from "dompurify";
+import DOMPurify from "dompurify";
 import { mapActions } from "vuex";
 
 import { mapModalState } from "@/vuex_helpers";
@@ -58,7 +58,7 @@ export default {
 	},
 	methods: {
 		marked,
-		sanitize,
+		sanitize: DOMPurify.sanitize,
 		formatDistance,
 		...mapActions("modalVisibility", ["openModal"])
 	}

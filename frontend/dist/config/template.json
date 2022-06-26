@@ -8,8 +8,8 @@
 		"websocketsDomain": "ws://localhost/backend/ws"
 	},
 	"devServer": {
-		"port": "81",
-		"webSocketURL": "ws://localhost/ws"
+		"port": 81,
+		"hmrClientPort": 80
 	},
 	"frontendDomain": "http://localhost",
 	"mode": "development",
@@ -53,5 +53,5 @@
 		"version": true
 	},
 	"skipConfigVersionCheck": false,
-	"configVersion": 11
+	"configVersion": 12
 }

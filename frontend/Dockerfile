@@ -3,11 +3,10 @@ FROM node:16.15 AS musare_frontend
 ARG FRONTEND_MODE=prod
 ENV FRONTEND_MODE=${FRONTEND_MODE}
 ENV SUPPRESS_NO_CONFIG_WARNING=1
+ENV NODE_CONFIG_DIR=./dist/config
 
 RUN apt-get update
 RUN apt-get install nginx -y
-
-RUN npm install -g webpack@5.73.0 webpack-cli@4.9.2
 
 RUN mkdir -p /opt/app
 WORKDIR /opt/app
@@ -28,4 +27,3 @@ RUN chmod u+x entrypoint.sh
 ENTRYPOINT bash /opt/app/entrypoint.sh
 
 EXPOSE 80/tcp
-EXPOSE 80/udp

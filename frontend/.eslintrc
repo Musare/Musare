@@ -6,11 +6,12 @@
 		"node": true,
 		"es6": true
 	},
+	"parser": "vue-eslint-parser",
 	"parserOptions": {
 		"ecmaVersion": 2018,
 		"sourceType": "module",
-		"parser": "@babel/eslint-parser",
-		"requireConfigFile": false
+		"requireConfigFile": false,
+		"parser": "@babel/eslint-parser"
 	},
 	"extends": [
 		"airbnb-base",

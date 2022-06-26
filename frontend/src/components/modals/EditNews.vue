@@ -77,7 +77,7 @@
 <script>
 import { mapActions, mapGetters } from "vuex";
 import { marked } from "marked";
-import { sanitize } from "dompurify";
+import DOMPurify from "dompurify";
 import Toast from "toasters";
 import { formatDistance } from "date-fns";
 
@@ -152,7 +152,7 @@ export default {
 			}
 		},
 		marked,
-		sanitize,
+		sanitize: DOMPurify.sanitize,
 		getTitle() {
 			let title = "";
 			const preview = document.getElementById("preview");

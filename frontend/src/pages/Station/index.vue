@@ -709,7 +709,7 @@ import AddToPlaylistDropdown from "@/components/AddToPlaylistDropdown.vue";
 import SongItem from "@/components/SongItem.vue";
 import Z404 from "../404.vue";
 
-import utils from "../../../js/utils";
+import utils from "@/utils";
 
 import StationSidebar from "./Sidebar/index.vue";
 

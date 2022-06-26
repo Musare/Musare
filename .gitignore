@@ -27,8 +27,7 @@ backend/build
 frontend/bundle-stats.json
 frontend/bundle-report.html
 frontend/node_modules/
-frontend/dist/build/
-frontend/dist/index.html
+frontend/build/
 frontend/dist/config/default.json
 
 npm

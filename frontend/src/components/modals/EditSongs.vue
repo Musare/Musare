@@ -194,7 +194,7 @@ import editSong from "@/store/modules/modals/editSong";
 export default {
 	components: {
 		EditSong: defineAsyncComponent(() =>
-			import("@/components/modals/EditSong")
+			import("@/components/modals/EditSong/index.vue")
 		),
 		SongItem
 	},
