@@ -43,6 +43,7 @@
     "marked": "^4.0.16",
     "normalize.css": "^8.0.1",
     "toasters": "^2.3.1",
+    "typescript": "^4.7.4",
     "vite": "^2.9.12",
     "vue": "^3.2.36",
     "vue-chartjs": "^4.1.1",
