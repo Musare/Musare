@@ -12,7 +12,7 @@ import store from "./store";
 import AppComponent from "./App.vue";
 
 const defaultConfigURL = new URL(
-	"config/default.json",
+	"/config/default.json",
 	import.meta.url
 ).toString();
 
