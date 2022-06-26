@@ -53,7 +53,7 @@ Run this command in your shell. You will have to do this command for every shell
 3. [Setup MongoDB](#Setting-up-MongoDB)
 4. [Setup Redis](#Setting-up-Redis)
 5. `cp backend/config/template.json backend/config/default.json` and configure as per [Configuration](./Configuration.md#Backend)
-6. `cp frontend/config/template.json frontend/config/default.json` and configure as per [Configuration](./Configuration.md#Frontend)
+6. `cp frontend/dist/config/template.json frontend/dist/config/default.json` and configure as per [Configuration](./Configuration.md#Frontend)
 7. `cd frontend && npm install && cd ..`
 8. `cd backend && npm install && cd ..`
 9. Start services

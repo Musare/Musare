@@ -22,7 +22,8 @@ const fetchVersionAndGitInfo = () => {
 		);
 
 		console.log(`Musare version: ${packageJson.version}.`);
-		if (config.get("debug.version")) debug.version = packageJson.version;
+		if (config.has("debug.version") && config.get("debug.version"))
+			debug.version = packageJson.version;
 	} catch (e) {
 		console.log(`Could not get package info: ${e.message}.`);
 	}
@@ -125,10 +126,12 @@ let server = null;
 if (mode === "development")
 	server = {
 		host: "0.0.0.0",
-		port: config.get("devServer.port"),
+		port: config.has("devServer.port") ? config.get("devServer.port") : 81,
 		strictPort: true,
 		hmr: {
-			clientPort: config.get("devServer.hmrClientPort")
+			clientPort: config.has("devServer.hmrClientPort")
+				? config.get("devServer.hmrClientPort")
+				: 80
 		}
 	};
 
