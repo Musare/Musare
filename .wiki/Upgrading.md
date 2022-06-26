@@ -1,4 +1,5 @@
 # Upgrading
+
 Musare upgrade process.
 
 To install a new instance please see [Installation](./Installation.md).
@@ -6,6 +7,7 @@ To install a new instance please see [Installation](./Installation.md).
 ## Docker
 
 ### Instructions
+
 1. Make a backup! `./musare.sh backup`
 2. Execute `./musare.sh update`. If an update requires any configuration changes or database migrations, you will be notified.
     - To update configuration compare example configs against your own and add/update/remove any properties as needed. For more information on properties see [Configuration](./Configuration.md). Frontend and backend configuration updates always update the `configVersion` property.
@@ -26,6 +28,7 @@ To install a new instance please see [Installation](./Installation.md).
 ## Non-Docker
 
 ### Instructions
+
 1. Make a backup!
 2. Stop all services
 3. `git pull`
@@ -50,6 +53,7 @@ Make sure to always look at the upgrade/downgrade instructions in the [MongoDB r
 ## Docker
 
 ### Instructions
+
 1. Stop the backend (`./musare.sh stop backend`)
 2. Make a backup of MongoDB (`./musare.sh backup`)
 3. Stop and reset the mongo container and delete the database folder (`./musare.sh reset mongo`)
@@ -62,6 +66,7 @@ Make sure to always look at the upgrade/downgrade instructions in the [MongoDB r
 ## Non-Docker
 
 ### Instructions
+
 1. Stop your backend
 2. Make a backup of MongoDB
 3. Stop and reset MongoDB

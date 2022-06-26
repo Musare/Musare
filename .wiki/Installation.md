@@ -8,9 +8,9 @@ To update an existing installation please see [Upgrading](./Upgrading.md).
 
 ### Dependencies
 
--   [Git](https://github.com/git-guides/install-git)
--   [Docker](https://docs.docker.com/get-docker/)
--   [docker-compose](https://docs.docker.com/compose/install/)
+- [Git](https://github.com/git-guides/install-git)
+- [Docker](https://docs.docker.com/get-docker/)
+- [docker-compose](https://docs.docker.com/compose/install/)
 
 ### Instructions
 
@@ -39,12 +39,12 @@ Run this command in your shell. You will have to do this command for every shell
 
 ### Dependencies
 
--   [Git](https://github.com/git-guides/install-git)
--   [Redis](http://redis.io/download)
--   [MongoDB](https://www.mongodb.com/try/download/community)
--   [NodeJS](https://nodejs.org/en/download/)
-    -   [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
-    -   [nodemon](https://github.com/remy/nodemon#installation)
+- [Git](https://github.com/git-guides/install-git)
+- [Redis](http://redis.io/download)
+- [MongoDB](https://www.mongodb.com/try/download/community)
+- [NodeJS](https://nodejs.org/en/download/)
+  - [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
+  - [nodemon](https://github.com/remy/nodemon#installation)
 
 ### Instructions
 
@@ -66,6 +66,7 @@ Run this command in your shell. You will have to do this command for every shell
             1. Run `startRedis.cmd` and `startMongo.cmd` to start Redis and Mongo.
             2. Execute `cd frontend && npm run dev` and `cd backend && npm run dev` separately.
 10. **(optional)** Register a new user on the website and grant the admin role by running the following in the mongodb shell.
+
     ```bash
     use musare
     db.auth("MUSAREDBUSER","MUSAREDBPASSWORD")
@@ -74,7 +75,7 @@ Run this command in your shell. You will have to do this command for every shell
 
 ### Setting up MongoDB
 
--   **Windows Only**
+- **Windows Only**
 
     1. In the root directory, create a folder called `.database`
     2. Create a file called `startMongo.cmd` in the root directory with the contents:
@@ -85,7 +86,7 @@ Run this command in your shell. You will have to do this command for every shell
 
     3. Start the database by executing the script `startMongo.cmd` you just made
 
--   Set up the MongoDB database itself
+- Set up the MongoDB database itself
 
     1. Start MongoDB
         - **Linux** Execute `systemctl start mongod`
@@ -120,7 +121,7 @@ Run this command in your shell. You will have to do this command for every shell
 
 ### Setting up Redis
 
--   **Windows**
+- **Windows**
 
     1. In the folder where you installed Redis, edit the `redis.windows.conf` file
 
@@ -135,7 +136,7 @@ Run this command in your shell. You will have to do this command for every shell
 
         And again, make sure that the paths lead to the proper config and executable. Replace `PASSWORD` with your Redis password.
 
--   **Linux**
+- **Linux**
     1. In `/etc/redis/redis.conf`
         1. Uncomment `notify-keyspace-events` and set its value to `Ex`.
         2. Uncomment `requirepass foobared` and replace foobared with your Redis password.

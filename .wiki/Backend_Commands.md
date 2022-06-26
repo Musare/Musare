@@ -1,7 +1,9 @@
 # Backend Commands
+
 Backend commands are inputted via STDIN or if using the Utility Script by using `./musare.sh attach backend`.
 
 ## Commands
+
 | Command | Parameters | Description |
 | --- | --- | --- |
 | `rs` | | Restart backend. |
@@ -17,6 +19,7 @@ Backend commands are inputted via STDIN or if using the Utility Script by using 
 | `stats` | `module` | Returns job statistics for a specified module. |
 
 ## Modules
+
 When specifying a module please use all lowercase. The available modules are as follows:
 
 - Cache
