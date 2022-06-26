@@ -33,6 +33,7 @@ frontend/dist/config/default.json
 npm
 node_modules
 package-lock.json
+.eslintcache
 
 # Logs
 log/

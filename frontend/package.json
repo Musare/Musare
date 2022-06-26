@@ -12,7 +12,7 @@
   "license": "GPL-3.0",
   "repository": "https://github.com/Musare/Musare",
   "scripts": {
-    "lint": "npx eslint src --ext .js,.vue",
+    "lint": "npx eslint --cache src --ext .js,.vue",
     "dev": "npx vite",
     "prod": "npx vite build --emptyOutDir"
   },
