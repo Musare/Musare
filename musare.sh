@@ -51,10 +51,10 @@ dockerCompose="${dockerCompose} ${composeFiles}"
 
 handleServices()
 {
-    validServices=(backend frontend mongo redis)
+    validServices=($1)
     servicesArray=()
     invalidServices=false
-    for x in "$@"; do
+    for x in "${@:2}"; do
         if [[ ${validServices[*]} =~ (^|[[:space:]])"$x"($|[[:space:]]) ]]; then
             if ! [[ ${servicesArray[*]} =~ (^|[[:space:]])"$x"($|[[:space:]]) ]]; then
                 servicesArray+=("${x}")
@@ -80,7 +80,7 @@ runDockerCommand()
 {
     validCommands=(start stop restart pull build ps logs)
     if [[ ${validCommands[*]} =~ (^|[[:space:]])"$2"($|[[:space:]]) ]]; then
-        servicesString=$(handleServices "${@:3}")
+        servicesString=$(handleServices "backend frontend mongo redis" "${@:3}")
         if [[ ${servicesString:0:1} == 1 ]]; then
             if [[ ${servicesString:2:4} == "all" ]]; then
                 servicesString=""
@@ -106,7 +106,7 @@ runDockerCommand()
                 exit ${exitValue}
             fi
         else
-            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: ${1} restart [backend, frontend, mongo, redis]${NC}"
+            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: ${1} [backend, frontend, mongo, redis]${NC}"
             exit 1
         fi
     else
@@ -129,44 +129,44 @@ case $1 in
     start)
         echo -e "${CYAN}Musare | Start Services${NC}"
         # shellcheck disable=SC2068
-        runDockerCommand "$(basename "$0")" start ${@:2}
+        runDockerCommand "$(basename "$0") $1" start ${@:2}
         ;;
 
     stop)
         echo -e "${CYAN}Musare | Stop Services${NC}"
         # shellcheck disable=SC2068
-        runDockerCommand "$(basename "$0")" stop ${@:2}
+        runDockerCommand "$(basename "$0") $1" stop ${@:2}
         ;;
 
     restart)
         echo -e "${CYAN}Musare | Restart Services${NC}"
         # shellcheck disable=SC2068
-        runDockerCommand "$(basename "$0")" restart ${@:2}
+        runDockerCommand "$(basename "$0") $1" restart ${@:2}
         ;;
 
     build)
         echo -e "${CYAN}Musare | Build Services${NC}"
         # shellcheck disable=SC2068
-        runDockerCommand "$(basename "$0")" pull ${@:2}
+        runDockerCommand "$(basename "$0") $1" pull ${@:2}
         # shellcheck disable=SC2068
-        runDockerCommand "$(basename "$0")" build ${@:2}
+        runDockerCommand "$(basename "$0") $1" build ${@:2}
         ;;
 
     status)
         echo -e "${CYAN}Musare | Service Status${NC}"
         # shellcheck disable=SC2068
-        runDockerCommand "$(basename "$0")" ps ${@:2}
+        runDockerCommand "$(basename "$0") $1" ps ${@:2}
         ;;
 
     reset)
         echo -e "${CYAN}Musare | Reset Services${NC}"
-        servicesString=$(handleServices "${@:2}")
+        servicesString=$(handleServices "backend frontend mongo redis" "${@:2}")
         if [[ ${servicesString:0:1} == 1 && ${servicesString:2:4} == "all" ]]; then
             echo -e "${RED}Resetting will remove the ${REDIS_DATA_LOCATION} and ${MONGO_DATA_LOCATION} directories.${NC}"
             echo -e "${GREEN}Are you sure you want to reset all data? ${YELLOW}[y,n]: ${NC}"
             read -r confirm
             if [[ "${confirm}" == y* ]]; then
-                runDockerCommand "$(basename "$0")" stop
+                runDockerCommand "$(basename "$0") $1" stop
                 ${dockerCompose} rm -v --force
                 if [[ -d $REDIS_DATA_LOCATION ]]; then
                     rm -rf "${REDIS_DATA_LOCATION}"
@@ -189,7 +189,7 @@ case $1 in
             read -r confirm
             if [[ "${confirm}" == y* ]]; then
                 # shellcheck disable=SC2086
-                runDockerCommand "$(basename "$0")" stop ${servicesString:2}
+                runDockerCommand "$(basename "$0") $1" stop ${servicesString:2}
                 # shellcheck disable=SC2086
                 ${dockerCompose} rm -v --force ${servicesString}
                 if [[ "${servicesString:2}" == *redis* && -d $REDIS_DATA_LOCATION ]]; then
@@ -247,42 +247,75 @@ case $1 in
 
     lint|eslint)
         echo -e "${CYAN}Musare | Lint${NC}"
-        fix=""
-        if [[ $2 == "fix" || $3 == "fix" || $2 == "--fix" || $3 == "--fix" ]]; then
+        services=$(sed "s/\(\ \)\{0,1\}\(-\)\{0,2\}fix//g;t;q1" <<< "${@:2}")
+        fixFound=$?
+        if [[ $fixFound -eq 0 ]]; then
             fix="--fix"
             echo -e "${GREEN}Auto-fix enabled${NC}"
         fi
-        case $2 in
-            frontend)
-                ${dockerCompose} exec -T frontend npx eslint --cache src --ext .js,.vue $fix
-                exitValue=$?
-                ;;
-            backend)
-                ${dockerCompose} exec -T backend npx eslint --cache logic $fix
-                exitValue=$?
-                ;;
-            docs)
-                ${docker} run -v "${scriptLocation}":/workdir ghcr.io/igorshubovych/markdownlint-cli:latest ".wiki" "*.md" $fix
-                exitValue=$?
-                ;;
-            ""|fix|--fix)
-                ${dockerCompose} exec -T frontend npx eslint --cache src --ext .js,.vue $fix
+        services=$(sed "s/\(\ \)\{0,1\}\(-\)\{0,2\}no-cache//g;t;q1" <<< "${services}")
+        noCacheFound=$?
+        cache="--cache"
+        if [[ $noCacheFound -eq 0 ]]; then
+            cache=""
+            echo -e "${YELLOW}ESlint cache disabled${NC}"
+        fi
+        # shellcheck disable=SC2068
+        servicesString=$(handleServices "backend frontend docs" ${services[@]})
+        if [[ ${servicesString:0:1} == 1 ]]; then
+            if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *frontend* ]]; then
+                echo -e "${CYAN}Running frontend lint...${NC}"
+                ${dockerCompose} exec -T frontend npx eslint $cache src --ext .js,.vue $fix
                 frontendExitValue=$?
-                ${dockerCompose} exec -T backend npx eslint --cache logic $fix
+            fi
+            if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *backend* ]]; then
+                echo -e "${CYAN}Running backend lint...${NC}"
+                ${dockerCompose} exec -T backend npx eslint $cache logic $fix
                 backendExitValue=$?
+            fi
+            if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *docs* ]]; then
+                echo -e "${CYAN}Running docs lint...${NC}"
                 ${docker} run -v "${scriptLocation}":/workdir ghcr.io/igorshubovych/markdownlint-cli:latest ".wiki" "*.md" $fix
                 docsExitValue=$?
-                if [[ ${frontendExitValue} -gt 0 || ${backendExitValue} -gt 0 || ${docsExitValue} -gt 0 ]]; then
-                    exitValue=1
-                else
-                    exitValue=0
-                fi
-                ;;
-            *)
-                echo -e "${RED}Invalid service $2\n${YELLOW}Usage: $(basename "$0") lint [backend, frontend, docs] [fix]${NC}"
+            fi
+            if [[ ${frontendExitValue} -gt 0 || ${backendExitValue} -gt 0 || ${docsExitValue} -gt 0 ]]; then
                 exitValue=1
-                ;;
-        esac
+            else
+                exitValue=0
+            fi
+        else
+            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") lint [backend, frontend, docs] [fix]${NC}"
+            exitValue=1
+        fi
+        if [[ ${exitValue} -gt 0 ]]; then
+            exit ${exitValue}
+        fi
+        ;;
+
+
+    typescript|ts)
+        echo -e "${CYAN}Musare | TypeScript Check${NC}"
+        servicesString=$(handleServices "backend frontend" "${@:2}")
+        if [[ ${servicesString:0:1} == 1 ]]; then
+            if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *frontend* ]]; then
+                echo -e "${CYAN}Running frontend typescript check...${NC}"
+                ${dockerCompose} exec -T frontend npm run typescript
+                frontendExitValue=$?
+            fi
+            if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *backend* ]]; then
+                echo -e "${CYAN}Running backend typescript check...${NC}"
+                ${dockerCompose} exec -T backend npm run typescript
+                backendExitValue=$?
+            fi
+            if [[ ${frontendExitValue} -gt 0 || ${backendExitValue} -gt 0 ]]; then
+                exitValue=1
+            else
+                exitValue=0
+            fi
+        else
+            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") typescript [backend, frontend]${NC}"
+            exitValue=1
+        fi
         if [[ ${exitValue} -gt 0 ]]; then
             exit ${exitValue}
         fi
@@ -308,8 +341,8 @@ case $1 in
                 if [[ ${exitValue} -gt 0 ]]; then
                     exit ${exitValue}
                 fi
-                runDockerCommand "$(basename "$0")" build
-                runDockerCommand "$(basename "$0")" restart
+                runDockerCommand "$(basename "$0") $1" build
+                runDockerCommand "$(basename "$0") $1" restart
                 echo -e "${GREEN}Updated!${NC}"
                 if [[ -n $dbChange ]]; then
                     echo -e "${RED}Database schema has changed, please run migration!${NC}"
@@ -330,7 +363,7 @@ case $1 in
     logs)
         echo -e "${CYAN}Musare | Logs${NC}"
         # shellcheck disable=SC2068
-        runDockerCommand "$(basename "$0")" logs ${@:2}
+        runDockerCommand "$(basename "$0") $1" logs ${@:2}
         ;;
 
     backup)
@@ -433,6 +466,7 @@ case $1 in
         echo -e "${YELLOW}restore - Restore database data from backup file${NC}"
         echo -e "${YELLOW}reset - Reset service data${NC}"
         echo -e "${YELLOW}admin [add,remove] - Assign/unassign admin role to/from a user${NC}"
+        echo -e "${YELLOW}typescript - Run typescript checks on frontend and/or backend${NC}"
         ;;
 
     *)
@@ -452,6 +486,7 @@ case $1 in
         echo -e "${YELLOW}restore - Restore database data from backup file${NC}"
         echo -e "${YELLOW}reset - Reset service data${NC}"
         echo -e "${YELLOW}admin [add,remove] - Assign/unassign admin role to/from a user${NC}"
+        echo -e "${YELLOW}typescript - Run typescript checks on frontend and/or backend${NC}"
         exit 1
         ;;
 esac
