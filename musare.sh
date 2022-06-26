@@ -254,11 +254,11 @@ case $1 in
         fi
         case $2 in
             frontend)
-                ${dockerCompose} exec -T frontend npx eslint src --ext .js,.vue $fix
+                ${dockerCompose} exec -T frontend npx eslint --cache src --ext .js,.vue $fix
                 exitValue=$?
                 ;;
             backend)
-                ${dockerCompose} exec -T backend npx eslint logic $fix
+                ${dockerCompose} exec -T backend npx eslint --cache logic $fix
                 exitValue=$?
                 ;;
             docs)
@@ -266,9 +266,9 @@ case $1 in
                 exitValue=$?
                 ;;
             ""|fix|--fix)
-                ${dockerCompose} exec -T frontend npx eslint src --ext .js,.vue $fix
+                ${dockerCompose} exec -T frontend npx eslint --cache src --ext .js,.vue $fix
                 frontendExitValue=$?
-                ${dockerCompose} exec -T backend npx eslint logic $fix
+                ${dockerCompose} exec -T backend npx eslint --cache logic $fix
                 backendExitValue=$?
                 ${docker} run -v "${scriptLocation}":/workdir ghcr.io/igorshubovych/markdownlint-cli:latest ".wiki" "*.md" $fix
                 docsExitValue=$?
