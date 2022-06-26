@@ -157,7 +157,7 @@ export default {
 		port: config.get("devServer.port"),
 		strictPort: true,
 		hmr: {
-			clientPort: config.get("devServer.clientPort")
+			clientPort: config.get("devServer.hmrClientPort")
 		}
 	},
 	build: {
