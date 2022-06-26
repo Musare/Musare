@@ -5,16 +5,62 @@
 				v-if="activity.payload.thumbnail"
 				:src="activity.payload.thumbnail"
 				onerror="this.src='/assets/notes.png'"
-				:alt="textOnlyMessage"
+				:alt="messageStripped"
 			/>
 			<i class="material-icons activity-type-icon">{{ getIcon() }}</i>
 		</div>
 		<div class="left-part">
-			<component
-				class="item-title"
-				:title="textOnlyMessage"
-				:is="formattedMessage"
-			/>
+			<p :title="messageStripped" class="item-title">
+				<span v-for="messagePart in messageParts" :key="messagePart">
+					<span
+						v-if="getMessagePartType(messagePart) === 'youtubeId'"
+						>{{ getMessagePartText(messagePart) }}</span
+					>
+					<a
+						v-else-if="
+							getMessagePartType(messagePart) === 'reportId'
+						"
+						class="activity-item-link"
+						@click="
+							openModal({
+								modal: 'viewReport',
+								data: { reportId: activity.payload.reportId }
+							})
+						"
+						>report</a
+					>
+					<a
+						v-else-if="
+							getMessagePartType(messagePart) === 'playlistId'
+						"
+						class="activity-item-link"
+						@click="
+							openModal({
+								modal: 'editPlaylist',
+								data: {
+									playlistId: activity.payload.playlistId
+								}
+							})
+						"
+						>{{ getMessagePartText(messagePart) }}
+					</a>
+					<router-link
+						v-else-if="
+							getMessagePartType(messagePart) === 'stationId'
+						"
+						class="activity-item-link"
+						:to="{
+							name: 'station',
+							params: { id: activity.payload.stationId }
+						}"
+						>{{ getMessagePartText(messagePart) }}</router-link
+					>
+
+					<span v-else>
+						{{ messagePart }}
+					</span>
+				</span>
+			</p>
 			<p class="item-description">
 				{{
 					formatDistance(parseISO(activity.createdAt), new Date(), {
@@ -46,78 +92,21 @@ export default {
 		};
 	},
 	computed: {
-		formattedMessage() {
-			const { youtubeId, playlistId, stationId, reportId } =
-				this.activity.payload;
-			let { message } = this.activity.payload;
+		messageParts() {
+			const { message } = this.activity.payload;
+			const messageParts = message.split(
+				/((?:<youtubeId>.*<\/youtubeId>)|(?:<reportId>.*<\/reportId>)|(?:<playlistId>.*<\/playlistId>)|(?:<stationId>.*<\/stationId>))/g
+			);
 
-			if (youtubeId) {
-				message = message.replace(
-					/<youtubeId>(.*)<\/youtubeId>/g,
-					"$1"
-				);
-			}
-
-			if (reportId) {
-				message = message.replace(
-					/<reportId>(.*)<\/reportId>/g,
-					`<a href='#' class='activity-item-link' @click='openModal({ modal: "viewReport", data: { reportId: "${reportId}" } })'>report</a>`
-				);
-			}
-
-			if (playlistId) {
-				message = message.replace(
-					/<playlistId>(.*)<\/playlistId>/g,
-					`<a href='#' class='activity-item-link' @click='openModal({ modal: "editPlaylist", data: { playlistId: "${playlistId}" } })'>$1</a>`
-				);
-			}
-
-			if (stationId) {
-				message = message.replace(
-					/<stationId>(.*)<\/stationId>/g,
-					`<router-link class='activity-item-link' :to="{ name: 'station', params: { id: '${stationId}' } }">$1</router-link>`
-				);
-			}
-
-			return {
-				template: `<p>${message}</p>`,
-				methods: {
-					openModal: this.openModal
-				}
-			};
+			return messageParts;
 		},
-		textOnlyMessage() {
-			const { youtubeId, playlistId, stationId, reportId } =
-				this.activity.payload;
+		messageStripped() {
 			let { message } = this.activity.payload;
 
-			if (reportId) {
-				message = message.replace(
-					/<reportId>(.*)<\/reportId>/g,
-					"report"
-				);
-			}
-
-			if (youtubeId) {
-				message = message.replace(
-					/<youtubeId>(.*)<\/youtubeId>/g,
-					"$1"
-				);
-			}
-
-			if (playlistId) {
-				message = message.replace(
-					/<playlistId>(.*)<\/playlistId>/g,
-					`$1`
-				);
-			}
-
-			if (stationId) {
-				message = message.replace(
-					/<stationId>(.*)<\/stationId>/g,
-					`$1`
-				);
-			}
+			message = message.replace(/<reportId>(.*)<\/reportId>/g, "report");
+			message = message.replace(/<youtubeId>(.*)<\/youtubeId>/g, "$1");
+			message = message.replace(/<playlistId>(.*)<\/playlistId>/g, `$1`);
+			message = message.replace(/<stationId>(.*)<\/stationId>/g, `$1`);
 
 			return message;
 		}
@@ -130,6 +119,19 @@ export default {
 			);
 	},
 	methods: {
+		getMessagePartType(messagePart) {
+			return messagePart.substring(1, messagePart.indexOf(">"));
+		},
+		getMessagePartText(messagePart) {
+			let message = messagePart;
+
+			message = message.replace(/<reportId>(.*)<\/reportId>/g, "report");
+			message = message.replace(/<youtubeId>(.*)<\/youtubeId>/g, "$1");
+			message = message.replace(/<playlistId>(.*)<\/playlistId>/g, `$1`);
+			message = message.replace(/<stationId>(.*)<\/stationId>/g, `$1`);
+
+			return message;
+		},
 		getIcon() {
 			const icons = {
 				/** User */

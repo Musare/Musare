@@ -149,7 +149,6 @@ export default {
 		]
 	},
 	define: {
-		__VUE_OPTIONS_API__: true,
 		__VUE_PROD_DEVTOOLS__: false,
 		MUSARE_VERSION: JSON.stringify(debug.version),
 		MUSARE_GIT_REMOTE: JSON.stringify(debug.git.remote),
