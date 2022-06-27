@@ -1,3 +1,110 @@
+<script setup lang="ts">
+// import { mapActions } from "vuex";
+import { useStore } from "vuex";
+import { ref, computed, onMounted } from "vue";
+import { formatDistance, parseISO } from "date-fns";
+
+const store = useStore();
+
+const props = defineProps({
+	activity: {
+		type: Object,
+		default: () => {}
+	}
+});
+
+const theme = ref("blue");
+
+const messageParts = computed(() => {
+	const { message } = props.activity.payload;
+	const messageParts = message.split(
+		/((?:<youtubeId>.*<\/youtubeId>)|(?:<reportId>.*<\/reportId>)|(?:<playlistId>.*<\/playlistId>)|(?:<stationId>.*<\/stationId>))/g
+	);
+
+	return messageParts;
+});
+const messageStripped = computed(() => {
+	let { message } = props.activity.payload;
+
+	message = message.replace(/<reportId>(.*)<\/reportId>/g, "report");
+	message = message.replace(/<youtubeId>(.*)<\/youtubeId>/g, "$1");
+	message = message.replace(/<playlistId>(.*)<\/playlistId>/g, `$1`);
+	message = message.replace(/<stationId>(.*)<\/stationId>/g, `$1`);
+
+	return message;
+});
+
+function getMessagePartType(messagePart) {
+	return messagePart.substring(1, messagePart.indexOf(">"));
+}
+function getMessagePartText(messagePart) {
+	let message = messagePart;
+
+	message = message.replace(/<reportId>(.*)<\/reportId>/g, "report");
+	message = message.replace(/<youtubeId>(.*)<\/youtubeId>/g, "$1");
+	message = message.replace(/<playlistId>(.*)<\/playlistId>/g, `$1`);
+	message = message.replace(/<stationId>(.*)<\/stationId>/g, `$1`);
+
+	return message;
+}
+
+function getIcon() {
+	const icons = {
+		/** User */
+		user__joined: "account_circle",
+		user__edit_bio: "create",
+		user__edit_avatar: "insert_photo",
+		user__edit_name: "create",
+		user__edit_location: "place",
+		user__toggle_nightmode: "nightlight_round",
+		user__toggle_autoskip_disliked_songs: "thumb_down_alt",
+		user__toggle_activity_watch: "visibility",
+		/** Songs */
+		song__report: "flag",
+		song__like: "thumb_up_alt",
+		song__dislike: "thumb_down_alt",
+		song__unlike: "not_interested",
+		song__undislike: "not_interested",
+		/** Stations */
+		station__favorite: "star",
+		station__unfavorite: "star_border",
+		station__create: "create",
+		station__remove: "delete",
+		station__edit_theme: "color_lens",
+		station__edit_name: "create",
+		station__edit_display_name: "create",
+		station__edit_description: "create",
+		station__edit_privacy: "security",
+		station__edit_genres: "create",
+		station__edit_blacklisted_genres: "create",
+		/** Playlists */
+		playlist__create: "create",
+		playlist__remove: "delete",
+		playlist__remove_song: "not_interested",
+		playlist__remove_songs: "not_interested",
+		playlist__add_song: "library_add",
+		playlist__add_songs: "library_add",
+		playlist__edit_privacy: "security",
+		playlist__edit_display_name: "create",
+		playlist__import_playlist: "publish"
+	};
+
+	return icons[props.activity.type];
+}
+
+function openModal(payload) {
+	store.dispatch("modalVisibility/openModal", payload);
+}
+
+onMounted(() => {
+	if (props.activity.type === "station__edit_theme")
+		theme.value = props.activity.payload.message.replace(
+			/to\s(\w+)/g,
+			"$1"
+		);
+});
+</script>
+
 <template>
 	<div class="item activity-item universal-item">
 		<div :class="[theme, 'thumbnail']">
@@ -12,6 +119,7 @@
 		<div class="left-part">
 			<p :title="messageStripped" class="item-title">
 				<span v-for="messagePart in messageParts" :key="messagePart">
+					{{ getMessagePartType(messagePart) }}
 					<span
 						v-if="getMessagePartType(messagePart) === 'youtubeId'"
 						>{{ getMessagePartText(messagePart) }}</span
@@ -74,113 +182,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapActions } from "vuex";
-import { formatDistance, parseISO } from "date-fns";
-
-export default {
-	props: {
-		activity: {
-			type: Object,
-			default: () => {}
-		}
-	},
-	data() {
-		return {
-			theme: "blue"
-		};
-	},
-	computed: {
-		messageParts() {
-			const { message } = this.activity.payload;
-			const messageParts = message.split(
-				/((?:<youtubeId>.*<\/youtubeId>)|(?:<reportId>.*<\/reportId>)|(?:<playlistId>.*<\/playlistId>)|(?:<stationId>.*<\/stationId>))/g
-			);
-
-			return messageParts;
-		},
-		messageStripped() {
-			let { message } = this.activity.payload;
-
-			message = message.replace(/<reportId>(.*)<\/reportId>/g, "report");
-			message = message.replace(/<youtubeId>(.*)<\/youtubeId>/g, "$1");
-			message = message.replace(/<playlistId>(.*)<\/playlistId>/g, `$1`);
-			message = message.replace(/<stationId>(.*)<\/stationId>/g, `$1`);
-
-			return message;
-		}
-	},
-	mounted() {
-		if (this.activity.type === "station__edit_theme")
-			this.theme = this.activity.payload.message.replace(
-				/to\s(\w+)/g,
-				"$1"
-			);
-	},
-	methods: {
-		getMessagePartType(messagePart) {
-			return messagePart.substring(1, messagePart.indexOf(">"));
-		},
-		getMessagePartText(messagePart) {
-			let message = messagePart;
-
-			message = message.replace(/<reportId>(.*)<\/reportId>/g, "report");
-			message = message.replace(/<youtubeId>(.*)<\/youtubeId>/g, "$1");
-			message = message.replace(/<playlistId>(.*)<\/playlistId>/g, `$1`);
-			message = message.replace(/<stationId>(.*)<\/stationId>/g, `$1`);
-
-			return message;
-		},
-		getIcon() {
-			const icons = {
-				/** User */
-				user__joined: "account_circle",
-				user__edit_bio: "create",
-				user__edit_avatar: "insert_photo",
-				user__edit_name: "create",
-				user__edit_location: "place",
-				user__toggle_nightmode: "nightlight_round",
-				user__toggle_autoskip_disliked_songs: "thumb_down_alt",
-				user__toggle_activity_watch: "visibility",
-				/** Songs */
-				song__report: "flag",
-				song__like: "thumb_up_alt",
-				song__dislike: "thumb_down_alt",
-				song__unlike: "not_interested",
-				song__undislike: "not_interested",
-				/** Stations */
-				station__favorite: "star",
-				station__unfavorite: "star_border",
-				station__create: "create",
-				station__remove: "delete",
-				station__edit_theme: "color_lens",
-				station__edit_name: "create",
-				station__edit_display_name: "create",
-				station__edit_description: "create",
-				station__edit_privacy: "security",
-				station__edit_genres: "create",
-				station__edit_blacklisted_genres: "create",
-				/** Playlists */
-				playlist__create: "create",
-				playlist__remove: "delete",
-				playlist__remove_song: "not_interested",
-				playlist__remove_songs: "not_interested",
-				playlist__add_song: "library_add",
-				playlist__add_songs: "library_add",
-				playlist__edit_privacy: "security",
-				playlist__edit_display_name: "create",
-				playlist__import_playlist: "publish"
-			};
-
-			return icons[this.activity.type];
-		},
-		formatDistance,
-		parseISO,
-		...mapActions("modalVisibility", ["openModal"])
-	}
-};
-</script>
 
 <style lang="less">
 .activity-item-link {
