@@ -1,3 +1,33 @@
+<script setup lang="ts">
+import { useStore } from "vuex";
+import { ref, computed, onMounted } from "vue";
+import Toast from "toasters";
+import ProfilePicture from "@/components/ProfilePicture.vue";
+
+const store = useStore();
+
+const notesUri = ref("");
+const frontendDomain = ref("");
+
+const users = computed(() => store.state.station.users);
+const userCount = computed(() => store.state.station.userCount);
+
+async function copyToClipboard() {
+	try {
+		await navigator.clipboard.writeText(
+			this.frontendDomain + this.$route.fullPath
+		);
+	} catch (err) {
+		new Toast("Failed to copy to clipboard.");
+	}
+}
+
+onMounted(async () => {
+	frontendDomain.value = await lofig.get("frontendDomain");
+	notesUri.value = encodeURI(`${frontendDomain.value}/assets/notes.png`);
+});
+</script>
+
 <template>
 	<div id="users">
 		<h5 class="has-text-centered">Total users: {{ userCount }}</h5>
@@ -62,42 +92,6 @@
 		</button>
 	</div>
 </template>
-
-<script>
-import { mapState } from "vuex";
-import Toast from "toasters";
-
-import ProfilePicture from "@/components/ProfilePicture.vue";
-
-export default {
-	components: { ProfilePicture },
-	data() {
-		return {
-			notesUri: "",
-			frontendDomain: ""
-		};
-	},
-	computed: mapState({
-		users: state => state.station.users,
-		userCount: state => state.station.userCount
-	}),
-	async mounted() {
-		this.frontendDomain = await lofig.get("frontendDomain");
-		this.notesUri = encodeURI(`${this.frontendDomain}/assets/notes.png`);
-	},
-	methods: {
-		async copyToClipboard() {
-			try {
-				await navigator.clipboard.writeText(
-					this.frontendDomain + this.$route.fullPath
-				);
-			} catch (err) {
-				new Toast("Failed to copy to clipboard.");
-			}
-		}
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {
