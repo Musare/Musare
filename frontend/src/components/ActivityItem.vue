@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// import { mapActions } from "vuex";
 import { useStore } from "vuex";
 import { ref, computed, onMounted } from "vue";
 import { formatDistance, parseISO } from "date-fns";

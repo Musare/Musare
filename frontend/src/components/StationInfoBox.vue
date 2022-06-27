@@ -17,43 +17,48 @@ const userId = computed(() => store.state.user.auth.userId);
 const role = computed(() => store.state.user.auth.role);
 const { socket } = store.state.websockets;
 
-const isOwnerOnly = () =>
-	loggedIn.value && userId.value === props.station.owner;
-const isAdminOnly = () => loggedIn.value && role.value === "admin";
-const isOwnerOrAdmin = () => isOwnerOnly() || isAdminOnly();
+function isOwnerOnly() {
+	return loggedIn.value && userId.value === props.station.owner;
+}
+function isAdminOnly() {
+	return loggedIn.value && role.value === "admin";
+}
+function isOwnerOrAdmin() {
+	return isOwnerOnly() || isAdminOnly();
+}
 
-const resumeStation = () => {
+function resumeStation() {
 	socket.dispatch("stations.resume", props.station._id, data => {
 		if (data.status !== "success") new Toast(`Error: ${data.message}`);
 		else new Toast("Successfully resumed the station.");
 	});
-};
-const pauseStation = () => {
+}
+function pauseStation() {
 	socket.dispatch("stations.pause", props.station._id, data => {
 		if (data.status !== "success") new Toast(`Error: ${data.message}`);
 		else new Toast("Successfully paused the station.");
 	});
-};
-const skipStation = () => {
+}
+function skipStation() {
 	socket.dispatch("stations.forceSkip", props.station._id, data => {
 		if (data.status !== "success") new Toast(`Error: ${data.message}`);
 		else new Toast("Successfully skipped the station's current song.");
 	});
-};
-const favoriteStation = () => {
+}
+function favoriteStation() {
 	socket.dispatch("stations.favoriteStation", props.station._id, res => {
 		if (res.status === "success") {
 			new Toast("Successfully favorited station.");
 		} else new Toast(res.message);
 	});
-};
-const unfavoriteStation = () => {
+}
+function unfavoriteStation() {
 	socket.dispatch("stations.unfavoriteStation", props.station._id, res => {
 		if (res.status === "success") {
 			new Toast("Successfully unfavorited station.");
 		} else new Toast(res.message);
 	});
-};
+}
 
 const openModal = payload =>
 	store.dispatch("modalVisibility/openModal", payload);
