@@ -1,3 +1,111 @@
+<script setup lang="ts">
+import { useStore } from "vuex";
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import { formatDistance, parseISO } from "date-fns";
+import AddToPlaylistDropdown from "./AddToPlaylistDropdown.vue";
+import utils from "@/utils";
+
+const store = useStore();
+
+const props = defineProps({
+	song: {
+		type: Object,
+		default: () => {}
+	},
+	requestedBy: {
+		type: Boolean,
+		default: false
+	},
+	duration: {
+		type: Boolean,
+		default: true
+	},
+	thumbnail: {
+		type: Boolean,
+		default: true
+	},
+	disabledActions: {
+		type: Array,
+		default: () => []
+	},
+	header: {
+		type: String,
+		default: null
+	}
+});
+
+const formatedRequestedAt = ref(null);
+const formatRequestedAtInterval = ref();
+const hoveredTippy = ref(false);
+const songActions = ref(null);
+
+const loggedIn = computed(() => store.state.user.auth.loggedIn);
+const userRole = computed(() => store.state.user.auth.userRole);
+
+function formatRequestedAt() {
+	if (props.requestedBy && props.song.requestedAt)
+		formatedRequestedAt.value = formatDistance(
+			parseISO(props.song.requestedAt),
+			new Date()
+		);
+}
+function formatArtists() {
+	if (props.song.artists.length === 1) {
+		return props.song.artists[0];
+	}
+	if (props.song.artists.length === 2) {
+		return props.song.artists.join(" & ");
+	}
+	if (props.song.artists.length > 2) {
+		return `${props.song.artists
+			.slice(0, -1)
+			.join(", ")} & ${props.song.artists.slice(-1)}`;
+	}
+	return null;
+}
+function hideTippyElements() {
+	songActions.value.tippy.hide();
+
+	setTimeout(
+		() =>
+			Array.from(document.querySelectorAll(".tippy-popper")).forEach(
+				popper => popper._tippy.hide()
+			),
+		500
+	);
+}
+function hoverTippy() {
+	hoveredTippy.value = true;
+}
+function openModal(payload) {
+	store.dispatch("modalVisibility/openModal", payload);
+}
+function report(song) {
+	hideTippyElements();
+	openModal({ modal: "report", data: { song } });
+}
+function edit(song) {
+	hideTippyElements();
+	openModal({
+		modal: "editSong",
+		data: { song }
+	});
+}
+
+onMounted(() => {
+	if (props.requestedBy) {
+		formatRequestedAt();
+		formatRequestedAtInterval.value = setInterval(() => {
+			formatRequestedAt();
+		}, 30000);
+	}
+});
+
+onUnmounted(() => {
+	clearInterval(formatRequestedAtInterval.value);
+});
+</script>
+
 <template>
 	<div
 		class="universal-item song-item"
@@ -165,120 +273,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapActions, mapState } from "vuex";
-import { formatDistance, parseISO } from "date-fns";
-
-import AddToPlaylistDropdown from "./AddToPlaylistDropdown.vue";
-import utils from "@/utils";
-
-export default {
-	components: { AddToPlaylistDropdown },
-	props: {
-		song: {
-			type: Object,
-			default: () => {}
-		},
-		requestedBy: {
-			type: Boolean,
-			default: false
-		},
-		duration: {
-			type: Boolean,
-			default: true
-		},
-		thumbnail: {
-			type: Boolean,
-			default: true
-		},
-		disabledActions: {
-			type: Array,
-			default: () => []
-		},
-		header: {
-			type: String,
-			default: null
-		}
-	},
-	data() {
-		return {
-			utils,
-			formatedRequestedAt: null,
-			formatRequestedAtInterval: null,
-			hoveredTippy: false
-		};
-	},
-	computed: {
-		...mapState({
-			loggedIn: state => state.user.auth.loggedIn,
-			userRole: state => state.user.auth.role
-		})
-	},
-	mounted() {
-		if (this.requestedBy) {
-			this.formatRequestedAt();
-			this.formatRequestedAtInterval = setInterval(() => {
-				this.formatRequestedAt();
-			}, 30000);
-		}
-	},
-	unmounted() {
-		clearInterval(this.formatRequestedAtInterval);
-	},
-	methods: {
-		formatRequestedAt() {
-			if (this.requestedBy && this.song.requestedAt)
-				this.formatedRequestedAt = this.formatDistance(
-					parseISO(this.song.requestedAt),
-					new Date()
-				);
-		},
-		formatArtists() {
-			if (this.song.artists.length === 1) {
-				return this.song.artists[0];
-			}
-			if (this.song.artists.length === 2) {
-				return this.song.artists.join(" & ");
-			}
-			if (this.song.artists.length > 2) {
-				return `${this.song.artists
-					.slice(0, -1)
-					.join(", ")} & ${this.song.artists.slice(-1)}`;
-			}
-			return null;
-		},
-		hideTippyElements() {
-			this.$refs.songActions.tippy.hide();
-
-			setTimeout(
-				() =>
-					Array.from(
-						document.querySelectorAll(".tippy-popper")
-					).forEach(popper => popper._tippy.hide()),
-				500
-			);
-		},
-		hoverTippy() {
-			this.hoveredTippy = true;
-		},
-		report(song) {
-			this.hideTippyElements();
-			this.openModal({ modal: "report", data: { song } });
-		},
-		edit(song) {
-			this.hideTippyElements();
-			this.openModal({
-				modal: "editSong",
-				data: { song }
-			});
-		},
-		...mapActions("modalVisibility", ["openModal"]),
-		formatDistance,
-		parseISO
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {
