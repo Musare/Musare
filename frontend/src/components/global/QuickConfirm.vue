@@ -1,3 +1,48 @@
+<script setup lang="ts">
+import { ref } from "vue";
+
+defineProps({
+	placement: { type: String, default: "top" }
+});
+
+const emit = defineEmits(["confirm"]);
+
+const clickedOnce = ref(false);
+const body = ref(document.body);
+
+const confirm = event => {
+	if (
+		!event ||
+		event.type !== "click" ||
+		event.altKey ||
+		event.ctrlKey ||
+		event.metaKey
+	)
+		return;
+
+	clickedOnce.value = false;
+	emit("confirm");
+	setTimeout(() => {
+		ref("confirm").tippy.hide();
+	}, 25);
+};
+
+const click = event => {
+	if (clickedOnce.value) confirm(event);
+	else clickedOnce.value = true;
+};
+
+const shiftClick = event => {
+	confirm(event);
+};
+
+const delayedHide = () => {
+	setTimeout(() => {
+		clickedOnce.value = false;
+	}, 25);
+};
+</script>
+
 <template>
 	<tippy
 		:interactive="true"
@@ -20,53 +65,3 @@
 		</template>
 	</tippy>
 </template>
-
-<script>
-export default {
-	props: {
-		placement: {
-			type: String,
-			default: "top"
-		}
-	},
-	emits: ["confirm"],
-	data() {
-		return {
-			clickedOnce: false,
-			body: document.body
-		};
-	},
-
-	methods: {
-		// eslint-disable-next-line no-unused-vars
-		confirm(event) {
-			if (
-				!event ||
-				event.type !== "click" ||
-				event.altKey ||
-				event.ctrlKey ||
-				event.metaKey
-			)
-				return;
-
-			this.clickedOnce = false;
-			this.$emit("confirm");
-			setTimeout(() => {
-				this.$refs.confirm.tippy.hide();
-			}, 25);
-		},
-		click(event) {
-			if (!this.clickedOnce) this.clickedOnce = true;
-			else this.confirm(event);
-		},
-		shiftClick(event) {
-			this.confirm(event);
-		},
-		delayedHide() {
-			setTimeout(() => {
-				this.clickedOnce = false;
-			}, 25);
-		}
-	}
-};
-</script>

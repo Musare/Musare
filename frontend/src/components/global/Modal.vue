@@ -1,3 +1,37 @@
+<script setup lang="ts">
+import { useStore } from "vuex";
+import { defineAsyncComponent, ref, onMounted } from "vue";
+
+const ChristmasLights = defineAsyncComponent(
+	() => import("@/components/ChristmasLights.vue")
+);
+
+const props = defineProps({
+	title: { type: String, default: "Modal" },
+	size: { type: String, default: null },
+	split: { type: Boolean, default: false },
+	interceptClose: { type: Boolean, default: false }
+});
+
+const emit = defineEmits(["close"]);
+
+const store = useStore();
+
+const christmas = ref(false);
+
+const closeCurrentModal = () =>
+	store.dispatch("modalVisibility/closeCurrentModal");
+
+const closeCurrentModalClick = () => {
+	if (props.interceptClose) emit("close");
+	else closeCurrentModal();
+};
+
+onMounted(async () => {
+	christmas.value = await lofig.get("siteSettings.christmas");
+});
+</script>
+
 <template>
 	<div class="modal is-active">
 		<div class="modal-background" @click="closeCurrentModalClick()" />
@@ -36,54 +70,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapState, mapActions } from "vuex";
-import { defineAsyncComponent } from "vue";
-
-export default {
-	components: {
-		ChristmasLights: defineAsyncComponent(() =>
-			import("@/components/ChristmasLights.vue")
-		)
-	},
-	props: {
-		title: { type: String, default: "Modal" },
-		size: { type: String, default: null },
-		split: { type: Boolean, default: false },
-		interceptClose: { type: Boolean, default: false }
-	},
-	emits: ["close"],
-	data() {
-		return {
-			christmas: false
-		};
-	},
-	computed: {
-		...mapState({
-			loggedIn: state => state.user.auth.loggedIn
-		})
-	},
-	async mounted() {
-		this.type = this.toCamelCase(this.title);
-		this.christmas = await lofig.get("siteSettings.christmas");
-	},
-	methods: {
-		closeCurrentModalClick() {
-			if (this.interceptClose) this.$emit("close");
-			else this.closeCurrentModal();
-		},
-		toCamelCase: str =>
-			str
-				.toLowerCase()
-				.replace(/[-_]+/g, " ")
-				.replace(/[^\w\s]/g, "")
-				.replace(/ (.)/g, $1 => $1.toUpperCase())
-				.replace(/ /g, ""),
-		...mapActions("modalVisibility", ["closeCurrentModal"])
-	}
-};
-</script>
 
 <style lang="less">
 .night-mode .modal .modal-card {

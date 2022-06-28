@@ -1,3 +1,56 @@
+<script setup lang="ts">
+import { ref, computed, watch } from "vue";
+
+const props = defineProps({
+	song: { type: Object, default: () => {} },
+	fallback: { type: Boolean, default: true }
+});
+
+const emit = defineEmits(["loadError"]);
+
+const loadError = ref(0);
+
+const isYoutubeThumbnail = computed(
+	() =>
+		props.song.youtubeId &&
+		((props.song.thumbnail &&
+			(props.song.thumbnail.lastIndexOf("i.ytimg.com") !== -1 ||
+				props.song.thumbnail.lastIndexOf("img.youtube.com") !== -1)) ||
+			(props.fallback &&
+				(!props.song.thumbnail ||
+					(props.song.thumbnail &&
+						(props.song.thumbnail.lastIndexOf(
+							"notes-transparent"
+						) !== -1 ||
+							props.song.thumbnail.lastIndexOf(
+								"/assets/notes.png"
+							) !== -1 ||
+							props.song.thumbnail === "empty")) ||
+					loadError.value === 1)))
+);
+
+const onLoadError = () => {
+	// Error codes
+	// -1 - Error occured, fallback disabled
+	// 0 - No errors
+	// 1 - Error occured with thumbnail, fallback enabled
+	// 2 - Error occured with youtube thumbnail, fallback enabled
+	if (!props.fallback) loadError.value = -1;
+	else if (loadError.value === 0 && !isYoutubeThumbnail.value)
+		loadError.value = 1;
+	else loadError.value = 2;
+	emit("loadError", loadError.value);
+};
+
+watch(
+	() => props.song,
+	() => {
+		loadError.value = 0;
+		emit("loadError", loadError.value);
+	}
+);
+</script>
+
 <template>
 	<div
 		:class="{
@@ -31,69 +84,6 @@
 		<img v-else loading="lazy" src="/assets/notes-transparent.png" />
 	</div>
 </template>
-
-<script>
-export default {
-	props: {
-		song: {
-			type: Object,
-			default: () => {}
-		},
-		fallback: {
-			type: Boolean,
-			default: true
-		}
-	},
-	emits: ["loadError"],
-	data() {
-		return {
-			loadError: 0
-		};
-	},
-	computed: {
-		isYoutubeThumbnail() {
-			return (
-				this.song.youtubeId &&
-				((this.song.thumbnail &&
-					(this.song.thumbnail.lastIndexOf("i.ytimg.com") !== -1 ||
-						this.song.thumbnail.lastIndexOf("img.youtube.com") !==
-							-1)) ||
-					(this.fallback &&
-						(!this.song.thumbnail ||
-							(this.song.thumbnail &&
-								(this.song.thumbnail.lastIndexOf(
-									"notes-transparent"
-								) !== -1 ||
-									this.song.thumbnail.lastIndexOf(
-										"/assets/notes.png"
-									) !== -1 ||
-									this.song.thumbnail === "empty")) ||
-							this.loadError === 1)))
-			);
-		}
-	},
-	watch: {
-		song() {
-			this.loadError = 0;
-			this.$emit("loadError", this.loadError);
-		}
-	},
-	methods: {
-		onLoadError() {
-			// Error codes
-			// -1 - Error occured, fallback disabled
-			// 0 - No errors
-			// 1 - Error occured with thumbnail, fallback enabled
-			// 2 - Error occured with youtube thumbnail, fallback enabled
-			if (!this.fallback) this.loadError = -1;
-			else if (this.loadError === 0 && !this.isYoutubeThumbnail)
-				this.loadError = 1;
-			else this.loadError = 2;
-			this.$emit("loadError", this.loadError);
-		}
-	}
-};
-</script>
 
 <style lang="less">
 .thumbnail {

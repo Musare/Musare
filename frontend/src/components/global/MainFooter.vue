@@ -1,3 +1,46 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from "vue";
+
+const siteSettings = ref({
+	logo_blue: "/assets/blue_wordmark.png",
+	sitename: "Musare",
+	footerLinks: {}
+});
+
+const filteredFooterLinks = computed(() =>
+	Object.fromEntries(
+		Object.entries(siteSettings.value.footerLinks).filter(
+			([title, url]) =>
+				!(
+					["about", "team", "news"].includes(title.toLowerCase()) &&
+					typeof url === "boolean"
+				)
+		)
+	)
+);
+
+const getLink = title =>
+	siteSettings.value.footerLinks[
+		Object.keys(siteSettings.value.footerLinks).find(
+			key => key.toLowerCase() === title
+		)
+	];
+
+onMounted(async () => {
+	lofig.get("siteSettings").then(settings => {
+		siteSettings.value = {
+			...settings,
+			footerLinks: {
+				about: true,
+				team: true,
+				news: true,
+				...settings.footerLinks
+			}
+		};
+	});
+});
+</script>
+
 <template>
 	<footer class="footer">
 		<div class="container">
@@ -46,56 +89,6 @@
 		</div>
 	</footer>
 </template>
-
-<script>
-export default {
-	data() {
-		return {
-			siteSettings: {
-				logo_blue: "/assets/blue_wordmark.png",
-				sitename: "Musare",
-				footerLinks: {}
-			}
-		};
-	},
-	computed: {
-		filteredFooterLinks() {
-			return Object.fromEntries(
-				Object.entries(this.siteSettings.footerLinks).filter(
-					([title, url]) =>
-						!(
-							["about", "team", "news"].includes(
-								title.toLowerCase()
-							) && typeof url === "boolean"
-						)
-				)
-			);
-		}
-	},
-	async mounted() {
-		lofig.get("siteSettings").then(siteSettings => {
-			this.siteSettings = {
-				...siteSettings,
-				footerLinks: {
-					about: true,
-					team: true,
-					news: true,
-					...siteSettings.footerLinks
-				}
-			};
-		});
-	},
-	methods: {
-		getLink(title) {
-			return this.siteSettings.footerLinks[
-				Object.keys(this.siteSettings.footerLinks).find(
-					key => key.toLowerCase() === title
-				)
-			];
-		}
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {

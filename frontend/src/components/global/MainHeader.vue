@@ -1,3 +1,90 @@
+<script setup lang="ts">
+import { useStore } from "vuex";
+import {
+	defineAsyncComponent,
+	ref,
+	computed,
+	onMounted,
+	watch,
+	nextTick
+} from "vue";
+import Toast from "toasters";
+
+const ChristmasLights = defineAsyncComponent(
+	() => import("@/components/ChristmasLights.vue")
+);
+
+defineProps({
+	hideLogo: { type: Boolean, default: false },
+	transparent: { type: Boolean, default: false },
+	hideLoggedOut: { type: Boolean, default: false }
+});
+
+const store = useStore();
+
+const localNightmode = ref(false);
+const isMobile = ref(false);
+const frontendDomain = ref("");
+const siteSettings = ref({
+	logo_white: "/assets/white_wordmark.png",
+	sitename: "Musare",
+	christmas: false,
+	registrationDisabled: false
+});
+const windowWidth = ref(0);
+
+const loggedIn = computed(() => store.state.user.auth.loggedIn);
+const username = computed(() => store.state.user.auth.username);
+const role = computed(() => store.state.user.auth.role);
+const { socket } = store.state.websockets;
+
+const openModal = modal => store.dispatch("modalVisibility/openModal", modal);
+const logout = () => store.dispatch("user/auth/logout");
+const changeNightmode = nightmode =>
+	store.dispatch("user/preferences/changeNightmode", nightmode);
+
+const toggleNightmode = toggle => {
+	localNightmode.value = toggle || !localNightmode.value;
+
+	localStorage.setItem("nightmode", `${localNightmode.value}`);
+
+	if (loggedIn.value) {
+		socket.dispatch(
+			"users.updatePreferences",
+			{ nightmode: localNightmode.value },
+			res => {
+				if (res.status !== "success") new Toast(res.message);
+			}
+		);
+	}
+
+	changeNightmode(localNightmode.value);
+};
+
+const onResize = () => {
+	windowWidth.value = window.innerWidth;
+};
+
+watch(
+	() => localNightmode.value,
+	nightmode => {
+		if (localNightmode.value !== nightmode) toggleNightmode(nightmode);
+	}
+);
+
+onMounted(async () => {
+	localNightmode.value = JSON.parse(localStorage.getItem("nightmode"));
+	if (localNightmode.value === null) localNightmode.value = false;
+
+	frontendDomain.value = await lofig.get("frontendDomain");
+	siteSettings.value = await lofig.get("siteSettings");
+
+	await nextTick();
+	onResize();
+	window.addEventListener("resize", onResize);
+});
+</script>
+
 <template>
 	<nav
 		class="nav is-info"
@@ -31,7 +118,7 @@
 			<div
 				class="nav-item"
 				id="nightmode-toggle"
-				@click="toggleNightmode()"
+				@click="toggleNightmode(!localNightmode)"
 			>
 				<span
 					:class="{
@@ -87,94 +174,6 @@
 		/>
 	</nav>
 </template>
-
-<script>
-import Toast from "toasters";
-import { mapState, mapGetters, mapActions } from "vuex";
-import { defineAsyncComponent } from "vue";
-
-export default {
-	components: {
-		ChristmasLights: defineAsyncComponent(() =>
-			import("@/components/ChristmasLights.vue")
-		)
-	},
-	props: {
-		hideLogo: { type: Boolean, default: false },
-		transparent: { type: Boolean, default: false },
-		hideLoggedOut: { type: Boolean, default: false }
-	},
-	data() {
-		return {
-			localNightmode: false,
-			isMobile: false,
-			frontendDomain: "",
-			siteSettings: {
-				logo_white: "",
-				sitename: "",
-				christmas: false,
-				registrationDisabled: false
-			},
-			windowWidth: 0
-		};
-	},
-	computed: {
-		...mapState({
-			modals: state => state.modalVisibility.modals.header,
-			role: state => state.user.auth.role,
-			loggedIn: state => state.user.auth.loggedIn,
-			username: state => state.user.auth.username,
-			nightmode: state => state.user.preferences.nightmode
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	watch: {
-		nightmode(nightmode) {
-			if (this.localNightmode !== nightmode)
-				this.toggleNightmode(nightmode);
-		}
-	},
-	async mounted() {
-		this.localNightmode = JSON.parse(localStorage.getItem("nightmode"));
-		if (this.localNightmode === null) this.localNightmode = false;
-
-		this.frontendDomain = await lofig.get("frontendDomain");
-		this.siteSettings = await lofig.get("siteSettings");
-
-		this.$nextTick(() => {
-			this.onResize();
-			window.addEventListener("resize", this.onResize);
-		});
-	},
-	methods: {
-		toggleNightmode(toggle) {
-			this.localNightmode = toggle || !this.localNightmode;
-
-			localStorage.setItem("nightmode", this.localNightmode);
-
-			if (this.loggedIn) {
-				this.socket.dispatch(
-					"users.updatePreferences",
-					{ nightmode: this.localNightmode },
-					res => {
-						if (res.status !== "success") new Toast(res.message);
-					}
-				);
-			}
-
-			this.changeNightmode(this.localNightmode);
-		},
-		onResize() {
-			this.windowWidth = window.innerWidth;
-		},
-		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions("user/auth", ["logout"]),
-		...mapActions("user/preferences", ["changeNightmode"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {

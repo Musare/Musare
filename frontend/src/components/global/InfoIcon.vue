@@ -1,19 +1,14 @@
+<script setup lang="ts">
+defineProps({
+	tooltip: { type: String, required: true }
+});
+</script>
+
 <template>
 	<span class="material-icons info-icon" :content="tooltip" v-tippy>
 		info
 	</span>
 </template>
-
-<script>
-export default {
-	props: {
-		tooltip: {
-			type: String,
-			required: true
-		}
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .material-icons.info-icon {
