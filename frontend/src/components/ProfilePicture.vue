@@ -1,3 +1,36 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from "vue";
+
+const props = defineProps({
+	avatar: {
+		type: Object,
+		default: () => {}
+	},
+	name: {
+		type: String,
+		default: ": )"
+	}
+});
+
+const notes = ref("");
+
+const initials = computed(() =>
+	props.name
+		.replaceAll(/[^A-Za-z ]+/g, "")
+		.replaceAll(/ +/g, " ")
+		.split(" ")
+		.map(word => word.charAt(0))
+		.splice(0, 2)
+		.join("")
+		.toUpperCase()
+);
+
+onMounted(async () => {
+	const frontendDomain = await lofig.get("frontendDomain");
+	notes.value = encodeURI(`${frontendDomain}/assets/notes.png`);
+});
+</script>
+
 <template>
 	<img
 		class="profile-picture using-gravatar"
@@ -11,42 +44,6 @@
 		<span>{{ initials }}</span>
 	</div>
 </template>
-
-<script>
-export default {
-	props: {
-		avatar: {
-			type: Object,
-			default: () => {}
-		},
-		name: {
-			type: String,
-			default: ": )"
-		}
-	},
-	data() {
-		return {
-			notes: ""
-		};
-	},
-	computed: {
-		initials() {
-			return this.name
-				.replaceAll(/[^A-Za-z ]+/g, "")
-				.replaceAll(/ +/g, " ")
-				.split(" ")
-				.map(word => word.charAt(0))
-				.splice(0, 2)
-				.join("")
-				.toUpperCase();
-		}
-	},
-	async mounted() {
-		const frontendDomain = await lofig.get("frontendDomain");
-		this.notes = encodeURI(`${frontendDomain}/assets/notes.png`);
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .profile-picture {
