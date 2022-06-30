@@ -1,3 +1,26 @@
+<script setup lang="ts">
+import { useStore } from "vuex";
+import { ref, watch } from "vue";
+import { format, formatDistance, parseISO } from "date-fns";
+
+const store = useStore();
+
+const props = defineProps({
+	punishment: { type: Object, default: () => {} }
+});
+
+const active = ref(false);
+
+const closeModal = payload =>
+	store.dispatch("modalVisibility/closeModal", payload);
+
+watch(props.punishment, punishment => {
+	active.value =
+		punishment.active &&
+		new Date(punishment.expiresAt).getTime() > Date.now();
+});
+</script>
+
 <template>
 	<div class="universal-item punishment-item">
 		<div class="item-icon">
@@ -69,35 +92,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapActions } from "vuex";
-import { format, formatDistance, parseISO } from "date-fns";
-
-export default {
-	props: {
-		punishment: { type: Object, default: () => {} }
-	},
-	data() {
-		return {
-			active: false
-		};
-	},
-	watch: {
-		punishment(punishment) {
-			this.active =
-				punishment.active &&
-				new Date(this.punishment.expiresAt).getTime() > Date.now();
-		}
-	},
-	methods: {
-		formatDistance,
-		format,
-		parseISO,
-		...mapActions("modalVisibility", ["closeModal"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {
