@@ -1,3 +1,47 @@
+<script setup lang="ts">
+import { useStore } from "vuex";
+import { computed, onMounted, onBeforeUnmount } from "vue";
+
+import { formatDistance } from "date-fns";
+import { marked } from "marked";
+import dompurify from "dompurify";
+
+const store = useStore();
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" }
+});
+
+const news = computed(() =>
+	store.state.modals.whatIsNew[props.modalUuid]
+		? store.state.modals.whatIsNew[props.modalUuid].news
+		: {}
+);
+
+onMounted(() => {
+	marked.use({
+		renderer: {
+			table(header, body) {
+				return `<table class="table">
+					<thead>${header}</thead>
+					<tbody>${body}</tbody>
+					</table>`;
+			}
+		}
+	});
+});
+
+onBeforeUnmount(() => {
+	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+	store.unregisterModule(["modals", "whatIsNew", props.modalUuid]);
+});
+
+const openModal = payload =>
+	store.dispatch("modalVisibility/openModal", payload);
+
+const { sanitize } = dompurify;
+</script>
+
 <template>
 	<modal title="News" class="what-is-news-modal">
 		<template #body>
@@ -22,48 +66,6 @@
 		</template>
 	</modal>
 </template>
-
-<script>
-import { formatDistance } from "date-fns";
-import { marked } from "marked";
-import DOMPurify from "dompurify";
-import { mapActions } from "vuex";
-
-import { mapModalState } from "@/vuex_helpers";
-
-export default {
-	props: {
-		modalUuid: { type: String, default: "" }
-	},
-	computed: {
-		...mapModalState("modals/whatIsNew/MODAL_UUID", {
-			news: state => state.news
-		})
-	},
-	mounted() {
-		marked.use({
-			renderer: {
-				table(header, body) {
-					return `<table class="table">
-					<thead>${header}</thead>
-					<tbody>${body}</tbody>
-					</table>`;
-				}
-			}
-		});
-	},
-	beforeUnmount() {
-		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-		this.$store.unregisterModule(["modals", "whatIsNew", this.modalUuid]);
-	},
-	methods: {
-		marked,
-		sanitize: DOMPurify.sanitize,
-		formatDistance,
-		...mapActions("modalVisibility", ["openModal"])
-	}
-};
-</script>
 
 <style lang="less">
 .what-is-news-modal .modal-card .modal-card-foot {
