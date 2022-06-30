@@ -1,3 +1,109 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from "vue";
+import { useStore } from "vuex";
+import Toast from "toasters";
+import ws from "@/ws";
+
+const store = useStore();
+
+const props = defineProps({
+	song: {
+		type: Object,
+		default: () => {}
+	},
+	placement: {
+		type: String,
+		default: "left"
+	}
+});
+
+const dropdown = ref(null);
+
+const playlists = computed(() => store.state.user.playlists.playlists);
+const fetchedPlaylists = computed(
+	() => store.state.user.playlists.fetchedPlaylists
+);
+const { socket } = store.state.websockets;
+
+const setPlaylists = payload =>
+	store.dispatch("user/playlists/setPlaylists", payload);
+
+const addPlaylist = payload =>
+	store.dispatch("user/playlists/addPlaylist", payload);
+
+const removePlaylist = payload =>
+	store.dispatch("user/playlists/removePlaylist", payload);
+
+const openModal = payload =>
+	store.dispatch("modalVisibility/openModal", payload);
+
+const init = () => {
+	if (!fetchedPlaylists.value)
+		socket.dispatch("playlists.indexMyPlaylists", res => {
+			if (res.status === "success")
+				if (!fetchedPlaylists.value) setPlaylists(res.data.playlists);
+		});
+};
+const hasSong = playlist =>
+	playlist.songs.map(song => song.youtubeId).indexOf(props.song.youtubeId) !==
+	-1;
+const toggleSongInPlaylist = playlistIndex => {
+	const playlist = playlists.value[playlistIndex];
+	if (!hasSong(playlist)) {
+		socket.dispatch(
+			"playlists.addSongToPlaylist",
+			false,
+			props.song.youtubeId,
+			playlist._id,
+			res => new Toast(res.message)
+		);
+	} else {
+		socket.dispatch(
+			"playlists.removeSongFromPlaylist",
+			props.song.youtubeId,
+			playlist._id,
+			res => new Toast(res.message)
+		);
+	}
+};
+const createPlaylist = () => {
+	dropdown.value.tippy.setProps({
+		zIndex: 0,
+		hideOnClick: false
+	});
+
+	window.addToPlaylistDropdown = dropdown.value;
+
+	openModal("createPlaylist");
+};
+
+onMounted(() => {
+	ws.onConnect(init);
+
+	socket.on("event:playlist.created", res => addPlaylist(res.data.playlist), {
+		replaceable: true
+	});
+
+	socket.on(
+		"event:playlist.deleted",
+		res => removePlaylist(res.data.playlistId),
+		{ replaceable: true }
+	);
+
+	socket.on(
+		"event:playlist.displayName.updated",
+		res => {
+			playlists.value.forEach((playlist, index) => {
+				if (playlist._id === res.data.playlistId) {
+					playlists.value[index].displayName = res.data.displayName;
+				}
+			});
+		},
+		{ replaceable: true }
+	);
+});
+</script>
+
 <template>
 	<tippy
 		class="addToPlaylistDropdown"
@@ -62,114 +168,6 @@
 		</template>
 	</tippy>
 </template>
-
-<script>
-import { mapGetters, mapState, mapActions } from "vuex";
-import Toast from "toasters";
-import ws from "@/ws";
-
-export default {
-	props: {
-		song: {
-			type: Object,
-			default: () => {}
-		},
-		placement: {
-			type: String,
-			default: "left"
-		}
-	},
-	computed: {
-		...mapGetters({
-			socket: "websockets/getSocket"
-		}),
-		...mapState({
-			playlists: state => state.user.playlists.playlists,
-			fetchedPlaylists: state => state.user.playlists.fetchedPlaylists
-		})
-	},
-	mounted() {
-		ws.onConnect(this.init);
-
-		this.socket.on(
-			"event:playlist.created",
-			res => this.addPlaylist(res.data.playlist),
-			{ replaceable: true }
-		);
-
-		this.socket.on(
-			"event:playlist.deleted",
-			res => this.removePlaylist(res.data.playlistId),
-			{ replaceable: true }
-		);
-
-		this.socket.on(
-			"event:playlist.displayName.updated",
-			res => {
-				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === res.data.playlistId) {
-						this.playlists[index].displayName =
-							res.data.displayName;
-					}
-				});
-			},
-			{ replaceable: true }
-		);
-	},
-	methods: {
-		init() {
-			if (!this.fetchedPlaylists)
-				this.socket.dispatch("playlists.indexMyPlaylists", res => {
-					if (res.status === "success")
-						if (!this.fetchedPlaylists)
-							this.setPlaylists(res.data.playlists);
-				});
-		},
-		toggleSongInPlaylist(playlistIndex) {
-			const playlist = this.playlists[playlistIndex];
-			if (!this.hasSong(playlist)) {
-				this.socket.dispatch(
-					"playlists.addSongToPlaylist",
-					false,
-					this.song.youtubeId,
-					playlist._id,
-					res => new Toast(res.message)
-				);
-			} else {
-				this.socket.dispatch(
-					"playlists.removeSongFromPlaylist",
-					this.song.youtubeId,
-					playlist._id,
-					res => new Toast(res.message)
-				);
-			}
-		},
-		hasSong(playlist) {
-			return (
-				playlist.songs
-					.map(song => song.youtubeId)
-					.indexOf(this.song.youtubeId) !== -1
-			);
-		},
-		createPlaylist() {
-			this.$refs.dropdown.tippy.setProps({
-				zIndex: 0,
-				hideOnClick: false
-			});
-
-			window.addToPlaylistDropdown = this.$refs.dropdown;
-
-			this.openModal("createPlaylist");
-		},
-		...mapActions("user/playlists", [
-			"setPlaylists",
-			"addPlaylist",
-			"removePlaylist"
-		]),
-		...mapActions("modalVisibility", ["openModal"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .no-playlists {
