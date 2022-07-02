@@ -1,3 +1,76 @@
+<script setup lang="ts">
+import { ref, computed } from "vue";
+
+const props = defineProps({
+	modelValue: { type: String, default: "" },
+	placeholder: { type: String, default: "Search value" },
+	disabled: { type: Boolean, default: false },
+	allItems: { type: Array, default: () => [] }
+});
+
+const emit = defineEmits(["update:modelValue"]);
+
+const inputFocussed = ref(false);
+const containerFocussed = ref(false);
+const itemFocussed = ref(false);
+const keydownInputTimeout = ref();
+const items = ref([]);
+
+const value = computed({
+	get: () => props.modelValue,
+	set: value => emit("update:modelValue", value)
+});
+
+const blurInput = event => {
+	if (
+		event.relatedTarget &&
+		event.relatedTarget.classList.contains("autosuggest-item")
+	)
+		itemFocussed.value = true;
+	inputFocussed.value = false;
+};
+
+const focusInput = () => {
+	inputFocussed.value = true;
+};
+
+const keydownInput = () => {
+	clearTimeout(keydownInputTimeout.value);
+	keydownInputTimeout.value = setTimeout(() => {
+		if (value.value && value.value.length > 1) {
+			items.value = props.allItems.filter(item =>
+				item.toLowerCase().startsWith(value.value.toLowerCase())
+			);
+		} else items.value = [];
+	}, 1000);
+};
+
+const focusAutosuggestContainer = () => {
+	containerFocussed.value = true;
+};
+
+const blurAutosuggestContainer = () => {
+	containerFocussed.value = false;
+};
+
+const selectAutosuggestItem = item => {
+	value.value = item;
+	items.value = [];
+};
+
+const focusAutosuggestItem = () => {
+	itemFocussed.value = true;
+};
+
+const blurAutosuggestItem = event => {
+	if (
+		!event.relatedTarget ||
+		!event.relatedTarget.classList.contains("autosuggest-item")
+	)
+		itemFocussed.value = false;
+};
+</script>
+
 <template>
 	<div>
 		<input
@@ -35,92 +108,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-export default {
-	props: {
-		modelValue: {
-			type: String,
-			default: ""
-		},
-		placeholder: {
-			type: String,
-			default: "Search value"
-		},
-		disabled: {
-			type: Boolean,
-			default: false
-		},
-		allItems: {
-			type: Array,
-			default: () => []
-		}
-	},
-	emits: ["update:modelValue"],
-	data() {
-		return {
-			inputFocussed: false,
-			containerFocussed: false,
-			itemFocussed: false,
-			keydownInputTimeout: null,
-			items: []
-		};
-	},
-	computed: {
-		value: {
-			get() {
-				return this.modelValue;
-			},
-			set(value) {
-				this.$emit("update:modelValue", value);
-			}
-		}
-	},
-	methods: {
-		blurInput(event) {
-			if (
-				event.relatedTarget &&
-				event.relatedTarget.classList.contains("autosuggest-item")
-			)
-				this.itemFocussed = true;
-			this.inputFocussed = false;
-		},
-		focusInput() {
-			this.inputFocussed = true;
-		},
-		keydownInput() {
-			clearTimeout(this.keydownInputTimeout);
-			this.keydownInputTimeout = setTimeout(() => {
-				if (this.value && this.value.length > 1) {
-					this.items = this.allItems.filter(item =>
-						item.toLowerCase().startsWith(this.value.toLowerCase())
-					);
-				} else this.items = [];
-			}, 1000);
-		},
-		focusAutosuggestContainer() {
-			this.containerFocussed = true;
-		},
-		blurAutosuggestContainer() {
-			this.containerFocussed = false;
-		},
-		selectAutosuggestItem(item) {
-			this.value = item;
-			this.items = [];
-		},
-		focusAutosuggestItem() {
-			this.itemFocussed = true;
-		},
-		blurAutosuggestItem(event) {
-			if (
-				!event.relatedTarget ||
-				!event.relatedTarget.classList.contains("autosuggest-item")
-			)
-				this.itemFocussed = false;
-		}
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode .autosuggest-container {

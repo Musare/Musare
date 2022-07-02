@@ -27,27 +27,6 @@ const saveDebounceTimeout = ref();
 const resizeDebounceTimeout = ref();
 const shown = ref(false);
 
-onMounted(async () => {
-	let initial = {
-		top: 10,
-		left: 10,
-		width: 200,
-		height: 400
-	};
-	if (props.id !== null && localStorage[`box:${props.id}`]) {
-		const json = JSON.parse(localStorage.getItem(`box:${props.id}`));
-		initial = { ...initial, ...json };
-		shown.value = json.shown;
-	} else {
-		initial.top =
-			props.initial === "align-bottom"
-				? Math.max(document.body.clientHeight - 10 - initial.height, 0)
-				: 10;
-	}
-	setInitialBox(initial, true);
-	resetBoxPosition(true);
-});
-
 const saveBox = () => {
 	if (saveDebounceTimeout.value) clearTimeout(saveDebounceTimeout.value);
 
@@ -139,13 +118,35 @@ const onWindowResize = () => {
 onWindowResize();
 window.addEventListener("resize", onWindowResize);
 
-onDragBoxUpdate.value = () => {
-	onWindowResize();
-};
+onMounted(async () => {
+	let initial = {
+		top: 10,
+		left: 10,
+		width: 200,
+		height: 400
+	};
+	if (props.id !== null && localStorage[`box:${props.id}`]) {
+		const json = JSON.parse(localStorage.getItem(`box:${props.id}`));
+		initial = { ...initial, ...json };
+		shown.value = json.shown;
+	} else {
+		initial.top =
+			props.initial === "align-bottom"
+				? Math.max(document.body.clientHeight - 10 - initial.height, 0)
+				: 10;
+	}
+	setInitialBox(initial, true);
+	resetBoxPosition(true);
+
+	onDragBoxUpdate.value = () => {
+		onWindowResize();
+	};
+});
 
 onUnmounted(() => {
 	window.removeEventListener("resize", onWindowResize);
 	if (resizeDebounceTimeout.value) clearTimeout(resizeDebounceTimeout.value);
+	if (saveDebounceTimeout.value) clearTimeout(saveDebounceTimeout.value);
 });
 
 defineExpose({
