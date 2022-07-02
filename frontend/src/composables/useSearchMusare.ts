@@ -1,0 +1,91 @@
+import { ref, computed } from "vue";
+import { useStore } from "vuex";
+
+import Toast from "toasters";
+
+export function useSearchMusare() {
+    const store = useStore();
+
+    const musareSearch = ref({
+        query: "",
+        searchedQuery: "",
+        page: 0,
+        count: 0,
+        resultsLeft: 0,
+        results: [],
+        pageSize: 0
+    });
+
+    const resultsLeftCount = computed(() =>
+        musareSearch.value.count - musareSearch.value.results.length);
+
+    const nextPageResultsCount = computed(() =>
+        Math.min(musareSearch.value.pageSize, resultsLeftCount.value));
+
+    const { socket } = store.state.websockets;
+
+    const searchForMusareSongs = (page, toast = true) => {
+        if (
+            musareSearch.value.page >= page ||
+            musareSearch.value.searchedQuery !== musareSearch.value.query
+        ) {
+            musareSearch.value.results = [];
+            musareSearch.value.page = 0;
+            musareSearch.value.count = 0;
+            musareSearch.value.resultsLeft = 0;
+            musareSearch.value.pageSize = 0;
+        }
+
+        musareSearch.value.searchedQuery = musareSearch.value.query;
+        socket.dispatch(
+            "songs.searchOfficial",
+            musareSearch.value.query,
+            page,
+            res => {
+                if (res.status === "success") {
+                    const { data } = res;
+                    const { count, pageSize, songs } = data;
+
+                    const newSongs = songs.map(song => ({
+                        isAddedToQueue: false,
+                        ...song
+                    }));
+
+                    musareSearch.value.results = [
+                        ...musareSearch.value.results,
+                        ...newSongs
+                    ];
+                    musareSearch.value.page = page;
+                    musareSearch.value.count = count;
+                    musareSearch.value.resultsLeft =
+                        count - musareSearch.value.results.length;
+                    musareSearch.value.pageSize = pageSize;
+                } else if (res.status === "error") {
+                    musareSearch.value.results = [];
+                    musareSearch.value.page = 0;
+                    musareSearch.value.count = 0;
+                    musareSearch.value.resultsLeft = 0;
+                    musareSearch.value.pageSize = 0;
+                    if (toast) new Toast(res.message);
+                }
+            }
+        );
+    }
+
+    const addMusareSongToPlaylist = (id, index) => {
+        return new Error("Not done yet.");
+        socket.dispatch(
+            "playlists.addSongToPlaylist",
+            false,
+            id,
+            this.playlist._id,
+            res => {
+                new Toast(res.message);
+                if (res.status === "success")
+                    musareSearch.value.results[index].isAddedToQueue = true;
+            }
+        );
+    }
+
+    return { musareSearch, resultsLeftCount, nextPageResultsCount, searchForMusareSongs, addMusareSongToPlaylist };
+}

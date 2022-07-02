@@ -1,3 +1,39 @@
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+
+import { useModalState } from "@/vuex_helpers";
+
+import { useSearchMusare } from "@/components/useSearchMusare";
+
+import SongItem from "@/components/SongItem.vue";
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" },
+	modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
+});
+
+const sitename = ref("Musare");
+
+const { song } = useModalState("MODAL_MODULE_PATH", {
+	modalUuid: props.modalUuid,
+	modalModulePath: props.modalModulePath
+});
+
+const {
+	musareSearch,
+	resultsLeftCount,
+	nextPageResultsCount,
+	searchForMusareSongs
+} = useSearchMusare();
+
+onMounted(async () => {
+	sitename.value = await lofig.get("siteSettings.sitename");
+
+	musareSearch.value.query = song.title;
+	searchForMusareSongs(1, false);
+});
+</script>
+
 <template>
 	<div class="musare-songs-tab">
 		<label class="label"> Search for a song on {{ sitename }} </label>
@@ -35,46 +71,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapGetters } from "vuex";
-
-import { mapModalState } from "@/vuex_helpers";
-
-import SearchMusare from "@/mixins/SearchMusare.vue";
-
-import SongItem from "@/components/SongItem.vue";
-
-export default {
-	components: {
-		SongItem
-	},
-	mixins: [SearchMusare],
-	props: {
-		modalUuid: { type: String, default: "" },
-		modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
-	},
-	data() {
-		return {
-			sitename: "Musare"
-		};
-	},
-	computed: {
-		...mapModalState("MODAL_MODULE_PATH", {
-			song: state => state.song
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	async mounted() {
-		this.sitename = await lofig.get("siteSettings.sitename");
-
-		this.musareSearch.query = this.song.title;
-		this.searchForMusareSongs(1, false);
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .musare-songs-tab #song-query-results {

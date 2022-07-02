@@ -1,5 +1,7 @@
 import { defineAsyncComponent } from "vue";
 
+import { useStore } from "vuex";
+
 const mapModalState = (namespace, map) => {
 	const modalState = {};
 	// console.log("MAP MODAL STATE", namespace);
@@ -73,4 +75,21 @@ const mapModalComponents = (baseDirectory, map) => {
 	return modalComponents;
 };
 
-export { mapModalState, mapModalActions, mapModalComponents };
+const useModalState = (namespace, options) => {
+	const store = useStore();
+
+	const modalState = namespace
+		.replace(
+			"MODAL_MODULE_PATH",
+			namespace.indexOf("MODAL_MODULE_PATH") !== -1
+				? options.modalModulePath
+				: null
+		)
+		.replace("MODAL_UUID", options.modalUuid)
+		.split("/")
+		.reduce((a, b) => a[b], store.state);
+
+	return modalState ? modalState : {};
+}
+
+export { mapModalState, mapModalActions, mapModalComponents, useModalState };
