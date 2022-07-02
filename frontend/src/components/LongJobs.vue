@@ -6,7 +6,6 @@ import FloatingBox from "@/components/FloatingBox.vue";
 
 const store = useStore();
 
-const minimise = ref(true);
 const body = ref(document.body);
 
 const activeJobs = computed(() => store.state.longJobs.activeJobs);

@@ -36,9 +36,6 @@ onBeforeUnmount(() => {
 	store.unregisterModule(["modals", "whatIsNew", props.modalUuid]);
 });
 
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
-
 const { sanitize } = dompurify;
 </script>
 

@@ -1,18 +1,12 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { ref, watch } from "vue";
 import { format, formatDistance, parseISO } from "date-fns";
-
-const store = useStore();
 
 const props = defineProps({
 	punishment: { type: Object, default: () => {} }
 });
 
 const active = ref(false);
-
-const closeModal = payload =>
-	store.dispatch("modalVisibility/closeModal", payload);
 
 watch(props.punishment, punishment => {
 	active.value =
