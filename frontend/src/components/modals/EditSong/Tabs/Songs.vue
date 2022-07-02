@@ -3,7 +3,7 @@ import { ref, onMounted } from "vue";
 
 import { useModalState } from "@/vuex_helpers";
 
-import { useSearchMusare } from "@/components/useSearchMusare";
+import { useSearchMusare } from "@/composables/useSearchMusare";
 
 import SongItem from "@/components/SongItem.vue";
 

@@ -1,9 +1,9 @@
-import { ref, computed } from "vue";
+import { ref } from "vue";
 import { useStore } from "vuex";
 
 import Toast from "toasters";
 
-export function useSearchMusare() {
+export function useSearchYoutube() {
     const store = useStore();
 
     const youtubeSearch = ref({
@@ -17,12 +17,6 @@ export function useSearchMusare() {
             isImportingOnlyMusic: true
         }
     });
-
-    // const resultsLeftCount = computed(() =>
-    //     musareSearch.value.count - musareSearch.value.results.length);
-
-    // const nextPageResultsCount = computed(() =>
-    //     Math.min(musareSearch.value.pageSize, resultsLeftCount.value));
 
     const { socket } = store.state.websockets;
 
@@ -50,7 +44,7 @@ export function useSearchMusare() {
                 res.data.items.forEach(result => {
                     youtubeSearch.value.songs.results.push({
                         id: result.id.videoId,
-                        url: `https://www.youtube.com/watch?v=${this.id}`,
+                        url: `https://www.youtube.com/watch?v=${result.id.videoId}`,
                         title: result.snippet.title,
                         thumbnail: result.snippet.thumbnails.default.url,
                         channelId: result.snippet.channelId,
@@ -75,7 +69,7 @@ export function useSearchMusare() {
                     res.data.items.forEach(result => {
                         youtubeSearch.value.songs.results.push({
                             id: result.id.videoId,
-                            url: `https://www.youtube.com/watch?v=${this.id}`,
+                            url: `https://www.youtube.com/watch?v=${result.id.videoId}`,
                             title: result.snippet.title,
                             thumbnail:
                                 result.snippet.thumbnails.default.url,

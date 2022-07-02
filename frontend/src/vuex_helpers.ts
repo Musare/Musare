@@ -92,4 +92,26 @@ const useModalState = (namespace, options) => {
 	return modalState ? modalState : {};
 }
 
-export { mapModalState, mapModalActions, mapModalComponents, useModalState };
+const useModalActions = (namespace, actions, options) => {
+	const store = useStore();
+
+	const pathStart = `${namespace
+		.replace(
+			"MODAL_MODULE_PATH",
+			namespace.indexOf("MODAL_MODULE_PATH") !== -1
+				? options.modalModulePath
+				: null
+		)
+		.replace("MODAL_UUID", options.modalUuid)}`;
+
+	const actionDispatchers = actions.map(actionName => ([actionName, function func(value) {
+		return store.dispatch(
+			`${pathStart}/${actionName}`,
+			value
+		);
+	}]));
+
+	return Object.fromEntries(actionDispatchers);
+}
+
+export { mapModalState, mapModalActions, mapModalComponents, useModalState, useModalActions };

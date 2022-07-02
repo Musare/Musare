@@ -1,3 +1,41 @@
+<script setup lang="ts">
+import { useModalState, useModalActions } from "@/vuex_helpers";
+
+import { useSearchYoutube } from "@/composables/useSearchYoutube";
+
+import SearchQueryItem from "../../../SearchQueryItem.vue";
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" },
+	modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
+});
+
+const { song, newSong } = useModalState("MODAL_MODULE_PATH", {
+	modalUuid: props.modalUuid,
+	modalModulePath: props.modalModulePath
+});
+
+const { updateYoutubeId, updateTitle, updateThumbnail } = useModalActions(
+	"MODAL_MODULE_PATH",
+	["updateYoutubeId", "updateTitle", "updateThumbnail"],
+	{
+		modalUuid: props.modalUuid,
+		modalModulePath: props.modalModulePath
+	}
+);
+
+const { youtubeSearch, searchForSongs, loadMoreSongs } = useSearchYoutube();
+
+const selectSong = result => {
+	updateYoutubeId(result.id);
+
+	if (newSong) {
+		updateTitle(result.title);
+		updateThumbnail(result.thumbnail);
+	}
+};
+</script>
+
 <template>
 	<div class="youtube-tab">
 		<label class="label"> Search for a song from YouTube </label>
@@ -57,52 +95,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapGetters } from "vuex";
-
-import { mapModalState, mapModalActions } from "@/vuex_helpers";
-
-import SearchYoutube from "@/mixins/SearchYoutube.vue";
-
-import SearchQueryItem from "../../../SearchQueryItem.vue";
-
-export default {
-	components: { SearchQueryItem },
-	mixins: [SearchYoutube],
-	props: {
-		modalUuid: { type: String, default: "" },
-		modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
-	},
-	data() {
-		return {};
-	},
-	computed: {
-		...mapModalState("MODAL_MODULE_PATH", {
-			song: state => state.song,
-			newSong: state => state.newSong
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	methods: {
-		selectSong(result) {
-			this.updateYoutubeId(result.id);
-
-			if (this.newSong) {
-				this.updateTitle(result.title);
-				this.updateThumbnail(result.thumbnail);
-			}
-		},
-		...mapModalActions("MODAL_MODULE_PATH", [
-			"updateYoutubeId",
-			"updateTitle",
-			"updateThumbnail"
-		])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .youtube-tab #song-query-results {
