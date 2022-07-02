@@ -2,7 +2,7 @@
 // TODO
 import { useStore } from "vuex";
 import { defineAsyncComponent, ref, computed, onUpdated } from "vue";
-import draggable from "vuedraggable";
+import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
 
 const SongItem = defineAsyncComponent(
@@ -92,50 +92,44 @@ const removeFromQueue = youtubeId => {
 	);
 };
 
-const repositionSongInQueue = ({ moved }) => {
-	if (!moved) return; // we only need to update when song is moved
-
+const repositionSongInQueue = ({ oldIndex, newIndex }) => {
+	if (oldIndex === newIndex) return; // we only need to update when song is moved
+	const song = queue.value[oldIndex];
 	socket.dispatch(
 		"stations.repositionSongInQueue",
 		station.value._id,
 		{
-			...moved.element,
-			oldIndex: moved.oldIndex,
-			newIndex: moved.newIndex
+			...song,
+			oldIndex,
+			newIndex
 		},
 		res => {
 			new Toast({ content: res.message, timeout: 4000 });
 			if (res.status !== "success")
 				repositionSongInList({
-					...moved.element,
-					newIndex: moved.oldIndex,
-					oldIndex: moved.newIndex
+					...song,
+					oldIndex,
+					newIndex
 				});
 		}
 	);
 };
 
-const moveSongToTop = (song, index) => {
+const moveSongToTop = index => {
 	// this.$refs[`song-item-${index}`].$refs.songActions.tippy.hide();
 
 	repositionSongInQueue({
-		moved: {
-			element: song,
-			oldIndex: index,
-			newIndex: 0
-		}
+		oldIndex: index,
+		newIndex: 0
 	});
 };
 
-const moveSongToBottom = (song, index) => {
+const moveSongToBottom = index => {
 	// this.$refs[`song-item-${index}`].$refs.songActions.tippy.hide();
 
 	repositionSongInQueue({
-		moved: {
-			element: song,
-			oldIndex: index,
-			newIndex: queue.value.length
-		}
+		oldIndex: index,
+		newIndex: queue.value.length
 	});
 };
 
@@ -157,16 +151,16 @@ onUpdated(() => {
 				'scrollable-list': true
 			}"
 		>
-			<draggable
+			<Sortable
 				:component-data="{
 					name: !drag ? 'draggable-list-transition' : null
 				}"
-				v-model="queue"
+				:list="queue"
 				item-key="_id"
-				v-bind="dragOptions"
+				:options="dragOptions"
 				@start="drag = true"
 				@end="drag = false"
-				@change="repositionSongInQueue"
+				@update="repositionSongInQueue"
 			>
 				<template #item="{ element, index }">
 					<song-item
@@ -197,14 +191,14 @@ onUpdated(() => {
 							<i
 								class="material-icons"
 								v-if="index > 0"
-								@click="moveSongToTop(element, index)"
+								@click="moveSongToTop(index)"
 								content="Move to top of Queue"
 								v-tippy
 								>vertical_align_top</i
 							>
 							<i
 								v-if="queue.length - 1 !== index"
-								@click="moveSongToBottom(element, index)"
+								@click="moveSongToBottom(index)"
 								class="material-icons"
 								content="Move to bottom of Queue"
 								v-tippy
@@ -213,7 +207,7 @@ onUpdated(() => {
 						</template>
 					</song-item>
 				</template>
-			</draggable>
+			</Sortable>
 		</div>
 		<p class="nothing-here-text has-text-centered" v-else>
 			There are no songs currently queued
