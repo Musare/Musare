@@ -1,3 +1,153 @@
+<script setup lang="ts">
+// TODO
+import { useStore } from "vuex";
+import { defineAsyncComponent, ref, computed, onUpdated } from "vue";
+import draggable from "vuedraggable";
+import Toast from "toasters";
+
+const SongItem = defineAsyncComponent(
+	() => import("@/components/SongItem.vue")
+);
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" },
+	sector: { type: String, default: "station" }
+});
+
+const store = useStore();
+
+const loggedIn = computed(() => store.state.user.auth.loggedIn);
+const userId = computed(() => store.state.user.auth.userId);
+const userRole = computed(() => store.state.user.auth.role);
+
+const { socket } = store.state.websockets;
+
+const repositionSongInList = payload => {
+	if (props.sector === "manageStation")
+		return store.dispatch(
+			"modals/manageStation/repositionSongInList",
+			payload
+		);
+
+	return store.dispatch("station/repositionSongInList", payload);
+};
+
+const actionableButtonVisible = ref(false);
+const drag = ref(false);
+
+const station = computed({
+	get: () => {
+		if (props.sector === "manageStation")
+			return store.state.modals.manageStation[props.modalUuid].station;
+		return store.state.station.station;
+	},
+	set: station => {
+		if (props.sector === "manageStation")
+			store.commit(
+				`modals/manageStation/${props.modalUuid}/updateStation`,
+				station
+			);
+		else store.commit("station/updateStation", station);
+	}
+});
+
+const queue = computed({
+	get: () => {
+		if (props.sector === "manageStation")
+			return store.state.modals.manageStation[props.modalUuid].songsList;
+		return store.state.station.songsList;
+	},
+	set: queue => {
+		if (props.sector === "manageStation")
+			store.commit(
+				`modals/manageStation/${props.modalUuid}/updateSongsList`,
+				queue
+			);
+		else store.commit("station/updateSongsList", queue);
+	}
+});
+
+const isOwnerOnly = () =>
+	loggedIn.value && userId.value === station.value.owner;
+
+const isAdminOnly = () => loggedIn.value && userRole.value === "admin";
+
+const dragOptions = computed(() => ({
+	animation: 200,
+	group: "queue",
+	disabled: !(isAdminOnly() || isOwnerOnly()),
+	ghostClass: "draggable-list-ghost"
+}));
+
+const removeFromQueue = youtubeId => {
+	socket.dispatch(
+		"stations.removeFromQueue",
+		station.value._id,
+		youtubeId,
+		res => {
+			if (res.status === "success")
+				new Toast("Successfully removed song from the queue.");
+			else new Toast(res.message);
+		}
+	);
+};
+
+const repositionSongInQueue = ({ moved }) => {
+	if (!moved) return; // we only need to update when song is moved
+
+	socket.dispatch(
+		"stations.repositionSongInQueue",
+		station.value._id,
+		{
+			...moved.element,
+			oldIndex: moved.oldIndex,
+			newIndex: moved.newIndex
+		},
+		res => {
+			new Toast({ content: res.message, timeout: 4000 });
+			if (res.status !== "success")
+				repositionSongInList({
+					...moved.element,
+					newIndex: moved.oldIndex,
+					oldIndex: moved.newIndex
+				});
+		}
+	);
+};
+
+const moveSongToTop = (song, index) => {
+	// this.$refs[`song-item-${index}`].$refs.songActions.tippy.hide();
+
+	repositionSongInQueue({
+		moved: {
+			element: song,
+			oldIndex: index,
+			newIndex: 0
+		}
+	});
+};
+
+const moveSongToBottom = (song, index) => {
+	// this.$refs[`song-item-${index}`].$refs.songActions.tippy.hide();
+
+	repositionSongInQueue({
+		moved: {
+			element: song,
+			oldIndex: index,
+			newIndex: queue.value.length
+		}
+	});
+};
+
+onUpdated(() => {
+	// check if actionable button is visible, if not: set max-height of queue items to 100%
+	actionableButtonVisible.value =
+		document
+			.getElementById("queue")
+			.querySelectorAll(".tab-actionable-button").length > 0;
+});
+</script>
+
 <template>
 	<div id="queue">
 		<div
@@ -70,173 +220,6 @@
 		</p>
 	</div>
 </template>
-
-<script>
-import { mapActions, mapState, mapGetters } from "vuex";
-import draggable from "vuedraggable";
-import Toast from "toasters";
-
-import SongItem from "@/components/SongItem.vue";
-
-export default {
-	components: { draggable, SongItem },
-	props: {
-		modalUuid: { type: String, default: "" },
-		sector: {
-			type: String,
-			default: "station"
-		}
-	},
-	data() {
-		return {
-			actionableButtonVisible: false,
-			drag: false
-		};
-	},
-	computed: {
-		station: {
-			get() {
-				if (this.sector === "manageStation")
-					return this.$store.state.modals.manageStation[
-						this.modalUuid
-					].station;
-				return this.$store.state.station.station;
-			},
-			set(station) {
-				if (this.sector === "manageStation")
-					this.$store.commit(
-						`modals/manageStation/${this.modalUuid}/updateStation`,
-						station
-					);
-				else this.$store.commit("station/updateStation", station);
-			}
-		},
-		queue: {
-			get() {
-				if (this.sector === "manageStation")
-					return this.$store.state.modals.manageStation[
-						this.modalUuid
-					].songsList;
-				return this.$store.state.station.songsList;
-			},
-			set(queue) {
-				if (this.sector === "manageStation")
-					this.$store.commit(
-						`modals/manageStation/${this.modalUuid}/updateSongsList`,
-						queue
-					);
-				else this.$store.commit("station/updateSongsList", queue);
-			}
-		},
-		dragOptions() {
-			return {
-				animation: 200,
-				group: "queue",
-				disabled: !(this.isAdminOnly() || this.isOwnerOnly()),
-				ghostClass: "draggable-list-ghost"
-			};
-		},
-		...mapState({
-			loggedIn: state => state.user.auth.loggedIn,
-			userId: state => state.user.auth.userId,
-			userRole: state => state.user.auth.role,
-			noSong: state => state.station.noSong
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	updated() {
-		// check if actionable button is visible, if not: set max-height of queue items to 100%
-		if (
-			document
-				.getElementById("queue")
-				.querySelectorAll(".tab-actionable-button").length > 0
-		)
-			this.actionableButtonVisible = true;
-		else this.actionableButtonVisible = false;
-	},
-	methods: {
-		isOwnerOnly() {
-			return this.loggedIn && this.userId === this.station.owner;
-		},
-		isAdminOnly() {
-			return this.loggedIn && this.userRole === "admin";
-		},
-		removeFromQueue(youtubeId) {
-			this.socket.dispatch(
-				"stations.removeFromQueue",
-				this.station._id,
-				youtubeId,
-				res => {
-					if (res.status === "success")
-						new Toast("Successfully removed song from the queue.");
-					else new Toast(res.message);
-				}
-			);
-		},
-		repositionSongInQueue({ moved }) {
-			if (!moved) return; // we only need to update when song is moved
-
-			this.socket.dispatch(
-				"stations.repositionSongInQueue",
-				this.station._id,
-				{
-					...moved.element,
-					oldIndex: moved.oldIndex,
-					newIndex: moved.newIndex
-				},
-				res => {
-					new Toast({ content: res.message, timeout: 4000 });
-					if (res.status !== "success")
-						this.repositionSongInList({
-							...moved.element,
-							newIndex: moved.oldIndex,
-							oldIndex: moved.newIndex
-						});
-				}
-			);
-		},
-		moveSongToTop(song, index) {
-			this.$refs[`song-item-${index}`].$refs.songActions.tippy.hide();
-
-			this.repositionSongInQueue({
-				moved: {
-					element: song,
-					oldIndex: index,
-					newIndex: 0
-				}
-			});
-		},
-		moveSongToBottom(song, index) {
-			this.$refs[`song-item-${index}`].$refs.songActions.tippy.hide();
-
-			this.repositionSongInQueue({
-				moved: {
-					element: song,
-					oldIndex: index,
-					newIndex: this.queue.length
-				}
-			});
-		},
-		...mapActions({
-			repositionSongInList(dispatch, payload) {
-				if (this.sector === "manageStation")
-					return dispatch(
-						"modals/manageStation/repositionSongInList",
-						payload
-					);
-
-				return dispatch("station/repositionSongInList", payload);
-			}
-		}),
-		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions({
-			showManageStationTab: "modals/manageStation/showTab"
-		})
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {
