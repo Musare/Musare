@@ -56,9 +56,9 @@ onMounted(async () => {
 		</div>
 		<div v-if="musareSearch.results.length > 0">
 			<song-item
-				v-for="song in musareSearch.results"
-				:key="song._id"
-				:song="song"
+				v-for="result in musareSearch.results"
+				:key="result._id"
+				:song="result"
 				:disabled-actions="['addToPlaylist', 'edit']"
 			/>
 			<button
