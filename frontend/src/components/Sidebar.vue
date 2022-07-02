@@ -1,3 +1,9 @@
+<script setup lang="ts">
+defineProps({
+	title: { type: String, default: "Sidebar" }
+});
+</script>
+
 <template>
 	<div class="sidebar" transition="slide">
 		<div class="inner-wrapper">
@@ -6,14 +12,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-export default {
-	props: {
-		title: { type: String, default: "Sidebar" }
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .inner-wrapper {
