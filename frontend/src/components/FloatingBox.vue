@@ -20,10 +20,12 @@ const {
 	setInitialBox,
 	onDragBox,
 	resetBoxPosition,
-	onWindowResizeDragBox
+	onWindowResizeDragBox,
+	onDragBoxUpdate
 } = useDragBox();
-let debounceTimeout;
-let shown = false;
+const saveDebounceTimeout = ref();
+const resizeDebounceTimeout = ref();
+const shown = ref(false);
 
 onMounted(async () => {
 	let initial = {
@@ -35,7 +37,7 @@ onMounted(async () => {
 	if (props.id !== null && localStorage[`box:${props.id}`]) {
 		const json = JSON.parse(localStorage.getItem(`box:${props.id}`));
 		initial = { ...initial, ...json };
-		shown = json.shown;
+		shown.value = json.shown;
 	} else {
 		initial.top =
 			props.initial === "align-bottom"
@@ -47,34 +49,43 @@ onMounted(async () => {
 });
 
 const saveBox = () => {
-	if (props.id === null) return;
-	localStorage.setItem(
-		`box:${props.id}`,
-		JSON.stringify({
-			height: dragBox.height,
-			width: dragBox.width,
-			top: dragBox.top,
-			left: dragBox.left,
-			shown
-		})
-	);
-	setInitialBox({
-		top:
-			props.initial === "align-bottom"
-				? Math.max(document.body.clientHeight - 10 - dragBox.height, 0)
-				: 10,
-		left: 10
-	});
+	if (saveDebounceTimeout.value) clearTimeout(saveDebounceTimeout.value);
+
+	saveDebounceTimeout.value = setTimeout(() => {
+		if (props.id === null) return;
+		localStorage.setItem(
+			`box:${props.id}`,
+			JSON.stringify({
+				height: dragBox.value.height,
+				width: dragBox.value.width,
+				top: dragBox.value.top,
+				left: dragBox.value.left,
+				shown: shown.value
+			})
+		);
+		setInitialBox({
+			top:
+				props.initial === "align-bottom"
+					? Math.max(
+							document.body.clientHeight -
+								10 -
+								dragBox.value.height,
+							0
+					  )
+					: 10,
+			left: 10
+		});
+	}, 50);
 };
 
 const setBoxDimensions = (width, height) => {
-	dragBox.height = Math.min(
+	dragBox.value.height = Math.min(
 		Math.max(height, props.minHeight),
 		props.maxHeight,
 		document.body.clientHeight
 	);
 
-	dragBox.width = Math.min(
+	dragBox.value.width = Math.min(
 		Math.max(width, props.minWidth),
 		props.maxWidth,
 		document.body.clientWidth
@@ -104,7 +115,7 @@ const onResizeBox = e => {
 };
 
 const toggleBox = () => {
-	shown = !shown;
+	shown.value = !shown.value;
 	saveBox();
 };
 
@@ -115,11 +126,11 @@ const resetBox = () => {
 };
 
 const onWindowResize = () => {
-	if (debounceTimeout) clearTimeout(debounceTimeout);
+	if (resizeDebounceTimeout.value) clearTimeout(resizeDebounceTimeout.value);
 
-	debounceTimeout = setTimeout(() => {
+	resizeDebounceTimeout.value = setTimeout(() => {
 		onWindowResizeDragBox();
-		const { width, height } = dragBox;
+		const { width, height } = dragBox.value;
 		setBoxDimensions(width + 0, height + 0);
 		saveBox();
 	}, 50);
@@ -128,13 +139,13 @@ const onWindowResize = () => {
 onWindowResize();
 window.addEventListener("resize", onWindowResize);
 
-// const onDragBoxUpdate = () => {
-// 	onWindowResize();
-// };
+onDragBoxUpdate.value = () => {
+	onWindowResize();
+};
 
 onUnmounted(() => {
 	window.removeEventListener("resize", onWindowResize);
-	if (debounceTimeout) clearTimeout(debounceTimeout);
+	if (resizeDebounceTimeout.value) clearTimeout(resizeDebounceTimeout.value);
 });
 
 defineExpose({
