@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { useStore } from "vuex";
-import { computed, onMounted, onBeforeUnmount } from "vue";
+import { onMounted, onBeforeUnmount } from "vue";
 
 import { formatDistance } from "date-fns";
 import { marked } from "marked";
 import dompurify from "dompurify";
+
+import { useModalState } from "@/vuex_helpers";
 
 const store = useStore();
 
@@ -12,11 +14,9 @@ const props = defineProps({
 	modalUuid: { type: String, default: "" }
 });
 
-const news = computed(() =>
-	store.state.modals.whatIsNew[props.modalUuid]
-		? store.state.modals.whatIsNew[props.modalUuid].news
-		: {}
-);
+const { news } = useModalState("modals/whatIsNew/MODAL_UUID", {
+	modalUuid: props.modalUuid
+});
 
 onMounted(() => {
 	marked.use({
