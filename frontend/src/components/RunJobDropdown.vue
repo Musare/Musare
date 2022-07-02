@@ -1,3 +1,42 @@
+<script setup lang="ts">
+import { useStore } from "vuex";
+import { ref } from "vue";
+
+defineProps({
+	jobs: { type: Array, default: () => [] }
+});
+
+const showJobDropdown = ref(false);
+
+const store = useStore();
+
+const { socket } = store.state.websockets;
+
+const setJob = payload => store.dispatch("longJobs/setJob", payload);
+
+const runJob = job => {
+	let id;
+	let title;
+
+	socket.dispatch(job.socket, {
+		cb: () => {},
+		onProgress: res => {
+			if (res.status === "started") {
+				id = res.id;
+				title = res.title;
+			}
+
+			if (id)
+				setJob({
+					id,
+					name: title,
+					...res
+				});
+		}
+	});
+};
+</script>
+
 <template>
 	<tippy
 		class="runJobDropdown"
@@ -51,52 +90,6 @@
 		</template>
 	</tippy>
 </template>
-
-<script>
-import { mapGetters } from "vuex";
-
-export default {
-	props: {
-		jobs: {
-			type: Array,
-			default: () => []
-		}
-	},
-	data() {
-		return {
-			showJobDropdown: false
-		};
-	},
-	computed: {
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	methods: {
-		runJob(job) {
-			let id;
-			let title;
-
-			this.socket.dispatch(job.socket, {
-				cb: () => {},
-				onProgress: res => {
-					if (res.status === "started") {
-						id = res.id;
-						title = res.title;
-					}
-
-					if (id)
-						this.setJob({
-							id,
-							name: title,
-							...res
-						});
-				}
-			});
-		}
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .nav-dropdown-items {
