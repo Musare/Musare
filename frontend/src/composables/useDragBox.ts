@@ -1,7 +1,7 @@
 // WIP
-import { ref, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, nextTick } from "vue";
 
-export default () => {
+export function useDragBox() {
 	const dragBox = ref({
 		top: 0,
 		left: 0,
@@ -22,15 +22,20 @@ export default () => {
 		debounceTimeout: null,
 		lastTappedDate: 0
 	});
+
 	const onDragBoxUpdate = ref();
 
-	const setInitialBox = (initial, reset) => {
+	const setOnDragBoxUpdate = newOnDragBoxUpdate => {
+		onDragBoxUpdate.value = newOnDragBoxUpdate;
+	}
+
+	const setInitialBox = (initial, reset = false) => {
 		dragBox.value.initial = initial || dragBox.value.initial;
 		if (reset)
 			dragBox.value = { ...dragBox.value, ...dragBox.value.initial };
 	};
 
-	const resetBoxPosition = preventUpdate => {
+	const resetBoxPosition = (preventUpdate = false) => {
 		setInitialBox(null, true);
 		dragBox.value.latest.top = dragBox.value.top;
 		dragBox.value.latest.left = dragBox.value.left;
@@ -117,8 +122,9 @@ export default () => {
 			if (
 				dragBox.value.top === dragBox.value.latest.top &&
 				dragBox.value.left === dragBox.value.latest.left
-			)
+			) {
 				resetBoxPosition();
+			}
 			else {
 				if (
 					dragBox.value.top >
@@ -141,10 +147,14 @@ export default () => {
 		}, 50);
 	};
 
-	resetBoxPosition(true);
+	onMounted(async () => {
+		resetBoxPosition(true);
 
-	onWindowResizeDragBox();
-	window.addEventListener("resize", onWindowResizeDragBox);
+		await nextTick();
+
+		onWindowResizeDragBox();
+		window.addEventListener("resize", onWindowResizeDragBox);
+	});
 
 	onUnmounted(() => {
 		window.removeEventListener("resize", onWindowResizeDragBox);
@@ -158,6 +168,6 @@ export default () => {
 		onDragBox,
 		resetBoxPosition,
 		onWindowResizeDragBox,
-		onDragBoxUpdate
+		setOnDragBoxUpdate
 	};
 };
