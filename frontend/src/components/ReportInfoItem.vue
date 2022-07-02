@@ -1,3 +1,22 @@
+<script setup lang="ts">
+import { useStore } from "vuex";
+import { defineAsyncComponent } from "vue";
+import { formatDistance } from "date-fns";
+
+const ProfilePicture = defineAsyncComponent(
+	() => import("@/components/ProfilePicture.vue")
+);
+
+defineProps({
+	createdBy: { type: Object, default: () => {} },
+	createdAt: { type: String, default: "" }
+});
+
+const store = useStore();
+
+const closeModal = modal => store.dispatch("modalVisibility/closeModal", modal);
+</script>
+
 <template>
 	<div class="universal-item report-info-item">
 		<div class="item-icon">
@@ -43,25 +62,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapActions } from "vuex";
-import { formatDistance } from "date-fns";
-
-import ProfilePicture from "@/components/ProfilePicture.vue";
-
-export default {
-	components: { ProfilePicture },
-	props: {
-		createdBy: { type: Object, default: () => {} },
-		createdAt: { type: String, default: "" }
-	},
-	methods: {
-		formatDistance,
-		...mapActions("modalVisibility", ["closeModal"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {
