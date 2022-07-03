@@ -90,7 +90,7 @@ const useModalState = (namespace, options) => {
 		.reduce((a, b) => a[b], store.state);
 
 	return modalState ? modalState : {};
-}
+};
 
 const useModalActions = (namespace, actions, options) => {
 	const store = useStore();
@@ -112,6 +112,17 @@ const useModalActions = (namespace, actions, options) => {
 	}]));
 
 	return Object.fromEntries(actionDispatchers);
-}
+};
 
-export { mapModalState, mapModalActions, mapModalComponents, useModalState, useModalActions };
+const useModalComponents = (baseDirectory, map) => {
+	const modalComponents = {};
+	Object.entries(map).forEach(([mapKey, mapValue]) => {
+		modalComponents[mapKey] =
+			defineAsyncComponent(() =>
+				import(`./${baseDirectory}/${mapValue}`)
+			);
+	});
+	return modalComponents;
+};
+
+export { mapModalState, mapModalActions, mapModalComponents, useModalState, useModalActions, useModalComponents };
