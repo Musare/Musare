@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useStore } from "vuex";
-import { computed, ref } from "vue";
+import { computed, shallowRef } from "vue";
 import { useModalComponents } from "@/vuex_helpers";
 
 const store = useStore();
@@ -8,7 +8,7 @@ const store = useStore();
 const activeModals = computed(() => store.state.modalVisibility.activeModals);
 const modals = computed(() => store.state.modalVisibility.modals);
 
-const modalComponents = ref(
+const modalComponents = shallowRef(
 	useModalComponents("components/modals", {
 		editUser: "EditUser.vue",
 		login: "Login.vue",
