@@ -1,3 +1,98 @@
+<script setup lang="ts">
+import { useStore } from "vuex";
+import { ref, defineAsyncComponent, onMounted, onBeforeUnmount } from "vue";
+import Toast from "toasters";
+import { useModalState } from "@/vuex_helpers";
+import ws from "@/ws";
+
+const AutoSuggest = defineAsyncComponent(
+	() => import("@/components/AutoSuggest.vue")
+);
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" }
+});
+
+const store = useStore();
+
+const closeCurrentModal = () =>
+	store.dispatch("modalVisibility/closeCurrentModal");
+const setJob = payload => store.dispatch("longJobs/setJob", payload);
+
+const { socket } = store.state.websockets;
+
+const { type } = useModalState("modals/bulkActions/MODAL_UUID", {
+	modalUuid: props.modalUuid
+});
+
+const method = ref("add");
+const items = ref([]);
+const itemInput = ref();
+const allItems = ref([]);
+
+const init = () => {
+	if (type.autosuggest && type.autosuggestDataAction)
+		socket.dispatch(type.autosuggestDataAction, res => {
+			if (res.status === "success") {
+				const { items } = res.data;
+				allItems.value = items;
+			} else {
+				new Toast(res.message);
+			}
+		});
+};
+
+const addItem = () => {
+	if (!itemInput.value) return;
+	if (type.regex && !type.regex.test(itemInput.value)) {
+		new Toast(`Invalid ${type.name} format.`);
+	} else if (items.value.includes(itemInput.value)) {
+		new Toast(`Duplicate ${type.name} specified.`);
+	} else {
+		items.value.push(itemInput.value);
+		itemInput.value = null;
+	}
+};
+
+const removeItem = index => {
+	items.value.splice(index, 1);
+};
+
+const applyChanges = () => {
+	let id;
+	let title;
+
+	socket.dispatch(type.action, method.value, items.value, type.items, {
+		cb: () => {},
+		onProgress: res => {
+			if (res.status === "started") {
+				id = res.id;
+				title = res.title;
+				closeCurrentModal();
+			}
+
+			if (id)
+				setJob({
+					id,
+					name: title,
+					...res
+				});
+		}
+	});
+};
+
+onBeforeUnmount(() => {
+	itemInput.value = null;
+	items.value = [];
+	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+	store.unregisterModule(["modals", "bulkActions", props.modalUuid]);
+});
+
+onMounted(() => {
+	ws.onConnect(init);
+});
+</script>
+
 <template>
 	<div>
 		<modal title="Bulk Actions" class="bulk-actions-modal" size="slim">
@@ -63,106 +158,6 @@
 		</modal>
 	</div>
 </template>
-
-<script>
-import { mapGetters, mapActions } from "vuex";
-
-import Toast from "toasters";
-
-import AutoSuggest from "@/components/AutoSuggest.vue";
-
-import ws from "@/ws";
-import { mapModalState } from "@/vuex_helpers";
-
-export default {
-	components: { AutoSuggest },
-	props: {
-		modalUuid: { type: String, default: "" }
-	},
-	data() {
-		return {
-			method: "add",
-			items: [],
-			itemInput: null,
-			allItems: []
-		};
-	},
-	computed: {
-		...mapModalState("modals/bulkActions/MODAL_UUID", {
-			type: state => state.type
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	beforeUnmount() {
-		this.itemInput = null;
-		this.items = [];
-		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-		this.$store.unregisterModule(["modals", "bulkActions", this.modalUuid]);
-	},
-	mounted() {
-		ws.onConnect(this.init);
-	},
-	methods: {
-		init() {
-			if (this.type.autosuggest && this.type.autosuggestDataAction)
-				this.socket.dispatch(this.type.autosuggestDataAction, res => {
-					if (res.status === "success") {
-						const { items } = res.data;
-						this.allItems = items;
-					} else {
-						new Toast(res.message);
-					}
-				});
-		},
-		addItem() {
-			if (!this.itemInput) return;
-			if (this.type.regex && !this.type.regex.test(this.itemInput)) {
-				new Toast(`Invalid ${this.type.name} format.`);
-			} else if (this.items.includes(this.itemInput)) {
-				new Toast(`Duplicate ${this.type.name} specified.`);
-			} else {
-				this.items.push(this.itemInput);
-				this.itemInput = null;
-			}
-		},
-		removeItem(index) {
-			this.items.splice(index, 1);
-		},
-		applyChanges() {
-			let id;
-			let title;
-
-			this.socket.dispatch(
-				this.type.action,
-				this.method,
-				this.items,
-				this.type.items,
-				{
-					cb: () => {},
-					onProgress: res => {
-						if (res.status === "started") {
-							id = res.id;
-							title = res.title;
-							this.closeCurrentModal();
-						}
-
-						if (id)
-							this.setJob({
-								id,
-								name: title,
-								...res
-							});
-					}
-				}
-			);
-		},
-		...mapActions("modalVisibility", ["closeCurrentModal"]),
-		...mapActions("longJobs", ["setJob"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .label {
