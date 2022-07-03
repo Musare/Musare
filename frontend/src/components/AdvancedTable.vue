@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// TODO
 import { useStore } from "vuex";
 import {
 	defineAsyncComponent,
@@ -149,17 +148,20 @@ const allFilterTypes = ref({
 		displayName: "Special"
 	}
 });
-const addFilterValue = ref(null);
+const addFilterValue = ref();
 const showFiltersDropdown = ref(false);
 const showColumnsDropdown = ref(false);
-const lastColumnResizerTapped = ref(null);
+const lastColumnResizerTapped = ref();
 const lastColumnResizerTappedDate = ref(0);
 const autosuggest = ref({
 	allItems: {}
 });
-const storeTableSettingsDebounceTimeout = ref(null);
-const windowResizeDebounceTimeout = ref(null);
+const storeTableSettingsDebounceTimeout = ref();
+const windowResizeDebounceTimeout = ref();
+const columnOrderChangedDebounceTimeout = ref();
 const lastSelectedItemIndex = ref(0);
+const bulkPopup = ref();
+const rowElements = ref([]);
 
 const lastPage = computed(() => Math.ceil(count.value / pageSize.value));
 const sortedFilteredColumns = computed(() =>
@@ -453,17 +455,16 @@ const toggleAllRows = () => {
 };
 
 const highlightRow = async itemIndex => {
-	// TODO
-	// const rowElement = this.$refs[`row-${itemIndex}`]
-	// 	? this.$refs[`row-${itemIndex}`][0]
-	// 	: null;
+	const rowElement = rowElements.value[`row-${itemIndex}`]
+		? rowElements.value[`row-${itemIndex}`][0]
+		: null;
 	// Set the last clicked item to no longer be highlighted, if it exists
 	if (lastSelectedItemIndex.value >= 0)
 		rows.value[lastSelectedItemIndex.value].highlighted = false;
-	// if (rowElement) {
-	// 	await nextTick();
-	// 	rowElement.focus();
-	// }
+	if (rowElement) {
+		await nextTick();
+		rowElement.focus();
+	}
 	// Set the item to be highlighted
 	rows.value[itemIndex].highlighted = true;
 };
@@ -481,14 +482,13 @@ const highlightDown = itemIndex => {
 };
 
 const unhighlightRow = async itemIndex => {
-	// TODO
-	// const rowElement = this.$refs[`row-${itemIndex}`]
-	// 	? this.$refs[`row-${itemIndex}`][0]
-	// 	: null;
-	// if (rowElement) {
-	// 	await nextTick();
-	// 	rowElement.blur();
-	// }
+	const rowElement = rowElements.value[`row-${itemIndex}`]
+		? rowElements.value[`row-${itemIndex}`][0]
+		: null;
+	if (rowElement) {
+		await nextTick();
+		rowElement.blur();
+	}
 	// Set the item to no longer be highlighted
 	rows.value[itemIndex].highlighted = false;
 };
@@ -649,8 +649,19 @@ const applyFilterAndGetData = () => {
 	storeTableSettings();
 };
 
-const columnOrderChanged = () => {
-	storeTableSettings();
+const columnOrderChanged = ({ oldIndex, newIndex }) => {
+	if (columnOrderChangedDebounceTimeout.value)
+		clearTimeout(columnOrderChangedDebounceTimeout.value);
+
+	columnOrderChangedDebounceTimeout.value = setTimeout(() => {
+		if (oldIndex === newIndex) return;
+		orderedColumns.value.splice(
+			newIndex,
+			0,
+			orderedColumns.value.splice(oldIndex, 1)[0]
+		);
+		storeTableSettings();
+	}, 100);
 };
 
 const getTableSettings = () => {
@@ -1059,14 +1070,11 @@ onMounted(async () => {
 					preventDefault: true,
 					handler: () => {
 						// Execute popup action 1-9
-						// if (aModalIsOpen.value) return;
-						// if (selectedRows.value.length === 0) return;
-						// TODO
-						// const bulkActionsElement =
-						// 	this.$refs["bulk-popup"].querySelector(
-						// 		".bulk-actions"
-						// 	);
-						// bulkActionsElement.children[i - 1].click();
+						if (aModalIsOpen.value) return;
+						if (selectedRows.value.length === 0) return;
+						const bulkActionsElement =
+							bulkPopup.value.querySelector(".bulk-actions");
+						bulkActionsElement.children[i - 1].click();
 					}
 				}
 			);
@@ -1078,16 +1086,13 @@ onMounted(async () => {
 			preventDefault: true,
 			handler: () => {
 				// Select popup action 0
-				// if (aModalIsOpen.value) return;
-				// if (selectedRows.value.length === 0) return;
-				// TODO
-				// const bulkActionsElement =
-				// 	this.$refs["bulk-popup"].querySelector(
-				// 		".bulk-actions"
-				// 	);
-				// bulkActionsElement.children[
-				// 	bulkActionsElement.children.length - 1
-				// ].focus();
+				if (aModalIsOpen.value) return;
+				if (selectedRows.value.length === 0) return;
+				const bulkActionsElement =
+					bulkPopup.value.querySelector(".bulk-actions");
+				bulkActionsElement.children[
+					bulkActionsElement.children.length - 1
+				].focus();
 			}
 		});
 	}
@@ -1104,6 +1109,8 @@ onUnmounted(() => {
 		clearTimeout(storeTableSettingsDebounceTimeout.value);
 	if (windowResizeDebounceTimeout.value)
 		clearTimeout(windowResizeDebounceTimeout.value);
+	if (columnOrderChangedDebounceTimeout.value)
+		clearTimeout(columnOrderChangedDebounceTimeout.value);
 
 	if (props.keyboardShortcuts) {
 		const shortcutNames = [
@@ -1675,7 +1682,7 @@ watch(
 								updated: item.updated,
 								removed: item.removed
 							}"
-							:ref="`row-${itemIndex}`"
+							:ref="el => (rowElements[`row-${itemIndex}`] = el)"
 							tabindex="0"
 							@blur="unhighlightRow(itemIndex)"
 							@keydown.up.prevent
@@ -1855,7 +1862,7 @@ watch(
 				width: dragBox.width + 'px',
 				height: dragBox.height + 'px'
 			}"
-			ref="bulk-popup"
+			ref="bulkPopup"
 		>
 			<button
 				class="button is-primary"

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// TODO
 import { useStore } from "vuex";
 import { defineAsyncComponent, ref, computed, onUpdated } from "vue";
 import { Sortable } from "sortablejs-vue3";
@@ -34,6 +33,7 @@ const repositionSongInList = payload => {
 
 const actionableButtonVisible = ref(false);
 const drag = ref(false);
+const songItems = ref([]);
 
 const station = computed({
 	get: () => {
@@ -116,7 +116,7 @@ const repositionSongInQueue = ({ oldIndex, newIndex }) => {
 };
 
 const moveSongToTop = index => {
-	// this.$refs[`song-item-${index}`].$refs.songActions.tippy.hide();
+	songItems.value[`song-item-${index}`].$refs.songActions.tippy.hide();
 
 	repositionSongInQueue({
 		oldIndex: index,
@@ -125,7 +125,7 @@ const moveSongToTop = index => {
 };
 
 const moveSongToBottom = index => {
-	// this.$refs[`song-item-${index}`].$refs.songActions.tippy.hide();
+	songItems.value[`song-item-${index}`].$refs.songActions.tippy.hide();
 
 	repositionSongInQueue({
 		oldIndex: index,
@@ -170,7 +170,7 @@ onUpdated(() => {
 							'item-draggable': isAdminOnly() || isOwnerOnly()
 						}"
 						:disabled-actions="[]"
-						:ref="`song-item-${index}`"
+						:ref="el => (songItems[`song-item-${index}`] = el)"
 					>
 						<template
 							v-if="isAdminOnly() || isOwnerOnly()"
