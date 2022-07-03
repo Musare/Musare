@@ -40,7 +40,7 @@ const hoveredTippy = ref(false);
 const songActions = ref(null);
 
 const loggedIn = computed(() => store.state.user.auth.loggedIn);
-const userRole = computed(() => store.state.user.auth.userRole);
+const userRole = computed(() => store.state.user.auth.role);
 
 function formatRequestedAt() {
 	if (props.requestedBy && props.song.requestedAt)
