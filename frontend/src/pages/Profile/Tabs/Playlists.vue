@@ -1,13 +1,7 @@
 <script setup lang="ts">
-import {
-	defineAsyncComponent,
-	computed,
-	onMounted,
-	onBeforeUnmount
-} from "vue";
+import { defineAsyncComponent, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import { useSortablePlaylists } from "@/composables/useSortablePlaylists";
-import ws from "@/ws";
 
 const PlaylistItem = defineAsyncComponent(
 	() => import("@/components/PlaylistItem.vue")
@@ -22,46 +16,21 @@ const store = useStore();
 
 const myUserId = computed(() => store.state.user.auth.userId);
 
-const { socket } = store.state.websockets;
-
 const {
 	Sortable,
 	drag,
-	orderOfPlaylists,
-	disabled,
+	userId,
+	currentUser,
 	playlists,
 	dragOptions,
-	setPlaylists,
-	calculatePlaylistOrder,
 	savePlaylistOrder
 } = useSortablePlaylists();
 
 const openModal = modal => store.dispatch("modalVisibility/openModal", modal);
 
 onMounted(() => {
-	ws.onConnect(() => {
-		if (myUserId.value !== props.userId)
-			socket.dispatch(
-				"apis.joinRoom",
-				`profile.${props.userId}.playlists`,
-				() => {}
-			);
-
-		socket.dispatch("playlists.indexForUser", props.userId, res => {
-			if (res.status === "success") setPlaylists(res.data.playlists);
-			orderOfPlaylists.value = calculatePlaylistOrder(); // order in regards to the database
-			disabled.value = myUserId.value !== props.userId;
-		});
-	});
-});
-
-onBeforeUnmount(() => {
-	if (myUserId.value !== props.userId)
-		socket.dispatch(
-			"apis.leaveRoom",
-			`profile.${props.userId}.playlists`,
-			() => {}
-		);
+	userId.value = props.userId;
+	currentUser.value = myUserId.value === props.userId;
 });
 </script>
 

@@ -1,12 +1,14 @@
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { useStore } from "vuex";
 import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
+import ws from "@/ws";
 
 export function useSortablePlaylists() {
     const orderOfPlaylists = ref([]);
     const drag = ref(false);
-    const disabled = ref(false);
+    const userId = ref();
+    const currentUser = ref(true);
 
     const store = useStore();
 
@@ -21,7 +23,7 @@ export function useSortablePlaylists() {
     const dragOptions = computed(() => ({
         animation: 200,
         group: "playlists",
-        disabled: disabled.value,
+        disabled: !currentUser.value,
         ghostClass: "draggable-list-ghost"
     }));
 
@@ -66,7 +68,22 @@ export function useSortablePlaylists() {
 		});
     };
 
-    onMounted(() => {
+    onMounted(async () => {
+		await nextTick();
+		ws.onConnect(() => {
+			if (!currentUser.value)
+				socket.dispatch(
+					"apis.joinRoom",
+					`profile.${userId.value}.playlists`,
+					() => {}
+				);
+
+			socket.dispatch("playlists.indexForUser", userId.value, res => {
+				if (res.status === "success") setPlaylists(res.data.playlists);
+				orderOfPlaylists.value = calculatePlaylistOrder(); // order in regards to the database
+			});
+		});
+
 		socket.on(
 			"event:playlist.created",
 			res => addPlaylist(res.data.playlist),
@@ -155,17 +172,22 @@ export function useSortablePlaylists() {
 		);
 	});
 
+	onBeforeUnmount(() => {
+		if (!currentUser.value)
+			socket.dispatch(
+				"apis.leaveRoom",
+				`profile.${userId.value}.playlists`,
+				() => {}
+			);
+	});
+
     return {
 		Sortable,
         drag,
-		orderOfPlaylists,
-        disabled,
+        userId,
+        currentUser,
         playlists,
         dragOptions,
-		setPlaylists,
-        addPlaylist,
-        removePlaylist,
-		calculatePlaylistOrder,
         savePlaylistOrder
     };
 };
