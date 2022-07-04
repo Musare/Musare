@@ -1,3 +1,70 @@
+<script setup lang="ts">
+import {
+	defineAsyncComponent,
+	computed,
+	onMounted,
+	onBeforeUnmount
+} from "vue";
+import { useStore } from "vuex";
+import { useSortablePlaylists } from "@/composables/useSortablePlaylists";
+import ws from "@/ws";
+
+const PlaylistItem = defineAsyncComponent(
+	() => import("@/components/PlaylistItem.vue")
+);
+
+const props = defineProps({
+	userId: { type: String, default: "" },
+	username: { type: String, default: "" }
+});
+
+const store = useStore();
+
+const myUserId = computed(() => store.state.user.auth.userId);
+
+const { socket } = store.state.websockets;
+
+const {
+	Sortable,
+	drag,
+	orderOfPlaylists,
+	disabled,
+	playlists,
+	dragOptions,
+	setPlaylists,
+	calculatePlaylistOrder,
+	savePlaylistOrder
+} = useSortablePlaylists();
+
+const openModal = modal => store.dispatch("modalVisibility/openModal", modal);
+
+onMounted(() => {
+	ws.onConnect(() => {
+		if (myUserId.value !== props.userId)
+			socket.dispatch(
+				"apis.joinRoom",
+				`profile.${props.userId}.playlists`,
+				() => {}
+			);
+
+		socket.dispatch("playlists.indexForUser", props.userId, res => {
+			if (res.status === "success") setPlaylists(res.data.playlists);
+			orderOfPlaylists.value = calculatePlaylistOrder(); // order in regards to the database
+			disabled.value = myUserId.value !== props.userId;
+		});
+	});
+});
+
+onBeforeUnmount(() => {
+	if (myUserId.value !== props.userId)
+		socket.dispatch(
+			"apis.leaveRoom",
+			`profile.${props.userId}.playlists`,
+			() => {}
+		);
+});
+</script>
+
 <template>
 	<div class="content playlists-tab">
 		<div v-if="playlists.length > 0">
@@ -18,17 +85,17 @@
 
 			<hr class="section-horizontal-rule" />
 
-			<draggable
+			<Sortable
 				:component-data="{
 					name: !drag ? 'draggable-list-transition' : null
 				}"
 				v-if="playlists.length > 0"
-				v-model="playlists"
+				:list="playlists"
 				item-key="_id"
-				v-bind="dragOptions"
+				:options="dragOptions"
 				@start="drag = true"
 				@end="drag = false"
-				@change="savePlaylistOrder"
+				@update="savePlaylistOrder"
 			>
 				<template #item="{ element }">
 					<playlist-item
@@ -73,7 +140,7 @@
 						</template>
 					</playlist-item>
 				</template>
-			</draggable>
+			</Sortable>
 
 			<button
 				v-if="myUserId === userId"
@@ -89,69 +156,3 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapActions, mapGetters } from "vuex";
-
-import PlaylistItem from "@/components/PlaylistItem.vue";
-import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
-import ws from "@/ws";
-
-export default {
-	components: {
-		PlaylistItem
-	},
-	mixins: [SortablePlaylists],
-	props: {
-		userId: {
-			type: String,
-			default: ""
-		},
-		username: {
-			type: String,
-			default: ""
-		}
-	},
-	computed: {
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	mounted() {
-		if (
-			this.$route.query.tab === "recent-activity" ||
-			this.$route.query.tab === "playlists"
-		)
-			this.tab = this.$route.query.tab;
-
-		if (this.myUserId !== this.userId) {
-			ws.onConnect(() =>
-				this.socket.dispatch(
-					"apis.joinRoom",
-					`profile.${this.userId}.playlists`,
-					() => {}
-				)
-			);
-		}
-
-		ws.onConnect(() =>
-			this.socket.dispatch("playlists.indexForUser", this.userId, res => {
-				if (res.status === "success")
-					this.setPlaylists(res.data.playlists);
-				this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
-			})
-		);
-	},
-	beforeUnmount() {
-		this.socket.dispatch(
-			"apis.leaveRoom",
-			`profile.${this.userId}.playlists`,
-			() => {}
-		);
-	},
-	methods: {
-		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions("user/playlists", ["setPlaylists"])
-	}
-};
-</script>

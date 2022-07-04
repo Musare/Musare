@@ -1,4 +1,3 @@
-// WIP
 import { ref, onMounted, onUnmounted, nextTick } from "vue";
 
 export function useDragBox() {
