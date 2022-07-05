@@ -5,53 +5,48 @@ import Toast from "toasters";
 import ws from "@/ws";
 
 export function useSortablePlaylists() {
-    const orderOfPlaylists = ref([]);
-    const drag = ref(false);
-    const userId = ref();
+	const orderOfPlaylists = ref([]);
+	const drag = ref(false);
+	const userId = ref();
 
-    const store = useStore();
+	const store = useStore();
 
-    const playlists = computed({
-        get: () => {
-            return store.state.user.playlists.playlists;
-        },
-        set: (playlists) => {
-            store.commit("user/playlists/updatePlaylists", playlists);
-        }
-    });
-    const myUserId = computed(() => store.state.user.auth.userId);
-    const isCurrentUser = computed(() => userId.value === myUserId.value);
+	const playlists = computed({
+		get: () => store.state.user.playlists.playlists,
+		set: playlists => {
+			store.commit("user/playlists/updatePlaylists", playlists);
+		}
+	});
+	const myUserId = computed(() => store.state.user.auth.userId);
+	const isCurrentUser = computed(() => userId.value === myUserId.value);
 	const dragOptions = computed(() => ({
-        animation: 200,
-        group: "playlists",
-        disabled: !isCurrentUser.value,
-        ghostClass: "draggable-list-ghost"
-    }));
+		animation: 200,
+		group: "playlists",
+		disabled: !isCurrentUser.value,
+		ghostClass: "draggable-list-ghost"
+	}));
 
-    const { socket } = store.state.websockets;
+	const { socket } = store.state.websockets;
 
-    const setPlaylists = playlists => store.dispatch("user/playlists/setPlaylists", playlists);
-    const addPlaylist = playlist => store.dispatch("user/playlists/addPlaylist", playlist);
-    const removePlaylist = playlist => store.dispatch("user/playlists/removePlaylist", playlist);
+	const setPlaylists = playlists =>
+		store.dispatch("user/playlists/setPlaylists", playlists);
+	const addPlaylist = playlist =>
+		store.dispatch("user/playlists/addPlaylist", playlist);
+	const removePlaylist = playlist =>
+		store.dispatch("user/playlists/removePlaylist", playlist);
 
-    const calculatePlaylistOrder = () => {
-        const calculatedOrder = [];
-        playlists.value.forEach(playlist =>
-            calculatedOrder.push(playlist._id)
-        );
+	const calculatePlaylistOrder = () => {
+		const calculatedOrder = [];
+		playlists.value.forEach(playlist => calculatedOrder.push(playlist._id));
 
-        return calculatedOrder;
-    };
+		return calculatedOrder;
+	};
 
-    const savePlaylistOrder = ({ oldIndex, newIndex }) => {
-        if (oldIndex === newIndex) return;
+	const savePlaylistOrder = ({ oldIndex, newIndex }) => {
+		if (oldIndex === newIndex) return;
 		const oldPlaylists = playlists.value;
 
-		oldPlaylists.splice(
-			newIndex,
-			0,
-			oldPlaylists.splice(oldIndex, 1)[0]
-		);
+		oldPlaylists.splice(newIndex, 0, oldPlaylists.splice(oldIndex, 1)[0]);
 
 		setPlaylists(oldPlaylists).then(() => {
 			const recalculatedOrder = calculatePlaylistOrder();
@@ -67,9 +62,9 @@ export function useSortablePlaylists() {
 				}
 			);
 		});
-    };
+	};
 
-    onMounted(async () => {
+	onMounted(async () => {
 		await nextTick();
 
 		if (!userId.value) userId.value = myUserId.value;
@@ -194,13 +189,13 @@ export function useSortablePlaylists() {
 			);
 	});
 
-    return {
+	return {
 		Sortable,
-        drag,
-        userId,
-        isCurrentUser,
-        playlists,
-        dragOptions,
-        savePlaylistOrder
-    };
-};
+		drag,
+		userId,
+		isCurrentUser,
+		playlists,
+		dragOptions,
+		savePlaylistOrder
+	};
+}

@@ -26,7 +26,7 @@ export function useDragBox() {
 
 	const setOnDragBoxUpdate = newOnDragBoxUpdate => {
 		onDragBoxUpdate.value = newOnDragBoxUpdate;
-	}
+	};
 
 	const setInitialBox = (initial, reset = false) => {
 		dragBox.value.initial = initial || dragBox.value.initial;
@@ -123,8 +123,7 @@ export function useDragBox() {
 				dragBox.value.left === dragBox.value.latest.left
 			) {
 				resetBoxPosition();
-			}
-			else {
+			} else {
 				if (
 					dragBox.value.top >
 					document.body.clientHeight - dragBox.value.height
@@ -169,4 +168,4 @@ export function useDragBox() {
 		onWindowResizeDragBox,
 		setOnDragBoxUpdate
 	};
-};
+}

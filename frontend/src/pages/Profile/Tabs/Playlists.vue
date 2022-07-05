@@ -49,7 +49,7 @@ onMounted(() => {
 
 			<hr class="section-horizontal-rule" />
 
-			<Sortable
+			<sortable
 				:component-data="{
 					name: !drag ? 'draggable-list-transition' : null
 				}"
@@ -104,7 +104,7 @@ onMounted(() => {
 						</template>
 					</playlist-item>
 				</template>
-			</Sortable>
+			</sortable>
 
 			<button
 				v-if="isCurrentUser"
