@@ -162,11 +162,20 @@ export function useSortablePlaylists() {
 		socket.on(
 			"event:user.orderOfPlaylists.updated",
 			res => {
+				const order = res.data.order.filter(playlistId =>
+					playlists.value.find(
+						playlist =>
+							playlist._id === playlistId &&
+							(isCurrentUser.value ||
+								playlist.privacy === "public")
+					)
+				);
 				const sortedPlaylists = [];
 
 				playlists.value.forEach(playlist => {
-					sortedPlaylists[res.data.order.indexOf(playlist._id)] =
-						playlist;
+					const playlistOrder = order.indexOf(playlist._id);
+					if (playlistOrder >= 0)
+						sortedPlaylists[playlistOrder] = playlist;
 				});
 
 				playlists.value = sortedPlaylists;
