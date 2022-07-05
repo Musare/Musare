@@ -11,7 +11,7 @@
 		"ecmaVersion": 2018,
 		"sourceType": "module",
 		"requireConfigFile": false,
-		"parser": "@babel/eslint-parser"
+		"parser": "@typescript-eslint/parser"
 	},
 	"extends": [
 		"airbnb-base",
@@ -20,7 +20,8 @@
 		"prettier"
 	],
 	"plugins": [
-		"prettier"
+		"prettier",
+		"@typescript-eslint"
 	],
 	"globals": {
 		"lofig": "writable",

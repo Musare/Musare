@@ -265,7 +265,7 @@ case $1 in
         if [[ ${servicesString:0:1} == 1 ]]; then
             if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *frontend* ]]; then
                 echo -e "${CYAN}Running frontend lint...${NC}"
-                ${dockerCompose} exec -T frontend npx eslint $cache src --ext .js,.vue $fix
+                ${dockerCompose} exec -T frontend npx eslint $cache src --ext .js,.ts,.vue $fix
                 frontendExitValue=$?
             fi
             if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *backend* ]]; then

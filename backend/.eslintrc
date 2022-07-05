@@ -6,7 +6,8 @@
 	},
 	"parserOptions": {
 		"ecmaVersion": 2021,
-		"sourceType": "module"
+		"sourceType": "module",
+		"parser": "@typescript-eslint/parser"
 	},
 	"extends": [
 		"eslint:recommended",
@@ -14,7 +15,7 @@
 		"prettier",
 		"plugin:jsdoc/recommended"
     ],
-    "plugins": [ "prettier", "jsdoc" ],
+    "plugins": [ "prettier", "jsdoc", "@typescript-eslint" ],
 	"rules": {
 		"no-console": 0,
 		"no-control-regex": 0,

@@ -12,14 +12,14 @@
   "license": "GPL-3.0",
   "repository": "https://github.com/Musare/Musare",
   "scripts": {
-    "lint": "npx eslint --cache src --ext .js,.vue",
+    "lint": "npx eslint --cache src --ext .js,.ts,.vue",
     "dev": "npx vite",
     "prod": "npx vite build --emptyOutDir",
     "typescript": "npx tsc --noEmit --skipLibCheck"
   },
   "devDependencies": {
-    "@babel/core": "^7.18.5",
-    "@babel/eslint-parser": "^7.18.2",
+    "@typescript-eslint/eslint-plugin": "^5.30.5",
+    "@typescript-eslint/parser": "^5.30.5",
     "@vue/compiler-sfc": "^3.2.36",
     "eslint": "^8.17.0",
     "eslint-config-prettier": "^8.5.0",
