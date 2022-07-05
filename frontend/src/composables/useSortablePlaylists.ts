@@ -8,7 +8,6 @@ export function useSortablePlaylists() {
     const orderOfPlaylists = ref([]);
     const drag = ref(false);
     const userId = ref();
-    const currentUser = ref(true);
 
     const store = useStore();
 
@@ -20,10 +19,12 @@ export function useSortablePlaylists() {
             store.commit("user/playlists/updatePlaylists", playlists);
         }
     });
-    const dragOptions = computed(() => ({
+    const myUserId = computed(() => store.state.user.auth.userId);
+    const isCurrentUser = computed(() => userId.value === myUserId.value);
+	const dragOptions = computed(() => ({
         animation: 200,
         group: "playlists",
-        disabled: !currentUser.value,
+        disabled: !isCurrentUser.value,
         ghostClass: "draggable-list-ghost"
     }));
 
@@ -70,8 +71,11 @@ export function useSortablePlaylists() {
 
     onMounted(async () => {
 		await nextTick();
+
+		if (!userId.value) userId.value = myUserId.value;
+
 		ws.onConnect(() => {
-			if (!currentUser.value)
+			if (!isCurrentUser.value)
 				socket.dispatch(
 					"apis.joinRoom",
 					`profile.${userId.value}.playlists`,
@@ -173,7 +177,7 @@ export function useSortablePlaylists() {
 	});
 
 	onBeforeUnmount(() => {
-		if (!currentUser.value)
+		if (!isCurrentUser.value)
 			socket.dispatch(
 				"apis.leaveRoom",
 				`profile.${userId.value}.playlists`,
@@ -185,7 +189,7 @@ export function useSortablePlaylists() {
 		Sortable,
         drag,
         userId,
-        currentUser,
+        isCurrentUser,
         playlists,
         dragOptions,
         savePlaylistOrder

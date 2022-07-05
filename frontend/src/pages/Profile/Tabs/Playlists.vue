@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineAsyncComponent, computed, onMounted } from "vue";
+import { defineAsyncComponent, onMounted } from "vue";
 import { useStore } from "vuex";
 import { useSortablePlaylists } from "@/composables/useSortablePlaylists";
 
@@ -12,25 +12,22 @@ const props = defineProps({
 	username: { type: String, default: "" }
 });
 
-const store = useStore();
-
-const myUserId = computed(() => store.state.user.auth.userId);
-
 const {
 	Sortable,
 	drag,
 	userId,
-	currentUser,
+	isCurrentUser,
 	playlists,
 	dragOptions,
 	savePlaylistOrder
 } = useSortablePlaylists();
 
+const store = useStore();
+
 const openModal = modal => store.dispatch("modalVisibility/openModal", modal);
 
 onMounted(() => {
 	userId.value = props.userId;
-	currentUser.value = myUserId.value === props.userId;
 });
 </script>
 
@@ -38,16 +35,14 @@ onMounted(() => {
 	<div class="content playlists-tab">
 		<div v-if="playlists.length > 0">
 			<h4 class="section-title">
-				{{ myUserId === userId ? "My" : null }}
+				{{ isCurrentUser ? "My" : null }}
 				Playlists
 			</h4>
 
 			<p class="section-description">
 				View
 				{{
-					userId === myUserId
-						? "and manage your personal"
-						: `${username}'s`
+					isCurrentUser ? "and manage your personal" : `${username}'s`
 				}}
 				playlists
 			</p>
@@ -76,12 +71,12 @@ onMounted(() => {
 						:playlist="element"
 						:class="{
 							item: true,
-							'item-draggable': myUserId === userId
+							'item-draggable': isCurrentUser
 						}"
 					>
 						<template #actions>
 							<i
-								v-if="myUserId === userId"
+								v-if="isCurrentUser"
 								@click="
 									openModal({
 										modal: 'editPlaylist',
@@ -112,7 +107,7 @@ onMounted(() => {
 			</Sortable>
 
 			<button
-				v-if="myUserId === userId"
+				v-if="isCurrentUser"
 				class="button is-primary"
 				id="create-new-playlist-button"
 				@click="openModal('createPlaylist')"
