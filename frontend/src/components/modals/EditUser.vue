@@ -1,3 +1,169 @@
+<script setup lang="ts">
+import { useStore } from "vuex";
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
+import Toast from "toasters";
+import { useModalState, useModalActions } from "@/vuex_helpers";
+import ws from "@/ws";
+import validation from "@/validation";
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" }
+});
+
+const store = useStore();
+
+const { socket } = store.state.websockets;
+
+const modalState = useModalState("modals/editUser/MODAL_UUID", {
+	modalUuid: props.modalUuid
+});
+const userId = computed(() => modalState.userId);
+const user = computed(() => modalState.user);
+
+const { setUser } = useModalActions("modals/editUser/MODAL_UUID", ["setUser"], {
+	modalUuid: props.modalUuid
+});
+const closeCurrentModal = () =>
+	store.dispatch("modalVisibility/closeCurrentModal");
+
+const ban = ref({ reason: "", expiresAt: "1h" });
+
+const init = () => {
+	if (userId.value)
+		socket.dispatch(`users.getUserFromId`, userId.value, res => {
+			if (res.status === "success") {
+				setUser(res.data);
+
+				socket.dispatch("apis.joinRoom", `edit-user.${userId.value}`);
+
+				socket.on(
+					"event:user.removed",
+					res => {
+						if (res.data.userId === userId.value)
+							closeCurrentModal();
+					},
+					{ modalUuid: props.modalUuid }
+				);
+			} else {
+				new Toast("User with that ID not found");
+				closeCurrentModal();
+			}
+		});
+};
+
+const updateUsername = () => {
+	const { username } = user.value;
+
+	if (!validation.isLength(username, 2, 32))
+		return new Toast("Username must have between 2 and 32 characters.");
+
+	if (!validation.regex.custom("a-zA-Z0-9_-").test(username))
+		return new Toast(
+			"Invalid username format. Allowed characters: a-z, A-Z, 0-9, _ and -."
+		);
+
+	return socket.dispatch(
+		`users.updateUsername`,
+		user.value._id,
+		username,
+		res => {
+			new Toast(res.message);
+		}
+	);
+};
+
+const updateEmail = () => {
+	const email = user.value.email.address;
+
+	if (!validation.isLength(email, 3, 254))
+		return new Toast("Email must have between 3 and 254 characters.");
+
+	if (
+		email.indexOf("@") !== email.lastIndexOf("@") ||
+		!validation.regex.emailSimple.test(email) ||
+		!validation.regex.ascii.test(email)
+	)
+		return new Toast("Invalid email format.");
+
+	return socket.dispatch(`users.updateEmail`, user.value._id, email, res => {
+		new Toast(res.message);
+	});
+};
+
+const updateRole = () => {
+	socket.dispatch(
+		`users.updateRole`,
+		user.value._id,
+		user.value.role,
+		res => {
+			new Toast(res.message);
+		}
+	);
+};
+
+const banUser = () => {
+	const { reason } = ban.value;
+
+	if (!validation.isLength(reason, 1, 64))
+		return new Toast("Reason must have between 1 and 64 characters.");
+
+	if (!validation.regex.ascii.test(reason))
+		return new Toast(
+			"Invalid reason format. Only ascii characters are allowed."
+		);
+
+	return socket.dispatch(
+		`users.banUserById`,
+		user.value._id,
+		ban.value.reason,
+		ban.value.expiresAt,
+		res => {
+			new Toast(res.message);
+		}
+	);
+};
+
+const resendVerificationEmail = () => {
+	socket.dispatch(`users.resendVerifyEmail`, user.value._id, res => {
+		new Toast(res.message);
+	});
+};
+
+const requestPasswordReset = () => {
+	socket.dispatch(`users.adminRequestPasswordReset`, user.value._id, res => {
+		new Toast(res.message);
+	});
+};
+
+const removeAccount = () => {
+	socket.dispatch(`users.adminRemove`, user.value._id, res => {
+		new Toast(res.message);
+	});
+};
+
+const removeSessions = () => {
+	socket.dispatch(`users.removeSessions`, user.value._id, res => {
+		new Toast(res.message);
+	});
+};
+
+// When the userId changes, run init. There can be a delay between the modal opening and the required data (userId) being available
+watch(
+	() => userId.value,
+	() => init()
+);
+
+onMounted(() => {
+	ws.onConnect(init);
+});
+
+onBeforeUnmount(() => {
+	socket.dispatch("apis.leaveRoom", `edit-user.${userId.value}`, () => {});
+	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+	store.unregisterModule(["modals", "editUser", props.modalUuid]);
+});
+</script>
+
 <template>
 	<div>
 		<modal title="Edit User">
@@ -104,198 +270,6 @@
 		</modal>
 	</div>
 </template>
-
-<script>
-import { mapGetters, mapActions } from "vuex";
-
-import Toast from "toasters";
-import validation from "@/validation";
-import ws from "@/ws";
-
-import { mapModalState, mapModalActions } from "@/vuex_helpers";
-
-export default {
-	props: {
-		modalUuid: { type: String, default: "" }
-	},
-	data() {
-		return {
-			ban: {
-				expiresAt: "1h"
-			}
-		};
-	},
-	computed: {
-		...mapModalState("modals/editUser/MODAL_UUID", {
-			userId: state => state.userId,
-			user: state => state.user
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	watch: {
-		// When the userId changes, run init. There can be a delay between the modal opening and the required data (userId) being available
-		userId() {
-			// Note: is it possible for this to run before the socket is ready?
-			this.init();
-		}
-	},
-	mounted() {
-		ws.onConnect(this.init);
-	},
-	beforeUnmount() {
-		this.socket.dispatch(
-			"apis.leaveRoom",
-			`edit-user.${this.userId}`,
-			() => {}
-		);
-		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-		this.$store.unregisterModule(["modals", "editUser", this.modalUuid]);
-	},
-	methods: {
-		init() {
-			if (this.userId)
-				this.socket.dispatch(
-					`users.getUserFromId`,
-					this.userId,
-					res => {
-						if (res.status === "success") {
-							const user = res.data;
-							this.setUser(user);
-
-							this.socket.dispatch(
-								"apis.joinRoom",
-								`edit-user.${this.userId}`
-							);
-
-							this.socket.on(
-								"event:user.removed",
-								res => {
-									if (res.data.userId === this.userId)
-										this.closeModal("editUser");
-								},
-								{ modalUuid: this.modalUuid }
-							);
-						} else {
-							new Toast("User with that ID not found");
-							this.closeModal("editUser");
-						}
-					}
-				);
-		},
-		updateUsername() {
-			const { username } = this.user;
-
-			if (!validation.isLength(username, 2, 32))
-				return new Toast(
-					"Username must have between 2 and 32 characters."
-				);
-
-			if (!validation.regex.custom("a-zA-Z0-9_-").test(username))
-				return new Toast(
-					"Invalid username format. Allowed characters: a-z, A-Z, 0-9, _ and -."
-				);
-
-			return this.socket.dispatch(
-				`users.updateUsername`,
-				this.user._id,
-				username,
-				res => {
-					new Toast(res.message);
-				}
-			);
-		},
-		updateEmail() {
-			const email = this.user.email.address;
-
-			if (!validation.isLength(email, 3, 254))
-				return new Toast(
-					"Email must have between 3 and 254 characters."
-				);
-
-			if (
-				email.indexOf("@") !== email.lastIndexOf("@") ||
-				!validation.regex.emailSimple.test(email) ||
-				!validation.regex.ascii.test(email)
-			)
-				return new Toast("Invalid email format.");
-
-			return this.socket.dispatch(
-				`users.updateEmail`,
-				this.user._id,
-				email,
-				res => {
-					new Toast(res.message);
-				}
-			);
-		},
-		updateRole() {
-			this.socket.dispatch(
-				`users.updateRole`,
-				this.user._id,
-				this.user.role,
-				res => {
-					new Toast(res.message);
-				}
-			);
-		},
-		banUser() {
-			const { reason } = this.ban;
-
-			if (!validation.isLength(reason, 1, 64))
-				return new Toast(
-					"Reason must have between 1 and 64 characters."
-				);
-
-			if (!validation.regex.ascii.test(reason))
-				return new Toast(
-					"Invalid reason format. Only ascii characters are allowed."
-				);
-
-			return this.socket.dispatch(
-				`users.banUserById`,
-				this.user._id,
-				this.ban.reason,
-				this.ban.expiresAt,
-				res => {
-					new Toast(res.message);
-				}
-			);
-		},
-		resendVerificationEmail() {
-			this.socket.dispatch(
-				`users.resendVerifyEmail`,
-				this.user._id,
-				res => {
-					new Toast(res.message);
-				}
-			);
-		},
-		requestPasswordReset() {
-			this.socket.dispatch(
-				`users.adminRequestPasswordReset`,
-				this.user._id,
-				res => {
-					new Toast(res.message);
-				}
-			);
-		},
-		removeAccount() {
-			this.socket.dispatch(`users.adminRemove`, this.user._id, res => {
-				new Toast(res.message);
-			});
-		},
-		removeSessions() {
-			this.socket.dispatch(`users.removeSessions`, this.user._id, res => {
-				new Toast(res.message);
-			});
-		},
-		...mapModalActions("modals/editUser/MODAL_UUID", ["setUser"]),
-		...mapActions("modalVisibility", ["closeModal"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode .section {
