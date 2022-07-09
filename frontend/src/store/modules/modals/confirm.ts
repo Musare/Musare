@@ -1,5 +1,5 @@
 /* eslint no-param-reassign: 0 */
-
+// TODO - Remove action and param once fully removed from components
 export default {
 	namespaced: true,
 	state: {

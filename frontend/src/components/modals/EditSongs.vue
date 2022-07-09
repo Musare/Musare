@@ -1,6 +1,310 @@
+<script setup lang="ts">
+import { useStore } from "vuex";
+import {
+	defineAsyncComponent,
+	ref,
+	computed,
+	onBeforeMount,
+	onMounted,
+	onBeforeUnmount,
+	onUnmounted
+} from "vue";
+import Toast from "toasters";
+import { useModalState, useModalActions } from "@/vuex_helpers";
+import editSongStore from "@/store/modules/modals/editSong";
+
+const EditSongModal = defineAsyncComponent(
+	() => import("@/components/modals/EditSong/index.vue")
+);
+const SongItem = defineAsyncComponent(
+	() => import("@/components/SongItem.vue")
+);
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" }
+});
+
+const store = useStore();
+
+const { socket } = store.state.websockets;
+
+const { youtubeIds, songPrefillData } = useModalState(
+	"modals/editSongs/MODAL_UUID",
+	{
+		modalUuid: props.modalUuid
+	}
+);
+
+const { editSong } = useModalActions(
+	"modals/editSongs/MODAL_UUID/editSong",
+	["editSong"],
+	{
+		modalUuid: props.modalUuid
+	}
+);
+
+const openModal = payload =>
+	store.dispatch("modalVisibility/openModal", payload);
+const closeCurrentModal = () =>
+	store.dispatch("modalVisibility/closeCurrentModal");
+
+const items = ref([]);
+const currentSong = ref({});
+const flagFilter = ref(false);
+const sidebarMobileActive = ref(false);
+const songItems = ref([]);
+
+const editingItemIndex = computed(() =>
+	items.value.findIndex(
+		item => item.song.youtubeId === currentSong.value.youtubeId
+	)
+);
+const filteredItems = computed({
+	get: () =>
+		items.value.filter(item => (flagFilter.value ? item.flagged : true)),
+	set: newItem => {
+		const index = items.value.findIndex(
+			item => item.song.youtubeId === newItem.youtubeId
+		);
+		items.value[index] = newItem;
+	}
+});
+const filteredEditingItemIndex = computed(() =>
+	filteredItems.value.findIndex(
+		item => item.song.youtubeId === currentSong.value.youtubeId
+	)
+);
+const currentSongFlagged = computed(
+	() =>
+		items.value.find(
+			item => item.song.youtubeId === currentSong.value.youtubeId
+		)?.flagged
+);
+
+const pickSong = song => {
+	editSong({
+		youtubeId: song.youtubeId,
+		prefill: songPrefillData[song.youtubeId]
+	});
+	currentSong.value = song;
+	if (
+		songItems.value[`edit-songs-item-${song.youtubeId}`] &&
+		songItems.value[`edit-songs-item-${song.youtubeId}`][0]
+	)
+		songItems.value[
+			`edit-songs-item-${song.youtubeId}`
+		][0].scrollIntoView();
+};
+
+const editNextSong = () => {
+	const currentlyEditingSongIndex = filteredEditingItemIndex.value;
+	let newEditingSongIndex = -1;
+	const index =
+		currentlyEditingSongIndex + 1 === filteredItems.value.length
+			? 0
+			: currentlyEditingSongIndex + 1;
+	for (let i = index; i < filteredItems.value.length; i += 1) {
+		if (!flagFilter.value || filteredItems.value[i].flagged) {
+			newEditingSongIndex = i;
+			break;
+		}
+	}
+
+	if (newEditingSongIndex > -1) {
+		const nextSong = filteredItems.value[newEditingSongIndex].song;
+		if (nextSong.removed) editNextSong();
+		else pickSong(nextSong);
+	}
+};
+
+const toggleFlag = (songIndex = null) => {
+	if (songIndex && songIndex > -1) {
+		filteredItems.value[songIndex].flagged =
+			!filteredItems.value[songIndex].flagged;
+		new Toast(
+			`Successfully ${
+				filteredItems.value[songIndex].flagged ? "flagged" : "unflagged"
+			} song.`
+		);
+	} else if (!songIndex && editingItemIndex.value > -1) {
+		items.value[editingItemIndex.value].flagged =
+			!items.value[editingItemIndex.value].flagged;
+		new Toast(
+			`Successfully ${
+				items.value[editingItemIndex.value].flagged
+					? "flagged"
+					: "unflagged"
+			} song.`
+		);
+	}
+};
+
+const onSavedSuccess = youtubeId => {
+	const itemIndex = items.value.findIndex(
+		item => item.song.youtubeId === youtubeId
+	);
+	if (itemIndex > -1) {
+		items.value[itemIndex].status = "done";
+		items.value[itemIndex].flagged = false;
+	}
+};
+
+const onSavedError = youtubeId => {
+	const itemIndex = items.value.findIndex(
+		item => item.song.youtubeId === youtubeId
+	);
+	if (itemIndex > -1) items.value[itemIndex].status = "error";
+};
+
+const onSaving = youtubeId => {
+	const itemIndex = items.value.findIndex(
+		item => item.song.youtubeId === youtubeId
+	);
+	if (itemIndex > -1) items.value[itemIndex].status = "saving";
+};
+
+const toggleDone = (index, overwrite = null) => {
+	const { status } = filteredItems.value[index];
+
+	if (status === "done" && overwrite !== "done")
+		filteredItems.value[index].status = "todo";
+	else {
+		filteredItems.value[index].status = "done";
+		filteredItems.value[index].flagged = false;
+	}
+};
+
+const toggleFlagFilter = () => {
+	flagFilter.value = !flagFilter.value;
+};
+
+const toggleMobileSidebar = () => {
+	sidebarMobileActive.value = !sidebarMobileActive.value;
+};
+
+const onClose = () => {
+	const doneItems = items.value.filter(item => item.status === "done").length;
+	const flaggedItems = items.value.filter(item => item.flagged).length;
+	const notDoneItems = items.value.length - doneItems;
+
+	if (doneItems > 0 && notDoneItems > 0)
+		openModal({
+			modal: "confirm",
+			data: {
+				message:
+					"You have songs which are not done yet. Are you sure you want to stop editing songs?",
+				onCompleted: closeCurrentModal
+			}
+		});
+	else if (flaggedItems > 0)
+		openModal({
+			modal: "confirm",
+			data: {
+				message:
+					"You have songs which are flagged. Are you sure you want to stop editing songs?",
+				onCompleted: closeCurrentModal
+			}
+		});
+	else closeCurrentModal();
+};
+
+onBeforeMount(() => {
+	console.log("EDITSONGS BEFOREMOUNT");
+	store.registerModule(
+		["modals", "editSongs", props.modalUuid, "editSong"],
+		editSongStore
+	);
+});
+
+onMounted(async () => {
+	console.log("EDITSONGS MOUNTED");
+
+	socket.dispatch("apis.joinRoom", "edit-songs");
+
+	socket.dispatch("songs.getSongsFromYoutubeIds", youtubeIds, res => {
+		if (res.data.songs.length === 0) {
+			closeCurrentModal();
+			new Toast("You can't edit 0 songs.");
+		} else {
+			items.value = res.data.songs.map(song => ({
+				status: "todo",
+				flagged: false,
+				song
+			}));
+			editNextSong();
+		}
+	});
+
+	socket.on(
+		`event:admin.song.created`,
+		res => {
+			const index = items.value
+				.map(item => item.song.youtubeId)
+				.indexOf(res.data.song.youtubeId);
+			if (index >= 0)
+				items.value[index].song = {
+					...items.value[index].song,
+					...res.data.song,
+					created: true
+				};
+		},
+		{ modalUuid: props.modalUuid }
+	);
+
+	socket.on(
+		`event:admin.song.updated`,
+		res => {
+			const index = items.value
+				.map(item => item.song.youtubeId)
+				.indexOf(res.data.song.youtubeId);
+			if (index >= 0)
+				items.value[index].song = {
+					...items.value[index].song,
+					...res.data.song,
+					updated: true
+				};
+		},
+		{ modalUuid: props.modalUuid }
+	);
+
+	socket.on(
+		`event:admin.song.removed`,
+		res => {
+			const index = items.value
+				.map(item => item.song._id)
+				.indexOf(res.data.songId);
+			if (index >= 0) items.value[index].song.removed = true;
+		},
+		{ modalUuid: props.modalUuid }
+	);
+
+	socket.on(
+		`event:admin.youtubeVideo.removed`,
+		res => {
+			const index = items.value
+				.map(item => item.song.youtubeVideoId)
+				.indexOf(res.videoId);
+			if (index >= 0) items.value[index].song.removed = true;
+		},
+		{ modalUuid: props.modalUuid }
+	);
+});
+
+onBeforeUnmount(() => {
+	console.log("EDITSONGS BEFORE UNMOUNT");
+	socket.dispatch("apis.leaveRoom", "edit-songs");
+});
+
+onUnmounted(() => {
+	console.log("EDITSONGS UNMOUNTED");
+	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+	store.unregisterModule(["modals", "editSongs", props.modalUuid]);
+});
+</script>
+
 <template>
 	<div>
-		<edit-song
+		<edit-song-modal
 			:modal-module-path="`modals/editSongs/${modalUuid}/editSong`"
 			:modal-uuid="modalUuid"
 			:bulk="true"
@@ -49,7 +353,12 @@
 									{ status, flagged, song }, index
 								) in filteredItems"
 								:key="`edit-songs-item-${index}`"
-								:ref="`edit-songs-item-${song.youtubeId}`"
+								:ref="
+									el =>
+										(songItems[
+											`edit-songs-item-${song.youtubeId}`
+										] = el)
+								"
 							>
 								<song-item
 									:song="song"
@@ -176,315 +485,9 @@
 					@click="toggleMobileSidebar()"
 				></div>
 			</template>
-		</edit-song>
+		</edit-song-modal>
 	</div>
 </template>
-
-<script>
-import { mapActions, mapGetters } from "vuex";
-import { defineAsyncComponent } from "vue";
-
-import Toast from "toasters";
-import { mapModalState, mapModalActions } from "@/vuex_helpers";
-
-import SongItem from "@/components/SongItem.vue";
-
-import editSong from "@/store/modules/modals/editSong";
-
-export default {
-	components: {
-		EditSong: defineAsyncComponent(() =>
-			import("@/components/modals/EditSong/index.vue")
-		),
-		SongItem
-	},
-	props: {
-		modalUuid: { type: String, default: "" }
-	},
-	data() {
-		return {
-			items: [],
-			currentSong: {},
-			flagFilter: false,
-			sidebarMobileActive: false
-		};
-	},
-	computed: {
-		editingItemIndex() {
-			return this.items.findIndex(
-				item => item.song.youtubeId === this.currentSong.youtubeId
-			);
-		},
-		filteredEditingItemIndex() {
-			return this.filteredItems.findIndex(
-				item => item.song.youtubeId === this.currentSong.youtubeId
-			);
-		},
-		filteredItems: {
-			get() {
-				return this.items.filter(item =>
-					this.flagFilter ? item.flagged : true
-				);
-			},
-			set(newItem) {
-				const index = this.items.findIndex(
-					item => item.song.youtubeId === newItem.youtubeId
-				);
-				this.item[index] = newItem;
-			}
-		},
-		currentSongFlagged() {
-			return this.items.find(
-				item => item.song.youtubeId === this.currentSong.youtubeId
-			)?.flagged;
-		},
-		...mapModalState("modals/editSongs/MODAL_UUID", {
-			youtubeIds: state => state.youtubeIds,
-			songPrefillData: state => state.songPrefillData
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	beforeMount() {
-		console.log("EDITSONGS BEFOREMOUNT");
-		this.$store.registerModule(
-			["modals", "editSongs", this.modalUuid, "editSong"],
-			editSong
-		);
-	},
-	async mounted() {
-		console.log("EDITSONGS MOUNTED");
-
-		this.socket.dispatch("apis.joinRoom", "edit-songs");
-
-		this.socket.dispatch(
-			"songs.getSongsFromYoutubeIds",
-			this.youtubeIds,
-			res => {
-				if (res.data.songs.length === 0) {
-					this.closeThisModal();
-					new Toast("You can't edit 0 songs.");
-				} else {
-					this.items = res.data.songs.map(song => ({
-						status: "todo",
-						flagged: false,
-						song
-					}));
-					this.editNextSong();
-				}
-			}
-		);
-
-		this.socket.on(
-			`event:admin.song.created`,
-			res => {
-				const index = this.items
-					.map(item => item.song.youtubeId)
-					.indexOf(res.data.song.youtubeId);
-				if (index >= 0)
-					this.items[index].song = {
-						...this.items[index].song,
-						...res.data.song,
-						created: true
-					};
-			},
-			{ modalUuid: this.modalUuid }
-		);
-
-		this.socket.on(
-			`event:admin.song.updated`,
-			res => {
-				const index = this.items
-					.map(item => item.song.youtubeId)
-					.indexOf(res.data.song.youtubeId);
-				if (index >= 0)
-					this.items[index].song = {
-						...this.items[index].song,
-						...res.data.song,
-						updated: true
-					};
-			},
-			{ modalUuid: this.modalUuid }
-		);
-
-		this.socket.on(
-			`event:admin.song.removed`,
-			res => {
-				const index = this.items
-					.map(item => item.song._id)
-					.indexOf(res.data.songId);
-				if (index >= 0) this.items[index].song.removed = true;
-			},
-			{ modalUuid: this.modalUuid }
-		);
-
-		this.socket.on(
-			`event:admin.youtubeVideo.removed`,
-			res => {
-				const index = this.items
-					.map(item => item.song.youtubeVideoId)
-					.indexOf(res.videoId);
-				if (index >= 0) this.items[index].song.removed = true;
-			},
-			{ modalUuid: this.modalUuid }
-		);
-	},
-	beforeUnmount() {
-		console.log("EDITSONGS BEFORE UNMOUNT");
-		this.socket.dispatch("apis.leaveRoom", "edit-songs");
-	},
-	unmounted() {
-		console.log("EDITSONGS UNMOUNTED");
-		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-		this.$store.unregisterModule(["modals", "editSongs", this.modalUuid]);
-	},
-	methods: {
-		pickSong(song) {
-			this.editSong({
-				youtubeId: song.youtubeId,
-				prefill: this.songPrefillData[song.youtubeId]
-			});
-			this.currentSong = song;
-			if (
-				this.$refs[`edit-songs-item-${song.youtubeId}`] &&
-				this.$refs[`edit-songs-item-${song.youtubeId}`][0]
-			)
-				this.$refs[
-					`edit-songs-item-${song.youtubeId}`
-				][0].scrollIntoView();
-		},
-		editNextSong() {
-			const currentlyEditingSongIndex = this.filteredEditingItemIndex;
-			let newEditingSongIndex = -1;
-			const index =
-				currentlyEditingSongIndex + 1 === this.filteredItems.length
-					? 0
-					: currentlyEditingSongIndex + 1;
-			for (let i = index; i < this.filteredItems.length; i += 1) {
-				if (!this.flagFilter || this.filteredItems[i].flagged) {
-					newEditingSongIndex = i;
-					break;
-				}
-			}
-
-			if (newEditingSongIndex > -1) {
-				const nextSong = this.filteredItems[newEditingSongIndex].song;
-				if (nextSong.removed) this.editNextSong();
-				else this.pickSong(nextSong);
-			}
-		},
-		toggleFlag(songIndex = null) {
-			if (songIndex && songIndex > -1) {
-				this.filteredItems[songIndex].flagged =
-					!this.filteredItems[songIndex].flagged;
-				new Toast(
-					`Successfully ${
-						this.filteredItems[songIndex].flagged
-							? "flagged"
-							: "unflagged"
-					} song.`
-				);
-			} else if (!songIndex && this.editingItemIndex > -1) {
-				this.items[this.editingItemIndex].flagged =
-					!this.items[this.editingItemIndex].flagged;
-				new Toast(
-					`Successfully ${
-						this.items[this.editingItemIndex].flagged
-							? "flagged"
-							: "unflagged"
-					} song.`
-				);
-			}
-		},
-		onSavedSuccess(youtubeId) {
-			const itemIndex = this.items.findIndex(
-				item => item.song.youtubeId === youtubeId
-			);
-			if (itemIndex > -1) {
-				this.items[itemIndex].status = "done";
-				this.items[itemIndex].flagged = false;
-			}
-		},
-		onSavedError(youtubeId) {
-			const itemIndex = this.items.findIndex(
-				item => item.song.youtubeId === youtubeId
-			);
-			if (itemIndex > -1) this.items[itemIndex].status = "error";
-		},
-		onSaving(youtubeId) {
-			const itemIndex = this.items.findIndex(
-				item => item.song.youtubeId === youtubeId
-			);
-			if (itemIndex > -1) this.items[itemIndex].status = "saving";
-		},
-		toggleDone(index, overwrite = null) {
-			const { status } = this.filteredItems[index];
-
-			if (status === "done" && overwrite !== "done")
-				this.filteredItems[index].status = "todo";
-			else {
-				this.filteredItems[index].status = "done";
-				this.filteredItems[index].flagged = false;
-			}
-		},
-		toggleFlagFilter() {
-			this.flagFilter = !this.flagFilter;
-		},
-		toggleMobileSidebar() {
-			this.sidebarMobileActive = !this.sidebarMobileActive;
-		},
-		confirmAction({ message, action, params }) {
-			this.openModal({
-				modal: "confirm",
-				data: {
-					message,
-					action,
-					params,
-					onCompleted: this.handleConfirmed
-				}
-			});
-		},
-		handleConfirmed({ action, params }) {
-			if (typeof this[action] === "function") {
-				if (params) this[action](params);
-				else this[action]();
-			}
-		},
-		onClose() {
-			const doneItems = this.items.filter(
-				item => item.status === "done"
-			).length;
-			const flaggedItems = this.items.filter(item => item.flagged).length;
-			const notDoneItems = this.items.length - doneItems;
-
-			if (doneItems > 0 && notDoneItems > 0)
-				this.confirmAction({
-					message:
-						"You have songs which are not done yet. Are you sure you want to stop editing songs?",
-					action: "closeThisModal",
-					params: null
-				});
-			else if (flaggedItems > 0)
-				this.confirmAction({
-					message:
-						"You have songs which are flagged. Are you sure you want to stop editing songs?",
-					action: "closeThisModal",
-					params: null
-				});
-			else this.closeThisModal();
-		},
-		closeThisModal() {
-			this.closeCurrentModal();
-		},
-		...mapActions("modalVisibility", ["openModal", "closeCurrentModal"]),
-		...mapModalActions("modals/editSongs/MODAL_UUID/editSong", [
-			"editSong"
-		]),
-		...mapModalActions("modals/editSongs/MODAL_UUID", ["resetSongs"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode .sidebar {
