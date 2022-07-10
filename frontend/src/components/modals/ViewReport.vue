@@ -1,3 +1,138 @@
+<script setup lang="ts">
+import { useStore } from "vuex";
+import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
+import Toast from "toasters";
+import { useModalState } from "@/vuex_helpers";
+import ws from "@/ws";
+
+const SongItem = defineAsyncComponent(
+	() => import("@/components/SongItem.vue")
+);
+const ReportInfoItem = defineAsyncComponent(
+	() => import("@/components/ReportInfoItem.vue")
+);
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" }
+});
+
+const store = useStore();
+
+const { socket } = store.state.websockets;
+
+const { reportId } = useModalState("modals/viewReport/MODAL_UUID", {
+	modalUuid: props.modalUuid
+});
+
+const resolveReport = payload =>
+	store.dispatch("admin/reports/resolveReport", payload);
+const removeReport = payload =>
+	store.dispatch("admin/reports/removeReport", payload);
+const openModal = payload =>
+	store.dispatch("modalVisibility/openModal", payload);
+const closeCurrentModal = () =>
+	store.dispatch("modalVisibility/closeCurrentModal");
+
+const icons = ref({
+	duration: "timer",
+	video: "tv",
+	thumbnail: "image",
+	artists: "record_voice_over",
+	title: "title",
+	custom: "lightbulb"
+});
+const report = ref({});
+const song = ref();
+
+const init = () => {
+	socket.dispatch("reports.findOne", reportId, res => {
+		if (res.status === "success") {
+			report.value = res.data.report;
+
+			socket.dispatch("apis.joinRoom", `view-report.${reportId}`);
+
+			socket.dispatch(
+				"songs.getSongFromSongId",
+				report.value.song._id,
+				res => {
+					if (res.status === "success") song.value = res.data.song;
+					else {
+						new Toast("Cannot find the report's associated song");
+						closeCurrentModal();
+					}
+				}
+			);
+
+			socket.on(
+				"event:admin.report.resolved",
+				res => {
+					report.value.resolved = res.data.resolved;
+				},
+				{ modalUuid: props.modalUuid }
+			);
+
+			socket.on("event:admin.report.removed", () => closeCurrentModal(), {
+				modalUuid: props.modalUuid
+			});
+
+			socket.on(
+				"event:admin.report.issue.toggled",
+				res => {
+					if (reportId === res.data.reportId) {
+						const issue = report.value.issues.find(
+							issue => issue._id.toString() === res.data.issueId
+						);
+
+						issue.resolved = res.data.resolved;
+					}
+				},
+				{ modalUuid: props.modalUuid }
+			);
+		} else {
+			new Toast("Report with that ID not found");
+			closeCurrentModal();
+		}
+	});
+};
+
+const resolve = value =>
+	resolveReport({ reportId, value })
+		.then(res => {
+			if (res.status !== "success") new Toast(res.message);
+		})
+		.catch(err => new Toast(err.message));
+
+const remove = () =>
+	removeReport(reportId)
+		.then(res => {
+			if (res.status === "success") closeCurrentModal();
+		})
+		.catch(err => new Toast(err.message));
+
+const toggleIssue = issueId => {
+	socket.dispatch("reports.toggleIssue", reportId, issueId, res => {
+		if (res.status !== "success") new Toast(res.message);
+	});
+};
+
+const openSong = () => {
+	openModal({
+		modal: "editSong",
+		data: { song: report.value.song }
+	});
+};
+
+onMounted(() => {
+	ws.onConnect(init);
+});
+
+onBeforeUnmount(() => {
+	socket.dispatch("apis.leaveRoom", `view-report.${reportId}`);
+	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+	store.unregisterModule(["modals", "viewReport", props.modalUuid]);
+});
+</script>
+
 <template>
 	<modal class="view-report-modal" title="View Report">
 		<template #body v-if="report && report._id">
@@ -113,151 +248,6 @@
 		</template>
 	</modal>
 </template>
-
-<script>
-import { mapActions, mapGetters } from "vuex";
-import Toast from "toasters";
-import ws from "@/ws";
-import { mapModalState } from "@/vuex_helpers";
-
-import SongItem from "@/components/SongItem.vue";
-import ReportInfoItem from "@/components/ReportInfoItem.vue";
-
-export default {
-	components: { SongItem, ReportInfoItem },
-	props: {
-		modalUuid: { type: String, default: "" }
-	},
-	data() {
-		return {
-			icons: {
-				duration: "timer",
-				video: "tv",
-				thumbnail: "image",
-				artists: "record_voice_over",
-				title: "title",
-				custom: "lightbulb"
-			},
-			report: {},
-			song: null
-		};
-	},
-	computed: {
-		...mapModalState("modals/viewReport/MODAL_UUID", {
-			reportId: state => state.reportId
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	mounted() {
-		ws.onConnect(this.init);
-
-		this.socket.on(
-			"event:admin.report.resolved",
-			res => {
-				this.report.resolved = res.data.resolved;
-			},
-			{ modalUuid: this.modalUuid }
-		);
-
-		this.socket.on(
-			"event:admin.report.removed",
-			() => this.closeModal("viewReport"),
-			{ modalUuid: this.modalUuid }
-		);
-
-		this.socket.on(
-			"event:admin.report.issue.toggled",
-			res => {
-				if (this.report._id === res.data.reportId) {
-					const issue = this.report.issues.find(
-						issue => issue._id.toString() === res.data.issueId
-					);
-
-					issue.resolved = res.data.resolved;
-				}
-			},
-			{ modalUuid: this.modalUuid }
-		);
-	},
-	beforeUnmount() {
-		this.socket.dispatch("apis.leaveRoom", `view-report.${this.reportId}`);
-		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-		this.$store.unregisterModule(["modals", "viewReport", this.modalUuid]);
-	},
-	methods: {
-		init() {
-			this.socket.dispatch("reports.findOne", this.reportId, res => {
-				if (res.status === "success") {
-					const { report } = res.data;
-
-					this.socket.dispatch(
-						"apis.joinRoom",
-						`view-report.${report._id}`
-					);
-
-					this.report = report;
-
-					this.socket.dispatch(
-						"songs.getSongFromSongId",
-						this.report.song._id,
-						res => {
-							if (res.status === "success")
-								this.song = res.data.song;
-							else {
-								new Toast(
-									"Cannot find the report's associated song"
-								);
-								this.closeModal("viewReport");
-							}
-						}
-					);
-				} else {
-					new Toast("Report with that ID not found");
-					this.closeModal("viewReport");
-				}
-			});
-		},
-		resolve(value) {
-			return this.resolveReport({ reportId: this.reportId, value })
-				.then(res => {
-					if (res.status !== "success") new Toast(res.message);
-				})
-				.catch(err => new Toast(err.message));
-		},
-		remove() {
-			return this.removeReport(this.reportId)
-				.then(res => {
-					if (res.status === "success") this.closeModal("viewReport");
-				})
-				.catch(err => new Toast(err.message));
-		},
-		toggleIssue(issueId) {
-			this.socket.dispatch(
-				"reports.toggleIssue",
-				this.reportId,
-				issueId,
-				res => {
-					if (res.status !== "success") new Toast(res.message);
-				}
-			);
-		},
-		openSong() {
-			this.openModal({
-				modal: "editSong",
-				data: { song: this.report.song }
-			});
-		},
-		...mapActions("admin/reports", [
-			"indexReports",
-			"resolveReport",
-			"removeReport"
-		]),
-		...mapActions("modalVisibility", ["closeModal", "openModal"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {
