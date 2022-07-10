@@ -1,3 +1,92 @@
+<script setup lang="ts">
+import { useStore } from "vuex";
+import { ref, onMounted, onBeforeUnmount } from "vue";
+import Toast from "toasters";
+import VueJsonPretty from "vue-json-pretty";
+import { useModalState, useModalActions } from "@/vuex_helpers";
+import ws from "@/ws";
+import "vue-json-pretty/lib/styles.css";
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" }
+});
+
+const store = useStore();
+
+const { socket } = store.state.websockets;
+
+const { requestId, request, removeAction } = useModalState(
+	"modals/viewApiRequest/MODAL_UUID",
+	{
+		modalUuid: props.modalUuid
+	}
+);
+
+const { viewApiRequest } = useModalActions(
+	"modals/viewApiRequest/MODAL_UUID",
+	["viewApiRequest"],
+	{
+		modalUuid: props.modalUuid
+	}
+);
+
+const closeCurrentModal = () =>
+	store.dispatch("modalVisibility/closeCurrentModal");
+
+const loaded = ref(false);
+
+const init = () => {
+	loaded.value = false;
+	socket.dispatch("youtube.getApiRequest", requestId, res => {
+		if (res.status === "success") {
+			const { apiRequest } = res.data;
+			viewApiRequest(apiRequest);
+			loaded.value = true;
+
+			socket.dispatch("apis.joinRoom", `view-api-request.${requestId}`);
+
+			socket.on(
+				"event:youtubeApiRequest.removed",
+				() => {
+					new Toast("This API request was removed.");
+					closeCurrentModal();
+				},
+				{ modalUuid: props.modalUuid }
+			);
+		} else {
+			new Toast("API request with that ID not found");
+			closeCurrentModal();
+		}
+	});
+};
+
+const remove = () => {
+	if (removeAction)
+		socket.dispatch(removeAction, requestId, res => {
+			if (res.status === "success") {
+				new Toast("API request successfully removed.");
+				closeCurrentModal();
+			} else {
+				new Toast("API request with that ID not found.");
+			}
+		});
+};
+
+onMounted(() => {
+	ws.onConnect(init);
+});
+
+onBeforeUnmount(() => {
+	socket.dispatch(
+		"apis.leaveRoom",
+		`view-api-request.${requestId}`,
+		() => {}
+	);
+	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+	store.unregisterModule(["modals", "viewApiRequest", props.modalUuid]);
+});
+</script>
+
 <template>
 	<modal title="View API Request">
 		<template #body>
@@ -40,106 +129,6 @@
 		</template>
 	</modal>
 </template>
-
-<script>
-import { mapActions, mapGetters } from "vuex";
-
-import VueJsonPretty from "vue-json-pretty";
-import "vue-json-pretty/lib/styles.css";
-import Toast from "toasters";
-
-import ws from "@/ws";
-import { mapModalState, mapModalActions } from "@/vuex_helpers";
-
-export default {
-	components: {
-		VueJsonPretty
-	},
-	props: {
-		modalUuid: { type: String, default: "" }
-	},
-	data() {
-		return {
-			loaded: false
-		};
-	},
-	computed: {
-		...mapModalState("modals/viewApiRequest/MODAL_UUID", {
-			requestId: state => state.requestId,
-			request: state => state.request,
-			removeAction: state => state.removeAction
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	mounted() {
-		ws.onConnect(this.init);
-	},
-	beforeUnmount() {
-		this.socket.dispatch(
-			"apis.leaveRoom",
-			`view-api-request.${this.requestId}`,
-			() => {}
-		);
-
-		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-		this.$store.unregisterModule([
-			"modals",
-			"viewApiRequest",
-			this.modalUuid
-		]);
-	},
-	methods: {
-		init() {
-			this.loaded = false;
-			this.socket.dispatch(
-				"youtube.getApiRequest",
-				this.requestId,
-				res => {
-					if (res.status === "success") {
-						const { apiRequest } = res.data;
-						this.viewApiRequest(apiRequest);
-						this.loaded = true;
-
-						this.socket.dispatch(
-							"apis.joinRoom",
-							`view-api-request.${this.requestId}`
-						);
-
-						this.socket.on(
-							"event:youtubeApiRequest.removed",
-							() => {
-								new Toast("This API request was removed.");
-								this.closeCurrentModal();
-							},
-							{ modalUuid: this.modalUuid }
-						);
-					} else {
-						new Toast("API request with that ID not found");
-						this.closeCurrentModal();
-					}
-				}
-			);
-		},
-		remove() {
-			if (this.removeAction)
-				this.socket.dispatch(this.removeAction, this.requestId, res => {
-					if (res.status === "success") {
-						new Toast("API request successfully removed.");
-						this.closeCurrentModal();
-					} else {
-						new Toast("API request with that ID not found.");
-					}
-				});
-		},
-		...mapModalActions("modals/viewApiRequest/MODAL_UUID", [
-			"viewApiRequest"
-		]),
-		...mapActions("modalVisibility", ["closeCurrentModal"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 ul {
