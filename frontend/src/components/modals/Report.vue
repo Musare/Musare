@@ -1,3 +1,221 @@
+<script setup lang="ts">
+import { useStore } from "vuex";
+import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
+import Toast from "toasters";
+import { useModalState } from "@/vuex_helpers";
+import ws from "@/ws";
+
+const SongItem = defineAsyncComponent(
+	() => import("@/components/SongItem.vue")
+);
+const ReportInfoItem = defineAsyncComponent(
+	() => import("@/components/ReportInfoItem.vue")
+);
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" }
+});
+
+const store = useStore();
+
+const { socket } = store.state.websockets;
+
+const { song } = useModalState("modals/report/MODAL_UUID", {
+	modalUuid: props.modalUuid
+});
+
+const openModal = payload =>
+	store.dispatch("modalVisibility/openModal", payload);
+const closeCurrentModal = () =>
+	store.dispatch("modalVisibility/closeCurrentModal");
+
+const existingReports = ref([]);
+const customIssues = ref([]);
+const predefinedCategories = ref([
+	{
+		category: "video",
+		issues: [
+			{
+				enabled: false,
+				title: "Doesn't exist",
+				description: "",
+				showDescription: false
+			},
+			{
+				enabled: false,
+				title: "It's private",
+				description: "",
+				showDescription: false
+			},
+			{
+				enabled: false,
+				title: "It's not available in my country",
+				description: "",
+				showDescription: false
+			},
+			{
+				enabled: false,
+				title: "Unofficial",
+				description: "",
+				showDescription: false
+			}
+		]
+	},
+	{
+		category: "title",
+		issues: [
+			{
+				enabled: false,
+				title: "Incorrect",
+				description: "",
+				showDescription: false
+			},
+			{
+				enabled: false,
+				title: "Inappropriate",
+				description: "",
+				showDescription: false
+			}
+		]
+	},
+	{
+		category: "duration",
+		issues: [
+			{
+				enabled: false,
+				title: "Skips too soon",
+				description: "",
+				showDescription: false
+			},
+			{
+				enabled: false,
+				title: "Skips too late",
+				description: "",
+				showDescription: false
+			},
+			{
+				enabled: false,
+				title: "Starts too soon",
+				description: "",
+				showDescription: false
+			},
+			{
+				enabled: false,
+				title: "Starts too late",
+				description: "",
+				showDescription: false
+			}
+		]
+	},
+	{
+		category: "artists",
+		issues: [
+			{
+				enabled: false,
+				title: "Incorrect",
+				description: "",
+				showDescription: false
+			},
+			{
+				enabled: false,
+				title: "Inappropriate",
+				description: "",
+				showDescription: false
+			}
+		]
+	},
+	{
+		category: "thumbnail",
+		issues: [
+			{
+				enabled: false,
+				title: "Incorrect",
+				description: "",
+				showDescription: false
+			},
+			{
+				enabled: false,
+				title: "Inappropriate",
+				description: "",
+				showDescription: false
+			},
+			{
+				enabled: false,
+				title: "Doesn't exist",
+				description: "",
+				showDescription: false
+			}
+		]
+	}
+]);
+
+const init = () => {
+	socket.dispatch("reports.myReportsForSong", song._id, res => {
+		if (res.status === "success") {
+			existingReports.value = res.data.reports;
+			existingReports.value.forEach(report =>
+				socket.dispatch("apis.joinRoom", `view-report.${report._id}`)
+			);
+		}
+	});
+
+	socket.on(
+		"event:admin.report.resolved",
+		res => {
+			existingReports.value = existingReports.value.filter(
+				report => report._id !== res.data.reportId
+			);
+		},
+		{ modalUuid: props.modalUuid }
+	);
+};
+
+const create = () => {
+	const issues = [];
+
+	// any predefined issues that are enabled
+	predefinedCategories.value.forEach(category =>
+		category.issues.forEach(issue => {
+			if (issue.enabled)
+				issues.push({
+					category: category.category,
+					title: issue.title,
+					description: issue.description
+				});
+		})
+	);
+
+	// any custom issues
+	customIssues.value.forEach(issue =>
+		issues.push({ category: "custom", title: issue })
+	);
+
+	if (issues.length === 0)
+		return new Toast("Reports must have at least one issue");
+
+	return socket.dispatch(
+		"reports.create",
+		{
+			issues,
+			youtubeId: song.youtubeId
+		},
+		res => {
+			new Toast(res.message);
+			if (res.status === "success") closeCurrentModal();
+		}
+	);
+};
+
+onMounted(() => {
+	ws.onConnect(init);
+});
+
+onBeforeUnmount(() => {
+	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+	store.unregisterModule(["modals", "report", props.modalUuid]);
+});
+</script>
+
 <template>
 	<div>
 		<modal
@@ -194,241 +412,13 @@
 					<i class="material-icons save-changes">done</i>
 					<span>&nbsp;Create</span>
 				</button>
-				<a class="button is-danger" @click="closeModal('report')">
+				<a class="button is-danger" @click="closeCurrentModal()">
 					<span>&nbsp;Cancel</span>
 				</a>
 			</template>
 		</modal>
 	</div>
 </template>
-
-<script>
-import { mapGetters, mapActions } from "vuex";
-import Toast from "toasters";
-import ws from "@/ws";
-import { mapModalState } from "@/vuex_helpers";
-
-import SongItem from "@/components/SongItem.vue";
-import ReportInfoItem from "@/components/ReportInfoItem.vue";
-
-export default {
-	components: { SongItem, ReportInfoItem },
-	props: {
-		modalUuid: { type: String, default: "" }
-	},
-	data() {
-		return {
-			icons: {
-				duration: "timer",
-				video: "tv",
-				thumbnail: "image",
-				artists: "record_voice_over",
-				title: "title",
-				custom: "lightbulb"
-			},
-			existingReports: [],
-			customIssues: [],
-			predefinedCategories: [
-				{
-					category: "video",
-					issues: [
-						{
-							enabled: false,
-							title: "Doesn't exist",
-							description: "",
-							showDescription: false
-						},
-						{
-							enabled: false,
-							title: "It's private",
-							description: "",
-							showDescription: false
-						},
-						{
-							enabled: false,
-							title: "It's not available in my country",
-							description: "",
-							showDescription: false
-						},
-						{
-							enabled: false,
-							title: "Unofficial",
-							description: "",
-							showDescription: false
-						}
-					]
-				},
-				{
-					category: "title",
-					issues: [
-						{
-							enabled: false,
-							title: "Incorrect",
-							description: "",
-							showDescription: false
-						},
-						{
-							enabled: false,
-							title: "Inappropriate",
-							description: "",
-							showDescription: false
-						}
-					]
-				},
-				{
-					category: "duration",
-					issues: [
-						{
-							enabled: false,
-							title: "Skips too soon",
-							description: "",
-							showDescription: false
-						},
-						{
-							enabled: false,
-							title: "Skips too late",
-							description: "",
-							showDescription: false
-						},
-						{
-							enabled: false,
-							title: "Starts too soon",
-							description: "",
-							showDescription: false
-						},
-						{
-							enabled: false,
-							title: "Starts too late",
-							description: "",
-							showDescription: false
-						}
-					]
-				},
-				{
-					category: "artists",
-					issues: [
-						{
-							enabled: false,
-							title: "Incorrect",
-							description: "",
-							showDescription: false
-						},
-						{
-							enabled: false,
-							title: "Inappropriate",
-							description: "",
-							showDescription: false
-						}
-					]
-				},
-				{
-					category: "thumbnail",
-					issues: [
-						{
-							enabled: false,
-							title: "Incorrect",
-							description: "",
-							showDescription: false
-						},
-						{
-							enabled: false,
-							title: "Inappropriate",
-							description: "",
-							showDescription: false
-						},
-						{
-							enabled: false,
-							title: "Doesn't exist",
-							description: "",
-							showDescription: false
-						}
-					]
-				}
-			]
-		};
-	},
-	computed: {
-		...mapModalState("modals/report/MODAL_UUID", {
-			song: state => state.song
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	mounted() {
-		ws.onConnect(this.init);
-
-		this.socket.on(
-			"event:admin.report.resolved",
-			res => {
-				this.existingReports = this.existingReports.filter(
-					report => report._id !== res.data.reportId
-				);
-			},
-			{ modalUuid: this.modalUuid }
-		);
-	},
-	beforeUnmount() {
-		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-		this.$store.unregisterModule(["modals", "report", this.modalUuid]);
-	},
-	methods: {
-		init() {
-			this.socket.dispatch(
-				"reports.myReportsForSong",
-				this.song._id,
-				res => {
-					if (res.status === "success") {
-						this.existingReports = res.data.reports;
-						this.existingReports.forEach(report =>
-							this.socket.dispatch(
-								"apis.joinRoom",
-								`view-report.${report._id}`
-							)
-						);
-					}
-				}
-			);
-		},
-		create() {
-			const issues = [];
-
-			// any predefined issues that are enabled
-			this.predefinedCategories.forEach(category =>
-				category.issues.forEach(issue => {
-					if (issue.enabled)
-						issues.push({
-							category: category.category,
-							title: issue.title,
-							description: issue.description
-						});
-				})
-			);
-
-			// any custom issues
-			this.customIssues.forEach(issue =>
-				issues.push({ category: "custom", title: issue })
-			);
-
-			if (issues.length === 0)
-				return new Toast("Reports must have at least one issue");
-
-			return this.socket.dispatch(
-				"reports.create",
-				{
-					issues,
-					youtubeId: this.song.youtubeId
-				},
-				res => {
-					new Toast(res.message);
-					if (res.status === "success") this.closeModal("report");
-				}
-			);
-		},
-		...mapActions("modalVisibility", ["openModal", "closeModal"])
-	}
-};
-</script>
 
 <style lang="less">
 .report-modal .song-item .thumbnail {
