@@ -1,10 +1,193 @@
+<script setup lang="ts">
+import { useStore } from "vuex";
+import { defineAsyncComponent, ref, watch, onMounted } from "vue";
+import { useRoute } from "vue-router";
+import Toast from "toasters";
+import validation from "@/validation";
+
+const InputHelpBox = defineAsyncComponent(
+	() => import("@/components/InputHelpBox.vue")
+);
+
+const route = useRoute();
+
+const username = ref({
+	value: "",
+	valid: false,
+	entered: false,
+	message: "Only letters, numbers and underscores are allowed."
+});
+const email = ref({
+	value: "",
+	valid: false,
+	entered: false,
+	message: "Please enter a valid email address."
+});
+const password = ref({
+	value: "",
+	valid: false,
+	entered: false,
+	visible: false,
+	message:
+		"Include at least one lowercase letter, one uppercase letter, one number and one special character."
+});
+const recaptcha = ref({
+	key: "",
+	token: "",
+	enabled: false
+});
+const apiDomain = ref("");
+const registrationDisabled = ref(false);
+const passwordElement = ref();
+
+const store = useStore();
+
+const register = payload => store.dispatch("user/auth/register", payload);
+const openModal = payload =>
+	store.dispatch("modalVisibility/openModal", payload);
+const closeCurrentModal = () =>
+	store.dispatch("modalVisibility/closeCurrentModal");
+
+const submitModal = () => {
+	if (!username.value.valid || !email.value.valid || !password.value.valid)
+		return new Toast("Please ensure all fields are valid.");
+
+	return register({
+		username: username.value.value,
+		email: email.value.value,
+		password: password.value.value,
+		recaptchaToken: recaptcha.value.token
+	})
+		.then(res => {
+			if (res.status === "success") window.location.reload();
+		})
+		.catch(err => new Toast(err.message));
+};
+
+const togglePasswordVisibility = () => {
+	if (passwordElement.value.type === "password") {
+		passwordElement.value.type = "text";
+		password.value.visible = true;
+	} else {
+		passwordElement.value.type = "password";
+		password.value.visible = false;
+	}
+};
+
+const changeToLoginModal = () => {
+	closeCurrentModal();
+	openModal("login");
+};
+
+const githubRedirect = () => {
+	localStorage.setItem("github_redirect", route.path);
+};
+
+watch(
+	() => username.value.value,
+	value => {
+		username.value.entered = true;
+		if (!validation.isLength(value, 2, 32)) {
+			username.value.message =
+				"Username must have between 2 and 32 characters.";
+			username.value.valid = false;
+		} else if (!validation.regex.azAZ09_.test(value)) {
+			username.value.message =
+				"Invalid format. Allowed characters: a-z, A-Z, 0-9 and _.";
+			username.value.valid = false;
+		} else if (value.replaceAll(/[_]/g, "").length === 0) {
+			username.value.message =
+				"Invalid format. Allowed characters: a-z, A-Z, 0-9 and _, and there has to be at least one letter or number.";
+			username.value.valid = false;
+		} else {
+			username.value.message = "Everything looks great!";
+			username.value.valid = true;
+		}
+	}
+);
+watch(
+	() => email.value.value,
+	value => {
+		email.value.entered = true;
+		if (!validation.isLength(value, 3, 254)) {
+			email.value.message =
+				"Email must have between 3 and 254 characters.";
+			email.value.valid = false;
+		} else if (
+			value.indexOf("@") !== value.lastIndexOf("@") ||
+			!validation.regex.emailSimple.test(value)
+		) {
+			email.value.message = "Invalid format.";
+			email.value.valid = false;
+		} else {
+			email.value.message = "Everything looks great!";
+			email.value.valid = true;
+		}
+	}
+);
+watch(
+	() => password.value.value,
+	value => {
+		password.value.entered = true;
+		if (!validation.isLength(value, 6, 200)) {
+			password.value.message =
+				"Password must have between 6 and 200 characters.";
+			password.value.valid = false;
+		} else if (!validation.regex.password.test(value)) {
+			password.value.message =
+				"Include at least one lowercase letter, one uppercase letter, one number and one special character.";
+			password.value.valid = false;
+		} else {
+			password.value.message = "Everything looks great!";
+			password.value.valid = true;
+		}
+	}
+);
+
+onMounted(async () => {
+	apiDomain.value = await lofig.get("backend.apiDomain");
+	lofig.get("siteSettings.registrationDisabled").then(res => {
+		if (res) {
+			new Toast("Registration is disabled.");
+			closeCurrentModal();
+		} else {
+			registrationDisabled.value = res;
+		}
+	});
+
+	lofig.get("recaptcha").then(obj => {
+		recaptcha.value.enabled = obj.enabled;
+		if (obj.enabled === true) {
+			recaptcha.value.key = obj.key;
+
+			const recaptchaScript = document.createElement("script");
+			recaptchaScript.onload = () => {
+				grecaptcha.ready(() => {
+					grecaptcha
+						.execute(recaptcha.value.key, { action: "login" })
+						.then(token => {
+							recaptcha.value.token = token;
+						});
+				});
+			};
+
+			recaptchaScript.setAttribute(
+				"src",
+				`https://www.google.com/recaptcha/api.js?render=${recaptcha.value.key}`
+			);
+			document.head.appendChild(recaptchaScript);
+		}
+	});
+});
+</script>
+
 <template>
 	<div>
 		<modal
 			title="Register"
 			class="register-modal"
 			:size="'slim'"
-			@closed="closeRegisterModal()"
+			@closed="closeCurrentModal()"
 		>
 			<template #body>
 				<!-- email address -->
@@ -15,11 +198,7 @@
 						class="input"
 						type="email"
 						placeholder="Email..."
-						@keypress="
-							onInput('email') &
-								submitOnEnter(submitModal, $event)
-						"
-						@paste="onInput('email')"
+						@keyup.enter="submitModal()"
 						autofocus
 					/>
 				</p>
@@ -39,11 +218,7 @@
 						class="input"
 						type="text"
 						placeholder="Username..."
-						@keypress="
-							onInput('username') &
-								submitOnEnter(submitModal, $event)
-						"
-						@paste="onInput('username')"
+						@keyup.enter="submitModal()"
 					/>
 				</p>
 				<transition name="fadein-helpbox">
@@ -64,13 +239,9 @@
 						v-model="password.value"
 						class="input"
 						type="password"
-						ref="password"
+						ref="passwordElement"
 						placeholder="Password..."
-						@keypress="
-							onInput('password') &
-								submitOnEnter(submitModal, $event)
-						"
-						@paste="onInput('password')"
+						@keyup.enter="submitModal()"
 					/>
 					<a @click="togglePasswordVisibility()">
 						<i class="material-icons">
@@ -95,11 +266,11 @@
 
 				<p>
 					By registering you agree to our
-					<router-link to="/terms" @click="closeRegisterModal()">
+					<router-link to="/terms" @click="closeCurrentModal()">
 						Terms of Service
 					</router-link>
 					and
-					<router-link to="/privacy" @click="closeRegisterModal()">
+					<router-link to="/privacy" @click="closeCurrentModal()">
 						Privacy Policy</router-link
 					>.
 				</p>
@@ -133,187 +304,6 @@
 		</modal>
 	</div>
 </template>
-
-<script>
-import { mapActions } from "vuex";
-import Toast from "toasters";
-
-import validation from "@/validation";
-import InputHelpBox from "../InputHelpBox.vue";
-
-export default {
-	components: { InputHelpBox },
-	data() {
-		return {
-			username: {
-				value: "",
-				valid: false,
-				entered: false,
-				message: "Only letters, numbers and underscores are allowed."
-			},
-			email: {
-				value: "",
-				valid: false,
-				entered: false,
-				message: "Please enter a valid email address."
-			},
-			password: {
-				value: "",
-				valid: false,
-				entered: false,
-				visible: false,
-				message:
-					"Include at least one lowercase letter, one uppercase letter, one number and one special character."
-			},
-			recaptcha: {
-				key: "",
-				token: "",
-				enabled: false
-			},
-			apiDomain: "",
-			registrationDisabled: false
-		};
-	},
-	watch: {
-		// eslint-disable-next-line
-		"username.value": function (value) {
-			if (!validation.isLength(value, 2, 32)) {
-				this.username.message =
-					"Username must have between 2 and 32 characters.";
-				this.username.valid = false;
-			} else if (!validation.regex.azAZ09_.test(value)) {
-				this.username.message =
-					"Invalid format. Allowed characters: a-z, A-Z, 0-9 and _.";
-				this.username.valid = false;
-			} else if (value.replaceAll(/[_]/g, "").length === 0) {
-				this.username.message =
-					"Invalid format. Allowed characters: a-z, A-Z, 0-9 and _, and there has to be at least one letter or number.";
-				this.username.valid = false;
-			} else {
-				this.username.message = "Everything looks great!";
-				this.username.valid = true;
-			}
-		},
-		// eslint-disable-next-line
-		"email.value": function (value) {
-			if (!validation.isLength(value, 3, 254)) {
-				this.email.message =
-					"Email must have between 3 and 254 characters.";
-				this.email.valid = false;
-			} else if (
-				value.indexOf("@") !== value.lastIndexOf("@") ||
-				!validation.regex.emailSimple.test(value)
-			) {
-				this.email.message = "Invalid format.";
-				this.email.valid = false;
-			} else {
-				this.email.message = "Everything looks great!";
-				this.email.valid = true;
-			}
-		},
-		// eslint-disable-next-line
-		"password.value": function (value) {
-			if (!validation.isLength(value, 6, 200)) {
-				this.password.message =
-					"Password must have between 6 and 200 characters.";
-				this.password.valid = false;
-			} else if (!validation.regex.password.test(value)) {
-				this.password.message =
-					"Include at least one lowercase letter, one uppercase letter, one number and one special character.";
-				this.password.valid = false;
-			} else {
-				this.password.message = "Everything looks great!";
-				this.password.valid = true;
-			}
-		}
-	},
-	async mounted() {
-		this.apiDomain = await lofig.get("backend.apiDomain");
-
-		lofig
-			.get("siteSettings.registrationDisabled")
-			.then(registrationDisabled => {
-				this.registrationDisabled = registrationDisabled;
-				if (registrationDisabled) {
-					new Toast("Registration is disabled.");
-					this.closeModal("register");
-				}
-			});
-
-		lofig.get("recaptcha").then(obj => {
-			this.recaptcha.enabled = obj.enabled;
-			if (obj.enabled === true) {
-				this.recaptcha.key = obj.key;
-
-				const recaptchaScript = document.createElement("script");
-				recaptchaScript.onload = () => {
-					grecaptcha.ready(() => {
-						grecaptcha
-							.execute(this.recaptcha.key, { action: "login" })
-							.then(token => {
-								this.recaptcha.token = token;
-							});
-					});
-				};
-
-				recaptchaScript.setAttribute(
-					"src",
-					`https://www.google.com/recaptcha/api.js?render=${this.recaptcha.key}`
-				);
-				document.head.appendChild(recaptchaScript);
-			}
-		});
-	},
-	methods: {
-		submitOnEnter: (cb, event) => {
-			if (event.which === 13) cb();
-		},
-		togglePasswordVisibility() {
-			if (this.$refs.password.type === "password") {
-				this.$refs.password.type = "text";
-				this.password.visible = true;
-			} else {
-				this.$refs.password.type = "password";
-				this.password.visible = false;
-			}
-		},
-		changeToLoginModal() {
-			this.closeRegisterModal();
-			this.openModal("login");
-		},
-		closeRegisterModal() {
-			this.closeModal("register");
-		},
-		submitModal() {
-			if (
-				!this.username.valid ||
-				!this.email.valid ||
-				!this.password.valid
-			)
-				return new Toast("Please ensure all fields are valid.");
-
-			return this.register({
-				username: this.username.value,
-				email: this.email.value,
-				password: this.password.value,
-				recaptchaToken: this.recaptcha.token
-			})
-				.then(res => {
-					if (res.status === "success") window.location.reload();
-				})
-				.catch(err => new Toast(err.message));
-		},
-		onInput(inputName) {
-			this[inputName].entered = true;
-		},
-		githubRedirect() {
-			localStorage.setItem("github_redirect", this.$route.path);
-		},
-		...mapActions("modalVisibility", ["closeModal", "openModal"]),
-		...mapActions("user/auth", ["register"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {
