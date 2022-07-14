@@ -1,3 +1,210 @@
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import { useStore } from "vuex";
+import { useRoute } from "vue-router";
+
+import AdvancedTable from "@/components/AdvancedTable.vue";
+import ProfilePicture from "@/components/ProfilePicture.vue";
+
+const store = useStore();
+const route = useRoute();
+
+const columnDefault = ref({
+	sortable: true,
+	hidable: true,
+	defaultVisibility: "shown",
+	draggable: true,
+	resizable: true,
+	minWidth: 150,
+	maxWidth: 600
+});
+const columns = ref([
+	{
+		name: "options",
+		displayName: "Options",
+		properties: ["_id", "username"],
+		sortable: false,
+		hidable: false,
+		resizable: false,
+		minWidth: 85,
+		defaultWidth: 85
+	},
+	{
+		name: "profilePicture",
+		displayName: "Image",
+		properties: ["avatar", "name", "username"],
+		sortable: false,
+		resizable: false,
+		minWidth: 71,
+		defaultWidth: 71
+	},
+	{
+		name: "name",
+		displayName: "Display Name",
+		properties: ["name"],
+		sortProperty: "name"
+	},
+	{
+		name: "username",
+		displayName: "Username",
+		properties: ["username"],
+		sortProperty: "username"
+	},
+	{
+		name: "_id",
+		displayName: "User ID",
+		properties: ["_id"],
+		sortProperty: "_id",
+		minWidth: 230,
+		defaultWidth: 230
+	},
+	{
+		name: "githubId",
+		displayName: "GitHub ID",
+		properties: ["services.github.id"],
+		sortProperty: "services.github.id",
+		minWidth: 115,
+		defaultWidth: 115
+	},
+	{
+		name: "hasPassword",
+		displayName: "Has Password",
+		properties: ["hasPassword"],
+		sortProperty: "hasPassword"
+	},
+	{
+		name: "role",
+		displayName: "Role",
+		properties: ["role"],
+		sortProperty: "role",
+		minWidth: 90,
+		defaultWidth: 90
+	},
+	{
+		name: "emailAddress",
+		displayName: "Email Address",
+		properties: ["email.address"],
+		sortProperty: "email.address",
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "emailVerified",
+		displayName: "Email Verified",
+		properties: ["email.verified"],
+		sortProperty: "email.verified",
+		defaultVisibility: "hidden",
+		minWidth: 140,
+		defaultWidth: 140
+	},
+	{
+		name: "songsRequested",
+		displayName: "Songs Requested",
+		properties: ["statistics.songsRequested"],
+		sortProperty: "statistics.songsRequested",
+		minWidth: 170,
+		defaultWidth: 170
+	}
+]);
+const filters = ref([
+	{
+		name: "_id",
+		displayName: "User ID",
+		property: "_id",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact"
+	},
+	{
+		name: "name",
+		displayName: "Display Name",
+		property: "name",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "username",
+		displayName: "Username",
+		property: "username",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "githubId",
+		displayName: "GitHub ID",
+		property: "services.github.id",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "hasPassword",
+		displayName: "Has Password",
+		property: "hasPassword",
+		filterTypes: ["boolean"],
+		defaultFilterType: "boolean"
+	},
+	{
+		name: "role",
+		displayName: "Role",
+		property: "role",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact",
+		dropdown: [
+			["admin", "Admin"],
+			["default", "Default"]
+		]
+	},
+	{
+		name: "emailAddress",
+		displayName: "Email Address",
+		property: "email.address",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "emailVerified",
+		displayName: "Email Verified",
+		property: "email.verified",
+		filterTypes: ["boolean"],
+		defaultFilterType: "boolean"
+	},
+	{
+		name: "songsRequested",
+		displayName: "Songs Requested",
+		property: "statistics.songsRequested",
+		filterTypes: [
+			"numberLesserEqual",
+			"numberLesser",
+			"numberGreater",
+			"numberGreaterEqual",
+			"numberEquals"
+		],
+		defaultFilterType: "numberLesser"
+	}
+]);
+const events = ref({
+	adminRoom: "users",
+	updated: {
+		event: "admin.user.updated",
+		id: "user._id",
+		item: "user"
+	},
+	removed: {
+		event: "user.removed",
+		id: "userId"
+	}
+});
+
+const openModal = payload =>
+	store.dispatch("modalVisibility/openModal", payload);
+
+const edit = userId => {
+	openModal({ modal: "editUser", data: { userId } });
+};
+
+onMounted(() => {
+	if (route.query.userId) edit(route.query.userId);
+});
+</script>
+
 <template>
 	<div class="admin-tab container">
 		<page-metadata title="Admin | Users" />
@@ -99,216 +306,6 @@
 		</advanced-table>
 	</div>
 </template>
-
-<script>
-import { mapActions } from "vuex";
-
-import AdvancedTable from "@/components/AdvancedTable.vue";
-import ProfilePicture from "@/components/ProfilePicture.vue";
-
-export default {
-	components: {
-		AdvancedTable,
-		ProfilePicture
-	},
-	data() {
-		return {
-			columnDefault: {
-				sortable: true,
-				hidable: true,
-				defaultVisibility: "shown",
-				draggable: true,
-				resizable: true,
-				minWidth: 150,
-				maxWidth: 600
-			},
-			columns: [
-				{
-					name: "options",
-					displayName: "Options",
-					properties: ["_id", "username"],
-					sortable: false,
-					hidable: false,
-					resizable: false,
-					minWidth: 85,
-					defaultWidth: 85
-				},
-				{
-					name: "profilePicture",
-					displayName: "Image",
-					properties: ["avatar", "name", "username"],
-					sortable: false,
-					resizable: false,
-					minWidth: 71,
-					defaultWidth: 71
-				},
-				{
-					name: "name",
-					displayName: "Display Name",
-					properties: ["name"],
-					sortProperty: "name"
-				},
-				{
-					name: "username",
-					displayName: "Username",
-					properties: ["username"],
-					sortProperty: "username"
-				},
-				{
-					name: "_id",
-					displayName: "User ID",
-					properties: ["_id"],
-					sortProperty: "_id",
-					minWidth: 230,
-					defaultWidth: 230
-				},
-				{
-					name: "githubId",
-					displayName: "GitHub ID",
-					properties: ["services.github.id"],
-					sortProperty: "services.github.id",
-					minWidth: 115,
-					defaultWidth: 115
-				},
-				{
-					name: "hasPassword",
-					displayName: "Has Password",
-					properties: ["hasPassword"],
-					sortProperty: "hasPassword"
-				},
-				{
-					name: "role",
-					displayName: "Role",
-					properties: ["role"],
-					sortProperty: "role",
-					minWidth: 90,
-					defaultWidth: 90
-				},
-				{
-					name: "emailAddress",
-					displayName: "Email Address",
-					properties: ["email.address"],
-					sortProperty: "email.address",
-					defaultVisibility: "hidden"
-				},
-				{
-					name: "emailVerified",
-					displayName: "Email Verified",
-					properties: ["email.verified"],
-					sortProperty: "email.verified",
-					defaultVisibility: "hidden",
-					minWidth: 140,
-					defaultWidth: 140
-				},
-				{
-					name: "songsRequested",
-					displayName: "Songs Requested",
-					properties: ["statistics.songsRequested"],
-					sortProperty: "statistics.songsRequested",
-					minWidth: 170,
-					defaultWidth: 170
-				}
-			],
-			filters: [
-				{
-					name: "_id",
-					displayName: "User ID",
-					property: "_id",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact"
-				},
-				{
-					name: "name",
-					displayName: "Display Name",
-					property: "name",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "username",
-					displayName: "Username",
-					property: "username",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "githubId",
-					displayName: "GitHub ID",
-					property: "services.github.id",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "hasPassword",
-					displayName: "Has Password",
-					property: "hasPassword",
-					filterTypes: ["boolean"],
-					defaultFilterType: "boolean"
-				},
-				{
-					name: "role",
-					displayName: "Role",
-					property: "role",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact",
-					dropdown: [
-						["admin", "Admin"],
-						["default", "Default"]
-					]
-				},
-				{
-					name: "emailAddress",
-					displayName: "Email Address",
-					property: "email.address",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "emailVerified",
-					displayName: "Email Verified",
-					property: "email.verified",
-					filterTypes: ["boolean"],
-					defaultFilterType: "boolean"
-				},
-				{
-					name: "songsRequested",
-					displayName: "Songs Requested",
-					property: "statistics.songsRequested",
-					filterTypes: [
-						"numberLesserEqual",
-						"numberLesser",
-						"numberGreater",
-						"numberGreaterEqual",
-						"numberEquals"
-					],
-					defaultFilterType: "numberLesser"
-				}
-			],
-			events: {
-				adminRoom: "users",
-				updated: {
-					event: "admin.user.updated",
-					id: "user._id",
-					item: "user"
-				},
-				removed: {
-					event: "user.removed",
-					id: "userId"
-				}
-			}
-		};
-	},
-	mounted() {
-		if (this.$route.query.userId) this.edit(this.$route.query.userId);
-	},
-	methods: {
-		edit(userId) {
-			this.openModal({ modal: "editUser", data: { userId } });
-		},
-		...mapActions("modalVisibility", ["openModal"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .profile-picture {
