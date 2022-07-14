@@ -1,3 +1,206 @@
+<script setup lang="ts">
+import { ref, watch, reactive, computed, onMounted } from "vue";
+import { useStore } from "vuex";
+import { useRoute } from "vue-router";
+import Toast from "toasters";
+
+import InputHelpBox from "@/components/InputHelpBox.vue";
+import SaveButton from "@/components/SaveButton.vue";
+import _validation from "@/validation";
+
+const store = useStore();
+const route = useRoute();
+
+const { socket } = store.state.websockets;
+
+const saveButton = ref();
+
+const userId = computed(() => store.state.user.auth.userId);
+const originalUser = computed(() => store.state.settings.originalUser);
+const modifiedUser = computed(() => store.state.settings.modifiedUser);
+
+const validation = reactive({
+	username: {
+		entered: false,
+		valid: false,
+		message: "Please enter a valid username."
+	},
+	email: {
+		entered: false,
+		valid: false,
+		message: "Please enter a valid email address."
+	}
+});
+
+const updateOriginalUser = payload =>
+	store.dispatch("settings/updateOriginalUser", payload);
+const openModal = payload =>
+	store.dispatch("modalVisibility/openModal", payload);
+
+const onInput = inputName => {
+	validation[inputName].entered = true;
+};
+
+const changeEmail = () => {
+	const email = modifiedUser.value.email.address;
+	if (!_validation.isLength(email, 3, 254))
+		return new Toast("Email must have between 3 and 254 characters.");
+	if (
+		email.indexOf("@") !== email.lastIndexOf("@") ||
+		!_validation.regex.emailSimple.test(email)
+	)
+		return new Toast("Invalid email format.");
+
+	saveButton.value.saveStatus = "disabled";
+
+	return socket.dispatch("users.updateEmail", userId.value, email, res => {
+		if (res.status !== "success") {
+			new Toast(res.message);
+			saveButton.value.handleFailedSave();
+		} else {
+			new Toast("Successfully changed email address");
+
+			updateOriginalUser({
+				property: "email.address",
+				value: email
+			});
+
+			saveButton.value.handleSuccessfulSave();
+		}
+	});
+};
+
+const changeUsername = () => {
+	const { username } = modifiedUser.value;
+
+	if (!_validation.isLength(username, 2, 32))
+		return new Toast("Username must have between 2 and 32 characters.");
+
+	if (!_validation.regex.azAZ09_.test(username))
+		return new Toast(
+			"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _."
+		);
+
+	if (username.replaceAll(/[_]/g, "").length === 0)
+		return new Toast(
+			"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _, and there has to be at least one letter or number."
+		);
+
+	saveButton.value.saveStatus = "disabled";
+
+	return socket.dispatch(
+		"users.updateUsername",
+		userId.value,
+		username,
+		res => {
+			if (res.status !== "success") {
+				new Toast(res.message);
+				saveButton.value.handleFailedSave();
+			} else {
+				new Toast("Successfully changed username");
+
+				updateOriginalUser({
+					property: "username",
+					value: username
+				});
+
+				saveButton.value.handleSuccessfulSave();
+			}
+		}
+	);
+};
+
+const saveChanges = () => {
+	const usernameChanged =
+		modifiedUser.value.username !== originalUser.value.username;
+	const emailAddressChanged =
+		modifiedUser.value.email.address !== originalUser.value.email.address;
+
+	if (usernameChanged) changeUsername();
+
+	if (emailAddressChanged) changeEmail();
+
+	if (!usernameChanged && !emailAddressChanged) {
+		saveButton.value.handleFailedSave();
+
+		new Toast("Please make a change before saving.");
+	}
+};
+
+const removeActivities = () => {
+	socket.dispatch("activities.removeAllForUser", res => {
+		new Toast(res.message);
+	});
+};
+
+onMounted(() => {
+	if (
+		route.query.removeAccount === "relinked-github" &&
+		!localStorage.getItem("github_redirect")
+	) {
+		openModal("removeAccount");
+
+		// TODO fix/redo this logic, broke after composition refactor
+		// setTimeout(() => {
+		// 	const modal = this.$parent.$children.find(
+		// 		child => child.name === "RemoveAccount"
+		// 	);
+
+		// 	modal.confirmGithubLink();
+		// }, 50);
+	}
+});
+
+watch(
+	() => modifiedUser.value.username,
+	value => {
+		// const value = newModifiedUser.username;
+
+		if (!_validation.isLength(value, 2, 32)) {
+			validation.username.message =
+				"Username must have between 2 and 32 characters.";
+			validation.username.valid = false;
+		} else if (
+			!_validation.regex.azAZ09_.test(value) &&
+			value !== originalUser.value.username // Sometimes a username pulled from GitHub won't succeed validation
+		) {
+			validation.username.message =
+				"Invalid format. Allowed characters: a-z, A-Z, 0-9 and _.";
+			validation.username.valid = false;
+		} else if (value.replaceAll(/[_]/g, "").length === 0) {
+			validation.username.message =
+				"Invalid format. Allowed characters: a-z, A-Z, 0-9 and _, and there has to be at least one letter or number.";
+			validation.username.valid = false;
+		} else {
+			validation.username.message = "Everything looks great!";
+			validation.username.valid = true;
+		}
+	}
+);
+
+watch(
+	() => modifiedUser.value.email.address,
+	value => {
+		// const value = newModifiedUser.email.address;
+
+		if (!_validation.isLength(value, 3, 254)) {
+			validation.email.message =
+				"Email must have between 3 and 254 characters.";
+			validation.email.valid = false;
+		} else if (
+			value.indexOf("@") !== value.lastIndexOf("@") ||
+			!_validation.regex.emailSimple.test(value)
+		) {
+			validation.email.message = "Invalid format.";
+			validation.email.valid = false;
+		} else {
+			validation.email.message = "Everything looks great!";
+			validation.email.valid = true;
+		}
+	}
+);
+</script>
+
 <template>
 	<div class="content account-tab">
 		<h4 class="section-title">Change account details</h4>
@@ -53,7 +256,7 @@
 			/>
 		</transition>
 
-		<save-button ref="saveButton" @clicked="saveChanges()" />
+		<SaveButton ref="saveButton" @clicked="saveChanges()" />
 
 		<div class="section-margin-bottom" />
 
@@ -80,213 +283,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapState, mapActions, mapGetters } from "vuex";
-import Toast from "toasters";
-
-import InputHelpBox from "@/components/InputHelpBox.vue";
-import SaveButton from "@/components/SaveButton.vue";
-import validation from "@/validation";
-
-export default {
-	components: {
-		InputHelpBox,
-		SaveButton
-	},
-	data() {
-		return {
-			validation: {
-				username: {
-					entered: false,
-					valid: false,
-					message: "Please enter a valid username."
-				},
-				email: {
-					entered: false,
-					valid: false,
-					message: "Please enter a valid email address."
-				}
-			}
-		};
-	},
-	computed: {
-		...mapState({
-			userId: state => state.user.auth.userId,
-			originalUser: state => state.settings.originalUser,
-			modifiedUser: state => state.settings.modifiedUser
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	watch: {
-		// prettier-ignore
-		// eslint-disable-next-line func-names
-		"modifiedUser.username": function (value) {
-			if (!validation.isLength(value, 2, 32)) {
-				this.validation.username.message =
-					"Username must have between 2 and 32 characters.";
-				this.validation.username.valid = false;
-			} else if (
-				!validation.regex.azAZ09_.test(value) &&
-				value !== this.originalUser.username // Sometimes a username pulled from GitHub won't succeed validation
-			) {
-				this.validation.username.message =
-					"Invalid format. Allowed characters: a-z, A-Z, 0-9 and _.";
-				this.validation.username.valid = false;
-			} else if (value.replaceAll(/[_]/g, "").length === 0) {
-				this.validation.username.message =
-					"Invalid format. Allowed characters: a-z, A-Z, 0-9 and _, and there has to be at least one letter or number.";
-				this.validation.username.valid = false;
-			} else {
-				this.validation.username.message = "Everything looks great!";
-				this.validation.username.valid = true;
-			}
-		},
-		// prettier-ignore
-		// eslint-disable-next-line func-names
-		"modifiedUser.email.address": function (value) {
-			if (!validation.isLength(value, 3, 254)) {
-				this.validation.email.message =
-					"Email must have between 3 and 254 characters.";
-				this.validation.email.valid = false;
-			} else if (
-				value.indexOf("@") !== value.lastIndexOf("@") ||
-				!validation.regex.emailSimple.test(value)
-			) {
-				this.validation.email.message = "Invalid format.";
-				this.validation.email.valid = false;
-			} else {
-				this.validation.email.message = "Everything looks great!";
-				this.validation.email.valid = true;
-			}
-		}
-	},
-	mounted() {
-		if (
-			this.$route.query.removeAccount === "relinked-github" &&
-			!localStorage.getItem("github_redirect")
-		) {
-			this.openModal("removeAccount");
-
-			setTimeout(() => {
-				const modal = this.$parent.$children.find(
-					child => child.name === "RemoveAccount"
-				);
-
-				modal.confirmGithubLink();
-			}, 50);
-		}
-	},
-	methods: {
-		onInput(inputName) {
-			this.validation[inputName].entered = true;
-		},
-		saveChanges() {
-			const usernameChanged =
-				this.modifiedUser.username !== this.originalUser.username;
-			const emailAddressChanged =
-				this.modifiedUser.email.address !==
-				this.originalUser.email.address;
-
-			if (usernameChanged) this.changeUsername();
-
-			if (emailAddressChanged) this.changeEmail();
-
-			if (!usernameChanged && !emailAddressChanged) {
-				this.$refs.saveButton.handleFailedSave();
-
-				new Toast("Please make a change before saving.");
-			}
-		},
-		changeEmail() {
-			const email = this.modifiedUser.email.address;
-			if (!validation.isLength(email, 3, 254))
-				return new Toast(
-					"Email must have between 3 and 254 characters."
-				);
-			if (
-				email.indexOf("@") !== email.lastIndexOf("@") ||
-				!validation.regex.emailSimple.test(email)
-			)
-				return new Toast("Invalid email format.");
-
-			this.$refs.saveButton.saveStatus = "disabled";
-
-			return this.socket.dispatch(
-				"users.updateEmail",
-				this.userId,
-				email,
-				res => {
-					if (res.status !== "success") {
-						new Toast(res.message);
-						this.$refs.saveButton.handleFailedSave();
-					} else {
-						new Toast("Successfully changed email address");
-
-						this.updateOriginalUser({
-							property: "email.address",
-							value: email
-						});
-
-						this.$refs.saveButton.handleSuccessfulSave();
-					}
-				}
-			);
-		},
-		changeUsername() {
-			const { username } = this.modifiedUser;
-
-			if (!validation.isLength(username, 2, 32))
-				return new Toast(
-					"Username must have between 2 and 32 characters."
-				);
-
-			if (!validation.regex.azAZ09_.test(username))
-				return new Toast(
-					"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _."
-				);
-
-			if (username.replaceAll(/[_]/g, "").length === 0)
-				return new Toast(
-					"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _, and there has to be at least one letter or number."
-				);
-
-			this.$refs.saveButton.saveStatus = "disabled";
-
-			return this.socket.dispatch(
-				"users.updateUsername",
-				this.userId,
-				username,
-				res => {
-					if (res.status !== "success") {
-						new Toast(res.message);
-						this.$refs.saveButton.handleFailedSave();
-					} else {
-						new Toast("Successfully changed username");
-
-						this.updateOriginalUser({
-							property: "username",
-							value: username
-						});
-
-						this.$refs.saveButton.handleSuccessfulSave();
-					}
-				}
-			);
-		},
-
-		removeActivities() {
-			this.socket.dispatch("activities.removeAllForUser", res => {
-				new Toast(res.message);
-			});
-		},
-		...mapActions("settings", ["updateOriginalUser"]),
-		...mapActions("modalVisibility", ["openModal"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .control {
