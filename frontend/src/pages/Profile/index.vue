@@ -1,3 +1,59 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from "vue";
+import { useStore } from "vuex";
+import { useRoute, useRouter } from "vue-router";
+import { format, parseISO } from "date-fns";
+import ws from "@/ws";
+
+import useTabQueryHandler from "@/composables/useTabQueryHandler";
+
+import ProfilePicture from "@/components/ProfilePicture.vue";
+
+import RecentActivity from "./Tabs/RecentActivity.vue";
+import Playlists from "./Tabs/Playlists.vue";
+
+const store = useStore();
+const route = useRoute();
+const router = useRouter();
+const { tab, showTab } = useTabQueryHandler("recent-activity");
+
+const { socket } = store.state.websockets;
+
+const user = ref();
+const userId = ref("");
+const isUser = ref(false);
+
+const role = computed(() => store.state.user.auth.role);
+const myUserId = computed(() => store.state.user.auth.userId);
+
+const init = () => {
+	socket.dispatch("users.getBasicUser", route.params.username, res => {
+		if (res.status === "error") router.push("/404");
+		else {
+			user.value = res.data;
+
+			user.value.createdAt = format(
+				parseISO(user.value.createdAt),
+				"MMMM do yyyy"
+			);
+
+			isUser.value = true;
+			userId.value = user.value._id;
+		}
+	});
+};
+
+onMounted(() => {
+	if (
+		route.query.tab === "recent-activity" ||
+		route.query.tab === "playlists"
+	)
+		tab.value = route.query.tab;
+
+	ws.onConnect(init);
+});
+</script>
+
 <template>
 	<div v-if="isUser">
 		<page-metadata :title="`Profile | ${user.username}`" />
@@ -99,76 +155,6 @@
 		<main-footer />
 	</div>
 </template>
-
-<script>
-import { mapState, mapGetters } from "vuex";
-import { format, parseISO } from "date-fns";
-import ws from "@/ws";
-
-import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
-
-import ProfilePicture from "@/components/ProfilePicture.vue";
-
-import RecentActivity from "./Tabs/RecentActivity.vue";
-import Playlists from "./Tabs/Playlists.vue";
-
-export default {
-	components: {
-		ProfilePicture,
-		RecentActivity,
-		Playlists
-	},
-	mixins: [TabQueryHandler],
-	data() {
-		return {
-			user: {},
-			userId: "",
-			isUser: false,
-			tab: "recent-activity"
-		};
-	},
-	computed: {
-		...mapState({
-			role: state => state.user.auth.role,
-			myUserId: state => state.user.auth.userId
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	mounted() {
-		if (
-			this.$route.query.tab === "recent-activity" ||
-			this.$route.query.tab === "playlists"
-		)
-			this.tab = this.$route.query.tab;
-
-		ws.onConnect(this.init);
-	},
-	methods: {
-		init() {
-			this.socket.dispatch(
-				"users.getBasicUser",
-				this.$route.params.username,
-				res => {
-					if (res.status === "error") this.$router.push("/404");
-					else {
-						this.user = res.data;
-
-						this.user.createdAt = format(
-							parseISO(this.user.createdAt),
-							"MMMM do yyyy"
-						);
-
-						this.isUser = true;
-						this.userId = this.user._id;
-					}
-				}
-			);
-		}
-	}
-};
-</script>
 
 <style lang="less" scoped>
 @media only screen and (max-width: 1250px) {
