@@ -1,3 +1,39 @@
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import { useStore } from "vuex";
+import { useRoute } from "vue-router";
+
+import ws from "@/ws";
+
+const store = useStore();
+const route = useRoute();
+
+const { socket } = store.state.websockets;
+
+const modules = ref([]);
+const activeModule = ref();
+
+const init = () => {
+	socket.dispatch("utils.getModules", res => {
+		if (res.status === "success") modules.value = res.data.modules;
+	});
+
+	if (route.query.moduleName) {
+		socket.dispatch("utils.getModule", route.query.moduleName, res => {
+			if (res.status === "success")
+				activeModule.value = {
+					runningJobs: res.data.runningJobs,
+					jobStatistics: res.data.jobStatistics
+				};
+		});
+	}
+};
+
+onMounted(() => {
+	ws.onConnect(init);
+});
+</script>
+
 <template>
 	<div class="admin-tab container">
 		<page-metadata title="Admin | Statistics" />
@@ -45,7 +81,7 @@
 				</table>
 			</div>
 		</div>
-		<div v-if="module" class="card">
+		<div v-if="activeModule" class="card">
 			<h4>Running Tasks</h4>
 			<hr class="section-horizontal-rule" />
 			<div class="card-content">
@@ -58,7 +94,7 @@
 					</thead>
 					<tbody>
 						<tr
-							v-for="job in module.runningTasks"
+							v-for="job in activeModule.runningTasks"
 							:key="JSON.stringify(job)"
 						>
 							<td>{{ job.name }}</td>
@@ -70,7 +106,7 @@
 				</table>
 			</div>
 		</div>
-		<div v-if="module" class="card">
+		<div v-if="activeModule" class="card">
 			<h4>Paused Tasks</h4>
 			<hr class="section-horizontal-rule" />
 			<div class="card-content">
@@ -83,7 +119,7 @@
 					</thead>
 					<tbody>
 						<tr
-							v-for="job in module.pausedTasks"
+							v-for="job in activeModule.pausedTasks"
 							:key="JSON.stringify(job)"
 						>
 							<td>{{ job.name }}</td>
@@ -95,7 +131,7 @@
 				</table>
 			</div>
 		</div>
-		<div v-if="module" class="card">
+		<div v-if="activeModule" class="card">
 			<h4>Queued Tasks</h4>
 			<hr class="section-horizontal-rule" />
 			<div class="card-content">
@@ -108,7 +144,7 @@
 					</thead>
 					<tbody>
 						<tr
-							v-for="job in module.queuedTasks"
+							v-for="job in activeModule.queuedTasks"
 							:key="JSON.stringify(job)"
 						>
 							<td>{{ job.name }}</td>
@@ -120,7 +156,7 @@
 				</table>
 			</div>
 		</div>
-		<div v-if="module">
+		<div v-if="activeModule">
 			<div class="card">
 				<h4>Average Logs</h4>
 				<hr class="section-horizontal-rule" />
@@ -137,7 +173,9 @@
 						</thead>
 						<tbody>
 							<tr
-								v-for="(job, jobName) in module.jobStatistics"
+								v-for="(
+									job, jobName
+								) in activeModule.jobStatistics"
 								:key="jobName"
 							>
 								<td>{{ jobName }}</td>
@@ -161,52 +199,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapGetters } from "vuex";
-
-import ws from "@/ws";
-
-export default {
-	components: {},
-	data() {
-		return {
-			modules: [],
-			module: null
-		};
-	},
-	computed: mapGetters({
-		socket: "websockets/getSocket"
-	}),
-	mounted() {
-		ws.onConnect(this.init);
-	},
-	methods: {
-		init() {
-			this.socket.dispatch("utils.getModules", res => {
-				if (res.status === "success") this.modules = res.data.modules;
-			});
-
-			if (this.$route.query.moduleName) {
-				this.socket.dispatch(
-					"utils.getModule",
-					this.$route.query.moduleName,
-					res => {
-						if (res.status === "success")
-							this.module = {
-								runningJobs: res.data.runningJobs,
-								jobStatistics: res.data.jobStatistics
-							};
-					}
-				);
-			}
-		},
-		round(number) {
-			return Math.round(number);
-		}
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {
