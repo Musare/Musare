@@ -1,3 +1,126 @@
+<script setup lang="ts">
+import { ref } from "vue";
+import { useStore } from "vuex";
+import Toast from "toasters";
+
+import AdvancedTable from "@/components/AdvancedTable.vue";
+
+const store = useStore();
+
+const { socket } = store.state.websockets;
+
+const columnDefault = ref({
+	sortable: true,
+	hidable: true,
+	defaultVisibility: "shown",
+	draggable: true,
+	resizable: true,
+	minWidth: 150,
+	maxWidth: 600
+});
+const columns = ref([
+	{
+		name: "options",
+		displayName: "Options",
+		properties: ["_id"],
+		sortable: false,
+		hidable: false,
+		resizable: false,
+		minWidth: 85,
+		defaultWidth: 85
+	},
+	{
+		name: "status",
+		displayName: "Status",
+		properties: ["status"],
+		sortProperty: "status",
+		defaultWidth: 150
+	},
+	{
+		name: "showToNewUsers",
+		displayName: "Show to new users",
+		properties: ["showToNewUsers"],
+		sortProperty: "showToNewUsers",
+		defaultWidth: 180
+	},
+	{
+		name: "title",
+		displayName: "Title",
+		properties: ["title"],
+		sortProperty: "title"
+	},
+	{
+		name: "createdBy",
+		displayName: "Created By",
+		properties: ["createdBy"],
+		sortProperty: "createdBy",
+		defaultWidth: 150
+	},
+	{
+		name: "markdown",
+		displayName: "Markdown",
+		properties: ["markdown"],
+		sortProperty: "markdown"
+	}
+]);
+const filters = ref([
+	{
+		name: "status",
+		displayName: "Status",
+		property: "status",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "showToNewUsers",
+		displayName: "Show to new users",
+		property: "showToNewUsers",
+		filterTypes: ["boolean"],
+		defaultFilterType: "boolean"
+	},
+	{
+		name: "title",
+		displayName: "Title",
+		property: "title",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "createdBy",
+		displayName: "Created By",
+		property: "createdBy",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "markdown",
+		displayName: "Markdown",
+		property: "markdown",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	}
+]);
+const events = ref({
+	adminRoom: "news",
+	updated: {
+		event: "admin.news.updated",
+		id: "news._id",
+		item: "news"
+	},
+	removed: {
+		event: "admin.news.deleted",
+		id: "newsId"
+	}
+});
+
+const openModal = payload =>
+	store.dispatch("modalVisibility/openModal", payload);
+
+const remove = id => {
+	socket.dispatch("news.remove", id, res => new Toast(res.message));
+};
+</script>
+
 <template>
 	<div class="admin-tab container">
 		<page-metadata title="Admin | News" />
@@ -87,139 +210,3 @@
 		</advanced-table>
 	</div>
 </template>
-
-<script>
-import { mapActions, mapGetters } from "vuex";
-import Toast from "toasters";
-
-import AdvancedTable from "@/components/AdvancedTable.vue";
-
-export default {
-	components: {
-		AdvancedTable
-	},
-	data() {
-		return {
-			editingNewsId: "",
-			columnDefault: {
-				sortable: true,
-				hidable: true,
-				defaultVisibility: "shown",
-				draggable: true,
-				resizable: true,
-				minWidth: 150,
-				maxWidth: 600
-			},
-			columns: [
-				{
-					name: "options",
-					displayName: "Options",
-					properties: ["_id"],
-					sortable: false,
-					hidable: false,
-					resizable: false,
-					minWidth: 85,
-					defaultWidth: 85
-				},
-				{
-					name: "status",
-					displayName: "Status",
-					properties: ["status"],
-					sortProperty: "status",
-					defaultWidth: 150
-				},
-				{
-					name: "showToNewUsers",
-					displayName: "Show to new users",
-					properties: ["showToNewUsers"],
-					sortProperty: "showToNewUsers",
-					defaultWidth: 180
-				},
-				{
-					name: "title",
-					displayName: "Title",
-					properties: ["title"],
-					sortProperty: "title"
-				},
-				{
-					name: "createdBy",
-					displayName: "Created By",
-					properties: ["createdBy"],
-					sortProperty: "createdBy",
-					defaultWidth: 150
-				},
-				{
-					name: "markdown",
-					displayName: "Markdown",
-					properties: ["markdown"],
-					sortProperty: "markdown"
-				}
-			],
-			filters: [
-				{
-					name: "status",
-					displayName: "Status",
-					property: "status",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "showToNewUsers",
-					displayName: "Show to new users",
-					property: "showToNewUsers",
-					filterTypes: ["boolean"],
-					defaultFilterType: "boolean"
-				},
-				{
-					name: "title",
-					displayName: "Title",
-					property: "title",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "createdBy",
-					displayName: "Created By",
-					property: "createdBy",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "markdown",
-					displayName: "Markdown",
-					property: "markdown",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				}
-			],
-			events: {
-				adminRoom: "news",
-				updated: {
-					event: "admin.news.updated",
-					id: "news._id",
-					item: "news"
-				},
-				removed: {
-					event: "admin.news.deleted",
-					id: "newsId"
-				}
-			}
-		};
-	},
-	computed: {
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	methods: {
-		remove(id) {
-			this.socket.dispatch(
-				"news.remove",
-				id,
-				res => new Toast(res.message)
-			);
-		},
-		...mapActions("modalVisibility", ["openModal"])
-	}
-};
-</script>
