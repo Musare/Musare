@@ -1,3 +1,122 @@
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useStore } from "vuex";
+import Toast from "toasters";
+
+import ActivityItem from "@/components/ActivityItem.vue";
+import ws from "@/ws";
+
+const store = useStore();
+
+const { socket } = store.state.websockets;
+
+const props = defineProps({
+	userId: {
+		type: String,
+		default: ""
+	}
+});
+
+const username = ref("");
+const activities = ref([]);
+const position = ref(1);
+const maxPosition = ref(1);
+const offsettedFromNextSet = ref(0);
+const isGettingSet = ref(false);
+
+const myUserId = computed(() => store.state.user.auth.userId);
+
+const getBasicUser = payload =>
+	store.dispatch("user/auth/getBasicUser", payload);
+
+const hideActivity = activityId => {
+	socket.dispatch("activities.hideActivity", activityId, res => {
+		if (res.status !== "success") new Toast(res.message);
+	});
+};
+
+const getSet = () => {
+	if (isGettingSet.value) return;
+	if (position.value >= maxPosition.value) return;
+
+	isGettingSet.value = true;
+
+	socket.dispatch(
+		"activities.getSet",
+		props.userId,
+		position.value,
+		offsettedFromNextSet.value,
+		res => {
+			if (res.status === "success") {
+				activities.value.push(...res.data.activities);
+				position.value += 1;
+			}
+
+			isGettingSet.value = false;
+		}
+	);
+};
+
+const init = () => {
+	if (myUserId.value !== props.userId)
+		getBasicUser(props.userId).then(user => {
+			if (user && user.username) username.value = user.username;
+		});
+
+	socket.dispatch("activities.length", props.userId, res => {
+		if (res.status === "success") {
+			maxPosition.value = Math.ceil(res.data.length / 15) + 1;
+			getSet();
+		}
+	});
+};
+
+const handleScroll = () => {
+	const scrollPosition = document.body.clientHeight + window.scrollY;
+	const bottomPosition = document.body.scrollHeight;
+
+	if (scrollPosition + 400 >= bottomPosition) getSet();
+
+	return maxPosition.value === position.value;
+};
+
+onMounted(() => {
+	window.addEventListener("scroll", handleScroll);
+
+	ws.onConnect(init);
+
+	socket.on("event:activity.updated", res => {
+		activities.value.find(
+			activity => activity._id === res.data.activityId
+		).payload.message = res.data.message;
+	});
+
+	socket.on("event:activity.created", res => {
+		activities.value.unshift(res.data.activity);
+		offsettedFromNextSet.value += 1;
+	});
+
+	socket.on("event:activity.hidden", res => {
+		activities.value = activities.value.filter(
+			activity => activity._id !== res.data.activityId
+		);
+
+		offsettedFromNextSet.value -= 1;
+	});
+
+	socket.on("event:activity.removeAllForUser", () => {
+		activities.value = [];
+		position.value = 1;
+		maxPosition.value = 1;
+		offsettedFromNextSet.value = 0;
+	});
+});
+
+onUnmounted(() => {
+	window.removeEventListener("scroll", handleScroll);
+});
+</script>
+
 <template>
 	<div class="content recent-activity-tab">
 		<div v-if="activities.length > 0">
@@ -38,126 +157,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapState, mapGetters, mapActions } from "vuex";
-import Toast from "toasters";
-
-import ActivityItem from "@/components/ActivityItem.vue";
-import ws from "@/ws";
-
-export default {
-	components: { ActivityItem },
-	props: {
-		userId: {
-			type: String,
-			default: ""
-		}
-	},
-	data() {
-		return {
-			username: "",
-			activities: [],
-			position: 1,
-			maxPosition: 1,
-			offsettedFromNextSet: 0,
-			isGettingSet: false
-		};
-	},
-	computed: {
-		...mapState({
-			myUserId: state => state.user.auth.userId
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	mounted() {
-		window.addEventListener("scroll", this.handleScroll);
-
-		ws.onConnect(this.init);
-
-		this.socket.on("event:activity.updated", res => {
-			this.activities.find(
-				activity => activity._id === res.data.activityId
-			).payload.message = res.data.message;
-		});
-
-		this.socket.on("event:activity.created", res => {
-			this.activities.unshift(res.data.activity);
-			this.offsettedFromNextSet += 1;
-		});
-
-		this.socket.on("event:activity.hidden", res => {
-			this.activities = this.activities.filter(
-				activity => activity._id !== res.data.activityId
-			);
-
-			this.offsettedFromNextSet -= 1;
-		});
-
-		this.socket.on("event:activity.removeAllForUser", () => {
-			this.activities = [];
-			this.position = 1;
-			this.maxPosition = 1;
-			this.offsettedFromNextSet = 0;
-		});
-	},
-	unmounted() {
-		window.removeEventListener("scroll", this.handleScroll);
-	},
-	methods: {
-		init() {
-			if (this.myUserId !== this.userId)
-				this.getBasicUser(this.userId).then(user => {
-					if (user && user.username) this.username = user.username;
-				});
-
-			this.socket.dispatch("activities.length", this.userId, res => {
-				if (res.status === "success") {
-					this.maxPosition = Math.ceil(res.data.length / 15) + 1;
-					this.getSet();
-				}
-			});
-		},
-		hideActivity(activityId) {
-			this.socket.dispatch("activities.hideActivity", activityId, res => {
-				if (res.status !== "success") new Toast(res.message);
-			});
-		},
-		getSet() {
-			if (this.isGettingSet) return;
-			if (this.position >= this.maxPosition) return;
-
-			this.isGettingSet = true;
-
-			this.socket.dispatch(
-				"activities.getSet",
-				this.userId,
-				this.position,
-				this.offsettedFromNextSet,
-				res => {
-					if (res.status === "success") {
-						this.activities.push(...res.data.activities);
-						this.position += 1;
-					}
-
-					this.isGettingSet = false;
-				}
-			);
-		},
-		handleScroll() {
-			const scrollPosition = document.body.clientHeight + window.scrollY;
-			const bottomPosition = document.body.scrollHeight;
-
-			if (scrollPosition + 400 >= bottomPosition) this.getSet();
-
-			return this.maxPosition === this.position;
-		},
-		...mapActions("user/auth", ["getBasicUser"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode #activity-items .activity-item {
