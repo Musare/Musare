@@ -1,3 +1,161 @@
+<script setup lang="ts">
+import { ref, computed } from "vue";
+import { useStore } from "vuex";
+import Toast from "toasters";
+
+import ProfilePicture from "@/components/ProfilePicture.vue";
+import SaveButton from "@/components/SaveButton.vue";
+import validation from "@/validation";
+
+const store = useStore();
+
+const { socket } = store.state.websockets;
+
+const saveButton = ref();
+
+const userId = computed(() => store.state.user.auth.userId);
+const originalUser = computed(() => store.state.settings.originalUser);
+const modifiedUser = computed(() => store.state.settings.modifiedUser);
+
+const updateOriginalUser = payload =>
+	store.dispatch("settings/updateOriginalUser", payload);
+
+const changeName = () => {
+	modifiedUser.value.name = modifiedUser.value.name
+		.replaceAll(/ +/g, " ")
+		.trim();
+	const { name } = modifiedUser.value;
+
+	if (!validation.isLength(name, 1, 64))
+		return new Toast("Name must have between 1 and 64 characters.");
+
+	if (!validation.regex.name.test(name))
+		return new Toast(
+			"Invalid name format. Only letters, numbers, spaces, apostrophes, underscores and hyphens are allowed."
+		);
+	if (name.replaceAll(/[ .'_-]/g, "").length === 0)
+		return new Toast(
+			"Invalid name format. Only letters, numbers, spaces, apostrophes, underscores and hyphens are allowed, and there has to be at least one letter or number."
+		);
+
+	saveButton.value.status = "disabled";
+
+	return socket.dispatch("users.updateName", userId.value, name, res => {
+		if (res.status !== "success") {
+			new Toast(res.message);
+			saveButton.value.handleFailedSave();
+		} else {
+			new Toast("Successfully changed name");
+
+			updateOriginalUser({
+				property: "name",
+				value: name
+			});
+
+			saveButton.value.handleSuccessfulSave();
+		}
+	});
+};
+
+const changeLocation = () => {
+	const { location } = modifiedUser.value;
+
+	if (!validation.isLength(location, 0, 50))
+		return new Toast("Location must have between 0 and 50 characters.");
+
+	saveButton.value.status = "disabled";
+
+	return socket.dispatch(
+		"users.updateLocation",
+		userId.value,
+		location,
+		res => {
+			if (res.status !== "success") {
+				new Toast(res.message);
+				saveButton.value.handleFailedSave();
+			} else {
+				new Toast("Successfully changed location");
+
+				updateOriginalUser({
+					property: "location",
+					value: location
+				});
+
+				saveButton.value.handleSuccessfulSave();
+			}
+		}
+	);
+};
+
+const changeBio = () => {
+	const { bio } = modifiedUser.value;
+
+	if (!validation.isLength(bio, 0, 200))
+		return new Toast("Bio must have between 0 and 200 characters.");
+
+	saveButton.value.status = "disabled";
+
+	return socket.dispatch("users.updateBio", userId.value, bio, res => {
+		if (res.status !== "success") {
+			new Toast(res.message);
+			saveButton.value.handleFailedSave();
+		} else {
+			new Toast("Successfully changed bio");
+
+			updateOriginalUser({
+				property: "bio",
+				value: bio
+			});
+
+			saveButton.value.handleSuccessfulSave();
+		}
+	});
+};
+
+const changeAvatar = () => {
+	const { avatar } = modifiedUser.value;
+
+	saveButton.value.status = "disabled";
+
+	return socket.dispatch("users.updateAvatar", userId.value, avatar, res => {
+		if (res.status !== "success") {
+			new Toast(res.message);
+			saveButton.value.handleFailedSave();
+		} else {
+			new Toast("Successfully updated avatar");
+
+			updateOriginalUser({
+				property: "avatar",
+				value: avatar
+			});
+
+			saveButton.value.handleSuccessfulSave();
+		}
+	});
+};
+
+const saveChanges = () => {
+	const nameChanged = modifiedUser.value.name !== originalUser.value.name;
+	const locationChanged =
+		modifiedUser.value.location !== originalUser.value.location;
+	const bioChanged = modifiedUser.value.bio !== originalUser.value.bio;
+	const avatarChanged =
+		modifiedUser.value.avatar.type !== originalUser.value.avatar.type ||
+		modifiedUser.value.avatar.color !== originalUser.value.avatar.color;
+
+	if (nameChanged) changeName();
+	if (locationChanged) changeLocation();
+	if (bioChanged) changeBio();
+	if (avatarChanged) changeAvatar();
+
+	if (!avatarChanged && !bioChanged && !locationChanged && !nameChanged) {
+		saveButton.value.handleFailedSave();
+
+		new Toast("Please make a change before saving.");
+	}
+};
+</script>
+
 <template>
 	<div class="content profile-tab">
 		<h4 class="section-title">Change Profile</h4>
@@ -84,190 +242,9 @@
 			>
 		</p>
 
-		<save-button ref="saveButton" @clicked="saveChanges()" />
+		<SaveButton ref="saveButton" @clicked="saveChanges()" />
 	</div>
 </template>
-
-<script>
-import { mapState, mapActions, mapGetters } from "vuex";
-import Toast from "toasters";
-
-import ProfilePicture from "@/components/ProfilePicture.vue";
-import SaveButton from "@/components/SaveButton.vue";
-import validation from "@/validation";
-
-export default {
-	components: { ProfilePicture, SaveButton },
-	computed: {
-		...mapState({
-			userId: state => state.user.auth.userId,
-			originalUser: state => state.settings.originalUser,
-			modifiedUser: state => state.settings.modifiedUser
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	methods: {
-		saveChanges() {
-			const nameChanged =
-				this.modifiedUser.name !== this.originalUser.name;
-			const locationChanged =
-				this.modifiedUser.location !== this.originalUser.location;
-			const bioChanged = this.modifiedUser.bio !== this.originalUser.bio;
-			const avatarChanged =
-				this.modifiedUser.avatar.type !==
-					this.originalUser.avatar.type ||
-				this.modifiedUser.avatar.color !==
-					this.originalUser.avatar.color;
-
-			if (nameChanged) this.changeName();
-			if (locationChanged) this.changeLocation();
-			if (bioChanged) this.changeBio();
-			if (avatarChanged) this.changeAvatar();
-
-			if (
-				!avatarChanged &&
-				!bioChanged &&
-				!locationChanged &&
-				!nameChanged
-			) {
-				this.$refs.saveButton.handleFailedSave();
-
-				new Toast("Please make a change before saving.");
-			}
-		},
-		changeName() {
-			this.modifiedUser.name = this.modifiedUser.name
-				.replaceAll(/ +/g, " ")
-				.trim();
-			const { name } = this.modifiedUser;
-
-			if (!validation.isLength(name, 1, 64))
-				return new Toast("Name must have between 1 and 64 characters.");
-
-			if (!validation.regex.name.test(name))
-				return new Toast(
-					"Invalid name format. Only letters, numbers, spaces, apostrophes, underscores and hyphens are allowed."
-				);
-			if (name.replaceAll(/[ .'_-]/g, "").length === 0)
-				return new Toast(
-					"Invalid name format. Only letters, numbers, spaces, apostrophes, underscores and hyphens are allowed, and there has to be at least one letter or number."
-				);
-
-			this.$refs.saveButton.status = "disabled";
-
-			return this.socket.dispatch(
-				"users.updateName",
-				this.userId,
-				name,
-				res => {
-					if (res.status !== "success") {
-						new Toast(res.message);
-						this.$refs.saveButton.handleFailedSave();
-					} else {
-						new Toast("Successfully changed name");
-
-						this.updateOriginalUser({
-							property: "name",
-							value: name
-						});
-
-						this.$refs.saveButton.handleSuccessfulSave();
-					}
-				}
-			);
-		},
-		changeLocation() {
-			const { location } = this.modifiedUser;
-
-			if (!validation.isLength(location, 0, 50))
-				return new Toast(
-					"Location must have between 0 and 50 characters."
-				);
-
-			this.$refs.saveButton.status = "disabled";
-
-			return this.socket.dispatch(
-				"users.updateLocation",
-				this.userId,
-				location,
-				res => {
-					if (res.status !== "success") {
-						new Toast(res.message);
-						this.$refs.saveButton.handleFailedSave();
-					} else {
-						new Toast("Successfully changed location");
-
-						this.updateOriginalUser({
-							property: "location",
-							value: location
-						});
-
-						this.$refs.saveButton.handleSuccessfulSave();
-					}
-				}
-			);
-		},
-		changeBio() {
-			const { bio } = this.modifiedUser;
-
-			if (!validation.isLength(bio, 0, 200))
-				return new Toast("Bio must have between 0 and 200 characters.");
-
-			this.$refs.saveButton.status = "disabled";
-
-			return this.socket.dispatch(
-				"users.updateBio",
-				this.userId,
-				bio,
-				res => {
-					if (res.status !== "success") {
-						new Toast(res.message);
-						this.$refs.saveButton.handleFailedSave();
-					} else {
-						new Toast("Successfully changed bio");
-
-						this.updateOriginalUser({
-							property: "bio",
-							value: bio
-						});
-
-						this.$refs.saveButton.handleSuccessfulSave();
-					}
-				}
-			);
-		},
-		changeAvatar() {
-			const { avatar } = this.modifiedUser;
-
-			this.$refs.saveButton.status = "disabled";
-
-			return this.socket.dispatch(
-				"users.updateAvatar",
-				this.userId,
-				avatar,
-				res => {
-					if (res.status !== "success") {
-						new Toast(res.message);
-						this.$refs.saveButton.handleFailedSave();
-					} else {
-						new Toast("Successfully updated avatar");
-
-						this.updateOriginalUser({
-							property: "avatar",
-							value: avatar
-						});
-
-						this.$refs.saveButton.handleSuccessfulSave();
-					}
-				}
-			);
-		},
-		...mapActions("settings", ["updateOriginalUser"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .content .control {
