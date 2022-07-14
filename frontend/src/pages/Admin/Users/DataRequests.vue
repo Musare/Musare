@@ -1,3 +1,84 @@
+<script setup lang="ts">
+import { ref } from "vue";
+import { useStore } from "vuex";
+import Toast from "toasters";
+
+import AdvancedTable from "@/components/AdvancedTable.vue";
+
+const store = useStore();
+
+const { socket } = store.state.websockets;
+
+const columnDefault = ref({
+	sortable: true,
+	hidable: true,
+	defaultVisibility: "shown",
+	draggable: true,
+	resizable: true,
+	minWidth: 150,
+	maxWidth: 600
+});
+const columns = ref([
+	{
+		name: "options",
+		displayName: "Options",
+		properties: ["_id"],
+		sortable: false,
+		hidable: false,
+		resizable: false,
+		minWidth: 76,
+		defaultWidth: 76
+	},
+	{
+		name: "type",
+		displayName: "Type",
+		properties: ["type"],
+		sortable: false
+	},
+	{
+		name: "userId",
+		displayName: "User ID",
+		properties: ["userId"],
+		sortProperty: "userId"
+	},
+	{
+		name: "_id",
+		displayName: "Request ID",
+		properties: ["_id"],
+		sortProperty: "_id"
+	}
+]);
+const filters = ref([
+	{
+		name: "_id",
+		displayName: "Request ID",
+		property: "_id",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact"
+	},
+	{
+		name: "userId",
+		displayName: "User ID",
+		property: "userId",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	}
+]);
+const events = ref({
+	adminRoom: "users",
+	removed: {
+		event: "admin.dataRequests.resolved",
+		id: "dataRequestId"
+	}
+});
+
+const resolveDataRequest = id => {
+	socket.dispatch("dataRequests.resolve", id, res => {
+		if (res.status === "success") new Toast(res.message);
+	});
+};
+</script>
+
 <template>
 	<div class="admin-tab container">
 		<page-metadata title="Admin | Users | Data Requests" />
@@ -60,94 +141,3 @@
 		</advanced-table>
 	</div>
 </template>
-
-<script>
-import { mapGetters } from "vuex";
-import Toast from "toasters";
-
-import AdvancedTable from "@/components/AdvancedTable.vue";
-
-export default {
-	components: {
-		AdvancedTable
-	},
-	data() {
-		return {
-			columnDefault: {
-				sortable: true,
-				hidable: true,
-				defaultVisibility: "shown",
-				draggable: true,
-				resizable: true,
-				minWidth: 150,
-				maxWidth: 600
-			},
-			columns: [
-				{
-					name: "options",
-					displayName: "Options",
-					properties: ["_id"],
-					sortable: false,
-					hidable: false,
-					resizable: false,
-					minWidth: 76,
-					defaultWidth: 76
-				},
-				{
-					name: "type",
-					displayName: "Type",
-					properties: ["type"],
-					sortable: false
-				},
-				{
-					name: "userId",
-					displayName: "User ID",
-					properties: ["userId"],
-					sortProperty: "userId"
-				},
-				{
-					name: "_id",
-					displayName: "Request ID",
-					properties: ["_id"],
-					sortProperty: "_id"
-				}
-			],
-			filters: [
-				{
-					name: "_id",
-					displayName: "Request ID",
-					property: "_id",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact"
-				},
-				{
-					name: "userId",
-					displayName: "User ID",
-					property: "userId",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				}
-			],
-			events: {
-				adminRoom: "users",
-				removed: {
-					event: "admin.dataRequests.resolved",
-					id: "dataRequestId"
-				}
-			}
-		};
-	},
-	computed: {
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	methods: {
-		resolveDataRequest(id) {
-			this.socket.dispatch("dataRequests.resolve", id, res => {
-				if (res.status === "success") new Toast(res.message);
-			});
-		}
-	}
-};
-</script>
