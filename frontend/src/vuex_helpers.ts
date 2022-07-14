@@ -1,4 +1,4 @@
-import { defineAsyncComponent } from "vue";
+import { reactive, defineAsyncComponent } from "vue";
 
 import { useStore } from "vuex";
 
@@ -91,7 +91,7 @@ const useModalState = (namespace, options) => {
 		.split("/")
 		.reduce((a, b) => a[b], store.state);
 
-	return modalState || {};
+	return reactive(modalState || {});
 };
 
 const useModalActions = (namespace, actions, options) => {
