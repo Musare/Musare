@@ -1,3 +1,111 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from "vue";
+import { useStore } from "vuex";
+import Toast from "toasters";
+import ws from "@/ws";
+
+import SaveButton from "@/components/SaveButton.vue";
+
+const store = useStore();
+
+const { socket } = store.state.websockets;
+
+const saveButton = ref();
+
+const localNightmode = ref(false);
+const localAutoSkipDisliked = ref(false);
+const localActivityLogPublic = ref(false);
+const localAnonymousSongRequests = ref(false);
+const localActivityWatch = ref(false);
+
+const nightmode = computed(() => store.state.user.preferences.nightmode);
+const autoSkipDisliked = computed(
+	() => store.state.user.preferences.autoSkipDisliked
+);
+const activityLogPublic = computed(
+	() => store.state.user.preferences.activityLogPublic
+);
+const anonymousSongRequests = computed(
+	() => store.state.user.preferences.anonymousSongRequests
+);
+const activityWatch = computed(
+	() => store.state.user.preferences.activityWatch
+);
+
+const saveChanges = () => {
+	if (
+		localNightmode.value === nightmode.value &&
+		localAutoSkipDisliked.value === autoSkipDisliked.value &&
+		localActivityLogPublic.value === activityLogPublic.value &&
+		localAnonymousSongRequests.value === anonymousSongRequests.value &&
+		localActivityWatch.value === activityWatch.value
+	) {
+		new Toast("Please make a change before saving.");
+
+		return saveButton.value.handleFailedSave();
+	}
+
+	saveButton.value.status = "disabled";
+
+	return socket.dispatch(
+		"users.updatePreferences",
+		{
+			nightmode: localNightmode.value,
+			autoSkipDisliked: localAutoSkipDisliked.value,
+			activityLogPublic: localActivityLogPublic.value,
+			anonymousSongRequests: localAnonymousSongRequests.value,
+			activityWatch: localActivityWatch.value
+		},
+		res => {
+			if (res.status !== "success") {
+				new Toast(res.message);
+				return saveButton.value.handleFailedSave();
+			}
+
+			new Toast("Successfully updated preferences");
+			return saveButton.value.handleSuccessfulSave();
+		}
+	);
+};
+
+onMounted(() => {
+	ws.onConnect(() =>
+		socket.dispatch("users.getPreferences", res => {
+			const { preferences } = res.data;
+
+			if (res.status === "success") {
+				localNightmode.value = preferences.nightmode;
+				localAutoSkipDisliked.value = preferences.autoSkipDisliked;
+				localActivityLogPublic.value = preferences.activityLogPublic;
+				localAnonymousSongRequests.value =
+					preferences.anonymousSongRequests;
+				localActivityWatch.value = preferences.activityWatch;
+			}
+		})
+	);
+
+	socket.on("keep.event:user.preferences.updated", res => {
+		const { preferences } = res.data;
+
+		if (preferences.nightmode !== undefined)
+			localNightmode.value = preferences.nightmode;
+
+		if (preferences.autoSkipDisliked !== undefined)
+			localAutoSkipDisliked.value = preferences.autoSkipDisliked;
+
+		if (preferences.activityLogPublic !== undefined)
+			localActivityLogPublic.value = preferences.activityLogPublic;
+
+		if (preferences.anonymousSongRequests !== undefined)
+			localAnonymousSongRequests.value =
+				preferences.anonymousSongRequests;
+
+		if (preferences.activityWatch !== undefined)
+			localActivityWatch.value = preferences.activityWatch;
+	});
+});
+</script>
+
 <template>
 	<div class="content preferences-tab">
 		<h4 class="section-title">Change preferences</h4>
@@ -83,122 +191,6 @@
 			</label>
 		</p>
 
-		<save-button ref="saveButton" @clicked="saveChanges()" />
+		<SaveButton ref="saveButton" @clicked="saveChanges()" />
 	</div>
 </template>
-
-<script>
-import { mapState, mapActions, mapGetters } from "vuex";
-import Toast from "toasters";
-import ws from "@/ws";
-
-import SaveButton from "@/components/SaveButton.vue";
-
-export default {
-	components: { SaveButton },
-	data() {
-		return {
-			localNightmode: false,
-			localAutoSkipDisliked: false,
-			localActivityLogPublic: false,
-			localAnonymousSongRequests: false,
-			localActivityWatch: false
-		};
-	},
-	computed: {
-		...mapState({
-			nightmode: state => state.user.preferences.nightmode,
-			autoSkipDisliked: state => state.user.preferences.autoSkipDisliked,
-			activityLogPublic: state =>
-				state.user.preferences.activityLogPublic,
-			anonymousSongRequests: state =>
-				state.user.preferences.anonymousSongRequests,
-			activityWatch: state => state.user.preferences.activityWatch
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	mounted() {
-		ws.onConnect(() =>
-			this.socket.dispatch("users.getPreferences", res => {
-				const { preferences } = res.data;
-
-				if (res.status === "success") {
-					this.localNightmode = preferences.nightmode;
-					this.localAutoSkipDisliked = preferences.autoSkipDisliked;
-					this.localActivityLogPublic = preferences.activityLogPublic;
-					this.localAnonymousSongRequests =
-						preferences.anonymousSongRequests;
-					this.localActivityWatch = preferences.activityWatch;
-				}
-			})
-		);
-
-		this.socket.on("keep.event:user.preferences.updated", res => {
-			const { preferences } = res.data;
-
-			if (preferences.nightmode !== undefined)
-				this.localNightmode = preferences.nightmode;
-
-			if (preferences.autoSkipDisliked !== undefined)
-				this.localAutoSkipDisliked = preferences.autoSkipDisliked;
-
-			if (preferences.activityLogPublic !== undefined)
-				this.localActivityLogPublic = preferences.activityLogPublic;
-
-			if (preferences.anonymousSongRequests !== undefined)
-				this.localAnonymousSongRequests =
-					preferences.anonymousSongRequests;
-
-			if (preferences.activityWatch !== undefined)
-				this.localActivityWatch = preferences.activityWatch;
-		});
-	},
-	methods: {
-		saveChanges() {
-			if (
-				this.localNightmode === this.nightmode &&
-				this.localAutoSkipDisliked === this.autoSkipDisliked &&
-				this.localActivityLogPublic === this.activityLogPublic &&
-				this.localAnonymousSongRequests ===
-					this.anonymousSongRequests &&
-				this.localActivityWatch === this.activityWatch
-			) {
-				new Toast("Please make a change before saving.");
-
-				return this.$refs.saveButton.handleFailedSave();
-			}
-
-			this.$refs.saveButton.status = "disabled";
-
-			return this.socket.dispatch(
-				"users.updatePreferences",
-				{
-					nightmode: this.localNightmode,
-					autoSkipDisliked: this.localAutoSkipDisliked,
-					activityLogPublic: this.localActivityLogPublic,
-					anonymousSongRequests: this.localAnonymousSongRequests,
-					activityWatch: this.localActivityWatch
-				},
-				res => {
-					if (res.status !== "success") {
-						new Toast(res.message);
-						return this.$refs.saveButton.handleFailedSave();
-					}
-
-					new Toast("Successfully updated preferences");
-					return this.$refs.saveButton.handleSuccessfulSave();
-				}
-			);
-		},
-		...mapActions("user/preferences", [
-			"changeNightmode",
-			"changeAutoSkipDisliked",
-			"changeActivityLogPublic",
-			"changeAnonymousSongRequests",
-			"changeActivityWatch"
-		])
-	}
-};
-</script>
