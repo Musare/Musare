@@ -1,3 +1,184 @@
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import { useStore } from "vuex";
+import { useRoute } from "vue-router";
+
+import Toast from "toasters";
+
+import AdvancedTable from "@/components/AdvancedTable.vue";
+import RunJobDropdown from "@/components/RunJobDropdown.vue";
+import LineChart from "@/components/LineChart.vue";
+
+import ws from "@/ws";
+
+const store = useStore();
+const route = useRoute();
+
+const { socket } = store.state.websockets;
+
+const quotaStatus = ref({});
+const fromDate = ref();
+const columnDefault = ref({
+	sortable: true,
+	hidable: true,
+	defaultVisibility: "shown",
+	draggable: true,
+	resizable: true,
+	minWidth: 150,
+	maxWidth: 600
+});
+const columns = ref([
+	{
+		name: "options",
+		displayName: "Options",
+		properties: ["_id"],
+		sortable: false,
+		hidable: false,
+		resizable: false,
+		minWidth: 85,
+		defaultWidth: 85
+	},
+	{
+		name: "quotaCost",
+		displayName: "Quota Cost",
+		properties: ["quotaCost"],
+		sortProperty: ["quotaCost"],
+		minWidth: 150,
+		defaultWidth: 150
+	},
+	{
+		name: "timestamp",
+		displayName: "Timestamp",
+		properties: ["date"],
+		sortProperty: ["date"],
+		minWidth: 150,
+		defaultWidth: 150
+	},
+	{
+		name: "url",
+		displayName: "URL",
+		properties: ["url"],
+		sortProperty: ["url"]
+	},
+	{
+		name: "_id",
+		displayName: "Request ID",
+		properties: ["_id"],
+		sortProperty: ["_id"],
+		minWidth: 230,
+		defaultWidth: 230
+	}
+]);
+const filters = ref([
+	{
+		name: "_id",
+		displayName: "Request ID",
+		property: "_id",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact"
+	},
+	{
+		name: "quotaCost",
+		displayName: "Quota Cost",
+		property: "quotaCost",
+		filterTypes: [
+			"numberLesserEqual",
+			"numberLesser",
+			"numberGreater",
+			"numberGreaterEqual",
+			"numberEquals"
+		],
+		defaultFilterType: "numberLesser"
+	},
+	{
+		name: "timestamp",
+		displayName: "Timestamp",
+		property: "date",
+		filterTypes: ["datetimeBefore", "datetimeAfter"],
+		defaultFilterType: "datetimeBefore"
+	},
+	{
+		name: "url",
+		displayName: "URL",
+		property: "url",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	}
+]);
+const events = ref({
+	adminRoom: "youtube",
+	removed: {
+		event: "admin.youtubeApiRequest.removed",
+		id: "requestId"
+	}
+});
+const charts = ref({
+	quotaUsage: null,
+	apiRequests: null
+});
+const jobs = ref([
+	{
+		name: "Reset stored API requests",
+		socket: "youtube.resetStoredApiRequests"
+	}
+]);
+
+const openModal = payload =>
+	store.dispatch("modalVisibility/openModal", payload);
+
+const init = () => {
+	if (route.query.fromDate) fromDate.value = route.query.fromDate;
+
+	socket.dispatch("youtube.getQuotaStatus", fromDate.value, res => {
+		if (res.status === "success") quotaStatus.value = res.data.status;
+	});
+
+	socket.dispatch(
+		"youtube.getQuotaChartData",
+		"days",
+		new Date().setDate(new Date().getDate() - 6),
+		new Date().setDate(new Date().getDate() + 1),
+		"usage",
+		res => {
+			if (res.status === "success") charts.value.quotaUsage = res.data;
+		}
+	);
+
+	socket.dispatch(
+		"youtube.getQuotaChartData",
+		"days",
+		new Date().setDate(new Date().getDate() - 6),
+		new Date().setDate(new Date().getDate() + 1),
+		"count",
+		res => {
+			if (res.status === "success") charts.value.apiRequests = res.data;
+		}
+	);
+};
+
+const getDateFormatted = createdAt => {
+	const date = new Date(createdAt);
+	const year = date.getFullYear();
+	const month = `${date.getMonth() + 1}`.padStart(2, 0);
+	const day = `${date.getDate()}`.padStart(2, 0);
+	const hour = `${date.getHours()}`.padStart(2, 0);
+	const minute = `${date.getMinutes()}`.padStart(2, 0);
+	return `${year}-${month}-${day} ${hour}:${minute}`;
+};
+
+const removeApiRequest = requestId => {
+	socket.dispatch(
+		"youtube.removeStoredApiRequest",
+		requestId,
+		res => new Toast(res.message)
+	);
+};
+
+onMounted(() => {
+	ws.onConnect(init);
+});
+</script>
+
 <template>
 	<div class="admin-tab container">
 		<page-metadata title="Admin | YouTube" />
@@ -124,198 +305,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapActions, mapGetters } from "vuex";
-
-import Toast from "toasters";
-
-import AdvancedTable from "@/components/AdvancedTable.vue";
-import RunJobDropdown from "@/components/RunJobDropdown.vue";
-import LineChart from "@/components/LineChart.vue";
-
-import ws from "@/ws";
-
-export default {
-	components: {
-		AdvancedTable,
-		RunJobDropdown,
-		LineChart
-	},
-	data() {
-		return {
-			quotaStatus: {},
-			fromDate: null,
-			columnDefault: {
-				sortable: true,
-				hidable: true,
-				defaultVisibility: "shown",
-				draggable: true,
-				resizable: true,
-				minWidth: 150,
-				maxWidth: 600
-			},
-			columns: [
-				{
-					name: "options",
-					displayName: "Options",
-					properties: ["_id"],
-					sortable: false,
-					hidable: false,
-					resizable: false,
-					minWidth: 85,
-					defaultWidth: 85
-				},
-				{
-					name: "quotaCost",
-					displayName: "Quota Cost",
-					properties: ["quotaCost"],
-					sortProperty: ["quotaCost"],
-					minWidth: 150,
-					defaultWidth: 150
-				},
-				{
-					name: "timestamp",
-					displayName: "Timestamp",
-					properties: ["date"],
-					sortProperty: ["date"],
-					minWidth: 150,
-					defaultWidth: 150
-				},
-				{
-					name: "url",
-					displayName: "URL",
-					properties: ["url"],
-					sortProperty: ["url"]
-				},
-				{
-					name: "_id",
-					displayName: "Request ID",
-					properties: ["_id"],
-					sortProperty: ["_id"],
-					minWidth: 230,
-					defaultWidth: 230
-				}
-			],
-			filters: [
-				{
-					name: "_id",
-					displayName: "Request ID",
-					property: "_id",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact"
-				},
-				{
-					name: "quotaCost",
-					displayName: "Quota Cost",
-					property: "quotaCost",
-					filterTypes: [
-						"numberLesserEqual",
-						"numberLesser",
-						"numberGreater",
-						"numberGreaterEqual",
-						"numberEquals"
-					],
-					defaultFilterType: "numberLesser"
-				},
-				{
-					name: "timestamp",
-					displayName: "Timestamp",
-					property: "date",
-					filterTypes: ["datetimeBefore", "datetimeAfter"],
-					defaultFilterType: "datetimeBefore"
-				},
-				{
-					name: "url",
-					displayName: "URL",
-					property: "url",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				}
-			],
-			events: {
-				adminRoom: "youtube",
-				removed: {
-					event: "admin.youtubeApiRequest.removed",
-					id: "requestId"
-				}
-			},
-			charts: {
-				quotaUsage: null,
-				apiRequests: null
-			},
-			jobs: [
-				{
-					name: "Reset stored API requests",
-					socket: "youtube.resetStoredApiRequests"
-				}
-			]
-		};
-	},
-	computed: mapGetters({
-		socket: "websockets/getSocket"
-	}),
-	mounted() {
-		ws.onConnect(this.init);
-	},
-	methods: {
-		init() {
-			if (this.$route.query.fromDate)
-				this.fromDate = this.$route.query.fromDate;
-
-			this.socket.dispatch(
-				"youtube.getQuotaStatus",
-				this.fromDate,
-				res => {
-					if (res.status === "success")
-						this.quotaStatus = res.data.status;
-				}
-			);
-
-			this.socket.dispatch(
-				"youtube.getQuotaChartData",
-				"days",
-				new Date().setDate(new Date().getDate() - 6),
-				new Date().setDate(new Date().getDate() + 1),
-				"usage",
-				res => {
-					if (res.status === "success")
-						this.charts.quotaUsage = res.data;
-				}
-			);
-
-			this.socket.dispatch(
-				"youtube.getQuotaChartData",
-				"days",
-				new Date().setDate(new Date().getDate() - 6),
-				new Date().setDate(new Date().getDate() + 1),
-				"count",
-				res => {
-					if (res.status === "success")
-						this.charts.apiRequests = res.data;
-				}
-			);
-		},
-		getDateFormatted(createdAt) {
-			const date = new Date(createdAt);
-			const year = date.getFullYear();
-			const month = `${date.getMonth() + 1}`.padStart(2, 0);
-			const day = `${date.getDate()}`.padStart(2, 0);
-			const hour = `${date.getHours()}`.padStart(2, 0);
-			const minute = `${date.getMinutes()}`.padStart(2, 0);
-			return `${year}-${month}-${day} ${hour}:${minute}`;
-		},
-		removeApiRequest(requestId) {
-			this.socket.dispatch(
-				"youtube.removeStoredApiRequest",
-				requestId,
-				res => new Toast(res.message)
-			);
-		},
-		...mapActions("modalVisibility", ["openModal"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode .admin-tab {
