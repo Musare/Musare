@@ -1,3 +1,68 @@
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import { useStore } from "vuex";
+
+import { formatDistance } from "date-fns";
+import { marked } from "marked";
+import DOMPurify from "dompurify";
+
+import ws from "@/ws";
+
+const store = useStore();
+
+const { socket } = store.state.websockets;
+
+const news = ref([]);
+
+const init = () => {
+	socket.dispatch("news.getPublished", res => {
+		if (res.status === "success") news.value = res.data.news;
+	});
+
+	socket.dispatch("apis.joinRoom", "news");
+};
+
+const { sanitize } = DOMPurify;
+
+onMounted(() => {
+	marked.use({
+		renderer: {
+			table(header, body) {
+				return `<table class="table">
+					<thead>${header}</thead>
+					<tbody>${body}</tbody>
+					</table>`;
+			}
+		}
+	});
+
+	socket.on("event:news.created", res => news.value.unshift(res.data.news));
+
+	socket.on("event:news.updated", res => {
+		if (res.data.news.status === "draft") {
+			news.value = news.value.filter(
+				item => item._id !== res.data.news._id
+			);
+			return;
+		}
+
+		for (let n = 0; n < news.value.length; n += 1) {
+			if (news.value[n]._id === res.data.news._id)
+				news.value[n] = {
+					...news.value[n],
+					...res.data.news
+				};
+		}
+	});
+
+	socket.on("event:news.deleted", res => {
+		news.value = news.value.filter(item => item._id !== res.data.newsId);
+	});
+
+	ws.onConnect(init);
+});
+</script>
+
 <template>
 	<div class="app">
 		<page-metadata title="News" />
@@ -34,77 +99,6 @@
 		<main-footer />
 	</div>
 </template>
-
-<script>
-import { formatDistance } from "date-fns";
-import { mapGetters } from "vuex";
-import { marked } from "marked";
-import DOMPurify from "dompurify";
-
-import ws from "@/ws";
-
-export default {
-	data() {
-		return {
-			news: []
-		};
-	},
-	computed: mapGetters({
-		socket: "websockets/getSocket"
-	}),
-	mounted() {
-		marked.use({
-			renderer: {
-				table(header, body) {
-					return `<table class="table">
-					<thead>${header}</thead>
-					<tbody>${body}</tbody>
-					</table>`;
-				}
-			}
-		});
-
-		this.socket.on("event:news.created", res =>
-			this.news.unshift(res.data.news)
-		);
-
-		this.socket.on("event:news.updated", res => {
-			if (res.data.news.status === "draft") {
-				this.news = this.news.filter(
-					item => item._id !== res.data.news._id
-				);
-				return;
-			}
-
-			for (let n = 0; n < this.news.length; n += 1) {
-				if (this.news[n]._id === res.data.news._id)
-					this.$set(this.news, n, {
-						...this.news[n],
-						...res.data.news
-					});
-			}
-		});
-
-		this.socket.on("event:news.deleted", res => {
-			this.news = this.news.filter(item => item._id !== res.data.newsId);
-		});
-
-		ws.onConnect(this.init);
-	},
-	methods: {
-		marked,
-		sanitize: DOMPurify.sanitize,
-		formatDistance,
-		init() {
-			this.socket.dispatch("news.getPublished", res => {
-				if (res.status === "success") this.news = res.data.news;
-			});
-
-			this.socket.dispatch("apis.joinRoom", "news");
-		}
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {
