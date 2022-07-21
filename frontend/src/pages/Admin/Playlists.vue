@@ -1,3 +1,242 @@
+<script setup lang="ts">
+import { ref } from "vue";
+import { useStore } from "vuex";
+
+import AdvancedTable from "@/components/AdvancedTable.vue";
+import RunJobDropdown from "@/components/RunJobDropdown.vue";
+
+import utils from "@/utils";
+
+const store = useStore();
+
+const columnDefault = ref({
+	sortable: true,
+	hidable: true,
+	defaultVisibility: "shown",
+	draggable: true,
+	resizable: true,
+	minWidth: 150,
+	maxWidth: 600
+});
+const columns = ref([
+	{
+		name: "options",
+		displayName: "Options",
+		properties: ["_id"],
+		sortable: false,
+		hidable: false,
+		resizable: false,
+		minWidth: 76,
+		defaultWidth: 76
+	},
+	{
+		name: "displayName",
+		displayName: "Display Name",
+		properties: ["displayName"],
+		sortProperty: "displayName"
+	},
+	{
+		name: "type",
+		displayName: "Type",
+		properties: ["type"],
+		sortProperty: "type"
+	},
+	{
+		name: "privacy",
+		displayName: "Privacy",
+		properties: ["privacy"],
+		sortProperty: "privacy"
+	},
+	{
+		name: "songsCount",
+		displayName: "Songs #",
+		properties: ["songsCount"],
+		sortProperty: "songsCount",
+		minWidth: 100,
+		defaultWidth: 100
+	},
+	{
+		name: "totalLength",
+		displayName: "Total Length",
+		properties: ["totalLength"],
+		sortProperty: "totalLength",
+		minWidth: 250,
+		defaultWidth: 250
+	},
+	{
+		name: "createdBy",
+		displayName: "Created By",
+		properties: ["createdBy"],
+		sortProperty: "createdBy",
+		defaultWidth: 150
+	},
+	{
+		name: "createdAt",
+		displayName: "Created At",
+		properties: ["createdAt"],
+		sortProperty: "createdAt",
+		defaultWidth: 150
+	},
+	{
+		name: "createdFor",
+		displayName: "Created For",
+		properties: ["createdFor"],
+		sortProperty: "createdFor",
+		minWidth: 230,
+		defaultWidth: 230
+	},
+	{
+		name: "_id",
+		displayName: "Playlist ID",
+		properties: ["_id"],
+		sortProperty: "_id",
+		minWidth: 230,
+		defaultWidth: 230
+	}
+]);
+const filters = ref([
+	{
+		name: "_id",
+		displayName: "Playlist ID",
+		property: "_id",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact"
+	},
+	{
+		name: "displayName",
+		displayName: "Display Name",
+		property: "displayName",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "type",
+		displayName: "Type",
+		property: "type",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact",
+		dropdown: [
+			["genre", "Genre"],
+			["station", "Station"],
+			["user", "User"],
+			["user-disliked", "User Disliked"],
+			["user-liked", "User Liked"]
+		]
+	},
+	{
+		name: "privacy",
+		displayName: "Privacy",
+		property: "privacy",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact",
+		dropdown: [
+			["public", "Public"],
+			["private", "Private"]
+		]
+	},
+	{
+		name: "songsCount",
+		displayName: "Songs Count",
+		property: "songsCount",
+		filterTypes: [
+			"numberLesserEqual",
+			"numberLesser",
+			"numberGreater",
+			"numberGreaterEqual",
+			"numberEquals"
+		],
+		defaultFilterType: "numberLesser"
+	},
+	{
+		name: "totalLength",
+		displayName: "Total Length",
+		property: "totalLength",
+		filterTypes: [
+			"numberLesserEqual",
+			"numberLesser",
+			"numberGreater",
+			"numberGreaterEqual",
+			"numberEquals"
+		],
+		defaultFilterType: "numberLesser"
+	},
+	{
+		name: "createdBy",
+		displayName: "Created By",
+		property: "createdBy",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "createdAt",
+		displayName: "Created At",
+		property: "createdAt",
+		filterTypes: ["datetimeBefore", "datetimeAfter"],
+		defaultFilterType: "datetimeBefore"
+	},
+	{
+		name: "createdFor",
+		displayName: "Created For",
+		property: "createdFor",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	}
+]);
+const events = ref({
+	adminRoom: "playlists",
+	updated: {
+		event: "admin.playlist.updated",
+		id: "playlist._id",
+		item: "playlist"
+	},
+	removed: {
+		event: "admin.playlist.deleted",
+		id: "playlistId"
+	}
+});
+const jobs = ref([
+	{
+		name: "Delete orphaned station playlists",
+		socket: "playlists.deleteOrphanedStationPlaylists"
+	},
+	{
+		name: "Delete orphaned genre playlists",
+		socket: "playlists.deleteOrphanedGenrePlaylists"
+	},
+	{
+		name: "Request orphaned playlist songs",
+		socket: "playlists.requestOrphanedPlaylistSongs"
+	},
+	{
+		name: "Clear and refill all station playlists",
+		socket: "playlists.clearAndRefillAllStationPlaylists"
+	},
+	{
+		name: "Clear and refill all genre playlists",
+		socket: "playlists.clearAndRefillAllGenrePlaylists"
+	},
+	{
+		name: "Create missing genre playlists",
+		socket: "playlists.createMissingGenrePlaylists"
+	}
+]);
+
+const openModal = payload =>
+	store.dispatch("modalVisibility/openModal", payload);
+
+const getDateFormatted = createdAt => {
+	const date = new Date(createdAt);
+	const year = date.getFullYear();
+	const month = `${date.getMonth() + 1}`.padStart(2, 0);
+	const day = `${date.getDate()}`.padStart(2, 0);
+	const hour = `${date.getHours()}`.padStart(2, 0);
+	const minute = `${date.getMinutes()}`.padStart(2, 0);
+	return `${year}-${month}-${day} ${hour}:${minute}`;
+};
+
+const formatTimeLong = length => utils.formatTimeLong(length);
+</script>
+
 <template>
 	<div class="admin-tab">
 		<page-metadata title="Admin | Playlists" />
@@ -83,250 +322,3 @@
 		</advanced-table>
 	</div>
 </template>
-
-<script>
-import { mapActions } from "vuex";
-
-import AdvancedTable from "@/components/AdvancedTable.vue";
-import RunJobDropdown from "@/components/RunJobDropdown.vue";
-
-import utils from "@/utils";
-
-export default {
-	components: {
-		AdvancedTable,
-		RunJobDropdown
-	},
-	data() {
-		return {
-			utils,
-			columnDefault: {
-				sortable: true,
-				hidable: true,
-				defaultVisibility: "shown",
-				draggable: true,
-				resizable: true,
-				minWidth: 150,
-				maxWidth: 600
-			},
-			columns: [
-				{
-					name: "options",
-					displayName: "Options",
-					properties: ["_id"],
-					sortable: false,
-					hidable: false,
-					resizable: false,
-					minWidth: 76,
-					defaultWidth: 76
-				},
-				{
-					name: "displayName",
-					displayName: "Display Name",
-					properties: ["displayName"],
-					sortProperty: "displayName"
-				},
-				{
-					name: "type",
-					displayName: "Type",
-					properties: ["type"],
-					sortProperty: "type"
-				},
-				{
-					name: "privacy",
-					displayName: "Privacy",
-					properties: ["privacy"],
-					sortProperty: "privacy"
-				},
-				{
-					name: "songsCount",
-					displayName: "Songs #",
-					properties: ["songsCount"],
-					sortProperty: "songsCount",
-					minWidth: 100,
-					defaultWidth: 100
-				},
-				{
-					name: "totalLength",
-					displayName: "Total Length",
-					properties: ["totalLength"],
-					sortProperty: "totalLength",
-					minWidth: 250,
-					defaultWidth: 250
-				},
-				{
-					name: "createdBy",
-					displayName: "Created By",
-					properties: ["createdBy"],
-					sortProperty: "createdBy",
-					defaultWidth: 150
-				},
-				{
-					name: "createdAt",
-					displayName: "Created At",
-					properties: ["createdAt"],
-					sortProperty: "createdAt",
-					defaultWidth: 150
-				},
-				{
-					name: "createdFor",
-					displayName: "Created For",
-					properties: ["createdFor"],
-					sortProperty: "createdFor",
-					minWidth: 230,
-					defaultWidth: 230
-				},
-				{
-					name: "_id",
-					displayName: "Playlist ID",
-					properties: ["_id"],
-					sortProperty: "_id",
-					minWidth: 230,
-					defaultWidth: 230
-				}
-			],
-			filters: [
-				{
-					name: "_id",
-					displayName: "Playlist ID",
-					property: "_id",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact"
-				},
-				{
-					name: "displayName",
-					displayName: "Display Name",
-					property: "displayName",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "type",
-					displayName: "Type",
-					property: "type",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact",
-					dropdown: [
-						["genre", "Genre"],
-						["station", "Station"],
-						["user", "User"],
-						["user-disliked", "User Disliked"],
-						["user-liked", "User Liked"]
-					]
-				},
-				{
-					name: "privacy",
-					displayName: "Privacy",
-					property: "privacy",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact",
-					dropdown: [
-						["public", "Public"],
-						["private", "Private"]
-					]
-				},
-				{
-					name: "songsCount",
-					displayName: "Songs Count",
-					property: "songsCount",
-					filterTypes: [
-						"numberLesserEqual",
-						"numberLesser",
-						"numberGreater",
-						"numberGreaterEqual",
-						"numberEquals"
-					],
-					defaultFilterType: "numberLesser"
-				},
-				{
-					name: "totalLength",
-					displayName: "Total Length",
-					property: "totalLength",
-					filterTypes: [
-						"numberLesserEqual",
-						"numberLesser",
-						"numberGreater",
-						"numberGreaterEqual",
-						"numberEquals"
-					],
-					defaultFilterType: "numberLesser"
-				},
-				{
-					name: "createdBy",
-					displayName: "Created By",
-					property: "createdBy",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "createdAt",
-					displayName: "Created At",
-					property: "createdAt",
-					filterTypes: ["datetimeBefore", "datetimeAfter"],
-					defaultFilterType: "datetimeBefore"
-				},
-				{
-					name: "createdFor",
-					displayName: "Created For",
-					property: "createdFor",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				}
-			],
-			events: {
-				adminRoom: "playlists",
-				updated: {
-					event: "admin.playlist.updated",
-					id: "playlist._id",
-					item: "playlist"
-				},
-				removed: {
-					event: "admin.playlist.deleted",
-					id: "playlistId"
-				}
-			},
-			jobs: [
-				{
-					name: "Delete orphaned station playlists",
-					socket: "playlists.deleteOrphanedStationPlaylists"
-				},
-				{
-					name: "Delete orphaned genre playlists",
-					socket: "playlists.deleteOrphanedGenrePlaylists"
-				},
-				{
-					name: "Request orphaned playlist songs",
-					socket: "playlists.requestOrphanedPlaylistSongs"
-				},
-				{
-					name: "Clear and refill all station playlists",
-					socket: "playlists.clearAndRefillAllStationPlaylists"
-				},
-				{
-					name: "Clear and refill all genre playlists",
-					socket: "playlists.clearAndRefillAllGenrePlaylists"
-				},
-				{
-					name: "Create missing genre playlists",
-					socket: "playlists.createMissingGenrePlaylists"
-				}
-			]
-		};
-	},
-	methods: {
-		getDateFormatted(createdAt) {
-			const date = new Date(createdAt);
-			const year = date.getFullYear();
-			const month = `${date.getMonth() + 1}`.padStart(2, 0);
-			const day = `${date.getDate()}`.padStart(2, 0);
-			const hour = `${date.getHours()}`.padStart(2, 0);
-			const minute = `${date.getMinutes()}`.padStart(2, 0);
-			return `${year}-${month}-${day} ${hour}:${minute}`;
-		},
-		formatTimeLong(length) {
-			return this.utils.formatTimeLong(length);
-		},
-		...mapActions("modalVisibility", ["openModal"])
-	}
-};
-</script>
