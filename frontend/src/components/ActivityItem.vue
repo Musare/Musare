@@ -118,7 +118,6 @@ onMounted(() => {
 		<div class="left-part">
 			<p :title="messageStripped" class="item-title">
 				<span v-for="messagePart in messageParts" :key="messagePart">
-					{{ getMessagePartType(messagePart) }}
 					<span
 						v-if="getMessagePartType(messagePart) === 'youtubeId'"
 						>{{ getMessagePartText(messagePart) }}</span
