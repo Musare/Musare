@@ -1,11 +1,21 @@
 <script setup lang="ts">
-import { ref, watch, reactive, computed, onMounted } from "vue";
+import {
+	defineAsyncComponent,
+	ref,
+	watch,
+	reactive,
+	computed,
+	onMounted
+} from "vue";
 import { useStore } from "vuex";
 
 import Toast from "toasters";
 
-import InputHelpBox from "@/components/InputHelpBox.vue";
 import _validation from "@/validation";
+
+const InputHelpBox = defineAsyncComponent(
+	() => import("@/components/InputHelpBox.vue")
+);
 
 const store = useStore();
 

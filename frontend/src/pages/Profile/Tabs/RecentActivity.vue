@@ -1,10 +1,19 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import {
+	defineAsyncComponent,
+	ref,
+	computed,
+	onMounted,
+	onUnmounted
+} from "vue";
 import { useStore } from "vuex";
 import Toast from "toasters";
 
-import ActivityItem from "@/components/ActivityItem.vue";
 import ws from "@/ws";
+
+const ActivityItem = defineAsyncComponent(
+	() => import("@/components/ActivityItem.vue")
+);
 
 const store = useStore();
 

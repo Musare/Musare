@@ -1,12 +1,24 @@
 <script setup lang="ts">
-import { ref, watch, reactive, computed, onMounted } from "vue";
+import {
+	defineAsyncComponent,
+	ref,
+	watch,
+	reactive,
+	computed,
+	onMounted
+} from "vue";
 import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
 
-import InputHelpBox from "@/components/InputHelpBox.vue";
-import SaveButton from "@/components/SaveButton.vue";
 import _validation from "@/validation";
+
+const InputHelpBox = defineAsyncComponent(
+	() => import("@/components/InputHelpBox.vue")
+);
+const SaveButton = defineAsyncComponent(
+	() => import("@/components/SaveButton.vue")
+);
 
 const store = useStore();
 const route = useRoute();

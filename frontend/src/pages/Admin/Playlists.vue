@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { defineAsyncComponent, ref } from "vue";
 import { useStore } from "vuex";
 
-import AdvancedTable from "@/components/AdvancedTable.vue";
-import RunJobDropdown from "@/components/RunJobDropdown.vue";
-
 import utils from "@/utils";
+
+const AdvancedTable = defineAsyncComponent(
+	() => import("@/components/AdvancedTable.vue")
+);
+const RunJobDropdown = defineAsyncComponent(
+	() => import("@/components/RunJobDropdown.vue")
+);
 
 const store = useStore();
 

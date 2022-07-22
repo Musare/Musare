@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { useStore } from "vuex";
 import { useRoute } from "vue-router";
-import { computed, watch, onMounted } from "vue";
+import { defineAsyncComponent, computed, watch, onMounted } from "vue";
 
 import useTabQueryHandler from "@/composables/useTabQueryHandler";
 
-import Queue from "@/components/Queue.vue";
-import Users from "@/pages/Station/Sidebar/Users.vue";
-import Request from "@/components/Request.vue";
+const Queue = defineAsyncComponent(() => import("@/components/Queue.vue"));
+const Users = defineAsyncComponent(
+	() => import("@/pages/Station/Sidebar/Users.vue")
+);
+const Request = defineAsyncComponent(() => import("@/components/Request.vue"));
 
 const store = useStore();
 const route = useRoute();

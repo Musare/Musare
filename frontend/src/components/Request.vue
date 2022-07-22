@@ -1,17 +1,23 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { defineAsyncComponent, ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 
 import Toast from "toasters";
-
-import SongItem from "@/components/SongItem.vue";
-import SearchQueryItem from "@/components/SearchQueryItem.vue";
-import PlaylistTabBase from "@/components/PlaylistTabBase.vue";
 
 // import SearchYoutube from "@/mixins/SearchYoutube.vue";
 // import SearchMusare from "@/mixins/SearchMusare.vue";
 import { useSearchYoutube } from "@/composables/useSearchYoutube";
 import { useSearchMusare } from "@/composables/useSearchMusare";
+
+const SongItem = defineAsyncComponent(
+	() => import("@/components/SongItem.vue")
+);
+const SearchQueryItem = defineAsyncComponent(
+	() => import("@/components/SearchQueryItem.vue")
+);
+const PlaylistTabBase = defineAsyncComponent(
+	() => import("@/components/PlaylistTabBase.vue")
+);
 
 const store = useStore();
 const { youtubeSearch, searchForSongs, loadMoreSongs } = useSearchYoutube();

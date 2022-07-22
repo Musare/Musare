@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { useStore } from "vuex";
-import { ref, computed, onMounted } from "vue";
+import { defineAsyncComponent, ref, computed, onMounted } from "vue";
 
-import FloatingBox from "@/components/FloatingBox.vue";
+const FloatingBox = defineAsyncComponent(
+	() => import("@/components/FloatingBox.vue")
+);
 
 const store = useStore();
 

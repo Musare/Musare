@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { useStore } from "vuex";
-import { ref, computed, onMounted } from "vue";
+import { defineAsyncComponent, ref, computed, onMounted } from "vue";
 import Toast from "toasters";
-import ProfilePicture from "@/components/ProfilePicture.vue";
+
+const ProfilePicture = defineAsyncComponent(
+	() => import("@/components/ProfilePicture.vue")
+);
 
 const store = useStore();
 

@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { defineAsyncComponent, ref, onMounted } from "vue";
 import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 
-import AdvancedTable from "@/components/AdvancedTable.vue";
-import ProfilePicture from "@/components/ProfilePicture.vue";
+const AdvancedTable = defineAsyncComponent(
+	() => import("@/components/AdvancedTable.vue")
+);
+const ProfilePicture = defineAsyncComponent(
+	() => import("@/components/ProfilePicture.vue")
+);
 
 const store = useStore();
 const route = useRoute();

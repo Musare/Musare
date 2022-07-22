@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { defineAsyncComponent, ref } from "vue";
 
-import ProfilePicture from "@/components/ProfilePicture.vue";
+const ProfilePicture = defineAsyncComponent(
+	() => import("@/components/ProfilePicture.vue")
+);
 
 const currentTeam = ref([
 	{

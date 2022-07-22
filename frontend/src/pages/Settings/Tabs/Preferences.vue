@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { defineAsyncComponent, ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import Toast from "toasters";
 import ws from "@/ws";
 
-import SaveButton from "@/components/SaveButton.vue";
+const SaveButton = defineAsyncComponent(
+	() => import("@/components/SaveButton.vue")
+);
 
 const store = useStore();
 

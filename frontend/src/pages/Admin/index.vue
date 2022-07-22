@@ -1,11 +1,20 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
+import {
+	defineAsyncComponent,
+	ref,
+	computed,
+	watch,
+	onMounted,
+	onBeforeUnmount
+} from "vue";
 import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
 
 import keyboardShortcuts from "@/keyboardShortcuts";
 
-import FloatingBox from "@/components/FloatingBox.vue";
+const FloatingBox = defineAsyncComponent(
+	() => import("@/components/FloatingBox.vue")
+);
 
 const store = useStore();
 const route = useRoute();

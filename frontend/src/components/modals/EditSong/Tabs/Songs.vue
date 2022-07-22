@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { defineAsyncComponent, ref, onMounted } from "vue";
 
 import { useModalState } from "@/vuex_helpers";
 
 import { useSearchMusare } from "@/composables/useSearchMusare";
 
-import SongItem from "@/components/SongItem.vue";
+const SongItem = defineAsyncComponent(
+	() => import("@/components/SongItem.vue")
+);
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" },

@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { defineAsyncComponent, ref, onMounted } from "vue";
 import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 
 import Toast from "toasters";
 
-import AdvancedTable from "@/components/AdvancedTable.vue";
-import RunJobDropdown from "@/components/RunJobDropdown.vue";
+const AdvancedTable = defineAsyncComponent(
+	() => import("@/components/AdvancedTable.vue")
+);
+const RunJobDropdown = defineAsyncComponent(
+	() => import("@/components/RunJobDropdown.vue")
+);
 
 const store = useStore();
 const route = useRoute();

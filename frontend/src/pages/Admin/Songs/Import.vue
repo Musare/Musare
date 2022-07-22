@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { defineAsyncComponent, ref } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 
 import Toast from "toasters";
 
-import AdvancedTable from "@/components/AdvancedTable.vue";
+const AdvancedTable = defineAsyncComponent(
+	() => import("@/components/AdvancedTable.vue")
+);
 
 const store = useStore();
 const router = useRouter();

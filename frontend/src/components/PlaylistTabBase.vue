@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from "vue";
+import { defineAsyncComponent, ref, reactive, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import Toast from "toasters";
 import ws from "@/ws";
 
 import { useModalState } from "@/vuex_helpers";
 
-import PlaylistItem from "@/components/PlaylistItem.vue";
-
 import { useSortablePlaylists } from "@/composables/useSortablePlaylists";
+
+const PlaylistItem = defineAsyncComponent(
+	() => import("@/components/PlaylistItem.vue")
+);
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" },

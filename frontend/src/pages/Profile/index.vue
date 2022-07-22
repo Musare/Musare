@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { defineAsyncComponent, ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
 import { format, parseISO } from "date-fns";
@@ -7,10 +7,13 @@ import ws from "@/ws";
 
 import useTabQueryHandler from "@/composables/useTabQueryHandler";
 
-import ProfilePicture from "@/components/ProfilePicture.vue";
-
-import RecentActivity from "./Tabs/RecentActivity.vue";
-import Playlists from "./Tabs/Playlists.vue";
+const ProfilePicture = defineAsyncComponent(
+	() => import("@/components/ProfilePicture.vue")
+);
+const RecentActivity = defineAsyncComponent(
+	() => import("./Tabs/RecentActivity.vue")
+);
+const Playlists = defineAsyncComponent(() => import("./Tabs/Playlists.vue"));
 
 const store = useStore();
 const route = useRoute();

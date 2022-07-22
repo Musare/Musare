@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { defineAsyncComponent, ref, computed } from "vue";
 import { useStore } from "vuex";
 import Toast from "toasters";
 
-import ProfilePicture from "@/components/ProfilePicture.vue";
-import SaveButton from "@/components/SaveButton.vue";
 import validation from "@/validation";
+
+const ProfilePicture = defineAsyncComponent(
+	() => import("@/components/ProfilePicture.vue")
+);
+const SaveButton = defineAsyncComponent(
+	() => import("@/components/SaveButton.vue")
+);
 
 const store = useStore();
 
