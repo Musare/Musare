@@ -27,6 +27,13 @@ const childrenActive = computed(() => store.state.admin.childrenActive);
 const toggleChildren = payload =>
 	store.dispatch("admin/toggleChildren", payload);
 
+const getTabFromPath = (path?) => {
+	const localPath = path || route.path;
+	return localPath.substr(0, 7) === "/admin/"
+		? localPath.substr(7, localPath.length)
+		: null;
+};
+
 const onRouteChange = () => {
 	if (currentTab.value.startsWith("songs")) {
 		toggleChildren({ child: "songs", force: false });
@@ -61,13 +68,6 @@ const resetKeyboardShortcutsHelper = () => {
 const toggleSidebar = () => {
 	sidebarActive.value = !sidebarActive.value;
 	localStorage.setItem("admin-sidebar-active", sidebarActive.value);
-};
-
-const getTabFromPath = path => {
-	const localPath = path || route.path;
-	return localPath.substr(0, 7) === "/admin/"
-		? localPath.substr(7, localPath.length)
-		: null;
 };
 
 const calculateSidebarPadding = () => {

@@ -111,7 +111,6 @@ const init = () => {
 
 const startEditingSongs = () => {
 	songsToEdit.value = [];
-	console.log(100, trackSongs.value);
 	trackSongs.value.forEach((songs, index) => {
 		songs.forEach(song => {
 			const album = JSON.parse(JSON.stringify(discogsAlbum.value));
@@ -140,7 +139,6 @@ const startEditingSongs = () => {
 			}
 
 			songsToEdit.value.push(songToEdit);
-			console.log(111, songsToEdit.value, songToEdit);
 		});
 	});
 

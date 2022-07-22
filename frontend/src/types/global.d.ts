@@ -4,4 +4,4 @@ declare global {
 	var YT: any;
 }
 
-export { };
+export {};

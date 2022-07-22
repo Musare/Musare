@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 
@@ -10,6 +10,8 @@ import RunJobDropdown from "@/components/RunJobDropdown.vue";
 
 const store = useStore();
 const route = useRoute();
+
+const setJob = payload => store.dispatch("longJobs/setJob", payload);
 
 const { socket } = store.state.websockets;
 
@@ -287,8 +289,6 @@ const jobs = ref([
 		socket: "media.recalculateAllRatings"
 	}
 ]);
-
-const song = computed(() => store.state.modals.editSong.song);
 
 const openModal = payload =>
 	store.dispatch("modalVisibility/openModal", payload);
