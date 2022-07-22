@@ -1,3 +1,136 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from "vue";
+import { useStore } from "vuex";
+
+import Toast from "toasters";
+
+import SongItem from "@/components/SongItem.vue";
+import SearchQueryItem from "@/components/SearchQueryItem.vue";
+import PlaylistTabBase from "@/components/PlaylistTabBase.vue";
+
+// import SearchYoutube from "@/mixins/SearchYoutube.vue";
+// import SearchMusare from "@/mixins/SearchMusare.vue";
+import { useSearchYoutube } from "@/composables/useSearchYoutube";
+import { useSearchMusare } from "@/composables/useSearchMusare";
+
+const store = useStore();
+const { youtubeSearch, searchForSongs, loadMoreSongs } = useSearchYoutube();
+const { musareSearch, searchForMusareSongs } = useSearchMusare();
+
+const { socket } = store.state.websockets;
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" },
+	sector: { type: String, default: "station" },
+	disableAutoRequest: { type: Boolean, default: false }
+});
+
+const tab = ref("songs");
+const sitename = ref("Musare");
+const tabs = ref({});
+
+// const loggedIn = computed(() => store.state.user.auth.loggedIn);
+// const role = computed(() => store.state.user.auth.role);
+// const userId = computed(() => store.state.user.auth.userId);
+
+const station = computed({
+	get() {
+		if (props.sector === "manageStation")
+			return this.$store.state.modals.manageStation[props.modalUuid]
+				.station;
+		return this.$store.state.station.station;
+	},
+	set(station) {
+		if (props.sector === "manageStation")
+			this.$store.commit(
+				`modals/manageStation/${props.modalUuid}/updateStation`,
+				station
+			);
+		else this.$store.commit("station/updateStation", station);
+	}
+});
+// const blacklist = computed({
+// 	get() {
+// 		if (props.sector === "manageStation")
+// 			return this.$store.state.modals.manageStation[props.modalUuid]
+// 				.blacklist;
+// 		return this.$store.state.station.blacklist;
+// 	},
+// 	set(blacklist) {
+// 		if (props.sector === "manageStation")
+// 			this.$store.commit(
+// 				`modals/manageStation/${props.modalUuid}/setBlacklist`,
+// 				blacklist
+// 			);
+// 		else this.$store.commit("station/setBlacklist", blacklist);
+// 	}
+// });
+const songsList = computed({
+	get() {
+		if (props.sector === "manageStation")
+			return this.$store.state.modals.manageStation[props.modalUuid]
+				.songsList;
+		return this.$store.state.station.songsList;
+	},
+	set(songsList) {
+		if (props.sector === "manageStation")
+			this.$store.commit(
+				`modals/manageStation/${props.modalUuid}/updateSongsList`,
+				songsList
+			);
+		else this.$store.commit("station/updateSongsList", songsList);
+	}
+});
+const musareResultsLeftCount = computed(
+	() => musareSearch.value.count - musareSearch.value.results.length
+);
+const nextPageMusareResultsCount = computed(() =>
+	Math.min(musareSearch.value.pageSize, musareResultsLeftCount.value)
+);
+const songsInQueue = computed(() => {
+	if (station.value.currentSong)
+		return songsList.value
+			.map(song => song.youtubeId)
+			.concat(station.value.currentSong.youtubeId);
+	return songsList.value.map(song => song.youtubeId);
+});
+// const currentUserQueueSongs = computed(
+// 	() =>
+// 		songsList.value.filter(
+// 			queueSong => queueSong.requestedBy === userId.value
+// 		).length
+// );
+
+const showTab = _tab => {
+	tabs.value[`${_tab}-tab`].scrollIntoView({ block: "nearest" });
+	tab.value = _tab;
+};
+
+const addSongToQueue = (youtubeId, index) => {
+	socket.dispatch(
+		"stations.addToQueue",
+		station.value._id,
+		youtubeId,
+		res => {
+			if (res.status !== "success") new Toast(`Error: ${res.message}`);
+			else {
+				if (index)
+					youtubeSearch.value.songs.results[index].isAddedToQueue =
+						true;
+
+				new Toast(res.message);
+			}
+		}
+	);
+};
+
+onMounted(async () => {
+	sitename.value = await lofig.get("siteSettings.sitename");
+
+	showTab("songs");
+});
+</script>
+
 <template>
 	<div class="station-playlists">
 		<p class="top-info has-text-centered">
@@ -7,7 +140,7 @@
 			<div class="tab-selection">
 				<button
 					class="button is-default"
-					ref="songs-tab"
+					:ref="el => (tabs['songs-tab'] = el)"
 					:class="{ selected: tab === 'songs' }"
 					@click="showTab('songs')"
 				>
@@ -16,7 +149,7 @@
 				<button
 					v-if="!disableAutoRequest"
 					class="button is-default"
-					ref="autorequest-tab"
+					:ref="el => (tabs['autorequest-tab'] = el)"
 					:class="{ selected: tab === 'autorequest' }"
 					@click="showTab('autorequest')"
 				>
@@ -182,150 +315,6 @@
 		</div>
 	</div>
 </template>
-<script>
-import { mapState, mapGetters } from "vuex";
-
-import Toast from "toasters";
-
-import SongItem from "@/components/SongItem.vue";
-import SearchQueryItem from "@/components/SearchQueryItem.vue";
-import PlaylistTabBase from "@/components/PlaylistTabBase.vue";
-
-import SearchYoutube from "@/mixins/SearchYoutube.vue";
-import SearchMusare from "@/mixins/SearchMusare.vue";
-
-export default {
-	components: {
-		SongItem,
-		SearchQueryItem,
-		PlaylistTabBase
-	},
-	mixins: [SearchYoutube, SearchMusare],
-	props: {
-		modalUuid: { type: String, default: "" },
-		sector: { type: String, default: "station" },
-		disableAutoRequest: { type: Boolean, default: false }
-	},
-	data() {
-		return {
-			tab: "songs",
-			sitename: "Musare"
-		};
-	},
-	computed: {
-		station: {
-			get() {
-				if (this.sector === "manageStation")
-					return this.$store.state.modals.manageStation[
-						this.modalUuid
-					].station;
-				return this.$store.state.station.station;
-			},
-			set(station) {
-				if (this.sector === "manageStation")
-					this.$store.commit(
-						`modals/manageStation/${this.modalUuid}/updateStation`,
-						station
-					);
-				else this.$store.commit("station/updateStation", station);
-			}
-		},
-		blacklist: {
-			get() {
-				if (this.sector === "manageStation")
-					return this.$store.state.modals.manageStation[
-						this.modalUuid
-					].blacklist;
-				return this.$store.state.station.blacklist;
-			},
-			set(blacklist) {
-				if (this.sector === "manageStation")
-					this.$store.commit(
-						`modals/manageStation/${this.modalUuid}/setBlacklist`,
-						blacklist
-					);
-				else this.$store.commit("station/setBlacklist", blacklist);
-			}
-		},
-		songsList: {
-			get() {
-				if (this.sector === "manageStation")
-					return this.$store.state.modals.manageStation[
-						this.modalUuid
-					].songsList;
-				return this.$store.state.station.songsList;
-			},
-			set(songsList) {
-				if (this.sector === "manageStation")
-					this.$store.commit(
-						`modals/manageStation/${this.modalUuid}/updateSongsList`,
-						songsList
-					);
-				else this.$store.commit("station/updateSongsList", songsList);
-			}
-		},
-		musareResultsLeftCount() {
-			return this.musareSearch.count - this.musareSearch.results.length;
-		},
-		nextPageMusareResultsCount() {
-			return Math.min(
-				this.musareSearch.pageSize,
-				this.musareResultsLeftCount
-			);
-		},
-		songsInQueue() {
-			if (this.station.currentSong)
-				return this.songsList
-					.map(song => song.youtubeId)
-					.concat(this.station.currentSong.youtubeId);
-			return this.songsList.map(song => song.youtubeId);
-		},
-		currentUserQueueSongs() {
-			return this.songsList.filter(
-				queueSong => queueSong.requestedBy === this.userId
-			).length;
-		},
-		...mapState("user", {
-			loggedIn: state => state.auth.loggedIn,
-			role: state => state.auth.role,
-			userId: state => state.auth.userId
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	async mounted() {
-		this.sitename = await lofig.get("siteSettings.sitename");
-
-		this.showTab("songs");
-	},
-	methods: {
-		showTab(tab) {
-			this.$refs[`${tab}-tab`].scrollIntoView({ block: "nearest" });
-			this.tab = tab;
-		},
-		addSongToQueue(youtubeId, index) {
-			this.socket.dispatch(
-				"stations.addToQueue",
-				this.station._id,
-				youtubeId,
-				res => {
-					if (res.status !== "success")
-						new Toast(`Error: ${res.message}`);
-					else {
-						if (index)
-							this.youtubeSearch.songs.results[
-								index
-							].isAddedToQueue = true;
-
-						new Toast(res.message);
-					}
-				}
-			);
-		}
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {
