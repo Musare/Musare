@@ -196,6 +196,9 @@ export function useSortablePlaylists() {
 		isCurrentUser,
 		playlists,
 		dragOptions,
-		savePlaylistOrder
+		orderOfPlaylists,
+		myUserId,
+		savePlaylistOrder,
+		calculatePlaylistOrder
 	};
 }

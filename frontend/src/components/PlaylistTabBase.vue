@@ -1,3 +1,311 @@
+<script setup lang="ts">
+import { ref, reactive, computed, onMounted } from "vue";
+import { useStore } from "vuex";
+import Toast from "toasters";
+import ws from "@/ws";
+
+import { useModalState } from "@/vuex_helpers";
+
+import PlaylistItem from "@/components/PlaylistItem.vue";
+
+import { useSortablePlaylists } from "@/composables/useSortablePlaylists";
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" },
+	type: {
+		type: String,
+		default: ""
+	},
+	sector: {
+		type: String,
+		default: "manageStation"
+	}
+});
+
+const emit = defineEmits(["selected"]);
+
+const store = useStore();
+
+const { socket } = store.state.websockets;
+
+const tab = ref("current");
+const search = reactive({
+	query: "",
+	searchedQuery: "",
+	page: 0,
+	count: 0,
+	resultsLeft: 0,
+	pageSize: 0,
+	results: []
+});
+const featuredPlaylists = ref([]);
+const tabs = ref({});
+
+const {
+	Sortable,
+	drag,
+	playlists,
+	dragOptions,
+	savePlaylistOrder,
+	orderOfPlaylists,
+	myUserId,
+	calculatePlaylistOrder
+} = useSortablePlaylists();
+
+const loggedIn = computed(() => store.state.user.auth.loggedIn);
+const role = computed(() => store.state.user.auth.role);
+const userId = computed(() => store.state.user.auth.userId);
+const autoRequest = computed(() => store.state.station.autoRequest);
+
+const { autofill } = useModalState("modals/manageStation/MODAL_UUID", {
+	modalUuid: props.modalUuid
+});
+
+const station = computed({
+	get() {
+		if (props.sector === "manageStation")
+			return store.state.modals.manageStation[props.modalUuid].station;
+		return store.state.station.station;
+	},
+	set(station) {
+		if (props.sector === "manageStation")
+			store.commit(
+				`modals/manageStation/${props.modalUuid}/updateStation`,
+				station
+			);
+		else store.commit("station/updateStation", station);
+	}
+});
+
+const blacklist = computed({
+	get() {
+		if (props.sector === "manageStation")
+			return store.state.modals.manageStation[props.modalUuid].blacklist;
+		return store.state.station.blacklist;
+	},
+	set(blacklist) {
+		if (props.sector === "manageStation")
+			store.commit(
+				`modals/manageStation/${props.modalUuid}/setBlacklist`,
+				blacklist
+			);
+		else store.commit("station/setBlacklist", blacklist);
+	}
+});
+
+const resultsLeftCount = computed(() => search.count - search.results.length);
+
+const nextPageResultsCount = computed(() =>
+	Math.min(search.pageSize, resultsLeftCount.value)
+);
+
+const openModal = payload =>
+	store.dispatch("modalVisibility/openModal", payload);
+const setPlaylists = payload =>
+	store.dispatch("user/playlists/setPlaylists", payload);
+const addPlaylistToAutoRequest = payload =>
+	store.dispatch("station/addPlaylistToAutoRequest", payload);
+const removePlaylistFromAutoRequest = payload =>
+	store.dispatch("station/removePlaylistFromAutoRequest", payload);
+
+const init = () => {
+	socket.dispatch("playlists.indexMyPlaylists", res => {
+		if (res.status === "success") setPlaylists(res.data.playlists);
+		orderOfPlaylists.value = calculatePlaylistOrder(); // order in regards to the database
+	});
+
+	socket.dispatch("playlists.indexFeaturedPlaylists", res => {
+		if (res.status === "success")
+			featuredPlaylists.value = res.data.playlists;
+	});
+
+	if (props.type === "autofill")
+		socket.dispatch(
+			`stations.getStationAutofillPlaylistsById`,
+			station.value._id,
+			res => {
+				if (res.status === "success") {
+					station.value.autofill.playlists = res.data.playlists;
+				}
+			}
+		);
+
+	socket.dispatch(
+		`stations.getStationBlacklistById`,
+		station.value._id,
+		res => {
+			if (res.status === "success") {
+				station.value.blacklist = res.data.playlists;
+			}
+		}
+	);
+};
+
+const showTab = _tab => {
+	tabs.value[`${_tab}-tab`].scrollIntoView({ block: "nearest" });
+	tab.value = _tab;
+};
+
+const isOwner = () =>
+	loggedIn.value && station.value && userId.value === station.value.owner;
+const isAdmin = () => loggedIn.value && role.value === "admin";
+const isOwnerOrAdmin = () => isOwner() || isAdmin();
+
+const label = (tense = "future", typeOverwrite = null, capitalize = false) => {
+	let label = typeOverwrite || props.type;
+
+	if (tense === "past") label = `${label}ed`;
+	if (tense === "present") label = `${label}ing`;
+
+	if (capitalize) label = `${label.charAt(0).toUpperCase()}${label.slice(1)}`;
+
+	return label;
+};
+
+const selectedPlaylists = typeOverwrite => {
+	const type = typeOverwrite || props.type;
+
+	if (type === "autofill") return autofill;
+	if (type === "blacklist") return blacklist.value;
+	if (type === "autorequest") return autoRequest.value;
+	return [];
+};
+
+const isSelected = (playlistId, typeOverwrite) => {
+	const type = typeOverwrite || props.type;
+	let selected = false;
+
+	selectedPlaylists(type).forEach(playlist => {
+		if (playlist._id === playlistId) selected = true;
+	});
+	return selected;
+};
+
+const deselectPlaylist = (playlistId, typeOverwrite) => {
+	const type = typeOverwrite || props.type;
+
+	if (type === "autofill")
+		return new Promise(resolve => {
+			socket.dispatch(
+				"stations.removeAutofillPlaylist",
+				station.value._id,
+				playlistId,
+				res => {
+					new Toast(res.message);
+					resolve();
+				}
+			);
+		});
+	if (type === "blacklist")
+		return new Promise(resolve => {
+			socket.dispatch(
+				"stations.removeBlacklistedPlaylist",
+				station.value._id,
+				playlistId,
+				res => {
+					new Toast(res.message);
+					resolve();
+				}
+			);
+		});
+	if (type === "autorequest")
+		return new Promise(resolve => {
+			removePlaylistFromAutoRequest(playlistId);
+			new Toast("Successfully deselected playlist.");
+			resolve();
+		});
+	return false;
+};
+
+const selectPlaylist = async (playlist, typeOverwrite) => {
+	const type = typeOverwrite || props.type;
+
+	if (isSelected(playlist._id, type))
+		return new Toast(`Error: Playlist already ${label("past", type)}.`);
+
+	if (type === "autofill")
+		return new Promise(resolve => {
+			socket.dispatch(
+				"stations.autofillPlaylist",
+				station.value._id,
+				playlist._id,
+				res => {
+					new Toast(res.message);
+					emit("selected");
+					resolve();
+				}
+			);
+		});
+	if (type === "blacklist") {
+		if (props.type !== "blacklist" && isSelected(playlist._id))
+			await deselectPlaylist(playlist._id);
+
+		return new Promise(resolve => {
+			socket.dispatch(
+				"stations.blacklistPlaylist",
+				station.value._id,
+				playlist._id,
+				res => {
+					new Toast(res.message);
+					emit("selected");
+					resolve();
+				}
+			);
+		});
+	}
+	if (type === "autorequest")
+		return new Promise(resolve => {
+			addPlaylistToAutoRequest(playlist);
+			new Toast("Successfully selected playlist to auto request songs.");
+			emit("selected");
+			resolve();
+		});
+	return false;
+};
+
+const searchForPlaylists = page => {
+	if (search.page >= page || search.searchedQuery !== search.query) {
+		search.results = [];
+		search.page = 0;
+		search.count = 0;
+		search.resultsLeft = 0;
+		search.pageSize = 0;
+	}
+
+	const { query } = search;
+	const action =
+		station.value.type === "official" && props.type !== "autorequest"
+			? "playlists.searchOfficial"
+			: "playlists.searchCommunity";
+
+	search.searchedQuery = search.query;
+	socket.dispatch(action, query, page, res => {
+		const { data } = res;
+		if (res.status === "success") {
+			const { count, pageSize, playlists } = data;
+			search.results = [...search.results, ...playlists];
+			search.page = page;
+			search.count = count;
+			search.resultsLeft = count - search.results.length;
+			search.pageSize = pageSize;
+		} else if (res.status === "error") {
+			search.results = [];
+			search.page = 0;
+			search.count = 0;
+			search.resultsLeft = 0;
+			search.pageSize = 0;
+			new Toast(res.message);
+		}
+	});
+};
+
+onMounted(() => {
+	showTab("search");
+
+	ws.onConnect(init);
+});
+</script>
+
 <template>
 	<div class="playlist-tab-base">
 		<div v-if="$slots.info" class="top-info has-text-centered">
@@ -7,7 +315,7 @@
 			<div class="tab-selection">
 				<button
 					class="button is-default"
-					ref="search-tab"
+					:ref="el => (tabs['search-tab'] = el)"
 					:class="{ selected: tab === 'search' }"
 					@click="showTab('search')"
 				>
@@ -15,7 +323,7 @@
 				</button>
 				<button
 					class="button is-default"
-					ref="current-tab"
+					:ref="el => (tabs['current-tab'] = el)"
 					:class="{ selected: tab === 'current' }"
 					@click="showTab('current')"
 				>
@@ -26,7 +334,7 @@
 						type === 'autorequest' || station.type === 'community'
 					"
 					class="button is-default"
-					ref="my-playlists-tab"
+					:ref="el => (tabs['my-playlists-tab'] = el)"
 					:class="{ selected: tab === 'my-playlists' }"
 					@click="showTab('my-playlists')"
 				>
@@ -506,16 +814,16 @@
 					class="menu-list scrollable-list"
 					v-if="playlists.length > 0"
 				>
-					<draggable
+					<sortable
 						:component-data="{
 							name: !drag ? 'draggable-list-transition' : null
 						}"
 						item-key="_id"
-						v-model="playlists"
-						v-bind="dragOptions"
+						:list="playlists"
+						:options="dragOptions"
 						@start="drag = true"
 						@end="drag = false"
-						@change="savePlaylistOrder"
+						@update="savePlaylistOrder"
 					>
 						<template #item="{ element }">
 							<playlist-item
@@ -669,7 +977,7 @@
 								</template>
 							</playlist-item>
 						</template>
-					</draggable>
+					</sortable>
 				</div>
 
 				<p v-else class="has-text-centered scrollable-list">
@@ -679,324 +987,6 @@
 		</div>
 	</div>
 </template>
-<script>
-import { mapActions, mapState, mapGetters } from "vuex";
-import Toast from "toasters";
-import ws from "@/ws";
-
-import { mapModalState } from "@/vuex_helpers";
-
-import PlaylistItem from "@/components/PlaylistItem.vue";
-
-import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
-
-export default {
-	components: {
-		PlaylistItem
-	},
-	mixins: [SortablePlaylists],
-	props: {
-		modalUuid: { type: String, default: "" },
-		type: {
-			type: String,
-			default: ""
-		},
-		sector: {
-			type: String,
-			default: "manageStation"
-		}
-	},
-	emits: ["selected"],
-	data() {
-		return {
-			tab: "current",
-			search: {
-				query: "",
-				searchedQuery: "",
-				page: 0,
-				count: 0,
-				resultsLeft: 0,
-				results: []
-			},
-			featuredPlaylists: []
-		};
-	},
-	computed: {
-		station: {
-			get() {
-				if (this.sector === "manageStation")
-					return this.$store.state.modals.manageStation[
-						this.modalUuid
-					].station;
-				return this.$store.state.station.station;
-			},
-			set(station) {
-				if (this.sector === "manageStation")
-					this.$store.commit(
-						`modals/manageStation/${this.modalUuid}/updateStation`,
-						station
-					);
-				else this.$store.commit("station/updateStation", station);
-			}
-		},
-		blacklist: {
-			get() {
-				if (this.sector === "manageStation")
-					return this.$store.state.modals.manageStation[
-						this.modalUuid
-					].blacklist;
-				return this.$store.state.station.blacklist;
-			},
-			set(blacklist) {
-				if (this.sector === "manageStation")
-					this.$store.commit(
-						`modals/manageStation/${this.modalUuid}/setBlacklist`,
-						blacklist
-					);
-				else this.$store.commit("station/setBlacklist", blacklist);
-			}
-		},
-		resultsLeftCount() {
-			return this.search.count - this.search.results.length;
-		},
-		nextPageResultsCount() {
-			return Math.min(this.search.pageSize, this.resultsLeftCount);
-		},
-		...mapState({
-			loggedIn: state => state.user.auth.loggedIn,
-			role: state => state.user.auth.role,
-			userId: state => state.user.auth.userId
-		}),
-		...mapModalState("modals/manageStation/MODAL_UUID", {
-			autofill: state => state.autofill
-		}),
-		...mapState("station", {
-			autoRequest: state => state.autoRequest
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	mounted() {
-		this.showTab("search");
-
-		ws.onConnect(this.init);
-	},
-	methods: {
-		init() {
-			this.socket.dispatch("playlists.indexMyPlaylists", res => {
-				if (res.status === "success")
-					this.setPlaylists(res.data.playlists);
-				this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
-			});
-
-			this.socket.dispatch("playlists.indexFeaturedPlaylists", res => {
-				if (res.status === "success")
-					this.featuredPlaylists = res.data.playlists;
-			});
-
-			if (this.type === "autofill")
-				this.socket.dispatch(
-					`stations.getStationAutofillPlaylistsById`,
-					this.station._id,
-					res => {
-						if (res.status === "success") {
-							this.station.autofill.playlists =
-								res.data.playlists;
-						}
-					}
-				);
-
-			this.socket.dispatch(
-				`stations.getStationBlacklistById`,
-				this.station._id,
-				res => {
-					if (res.status === "success") {
-						this.station.blacklist = res.data.playlists;
-					}
-				}
-			);
-		},
-		showTab(tab) {
-			this.$refs[`${tab}-tab`].scrollIntoView({ block: "nearest" });
-			this.tab = tab;
-		},
-		isOwner() {
-			return (
-				this.loggedIn &&
-				this.station &&
-				this.userId === this.station.owner
-			);
-		},
-		isAdmin() {
-			return this.loggedIn && this.role === "admin";
-		},
-		isOwnerOrAdmin() {
-			return this.isOwner() || this.isAdmin();
-		},
-		label(tense = "future", typeOverwrite = null, capitalize = false) {
-			let label = typeOverwrite || this.type;
-
-			if (tense === "past") label = `${label}ed`;
-			if (tense === "present") label = `${label}ing`;
-
-			if (capitalize)
-				label = `${label.charAt(0).toUpperCase()}${label.slice(1)}`;
-
-			return label;
-		},
-		selectedPlaylists(typeOverwrite) {
-			const type = typeOverwrite || this.type;
-
-			if (type === "autofill") return this.autofill;
-			if (type === "blacklist") return this.blacklist;
-			if (type === "autorequest") return this.autoRequest;
-			return [];
-		},
-		async selectPlaylist(playlist, typeOverwrite) {
-			const type = typeOverwrite || this.type;
-
-			if (this.isSelected(playlist._id, type))
-				return new Toast(
-					`Error: Playlist already ${this.label("past", type)}.`
-				);
-
-			if (type === "autofill")
-				return new Promise(resolve => {
-					this.socket.dispatch(
-						"stations.autofillPlaylist",
-						this.station._id,
-						playlist._id,
-						res => {
-							new Toast(res.message);
-							this.$emit("selected");
-							resolve();
-						}
-					);
-				});
-			if (type === "blacklist") {
-				if (this.type !== "blacklist" && this.isSelected(playlist._id))
-					await this.deselectPlaylist(playlist._id);
-
-				return new Promise(resolve => {
-					this.socket.dispatch(
-						"stations.blacklistPlaylist",
-						this.station._id,
-						playlist._id,
-						res => {
-							new Toast(res.message);
-							this.$emit("selected");
-							resolve();
-						}
-					);
-				});
-			}
-			if (type === "autorequest")
-				return new Promise(resolve => {
-					this.addPlaylistToAutoRequest(playlist);
-					new Toast(
-						"Successfully selected playlist to auto request songs."
-					);
-					this.$emit("selected");
-					resolve();
-				});
-			return false;
-		},
-		deselectPlaylist(playlistId, typeOverwrite) {
-			const type = typeOverwrite || this.type;
-
-			if (type === "autofill")
-				return new Promise(resolve => {
-					this.socket.dispatch(
-						"stations.removeAutofillPlaylist",
-						this.station._id,
-						playlistId,
-						res => {
-							new Toast(res.message);
-							resolve();
-						}
-					);
-				});
-			if (type === "blacklist")
-				return new Promise(resolve => {
-					this.socket.dispatch(
-						"stations.removeBlacklistedPlaylist",
-						this.station._id,
-						playlistId,
-						res => {
-							new Toast(res.message);
-							resolve();
-						}
-					);
-				});
-			if (type === "autorequest")
-				return new Promise(resolve => {
-					this.removePlaylistFromAutoRequest(playlistId);
-					new Toast("Successfully deselected playlist.");
-					resolve();
-				});
-			return false;
-		},
-		isSelected(playlistId, typeOverwrite) {
-			const type = typeOverwrite || this.type;
-			let selected = false;
-
-			this.selectedPlaylists(type).forEach(playlist => {
-				if (playlist._id === playlistId) selected = true;
-			});
-			return selected;
-		},
-		searchForPlaylists(page) {
-			if (
-				this.search.page >= page ||
-				this.search.searchedQuery !== this.search.query
-			) {
-				this.search.results = [];
-				this.search.page = 0;
-				this.search.count = 0;
-				this.search.resultsLeft = 0;
-				this.search.pageSize = 0;
-			}
-
-			const { query } = this.search;
-			const action =
-				this.station.type === "official" && this.type !== "autorequest"
-					? "playlists.searchOfficial"
-					: "playlists.searchCommunity";
-
-			this.search.searchedQuery = this.search.query;
-			this.socket.dispatch(action, query, page, res => {
-				const { data } = res;
-				if (res.status === "success") {
-					const { count, pageSize, playlists } = data;
-					this.search.results = [
-						...this.search.results,
-						...playlists
-					];
-					this.search.page = page;
-					this.search.count = count;
-					this.search.resultsLeft =
-						count - this.search.results.length;
-					this.search.pageSize = pageSize;
-				} else if (res.status === "error") {
-					this.search.results = [];
-					this.search.page = 0;
-					this.search.count = 0;
-					this.search.resultsLeft = 0;
-					this.search.pageSize = 0;
-					new Toast(res.message);
-				}
-			});
-		},
-		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions("user/playlists", ["setPlaylists"]),
-		...mapActions("station", [
-			"addPlaylistToAutoRequest",
-			"removePlaylistFromAutoRequest"
-		])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {
