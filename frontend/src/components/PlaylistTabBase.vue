@@ -6,7 +6,7 @@ import ws from "@/ws";
 
 import { useModalState } from "@/vuex_helpers";
 
-import { useSortablePlaylists } from "@/composables/useSortablePlaylists";
+import useSortablePlaylists from "@/composables/useSortablePlaylists";
 
 const PlaylistItem = defineAsyncComponent(
 	() => import("@/components/PlaylistItem.vue")

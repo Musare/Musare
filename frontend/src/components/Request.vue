@@ -6,8 +6,8 @@ import Toast from "toasters";
 
 // import SearchYoutube from "@/mixins/SearchYoutube.vue";
 // import SearchMusare from "@/mixins/SearchMusare.vue";
-import { useSearchYoutube } from "@/composables/useSearchYoutube";
-import { useSearchMusare } from "@/composables/useSearchMusare";
+import useSearchYoutube from "@/composables/useSearchYoutube";
+import useSearchMusare from "@/composables/useSearchMusare";
 
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")

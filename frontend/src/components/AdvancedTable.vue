@@ -15,7 +15,7 @@ import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
 import keyboardShortcuts from "@/keyboardShortcuts";
 import ws from "@/ws";
-import { useDragBox } from "@/composables/useDragBox";
+import useDragBox from "@/composables/useDragBox";
 
 const { dragBox, setInitialBox, onDragBox, resetBoxPosition } = useDragBox();
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useModalState, useModalActions } from "@/vuex_helpers";
 
-import { useSearchYoutube } from "@/composables/useSearchYoutube";
+import useSearchYoutube from "@/composables/useSearchYoutube";
 
 import SearchQueryItem from "../../../SearchQueryItem.vue";
 

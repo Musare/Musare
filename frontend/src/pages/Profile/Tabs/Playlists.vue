@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent, onMounted } from "vue";
 import { useStore } from "vuex";
-import { useSortablePlaylists } from "@/composables/useSortablePlaylists";
+import useSortablePlaylists from "@/composables/useSortablePlaylists";
 
 const PlaylistItem = defineAsyncComponent(
 	() => import("@/components/PlaylistItem.vue")

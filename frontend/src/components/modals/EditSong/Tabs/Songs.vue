@@ -3,7 +3,7 @@ import { defineAsyncComponent, ref, onMounted } from "vue";
 
 import { useModalState } from "@/vuex_helpers";
 
-import { useSearchMusare } from "@/composables/useSearchMusare";
+import useSearchMusare from "@/composables/useSearchMusare";
 
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
