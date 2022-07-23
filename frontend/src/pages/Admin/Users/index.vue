@@ -318,6 +318,6 @@ onMounted(() => {
 }
 
 :deep(.profile-picture.using-initials span) {
-	font-size: 20px; // 2/5th of .profile-picture height/width
+	font-size: 20px !important; // 2/5th of .profile-picture height/width
 }
 </style>
