@@ -1,6 +1,295 @@
+<script setup lang="ts">
+import { useStore } from "vuex";
+import { useRoute, useRouter } from "vue-router";
+import { defineAsyncComponent, ref, computed, watch, onMounted } from "vue";
+import Toast from "toasters";
+
+import ws from "@/ws";
+import aw from "@/aw";
+import keyboardShortcuts from "@/keyboardShortcuts";
+
+const ModalManager = defineAsyncComponent(
+	() => import("@/components/ModalManager.vue")
+);
+const LongJobs = defineAsyncComponent(
+	() => import("@/components/LongJobs.vue")
+);
+const BannedPage = defineAsyncComponent(() => import("@/pages/Banned.vue"));
+const FallingSnow = defineAsyncComponent(
+	() => import("@/components/FallingSnow.vue")
+);
+
+const store = useStore();
+const route = useRoute();
+const router = useRouter();
+
+const loggedIn = computed(() => store.state.user.auth.loggedIn);
+const banned = computed(() => store.state.user.auth.banned);
+const modals = computed(() => store.state.modalVisibility.modals);
+const activeModals = computed(() => store.state.modalVisibility.activeModals);
+const nightmode = computed(() => store.state.user.preferences.nightmode);
+const activityWatch = computed(
+	() => store.state.user.preferences.activityWatch
+);
+const { socket } = store.state.websockets;
+
+const apiDomain = ref("");
+const socketConnected = ref(true);
+const keyIsDown = ref(false);
+const scrollPosition = ref({ y: 0, x: 0 });
+const aModalIsOpen2 = ref(false);
+const broadcastChannel = ref();
+const christmas = ref(false);
+const disconnectedMessage = ref();
+
+const aModalIsOpen = computed(() => Object.keys(activeModals.value).length > 0);
+
+const openModal = payload =>
+	store.dispatch("modalVisibility/openModal", payload);
+const closeCurrentModal = () =>
+	store.dispatch("modalVisibility/closeCurrentModal");
+const changeNightmode = payload =>
+	store.dispatch("user/preferences/changeNightmode", payload);
+const changeAutoSkipDisliked = payload =>
+	store.dispatch("user/preferences/changeAutoSkipDisliked", payload);
+const changeActivityLogPublic = payload =>
+	store.dispatch("user/preferences/changeActivityLogPublic", payload);
+const changeAnonymousSongRequests = payload =>
+	store.dispatch("user/preferences/changeAnonymousSongRequests", payload);
+const changeActivityWatch = payload =>
+	store.dispatch("user/preferences/changeActivityWatch", payload);
+
+const toggleNightMode = () => {
+	localStorage.setItem("nightmode", !nightmode.value);
+
+	if (loggedIn.value) {
+		socket.dispatch(
+			"users.updatePreferences",
+			{ nightmode: !nightmode.value },
+			res => {
+				if (res.status !== "success") new Toast(res.message);
+			}
+		);
+	}
+
+	changeNightmode(!nightmode.value);
+};
+
+const enableNightmode = () => {
+	document.getElementsByTagName("html")[0].classList.add("night-mode");
+};
+
+const disableNightmode = () => {
+	document.getElementsByTagName("html")[0].classList.remove("night-mode");
+};
+
+const enableChristmasMode = () => {
+	document.getElementsByTagName("html")[0].classList.add("christmas-mode");
+};
+
+watch(socketConnected, connected => {
+	if (!connected) disconnectedMessage.value.show();
+	else disconnectedMessage.value.hide();
+});
+watch(nightmode.value, enabled => {
+	if (enabled) enableNightmode();
+	else disableNightmode();
+});
+watch(activityWatch.value, enabled => {
+	if (enabled) aw.enable();
+	else aw.disable();
+});
+watch(aModalIsOpen, isOpen => {
+	if (isOpen) {
+		scrollPosition.value = {
+			x: window.scrollX,
+			y: window.scrollY
+		};
+		aModalIsOpen2.value = true;
+	} else {
+		aModalIsOpen2.value = false;
+		setTimeout(() => {
+			window.scrollTo(scrollPosition.value.x, scrollPosition.value.y);
+		}, 10);
+	}
+});
+
+onMounted(async () => {
+	window
+		.matchMedia("(prefers-color-scheme: dark)")
+		.addEventListener("change", e => {
+			if (e.matches === !nightmode.value) toggleNightMode();
+		});
+
+	if (!loggedIn.value) {
+		lofig.get("cookie.SIDname").then(sid => {
+			broadcastChannel.value = new BroadcastChannel(`${sid}.user_login`);
+			broadcastChannel.value.onmessage = data => {
+				if (data) {
+					broadcastChannel.value.close();
+					window.location.reload();
+				}
+			};
+		});
+	}
+
+	document.onkeydown = ev => {
+		const event = ev || window.event;
+		const { keyCode } = event;
+		const shift = event.shiftKey;
+		const ctrl = event.ctrlKey;
+		const alt = event.altKey;
+
+		const identifier = `${keyCode}.${shift}.${ctrl}`;
+
+		if (keyIsDown.value === identifier) return;
+		keyIsDown.value = identifier;
+
+		keyboardShortcuts.handleKeyDown(event, keyCode, shift, ctrl, alt);
+	};
+
+	document.onkeyup = () => {
+		keyIsDown.value = "";
+	};
+
+	// ctrl + alt + n
+	keyboardShortcuts.registerShortcut("nightmode", {
+		keyCode: 78,
+		ctrl: true,
+		alt: true,
+		handler: () => toggleNightMode()
+	});
+
+	keyboardShortcuts.registerShortcut("closeModal", {
+		keyCode: 27,
+		shift: false,
+		ctrl: false,
+		handler: () => {
+			if (
+				Object.keys(activeModals.value).length !== 0 &&
+				modals.value[
+					activeModals.value[activeModals.value.length - 1]
+				] !== "editSong" &&
+				modals.value[
+					activeModals.value[activeModals.value.length - 1]
+				] !== "editSongs"
+			)
+				closeCurrentModal();
+		}
+	});
+
+	disconnectedMessage.value = new Toast({
+		content: "Could not connect to the server.",
+		persistent: true,
+		interactable: false
+	});
+
+	disconnectedMessage.value.hide();
+
+	ws.onConnect(() => {
+		socketConnected.value = true;
+
+		socket.dispatch("users.getPreferences", res => {
+			if (res.status === "success") {
+				const { preferences } = res.data;
+
+				changeAutoSkipDisliked(preferences.autoSkipDisliked);
+				changeNightmode(preferences.nightmode);
+				changeActivityLogPublic(preferences.activityLogPublic);
+				changeAnonymousSongRequests(preferences.anonymousSongRequests);
+				changeActivityWatch(preferences.activityWatch);
+
+				if (nightmode.value) enableNightmode();
+				else disableNightmode();
+			}
+		});
+
+		socket.on("keep.event:user.session.deleted", () =>
+			window.location.reload()
+		);
+
+		const newUser = !localStorage.getItem("firstVisited");
+		socket.dispatch("news.newest", newUser, res => {
+			if (res.status !== "success") return;
+
+			const { news } = res.data;
+
+			if (news) {
+				if (newUser) {
+					openModal({ modal: "whatIsNew", data: { news } });
+				} else if (localStorage.getItem("whatIsNew")) {
+					if (
+						parseInt(localStorage.getItem("whatIsNew")) <
+						news.createdAt
+					) {
+						openModal({
+							modal: "whatIsNew",
+							data: { news }
+						});
+						localStorage.setItem("whatIsNew", news.createdAt);
+					}
+				} else {
+					if (
+						parseInt(localStorage.getItem("firstVisited")) <
+						news.createdAt
+					)
+						openModal({
+							modal: "whatIsNew",
+							data: { news }
+						});
+					localStorage.setItem("whatIsNew", news.createdAt);
+				}
+			}
+
+			if (!localStorage.getItem("firstVisited"))
+				localStorage.setItem("firstVisited", Date.now());
+		});
+	});
+
+	ws.onDisconnect(true, () => {
+		socketConnected.value = false;
+	});
+
+	apiDomain.value = await lofig.get("backend.apiDomain");
+
+	router.isReady().then(() => {
+		if (route.query.err) {
+			let { err } = route.query;
+			err = err.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+			router.push({ query: {} });
+			new Toast({ content: err, timeout: 20000 });
+		}
+
+		if (route.query.msg) {
+			let { msg } = route.query;
+			msg = msg.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+			router.push({ query: {} });
+			new Toast({ content: msg, timeout: 20000 });
+		}
+
+		if (localStorage.getItem("github_redirect")) {
+			router.push(localStorage.getItem("github_redirect"));
+			localStorage.removeItem("github_redirect");
+		}
+	});
+
+	if (localStorage.getItem("nightmode") === "true") {
+		changeNightmode(true);
+		enableNightmode();
+	}
+
+	lofig.get("siteSettings.christmas").then(enabled => {
+		if (enabled) {
+			christmas.value = true;
+			enableChristmasMode();
+		}
+	});
+});
+</script>
+
 <template>
 	<div class="upper-container">
-		<banned v-if="banned" />
+		<banned-page v-if="banned" />
 		<div v-else class="upper-container">
 			<router-view
 				:key="$route.fullPath"
@@ -13,308 +302,6 @@
 		<long-jobs />
 	</div>
 </template>
-
-<script>
-import { mapState, mapActions, mapGetters } from "vuex";
-import Toast from "toasters";
-import { defineAsyncComponent } from "vue";
-
-import ws from "./ws";
-import aw from "./aw";
-import keyboardShortcuts from "./keyboardShortcuts";
-
-export default {
-	components: {
-		ModalManager: defineAsyncComponent(() =>
-			import("@/components/ModalManager.vue")
-		),
-		LongJobs: defineAsyncComponent(() =>
-			import("@/components/LongJobs.vue")
-		),
-		Banned: defineAsyncComponent(() => import("@/pages/Banned.vue")),
-		FallingSnow: defineAsyncComponent(() =>
-			import("@/components/FallingSnow.vue")
-		)
-	},
-	replace: false,
-	data() {
-		return {
-			apiDomain: "",
-			socketConnected: true,
-			keyIsDown: false,
-			scrollPosition: { y: 0, x: 0 },
-			aModalIsOpen2: false,
-			broadcastChannel: null,
-			christmas: false
-		};
-	},
-	computed: {
-		...mapState({
-			loggedIn: state => state.user.auth.loggedIn,
-			role: state => state.user.auth.role,
-			username: state => state.user.auth.username,
-			userId: state => state.user.auth.userId,
-			banned: state => state.user.auth.banned,
-			modals: state => state.modalVisibility.modals,
-			activeModals: state => state.modalVisibility.activeModals,
-			nightmode: state => state.user.preferences.nightmode,
-			activityWatch: state => state.user.preferences.activityWatch
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		}),
-		aModalIsOpen() {
-			return Object.keys(this.activeModals).length > 0;
-		}
-	},
-	watch: {
-		socketConnected(connected) {
-			if (!connected) this.disconnectedMessage.show();
-			else this.disconnectedMessage.hide();
-		},
-		nightmode(nightmode) {
-			if (nightmode) this.enableNightmode();
-			else this.disableNightmode();
-		},
-		activityWatch(activityWatch) {
-			if (activityWatch) aw.enable();
-			else aw.disable();
-		},
-		aModalIsOpen(aModalIsOpen) {
-			if (aModalIsOpen) {
-				this.scrollPosition = {
-					x: window.scrollX,
-					y: window.scrollY
-				};
-				this.aModalIsOpen2 = true;
-			} else {
-				this.aModalIsOpen2 = false;
-				setTimeout(() => {
-					window.scrollTo(
-						this.scrollPosition.x,
-						this.scrollPosition.y
-					);
-				}, 10);
-			}
-		}
-	},
-	async mounted() {
-		window
-			.matchMedia("(prefers-color-scheme: dark)")
-			.addEventListener("change", e => {
-				if (e.matches === !this.nightmode) this.toggleNightMode();
-			});
-
-		if (!this.loggedIn) {
-			lofig.get("cookie.SIDname").then(sid => {
-				this.broadcastChannel = new BroadcastChannel(
-					`${sid}.user_login`
-				);
-				this.broadcastChannel.onmessage = data => {
-					if (data) {
-						this.broadcastChannel.close();
-						window.location.reload();
-					}
-				};
-			});
-		}
-
-		document.onkeydown = ev => {
-			const event = ev || window.event;
-			const { keyCode } = event;
-			const shift = event.shiftKey;
-			const ctrl = event.ctrlKey;
-			const alt = event.altKey;
-
-			const identifier = `${keyCode}.${shift}.${ctrl}`;
-
-			if (this.keyIsDown === identifier) return;
-			this.keyIsDown = identifier;
-
-			keyboardShortcuts.handleKeyDown(event, keyCode, shift, ctrl, alt);
-		};
-
-		document.onkeyup = () => {
-			this.keyIsDown = "";
-		};
-
-		// ctrl + alt + n
-		keyboardShortcuts.registerShortcut("nightmode", {
-			keyCode: 78,
-			ctrl: true,
-			alt: true,
-			handler: () => this.toggleNightMode()
-		});
-
-		keyboardShortcuts.registerShortcut("closeModal", {
-			keyCode: 27,
-			shift: false,
-			ctrl: false,
-			handler: () => {
-				if (
-					Object.keys(this.activeModals).length !== 0 &&
-					this.modals[
-						this.activeModals[this.activeModals.length - 1]
-					] !== "editSong" &&
-					this.modals[
-						this.activeModals[this.activeModals.length - 1]
-					] !== "editSongs"
-				)
-					this.closeCurrentModal();
-			}
-		});
-
-		this.disconnectedMessage = new Toast({
-			content: "Could not connect to the server.",
-			persistent: true,
-			interactable: false
-		});
-
-		this.disconnectedMessage.hide();
-
-		ws.onConnect(() => {
-			this.socketConnected = true;
-
-			this.socket.dispatch("users.getPreferences", res => {
-				if (res.status === "success") {
-					const { preferences } = res.data;
-
-					this.changeAutoSkipDisliked(preferences.autoSkipDisliked);
-					this.changeNightmode(preferences.nightmode);
-					this.changeActivityLogPublic(preferences.activityLogPublic);
-					this.changeAnonymousSongRequests(
-						preferences.anonymousSongRequests
-					);
-					this.changeActivityWatch(preferences.activityWatch);
-
-					if (this.nightmode) this.enableNightmode();
-					else this.disableNightmode();
-				}
-			});
-
-			this.socket.on("keep.event:user.session.deleted", () =>
-				window.location.reload()
-			);
-
-			const newUser = !localStorage.getItem("firstVisited");
-			this.socket.dispatch("news.newest", newUser, res => {
-				if (res.status !== "success") return;
-
-				const { news } = res.data;
-
-				if (news) {
-					if (newUser) {
-						this.openModal({ modal: "whatIsNew", data: { news } });
-					} else if (localStorage.getItem("whatIsNew")) {
-						if (
-							parseInt(localStorage.getItem("whatIsNew")) <
-							news.createdAt
-						) {
-							this.openModal({
-								modal: "whatIsNew",
-								data: { news }
-							});
-							localStorage.setItem("whatIsNew", news.createdAt);
-						}
-					} else {
-						if (
-							parseInt(localStorage.getItem("firstVisited")) <
-							news.createdAt
-						)
-							this.openModal({
-								modal: "whatIsNew",
-								data: { news }
-							});
-						localStorage.setItem("whatIsNew", news.createdAt);
-					}
-				}
-
-				if (!localStorage.getItem("firstVisited"))
-					localStorage.setItem("firstVisited", Date.now());
-			});
-		});
-
-		ws.onDisconnect(true, () => {
-			this.socketConnected = false;
-		});
-
-		this.apiDomain = await lofig.get("backend.apiDomain");
-
-		this.$router.isReady().then(() => {
-			if (this.$route.query.err) {
-				let { err } = this.$route.query;
-				err = err.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-				this.$router.push({ query: {} });
-				new Toast({ content: err, timeout: 20000 });
-			}
-
-			if (this.$route.query.msg) {
-				let { msg } = this.$route.query;
-				msg = msg.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-				this.$router.push({ query: {} });
-				new Toast({ content: msg, timeout: 20000 });
-			}
-
-			if (localStorage.getItem("github_redirect")) {
-				this.$router.push(localStorage.getItem("github_redirect"));
-				localStorage.removeItem("github_redirect");
-			}
-		});
-
-		if (localStorage.getItem("nightmode") === "true") {
-			this.changeNightmode(true);
-			this.enableNightmode();
-		}
-
-		lofig.get("siteSettings.christmas").then(christmas => {
-			if (christmas) {
-				this.christmas = true;
-				this.enableChristmasMode();
-			}
-		});
-	},
-	methods: {
-		toggleNightMode() {
-			localStorage.setItem("nightmode", !this.nightmode);
-
-			if (this.loggedIn) {
-				this.socket.dispatch(
-					"users.updatePreferences",
-					{ nightmode: !this.nightmode },
-					res => {
-						if (res.status !== "success") new Toast(res.message);
-					}
-				);
-			}
-
-			this.changeNightmode(!this.nightmode);
-		},
-		enableNightmode: () => {
-			document
-				.getElementsByTagName("html")[0]
-				.classList.add("night-mode");
-		},
-		disableNightmode: () => {
-			document
-				.getElementsByTagName("html")[0]
-				.classList.remove("night-mode");
-		},
-		enableChristmasMode: () => {
-			document
-				.getElementsByTagName("html")[0]
-				.classList.add("christmas-mode");
-		},
-		...mapActions("modalVisibility", ["closeCurrentModal", "openModal"]),
-		...mapActions("user/preferences", [
-			"changeNightmode",
-			"changeAutoSkipDisliked",
-			"changeActivityLogPublic",
-			"changeAnonymousSongRequests",
-			"changeActivityWatch"
-		])
-	}
-};
-</script>
 
 <style lang="less">
 @import "normalize.css/normalize.css";
