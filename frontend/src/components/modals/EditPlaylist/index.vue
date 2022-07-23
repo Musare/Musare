@@ -1,3 +1,329 @@
+<script setup lang="ts">
+import { useStore } from "vuex";
+import {
+	defineAsyncComponent,
+	ref,
+	computed,
+	onMounted,
+	onBeforeUnmount
+} from "vue";
+import { Sortable } from "sortablejs-vue3";
+import Toast from "toasters";
+import { useModalState, useModalActions } from "@/vuex_helpers";
+import ws from "@/ws";
+import utils from "@/utils";
+
+const SongItem = defineAsyncComponent(
+	() => import("@/components/SongItem.vue")
+);
+const Settings = defineAsyncComponent(() => import("./Tabs/Settings.vue"));
+const AddSongs = defineAsyncComponent(() => import("./Tabs/AddSongs.vue"));
+const ImportPlaylists = defineAsyncComponent(
+	() => import("./Tabs/ImportPlaylists.vue")
+);
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" }
+});
+
+const store = useStore();
+
+const station = computed(() => store.state.station);
+const loggedIn = computed(() => store.state.user.auth.loggedIn);
+const userId = computed(() => store.state.user.auth.userId);
+const userRole = computed(() => store.state.user.auth.role);
+
+const { socket } = store.state.websockets;
+
+const drag = ref(false);
+const apiDomain = ref("");
+const gettingSongs = ref(false);
+const tabs = ref([]);
+const songItems = ref([]);
+
+const playlistSongs = computed({
+	get: () => store.state.modals.editPlaylist[props.modalUuid].playlist.songs,
+	set: value => {
+		store.commit(
+			`modals/editPlaylist/${props.modalUuid}/updatePlaylistSongs`,
+			value
+		);
+	}
+});
+
+const modalState = useModalState("modals/editPlaylist/MODAL_UUID", {
+	modalUuid: props.modalUuid
+});
+const playlistId = computed(() => modalState.playlistId);
+const tab = computed(() => modalState.tab);
+const playlist = computed(() => modalState.playlist);
+
+const { setPlaylist, clearPlaylist, addSong, removeSong, repositionedSong } =
+	useModalActions(
+		"modals/editPlaylist/MODAL_UUID",
+		[
+			"setPlaylist",
+			"clearPlaylist",
+			"addSong",
+			"removeSong",
+			"repositionedSong"
+		],
+		{
+			modalUuid: props.modalUuid
+		}
+	);
+
+const closeCurrentModal = () =>
+	store.dispatch("modalVisibility/closeCurrentModal");
+const showTab = payload => {
+	tabs.value[`${payload}-tab`].scrollIntoView({ block: "nearest" });
+	store.dispatch(`modals/editPlaylist/${props.modalUuid}/showTab`, payload);
+};
+
+const isEditable = () =>
+	(playlist.value.type === "user" ||
+		playlist.value.type === "user-liked" ||
+		playlist.value.type === "user-disliked") &&
+	(userId.value === playlist.value.createdBy || userRole.value === "admin");
+
+const dragOptions = computed(() => ({
+	animation: 200,
+	group: "songs",
+	disabled: !isEditable(),
+	ghostClass: "draggable-list-ghost"
+}));
+
+const init = () => {
+	gettingSongs.value = true;
+	socket.dispatch("playlists.getPlaylist", playlistId.value, res => {
+		if (res.status === "success") {
+			setPlaylist(res.data.playlist);
+		} else new Toast(res.message);
+		gettingSongs.value = false;
+	});
+};
+
+const isAdmin = () => userRole.value === "admin";
+
+const isOwner = () =>
+	loggedIn.value && userId.value === playlist.value.createdBy;
+
+const repositionSong = ({ oldIndex, newIndex }) => {
+	if (oldIndex === newIndex) return; // we only need to update when song is moved
+	const song = playlistSongs.value[oldIndex];
+
+	socket.dispatch(
+		"playlists.repositionSong",
+		playlist.value._id,
+		{
+			...song,
+			oldIndex,
+			newIndex
+		},
+		res => {
+			if (res.status !== "success")
+				repositionedSong({
+					...song,
+					newIndex: oldIndex,
+					oldIndex: newIndex
+				});
+		}
+	);
+};
+
+const moveSongToTop = (song, index) => {
+	songItems.value[`song-item-${index}`].$refs.songActions.tippy.hide();
+
+	repositionSong({
+		oldIndex: index,
+		newIndex: 0
+	});
+};
+
+const moveSongToBottom = (song, index) => {
+	songItems.value[`song-item-${index}`].$refs.songActions.tippy.hide();
+
+	repositionSong({
+		oldIndex: index,
+		newIndex: playlistSongs.value.length
+	});
+};
+
+const totalLength = () => {
+	let length = 0;
+	playlist.value.songs.forEach(song => {
+		length += song.duration;
+	});
+	return utils.formatTimeLong(length);
+};
+
+// const shuffle = () => {
+// 	socket.dispatch("playlists.shuffle", playlist.value._id, res => {
+// 		new Toast(res.message);
+// 		if (res.status === "success") {
+// 			updatePlaylistSongs(
+// 				res.data.playlist.songs.sort((a, b) => a.position - b.position)
+// 			);
+// 		}
+// 	});
+// };
+
+const removeSongFromPlaylist = id =>
+	socket.dispatch(
+		"playlists.removeSongFromPlaylist",
+		id,
+		playlist.value._id,
+		res => {
+			new Toast(res.message);
+		}
+	);
+
+const removePlaylist = () => {
+	if (isOwner()) {
+		socket.dispatch("playlists.remove", playlist.value._id, res => {
+			new Toast(res.message);
+			if (res.status === "success") closeCurrentModal();
+		});
+	} else if (isAdmin()) {
+		socket.dispatch("playlists.removeAdmin", playlist.value._id, res => {
+			new Toast(res.message);
+			if (res.status === "success") closeCurrentModal();
+		});
+	}
+};
+
+const downloadPlaylist = async () => {
+	if (apiDomain.value === "")
+		apiDomain.value = await lofig.get("backend.apiDomain");
+
+	fetch(`${apiDomain.value}/export/playlist/${playlist.value._id}`, {
+		credentials: "include"
+	})
+		.then(res => res.blob())
+		.then(blob => {
+			const url = window.URL.createObjectURL(blob);
+
+			const a = document.createElement("a");
+			a.style.display = "none";
+			a.href = url;
+
+			a.download = `musare-playlist-${
+				playlist.value._id
+			}-${new Date().toISOString()}.json`;
+
+			document.body.appendChild(a);
+			a.click();
+			window.URL.revokeObjectURL(url);
+
+			new Toast("Successfully downloaded playlist.");
+		})
+		.catch(() => new Toast("Failed to export and download playlist."));
+};
+
+const addSongToQueue = youtubeId => {
+	socket.dispatch(
+		"stations.addToQueue",
+		station.value._id,
+		youtubeId,
+		data => {
+			if (data.status !== "success")
+				new Toast({
+					content: `Error: ${data.message}`,
+					timeout: 8000
+				});
+			else new Toast({ content: data.message, timeout: 4000 });
+		}
+	);
+};
+
+const clearAndRefillStationPlaylist = () => {
+	socket.dispatch(
+		"playlists.clearAndRefillStationPlaylist",
+		playlist.value._id,
+		data => {
+			if (data.status !== "success")
+				new Toast({
+					content: `Error: ${data.message}`,
+					timeout: 8000
+				});
+			else new Toast({ content: data.message, timeout: 4000 });
+		}
+	);
+};
+
+const clearAndRefillGenrePlaylist = () => {
+	socket.dispatch(
+		"playlists.clearAndRefillGenrePlaylist",
+		playlist.value._id,
+		data => {
+			if (data.status !== "success")
+				new Toast({
+					content: `Error: ${data.message}`,
+					timeout: 8000
+				});
+			else new Toast({ content: data.message, timeout: 4000 });
+		}
+	);
+};
+
+onMounted(() => {
+	ws.onConnect(init);
+
+	socket.on(
+		"event:playlist.song.added",
+		res => {
+			if (playlist.value._id === res.data.playlistId)
+				addSong(res.data.song);
+		},
+		{ modalUuid: props.modalUuid }
+	);
+
+	socket.on(
+		"event:playlist.song.removed",
+		res => {
+			if (playlist.value._id === res.data.playlistId) {
+				// remove song from array of playlists
+				removeSong(res.data.youtubeId);
+			}
+		},
+		{ modalUuid: props.modalUuid }
+	);
+
+	socket.on(
+		"event:playlist.displayName.updated",
+		res => {
+			if (playlist.value._id === res.data.playlistId) {
+				setPlaylist({
+					displayName: res.data.displayName,
+					...playlist.value
+				});
+			}
+		},
+		{ modalUuid: props.modalUuid }
+	);
+
+	socket.on(
+		"event:playlist.song.repositioned",
+		res => {
+			if (playlist.value._id === res.data.playlistId) {
+				const { song, playlistId } = res.data;
+
+				if (playlist.value._id === playlistId) {
+					repositionedSong(song);
+				}
+			}
+		},
+		{ modalUuid: props.modalUuid }
+	);
+});
+
+onBeforeUnmount(() => {
+	clearPlaylist();
+	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
+	store.unregisterModule(["modals", "editPlaylist", props.modalUuid]);
+});
+</script>
+
 <template>
 	<modal
 		:title="
@@ -23,7 +349,7 @@
 						<button
 							class="button is-default"
 							:class="{ selected: tab === 'settings' }"
-							ref="settings-tab"
+							:ref="el => (tabs['settings-tab'] = el)"
 							@click="showTab('settings')"
 							v-if="
 								userId === playlist.createdBy ||
@@ -36,7 +362,7 @@
 						<button
 							class="button is-default"
 							:class="{ selected: tab === 'add-songs' }"
-							ref="add-songs-tab"
+							:ref="el => (tabs['add-songs-tab'] = el)"
 							@click="showTab('add-songs')"
 							v-if="isEditable()"
 						>
@@ -47,7 +373,7 @@
 							:class="{
 								selected: tab === 'import-playlists'
 							}"
-							ref="import-playlists-tab"
+							:ref="el => (tabs['import-playlists-tab'] = el)"
 							@click="showTab('import-playlists')"
 							v-if="isEditable()"
 						>
@@ -92,17 +418,17 @@
 					</div>
 
 					<aside class="menu">
-						<draggable
+						<sortable
 							:component-data="{
 								name: !drag ? 'draggable-list-transition' : null
 							}"
 							v-if="playlistSongs.length > 0"
-							v-model="playlistSongs"
+							:list="playlistSongs"
 							item-key="_id"
-							v-bind="dragOptions"
+							:options="dragOptions"
 							@start="drag = true"
 							@end="drag = false"
-							@change="repositionSong"
+							@update="repositionSong"
 						>
 							<template #item="{ element, index }">
 								<div class="menu-list scrollable-list">
@@ -111,7 +437,12 @@
 										:class="{
 											'item-draggable': isEditable()
 										}"
-										:ref="`song-item-${index}`"
+										:ref="
+											el =>
+												(songItems[
+													`song-item-${index}`
+												] = el)
+										"
 									>
 										<template #tippyActions>
 											<i
@@ -193,7 +524,7 @@
 									</song-item>
 								</div>
 							</template>
-						</draggable>
+						</sortable>
 						<p v-else-if="gettingSongs" class="nothing-here-text">
 							Loading songs...
 						</p>
@@ -245,361 +576,6 @@
 		</template>
 	</modal>
 </template>
-
-<script>
-import { mapState, mapGetters, mapActions } from "vuex";
-import draggable from "vuedraggable";
-import Toast from "toasters";
-
-import { mapModalState, mapModalActions } from "@/vuex_helpers";
-import ws from "@/ws";
-import SongItem from "../../SongItem.vue";
-
-import Settings from "./Tabs/Settings.vue";
-import AddSongs from "./Tabs/AddSongs.vue";
-import ImportPlaylists from "./Tabs/ImportPlaylists.vue";
-
-import utils from "@/utils";
-
-export default {
-	components: {
-		draggable,
-		SongItem,
-		Settings,
-		AddSongs,
-		ImportPlaylists
-	},
-	props: {
-		modalUuid: { type: String, default: "" }
-	},
-	data() {
-		return {
-			utils,
-			drag: false,
-			apiDomain: "",
-			gettingSongs: false
-		};
-	},
-	computed: {
-		...mapState("station", {
-			station: state => state.station
-		}),
-		...mapModalState("modals/editPlaylist/MODAL_UUID", {
-			playlistId: state => state.playlistId,
-			tab: state => state.tab,
-			playlist: state => state.playlist
-		}),
-		playlistSongs: {
-			get() {
-				return this.$store.state.modals.editPlaylist[this.modalUuid]
-					.playlist.songs;
-			},
-			set(value) {
-				this.$store.commit(
-					`modals/editPlaylist/${this.modalUuid}/updatePlaylistSongs`,
-					value
-				);
-			}
-		},
-		...mapState({
-			loggedIn: state => state.user.auth.loggedIn,
-			userId: state => state.user.auth.userId,
-			userRole: state => state.user.auth.role
-		}),
-		dragOptions() {
-			return {
-				animation: 200,
-				group: "songs",
-				disabled: !this.isEditable(),
-				ghostClass: "draggable-list-ghost"
-			};
-		},
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	mounted() {
-		ws.onConnect(this.init);
-
-		this.socket.on(
-			"event:playlist.song.added",
-			res => {
-				if (this.playlist._id === res.data.playlistId)
-					this.addSong(res.data.song);
-			},
-			{ modalUuid: this.modalUuid }
-		);
-
-		this.socket.on(
-			"event:playlist.song.removed",
-			res => {
-				if (this.playlist._id === res.data.playlistId) {
-					// remove song from array of playlists
-					this.removeSong(res.data.youtubeId);
-				}
-			},
-			{ modalUuid: this.modalUuid }
-		);
-
-		this.socket.on(
-			"event:playlist.displayName.updated",
-			res => {
-				if (this.playlist._id === res.data.playlistId) {
-					const playlist = {
-						displayName: res.data.displayName,
-						...this.playlist
-					};
-					this.setPlaylist(playlist);
-				}
-			},
-			{ modalUuid: this.modalUuid }
-		);
-
-		this.socket.on(
-			"event:playlist.song.repositioned",
-			res => {
-				if (this.playlist._id === res.data.playlistId) {
-					const { song, playlistId } = res.data;
-
-					if (this.playlist._id === playlistId) {
-						this.repositionedSong(song);
-					}
-				}
-			},
-			{ modalUuid: this.modalUuid }
-		);
-	},
-	beforeUnmount() {
-		this.clearPlaylist();
-		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-		this.$store.unregisterModule([
-			"modals",
-			"editPlaylist",
-			this.modalUuid
-		]);
-	},
-	methods: {
-		init() {
-			this.gettingSongs = true;
-			this.socket.dispatch(
-				"playlists.getPlaylist",
-				this.playlistId,
-				res => {
-					if (res.status === "success") {
-						this.setPlaylist(res.data.playlist);
-					} else new Toast(res.message);
-					this.gettingSongs = false;
-				}
-			);
-		},
-		isEditable() {
-			return (
-				(this.playlist.type === "user" ||
-					this.playlist.type === "user-liked" ||
-					this.playlist.type === "user-disliked") &&
-				(this.userId === this.playlist.createdBy ||
-					this.userRole === "admin")
-			);
-		},
-		isAdmin() {
-			return this.userRole === "admin";
-		},
-		isOwner() {
-			return this.loggedIn && this.userId === this.playlist.createdBy;
-		},
-		repositionSong({ moved }) {
-			if (!moved) return; // we only need to update when song is moved
-
-			this.socket.dispatch(
-				"playlists.repositionSong",
-				this.playlist._id,
-				{
-					...moved.element,
-					oldIndex: moved.oldIndex,
-					newIndex: moved.newIndex
-				},
-				res => {
-					if (res.status !== "success")
-						this.repositionedSong({
-							...moved.element,
-							newIndex: moved.oldIndex,
-							oldIndex: moved.newIndex
-						});
-				}
-			);
-		},
-		moveSongToTop(song, index) {
-			this.$refs[`song-item-${index}`].$refs.songActions.tippy.hide();
-
-			this.repositionSong({
-				moved: {
-					element: song,
-					oldIndex: index,
-					newIndex: 0
-				}
-			});
-		},
-		moveSongToBottom(song, index) {
-			this.$refs[`song-item-${index}`].$refs.songActions.tippy.hide();
-
-			this.repositionSong({
-				moved: {
-					element: song,
-					oldIndex: index,
-					newIndex: this.playlistSongs.length
-				}
-			});
-		},
-		totalLength() {
-			let length = 0;
-			this.playlist.songs.forEach(song => {
-				length += song.duration;
-			});
-			return this.utils.formatTimeLong(length);
-		},
-		shuffle() {
-			this.socket.dispatch(
-				"playlists.shuffle",
-				this.playlist._id,
-				res => {
-					new Toast(res.message);
-					if (res.status === "success") {
-						this.updatePlaylistSongs(
-							res.data.playlist.songs.sort(
-								(a, b) => a.position - b.position
-							)
-						);
-					}
-				}
-			);
-		},
-		removeSongFromPlaylist(id) {
-			return this.socket.dispatch(
-				"playlists.removeSongFromPlaylist",
-				id,
-				this.playlist._id,
-				res => {
-					new Toast(res.message);
-				}
-			);
-		},
-		removePlaylist() {
-			if (this.isOwner()) {
-				this.socket.dispatch(
-					"playlists.remove",
-					this.playlist._id,
-					res => {
-						new Toast(res.message);
-						if (res.status === "success")
-							this.closeModal("editPlaylist");
-					}
-				);
-			} else if (this.isAdmin()) {
-				this.socket.dispatch(
-					"playlists.removeAdmin",
-					this.playlist._id,
-					res => {
-						new Toast(res.message);
-						if (res.status === "success")
-							this.closeModal("editPlaylist");
-					}
-				);
-			}
-		},
-		async downloadPlaylist() {
-			if (this.apiDomain === "")
-				this.apiDomain = await lofig.get("backend.apiDomain");
-
-			fetch(`${this.apiDomain}/export/playlist/${this.playlist._id}`, {
-				credentials: "include"
-			})
-				.then(res => res.blob())
-				.then(blob => {
-					const url = window.URL.createObjectURL(blob);
-
-					const a = document.createElement("a");
-					a.style.display = "none";
-					a.href = url;
-
-					a.download = `musare-playlist-${
-						this.playlist._id
-					}-${new Date().toISOString()}.json`;
-
-					document.body.appendChild(a);
-					a.click();
-					window.URL.revokeObjectURL(url);
-
-					new Toast("Successfully downloaded playlist.");
-				})
-				.catch(
-					() => new Toast("Failed to export and download playlist.")
-				);
-		},
-		addSongToQueue(youtubeId) {
-			this.socket.dispatch(
-				"stations.addToQueue",
-				this.station._id,
-				youtubeId,
-				data => {
-					if (data.status !== "success")
-						new Toast({
-							content: `Error: ${data.message}`,
-							timeout: 8000
-						});
-					else new Toast({ content: data.message, timeout: 4000 });
-				}
-			);
-		},
-		clearAndRefillStationPlaylist() {
-			this.socket.dispatch(
-				"playlists.clearAndRefillStationPlaylist",
-				this.playlist._id,
-				data => {
-					if (data.status !== "success")
-						new Toast({
-							content: `Error: ${data.message}`,
-							timeout: 8000
-						});
-					else new Toast({ content: data.message, timeout: 4000 });
-				}
-			);
-		},
-		clearAndRefillGenrePlaylist() {
-			this.socket.dispatch(
-				"playlists.clearAndRefillGenrePlaylist",
-				this.playlist._id,
-				data => {
-					if (data.status !== "success")
-						new Toast({
-							content: `Error: ${data.message}`,
-							timeout: 8000
-						});
-					else new Toast({ content: data.message, timeout: 4000 });
-				}
-			);
-		},
-		...mapActions({
-			showTab(dispatch, payload) {
-				this.$refs[`${payload}-tab`].scrollIntoView({
-					block: "nearest"
-				});
-				return dispatch(
-					`modals/editPlaylist/${this.modalUuid}/showTab`,
-					payload
-				);
-			}
-		}),
-		...mapModalActions("modals/editPlaylist/MODAL_UUID", [
-			"setPlaylist",
-			"clearPlaylist",
-			"addSong",
-			"removeSong",
-			"repositionedSong"
-		]),
-		...mapActions("modalVisibility", ["openModal", "closeModal"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {
