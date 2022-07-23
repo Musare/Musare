@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useStore } from "vuex";
+import { useRoute } from "vue-router";
 import { defineAsyncComponent, ref, computed, onMounted } from "vue";
 import Toast from "toasters";
 
@@ -8,6 +9,7 @@ const ProfilePicture = defineAsyncComponent(
 );
 
 const store = useStore();
+const route = useRoute();
 
 const notesUri = ref("");
 const frontendDomain = ref("");
@@ -18,7 +20,7 @@ const userCount = computed(() => store.state.station.userCount);
 async function copyToClipboard() {
 	try {
 		await navigator.clipboard.writeText(
-			this.frontendDomain + this.$route.fullPath
+			frontendDomain.value + route.fullPath
 		);
 	} catch (err) {
 		new Toast("Failed to copy to clipboard.");

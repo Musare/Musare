@@ -4,8 +4,6 @@ import { useStore } from "vuex";
 
 import Toast from "toasters";
 
-// import SearchYoutube from "@/mixins/SearchYoutube.vue";
-// import SearchMusare from "@/mixins/SearchMusare.vue";
 import useSearchYoutube from "@/composables/useSearchYoutube";
 import useSearchMusare from "@/composables/useSearchMusare";
 
@@ -42,49 +40,47 @@ const tabs = ref({});
 const station = computed({
 	get() {
 		if (props.sector === "manageStation")
-			return this.$store.state.modals.manageStation[props.modalUuid]
-				.station;
-		return this.$store.state.station.station;
+			return store.state.modals.manageStation[props.modalUuid].station;
+		return store.state.station.station;
 	},
 	set(station) {
 		if (props.sector === "manageStation")
-			this.$store.commit(
+			store.commit(
 				`modals/manageStation/${props.modalUuid}/updateStation`,
 				station
 			);
-		else this.$store.commit("station/updateStation", station);
+		else store.commit("station/updateStation", station);
 	}
 });
 // const blacklist = computed({
 // 	get() {
 // 		if (props.sector === "manageStation")
-// 			return this.$store.state.modals.manageStation[props.modalUuid]
+// 			return store.state.modals.manageStation[props.modalUuid]
 // 				.blacklist;
-// 		return this.$store.state.station.blacklist;
+// 		return store.state.station.blacklist;
 // 	},
 // 	set(blacklist) {
 // 		if (props.sector === "manageStation")
-// 			this.$store.commit(
+// 			store.commit(
 // 				`modals/manageStation/${props.modalUuid}/setBlacklist`,
 // 				blacklist
 // 			);
-// 		else this.$store.commit("station/setBlacklist", blacklist);
+// 		else store.commit("station/setBlacklist", blacklist);
 // 	}
 // });
 const songsList = computed({
 	get() {
 		if (props.sector === "manageStation")
-			return this.$store.state.modals.manageStation[props.modalUuid]
-				.songsList;
-		return this.$store.state.station.songsList;
+			return store.state.modals.manageStation[props.modalUuid].songsList;
+		return store.state.station.songsList;
 	},
 	set(songsList) {
 		if (props.sector === "manageStation")
-			this.$store.commit(
+			store.commit(
 				`modals/manageStation/${props.modalUuid}/updateSongsList`,
 				songsList
 			);
-		else this.$store.commit("station/updateSongsList", songsList);
+		else store.commit("station/updateSongsList", songsList);
 	}
 });
 const musareResultsLeftCount = computed(
