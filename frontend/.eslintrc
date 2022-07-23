@@ -17,7 +17,9 @@
 		"airbnb-base",
 		"plugin:vue/strongly-recommended",
 		"eslint:recommended",
-		"prettier"
+		"prettier",
+		"plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended"
 	],
 	"plugins": [
 		"prettier",
@@ -44,6 +46,7 @@
 		],
 		"vue/order-in-components": 2,
 		"vue/no-v-for-template-key": 0,
-		"vue/multi-word-component-names": 0
+		"vue/multi-word-component-names": 0,
+		"@typescript-eslint/no-empty-function": 0
 	}
 }

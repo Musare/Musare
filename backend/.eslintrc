@@ -13,7 +13,9 @@
 		"eslint:recommended",
 		"airbnb-base",
 		"prettier",
-		"plugin:jsdoc/recommended"
+		"plugin:jsdoc/recommended",
+		"plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended"
     ],
     "plugins": [ "prettier", "jsdoc", "@typescript-eslint" ],
 	"rules": {
@@ -41,6 +43,7 @@
 				"ArrowFunctionExpression": false,
 				"FunctionExpression": false
 			}
-		}]
+		}],
+		"@typescript-eslint/no-empty-function": 0
     }
 }
