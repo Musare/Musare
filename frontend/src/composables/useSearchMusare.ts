@@ -74,13 +74,12 @@ export default function useSearchMusare() {
 		);
 	};
 
-	const addMusareSongToPlaylist = (id, index) => {
-		return new Error("Not done yet.");
+	const addMusareSongToPlaylist = (playlistId, id, index) => {
 		socket.dispatch(
 			"playlists.addSongToPlaylist",
 			false,
 			id,
-			this.playlist._id,
+			playlistId,
 			res => {
 				new Toast(res.message);
 				if (res.status === "success")

@@ -82,12 +82,12 @@ export default function useSearchYoutube() {
 		);
 	};
 
-	const addYouTubeSongToPlaylist = (id, index) => {
+	const addYouTubeSongToPlaylist = (playlistId, id, index) => {
 		socket.dispatch(
 			"playlists.addSongToPlaylist",
 			false,
 			id,
-			this.playlist._id,
+			playlistId,
 			res => {
 				new Toast(res.message);
 				if (res.status === "success")
