@@ -51,7 +51,7 @@
     "vue": "^3.2.36",
     "vue-chartjs": "^4.1.1",
     "vue-content-loader": "^2.0.1",
-    "vue-json-pretty": "^2.1.0",
+    "vue-json-pretty": "^2.1.1",
     "vue-loader": "^17.0.0",
     "vue-router": "^4.0.15",
     "vue-tippy": "^6.0.0-alpha.57",
