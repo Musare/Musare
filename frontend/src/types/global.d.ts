@@ -1,7 +1,7 @@
 declare global {
-	var lofig: any;
-	var stationInterval: number;
-	var YT: any;
+	const lofig: any;
+	const stationInterval: number;
+	const YT: any;
 }
 
 export {};

@@ -1053,7 +1053,7 @@ class _YouTubeModule extends CoreClass {
 
 				youtubeApiRequest.save();
 
-				const { key, ...keylessParams } = payload.params;
+				const { ...keylessParams } = payload.params;
 				CacheModule.runJob(
 					"HSET",
 					{

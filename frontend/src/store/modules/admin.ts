@@ -23,7 +23,7 @@ const modules = {
 		state: {},
 		getters: {},
 		actions: {
-			/* eslint-disable-next-line no-unused-vars */
+			/* eslint-disable-next-line */
 			resolveReport: ({ commit }, { reportId, value }) =>
 				new Promise((resolve, reject) => {
 					admin.reports
@@ -31,7 +31,7 @@ const modules = {
 						.then(res => resolve(res))
 						.catch(err => reject(new Error(err.message)));
 				}),
-			/* eslint-disable-next-line no-unused-vars */
+			/* eslint-disable-next-line */
 			removeReport: ({ commit }, reportId) =>
 				new Promise((resolve, reject) => {
 					admin.reports

@@ -3,7 +3,7 @@ import { useStore } from "vuex";
 
 import Toast from "toasters";
 
-export function useSearchYoutube() {
+export default function useSearchYoutube() {
 	const store = useStore();
 
 	const youtubeSearch = ref({

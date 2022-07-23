@@ -4,7 +4,7 @@ import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
 import ws from "@/ws";
 
-export function useSortablePlaylists() {
+export default function useSortablePlaylists() {
 	const orderOfPlaylists = ref([]);
 	const drag = ref(false);
 	const userId = ref();

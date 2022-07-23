@@ -47,6 +47,7 @@
 		"vue/order-in-components": 2,
 		"vue/no-v-for-template-key": 0,
 		"vue/multi-word-component-names": 0,
-		"@typescript-eslint/no-empty-function": 0
+		"@typescript-eslint/no-empty-function": 0,
+		"@typescript-eslint/no-explicit-any": 0
 	}
 }

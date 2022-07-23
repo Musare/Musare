@@ -1,6 +1,6 @@
 import { ref, onMounted, onUnmounted, nextTick } from "vue";
 
-export function useDragBox() {
+export default function useDragBox() {
 	const dragBox = ref({
 		top: 0,
 		left: 0,

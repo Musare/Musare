@@ -27,7 +27,7 @@ const modules = {
 			gotData: false
 		},
 		actions: {
-			/* eslint-disable-next-line no-unused-vars */
+			/* eslint-disable-next-line */
 			register: ({ commit }, user) =>
 				new Promise((resolve, reject) => {
 					const { username, email, password } = user;
@@ -80,7 +80,7 @@ const modules = {
 							.then(res => resolve(res))
 							.catch(err => reject(new Error(err.message)));
 				}),
-			/* eslint-disable-next-line no-unused-vars */
+			/* eslint-disable-next-line */
 			login: ({ commit }, user) =>
 				new Promise((resolve, reject) => {
 					auth.login(user)
