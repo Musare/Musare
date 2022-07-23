@@ -12,8 +12,6 @@
 		class="manage-station-modal"
 		:size="isOwnerOrAdmin() || sector !== 'home' ? 'wide' : null"
 		:split="isOwnerOrAdmin() || sector !== 'home'"
-		:intercept-close="true"
-		@close="onCloseModal"
 	>
 		<template #body v-if="station && station._id">
 			<div class="left-section">
@@ -557,11 +555,6 @@ export default {
 					else new Toast({ content: res.message, timeout: 4000 });
 				}
 			);
-		},
-		onCloseModal() {
-			if (this.isOwnerOrAdmin() || this.sector !== "home")
-				this.$refs.settingsTabComponent.onCloseModal();
-			else this.closeModal("manageStation");
 		},
 		...mapModalActions("modals/manageStation/MODAL_UUID", [
 			"editStation",
