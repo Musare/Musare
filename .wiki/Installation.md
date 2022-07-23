@@ -57,8 +57,8 @@ by running `./musare.sh admin add USERNAME`.
 
 1. `git clone https://github.com/Musare/Musare.git`
 2. `cd Musare`
-3. [Setup MongoDB](#Setting-up-MongoDB)
-4. [Setup Redis](#Setting-up-Redis)
+3. [Setup MongoDB](#setting-up-mongodb)
+4. [Setup Redis](#setting-up-redis)
 5. `cp backend/config/template.json backend/config/default.json` and configure
 as per [Configuration](./Configuration.md#Backend)
 6. `cp frontend/dist/config/template.json frontend/dist/config/default.json`
