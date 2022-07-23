@@ -16,7 +16,7 @@
     "typescript": "npx tsc --noEmit --skipLibCheck"
   },
   "dependencies": {
-    "async": "^3.2.3",
+    "async": "^3.2.4",
     "axios": "^0.27.2",
     "bcrypt": "^5.0.1",
     "bluebird": "^3.7.2",
