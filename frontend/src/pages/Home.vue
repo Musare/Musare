@@ -1,3 +1,347 @@
+<script setup lang="ts">
+import { useStore } from "vuex";
+import { useRoute, useRouter } from "vue-router";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { Sortable } from "sortablejs-vue3";
+import Toast from "toasters";
+import keyboardShortcuts from "@/keyboardShortcuts";
+import ws from "@/ws";
+
+const store = useStore();
+const route = useRoute();
+const router = useRouter();
+
+const loggedIn = computed(() => store.state.user.auth.loggedIn);
+const userId = computed(() => store.state.user.auth.userId);
+const role = computed(() => store.state.user.auth.role);
+
+const { socket } = store.state.websockets;
+
+const stations = ref([]);
+const searchQuery = ref("");
+const siteSettings = ref({
+	logo_white: "",
+	sitename: "Musare",
+	registrationDisabled: false
+});
+const orderOfFavoriteStations = ref([]);
+const handledLoginRegisterRedirect = ref(false);
+const changeFavoriteOrderDebounceTimeout = ref();
+
+const isOwner = station => loggedIn.value && station.owner === userId.value;
+
+const isAdmin = () => loggedIn.value && role.value === "admin";
+
+const isOwnerOrAdmin = station => isOwner(station) || isAdmin();
+
+const isPlaying = station => typeof station.currentSong.title !== "undefined";
+
+const filteredStations = computed(() => {
+	const privacyOrder = ["public", "unlisted", "private"];
+	return stations.value
+		.filter(
+			station =>
+				JSON.stringify(Object.values(station)).indexOf(
+					searchQuery.value
+				) !== -1
+		)
+		.sort(
+			(a, b) =>
+				isOwner(b) - isOwner(a) ||
+				isPlaying(b) - isPlaying(a) ||
+				a.paused - b.paused ||
+				privacyOrder.indexOf(a.privacy) -
+					privacyOrder.indexOf(b.privacy) ||
+				b.userCount - a.userCount
+		);
+});
+
+const dragOptions = computed(() => ({
+	animation: 200,
+	group: "favoriteStations",
+	disabled: false,
+	ghostClass: "draggable-list-ghost",
+	filter: ".ignore-elements",
+	fallbackTolerance: 50
+}));
+
+const favoriteStations = computed(() =>
+	filteredStations.value
+		.filter(station => station.isFavorited === true)
+		.sort(
+			(a, b) =>
+				orderOfFavoriteStations.value.indexOf(a._id) -
+				orderOfFavoriteStations.value.indexOf(b._id)
+		)
+);
+
+const openModal = payload =>
+	store.dispatch("modalVisibility/openModal", payload);
+
+const init = () => {
+	socket.dispatch(
+		"stations.index",
+		route.query.adminFilter === undefined,
+		res => {
+			stations.value = [];
+
+			if (res.status === "success") {
+				res.data.stations.forEach(station => {
+					const modifiableStation = station;
+
+					if (!modifiableStation.currentSong)
+						modifiableStation.currentSong = {
+							thumbnail: "/assets/notes-transparent.png"
+						};
+
+					if (
+						modifiableStation.currentSong &&
+						!modifiableStation.currentSong.thumbnail
+					)
+						modifiableStation.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.youtubeId}/mqdefault.jpg`;
+
+					stations.value.push(modifiableStation);
+				});
+
+				orderOfFavoriteStations.value = res.data.favorited;
+			}
+		}
+	);
+
+	socket.dispatch("apis.joinRoom", "home");
+};
+
+const canRequest = (station, requireLogin = true) =>
+	station &&
+	(!requireLogin || loggedIn.value) &&
+	station.requests &&
+	station.requests.enabled &&
+	(station.requests.access === "user" ||
+		(station.requests.access === "owner" && isOwnerOrAdmin(station)));
+
+const favoriteStation = stationId => {
+	socket.dispatch("stations.favoriteStation", stationId, res => {
+		if (res.status === "success") {
+			new Toast("Successfully favorited station.");
+		} else new Toast(res.message);
+	});
+};
+
+const unfavoriteStation = stationId => {
+	socket.dispatch("stations.unfavoriteStation", stationId, res => {
+		if (res.status === "success") {
+			new Toast("Successfully unfavorited station.");
+		} else new Toast(res.message);
+	});
+};
+
+const changeFavoriteOrder = ({ oldIndex, newIndex }) => {
+	if (changeFavoriteOrderDebounceTimeout.value)
+		clearTimeout(changeFavoriteOrderDebounceTimeout.value);
+
+	changeFavoriteOrderDebounceTimeout.value = setTimeout(() => {
+		if (oldIndex === newIndex) return;
+		favoriteStations.value.splice(
+			newIndex,
+			0,
+			favoriteStations.value.splice(oldIndex, 1)[0]
+		);
+
+		const recalculatedOrder = [];
+		favoriteStations.value.forEach(station =>
+			recalculatedOrder.push(station._id)
+		);
+
+		socket.dispatch(
+			"users.updateOrderOfFavoriteStations",
+			recalculatedOrder,
+			res => new Toast(res.message)
+		);
+	}, 100);
+};
+
+onMounted(async () => {
+	siteSettings.value = await lofig.get("siteSettings");
+
+	if (route.query.searchQuery) searchQuery.value = route.query.query;
+
+	if (
+		!loggedIn.value &&
+		route.redirectedFrom &&
+		(route.redirectedFrom.name === "login" ||
+			route.redirectedFrom.name === "register") &&
+		!handledLoginRegisterRedirect.value
+	) {
+		// Makes sure the login/register modal isn't opened whenever the home page gets remounted due to a code change
+		handledLoginRegisterRedirect.value = true;
+		openModal(route.redirectedFrom.name);
+	}
+
+	ws.onConnect(init);
+
+	socket.on("event:station.created", res => {
+		const { station } = res.data;
+
+		if (stations.value.find(_station => _station._id === station._id)) {
+			stations.value.forEach(s => {
+				const _station = s;
+				if (_station._id === station._id) {
+					_station.privacy = station.privacy;
+				}
+			});
+		} else {
+			if (!station.currentSong)
+				station.currentSong = {
+					thumbnail: "/assets/notes-transparent.png"
+				};
+			if (station.currentSong && !station.currentSong.thumbnail)
+				station.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.youtubeId}/mqdefault.jpg`;
+			stations.value.push(station);
+		}
+	});
+
+	socket.on("event:station.deleted", res => {
+		const { stationId } = res.data;
+
+		const station = stations.value.find(
+			station => station._id === stationId
+		);
+
+		if (station) {
+			const stationIndex = stations.value.indexOf(station);
+			stations.value.splice(stationIndex, 1);
+
+			if (station.isFavorited)
+				orderOfFavoriteStations.value =
+					orderOfFavoriteStations.value.filter(
+						favoritedId => favoritedId !== stationId
+					);
+		}
+	});
+
+	socket.on("event:station.userCount.updated", res => {
+		const station = stations.value.find(
+			station => station._id === res.data.stationId
+		);
+
+		if (station) station.userCount = res.data.userCount;
+	});
+
+	socket.on("event:station.updated", res => {
+		const stationIndex = stations.value
+			.map(station => station._id)
+			.indexOf(res.data.station._id);
+
+		if (stationIndex !== -1) {
+			stations.value[stationIndex] = {
+				...stations.value[stationIndex],
+				...res.data.station
+			};
+		}
+	});
+
+	socket.on("event:station.nextSong", res => {
+		const station = stations.value.find(
+			station => station._id === res.data.stationId
+		);
+
+		if (station) {
+			let newSong = res.data.currentSong;
+
+			if (!newSong)
+				newSong = {
+					thumbnail: "/assets/notes-transparent.png"
+				};
+
+			station.currentSong = newSong;
+		}
+	});
+
+	socket.on("event:station.pause", res => {
+		const station = stations.value.find(
+			station => station._id === res.data.stationId
+		);
+
+		if (station) station.paused = true;
+	});
+
+	socket.on("event:station.resume", res => {
+		const station = stations.value.find(
+			station => station._id === res.data.stationId
+		);
+
+		if (station) station.paused = false;
+	});
+
+	socket.on("event:user.station.favorited", res => {
+		const { stationId } = res.data;
+
+		const station = stations.value.find(
+			station => station._id === stationId
+		);
+
+		if (station) {
+			station.isFavorited = true;
+			orderOfFavoriteStations.value.push(stationId);
+		}
+	});
+
+	socket.on("event:user.station.unfavorited", res => {
+		const { stationId } = res.data;
+
+		const station = stations.value.find(
+			station => station._id === stationId
+		);
+
+		if (station) {
+			station.isFavorited = false;
+			orderOfFavoriteStations.value =
+				orderOfFavoriteStations.value.filter(
+					favoritedId => favoritedId !== stationId
+				);
+		}
+	});
+
+	socket.on("event:user.orderOfFavoriteStations.updated", res => {
+		orderOfFavoriteStations.value = res.data.order;
+	});
+
+	// ctrl + alt + f
+	keyboardShortcuts.registerShortcut("home.toggleAdminFilter", {
+		keyCode: 70,
+		ctrl: true,
+		alt: true,
+		handler: () => {
+			if (isAdmin())
+				if (route.query.adminFilter === undefined)
+					router.push({
+						query: {
+							...route.query,
+							adminFilter: null
+						}
+					});
+				else
+					router.push({
+						query: {
+							...route.query,
+							adminFilter: undefined
+						}
+					});
+		}
+	});
+});
+
+onBeforeUnmount(() => {
+	socket.dispatch("apis.leaveRoom", "home", () => {});
+
+	const shortcutNames = ["home.toggleAdminFilter"];
+
+	shortcutNames.forEach(shortcutName => {
+		keyboardShortcuts.unregisterShortcut(shortcutName);
+	});
+});
+</script>
+
 <template>
 	<div>
 		<page-metadata title="Home" />
@@ -46,11 +390,11 @@
 					</div>
 				</div>
 
-				<draggable
+				<sortable
 					item-key="_id"
-					v-model="favoriteStations"
-					v-bind="dragOptions"
-					@change="changeFavoriteOrder"
+					:list="favoriteStations"
+					:options="dragOptions"
+					@update="changeFavoriteOrder"
 				>
 					<template #item="{ element }">
 						<router-link
@@ -265,7 +609,7 @@
 							</div>
 						</router-link>
 					</template>
-				</draggable>
+				</sortable>
 			</div>
 			<div class="group bottom">
 				<div class="group-title">
@@ -513,365 +857,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapState, mapGetters, mapActions } from "vuex";
-import draggable from "vuedraggable";
-import Toast from "toasters";
-
-import ws from "@/ws";
-import keyboardShortcuts from "@/keyboardShortcuts";
-
-export default {
-	components: {
-		draggable
-	},
-	data() {
-		return {
-			recaptcha: { key: "" },
-			stations: [],
-			favoriteStations: [],
-			searchQuery: "",
-			siteSettings: {
-				logo_white: "",
-				sitename: "Musare",
-				registrationDisabled: false
-			},
-			orderOfFavoriteStations: [],
-			handledLoginRegisterRedirect: false,
-			editingStationId: null
-		};
-	},
-	computed: {
-		...mapState({
-			loggedIn: state => state.user.auth.loggedIn,
-			userId: state => state.user.auth.userId,
-			role: state => state.user.auth.role,
-			modals: state => state.modalVisibility.modals
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		}),
-		filteredStations() {
-			const privacyOrder = ["public", "unlisted", "private"];
-			return this.stations
-				.filter(
-					station =>
-						JSON.stringify(Object.values(station)).indexOf(
-							this.searchQuery
-						) !== -1
-				)
-				.sort(
-					(a, b) =>
-						this.isOwner(b) - this.isOwner(a) ||
-						this.isPlaying(b) - this.isPlaying(a) ||
-						a.paused - b.paused ||
-						privacyOrder.indexOf(a.privacy) -
-							privacyOrder.indexOf(b.privacy) ||
-						b.userCount - a.userCount
-				);
-		},
-		dragOptions() {
-			return {
-				animation: 200,
-				group: "favoriteStations",
-				disabled: false,
-				ghostClass: "draggable-list-ghost",
-				filter: ".ignore-elements",
-				fallbackTolerance: 50
-			};
-		}
-	},
-	watch: {
-		orderOfFavoriteStations: {
-			deep: true,
-			handler() {
-				this.calculateFavoriteStations();
-			}
-		}
-	},
-	async mounted() {
-		this.siteSettings = await lofig.get("siteSettings");
-
-		if (this.$route.query.searchQuery)
-			this.searchQuery = this.$route.query.query;
-
-		if (
-			!this.loggedIn &&
-			this.$route.redirectedFrom &&
-			(this.$route.redirectedFrom.name === "login" ||
-				this.$route.redirectedFrom.name === "register") &&
-			!this.handledLoginRegisterRedirect
-		) {
-			// Makes sure the login/register modal isn't opened whenever the home page gets remounted due to a code change
-			this.handledLoginRegisterRedirect = true;
-			this.openModal(this.$route.redirectedFrom.name);
-		}
-
-		ws.onConnect(this.init);
-
-		this.socket.on("event:station.created", res => {
-			const { station } = res.data;
-
-			if (this.stations.find(_station => _station._id === station._id)) {
-				this.stations.forEach(s => {
-					const _station = s;
-					if (_station._id === station._id) {
-						_station.privacy = station.privacy;
-					}
-				});
-			} else {
-				if (!station.currentSong)
-					station.currentSong = {
-						thumbnail: "/assets/notes-transparent.png"
-					};
-				if (station.currentSong && !station.currentSong.thumbnail)
-					station.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.youtubeId}/mqdefault.jpg`;
-				this.stations.push(station);
-			}
-		});
-
-		this.socket.on("event:station.deleted", res => {
-			const { stationId } = res.data;
-
-			const station = this.stations.find(
-				station => station._id === stationId
-			);
-
-			if (station) {
-				const stationIndex = this.stations.indexOf(station);
-				this.stations.splice(stationIndex, 1);
-
-				if (station.isFavorited)
-					this.orderOfFavoriteStations =
-						this.orderOfFavoriteStations.filter(
-							favoritedId => favoritedId !== stationId
-						);
-			}
-		});
-
-		this.socket.on("event:station.userCount.updated", res => {
-			const station = this.stations.find(
-				station => station._id === res.data.stationId
-			);
-
-			if (station) station.userCount = res.data.userCount;
-		});
-
-		this.socket.on("event:station.updated", res => {
-			const stationIndex = this.stations
-				.map(station => station._id)
-				.indexOf(res.data.station._id);
-
-			if (stationIndex !== -1) {
-				this.stations[stationIndex] = {
-					...this.stations[stationIndex],
-					...res.data.station
-				};
-
-				this.calculateFavoriteStations();
-			}
-		});
-
-		this.socket.on("event:station.nextSong", res => {
-			const station = this.stations.find(
-				station => station._id === res.data.stationId
-			);
-
-			if (station) {
-				let newSong = res.data.currentSong;
-
-				if (!newSong)
-					newSong = {
-						thumbnail: "/assets/notes-transparent.png"
-					};
-
-				station.currentSong = newSong;
-			}
-		});
-
-		this.socket.on("event:station.pause", res => {
-			const station = this.stations.find(
-				station => station._id === res.data.stationId
-			);
-
-			if (station) station.paused = true;
-		});
-
-		this.socket.on("event:station.resume", res => {
-			const station = this.stations.find(
-				station => station._id === res.data.stationId
-			);
-
-			if (station) station.paused = false;
-		});
-
-		this.socket.on("event:user.station.favorited", res => {
-			const { stationId } = res.data;
-
-			const station = this.stations.find(
-				station => station._id === stationId
-			);
-
-			if (station) {
-				station.isFavorited = true;
-				this.orderOfFavoriteStations.push(stationId);
-			}
-		});
-
-		this.socket.on("event:user.station.unfavorited", res => {
-			const { stationId } = res.data;
-
-			const station = this.stations.find(
-				station => station._id === stationId
-			);
-
-			if (station) {
-				station.isFavorited = false;
-				this.orderOfFavoriteStations =
-					this.orderOfFavoriteStations.filter(
-						favoritedId => favoritedId !== stationId
-					);
-			}
-		});
-
-		this.socket.on("event:user.orderOfFavoriteStations.updated", res => {
-			this.orderOfFavoriteStations = res.data.order;
-		});
-
-		// ctrl + alt + f
-		keyboardShortcuts.registerShortcut("home.toggleAdminFilter", {
-			keyCode: 70,
-			ctrl: true,
-			alt: true,
-			handler: () => {
-				if (this.isAdmin())
-					if (this.$route.query.adminFilter === undefined)
-						this.$router.push({
-							query: {
-								...this.$route.query,
-								adminFilter: null
-							}
-						});
-					else
-						this.$router.push({
-							query: {
-								...this.$route.query,
-								adminFilter: undefined
-							}
-						});
-			}
-		});
-	},
-	beforeUnmount() {
-		this.socket.dispatch("apis.leaveRoom", "home", () => {});
-
-		const shortcutNames = ["home.toggleAdminFilter"];
-
-		shortcutNames.forEach(shortcutName => {
-			keyboardShortcuts.unregisterShortcut(shortcutName);
-		});
-	},
-	methods: {
-		init() {
-			this.socket.dispatch(
-				"stations.index",
-				this.$route.query.adminFilter === undefined,
-				res => {
-					this.stations = [];
-
-					if (res.status === "success") {
-						res.data.stations.forEach(station => {
-							const modifiableStation = station;
-
-							if (!modifiableStation.currentSong)
-								modifiableStation.currentSong = {
-									thumbnail: "/assets/notes-transparent.png"
-								};
-
-							if (
-								modifiableStation.currentSong &&
-								!modifiableStation.currentSong.thumbnail
-							)
-								modifiableStation.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.youtubeId}/mqdefault.jpg`;
-
-							this.stations.push(modifiableStation);
-						});
-
-						this.orderOfFavoriteStations = res.data.favorited;
-					}
-				}
-			);
-
-			this.socket.dispatch("apis.joinRoom", "home");
-		},
-		isOwner(station) {
-			return this.loggedIn && station.owner === this.userId;
-		},
-		isAdmin() {
-			return this.loggedIn && this.role === "admin";
-		},
-		isOwnerOrAdmin(station) {
-			return this.isOwner(station) || this.isAdmin();
-		},
-		canRequest(station, requireLogin = true) {
-			return (
-				station &&
-				(!requireLogin || this.loggedIn) &&
-				station.requests &&
-				station.requests.enabled &&
-				(station.requests.access === "user" ||
-					(station.requests.access === "owner" &&
-						this.isOwnerOrAdmin(station)))
-			);
-		},
-		isPlaying(station) {
-			return typeof station.currentSong.title !== "undefined";
-		},
-		favoriteStation(stationId) {
-			this.socket.dispatch("stations.favoriteStation", stationId, res => {
-				if (res.status === "success") {
-					new Toast("Successfully favorited station.");
-				} else new Toast(res.message);
-			});
-		},
-		unfavoriteStation(stationId) {
-			this.socket.dispatch(
-				"stations.unfavoriteStation",
-				stationId,
-				res => {
-					if (res.status === "success") {
-						new Toast("Successfully unfavorited station.");
-					} else new Toast(res.message);
-				}
-			);
-		},
-		calculateFavoriteStations() {
-			this.favoriteStations = this.filteredStations
-				.filter(station => station.isFavorited === true)
-				.sort(
-					(a, b) =>
-						this.orderOfFavoriteStations.indexOf(a._id) -
-						this.orderOfFavoriteStations.indexOf(b._id)
-				);
-		},
-		changeFavoriteOrder() {
-			const recalculatedOrder = [];
-			this.favoriteStations.forEach(station =>
-				recalculatedOrder.push(station._id)
-			);
-
-			this.socket.dispatch(
-				"users.updateOrderOfFavoriteStations",
-				recalculatedOrder,
-				res => new Toast(res.message)
-			);
-		},
-		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions("station", ["updateIfStationIsFavorited"])
-	}
-};
-</script>
 
 <style lang="less">
 .christmas-mode .home-page {

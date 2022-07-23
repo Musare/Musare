@@ -91,11 +91,11 @@ watch(socketConnected, connected => {
 	if (!connected) disconnectedMessage.value.show();
 	else disconnectedMessage.value.hide();
 });
-watch(nightmode.value, enabled => {
+watch(nightmode, enabled => {
 	if (enabled) enableNightmode();
 	else disableNightmode();
 });
-watch(activityWatch.value, enabled => {
+watch(activityWatch, enabled => {
 	if (enabled) aw.enable();
 	else aw.disable();
 });
