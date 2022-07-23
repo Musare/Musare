@@ -1,3 +1,70 @@
+<script setup lang="ts">
+import { useStore } from "vuex";
+import { computed } from "vue";
+import Toast from "toasters";
+import { useModalState } from "@/vuex_helpers";
+import useSearchYoutube from "@/composables/useSearchYoutube";
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" }
+});
+
+const store = useStore();
+
+const { socket } = store.state.websockets;
+
+const modalState = useModalState("modals/editPlaylist/MODAL_UUID", {
+	modalUuid: props.modalUuid
+});
+const playlist = computed(() => modalState.playlist);
+
+const setJob = payload => store.dispatch("longJobs/setJob", payload);
+
+const { youtubeSearch } = useSearchYoutube();
+
+const importPlaylist = () => {
+	let id;
+	let title;
+
+	// import query is blank
+	if (!youtubeSearch.value.playlist.query)
+		return new Toast("Please enter a YouTube playlist URL.");
+
+	const regex = /[\\?&]list=([^&#]*)/;
+	const splitQuery = regex.exec(youtubeSearch.value.playlist.query);
+
+	if (!splitQuery) {
+		return new Toast({
+			content: "Please enter a valid YouTube playlist URL.",
+			timeout: 4000
+		});
+	}
+
+	return socket.dispatch(
+		"playlists.addSetToPlaylist",
+		youtubeSearch.value.playlist.query,
+		playlist.value._id,
+		youtubeSearch.value.playlist.isImportingOnlyMusic,
+		{
+			cb: () => {},
+			onProgress: res => {
+				if (res.status === "started") {
+					id = res.id;
+					title = res.title;
+				}
+
+				if (id)
+					setJob({
+						id,
+						name: title,
+						...res
+					});
+			}
+		}
+	);
+};
+</script>
+
 <template>
 	<div class="youtube-tab section">
 		<label class="label"> Search for a playlist from YouTube </label>
@@ -30,75 +97,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapGetters } from "vuex";
-import Toast from "toasters";
-
-import { mapModalState } from "@/vuex_helpers";
-import SearchYoutube from "@/mixins/SearchYoutube.vue";
-
-export default {
-	mixins: [SearchYoutube],
-	props: {
-		modalUuid: { type: String, default: "" }
-	},
-	data() {
-		return {};
-	},
-	computed: {
-		...mapModalState("modals/editPlaylist/MODAL_UUID", {
-			playlist: state => state.playlist
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	methods: {
-		importPlaylist() {
-			let id;
-			let title;
-
-			// import query is blank
-			if (!this.youtubeSearch.playlist.query)
-				return new Toast("Please enter a YouTube playlist URL.");
-
-			const regex = /[\\?&]list=([^&#]*)/;
-			const splitQuery = regex.exec(this.youtubeSearch.playlist.query);
-
-			if (!splitQuery) {
-				return new Toast({
-					content: "Please enter a valid YouTube playlist URL.",
-					timeout: 4000
-				});
-			}
-
-			return this.socket.dispatch(
-				"playlists.addSetToPlaylist",
-				this.youtubeSearch.playlist.query,
-				this.playlist._id,
-				this.youtubeSearch.playlist.isImportingOnlyMusic,
-				{
-					cb: () => {},
-					onProgress: res => {
-						if (res.status === "started") {
-							id = res.id;
-							title = res.title;
-						}
-
-						if (id)
-							this.setJob({
-								id,
-								name: title,
-								...res
-							});
-					}
-				}
-			);
-		}
-	}
-};
-</script>
 
 <style lang="less" scoped>
 #playlist-import-type select {
