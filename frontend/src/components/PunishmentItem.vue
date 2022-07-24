@@ -8,11 +8,14 @@ const props = defineProps({
 
 const active = ref(false);
 
-watch(props.punishment, punishment => {
-	active.value =
-		punishment.active &&
-		new Date(punishment.expiresAt).getTime() > Date.now();
-});
+watch(
+	() => props.punishment,
+	punishment => {
+		active.value =
+			punishment.active &&
+			new Date(punishment.expiresAt).getTime() > Date.now();
+	}
+);
 </script>
 
 <template>

@@ -34,10 +34,12 @@ const canRequest = (requireLogin = true) =>
 	(station.value.requests.access === "user" ||
 		(station.value.requests.access === "owner" && isOwnerOrAdmin()));
 
-// TODO fix
-watch(station.value.requests, () => {
-	if (tab.value === "request" && !canRequest()) showTab("queue");
-});
+watch(
+	() => station.value.requests,
+	() => {
+		if (tab.value === "request" && !canRequest()) showTab("queue");
+	}
+);
 
 onMounted(() => {
 	if (

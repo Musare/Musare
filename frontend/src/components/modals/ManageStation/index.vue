@@ -124,17 +124,23 @@ const resetQueue = () => {
 	});
 };
 
-watch(station.value.requests, () => {
-	if (tab.value === "request" && !canRequest()) {
-		if (isOwnerOrAdmin()) showTab("settings");
-		else if (!(sector.value === "home" && !isOwnerOrAdmin()))
-			closeCurrentModal();
+watch(
+	() => station.value.requests,
+	() => {
+		if (tab.value === "request" && !canRequest()) {
+			if (isOwnerOrAdmin()) showTab("settings");
+			else if (!(sector.value === "home" && !isOwnerOrAdmin()))
+				closeCurrentModal();
+		}
 	}
-});
-watch(station.value.autofill, value => {
-	if (tab.value === "autofill" && value && !value.enabled)
-		showTab("settings");
-});
+);
+watch(
+	() => station.value.autofill,
+	value => {
+		if (tab.value === "autofill" && value && !value.enabled)
+			showTab("settings");
+	}
+);
 
 onMounted(() => {
 	socket.dispatch(`stations.getStationById`, stationId.value, res => {

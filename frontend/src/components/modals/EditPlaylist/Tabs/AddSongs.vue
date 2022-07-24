@@ -39,45 +39,56 @@ const {
 	addMusareSongToPlaylist
 } = useSearchMusare();
 
-watch(youtubeSearch.value.songs.results, songs => {
-	songs.forEach((searchItem, index) =>
-		playlist.songs.find(song => {
-			if (song.youtubeId === searchItem.id)
-				youtubeSearch.value.songs.results[index].isAddedToQueue = true;
-			return song.youtubeId === searchItem.id;
-		})
-	);
-});
-watch(musareSearch.value.results, songs => {
-	songs.forEach((searchItem, index) =>
-		playlist.songs.find(song => {
-			if (song._id === searchItem._id)
-				musareSearch.value.results[index].isAddedToQueue = true;
+watch(
+	() => youtubeSearch.value.songs.results,
+	songs => {
+		songs.forEach((searchItem, index) =>
+			playlist.songs.find(song => {
+				if (song.youtubeId === searchItem.id)
+					youtubeSearch.value.songs.results[index].isAddedToQueue =
+						true;
+				return song.youtubeId === searchItem.id;
+			})
+		);
+	}
+);
+watch(
+	() => musareSearch.value.results,
+	songs => {
+		songs.forEach((searchItem, index) =>
+			playlist.songs.find(song => {
+				if (song._id === searchItem._id)
+					musareSearch.value.results[index].isAddedToQueue = true;
 
-			return song._id === searchItem._id;
-		})
-	);
-});
-watch(playlist.songs, () => {
-	youtubeSearch.value.songs.results.forEach((searchItem, index) =>
-		playlist.songs.find(song => {
-			youtubeSearch.value.songs.results[index].isAddedToQueue = false;
-			if (song.youtubeId === searchItem.id)
-				youtubeSearch.value.songs.results[index].isAddedToQueue = true;
+				return song._id === searchItem._id;
+			})
+		);
+	}
+);
+watch(
+	() => playlist.songs,
+	() => {
+		youtubeSearch.value.songs.results.forEach((searchItem, index) =>
+			playlist.songs.find(song => {
+				youtubeSearch.value.songs.results[index].isAddedToQueue = false;
+				if (song.youtubeId === searchItem.id)
+					youtubeSearch.value.songs.results[index].isAddedToQueue =
+						true;
 
-			return song.youtubeId === searchItem.id;
-		})
-	);
-	musareSearch.value.results.forEach((searchItem, index) =>
-		playlist.songs.find(song => {
-			musareSearch.value.results[index].isAddedToQueue = false;
-			if (song.youtubeId === searchItem.youtubeId)
-				musareSearch.value.results[index].isAddedToQueue = true;
+				return song.youtubeId === searchItem.id;
+			})
+		);
+		musareSearch.value.results.forEach((searchItem, index) =>
+			playlist.songs.find(song => {
+				musareSearch.value.results[index].isAddedToQueue = false;
+				if (song.youtubeId === searchItem.youtubeId)
+					musareSearch.value.results[index].isAddedToQueue = true;
 
-			return song.youtubeId === searchItem.youtubeId;
-		})
-	);
-});
+				return song.youtubeId === searchItem.youtubeId;
+			})
+		);
+	}
+);
 
 onMounted(async () => {
 	sitename.value = await lofig.get("siteSettings.sitename");

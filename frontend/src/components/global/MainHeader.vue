@@ -65,12 +65,9 @@ const onResize = () => {
 	windowWidth.value = window.innerWidth;
 };
 
-watch(
-	() => localNightmode.value,
-	nightmode => {
-		if (localNightmode.value !== nightmode) toggleNightmode(nightmode);
-	}
-);
+watch(localNightmode, nightmode => {
+	if (localNightmode.value !== nightmode) toggleNightmode(nightmode);
+});
 
 onMounted(async () => {
 	localNightmode.value = JSON.parse(localStorage.getItem("nightmode"));

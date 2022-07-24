@@ -1142,14 +1142,11 @@ onUnmounted(() => {
 	}
 });
 
-watch(
-	() => selectedRows.value,
-	(newSelectedRows, oldSelectedRows) => {
-		// If selected rows goes from zero to one or more selected, trigger onWindowResize, as otherwise the popup could be out of bounds
-		if (oldSelectedRows.length === 0 && newSelectedRows.length > 0)
-			onWindowResize();
-	}
-);
+watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
+	// If selected rows goes from zero to one or more selected, trigger onWindowResize, as otherwise the popup could be out of bounds
+	if (oldSelectedRows.length === 0 && newSelectedRows.length > 0)
+		onWindowResize();
+});
 </script>
 
 <template>

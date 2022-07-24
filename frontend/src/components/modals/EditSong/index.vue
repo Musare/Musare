@@ -1053,14 +1053,11 @@ watch(
 	() => song.value.skipDuration,
 	() => drawCanvas()
 );
-watch(
-	() => youtubeId.value,
-	(_youtubeId, _oldYoutubeId) => {
-		console.log("NEW YOUTUBE ID", _youtubeId);
-		unloadSong(_oldYoutubeId);
-		loadSong(_youtubeId);
-	}
-);
+watch(youtubeId, (_youtubeId, _oldYoutubeId) => {
+	console.log("NEW YOUTUBE ID", _youtubeId);
+	unloadSong(_oldYoutubeId);
+	loadSong(_youtubeId);
+});
 
 onMounted(async () => {
 	activityWatchVideoDataInterval.value = setInterval(() => {
