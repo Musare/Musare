@@ -272,8 +272,8 @@ const drawCanvas = () => {
 
 	const videoDuration = Number(youtubeVideoDuration.value);
 
-	const skipDuration = Number(song.value.skipDuration.value);
-	const duration = Number(song.value.duration.value);
+	const skipDuration = Number(song.value.skipDuration);
+	const duration = Number(song.value.duration);
 	const afterDuration = videoDuration - (skipDuration + duration);
 
 	const width = 530;
