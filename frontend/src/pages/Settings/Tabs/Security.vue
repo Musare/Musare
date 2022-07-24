@@ -22,7 +22,10 @@ const store = useStore();
 const { socket } = store.state.websockets;
 
 const apiDomain = ref("");
-const sitename = ref("Musare");
+const siteSettings = ref({
+	sitename: "Musare",
+	githubAuthentication: false
+});
 const validation = reactive({
 	oldPassword: {
 		value: "",
@@ -107,7 +110,7 @@ const removeSessions = () => {
 
 onMounted(async () => {
 	apiDomain.value = await lofig.get("backend.apiDomain");
-	sitename.value = await lofig.get("siteSettings.sitename");
+	siteSettings.value = await lofig.get("siteSettings");
 });
 
 watch(validation, newValidation => {
@@ -227,10 +230,10 @@ watch(validation, newValidation => {
 			<div class="section-margin-bottom" />
 		</div>
 
-		<div v-if="!isGithubLinked">
+		<div v-if="!isGithubLinked && siteSettings.githubAuthentication">
 			<h4 class="section-title">Link your GitHub account</h4>
 			<p class="section-description">
-				Link your {{ sitename }} account with GitHub
+				Link your {{ siteSettings.sitename }} account with GitHub
 			</p>
 
 			<hr class="section-horizontal-rule" />
@@ -255,7 +258,7 @@ watch(validation, newValidation => {
 
 			<div class="row">
 				<quick-confirm
-					v-if="isPasswordLinked"
+					v-if="isPasswordLinked && siteSettings.githubAuthentication"
 					@confirm="unlinkPassword()"
 				>
 					<a class="button is-danger">

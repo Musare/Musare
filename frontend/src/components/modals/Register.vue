@@ -37,7 +37,10 @@ const recaptcha = ref({
 	enabled: false
 });
 const apiDomain = ref("");
-const registrationDisabled = ref(false);
+const siteSettings = ref({
+	registrationDisabled: false,
+	githubAuthentication: false
+});
 const passwordElement = ref();
 
 const store = useStore();
@@ -146,12 +149,12 @@ watch(
 
 onMounted(async () => {
 	apiDomain.value = await lofig.get("backend.apiDomain");
-	lofig.get("siteSettings.registrationDisabled").then(res => {
-		if (res) {
+	lofig.get("siteSettings").then(settings => {
+		if (settings.registrationDisabled) {
 			new Toast("Registration is disabled.");
 			closeCurrentModal();
 		} else {
-			registrationDisabled.value = res;
+			siteSettings.value = settings;
 		}
 	});
 
@@ -281,6 +284,7 @@ onMounted(async () => {
 						Register
 					</button>
 					<a
+						v-if="siteSettings.githubAuthentication"
 						class="button is-github"
 						:href="apiDomain + '/auth/github/authorize'"
 						@click="githubRedirect()"

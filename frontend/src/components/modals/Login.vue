@@ -12,7 +12,10 @@ const password = ref({
 	visible: false
 });
 const apiDomain = ref("");
-const registrationDisabled = ref(false);
+const siteSettings = ref({
+	registrationDisabled: false,
+	githubAuthentication: false
+});
 const passwordElement = ref();
 
 const store = useStore();
@@ -66,9 +69,7 @@ const githubRedirect = () => {
 
 onMounted(async () => {
 	apiDomain.value = await lofig.get("backend.apiDomain");
-	registrationDisabled.value = await lofig.get(
-		"siteSettings.registrationDisabled"
-	);
+	siteSettings.value = await lofig.get("siteSettings");
 });
 </script>
 
@@ -149,6 +150,7 @@ onMounted(async () => {
 						Login
 					</button>
 					<a
+						v-if="siteSettings.githubAuthentication"
 						class="button is-github"
 						:href="apiDomain + '/auth/github/authorize'"
 						@click="githubRedirect()"
@@ -164,7 +166,7 @@ onMounted(async () => {
 				</div>
 
 				<p
-					v-if="!registrationDisabled"
+					v-if="!siteSettings.registrationDisabled"
 					class="content-box-optional-helper"
 				>
 					<a @click="changeToRegisterModal()">

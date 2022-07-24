@@ -16,7 +16,7 @@ const defaultConfigURL = new URL(
 	import.meta.url
 ).toString();
 
-const REQUIRED_CONFIG_VERSION = 12;
+const REQUIRED_CONFIG_VERSION = 13;
 
 lofig.folder = defaultConfigURL;
 

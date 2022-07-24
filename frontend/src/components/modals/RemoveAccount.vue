@@ -35,6 +35,7 @@ const password = ref({
 	visible: false
 });
 const passwordElement = ref();
+const githubAuthentication = ref(false);
 
 const checkForAutofill = (cb, event) => {
 	if (
@@ -107,6 +108,9 @@ const remove = () =>
 onMounted(async () => {
 	apiDomain.value = await lofig.get("backend.apiDomain");
 	accountRemovalMessage.value = await lofig.get("messages.accountRemoval");
+	githubAuthentication.value = await lofig.get(
+		"siteSettings.githubAuthentication"
+	);
 
 	if (githubLinkConfirmed.value === true) confirmGithubLink();
 });
@@ -160,7 +164,10 @@ onMounted(async () => {
 			<div
 				class="content-box"
 				id="password-linked"
-				v-if="step === 'confirm-identity' && isPasswordLinked"
+				v-if="
+					step === 'confirm-identity' &&
+					(isPasswordLinked || !githubAuthentication)
+				"
 			>
 				<h2 class="content-box-title">Enter your password</h2>
 				<p class="content-box-description">
@@ -217,7 +224,11 @@ onMounted(async () => {
 
 			<div
 				class="content-box"
-				v-else-if="isGithubLinked && step === 'confirm-identity'"
+				v-else-if="
+					githubAuthentication &&
+					isGithubLinked &&
+					step === 'confirm-identity'
+				"
 			>
 				<h2 class="content-box-title">Verify your GitHub</h2>
 				<p class="content-box-description">
@@ -237,7 +248,10 @@ onMounted(async () => {
 				</div>
 			</div>
 
-			<div class="content-box" v-if="step === 'relink-github'">
+			<div
+				class="content-box"
+				v-if="githubAuthentication && step === 'relink-github'"
+			>
 				<h2 class="content-box-title">Re-link GitHub</h2>
 				<p class="content-box-description">
 					Re-link your GitHub account in order to verify your

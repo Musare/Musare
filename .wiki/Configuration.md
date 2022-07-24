@@ -24,6 +24,7 @@ Location: `backend/config/default.json`
 | `apis.youtube.quotas.limit` | YouTube API quota limit. |
 | `apis.recaptcha.secret` | ReCaptcha Site v3 secret, obtained from [here](https://www.google.com/recaptcha/admin). |
 | `apis.recaptcha.enabled` | Whether to enable ReCaptcha at email registration. |
+| `apis.github.enabled` | Whether to enable GitHub authentication. |
 | `apis.github.client` | GitHub OAuth Application client, obtained from [here](https://github.com/settings/developers). |
 | `apis.github.secret` | GitHub OAuth Application secret, obtained with client. |
 | `apis.github.redirect_uri` | The authorization callback url is the backend url with `/auth/github/authorize/callback` appended, for example `http://localhost/backend/auth/github/authorize/callback`. |

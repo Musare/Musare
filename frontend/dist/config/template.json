@@ -28,7 +28,8 @@
 		},
 		"mediasession": false,
 		"christmas": false,
-		"registrationDisabled": false
+		"registrationDisabled": false,
+		"githubAuthentication": false
 	},
 	"messages": {
 		"accountRemoval": "Your account will be deactivated instantly and your data will shortly be deleted by an admin."
@@ -53,5 +54,5 @@
 		"version": true
 	},
 	"skipConfigVersionCheck": false,
-	"configVersion": 12
+	"configVersion": 13
 }

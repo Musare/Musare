@@ -1184,7 +1184,8 @@ export default {
 		return async.waterfall(
 			[
 				next => {
-					userModel.findOne({ _id: session.userId }, (err, user) => next(err, user));
+					if (!config.get("apis.github.enabled")) return next("GitHub authentication is disabled.");
+					return userModel.findOne({ _id: session.userId }, (err, user) => next(err, user));
 				},
 
 				(user, next) => {
@@ -2813,6 +2814,7 @@ export default {
 
 				(user, next) => {
 					if (!user) return next("Not logged in.");
+					if (!config.get("apis.github.enabled")) return next("Unlinking password is disabled.");
 					if (!user.services.github || !user.services.github.id)
 						return next("You can't remove password login without having GitHub login.");
 					return userModel.updateOne({ _id: session.userId }, { $unset: { "services.password": "" } }, next);

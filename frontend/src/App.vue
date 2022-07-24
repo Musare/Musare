@@ -267,10 +267,12 @@ onMounted(async () => {
 			new Toast({ content: msg, timeout: 20000 });
 		}
 
-		if (localStorage.getItem("github_redirect")) {
-			router.push(localStorage.getItem("github_redirect"));
-			localStorage.removeItem("github_redirect");
-		}
+		lofig.get("siteSettings.githubAuthentication").then(enabled => {
+			if (enabled && localStorage.getItem("github_redirect")) {
+				router.push(localStorage.getItem("github_redirect"));
+				localStorage.removeItem("github_redirect");
+			}
+		});
 	});
 
 	if (localStorage.getItem("nightmode") === "true") {
