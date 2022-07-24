@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
+import {
+	defineAsyncComponent,
+	ref,
+	computed,
+	watch,
+	onMounted,
+	onBeforeUnmount
+} from "vue";
 import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
 import Toast from "toasters";
@@ -10,16 +17,24 @@ import aw from "@/aw";
 import ms from "@/ms";
 import ws from "@/ws";
 import keyboardShortcuts from "@/keyboardShortcuts";
-
-import FloatingBox from "@/components/FloatingBox.vue";
-import StationInfoBox from "@/components/StationInfoBox.vue";
-import AddToPlaylistDropdown from "@/components/AddToPlaylistDropdown.vue";
-import SongItem from "@/components/SongItem.vue";
-import Z404 from "../404.vue";
-
 import utils from "@/utils";
 
-import StationSidebar from "./Sidebar/index.vue";
+const FloatingBox = defineAsyncComponent(
+	() => import("@/components/FloatingBox.vue")
+);
+const StationInfoBox = defineAsyncComponent(
+	() => import("@/components/StationInfoBox.vue")
+);
+const AddToPlaylistDropdown = defineAsyncComponent(
+	() => import("@/components/AddToPlaylistDropdown.vue")
+);
+const SongItem = defineAsyncComponent(
+	() => import("@/components/SongItem.vue")
+);
+const Z404 = defineAsyncComponent(() => import("@/pages/404.vue"));
+const StationSidebar = defineAsyncComponent(
+	() => import("./Sidebar/index.vue")
+);
 
 const store = useStore();
 const route = useRoute();
@@ -32,7 +47,6 @@ const isApple = ref(
 	navigator.platform.match(/iPhone|iPod|iPad/) ||
 		navigator.vendor === "Apple Computer, Inc."
 );
-// const title = ref("Station");
 const loading = ref(true);
 const exists = ref(true);
 const playerReady = ref(false);
@@ -49,7 +63,6 @@ const seeking = ref(false);
 const playbackRate = ref(1);
 const volumeSliderValue = ref(0);
 const showPlaylistDropdown = ref(false);
-// const theme = ref("var(--primary-color)");
 const seekerbarPercentage = ref(0);
 const frontendDevMode = ref("production");
 const activityWatchVideoDataInterval = ref(null);
@@ -75,7 +88,6 @@ const stationIdentifier = ref();
 const playerDebugBox = ref();
 const keyboardShortcutsHelper = ref();
 
-// const modals = computed(() => store.state.modalVisibility.modals);
 const activeModals = computed(() => store.state.modalVisibility.activeModals);
 
 // TODO fix this if it still has some use, as this is no longer accurate
@@ -90,8 +102,6 @@ const localPaused = computed(() => store.state.station.localPaused);
 const noSong = computed(() => store.state.station.noSong);
 const autoRequest = computed(() => store.state.station.autoRequest);
 const autoRequestLock = computed(() => store.state.station.autoRequestLock);
-// const autofill = computed(() => store.state.station.autofill);
-// const blacklist = computed(() => store.state.station.blacklist);
 
 const loggedIn = computed(() => store.state.user.auth.loggedIn);
 const userId = computed(() => store.state.user.auth.userId);
@@ -128,9 +138,6 @@ const currentUserQueueSongs = computed(
 			queueSong => queueSong.requestedBy === userId.value
 		).length
 );
-
-// const openModal = payload =>
-// 	store.dispatch("modalVisibility/openModal", payload);
 
 const joinStation = payload => store.dispatch("station/joinStation", payload);
 const leaveStation = payload => store.dispatch("station/leaveStation", payload);
@@ -227,18 +234,6 @@ const autoRequestSong = () => {
 		}
 	}
 };
-// const removeFromQueue = youtubeId => {
-// 	socket.dispatch(
-// 		"stations.removeFromQueue",
-// 		station.value._id,
-// 		youtubeId,
-// 		res => {
-// 			if (res.status === "success") {
-// 				new Toast("Successfully removed song from the queue.");
-// 			} else new Toast(res.message);
-// 		}
-// 	);
-// };
 const getTimeElapsed = () => {
 	if (currentSong.value) {
 		if (stationPaused.value)
@@ -585,10 +580,10 @@ const setCurrentSong = data => {
 
 		// If the station is playing and the backend is not connected, set the next song to skip to after this song and set a timer to skip
 		if (!stationPaused.value && !socketConnected.value) {
-			if (nextSong.value)
+			if (nextSong)
 				setNextCurrentSong(
 					{
-						currentSong: nextSong.value,
+						currentSong: nextSong,
 						startedAt: Date.now() + getTimeRemaining(),
 						paused: false,
 						timePaused: 0
@@ -1027,20 +1022,6 @@ const join = () => {
 		}
 	});
 };
-// const favoriteStation = () => {
-// 	socket.dispatch("stations.favoriteStation", station.value._id, res => {
-// 		if (res.status === "success") {
-// 			new Toast("Successfully favorited station.");
-// 		} else new Toast(res.message);
-// 	});
-// };
-// const unfavoriteStation = () => {
-// 	socket.dispatch("stations.unfavoriteStation", station.value._id, res => {
-// 		if (res.status === "success") {
-// 			new Toast("Successfully unfavorited station.");
-// 		} else new Toast(res.message);
-// 	});
-// };
 const sendActivityWatchVideoData = () => {
 	if (!stationPaused.value && !localPaused.value && !noSong.value) {
 		if (activityWatchVideoLastStatus.value !== "playing") {
