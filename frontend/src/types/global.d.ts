@@ -1,7 +1,11 @@
+/* eslint no-var: 0 */
+/* eslint vars-on-top: 0 */
+
 declare global {
-	const lofig: any;
-	const stationInterval: number;
-	const YT: any;
+	var lofig: any;
+	var stationInterval: number;
+	var YT: any;
+	var stationNextSongTimeout: any;
 }
 
 export {};

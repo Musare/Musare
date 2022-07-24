@@ -1,3 +1,1413 @@
+<script setup lang="ts">
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
+import { useStore } from "vuex";
+import { useRoute, useRouter } from "vue-router";
+import Toast from "toasters";
+import { ContentLoader } from "vue-content-loader";
+import canAutoPlay from "can-autoplay";
+
+import aw from "@/aw";
+import ms from "@/ms";
+import ws from "@/ws";
+import keyboardShortcuts from "@/keyboardShortcuts";
+
+import FloatingBox from "@/components/FloatingBox.vue";
+import StationInfoBox from "@/components/StationInfoBox.vue";
+import AddToPlaylistDropdown from "@/components/AddToPlaylistDropdown.vue";
+import SongItem from "@/components/SongItem.vue";
+import Z404 from "../404.vue";
+
+import utils from "@/utils";
+
+import StationSidebar from "./Sidebar/index.vue";
+
+const store = useStore();
+const route = useRoute();
+const router = useRouter();
+
+const { socket } = store.state.websockets;
+
+// TODO this might need a different place, like onMounted
+const isApple = ref(
+	navigator.platform.match(/iPhone|iPod|iPad/) ||
+		navigator.vendor === "Apple Computer, Inc."
+);
+// const title = ref("Station");
+const loading = ref(true);
+const exists = ref(true);
+const playerReady = ref(false);
+const player = ref(undefined);
+const timePaused = ref(0);
+const muted = ref(false);
+const timeElapsed = ref("0:00");
+const timeBeforePause = ref(0);
+const systemDifference = ref(0);
+const attemptsToPlayVideo = ref(0);
+const canAutoplay = ref(true);
+const lastTimeRequestedIfCanAutoplay = ref(0);
+const seeking = ref(false);
+const playbackRate = ref(1);
+const volumeSliderValue = ref(0);
+const showPlaylistDropdown = ref(false);
+// const theme = ref("var(--primary-color)");
+const seekerbarPercentage = ref(0);
+const frontendDevMode = ref("production");
+const activityWatchVideoDataInterval = ref(null);
+const activityWatchVideoLastStatus = ref("");
+const activityWatchVideoLastYouTubeId = ref("");
+// const activityWatchVideoLastStartDuration = ref("");
+const nextCurrentSong = ref(null);
+const editSongModalWatcher = ref(null);
+const beforeEditSongModalLocalPaused = ref(null);
+const socketConnected = ref(null);
+const persistentToastCheckerInterval = ref(null);
+const persistentToasts = ref([]);
+const mediasession = ref(false);
+const christmas = ref(false);
+const sitename = ref("Musare");
+// NEW
+const videoLoading = ref();
+const startedAt = ref();
+const pausedAt = ref();
+const stationIdentifier = ref();
+// ENDNEW
+
+const playerDebugBox = ref();
+const keyboardShortcutsHelper = ref();
+
+// const modals = computed(() => store.state.modalVisibility.modals);
+const activeModals = computed(() => store.state.modalVisibility.activeModals);
+
+// TODO fix this if it still has some use, as this is no longer accurate
+// const video = computed(() => store.state.modals.editSong);
+
+const station = computed(() => store.state.station.station);
+const currentSong = computed(() => store.state.station.currentSong);
+const nextSong = computed(() => store.state.station.nextSong);
+const songsList = computed(() => store.state.station.songsList);
+const stationPaused = computed(() => store.state.station.stationPaused);
+const localPaused = computed(() => store.state.station.localPaused);
+const noSong = computed(() => store.state.station.noSong);
+const autoRequest = computed(() => store.state.station.autoRequest);
+const autoRequestLock = computed(() => store.state.station.autoRequestLock);
+// const autofill = computed(() => store.state.station.autofill);
+// const blacklist = computed(() => store.state.station.blacklist);
+
+const loggedIn = computed(() => store.state.user.auth.loggedIn);
+const userId = computed(() => store.state.user.auth.userId);
+const role = computed(() => store.state.user.auth.role);
+const nightmode = computed(() => store.state.user.preferences.nightmode);
+const autoSkipDisliked = computed(
+	() => store.state.user.preferences.autoSkipDisliked
+);
+
+const skipVotesLoaded = computed(
+	() =>
+		!noSong.value &&
+		Number.isInteger(currentSong.value.skipVotes) &&
+		currentSong.value.skipVotes >= 0
+);
+const ratingsLoaded = computed(
+	() =>
+		!noSong.value &&
+		Number.isInteger(currentSong.value.likes) &&
+		Number.isInteger(currentSong.value.dislikes) &&
+		currentSong.value.likes >= 0 &&
+		currentSong.value.dislikes >= 0
+);
+const ownRatingsLoaded = computed(
+	() =>
+		!noSong.value &&
+		typeof currentSong.value.liked === "boolean" &&
+		typeof currentSong.value.disliked === "boolean"
+);
+const aModalIsOpen = computed(() => Object.keys(activeModals.value).length > 0);
+const currentUserQueueSongs = computed(
+	() =>
+		songsList.value.filter(
+			queueSong => queueSong.requestedBy === userId.value
+		).length
+);
+
+// const openModal = payload =>
+// 	store.dispatch("modalVisibility/openModal", payload);
+
+const joinStation = payload => store.dispatch("station/joinStation", payload);
+const leaveStation = payload => store.dispatch("station/leaveStation", payload);
+const updateStation = payload =>
+	store.dispatch("station/updateStation", payload);
+const updateUserCount = payload =>
+	store.dispatch("station/updateUserCount", payload);
+const updateUsers = payload => store.dispatch("station/updateUsers", payload);
+const updateCurrentSong = payload =>
+	store.dispatch("station/updateCurrentSong", payload);
+const updateNextSong = payload =>
+	store.dispatch("station/updateNextSong", payload);
+const updateSongsList = payload =>
+	store.dispatch("station/updateSongsList", payload);
+const repositionSongInList = payload =>
+	store.dispatch("station/repositionSongInList", payload);
+const updateStationPaused = payload =>
+	store.dispatch("station/updateStationPaused", payload);
+const updateLocalPaused = payload =>
+	store.dispatch("station/updateLocalPaused", payload);
+const updateNoSong = payload => store.dispatch("station/updateNoSong", payload);
+const updateIfStationIsFavorited = payload =>
+	store.dispatch("station/updateIfStationIsFavorited", payload);
+const setAutofillPlaylists = payload =>
+	store.dispatch("station/setAutofillPlaylists", payload);
+const setBlacklist = payload => store.dispatch("station/setBlacklist", payload);
+const updateCurrentSongRatings = payload =>
+	store.dispatch("station/updateCurrentSongRatings", payload);
+const updateOwnCurrentSongRatings = payload =>
+	store.dispatch("station/updateOwnCurrentSongRatings", payload);
+const updateCurrentSongSkipVotes = payload =>
+	store.dispatch("station/updateCurrentSongSkipVotes", payload);
+const updateAutoRequestLock = payload =>
+	store.dispatch("station/updateAutoRequestLock", payload);
+
+// TODO fix this if it still has some use
+// const stopVideo = payload =>
+// 	store.dispatch("modals/editSong/stopVideo", payload);
+
+const isOwnerOnly = () =>
+	loggedIn.value && userId.value === station.value.owner;
+const isAdminOnly = () => loggedIn.value && role.value === "admin";
+const isOwnerOrAdmin = () => isOwnerOnly() || isAdminOnly();
+const updateMediaSessionData = currentSong => {
+	if (currentSong) {
+		ms.setMediaSessionData(
+			0,
+			!localPaused.value && !stationPaused.value, // This should be improved later
+			currentSong.value.title,
+			currentSong.value.artists.join(", "),
+			null,
+			currentSong.value.thumbnail
+		);
+	} else ms.removeMediaSessionData(0);
+};
+const autoRequestSong = () => {
+	if (
+		!autoRequestLock.value &&
+		songsList.value.length < 50 &&
+		currentUserQueueSongs.value < station.value.requests.limit * 0.5 &&
+		autoRequest.value.length > 0
+	) {
+		const selectedPlaylist =
+			autoRequest.value[
+				Math.floor(Math.random() * autoRequest.value.length)
+			];
+		if (selectedPlaylist._id && selectedPlaylist.songs.length > 0) {
+			const selectedSong =
+				selectedPlaylist.songs[
+					Math.floor(Math.random() * selectedPlaylist.songs.length)
+				];
+			if (selectedSong.youtubeId) {
+				updateAutoRequestLock(true);
+				socket.dispatch(
+					"stations.addToQueue",
+					station.value._id,
+					selectedSong.youtubeId,
+					data => {
+						updateAutoRequestLock(false);
+						if (data.status !== "success") {
+							setTimeout(
+								() => {
+									autoRequestSong();
+								},
+								data.message ===
+									"That song is already in the queue."
+									? 5000
+									: 1000
+							);
+						}
+					}
+				);
+			}
+		}
+	}
+};
+// const removeFromQueue = youtubeId => {
+// 	socket.dispatch(
+// 		"stations.removeFromQueue",
+// 		station.value._id,
+// 		youtubeId,
+// 		res => {
+// 			if (res.status === "success") {
+// 				new Toast("Successfully removed song from the queue.");
+// 			} else new Toast(res.message);
+// 		}
+// 	);
+// };
+const getTimeElapsed = () => {
+	if (currentSong.value) {
+		if (stationPaused.value)
+			timePaused.value += Date.currently() - pausedAt.value;
+		return Date.currently() - startedAt.value - timePaused.value;
+	}
+	return 0;
+};
+const getTimeRemaining = () => {
+	if (currentSong.value) {
+		return currentSong.value.duration * 1000 - getTimeElapsed();
+	}
+	return 0;
+};
+const skipSong = () => {
+	if (nextCurrentSong.value && nextCurrentSong.value.currentSong) {
+		const _songsList = songsList.value.concat([]);
+		if (
+			_songsList.length > 0 &&
+			_songsList[0].youtubeId ===
+				nextCurrentSong.value.currentSong.youtubeId
+		) {
+			_songsList.splice(0, 1);
+			updateSongsList(_songsList);
+		}
+		// TODO fix
+		// eslint-disable-next-line
+		setCurrentSong(nextCurrentSong.value);
+	} else {
+		// TODO fix
+		// eslint-disable-next-line
+		setCurrentSong({
+			currentSong: null,
+			startedAt: 0,
+			paused: stationPaused.value,
+			timePaused: 0,
+			pausedAt: 0
+		});
+	}
+};
+const setNextCurrentSong = (_nextCurrentSong, skipSkipCheck = false) => {
+	nextCurrentSong.value = _nextCurrentSong;
+	// If skipSkipCheck is true, it won't try to skip the song
+	if (getTimeRemaining() <= 0 && !skipSkipCheck) {
+		skipSong();
+	}
+};
+const resizeSeekerbar = () => {
+	seekerbarPercentage.value = parseFloat(
+		(getTimeElapsed() / 1000 / currentSong.value.duration) * 100
+	);
+};
+const calculateTimeElapsed = () => {
+	if (
+		playerReady.value &&
+		!noSong.value &&
+		currentSong.value &&
+		player.value.getPlayerState() === -1
+	) {
+		if (!canAutoplay.value) {
+			if (Date.now() - lastTimeRequestedIfCanAutoplay.value > 2000) {
+				lastTimeRequestedIfCanAutoplay.value = Date.now();
+				canAutoPlay.video().then(({ result }) => {
+					if (result) {
+						attemptsToPlayVideo.value = 0;
+						canAutoplay.value = true;
+					} else {
+						canAutoplay.value = false;
+					}
+				});
+			}
+		} else {
+			player.value.playVideo();
+			attemptsToPlayVideo.value += 1;
+		}
+	}
+
+	if (
+		!stationPaused.value &&
+		!localPaused.value &&
+		playerReady.value &&
+		!isApple.value
+	) {
+		const timeElapsed = getTimeElapsed();
+		const currentPlayerTime =
+			Math.max(
+				player.value.getCurrentTime() - currentSong.value.skipDuration,
+				0
+			) * 1000;
+
+		const difference = timeElapsed - currentPlayerTime;
+
+		let _playbackRate = 1;
+
+		if (difference < -2000) {
+			if (!seeking.value) {
+				seeking.value = true;
+				player.value.seekTo(
+					getTimeElapsed() / 1000 + currentSong.value.skipDuration
+				);
+			}
+		} else if (difference < -200) {
+			_playbackRate = 0.8;
+		} else if (difference < -50) {
+			_playbackRate = 0.9;
+		} else if (difference < -25) {
+			_playbackRate = 0.95;
+		} else if (difference > 2000) {
+			if (!seeking.value) {
+				seeking.value = true;
+				player.value.seekTo(
+					getTimeElapsed() / 1000 + currentSong.value.skipDuration
+				);
+			}
+		} else if (difference > 200) {
+			_playbackRate = 1.2;
+		} else if (difference > 50) {
+			_playbackRate = 1.1;
+		} else if (difference > 25) {
+			_playbackRate = 1.05;
+		} else if (player.value.getPlaybackRate !== 1.0) {
+			player.value.setPlaybackRate(1.0);
+		}
+
+		if (playbackRate.value !== _playbackRate) {
+			player.value.setPlaybackRate(_playbackRate);
+			playbackRate.value = _playbackRate;
+		}
+	}
+
+	if (stationPaused.value)
+		timePaused.value += Date.currently() - pausedAt.value;
+
+	const duration =
+		(Date.currently() - startedAt.value - timePaused.value) / 1000;
+
+	const songDuration = currentSong.value.duration;
+	if (songDuration <= duration) player.value.pauseVideo();
+	if (duration <= songDuration)
+		timeElapsed.value = utils.formatTime(duration);
+};
+const playVideo = () => {
+	if (playerReady.value) {
+		videoLoading.value = true;
+		player.value.loadVideoById(
+			currentSong.value.youtubeId,
+			getTimeElapsed() / 1000 + currentSong.value.skipDuration
+		);
+
+		if (window.stationInterval !== 0) clearInterval(window.stationInterval);
+		window.stationInterval = setInterval(() => {
+			if (!stationPaused.value) {
+				resizeSeekerbar();
+				calculateTimeElapsed();
+			}
+		}, 150);
+	}
+};
+const voteSkipStation = message => {
+	socket.dispatch("stations.voteSkip", station.value._id, data => {
+		if (data.status !== "success") new Toast(`Error: ${data.message}`);
+		else
+			new Toast(
+				message || "Successfully voted to skip the current song."
+			);
+	});
+};
+const youtubeReady = () => {
+	if (!player.value) {
+		ms.setYTReady(false);
+		player.value = new window.YT.Player("stationPlayer", {
+			height: 270,
+			width: 480,
+			videoId: currentSong.value.youtubeId,
+			host: "https://www.youtube-nocookie.com",
+			startSeconds:
+				getTimeElapsed() / 1000 + currentSong.value.skipDuration,
+			playerVars: {
+				controls: 0,
+				iv_load_policy: 3,
+				rel: 0,
+				showinfo: 0,
+				disablekb: 1,
+				playsinline: 1
+			},
+			events: {
+				onReady: () => {
+					playerReady.value = true;
+					ms.setYTReady(true);
+
+					let volume = parseFloat(localStorage.getItem("volume"));
+
+					volume = typeof volume === "number" ? volume : 20;
+
+					player.value.setVolume(volume);
+
+					if (volume > 0) player.value.unMute();
+					if (muted.value) player.value.mute();
+
+					playVideo();
+
+					// on ios, playback will be forcibly paused locally
+					if (isApple.value) {
+						updateLocalPaused(true);
+						new Toast(
+							`Please click play manually to use ${sitename.value} on iOS.`
+						);
+					}
+				},
+				onError: err => {
+					console.log("error with youtube video", err);
+
+					if (err.data === 150 && loggedIn.value) {
+						if (!(localPaused.value || stationPaused.value)) {
+							// automatically vote to skip
+							voteSkipStation(
+								"Automatically voted to skip as this song isn't available for you."
+							);
+						}
+
+						// persistent message while song is playing
+						const persistentToast = new Toast({
+							content:
+								"This song is unavailable for you, but is playing for everyone else.",
+							persistent: true
+						});
+
+						// save current song id
+						const erroredYoutubeId = currentSong.value.youtubeId;
+
+						persistentToasts.value.push({
+							toast: persistentToast,
+							checkIfCanRemove: () => {
+								if (
+									currentSong.value.youtubeId !==
+									erroredYoutubeId
+								) {
+									persistentToast.destroy();
+									return true;
+								}
+								return false;
+							}
+						});
+					} else {
+						new Toast(
+							"There has been an error with the YouTube Embed"
+						);
+					}
+				},
+				onStateChange: event => {
+					if (
+						event.data === window.YT.PlayerState.PLAYING &&
+						videoLoading.value === true
+					) {
+						videoLoading.value = false;
+						player.value.seekTo(
+							getTimeElapsed() / 1000 +
+								currentSong.value.skipDuration,
+							true
+						);
+						canAutoplay.value = true;
+						if (localPaused.value || stationPaused.value)
+							player.value.pauseVideo();
+					} else if (
+						event.data === window.YT.PlayerState.PLAYING &&
+						(localPaused.value || stationPaused.value)
+					) {
+						player.value.seekTo(timeBeforePause.value / 1000, true);
+						player.value.pauseVideo();
+					} else if (
+						event.data === window.YT.PlayerState.PLAYING &&
+						seeking.value === true
+					)
+						seeking.value = false;
+
+					if (
+						event.data === window.YT.PlayerState.PAUSED &&
+						!localPaused.value &&
+						!stationPaused.value &&
+						!noSong.value &&
+						player.value.getDuration() / 1000 <
+							currentSong.value.duration
+					) {
+						player.value.seekTo(
+							getTimeElapsed() / 1000 +
+								currentSong.value.skipDuration,
+							true
+						);
+						player.value.playVideo();
+					}
+				}
+			}
+		});
+	}
+};
+const setCurrentSong = data => {
+	const {
+		currentSong: _currentSong,
+		startedAt: _startedAt,
+		paused: _paused,
+		timePaused: _timePaused,
+		pausedAt: _pausedAt
+	} = data;
+
+	if (_currentSong) {
+		if (!_currentSong.skipDuration || _currentSong.skipDuration < 0)
+			_currentSong.skipDuration = 0;
+		if (!_currentSong.duration || _currentSong.duration < 0)
+			_currentSong.duration = 0;
+	}
+
+	updateCurrentSong(_currentSong || {});
+
+	let nextSong = null;
+	if (songsList.value[0])
+		nextSong = songsList.value[0].youtubeId ? songsList.value[0] : null;
+
+	updateNextSong(nextSong);
+	setNextCurrentSong(
+		{
+			currentSong: null,
+			startedAt: 0,
+			_paused,
+			timePaused: 0,
+			pausedAt: 0
+		},
+		true
+	);
+
+	clearTimeout(window.stationNextSongTimeout);
+
+	if (mediasession.value) updateMediaSessionData(_currentSong);
+
+	startedAt.value = _startedAt;
+	updateStationPaused(_paused);
+	timePaused.value = _timePaused;
+	pausedAt.value = _pausedAt;
+
+	if (_currentSong) {
+		updateNoSong(false);
+
+		if (!playerReady.value) youtubeReady();
+		else playVideo();
+
+		// If the station is playing and the backend is not connected, set the next song to skip to after this song and set a timer to skip
+		if (!stationPaused.value && !socketConnected.value) {
+			if (nextSong.value)
+				setNextCurrentSong(
+					{
+						currentSong: nextSong.value,
+						startedAt: Date.now() + getTimeRemaining(),
+						paused: false,
+						timePaused: 0
+					},
+					true
+				);
+			else
+				setNextCurrentSong(
+					{
+						currentSong: null,
+						startedAt: 0,
+						paused: false,
+						timePaused: 0,
+						pausedAt: 0
+					},
+					true
+				);
+			window.stationNextSongTimeout = setTimeout(() => {
+				if (
+					!noSong.value &&
+					_currentSong.value._id === _currentSong._id
+				)
+					skipSong("window.stationNextSongTimeout 1");
+			}, getTimeRemaining());
+		}
+
+		const currentSongId = currentSong.value._id;
+
+		socket.dispatch(
+			"stations.getSkipVotes",
+			station.value._id,
+			currentSongId,
+			res => {
+				if (res.status === "success") {
+					const { skipVotes, skipVotesCurrent } = res.data;
+					if (
+						!noSong.value &&
+						currentSong.value._id === currentSongId
+					) {
+						updateCurrentSongSkipVotes({
+							skipVotes,
+							skipVotesCurrent
+						});
+					}
+				}
+			}
+		);
+
+		socket.dispatch("media.getRatings", _currentSong.youtubeId, res => {
+			if (_currentSong.youtubeId === currentSong.value.youtubeId) {
+				const { likes, dislikes } = res.data;
+				updateCurrentSongRatings({ likes, dislikes });
+			}
+		});
+
+		if (loggedIn.value) {
+			socket.dispatch(
+				"media.getOwnRatings",
+				_currentSong.youtubeId,
+				res => {
+					console.log("getOwnSongRatings", res);
+					if (
+						res.status === "success" &&
+						currentSong.value.youtubeId === res.data.youtubeId
+					) {
+						updateOwnCurrentSongRatings(res.data);
+
+						if (
+							autoSkipDisliked.value &&
+							res.data.disliked === true &&
+							!(localPaused.value || stationPaused.value)
+						) {
+							voteSkipStation(
+								"Automatically voted to skip disliked song."
+							);
+						}
+					}
+				}
+			);
+		}
+	} else {
+		if (playerReady.value) player.value.stopVideo();
+		updateNoSong(true);
+	}
+
+	calculateTimeElapsed();
+	resizeSeekerbar();
+};
+const changeVolume = () => {
+	const volume = volumeSliderValue.value;
+	localStorage.setItem("volume", volume);
+	if (playerReady.value) {
+		player.value.setVolume(volume);
+		if (volume > 0) {
+			player.value.unMute();
+			localStorage.setItem("muted", false);
+			muted.value = false;
+		}
+	}
+};
+const resumeLocalPlayer = () => {
+	if (mediasession.value) updateMediaSessionData(currentSong.value);
+	if (!noSong.value) {
+		if (playerReady.value) {
+			player.value.seekTo(
+				getTimeElapsed() / 1000 + currentSong.value.skipDuration
+			);
+			player.value.playVideo();
+		}
+	}
+};
+const pauseLocalPlayer = () => {
+	if (mediasession.value) updateMediaSessionData(currentSong.value);
+	if (!noSong.value) {
+		timeBeforePause.value = getTimeElapsed();
+		if (playerReady.value) player.value.pauseVideo();
+	}
+};
+const resumeLocalStation = () => {
+	updateLocalPaused(false);
+	if (!stationPaused.value) resumeLocalPlayer();
+};
+const pauseLocalStation = () => {
+	updateLocalPaused(true);
+	pauseLocalPlayer();
+};
+const skipStation = () => {
+	socket.dispatch("stations.forceSkip", station.value._id, data => {
+		if (data.status !== "success") new Toast(`Error: ${data.message}`);
+		else new Toast("Successfully skipped the station's current song.");
+	});
+};
+const resumeStation = () => {
+	socket.dispatch("stations.resume", station.value._id, data => {
+		if (data.status !== "success") new Toast(`Error: ${data.message}`);
+		else new Toast("Successfully resumed the station.");
+	});
+};
+const pauseStation = () => {
+	socket.dispatch("stations.pause", station.value._id, data => {
+		if (data.status !== "success") new Toast(`Error: ${data.message}`);
+		else new Toast("Successfully paused the station.");
+	});
+};
+const toggleMute = () => {
+	if (playerReady.value) {
+		const previousVolume = parseFloat(localStorage.getItem("volume"));
+		const volume = player.value.getVolume() <= 0 ? previousVolume : 0;
+		muted.value = !muted.value;
+		localStorage.setItem("muted", muted.value);
+		volumeSliderValue.value = volume;
+		player.value.setVolume(volume);
+		if (!muted.value) localStorage.setItem("volume", volume);
+	}
+};
+const increaseVolume = () => {
+	if (playerReady.value) {
+		const previousVolume = parseFloat(localStorage.getItem("volume"));
+		let volume = previousVolume + 5;
+		if (previousVolume === 0) {
+			muted.value = false;
+			localStorage.setItem("muted", false);
+		}
+		if (volume > 100) volume = 100;
+		volumeSliderValue.value = volume;
+		player.value.setVolume(volume);
+		localStorage.setItem("volume", volume);
+	}
+};
+const toggleLike = () => {
+	if (currentSong.value.liked)
+		socket.dispatch("media.unlike", currentSong.value.youtubeId, res => {
+			if (res.status !== "success") new Toast(`Error: ${res.message}`);
+		});
+	else
+		socket.dispatch("media.like", currentSong.value.youtubeId, res => {
+			if (res.status !== "success") new Toast(`Error: ${res.message}`);
+		});
+};
+const toggleDislike = () => {
+	if (currentSong.value.disliked)
+		return socket.dispatch(
+			"media.undislike",
+			currentSong.value.youtubeId,
+			res => {
+				if (res.status !== "success")
+					new Toast(`Error: ${res.message}`);
+			}
+		);
+
+	return socket.dispatch(
+		"media.dislike",
+		currentSong.value.youtubeId,
+		res => {
+			if (res.status !== "success") new Toast(`Error: ${res.message}`);
+		}
+	);
+};
+const togglePlayerDebugBox = () => {
+	playerDebugBox.value.toggleBox();
+};
+const resetPlayerDebugBox = () => {
+	playerDebugBox.value.resetBox();
+};
+const toggleKeyboardShortcutsHelper = () => {
+	keyboardShortcutsHelper.value.toggleBox();
+};
+const resetKeyboardShortcutsHelper = () => {
+	keyboardShortcutsHelper.value.resetBox();
+};
+const join = () => {
+	socket.dispatch("stations.join", stationIdentifier.value, res => {
+		if (res.status === "success") {
+			setTimeout(() => {
+				loading.value = false;
+			}, 1000); // prevents popping in of youtube embed etc.
+
+			const {
+				_id,
+				displayName,
+				name,
+				description,
+				privacy,
+				owner,
+				autofill,
+				blacklist,
+				type,
+				isFavorited,
+				theme,
+				requests
+			} = res.data;
+
+			// change url to use station name instead of station id
+			if (name !== stationIdentifier.value) {
+				// eslint-disable-next-line no-restricted-globals
+				router.replace(name);
+			}
+
+			joinStation({
+				_id,
+				name,
+				displayName,
+				description,
+				privacy,
+				owner,
+				autofill,
+				blacklist,
+				type,
+				isFavorited,
+				theme,
+				requests
+			});
+
+			document.getElementsByTagName(
+				"html"
+			)[0].style.cssText = `--primary-color: var(--${res.data.theme})`;
+
+			setCurrentSong({
+				currentSong: res.data.currentSong,
+				startedAt: res.data.startedAt,
+				paused: res.data.paused,
+				timePaused: res.data.timePaused,
+				pausedAt: res.data.pausedAt
+			});
+
+			updateUserCount(res.data.userCount);
+			updateUsers(res.data.users);
+
+			socket.dispatch(
+				"stations.getStationAutofillPlaylistsById",
+				station.value._id,
+				res => {
+					if (res.status === "success") {
+						setAutofillPlaylists(res.data.playlists);
+					}
+				}
+			);
+
+			socket.dispatch(
+				"stations.getStationBlacklistById",
+				station.value._id,
+				res => {
+					if (res.status === "success") {
+						setBlacklist(res.data.playlists);
+					}
+				}
+			);
+
+			socket.dispatch("stations.getQueue", _id, res => {
+				if (res.status === "success") {
+					const { queue } = res.data;
+					updateSongsList(queue);
+					const [nextSong] = queue;
+
+					updateNextSong(nextSong);
+				}
+			});
+
+			if (isOwnerOrAdmin()) {
+				keyboardShortcuts.registerShortcut("station.pauseResume", {
+					keyCode: 32, // Spacebar
+					shift: false,
+					ctrl: true,
+					preventDefault: true,
+					handler: () => {
+						if (aModalIsOpen.value) return;
+						if (stationPaused.value) resumeStation();
+						else pauseStation();
+					}
+				});
+
+				keyboardShortcuts.registerShortcut("station.skipStation", {
+					keyCode: 39, // Right arrow key
+					shift: false,
+					ctrl: true,
+					preventDefault: true,
+					handler: () => {
+						if (aModalIsOpen.value) return;
+						skipStation();
+					}
+				});
+			}
+
+			keyboardShortcuts.registerShortcut("station.lowerVolumeLarge", {
+				keyCode: 40, // Down arrow key
+				shift: false,
+				ctrl: true,
+				preventDefault: true,
+				handler: () => {
+					if (aModalIsOpen.value) return;
+					volumeSliderValue.value -= 10;
+					changeVolume();
+				}
+			});
+
+			keyboardShortcuts.registerShortcut("station.lowerVolumeSmall", {
+				keyCode: 40, // Down arrow key
+				shift: true,
+				ctrl: true,
+				preventDefault: true,
+				handler: () => {
+					if (aModalIsOpen.value) return;
+					volumeSliderValue.value -= 1;
+					changeVolume();
+				}
+			});
+
+			keyboardShortcuts.registerShortcut("station.increaseVolumeLarge", {
+				keyCode: 38, // Up arrow key
+				shift: false,
+				ctrl: true,
+				preventDefault: true,
+				handler: () => {
+					if (aModalIsOpen.value) return;
+					volumeSliderValue.value += 10;
+					changeVolume();
+				}
+			});
+
+			keyboardShortcuts.registerShortcut("station.increaseVolumeSmall", {
+				keyCode: 38, // Up arrow key
+				shift: true,
+				ctrl: true,
+				preventDefault: true,
+				handler: () => {
+					if (aModalIsOpen.value) return;
+					volumeSliderValue.value += 1;
+					changeVolume();
+				}
+			});
+
+			keyboardShortcuts.registerShortcut("station.toggleDebug", {
+				keyCode: 68, // D key
+				shift: false,
+				ctrl: true,
+				preventDefault: true,
+				handler: () => {
+					if (aModalIsOpen.value) return;
+					togglePlayerDebugBox();
+				}
+			});
+
+			keyboardShortcuts.registerShortcut(
+				"station.toggleKeyboardShortcutsHelper",
+				{
+					keyCode: 191, // '/' key
+					ctrl: true,
+					preventDefault: true,
+					handler: () => {
+						if (aModalIsOpen.value) return;
+						toggleKeyboardShortcutsHelper();
+					}
+				}
+			);
+
+			keyboardShortcuts.registerShortcut(
+				"station.resetKeyboardShortcutsHelper",
+				{
+					keyCode: 191, // '/' key
+					ctrl: true,
+					shift: true,
+					preventDefault: true,
+					handler: () => {
+						if (aModalIsOpen.value) return;
+						resetKeyboardShortcutsHelper();
+					}
+				}
+			);
+
+			// UNIX client time before ping
+			const beforePing = Date.now();
+			socket.dispatch("apis.ping", res => {
+				if (res.status === "success") {
+					// UNIX client time after ping
+					const afterPing = Date.now();
+					// Average time in MS it took between the server responding and the client receiving
+					const connectionLatency = (afterPing - beforePing) / 2;
+					console.log(connectionLatency, beforePing - afterPing);
+					// UNIX server time
+					const serverDate = res.data.date;
+					// Difference between the server UNIX time and the client UNIX time after ping, with the connectionLatency added to the server UNIX time
+					const difference =
+						serverDate + connectionLatency - afterPing;
+					console.log("Difference: ", difference);
+					if (difference > 3000 || difference < -3000) {
+						console.log(
+							"System time difference is bigger than 3 seconds."
+						);
+					}
+					systemDifference.value = difference;
+				}
+			});
+		} else {
+			loading.value = false;
+			exists.value = false;
+		}
+	});
+};
+// const favoriteStation = () => {
+// 	socket.dispatch("stations.favoriteStation", station.value._id, res => {
+// 		if (res.status === "success") {
+// 			new Toast("Successfully favorited station.");
+// 		} else new Toast(res.message);
+// 	});
+// };
+// const unfavoriteStation = () => {
+// 	socket.dispatch("stations.unfavoriteStation", station.value._id, res => {
+// 		if (res.status === "success") {
+// 			new Toast("Successfully unfavorited station.");
+// 		} else new Toast(res.message);
+// 	});
+// };
+const sendActivityWatchVideoData = () => {
+	if (!stationPaused.value && !localPaused.value && !noSong.value) {
+		if (activityWatchVideoLastStatus.value !== "playing") {
+			activityWatchVideoLastStatus.value = "playing";
+			activityWatchVideoLastStatus.value =
+				currentSong.value.skipDuration + getTimeElapsed();
+		}
+
+		if (
+			activityWatchVideoLastYouTubeId.value !==
+			currentSong.value.youtubeId
+		) {
+			activityWatchVideoLastYouTubeId.value = currentSong.value.youtubeId;
+			activityWatchVideoLastStatus.value =
+				currentSong.value.skipDuration + getTimeElapsed();
+		}
+
+		const videoData = {
+			title: currentSong.value ? currentSong.value.title : null,
+			artists:
+				currentSong.value && currentSong.value.artists
+					? currentSong.value.artists.join(", ")
+					: null,
+			youtubeId: currentSong.value.youtubeId,
+			muted: muted.value,
+			volume: volumeSliderValue.value,
+			startedDuration:
+				activityWatchVideoLastStatus.value <= 0
+					? 0
+					: Math.floor(activityWatchVideoLastStatus.value / 1000),
+			source: `station#${station.value.name}`,
+			hostname: window.location.hostname
+		};
+
+		aw.sendVideoData(videoData);
+	} else {
+		activityWatchVideoLastStatus.value = "not_playing";
+	}
+};
+
+watch(
+	() => autoRequest.value.length,
+	() => {
+		autoRequestSong();
+	}
+);
+
+onMounted(async () => {
+	editSongModalWatcher.value = store.watch(
+		state =>
+			state.modalVisibility.activeModals.length > 0 &&
+			state.modalVisibility.modals[
+				state.modalVisibility.activeModals[
+					state.modalVisibility.activeModals.length - 1
+				]
+			] === "editSong"
+				? state.modals.editSong[
+						state.modalVisibility.activeModals[
+							state.modalVisibility.activeModals.length - 1
+						]
+				  ].video.paused
+				: null,
+		paused => {
+			if (paused && !beforeEditSongModalLocalPaused.value) {
+				resumeLocalStation();
+			} else if (!paused) {
+				beforeEditSongModalLocalPaused.value = localPaused.value;
+				pauseLocalStation();
+			}
+		}
+	);
+
+	window.scrollTo(0, 0);
+
+	Date.currently = () => new Date().getTime() + systemDifference.value;
+
+	stationIdentifier.value = route.params.id;
+
+	window.stationInterval = 0;
+	activityWatchVideoDataInterval.value = setInterval(() => {
+		sendActivityWatchVideoData();
+	}, 1000);
+	persistentToastCheckerInterval.value = setInterval(() => {
+		persistentToasts.value.filter(
+			persistentToast => !persistentToast.checkIfCanRemove()
+		);
+	}, 1000);
+
+	if (socket.readyState === 1) join();
+	ws.onConnect(() => {
+		socketConnected.value = true;
+		clearTimeout(window.stationNextSongTimeout);
+		join();
+	});
+
+	ws.onDisconnect(true, () => {
+		socketConnected.value = false;
+		const _currentSong = currentSong.value.currentSong;
+		if (nextSong.value)
+			setNextCurrentSong(
+				{
+					currentSong: nextSong.value,
+					startedAt: Date.now() + getTimeRemaining(),
+					paused: false,
+					timePaused: 0
+				},
+				true
+			);
+		else
+			setNextCurrentSong(
+				{
+					currentSong: null,
+					startedAt: 0,
+					paused: false,
+					timePaused: 0,
+					pausedAt: 0
+				},
+				true
+			);
+		window.stationNextSongTimeout = setTimeout(() => {
+			if (!noSong.value && currentSong.value._id === _currentSong._id)
+				skipSong("window.stationNextSongTimeout 2");
+		}, getTimeRemaining());
+	});
+
+	frontendDevMode.value = await lofig.get("mode");
+	mediasession.value = await lofig.get("siteSettings.mediasession");
+	christmas.value = await lofig.get("siteSettings.christmas");
+	sitename.value = await lofig.get("siteSettings.sitename");
+
+	socket.dispatch("stations.existsByName", stationIdentifier.value, res => {
+		if (res.status === "error" || !res.data.exists) {
+			// station identifier may be using stationid instead
+			socket.dispatch(
+				"stations.existsById",
+				stationIdentifier.value,
+				res => {
+					if (res.status === "error" || !res.data.exists) {
+						loading.value = false;
+						exists.value = false;
+					}
+				}
+			);
+		}
+	});
+
+	ms.setListeners(0, {
+		play: () => {
+			if (isOwnerOrAdmin()) resumeStation();
+			else resumeLocalStation();
+		},
+		pause: () => {
+			if (isOwnerOrAdmin()) pauseStation();
+			else pauseLocalStation();
+		},
+		nexttrack: () => {
+			if (isOwnerOrAdmin()) skipStation();
+			else voteSkipStation();
+		}
+	});
+
+	socket.on("event:station.nextSong", res => {
+		const { currentSong, startedAt, paused, timePaused } = res.data;
+
+		setCurrentSong({
+			currentSong,
+			startedAt,
+			paused,
+			timePaused,
+			pausedAt: 0
+		});
+	});
+
+	socket.on("event:station.pause", res => {
+		pausedAt.value = res.data.pausedAt;
+		updateStationPaused(true);
+		pauseLocalPlayer();
+
+		clearTimeout(window.stationNextSongTimeout);
+	});
+
+	socket.on("event:station.resume", res => {
+		timePaused.value = res.data.timePaused;
+		updateStationPaused(false);
+		if (!localPaused.value) resumeLocalPlayer();
+
+		autoRequestSong();
+	});
+
+	socket.on("event:station.deleted", () => {
+		window.location.href = "/?msg=The station you were in was deleted.";
+		return true;
+	});
+
+	socket.on("event:ratings.liked", res => {
+		if (!noSong.value) {
+			if (res.data.youtubeId === currentSong.value.youtubeId) {
+				updateCurrentSongRatings(res.data);
+			}
+		}
+	});
+
+	socket.on("event:ratings.disliked", res => {
+		if (!noSong.value) {
+			if (res.data.youtubeId === currentSong.value.youtubeId) {
+				updateCurrentSongRatings(res.data);
+			}
+		}
+	});
+
+	socket.on("event:ratings.unliked", res => {
+		if (!noSong.value) {
+			if (res.data.youtubeId === currentSong.value.youtubeId) {
+				updateCurrentSongRatings(res.data);
+			}
+		}
+	});
+
+	socket.on("event:ratings.undisliked", res => {
+		if (!noSong.value) {
+			if (res.data.youtubeId === currentSong.value.youtubeId) {
+				updateCurrentSongRatings(res.data);
+			}
+		}
+	});
+
+	socket.on("event:ratings.updated", res => {
+		if (!noSong.value) {
+			if (res.data.youtubeId === currentSong.value.youtubeId) {
+				updateOwnCurrentSongRatings(res.data);
+			}
+		}
+	});
+
+	socket.on("event:station.queue.updated", res => {
+		updateSongsList(res.data.queue);
+
+		let nextSong = null;
+		if (songsList.value[0])
+			nextSong = songsList.value[0].youtubeId ? songsList.value[0] : null;
+
+		updateNextSong(nextSong);
+
+		autoRequestSong();
+	});
+
+	socket.on("event:station.queue.song.repositioned", res => {
+		repositionSongInList(res.data.song);
+
+		let nextSong = null;
+		if (songsList.value[0])
+			nextSong = songsList.value[0].youtubeId ? songsList.value[0] : null;
+
+		updateNextSong(nextSong);
+	});
+
+	socket.on("event:station.voteSkipSong", () => {
+		if (currentSong.value)
+			updateCurrentSongSkipVotes({
+				skipVotes: currentSong.value.skipVotes + 1,
+				skipVotesCurrent: null
+			});
+	});
+
+	socket.on("event:station.updated", async res => {
+		const { name, theme, privacy } = res.data.station;
+
+		if (!isOwnerOrAdmin() && privacy === "private") {
+			window.location.href =
+				"/?msg=The station you were in was made private.";
+		} else {
+			if (station.value.name !== name) {
+				await router.push(
+					`${name}?${Object.keys(route.query)
+						.map(
+							key =>
+								`${encodeURIComponent(
+									key
+								)}=${encodeURIComponent(route.query[key])}`
+						)
+						.join("&")}`
+				);
+
+				// eslint-disable-next-line no-restricted-globals
+				history.replaceState({ ...history.state, ...{} }, null);
+			}
+
+			if (station.value.theme !== theme)
+				document.getElementsByTagName(
+					"html"
+				)[0].style.cssText = `--primary-color: var(--${theme})`;
+
+			updateStation(res.data.station);
+		}
+	});
+
+	socket.on("event:station.users.updated", res =>
+		updateUsers(res.data.users)
+	);
+
+	socket.on("event:station.userCount.updated", res =>
+		updateUserCount(res.data.userCount)
+	);
+
+	socket.on("event:user.station.favorited", res => {
+		if (res.data.stationId === station.value._id)
+			updateIfStationIsFavorited({ isFavorited: true });
+	});
+
+	socket.on("event:user.station.unfavorited", res => {
+		if (res.data.stationId === station.value._id)
+			updateIfStationIsFavorited({ isFavorited: false });
+	});
+
+	if (JSON.parse(localStorage.getItem("muted"))) {
+		muted.value = true;
+		player.value.setVolume(0);
+		volumeSliderValue.value = 0;
+	} else {
+		let volume = parseFloat(localStorage.getItem("volume"));
+		volume =
+			typeof volume === "number" && !Number.isNaN(volume) ? volume : 20;
+		localStorage.setItem("volume", volume);
+		volumeSliderValue.value = volume;
+	}
+});
+
+onBeforeUnmount(() => {
+	document.getElementsByTagName("html")[0].style.cssText = "";
+
+	if (mediasession.value) {
+		ms.removeListeners(0);
+		ms.removeMediaSessionData(0);
+	}
+
+	/** Reset Songslist */
+	updateSongsList([]);
+
+	const shortcutNames = [
+		"station.pauseResume",
+		"station.skipStation",
+		"station.lowerVolumeLarge",
+		"station.lowerVolumeSmall",
+		"station.increaseVolumeLarge",
+		"station.increaseVolumeSmall",
+		"station.toggleDebug"
+	];
+
+	shortcutNames.forEach(shortcutName => {
+		keyboardShortcuts.unregisterShortcut(shortcutName);
+	});
+
+	editSongModalWatcher.value(); // removes the watcher
+
+	clearInterval(activityWatchVideoDataInterval.value);
+	clearTimeout(window.stationNextSongTimeout);
+	clearTimeout(persistentToastCheckerInterval.value);
+	persistentToasts.value.forEach(persistentToast => {
+		persistentToast.toast.destroy();
+	});
+
+	socket.dispatch("stations.leave", station.value._id, () => {});
+
+	leaveStation();
+});
+</script>
+
 <template>
 	<div>
 		<page-metadata
@@ -691,1516 +2101,6 @@
 		<Z404 v-if="!exists"></Z404>
 	</div>
 </template>
-
-<script>
-import { mapState, mapActions, mapGetters } from "vuex";
-import Toast from "toasters";
-import { ContentLoader } from "vue-content-loader";
-import canAutoPlay from "can-autoplay";
-
-import aw from "@/aw";
-import ms from "@/ms";
-import ws from "@/ws";
-import keyboardShortcuts from "@/keyboardShortcuts";
-
-import FloatingBox from "@/components/FloatingBox.vue";
-import StationInfoBox from "@/components/StationInfoBox.vue";
-import AddToPlaylistDropdown from "@/components/AddToPlaylistDropdown.vue";
-import SongItem from "@/components/SongItem.vue";
-import Z404 from "../404.vue";
-
-import utils from "@/utils";
-
-import StationSidebar from "./Sidebar/index.vue";
-
-export default {
-	components: {
-		ContentLoader,
-		Z404,
-		FloatingBox,
-		StationInfoBox,
-		StationSidebar,
-		AddToPlaylistDropdown,
-		SongItem
-	},
-	data() {
-		return {
-			utils,
-			isApple:
-				navigator.platform.match(/iPhone|iPod|iPad/) ||
-				navigator.vendor === "Apple Computer, Inc.",
-			title: "Station",
-			loading: true,
-			exists: true,
-			playerReady: false,
-			player: undefined,
-			timePaused: 0,
-			muted: false,
-			timeElapsed: "0:00",
-			timeBeforePause: 0,
-			systemDifference: 0,
-			attemptsToPlayVideo: 0,
-			canAutoplay: true,
-			lastTimeRequestedIfCanAutoplay: 0,
-			seeking: false,
-			playbackRate: 1,
-			volumeSliderValue: 0,
-			showPlaylistDropdown: false,
-			theme: "var(--primary-color)",
-			seekerbarPercentage: 0,
-			frontendDevMode: "production",
-			activityWatchVideoDataInterval: null,
-			activityWatchVideoLastStatus: "",
-			activityWatchVideoLastYouTubeId: "",
-			activityWatchVideoLastStartDuration: "",
-			nextCurrentSong: null,
-			editSongModalWatcher: null,
-			beforeEditSongModalLocalPaused: null,
-			socketConnected: null,
-			persistentToastCheckerInterval: null,
-			persistentToasts: [],
-			mediasession: false,
-			christmas: false,
-			sitename: "Musare"
-		};
-	},
-	computed: {
-		skipVotesLoaded() {
-			return (
-				!this.noSong &&
-				Number.isInteger(this.currentSong.skipVotes) &&
-				this.currentSong.skipVotes >= 0
-			);
-		},
-		ratingsLoaded() {
-			return (
-				!this.noSong &&
-				Number.isInteger(this.currentSong.likes) &&
-				Number.isInteger(this.currentSong.dislikes) &&
-				this.currentSong.likes >= 0 &&
-				this.currentSong.dislikes >= 0
-			);
-		},
-		ownRatingsLoaded() {
-			return (
-				!this.noSong &&
-				typeof this.currentSong.liked === "boolean" &&
-				typeof this.currentSong.disliked === "boolean"
-			);
-		},
-		aModalIsOpen() {
-			return Object.keys(this.activeModals).length > 0;
-		},
-		currentUserQueueSongs() {
-			return this.songsList.filter(
-				queueSong => queueSong.requestedBy === this.userId
-			).length;
-		},
-		...mapState("modalVisibility", {
-			modals: state => state.modals,
-			activeModals: state => state.activeModals
-		}),
-		...mapState("modals/editSong", {
-			video: state => state.video
-		}),
-		...mapState("station", {
-			station: state => state.station,
-			currentSong: state => state.currentSong,
-			nextSong: state => state.nextSong,
-			songsList: state => state.songsList,
-			stationPaused: state => state.stationPaused,
-			localPaused: state => state.localPaused,
-			noSong: state => state.noSong,
-			autoRequest: state => state.autoRequest,
-			autoRequestLock: state => state.autoRequestLock,
-			autofill: state => state.autofill,
-			blacklist: state => state.blacklist
-		}),
-		...mapState({
-			loggedIn: state => state.user.auth.loggedIn,
-			userId: state => state.user.auth.userId,
-			role: state => state.user.auth.role,
-			nightmode: state => state.user.preferences.nightmode,
-			autoSkipDisliked: state => state.user.preferences.autoSkipDisliked
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	watch: {
-		"autoRequest.length": function autoRequestWatcher() {
-			this.autoRequestSong();
-		}
-	},
-	async mounted() {
-		this.editSongModalWatcher = this.$store.watch(
-			state =>
-				state.modalVisibility.activeModals.length > 0 &&
-				state.modalVisibility.modals[
-					state.modalVisibility.activeModals[
-						state.modalVisibility.activeModals.length - 1
-					]
-				] === "editSong"
-					? state.modals.editSong[
-							state.modalVisibility.activeModals[
-								state.modalVisibility.activeModals.length - 1
-							]
-					  ].video.paused
-					: null,
-			paused => {
-				if (paused && !this.beforeEditSongModalLocalPaused) {
-					this.resumeLocalStation();
-				} else if (!paused) {
-					this.beforeEditSongModalLocalPaused = this.localPaused;
-					this.pauseLocalStation();
-				}
-			}
-		);
-
-		window.scrollTo(0, 0);
-
-		Date.currently = () => new Date().getTime() + this.systemDifference;
-
-		this.stationIdentifier = this.$route.params.id;
-
-		window.stationInterval = 0;
-		this.activityWatchVideoDataInterval = setInterval(() => {
-			this.sendActivityWatchVideoData();
-		}, 1000);
-		this.persistentToastCheckerInterval = setInterval(() => {
-			this.persistentToasts.filter(
-				persistentToast => !persistentToast.checkIfCanRemove()
-			);
-		}, 1000);
-
-		if (this.socket.readyState === 1) this.join();
-		ws.onConnect(() => {
-			this.socketConnected = true;
-			clearTimeout(window.stationNextSongTimeout);
-			this.join();
-		});
-
-		ws.onDisconnect(true, () => {
-			this.socketConnected = false;
-			const { currentSong } = this.currentSong;
-			if (this.nextSong)
-				this.setNextCurrentSong(
-					{
-						currentSong: this.nextSong,
-						startedAt: Date.now() + this.getTimeRemaining(),
-						paused: false,
-						timePaused: 0
-					},
-					true
-				);
-			else
-				this.setNextCurrentSong(
-					{
-						currentSong: null,
-						startedAt: 0,
-						paused: false,
-						timePaused: 0,
-						pausedAt: 0
-					},
-					true
-				);
-			window.stationNextSongTimeout = setTimeout(() => {
-				if (!this.noSong && this.currentSong._id === currentSong._id)
-					this.skipSong("window.stationNextSongTimeout 2");
-			}, this.getTimeRemaining());
-		});
-
-		this.frontendDevMode = await lofig.get("mode");
-		this.mediasession = await lofig.get("siteSettings.mediasession");
-		this.christmas = await lofig.get("siteSettings.christmas");
-		this.sitename = await lofig.get("siteSettings.sitename");
-
-		this.socket.dispatch(
-			"stations.existsByName",
-			this.stationIdentifier,
-			res => {
-				if (res.status === "error" || !res.data.exists) {
-					// station identifier may be using stationid instead
-					this.socket.dispatch(
-						"stations.existsById",
-						this.stationIdentifier,
-						res => {
-							if (res.status === "error" || !res.data.exists) {
-								this.loading = false;
-								this.exists = false;
-							}
-						}
-					);
-				}
-			}
-		);
-
-		ms.setListeners(0, {
-			play: () => {
-				if (this.isOwnerOrAdmin()) this.resumeStation();
-				else this.resumeLocalStation();
-			},
-			pause: () => {
-				if (this.isOwnerOrAdmin()) this.pauseStation();
-				else this.pauseLocalStation();
-			},
-			nexttrack: () => {
-				if (this.isOwnerOrAdmin()) this.skipStation();
-				else this.voteSkipStation();
-			}
-		});
-
-		this.socket.on("event:station.nextSong", res => {
-			const { currentSong, startedAt, paused, timePaused } = res.data;
-
-			this.setCurrentSong({
-				currentSong,
-				startedAt,
-				paused,
-				timePaused,
-				pausedAt: 0
-			});
-		});
-
-		this.socket.on("event:station.pause", res => {
-			this.pausedAt = res.data.pausedAt;
-			this.updateStationPaused(true);
-			this.pauseLocalPlayer();
-
-			clearTimeout(window.stationNextSongTimeout);
-		});
-
-		this.socket.on("event:station.resume", res => {
-			this.timePaused = res.data.timePaused;
-			this.updateStationPaused(false);
-			if (!this.localPaused) this.resumeLocalPlayer();
-
-			this.autoRequestSong();
-		});
-
-		this.socket.on("event:station.deleted", () => {
-			window.location.href = "/?msg=The station you were in was deleted.";
-			return true;
-		});
-
-		this.socket.on("event:ratings.liked", res => {
-			if (!this.noSong) {
-				if (res.data.youtubeId === this.currentSong.youtubeId) {
-					this.updateCurrentSongRatings(res.data);
-				}
-			}
-		});
-
-		this.socket.on("event:ratings.disliked", res => {
-			if (!this.noSong) {
-				if (res.data.youtubeId === this.currentSong.youtubeId) {
-					this.updateCurrentSongRatings(res.data);
-				}
-			}
-		});
-
-		this.socket.on("event:ratings.unliked", res => {
-			if (!this.noSong) {
-				if (res.data.youtubeId === this.currentSong.youtubeId) {
-					this.updateCurrentSongRatings(res.data);
-				}
-			}
-		});
-
-		this.socket.on("event:ratings.undisliked", res => {
-			if (!this.noSong) {
-				if (res.data.youtubeId === this.currentSong.youtubeId) {
-					this.updateCurrentSongRatings(res.data);
-				}
-			}
-		});
-
-		this.socket.on("event:ratings.updated", res => {
-			if (!this.noSong) {
-				if (res.data.youtubeId === this.currentSong.youtubeId) {
-					this.updateOwnCurrentSongRatings(res.data);
-				}
-			}
-		});
-
-		this.socket.on("event:station.queue.updated", res => {
-			this.updateSongsList(res.data.queue);
-
-			let nextSong = null;
-			if (this.songsList[0])
-				nextSong = this.songsList[0].youtubeId
-					? this.songsList[0]
-					: null;
-
-			this.updateNextSong(nextSong);
-
-			this.autoRequestSong();
-		});
-
-		this.socket.on("event:station.queue.song.repositioned", res => {
-			this.repositionSongInList(res.data.song);
-
-			let nextSong = null;
-			if (this.songsList[0])
-				nextSong = this.songsList[0].youtubeId
-					? this.songsList[0]
-					: null;
-
-			this.updateNextSong(nextSong);
-		});
-
-		this.socket.on("event:station.voteSkipSong", () => {
-			if (this.currentSong)
-				this.updateCurrentSongSkipVotes({
-					skipVotes: this.currentSong.skipVotes + 1,
-					skipVotesCurrent: null
-				});
-		});
-
-		this.socket.on("event:station.updated", async res => {
-			const { name, theme, privacy } = res.data.station;
-
-			if (!this.isOwnerOrAdmin() && privacy === "private") {
-				window.location.href =
-					"/?msg=The station you were in was made private.";
-			} else {
-				if (this.station.name !== name) {
-					await this.$router.push(
-						`${name}?${Object.keys(this.$route.query)
-							.map(
-								key =>
-									`${encodeURIComponent(
-										key
-									)}=${encodeURIComponent(
-										this.$route.query[key]
-									)}`
-							)
-							.join("&")}`
-					);
-
-					// eslint-disable-next-line no-restricted-globals
-					history.replaceState({ ...history.state, ...{} }, null);
-				}
-
-				if (this.station.theme !== theme)
-					document.getElementsByTagName(
-						"html"
-					)[0].style.cssText = `--primary-color: var(--${theme})`;
-
-				this.updateStation(res.data.station);
-			}
-		});
-
-		this.socket.on("event:station.users.updated", res =>
-			this.updateUsers(res.data.users)
-		);
-
-		this.socket.on("event:station.userCount.updated", res =>
-			this.updateUserCount(res.data.userCount)
-		);
-
-		this.socket.on("event:user.station.favorited", res => {
-			if (res.data.stationId === this.station._id)
-				this.updateIfStationIsFavorited({ isFavorited: true });
-		});
-
-		this.socket.on("event:user.station.unfavorited", res => {
-			if (res.data.stationId === this.station._id)
-				this.updateIfStationIsFavorited({ isFavorited: false });
-		});
-
-		if (JSON.parse(localStorage.getItem("muted"))) {
-			this.muted = true;
-			this.player.setVolume(0);
-			this.volumeSliderValue = 0;
-		} else {
-			let volume = parseFloat(localStorage.getItem("volume"));
-			volume =
-				typeof volume === "number" && !Number.isNaN(volume)
-					? volume
-					: 20;
-			localStorage.setItem("volume", volume);
-			this.volumeSliderValue = volume;
-		}
-	},
-	beforeUnmount() {
-		document.getElementsByTagName("html")[0].style.cssText = "";
-
-		if (this.mediasession) {
-			ms.removeListeners(0);
-			ms.removeMediaSessionData(0);
-		}
-
-		/** Reset Songslist */
-		this.updateSongsList([]);
-
-		const shortcutNames = [
-			"station.pauseResume",
-			"station.skipStation",
-			"station.lowerVolumeLarge",
-			"station.lowerVolumeSmall",
-			"station.increaseVolumeLarge",
-			"station.increaseVolumeSmall",
-			"station.toggleDebug"
-		];
-
-		shortcutNames.forEach(shortcutName => {
-			keyboardShortcuts.unregisterShortcut(shortcutName);
-		});
-
-		this.editSongModalWatcher(); // removes the watcher
-
-		clearInterval(this.activityWatchVideoDataInterval);
-		clearTimeout(window.stationNextSongTimeout);
-		clearTimeout(this.persistentToastCheckerInterval);
-		this.persistentToasts.forEach(persistentToast => {
-			persistentToast.toast.destroy();
-		});
-
-		this.socket.dispatch("stations.leave", this.station._id, () => {});
-
-		this.leaveStation();
-	},
-	methods: {
-		isOwnerOnly() {
-			return this.loggedIn && this.userId === this.station.owner;
-		},
-		isAdminOnly() {
-			return this.loggedIn && this.role === "admin";
-		},
-		isOwnerOrAdmin() {
-			return this.isOwnerOnly() || this.isAdminOnly();
-		},
-		updateMediaSessionData(currentSong) {
-			if (currentSong) {
-				ms.setMediaSessionData(
-					0,
-					!this.localPaused && !this.stationPaused, // This should be improved later
-					this.currentSong.title,
-					this.currentSong.artists.join(", "),
-					null,
-					this.currentSong.thumbnail
-				);
-			} else ms.removeMediaSessionData(0);
-		},
-		autoRequestSong() {
-			if (
-				!this.autoRequestLock &&
-				this.songsList.length < 50 &&
-				this.currentUserQueueSongs <
-					this.station.requests.limit * 0.5 &&
-				this.autoRequest.length > 0
-			) {
-				const selectedPlaylist =
-					this.autoRequest[
-						Math.floor(Math.random() * this.autoRequest.length)
-					];
-				if (selectedPlaylist._id && selectedPlaylist.songs.length > 0) {
-					const selectedSong =
-						selectedPlaylist.songs[
-							Math.floor(
-								Math.random() * selectedPlaylist.songs.length
-							)
-						];
-					if (selectedSong.youtubeId) {
-						this.updateAutoRequestLock(true);
-						this.socket.dispatch(
-							"stations.addToQueue",
-							this.station._id,
-							selectedSong.youtubeId,
-							data => {
-								this.updateAutoRequestLock(false);
-								if (data.status !== "success") {
-									setTimeout(
-										() => {
-											this.autoRequestSong();
-										},
-										data.message ===
-											"That song is already in the queue."
-											? 5000
-											: 1000
-									);
-								}
-							}
-						);
-					}
-				}
-			}
-		},
-		removeFromQueue(youtubeId) {
-			window.socket.dispatch(
-				"stations.removeFromQueue",
-				this.station._id,
-				youtubeId,
-				res => {
-					if (res.status === "success") {
-						new Toast("Successfully removed song from the queue.");
-					} else new Toast(res.message);
-				}
-			);
-		},
-		setNextCurrentSong(nextCurrentSong, skipSkipCheck = false) {
-			this.nextCurrentSong = nextCurrentSong;
-			// If skipSkipCheck is true, it won't try to skip the song
-			if (this.getTimeRemaining() <= 0 && !skipSkipCheck) {
-				this.skipSong();
-			}
-		},
-		skipSong() {
-			if (this.nextCurrentSong && this.nextCurrentSong.currentSong) {
-				const songsList = this.songsList.concat([]);
-				if (
-					songsList.length > 0 &&
-					songsList[0].youtubeId ===
-						this.nextCurrentSong.currentSong.youtubeId
-				) {
-					songsList.splice(0, 1);
-					this.updateSongsList(songsList);
-				}
-				this.setCurrentSong(this.nextCurrentSong);
-			} else {
-				this.setCurrentSong({
-					currentSong: null,
-					startedAt: 0,
-					paused: this.stationPaused,
-					timePaused: 0,
-					pausedAt: 0
-				});
-			}
-		},
-		setCurrentSong(data) {
-			const { currentSong, startedAt, paused, timePaused, pausedAt } =
-				data;
-
-			if (currentSong) {
-				if (!currentSong.skipDuration || currentSong.skipDuration < 0)
-					currentSong.skipDuration = 0;
-				if (!currentSong.duration || currentSong.duration < 0)
-					currentSong.duration = 0;
-			}
-
-			this.updateCurrentSong(currentSong || {});
-
-			let nextSong = null;
-			if (this.songsList[0])
-				nextSong = this.songsList[0].youtubeId
-					? this.songsList[0]
-					: null;
-
-			this.updateNextSong(nextSong);
-			this.setNextCurrentSong(
-				{
-					currentSong: null,
-					startedAt: 0,
-					paused,
-					timePaused: 0,
-					pausedAt: 0
-				},
-				true
-			);
-
-			clearTimeout(window.stationNextSongTimeout);
-
-			if (this.mediasession) this.updateMediaSessionData(currentSong);
-
-			this.startedAt = startedAt;
-			this.updateStationPaused(paused);
-			this.timePaused = timePaused;
-			this.pausedAt = pausedAt;
-
-			if (currentSong) {
-				this.updateNoSong(false);
-
-				if (!this.playerReady) this.youtubeReady();
-				else this.playVideo();
-
-				// If the station is playing and the backend is not connected, set the next song to skip to after this song and set a timer to skip
-				if (!this.stationPaused && !this.socketConnected) {
-					if (this.nextSong)
-						this.setNextCurrentSong(
-							{
-								currentSong: this.nextSong,
-								startedAt: Date.now() + this.getTimeRemaining(),
-								paused: false,
-								timePaused: 0
-							},
-							true
-						);
-					else
-						this.setNextCurrentSong(
-							{
-								currentSong: null,
-								startedAt: 0,
-								paused: false,
-								timePaused: 0,
-								pausedAt: 0
-							},
-							true
-						);
-					window.stationNextSongTimeout = setTimeout(() => {
-						if (
-							!this.noSong &&
-							this.currentSong._id === currentSong._id
-						)
-							this.skipSong("window.stationNextSongTimeout 1");
-					}, this.getTimeRemaining());
-				}
-
-				const currentSongId = this.currentSong._id;
-
-				this.socket.dispatch(
-					"stations.getSkipVotes",
-					this.station._id,
-					currentSongId,
-					res => {
-						if (res.status === "success") {
-							const { skipVotes, skipVotesCurrent } = res.data;
-							if (
-								!this.noSong &&
-								this.currentSong._id === currentSongId
-							) {
-								this.updateCurrentSongSkipVotes({
-									skipVotes,
-									skipVotesCurrent
-								});
-							}
-						}
-					}
-				);
-
-				this.socket.dispatch(
-					"media.getRatings",
-					currentSong.youtubeId,
-					res => {
-						if (
-							currentSong.youtubeId === this.currentSong.youtubeId
-						) {
-							const { likes, dislikes } = res.data;
-							this.updateCurrentSongRatings({ likes, dislikes });
-						}
-					}
-				);
-
-				if (this.loggedIn) {
-					this.socket.dispatch(
-						"media.getOwnRatings",
-						currentSong.youtubeId,
-						res => {
-							console.log("getOwnSongRatings", res);
-							if (
-								res.status === "success" &&
-								this.currentSong.youtubeId ===
-									res.data.youtubeId
-							) {
-								this.updateOwnCurrentSongRatings(res.data);
-
-								if (
-									this.autoSkipDisliked &&
-									res.data.disliked === true &&
-									!(this.localPaused || this.stationPaused)
-								) {
-									this.voteSkipStation(
-										"Automatically voted to skip disliked song."
-									);
-								}
-							}
-						}
-					);
-				}
-			} else {
-				if (this.playerReady) this.player.stopVideo();
-				this.updateNoSong(true);
-			}
-
-			this.calculateTimeElapsed();
-			this.resizeSeekerbar();
-		},
-		youtubeReady() {
-			if (!this.player) {
-				ms.setYTReady(false);
-				this.player = new window.YT.Player("stationPlayer", {
-					height: 270,
-					width: 480,
-					videoId: this.currentSong.youtubeId,
-					host: "https://www.youtube-nocookie.com",
-					startSeconds:
-						this.getTimeElapsed() / 1000 +
-						this.currentSong.skipDuration,
-					playerVars: {
-						controls: 0,
-						iv_load_policy: 3,
-						rel: 0,
-						showinfo: 0,
-						disablekb: 1,
-						playsinline: 1
-					},
-					events: {
-						onReady: () => {
-							this.playerReady = true;
-							ms.setYTReady(true);
-
-							let volume = parseFloat(
-								localStorage.getItem("volume")
-							);
-
-							volume = typeof volume === "number" ? volume : 20;
-
-							this.player.setVolume(volume);
-
-							if (volume > 0) this.player.unMute();
-							if (this.muted) this.player.mute();
-
-							this.playVideo();
-
-							// on ios, playback will be forcibly paused locally
-							if (this.isApple) {
-								this.updateLocalPaused(true);
-								new Toast(
-									`Please click play manually to use ${this.sitename} on iOS.`
-								);
-							}
-						},
-						onError: err => {
-							console.log("error with youtube video", err);
-
-							if (err.data === 150 && this.loggedIn) {
-								if (!(this.localPaused || this.stationPaused)) {
-									// automatically vote to skip
-									this.voteSkipStation(
-										"Automatically voted to skip as this song isn't available for you."
-									);
-								}
-
-								// persistent message while song is playing
-								const persistentToast = new Toast({
-									content:
-										"This song is unavailable for you, but is playing for everyone else.",
-									persistent: true
-								});
-
-								// save current song id
-								const erroredYoutubeId =
-									this.currentSong.youtubeId;
-
-								this.persistentToasts.push({
-									toast: persistentToast,
-									checkIfCanRemove: () => {
-										if (
-											this.currentSong.youtubeId !==
-											erroredYoutubeId
-										) {
-											persistentToast.destroy();
-											return true;
-										}
-										return false;
-									}
-								});
-							} else {
-								new Toast(
-									"There has been an error with the YouTube Embed"
-								);
-							}
-						},
-						onStateChange: event => {
-							if (
-								event.data === window.YT.PlayerState.PLAYING &&
-								this.videoLoading === true
-							) {
-								this.videoLoading = false;
-								this.player.seekTo(
-									this.getTimeElapsed() / 1000 +
-										this.currentSong.skipDuration,
-									true
-								);
-								this.canAutoplay = true;
-								if (this.localPaused || this.stationPaused)
-									this.player.pauseVideo();
-							} else if (
-								event.data === window.YT.PlayerState.PLAYING &&
-								(this.localPaused || this.stationPaused)
-							) {
-								this.player.seekTo(
-									this.timeBeforePause / 1000,
-									true
-								);
-								this.player.pauseVideo();
-							} else if (
-								event.data === window.YT.PlayerState.PLAYING &&
-								this.seeking === true
-							)
-								this.seeking = false;
-
-							if (
-								event.data === window.YT.PlayerState.PAUSED &&
-								!this.localPaused &&
-								!this.stationPaused &&
-								!this.noSong &&
-								this.player.getDuration() / 1000 <
-									this.currentSong.duration
-							) {
-								this.player.seekTo(
-									this.getTimeElapsed() / 1000 +
-										this.currentSong.skipDuration,
-									true
-								);
-								this.player.playVideo();
-							}
-						}
-					}
-				});
-			}
-		},
-		getTimeElapsed() {
-			if (this.currentSong) {
-				let { timePaused } = this;
-				if (this.stationPaused)
-					timePaused += Date.currently() - this.pausedAt;
-				return Date.currently() - this.startedAt - timePaused;
-			}
-			return 0;
-		},
-		getTimeRemaining() {
-			if (this.currentSong) {
-				return this.currentSong.duration * 1000 - this.getTimeElapsed();
-			}
-			return 0;
-		},
-		playVideo() {
-			if (this.playerReady) {
-				this.videoLoading = true;
-				this.player.loadVideoById(
-					this.currentSong.youtubeId,
-					this.getTimeElapsed() / 1000 + this.currentSong.skipDuration
-				);
-
-				if (window.stationInterval !== 0)
-					clearInterval(window.stationInterval);
-				window.stationInterval = setInterval(() => {
-					if (!this.stationPaused) {
-						this.resizeSeekerbar();
-						this.calculateTimeElapsed();
-					}
-				}, 150);
-			}
-		},
-		resizeSeekerbar() {
-			this.seekerbarPercentage = parseFloat(
-				(this.getTimeElapsed() / 1000 / this.currentSong.duration) * 100
-			);
-		},
-		calculateTimeElapsed() {
-			if (
-				this.playerReady &&
-				!this.noSong &&
-				this.currentSong &&
-				this.player.getPlayerState() === -1
-			) {
-				if (!this.canAutoplay) {
-					if (
-						Date.now() - this.lastTimeRequestedIfCanAutoplay >
-						2000
-					) {
-						this.lastTimeRequestedIfCanAutoplay = Date.now();
-						canAutoPlay.video().then(({ result }) => {
-							if (result) {
-								this.attemptsToPlayVideo = 0;
-								this.canAutoplay = true;
-							} else {
-								this.canAutoplay = false;
-							}
-						});
-					}
-				} else {
-					this.player.playVideo();
-					this.attemptsToPlayVideo += 1;
-				}
-			}
-
-			if (
-				!this.stationPaused &&
-				!this.localPaused &&
-				this.playerReady &&
-				!this.isApple
-			) {
-				const timeElapsed = this.getTimeElapsed();
-				const currentPlayerTime =
-					Math.max(
-						this.player.getCurrentTime() -
-							this.currentSong.skipDuration,
-						0
-					) * 1000;
-
-				const difference = timeElapsed - currentPlayerTime;
-
-				let playbackRate = 1;
-
-				if (difference < -2000) {
-					if (!this.seeking) {
-						this.seeking = true;
-						this.player.seekTo(
-							this.getTimeElapsed() / 1000 +
-								this.currentSong.skipDuration
-						);
-					}
-				} else if (difference < -200) {
-					playbackRate = 0.8;
-				} else if (difference < -50) {
-					playbackRate = 0.9;
-				} else if (difference < -25) {
-					playbackRate = 0.95;
-				} else if (difference > 2000) {
-					if (!this.seeking) {
-						this.seeking = true;
-						this.player.seekTo(
-							this.getTimeElapsed() / 1000 +
-								this.currentSong.skipDuration
-						);
-					}
-				} else if (difference > 200) {
-					playbackRate = 1.2;
-				} else if (difference > 50) {
-					playbackRate = 1.1;
-				} else if (difference > 25) {
-					playbackRate = 1.05;
-				} else if (this.player.getPlaybackRate !== 1.0) {
-					this.player.setPlaybackRate(1.0);
-				}
-
-				if (this.playbackRate !== playbackRate) {
-					this.player.setPlaybackRate(playbackRate);
-					this.playbackRate = playbackRate;
-				}
-			}
-
-			let { timePaused } = this;
-			if (this.stationPaused)
-				timePaused += Date.currently() - this.pausedAt;
-
-			const duration =
-				(Date.currently() - this.startedAt - timePaused) / 1000;
-
-			const songDuration = this.currentSong.duration;
-			if (songDuration <= duration) this.player.pauseVideo();
-			if (duration <= songDuration)
-				this.timeElapsed = utils.formatTime(duration);
-		},
-		changeVolume() {
-			const volume = this.volumeSliderValue;
-			localStorage.setItem("volume", volume);
-			if (this.playerReady) {
-				this.player.setVolume(volume);
-				if (volume > 0) {
-					this.player.unMute();
-					localStorage.setItem("muted", false);
-					this.muted = false;
-				}
-			}
-		},
-		resumeLocalStation() {
-			this.updateLocalPaused(false);
-			if (!this.stationPaused) this.resumeLocalPlayer();
-		},
-		pauseLocalStation() {
-			this.updateLocalPaused(true);
-			this.pauseLocalPlayer();
-		},
-		resumeLocalPlayer() {
-			if (this.mediasession)
-				this.updateMediaSessionData(this.currentSong);
-			if (!this.noSong) {
-				if (this.playerReady) {
-					this.player.seekTo(
-						this.getTimeElapsed() / 1000 +
-							this.currentSong.skipDuration
-					);
-					this.player.playVideo();
-				}
-			}
-		},
-		pauseLocalPlayer() {
-			if (this.mediasession)
-				this.updateMediaSessionData(this.currentSong);
-			if (!this.noSong) {
-				this.timeBeforePause = this.getTimeElapsed();
-				if (this.playerReady) this.player.pauseVideo();
-			}
-		},
-		skipStation() {
-			this.socket.dispatch(
-				"stations.forceSkip",
-				this.station._id,
-				data => {
-					if (data.status !== "success")
-						new Toast(`Error: ${data.message}`);
-					else
-						new Toast(
-							"Successfully skipped the station's current song."
-						);
-				}
-			);
-		},
-		voteSkipStation(message) {
-			this.socket.dispatch(
-				"stations.voteSkip",
-				this.station._id,
-				data => {
-					if (data.status !== "success")
-						new Toast(`Error: ${data.message}`);
-					else
-						new Toast(
-							message ||
-								"Successfully voted to skip the current song."
-						);
-				}
-			);
-		},
-		resumeStation() {
-			this.socket.dispatch("stations.resume", this.station._id, data => {
-				if (data.status !== "success")
-					new Toast(`Error: ${data.message}`);
-				else new Toast("Successfully resumed the station.");
-			});
-		},
-		pauseStation() {
-			this.socket.dispatch("stations.pause", this.station._id, data => {
-				if (data.status !== "success")
-					new Toast(`Error: ${data.message}`);
-				else new Toast("Successfully paused the station.");
-			});
-		},
-		toggleMute() {
-			if (this.playerReady) {
-				const previousVolume = parseFloat(
-					localStorage.getItem("volume")
-				);
-				const volume =
-					this.player.getVolume() <= 0 ? previousVolume : 0;
-				this.muted = !this.muted;
-				localStorage.setItem("muted", this.muted);
-				this.volumeSliderValue = volume;
-				this.player.setVolume(volume);
-				if (!this.muted) localStorage.setItem("volume", volume);
-			}
-		},
-		increaseVolume() {
-			if (this.playerReady) {
-				const previousVolume = parseFloat(
-					localStorage.getItem("volume")
-				);
-				let volume = previousVolume + 5;
-				if (previousVolume === 0) {
-					this.muted = false;
-					localStorage.setItem("muted", false);
-				}
-				if (volume > 100) volume = 100;
-				this.volumeSliderValue = volume;
-				this.player.setVolume(volume);
-				localStorage.setItem("volume", volume);
-			}
-		},
-		toggleLike() {
-			if (this.currentSong.liked)
-				this.socket.dispatch(
-					"media.unlike",
-					this.currentSong.youtubeId,
-					res => {
-						if (res.status !== "success")
-							new Toast(`Error: ${res.message}`);
-					}
-				);
-			else
-				this.socket.dispatch(
-					"media.like",
-					this.currentSong.youtubeId,
-					res => {
-						if (res.status !== "success")
-							new Toast(`Error: ${res.message}`);
-					}
-				);
-		},
-		toggleDislike() {
-			if (this.currentSong.disliked)
-				return this.socket.dispatch(
-					"media.undislike",
-					this.currentSong.youtubeId,
-					res => {
-						if (res.status !== "success")
-							new Toast(`Error: ${res.message}`);
-					}
-				);
-
-			return this.socket.dispatch(
-				"media.dislike",
-				this.currentSong.youtubeId,
-				res => {
-					if (res.status !== "success")
-						new Toast(`Error: ${res.message}`);
-				}
-			);
-		},
-		togglePlayerDebugBox() {
-			this.$refs.playerDebugBox.toggleBox();
-		},
-		resetPlayerDebugBox() {
-			this.$refs.playerDebugBox.resetBox();
-		},
-		toggleKeyboardShortcutsHelper() {
-			this.$refs.keyboardShortcutsHelper.toggleBox();
-		},
-		resetKeyboardShortcutsHelper() {
-			this.$refs.keyboardShortcutsHelper.resetBox();
-		},
-		join() {
-			this.socket.dispatch(
-				"stations.join",
-				this.stationIdentifier,
-				res => {
-					if (res.status === "success") {
-						setTimeout(() => {
-							this.loading = false;
-						}, 1000); // prevents popping in of youtube embed etc.
-
-						const {
-							_id,
-							displayName,
-							name,
-							description,
-							privacy,
-							owner,
-							autofill,
-							blacklist,
-							type,
-							isFavorited,
-							theme,
-							requests
-						} = res.data;
-
-						// change url to use station name instead of station id
-						if (name !== this.stationIdentifier) {
-							// eslint-disable-next-line no-restricted-globals
-							this.$router.replace(name);
-						}
-
-						this.joinStation({
-							_id,
-							name,
-							displayName,
-							description,
-							privacy,
-							owner,
-							autofill,
-							blacklist,
-							type,
-							isFavorited,
-							theme,
-							requests
-						});
-
-						document.getElementsByTagName(
-							"html"
-						)[0].style.cssText = `--primary-color: var(--${res.data.theme})`;
-
-						this.setCurrentSong({
-							currentSong: res.data.currentSong,
-							startedAt: res.data.startedAt,
-							paused: res.data.paused,
-							timePaused: res.data.timePaused,
-							pausedAt: res.data.pausedAt
-						});
-
-						this.updateUserCount(res.data.userCount);
-						this.updateUsers(res.data.users);
-
-						this.socket.dispatch(
-							"stations.getStationAutofillPlaylistsById",
-							this.station._id,
-							res => {
-								if (res.status === "success") {
-									this.setAutofillPlaylists(
-										res.data.playlists
-									);
-								}
-							}
-						);
-
-						this.socket.dispatch(
-							"stations.getStationBlacklistById",
-							this.station._id,
-							res => {
-								if (res.status === "success") {
-									this.setBlacklist(res.data.playlists);
-								}
-							}
-						);
-
-						this.socket.dispatch("stations.getQueue", _id, res => {
-							if (res.status === "success") {
-								const { queue } = res.data;
-								this.updateSongsList(queue);
-								const [nextSong] = queue;
-
-								this.updateNextSong(nextSong);
-							}
-						});
-
-						if (this.isOwnerOrAdmin()) {
-							keyboardShortcuts.registerShortcut(
-								"station.pauseResume",
-								{
-									keyCode: 32, // Spacebar
-									shift: false,
-									ctrl: true,
-									preventDefault: true,
-									handler: () => {
-										if (this.aModalIsOpen) return;
-										if (this.stationPaused)
-											this.resumeStation();
-										else this.pauseStation();
-									}
-								}
-							);
-
-							keyboardShortcuts.registerShortcut(
-								"station.skipStation",
-								{
-									keyCode: 39, // Right arrow key
-									shift: false,
-									ctrl: true,
-									preventDefault: true,
-									handler: () => {
-										if (this.aModalIsOpen) return;
-										this.skipStation();
-									}
-								}
-							);
-						}
-
-						keyboardShortcuts.registerShortcut(
-							"station.lowerVolumeLarge",
-							{
-								keyCode: 40, // Down arrow key
-								shift: false,
-								ctrl: true,
-								preventDefault: true,
-								handler: () => {
-									if (this.aModalIsOpen) return;
-									this.volumeSliderValue -= 10;
-									this.changeVolume();
-								}
-							}
-						);
-
-						keyboardShortcuts.registerShortcut(
-							"station.lowerVolumeSmall",
-							{
-								keyCode: 40, // Down arrow key
-								shift: true,
-								ctrl: true,
-								preventDefault: true,
-								handler: () => {
-									if (this.aModalIsOpen) return;
-									this.volumeSliderValue -= 1;
-									this.changeVolume();
-								}
-							}
-						);
-
-						keyboardShortcuts.registerShortcut(
-							"station.increaseVolumeLarge",
-							{
-								keyCode: 38, // Up arrow key
-								shift: false,
-								ctrl: true,
-								preventDefault: true,
-								handler: () => {
-									if (this.aModalIsOpen) return;
-									this.volumeSliderValue += 10;
-									this.changeVolume();
-								}
-							}
-						);
-
-						keyboardShortcuts.registerShortcut(
-							"station.increaseVolumeSmall",
-							{
-								keyCode: 38, // Up arrow key
-								shift: true,
-								ctrl: true,
-								preventDefault: true,
-								handler: () => {
-									if (this.aModalIsOpen) return;
-									this.volumeSliderValue += 1;
-									this.changeVolume();
-								}
-							}
-						);
-
-						keyboardShortcuts.registerShortcut(
-							"station.toggleDebug",
-							{
-								keyCode: 68, // D key
-								shift: false,
-								ctrl: true,
-								preventDefault: true,
-								handler: () => {
-									if (this.aModalIsOpen) return;
-									this.togglePlayerDebugBox();
-								}
-							}
-						);
-
-						keyboardShortcuts.registerShortcut(
-							"station.toggleKeyboardShortcutsHelper",
-							{
-								keyCode: 191, // '/' key
-								ctrl: true,
-								preventDefault: true,
-								handler: () => {
-									if (this.aModalIsOpen) return;
-									this.toggleKeyboardShortcutsHelper();
-								}
-							}
-						);
-
-						keyboardShortcuts.registerShortcut(
-							"station.resetKeyboardShortcutsHelper",
-							{
-								keyCode: 191, // '/' key
-								ctrl: true,
-								shift: true,
-								preventDefault: true,
-								handler: () => {
-									if (this.aModalIsOpen) return;
-									this.resetKeyboardShortcutsHelper();
-								}
-							}
-						);
-
-						// UNIX client time before ping
-						const beforePing = Date.now();
-						this.socket.dispatch("apis.ping", res => {
-							if (res.status === "success") {
-								// UNIX client time after ping
-								const afterPing = Date.now();
-								// Average time in MS it took between the server responding and the client receiving
-								const connectionLatency =
-									(afterPing - beforePing) / 2;
-								console.log(
-									connectionLatency,
-									beforePing - afterPing
-								);
-								// UNIX server time
-								const serverDate = res.data.date;
-								// Difference between the server UNIX time and the client UNIX time after ping, with the connectionLatency added to the server UNIX time
-								const difference =
-									serverDate + connectionLatency - afterPing;
-								console.log("Difference: ", difference);
-								if (difference > 3000 || difference < -3000) {
-									console.log(
-										"System time difference is bigger than 3 seconds."
-									);
-								}
-								this.systemDifference = difference;
-							}
-						});
-					} else {
-						this.loading = false;
-						this.exists = false;
-					}
-				}
-			);
-		},
-		favoriteStation() {
-			this.socket.dispatch(
-				"stations.favoriteStation",
-				this.station._id,
-				res => {
-					if (res.status === "success") {
-						new Toast("Successfully favorited station.");
-					} else new Toast(res.message);
-				}
-			);
-		},
-		unfavoriteStation() {
-			this.socket.dispatch(
-				"stations.unfavoriteStation",
-				this.station._id,
-				res => {
-					if (res.status === "success") {
-						new Toast("Successfully unfavorited station.");
-					} else new Toast(res.message);
-				}
-			);
-		},
-		sendActivityWatchVideoData() {
-			if (!this.stationPaused && !this.localPaused && !this.noSong) {
-				if (this.activityWatchVideoLastStatus !== "playing") {
-					this.activityWatchVideoLastStatus = "playing";
-					this.activityWatchVideoLastStartDuration =
-						this.currentSong.skipDuration + this.getTimeElapsed();
-				}
-
-				if (
-					this.activityWatchVideoLastYouTubeId !==
-					this.currentSong.youtubeId
-				) {
-					this.activityWatchVideoLastYouTubeId =
-						this.currentSong.youtubeId;
-					this.activityWatchVideoLastStartDuration =
-						this.currentSong.skipDuration + this.getTimeElapsed();
-				}
-
-				const videoData = {
-					title: this.currentSong ? this.currentSong.title : null,
-					artists:
-						this.currentSong && this.currentSong.artists
-							? this.currentSong.artists.join(", ")
-							: null,
-					youtubeId: this.currentSong.youtubeId,
-					muted: this.muted,
-					volume: this.volumeSliderValue,
-					startedDuration:
-						this.activityWatchVideoLastStartDuration <= 0
-							? 0
-							: Math.floor(
-									this.activityWatchVideoLastStartDuration /
-										1000
-							  ),
-					source: `station#${this.station.name}`,
-					hostname: window.location.hostname
-				};
-
-				aw.sendVideoData(videoData);
-			} else {
-				this.activityWatchVideoLastStatus = "not_playing";
-			}
-		},
-		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions("station", [
-			"joinStation",
-			"leaveStation",
-			"updateStation",
-			"updateUserCount",
-			"updateUsers",
-			"updateCurrentSong",
-			"updateNextSong",
-			"updateSongsList",
-			"repositionSongInList",
-			"updateStationPaused",
-			"updateLocalPaused",
-			"updateNoSong",
-			"updateIfStationIsFavorited",
-			"setAutofillPlaylists",
-			"setBlacklist",
-			"updateCurrentSongRatings",
-			"updateOwnCurrentSongRatings",
-			"updateCurrentSongSkipVotes",
-			"updateAutoRequestLock"
-		]),
-		...mapActions("modals/editSong", ["stopVideo"])
-	}
-};
-</script>
 
 <style lang="less">
 #stationPlayer {
