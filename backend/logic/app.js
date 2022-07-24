@@ -43,7 +43,9 @@ class _AppModule extends CoreClass {
 
 			const app = (this.app = express());
 			const SIDname = config.get("cookie.SIDname");
-			this.server = http.createServer(app).listen(config.get("serverPort"));
+			this.server = http
+				.createServer(app)
+				.listen(config.get("serverPort"));
 
 			app.use(cookieParser());
 
@@ -71,14 +73,16 @@ class _AppModule extends CoreClass {
 				null
 			);
 
-			const redirectUri = `${config.get("serverDomain")}/auth/github/authorize/callback`;
+			const redirectUri = `${config.get("apis.github.redirect_uri")}`;
 
 			/**
 			 * @param {object} res - response object from Express
 			 * @param {string} err - custom error message
 			 */
 			function redirectOnErr(res, err) {
-				res.redirect(`${config.get("domain")}?err=${encodeURIComponent(err)}`);
+				res.redirect(
+					`${config.get("domain")}?err=${encodeURIComponent(err)}`
+				);
 			}
 
 			app.get("/auth/github/authorize", async (req, res) => {
@@ -88,15 +92,20 @@ class _AppModule extends CoreClass {
 						"APP_REJECTED_GITHUB_AUTHORIZE",
 						`A user tried to use github authorize, but the APP module is currently not ready.`
 					);
-					return redirectOnErr(res, "Something went wrong on our end. Please try again later.");
+					return redirectOnErr(
+						res,
+						"Something went wrong on our end. Please try again later."
+					);
 				}
 
 				const params = [
 					`client_id=${config.get("apis.github.client")}`,
-					`redirect_uri=${config.get("serverDomain")}/auth/github/authorize/callback`,
+					`redirect_uri=${config.get("apis.github.redirect_uri")}`,
 					`scope=user:email`
 				].join("&");
-				return res.redirect(`https://github.com/login/oauth/authorize?${params}`);
+				return res.redirect(
+					`https://github.com/login/oauth/authorize?${params}`
+				);
 			});
 
 			app.get("/auth/github/link", async (req, res) => {
@@ -106,16 +115,21 @@ class _AppModule extends CoreClass {
 						"APP_REJECTED_GITHUB_AUTHORIZE",
 						`A user tried to use github authorize, but the APP module is currently not ready.`
 					);
-					return redirectOnErr(res, "Something went wrong on our end. Please try again later.");
+					return redirectOnErr(
+						res,
+						"Something went wrong on our end. Please try again later."
+					);
 				}
 
 				const params = [
 					`client_id=${config.get("apis.github.client")}`,
-					`redirect_uri=${config.get("serverDomain")}/auth/github/authorize/callback`,
+					`redirect_uri=${config.get("apis.github.redirect_uri")}`,
 					`scope=user:email`,
 					`state=${req.cookies[SIDname]}`
 				].join("&");
-				return res.redirect(`https://github.com/login/oauth/authorize?${params}`);
+				return res.redirect(
+					`https://github.com/login/oauth/authorize?${params}`
+				);
 			});
 
 			app.get("/auth/github/authorize/callback", async (req, res) => {
@@ -126,7 +140,10 @@ class _AppModule extends CoreClass {
 						`A user tried to use github authorize, but the APP module is currently not ready.`
 					);
 
-					return redirectOnErr(res, "Something went wrong on our end. Please try again later.");
+					return redirectOnErr(
+						res,
+						"Something went wrong on our end. Please try again later."
+					);
 				}
 
 				const { code } = req.query;
@@ -136,21 +153,30 @@ class _AppModule extends CoreClass {
 
 				const { state } = req.query;
 
-				const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 });
+				const verificationToken = await UtilsModule.runJob(
+					"GENERATE_RANDOM_STRING",
+					{ length: 64 }
+				);
 
 				return async.waterfall(
 					[
 						next => {
-							if (req.query.error) return next(req.query.error_description);
+							if (req.query.error)
+								return next(req.query.error_description);
 							return next();
 						},
 
 						next => {
-							oauth2.getOAuthAccessToken(code, { redirect_uri: redirectUri }, next);
+							oauth2.getOAuthAccessToken(
+								code,
+								{ redirect_uri: redirectUri },
+								next
+							);
 						},
 
 						(_accessToken, refreshToken, results, next) => {
-							if (results.error) return next(results.error_description);
+							if (results.error)
+								return next(results.error_description);
 
 							accessToken = _accessToken;
 
@@ -168,7 +194,8 @@ class _AppModule extends CoreClass {
 						},
 
 						(github, next) => {
-							if (github.status !== 200) return next(github.data.message);
+							if (github.status !== 200)
+								return next(github.data.message);
 
 							if (state) {
 								return async.waterfall(
@@ -178,19 +205,31 @@ class _AppModule extends CoreClass {
 												table: "sessions",
 												key: state
 											})
-												.then(session => next(null, session))
+												.then(session =>
+													next(null, session)
+												)
 												.catch(next);
 										},
 
 										(session, next) => {
-											if (!session) return next("Invalid session.");
-											return userModel.findOne({ _id: session.userId }, next);
+											if (!session)
+												return next("Invalid session.");
+											return userModel.findOne(
+												{ _id: session.userId },
+												next
+											);
 										},
 
 										(user, next) => {
-											if (!user) return next("User not found.");
-											if (user.services.github && user.services.github.id)
-												return next("Account already has GitHub linked.");
+											if (!user)
+												return next("User not found.");
+											if (
+												user.services.github &&
+												user.services.github.id
+											)
+												return next(
+													"Account already has GitHub linked."
+												);
 
 											return userModel.updateOne(
 												{ _id: user._id },
@@ -198,14 +237,19 @@ class _AppModule extends CoreClass {
 													$set: {
 														"services.github": {
 															id: github.data.id,
-															access_token: accessToken
+															access_token:
+																accessToken
 														}
 													}
 												},
 												{ runValidators: true },
 												err => {
 													if (err) return next(err);
-													return next(null, user, github.data);
+													return next(
+														null,
+														user,
+														github.data
+													);
 												}
 											);
 										},
@@ -221,18 +265,26 @@ class _AppModule extends CoreClass {
 												value: { userId: user._id }
 											});
 
-											res.redirect(`${config.get("domain")}/settings?tab=security`);
+											res.redirect(
+												`${config.get(
+													"domain"
+												)}/settings?tab=security`
+											);
 										}
 									],
 									next
 								);
 							}
 
-							if (!github.data.id) return next("Something went wrong, no id.");
+							if (!github.data.id)
+								return next("Something went wrong, no id.");
 
-							return userModel.findOne({ "services.github.id": github.data.id }, (err, user) => {
-								next(err, user, github.data);
-							});
+							return userModel.findOne(
+								{ "services.github.id": github.data.id },
+								(err, user) => {
+									next(err, user, github.data);
+								}
+							);
 						},
 
 						(user, _body, next) => {
@@ -243,13 +295,19 @@ class _AppModule extends CoreClass {
 								return user.save(() => next(true, user._id));
 							}
 
-							return userModel.findOne({ username: new RegExp(`^${body.login}$`, "i") }, (err, user) =>
-								next(err, user)
+							return userModel.findOne(
+								{
+									username: new RegExp(`^${body.login}$`, "i")
+								},
+								(err, user) => next(err, user)
 							);
 						},
 
 						(user, next) => {
-							if (user) return next(`An account with that username already exists.`);
+							if (user)
+								return next(
+									`An account with that username already exists.`
+								);
 
 							return axios
 								.get("https://api.github.com/user/emails", {
@@ -266,10 +324,14 @@ class _AppModule extends CoreClass {
 							if (!Array.isArray(body)) return next(body.message);
 
 							body.forEach(email => {
-								if (email.primary) address = email.email.toLowerCase();
+								if (email.primary)
+									address = email.email.toLowerCase();
 							});
 
-							return userModel.findOne({ "email.address": address }, next);
+							return userModel.findOne(
+								{ "email.address": address },
+								next
+							);
 						},
 
 						(user, next) => {
@@ -280,11 +342,17 @@ class _AppModule extends CoreClass {
 
 						(user, _id, next) => {
 							if (user) {
-								if (Object.keys(JSON.parse(user.services.github)).length === 0)
+								if (
+									Object.keys(
+										JSON.parse(user.services.github)
+									).length === 0
+								)
 									return next(
 										`An account with that email address exists, but is not linked to GitHub.`
 									);
-								return next(`An account with that email address already exists.`);
+								return next(
+									`An account with that email address already exists.`
+								);
 							}
 
 							return next(null, {
@@ -298,7 +366,10 @@ class _AppModule extends CoreClass {
 									verificationToken
 								},
 								services: {
-									github: { id: body.id, access_token: accessToken }
+									github: {
+										id: body.id,
+										access_token: accessToken
+									}
 								}
 							});
 						},
@@ -322,9 +393,14 @@ class _AppModule extends CoreClass {
 							MailModule.runJob("GET_SCHEMA", {
 								schemaName: "verifyEmail"
 							}).then(verifyEmailSchema => {
-								verifyEmailSchema(address, body.login, user.email.verificationToken, err => {
-									next(err, user._id);
-								});
+								verifyEmailSchema(
+									address,
+									body.login,
+									user.email.verificationToken,
+									err => {
+										next(err, user._id);
+									}
+								);
 							});
 						},
 
@@ -349,16 +425,32 @@ class _AppModule extends CoreClass {
 								type: "user-disliked"
 							})
 								.then(dislikedSongsPlaylist => {
-									next(null, { likedSongsPlaylist, dislikedSongsPlaylist }, userId);
+									next(
+										null,
+										{
+											likedSongsPlaylist,
+											dislikedSongsPlaylist
+										},
+										userId
+									);
 								})
 								.catch(err => next(err));
 						},
 
 						// associate liked + disliked songs playlist to the user object
-						({ likedSongsPlaylist, dislikedSongsPlaylist }, userId, next) => {
+						(
+							{ likedSongsPlaylist, dislikedSongsPlaylist },
+							userId,
+							next
+						) => {
 							userModel.updateOne(
 								{ _id: userId },
-								{ $set: { likedSongsPlaylist, dislikedSongsPlaylist } },
+								{
+									$set: {
+										likedSongsPlaylist,
+										dislikedSongsPlaylist
+									}
+								},
 								{ runValidators: true },
 								err => {
 									if (err) return next(err);
@@ -394,9 +486,12 @@ class _AppModule extends CoreClass {
 						}
 
 						const sessionId = await UtilsModule.runJob("GUID", {});
-						const sessionSchema = await CacheModule.runJob("GET_SCHEMA", {
-							schemaName: "session"
-						});
+						const sessionSchema = await CacheModule.runJob(
+							"GET_SCHEMA",
+							{
+								schemaName: "session"
+							}
+						);
 
 						return CacheModule.runJob("HSET", {
 							table: "sessions",
@@ -405,7 +500,10 @@ class _AppModule extends CoreClass {
 						})
 							.then(() => {
 								const date = new Date();
-								date.setTime(new Date().getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+								date.setTime(
+									new Date().getTime() +
+										2 * 365 * 24 * 60 * 60 * 1000
+								);
 
 								res.cookie(SIDname, sessionId, {
 									expires: date,
@@ -434,7 +532,10 @@ class _AppModule extends CoreClass {
 						"APP_REJECTED_GITHUB_AUTHORIZE",
 						`A user tried to use github authorize, but the APP module is currently not ready.`
 					);
-					return redirectOnErr(res, "Something went wrong on our end. Please try again later.");
+					return redirectOnErr(
+						res,
+						"Something went wrong on our end. Please try again later."
+					);
 				}
 
 				const { code } = req.query;
@@ -447,12 +548,16 @@ class _AppModule extends CoreClass {
 						},
 
 						next => {
-							userModel.findOne({ "email.verificationToken": code }, next);
+							userModel.findOne(
+								{ "email.verificationToken": code },
+								next
+							);
 						},
 
 						(user, next) => {
 							if (!user) return next("User not found.");
-							if (user.email.verified) return next("This email is already verified.");
+							if (user.email.verified)
+								return next("This email is already verified.");
 
 							return userModel.updateOne(
 								{ "email.verificationToken": code },
@@ -472,7 +577,11 @@ class _AppModule extends CoreClass {
 							if (typeof err === "string") error = err;
 							else if (err.message) error = err.message;
 
-							this.log("ERROR", "VERIFY_EMAIL", `Verifying email failed. "${error}"`);
+							this.log(
+								"ERROR",
+								"VERIFY_EMAIL",
+								`Verifying email failed. "${error}"`
+							);
 
 							return res.json({
 								status: "error",
@@ -480,9 +589,17 @@ class _AppModule extends CoreClass {
 							});
 						}
 
-						this.log("INFO", "VERIFY_EMAIL", `Successfully verified email.`);
+						this.log(
+							"INFO",
+							"VERIFY_EMAIL",
+							`Successfully verified email.`
+						);
 
-						return res.redirect(`${config.get("domain")}?msg=Thank you for verifying your email`);
+						return res.redirect(
+							`${config.get(
+								"domain"
+							)}?msg=Thank you for verifying your email`
+						);
 					}
 				);
 			});
