@@ -40,7 +40,8 @@ export default createStore({
 				viewReport: emptyModule,
 				confirm: emptyModule,
 				bulkActions: emptyModule,
-				viewYoutubeVideo: emptyModule
+				viewYoutubeVideo: emptyModule,
+				removeAccount: emptyModule
 			}
 		},
 		longJobs

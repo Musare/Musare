@@ -87,9 +87,7 @@ const confirmAction = ({ message, action, params }) => {
 };
 
 const seekTo = position => {
-	// TODO fix recursive/eslint warning
-	// eslint-disable-next-line
-	settings("play");
+	pauseVideo(false);
 	player.player.seekTo(position);
 };
 

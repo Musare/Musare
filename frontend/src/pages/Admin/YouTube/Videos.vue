@@ -212,7 +212,6 @@ const removeVideos = videoIds => {
 			}
 
 			if (id)
-				// TODO fix
 				setJob({
 					id,
 					name: title,

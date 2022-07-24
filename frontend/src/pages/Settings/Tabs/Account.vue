@@ -150,16 +150,10 @@ onMounted(() => {
 		route.query.removeAccount === "relinked-github" &&
 		!localStorage.getItem("github_redirect")
 	) {
-		openModal("removeAccount");
-
-		// TODO fix/redo this logic, broke after composition refactor
-		// setTimeout(() => {
-		// 	const modal = this.$parent.$children.find(
-		// 		child => child.name === "RemoveAccount"
-		// 	);
-
-		// 	modal.confirmGithubLink();
-		// }, 50);
+		openModal({
+			modal: "removeAccount",
+			data: { githubLinkConfirmed: true }
+		});
 	}
 });
 

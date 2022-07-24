@@ -17,6 +17,7 @@ import confirm from "./modals/confirm";
 import editSongs from "./modals/editSongs";
 import editSong from "./modals/editSong";
 import viewYoutubeVideo from "./modals/viewYoutubeVideo";
+import removeAccount from "./modals/removeAccount";
 
 const state = {
 	modals: {},
@@ -39,7 +40,8 @@ const modalModules = {
 	confirm,
 	editSongs,
 	editSong,
-	viewYoutubeVideo
+	viewYoutubeVideo,
+	removeAccount
 };
 
 const getters = {};

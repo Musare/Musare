@@ -3,8 +3,9 @@ import { useStore } from "vuex";
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
+import { useModalState } from "@/vuex_helpers";
 
-defineProps({
+const props = defineProps({
 	modalUuid: { type: String, default: "" }
 });
 
@@ -13,6 +14,13 @@ const route = useRoute();
 const store = useStore();
 
 const { socket } = store.state.websockets;
+
+const { githubLinkConfirmed } = useModalState(
+	"modals/removeAccount/MODAL_UUID",
+	{
+		modalUuid: props.modalUuid
+	}
+);
 
 const isPasswordLinked = () => store.dispatch("settings/isPasswordLinked");
 const isGithubLinked = () => store.dispatch("settings/isGithubLinked");
@@ -99,6 +107,8 @@ const remove = () =>
 onMounted(async () => {
 	apiDomain.value = await lofig.get("backend.apiDomain");
 	accountRemovalMessage.value = await lofig.get("messages.accountRemoval");
+
+	if (githubLinkConfirmed.value === true) confirmGithubLink();
 });
 </script>
 
