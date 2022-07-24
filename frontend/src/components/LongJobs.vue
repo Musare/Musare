@@ -10,6 +10,7 @@ const store = useStore();
 
 const body = ref(document.body);
 
+const loggedIn = computed(() => store.state.user.auth.loggedIn);
 const activeJobs = computed(() => store.state.longJobs.activeJobs);
 
 const { socket } = store.state.websockets;
@@ -31,34 +32,38 @@ const remove = job => {
 };
 
 onMounted(() => {
-	socket.dispatch("users.getLongJobs", {
-		cb: res => {
-			if (res.status === "success") {
-				setJobs(res.data.longJobs);
-			} else console.log(res.message);
-		},
-		onProgress: res => {
-			setJob(res);
-		}
-	});
+	if (loggedIn.value) {
+		socket.dispatch("users.getLongJobs", {
+			cb: res => {
+				if (res.status === "success") {
+					setJobs(res.data.longJobs);
+				} else console.log(res.message);
+			},
+			onProgress: res => {
+				setJob(res);
+			}
+		});
 
-	socket.on("keep.event:longJob.removed", ({ data }) => {
-		removeJob(data.jobId);
-	});
+		socket.on("keep.event:longJob.removed", ({ data }) => {
+			removeJob(data.jobId);
+		});
 
-	socket.on("keep.event:longJob.added", ({ data }) => {
-		if (!activeJobs.value.find(activeJob => activeJob.id === data.jobId))
-			socket.dispatch("users.getLongJob", data.jobId, {
-				cb: res => {
-					if (res.status === "success") {
-						setJob(res.data.longJob);
-					} else console.log(res.message);
-				},
-				onProgress: res => {
-					setJob(res);
-				}
-			});
-	});
+		socket.on("keep.event:longJob.added", ({ data }) => {
+			if (
+				!activeJobs.value.find(activeJob => activeJob.id === data.jobId)
+			)
+				socket.dispatch("users.getLongJob", data.jobId, {
+					cb: res => {
+						if (res.status === "success") {
+							setJob(res.data.longJob);
+						} else console.log(res.message);
+					},
+					onProgress: res => {
+						setJob(res);
+					}
+				});
+		});
+	}
 });
 </script>
 
