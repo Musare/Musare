@@ -49,6 +49,13 @@ class _NotificationsModule extends CoreClass {
 				}
 			});
 
+			this.pub.on("error", err => {
+				if (this.getStatus() === "INITIALIZING") reject(err);
+				if (this.getStatus() === "LOCKDOWN") return;
+
+				this.log("ERROR", `Error ${err.message}.`);
+			});
+
 			this.pub.connect().then(async () => {
 				this.log("INFO", "Pub connected succesfully.");
 
@@ -106,6 +113,13 @@ class _NotificationsModule extends CoreClass {
 				}
 			});
 
+			this.sub.on("error", err => {
+				if (this.getStatus() === "INITIALIZING") reject(err);
+				if (this.getStatus() === "LOCKDOWN") return;
+
+				this.log("ERROR", `Error ${err.message}.`);
+			});
+
 			this.sub.connect().then(async () => {
 				this.log("INFO", "Sub connected succesfully.");
 
@@ -125,20 +139,6 @@ class _NotificationsModule extends CoreClass {
 						sub.cb();
 					});
 				});
-			});
-
-			this.sub.on("error", err => {
-				if (this.getStatus() === "INITIALIZING") reject(err);
-				if (this.getStatus() === "LOCKDOWN") return;
-
-				this.log("ERROR", `Error ${err.message}.`);
-			});
-
-			this.pub.on("error", err => {
-				if (this.getStatus() === "INITIALIZING") reject(err);
-				if (this.getStatus() === "LOCKDOWN") return;
-
-				this.log("ERROR", `Error ${err.message}.`);
 			});
 		});
 	}

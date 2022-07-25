@@ -9,8 +9,8 @@
   "license": "GPL-3.0",
   "repository": "https://github.com/Musare/Musare",
   "scripts": {
-    "dev": "nodemon --es-module-specifier-resolution=node",
-    "docker:dev": "nodemon --es-module-specifier-resolution=node --legacy-watch --no-stdin /opt/app",
+    "dev": "npx nodemon --es-module-specifier-resolution=node",
+    "docker:dev": "npx nodemon --es-module-specifier-resolution=node --legacy-watch --no-stdin /opt/app",
     "docker:prod": "node --es-module-specifier-resolution=node /opt/app",
     "lint": "npx eslint --cache logic",
     "typescript": "npx tsc --noEmit --skipLibCheck"
@@ -45,6 +45,7 @@
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jsdoc": "^39.3.3",
     "eslint-plugin-prettier": "^4.2.1",
+    "nodemon": "^2.0.19",
     "prettier": "2.7.1",
     "trace-unhandled": "^2.0.1",
     "ts-node": "^10.9.1",

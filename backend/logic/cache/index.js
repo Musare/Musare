@@ -69,6 +69,13 @@ class _CacheModule extends CoreClass {
 				}
 			});
 
+			this.client.on("error", err => {
+				if (this.getStatus() === "INITIALIZING") reject(err);
+				if (this.getStatus() === "LOCKDOWN") return;
+
+				this.log("ERROR", `Error ${err.message}.`);
+			});
+
 			this.client.connect().then(async () => {
 				this.log("INFO", "Connected succesfully.");
 
@@ -83,13 +90,6 @@ class _CacheModule extends CoreClass {
 						next();
 					});
 				});
-			});
-
-			this.client.on("error", err => {
-				if (this.getStatus() === "INITIALIZING") reject(err);
-				if (this.getStatus() === "LOCKDOWN") return;
-
-				this.log("ERROR", `Error ${err.message}.`);
 			});
 		});
 	}

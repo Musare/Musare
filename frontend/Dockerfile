@@ -1,3 +1,13 @@
+FROM node:16.15 AS frontend_node_modules
+
+RUN mkdir -p /opt/app
+WORKDIR /opt/app
+
+COPY package.json /opt/app/package.json
+COPY package-lock.json /opt/app/package-lock.json
+
+RUN npm install --silent
+
 FROM node:16.15 AS musare_frontend
 
 ARG FRONTEND_MODE=prod
@@ -11,12 +21,8 @@ RUN apt-get install nginx -y
 RUN mkdir -p /opt/app
 WORKDIR /opt/app
 
-COPY package.json /opt/app/package.json
-COPY package-lock.json /opt/app/package-lock.json
-
-RUN npm install
-
 COPY . /opt/app
+COPY --from=frontend_node_modules /opt/app/node_modules node_modules
 
 RUN mkdir -p /run/nginx
 
