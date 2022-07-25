@@ -130,7 +130,7 @@ class _CacheModule extends CoreClass {
 			if (["object", "array"].includes(typeof value)) value = JSON.stringify(value);
 
 			CacheModule.client
-				.hSet(payload.table, key, value)
+				.HSET(payload.table, key, value)
 				.then(() => resolve(JSON.parse(value)))
 				.catch(err => reject(new Error(err)));
 		});
@@ -160,7 +160,7 @@ class _CacheModule extends CoreClass {
 			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 
 			CacheModule.client
-				.hGet(payload.table, key, payload.value)
+				.HGET(payload.table, key, payload.value)
 				.then(value => {
 					let parsedValue;
 					try {
@@ -199,7 +199,7 @@ class _CacheModule extends CoreClass {
 			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 
 			CacheModule.client
-				.hDel(payload.table, key)
+				.HDEL(payload.table, key)
 				.then(() => resolve())
 				.catch(err => reject(new Error(err)));
 		});
@@ -221,7 +221,7 @@ class _CacheModule extends CoreClass {
 			}
 
 			CacheModule.client
-				.hGetAll(payload.table)
+				.HGETALL(payload.table)
 				.then(obj => {
 					if (obj)
 						Object.keys(obj).forEach(key => {
@@ -253,7 +253,7 @@ class _CacheModule extends CoreClass {
 			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 
 			CacheModule.client
-				.del(key)
+				.DEL(key)
 				.then(() => resolve())
 				.catch(err => reject(new Error(err)));
 		});

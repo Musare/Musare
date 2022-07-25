@@ -113,7 +113,7 @@ class _NotificationsModule extends CoreClass {
 				else if (this.getStatus() === "LOCKDOWN" || this.getStatus() === "RECONNECTING")
 					this.setStatus("READY");
 
-				this.sub.pSubscribe(`__keyevent@${this.pub.options.db}__:expired`, (message, channel) => {
+				this.sub.PSUBSCRIBE(`__keyevent@${this.pub.options.db}__:expired`, (message, channel) => {
 					this.log("STATION_ISSUE", `PMESSAGE1 - Channel: ${channel}; ExpiredKey: ${message}`);
 
 					this.subscriptions.forEach(sub => {
@@ -167,7 +167,7 @@ class _NotificationsModule extends CoreClass {
 						.digest("hex")}; StationId: ${payload.station._id}; StationName: ${payload.station.name}`
 				);
 				NotificationsModule.pub
-					.set(
+					.SET(
 						crypto.createHash("md5").update(`_notification:${payload.name}_`).digest("hex"),
 						"",
 						"PX",
@@ -260,7 +260,7 @@ class _NotificationsModule extends CoreClass {
 					.digest("hex")}`
 			);
 			NotificationsModule.pub
-				.del(crypto.createHash("md5").update(`_notification:${payload.name}_`).digest("hex"))
+				.DEL(crypto.createHash("md5").update(`_notification:${payload.name}_`).digest("hex"))
 				.then(() => resolve())
 				.catch(err => reject(new Error(err)));
 		});
