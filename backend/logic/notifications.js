@@ -6,7 +6,6 @@ import redis from "redis";
 import CoreClass from "../core";
 
 let NotificationsModule;
-let UtilsModule;
 
 class _NotificationsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -28,39 +27,104 @@ class _NotificationsModule extends CoreClass {
 			const url = (this.url = config.get("redis").url);
 			const password = (this.password = config.get("redis").password);
 
-			UtilsModule = this.moduleManager.modules.utils;
-
 			this.pub = redis.createClient({
 				url,
 				password,
-				retry_strategy: options => {
-					if (this.getStatus() === "LOCKDOWN") return;
-					if (this.getStatus() !== "RECONNECTING") this.setStatus("RECONNECTING");
+				reconnectStrategy: retries => {
+					if (this.getStatus() !== "LOCKDOWN") {
+						if (this.getStatus() !== "RECONNECTING") this.setStatus("RECONNECTING");
 
-					this.log("INFO", `Attempting to reconnect.`);
+						this.log("INFO", `Attempting to reconnect.`);
 
-					if (options.attempt >= 10) {
-						this.log("ERROR", `Stopped trying to reconnect.`);
+						if (retries >= 10) {
+							this.log("ERROR", `Stopped trying to reconnect.`);
 
-						this.setStatus("FAILED");
+							this.setStatus("FAILED");
+
+							new Error("Stopped trying to reconnect.");
+						} else {
+							Math.min(retries * 50, 500);
+						}
 					}
 				}
 			});
+
+			this.pub.connect().then(async () => {
+				this.log("INFO", "Pub connected succesfully.");
+
+				this.pub
+					.sendCommand(["CONFIG", "GET", "notify-keyspace-events"])
+					.then(response => {
+						if (response[1] === "xE") {
+							this.log("INFO", "NOTIFICATIONS_INITIALIZE", `notify-keyspace-events is set correctly`);
+							this.log("STATION_ISSUE", `notify-keyspace-events is set correctly`);
+						} else {
+							this.log(
+								"ERROR",
+								"NOTIFICATIONS_INITIALIZE",
+								`notify-keyspace-events is NOT correctly! It is set to: ${response[1]}`
+							);
+							this.log(
+								"STATION_ISSUE",
+								`notify-keyspace-events is NOT correctly! It is set to: ${response[1]}`
+							);
+						}
+					})
+					.catch(err => {
+						this.log(
+							"ERROR",
+							"NOTIFICATIONS_INITIALIZE",
+							`Getting notify-keyspace-events gave an error. ${err}`
+						);
+						this.log("STATION_ISSUE", `Getting notify-keyspace-events gave an error. ${err}.`);
+					});
+
+				if (this.getStatus() === "INITIALIZING") resolve();
+				else if (this.getStatus() === "LOCKDOWN" || this.getStatus() === "RECONNECTING")
+					this.setStatus("INITIALIZED");
+			});
+
 			this.sub = redis.createClient({
 				url,
 				password,
-				retry_strategy: options => {
-					if (this.getStatus() === "LOCKDOWN") return;
-					if (this.getStatus() !== "RECONNECTING") this.setStatus("RECONNECTING");
+				reconnectStrategy: retries => {
+					if (this.getStatus() !== "LOCKDOWN") {
+						if (this.getStatus() !== "RECONNECTING") this.setStatus("RECONNECTING");
 
-					this.log("INFO", `Attempting to reconnect.`);
+						this.log("INFO", `Attempting to reconnect.`);
 
-					if (options.attempt >= 10) {
-						this.log("ERROR", `Stopped trying to reconnect.`);
+						if (retries >= 10) {
+							this.log("ERROR", `Stopped trying to reconnect.`);
 
-						this.setStatus("FAILED");
+							this.setStatus("FAILED");
+
+							new Error("Stopped trying to reconnect.");
+						} else {
+							Math.min(retries * 50, 500);
+						}
 					}
 				}
+			});
+
+			this.sub.connect().then(async () => {
+				this.log("INFO", "Sub connected succesfully.");
+
+				if (this.getStatus() === "INITIALIZING") resolve();
+				else if (this.getStatus() === "LOCKDOWN" || this.getStatus() === "RECONNECTING")
+					this.setStatus("READY");
+
+				this.sub.pSubscribe(`__keyevent@${this.pub.options.db}__:expired`, (message, channel) => {
+					this.log("STATION_ISSUE", `PMESSAGE1 - Channel: ${channel}; ExpiredKey: ${message}`);
+
+					this.subscriptions.forEach(sub => {
+						this.log(
+							"STATION_ISSUE",
+							`PMESSAGE2 - Sub name: ${sub.name}; Calls cb: ${!(sub.name !== message)}`
+						);
+						if (sub.name !== message) return;
+						sub.cb();
+					});
+				});
 			});
 
 			this.sub.on("error", err => {
@@ -76,76 +140,6 @@ class _NotificationsModule extends CoreClass {
 
 				this.log("ERROR", `Error ${err.message}.`);
 			});
-
-			this.sub.on("connect", () => {
-				this.log("INFO", "Sub connected succesfully.");
-
-				if (this.getStatus() === "INITIALIZING") resolve();
-				else if (this.getStatus() === "LOCKDOWN" || this.getStatus() === "RECONNECTING")
-					this.setStatus("READY");
-			});
-
-			this.pub.on("connect", () => {
-				this.log("INFO", "Pub connected succesfully.");
-
-				this.pub.config("GET", "notify-keyspace-events", async (err, response) => {
-					if (err) {
-						const formattedErr = await UtilsModule.runJob(
-							"GET_ERROR",
-							{
-								error: err
-							},
-							this
-						);
-						this.log(
-							"ERROR",
-							"NOTIFICATIONS_INITIALIZE",
-							`Getting notify-keyspace-events gave an error. ${formattedErr}`
-						);
-						this.log(
-							"STATION_ISSUE",
-							`Getting notify-keyspace-events gave an error. ${formattedErr}. ${response}`
-						);
-						return;
-					}
-					if (response[1] === "xE") {
-						this.log("INFO", "NOTIFICATIONS_INITIALIZE", `notify-keyspace-events is set correctly`);
-						this.log("STATION_ISSUE", `notify-keyspace-events is set correctly`);
-					} else {
-						this.log(
-							"ERROR",
-							"NOTIFICATIONS_INITIALIZE",
-							`notify-keyspace-events is NOT correctly! It is set to: ${response[1]}`
-						);
-						this.log(
-							"STATION_ISSUE",
-							`notify-keyspace-events is NOT correctly! It is set to: ${response[1]}`
-						);
-					}
-				});
-
-				if (this.getStatus() === "INITIALIZING") resolve();
-				else if (this.getStatus() === "LOCKDOWN" || this.getStatus() === "RECONNECTING")
-					this.setStatus("INITIALIZED");
-			});
-
-			this.sub.on("pmessage", (pattern, channel, expiredKey) => {
-				this.log(
-					"STATION_ISSUE",
-					`PMESSAGE1 - Pattern: ${pattern}; Channel: ${channel}; ExpiredKey: ${expiredKey}`
-				);
-
-				this.subscriptions.forEach(sub => {
-					this.log(
-						"STATION_ISSUE",
-						`PMESSAGE2 - Sub name: ${sub.name}; Calls cb: ${!(sub.name !== expiredKey)}`
-					);
-					if (sub.name !== expiredKey) return;
-					sub.cb();
-				});
-			});
-
-			this.sub.psubscribe(`__keyevent@${this.pub.options.db}__:expired`);
 		});
 	}
 
@@ -172,17 +166,16 @@ class _NotificationsModule extends CoreClass {
 						.update(`_notification:${payload.name}_`)
 						.digest("hex")}; StationId: ${payload.station._id}; StationName: ${payload.station.name}`
 				);
-				NotificationsModule.pub.set(
-					crypto.createHash("md5").update(`_notification:${payload.name}_`).digest("hex"),
-					"",
-					"PX",
-					time,
-					"NX",
-					err => {
-						if (err) reject(err);
-						else resolve();
-					}
-				);
+				NotificationsModule.pub
+					.set(
+						crypto.createHash("md5").update(`_notification:${payload.name}_`).digest("hex"),
+						"",
+						"PX",
+						time,
+						"NX"
+					)
+					.then(() => resolve())
+					.catch(err => reject(new Error(err)));
 			}
 		});
 	}
@@ -266,13 +259,10 @@ class _NotificationsModule extends CoreClass {
 					.update(`_notification:${payload.name}_`)
 					.digest("hex")}`
 			);
-			NotificationsModule.pub.del(
-				crypto.createHash("md5").update(`_notification:${payload.name}_`).digest("hex"),
-				err => {
-					if (err) reject(err);
-					else resolve();
-				}
-			);
+			NotificationsModule.pub
+				.del(crypto.createHash("md5").update(`_notification:${payload.name}_`).digest("hex"))
+				.then(() => resolve())
+				.catch(err => reject(new Error(err)));
 		});
 	}
 }
