@@ -26,7 +26,7 @@ COPY --from=frontend_node_modules /opt/app/node_modules node_modules
 
 RUN mkdir -p /run/nginx
 
-RUN bash -c '[[ "${FRONTEND_MODE}" = "prod" ]] && npm run prod' || exit 0
+RUN bash -c '([[ "${FRONTEND_MODE}" == "dev" ]] && exit 0) || npm run prod'
 
 RUN chmod u+x entrypoint.sh
 

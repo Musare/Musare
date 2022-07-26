@@ -10,13 +10,16 @@ RUN npm install --silent
 
 FROM node:16.15 AS musare_backend
 
+ARG CONTAINER_MODE=prod
+ENV CONTAINER_MODE=${CONTAINER_MODE}
+
 RUN mkdir -p /opt/app
 WORKDIR /opt/app
 
 COPY . /opt/app
 COPY --from=backend_node_modules /opt/app/node_modules node_modules
 
-ENTRYPOINT npm run docker:dev
+ENTRYPOINT bash -c '([[ "${CONTAINER_MODE}" == "dev" ]] && npm install --silent); npm run docker:dev'
 
 EXPOSE 8080/tcp
 EXPOSE 8080/udp

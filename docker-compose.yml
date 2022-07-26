@@ -8,8 +8,9 @@ services:
     restart: ${RESTART_POLICY:-unless-stopped}
     volumes:
       - ./.git:/opt/app/.parent_git:ro
-      - /opt/app/node_modules
       - ./backend/config:/opt/app/config
+    environment:
+      - CONTAINER_MODE=${CONTAINER_MODE:-prod}
     links:
       - mongo
       - redis

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ "${CONTAINER_MODE}" == "dev" ]]; then
-    npm install
+    npm install --silent
 fi
 
 if [[ "${FRONTEND_MODE}" == "prod" ]]; then
