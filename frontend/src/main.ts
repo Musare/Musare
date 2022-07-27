@@ -3,6 +3,7 @@ import { createApp } from "vue";
 
 import VueTippy, { Tippy } from "vue-tippy";
 import { createRouter, createWebHistory } from "vue-router";
+import { createPinia } from "pinia";
 import "lofig";
 
 import ws from "@/ws";
@@ -47,6 +48,8 @@ app.use(VueTippy, {
 	allowHTML: true,
 	defaultProps: { animation: "scale", touch: "hold" }
 });
+
+app.use(createPinia());
 
 app.component("Tippy", Tippy);
 
