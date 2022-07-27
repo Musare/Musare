@@ -8,7 +8,7 @@ import {
 } from "vue";
 import { useStore } from "vuex";
 import Toast from "toasters";
-
+import { useWebsocketsStore } from "@/stores/websockets";
 import ws from "@/ws";
 
 const ActivityItem = defineAsyncComponent(
@@ -17,7 +17,7 @@ const ActivityItem = defineAsyncComponent(
 
 const store = useStore();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const props = defineProps({
 	userId: {

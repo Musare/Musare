@@ -6,6 +6,7 @@ import DOMPurify from "dompurify";
 import Toast from "toasters";
 import { formatDistance } from "date-fns";
 import { useModalState } from "@/vuex_helpers";
+import { useWebsocketsStore } from "@/stores/websockets";
 import ws from "@/ws";
 
 const SaveButton = defineAsyncComponent(
@@ -18,7 +19,7 @@ const props = defineProps({
 
 const store = useStore();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const { createNews, newsId } = useModalState("modals/editNews/MODAL_UUID", {
 	modalUuid: props.modalUuid

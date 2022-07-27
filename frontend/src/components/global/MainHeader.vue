@@ -9,6 +9,7 @@ import {
 	nextTick
 } from "vue";
 import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 const ChristmasLights = defineAsyncComponent(
 	() => import("@/components/ChristmasLights.vue")
@@ -36,7 +37,7 @@ const windowWidth = ref(0);
 const loggedIn = computed(() => store.state.user.auth.loggedIn);
 const username = computed(() => store.state.user.auth.username);
 const role = computed(() => store.state.user.auth.role);
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const openModal = modal => store.dispatch("modalVisibility/openModal", modal);
 const logout = () => store.dispatch("user/auth/logout");

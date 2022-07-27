@@ -2,6 +2,7 @@
 import { useStore } from "vuex";
 import { ref, onBeforeUnmount } from "vue";
 import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalState } from "@/vuex_helpers";
 import validation from "@/validation";
 
@@ -11,7 +12,7 @@ const props = defineProps({
 
 const store = useStore();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const { official } = useModalState("modals/createStation/MODAL_UUID", {
 	modalUuid: props.modalUuid

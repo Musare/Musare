@@ -14,6 +14,7 @@ import aw from "@/aw";
 import ws from "@/ws";
 import validation from "@/validation";
 import keyboardShortcuts from "@/keyboardShortcuts";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 const FloatingBox = defineAsyncComponent(
 	() => import("@/components/FloatingBox.vue")
@@ -51,7 +52,7 @@ const emit = defineEmits([
 
 const store = useStore();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const modals = computed(() => store.state.modalVisibility.modals);
 const activeModals = computed(() => store.state.modalVisibility.activeModals);

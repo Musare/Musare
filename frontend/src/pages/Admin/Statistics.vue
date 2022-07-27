@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { useStore } from "vuex";
 import { useRoute } from "vue-router";
-
+import { useWebsocketsStore } from "@/stores/websockets";
 import ws from "@/ws";
 
-const store = useStore();
 const route = useRoute();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const modules = ref([]);
 const activeModule = ref();

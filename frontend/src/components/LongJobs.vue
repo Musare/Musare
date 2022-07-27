@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useStore } from "vuex";
 import { defineAsyncComponent, ref, computed, onMounted } from "vue";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 const FloatingBox = defineAsyncComponent(
 	() => import("@/components/FloatingBox.vue")
@@ -13,7 +14,7 @@ const body = ref(document.body);
 const loggedIn = computed(() => store.state.user.auth.loggedIn);
 const activeJobs = computed(() => store.state.longJobs.activeJobs);
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const setJob = payload => store.dispatch("longJobs/setJob", payload);
 

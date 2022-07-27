@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { useStore } from "vuex";
 
 import { formatDistance } from "date-fns";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 import ws from "@/ws";
 
-const store = useStore();
-
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const news = ref([]);
 

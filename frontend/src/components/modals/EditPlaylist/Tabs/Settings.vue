@@ -4,6 +4,7 @@ import { computed } from "vue";
 import Toast from "toasters";
 import { useModalState } from "@/vuex_helpers";
 import validation from "@/validation";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
@@ -14,7 +15,7 @@ const store = useStore();
 const userId = computed(() => store.state.user.auth.userId);
 const userRole = computed(() => store.state.user.auth.role);
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const modalState = useModalState("modals/editPlaylist/MODAL_UUID", {
 	modalUuid: props.modalUuid

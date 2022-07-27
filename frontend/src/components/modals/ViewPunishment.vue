@@ -2,6 +2,7 @@
 import { useStore } from "vuex";
 import { defineAsyncComponent, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalState, useModalActions } from "@/vuex_helpers";
 import ws from "@/ws";
 
@@ -15,7 +16,7 @@ const props = defineProps({
 
 const store = useStore();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const { punishmentId, punishment } = useModalState(
 	"modals/viewPunishment/MODAL_UUID",

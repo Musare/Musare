@@ -4,6 +4,7 @@ import { useStore } from "vuex";
 import Toast from "toasters";
 import ws from "@/ws";
 
+import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalState } from "@/vuex_helpers";
 
 import useSortablePlaylists from "@/composables/useSortablePlaylists";
@@ -28,7 +29,7 @@ const emit = defineEmits(["selected"]);
 
 const store = useStore();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const tab = ref("current");
 const search = reactive({

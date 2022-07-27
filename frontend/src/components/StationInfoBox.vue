@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import { useStore } from "vuex";
 import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 const store = useStore();
 
@@ -15,7 +16,7 @@ const props = defineProps({
 const loggedIn = computed(() => store.state.user.auth.loggedIn);
 const userId = computed(() => store.state.user.auth.userId);
 const role = computed(() => store.state.user.auth.role);
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 function isOwnerOnly() {
 	return loggedIn.value && userId.value === props.station.owner;

@@ -2,6 +2,7 @@
 import { useStore } from "vuex";
 import { ref, defineAsyncComponent, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalState } from "@/vuex_helpers";
 import ws from "@/ws";
 
@@ -19,7 +20,7 @@ const closeCurrentModal = () =>
 	store.dispatch("modalVisibility/closeCurrentModal");
 const setJob = payload => store.dispatch("longJobs/setJob", payload);
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const { type } = useModalState("modals/bulkActions/MODAL_UUID", {
 	modalUuid: props.modalUuid

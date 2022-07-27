@@ -12,7 +12,7 @@ import { useRoute, useRouter } from "vue-router";
 import Toast from "toasters";
 import { ContentLoader } from "vue-content-loader";
 import canAutoPlay from "can-autoplay";
-
+import { useWebsocketsStore } from "@/stores/websockets";
 import aw from "@/aw";
 import ms from "@/ms";
 import ws from "@/ws";
@@ -40,7 +40,7 @@ const store = useStore();
 const route = useRoute();
 const router = useRouter();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 // TODO this might need a different place, like onMounted
 const isApple = ref(

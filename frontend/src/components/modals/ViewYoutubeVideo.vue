@@ -4,6 +4,7 @@ import { onMounted, onBeforeUnmount, ref } from "vue";
 import Toast from "toasters";
 import aw from "@/aw";
 import ws from "@/ws";
+import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalState, useModalActions } from "@/vuex_helpers";
 
 const store = useStore();
@@ -54,7 +55,7 @@ const openModal = payload =>
 const closeCurrentModal = () =>
 	store.dispatch("modalVisibility/closeCurrentModal");
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const remove = () => {
 	socket.dispatch("youtube.removeVideos", videoId, res => {

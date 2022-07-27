@@ -10,6 +10,7 @@ import {
 } from "vue";
 import Toast from "toasters";
 import { Sortable } from "sortablejs-vue3";
+import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalState, useModalActions } from "@/vuex_helpers";
 import ws from "@/ws";
 
@@ -23,7 +24,7 @@ const props = defineProps({
 
 const store = useStore();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const modalState = useModalState("modals/importAlbum/MODAL_UUID", {
 	modalUuid: props.modalUuid

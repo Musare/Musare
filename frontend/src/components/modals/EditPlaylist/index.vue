@@ -9,6 +9,7 @@ import {
 } from "vue";
 import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalState, useModalActions } from "@/vuex_helpers";
 import ws from "@/ws";
 import utils from "@/utils";
@@ -33,7 +34,7 @@ const loggedIn = computed(() => store.state.user.auth.loggedIn);
 const userId = computed(() => store.state.user.auth.userId);
 const userRole = computed(() => store.state.user.auth.role);
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const drag = ref(false);
 const apiDomain = ref("");

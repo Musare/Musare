@@ -10,6 +10,7 @@ import {
 } from "vue";
 import Toast from "toasters";
 import { useModalState, useModalActions } from "@/vuex_helpers";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 const Queue = defineAsyncComponent(() => import("@/components/Queue.vue"));
 const SongItem = defineAsyncComponent(
@@ -34,7 +35,7 @@ const loggedIn = computed(() => store.state.user.auth.loggedIn);
 const userId = computed(() => store.state.user.auth.userId);
 const role = computed(() => store.state.user.auth.role);
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const modalState = useModalState("modals/manageStation/MODAL_UUID", {
 	modalUuid: props.modalUuid

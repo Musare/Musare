@@ -4,6 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
 import keyboardShortcuts from "@/keyboardShortcuts";
 import ws from "@/ws";
 
@@ -15,7 +16,7 @@ const loggedIn = computed(() => store.state.user.auth.loggedIn);
 const userId = computed(() => store.state.user.auth.userId);
 const role = computed(() => store.state.user.auth.role);
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const stations = ref([]);
 const searchQuery = ref("");

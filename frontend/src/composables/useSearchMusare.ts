@@ -1,11 +1,8 @@
 import { ref, computed } from "vue";
-import { useStore } from "vuex";
-
 import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 export default function useSearchMusare() {
-	const store = useStore();
-
 	const musareSearch = ref({
 		query: "",
 		searchedQuery: "",
@@ -24,7 +21,7 @@ export default function useSearchMusare() {
 		Math.min(musareSearch.value.pageSize, resultsLeftCount.value)
 	);
 
-	const { socket } = store.state.websockets;
+	const { socket } = useWebsocketsStore();
 
 	const searchForMusareSongs = (page, toast = true) => {
 		if (

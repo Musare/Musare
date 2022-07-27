@@ -2,6 +2,7 @@
 import { defineAsyncComponent, ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
 import ws from "@/ws";
 
 const SaveButton = defineAsyncComponent(
@@ -10,7 +11,7 @@ const SaveButton = defineAsyncComponent(
 
 const store = useStore();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const saveButton = ref();
 

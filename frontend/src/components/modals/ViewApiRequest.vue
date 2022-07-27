@@ -3,6 +3,7 @@ import { useStore } from "vuex";
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
 import VueJsonPretty from "vue-json-pretty";
+import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalState, useModalActions } from "@/vuex_helpers";
 import ws from "@/ws";
 import "vue-json-pretty/lib/styles.css";
@@ -13,7 +14,7 @@ const props = defineProps({
 
 const store = useStore();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const { requestId, request, removeAction } = useModalState(
 	"modals/viewApiRequest/MODAL_UUID",

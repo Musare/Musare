@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
-
 import Toast from "toasters";
-
+import { useWebsocketsStore } from "@/stores/websockets";
 import useSearchYoutube from "@/composables/useSearchYoutube";
 import useSearchMusare from "@/composables/useSearchMusare";
 
@@ -21,7 +20,7 @@ const store = useStore();
 const { youtubeSearch, searchForSongs, loadMoreSongs } = useSearchYoutube();
 const { musareSearch, searchForMusareSongs } = useSearchMusare();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" },

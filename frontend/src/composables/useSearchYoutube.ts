@@ -1,11 +1,8 @@
 import { ref } from "vue";
-import { useStore } from "vuex";
-
 import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 export default function useSearchYoutube() {
-	const store = useStore();
-
 	const youtubeSearch = ref({
 		songs: {
 			results: [],
@@ -18,7 +15,7 @@ export default function useSearchYoutube() {
 		}
 	});
 
-	const { socket } = store.state.websockets;
+	const { socket } = useWebsocketsStore();
 
 	const searchForSongs = () => {
 		let { query } = youtubeSearch.value.songs;

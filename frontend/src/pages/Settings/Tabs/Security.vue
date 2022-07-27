@@ -10,7 +10,7 @@ import {
 import { useStore } from "vuex";
 import Toast from "toasters";
 import { useSettingsStore } from "@/stores/settings";
-
+import { useWebsocketsStore } from "@/stores/websockets";
 import _validation from "@/validation";
 
 const InputHelpBox = defineAsyncComponent(
@@ -20,7 +20,7 @@ const InputHelpBox = defineAsyncComponent(
 const settingsStore = useSettingsStore();
 const store = useStore();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const apiDomain = ref("");
 const siteSettings = ref({

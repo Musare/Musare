@@ -13,6 +13,7 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
 import keyboardShortcuts from "@/keyboardShortcuts";
 import ws from "@/ws";
 import useDragBox from "@/composables/useDragBox";
@@ -60,7 +61,7 @@ const store = useStore();
 
 const activeModals = computed(() => store.state.modalVisibility.activeModals);
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const page = ref(1);
 const pageSize = ref(10);

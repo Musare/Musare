@@ -9,7 +9,7 @@ import {
 } from "vue";
 import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
-
+import { useWebsocketsStore } from "@/stores/websockets";
 import keyboardShortcuts from "@/keyboardShortcuts";
 
 const FloatingBox = defineAsyncComponent(
@@ -20,7 +20,7 @@ const store = useStore();
 const route = useRoute();
 const router = useRouter();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const currentTab = ref("");
 const siteSettings = ref({

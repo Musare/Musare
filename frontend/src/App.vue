@@ -3,7 +3,7 @@ import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
 import { defineAsyncComponent, ref, computed, watch, onMounted } from "vue";
 import Toast from "toasters";
-
+import { useWebsocketsStore } from "@/stores/websockets";
 import ws from "@/ws";
 import aw from "@/aw";
 import keyboardShortcuts from "@/keyboardShortcuts";
@@ -31,7 +31,7 @@ const nightmode = computed(() => store.state.user.preferences.nightmode);
 const activityWatch = computed(
 	() => store.state.user.preferences.activityWatch
 );
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const apiDomain = ref("");
 const socketConnected = ref(true);

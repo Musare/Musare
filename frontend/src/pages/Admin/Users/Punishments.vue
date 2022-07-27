@@ -2,6 +2,7 @@
 import { defineAsyncComponent, ref } from "vue";
 import { useStore } from "vuex";
 import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -9,7 +10,7 @@ const AdvancedTable = defineAsyncComponent(
 
 const store = useStore();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const ipBan = ref({
 	expiresAt: "1h"

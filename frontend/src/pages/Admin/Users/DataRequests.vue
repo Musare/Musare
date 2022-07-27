@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from "vue";
-import { useStore } from "vuex";
 import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
 );
 
-const store = useStore();
-
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const columnDefault = ref({
 	sortable: true,

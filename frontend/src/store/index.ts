@@ -1,8 +1,6 @@
 /* eslint-disable import/no-cycle */
 import { createStore } from "vuex";
 
-import websockets from "./modules/websockets";
-
 import user from "./modules/user";
 import modalVisibility from "./modules/modalVisibility";
 import station from "./modules/station";
@@ -15,7 +13,6 @@ const emptyModule = {
 
 export default createStore({
 	modules: {
-		websockets,
 		user,
 		station,
 		admin,

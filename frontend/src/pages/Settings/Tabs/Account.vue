@@ -11,7 +11,7 @@ import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
 import { useSettingsStore } from "@/stores/settings";
-
+import { useWebsocketsStore } from "@/stores/websockets";
 import _validation from "@/validation";
 
 const InputHelpBox = defineAsyncComponent(
@@ -25,7 +25,7 @@ const settingsStore = useSettingsStore();
 const store = useStore();
 const route = useRoute();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const saveButton = ref();
 

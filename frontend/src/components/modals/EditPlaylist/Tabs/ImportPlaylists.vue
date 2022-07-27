@@ -4,6 +4,7 @@ import { computed } from "vue";
 import Toast from "toasters";
 import { useModalState } from "@/vuex_helpers";
 import useSearchYoutube from "@/composables/useSearchYoutube";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
@@ -11,7 +12,7 @@ const props = defineProps({
 
 const store = useStore();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const modalState = useModalState("modals/editPlaylist/MODAL_UUID", {
 	modalUuid: props.modalUuid

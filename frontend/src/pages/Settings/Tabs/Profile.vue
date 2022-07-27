@@ -3,6 +3,7 @@ import { defineAsyncComponent, ref, computed } from "vue";
 import { useStore } from "vuex";
 import Toast from "toasters";
 import { useSettingsStore } from "@/stores/settings";
+import { useWebsocketsStore } from "@/stores/websockets";
 import validation from "@/validation";
 
 const ProfilePicture = defineAsyncComponent(
@@ -15,7 +16,7 @@ const SaveButton = defineAsyncComponent(
 const settingsStore = useSettingsStore();
 const store = useStore();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const saveButton = ref();
 

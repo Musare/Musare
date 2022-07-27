@@ -2,6 +2,7 @@
 import { useStore } from "vuex";
 import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalState } from "@/vuex_helpers";
 import ws from "@/ws";
 
@@ -18,7 +19,7 @@ const props = defineProps({
 
 const store = useStore();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const { reportId } = useModalState("modals/viewReport/MODAL_UUID", {
 	modalUuid: props.modalUuid

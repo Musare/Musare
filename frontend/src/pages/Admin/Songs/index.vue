@@ -2,8 +2,8 @@
 import { defineAsyncComponent, ref, onMounted } from "vue";
 import { useStore } from "vuex";
 import { useRoute } from "vue-router";
-
 import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -17,7 +17,7 @@ const route = useRoute();
 
 const setJob = payload => store.dispatch("longJobs/setJob", payload);
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const columnDefault = ref({
 	sortable: true,

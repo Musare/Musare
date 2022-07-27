@@ -2,6 +2,7 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { useStore } from "vuex";
 import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
 import ws from "@/ws";
 
 export default function useSortablePlaylists() {
@@ -26,7 +27,7 @@ export default function useSortablePlaylists() {
 		ghostClass: "draggable-list-ghost"
 	}));
 
-	const { socket } = store.state.websockets;
+	const { socket } = useWebsocketsStore();
 
 	const setPlaylists = playlists =>
 		store.dispatch("user/playlists/setPlaylists", playlists);

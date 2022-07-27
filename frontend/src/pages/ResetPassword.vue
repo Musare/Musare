@@ -3,6 +3,7 @@ import { useStore } from "vuex";
 import { defineAsyncComponent, ref, computed, watch, onMounted } from "vue";
 import Toast from "toasters";
 import validation from "@/validation";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 const InputHelpBox = defineAsyncComponent(
 	() => import("@/components/InputHelpBox.vue")
@@ -16,7 +17,7 @@ const store = useStore();
 
 const accountEmail = computed(() => store.state.user.auth.email);
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const code = ref("");
 const inputs = ref({

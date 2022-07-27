@@ -2,8 +2,8 @@
 import { defineAsyncComponent, ref } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
-
 import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -12,7 +12,7 @@ const AdvancedTable = defineAsyncComponent(
 const store = useStore();
 const router = useRouter();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const createImport = ref({
 	stage: 2,

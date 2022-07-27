@@ -5,6 +5,7 @@ import { useRoute } from "vue-router";
 import Toast from "toasters";
 import { useModalState } from "@/vuex_helpers";
 import { useSettingsStore } from "@/stores/settings";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
@@ -15,7 +16,7 @@ const route = useRoute();
 
 const store = useStore();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const { githubLinkConfirmed } = useModalState(
 	"modals/removeAccount/MODAL_UUID",

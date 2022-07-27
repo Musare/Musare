@@ -12,6 +12,7 @@ import {
 import Toast from "toasters";
 import { useModalState, useModalActions } from "@/vuex_helpers";
 import editSongStore from "@/store/modules/modals/editSong";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 const EditSongModal = defineAsyncComponent(
 	() => import("@/components/modals/EditSong/index.vue")
@@ -26,7 +27,7 @@ const props = defineProps({
 
 const store = useStore();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const { youtubeIds, songPrefillData } = useModalState(
 	"modals/editSongs/MODAL_UUID",

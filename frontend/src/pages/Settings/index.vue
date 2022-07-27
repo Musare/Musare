@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 import { onMounted, defineAsyncComponent } from "vue";
 import Toast from "toasters";
 import { useSettingsStore } from "@/stores/settings";
+import { useWebsocketsStore } from "@/stores/websockets";
 import ws from "@/ws";
-
 import useTabQueryHandler from "@/composables/useTabQueryHandler";
 
 const SecuritySettings = defineAsyncComponent(
@@ -22,11 +21,10 @@ const PreferencesSettings = defineAsyncComponent(
 );
 
 const settingsStore = useSettingsStore();
-const store = useStore();
 const route = useRoute();
 const { tab, showTab } = useTabQueryHandler("");
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const { setUser, updateOriginalUser } = settingsStore;
 

@@ -1,17 +1,14 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref, computed, onMounted } from "vue";
-import { useStore } from "vuex";
-
 import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalState, useModalActions } from "@/vuex_helpers";
 
 const ReportInfoItem = defineAsyncComponent(
 	() => import("@/components/ReportInfoItem.vue")
 );
 
-const store = useStore();
-
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" },

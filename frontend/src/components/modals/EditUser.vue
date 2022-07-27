@@ -6,6 +6,7 @@ import { storeToRefs } from "pinia";
 import ws from "@/ws";
 import validation from "@/validation";
 import { useEditUserStore } from "@/stores/editUser";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
@@ -14,7 +15,7 @@ const props = defineProps({
 const editUserStore = useEditUserStore(props);
 const store = useStore();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const { userId, user } = storeToRefs(editUserStore);
 const { setUser } = editUserStore;

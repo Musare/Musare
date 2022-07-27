@@ -3,8 +3,8 @@ import { defineAsyncComponent, ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
 import { format, parseISO } from "date-fns";
+import { useWebsocketsStore } from "@/stores/websockets";
 import ws from "@/ws";
-
 import useTabQueryHandler from "@/composables/useTabQueryHandler";
 
 const ProfilePicture = defineAsyncComponent(
@@ -20,7 +20,7 @@ const route = useRoute();
 const router = useRouter();
 const { tab, showTab } = useTabQueryHandler("recent-activity");
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const user = ref();
 const userId = ref("");

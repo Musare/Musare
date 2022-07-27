@@ -3,6 +3,7 @@ import { useStore } from "vuex";
 import { ref, onBeforeUnmount } from "vue";
 import Toast from "toasters";
 import validation from "@/validation";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 defineProps({
 	modalUuid: { type: String, default: "" }
@@ -21,7 +22,7 @@ const openModal = payload =>
 const closeCurrentModal = () =>
 	store.dispatch("modalVisibility/closeCurrentModal");
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const createPlaylist = () => {
 	const { displayName } = playlist.value;

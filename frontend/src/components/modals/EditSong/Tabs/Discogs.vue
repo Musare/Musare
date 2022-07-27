@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { ref, computed, onMounted } from "vue";
 import Toast from "toasters";
 import { useModalState, useModalActions } from "@/vuex_helpers";
 import keyboardShortcuts from "@/keyboardShortcuts";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" },
@@ -14,9 +14,7 @@ const props = defineProps({
 	bulk: { type: Boolean, default: false }
 });
 
-const store = useStore();
-
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const modalState = useModalState(props.modalModulePath, {
 	modalUuid: props.modalUuid

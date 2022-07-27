@@ -1,5 +1,4 @@
-// eslint-disable-next-line import/no-cycle
-import store from "./store";
+import { useWebsocketsStore } from "@/stores/websockets";
 import ListenerHandler from "./classes/ListenerHandler.class";
 
 const onConnect = [];
@@ -127,7 +126,8 @@ export default {
 		}
 
 		this.socket = new CustomWebSocket();
-		store.dispatch("websockets/createSocket", this.socket);
+		const { createSocket } = useWebsocketsStore();
+		createSocket(this.socket);
 
 		this.socket.onopen = () => {
 			console.log("WS: SOCKET OPENED");

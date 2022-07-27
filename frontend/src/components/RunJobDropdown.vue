@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useStore } from "vuex";
 import { ref } from "vue";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 defineProps({
 	jobs: { type: Array, default: () => [] }
@@ -10,7 +11,7 @@ const showJobDropdown = ref(false);
 
 const store = useStore();
 
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const setJob = payload => store.dispatch("longJobs/setJob", payload);
 

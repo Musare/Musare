@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
 import ws from "@/ws";
 
 const store = useStore();
@@ -23,7 +24,7 @@ const playlists = computed(() => store.state.user.playlists.playlists);
 const fetchedPlaylists = computed(
 	() => store.state.user.playlists.fetchedPlaylists
 );
-const { socket } = store.state.websockets;
+const { socket } = useWebsocketsStore();
 
 const setPlaylists = payload =>
 	store.dispatch("user/playlists/setPlaylists", payload);
