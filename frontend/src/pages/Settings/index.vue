@@ -3,6 +3,7 @@ import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 import { onMounted, defineAsyncComponent } from "vue";
 import Toast from "toasters";
+import { useSettingsStore } from "@/stores/settings";
 import ws from "@/ws";
 
 import useTabQueryHandler from "@/composables/useTabQueryHandler";
@@ -20,16 +21,14 @@ const PreferencesSettings = defineAsyncComponent(
 	() => import("./Tabs/Preferences.vue")
 );
 
+const settingsStore = useSettingsStore();
 const store = useStore();
 const route = useRoute();
 const { tab, showTab } = useTabQueryHandler("");
 
 const { socket } = store.state.websockets;
 
-const setUser = payload => store.dispatch("settings/setUser", payload);
-
-const updateOriginalUser = payload =>
-	store.dispatch("settings/updateOriginalUser", payload);
+const { setUser, updateOriginalUser } = settingsStore;
 
 const init = () => {
 	socket.dispatch("users.findBySession", res => {

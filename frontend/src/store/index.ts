@@ -4,7 +4,6 @@ import { createStore } from "vuex";
 import websockets from "./modules/websockets";
 
 import user from "./modules/user";
-import settings from "./modules/settings";
 import modalVisibility from "./modules/modalVisibility";
 import station from "./modules/station";
 import admin from "./modules/admin";
@@ -18,7 +17,6 @@ export default createStore({
 	modules: {
 		websockets,
 		user,
-		settings,
 		station,
 		admin,
 		modalVisibility,

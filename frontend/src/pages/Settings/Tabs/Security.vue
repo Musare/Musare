@@ -8,8 +8,8 @@ import {
 	onMounted
 } from "vue";
 import { useStore } from "vuex";
-
 import Toast from "toasters";
+import { useSettingsStore } from "@/stores/settings";
 
 import _validation from "@/validation";
 
@@ -17,6 +17,7 @@ const InputHelpBox = defineAsyncComponent(
 	() => import("@/components/InputHelpBox.vue")
 );
 
+const settingsStore = useSettingsStore();
 const store = useStore();
 
 const { socket } = store.state.websockets;
@@ -44,15 +45,7 @@ const validation = reactive({
 const newPassword = ref();
 const oldPassword = ref();
 
-// TODO fix, getters are broken
-// const isPasswordLinked = computed(() => store.state.settings.isPasswordLinked);
-// const isGithubLinked = computed(() => store.state.settings.isGithubLinked);
-const isPasswordLinked = computed(
-	() => !!store.state.settings.originalUser.password
-);
-const isGithubLinked = computed(
-	() => !!store.state.settings.originalUser.github
-);
+const { isPasswordLinked, isGithubLinked } = settingsStore;
 const userId = computed(() => store.state.user.auth.userId);
 
 const togglePasswordVisibility = refName => {

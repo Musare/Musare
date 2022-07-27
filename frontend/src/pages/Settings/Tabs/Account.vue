@@ -10,6 +10,7 @@ import {
 import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
+import { useSettingsStore } from "@/stores/settings";
 
 import _validation from "@/validation";
 
@@ -20,6 +21,7 @@ const SaveButton = defineAsyncComponent(
 	() => import("@/components/SaveButton.vue")
 );
 
+const settingsStore = useSettingsStore();
 const store = useStore();
 const route = useRoute();
 
@@ -28,8 +30,7 @@ const { socket } = store.state.websockets;
 const saveButton = ref();
 
 const userId = computed(() => store.state.user.auth.userId);
-const originalUser = computed(() => store.state.settings.originalUser);
-const modifiedUser = computed(() => store.state.settings.modifiedUser);
+const { originalUser, modifiedUser } = settingsStore;
 
 const validation = reactive({
 	username: {
@@ -44,8 +45,7 @@ const validation = reactive({
 	}
 });
 
-const updateOriginalUser = payload =>
-	store.dispatch("settings/updateOriginalUser", payload);
+const { updateOriginalUser } = settingsStore;
 const openModal = payload =>
 	store.dispatch("modalVisibility/openModal", payload);
 
@@ -54,7 +54,7 @@ const onInput = inputName => {
 };
 
 const changeEmail = () => {
-	const email = modifiedUser.value.email.address;
+	const email = modifiedUser.email.address;
 	if (!_validation.isLength(email, 3, 254))
 		return new Toast("Email must have between 3 and 254 characters.");
 	if (
@@ -83,7 +83,7 @@ const changeEmail = () => {
 };
 
 const changeUsername = () => {
-	const { username } = modifiedUser.value;
+	const { username } = modifiedUser;
 
 	if (!_validation.isLength(username, 2, 32))
 		return new Toast("Username must have between 2 and 32 characters.");
@@ -123,10 +123,9 @@ const changeUsername = () => {
 };
 
 const saveChanges = () => {
-	const usernameChanged =
-		modifiedUser.value.username !== originalUser.value.username;
+	const usernameChanged = modifiedUser.username !== originalUser.username;
 	const emailAddressChanged =
-		modifiedUser.value.email.address !== originalUser.value.email.address;
+		modifiedUser.email.address !== originalUser.email.address;
 
 	if (usernameChanged) changeUsername();
 
@@ -158,7 +157,7 @@ onMounted(() => {
 });
 
 watch(
-	() => modifiedUser.value.username,
+	() => modifiedUser.username,
 	value => {
 		// const value = newModifiedUser.username;
 
@@ -168,7 +167,7 @@ watch(
 			validation.username.valid = false;
 		} else if (
 			!_validation.regex.azAZ09_.test(value) &&
-			value !== originalUser.value.username // Sometimes a username pulled from GitHub won't succeed validation
+			value !== originalUser.username // Sometimes a username pulled from GitHub won't succeed validation
 		) {
 			validation.username.message =
 				"Invalid format. Allowed characters: a-z, A-Z, 0-9 and _.";
@@ -185,7 +184,7 @@ watch(
 );
 
 watch(
-	() => modifiedUser.value.email.address,
+	() => modifiedUser.email.address,
 	value => {
 		// const value = newModifiedUser.email.address;
 

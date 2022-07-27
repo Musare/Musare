@@ -2,7 +2,7 @@
 import { defineAsyncComponent, ref, computed } from "vue";
 import { useStore } from "vuex";
 import Toast from "toasters";
-
+import { useSettingsStore } from "@/stores/settings";
 import validation from "@/validation";
 
 const ProfilePicture = defineAsyncComponent(
@@ -12,6 +12,7 @@ const SaveButton = defineAsyncComponent(
 	() => import("@/components/SaveButton.vue")
 );
 
+const settingsStore = useSettingsStore();
 const store = useStore();
 
 const { socket } = store.state.websockets;
@@ -19,17 +20,13 @@ const { socket } = store.state.websockets;
 const saveButton = ref();
 
 const userId = computed(() => store.state.user.auth.userId);
-const originalUser = computed(() => store.state.settings.originalUser);
-const modifiedUser = computed(() => store.state.settings.modifiedUser);
+const { originalUser, modifiedUser } = settingsStore;
 
-const updateOriginalUser = payload =>
-	store.dispatch("settings/updateOriginalUser", payload);
+const { updateOriginalUser } = settingsStore;
 
 const changeName = () => {
-	modifiedUser.value.name = modifiedUser.value.name
-		.replaceAll(/ +/g, " ")
-		.trim();
-	const { name } = modifiedUser.value;
+	modifiedUser.name = modifiedUser.name.replaceAll(/ +/g, " ").trim();
+	const { name } = modifiedUser;
 
 	if (!validation.isLength(name, 1, 64))
 		return new Toast("Name must have between 1 and 64 characters.");
@@ -63,7 +60,7 @@ const changeName = () => {
 };
 
 const changeLocation = () => {
-	const { location } = modifiedUser.value;
+	const { location } = modifiedUser;
 
 	if (!validation.isLength(location, 0, 50))
 		return new Toast("Location must have between 0 and 50 characters.");
@@ -93,7 +90,7 @@ const changeLocation = () => {
 };
 
 const changeBio = () => {
-	const { bio } = modifiedUser.value;
+	const { bio } = modifiedUser;
 
 	if (!validation.isLength(bio, 0, 200))
 		return new Toast("Bio must have between 0 and 200 characters.");
@@ -118,7 +115,7 @@ const changeBio = () => {
 };
 
 const changeAvatar = () => {
-	const { avatar } = modifiedUser.value;
+	const { avatar } = modifiedUser;
 
 	saveButton.value.status = "disabled";
 
@@ -140,13 +137,12 @@ const changeAvatar = () => {
 };
 
 const saveChanges = () => {
-	const nameChanged = modifiedUser.value.name !== originalUser.value.name;
-	const locationChanged =
-		modifiedUser.value.location !== originalUser.value.location;
-	const bioChanged = modifiedUser.value.bio !== originalUser.value.bio;
+	const nameChanged = modifiedUser.name !== originalUser.name;
+	const locationChanged = modifiedUser.location !== originalUser.location;
+	const bioChanged = modifiedUser.bio !== originalUser.bio;
 	const avatarChanged =
-		modifiedUser.value.avatar.type !== originalUser.value.avatar.type ||
-		modifiedUser.value.avatar.color !== originalUser.value.avatar.color;
+		modifiedUser.avatar.type !== originalUser.avatar.type ||
+		modifiedUser.avatar.color !== originalUser.avatar.color;
 
 	if (nameChanged) changeName();
 	if (locationChanged) changeLocation();
