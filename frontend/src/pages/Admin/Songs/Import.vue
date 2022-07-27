@@ -4,6 +4,7 @@ import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useLongJobsStore } from "@/stores/longJobs";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -238,7 +239,7 @@ const events = ref({
 const openModal = payload =>
 	store.dispatch("modalVisibility/openModal", payload);
 
-const setJob = payload => store.dispatch("longJobs/setJob", payload);
+const { setJob } = useLongJobsStore();
 
 const openAdvancedTable = importJob => {
 	const filter = {

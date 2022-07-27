@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { useStore } from "vuex";
 import { defineAsyncComponent, ref, computed, onMounted } from "vue";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useLongJobsStore } from "@/stores/longJobs";
 
 const FloatingBox = defineAsyncComponent(
 	() => import("@/components/FloatingBox.vue")
@@ -12,15 +14,12 @@ const store = useStore();
 const body = ref(document.body);
 
 const loggedIn = computed(() => store.state.user.auth.loggedIn);
-const activeJobs = computed(() => store.state.longJobs.activeJobs);
 
 const { socket } = useWebsocketsStore();
 
-const setJob = payload => store.dispatch("longJobs/setJob", payload);
-
-const setJobs = payload => store.dispatch("longJobs/setJobs", payload);
-
-const removeJob = payload => store.dispatch("longJobs/removeJob", payload);
+const longJobsStore = useLongJobsStore();
+const { activeJobs } = storeToRefs(longJobsStore);
+const { setJob, setJobs, removeJob } = longJobsStore;
 
 const remove = job => {
 	if (job.status === "success" || job.status === "error") {

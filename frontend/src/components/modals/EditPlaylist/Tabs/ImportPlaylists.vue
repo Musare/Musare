@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { computed } from "vue";
 import Toast from "toasters";
 import { useModalState } from "@/vuex_helpers";
 import useSearchYoutube from "@/composables/useSearchYoutube";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useLongJobsStore } from "@/stores/longJobs";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
 });
-
-const store = useStore();
 
 const { socket } = useWebsocketsStore();
 
@@ -19,7 +17,7 @@ const modalState = useModalState("modals/editPlaylist/MODAL_UUID", {
 });
 const playlist = computed(() => modalState.playlist);
 
-const setJob = payload => store.dispatch("longJobs/setJob", payload);
+const { setJob } = useLongJobsStore();
 
 const { youtubeSearch } = useSearchYoutube();
 

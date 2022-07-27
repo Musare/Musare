@@ -4,6 +4,7 @@ import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useLongJobsStore } from "@/stores/longJobs";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -15,7 +16,7 @@ const RunJobDropdown = defineAsyncComponent(
 const store = useStore();
 const route = useRoute();
 
-const setJob = payload => store.dispatch("longJobs/setJob", payload);
+const { setJob } = useLongJobsStore();
 
 const { socket } = useWebsocketsStore();
 

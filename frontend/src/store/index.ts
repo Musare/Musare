@@ -5,7 +5,6 @@ import user from "./modules/user";
 import modalVisibility from "./modules/modalVisibility";
 import station from "./modules/station";
 import admin from "./modules/admin";
-import longJobs from "./modules/longJobs";
 
 const emptyModule = {
 	namespaced: true
@@ -37,8 +36,7 @@ export default createStore({
 				viewYoutubeVideo: emptyModule,
 				removeAccount: emptyModule
 			}
-		},
-		longJobs
+		}
 	},
 	strict: false
 });
