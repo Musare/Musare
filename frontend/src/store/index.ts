@@ -28,7 +28,6 @@ export default createStore({
 				importAlbum: emptyModule,
 				editPlaylist: emptyModule,
 				manageStation: emptyModule,
-				editUser: emptyModule,
 				whatIsNew: emptyModule,
 				createStation: emptyModule,
 				editNews: emptyModule,

@@ -1,7 +1,6 @@
 /* eslint no-param-reassign: 0 */
 import ws from "@/ws";
 
-import editUser from "./modals/editUser";
 import whatIsNew from "./modals/whatIsNew";
 import createStation from "./modals/createStation";
 import editNews from "./modals/editNews";
@@ -19,13 +18,16 @@ import editSong from "./modals/editSong";
 import viewYoutubeVideo from "./modals/viewYoutubeVideo";
 import removeAccount from "./modals/removeAccount";
 
+import { useEditUserStore } from "@/stores/editUser";
+
 const state = {
 	modals: {},
 	activeModals: []
 };
 
+const piniaStores = ["editUser"];
+
 const modalModules = {
-	editUser,
 	whatIsNew,
 	createStation,
 	editNews,
@@ -99,7 +101,19 @@ const mutations = {
 	openModal(state, { modal, uuid, data }) {
 		state.modals[uuid] = modal;
 
-		if (modalModules[modal]) {
+		if (piniaStores.indexOf(modal) !== -1) {
+			let store;
+
+			switch (modal) {
+				case "editUser":
+					store = useEditUserStore({ modalUuid: uuid });
+					break;
+				default:
+					break;
+			}
+
+			if (data) store.init(data);
+		} else if (modalModules[modal]) {
 			this.registerModule(["modals", modal, uuid], modalModules[modal]);
 			if (data) this.dispatch(`modals/${modal}/${uuid}/init`, data);
 		}

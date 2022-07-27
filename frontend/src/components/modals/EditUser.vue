@@ -1,28 +1,24 @@
 <script setup lang="ts">
 import { useStore } from "vuex";
-import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
+import { ref, watch, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
-import { useModalState, useModalActions } from "@/vuex_helpers";
+import { storeToRefs } from "pinia";
 import ws from "@/ws";
 import validation from "@/validation";
+import { useEditUserStore } from "@/stores/editUser";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
 });
 
+const editUserStore = useEditUserStore(props);
 const store = useStore();
 
 const { socket } = store.state.websockets;
 
-const modalState = useModalState("modals/editUser/MODAL_UUID", {
-	modalUuid: props.modalUuid
-});
-const userId = computed(() => modalState.userId);
-const user = computed(() => modalState.user);
+const { userId, user } = storeToRefs(editUserStore);
+const { setUser } = editUserStore;
 
-const { setUser } = useModalActions("modals/editUser/MODAL_UUID", ["setUser"], {
-	modalUuid: props.modalUuid
-});
 const closeCurrentModal = () =>
 	store.dispatch("modalVisibility/closeCurrentModal");
 
@@ -156,8 +152,8 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
 	socket.dispatch("apis.leaveRoom", `edit-user.${userId.value}`, () => {});
-	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-	store.unregisterModule(["modals", "editUser", props.modalUuid]);
+	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
+	editUserStore.$dispose();
 });
 </script>
 
