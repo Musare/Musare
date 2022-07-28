@@ -15,6 +15,13 @@ updates:
     schedule:
       interval: "daily"
 
+  # Maintain dependencies for backend docker
+  - package-ecosystem: "docker"
+    directory: "/backend"
+    target-branch: "staging"
+    schedule:
+      interval: "daily"
+
   # Maintain dependencies for frontend npm
   - package-ecosystem: "npm"
     directory: "/frontend"
@@ -22,9 +29,9 @@ updates:
     schedule:
       interval: "daily"
 
-  # Maintain dependencies for docker
+  # Maintain dependencies for frontend docker
   - package-ecosystem: "docker"
-    directory: "/"
+    directory: "/frontend"
     target-branch: "staging"
     schedule:
       interval: "daily"
