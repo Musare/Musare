@@ -10,9 +10,11 @@ import {
 import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { ContentLoader } from "vue-content-loader";
 import canAutoPlay from "can-autoplay";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useStationStore } from "@/stores/station";
 import aw from "@/aw";
 import ms from "@/ms";
 import ws from "@/ws";
@@ -41,6 +43,7 @@ const route = useRoute();
 const router = useRouter();
 
 const { socket } = useWebsocketsStore();
+const stationStore = useStationStore();
 
 // TODO this might need a different place, like onMounted
 const isApple = ref(
@@ -93,16 +96,6 @@ const activeModals = computed(() => store.state.modalVisibility.activeModals);
 // TODO fix this if it still has some use, as this is no longer accurate
 // const video = computed(() => store.state.modals.editSong);
 
-const station = computed(() => store.state.station.station);
-const currentSong = computed(() => store.state.station.currentSong);
-const nextSong = computed(() => store.state.station.nextSong);
-const songsList = computed(() => store.state.station.songsList);
-const stationPaused = computed(() => store.state.station.stationPaused);
-const localPaused = computed(() => store.state.station.localPaused);
-const noSong = computed(() => store.state.station.noSong);
-const autoRequest = computed(() => store.state.station.autoRequest);
-const autoRequestLock = computed(() => store.state.station.autoRequestLock);
-
 const loggedIn = computed(() => store.state.user.auth.loggedIn);
 const userId = computed(() => store.state.user.auth.userId);
 const role = computed(() => store.state.user.auth.role);
@@ -110,6 +103,18 @@ const nightmode = computed(() => store.state.user.preferences.nightmode);
 const autoSkipDisliked = computed(
 	() => store.state.user.preferences.autoSkipDisliked
 );
+
+const {
+	station,
+	currentSong,
+	nextSong,
+	songsList,
+	stationPaused,
+	localPaused,
+	noSong,
+	autoRequest,
+	autoRequestLock
+} = storeToRefs(stationStore);
 
 const skipVotesLoaded = computed(
 	() =>
@@ -139,39 +144,27 @@ const currentUserQueueSongs = computed(
 		).length
 );
 
-const joinStation = payload => store.dispatch("station/joinStation", payload);
-const leaveStation = payload => store.dispatch("station/leaveStation", payload);
-const updateStation = payload =>
-	store.dispatch("station/updateStation", payload);
-const updateUserCount = payload =>
-	store.dispatch("station/updateUserCount", payload);
-const updateUsers = payload => store.dispatch("station/updateUsers", payload);
-const updateCurrentSong = payload =>
-	store.dispatch("station/updateCurrentSong", payload);
-const updateNextSong = payload =>
-	store.dispatch("station/updateNextSong", payload);
-const updateSongsList = payload =>
-	store.dispatch("station/updateSongsList", payload);
-const repositionSongInList = payload =>
-	store.dispatch("station/repositionSongInList", payload);
-const updateStationPaused = payload =>
-	store.dispatch("station/updateStationPaused", payload);
-const updateLocalPaused = payload =>
-	store.dispatch("station/updateLocalPaused", payload);
-const updateNoSong = payload => store.dispatch("station/updateNoSong", payload);
-const updateIfStationIsFavorited = payload =>
-	store.dispatch("station/updateIfStationIsFavorited", payload);
-const setAutofillPlaylists = payload =>
-	store.dispatch("station/setAutofillPlaylists", payload);
-const setBlacklist = payload => store.dispatch("station/setBlacklist", payload);
-const updateCurrentSongRatings = payload =>
-	store.dispatch("station/updateCurrentSongRatings", payload);
-const updateOwnCurrentSongRatings = payload =>
-	store.dispatch("station/updateOwnCurrentSongRatings", payload);
-const updateCurrentSongSkipVotes = payload =>
-	store.dispatch("station/updateCurrentSongSkipVotes", payload);
-const updateAutoRequestLock = payload =>
-	store.dispatch("station/updateAutoRequestLock", payload);
+const {
+	joinStation,
+	leaveStation,
+	updateStation,
+	updateUserCount,
+	updateUsers,
+	updateCurrentSong,
+	updateNextSong,
+	updateSongsList,
+	repositionSongInList,
+	updateStationPaused,
+	updateLocalPaused,
+	updateNoSong,
+	updateIfStationIsFavorited,
+	setAutofillPlaylists,
+	setBlacklist,
+	updateCurrentSongRatings,
+	updateOwnCurrentSongRatings,
+	updateCurrentSongSkipVotes,
+	updateAutoRequestLock
+} = stationStore;
 
 // TODO fix this if it still has some use
 // const stopVideo = payload =>

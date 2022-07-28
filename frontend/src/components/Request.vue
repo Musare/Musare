@@ -3,6 +3,7 @@ import { defineAsyncComponent, ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useStationStore } from "@/stores/station";
 import useSearchYoutube from "@/composables/useSearchYoutube";
 import useSearchMusare from "@/composables/useSearchMusare";
 
@@ -21,6 +22,7 @@ const { youtubeSearch, searchForSongs, loadMoreSongs } = useSearchYoutube();
 const { musareSearch, searchForMusareSongs } = useSearchMusare();
 
 const { socket } = useWebsocketsStore();
+const stationStore = useStationStore();
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" },
@@ -40,7 +42,7 @@ const station = computed({
 	get() {
 		if (props.sector === "manageStation")
 			return store.state.modals.manageStation[props.modalUuid].station;
-		return store.state.station.station;
+		return stationStore.station;
 	},
 	set(station) {
 		if (props.sector === "manageStation")
@@ -48,7 +50,7 @@ const station = computed({
 				`modals/manageStation/${props.modalUuid}/updateStation`,
 				station
 			);
-		else store.commit("station/updateStation", station);
+		else stationStore.updateStation(station);
 	}
 });
 // const blacklist = computed({
@@ -56,7 +58,7 @@ const station = computed({
 // 		if (props.sector === "manageStation")
 // 			return store.state.modals.manageStation[props.modalUuid]
 // 				.blacklist;
-// 		return store.state.station.blacklist;
+// 		return stationStore.blacklist;
 // 	},
 // 	set(blacklist) {
 // 		if (props.sector === "manageStation")
@@ -64,14 +66,14 @@ const station = computed({
 // 				`modals/manageStation/${props.modalUuid}/setBlacklist`,
 // 				blacklist
 // 			);
-// 		else store.commit("station/setBlacklist", blacklist);
+// 		else stationStore.setBlacklist(blacklist);
 // 	}
 // });
 const songsList = computed({
 	get() {
 		if (props.sector === "manageStation")
 			return store.state.modals.manageStation[props.modalUuid].songsList;
-		return store.state.station.songsList;
+		return stationStore.songsList;
 	},
 	set(songsList) {
 		if (props.sector === "manageStation")
@@ -79,7 +81,7 @@ const songsList = computed({
 				`modals/manageStation/${props.modalUuid}/updateSongsList`,
 				songsList
 			);
-		else store.commit("station/updateSongsList", songsList);
+		else stationStore.updateSongsList(songsList);
 	}
 });
 const musareResultsLeftCount = computed(

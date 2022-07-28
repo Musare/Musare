@@ -2,9 +2,11 @@
 import { defineAsyncComponent, ref, reactive, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import ws from "@/ws";
 
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useStationStore } from "@/stores/station";
 import { useModalState } from "@/vuex_helpers";
 
 import useSortablePlaylists from "@/composables/useSortablePlaylists";
@@ -30,6 +32,7 @@ const emit = defineEmits(["selected"]);
 const store = useStore();
 
 const { socket } = useWebsocketsStore();
+const stationStore = useStationStore();
 
 const tab = ref("current");
 const search = reactive({
@@ -58,7 +61,8 @@ const {
 const loggedIn = computed(() => store.state.user.auth.loggedIn);
 const role = computed(() => store.state.user.auth.role);
 const userId = computed(() => store.state.user.auth.userId);
-const autoRequest = computed(() => store.state.station.autoRequest);
+
+const { autoRequest } = storeToRefs(stationStore);
 
 const { autofill } = useModalState("modals/manageStation/MODAL_UUID", {
 	modalUuid: props.modalUuid
@@ -68,7 +72,7 @@ const station = computed({
 	get() {
 		if (props.sector === "manageStation")
 			return store.state.modals.manageStation[props.modalUuid].station;
-		return store.state.station.station;
+		return stationStore.station;
 	},
 	set(station) {
 		if (props.sector === "manageStation")
@@ -76,7 +80,7 @@ const station = computed({
 				`modals/manageStation/${props.modalUuid}/updateStation`,
 				station
 			);
-		else store.commit("station/updateStation", station);
+		else stationStore.updateStation(station);
 	}
 });
 
@@ -84,7 +88,7 @@ const blacklist = computed({
 	get() {
 		if (props.sector === "manageStation")
 			return store.state.modals.manageStation[props.modalUuid].blacklist;
-		return store.state.station.blacklist;
+		return stationStore.blacklist;
 	},
 	set(blacklist) {
 		if (props.sector === "manageStation")
@@ -92,7 +96,7 @@ const blacklist = computed({
 				`modals/manageStation/${props.modalUuid}/setBlacklist`,
 				blacklist
 			);
-		else store.commit("station/setBlacklist", blacklist);
+		else stationStore.setBlacklist(blacklist);
 	}
 });
 
@@ -106,10 +110,9 @@ const openModal = payload =>
 	store.dispatch("modalVisibility/openModal", payload);
 const setPlaylists = payload =>
 	store.dispatch("user/playlists/setPlaylists", payload);
-const addPlaylistToAutoRequest = payload =>
-	store.dispatch("station/addPlaylistToAutoRequest", payload);
-const removePlaylistFromAutoRequest = payload =>
-	store.dispatch("station/removePlaylistFromAutoRequest", payload);
+
+const { addPlaylistToAutoRequest, removePlaylistFromAutoRequest } =
+	stationStore;
 
 const init = () => {
 	socket.dispatch("playlists.indexMyPlaylists", res => {

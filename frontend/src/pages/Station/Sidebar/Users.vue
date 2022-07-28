@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { useRoute } from "vue-router";
-import { defineAsyncComponent, ref, computed, onMounted } from "vue";
+import { defineAsyncComponent, ref, onMounted } from "vue";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
+import { useStationStore } from "@/stores/station";
 
 const ProfilePicture = defineAsyncComponent(
 	() => import("@/components/ProfilePicture.vue")
 );
 
-const store = useStore();
+const stationStore = useStationStore();
 const route = useRoute();
 
 const notesUri = ref("");
 const frontendDomain = ref("");
 
-const users = computed(() => store.state.station.users);
-const userCount = computed(() => store.state.station.userCount);
+const { users, userCount } = storeToRefs(stationStore);
 
 async function copyToClipboard() {
 	try {

@@ -4,6 +4,7 @@ import { defineAsyncComponent, ref, computed, onUpdated } from "vue";
 import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useStationStore } from "@/stores/station";
 
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
@@ -21,6 +22,7 @@ const userId = computed(() => store.state.user.auth.userId);
 const userRole = computed(() => store.state.user.auth.role);
 
 const { socket } = useWebsocketsStore();
+const stationStore = useStationStore();
 
 const repositionSongInList = payload => {
 	if (props.sector === "manageStation")
@@ -29,7 +31,7 @@ const repositionSongInList = payload => {
 			payload
 		);
 
-	return store.dispatch("station/repositionSongInList", payload);
+	return stationStore.repositionSongInList(payload);
 };
 
 const actionableButtonVisible = ref(false);
@@ -40,7 +42,7 @@ const station = computed({
 	get: () => {
 		if (props.sector === "manageStation")
 			return store.state.modals.manageStation[props.modalUuid].station;
-		return store.state.station.station;
+		return stationStore.station;
 	},
 	set: station => {
 		if (props.sector === "manageStation")
@@ -48,7 +50,7 @@ const station = computed({
 				`modals/manageStation/${props.modalUuid}/updateStation`,
 				station
 			);
-		else store.commit("station/updateStation", station);
+		else stationStore.updateStation(station);
 	}
 });
 
@@ -56,7 +58,7 @@ const queue = computed({
 	get: () => {
 		if (props.sector === "manageStation")
 			return store.state.modals.manageStation[props.modalUuid].songsList;
-		return store.state.station.songsList;
+		return stationStore.songsList;
 	},
 	set: queue => {
 		if (props.sector === "manageStation")
@@ -64,7 +66,7 @@ const queue = computed({
 				`modals/manageStation/${props.modalUuid}/updateSongsList`,
 				queue
 			);
-		else store.commit("station/updateSongsList", queue);
+		else stationStore.updateSongsList(queue);
 	}
 });
 

@@ -9,7 +9,9 @@ import {
 } from "vue";
 import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useStationStore } from "@/stores/station";
 import { useModalState, useModalActions } from "@/vuex_helpers";
 import ws from "@/ws";
 import utils from "@/utils";
@@ -29,12 +31,14 @@ const props = defineProps({
 
 const store = useStore();
 
-const station = computed(() => store.state.station);
 const loggedIn = computed(() => store.state.user.auth.loggedIn);
 const userId = computed(() => store.state.user.auth.userId);
 const userRole = computed(() => store.state.user.auth.role);
 
 const { socket } = useWebsocketsStore();
+const stationStore = useStationStore();
+
+const { station } = storeToRefs(stationStore);
 
 const drag = ref(false);
 const apiDomain = ref("");
