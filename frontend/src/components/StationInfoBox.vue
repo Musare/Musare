@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import { useStore } from "vuex";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserAuthStore } from "@/stores/userAuth";
 
 const store = useStore();
+const userAuthStore = useUserAuthStore();
 
 const props = defineProps({
 	station: { type: Object, default: null },
@@ -13,10 +15,8 @@ const props = defineProps({
 	showGoToStation: { type: Boolean, default: false }
 });
 
-const loggedIn = computed(() => store.state.user.auth.loggedIn);
-const userId = computed(() => store.state.user.auth.userId);
-const role = computed(() => store.state.user.auth.role);
 const { socket } = useWebsocketsStore();
+const { loggedIn, userId, role } = storeToRefs(userAuthStore);
 
 function isOwnerOnly() {
 	return loggedIn.value && userId.value === props.station.owner;

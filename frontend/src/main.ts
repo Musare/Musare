@@ -6,6 +6,8 @@ import { createRouter, createWebHistory } from "vue-router";
 import { createPinia } from "pinia";
 import "lofig";
 
+import { useUserAuthStore } from "@/stores/userAuth";
+import { useUserPreferencesStore } from "@/stores/userPreferences";
 import ws from "@/ws";
 import ms from "@/ms";
 import store from "./store";
@@ -234,6 +236,8 @@ const router = createRouter({
 	]
 });
 
+const userAuthStore = useUserAuthStore();
+
 router.beforeEach((to, from, next) => {
 	if (window.stationInterval) {
 		clearInterval(window.stationInterval);
@@ -253,27 +257,25 @@ router.beforeEach((to, from, next) => {
 
 	if (to.meta.loginRequired || to.meta.adminRequired || to.meta.guestsOnly) {
 		const gotData = () => {
-			if (to.meta.loginRequired && !store.state.user.auth.loggedIn)
+			if (to.meta.loginRequired && !userAuthStore.loggedIn)
 				next({ path: "/login", query: "" });
-			else if (
-				to.meta.adminRequired &&
-				store.state.user.auth.role !== "admin"
-			)
+			else if (to.meta.adminRequired && userAuthStore.role !== "admin")
 				next({ path: "/", query: "" });
-			else if (to.meta.guestsOnly && store.state.user.auth.loggedIn)
+			else if (to.meta.guestsOnly && userAuthStore.loggedIn)
 				next({ path: "/", query: "" });
 			else next();
 		};
 
-		if (store.state.user.auth.gotData) gotData();
+		if (userAuthStore.gotData) gotData();
 		else {
-			const watcher = store.watch(
-				state => state.user.auth.gotData,
-				() => {
-					watcher();
-					gotData();
-				}
-			);
+			// TODO
+			// const watcher = store.watch(
+			// 	state => userAuthStore.gotData,
+			// 	() => {
+			// 		watcher();
+			// 		gotData();
+			// 	}
+			// );
 		}
 	} else next();
 });
@@ -305,7 +307,7 @@ lofig.folder = defaultConfigURL;
 	ws.socket.on("ready", res => {
 		const { loggedIn, role, username, userId, email } = res.data;
 
-		store.dispatch("user/auth/authData", {
+		userAuthStore.authData({
 			loggedIn,
 			role,
 			username,
@@ -315,47 +317,40 @@ lofig.folder = defaultConfigURL;
 	});
 
 	ws.socket.on("keep.event:user.banned", res =>
-		store.dispatch("user/auth/banUser", res.data.ban)
+		userAuthStore.banUser(res.data.ban)
 	);
 
 	ws.socket.on("keep.event:user.username.updated", res =>
-		store.dispatch("user/auth/updateUsername", res.data.username)
+		userAuthStore.updateUsername(res.data.username)
 	);
 
 	ws.socket.on("keep.event:user.preferences.updated", res => {
 		const { preferences } = res.data;
 
+		const {
+			changeAutoSkipDisliked,
+			changeNightmode,
+			changeActivityLogPublic,
+			changeAnonymousSongRequests,
+			changeActivityWatch
+		} = useUserPreferencesStore();
+
 		if (preferences.autoSkipDisliked !== undefined)
-			store.dispatch(
-				"user/preferences/changeAutoSkipDisliked",
-				preferences.autoSkipDisliked
-			);
+			changeAutoSkipDisliked(preferences.autoSkipDisliked);
 
 		if (preferences.nightmode !== undefined) {
 			localStorage.setItem("nightmode", preferences.nightmode);
-			store.dispatch(
-				"user/preferences/changeNightmode",
-				preferences.nightmode
-			);
+			changeNightmode(preferences.nightmode);
 		}
 
 		if (preferences.activityLogPublic !== undefined)
-			store.dispatch(
-				"user/preferences/changeActivityLogPublic",
-				preferences.activityLogPublic
-			);
+			changeActivityLogPublic(preferences.activityLogPublic);
 
 		if (preferences.anonymousSongRequests !== undefined)
-			store.dispatch(
-				"user/preferences/changeAnonymousSongRequests",
-				preferences.anonymousSongRequests
-			);
+			changeAnonymousSongRequests(preferences.anonymousSongRequests);
 
 		if (preferences.activityWatch !== undefined)
-			store.dispatch(
-				"user/preferences/changeActivityWatch",
-				preferences.activityWatch
-			);
+			changeActivityWatch(preferences.activityWatch);
 	});
 
 	app.mount("#root");

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { useStore } from "vuex";
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { formatDistance, parseISO } from "date-fns";
+import { storeToRefs } from "pinia";
 import AddToPlaylistDropdown from "./AddToPlaylistDropdown.vue";
+import { useUserAuthStore } from "@/stores/userAuth";
 import utils from "@/utils";
 
 const store = useStore();
@@ -39,8 +41,8 @@ const formatRequestedAtInterval = ref();
 const hoveredTippy = ref(false);
 const songActions = ref(null);
 
-const loggedIn = computed(() => store.state.user.auth.loggedIn);
-const userRole = computed(() => store.state.user.auth.role);
+const userAuthStore = useUserAuthStore();
+const { loggedIn, role: userRole } = storeToRefs(userAuthStore);
 
 function formatRequestedAt() {
 	if (props.requestedBy && props.song.requestedAt)

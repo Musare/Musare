@@ -7,6 +7,8 @@ import ws from "@/ws";
 
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
+import { useUserAuthStore } from "@/stores/userAuth";
+import { useUserPlaylistsStore } from "@/stores/userPlaylists";
 import { useModalState } from "@/vuex_helpers";
 
 import useSortablePlaylists from "@/composables/useSortablePlaylists";
@@ -33,6 +35,7 @@ const store = useStore();
 
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
+const userAuthStore = useUserAuthStore();
 
 const tab = ref("current");
 const search = reactive({
@@ -58,10 +61,7 @@ const {
 	calculatePlaylistOrder
 } = useSortablePlaylists();
 
-const loggedIn = computed(() => store.state.user.auth.loggedIn);
-const role = computed(() => store.state.user.auth.role);
-const userId = computed(() => store.state.user.auth.userId);
-
+const { loggedIn, role, userId } = storeToRefs(userAuthStore);
 const { autoRequest } = storeToRefs(stationStore);
 
 const { autofill } = useModalState("modals/manageStation/MODAL_UUID", {
@@ -108,8 +108,8 @@ const nextPageResultsCount = computed(() =>
 
 const openModal = payload =>
 	store.dispatch("modalVisibility/openModal", payload);
-const setPlaylists = payload =>
-	store.dispatch("user/playlists/setPlaylists", payload);
+
+const { setPlaylists } = useUserPlaylistsStore();
 
 const { addPlaylistToAutoRequest, removePlaylistFromAutoRequest } =
 	stationStore;

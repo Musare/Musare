@@ -3,7 +3,10 @@ import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
 import { defineAsyncComponent, ref, computed, watch, onMounted } from "vue";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserAuthStore } from "@/stores/userAuth";
+import { useUserPreferencesStore } from "@/stores/userPreferences";
 import ws from "@/ws";
 import aw from "@/aw";
 import keyboardShortcuts from "@/keyboardShortcuts";
@@ -23,15 +26,12 @@ const store = useStore();
 const route = useRoute();
 const router = useRouter();
 
-const loggedIn = computed(() => store.state.user.auth.loggedIn);
-const banned = computed(() => store.state.user.auth.banned);
 const modals = computed(() => store.state.modalVisibility.modals);
 const activeModals = computed(() => store.state.modalVisibility.activeModals);
-const nightmode = computed(() => store.state.user.preferences.nightmode);
-const activityWatch = computed(
-	() => store.state.user.preferences.activityWatch
-);
+
 const { socket } = useWebsocketsStore();
+const userAuthStore = useUserAuthStore();
+const userPreferencesStore = useUserPreferencesStore();
 
 const apiDomain = ref("");
 const socketConnected = ref(true);
@@ -42,22 +42,22 @@ const broadcastChannel = ref();
 const christmas = ref(false);
 const disconnectedMessage = ref();
 
+const { loggedIn, banned } = storeToRefs(userAuthStore);
+const { nightmode, activityWatch } = storeToRefs(userPreferencesStore);
+const {
+	changeNightmode,
+	changeAutoSkipDisliked,
+	changeActivityLogPublic,
+	changeAnonymousSongRequests,
+	changeActivityWatch
+} = userPreferencesStore;
+
 const aModalIsOpen = computed(() => Object.keys(activeModals.value).length > 0);
 
 const openModal = payload =>
 	store.dispatch("modalVisibility/openModal", payload);
 const closeCurrentModal = () =>
 	store.dispatch("modalVisibility/closeCurrentModal");
-const changeNightmode = payload =>
-	store.dispatch("user/preferences/changeNightmode", payload);
-const changeAutoSkipDisliked = payload =>
-	store.dispatch("user/preferences/changeAutoSkipDisliked", payload);
-const changeActivityLogPublic = payload =>
-	store.dispatch("user/preferences/changeActivityLogPublic", payload);
-const changeAnonymousSongRequests = payload =>
-	store.dispatch("user/preferences/changeAnonymousSongRequests", payload);
-const changeActivityWatch = payload =>
-	store.dispatch("user/preferences/changeActivityWatch", payload);
 
 const toggleNightMode = () => {
 	localStorage.setItem("nightmode", !nightmode.value);

@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { useStore } from "vuex";
-
-const store = useStore();
+import { storeToRefs } from "pinia";
+import { useUserAuthStore } from "@/stores/userAuth";
 
 defineProps({
 	small: { type: Boolean, default: false },
 	lights: { type: Number, default: 1 }
 });
 
-const loggedIn = computed(() => store.state.user.auth.loggedIn);
+const userAuthStore = useUserAuthStore();
+const { loggedIn } = storeToRefs(userAuthStore);
 </script>
 
 <template>

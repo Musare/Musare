@@ -1,16 +1,10 @@
 <script setup lang="ts">
-import {
-	defineAsyncComponent,
-	ref,
-	watch,
-	reactive,
-	computed,
-	onMounted
-} from "vue";
-import { useStore } from "vuex";
+import { defineAsyncComponent, ref, watch, reactive, onMounted } from "vue";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useSettingsStore } from "@/stores/settings";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserAuthStore } from "@/stores/userAuth";
 import _validation from "@/validation";
 
 const InputHelpBox = defineAsyncComponent(
@@ -18,7 +12,7 @@ const InputHelpBox = defineAsyncComponent(
 );
 
 const settingsStore = useSettingsStore();
-const store = useStore();
+const userAuthStore = useUserAuthStore();
 
 const { socket } = useWebsocketsStore();
 
@@ -46,7 +40,7 @@ const newPassword = ref();
 const oldPassword = ref();
 
 const { isPasswordLinked, isGithubLinked } = settingsStore;
-const userId = computed(() => store.state.user.auth.userId);
+const { userId } = storeToRefs(userAuthStore);
 
 const togglePasswordVisibility = refName => {
 	const ref = refName === "oldPassword" ? oldPassword : newPassword;

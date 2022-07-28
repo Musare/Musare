@@ -9,8 +9,10 @@ import {
 	onBeforeUnmount
 } from "vue";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useModalState, useModalActions } from "@/vuex_helpers";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserAuthStore } from "@/stores/userAuth";
 
 const Queue = defineAsyncComponent(() => import("@/components/Queue.vue"));
 const SongItem = defineAsyncComponent(
@@ -31,9 +33,8 @@ const props = defineProps({
 
 const store = useStore();
 
-const loggedIn = computed(() => store.state.user.auth.loggedIn);
-const userId = computed(() => store.state.user.auth.userId);
-const role = computed(() => store.state.user.auth.role);
+const userAuthStore = useUserAuthStore();
+const { loggedIn, userId, role } = storeToRefs(userAuthStore);
 
 const { socket } = useWebsocketsStore();
 

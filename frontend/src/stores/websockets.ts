@@ -30,6 +30,8 @@ export const useWebsocketsStore = defineStore("websockets", {
 		}
 	},
 	getters: {
-		getSocket: state => state.socket
+		getSocket() {
+			return this.socket;
+		}
 	}
 });

@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, computed, onMounted } from "vue";
-import { useStore } from "vuex";
+import { defineAsyncComponent, ref, onMounted } from "vue";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserPreferencesStore } from "@/stores/userPreferences";
 import ws from "@/ws";
 
 const SaveButton = defineAsyncComponent(
 	() => import("@/components/SaveButton.vue")
 );
 
-const store = useStore();
-
 const { socket } = useWebsocketsStore();
+const userPreferencesStore = useUserPreferencesStore();
 
 const saveButton = ref();
 
@@ -21,19 +21,13 @@ const localActivityLogPublic = ref(false);
 const localAnonymousSongRequests = ref(false);
 const localActivityWatch = ref(false);
 
-const nightmode = computed(() => store.state.user.preferences.nightmode);
-const autoSkipDisliked = computed(
-	() => store.state.user.preferences.autoSkipDisliked
-);
-const activityLogPublic = computed(
-	() => store.state.user.preferences.activityLogPublic
-);
-const anonymousSongRequests = computed(
-	() => store.state.user.preferences.anonymousSongRequests
-);
-const activityWatch = computed(
-	() => store.state.user.preferences.activityWatch
-);
+const {
+	nightmode,
+	autoSkipDisliked,
+	activityLogPublic,
+	anonymousSongRequests,
+	activityWatch
+} = storeToRefs(userPreferencesStore);
 
 const saveChanges = () => {
 	if (

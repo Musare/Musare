@@ -1,19 +1,18 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
-import { defineAsyncComponent, ref, computed, onMounted } from "vue";
+import { defineAsyncComponent, ref, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
+import { useUserAuthStore } from "@/stores/userAuth";
 
 const FloatingBox = defineAsyncComponent(
 	() => import("@/components/FloatingBox.vue")
 );
 
-const store = useStore();
-
 const body = ref(document.body);
 
-const loggedIn = computed(() => store.state.user.auth.loggedIn);
+const userAuthStore = useUserAuthStore();
+const { loggedIn } = storeToRefs(userAuthStore);
 
 const { socket } = useWebsocketsStore();
 

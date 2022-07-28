@@ -1,17 +1,12 @@
 <script setup lang="ts">
-import {
-	defineAsyncComponent,
-	ref,
-	watch,
-	reactive,
-	computed,
-	onMounted
-} from "vue";
+import { defineAsyncComponent, ref, watch, reactive, onMounted } from "vue";
 import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useSettingsStore } from "@/stores/settings";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserAuthStore } from "@/stores/userAuth";
 import _validation from "@/validation";
 
 const InputHelpBox = defineAsyncComponent(
@@ -22,6 +17,7 @@ const SaveButton = defineAsyncComponent(
 );
 
 const settingsStore = useSettingsStore();
+const userAuthStore = useUserAuthStore();
 const store = useStore();
 const route = useRoute();
 
@@ -29,7 +25,7 @@ const { socket } = useWebsocketsStore();
 
 const saveButton = ref();
 
-const userId = computed(() => store.state.user.auth.userId);
+const { userId } = storeToRefs(userAuthStore);
 const { originalUser, modifiedUser } = settingsStore;
 
 const validation = reactive({

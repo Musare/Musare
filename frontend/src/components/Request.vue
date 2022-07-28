@@ -34,10 +34,6 @@ const tab = ref("songs");
 const sitename = ref("Musare");
 const tabs = ref({});
 
-// const loggedIn = computed(() => store.state.user.auth.loggedIn);
-// const role = computed(() => store.state.user.auth.role);
-// const userId = computed(() => store.state.user.auth.userId);
-
 const station = computed({
 	get() {
 		if (props.sector === "manageStation")

@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { storeToRefs } from "pinia";
 import { formatDistance } from "date-fns";
-import { useStore } from "vuex";
+import { useUserAuthStore } from "@/stores/userAuth";
 
-const store = useStore();
-
-const ban = computed(() => store.state.user.auth.ban);
+const userAuthStore = useUserAuthStore();
+const { ban } = storeToRefs(userAuthStore);
 </script>
 
 <template>

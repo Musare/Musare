@@ -4,17 +4,18 @@ import { useRoute, useRouter } from "vue-router";
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserAuthStore } from "@/stores/userAuth";
 import keyboardShortcuts from "@/keyboardShortcuts";
 import ws from "@/ws";
 
 const store = useStore();
+const userAuthStore = useUserAuthStore();
 const route = useRoute();
 const router = useRouter();
 
-const loggedIn = computed(() => store.state.user.auth.loggedIn);
-const userId = computed(() => store.state.user.auth.userId);
-const role = computed(() => store.state.user.auth.role);
+const { loggedIn, userId, role } = storeToRefs(userAuthStore);
 
 const { socket } = useWebsocketsStore();
 

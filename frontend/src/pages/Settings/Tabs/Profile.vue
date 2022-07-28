@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, computed } from "vue";
-import { useStore } from "vuex";
+import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useSettingsStore } from "@/stores/settings";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserAuthStore } from "@/stores/userAuth";
 import validation from "@/validation";
 
 const ProfilePicture = defineAsyncComponent(
@@ -14,13 +15,13 @@ const SaveButton = defineAsyncComponent(
 );
 
 const settingsStore = useSettingsStore();
-const store = useStore();
+const userAuthStore = useUserAuthStore();
 
 const { socket } = useWebsocketsStore();
 
 const saveButton = ref();
 
-const userId = computed(() => store.state.user.auth.userId);
+const { userId } = storeToRefs(userAuthStore);
 const { originalUser, modifiedUser } = settingsStore;
 
 const { updateOriginalUser } = settingsStore;

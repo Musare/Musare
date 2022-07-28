@@ -1,21 +1,14 @@
 <script setup lang="ts">
-import {
-	defineAsyncComponent,
-	ref,
-	computed,
-	onMounted,
-	onUnmounted
-} from "vue";
-import { useStore } from "vuex";
+import { defineAsyncComponent, ref, onMounted, onUnmounted } from "vue";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserAuthStore } from "@/stores/userAuth";
 import ws from "@/ws";
 
 const ActivityItem = defineAsyncComponent(
 	() => import("@/components/ActivityItem.vue")
 );
-
-const store = useStore();
 
 const { socket } = useWebsocketsStore();
 
@@ -33,10 +26,9 @@ const maxPosition = ref(1);
 const offsettedFromNextSet = ref(0);
 const isGettingSet = ref(false);
 
-const myUserId = computed(() => store.state.user.auth.userId);
-
-const getBasicUser = payload =>
-	store.dispatch("user/auth/getBasicUser", payload);
+const userAuthStore = useUserAuthStore();
+const { userId: myUserId } = storeToRefs(userAuthStore);
+const { getBasicUser } = userAuthStore;
 
 const hideActivity = activityId => {
 	socket.dispatch("activities.hideActivity", activityId, res => {

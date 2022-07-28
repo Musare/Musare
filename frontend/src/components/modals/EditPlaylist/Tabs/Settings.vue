@@ -1,19 +1,18 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { computed } from "vue";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useModalState } from "@/vuex_helpers";
 import validation from "@/validation";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserAuthStore } from "@/stores/userAuth";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
 });
 
-const store = useStore();
-
-const userId = computed(() => store.state.user.auth.userId);
-const userRole = computed(() => store.state.user.auth.role);
+const userAuthStore = useUserAuthStore();
+const { userId, role: userRole } = storeToRefs(userAuthStore);
 
 const { socket } = useWebsocketsStore();
 

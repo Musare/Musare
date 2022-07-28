@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { useRoute } from "vue-router";
-import { defineAsyncComponent, computed, watch, onMounted } from "vue";
+import { defineAsyncComponent, watch, onMounted } from "vue";
 import { storeToRefs } from "pinia";
+import { useUserAuthStore } from "@/stores/userAuth";
 import { useStationStore } from "@/stores/station";
 import useTabQueryHandler from "@/composables/useTabQueryHandler";
 
@@ -12,16 +12,13 @@ const Users = defineAsyncComponent(
 );
 const Request = defineAsyncComponent(() => import("@/components/Request.vue"));
 
-const store = useStore();
 const route = useRoute();
+const userAuthStore = useUserAuthStore();
 const stationStore = useStationStore();
 
 const { tab, showTab } = useTabQueryHandler("queue");
 
-const userId = computed(() => store.state.user.auth.userId);
-const loggedIn = computed(() => store.state.user.auth.loggedIn);
-const role = computed(() => store.state.user.auth.rol);
-
+const { loggedIn, userId, role } = storeToRefs(userAuthStore);
 const { station } = storeToRefs(stationStore);
 
 const isOwner = () =>

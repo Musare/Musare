@@ -1,7 +1,6 @@
 /* eslint-disable import/no-cycle */
 import { createStore } from "vuex";
 
-import user from "./modules/user";
 import modalVisibility from "./modules/modalVisibility";
 
 const emptyModule = {
@@ -10,7 +9,6 @@ const emptyModule = {
 
 export default createStore({
 	modules: {
-		user,
 		modalVisibility,
 		modals: {
 			namespaced: true,

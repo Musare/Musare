@@ -3,8 +3,10 @@ import { useStore } from "vuex";
 import { defineAsyncComponent, ref, computed, onUpdated } from "vue";
 import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
+import { useUserAuthStore } from "@/stores/userAuth";
 
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
@@ -17,12 +19,11 @@ const props = defineProps({
 
 const store = useStore();
 
-const loggedIn = computed(() => store.state.user.auth.loggedIn);
-const userId = computed(() => store.state.user.auth.userId);
-const userRole = computed(() => store.state.user.auth.role);
-
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
+const userAuthStore = useUserAuthStore();
+
+const { loggedIn, userId, role: userRole } = storeToRefs(userAuthStore);
 
 const repositionSongInList = payload => {
 	if (props.sector === "manageStation")

@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import { useStore } from "vuex";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserPlaylistsStore } from "@/stores/userPlaylists";
 import ws from "@/ws";
 
 const store = useStore();
@@ -20,20 +22,11 @@ const props = defineProps({
 
 const dropdown = ref(null);
 
-const playlists = computed(() => store.state.user.playlists.playlists);
-const fetchedPlaylists = computed(
-	() => store.state.user.playlists.fetchedPlaylists
-);
 const { socket } = useWebsocketsStore();
+const userPlaylistsStore = useUserPlaylistsStore();
 
-const setPlaylists = payload =>
-	store.dispatch("user/playlists/setPlaylists", payload);
-
-const addPlaylist = payload =>
-	store.dispatch("user/playlists/addPlaylist", payload);
-
-const removePlaylist = payload =>
-	store.dispatch("user/playlists/removePlaylist", payload);
+const { playlists, fetchedPlaylists } = storeToRefs(userPlaylistsStore);
+const { setPlaylists, addPlaylist, removePlaylist } = userPlaylistsStore;
 
 const openModal = payload =>
 	store.dispatch("modalVisibility/openModal", payload);

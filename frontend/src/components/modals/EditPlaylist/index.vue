@@ -12,6 +12,7 @@ import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
+import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalState, useModalActions } from "@/vuex_helpers";
 import ws from "@/ws";
 import utils from "@/utils";
@@ -31,14 +32,12 @@ const props = defineProps({
 
 const store = useStore();
 
-const loggedIn = computed(() => store.state.user.auth.loggedIn);
-const userId = computed(() => store.state.user.auth.userId);
-const userRole = computed(() => store.state.user.auth.role);
-
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
+const userAuthStore = useUserAuthStore();
 
 const { station } = storeToRefs(stationStore);
+const { loggedIn, userId, role: userRole } = storeToRefs(userAuthStore);
 
 const drag = ref(false);
 const apiDomain = ref("");

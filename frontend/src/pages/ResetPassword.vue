@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
-import { defineAsyncComponent, ref, computed, watch, onMounted } from "vue";
+import { defineAsyncComponent, ref, watch, onMounted } from "vue";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
+import { useUserAuthStore } from "@/stores/userAuth";
 import validation from "@/validation";
 import { useWebsocketsStore } from "@/stores/websockets";
 
@@ -13,9 +14,8 @@ const props = defineProps({
 	mode: { type: String, enum: ["reset", "set"], default: "reset" }
 });
 
-const store = useStore();
-
-const accountEmail = computed(() => store.state.user.auth.email);
+const userAuthStore = useUserAuthStore();
+const { email: accountEmail } = storeToRefs(userAuthStore);
 
 const { socket } = useWebsocketsStore();
 

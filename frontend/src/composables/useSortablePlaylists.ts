@@ -1,8 +1,10 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
-import { useStore } from "vuex";
 import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserAuthStore } from "@/stores/userAuth";
+import { useUserPlaylistsStore } from "@/stores/userPlaylists";
 import ws from "@/ws";
 
 export default function useSortablePlaylists() {
@@ -10,15 +12,17 @@ export default function useSortablePlaylists() {
 	const drag = ref(false);
 	const userId = ref();
 
-	const store = useStore();
+	const userAuthStore = useUserAuthStore();
+	const userPlaylistsStore = useUserPlaylistsStore();
+
+	const { userId: myUserId } = storeToRefs(userAuthStore);
 
 	const playlists = computed({
-		get: () => store.state.user.playlists.playlists,
+		get: () => userPlaylistsStore.playlists,
 		set: playlists => {
-			store.commit("user/playlists/updatePlaylists", playlists);
+			userPlaylistsStore.updatePlaylists(playlists);
 		}
 	});
-	const myUserId = computed(() => store.state.user.auth.userId);
 	const isCurrentUser = computed(() => userId.value === myUserId.value);
 	const dragOptions = computed(() => ({
 		animation: 200,
@@ -29,12 +33,7 @@ export default function useSortablePlaylists() {
 
 	const { socket } = useWebsocketsStore();
 
-	const setPlaylists = playlists =>
-		store.dispatch("user/playlists/setPlaylists", playlists);
-	const addPlaylist = playlist =>
-		store.dispatch("user/playlists/addPlaylist", playlist);
-	const removePlaylist = playlist =>
-		store.dispatch("user/playlists/removePlaylist", playlist);
+	const { setPlaylists, addPlaylist, removePlaylist } = userPlaylistsStore;
 
 	const calculatePlaylistOrder = () => {
 		const calculatedOrder = [];

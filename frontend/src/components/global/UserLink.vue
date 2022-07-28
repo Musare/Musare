@@ -1,20 +1,18 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { ref, onMounted } from "vue";
+import { useUserAuthStore } from "@/stores/userAuth";
 
 const props = defineProps({
 	userId: { type: String, default: "" },
 	link: { type: Boolean, default: true }
 });
 
-const store = useStore();
-
 const user = ref({
 	name: "Unknown",
 	username: null
 });
 
-const getBasicUser = userId => store.dispatch("user/auth/getBasicUser", userId);
+const { getBasicUser } = useUserAuthStore();
 
 onMounted(() => {
 	getBasicUser(props.userId).then(basicUser => {

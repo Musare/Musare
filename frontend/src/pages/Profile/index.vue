@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, computed, onMounted } from "vue";
-import { useStore } from "vuex";
+import { defineAsyncComponent, ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { format, parseISO } from "date-fns";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserAuthStore } from "@/stores/userAuth";
 import ws from "@/ws";
 import useTabQueryHandler from "@/composables/useTabQueryHandler";
 
@@ -15,7 +16,6 @@ const RecentActivity = defineAsyncComponent(
 );
 const Playlists = defineAsyncComponent(() => import("./Tabs/Playlists.vue"));
 
-const store = useStore();
 const route = useRoute();
 const router = useRouter();
 const { tab, showTab } = useTabQueryHandler("recent-activity");
@@ -26,8 +26,8 @@ const user = ref();
 const userId = ref("");
 const isUser = ref(false);
 
-const role = computed(() => store.state.user.auth.role);
-const myUserId = computed(() => store.state.user.auth.userId);
+const userAuthStore = useUserAuthStore();
+const { userId: myUserId, role } = storeToRefs(userAuthStore);
 
 const init = () => {
 	socket.dispatch("users.getBasicUser", route.params.username, res => {

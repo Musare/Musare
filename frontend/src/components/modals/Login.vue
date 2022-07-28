@@ -3,6 +3,7 @@ import { useStore } from "vuex";
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
+import { useUserAuthStore } from "@/stores/userAuth";
 
 const route = useRoute();
 
@@ -20,7 +21,8 @@ const passwordElement = ref();
 
 const store = useStore();
 
-const login = payload => store.dispatch("user/auth/login", payload);
+const { login } = useUserAuthStore();
+
 const openModal = payload =>
 	store.dispatch("modalVisibility/openModal", payload);
 const closeCurrentModal = () =>

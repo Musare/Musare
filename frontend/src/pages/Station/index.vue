@@ -15,6 +15,8 @@ import { ContentLoader } from "vue-content-loader";
 import canAutoPlay from "can-autoplay";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
+import { useUserAuthStore } from "@/stores/userAuth";
+import { useUserPreferencesStore } from "@/stores/userPreferences";
 import aw from "@/aw";
 import ms from "@/ms";
 import ws from "@/ws";
@@ -44,6 +46,8 @@ const router = useRouter();
 
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
+const userAuthStore = useUserAuthStore();
+const userPreferencesStore = useUserPreferencesStore();
 
 // TODO this might need a different place, like onMounted
 const isApple = ref(
@@ -96,14 +100,8 @@ const activeModals = computed(() => store.state.modalVisibility.activeModals);
 // TODO fix this if it still has some use, as this is no longer accurate
 // const video = computed(() => store.state.modals.editSong);
 
-const loggedIn = computed(() => store.state.user.auth.loggedIn);
-const userId = computed(() => store.state.user.auth.userId);
-const role = computed(() => store.state.user.auth.role);
-const nightmode = computed(() => store.state.user.preferences.nightmode);
-const autoSkipDisliked = computed(
-	() => store.state.user.preferences.autoSkipDisliked
-);
-
+const { loggedIn, userId, role } = storeToRefs(userAuthStore);
+const { nightmode, autoSkipDisliked } = storeToRefs(userPreferencesStore);
 const {
 	station,
 	currentSong,

@@ -3,6 +3,7 @@ import { useStore } from "vuex";
 import { defineAsyncComponent, ref, watch, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
+import { useUserAuthStore } from "@/stores/userAuth";
 import validation from "@/validation";
 
 const InputHelpBox = defineAsyncComponent(
@@ -45,7 +46,8 @@ const passwordElement = ref();
 
 const store = useStore();
 
-const register = payload => store.dispatch("user/auth/register", payload);
+const { register } = useUserAuthStore();
+
 const openModal = payload =>
 	store.dispatch("modalVisibility/openModal", payload);
 const closeCurrentModal = () =>
