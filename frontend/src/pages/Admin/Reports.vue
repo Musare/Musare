@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from "vue";
 import { useStore } from "vuex";
-
 import Toast from "toasters";
+import admin from "@/api/admin/index";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -147,11 +147,10 @@ const events = ref({
 
 const openModal = payload =>
 	store.dispatch("modalVisibility/openModal", payload);
-const resolveReport = payload =>
-	store.dispatch("admin/reports/resolveReport", payload);
 
 const resolve = (reportId, value) =>
-	resolveReport({ reportId, value })
+	admin.reports
+		.resolve({ reportId, value })
 		.then(res => {
 			if (res.status !== "success") new Toast(res.message);
 		})

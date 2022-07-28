@@ -5,6 +5,7 @@ import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalState } from "@/vuex_helpers";
 import ws from "@/ws";
+import admin from "@/api/admin/index";
 
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
@@ -25,10 +26,6 @@ const { reportId } = useModalState("modals/viewReport/MODAL_UUID", {
 	modalUuid: props.modalUuid
 });
 
-const resolveReport = payload =>
-	store.dispatch("admin/reports/resolveReport", payload);
-const removeReport = payload =>
-	store.dispatch("admin/reports/removeReport", payload);
 const openModal = payload =>
 	store.dispatch("modalVisibility/openModal", payload);
 const closeCurrentModal = () =>
@@ -97,14 +94,16 @@ const init = () => {
 };
 
 const resolve = value =>
-	resolveReport({ reportId, value })
+	admin.reports
+		.resolve({ reportId, value })
 		.then(res => {
 			if (res.status !== "success") new Toast(res.message);
 		})
 		.catch(err => new Toast(err.message));
 
 const remove = () =>
-	removeReport(reportId)
+	admin.reports
+		.remove(reportId)
 		.then(res => {
 			if (res.status === "success") closeCurrentModal();
 		})

@@ -2,12 +2,10 @@
 import {
 	defineAsyncComponent,
 	ref,
-	computed,
 	watch,
 	onMounted,
 	onBeforeUnmount
 } from "vue";
-import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
 import { useWebsocketsStore } from "@/stores/websockets";
 import keyboardShortcuts from "@/keyboardShortcuts";
@@ -16,7 +14,6 @@ const FloatingBox = defineAsyncComponent(
 	() => import("@/components/FloatingBox.vue")
 );
 
-const store = useStore();
 const route = useRoute();
 const router = useRouter();
 
@@ -30,11 +27,18 @@ const siteSettings = ref({
 const sidebarActive = ref(true);
 const sidebarPadding = ref(0);
 const keyboardShortcutsHelper = ref();
+const childrenActive = ref({
+	songs: false,
+	users: false,
+	youtube: false
+});
 
-const childrenActive = computed(() => store.state.admin.childrenActive);
-
-const toggleChildren = payload =>
-	store.dispatch("admin/toggleChildren", payload);
+const toggleChildren = payload => {
+	if (typeof payload.force === "undefined")
+		childrenActive.value[payload.child] =
+			!childrenActive.value[payload.child];
+	else childrenActive.value[payload.child] = payload.force;
+};
 
 const getTabFromPath = (path?) => {
 	const localPath = path || route.path;

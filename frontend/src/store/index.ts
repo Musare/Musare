@@ -3,7 +3,6 @@ import { createStore } from "vuex";
 
 import user from "./modules/user";
 import modalVisibility from "./modules/modalVisibility";
-import admin from "./modules/admin";
 
 const emptyModule = {
 	namespaced: true
@@ -12,7 +11,6 @@ const emptyModule = {
 export default createStore({
 	modules: {
 		user,
-		admin,
 		modalVisibility,
 		modals: {
 			namespaced: true,
