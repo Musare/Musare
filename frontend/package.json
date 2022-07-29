@@ -15,7 +15,7 @@
     "lint": "npx eslint --cache src --ext .js,.ts,.vue",
     "dev": "npx vite",
     "prod": "npx vite build --emptyOutDir",
-    "typescript": "npx tsc --noEmit --skipLibCheck"
+    "typescript": "npx vue-tsc --noEmit --skipLibCheck"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.31.0",
@@ -30,7 +30,8 @@
     "less": "^4.1.3",
     "prettier": "^2.7.1",
     "vite-plugin-dynamic-import": "^1.0.0",
-    "vue-eslint-parser": "^9.0.3"
+    "vue-eslint-parser": "^9.0.3",
+    "vue-tsc": "^0.39.2"
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^3.0.1",
