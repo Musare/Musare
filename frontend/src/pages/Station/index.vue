@@ -362,7 +362,8 @@ const calculateTimeElapsed = () => {
 		(Date.currently() - startedAt.value - timePaused.value) / 1000;
 
 	const songDuration = currentSong.value.duration;
-	if (songDuration <= duration) player.value.pauseVideo();
+	if (playerReady.value && songDuration <= duration)
+		player.value.pauseVideo();
 	if (duration <= songDuration)
 		timeElapsed.value = utils.formatTime(duration);
 };
@@ -425,6 +426,14 @@ const youtubeReady = () => {
 					if (muted.value) player.value.mute();
 
 					playVideo();
+
+					const duration =
+						(Date.currently() -
+							startedAt.value -
+							timePaused.value) /
+						1000;
+					const songDuration = currentSong.value.duration;
+					if (songDuration <= duration) player.value.pauseVideo();
 
 					// on ios, playback will be forcibly paused locally
 					if (isApple.value) {
