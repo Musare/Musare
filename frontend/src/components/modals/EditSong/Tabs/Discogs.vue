@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, onMounted } from "vue";
+import { storeToRefs } from "pinia";
 import Toast from "toasters";
-import { useModalState, useModalActions } from "@/vuex_helpers";
 import keyboardShortcuts from "@/keyboardShortcuts";
+
+import { useEditSongStore } from "@/stores/editSong";
+
 import { useWebsocketsStore } from "@/stores/websockets";
 
 const props = defineProps({
@@ -14,20 +17,13 @@ const props = defineProps({
 	bulk: { type: Boolean, default: false }
 });
 
+const editSongStore = useEditSongStore(props);
+
 const { socket } = useWebsocketsStore();
 
-const modalState = useModalState(props.modalModulePath, {
-	modalUuid: props.modalUuid
-});
-const song = computed(() => modalState.song);
+const { song } = storeToRefs(editSongStore);
 
-const { selectDiscogsInfo } = useModalActions(
-	props.modalModulePath,
-	["selectDiscogsInfo"],
-	{
-		modalUuid: props.modalUuid
-	}
-);
+const { selectDiscogsInfo } = editSongStore;
 
 const discogs = ref({
 	apiResults: [],

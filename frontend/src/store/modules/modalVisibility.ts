@@ -13,19 +13,19 @@ import viewApiRequest from "./modals/viewApiRequest";
 import viewPunishment from "./modals/viewPunishment";
 import importAlbum from "./modals/importAlbum";
 import confirm from "./modals/confirm";
-import editSongs from "./modals/editSongs";
-import editSong from "./modals/editSong";
 import viewYoutubeVideo from "./modals/viewYoutubeVideo";
 import removeAccount from "./modals/removeAccount";
 
 import { useEditUserStore } from "@/stores/editUser";
+import { useEditSongStore } from "@/stores/editSong";
+import { useEditSongsStore } from "@/stores/editSongs";
 
 const state = {
 	modals: {},
 	activeModals: []
 };
 
-const piniaStores = ["editUser"];
+const piniaStores = ["editUser", "editSong", "editSongs"];
 
 const modalModules = {
 	whatIsNew,
@@ -40,8 +40,6 @@ const modalModules = {
 	viewPunishment,
 	importAlbum,
 	confirm,
-	editSongs,
-	editSong,
 	viewYoutubeVideo,
 	removeAccount
 };
@@ -107,6 +105,12 @@ const mutations = {
 			switch (modal) {
 				case "editUser":
 					store = useEditUserStore({ modalUuid: uuid });
+					break;
+				case "editSong":
+					store = useEditSongStore({ modalUuid: uuid });
+					break;
+				case "editSongs":
+					store = useEditSongsStore({ modalUuid: uuid });
 					break;
 				default:
 					break;

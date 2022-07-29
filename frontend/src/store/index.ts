@@ -13,8 +13,6 @@ export default createStore({
 		modals: {
 			namespaced: true,
 			modules: {
-				editSong: emptyModule,
-				editSongs: emptyModule,
 				importAlbum: emptyModule,
 				editPlaylist: emptyModule,
 				manageStation: emptyModule,

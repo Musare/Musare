@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref, onMounted } from "vue";
 
-import { useModalState } from "@/vuex_helpers";
+import { storeToRefs } from "pinia";
+
+import { useEditSongStore } from "@/stores/editSong";
 
 import useSearchMusare from "@/composables/useSearchMusare";
 
@@ -16,10 +18,9 @@ const props = defineProps({
 
 const sitename = ref("Musare");
 
-const { song } = useModalState("MODAL_MODULE_PATH", {
-	modalUuid: props.modalUuid,
-	modalModulePath: props.modalModulePath
-});
+const editSongStore = useEditSongStore(props);
+
+const { song } = storeToRefs(editSongStore);
 
 const {
 	musareSearch,
@@ -31,7 +32,7 @@ const {
 onMounted(async () => {
 	sitename.value = await lofig.get("siteSettings.sitename");
 
-	musareSearch.value.query = song.title;
+	musareSearch.value.query = song.value.title;
 	searchForMusareSongs(1, false);
 });
 </script>

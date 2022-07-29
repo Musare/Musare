@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { useStore } from "vuex";
+import { storeToRefs } from "pinia";
 import {
 	defineAsyncComponent,
 	ref,
 	computed,
-	onBeforeMount,
 	onMounted,
 	onBeforeUnmount,
 	onUnmounted
 } from "vue";
 import Toast from "toasters";
-import { useModalState, useModalActions } from "@/vuex_helpers";
-import editSongStore from "@/store/modules/modals/editSong";
+
+import { useEditSongStore } from "@/stores/editSong";
+import { useEditSongsStore } from "@/stores/editSongs";
+
 import { useWebsocketsStore } from "@/stores/websockets";
 
 const EditSongModal = defineAsyncComponent(
@@ -27,22 +29,14 @@ const props = defineProps({
 
 const store = useStore();
 
+const editSongStore = useEditSongStore(props);
+const editSongsStore = useEditSongsStore(props);
+
 const { socket } = useWebsocketsStore();
 
-const { youtubeIds, songPrefillData } = useModalState(
-	"modals/editSongs/MODAL_UUID",
-	{
-		modalUuid: props.modalUuid
-	}
-);
+const { youtubeIds, songPrefillData } = storeToRefs(editSongsStore);
 
-const { editSong } = useModalActions(
-	"modals/editSongs/MODAL_UUID/editSong",
-	["editSong"],
-	{
-		modalUuid: props.modalUuid
-	}
-);
+const { editSong } = editSongStore;
 
 const openModal = payload =>
 	store.dispatch("modalVisibility/openModal", payload);
@@ -85,7 +79,7 @@ const currentSongFlagged = computed(
 const pickSong = song => {
 	editSong({
 		youtubeId: song.youtubeId,
-		prefill: songPrefillData[song.youtubeId]
+		prefill: songPrefillData.value[song.youtubeId]
 	});
 	currentSong.value = song;
 	if (
@@ -209,20 +203,20 @@ const onClose = () => {
 	else closeCurrentModal();
 };
 
-onBeforeMount(() => {
-	console.log("EDITSONGS BEFOREMOUNT");
-	store.registerModule(
-		["modals", "editSongs", props.modalUuid, "editSong"],
-		editSongStore
-	);
-});
+// onBeforeMount(() => {
+// 	console.log("EDITSONGS BEFOREMOUNT");
+//  store.registerModule(
+//  	["modals", "editSongs", props.modalUuid, "editSong"],
+//  	editSongStore
+//  );
+// });
 
 onMounted(async () => {
 	console.log("EDITSONGS MOUNTED");
 
 	socket.dispatch("apis.joinRoom", "edit-songs");
 
-	socket.dispatch("songs.getSongsFromYoutubeIds", youtubeIds, res => {
+	socket.dispatch("songs.getSongsFromYoutubeIds", youtubeIds.value, res => {
 		if (res.data.songs.length === 0) {
 			closeCurrentModal();
 			new Toast("You can't edit 0 songs.");
@@ -298,8 +292,8 @@ onBeforeUnmount(() => {
 
 onUnmounted(() => {
 	console.log("EDITSONGS UNMOUNTED");
-	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-	store.unregisterModule(["modals", "editSongs", props.modalUuid]);
+	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
+	editSongsStore.$dispose();
 });
 </script>
 

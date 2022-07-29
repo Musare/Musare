@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { useModalState, useModalActions } from "@/vuex_helpers";
+import { storeToRefs } from "pinia";
+
+import { useEditSongStore } from "@/stores/editSong";
 
 import useSearchYoutube from "@/composables/useSearchYoutube";
 
@@ -10,19 +12,11 @@ const props = defineProps({
 	modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
 });
 
-const { song, newSong } = useModalState("MODAL_MODULE_PATH", {
-	modalUuid: props.modalUuid,
-	modalModulePath: props.modalModulePath
-});
+const editSongStore = useEditSongStore(props);
 
-const { updateYoutubeId, updateTitle, updateThumbnail } = useModalActions(
-	"MODAL_MODULE_PATH",
-	["updateYoutubeId", "updateTitle", "updateThumbnail"],
-	{
-		modalUuid: props.modalUuid,
-		modalModulePath: props.modalModulePath
-	}
-);
+const { song, newSong } = storeToRefs(editSongStore);
+
+const { updateYoutubeId, updateTitle, updateThumbnail } = editSongStore;
 
 const { youtubeSearch, searchForSongs, loadMoreSongs } = useSearchYoutube();
 

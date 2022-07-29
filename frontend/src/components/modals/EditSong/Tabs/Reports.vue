@@ -1,19 +1,24 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref, computed, onMounted } from "vue";
+import { storeToRefs } from "pinia";
 import Toast from "toasters";
+
+import { useEditSongStore } from "@/stores/editSong";
+
 import { useWebsocketsStore } from "@/stores/websockets";
-import { useModalState, useModalActions } from "@/vuex_helpers";
 
 const ReportInfoItem = defineAsyncComponent(
 	() => import("@/components/ReportInfoItem.vue")
 );
 
-const { socket } = useWebsocketsStore();
-
 const props = defineProps({
 	modalUuid: { type: String, default: "" },
 	modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
 });
+
+const editSongStore = useEditSongStore(props);
+
+const { socket } = useWebsocketsStore();
 
 const tab = ref("sort-by-report");
 const icons = ref({
@@ -26,15 +31,12 @@ const icons = ref({
 });
 const tabs = ref({});
 
-const { reports } = useModalState("MODAL_MODULE_PATH", {
-	modalUuid: props.modalUuid,
-	modalModulePath: props.modalModulePath
-});
+const { reports } = storeToRefs(editSongStore);
 
 const sortedByCategory = computed(() => {
 	const categories = {};
 
-	reports.forEach(report =>
+	reports.value.forEach(report =>
 		report.issues.forEach(issue => {
 			if (categories[issue.category])
 				categories[issue.category].push({
@@ -54,14 +56,7 @@ const sortedByCategory = computed(() => {
 // const closeModal = payload =>
 // 	store.dispatch("modalVisibility/closeModal", payload);
 
-const { resolveReport } = useModalActions(
-	"MODAL_MODULE_PATH",
-	["resolveReport"],
-	{
-		modalUuid: props.modalUuid,
-		modalModulePath: props.modalModulePath
-	}
-);
+const { resolveReport } = editSongStore;
 
 const showTab = _tab => {
 	tabs.value[`${_tab}-tab`].scrollIntoView({ block: "nearest" });
@@ -81,7 +76,7 @@ const toggleIssue = (reportId, issueId) => {
 onMounted(() => {
 	socket.on(
 		"event:admin.report.created",
-		res => reports.unshift(res.data.report),
+		res => reports.value.unshift(res.data.report),
 		{ modalUuid: props.modalUuid }
 	);
 
@@ -94,9 +89,9 @@ onMounted(() => {
 	socket.on(
 		"event:admin.report.issue.toggled",
 		res => {
-			reports.forEach((report, index) => {
+			reports.value.forEach((report, index) => {
 				if (report._id === res.data.reportId) {
-					const issue = reports[index].issues.find(
+					const issue = reports.value[index].issues.find(
 						issue => issue._id.toString() === res.data.issueId
 					);
 

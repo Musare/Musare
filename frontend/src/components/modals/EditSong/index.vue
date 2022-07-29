@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useStore } from "vuex";
+import { storeToRefs } from "pinia";
 import {
 	defineAsyncComponent,
 	ref,
@@ -9,12 +10,13 @@ import {
 	onBeforeUnmount
 } from "vue";
 import Toast from "toasters";
-import { useModalState, useModalActions } from "@/vuex_helpers";
 import aw from "@/aw";
 import ws from "@/ws";
 import validation from "@/validation";
 import keyboardShortcuts from "@/keyboardShortcuts";
+
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useEditSongStore } from "@/stores/editSong";
 
 const FloatingBox = defineAsyncComponent(
 	() => import("@/components/FloatingBox.vue")
@@ -51,23 +53,22 @@ const emit = defineEmits([
 ]);
 
 const store = useStore();
-
+const editSongStore = useEditSongStore(props);
 const { socket } = useWebsocketsStore();
 
 const modals = computed(() => store.state.modalVisibility.modals);
 const activeModals = computed(() => store.state.modalVisibility.activeModals);
 
-const modalState = useModalState(props.modalModulePath, {
-	modalUuid: props.modalUuid
-});
-const tab = computed(() => modalState.tab);
-const video = computed(() => modalState.video);
-const song = computed(() => modalState.song);
-const youtubeId = computed(() => modalState.youtubeId);
-const prefillData = computed(() => modalState.prefillData);
-const originalSong = computed(() => modalState.originalSong);
-const reports = computed(() => modalState.reports);
-const newSong = computed(() => modalState.newSong);
+const {
+	tab,
+	video,
+	song,
+	youtubeId,
+	prefillData,
+	originalSong,
+	reports,
+	newSong
+} = storeToRefs(editSongStore);
 
 const songDataLoaded = ref(false);
 const songDeleted = ref(false);
@@ -159,24 +160,7 @@ const {
 	updateSongField,
 	updateReports,
 	setPlaybackRate
-} = useModalActions(
-	props.modalModulePath,
-	[
-		"stopVideo",
-		"hardStopVideo",
-		"loadVideoById",
-		"pauseVideo",
-		"setSong",
-		"resetSong",
-		"updateOriginalSong",
-		"updateSongField",
-		"updateReports",
-		"setPlaybackRate"
-	],
-	{
-		modalUuid: props.modalUuid
-	}
-);
+} = editSongStore;
 
 const openModal = payload =>
 	store.dispatch("modalVisibility/openModal", payload);
@@ -189,13 +173,7 @@ const closeCurrentModal = () => {
 const showTab = payload => {
 	if (tabs.value[`${payload}-tab`])
 		tabs.value[`${payload}-tab`].scrollIntoView({ block: "nearest" });
-	store.dispatch(
-		`${props.modalModulePath.replace(
-			"MODAL_UUID",
-			props.modalUuid
-		)}/showTab`,
-		payload
-	);
+	editSongStore.showTab(payload);
 };
 
 const onThumbnailLoad = () => {
@@ -268,7 +246,6 @@ const loadSong = _youtubeId => {
 
 const drawCanvas = () => {
 	if (!songDataLoaded.value || !canvasElement.value) return;
-	console.log(555, canvasElement.value);
 	const ctx = canvasElement.value.getContext("2d");
 
 	const videoDuration = Number(youtubeVideoDuration.value);
@@ -1275,17 +1252,8 @@ onBeforeUnmount(() => {
 		keyboardShortcuts.unregisterShortcut(shortcutName);
 	});
 
-	if (!props.bulk) {
-		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-		store.unregisterModule(["modals", "editSong", props.modalUuid]);
-	} else {
-		store.unregisterModule([
-			"modals",
-			"editSongs",
-			props.modalUuid,
-			"editSong"
-		]);
-	}
+	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
+	editSongStore.$dispose();
 });
 </script>
 
