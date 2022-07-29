@@ -268,14 +268,20 @@ router.beforeEach((to, from, next) => {
 
 		if (userAuthStore.gotData) gotData();
 		else {
-			// TODO
-			// const watcher = store.watch(
-			// 	state => userAuthStore.gotData,
-			// 	() => {
-			// 		watcher();
-			// 		gotData();
-			// 	}
-			// );
+			const unsubscribe = userAuthStore.$onAction(
+				({ name, after, onError }) => {
+					if (name === "authData") {
+						after(() => {
+							gotData();
+							unsubscribe();
+						});
+
+						onError(() => {
+							unsubscribe();
+						});
+					}
+				}
+			);
 		}
 	} else next();
 });
