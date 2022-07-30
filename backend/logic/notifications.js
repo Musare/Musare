@@ -91,27 +91,7 @@ class _NotificationsModule extends CoreClass {
 					this.setStatus("INITIALIZED");
 			});
 
-			this.sub = redis.createClient({
-				url,
-				password,
-				reconnectStrategy: retries => {
-					if (this.getStatus() !== "LOCKDOWN") {
-						if (this.getStatus() !== "RECONNECTING") this.setStatus("RECONNECTING");
-
-						this.log("INFO", `Attempting to reconnect.`);
-
-						if (retries >= 10) {
-							this.log("ERROR", `Stopped trying to reconnect.`);
-
-							this.setStatus("FAILED");
-
-							new Error("Stopped trying to reconnect.");
-						} else {
-							Math.min(retries * 50, 500);
-						}
-					}
-				}
-			});
+			this.sub = this.pub.duplicate();
 
 			this.sub.on("error", err => {
 				if (this.getStatus() === "INITIALIZING") reject(err);
@@ -127,7 +107,7 @@ class _NotificationsModule extends CoreClass {
 				else if (this.getStatus() === "LOCKDOWN" || this.getStatus() === "RECONNECTING")
 					this.setStatus("READY");
 
-				this.sub.PSUBSCRIBE(`__keyevent@${this.pub.options.db}__:expired`, (message, channel) => {
+				this.sub.PSUBSCRIBE(`__keyevent@${this.sub.options.db}__:expired`, (message, channel) => {
 					this.log("STATION_ISSUE", `PMESSAGE1 - Channel: ${channel}; ExpiredKey: ${message}`);
 
 					this.subscriptions.forEach(sub => {
