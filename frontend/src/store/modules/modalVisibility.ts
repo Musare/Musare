@@ -3,7 +3,6 @@ import ws from "@/ws";
 
 import whatIsNew from "./modals/whatIsNew";
 import manageStation from "./modals/manageStation";
-import editPlaylist from "./modals/editPlaylist";
 import report from "./modals/report";
 import viewReport from "./modals/viewReport";
 import viewApiRequest from "./modals/viewApiRequest";
@@ -19,6 +18,7 @@ import { useBulkActionsStore } from "@/stores/bulkActions";
 import { useConfirmStore } from "@/stores/confirm";
 import { useCreateStationStore } from "@/stores/createStation";
 import { useEditNewsStore } from "@/stores/editNews";
+import { useEditPlaylistStore } from "@/stores/editPlaylist";
 
 const state = {
 	modals: {},
@@ -32,13 +32,13 @@ const piniaStores = [
 	"bulkActions",
 	"confirm",
 	"createStation",
-	"editNews"
+	"editNews",
+	"editPlaylist"
 ];
 
 const modalModules = {
 	whatIsNew,
 	manageStation,
-	editPlaylist,
 	report,
 	viewReport,
 	viewApiRequest,
@@ -127,6 +127,9 @@ const mutations = {
 					break;
 				case "editNews":
 					store = useEditNewsStore({ modalUuid: uuid });
+					break;
+				case "editPlaylist":
+					store = useEditPlaylistStore({ modalUuid: uuid });
 					break;
 				default:
 					break;

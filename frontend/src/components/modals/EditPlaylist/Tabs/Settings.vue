@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
-import { useModalState } from "@/vuex_helpers";
 import validation from "@/validation";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
+import { useEditPlaylistStore } from "@/stores/editPlaylist";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
@@ -16,10 +15,8 @@ const { userId, role: userRole } = storeToRefs(userAuthStore);
 
 const { socket } = useWebsocketsStore();
 
-const modalState = useModalState("modals/editPlaylist/MODAL_UUID", {
-	modalUuid: props.modalUuid
-});
-const playlist = computed(() => modalState.playlist);
+const editPlaylistStore = useEditPlaylistStore(props);
+const { playlist } = storeToRefs(editPlaylistStore);
 
 const isEditable = () =>
 	(playlist.value.type === "user" ||

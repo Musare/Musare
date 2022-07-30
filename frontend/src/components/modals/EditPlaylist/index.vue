@@ -11,9 +11,9 @@ import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useEditPlaylistStore } from "@/stores/editPlaylist";
 import { useStationStore } from "@/stores/station";
 import { useUserAuthStore } from "@/stores/userAuth";
-import { useModalState, useModalActions } from "@/vuex_helpers";
 import ws from "@/ws";
 import utils from "@/utils";
 
@@ -33,6 +33,7 @@ const props = defineProps({
 const store = useStore();
 
 const { socket } = useWebsocketsStore();
+const editPlaylistStore = useEditPlaylistStore(props);
 const stationStore = useStationStore();
 const userAuthStore = useUserAuthStore();
 
@@ -46,42 +47,21 @@ const tabs = ref([]);
 const songItems = ref([]);
 
 const playlistSongs = computed({
-	get: () => store.state.modals.editPlaylist[props.modalUuid].playlist.songs,
+	get: () => editPlaylistStore.playlist.songs,
 	set: value => {
-		store.commit(
-			`modals/editPlaylist/${props.modalUuid}/updatePlaylistSongs`,
-			value
-		);
+		editPlaylistStore.updatePlaylistSongs(value);
 	}
 });
 
-const modalState = useModalState("modals/editPlaylist/MODAL_UUID", {
-	modalUuid: props.modalUuid
-});
-const playlistId = computed(() => modalState.playlistId);
-const tab = computed(() => modalState.tab);
-const playlist = computed(() => modalState.playlist);
-
+const { playlistId, tab, playlist } = storeToRefs(editPlaylistStore);
 const { setPlaylist, clearPlaylist, addSong, removeSong, repositionedSong } =
-	useModalActions(
-		"modals/editPlaylist/MODAL_UUID",
-		[
-			"setPlaylist",
-			"clearPlaylist",
-			"addSong",
-			"removeSong",
-			"repositionedSong"
-		],
-		{
-			modalUuid: props.modalUuid
-		}
-	);
+	editPlaylistStore;
 
 const closeCurrentModal = () =>
 	store.dispatch("modalVisibility/closeCurrentModal");
 const showTab = payload => {
 	tabs.value[`${payload}-tab`].scrollIntoView({ block: "nearest" });
-	store.dispatch(`modals/editPlaylist/${props.modalUuid}/showTab`, payload);
+	editPlaylistStore.showTab(payload);
 };
 
 const isEditable = () =>
@@ -323,8 +303,8 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
 	clearPlaylist();
-	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-	store.unregisterModule(["modals", "editPlaylist", props.modalUuid]);
+	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
+	editPlaylistStore.$dispose();
 });
 </script>
 

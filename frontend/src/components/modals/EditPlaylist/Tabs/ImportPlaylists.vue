@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import Toast from "toasters";
-import { useModalState } from "@/vuex_helpers";
+import { storeToRefs } from "pinia";
 import useSearchYoutube from "@/composables/useSearchYoutube";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
+import { useEditPlaylistStore } from "@/stores/editPlaylist";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
@@ -12,10 +12,8 @@ const props = defineProps({
 
 const { socket } = useWebsocketsStore();
 
-const modalState = useModalState("modals/editPlaylist/MODAL_UUID", {
-	modalUuid: props.modalUuid
-});
-const playlist = computed(() => modalState.playlist);
+const editPlaylistStore = useEditPlaylistStore(props);
+const { playlist } = storeToRefs(editPlaylistStore);
 
 const { setJob } = useLongJobsStore();
 

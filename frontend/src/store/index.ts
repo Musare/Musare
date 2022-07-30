@@ -14,7 +14,6 @@ export default createStore({
 			namespaced: true,
 			modules: {
 				importAlbum: emptyModule,
-				editPlaylist: emptyModule,
 				manageStation: emptyModule,
 				whatIsNew: emptyModule,
 				viewApiRequest: emptyModule,

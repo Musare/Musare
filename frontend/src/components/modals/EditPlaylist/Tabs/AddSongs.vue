@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref, watch, onMounted } from "vue";
-import { useModalState } from "@/vuex_helpers";
+import { storeToRefs } from "pinia";
 import useSearchYoutube from "@/composables/useSearchYoutube";
 import useSearchMusare from "@/composables/useSearchMusare";
+import { useEditPlaylistStore } from "@/stores/editPlaylist";
 
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
@@ -15,12 +16,8 @@ const props = defineProps({
 	modalUuid: { type: String, default: "" }
 });
 
-const { playlistId, playlist } = useModalState(
-	"modals/editPlaylist/MODAL_UUID",
-	{
-		modalUuid: props.modalUuid
-	}
-);
+const editPlaylistStore = useEditPlaylistStore(props);
+const { playlistId, playlist } = storeToRefs(editPlaylistStore);
 
 const sitename = ref("Musare");
 
@@ -43,7 +40,7 @@ watch(
 	() => youtubeSearch.value.songs.results,
 	songs => {
 		songs.forEach((searchItem, index) =>
-			playlist.songs.find(song => {
+			playlist.value.songs.find(song => {
 				if (song.youtubeId === searchItem.id)
 					youtubeSearch.value.songs.results[index].isAddedToQueue =
 						true;
@@ -56,7 +53,7 @@ watch(
 	() => musareSearch.value.results,
 	songs => {
 		songs.forEach((searchItem, index) =>
-			playlist.songs.find(song => {
+			playlist.value.songs.find(song => {
 				if (song._id === searchItem._id)
 					musareSearch.value.results[index].isAddedToQueue = true;
 
@@ -66,10 +63,10 @@ watch(
 	}
 );
 watch(
-	() => playlist.songs,
+	() => playlist.value.songs,
 	() => {
 		youtubeSearch.value.songs.results.forEach((searchItem, index) =>
-			playlist.songs.find(song => {
+			playlist.value.songs.find(song => {
 				youtubeSearch.value.songs.results[index].isAddedToQueue = false;
 				if (song.youtubeId === searchItem.id)
 					youtubeSearch.value.songs.results[index].isAddedToQueue =
@@ -79,7 +76,7 @@ watch(
 			})
 		);
 		musareSearch.value.results.forEach((searchItem, index) =>
-			playlist.songs.find(song => {
+			playlist.value.songs.find(song => {
 				musareSearch.value.results[index].isAddedToQueue = false;
 				if (song.youtubeId === searchItem.youtubeId)
 					musareSearch.value.results[index].isAddedToQueue = true;
