@@ -107,7 +107,7 @@ class _NotificationsModule extends CoreClass {
 				else if (this.getStatus() === "LOCKDOWN" || this.getStatus() === "RECONNECTING")
 					this.setStatus("READY");
 
-				this.sub.PSUBSCRIBE(`__keyevent@${this.sub.options.db}__:expired`, (message, channel) => {
+				this.sub.PSUBSCRIBE(`__keyevent@${this.sub.options.database}__:expired`, (message, channel) => {
 					this.log("STATION_ISSUE", `PMESSAGE1 - Channel: ${channel}; ExpiredKey: ${message}`);
 
 					this.subscriptions.forEach(sub => {
