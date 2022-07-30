@@ -8,7 +8,6 @@ import manageStation from "./modals/manageStation";
 import editPlaylist from "./modals/editPlaylist";
 import report from "./modals/report";
 import viewReport from "./modals/viewReport";
-import bulkActions from "./modals/bulkActions";
 import viewApiRequest from "./modals/viewApiRequest";
 import viewPunishment from "./modals/viewPunishment";
 import importAlbum from "./modals/importAlbum";
@@ -19,13 +18,14 @@ import removeAccount from "./modals/removeAccount";
 import { useEditUserStore } from "@/stores/editUser";
 import { useEditSongStore } from "@/stores/editSong";
 import { useEditSongsStore } from "@/stores/editSongs";
+import { useBulkActionsStore } from "@/stores/bulkActions";
 
 const state = {
 	modals: {},
 	activeModals: []
 };
 
-const piniaStores = ["editUser", "editSong", "editSongs"];
+const piniaStores = ["editUser", "editSong", "editSongs", "bulkActions"];
 
 const modalModules = {
 	whatIsNew,
@@ -35,7 +35,6 @@ const modalModules = {
 	editPlaylist,
 	report,
 	viewReport,
-	bulkActions,
 	viewApiRequest,
 	viewPunishment,
 	importAlbum,
@@ -111,6 +110,9 @@ const mutations = {
 					break;
 				case "editSongs":
 					store = useEditSongsStore({ modalUuid: uuid });
+					break;
+				case "bulkActions":
+					store = useBulkActionsStore({ modalUuid: uuid });
 					break;
 				default:
 					break;

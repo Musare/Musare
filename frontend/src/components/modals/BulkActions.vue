@@ -2,9 +2,10 @@
 import { useStore } from "vuex";
 import { ref, defineAsyncComponent, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
-import { useModalState } from "@/vuex_helpers";
+import { useBulkActionsStore } from "@/stores/bulkActions";
 import ws from "@/ws";
 
 const AutoSuggest = defineAsyncComponent(
@@ -24,9 +25,8 @@ const { setJob } = useLongJobsStore();
 
 const { socket } = useWebsocketsStore();
 
-const { type } = useModalState("modals/bulkActions/MODAL_UUID", {
-	modalUuid: props.modalUuid
-});
+const bulkActionsStore = useBulkActionsStore(props);
+const { type } = storeToRefs(bulkActionsStore);
 
 const method = ref("add");
 const items = ref([]);
@@ -34,8 +34,8 @@ const itemInput = ref();
 const allItems = ref([]);
 
 const init = () => {
-	if (type.autosuggest && type.autosuggestDataAction)
-		socket.dispatch(type.autosuggestDataAction, res => {
+	if (type.value.autosuggest && type.value.autosuggestDataAction)
+		socket.dispatch(type.value.autosuggestDataAction, res => {
 			if (res.status === "success") {
 				const { items } = res.data;
 				allItems.value = items;
@@ -47,10 +47,10 @@ const init = () => {
 
 const addItem = () => {
 	if (!itemInput.value) return;
-	if (type.regex && !type.regex.test(itemInput.value)) {
-		new Toast(`Invalid ${type.name} format.`);
+	if (type.value.regex && !type.value.regex.test(itemInput.value)) {
+		new Toast(`Invalid ${type.value.name} format.`);
 	} else if (items.value.includes(itemInput.value)) {
-		new Toast(`Duplicate ${type.name} specified.`);
+		new Toast(`Duplicate ${type.value.name} specified.`);
 	} else {
 		items.value.push(itemInput.value);
 		itemInput.value = null;
@@ -65,30 +65,36 @@ const applyChanges = () => {
 	let id;
 	let title;
 
-	socket.dispatch(type.action, method.value, items.value, type.items, {
-		cb: () => {},
-		onProgress: res => {
-			if (res.status === "started") {
-				id = res.id;
-				title = res.title;
-				closeCurrentModal();
-			}
+	socket.dispatch(
+		type.value.action,
+		method.value,
+		items.value,
+		type.value.items,
+		{
+			cb: () => {},
+			onProgress: res => {
+				if (res.status === "started") {
+					id = res.id;
+					title = res.title;
+					closeCurrentModal();
+				}
 
-			if (id)
-				setJob({
-					id,
-					name: title,
-					...res
-				});
+				if (id)
+					setJob({
+						id,
+						name: title,
+						...res
+					});
+			}
 		}
-	});
+	);
 };
 
 onBeforeUnmount(() => {
 	itemInput.value = null;
 	items.value = [];
-	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-	store.unregisterModule(["modals", "bulkActions", props.modalUuid]);
+	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
+	bulkActionsStore.$dispose();
 });
 
 onMounted(() => {

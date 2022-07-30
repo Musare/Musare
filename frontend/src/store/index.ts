@@ -24,7 +24,6 @@ export default createStore({
 				report: emptyModule,
 				viewReport: emptyModule,
 				confirm: emptyModule,
-				bulkActions: emptyModule,
 				viewYoutubeVideo: emptyModule,
 				removeAccount: emptyModule
 			}
