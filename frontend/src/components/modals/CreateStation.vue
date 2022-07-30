@@ -2,8 +2,9 @@
 import { useStore } from "vuex";
 import { ref, onBeforeUnmount } from "vue";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
-import { useModalState } from "@/vuex_helpers";
+import { useCreateStationStore } from "@/stores/createStation";
 import validation from "@/validation";
 
 const props = defineProps({
@@ -14,9 +15,8 @@ const store = useStore();
 
 const { socket } = useWebsocketsStore();
 
-const { official } = useModalState("modals/createStation/MODAL_UUID", {
-	modalUuid: props.modalUuid
-});
+const createStationStore = useCreateStationStore(props);
+const { official } = storeToRefs(createStationStore);
 
 const closeCurrentModal = () =>
 	store.dispatch("modalVisibility/closeCurrentModal");
@@ -65,7 +65,7 @@ const submitModal = () => {
 		"stations.create",
 		{
 			name,
-			type: official ? "official" : "community",
+			type: official.value ? "official" : "community",
 			displayName,
 			description
 		},
@@ -79,8 +79,8 @@ const submitModal = () => {
 };
 
 onBeforeUnmount(() => {
-	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-	store.unregisterModule(["modals", "createStation", props.modalUuid]);
+	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
+	createStationStore.$dispose();
 });
 </script>
 

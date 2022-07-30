@@ -17,7 +17,6 @@ export default createStore({
 				editPlaylist: emptyModule,
 				manageStation: emptyModule,
 				whatIsNew: emptyModule,
-				createStation: emptyModule,
 				editNews: emptyModule,
 				viewApiRequest: emptyModule,
 				viewPunishment: emptyModule,

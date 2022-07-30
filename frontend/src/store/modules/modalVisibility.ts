@@ -2,7 +2,6 @@
 import ws from "@/ws";
 
 import whatIsNew from "./modals/whatIsNew";
-import createStation from "./modals/createStation";
 import editNews from "./modals/editNews";
 import manageStation from "./modals/manageStation";
 import editPlaylist from "./modals/editPlaylist";
@@ -19,6 +18,7 @@ import { useEditSongStore } from "@/stores/editSong";
 import { useEditSongsStore } from "@/stores/editSongs";
 import { useBulkActionsStore } from "@/stores/bulkActions";
 import { useConfirmStore } from "@/stores/confirm";
+import { useCreateStationStore } from "@/stores/createStation";
 
 const state = {
 	modals: {},
@@ -30,12 +30,12 @@ const piniaStores = [
 	"editSong",
 	"editSongs",
 	"bulkActions",
-	"confirm"
+	"confirm",
+	"createStation"
 ];
 
 const modalModules = {
 	whatIsNew,
-	createStation,
 	editNews,
 	manageStation,
 	editPlaylist,
@@ -121,6 +121,9 @@ const mutations = {
 					break;
 				case "confirm":
 					store = useConfirmStore({ modalUuid: uuid });
+					break;
+				case "createStation":
+					store = useCreateStationStore({ modalUuid: uuid });
 					break;
 				default:
 					break;
