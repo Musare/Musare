@@ -5,8 +5,9 @@ import { marked } from "marked";
 import DOMPurify from "dompurify";
 import Toast from "toasters";
 import { formatDistance } from "date-fns";
-import { useModalState } from "@/vuex_helpers";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useEditNewsStore } from "@/stores/editNews";
 import ws from "@/ws";
 
 const SaveButton = defineAsyncComponent(
@@ -21,9 +22,8 @@ const store = useStore();
 
 const { socket } = useWebsocketsStore();
 
-const { createNews, newsId } = useModalState("modals/editNews/MODAL_UUID", {
-	modalUuid: props.modalUuid
-});
+const editNewsStore = useEditNewsStore(props);
+const { createNews, newsId } = storeToRefs(editNewsStore);
 
 const closeCurrentModal = () =>
 	store.dispatch("modalVisibility/closeCurrentModal");
@@ -37,8 +37,8 @@ const createdBy = ref();
 const createdAt = ref(0);
 
 const init = () => {
-	if (newsId && !createNews) {
-		socket.dispatch(`news.getNewsFromId`, newsId, res => {
+	if (newsId && !createNews.value) {
+		socket.dispatch(`news.getNewsFromId`, newsId.value, res => {
 			if (res.status === "success") {
 				markdown.value = res.data.news.markdown;
 				status.value = res.data.news.status;
@@ -110,7 +110,7 @@ const update = close => {
 
 	return socket.dispatch(
 		"news.update",
-		newsId,
+		newsId.value,
 		{
 			title,
 			markdown: markdown.value,
@@ -125,8 +125,8 @@ const update = close => {
 };
 
 onBeforeUnmount(() => {
-	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-	store.unregisterModule(["modals", "confirm", props.modalUuid]);
+	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
+	editNewsStore.$dispose();
 });
 
 onMounted(() => {
