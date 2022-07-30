@@ -2,8 +2,9 @@
 import { useStore } from "vuex";
 import { defineAsyncComponent, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
-import { useModalState, useModalActions } from "@/vuex_helpers";
+import { useViewPunishmentStore } from "@/stores/viewPunishment";
 import ws from "@/ws";
 
 const PunishmentItem = defineAsyncComponent(
@@ -18,29 +19,17 @@ const store = useStore();
 
 const { socket } = useWebsocketsStore();
 
-const { punishmentId, punishment } = useModalState(
-	"modals/viewPunishment/MODAL_UUID",
-	{
-		modalUuid: props.modalUuid
-	}
-);
-
-const { viewPunishment } = useModalActions(
-	"modals/viewPunishment/MODAL_UUID",
-	["viewPunishment"],
-	{
-		modalUuid: props.modalUuid
-	}
-);
+const viewPunishmentStore = useViewPunishmentStore(props);
+const { punishmentId, punishment } = storeToRefs(viewPunishmentStore);
+const { viewPunishment } = viewPunishmentStore;
 
 const closeCurrentModal = () =>
 	store.dispatch("modalVisibility/closeCurrentModal");
 
 const init = () => {
-	socket.dispatch(`punishments.findOne`, punishmentId, res => {
+	socket.dispatch(`punishments.findOne`, punishmentId.value, res => {
 		if (res.status === "success") {
-			const { punishment } = res.data;
-			viewPunishment(punishment);
+			viewPunishment(res.data.punishment);
 		} else {
 			new Toast("Punishment with that ID not found");
 			closeCurrentModal();
@@ -53,8 +42,8 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-	store.unregisterModule(["modals", "viewPunishment", props.modalUuid]);
+	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
+	viewPunishmentStore.$dispose();
 });
 </script>
 
