@@ -14,7 +14,6 @@ export default createStore({
 			namespaced: true,
 			modules: {
 				whatIsNew: emptyModule,
-				viewApiRequest: emptyModule,
 				viewPunishment: emptyModule,
 				viewReport: emptyModule,
 				viewYoutubeVideo: emptyModule

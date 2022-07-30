@@ -3,8 +3,9 @@ import { useStore } from "vuex";
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
 import VueJsonPretty from "vue-json-pretty";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
-import { useModalState, useModalActions } from "@/vuex_helpers";
+import { useViewApiRequestStore } from "@/stores/viewApiRequest";
 import ws from "@/ws";
 import "vue-json-pretty/lib/styles.css";
 
@@ -16,20 +17,9 @@ const store = useStore();
 
 const { socket } = useWebsocketsStore();
 
-const { requestId, request, removeAction } = useModalState(
-	"modals/viewApiRequest/MODAL_UUID",
-	{
-		modalUuid: props.modalUuid
-	}
-);
-
-const { viewApiRequest } = useModalActions(
-	"modals/viewApiRequest/MODAL_UUID",
-	["viewApiRequest"],
-	{
-		modalUuid: props.modalUuid
-	}
-);
+const viewApiRequestStore = useViewApiRequestStore(props);
+const { requestId, request, removeAction } = storeToRefs(viewApiRequestStore);
+const { viewApiRequest } = viewApiRequestStore;
 
 const closeCurrentModal = () =>
 	store.dispatch("modalVisibility/closeCurrentModal");
@@ -38,13 +28,16 @@ const loaded = ref(false);
 
 const init = () => {
 	loaded.value = false;
-	socket.dispatch("youtube.getApiRequest", requestId, res => {
+	socket.dispatch("youtube.getApiRequest", requestId.value, res => {
 		if (res.status === "success") {
 			const { apiRequest } = res.data;
 			viewApiRequest(apiRequest);
 			loaded.value = true;
 
-			socket.dispatch("apis.joinRoom", `view-api-request.${requestId}`);
+			socket.dispatch(
+				"apis.joinRoom",
+				`view-api-request.${requestId.value}`
+			);
 
 			socket.on(
 				"event:youtubeApiRequest.removed",
@@ -62,8 +55,8 @@ const init = () => {
 };
 
 const remove = () => {
-	if (removeAction)
-		socket.dispatch(removeAction, requestId, res => {
+	if (removeAction.value)
+		socket.dispatch(removeAction.value, requestId.value, res => {
 			if (res.status === "success") {
 				new Toast("API request successfully removed.");
 				closeCurrentModal();
@@ -80,11 +73,11 @@ onMounted(() => {
 onBeforeUnmount(() => {
 	socket.dispatch(
 		"apis.leaveRoom",
-		`view-api-request.${requestId}`,
+		`view-api-request.${requestId.value}`,
 		() => {}
 	);
-	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-	store.unregisterModule(["modals", "viewApiRequest", props.modalUuid]);
+	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
+	viewApiRequestStore.$dispose();
 });
 </script>
 
