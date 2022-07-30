@@ -2,8 +2,9 @@
 import { useStore } from "vuex";
 import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
-import { useModalState } from "@/vuex_helpers";
+import { useViewReportStore } from "@/stores/viewReport";
 import ws from "@/ws";
 import admin from "@/api/admin/index";
 
@@ -22,9 +23,8 @@ const store = useStore();
 
 const { socket } = useWebsocketsStore();
 
-const { reportId } = useModalState("modals/viewReport/MODAL_UUID", {
-	modalUuid: props.modalUuid
-});
+const viewReportStore = useViewReportStore(props);
+const { reportId } = storeToRefs(viewReportStore);
 
 const openModal = payload =>
 	store.dispatch("modalVisibility/openModal", payload);
@@ -43,11 +43,11 @@ const report = ref({});
 const song = ref();
 
 const init = () => {
-	socket.dispatch("reports.findOne", reportId, res => {
+	socket.dispatch("reports.findOne", reportId.value, res => {
 		if (res.status === "success") {
 			report.value = res.data.report;
 
-			socket.dispatch("apis.joinRoom", `view-report.${reportId}`);
+			socket.dispatch("apis.joinRoom", `view-report.${reportId.value}`);
 
 			socket.dispatch(
 				"songs.getSongFromSongId",
@@ -76,7 +76,7 @@ const init = () => {
 			socket.on(
 				"event:admin.report.issue.toggled",
 				res => {
-					if (reportId === res.data.reportId) {
+					if (reportId.value === res.data.reportId) {
 						const issue = report.value.issues.find(
 							issue => issue._id.toString() === res.data.issueId
 						);
@@ -95,7 +95,7 @@ const init = () => {
 
 const resolve = value =>
 	admin.reports
-		.resolve({ reportId, value })
+		.resolve({ reportId: reportId.value, value })
 		.then(res => {
 			if (res.status !== "success") new Toast(res.message);
 		})
@@ -103,14 +103,14 @@ const resolve = value =>
 
 const remove = () =>
 	admin.reports
-		.remove(reportId)
+		.remove(reportId.value)
 		.then(res => {
 			if (res.status === "success") closeCurrentModal();
 		})
 		.catch(err => new Toast(err.message));
 
 const toggleIssue = issueId => {
-	socket.dispatch("reports.toggleIssue", reportId, issueId, res => {
+	socket.dispatch("reports.toggleIssue", reportId.value, issueId, res => {
 		if (res.status !== "success") new Toast(res.message);
 	});
 };
@@ -127,9 +127,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-	socket.dispatch("apis.leaveRoom", `view-report.${reportId}`);
-	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-	store.unregisterModule(["modals", "viewReport", props.modalUuid]);
+	socket.dispatch("apis.leaveRoom", `view-report.${reportId.value}`);
+	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
+	viewReportStore.$dispose();
 });
 </script>
 
