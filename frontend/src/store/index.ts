@@ -23,7 +23,6 @@ export default createStore({
 				viewPunishment: emptyModule,
 				report: emptyModule,
 				viewReport: emptyModule,
-				confirm: emptyModule,
 				viewYoutubeVideo: emptyModule,
 				removeAccount: emptyModule
 			}

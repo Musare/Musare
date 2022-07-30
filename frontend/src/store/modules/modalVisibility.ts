@@ -11,7 +11,6 @@ import viewReport from "./modals/viewReport";
 import viewApiRequest from "./modals/viewApiRequest";
 import viewPunishment from "./modals/viewPunishment";
 import importAlbum from "./modals/importAlbum";
-import confirm from "./modals/confirm";
 import viewYoutubeVideo from "./modals/viewYoutubeVideo";
 import removeAccount from "./modals/removeAccount";
 
@@ -19,13 +18,20 @@ import { useEditUserStore } from "@/stores/editUser";
 import { useEditSongStore } from "@/stores/editSong";
 import { useEditSongsStore } from "@/stores/editSongs";
 import { useBulkActionsStore } from "@/stores/bulkActions";
+import { useConfirmStore } from "@/stores/confirm";
 
 const state = {
 	modals: {},
 	activeModals: []
 };
 
-const piniaStores = ["editUser", "editSong", "editSongs", "bulkActions"];
+const piniaStores = [
+	"editUser",
+	"editSong",
+	"editSongs",
+	"bulkActions",
+	"confirm"
+];
 
 const modalModules = {
 	whatIsNew,
@@ -38,7 +44,6 @@ const modalModules = {
 	viewApiRequest,
 	viewPunishment,
 	importAlbum,
-	confirm,
 	viewYoutubeVideo,
 	removeAccount
 };
@@ -113,6 +118,9 @@ const mutations = {
 					break;
 				case "bulkActions":
 					store = useBulkActionsStore({ modalUuid: uuid });
+					break;
+				case "confirm":
+					store = useConfirmStore({ modalUuid: uuid });
 					break;
 				default:
 					break;

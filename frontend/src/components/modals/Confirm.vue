@@ -1,21 +1,19 @@
 <script setup lang="ts">
 import { useStore } from "vuex";
 import { onBeforeUnmount } from "vue";
-import { useModalState, useModalActions } from "@/vuex_helpers";
+import { storeToRefs } from "pinia";
+import { useConfirmStore } from "@/stores/confirm";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
 });
 
+const confirmStore = useConfirmStore(props);
+const { message } = storeToRefs(confirmStore);
+const { confirm } = confirmStore;
+
 const store = useStore();
 
-const { message } = useModalState("modals/confirm/MODAL_UUID", {
-	modalUuid: props.modalUuid
-});
-
-const { confirm } = useModalActions("modals/confirm/MODAL_UUID", ["confirm"], {
-	modalUuid: props.modalUuid
-});
 const closeCurrentModal = () =>
 	store.dispatch("modalVisibility/closeCurrentModal");
 
@@ -25,8 +23,8 @@ const confirmAction = () => {
 };
 
 onBeforeUnmount(() => {
-	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-	store.unregisterModule(["modals", "confirm", props.modalUuid]);
+	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
+	confirmStore.$dispose();
 });
 </script>
 
