@@ -167,13 +167,10 @@ class _NotificationsModule extends CoreClass {
 						.digest("hex")}; StationId: ${payload.station._id}; StationName: ${payload.station.name}`
 				);
 				NotificationsModule.pub
-					.SET(
-						crypto.createHash("md5").update(`_notification:${payload.name}_`).digest("hex"),
-						"",
-						"PX",
-						time,
-						"NX"
-					)
+					.SET(crypto.createHash("md5").update(`_notification:${payload.name}_`).digest("hex"), "", {
+						PX: time,
+						NX: true
+					})
 					.then(() => resolve())
 					.catch(err => reject(new Error(err)));
 			}
