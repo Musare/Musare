@@ -2,8 +2,9 @@
 import { useStore } from "vuex";
 import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
-import { useModalState } from "@/vuex_helpers";
+import { useReportStore } from "@/stores/report";
 import ws from "@/ws";
 
 const SongItem = defineAsyncComponent(
@@ -21,9 +22,8 @@ const store = useStore();
 
 const { socket } = useWebsocketsStore();
 
-const { song } = useModalState("modals/report/MODAL_UUID", {
-	modalUuid: props.modalUuid
-});
+const reportStore = useReportStore(props);
+const { song } = storeToRefs(reportStore);
 
 const openModal = payload =>
 	store.dispatch("modalVisibility/openModal", payload);
@@ -151,7 +151,7 @@ const predefinedCategories = ref([
 ]);
 
 const init = () => {
-	socket.dispatch("reports.myReportsForSong", song._id, res => {
+	socket.dispatch("reports.myReportsForSong", song.value._id, res => {
 		if (res.status === "success") {
 			existingReports.value = res.data.reports;
 			existingReports.value.forEach(report =>
@@ -198,7 +198,7 @@ const create = () => {
 		"reports.create",
 		{
 			issues,
-			youtubeId: song.youtubeId
+			youtubeId: song.value.youtubeId
 		},
 		res => {
 			new Toast(res.message);
@@ -212,8 +212,8 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-	store.unregisterModule(["modals", "report", props.modalUuid]);
+	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
+	reportStore.$dispose();
 });
 </script>
 

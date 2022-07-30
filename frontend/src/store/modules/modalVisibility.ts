@@ -2,7 +2,6 @@
 import ws from "@/ws";
 
 import whatIsNew from "./modals/whatIsNew";
-import report from "./modals/report";
 import viewReport from "./modals/viewReport";
 import viewApiRequest from "./modals/viewApiRequest";
 import viewPunishment from "./modals/viewPunishment";
@@ -19,6 +18,7 @@ import { useEditPlaylistStore } from "@/stores/editPlaylist";
 import { useImportAlbumStore } from "@/stores/importAlbum";
 import { useManageStationStore } from "@/stores/manageStation";
 import { useRemoveAccountStore } from "@/stores/removeAccount";
+import { useReportStore } from "@/stores/report";
 
 const state = {
 	modals: {},
@@ -36,12 +36,12 @@ const piniaStores = [
 	"editPlaylist",
 	"importAlbum",
 	"manageStation",
-	"removeAccount"
+	"removeAccount",
+	"report"
 ];
 
 const modalModules = {
 	whatIsNew,
-	report,
 	viewReport,
 	viewApiRequest,
 	viewPunishment,
@@ -139,6 +139,9 @@ const mutations = {
 					break;
 				case "removeAccount":
 					store = useRemoveAccountStore({ modalUuid: uuid });
+					break;
+				case "report":
+					store = useReportStore({ modalUuid: uuid });
 					break;
 				default:
 					break;
