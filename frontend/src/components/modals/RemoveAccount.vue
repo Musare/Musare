@@ -3,9 +3,10 @@ import { useStore } from "vuex";
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
-import { useModalState } from "@/vuex_helpers";
+import { storeToRefs } from "pinia";
 import { useSettingsStore } from "@/stores/settings";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useRemoveAccountStore } from "@/stores/removeAccount";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
@@ -18,12 +19,8 @@ const store = useStore();
 
 const { socket } = useWebsocketsStore();
 
-const { githubLinkConfirmed } = useModalState(
-	"modals/removeAccount/MODAL_UUID",
-	{
-		modalUuid: props.modalUuid
-	}
-);
+const removeAccountStore = useRemoveAccountStore(props);
+const { githubLinkConfirmed } = storeToRefs(removeAccountStore);
 
 const { isPasswordLinked, isGithubLinked } = settingsStore;
 const closeCurrentModal = () =>

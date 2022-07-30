@@ -7,7 +7,6 @@ import viewReport from "./modals/viewReport";
 import viewApiRequest from "./modals/viewApiRequest";
 import viewPunishment from "./modals/viewPunishment";
 import viewYoutubeVideo from "./modals/viewYoutubeVideo";
-import removeAccount from "./modals/removeAccount";
 
 import { useEditUserStore } from "@/stores/editUser";
 import { useEditSongStore } from "@/stores/editSong";
@@ -19,6 +18,7 @@ import { useEditNewsStore } from "@/stores/editNews";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";
 import { useImportAlbumStore } from "@/stores/importAlbum";
 import { useManageStationStore } from "@/stores/manageStation";
+import { useRemoveAccountStore } from "@/stores/removeAccount";
 
 const state = {
 	modals: {},
@@ -35,7 +35,8 @@ const piniaStores = [
 	"editNews",
 	"editPlaylist",
 	"importAlbum",
-	"manageStation"
+	"manageStation",
+	"removeAccount"
 ];
 
 const modalModules = {
@@ -44,8 +45,7 @@ const modalModules = {
 	viewReport,
 	viewApiRequest,
 	viewPunishment,
-	viewYoutubeVideo,
-	removeAccount
+	viewYoutubeVideo
 };
 
 const getters = {};
@@ -136,6 +136,9 @@ const mutations = {
 					break;
 				case "manageStation":
 					store = useManageStationStore({ modalUuid: uuid });
+					break;
+				case "removeAccount":
+					store = useRemoveAccountStore({ modalUuid: uuid });
 					break;
 				default:
 					break;
