@@ -10,8 +10,9 @@ import {
 } from "vue";
 import Toast from "toasters";
 import { Sortable } from "sortablejs-vue3";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
-import { useModalState, useModalActions } from "@/vuex_helpers";
+import { useImportAlbumStore } from "@/stores/importAlbum";
 import ws from "@/ws";
 
 const SongItem = defineAsyncComponent(
@@ -26,13 +27,9 @@ const store = useStore();
 
 const { socket } = useWebsocketsStore();
 
-const modalState = useModalState("modals/importAlbum/MODAL_UUID", {
-	modalUuid: props.modalUuid
-});
-const discogsTab = computed(() => modalState.discogsTab);
-const discogsAlbum = computed(() => modalState.discogsAlbum);
-const prefillDiscogs = computed(() => modalState.prefillDiscogs);
-
+const importAlbumStore = useImportAlbumStore(props);
+const { discogsTab, discogsAlbum, prefillDiscogs } =
+	storeToRefs(importAlbumStore);
 const {
 	toggleDiscogsAlbum,
 	setPlaylistSongs,
@@ -40,22 +37,8 @@ const {
 	selectDiscogsAlbum,
 	resetPlaylistSongs,
 	updatePlaylistSong
-} = useModalActions(
-	"modals/importAlbum/MODAL_UUID",
-	[
-		"toggleDiscogsAlbum",
-		"setPlaylistSongs",
-		"updatePlaylistSongs",
-		"selectDiscogsAlbum",
-		"updateEditingSongs",
-		"resetPlaylistSongs",
-		"togglePrefillDiscogs",
-		"updatePlaylistSong"
-	],
-	{
-		modalUuid: props.modalUuid
-	}
-);
+} = importAlbumStore;
+
 const openModal = payload =>
 	store.dispatch("modalVisibility/openModal", payload);
 
@@ -77,21 +60,15 @@ const discogs = ref({
 const discogsTabs = ref([]);
 
 const playlistSongs = computed({
-	get: () => store.state.modals.importAlbum[props.modalUuid].playlistSongs,
-	set: playlistSongs => {
-		store.commit(
-			`modals/importAlbum/${props.modalUuid}/updatePlaylistSongs`,
-			playlistSongs
-		);
+	get: () => importAlbumStore.playlistSongs,
+	set: value => {
+		importAlbumStore.updatePlaylistSongs(value);
 	}
 });
 const localPrefillDiscogs = computed({
-	get: () => store.state.modals.importAlbum[props.modalUuid].prefillDiscogs,
-	set: prefillDiscogs => {
-		store.commit(
-			`modals/importAlbum/${props.modalUuid}/updatePrefillDiscogs`,
-			prefillDiscogs
-		);
+	get: () => importAlbumStore.prefillDiscogs,
+	set: value => {
+		importAlbumStore.updatePrefillDiscogs(value);
 	}
 });
 
@@ -100,10 +77,7 @@ const showDiscogsTab = tab => {
 		discogsTabs.value[`discogs-${tab}-tab`].scrollIntoView({
 			block: "nearest"
 		});
-	return store.dispatch(
-		`modals/importAlbum/${props.modalUuid}/showDiscogsTab`,
-		tab
-	);
+	return importAlbumStore.showDiscogsTab(tab);
 };
 
 const init = () => {
@@ -381,8 +355,8 @@ onBeforeUnmount(() => {
 	setPlaylistSongs([]);
 	showDiscogsTab("search");
 	socket.dispatch("apis.leaveRoom", "import-album");
-	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-	store.unregisterModule(["modals", "importAlbum", props.modalUuid]);
+	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
+	importAlbumStore.$dispose();
 });
 </script>
 
