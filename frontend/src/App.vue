@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
 import { defineAsyncComponent, ref, computed, watch, onMounted } from "vue";
 import Toast from "toasters";
@@ -7,6 +6,7 @@ import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPreferencesStore } from "@/stores/userPreferences";
+import { useModalsStore } from "@/stores/modals";
 import ws from "@/ws";
 import aw from "@/aw";
 import keyboardShortcuts from "@/keyboardShortcuts";
@@ -22,16 +22,13 @@ const FallingSnow = defineAsyncComponent(
 	() => import("@/components/FallingSnow.vue")
 );
 
-const store = useStore();
 const route = useRoute();
 const router = useRouter();
-
-const modals = computed(() => store.state.modalVisibility.modals);
-const activeModals = computed(() => store.state.modalVisibility.activeModals);
 
 const { socket } = useWebsocketsStore();
 const userAuthStore = useUserAuthStore();
 const userPreferencesStore = useUserPreferencesStore();
+const modalsStore = useModalsStore();
 
 const apiDomain = ref("");
 const socketConnected = ref(true);
@@ -51,13 +48,10 @@ const {
 	changeAnonymousSongRequests,
 	changeActivityWatch
 } = userPreferencesStore;
+const { modals, activeModals } = storeToRefs(modalsStore);
+const { openModal, closeCurrentModal } = modalsStore;
 
 const aModalIsOpen = computed(() => Object.keys(activeModals.value).length > 0);
-
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
-const closeCurrentModal = () =>
-	store.dispatch("modalVisibility/closeCurrentModal");
 
 const toggleNightMode = () => {
 	localStorage.setItem("nightmode", !nightmode.value);

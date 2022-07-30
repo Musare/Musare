@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from "vue";
-import { useStore } from "vuex";
 import Toast from "toasters";
 import admin from "@/api/admin/index";
+import { useModalsStore } from "@/stores/modals";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
 );
-
-const store = useStore();
 
 const columnDefault = ref({
 	sortable: true,
@@ -145,8 +143,7 @@ const events = ref({
 	}
 });
 
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
+const { openModal } = useModalsStore();
 
 const resolve = (reportId, value) =>
 	admin.reports

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { ref, defineAsyncComponent, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
 import { useBulkActionsStore } from "@/stores/bulkActions";
+import { useModalsStore } from "@/stores/modals";
 import ws from "@/ws";
 
 const AutoSuggest = defineAsyncComponent(
@@ -16,10 +16,7 @@ const props = defineProps({
 	modalUuid: { type: String, default: "" }
 });
 
-const store = useStore();
-
-const closeCurrentModal = () =>
-	store.dispatch("modalVisibility/closeCurrentModal");
+const { closeCurrentModal } = useModalsStore();
 
 const { setJob } = useLongJobsStore();
 

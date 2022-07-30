@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import {
 	defineAsyncComponent,
 	useSlots,
@@ -13,7 +12,9 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useModalsStore } from "@/stores/modals";
 import keyboardShortcuts from "@/keyboardShortcuts";
 import ws from "@/ws";
 import useDragBox from "@/composables/useDragBox";
@@ -57,9 +58,8 @@ const slots = useSlots();
 const route = useRoute();
 const router = useRouter();
 
-const store = useStore();
-
-const activeModals = computed(() => store.state.modalVisibility.activeModals);
+const modalsStore = useModalsStore();
+const { activeModals } = storeToRefs(modalsStore);
 
 const { socket } = useWebsocketsStore();
 

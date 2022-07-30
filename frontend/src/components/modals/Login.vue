@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
 import { useUserAuthStore } from "@/stores/userAuth";
+import { useModalsStore } from "@/stores/modals";
 
 const route = useRoute();
 
@@ -19,14 +19,9 @@ const siteSettings = ref({
 });
 const passwordElement = ref();
 
-const store = useStore();
-
 const { login } = useUserAuthStore();
 
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
-const closeCurrentModal = () =>
-	store.dispatch("modalVisibility/closeCurrentModal");
+const { openModal, closeCurrentModal } = useModalsStore();
 
 const submitModal = () => {
 	login({

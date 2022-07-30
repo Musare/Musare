@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
 import VueJsonPretty from "vue-json-pretty";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useModalsStore } from "@/stores/modals";
 import { useViewApiRequestStore } from "@/stores/viewApiRequest";
 import ws from "@/ws";
 import "vue-json-pretty/lib/styles.css";
@@ -13,16 +13,13 @@ const props = defineProps({
 	modalUuid: { type: String, default: "" }
 });
 
-const store = useStore();
-
 const { socket } = useWebsocketsStore();
 
 const viewApiRequestStore = useViewApiRequestStore(props);
 const { requestId, request, removeAction } = storeToRefs(viewApiRequestStore);
 const { viewApiRequest } = viewApiRequestStore;
 
-const closeCurrentModal = () =>
-	store.dispatch("modalVisibility/closeCurrentModal");
+const { closeCurrentModal } = useModalsStore();
 
 const loaded = ref(false);
 

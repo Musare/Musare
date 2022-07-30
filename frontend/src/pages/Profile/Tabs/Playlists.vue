@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent, onMounted } from "vue";
-import { useStore } from "vuex";
 import useSortablePlaylists from "@/composables/useSortablePlaylists";
+import { useModalsStore } from "@/stores/modals";
 
 const PlaylistItem = defineAsyncComponent(
 	() => import("@/components/PlaylistItem.vue")
@@ -22,9 +22,7 @@ const {
 	savePlaylistOrder
 } = useSortablePlaylists();
 
-const store = useStore();
-
-const openModal = modal => store.dispatch("modalVisibility/openModal", modal);
+const { openModal } = useModalsStore();
 
 onMounted(() => {
 	userId.value = props.userId;

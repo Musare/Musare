@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { Sortable } from "sortablejs-vue3";
@@ -7,10 +6,10 @@ import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
+import { useModalsStore } from "@/stores/modals";
 import keyboardShortcuts from "@/keyboardShortcuts";
 import ws from "@/ws";
 
-const store = useStore();
 const userAuthStore = useUserAuthStore();
 const route = useRoute();
 const router = useRouter();
@@ -77,8 +76,7 @@ const favoriteStations = computed(() =>
 		)
 );
 
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
+const { openModal } = useModalsStore();
 
 const init = () => {
 	socket.dispatch(

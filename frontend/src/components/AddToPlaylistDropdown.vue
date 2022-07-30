@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { useStore } from "vuex";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserPlaylistsStore } from "@/stores/userPlaylists";
+import { useModalsStore } from "@/stores/modals";
 import ws from "@/ws";
-
-const store = useStore();
 
 const props = defineProps({
 	song: {
@@ -28,8 +26,7 @@ const userPlaylistsStore = useUserPlaylistsStore();
 const { playlists, fetchedPlaylists } = storeToRefs(userPlaylistsStore);
 const { setPlaylists, addPlaylist, removePlaylist } = userPlaylistsStore;
 
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
+const { openModal } = useModalsStore();
 
 const init = () => {
 	if (!fetchedPlaylists.value)

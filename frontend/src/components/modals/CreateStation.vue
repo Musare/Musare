@@ -1,25 +1,22 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { ref, onBeforeUnmount } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useCreateStationStore } from "@/stores/createStation";
+import { useModalsStore } from "@/stores/modals";
 import validation from "@/validation";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
 });
 
-const store = useStore();
-
 const { socket } = useWebsocketsStore();
 
 const createStationStore = useCreateStationStore(props);
 const { official } = storeToRefs(createStationStore);
 
-const closeCurrentModal = () =>
-	store.dispatch("modalVisibility/closeCurrentModal");
+const { closeCurrentModal } = useModalsStore();
 
 const newStation = ref({
 	name: "",

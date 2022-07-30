@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { storeToRefs } from "pinia";
 import {
 	defineAsyncComponent,
@@ -16,6 +15,7 @@ import validation from "@/validation";
 import keyboardShortcuts from "@/keyboardShortcuts";
 
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useModalsStore } from "@/stores/modals";
 import { useEditSongStore } from "@/stores/editSong";
 
 const FloatingBox = defineAsyncComponent(
@@ -52,12 +52,12 @@ const emit = defineEmits([
 	"close"
 ]);
 
-const store = useStore();
 const editSongStore = useEditSongStore(props);
 const { socket } = useWebsocketsStore();
 
-const modals = computed(() => store.state.modalVisibility.modals);
-const activeModals = computed(() => store.state.modalVisibility.activeModals);
+const modalsStore = useModalsStore();
+const { modals, activeModals } = storeToRefs(modalsStore);
+const { openModal } = modalsStore;
 
 const {
 	tab,
@@ -162,12 +162,9 @@ const {
 	setPlaybackRate
 } = editSongStore;
 
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
-
 const closeCurrentModal = () => {
 	if (props.bulk) emit("close");
-	else store.dispatch("modalVisibility/closeCurrentModal");
+	else modalsStore.closeCurrentModal();
 };
 
 const showTab = payload => {

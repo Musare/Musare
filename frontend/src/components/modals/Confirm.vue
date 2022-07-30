@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { onBeforeUnmount } from "vue";
 import { storeToRefs } from "pinia";
 import { useConfirmStore } from "@/stores/confirm";
+import { useModalsStore } from "@/stores/modals";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
@@ -12,10 +12,7 @@ const confirmStore = useConfirmStore(props);
 const { message } = storeToRefs(confirmStore);
 const { confirm } = confirmStore;
 
-const store = useStore();
-
-const closeCurrentModal = () =>
-	store.dispatch("modalVisibility/closeCurrentModal");
+const { closeCurrentModal } = useModalsStore();
 
 const confirmAction = () => {
 	confirm();

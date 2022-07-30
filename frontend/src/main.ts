@@ -8,9 +8,9 @@ import "lofig";
 
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPreferencesStore } from "@/stores/userPreferences";
+import { useModalsStore } from "@/stores/modals";
 import ws from "@/ws";
 import ms from "@/ms";
-import store from "./store";
 
 import AppComponent from "./App.vue";
 
@@ -34,8 +34,6 @@ const handleMetadata = attrs => {
 };
 
 const app = createApp(AppComponent);
-
-app.use(store);
 
 app.use(VueTippy, {
 	directive: "tippy", // => v-tippy
@@ -237,6 +235,7 @@ const router = createRouter({
 });
 
 const userAuthStore = useUserAuthStore();
+const modalsStore = useModalsStore();
 
 router.beforeEach((to, from, next) => {
 	if (window.stationInterval) {
@@ -245,10 +244,10 @@ router.beforeEach((to, from, next) => {
 	}
 
 	// if (to.name === "station") {
-	// 	store.dispatch("modalVisibility/closeModal", "manageStation");
+	// 	modalsStore.closeModal("manageStation");
 	// }
 
-	store.dispatch("modalVisibility/closeAllModals");
+	modalsStore.closeAllModals();
 
 	if (ws.socket && to.fullPath !== from.fullPath) {
 		ws.clearCallbacks();

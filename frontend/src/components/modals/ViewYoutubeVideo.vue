@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { onMounted, onBeforeUnmount, ref } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import aw from "@/aw";
 import ws from "@/ws";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useModalsStore } from "@/stores/modals";
 import { useViewYoutubeVideoStore } from "@/stores/viewYoutubeVideo";
-
-const store = useStore();
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
@@ -36,11 +34,7 @@ const {
 	viewYoutubeVideo
 } = viewYoutubeVideoStore;
 
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
-
-const closeCurrentModal = () =>
-	store.dispatch("modalVisibility/closeCurrentModal");
+const { openModal, closeCurrentModal } = useModalsStore();
 
 const { socket } = useWebsocketsStore();
 

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { defineAsyncComponent, ref, onMounted, watch, nextTick } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPreferencesStore } from "@/stores/userPreferences";
+import { useModalsStore } from "@/stores/modals";
 
 const ChristmasLights = defineAsyncComponent(
 	() => import("@/components/ChristmasLights.vue")
@@ -17,7 +17,6 @@ defineProps({
 	hideLoggedOut: { type: Boolean, default: false }
 });
 
-const store = useStore();
 const userAuthStore = useUserAuthStore();
 
 const localNightmode = ref(false);
@@ -37,7 +36,7 @@ const { loggedIn, username, role } = storeToRefs(userAuthStore);
 const { logout } = userAuthStore;
 const { changeNightmode } = useUserPreferencesStore();
 
-const openModal = modal => store.dispatch("modalVisibility/openModal", modal);
+const { openModal } = useModalsStore();
 
 const toggleNightmode = toggle => {
 	localNightmode.value = toggle || !localNightmode.value;

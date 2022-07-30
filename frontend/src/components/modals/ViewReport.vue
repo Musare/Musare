@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useModalsStore } from "@/stores/modals";
 import { useViewReportStore } from "@/stores/viewReport";
 import ws from "@/ws";
 import admin from "@/api/admin/index";
@@ -19,17 +19,12 @@ const props = defineProps({
 	modalUuid: { type: String, default: "" }
 });
 
-const store = useStore();
-
 const { socket } = useWebsocketsStore();
 
 const viewReportStore = useViewReportStore(props);
 const { reportId } = storeToRefs(viewReportStore);
 
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
-const closeCurrentModal = () =>
-	store.dispatch("modalVisibility/closeCurrentModal");
+const { openModal, closeCurrentModal } = useModalsStore();
 
 const icons = ref({
 	duration: "timer",

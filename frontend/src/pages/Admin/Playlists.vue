@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from "vue";
-import { useStore } from "vuex";
+import { useModalsStore } from "@/stores/modals";
 
 import utils from "@/utils";
 
@@ -10,8 +10,6 @@ const AdvancedTable = defineAsyncComponent(
 const RunJobDropdown = defineAsyncComponent(
 	() => import("@/components/RunJobDropdown.vue")
 );
-
-const store = useStore();
 
 const columnDefault = ref({
 	sortable: true,
@@ -225,8 +223,7 @@ const jobs = ref([
 	}
 ]);
 
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
+const { openModal } = useModalsStore();
 
 const getDateFormatted = createdAt => {
 	const date = new Date(createdAt);

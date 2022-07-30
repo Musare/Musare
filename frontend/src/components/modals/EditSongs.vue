@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { storeToRefs } from "pinia";
 import {
 	defineAsyncComponent,
@@ -11,9 +10,9 @@ import {
 } from "vue";
 import Toast from "toasters";
 
+import { useModalsStore } from "@/stores/modals";
 import { useEditSongStore } from "@/stores/editSong";
 import { useEditSongsStore } from "@/stores/editSongs";
-
 import { useWebsocketsStore } from "@/stores/websockets";
 
 const EditSongModal = defineAsyncComponent(
@@ -27,8 +26,6 @@ const props = defineProps({
 	modalUuid: { type: String, default: "" }
 });
 
-const store = useStore();
-
 const editSongStore = useEditSongStore(props);
 const editSongsStore = useEditSongsStore(props);
 
@@ -38,10 +35,7 @@ const { youtubeIds, songPrefillData } = storeToRefs(editSongsStore);
 
 const { editSong } = editSongStore;
 
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
-const closeCurrentModal = () =>
-	store.dispatch("modalVisibility/closeCurrentModal");
+const { openModal, closeCurrentModal } = useModalsStore();
 
 const items = ref([]);
 const currentSong = ref({});

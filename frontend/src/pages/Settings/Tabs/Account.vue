@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref, watch, reactive, onMounted } from "vue";
-import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useSettingsStore } from "@/stores/settings";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
+import { useModalsStore } from "@/stores/modals";
 import _validation from "@/validation";
 
 const InputHelpBox = defineAsyncComponent(
@@ -18,7 +18,6 @@ const SaveButton = defineAsyncComponent(
 
 const settingsStore = useSettingsStore();
 const userAuthStore = useUserAuthStore();
-const store = useStore();
 const route = useRoute();
 
 const { socket } = useWebsocketsStore();
@@ -42,8 +41,8 @@ const validation = reactive({
 });
 
 const { updateOriginalUser } = settingsStore;
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
+
+const { openModal } = useModalsStore();
 
 const onInput = inputName => {
 	validation[inputName].entered = true;

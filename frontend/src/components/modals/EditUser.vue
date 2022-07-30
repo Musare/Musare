@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { ref, watch, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
@@ -7,21 +6,20 @@ import ws from "@/ws";
 import validation from "@/validation";
 import { useEditUserStore } from "@/stores/editUser";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useModalsStore } from "@/stores/modals";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
 });
 
 const editUserStore = useEditUserStore(props);
-const store = useStore();
 
 const { socket } = useWebsocketsStore();
 
 const { userId, user } = storeToRefs(editUserStore);
 const { setUser } = editUserStore;
 
-const closeCurrentModal = () =>
-	store.dispatch("modalVisibility/closeCurrentModal");
+const { closeCurrentModal } = useModalsStore();
 
 const ban = ref({ reason: "", expiresAt: "1h" });
 

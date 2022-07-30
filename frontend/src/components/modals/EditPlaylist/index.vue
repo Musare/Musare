@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import {
 	defineAsyncComponent,
 	ref,
@@ -14,6 +13,7 @@ import { useWebsocketsStore } from "@/stores/websockets";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";
 import { useStationStore } from "@/stores/station";
 import { useUserAuthStore } from "@/stores/userAuth";
+import { useModalsStore } from "@/stores/modals";
 import ws from "@/ws";
 import utils from "@/utils";
 
@@ -29,8 +29,6 @@ const ImportPlaylists = defineAsyncComponent(
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
 });
-
-const store = useStore();
 
 const { socket } = useWebsocketsStore();
 const editPlaylistStore = useEditPlaylistStore(props);
@@ -57,8 +55,8 @@ const { playlistId, tab, playlist } = storeToRefs(editPlaylistStore);
 const { setPlaylist, clearPlaylist, addSong, removeSong, repositionedSong } =
 	editPlaylistStore;
 
-const closeCurrentModal = () =>
-	store.dispatch("modalVisibility/closeCurrentModal");
+const { closeCurrentModal } = useModalsStore();
+
 const showTab = payload => {
 	tabs.value[`${payload}-tab`].scrollIntoView({ block: "nearest" });
 	editPlaylistStore.showTab(payload);

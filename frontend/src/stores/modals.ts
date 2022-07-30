@@ -1,4 +1,5 @@
-/* eslint no-param-reassign: 0 */
+import { defineStore } from "pinia";
+import { defineAsyncComponent } from "vue";
 import ws from "@/ws";
 
 import { useEditUserStore } from "@/stores/editUser";
@@ -19,46 +20,32 @@ import { useViewReportStore } from "@/stores/viewReport";
 import { useViewYoutubeVideoStore } from "@/stores/viewYoutubeVideo";
 import { useWhatIsNewStore } from "@/stores/whatIsNew";
 
-const state = {
-	modals: {},
-	activeModals: []
-};
+// TODO fix/decide eslint rule properly
+// eslint-disable-next-line
+export const useModalsStore = defineStore("modals", {
+	state: () => ({
+		modals: {},
+		activeModals: []
+	}),
+	actions: {
+		closeModal(modal) {
+			if (modal === "register")
+				lofig.get("recaptcha.enabled").then(enabled => {
+					if (enabled) window.location.reload();
+				});
 
-const piniaStores = [
-	"editUser",
-	"editSong",
-	"editSongs",
-	"bulkActions",
-	"confirm",
-	"createStation",
-	"editNews",
-	"editPlaylist",
-	"importAlbum",
-	"manageStation",
-	"removeAccount",
-	"report",
-	"viewApiRequest",
-	"viewPunishment",
-	"viewReport",
-	"viewYoutubeVideo",
-	"whatIsNew"
-];
-
-const modalModules = {};
-
-const getters = {};
-
-const actions = {
-	closeModal: ({ commit }, modal) => {
-		if (modal === "register")
-			lofig.get("recaptcha.enabled").then(enabled => {
-				if (enabled) window.location.reload();
+			Object.entries(this.modals).forEach(([uuid, _modal]) => {
+				if (modal === _modal) {
+					ws.destroyModalListeners(uuid);
+					this.activeModals.splice(
+						this.activeModals.indexOf(uuid),
+						1
+					);
+					delete this.modals[uuid];
+				}
 			});
-
-		commit("closeModal", modal);
-	},
-	openModal: ({ commit }, dataOrModal) =>
-		new Promise(resolve => {
+		},
+		openModal(dataOrModal) {
 			const uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
 				/[xy]/g,
 				symbol => {
@@ -75,35 +62,16 @@ const actions = {
 				}
 			);
 
-			if (typeof dataOrModal === "string")
-				commit("openModal", { modal: dataOrModal, uuid });
-			else commit("openModal", { ...dataOrModal, uuid });
-			resolve({ uuid });
-		}),
-	closeCurrentModal: ({ commit }) => {
-		commit("closeCurrentModal");
-	},
-	closeAllModals: ({ commit }) => {
-		commit("closeAllModals");
-	}
-};
-
-const mutations = {
-	closeModal(state, modal) {
-		Object.entries(state.modals).forEach(([uuid, _modal]) => {
-			if (modal === _modal) {
-				ws.destroyModalListeners(uuid);
-				state.activeModals.splice(state.activeModals.indexOf(uuid), 1);
-				delete state.modals[uuid];
+			let modal;
+			let data;
+			if (typeof dataOrModal === "string") modal = dataOrModal;
+			else {
+				modal = dataOrModal.modal;
+				data = dataOrModal.data;
 			}
-		});
-	},
-	openModal(state, { modal, uuid, data }) {
-		state.modals[uuid] = modal;
+			this.modals[uuid] = modal;
 
-		if (piniaStores.indexOf(modal) !== -1) {
 			let store;
-
 			switch (modal) {
 				case "editUser":
 					store = useEditUserStore({ modalUuid: uuid });
@@ -159,40 +127,42 @@ const mutations = {
 				default:
 					break;
 			}
-
 			if (typeof store.init === "function" && data) store.init(data);
-		} else if (modalModules[modal]) {
-			this.registerModule(["modals", modal, uuid], modalModules[modal]);
-			if (data) this.dispatch(`modals/${modal}/${uuid}/init`, data);
+
+			this.activeModals.push(uuid);
+
+			return { uuid };
+		},
+		closeCurrentModal() {
+			const currentlyActiveModalUuid =
+				this.activeModals[this.activeModals.length - 1];
+			// TODO: make sure to only destroy/register modal listeners for a unique modal
+			// remove any websocket listeners for the modal
+			ws.destroyModalListeners(currentlyActiveModalUuid);
+
+			this.activeModals.pop();
+
+			delete this.modals[currentlyActiveModalUuid];
+		},
+		closeAllModals() {
+			this.activeModals.forEach(modalUuid => {
+				ws.destroyModalListeners(modalUuid);
+			});
+
+			this.activeModals = [];
+			this.modals = {};
 		}
-
-		state.activeModals.push(uuid);
-	},
-	closeCurrentModal(state) {
-		const currentlyActiveModalUuid =
-			state.activeModals[state.activeModals.length - 1];
-		// TODO: make sure to only destroy/register modal listeners for a unique modal
-		// remove any websocket listeners for the modal
-		ws.destroyModalListeners(currentlyActiveModalUuid);
-
-		state.activeModals.pop();
-
-		delete state.modals[currentlyActiveModalUuid];
-	},
-	closeAllModals(state) {
-		state.activeModals.forEach(modalUuid => {
-			ws.destroyModalListeners(modalUuid);
-		});
-
-		state.activeModals = [];
-		state.modals = {};
 	}
-};
+});
 
-export default {
-	namespaced: true,
-	state,
-	getters,
-	actions,
-	mutations
+// TODO fix/decide eslint rule properly
+// eslint-disable-next-line
+export const useModalComponents = (baseDirectory, map) => {
+	const modalComponents = {};
+	Object.entries(map).forEach(([mapKey, mapValue]) => {
+		modalComponents[mapKey] = defineAsyncComponent(
+			() => import(`@/${baseDirectory}/${mapValue}`)
+		);
+	});
+	return modalComponents;
 };

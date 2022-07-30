@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref, onMounted } from "vue";
-import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useModalsStore } from "@/stores/modals";
 import ws from "@/ws";
 
 const AdvancedTable = defineAsyncComponent(
@@ -16,7 +16,6 @@ const LineChart = defineAsyncComponent(
 	() => import("@/components/LineChart.vue")
 );
 
-const store = useStore();
 const route = useRoute();
 
 const { socket } = useWebsocketsStore();
@@ -128,8 +127,7 @@ const jobs = ref([
 	}
 ]);
 
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
+const { openModal } = useModalsStore();
 
 const init = () => {
 	if (route.query.fromDate) fromDate.value = route.query.fromDate;

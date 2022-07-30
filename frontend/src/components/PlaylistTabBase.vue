@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref, reactive, computed, onMounted } from "vue";
-import { useStore } from "vuex";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import ws from "@/ws";
@@ -9,6 +8,7 @@ import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPlaylistsStore } from "@/stores/userPlaylists";
+import { useModalsStore } from "@/stores/modals";
 import { useManageStationStore } from "@/stores/manageStation";
 
 import useSortablePlaylists from "@/composables/useSortablePlaylists";
@@ -30,8 +30,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["selected"]);
-
-const store = useStore();
 
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
@@ -98,8 +96,7 @@ const nextPageResultsCount = computed(() =>
 	Math.min(search.pageSize, resultsLeftCount.value)
 );
 
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
+const { openModal } = useModalsStore();
 
 const { setPlaylists } = useUserPlaylistsStore();
 

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { ref, onBeforeUnmount } from "vue";
 import Toast from "toasters";
 import validation from "@/validation";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useModalsStore } from "@/stores/modals";
 
 defineProps({
 	modalUuid: { type: String, default: "" }
@@ -15,12 +15,7 @@ const playlist = ref({
 	songs: []
 });
 
-const store = useStore();
-
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
-const closeCurrentModal = () =>
-	store.dispatch("modalVisibility/closeCurrentModal");
+const { openModal, closeCurrentModal } = useModalsStore();
 
 const { socket } = useWebsocketsStore();
 

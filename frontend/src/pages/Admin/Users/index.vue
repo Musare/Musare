@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref, onMounted } from "vue";
-import { useStore } from "vuex";
 import { useRoute } from "vue-router";
+import { useModalsStore } from "@/stores/modals";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -10,7 +10,6 @@ const ProfilePicture = defineAsyncComponent(
 	() => import("@/components/ProfilePicture.vue")
 );
 
-const store = useStore();
 const route = useRoute();
 
 const columnDefault = ref({
@@ -197,8 +196,7 @@ const events = ref({
 	}
 });
 
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
+const { openModal } = useModalsStore();
 
 const edit = userId => {
 	openModal({ modal: "editUser", data: { userId } });

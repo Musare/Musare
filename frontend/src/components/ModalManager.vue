@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
-import { computed, shallowRef } from "vue";
-import { useModalComponents } from "@/vuex_helpers";
+import { shallowRef } from "vue";
+import { storeToRefs } from "pinia";
+import { useModalsStore, useModalComponents } from "@/stores/modals";
 
-const store = useStore();
-
-const activeModals = computed(() => store.state.modalVisibility.activeModals);
-const modals = computed(() => store.state.modalVisibility.modals);
+const modalsStore = useModalsStore();
+const { modals, activeModals } = storeToRefs(modalsStore);
 
 const modalComponents = shallowRef(
 	useModalComponents("components/modals", {

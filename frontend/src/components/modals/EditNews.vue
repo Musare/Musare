@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
@@ -8,6 +7,7 @@ import { formatDistance } from "date-fns";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useEditNewsStore } from "@/stores/editNews";
+import { useModalsStore } from "@/stores/modals";
 import ws from "@/ws";
 
 const SaveButton = defineAsyncComponent(
@@ -18,15 +18,12 @@ const props = defineProps({
 	modalUuid: { type: String, default: "" }
 });
 
-const store = useStore();
-
 const { socket } = useWebsocketsStore();
 
 const editNewsStore = useEditNewsStore(props);
 const { createNews, newsId } = storeToRefs(editNewsStore);
 
-const closeCurrentModal = () =>
-	store.dispatch("modalVisibility/closeCurrentModal");
+const { closeCurrentModal } = useModalsStore();
 
 const markdown = ref(
 	"# Header\n## Sub-Header\n- **So**\n- _Many_\n- ~Points~\n\nOther things you want to say and [link](https://example.com).\n\n### Sub-Sub-Header\n> Oh look, a quote!\n\n`lil code`\n\n```\nbig code\n```\n"

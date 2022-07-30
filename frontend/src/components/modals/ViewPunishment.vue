@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { defineAsyncComponent, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useModalsStore } from "@/stores/modals";
 import { useViewPunishmentStore } from "@/stores/viewPunishment";
 import ws from "@/ws";
 
@@ -15,16 +15,13 @@ const props = defineProps({
 	modalUuid: { type: String, default: "" }
 });
 
-const store = useStore();
-
 const { socket } = useWebsocketsStore();
 
 const viewPunishmentStore = useViewPunishmentStore(props);
 const { punishmentId, punishment } = storeToRefs(viewPunishmentStore);
 const { viewPunishment } = viewPunishmentStore;
 
-const closeCurrentModal = () =>
-	store.dispatch("modalVisibility/closeCurrentModal");
+const { closeCurrentModal } = useModalsStore();
 
 const init = () => {
 	socket.dispatch(`punishments.findOne`, punishmentId.value, res => {

@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { ref, computed, onMounted } from "vue";
 import { formatDistance, parseISO } from "date-fns";
-
-const store = useStore();
+import { useModalsStore } from "@/stores/modals";
 
 const props = defineProps({
 	activity: {
@@ -13,6 +11,8 @@ const props = defineProps({
 });
 
 const theme = ref("blue");
+
+const { openModal } = useModalsStore();
 
 const messageParts = computed(() => {
 	const { message } = props.activity.payload;
@@ -89,10 +89,6 @@ function getIcon() {
 	};
 
 	return icons[props.activity.type];
-}
-
-function openModal(payload) {
-	store.dispatch("modalVisibility/openModal", payload);
 }
 
 onMounted(() => {

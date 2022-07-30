@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
@@ -7,6 +6,7 @@ import { storeToRefs } from "pinia";
 import { useSettingsStore } from "@/stores/settings";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useRemoveAccountStore } from "@/stores/removeAccount";
+import { useModalsStore } from "@/stores/modals";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
@@ -15,16 +15,14 @@ const props = defineProps({
 const settingsStore = useSettingsStore();
 const route = useRoute();
 
-const store = useStore();
-
 const { socket } = useWebsocketsStore();
 
 const removeAccountStore = useRemoveAccountStore(props);
 const { githubLinkConfirmed } = storeToRefs(removeAccountStore);
 
 const { isPasswordLinked, isGithubLinked } = settingsStore;
-const closeCurrentModal = () =>
-	store.dispatch("modalVisibility/closeCurrentModal");
+
+const { closeCurrentModal } = useModalsStore();
 
 const step = ref("confirm-identity");
 const apiDomain = ref("");

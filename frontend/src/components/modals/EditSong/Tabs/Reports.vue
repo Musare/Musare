@@ -53,9 +53,6 @@ const sortedByCategory = computed(() => {
 	return categories;
 });
 
-// const closeModal = payload =>
-// 	store.dispatch("modalVisibility/closeModal", payload);
-
 const { resolveReport } = editSongStore;
 
 const showTab = _tab => {

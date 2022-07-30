@@ -3,7 +3,7 @@
 import Toast from "toasters";
 import ws from "@/ws";
 
-// when Vuex needs to interact with websockets
+// when Pinia needs to interact with websockets
 
 export default {
 	register(user) {

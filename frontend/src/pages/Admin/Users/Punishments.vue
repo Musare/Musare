@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from "vue";
-import { useStore } from "vuex";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useModalsStore } from "@/stores/modals";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
 );
-
-const store = useStore();
 
 const { socket } = useWebsocketsStore();
 
@@ -146,8 +144,7 @@ const filters = ref([
 	}
 ]);
 
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
+const { openModal } = useModalsStore();
 
 const banIP = () => {
 	socket.dispatch(

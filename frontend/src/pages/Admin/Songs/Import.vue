@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from "vue";
-import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
+import { useModalsStore } from "@/stores/modals";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
 );
 
-const store = useStore();
 const router = useRouter();
 
 const { socket } = useWebsocketsStore();
@@ -236,8 +235,7 @@ const events = ref({
 	}
 });
 
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
+const { openModal } = useModalsStore();
 
 const { setJob } = useLongJobsStore();
 

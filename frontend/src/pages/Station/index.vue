@@ -7,7 +7,6 @@ import {
 	onMounted,
 	onBeforeUnmount
 } from "vue";
-import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
@@ -17,6 +16,7 @@ import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPreferencesStore } from "@/stores/userPreferences";
+import { useModalsStore } from "@/stores/modals";
 import aw from "@/aw";
 import ms from "@/ms";
 import ws from "@/ws";
@@ -40,7 +40,6 @@ const StationSidebar = defineAsyncComponent(
 	() => import("./Sidebar/index.vue")
 );
 
-const store = useStore();
 const route = useRoute();
 const router = useRouter();
 
@@ -78,7 +77,7 @@ const activityWatchVideoLastYouTubeId = ref("");
 // const activityWatchVideoLastStartDuration = ref("");
 const nextCurrentSong = ref(null);
 const editSongModalWatcher = ref(null);
-const beforeEditSongModalLocalPaused = ref(null);
+// const beforeEditSongModalLocalPaused = ref(null);
 const socketConnected = ref(null);
 const persistentToastCheckerInterval = ref(null);
 const persistentToasts = ref([]);
@@ -95,7 +94,8 @@ const stationIdentifier = ref();
 const playerDebugBox = ref();
 const keyboardShortcutsHelper = ref();
 
-const activeModals = computed(() => store.state.modalVisibility.activeModals);
+const modalsStore = useModalsStore();
+const { activeModals } = storeToRefs(modalsStore);
 
 // TODO fix this if it still has some use, as this is no longer accurate
 // const video = computed(() => store.state.modals.editSong);
@@ -1070,29 +1070,30 @@ watch(
 );
 
 onMounted(async () => {
-	editSongModalWatcher.value = store.watch(
-		state =>
-			state.modalVisibility.activeModals.length > 0 &&
-			state.modalVisibility.modals[
-				state.modalVisibility.activeModals[
-					state.modalVisibility.activeModals.length - 1
-				]
-			] === "editSong"
-				? state.modals.editSong[
-						state.modalVisibility.activeModals[
-							state.modalVisibility.activeModals.length - 1
-						]
-				  ].video.paused
-				: null,
-		paused => {
-			if (paused && !beforeEditSongModalLocalPaused.value) {
-				resumeLocalStation();
-			} else if (!paused) {
-				beforeEditSongModalLocalPaused.value = localPaused.value;
-				pauseLocalStation();
-			}
-		}
-	);
+	// TODO
+	// editSongModalWatcher.value = store.watch(
+	// 	state =>
+	// 		state.modalVisibility.activeModals.length > 0 &&
+	// 		state.modalVisibility.modals[
+	// 			state.modalVisibility.activeModals[
+	// 				state.modalVisibility.activeModals.length - 1
+	// 			]
+	// 		] === "editSong"
+	// 			? state.modals.editSong[
+	// 					state.modalVisibility.activeModals[
+	// 						state.modalVisibility.activeModals.length - 1
+	// 					]
+	// 			  ].video.paused
+	// 			: null,
+	// 	paused => {
+	// 		if (paused && !beforeEditSongModalLocalPaused.value) {
+	// 			resumeLocalStation();
+	// 		} else if (!paused) {
+	// 			beforeEditSongModalLocalPaused.value = localPaused.value;
+	// 			pauseLocalStation();
+	// 		}
+	// 	}
+	// );
 
 	window.scrollTo(0, 0);
 

@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
+import { useModalsStore } from "@/stores/modals";
 
-const store = useStore();
 const userAuthStore = useUserAuthStore();
 
 const props = defineProps({
@@ -17,6 +16,8 @@ const props = defineProps({
 
 const { socket } = useWebsocketsStore();
 const { loggedIn, userId, role } = storeToRefs(userAuthStore);
+
+const { openModal } = useModalsStore();
 
 function isOwnerOnly() {
 	return loggedIn.value && userId.value === props.station.owner;
@@ -60,9 +61,6 @@ function unfavoriteStation() {
 		} else new Toast(res.message);
 	});
 }
-
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
 </script>
 
 <template>

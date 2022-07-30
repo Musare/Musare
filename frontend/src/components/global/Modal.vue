@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { defineAsyncComponent, ref, onMounted } from "vue";
+import { useModalsStore } from "@/stores/modals";
 
 const ChristmasLights = defineAsyncComponent(
 	() => import("@/components/ChristmasLights.vue")
@@ -15,12 +15,9 @@ const props = defineProps({
 
 const emit = defineEmits(["close"]);
 
-const store = useStore();
-
 const christmas = ref(false);
 
-const closeCurrentModal = () =>
-	store.dispatch("modalVisibility/closeCurrentModal");
+const { closeCurrentModal } = useModalsStore();
 
 const closeCurrentModalClick = () => {
 	if (props.interceptClose) emit("close");

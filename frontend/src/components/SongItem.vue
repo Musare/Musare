@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { ref, onMounted, onUnmounted } from "vue";
 import { formatDistance, parseISO } from "date-fns";
 import { storeToRefs } from "pinia";
 import AddToPlaylistDropdown from "./AddToPlaylistDropdown.vue";
 import { useUserAuthStore } from "@/stores/userAuth";
+import { useModalsStore } from "@/stores/modals";
 import utils from "@/utils";
-
-const store = useStore();
 
 const props = defineProps({
 	song: {
@@ -44,6 +42,8 @@ const songActions = ref(null);
 const userAuthStore = useUserAuthStore();
 const { loggedIn, role: userRole } = storeToRefs(userAuthStore);
 
+const { openModal } = useModalsStore();
+
 function formatRequestedAt() {
 	if (props.requestedBy && props.song.requestedAt)
 		formatedRequestedAt.value = formatDistance(
@@ -78,9 +78,6 @@ function hideTippyElements() {
 }
 function hoverTippy() {
 	hoveredTippy.value = true;
-}
-function openModal(payload) {
-	store.dispatch("modalVisibility/openModal", payload);
 }
 function report(song) {
 	hideTippyElements();

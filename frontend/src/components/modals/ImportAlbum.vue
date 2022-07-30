@@ -1,6 +1,5 @@
 <script setup lang="ts">
 // TODO - Fix sortable
-import { useStore } from "vuex";
 import {
 	defineAsyncComponent,
 	ref,
@@ -12,6 +11,7 @@ import Toast from "toasters";
 import { Sortable } from "sortablejs-vue3";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useModalsStore } from "@/stores/modals";
 import { useImportAlbumStore } from "@/stores/importAlbum";
 import ws from "@/ws";
 
@@ -22,8 +22,6 @@ const SongItem = defineAsyncComponent(
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
 });
-
-const store = useStore();
 
 const { socket } = useWebsocketsStore();
 
@@ -39,8 +37,7 @@ const {
 	updatePlaylistSong
 } = importAlbumStore;
 
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
+const { openModal } = useModalsStore();
 
 const isImportingPlaylist = ref(false);
 const trackSongs = ref([]);

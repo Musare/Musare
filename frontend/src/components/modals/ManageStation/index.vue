@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import {
 	defineAsyncComponent,
 	ref,
@@ -11,6 +10,7 @@ import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
+import { useModalsStore } from "@/stores/modals";
 import { useManageStationStore } from "@/stores/manageStation";
 
 const Queue = defineAsyncComponent(() => import("@/components/Queue.vue"));
@@ -29,8 +29,6 @@ const Request = defineAsyncComponent(() => import("@/components/Request.vue"));
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
 });
-
-const store = useStore();
 
 const tabs = ref([]);
 
@@ -65,8 +63,7 @@ const {
 	updateIsFavorited
 } = manageStationStore;
 
-const closeCurrentModal = () =>
-	store.dispatch("modalVisibility/closeCurrentModal");
+const { closeCurrentModal } = useModalsStore();
 
 const showTab = payload => {
 	if (tabs.value[`${payload}-tab`])

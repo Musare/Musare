@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { defineAsyncComponent, ref, watch, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
 import { useUserAuthStore } from "@/stores/userAuth";
+import { useModalsStore } from "@/stores/modals";
 import validation from "@/validation";
 
 const InputHelpBox = defineAsyncComponent(
@@ -44,14 +44,9 @@ const siteSettings = ref({
 });
 const passwordElement = ref();
 
-const store = useStore();
-
 const { register } = useUserAuthStore();
 
-const openModal = payload =>
-	store.dispatch("modalVisibility/openModal", payload);
-const closeCurrentModal = () =>
-	store.dispatch("modalVisibility/closeCurrentModal");
+const { openModal, closeCurrentModal } = useModalsStore();
 
 const submitModal = () => {
 	if (!username.value.valid || !email.value.valid || !password.value.valid)

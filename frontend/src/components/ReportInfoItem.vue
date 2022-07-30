@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { defineAsyncComponent } from "vue";
 import { formatDistance } from "date-fns";
+import { useModalsStore } from "@/stores/modals";
 
 const ProfilePicture = defineAsyncComponent(
 	() => import("@/components/ProfilePicture.vue")
@@ -12,9 +12,7 @@ defineProps({
 	createdAt: { type: String, default: "" }
 });
 
-const store = useStore();
-
-const closeModal = modal => store.dispatch("modalVisibility/closeModal", modal);
+const { closeModal } = useModalsStore();
 </script>
 
 <template>
