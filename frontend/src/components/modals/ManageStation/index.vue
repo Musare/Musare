@@ -3,16 +3,15 @@ import { useStore } from "vuex";
 import {
 	defineAsyncComponent,
 	ref,
-	computed,
 	watch,
 	onMounted,
 	onBeforeUnmount
 } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
-import { useModalState, useModalActions } from "@/vuex_helpers";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
+import { useManageStationStore } from "@/stores/manageStation";
 
 const Queue = defineAsyncComponent(() => import("@/components/Queue.vue"));
 const SongItem = defineAsyncComponent(
@@ -33,26 +32,25 @@ const props = defineProps({
 
 const store = useStore();
 
+const tabs = ref([]);
+
 const userAuthStore = useUserAuthStore();
 const { loggedIn, userId, role } = storeToRefs(userAuthStore);
 
 const { socket } = useWebsocketsStore();
 
-const modalState = useModalState("modals/manageStation/MODAL_UUID", {
-	modalUuid: props.modalUuid
-});
-const stationId = computed(() => modalState.stationId);
-const sector = computed(() => modalState.sector);
-const tab = computed(() => modalState.tab);
-const station = computed(() => modalState.station);
-const stationPlaylist = computed(() => modalState.stationPlaylist);
-const autofill = computed(() => modalState.autofill);
-const blacklist = computed(() => modalState.blacklist);
-const stationPaused = computed(() => modalState.stationPaused);
-const currentSong = computed(() => modalState.currentSong);
-
-const tabs = ref([]);
-
+const manageStationStore = useManageStationStore(props);
+const {
+	stationId,
+	sector,
+	tab,
+	station,
+	stationPlaylist,
+	autofill,
+	blacklist,
+	stationPaused,
+	currentSong
+} = storeToRefs(manageStationStore);
 const {
 	editStation,
 	setAutofillPlaylists,
@@ -65,25 +63,7 @@ const {
 	updateCurrentSong,
 	updateStation,
 	updateIsFavorited
-} = useModalActions(
-	"modals/manageStation/MODAL_UUID",
-	[
-		"editStation",
-		"setAutofillPlaylists",
-		"setBlacklist",
-		"clearStation",
-		"updateSongsList",
-		"updateStationPlaylist",
-		"repositionSongInList",
-		"updateStationPaused",
-		"updateCurrentSong",
-		"updateStation",
-		"updateIsFavorited"
-	],
-	{
-		modalUuid: props.modalUuid
-	}
-);
+} = manageStationStore;
 
 const closeCurrentModal = () =>
 	store.dispatch("modalVisibility/closeCurrentModal");
@@ -91,7 +71,7 @@ const closeCurrentModal = () =>
 const showTab = payload => {
 	if (tabs.value[`${payload}-tab`])
 		tabs.value[`${payload}-tab`].scrollIntoView({ block: "nearest" });
-	store.dispatch(`modals/manageStation/${props.modalUuid}/showTab`, payload);
+	manageStationStore.showTab(payload);
 };
 
 const isOwner = () =>
@@ -407,8 +387,8 @@ onBeforeUnmount(() => {
 	if (isOwnerOrAdmin()) showTab("settings");
 	clearStation();
 
-	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-	store.unregisterModule(["modals", "manageStation", props.modalUuid]);
+	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
+	manageStationStore.$dispose();
 });
 </script>
 

@@ -9,7 +9,7 @@ import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPlaylistsStore } from "@/stores/userPlaylists";
-import { useModalState } from "@/vuex_helpers";
+import { useManageStationStore } from "@/stores/manageStation";
 
 import useSortablePlaylists from "@/composables/useSortablePlaylists";
 
@@ -64,39 +64,31 @@ const {
 const { loggedIn, role, userId } = storeToRefs(userAuthStore);
 const { autoRequest } = storeToRefs(stationStore);
 
-const { autofill } = useModalState("modals/manageStation/MODAL_UUID", {
-	modalUuid: props.modalUuid
-});
+const manageStationStore = useManageStationStore(props);
+const { autofill } = storeToRefs(manageStationStore);
 
 const station = computed({
 	get() {
-		if (props.sector === "manageStation")
-			return store.state.modals.manageStation[props.modalUuid].station;
+		if (props.sector === "manageStation") return manageStationStore.station;
 		return stationStore.station;
 	},
-	set(station) {
+	set(value) {
 		if (props.sector === "manageStation")
-			store.commit(
-				`modals/manageStation/${props.modalUuid}/updateStation`,
-				station
-			);
-		else stationStore.updateStation(station);
+			manageStationStore.updateStation(value);
+		else stationStore.updateStation(value);
 	}
 });
 
 const blacklist = computed({
 	get() {
 		if (props.sector === "manageStation")
-			return store.state.modals.manageStation[props.modalUuid].blacklist;
+			return manageStationStore.blacklist;
 		return stationStore.blacklist;
 	},
-	set(blacklist) {
+	set(value) {
 		if (props.sector === "manageStation")
-			store.commit(
-				`modals/manageStation/${props.modalUuid}/setBlacklist`,
-				blacklist
-			);
-		else stationStore.setBlacklist(blacklist);
+			manageStationStore.setBlacklist(value);
+		else stationStore.setBlacklist(value);
 	}
 });
 
@@ -171,7 +163,7 @@ const label = (tense = "future", typeOverwrite = null, capitalize = false) => {
 const selectedPlaylists = typeOverwrite => {
 	const type = typeOverwrite || props.type;
 
-	if (type === "autofill") return autofill;
+	if (type === "autofill") return autofill.value;
 	if (type === "blacklist") return blacklist.value;
 	if (type === "autorequest") return autoRequest.value;
 	return [];

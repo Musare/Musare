@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import Toast from "toasters";
-import { useModalState, useModalActions } from "@/vuex_helpers";
+import { storeToRefs } from "pinia";
 import validation from "@/validation";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useManageStationStore } from "@/stores/manageStation";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
@@ -11,18 +12,9 @@ const props = defineProps({
 
 const { socket } = useWebsocketsStore();
 
-const modalState = useModalState("modals/manageStation/MODAL_UUID", {
-	modalUuid: props.modalUuid
-});
-const station = computed(() => modalState.station);
-
-const { editStation } = useModalActions(
-	"modals/manageStation/MODAL_UUID",
-	["editStation"],
-	{
-		modalUuid: props.modalUuid
-	}
-);
+const manageStationStore = useManageStationStore(props);
+const { station } = storeToRefs(manageStationStore);
+const { editStation } = manageStationStore;
 
 const localStation = ref({
 	name: "",

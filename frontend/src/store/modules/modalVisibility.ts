@@ -2,7 +2,6 @@
 import ws from "@/ws";
 
 import whatIsNew from "./modals/whatIsNew";
-import manageStation from "./modals/manageStation";
 import report from "./modals/report";
 import viewReport from "./modals/viewReport";
 import viewApiRequest from "./modals/viewApiRequest";
@@ -19,6 +18,7 @@ import { useCreateStationStore } from "@/stores/createStation";
 import { useEditNewsStore } from "@/stores/editNews";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";
 import { useImportAlbumStore } from "@/stores/importAlbum";
+import { useManageStationStore } from "@/stores/manageStation";
 
 const state = {
 	modals: {},
@@ -34,12 +34,12 @@ const piniaStores = [
 	"createStation",
 	"editNews",
 	"editPlaylist",
-	"importAlbum"
+	"importAlbum",
+	"manageStation"
 ];
 
 const modalModules = {
 	whatIsNew,
-	manageStation,
 	report,
 	viewReport,
 	viewApiRequest,
@@ -134,11 +134,14 @@ const mutations = {
 				case "importAlbum":
 					store = useImportAlbumStore({ modalUuid: uuid });
 					break;
+				case "manageStation":
+					store = useManageStationStore({ modalUuid: uuid });
+					break;
 				default:
 					break;
 			}
 
-			if (data) store.init(data);
+			if (typeof store.init === "function" && data) store.init(data);
 		} else if (modalModules[modal]) {
 			this.registerModule(["modals", modal, uuid], modalModules[modal]);
 			if (data) this.dispatch(`modals/${modal}/${uuid}/init`, data);

@@ -13,7 +13,6 @@ export default createStore({
 		modals: {
 			namespaced: true,
 			modules: {
-				manageStation: emptyModule,
 				whatIsNew: emptyModule,
 				viewApiRequest: emptyModule,
 				viewPunishment: emptyModule,

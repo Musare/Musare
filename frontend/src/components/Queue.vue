@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { defineAsyncComponent, ref, computed, onUpdated } from "vue";
 import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
@@ -7,6 +6,7 @@ import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
 import { useUserAuthStore } from "@/stores/userAuth";
+import { useManageStationStore } from "@/stores/manageStation";
 
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
@@ -17,21 +17,16 @@ const props = defineProps({
 	sector: { type: String, default: "station" }
 });
 
-const store = useStore();
-
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
 const userAuthStore = useUserAuthStore();
+const manageStationStore = useManageStationStore(props);
 
 const { loggedIn, userId, role: userRole } = storeToRefs(userAuthStore);
 
 const repositionSongInList = payload => {
 	if (props.sector === "manageStation")
-		return store.dispatch(
-			"modals/manageStation/repositionSongInList",
-			payload
-		);
-
+		return manageStationStore.repositionSongInList(payload);
 	return stationStore.repositionSongInList(payload);
 };
 
@@ -41,33 +36,26 @@ const songItems = ref([]);
 
 const station = computed({
 	get: () => {
-		if (props.sector === "manageStation")
-			return store.state.modals.manageStation[props.modalUuid].station;
+		if (props.sector === "manageStation") return manageStationStore.station;
 		return stationStore.station;
 	},
-	set: station => {
+	set: value => {
 		if (props.sector === "manageStation")
-			store.commit(
-				`modals/manageStation/${props.modalUuid}/updateStation`,
-				station
-			);
-		else stationStore.updateStation(station);
+			manageStationStore.updateStation(value);
+		else stationStore.updateStation(value);
 	}
 });
 
 const queue = computed({
 	get: () => {
 		if (props.sector === "manageStation")
-			return store.state.modals.manageStation[props.modalUuid].songsList;
+			return manageStationStore.songsList;
 		return stationStore.songsList;
 	},
-	set: queue => {
+	set: value => {
 		if (props.sector === "manageStation")
-			store.commit(
-				`modals/manageStation/${props.modalUuid}/updateSongsList`,
-				queue
-			);
-		else stationStore.updateSongsList(queue);
+			manageStationStore.updateSongsList(value);
+		else stationStore.updateSongsList(value);
 	}
 });
 

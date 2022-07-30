@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref, computed, onMounted } from "vue";
-import { useStore } from "vuex";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
+import { useManageStationStore } from "@/stores/manageStation";
 import useSearchYoutube from "@/composables/useSearchYoutube";
 import useSearchMusare from "@/composables/useSearchMusare";
 
@@ -17,18 +17,18 @@ const PlaylistTabBase = defineAsyncComponent(
 	() => import("@/components/PlaylistTabBase.vue")
 );
 
-const store = useStore();
-const { youtubeSearch, searchForSongs, loadMoreSongs } = useSearchYoutube();
-const { musareSearch, searchForMusareSongs } = useSearchMusare();
-
-const { socket } = useWebsocketsStore();
-const stationStore = useStationStore();
-
 const props = defineProps({
 	modalUuid: { type: String, default: "" },
 	sector: { type: String, default: "station" },
 	disableAutoRequest: { type: Boolean, default: false }
 });
+
+const { youtubeSearch, searchForSongs, loadMoreSongs } = useSearchYoutube();
+const { musareSearch, searchForMusareSongs } = useSearchMusare();
+
+const { socket } = useWebsocketsStore();
+const stationStore = useStationStore();
+const manageStationStore = useManageStationStore(props);
 
 const tab = ref("songs");
 const sitename = ref("Musare");
@@ -36,48 +36,36 @@ const tabs = ref({});
 
 const station = computed({
 	get() {
-		if (props.sector === "manageStation")
-			return store.state.modals.manageStation[props.modalUuid].station;
+		if (props.sector === "manageStation") return manageStationStore.station;
 		return stationStore.station;
 	},
-	set(station) {
+	set(value) {
 		if (props.sector === "manageStation")
-			store.commit(
-				`modals/manageStation/${props.modalUuid}/updateStation`,
-				station
-			);
-		else stationStore.updateStation(station);
+			manageStationStore.updateStation(value);
+		else stationStore.updateStation(value);
 	}
 });
 // const blacklist = computed({
 // 	get() {
-// 		if (props.sector === "manageStation")
-// 			return store.state.modals.manageStation[props.modalUuid]
-// 				.blacklist;
+// 		if (props.sector === "manageStation") return manageStationStore.blacklist;
 // 		return stationStore.blacklist;
 // 	},
-// 	set(blacklist) {
+// 	set(value) {
 // 		if (props.sector === "manageStation")
-// 			store.commit(
-// 				`modals/manageStation/${props.modalUuid}/setBlacklist`,
-// 				blacklist
-// 			);
-// 		else stationStore.setBlacklist(blacklist);
+// 			manageStationStore.setBlacklist(value);
+// 		else stationStore.setBlacklist(value);
 // 	}
 // });
 const songsList = computed({
 	get() {
 		if (props.sector === "manageStation")
-			return store.state.modals.manageStation[props.modalUuid].songsList;
+			return manageStationStore.songsList;
 		return stationStore.songsList;
 	},
-	set(songsList) {
+	set(value) {
 		if (props.sector === "manageStation")
-			store.commit(
-				`modals/manageStation/${props.modalUuid}/updateSongsList`,
-				songsList
-			);
-		else stationStore.updateSongsList(songsList);
+			manageStationStore.updateSongsList(value);
+		else stationStore.updateSongsList(value);
 	}
 });
 const musareResultsLeftCount = computed(
