@@ -1,8 +1,6 @@
 /* eslint no-param-reassign: 0 */
 import ws from "@/ws";
 
-import whatIsNew from "./modals/whatIsNew";
-
 import { useEditUserStore } from "@/stores/editUser";
 import { useEditSongStore } from "@/stores/editSong";
 import { useEditSongsStore } from "@/stores/editSongs";
@@ -19,6 +17,7 @@ import { useViewApiRequestStore } from "@/stores/viewApiRequest";
 import { useViewPunishmentStore } from "@/stores/viewPunishment";
 import { useViewReportStore } from "@/stores/viewReport";
 import { useViewYoutubeVideoStore } from "@/stores/viewYoutubeVideo";
+import { useWhatIsNewStore } from "@/stores/whatIsNew";
 
 const state = {
 	modals: {},
@@ -41,12 +40,11 @@ const piniaStores = [
 	"viewApiRequest",
 	"viewPunishment",
 	"viewReport",
-	"viewYoutubeVideo"
+	"viewYoutubeVideo",
+	"whatIsNew"
 ];
 
-const modalModules = {
-	whatIsNew
-};
+const modalModules = {};
 
 const getters = {};
 
@@ -154,6 +152,9 @@ const mutations = {
 					break;
 				case "viewYoutubeVideo":
 					store = useViewYoutubeVideoStore({ modalUuid: uuid });
+					break;
+				case "whatIsNew":
+					store = useWhatIsNewStore({ modalUuid: uuid });
 					break;
 				default:
 					break;

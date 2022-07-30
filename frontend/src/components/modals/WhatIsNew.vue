@@ -1,22 +1,17 @@
 <script setup lang="ts">
-import { useStore } from "vuex";
 import { onMounted, onBeforeUnmount } from "vue";
-
+import { storeToRefs } from "pinia";
 import { formatDistance } from "date-fns";
 import { marked } from "marked";
 import dompurify from "dompurify";
-
-import { useModalState } from "@/vuex_helpers";
-
-const store = useStore();
+import { useWhatIsNewStore } from "@/stores/whatIsNew";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
 });
 
-const { news } = useModalState("modals/whatIsNew/MODAL_UUID", {
-	modalUuid: props.modalUuid
-});
+const whatIsNewStore = useWhatIsNewStore(props);
+const { news } = storeToRefs(whatIsNewStore);
 
 onMounted(() => {
 	marked.use({
@@ -32,8 +27,8 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-	// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-	store.unregisterModule(["modals", "whatIsNew", props.modalUuid]);
+	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
+	whatIsNewStore.$dispose();
 });
 
 const { sanitize } = dompurify;
