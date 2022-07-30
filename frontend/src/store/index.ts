@@ -13,8 +13,7 @@ export default createStore({
 		modals: {
 			namespaced: true,
 			modules: {
-				whatIsNew: emptyModule,
-				viewYoutubeVideo: emptyModule
+				whatIsNew: emptyModule
 			}
 		}
 	},
