@@ -33,10 +33,10 @@ const messageStripped = computed(() => {
 	return message;
 });
 
-function getMessagePartType(messagePart) {
-	return messagePart.substring(1, messagePart.indexOf(">"));
-}
-function getMessagePartText(messagePart) {
+const getMessagePartType = messagePart =>
+	messagePart.substring(1, messagePart.indexOf(">"));
+
+const getMessagePartText = messagePart => {
 	let message = messagePart;
 
 	message = message.replace(/<reportId>(.*)<\/reportId>/g, "report");
@@ -45,9 +45,9 @@ function getMessagePartText(messagePart) {
 	message = message.replace(/<stationId>(.*)<\/stationId>/g, `$1`);
 
 	return message;
-}
+};
 
-function getIcon() {
+const getIcon = () => {
 	const icons = {
 		/** User */
 		user__joined: "account_circle",
@@ -89,7 +89,7 @@ function getIcon() {
 	};
 
 	return icons[props.activity.type];
-}
+};
 
 onMounted(() => {
 	if (props.activity.type === "station__edit_theme")

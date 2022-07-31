@@ -19,48 +19,49 @@ const { loggedIn, userId, role } = storeToRefs(userAuthStore);
 
 const { openModal } = useModalsStore();
 
-function isOwnerOnly() {
-	return loggedIn.value && userId.value === props.station.owner;
-}
-function isAdminOnly() {
-	return loggedIn.value && role.value === "admin";
-}
-function isOwnerOrAdmin() {
-	return isOwnerOnly() || isAdminOnly();
-}
+const isOwnerOnly = () =>
+	loggedIn.value && userId.value === props.station.owner;
 
-function resumeStation() {
+const isAdminOnly = () => loggedIn.value && role.value === "admin";
+
+const isOwnerOrAdmin = () => isOwnerOnly() || isAdminOnly();
+
+const resumeStation = () => {
 	socket.dispatch("stations.resume", props.station._id, data => {
 		if (data.status !== "success") new Toast(`Error: ${data.message}`);
 		else new Toast("Successfully resumed the station.");
 	});
-}
-function pauseStation() {
+};
+
+const pauseStation = () => {
 	socket.dispatch("stations.pause", props.station._id, data => {
 		if (data.status !== "success") new Toast(`Error: ${data.message}`);
 		else new Toast("Successfully paused the station.");
 	});
-}
-function skipStation() {
+};
+
+const skipStation = () => {
 	socket.dispatch("stations.forceSkip", props.station._id, data => {
 		if (data.status !== "success") new Toast(`Error: ${data.message}`);
 		else new Toast("Successfully skipped the station's current song.");
 	});
-}
-function favoriteStation() {
+};
+
+const favoriteStation = () => {
 	socket.dispatch("stations.favoriteStation", props.station._id, res => {
 		if (res.status === "success") {
 			new Toast("Successfully favorited station.");
 		} else new Toast(res.message);
 	});
-}
-function unfavoriteStation() {
+};
+
+const unfavoriteStation = () => {
 	socket.dispatch("stations.unfavoriteStation", props.station._id, res => {
 		if (res.status === "success") {
 			new Toast("Successfully unfavorited station.");
 		} else new Toast(res.message);
 	});
-}
+};
 </script>
 
 <template>

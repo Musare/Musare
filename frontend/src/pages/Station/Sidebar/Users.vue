@@ -17,7 +17,7 @@ const frontendDomain = ref("");
 
 const { users, userCount } = storeToRefs(stationStore);
 
-async function copyToClipboard() {
+const copyToClipboard = async () => {
 	try {
 		await navigator.clipboard.writeText(
 			frontendDomain.value + route.fullPath
@@ -25,7 +25,7 @@ async function copyToClipboard() {
 	} catch (err) {
 		new Toast("Failed to copy to clipboard.");
 	}
-}
+};
 
 onMounted(async () => {
 	frontendDomain.value = await lofig.get("frontendDomain");

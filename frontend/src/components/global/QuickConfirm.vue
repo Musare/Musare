@@ -9,6 +9,7 @@ const emit = defineEmits(["confirm"]);
 
 const clickedOnce = ref(false);
 const body = ref(document.body);
+const quickConfirm = ref();
 
 const confirm = event => {
 	if (
@@ -23,7 +24,7 @@ const confirm = event => {
 	clickedOnce.value = false;
 	emit("confirm");
 	setTimeout(() => {
-		ref("confirm").tippy.hide();
+		quickConfirm.value.tippy.hide();
 	}, 25);
 };
 

@@ -44,14 +44,15 @@ const { loggedIn, role: userRole } = storeToRefs(userAuthStore);
 
 const { openModal } = useModalsStore();
 
-function formatRequestedAt() {
+const formatRequestedAt = () => {
 	if (props.requestedBy && props.song.requestedAt)
 		formatedRequestedAt.value = formatDistance(
 			parseISO(props.song.requestedAt),
 			new Date()
 		);
-}
-function formatArtists() {
+};
+
+const formatArtists = () => {
 	if (props.song.artists.length === 1) {
 		return props.song.artists[0];
 	}
@@ -64,8 +65,9 @@ function formatArtists() {
 			.join(", ")} & ${props.song.artists.slice(-1)}`;
 	}
 	return null;
-}
-function hideTippyElements() {
+};
+
+const hideTippyElements = () => {
 	songActions.value.tippy.hide();
 
 	setTimeout(
@@ -75,21 +77,24 @@ function hideTippyElements() {
 			),
 		500
 	);
-}
-function hoverTippy() {
+};
+
+const hoverTippy = () => {
 	hoveredTippy.value = true;
-}
-function report(song) {
+};
+
+const report = song => {
 	hideTippyElements();
 	openModal({ modal: "report", data: { song } });
-}
-function edit(song) {
+};
+
+const edit = song => {
 	hideTippyElements();
 	openModal({
 		modal: "editSong",
 		data: { song }
 	});
-}
+};
 
 onMounted(() => {
 	if (props.requestedBy) {

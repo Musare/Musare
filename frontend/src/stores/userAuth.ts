@@ -23,9 +23,9 @@ export const useUserAuthStore = defineStore("userAuth", {
 				const { username, email, password, recaptchaToken } = user;
 
 				if (!email || !username || !password)
-					return reject(new Error("Please fill in all fields"));
+					reject(new Error("Please fill in all fields"));
 				else if (!validation.isLength(email, 3, 254))
-					return reject(
+					reject(
 						new Error(
 							"Email must have between 3 and 254 characters."
 						)
@@ -34,39 +34,39 @@ export const useUserAuthStore = defineStore("userAuth", {
 					email.indexOf("@") !== email.lastIndexOf("@") ||
 					!validation.regex.emailSimple.test(email)
 				)
-					return reject(new Error("Invalid email format."));
+					reject(new Error("Invalid email format."));
 				else if (!validation.isLength(username, 2, 32))
-					return reject(
+					reject(
 						new Error(
 							"Username must have between 2 and 32 characters."
 						)
 					);
 				else if (!validation.regex.azAZ09_.test(username))
-					return reject(
+					reject(
 						new Error(
 							"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _."
 						)
 					);
 				else if (username.replaceAll(/[_]/g, "").length === 0)
-					return reject(
+					reject(
 						new Error(
 							"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _, and there has to be at least one letter or number."
 						)
 					);
 				else if (!validation.isLength(password, 6, 200))
-					return reject(
+					reject(
 						new Error(
 							"Password must have between 6 and 200 characters."
 						)
 					);
 				else if (!validation.regex.password.test(password))
-					return reject(
+					reject(
 						new Error(
 							"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character."
 						)
 					);
 				else
-					return ws.socket.dispatch(
+					ws.socket.dispatch(
 						"users.register",
 						username,
 						email,

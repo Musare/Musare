@@ -76,7 +76,7 @@ const activityWatchVideoLastStatus = ref("");
 const activityWatchVideoLastYouTubeId = ref("");
 // const activityWatchVideoLastStartDuration = ref("");
 const nextCurrentSong = ref(null);
-const editSongModalWatcher = ref(null);
+// const editSongModalWatcher = ref(null);
 // const beforeEditSongModalLocalPaused = ref(null);
 const socketConnected = ref(null);
 const persistentToastCheckerInterval = ref(null);
@@ -1375,7 +1375,7 @@ onBeforeUnmount(() => {
 		keyboardShortcuts.unregisterShortcut(shortcutName);
 	});
 
-	editSongModalWatcher.value(); // removes the watcher
+	// editSongModalWatcher.value(); // removes the watcher
 
 	clearInterval(activityWatchVideoDataInterval.value);
 	clearTimeout(window.stationNextSongTimeout);
