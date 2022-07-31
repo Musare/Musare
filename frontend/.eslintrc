@@ -14,8 +14,7 @@
 		"parser": "@typescript-eslint/parser"
 	},
 	"extends": [
-		"airbnb-base",
-		"plugin:vue/strongly-recommended",
+		"plugin:vue/vue3-strongly-recommended",
 		"eslint:recommended",
 		"prettier",
 		"plugin:@typescript-eslint/eslint-recommended",

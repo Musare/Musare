@@ -20,8 +20,6 @@ import { useViewReportStore } from "@/stores/viewReport";
 import { useViewYoutubeVideoStore } from "@/stores/viewYoutubeVideo";
 import { useWhatIsNewStore } from "@/stores/whatIsNew";
 
-// TODO fix/decide eslint rule properly
-// eslint-disable-next-line
 export const useModalsStore = defineStore("modals", {
 	state: () => ({
 		modals: {},
@@ -155,8 +153,6 @@ export const useModalsStore = defineStore("modals", {
 	}
 });
 
-// TODO fix/decide eslint rule properly
-// eslint-disable-next-line
 export const useModalComponents = (baseDirectory, map) => {
 	const modalComponents = {};
 	Object.entries(map).forEach(([mapKey, mapValue]) => {

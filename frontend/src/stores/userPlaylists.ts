@@ -1,7 +1,5 @@
 import { defineStore } from "pinia";
 
-// TODO fix/decide eslint rule properly
-// eslint-disable-next-line
 export const useUserPlaylistsStore = defineStore("userPlaylists", {
 	state: () => ({
 		playlists: [],

@@ -49,7 +49,9 @@ const emit = defineEmits([
 	"savedError",
 	"flagSong",
 	"nextSong",
-	"close"
+	"close",
+	"saving",
+	"toggleFlag"
 ]);
 
 const editSongStore = useEditSongStore(props);
@@ -1484,7 +1486,7 @@ onBeforeUnmount(() => {
 							:song="song"
 							:fallback="false"
 							class="thumbnail-preview"
-							@loadError="onThumbnailLoadError"
+							@load-error="onThumbnailLoadError"
 						/>
 						<img
 							v-if="

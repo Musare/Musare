@@ -3,8 +3,6 @@ import validation from "@/validation";
 import ws from "@/ws";
 import auth from "@/api/auth";
 
-// TODO fix/decide eslint rule properly
-// eslint-disable-next-line
 export const useUserAuthStore = defineStore("userAuth", {
 	state: () => ({
 		userIdMap: {},

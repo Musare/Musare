@@ -8,7 +8,7 @@ const props = defineProps({
 	allItems: { type: Array, default: () => [] }
 });
 
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits(["update:modelValue", "submitted"]);
 
 const inputFocussed = ref(false);
 const containerFocussed = ref(false);
@@ -81,7 +81,7 @@ const blurAutosuggestItem = event => {
 			:disabled="disabled"
 			@blur="blurInput($event)"
 			@focus="focusInput()"
-			@keydown.enter="$emit('submitted')"
+			@keydown.enter="emit('submitted')"
 			@keydown="keydownInput()"
 		/>
 		<div

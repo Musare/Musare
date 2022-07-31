@@ -299,11 +299,11 @@ onUnmounted(() => {
 			:bulk="true"
 			:flagged="currentSongFlagged"
 			v-if="currentSong"
-			@savedSuccess="onSavedSuccess"
-			@savedError="onSavedError"
+			@saved-success="onSavedSuccess"
+			@saved-error="onSavedError"
 			@saving="onSaving"
-			@toggleFlag="toggleFlag"
-			@nextSong="editNextSong"
+			@toggle-flag="toggleFlag"
+			@next-song="editNextSong"
 			@close="onClose"
 		>
 			<template #toggleMobileSidebar>

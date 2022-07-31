@@ -1,5 +1,3 @@
-/* eslint-disable import/no-cycle */
-
 import Toast from "toasters";
 import ws from "@/ws";
 

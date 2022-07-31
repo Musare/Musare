@@ -1,9 +1,5 @@
-/* eslint no-param-reassign: 0 */
-
 import { defineStore } from "pinia";
 
-// TODO fix/decide eslint rule properly
-// eslint-disable-next-line
 export const useEditSongStore = props => {
 	const { modalUuid } = props;
 	return defineStore(`editSong-${modalUuid}`, {
@@ -118,27 +114,6 @@ export const useEditSongStore = props => {
 					this.video.playbackRate =
 						this.video.player.getPlaybackRate();
 				}
-			},
-
-			getCurrentTime(fixedVal) {
-				// new Promise(resolve => {
-				// 	commit("getCurrentTime", fixedVal);
-				// 	resolve(this.video.currentTime);
-				// }),
-				// 	if (!this.playerReady) this.video.currentTime = 0;
-				// else {
-				// 	Promise.resolve(this.video.player.getCurrentTime()).then(
-				// 		time => {
-				// 			if (fixedVal)
-				// 				Promise.resolve(time.toFixed(fixedVal)).then(
-				// 					fixedTime => {
-				// 						this.video.currentTime = fixedTime;
-				// 					}
-				// 				);
-				// 			else this.video.currentTime = time;
-				// 		}
-				// 	);
-				// }
 			}
 		}
 	})();
