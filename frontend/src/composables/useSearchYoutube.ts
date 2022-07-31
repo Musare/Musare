@@ -2,7 +2,7 @@ import { ref } from "vue";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 
-export default function useSearchYoutube() {
+export const useSearchYoutube = () => {
 	const youtubeSearch = ref({
 		songs: {
 			results: [],
@@ -100,4 +100,4 @@ export default function useSearchYoutube() {
 		loadMoreSongs,
 		addYouTubeSongToPlaylist
 	};
-}
+};

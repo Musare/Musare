@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref, watch, onMounted } from "vue";
 import { storeToRefs } from "pinia";
-import useSearchYoutube from "@/composables/useSearchYoutube";
-import useSearchMusare from "@/composables/useSearchMusare";
+import { useSearchYoutube } from "@/composables/useSearchYoutube";
+import { useSearchMusare } from "@/composables/useSearchMusare";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";
 
 const SongItem = defineAsyncComponent(

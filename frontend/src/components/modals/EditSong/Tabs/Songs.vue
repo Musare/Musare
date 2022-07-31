@@ -5,7 +5,7 @@ import { storeToRefs } from "pinia";
 
 import { useEditSongStore } from "@/stores/editSong";
 
-import useSearchMusare from "@/composables/useSearchMusare";
+import { useSearchMusare } from "@/composables/useSearchMusare";
 
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")

@@ -6,7 +6,7 @@ import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import ws from "@/ws";
-import useTabQueryHandler from "@/composables/useTabQueryHandler";
+import { useTabQueryHandler } from "@/composables/useTabQueryHandler";
 
 const ProfilePicture = defineAsyncComponent(
 	() => import("@/components/ProfilePicture.vue")

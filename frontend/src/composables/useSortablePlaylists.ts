@@ -7,7 +7,7 @@ import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPlaylistsStore } from "@/stores/userPlaylists";
 import ws from "@/ws";
 
-export default function useSortablePlaylists() {
+export const useSortablePlaylists = () => {
 	const orderOfPlaylists = ref([]);
 	const drag = ref(false);
 	const userId = ref();
@@ -201,4 +201,4 @@ export default function useSortablePlaylists() {
 		savePlaylistOrder,
 		calculatePlaylistOrder
 	};
-}
+};

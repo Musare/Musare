@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
-import useSearchYoutube from "@/composables/useSearchYoutube";
+import { useSearchYoutube } from "@/composables/useSearchYoutube";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";

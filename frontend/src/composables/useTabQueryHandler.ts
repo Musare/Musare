@@ -1,7 +1,7 @@
 import { ref } from "vue";
 import { useRoute } from "vue-router";
 
-export default function useTabQueryHandler(defaultTab) {
+export const useTabQueryHandler = defaultTab => {
 	const route = useRoute();
 
 	const tab = ref(defaultTab);
@@ -34,4 +34,4 @@ export default function useTabQueryHandler(defaultTab) {
 		tab,
 		showTab
 	};
-}
+};

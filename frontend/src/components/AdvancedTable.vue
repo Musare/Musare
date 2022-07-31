@@ -17,7 +17,7 @@ import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import keyboardShortcuts from "@/keyboardShortcuts";
 import ws from "@/ws";
-import useDragBox from "@/composables/useDragBox";
+import { useDragBox } from "@/composables/useDragBox";
 
 const { dragBox, setInitialBox, onDragBox, resetBoxPosition } = useDragBox();
 

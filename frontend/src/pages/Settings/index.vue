@@ -5,7 +5,7 @@ import Toast from "toasters";
 import { useSettingsStore } from "@/stores/settings";
 import { useWebsocketsStore } from "@/stores/websockets";
 import ws from "@/ws";
-import useTabQueryHandler from "@/composables/useTabQueryHandler";
+import { useTabQueryHandler } from "@/composables/useTabQueryHandler";
 
 const SecuritySettings = defineAsyncComponent(
 	() => import("./Tabs/Security.vue")

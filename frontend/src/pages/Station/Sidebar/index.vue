@@ -4,7 +4,7 @@ import { defineAsyncComponent, watch, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useStationStore } from "@/stores/station";
-import useTabQueryHandler from "@/composables/useTabQueryHandler";
+import { useTabQueryHandler } from "@/composables/useTabQueryHandler";
 
 const Queue = defineAsyncComponent(() => import("@/components/Queue.vue"));
 const Users = defineAsyncComponent(

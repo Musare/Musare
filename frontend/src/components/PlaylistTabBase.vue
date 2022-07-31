@@ -11,7 +11,7 @@ import { useUserPlaylistsStore } from "@/stores/userPlaylists";
 import { useModalsStore } from "@/stores/modals";
 import { useManageStationStore } from "@/stores/manageStation";
 
-import useSortablePlaylists from "@/composables/useSortablePlaylists";
+import { useSortablePlaylists } from "@/composables/useSortablePlaylists";
 
 const PlaylistItem = defineAsyncComponent(
 	() => import("@/components/PlaylistItem.vue")

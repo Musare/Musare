@@ -4,8 +4,8 @@ import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
 import { useManageStationStore } from "@/stores/manageStation";
-import useSearchYoutube from "@/composables/useSearchYoutube";
-import useSearchMusare from "@/composables/useSearchMusare";
+import { useSearchYoutube } from "@/composables/useSearchYoutube";
+import { useSearchMusare } from "@/composables/useSearchMusare";
 
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")

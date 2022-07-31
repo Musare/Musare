@@ -2,7 +2,7 @@ import { ref, computed } from "vue";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 
-export default function useSearchMusare() {
+export const useSearchMusare = () => {
 	const musareSearch = ref({
 		query: "",
 		searchedQuery: "",
@@ -92,4 +92,4 @@ export default function useSearchMusare() {
 		searchForMusareSongs,
 		addMusareSongToPlaylist
 	};
-}
+};

@@ -3,7 +3,7 @@ import { storeToRefs } from "pinia";
 
 import { useEditSongStore } from "@/stores/editSong";
 
-import useSearchYoutube from "@/composables/useSearchYoutube";
+import { useSearchYoutube } from "@/composables/useSearchYoutube";
 
 import SearchQueryItem from "../../../SearchQueryItem.vue";
 
