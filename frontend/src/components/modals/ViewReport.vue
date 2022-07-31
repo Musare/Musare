@@ -5,8 +5,8 @@ import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useViewReportStore } from "@/stores/viewReport";
+import { useReports } from "@/composables/useReports";
 import ws from "@/ws";
-import admin from "@/api/admin/index";
 
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
@@ -25,6 +25,8 @@ const viewReportStore = useViewReportStore(props);
 const { reportId } = storeToRefs(viewReportStore);
 
 const { openModal, closeCurrentModal } = useModalsStore();
+
+const { resolveReport, removeReport } = useReports();
 
 const icons = ref({
 	duration: "timer",
@@ -89,16 +91,14 @@ const init = () => {
 };
 
 const resolve = value =>
-	admin.reports
-		.resolve({ reportId: reportId.value, value })
+	resolveReport({ reportId: reportId.value, value })
 		.then(res => {
 			if (res.status !== "success") new Toast(res.message);
 		})
 		.catch(err => new Toast(err.message));
 
 const remove = () =>
-	admin.reports
-		.remove(reportId.value)
+	removeReport(reportId.value)
 		.then(res => {
 			if (res.status === "success") closeCurrentModal();
 		})

@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
+import Toast from "toasters";
 import validation from "@/validation";
 import ws from "@/ws";
-import auth from "@/api/auth";
 
 export const useUserAuthStore = defineStore("userAuth", {
 	state: () => ({
@@ -20,12 +20,12 @@ export const useUserAuthStore = defineStore("userAuth", {
 	actions: {
 		register(user) {
 			return new Promise((resolve, reject) => {
-				const { username, email, password } = user;
+				const { username, email, password, recaptchaToken } = user;
 
 				if (!email || !username || !password)
-					reject(new Error("Please fill in all fields"));
+					return reject(new Error("Please fill in all fields"));
 				else if (!validation.isLength(email, 3, 254))
-					reject(
+					return reject(
 						new Error(
 							"Email must have between 3 and 254 characters."
 						)
@@ -34,67 +34,135 @@ export const useUserAuthStore = defineStore("userAuth", {
 					email.indexOf("@") !== email.lastIndexOf("@") ||
 					!validation.regex.emailSimple.test(email)
 				)
-					reject(new Error("Invalid email format."));
+					return reject(new Error("Invalid email format."));
 				else if (!validation.isLength(username, 2, 32))
-					reject(
+					return reject(
 						new Error(
 							"Username must have between 2 and 32 characters."
 						)
 					);
 				else if (!validation.regex.azAZ09_.test(username))
-					reject(
+					return reject(
 						new Error(
 							"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _."
 						)
 					);
 				else if (username.replaceAll(/[_]/g, "").length === 0)
-					reject(
+					return reject(
 						new Error(
 							"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _, and there has to be at least one letter or number."
 						)
 					);
 				else if (!validation.isLength(password, 6, 200))
-					reject(
+					return reject(
 						new Error(
 							"Password must have between 6 and 200 characters."
 						)
 					);
 				else if (!validation.regex.password.test(password))
-					reject(
+					return reject(
 						new Error(
 							"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character."
 						)
 					);
 				else
-					auth.register(user)
-						.then(res => resolve(res))
-						.catch(err => reject(new Error(err.message)));
+					return ws.socket.dispatch(
+						"users.register",
+						username,
+						email,
+						password,
+						recaptchaToken,
+						res => {
+							if (res.status === "success") {
+								if (res.SID) {
+									return lofig.get("cookie").then(cookie => {
+										const date = new Date();
+										date.setTime(
+											new Date().getTime() +
+												2 * 365 * 24 * 60 * 60 * 1000
+										);
+
+										const secure = cookie.secure
+											? "secure=true; "
+											: "";
+
+										let domain = "";
+										if (cookie.domain !== "localhost")
+											domain = ` domain=${cookie.domain};`;
+
+										document.cookie = `${cookie.SIDname}=${
+											res.SID
+										}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
+
+										return resolve({
+											status: "success",
+											message: "Account registered!"
+										});
+									});
+								}
+
+								return reject(new Error("You must login"));
+							}
+
+							return reject(new Error(res.message));
+						}
+					);
 			});
 		},
 		login(user) {
 			return new Promise((resolve, reject) => {
-				auth.login(user)
-					.then(() => {
-						lofig.get("cookie.SIDname").then(sid => {
+				const { email, password } = user;
+
+				ws.socket.dispatch("users.login", email, password, res => {
+					if (res.status === "success") {
+						return lofig.get("cookie").then(cookie => {
+							const date = new Date();
+							date.setTime(
+								new Date().getTime() +
+									2 * 365 * 24 * 60 * 60 * 1000
+							);
+
+							const secure = cookie.secure ? "secure=true; " : "";
+
+							let domain = "";
+							if (cookie.domain !== "localhost")
+								domain = ` domain=${cookie.domain};`;
+
+							document.cookie = `${cookie.SIDname}=${
+								res.data.SID
+							}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
+
 							const bc = new BroadcastChannel(
-								`${sid}.user_login`
+								`${cookie.SIDname}.user_login`
 							);
 							bc.postMessage(true);
 							bc.close();
+
+							return resolve({
+								status: "success",
+								message: "Logged in!"
+							});
 						});
-						resolve({
-							status: "success",
-							message: "Logged in!"
-						});
-					})
-					.catch(err => reject(new Error(err.message)));
+					}
+
+					return reject(new Error(res.message));
+				});
 			});
 		},
 		logout() {
-			return new Promise<void>((resolve, reject) => {
-				auth.logout()
-					.then(() => resolve())
-					.catch(() => reject());
+			return new Promise((resolve, reject) => {
+				ws.socket.dispatch("users.logout", res => {
+					if (res.status === "success") {
+						return resolve(
+							lofig.get("cookie").then(cookie => {
+								document.cookie = `${cookie.SIDname}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+								return window.location.reload();
+							})
+						);
+					}
+					new Toast(res.message);
+					return reject(new Error(res.message));
+				});
 			});
 		},
 		getBasicUser(userId) {

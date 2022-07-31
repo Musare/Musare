@@ -1,8 +1,8 @@
 import Toast from "toasters";
 import ws from "@/ws";
 
-export default {
-	resolve({ reportId, value }) {
+export const useReports = () => {
+	const resolveReport = ({ reportId, value }) => {
 		return new Promise((resolve, reject) => {
 			ws.socket.dispatch("reports.resolve", reportId, value, res => {
 				new Toast(res.message);
@@ -11,8 +11,9 @@ export default {
 				return reject(new Error(res.message));
 			});
 		});
-	},
-	remove(reportId) {
+	};
+
+	const removeReport = reportId => {
 		return new Promise((resolve, reject) => {
 			ws.socket.dispatch("reports.remove", reportId, res => {
 				new Toast(res.message);
@@ -21,5 +22,10 @@ export default {
 				return reject(new Error(res.message));
 			});
 		});
-	}
+	};
+
+	return {
+		resolveReport,
+		removeReport
+	};
 };

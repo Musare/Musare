@@ -125,7 +125,8 @@ export const useModalsStore = defineStore("modals", {
 				default:
 					break;
 			}
-			if (typeof store.init === "function" && data) store.init(data);
+			if (store && typeof store.init === "function" && data)
+				store.init(data);
 
 			this.activeModals.push(uuid);
 

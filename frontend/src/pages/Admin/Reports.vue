@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
-import admin from "@/api/admin/index";
 import { useModalsStore } from "@/stores/modals";
+import { useReports } from "@/composables/useReports";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -145,9 +145,10 @@ const events = ref({
 
 const { openModal } = useModalsStore();
 
+const { resolveReport } = useReports();
+
 const resolve = (reportId, value) =>
-	admin.reports
-		.resolve({ reportId, value })
+	resolveReport({ reportId, value })
 		.then(res => {
 			if (res.status !== "success") new Toast(res.message);
 		})
