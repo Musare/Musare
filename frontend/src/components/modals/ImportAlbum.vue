@@ -26,7 +26,7 @@ const props = defineProps({
 const { socket } = useWebsocketsStore();
 
 const importAlbumStore = useImportAlbumStore(props);
-const { discogsTab, discogsAlbum, prefillDiscogs } =
+const { discogsTab, discogsAlbum, prefillDiscogs, playlistSongs } =
 	storeToRefs(importAlbumStore);
 const {
 	toggleDiscogsAlbum,
@@ -55,13 +55,9 @@ const discogs = ref({
 	disableLoadMore: false
 });
 const discogsTabs = ref([]);
+const sortableUpdateNumber = ref(0);
 
-const playlistSongs = computed({
-	get: () => importAlbumStore.playlistSongs,
-	set: value => {
-		importAlbumStore.updatePlaylistSongs(value);
-	}
-});
+// TODO might not not be needed anymore, might be able to directly edit prefillDiscogs
 const localPrefillDiscogs = computed({
 	get: () => importAlbumStore.prefillDiscogs,
 	set: value => {
@@ -332,11 +328,52 @@ const updatePlaylistSongPosition = ({ oldIndex, newIndex }) => {
 	playlistSongs.value = oldSongs;
 };
 
-const updateTrackSongPosition = ({ oldIndex, newIndex }) => {
+const updateTrackSongPosition = (trackIndex, { oldIndex, newIndex }) => {
 	if (oldIndex === newIndex) return;
-	const oldSongs = trackSongs.value;
+	const oldSongs = trackSongs.value[trackIndex];
 	oldSongs.splice(newIndex, 0, oldSongs.splice(oldIndex, 1)[0]);
-	trackSongs.value = oldSongs;
+	trackSongs.value[trackIndex] = oldSongs;
+};
+
+const playlistSongAdded = event => {
+	const fromTrack = event.from;
+	const fromTrackIndex = Number(fromTrack.dataset.trackIndex);
+	const song = trackSongs.value[fromTrackIndex][event.oldIndex];
+	const newPlaylistSongs = JSON.parse(JSON.stringify(playlistSongs.value));
+	newPlaylistSongs.splice(event.newIndex, 0, song);
+	playlistSongs.value = newPlaylistSongs;
+
+	sortableUpdateNumber.value += 1;
+};
+
+const playlistSongRemoved = event => {
+	playlistSongs.value.splice(event.oldIndex, 1);
+
+	sortableUpdateNumber.value += 1;
+};
+
+const trackSongAdded = (trackIndex, event) => {
+	const fromElement = event.from;
+	let song = null;
+	if (fromElement.dataset.trackIndex) {
+		const fromTrackIndex = Number(fromElement.dataset.trackIndex);
+		song = trackSongs.value[fromTrackIndex][event.oldIndex];
+	} else {
+		song = playlistSongs.value[event.oldIndex];
+	}
+	const newTrackSongs = JSON.parse(
+		JSON.stringify(trackSongs.value[trackIndex])
+	);
+	newTrackSongs.splice(event.newIndex, 0, song);
+	trackSongs.value[trackIndex] = newTrackSongs;
+
+	sortableUpdateNumber.value += 1;
+};
+
+const trackSongRemoved = (trackIndex, event) => {
+	trackSongs.value[trackIndex].splice(event.oldIndex, 1);
+
+	sortableUpdateNumber.value += 1;
 };
 
 onMounted(() => {
@@ -609,11 +646,14 @@ onBeforeUnmount(() => {
 						Reset
 					</button>
 					<sortable
+						:key="`${sortableUpdateNumber}-playlistSongs`"
 						v-if="playlistSongs.length > 0"
 						:list="playlistSongs"
 						item-key="_id"
 						:options="{ group: 'songs' }"
 						@update="updatePlaylistSongPosition"
+						@add="playlistSongAdded"
+						@remove="playlistSongRemoved"
 					>
 						<template #item="{ element }">
 							<song-item
@@ -638,11 +678,15 @@ onBeforeUnmount(() => {
 							<p>{{ track.title }}</p>
 						</div>
 						<sortable
+							:key="`${sortableUpdateNumber}-${index}-playlistSongs`"
 							class="track-box-songs-drag-area"
 							:list="trackSongs[index]"
+							:data-track-index="index"
 							item-key="_id"
 							:options="{ group: 'songs' }"
-							@update="updateTrackSongPosition"
+							@update="updateTrackSongPosition(index, $event)"
+							@add="trackSongAdded(index, $event)"
+							@remove="trackSongRemoved(index, $event)"
 						>
 							<template #item="{ element }">
 								<song-item
