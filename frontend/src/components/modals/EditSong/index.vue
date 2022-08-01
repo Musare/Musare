@@ -224,8 +224,19 @@ const loadSong = _youtubeId => {
 
 			songDataLoaded.value = true;
 
-			if (_song._id)
+			if (_song._id) {
 				socket.dispatch("apis.joinRoom", `edit-song.${_song._id}`);
+
+				if (!newSong.value)
+					socket.dispatch(
+						"reports.getReportsForSong",
+						_song._id,
+						res => {
+							console.log(222, res);
+							updateReports(res.data.reports);
+						}
+					);
+			}
 
 			if (video.value.player && video.value.player.cueVideoById) {
 				video.value.player.cueVideoById(_youtubeId, _song.skipDuration);
@@ -236,11 +247,6 @@ const loadSong = _youtubeId => {
 			if (!props.bulk) closeCurrentModal();
 		}
 	});
-
-	if (!newSong.value)
-		socket.dispatch("reports.getReportsForSong", song.value._id, res => {
-			updateReports(res.data.reports);
-		});
 };
 
 const drawCanvas = () => {
