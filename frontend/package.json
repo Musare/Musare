@@ -34,7 +34,7 @@
   "dependencies": {
     "@vitejs/plugin-vue": "^3.0.1",
     "can-autoplay": "^3.0.2",
-    "chart.js": "^3.8.2",
+    "chart.js": "^3.9.0",
     "config": "^3.3.7",
     "date-fns": "^2.29.1",
     "dompurify": "^2.3.10",
