@@ -131,7 +131,7 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("keep.event:user.banned", { data: { ban: data.punishment } });
-				socket.disconnect(true);
+				socket.close();
 			});
 		});
 	}

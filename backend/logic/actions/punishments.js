@@ -21,7 +21,7 @@ CacheModule.runJob("SUB", {
 
 		WSModule.runJob("SOCKETS_FROM_IP", { ip: data.ip }, this).then(sockets => {
 			sockets.forEach(socket => {
-				socket.disconnect(true);
+				socket.close();
 			});
 		});
 	}
