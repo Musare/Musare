@@ -6,25 +6,42 @@ updates:
     directory: "/"
     target-branch: "staging"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "friday"
+      time: "12:00"
 
   # Maintain dependencies for backend npm
   - package-ecosystem: "npm"
     directory: "/backend"
     target-branch: "staging"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "friday"
+      time: "12:00"
+
+  # Maintain dependencies for backend docker
+  - package-ecosystem: "docker"
+    directory: "/backend"
+    target-branch: "staging"
+    schedule:
+      interval: "weekly"
+      day: "friday"
+      time: "12:00"
 
   # Maintain dependencies for frontend npm
   - package-ecosystem: "npm"
     directory: "/frontend"
     target-branch: "staging"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "friday"
+      time: "12:00"
 
-  # Maintain dependencies for docker
+  # Maintain dependencies for frontend docker
   - package-ecosystem: "docker"
-    directory: "/"
+    directory: "/frontend"
     target-branch: "staging"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "friday"
+      time: "12:00"
