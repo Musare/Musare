@@ -11,11 +11,17 @@ const WSModule = moduleManager.modules.ws;
 const CacheModule = moduleManager.modules.cache;
 
 CacheModule.runJob("SUB", {
-	channel: "dataRequest.resolve",
-	cb: dataRequestId => {
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: "admin.users",
-			args: ["event:admin.dataRequests.resolved", { data: { dataRequestId } }]
+	channel: "dataRequest.update",
+	cb: async dataRequestId => {
+		const dataRequestModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "dataRequest"
+		});
+
+		dataRequestModel.findOne({ _id: dataRequestId }, (err, dataRequest) => {
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: "admin.users",
+				args: ["event:admin.dataRequests.updated", { data: { dataRequest } }]
+			});
 		});
 	}
 });
@@ -81,10 +87,11 @@ export default {
 	 * Resolves a data request
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {object} dataRequestId - the id of the data request to resolve
+	 * @param {string} dataRequestId - the id of the data request to resolve
+	 * @param {boolean} resolved - whether to set to resolved to true or false
 	 * @param {Function} cb - gets called with the result
 	 */
-	resolve: isAdminRequired(async function update(session, dataRequestId, cb) {
+	resolve: isAdminRequired(async function resolve(session, dataRequestId, resolved, cb) {
 		const dataRequestModel = await DBModule.runJob("GET_MODEL", { modelName: "dataRequest" }, this);
 
 		async.waterfall(
@@ -96,7 +103,7 @@ export default {
 				},
 
 				next => {
-					dataRequestModel.updateOne({ _id: dataRequestId }, { resolved: true }, { upsert: true }, err =>
+					dataRequestModel.updateOne({ _id: dataRequestId }, { resolved }, { upsert: true }, err =>
 						next(err)
 					);
 				}
@@ -107,22 +114,26 @@ export default {
 					this.log(
 						"ERROR",
 						"DATA_REQUESTS_RESOLVE",
-						`Resolving data request ${dataRequestId} failed for user "${session.userId}". "${err}"`
+						`${resolved ? "R" : "Unr"}esolving data request ${dataRequestId} failed for user "${
+							session.userId
+						}". "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
 
-				CacheModule.runJob("PUB", { channel: "dataRequest.resolve", value: dataRequestId });
+				CacheModule.runJob("PUB", { channel: "dataRequest.update", value: dataRequestId });
 
 				this.log(
 					"SUCCESS",
 					"DATA_REQUESTS_RESOLVE",
-					`Resolving data request "${dataRequestId}" successful for user ${session.userId}".`
+					`${resolved ? "R" : "Unr"}esolving data request "${dataRequestId}" successful for user ${
+						session.userId
+					}".`
 				);
 
 				return cb({
 					status: "success",
-					message: "Successfully resolved data request."
+					message: `Successfully ${resolved ? "" : "un"}resolved data request.`
 				});
 			}
 		);

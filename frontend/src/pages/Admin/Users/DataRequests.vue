@@ -15,7 +15,7 @@ const columnDefault = ref({
 	defaultVisibility: "shown",
 	draggable: true,
 	resizable: true,
-	minWidth: 150,
+	minWidth: 230,
 	maxWidth: 600
 });
 const columns = ref([
@@ -28,6 +28,13 @@ const columns = ref([
 		resizable: false,
 		minWidth: 76,
 		defaultWidth: 76
+	},
+	{
+		name: "resolved",
+		displayName: "Resolved",
+		properties: ["resolved"],
+		sortProperty: "resolved",
+		minWidth: 150
 	},
 	{
 		name: "type",
@@ -62,18 +69,26 @@ const filters = ref([
 		property: "userId",
 		filterTypes: ["contains", "exact", "regex"],
 		defaultFilterType: "contains"
+	},
+	{
+		name: "resolved",
+		displayName: "Resolved",
+		property: "resolved",
+		filterTypes: ["boolean"],
+		defaultFilterType: "boolean"
 	}
 ]);
 const events = ref({
 	adminRoom: "users",
-	removed: {
-		event: "admin.dataRequests.resolved",
-		id: "dataRequestId"
+	updated: {
+		event: "admin.dataRequests.updated",
+		id: "dataRequest._id",
+		item: "dataRequest"
 	}
 });
 
-const resolveDataRequest = id => {
-	socket.dispatch("dataRequests.resolve", id, res => {
+const resolveDataRequest = (id, resolved) => {
+	socket.dispatch("dataRequests.resolve", id, resolved, res => {
 		if (res.status === "success") new Toast(res.message);
 	});
 };
@@ -99,20 +114,32 @@ const resolveDataRequest = id => {
 		>
 			<template #column-options="slotProps">
 				<div class="row-options">
-					<quick-confirm
-						placement="right"
-						@confirm="resolveDataRequest(slotProps.item._id)"
+					<button
+						v-if="slotProps.item.resolved"
+						class="button is-danger material-icons icon-with-button"
+						@click="resolveDataRequest(slotProps.item._id, false)"
 						:disabled="slotProps.item.removed"
+						content="Unresolve Data Request"
+						v-tippy
 					>
-						<button
-							class="button is-success icon-with-button material-icons"
-							content="Resolve Data Request"
-							v-tippy
-						>
-							done_all
-						</button>
-					</quick-confirm>
+						remove_done
+					</button>
+					<button
+						v-else
+						class="button is-success material-icons icon-with-button"
+						@click="resolveDataRequest(slotProps.item._id, true)"
+						:disabled="slotProps.item.removed"
+						content="Resolve Data Request"
+						v-tippy
+					>
+						done_all
+					</button>
 				</div>
+			</template>
+			<template #column-resolved="slotProps">
+				<span :title="slotProps.item.resolved">{{
+					slotProps.item.resolved
+				}}</span>
 			</template>
 			<template #column-type="slotProps">
 				<span
