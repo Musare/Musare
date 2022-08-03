@@ -172,15 +172,15 @@ const isOwnerOnly = () =>
 	loggedIn.value && userId.value === station.value.owner;
 const isAdminOnly = () => loggedIn.value && role.value === "admin";
 const isOwnerOrAdmin = () => isOwnerOnly() || isAdminOnly();
-const updateMediaSessionData = currentSong => {
-	if (currentSong) {
+const updateMediaSessionData = song => {
+	if (song) {
 		ms.setMediaSessionData(
 			0,
 			!localPaused.value && !stationPaused.value, // This should be improved later
-			currentSong.value.title,
-			currentSong.value.artists.join(", "),
+			song.title,
+			song.artists ? song.artists.join(", ") : null,
 			null,
-			currentSong.value.thumbnail
+			song.thumbnail
 		);
 	} else ms.removeMediaSessionData(0);
 };
