@@ -182,7 +182,7 @@ defineExpose({
 	</div>
 </template>
 
-<style lang="less">
+<style lang="less" scoped>
 .night-mode .floating-box {
 	background-color: var(--dark-grey-2) !important;
 	border: 0 !important;
