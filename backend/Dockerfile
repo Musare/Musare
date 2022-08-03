@@ -1,4 +1,4 @@
-FROM node:16.15 AS backend_node_modules
+FROM node:18.7.0 AS backend_node_modules
 
 RUN mkdir -p /opt/app
 WORKDIR /opt/app
@@ -8,7 +8,7 @@ COPY package-lock.json /opt/app/package-lock.json
 
 RUN npm install --silent
 
-FROM node:16.15 AS musare_backend
+FROM node:18.7.0 AS musare_backend
 
 ARG CONTAINER_MODE=prod
 ENV CONTAINER_MODE=${CONTAINER_MODE}
