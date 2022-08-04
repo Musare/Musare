@@ -1,6 +1,6 @@
 import async from "async";
 
-import { isAdminRequired } from "./hooks";
+import { useHasPermission } from "./hooks/hasPermission";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -39,49 +39,52 @@ export default {
 	 * @param operator - the operator for queries
 	 * @param cb
 	 */
-	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
-		async.waterfall(
-			[
-				next => {
-					DBModule.runJob(
-						"GET_DATA",
-						{
-							page,
-							pageSize,
-							properties,
-							sort,
-							queries,
-							operator,
-							modelName: "dataRequest",
-							blacklistedProperties: [],
-							specialProperties: {},
-							specialQueries: {}
-						},
-						this
-					)
-						.then(response => {
-							next(null, response);
-						})
-						.catch(err => {
-							next(err);
-						});
+	getData: useHasPermission(
+		"dataRequests.getData",
+		async function getData(session, page, pageSize, properties, sort, queries, operator, cb) {
+			async.waterfall(
+				[
+					next => {
+						DBModule.runJob(
+							"GET_DATA",
+							{
+								page,
+								pageSize,
+								properties,
+								sort,
+								queries,
+								operator,
+								modelName: "dataRequest",
+								blacklistedProperties: [],
+								specialProperties: {},
+								specialQueries: {}
+							},
+							this
+						)
+							.then(response => {
+								next(null, response);
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				],
+				async (err, response) => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log("ERROR", "DATA_REQUESTS_GET_DATA", `Failed to get data from data requests. "${err}"`);
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "DATA_REQUESTS_GET_DATA", `Got data from data requests successfully.`);
+					return cb({
+						status: "success",
+						message: "Successfully got data from data requests.",
+						data: response
+					});
 				}
-			],
-			async (err, response) => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "DATA_REQUESTS_GET_DATA", `Failed to get data from data requests. "${err}"`);
-					return cb({ status: "error", message: err });
-				}
-				this.log("SUCCESS", "DATA_REQUESTS_GET_DATA", `Got data from data requests successfully.`);
-				return cb({
-					status: "success",
-					message: "Successfully got data from data requests.",
-					data: response
-				});
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Resolves a data request
@@ -91,7 +94,7 @@ export default {
 	 * @param {boolean} resolved - whether to set to resolved to true or false
 	 * @param {Function} cb - gets called with the result
 	 */
-	resolve: isAdminRequired(async function resolve(session, dataRequestId, resolved, cb) {
+	resolve: useHasPermission("dataRequests.resolve", async function resolve(session, dataRequestId, resolved, cb) {
 		const dataRequestModel = await DBModule.runJob("GET_MODEL", { modelName: "dataRequest" }, this);
 
 		async.waterfall(

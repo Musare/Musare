@@ -1,6 +1,7 @@
 import async from "async";
 
-import { isAdminRequired, isLoginRequired } from "./hooks";
+import isLoginRequired from "./hooks/loginRequired";
+import { useHasPermission } from "./hooks/hasPermission";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -128,55 +129,62 @@ export default {
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param cb
 	 */
-	recalculateAllRatings: isAdminRequired(async function recalculateAllRatings(session, cb) {
-		this.keepLongJob();
-		this.publishProgress({
-			status: "started",
-			title: "Recalculate all ratings",
-			message: "Recalculating all ratings.",
-			id: this.toString()
-		});
-		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
-		await CacheModule.runJob(
-			"PUB",
-			{
-				channel: "longJob.added",
-				value: { jobId: this.toString(), userId: session.userId }
-			},
-			this
-		);
+	recalculateAllRatings: useHasPermission(
+		"media.recalculateAllRatings",
+		async function recalculateAllRatings(session, cb) {
+			this.keepLongJob();
+			this.publishProgress({
+				status: "started",
+				title: "Recalculate all ratings",
+				message: "Recalculating all ratings.",
+				id: this.toString()
+			});
+			await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+			await CacheModule.runJob(
+				"PUB",
+				{
+					channel: "longJob.added",
+					value: { jobId: this.toString(), userId: session.userId }
+				},
+				this
+			);
 
-		async.waterfall(
-			[
-				next => {
-					MediaModule.runJob("RECALCULATE_ALL_RATINGS", {}, this)
-						.then(() => {
-							next();
-						})
-						.catch(err => {
-							next(err);
+			async.waterfall(
+				[
+					next => {
+						MediaModule.runJob("RECALCULATE_ALL_RATINGS", {}, this)
+							.then(() => {
+								next();
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				],
+				async err => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log(
+							"ERROR",
+							"MEDIA_RECALCULATE_ALL_RATINGS",
+							`Failed to recalculate all ratings. "${err}"`
+						);
+						this.publishProgress({
+							status: "error",
+							message: err
 						});
-				}
-			],
-			async err => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "MEDIA_RECALCULATE_ALL_RATINGS", `Failed to recalculate all ratings. "${err}"`);
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "MEDIA_RECALCULATE_ALL_RATINGS", `Recalculated all ratings successfully.`);
 					this.publishProgress({
-						status: "error",
-						message: err
+						status: "success",
+						message: "Successfully recalculated all ratings."
 					});
-					return cb({ status: "error", message: err });
+					return cb({ status: "success", message: "Successfully recalculated all ratings." });
 				}
-				this.log("SUCCESS", "MEDIA_RECALCULATE_ALL_RATINGS", `Recalculated all ratings successfully.`);
-				this.publishProgress({
-					status: "success",
-					message: "Successfully recalculated all ratings."
-				});
-				return cb({ status: "success", message: "Successfully recalculated all ratings." });
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Like
@@ -841,65 +849,59 @@ export default {
 	 * @param operator - the operator for queries
 	 * @param cb
 	 */
-	getImportJobs: isAdminRequired(async function getImportJobs(
-		session,
-		page,
-		pageSize,
-		properties,
-		sort,
-		queries,
-		operator,
-		cb
-	) {
-		async.waterfall(
-			[
-				next => {
-					DBModule.runJob(
-						"GET_DATA",
-						{
-							page,
-							pageSize,
-							properties,
-							sort,
-							queries,
-							operator,
-							modelName: "importJob",
-							blacklistedProperties: [],
-							specialProperties: {},
-							specialQueries: {}
-						},
-						this
-					)
-						.then(response => {
-							next(null, response);
-						})
-						.catch(err => {
-							next(err);
-						});
+	getImportJobs: useHasPermission(
+		"media.getImportJobs",
+		async function getImportJobs(session, page, pageSize, properties, sort, queries, operator, cb) {
+			async.waterfall(
+				[
+					next => {
+						DBModule.runJob(
+							"GET_DATA",
+							{
+								page,
+								pageSize,
+								properties,
+								sort,
+								queries,
+								operator,
+								modelName: "importJob",
+								blacklistedProperties: [],
+								specialProperties: {},
+								specialQueries: {}
+							},
+							this
+						)
+							.then(response => {
+								next(null, response);
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				],
+				async (err, response) => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log("ERROR", "MEDIA_GET_IMPORT_JOBS", `Failed to get import jobs. "${err}"`);
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "MEDIA_GET_IMPORT_JOBS", `Fetched import jobs successfully.`);
+					return cb({
+						status: "success",
+						message: "Successfully fetched import jobs.",
+						data: response
+					});
 				}
-			],
-			async (err, response) => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "MEDIA_GET_IMPORT_JOBS", `Failed to get import jobs. "${err}"`);
-					return cb({ status: "error", message: err });
-				}
-				this.log("SUCCESS", "MEDIA_GET_IMPORT_JOBS", `Fetched import jobs successfully.`);
-				return cb({
-					status: "success",
-					message: "Successfully fetched import jobs.",
-					data: response
-				});
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Remove import jobs
 	 *
 	 * @returns {{status: string, data: object}}
 	 */
-	removeImportJobs: isAdminRequired(function removeImportJobs(session, jobIds, cb) {
+	removeImportJobs: useHasPermission("media.removeImportJobs", function removeImportJobs(session, jobIds, cb) {
 		MediaModule.runJob("REMOVE_IMPORT_JOBS", { jobIds }, this)
 			.then(() => {
 				this.log("SUCCESS", "MEDIA_REMOVE_IMPORT_JOBS", `Removing import jobs was successful.`);

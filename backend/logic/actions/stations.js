@@ -2,7 +2,9 @@ import async from "async";
 import mongoose from "mongoose";
 import config from "config";
 
-import { isLoginRequired, isOwnerRequired, isAdminRequired } from "./hooks";
+import { useHasPermission } from "./hooks/hasPermission";
+import isLoginRequired from "./hooks/loginRequired";
+import isOwnerRequired from "./hooks/ownerRequired";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -496,93 +498,96 @@ export default {
 	 * @param operator - the operator for queries
 	 * @param cb
 	 */
-	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
-		async.waterfall(
-			[
-				next => {
-					DBModule.runJob(
-						"GET_DATA",
-						{
-							page,
-							pageSize,
-							properties,
-							sort,
-							queries,
-							operator,
-							modelName: "station",
-							blacklistedProperties: [],
-							specialProperties: {
-								owner: [
-									{
-										$addFields: {
-											ownerOID: {
-												$convert: {
-													input: "$owner",
-													to: "objectId",
-													onError: "unknown",
-													onNull: "unknown"
+	getData: useHasPermission(
+		"stations.getData",
+		async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
+			async.waterfall(
+				[
+					next => {
+						DBModule.runJob(
+							"GET_DATA",
+							{
+								page,
+								pageSize,
+								properties,
+								sort,
+								queries,
+								operator,
+								modelName: "station",
+								blacklistedProperties: [],
+								specialProperties: {
+									owner: [
+										{
+											$addFields: {
+												ownerOID: {
+													$convert: {
+														input: "$owner",
+														to: "objectId",
+														onError: "unknown",
+														onNull: "unknown"
+													}
 												}
 											}
-										}
-									},
-									{
-										$lookup: {
-											from: "users",
-											localField: "ownerOID",
-											foreignField: "_id",
-											as: "ownerUser"
-										}
-									},
-									{
-										$unwind: {
-											path: "$ownerUser",
-											preserveNullAndEmptyArrays: true
-										}
-									},
-									{
-										$addFields: {
-											ownerUsername: {
-												$cond: [
-													{ $eq: [{ $type: "$owner" }, "string"] },
-													{ $ifNull: ["$ownerUser.username", "unknown"] },
-													"none"
-												]
+										},
+										{
+											$lookup: {
+												from: "users",
+												localField: "ownerOID",
+												foreignField: "_id",
+												as: "ownerUser"
+											}
+										},
+										{
+											$unwind: {
+												path: "$ownerUser",
+												preserveNullAndEmptyArrays: true
+											}
+										},
+										{
+											$addFields: {
+												ownerUsername: {
+													$cond: [
+														{ $eq: [{ $type: "$owner" }, "string"] },
+														{ $ifNull: ["$ownerUser.username", "unknown"] },
+														"none"
+													]
+												}
+											}
+										},
+										{
+											$project: {
+												ownerOID: 0,
+												ownerUser: 0
 											}
 										}
-									},
-									{
-										$project: {
-											ownerOID: 0,
-											ownerUser: 0
-										}
-									}
-								]
+									]
+								},
+								specialQueries: {
+									owner: newQuery => ({ $or: [newQuery, { ownerUsername: newQuery.owner }] })
+								}
 							},
-							specialQueries: {
-								owner: newQuery => ({ $or: [newQuery, { ownerUsername: newQuery.owner }] })
-							}
-						},
-						this
-					)
-						.then(response => {
-							next(null, response);
-						})
-						.catch(err => {
-							next(err);
-						});
+							this
+						)
+							.then(response => {
+								next(null, response);
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				],
+				async (err, response) => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log("ERROR", "STATIONS_GET_DATA", `Failed to get data from stations. "${err}"`);
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "STATIONS_GET_DATA", `Got data from stations successfully.`);
+					return cb({ status: "success", message: "Successfully got data from stations.", data: response });
 				}
-			],
-			async (err, response) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "STATIONS_GET_DATA", `Failed to get data from stations. "${err}"`);
-					return cb({ status: "error", message: err });
-				}
-				this.log("SUCCESS", "STATIONS_GET_DATA", `Got data from stations successfully.`);
-				return cb({ status: "success", message: "Successfully got data from stations.", data: response });
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Obtains basic metadata of a station in order to format an activity
@@ -2468,51 +2473,54 @@ export default {
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
-	clearEveryStationQueue: isAdminRequired(async function clearEveryStationQueue(session, cb) {
-		this.keepLongJob();
-		this.publishProgress({
-			status: "started",
-			title: "Clear every station queue",
-			message: "Clearing every station queue.",
-			id: this.toString()
-		});
-		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
-		await CacheModule.runJob(
-			"PUB",
-			{
-				channel: "longJob.added",
-				value: { jobId: this.toString(), userId: session.userId }
-			},
-			this
-		);
+	clearEveryStationQueue: useHasPermission(
+		"stations.clearEveryStationQueue",
+		async function clearEveryStationQueue(session, cb) {
+			this.keepLongJob();
+			this.publishProgress({
+				status: "started",
+				title: "Clear every station queue",
+				message: "Clearing every station queue.",
+				id: this.toString()
+			});
+			await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+			await CacheModule.runJob(
+				"PUB",
+				{
+					channel: "longJob.added",
+					value: { jobId: this.toString(), userId: session.userId }
+				},
+				this
+			);
 
-		async.waterfall(
-			[
-				next => {
-					StationsModule.runJob("CLEAR_EVERY_STATION_QUEUE", {}, this)
-						.then(() => next())
-						.catch(next);
-				}
-			],
-			async err => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "CLEAR_EVERY_STATION_QUEUE", `Clearing every station queue failed. "${err}"`);
+			async.waterfall(
+				[
+					next => {
+						StationsModule.runJob("CLEAR_EVERY_STATION_QUEUE", {}, this)
+							.then(() => next())
+							.catch(next);
+					}
+				],
+				async err => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log("ERROR", "CLEAR_EVERY_STATION_QUEUE", `Clearing every station queue failed. "${err}"`);
+						this.publishProgress({
+							status: "error",
+							message: err
+						});
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "CLEAR_EVERY_STATION_QUEUE", "Clearing every station queue was successful.");
 					this.publishProgress({
-						status: "error",
-						message: err
+						status: "success",
+						message: "Successfully cleared every station queue."
 					});
-					return cb({ status: "error", message: err });
+					return cb({ status: "success", message: "Successfully cleared every station queue." });
 				}
-				this.log("SUCCESS", "CLEAR_EVERY_STATION_QUEUE", "Clearing every station queue was successful.");
-				this.publishProgress({
-					status: "success",
-					message: "Successfully cleared every station queue."
-				});
-				return cb({ status: "success", message: "Successfully cleared every station queue." });
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Reset a station queue
@@ -2521,7 +2529,7 @@ export default {
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - gets called with the result
 	 */
-	resetQueue: isAdminRequired(async function resetQueue(session, stationId, cb) {
+	resetQueue: useHasPermission("stations.resetQueue", async function resetQueue(session, stationId, cb) {
 		async.waterfall(
 			[
 				next => {

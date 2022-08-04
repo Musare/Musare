@@ -1,6 +1,7 @@
 import async from "async";
 
-import { isAdminRequired, isLoginRequired } from "./hooks";
+import isLoginRequired from "./hooks/loginRequired";
+import { useHasPermission } from "./hooks/hasPermission";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -99,93 +100,98 @@ export default {
 	 * @param operator - the operator for queries
 	 * @param cb
 	 */
-	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
-		async.waterfall(
-			[
-				next => {
-					DBModule.runJob(
-						"GET_DATA",
-						{
-							page,
-							pageSize,
-							properties,
-							sort,
-							queries,
-							operator,
-							modelName: "report",
-							blacklistedProperties: [],
-							specialProperties: {
-								createdBy: [
-									{
-										$addFields: {
-											createdByOID: {
-												$convert: {
-													input: "$createdBy",
-													to: "objectId",
-													onError: "unknown",
-													onNull: "unknown"
+	getData: useHasPermission(
+		"reports.getData",
+		async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
+			async.waterfall(
+				[
+					next => {
+						DBModule.runJob(
+							"GET_DATA",
+							{
+								page,
+								pageSize,
+								properties,
+								sort,
+								queries,
+								operator,
+								modelName: "report",
+								blacklistedProperties: [],
+								specialProperties: {
+									createdBy: [
+										{
+											$addFields: {
+												createdByOID: {
+													$convert: {
+														input: "$createdBy",
+														to: "objectId",
+														onError: "unknown",
+														onNull: "unknown"
+													}
 												}
 											}
-										}
-									},
-									{
-										$lookup: {
-											from: "users",
-											localField: "createdByOID",
-											foreignField: "_id",
-											as: "createdByUser"
-										}
-									},
-									{
-										$unwind: {
-											path: "$createdByUser",
-											preserveNullAndEmptyArrays: true
-										}
-									},
-									{
-										$addFields: {
-											createdByUsername: {
-												$ifNull: ["$createdByUser.username", "unknown"]
+										},
+										{
+											$lookup: {
+												from: "users",
+												localField: "createdByOID",
+												foreignField: "_id",
+												as: "createdByUser"
+											}
+										},
+										{
+											$unwind: {
+												path: "$createdByUser",
+												preserveNullAndEmptyArrays: true
+											}
+										},
+										{
+											$addFields: {
+												createdByUsername: {
+													$ifNull: ["$createdByUser.username", "unknown"]
+												}
+											}
+										},
+										{
+											$project: {
+												createdByOID: 0,
+												createdByUser: 0
 											}
 										}
-									},
-									{
-										$project: {
-											createdByOID: 0,
-											createdByUser: 0
-										}
-									}
-								]
+									]
+								},
+								specialQueries: {
+									createdBy: newQuery => ({
+										$or: [newQuery, { createdByUsername: newQuery.createdBy }]
+									})
+								}
 							},
-							specialQueries: {
-								createdBy: newQuery => ({ $or: [newQuery, { createdByUsername: newQuery.createdBy }] })
-							}
-						},
-						this
-					)
-						.then(response => {
-							next(null, response);
-						})
-						.catch(err => {
-							next(err);
-						});
+							this
+						)
+							.then(response => {
+								next(null, response);
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				],
+				async (err, response) => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log("ERROR", "REPORTS_GET_DATA", `Failed to get data from reports. "${err}"`);
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "REPORTS_GET_DATA", `Got data from reports successfully.`);
+					return cb({
+						status: "success",
+						message: "Successfully got data from reports.",
+						data: response
+					});
 				}
-			],
-			async (err, response) => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "REPORTS_GET_DATA", `Failed to get data from reports. "${err}"`);
-					return cb({ status: "error", message: err });
-				}
-				this.log("SUCCESS", "REPORTS_GET_DATA", `Got data from reports successfully.`);
-				return cb({
-					status: "success",
-					message: "Successfully got data from reports.",
-					data: response
-				});
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Gets a specific report
@@ -194,7 +200,7 @@ export default {
 	 * @param {string} reportId - the id of the report to return
 	 * @param {Function} cb - gets called with the result
 	 */
-	findOne: isAdminRequired(async function findOne(session, reportId, cb) {
+	findOne: useHasPermission("reports.findOne", async function findOne(session, reportId, cb) {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
@@ -243,60 +249,70 @@ export default {
 	 * @param {string} songId - the id of the song to index reports for
 	 * @param {Function} cb - gets called with the result
 	 */
-	getReportsForSong: isAdminRequired(async function getReportsForSong(session, songId, cb) {
-		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+	getReportsForSong: useHasPermission(
+		"reports.getReportsForSong",
+		async function getReportsForSong(session, songId, cb) {
+			const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
+			const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
-		async.waterfall(
-			[
-				next =>
-					reportModel.find({ "song._id": songId, resolved: false }).sort({ createdAt: "desc" }).exec(next),
+			async.waterfall(
+				[
+					next =>
+						reportModel
+							.find({ "song._id": songId, resolved: false })
+							.sort({ createdAt: "desc" })
+							.exec(next),
 
-				(_reports, next) => {
-					const reports = [];
+					(_reports, next) => {
+						const reports = [];
 
-					async.each(
-						_reports,
-						(report, cb) => {
-							userModel
-								.findById(report.createdBy)
-								.select({ avatar: -1, name: -1, username: -1 })
-								.exec((err, user) => {
-									if (!user)
-										reports.push({
-											...report._doc,
-											createdBy: { _id: report.createdBy }
-										});
-									else
-										reports.push({
-											...report._doc,
-											createdBy: {
-												avatar: user.avatar,
-												name: user.name,
-												username: user.username,
-												_id: report.createdBy
-											}
-										});
+						async.each(
+							_reports,
+							(report, cb) => {
+								userModel
+									.findById(report.createdBy)
+									.select({ avatar: -1, name: -1, username: -1 })
+									.exec((err, user) => {
+										if (!user)
+											reports.push({
+												...report._doc,
+												createdBy: { _id: report.createdBy }
+											});
+										else
+											reports.push({
+												...report._doc,
+												createdBy: {
+													avatar: user.avatar,
+													name: user.name,
+													username: user.username,
+													_id: report.createdBy
+												}
+											});
 
-									return cb(err);
-								});
-						},
-						err => next(err, reports)
-					);
+										return cb(err);
+									});
+							},
+							err => next(err, reports)
+						);
+					}
+				],
+				async (err, reports) => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log(
+							"ERROR",
+							"GET_REPORTS_FOR_SONG",
+							`Indexing reports for song "${songId}" failed. "${err}"`
+						);
+						return cb({ status: "error", message: err });
+					}
+
+					this.log("SUCCESS", "GET_REPORTS_FOR_SONG", `Indexing reports for song "${songId}" successful.`);
+					return cb({ status: "success", data: { reports } });
 				}
-			],
-			async (err, reports) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "GET_REPORTS_FOR_SONG", `Indexing reports for song "${songId}" failed. "${err}"`);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log("SUCCESS", "GET_REPORTS_FOR_SONG", `Indexing reports for song "${songId}" successful.`);
-				return cb({ status: "success", data: { reports } });
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Gets all a users reports for a specific songId
@@ -380,7 +396,7 @@ export default {
 	 * @param {boolean} resolved - whether to set to resolved to true or false
 	 * @param {Function} cb - gets called with the result
 	 */
-	resolve: isAdminRequired(async function resolve(session, reportId, resolved, cb) {
+	resolve: useHasPermission("reports.resolve", async function resolve(session, reportId, resolved, cb) {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
 
 		async.waterfall(
@@ -445,7 +461,7 @@ export default {
 	 * @param {string} issueId - the id of the issue within the report
 	 * @param {Function} cb - gets called with the result
 	 */
-	toggleIssue: isAdminRequired(async function toggleIssue(session, reportId, issueId, cb) {
+	toggleIssue: useHasPermission("reports.toggleIssue", async function toggleIssue(session, reportId, issueId, cb) {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
 
 		async.waterfall(
@@ -594,7 +610,7 @@ export default {
 	 * @param {object} reportId - the id of the report item we want to remove
 	 * @param {Function} cb - gets called with the result
 	 */
-	remove: isAdminRequired(async function remove(session, reportId, cb) {
+	remove: useHasPermission("reports.remove", async function remove(session, reportId, cb) {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
 
 		async.waterfall(

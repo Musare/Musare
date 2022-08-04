@@ -2,7 +2,8 @@ import config from "config";
 import async from "async";
 import axios from "axios";
 
-import { isAdminRequired, isLoginRequired } from "./hooks";
+import isLoginRequired from "./hooks/loginRequired";
+import { hasPermission, useHasPermission } from "./hooks/hasPermission";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -70,7 +71,7 @@ export default {
 	 * @param query - the query
 	 * @param {Function} cb
 	 */
-	searchDiscogs: isAdminRequired(function searchDiscogs(session, query, page, cb) {
+	searchDiscogs: useHasPermission("apis.searchDiscogs", function searchDiscogs(session, query, page, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -187,7 +188,7 @@ export default {
 	 * @param {string} page - the admin room to join
 	 * @param {Function} cb - callback
 	 */
-	joinAdminRoom: isAdminRequired((session, page, cb) => {
+	joinAdminRoom(session, page, cb) {
 		if (
 			page === "songs" ||
 			page === "stations" ||
@@ -201,16 +202,24 @@ export default {
 			page === "youtubeVideos" ||
 			page === "import"
 		) {
-			WSModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session.socketId }).then(() => {
-				WSModule.runJob("SOCKET_JOIN_ROOM", {
-					socketId: session.socketId,
-					room: `admin.${page}`
-				});
-			});
+			hasPermission(`apis.joinAdminRoom.${page}`, session.userId)
+				.then(hasPerm => {
+					if (hasPerm)
+						WSModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session.socketId }).then(() => {
+							WSModule.runJob(
+								"SOCKET_JOIN_ROOM",
+								{
+									socketId: session.socketId,
+									room: `admin.${page}`
+								},
+								this
+							).then(() => cb({ status: "success", message: "Successfully joined admin room." }));
+						});
+					else cb({ status: "error", message: "Failed to join admin room." });
+				})
+				.catch(() => cb({ status: "error", message: "Failed to join admin room." }));
 		}
-
-		cb({ status: "success", message: "Successfully joined admin room." });
-	}),
+	},
 
 	/**
 	 * Leaves all rooms

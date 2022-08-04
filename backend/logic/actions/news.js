@@ -1,6 +1,6 @@
 import async from "async";
 
-import { isAdminRequired } from "./hooks";
+import { useHasPermission } from "./hooks/hasPermission";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -69,93 +69,98 @@ export default {
 	 * @param operator - the operator for queries
 	 * @param cb
 	 */
-	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
-		async.waterfall(
-			[
-				next => {
-					DBModule.runJob(
-						"GET_DATA",
-						{
-							page,
-							pageSize,
-							properties,
-							sort,
-							queries,
-							operator,
-							modelName: "news",
-							blacklistedProperties: [],
-							specialProperties: {
-								createdBy: [
-									{
-										$addFields: {
-											createdByOID: {
-												$convert: {
-													input: "$createdBy",
-													to: "objectId",
-													onError: "unknown",
-													onNull: "unknown"
+	getData: useHasPermission(
+		"news.getData",
+		async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
+			async.waterfall(
+				[
+					next => {
+						DBModule.runJob(
+							"GET_DATA",
+							{
+								page,
+								pageSize,
+								properties,
+								sort,
+								queries,
+								operator,
+								modelName: "news",
+								blacklistedProperties: [],
+								specialProperties: {
+									createdBy: [
+										{
+											$addFields: {
+												createdByOID: {
+													$convert: {
+														input: "$createdBy",
+														to: "objectId",
+														onError: "unknown",
+														onNull: "unknown"
+													}
 												}
 											}
-										}
-									},
-									{
-										$lookup: {
-											from: "users",
-											localField: "createdByOID",
-											foreignField: "_id",
-											as: "createdByUser"
-										}
-									},
-									{
-										$unwind: {
-											path: "$createdByUser",
-											preserveNullAndEmptyArrays: true
-										}
-									},
-									{
-										$addFields: {
-											createdByUsername: {
-												$ifNull: ["$createdByUser.username", "unknown"]
+										},
+										{
+											$lookup: {
+												from: "users",
+												localField: "createdByOID",
+												foreignField: "_id",
+												as: "createdByUser"
+											}
+										},
+										{
+											$unwind: {
+												path: "$createdByUser",
+												preserveNullAndEmptyArrays: true
+											}
+										},
+										{
+											$addFields: {
+												createdByUsername: {
+													$ifNull: ["$createdByUser.username", "unknown"]
+												}
+											}
+										},
+										{
+											$project: {
+												createdByOID: 0,
+												createdByUser: 0
 											}
 										}
-									},
-									{
-										$project: {
-											createdByOID: 0,
-											createdByUser: 0
-										}
-									}
-								]
+									]
+								},
+								specialQueries: {
+									createdBy: newQuery => ({
+										$or: [newQuery, { createdByUsername: newQuery.createdBy }]
+									})
+								}
 							},
-							specialQueries: {
-								createdBy: newQuery => ({ $or: [newQuery, { createdByUsername: newQuery.createdBy }] })
-							}
-						},
-						this
-					)
-						.then(response => {
-							next(null, response);
-						})
-						.catch(err => {
-							next(err);
-						});
+							this
+						)
+							.then(response => {
+								next(null, response);
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				],
+				async (err, response) => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log("ERROR", "NEWS_GET_DATA", `Failed to get data from news. "${err}"`);
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "NEWS_GET_DATA", `Got data from news successfully.`);
+					return cb({
+						status: "success",
+						message: "Successfully got data from news.",
+						data: response
+					});
 				}
-			],
-			async (err, response) => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "NEWS_GET_DATA", `Failed to get data from news. "${err}"`);
-					return cb({ status: "error", message: err });
-				}
-				this.log("SUCCESS", "NEWS_GET_DATA", `Got data from news successfully.`);
-				return cb({
-					status: "success",
-					message: "Successfully got data from news.",
-					data: response
-				});
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Gets all news items that are published
@@ -221,7 +226,7 @@ export default {
 	 * @param {object} data - the object of the news data
 	 * @param {Function} cb - gets called with the result
 	 */
-	create: isAdminRequired(async function create(session, data, cb) {
+	create: useHasPermission("news.create", async function create(session, data, cb) {
 		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" }, this);
 		async.waterfall(
 			[
@@ -283,7 +288,7 @@ export default {
 	 * @param {object} newsId - the id of the news item we want to remove
 	 * @param {Function} cb - gets called with the result
 	 */
-	remove: isAdminRequired(async function remove(session, newsId, cb) {
+	remove: useHasPermission("news.remove", async function remove(session, newsId, cb) {
 		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" }, this);
 
 		async.waterfall(
@@ -331,7 +336,7 @@ export default {
 	 * @param {string} item.markdown - the markdown that forms the content of the news
 	 * @param {Function} cb - gets called with the result
 	 */
-	update: isAdminRequired(async function update(session, newsId, item, cb) {
+	update: useHasPermission("news.update", async function update(session, newsId, item, cb) {
 		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" }, this);
 
 		async.waterfall(
