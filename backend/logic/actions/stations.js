@@ -2,9 +2,8 @@ import async from "async";
 import mongoose from "mongoose";
 import config from "config";
 
-import { useHasPermission } from "./hooks/hasPermission";
+import { hasPermission, useHasPermission } from "./hooks/hasPermission";
 import isLoginRequired from "./hooks/loginRequired";
-import isOwnerRequired from "./hooks/ownerRequired";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -1236,9 +1235,15 @@ export default {
 	 * @param stationId - the station id
 	 * @param cb
 	 */
-	forceSkip: isOwnerRequired(function forceSkip(session, stationId, cb) {
+	forceSkip(session, stationId, cb) {
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.forceSkip", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
 						.then(station => {
@@ -1266,7 +1271,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Leaves the user's current station
@@ -1318,14 +1323,21 @@ export default {
 	 * @param session
 	 * @param stationId - the station id
 	 * @param station - updated station object
+	 * @param newStation
 	 * @param cb
 	 */
-	update: isOwnerRequired(async function update(session, stationId, newStation, cb) {
+	async update(session, stationId, newStation, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.update", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					stationModel.findOne({ _id: stationId }, next);
 				},
@@ -1411,7 +1423,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Pauses a station
@@ -1420,7 +1432,7 @@ export default {
 	 * @param stationId - the station id
 	 * @param cb
 	 */
-	pause: isOwnerRequired(async function pause(session, stationId, cb) {
+	async pause(session, stationId, cb) {
 		const stationModel = await DBModule.runJob(
 			"GET_MODEL",
 			{
@@ -1430,6 +1442,12 @@ export default {
 		);
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.pause", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
 						.then(station => {
@@ -1474,7 +1492,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Resumes a station
@@ -1483,7 +1501,7 @@ export default {
 	 * @param stationId - the station id
 	 * @param cb
 	 */
-	resume: isOwnerRequired(async function resume(session, stationId, cb) {
+	async resume(session, stationId, cb) {
 		const stationModel = await DBModule.runJob(
 			"GET_MODEL",
 			{
@@ -1493,6 +1511,12 @@ export default {
 		);
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.resume", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
 						.then(station => {
@@ -1544,7 +1568,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Removes a station
@@ -1553,12 +1577,18 @@ export default {
 	 * @param stationId - the station id
 	 * @param cb
 	 */
-	remove: isOwnerRequired(async function remove(session, stationId, cb) {
+	async remove(session, stationId, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.remove", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					stationModel.findById(stationId, (err, station) => {
 						if (err) return next(err);
@@ -1622,7 +1652,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Create a station
@@ -1900,9 +1930,15 @@ export default {
 	 * @param youtubeId - the youtube id
 	 * @param cb
 	 */
-	removeFromQueue: isOwnerRequired(async function removeFromQueue(session, stationId, youtubeId, cb) {
+	async removeFromQueue(session, stationId, youtubeId, cb) {
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.removeFromQueue", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					if (!youtubeId) return next("Invalid youtube id.");
 					return StationsModule.runJob("REMOVE_FROM_QUEUE", { stationId, youtubeId }, this)
@@ -1933,7 +1969,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Gets the queue from a station
@@ -2000,11 +2036,17 @@ export default {
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
 	 */
-	repositionSongInQueue: isOwnerRequired(async function repositionQueue(session, stationId, song, cb) {
+	async repositionSongInQueue(session, stationId, song, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.repositionSongInQueue", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					if (!song || !song.youtubeId) return next("You must provide a song to reposition.");
 					return next();
@@ -2070,7 +2112,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Autofill a playlist in a station
@@ -2080,9 +2122,15 @@ export default {
 	 * @param playlistId - the playlist id
 	 * @param cb
 	 */
-	autofillPlaylist: isOwnerRequired(async function autofillPlaylist(session, stationId, playlistId, cb) {
+	async autofillPlaylist(session, stationId, playlistId, cb) {
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.autofillPlaylist", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
 						.then(station => next(null, station))
@@ -2139,7 +2187,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Remove autofilled playlist from a station
@@ -2149,9 +2197,15 @@ export default {
 	 * @param playlistId - the playlist id
 	 * @param cb
 	 */
-	removeAutofillPlaylist: isOwnerRequired(async function removeAutofillPlaylist(session, stationId, playlistId, cb) {
+	async removeAutofillPlaylist(session, stationId, playlistId, cb) {
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.removeAutofillPlaylist", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
 						.then(station => next(null, station))
@@ -2206,7 +2260,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Blacklist a playlist in a station
@@ -2216,9 +2270,15 @@ export default {
 	 * @param playlistId - the playlist id
 	 * @param cb
 	 */
-	blacklistPlaylist: isOwnerRequired(async function blacklistPlaylist(session, stationId, playlistId, cb) {
+	async blacklistPlaylist(session, stationId, playlistId, cb) {
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.blacklistPlaylist", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
 						.then(station => next(null, station))
@@ -2273,7 +2333,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Remove blacklisted a playlist from a station
@@ -2283,14 +2343,15 @@ export default {
 	 * @param playlistId - the playlist id
 	 * @param cb
 	 */
-	removeBlacklistedPlaylist: isOwnerRequired(async function removeBlacklistedPlaylist(
-		session,
-		stationId,
-		playlistId,
-		cb
-	) {
+	async removeBlacklistedPlaylist(session, stationId, playlistId, cb) {
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.removeBlacklistedPlaylist", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
 						.then(station => next(null, station))
@@ -2344,7 +2405,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	favoriteStation: isLoginRequired(async function favoriteStation(session, stationId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);

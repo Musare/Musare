@@ -11,11 +11,22 @@ const StationsModule = moduleManager.modules.stations;
 const permissions = {};
 permissions.dj = {
 	"test.queue.add": true,
-	"test.queue.remove": false
+	"test.queue.remove": false,
+	"stations.forceSkip": true,
+	"stations.pause": true,
+	"stations.resume": true,
+	"stations.removeFromQueue": true,
+	"stations.repositionSongInQueue": true,
+	"stations.autofillPlaylist": true,
+	"stations.removeAutofillPlaylist": true,
+	"stations.blacklistPlaylist": true,
+	"stations.removeBlacklistedPlaylist": true
 };
 permissions.owner = {
 	...permissions.dj,
-	"test.queue.remove": true
+	"test.queue.remove": true,
+	"stations.update": true,
+	"stations.remove": true
 };
 permissions.moderator = {
 	...permissions.owner,
@@ -63,6 +74,7 @@ permissions.moderator = {
 	"reports.toggleIssue": true,
 	"stations.getData": true,
 	"stations.resetQueue": true,
+	"stations.remove": false,
 	"youtube.getVideos": true,
 	"youtube.requestSetAdmin": true
 };
@@ -91,6 +103,7 @@ permissions.admin = {
 	"playlists.createMissingGenrePlaylists": true,
 	"reports.remove": true,
 	"stations.clearEveryStationQueue": true,
+	"stations.remove": true,
 	"users.getData": true,
 	"users.adminRemove": true,
 	"users.getUserFromId": true,
@@ -109,13 +122,30 @@ permissions.admin = {
 	"youtube.removeVideos": true
 };
 
-export const hasPermission = async (permission, userId, stationId) => {
+export const hasPermission = async (permission, session, stationId) => {
 	const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
-	return new Promise(resolve => {
+	return new Promise((resolve, reject) => {
 		async.waterfall(
 			[
 				next => {
+					let userId;
+					if (typeof session === "object") {
+						if (session.userId) userId = session.userId;
+						else
+							CacheModule.runJob(
+								"HGET",
+								{
+									table: "sessions",
+									key: session.sessionId
+								},
+								this
+							)
+								.then(_session => {
+									if (_session && _session.userId) userId = _session.userId;
+								})
+								.catch(next);
+					} else userId = session;
 					if (!userId) return next("User ID required.");
 					return userModel.findOne({ _id: userId }, next);
 				},
@@ -125,10 +155,11 @@ export const hasPermission = async (permission, userId, stationId) => {
 					return StationsModule.runJob("GET_STATION", { stationId }, this)
 						.then(station => {
 							if (!station) return next("Station not found.");
-							if (station.type === "community" && station.owner === userId)
+							if (station.type === "community" && station.owner === user._id)
 								return next(null, [user.role, "owner"]);
 							// if (station.type === "community" && station.djs.find(userId))
 							// 	return next(null, [user.role, "dj"]);
+							if (user.role === "admin" || user.role === "moderator") return next(null, [user.role]);
 							return next("Invalid permissions.");
 						})
 						.catch(next);
@@ -152,11 +183,11 @@ export const hasPermission = async (permission, userId, stationId) => {
 					// 	"HAS_PERMISSION",
 					// 	`User "${userId}" does not have required permission "${permission}". "${err}"`
 					// );
-					return resolve(false);
+					return reject(err);
 				}
 				// TODO
 				// this.log("INFO", "HAS_PERMISSION", `User "${userId}" has required permission "${permission}".`, false);
-				return resolve(true);
+				return resolve();
 			}
 		);
 	});
@@ -171,26 +202,9 @@ export const useHasPermission = (options, destination) =>
 		async.waterfall(
 			[
 				next => {
-					CacheModule.runJob(
-						"HGET",
-						{
-							table: "sessions",
-							key: session.sessionId
-						},
-						this
-					)
-						.then(session => {
-							next(null, session);
-						})
-						.catch(next);
-				},
-				(session, next) => {
-					if (!session || !session.userId) return next("Login required.");
-					return hasPermission(permission, session.userId, stationId)
-						.then(hasPerm => {
-							if (hasPerm) return next();
-							return next("Insufficient permissions.");
-						})
+					if (!session || !session.sessionId) return next("Login required.");
+					return hasPermission(permission, session, stationId)
+						.then(() => next())
 						.catch(next);
 				}
 			],

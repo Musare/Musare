@@ -203,20 +203,18 @@ export default {
 			page === "import"
 		) {
 			hasPermission(`apis.joinAdminRoom.${page}`, session.userId)
-				.then(hasPerm => {
-					if (hasPerm)
-						WSModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session.socketId }).then(() => {
-							WSModule.runJob(
-								"SOCKET_JOIN_ROOM",
-								{
-									socketId: session.socketId,
-									room: `admin.${page}`
-								},
-								this
-							).then(() => cb({ status: "success", message: "Successfully joined admin room." }));
-						});
-					else cb({ status: "error", message: "Failed to join admin room." });
-				})
+				.then(() =>
+					WSModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session.socketId }).then(() => {
+						WSModule.runJob(
+							"SOCKET_JOIN_ROOM",
+							{
+								socketId: session.socketId,
+								room: `admin.${page}`
+							},
+							this
+						).then(() => cb({ status: "success", message: "Successfully joined admin room." }));
+					})
+				)
 				.catch(() => cb({ status: "error", message: "Failed to join admin room." }));
 		}
 	},
