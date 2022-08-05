@@ -52,37 +52,13 @@ CacheModule.runJob("SUB", {
 					const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);
 					if (!socket) return;
 					const { session } = socket;
-
-					if (session.sessionId) {
-						CacheModule.runJob("HGET", {
-							table: "sessions",
-							key: session.sessionId
-						}).then(session => {
-							if (session)
-								DBModule.runJob(
-									"GET_MODEL",
-									{
-										modelName: "user"
-									},
-									this
-								).then(userModel => {
-									userModel.findOne({ _id: session.userId }, (err, user) => {
-										if (user && user.role === "admin")
-											socket.dispatch("event:station.userCount.updated", {
-												data: { stationId, count }
-											});
-										else if (
-											user &&
-											station.type === "community" &&
-											station.owner === session.userId
-										)
-											socket.dispatch("event:station.userCount.updated", {
-												data: { stationId, count }
-											});
-									});
-								});
-						});
-					}
+					hasPermission("stations.view", session, stationId)
+						.then(() => {
+							socket.dispatch("event:station.userCount.updated", {
+								data: { stationId, count }
+							});
+						})
+						.catch(() => {});
 				});
 			}
 		});
@@ -274,8 +250,6 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "station.create",
 	cb: async stationId => {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
-
 		StationsModule.runJob("INITIALIZE_STATION", { stationId }).then(async res => {
 			const { station } = res;
 			station.userCount = StationsModule.usersPerStationCount[stationId] || 0;
@@ -299,22 +273,11 @@ CacheModule.runJob("SUB", {
 					const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);
 					if (!socket) return;
 					const { session } = socket;
-
-					if (session.sessionId) {
-						CacheModule.runJob("HGET", {
-							table: "sessions",
-							key: session.sessionId
-						}).then(session => {
-							if (session) {
-								userModel.findOne({ _id: session.userId }, (err, user) => {
-									if (user && user.role === "admin")
-										socket.dispatch("event:station.created", { data: { station } });
-									else if (user && station.type === "community" && station.owner === session.userId)
-										socket.dispatch("event:station.created", { data: { station } });
-								});
-							}
-						});
-					}
+					hasPermission("stations.view", session, stationId)
+						.then(() => {
+							socket.dispatch("event:station.created", { data: { station } });
+						})
+						.catch(() => {});
 				});
 			}
 		});
@@ -431,30 +394,26 @@ export default {
 											},
 											this
 										)
-											.then(exists => {
-												if (exists && session.userId && station.privacy !== "public") {
-													DBModule.runJob("GET_MODEL", { modelName: "user" }, this)
-														.then(userModel => {
-															userModel.findOne({ _id: session.userId }, (err, user) => {
-																if (err) return callback(err);
-																if (
-																	(user.role !== "admin" &&
-																		station.owner !== session.userId) ||
-																	(adminFilter &&
-																		user.role === "admin" &&
-																		station.owner !== session.userId)
-																) {
-																	return callback(null, false);
-																}
-																return callback(null, exists);
-															});
-														})
-														.catch(callback);
-												} else if (exists && !session.userId && station.privacy !== "public")
-													callback(null, false);
-												else callback(null, exists);
-											})
+											.then(exists => callback(null, exists))
 											.catch(callback);
+									},
+
+									(exists, callback) => {
+										if (!exists) callback(null, false, false);
+										else if (station.privacy === "public") callback(null, true, true);
+										else
+											hasPermission("stations.index", session.userId, station._id)
+												.then(() => callback(null, true, true))
+												.catch(() => callback(null, true, false));
+									},
+
+									(exists, canIndex, callback) => {
+										if (!exists) callback(null, false);
+										else if (!canIndex && !adminFilter)
+											hasPermission("stations.index.other", session.userId)
+												.then(() => callback(null, true))
+												.catch(() => callback(null, false));
+										else callback(null, canIndex);
 									}
 								],
 								(err, exists) => {
@@ -1239,7 +1198,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					hasPermission("stations.forceSkip", session, stationId)
+					hasPermission("stations.skip", session, stationId)
 						.then(() => next())
 						.catch(next);
 				},
@@ -1662,7 +1621,6 @@ export default {
 	 * @param cb
 	 */
 	create: isLoginRequired(async function create(session, data, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
@@ -1734,14 +1692,10 @@ export default {
 					if (blacklist.indexOf(data.name) !== -1)
 						return next("That name is blacklisted. Please use a different name.");
 
-					if (data.type === "official") {
-						return userModel.findOne({ _id: session.userId }, (err, user) => {
-							if (err) return next(err);
-							if (!user) return next("User not found.");
-							if (user.role !== "admin") return next("Admin required.");
-							return next();
-						});
-					}
+					if (data.type === "official")
+						return hasPermission("stations.create.official", session)
+							.then(() => next())
+							.catch(() => next("Insufficient permissions."));
 					return next();
 				},
 
@@ -1838,8 +1792,6 @@ export default {
 	 * @param cb
 	 */
 	addToQueue: isLoginRequired(async function addToQueue(session, stationId, youtubeId, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-
 		async.waterfall(
 			[
 				next => {
@@ -1858,12 +1810,9 @@ export default {
 						station.requests.access === "owner" ||
 						(station.requests.access === "user" && station.privacy === "private")
 					) {
-						return userModel.findOne({ _id: session.userId }, (err, user) => {
-							if (err) return next(err);
-							if (user.role !== "admin" && station.owner !== session.userId)
-								return next("You do not have permission to add songs to queue.");
-							return next(null, station);
-						});
+						return hasPermission("stations.addToQueue", session, stationId)
+							.then(() => next(null, station))
+							.catch(() => next("You do not have permission to add songs to queue."));
 					}
 
 					return next(null, station);

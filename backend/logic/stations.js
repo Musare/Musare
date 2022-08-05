@@ -2,6 +2,8 @@ import async from "async";
 
 import CoreClass from "../core";
 
+import { hasPermission } from "./hooks/hasPermission";
+
 let StationsModule;
 let CacheModule;
 let DBModule;
@@ -1006,31 +1008,16 @@ class _StationsModule extends CoreClass {
 							if (session.sessionId) {
 								CacheModule.runJob("HGET", { table: "sessions", key: session.sessionId }).then(
 									session => {
-										if (session) {
-											DBModule.runJob("GET_MODEL", { modelName: "user" }).then(userModel => {
-												userModel.findOne({ _id: session.userId }, (err, user) => {
-													if (!err && user) {
-														if (user.role === "admin")
-															socket.dispatch("event:station.nextSong", {
-																data: {
-																	stationId: station._id,
-																	currentSong
-																}
-															});
-														else if (
-															station.type === "community" &&
-															station.owner === session.userId
-														)
-															socket.dispatch("event:station.nextSong", {
-																data: {
-																	stationId: station._id,
-																	currentSong
-																}
-															});
+										hasPermission("stations.skip", session, station._id)
+											.then(() =>
+												socket.dispatch("event:station.nextSong", {
+													data: {
+														stationId: station._id,
+														currentSong
 													}
-												});
-											});
-										}
+												})
+											)
+											.catch(() => {});
 									}
 								);
 							}
@@ -1080,17 +1067,9 @@ class _StationsModule extends CoreClass {
 					},
 
 					next => {
-						DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
-							userModel.findOne({ _id: payload.userId }, next);
-						});
-					},
-
-					(user, next) => {
-						if (!user) return next("Not allowed");
-						if (user.role === "admin" || payload.station.owner === payload.userId) return next(true);
-						if (payload.station.type === "official") return next("Not allowed");
-
-						return next("Not allowed");
+						hasPermission("stations.view", payload.userId, payload.station._id)
+							.then(() => next(true))
+							.catch(() => next("Not allowed"));
 					}
 				],
 				async errOrResult => {
@@ -1187,71 +1166,19 @@ class _StationsModule extends CoreClass {
 										sockets,
 										1,
 										(socket, next) => {
-											const { session } = socket;
-
-											async.waterfall(
-												[
-													next => {
-														if (!session.sessionId) next("No session id");
-														else next();
-													},
-
-													next => {
-														CacheModule.runJob(
-															"HGET",
-															{
-																table: "sessions",
-																key: session.sessionId
-															},
-															this
-														)
-															.then(response => {
-																next(null, response);
-															})
-															.catch(next);
-													},
-
-													(session, next) => {
-														if (!session) next("No session");
-														else {
-															DBModule.runJob("GET_MODEL", { modelName: "user" }, this)
-																.then(userModel => {
-																	next(null, userModel);
-																})
-																.catch(next);
-														}
-													},
-
-													(userModel, next) => {
-														if (!userModel) next("No user model");
-														else
-															userModel.findOne(
-																{
-																	_id: session.userId
-																},
-																next
-															);
-													},
-
-													(user, next) => {
-														if (!user) next("No user found");
-														else if (user.role === "admin") {
-															socketsThatCan.push(socket);
-															next();
-														} else if (
-															payload.station.type === "community" &&
-															payload.station.owner === session.userId
-														) {
-															socketsThatCan.push(socket);
-															next();
-														}
-													}
-												],
-												err => {
-													if (err) socketsThatCannot.push(socket);
-													next();
-												}
-											);
+											if (!(socket.session && socket.session.sessionId)) {
+												socketsThatCannot.push(socket);
+												next();
+											} else
+												hasPermission("stations.view", socket.session, payload.station._id)
+													.then(() => {
+														socketsThatCan.push(socket);
+														next();
+													})
+													.catch(() => {
+														socketsThatCannot.push(socket);
+														next();
+													});
 										},
 										err => {
 											if (err) reject(err);

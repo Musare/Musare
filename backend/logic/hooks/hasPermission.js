@@ -3,24 +3,23 @@ import async from "async";
 // eslint-disable-next-line
 import moduleManager from "../../index";
 
-const DBModule = moduleManager.modules.db;
-const CacheModule = moduleManager.modules.cache;
-const UtilsModule = moduleManager.modules.utils;
-const StationsModule = moduleManager.modules.stations;
-
 const permissions = {};
 permissions.dj = {
 	"test.queue.add": true,
 	"test.queue.remove": false,
-	"stations.forceSkip": true,
+	"stations.view": true,
+	"stations.skip": true,
 	"stations.pause": true,
 	"stations.resume": true,
+	"stations.addToQueue": true,
 	"stations.removeFromQueue": true,
 	"stations.repositionSongInQueue": true,
 	"stations.autofillPlaylist": true,
 	"stations.removeAutofillPlaylist": true,
 	"stations.blacklistPlaylist": true,
-	"stations.removeBlacklistedPlaylist": true
+	"stations.removeBlacklistedPlaylist": true,
+	"stations.index": true,
+	"stations.getPlaylist": true
 };
 permissions.owner = {
 	...permissions.dj,
@@ -63,6 +62,11 @@ permissions.moderator = {
 	"playlists.getData": true,
 	"playlists.searchOfficial": true,
 	"playlists.updatePrivacyAdmin": true,
+	"playlists.getPlaylist": true,
+	"playlists.repositionSong": true,
+	"playlists.addSongToPlaylist": true,
+	"playlists.addSetToPlaylist": true,
+	"playlists.removeSongFromPlaylist": true,
 	"punishments.getData": true,
 	"punishments.getPunishmentsForUser": true,
 	"punishments.findOne": true,
@@ -75,6 +79,9 @@ permissions.moderator = {
 	"stations.getData": true,
 	"stations.resetQueue": true,
 	"stations.remove": false,
+	"stations.index": false,
+	"stations.index.other": true,
+	"stations.create.official": true,
 	"youtube.getVideos": true,
 	"youtube.requestSetAdmin": true
 };
@@ -111,6 +118,13 @@ permissions.admin = {
 	"users.adminRequestPasswordReset": true,
 	"users.resendVerifyEmail": true,
 	"users.banUserById": true,
+	"users.removeSessions": true,
+	"users.updateUsername": true,
+	"users.updateEmail": true,
+	"users.updateName": true,
+	"users.updateLocation": true,
+	"users.updateBio": true,
+	"users.updateAvatar": true,
 	"utils.getModules": true,
 	"utils.getModule": true,
 	"youtube.getQuotaStatus": true,
@@ -123,6 +137,10 @@ permissions.admin = {
 };
 
 export const hasPermission = async (permission, session, stationId) => {
+	const CacheModule = moduleManager.modules.cache;
+	const DBModule = moduleManager.modules.db;
+	const StationsModule = moduleManager.modules.stations;
+	const UtilsModule = moduleManager.modules.utils;
 	const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 	return new Promise((resolve, reject) => {
@@ -155,7 +173,7 @@ export const hasPermission = async (permission, session, stationId) => {
 					return StationsModule.runJob("GET_STATION", { stationId }, this)
 						.then(station => {
 							if (!station) return next("Station not found.");
-							if (station.type === "community" && station.owner === user._id)
+							if (station.type === "community" && station.owner === user._id.toString())
 								return next(null, [user.role, "owner"]);
 							// if (station.type === "community" && station.djs.find(userId))
 							// 	return next(null, [user.role, "dj"]);
@@ -175,18 +193,22 @@ export const hasPermission = async (permission, session, stationId) => {
 				}
 			],
 			async err => {
+				const userId = typeof session === "object" ? session.userId || session.sessionId : session;
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					// TODO
-					// this.log(
-					// 	"INFO",
-					// 	"HAS_PERMISSION",
-					// 	`User "${userId}" does not have required permission "${permission}". "${err}"`
-					// );
+					UtilsModule.log(
+						"INFO",
+						"HAS_PERMISSION",
+						`User "${userId}" does not have required permission "${permission}". "${err}"`
+					);
 					return reject(err);
 				}
-				// TODO
-				// this.log("INFO", "HAS_PERMISSION", `User "${userId}" has required permission "${permission}".`, false);
+				UtilsModule.log(
+					"INFO",
+					"HAS_PERMISSION",
+					`User "${userId}" has required permission "${permission}".`,
+					false
+				);
 				return resolve();
 			}
 		);
@@ -195,6 +217,7 @@ export const hasPermission = async (permission, session, stationId) => {
 
 export const useHasPermission = (options, destination) =>
 	async function useHasPermission(session, ...args) {
+		const UtilsModule = moduleManager.modules.utils;
 		const permission = typeof options === "object" ? options.permission : options;
 		const stationId = typeof options === "object" ? options.stationId : null;
 		const cb = args[args.length - 1];

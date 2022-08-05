@@ -7,7 +7,7 @@ import axios from "axios";
 import bcrypt from "bcrypt";
 import sha256 from "sha256";
 import isLoginRequired from "../hooks/loginRequired";
-import { useHasPermission } from "../hooks/hasPermission";
+import { hasPermission, useHasPermission } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -1242,17 +1242,13 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	removeSessions: isLoginRequired(async function removeSessions(session, userId, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-
 		async.waterfall(
 			[
 				next => {
-					userModel.findOne({ _id: session.userId }, (err, user) => {
-						if (err) return next(err);
-						if (user.role !== "admin" && session.userId !== userId)
-							return next("Only admins and the owner of the account can remove their sessions.");
-						return next();
-					});
+					if (session.userId === userId) return next();
+					return hasPermission("users.removeSessions", session)
+						.then(() => next())
+						.catch(() => next("Only admins and the owner of the account can remove their sessions."));
 				},
 
 				next => {
@@ -1988,14 +1984,13 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					if (updatingUserId === session.userId) return next(null, true);
-					return userModel.findOne({ _id: session.userId }, next);
+					if (updatingUserId === session.userId) return next();
+					return hasPermission("users.updateUsername", session)
+						.then(() => next())
+						.catch(() => next("Invalid permissions."));
 				},
 
-				(user, next) => {
-					if (user !== true && (!user || user.role !== "admin")) return next("Invalid permissions.");
-					return userModel.findOne({ _id: updatingUserId }, next);
-				},
+				next => userModel.findOne({ _id: updatingUserId }, next),
 
 				(user, next) => {
 					if (!user) return next("User not found.");
@@ -2081,14 +2076,13 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					if (updatingUserId === session.userId) return next(null, true);
-					return userModel.findOne({ _id: session.userId }, next);
+					if (updatingUserId === session.userId) return next();
+					return hasPermission("users.updateEmail", session)
+						.then(() => next())
+						.catch(() => next("Invalid permissions."));
 				},
 
-				(user, next) => {
-					if (user !== true && (!user || user.role !== "admin")) return next("Invalid permissions.");
-					return userModel.findOne({ _id: updatingUserId }, next);
-				},
+				next => userModel.findOne({ _id: updatingUserId }, next),
 
 				(user, next) => {
 					if (!user) return next("User not found.");
@@ -2192,14 +2186,13 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					if (updatingUserId === session.userId) return next(null, true);
-					return userModel.findOne({ _id: session.userId }, next);
+					if (updatingUserId === session.userId) return next();
+					return hasPermission("users.updateName", session)
+						.then(() => next())
+						.catch(() => next("Invalid permissions."));
 				},
 
-				(user, next) => {
-					if (user !== true && (!user || user.role !== "admin")) return next("Invalid permissions.");
-					return userModel.findOne({ _id: updatingUserId }, next);
-				},
+				next => userModel.findOne({ _id: updatingUserId }, next),
 
 				(user, next) => {
 					if (!user) return next("User not found.");
@@ -2263,14 +2256,13 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					if (updatingUserId === session.userId) return next(null, true);
-					return userModel.findOne({ _id: session.userId }, next);
+					if (updatingUserId === session.userId) return next();
+					return hasPermission("users.updateLocation", session)
+						.then(() => next())
+						.catch(() => next("Invalid permissions."));
 				},
 
-				(user, next) => {
-					if (user !== true && (!user || user.role !== "admin")) return next("Invalid permissions.");
-					return userModel.findOne({ _id: updatingUserId }, next);
-				},
+				next => userModel.findOne({ _id: updatingUserId }, next),
 
 				(user, next) => {
 					if (!user) return next("User not found.");
@@ -2334,14 +2326,13 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					if (updatingUserId === session.userId) return next(null, true);
-					return userModel.findOne({ _id: session.userId }, next);
+					if (updatingUserId === session.userId) return next();
+					return hasPermission("users.updateBio", session)
+						.then(() => next())
+						.catch(() => next("Invalid permissions."));
 				},
 
-				(user, next) => {
-					if (user !== true && (!user || user.role !== "admin")) return next("Invalid permissions.");
-					return userModel.findOne({ _id: updatingUserId }, next);
-				},
+				next => userModel.findOne({ _id: updatingUserId }, next),
 
 				(user, next) => {
 					if (!user) return next("User not found.");
@@ -2399,14 +2390,13 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					if (updatingUserId === session.userId) return next(null, true);
-					return userModel.findOne({ _id: session.userId }, next);
+					if (updatingUserId === session.userId) return next();
+					return hasPermission("users.updateAvatar", session)
+						.then(() => next())
+						.catch(() => next("Invalid permissions."));
 				},
 
-				(user, next) => {
-					if (user !== true && (!user || user.role !== "admin")) return next("Invalid permissions.");
-					return userModel.findOne({ _id: updatingUserId }, next);
-				},
+				next => userModel.findOne({ _id: updatingUserId }, next),
 
 				(user, next) => {
 					if (!user) return next("User not found.");

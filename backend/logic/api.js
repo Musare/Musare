@@ -5,6 +5,8 @@ import crypto from "crypto";
 
 import CoreClass from "../core";
 
+import { hasPermission } from "./hooks/hasPermission";
+
 let AppModule;
 let DBModule;
 let PlaylistsModule;
@@ -127,29 +129,24 @@ class _APIModule extends CoreClass {
 					response.app.get("/export/playlist/:playlistId", async (req, res) => {
 						const { playlistId } = req.params;
 
-						const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
-
 						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId })
 							.then(playlist => {
-								if (playlist.privacy === "public") res.json({ status: "success", playlist });
-								else {
+								if (!playlist) res.json({ status: "error", message: "Playlist not found." });
+								else if (playlist.privacy === "public") res.json({ status: "success", playlist });
+								else
 									isLoggedIn(req, res, () => {
 										if (playlist.createdBy === req.session.userId)
 											res.json({ status: "success", playlist });
-										else {
-											userModel.findOne({ _id: req.session.userId }, (err, user) => {
-												if (err) res.json({ status: "error", message: err.message });
-												else if (user.role === "admin")
-													res.json({ status: "success", playlist });
-												else
+										else
+											hasPermission("playlists.getPlaylist", req.session.userId)
+												.then(() => res.json({ status: "success", playlist }))
+												.catch(() =>
 													res.json({
 														status: "error",
 														message: "You're not allowed to download this playlist."
-													});
-											});
-										}
+													})
+												);
 									});
-								}
 							})
 							.catch(err => {
 								res.json({ status: "error", message: err.message });

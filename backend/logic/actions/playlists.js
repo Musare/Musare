@@ -820,18 +820,10 @@ export default {
 
 				(playlist, next) => {
 					if (!playlist) return next("Playlist not found");
-					if (playlist.privacy !== "public" && playlist.createdBy !== session.userId) {
-						if (session)
-							// check if user requested to get a playlist is an admin
-							return DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
-								userModel.findOne({ _id: session.userId }, (err, user) => {
-									if (user && user.role === "admin") return next(null, playlist);
-									return next("User unauthorised to view playlist.");
-								});
-							});
-						return next("User unauthorised to view playlist.");
-					}
-
+					if (playlist.privacy !== "public" && playlist.createdBy !== session.userId)
+						return hasPermission("playlists.getPlaylist", session)
+							.then(() => next(null, playlist))
+							.catch(() => next("User unauthorised to view playlist."));
 					return next(null, playlist);
 				}
 			],
@@ -879,18 +871,10 @@ export default {
 
 				(playlist, next) => {
 					if (!playlist) return next("Playlist not found");
-					if (playlist.privacy !== "public" && playlist.createdBy !== session.userId) {
-						if (session)
-							// check if user requested to get a playlist is an admin
-							return DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
-								userModel.findOne({ _id: session.userId }, (err, user) => {
-									if (user && user.role === "admin") return next(null, playlist);
-									return next("User unauthorised to view playlist.");
-								});
-							});
-						return next("User unauthorised to view playlist.");
-					}
-
+					if (playlist.privacy !== "public")
+						return hasPermission("stations.getPlaylist", session, stationId)
+							.then(() => next(null, playlist))
+							.catch(() => next("User unauthorised to view playlist."));
 					return next(null, playlist);
 				}
 			],
@@ -1016,14 +1000,11 @@ export default {
 				next => {
 					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
-							if (!playlist || playlist.createdBy !== session.userId) {
-								return DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
-									userModel.findOne({ _id: session.userId }, (err, user) => {
-										if (user && user.role === "admin") return next();
-										return next("Something went wrong when trying to get the playlist");
-									});
-								});
-							}
+							if (!playlist) return next("Playlist not found.");
+							if (playlist.createdBy !== session.userId)
+								return hasPermission("playlists.repositionSong", session)
+									.then(() => next())
+									.catch(() => next("Invalid permissions."));
 							return next();
 						})
 						.catch(next);
@@ -1107,14 +1088,12 @@ export default {
 				next => {
 					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
-							if (!playlist || playlist.createdBy !== session.userId) {
-								DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
-									userModel.findOne({ _id: session.userId }, (err, user) => {
-										if (user && user.role === "admin") return next(null, playlist);
-										return next("Something went wrong when trying to get the playlist");
-									});
-								});
-							} else next(null, playlist);
+							if (!playlist) return next("Playlist not found.");
+							if (playlist.createdBy !== session.userId)
+								return hasPermission("playlists.addSongToPlaylist", session)
+									.then(() => next(null, playlist))
+									.catch(() => next("Invalid permissions."));
+							return next(null, playlist);
 						})
 						.catch(next);
 				},
@@ -1376,15 +1355,11 @@ export default {
 
 				(playlist, next) => {
 					this.publishProgress({ status: "update", message: `Importing YouTube playlist (stage 4)` });
-					if (!playlist || playlist.createdBy !== session.userId) {
-						return DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
-							userModel.findOne({ _id: session.userId }, (err, user) => {
-								if (user && user.role === "admin") return next(null, playlist);
-								return next("Something went wrong when trying to get the playlist");
-							});
-						});
-					}
-
+					if (!playlist) return next("Playlist not found.");
+					if (playlist.createdBy !== session.userId)
+						return hasPermission("playlists.addSetToPlaylist", session)
+							.then(() => next(null, playlist))
+							.catch(() => next("Invalid permissions."));
 					return next(null, playlist);
 				}
 			],
@@ -1459,14 +1434,11 @@ export default {
 				next => {
 					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
-							if (!playlist || playlist.createdBy !== session.userId) {
-								return DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
-									userModel.findOne({ _id: session.userId }, (err, user) => {
-										if (user && user.role === "admin") return next(null, playlist);
-										return next("Something went wrong when trying to get the playlist");
-									});
-								});
-							}
+							if (!playlist) return next("Playlist not found.");
+							if (playlist.createdBy !== session.userId)
+								return hasPermission("playlists.removeSongFromPlaylist", session)
+									.then(() => next(null, playlist))
+									.catch(() => next("Invalid permissions."));
 							return next(null, playlist);
 						})
 						.catch(next);
