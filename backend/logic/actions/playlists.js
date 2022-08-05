@@ -1,8 +1,8 @@
 import async from "async";
 import config from "config";
 
-import isLoginRequired from "./hooks/loginRequired";
-import { useHasPermission } from "./hooks/hasPermission";
+import isLoginRequired from "../hooks/loginRequired";
+import { hasPermission, useHasPermission } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";

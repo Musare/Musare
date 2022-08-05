@@ -2,8 +2,8 @@ import async from "async";
 import mongoose from "mongoose";
 import config from "config";
 
-import { hasPermission, useHasPermission } from "./hooks/hasPermission";
-import isLoginRequired from "./hooks/loginRequired";
+import { hasPermission, useHasPermission } from "../hooks/hasPermission";
+import isLoginRequired from "../hooks/loginRequired";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";

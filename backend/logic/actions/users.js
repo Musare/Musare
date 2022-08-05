@@ -6,8 +6,8 @@ import mongoose from "mongoose";
 import axios from "axios";
 import bcrypt from "bcrypt";
 import sha256 from "sha256";
-import isLoginRequired from "./hooks/loginRequired";
-import { useHasPermission } from "./hooks/hasPermission";
+import isLoginRequired from "../hooks/loginRequired";
+import { useHasPermission } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";

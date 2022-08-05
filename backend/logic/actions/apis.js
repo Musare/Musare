@@ -2,8 +2,8 @@ import config from "config";
 import async from "async";
 import axios from "axios";
 
-import isLoginRequired from "./hooks/loginRequired";
-import { hasPermission, useHasPermission } from "./hooks/hasPermission";
+import isLoginRequired from "../hooks/loginRequired";
+import { hasPermission, useHasPermission } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
