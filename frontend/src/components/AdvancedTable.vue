@@ -906,6 +906,7 @@ onMounted(async () => {
 
 	ws.onConnect(init);
 
+	// TODO, this doesn't address special properties
 	if (props.events && props.events.updated)
 		socket.on(`event:${props.events.updated.event}`, res => {
 			const index = rows.value

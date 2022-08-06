@@ -301,6 +301,56 @@ class _PunishmentsModule extends CoreClass {
 			);
 		});
 	}
+
+	/**
+	 * Deactivates a punishment
+	 *
+	 * @param {object} payload - object containing the payload
+	 * @param {string} payload.punishmentId - the MongoDB id of the punishment
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	DEACTIVATE_PUNISHMENT(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						PunishmentsModule.punishmentModel.findOne({ _id: payload.punishmentId }, next);
+					},
+
+					(punishment, next) => {
+						if (!punishment) next("Punishment does not exist.");
+						else
+							PunishmentsModule.punishmentModel.updateOne(
+								{ _id: payload.punishmentId },
+								{ $set: { active: false } },
+								next
+							);
+					},
+
+					(res, next) => {
+						CacheModule.runJob(
+							"HDEL",
+							{
+								table: "punishments",
+								key: payload.punishmentId
+							},
+							this
+						)
+							.then(() => next())
+							.catch(next);
+					},
+
+					next => {
+						PunishmentsModule.punishmentModel.findOne({ _id: payload.punishmentId }, next);
+					}
+				],
+				(err, punishment) => {
+					if (err) return reject(new Error(err));
+					return resolve(punishment);
+				}
+			);
+		});
+	}
 }
 
 export default new _PunishmentsModule();

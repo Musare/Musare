@@ -26,7 +26,7 @@ const columns = ref([
 	{
 		name: "options",
 		displayName: "Options",
-		properties: ["_id"],
+		properties: ["_id", "status"],
 		sortable: false,
 		hidable: false,
 		resizable: false,
@@ -143,6 +143,14 @@ const filters = ref([
 		defaultFilterType: "datetimeBefore"
 	}
 ]);
+const events = ref({
+	adminRoom: "punishments",
+	updated: {
+		event: "admin.punishment.updated",
+		id: "punishment._id",
+		item: "punishment"
+	}
+});
 
 const { openModal } = useModalsStore();
 
@@ -167,6 +175,16 @@ const getDateFormatted = createdAt => {
 	const minute = `${date.getMinutes()}`.padStart(2, 0);
 	return `${year}-${month}-${day} ${hour}:${minute}`;
 };
+
+const deactivatePunishment = punishmentId => {
+	socket.dispatch("punishments.deactivatePunishment", punishmentId, res => {
+		if (res.status === "success") {
+			new Toast("Successfully deactivated punishment.");
+		} else {
+			new Toast(res.message);
+		}
+	});
+};
 </script>
 
 <template>
@@ -182,6 +200,7 @@ const getDateFormatted = createdAt => {
 			:column-default="columnDefault"
 			:columns="columns"
 			:filters="filters"
+			:events="events"
 			data-action="punishments.getData"
 			name="admin-punishments"
 			:max-width="1200"
@@ -201,6 +220,18 @@ const getDateFormatted = createdAt => {
 						v-tippy
 					>
 						open_in_full
+					</button>
+					<button
+						class="button is-primary icon-with-button material-icons"
+						@click="deactivatePunishment(slotProps.item._id)"
+						:disabled="
+							slotProps.item.removed ||
+							slotProps.item.status === 'Inactive'
+						"
+						content="Deactivate Punishment"
+						v-tippy
+					>
+						gavel
 					</button>
 				</div>
 			</template>

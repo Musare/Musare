@@ -14,6 +14,9 @@ export const useViewPunishmentStore = props => {
 			},
 			viewPunishment(punishment) {
 				this.punishment = punishment;
+			},
+			deactivatePunishment() {
+				this.punishment.active = false;
 			}
 		}
 	})();
