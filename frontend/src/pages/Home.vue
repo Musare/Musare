@@ -115,7 +115,7 @@ const canRequest = (station, requireLogin = true) =>
 	station.requests.enabled &&
 	(station.requests.access === "user" ||
 		(station.requests.access === "owner" &&
-			(isOwner(station) || hasPermission("stations.addToQueue"))));
+			(isOwner(station) || hasPermission("stations.request"))));
 
 const favoriteStation = stationId => {
 	socket.dispatch("stations.favoriteStation", stationId, res => {

@@ -48,7 +48,7 @@ export default {
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param cb
 	 */
-	length: useHasPermission("songs.length", async function length(session, cb) {
+	length: useHasPermission("songs.get", async function length(session, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
@@ -81,7 +81,7 @@ export default {
 	 * @param cb
 	 */
 	getData: useHasPermission(
-		"songs.getData",
+		"admin.view.songs",
 		async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
 			async.waterfall(
 				[
@@ -270,7 +270,7 @@ export default {
 	 * @param {string} songId - the song id
 	 * @param {Function} cb
 	 */
-	getSongFromSongId: useHasPermission("songs.getSongFromId", function getSongFromSongId(session, songId, cb) {
+	getSongFromSongId: useHasPermission("songs.get", function getSongFromSongId(session, songId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -299,45 +299,42 @@ export default {
 	 * @param {Array} youtubeIds - the song ids
 	 * @param {Function} cb
 	 */
-	getSongsFromYoutubeIds: useHasPermission(
-		"songs.getSongsFromYoutubeIds",
-		function getSongsFromYoutubeIds(session, youtubeIds, cb) {
-			async.waterfall(
-				[
-					next => {
-						SongsModule.runJob(
-							"GET_SONGS",
-							{
-								youtubeIds,
-								properties: [
-									"youtubeId",
-									"title",
-									"artists",
-									"thumbnail",
-									"duration",
-									"verified",
-									"_id",
-									"youtubeVideoId"
-								]
-							},
-							this
-						)
-							.then(response => next(null, response.songs))
-							.catch(err => next(err));
-					}
-				],
-				async (err, songs) => {
-					if (err) {
-						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-						this.log("ERROR", "SONGS_GET_SONGS_FROM_MUSARE_IDS", `Failed to get songs. "${err}"`);
-						return cb({ status: "error", message: err });
-					}
-					this.log("SUCCESS", "SONGS_GET_SONGS_FROM_MUSARE_IDS", `Got songs successfully.`);
-					return cb({ status: "success", data: { songs } });
+	getSongsFromYoutubeIds: useHasPermission("songs.get", function getSongsFromYoutubeIds(session, youtubeIds, cb) {
+		async.waterfall(
+			[
+				next => {
+					SongsModule.runJob(
+						"GET_SONGS",
+						{
+							youtubeIds,
+							properties: [
+								"youtubeId",
+								"title",
+								"artists",
+								"thumbnail",
+								"duration",
+								"verified",
+								"_id",
+								"youtubeVideoId"
+							]
+						},
+						this
+					)
+						.then(response => next(null, response.songs))
+						.catch(err => next(err));
 				}
-			);
-		}
-	),
+			],
+			async (err, songs) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "SONGS_GET_SONGS_FROM_MUSARE_IDS", `Failed to get songs. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "SONGS_GET_SONGS_FROM_MUSARE_IDS", `Got songs successfully.`);
+				return cb({ status: "success", data: { songs } });
+			}
+		);
+	}),
 
 	/**
 	 * Creates a song
@@ -724,7 +721,7 @@ export default {
 	 * @param songIds - array of song ids
 	 * @param cb
 	 */
-	removeMany: useHasPermission("songs.removeMany", async function remove(session, songIds, cb) {
+	removeMany: useHasPermission("songs.remove", async function remove(session, songIds, cb) {
 		const successful = [];
 		const failed = [];
 
@@ -926,7 +923,7 @@ export default {
 	 * @param songIds - array of song ids
 	 * @param cb
 	 */
-	verifyMany: useHasPermission("songs.verifyMany", async function verifyMany(session, songIds, cb) {
+	verifyMany: useHasPermission("songs.verify", async function verifyMany(session, songIds, cb) {
 		const successful = [];
 		const failed = [];
 
@@ -1022,7 +1019,7 @@ export default {
 	 * @param songId - the song id
 	 * @param cb
 	 */
-	unverify: useHasPermission("songs.unverify", async function add(session, songId, cb) {
+	unverify: useHasPermission("songs.verify", async function add(session, songId, cb) {
 		const SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
@@ -1087,7 +1084,7 @@ export default {
 	 * @param songIds - array of song ids
 	 * @param cb
 	 */
-	unverifyMany: useHasPermission("songs.unverifyMany", async function unverifyMany(session, songIds, cb) {
+	unverifyMany: useHasPermission("songs.verify", async function unverifyMany(session, songIds, cb) {
 		const successful = [];
 		const failed = [];
 
@@ -1190,7 +1187,7 @@ export default {
 	 * @param session
 	 * @param cb
 	 */
-	getGenres: useHasPermission("songs.getGenres", function getGenres(session, cb) {
+	getGenres: useHasPermission("songs.get", function getGenres(session, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1229,7 +1226,7 @@ export default {
 	 * @param songIds Array of songIds to apply genres to
 	 * @param cb
 	 */
-	editGenres: useHasPermission("songs.editGenres", async function editGenres(session, method, genres, songIds, cb) {
+	editGenres: useHasPermission("songs.update", async function editGenres(session, method, genres, songIds, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 
 		this.keepLongJob();
@@ -1318,7 +1315,7 @@ export default {
 	 * @param session
 	 * @param cb
 	 */
-	getArtists: useHasPermission("songs.getArtists", function getArtists(session, cb) {
+	getArtists: useHasPermission("songs.get", function getArtists(session, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1357,91 +1354,88 @@ export default {
 	 * @param songIds Array of songIds to apply artists to
 	 * @param cb
 	 */
-	editArtists: useHasPermission(
-		"songs.editArtists",
-		async function editArtists(session, method, artists, songIds, cb) {
-			const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+	editArtists: useHasPermission("songs.update", async function editArtists(session, method, artists, songIds, cb) {
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 
-			this.keepLongJob();
-			this.publishProgress({
-				status: "started",
-				title: "Bulk editing artists",
-				message: "Updating artists.",
-				id: this.toString()
-			});
-			await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
-			await CacheModule.runJob(
-				"PUB",
-				{
-					channel: "longJob.added",
-					value: { jobId: this.toString(), userId: session.userId }
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Bulk editing artists",
+			message: "Updating artists.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
+		async.waterfall(
+			[
+				next => {
+					songModel.find({ _id: { $in: songIds } }, next);
 				},
-				this
-			);
 
-			async.waterfall(
-				[
-					next => {
-						songModel.find({ _id: { $in: songIds } }, next);
-					},
+				(songs, next) => {
+					const songsFound = songs.map(song => song._id);
+					if (songsFound.length > 0) next(null, songsFound);
+					else next("None of the specified songs were found.");
+				},
 
-					(songs, next) => {
-						const songsFound = songs.map(song => song._id);
-						if (songsFound.length > 0) next(null, songsFound);
-						else next("None of the specified songs were found.");
-					},
+				(songsFound, next) => {
+					const query = {};
+					if (method === "add") {
+						query.$addToSet = { artists: { $each: artists } };
+					} else if (method === "remove") {
+						query.$pullAll = { artists };
+					} else if (method === "replace") {
+						query.$set = { artists };
+					} else {
+						next("Invalid method.");
+						return;
+					}
 
-					(songsFound, next) => {
-						const query = {};
-						if (method === "add") {
-							query.$addToSet = { artists: { $each: artists } };
-						} else if (method === "remove") {
-							query.$pullAll = { artists };
-						} else if (method === "replace") {
-							query.$set = { artists };
-						} else {
-							next("Invalid method.");
+					this.publishProgress({
+						status: "update",
+						message: "Updating artists in MongoDB."
+					});
+					songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
+						if (err) {
+							next(err);
 							return;
 						}
-
-						this.publishProgress({
-							status: "update",
-							message: "Updating artists in MongoDB."
-						});
-						songModel.updateMany({ _id: { $in: songsFound } }, query, { runValidators: true }, err => {
-							if (err) {
-								next(err);
-								return;
-							}
-							SongsModule.runJob("UPDATE_SONGS", { songIds: songsFound });
-							next();
-						});
-					}
-				],
-				async err => {
-					if (err && err !== true) {
-						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-						this.log("ERROR", "EDIT_ARTISTS", `User ${session.userId} failed to edit artists. '${err}'`);
-						this.publishProgress({
-							status: "error",
-							message: err
-						});
-						cb({ status: "error", message: err });
-					} else {
-						this.log("SUCCESS", "EDIT_ARTISTS", `User ${session.userId} has successfully edited artists.`);
-						this.publishProgress({
-							status: "success",
-							message: "Successfully edited artists."
-						});
-						cb({
-							status: "success",
-							message: "Successfully edited artists."
-						});
-					}
+						SongsModule.runJob("UPDATE_SONGS", { songIds: songsFound });
+						next();
+					});
 				}
-			);
-		}
-	),
+			],
+			async err => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "EDIT_ARTISTS", `User ${session.userId} failed to edit artists. '${err}'`);
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
+					cb({ status: "error", message: err });
+				} else {
+					this.log("SUCCESS", "EDIT_ARTISTS", `User ${session.userId} has successfully edited artists.`);
+					this.publishProgress({
+						status: "success",
+						message: "Successfully edited artists."
+					});
+					cb({
+						status: "success",
+						message: "Successfully edited artists."
+					});
+				}
+			}
+		);
+	}),
 
 	/**
 	 * Gets a list of all tags
@@ -1449,7 +1443,7 @@ export default {
 	 * @param session
 	 * @param cb
 	 */
-	getTags: useHasPermission("songs.getTags", function getTags(session, cb) {
+	getTags: useHasPermission("songs.get", function getTags(session, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1488,7 +1482,7 @@ export default {
 	 * @param songIds Array of songIds to apply tags to
 	 * @param cb
 	 */
-	editTags: useHasPermission("songs.editTags", async function editTags(session, method, tags, songIds, cb) {
+	editTags: useHasPermission("songs.update", async function editTags(session, method, tags, songIds, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 
 		this.keepLongJob();

@@ -70,7 +70,7 @@ export default {
 	 * @param cb
 	 */
 	getData: useHasPermission(
-		"news.getData",
+		"admin.view.news",
 		async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
 			async.waterfall(
 				[

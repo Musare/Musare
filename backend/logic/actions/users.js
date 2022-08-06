@@ -545,7 +545,7 @@ export default {
 	 * @param {string} userId - the user id that is going to be banned
 	 * @param {Function} cb - gets called with the result
 	 */
-	adminRemove: useHasPermission("users.adminRemove", async function adminRemove(session, userId, cb) {
+	adminRemove: useHasPermission("users.remove", async function adminRemove(session, userId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		const dataRequestModel = await DBModule.runJob("GET_MODEL", { modelName: "dataRequest" }, this);
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
@@ -1246,7 +1246,7 @@ export default {
 			[
 				next => {
 					if (session.userId === userId) return next();
-					return hasPermission("users.removeSessions", session)
+					return hasPermission("users.remove.sessions", session)
 						.then(() => next())
 						.catch(() => next("Only admins and the owner of the account can remove their sessions."));
 				},
@@ -1855,7 +1855,7 @@ export default {
 	 * @param {string} userId - the userId of the person we are trying to get the username from
 	 * @param {Function} cb - gets called with the result
 	 */
-	getUserFromId: useHasPermission("users.getUserFromId", async function getUserFromId(session, userId, cb) {
+	getUserFromId: useHasPermission("users.get", async function getUserFromId(session, userId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		userModel
 			.findById(userId)
@@ -1985,7 +1985,7 @@ export default {
 			[
 				next => {
 					if (updatingUserId === session.userId) return next();
-					return hasPermission("users.updateUsername", session)
+					return hasPermission("users.update", session)
 						.then(() => next())
 						.catch(() => next("Invalid permissions."));
 				},
@@ -2077,7 +2077,7 @@ export default {
 			[
 				next => {
 					if (updatingUserId === session.userId) return next();
-					return hasPermission("users.updateEmail", session)
+					return hasPermission("users.update", session)
 						.then(() => next())
 						.catch(() => next("Invalid permissions."));
 				},
@@ -2187,7 +2187,7 @@ export default {
 			[
 				next => {
 					if (updatingUserId === session.userId) return next();
-					return hasPermission("users.updateName", session)
+					return hasPermission("users.update", session)
 						.then(() => next())
 						.catch(() => next("Invalid permissions."));
 				},
@@ -2257,7 +2257,7 @@ export default {
 			[
 				next => {
 					if (updatingUserId === session.userId) return next();
-					return hasPermission("users.updateLocation", session)
+					return hasPermission("users.update", session)
 						.then(() => next())
 						.catch(() => next("Invalid permissions."));
 				},
@@ -2327,7 +2327,7 @@ export default {
 			[
 				next => {
 					if (updatingUserId === session.userId) return next();
-					return hasPermission("users.updateBio", session)
+					return hasPermission("users.update", session)
 						.then(() => next())
 						.catch(() => next("Invalid permissions."));
 				},
@@ -2391,7 +2391,7 @@ export default {
 			[
 				next => {
 					if (updatingUserId === session.userId) return next();
-					return hasPermission("users.updateAvatar", session)
+					return hasPermission("users.update", session)
 						.then(() => next())
 						.catch(() => next("Invalid permissions."));
 				},
@@ -2452,7 +2452,7 @@ export default {
 	 * @param {string} newRole - the new role
 	 * @param {Function} cb - gets called with the result
 	 */
-	updateRole: useHasPermission("users.updateRole", async function updateRole(session, updatingUserId, newRole, cb) {
+	updateRole: useHasPermission("users.update", async function updateRole(session, updatingUserId, newRole, cb) {
 		newRole = newRole.toLowerCase();
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
@@ -2984,7 +2984,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	adminRequestPasswordReset: useHasPermission(
-		"users.adminRequestPasswordReset",
+		"users.requestPasswordReset",
 		async function adminRequestPasswordReset(session, userId, cb) {
 			const code = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 8 }, this);
 			const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
@@ -3228,7 +3228,7 @@ export default {
 	 * @param {string} expiresAt - the time the ban expires
 	 * @param {Function} cb - gets called with the result
 	 */
-	banUserById: useHasPermission("users.banUserById", function banUserById(session, userId, reason, expiresAt, cb) {
+	banUserById: useHasPermission("users.ban", function banUserById(session, userId, reason, expiresAt, cb) {
 		async.waterfall(
 			[
 				next => {

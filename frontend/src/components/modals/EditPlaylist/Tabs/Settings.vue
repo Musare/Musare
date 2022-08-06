@@ -28,7 +28,7 @@ const isEditable = permission =>
 		playlist.value.type === "user-disliked") &&
 		(isOwner() || hasPermission(permission))) ||
 	(playlist.value.type === "genre" &&
-		permission === "playlists.updatePrivacy" &&
+		permission === "playlists.update.privacy" &&
 		hasPermission(permission));
 
 const renamePlaylist = () => {
@@ -71,7 +71,7 @@ const updatePrivacy = () => {
 	<div class="settings-tab section">
 		<div
 			v-if="
-				isEditable('playlists.updateDisplayName') &&
+				isEditable('playlists.update.displayName') &&
 				!(
 					playlist.type === 'user-liked' ||
 					playlist.type === 'user-disliked'
@@ -101,7 +101,7 @@ const updatePrivacy = () => {
 			</div>
 		</div>
 
-		<div v-if="isEditable('playlists.updatePrivacy')">
+		<div v-if="isEditable('playlists.update.privacy')">
 			<label class="label"> Change privacy </label>
 			<div class="control is-grouped input-with-button">
 				<div class="control is-expanded select">

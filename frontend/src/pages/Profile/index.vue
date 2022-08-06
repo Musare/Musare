@@ -91,14 +91,13 @@ onMounted(() => {
 				<div
 					class="buttons"
 					v-if="
-						myUserId === userId ||
-						hasPermission('apis.joinAdminRoom.users')
+						myUserId === userId || hasPermission('admin.view.users')
 					"
 				>
 					<router-link
 						:to="`/admin/users?userId=${user._id}`"
 						class="button is-primary"
-						v-if="hasPermission('apis.joinAdminRoom.users')"
+						v-if="hasPermission('admin.view.users')"
 					>
 						Edit
 					</router-link>

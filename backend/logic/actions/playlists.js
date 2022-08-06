@@ -277,7 +277,7 @@ export default {
 	 * @param cb
 	 */
 	getData: useHasPermission(
-		"playlists.getData",
+		"admin.view.playlists",
 		async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
 			async.waterfall(
 				[
@@ -437,44 +437,41 @@ export default {
 	 * @param {string} query - the page
 	 * @param {Function} cb - gets called with the result
 	 */
-	searchOfficial: useHasPermission(
-		"playlists.searchOfficial",
-		async function searchOfficial(session, query, page, cb) {
-			async.waterfall(
-				[
-					next => {
-						if ((!query && query !== "") || typeof query !== "string") next("Invalid query.");
-						else next();
-					},
+	searchOfficial: useHasPermission("playlists.get", async function searchOfficial(session, query, page, cb) {
+		async.waterfall(
+			[
+				next => {
+					if ((!query && query !== "") || typeof query !== "string") next("Invalid query.");
+					else next();
+				},
 
-					next => {
-						PlaylistsModule.runJob("SEARCH", {
-							query,
-							includeGenre: true,
-							includePrivate: true,
-							includeSongs: true,
-							page
+				next => {
+					PlaylistsModule.runJob("SEARCH", {
+						query,
+						includeGenre: true,
+						includePrivate: true,
+						includeSongs: true,
+						page
+					})
+						.then(response => {
+							next(null, response);
 						})
-							.then(response => {
-								next(null, response);
-							})
-							.catch(err => {
-								next(err);
-							});
-					}
-				],
-				async (err, data) => {
-					if (err) {
-						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-						this.log("ERROR", "PLAYLISTS_SEARCH_OFFICIAL", `Searching playlists failed. "${err}"`);
-						return cb({ status: "error", message: err });
-					}
-					this.log("SUCCESS", "PLAYLISTS_SEARCH_OFFICIAL", "Searching playlists successful.");
-					return cb({ status: "success", data });
+						.catch(err => {
+							next(err);
+						});
 				}
-			);
-		}
-	),
+			],
+			async (err, data) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "PLAYLISTS_SEARCH_OFFICIAL", `Searching playlists failed. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "PLAYLISTS_SEARCH_OFFICIAL", "Searching playlists successful.");
+				return cb({ status: "success", data });
+			}
+		);
+	}),
 
 	/**
 	 * Gets the first song from a private playlist
@@ -821,7 +818,7 @@ export default {
 				(playlist, next) => {
 					if (!playlist) return next("Playlist not found");
 					if (playlist.privacy !== "public" && playlist.createdBy !== session.userId)
-						return hasPermission("playlists.getPlaylist", session)
+						return hasPermission("playlists.get", session)
 							.then(() => next(null, playlist))
 							.catch(() => next("User unauthorised to view playlist."));
 					return next(null, playlist);
@@ -872,7 +869,7 @@ export default {
 				(playlist, next) => {
 					if (!playlist) return next("Playlist not found");
 					if (playlist.privacy !== "public")
-						return hasPermission("stations.getPlaylist", session, stationId)
+						return hasPermission("stations.view", session, stationId)
 							.then(() => next(null, playlist))
 							.catch(() => next("User unauthorised to view playlist."));
 					return next(null, playlist);
@@ -1002,7 +999,7 @@ export default {
 						.then(playlist => {
 							if (!playlist) return next("Playlist not found.");
 							if (playlist.createdBy !== session.userId)
-								return hasPermission("playlists.repositionSong", session)
+								return hasPermission("playlists.songs.reposition", session)
 									.then(() => next())
 									.catch(() => next("Invalid permissions."));
 							return next();
@@ -1090,7 +1087,7 @@ export default {
 						.then(playlist => {
 							if (!playlist) return next("Playlist not found.");
 							if (playlist.createdBy !== session.userId)
-								return hasPermission("playlists.addSongToPlaylist", session)
+								return hasPermission("playlists.songs.add", session)
 									.then(() => next(null, playlist))
 									.catch(() => next("Invalid permissions."));
 							return next(null, playlist);
@@ -1357,7 +1354,7 @@ export default {
 					this.publishProgress({ status: "update", message: `Importing YouTube playlist (stage 4)` });
 					if (!playlist) return next("Playlist not found.");
 					if (playlist.createdBy !== session.userId)
-						return hasPermission("playlists.addSetToPlaylist", session)
+						return hasPermission("playlists.songs.add", session)
 							.then(() => next(null, playlist))
 							.catch(() => next("Invalid permissions."));
 					return next(null, playlist);
@@ -1436,7 +1433,7 @@ export default {
 						.then(playlist => {
 							if (!playlist) return next("Playlist not found.");
 							if (playlist.createdBy !== session.userId)
-								return hasPermission("playlists.removeSongFromPlaylist", session)
+								return hasPermission("playlists.songs.remove", session)
 									.then(() => next(null, playlist))
 									.catch(() => next("Invalid permissions."));
 							return next(null, playlist);
@@ -1905,7 +1902,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	updatePrivacyAdmin: useHasPermission(
-		"playlists.updatePrivacy",
+		"playlists.update.privacy",
 		async function updatePrivacyAdmin(session, playlistId, privacy, cb) {
 			const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
@@ -1979,62 +1976,59 @@ export default {
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
-	deleteOrphanedStationPlaylists: useHasPermission(
-		"playlists.deleteOrphanedStationPlaylists",
-		async function index(session, cb) {
-			this.keepLongJob();
-			this.publishProgress({
-				status: "started",
-				title: "Delete orphaned station playlists",
-				message: "Deleting orphaned station playlists.",
-				id: this.toString()
-			});
-			await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
-			await CacheModule.runJob(
-				"PUB",
-				{
-					channel: "longJob.added",
-					value: { jobId: this.toString(), userId: session.userId }
-				},
-				this
-			);
+	deleteOrphanedStationPlaylists: useHasPermission("playlists.deleteOrphaned", async function index(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Delete orphaned station playlists",
+			message: "Deleting orphaned station playlists.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
 
-			async.waterfall(
-				[
-					next => {
-						PlaylistsModule.runJob("DELETE_ORPHANED_STATION_PLAYLISTS", {}, this)
-							.then(() => next())
-							.catch(next);
-					}
-				],
-				async err => {
-					if (err) {
-						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-						this.log(
-							"ERROR",
-							"PLAYLISTS_DELETE_ORPHANED_STATION_PLAYLISTS",
-							`Deleting orphaned station playlists failed. "${err}"`
-						);
-						this.publishProgress({
-							status: "error",
-							message: err
-						});
-						return cb({ status: "error", message: err });
-					}
+		async.waterfall(
+			[
+				next => {
+					PlaylistsModule.runJob("DELETE_ORPHANED_STATION_PLAYLISTS", {}, this)
+						.then(() => next())
+						.catch(next);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
-						"SUCCESS",
+						"ERROR",
 						"PLAYLISTS_DELETE_ORPHANED_STATION_PLAYLISTS",
-						"Deleting orphaned station playlists successful."
+						`Deleting orphaned station playlists failed. "${err}"`
 					);
 					this.publishProgress({
-						status: "success",
-						message: "Successfully deleted orphaned station playlists."
+						status: "error",
+						message: err
 					});
-					return cb({ status: "success", message: "Successfully deleted orphaned station playlists." });
+					return cb({ status: "error", message: err });
 				}
-			);
-		}
-	),
+				this.log(
+					"SUCCESS",
+					"PLAYLISTS_DELETE_ORPHANED_STATION_PLAYLISTS",
+					"Deleting orphaned station playlists successful."
+				);
+				this.publishProgress({
+					status: "success",
+					message: "Successfully deleted orphaned station playlists."
+				});
+				return cb({ status: "success", message: "Successfully deleted orphaned station playlists." });
+			}
+		);
+	}),
 
 	/**
 	 * Deletes all orphaned genre playlists
@@ -2042,62 +2036,59 @@ export default {
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
-	deleteOrphanedGenrePlaylists: useHasPermission(
-		"playlists.deleteOrphanedGenrePlaylists",
-		async function index(session, cb) {
-			this.keepLongJob();
-			this.publishProgress({
-				status: "started",
-				title: "Delete orphaned genre playlists",
-				message: "Deleting orphaned genre playlists.",
-				id: this.toString()
-			});
-			await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
-			await CacheModule.runJob(
-				"PUB",
-				{
-					channel: "longJob.added",
-					value: { jobId: this.toString(), userId: session.userId }
-				},
-				this
-			);
+	deleteOrphanedGenrePlaylists: useHasPermission("playlists.deleteOrphaned", async function index(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Delete orphaned genre playlists",
+			message: "Deleting orphaned genre playlists.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
 
-			async.waterfall(
-				[
-					next => {
-						PlaylistsModule.runJob("DELETE_ORPHANED_GENRE_PLAYLISTS", {}, this)
-							.then(() => next())
-							.catch(next);
-					}
-				],
-				async err => {
-					if (err) {
-						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-						this.log(
-							"ERROR",
-							"PLAYLISTS_DELETE_ORPHANED_GENRE_PLAYLISTS",
-							`Deleting orphaned genre playlists failed. "${err}"`
-						);
-						this.publishProgress({
-							status: "error",
-							message: err
-						});
-						return cb({ status: "error", message: err });
-					}
+		async.waterfall(
+			[
+				next => {
+					PlaylistsModule.runJob("DELETE_ORPHANED_GENRE_PLAYLISTS", {}, this)
+						.then(() => next())
+						.catch(next);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
-						"SUCCESS",
+						"ERROR",
 						"PLAYLISTS_DELETE_ORPHANED_GENRE_PLAYLISTS",
-						"Deleting orphaned genre playlists successful."
+						`Deleting orphaned genre playlists failed. "${err}"`
 					);
 					this.publishProgress({
-						status: "success",
-						message: "Successfully deleted orphaned genre playlists."
+						status: "error",
+						message: err
 					});
-					return cb({ status: "success", message: "Successfully deleted orphaned genre playlists." });
+					return cb({ status: "error", message: err });
 				}
-			);
-		}
-	),
+				this.log(
+					"SUCCESS",
+					"PLAYLISTS_DELETE_ORPHANED_GENRE_PLAYLISTS",
+					"Deleting orphaned genre playlists successful."
+				);
+				this.publishProgress({
+					status: "success",
+					message: "Successfully deleted orphaned genre playlists."
+				});
+				return cb({ status: "success", message: "Successfully deleted orphaned genre playlists." });
+			}
+		);
+	}),
 
 	/**
 	 * Requests orpahned playlist songs
@@ -2170,7 +2161,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	clearAndRefillStationPlaylist: useHasPermission(
-		"playlists.clearAndRefillStationPlaylist",
+		"playlists.clearAndRefill",
 		async function index(session, playlistId, cb) {
 			async.waterfall(
 				[
@@ -2223,7 +2214,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	clearAndRefillGenrePlaylist: useHasPermission(
-		"playlists.clearAndRefillGenrePlaylist",
+		"playlists.clearAndRefill",
 		async function index(session, playlistId, cb) {
 			async.waterfall(
 				[
@@ -2275,7 +2266,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	clearAndRefillAllStationPlaylists: useHasPermission(
-		"playlists.clearAndRefillAllStationPlaylists",
+		"playlists.clearAndRefillAll",
 		async function index(session, cb) {
 			this.keepLongJob();
 			this.publishProgress({
@@ -2371,96 +2362,93 @@ export default {
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
-	clearAndRefillAllGenrePlaylists: useHasPermission(
-		"playlists.clearAndRefillAllGenrePlaylists",
-		async function index(session, cb) {
-			this.keepLongJob();
-			this.publishProgress({
-				status: "started",
-				title: "Clear and refill all genre playlists",
-				message: "Clearing and refilling all genre playlists.",
-				id: this.toString()
-			});
-			await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
-			await CacheModule.runJob(
-				"PUB",
-				{
-					channel: "longJob.added",
-					value: { jobId: this.toString(), userId: session.userId }
-				},
-				this
-			);
+	clearAndRefillAllGenrePlaylists: useHasPermission("playlists.clearAndRefillAll", async function index(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Clear and refill all genre playlists",
+			message: "Clearing and refilling all genre playlists.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
 
-			async.waterfall(
-				[
-					next => {
-						PlaylistsModule.runJob("GET_ALL_GENRE_PLAYLISTS", {}, this)
-							.then(response => {
-								next(null, response.playlists);
-							})
-							.catch(err => {
-								next(err);
-							});
-					},
-
-					(playlists, next) => {
-						async.eachLimit(
-							playlists,
-							1,
-							(playlist, next) => {
-								this.publishProgress({
-									status: "update",
-									message: `Clearing and refilling "${playlist._id}"`
-								});
-								PlaylistsModule.runJob(
-									"CLEAR_AND_REFILL_GENRE_PLAYLIST",
-									{ playlistId: playlist._id },
-									this
-								)
-									.then(() => {
-										next();
-									})
-									.catch(err => {
-										next(err);
-									});
-							},
-							next
-						);
-					}
-				],
-				async err => {
-					if (err) {
-						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-
-						this.log(
-							"ERROR",
-							"PLAYLIST_CLEAR_AND_REFILL_ALL_GENRE_PLAYLISTS",
-							`Clearing and refilling all genre playlists failed for user "${session.userId}". "${err}"`
-						);
-						this.publishProgress({
-							status: "error",
-							message: err
+		async.waterfall(
+			[
+				next => {
+					PlaylistsModule.runJob("GET_ALL_GENRE_PLAYLISTS", {}, this)
+						.then(response => {
+							next(null, response.playlists);
+						})
+						.catch(err => {
+							next(err);
 						});
-						return cb({ status: "error", message: err });
-					}
+				},
+
+				(playlists, next) => {
+					async.eachLimit(
+						playlists,
+						1,
+						(playlist, next) => {
+							this.publishProgress({
+								status: "update",
+								message: `Clearing and refilling "${playlist._id}"`
+							});
+							PlaylistsModule.runJob(
+								"CLEAR_AND_REFILL_GENRE_PLAYLIST",
+								{ playlistId: playlist._id },
+								this
+							)
+								.then(() => {
+									next();
+								})
+								.catch(err => {
+									next(err);
+								});
+						},
+						next
+					);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
 					this.log(
-						"SUCCESS",
+						"ERROR",
 						"PLAYLIST_CLEAR_AND_REFILL_ALL_GENRE_PLAYLISTS",
-						`Successfully cleared and refilled all genre playlists for user "${session.userId}".`
+						`Clearing and refilling all genre playlists failed for user "${session.userId}". "${err}"`
 					);
 					this.publishProgress({
-						status: "success",
-						message: "Playlists have been successfully cleared and refilled."
+						status: "error",
+						message: err
 					});
-					return cb({
-						status: "success",
-						message: "Playlists have been successfully cleared and refilled"
-					});
+					return cb({ status: "error", message: err });
 				}
-			);
-		}
-	),
+
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_CLEAR_AND_REFILL_ALL_GENRE_PLAYLISTS",
+					`Successfully cleared and refilled all genre playlists for user "${session.userId}".`
+				);
+				this.publishProgress({
+					status: "success",
+					message: "Playlists have been successfully cleared and refilled."
+				});
+				return cb({
+					status: "success",
+					message: "Playlists have been successfully cleared and refilled"
+				});
+			}
+		);
+	}),
 
 	/**
 	 * Create missing genre playlists
@@ -2468,69 +2456,66 @@ export default {
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
-	createMissingGenrePlaylists: useHasPermission(
-		"playlists.createMissingGenrePlaylists",
-		async function index(session, cb) {
-			this.keepLongJob();
-			this.publishProgress({
-				status: "started",
-				title: "Create missing genre playlists",
-				message: "Creating missing genre playlists.",
-				id: this.toString()
-			});
-			await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
-			await CacheModule.runJob(
-				"PUB",
-				{
-					channel: "longJob.added",
-					value: { jobId: this.toString(), userId: session.userId }
-				},
-				this
-			);
+	createMissingGenrePlaylists: useHasPermission("playlists.createMissing", async function index(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Create missing genre playlists",
+			message: "Creating missing genre playlists.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
 
-			async.waterfall(
-				[
-					next => {
-						PlaylistsModule.runJob("CREATE_MISSING_GENRE_PLAYLISTS", this)
-							.then(() => {
-								next();
-							})
-							.catch(err => {
-								next(err);
-							});
-					}
-				],
-				async err => {
-					if (err) {
-						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-
-						this.log(
-							"ERROR",
-							"PLAYLIST_CREATE_MISSING_GENRE_PLAYLISTS",
-							`Creating missing genre playlists failed for user "${session.userId}". "${err}"`
-						);
-						this.publishProgress({
-							status: "error",
-							message: err
+		async.waterfall(
+			[
+				next => {
+					PlaylistsModule.runJob("CREATE_MISSING_GENRE_PLAYLISTS", this)
+						.then(() => {
+							next();
+						})
+						.catch(err => {
+							next(err);
 						});
-						return cb({ status: "error", message: err });
-					}
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
 					this.log(
-						"SUCCESS",
+						"ERROR",
 						"PLAYLIST_CREATE_MISSING_GENRE_PLAYLISTS",
-						`Successfully created missing genre playlists for user "${session.userId}".`
+						`Creating missing genre playlists failed for user "${session.userId}". "${err}"`
 					);
 					this.publishProgress({
-						status: "success",
-						message: "Missing genre playlists have been successfully created."
+						status: "error",
+						message: err
 					});
-					return cb({
-						status: "success",
-						message: "Missing genre playlists have been successfully created"
-					});
+					return cb({ status: "error", message: err });
 				}
-			);
-		}
-	)
+
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_CREATE_MISSING_GENRE_PLAYLISTS",
+					`Successfully created missing genre playlists for user "${session.userId}".`
+				);
+				this.publishProgress({
+					status: "success",
+					message: "Missing genre playlists have been successfully created."
+				});
+				return cb({
+					status: "success",
+					message: "Missing genre playlists have been successfully created"
+				});
+			}
+		);
+	})
 };

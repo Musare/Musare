@@ -19,7 +19,7 @@ export default {
 	 *
 	 * @returns {{status: string, data: object}}
 	 */
-	getQuotaStatus: useHasPermission("youtube.getQuotaStatus", function getQuotaStatus(session, fromDate, cb) {
+	getQuotaStatus: useHasPermission("admin.view.youtube", function getQuotaStatus(session, fromDate, cb) {
 		YouTubeModule.runJob("GET_QUOTA_STATUS", { fromDate }, this)
 			.then(response => {
 				this.log("SUCCESS", "YOUTUBE_GET_QUOTA_STATUS", `Getting quota status was successful.`);
@@ -43,7 +43,7 @@ export default {
 	 * @returns {{status: string, data: object}}
 	 */
 	getQuotaChartData: useHasPermission(
-		"youtube.getQuotaChartData",
+		"admin.view.youtube",
 		function getQuotaChartData(session, timePeriod, startDate, endDate, dataType, cb) {
 			YouTubeModule.runJob(
 				"GET_QUOTA_CHART_DATA",
@@ -75,7 +75,7 @@ export default {
 	 * @param cb
 	 */
 	getApiRequests: useHasPermission(
-		"youtube.getApiRequests",
+		"admin.view.youtube",
 		async function getApiRequests(session, page, pageSize, properties, sort, queries, operator, cb) {
 			async.waterfall(
 				[
@@ -247,7 +247,7 @@ export default {
 	 * @param cb
 	 */
 	getVideos: useHasPermission(
-		"youtube.getVideos",
+		"admin.view.youtubeVideos",
 		async function getVideos(session, page, pageSize, properties, sort, queries, operator, cb) {
 			async.waterfall(
 				[

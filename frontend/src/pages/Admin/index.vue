@@ -181,7 +181,7 @@ onBeforeUnmount(() => {
 							</div>
 							<div
 								v-if="
-									hasPermission('apis.joinAdminRoom.songs') &&
+									hasPermission('admin.view.songs') &&
 									sidebarActive
 								"
 								class="sidebar-item with-children"
@@ -214,9 +214,7 @@ onBeforeUnmount(() => {
 									</router-link>
 									<router-link
 										v-if="
-											hasPermission(
-												'apis.joinAdminRoom.import'
-											)
+											hasPermission('admin.view.import')
 										"
 										class="sidebar-item-child"
 										to="/admin/songs/import"
@@ -227,7 +225,7 @@ onBeforeUnmount(() => {
 							</div>
 							<router-link
 								v-else-if="
-									hasPermission('apis.joinAdminRoom.users') &&
+									hasPermission('admin.view.users') &&
 									!sidebarActive
 								"
 								class="sidebar-item songs"
@@ -242,9 +240,7 @@ onBeforeUnmount(() => {
 								<span>Songs</span>
 							</router-link>
 							<router-link
-								v-if="
-									hasPermission('apis.joinAdminRoom.reports')
-								"
+								v-if="hasPermission('admin.view.reports')"
 								class="sidebar-item reports"
 								to="/admin/reports"
 								content="Reports"
@@ -257,9 +253,7 @@ onBeforeUnmount(() => {
 								<span>Reports</span>
 							</router-link>
 							<router-link
-								v-if="
-									hasPermission('apis.joinAdminRoom.stations')
-								"
+								v-if="hasPermission('admin.view.stations')"
 								class="sidebar-item stations"
 								to="/admin/stations"
 								content="Stations"
@@ -272,11 +266,7 @@ onBeforeUnmount(() => {
 								<span>Stations</span>
 							</router-link>
 							<router-link
-								v-if="
-									hasPermission(
-										'apis.joinAdminRoom.playlists'
-									)
-								"
+								v-if="hasPermission('admin.view.playlists')"
 								class="sidebar-item playlists"
 								to="/admin/playlists"
 								content="Playlists"
@@ -290,7 +280,7 @@ onBeforeUnmount(() => {
 							</router-link>
 							<div
 								v-if="
-									hasPermission('apis.joinAdminRoom.users') &&
+									hasPermission('admin.view.users') &&
 									sidebarActive
 								"
 								class="sidebar-item with-children"
@@ -337,7 +327,7 @@ onBeforeUnmount(() => {
 							</div>
 							<router-link
 								v-else-if="
-									hasPermission('apis.joinAdminRoom.users') &&
+									hasPermission('admin.view.users') &&
 									!sidebarActive
 								"
 								class="sidebar-item users"
@@ -352,7 +342,7 @@ onBeforeUnmount(() => {
 								<span>Users</span>
 							</router-link>
 							<router-link
-								v-if="hasPermission('apis.joinAdminRoom.news')"
+								v-if="hasPermission('admin.view.news')"
 								class="sidebar-item news"
 								to="/admin/news"
 								content="News"
@@ -365,11 +355,7 @@ onBeforeUnmount(() => {
 								<span>News</span>
 							</router-link>
 							<router-link
-								v-if="
-									hasPermission(
-										'apis.joinAdminRoom.statistics'
-									)
-								"
+								v-if="hasPermission('admin.view.statistics')"
 								class="sidebar-item statistics"
 								to="/admin/statistics"
 								content="Statistics"
@@ -383,11 +369,9 @@ onBeforeUnmount(() => {
 							</router-link>
 							<div
 								v-if="
-									(hasPermission(
-										'apis.joinAdminRoom.youtube'
-									) ||
+									(hasPermission('admin.view.youtube') ||
 										hasPermission(
-											'apis.joinAdminRoom.youtubeVideos'
+											'admin.view.youtubeVideos'
 										)) &&
 									sidebarActive
 								"
@@ -397,9 +381,7 @@ onBeforeUnmount(() => {
 								<span>
 									<router-link
 										:to="`/admin/youtube${
-											hasPermission(
-												'apis.joinAdminRoom.youtube'
-											)
+											hasPermission('admin.view.youtube')
 												? ''
 												: '/videos'
 										}`"
@@ -425,9 +407,7 @@ onBeforeUnmount(() => {
 								<div class="sidebar-item-children">
 									<router-link
 										v-if="
-											hasPermission(
-												'apis.joinAdminRoom.youtube'
-											)
+											hasPermission('admin.view.youtube')
 										"
 										class="sidebar-item-child"
 										to="/admin/youtube"
@@ -437,7 +417,7 @@ onBeforeUnmount(() => {
 									<router-link
 										v-if="
 											hasPermission(
-												'apis.joinAdminRoom.youtubeVideos'
+												'admin.view.youtubeVideos'
 											)
 										"
 										class="sidebar-item-child"
@@ -449,17 +429,15 @@ onBeforeUnmount(() => {
 							</div>
 							<router-link
 								v-else-if="
-									(hasPermission(
-										'apis.joinAdminRoom.youtube'
-									) ||
+									(hasPermission('admin.view.youtube') ||
 										hasPermission(
-											'apis.joinAdminRoom.youtubeVideos'
+											'admin.view.youtubeVideos'
 										)) &&
 									!sidebarActive
 								"
 								class="sidebar-item youtube"
 								:to="`/admin/youtube${
-									hasPermission('apis.joinAdminRoom.youtube')
+									hasPermission('admin.view.youtube')
 										? ''
 										: '/videos'
 								}`"

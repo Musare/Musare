@@ -174,69 +174,69 @@ const router = createRouter({
 				{
 					path: "songs",
 					component: () => import("@/pages/Admin/Songs/index.vue"),
-					meta: { permissionRequired: "apis.joinAdminRoom.songs" }
+					meta: { permissionRequired: "admin.view.songs" }
 				},
 				{
 					path: "songs/import",
 					component: () => import("@/pages/Admin/Songs/Import.vue"),
-					meta: { permissionRequired: "apis.joinAdminRoom.import" }
+					meta: { permissionRequired: "admin.view.import" }
 				},
 				{
 					path: "reports",
 					component: () => import("@/pages/Admin/Reports.vue"),
-					meta: { permissionRequired: "apis.joinAdminRoom.reports" }
+					meta: { permissionRequired: "admin.view.reports" }
 				},
 				{
 					path: "stations",
 					component: () => import("@/pages/Admin/Stations.vue"),
-					meta: { permissionRequired: "apis.joinAdminRoom.stations" }
+					meta: { permissionRequired: "admin.view.stations" }
 				},
 				{
 					path: "playlists",
 					component: () => import("@/pages/Admin/Playlists.vue"),
-					meta: { permissionRequired: "apis.joinAdminRoom.playlists" }
+					meta: { permissionRequired: "admin.view.playlists" }
 				},
 				{
 					path: "users",
 					component: () => import("@/pages/Admin/Users/index.vue"),
-					meta: { permissionRequired: "apis.joinAdminRoom.users" }
+					meta: { permissionRequired: "admin.view.users" }
 				},
 				{
 					path: "users/data-requests",
 					component: () =>
 						import("@/pages/Admin/Users/DataRequests.vue"),
-					meta: { permissionRequired: "apis.joinAdminRoom.users" }
+					meta: { permissionRequired: "admin.view.users" }
 				},
 				{
 					path: "users/punishments",
 					component: () =>
 						import("@/pages/Admin/Users/Punishments.vue"),
 					meta: {
-						permissionRequired: "apis.joinAdminRoom.punishments"
+						permissionRequired: "admin.view.punishments"
 					}
 				},
 				{
 					path: "news",
 					component: () => import("@/pages/Admin/News.vue"),
-					meta: { permissionRequired: "apis.joinAdminRoom.news" }
+					meta: { permissionRequired: "admin.view.news" }
 				},
 				{
 					path: "statistics",
 					component: () => import("@/pages/Admin/Statistics.vue"),
 					meta: {
-						permissionRequired: "apis.joinAdminRoom.statistics"
+						permissionRequired: "admin.view.statistics"
 					}
 				},
 				{
 					path: "youtube",
 					component: () => import("@/pages/Admin/YouTube/index.vue"),
-					meta: { permissionRequired: "apis.joinAdminRoom.youtube" }
+					meta: { permissionRequired: "admin.view.youtube" }
 				},
 				{
 					path: "youtube/videos",
 					component: () => import("@/pages/Admin/YouTube/Videos.vue"),
 					meta: {
-						permissionRequired: "apis.joinAdminRoom.youtubeVideos"
+						permissionRequired: "admin.view.youtubeVideos"
 					}
 				}
 			],

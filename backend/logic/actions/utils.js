@@ -51,7 +51,7 @@ export default {
 		);
 	}),
 
-	getModule: useHasPermission("utils.getModule", function getModule(session, moduleName, cb) {
+	getModule: useHasPermission("utils.getModules", function getModule(session, moduleName, cb) {
 		async.waterfall(
 			[
 				next => {

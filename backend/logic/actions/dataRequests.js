@@ -40,7 +40,7 @@ export default {
 	 * @param cb
 	 */
 	getData: useHasPermission(
-		"dataRequests.getData",
+		"admin.view.users",
 		async function getData(session, page, pageSize, properties, sort, queries, operator, cb) {
 			async.waterfall(
 				[

@@ -881,10 +881,7 @@ const join = () => {
 				}
 			});
 
-			if (
-				hasPermission("stations.pause") &&
-				hasPermission("stations.resume")
-			)
+			if (hasPermission("stations.playback.toggle"))
 				keyboardShortcuts.registerShortcut("station.pauseResume", {
 					keyCode: 32, // Spacebar
 					shift: false,
@@ -1173,11 +1170,11 @@ onMounted(async () => {
 
 	ms.setListeners(0, {
 		play: () => {
-			if (hasPermission("stations.resume")) resumeStation();
+			if (hasPermission("stations.playback.toggle")) resumeStation();
 			else resumeLocalStation();
 		},
 		pause: () => {
-			if (hasPermission("stations.pause")) pauseStation();
+			if (hasPermission("stations.playback.toggle")) pauseStation();
 			else pauseLocalStation();
 		},
 		nexttrack: () => {
@@ -2049,8 +2046,7 @@ onBeforeUnmount(() => {
 				<div>
 					<div
 						v-if="
-							hasPermission('stations.resume') ||
-							hasPermission('stations.pause') ||
+							hasPermission('stations.playback.toggle') ||
 							hasPermission('stations.skip')
 						"
 					>
@@ -2060,8 +2056,7 @@ onBeforeUnmount(() => {
 					</div>
 					<hr
 						v-if="
-							hasPermission('stations.resume') ||
-							hasPermission('stations.pause') ||
+							hasPermission('stations.playback.toggle') ||
 							hasPermission('stations.skip')
 						"
 					/>

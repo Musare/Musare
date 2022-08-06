@@ -108,7 +108,9 @@ const unfavoriteStation = () => {
 			<!-- (Admin) Pause/Resume Button -->
 			<button
 				class="button is-danger"
-				v-if="hasPermission('stations.resume') && stationPaused"
+				v-if="
+					hasPermission('stations.playback.toggle') && stationPaused
+				"
 				@click="resumeStation()"
 			>
 				<i class="material-icons icon-with-button">play_arrow</i>
@@ -117,7 +119,9 @@ const unfavoriteStation = () => {
 			<button
 				class="button is-danger"
 				@click="pauseStation()"
-				v-if="hasPermission('stations.pause') && !stationPaused"
+				v-if="
+					hasPermission('stations.playback.toggle') && !stationPaused
+				"
 			>
 				<i class="material-icons icon-with-button">pause</i>
 				<span> Pause Station </span>

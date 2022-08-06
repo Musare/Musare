@@ -850,7 +850,7 @@ export default {
 	 * @param cb
 	 */
 	getImportJobs: useHasPermission(
-		"media.getImportJobs",
+		"admin.view.import",
 		async function getImportJobs(session, page, pageSize, properties, sort, queries, operator, cb) {
 			async.waterfall(
 				[

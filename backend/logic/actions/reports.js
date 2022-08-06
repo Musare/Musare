@@ -101,7 +101,7 @@ export default {
 	 * @param cb
 	 */
 	getData: useHasPermission(
-		"reports.getData",
+		"admin.view.reports",
 		async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
 			async.waterfall(
 				[
@@ -200,7 +200,7 @@ export default {
 	 * @param {string} reportId - the id of the report to return
 	 * @param {Function} cb - gets called with the result
 	 */
-	findOne: useHasPermission("reports.findOne", async function findOne(session, reportId, cb) {
+	findOne: useHasPermission("reports.get", async function findOne(session, reportId, cb) {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
@@ -249,70 +249,60 @@ export default {
 	 * @param {string} songId - the id of the song to index reports for
 	 * @param {Function} cb - gets called with the result
 	 */
-	getReportsForSong: useHasPermission(
-		"reports.getReportsForSong",
-		async function getReportsForSong(session, songId, cb) {
-			const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
-			const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+	getReportsForSong: useHasPermission("reports.get", async function getReportsForSong(session, songId, cb) {
+		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
-			async.waterfall(
-				[
-					next =>
-						reportModel
-							.find({ "song._id": songId, resolved: false })
-							.sort({ createdAt: "desc" })
-							.exec(next),
+		async.waterfall(
+			[
+				next =>
+					reportModel.find({ "song._id": songId, resolved: false }).sort({ createdAt: "desc" }).exec(next),
 
-					(_reports, next) => {
-						const reports = [];
+				(_reports, next) => {
+					const reports = [];
 
-						async.each(
-							_reports,
-							(report, cb) => {
-								userModel
-									.findById(report.createdBy)
-									.select({ avatar: -1, name: -1, username: -1 })
-									.exec((err, user) => {
-										if (!user)
-											reports.push({
-												...report._doc,
-												createdBy: { _id: report.createdBy }
-											});
-										else
-											reports.push({
-												...report._doc,
-												createdBy: {
-													avatar: user.avatar,
-													name: user.name,
-													username: user.username,
-													_id: report.createdBy
-												}
-											});
+					async.each(
+						_reports,
+						(report, cb) => {
+							userModel
+								.findById(report.createdBy)
+								.select({ avatar: -1, name: -1, username: -1 })
+								.exec((err, user) => {
+									if (!user)
+										reports.push({
+											...report._doc,
+											createdBy: { _id: report.createdBy }
+										});
+									else
+										reports.push({
+											...report._doc,
+											createdBy: {
+												avatar: user.avatar,
+												name: user.name,
+												username: user.username,
+												_id: report.createdBy
+											}
+										});
 
-										return cb(err);
-									});
-							},
-							err => next(err, reports)
-						);
-					}
-				],
-				async (err, reports) => {
-					if (err) {
-						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-						this.log(
-							"ERROR",
-							"GET_REPORTS_FOR_SONG",
-							`Indexing reports for song "${songId}" failed. "${err}"`
-						);
-						return cb({ status: "error", message: err });
-					}
-
-					this.log("SUCCESS", "GET_REPORTS_FOR_SONG", `Indexing reports for song "${songId}" successful.`);
-					return cb({ status: "success", data: { reports } });
+									return cb(err);
+								});
+						},
+						err => next(err, reports)
+					);
 				}
-			);
-		}
-	),
+			],
+			async (err, reports) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "GET_REPORTS_FOR_SONG", `Indexing reports for song "${songId}" failed. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+
+				this.log("SUCCESS", "GET_REPORTS_FOR_SONG", `Indexing reports for song "${songId}" successful.`);
+				return cb({ status: "success", data: { reports } });
+			}
+		);
+	}),
 
 	/**
 	 * Gets all a users reports for a specific songId
@@ -396,7 +386,7 @@ export default {
 	 * @param {boolean} resolved - whether to set to resolved to true or false
 	 * @param {Function} cb - gets called with the result
 	 */
-	resolve: useHasPermission("reports.resolve", async function resolve(session, reportId, resolved, cb) {
+	resolve: useHasPermission("reports.update", async function resolve(session, reportId, resolved, cb) {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
 
 		async.waterfall(
@@ -461,7 +451,7 @@ export default {
 	 * @param {string} issueId - the id of the issue within the report
 	 * @param {Function} cb - gets called with the result
 	 */
-	toggleIssue: useHasPermission("reports.toggleIssue", async function toggleIssue(session, reportId, issueId, cb) {
+	toggleIssue: useHasPermission("reports.update", async function toggleIssue(session, reportId, issueId, cb) {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
 
 		async.waterfall(

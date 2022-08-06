@@ -62,7 +62,7 @@ const hasPermission = permission =>
 const dragOptions = computed(() => ({
 	animation: 200,
 	group: "queue",
-	disabled: !hasPermission("stations.repositionSongInQueue"),
+	disabled: !hasPermission("stations.queue.reposition"),
 	ghostClass: "draggable-list-ghost"
 }));
 
@@ -155,20 +155,18 @@ onUpdated(() => {
 						:requested-by="true"
 						:class="{
 							'item-draggable': hasPermission(
-								'stations.repositionSongInQueue'
+								'stations.queue.reposition'
 							)
 						}"
 						:disabled-actions="[]"
 						:ref="el => (songItems[`song-item-${index}`] = el)"
 					>
 						<template
-							v-if="
-								hasPermission('stations.repositionSongInQueue')
-							"
+							v-if="hasPermission('stations.queue.reposition')"
 							#tippyActions
 						>
 							<quick-confirm
-								v-if="hasPermission('stations.removeFromQueue')"
+								v-if="hasPermission('stations.queue.remove')"
 								placement="left"
 								@confirm="removeFromQueue(element.youtubeId)"
 							>

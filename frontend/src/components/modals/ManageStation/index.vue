@@ -79,7 +79,7 @@ const canRequest = () =>
 	station.value.requests.enabled &&
 	(station.value.requests.access === "user" ||
 		(station.value.requests.access === "owner" &&
-			hasPermission("stations.addToQueue")));
+			hasPermission("stations.request")));
 
 const removeStation = () => {
 	socket.dispatch("stations.remove", stationId.value, res => {
@@ -151,7 +151,7 @@ onMounted(() => {
 				}
 			);
 
-			if (hasPermission("stations.getPlaylist")) {
+			if (hasPermission("stations.view")) {
 				socket.dispatch(
 					"playlists.getPlaylistForStation",
 					stationId.value,
@@ -308,7 +308,7 @@ onMounted(() => {
 		{ modalUuid: props.modalUuid }
 	);
 
-	if (hasPermission("stations.getPlaylist")) {
+	if (hasPermission("stations.view")) {
 		socket.on(
 			"event:playlist.song.added",
 			res => {
@@ -533,13 +533,13 @@ onBeforeUnmount(() => {
 		<template #footer>
 			<div class="right">
 				<quick-confirm
-					v-if="hasPermission('stations.removeFromQueue')"
+					v-if="hasPermission('stations.queue.remove')"
 					@confirm="resetQueue()"
 				>
 					<a class="button is-danger">Reset queue</a>
 				</quick-confirm>
 				<quick-confirm
-					v-if="hasPermission('stations.resetQueue')"
+					v-if="hasPermission('stations.queue.reset')"
 					@confirm="removeStation()"
 				>
 					<button class="button is-danger">Delete station</button>

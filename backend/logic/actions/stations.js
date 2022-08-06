@@ -457,7 +457,7 @@ export default {
 	 * @param cb
 	 */
 	getData: useHasPermission(
-		"stations.getData",
+		"admin.view.stations",
 		async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
 			async.waterfall(
 				[
@@ -1426,7 +1426,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					hasPermission("stations.pause", session, stationId)
+					hasPermission("stations.playback.toggle", session, stationId)
 						.then(() => next())
 						.catch(next);
 				},
@@ -1495,7 +1495,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					hasPermission("stations.resume", session, stationId)
+					hasPermission("stations.playback.toggle", session, stationId)
 						.then(() => next())
 						.catch(next);
 				},
@@ -1834,7 +1834,7 @@ export default {
 						station.requests.access === "owner" ||
 						(station.requests.access === "user" && station.privacy === "private")
 					) {
-						return hasPermission("stations.addToQueue", session, stationId)
+						return hasPermission("stations.request", session, stationId)
 							.then(() => next(null, station))
 							.catch(() => next("You do not have permission to add songs to queue."));
 					}
@@ -1907,7 +1907,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					hasPermission("stations.removeFromQueue", session, stationId)
+					hasPermission("stations.queue.remove", session, stationId)
 						.then(() => next())
 						.catch(next);
 				},
@@ -2015,7 +2015,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					hasPermission("stations.repositionSongInQueue", session, stationId)
+					hasPermission("stations.queue.reposition", session, stationId)
 						.then(() => next())
 						.catch(next);
 				},
@@ -2099,7 +2099,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					hasPermission("stations.autofillPlaylist", session, stationId)
+					hasPermission("stations.autofill", session, stationId)
 						.then(() => next())
 						.catch(next);
 				},
@@ -2174,7 +2174,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					hasPermission("stations.removeAutofillPlaylist", session, stationId)
+					hasPermission("stations.autofill", session, stationId)
 						.then(() => next())
 						.catch(next);
 				},
@@ -2247,7 +2247,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					hasPermission("stations.blacklistPlaylist", session, stationId)
+					hasPermission("stations.blacklist", session, stationId)
 						.then(() => next())
 						.catch(next);
 				},
@@ -2320,7 +2320,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					hasPermission("stations.removeBlacklistedPlaylist", session, stationId)
+					hasPermission("stations.blacklist", session, stationId)
 						.then(() => next())
 						.catch(next);
 				},
@@ -2563,7 +2563,7 @@ export default {
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - gets called with the result
 	 */
-	resetQueue: useHasPermission("stations.resetQueue", async function resetQueue(session, stationId, cb) {
+	resetQueue: useHasPermission("stations.queue.reset", async function resetQueue(session, stationId, cb) {
 		async.waterfall(
 			[
 				next => {

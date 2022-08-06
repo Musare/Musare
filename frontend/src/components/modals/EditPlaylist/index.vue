@@ -73,13 +73,13 @@ const isEditable = permission =>
 		playlist.value.type === "user-disliked") &&
 		(isOwner() || hasPermission(permission))) ||
 	(playlist.value.type === "genre" &&
-		permission === "playlists.updatePrivacy" &&
+		permission === "playlists.update.privacy" &&
 		hasPermission(permission));
 
 const dragOptions = computed(() => ({
 	animation: 200,
 	group: "songs",
-	disabled: !isEditable("playlists.repositionSong"),
+	disabled: !isEditable("playlists.songs.reposition"),
 	ghostClass: "draggable-list-ghost"
 }));
 
@@ -312,15 +312,15 @@ onBeforeUnmount(() => {
 <template>
 	<modal
 		:title="
-			isEditable('playlists.updatePrivacy')
+			isEditable('playlists.update.privacy')
 				? 'Edit Playlist'
 				: 'View Playlist'
 		"
 		:class="{
 			'edit-playlist-modal': true,
-			'view-only': !isEditable('playlists.updatePrivacy')
+			'view-only': !isEditable('playlists.update.privacy')
 		}"
-		:size="isEditable('playlists.updatePrivacy') ? 'wide' : null"
+		:size="isEditable('playlists.update.privacy') ? 'wide' : null"
 		:split="true"
 	>
 		<template #body>
@@ -338,7 +338,7 @@ onBeforeUnmount(() => {
 							:class="{ selected: tab === 'settings' }"
 							:ref="el => (tabs['settings-tab'] = el)"
 							@click="showTab('settings')"
-							v-if="isEditable('playlists.updatePrivacy')"
+							v-if="isEditable('playlists.update.privacy')"
 						>
 							Settings
 						</button>
@@ -347,7 +347,7 @@ onBeforeUnmount(() => {
 							:class="{ selected: tab === 'add-songs' }"
 							:ref="el => (tabs['add-songs-tab'] = el)"
 							@click="showTab('add-songs')"
-							v-if="isEditable('playlists.addSongToPlaylist')"
+							v-if="isEditable('playlists.songs.add')"
 						>
 							Add Songs
 						</button>
@@ -358,7 +358,7 @@ onBeforeUnmount(() => {
 							}"
 							:ref="el => (tabs['import-playlists-tab'] = el)"
 							@click="showTab('import-playlists')"
-							v-if="isEditable('playlists.addSetToPlaylist')"
+							v-if="isEditable('playlists.songs.add')"
 						>
 							Import Playlists
 						</button>
@@ -366,19 +366,19 @@ onBeforeUnmount(() => {
 					<settings
 						class="tab"
 						v-show="tab === 'settings'"
-						v-if="isEditable('playlists.updatePrivacy')"
+						v-if="isEditable('playlists.update.privacy')"
 						:modal-uuid="modalUuid"
 					/>
 					<add-songs
 						class="tab"
 						v-show="tab === 'add-songs'"
-						v-if="isEditable('playlists.addSongToPlaylist')"
+						v-if="isEditable('playlists.songs.add')"
 						:modal-uuid="modalUuid"
 					/>
 					<import-playlists
 						class="tab"
 						v-show="tab === 'import-playlists'"
-						v-if="isEditable('playlists.addSetToPlaylist')"
+						v-if="isEditable('playlists.songs.add')"
 						:modal-uuid="modalUuid"
 					/>
 				</div>
@@ -386,7 +386,7 @@ onBeforeUnmount(() => {
 
 			<div class="right-section">
 				<div id="rearrange-songs-section" class="section">
-					<div v-if="isEditable('playlists.repositionSong')">
+					<div v-if="isEditable('playlists.songs.reposition')">
 						<h4 class="section-title">Rearrange Songs</h4>
 
 						<p class="section-description">
@@ -415,7 +415,7 @@ onBeforeUnmount(() => {
 										:song="element"
 										:class="{
 											'item-draggable': isEditable(
-												'playlists.repositionSong'
+												'playlists.songs.reposition'
 											)
 										}"
 										:ref="
@@ -456,7 +456,7 @@ onBeforeUnmount(() => {
 													userId ===
 														playlist.createdBy ||
 													isEditable(
-														'playlists.removeSongFromPlaylist'
+														'playlists.songs.remove'
 													)
 												"
 												placement="left"
@@ -477,7 +477,7 @@ onBeforeUnmount(() => {
 												class="material-icons"
 												v-if="
 													isEditable(
-														'playlists.repositionSong'
+														'playlists.songs.reposition'
 													) && index > 0
 												"
 												@click="
@@ -493,7 +493,7 @@ onBeforeUnmount(() => {
 											<i
 												v-if="
 													isEditable(
-														'playlists.repositionSong'
+														'playlists.songs.reposition'
 													) &&
 													playlistSongs.length - 1 !==
 														index
@@ -529,7 +529,7 @@ onBeforeUnmount(() => {
 				class="button is-default"
 				v-if="
 					isOwner() ||
-					hasPermission('playlists.getPlaylist') ||
+					hasPermission('playlists.get') ||
 					playlist.privacy === 'public'
 				"
 				@click="downloadPlaylist()"
@@ -539,9 +539,8 @@ onBeforeUnmount(() => {
 			<div class="right">
 				<quick-confirm
 					v-if="
-						hasPermission(
-							'playlists.clearAndRefillStationPlaylist'
-						) && playlist.type === 'station'
+						hasPermission('playlists.clearAndRefill') &&
+						playlist.type === 'station'
 					"
 					@confirm="clearAndRefillStationPlaylist()"
 				>
@@ -551,9 +550,8 @@ onBeforeUnmount(() => {
 				</quick-confirm>
 				<quick-confirm
 					v-if="
-						hasPermission(
-							'playlists.clearAndRefillGenrePlaylist'
-						) && playlist.type === 'genre'
+						hasPermission('playlists.clearAndRefill') &&
+						playlist.type === 'genre'
 					"
 					@confirm="clearAndRefillGenrePlaylist()"
 				>

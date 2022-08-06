@@ -41,7 +41,7 @@ export default {
 	 * @param cb
 	 */
 	getData: useHasPermission(
-		"punishments.getData",
+		"admin.view.punishments",
 		async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
 			async.waterfall(
 				[
@@ -206,7 +206,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	getPunishmentsForUser: useHasPermission(
-		"punishments.getPunishmentsForUser",
+		"punishments.get",
 		async function getPunishmentsForUser(session, userId, cb) {
 			const punishmentModel = await DBModule.runJob("GET_MODEL", { modelName: "punishment" }, this);
 
@@ -236,7 +236,7 @@ export default {
 	 * @param {string} punishmentId - the punishment id
 	 * @param {Function} cb - gets called with the result
 	 */
-	findOne: useHasPermission("punishments.findOne", async function findOne(session, punishmentId, cb) {
+	findOne: useHasPermission("punishments.get", async function findOne(session, punishmentId, cb) {
 		const punishmentModel = await DBModule.runJob("GET_MODEL", { modelName: "punishment" }, this);
 
 		async.waterfall([next => punishmentModel.findOne({ _id: punishmentId }, next)], async (err, punishment) => {

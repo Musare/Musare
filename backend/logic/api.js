@@ -138,7 +138,7 @@ class _APIModule extends CoreClass {
 										if (playlist.createdBy === req.session.userId)
 											res.json({ status: "success", playlist });
 										else
-											hasPermission("playlists.getPlaylist", req.session.userId)
+											hasPermission("playlists.get", req.session.userId)
 												.then(() => res.json({ status: "success", playlist }))
 												.catch(() =>
 													res.json({

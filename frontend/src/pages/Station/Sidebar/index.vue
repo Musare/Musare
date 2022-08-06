@@ -29,7 +29,7 @@ const canRequest = (requireLogin = true) =>
 	station.value.requests.enabled &&
 	(station.value.requests.access === "user" ||
 		(station.value.requests.access === "owner" &&
-			hasPermission("stations.addToQueue")));
+			hasPermission("stations.request")));
 
 watch(
 	() => station.value.requests,
