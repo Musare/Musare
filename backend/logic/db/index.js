@@ -11,7 +11,7 @@ const REQUIRED_DOCUMENT_VERSIONS = {
 	playlist: 6,
 	punishment: 1,
 	queueSong: 1,
-	report: 5,
+	report: 6,
 	song: 9,
 	station: 8,
 	user: 3,
