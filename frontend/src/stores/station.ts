@@ -123,6 +123,11 @@ export const useStationStore = defineStore("station", {
 					this.autoRequest.splice(index, 1);
 				}
 			});
+		},
+		hasPermission(permission) {
+			return !!(
+				this.station.permissions && this.station.permissions[permission]
+			);
 		}
 	}
 });

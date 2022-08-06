@@ -5,9 +5,8 @@ import moduleManager from "../../index";
 
 const permissions = {};
 permissions.dj = {
-	"test.queue.add": true,
-	"test.queue.remove": false,
 	"stations.view": true,
+	"stations.view.manage": true,
 	"stations.skip": true,
 	"stations.pause": true,
 	"stations.resume": true,
@@ -23,13 +22,11 @@ permissions.dj = {
 };
 permissions.owner = {
 	...permissions.dj,
-	"test.queue.remove": true,
 	"stations.update": true,
 	"stations.remove": true
 };
 permissions.moderator = {
 	...permissions.owner,
-	"test.remove.other": false,
 	"songs.length": true,
 	"songs.getData": true,
 	"songs.getSongFromId": true,
@@ -61,12 +58,14 @@ permissions.moderator = {
 	"news.update": true,
 	"playlists.getData": true,
 	"playlists.searchOfficial": true,
-	"playlists.updatePrivacyAdmin": true,
+	"playlists.updatePrivacy": true,
+	"playlists.updateDisplayName": false,
 	"playlists.getPlaylist": true,
 	"playlists.repositionSong": true,
 	"playlists.addSongToPlaylist": true,
 	"playlists.addSetToPlaylist": true,
 	"playlists.removeSongFromPlaylist": true,
+	"playlists.view.others": true,
 	"punishments.getData": true,
 	"punishments.getPunishmentsForUser": true,
 	"punishments.findOne": true,
@@ -83,11 +82,11 @@ permissions.moderator = {
 	"stations.index.other": true,
 	"stations.create.official": true,
 	"youtube.getVideos": true,
-	"youtube.requestSetAdmin": true
+	"youtube.requestSetAdmin": true,
+	"admin.view": true
 };
 permissions.admin = {
 	...permissions.moderator,
-	"test.remove.other": true,
 	"songs.updateAll": true,
 	"songs.remove": true,
 	"songs.removeMany": true,
@@ -251,3 +250,76 @@ export const useHasPermission = (options, destination) =>
 			}
 		);
 	};
+
+export const getUserPermissions = async (session, stationId) => {
+	const CacheModule = moduleManager.modules.cache;
+	const DBModule = moduleManager.modules.db;
+	const StationsModule = moduleManager.modules.stations;
+	const UtilsModule = moduleManager.modules.utils;
+	const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+
+	return new Promise((resolve, reject) => {
+		async.waterfall(
+			[
+				next => {
+					let userId;
+					if (typeof session === "object") {
+						if (session.userId) userId = session.userId;
+						else
+							CacheModule.runJob(
+								"HGET",
+								{
+									table: "sessions",
+									key: session.sessionId
+								},
+								this
+							)
+								.then(_session => {
+									if (_session && _session.userId) userId = _session.userId;
+								})
+								.catch(next);
+					} else userId = session;
+					if (!userId) return next("User ID required.");
+					return userModel.findOne({ _id: userId }, next);
+				},
+				(user, next) => {
+					if (!user) return next("Login required.");
+					if (!stationId) return next(null, [user.role]);
+					return StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => {
+							if (!station) return next("Station not found.");
+							if (station.type === "community" && station.owner === user._id.toString())
+								return next(null, [user.role, "owner"]);
+							// if (station.type === "community" && station.djs.find(userId))
+							// 	return next(null, [user.role, "dj"]);
+							if (user.role === "admin" || user.role === "moderator") return next(null, [user.role]);
+							return next("Invalid permissions.");
+						})
+						.catch(next);
+				},
+				(roles, next) => {
+					if (!roles) return next("Role required.");
+					let rolePermissions = {};
+					roles.forEach(role => {
+						if (permissions[role]) rolePermissions = { ...rolePermissions, ...permissions[role] };
+					});
+					return next(null, rolePermissions);
+				}
+			],
+			async (err, rolePermissions) => {
+				const userId = typeof session === "object" ? session.userId || session.sessionId : session;
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					UtilsModule.log(
+						"INFO",
+						"GET_USER_PERMISSIONS",
+						`Failed to get permissions for user "${userId}". "${err}"`
+					);
+					return reject(err);
+				}
+				UtilsModule.log("INFO", "GET_USER_PERMISSIONS", `Fetched permissions for user "${userId}".`, false);
+				return resolve(rolePermissions);
+			}
+		);
+	});
+};

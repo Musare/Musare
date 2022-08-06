@@ -1905,7 +1905,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	updatePrivacyAdmin: useHasPermission(
-		"playlists.updatePrivacyAdmin",
+		"playlists.updatePrivacy",
 		async function updatePrivacyAdmin(session, playlistId, privacy, cb) {
 			const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 

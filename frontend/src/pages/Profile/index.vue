@@ -27,7 +27,8 @@ const userId = ref("");
 const isUser = ref(false);
 
 const userAuthStore = useUserAuthStore();
-const { userId: myUserId, role } = storeToRefs(userAuthStore);
+const { userId: myUserId } = storeToRefs(userAuthStore);
+const { hasPermission } = userAuthStore;
 
 const init = () => {
 	socket.dispatch("users.getBasicUser", route.params.username, res => {
@@ -89,12 +90,15 @@ onMounted(() => {
 				</div>
 				<div
 					class="buttons"
-					v-if="myUserId === userId || role === 'admin'"
+					v-if="
+						myUserId === userId ||
+						hasPermission('apis.joinAdminRoom.users')
+					"
 				>
 					<router-link
 						:to="`/admin/users?userId=${user._id}`"
 						class="button is-primary"
-						v-if="role === 'admin'"
+						v-if="hasPermission('apis.joinAdminRoom.users')"
 					>
 						Edit
 					</router-link>

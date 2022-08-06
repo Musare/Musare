@@ -18,13 +18,9 @@ const stationStore = useStationStore();
 
 const { tab, showTab } = useTabQueryHandler("queue");
 
-const { loggedIn, userId, role } = storeToRefs(userAuthStore);
+const { loggedIn } = storeToRefs(userAuthStore);
 const { station } = storeToRefs(stationStore);
-
-const isOwner = () =>
-	loggedIn.value && station.value && userId.value === station.value.owner;
-const isAdmin = () => loggedIn.value && role.value === "admin";
-const isOwnerOrAdmin = () => isOwner() || isAdmin();
+const { hasPermission } = stationStore;
 
 const canRequest = (requireLogin = true) =>
 	station.value &&
@@ -32,7 +28,8 @@ const canRequest = (requireLogin = true) =>
 	station.value.requests &&
 	station.value.requests.enabled &&
 	(station.value.requests.access === "user" ||
-		(station.value.requests.access === "owner" && isOwnerOrAdmin()));
+		(station.value.requests.access === "owner" &&
+			hasPermission("stations.addToQueue")));
 
 watch(
 	() => station.value.requests,

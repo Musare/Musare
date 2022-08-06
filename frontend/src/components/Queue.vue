@@ -2,10 +2,8 @@
 import { defineAsyncComponent, ref, computed, onUpdated } from "vue";
 import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
-import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
-import { useUserAuthStore } from "@/stores/userAuth";
 import { useManageStationStore } from "@/stores/manageStation";
 
 const SongItem = defineAsyncComponent(
@@ -19,10 +17,7 @@ const props = defineProps({
 
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
-const userAuthStore = useUserAuthStore();
 const manageStationStore = useManageStationStore(props);
-
-const { loggedIn, userId, role: userRole } = storeToRefs(userAuthStore);
 
 const repositionSongInList = payload => {
 	if (props.sector === "manageStation")
@@ -59,15 +54,15 @@ const queue = computed({
 	}
 });
 
-const isOwnerOnly = () =>
-	loggedIn.value && userId.value === station.value.owner;
-
-const isAdminOnly = () => loggedIn.value && userRole.value === "admin";
+const hasPermission = permission =>
+	props.sector === "manageStation"
+		? manageStationStore.hasPermission(permission)
+		: stationStore.hasPermission(permission);
 
 const dragOptions = computed(() => ({
 	animation: 200,
 	group: "queue",
-	disabled: !(isAdminOnly() || isOwnerOnly()),
+	disabled: !hasPermission("stations.repositionSongInQueue"),
 	ghostClass: "draggable-list-ghost"
 }));
 
@@ -159,17 +154,21 @@ onUpdated(() => {
 						:song="element"
 						:requested-by="true"
 						:class="{
-							'item-draggable': isAdminOnly() || isOwnerOnly()
+							'item-draggable': hasPermission(
+								'stations.repositionSongInQueue'
+							)
 						}"
 						:disabled-actions="[]"
 						:ref="el => (songItems[`song-item-${index}`] = el)"
 					>
 						<template
-							v-if="isAdminOnly() || isOwnerOnly()"
+							v-if="
+								hasPermission('stations.repositionSongInQueue')
+							"
 							#tippyActions
 						>
 							<quick-confirm
-								v-if="isOwnerOnly() || isAdminOnly()"
+								v-if="hasPermission('stations.removeFromQueue')"
 								placement="left"
 								@confirm="removeFromQueue(element.youtubeId)"
 							>

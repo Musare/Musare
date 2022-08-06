@@ -11,20 +11,25 @@ const props = defineProps({
 });
 
 const userAuthStore = useUserAuthStore();
-const { userId, role: userRole } = storeToRefs(userAuthStore);
+const { loggedIn, userId } = storeToRefs(userAuthStore);
+const { hasPermission } = userAuthStore;
 
 const { socket } = useWebsocketsStore();
 
 const editPlaylistStore = useEditPlaylistStore(props);
 const { playlist } = storeToRefs(editPlaylistStore);
 
-const isEditable = () =>
-	(playlist.value.type === "user" ||
+const isOwner = () =>
+	loggedIn.value && userId.value === playlist.value.createdBy;
+
+const isEditable = permission =>
+	((playlist.value.type === "user" ||
 		playlist.value.type === "user-liked" ||
 		playlist.value.type === "user-disliked") &&
-	(userId.value === playlist.value.createdBy || userRole.value === "admin");
-
-const isAdmin = () => userRole.value === "admin";
+		(isOwner() || hasPermission(permission))) ||
+	(playlist.value.type === "genre" &&
+		permission === "playlists.updatePrivacy" &&
+		hasPermission(permission));
 
 const renamePlaylist = () => {
 	const { displayName } = playlist.value;
@@ -66,7 +71,7 @@ const updatePrivacy = () => {
 	<div class="settings-tab section">
 		<div
 			v-if="
-				isEditable() &&
+				isEditable('playlists.updateDisplayName') &&
 				!(
 					playlist.type === 'user-liked' ||
 					playlist.type === 'user-disliked'
@@ -96,7 +101,7 @@ const updatePrivacy = () => {
 			</div>
 		</div>
 
-		<div v-if="isEditable() || (playlist.type === 'genre' && isAdmin())">
+		<div v-if="isEditable('playlists.updatePrivacy')">
 			<label class="label"> Change privacy </label>
 			<div class="control is-grouped input-with-button">
 				<div class="control is-expanded select">

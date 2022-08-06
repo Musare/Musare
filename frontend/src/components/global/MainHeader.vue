@@ -32,8 +32,8 @@ const windowWidth = ref(0);
 
 const { socket } = useWebsocketsStore();
 
-const { loggedIn, username, role } = storeToRefs(userAuthStore);
-const { logout } = userAuthStore;
+const { loggedIn, username } = storeToRefs(userAuthStore);
+const { logout, hasPermission } = userAuthStore;
 const { changeNightmode } = useUserPreferencesStore();
 
 const { openModal } = useModalsStore();
@@ -129,7 +129,7 @@ onMounted(async () => {
 			</div>
 			<span v-if="loggedIn" class="grouped">
 				<router-link
-					v-if="role === 'admin'"
+					v-if="hasPermission('admin.view')"
 					class="nav-item admin"
 					to="/admin"
 				>

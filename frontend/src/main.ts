@@ -173,57 +173,75 @@ const router = createRouter({
 			children: [
 				{
 					path: "songs",
-					component: () => import("@/pages/Admin/Songs/index.vue")
+					component: () => import("@/pages/Admin/Songs/index.vue"),
+					meta: { permissionRequired: "apis.joinAdminRoom.songs" }
 				},
 				{
 					path: "songs/import",
-					component: () => import("@/pages/Admin/Songs/Import.vue")
+					component: () => import("@/pages/Admin/Songs/Import.vue"),
+					meta: { permissionRequired: "apis.joinAdminRoom.import" }
 				},
 				{
 					path: "reports",
-					component: () => import("@/pages/Admin/Reports.vue")
+					component: () => import("@/pages/Admin/Reports.vue"),
+					meta: { permissionRequired: "apis.joinAdminRoom.reports" }
 				},
 				{
 					path: "stations",
-					component: () => import("@/pages/Admin/Stations.vue")
+					component: () => import("@/pages/Admin/Stations.vue"),
+					meta: { permissionRequired: "apis.joinAdminRoom.stations" }
 				},
 				{
 					path: "playlists",
-					component: () => import("@/pages/Admin/Playlists.vue")
+					component: () => import("@/pages/Admin/Playlists.vue"),
+					meta: { permissionRequired: "apis.joinAdminRoom.playlists" }
 				},
 				{
 					path: "users",
-					component: () => import("@/pages/Admin/Users/index.vue")
+					component: () => import("@/pages/Admin/Users/index.vue"),
+					meta: { permissionRequired: "apis.joinAdminRoom.users" }
 				},
 				{
 					path: "users/data-requests",
 					component: () =>
-						import("@/pages/Admin/Users/DataRequests.vue")
+						import("@/pages/Admin/Users/DataRequests.vue"),
+					meta: { permissionRequired: "apis.joinAdminRoom.users" }
 				},
 				{
 					path: "users/punishments",
 					component: () =>
-						import("@/pages/Admin/Users/Punishments.vue")
+						import("@/pages/Admin/Users/Punishments.vue"),
+					meta: {
+						permissionRequired: "apis.joinAdminRoom.punishments"
+					}
 				},
 				{
 					path: "news",
-					component: () => import("@/pages/Admin/News.vue")
+					component: () => import("@/pages/Admin/News.vue"),
+					meta: { permissionRequired: "apis.joinAdminRoom.news" }
 				},
 				{
 					path: "statistics",
-					component: () => import("@/pages/Admin/Statistics.vue")
+					component: () => import("@/pages/Admin/Statistics.vue"),
+					meta: {
+						permissionRequired: "apis.joinAdminRoom.statistics"
+					}
 				},
 				{
 					path: "youtube",
-					component: () => import("@/pages/Admin/YouTube/index.vue")
+					component: () => import("@/pages/Admin/YouTube/index.vue"),
+					meta: { permissionRequired: "apis.joinAdminRoom.youtube" }
 				},
 				{
 					path: "youtube/videos",
-					component: () => import("@/pages/Admin/YouTube/Videos.vue")
+					component: () => import("@/pages/Admin/YouTube/Videos.vue"),
+					meta: {
+						permissionRequired: "apis.joinAdminRoom.youtubeVideos"
+					}
 				}
 			],
 			meta: {
-				adminRequired: true
+				permissionRequired: "admin.view"
 			}
 		},
 		{
@@ -254,11 +272,18 @@ router.beforeEach((to, from, next) => {
 		ws.destroyListeners();
 	}
 
-	if (to.meta.loginRequired || to.meta.adminRequired || to.meta.guestsOnly) {
+	if (
+		to.meta.loginRequired ||
+		to.meta.permissionRequired ||
+		to.meta.guestsOnly
+	) {
 		const gotData = () => {
 			if (to.meta.loginRequired && !userAuthStore.loggedIn)
 				next({ path: "/login", query: "" });
-			else if (to.meta.adminRequired && userAuthStore.role !== "admin")
+			else if (
+				to.meta.permissionRequired &&
+				!userAuthStore.hasPermission(to.meta.permissionRequired)
+			)
 				next({ path: "/", query: "" });
 			else if (to.meta.guestsOnly && userAuthStore.loggedIn)
 				next({ path: "/", query: "" });
@@ -310,14 +335,16 @@ lofig.folder = defaultConfigURL;
 	if (await lofig.get("siteSettings.mediasession")) ms.init();
 
 	ws.socket.on("ready", res => {
-		const { loggedIn, role, username, userId, email } = res.data;
+		const { loggedIn, role, username, userId, email, permissions } =
+			res.data;
 
 		userAuthStore.authData({
 			loggedIn,
 			role,
 			username,
 			email,
-			userId
+			userId,
+			permissions
 		});
 	});
 

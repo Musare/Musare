@@ -161,17 +161,14 @@ const {
 	updateCurrentSongRatings,
 	updateOwnCurrentSongRatings,
 	updateCurrentSongSkipVotes,
-	updateAutoRequestLock
+	updateAutoRequestLock,
+	hasPermission
 } = stationStore;
 
 // TODO fix this if it still has some use
 // const stopVideo = payload =>
 // 	store.dispatch("modals/editSong/stopVideo", payload);
 
-const isOwnerOnly = () =>
-	loggedIn.value && userId.value === station.value.owner;
-const isAdminOnly = () => loggedIn.value && role.value === "admin";
-const isOwnerOrAdmin = () => isOwnerOnly() || isAdminOnly();
 const updateMediaSessionData = song => {
 	if (song) {
 		ms.setMediaSessionData(
@@ -813,7 +810,8 @@ const join = () => {
 				type,
 				isFavorited,
 				theme,
-				requests
+				requests,
+				permissions
 			} = res.data;
 
 			// change url to use station name instead of station id
@@ -834,7 +832,8 @@ const join = () => {
 				type,
 				isFavorited,
 				theme,
-				requests
+				requests,
+				permissions
 			});
 
 			document.getElementsByTagName(
@@ -882,7 +881,10 @@ const join = () => {
 				}
 			});
 
-			if (isOwnerOrAdmin()) {
+			if (
+				hasPermission("stations.pause") &&
+				hasPermission("stations.resume")
+			)
 				keyboardShortcuts.registerShortcut("station.pauseResume", {
 					keyCode: 32, // Spacebar
 					shift: false,
@@ -895,6 +897,7 @@ const join = () => {
 					}
 				});
 
+			if (hasPermission("stations.skip"))
 				keyboardShortcuts.registerShortcut("station.skipStation", {
 					keyCode: 39, // Right arrow key
 					shift: false,
@@ -905,7 +908,6 @@ const join = () => {
 						skipStation();
 					}
 				});
-			}
 
 			keyboardShortcuts.registerShortcut("station.lowerVolumeLarge", {
 				keyCode: 40, // Down arrow key
@@ -1171,15 +1173,15 @@ onMounted(async () => {
 
 	ms.setListeners(0, {
 		play: () => {
-			if (isOwnerOrAdmin()) resumeStation();
+			if (hasPermission("stations.resume")) resumeStation();
 			else resumeLocalStation();
 		},
 		pause: () => {
-			if (isOwnerOrAdmin()) pauseStation();
+			if (hasPermission("stations.pause")) pauseStation();
 			else pauseLocalStation();
 		},
 		nexttrack: () => {
-			if (isOwnerOrAdmin()) skipStation();
+			if (hasPermission("stations.skip")) skipStation();
 			else voteSkipStation();
 		}
 	});
@@ -1290,7 +1292,7 @@ onMounted(async () => {
 	socket.on("event:station.updated", async res => {
 		const { name, theme, privacy } = res.data.station;
 
-		if (!isOwnerOrAdmin() && privacy === "private") {
+		if (!hasPermission("stations.view") && privacy === "private") {
 			window.location.href =
 				"/?msg=The station you were in was made private.";
 		} else {
@@ -2045,12 +2047,24 @@ onBeforeUnmount(() => {
 		>
 			<template #body>
 				<div>
-					<div v-if="isOwnerOrAdmin()">
+					<div
+						v-if="
+							hasPermission('stations.resume') ||
+							hasPermission('stations.pause') ||
+							hasPermission('stations.skip')
+						"
+					>
 						<span class="biggest"><b>Admin/owner</b></span>
 						<span><b>Ctrl + Space</b> - Pause/resume station</span>
 						<span><b>Ctrl + Numpad right</b> - Skip station</span>
 					</div>
-					<hr v-if="isOwnerOrAdmin()" />
+					<hr
+						v-if="
+							hasPermission('stations.resume') ||
+							hasPermission('stations.pause') ||
+							hasPermission('stations.skip')
+						"
+					/>
 					<div>
 						<span class="biggest"><b>Volume</b></span>
 						<span
