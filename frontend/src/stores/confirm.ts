@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 
 export const useConfirmStore = props => {
 	const { modalUuid } = props;
+	if (!modalUuid || modalUuid === "") return false;
 	return defineStore(`confirm-${modalUuid}`, {
 		state: () => ({
 			message: "",
