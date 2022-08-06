@@ -82,8 +82,11 @@ const enableChristmasMode = () => {
 };
 
 watch(socketConnected, connected => {
-	if (!connected) disconnectedMessage.value.show();
+	if (!connected && !userAuthStore.banned) disconnectedMessage.value.show();
 	else disconnectedMessage.value.hide();
+});
+watch(banned, () => {
+	disconnectedMessage.value.hide();
 });
 watch(nightmode, enabled => {
 	if (enabled) enableNightmode();
