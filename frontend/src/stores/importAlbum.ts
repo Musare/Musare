@@ -2,7 +2,6 @@ import { defineStore } from "pinia";
 
 export const useImportAlbumStore = props => {
 	const { modalUuid } = props;
-	if (!modalUuid || modalUuid === "") return false;
 	return defineStore(`importAlbum-${modalUuid}`, {
 		state: () => ({
 			discogsAlbum: {},

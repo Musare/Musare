@@ -2,7 +2,6 @@ import { defineStore } from "pinia";
 
 export const useEditNewsStore = props => {
 	const { modalUuid } = props;
-	if (!modalUuid || modalUuid === "") return false;
 	return defineStore(`editNews-${modalUuid}`, {
 		state: () => ({
 			createNews: false,

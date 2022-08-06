@@ -2,7 +2,6 @@ import { defineStore } from "pinia";
 
 export const useManageStationStore = props => {
 	const { modalUuid } = props;
-	if (!modalUuid || modalUuid === "") return false;
 	return defineStore(`manageStation-${modalUuid}`, {
 		state: () => ({
 			stationId: null,

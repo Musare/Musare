@@ -2,7 +2,6 @@ import { defineStore } from "pinia";
 
 export const useViewApiRequestStore = props => {
 	const { modalUuid } = props;
-	if (!modalUuid || modalUuid === "") return false;
 	return defineStore(`viewApiRequest-${modalUuid}`, {
 		state: () => ({
 			requestId: null,

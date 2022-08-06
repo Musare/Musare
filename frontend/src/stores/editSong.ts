@@ -2,7 +2,6 @@ import { defineStore } from "pinia";
 
 export const useEditSongStore = props => {
 	const { modalUuid } = props;
-	if (!modalUuid || modalUuid === "") return false;
 	return defineStore(`editSong-${modalUuid}`, {
 		state: () => ({
 			video: {
