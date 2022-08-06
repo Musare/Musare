@@ -88,6 +88,14 @@ const columns = ref([
 		sortProperty: "createdAt",
 		defaultWidth: 200,
 		defaultVisibility: "hidden"
+	},
+	{
+		name: "songId",
+		displayName: "Song ID",
+		properties: ["songId"],
+		sortProperty: "songId",
+		defaultWidth: 220,
+		defaultVisibility: "hidden"
 	}
 ]);
 const filters = ref([
@@ -145,6 +153,13 @@ const filters = ref([
 		property: "importJob",
 		filterTypes: ["special"],
 		defaultFilterType: "special"
+	},
+	{
+		name: "songId",
+		displayName: "Song ID",
+		property: "songId",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
 	}
 ]);
 const events = ref({
@@ -353,6 +368,11 @@ const confirmAction = ({ message, action, params }) => {
 			<template #column-createdAt="slotProps">
 				<span :title="new Date(slotProps.item.createdAt)">{{
 					getDateFormatted(slotProps.item.createdAt)
+				}}</span>
+			</template>
+			<template #column-songId="slotProps">
+				<span :title="slotProps.item.songId">{{
+					slotProps.item.songId
 				}}</span>
 			</template>
 			<template #bulk-actions="slotProps">
