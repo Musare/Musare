@@ -361,7 +361,7 @@ export default {
 			[
 				next => {
 					PunishmentsModule.runJob("DEACTIVATE_PUNISHMENT", { punishmentId }, this)
-						.then(punishment => next(null, punishment))
+						.then(punishment => next(null, punishment._doc))
 						.catch(next);
 				}
 			],
@@ -379,7 +379,14 @@ export default {
 
 				WSModule.runJob("EMIT_TO_ROOM", {
 					room: `admin.punishments`,
-					args: ["event:admin.punishment.updated", { data: { punishment } }]
+					args: [
+						"event:admin.punishment.updated",
+						{
+							data: {
+								punishment: { ...punishment, status: "Inactive" }
+							}
+						}
+					]
 				});
 
 				return cb({ status: "success" });

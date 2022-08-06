@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { computed } from "vue";
 import { format, formatDistance, parseISO } from "date-fns";
 
 const props = defineProps({
@@ -19,7 +19,7 @@ const active = computed(
 	<div class="universal-item punishment-item">
 		<div class="item-icon">
 			<p class="is-expanded checkbox-control">
-				<label class="switch">
+				<label class="switch" :class="{ disabled: !active }">
 					<input
 						type="checkbox"
 						:checked="active"
@@ -29,7 +29,10 @@ const active = computed(
 								: $event.preventDefault()
 						"
 					/>
-					<span class="slider round"></span>
+					<span
+						class="slider round"
+						:class="{ disabled: !active }"
+					></span>
 				</label>
 			</p>
 			<p>
@@ -119,10 +122,6 @@ const active = computed(
 		justify-content: space-evenly;
 		border: 1px solid var(--light-grey-3);
 		border-radius: @border-radius;
-
-		.checkbox-control .slider {
-			cursor: default;
-		}
 	}
 
 	.item-title {

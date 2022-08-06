@@ -26,7 +26,7 @@ const columns = ref([
 	{
 		name: "options",
 		displayName: "Options",
-		properties: ["_id", "status"],
+		properties: ["_id", "active", "status"],
 		sortable: false,
 		hidable: false,
 		resizable: false,
@@ -221,18 +221,28 @@ const deactivatePunishment = punishmentId => {
 					>
 						open_in_full
 					</button>
-					<button
-						class="button is-primary icon-with-button material-icons"
-						@click="deactivatePunishment(slotProps.item._id)"
+					<quick-confirm
+						@confirm="deactivatePunishment(slotProps.item._id)"
 						:disabled="
-							slotProps.item.removed ||
-							slotProps.item.status === 'Inactive'
+							!slotProps.item.active || slotProps.item.removed
 						"
-						content="Deactivate Punishment"
-						v-tippy
 					>
-						gavel
-					</button>
+						<button
+							class="button is-danger icon-with-button material-icons"
+							:class="{
+								disabled:
+									!slotProps.item.active ||
+									slotProps.item.removed
+							}"
+							:disabled="
+								!slotProps.item.active || slotProps.item.removed
+							"
+							content="Deactivate Punishment"
+							v-tippy
+						>
+							gavel
+						</button>
+					</quick-confirm>
 				</div>
 			</template>
 			<template #column-status="slotProps">

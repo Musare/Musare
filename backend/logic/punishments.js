@@ -6,6 +6,7 @@ let PunishmentsModule;
 let CacheModule;
 let DBModule;
 let UtilsModule;
+let WSModule;
 
 class _PunishmentsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -26,6 +27,7 @@ class _PunishmentsModule extends CoreClass {
 		CacheModule = this.moduleManager.modules.cache;
 		DBModule = this.moduleManager.modules.db;
 		UtilsModule = this.moduleManager.modules.utils;
+		WSModule = this.moduleManager.modules.ws;
 
 		this.punishmentModel = this.PunishmentModel = await DBModule.runJob("GET_MODEL", { modelName: "punishment" });
 		this.punishmentSchemaCache = await CacheModule.runJob("GET_SCHEMA", { schemaName: "punishment" });
@@ -144,7 +146,19 @@ class _PunishmentsModule extends CoreClass {
 										key: punishment.punishmentId
 									},
 									this
-								).finally(() => next2());
+								).finally(() => {
+									WSModule.runJob(
+										"EMIT_TO_ROOM",
+										{
+											room: `admin.punishments`,
+											args: [
+												"event:admin.punishment.updated",
+												{ data: { punishment: { ...punishment, status: "Inactive" } } }
+											]
+										},
+										this
+									).finally(() => next2());
+								});
 							},
 							() => {
 								next(null, punishments);
