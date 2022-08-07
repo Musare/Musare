@@ -77,7 +77,7 @@ const songDeleted = ref(false);
 const youtubeError = ref(false);
 const youtubeErrorMessage = ref("");
 const youtubeVideoDuration = ref("0.000");
-const youtubeVideoCurrentTime = ref(0);
+const youtubeVideoCurrentTime = ref(<number | string>0);
 const youtubeVideoNote = ref("");
 const useHTTPS = ref(false);
 const muted = ref(false);
@@ -87,7 +87,7 @@ const genreInputValue = ref("");
 const tagInputValue = ref("");
 const activityWatchVideoDataInterval = ref(null);
 const activityWatchVideoLastStatus = ref("");
-const activityWatchVideoLastStartDuration = ref("");
+const activityWatchVideoLastStartDuration = ref(0);
 const recommendedGenres = ref([
 	"Blues",
 	"Country",
@@ -138,7 +138,7 @@ const tabs = ref([]);
 const inputs = ref([]);
 const playerReady = ref(true);
 const interval = ref();
-const saveButtonRefs = ref([]);
+const saveButtonRefs = ref(<any>[]);
 const canvasElement = ref();
 const genreHelper = ref();
 
@@ -194,7 +194,7 @@ const onThumbnailLoadError = error => {
 	thumbnailLoadError.value = error !== 0;
 };
 
-const unloadSong = (_youtubeId, songId) => {
+const unloadSong = (_youtubeId, songId?) => {
 	songDataLoaded.value = false;
 	songDeleted.value = false;
 	stopVideo();
@@ -455,8 +455,9 @@ const init = () => {
 							}
 
 							if (song.value.duration === -1)
-								song.value.duration =
-									youtubeVideoDuration.value;
+								song.value.duration = Number.parseInt(
+									youtubeVideoDuration.value
+								);
 
 							youtubeDuration -= song.value.skipDuration;
 							if (song.value.duration > youtubeDuration + 1) {
@@ -580,7 +581,7 @@ const save = (songToCopy, closeOrNext, saveButtonRefName, _newSong = false) => {
 	// Duration
 	if (
 		Number(_song.skipDuration) + Number(_song.duration) >
-			youtubeVideoDuration.value &&
+			Number.parseInt(youtubeVideoDuration.value) &&
 		(((!_newSong || props.bulk) && !youtubeError.value) ||
 			originalSong.value.duration !== _song.duration)
 	) {
@@ -812,7 +813,8 @@ const getYouTubeData = type => {
 };
 
 const fillDuration = () => {
-	song.value.duration = youtubeVideoDuration.value - song.value.skipDuration;
+	song.value.duration =
+		Number.parseInt(youtubeVideoDuration.value) - song.value.skipDuration;
 };
 
 const settings = type => {
@@ -849,7 +851,7 @@ const play = () => {
 
 const changeVolume = () => {
 	const volume = volumeSliderValue.value;
-	localStorage.setItem("volume", volume);
+	localStorage.setItem("volume", `${volume}`);
 	video.value.player.setVolume(volume);
 	if (volume > 0) {
 		video.value.player.unMute();
@@ -863,10 +865,10 @@ const toggleMute = () => {
 	muted.value = !muted.value;
 	volumeSliderValue.value = volume;
 	video.value.player.setVolume(volume);
-	if (!muted.value) localStorage.setItem("volume", volume);
+	if (!muted.value) localStorage.setItem("volume", `${volume}`);
 };
 
-const addTag = (type, value) => {
+const addTag = (type, value?) => {
 	if (type === "genres") {
 		const genre = value || genreInputValue.value.trim();
 
@@ -943,15 +945,15 @@ const sendActivityWatchVideoData = () => {
 			activityWatchVideoLastStatus.value = "playing";
 			if (
 				song.value.skipDuration > 0 &&
-				parseFloat(youtubeVideoCurrentTime.value) === 0
+				Number(youtubeVideoCurrentTime.value) === 0
 			) {
 				activityWatchVideoLastStartDuration.value = Math.floor(
 					song.value.skipDuration +
-						parseFloat(youtubeVideoCurrentTime.value)
+						Number(youtubeVideoCurrentTime.value)
 				);
 			} else {
 				activityWatchVideoLastStartDuration.value = Math.floor(
-					parseFloat(youtubeVideoCurrentTime.value)
+					Number(youtubeVideoCurrentTime.value)
 				);
 			}
 		}
@@ -1053,7 +1055,7 @@ onMounted(async () => {
 
 	let volume = parseFloat(localStorage.getItem("volume"));
 	volume = typeof volume === "number" && !Number.isNaN(volume) ? volume : 20;
-	localStorage.setItem("volume", volume);
+	localStorage.setItem("volume", `${volume}`);
 	volumeSliderValue.value = volume;
 
 	socket.on(

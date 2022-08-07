@@ -2,6 +2,7 @@
 import { defineAsyncComponent, ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useModalsStore } from "@/stores/modals";
+import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -12,7 +13,7 @@ const ProfilePicture = defineAsyncComponent(
 
 const route = useRoute();
 
-const columnDefault = ref({
+const columnDefault = ref(<TableColumn>{
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -21,7 +22,7 @@ const columnDefault = ref({
 	minWidth: 150,
 	maxWidth: 600
 });
-const columns = ref([
+const columns = ref(<TableColumn[]>[
 	{
 		name: "options",
 		displayName: "Options",
@@ -108,7 +109,7 @@ const columns = ref([
 		defaultWidth: 170
 	}
 ]);
-const filters = ref([
+const filters = ref(<TableFilter[]>[
 	{
 		name: "_id",
 		displayName: "User ID",
@@ -183,7 +184,7 @@ const filters = ref([
 		defaultFilterType: "numberLesser"
 	}
 ]);
-const events = ref({
+const events = ref(<TableEvents>{
 	adminRoom: "users",
 	updated: {
 		event: "admin.user.updated",

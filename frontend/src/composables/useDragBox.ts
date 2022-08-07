@@ -64,7 +64,7 @@ export const useDragBox = () => {
 			? e1.changedTouches[0].clientY
 			: e1.clientY;
 
-		document.onmousemove = document.ontouchmove = e => {
+		const onMove = e => {
 			const e2 = e || window.event;
 			const e2IsTouch = e2.type === "touchmove";
 			if (!e2IsTouch) e2.preventDefault();
@@ -101,8 +101,10 @@ export const useDragBox = () => {
 					document.body.clientWidth - dragBox.value.width;
 			if (dragBox.value.left < 0) dragBox.value.left = 0;
 		};
+		document.onmousemove = onMove;
+		document.ontouchmove = onMove;
 
-		document.onmouseup = document.ontouchend = () => {
+		const onUp = () => {
 			document.onmouseup = null;
 			document.ontouchend = null;
 			document.onmousemove = null;
@@ -111,6 +113,8 @@ export const useDragBox = () => {
 			if (typeof onDragBoxUpdate.value === "function")
 				onDragBoxUpdate.value();
 		};
+		document.onmouseup = onUp;
+		document.ontouchend = onUp;
 	};
 
 	const onWindowResizeDragBox = () => {

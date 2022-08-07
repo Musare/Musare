@@ -4,6 +4,12 @@ import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
 import { useModalsStore } from "@/stores/modals";
+import {
+	TableColumn,
+	TableFilter,
+	TableEvents,
+	TableBulkActions
+} from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -16,7 +22,7 @@ const { setJob } = useLongJobsStore();
 
 const { socket } = useWebsocketsStore();
 
-const columnDefault = ref({
+const columnDefault = ref(<TableColumn>{
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -25,7 +31,7 @@ const columnDefault = ref({
 	minWidth: 200,
 	maxWidth: 600
 });
-const columns = ref([
+const columns = ref(<TableColumn[]>[
 	{
 		name: "options",
 		displayName: "Options",
@@ -88,9 +94,17 @@ const columns = ref([
 		sortProperty: "createdAt",
 		defaultWidth: 200,
 		defaultVisibility: "hidden"
+	},
+	{
+		name: "songId",
+		displayName: "Song ID",
+		properties: ["songId"],
+		sortProperty: "songId",
+		defaultWidth: 220,
+		defaultVisibility: "hidden"
 	}
 ]);
-const filters = ref([
+const filters = ref(<TableFilter[]>[
 	{
 		name: "_id",
 		displayName: "Video ID",
@@ -145,9 +159,16 @@ const filters = ref([
 		property: "importJob",
 		filterTypes: ["special"],
 		defaultFilterType: "special"
+	},
+	{
+		name: "songId",
+		displayName: "Song ID",
+		property: "songId",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
 	}
 ]);
-const events = ref({
+const events = ref(<TableEvents>{
 	adminRoom: "youtubeVideos",
 	updated: {
 		event: "admin.youtubeVideo.updated",
@@ -159,6 +180,7 @@ const events = ref({
 		id: "videoId"
 	}
 });
+const bulkActions = ref(<TableBulkActions>{ width: 200 });
 const jobs = ref([
 	{
 		name: "Recalculate all ratings",
@@ -222,10 +244,10 @@ const removeVideos = videoIds => {
 const getDateFormatted = createdAt => {
 	const date = new Date(createdAt);
 	const year = date.getFullYear();
-	const month = `${date.getMonth() + 1}`.padStart(2, 0);
-	const day = `${date.getDate()}`.padStart(2, 0);
-	const hour = `${date.getHours()}`.padStart(2, 0);
-	const minute = `${date.getMinutes()}`.padStart(2, 0);
+	const month = `${date.getMonth() + 1}`.padStart(2, "0");
+	const day = `${date.getDate()}`.padStart(2, "0");
+	const hour = `${date.getHours()}`.padStart(2, "0");
+	const minute = `${date.getMinutes()}`.padStart(2, "0");
 	return `${year}-${month}-${day} ${hour}:${minute}`;
 };
 
@@ -269,7 +291,7 @@ const confirmAction = ({ message, action, params }) => {
 			data-action="youtube.getVideos"
 			name="admin-youtube-videos"
 			:max-width="1140"
-			:bulk-actions="{ width: 200 }"
+			:bulk-actions="bulkActions"
 		>
 			<template #column-options="slotProps">
 				<div class="row-options">
@@ -346,13 +368,18 @@ const confirmAction = ({ message, action, params }) => {
 				}}</span>
 			</template>
 			<template #column-duration="slotProps">
-				<span :title="slotProps.item.duration">{{
+				<span :title="`${slotProps.item.duration}`">{{
 					slotProps.item.duration
 				}}</span>
 			</template>
 			<template #column-createdAt="slotProps">
-				<span :title="new Date(slotProps.item.createdAt)">{{
+				<span :title="new Date(slotProps.item.createdAt).toString()">{{
 					getDateFormatted(slotProps.item.createdAt)
+				}}</span>
+			</template>
+			<template #column-songId="slotProps">
+				<span :title="slotProps.item.songId">{{
+					slotProps.item.songId
 				}}</span>
 			</template>
 			<template #bulk-actions="slotProps">

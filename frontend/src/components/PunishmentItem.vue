@@ -1,20 +1,17 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed } from "vue";
 import { format, formatDistance, parseISO } from "date-fns";
 
 const props = defineProps({
 	punishment: { type: Object, default: () => {} }
 });
 
-const active = ref(false);
+defineEmits(["deactivate"]);
 
-watch(
-	() => props.punishment,
-	punishment => {
-		active.value =
-			punishment.active &&
-			new Date(punishment.expiresAt).getTime() > Date.now();
-	}
+const active = computed(
+	() =>
+		props.punishment.active &&
+		new Date(props.punishment.expiresAt).getTime() > Date.now()
 );
 </script>
 
@@ -22,9 +19,20 @@ watch(
 	<div class="universal-item punishment-item">
 		<div class="item-icon">
 			<p class="is-expanded checkbox-control">
-				<label class="switch">
-					<input type="checkbox" v-model="active" disabled />
-					<span class="slider round"></span>
+				<label class="switch" :class="{ disabled: !active }">
+					<input
+						type="checkbox"
+						:checked="active"
+						@click="
+							active
+								? $emit('deactivate', $event)
+								: $event.preventDefault()
+						"
+					/>
+					<span
+						class="slider round"
+						:class="{ disabled: !active }"
+					></span>
 				</label>
 			</p>
 			<p>
@@ -114,10 +122,6 @@ watch(
 		justify-content: space-evenly;
 		border: 1px solid var(--light-grey-3);
 		border-radius: @border-radius;
-
-		.checkbox-control .slider {
-			cursor: default;
-		}
 	}
 
 	.item-title {

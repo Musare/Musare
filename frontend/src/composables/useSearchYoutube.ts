@@ -21,15 +21,15 @@ export const useSearchYoutube = () => {
 		let { query } = youtubeSearch.value.songs;
 
 		if (query.indexOf("&index=") !== -1) {
-			query = query.split("&index=");
-			query.pop();
-			query = query.join("");
+			const splitQuery = query.split("&index=");
+			splitQuery.pop();
+			query = splitQuery.join("");
 		}
 
 		if (query.indexOf("&list=") !== -1) {
-			query = query.split("&list=");
-			query.pop();
-			query = query.join("");
+			const splitQuery = query.split("&list=");
+			splitQuery.pop();
+			query = splitQuery.join("");
 		}
 
 		socket.dispatch("apis.searchYoutube", query, res => {

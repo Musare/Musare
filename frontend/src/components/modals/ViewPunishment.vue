@@ -34,6 +34,21 @@ const init = () => {
 	});
 };
 
+const deactivatePunishment = event => {
+	event.preventDefault();
+	socket.dispatch(
+		"punishments.deactivatePunishment",
+		punishmentId.value,
+		res => {
+			if (res.status === "success") {
+				viewPunishmentStore.deactivatePunishment();
+			} else {
+				new Toast(res.message);
+			}
+		}
+	);
+};
+
 onMounted(() => {
 	ws.onConnect(init);
 });
@@ -48,7 +63,10 @@ onBeforeUnmount(() => {
 	<div>
 		<modal title="View Punishment">
 			<template #body v-if="punishment && punishment._id">
-				<punishment-item :punishment="punishment" />
+				<punishment-item
+					:punishment="punishment"
+					@deactivate="deactivatePunishment"
+				/>
 			</template>
 		</modal>
 	</div>

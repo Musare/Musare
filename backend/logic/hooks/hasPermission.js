@@ -72,6 +72,7 @@ permissions.admin = {
 	"playlists.deleteOrphaned": true,
 	"playlists.removeAdmin": true,
 	"playlists.requestOrphanedPlaylistSongs": true,
+	"punishments.deactivate": true,
 	"reports.remove": true,
 	"songs.remove": true,
 	"songs.updateAll": true,

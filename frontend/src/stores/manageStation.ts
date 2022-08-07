@@ -1,4 +1,7 @@
 import { defineStore } from "pinia";
+import { Station } from "@/types/station";
+import { Playlist } from "@/types/playlist";
+import { CurrentSong, Song } from "@/types/song";
 
 export const useManageStationStore = props => {
 	const { modalUuid } = props;
@@ -7,13 +10,13 @@ export const useManageStationStore = props => {
 			stationId: null,
 			sector: "admin",
 			tab: "settings",
-			station: {},
-			stationPlaylist: { songs: [] },
-			autofill: [],
-			blacklist: [],
-			songsList: [],
+			station: <Station>{},
+			stationPlaylist: <Playlist>{ songs: [] },
+			autofill: <Playlist[]>[],
+			blacklist: <Playlist[]>[],
+			songsList: <Song[]>[],
 			stationPaused: true,
-			currentSong: {}
+			currentSong: <CurrentSong>{}
 		}),
 		actions: {
 			init({ stationId, sector }) {

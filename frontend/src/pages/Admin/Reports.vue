@@ -3,12 +3,13 @@ import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
 import { useModalsStore } from "@/stores/modals";
 import { useReports } from "@/composables/useReports";
+import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
 );
 
-const columnDefault = ref({
+const columnDefault = ref(<TableColumn>{
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -17,7 +18,7 @@ const columnDefault = ref({
 	minWidth: 150,
 	maxWidth: 600
 });
-const columns = ref([
+const columns = ref(<TableColumn[]>[
 	{
 		name: "options",
 		displayName: "Options",
@@ -79,7 +80,7 @@ const columns = ref([
 		defaultWidth: 150
 	}
 ]);
-const filters = ref([
+const filters = ref(<TableFilter[]>[
 	{
 		name: "_id",
 		displayName: "Report ID",
@@ -130,7 +131,7 @@ const filters = ref([
 		defaultFilterType: "datetimeBefore"
 	}
 ]);
-const events = ref({
+const events = ref(<TableEvents>{
 	adminRoom: "reports",
 	updated: {
 		event: "admin.report.updated",
@@ -149,7 +150,7 @@ const { resolveReport } = useReports();
 
 const resolve = (reportId, value) =>
 	resolveReport({ reportId, value })
-		.then(res => {
+		.then((res: any) => {
 			if (res.status !== "success") new Toast(res.message);
 		})
 		.catch(err => new Toast(err.message));
@@ -157,10 +158,10 @@ const resolve = (reportId, value) =>
 const getDateFormatted = createdAt => {
 	const date = new Date(createdAt);
 	const year = date.getFullYear();
-	const month = `${date.getMonth() + 1}`.padStart(2, 0);
-	const day = `${date.getDate()}`.padStart(2, 0);
-	const hour = `${date.getHours()}`.padStart(2, 0);
-	const minute = `${date.getMinutes()}`.padStart(2, 0);
+	const month = `${date.getMonth() + 1}`.padStart(2, "0");
+	const day = `${date.getDate()}`.padStart(2, "0");
+	const hour = `${date.getHours()}`.padStart(2, "0");
+	const minute = `${date.getMinutes()}`.padStart(2, "0");
 	return `${year}-${month}-${day} ${hour}:${minute}`;
 };
 </script>
@@ -266,7 +267,7 @@ const getDateFormatted = createdAt => {
 				<user-link v-else :user-id="slotProps.item.createdBy" />
 			</template>
 			<template #column-createdAt="slotProps">
-				<span :title="new Date(slotProps.item.createdAt)">{{
+				<span :title="new Date(slotProps.item.createdAt).toString()">{{
 					getDateFormatted(slotProps.item.createdAt)
 				}}</span>
 			</template>

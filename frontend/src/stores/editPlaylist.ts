@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { Playlist } from "@/types/playlist";
 
 export const useEditPlaylistStore = props => {
 	const { modalUuid } = props;
@@ -6,7 +7,7 @@ export const useEditPlaylistStore = props => {
 		state: () => ({
 			playlistId: null,
 			tab: "settings",
-			playlist: { songs: [] }
+			playlist: <Playlist>{ songs: [] }
 		}),
 		actions: {
 			init({ playlistId }) {

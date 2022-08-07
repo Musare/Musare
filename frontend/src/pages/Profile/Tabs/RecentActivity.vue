@@ -60,7 +60,7 @@ const getSet = () => {
 
 const init = () => {
 	if (myUserId.value !== props.userId)
-		getBasicUser(props.userId).then(user => {
+		getBasicUser(props.userId).then((user: any) => {
 			if (user && user.username) username.value = user.username;
 		});
 

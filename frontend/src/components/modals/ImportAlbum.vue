@@ -87,7 +87,18 @@ const startEditingSongs = () => {
 			delete album.expanded;
 			delete album.gotMoreInfo;
 
-			const songToEdit = {
+			const songToEdit = <
+				{
+					youtubeId: string;
+					prefill: {
+						discogs: typeof album;
+						title?: string;
+						thumbnail?: string;
+						genres?: string[];
+						artists?: string[];
+					};
+				}
+			>{
 				youtubeId: song.youtubeId,
 				prefill: {
 					discogs: album

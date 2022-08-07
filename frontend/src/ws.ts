@@ -1,4 +1,5 @@
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserAuthStore } from "@/stores/userAuth";
 import ListenerHandler from "./classes/ListenerHandler.class";
 
 const onConnect = [];
@@ -72,6 +73,8 @@ export default {
 	},
 
 	init(url) {
+		const userAuthStore = useUserAuthStore();
+
 		// ensures correct context of socket object when dispatching (because socket object is recreated on reconnection)
 		const waitForConnectionToDispatch = (...args) =>
 			this.socket.dispatch(...args);
@@ -164,8 +167,8 @@ export default {
 			onDisconnect.temp.forEach(cb => cb());
 			onDisconnect.persist.forEach(cb => cb());
 
-			// try to reconnect every 1000ms
-			setTimeout(() => this.init(url), 1000);
+			// try to reconnect every 1000ms, if the user isn't banned
+			if (!userAuthStore.banned) setTimeout(() => this.init(url), 1000);
 		};
 
 		this.socket.onerror = err => {

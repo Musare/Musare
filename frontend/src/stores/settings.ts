@@ -1,9 +1,10 @@
 import { defineStore } from "pinia";
+import { User } from "@/types/user";
 
 export const useSettingsStore = defineStore("settings", {
 	state: () => ({
-		originalUser: {},
-		modifiedUser: {}
+		originalUser: <User>{},
+		modifiedUser: <User>{}
 	}),
 	actions: {
 		updateOriginalUser(payload) {
@@ -26,7 +27,7 @@ export const useSettingsStore = defineStore("settings", {
 		}
 	},
 	getters: {
-		isGithubLinked: state => state.originalUser.github,
-		isPasswordLinked: state => state.originalUser.password
+		isGithubLinked: state => state.originalUser.services.github,
+		isPasswordLinked: state => state.originalUser.services.password
 	}
 });

@@ -48,7 +48,7 @@ const { sanitize } = dompurify;
 				<user-link
 					:user-id="news.createdBy"
 					:alt="news.createdBy" /></span
-			>&nbsp;<span :title="new Date(news.createdAt)">
+			>&nbsp;<span :title="new Date(news.createdAt).toString()">
 				{{
 					formatDistance(news.createdAt, new Date(), {
 						addSuffix: true

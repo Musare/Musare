@@ -14,7 +14,10 @@ export const useUserAuthStore = defineStore("userAuth", {
 		email: "",
 		userId: "",
 		banned: false,
-		ban: {},
+		ban: {
+			reason: null,
+			expiresAt: null
+		},
 		gotData: false,
 		permissions: {}
 	}),

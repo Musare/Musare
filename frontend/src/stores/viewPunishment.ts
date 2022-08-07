@@ -5,7 +5,9 @@ export const useViewPunishmentStore = props => {
 	return defineStore(`viewPunishment-${modalUuid}`, {
 		state: () => ({
 			punishmentId: null,
-			punishment: {}
+			punishment: {
+				_id: null
+			}
 		}),
 		actions: {
 			init({ punishmentId }) {
@@ -13,6 +15,9 @@ export const useViewPunishmentStore = props => {
 			},
 			viewPunishment(punishment) {
 				this.punishment = punishment;
+			},
+			deactivatePunishment() {
+				this.punishment.active = false;
 			}
 		}
 	})();

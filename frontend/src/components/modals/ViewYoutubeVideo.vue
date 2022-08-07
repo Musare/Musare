@@ -56,13 +56,13 @@ const handleConfirmed = ({ action, params }) => {
 	}
 };
 
-const confirmAction = ({ message, action, params }) => {
+const confirmAction = ({ message, action }) => {
 	openModal({
 		modal: "confirm",
 		data: {
 			message,
 			action,
-			params,
+			params: null,
 			onCompleted: handleConfirmed
 		}
 	});
@@ -103,7 +103,7 @@ const play = () => {
 
 const changeVolume = () => {
 	const { volume } = player.value;
-	localStorage.setItem("volume", volume);
+	localStorage.setItem("volume", `${volume}`);
 	player.value.player.setVolume(volume);
 	if (volume > 0) {
 		player.value.player.unMute();
@@ -181,7 +181,7 @@ const sendActivityWatchVideoData = () => {
 		if (activityWatchVideoLastStatus.value !== "playing") {
 			activityWatchVideoLastStatus.value = "playing";
 			activityWatchVideoLastStartDuration.value = Math.floor(
-				parseFloat(player.value.currentTime)
+				Number(player.value.currentTime)
 			);
 		}
 
@@ -373,8 +373,9 @@ const init = () => {
 										}
 
 										if (video.value.duration === -1)
-											video.value.duration =
-												player.value.duration;
+											video.value.duration = Number(
+												player.value.duration
+											);
 
 										if (
 											video.value.duration >
@@ -497,7 +498,7 @@ onBeforeUnmount(() => {
 					</p>
 					<p>
 						<strong>Duration:</strong>
-						<span :title="video.duration">{{
+						<span :title="`${video.duration}`">{{
 							video.duration
 						}}</span>
 					</p>

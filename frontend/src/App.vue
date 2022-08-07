@@ -32,7 +32,7 @@ const modalsStore = useModalsStore();
 
 const apiDomain = ref("");
 const socketConnected = ref(true);
-const keyIsDown = ref(false);
+const keyIsDown = ref("");
 const scrollPosition = ref({ y: 0, x: 0 });
 const aModalIsOpen2 = ref(false);
 const broadcastChannel = ref();
@@ -54,7 +54,7 @@ const { openModal, closeCurrentModal } = modalsStore;
 const aModalIsOpen = computed(() => Object.keys(activeModals.value).length > 0);
 
 const toggleNightMode = () => {
-	localStorage.setItem("nightmode", !nightmode.value);
+	localStorage.setItem("nightmode", `${!nightmode.value}`);
 
 	if (loggedIn.value) {
 		socket.dispatch(
@@ -82,8 +82,11 @@ const enableChristmasMode = () => {
 };
 
 watch(socketConnected, connected => {
-	if (!connected) disconnectedMessage.value.show();
+	if (!connected && !userAuthStore.banned) disconnectedMessage.value.show();
 	else disconnectedMessage.value.hide();
+});
+watch(banned, () => {
+	disconnectedMessage.value.hide();
 });
 watch(nightmode, enabled => {
 	if (enabled) enableNightmode();
@@ -127,7 +130,7 @@ onMounted(async () => {
 		});
 	}
 
-	document.onkeydown = ev => {
+	document.onkeydown = (ev: any) => {
 		const event = ev || window.event;
 		const { keyCode } = event;
 		const shift = event.shiftKey;
@@ -236,7 +239,7 @@ onMounted(async () => {
 			}
 
 			if (!localStorage.getItem("firstVisited"))
-				localStorage.setItem("firstVisited", Date.now());
+				localStorage.setItem("firstVisited", Date.now().toString());
 		});
 	});
 
@@ -249,14 +252,18 @@ onMounted(async () => {
 	router.isReady().then(() => {
 		if (route.query.err) {
 			let { err } = route.query;
-			err = err.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+			err = JSON.stringify(err)
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;");
 			router.push({ query: {} });
 			new Toast({ content: err, timeout: 20000 });
 		}
 
 		if (route.query.msg) {
 			let { msg } = route.query;
-			msg = msg.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+			msg = JSON.stringify(msg)
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;");
 			router.push({ query: {} });
 			new Toast({ content: msg, timeout: 20000 });
 		}
@@ -1146,10 +1153,6 @@ img {
 					background-color: var(--light-grey-3);
 					transition: 0.2s;
 					border-radius: 34px;
-
-					&.disabled {
-						cursor: not-allowed;
-					}
 				}
 
 				.slider:before {
@@ -2003,6 +2006,10 @@ h4.section-title {
 		background-color: var(--light-grey-3);
 		transition: 0.2s;
 		border-radius: 34px;
+
+		&.disabled {
+			cursor: not-allowed;
+		}
 	}
 
 	.slider:before {

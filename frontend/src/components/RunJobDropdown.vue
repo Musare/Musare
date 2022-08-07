@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { PropType, ref } from "vue";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
 
 defineProps({
-	jobs: { type: Array, default: () => [] }
+	jobs: { type: Array as PropType<any[]>, default: () => [] }
 });
 
 const showJobDropdown = ref(false);

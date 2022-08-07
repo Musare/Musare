@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { PropType, computed } from "vue";
 import { Line } from "vue-chartjs";
 import {
 	Chart as ChartJS,
@@ -10,7 +10,8 @@ import {
 	PointElement,
 	CategoryScale,
 	LinearScale,
-	LineController
+	LineController,
+	Plugin
 } from "chart.js";
 
 ChartJS.register(
@@ -30,15 +31,18 @@ const props = defineProps({
 	width: { type: Number, default: 200 },
 	height: { type: Number, default: 200 },
 	cssClasses: { default: "", type: String },
-	styles: { type: Object, default: () => {} },
-	plugins: { type: Object, default: () => {} },
-	data: { type: Object, default: () => {} },
+	styles: {
+		type: Object as PropType<Partial<CSSStyleDeclaration>>,
+		default: () => {}
+	},
+	plugins: { type: Object as PropType<Plugin<"line">[]>, default: () => {} },
+	data: { type: Object as PropType<any>, default: () => {} },
 	options: { type: Object, default: () => {} }
 });
 
 const chartStyles = computed(() => ({
 	position: "relative",
-	height: props.height,
+	height: `${props.height}px`,
 	...props.styles
 }));
 const chartOptions = computed(() => ({

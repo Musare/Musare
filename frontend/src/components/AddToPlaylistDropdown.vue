@@ -18,6 +18,8 @@ const props = defineProps({
 	}
 });
 
+const emit = defineEmits(["showPlaylistDropdown"]);
+
 const dropdown = ref(null);
 
 const { socket } = useWebsocketsStore();
@@ -105,16 +107,8 @@ onMounted(() => {
 		ref="dropdown"
 		trigger="click"
 		append-to="parent"
-		@show="
-			() => {
-				$parent.showPlaylistDropdown = true;
-			}
-		"
-		@hide="
-			() => {
-				$parent.showPlaylistDropdown = false;
-			}
-		"
+		@show="emit('showPlaylistDropdown', true)"
+		@hide="emit('showPlaylistDropdown', false)"
 	>
 		<slot name="button" ref="trigger" />
 
@@ -131,13 +125,13 @@ onMounted(() => {
 						<label class="switch">
 							<input
 								type="checkbox"
-								:id="index"
+								:id="`${index}`"
 								:checked="hasSong(playlist)"
 								@click="toggleSongInPlaylist(index)"
 							/>
 							<span class="slider round"></span>
 						</label>
-						<label :for="index">
+						<label :for="`${index}`">
 							<span></span>
 							<p>{{ playlist.displayName }}</p>
 						</label>

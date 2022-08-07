@@ -100,7 +100,7 @@ const { activeModals } = storeToRefs(modalsStore);
 // TODO fix this if it still has some use, as this is no longer accurate
 // const video = computed(() => store.state.modals.editSong);
 
-const { loggedIn, userId, role } = storeToRefs(userAuthStore);
+const { loggedIn, userId } = storeToRefs(userAuthStore);
 const { nightmode, autoSkipDisliked } = storeToRefs(userPreferencesStore);
 const {
 	station,
@@ -222,11 +222,12 @@ const autoRequestSong = () => {
 		}
 	}
 };
+const dateCurrently = () => new Date().getTime() + systemDifference.value;
 const getTimeElapsed = () => {
 	if (currentSong.value) {
 		if (stationPaused.value)
-			timePaused.value += Date.currently() - pausedAt.value;
-		return Date.currently() - startedAt.value - timePaused.value;
+			timePaused.value += dateCurrently() - pausedAt.value;
+		return dateCurrently() - startedAt.value - timePaused.value;
 	}
 	return 0;
 };
@@ -270,9 +271,8 @@ const setNextCurrentSong = (_nextCurrentSong, skipSkipCheck = false) => {
 	}
 };
 const resizeSeekerbar = () => {
-	seekerbarPercentage.value = parseFloat(
-		(getTimeElapsed() / 1000 / currentSong.value.duration) * 100
-	);
+	seekerbarPercentage.value =
+		(getTimeElapsed() / 1000 / currentSong.value.duration) * 100;
 };
 const calculateTimeElapsed = () => {
 	if (
@@ -353,16 +353,16 @@ const calculateTimeElapsed = () => {
 	}
 
 	if (stationPaused.value)
-		timePaused.value += Date.currently() - pausedAt.value;
+		timePaused.value += dateCurrently() - pausedAt.value;
 
 	const duration =
-		(Date.currently() - startedAt.value - timePaused.value) / 1000;
+		(dateCurrently() - startedAt.value - timePaused.value) / 1000;
 
 	const songDuration = currentSong.value.duration;
 	if (playerReady.value && songDuration <= duration)
 		player.value.pauseVideo();
 	if (duration <= songDuration)
-		timeElapsed.value = utils.formatTime(duration);
+		timeElapsed.value = utils.formatTime(duration) || "0";
 };
 const playVideo = () => {
 	if (playerReady.value) {
@@ -381,7 +381,7 @@ const playVideo = () => {
 		}, 150);
 	}
 };
-const voteSkipStation = message => {
+const voteSkipStation = (message?) => {
 	socket.dispatch("stations.voteSkip", station.value._id, data => {
 		if (data.status !== "success") new Toast(`Error: ${data.message}`);
 		else
@@ -425,9 +425,7 @@ const youtubeReady = () => {
 					playVideo();
 
 					const duration =
-						(Date.currently() -
-							startedAt.value -
-							timePaused.value) /
+						(dateCurrently() - startedAt.value - timePaused.value) /
 						1000;
 					const songDuration = currentSong.value.duration;
 					if (songDuration <= duration) player.value.pauseVideo();
@@ -603,7 +601,7 @@ const setCurrentSong = data => {
 					!noSong.value &&
 					_currentSong.value._id === _currentSong._id
 				)
-					skipSong("window.stationNextSongTimeout 1");
+					skipSong();
 			}, getTimeRemaining());
 		}
 
@@ -671,12 +669,12 @@ const setCurrentSong = data => {
 };
 const changeVolume = () => {
 	const volume = volumeSliderValue.value;
-	localStorage.setItem("volume", volume);
+	localStorage.setItem("volume", `${volume}`);
 	if (playerReady.value) {
 		player.value.setVolume(volume);
 		if (volume > 0) {
 			player.value.unMute();
-			localStorage.setItem("muted", false);
+			localStorage.setItem("muted", "false");
 			muted.value = false;
 		}
 	}
@@ -730,10 +728,10 @@ const toggleMute = () => {
 		const previousVolume = parseFloat(localStorage.getItem("volume"));
 		const volume = player.value.getVolume() <= 0 ? previousVolume : 0;
 		muted.value = !muted.value;
-		localStorage.setItem("muted", muted.value);
+		localStorage.setItem("muted", `${muted.value}`);
 		volumeSliderValue.value = volume;
 		player.value.setVolume(volume);
-		if (!muted.value) localStorage.setItem("volume", volume);
+		if (!muted.value) localStorage.setItem("volume", `${volume}`);
 	}
 };
 const increaseVolume = () => {
@@ -742,12 +740,12 @@ const increaseVolume = () => {
 		let volume = previousVolume + 5;
 		if (previousVolume === 0) {
 			muted.value = false;
-			localStorage.setItem("muted", false);
+			localStorage.setItem("muted", "false");
 		}
 		if (volume > 100) volume = 100;
 		volumeSliderValue.value = volume;
 		player.value.setVolume(volume);
-		localStorage.setItem("volume", volume);
+		localStorage.setItem("volume", `${volume}`);
 	}
 };
 const toggleLike = () => {
@@ -1025,8 +1023,9 @@ const sendActivityWatchVideoData = () => {
 	if (!stationPaused.value && !localPaused.value && !noSong.value) {
 		if (activityWatchVideoLastStatus.value !== "playing") {
 			activityWatchVideoLastStatus.value = "playing";
-			activityWatchVideoLastStatus.value =
-				currentSong.value.skipDuration + getTimeElapsed();
+			activityWatchVideoLastStatus.value = `${
+				currentSong.value.skipDuration + getTimeElapsed()
+			}`;
 		}
 
 		if (
@@ -1034,8 +1033,9 @@ const sendActivityWatchVideoData = () => {
 			currentSong.value.youtubeId
 		) {
 			activityWatchVideoLastYouTubeId.value = currentSong.value.youtubeId;
-			activityWatchVideoLastStatus.value =
-				currentSong.value.skipDuration + getTimeElapsed();
+			activityWatchVideoLastStatus.value = `${
+				currentSong.value.skipDuration + getTimeElapsed()
+			}`;
 		}
 
 		const videoData = {
@@ -1048,9 +1048,11 @@ const sendActivityWatchVideoData = () => {
 			muted: muted.value,
 			volume: volumeSliderValue.value,
 			startedDuration:
-				activityWatchVideoLastStatus.value <= 0
+				Number(activityWatchVideoLastStatus.value) <= 0
 					? 0
-					: Math.floor(activityWatchVideoLastStatus.value / 1000),
+					: Math.floor(
+							Number(activityWatchVideoLastStatus.value) / 1000
+					  ),
 			source: `station#${station.value.name}`,
 			hostname: window.location.hostname
 		};
@@ -1096,8 +1098,6 @@ onMounted(async () => {
 
 	window.scrollTo(0, 0);
 
-	Date.currently = () => new Date().getTime() + systemDifference.value;
-
 	stationIdentifier.value = route.params.id;
 
 	window.stationInterval = 0;
@@ -1119,7 +1119,7 @@ onMounted(async () => {
 
 	ws.onDisconnect(true, () => {
 		socketConnected.value = false;
-		const _currentSong = currentSong.value.currentSong;
+		const _currentSong = currentSong.value;
 		if (nextSong.value)
 			setNextCurrentSong(
 				{
@@ -1143,7 +1143,7 @@ onMounted(async () => {
 			);
 		window.stationNextSongTimeout = setTimeout(() => {
 			if (!noSong.value && currentSong.value._id === _currentSong._id)
-				skipSong("window.stationNextSongTimeout 2");
+				skipSong();
 		}, getTimeRemaining());
 	});
 
@@ -1300,7 +1300,9 @@ onMounted(async () => {
 							key =>
 								`${encodeURIComponent(
 									key
-								)}=${encodeURIComponent(route.query[key])}`
+								)}=${encodeURIComponent(
+									JSON.stringify(route.query[key])
+								)}`
 						)
 						.join("&")}`
 				);
@@ -1344,7 +1346,7 @@ onMounted(async () => {
 		let volume = parseFloat(localStorage.getItem("volume"));
 		volume =
 			typeof volume === "number" && !Number.isNaN(volume) ? volume : 20;
-		localStorage.setItem("volume", volume);
+		localStorage.setItem("volume", `${volume}`);
 		volumeSliderValue.value = volume;
 	}
 });
@@ -2007,8 +2009,7 @@ onBeforeUnmount(() => {
 				<span
 					><b>Skip votes current</b>:
 					{{
-						currentSong.skipVotesCurrent === true ||
-						currentSong.skipVotesCurrent === false
+						currentSong.skipVotesCurrent
 							? currentSong.skipVotesCurrent
 							: "N/A"
 					}}</span

@@ -6,6 +6,7 @@ let PunishmentsModule;
 let CacheModule;
 let DBModule;
 let UtilsModule;
+let WSModule;
 
 class _PunishmentsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -26,6 +27,7 @@ class _PunishmentsModule extends CoreClass {
 		CacheModule = this.moduleManager.modules.cache;
 		DBModule = this.moduleManager.modules.db;
 		UtilsModule = this.moduleManager.modules.utils;
+		WSModule = this.moduleManager.modules.ws;
 
 		this.punishmentModel = this.PunishmentModel = await DBModule.runJob("GET_MODEL", { modelName: "punishment" });
 		this.punishmentSchemaCache = await CacheModule.runJob("GET_SCHEMA", { schemaName: "punishment" });
@@ -144,7 +146,19 @@ class _PunishmentsModule extends CoreClass {
 										key: punishment.punishmentId
 									},
 									this
-								).finally(() => next2());
+								).finally(() => {
+									WSModule.runJob(
+										"EMIT_TO_ROOM",
+										{
+											room: `admin.punishments`,
+											args: [
+												"event:admin.punishment.updated",
+												{ data: { punishment: { ...punishment, status: "Inactive" } } }
+											]
+										},
+										this
+									).finally(() => next2());
+								});
 							},
 							() => {
 								next(null, punishments);
@@ -292,6 +306,56 @@ class _PunishmentsModule extends CoreClass {
 						)
 							.then(() => next(null, punishment))
 							.catch(next);
+					}
+				],
+				(err, punishment) => {
+					if (err) return reject(new Error(err));
+					return resolve(punishment);
+				}
+			);
+		});
+	}
+
+	/**
+	 * Deactivates a punishment
+	 *
+	 * @param {object} payload - object containing the payload
+	 * @param {string} payload.punishmentId - the MongoDB id of the punishment
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	DEACTIVATE_PUNISHMENT(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						PunishmentsModule.punishmentModel.findOne({ _id: payload.punishmentId }, next);
+					},
+
+					(punishment, next) => {
+						if (!punishment) next("Punishment does not exist.");
+						else
+							PunishmentsModule.punishmentModel.updateOne(
+								{ _id: payload.punishmentId },
+								{ $set: { active: false } },
+								next
+							);
+					},
+
+					(res, next) => {
+						CacheModule.runJob(
+							"HDEL",
+							{
+								table: "punishments",
+								key: payload.punishmentId
+							},
+							this
+						)
+							.then(() => next())
+							.catch(next);
+					},
+
+					next => {
+						PunishmentsModule.punishmentModel.findOne({ _id: payload.punishmentId }, next);
 					}
 				],
 				(err, punishment) => {

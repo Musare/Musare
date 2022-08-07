@@ -58,7 +58,7 @@ const submitModal = () => {
 		password: password.value.value,
 		recaptchaToken: recaptcha.value.token
 	})
-		.then(res => {
+		.then((res: any) => {
 			if (res.status === "success") window.location.reload();
 		})
 		.catch(err => new Toast(err.message));

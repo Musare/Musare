@@ -60,7 +60,7 @@ watch(
 	>
 		<slot name="icon" />
 		<div
-			v-if="-1 < loadError < 2 && isYoutubeThumbnail"
+			v-if="-1 < loadError && loadError < 2 && isYoutubeThumbnail"
 			class="yt-thumbnail-bg"
 			:style="{
 				'background-image':
@@ -70,7 +70,7 @@ watch(
 			}"
 		></div>
 		<img
-			v-if="-1 < loadError < 2 && isYoutubeThumbnail"
+			v-if="-1 < loadError && loadError < 2 && isYoutubeThumbnail"
 			loading="lazy"
 			:src="`https://img.youtube.com/vi/${song.youtubeId}/mqdefault.jpg`"
 			@error="onLoadError"
