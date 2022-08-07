@@ -187,7 +187,8 @@ const updateMediaSessionData = song => {
 			song.title,
 			song.artists ? song.artists.join(", ") : null,
 			null,
-			song.thumbnail
+			song.thumbnail ||
+				`https://img.youtube.com/vi/${song.youtubeId}/mqdefault.jpg`
 		);
 	} else ms.removeMediaSessionData(0);
 };

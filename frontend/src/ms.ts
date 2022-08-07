@@ -28,7 +28,7 @@ export default {
 				title,
 				artist,
 				album,
-				artwork: [{ src: artwork }]
+				...(artwork ? { artwork: [{ src: artwork }] } : null)
 			})
 		};
 	},
