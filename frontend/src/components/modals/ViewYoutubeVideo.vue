@@ -9,7 +9,8 @@ import { useModalsStore } from "@/stores/modals";
 import { useViewYoutubeVideoStore } from "@/stores/viewYoutubeVideo";
 import { useStationStore } from "@/stores/station";
 
-const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
+import Modal from "@/components/Modal.vue";
+
 const SongThumbnail = defineAsyncComponent(
 	() => import("@/components/SongThumbnail.vue")
 );

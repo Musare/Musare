@@ -19,6 +19,9 @@ const QuickConfirm = defineAsyncComponent(
 const SongThumbnail = defineAsyncComponent(
 	() => import("@/components/SongThumbnail.vue")
 );
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
 
 const route = useRoute();
 
@@ -663,7 +666,7 @@ onMounted(() => {
 				}}</span>
 			</template>
 			<template #column-requestedBy="slotProps">
-				<UserLink :user-id="slotProps.item.requestedBy" />
+				<user-link :user-id="slotProps.item.requestedBy" />
 			</template>
 			<template #column-requestedAt="slotProps">
 				<span
@@ -672,7 +675,7 @@ onMounted(() => {
 				>
 			</template>
 			<template #column-verifiedBy="slotProps">
-				<UserLink :user-id="slotProps.item.verifiedBy" />
+				<user-link :user-id="slotProps.item.verifiedBy" />
 			</template>
 			<template #column-verifiedAt="slotProps">
 				<span :title="new Date(slotProps.item.verifiedAt).toString()">{{
