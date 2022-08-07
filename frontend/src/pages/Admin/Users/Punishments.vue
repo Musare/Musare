@@ -29,7 +29,7 @@ const columns = ref(<TableColumn[]>[
 	{
 		name: "options",
 		displayName: "Options",
-		properties: ["_id", "active", "status"],
+		properties: ["_id", "status"],
 		sortable: false,
 		hidable: false,
 		resizable: false,
@@ -227,18 +227,20 @@ const deactivatePunishment = punishmentId => {
 					<quick-confirm
 						@confirm="deactivatePunishment(slotProps.item._id)"
 						:disabled="
-							!slotProps.item.active || slotProps.item.removed
+							slotProps.item.status === 'Inactive' ||
+							slotProps.item.removed
 						"
 					>
 						<button
 							class="button is-danger icon-with-button material-icons"
 							:class="{
 								disabled:
-									!slotProps.item.active ||
+									slotProps.item.status === 'Inactive' ||
 									slotProps.item.removed
 							}"
 							:disabled="
-								!slotProps.item.active || slotProps.item.removed
+								slotProps.item.status === 'Inactive' ||
+								slotProps.item.removed
 							"
 							content="Deactivate Punishment"
 							v-tippy
