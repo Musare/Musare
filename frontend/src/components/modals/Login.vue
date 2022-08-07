@@ -28,7 +28,7 @@ const submitModal = () => {
 		email: email.value,
 		password: password.value.value
 	})
-		.then(res => {
+		.then((res: any) => {
 			if (res.status === "success") window.location.reload();
 		})
 		.catch(err => new Toast(err.message));

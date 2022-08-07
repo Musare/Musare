@@ -80,7 +80,9 @@ onMounted(() => {
 						<user-link
 							:user-id="item.createdBy"
 							:alt="item.createdBy"
-						/>&nbsp;<span :title="new Date(item.createdAt)">
+						/>&nbsp;<span
+							:title="new Date(item.createdAt).toString()"
+						>
 							{{
 								formatDistance(item.createdAt, new Date(), {
 									addSuffix: true

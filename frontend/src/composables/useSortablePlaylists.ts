@@ -48,20 +48,20 @@ export const useSortablePlaylists = () => {
 
 		oldPlaylists.splice(newIndex, 0, oldPlaylists.splice(oldIndex, 1)[0]);
 
-		setPlaylists(oldPlaylists).then(() => {
-			const recalculatedOrder = calculatePlaylistOrder();
+		setPlaylists(oldPlaylists);
 
-			socket.dispatch(
-				"users.updateOrderOfPlaylists",
-				recalculatedOrder,
-				res => {
-					if (res.status === "error") return new Toast(res.message);
+		const recalculatedOrder = calculatePlaylistOrder();
 
-					orderOfPlaylists.value = calculatePlaylistOrder(); // new order in regards to the database
-					return new Toast(res.message);
-				}
-			);
-		});
+		socket.dispatch(
+			"users.updateOrderOfPlaylists",
+			recalculatedOrder,
+			res => {
+				if (res.status === "error") return new Toast(res.message);
+
+				orderOfPlaylists.value = calculatePlaylistOrder(); // new order in regards to the database
+				return new Toast(res.message);
+			}
+		);
 	};
 
 	onMounted(async () => {

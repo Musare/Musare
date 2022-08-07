@@ -9,11 +9,11 @@ import {
 	onUnmounted
 } from "vue";
 import Toast from "toasters";
-
 import { useModalsStore } from "@/stores/modals";
 import { useEditSongStore } from "@/stores/editSong";
 import { useEditSongsStore } from "@/stores/editSongs";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { Song } from "@/types/song.js";
 
 const EditSongModal = defineAsyncComponent(
 	() => import("@/components/modals/EditSong/index.vue")
@@ -38,7 +38,7 @@ const { editSong } = editSongStore;
 const { openModal, closeCurrentModal } = useModalsStore();
 
 const items = ref([]);
-const currentSong = ref({});
+const currentSong = ref(<Song>{});
 const flagFilter = ref(false);
 const sidebarMobileActive = ref(false);
 const songItems = ref([]);
@@ -51,7 +51,7 @@ const editingItemIndex = computed(() =>
 const filteredItems = computed({
 	get: () =>
 		items.value.filter(item => (flagFilter.value ? item.flagged : true)),
-	set: newItem => {
+	set: (newItem: any) => {
 		const index = items.value.findIndex(
 			item => item.song.youtubeId === newItem.youtubeId
 		);

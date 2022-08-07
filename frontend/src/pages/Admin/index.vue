@@ -80,12 +80,11 @@ const resetKeyboardShortcutsHelper = () => {
 
 const toggleSidebar = () => {
 	sidebarActive.value = !sidebarActive.value;
-	localStorage.setItem("admin-sidebar-active", sidebarActive.value);
+	localStorage.setItem("admin-sidebar-active", `${sidebarActive.value}`);
 };
 
 const calculateSidebarPadding = () => {
-	const scrollTop =
-		document.documentElement.scrollTop || document.scrollTop || 0;
+	const scrollTop = document.documentElement.scrollTop || 0;
 	if (scrollTop <= 64) sidebarPadding.value = 64 - scrollTop;
 	else sidebarPadding.value = 0;
 };

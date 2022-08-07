@@ -6,7 +6,13 @@ export const useViewYoutubeVideoStore = props => {
 		state: () => ({
 			videoId: null,
 			youtubeId: null,
-			video: {},
+			video: {
+				_id: null,
+				youtubeId: null,
+				title: null,
+				author: null,
+				duration: 0
+			},
 			player: {
 				error: false,
 				errorMessage: "",

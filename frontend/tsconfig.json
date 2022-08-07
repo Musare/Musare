@@ -12,6 +12,8 @@
         "./src/*"
       ]
     },
-    "jsx": "preserve"
+    "jsx": "preserve",
+    "types": ["vite/client"]
   },
+  "exclude": ["./src/index.html"]
 }

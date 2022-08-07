@@ -38,7 +38,7 @@ const keydownInput = () => {
 	clearTimeout(keydownInputTimeout.value);
 	keydownInputTimeout.value = setTimeout(() => {
 		if (value.value && value.value.length > 1) {
-			items.value = props.allItems.filter(item =>
+			items.value = props.allItems.filter((item: string) =>
 				item.toLowerCase().startsWith(value.value.toLowerCase())
 			);
 		} else items.value = [];

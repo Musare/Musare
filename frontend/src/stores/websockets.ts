@@ -1,8 +1,9 @@
 import { defineStore } from "pinia";
+import { CustomWebSocket } from "@/types/customWebSocket";
 
 export const useWebsocketsStore = defineStore("websockets", {
 	state: () => ({
-		socket: {
+		socket: <CustomWebSocket>{
 			dispatcher: {}
 		}
 	}),

@@ -1,12 +1,30 @@
 import { defineStore } from "pinia";
+import { Song } from "@/types/song";
 
 export const useImportAlbumStore = props => {
 	const { modalUuid } = props;
 	return defineStore(`importAlbum-${modalUuid}`, {
 		state: () => ({
-			discogsAlbum: {},
-			originalPlaylistSongs: [],
-			playlistSongs: [],
+			discogsAlbum: <
+				{
+					album?: {
+						albumArt: string;
+						title: string;
+						type: string;
+						year: string;
+						artists: string[];
+						genres: string[];
+					};
+					dataQuality?: string;
+					tracks?: {
+						position: string;
+						title: string;
+					}[];
+					expanded?: boolean;
+				}
+			>{},
+			originalPlaylistSongs: <Song[]>[],
+			playlistSongs: <Song[]>[],
 			editingSongs: false,
 			discogsTab: "search",
 			prefillDiscogs: false

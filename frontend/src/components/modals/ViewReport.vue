@@ -7,6 +7,7 @@ import { useModalsStore } from "@/stores/modals";
 import { useViewReportStore } from "@/stores/viewReport";
 import { useReports } from "@/composables/useReports";
 import ws from "@/ws";
+import { Report } from "@/types/report";
 
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
@@ -36,7 +37,7 @@ const icons = ref({
 	title: "title",
 	custom: "lightbulb"
 });
-const report = ref({});
+const report = ref(<Report>{});
 const song = ref();
 
 const init = () => {
@@ -92,14 +93,14 @@ const init = () => {
 
 const resolve = value =>
 	resolveReport({ reportId: reportId.value, value })
-		.then(res => {
+		.then((res: any) => {
 			if (res.status !== "success") new Toast(res.message);
 		})
 		.catch(err => new Toast(err.message));
 
 const remove = () =>
 	removeReport(reportId.value)
-		.then(res => {
+		.then((res: any) => {
 			if (res.status === "success") closeCurrentModal();
 		})
 		.catch(err => new Toast(err.message));
@@ -134,7 +135,7 @@ onBeforeUnmount(() => {
 			<div class="report-item">
 				<div id="song-and-report-items">
 					<report-info-item
-						:created-at="report.createdAt"
+						:created-at="`${report.createdAt}`"
 						:created-by="report.createdBy"
 					/>
 

@@ -5,6 +5,7 @@ import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import ws from "@/ws";
+import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -20,9 +21,20 @@ const route = useRoute();
 
 const { socket } = useWebsocketsStore();
 
-const quotaStatus = ref({});
+const quotaStatus = ref(
+	<
+		{
+			[key: string]: {
+				title: string;
+				quotaUsed: number;
+				limit: number;
+				quotaExceeded: boolean;
+			};
+		}
+	>{}
+);
 const fromDate = ref();
-const columnDefault = ref({
+const columnDefault = ref(<TableColumn>{
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -31,7 +43,7 @@ const columnDefault = ref({
 	minWidth: 150,
 	maxWidth: 600
 });
-const columns = ref([
+const columns = ref(<TableColumn[]>[
 	{
 		name: "options",
 		displayName: "Options",
@@ -73,7 +85,7 @@ const columns = ref([
 		defaultWidth: 230
 	}
 ]);
-const filters = ref([
+const filters = ref(<TableFilter[]>[
 	{
 		name: "_id",
 		displayName: "Request ID",
@@ -109,7 +121,7 @@ const filters = ref([
 		defaultFilterType: "contains"
 	}
 ]);
-const events = ref({
+const events = ref(<TableEvents>{
 	adminRoom: "youtube",
 	removed: {
 		event: "admin.youtubeApiRequest.removed",
@@ -117,8 +129,8 @@ const events = ref({
 	}
 });
 const charts = ref({
-	quotaUsage: null,
-	apiRequests: null
+	quotaUsage: {},
+	apiRequests: {}
 });
 const jobs = ref([
 	{
@@ -162,10 +174,10 @@ const init = () => {
 const getDateFormatted = createdAt => {
 	const date = new Date(createdAt);
 	const year = date.getFullYear();
-	const month = `${date.getMonth() + 1}`.padStart(2, 0);
-	const day = `${date.getDate()}`.padStart(2, 0);
-	const hour = `${date.getHours()}`.padStart(2, 0);
-	const minute = `${date.getMinutes()}`.padStart(2, 0);
+	const month = `${date.getMonth() + 1}`.padStart(2, "0");
+	const day = `${date.getDate()}`.padStart(2, "0");
+	const hour = `${date.getHours()}`.padStart(2, "0");
+	const minute = `${date.getMinutes()}`.padStart(2, "0");
 	return `${year}-${month}-${day} ${hour}:${minute}`;
 };
 
@@ -295,7 +307,7 @@ onMounted(() => {
 					}}</span>
 				</template>
 				<template #column-timestamp="slotProps">
-					<span :title="new Date(slotProps.item.date)">{{
+					<span :title="new Date(slotProps.item.date).toString()">{{
 						getDateFormatted(slotProps.item.date)
 					}}</span>
 				</template>

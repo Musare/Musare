@@ -189,7 +189,7 @@ const otherContributors = ref([
 							</div>
 							<a
 								v-if="member.link"
-								:href="member.link"
+								:href="`${member.link}`"
 								target="_blank"
 								class="material-icons"
 							>

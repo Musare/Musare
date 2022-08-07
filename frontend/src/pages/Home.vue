@@ -48,8 +48,8 @@ const filteredStations = computed(() => {
 		)
 		.sort(
 			(a, b) =>
-				isOwner(b) - isOwner(a) ||
-				isPlaying(b) - isPlaying(a) ||
+				Number(isOwner(b)) - Number(isOwner(a)) ||
+				Number(isPlaying(b)) - Number(isPlaying(a)) ||
 				a.paused - b.paused ||
 				privacyOrder.indexOf(a.privacy) -
 					privacyOrder.indexOf(b.privacy) ||
@@ -163,7 +163,8 @@ const changeFavoriteOrder = ({ oldIndex, newIndex }) => {
 onMounted(async () => {
 	siteSettings.value = await lofig.get("siteSettings");
 
-	if (route.query.searchQuery) searchQuery.value = route.query.query;
+	if (route.query.searchQuery)
+		searchQuery.value = JSON.stringify(route.query.query);
 
 	if (
 		!loggedIn.value &&

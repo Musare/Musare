@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from "vue";
 import { useModalsStore } from "@/stores/modals";
-
 import utils from "@/utils";
+import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -11,7 +11,7 @@ const RunJobDropdown = defineAsyncComponent(
 	() => import("@/components/RunJobDropdown.vue")
 );
 
-const columnDefault = ref({
+const columnDefault = ref(<TableColumn>{
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -20,7 +20,7 @@ const columnDefault = ref({
 	minWidth: 150,
 	maxWidth: 600
 });
-const columns = ref([
+const columns = ref(<TableColumn[]>[
 	{
 		name: "options",
 		displayName: "Options",
@@ -96,7 +96,7 @@ const columns = ref([
 		defaultWidth: 230
 	}
 ]);
-const filters = ref([
+const filters = ref(<TableFilter[]>[
 	{
 		name: "_id",
 		displayName: "Playlist ID",
@@ -184,7 +184,7 @@ const filters = ref([
 		defaultFilterType: "contains"
 	}
 ]);
-const events = ref({
+const events = ref(<TableEvents>{
 	adminRoom: "playlists",
 	updated: {
 		event: "admin.playlist.updated",
@@ -228,10 +228,10 @@ const { openModal } = useModalsStore();
 const getDateFormatted = createdAt => {
 	const date = new Date(createdAt);
 	const year = date.getFullYear();
-	const month = `${date.getMonth() + 1}`.padStart(2, 0);
-	const day = `${date.getDate()}`.padStart(2, 0);
-	const hour = `${date.getHours()}`.padStart(2, 0);
-	const minute = `${date.getMinutes()}`.padStart(2, 0);
+	const month = `${date.getMonth() + 1}`.padStart(2, "0");
+	const day = `${date.getDate()}`.padStart(2, "0");
+	const hour = `${date.getHours()}`.padStart(2, "0");
+	const minute = `${date.getMinutes()}`.padStart(2, "0");
 	return `${year}-${month}-${day} ${hour}:${minute}`;
 };
 
@@ -306,7 +306,7 @@ const formatTimeLong = length => utils.formatTimeLong(length);
 				<user-link v-else :user-id="slotProps.item.createdBy" />
 			</template>
 			<template #column-createdAt="slotProps">
-				<span :title="new Date(slotProps.item.createdAt)">{{
+				<span :title="new Date(slotProps.item.createdAt).toString()">{{
 					getDateFormatted(slotProps.item.createdAt)
 				}}</span>
 			</template>

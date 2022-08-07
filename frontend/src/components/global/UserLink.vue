@@ -15,15 +15,17 @@ const user = ref({
 const { getBasicUser } = useUserAuthStore();
 
 onMounted(() => {
-	getBasicUser(props.userId).then(basicUser => {
-		if (basicUser) {
-			const { name, username } = basicUser;
-			user.value = {
-				name,
-				username
-			};
+	getBasicUser(props.userId).then(
+		(basicUser: { name: string; username: string } | null) => {
+			if (basicUser) {
+				const { name, username } = basicUser;
+				user.value = {
+					name,
+					username
+				};
+			}
 		}
-	});
+	);
 });
 </script>
 

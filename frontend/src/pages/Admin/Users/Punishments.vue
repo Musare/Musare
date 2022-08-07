@@ -3,6 +3,7 @@ import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
+import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -11,9 +12,11 @@ const AdvancedTable = defineAsyncComponent(
 const { socket } = useWebsocketsStore();
 
 const ipBan = ref({
+	ip: "",
+	reason: "",
 	expiresAt: "1h"
 });
-const columnDefault = ref({
+const columnDefault = ref(<TableColumn>{
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -22,7 +25,7 @@ const columnDefault = ref({
 	minWidth: 150,
 	maxWidth: 600
 });
-const columns = ref([
+const columns = ref(<TableColumn[]>[
 	{
 		name: "options",
 		displayName: "Options",
@@ -84,7 +87,7 @@ const columns = ref([
 		defaultVisibility: "hidden"
 	}
 ]);
-const filters = ref([
+const filters = ref(<TableFilter[]>[
 	{
 		name: "status",
 		displayName: "Status",
@@ -143,7 +146,7 @@ const filters = ref([
 		defaultFilterType: "datetimeBefore"
 	}
 ]);
-const events = ref({
+const events = ref(<TableEvents>{
 	adminRoom: "punishments",
 	updated: {
 		event: "admin.punishment.updated",
@@ -169,10 +172,10 @@ const banIP = () => {
 const getDateFormatted = createdAt => {
 	const date = new Date(createdAt);
 	const year = date.getFullYear();
-	const month = `${date.getMonth() + 1}`.padStart(2, 0);
-	const day = `${date.getDate()}`.padStart(2, 0);
-	const hour = `${date.getHours()}`.padStart(2, 0);
-	const minute = `${date.getMinutes()}`.padStart(2, 0);
+	const month = `${date.getMonth() + 1}`.padStart(2, "0");
+	const day = `${date.getDate()}`.padStart(2, "0");
+	const hour = `${date.getHours()}`.padStart(2, "0");
+	const minute = `${date.getMinutes()}`.padStart(2, "0");
 	return `${year}-${month}-${day} ${hour}:${minute}`;
 };
 
@@ -281,12 +284,12 @@ const deactivatePunishment = punishmentId => {
 				<user-link :user-id="slotProps.item.punishedBy" />
 			</template>
 			<template #column-punishedAt="slotProps">
-				<span :title="new Date(slotProps.item.punishedAt)">{{
+				<span :title="new Date(slotProps.item.punishedAt).toString()">{{
 					getDateFormatted(slotProps.item.punishedAt)
 				}}</span>
 			</template>
 			<template #column-expiresAt="slotProps">
-				<span :title="new Date(slotProps.item.expiresAt)">{{
+				<span :title="new Date(slotProps.item.expiresAt).toString()">{{
 					getDateFormatted(slotProps.item.expiresAt)
 				}}</span>
 			</template>

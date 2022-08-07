@@ -60,9 +60,9 @@ onMounted(async () => {
 					<a
 						v-for="(url, title, index) in filteredFooterLinks"
 						:key="`footer-link-${index}`"
-						:href="url"
+						:href="`${url}`"
 						target="_blank"
-						:title="title"
+						:title="`${title}`"
 					>
 						{{ title }}
 					</a>

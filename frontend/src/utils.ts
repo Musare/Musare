@@ -15,11 +15,11 @@ export default {
 			if (originalDuration <= 0) return "0:00";
 
 			let duration = originalDuration;
-			let hours = Math.floor(duration / (60 * 60));
+			let hours: number | string = Math.floor(duration / (60 * 60));
 			duration -= hours * 60 * 60;
-			let minutes = Math.floor(duration / 60);
+			let minutes: number | string = Math.floor(duration / 60);
 			duration -= minutes * 60;
-			let seconds = Math.floor(duration);
+			let seconds: number | string = Math.floor(duration);
 
 			if (hours === 0) {
 				hours = "";

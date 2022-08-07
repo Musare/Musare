@@ -5,7 +5,14 @@ export const useViewApiRequestStore = props => {
 	return defineStore(`viewApiRequest-${modalUuid}`, {
 		state: () => ({
 			requestId: null,
-			request: {},
+			request: {
+				_id: null,
+				url: null,
+				params: {},
+				results: [],
+				date: null,
+				quotaCost: null
+			},
 			removeAction: null
 		}),
 		actions: {

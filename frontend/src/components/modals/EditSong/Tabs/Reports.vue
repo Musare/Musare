@@ -50,7 +50,7 @@ const sortedByCategory = computed(() => {
 		})
 	);
 
-	return categories;
+	return <any>categories;
 });
 
 const { resolveReport } = editSongStore;
@@ -213,7 +213,7 @@ onMounted(() => {
 					:key="report._id"
 				>
 					<report-info-item
-						:created-at="report.createdAt"
+						:created-at="`${report.createdAt}`"
 						:created-by="report.createdBy"
 					>
 						<template #actions>

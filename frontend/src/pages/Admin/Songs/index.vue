@@ -5,6 +5,7 @@ import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
 import { useModalsStore } from "@/stores/modals";
+import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -19,7 +20,7 @@ const { setJob } = useLongJobsStore();
 
 const { socket } = useWebsocketsStore();
 
-const columnDefault = ref({
+const columnDefault = ref(<TableColumn>{
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -28,7 +29,7 @@ const columnDefault = ref({
 	minWidth: 200,
 	maxWidth: 600
 });
-const columns = ref([
+const columns = ref(<TableColumn[]>[
 	{
 		name: "options",
 		displayName: "Options",
@@ -153,7 +154,7 @@ const columns = ref([
 		defaultVisibility: "hidden"
 	}
 ]);
-const filters = ref([
+const filters = ref(<TableFilter[]>[
 	{
 		name: "_id",
 		displayName: "Song ID",
@@ -271,7 +272,7 @@ const filters = ref([
 		defaultFilterType: "numberLesser"
 	}
 ]);
-const events = ref({
+const events = ref(<TableEvents>{
 	adminRoom: "songs",
 	updated: {
 		event: "admin.song.updated",
@@ -479,10 +480,10 @@ const deleteMany = selectedRows => {
 const getDateFormatted = createdAt => {
 	const date = new Date(createdAt);
 	const year = date.getFullYear();
-	const month = `${date.getMonth() + 1}`.padStart(2, 0);
-	const day = `${date.getDate()}`.padStart(2, 0);
-	const hour = `${date.getHours()}`.padStart(2, 0);
-	const minute = `${date.getMinutes()}`.padStart(2, 0);
+	const month = `${date.getMonth() + 1}`.padStart(2, "0");
+	const day = `${date.getDate()}`.padStart(2, "0");
+	const hour = `${date.getHours()}`.padStart(2, "0");
+	const minute = `${date.getMinutes()}`.padStart(2, "0");
 	return `${year}-${month}-${day} ${hour}:${minute}`;
 };
 
@@ -659,15 +660,16 @@ onMounted(() => {
 				<UserLink :user-id="slotProps.item.requestedBy" />
 			</template>
 			<template #column-requestedAt="slotProps">
-				<span :title="new Date(slotProps.item.requestedAt)">{{
-					getDateFormatted(slotProps.item.requestedAt)
-				}}</span>
+				<span
+					:title="new Date(slotProps.item.requestedAt).toString()"
+					>{{ getDateFormatted(slotProps.item.requestedAt) }}</span
+				>
 			</template>
 			<template #column-verifiedBy="slotProps">
 				<UserLink :user-id="slotProps.item.verifiedBy" />
 			</template>
 			<template #column-verifiedAt="slotProps">
-				<span :title="new Date(slotProps.item.verifiedAt)">{{
+				<span :title="new Date(slotProps.item.verifiedAt).toString()">{{
 					getDateFormatted(slotProps.item.verifiedAt)
 				}}</span>
 			</template>

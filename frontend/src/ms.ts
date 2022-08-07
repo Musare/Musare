@@ -75,7 +75,7 @@ export default {
 	getHighestPriority() {
 		return Object.keys(this.mediaSessionData)
 			.map(priority => Number(priority))
-			.sort((a, b) => a > b)
+			.sort((a, b) => a - b)
 			.reverse()[0];
 	},
 	init() {

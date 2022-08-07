@@ -157,7 +157,7 @@ const label = (tense = "future", typeOverwrite = null, capitalize = false) => {
 	return label;
 };
 
-const selectedPlaylists = typeOverwrite => {
+const selectedPlaylists = (typeOverwrite?: string) => {
 	const type = typeOverwrite || props.type;
 
 	if (type === "autofill") return autofill.value;
@@ -166,7 +166,7 @@ const selectedPlaylists = typeOverwrite => {
 	return [];
 };
 
-const isSelected = (playlistId, typeOverwrite) => {
+const isSelected = (playlistId, typeOverwrite?: string) => {
 	const type = typeOverwrite || props.type;
 	let selected = false;
 
@@ -176,7 +176,7 @@ const isSelected = (playlistId, typeOverwrite) => {
 	return selected;
 };
 
-const deselectPlaylist = (playlistId, typeOverwrite) => {
+const deselectPlaylist = (playlistId, typeOverwrite?: string) => {
 	const type = typeOverwrite || props.type;
 
 	if (type === "autofill")
@@ -187,7 +187,7 @@ const deselectPlaylist = (playlistId, typeOverwrite) => {
 				playlistId,
 				res => {
 					new Toast(res.message);
-					resolve();
+					resolve(true);
 				}
 			);
 		});
@@ -199,7 +199,7 @@ const deselectPlaylist = (playlistId, typeOverwrite) => {
 				playlistId,
 				res => {
 					new Toast(res.message);
-					resolve();
+					resolve(true);
 				}
 			);
 		});
@@ -207,12 +207,12 @@ const deselectPlaylist = (playlistId, typeOverwrite) => {
 		return new Promise(resolve => {
 			removePlaylistFromAutoRequest(playlistId);
 			new Toast("Successfully deselected playlist.");
-			resolve();
+			resolve(true);
 		});
 	return false;
 };
 
-const selectPlaylist = async (playlist, typeOverwrite) => {
+const selectPlaylist = async (playlist, typeOverwrite?: string) => {
 	const type = typeOverwrite || props.type;
 
 	if (isSelected(playlist._id, type))
@@ -227,7 +227,7 @@ const selectPlaylist = async (playlist, typeOverwrite) => {
 				res => {
 					new Toast(res.message);
 					emit("selected");
-					resolve();
+					resolve(true);
 				}
 			);
 		});
@@ -243,7 +243,7 @@ const selectPlaylist = async (playlist, typeOverwrite) => {
 				res => {
 					new Toast(res.message);
 					emit("selected");
-					resolve();
+					resolve(true);
 				}
 			);
 		});
@@ -253,7 +253,7 @@ const selectPlaylist = async (playlist, typeOverwrite) => {
 			addPlaylistToAutoRequest(playlist);
 			new Toast("Successfully selected playlist to auto request songs.");
 			emit("selected");
-			resolve();
+			resolve(true);
 		});
 	return false;
 };

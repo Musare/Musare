@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
 	defineAsyncComponent,
+	PropType,
 	useSlots,
 	ref,
 	computed,
@@ -18,6 +19,12 @@ import { useModalsStore } from "@/stores/modals";
 import keyboardShortcuts from "@/keyboardShortcuts";
 import ws from "@/ws";
 import { useDragBox } from "@/composables/useDragBox";
+import {
+	TableColumn,
+	TableFilter,
+	TableEvents,
+	TableBulkActions
+} from "@/types/advancedTable";
 
 const { dragBox, setInitialBox, onDragBox, resetBoxPosition } = useDragBox();
 
@@ -41,16 +48,25 @@ const props = defineProps({
 	width: Width of column, e.g. 100px
 	maxWidth: Maximum width of column, e.g. 150px
 	*/
-	columnDefault: { type: Object, default: () => {} },
-	columns: { type: Array, default: null },
-	filters: { type: Array, default: null },
+	columnDefault: { type: Object as PropType<TableColumn>, default: () => {} },
+	columns: {
+		type: Array as PropType<TableColumn[]>,
+		default: () => []
+	},
+	filters: {
+		type: Array as PropType<TableFilter[]>,
+		default: () => []
+	},
 	dataAction: { type: String, default: null },
 	name: { type: String, default: null },
 	maxWidth: { type: Number, default: 1880 },
 	query: { type: Boolean, default: true },
 	keyboardShortcuts: { type: Boolean, default: true },
-	events: { type: Object, default: () => {} },
-	bulkActions: { type: Object, default: () => {} }
+	events: { type: Object as PropType<TableEvents>, default: () => {} },
+	bulkActions: {
+		type: Object as PropType<TableBulkActions>,
+		default: () => {}
+	}
 });
 
 const slots = useSlots();
@@ -98,7 +114,16 @@ const filterOperators = ref([
 		displayName: "NOR"
 	}
 ]);
-const resizing = ref({});
+const resizing = ref({
+	resizing: false,
+	width: 0,
+	lastX: 0,
+	resizingColumn: {
+		width: 0,
+		minWidth: 0,
+		maxWidth: 0
+	}
+});
 const allFilterTypes = ref({
 	contains: {
 		name: "contains",
@@ -666,26 +691,50 @@ const columnOrderChanged = ({ oldIndex, newIndex }) => {
 };
 
 const getTableSettings = () => {
-	const urlTableSettings = {};
+	const urlTableSettings = <
+		{
+			page: number;
+			pageSize: number;
+			shownColumns: string[];
+			columnOrder: string[];
+			columnWidths: {
+				name: string;
+				width: number;
+			}[];
+			columnSort: {
+				[name: string]: string;
+			};
+			filter: {
+				appliedFilters: TableFilter[];
+				appliedFilterOperator: string;
+			};
+		}
+	>{};
 	if (props.query) {
 		if (route.query.page)
-			urlTableSettings.page = Number.parseInt(route.query.page);
+			urlTableSettings.page = Number.parseInt(<string>route.query.page);
 		if (route.query.pageSize)
-			urlTableSettings.pageSize = Number.parseInt(route.query.pageSize);
+			urlTableSettings.pageSize = Number.parseInt(
+				<string>route.query.pageSize
+			);
 		if (route.query.shownColumns)
 			urlTableSettings.shownColumns = JSON.parse(
-				route.query.shownColumns
+				<string>route.query.shownColumns
 			);
 		if (route.query.columnOrder)
-			urlTableSettings.columnOrder = JSON.parse(route.query.columnOrder);
+			urlTableSettings.columnOrder = JSON.parse(
+				<string>route.query.columnOrder
+			);
 		if (route.query.columnWidths)
 			urlTableSettings.columnWidths = JSON.parse(
-				route.query.columnWidths
+				<string>route.query.columnWidths
 			);
 		if (route.query.columnSort)
-			urlTableSettings.columnSort = JSON.parse(route.query.columnSort);
+			urlTableSettings.columnSort = JSON.parse(
+				<string>route.query.columnSort
+			);
 		if (route.query.filter)
-			urlTableSettings.filter = JSON.parse(route.query.filter);
+			urlTableSettings.filter = JSON.parse(<string>route.query.filter);
 	}
 
 	const localStorageTableSettings = JSON.parse(
@@ -739,8 +788,8 @@ const init = () => {
 	getData();
 	if (props.query) setQuery();
 	if (props.events) {
-		if (props.events.room)
-			socket.dispatch("apis.joinRoom", props.events.room, () => {});
+		// if (props.events.room)
+		// 	socket.dispatch("apis.joinRoom", props.events.room, () => {});
 		if (props.events.adminRoom)
 			socket.dispatch(
 				"apis.joinAdminRoom",
@@ -892,13 +941,15 @@ onMounted(async () => {
 			appliedFilters.value = tableSettings.filter.appliedFilters.filter(
 				appliedFilter =>
 					props.filters.find(
-						filter => appliedFilter.filter.name === filter.name
+						(filter: { name: string }) =>
+							appliedFilter.filter.name === filter.name
 					)
 			);
 			editingFilters.value = tableSettings.filter.appliedFilters.filter(
 				appliedFilter =>
 					props.filters.find(
-						filter => appliedFilter.filter.name === filter.name
+						(filter: { name: string }) =>
+							appliedFilter.filter.name === filter.name
 					)
 			);
 		}
@@ -1041,7 +1092,7 @@ onMounted(async () => {
 				if (aModalIsOpen.value) return;
 				console.log("Reset local storage");
 				localStorage.removeItem(`advancedTableSettings:${props.name}`);
-				router.push({ query: "" });
+				router.push({ query: {} });
 			}
 		});
 

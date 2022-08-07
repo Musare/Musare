@@ -1,4 +1,6 @@
 import { defineStore } from "pinia";
+import { Song } from "@/types/song";
+import { Report } from "@/types/report";
 
 export const useEditSongStore = props => {
 	const { modalUuid } = props;
@@ -13,9 +15,9 @@ export const useEditSongStore = props => {
 				playbackRate: 1
 			},
 			youtubeId: null,
-			song: {},
-			originalSong: {},
-			reports: [],
+			song: <Song>{},
+			originalSong: <Song>{},
+			reports: <Report[]>[],
 			tab: "discogs",
 			newSong: false,
 			prefillData: {}

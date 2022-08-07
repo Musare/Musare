@@ -3,6 +3,7 @@ import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
+import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -13,7 +14,7 @@ const RunJobDropdown = defineAsyncComponent(
 
 const { socket } = useWebsocketsStore();
 
-const columnDefault = ref({
+const columnDefault = ref(<TableColumn>{
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -22,7 +23,7 @@ const columnDefault = ref({
 	minWidth: 150,
 	maxWidth: 600
 });
-const columns = ref([
+const columns = ref(<TableColumn[]>[
 	{
 		name: "options",
 		displayName: "Options",
@@ -141,7 +142,7 @@ const columns = ref([
 		defaultVisibility: "hidden"
 	}
 ]);
-const filters = ref([
+const filters = ref(<TableFilter[]>[
 	{
 		name: "_id",
 		displayName: "Station ID",
@@ -277,7 +278,7 @@ const filters = ref([
 		]
 	}
 ]);
-const events = ref({
+const events = ref(<TableEvents>{
 	adminRoom: "stations",
 	updated: {
 		event: "station.updated",

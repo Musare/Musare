@@ -73,7 +73,7 @@ const hideTippyElements = () => {
 	setTimeout(
 		() =>
 			Array.from(document.querySelectorAll(".tippy-popper")).forEach(
-				popper => popper._tippy.hide()
+				(popper: any) => popper._tippy.hide()
 			),
 		500
 	);

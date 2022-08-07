@@ -73,7 +73,7 @@ const globalComponents = import.meta.glob("@/components/global/*.vue");
 Object.entries(globalComponents).forEach(
 	async ([componentFilePath, definition]) => {
 		const componentName = componentFilePath.split("/").pop().split(".")[0];
-		const component = await definition();
+		const component: any = await definition();
 		app.component(componentName, component.default);
 	}
 );
@@ -257,11 +257,11 @@ router.beforeEach((to, from, next) => {
 	if (to.meta.loginRequired || to.meta.adminRequired || to.meta.guestsOnly) {
 		const gotData = () => {
 			if (to.meta.loginRequired && !userAuthStore.loggedIn)
-				next({ path: "/login", query: "" });
+				next({ path: "/login" });
 			else if (to.meta.adminRequired && userAuthStore.role !== "admin")
-				next({ path: "/", query: "" });
+				next({ path: "/" });
 			else if (to.meta.guestsOnly && userAuthStore.loggedIn)
-				next({ path: "/", query: "" });
+				next({ path: "/" });
 			else next();
 		};
 

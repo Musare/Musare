@@ -1,24 +1,28 @@
 import { defineStore } from "pinia";
+import { Playlist } from "@/types/playlist";
+import { Song, CurrentSong } from "@/types/song";
+import { Station } from "@/types/station";
+import { User } from "@/types/user";
 
 export const useStationStore = defineStore("station", {
 	state: () => ({
-		station: {},
-		autoRequest: [],
+		station: <Station>{},
+		autoRequest: <Playlist[]>[],
 		autoRequestLock: false,
 		editing: {},
 		userCount: 0,
 		users: {
-			loggedIn: [],
-			loggedOut: []
+			loggedIn: <User[]>[],
+			loggedOut: <User[]>[]
 		},
-		currentSong: {},
-		nextSong: null,
-		songsList: [],
+		currentSong: <CurrentSong | undefined>{},
+		nextSong: <Song | undefined | null>null,
+		songsList: <Song[]>[],
 		stationPaused: true,
 		localPaused: false,
 		noSong: true,
-		autofill: [],
-		blacklist: []
+		autofill: <Playlist[]>[],
+		blacklist: <Playlist[]>[]
 	}),
 	actions: {
 		joinStation(station) {

@@ -93,7 +93,7 @@ const showTab = _tab => {
 	tab.value = _tab;
 };
 
-const addSongToQueue = (youtubeId, index) => {
+const addSongToQueue = (youtubeId: string, index?: number) => {
 	socket.dispatch(
 		"stations.addToQueue",
 		station.value._id,

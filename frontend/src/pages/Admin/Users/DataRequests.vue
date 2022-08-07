@@ -2,6 +2,7 @@
 import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -9,7 +10,7 @@ const AdvancedTable = defineAsyncComponent(
 
 const { socket } = useWebsocketsStore();
 
-const columnDefault = ref({
+const columnDefault = ref(<TableColumn>{
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -18,7 +19,7 @@ const columnDefault = ref({
 	minWidth: 230,
 	maxWidth: 600
 });
-const columns = ref([
+const columns = ref(<TableColumn[]>[
 	{
 		name: "options",
 		displayName: "Options",
@@ -55,7 +56,7 @@ const columns = ref([
 		sortProperty: "_id"
 	}
 ]);
-const filters = ref([
+const filters = ref(<TableFilter[]>[
 	{
 		name: "_id",
 		displayName: "Request ID",
@@ -78,7 +79,7 @@ const filters = ref([
 		defaultFilterType: "boolean"
 	}
 ]);
-const events = ref({
+const events = ref(<TableEvents>{
 	adminRoom: "users",
 	updated: {
 		event: "admin.dataRequests.updated",

@@ -58,16 +58,16 @@ const getTitle = () => {
 
 	if (preview.childNodes.length === 0) return "";
 
-	if (preview.childNodes[0].tagName !== "H1") {
+	if (preview.childNodes[0].nodeName !== "H1") {
 		for (let node = 0; node < preview.childNodes.length; node += 1) {
-			if (preview.childNodes[node].tagName) {
-				if (preview.childNodes[node].tagName === "H1")
-					title = preview.childNodes[node].innerText;
+			if (preview.childNodes[node].nodeName) {
+				if (preview.childNodes[node].nodeName === "H1")
+					title = preview.childNodes[node].textContent;
 
 				break;
 			}
 		}
-	} else title = preview.childNodes[0].innerText;
+	} else title = preview.childNodes[0].textContent;
 
 	return title;
 };
@@ -205,7 +205,7 @@ onMounted(() => {
 							:user-id="createdBy"
 							:alt="createdBy"
 						/> </span
-					>&nbsp;<span :title="new Date(createdAt)">
+					>&nbsp;<span :title="new Date(createdAt).toString()">
 						{{
 							formatDistance(createdAt, new Date(), {
 								addSuffix: true
