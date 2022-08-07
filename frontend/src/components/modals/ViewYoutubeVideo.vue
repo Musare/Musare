@@ -144,7 +144,7 @@ const toggleMute = () => {
 
 const drawCanvas = () => {
 	if (!loaded.value) return;
-	const canvasElement = durationCanvas;
+	const canvasElement = durationCanvas.value;
 	if (!canvasElement) return;
 	const ctx = canvasElement.getContext("2d");
 
