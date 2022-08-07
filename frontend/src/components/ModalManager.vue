@@ -25,7 +25,6 @@ const modalComponents = shallowRef(
 		removeAccount: "RemoveAccount.vue",
 		importAlbum: "ImportAlbum.vue",
 		confirm: "Confirm.vue",
-		editSongs: "EditSongs.vue",
 		editSong: "EditSong/index.vue",
 		viewYoutubeVideo: "ViewYoutubeVideo.vue"
 	})

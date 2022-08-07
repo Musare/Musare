@@ -344,7 +344,7 @@ const editSongs = videos => {
 	const songs = videos.map(youtubeId => ({ youtubeId }));
 	if (songs.length === 1)
 		openModal({ modal: "editSong", data: { song: songs[0] } });
-	else openModal({ modal: "editSongs", data: { songs } });
+	else openModal({ modal: "editSong", data: { songs } });
 };
 
 const importAlbum = youtubeIds => {

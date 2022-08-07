@@ -4,7 +4,6 @@ import ws from "@/ws";
 
 import { useEditUserStore } from "@/stores/editUser";
 import { useEditSongStore } from "@/stores/editSong";
-import { useEditSongsStore } from "@/stores/editSongs";
 import { useBulkActionsStore } from "@/stores/bulkActions";
 import { useConfirmStore } from "@/stores/confirm";
 import { useCreateStationStore } from "@/stores/createStation";
@@ -76,9 +75,6 @@ export const useModalsStore = defineStore("modals", {
 					break;
 				case "editSong":
 					store = useEditSongStore({ modalUuid: uuid });
-					break;
-				case "editSongs":
-					store = useEditSongsStore({ modalUuid: uuid });
 					break;
 				case "bulkActions":
 					store = useBulkActionsStore({ modalUuid: uuid });

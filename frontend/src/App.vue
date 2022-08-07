@@ -166,10 +166,7 @@ onMounted(async () => {
 				Object.keys(activeModals.value).length !== 0 &&
 				modals.value[
 					activeModals.value[activeModals.value.length - 1]
-				] !== "editSong" &&
-				modals.value[
-					activeModals.value[activeModals.value.length - 1]
-				] !== "editSongs"
+				] !== "editSong"
 			)
 				closeCurrentModal();
 		}

@@ -124,7 +124,7 @@ const startEditingSongs = () => {
 	if (songsToEdit.value.length === 0) new Toast("You can't edit 0 songs.");
 	else {
 		openModal({
-			modal: "editSongs",
+			modal: "editSong",
 			data: { songs: songsToEdit.value }
 		});
 	}

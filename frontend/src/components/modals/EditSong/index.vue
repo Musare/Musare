@@ -14,6 +14,8 @@ import ws from "@/ws";
 import validation from "@/validation";
 import keyboardShortcuts from "@/keyboardShortcuts";
 
+import { Song } from "@/types/song.js";
+
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useEditSongStore } from "@/stores/editSong";
@@ -27,6 +29,9 @@ const SaveButton = defineAsyncComponent(
 const AutoSuggest = defineAsyncComponent(
 	() => import("@/components/AutoSuggest.vue")
 );
+const SongItem = defineAsyncComponent(
+	() => import("@/components/SongItem.vue")
+);
 const Discogs = defineAsyncComponent(() => import("./Tabs/Discogs.vue"));
 const ReportsTab = defineAsyncComponent(() => import("./Tabs/Reports.vue"));
 const Youtube = defineAsyncComponent(() => import("./Tabs/Youtube.vue"));
@@ -38,19 +43,14 @@ const props = defineProps({
 		type: String,
 		default: "modals/editSong/MODAL_UUID"
 	},
-	discogsAlbum: { type: Object, default: null },
-	bulk: { type: Boolean, default: false },
-	flagged: { type: Boolean, default: false }
+	discogsAlbum: { type: Object, default: null }
 });
 
 const emit = defineEmits([
 	"error",
-	"savedSuccess",
-	"savedError",
 	"flagSong",
 	"nextSong",
 	"close",
-	"saving",
 	"toggleFlag"
 ]);
 
@@ -69,7 +69,10 @@ const {
 	prefillData,
 	originalSong,
 	reports,
-	newSong
+	newSong,
+	bulk,
+	youtubeIds,
+	songPrefillData
 } = storeToRefs(editSongStore);
 
 const songDataLoaded = ref(false);
@@ -141,6 +144,13 @@ const interval = ref();
 const saveButtonRefs = ref(<any>[]);
 const canvasElement = ref();
 const genreHelper = ref();
+// EditSongs
+const items = ref([]);
+const currentSong = ref(<Song>{});
+const flagFilter = ref(false);
+const sidebarMobileActive = ref(false);
+const songItems = ref([]);
+// EditSongs end
 
 const isYoutubeThumbnail = computed(
 	() =>
@@ -150,8 +160,37 @@ const isYoutubeThumbnail = computed(
 		(song.value.thumbnail.lastIndexOf("i.ytimg.com") !== -1 ||
 			song.value.thumbnail.lastIndexOf("img.youtube.com") !== -1)
 );
+// EditSongs
+const editingItemIndex = computed(() =>
+	items.value.findIndex(
+		item => item.song.youtubeId === currentSong.value.youtubeId
+	)
+);
+const filteredItems = computed({
+	get: () =>
+		items.value.filter(item => (flagFilter.value ? item.flagged : true)),
+	set: (newItem: any) => {
+		const index = items.value.findIndex(
+			item => item.song.youtubeId === newItem.youtubeId
+		);
+		items.value[index] = newItem;
+	}
+});
+const filteredEditingItemIndex = computed(() =>
+	filteredItems.value.findIndex(
+		item => item.song.youtubeId === currentSong.value.youtubeId
+	)
+);
+const currentSongFlagged = computed(
+	() =>
+		items.value.find(
+			item => item.song.youtubeId === currentSong.value.youtubeId
+		)?.flagged
+);
+// EditSongs end
 
 const {
+	editSong,
 	stopVideo,
 	hardStopVideo,
 	loadVideoById,
@@ -164,16 +203,144 @@ const {
 	setPlaybackRate
 } = editSongStore;
 
-const closeCurrentModal = () => {
-	if (props.bulk) emit("close");
-	else modalsStore.closeCurrentModal();
-};
-
 const showTab = payload => {
 	if (tabs.value[`${payload}-tab`])
 		tabs.value[`${payload}-tab`].scrollIntoView({ block: "nearest" });
 	editSongStore.showTab(payload);
 };
+
+// EditSongs
+const toggleDone = (index, overwrite = null) => {
+	const { status } = filteredItems.value[index];
+
+	if (status === "done" && overwrite !== "done")
+		filteredItems.value[index].status = "todo";
+	else {
+		filteredItems.value[index].status = "done";
+		filteredItems.value[index].flagged = false;
+	}
+};
+
+const toggleFlagFilter = () => {
+	flagFilter.value = !flagFilter.value;
+};
+
+const toggleMobileSidebar = () => {
+	sidebarMobileActive.value = !sidebarMobileActive.value;
+};
+
+const pickSong = song => {
+	editSong({
+		youtubeId: song.youtubeId,
+		prefill: songPrefillData.value[song.youtubeId]
+	});
+	currentSong.value = song;
+	if (
+		songItems.value[`edit-songs-item-${song.youtubeId}`] &&
+		songItems.value[`edit-songs-item-${song.youtubeId}`][0]
+	)
+		songItems.value[
+			`edit-songs-item-${song.youtubeId}`
+		][0].scrollIntoView();
+};
+
+const editNextSong = () => {
+	const currentlyEditingSongIndex = filteredEditingItemIndex.value;
+	let newEditingSongIndex = -1;
+	const index =
+		currentlyEditingSongIndex + 1 === filteredItems.value.length
+			? 0
+			: currentlyEditingSongIndex + 1;
+	for (let i = index; i < filteredItems.value.length; i += 1) {
+		if (!flagFilter.value || filteredItems.value[i].flagged) {
+			newEditingSongIndex = i;
+			break;
+		}
+	}
+
+	if (newEditingSongIndex > -1) {
+		const nextSong = filteredItems.value[newEditingSongIndex].song;
+		if (nextSong.removed) editNextSong();
+		else pickSong(nextSong);
+	}
+};
+
+const toggleFlag = (songIndex = null) => {
+	if (songIndex && songIndex > -1) {
+		filteredItems.value[songIndex].flagged =
+			!filteredItems.value[songIndex].flagged;
+		new Toast(
+			`Successfully ${
+				filteredItems.value[songIndex].flagged ? "flagged" : "unflagged"
+			} song.`
+		);
+	} else if (!songIndex && editingItemIndex.value > -1) {
+		items.value[editingItemIndex.value].flagged =
+			!items.value[editingItemIndex.value].flagged;
+		new Toast(
+			`Successfully ${
+				items.value[editingItemIndex.value].flagged
+					? "flagged"
+					: "unflagged"
+			} song.`
+		);
+	}
+};
+
+const onSavedSuccess = youtubeId => {
+	const itemIndex = items.value.findIndex(
+		item => item.song.youtubeId === youtubeId
+	);
+	if (itemIndex > -1) {
+		items.value[itemIndex].status = "done";
+		items.value[itemIndex].flagged = false;
+	}
+};
+
+const onSavedError = youtubeId => {
+	const itemIndex = items.value.findIndex(
+		item => item.song.youtubeId === youtubeId
+	);
+	if (itemIndex > -1) items.value[itemIndex].status = "error";
+};
+
+const onSaving = youtubeId => {
+	const itemIndex = items.value.findIndex(
+		item => item.song.youtubeId === youtubeId
+	);
+	if (itemIndex > -1) items.value[itemIndex].status = "saving";
+};
+
+const closeCurrentModal = () => {
+	if (bulk.value) {
+		const doneItems = items.value.filter(
+			item => item.status === "done"
+		).length;
+		const flaggedItems = items.value.filter(item => item.flagged).length;
+		const notDoneItems = items.value.length - doneItems;
+
+		if (doneItems > 0 && notDoneItems > 0)
+			openModal({
+				modal: "confirm",
+				data: {
+					message:
+						"You have songs which are not done yet. Are you sure you want to stop editing songs?",
+					onCompleted: modalsStore.closeCurrentModal
+				}
+			});
+		else if (flaggedItems > 0)
+			openModal({
+				modal: "confirm",
+				data: {
+					message:
+						"You have songs which are flagged. Are you sure you want to stop editing songs?",
+					onCompleted: modalsStore.closeCurrentModal
+				}
+			});
+		else modalsStore.closeCurrentModal();
+	} else modalsStore.closeCurrentModal();
+};
+// EditSongs end
 
 const onThumbnailLoad = () => {
 	if (thumbnailElement.value) {
@@ -243,8 +410,8 @@ const loadSong = _youtubeId => {
 			}
 		} else {
 			new Toast("Song with that ID not found");
-			if (props.bulk) songNotFound.value = true;
-			if (!props.bulk) closeCurrentModal();
+			if (bulk.value) songNotFound.value = true;
+			if (!bulk.value) closeCurrentModal();
 		}
 	});
 };
@@ -294,7 +461,7 @@ const seekTo = position => {
 };
 
 const init = () => {
-	if (newSong.value && !youtubeId.value && !props.bulk) {
+	if (newSong.value && !youtubeId.value && !bulk.value) {
 		setSong({
 			youtubeId: "",
 			title: "",
@@ -309,7 +476,7 @@ const init = () => {
 		songDataLoaded.value = true;
 		showTab("youtube");
 	} else if (youtubeId.value) loadSong(youtubeId.value);
-	else if (!props.bulk) {
+	else if (!bulk.value) {
 		new Toast("You can't open EditSong without editing a song");
 		return closeCurrentModal();
 	}
@@ -521,25 +688,25 @@ const init = () => {
 const save = (songToCopy, closeOrNext, saveButtonRefName, _newSong = false) => {
 	const _song = JSON.parse(JSON.stringify(songToCopy));
 
-	if (!newSong.value || props.bulk) emit("saving", _song.youtubeId);
+	if (!newSong.value || bulk.value) onSaving(_song.youtubeId);
 
 	const saveButtonRef = saveButtonRefs.value[saveButtonRefName];
 
 	if (!youtubeError.value && youtubeVideoDuration.value === "0.000") {
 		saveButtonRef.handleFailedSave();
-		if (!_newSong) emit("savedError", _song.youtubeId);
+		if (!_newSong) onSavedError(_song.youtubeId);
 		return new Toast("The video appears to not be working.");
 	}
 
 	if (!_song.title) {
 		saveButtonRef.handleFailedSave();
-		if (!_newSong || props.bulk) emit("savedError", _song.youtubeId);
+		if (!_newSong || bulk.value) onSavedError(_song.youtubeId);
 		return new Toast("Please fill in all fields");
 	}
 
 	if (!_song.thumbnail) {
 		saveButtonRef.handleFailedSave();
-		if (!_newSong || props.bulk) emit("savedError", _song.youtubeId);
+		if (!_newSong || bulk.value) onSavedError(_song.youtubeId);
 		return new Toast("Please fill in all fields");
 	}
 
@@ -572,7 +739,7 @@ const save = (songToCopy, closeOrNext, saveButtonRefName, _newSong = false) => {
 		originalSong.value.youtubeId !== _song.youtubeId
 	) {
 		saveButtonRef.handleFailedSave();
-		if (!_newSong || props.bulk) emit("savedError", _song.youtubeId);
+		if (!_newSong || bulk.value) onSavedError(_song.youtubeId);
 		return new Toast(
 			"You're not allowed to change the YouTube id while the player is not working"
 		);
@@ -582,11 +749,11 @@ const save = (songToCopy, closeOrNext, saveButtonRefName, _newSong = false) => {
 	if (
 		Number(_song.skipDuration) + Number(_song.duration) >
 			Number.parseInt(youtubeVideoDuration.value) &&
-		(((!_newSong || props.bulk) && !youtubeError.value) ||
+		(((!_newSong || bulk.value) && !youtubeError.value) ||
 			originalSong.value.duration !== _song.duration)
 	) {
 		saveButtonRef.handleFailedSave();
-		if (!_newSong || props.bulk) emit("savedError", _song.youtubeId);
+		if (!_newSong || bulk.value) onSavedError(_song.youtubeId);
 		return new Toast(
 			"Duration can't be higher than the length of the video"
 		);
@@ -595,7 +762,7 @@ const save = (songToCopy, closeOrNext, saveButtonRefName, _newSong = false) => {
 	// Title
 	if (!validation.isLength(_song.title, 1, 100)) {
 		saveButtonRef.handleFailedSave();
-		if (!_newSong || props.bulk) emit("savedError", _song.youtubeId);
+		if (!_newSong || bulk.value) onSavedError(_song.youtubeId);
 		return new Toast("Title must have between 1 and 100 characters.");
 	}
 
@@ -605,7 +772,7 @@ const save = (songToCopy, closeOrNext, saveButtonRefName, _newSong = false) => {
 		_song.artists.length > 10
 	) {
 		saveButtonRef.handleFailedSave();
-		if (!_newSong || props.bulk) emit("savedError", _song.youtubeId);
+		if (!_newSong || bulk.value) onSavedError(_song.youtubeId);
 		return new Toast(
 			"Invalid artists. You must have at least 1 artist and a maximum of 10 artists."
 		);
@@ -628,7 +795,7 @@ const save = (songToCopy, closeOrNext, saveButtonRefName, _newSong = false) => {
 
 	if (error) {
 		saveButtonRef.handleFailedSave();
-		if (!_newSong || props.bulk) emit("savedError", _song.youtubeId);
+		if (!_newSong || bulk.value) onSavedError(_song.youtubeId);
 		return new Toast(error);
 	}
 
@@ -654,7 +821,7 @@ const save = (songToCopy, closeOrNext, saveButtonRefName, _newSong = false) => {
 
 	if (error) {
 		saveButtonRef.handleFailedSave();
-		if (!_newSong || props.bulk) emit("savedError", _song.youtubeId);
+		if (!_newSong || bulk.value) onSavedError(_song.youtubeId);
 		return new Toast(error);
 	}
 
@@ -674,19 +841,19 @@ const save = (songToCopy, closeOrNext, saveButtonRefName, _newSong = false) => {
 
 	if (error) {
 		saveButtonRef.handleFailedSave();
-		if (!_newSong || props.bulk) emit("savedError", _song.youtubeId);
+		if (!_newSong || bulk.value) onSavedError(_song.youtubeId);
 		return new Toast(error);
 	}
 
 	// Thumbnail
 	if (!validation.isLength(_song.thumbnail, 1, 256)) {
 		saveButtonRef.handleFailedSave();
-		if (!_newSong || props.bulk) emit("savedError", _song.youtubeId);
+		if (!_newSong || bulk.value) onSavedError(_song.youtubeId);
 		return new Toast("Thumbnail must have between 8 and 256 characters.");
 	}
 	if (useHTTPS.value && _song.thumbnail.indexOf("https://") !== 0) {
 		saveButtonRef.handleFailedSave();
-		if (!_newSong || props.bulk) emit("savedError", _song.youtubeId);
+		if (!_newSong || bulk.value) onSavedError(_song.youtubeId);
 		return new Toast('Thumbnail must start with "https://".');
 	}
 
@@ -696,7 +863,7 @@ const save = (songToCopy, closeOrNext, saveButtonRefName, _newSong = false) => {
 		_song.thumbnail.indexOf("https://") !== 0
 	) {
 		saveButtonRef.handleFailedSave();
-		if (!_newSong || props.bulk) emit("savedError", _song.youtubeId);
+		if (!_newSong || bulk.value) onSavedError(_song.youtubeId);
 		return new Toast('Thumbnail must start with "http://".');
 	}
 
@@ -708,19 +875,19 @@ const save = (songToCopy, closeOrNext, saveButtonRefName, _newSong = false) => {
 
 			if (res.status === "error") {
 				saveButtonRef.handleFailedSave();
-				emit("savedError", _song.youtubeId);
+				onSavedError(_song.youtubeId);
 				return;
 			}
 
 			saveButtonRef.handleSuccessfulSave();
-			emit("savedSuccess", _song.youtubeId);
+			onSavedSuccess(_song.youtubeId);
 
 			if (!closeOrNext) {
 				loadSong(_song.youtubeId);
 				return;
 			}
 
-			if (props.bulk) emit("nextSong");
+			if (bulk.value) emit("nextSong");
 			else closeCurrentModal();
 		});
 	return socket.dispatch(`songs.update`, _song._id, _song, res => {
@@ -728,28 +895,20 @@ const save = (songToCopy, closeOrNext, saveButtonRefName, _newSong = false) => {
 
 		if (res.status === "error") {
 			saveButtonRef.handleFailedSave();
-			emit("savedError", _song.youtubeId);
+			onSavedError(_song.youtubeId);
 			return;
 		}
 
 		updateOriginalSong(_song);
 
 		saveButtonRef.handleSuccessfulSave();
-		emit("savedSuccess", _song.youtubeId);
+		onSavedSuccess(_song.youtubeId);
 
 		if (!closeOrNext) return;
 
-		if (props.bulk) emit("nextSong");
+		if (bulk.value) emit("nextSong");
 		else closeCurrentModal();
 	});
-};
-
-const editNextSong = () => {
-	emit("nextSong");
-};
-
-const toggleFlag = () => {
-	emit("toggleFlag");
 };
 
 const getAlbumData = type => {
@@ -1068,6 +1227,82 @@ onMounted(async () => {
 		{ modalUuid: props.modalUuid }
 	);
 
+	if (bulk.value) {
+		socket.dispatch("apis.joinRoom", "edit-songs");
+
+		socket.dispatch(
+			"songs.getSongsFromYoutubeIds",
+			youtubeIds.value,
+			res => {
+				if (res.data.songs.length === 0) {
+					closeCurrentModal();
+					new Toast("You can't edit 0 songs.");
+				} else {
+					items.value = res.data.songs.map(song => ({
+						status: "todo",
+						flagged: false,
+						song
+					}));
+					editNextSong();
+				}
+			}
+		);
+
+		socket.on(
+			`event:admin.song.created`,
+			res => {
+				const index = items.value
+					.map(item => item.song.youtubeId)
+					.indexOf(res.data.song.youtubeId);
+				if (index >= 0)
+					items.value[index].song = {
+						...items.value[index].song,
+						...res.data.song,
+						created: true
+					};
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			`event:admin.song.updated`,
+			res => {
+				const index = items.value
+					.map(item => item.song.youtubeId)
+					.indexOf(res.data.song.youtubeId);
+				if (index >= 0)
+					items.value[index].song = {
+						...items.value[index].song,
+						...res.data.song,
+						updated: true
+					};
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			`event:admin.song.removed`,
+			res => {
+				const index = items.value
+					.map(item => item.song._id)
+					.indexOf(res.data.songId);
+				if (index >= 0) items.value[index].song.removed = true;
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			`event:admin.youtubeVideo.removed`,
+			res => {
+				const index = items.value
+					.map(item => item.song.youtubeVideoId)
+					.indexOf(res.videoId);
+				if (index >= 0) items.value[index].song.removed = true;
+			},
+			{ modalUuid: props.modalUuid }
+		);
+	}
+
 	keyboardShortcuts.registerShortcut("editSong.pauseResumeVideo", {
 		keyCode: 101,
 		preventDefault: true,
@@ -1194,10 +1429,7 @@ onMounted(async () => {
 			if (
 				modals.value[
 					activeModals.value[activeModals.value.length - 1]
-				] === "editSong" ||
-				modals.value[
-					activeModals.value[activeModals.value.length - 1]
-				] === "editSongs"
+				] === "editSong"
 			) {
 				onCloseModal();
 			}
@@ -1232,6 +1464,10 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+	if (bulk.value) {
+		socket.dispatch("apis.leaveRoom", "edit-songs");
+	}
+
 	unloadSong(youtubeId.value, song.value._id);
 
 	playerReady.value = false;
@@ -1274,11 +1510,175 @@ onBeforeUnmount(() => {
 			:intercept-close="true"
 			@close="onCloseModal"
 		>
-			<template #toggleMobileSidebar>
-				<slot name="toggleMobileSidebar" />
+			<template #toggleMobileSidebar v-if="bulk">
+				<i
+					class="material-icons toggle-sidebar-icon"
+					:content="`${
+						sidebarMobileActive ? 'Close' : 'Open'
+					} Edit Queue`"
+					v-tippy
+					@click="toggleMobileSidebar()"
+					>expand_circle_down</i
+				>
 			</template>
-			<template #sidebar>
-				<slot name="sidebar" />
+			<template #sidebar v-if="bulk">
+				<div class="sidebar" :class="{ active: sidebarMobileActive }">
+					<header class="sidebar-head">
+						<h2 class="sidebar-title is-marginless">Edit Queue</h2>
+						<i
+							class="material-icons toggle-sidebar-icon"
+							:content="`${
+								sidebarMobileActive ? 'Close' : 'Open'
+							} Edit Queue`"
+							v-tippy
+							@click="toggleMobileSidebar()"
+							>expand_circle_down</i
+						>
+					</header>
+					<section class="sidebar-body">
+						<div
+							v-show="filteredItems.length > 0"
+							class="edit-songs-items"
+						>
+							<div
+								class="item"
+								v-for="(
+									{ status, flagged, song }, index
+								) in filteredItems"
+								:key="`edit-songs-item-${index}`"
+								:ref="
+									el =>
+										(songItems[
+											`edit-songs-item-${song.youtubeId}`
+										] = el)
+								"
+							>
+								<song-item
+									:song="song"
+									:thumbnail="false"
+									:duration="false"
+									:disabled-actions="
+										song.removed
+											? ['all']
+											: ['report', 'edit']
+									"
+									:class="{
+										updated: song.updated,
+										removed: song.removed
+									}"
+								>
+									<template #leftIcon>
+										<i
+											v-if="
+												currentSong.youtubeId ===
+													song.youtubeId &&
+												!song.removed
+											"
+											class="material-icons item-icon editing-icon"
+											content="Currently editing song"
+											v-tippy="{ theme: 'info' }"
+											@click="toggleDone(index)"
+											>edit</i
+										>
+										<i
+											v-else-if="song.removed"
+											class="material-icons item-icon removed-icon"
+											content="Song removed"
+											v-tippy="{ theme: 'info' }"
+											>delete_forever</i
+										>
+										<i
+											v-else-if="status === 'error'"
+											class="material-icons item-icon error-icon"
+											content="Error saving song"
+											v-tippy="{ theme: 'info' }"
+											@click="toggleDone(index)"
+											>error</i
+										>
+										<i
+											v-else-if="status === 'saving'"
+											class="material-icons item-icon saving-icon"
+											content="Currently saving song"
+											v-tippy="{ theme: 'info' }"
+											>pending</i
+										>
+										<i
+											v-else-if="flagged"
+											class="material-icons item-icon flag-icon"
+											content="Song flagged"
+											v-tippy="{ theme: 'info' }"
+											@click="toggleDone(index)"
+											>flag_circle</i
+										>
+										<i
+											v-else-if="status === 'done'"
+											class="material-icons item-icon done-icon"
+											content="Song marked complete"
+											v-tippy="{ theme: 'info' }"
+											@click="toggleDone(index)"
+											>check_circle</i
+										>
+										<i
+											v-else-if="status === 'todo'"
+											class="material-icons item-icon todo-icon"
+											content="Song marked todo"
+											v-tippy="{ theme: 'info' }"
+											@click="toggleDone(index)"
+											>cancel</i
+										>
+									</template>
+									<template v-if="!song.removed" #actions>
+										<i
+											class="material-icons edit-icon"
+											content="Edit Song"
+											v-tippy
+											@click="pickSong(song)"
+										>
+											edit
+										</i>
+									</template>
+									<template #tippyActions>
+										<i
+											class="material-icons flag-icon"
+											:class="{
+												flagged
+											}"
+											content="Toggle Flag"
+											v-tippy
+											@click="toggleFlag(index)"
+										>
+											flag_circle
+										</i>
+									</template>
+								</song-item>
+							</div>
+						</div>
+						<p v-if="filteredItems.length === 0" class="no-items">
+							{{
+								flagFilter
+									? "No flagged songs queued"
+									: "No songs queued"
+							}}
+						</p>
+					</section>
+					<footer class="sidebar-foot">
+						<button
+							@click="toggleFlagFilter()"
+							class="button is-primary"
+						>
+							{{
+								flagFilter
+									? "Show All Songs"
+									: "Show Only Flagged Songs"
+							}}
+						</button>
+					</footer>
+				</div>
+				<div
+					v-if="sidebarMobileActive"
+					class="sidebar-overlay"
+					@click="toggleMobileSidebar()"
+				></div>
 			</template>
 			<template #body>
 				<div v-if="!youtubeId && !newSong" class="notice-container">
@@ -1911,7 +2311,7 @@ onBeforeUnmount(() => {
 						@click="toggleFlag()"
 						v-if="youtubeId && !songDeleted"
 					>
-						{{ flagged ? "Unflag" : "Flag" }}
+						{{ currentSongFlagged ? "Unflag" : "Flag" }}
 					</button>
 				</div>
 				<div v-if="!newSong && !songDeleted">
@@ -2016,6 +2416,39 @@ onBeforeUnmount(() => {
 
 	.duration-canvas {
 		background-color: var(--dark-grey-2) !important;
+	}
+
+	.sidebar {
+		.sidebar-head,
+		.sidebar-foot {
+			background-color: var(--dark-grey-3);
+			border: none;
+		}
+
+		.sidebar-body {
+			background-color: var(--dark-grey-4) !important;
+		}
+
+		.sidebar-head .toggle-sidebar-icon.material-icons,
+		.sidebar-title {
+			color: var(--white);
+		}
+
+		p,
+		label,
+		td,
+		th {
+			color: var(--light-grey-2) !important;
+		}
+
+		h1,
+		h2,
+		h3,
+		h4,
+		h5,
+		h6 {
+			color: var(--white) !important;
+		}
 	}
 }
 
@@ -2505,5 +2938,162 @@ onBeforeUnmount(() => {
 
 :deep(.autosuggest-container) {
 	top: unset;
+}
+
+.toggle-sidebar-icon {
+	display: none;
+}
+
+.sidebar {
+	width: 100%;
+	max-width: 350px;
+	z-index: 2000;
+	display: flex;
+	flex-direction: column;
+	position: relative;
+	height: 100%;
+	max-height: calc(100vh - 40px);
+	overflow: auto;
+	margin-right: 8px;
+	border-radius: @border-radius;
+
+	.sidebar-head,
+	.sidebar-foot {
+		display: flex;
+		flex-shrink: 0;
+		position: relative;
+		justify-content: flex-start;
+		align-items: center;
+		padding: 20px;
+		background-color: var(--light-grey);
+	}
+
+	.sidebar-head {
+		border-bottom: 1px solid var(--light-grey-2);
+		border-radius: @border-radius @border-radius 0 0;
+
+		.sidebar-title {
+			display: flex;
+			flex: 1;
+			margin: 0;
+			font-size: 26px;
+			font-weight: 600;
+		}
+	}
+
+	.sidebar-body {
+		background-color: var(--white);
+		display: flex;
+		flex-direction: column;
+		row-gap: 8px;
+		flex: 1;
+		overflow: auto;
+		padding: 10px;
+
+		.edit-songs-items {
+			display: flex;
+			flex-direction: column;
+			row-gap: 8px;
+
+			.item {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				column-gap: 8px;
+
+				:deep(.song-item) {
+					.item-icon {
+						margin-right: 10px;
+						cursor: pointer;
+					}
+
+					.removed-icon,
+					.error-icon {
+						color: var(--red);
+					}
+
+					.saving-icon,
+					.todo-icon,
+					.editing-icon {
+						color: var(--primary-color);
+					}
+
+					.done-icon {
+						color: var(--green);
+					}
+
+					.flag-icon {
+						color: var(--orange);
+
+						&.flagged {
+							color: var(--grey);
+						}
+					}
+
+					&.removed {
+						filter: grayscale(100%);
+						cursor: not-allowed;
+						user-select: none;
+					}
+				}
+			}
+		}
+
+		.no-items {
+			text-align: center;
+			font-size: 18px;
+		}
+	}
+
+	.sidebar-foot {
+		border-top: 1px solid var(--light-grey-2);
+		border-radius: 0 0 @border-radius @border-radius;
+
+		.button {
+			flex: 1;
+		}
+	}
+
+	.sidebar-overlay {
+		display: none;
+	}
+}
+
+@media only screen and (max-width: 1580px) {
+	.toggle-sidebar-icon {
+		display: flex;
+		margin-right: 5px;
+		transform: rotate(90deg);
+		cursor: pointer;
+	}
+
+	.sidebar {
+		display: none;
+
+		&.active {
+			display: flex;
+			position: absolute;
+			z-index: 2010;
+			top: 20px;
+			left: 20px;
+
+			.sidebar-head .toggle-sidebar-icon {
+				display: flex;
+				margin-left: 5px;
+				transform: rotate(-90deg);
+			}
+		}
+	}
+
+	.sidebar-overlay {
+		display: flex;
+		position: absolute;
+		z-index: 2009;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: rgba(10, 10, 10, 0.85);
+	}
 }
 </style>

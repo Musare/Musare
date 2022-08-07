@@ -317,7 +317,7 @@ const editMany = selectedRows => {
 		const songs = selectedRows.map(row => ({
 			youtubeId: row.youtubeId
 		}));
-		openModal({ modal: "editSongs", data: { songs } });
+		openModal({ modal: "editSong", data: { songs } });
 	}
 };
 

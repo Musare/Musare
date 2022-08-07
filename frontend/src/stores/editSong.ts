@@ -20,11 +20,23 @@ export const useEditSongStore = props => {
 			reports: <Report[]>[],
 			tab: "discogs",
 			newSong: false,
-			prefillData: {}
+			prefillData: {},
+			bulk: false,
+			youtubeIds: [],
+			songPrefillData: {}
 		}),
 		actions: {
-			init({ song }) {
-				this.editSong(song);
+			init({ song, songs }) {
+				if (songs) {
+					this.bulk = true;
+					this.youtubeIds = songs.map(song => song.youtubeId);
+					this.songPrefillData = Object.fromEntries(
+						songs.map(song => [
+							song.youtubeId,
+							song.prefill ? song.prefill : {}
+						])
+					);
+				} else this.editSong(song);
 			},
 			showTab(tab) {
 				this.tab = tab;
