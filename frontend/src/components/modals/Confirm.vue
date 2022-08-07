@@ -30,7 +30,14 @@ onBeforeUnmount(() => {
 		<modal class="confirm-modal" title="Confirm Action" :size="'slim'">
 			<template #body>
 				<div class="confirm-modal-inner-container">
-					{{ message }}
+					<ul v-if="Array.isArray(message)">
+						<li v-for="messageItem in message" :key="messageItem">
+							{{ messageItem }}
+						</li>
+					</ul>
+					<template v-else>
+						{{ message }}
+					</template>
 				</div>
 			</template>
 			<template #footer>

@@ -310,36 +310,6 @@ const onSaving = youtubeId => {
 	);
 	if (itemIndex > -1) items.value[itemIndex].status = "saving";
 };
-
-const closeCurrentModal = () => {
-	if (bulk.value) {
-		const doneItems = items.value.filter(
-			item => item.status === "done"
-		).length;
-		const flaggedItems = items.value.filter(item => item.flagged).length;
-		const notDoneItems = items.value.length - doneItems;
-
-		if (doneItems > 0 && notDoneItems > 0)
-			openModal({
-				modal: "confirm",
-				data: {
-					message:
-						"You have songs which are not done yet. Are you sure you want to stop editing songs?",
-					onCompleted: modalsStore.closeCurrentModal
-				}
-			});
-		else if (flaggedItems > 0)
-			openModal({
-				modal: "confirm",
-				data: {
-					message:
-						"You have songs which are flagged. Are you sure you want to stop editing songs?",
-					onCompleted: modalsStore.closeCurrentModal
-				}
-			});
-		else modalsStore.closeCurrentModal();
-	} else modalsStore.closeCurrentModal();
-};
 // EditSongs end
 
 const onThumbnailLoad = () => {
@@ -411,7 +381,7 @@ const loadSong = _youtubeId => {
 		} else {
 			new Toast("Song with that ID not found");
 			if (bulk.value) songNotFound.value = true;
-			if (!bulk.value) closeCurrentModal();
+			if (!bulk.value) modalsStore.closeCurrentModal();
 		}
 	});
 };
@@ -478,7 +448,7 @@ const init = () => {
 	} else if (youtubeId.value) loadSong(youtubeId.value);
 	else if (!bulk.value) {
 		new Toast("You can't open EditSong without editing a song");
-		return closeCurrentModal();
+		return modalsStore.closeCurrentModal();
 	}
 
 	interval.value = setInterval(() => {
@@ -888,7 +858,7 @@ const save = (songToCopy, closeOrNext, saveButtonRefName, _newSong = false) => {
 			}
 
 			if (bulk.value) emit("nextSong");
-			else closeCurrentModal();
+			else modalsStore.closeCurrentModal();
 		});
 	return socket.dispatch(`songs.update`, _song._id, _song, res => {
 		new Toast(res.message);
@@ -907,7 +877,7 @@ const save = (songToCopy, closeOrNext, saveButtonRefName, _newSong = false) => {
 		if (!closeOrNext) return;
 
 		if (bulk.value) emit("nextSong");
-		else closeCurrentModal();
+		else modalsStore.closeCurrentModal();
 	});
 };
 
@@ -1177,16 +1147,40 @@ const onCloseModal = () => {
 	});
 	const unsavedChanges = songStringified !== originalSongStringified;
 
+	const confirmReasons = [];
+
 	if (unsavedChanges) {
+		confirmReasons.push(
+			"You have unsaved changes. Are you sure you want to discard unsaved changes?"
+		);
+	}
+
+	if (bulk.value) {
+		const doneItems = items.value.filter(
+			item => item.status === "done"
+		).length;
+		const flaggedItems = items.value.filter(item => item.flagged).length;
+		const notDoneItems = items.value.length - doneItems;
+
+		if (doneItems > 0 && notDoneItems > 0)
+			confirmReasons.push(
+				"You have songs which are not done yet. Are you sure you want to stop editing songs?"
+			);
+		else if (flaggedItems > 0)
+			confirmReasons.push(
+				"You have songs which are flagged. Are you sure you want to stop editing songs?"
+			);
+	}
+
+	if (confirmReasons.length > 0) {
 		return confirmAction({
-			message:
-				"You have unsaved changes. Are you sure you want to discard unsaved changes?",
-			action: closeCurrentModal,
+			message: confirmReasons,
+			action: modalsStore.closeCurrentModal,
 			params: null
 		});
 	}
 
-	return closeCurrentModal();
+	return modalsStore.closeCurrentModal();
 };
 
 watch(
@@ -1235,7 +1229,7 @@ onMounted(async () => {
 			youtubeIds.value,
 			res => {
 				if (res.data.songs.length === 0) {
-					closeCurrentModal();
+					modalsStore.closeCurrentModal();
 					new Toast("You can't edit 0 songs.");
 				} else {
 					items.value = res.data.songs.map(song => ({
