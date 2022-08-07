@@ -247,7 +247,7 @@ export default {
 	 * @param cb
 	 */
 	getData: useHasPermission(
-		"users.getData",
+		"users.get",
 		async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
 			async.waterfall(
 				[

@@ -2,6 +2,7 @@
 import { defineAsyncComponent, ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useModalsStore } from "@/stores/modals";
+import { useUserAuthStore } from "@/stores/userAuth";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
@@ -199,6 +200,8 @@ const events = ref(<TableEvents>{
 
 const { openModal } = useModalsStore();
 
+const { hasPermission } = useUserAuthStore();
+
 const edit = userId => {
 	openModal({ modal: "editUser", data: { userId } });
 };
@@ -229,6 +232,7 @@ onMounted(() => {
 			<template #column-options="slotProps">
 				<div class="row-options">
 					<button
+						v-if="hasPermission('users.update')"
 						class="button is-primary icon-with-button material-icons"
 						@click="edit(slotProps.item._id)"
 						:disabled="slotProps.item.removed"

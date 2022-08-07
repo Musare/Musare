@@ -2,6 +2,7 @@
 import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserAuthStore } from "@/stores/userAuth";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
@@ -88,6 +89,8 @@ const events = ref(<TableEvents>{
 	}
 });
 
+const { hasPermission } = useUserAuthStore();
+
 const resolveDataRequest = (id, resolved) => {
 	socket.dispatch("dataRequests.resolve", id, resolved, res => {
 		if (res.status === "success") new Toast(res.message);
@@ -116,7 +119,10 @@ const resolveDataRequest = (id, resolved) => {
 			<template #column-options="slotProps">
 				<div class="row-options">
 					<button
-						v-if="slotProps.item.resolved"
+						v-if="
+							hasPermission('dataRequests.resolve') &&
+							slotProps.item.resolved
+						"
 						class="button is-danger material-icons icon-with-button"
 						@click="resolveDataRequest(slotProps.item._id, false)"
 						:disabled="slotProps.item.removed"
@@ -126,7 +132,7 @@ const resolveDataRequest = (id, resolved) => {
 						remove_done
 					</button>
 					<button
-						v-else
+						v-else-if="hasPermission('dataRequests.resolve')"
 						class="button is-success material-icons icon-with-button"
 						@click="resolveDataRequest(slotProps.item._id, true)"
 						:disabled="slotProps.item.removed"
