@@ -22,7 +22,8 @@ export const useStationStore = defineStore("station", {
 		localPaused: false,
 		noSong: true,
 		autofill: <Playlist[]>[],
-		blacklist: <Playlist[]>[]
+		blacklist: <Playlist[]>[],
+		mediaModalPlayingAudio: false
 	}),
 	actions: {
 		joinStation(station) {
@@ -127,6 +128,9 @@ export const useStationStore = defineStore("station", {
 					this.autoRequest.splice(index, 1);
 				}
 			});
+		},
+		updateMediaModalPlayingAudio(mediaModalPlayingAudio) {
+			this.mediaModalPlayingAudio = mediaModalPlayingAudio;
 		}
 	}
 });

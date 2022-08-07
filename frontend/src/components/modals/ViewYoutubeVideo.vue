@@ -7,6 +7,7 @@ import ws from "@/ws";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useViewYoutubeVideoStore } from "@/stores/viewYoutubeVideo";
+import { useStationStore } from "@/stores/station";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
@@ -22,6 +23,7 @@ const activityWatchVideoLastStatus = ref("");
 const activityWatchVideoLastStartDuration = ref(0);
 
 const viewYoutubeVideoStore = useViewYoutubeVideoStore(props);
+const stationStore = useStationStore();
 const { videoId, youtubeId, video, player } = storeToRefs(
 	viewYoutubeVideoStore
 );
@@ -33,6 +35,7 @@ const {
 	setPlaybackRate,
 	viewYoutubeVideo
 } = viewYoutubeVideoStore;
+const { updateMediaModalPlayingAudio } = stationStore;
 
 const { openModal, closeCurrentModal } = useModalsStore();
 
@@ -70,6 +73,7 @@ const confirmAction = ({ message, action }) => {
 
 const seekTo = position => {
 	pauseVideo(false);
+	updateMediaModalPlayingAudio(true);
 	player.value.player.seekTo(position);
 };
 
@@ -78,12 +82,15 @@ const settings = type => {
 		case "stop":
 			stopVideo();
 			pauseVideo(true);
+			updateMediaModalPlayingAudio(false);
 			break;
 		case "pause":
 			pauseVideo(true);
+			updateMediaModalPlayingAudio(false);
 			break;
 		case "play":
 			pauseVideo(false);
+			updateMediaModalPlayingAudio(true);
 			break;
 		case "skipToLast10Secs":
 			seekTo(Number(player.value.duration) - 10);
@@ -230,6 +237,7 @@ const init = () => {
 					) {
 						stopVideo();
 						pauseVideo(true);
+						updateMediaModalPlayingAudio(false);
 						drawCanvas();
 					}
 					if (
@@ -383,6 +391,7 @@ const init = () => {
 										) {
 											stopVideo();
 											pauseVideo(true);
+											updateMediaModalPlayingAudio(false);
 											return new Toast(
 												"Video can't play. Specified duration is bigger than the YouTube song duration."
 											);
@@ -390,6 +399,7 @@ const init = () => {
 										if (video.value.duration <= 0) {
 											stopVideo();
 											pauseVideo(true);
+											updateMediaModalPlayingAudio(false);
 											return new Toast(
 												"Video can't play. Specified duration has to be more than 0 seconds."
 											);
@@ -448,6 +458,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
 	stopVideo();
 	pauseVideo(true);
+	updateMediaModalPlayingAudio(false);
 	player.value.duration = "0.000";
 	player.value.currentTime = 0;
 	player.value.playerReady = false;

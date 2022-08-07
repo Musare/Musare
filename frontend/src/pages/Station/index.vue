@@ -76,8 +76,9 @@ const activityWatchVideoLastStatus = ref("");
 const activityWatchVideoLastYouTubeId = ref("");
 // const activityWatchVideoLastStartDuration = ref("");
 const nextCurrentSong = ref(null);
-// const editSongModalWatcher = ref(null);
-// const beforeEditSongModalLocalPaused = ref(null);
+const mediaModalWatcher = ref(null);
+const beforeMediaModalLocalPausedLock = ref(false);
+const beforeMediaModalLocalPaused = ref(null);
 const socketConnected = ref(null);
 const persistentToastCheckerInterval = ref(null);
 const persistentToasts = ref([]);
@@ -1072,30 +1073,22 @@ watch(
 );
 
 onMounted(async () => {
-	// TODO
-	// editSongModalWatcher.value = store.watch(
-	// 	state =>
-	// 		state.modalVisibility.activeModals.length > 0 &&
-	// 		state.modalVisibility.modals[
-	// 			state.modalVisibility.activeModals[
-	// 				state.modalVisibility.activeModals.length - 1
-	// 			]
-	// 		] === "editSong"
-	// 			? state.modals.editSong[
-	// 					state.modalVisibility.activeModals[
-	// 						state.modalVisibility.activeModals.length - 1
-	// 					]
-	// 			  ].video.paused
-	// 			: null,
-	// 	paused => {
-	// 		if (paused && !beforeEditSongModalLocalPaused.value) {
-	// 			resumeLocalStation();
-	// 		} else if (!paused) {
-	// 			beforeEditSongModalLocalPaused.value = localPaused.value;
-	// 			pauseLocalStation();
-	// 		}
-	// 	}
-	// );
+	mediaModalWatcher.value = stationStore.$onAction(({ name, args }) => {
+		if (name === "updateMediaModalPlayingAudio") {
+			const [mediaModalPlayingAudio] = args;
+
+			if (mediaModalPlayingAudio) {
+				if (!beforeMediaModalLocalPausedLock.value) {
+					beforeMediaModalLocalPausedLock.value = true;
+					beforeMediaModalLocalPaused.value = localPaused.value;
+					pauseLocalStation();
+				}
+			} else {
+				beforeMediaModalLocalPausedLock.value = false;
+				if (!beforeMediaModalLocalPaused.value) resumeLocalStation();
+			}
+		}
+	});
 
 	window.scrollTo(0, 0);
 
@@ -1377,7 +1370,7 @@ onBeforeUnmount(() => {
 		keyboardShortcuts.unregisterShortcut(shortcutName);
 	});
 
-	// editSongModalWatcher.value(); // removes the watcher
+	mediaModalWatcher.value(); // removes the watcher
 
 	clearInterval(activityWatchVideoDataInterval.value);
 	clearTimeout(window.stationNextSongTimeout);
