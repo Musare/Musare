@@ -1545,37 +1545,35 @@ onBeforeUnmount(() => {
 						>
 							<div
 								class="item"
-								v-for="(
-									{ status, flagged, song }, index
-								) in filteredItems"
+								v-for="(data, index) in filteredItems"
 								:key="`edit-songs-item-${index}`"
 								:ref="
 									el =>
 										(songItems[
-											`edit-songs-item-${song.youtubeId}`
+											`edit-songs-item-${data.song.youtubeId}`
 										] = el)
 								"
 							>
 								<song-item
-									:song="song"
+									:song="data.song"
 									:thumbnail="false"
 									:duration="false"
 									:disabled-actions="
-										song.removed
+										data.song.removed
 											? ['all']
 											: ['report', 'edit']
 									"
 									:class="{
-										updated: song.updated,
-										removed: song.removed
+										updated: data.song.updated,
+										removed: data.song.removed
 									}"
 								>
 									<template #leftIcon>
 										<i
 											v-if="
 												currentSong.youtubeId ===
-													song.youtubeId &&
-												!song.removed
+													data.song.youtubeId &&
+												!data.song.removed
 											"
 											class="material-icons item-icon editing-icon"
 											content="Currently editing song"
@@ -1584,14 +1582,14 @@ onBeforeUnmount(() => {
 											>edit</i
 										>
 										<i
-											v-else-if="song.removed"
+											v-else-if="data.song.removed"
 											class="material-icons item-icon removed-icon"
 											content="Song removed"
 											v-tippy="{ theme: 'info' }"
 											>delete_forever</i
 										>
 										<i
-											v-else-if="status === 'error'"
+											v-else-if="data.status === 'error'"
 											class="material-icons item-icon error-icon"
 											content="Error saving song"
 											v-tippy="{ theme: 'info' }"
@@ -1599,14 +1597,14 @@ onBeforeUnmount(() => {
 											>error</i
 										>
 										<i
-											v-else-if="status === 'saving'"
+											v-else-if="data.status === 'saving'"
 											class="material-icons item-icon saving-icon"
 											content="Currently saving song"
 											v-tippy="{ theme: 'info' }"
 											>pending</i
 										>
 										<i
-											v-else-if="flagged"
+											v-else-if="data.flagged"
 											class="material-icons item-icon flag-icon"
 											content="Song flagged"
 											v-tippy="{ theme: 'info' }"
@@ -1614,7 +1612,7 @@ onBeforeUnmount(() => {
 											>flag_circle</i
 										>
 										<i
-											v-else-if="status === 'done'"
+											v-else-if="data.status === 'done'"
 											class="material-icons item-icon done-icon"
 											content="Song marked complete"
 											v-tippy="{ theme: 'info' }"
@@ -1622,7 +1620,7 @@ onBeforeUnmount(() => {
 											>check_circle</i
 										>
 										<i
-											v-else-if="status === 'todo'"
+											v-else-if="data.status === 'todo'"
 											class="material-icons item-icon todo-icon"
 											content="Song marked todo"
 											v-tippy="{ theme: 'info' }"
@@ -1630,12 +1628,15 @@ onBeforeUnmount(() => {
 											>cancel</i
 										>
 									</template>
-									<template v-if="!song.removed" #actions>
+									<template
+										v-if="!data.song.removed"
+										#actions
+									>
 										<i
 											class="material-icons edit-icon"
 											content="Edit Song"
 											v-tippy
-											@click="pickSong(song)"
+											@click="pickSong(data.song)"
 										>
 											edit
 										</i>
@@ -1644,7 +1645,7 @@ onBeforeUnmount(() => {
 										<i
 											class="material-icons flag-icon"
 											:class="{
-												flagged
+												flagged: data.flagged
 											}"
 											content="Toggle Flag"
 											v-tippy
