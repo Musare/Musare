@@ -459,6 +459,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
 	stopVideo();
 	pauseVideo(true);
+	updateMediaModalPlayingAudio(false);
 	player.value.duration = "0.000";
 	player.value.currentTime = 0;
 	player.value.playerReady = false;

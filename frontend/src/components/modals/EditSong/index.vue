@@ -1476,6 +1476,8 @@ onBeforeUnmount(() => {
 
 	unloadSong(youtubeId.value, song.value._id);
 
+	updateMediaModalPlayingAudio(false);
+
 	playerReady.value = false;
 	clearInterval(interval.value);
 	clearInterval(activityWatchVideoDataInterval.value);
