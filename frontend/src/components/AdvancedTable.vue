@@ -93,7 +93,6 @@ const columnDragOptions = ref({
 	ghostClass: "draggable-list-ghost",
 	filter: ".ignore-elements",
 	fallbackTolerance: 50,
-	handle: ".handle",
 	draggable: ".item-draggable"
 });
 const editingFilters = ref([]);
@@ -688,6 +687,39 @@ const columnOrderChanged = ({ oldIndex, newIndex }) => {
 		);
 		storeTableSettings();
 	}, 100);
+};
+
+const columnOrderChangedDropdown = event => {
+	const filteredOrderedColumns = orderedColumns.value.filter(
+		column =>
+			column.name !== "select" &&
+			column.name !== "placeholder" &&
+			column.name !== "updatedPlaceholder" &&
+			column.draggable
+	);
+	const oldColumn = filteredOrderedColumns[event.oldDraggableIndex];
+	const newColumn = filteredOrderedColumns[event.newDraggableIndex];
+
+	const oldIndex = orderedColumns.value.indexOf(oldColumn);
+	const newIndex = orderedColumns.value.indexOf(newColumn);
+
+	columnOrderChanged({ oldIndex, newIndex });
+};
+
+const columnOrderChangedHead = event => {
+	const filteredOrderedColumns = orderedColumns.value.filter(
+		column =>
+			shownColumns.value.indexOf(column.name) !== -1 &&
+			(column.name !== "updatedPlaceholder" || rows.value.length > 0) &&
+			column.draggable
+	);
+	const oldColumn = filteredOrderedColumns[event.oldDraggableIndex];
+	const newColumn = filteredOrderedColumns[event.newDraggableIndex];
+
+	const oldIndex = orderedColumns.value.indexOf(oldColumn);
+	const newIndex = orderedColumns.value.indexOf(newColumn);
+
+	columnOrderChanged({ oldIndex, newIndex });
 };
 
 const getTableSettings = () => {
@@ -1545,7 +1577,7 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 								item-key="name"
 								:options="columnDragOptions"
 								class="nav-dropdown-items"
-								@update="columnOrderChanged"
+								@update="columnOrderChangedDropdown"
 							>
 								<template #item="{ element: column }">
 									<button
@@ -1616,8 +1648,11 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 							:list="orderedColumns"
 							item-key="name"
 							tag="tr"
-							:options="columnDragOptions"
-							@update="columnOrderChanged"
+							:options="{
+								...columnDragOptions,
+								handle: '.handle'
+							}"
+							@update="columnOrderChangedHead"
 						>
 							<template #item="{ element: column }">
 								<th
