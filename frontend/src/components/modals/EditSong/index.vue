@@ -47,14 +47,6 @@ const props = defineProps({
 	discogsAlbum: { type: Object, default: null }
 });
 
-const emit = defineEmits([
-	"error",
-	"flagSong",
-	"nextSong",
-	"close",
-	"toggleFlag"
-]);
-
 const editSongStore = useEditSongStore(props);
 const stationStore = useStationStore();
 const { socket } = useWebsocketsStore();
@@ -866,7 +858,7 @@ const save = (songToCopy, closeOrNext, saveButtonRefName, _newSong = false) => {
 				return;
 			}
 
-			if (bulk.value) emit("nextSong");
+			if (bulk.value) editNextSong();
 			else modalsStore.closeCurrentModal();
 		});
 	return socket.dispatch(`songs.update`, _song._id, _song, res => {
@@ -885,7 +877,7 @@ const save = (songToCopy, closeOrNext, saveButtonRefName, _newSong = false) => {
 
 		if (!closeOrNext) return;
 
-		if (bulk.value) emit("nextSong");
+		if (bulk.value) editNextSong();
 		else modalsStore.closeCurrentModal();
 	});
 };
