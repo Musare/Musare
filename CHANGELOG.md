@@ -1,5 +1,47 @@
 # Changelog
 
+## [v3.7.0-rc1] - 2022-08-07
+
+This release contains mostly internal refactors.
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Added
+
+- feat: Added TypeScript to frontend and backend
+- feat: Added TypeScript check command to musare.sh
+- feat: Added markdown lint command to musare.sh
+- feat: Added config option to enable/disable GitHub authentication
+- feat: Added resolved column, filter and update event
+to Data Requests admin page
+- feat: Added ability to deactivate punishments
+- feat: Added songId column and filter to YouTube Videos admin page
+
+### Changed
+
+- refactor: Started migrating frontend to TypeScript, with inferred types
+- refactor: Migrated from Vue Options to Vue Composition API
+- refactor: Migrated from Webpack to Vite
+- refactor: Migrated from VueX to Pinia
+- refactor: Migrated from vue-draggable to sortablejs-vue3
+- refactor: Enabled eslint cache
+- refactor: Split docker npm install build steps
+- refactor: Merged Edit Songs into Edit Song modal
+- refactor: Converted global components back to normal components
+
+### Fixed
+
+- fix: toGMTString deprecated
+- fix: First letter of Activity Item title duplicated
+- fix: getRatings not available to logged out users
+- fix: Opening station with active floating box breaks styling
+- fix: GET_SONGS returns out-of-order array
+- fix: Previous migration didn't properly migrate reports
+- fix: Banning users causing backend crash and continuous reconnection attempts
+- fix: Edit Songs does not work in production
+- fix: Close modal keyboard shortcut does not work in Edit Song modal
+- fix: Station and modal playback toggles not handled properly
+- fix: MediaSession breaks station if a YouTube video plays instead of a song
+
 ## [v3.6.0] - 2022-06-12
 
 This release includes all changes from v3.6.0-rc1, in addition to the following.
