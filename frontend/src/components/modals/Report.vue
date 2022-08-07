@@ -7,6 +7,7 @@ import { useModalsStore } from "@/stores/modals";
 import { useReportStore } from "@/stores/report";
 import ws from "@/ws";
 
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
 );

@@ -16,6 +16,9 @@ import { useSortablePlaylists } from "@/composables/useSortablePlaylists";
 const PlaylistItem = defineAsyncComponent(
 	() => import("@/components/PlaylistItem.vue")
 );
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
+);
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" },

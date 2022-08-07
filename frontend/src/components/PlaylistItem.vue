@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { defineAsyncComponent, ref, computed, onMounted } from "vue";
 import utils from "@/utils";
+
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
 
 const props = defineProps({
 	playlist: { type: Object, default: () => {} },

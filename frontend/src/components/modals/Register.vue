@@ -6,6 +6,7 @@ import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
 import validation from "@/validation";
 
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const InputHelpBox = defineAsyncComponent(
 	() => import("@/components/InputHelpBox.vue")
 );

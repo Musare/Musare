@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { defineAsyncComponent, ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
+
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 
 const route = useRoute();
 

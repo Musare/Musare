@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref } from "vue";
+import { defineAsyncComponent, onMounted, onBeforeUnmount, ref } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import aw from "@/aw";
@@ -8,6 +8,11 @@ import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useViewYoutubeVideoStore } from "@/stores/viewYoutubeVideo";
 import { useStationStore } from "@/stores/station";
+
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
+const SongThumbnail = defineAsyncComponent(
+	() => import("@/components/SongThumbnail.vue")
+);
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }

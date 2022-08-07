@@ -10,6 +10,9 @@ import _validation from "@/validation";
 const InputHelpBox = defineAsyncComponent(
 	() => import("@/components/InputHelpBox.vue")
 );
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
+);
 
 const settingsStore = useSettingsStore();
 const userAuthStore = useUserAuthStore();

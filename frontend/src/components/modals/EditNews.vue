@@ -10,8 +10,12 @@ import { useEditNewsStore } from "@/stores/editNews";
 import { useModalsStore } from "@/stores/modals";
 import ws from "@/ws";
 
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const SaveButton = defineAsyncComponent(
 	() => import("@/components/SaveButton.vue")
+);
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
 );
 
 const props = defineProps({

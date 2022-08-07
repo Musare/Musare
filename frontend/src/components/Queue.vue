@@ -11,6 +11,9 @@ import { useManageStationStore } from "@/stores/manageStation";
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
 );
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
+);
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" },

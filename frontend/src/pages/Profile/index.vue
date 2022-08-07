@@ -8,6 +8,12 @@ import { useUserAuthStore } from "@/stores/userAuth";
 import ws from "@/ws";
 import { useTabQueryHandler } from "@/composables/useTabQueryHandler";
 
+const MainHeader = defineAsyncComponent(
+	() => import("@/components/MainHeader.vue")
+);
+const MainFooter = defineAsyncComponent(
+	() => import("@/components/MainFooter.vue")
+);
 const ProfilePicture = defineAsyncComponent(
 	() => import("@/components/ProfilePicture.vue")
 );

@@ -13,6 +13,12 @@ const AdvancedTable = defineAsyncComponent(
 const RunJobDropdown = defineAsyncComponent(
 	() => import("@/components/RunJobDropdown.vue")
 );
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
+);
+const SongThumbnail = defineAsyncComponent(
+	() => import("@/components/SongThumbnail.vue")
+);
 
 const route = useRoute();
 

@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { defineAsyncComponent, ref, onMounted } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import validation from "@/validation";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useManageStationStore } from "@/stores/manageStation";
+
+const InfoIcon = defineAsyncComponent(
+	() => import("@/components/InfoIcon.vue")
+);
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }

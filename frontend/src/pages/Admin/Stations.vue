@@ -11,6 +11,12 @@ const AdvancedTable = defineAsyncComponent(
 const RunJobDropdown = defineAsyncComponent(
 	() => import("@/components/RunJobDropdown.vue")
 );
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
+);
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
 
 const { socket } = useWebsocketsStore();
 

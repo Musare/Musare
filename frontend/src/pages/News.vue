@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { defineAsyncComponent, ref, onMounted } from "vue";
 
 import { formatDistance } from "date-fns";
 import { marked } from "marked";
@@ -7,6 +7,16 @@ import DOMPurify from "dompurify";
 import { useWebsocketsStore } from "@/stores/websockets";
 
 import ws from "@/ws";
+
+const MainHeader = defineAsyncComponent(
+	() => import("@/components/MainHeader.vue")
+);
+const MainFooter = defineAsyncComponent(
+	() => import("@/components/MainFooter.vue")
+);
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
 
 const { socket } = useWebsocketsStore();
 

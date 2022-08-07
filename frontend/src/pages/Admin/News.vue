@@ -8,6 +8,12 @@ import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
 );
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
+);
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
 
 const { socket } = useWebsocketsStore();
 

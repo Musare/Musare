@@ -7,6 +7,7 @@ import { useModalsStore } from "@/stores/modals";
 import { useViewPunishmentStore } from "@/stores/viewPunishment";
 import ws from "@/ws";
 
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const PunishmentItem = defineAsyncComponent(
 	() => import("@/components/PunishmentItem.vue")
 );

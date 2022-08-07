@@ -13,6 +13,7 @@ import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
 import { useManageStationStore } from "@/stores/manageStation";
 
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const Queue = defineAsyncComponent(() => import("@/components/Queue.vue"));
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
@@ -25,6 +26,9 @@ const PlaylistTabBase = defineAsyncComponent(
 	() => import("@/components/PlaylistTabBase.vue")
 );
 const Request = defineAsyncComponent(() => import("@/components/Request.vue"));
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
+);
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }

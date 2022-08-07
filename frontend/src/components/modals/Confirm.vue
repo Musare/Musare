@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { onBeforeUnmount } from "vue";
+import { defineAsyncComponent, onBeforeUnmount } from "vue";
 import { storeToRefs } from "pinia";
 import { useConfirmStore } from "@/stores/confirm";
 import { useModalsStore } from "@/stores/modals";
+
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }

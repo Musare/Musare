@@ -21,6 +21,7 @@ import { useModalsStore } from "@/stores/modals";
 import { useEditSongStore } from "@/stores/editSong";
 import { useStationStore } from "@/stores/station";
 
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const FloatingBox = defineAsyncComponent(
 	() => import("@/components/FloatingBox.vue")
 );
@@ -37,6 +38,9 @@ const Discogs = defineAsyncComponent(() => import("./Tabs/Discogs.vue"));
 const ReportsTab = defineAsyncComponent(() => import("./Tabs/Reports.vue"));
 const Youtube = defineAsyncComponent(() => import("./Tabs/Youtube.vue"));
 const MusareSongs = defineAsyncComponent(() => import("./Tabs/Songs.vue"));
+const SongThumbnail = defineAsyncComponent(
+	() => import("@/components/SongThumbnail.vue")
+);
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" },

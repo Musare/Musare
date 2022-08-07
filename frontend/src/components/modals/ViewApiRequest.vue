@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
 import VueJsonPretty from "vue-json-pretty";
 import { storeToRefs } from "pinia";
@@ -8,6 +8,11 @@ import { useModalsStore } from "@/stores/modals";
 import { useViewApiRequestStore } from "@/stores/viewApiRequest";
 import ws from "@/ws";
 import "vue-json-pretty/lib/styles.css";
+
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
+);
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }

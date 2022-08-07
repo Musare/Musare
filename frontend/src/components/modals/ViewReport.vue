@@ -9,11 +9,15 @@ import { useReports } from "@/composables/useReports";
 import ws from "@/ws";
 import { Report } from "@/types/report";
 
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
 );
 const ReportInfoItem = defineAsyncComponent(
 	() => import("@/components/ReportInfoItem.vue")
+);
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
 );
 
 const props = defineProps({

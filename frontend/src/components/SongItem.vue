@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { defineAsyncComponent, ref, onMounted, onUnmounted } from "vue";
 import { formatDistance, parseISO } from "date-fns";
 import { storeToRefs } from "pinia";
 import AddToPlaylistDropdown from "./AddToPlaylistDropdown.vue";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
 import utils from "@/utils";
+
+const SongThumbnail = defineAsyncComponent(
+	() => import("@/components/SongThumbnail.vue")
+);
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
 
 const props = defineProps({
 	song: {

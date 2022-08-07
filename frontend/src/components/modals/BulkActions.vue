@@ -8,6 +8,7 @@ import { useBulkActionsStore } from "@/stores/bulkActions";
 import { useModalsStore } from "@/stores/modals";
 import ws from "@/ws";
 
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const AutoSuggest = defineAsyncComponent(
 	() => import("@/components/AutoSuggest.vue")
 );

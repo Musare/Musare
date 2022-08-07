@@ -9,6 +9,9 @@ import ws from "@/ws";
 const ActivityItem = defineAsyncComponent(
 	() => import("@/components/ActivityItem.vue")
 );
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
+);
 
 const { socket } = useWebsocketsStore();
 

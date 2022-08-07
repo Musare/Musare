@@ -1,10 +1,15 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount } from "vue";
+import { defineAsyncComponent, onMounted, onBeforeUnmount } from "vue";
 import { storeToRefs } from "pinia";
 import { formatDistance } from "date-fns";
 import { marked } from "marked";
 import dompurify from "dompurify";
 import { useWhatIsNewStore } from "@/stores/whatIsNew";
+
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }

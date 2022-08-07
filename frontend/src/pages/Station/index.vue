@@ -23,6 +23,12 @@ import ws from "@/ws";
 import keyboardShortcuts from "@/keyboardShortcuts";
 import utils from "@/utils";
 
+const MainHeader = defineAsyncComponent(
+	() => import("@/components/MainHeader.vue")
+);
+const MainFooter = defineAsyncComponent(
+	() => import("@/components/MainFooter.vue")
+);
 const FloatingBox = defineAsyncComponent(
 	() => import("@/components/FloatingBox.vue")
 );

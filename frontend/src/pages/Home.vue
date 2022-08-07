@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import {
+	defineAsyncComponent,
+	ref,
+	computed,
+	onMounted,
+	onBeforeUnmount
+} from "vue";
 import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
@@ -9,6 +15,19 @@ import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
 import keyboardShortcuts from "@/keyboardShortcuts";
 import ws from "@/ws";
+
+const MainHeader = defineAsyncComponent(
+	() => import("@/components/MainHeader.vue")
+);
+const MainFooter = defineAsyncComponent(
+	() => import("@/components/MainFooter.vue")
+);
+const SongThumbnail = defineAsyncComponent(
+	() => import("@/components/SongThumbnail.vue")
+);
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
 
 const userAuthStore = useUserAuthStore();
 const route = useRoute();

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { defineAsyncComponent, ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
@@ -7,6 +7,11 @@ import { useSettingsStore } from "@/stores/settings";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useRemoveAccountStore } from "@/stores/removeAccount";
 import { useModalsStore } from "@/stores/modals";
+
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
+);
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }

@@ -15,6 +15,9 @@ const InputHelpBox = defineAsyncComponent(
 const SaveButton = defineAsyncComponent(
 	() => import("@/components/SaveButton.vue")
 );
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
+);
 
 const settingsStore = useSettingsStore();
 const userAuthStore = useUserAuthStore();

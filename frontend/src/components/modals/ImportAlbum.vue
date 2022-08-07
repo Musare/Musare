@@ -15,6 +15,7 @@ import { useModalsStore } from "@/stores/modals";
 import { useImportAlbumStore } from "@/stores/importAlbum";
 import ws from "@/ws";
 
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
 );

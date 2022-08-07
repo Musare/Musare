@@ -69,15 +69,6 @@ app.component("PageMetadata", {
 	}
 });
 
-const globalComponents = import.meta.glob("@/components/global/*.vue");
-Object.entries(globalComponents).forEach(
-	async ([componentFilePath, definition]) => {
-		const componentName = componentFilePath.split("/").pop().split(".")[0];
-		const component: any = await definition();
-		app.component(componentName, component.default);
-	}
-);
-
 app.directive("scroll", {
 	mounted(el, binding) {
 		const f = evt => {

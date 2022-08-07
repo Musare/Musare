@@ -16,6 +16,9 @@ const RunJobDropdown = defineAsyncComponent(
 const LineChart = defineAsyncComponent(
 	() => import("@/components/LineChart.vue")
 );
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
+);
 
 const route = useRoute();
 

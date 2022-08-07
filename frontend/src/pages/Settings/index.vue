@@ -7,6 +7,12 @@ import { useWebsocketsStore } from "@/stores/websockets";
 import ws from "@/ws";
 import { useTabQueryHandler } from "@/composables/useTabQueryHandler";
 
+const MainHeader = defineAsyncComponent(
+	() => import("@/components/MainHeader.vue")
+);
+const MainFooter = defineAsyncComponent(
+	() => import("@/components/MainFooter.vue")
+);
 const SecuritySettings = defineAsyncComponent(
 	() => import("./Tabs/Security.vue")
 );

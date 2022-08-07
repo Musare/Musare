@@ -10,6 +10,12 @@ import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
 );
+const InfoIcon = defineAsyncComponent(
+	() => import("@/components/InfoIcon.vue")
+);
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
 
 const router = useRouter();
 

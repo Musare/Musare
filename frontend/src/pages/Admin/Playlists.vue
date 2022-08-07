@@ -10,6 +10,9 @@ const AdvancedTable = defineAsyncComponent(
 const RunJobDropdown = defineAsyncComponent(
 	() => import("@/components/RunJobDropdown.vue")
 );
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
 
 const columnDefault = ref(<TableColumn>{
 	sortable: true,

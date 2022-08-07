@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { defineAsyncComponent, computed } from "vue";
 import { format, formatDistance, parseISO } from "date-fns";
+
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
 
 const props = defineProps({
 	punishment: { type: Object, default: () => {} }

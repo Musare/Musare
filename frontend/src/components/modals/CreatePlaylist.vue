@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, onBeforeUnmount } from "vue";
+import { defineAsyncComponent, ref, onBeforeUnmount } from "vue";
 import Toast from "toasters";
 import validation from "@/validation";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
+
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 
 defineProps({
 	modalUuid: { type: String, default: "" }

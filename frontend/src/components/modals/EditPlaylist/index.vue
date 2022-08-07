@@ -17,6 +17,7 @@ import { useModalsStore } from "@/stores/modals";
 import ws from "@/ws";
 import utils from "@/utils";
 
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
 );
@@ -24,6 +25,9 @@ const Settings = defineAsyncComponent(() => import("./Tabs/Settings.vue"));
 const AddSongs = defineAsyncComponent(() => import("./Tabs/AddSongs.vue"));
 const ImportPlaylists = defineAsyncComponent(
 	() => import("./Tabs/ImportPlaylists.vue")
+);
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
 );
 
 const props = defineProps({

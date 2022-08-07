@@ -6,6 +6,12 @@ import { useUserAuthStore } from "@/stores/userAuth";
 import validation from "@/validation";
 import { useWebsocketsStore } from "@/stores/websockets";
 
+const MainHeader = defineAsyncComponent(
+	() => import("@/components/MainHeader.vue")
+);
+const MainFooter = defineAsyncComponent(
+	() => import("@/components/MainFooter.vue")
+);
 const InputHelpBox = defineAsyncComponent(
 	() => import("@/components/InputHelpBox.vue")
 );

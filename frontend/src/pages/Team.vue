@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from "vue";
 
+const MainHeader = defineAsyncComponent(
+	() => import("@/components/MainHeader.vue")
+);
+const MainFooter = defineAsyncComponent(
+	() => import("@/components/MainFooter.vue")
+);
 const ProfilePicture = defineAsyncComponent(
 	() => import("@/components/ProfilePicture.vue")
 );

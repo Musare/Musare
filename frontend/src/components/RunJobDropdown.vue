@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { PropType, ref } from "vue";
+import { defineAsyncComponent, PropType, ref } from "vue";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
+
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
+);
 
 defineProps({
 	jobs: { type: Array as PropType<any[]>, default: () => [] }

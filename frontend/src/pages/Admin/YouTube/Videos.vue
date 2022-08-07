@@ -17,6 +17,9 @@ const AdvancedTable = defineAsyncComponent(
 const RunJobDropdown = defineAsyncComponent(
 	() => import("@/components/RunJobDropdown.vue")
 );
+const SongThumbnail = defineAsyncComponent(
+	() => import("@/components/SongThumbnail.vue")
+);
 
 const { setJob } = useLongJobsStore();
 

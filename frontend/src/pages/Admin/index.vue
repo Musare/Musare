@@ -10,6 +10,12 @@ import { useRoute, useRouter } from "vue-router";
 import { useWebsocketsStore } from "@/stores/websockets";
 import keyboardShortcuts from "@/keyboardShortcuts";
 
+const MainHeader = defineAsyncComponent(
+	() => import("@/components/MainHeader.vue")
+);
+const MainFooter = defineAsyncComponent(
+	() => import("@/components/MainFooter.vue")
+);
 const FloatingBox = defineAsyncComponent(
 	() => import("@/components/FloatingBox.vue")
 );
