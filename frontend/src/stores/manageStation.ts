@@ -5,6 +5,7 @@ import { CurrentSong, Song } from "@/types/song";
 
 export const useManageStationStore = props => {
 	const { modalUuid } = props;
+	if (!modalUuid) return null;
 	return defineStore(`manageStation-${modalUuid}`, {
 		state: () => ({
 			stationId: null,

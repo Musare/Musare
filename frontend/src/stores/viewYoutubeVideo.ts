@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 
 export const useViewYoutubeVideoStore = props => {
 	const { modalUuid } = props;
+	if (!modalUuid) return null;
 	return defineStore(`viewYoutubeVideo-${modalUuid}`, {
 		state: () => ({
 			videoId: null,

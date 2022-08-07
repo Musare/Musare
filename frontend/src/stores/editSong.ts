@@ -4,6 +4,7 @@ import { Report } from "@/types/report";
 
 export const useEditSongStore = props => {
 	const { modalUuid } = props;
+	if (!modalUuid) return null;
 	return defineStore(`editSong-${modalUuid}`, {
 		state: () => ({
 			video: {

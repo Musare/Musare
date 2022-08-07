@@ -3,6 +3,7 @@ import { Playlist } from "@/types/playlist";
 
 export const useEditPlaylistStore = props => {
 	const { modalUuid } = props;
+	if (!modalUuid) return null;
 	return defineStore(`editPlaylist-${modalUuid}`, {
 		state: () => ({
 			playlistId: null,

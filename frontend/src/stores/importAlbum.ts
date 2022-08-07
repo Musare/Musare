@@ -3,6 +3,7 @@ import { Song } from "@/types/song";
 
 export const useImportAlbumStore = props => {
 	const { modalUuid } = props;
+	if (!modalUuid) return null;
 	return defineStore(`importAlbum-${modalUuid}`, {
 		state: () => ({
 			discogsAlbum: <
