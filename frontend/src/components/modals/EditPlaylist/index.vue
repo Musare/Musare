@@ -66,16 +66,24 @@ const showTab = payload => {
 	editPlaylistStore.showTab(payload);
 };
 
-const isEditable = () =>
-	(playlist.value.type === "user" ||
+const { hasPermission } = userAuthStore;
+
+const isOwner = () =>
+	loggedIn.value && userId.value === playlist.value.createdBy;
+
+const isEditable = permission =>
+	((playlist.value.type === "user" ||
 		playlist.value.type === "user-liked" ||
 		playlist.value.type === "user-disliked") &&
-	(userId.value === playlist.value.createdBy || userRole.value === "admin");
+		(isOwner() || hasPermission(permission))) ||
+	(playlist.value.type === "genre" &&
+		permission === "playlists.update.privacy" &&
+		hasPermission(permission));
 
 const dragOptions = computed(() => ({
 	animation: 200,
 	group: "songs",
-	disabled: !isEditable(),
+	disabled: !isEditable("playlists.songs.reposition"),
 	ghostClass: "draggable-list-ghost"
 }));
 
@@ -88,11 +96,6 @@ const init = () => {
 		gettingSongs.value = false;
 	});
 };
-
-const isAdmin = () => userRole.value === "admin";
-
-const isOwner = () =>
-	loggedIn.value && userId.value === playlist.value.createdBy;
 
 const repositionSong = ({ oldIndex, newIndex }) => {
 	if (oldIndex === newIndex) return; // we only need to update when song is moved
@@ -170,7 +173,7 @@ const removePlaylist = () => {
 			new Toast(res.message);
 			if (res.status === "success") closeCurrentModal();
 		});
-	} else if (isAdmin()) {
+	} else if (hasPermission("playlists.removeAdmin")) {
 		socket.dispatch("playlists.removeAdmin", playlist.value._id, res => {
 			new Toast(res.message);
 			if (res.status === "success") closeCurrentModal();
@@ -313,13 +316,15 @@ onBeforeUnmount(() => {
 <template>
 	<modal
 		:title="
-			userId === playlist.createdBy ? 'Edit Playlist' : 'View Playlist'
+			isEditable('playlists.update.privacy')
+				? 'Edit Playlist'
+				: 'View Playlist'
 		"
 		:class="{
 			'edit-playlist-modal': true,
-			'view-only': !isEditable()
+			'view-only': !isEditable('playlists.update.privacy')
 		}"
-		:size="isEditable() ? 'wide' : null"
+		:size="isEditable('playlists.update.privacy') ? 'wide' : null"
 		:split="true"
 	>
 		<template #body>
@@ -337,11 +342,7 @@ onBeforeUnmount(() => {
 							:class="{ selected: tab === 'settings' }"
 							:ref="el => (tabs['settings-tab'] = el)"
 							@click="showTab('settings')"
-							v-if="
-								userId === playlist.createdBy ||
-								isEditable() ||
-								(playlist.type === 'genre' && isAdmin())
-							"
+							v-if="isEditable('playlists.update.privacy')"
 						>
 							Settings
 						</button>
@@ -350,7 +351,7 @@ onBeforeUnmount(() => {
 							:class="{ selected: tab === 'add-songs' }"
 							:ref="el => (tabs['add-songs-tab'] = el)"
 							@click="showTab('add-songs')"
-							v-if="isEditable()"
+							v-if="isEditable('playlists.songs.add')"
 						>
 							Add Songs
 						</button>
@@ -361,7 +362,7 @@ onBeforeUnmount(() => {
 							}"
 							:ref="el => (tabs['import-playlists-tab'] = el)"
 							@click="showTab('import-playlists')"
-							v-if="isEditable()"
+							v-if="isEditable('playlists.songs.add')"
 						>
 							Import Playlists
 						</button>
@@ -369,23 +370,19 @@ onBeforeUnmount(() => {
 					<settings
 						class="tab"
 						v-show="tab === 'settings'"
-						v-if="
-							userId === playlist.createdBy ||
-							isEditable() ||
-							(playlist.type === 'genre' && isAdmin())
-						"
+						v-if="isEditable('playlists.update.privacy')"
 						:modal-uuid="modalUuid"
 					/>
 					<add-songs
 						class="tab"
 						v-show="tab === 'add-songs'"
-						v-if="isEditable()"
+						v-if="isEditable('playlists.songs.add')"
 						:modal-uuid="modalUuid"
 					/>
 					<import-playlists
 						class="tab"
 						v-show="tab === 'import-playlists'"
-						v-if="isEditable()"
+						v-if="isEditable('playlists.songs.add')"
 						:modal-uuid="modalUuid"
 					/>
 				</div>
@@ -393,7 +390,7 @@ onBeforeUnmount(() => {
 
 			<div class="right-section">
 				<div id="rearrange-songs-section" class="section">
-					<div v-if="isEditable()">
+					<div v-if="isEditable('playlists.songs.reposition')">
 						<h4 class="section-title">Rearrange Songs</h4>
 
 						<p class="section-description">
@@ -421,7 +418,9 @@ onBeforeUnmount(() => {
 									<song-item
 										:song="element"
 										:class="{
-											'item-draggable': isEditable()
+											'item-draggable': isEditable(
+												'playlists.songs.reposition'
+											)
 										}"
 										:ref="
 											el =>
@@ -460,7 +459,9 @@ onBeforeUnmount(() => {
 												v-if="
 													userId ===
 														playlist.createdBy ||
-													isEditable()
+													isEditable(
+														'playlists.songs.remove'
+													)
 												"
 												placement="left"
 												@confirm="
@@ -478,7 +479,11 @@ onBeforeUnmount(() => {
 											</quick-confirm>
 											<i
 												class="material-icons"
-												v-if="isEditable() && index > 0"
+												v-if="
+													isEditable(
+														'playlists.songs.reposition'
+													) && index > 0
+												"
 												@click="
 													moveSongToTop(
 														element,
@@ -491,7 +496,9 @@ onBeforeUnmount(() => {
 											>
 											<i
 												v-if="
-													isEditable() &&
+													isEditable(
+														'playlists.songs.reposition'
+													) &&
 													playlistSongs.length - 1 !==
 														index
 												"
@@ -524,14 +531,21 @@ onBeforeUnmount(() => {
 		<template #footer>
 			<button
 				class="button is-default"
-				v-if="isOwner() || isAdmin() || playlist.privacy === 'public'"
+				v-if="
+					isOwner() ||
+					hasPermission('playlists.get') ||
+					playlist.privacy === 'public'
+				"
 				@click="downloadPlaylist()"
 			>
 				Download Playlist
 			</button>
 			<div class="right">
 				<quick-confirm
-					v-if="playlist.type === 'station'"
+					v-if="
+						hasPermission('playlists.clearAndRefill') &&
+						playlist.type === 'station'
+					"
 					@confirm="clearAndRefillStationPlaylist()"
 				>
 					<a class="button is-danger">
@@ -539,7 +553,10 @@ onBeforeUnmount(() => {
 					</a>
 				</quick-confirm>
 				<quick-confirm
-					v-if="playlist.type === 'genre'"
+					v-if="
+						hasPermission('playlists.clearAndRefill') &&
+						playlist.type === 'genre'
+					"
 					@confirm="clearAndRefillGenrePlaylist()"
 				>
 					<a class="button is-danger">
@@ -548,7 +565,7 @@ onBeforeUnmount(() => {
 				</quick-confirm>
 				<quick-confirm
 					v-if="
-						isEditable() &&
+						isEditable('playlists.removeAdmin') &&
 						!(
 							playlist.type === 'user-liked' ||
 							playlist.type === 'user-disliked'

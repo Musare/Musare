@@ -1,6 +1,6 @@
 import async from "async";
 
-import { isAdminRequired } from "./hooks";
+import { useHasPermission } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -9,7 +9,7 @@ const UtilsModule = moduleManager.modules.utils;
 const WSModule = moduleManager.modules.ws;
 
 export default {
-	getModules: isAdminRequired(function getModules(session, cb) {
+	getModules: useHasPermission("utils.getModules", function getModules(session, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -51,7 +51,7 @@ export default {
 		);
 	}),
 
-	getModule: isAdminRequired(function getModule(session, moduleName, cb) {
+	getModule: useHasPermission("utils.getModules", function getModule(session, moduleName, cb) {
 		async.waterfall(
 			[
 				next => {

@@ -33,7 +33,8 @@ const userAuthStore = useUserAuthStore();
 const route = useRoute();
 const router = useRouter();
 
-const { loggedIn, userId, role } = storeToRefs(userAuthStore);
+const { loggedIn, userId } = storeToRefs(userAuthStore);
+const { hasPermission } = userAuthStore;
 
 const { socket } = useWebsocketsStore();
 
@@ -49,10 +50,6 @@ const handledLoginRegisterRedirect = ref(false);
 const changeFavoriteOrderDebounceTimeout = ref();
 
 const isOwner = station => loggedIn.value && station.owner === userId.value;
-
-const isAdmin = () => loggedIn.value && role.value === "admin";
-
-const isOwnerOrAdmin = station => isOwner(station) || isAdmin();
 
 const isPlaying = station => typeof station.currentSong.title !== "undefined";
 
@@ -136,7 +133,8 @@ const canRequest = (station, requireLogin = true) =>
 	station.requests &&
 	station.requests.enabled &&
 	(station.requests.access === "user" ||
-		(station.requests.access === "owner" && isOwnerOrAdmin(station)));
+		(station.requests.access === "owner" &&
+			(isOwner(station) || hasPermission("stations.request"))));
 
 const favoriteStation = stationId => {
 	socket.dispatch("stations.favoriteStation", stationId, res => {
@@ -332,7 +330,7 @@ onMounted(async () => {
 		ctrl: true,
 		alt: true,
 		handler: () => {
-			if (isAdmin())
+			if (hasPermission("stations.index.other"))
 				if (route.query.adminFilter === undefined)
 					router.push({
 						query: {
@@ -437,7 +435,12 @@ onBeforeUnmount(() => {
 									<template #icon>
 										<div class="icon-container">
 											<div
-												v-if="isOwnerOrAdmin(element)"
+												v-if="
+													isOwner(element) ||
+													hasPermission(
+														'stations.view.manage'
+													)
+												"
 												class="material-icons manage-station"
 												@click.prevent="
 													openModal({
@@ -701,7 +704,12 @@ onBeforeUnmount(() => {
 							<template #icon>
 								<div class="icon-container">
 									<div
-										v-if="isOwnerOrAdmin(station)"
+										v-if="
+											isOwner(station) ||
+											hasPermission(
+												'stations.view.manage'
+											)
+										"
 										class="material-icons manage-station"
 										@click.prevent="
 											openModal({

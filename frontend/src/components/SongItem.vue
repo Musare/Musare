@@ -47,7 +47,8 @@ const hoveredTippy = ref(false);
 const songActions = ref(null);
 
 const userAuthStore = useUserAuthStore();
-const { loggedIn, role: userRole } = storeToRefs(userAuthStore);
+const { loggedIn } = storeToRefs(userAuthStore);
+const { hasPermission } = userAuthStore;
 
 const { openModal } = useModalsStore();
 
@@ -246,7 +247,7 @@ onUnmounted(() => {
 								v-if="
 									loggedIn &&
 									song._id &&
-									userRole === 'admin' &&
+									hasPermission('songs.update') &&
 									disabledActions.indexOf('edit') === -1
 								"
 								class="material-icons edit-icon"

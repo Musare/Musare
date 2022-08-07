@@ -37,7 +37,7 @@ const props = defineProps({
 const tabs = ref([]);
 
 const userAuthStore = useUserAuthStore();
-const { loggedIn, userId, role } = storeToRefs(userAuthStore);
+const { loggedIn } = storeToRefs(userAuthStore);
 
 const { socket } = useWebsocketsStore();
 
@@ -64,7 +64,8 @@ const {
 	updateStationPaused,
 	updateCurrentSong,
 	updateStation,
-	updateIsFavorited
+	updateIsFavorited,
+	hasPermission
 } = manageStationStore;
 
 const { closeCurrentModal } = useModalsStore();
@@ -75,20 +76,14 @@ const showTab = payload => {
 	manageStationStore.showTab(payload);
 };
 
-const isOwner = () =>
-	loggedIn.value && station.value && userId.value === station.value.owner;
-
-const isAdmin = () => loggedIn.value && role.value === "admin";
-
-const isOwnerOrAdmin = () => isOwner() || isAdmin();
-
 const canRequest = () =>
 	station.value &&
 	loggedIn.value &&
 	station.value.requests &&
 	station.value.requests.enabled &&
 	(station.value.requests.access === "user" ||
-		(station.value.requests.access === "owner" && isOwnerOrAdmin()));
+		(station.value.requests.access === "owner" &&
+			hasPermission("stations.request")));
 
 const removeStation = () => {
 	socket.dispatch("stations.remove", stationId.value, res => {
@@ -111,8 +106,10 @@ watch(
 	() => station.value.requests,
 	() => {
 		if (tab.value === "request" && !canRequest()) {
-			if (isOwnerOrAdmin()) showTab("settings");
-			else if (!(sector.value === "home" && !isOwnerOrAdmin()))
+			if (hasPermission("stations.update")) showTab("settings");
+			else if (
+				!(sector.value === "home" && !hasPermission("stations.update"))
+			)
 				closeCurrentModal();
 		}
 	}
@@ -130,7 +127,7 @@ onMounted(() => {
 		if (res.status === "success") {
 			editStation(res.data.station);
 
-			if (!isOwnerOrAdmin()) showTab("request");
+			if (!hasPermission("stations.update")) showTab("request");
 
 			const currentSong = res.data.station.currentSong
 				? res.data.station.currentSong
@@ -158,7 +155,7 @@ onMounted(() => {
 				}
 			);
 
-			if (isOwnerOrAdmin()) {
+			if (hasPermission("stations.view")) {
 				socket.dispatch(
 					"playlists.getPlaylistForStation",
 					stationId.value,
@@ -315,7 +312,7 @@ onMounted(() => {
 		{ modalUuid: props.modalUuid }
 	);
 
-	if (isOwnerOrAdmin()) {
+	if (hasPermission("stations.view")) {
 		socket.on(
 			"event:playlist.song.added",
 			res => {
@@ -385,7 +382,7 @@ onBeforeUnmount(() => {
 		() => {}
 	);
 
-	if (isOwnerOrAdmin()) showTab("settings");
+	if (hasPermission("stations.update")) showTab("settings");
 	clearStation();
 
 	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
@@ -397,16 +394,20 @@ onBeforeUnmount(() => {
 	<modal
 		v-if="station"
 		:title="
-			sector === 'home' && !isOwnerOrAdmin()
+			sector === 'home' && !hasPermission('stations.update')
 				? 'View Queue'
-				: !isOwnerOrAdmin()
+				: !hasPermission('stations.update')
 				? 'Add Song to Queue'
 				: 'Manage Station'
 		"
 		:style="`--primary-color: var(--${station.theme})`"
 		class="manage-station-modal"
-		:size="isOwnerOrAdmin() || sector !== 'home' ? 'wide' : null"
-		:split="isOwnerOrAdmin() || sector !== 'home'"
+		:size="
+			hasPermission('stations.update') || sector !== 'home'
+				? 'wide'
+				: null
+		"
+		:split="hasPermission('stations.update') || sector !== 'home'"
 	>
 		<template #body v-if="station && station._id">
 			<div class="left-section">
@@ -416,12 +417,19 @@ onBeforeUnmount(() => {
 							:station="station"
 							:station-paused="stationPaused"
 							:show-go-to-station="sector !== 'station'"
+							:sector="'manageStation'"
+							:modal-uuid="modalUuid"
 						/>
 					</div>
-					<div v-if="isOwnerOrAdmin() || sector !== 'home'">
+					<div
+						v-if="
+							hasPermission('stations.update') ||
+							sector !== 'home'
+						"
+					>
 						<div class="tab-selection">
 							<button
-								v-if="isOwnerOrAdmin()"
+								v-if="hasPermission('stations.update')"
 								class="button is-default"
 								:class="{ selected: tab === 'settings' }"
 								:ref="el => (tabs['settings-tab'] = el)"
@@ -440,7 +448,8 @@ onBeforeUnmount(() => {
 							</button>
 							<button
 								v-if="
-									isOwnerOrAdmin() && station.autofill.enabled
+									hasPermission('stations.view.manage') &&
+									station.autofill.enabled
 								"
 								class="button is-default"
 								:class="{ selected: tab === 'autofill' }"
@@ -450,7 +459,7 @@ onBeforeUnmount(() => {
 								Autofill
 							</button>
 							<button
-								v-if="isOwnerOrAdmin()"
+								v-if="hasPermission('stations.view.manage')"
 								class="button is-default"
 								:class="{ selected: tab === 'blacklist' }"
 								:ref="el => (tabs['blacklist-tab'] = el)"
@@ -460,7 +469,7 @@ onBeforeUnmount(() => {
 							</button>
 						</div>
 						<settings
-							v-if="isOwnerOrAdmin()"
+							v-if="hasPermission('stations.update')"
 							class="tab"
 							v-show="tab === 'settings'"
 							:modal-uuid="modalUuid"
@@ -475,7 +484,10 @@ onBeforeUnmount(() => {
 							:modal-uuid="modalUuid"
 						/>
 						<playlist-tab-base
-							v-if="isOwnerOrAdmin() && station.autofill.enabled"
+							v-if="
+								hasPermission('stations.view.manage') &&
+								station.autofill.enabled
+							"
 							class="tab"
 							v-show="tab === 'autofill'"
 							:type="'autofill'"
@@ -489,7 +501,7 @@ onBeforeUnmount(() => {
 							</template>
 						</playlist-tab-base>
 						<playlist-tab-base
-							v-if="isOwnerOrAdmin()"
+							v-if="hasPermission('stations.view.manage')"
 							class="tab"
 							v-show="tab === 'blacklist'"
 							:type="'blacklist'"
@@ -523,11 +535,17 @@ onBeforeUnmount(() => {
 			</div>
 		</template>
 		<template #footer>
-			<div v-if="isOwnerOrAdmin()" class="right">
-				<quick-confirm @confirm="resetQueue()">
+			<div class="right">
+				<quick-confirm
+					v-if="hasPermission('stations.queue.remove')"
+					@confirm="resetQueue()"
+				>
 					<a class="button is-danger">Reset queue</a>
 				</quick-confirm>
-				<quick-confirm @confirm="removeStation()">
+				<quick-confirm
+					v-if="hasPermission('stations.queue.reset')"
+					@confirm="removeStation()"
+				>
 					<button class="button is-danger">Delete station</button>
 				</quick-confirm>
 			</div>
