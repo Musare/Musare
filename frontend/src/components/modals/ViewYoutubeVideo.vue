@@ -78,7 +78,6 @@ const confirmAction = ({ message, action }) => {
 
 const seekTo = position => {
 	pauseVideo(false);
-	updateMediaModalPlayingAudio(true);
 	player.value.player.seekTo(position);
 };
 
@@ -87,15 +86,12 @@ const settings = type => {
 		case "stop":
 			stopVideo();
 			pauseVideo(true);
-			updateMediaModalPlayingAudio(false);
 			break;
 		case "pause":
 			pauseVideo(true);
-			updateMediaModalPlayingAudio(false);
 			break;
 		case "play":
 			pauseVideo(false);
-			updateMediaModalPlayingAudio(true);
 			break;
 		case "skipToLast10Secs":
 			seekTo(Number(player.value.duration) - 10);
@@ -242,7 +238,6 @@ const init = () => {
 					) {
 						stopVideo();
 						pauseVideo(true);
-						updateMediaModalPlayingAudio(false);
 						drawCanvas();
 					}
 					if (
@@ -331,6 +326,7 @@ const init = () => {
 
 									if (event.data === 1) {
 										player.value.paused = false;
+										updateMediaModalPlayingAudio(true);
 										const youtubeDuration =
 											player.value.player.getDuration();
 										const newYoutubeVideoDuration =
@@ -396,7 +392,6 @@ const init = () => {
 										) {
 											stopVideo();
 											pauseVideo(true);
-											updateMediaModalPlayingAudio(false);
 											return new Toast(
 												"Video can't play. Specified duration is bigger than the YouTube song duration."
 											);
@@ -404,7 +399,6 @@ const init = () => {
 										if (video.value.duration <= 0) {
 											stopVideo();
 											pauseVideo(true);
-											updateMediaModalPlayingAudio(false);
 											return new Toast(
 												"Video can't play. Specified duration has to be more than 0 seconds."
 											);
@@ -413,6 +407,7 @@ const init = () => {
 										setPlaybackRate(null);
 									} else if (event.data === 2) {
 										player.value.paused = true;
+										updateMediaModalPlayingAudio(false);
 									}
 
 									return false;
@@ -463,7 +458,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
 	stopVideo();
 	pauseVideo(true);
-	updateMediaModalPlayingAudio(false);
 	player.value.duration = "0.000";
 	player.value.currentTime = 0;
 	player.value.playerReady = false;

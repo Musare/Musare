@@ -336,7 +336,7 @@ const unloadSong = (_youtubeId, songId?) => {
 	songDeleted.value = false;
 	stopVideo();
 	pauseVideo(true);
-	updateMediaModalPlayingAudio(false);
+
 	resetSong(_youtubeId);
 	thumbnailNotSquare.value = false;
 	thumbnailWidth.value = null;
@@ -428,7 +428,7 @@ const drawCanvas = () => {
 
 const seekTo = position => {
 	pauseVideo(false);
-	updateMediaModalPlayingAudio(true);
+
 	video.value.player.seekTo(position);
 };
 
@@ -466,7 +466,7 @@ const init = () => {
 		) {
 			stopVideo();
 			pauseVideo(true);
-			updateMediaModalPlayingAudio(false);
+
 			drawCanvas();
 		}
 		if (
@@ -543,6 +543,7 @@ const init = () => {
 
 						if (event.data === 1) {
 							video.value.paused = false;
+							updateMediaModalPlayingAudio(true);
 							let youtubeDuration =
 								video.value.player.getDuration();
 							const newYoutubeVideoDuration =
@@ -603,7 +604,7 @@ const init = () => {
 							if (song.value.duration > youtubeDuration + 1) {
 								stopVideo();
 								pauseVideo(true);
-								updateMediaModalPlayingAudio(false);
+
 								return new Toast(
 									"Video can't play. Specified duration is bigger than the YouTube song duration."
 								);
@@ -611,7 +612,7 @@ const init = () => {
 							if (song.value.duration <= 0) {
 								stopVideo();
 								pauseVideo(true);
-								updateMediaModalPlayingAudio(false);
+
 								return new Toast(
 									"Video can't play. Specified duration has to be more than 0 seconds."
 								);
@@ -627,6 +628,7 @@ const init = () => {
 							setPlaybackRate(null);
 						} else if (event.data === 2) {
 							video.value.paused = true;
+							updateMediaModalPlayingAudio(false);
 						}
 
 						return false;
@@ -956,20 +958,20 @@ const settings = type => {
 		case "stop":
 			stopVideo();
 			pauseVideo(true);
-			updateMediaModalPlayingAudio(false);
+
 			break;
 		case "hardStop":
 			hardStopVideo();
 			pauseVideo(true);
-			updateMediaModalPlayingAudio(false);
+
 			break;
 		case "pause":
 			pauseVideo(true);
-			updateMediaModalPlayingAudio(false);
+
 			break;
 		case "play":
 			pauseVideo(false);
-			updateMediaModalPlayingAudio(true);
+
 			break;
 		case "skipToLast10Secs":
 			seekTo(song.value.duration - 10 + song.value.skipDuration);
