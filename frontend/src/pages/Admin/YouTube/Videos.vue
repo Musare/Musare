@@ -38,7 +38,7 @@ const columns = ref(<TableColumn[]>[
 	{
 		name: "options",
 		displayName: "Options",
-		properties: ["_id", "youtubeId"],
+		properties: ["_id", "youtubeId", "songId"],
 		sortable: false,
 		hidable: false,
 		resizable: false,
@@ -318,7 +318,11 @@ const confirmAction = ({ message, action, params }) => {
 						class="button is-primary icon-with-button material-icons"
 						@click="editOne(slotProps.item)"
 						:disabled="slotProps.item.removed"
-						content="Create/edit song from video"
+						:content="
+							!!slotProps.item.songId
+								? 'Edit Song'
+								: 'Create song from video'
+						"
 						v-tippy
 					>
 						music_note
