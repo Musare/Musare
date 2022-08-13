@@ -13,7 +13,7 @@ const props = defineProps({
 });
 
 const {
-	Sortable,
+	Draggable,
 	drag,
 	userId,
 	isCurrentUser,
@@ -47,10 +47,11 @@ onMounted(() => {
 
 			<hr class="section-horizontal-rule" />
 
-			<sortable
+			<draggable
 				:component-data="{
 					name: !drag ? 'draggable-list-transition' : null
 				}"
+				name="profile-playlists"
 				v-if="playlists.length > 0"
 				:list="playlists"
 				item-key="_id"
@@ -102,7 +103,7 @@ onMounted(() => {
 						</template>
 					</playlist-item>
 				</template>
-			</sortable>
+			</draggable>
 
 			<button
 				v-if="isCurrentUser"
