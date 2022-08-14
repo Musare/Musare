@@ -408,7 +408,7 @@ onBeforeUnmount(() => {
 
 <template>
 	<div>
-		<modal title="Import Album" class="import-album-modal">
+		<modal title="Import Album" class="import-album-modal" size="wide">
 			<template #body>
 				<div class="tabs-container discogs-container">
 					<div class="tab-selection">
