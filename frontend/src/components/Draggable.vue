@@ -6,7 +6,10 @@ const props = defineProps({
 	itemKey: { type: String, default: "" },
 	list: { type: Array as PropType<any[]>, default: () => [] },
 	componentData: { type: Object, default: () => ({}) },
-	options: { type: Object, default: () => ({}) }
+	attributes: { type: Object, default: () => ({}) },
+	options: { type: Object, default: () => ({}) },
+	tag: { type: String, default: "div" },
+	class: { type: String, default: "" }
 });
 
 const mounted = ref(false);
@@ -19,6 +22,8 @@ const emit = defineEmits(["update:list", "start", "end", "update"]);
 
 // When an element starts being dragged
 const onDragStart = (itemIndex: number, event: DragEvent) => {
+	// console.log(111, event);
+
 	// Set the effect of moving an element, which by default is clone. Not being used right now
 	event.dataTransfer.dropEffect = "move";
 
@@ -39,12 +44,15 @@ const onDragStart = (itemIndex: number, event: DragEvent) => {
 
 // When a dragging element hovers over another draggable element, this gets triggered, usually many times in a second
 const onDragOver = (itemIndex: number) => {
+	// console.log(321, itemIndex);
 	// The index and list name of the item that is being dragged, stored in window since it can come from another list as well
 	const fromIndex = window.draggingItemIndex;
 	const fromList = window.draggingItemListName;
 	// The new index and list name of the item that is being dragged
 	const toIndex = itemIndex;
 	const toList = props.name;
+
+	// console.log(3211, fromIndex, fromList, toIndex, toList);
 
 	// If the item hasn't changed position in the same list, don't continue
 	if (fromIndex === toIndex && fromList === toList) return;
@@ -90,13 +98,22 @@ const onDrop = () => {
 	// Emits the update event to parent component, indicating that the order is now done and ordering/moving is done
 	emit("update");
 };
+
+// Function that gets called for each item and returns attributes
+const convertAttributes = item =>
+	Object.fromEntries(
+		Object.entries(props.attributes).map(([key, value]) => [
+			key,
+			typeof value === "function" ? value(item) : value
+		])
+	);
 </script>
 
 <template>
-	<div
+	<component
+		:is="tag"
 		v-for="(item, itemIndex) in list"
 		:key="item[itemKey]"
-		class="draggable-item"
 		draggable="true"
 		@dragstart="onDragStart(itemIndex, $event)"
 		@dragenter.prevent
@@ -105,7 +122,8 @@ const onDrop = () => {
 		@drop.prevent="onDrop()"
 		:data-index="itemIndex"
 		:data-list="name"
+		v-bind="convertAttributes(item)"
 	>
 		<slot name="item" :element="item"></slot>
-	</div>
+	</component>
 </template>
