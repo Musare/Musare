@@ -219,10 +219,6 @@ onUpdated(() => {
 		max-height: 100%;
 	}
 
-	:deep(.draggable-item:not(:last-of-type)) {
-		margin-bottom: 10px;
-	}
-
 	#queue-locked {
 		display: flex;
 		justify-content: center;

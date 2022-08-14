@@ -820,10 +820,7 @@ onMounted(() => {
 						@update="savePlaylistOrder"
 					>
 						<template #item="{ element }">
-							<playlist-item
-								class="is-draggable"
-								:playlist="element"
-							>
+							<playlist-item :playlist="element">
 								<template #item-icon>
 									<i
 										class="material-icons blacklisted-icon"
@@ -1028,8 +1025,7 @@ onMounted(() => {
 		.tab {
 			padding: 15px 0;
 			border-radius: 0;
-			.playlist-item:not(:last-of-type),
-			:deep(.draggable-item:not(:last-of-type)) {
+			.playlist-item:not(:last-of-type) {
 				margin-bottom: 10px;
 			}
 			.load-more-button {

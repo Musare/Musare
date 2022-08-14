@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PropType, watch, onMounted, ref } from "vue";
+import { PropType, Slot as SlotType, watch, onMounted, ref } from "vue";
 
 const props = defineProps({
 	itemKey: { type: String, default: "" },
@@ -26,7 +26,7 @@ const listUuid = ref(
 	})
 );
 const mounted = ref(false);
-const data = ref([]);
+const data = ref([] as any[]);
 
 watch(
 	() => props.list,
@@ -42,9 +42,10 @@ onMounted(() => {
 
 const emit = defineEmits(["update:list", "start", "end", "update"]);
 
-const itemOnMove = index => {
+const itemOnMove = (index: number) => {
 	// Deletes the remove function for the dragging element
-	delete window.draggingItem.itemOnMove;
+	if (window.draggingItem && window.draggingItem.itemOnMove)
+		delete window.draggingItem.itemOnMove;
 	// Remove the item from the current list and return it
 	const listItem = data.value.splice(index, 1)[0];
 	emit("update:list", data.value);
@@ -55,7 +56,7 @@ const itemOnMove = index => {
 const onDragStart = (itemIndex: number, event: DragEvent) => {
 	const { draggable } = event.target as HTMLElement;
 
-	if (props.disabled === true || !draggable) {
+	if (props.disabled === true || !draggable || !event.dataTransfer) {
 		event.preventDefault();
 		return;
 	}
@@ -79,14 +80,14 @@ const onDragStart = (itemIndex: number, event: DragEvent) => {
 
 // When a dragging element hovers over another draggable element, this gets triggered, usually many times in a second
 const onDragOver = (itemIndex: number, event: DragEvent) => {
-	const getDraggableElement = element =>
+	const getDraggableElement = (element: any): any =>
 		element.classList.contains("draggable-item")
 			? element
 			: getDraggableElement(element.parentElement);
 	const draggableElement = getDraggableElement(event.target);
 	const { draggable } = draggableElement;
 
-	if (props.disabled === true || !draggable) return;
+	if (props.disabled === true || !draggable || !window.draggingItem) return;
 
 	// The index and list uuid of the item that is being dragged, stored in window since it can come from another list as well
 	const fromIndex = window.draggingItem.itemIndex;
@@ -113,7 +114,7 @@ const onDragOver = (itemIndex: number, event: DragEvent) => {
 	window.draggingItem.itemListUuid = listUuid.value;
 
 	// If the item comes from another list
-	if (toList !== fromList) {
+	if (toList !== fromList && window.draggingItem.itemOnMove) {
 		// Call the remove function from the dragging element, which removes the item from the previous list and returns it
 		const item = window.draggingItem.itemOnMove(fromIndex);
 		// Define a new remove function for the dragging element
@@ -138,6 +139,7 @@ const onDragEnd = () => {
 // Gets called when an element is dropped on another element
 const onDrop = () => {
 	// Emits the update event to parent component, indicating that the order is now done and ordering/moving is done
+	if (!window.draggingItem) return;
 	const { itemIndex, itemListUuid, initialItemIndex, initialItemListUuid } =
 		window.draggingItem;
 	if (itemListUuid === initialItemListUuid)
@@ -161,7 +163,7 @@ const convertAttributes = (item: any) =>
 		])
 	);
 
-const hasSlotContent = (slot, slotProps = {}) => {
+const hasSlotContent = (slot: SlotType | undefined, slotProps = {}) => {
 	if (!slot) return false;
 
 	return slot(slotProps).some(vnode => {
@@ -186,7 +188,7 @@ const hasSlotContent = (slot, slotProps = {}) => {
 <template>
 	<template v-for="(item, itemIndex) in data" :key="item[itemKey]">
 		<component
-			v-if="hasSlotContent($slots.item, { element: item })"
+			v-if="$slots.item && hasSlotContent($slots.item, { element: item })"
 			:is="tag"
 			:draggable="
 				typeof disabled === 'function' ? !disabled(item) : !disabled
@@ -206,8 +208,11 @@ const hasSlotContent = (slot, slotProps = {}) => {
 	</template>
 </template>
 
-<style>
-.draggable-item .is-draggable {
+<style scoped>
+.draggable-item[draggable="true"] {
 	cursor: move;
+}
+.draggable-item:not(:last-of-type) {
+	margin-bottom: 10px;
 }
 </style>

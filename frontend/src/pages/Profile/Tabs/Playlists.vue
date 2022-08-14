@@ -56,9 +56,6 @@ onMounted(() => {
 								element.createdBy === userId)
 						"
 						:playlist="element"
-						:class="{
-							'is-draggable': isCurrentUser
-						}"
 					>
 						<template #actions>
 							<i

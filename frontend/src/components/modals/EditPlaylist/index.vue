@@ -671,13 +671,5 @@ onBeforeUnmount(() => {
 			}
 		}
 	}
-
-	.right-section {
-		#rearrange-songs-section {
-			:deep(.draggable-item:not(:last-of-type)) {
-				margin-bottom: 10px;
-			}
-		}
-	}
 }
 </style>

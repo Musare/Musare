@@ -16,7 +16,7 @@ declare global {
 				itemIndex: number;
 				itemListUuid: string;
 				itemGroup: string;
-				itemOnMove: (index: number) => any;
+				itemOnMove?: (index: number) => any;
 				initialItemIndex: number;
 				initialItemListUuid: string;
 		  };
