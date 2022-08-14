@@ -77,15 +77,6 @@ const filteredStations = computed(() => {
 		);
 });
 
-const dragOptions = computed(() => ({
-	animation: 200,
-	group: "favoriteStations",
-	disabled: false,
-	ghostClass: "draggable-list-ghost",
-	filter: ".ignore-elements",
-	fallbackTolerance: 50
-}));
-
 const favoriteStations = computed(() =>
 	filteredStations.value
 		.filter(station => station.isFavorited === true)
@@ -155,10 +146,11 @@ const unfavoriteStation = stationId => {
 	});
 };
 
-const changeFavoriteOrder = () => {
+const changeFavoriteOrder = ({ moved }) => {
+	const { updatedList } = moved;
 	socket.dispatch(
 		"users.updateOrderOfFavoriteStations",
-		favoriteStations.value.map(station => station._id),
+		updatedList.map(station => station._id),
 		res => new Toast(res.message)
 	);
 };
@@ -397,8 +389,8 @@ onBeforeUnmount(() => {
 				<draggable
 					item-key="_id"
 					name="home-favorite-stations"
-					v-model:list="favoriteStations"
-					:options="dragOptions"
+					tag="span"
+					:list="favoriteStations"
 					@update="changeFavoriteOrder"
 				>
 					<template #item="{ element }">

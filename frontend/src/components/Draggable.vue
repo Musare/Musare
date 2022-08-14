@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PropType, onMounted, ref } from "vue";
+import { PropType, watch, onMounted, ref } from "vue";
 
 const props = defineProps({
 	name: { type: String, default: "" },
@@ -7,7 +7,6 @@ const props = defineProps({
 	list: { type: Array as PropType<any[]>, default: () => [] },
 	componentData: { type: Object, default: () => ({}) },
 	attributes: { type: Object, default: () => ({}) },
-	options: { type: Object, default: () => ({}) },
 	tag: { type: String, default: "div" },
 	class: { type: String, default: "" },
 	group: { type: String, default: "" },
@@ -15,8 +14,17 @@ const props = defineProps({
 });
 
 const mounted = ref(false);
+const data = ref([]);
+
+watch(
+	() => props.list,
+	list => {
+		data.value = list;
+	}
+);
 
 onMounted(() => {
+	data.value = props.list;
 	mounted.value = true;
 });
 
@@ -26,9 +34,8 @@ const itemOnMove = index => {
 	// Deletes the remove function for the dragging element
 	delete window.draggingItem.itemOnMove;
 	// Remove the item from the current list and return it
-	const list = props.list.slice();
-	const listItem = list.splice(index, 1)[0];
-	emit("update:list", list);
+	const listItem = data.value.splice(index, 1)[0];
+	emit("update:list", data.value);
 	return listItem;
 };
 
@@ -48,7 +55,7 @@ const onDragStart = (itemIndex: number, event: DragEvent) => {
 	window.draggingItem = {
 		itemIndex,
 		itemListName: props.name,
-		itemGroup: props.options.group,
+		itemGroup: props.group,
 		itemOnMove,
 		initialItemIndex: itemIndex,
 		initialItemListName: props.name
@@ -83,7 +90,7 @@ const onDragOver = (itemIndex: number, event: DragEvent) => {
 	if (fromIndex === toIndex && fromList === toList) return;
 
 	// If the dragging item isn't from the same group, don't continue
-	if (window.draggingItem.itemGroup !== props.options.group) return;
+	if (window.draggingItem.itemGroup !== props.group) return;
 
 	// Update the index and list name of the dragged item
 	window.draggingItem.itemIndex = toIndex;
@@ -95,18 +102,16 @@ const onDragOver = (itemIndex: number, event: DragEvent) => {
 		const item = window.draggingItem.itemOnMove(fromIndex);
 		// Define a new remove function for the dragging element
 		window.draggingItem.itemOnMove = itemOnMove;
-		window.draggingItem.itemGroup = props.options.group;
+		window.draggingItem.itemGroup = props.group;
 		// Add the item to the list at the new index
-		const list = props.list.slice();
-		list.splice(toIndex, 0, item);
-		emit("update:list", list);
+		data.value.splice(toIndex, 0, item);
+		emit("update:list", data.value);
 	}
 	// If the item is being reordered in the same list
 	else {
 		// Remove the item from the old position, and add the item to the new position
-		const list = props.list.slice();
-		list.splice(toIndex, 0, list.splice(fromIndex, 1)[0]);
-		emit("update:list", list);
+		data.value.splice(toIndex, 0, data.value.splice(fromIndex, 1)[0]);
+		emit("update:list", data.value);
 	}
 };
 // Gets called when the element that is being dragged is released
@@ -121,7 +126,11 @@ const onDrop = () => {
 		window.draggingItem;
 	if (itemListName === initialItemListName)
 		emit("update", {
-			moved: { oldIndex: initialItemIndex, newIndex: itemIndex }
+			moved: {
+				oldIndex: initialItemIndex,
+				newIndex: itemIndex,
+				updatedList: data.value
+			}
 		});
 	else emit("update", {});
 	delete window.draggingItem;
@@ -159,7 +168,7 @@ const hasSlotContent = (slot, slotProps = {}) => {
 </script>
 
 <template>
-	<template v-for="(item, itemIndex) in list" :key="item[itemKey]">
+	<template v-for="(item, itemIndex) in data" :key="item[itemKey]">
 		<component
 			v-if="hasSlotContent($slots.item, { element: item })"
 			:is="tag"

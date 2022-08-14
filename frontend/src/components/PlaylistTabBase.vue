@@ -55,7 +55,6 @@ const {
 	Draggable,
 	drag,
 	playlists,
-	dragOptions,
 	savePlaylistOrder,
 	orderOfPlaylists,
 	myUserId,
@@ -819,7 +818,6 @@ onMounted(() => {
 						:name="`my-playlists-${type}-${sector}-${modalUuid}`"
 						v-model:list="playlists"
 						item-key="_id"
-						:options="dragOptions"
 						@start="drag = true"
 						@end="drag = false"
 						@update="savePlaylistOrder"

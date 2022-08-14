@@ -24,12 +24,6 @@ export const useSortablePlaylists = () => {
 		}
 	});
 	const isCurrentUser = computed(() => userId.value === myUserId.value);
-	const dragOptions = computed(() => ({
-		animation: 200,
-		group: "playlists",
-		disabled: !isCurrentUser.value,
-		ghostClass: "draggable-list-ghost"
-	}));
 
 	const { socket } = useWebsocketsStore();
 
@@ -193,7 +187,6 @@ export const useSortablePlaylists = () => {
 		userId,
 		isCurrentUser,
 		playlists,
-		dragOptions,
 		orderOfPlaylists,
 		myUserId,
 		savePlaylistOrder,

@@ -12,15 +12,8 @@ const props = defineProps({
 	username: { type: String, default: "" }
 });
 
-const {
-	Draggable,
-	drag,
-	userId,
-	isCurrentUser,
-	playlists,
-	dragOptions,
-	savePlaylistOrder
-} = useSortablePlaylists();
+const { Draggable, drag, userId, isCurrentUser, playlists, savePlaylistOrder } =
+	useSortablePlaylists();
 
 const { openModal } = useModalsStore();
 
@@ -55,7 +48,6 @@ onMounted(() => {
 				v-if="playlists.length > 0"
 				v-model:list="playlists"
 				item-key="_id"
-				:options="dragOptions"
 				@start="drag = true"
 				@end="drag = false"
 				@update="savePlaylistOrder"

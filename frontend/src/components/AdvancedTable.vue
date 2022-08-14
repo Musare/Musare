@@ -86,14 +86,6 @@ const count = ref(0);
 const sort = ref({});
 const orderedColumns = ref([]);
 const shownColumns = ref([]);
-const columnDragOptions = ref({
-	animation: 200,
-	group: "columns",
-	disabled: false,
-	ghostClass: "draggable-list-ghost",
-	filter: ".ignore-elements",
-	fallbackTolerance: 50
-});
 const editingFilters = ref([]);
 const appliedFilters = ref([]);
 const filterOperator = ref("or");
@@ -1531,10 +1523,6 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 								<draggable
 									v-model:list="orderedColumns"
 									item-key="name"
-									:options="{
-										...columnDragOptions,
-										group: 'dropdown-columns'
-									}"
 									@update="columnOrderChanged"
 									:attributes="{
 										class: column => ({
@@ -1620,10 +1608,6 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 							<draggable
 								v-model:list="orderedColumns"
 								item-key="name"
-								:options="{
-									...columnDragOptions,
-									handle: '.handle'
-								}"
 								@update="columnOrderChanged"
 								tag="th"
 								:attributes="{

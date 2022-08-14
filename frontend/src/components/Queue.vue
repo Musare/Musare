@@ -63,13 +63,6 @@ const isOwnerOnly = () =>
 
 const isAdminOnly = () => loggedIn.value && userRole.value === "admin";
 
-const dragOptions = computed(() => ({
-	animation: 200,
-	group: "queue",
-	disabled: !(isAdminOnly() || isOwnerOnly()),
-	ghostClass: "draggable-list-ghost"
-}));
-
 const removeFromQueue = youtubeId => {
 	socket.dispatch(
 		"stations.removeFromQueue",
@@ -158,7 +151,6 @@ onUpdated(() => {
 				:name="`queue-${modalUuid}-${sector}`"
 				v-model:list="queue"
 				item-key="_id"
-				:options="dragOptions"
 				@start="drag = true"
 				@end="drag = false"
 				@update="repositionSongInQueue"
