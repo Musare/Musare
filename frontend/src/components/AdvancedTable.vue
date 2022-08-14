@@ -1531,7 +1531,10 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 								<draggable
 									v-model:list="orderedColumns"
 									item-key="name"
-									:options="columnDragOptions"
+									:options="{
+										...columnDragOptions,
+										group: 'dropdown-columns'
+									}"
 									@update="columnOrderChanged"
 									:attributes="{
 										class: column => ({
