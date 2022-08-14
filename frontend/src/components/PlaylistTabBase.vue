@@ -826,7 +826,7 @@ onMounted(() => {
 					>
 						<template #item="{ element }">
 							<playlist-item
-								class="item-draggable"
+								class="is-draggable"
 								:playlist="element"
 							>
 								<template #item-icon>

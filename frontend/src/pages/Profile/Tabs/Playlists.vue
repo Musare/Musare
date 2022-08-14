@@ -69,7 +69,7 @@ onMounted(() => {
 						"
 						:playlist="element"
 						:class="{
-							'item-draggable': isCurrentUser
+							'is-draggable': isCurrentUser
 						}"
 					>
 						<template #actions>

@@ -93,7 +93,7 @@ const columnDragOptions = ref({
 	ghostClass: "draggable-list-ghost",
 	filter: ".ignore-elements",
 	fallbackTolerance: 50,
-	draggable: ".item-draggable"
+	draggable: ".is-draggable"
 });
 const editingFilters = ref([]);
 const appliedFilters = ref([]);
@@ -1537,7 +1537,7 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 									:attributes="{
 										class: column => ({
 											sortable: column.sortable,
-											'item-draggable': column.draggable,
+											'is-draggable': column.draggable,
 											'nav-item': true
 										})
 									}"
@@ -1631,7 +1631,7 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 									}),
 									class: column => ({
 										sortable: column.sortable,
-										'item-draggable': column.draggable
+										'is-draggable': column.draggable
 									})
 								}"
 							>
@@ -1957,13 +1957,13 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 	.table-outer-container {
 		.table-container .table {
 			&,
-			thead th {
+			:deep(thead th) {
 				background-color: var(--dark-grey-3) !important;
 				color: var(--light-grey-2);
 			}
 
 			tr {
-				th,
+				:deep(th),
 				td {
 					border-color: var(--dark-grey) !important;
 					background-color: var(--dark-grey-3) !important;
@@ -1976,7 +1976,7 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 				&:hover,
 				&:focus,
 				&.highlighted {
-					th,
+					:deep(th),
 					td {
 						background-color: var(--dark-grey-4) !important;
 					}
@@ -2052,7 +2052,7 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 			border-collapse: separate;
 			table-layout: fixed;
 
-			thead {
+			:deep(thead) {
 				tr {
 					th {
 						height: 40px;
@@ -2153,7 +2153,7 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 		}
 
 		table {
-			thead tr,
+			:deep(thead tr),
 			tbody tr {
 				th,
 				td {
@@ -2200,7 +2200,7 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 			}
 
 			&.has-checkboxes {
-				thead,
+				:deep(thead),
 				tbody {
 					tr {
 						th,

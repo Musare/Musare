@@ -1636,10 +1636,6 @@ h4.section-title {
 }
 
 /** Universial items e.g. playlist items, queue items, activity items */
-.item-draggable {
-	cursor: move;
-}
-
 .universal-item {
 	display: flex;
 	flex-direction: row;

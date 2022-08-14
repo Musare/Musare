@@ -123,7 +123,14 @@ const convertAttributes = item =>
 		:data-index="itemIndex"
 		:data-list="name"
 		v-bind="convertAttributes(item)"
+		class="draggable-item"
 	>
 		<slot name="item" :element="item"></slot>
 	</component>
 </template>
+
+<style>
+.draggable-item .is-draggable {
+	cursor: move;
+}
+</style>
