@@ -2,10 +2,8 @@
 import { PropType, watch, onMounted, ref } from "vue";
 
 const props = defineProps({
-	name: { type: String, default: "" },
 	itemKey: { type: String, default: "" },
 	list: { type: Array as PropType<any[]>, default: () => [] },
-	componentData: { type: Object, default: () => ({}) },
 	attributes: { type: Object, default: () => ({}) },
 	tag: { type: String, default: "div" },
 	class: { type: String, default: "" },
@@ -13,6 +11,20 @@ const props = defineProps({
 	disabled: { type: [Boolean, Function], default: false }
 });
 
+const listUuid = ref(
+	"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, symbol => {
+		let array;
+
+		if (symbol === "y") {
+			array = ["8", "9", "a", "b"];
+			return array[Math.floor(Math.random() * array.length)];
+		}
+
+		array = new Uint8Array(1);
+		window.crypto.getRandomValues(array);
+		return (array[0] % 16).toString(16);
+	})
+);
 const mounted = ref(false);
 const data = ref([]);
 
@@ -51,14 +63,14 @@ const onDragStart = (itemIndex: number, event: DragEvent) => {
 	// Set the effect of moving an element, which by default is clone. Not being used right now
 	event.dataTransfer.dropEffect = "move";
 
-	// Sets the dragging element index, list name and adds a remove function for when this item is moved to a different list
+	// Sets the dragging element index, list uuid and adds a remove function for when this item is moved to a different list
 	window.draggingItem = {
 		itemIndex,
-		itemListName: props.name,
+		itemListUuid: listUuid.value,
 		itemGroup: props.group,
 		itemOnMove,
 		initialItemIndex: itemIndex,
-		initialItemListName: props.name
+		initialItemListUuid: listUuid.value
 	};
 
 	// Emits the start event to the parent component, indicating that dragging has started
@@ -76,12 +88,12 @@ const onDragOver = (itemIndex: number, event: DragEvent) => {
 
 	if (props.disabled === true || !draggable) return;
 
-	// The index and list name of the item that is being dragged, stored in window since it can come from another list as well
+	// The index and list uuid of the item that is being dragged, stored in window since it can come from another list as well
 	const fromIndex = window.draggingItem.itemIndex;
-	const fromList = window.draggingItem.itemListName;
-	// The new index and list name of the item that is being dragged
+	const fromList = window.draggingItem.itemListUuid;
+	// The new index and list uuid of the item that is being dragged
 	const toIndex = itemIndex;
-	const toList = props.name;
+	const toList = listUuid.value;
 
 	// Don't continue if fromIndex is invalid
 	if (fromIndex === -1 || toIndex === -1) return;
@@ -90,11 +102,15 @@ const onDragOver = (itemIndex: number, event: DragEvent) => {
 	if (fromIndex === toIndex && fromList === toList) return;
 
 	// If the dragging item isn't from the same group, don't continue
-	if (window.draggingItem.itemGroup !== props.group) return;
+	if (
+		fromList !== toList &&
+		(props.group === "" || window.draggingItem.itemGroup !== props.group)
+	)
+		return;
 
-	// Update the index and list name of the dragged item
+	// Update the index and list uuid of the dragged item
 	window.draggingItem.itemIndex = toIndex;
-	window.draggingItem.itemListName = props.name;
+	window.draggingItem.itemListUuid = listUuid.value;
 
 	// If the item comes from another list
 	if (toList !== fromList) {
@@ -122,9 +138,9 @@ const onDragEnd = () => {
 // Gets called when an element is dropped on another element
 const onDrop = () => {
 	// Emits the update event to parent component, indicating that the order is now done and ordering/moving is done
-	const { itemIndex, itemListName, initialItemIndex, initialItemListName } =
+	const { itemIndex, itemListUuid, initialItemIndex, initialItemListUuid } =
 		window.draggingItem;
-	if (itemListName === initialItemListName)
+	if (itemListUuid === initialItemListUuid)
 		emit("update", {
 			moved: {
 				oldIndex: initialItemIndex,
@@ -181,7 +197,7 @@ const hasSlotContent = (slot, slotProps = {}) => {
 			@dragend="onDragEnd()"
 			@drop.prevent="onDrop()"
 			:data-index="itemIndex"
-			:data-list="name"
+			:data-list="listUuid"
 			class="draggable-item"
 			v-bind="convertAttributes(item)"
 		>

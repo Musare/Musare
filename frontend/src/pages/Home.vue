@@ -388,7 +388,6 @@ onBeforeUnmount(() => {
 
 				<draggable
 					item-key="_id"
-					name="home-favorite-stations"
 					tag="span"
 					:list="favoriteStations"
 					@update="changeFavoriteOrder"

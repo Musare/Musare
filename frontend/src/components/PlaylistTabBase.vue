@@ -812,9 +812,6 @@ onMounted(() => {
 					v-if="playlists.length > 0"
 				>
 					<draggable
-						:component-data="{
-							name: !drag ? 'draggable-list-transition' : null
-						}"
 						:name="`my-playlists-${type}-${sector}-${modalUuid}`"
 						v-model:list="playlists"
 						item-key="_id"

@@ -408,11 +408,7 @@ onBeforeUnmount(() => {
 
 					<aside class="menu">
 						<draggable
-							:component-data="{
-								name: !drag ? 'draggable-list-transition' : null
-							}"
 							v-if="playlistSongs.length > 0"
-							:name="`edit-playlist-${modalUuid}`"
 							v-model:list="playlistSongs"
 							item-key="_id"
 							@start="drag = true"

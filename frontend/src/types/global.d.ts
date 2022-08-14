@@ -14,11 +14,11 @@ declare global {
 		| undefined
 		| {
 				itemIndex: number;
-				itemListName: string;
+				itemListUuid: string;
 				itemGroup: string;
 				itemOnMove: (index: number) => any;
 				initialItemIndex: number;
-				initialItemListName: string;
+				initialItemListUuid: string;
 		  };
 }
 

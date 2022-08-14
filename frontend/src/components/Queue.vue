@@ -145,10 +145,6 @@ onUpdated(() => {
 			}"
 		>
 			<draggable
-				:component-data="{
-					name: !drag ? 'draggable-list-transition' : null
-				}"
-				:name="`queue-${modalUuid}-${sector}`"
 				v-model:list="queue"
 				item-key="_id"
 				@start="drag = true"

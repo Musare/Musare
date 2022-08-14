@@ -41,10 +41,6 @@ onMounted(() => {
 			<hr class="section-horizontal-rule" />
 
 			<draggable
-				:component-data="{
-					name: !drag ? 'draggable-list-transition' : null
-				}"
-				name="profile-playlists"
 				v-if="playlists.length > 0"
 				v-model:list="playlists"
 				item-key="_id"
