@@ -49,7 +49,9 @@ const onDragStart = (itemIndex: number, event: DragEvent) => {
 		itemIndex,
 		itemListName: props.name,
 		itemGroup: props.options.group,
-		itemOnMove
+		itemOnMove,
+		initialItemIndex: itemIndex,
+		initialItemListName: props.name
 	};
 
 	// Emits the start event to the parent component, indicating that dragging has started
@@ -112,7 +114,14 @@ const onDragEnd = () => {
 // Gets called when an element is dropped on another element
 const onDrop = () => {
 	// Emits the update event to parent component, indicating that the order is now done and ordering/moving is done
-	emit("update");
+	const { itemIndex, itemListName, initialItemIndex, initialItemListName } =
+		window.draggingItem;
+	if (itemListName === initialItemListName)
+		emit("update", {
+			moved: { oldIndex: initialItemIndex, newIndex: itemIndex }
+		});
+	else emit("update", {});
+	delete window.draggingItem;
 };
 
 // Function that gets called for each item and returns attributes
