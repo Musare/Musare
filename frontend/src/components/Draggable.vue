@@ -34,7 +34,7 @@ const itemOnMove = index => {
 
 // When an element starts being dragged
 const onDragStart = (itemIndex: number, event: DragEvent) => {
-	const { draggable } = event.target;
+	const { draggable } = event.target as HTMLElement;
 
 	if (props.disabled === true || !draggable) {
 		event.preventDefault();
@@ -75,6 +75,9 @@ const onDragOver = (itemIndex: number, event: DragEvent) => {
 	// The new index and list name of the item that is being dragged
 	const toIndex = itemIndex;
 	const toList = props.name;
+
+	// Don't continue if fromIndex is invalid
+	if (fromIndex === -1 || toIndex === -1) return;
 
 	// If the item hasn't changed position in the same list, don't continue
 	if (fromIndex === toIndex && fromList === toList) return;
@@ -125,7 +128,7 @@ const onDrop = () => {
 };
 
 // Function that gets called for each item and returns attributes
-const convertAttributes = item =>
+const convertAttributes = (item: any) =>
 	Object.fromEntries(
 		Object.entries(props.attributes).map(([key, value]) => [
 			key,
@@ -173,7 +176,7 @@ const hasSlotContent = (slot, slotProps = {}) => {
 			class="draggable-item"
 			v-bind="convertAttributes(item)"
 		>
-			<slot name="item" :element="item"></slot>
+			<slot name="item" :element="item" :index="itemIndex"></slot>
 		</component>
 	</template>
 </template>

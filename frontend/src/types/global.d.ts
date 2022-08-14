@@ -10,9 +10,16 @@ declare global {
 	var addToPlaylistDropdown: any;
 	var scrollDebounceId: any;
 	var focusedElementBefore: any;
-	var draggingItemIndex: undefined | number;
-	var draggingItemListName: undefined | string;
-	var draggingItemOnMove: undefined | ((index: number) => any);
+	var draggingItem:
+		| undefined
+		| {
+				itemIndex: number;
+				itemListName: string;
+				itemGroup: string;
+				itemOnMove: (index: number) => any;
+				initialItemIndex: number;
+				initialItemListName: string;
+		  };
 }
 
 export {};
