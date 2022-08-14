@@ -1,11 +1,10 @@
 <script setup lang="ts">
-/* eslint-disable vue/no-mutating-props */
-import { onMounted, ref } from "vue";
+import { PropType, onMounted, ref } from "vue";
 
 const props = defineProps({
 	name: { type: String, default: "" },
 	itemKey: { type: String, default: "" },
-	list: { type: Array, default: () => [] },
+	list: { type: Array as PropType<any[]>, default: () => [] },
 	componentData: { type: Object, default: () => ({}) },
 	options: { type: Object, default: () => ({}) }
 });
@@ -16,10 +15,10 @@ onMounted(() => {
 	mounted.value = true;
 });
 
-const emit = defineEmits(["start", "end", "update"]);
+const emit = defineEmits(["update:list", "start", "end", "update"]);
 
 // When an element starts being dragged
-const onDragStart = (itemIndex, event) => {
+const onDragStart = (itemIndex: number, event: DragEvent) => {
 	// Set the effect of moving an element, which by default is clone. Not being used right now
 	event.dataTransfer.dropEffect = "move";
 
@@ -27,8 +26,11 @@ const onDragStart = (itemIndex, event) => {
 	window.draggingItemIndex = itemIndex;
 	window.draggingItemListName = props.name;
 	window.draggingItemOnMove = index => {
-		window.draggingItemOnMove = null;
-		return props.list.splice(index, 1)[0];
+		delete window.draggingItemOnMove;
+		const list = props.list.slice();
+		const listItem = list.splice(index, 1)[0];
+		emit("update:list", list);
+		return listItem;
 	};
 
 	// Emits the start event to the parent component, indicating that dragging has started
@@ -36,10 +38,10 @@ const onDragStart = (itemIndex, event) => {
 };
 
 // When a dragging element hovers over another draggable element, this gets triggered, usually many times in a second
-const onDragOver = itemIndex => {
+const onDragOver = (itemIndex: number) => {
 	// The index and list name of the item that is being dragged, stored in window since it can come from another list as well
 	const fromIndex = window.draggingItemIndex;
-	const fromList = window.draggingItemList;
+	const fromList = window.draggingItemListName;
 	// The new index and list name of the item that is being dragged
 	const toIndex = itemIndex;
 	const toList = props.name;
@@ -49,7 +51,7 @@ const onDragOver = itemIndex => {
 
 	// Update the index and list name of the dragged item
 	window.draggingItemIndex = toIndex;
-	window.draggingItemList = props.name;
+	window.draggingItemListName = props.name;
 
 	// If the item comes from another list
 	if (toList !== fromList) {
@@ -58,17 +60,24 @@ const onDragOver = itemIndex => {
 		// Define a new remove function for the dragging element
 		window.draggingItemOnMove = index => {
 			// Deletes the remove function for the dragging element
-			window.draggingItemOnMove = null;
+			delete window.draggingItemOnMove;
 			// Remove the item from the current list and return it
-			return props.list.splice(index, 1)[0];
+			const list = props.list.slice();
+			const listItem = list.splice(index, 1)[0];
+			emit("update:list", list);
+			return listItem;
 		};
 		// Add the item to the list at the new index
-		props.list.splice(toIndex, 0, item);
+		const list = props.list.slice();
+		list.splice(toIndex, 0, item);
+		emit("update:list", list);
 	}
 	// If the item is being reordered in the same list
 	else {
 		// Remove the item from the old position, and add the item to the new position
-		props.list.splice(toIndex, 0, props.list.splice(fromIndex, 1)[0]);
+		const list = props.list.slice();
+		list.splice(toIndex, 0, list.splice(fromIndex, 1)[0]);
+		emit("update:list", list);
 	}
 };
 // Gets called when the element that is being dragged is released
@@ -85,27 +94,18 @@ const onDrop = () => {
 
 <template>
 	<div
-		v-for="n in list.length"
-		:key="`${name}-${n - 1}`"
-		:id="`${name}-${n - 1}`"
-	></div>
-
-	<template v-if="mounted">
-		<div v-for="(item, itemIndex) in list" :key="item[itemKey]">
-			<Teleport :to="`#${name}-${itemIndex}`">
-				<div
-					draggable="true"
-					@dragstart="onDragStart(itemIndex, $event)"
-					@dragenter.prevent
-					@dragover.prevent="onDragOver(itemIndex)"
-					@dragend="onDragEnd()"
-					@drop.prevent="onDrop()"
-					:data-index="itemIndex"
-					:data-list="name"
-				>
-					<slot name="item" :element="item"></slot>
-				</div>
-			</Teleport>
-		</div>
-	</template>
+		v-for="(item, itemIndex) in list"
+		:key="item[itemKey]"
+		class="draggable-item"
+		draggable="true"
+		@dragstart="onDragStart(itemIndex, $event)"
+		@dragenter.prevent
+		@dragover.prevent="onDragOver(itemIndex)"
+		@dragend="onDragEnd()"
+		@drop.prevent="onDrop()"
+		:data-index="itemIndex"
+		:data-list="name"
+	>
+		<slot name="item" :element="item"></slot>
+	</div>
 </template>

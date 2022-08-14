@@ -53,7 +53,7 @@ onMounted(() => {
 				}"
 				name="profile-playlists"
 				v-if="playlists.length > 0"
-				:list="playlists"
+				v-model:list="playlists"
 				item-key="_id"
 				:options="dragOptions"
 				@start="drag = true"
@@ -69,7 +69,6 @@ onMounted(() => {
 						"
 						:playlist="element"
 						:class="{
-							item: true,
 							'item-draggable': isCurrentUser
 						}"
 					>
