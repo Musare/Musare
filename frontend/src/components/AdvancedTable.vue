@@ -92,8 +92,7 @@ const columnDragOptions = ref({
 	disabled: false,
 	ghostClass: "draggable-list-ghost",
 	filter: ".ignore-elements",
-	fallbackTolerance: 50,
-	draggable: ".is-draggable"
+	fallbackTolerance: 50
 });
 const editingFilters = ref([]);
 const appliedFilters = ref([]);
@@ -1537,61 +1536,68 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 									:attributes="{
 										class: column => ({
 											sortable: column.sortable,
-											'is-draggable': column.draggable,
 											'nav-item': true
 										})
 									}"
+									:disabled="column => !column.draggable"
 									tag="button"
 								>
 									<template #item="{ element: column }">
-										<div
+										<template
 											v-if="
 												column.name !== 'select' &&
 												column.name !== 'placeholder' &&
 												column.name !==
 													'updatedPlaceholder'
 											"
-											@click.prevent="
-												toggleColumnVisibility(column)
-											"
 										>
-											<p
-												class="control is-expanded checkbox-control"
+											<div
+												@click.prevent="
+													toggleColumnVisibility(
+														column
+													)
+												"
 											>
-												<label class="switch">
-													<input
-														type="checkbox"
-														:id="`column-dropdown-checkbox-${column.name}`"
-														:checked="
-															shownColumns.indexOf(
-																column.name
-															) !== -1
-														"
-														@click="
-															toggleColumnVisibility(
-																column
-															)
-														"
-													/>
-													<span
-														:class="{
-															slider: true,
-															round: true,
-															disabled:
-																!column.hidable
-														}"
-													></span>
-												</label>
-												<label
-													:for="`column-dropdown-checkbox-${column.name}`"
+												<p
+													class="control is-expanded checkbox-control"
 												>
-													<span></span>
-													<p>
-														{{ column.displayName }}
-													</p>
-												</label>
-											</p>
-										</div>
+													<label class="switch">
+														<input
+															type="checkbox"
+															:id="`column-dropdown-checkbox-${column.name}`"
+															:checked="
+																shownColumns.indexOf(
+																	column.name
+																) !== -1
+															"
+															@click="
+																toggleColumnVisibility(
+																	column
+																)
+															"
+														/>
+														<span
+															:class="{
+																slider: true,
+																round: true,
+																disabled:
+																	!column.hidable
+															}"
+														></span>
+													</label>
+													<label
+														:for="`column-dropdown-checkbox-${column.name}`"
+													>
+														<span></span>
+														<p>
+															{{
+																column.displayName
+															}}
+														</p>
+													</label>
+												</p>
+											</div>
+										</template>
 									</template>
 								</draggable>
 							</div>
@@ -1630,10 +1636,10 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 											: `${column.maxWidth}px`
 									}),
 									class: column => ({
-										sortable: column.sortable,
-										'is-draggable': column.draggable
+										sortable: column.sortable
 									})
 								}"
+								:disabled="column => !column.draggable"
 							>
 								<template #item="{ element: column }">
 									<template
