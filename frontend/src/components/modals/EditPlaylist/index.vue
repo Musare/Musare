@@ -6,7 +6,6 @@ import {
 	onMounted,
 	onBeforeUnmount
 } from "vue";
-import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
@@ -28,6 +27,9 @@ const ImportPlaylists = defineAsyncComponent(
 );
 const QuickConfirm = defineAsyncComponent(
 	() => import("@/components/QuickConfirm.vue")
+);
+const Draggable = defineAsyncComponent(
+	() => import("@/components/Draggable.vue")
 );
 
 const props = defineProps({
@@ -72,13 +74,6 @@ const isEditable = () =>
 		playlist.value.type === "user-disliked") &&
 	(userId.value === playlist.value.createdBy || userRole.value === "admin");
 
-const dragOptions = computed(() => ({
-	animation: 200,
-	group: "songs",
-	disabled: !isEditable(),
-	ghostClass: "draggable-list-ghost"
-}));
-
 const init = () => {
 	gettingSongs.value = true;
 	socket.dispatch("playlists.getPlaylist", playlistId.value, res => {
@@ -94,10 +89,10 @@ const isAdmin = () => userRole.value === "admin";
 const isOwner = () =>
 	loggedIn.value && userId.value === playlist.value.createdBy;
 
-const repositionSong = ({ oldIndex, newIndex }) => {
+const repositionSong = ({ moved }) => {
+	const { oldIndex, newIndex } = moved;
 	if (oldIndex === newIndex) return; // we only need to update when song is moved
 	const song = playlistSongs.value[oldIndex];
-
 	socket.dispatch(
 		"playlists.repositionSong",
 		playlist.value._id,
@@ -117,21 +112,29 @@ const repositionSong = ({ oldIndex, newIndex }) => {
 	);
 };
 
-const moveSongToTop = (song, index) => {
+const moveSongToTop = index => {
 	songItems.value[`song-item-${index}`].$refs.songActions.tippy.hide();
-
+	playlistSongs.value.splice(0, 0, playlistSongs.value.splice(index, 1)[0]);
 	repositionSong({
-		oldIndex: index,
-		newIndex: 0
+		moved: {
+			oldIndex: index,
+			newIndex: 0
+		}
 	});
 };
 
-const moveSongToBottom = (song, index) => {
+const moveSongToBottom = index => {
 	songItems.value[`song-item-${index}`].$refs.songActions.tippy.hide();
-
+	playlistSongs.value.splice(
+		playlistSongs.value.length - 1,
+		0,
+		playlistSongs.value.splice(index, 1)[0]
+	);
 	repositionSong({
-		oldIndex: index,
-		newIndex: playlistSongs.value.length
+		moved: {
+			oldIndex: index,
+			newIndex: playlistSongs.value.length - 1
+		}
 	});
 };
 
@@ -404,25 +407,23 @@ onBeforeUnmount(() => {
 					</div>
 
 					<aside class="menu">
-						<sortable
+						<draggable
 							:component-data="{
 								name: !drag ? 'draggable-list-transition' : null
 							}"
 							v-if="playlistSongs.length > 0"
-							:list="playlistSongs"
+							:name="`edit-playlist-${modalUuid}`"
+							v-model:list="playlistSongs"
 							item-key="_id"
-							:options="dragOptions"
 							@start="drag = true"
 							@end="drag = false"
 							@update="repositionSong"
+							:disabled="!isEditable()"
 						>
 							<template #item="{ element, index }">
 								<div class="menu-list scrollable-list">
 									<song-item
 										:song="element"
-										:class="{
-											'item-draggable': isEditable()
-										}"
 										:ref="
 											el =>
 												(songItems[
@@ -479,12 +480,7 @@ onBeforeUnmount(() => {
 											<i
 												class="material-icons"
 												v-if="isEditable() && index > 0"
-												@click="
-													moveSongToTop(
-														element,
-														index
-													)
-												"
+												@click="moveSongToTop(index)"
 												content="Move to top of Playlist"
 												v-tippy
 												>vertical_align_top</i
@@ -495,12 +491,7 @@ onBeforeUnmount(() => {
 													playlistSongs.length - 1 !==
 														index
 												"
-												@click="
-													moveSongToBottom(
-														element,
-														index
-													)
-												"
+												@click="moveSongToBottom(index)"
 												class="material-icons"
 												content="Move to bottom of Playlist"
 												v-tippy
@@ -510,7 +501,7 @@ onBeforeUnmount(() => {
 									</song-item>
 								</div>
 							</template>
-						</sortable>
+						</draggable>
 						<p v-else-if="gettingSongs" class="nothing-here-text">
 							Loading songs...
 						</p>
