@@ -236,13 +236,8 @@ const pickSong = song => {
 		prefill: songPrefillData.value[song.youtubeId]
 	});
 	currentSong.value = song;
-	if (
-		songItems.value[`edit-songs-item-${song.youtubeId}`] &&
-		songItems.value[`edit-songs-item-${song.youtubeId}`][0]
-	)
-		songItems.value[
-			`edit-songs-item-${song.youtubeId}`
-		][0].scrollIntoView();
+	if (songItems.value[`edit-songs-item-${song.youtubeId}`])
+		songItems.value[`edit-songs-item-${song.youtubeId}`].scrollIntoView();
 };
 
 const editNextSong = () => {
