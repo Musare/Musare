@@ -4,6 +4,8 @@ import { createApp } from "vue";
 import VueTippy, { Tippy } from "vue-tippy";
 import { createRouter, createWebHistory } from "vue-router";
 import { createPinia } from "pinia";
+import { polyfill as mobileDragDropPolyfill } from "mobile-drag-drop";
+import { scrollBehaviourDragImageTranslateOverride as mobileDragDropScrollBehaviourDragImageTranslateOverride } from "mobile-drag-drop/scroll-behaviour";
 import "lofig";
 
 import { useUserAuthStore } from "@/stores/userAuth";
@@ -297,6 +299,13 @@ lofig.folder = defaultConfigURL;
 
 	const websocketsDomain = await lofig.get("backend.websocketsDomain");
 	ws.init(websocketsDomain);
+
+	mobileDragDropPolyfill({
+		dragImageTranslateOverride:
+			mobileDragDropScrollBehaviourDragImageTranslateOverride
+	});
+
+	window.addEventListener("touchmove", () => {});
 
 	if (await lofig.get("siteSettings.mediasession")) ms.init();
 

@@ -812,7 +812,6 @@ onMounted(() => {
 					v-if="playlists.length > 0"
 				>
 					<draggable
-						:name="`my-playlists-${type}-${sector}-${modalUuid}`"
 						v-model:list="playlists"
 						item-key="_id"
 						@start="drag = true"

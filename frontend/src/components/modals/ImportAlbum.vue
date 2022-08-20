@@ -333,53 +333,6 @@ const updateTrackSong = updatedSong => {
 	});
 };
 
-// const updatePlaylistSongPosition = ({ oldIndex, newIndex }) => {
-// 	if (oldIndex === newIndex) return;
-// 	const oldSongs = playlistSongs.value;
-// 	oldSongs.splice(newIndex, 0, oldSongs.splice(oldIndex, 1)[0]);
-// 	playlistSongs.value = oldSongs;
-// };
-
-// const updateTrackSongPosition = (trackIndex, { oldIndex, newIndex }) => {
-// 	if (oldIndex === newIndex) return;
-// 	const oldSongs = trackSongs.value[trackIndex];
-// 	oldSongs.splice(newIndex, 0, oldSongs.splice(oldIndex, 1)[0]);
-// 	trackSongs.value[trackIndex] = oldSongs;
-// };
-
-// const playlistSongAdded = event => {
-// 	const fromTrack = event.from;
-// 	const fromTrackIndex = Number(fromTrack.dataset.trackIndex);
-// 	const song = trackSongs.value[fromTrackIndex][event.oldIndex];
-// 	const newPlaylistSongs = JSON.parse(JSON.stringify(playlistSongs.value));
-// 	newPlaylistSongs.splice(event.newIndex, 0, song);
-// 	playlistSongs.value = newPlaylistSongs;
-// };
-
-// const playlistSongRemoved = event => {
-// 	playlistSongs.value.splice(event.oldIndex, 1);
-// };
-
-// const trackSongAdded = (trackIndex, event) => {
-// 	const fromElement = event.from;
-// 	let song = null;
-// 	if (fromElement.dataset.trackIndex) {
-// 		const fromTrackIndex = Number(fromElement.dataset.trackIndex);
-// 		song = trackSongs.value[fromTrackIndex][event.oldIndex];
-// 	} else {
-// 		song = playlistSongs.value[event.oldIndex];
-// 	}
-// 	const newTrackSongs = JSON.parse(
-// 		JSON.stringify(trackSongs.value[trackIndex])
-// 	);
-// 	newTrackSongs.splice(event.newIndex, 0, song);
-// 	trackSongs.value[trackIndex] = newTrackSongs;
-// };
-
-// const trackSongRemoved = (trackIndex, event) => {
-// 	trackSongs.value[trackIndex].splice(event.oldIndex, 1);
-// };
-
 onMounted(() => {
 	ws.onConnect(init);
 
