@@ -302,7 +302,18 @@ lofig.folder = defaultConfigURL;
 
 	mobileDragDropPolyfill({
 		dragImageTranslateOverride:
-			mobileDragDropScrollBehaviourDragImageTranslateOverride
+			mobileDragDropScrollBehaviourDragImageTranslateOverride,
+		tryFindDraggableTarget: event => {
+			const getDraggableElement = (element: HTMLElement) => {
+				if (element.classList.contains("draggable-item"))
+					return element;
+				if (element.parentElement)
+					return getDraggableElement(element.parentElement);
+				return undefined;
+			};
+
+			return getDraggableElement(event.target as HTMLElement);
+		}
 	});
 
 	window.addEventListener("touchmove", () => {});
