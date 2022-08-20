@@ -400,7 +400,7 @@ onBeforeUnmount(() => {
 
 <template>
 	<div>
-		<modal title="Import Album" class="import-album-modal">
+		<modal title="Import Album" class="import-album-modal" size="wide">
 			<template #body>
 				<div class="tabs-container discogs-container">
 					<div class="tab-selection">
@@ -677,21 +677,22 @@ onBeforeUnmount(() => {
 							<span>{{ track.position }}.</span>
 							<p>{{ track.title }}</p>
 						</div>
-						<draggable
-							class="track-box-songs-drag-area"
-							v-model:list="trackSongs[index]"
-							:data-track-index="index"
-							item-key="_id"
-							:group="`import-album-${modalUuid}-songs`"
-						>
-							<template #item="{ element }">
-								<song-item
-									:key="`track-song-${element._id}`"
-									:song="element"
-								>
-								</song-item>
-							</template>
-						</draggable>
+						<!-- :data-track-index="index" -->
+						<div class="track-box-songs-drag-area">
+							<draggable
+								v-model:list="trackSongs[index]"
+								item-key="_id"
+								:group="`import-album-${modalUuid}-songs`"
+							>
+								<template #item="{ element }">
+									<song-item
+										:key="`track-song-${element._id}`"
+										:song="element"
+									>
+									</song-item>
+								</template>
+							</draggable>
+						</div>
 					</div>
 				</div>
 			</template>
@@ -1152,6 +1153,7 @@ onBeforeUnmount(() => {
 		.track-box-songs-drag-area {
 			flex: 1;
 			min-height: 100px;
+			display: flex;
 		}
 	}
 }

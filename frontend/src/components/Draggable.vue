@@ -79,15 +79,21 @@ const onDragStart = (itemIndex: number, event: DragEvent) => {
 };
 
 // When a dragging element hovers over another draggable element, this gets triggered, usually many times in a second
-const onDragOver = (itemIndex: number, event: DragEvent) => {
-	const getDraggableElement = (element: any): any =>
-		element.classList.contains("draggable-item")
+const onDragOver = (itemIndex: number, event: DragEvent, push = false) => {
+	const getDraggableElement = (element: HTMLElement): any =>
+		element.classList.contains("draggable-item") ||
+		element.classList.contains("empty-list-placeholder")
 			? element
 			: getDraggableElement(element.parentElement);
-	const draggableElement = getDraggableElement(event.target);
+	const draggableElement = getDraggableElement(event.target as HTMLElement);
 	const { draggable } = draggableElement;
 
-	if (props.disabled === true || !draggable || !window.draggingItem) return;
+	if (
+		props.disabled === true ||
+		(!draggable && !push) ||
+		!window.draggingItem
+	)
+		return;
 
 	// The index and list uuid of the item that is being dragged, stored in window since it can come from another list as well
 	const fromIndex = window.draggingItem.itemIndex;
@@ -95,9 +101,6 @@ const onDragOver = (itemIndex: number, event: DragEvent) => {
 	// The new index and list uuid of the item that is being dragged
 	const toIndex = itemIndex;
 	const toList = listUuid.value;
-
-	// Don't continue if fromIndex is invalid
-	if (fromIndex === -1 || toIndex === -1) return;
 
 	// If the item hasn't changed position in the same list, don't continue
 	if (fromIndex === toIndex && fromList === toList) return;
@@ -121,7 +124,8 @@ const onDragOver = (itemIndex: number, event: DragEvent) => {
 		window.draggingItem.itemOnMove = itemOnMove;
 		window.draggingItem.itemGroup = props.group;
 		// Add the item to the list at the new index
-		data.value.splice(toIndex, 0, item);
+		if (push) data.value.push(item);
+		else data.value.splice(toIndex, 0, item);
 		emit("update:list", data.value);
 	}
 	// If the item is being reordered in the same list
@@ -188,7 +192,7 @@ const hasSlotContent = (slot: SlotType | undefined, slotProps = {}) => {
 <template>
 	<template v-for="(item, itemIndex) in data" :key="item[itemKey]">
 		<component
-			v-if="$slots.item && hasSlotContent($slots.item, { element: item })"
+			v-if="hasSlotContent($slots.item, { element: item })"
 			:is="tag"
 			:draggable="
 				typeof disabled === 'function' ? !disabled(item) : !disabled
@@ -206,6 +210,12 @@ const hasSlotContent = (slot: SlotType | undefined, slotProps = {}) => {
 			<slot name="item" :element="item" :index="itemIndex"></slot>
 		</component>
 	</template>
+	<div
+		v-if="data.length === 0"
+		class="empty-list-placeholder"
+		@dragover.prevent="onDragOver(0, $event, true)"
+		@drop.prevent
+	></div>
 </template>
 
 <style scoped>
@@ -214,5 +224,8 @@ const hasSlotContent = (slot: SlotType | undefined, slotProps = {}) => {
 }
 .draggable-item:not(:last-of-type) {
 	margin-bottom: 10px;
+}
+.empty-list-placeholder {
+	flex: 1;
 }
 </style>
