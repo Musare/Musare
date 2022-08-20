@@ -307,7 +307,6 @@ onMounted(async () => {
 @import "normalize.css/normalize.css";
 @import "tippy.js/dist/tippy.css";
 @import "tippy.js/animations/scale.css";
-@import "mobile-drag-drop/default.css";
 
 :root {
 	--primary-color: var(--blue);
@@ -578,6 +577,8 @@ body {
 	line-height: 1.4285714;
 	font-size: 1rem;
 	font-family: "Inter", Helvetica, Arial, sans-serif;
+	max-width: 100%;
+	overflow-x: hidden;
 }
 
 .app {

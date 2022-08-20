@@ -1107,6 +1107,7 @@ onBeforeUnmount(() => {
 			flex: 1;
 			min-height: 100px;
 			display: flex;
+			flex-direction: column;
 		}
 	}
 }

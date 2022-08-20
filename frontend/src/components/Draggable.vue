@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/* eslint-disable import/first */
 import { PropType, Slot as SlotType, watch, onMounted, ref } from "vue";
 
 const props = defineProps({
@@ -189,6 +190,28 @@ const hasSlotContent = (slot: SlotType | undefined, slotProps = {}) => {
 };
 </script>
 
+<script lang="ts">
+import { polyfill as mobileDragDropPolyfill } from "mobile-drag-drop";
+import { scrollBehaviourDragImageTranslateOverride as mobileDragDropScrollBehaviourDragImageTranslateOverride } from "mobile-drag-drop/scroll-behaviour";
+
+mobileDragDropPolyfill({
+	dragImageTranslateOverride:
+		mobileDragDropScrollBehaviourDragImageTranslateOverride,
+	tryFindDraggableTarget: event => {
+		const getDraggableElement = (element: HTMLElement) => {
+			if (element.classList.contains("draggable-item")) return element;
+			if (element.parentElement)
+				return getDraggableElement(element.parentElement);
+			return undefined;
+		};
+
+		return getDraggableElement(event.target as HTMLElement);
+	}
+});
+
+window.addEventListener("touchmove", () => {});
+</script>
+
 <template>
 	<template v-for="(item, itemIndex) in data" :key="item[itemKey]">
 		<component
@@ -219,6 +242,8 @@ const hasSlotContent = (slot: SlotType | undefined, slotProps = {}) => {
 </template>
 
 <style scoped>
+@import "mobile-drag-drop/default.css";
+
 .draggable-item[draggable="true"] {
 	cursor: move;
 }
