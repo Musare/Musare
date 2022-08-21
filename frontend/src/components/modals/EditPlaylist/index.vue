@@ -8,6 +8,7 @@ import {
 } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
+import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";
 import { useStationStore } from "@/stores/station";
@@ -27,9 +28,6 @@ const ImportPlaylists = defineAsyncComponent(
 );
 const QuickConfirm = defineAsyncComponent(
 	() => import("@/components/QuickConfirm.vue")
-);
-const Draggable = defineAsyncComponent(
-	() => import("@/components/Draggable.vue")
 );
 
 const props = defineProps({
@@ -407,7 +405,7 @@ onBeforeUnmount(() => {
 					</div>
 
 					<aside class="menu">
-						<draggable
+						<draggable-list
 							v-if="playlistSongs.length > 0"
 							v-model:list="playlistSongs"
 							item-key="_id"
@@ -491,7 +489,7 @@ onBeforeUnmount(() => {
 									</template>
 								</song-item>
 							</template>
-						</draggable>
+						</draggable-list>
 						<p v-else-if="gettingSongs" class="nothing-here-text">
 							Loading songs...
 						</p>

@@ -307,6 +307,7 @@ onMounted(async () => {
 @import "normalize.css/normalize.css";
 @import "tippy.js/dist/tippy.css";
 @import "tippy.js/animations/scale.css";
+@import "vue-draggable-list/dist/style.css";
 
 :root {
 	--primary-color: var(--blue);

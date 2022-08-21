@@ -1,11 +1,11 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
+import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPlaylistsStore } from "@/stores/userPlaylists";
 import ws from "@/ws";
-import Draggable from "@/components/Draggable.vue";
 
 export const useSortablePlaylists = () => {
 	const orderOfPlaylists = ref([]);
@@ -182,7 +182,7 @@ export const useSortablePlaylists = () => {
 	});
 
 	return {
-		Draggable,
+		DraggableList,
 		drag,
 		userId,
 		isCurrentUser,

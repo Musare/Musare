@@ -2,6 +2,7 @@
 import { defineAsyncComponent, ref, computed, onUpdated } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
+import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
 import { useUserAuthStore } from "@/stores/userAuth";
@@ -12,9 +13,6 @@ const SongItem = defineAsyncComponent(
 );
 const QuickConfirm = defineAsyncComponent(
 	() => import("@/components/QuickConfirm.vue")
-);
-const Draggable = defineAsyncComponent(
-	() => import("@/components/Draggable.vue")
 );
 
 const props = defineProps({
@@ -144,7 +142,7 @@ onUpdated(() => {
 				'scrollable-list': true
 			}"
 		>
-			<draggable
+			<draggable-list
 				v-model:list="queue"
 				item-key="_id"
 				@start="drag = true"
@@ -194,7 +192,7 @@ onUpdated(() => {
 						</template>
 					</song-item>
 				</template>
-			</draggable>
+			</draggable-list>
 		</div>
 		<p class="nothing-here-text has-text-centered" v-else>
 			There are no songs currently queued

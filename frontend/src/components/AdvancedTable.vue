@@ -13,10 +13,10 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
+import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import keyboardShortcuts from "@/keyboardShortcuts";
-import draggable from "@/components/Draggable.vue";
 import ws from "@/ws";
 import { useDragBox } from "@/composables/useDragBox";
 import {
@@ -1520,7 +1520,7 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 
 						<template #content>
 							<div class="nav-dropdown-items">
-								<draggable
+								<draggable-list
 									v-model:list="orderedColumns"
 									item-key="name"
 									@update="columnOrderChanged"
@@ -1590,7 +1590,7 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 											</div>
 										</template>
 									</template>
-								</draggable>
+								</draggable-list>
 							</div>
 						</template>
 					</tippy>
@@ -1605,7 +1605,7 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 				>
 					<thead>
 						<tr>
-							<draggable
+							<draggable-list
 								v-model:list="orderedColumns"
 								item-key="name"
 								@update="columnOrderChanged"
@@ -1724,7 +1724,7 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 										></div>
 									</template>
 								</template>
-							</draggable>
+							</draggable-list>
 						</tr>
 					</thead>
 					<tbody>

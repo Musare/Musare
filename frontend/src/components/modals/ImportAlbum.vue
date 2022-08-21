@@ -8,6 +8,7 @@ import {
 } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
+import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useImportAlbumStore } from "@/stores/importAlbum";
@@ -16,9 +17,6 @@ import ws from "@/ws";
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
-);
-const Draggable = defineAsyncComponent(
-	() => import("@/components/Draggable.vue")
 );
 
 const props = defineProps({
@@ -602,7 +600,7 @@ onBeforeUnmount(() => {
 					>
 						Reset
 					</button>
-					<draggable
+					<draggable-list
 						v-if="playlistSongs.length > 0"
 						v-model:list="playlistSongs"
 						item-key="_id"
@@ -615,7 +613,7 @@ onBeforeUnmount(() => {
 							>
 							</song-item>
 						</template>
-					</draggable>
+					</draggable-list>
 				</div>
 				<div
 					class="track-boxes"
@@ -632,7 +630,7 @@ onBeforeUnmount(() => {
 						</div>
 						<!-- :data-track-index="index" -->
 						<div class="track-box-songs-drag-area">
-							<draggable
+							<draggable-list
 								v-model:list="trackSongs[index]"
 								item-key="_id"
 								:group="`import-album-${modalUuid}-songs`"
@@ -644,7 +642,7 @@ onBeforeUnmount(() => {
 									>
 									</song-item>
 								</template>
-							</draggable>
+							</draggable-list>
 						</div>
 					</div>
 				</div>

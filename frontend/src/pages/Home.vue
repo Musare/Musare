@@ -9,6 +9,7 @@ import {
 } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
+import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
@@ -26,9 +27,6 @@ const SongThumbnail = defineAsyncComponent(
 );
 const UserLink = defineAsyncComponent(
 	() => import("@/components/UserLink.vue")
-);
-const Draggable = defineAsyncComponent(
-	() => import("@/components/Draggable.vue")
 );
 
 const userAuthStore = useUserAuthStore();
@@ -386,7 +384,7 @@ onBeforeUnmount(() => {
 					</div>
 				</div>
 
-				<draggable
+				<draggable-list
 					item-key="_id"
 					tag="span"
 					:list="favoriteStations"
@@ -604,7 +602,7 @@ onBeforeUnmount(() => {
 							</div>
 						</router-link>
 					</template>
-				</draggable>
+				</draggable-list>
 			</div>
 			<div class="group bottom">
 				<div class="group-title">

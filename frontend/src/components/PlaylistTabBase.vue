@@ -52,7 +52,7 @@ const featuredPlaylists = ref([]);
 const tabs = ref({});
 
 const {
-	Draggable,
+	DraggableList,
 	drag,
 	playlists,
 	savePlaylistOrder,
@@ -811,7 +811,7 @@ onMounted(() => {
 					class="menu-list scrollable-list"
 					v-if="playlists.length > 0"
 				>
-					<draggable
+					<draggable-list
 						v-model:list="playlists"
 						item-key="_id"
 						@start="drag = true"
@@ -967,7 +967,7 @@ onMounted(() => {
 								</template>
 							</playlist-item>
 						</template>
-					</draggable>
+					</draggable-list>
 				</div>
 
 				<p v-else class="has-text-centered scrollable-list">
