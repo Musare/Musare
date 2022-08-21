@@ -29,6 +29,8 @@ export interface User {
 			access_token: string;
 		};
 	};
+	password?: boolean;
+	github?: boolean;
 	statistics: {
 		songsRequested: number;
 	};

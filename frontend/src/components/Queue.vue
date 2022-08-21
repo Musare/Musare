@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref, computed, onUpdated } from "vue";
-import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
+import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
 import { useManageStationStore } from "@/stores/manageStation";
@@ -21,12 +21,6 @@ const props = defineProps({
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
 const manageStationStore = useManageStationStore(props);
-
-const repositionSongInList = payload => {
-	if (props.sector === "manageStation")
-		return manageStationStore.repositionSongInList(payload);
-	return stationStore.repositionSongInList(payload);
-};
 
 const actionableButtonVisible = ref(false);
 const drag = ref(false);
@@ -62,13 +56,6 @@ const hasPermission = permission =>
 		? manageStationStore.hasPermission(permission)
 		: stationStore.hasPermission(permission);
 
-const dragOptions = computed(() => ({
-	animation: 200,
-	group: "queue",
-	disabled: !hasPermission("stations.queue.reposition"),
-	ghostClass: "draggable-list-ghost"
-}));
-
 const removeFromQueue = youtubeId => {
 	socket.dispatch(
 		"stations.removeFromQueue",
@@ -82,9 +69,10 @@ const removeFromQueue = youtubeId => {
 	);
 };
 
-const repositionSongInQueue = ({ oldIndex, newIndex }) => {
+const repositionSongInQueue = ({ moved }) => {
+	const { oldIndex, newIndex } = moved;
 	if (oldIndex === newIndex) return; // we only need to update when song is moved
-	const song = queue.value[oldIndex];
+	const song = queue.value[newIndex];
 	socket.dispatch(
 		"stations.repositionSongInQueue",
 		station.value._id,
@@ -96,30 +84,38 @@ const repositionSongInQueue = ({ oldIndex, newIndex }) => {
 		res => {
 			new Toast({ content: res.message, timeout: 4000 });
 			if (res.status !== "success")
-				repositionSongInList({
-					...song,
+				queue.value.splice(
 					oldIndex,
-					newIndex
-				});
+					0,
+					queue.value.splice(newIndex, 1)[0]
+				);
 		}
 	);
 };
 
 const moveSongToTop = index => {
 	songItems.value[`song-item-${index}`].$refs.songActions.tippy.hide();
-
+	queue.value.splice(0, 0, queue.value.splice(index, 1)[0]);
 	repositionSongInQueue({
-		oldIndex: index,
-		newIndex: 0
+		moved: {
+			oldIndex: index,
+			newIndex: 0
+		}
 	});
 };
 
 const moveSongToBottom = index => {
 	songItems.value[`song-item-${index}`].$refs.songActions.tippy.hide();
-
+	queue.value.splice(
+		queue.value.length - 1,
+		0,
+		queue.value.splice(index, 1)[0]
+	);
 	repositionSongInQueue({
-		oldIndex: index,
-		newIndex: queue.value.length
+		moved: {
+			oldIndex: index,
+			newIndex: queue.value.length - 1
+		}
 	});
 };
 
@@ -141,26 +137,18 @@ onUpdated(() => {
 				'scrollable-list': true
 			}"
 		>
-			<Sortable
-				:component-data="{
-					name: !drag ? 'draggable-list-transition' : null
-				}"
-				:list="queue"
+			<draggable-list
+				v-model:list="queue"
 				item-key="_id"
-				:options="dragOptions"
 				@start="drag = true"
 				@end="drag = false"
 				@update="repositionSongInQueue"
+				:disabled="!hasPermission('stations.queue.reposition')"
 			>
 				<template #item="{ element, index }">
 					<song-item
 						:song="element"
 						:requested-by="true"
-						:class="{
-							'item-draggable': hasPermission(
-								'stations.queue.reposition'
-							)
-						}"
 						:disabled-actions="[]"
 						:ref="el => (songItems[`song-item-${index}`] = el)"
 					>
@@ -199,7 +187,7 @@ onUpdated(() => {
 						</template>
 					</song-item>
 				</template>
-			</Sortable>
+			</draggable-list>
 		</div>
 		<p class="nothing-here-text has-text-centered" v-else>
 			There are no songs currently queued
@@ -222,10 +210,6 @@ onUpdated(() => {
 
 	.actionable-button-hidden {
 		max-height: 100%;
-	}
-
-	.song-item:not(:last-of-type) {
-		margin-bottom: 10px;
 	}
 
 	#queue-locked {

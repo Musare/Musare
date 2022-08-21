@@ -11,9 +11,9 @@ import {
 	nextTick
 } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
+import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import keyboardShortcuts from "@/keyboardShortcuts";
@@ -86,15 +86,6 @@ const count = ref(0);
 const sort = ref({});
 const orderedColumns = ref([]);
 const shownColumns = ref([]);
-const columnDragOptions = ref({
-	animation: 200,
-	group: "columns",
-	disabled: false,
-	ghostClass: "draggable-list-ghost",
-	filter: ".ignore-elements",
-	fallbackTolerance: 50,
-	draggable: ".item-draggable"
-});
 const editingFilters = ref([]);
 const appliedFilters = ref([]);
 const filterOperator = ref("or");
@@ -674,52 +665,8 @@ const applyFilterAndGetData = () => {
 	storeTableSettings();
 };
 
-const columnOrderChanged = ({ oldIndex, newIndex }) => {
-	if (columnOrderChangedDebounceTimeout.value)
-		clearTimeout(columnOrderChangedDebounceTimeout.value);
-
-	columnOrderChangedDebounceTimeout.value = setTimeout(() => {
-		if (oldIndex === newIndex) return;
-		orderedColumns.value.splice(
-			newIndex,
-			0,
-			orderedColumns.value.splice(oldIndex, 1)[0]
-		);
-		storeTableSettings();
-	}, 100);
-};
-
-const columnOrderChangedDropdown = event => {
-	const filteredOrderedColumns = orderedColumns.value.filter(
-		column =>
-			column.name !== "select" &&
-			column.name !== "placeholder" &&
-			column.name !== "updatedPlaceholder" &&
-			column.draggable
-	);
-	const oldColumn = filteredOrderedColumns[event.oldDraggableIndex];
-	const newColumn = filteredOrderedColumns[event.newDraggableIndex];
-
-	const oldIndex = orderedColumns.value.indexOf(oldColumn);
-	const newIndex = orderedColumns.value.indexOf(newColumn);
-
-	columnOrderChanged({ oldIndex, newIndex });
-};
-
-const columnOrderChangedHead = event => {
-	const filteredOrderedColumns = orderedColumns.value.filter(
-		column =>
-			shownColumns.value.indexOf(column.name) !== -1 &&
-			(column.name !== "updatedPlaceholder" || rows.value.length > 0) &&
-			column.draggable
-	);
-	const oldColumn = filteredOrderedColumns[event.oldDraggableIndex];
-	const newColumn = filteredOrderedColumns[event.newDraggableIndex];
-
-	const oldIndex = orderedColumns.value.indexOf(oldColumn);
-	const newIndex = orderedColumns.value.indexOf(newColumn);
-
-	columnOrderChanged({ oldIndex, newIndex });
+const columnOrderChanged = () => {
+	storeTableSettings();
 };
 
 const getTableSettings = () => {
@@ -1572,66 +1519,79 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 						</div>
 
 						<template #content>
-							<Sortable
-								:list="orderedColumns"
-								item-key="name"
-								:options="columnDragOptions"
-								class="nav-dropdown-items"
-								@update="columnOrderChangedDropdown"
-							>
-								<template #item="{ element: column }">
-									<button
-										v-if="
-											column.name !== 'select' &&
-											column.name !== 'placeholder' &&
-											column.name !== 'updatedPlaceholder'
-										"
-										:class="{
+							<div class="nav-dropdown-items">
+								<draggable-list
+									v-model:list="orderedColumns"
+									item-key="name"
+									@update="columnOrderChanged"
+									:attributes="{
+										class: column => ({
 											sortable: column.sortable,
-											'item-draggable': column.draggable,
 											'nav-item': true
-										}"
-										@click.prevent="
-											toggleColumnVisibility(column)
-										"
-									>
-										<p
-											class="control is-expanded checkbox-control"
+										})
+									}"
+									:disabled="column => !column.draggable"
+									tag="button"
+								>
+									<template #item="{ element: column }">
+										<template
+											v-if="
+												column.name !== 'select' &&
+												column.name !== 'placeholder' &&
+												column.name !==
+													'updatedPlaceholder'
+											"
 										>
-											<label class="switch">
-												<input
-													type="checkbox"
-													:id="`column-dropdown-checkbox-${column.name}`"
-													:checked="
-														shownColumns.indexOf(
-															column.name
-														) !== -1
-													"
-													@click="
-														toggleColumnVisibility(
-															column
-														)
-													"
-												/>
-												<span
-													:class="{
-														slider: true,
-														round: true,
-														disabled:
-															!column.hidable
-													}"
-												></span>
-											</label>
-											<label
-												:for="`column-dropdown-checkbox-${column.name}`"
+											<div
+												@click.prevent="
+													toggleColumnVisibility(
+														column
+													)
+												"
 											>
-												<span></span>
-												<p>{{ column.displayName }}</p>
-											</label>
-										</p>
-									</button>
-								</template>
-							</Sortable>
+												<p
+													class="control is-expanded checkbox-control"
+												>
+													<label class="switch">
+														<input
+															type="checkbox"
+															:id="`column-dropdown-checkbox-${column.name}`"
+															:checked="
+																shownColumns.indexOf(
+																	column.name
+																) !== -1
+															"
+															@click="
+																toggleColumnVisibility(
+																	column
+																)
+															"
+														/>
+														<span
+															:class="{
+																slider: true,
+																round: true,
+																disabled:
+																	!column.hidable
+															}"
+														></span>
+													</label>
+													<label
+														:for="`column-dropdown-checkbox-${column.name}`"
+													>
+														<span></span>
+														<p>
+															{{
+																column.displayName
+															}}
+														</p>
+													</label>
+												</p>
+											</div>
+										</template>
+									</template>
+								</draggable-list>
+							</div>
 						</template>
 					</tippy>
 				</div>
@@ -1644,29 +1604,14 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 					}"
 				>
 					<thead>
-						<Sortable
-							:list="orderedColumns"
-							item-key="name"
-							tag="tr"
-							:options="{
-								...columnDragOptions,
-								handle: '.handle'
-							}"
-							@update="columnOrderChangedHead"
-						>
-							<template #item="{ element: column }">
-								<th
-									v-if="
-										shownColumns.indexOf(column.name) !==
-											-1 &&
-										(column.name !== 'updatedPlaceholder' ||
-											rows.length > 0)
-									"
-									:class="{
-										sortable: column.sortable,
-										'item-draggable': column.draggable
-									}"
-									:style="{
+						<tr>
+							<draggable-list
+								v-model:list="orderedColumns"
+								item-key="name"
+								@update="columnOrderChanged"
+								tag="th"
+								:attributes="{
+									style: column => ({
 										minWidth: Number.isNaN(column.minWidth)
 											? column.minWidth
 											: `${column.minWidth}px`,
@@ -1676,86 +1621,111 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 										maxWidth: Number.isNaN(column.maxWidth)
 											? column.maxWidth
 											: `${column.maxWidth}px`
-									}"
-								>
-									<div v-if="column.name === 'select'">
-										<p class="checkbox">
-											<input
-												v-if="rows.length === 0"
-												type="checkbox"
-												disabled
-											/>
-											<input
-												v-else
-												type="checkbox"
-												:checked="
-													rows.filter(
-														row => !row.removed
-													).length ===
-													selectedRows.length
-												"
-												@click="toggleAllRows()"
-											/>
-										</p>
-									</div>
-									<div v-else class="handle">
-										<span>
-											{{ column.displayName }}
-										</span>
-										<span
-											v-if="column.sortable"
-											:content="`Sort by ${column.displayName}`"
-											v-tippy
-										>
-											<span
-												v-if="
-													!sort[column.sortProperty]
-												"
-												class="material-icons"
-												@click="changeSort(column)"
-											>
-												unfold_more
-											</span>
-											<span
-												v-if="
-													sort[
-														column.sortProperty
-													] === 'ascending'
-												"
-												class="material-icons active"
-												@click="changeSort(column)"
-											>
-												expand_more
-											</span>
-											<span
-												v-if="
-													sort[
-														column.sortProperty
-													] === 'descending'
-												"
-												class="material-icons active"
-												@click="changeSort(column)"
-											>
-												expand_less
-											</span>
-										</span>
-									</div>
-									<div
-										class="resizer"
-										v-if="column.resizable"
-										@mousedown.prevent.stop="
-											columnResizingStart(column, $event)
+									}),
+									class: column => ({
+										sortable: column.sortable
+									})
+								}"
+								:disabled="column => !column.draggable"
+							>
+								<template #item="{ element: column }">
+									<template
+										v-if="
+											shownColumns.indexOf(
+												column.name
+											) !== -1 &&
+											(column.name !==
+												'updatedPlaceholder' ||
+												rows.length > 0)
 										"
-										@touchstart.prevent.stop="
-											columnResizingStart(column, $event)
-										"
-										@mouseup="columnResizingStop()"
-										@touchend="columnResizingStop()"
-										@dblclick="columnResetWidth(column)"
-									></div>
-								</th>
-							</template>
-						</Sortable>
+									>
+										<div v-if="column.name === 'select'">
+											<p class="checkbox">
+												<input
+													v-if="rows.length === 0"
+													type="checkbox"
+													disabled
+												/>
+												<input
+													v-else
+													type="checkbox"
+													:checked="
+														rows.filter(
+															row => !row.removed
+														).length ===
+														selectedRows.length
+													"
+													@click="toggleAllRows()"
+												/>
+											</p>
+										</div>
+										<div v-else class="handle">
+											<span>
+												{{ column.displayName }}
+											</span>
+											<span
+												v-if="column.sortable"
+												:content="`Sort by ${column.displayName}`"
+												v-tippy
+											>
+												<span
+													v-if="
+														!sort[
+															column.sortProperty
+														]
+													"
+													class="material-icons"
+													@click="changeSort(column)"
+												>
+													unfold_more
+												</span>
+												<span
+													v-if="
+														sort[
+															column.sortProperty
+														] === 'ascending'
+													"
+													class="material-icons active"
+													@click="changeSort(column)"
+												>
+													expand_more
+												</span>
+												<span
+													v-if="
+														sort[
+															column.sortProperty
+														] === 'descending'
+													"
+													class="material-icons active"
+													@click="changeSort(column)"
+												>
+													expand_less
+												</span>
+											</span>
+										</div>
+										<div
+											class="resizer"
+											v-if="column.resizable"
+											@mousedown.prevent.stop="
+												columnResizingStart(
+													column,
+													$event
+												)
+											"
+											@touchstart.prevent.stop="
+												columnResizingStart(
+													column,
+													$event
+												)
+											"
+											@mouseup="columnResizingStop()"
+											@touchend="columnResizingStop()"
+											@dblclick="columnResetWidth(column)"
+										></div>
+									</template>
+								</template>
+							</draggable-list>
+						</tr>
 					</thead>
 					<tbody>
 						<tr
@@ -1980,13 +1950,13 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 	.table-outer-container {
 		.table-container .table {
 			&,
-			thead th {
+			:deep(thead th) {
 				background-color: var(--dark-grey-3) !important;
 				color: var(--light-grey-2);
 			}
 
 			tr {
-				th,
+				:deep(th),
 				td {
 					border-color: var(--dark-grey) !important;
 					background-color: var(--dark-grey-3) !important;
@@ -1999,7 +1969,7 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 				&:hover,
 				&:focus,
 				&.highlighted {
-					th,
+					:deep(th),
 					td {
 						background-color: var(--dark-grey-4) !important;
 					}
@@ -2075,7 +2045,7 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 			border-collapse: separate;
 			table-layout: fixed;
 
-			thead {
+			:deep(thead) {
 				tr {
 					th {
 						height: 40px;
@@ -2176,7 +2146,7 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 		}
 
 		table {
-			thead tr,
+			:deep(thead tr),
 			tbody tr {
 				th,
 				td {
@@ -2223,7 +2193,7 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 			}
 
 			&.has-checkboxes {
-				thead,
+				:deep(thead),
 				tbody {
 					tr {
 						th,

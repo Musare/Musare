@@ -1265,20 +1265,41 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					this.publishProgress({ status: "update", message: `Importing YouTube playlist (stage 1)` });
-					YouTubeModule.runJob("GET_PLAYLIST", { url, musicOnly }, this)
-						.then(res => {
-							if (res.filteredSongs) {
-								videosInPlaylistTotal = res.songs.length;
-								songsInPlaylistTotal = res.filteredSongs.length;
-							} else {
-								songsInPlaylistTotal = videosInPlaylistTotal = res.songs.length;
-							}
-							next(null, res.songs);
-						})
-						.catch(err => {
-							next(err);
+					DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
+						userModel.findOne({ _id: session.userId }, (err, user) => {
+							if (user && user.role === "admin") return next(null, true);
+							return next(null, false);
 						});
+					});
+				},
+
+				(isAdmin, next) => {
+					this.publishProgress({ status: "update", message: `Importing YouTube playlist (stage 1)` });
+					const playlistRegex = /[\\?&]list=([^&#]*)/;
+					const channelRegex =
+						/\.[\w]+\/(?:(?:channel\/(UC[0-9A-Za-z_-]{21}[AQgw]))|(?:user\/?([\w-]+))|(?:c\/?([\w-]+))|(?:\/?([\w-]+)))/;
+
+					if (playlistRegex.exec(url) || channelRegex.exec(url))
+						YouTubeModule.runJob(
+							playlistRegex.exec(url) ? "GET_PLAYLIST" : "GET_CHANNEL",
+							{
+								url,
+								musicOnly,
+								disableSearch: !isAdmin
+							},
+							this
+						)
+							.then(res => {
+								if (res.filteredSongs) {
+									videosInPlaylistTotal = res.songs.length;
+									songsInPlaylistTotal = res.filteredSongs.length;
+								} else {
+									songsInPlaylistTotal = videosInPlaylistTotal = res.songs.length;
+								}
+								next(null, res.songs);
+							})
+							.catch(next);
+					else next("Invalid YouTube URL.");
 				},
 				(youtubeIds, next) => {
 					this.publishProgress({ status: "update", message: `Importing YouTube playlist (stage 2)` });

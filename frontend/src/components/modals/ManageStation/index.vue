@@ -524,7 +524,7 @@ onBeforeUnmount(() => {
 					</div>
 					<hr class="section-horizontal-rule" />
 					<song-item
-						v-if="currentSong._id"
+						v-if="currentSong.youtubeId"
 						:song="currentSong"
 						:requested-by="true"
 						header="Currently Playing.."

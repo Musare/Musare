@@ -1,5 +1,22 @@
 # Changelog
 
+## [v3.7.0-rc2] - 2022-08-21
+
+This release includes all changes from v3.7.0-rc1, in addition to the following.
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Changed
+
+- refactor: Migrated from sortablejs-vue3 to vue-draggable-list
+- refactor: Disabled user preference activity items
+- refactor: Allowed for YouTube channel imports in to playlists
+
+### Fixed
+
+- fix: Invalid settings store getters
+- fix: EditSong song items scrollIntoView not functioning
+- fix: Cache/notifications module falsely reporting readiness
+
 ## [v3.7.0-rc1] - 2022-08-07
 
 This release contains mostly internal refactors.

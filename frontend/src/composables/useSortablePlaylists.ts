@@ -1,7 +1,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
-import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
+import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPlaylistsStore } from "@/stores/userPlaylists";
@@ -24,12 +24,6 @@ export const useSortablePlaylists = () => {
 		}
 	});
 	const isCurrentUser = computed(() => userId.value === myUserId.value);
-	const dragOptions = computed(() => ({
-		animation: 200,
-		group: "playlists",
-		disabled: !isCurrentUser.value,
-		ghostClass: "draggable-list-ghost"
-	}));
 
 	const { socket } = useWebsocketsStore();
 
@@ -42,15 +36,13 @@ export const useSortablePlaylists = () => {
 		return calculatedOrder;
 	};
 
-	const savePlaylistOrder = ({ oldIndex, newIndex }) => {
-		if (oldIndex === newIndex) return;
-		const oldPlaylists = playlists.value;
-
-		oldPlaylists.splice(newIndex, 0, oldPlaylists.splice(oldIndex, 1)[0]);
-
-		setPlaylists(oldPlaylists);
-
+	const savePlaylistOrder = () => {
 		const recalculatedOrder = calculatePlaylistOrder();
+		if (
+			JSON.stringify(orderOfPlaylists.value) ===
+			JSON.stringify(recalculatedOrder)
+		)
+			return; // nothing has changed
 
 		socket.dispatch(
 			"users.updateOrderOfPlaylists",
@@ -190,12 +182,11 @@ export const useSortablePlaylists = () => {
 	});
 
 	return {
-		Sortable,
+		DraggableList,
 		drag,
 		userId,
 		isCurrentUser,
 		playlists,
-		dragOptions,
 		orderOfPlaylists,
 		myUserId,
 		savePlaylistOrder,
