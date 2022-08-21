@@ -1467,7 +1467,7 @@ export default {
 					userModel.findByIdAndUpdate(session.userId, { $set }, { new: false, upsert: true }, next);
 				}
 			],
-			async (err, user) => {
+			async err => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
@@ -1490,40 +1490,40 @@ export default {
 					}
 				});
 
-				if (preferences.nightmode !== undefined && preferences.nightmode !== user.preferences.nightmode)
-					ActivitiesModule.runJob("ADD_ACTIVITY", {
-						userId: session.userId,
-						type: "user__toggle_nightmode",
-						payload: { message: preferences.nightmode ? "Enabled nightmode" : "Disabled nightmode" }
-					});
+				// if (preferences.nightmode !== undefined && preferences.nightmode !== user.preferences.nightmode)
+				// 	ActivitiesModule.runJob("ADD_ACTIVITY", {
+				// 		userId: session.userId,
+				// 		type: "user__toggle_nightmode",
+				// 		payload: { message: preferences.nightmode ? "Enabled nightmode" : "Disabled nightmode" }
+				// 	});
 
-				if (
-					preferences.autoSkipDisliked !== undefined &&
-					preferences.autoSkipDisliked !== user.preferences.autoSkipDisliked
-				)
-					ActivitiesModule.runJob("ADD_ACTIVITY", {
-						userId: session.userId,
-						type: "user__toggle_autoskip_disliked_songs",
-						payload: {
-							message: preferences.autoSkipDisliked
-								? "Enabled the autoskipping of disliked songs"
-								: "Disabled the autoskipping of disliked songs"
-						}
-					});
+				// if (
+				// 	preferences.autoSkipDisliked !== undefined &&
+				// 	preferences.autoSkipDisliked !== user.preferences.autoSkipDisliked
+				// )
+				// 	ActivitiesModule.runJob("ADD_ACTIVITY", {
+				// 		userId: session.userId,
+				// 		type: "user__toggle_autoskip_disliked_songs",
+				// 		payload: {
+				// 			message: preferences.autoSkipDisliked
+				// 				? "Enabled the autoskipping of disliked songs"
+				// 				: "Disabled the autoskipping of disliked songs"
+				// 		}
+				// 	});
 
-				if (
-					preferences.activityWatch !== undefined &&
-					preferences.activityWatch !== user.preferences.activityWatch
-				)
-					ActivitiesModule.runJob("ADD_ACTIVITY", {
-						userId: session.userId,
-						type: "user__toggle_activity_watch",
-						payload: {
-							message: preferences.activityWatch
-								? "Enabled ActivityWatch integration"
-								: "Disabled ActivityWatch integration"
-						}
-					});
+				// if (
+				// 	preferences.activityWatch !== undefined &&
+				// 	preferences.activityWatch !== user.preferences.activityWatch
+				// )
+				// 	ActivitiesModule.runJob("ADD_ACTIVITY", {
+				// 		userId: session.userId,
+				// 		type: "user__toggle_activity_watch",
+				// 		payload: {
+				// 			message: preferences.activityWatch
+				// 				? "Enabled ActivityWatch integration"
+				// 				: "Disabled ActivityWatch integration"
+				// 		}
+				// 	});
 
 				this.log(
 					"SUCCESS",
