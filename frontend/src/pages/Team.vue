@@ -20,9 +20,10 @@ const currentTeam = ref([
 			"MusareReact",
 			"MusareNode",
 			"MusareStatus",
+			"lofig",
 			"MusareTranslation",
 			"aw-watcher-musare",
-			"lofig"
+			"vue-draggable-list"
 		],
 		active: "Sept 2015 - present",
 		github: "KrisVos130",
@@ -35,7 +36,13 @@ const currentTeam = ref([
 	{
 		name: "Owen Diffey",
 		bio: "Developer, Designer, System Admin and QA Tester. Previously Owner and Project Manager.",
-		projects: ["MusareMeteor", "MusareReact", "MusareNode", "vue-roaster"],
+		projects: [
+			"MusareMeteor",
+			"MusareReact",
+			"MusareNode",
+			"vue-roaster",
+			"vue-draggable-list"
+		],
 		active: "Feb 2016 - present",
 		github: "odiffey",
 		link: "https://diffey.dev",
