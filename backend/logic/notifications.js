@@ -56,6 +56,13 @@ class _NotificationsModule extends CoreClass {
 				this.log("ERROR", `Error ${err.message}.`);
 			});
 
+			this.pub.on("ready", () => {
+				this.log("INFO", "Pub is ready.");
+				if (this.getStatus() === "INITIALIZING") resolve();
+				else if (this.getStatus() === "LOCKDOWN" || this.getStatus() === "RECONNECTING")
+					this.setStatus("INITIALIZED");
+			});
+
 			this.pub.connect().then(async () => {
 				this.log("INFO", "Pub connected succesfully.");
 
@@ -85,10 +92,6 @@ class _NotificationsModule extends CoreClass {
 						);
 						this.log("STATION_ISSUE", `Getting notify-keyspace-events gave an error. ${err}.`);
 					});
-
-				if (this.getStatus() === "INITIALIZING") resolve();
-				else if (this.getStatus() === "LOCKDOWN" || this.getStatus() === "RECONNECTING")
-					this.setStatus("INITIALIZED");
 			});
 
 			this.sub = this.pub.duplicate();

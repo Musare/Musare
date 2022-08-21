@@ -76,11 +76,14 @@ class _CacheModule extends CoreClass {
 				this.log("ERROR", `Error ${err.message}.`);
 			});
 
-			this.client.connect().then(async () => {
-				this.log("INFO", "Connected succesfully.");
-
+			this.client.on("ready", () => {
+				this.log("INFO", "Redis is ready.");
 				if (this.getStatus() === "INITIALIZING") resolve();
 				else if (this.getStatus() === "FAILED" || this.getStatus() === "RECONNECTING") this.setStatus("READY");
+			});
+
+			this.client.connect().then(async () => {
+				this.log("INFO", "Connected succesfully.");
 			});
 
 			// TODO move to a better place
