@@ -52,10 +52,9 @@ const featuredPlaylists = ref([]);
 const tabs = ref({});
 
 const {
-	Sortable,
+	DraggableList,
 	drag,
 	playlists,
-	dragOptions,
 	savePlaylistOrder,
 	orderOfPlaylists,
 	myUserId,
@@ -812,22 +811,15 @@ onMounted(() => {
 					class="menu-list scrollable-list"
 					v-if="playlists.length > 0"
 				>
-					<sortable
-						:component-data="{
-							name: !drag ? 'draggable-list-transition' : null
-						}"
+					<draggable-list
+						v-model:list="playlists"
 						item-key="_id"
-						:list="playlists"
-						:options="dragOptions"
 						@start="drag = true"
 						@end="drag = false"
 						@update="savePlaylistOrder"
 					>
 						<template #item="{ element }">
-							<playlist-item
-								class="item-draggable"
-								:playlist="element"
-							>
+							<playlist-item :playlist="element">
 								<template #item-icon>
 									<i
 										class="material-icons blacklisted-icon"
@@ -975,7 +967,7 @@ onMounted(() => {
 								</template>
 							</playlist-item>
 						</template>
-					</sortable>
+					</draggable-list>
 				</div>
 
 				<p v-else class="has-text-centered scrollable-list">
@@ -1032,8 +1024,7 @@ onMounted(() => {
 		.tab {
 			padding: 15px 0;
 			border-radius: 0;
-			.playlist-item:not(:last-of-type),
-			.item.item-draggable:not(:last-of-type) {
+			.playlist-item:not(:last-of-type) {
 				margin-bottom: 10px;
 			}
 			.load-more-button {

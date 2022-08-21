@@ -7,9 +7,9 @@ import {
 	onMounted,
 	onBeforeUnmount
 } from "vue";
-import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
+import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
@@ -46,7 +46,6 @@ const siteSettings = ref({
 });
 const orderOfFavoriteStations = ref([]);
 const handledLoginRegisterRedirect = ref(false);
-const changeFavoriteOrderDebounceTimeout = ref();
 
 const isOwner = station => loggedIn.value && station.owner === userId.value;
 
@@ -75,15 +74,6 @@ const filteredStations = computed(() => {
 				b.userCount - a.userCount
 		);
 });
-
-const dragOptions = computed(() => ({
-	animation: 200,
-	group: "favoriteStations",
-	disabled: false,
-	ghostClass: "draggable-list-ghost",
-	filter: ".ignore-elements",
-	fallbackTolerance: 50
-}));
 
 const favoriteStations = computed(() =>
 	filteredStations.value
@@ -154,29 +144,13 @@ const unfavoriteStation = stationId => {
 	});
 };
 
-const changeFavoriteOrder = ({ oldIndex, newIndex }) => {
-	if (changeFavoriteOrderDebounceTimeout.value)
-		clearTimeout(changeFavoriteOrderDebounceTimeout.value);
-
-	changeFavoriteOrderDebounceTimeout.value = setTimeout(() => {
-		if (oldIndex === newIndex) return;
-		favoriteStations.value.splice(
-			newIndex,
-			0,
-			favoriteStations.value.splice(oldIndex, 1)[0]
-		);
-
-		const recalculatedOrder = [];
-		favoriteStations.value.forEach(station =>
-			recalculatedOrder.push(station._id)
-		);
-
-		socket.dispatch(
-			"users.updateOrderOfFavoriteStations",
-			recalculatedOrder,
-			res => new Toast(res.message)
-		);
-	}, 100);
+const changeFavoriteOrder = ({ moved }) => {
+	const { updatedList } = moved;
+	socket.dispatch(
+		"users.updateOrderOfFavoriteStations",
+		updatedList.map(station => station._id),
+		res => new Toast(res.message)
+	);
 };
 
 onMounted(async () => {
@@ -410,10 +384,10 @@ onBeforeUnmount(() => {
 					</div>
 				</div>
 
-				<sortable
+				<draggable-list
 					item-key="_id"
+					tag="span"
 					:list="favoriteStations"
-					:options="dragOptions"
 					@update="changeFavoriteOrder"
 				>
 					<template #item="{ element }">
@@ -424,7 +398,6 @@ onBeforeUnmount(() => {
 							}"
 							:class="{
 								'station-card': true,
-								'item-draggable': true,
 								isPrivate: element.privacy === 'private',
 								isMine: isOwner(element)
 							}"
@@ -629,7 +602,7 @@ onBeforeUnmount(() => {
 							</div>
 						</router-link>
 					</template>
-				</sortable>
+				</draggable-list>
 			</div>
 			<div class="group bottom">
 				<div class="group-title">

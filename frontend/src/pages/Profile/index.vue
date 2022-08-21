@@ -394,7 +394,8 @@ onMounted(() => {
 			font-weight: 400;
 		}
 
-		.item {
+		.item,
+		.draggable-item {
 			overflow: hidden;
 
 			&:not(:last-of-type) {

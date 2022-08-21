@@ -6,9 +6,9 @@ import {
 	onMounted,
 	onBeforeUnmount
 } from "vue";
-import { Sortable } from "sortablejs-vue3";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
+import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";
 import { useStationStore } from "@/stores/station";
@@ -72,13 +72,6 @@ const isEditable = () =>
 		playlist.value.type === "user-disliked") &&
 	(userId.value === playlist.value.createdBy || userRole.value === "admin");
 
-const dragOptions = computed(() => ({
-	animation: 200,
-	group: "songs",
-	disabled: !isEditable(),
-	ghostClass: "draggable-list-ghost"
-}));
-
 const init = () => {
 	gettingSongs.value = true;
 	socket.dispatch("playlists.getPlaylist", playlistId.value, res => {
@@ -94,10 +87,10 @@ const isAdmin = () => userRole.value === "admin";
 const isOwner = () =>
 	loggedIn.value && userId.value === playlist.value.createdBy;
 
-const repositionSong = ({ oldIndex, newIndex }) => {
+const repositionSong = ({ moved }) => {
+	const { oldIndex, newIndex } = moved;
 	if (oldIndex === newIndex) return; // we only need to update when song is moved
-	const song = playlistSongs.value[oldIndex];
-
+	const song = playlistSongs.value[newIndex];
 	socket.dispatch(
 		"playlists.repositionSong",
 		playlist.value._id,
@@ -117,21 +110,29 @@ const repositionSong = ({ oldIndex, newIndex }) => {
 	);
 };
 
-const moveSongToTop = (song, index) => {
+const moveSongToTop = index => {
 	songItems.value[`song-item-${index}`].$refs.songActions.tippy.hide();
-
+	playlistSongs.value.splice(0, 0, playlistSongs.value.splice(index, 1)[0]);
 	repositionSong({
-		oldIndex: index,
-		newIndex: 0
+		moved: {
+			oldIndex: index,
+			newIndex: 0
+		}
 	});
 };
 
-const moveSongToBottom = (song, index) => {
+const moveSongToBottom = index => {
 	songItems.value[`song-item-${index}`].$refs.songActions.tippy.hide();
-
+	playlistSongs.value.splice(
+		playlistSongs.value.length - 1,
+		0,
+		playlistSongs.value.splice(index, 1)[0]
+	);
 	repositionSong({
-		oldIndex: index,
-		newIndex: playlistSongs.value.length
+		moved: {
+			oldIndex: index,
+			newIndex: playlistSongs.value.length - 1
+		}
 	});
 };
 
@@ -404,113 +405,91 @@ onBeforeUnmount(() => {
 					</div>
 
 					<aside class="menu">
-						<sortable
-							:component-data="{
-								name: !drag ? 'draggable-list-transition' : null
-							}"
+						<draggable-list
 							v-if="playlistSongs.length > 0"
-							:list="playlistSongs"
+							v-model:list="playlistSongs"
 							item-key="_id"
-							:options="dragOptions"
 							@start="drag = true"
 							@end="drag = false"
 							@update="repositionSong"
+							:disabled="!isEditable()"
 						>
 							<template #item="{ element, index }">
-								<div class="menu-list scrollable-list">
-									<song-item
-										:song="element"
-										:class="{
-											'item-draggable': isEditable()
-										}"
-										:ref="
-											el =>
-												(songItems[
-													`song-item-${index}`
-												] = el)
-										"
-									>
-										<template #tippyActions>
-											<i
-												class="material-icons add-to-queue-icon"
-												v-if="
-													station &&
-													station.requests &&
-													station.requests.enabled &&
+								<song-item
+									:song="element"
+									:ref="
+										el =>
+											(songItems[`song-item-${index}`] =
+												el)
+									"
+								>
+									<template #tippyActions>
+										<i
+											class="material-icons add-to-queue-icon"
+											v-if="
+												station &&
+												station.requests &&
+												station.requests.enabled &&
+												(station.requests.access ===
+													'user' ||
 													(station.requests.access ===
-														'user' ||
-														(station.requests
-															.access ===
-															'owner' &&
-															(userRole ===
-																'admin' ||
-																station.owner ===
-																	userId)))
-												"
-												@click="
-													addSongToQueue(
-														element.youtubeId
-													)
-												"
-												content="Add Song to Queue"
-												v-tippy
-												>queue</i
-											>
-											<quick-confirm
-												v-if="
-													userId ===
-														playlist.createdBy ||
-													isEditable()
-												"
-												placement="left"
-												@confirm="
-													removeSongFromPlaylist(
-														element.youtubeId
-													)
-												"
-											>
-												<i
-													class="material-icons delete-icon"
-													content="Remove Song from Playlist"
-													v-tippy
-													>delete_forever</i
-												>
-											</quick-confirm>
+														'owner' &&
+														(userRole === 'admin' ||
+															station.owner ===
+																userId)))
+											"
+											@click="
+												addSongToQueue(
+													element.youtubeId
+												)
+											"
+											content="Add Song to Queue"
+											v-tippy
+											>queue</i
+										>
+										<quick-confirm
+											v-if="
+												userId === playlist.createdBy ||
+												isEditable()
+											"
+											placement="left"
+											@confirm="
+												removeSongFromPlaylist(
+													element.youtubeId
+												)
+											"
+										>
 											<i
-												class="material-icons"
-												v-if="isEditable() && index > 0"
-												@click="
-													moveSongToTop(
-														element,
-														index
-													)
-												"
-												content="Move to top of Playlist"
+												class="material-icons delete-icon"
+												content="Remove Song from Playlist"
 												v-tippy
-												>vertical_align_top</i
+												>delete_forever</i
 											>
-											<i
-												v-if="
-													isEditable() &&
-													playlistSongs.length - 1 !==
-														index
-												"
-												@click="
-													moveSongToBottom(
-														element,
-														index
-													)
-												"
-												class="material-icons"
-												content="Move to bottom of Playlist"
-												v-tippy
-												>vertical_align_bottom</i
-											>
-										</template>
-									</song-item>
-								</div>
+										</quick-confirm>
+										<i
+											class="material-icons"
+											v-if="isEditable() && index > 0"
+											@click="moveSongToTop(index)"
+											content="Move to top of Playlist"
+											v-tippy
+											>vertical_align_top</i
+										>
+										<i
+											v-if="
+												isEditable() &&
+												playlistSongs.length - 1 !==
+													index
+											"
+											@click="moveSongToBottom(index)"
+											class="material-icons"
+											content="Move to bottom of Playlist"
+											v-tippy
+											>vertical_align_bottom</i
+										>
+									</template>
+								</song-item>
 							</template>
-						</sortable>
+						</draggable-list>
 						<p v-else-if="gettingSongs" class="nothing-here-text">
 							Loading songs...
 						</p>
@@ -592,19 +571,6 @@ onBeforeUnmount(() => {
 		.right-section .section {
 			border-radius: @border-radius;
 		}
-	}
-}
-
-.menu-list li {
-	display: flex;
-	justify-content: space-between;
-
-	&:not(:last-of-type) {
-		margin-bottom: 10px;
-	}
-
-	a {
-		display: flex;
 	}
 }
 
@@ -700,14 +666,6 @@ onBeforeUnmount(() => {
 			h3,
 			h5 {
 				margin: 0;
-			}
-		}
-	}
-
-	.right-section {
-		#rearrange-songs-section {
-			.scrollable-list:not(:last-of-type) {
-				margin-bottom: 10px;
 			}
 		}
 	}

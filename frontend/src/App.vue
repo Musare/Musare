@@ -307,6 +307,7 @@ onMounted(async () => {
 @import "normalize.css/normalize.css";
 @import "tippy.js/dist/tippy.css";
 @import "tippy.js/animations/scale.css";
+@import "vue-draggable-list/dist/style.css";
 
 :root {
 	--primary-color: var(--blue);
@@ -577,6 +578,8 @@ body {
 	line-height: 1.4285714;
 	font-size: 1rem;
 	font-family: "Inter", Helvetica, Arial, sans-serif;
+	max-width: 100%;
+	overflow-x: hidden;
 }
 
 .app {
@@ -1636,10 +1639,6 @@ h4.section-title {
 }
 
 /** Universial items e.g. playlist items, queue items, activity items */
-.item-draggable {
-	cursor: move;
-}
-
 .universal-item {
 	display: flex;
 	flex-direction: row;

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// TODO - Fix sortable
 import {
 	defineAsyncComponent,
 	ref,
@@ -8,8 +7,8 @@ import {
 	onBeforeUnmount
 } from "vue";
 import Toast from "toasters";
-import { Sortable } from "sortablejs-vue3";
 import { storeToRefs } from "pinia";
+import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useImportAlbumStore } from "@/stores/importAlbum";
@@ -56,7 +55,6 @@ const discogs = ref({
 	disableLoadMore: false
 });
 const discogsTabs = ref([]);
-const sortableUpdateNumber = ref(0);
 
 // TODO might not not be needed anymore, might be able to directly edit prefillDiscogs
 const localPrefillDiscogs = computed({
@@ -333,61 +331,6 @@ const updateTrackSong = updatedSong => {
 	});
 };
 
-const updatePlaylistSongPosition = ({ oldIndex, newIndex }) => {
-	if (oldIndex === newIndex) return;
-	const oldSongs = playlistSongs.value;
-	oldSongs.splice(newIndex, 0, oldSongs.splice(oldIndex, 1)[0]);
-	playlistSongs.value = oldSongs;
-};
-
-const updateTrackSongPosition = (trackIndex, { oldIndex, newIndex }) => {
-	if (oldIndex === newIndex) return;
-	const oldSongs = trackSongs.value[trackIndex];
-	oldSongs.splice(newIndex, 0, oldSongs.splice(oldIndex, 1)[0]);
-	trackSongs.value[trackIndex] = oldSongs;
-};
-
-const playlistSongAdded = event => {
-	const fromTrack = event.from;
-	const fromTrackIndex = Number(fromTrack.dataset.trackIndex);
-	const song = trackSongs.value[fromTrackIndex][event.oldIndex];
-	const newPlaylistSongs = JSON.parse(JSON.stringify(playlistSongs.value));
-	newPlaylistSongs.splice(event.newIndex, 0, song);
-	playlistSongs.value = newPlaylistSongs;
-
-	sortableUpdateNumber.value += 1;
-};
-
-const playlistSongRemoved = event => {
-	playlistSongs.value.splice(event.oldIndex, 1);
-
-	sortableUpdateNumber.value += 1;
-};
-
-const trackSongAdded = (trackIndex, event) => {
-	const fromElement = event.from;
-	let song = null;
-	if (fromElement.dataset.trackIndex) {
-		const fromTrackIndex = Number(fromElement.dataset.trackIndex);
-		song = trackSongs.value[fromTrackIndex][event.oldIndex];
-	} else {
-		song = playlistSongs.value[event.oldIndex];
-	}
-	const newTrackSongs = JSON.parse(
-		JSON.stringify(trackSongs.value[trackIndex])
-	);
-	newTrackSongs.splice(event.newIndex, 0, song);
-	trackSongs.value[trackIndex] = newTrackSongs;
-
-	sortableUpdateNumber.value += 1;
-};
-
-const trackSongRemoved = (trackIndex, event) => {
-	trackSongs.value[trackIndex].splice(event.oldIndex, 1);
-
-	sortableUpdateNumber.value += 1;
-};
-
 onMounted(() => {
 	ws.onConnect(init);
 
@@ -657,15 +600,11 @@ onBeforeUnmount(() => {
 					>
 						Reset
 					</button>
-					<sortable
-						:key="`${sortableUpdateNumber}-playlistSongs`"
+					<draggable-list
 						v-if="playlistSongs.length > 0"
-						:list="playlistSongs"
+						v-model:list="playlistSongs"
 						item-key="_id"
-						:options="{ group: 'songs' }"
-						@update="updatePlaylistSongPosition"
-						@add="playlistSongAdded"
-						@remove="playlistSongRemoved"
+						:group="`import-album-${modalUuid}-songs`"
 					>
 						<template #item="{ element }">
 							<song-item
@@ -674,7 +613,7 @@ onBeforeUnmount(() => {
 							>
 							</song-item>
 						</template>
-					</sortable>
+					</draggable-list>
 				</div>
 				<div
 					class="track-boxes"
@@ -689,25 +628,22 @@ onBeforeUnmount(() => {
 							<span>{{ track.position }}.</span>
 							<p>{{ track.title }}</p>
 						</div>
-						<sortable
-							:key="`${sortableUpdateNumber}-${index}-playlistSongs`"
-							class="track-box-songs-drag-area"
-							:list="trackSongs[index]"
-							:data-track-index="index"
-							item-key="_id"
-							:options="{ group: 'songs' }"
-							@update="updateTrackSongPosition(index, $event)"
-							@add="trackSongAdded(index, $event)"
-							@remove="trackSongRemoved(index, $event)"
-						>
-							<template #item="{ element }">
-								<song-item
-									:key="`track-song-${element._id}`"
-									:song="element"
-								>
-								</song-item>
-							</template>
-						</sortable>
+						<!-- :data-track-index="index" -->
+						<div class="track-box-songs-drag-area">
+							<draggable-list
+								v-model:list="trackSongs[index]"
+								item-key="_id"
+								:group="`import-album-${modalUuid}-songs`"
+							>
+								<template #item="{ element }">
+									<song-item
+										:key="`track-song-${element._id}`"
+										:song="element"
+									>
+									</song-item>
+								</template>
+							</draggable-list>
+						</div>
 					</div>
 				</div>
 			</template>
@@ -1168,6 +1104,8 @@ onBeforeUnmount(() => {
 		.track-box-songs-drag-area {
 			flex: 1;
 			min-height: 100px;
+			display: flex;
+			flex-direction: column;
 		}
 	}
 }

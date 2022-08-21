@@ -13,12 +13,11 @@ const props = defineProps({
 });
 
 const {
-	Sortable,
+	DraggableList,
 	drag,
 	userId,
 	isCurrentUser,
 	playlists,
-	dragOptions,
 	savePlaylistOrder
 } = useSortablePlaylists();
 
@@ -47,14 +46,10 @@ onMounted(() => {
 
 			<hr class="section-horizontal-rule" />
 
-			<sortable
-				:component-data="{
-					name: !drag ? 'draggable-list-transition' : null
-				}"
+			<draggable-list
 				v-if="playlists.length > 0"
-				:list="playlists"
+				v-model:list="playlists"
 				item-key="_id"
-				:options="dragOptions"
 				@start="drag = true"
 				@end="drag = false"
 				@update="savePlaylistOrder"
@@ -67,10 +62,6 @@ onMounted(() => {
 								element.createdBy === userId)
 						"
 						:playlist="element"
-						:class="{
-							item: true,
-							'item-draggable': isCurrentUser
-						}"
 					>
 						<template #actions>
 							<i
@@ -102,7 +93,7 @@ onMounted(() => {
 						</template>
 					</playlist-item>
 				</template>
-			</sortable>
+			</draggable-list>
 
 			<button
 				v-if="isCurrentUser"
