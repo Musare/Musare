@@ -27,10 +27,14 @@ const importPlaylist = () => {
 	if (!youtubeSearch.value.playlist.query)
 		return new Toast("Please enter a YouTube playlist URL.");
 
-	const regex = /[\\?&]list=([^&#]*)/;
-	const splitQuery = regex.exec(youtubeSearch.value.playlist.query);
+	const playlistRegex = /[\\?&]list=([^&#]*)/;
+	const channelRegex =
+		/\.[\w]+\/(?:(?:channel\/(UC[0-9A-Za-z_-]{21}[AQgw]))|(?:user\/?([\w-]+))|(?:c\/?([\w-]+))|(?:\/?([\w-]+)))/;
 
-	if (!splitQuery) {
+	if (
+		!playlistRegex.exec(youtubeSearch.value.playlist.query) &&
+		!channelRegex.exec(youtubeSearch.value.playlist.query)
+	) {
 		return new Toast({
 			content: "Please enter a valid YouTube playlist URL.",
 			timeout: 4000
