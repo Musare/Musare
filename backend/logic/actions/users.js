@@ -775,13 +775,8 @@ export default {
 				next => {
 					const query = {};
 					if (identifier.indexOf("@") !== -1) query["email.address"] = identifier;
-					else query.username = identifier;
-					userModel.findOne(
-						{
-							$or: [query]
-						},
-						next
-					);
+					else query.username = { $regex: `^${identifier}$`, $options: "i" };
+					userModel.findOne(query, next);
 				},
 
 				// if the user doesn't exist, respond with a failure
