@@ -29,7 +29,7 @@
     "mongoose": "^6.5.3",
     "nodemailer": "^6.7.8",
     "oauth": "^0.10.0",
-    "redis": "^4.2.0",
+    "redis": "^4.3.0",
     "retry-axios": "^3.0.0",
     "sha256": "^0.2.0",
     "socks": "^2.7.0",
