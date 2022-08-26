@@ -329,7 +329,7 @@ onMounted(() => {
 	}
 
 	.bio-row {
-		max-width: 608px;
+		max-width: calc(min(608px, 100%));
 		margin-bottom: 24px;
 		margin-left: auto;
 		margin-right: auto;
@@ -338,7 +338,7 @@ onMounted(() => {
 	}
 
 	.date-location-row {
-		max-width: 608px;
+		max-width: calc(min(608px, 100%));
 		margin-left: auto;
 		margin-right: auto;
 		margin-bottom: 24px;
