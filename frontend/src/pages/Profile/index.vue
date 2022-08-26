@@ -166,12 +166,6 @@ onMounted(() => {
 </template>
 
 <style lang="less" scoped>
-@media only screen and (max-width: 1250px) {
-	.bottom-section .content {
-		width: 650px !important;
-	}
-}
-
 @media only screen and (max-width: 900px) {
 	.info-section {
 		margin-top: 0 !important;
@@ -229,8 +223,22 @@ onMounted(() => {
 	}
 }
 
+@media only screen and (max-width: 500px) {
+	.bottom-section {
+		padding: 12px;
+		:deep(.content) {
+			padding: 30px 25px !important;
+			margin-left: 0;
+			margin-right: 0;
+		}
+	}
+}
+
+:deep(.container) {
+	max-width: 100%;
+}
+
 .info-section {
-	width: 912px;
 	max-width: 100%;
 	margin-left: auto;
 	margin-right: auto;
