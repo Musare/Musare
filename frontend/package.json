@@ -12,10 +12,10 @@
   "license": "GPL-3.0",
   "repository": "https://github.com/Musare/Musare",
   "scripts": {
-    "lint": "npx eslint --cache src --ext .js,.ts,.vue",
-    "dev": "npx vite",
-    "prod": "npx vite build --emptyOutDir",
-    "typescript": "npx vue-tsc --noEmit --skipLibCheck"
+    "lint": "eslint --cache src --ext .js,.ts,.vue",
+    "dev": "vite",
+    "prod": "vite build --emptyOutDir",
+    "typescript": "vue-tsc --noEmit --skipLibCheck"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.35.1",
