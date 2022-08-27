@@ -1,5 +1,17 @@
 # Changelog
 
+## [v3.7.0] - 2022-08-27
+
+This release contains mostly internal refactors, and includes all
+changes from v3.7.0-rc1 and v3.7.0-rc2, in addition to the following.
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Fixed
+
+- fix: Unable to login with username if it contains uppercase characters
+- fix: Profile page not responsive
+- fix: Don't use npx within package scripts
+
 ## [v3.7.0-rc2] - 2022-08-21
 
 This release includes all changes from v3.7.0-rc1, in addition to the following.
