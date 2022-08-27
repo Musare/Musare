@@ -1,6 +1,6 @@
 import async from "async";
 
-import { isAdminRequired } from "./hooks";
+import { useHasPermission } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -40,160 +40,163 @@ export default {
 	 * @param operator - the operator for queries
 	 * @param cb
 	 */
-	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
-		async.waterfall(
-			[
-				next => {
-					DBModule.runJob(
-						"GET_DATA",
-						{
-							page,
-							pageSize,
-							properties,
-							sort,
-							queries,
-							operator,
-							modelName: "punishment",
-							blacklistedProperties: [],
-							specialProperties: {
-								status: [
-									{
-										$addFields: {
-											status: {
-												$cond: [
-													{ $eq: ["$active", true] },
-													{
-														$cond: [
-															{ $gt: [new Date(), "$expiresAt"] },
-															"Inactive",
-															"Active"
-														]
-													},
-													"Inactive"
-												]
-											}
-										}
-									}
-								],
-								value: [
-									{
-										$addFields: {
-											valueOID: {
-												$convert: {
-													input: "$value",
-													to: "objectId",
-													onError: "unknown",
-													onNull: "unknown"
+	getData: useHasPermission(
+		"admin.view.punishments",
+		async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
+			async.waterfall(
+				[
+					next => {
+						DBModule.runJob(
+							"GET_DATA",
+							{
+								page,
+								pageSize,
+								properties,
+								sort,
+								queries,
+								operator,
+								modelName: "punishment",
+								blacklistedProperties: [],
+								specialProperties: {
+									status: [
+										{
+											$addFields: {
+												status: {
+													$cond: [
+														{ $eq: ["$active", true] },
+														{
+															$cond: [
+																{ $gt: [new Date(), "$expiresAt"] },
+																"Inactive",
+																"Active"
+															]
+														},
+														"Inactive"
+													]
 												}
 											}
 										}
-									},
-									{
-										$lookup: {
-											from: "users",
-											localField: "valueOID",
-											foreignField: "_id",
-											as: "valueUser"
-										}
-									},
-									{
-										$unwind: {
-											path: "$valueUser",
-											preserveNullAndEmptyArrays: true
-										}
-									},
-									{
-										$addFields: {
-											valueUsername: {
-												$cond: [
-													{ $eq: ["$type", "banUserId"] },
-													{ $ifNull: ["$valueUser.username", "unknown"] },
-													null
-												]
-											}
-										}
-									},
-									{
-										$project: {
-											valueOID: 0,
-											valueUser: 0
-										}
-									}
-								],
-								punishedBy: [
-									{
-										$addFields: {
-											punishedByOID: {
-												$convert: {
-													input: "$punishedBy",
-													to: "objectId",
-													onError: "unknown",
-													onNull: "unknown"
+									],
+									value: [
+										{
+											$addFields: {
+												valueOID: {
+													$convert: {
+														input: "$value",
+														to: "objectId",
+														onError: "unknown",
+														onNull: "unknown"
+													}
 												}
 											}
-										}
-									},
-									{
-										$lookup: {
-											from: "users",
-											localField: "punishedByOID",
-											foreignField: "_id",
-											as: "punishedByUser"
-										}
-									},
-									{
-										$unwind: {
-											path: "$punishedByUser",
-											preserveNullAndEmptyArrays: true
-										}
-									},
-									{
-										$addFields: {
-											punishedByUsername: {
-												$ifNull: ["$punishedByUser.username", "unknown"]
+										},
+										{
+											$lookup: {
+												from: "users",
+												localField: "valueOID",
+												foreignField: "_id",
+												as: "valueUser"
+											}
+										},
+										{
+											$unwind: {
+												path: "$valueUser",
+												preserveNullAndEmptyArrays: true
+											}
+										},
+										{
+											$addFields: {
+												valueUsername: {
+													$cond: [
+														{ $eq: ["$type", "banUserId"] },
+														{ $ifNull: ["$valueUser.username", "unknown"] },
+														null
+													]
+												}
+											}
+										},
+										{
+											$project: {
+												valueOID: 0,
+												valueUser: 0
 											}
 										}
-									},
-									{
-										$project: {
-											punishedByOID: 0,
-											punishedByUser: 0
+									],
+									punishedBy: [
+										{
+											$addFields: {
+												punishedByOID: {
+													$convert: {
+														input: "$punishedBy",
+														to: "objectId",
+														onError: "unknown",
+														onNull: "unknown"
+													}
+												}
+											}
+										},
+										{
+											$lookup: {
+												from: "users",
+												localField: "punishedByOID",
+												foreignField: "_id",
+												as: "punishedByUser"
+											}
+										},
+										{
+											$unwind: {
+												path: "$punishedByUser",
+												preserveNullAndEmptyArrays: true
+											}
+										},
+										{
+											$addFields: {
+												punishedByUsername: {
+													$ifNull: ["$punishedByUser.username", "unknown"]
+												}
+											}
+										},
+										{
+											$project: {
+												punishedByOID: 0,
+												punishedByUser: 0
+											}
 										}
-									}
-								]
+									]
+								},
+								specialQueries: {
+									value: newQuery => ({ $or: [newQuery, { valueUsername: newQuery.value }] }),
+									punishedBy: newQuery => ({
+										$or: [newQuery, { punishedByUsername: newQuery.punishedBy }]
+									})
+								}
 							},
-							specialQueries: {
-								value: newQuery => ({ $or: [newQuery, { valueUsername: newQuery.value }] }),
-								punishedBy: newQuery => ({
-									$or: [newQuery, { punishedByUsername: newQuery.punishedBy }]
-								})
-							}
-						},
-						this
-					)
-						.then(response => {
-							next(null, response);
-						})
-						.catch(err => {
-							next(err);
-						});
+							this
+						)
+							.then(response => {
+								next(null, response);
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				],
+				async (err, response) => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log("ERROR", "PUNISHMENTS_GET_DATA", `Failed to get data from punishments. "${err}"`);
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "PUNISHMENTS_GET_DATA", `Got data from punishments successfully.`);
+					return cb({
+						status: "success",
+						message: "Successfully got data from punishments.",
+						data: response
+					});
 				}
-			],
-			async (err, response) => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "PUNISHMENTS_GET_DATA", `Failed to get data from punishments. "${err}"`);
-					return cb({ status: "error", message: err });
-				}
-				this.log("SUCCESS", "PUNISHMENTS_GET_DATA", `Got data from punishments successfully.`);
-				return cb({
-					status: "success",
-					message: "Successfully got data from punishments.",
-					data: response
-				});
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Gets all punishments for a user
@@ -202,26 +205,29 @@ export default {
 	 * @param {string} userId - the id of the user
 	 * @param {Function} cb - gets called with the result
 	 */
-	getPunishmentsForUser: isAdminRequired(async function getPunishmentsForUser(session, userId, cb) {
-		const punishmentModel = await DBModule.runJob("GET_MODEL", { modelName: "punishment" }, this);
+	getPunishmentsForUser: useHasPermission(
+		"punishments.get",
+		async function getPunishmentsForUser(session, userId, cb) {
+			const punishmentModel = await DBModule.runJob("GET_MODEL", { modelName: "punishment" }, this);
 
-		punishmentModel.find({ type: "banUserId", value: userId }, async (err, punishments) => {
-			if (err) {
-				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+			punishmentModel.find({ type: "banUserId", value: userId }, async (err, punishments) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
-				this.log(
-					"ERROR",
-					"GET_PUNISHMENTS_FOR_USER",
-					`Getting punishments for user ${userId} failed. "${err}"`
-				);
+					this.log(
+						"ERROR",
+						"GET_PUNISHMENTS_FOR_USER",
+						`Getting punishments for user ${userId} failed. "${err}"`
+					);
 
-				return cb({ status: "error", message: err });
-			}
+					return cb({ status: "error", message: err });
+				}
 
-			this.log("SUCCESS", "GET_PUNISHMENTS_FOR_USER", `Got punishments for user ${userId} successful.`);
-			return cb({ status: "success", data: { punishments } });
-		});
-	}),
+				this.log("SUCCESS", "GET_PUNISHMENTS_FOR_USER", `Got punishments for user ${userId} successful.`);
+				return cb({ status: "success", data: { punishments } });
+			});
+		}
+	),
 
 	/**
 	 * Returns a punishment by id
@@ -230,7 +236,7 @@ export default {
 	 * @param {string} punishmentId - the punishment id
 	 * @param {Function} cb - gets called with the result
 	 */
-	findOne: isAdminRequired(async function findOne(session, punishmentId, cb) {
+	findOne: useHasPermission("punishments.get", async function findOne(session, punishmentId, cb) {
 		const punishmentModel = await DBModule.runJob("GET_MODEL", { modelName: "punishment" }, this);
 
 		async.waterfall([next => punishmentModel.findOne({ _id: punishmentId }, next)], async (err, punishment) => {
@@ -257,7 +263,7 @@ export default {
 	 * @param {string} expiresAt - the time the ban expires
 	 * @param {Function} cb - gets called with the result
 	 */
-	banIP: isAdminRequired(function banIP(session, value, reason, expiresAt, cb) {
+	banIP: useHasPermission("punishments.banIP", function banIP(session, value, reason, expiresAt, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -356,41 +362,44 @@ export default {
 	 * @param {string} punishmentId - the MongoDB id of the punishment
 	 * @param {Function} cb - gets called with the result
 	 */
-	deactivatePunishment: isAdminRequired(function deactivatePunishment(session, punishmentId, cb) {
-		async.waterfall(
-			[
-				next => {
-					PunishmentsModule.runJob("DEACTIVATE_PUNISHMENT", { punishmentId }, this)
-						.then(punishment => next(null, punishment._doc))
-						.catch(next);
-				}
-			],
-			async (err, punishment) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"DEACTIVATE_PUNISHMENT",
-						`Deactivating punishment ${punishmentId} failed. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-				this.log("SUCCESS", "DEACTIVATE_PUNISHMENT", `Deactivated punishment ${punishmentId} successful.`);
+	deactivatePunishment: useHasPermission(
+		"punishments.deactivate",
+		function deactivatePunishment(session, punishmentId, cb) {
+			async.waterfall(
+				[
+					next => {
+						PunishmentsModule.runJob("DEACTIVATE_PUNISHMENT", { punishmentId }, this)
+							.then(punishment => next(null, punishment._doc))
+							.catch(next);
+					}
+				],
+				async (err, punishment) => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log(
+							"ERROR",
+							"DEACTIVATE_PUNISHMENT",
+							`Deactivating punishment ${punishmentId} failed. "${err}"`
+						);
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "DEACTIVATE_PUNISHMENT", `Deactivated punishment ${punishmentId} successful.`);
 
-				WSModule.runJob("EMIT_TO_ROOM", {
-					room: `admin.punishments`,
-					args: [
-						"event:admin.punishment.updated",
-						{
-							data: {
-								punishment: { ...punishment, status: "Inactive" }
+					WSModule.runJob("EMIT_TO_ROOM", {
+						room: `admin.punishments`,
+						args: [
+							"event:admin.punishment.updated",
+							{
+								data: {
+									punishment: { ...punishment, status: "Inactive" }
+								}
 							}
-						}
-					]
-				});
+						]
+					});
 
-				return cb({ status: "success" });
-			}
-		);
-	})
+					return cb({ status: "success" });
+				}
+			);
+		}
+	)
 };

@@ -18,7 +18,8 @@ export const useUserAuthStore = defineStore("userAuth", {
 			reason: null,
 			expiresAt: null
 		},
-		gotData: false
+		gotData: false,
+		permissions: {}
 	}),
 	actions: {
 		register(user) {
@@ -231,6 +232,7 @@ export const useUserAuthStore = defineStore("userAuth", {
 			this.username = data.username;
 			this.email = data.email;
 			this.userId = data.userId;
+			this.permissions = data.permissions || {};
 			this.gotData = true;
 		},
 		banUser(ban) {
@@ -239,6 +241,9 @@ export const useUserAuthStore = defineStore("userAuth", {
 		},
 		updateUsername(username) {
 			this.username = username;
+		},
+		hasPermission(permission) {
+			return !!(this.permissions && this.permissions[permission]);
 		}
 	}
 });

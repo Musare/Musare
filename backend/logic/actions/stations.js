@@ -2,7 +2,8 @@ import async from "async";
 import mongoose from "mongoose";
 import config from "config";
 
-import { isLoginRequired, isOwnerRequired, isAdminRequired } from "./hooks";
+import { hasPermission, useHasPermission, getUserPermissions } from "../hooks/hasPermission";
+import isLoginRequired from "../hooks/loginRequired";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -51,37 +52,13 @@ CacheModule.runJob("SUB", {
 					const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);
 					if (!socket) return;
 					const { session } = socket;
-
-					if (session.sessionId) {
-						CacheModule.runJob("HGET", {
-							table: "sessions",
-							key: session.sessionId
-						}).then(session => {
-							if (session)
-								DBModule.runJob(
-									"GET_MODEL",
-									{
-										modelName: "user"
-									},
-									this
-								).then(userModel => {
-									userModel.findOne({ _id: session.userId }, (err, user) => {
-										if (user && user.role === "admin")
-											socket.dispatch("event:station.userCount.updated", {
-												data: { stationId, count }
-											});
-										else if (
-											user &&
-											station.type === "community" &&
-											station.owner === session.userId
-										)
-											socket.dispatch("event:station.userCount.updated", {
-												data: { stationId, count }
-											});
-									});
-								});
-						});
-					}
+					hasPermission("stations.view", session, stationId)
+						.then(() => {
+							socket.dispatch("event:station.userCount.updated", {
+								data: { stationId, count }
+							});
+						})
+						.catch(() => {});
 				});
 			}
 		});
@@ -273,8 +250,6 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "station.create",
 	cb: async stationId => {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
-
 		StationsModule.runJob("INITIALIZE_STATION", { stationId }).then(async res => {
 			const { station } = res;
 			station.userCount = StationsModule.usersPerStationCount[stationId] || 0;
@@ -298,22 +273,11 @@ CacheModule.runJob("SUB", {
 					const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);
 					if (!socket) return;
 					const { session } = socket;
-
-					if (session.sessionId) {
-						CacheModule.runJob("HGET", {
-							table: "sessions",
-							key: session.sessionId
-						}).then(session => {
-							if (session) {
-								userModel.findOne({ _id: session.userId }, (err, user) => {
-									if (user && user.role === "admin")
-										socket.dispatch("event:station.created", { data: { station } });
-									else if (user && station.type === "community" && station.owner === session.userId)
-										socket.dispatch("event:station.created", { data: { station } });
-								});
-							}
-						});
-					}
+					hasPermission("stations.view", session, stationId)
+						.then(() => {
+							socket.dispatch("event:station.created", { data: { station } });
+						})
+						.catch(() => {});
 				});
 			}
 		});
@@ -430,30 +394,26 @@ export default {
 											},
 											this
 										)
-											.then(exists => {
-												if (exists && session.userId && station.privacy !== "public") {
-													DBModule.runJob("GET_MODEL", { modelName: "user" }, this)
-														.then(userModel => {
-															userModel.findOne({ _id: session.userId }, (err, user) => {
-																if (err) return callback(err);
-																if (
-																	(user.role !== "admin" &&
-																		station.owner !== session.userId) ||
-																	(adminFilter &&
-																		user.role === "admin" &&
-																		station.owner !== session.userId)
-																) {
-																	return callback(null, false);
-																}
-																return callback(null, exists);
-															});
-														})
-														.catch(callback);
-												} else if (exists && !session.userId && station.privacy !== "public")
-													callback(null, false);
-												else callback(null, exists);
-											})
+											.then(exists => callback(null, exists))
 											.catch(callback);
+									},
+
+									(exists, callback) => {
+										if (!exists) callback(null, false, false);
+										else if (station.privacy === "public") callback(null, true, true);
+										else
+											hasPermission("stations.index", session.userId, station._id)
+												.then(() => callback(null, true, true))
+												.catch(() => callback(null, true, false));
+									},
+
+									(exists, canIndex, callback) => {
+										if (!exists) callback(null, false);
+										else if (!canIndex && !adminFilter)
+											hasPermission("stations.index.other", session.userId)
+												.then(() => callback(null, true))
+												.catch(() => callback(null, false));
+										else callback(null, canIndex);
 									}
 								],
 								(err, exists) => {
@@ -496,93 +456,96 @@ export default {
 	 * @param operator - the operator for queries
 	 * @param cb
 	 */
-	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
-		async.waterfall(
-			[
-				next => {
-					DBModule.runJob(
-						"GET_DATA",
-						{
-							page,
-							pageSize,
-							properties,
-							sort,
-							queries,
-							operator,
-							modelName: "station",
-							blacklistedProperties: [],
-							specialProperties: {
-								owner: [
-									{
-										$addFields: {
-											ownerOID: {
-												$convert: {
-													input: "$owner",
-													to: "objectId",
-													onError: "unknown",
-													onNull: "unknown"
+	getData: useHasPermission(
+		"admin.view.stations",
+		async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
+			async.waterfall(
+				[
+					next => {
+						DBModule.runJob(
+							"GET_DATA",
+							{
+								page,
+								pageSize,
+								properties,
+								sort,
+								queries,
+								operator,
+								modelName: "station",
+								blacklistedProperties: [],
+								specialProperties: {
+									owner: [
+										{
+											$addFields: {
+												ownerOID: {
+													$convert: {
+														input: "$owner",
+														to: "objectId",
+														onError: "unknown",
+														onNull: "unknown"
+													}
 												}
 											}
-										}
-									},
-									{
-										$lookup: {
-											from: "users",
-											localField: "ownerOID",
-											foreignField: "_id",
-											as: "ownerUser"
-										}
-									},
-									{
-										$unwind: {
-											path: "$ownerUser",
-											preserveNullAndEmptyArrays: true
-										}
-									},
-									{
-										$addFields: {
-											ownerUsername: {
-												$cond: [
-													{ $eq: [{ $type: "$owner" }, "string"] },
-													{ $ifNull: ["$ownerUser.username", "unknown"] },
-													"none"
-												]
+										},
+										{
+											$lookup: {
+												from: "users",
+												localField: "ownerOID",
+												foreignField: "_id",
+												as: "ownerUser"
+											}
+										},
+										{
+											$unwind: {
+												path: "$ownerUser",
+												preserveNullAndEmptyArrays: true
+											}
+										},
+										{
+											$addFields: {
+												ownerUsername: {
+													$cond: [
+														{ $eq: [{ $type: "$owner" }, "string"] },
+														{ $ifNull: ["$ownerUser.username", "unknown"] },
+														"none"
+													]
+												}
+											}
+										},
+										{
+											$project: {
+												ownerOID: 0,
+												ownerUser: 0
 											}
 										}
-									},
-									{
-										$project: {
-											ownerOID: 0,
-											ownerUser: 0
-										}
-									}
-								]
+									]
+								},
+								specialQueries: {
+									owner: newQuery => ({ $or: [newQuery, { ownerUsername: newQuery.owner }] })
+								}
 							},
-							specialQueries: {
-								owner: newQuery => ({ $or: [newQuery, { ownerUsername: newQuery.owner }] })
-							}
-						},
-						this
-					)
-						.then(response => {
-							next(null, response);
-						})
-						.catch(err => {
-							next(err);
-						});
+							this
+						)
+							.then(response => {
+								next(null, response);
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				],
+				async (err, response) => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log("ERROR", "STATIONS_GET_DATA", `Failed to get data from stations. "${err}"`);
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "STATIONS_GET_DATA", `Got data from stations successfully.`);
+					return cb({ status: "success", message: "Successfully got data from stations.", data: response });
 				}
-			],
-			async (err, response) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "STATIONS_GET_DATA", `Failed to get data from stations. "${err}"`);
-					return cb({ status: "error", message: err });
-				}
-				this.log("SUCCESS", "STATIONS_GET_DATA", `Got data from stations successfully.`);
-				return cb({ status: "success", message: "Successfully got data from stations.", data: response });
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Obtains basic metadata of a station in order to format an activity
@@ -899,6 +862,18 @@ export default {
 					}
 
 					return next(null, data);
+				},
+
+				(data, next) => {
+					getUserPermissions(session.userId, data._id)
+						.then(permissions => {
+							data.permissions = permissions;
+							next(null, data);
+						})
+						.catch(() => {
+							data.permissions = {};
+							next(null, data);
+						});
 				}
 			],
 			async (err, data) => {
@@ -988,6 +963,18 @@ export default {
 					};
 
 					next(null, data);
+				},
+
+				(data, next) => {
+					getUserPermissions(session.userId, data._id)
+						.then(permissions => {
+							data.permissions = permissions;
+							next(null, data);
+						})
+						.catch(() => {
+							data.permissions = {};
+							next(null, data);
+						});
 				}
 			],
 			async (err, data) => {
@@ -1231,9 +1218,15 @@ export default {
 	 * @param stationId - the station id
 	 * @param cb
 	 */
-	forceSkip: isOwnerRequired(function forceSkip(session, stationId, cb) {
+	forceSkip(session, stationId, cb) {
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.skip", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
 						.then(station => {
@@ -1261,7 +1254,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Leaves the user's current station
@@ -1313,14 +1306,21 @@ export default {
 	 * @param session
 	 * @param stationId - the station id
 	 * @param station - updated station object
+	 * @param newStation
 	 * @param cb
 	 */
-	update: isOwnerRequired(async function update(session, stationId, newStation, cb) {
+	async update(session, stationId, newStation, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.update", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					stationModel.findOne({ _id: stationId }, next);
 				},
@@ -1406,7 +1406,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Pauses a station
@@ -1415,7 +1415,7 @@ export default {
 	 * @param stationId - the station id
 	 * @param cb
 	 */
-	pause: isOwnerRequired(async function pause(session, stationId, cb) {
+	async pause(session, stationId, cb) {
 		const stationModel = await DBModule.runJob(
 			"GET_MODEL",
 			{
@@ -1425,6 +1425,12 @@ export default {
 		);
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.playback.toggle", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
 						.then(station => {
@@ -1469,7 +1475,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Resumes a station
@@ -1478,7 +1484,7 @@ export default {
 	 * @param stationId - the station id
 	 * @param cb
 	 */
-	resume: isOwnerRequired(async function resume(session, stationId, cb) {
+	async resume(session, stationId, cb) {
 		const stationModel = await DBModule.runJob(
 			"GET_MODEL",
 			{
@@ -1488,6 +1494,12 @@ export default {
 		);
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.playback.toggle", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
 						.then(station => {
@@ -1539,7 +1551,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Removes a station
@@ -1548,12 +1560,18 @@ export default {
 	 * @param stationId - the station id
 	 * @param cb
 	 */
-	remove: isOwnerRequired(async function remove(session, stationId, cb) {
+	async remove(session, stationId, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.remove", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					stationModel.findById(stationId, (err, station) => {
 						if (err) return next(err);
@@ -1617,7 +1635,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Create a station
@@ -1627,7 +1645,6 @@ export default {
 	 * @param cb
 	 */
 	create: isLoginRequired(async function create(session, data, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
@@ -1699,14 +1716,10 @@ export default {
 					if (blacklist.indexOf(data.name) !== -1)
 						return next("That name is blacklisted. Please use a different name.");
 
-					if (data.type === "official") {
-						return userModel.findOne({ _id: session.userId }, (err, user) => {
-							if (err) return next(err);
-							if (!user) return next("User not found.");
-							if (user.role !== "admin") return next("Admin required.");
-							return next();
-						});
-					}
+					if (data.type === "official")
+						return hasPermission("stations.create.official", session)
+							.then(() => next())
+							.catch(() => next("Insufficient permissions."));
 					return next();
 				},
 
@@ -1803,8 +1816,6 @@ export default {
 	 * @param cb
 	 */
 	addToQueue: isLoginRequired(async function addToQueue(session, stationId, youtubeId, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-
 		async.waterfall(
 			[
 				next => {
@@ -1823,12 +1834,9 @@ export default {
 						station.requests.access === "owner" ||
 						(station.requests.access === "user" && station.privacy === "private")
 					) {
-						return userModel.findOne({ _id: session.userId }, (err, user) => {
-							if (err) return next(err);
-							if (user.role !== "admin" && station.owner !== session.userId)
-								return next("You do not have permission to add songs to queue.");
-							return next(null, station);
-						});
+						return hasPermission("stations.request", session, stationId)
+							.then(() => next(null, station))
+							.catch(() => next("You do not have permission to add songs to queue."));
 					}
 
 					return next(null, station);
@@ -1895,9 +1903,15 @@ export default {
 	 * @param youtubeId - the youtube id
 	 * @param cb
 	 */
-	removeFromQueue: isOwnerRequired(async function removeFromQueue(session, stationId, youtubeId, cb) {
+	async removeFromQueue(session, stationId, youtubeId, cb) {
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.queue.remove", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					if (!youtubeId) return next("Invalid youtube id.");
 					return StationsModule.runJob("REMOVE_FROM_QUEUE", { stationId, youtubeId }, this)
@@ -1928,7 +1942,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Gets the queue from a station
@@ -1995,11 +2009,17 @@ export default {
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
 	 */
-	repositionSongInQueue: isOwnerRequired(async function repositionQueue(session, stationId, song, cb) {
+	async repositionSongInQueue(session, stationId, song, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.queue.reposition", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					if (!song || !song.youtubeId) return next("You must provide a song to reposition.");
 					return next();
@@ -2065,7 +2085,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Autofill a playlist in a station
@@ -2075,9 +2095,15 @@ export default {
 	 * @param playlistId - the playlist id
 	 * @param cb
 	 */
-	autofillPlaylist: isOwnerRequired(async function autofillPlaylist(session, stationId, playlistId, cb) {
+	async autofillPlaylist(session, stationId, playlistId, cb) {
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.autofill", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
 						.then(station => next(null, station))
@@ -2134,7 +2160,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Remove autofilled playlist from a station
@@ -2144,9 +2170,15 @@ export default {
 	 * @param playlistId - the playlist id
 	 * @param cb
 	 */
-	removeAutofillPlaylist: isOwnerRequired(async function removeAutofillPlaylist(session, stationId, playlistId, cb) {
+	async removeAutofillPlaylist(session, stationId, playlistId, cb) {
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.autofill", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
 						.then(station => next(null, station))
@@ -2201,7 +2233,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Blacklist a playlist in a station
@@ -2211,9 +2243,15 @@ export default {
 	 * @param playlistId - the playlist id
 	 * @param cb
 	 */
-	blacklistPlaylist: isOwnerRequired(async function blacklistPlaylist(session, stationId, playlistId, cb) {
+	async blacklistPlaylist(session, stationId, playlistId, cb) {
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.blacklist", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
 						.then(station => next(null, station))
@@ -2268,7 +2306,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Remove blacklisted a playlist from a station
@@ -2278,14 +2316,15 @@ export default {
 	 * @param playlistId - the playlist id
 	 * @param cb
 	 */
-	removeBlacklistedPlaylist: isOwnerRequired(async function removeBlacklistedPlaylist(
-		session,
-		stationId,
-		playlistId,
-		cb
-	) {
+	async removeBlacklistedPlaylist(session, stationId, playlistId, cb) {
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.blacklist", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
 						.then(station => next(null, station))
@@ -2339,7 +2378,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	favoriteStation: isLoginRequired(async function favoriteStation(session, stationId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
@@ -2468,51 +2507,54 @@ export default {
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
-	clearEveryStationQueue: isAdminRequired(async function clearEveryStationQueue(session, cb) {
-		this.keepLongJob();
-		this.publishProgress({
-			status: "started",
-			title: "Clear every station queue",
-			message: "Clearing every station queue.",
-			id: this.toString()
-		});
-		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
-		await CacheModule.runJob(
-			"PUB",
-			{
-				channel: "longJob.added",
-				value: { jobId: this.toString(), userId: session.userId }
-			},
-			this
-		);
+	clearEveryStationQueue: useHasPermission(
+		"stations.clearEveryStationQueue",
+		async function clearEveryStationQueue(session, cb) {
+			this.keepLongJob();
+			this.publishProgress({
+				status: "started",
+				title: "Clear every station queue",
+				message: "Clearing every station queue.",
+				id: this.toString()
+			});
+			await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+			await CacheModule.runJob(
+				"PUB",
+				{
+					channel: "longJob.added",
+					value: { jobId: this.toString(), userId: session.userId }
+				},
+				this
+			);
 
-		async.waterfall(
-			[
-				next => {
-					StationsModule.runJob("CLEAR_EVERY_STATION_QUEUE", {}, this)
-						.then(() => next())
-						.catch(next);
-				}
-			],
-			async err => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "CLEAR_EVERY_STATION_QUEUE", `Clearing every station queue failed. "${err}"`);
+			async.waterfall(
+				[
+					next => {
+						StationsModule.runJob("CLEAR_EVERY_STATION_QUEUE", {}, this)
+							.then(() => next())
+							.catch(next);
+					}
+				],
+				async err => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log("ERROR", "CLEAR_EVERY_STATION_QUEUE", `Clearing every station queue failed. "${err}"`);
+						this.publishProgress({
+							status: "error",
+							message: err
+						});
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "CLEAR_EVERY_STATION_QUEUE", "Clearing every station queue was successful.");
 					this.publishProgress({
-						status: "error",
-						message: err
+						status: "success",
+						message: "Successfully cleared every station queue."
 					});
-					return cb({ status: "error", message: err });
+					return cb({ status: "success", message: "Successfully cleared every station queue." });
 				}
-				this.log("SUCCESS", "CLEAR_EVERY_STATION_QUEUE", "Clearing every station queue was successful.");
-				this.publishProgress({
-					status: "success",
-					message: "Successfully cleared every station queue."
-				});
-				return cb({ status: "success", message: "Successfully cleared every station queue." });
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Reset a station queue
@@ -2521,7 +2563,7 @@ export default {
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - gets called with the result
 	 */
-	resetQueue: isAdminRequired(async function resetQueue(session, stationId, cb) {
+	resetQueue: useHasPermission("stations.queue.reset", async function resetQueue(session, stationId, cb) {
 		async.waterfall(
 			[
 				next => {

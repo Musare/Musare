@@ -131,6 +131,11 @@ export const useStationStore = defineStore("station", {
 		},
 		updateMediaModalPlayingAudio(mediaModalPlayingAudio) {
 			this.mediaModalPlayingAudio = mediaModalPlayingAudio;
+		},
+		hasPermission(permission) {
+			return !!(
+				this.station.permissions && this.station.permissions[permission]
+			);
 		}
 	}
 });

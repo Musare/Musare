@@ -6,7 +6,6 @@ import ws from "@/ws";
 
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
-import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPlaylistsStore } from "@/stores/userPlaylists";
 import { useModalsStore } from "@/stores/modals";
 import { useManageStationStore } from "@/stores/manageStation";
@@ -36,7 +35,6 @@ const emit = defineEmits(["selected"]);
 
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
-const userAuthStore = useUserAuthStore();
 
 const tab = ref("current");
 const search = reactive({
@@ -61,7 +59,6 @@ const {
 	calculatePlaylistOrder
 } = useSortablePlaylists();
 
-const { loggedIn, role, userId } = storeToRefs(userAuthStore);
 const { autoRequest } = storeToRefs(stationStore);
 
 const manageStationStore = useManageStationStore(props);
@@ -97,6 +94,11 @@ const resultsLeftCount = computed(() => search.count - search.results.length);
 const nextPageResultsCount = computed(() =>
 	Math.min(search.pageSize, resultsLeftCount.value)
 );
+
+const hasPermission = permission =>
+	props.sector === "manageStation"
+		? manageStationStore.hasPermission(permission)
+		: stationStore.hasPermission(permission);
 
 const { openModal } = useModalsStore();
 
@@ -142,11 +144,6 @@ const showTab = _tab => {
 	tabs.value[`${_tab}-tab`].scrollIntoView({ block: "nearest" });
 	tab.value = _tab;
 };
-
-const isOwner = () =>
-	loggedIn.value && station.value && userId.value === station.value.owner;
-const isAdmin = () => loggedIn.value && role.value === "admin";
-const isOwnerOrAdmin = () => isOwner() || isAdmin();
 
 const label = (tense = "future", typeOverwrite = null, capitalize = false) => {
 	let label = typeOverwrite || props.type;
@@ -512,7 +509,7 @@ onMounted(() => {
 								v-if="
 									featuredPlaylist.createdBy !== myUserId &&
 									(featuredPlaylist.privacy === 'public' ||
-										isAdmin())
+										hasPermission('playlists.view.others'))
 								"
 								@click="
 									openModal({
@@ -693,7 +690,8 @@ onMounted(() => {
 							<i
 								v-if="
 									playlist.createdBy !== myUserId &&
-									(playlist.privacy === 'public' || isAdmin())
+									(playlist.privacy === 'public' ||
+										hasPermission('playlists.view.others'))
 								"
 								@click="
 									openModal({
@@ -746,7 +744,6 @@ onMounted(() => {
 
 						<template #actions>
 							<quick-confirm
-								v-if="isOwnerOrAdmin()"
 								@confirm="deselectPlaylist(playlist._id)"
 							>
 								<i
@@ -775,7 +772,8 @@ onMounted(() => {
 							<i
 								v-if="
 									playlist.createdBy !== myUserId &&
-									(playlist.privacy === 'public' || isAdmin())
+									(playlist.privacy === 'public' ||
+										hasPermission('playlists.view.others'))
 								"
 								@click="
 									openModal({

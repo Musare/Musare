@@ -5,6 +5,7 @@ import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
 import { useModalsStore } from "@/stores/modals";
+import { useUserAuthStore } from "@/stores/userAuth";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
@@ -28,6 +29,8 @@ const route = useRoute();
 const { setJob } = useLongJobsStore();
 
 const { socket } = useWebsocketsStore();
+
+const { hasPermission } = useUserAuthStore();
 
 const columnDefault = ref(<TableColumn>{
 	sortable: true,
@@ -293,16 +296,17 @@ const events = ref(<TableEvents>{
 		id: "songId"
 	}
 });
-const jobs = ref([
-	{
+const jobs = ref([]);
+if (hasPermission("songs.updateAll"))
+	jobs.value.push({
 		name: "Update all songs",
 		socket: "songs.updateAll"
-	},
-	{
+	});
+if (hasPermission("media.recalculateAllRatings"))
+	jobs.value.push({
 		name: "Recalculate all ratings",
 		socket: "media.recalculateAllRatings"
-	}
-]);
+	});
 
 const { openModal } = useModalsStore();
 
@@ -557,6 +561,7 @@ onMounted(() => {
 			<template #column-options="slotProps">
 				<div class="row-options">
 					<button
+						v-if="hasPermission('songs.update')"
 						class="button is-primary icon-with-button material-icons"
 						@click="editOne(slotProps.item)"
 						:disabled="slotProps.item.removed"
@@ -566,7 +571,10 @@ onMounted(() => {
 						edit
 					</button>
 					<quick-confirm
-						v-if="slotProps.item.verified"
+						v-if="
+							hasPermission('songs.verify') &&
+							slotProps.item.verified
+						"
 						@confirm="unverifyOne(slotProps.item._id)"
 					>
 						<button
@@ -579,7 +587,7 @@ onMounted(() => {
 						</button>
 					</quick-confirm>
 					<button
-						v-else
+						v-else-if="hasPermission('songs.verify')"
 						class="button is-success icon-with-button material-icons"
 						@click="verifyOne(slotProps.item._id)"
 						:disabled="slotProps.item.removed"
@@ -589,6 +597,7 @@ onMounted(() => {
 						check_circle
 					</button>
 					<button
+						v-if="hasPermission('songs.remove')"
 						class="button is-danger icon-with-button material-icons"
 						@click.prevent="
 							confirmAction({
@@ -685,6 +694,7 @@ onMounted(() => {
 			<template #bulk-actions="slotProps">
 				<div class="bulk-actions">
 					<i
+						v-if="hasPermission('songs.update')"
 						class="material-icons edit-songs-icon"
 						@click.prevent="editMany(slotProps.item)"
 						content="Edit Songs"
@@ -694,6 +704,7 @@ onMounted(() => {
 						edit
 					</i>
 					<i
+						v-if="hasPermission('songs.verify')"
 						class="material-icons verify-songs-icon"
 						@click.prevent="verifyMany(slotProps.item)"
 						content="Verify Songs"
@@ -703,6 +714,7 @@ onMounted(() => {
 						check_circle
 					</i>
 					<quick-confirm
+						v-if="hasPermission('songs.verify')"
 						placement="left"
 						@confirm="unverifyMany(slotProps.item)"
 						tabindex="0"
@@ -716,6 +728,10 @@ onMounted(() => {
 						</i>
 					</quick-confirm>
 					<i
+						v-if="
+							hasPermission('songs.update') &&
+							hasPermission('apis.searchDiscogs')
+						"
 						class="material-icons import-album-icon"
 						@click.prevent="importAlbum(slotProps.item)"
 						content="Import Album"
@@ -725,6 +741,7 @@ onMounted(() => {
 						album
 					</i>
 					<i
+						v-if="hasPermission('songs.update')"
 						class="material-icons tag-songs-icon"
 						@click.prevent="setTags(slotProps.item)"
 						content="Set Tags"
@@ -734,6 +751,7 @@ onMounted(() => {
 						local_offer
 					</i>
 					<i
+						v-if="hasPermission('songs.update')"
 						class="material-icons artists-songs-icon"
 						@click.prevent="setArtists(slotProps.item)"
 						content="Set Artists"
@@ -743,6 +761,7 @@ onMounted(() => {
 						group
 					</i>
 					<i
+						v-if="hasPermission('songs.update')"
 						class="material-icons genres-songs-icon"
 						@click.prevent="setGenres(slotProps.item)"
 						content="Set Genres"
@@ -752,6 +771,7 @@ onMounted(() => {
 						theater_comedy
 					</i>
 					<i
+						v-if="hasPermission('songs.remove')"
 						class="material-icons delete-icon"
 						@click.prevent="
 							confirmAction({

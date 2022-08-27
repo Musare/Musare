@@ -5,6 +5,7 @@ import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
 import { useModalsStore } from "@/stores/modals";
+import { useUserAuthStore } from "@/stores/userAuth";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
@@ -245,6 +246,8 @@ const events = ref(<TableEvents>{
 const { openModal } = useModalsStore();
 
 const { setJob } = useLongJobsStore();
+
+const { hasPermission } = useUserAuthStore();
 
 const openAdvancedTable = importJob => {
 	const filter = {
@@ -510,6 +513,11 @@ const confirmAction = ({ message, action, params }) => {
 						<template #column-options="slotProps">
 							<div class="row-options">
 								<button
+									v-if="
+										hasPermission(
+											'admin.view.youtubeVideos'
+										)
+									"
 									class="button is-primary icon-with-button material-icons"
 									@click="openAdvancedTable(slotProps.item)"
 									:disabled="
@@ -522,6 +530,7 @@ const confirmAction = ({ message, action, params }) => {
 									table_view
 								</button>
 								<button
+									v-if="hasPermission('songs.update')"
 									class="button is-primary icon-with-button material-icons"
 									@click="
 										editSongs(
@@ -539,6 +548,10 @@ const confirmAction = ({ message, action, params }) => {
 									music_note
 								</button>
 								<button
+									v-if="
+										hasPermission('songs.update') &&
+										hasPermission('apis.searchDiscogs')
+									"
 									class="button icon-with-button material-icons import-album-icon"
 									@click="
 										importAlbum(
@@ -556,6 +569,9 @@ const confirmAction = ({ message, action, params }) => {
 									album
 								</button>
 								<button
+									v-if="
+										hasPermission('media.removeImportJobs')
+									"
 									class="button is-danger icon-with-button material-icons"
 									@click.prevent="
 										confirmAction({

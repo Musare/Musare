@@ -75,6 +75,12 @@ export const useManageStationStore = props => {
 			},
 			updateIsFavorited(isFavorited) {
 				this.station.isFavorited = isFavorited;
+			},
+			hasPermission(permission) {
+				return !!(
+					this.station.permissions &&
+					this.station.permissions[permission]
+				);
 			}
 		}
 	})();

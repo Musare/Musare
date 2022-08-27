@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref, computed, onUpdated } from "vue";
 import Toast from "toasters";
-import { storeToRefs } from "pinia";
 import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
-import { useUserAuthStore } from "@/stores/userAuth";
 import { useManageStationStore } from "@/stores/manageStation";
 
 const SongItem = defineAsyncComponent(
@@ -22,10 +20,7 @@ const props = defineProps({
 
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
-const userAuthStore = useUserAuthStore();
 const manageStationStore = useManageStationStore(props);
-
-const { loggedIn, userId, role: userRole } = storeToRefs(userAuthStore);
 
 const actionableButtonVisible = ref(false);
 const drag = ref(false);
@@ -56,10 +51,10 @@ const queue = computed({
 	}
 });
 
-const isOwnerOnly = () =>
-	loggedIn.value && userId.value === station.value.owner;
-
-const isAdminOnly = () => loggedIn.value && userRole.value === "admin";
+const hasPermission = permission =>
+	props.sector === "manageStation"
+		? manageStationStore.hasPermission(permission)
+		: stationStore.hasPermission(permission);
 
 const removeFromQueue = youtubeId => {
 	socket.dispatch(
@@ -148,7 +143,7 @@ onUpdated(() => {
 				@start="drag = true"
 				@end="drag = false"
 				@update="repositionSongInQueue"
-				:disabled="!(isAdminOnly() || isOwnerOnly())"
+				:disabled="!hasPermission('stations.queue.reposition')"
 			>
 				<template #item="{ element, index }">
 					<song-item
@@ -158,11 +153,11 @@ onUpdated(() => {
 						:ref="el => (songItems[`song-item-${index}`] = el)"
 					>
 						<template
-							v-if="isAdminOnly() || isOwnerOnly()"
+							v-if="hasPermission('stations.queue.reposition')"
 							#tippyActions
 						>
 							<quick-confirm
-								v-if="isOwnerOnly() || isAdminOnly()"
+								v-if="hasPermission('stations.queue.remove')"
 								placement="left"
 								@confirm="removeFromQueue(element.youtubeId)"
 							>
