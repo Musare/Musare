@@ -1,10 +1,84 @@
+<script setup lang="ts">
+import { defineAsyncComponent, ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
+import Toast from "toasters";
+import { useUserAuthStore } from "@/stores/userAuth";
+import { useModalsStore } from "@/stores/modals";
+
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
+
+const route = useRoute();
+
+const email = ref("");
+const password = ref({
+	value: "",
+	visible: false
+});
+const apiDomain = ref("");
+const siteSettings = ref({
+	registrationDisabled: false,
+	githubAuthentication: false
+});
+const passwordElement = ref();
+
+const { login } = useUserAuthStore();
+
+const { openModal, closeCurrentModal } = useModalsStore();
+
+const submitModal = () => {
+	login({
+		email: email.value,
+		password: password.value.value
+	})
+		.then((res: any) => {
+			if (res.status === "success") window.location.reload();
+		})
+		.catch(err => new Toast(err.message));
+};
+
+const checkForAutofill = event => {
+	if (
+		event.target.value !== "" &&
+		event.inputType === undefined &&
+		event.data === undefined &&
+		event.dataTransfer === undefined &&
+		event.isComposing === undefined
+	)
+		submitModal();
+};
+
+const togglePasswordVisibility = () => {
+	if (passwordElement.value.type === "password") {
+		passwordElement.value.type = "text";
+		password.value.visible = true;
+	} else {
+		passwordElement.value.type = "password";
+		password.value.visible = false;
+	}
+};
+
+const changeToRegisterModal = () => {
+	closeCurrentModal();
+	openModal("register");
+};
+
+const githubRedirect = () => {
+	localStorage.setItem("github_redirect", route.path);
+};
+
+onMounted(async () => {
+	apiDomain.value = await lofig.get("backend.apiDomain");
+	siteSettings.value = await lofig.get("siteSettings");
+});
+</script>
+
 <template>
 	<div>
 		<modal
 			title="Login"
 			class="login-modal"
 			:size="'slim'"
-			@closed="closeLoginModal()"
+			@closed="closeCurrentModal()"
 		>
 			<template #body>
 				<form>
@@ -16,7 +90,7 @@
 							class="input"
 							type="email"
 							placeholder="Username/Email..."
-							@keypress="submitOnEnter(submitModal, $event)"
+							@keyup.enter="submitModal()"
 						/>
 					</p>
 
@@ -30,10 +104,10 @@
 							v-model="password.value"
 							class="input"
 							type="password"
-							ref="password"
+							ref="passwordElement"
 							placeholder="Password..."
 							@input="checkForAutofill($event)"
-							@keypress="submitOnEnter(submitModal, $event)"
+							@keyup.enter="submitModal()"
 						/>
 						<a @click="togglePasswordVisibility()">
 							<i class="material-icons">
@@ -50,7 +124,7 @@
 						<router-link
 							id="forgot-password"
 							to="/reset_password"
-							@click="closeLoginModal()"
+							@click="closeCurrentModal()"
 						>
 							Forgot password?
 						</router-link>
@@ -59,11 +133,11 @@
 					<br />
 					<p>
 						By logging in you agree to our
-						<router-link to="/terms" @click="closeLoginModal()">
+						<router-link to="/terms" @click="closeCurrentModal()">
 							Terms of Service
 						</router-link>
 						and
-						<router-link to="/privacy" @click="closeLoginModal()">
+						<router-link to="/privacy" @click="closeCurrentModal()">
 							Privacy Policy</router-link
 						>.
 					</p>
@@ -75,6 +149,7 @@
 						Login
 					</button>
 					<a
+						v-if="siteSettings.githubAuthentication"
 						class="button is-github"
 						:href="apiDomain + '/auth/github/authorize'"
 						@click="githubRedirect()"
@@ -90,7 +165,7 @@
 				</div>
 
 				<p
-					v-if="!registrationDisabled"
+					v-if="!siteSettings.registrationDisabled"
 					class="content-box-optional-helper"
 				>
 					<a @click="changeToRegisterModal()">
@@ -101,78 +176,6 @@
 		</modal>
 	</div>
 </template>
-
-<script>
-import { mapActions } from "vuex";
-
-import Toast from "toasters";
-
-export default {
-	data() {
-		return {
-			email: "",
-			password: {
-				value: "",
-				visible: false
-			},
-			apiDomain: "",
-			registrationDisabled: false
-		};
-	},
-	async mounted() {
-		this.apiDomain = await lofig.get("backend.apiDomain");
-		this.registrationDisabled = await lofig.get(
-			"siteSettings.registrationDisabled"
-		);
-	},
-	methods: {
-		checkForAutofill(event) {
-			if (
-				event.target.value !== "" &&
-				event.inputType === undefined &&
-				event.data === undefined &&
-				event.dataTransfer === undefined &&
-				event.isComposing === undefined
-			)
-				this.submitModal();
-		},
-		submitOnEnter(cb, event) {
-			if (event.which === 13) cb();
-		},
-		submitModal() {
-			this.login({
-				email: this.email,
-				password: this.password.value
-			})
-				.then(res => {
-					if (res.status === "success") window.location.reload();
-				})
-				.catch(err => new Toast(err.message));
-		},
-		togglePasswordVisibility() {
-			if (this.$refs.password.type === "password") {
-				this.$refs.password.type = "text";
-				this.password.visible = true;
-			} else {
-				this.$refs.password.type = "password";
-				this.password.visible = false;
-			}
-		},
-		changeToRegisterModal() {
-			this.closeLoginModal();
-			this.openModal("register");
-		},
-		closeLoginModal() {
-			this.closeModal("login");
-		},
-		githubRedirect() {
-			localStorage.setItem("github_redirect", this.$route.path);
-		},
-		...mapActions("modalVisibility", ["closeModal", "openModal"]),
-		...mapActions("user/auth", ["login"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {

@@ -1,3 +1,174 @@
+<script setup lang="ts">
+import { defineAsyncComponent, ref } from "vue";
+import Toast from "toasters";
+import { useModalsStore } from "@/stores/modals";
+import { useReports } from "@/composables/useReports";
+import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
+
+const AdvancedTable = defineAsyncComponent(
+	() => import("@/components/AdvancedTable.vue")
+);
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
+
+const columnDefault = ref(<TableColumn>{
+	sortable: true,
+	hidable: true,
+	defaultVisibility: "shown",
+	draggable: true,
+	resizable: true,
+	minWidth: 150,
+	maxWidth: 600
+});
+const columns = ref(<TableColumn[]>[
+	{
+		name: "options",
+		displayName: "Options",
+		properties: ["_id", "resolved"],
+		sortable: false,
+		hidable: false,
+		resizable: false,
+		minWidth: 85,
+		defaultWidth: 85
+	},
+	{
+		name: "_id",
+		displayName: "Report ID",
+		properties: ["_id"],
+		sortProperty: "_id",
+		minWidth: 215,
+		defaultWidth: 215
+	},
+	{
+		name: "songId",
+		displayName: "Song ID",
+		properties: ["song"],
+		sortProperty: "song._id",
+		minWidth: 215,
+		defaultWidth: 215
+	},
+	{
+		name: "songYoutubeId",
+		displayName: "Song YouTube ID",
+		properties: ["song"],
+		sortProperty: "song.youtubeId",
+		minWidth: 165,
+		defaultWidth: 165
+	},
+	{
+		name: "resolved",
+		displayName: "Resolved",
+		properties: ["resolved"],
+		sortProperty: "resolved"
+	},
+	{
+		name: "categories",
+		displayName: "Categories",
+		properties: ["issues"],
+		sortable: false
+	},
+	{
+		name: "createdBy",
+		displayName: "Created By",
+		properties: ["createdBy"],
+		sortProperty: "createdBy",
+		defaultWidth: 150
+	},
+	{
+		name: "createdAt",
+		displayName: "Created At",
+		properties: ["createdAt"],
+		sortProperty: "createdAt",
+		defaultWidth: 150
+	}
+]);
+const filters = ref(<TableFilter[]>[
+	{
+		name: "_id",
+		displayName: "Report ID",
+		property: "_id",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact"
+	},
+	{
+		name: "songId",
+		displayName: "Song ID",
+		property: "song._id",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact"
+	},
+	{
+		name: "songYoutubeId",
+		displayName: "Song YouTube ID",
+		property: "song.youtubeId",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "resolved",
+		displayName: "Resolved",
+		property: "resolved",
+		filterTypes: ["boolean"],
+		defaultFilterType: "boolean"
+	},
+	{
+		name: "categories",
+		displayName: "Categories",
+		property: "issues.category",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "createdBy",
+		displayName: "Created By",
+		property: "createdBy",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "createdAt",
+		displayName: "Created At",
+		property: "createdAt",
+		filterTypes: ["datetimeBefore", "datetimeAfter"],
+		defaultFilterType: "datetimeBefore"
+	}
+]);
+const events = ref(<TableEvents>{
+	adminRoom: "reports",
+	updated: {
+		event: "admin.report.updated",
+		id: "report._id",
+		item: "report"
+	},
+	removed: {
+		event: "admin.report.removed",
+		id: "reportId"
+	}
+});
+
+const { openModal } = useModalsStore();
+
+const { resolveReport } = useReports();
+
+const resolve = (reportId, value) =>
+	resolveReport({ reportId, value })
+		.then((res: any) => {
+			if (res.status !== "success") new Toast(res.message);
+		})
+		.catch(err => new Toast(err.message));
+
+const getDateFormatted = createdAt => {
+	const date = new Date(createdAt);
+	const year = date.getFullYear();
+	const month = `${date.getMonth() + 1}`.padStart(2, "0");
+	const day = `${date.getDate()}`.padStart(2, "0");
+	const hour = `${date.getHours()}`.padStart(2, "0");
+	const minute = `${date.getMinutes()}`.padStart(2, "0");
+	return `${year}-${month}-${day} ${hour}:${minute}`;
+};
+</script>
+
 <template>
 	<div class="admin-tab container">
 		<page-metadata title="Admin | Reports" />
@@ -99,182 +270,10 @@
 				<user-link v-else :user-id="slotProps.item.createdBy" />
 			</template>
 			<template #column-createdAt="slotProps">
-				<span :title="new Date(slotProps.item.createdAt)">{{
+				<span :title="new Date(slotProps.item.createdAt).toString()">{{
 					getDateFormatted(slotProps.item.createdAt)
 				}}</span>
 			</template>
 		</advanced-table>
 	</div>
 </template>
-
-<script>
-import { mapActions } from "vuex";
-
-import Toast from "toasters";
-
-import AdvancedTable from "@/components/AdvancedTable.vue";
-
-export default {
-	components: {
-		AdvancedTable
-	},
-	data() {
-		return {
-			columnDefault: {
-				sortable: true,
-				hidable: true,
-				defaultVisibility: "shown",
-				draggable: true,
-				resizable: true,
-				minWidth: 150,
-				maxWidth: 600
-			},
-			columns: [
-				{
-					name: "options",
-					displayName: "Options",
-					properties: ["_id", "resolved"],
-					sortable: false,
-					hidable: false,
-					resizable: false,
-					minWidth: 85,
-					defaultWidth: 85
-				},
-				{
-					name: "_id",
-					displayName: "Report ID",
-					properties: ["_id"],
-					sortProperty: "_id",
-					minWidth: 215,
-					defaultWidth: 215
-				},
-				{
-					name: "songId",
-					displayName: "Song ID",
-					properties: ["song"],
-					sortProperty: "song._id",
-					minWidth: 215,
-					defaultWidth: 215
-				},
-				{
-					name: "songYoutubeId",
-					displayName: "Song YouTube ID",
-					properties: ["song"],
-					sortProperty: "song.youtubeId",
-					minWidth: 165,
-					defaultWidth: 165
-				},
-				{
-					name: "resolved",
-					displayName: "Resolved",
-					properties: ["resolved"],
-					sortProperty: "resolved"
-				},
-				{
-					name: "categories",
-					displayName: "Categories",
-					properties: ["issues"],
-					sortable: false
-				},
-				{
-					name: "createdBy",
-					displayName: "Created By",
-					properties: ["createdBy"],
-					sortProperty: "createdBy",
-					defaultWidth: 150
-				},
-				{
-					name: "createdAt",
-					displayName: "Created At",
-					properties: ["createdAt"],
-					sortProperty: "createdAt",
-					defaultWidth: 150
-				}
-			],
-			filters: [
-				{
-					name: "_id",
-					displayName: "Report ID",
-					property: "_id",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact"
-				},
-				{
-					name: "songId",
-					displayName: "Song ID",
-					property: "song._id",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact"
-				},
-				{
-					name: "songYoutubeId",
-					displayName: "Song YouTube ID",
-					property: "song.youtubeId",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "resolved",
-					displayName: "Resolved",
-					property: "resolved",
-					filterTypes: ["boolean"],
-					defaultFilterType: "boolean"
-				},
-				{
-					name: "categories",
-					displayName: "Categories",
-					property: "issues.category",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "createdBy",
-					displayName: "Created By",
-					property: "createdBy",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "createdAt",
-					displayName: "Created At",
-					property: "createdAt",
-					filterTypes: ["datetimeBefore", "datetimeAfter"],
-					defaultFilterType: "datetimeBefore"
-				}
-			],
-			events: {
-				adminRoom: "reports",
-				updated: {
-					event: "admin.report.updated",
-					id: "report._id",
-					item: "report"
-				},
-				removed: {
-					event: "admin.report.removed",
-					id: "reportId"
-				}
-			}
-		};
-	},
-	methods: {
-		resolve(reportId, value) {
-			return this.resolveReport({ reportId, value })
-				.then(res => {
-					if (res.status !== "success") new Toast(res.message);
-				})
-				.catch(err => new Toast(err.message));
-		},
-		getDateFormatted(createdAt) {
-			const date = new Date(createdAt);
-			const year = date.getFullYear();
-			const month = `${date.getMonth() + 1}`.padStart(2, 0);
-			const day = `${date.getDate()}`.padStart(2, 0);
-			const hour = `${date.getHours()}`.padStart(2, 0);
-			const minute = `${date.getMinutes()}`.padStart(2, 0);
-			return `${year}-${month}-${day} ${hour}:${minute}`;
-		},
-		...mapActions("modalVisibility", ["openModal", "closeModal"]),
-		...mapActions("admin/reports", ["resolveReport"])
-	}
-};
-</script>

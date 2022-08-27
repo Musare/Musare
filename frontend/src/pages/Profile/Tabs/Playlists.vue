@@ -1,34 +1,58 @@
+<script setup lang="ts">
+import { defineAsyncComponent, onMounted } from "vue";
+import { useSortablePlaylists } from "@/composables/useSortablePlaylists";
+import { useModalsStore } from "@/stores/modals";
+
+const PlaylistItem = defineAsyncComponent(
+	() => import("@/components/PlaylistItem.vue")
+);
+
+const props = defineProps({
+	userId: { type: String, default: "" },
+	username: { type: String, default: "" }
+});
+
+const {
+	DraggableList,
+	drag,
+	userId,
+	isCurrentUser,
+	playlists,
+	savePlaylistOrder
+} = useSortablePlaylists();
+
+const { openModal } = useModalsStore();
+
+onMounted(() => {
+	userId.value = props.userId;
+});
+</script>
+
 <template>
 	<div class="content playlists-tab">
 		<div v-if="playlists.length > 0">
 			<h4 class="section-title">
-				{{ myUserId === userId ? "My" : null }}
+				{{ isCurrentUser ? "My" : null }}
 				Playlists
 			</h4>
 
 			<p class="section-description">
 				View
 				{{
-					userId === myUserId
-						? "and manage your personal"
-						: `${username}'s`
+					isCurrentUser ? "and manage your personal" : `${username}'s`
 				}}
 				playlists
 			</p>
 
 			<hr class="section-horizontal-rule" />
 
-			<draggable
-				:component-data="{
-					name: !drag ? 'draggable-list-transition' : null
-				}"
+			<draggable-list
 				v-if="playlists.length > 0"
-				v-model="playlists"
+				v-model:list="playlists"
 				item-key="_id"
-				v-bind="dragOptions"
 				@start="drag = true"
 				@end="drag = false"
-				@change="savePlaylistOrder"
+				@update="savePlaylistOrder"
 			>
 				<template #item="{ element }">
 					<playlist-item
@@ -38,14 +62,10 @@
 								element.createdBy === userId)
 						"
 						:playlist="element"
-						:class="{
-							item: true,
-							'item-draggable': myUserId === userId
-						}"
 					>
 						<template #actions>
 							<i
-								v-if="myUserId === userId"
+								v-if="isCurrentUser"
 								@click="
 									openModal({
 										modal: 'editPlaylist',
@@ -73,10 +93,10 @@
 						</template>
 					</playlist-item>
 				</template>
-			</draggable>
+			</draggable-list>
 
 			<button
-				v-if="myUserId === userId"
+				v-if="isCurrentUser"
 				class="button is-primary"
 				id="create-new-playlist-button"
 				@click="openModal('createPlaylist')"
@@ -89,69 +109,3 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapActions, mapGetters } from "vuex";
-
-import PlaylistItem from "@/components/PlaylistItem.vue";
-import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
-import ws from "@/ws";
-
-export default {
-	components: {
-		PlaylistItem
-	},
-	mixins: [SortablePlaylists],
-	props: {
-		userId: {
-			type: String,
-			default: ""
-		},
-		username: {
-			type: String,
-			default: ""
-		}
-	},
-	computed: {
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	mounted() {
-		if (
-			this.$route.query.tab === "recent-activity" ||
-			this.$route.query.tab === "playlists"
-		)
-			this.tab = this.$route.query.tab;
-
-		if (this.myUserId !== this.userId) {
-			ws.onConnect(() =>
-				this.socket.dispatch(
-					"apis.joinRoom",
-					`profile.${this.userId}.playlists`,
-					() => {}
-				)
-			);
-		}
-
-		ws.onConnect(() =>
-			this.socket.dispatch("playlists.indexForUser", this.userId, res => {
-				if (res.status === "success")
-					this.setPlaylists(res.data.playlists);
-				this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
-			})
-		);
-	},
-	beforeUnmount() {
-		this.socket.dispatch(
-			"apis.leaveRoom",
-			`profile.${this.userId}.playlists`,
-			() => {}
-		);
-	},
-	methods: {
-		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions("user/playlists", ["setPlaylists"])
-	}
-};
-</script>

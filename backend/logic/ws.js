@@ -561,9 +561,11 @@ class _WSModule extends CoreClass {
 					`A user tried to connect, but is currently banned. IP: ${socket.ip}.${sessionInfo}`
 				);
 
-				socket.dispatch("keep.event:banned", { data: { ban: socket.banishment.ban } });
+				socket.dispatch("keep.event:user.banned", { data: { ban: socket.banishment.ban } });
 
 				socket.close(); // close socket connection
+
+				resolve();
 
 				return;
 			}

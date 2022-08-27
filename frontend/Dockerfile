@@ -1,13 +1,4 @@
-FROM node:16.15 AS musare_frontend
-
-ARG FRONTEND_MODE=prod
-ENV FRONTEND_MODE=${FRONTEND_MODE}
-ENV SUPPRESS_NO_CONFIG_WARNING=1
-
-RUN apt-get update
-RUN apt-get install nginx -y
-
-RUN npm install -g webpack@5.73.0 webpack-cli@4.9.2
+FROM node:16.15 AS frontend_node_modules
 
 RUN mkdir -p /opt/app
 WORKDIR /opt/app
@@ -15,17 +6,30 @@ WORKDIR /opt/app
 COPY package.json /opt/app/package.json
 COPY package-lock.json /opt/app/package-lock.json
 
-RUN npm install
+RUN npm install --silent
+
+FROM node:16.15 AS musare_frontend
+
+ARG FRONTEND_MODE=prod
+ENV FRONTEND_MODE=${FRONTEND_MODE}
+ENV SUPPRESS_NO_CONFIG_WARNING=1
+ENV NODE_CONFIG_DIR=./dist/config
+
+RUN apt-get update
+RUN apt-get install nginx -y
+
+RUN mkdir -p /opt/app
+WORKDIR /opt/app
 
 COPY . /opt/app
+COPY --from=frontend_node_modules /opt/app/node_modules node_modules
 
 RUN mkdir -p /run/nginx
 
-RUN bash -c '[[ "${FRONTEND_MODE}" = "prod" ]] && npm run prod' || exit 0
+RUN bash -c '([[ "${FRONTEND_MODE}" == "dev" ]] && exit 0) || npm run prod'
 
 RUN chmod u+x entrypoint.sh
 
 ENTRYPOINT bash /opt/app/entrypoint.sh
 
 EXPOSE 80/tcp
-EXPOSE 80/udp

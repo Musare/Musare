@@ -1,15 +1,21 @@
 # Utility Script
-The utility script is a tool that allows for the simple management of a Musare Docker instance.
 
-Please follow the [Docker Installation Guide](./Installation.md#Docker) before using this script.
+The utility script is a tool that allows for the simple management of a Musare
+Docker instance.
+
+Please follow the [Docker Installation Guide](./Installation.md#Docker) before
+using this script.
 
 ## Usage
+
 Linux (Bash):
+
 ```bash
 ./musare.sh command [parameters]
 ```
 
 ## Commands
+
 | Command | Parameters | Description |
 | --- | --- | --- |
 | `start` | `[frontend backend redis mongo]` | Start service(s). |
@@ -20,11 +26,16 @@ Linux (Bash):
 | `update` | `[auto]` | Update Musare. When auto is specified the update will be cancelled if there are any changes requiring manual intervention, allowing you to run this unattended. |
 | `attach` | `<backend,mongo,redis>` | Attach to backend server, mongodb or redis shell. |
 | `build` | `[frontend backend]` | Build service(s). |
-| `eslint` | `[frontend backend] [fix]` | Run eslint on frontend and/or backend. Specify fix to auto fix issues where possible. |
+| `lint` | `[frontend backend docs] [fix]` | Run lint on frontend, backend and/or docs. Specify fix to auto fix issues where possible. |
 | `backup` | | Backup database data to file. Configured in .env file. |
 | `restore` | `[file]` | Restore database from file. If file is not specified you will be prompted. |
 | `reset` | `[frontend backend redis mongo]` | Reset all data for service(s). |
 | `admin` | `<add,remove> [username]` | Assign/unassign admin role to/from user. If the username is not specified you will be prompted. |
+| `typescript` | `[frontend backend]` | Run TypeScript checks on frontend and/or backend. |
 
 ### Services
-There are currently 4 services; frontend, backend, redis and mongo. Where services is a parameter you can specify any of these, or multiple seperated by spaces, for example `./musare.sh restart frontend backend` to restart the frontend and backend. If no services are specified all will be selected.
+
+There are currently 4 services; frontend, backend, redis and mongo. Where
+services is a parameter you can specify any of these, or multiple seperated by
+spaces, for example `./musare.sh restart frontend backend` to restart the
+frontend and backend. If no services are specified all will be selected.

@@ -6,15 +6,18 @@
 	},
 	"parserOptions": {
 		"ecmaVersion": 2021,
-		"sourceType": "module"
+		"sourceType": "module",
+		"parser": "@typescript-eslint/parser"
 	},
 	"extends": [
 		"eslint:recommended",
 		"airbnb-base",
 		"prettier",
-		"plugin:jsdoc/recommended"
+		"plugin:jsdoc/recommended",
+		"plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended"
     ],
-    "plugins": [ "prettier", "jsdoc" ],
+    "plugins": [ "prettier", "jsdoc", "@typescript-eslint" ],
 	"rules": {
 		"no-console": 0,
 		"no-control-regex": 0,
@@ -40,6 +43,8 @@
 				"ArrowFunctionExpression": false,
 				"FunctionExpression": false
 			}
-		}]
+		}],
+		"@typescript-eslint/no-empty-function": 0,
+		"@typescript-eslint/no-this-alias": 0
     }
 }

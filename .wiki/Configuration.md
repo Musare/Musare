@@ -1,6 +1,7 @@
 # Configuration
 
 ## Backend
+
 Location: `backend/config/default.json`
 
 | Property | Description |
@@ -23,6 +24,7 @@ Location: `backend/config/default.json`
 | `apis.youtube.quotas.limit` | YouTube API quota limit. |
 | `apis.recaptcha.secret` | ReCaptcha Site v3 secret, obtained from [here](https://www.google.com/recaptcha/admin). |
 | `apis.recaptcha.enabled` | Whether to enable ReCaptcha at email registration. |
+| `apis.github.enabled` | Whether to enable GitHub authentication. |
 | `apis.github.client` | GitHub OAuth Application client, obtained from [here](https://github.com/settings/developers). |
 | `apis.github.secret` | GitHub OAuth Application secret, obtained with client. |
 | `apis.github.redirect_uri` | The authorization callback url is the backend url with `/auth/github/authorize/callback` appended, for example `http://localhost/backend/auth/github/authorize/callback`. |
@@ -43,11 +45,11 @@ Location: `backend/config/default.json`
 | `cookie.domain` | The ip or address you use to access the site, without protocols (http/https), so for example `localhost`. |
 | `cookie.secure` | Should be `true` for SSL connections, and `false` for normal http connections. |
 | `cookie.SIDname` | Name of the cookie stored for sessions. |
-| `blacklistedCommunityStationNames ` | Array of blacklisted community station names. |
-| `featuredPlaylists ` | Array of featured playlist id's. Playlist privacy must be public. |
+| `blacklistedCommunityStationNames` | Array of blacklisted community station names. |
+| `featuredPlaylists` | Array of featured playlist id's. Playlist privacy must be public. |
 | `skipConfigVersionCheck` | Skips checking if the config version is outdated or not. Should almost always be set to false. |
 | `skipDbDocumentsVersionCheck` | Skips checking if there are any DB documents outdated or not. Should almost always be set to false. |
-| `debug.stationIssue` | If set to `true` it will enable the `/debug_station` API endpoint on the backend, which provides information useful to debugging stations not skipping, as well as capure all jobs specified in `debug.captureJobs`. 
+| `debug.stationIssue` | If set to `true` it will enable the `/debug_station` API endpoint on the backend, which provides information useful to debugging stations not skipping, as well as capure all jobs specified in `debug.captureJobs`.
 | `debug.traceUnhandledPromises` | Enables the trace-unhandled package, which provides detailed information when a promise is unhandled. |
 | `debug.captureJobs` | Array of jobs to capture for `debug.stationIssue`. |
 | `defaultLogging.hideType` | Filters out specified message types from log, for example `INFO`, `SUCCESS`, `ERROR` and `STATION_ISSUE`. |
@@ -57,6 +59,7 @@ Location: `backend/config/default.json`
 | `configVersion` | Version of the config. Every time the template changes, you should change your config accordingly and update the configVersion. |
 
 ## Frontend
+
 Location: `frontend/dist/config/default.json`
 
 | Property | Description |
@@ -64,8 +67,8 @@ Location: `frontend/dist/config/default.json`
 | `mode` | Should be either `development` or `production`. |
 | `backend.apiDomain` | Should be the url where the backend will be accessible from, usually `http://localhost/backend` for docker or `http://localhost:8080` for non-Docker. |
 | `backend.websocketsDomain` | Should be the same as the `apiDomain`, except using the `ws://` protocol instead of `http://` and with `/ws` at the end. |
-| `devServer.webSocketURL` | Should be the webpack-dev-server websocket URL, usually `ws://localhost/ws`. |
-| `devServer.port` | Should be the port where webpack-dev-server will be accessible from, should always be port `81` for Docker since nginx listens on port 80, and is recommended to be port `80` for non-Docker. |
+| `devServer.hmrClientPort` | Should be the port on which the frontend will be accessible from, usually port `80`, or `443` if using SSL. Only used when running in dev mode. |
+| `devServer.port` | Should be the port where Vite's dev server will be accessible from, should always be port `81` for Docker since nginx listens on port 80, and is recommended to be port `80` for non-Docker. Only used when running in dev mode. |
 | `frontendDomain` | Should be the url where the frontend will be accessible from, usually `http://localhost` for docker or `http://localhost:80` for non-Docker. |
 | `recaptcha.key` | ReCaptcha Site v3 key, obtained from [here](https://www.google.com/recaptcha/admin). |
 | `recaptcha.enabled` | Whether to enable ReCaptcha at email registration. |
@@ -94,11 +97,19 @@ Location: `frontend/dist/config/default.json`
 [^1]: Requires a frontend restart to update. The data will be available from the frontend console and by the frontend code.
 
 ## Docker Environment
+
 Location: `.env`
 
-In the table below the container host refers to the IP address that the docker container listens on, setting this to `127.0.0.1` for example will only expose the configured port to localhost, whereas setting to `0.0.0.0` will expose the port on all interfaces.
+In the table below the container host refers to the IP address that the docker
+container listens on, setting this to `127.0.0.1` for example will only expose
+the configured port to localhost, whereas setting to `0.0.0.0` will expose the
+port on all interfaces.
 
-The container port refers to the external docker container port, used to access services within the container. Changing this does not require any changes to configuration within container. For example setting the `MONGO_PORT` to `21018` will allow you to access the mongo service through that port, even though the application within the container is listening on `21017`.
+The container port refers to the external docker container port, used to access
+services within the container. Changing this does not require any changes to
+configuration within container. For example setting the `MONGO_PORT` to `21018`
+will allow you to access the mongo service through that port, even though the
+application within the container is listening on `21017`.
 
 | Property | Description |
 | --- | --- |
@@ -126,9 +137,14 @@ The container port refers to the external docker container port, used to access 
 | `BACKUP_NAME` | Name of musare.sh backup files. Defaults to `musare-$(date +"%Y-%m-%d-%s").dump`. |
 
 ## Docker-compose override
-You may want to override the docker-compose files in some specific cases. For this, you can create a `docker-compose.override.yml` file.  
+
+You may want to override the docker-compose files in some specific cases.
+For this, you can create a `docker-compose.override.yml` file.
+
 ### Run backend on its own domain
-One example usecase for the override is to expose the backend port so you can run it separately from the frontend. An example file for this is as follows:
+
+One example usecase for the override is to expose the backend port so you can
+run it separately from the frontend. An example file for this is as follows:
 
 ```yml
 services:

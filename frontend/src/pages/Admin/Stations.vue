@@ -1,3 +1,319 @@
+<script setup lang="ts">
+import { defineAsyncComponent, ref } from "vue";
+import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
+import { useModalsStore } from "@/stores/modals";
+import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
+
+const AdvancedTable = defineAsyncComponent(
+	() => import("@/components/AdvancedTable.vue")
+);
+const RunJobDropdown = defineAsyncComponent(
+	() => import("@/components/RunJobDropdown.vue")
+);
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
+);
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
+
+const { socket } = useWebsocketsStore();
+
+const columnDefault = ref(<TableColumn>{
+	sortable: true,
+	hidable: true,
+	defaultVisibility: "shown",
+	draggable: true,
+	resizable: true,
+	minWidth: 150,
+	maxWidth: 600
+});
+const columns = ref(<TableColumn[]>[
+	{
+		name: "options",
+		displayName: "Options",
+		properties: ["_id", "name"],
+		sortable: false,
+		hidable: false,
+		resizable: false,
+		minWidth: 129,
+		defaultWidth: 129
+	},
+	{
+		name: "_id",
+		displayName: "Station ID",
+		properties: ["_id"],
+		sortProperty: "_id",
+		minWidth: 230,
+		defaultWidth: 230
+	},
+	{
+		name: "name",
+		displayName: "Name",
+		properties: ["name"],
+		sortProperty: "name"
+	},
+	{
+		name: "displayName",
+		displayName: "Display Name",
+		properties: ["displayName"],
+		sortProperty: "displayName"
+	},
+	{
+		name: "description",
+		displayName: "Description",
+		properties: ["description"],
+		sortProperty: "description",
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "type",
+		displayName: "Type",
+		properties: ["type"],
+		sortProperty: "type"
+	},
+	{
+		name: "privacy",
+		displayName: "Privacy",
+		properties: ["privacy"],
+		sortProperty: "privacy"
+	},
+	{
+		name: "owner",
+		displayName: "Owner",
+		properties: ["owner", "type"],
+		sortProperty: "owner",
+		defaultWidth: 150
+	},
+	{
+		name: "theme",
+		displayName: "Theme",
+		properties: ["theme"],
+		sortProperty: "theme",
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "requestsEnabled",
+		displayName: "Requests Enabled",
+		properties: ["requests.enabled"],
+		sortProperty: "requests.enabled",
+		minWidth: 180,
+		defaultWidth: 180,
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "requestsAccess",
+		displayName: "Requests Access",
+		properties: ["requests.access"],
+		sortProperty: "requests.access",
+		minWidth: 180,
+		defaultWidth: 180,
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "requestsLimit",
+		displayName: "Requests Limit",
+		properties: ["requests.limit"],
+		sortProperty: "requests.limit",
+		minWidth: 180,
+		defaultWidth: 180,
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "autofillEnabled",
+		displayName: "Autofill Enabled",
+		properties: ["autofill.enabled"],
+		sortProperty: "autofill.enabled",
+		minWidth: 180,
+		defaultWidth: 180,
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "autofillLimit",
+		displayName: "Autofill Limit",
+		properties: ["autofill.limit"],
+		sortProperty: "autofill.limit",
+		minWidth: 180,
+		defaultWidth: 180,
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "autofillMode",
+		displayName: "Autofill Mode",
+		properties: ["autofill.mode"],
+		sortProperty: "autofill.mode",
+		minWidth: 180,
+		defaultWidth: 180,
+		defaultVisibility: "hidden"
+	}
+]);
+const filters = ref(<TableFilter[]>[
+	{
+		name: "_id",
+		displayName: "Station ID",
+		property: "_id",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact"
+	},
+	{
+		name: "name",
+		displayName: "Name",
+		property: "name",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "displayName",
+		displayName: "Display Name",
+		property: "displayName",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "description",
+		displayName: "Description",
+		property: "description",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "type",
+		displayName: "Type",
+		property: "type",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact",
+		dropdown: [
+			["official", "Official"],
+			["community", "Community"]
+		]
+	},
+	{
+		name: "privacy",
+		displayName: "Privacy",
+		property: "privacy",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact",
+		dropdown: [
+			["public", "Public"],
+			["unlisted", "Unlisted"],
+			["private", "Private"]
+		]
+	},
+	{
+		name: "owner",
+		displayName: "Owner",
+		property: "owner",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "theme",
+		displayName: "Theme",
+		property: "theme",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact",
+		dropdown: [
+			["blue", "Blue"],
+			["purple", "Purple"],
+			["teal", "Teal"],
+			["orange", "Orange"],
+			["red", "Red"]
+		]
+	},
+	{
+		name: "requestsEnabled",
+		displayName: "Requests Enabled",
+		property: "requests.enabled",
+		filterTypes: ["boolean"],
+		defaultFilterType: "boolean"
+	},
+	{
+		name: "requestsAccess",
+		displayName: "Requests Access",
+		property: "requests.access",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact",
+		dropdown: [
+			["owner", "Owner"],
+			["user", "User"]
+		]
+	},
+	{
+		name: "requestsLimit",
+		displayName: "Requests Limit",
+		property: "requests.limit",
+		filterTypes: [
+			"numberLesserEqual",
+			"numberLesser",
+			"numberGreater",
+			"numberGreaterEqual",
+			"numberEquals"
+		],
+		defaultFilterType: "numberLesser"
+	},
+	{
+		name: "autofillEnabled",
+		displayName: "Autofill Enabled",
+		property: "autofill.enabled",
+		filterTypes: ["boolean"],
+		defaultFilterType: "boolean"
+	},
+	{
+		name: "autofillLimit",
+		displayName: "Autofill Limit",
+		property: "autofill.limit",
+		filterTypes: [
+			"numberLesserEqual",
+			"numberLesser",
+			"numberGreater",
+			"numberGreaterEqual",
+			"numberEquals"
+		],
+		defaultFilterType: "numberLesser"
+	},
+	{
+		name: "autofillMode",
+		displayName: "Autofill Mode",
+		property: "autofill.mode",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact",
+		dropdown: [
+			["random", "Random"],
+			["sequential", "Sequential"]
+		]
+	}
+]);
+const events = ref(<TableEvents>{
+	adminRoom: "stations",
+	updated: {
+		event: "station.updated",
+		id: "station._id",
+		item: "station"
+	},
+	removed: {
+		event: "admin.station.deleted",
+		id: "stationId"
+	}
+});
+const jobs = ref([
+	{
+		name: "Clear every station queue",
+		socket: "stations.clearEveryStationQueue"
+	}
+]);
+
+const { openModal } = useModalsStore();
+
+const remove = stationId => {
+	socket.dispatch(
+		"stations.remove",
+		stationId,
+		res => new Toast(res.message)
+	);
+};
+</script>
+
 <template>
 	<div class="admin-tab">
 		<page-metadata title="Admin | Stations" />
@@ -144,321 +460,3 @@
 		</advanced-table>
 	</div>
 </template>
-
-<script>
-import { mapActions, mapGetters } from "vuex";
-
-import Toast from "toasters";
-
-import AdvancedTable from "@/components/AdvancedTable.vue";
-import RunJobDropdown from "@/components/RunJobDropdown.vue";
-
-export default {
-	components: {
-		AdvancedTable,
-		RunJobDropdown
-	},
-	data() {
-		return {
-			editingStationId: "",
-			columnDefault: {
-				sortable: true,
-				hidable: true,
-				defaultVisibility: "shown",
-				draggable: true,
-				resizable: true,
-				minWidth: 150,
-				maxWidth: 600
-			},
-			columns: [
-				{
-					name: "options",
-					displayName: "Options",
-					properties: ["_id", "name"],
-					sortable: false,
-					hidable: false,
-					resizable: false,
-					minWidth: 129,
-					defaultWidth: 129
-				},
-				{
-					name: "_id",
-					displayName: "Station ID",
-					properties: ["_id"],
-					sortProperty: "_id",
-					minWidth: 230,
-					defaultWidth: 230
-				},
-				{
-					name: "name",
-					displayName: "Name",
-					properties: ["name"],
-					sortProperty: "name"
-				},
-				{
-					name: "displayName",
-					displayName: "Display Name",
-					properties: ["displayName"],
-					sortProperty: "displayName"
-				},
-				{
-					name: "description",
-					displayName: "Description",
-					properties: ["description"],
-					sortProperty: "description",
-					defaultVisibility: "hidden"
-				},
-				{
-					name: "type",
-					displayName: "Type",
-					properties: ["type"],
-					sortProperty: "type"
-				},
-				{
-					name: "privacy",
-					displayName: "Privacy",
-					properties: ["privacy"],
-					sortProperty: "privacy"
-				},
-				{
-					name: "owner",
-					displayName: "Owner",
-					properties: ["owner", "type"],
-					sortProperty: "owner",
-					defaultWidth: 150
-				},
-				{
-					name: "theme",
-					displayName: "Theme",
-					properties: ["theme"],
-					sortProperty: "theme",
-					defaultVisibility: "hidden"
-				},
-				{
-					name: "requestsEnabled",
-					displayName: "Requests Enabled",
-					properties: ["requests.enabled"],
-					sortProperty: "requests.enabled",
-					minWidth: 180,
-					defaultWidth: 180,
-					defaultVisibility: "hidden"
-				},
-				{
-					name: "requestsAccess",
-					displayName: "Requests Access",
-					properties: ["requests.access"],
-					sortProperty: "requests.access",
-					minWidth: 180,
-					defaultWidth: 180,
-					defaultVisibility: "hidden"
-				},
-				{
-					name: "requestsLimit",
-					displayName: "Requests Limit",
-					properties: ["requests.limit"],
-					sortProperty: "requests.limit",
-					minWidth: 180,
-					defaultWidth: 180,
-					defaultVisibility: "hidden"
-				},
-				{
-					name: "autofillEnabled",
-					displayName: "Autofill Enabled",
-					properties: ["autofill.enabled"],
-					sortProperty: "autofill.enabled",
-					minWidth: 180,
-					defaultWidth: 180,
-					defaultVisibility: "hidden"
-				},
-				{
-					name: "autofillLimit",
-					displayName: "Autofill Limit",
-					properties: ["autofill.limit"],
-					sortProperty: "autofill.limit",
-					minWidth: 180,
-					defaultWidth: 180,
-					defaultVisibility: "hidden"
-				},
-				{
-					name: "autofillMode",
-					displayName: "Autofill Mode",
-					properties: ["autofill.mode"],
-					sortProperty: "autofill.mode",
-					minWidth: 180,
-					defaultWidth: 180,
-					defaultVisibility: "hidden"
-				}
-			],
-			filters: [
-				{
-					name: "_id",
-					displayName: "Station ID",
-					property: "_id",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact"
-				},
-				{
-					name: "name",
-					displayName: "Name",
-					property: "name",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "displayName",
-					displayName: "Display Name",
-					property: "displayName",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "description",
-					displayName: "Description",
-					property: "description",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "type",
-					displayName: "Type",
-					property: "type",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact",
-					dropdown: [
-						["official", "Official"],
-						["community", "Community"]
-					]
-				},
-				{
-					name: "privacy",
-					displayName: "Privacy",
-					property: "privacy",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact",
-					dropdown: [
-						["public", "Public"],
-						["unlisted", "Unlisted"],
-						["private", "Private"]
-					]
-				},
-				{
-					name: "owner",
-					displayName: "Owner",
-					property: "owner",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "theme",
-					displayName: "Theme",
-					property: "theme",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact",
-					dropdown: [
-						["blue", "Blue"],
-						["purple", "Purple"],
-						["teal", "Teal"],
-						["orange", "Orange"],
-						["red", "Red"]
-					]
-				},
-				{
-					name: "requestsEnabled",
-					displayName: "Requests Enabled",
-					property: "requests.enabled",
-					filterTypes: ["boolean"],
-					defaultFilterType: "boolean"
-				},
-				{
-					name: "requestsAccess",
-					displayName: "Requests Access",
-					property: "requests.access",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact",
-					dropdown: [
-						["owner", "Owner"],
-						["user", "User"]
-					]
-				},
-				{
-					name: "requestsLimit",
-					displayName: "Requests Limit",
-					property: "requests.limit",
-					filterTypes: [
-						"numberLesserEqual",
-						"numberLesser",
-						"numberGreater",
-						"numberGreaterEqual",
-						"numberEquals"
-					],
-					defaultFilterType: "numberLesser"
-				},
-				{
-					name: "autofillEnabled",
-					displayName: "Autofill Enabled",
-					property: "autofill.enabled",
-					filterTypes: ["boolean"],
-					defaultFilterType: "boolean"
-				},
-				{
-					name: "autofillLimit",
-					displayName: "Autofill Limit",
-					property: "autofill.limit",
-					filterTypes: [
-						"numberLesserEqual",
-						"numberLesser",
-						"numberGreater",
-						"numberGreaterEqual",
-						"numberEquals"
-					],
-					defaultFilterType: "numberLesser"
-				},
-				{
-					name: "autofillMode",
-					displayName: "Autofill Mode",
-					property: "autofill.mode",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact",
-					dropdown: [
-						["random", "Random"],
-						["sequential", "Sequential"]
-					]
-				}
-			],
-			events: {
-				adminRoom: "stations",
-				updated: {
-					event: "station.updated",
-					id: "station._id",
-					item: "station"
-				},
-				removed: {
-					event: "admin.station.deleted",
-					id: "stationId"
-				}
-			},
-			jobs: [
-				{
-					name: "Clear every station queue",
-					socket: "stations.clearEveryStationQueue"
-				}
-			]
-		};
-	},
-	computed: {
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	methods: {
-		remove(stationId) {
-			this.socket.dispatch(
-				"stations.remove",
-				stationId,
-				res => new Toast(res.message)
-			);
-		},
-		...mapActions("modalVisibility", ["openModal"])
-	}
-};
-</script>

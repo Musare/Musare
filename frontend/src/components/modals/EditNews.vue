@@ -1,3 +1,151 @@
+<script setup lang="ts">
+import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
+import { marked } from "marked";
+import DOMPurify from "dompurify";
+import Toast from "toasters";
+import { formatDistance } from "date-fns";
+import { storeToRefs } from "pinia";
+import { useWebsocketsStore } from "@/stores/websockets";
+import { useEditNewsStore } from "@/stores/editNews";
+import { useModalsStore } from "@/stores/modals";
+import ws from "@/ws";
+
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
+const SaveButton = defineAsyncComponent(
+	() => import("@/components/SaveButton.vue")
+);
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" }
+});
+
+const { socket } = useWebsocketsStore();
+
+const editNewsStore = useEditNewsStore(props);
+const { createNews, newsId } = storeToRefs(editNewsStore);
+
+const { closeCurrentModal } = useModalsStore();
+
+const markdown = ref(
+	"# Header\n## Sub-Header\n- **So**\n- _Many_\n- ~Points~\n\nOther things you want to say and [link](https://example.com).\n\n### Sub-Sub-Header\n> Oh look, a quote!\n\n`lil code`\n\n```\nbig code\n```\n"
+);
+const status = ref("published");
+const showToNewUsers = ref(false);
+const createdBy = ref();
+const createdAt = ref(0);
+
+const init = () => {
+	if (newsId && !createNews.value) {
+		socket.dispatch(`news.getNewsFromId`, newsId.value, res => {
+			if (res.status === "success") {
+				markdown.value = res.data.news.markdown;
+				status.value = res.data.news.status;
+				showToNewUsers.value = res.data.news.showToNewUsers;
+				createdBy.value = res.data.news.createdBy;
+				createdAt.value = res.data.news.createdAt;
+			} else {
+				new Toast("News with that ID not found.");
+				closeCurrentModal();
+			}
+		});
+	}
+};
+
+const getTitle = () => {
+	let title = "";
+	const preview = document.getElementById("preview");
+
+	// validate existence of h1 for the page title
+
+	if (preview.childNodes.length === 0) return "";
+
+	if (preview.childNodes[0].nodeName !== "H1") {
+		for (let node = 0; node < preview.childNodes.length; node += 1) {
+			if (preview.childNodes[node].nodeName) {
+				if (preview.childNodes[node].nodeName === "H1")
+					title = preview.childNodes[node].textContent;
+
+				break;
+			}
+		}
+	} else title = preview.childNodes[0].textContent;
+
+	return title;
+};
+
+const create = close => {
+	if (markdown.value === "") return new Toast("News item cannot be empty.");
+
+	const title = getTitle();
+	if (!title)
+		return new Toast(
+			"Please provide a title (heading level 1) at the top of the document."
+		);
+
+	return socket.dispatch(
+		"news.create",
+		{
+			title,
+			markdown: markdown.value,
+			status: status.value,
+			showToNewUsers: showToNewUsers.value
+		},
+		res => {
+			new Toast(res.message);
+			if (res.status === "success" && close) closeCurrentModal();
+		}
+	);
+};
+
+const update = close => {
+	if (markdown.value === "") return new Toast("News item cannot be empty.");
+
+	const title = getTitle();
+	if (!title)
+		return new Toast(
+			"Please provide a title (heading level 1) at the top of the document."
+		);
+
+	return socket.dispatch(
+		"news.update",
+		newsId.value,
+		{
+			title,
+			markdown: markdown.value,
+			status: status.value,
+			showToNewUsers: showToNewUsers.value
+		},
+		res => {
+			new Toast(res.message);
+			if (res.status === "success" && close) closeCurrentModal();
+		}
+	);
+};
+
+onBeforeUnmount(() => {
+	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
+	editNewsStore.$dispose();
+});
+
+onMounted(() => {
+	marked.use({
+		renderer: {
+			table(header, body) {
+				return `<table class="table">
+				<thead>${header}</thead>
+				<tbody>${body}</tbody>
+				</table>`;
+			}
+		}
+	});
+
+	ws.onConnect(init);
+});
+</script>
+
 <template>
 	<modal
 		class="edit-news-modal"
@@ -15,7 +163,7 @@
 				<div
 					class="news-item"
 					id="preview"
-					v-html="sanitize(marked(markdown))"
+					v-html="DOMPurify.sanitize(marked(markdown))"
 				></div>
 			</div>
 		</template>
@@ -61,7 +209,7 @@
 							:user-id="createdBy"
 							:alt="createdBy"
 						/> </span
-					>&nbsp;<span :title="new Date(createdAt)">
+					>&nbsp;<span :title="new Date(createdAt).toString()">
 						{{
 							formatDistance(createdAt, new Date(), {
 								addSuffix: true
@@ -73,167 +221,6 @@
 		</template>
 	</modal>
 </template>
-
-<script>
-import { mapActions, mapGetters } from "vuex";
-import { marked } from "marked";
-import { sanitize } from "dompurify";
-import Toast from "toasters";
-import { formatDistance } from "date-fns";
-
-import ws from "@/ws";
-import SaveButton from "../SaveButton.vue";
-
-import { mapModalState } from "@/vuex_helpers";
-
-export default {
-	components: { SaveButton },
-	props: {
-		modalUuid: { type: String, default: "" }
-	},
-	data() {
-		return {
-			markdown:
-				"# Header\n## Sub-Header\n- **So**\n- _Many_\n- ~Points~\n\nOther things you want to say and [link](https://example.com).\n\n### Sub-Sub-Header\n> Oh look, a quote!\n\n`lil code`\n\n```\nbig code\n```\n",
-			status: "published",
-			showToNewUsers: false,
-			createdBy: null,
-			createdAt: 0
-		};
-	},
-	computed: {
-		...mapModalState("modals/editNews/MODAL_UUID", {
-			createNews: state => state.createNews,
-			newsId: state => state.newsId,
-			sector: state => state.sector
-		}),
-		...mapGetters({ socket: "websockets/getSocket" })
-	},
-	mounted() {
-		marked.use({
-			renderer: {
-				table(header, body) {
-					return `<table class="table">
-					<thead>${header}</thead>
-					<tbody>${body}</tbody>
-					</table>`;
-				}
-			}
-		});
-
-		ws.onConnect(this.init);
-	},
-	beforeUnmount() {
-		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-		this.$store.unregisterModule(["modals", "editNews", this.modalUuid]);
-	},
-	methods: {
-		init() {
-			if (this.newsId && !this.createNews) {
-				this.socket.dispatch(`news.getNewsFromId`, this.newsId, res => {
-					if (res.status === "success") {
-						const {
-							markdown,
-							status,
-							showToNewUsers,
-							createdBy,
-							createdAt
-						} = res.data.news;
-						this.markdown = markdown;
-						this.status = status;
-						this.showToNewUsers = showToNewUsers;
-						this.createdBy = createdBy;
-						this.createdAt = createdAt;
-					} else {
-						new Toast("News with that ID not found.");
-						this.closeModal("editNews");
-					}
-				});
-			}
-		},
-		marked,
-		sanitize,
-		getTitle() {
-			let title = "";
-			const preview = document.getElementById("preview");
-
-			// validate existence of h1 for the page title
-
-			if (preview.childNodes.length === 0) return "";
-
-			if (preview.childNodes[0].tagName !== "H1") {
-				for (
-					let node = 0;
-					node < preview.childNodes.length;
-					node += 1
-				) {
-					if (preview.childNodes[node].tagName) {
-						if (preview.childNodes[node].tagName === "H1")
-							title = preview.childNodes[node].innerText;
-
-						break;
-					}
-				}
-			} else title = preview.childNodes[0].innerText;
-
-			return title;
-		},
-		create(close) {
-			if (this.markdown === "")
-				return new Toast("News item cannot be empty.");
-
-			const title = this.getTitle();
-			if (!title)
-				return new Toast(
-					"Please provide a title (heading level 1) at the top of the document."
-				);
-
-			return this.socket.dispatch(
-				"news.create",
-				{
-					title,
-					markdown: this.markdown,
-					status: this.status,
-					showToNewUsers: this.showToNewUsers
-				},
-				res => {
-					new Toast(res.message);
-					if (res.status === "success" && close)
-						this.closeModal("editNews");
-				}
-			);
-		},
-		update(close) {
-			if (this.markdown === "")
-				return new Toast("News item cannot be empty.");
-
-			const title = this.getTitle();
-			if (!title)
-				return new Toast(
-					"Please provide a title (heading level 1) at the top of the document."
-				);
-
-			return this.socket.dispatch(
-				"news.update",
-				this.newsId,
-				{
-					title,
-					markdown: this.markdown,
-					status: this.status,
-					showToNewUsers: this.showToNewUsers
-				},
-				res => {
-					new Toast(res.message);
-					if (res.status === "success" && close)
-						this.closeModal("editNews");
-				}
-			);
-		},
-		formatDistance,
-		...mapActions("modalVisibility", ["closeModal"])
-	}
-};
-</script>
 
 <style lang="less">
 .edit-news-modal .modal-card .modal-card-foot .right {

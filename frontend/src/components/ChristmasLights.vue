@@ -1,3 +1,16 @@
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { useUserAuthStore } from "@/stores/userAuth";
+
+defineProps({
+	small: { type: Boolean, default: false },
+	lights: { type: Number, default: 1 }
+});
+
+const userAuthStore = useUserAuthStore();
+const { loggedIn } = storeToRefs(userAuthStore);
+</script>
+
 <template>
 	<div
 		:class="{
@@ -13,26 +26,6 @@
 		</template>
 	</div>
 </template>
-
-<script>
-import { mapState } from "vuex";
-
-export default {
-	props: {
-		small: { type: Boolean, default: false },
-		lights: { type: Number, default: 1 }
-	},
-	computed: {
-		...mapState({
-			loggedIn: state => state.user.auth.loggedIn
-		})
-	},
-
-	async mounted() {
-		this.christmas = await lofig.get("siteSettings.christmas");
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .christmas-mode {

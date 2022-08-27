@@ -1,7 +1,7 @@
 {
   "name": "musare-backend",
   "private": true,
-  "version": "3.6.0",
+  "version": "3.7.0",
   "type": "module",
   "description": "An open-source collaborative music listening and catalogue curation application. Currently supporting YouTube based content.",
   "main": "index.js",
@@ -12,10 +12,11 @@
     "dev": "nodemon --es-module-specifier-resolution=node",
     "docker:dev": "nodemon --es-module-specifier-resolution=node --legacy-watch --no-stdin /opt/app",
     "docker:prod": "node --es-module-specifier-resolution=node /opt/app",
-    "lint": "npx eslint logic"
+    "lint": "eslint --cache logic",
+    "typescript": "tsc --noEmit --skipLibCheck"
   },
   "dependencies": {
-    "async": "^3.2.3",
+    "async": "^3.2.4",
     "axios": "^0.27.2",
     "bcrypt": "^5.0.1",
     "bluebird": "^3.7.2",
@@ -25,24 +26,29 @@
     "cors": "^2.8.5",
     "express": "^4.18.1",
     "moment": "^2.29.4",
-    "mongoose": "^6.4.6",
-    "nodemailer": "^6.7.5",
-    "oauth": "^0.9.15",
-    "redis": "^3.1.2",
+    "mongoose": "^6.5.3",
+    "nodemailer": "^6.7.8",
+    "oauth": "^0.10.0",
+    "redis": "^4.3.0",
     "retry-axios": "^3.0.0",
     "sha256": "^0.2.0",
-    "socks": "^2.6.2",
+    "socks": "^2.7.0",
     "underscore": "^1.13.4",
-    "ws": "^8.7.0"
+    "ws": "^8.8.1"
   },
   "devDependencies": {
-    "eslint": "^8.17.0",
+    "@typescript-eslint/eslint-plugin": "^5.35.1",
+    "@typescript-eslint/parser": "^5.35.1",
+    "eslint": "^8.22.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-jsdoc": "^39.3.2",
-    "eslint-plugin-prettier": "^4.0.0",
-    "prettier": "2.6.2",
-    "trace-unhandled": "^2.0.1"
+    "eslint-plugin-jsdoc": "^39.3.6",
+    "eslint-plugin-prettier": "^4.2.1",
+    "nodemon": "^2.0.19",
+    "prettier": "2.7.1",
+    "trace-unhandled": "^2.0.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.2"
   }
 }

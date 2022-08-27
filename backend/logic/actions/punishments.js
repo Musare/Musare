@@ -21,7 +21,7 @@ CacheModule.runJob("SUB", {
 
 		WSModule.runJob("SOCKETS_FROM_IP", { ip: data.ip }, this).then(sockets => {
 			sockets.forEach(socket => {
-				socket.disconnect(true);
+				socket.close();
 			});
 		});
 	}
@@ -345,6 +345,51 @@ export default {
 					status: "success",
 					message: "Successfully banned IP address."
 				});
+			}
+		);
+	}),
+
+	/**
+	 * Deactivates a punishment
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} punishmentId - the MongoDB id of the punishment
+	 * @param {Function} cb - gets called with the result
+	 */
+	deactivatePunishment: isAdminRequired(function deactivatePunishment(session, punishmentId, cb) {
+		async.waterfall(
+			[
+				next => {
+					PunishmentsModule.runJob("DEACTIVATE_PUNISHMENT", { punishmentId }, this)
+						.then(punishment => next(null, punishment._doc))
+						.catch(next);
+				}
+			],
+			async (err, punishment) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"DEACTIVATE_PUNISHMENT",
+						`Deactivating punishment ${punishmentId} failed. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "DEACTIVATE_PUNISHMENT", `Deactivated punishment ${punishmentId} successful.`);
+
+				WSModule.runJob("EMIT_TO_ROOM", {
+					room: `admin.punishments`,
+					args: [
+						"event:admin.punishment.updated",
+						{
+							data: {
+								punishment: { ...punishment, status: "Inactive" }
+							}
+						}
+					]
+				});
+
+				return cb({ status: "success" });
 			}
 		);
 	})

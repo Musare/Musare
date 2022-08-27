@@ -1,3 +1,42 @@
+<script setup lang="ts">
+import { defineAsyncComponent, ref, onMounted } from "vue";
+
+import { storeToRefs } from "pinia";
+
+import { useEditSongStore } from "@/stores/editSong";
+
+import { useSearchMusare } from "@/composables/useSearchMusare";
+
+const SongItem = defineAsyncComponent(
+	() => import("@/components/SongItem.vue")
+);
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" },
+	modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
+});
+
+const sitename = ref("Musare");
+
+const editSongStore = useEditSongStore(props);
+
+const { song } = storeToRefs(editSongStore);
+
+const {
+	musareSearch,
+	resultsLeftCount,
+	nextPageResultsCount,
+	searchForMusareSongs
+} = useSearchMusare();
+
+onMounted(async () => {
+	sitename.value = await lofig.get("siteSettings.sitename");
+
+	musareSearch.value.query = song.value.title;
+	searchForMusareSongs(1, false);
+});
+</script>
+
 <template>
 	<div class="musare-songs-tab">
 		<label class="label"> Search for a song on {{ sitename }} </label>
@@ -20,9 +59,9 @@
 		</div>
 		<div v-if="musareSearch.results.length > 0">
 			<song-item
-				v-for="song in musareSearch.results"
-				:key="song._id"
-				:song="song"
+				v-for="result in musareSearch.results"
+				:key="result._id"
+				:song="result"
 				:disabled-actions="['addToPlaylist', 'edit']"
 			/>
 			<button
@@ -35,46 +74,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapGetters } from "vuex";
-
-import { mapModalState } from "@/vuex_helpers";
-
-import SearchMusare from "@/mixins/SearchMusare.vue";
-
-import SongItem from "@/components/SongItem.vue";
-
-export default {
-	components: {
-		SongItem
-	},
-	mixins: [SearchMusare],
-	props: {
-		modalUuid: { type: String, default: "" },
-		modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
-	},
-	data() {
-		return {
-			sitename: "Musare"
-		};
-	},
-	computed: {
-		...mapModalState("MODAL_MODULE_PATH", {
-			song: state => state.song
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	async mounted() {
-		this.sitename = await lofig.get("siteSettings.sitename");
-
-		this.musareSearch.query = this.song.title;
-		this.searchForMusareSongs(1, false);
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .musare-songs-tab #song-query-results {

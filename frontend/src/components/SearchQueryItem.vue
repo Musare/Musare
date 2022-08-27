@@ -1,3 +1,9 @@
+<script setup lang="ts">
+defineProps({
+	result: { type: Object, default: () => {} }
+});
+</script>
+
 <template>
 	<div class="universal-item search-query-item">
 		<div class="thumbnail-and-info">
@@ -33,17 +39,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-export default {
-	props: {
-		result: {
-			type: Object,
-			default: () => {}
-		}
-	}
-};
-</script>
 
 <style lang="less">
 .search-query-actions-enter-active,

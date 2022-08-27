@@ -1,3 +1,127 @@
+<script setup lang="ts">
+import { defineAsyncComponent, ref } from "vue";
+
+const MainHeader = defineAsyncComponent(
+	() => import("@/components/MainHeader.vue")
+);
+const MainFooter = defineAsyncComponent(
+	() => import("@/components/MainFooter.vue")
+);
+const ProfilePicture = defineAsyncComponent(
+	() => import("@/components/ProfilePicture.vue")
+);
+
+const currentTeam = ref([
+	{
+		name: "Kristian Vos",
+		bio: "Co-Founder, Owner, Lead Developer, System Admin and QA Tester.",
+		projects: [
+			"MusareMeteor",
+			"MusareReact",
+			"MusareNode",
+			"MusareStatus",
+			"lofig",
+			"MusareTranslation",
+			"aw-watcher-musare",
+			"vue-draggable-list"
+		],
+		active: "Sept 2015 - present",
+		github: "KrisVos130",
+		link: "https://kvos.dev",
+		avatar: {
+			type: "text",
+			color: "orange"
+		}
+	},
+	{
+		name: "Owen Diffey",
+		bio: "Developer, Designer, System Admin and QA Tester. Previously Owner and Project Manager.",
+		projects: [
+			"MusareMeteor",
+			"MusareReact",
+			"MusareNode",
+			"vue-roaster",
+			"vue-draggable-list"
+		],
+		active: "Feb 2016 - present",
+		github: "odiffey",
+		link: "https://diffey.dev",
+		avatar: {
+			type: "text",
+			color: "purple"
+		}
+	}
+]);
+const previousTeam = ref([
+	{
+		name: "Jonathan Graham",
+		bio: "Lead Developer, Designer and QA Tester.",
+		projects: [
+			"MusareMeteor",
+			"MusareReact",
+			"MusareNode",
+			"vue-roaster",
+			"lofig"
+		],
+		active: "Aug 2016 - Mar 2022",
+		github: "jonathan-grah",
+		link: "https://jgraham.dev"
+	},
+	{
+		name: "Akira Laine",
+		bio: "Co-Founder, Lead Developer, Designer and QA Tester.",
+		projects: ["MusareMeteor"],
+		active: "Sept 2015 - Feb 2016",
+		github: "darthmeme",
+		link: "https://github.com/AkiraLaine"
+	},
+	{
+		name: "Cameron Kline",
+		bio: "Developer, Designer and QA Tester.",
+		projects: ["MusareMeteor", "MusareReact", "MusareNode"],
+		active: "Aug - Nov 2016",
+		github: "luveti",
+		link: "https://github.com/luveti"
+	},
+	{
+		name: "Antonio",
+		bio: "Official instance Moderator.",
+		active: "Unknown"
+	},
+	{
+		name: "Aaron Gildea",
+		bio: "Official instance Moderator.",
+		active: "Unknown"
+	},
+	{
+		name: "Johannes Andersen",
+		bio: "Official instance Moderator and QA Tester.",
+		active: "Unknown",
+		link: "https://github.com/Johannes-Andersen"
+	},
+	{
+		name: "Adryd",
+		bio: "Created Logo and Notes image.",
+		active: "May 2016",
+		link: "https://github.com/Adryd"
+	}
+]);
+const otherContributors = ref([
+	{
+		name: "arvind-iyer",
+		link: "https://github.com/arvind-iyer"
+	},
+	{
+		name: "CullenIO",
+		link: "https://github.com/CullenIO"
+	},
+	{
+		name: "Wesley McCann",
+		link: "https://github.com/Septimus"
+	}
+]);
+</script>
+
 <template>
 	<div class="app">
 		<page-metadata title="Team" />
@@ -78,7 +202,7 @@
 							</div>
 							<a
 								v-if="member.link"
-								:href="member.link"
+								:href="`${member.link}`"
 								target="_blank"
 								class="material-icons"
 							>
@@ -128,125 +252,6 @@
 		<main-footer />
 	</div>
 </template>
-
-<script>
-import ProfilePicture from "@/components/ProfilePicture.vue";
-
-export default {
-	components: { ProfilePicture },
-	data() {
-		return {
-			currentTeam: [
-				{
-					name: "Kristian Vos",
-					bio: "Co-Founder, Owner, Lead Developer, System Admin and QA Tester.",
-					projects: [
-						"MusareMeteor",
-						"MusareReact",
-						"MusareNode",
-						"MusareStatus",
-						"MusareTranslation",
-						"aw-watcher-musare",
-						"lofig"
-					],
-					active: "Sept 2015 - present",
-					github: "KrisVos130",
-					link: "https://kvos.dev",
-					avatar: {
-						type: "text",
-						color: "orange"
-					}
-				},
-				{
-					name: "Owen Diffey",
-					bio: "Developer, Designer, System Admin and QA Tester. Previously Owner and Project Manager.",
-					projects: [
-						"MusareMeteor",
-						"MusareReact",
-						"MusareNode",
-						"vue-roaster"
-					],
-					active: "Feb 2016 - present",
-					github: "odiffey",
-					link: "https://diffey.dev",
-					avatar: {
-						type: "text",
-						color: "purple"
-					}
-				}
-			],
-			previousTeam: [
-				{
-					name: "Jonathan Graham",
-					bio: "Lead Developer, Designer and QA Tester.",
-					projects: [
-						"MusareMeteor",
-						"MusareReact",
-						"MusareNode",
-						"vue-roaster",
-						"lofig"
-					],
-					active: "Aug 2016 - Mar 2022",
-					github: "jonathan-grah",
-					link: "https://jgraham.dev"
-				},
-				{
-					name: "Akira Laine",
-					bio: "Co-Founder, Lead Developer, Designer and QA Tester.",
-					projects: ["MusareMeteor"],
-					active: "Sept 2015 - Feb 2016",
-					github: "darthmeme",
-					link: "https://github.com/AkiraLaine"
-				},
-				{
-					name: "Cameron Kline",
-					bio: "Developer, Designer and QA Tester.",
-					projects: ["MusareMeteor", "MusareReact", "MusareNode"],
-					active: "Aug - Nov 2016",
-					github: "luveti",
-					link: "https://github.com/luveti"
-				},
-				{
-					name: "Antonio",
-					bio: "Official instance Moderator.",
-					active: "Unknown"
-				},
-				{
-					name: "Aaron Gildea",
-					bio: "Official instance Moderator.",
-					active: "Unknown"
-				},
-				{
-					name: "Johannes Andersen",
-					bio: "Official instance Moderator and QA Tester.",
-					active: "Unknown",
-					link: "https://github.com/Johannes-Andersen"
-				},
-				{
-					name: "Adryd",
-					bio: "Created Logo and Notes image.",
-					active: "May 2016",
-					link: "https://github.com/Adryd"
-				}
-			],
-			otherContributors: [
-				{
-					name: "arvind-iyer",
-					link: "https://github.com/arvind-iyer"
-				},
-				{
-					name: "CullenIO",
-					link: "https://github.com/CullenIO"
-				},
-				{
-					name: "Wesley McCann",
-					link: "https://github.com/Septimus"
-				}
-			]
-		};
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {

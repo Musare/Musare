@@ -289,7 +289,7 @@ export default {
 
 	/**
 	 * Gets multiple songs from the Musare song ids
-	 * At this time only used in EditSongs
+	 * At this time only used in bulk EditSong
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Array} youtubeIds - the song ids

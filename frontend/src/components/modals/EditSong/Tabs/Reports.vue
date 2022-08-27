@@ -1,9 +1,112 @@
+<script setup lang="ts">
+import { defineAsyncComponent, ref, computed, onMounted } from "vue";
+import { storeToRefs } from "pinia";
+import Toast from "toasters";
+
+import { useEditSongStore } from "@/stores/editSong";
+
+import { useWebsocketsStore } from "@/stores/websockets";
+
+const ReportInfoItem = defineAsyncComponent(
+	() => import("@/components/ReportInfoItem.vue")
+);
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" },
+	modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
+});
+
+const editSongStore = useEditSongStore(props);
+
+const { socket } = useWebsocketsStore();
+
+const tab = ref("sort-by-report");
+const icons = ref({
+	duration: "timer",
+	video: "tv",
+	thumbnail: "image",
+	artists: "record_voice_over",
+	title: "title",
+	custom: "lightbulb"
+});
+const tabs = ref({});
+
+const { reports } = storeToRefs(editSongStore);
+
+const sortedByCategory = computed(() => {
+	const categories = {};
+
+	reports.value.forEach(report =>
+		report.issues.forEach(issue => {
+			if (categories[issue.category])
+				categories[issue.category].push({
+					...issue,
+					reportId: report._id
+				});
+			else
+				categories[issue.category] = [
+					{ ...issue, reportId: report._id }
+				];
+		})
+	);
+
+	return <any>categories;
+});
+
+const { resolveReport } = editSongStore;
+
+const showTab = _tab => {
+	tabs.value[`${_tab}-tab`].scrollIntoView({ block: "nearest" });
+	tab.value = _tab;
+};
+
+const resolve = reportId => {
+	socket.dispatch("reports.resolve", reportId, res => new Toast(res.message));
+};
+
+const toggleIssue = (reportId, issueId) => {
+	socket.dispatch("reports.toggleIssue", reportId, issueId, res => {
+		if (res.status !== "success") new Toast(res.message);
+	});
+};
+
+onMounted(() => {
+	socket.on(
+		"event:admin.report.created",
+		res => reports.value.unshift(res.data.report),
+		{ modalUuid: props.modalUuid }
+	);
+
+	socket.on(
+		"event:admin.report.resolved",
+		res => resolveReport(res.data.reportId),
+		{ modalUuid: props.modalUuid }
+	);
+
+	socket.on(
+		"event:admin.report.issue.toggled",
+		res => {
+			reports.value.forEach((report, index) => {
+				if (report._id === res.data.reportId) {
+					const issue = reports.value[index].issues.find(
+						issue => issue._id.toString() === res.data.issueId
+					);
+
+					issue.resolved = res.data.resolved;
+				}
+			});
+		},
+		{ modalUuid: props.modalUuid }
+	);
+});
+</script>
+
 <template>
 	<div class="reports-tab tabs-container">
 		<div class="tab-selection">
 			<button
 				class="button is-default"
-				ref="sort-by-report-tab"
+				:ref="el => (tabs['sort-by-report-tab'] = el)"
 				:class="{ selected: tab === 'sort-by-report' }"
 				@click="showTab('sort-by-report')"
 			>
@@ -11,7 +114,7 @@
 			</button>
 			<button
 				class="button is-default"
-				ref="sort-by-category-tab"
+				:ref="el => (tabs['sort-by-category-tab'] = el)"
 				:class="{ selected: tab === 'sort-by-category' }"
 				@click="showTab('sort-by-category')"
 			>
@@ -110,7 +213,7 @@
 					:key="report._id"
 				>
 					<report-info-item
-						:created-at="report.createdAt"
+						:created-at="`${report.createdAt}`"
 						:created-by="report.createdBy"
 					>
 						<template #actions>
@@ -186,117 +289,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapGetters, mapActions } from "vuex";
-
-import Toast from "toasters";
-import { mapModalState, mapModalActions } from "@/vuex_helpers";
-
-import ReportInfoItem from "@/components/ReportInfoItem.vue";
-
-export default {
-	components: { ReportInfoItem },
-	props: {
-		modalUuid: { type: String, default: "" },
-		modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
-	},
-	data() {
-		return {
-			tab: "sort-by-report",
-			icons: {
-				duration: "timer",
-				video: "tv",
-				thumbnail: "image",
-				artists: "record_voice_over",
-				title: "title",
-				custom: "lightbulb"
-			}
-		};
-	},
-	computed: {
-		...mapModalState("MODAL_MODULE_PATH", {
-			reports: state => state.reports
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		}),
-		sortedByCategory() {
-			const categories = {};
-
-			this.reports.forEach(report =>
-				report.issues.forEach(issue => {
-					if (categories[issue.category])
-						categories[issue.category].push({
-							...issue,
-							reportId: report._id
-						});
-					else
-						categories[issue.category] = [
-							{ ...issue, reportId: report._id }
-						];
-				})
-			);
-
-			return categories;
-		}
-	},
-	mounted() {
-		this.socket.on(
-			"event:admin.report.created",
-			res => this.reports.unshift(res.data.report),
-			{ modalUuid: this.modalUuid }
-		);
-
-		this.socket.on(
-			"event:admin.report.resolved",
-			res => this.resolveReport(res.data.reportId),
-			{ modalUuid: this.modalUuid }
-		);
-
-		this.socket.on(
-			"event:admin.report.issue.toggled",
-			res => {
-				this.reports.forEach((report, index) => {
-					if (report._id === res.data.reportId) {
-						const issue = this.reports[index].issues.find(
-							issue => issue._id.toString() === res.data.issueId
-						);
-
-						issue.resolved = res.data.resolved;
-					}
-				});
-			},
-			{ modalUuid: this.modalUuid }
-		);
-	},
-	methods: {
-		showTab(tab) {
-			this.$refs[`${tab}-tab`].scrollIntoView({ block: "nearest" });
-			this.tab = tab;
-		},
-		resolve(reportId) {
-			this.socket.dispatch(
-				"reports.resolve",
-				reportId,
-				res => new Toast(res.message)
-			);
-		},
-		toggleIssue(reportId, issueId) {
-			this.socket.dispatch(
-				"reports.toggleIssue",
-				reportId,
-				issueId,
-				res => {
-					if (res.status !== "success") new Toast(res.message);
-				}
-			);
-		},
-		...mapModalActions("MODAL_MODULE_PATH", ["resolveReport"]),
-		...mapActions("modalVisibility", ["closeModal"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {

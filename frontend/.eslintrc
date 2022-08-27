@@ -6,20 +6,24 @@
 		"node": true,
 		"es6": true
 	},
+	"parser": "vue-eslint-parser",
 	"parserOptions": {
-		"ecmaVersion": 2018,
+		"ecmaVersion": 2021,
 		"sourceType": "module",
-		"parser": "@babel/eslint-parser",
-		"requireConfigFile": false
+		"requireConfigFile": false,
+		"parser": "@typescript-eslint/parser"
 	},
 	"extends": [
 		"airbnb-base",
-		"plugin:vue/strongly-recommended",
+		"plugin:vue/vue3-strongly-recommended",
 		"eslint:recommended",
-		"prettier"
+		"prettier",
+		"plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended"
 	],
 	"plugins": [
-		"prettier"
+		"prettier",
+		"@typescript-eslint"
 	],
 	"globals": {
 		"lofig": "writable",
@@ -35,13 +39,17 @@
 		"no-multi-assign": 0,
 		"no-shadow": 0,
 		"no-new": 0,
+		"no-param-reassign": 0,
 		"import/no-unresolved": 0,
 		"import/extensions": 0,
+		"import/prefer-default-export": 0,
 		"prettier/prettier": [
 			"error"
 		],
 		"vue/order-in-components": 2,
 		"vue/no-v-for-template-key": 0,
-		"vue/multi-word-component-names": 0
+		"vue/multi-word-component-names": 0,
+		"@typescript-eslint/no-empty-function": 0,
+		"@typescript-eslint/no-explicit-any": 0
 	}
 }

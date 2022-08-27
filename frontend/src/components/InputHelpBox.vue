@@ -1,3 +1,21 @@
+<script setup lang="ts">
+defineProps({
+	message: {
+		type: String,
+		required: true
+	},
+	valid: {
+		type: Boolean,
+		required: true
+	},
+	entered: {
+		type: Boolean,
+		default: undefined,
+		required: false
+	}
+});
+</script>
+
 <template>
 	<p
 		class="help"
@@ -12,26 +30,6 @@
 		{{ message }}
 	</p>
 </template>
-
-<script>
-export default {
-	props: {
-		message: {
-			type: String,
-			required: true
-		},
-		valid: {
-			type: Boolean,
-			required: true
-		},
-		entered: {
-			type: Boolean,
-			default: undefined,
-			required: false
-		}
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .help {

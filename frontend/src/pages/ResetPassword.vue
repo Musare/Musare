@@ -1,3 +1,202 @@
+<script setup lang="ts">
+import { defineAsyncComponent, ref, watch, onMounted } from "vue";
+import Toast from "toasters";
+import { storeToRefs } from "pinia";
+import { useUserAuthStore } from "@/stores/userAuth";
+import validation from "@/validation";
+import { useWebsocketsStore } from "@/stores/websockets";
+
+const MainHeader = defineAsyncComponent(
+	() => import("@/components/MainHeader.vue")
+);
+const MainFooter = defineAsyncComponent(
+	() => import("@/components/MainFooter.vue")
+);
+const InputHelpBox = defineAsyncComponent(
+	() => import("@/components/InputHelpBox.vue")
+);
+
+const props = defineProps({
+	mode: { type: String, enum: ["reset", "set"], default: "reset" }
+});
+
+const userAuthStore = useUserAuthStore();
+const { email: accountEmail } = storeToRefs(userAuthStore);
+
+const { socket } = useWebsocketsStore();
+
+const code = ref("");
+const inputs = ref({
+	email: {
+		value: "",
+		hasBeenSentAlready: true,
+		entered: false,
+		valid: false,
+		message: "Please enter a valid email address."
+	},
+	password: {
+		value: "",
+		visible: false,
+		entered: false,
+		valid: false,
+		message:
+			"Include at least one lowercase letter, one uppercase letter, one number and one special character."
+	},
+	passwordAgain: {
+		value: "",
+		visible: false,
+		entered: false,
+		valid: false,
+		message: "This password must match."
+	}
+});
+const step = ref(1);
+const inputElements = ref([]);
+
+const togglePasswordVisibility = input => {
+	if (inputElements.value[input].type === "password") {
+		inputElements.value[input].type = "text";
+		inputs.value[input].visible = true;
+	} else {
+		inputElements.value[input].type = "password";
+		inputs.value[input].visible = false;
+	}
+};
+
+const checkPasswordMatch = (pass, passAgain) => {
+	if (passAgain !== pass) {
+		inputs.value.passwordAgain.message = "This password must match.";
+		inputs.value.passwordAgain.valid = false;
+	} else {
+		inputs.value.passwordAgain.message = "Everything looks great!";
+		inputs.value.passwordAgain.valid = true;
+	}
+};
+
+const onInput = inputName => {
+	inputs.value[inputName].entered = true;
+};
+
+const submitEmail = () => {
+	if (
+		inputs.value.email.value.indexOf("@") !==
+			inputs.value.email.value.lastIndexOf("@") ||
+		!validation.regex.emailSimple.test(inputs.value.email.value)
+	)
+		return new Toast("Invalid email format.");
+
+	if (!inputs.value.email.value) return new Toast("Email cannot be empty");
+
+	inputs.value.email.hasBeenSentAlready = false;
+
+	if (props.mode === "set") {
+		return socket.dispatch("users.requestPassword", res => {
+			new Toast(res.message);
+			if (res.status === "success") step.value = 2;
+		});
+	}
+
+	return socket.dispatch(
+		"users.requestPasswordReset",
+		inputs.value.email.value,
+		res => {
+			new Toast(res.message);
+			if (res.status === "success") {
+				code.value = ""; // in case: already have a code -> request another code
+				step.value = 2;
+			} else step.value = 5;
+		}
+	);
+};
+
+const verifyCode = () => {
+	if (!code.value) return new Toast("Code cannot be empty");
+
+	return socket.dispatch(
+		props.mode === "set"
+			? "users.verifyPasswordCode"
+			: "users.verifyPasswordResetCode",
+		code.value,
+		res => {
+			new Toast(res.message);
+			if (res.status === "success") step.value = 3;
+		}
+	);
+};
+
+const changePassword = () => {
+	if (inputs.value.password.valid && !inputs.value.passwordAgain.valid)
+		return new Toast("Please ensure the passwords match.");
+
+	if (!inputs.value.password.valid)
+		return new Toast("Please enter a valid password.");
+
+	return socket.dispatch(
+		props.mode === "set"
+			? "users.changePasswordWithCode"
+			: "users.changePasswordWithResetCode",
+		code.value,
+		inputs.value.password.value,
+		res => {
+			new Toast(res.message);
+			if (res.status === "success") step.value = 4;
+			else step.value = 5;
+		}
+	);
+};
+
+watch(
+	() => inputs.value.email.value,
+	value => {
+		if (!value) return;
+
+		if (
+			value.indexOf("@") !== value.lastIndexOf("@") ||
+			!validation.regex.emailSimple.test(value)
+		) {
+			inputs.value.email.message = "Please enter a valid email address.";
+			inputs.value.email.valid = false;
+		} else {
+			inputs.value.email.message = "Everything looks great!";
+			inputs.value.email.valid = true;
+		}
+	}
+);
+watch(
+	() => inputs.value.password.value,
+	value => {
+		if (!value) return;
+
+		checkPasswordMatch(value, inputs.value.passwordAgain.value);
+
+		if (!validation.isLength(value, 6, 200)) {
+			inputs.value.password.message =
+				"Password must have between 6 and 200 characters.";
+			inputs.value.password.valid = false;
+		} else if (!validation.regex.password.test(value)) {
+			inputs.value.password.message =
+				"Include at least one lowercase letter, one uppercase letter, one number and one special character.";
+			inputs.value.password.valid = false;
+		} else {
+			inputs.value.password.message = "Everything looks great!";
+			inputs.value.password.valid = true;
+		}
+	}
+);
+watch(
+	() => inputs.value.passwordAgain.value,
+	value => {
+		if (!value) return;
+
+		checkPasswordMatch(inputs.value.password.value, value);
+	}
+);
+
+onMounted(() => {
+	inputs.value.email.value = accountEmail.value;
+});
+</script>
+
 <template>
 	<div>
 		<page-metadata
@@ -45,9 +244,15 @@
 											<input
 												class="input"
 												type="email"
+												:ref="
+													el =>
+														(inputElements[
+															'email'
+														] = el)
+												"
 												placeholder="Enter email address here..."
 												autofocus
-												v-model="email.value"
+												v-model="inputs.email.value"
 												@keyup.enter="submitEmail()"
 												@keypress="onInput('email')"
 												@paste="onInput('email')"
@@ -67,9 +272,9 @@
 									</div>
 									<transition name="fadein-helpbox">
 										<input-help-box
-											:entered="email.entered"
-											:valid="email.valid"
-											:message="email.message"
+											:entered="inputs.email.entered"
+											:valid="inputs.email.valid"
+											:message="inputs.email.message"
 										/>
 									</transition>
 								</div>
@@ -82,16 +287,16 @@
 								</h2>
 								<p
 									class="content-box-description"
-									v-if="!email.hasBeenSentAlready"
+									v-if="!inputs.email.hasBeenSentAlready"
 								>
 									A code has been sent to
-									<strong>{{ email.value }}.</strong>
+									<strong>{{ inputs.email.value }}.</strong>
 								</p>
 
 								<p class="content-box-optional-helper">
 									<a
 										@click="
-											email.value
+											inputs.email.value
 												? submitEmail()
 												: (step = 1)
 										"
@@ -149,9 +354,13 @@
 											class="input"
 											id="new-password"
 											type="password"
-											ref="password"
+											:ref="
+												el =>
+													(inputElements['password'] =
+														el)
+											"
 											placeholder="Enter password here..."
-											v-model="password.value"
+											v-model="inputs.password.value"
 											@keypress="onInput('password')"
 											@paste="onInput('password')"
 										/>
@@ -164,7 +373,7 @@
 										>
 											<i class="material-icons">
 												{{
-													!password.visible
+													!inputs.password.visible
 														? "visibility"
 														: "visibility_off"
 												}}
@@ -174,9 +383,9 @@
 
 									<transition name="fadein-helpbox">
 										<input-help-box
-											:entered="password.entered"
-											:valid="password.valid"
-											:message="password.message"
+											:entered="inputs.password.entered"
+											:valid="inputs.password.valid"
+											:message="inputs.password.message"
 										/>
 									</transition>
 
@@ -194,9 +403,14 @@
 											class="input"
 											id="new-password-again"
 											type="password"
-											ref="passwordAgain"
+											:ref="
+												el =>
+													(inputElements[
+														'passwordAgain'
+													] = el)
+											"
 											placeholder="Enter password here..."
-											v-model="passwordAgain.value"
+											v-model="inputs.passwordAgain.value"
 											@keyup.enter="changePassword()"
 											@keypress="onInput('passwordAgain')"
 											@paste="onInput('passwordAgain')"
@@ -210,7 +424,8 @@
 										>
 											<i class="material-icons">
 												{{
-													!passwordAgain.visible
+													!inputs.passwordAgain
+														.visible
 														? "visibility"
 														: "visibility_off"
 												}}
@@ -220,9 +435,13 @@
 
 									<transition name="fadein-helpbox">
 										<input-help-box
-											:entered="passwordAgain.entered"
-											:valid="passwordAgain.valid"
-											:message="passwordAgain.message"
+											:entered="
+												inputs.passwordAgain.entered
+											"
+											:valid="inputs.passwordAgain.valid"
+											:message="
+												inputs.passwordAgain.message
+											"
 										/>
 									</transition>
 
@@ -280,192 +499,6 @@
 		<main-footer />
 	</div>
 </template>
-
-<script>
-import Toast from "toasters";
-import { mapGetters, mapState } from "vuex";
-
-import InputHelpBox from "@/components/InputHelpBox.vue";
-
-import validation from "@/validation";
-
-export default {
-	components: { InputHelpBox },
-	props: {
-		mode: {
-			default: "reset",
-			enum: ["reset", "set"],
-			type: String
-		}
-	},
-	data() {
-		return {
-			code: "",
-			email: {
-				value: "",
-				hasBeenSentAlready: true,
-				entered: false,
-				valid: false,
-				message: "Please enter a valid email address."
-			},
-			password: {
-				value: "",
-				visible: false,
-				entered: false,
-				valid: false,
-				message:
-					"Include at least one lowercase letter, one uppercase letter, one number and one special character."
-			},
-			passwordAgain: {
-				value: "",
-				visible: false,
-				entered: false,
-				valid: false,
-				message: "This password must match."
-			},
-			step: 1
-		};
-	},
-	computed: {
-		...mapGetters({
-			socket: "websockets/getSocket"
-		}),
-		...mapState({
-			accountEmail: state => state.user.auth.email
-		})
-	},
-	watch: {
-		"email.value": function watchEmail(value) {
-			if (!value) return;
-
-			if (
-				value.indexOf("@") !== value.lastIndexOf("@") ||
-				!validation.regex.emailSimple.test(value)
-			) {
-				this.email.message = "Please enter a valid email address.";
-				this.email.valid = false;
-			} else {
-				this.email.message = "Everything looks great!";
-				this.email.valid = true;
-			}
-		},
-		"password.value": function watchPassword(value) {
-			if (!value) return;
-
-			this.checkPasswordMatch(value, this.passwordAgain.value);
-
-			if (!validation.isLength(value, 6, 200)) {
-				this.password.message =
-					"Password must have between 6 and 200 characters.";
-				this.password.valid = false;
-			} else if (!validation.regex.password.test(value)) {
-				this.password.message =
-					"Include at least one lowercase letter, one uppercase letter, one number and one special character.";
-				this.password.valid = false;
-			} else {
-				this.password.message = "Everything looks great!";
-				this.password.valid = true;
-			}
-		},
-		"passwordAgain.value": function watchPasswordAgain(value) {
-			if (!value) return;
-
-			this.checkPasswordMatch(this.password.value, value);
-		}
-	},
-	mounted() {
-		this.email.value = this.accountEmail;
-	},
-	methods: {
-		togglePasswordVisibility(ref) {
-			if (this.$refs[ref].type === "password") {
-				this.$refs[ref].type = "text";
-				this[ref].visible = true;
-			} else {
-				this.$refs[ref].type = "password";
-				this[ref].visible = false;
-			}
-		},
-		checkPasswordMatch(password, passwordAgain) {
-			if (passwordAgain !== password) {
-				this.passwordAgain.message = "This password must match.";
-				this.passwordAgain.valid = false;
-			} else {
-				this.passwordAgain.message = "Everything looks great!";
-				this.passwordAgain.valid = true;
-			}
-		},
-		onInput(inputName) {
-			this[inputName].entered = true;
-		},
-		submitEmail() {
-			if (
-				this.email.value.indexOf("@") !==
-					this.email.value.lastIndexOf("@") ||
-				!validation.regex.emailSimple.test(this.email.value)
-			)
-				return new Toast("Invalid email format.");
-
-			if (!this.email.value) return new Toast("Email cannot be empty");
-
-			this.email.hasBeenSentAlready = false;
-
-			if (this.mode === "set") {
-				return this.socket.dispatch("users.requestPassword", res => {
-					new Toast(res.message);
-					if (res.status === "success") this.step = 2;
-				});
-			}
-
-			return this.socket.dispatch(
-				"users.requestPasswordReset",
-				this.email.value,
-				res => {
-					new Toast(res.message);
-					if (res.status === "success") {
-						this.code = ""; // in case: already have a code -> request another code
-						this.step = 2;
-					} else this.step = 5;
-				}
-			);
-		},
-		verifyCode() {
-			if (!this.code) return new Toast("Code cannot be empty");
-
-			return this.socket.dispatch(
-				this.mode === "set"
-					? "users.verifyPasswordCode"
-					: "users.verifyPasswordResetCode",
-				this.code,
-				res => {
-					new Toast(res.message);
-					if (res.status === "success") this.step = 3;
-				}
-			);
-		},
-		changePassword() {
-			if (this.password.valid && !this.passwordAgain.valid)
-				return new Toast("Please ensure the passwords match.");
-
-			if (!this.password.valid)
-				return new Toast("Please enter a valid password.");
-
-			return this.socket.dispatch(
-				this.mode === "set"
-					? "users.changePasswordWithCode"
-					: "users.changePasswordWithResetCode",
-				this.code,
-				this.password.value,
-				res => {
-					new Toast(res.message);
-					if (res.status === "success") this.step = 4;
-					else this.step = 5;
-				}
-			);
-		}
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {

@@ -37,6 +37,7 @@
 			"enabled": false
 		},
 		"github": {
+			"enabled": false,
 			"client": "",
 			"secret": "",
 			"redirect_uri": ""
@@ -113,5 +114,5 @@
 			]
 		}
 	},
-	"configVersion": 10
+	"configVersion": 11
 }

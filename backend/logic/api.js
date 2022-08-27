@@ -208,7 +208,10 @@ class _APIModule extends CoreClass {
 									},
 
 									next => {
-										NotificationsModule.pub.keys("*", next);
+										NotificationsModule.pub
+											.KEYS("*")
+											.then(redisKeys => next(null, redisKeys))
+											.catch(next);
 									},
 
 									(redisKeys, next) => {
@@ -220,10 +223,13 @@ class _APIModule extends CoreClass {
 											redisKeys,
 											1,
 											(redisKey, next) => {
-												NotificationsModule.pub.ttl(redisKey, (err, ttl) => {
-													responseObject.redis.ttl[redisKey] = ttl;
-													next(err);
-												});
+												NotificationsModule.pub
+													.TTL(redisKey)
+													.then(ttl => {
+														responseObject.redis.ttl[redisKey] = ttl;
+														next();
+													})
+													.catch(next);
 											},
 											next
 										);

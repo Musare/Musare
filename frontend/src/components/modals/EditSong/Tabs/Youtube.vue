@@ -1,3 +1,35 @@
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+
+import { useEditSongStore } from "@/stores/editSong";
+
+import { useSearchYoutube } from "@/composables/useSearchYoutube";
+
+import SearchQueryItem from "../../../SearchQueryItem.vue";
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" },
+	modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
+});
+
+const editSongStore = useEditSongStore(props);
+
+const { song, newSong } = storeToRefs(editSongStore);
+
+const { updateYoutubeId, updateTitle, updateThumbnail } = editSongStore;
+
+const { youtubeSearch, searchForSongs, loadMoreSongs } = useSearchYoutube();
+
+const selectSong = result => {
+	updateYoutubeId(result.id);
+
+	if (newSong) {
+		updateTitle(result.title);
+		updateThumbnail(result.thumbnail);
+	}
+};
+</script>
+
 <template>
 	<div class="youtube-tab">
 		<label class="label"> Search for a song from YouTube </label>
@@ -57,52 +89,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapGetters } from "vuex";
-
-import { mapModalState, mapModalActions } from "@/vuex_helpers";
-
-import SearchYoutube from "@/mixins/SearchYoutube.vue";
-
-import SearchQueryItem from "../../../SearchQueryItem.vue";
-
-export default {
-	components: { SearchQueryItem },
-	mixins: [SearchYoutube],
-	props: {
-		modalUuid: { type: String, default: "" },
-		modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
-	},
-	data() {
-		return {};
-	},
-	computed: {
-		...mapModalState("MODAL_MODULE_PATH", {
-			song: state => state.song,
-			newSong: state => state.newSong
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	methods: {
-		selectSong(result) {
-			this.updateYoutubeId(result.id);
-
-			if (this.newSong) {
-				this.updateTitle(result.title);
-				this.updateThumbnail(result.thumbnail);
-			}
-		},
-		...mapModalActions("MODAL_MODULE_PATH", [
-			"updateYoutubeId",
-			"updateTitle",
-			"updateThumbnail"
-		])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .youtube-tab #song-query-results {

@@ -1,3 +1,56 @@
+<script setup lang="ts">
+import { useRoute } from "vue-router";
+import { defineAsyncComponent, watch, onMounted } from "vue";
+import { storeToRefs } from "pinia";
+import { useUserAuthStore } from "@/stores/userAuth";
+import { useStationStore } from "@/stores/station";
+import { useTabQueryHandler } from "@/composables/useTabQueryHandler";
+
+const Queue = defineAsyncComponent(() => import("@/components/Queue.vue"));
+const Users = defineAsyncComponent(
+	() => import("@/pages/Station/Sidebar/Users.vue")
+);
+const Request = defineAsyncComponent(() => import("@/components/Request.vue"));
+
+const route = useRoute();
+const userAuthStore = useUserAuthStore();
+const stationStore = useStationStore();
+
+const { tab, showTab } = useTabQueryHandler("queue");
+
+const { loggedIn, userId, role } = storeToRefs(userAuthStore);
+const { station } = storeToRefs(stationStore);
+
+const isOwner = () =>
+	loggedIn.value && station.value && userId.value === station.value.owner;
+const isAdmin = () => loggedIn.value && role.value === "admin";
+const isOwnerOrAdmin = () => isOwner() || isAdmin();
+
+const canRequest = (requireLogin = true) =>
+	station.value &&
+	(!requireLogin || loggedIn.value) &&
+	station.value.requests &&
+	station.value.requests.enabled &&
+	(station.value.requests.access === "user" ||
+		(station.value.requests.access === "owner" && isOwnerOrAdmin()));
+
+watch(
+	() => station.value.requests,
+	() => {
+		if (tab.value === "request" && !canRequest()) showTab("queue");
+	}
+);
+
+onMounted(() => {
+	if (
+		route.query.tab === "queue" ||
+		route.query.tab === "users" ||
+		route.query.tab === "request"
+	)
+		tab.value = route.query.tab;
+});
+</script>
+
 <template>
 	<div id="tabs-container">
 		<div id="tab-selection">
@@ -32,9 +85,9 @@
 				Request
 			</button>
 		</div>
-		<queue class="tab" v-show="tab === 'queue'" />
-		<users class="tab" v-show="tab === 'users'" />
-		<request
+		<Queue class="tab" v-show="tab === 'queue'" />
+		<Users class="tab" v-show="tab === 'users'" />
+		<Request
 			v-if="canRequest()"
 			v-show="tab === 'request'"
 			class="tab requests-tab"
@@ -42,75 +95,6 @@
 		/>
 	</div>
 </template>
-
-<script>
-import { mapActions, mapState } from "vuex";
-
-import Queue from "@/components/Queue.vue";
-import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
-import Users from "./Users.vue";
-import Request from "@/components/Request.vue";
-
-export default {
-	components: { Queue, Users, Request },
-	mixins: [TabQueryHandler],
-	data() {
-		return {
-			tab: "queue"
-		};
-	},
-	computed: mapState({
-		station: state => state.station.station,
-		users: state => state.station.users,
-		userCount: state => state.station.userCount,
-		userId: state => state.user.auth.userId,
-		loggedIn: state => state.user.auth.loggedIn,
-		role: state => state.user.auth.role
-	}),
-	watch: {
-		// eslint-disable-next-line
-		"station.requests": function (requests) {
-			if (this.tab === "request" && !this.canRequest())
-				this.showTab("queue");
-		}
-	},
-	mounted() {
-		if (
-			this.$route.query.tab === "queue" ||
-			this.$route.query.tab === "users" ||
-			this.$route.query.tab === "request"
-		)
-			this.tab = this.$route.query.tab;
-	},
-	methods: {
-		isOwner() {
-			return (
-				this.loggedIn &&
-				this.station &&
-				this.userId === this.station.owner
-			);
-		},
-		isAdmin() {
-			return this.loggedIn && this.role === "admin";
-		},
-		isOwnerOrAdmin() {
-			return this.isOwner() || this.isAdmin();
-		},
-		canRequest(requireLogin = true) {
-			return (
-				this.station &&
-				(!requireLogin || this.loggedIn) &&
-				this.station.requests &&
-				this.station.requests.enabled &&
-				(this.station.requests.access === "user" ||
-					(this.station.requests.access === "owner" &&
-						this.isOwnerOrAdmin()))
-			);
-		},
-		...mapActions("modalVisibility", ["openModal"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {

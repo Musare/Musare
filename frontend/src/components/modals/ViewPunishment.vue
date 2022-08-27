@@ -1,76 +1,74 @@
+<script setup lang="ts">
+import { defineAsyncComponent, onMounted, onBeforeUnmount } from "vue";
+import Toast from "toasters";
+import { storeToRefs } from "pinia";
+import { useWebsocketsStore } from "@/stores/websockets";
+import { useModalsStore } from "@/stores/modals";
+import { useViewPunishmentStore } from "@/stores/viewPunishment";
+import ws from "@/ws";
+
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
+const PunishmentItem = defineAsyncComponent(
+	() => import("@/components/PunishmentItem.vue")
+);
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" }
+});
+
+const { socket } = useWebsocketsStore();
+
+const viewPunishmentStore = useViewPunishmentStore(props);
+const { punishmentId, punishment } = storeToRefs(viewPunishmentStore);
+const { viewPunishment } = viewPunishmentStore;
+
+const { closeCurrentModal } = useModalsStore();
+
+const init = () => {
+	socket.dispatch(`punishments.findOne`, punishmentId.value, res => {
+		if (res.status === "success") {
+			viewPunishment(res.data.punishment);
+		} else {
+			new Toast("Punishment with that ID not found");
+			closeCurrentModal();
+		}
+	});
+};
+
+const deactivatePunishment = event => {
+	event.preventDefault();
+	socket.dispatch(
+		"punishments.deactivatePunishment",
+		punishmentId.value,
+		res => {
+			if (res.status === "success") {
+				viewPunishmentStore.deactivatePunishment();
+			} else {
+				new Toast(res.message);
+			}
+		}
+	);
+};
+
+onMounted(() => {
+	ws.onConnect(init);
+});
+
+onBeforeUnmount(() => {
+	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
+	viewPunishmentStore.$dispose();
+});
+</script>
+
 <template>
 	<div>
 		<modal title="View Punishment">
 			<template #body v-if="punishment && punishment._id">
-				<punishment-item :punishment="punishment" />
+				<punishment-item
+					:punishment="punishment"
+					@deactivate="deactivatePunishment"
+				/>
 			</template>
 		</modal>
 	</div>
 </template>
-
-<script>
-import { mapGetters, mapActions } from "vuex";
-import { format, formatDistance, parseISO } from "date-fns";
-
-import Toast from "toasters";
-import ws from "@/ws";
-import { mapModalState, mapModalActions } from "@/vuex_helpers";
-
-import PunishmentItem from "../PunishmentItem.vue";
-
-export default {
-	components: { PunishmentItem },
-	props: {
-		modalUuid: { type: String, default: "" }
-	},
-	data() {
-		return {
-			ban: {}
-		};
-	},
-	computed: {
-		...mapModalState("modals/viewPunishment/MODAL_UUID", {
-			punishmentId: state => state.punishmentId,
-			punishment: state => state.punishment
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	mounted() {
-		ws.onConnect(this.init);
-	},
-	beforeUnmount() {
-		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-		this.$store.unregisterModule([
-			"modals",
-			"viewPunishment",
-			this.modalUuid
-		]);
-	},
-	methods: {
-		init() {
-			this.socket.dispatch(
-				`punishments.findOne`,
-				this.punishmentId,
-				res => {
-					if (res.status === "success") {
-						const { punishment } = res.data;
-						this.viewPunishment(punishment);
-					} else {
-						new Toast("Punishment with that ID not found");
-						this.closeModal("viewPunishment");
-					}
-				}
-			);
-		},
-		...mapActions("modalVisibility", ["closeModal"]),
-		...mapModalActions("modals/viewPunishment/MODAL_UUID", [
-			"viewPunishment"
-		]),
-		format,
-		formatDistance,
-		parseISO
-	}
-};
-</script>

@@ -704,7 +704,7 @@ export default {
 	 * @param cb
 	 */
 
-	getRatings: isLoginRequired(async function getRatings(session, youtubeId, cb) {
+	async getRatings(session, youtubeId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -742,7 +742,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Gets user's own ratings

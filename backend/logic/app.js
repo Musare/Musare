@@ -62,17 +62,6 @@ class _AppModule extends CoreClass {
 			app.use(cors(corsOptions));
 			app.options("*", cors(corsOptions));
 
-			const oauth2 = new OAuth2(
-				config.get("apis.github.client"),
-				config.get("apis.github.secret"),
-				"https://github.com/",
-				"login/oauth/authorize",
-				"login/oauth/access_token",
-				null
-			);
-
-			const redirectUri = `${config.get("serverDomain")}/auth/github/authorize/callback`;
-
 			/**
 			 * @param {object} res - response object from Express
 			 * @param {string} err - custom error message
@@ -81,358 +70,389 @@ class _AppModule extends CoreClass {
 				res.redirect(`${config.get("domain")}?err=${encodeURIComponent(err)}`);
 			}
 
-			app.get("/auth/github/authorize", async (req, res) => {
-				if (this.getStatus() !== "READY") {
-					this.log(
-						"INFO",
-						"APP_REJECTED_GITHUB_AUTHORIZE",
-						`A user tried to use github authorize, but the APP module is currently not ready.`
-					);
-					return redirectOnErr(res, "Something went wrong on our end. Please try again later.");
-				}
+			if (config.get("apis.github.enabled")) {
+				const oauth2 = new OAuth2(
+					config.get("apis.github.client"),
+					config.get("apis.github.secret"),
+					"https://github.com/",
+					"login/oauth/authorize",
+					"login/oauth/access_token",
+					null
+				);
 
-				const params = [
-					`client_id=${config.get("apis.github.client")}`,
-					`redirect_uri=${config.get("serverDomain")}/auth/github/authorize/callback`,
-					`scope=user:email`
-				].join("&");
-				return res.redirect(`https://github.com/login/oauth/authorize?${params}`);
-			});
+				const redirectUri = `${config.get("apis.github.redirect_uri")}`;
 
-			app.get("/auth/github/link", async (req, res) => {
-				if (this.getStatus() !== "READY") {
-					this.log(
-						"INFO",
-						"APP_REJECTED_GITHUB_AUTHORIZE",
-						`A user tried to use github authorize, but the APP module is currently not ready.`
-					);
-					return redirectOnErr(res, "Something went wrong on our end. Please try again later.");
-				}
+				app.get("/auth/github/authorize", async (req, res) => {
+					if (this.getStatus() !== "READY") {
+						this.log(
+							"INFO",
+							"APP_REJECTED_GITHUB_AUTHORIZE",
+							`A user tried to use github authorize, but the APP module is currently not ready.`
+						);
+						return redirectOnErr(res, "Something went wrong on our end. Please try again later.");
+					}
 
-				const params = [
-					`client_id=${config.get("apis.github.client")}`,
-					`redirect_uri=${config.get("serverDomain")}/auth/github/authorize/callback`,
-					`scope=user:email`,
-					`state=${req.cookies[SIDname]}`
-				].join("&");
-				return res.redirect(`https://github.com/login/oauth/authorize?${params}`);
-			});
+					const params = [
+						`client_id=${config.get("apis.github.client")}`,
+						`redirect_uri=${config.get("apis.github.redirect_uri")}`,
+						`scope=user:email`
+					].join("&");
+					return res.redirect(`https://github.com/login/oauth/authorize?${params}`);
+				});
 
-			app.get("/auth/github/authorize/callback", async (req, res) => {
-				if (this.getStatus() !== "READY") {
-					this.log(
-						"INFO",
-						"APP_REJECTED_GITHUB_AUTHORIZE",
-						`A user tried to use github authorize, but the APP module is currently not ready.`
-					);
+				app.get("/auth/github/link", async (req, res) => {
+					if (this.getStatus() !== "READY") {
+						this.log(
+							"INFO",
+							"APP_REJECTED_GITHUB_AUTHORIZE",
+							`A user tried to use github authorize, but the APP module is currently not ready.`
+						);
+						return redirectOnErr(res, "Something went wrong on our end. Please try again later.");
+					}
 
-					return redirectOnErr(res, "Something went wrong on our end. Please try again later.");
-				}
+					const params = [
+						`client_id=${config.get("apis.github.client")}`,
+						`redirect_uri=${config.get("apis.github.redirect_uri")}`,
+						`scope=user:email`,
+						`state=${req.cookies[SIDname]}`
+					].join("&");
+					return res.redirect(`https://github.com/login/oauth/authorize?${params}`);
+				});
 
-				const { code } = req.query;
-				let accessToken;
-				let body;
-				let address;
+				app.get("/auth/github/authorize/callback", async (req, res) => {
+					if (this.getStatus() !== "READY") {
+						this.log(
+							"INFO",
+							"APP_REJECTED_GITHUB_AUTHORIZE",
+							`A user tried to use github authorize, but the APP module is currently not ready.`
+						);
 
-				const { state } = req.query;
+						return redirectOnErr(res, "Something went wrong on our end. Please try again later.");
+					}
 
-				const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 });
+					const { code } = req.query;
+					let accessToken;
+					let body;
+					let address;
 
-				return async.waterfall(
-					[
-						next => {
-							if (req.query.error) return next(req.query.error_description);
-							return next();
-						},
+					const { state } = req.query;
 
-						next => {
-							oauth2.getOAuthAccessToken(code, { redirect_uri: redirectUri }, next);
-						},
+					const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 });
 
-						(_accessToken, refreshToken, results, next) => {
-							if (results.error) return next(results.error_description);
+					return async.waterfall(
+						[
+							next => {
+								if (req.query.error) return next(req.query.error_description);
+								return next();
+							},
 
-							accessToken = _accessToken;
+							next => {
+								oauth2.getOAuthAccessToken(code, { redirect_uri: redirectUri }, next);
+							},
 
-							const options = {
-								headers: {
-									"User-Agent": "request",
-									Authorization: `token ${accessToken}`
-								}
-							};
+							(_accessToken, refreshToken, results, next) => {
+								if (results.error) return next(results.error_description);
 
-							return axios
-								.get("https://api.github.com/user", options)
-								.then(github => next(null, github))
-								.catch(err => next(err));
-						},
+								accessToken = _accessToken;
 
-						(github, next) => {
-							if (github.status !== 200) return next(github.data.message);
-
-							if (state) {
-								return async.waterfall(
-									[
-										next => {
-											CacheModule.runJob("HGET", {
-												table: "sessions",
-												key: state
-											})
-												.then(session => next(null, session))
-												.catch(next);
-										},
-
-										(session, next) => {
-											if (!session) return next("Invalid session.");
-											return userModel.findOne({ _id: session.userId }, next);
-										},
-
-										(user, next) => {
-											if (!user) return next("User not found.");
-											if (user.services.github && user.services.github.id)
-												return next("Account already has GitHub linked.");
-
-											return userModel.updateOne(
-												{ _id: user._id },
-												{
-													$set: {
-														"services.github": {
-															id: github.data.id,
-															access_token: accessToken
-														}
-													}
-												},
-												{ runValidators: true },
-												err => {
-													if (err) return next(err);
-													return next(null, user, github.data);
-												}
-											);
-										},
-
-										user => {
-											CacheModule.runJob("PUB", {
-												channel: "user.linkGithub",
-												value: user._id
-											});
-
-											CacheModule.runJob("PUB", {
-												channel: "user.updated",
-												value: { userId: user._id }
-											});
-
-											res.redirect(`${config.get("domain")}/settings?tab=security`);
-										}
-									],
-									next
-								);
-							}
-
-							if (!github.data.id) return next("Something went wrong, no id.");
-
-							return userModel.findOne({ "services.github.id": github.data.id }, (err, user) => {
-								next(err, user, github.data);
-							});
-						},
-
-						(user, _body, next) => {
-							body = _body;
-
-							if (user) {
-								user.services.github.access_token = accessToken;
-								return user.save(() => next(true, user._id));
-							}
-
-							return userModel.findOne({ username: new RegExp(`^${body.login}$`, "i") }, (err, user) =>
-								next(err, user)
-							);
-						},
-
-						(user, next) => {
-							if (user) return next(`An account with that username already exists.`);
-
-							return axios
-								.get("https://api.github.com/user/emails", {
+								const options = {
 									headers: {
 										"User-Agent": "request",
 										Authorization: `token ${accessToken}`
 									}
-								})
-								.then(res => next(null, res.data))
-								.catch(err => next(err));
-						},
+								};
 
-						(body, next) => {
-							if (!Array.isArray(body)) return next(body.message);
+								return axios
+									.get("https://api.github.com/user", options)
+									.then(github => next(null, github))
+									.catch(err => next(err));
+							},
 
-							body.forEach(email => {
-								if (email.primary) address = email.email.toLowerCase();
-							});
+							(github, next) => {
+								if (github.status !== 200) return next(github.data.message);
 
-							return userModel.findOne({ "email.address": address }, next);
-						},
+								if (state) {
+									return async.waterfall(
+										[
+											next => {
+												CacheModule.runJob("HGET", {
+													table: "sessions",
+													key: state
+												})
+													.then(session => next(null, session))
+													.catch(next);
+											},
 
-						(user, next) => {
-							UtilsModule.runJob("GENERATE_RANDOM_STRING", {
-								length: 12
-							}).then(_id => next(null, user, _id));
-						},
+											(session, next) => {
+												if (!session) return next("Invalid session.");
+												return userModel.findOne({ _id: session.userId }, next);
+											},
 
-						(user, _id, next) => {
-							if (user) {
-								if (Object.keys(JSON.parse(user.services.github)).length === 0)
-									return next(
-										`An account with that email address exists, but is not linked to GitHub.`
+											(user, next) => {
+												if (!user) return next("User not found.");
+												if (user.services.github && user.services.github.id)
+													return next("Account already has GitHub linked.");
+
+												return userModel.updateOne(
+													{ _id: user._id },
+													{
+														$set: {
+															"services.github": {
+																id: github.data.id,
+																access_token: accessToken
+															}
+														}
+													},
+													{ runValidators: true },
+													err => {
+														if (err) return next(err);
+														return next(null, user, github.data);
+													}
+												);
+											},
+
+											user => {
+												CacheModule.runJob("PUB", {
+													channel: "user.linkGithub",
+													value: user._id
+												});
+
+												CacheModule.runJob("PUB", {
+													channel: "user.updated",
+													value: { userId: user._id }
+												});
+
+												res.redirect(`${config.get("domain")}/settings?tab=security`);
+											}
+										],
+										next
 									);
-								return next(`An account with that email address already exists.`);
-							}
-
-							return next(null, {
-								_id,
-								username: body.login,
-								name: body.name,
-								location: body.location,
-								bio: body.bio,
-								email: {
-									address,
-									verificationToken
-								},
-								services: {
-									github: { id: body.id, access_token: accessToken }
 								}
-							});
-						},
 
-						// generate the url for gravatar avatar
-						(user, next) => {
-							UtilsModule.runJob("CREATE_GRAVATAR", {
-								email: user.email.address
-							}).then(url => {
-								user.avatar = { type: "gravatar", url };
-								next(null, user);
-							});
-						},
+								if (!github.data.id) return next("Something went wrong, no id.");
 
-						// save the new user to the database
-						(user, next) => {
-							userModel.create(user, next);
-						},
-
-						(user, next) => {
-							MailModule.runJob("GET_SCHEMA", {
-								schemaName: "verifyEmail"
-							}).then(verifyEmailSchema => {
-								verifyEmailSchema(address, body.login, user.email.verificationToken, err => {
-									next(err, user._id);
+								return userModel.findOne({ "services.github.id": github.data.id }, (err, user) => {
+									next(err, user, github.data);
 								});
-							});
-						},
+							},
 
-						// create a liked songs playlist for the new user
-						(userId, next) => {
-							PlaylistsModule.runJob("CREATE_USER_PLAYLIST", {
-								userId,
-								displayName: "Liked Songs",
-								type: "user-liked"
-							})
-								.then(likedSongsPlaylist => {
-									next(null, likedSongsPlaylist, userId);
-								})
-								.catch(err => next(err));
-						},
+							(user, _body, next) => {
+								body = _body;
 
-						// create a disliked songs playlist for the new user
-						(likedSongsPlaylist, userId, next) => {
-							PlaylistsModule.runJob("CREATE_USER_PLAYLIST", {
-								userId,
-								displayName: "Disliked Songs",
-								type: "user-disliked"
-							})
-								.then(dislikedSongsPlaylist => {
-									next(null, { likedSongsPlaylist, dislikedSongsPlaylist }, userId);
-								})
-								.catch(err => next(err));
-						},
-
-						// associate liked + disliked songs playlist to the user object
-						({ likedSongsPlaylist, dislikedSongsPlaylist }, userId, next) => {
-							userModel.updateOne(
-								{ _id: userId },
-								{ $set: { likedSongsPlaylist, dislikedSongsPlaylist } },
-								{ runValidators: true },
-								err => {
-									if (err) return next(err);
-									return next(null, userId);
+								if (user) {
+									user.services.github.access_token = accessToken;
+									return user.save(() => next(true, user._id));
 								}
-							);
-						},
 
-						// add the activity of account creation
-						(userId, next) => {
-							ActivitiesModule.runJob("ADD_ACTIVITY", {
-								userId,
-								type: "user__joined",
-								payload: { message: "Welcome to Musare!" }
-							});
+								return userModel.findOne(
+									{
+										username: new RegExp(`^${body.login}$`, "i")
+									},
+									(err, user) => next(err, user)
+								);
+							},
 
-							next(null, userId);
-						}
-					],
-					async (err, userId) => {
-						if (err && err !== true) {
-							err = await UtilsModule.runJob("GET_ERROR", {
-								error: err
-							});
+							(user, next) => {
+								if (user) return next(`An account with that username already exists.`);
 
-							this.log(
-								"ERROR",
-								"AUTH_GITHUB_AUTHORIZE_CALLBACK",
-								`Failed to authorize with GitHub. "${err}"`
-							);
+								return axios
+									.get("https://api.github.com/user/emails", {
+										headers: {
+											"User-Agent": "request",
+											Authorization: `token ${accessToken}`
+										}
+									})
+									.then(res => next(null, res.data))
+									.catch(err => next(err));
+							},
 
-							return redirectOnErr(res, err);
-						}
+							(body, next) => {
+								if (!Array.isArray(body)) return next(body.message);
 
-						const sessionId = await UtilsModule.runJob("GUID", {});
-						const sessionSchema = await CacheModule.runJob("GET_SCHEMA", {
-							schemaName: "session"
-						});
+								body.forEach(email => {
+									if (email.primary) address = email.email.toLowerCase();
+								});
 
-						return CacheModule.runJob("HSET", {
-							table: "sessions",
-							key: sessionId,
-							value: sessionSchema(sessionId, userId)
-						})
-							.then(() => {
-								const date = new Date();
-								date.setTime(new Date().getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+								return userModel.findOne({ "email.address": address }, next);
+							},
 
-								res.cookie(SIDname, sessionId, {
-									expires: date,
-									secure: config.get("cookie.secure"),
-									path: "/",
-									domain: config.get("cookie.domain")
+							(user, next) => {
+								UtilsModule.runJob("GENERATE_RANDOM_STRING", {
+									length: 12
+								}).then(_id => next(null, user, _id));
+							},
+
+							(user, _id, next) => {
+								if (user) {
+									if (Object.keys(JSON.parse(user.services.github)).length === 0)
+										return next(
+											`An account with that email address exists, but is not linked to GitHub.`
+										);
+									return next(`An account with that email address already exists.`);
+								}
+
+								return next(null, {
+									_id,
+									username: body.login,
+									name: body.name,
+									location: body.location,
+									bio: body.bio,
+									email: {
+										address,
+										verificationToken
+									},
+									services: {
+										github: {
+											id: body.id,
+											access_token: accessToken
+										}
+									}
+								});
+							},
+
+							// generate the url for gravatar avatar
+							(user, next) => {
+								UtilsModule.runJob("CREATE_GRAVATAR", {
+									email: user.email.address
+								}).then(url => {
+									user.avatar = { type: "gravatar", url };
+									next(null, user);
+								});
+							},
+
+							// save the new user to the database
+							(user, next) => {
+								userModel.create(user, next);
+							},
+
+							(user, next) => {
+								MailModule.runJob("GET_SCHEMA", {
+									schemaName: "verifyEmail"
+								}).then(verifyEmailSchema => {
+									verifyEmailSchema(address, body.login, user.email.verificationToken, err => {
+										next(err, user._id);
+									});
+								});
+							},
+
+							// create a liked songs playlist for the new user
+							(userId, next) => {
+								PlaylistsModule.runJob("CREATE_USER_PLAYLIST", {
+									userId,
+									displayName: "Liked Songs",
+									type: "user-liked"
+								})
+									.then(likedSongsPlaylist => {
+										next(null, likedSongsPlaylist, userId);
+									})
+									.catch(err => next(err));
+							},
+
+							// create a disliked songs playlist for the new user
+							(likedSongsPlaylist, userId, next) => {
+								PlaylistsModule.runJob("CREATE_USER_PLAYLIST", {
+									userId,
+									displayName: "Disliked Songs",
+									type: "user-disliked"
+								})
+									.then(dislikedSongsPlaylist => {
+										next(
+											null,
+											{
+												likedSongsPlaylist,
+												dislikedSongsPlaylist
+											},
+											userId
+										);
+									})
+									.catch(err => next(err));
+							},
+
+							// associate liked + disliked songs playlist to the user object
+							({ likedSongsPlaylist, dislikedSongsPlaylist }, userId, next) => {
+								userModel.updateOne(
+									{ _id: userId },
+									{
+										$set: {
+											likedSongsPlaylist,
+											dislikedSongsPlaylist
+										}
+									},
+									{ runValidators: true },
+									err => {
+										if (err) return next(err);
+										return next(null, userId);
+									}
+								);
+							},
+
+							// add the activity of account creation
+							(userId, next) => {
+								ActivitiesModule.runJob("ADD_ACTIVITY", {
+									userId,
+									type: "user__joined",
+									payload: { message: "Welcome to Musare!" }
+								});
+
+								next(null, userId);
+							}
+						],
+						async (err, userId) => {
+							if (err && err !== true) {
+								err = await UtilsModule.runJob("GET_ERROR", {
+									error: err
 								});
 
 								this.log(
-									"INFO",
+									"ERROR",
 									"AUTH_GITHUB_AUTHORIZE_CALLBACK",
-									`User "${userId}" successfully authorized with GitHub.`
+									`Failed to authorize with GitHub. "${err}"`
 								);
 
-								res.redirect(`${config.get("domain")}/`);
+								return redirectOnErr(res, err);
+							}
+
+							const sessionId = await UtilsModule.runJob("GUID", {});
+							const sessionSchema = await CacheModule.runJob("GET_SCHEMA", {
+								schemaName: "session"
+							});
+
+							return CacheModule.runJob("HSET", {
+								table: "sessions",
+								key: sessionId,
+								value: sessionSchema(sessionId, userId)
 							})
-							.catch(err => redirectOnErr(res, err.message));
-					}
-				);
-			});
+								.then(() => {
+									const date = new Date();
+									date.setTime(new Date().getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+
+									res.cookie(SIDname, sessionId, {
+										expires: date,
+										secure: config.get("cookie.secure"),
+										path: "/",
+										domain: config.get("cookie.domain")
+									});
+
+									this.log(
+										"INFO",
+										"AUTH_GITHUB_AUTHORIZE_CALLBACK",
+										`User "${userId}" successfully authorized with GitHub.`
+									);
+
+									res.redirect(`${config.get("domain")}/`);
+								})
+								.catch(err => redirectOnErr(res, err.message));
+						}
+					);
+				});
+			}
 
 			app.get("/auth/verify_email", async (req, res) => {
 				if (this.getStatus() !== "READY") {
 					this.log(
 						"INFO",
-						"APP_REJECTED_GITHUB_AUTHORIZE",
-						`A user tried to use github authorize, but the APP module is currently not ready.`
+						"APP_REJECTED_VERIFY_EMAIL",
+						`A user tried to use verify email, but the APP module is currently not ready.`
 					);
 					return redirectOnErr(res, "Something went wrong on our end. Please try again later.");
 				}

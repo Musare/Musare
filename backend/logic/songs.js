@@ -207,7 +207,16 @@ class _SongsModule extends CoreClass {
 											youtubeVideoId: video._id
 										};
 									});
-									next(null, [...songs, ...youtubeVideos]);
+									next(
+										null,
+										payload.youtubeIds
+											.map(
+												youtubeId =>
+													songs.find(song => song.youtubeId === youtubeId) ||
+													youtubeVideos.find(video => video.youtubeId === youtubeId)
+											)
+											.filter(song => !!song)
+									);
 								}
 							}
 						);

@@ -131,7 +131,7 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("keep.event:user.banned", { data: { ban: data.punishment } });
-				socket.disconnect(true);
+				socket.close();
 			});
 		});
 	}
@@ -775,13 +775,8 @@ export default {
 				next => {
 					const query = {};
 					if (identifier.indexOf("@") !== -1) query["email.address"] = identifier;
-					else query.username = identifier;
-					userModel.findOne(
-						{
-							$or: [query]
-						},
-						next
-					);
+					else query.username = { $regex: `^${identifier}$`, $options: "i" };
+					userModel.findOne(query, next);
 				},
 
 				// if the user doesn't exist, respond with a failure
@@ -1184,7 +1179,8 @@ export default {
 		return async.waterfall(
 			[
 				next => {
-					userModel.findOne({ _id: session.userId }, (err, user) => next(err, user));
+					if (!config.get("apis.github.enabled")) return next("GitHub authentication is disabled.");
+					return userModel.findOne({ _id: session.userId }, (err, user) => next(err, user));
 				},
 
 				(user, next) => {
@@ -1466,7 +1462,7 @@ export default {
 					userModel.findByIdAndUpdate(session.userId, { $set }, { new: false, upsert: true }, next);
 				}
 			],
-			async (err, user) => {
+			async err => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
@@ -1489,40 +1485,40 @@ export default {
 					}
 				});
 
-				if (preferences.nightmode !== undefined && preferences.nightmode !== user.preferences.nightmode)
-					ActivitiesModule.runJob("ADD_ACTIVITY", {
-						userId: session.userId,
-						type: "user__toggle_nightmode",
-						payload: { message: preferences.nightmode ? "Enabled nightmode" : "Disabled nightmode" }
-					});
+				// if (preferences.nightmode !== undefined && preferences.nightmode !== user.preferences.nightmode)
+				// 	ActivitiesModule.runJob("ADD_ACTIVITY", {
+				// 		userId: session.userId,
+				// 		type: "user__toggle_nightmode",
+				// 		payload: { message: preferences.nightmode ? "Enabled nightmode" : "Disabled nightmode" }
+				// 	});
 
-				if (
-					preferences.autoSkipDisliked !== undefined &&
-					preferences.autoSkipDisliked !== user.preferences.autoSkipDisliked
-				)
-					ActivitiesModule.runJob("ADD_ACTIVITY", {
-						userId: session.userId,
-						type: "user__toggle_autoskip_disliked_songs",
-						payload: {
-							message: preferences.autoSkipDisliked
-								? "Enabled the autoskipping of disliked songs"
-								: "Disabled the autoskipping of disliked songs"
-						}
-					});
+				// if (
+				// 	preferences.autoSkipDisliked !== undefined &&
+				// 	preferences.autoSkipDisliked !== user.preferences.autoSkipDisliked
+				// )
+				// 	ActivitiesModule.runJob("ADD_ACTIVITY", {
+				// 		userId: session.userId,
+				// 		type: "user__toggle_autoskip_disliked_songs",
+				// 		payload: {
+				// 			message: preferences.autoSkipDisliked
+				// 				? "Enabled the autoskipping of disliked songs"
+				// 				: "Disabled the autoskipping of disliked songs"
+				// 		}
+				// 	});
 
-				if (
-					preferences.activityWatch !== undefined &&
-					preferences.activityWatch !== user.preferences.activityWatch
-				)
-					ActivitiesModule.runJob("ADD_ACTIVITY", {
-						userId: session.userId,
-						type: "user__toggle_activity_watch",
-						payload: {
-							message: preferences.activityWatch
-								? "Enabled ActivityWatch integration"
-								: "Disabled ActivityWatch integration"
-						}
-					});
+				// if (
+				// 	preferences.activityWatch !== undefined &&
+				// 	preferences.activityWatch !== user.preferences.activityWatch
+				// )
+				// 	ActivitiesModule.runJob("ADD_ACTIVITY", {
+				// 		userId: session.userId,
+				// 		type: "user__toggle_activity_watch",
+				// 		payload: {
+				// 			message: preferences.activityWatch
+				// 				? "Enabled ActivityWatch integration"
+				// 				: "Disabled ActivityWatch integration"
+				// 		}
+				// 	});
 
 				this.log(
 					"SUCCESS",
@@ -2813,6 +2809,7 @@ export default {
 
 				(user, next) => {
 					if (!user) return next("Not logged in.");
+					if (!config.get("apis.github.enabled")) return next("Unlinking password is disabled.");
 					if (!user.services.github || !user.services.github.id)
 						return next("You can't remove password login without having GitHub login.");
 					return userModel.updateOne({ _id: session.userId }, { $unset: { "services.password": "" } }, next);

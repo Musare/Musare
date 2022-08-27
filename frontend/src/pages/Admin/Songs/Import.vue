@@ -1,3 +1,395 @@
+<script setup lang="ts">
+import { defineAsyncComponent, ref } from "vue";
+import { useRouter } from "vue-router";
+import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
+import { useLongJobsStore } from "@/stores/longJobs";
+import { useModalsStore } from "@/stores/modals";
+import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
+
+const AdvancedTable = defineAsyncComponent(
+	() => import("@/components/AdvancedTable.vue")
+);
+const InfoIcon = defineAsyncComponent(
+	() => import("@/components/InfoIcon.vue")
+);
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
+
+const router = useRouter();
+
+const { socket } = useWebsocketsStore();
+
+const createImport = ref({
+	stage: 2,
+	importMethod: "youtube",
+	youtubeUrl: "",
+	isImportingOnlyMusic: false
+});
+const columnDefault = ref(<TableColumn>{
+	sortable: true,
+	hidable: true,
+	defaultVisibility: "shown",
+	draggable: true,
+	resizable: true,
+	minWidth: 200,
+	maxWidth: 600
+});
+const columns = ref(<TableColumn[]>[
+	{
+		name: "options",
+		displayName: "Options",
+		properties: ["_id", "status"],
+		sortable: false,
+		hidable: false,
+		resizable: false,
+		minWidth: 160,
+		defaultWidth: 160
+	},
+	{
+		name: "type",
+		displayName: "Type",
+		properties: ["type"],
+		sortProperty: "type",
+		minWidth: 120,
+		defaultWidth: 120
+	},
+	{
+		name: "requestedBy",
+		displayName: "Requested By",
+		properties: ["requestedBy"],
+		sortProperty: "requestedBy"
+	},
+	{
+		name: "requestedAt",
+		displayName: "Requested At",
+		properties: ["requestedAt"],
+		sortProperty: "requestedAt"
+	},
+	{
+		name: "successful",
+		displayName: "Successful",
+		properties: ["response"],
+		sortProperty: "response.successful",
+		minWidth: 120,
+		defaultWidth: 120
+	},
+	{
+		name: "alreadyInDatabase",
+		displayName: "Existing",
+		properties: ["response"],
+		sortProperty: "response.alreadyInDatabase",
+		minWidth: 120,
+		defaultWidth: 120
+	},
+	{
+		name: "failed",
+		displayName: "Failed",
+		properties: ["response"],
+		sortProperty: "response.failed",
+		minWidth: 120,
+		defaultWidth: 120
+	},
+	{
+		name: "status",
+		displayName: "Status",
+		properties: ["status"],
+		sortProperty: "status",
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "url",
+		displayName: "URL",
+		properties: ["query.url"],
+		sortProperty: "query.url"
+	},
+	{
+		name: "musicOnly",
+		displayName: "Music Only",
+		properties: ["query.musicOnly"],
+		sortProperty: "query.musicOnly",
+		minWidth: 120,
+		defaultWidth: 120
+	},
+	{
+		name: "_id",
+		displayName: "Import ID",
+		properties: ["_id"],
+		sortProperty: "_id",
+		minWidth: 215,
+		defaultWidth: 215,
+		defaultVisibility: "hidden"
+	}
+]);
+const filters = ref(<TableFilter[]>[
+	{
+		name: "_id",
+		displayName: "Import ID",
+		property: "_id",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact"
+	},
+	{
+		name: "type",
+		displayName: "Type",
+		property: "type",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact",
+		dropdown: [["youtube", "YouTube"]]
+	},
+	{
+		name: "requestedBy",
+		displayName: "Requested By",
+		property: "requestedBy",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "requestedAt",
+		displayName: "Requested At",
+		property: "requestedAt",
+		filterTypes: ["datetimeBefore", "datetimeAfter"],
+		defaultFilterType: "datetimeBefore"
+	},
+	{
+		name: "response.successful",
+		displayName: "Successful",
+		property: "response.successful",
+		filterTypes: [
+			"numberLesserEqual",
+			"numberLesser",
+			"numberGreater",
+			"numberGreaterEqual",
+			"numberEquals"
+		],
+		defaultFilterType: "numberLesser"
+	},
+	{
+		name: "response.alreadyInDatabase",
+		displayName: "Existing",
+		property: "response.alreadyInDatabase",
+		filterTypes: [
+			"numberLesserEqual",
+			"numberLesser",
+			"numberGreater",
+			"numberGreaterEqual",
+			"numberEquals"
+		],
+		defaultFilterType: "numberLesser"
+	},
+	{
+		name: "response.failed",
+		displayName: "Failed",
+		property: "response.failed",
+		filterTypes: [
+			"numberLesserEqual",
+			"numberLesser",
+			"numberGreater",
+			"numberGreaterEqual",
+			"numberEquals"
+		],
+		defaultFilterType: "numberLesser"
+	},
+	{
+		name: "status",
+		displayName: "Status",
+		property: "status",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "url",
+		displayName: "URL",
+		property: "query.url",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "musicOnly",
+		displayName: "Music Only",
+		property: "query.musicOnly",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact",
+		dropdown: [
+			[true, "True"],
+			[false, "False"]
+		]
+	},
+	{
+		name: "status",
+		displayName: "Status",
+		property: "status",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact",
+		dropdown: [
+			["success", "Success"],
+			["in-progress", "In Progress"],
+			["failed", "Failed"]
+		]
+	}
+]);
+const events = ref(<TableEvents>{
+	adminRoom: "import",
+	updated: {
+		event: "admin.importJob.updated",
+		id: "importJob._id",
+		item: "importJob"
+	},
+	removed: {
+		event: "admin.importJob.removed",
+		id: "jobId"
+	}
+});
+
+const { openModal } = useModalsStore();
+
+const { setJob } = useLongJobsStore();
+
+const openAdvancedTable = importJob => {
+	const filter = {
+		appliedFilters: [
+			{
+				data: importJob._id,
+				filter: {
+					name: "importJob",
+					displayName: "Import Job",
+					property: "importJob",
+					filterTypes: ["special"],
+					defaultFilterType: "special"
+				},
+				filterType: { name: "special", displayName: "Special" }
+			}
+		],
+		appliedFilterOperator: "or"
+	};
+	router.push({
+		path: `/admin/youtube/videos`,
+		query: { filter: JSON.stringify(filter) }
+	});
+};
+
+const resetCreateImport = () => {
+	createImport.value = {
+		stage: 2,
+		importMethod: "youtube",
+		youtubeUrl: "",
+		isImportingOnlyMusic: false
+	};
+};
+
+const importFromYoutube = () => {
+	if (!createImport.value.youtubeUrl)
+		return new Toast("Please enter a YouTube URL.");
+
+	let id;
+	let title;
+
+	return socket.dispatch(
+		"youtube.requestSetAdmin",
+		createImport.value.youtubeUrl,
+		createImport.value.isImportingOnlyMusic,
+		true,
+		{
+			cb: () => {},
+			onProgress: res => {
+				if (res.status === "started") {
+					id = res.id;
+					title = res.title;
+				}
+
+				if (id)
+					setJob({
+						id,
+						name: title,
+						...res
+					});
+			}
+		}
+	);
+};
+
+const submitCreateImport = stage => {
+	if (stage === 2) {
+		const playlistRegex = /[\\?&]list=([^&#]*)/;
+		const channelRegex =
+			/\.[\w]+\/(?:(?:channel\/(UC[0-9A-Za-z_-]{21}[AQgw]))|(?:user\/?([\w-]+))|(?:c\/?([\w-]+))|(?:\/?([\w-]+)))/;
+		if (
+			playlistRegex.exec(createImport.value.youtubeUrl) ||
+			channelRegex.exec(createImport.value.youtubeUrl)
+		)
+			importFromYoutube();
+		else
+			return new Toast({
+				content: "Please enter a valid YouTube URL.",
+				timeout: 4000
+			});
+	}
+
+	if (stage === 3) resetCreateImport();
+	else createImport.value.stage += 1;
+
+	return createImport.value.stage;
+};
+
+// const prevCreateImport = stage => {
+// 	if (stage === 2) createImport.value.stage = 1;
+// };
+
+const getDateFormatted = createdAt => {
+	const date = new Date(createdAt);
+	const year = date.getFullYear();
+	const month = `${date.getMonth() + 1}`.padStart(2, "0");
+	const day = `${date.getDate()}`.padStart(2, "0");
+	const hour = `${date.getHours()}`.padStart(2, "0");
+	const minute = `${date.getMinutes()}`.padStart(2, "0");
+	return `${year}-${month}-${day} ${hour}:${minute}`;
+};
+
+const editSongs = videos => {
+	const songs = videos.map(youtubeId => ({ youtubeId }));
+	if (songs.length === 1)
+		openModal({ modal: "editSong", data: { song: songs[0] } });
+	else openModal({ modal: "editSong", data: { songs } });
+};
+
+const importAlbum = youtubeIds => {
+	socket.dispatch("songs.getSongsFromYoutubeIds", youtubeIds, res => {
+		if (res.status === "success") {
+			openModal({
+				modal: "importAlbum",
+				data: { songs: res.data.songs }
+			});
+		} else new Toast("Could not get songs.");
+	});
+};
+
+const removeImportJob = jobId => {
+	socket.dispatch("media.removeImportJobs", jobId, res => {
+		new Toast(res.message);
+	});
+};
+
+const handleConfirmed = ({ action, params }) => {
+	if (typeof action === "function") {
+		if (params) action(params);
+		else action();
+	}
+};
+
+const confirmAction = ({ message, action, params }) => {
+	openModal({
+		modal: "confirm",
+		data: {
+			message,
+			action,
+			params,
+			onCompleted: handleConfirmed
+		}
+	});
+};
+</script>
+
 <template>
 	<div>
 		<page-metadata title="Admin | Songs | Import" />
@@ -169,7 +561,7 @@
 										confirmAction({
 											message:
 												'Note: Removing an import will not remove any videos or songs.',
-											action: 'removeImportJob',
+											action: removeImportJob,
 											params: slotProps.item._id
 										})
 									"
@@ -194,7 +586,11 @@
 						</template>
 						<template #column-requestedAt="slotProps">
 							<span
-								:title="new Date(slotProps.item.requestedAt)"
+								:title="
+									new Date(
+										slotProps.item.requestedAt
+									).toString()
+								"
 								>{{
 									getDateFormatted(slotProps.item.requestedAt)
 								}}</span
@@ -248,389 +644,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapGetters, mapActions } from "vuex";
-
-import Toast from "toasters";
-
-import AdvancedTable from "@/components/AdvancedTable.vue";
-
-export default {
-	components: {
-		AdvancedTable
-	},
-	data() {
-		return {
-			createImport: {
-				stage: 2,
-				importMethod: "youtube",
-				youtubeUrl: "",
-				isImportingOnlyMusic: false
-			},
-			columnDefault: {
-				sortable: true,
-				hidable: true,
-				defaultVisibility: "shown",
-				draggable: true,
-				resizable: true,
-				minWidth: 200,
-				maxWidth: 600
-			},
-			columns: [
-				{
-					name: "options",
-					displayName: "Options",
-					properties: ["_id", "status"],
-					sortable: false,
-					hidable: false,
-					resizable: false,
-					minWidth: 160,
-					defaultWidth: 160
-				},
-				{
-					name: "type",
-					displayName: "Type",
-					properties: ["type"],
-					sortProperty: "type",
-					minWidth: 120,
-					defaultWidth: 120
-				},
-				{
-					name: "requestedBy",
-					displayName: "Requested By",
-					properties: ["requestedBy"],
-					sortProperty: "requestedBy"
-				},
-				{
-					name: "requestedAt",
-					displayName: "Requested At",
-					properties: ["requestedAt"],
-					sortProperty: "requestedAt"
-				},
-				{
-					name: "successful",
-					displayName: "Successful",
-					properties: ["response"],
-					sortProperty: "response.successful",
-					minWidth: 120,
-					defaultWidth: 120
-				},
-				{
-					name: "alreadyInDatabase",
-					displayName: "Existing",
-					properties: ["response"],
-					sortProperty: "response.alreadyInDatabase",
-					minWidth: 120,
-					defaultWidth: 120
-				},
-				{
-					name: "failed",
-					displayName: "Failed",
-					properties: ["response"],
-					sortProperty: "response.failed",
-					minWidth: 120,
-					defaultWidth: 120
-				},
-				{
-					name: "status",
-					displayName: "Status",
-					properties: ["status"],
-					sortProperty: "status",
-					defaultVisibility: "hidden"
-				},
-				{
-					name: "url",
-					displayName: "URL",
-					properties: ["query.url"],
-					sortProperty: "query.url"
-				},
-				{
-					name: "musicOnly",
-					displayName: "Music Only",
-					properties: ["query.musicOnly"],
-					sortProperty: "query.musicOnly",
-					minWidth: 120,
-					defaultWidth: 120
-				},
-				{
-					name: "_id",
-					displayName: "Import ID",
-					properties: ["_id"],
-					sortProperty: "_id",
-					minWidth: 215,
-					defaultWidth: 215,
-					defaultVisibility: "hidden"
-				}
-			],
-			filters: [
-				{
-					name: "_id",
-					displayName: "Import ID",
-					property: "_id",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact"
-				},
-				{
-					name: "type",
-					displayName: "Type",
-					property: "type",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact",
-					dropdown: [["youtube", "YouTube"]]
-				},
-				{
-					name: "requestedBy",
-					displayName: "Requested By",
-					property: "requestedBy",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "requestedAt",
-					displayName: "Requested At",
-					property: "requestedAt",
-					filterTypes: ["datetimeBefore", "datetimeAfter"],
-					defaultFilterType: "datetimeBefore"
-				},
-				{
-					name: "response.successful",
-					displayName: "Successful",
-					property: "response.successful",
-					filterTypes: [
-						"numberLesserEqual",
-						"numberLesser",
-						"numberGreater",
-						"numberGreaterEqual",
-						"numberEquals"
-					],
-					defaultFilterType: "numberLesser"
-				},
-				{
-					name: "response.alreadyInDatabase",
-					displayName: "Existing",
-					property: "response.alreadyInDatabase",
-					filterTypes: [
-						"numberLesserEqual",
-						"numberLesser",
-						"numberGreater",
-						"numberGreaterEqual",
-						"numberEquals"
-					],
-					defaultFilterType: "numberLesser"
-				},
-				{
-					name: "response.failed",
-					displayName: "Failed",
-					property: "response.failed",
-					filterTypes: [
-						"numberLesserEqual",
-						"numberLesser",
-						"numberGreater",
-						"numberGreaterEqual",
-						"numberEquals"
-					],
-					defaultFilterType: "numberLesser"
-				},
-				{
-					name: "status",
-					displayName: "Status",
-					property: "status",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "url",
-					displayName: "URL",
-					property: "query.url",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "musicOnly",
-					displayName: "Music Only",
-					property: "query.musicOnly",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact",
-					dropdown: [
-						[true, "True"],
-						[false, "False"]
-					]
-				},
-				{
-					name: "status",
-					displayName: "Status",
-					property: "status",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact",
-					dropdown: [
-						["success", "Success"],
-						["in-progress", "In Progress"],
-						["failed", "Failed"]
-					]
-				}
-			],
-			events: {
-				adminRoom: "import",
-				updated: {
-					event: "admin.importJob.updated",
-					id: "importJob._id",
-					item: "importJob"
-				},
-				removed: {
-					event: "admin.importJob.removed",
-					id: "jobId"
-				}
-			}
-		};
-	},
-	computed: {
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	methods: {
-		openAdvancedTable(importJob) {
-			const filter = {
-				appliedFilters: [
-					{
-						data: importJob._id,
-						filter: {
-							name: "importJob",
-							displayName: "Import Job",
-							property: "importJob",
-							filterTypes: ["special"],
-							defaultFilterType: "special"
-						},
-						filterType: { name: "special", displayName: "Special" }
-					}
-				],
-				appliedFilterOperator: "or"
-			};
-			this.$router.push({
-				path: `/admin/youtube/videos`,
-				query: { filter: JSON.stringify(filter) }
-			});
-		},
-		submitCreateImport(stage) {
-			if (stage === 2) {
-				const playlistRegex = /[\\?&]list=([^&#]*)/;
-				const channelRegex =
-					/\.[\w]+\/(?:(?:channel\/(UC[0-9A-Za-z_-]{21}[AQgw]))|(?:user\/?([\w-]+))|(?:c\/?([\w-]+))|(?:\/?([\w-]+)))/;
-				if (
-					playlistRegex.exec(this.createImport.youtubeUrl) ||
-					channelRegex.exec(this.createImport.youtubeUrl)
-				)
-					this.importFromYoutube();
-				else
-					return new Toast({
-						content: "Please enter a valid YouTube URL.",
-						timeout: 4000
-					});
-			}
-
-			if (stage === 3) this.resetCreateImport();
-			else this.createImport.stage += 1;
-
-			return this.createImport.stage;
-		},
-		resetCreateImport() {
-			this.createImport = {
-				stage: 2,
-				importMethod: "youtube",
-				youtubeUrl: "",
-				isImportingOnlyMusic: false
-			};
-		},
-		prevCreateImport(stage) {
-			if (stage === 2) this.createImport.stage = 1;
-		},
-		importFromYoutube() {
-			if (!this.createImport.youtubeUrl)
-				return new Toast("Please enter a YouTube URL.");
-
-			let id;
-			let title;
-
-			return this.socket.dispatch(
-				"youtube.requestSetAdmin",
-				this.createImport.youtubeUrl,
-				this.createImport.isImportingOnlyMusic,
-				true,
-				{
-					cb: () => {},
-					onProgress: res => {
-						if (res.status === "started") {
-							id = res.id;
-							title = res.title;
-						}
-
-						if (id)
-							this.setJob({
-								id,
-								name: title,
-								...res
-							});
-					}
-				}
-			);
-		},
-		getDateFormatted(createdAt) {
-			const date = new Date(createdAt);
-			const year = date.getFullYear();
-			const month = `${date.getMonth() + 1}`.padStart(2, 0);
-			const day = `${date.getDate()}`.padStart(2, 0);
-			const hour = `${date.getHours()}`.padStart(2, 0);
-			const minute = `${date.getMinutes()}`.padStart(2, 0);
-			return `${year}-${month}-${day} ${hour}:${minute}`;
-		},
-		editSongs(videos) {
-			const songs = videos.map(youtubeId => ({ youtubeId }));
-			if (songs.length === 1)
-				this.openModal({ modal: "editSong", data: { song: songs[0] } });
-			else this.openModal({ modal: "editSongs", data: { songs } });
-		},
-		importAlbum(youtubeIds) {
-			this.socket.dispatch(
-				"songs.getSongsFromYoutubeIds",
-				youtubeIds,
-				res => {
-					if (res.status === "success") {
-						this.openModal({
-							modal: "importAlbum",
-							data: { songs: res.data.songs }
-						});
-					} else new Toast("Could not get songs.");
-				}
-			);
-		},
-		removeImportJob(jobId) {
-			this.socket.dispatch("media.removeImportJobs", jobId, res => {
-				new Toast(res.message);
-			});
-		},
-		confirmAction({ message, action, params }) {
-			this.openModal({
-				modal: "confirm",
-				data: {
-					message,
-					action,
-					params,
-					onCompleted: this.handleConfirmed
-				}
-			});
-		},
-		handleConfirmed({ action, params }) {
-			if (typeof this[action] === "function") {
-				if (params) this[action](params);
-				else this[action]();
-			}
-		},
-		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions("longJobs", ["setJob"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .admin-tab.import-tab {

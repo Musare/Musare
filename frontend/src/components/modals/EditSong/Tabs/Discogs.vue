@@ -1,3 +1,153 @@
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import { storeToRefs } from "pinia";
+import Toast from "toasters";
+import keyboardShortcuts from "@/keyboardShortcuts";
+
+import { useEditSongStore } from "@/stores/editSong";
+
+import { useWebsocketsStore } from "@/stores/websockets";
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" },
+	modalModulePath: {
+		type: String,
+		default: "modals/editSong/MODAL_UUID"
+	},
+	bulk: { type: Boolean, default: false }
+});
+
+const editSongStore = useEditSongStore(props);
+
+const { socket } = useWebsocketsStore();
+
+const { song } = storeToRefs(editSongStore);
+
+const { selectDiscogsInfo } = editSongStore;
+
+const discogs = ref({
+	apiResults: [],
+	page: 1,
+	pages: 1,
+	disableLoadMore: false
+});
+const discogsQuery = ref("");
+const discogsInput = ref();
+
+const toggleAPIResult = index => {
+	const apiResult = discogs.value.apiResults[index];
+	if (apiResult.expanded === true) apiResult.expanded = false;
+	else if (apiResult.gotMoreInfo === true) apiResult.expanded = true;
+	else {
+		fetch(apiResult.album.resourceUrl)
+			.then(response => response.json())
+			.then(data => {
+				apiResult.album.artists = [];
+				apiResult.album.artistIds = [];
+				const artistRegex = /\\([0-9]+\\)$/;
+
+				apiResult.dataQuality = data.data_quality;
+				data.artists.forEach(artist => {
+					apiResult.album.artists.push(
+						artist.name.replace(artistRegex, "")
+					);
+					apiResult.album.artistIds.push(artist.id);
+				});
+				apiResult.tracks = data.tracklist.map(track => ({
+					position: track.position,
+					title: track.title
+				}));
+				apiResult.expanded = true;
+				apiResult.gotMoreInfo = true;
+			});
+	}
+};
+
+const searchDiscogsForPage = page => {
+	const query = discogsQuery.value;
+
+	socket.dispatch("apis.searchDiscogs", query, page, res => {
+		if (res.status === "success") {
+			if (page === 1)
+				new Toast(
+					`Successfully searched. Got ${res.data.results.length} results.`
+				);
+			else
+				new Toast(
+					`Successfully got ${res.data.results.length} more results.`
+				);
+
+			if (page === 1) {
+				discogs.value.apiResults = [];
+			}
+
+			discogs.value.pages = res.data.pages;
+
+			discogs.value.apiResults = discogs.value.apiResults.concat(
+				res.data.results.map(result => {
+					const type =
+						result.type.charAt(0).toUpperCase() +
+						result.type.slice(1);
+
+					return {
+						expanded: false,
+						gotMoreInfo: false,
+						album: {
+							id: result.id,
+							title: result.title,
+							type,
+							year: result.year,
+							genres: result.genre,
+							albumArt: result.cover_image,
+							resourceUrl: result.resource_url
+						}
+					};
+				})
+			);
+
+			discogs.value.page = page;
+			discogs.value.disableLoadMore = false;
+		} else new Toast(res.message);
+	});
+};
+
+const loadNextDiscogsPage = () => {
+	discogs.value.disableLoadMore = true;
+	searchDiscogsForPage(discogs.value.page + 1);
+};
+
+const onDiscogsQueryChange = () => {
+	discogs.value.page = 1;
+	discogs.value.pages = 1;
+	discogs.value.apiResults = [];
+	discogs.value.disableLoadMore = false;
+};
+
+const selectTrack = (apiResultIndex, trackIndex) => {
+	const apiResult = JSON.parse(
+		JSON.stringify(discogs.value.apiResults[apiResultIndex])
+	);
+	apiResult.track = apiResult.tracks[trackIndex];
+	delete apiResult.tracks;
+	delete apiResult.expanded;
+	delete apiResult.gotMoreInfo;
+
+	selectDiscogsInfo(apiResult);
+};
+
+onMounted(() => {
+	discogsQuery.value = song.value.title;
+
+	keyboardShortcuts.registerShortcut("editSong.focusDiscogs", {
+		keyCode: 35,
+		preventDefault: true,
+		handler: () => {
+			discogsInput.value.focus();
+		}
+	});
+});
+</script>
+
 <template>
 	<div class="discogs-tab">
 		<div class="selected-discogs-info" v-if="!song.discogs">
@@ -49,7 +199,7 @@
 					class="input"
 					type="text"
 					placeholder="Enter your Discogs query here..."
-					ref="discogs-input"
+					ref="discogsInput"
 					v-model="discogsQuery"
 					@keyup.enter="searchDiscogsForPage(1)"
 					@change="onDiscogsQueryChange"
@@ -113,13 +263,6 @@
 						Data quality:
 						<span>{{ result.dataQuality }}</span>
 					</p>
-					<button
-						class="button is-primary"
-						:disabled="bulk"
-						@click="importAlbum(result)"
-					>
-						Import album
-					</button>
 					<div class="tracks">
 						<div
 							class="track"
@@ -149,155 +292,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapGetters } from "vuex";
-
-import Toast from "toasters";
-import { mapModalState, mapModalActions } from "@/vuex_helpers";
-
-import keyboardShortcuts from "@/keyboardShortcuts";
-
-export default {
-	props: {
-		modalUuid: { type: String, default: "" },
-		modalModulePath: {
-			type: String,
-			default: "modals/editSong/MODAL_UUID"
-		},
-		bulk: { type: Boolean, default: false }
-	},
-	data() {
-		return {
-			discogs: {
-				apiResults: [],
-				page: 1,
-				pages: 1,
-				disableLoadMore: false
-			},
-			discogsQuery: ""
-		};
-	},
-	computed: {
-		...mapModalState("MODAL_MODULE_PATH", {
-			song: state => state.song
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	mounted() {
-		this.discogsQuery = this.song.title;
-
-		keyboardShortcuts.registerShortcut("editSong.focusDiscogs", {
-			keyCode: 35,
-			preventDefault: true,
-			handler: () => {
-				this.$refs["discogs-input"].focus();
-			}
-		});
-	},
-	methods: {
-		toggleAPIResult(index) {
-			const apiResult = this.discogs.apiResults[index];
-			if (apiResult.expanded === true) apiResult.expanded = false;
-			else if (apiResult.gotMoreInfo === true) apiResult.expanded = true;
-			else {
-				fetch(apiResult.album.resourceUrl)
-					.then(response => response.json())
-					.then(data => {
-						apiResult.album.artists = [];
-						apiResult.album.artistIds = [];
-						const artistRegex = /\\([0-9]+\\)$/;
-
-						apiResult.dataQuality = data.data_quality;
-						data.artists.forEach(artist => {
-							apiResult.album.artists.push(
-								artist.name.replace(artistRegex, "")
-							);
-							apiResult.album.artistIds.push(artist.id);
-						});
-						apiResult.tracks = data.tracklist.map(track => ({
-							position: track.position,
-							title: track.title
-						}));
-						apiResult.expanded = true;
-						apiResult.gotMoreInfo = true;
-					});
-			}
-		},
-		searchDiscogsForPage(page) {
-			const query = this.discogsQuery;
-
-			this.socket.dispatch("apis.searchDiscogs", query, page, res => {
-				if (res.status === "success") {
-					if (page === 1)
-						new Toast(
-							`Successfully searched. Got ${res.data.results.length} results.`
-						);
-					else
-						new Toast(
-							`Successfully got ${res.data.results.length} more results.`
-						);
-
-					if (page === 1) {
-						this.discogs.apiResults = [];
-					}
-
-					this.discogs.pages = res.data.pages;
-
-					this.discogs.apiResults = this.discogs.apiResults.concat(
-						res.data.results.map(result => {
-							const type =
-								result.type.charAt(0).toUpperCase() +
-								result.type.slice(1);
-
-							return {
-								expanded: false,
-								gotMoreInfo: false,
-								album: {
-									id: result.id,
-									title: result.title,
-									type,
-									year: result.year,
-									genres: result.genre,
-									albumArt: result.cover_image,
-									resourceUrl: result.resource_url
-								}
-							};
-						})
-					);
-
-					this.discogs.page = page;
-					this.discogs.disableLoadMore = false;
-				} else new Toast(res.message);
-			});
-		},
-		loadNextDiscogsPage() {
-			this.discogs.disableLoadMore = true;
-			this.searchDiscogsForPage(this.discogs.page + 1);
-		},
-		onDiscogsQueryChange() {
-			this.discogs.page = 1;
-			this.discogs.pages = 1;
-			this.discogs.apiResults = [];
-			this.discogs.disableLoadMore = false;
-		},
-		selectTrack(apiResultIndex, trackIndex) {
-			const apiResult = JSON.parse(
-				JSON.stringify(this.discogs.apiResults[apiResultIndex])
-			);
-			apiResult.track = apiResult.tracks[trackIndex];
-			delete apiResult.tracks;
-			delete apiResult.expanded;
-			delete apiResult.gotMoreInfo;
-
-			this.selectDiscogsInfo(apiResult);
-		},
-		...mapModalActions("MODAL_MODULE_PATH", ["selectDiscogsInfo"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {

@@ -1,3 +1,71 @@
+<script setup lang="ts">
+import { defineAsyncComponent, ref, onMounted } from "vue";
+import { storeToRefs } from "pinia";
+import { useWebsocketsStore } from "@/stores/websockets";
+import { useLongJobsStore } from "@/stores/longJobs";
+import { useUserAuthStore } from "@/stores/userAuth";
+
+const FloatingBox = defineAsyncComponent(
+	() => import("@/components/FloatingBox.vue")
+);
+
+const body = ref(document.body);
+
+const userAuthStore = useUserAuthStore();
+const { loggedIn } = storeToRefs(userAuthStore);
+
+const { socket } = useWebsocketsStore();
+
+const longJobsStore = useLongJobsStore();
+const { activeJobs } = storeToRefs(longJobsStore);
+const { setJob, setJobs, removeJob } = longJobsStore;
+
+const remove = job => {
+	if (job.status === "success" || job.status === "error") {
+		socket.dispatch("users.removeLongJob", job.id, res => {
+			if (res.status === "success") {
+				removeJob(job.id);
+			} else console.log(res.message);
+		});
+	}
+};
+
+onMounted(() => {
+	if (loggedIn.value) {
+		socket.dispatch("users.getLongJobs", {
+			cb: res => {
+				if (res.status === "success") {
+					setJobs(res.data.longJobs);
+				} else console.log(res.message);
+			},
+			onProgress: res => {
+				setJob(res);
+			}
+		});
+
+		socket.on("keep.event:longJob.removed", ({ data }) => {
+			removeJob(data.jobId);
+		});
+
+		socket.on("keep.event:longJob.added", ({ data }) => {
+			if (
+				!activeJobs.value.find(activeJob => activeJob.id === data.jobId)
+			)
+				socket.dispatch("users.getLongJob", data.jobId, {
+					cb: res => {
+						if (res.status === "success") {
+							setJob(res.data.longJob);
+						} else console.log(res.message);
+					},
+					onProgress: res => {
+						setJob(res);
+					}
+				});
+		});
+	}
+});
+</script>
+
 <template>
 	<floating-box
 		v-if="activeJobs.length > 0"
@@ -83,74 +151,6 @@
 		</template>
 	</floating-box>
 </template>
-
-<script>
-import { mapState, mapActions, mapGetters } from "vuex";
-
-import FloatingBox from "@/components/FloatingBox.vue";
-
-export default {
-	components: {
-		FloatingBox
-	},
-	data() {
-		return {
-			minimise: true,
-			body: document.body
-		};
-	},
-	computed: {
-		...mapState("longJobs", {
-			activeJobs: state => state.activeJobs
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	mounted() {
-		this.socket.dispatch("users.getLongJobs", {
-			cb: res => {
-				if (res.status === "success") {
-					this.setJobs(res.data.longJobs);
-				} else console.log(res.message);
-			},
-			onProgress: res => {
-				this.setJob(res);
-			}
-		});
-
-		this.socket.on("keep.event:longJob.removed", ({ data }) => {
-			this.removeJob(data.jobId);
-		});
-
-		this.socket.on("keep.event:longJob.added", ({ data }) => {
-			if (!this.activeJobs.find(activeJob => activeJob.id === data.jobId))
-				this.socket.dispatch("users.getLongJob", data.jobId, {
-					cb: res => {
-						if (res.status === "success") {
-							this.setJob(res.data.longJob);
-						} else console.log(res.message);
-					},
-					onProgress: res => {
-						this.setJob(res);
-					}
-				});
-		});
-	},
-	methods: {
-		remove(job) {
-			if (job.status === "success" || job.status === "error") {
-				this.socket.dispatch("users.removeLongJob", job.id, res => {
-					if (res.status === "success") {
-						this.removeJob(job.id);
-					} else console.log(res.message);
-				});
-			}
-		},
-		...mapActions("longJobs", ["setJob", "setJobs", "removeJob"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {

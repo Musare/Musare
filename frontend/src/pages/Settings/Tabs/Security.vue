@@ -1,3 +1,125 @@
+<script setup lang="ts">
+import { defineAsyncComponent, ref, watch, reactive, onMounted } from "vue";
+import Toast from "toasters";
+import { storeToRefs } from "pinia";
+import { useSettingsStore } from "@/stores/settings";
+import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserAuthStore } from "@/stores/userAuth";
+import _validation from "@/validation";
+
+const InputHelpBox = defineAsyncComponent(
+	() => import("@/components/InputHelpBox.vue")
+);
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
+);
+
+const settingsStore = useSettingsStore();
+const userAuthStore = useUserAuthStore();
+
+const { socket } = useWebsocketsStore();
+
+const apiDomain = ref("");
+const siteSettings = ref({
+	sitename: "Musare",
+	githubAuthentication: false
+});
+const validation = reactive({
+	oldPassword: {
+		value: "",
+		visible: false
+	},
+	newPassword: {
+		value: "",
+		visible: false,
+		valid: false,
+		entered: false,
+		message:
+			"Include at least one lowercase letter, one uppercase letter, one number and one special character."
+	}
+});
+
+const newPassword = ref();
+const oldPassword = ref();
+
+const { isPasswordLinked, isGithubLinked } = settingsStore;
+const { userId } = storeToRefs(userAuthStore);
+
+const togglePasswordVisibility = refName => {
+	const ref = refName === "oldPassword" ? oldPassword : newPassword;
+	if (ref.value.type === "password") {
+		ref.value.type = "text";
+		validation[refName].visible = true;
+	} else {
+		ref.value.type = "password";
+		validation[refName].visible = false;
+	}
+};
+const onInput = inputName => {
+	validation[inputName].entered = true;
+};
+const changePassword = () => {
+	const newPassword = validation.newPassword.value;
+
+	if (validation.oldPassword.value === "")
+		return new Toast("Please enter your previous password.");
+
+	if (!validation.newPassword.valid)
+		return new Toast("Please enter a valid new password.");
+
+	return socket.dispatch(
+		"users.updatePassword",
+		validation.oldPassword.value,
+		newPassword,
+		res => {
+			if (res.status !== "success") new Toast(res.message);
+			else {
+				validation.oldPassword.value = "";
+				validation.newPassword.value = "";
+
+				new Toast("Successfully changed password.");
+			}
+		}
+	);
+};
+const unlinkPassword = () => {
+	socket.dispatch("users.unlinkPassword", res => {
+		new Toast(res.message);
+	});
+};
+const unlinkGitHub = () => {
+	socket.dispatch("users.unlinkGitHub", res => {
+		new Toast(res.message);
+	});
+};
+const removeSessions = () => {
+	socket.dispatch(`users.removeSessions`, userId.value, res => {
+		new Toast(res.message);
+	});
+};
+
+onMounted(async () => {
+	apiDomain.value = await lofig.get("backend.apiDomain");
+	siteSettings.value = await lofig.get("siteSettings");
+});
+
+watch(validation, newValidation => {
+	const { value } = newValidation.newPassword;
+	if (!_validation.isLength(value, 6, 200)) {
+		validation.newPassword.message =
+			"Password must have between 6 and 200 characters.";
+		validation.newPassword.valid = false;
+	} else if (!_validation.regex.password.test(value)) {
+		validation.newPassword.message =
+			"Include at least one lowercase letter, one uppercase letter, one number and one special character.";
+		validation.newPassword.valid = false;
+	} else {
+		validation.newPassword.message = "Everything looks great!";
+		validation.newPassword.valid = true;
+	}
+});
+</script>
+
 <template>
 	<div class="content security-tab">
 		<div v-if="isPasswordLinked">
@@ -98,10 +220,10 @@
 			<div class="section-margin-bottom" />
 		</div>
 
-		<div v-if="!isGithubLinked">
+		<div v-if="!isGithubLinked && siteSettings.githubAuthentication">
 			<h4 class="section-title">Link your GitHub account</h4>
 			<p class="section-description">
-				Link your {{ sitename }} account with GitHub
+				Link your {{ siteSettings.sitename }} account with GitHub
 			</p>
 
 			<hr class="section-horizontal-rule" />
@@ -126,7 +248,7 @@
 
 			<div class="row">
 				<quick-confirm
-					v-if="isPasswordLinked"
+					v-if="isPasswordLinked && siteSettings.githubAuthentication"
 					@confirm="unlinkPassword()"
 				>
 					<a class="button is-danger">
@@ -165,122 +287,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import Toast from "toasters";
-import { mapGetters, mapState } from "vuex";
-
-import InputHelpBox from "@/components/InputHelpBox.vue";
-import validation from "@/validation";
-
-export default {
-	components: { InputHelpBox },
-	data() {
-		return {
-			apiDomain: "",
-			sitename: "Musare",
-			validation: {
-				oldPassword: {
-					value: "",
-					visible: false
-				},
-				newPassword: {
-					value: "",
-					visible: false,
-					valid: false,
-					entered: false,
-					message:
-						"Include at least one lowercase letter, one uppercase letter, one number and one special character."
-				}
-			}
-		};
-	},
-	computed: {
-		...mapGetters({
-			isPasswordLinked: "settings/isPasswordLinked",
-			isGithubLinked: "settings/isGithubLinked",
-			socket: "websockets/getSocket"
-		}),
-		...mapState({
-			userId: state => state.user.auth.userId
-		})
-	},
-	watch: {
-		// eslint-disable-next-line func-names
-		"validation.newPassword.value": function (value) {
-			if (!validation.isLength(value, 6, 200)) {
-				this.validation.newPassword.message =
-					"Password must have between 6 and 200 characters.";
-				this.validation.newPassword.valid = false;
-			} else if (!validation.regex.password.test(value)) {
-				this.validation.newPassword.message =
-					"Include at least one lowercase letter, one uppercase letter, one number and one special character.";
-				this.validation.newPassword.valid = false;
-			} else {
-				this.validation.newPassword.message = "Everything looks great!";
-				this.validation.newPassword.valid = true;
-			}
-		}
-	},
-	async mounted() {
-		this.apiDomain = await lofig.get("backend.apiDomain");
-		this.sitename = await lofig.get("siteSettings.sitename");
-	},
-	methods: {
-		togglePasswordVisibility(ref) {
-			if (this.$refs[ref].type === "password") {
-				this.$refs[ref].type = "text";
-				this.validation[ref].visible = true;
-			} else {
-				this.$refs[ref].type = "password";
-				this.validation[ref].visible = false;
-			}
-		},
-		onInput(inputName) {
-			this.validation[inputName].entered = true;
-		},
-		changePassword() {
-			const newPassword = this.validation.newPassword.value;
-
-			if (this.validation.oldPassword.value === "")
-				return new Toast("Please enter your previous password.");
-
-			if (!this.validation.newPassword.valid)
-				return new Toast("Please enter a valid new password.");
-
-			return this.socket.dispatch(
-				"users.updatePassword",
-				this.validation.oldPassword.value,
-				newPassword,
-				res => {
-					if (res.status !== "success") new Toast(res.message);
-					else {
-						this.validation.oldPassword.value = "";
-						this.validation.newPassword.value = "";
-
-						new Toast("Successfully changed password.");
-					}
-				}
-			);
-		},
-		unlinkPassword() {
-			this.socket.dispatch("users.unlinkPassword", res => {
-				new Toast(res.message);
-			});
-		},
-		unlinkGitHub() {
-			this.socket.dispatch("users.unlinkGitHub", res => {
-				new Toast(res.message);
-			});
-		},
-		removeSessions() {
-			this.socket.dispatch(`users.removeSessions`, this.userId, res => {
-				new Toast(res.message);
-			});
-		}
-	}
-};
-</script>
 
 <style lang="less" scoped>
 #change-password-button {

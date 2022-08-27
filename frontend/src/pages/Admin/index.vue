@@ -1,3 +1,163 @@
+<script setup lang="ts">
+import {
+	defineAsyncComponent,
+	ref,
+	watch,
+	onMounted,
+	onBeforeUnmount
+} from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useWebsocketsStore } from "@/stores/websockets";
+import keyboardShortcuts from "@/keyboardShortcuts";
+
+const MainHeader = defineAsyncComponent(
+	() => import("@/components/MainHeader.vue")
+);
+const MainFooter = defineAsyncComponent(
+	() => import("@/components/MainFooter.vue")
+);
+const FloatingBox = defineAsyncComponent(
+	() => import("@/components/FloatingBox.vue")
+);
+
+const route = useRoute();
+const router = useRouter();
+
+const { socket } = useWebsocketsStore();
+
+const currentTab = ref("");
+const siteSettings = ref({
+	logo: "",
+	sitename: ""
+});
+const sidebarActive = ref(true);
+const sidebarPadding = ref(0);
+const keyboardShortcutsHelper = ref();
+const childrenActive = ref({
+	songs: false,
+	users: false,
+	youtube: false
+});
+
+const toggleChildren = payload => {
+	if (typeof payload.force === "undefined")
+		childrenActive.value[payload.child] =
+			!childrenActive.value[payload.child];
+	else childrenActive.value[payload.child] = payload.force;
+};
+
+const getTabFromPath = (path?) => {
+	const localPath = path || route.path;
+	return localPath.substr(0, 7) === "/admin/"
+		? localPath.substr(7, localPath.length)
+		: null;
+};
+
+const onRouteChange = () => {
+	if (currentTab.value.startsWith("songs")) {
+		toggleChildren({ child: "songs", force: false });
+	} else if (currentTab.value.startsWith("users")) {
+		toggleChildren({ child: "users", force: false });
+	} else if (currentTab.value.startsWith("youtube")) {
+		toggleChildren({ child: "youtube", force: false });
+	}
+	currentTab.value = getTabFromPath();
+	// if (this.$refs[`${currentTab.value}-tab`])
+	// 	this.$refs[`${currentTab.value}-tab`].scrollIntoView({
+	// 		inline: "center",
+	// 		block: "nearest"
+	// 	});
+	localStorage.setItem("lastAdminPage", currentTab.value);
+	if (currentTab.value.startsWith("songs"))
+		toggleChildren({ child: "songs", force: true });
+	else if (currentTab.value.startsWith("users"))
+		toggleChildren({ child: "users", force: true });
+	else if (currentTab.value.startsWith("youtube"))
+		toggleChildren({ child: "youtube", force: true });
+};
+
+const toggleKeyboardShortcutsHelper = () => {
+	keyboardShortcutsHelper.value.toggleBox();
+};
+
+const resetKeyboardShortcutsHelper = () => {
+	keyboardShortcutsHelper.value.resetBox();
+};
+
+const toggleSidebar = () => {
+	sidebarActive.value = !sidebarActive.value;
+	localStorage.setItem("admin-sidebar-active", `${sidebarActive.value}`);
+};
+
+const calculateSidebarPadding = () => {
+	const scrollTop = document.documentElement.scrollTop || 0;
+	if (scrollTop <= 64) sidebarPadding.value = 64 - scrollTop;
+	else sidebarPadding.value = 0;
+};
+
+watch(
+	() => route.path,
+	path => {
+		if (getTabFromPath(path)) onRouteChange();
+	}
+);
+
+onMounted(async () => {
+	if (getTabFromPath()) {
+		onRouteChange();
+	} else if (localStorage.getItem("lastAdminPage")) {
+		router.push(`/admin/${localStorage.getItem("lastAdminPage")}`);
+	} else {
+		router.push(`/admin/songs`);
+	}
+
+	siteSettings.value = await lofig.get("siteSettings");
+
+	sidebarActive.value = JSON.parse(
+		localStorage.getItem("admin-sidebar-active")
+	);
+	if (sidebarActive.value === null)
+		sidebarActive.value = !(document.body.clientWidth <= 768);
+
+	calculateSidebarPadding();
+	window.addEventListener("scroll", calculateSidebarPadding);
+
+	keyboardShortcuts.registerShortcut("admin.toggleKeyboardShortcutsHelper", {
+		keyCode: 191, // '/' key
+		ctrl: true,
+		preventDefault: true,
+		handler: () => {
+			toggleKeyboardShortcutsHelper();
+		}
+	});
+
+	keyboardShortcuts.registerShortcut("admin.resetKeyboardShortcutsHelper", {
+		keyCode: 191, // '/' key
+		ctrl: true,
+		shift: true,
+		preventDefault: true,
+		handler: () => {
+			resetKeyboardShortcutsHelper();
+		}
+	});
+});
+
+onBeforeUnmount(() => {
+	socket.dispatch("apis.leaveRooms");
+
+	window.removeEventListener("scroll", calculateSidebarPadding);
+
+	const shortcutNames = [
+		"admin.toggleKeyboardShortcutsHelper",
+		"admin.resetKeyboardShortcutsHelper"
+	];
+
+	shortcutNames.forEach(shortcutName => {
+		keyboardShortcuts.unregisterShortcut(shortcutName);
+	});
+});
+</script>
+
 <template>
 	<div class="app">
 		<div class="admin-area">
@@ -327,150 +487,6 @@
 		</floating-box>
 	</div>
 </template>
-
-<script>
-import { mapState, mapActions, mapGetters } from "vuex";
-
-import keyboardShortcuts from "@/keyboardShortcuts";
-
-import FloatingBox from "@/components/FloatingBox.vue";
-
-export default {
-	components: {
-		FloatingBox
-	},
-	data() {
-		return {
-			currentTab: "",
-			siteSettings: {
-				logo: "",
-				sitename: ""
-			},
-			sidebarActive: true,
-			sidebarPadding: 0
-		};
-	},
-	computed: {
-		...mapGetters({
-			socket: "websockets/getSocket"
-		}),
-		...mapState("admin", { childrenActive: state => state.childrenActive })
-	},
-	watch: {
-		$route(route) {
-			if (this.getTabFromPath(route.path)) this.onRouteChange();
-		}
-	},
-	async mounted() {
-		if (this.getTabFromPath()) {
-			this.onRouteChange();
-		} else if (localStorage.getItem("lastAdminPage")) {
-			this.$router.push(
-				`/admin/${localStorage.getItem("lastAdminPage")}`
-			);
-		} else {
-			this.$router.push(`/admin/songs`);
-		}
-
-		this.siteSettings = await lofig.get("siteSettings");
-
-		this.sidebarActive = JSON.parse(
-			localStorage.getItem("admin-sidebar-active")
-		);
-		if (this.sidebarActive === null)
-			this.sidebarActive = !(document.body.clientWidth <= 768);
-
-		this.calculateSidebarPadding();
-		window.addEventListener("scroll", this.calculateSidebarPadding);
-
-		keyboardShortcuts.registerShortcut(
-			"admin.toggleKeyboardShortcutsHelper",
-			{
-				keyCode: 191, // '/' key
-				ctrl: true,
-				preventDefault: true,
-				handler: () => {
-					this.toggleKeyboardShortcutsHelper();
-				}
-			}
-		);
-
-		keyboardShortcuts.registerShortcut(
-			"admin.resetKeyboardShortcutsHelper",
-			{
-				keyCode: 191, // '/' key
-				ctrl: true,
-				shift: true,
-				preventDefault: true,
-				handler: () => {
-					this.resetKeyboardShortcutsHelper();
-				}
-			}
-		);
-	},
-	beforeUnmount() {
-		this.socket.dispatch("apis.leaveRooms");
-
-		window.removeEventListener("scroll", this.calculateSidebarPadding);
-
-		const shortcutNames = [
-			"admin.toggleKeyboardShortcutsHelper",
-			"admin.resetKeyboardShortcutsHelper"
-		];
-
-		shortcutNames.forEach(shortcutName => {
-			keyboardShortcuts.unregisterShortcut(shortcutName);
-		});
-	},
-	methods: {
-		onRouteChange() {
-			if (this.currentTab.startsWith("songs")) {
-				this.toggleChildren({ child: "songs", force: false });
-			} else if (this.currentTab.startsWith("users")) {
-				this.toggleChildren({ child: "users", force: false });
-			} else if (this.currentTab.startsWith("youtube")) {
-				this.toggleChildren({ child: "youtube", force: false });
-			}
-			this.currentTab = this.getTabFromPath();
-			if (this.$refs[`${this.currentTab}-tab`])
-				this.$refs[`${this.currentTab}-tab`].scrollIntoView({
-					inline: "center",
-					block: "nearest"
-				});
-			localStorage.setItem("lastAdminPage", this.currentTab);
-			if (this.currentTab.startsWith("songs"))
-				this.toggleChildren({ child: "songs", force: true });
-			else if (this.currentTab.startsWith("users"))
-				this.toggleChildren({ child: "users", force: true });
-			else if (this.currentTab.startsWith("youtube"))
-				this.toggleChildren({ child: "youtube", force: true });
-		},
-		toggleKeyboardShortcutsHelper() {
-			this.$refs.keyboardShortcutsHelper.toggleBox();
-		},
-		resetKeyboardShortcutsHelper() {
-			this.$refs.keyboardShortcutsHelper.resetBox();
-		},
-		toggleSidebar() {
-			this.sidebarActive = !this.sidebarActive;
-			localStorage.setItem("admin-sidebar-active", this.sidebarActive);
-		},
-		getTabFromPath(path) {
-			const localPath = path || this.$route.path;
-			return localPath.substr(0, 7) === "/admin/"
-				? localPath.substr(7, localPath.length)
-				: null;
-		},
-		calculateSidebarPadding() {
-			const scrollTop =
-				document.documentElement.scrollTop || document.scrollTop || 0;
-			if (scrollTop <= 64) this.sidebarPadding = 64 - scrollTop;
-			else this.sidebarPadding = 0;
-		},
-		...mapActions("admin", ["toggleChildren"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {

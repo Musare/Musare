@@ -1,3 +1,126 @@
+<script setup lang="ts">
+import { defineAsyncComponent, ref, onMounted } from "vue";
+import Toast from "toasters";
+import { storeToRefs } from "pinia";
+import validation from "@/validation";
+import { useWebsocketsStore } from "@/stores/websockets";
+import { useManageStationStore } from "@/stores/manageStation";
+
+const InfoIcon = defineAsyncComponent(
+	() => import("@/components/InfoIcon.vue")
+);
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" }
+});
+
+const { socket } = useWebsocketsStore();
+
+const manageStationStore = useManageStationStore(props);
+const { station } = storeToRefs(manageStationStore);
+const { editStation } = manageStationStore;
+
+const localStation = ref({
+	name: "",
+	displayName: "",
+	description: "",
+	theme: "blue",
+	privacy: "private",
+	requests: {
+		enabled: true,
+		access: "owner",
+		limit: 3
+	},
+	autofill: {
+		enabled: true,
+		limit: 30,
+		mode: "random"
+	}
+});
+
+const update = () => {
+	if (
+		JSON.stringify({
+			name: localStation.value.name,
+			displayName: localStation.value.displayName,
+			description: localStation.value.description,
+			theme: localStation.value.theme,
+			privacy: localStation.value.privacy,
+			requests: {
+				enabled: localStation.value.requests.enabled,
+				access: localStation.value.requests.access,
+				limit: localStation.value.requests.limit
+			},
+			autofill: {
+				enabled: localStation.value.autofill.enabled,
+				limit: localStation.value.autofill.limit,
+				mode: localStation.value.autofill.mode
+			}
+		}) !==
+		JSON.stringify({
+			name: station.value.name,
+			displayName: station.value.displayName,
+			description: station.value.description,
+			theme: station.value.theme,
+			privacy: station.value.privacy,
+			requests: {
+				enabled: station.value.requests.enabled,
+				access: station.value.requests.access,
+				limit: station.value.requests.limit
+			},
+			autofill: {
+				enabled: station.value.autofill.enabled,
+				limit: station.value.autofill.limit,
+				mode: station.value.autofill.mode
+			}
+		})
+	) {
+		const { name, displayName, description } = localStation.value;
+
+		if (!validation.isLength(name, 2, 16))
+			new Toast("Name must have between 2 and 16 characters.");
+		else if (!validation.regex.az09_.test(name))
+			new Toast(
+				"Invalid name format. Allowed characters: a-z, 0-9 and _."
+			);
+		else if (!validation.isLength(displayName, 2, 32))
+			new Toast("Display name must have between 2 and 32 characters.");
+		else if (!validation.regex.ascii.test(displayName))
+			new Toast(
+				"Invalid display name format. Only ASCII characters are allowed."
+			);
+		else if (!validation.isLength(description, 2, 200))
+			new Toast("Description must have between 2 and 200 characters.");
+		else if (
+			description
+				.split("")
+				.filter(character => character.charCodeAt(0) === 21328)
+				.length !== 0
+		)
+			new Toast("Invalid description format.");
+		else
+			socket.dispatch(
+				"stations.update",
+				station.value._id,
+				localStation.value,
+				res => {
+					new Toast(res.message);
+
+					if (res.status === "success") {
+						editStation(localStation.value);
+					}
+				}
+			);
+	} else {
+		new Toast("Please make a change before saving.");
+	}
+};
+
+onMounted(() => {
+	localStation.value = JSON.parse(JSON.stringify(station.value));
+});
+</script>
+
 <template>
 	<div class="station-settings">
 		<label class="label">Name</label>
@@ -170,141 +293,6 @@
 		</button>
 	</div>
 </template>
-
-<script>
-import { mapGetters, mapActions } from "vuex";
-
-import Toast from "toasters";
-
-import { mapModalState, mapModalActions } from "@/vuex_helpers";
-import validation from "@/validation";
-
-export default {
-	props: {
-		modalUuid: { type: String, default: "" }
-	},
-	data() {
-		return {
-			localStation: {
-				name: "",
-				displayName: "",
-				description: "",
-				theme: "blue",
-				privacy: "private",
-				requests: {
-					enabled: true,
-					access: "owner",
-					limit: 3
-				},
-				autofill: {
-					enabled: true,
-					limit: 30,
-					mode: "random"
-				}
-			}
-		};
-	},
-	computed: {
-		...mapModalState("modals/manageStation/MODAL_UUID", {
-			station: state => state.station
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	mounted() {
-		this.localStation = JSON.parse(JSON.stringify(this.station));
-	},
-	methods: {
-		update() {
-			if (
-				JSON.stringify({
-					name: this.localStation.name,
-					displayName: this.localStation.displayName,
-					description: this.localStation.description,
-					theme: this.localStation.theme,
-					privacy: this.localStation.privacy,
-					requests: {
-						enabled: this.localStation.requests.enabled,
-						access: this.localStation.requests.access,
-						limit: this.localStation.requests.limit
-					},
-					autofill: {
-						enabled: this.localStation.autofill.enabled,
-						limit: this.localStation.autofill.limit,
-						mode: this.localStation.autofill.mode
-					}
-				}) !==
-				JSON.stringify({
-					name: this.station.name,
-					displayName: this.station.displayName,
-					description: this.station.description,
-					theme: this.station.theme,
-					privacy: this.station.privacy,
-					requests: {
-						enabled: this.station.requests.enabled,
-						access: this.station.requests.access,
-						limit: this.station.requests.limit
-					},
-					autofill: {
-						enabled: this.station.autofill.enabled,
-						limit: this.station.autofill.limit,
-						mode: this.station.autofill.mode
-					}
-				})
-			) {
-				const { name, displayName, description } = this.localStation;
-
-				if (!validation.isLength(name, 2, 16))
-					new Toast("Name must have between 2 and 16 characters.");
-				else if (!validation.regex.az09_.test(name))
-					new Toast(
-						"Invalid name format. Allowed characters: a-z, 0-9 and _."
-					);
-				else if (!validation.isLength(displayName, 2, 32))
-					new Toast(
-						"Display name must have between 2 and 32 characters."
-					);
-				else if (!validation.regex.ascii.test(displayName))
-					new Toast(
-						"Invalid display name format. Only ASCII characters are allowed."
-					);
-				else if (!validation.isLength(description, 2, 200))
-					new Toast(
-						"Description must have between 2 and 200 characters."
-					);
-				else if (
-					description
-						.split("")
-						.filter(character => character.charCodeAt(0) === 21328)
-						.length !== 0
-				)
-					new Toast("Invalid description format.");
-				else
-					this.socket.dispatch(
-						"stations.update",
-						this.station._id,
-						this.localStation,
-						res => {
-							new Toast(res.message);
-
-							if (res.status === "success") {
-								this.editStation(this.localStation);
-							}
-						}
-					);
-			} else {
-				new Toast("Please make a change before saving.");
-			}
-		},
-		onCloseModal() {
-			this.closeModal("manageStation");
-		},
-		...mapModalActions("modals/manageStation/MODAL_UUID", ["editStation"]),
-		...mapActions("modalVisibility", ["closeModal"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {

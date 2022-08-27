@@ -1,3 +1,68 @@
+<script setup lang="ts">
+import { defineAsyncComponent, ref, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { format, parseISO } from "date-fns";
+import { storeToRefs } from "pinia";
+import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserAuthStore } from "@/stores/userAuth";
+import ws from "@/ws";
+import { useTabQueryHandler } from "@/composables/useTabQueryHandler";
+
+const MainHeader = defineAsyncComponent(
+	() => import("@/components/MainHeader.vue")
+);
+const MainFooter = defineAsyncComponent(
+	() => import("@/components/MainFooter.vue")
+);
+const ProfilePicture = defineAsyncComponent(
+	() => import("@/components/ProfilePicture.vue")
+);
+const RecentActivity = defineAsyncComponent(
+	() => import("./Tabs/RecentActivity.vue")
+);
+const Playlists = defineAsyncComponent(() => import("./Tabs/Playlists.vue"));
+
+const route = useRoute();
+const router = useRouter();
+const { tab, showTab } = useTabQueryHandler("recent-activity");
+
+const { socket } = useWebsocketsStore();
+
+const user = ref();
+const userId = ref("");
+const isUser = ref(false);
+
+const userAuthStore = useUserAuthStore();
+const { userId: myUserId, role } = storeToRefs(userAuthStore);
+
+const init = () => {
+	socket.dispatch("users.getBasicUser", route.params.username, res => {
+		if (res.status === "error") router.push("/404");
+		else {
+			user.value = res.data;
+
+			user.value.createdAt = format(
+				parseISO(user.value.createdAt),
+				"MMMM do yyyy"
+			);
+
+			isUser.value = true;
+			userId.value = user.value._id;
+		}
+	});
+};
+
+onMounted(() => {
+	if (
+		route.query.tab === "recent-activity" ||
+		route.query.tab === "playlists"
+	)
+		tab.value = route.query.tab;
+
+	ws.onConnect(init);
+});
+</script>
+
 <template>
 	<div v-if="isUser">
 		<page-metadata :title="`Profile | ${user.username}`" />
@@ -100,83 +165,7 @@
 	</div>
 </template>
 
-<script>
-import { mapState, mapGetters } from "vuex";
-import { format, parseISO } from "date-fns";
-import ws from "@/ws";
-
-import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
-
-import ProfilePicture from "@/components/ProfilePicture";
-
-import RecentActivity from "./Tabs/RecentActivity.vue";
-import Playlists from "./Tabs/Playlists.vue";
-
-export default {
-	components: {
-		ProfilePicture,
-		RecentActivity,
-		Playlists
-	},
-	mixins: [TabQueryHandler],
-	data() {
-		return {
-			user: {},
-			userId: "",
-			isUser: false,
-			tab: "recent-activity"
-		};
-	},
-	computed: {
-		...mapState({
-			role: state => state.user.auth.role,
-			myUserId: state => state.user.auth.userId
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	mounted() {
-		if (
-			this.$route.query.tab === "recent-activity" ||
-			this.$route.query.tab === "playlists"
-		)
-			this.tab = this.$route.query.tab;
-
-		ws.onConnect(this.init);
-	},
-	methods: {
-		init() {
-			this.socket.dispatch(
-				"users.getBasicUser",
-				this.$route.params.username,
-				res => {
-					if (res.status === "error") this.$router.push("/404");
-					else {
-						this.user = res.data;
-
-						this.user.createdAt = format(
-							parseISO(this.user.createdAt),
-							"MMMM do yyyy"
-						);
-
-						this.isUser = true;
-						this.userId = this.user._id;
-					}
-				}
-			);
-		}
-	}
-};
-</script>
-
 <style lang="less" scoped>
-@media only screen and (max-width: 1250px) {
-	.bottom-section .content {
-		width: 650px !important;
-	}
-}
-
 @media only screen and (max-width: 900px) {
 	.info-section {
 		margin-top: 0 !important;
@@ -234,8 +223,22 @@ export default {
 	}
 }
 
+@media only screen and (max-width: 500px) {
+	.bottom-section {
+		padding: 12px;
+		:deep(.content) {
+			padding: 30px 25px !important;
+			margin-left: 0;
+			margin-right: 0;
+		}
+	}
+}
+
+:deep(.container) {
+	max-width: 100%;
+}
+
 .info-section {
-	width: 912px;
 	max-width: 100%;
 	margin-left: auto;
 	margin-right: auto;
@@ -326,7 +329,7 @@ export default {
 	}
 
 	.bio-row {
-		max-width: 608px;
+		max-width: calc(min(608px, 100%));
 		margin-bottom: 24px;
 		margin-left: auto;
 		margin-right: auto;
@@ -335,7 +338,7 @@ export default {
 	}
 
 	.date-location-row {
-		max-width: 608px;
+		max-width: calc(min(608px, 100%));
 		margin-left: auto;
 		margin-right: auto;
 		margin-bottom: 24px;
@@ -399,7 +402,8 @@ export default {
 			font-weight: 400;
 		}
 
-		.item {
+		.item,
+		.draggable-item {
 			overflow: hidden;
 
 			&:not(:last-of-type) {

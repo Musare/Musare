@@ -1,3 +1,38 @@
+<script setup lang="ts">
+import { defineAsyncComponent, ref, computed, onMounted } from "vue";
+import utils from "@/utils";
+
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
+
+const props = defineProps({
+	playlist: { type: Object, default: () => {} },
+	showOwner: { type: Boolean, default: false }
+});
+
+const sitename = ref("Musare");
+
+const totalLength = playlist => {
+	let length = 0;
+	playlist.songs.forEach(song => {
+		length += song.duration;
+	});
+	return utils.formatTimeLong(length);
+};
+
+const playlistLength = computed(
+	() =>
+		`${totalLength(props.playlist)} • ${props.playlist.songs.length} ${
+			props.playlist.songs.length === 1 ? "song" : "songs"
+		}`
+);
+
+onMounted(async () => {
+	sitename.value = await lofig.get("siteSettings.sitename");
+});
+</script>
+
 <template>
 	<div class="playlist-item universal-item">
 		<slot name="item-icon">
@@ -35,42 +70,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import utils from "../../js/utils";
-
-export default {
-	props: {
-		playlist: { type: Object, default: () => {} },
-		showOwner: { type: Boolean, default: false }
-	},
-	data() {
-		return {
-			utils,
-			sitename: "Musare"
-		};
-	},
-	computed: {
-		playlistLength() {
-			return `${this.totalLength(this.playlist)} • ${
-				this.playlist.songs.length
-			} ${this.playlist.songs.length === 1 ? "song" : "songs"}`;
-		}
-	},
-	async mounted() {
-		this.sitename = await lofig.get("siteSettings.sitename");
-	},
-	methods: {
-		totalLength(playlist) {
-			let length = 0;
-			playlist.songs.forEach(song => {
-				length += song.duration;
-			});
-			return this.utils.formatTimeLong(length);
-		}
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {

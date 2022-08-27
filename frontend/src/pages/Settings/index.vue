@@ -1,3 +1,90 @@
+<script setup lang="ts">
+import { useRoute } from "vue-router";
+import { onMounted, defineAsyncComponent } from "vue";
+import Toast from "toasters";
+import { useSettingsStore } from "@/stores/settings";
+import { useWebsocketsStore } from "@/stores/websockets";
+import ws from "@/ws";
+import { useTabQueryHandler } from "@/composables/useTabQueryHandler";
+
+const MainHeader = defineAsyncComponent(
+	() => import("@/components/MainHeader.vue")
+);
+const MainFooter = defineAsyncComponent(
+	() => import("@/components/MainFooter.vue")
+);
+const SecuritySettings = defineAsyncComponent(
+	() => import("./Tabs/Security.vue")
+);
+const AccountSettings = defineAsyncComponent(
+	() => import("./Tabs/Account.vue")
+);
+const ProfileSettings = defineAsyncComponent(
+	() => import("./Tabs/Profile.vue")
+);
+const PreferencesSettings = defineAsyncComponent(
+	() => import("./Tabs/Preferences.vue")
+);
+
+const settingsStore = useSettingsStore();
+const route = useRoute();
+const { tab, showTab } = useTabQueryHandler("");
+
+const { socket } = useWebsocketsStore();
+
+const { setUser, updateOriginalUser } = settingsStore;
+
+const init = () => {
+	socket.dispatch("users.findBySession", res => {
+		if (res.status === "success") setUser(res.data.user);
+		else new Toast("You're not currently signed in.");
+	});
+};
+
+onMounted(() => {
+	if (
+		route.query.tab === "profile" ||
+		route.query.tab === "security" ||
+		route.query.tab === "account" ||
+		route.query.tab === "preferences"
+	)
+		tab.value = route.query.tab;
+	else tab.value = "profile";
+
+	// this.localNightmode = this.nightmode;
+
+	ws.onConnect(init);
+
+	socket.on("event:user.password.linked", () =>
+		updateOriginalUser({
+			property: "password",
+			value: true
+		})
+	);
+
+	socket.on("event:user.password.unlinked", () =>
+		updateOriginalUser({
+			property: "password",
+			value: false
+		})
+	);
+
+	socket.on("event:user.github.linked", () =>
+		updateOriginalUser({
+			property: "github",
+			value: true
+		})
+	);
+
+	socket.on("event:user.github.unlinked", () =>
+		updateOriginalUser({
+			property: "github",
+			value: false
+		})
+	);
+});
+</script>
+
 <template>
 	<div>
 		<page-metadata title="Settings" />
@@ -44,94 +131,6 @@
 		<main-footer />
 	</div>
 </template>
-
-<script>
-import { mapActions, mapGetters } from "vuex";
-import { defineAsyncComponent } from "vue";
-import Toast from "toasters";
-import ws from "@/ws";
-
-import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
-
-export default {
-	components: {
-		SecuritySettings: defineAsyncComponent(() =>
-			import("./Tabs/Security.vue")
-		),
-		AccountSettings: defineAsyncComponent(() =>
-			import("./Tabs/Account.vue")
-		),
-		ProfileSettings: defineAsyncComponent(() =>
-			import("./Tabs/Profile.vue")
-		),
-		PreferencesSettings: defineAsyncComponent(() =>
-			import("./Tabs/Preferences.vue")
-		)
-	},
-	mixins: [TabQueryHandler],
-	data() {
-		return {
-			tab: ""
-		};
-	},
-	computed: {
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	mounted() {
-		if (
-			this.$route.query.tab === "profile" ||
-			this.$route.query.tab === "security" ||
-			this.$route.query.tab === "account" ||
-			this.$route.query.tab === "preferences"
-		)
-			this.tab = this.$route.query.tab;
-		else this.tab = "profile";
-
-		this.localNightmode = this.nightmode;
-
-		ws.onConnect(this.init);
-
-		this.socket.on("event:user.password.linked", () =>
-			this.updateOriginalUser({
-				property: "password",
-				value: true
-			})
-		);
-
-		this.socket.on("event:user.password.unlinked", () =>
-			this.updateOriginalUser({
-				property: "password",
-				value: false
-			})
-		);
-
-		this.socket.on("event:user.github.linked", () =>
-			this.updateOriginalUser({
-				property: "github",
-				value: true
-			})
-		);
-
-		this.socket.on("event:user.github.unlinked", () =>
-			this.updateOriginalUser({
-				property: "github",
-				value: false
-			})
-		);
-	},
-	methods: {
-		init() {
-			this.socket.dispatch("users.findBySession", res => {
-				if (res.status === "success") this.setUser(res.data.user);
-				else new Toast("You're not currently signed in.");
-			});
-		},
-		...mapActions("settings", ["updateOriginalUser", "setUser"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .night-mode {

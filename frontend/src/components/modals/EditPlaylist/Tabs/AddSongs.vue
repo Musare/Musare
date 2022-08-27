@@ -1,3 +1,97 @@
+<script setup lang="ts">
+import { defineAsyncComponent, ref, watch, onMounted } from "vue";
+import { storeToRefs } from "pinia";
+import { useSearchYoutube } from "@/composables/useSearchYoutube";
+import { useSearchMusare } from "@/composables/useSearchMusare";
+import { useEditPlaylistStore } from "@/stores/editPlaylist";
+
+const SongItem = defineAsyncComponent(
+	() => import("@/components/SongItem.vue")
+);
+const SearchQueryItem = defineAsyncComponent(
+	() => import("@/components/SearchQueryItem.vue")
+);
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" }
+});
+
+const editPlaylistStore = useEditPlaylistStore(props);
+const { playlistId, playlist } = storeToRefs(editPlaylistStore);
+
+const sitename = ref("Musare");
+
+const {
+	youtubeSearch,
+	searchForSongs,
+	loadMoreSongs,
+	addYouTubeSongToPlaylist
+} = useSearchYoutube();
+
+const {
+	musareSearch,
+	resultsLeftCount,
+	nextPageResultsCount,
+	searchForMusareSongs,
+	addMusareSongToPlaylist
+} = useSearchMusare();
+
+watch(
+	() => youtubeSearch.value.songs.results,
+	songs => {
+		songs.forEach((searchItem, index) =>
+			playlist.value.songs.find(song => {
+				if (song.youtubeId === searchItem.id)
+					youtubeSearch.value.songs.results[index].isAddedToQueue =
+						true;
+				return song.youtubeId === searchItem.id;
+			})
+		);
+	}
+);
+watch(
+	() => musareSearch.value.results,
+	songs => {
+		songs.forEach((searchItem, index) =>
+			playlist.value.songs.find(song => {
+				if (song._id === searchItem._id)
+					musareSearch.value.results[index].isAddedToQueue = true;
+
+				return song._id === searchItem._id;
+			})
+		);
+	}
+);
+watch(
+	() => playlist.value.songs,
+	() => {
+		youtubeSearch.value.songs.results.forEach((searchItem, index) =>
+			playlist.value.songs.find(song => {
+				youtubeSearch.value.songs.results[index].isAddedToQueue = false;
+				if (song.youtubeId === searchItem.id)
+					youtubeSearch.value.songs.results[index].isAddedToQueue =
+						true;
+
+				return song.youtubeId === searchItem.id;
+			})
+		);
+		musareSearch.value.results.forEach((searchItem, index) =>
+			playlist.value.songs.find(song => {
+				musareSearch.value.results[index].isAddedToQueue = false;
+				if (song.youtubeId === searchItem.youtubeId)
+					musareSearch.value.results[index].isAddedToQueue = true;
+
+				return song.youtubeId === searchItem.youtubeId;
+			})
+		);
+	}
+);
+
+onMounted(async () => {
+	sitename.value = await lofig.get("siteSettings.sitename");
+});
+</script>
+
 <template>
 	<div class="youtube-tab section">
 		<div>
@@ -47,6 +141,7 @@
 								v-tippy
 								@click="
 									addMusareSongToPlaylist(
+										playlistId,
 										song.youtubeId,
 										index
 									)
@@ -120,7 +215,11 @@
 								content="Add Song to Playlist"
 								v-tippy
 								@click="
-									addYouTubeSongToPlaylist(result.id, index)
+									addYouTubeSongToPlaylist(
+										playlistId,
+										result.id,
+										index
+									)
 								"
 								>playlist_add</i
 							>
@@ -138,91 +237,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapGetters } from "vuex";
-
-import { mapModalState } from "@/vuex_helpers";
-
-import SearchYoutube from "@/mixins/SearchYoutube.vue";
-import SearchMusare from "@/mixins/SearchMusare.vue";
-
-import SongItem from "@/components/SongItem.vue";
-import SearchQueryItem from "@/components/SearchQueryItem.vue";
-
-export default {
-	components: { SearchQueryItem, SongItem },
-	mixins: [SearchYoutube, SearchMusare],
-	props: {
-		modalUuid: { type: String, default: "" }
-	},
-	data() {
-		return {
-			sitename: "Musare"
-		};
-	},
-	computed: {
-		...mapModalState("modals/editPlaylist/MODAL_UUID", {
-			playlist: state => state.playlist
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	watch: {
-		"youtubeSearch.songs.results": function checkIfSongInPlaylist(songs) {
-			songs.forEach((searchItem, index) =>
-				this.playlist.songs.find(song => {
-					if (song.youtubeId === searchItem.id)
-						this.youtubeSearch.songs.results[
-							index
-						].isAddedToQueue = true;
-
-					return song.youtubeId === searchItem.id;
-				})
-			);
-		},
-		"musareSearch.results": function checkIfSongInPlaylist(songs) {
-			songs.forEach((searchItem, index) =>
-				this.playlist.songs.find(song => {
-					if (song._id === searchItem._id)
-						this.musareSearch.results[index].isAddedToQueue = true;
-
-					return song._id === searchItem._id;
-				})
-			);
-		},
-		"playlist.songs": function checkIfSongInPlaylist() {
-			this.youtubeSearch.songs.results.forEach((searchItem, index) =>
-				this.playlist.songs.find(song => {
-					this.youtubeSearch.songs.results[
-						index
-					].isAddedToQueue = false;
-					if (song.youtubeId === searchItem.id)
-						this.youtubeSearch.songs.results[
-							index
-						].isAddedToQueue = true;
-
-					return song.youtubeId === searchItem.id;
-				})
-			);
-			console.log(222);
-			this.musareSearch.results.forEach((searchItem, index) =>
-				this.playlist.songs.find(song => {
-					this.musareSearch.results[index].isAddedToQueue = false;
-					if (song.youtubeId === searchItem.youtubeId)
-						this.musareSearch.results[index].isAddedToQueue = true;
-
-					return song.youtubeId === searchItem.youtubeId;
-				})
-			);
-		}
-	},
-	async mounted() {
-		this.sitename = await lofig.get("siteSettings.sitename");
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .youtube-tab {

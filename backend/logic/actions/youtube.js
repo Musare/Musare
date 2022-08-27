@@ -273,7 +273,45 @@ export default {
 							operator,
 							modelName: "youtubeVideo",
 							blacklistedProperties: [],
-							specialProperties: {},
+							specialProperties: {
+								songId: [
+									// Fetch songs from songs collection with a matching youtubeId
+									{
+										$lookup: {
+											from: "songs",
+											localField: "youtubeId",
+											foreignField: "youtubeId",
+											as: "song"
+										}
+									},
+									// Turn the array of songs returned in the last step into one object, since only one song should have been returned maximum
+									{
+										$unwind: {
+											path: "$song",
+											preserveNullAndEmptyArrays: true
+										}
+									},
+									// Add new field songId, which grabs the song object's _id and tries turning it into a string
+									{
+										$addFields: {
+											songId: {
+												$convert: {
+													input: "$song._id",
+													to: "string",
+													onError: "",
+													onNull: ""
+												}
+											}
+										}
+									},
+									// Cleanup, don't return the song object for any further steps
+									{
+										$project: {
+											song: 0
+										}
+									}
+								]
+							},
 							specialQueries: {},
 							specialFilters: {
 								importJob: importJobId => [

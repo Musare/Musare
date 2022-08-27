@@ -587,7 +587,7 @@ class _YouTubeModule extends CoreClass {
 				],
 				(err, channelId) => {
 					if (err) {
-						YouTubeModule.log("ERROR", "GET_CHANNEL_ID_FROM_CUSTOM_URL", `${err.message}`);
+						YouTubeModule.log("ERROR", "GET_CHANNEL_ID_FROM_CUSTOM_URL", `${err.message || err}`);
 						if (err.message === "Request failed with status code 404") {
 							return reject(new Error("Channel not found. Is the channel public/unlisted?"));
 						}
@@ -783,6 +783,7 @@ class _YouTubeModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {boolean} payload.musicOnly - whether to return music videos or all videos in the channel
+	 * @param {boolean} payload.disableSearch - whether to allow searching for custom url/username
 	 * @param {string} payload.url - the url of the YouTube channel
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
@@ -807,6 +808,8 @@ class _YouTubeModule extends CoreClass {
 			console.log(`Channel custom URL: ${channelCustomUrl}`);
 			console.log(`Channel username or custom URL: ${channelUsernameOrCustomUrl}`);
 
+			const disableSearch = payload.disableSearch || false;
+
 			async.waterfall(
 				[
 					next => {
@@ -829,6 +832,10 @@ class _YouTubeModule extends CoreClass {
 					(getUsernameFromCustomUrl, playlistId, next) => {
 						if (!getUsernameFromCustomUrl) return next(null, playlistId);
 
+						if (disableSearch)
+							return next(
+								"Importing with this type of URL is disabled. Please provide a channel URL with the channel ID."
+							);
 						const payload = {};
 						if (channelCustomUrl) payload.customUrl = channelCustomUrl;
 						else if (channelUsernameOrCustomUrl) payload.customUrl = channelUsernameOrCustomUrl;
@@ -890,8 +897,8 @@ class _YouTubeModule extends CoreClass {
 				],
 				(err, response) => {
 					if (err && err !== true) {
-						YouTubeModule.log("ERROR", "GET_CHANNEL", "Some error has occurred.", err.message);
-						reject(new Error(err.message));
+						YouTubeModule.log("ERROR", "GET_CHANNEL", "Some error has occurred.", err.message || err);
+						reject(new Error(err.message || err));
 					} else {
 						resolve({ songs: response.filteredSongs ? response.filteredSongs.videoIds : response.songs });
 					}
@@ -1053,7 +1060,7 @@ class _YouTubeModule extends CoreClass {
 
 				youtubeApiRequest.save();
 
-				const { key, ...keylessParams } = payload.params;
+				const { ...keylessParams } = payload.params;
 				CacheModule.runJob(
 					"HSET",
 					{

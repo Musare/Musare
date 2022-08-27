@@ -1,3 +1,14 @@
+<script setup lang="ts">
+import { defineAsyncComponent } from "vue";
+
+const MainHeader = defineAsyncComponent(
+	() => import("@/components/MainHeader.vue")
+);
+const MainFooter = defineAsyncComponent(
+	() => import("@/components/MainFooter.vue")
+);
+</script>
+
 <template>
 	<div>
 		<main-header />

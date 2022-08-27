@@ -1,3 +1,530 @@
+<script setup lang="ts">
+import { defineAsyncComponent, ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
+import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
+import { useLongJobsStore } from "@/stores/longJobs";
+import { useModalsStore } from "@/stores/modals";
+import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
+
+const AdvancedTable = defineAsyncComponent(
+	() => import("@/components/AdvancedTable.vue")
+);
+const RunJobDropdown = defineAsyncComponent(
+	() => import("@/components/RunJobDropdown.vue")
+);
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
+);
+const SongThumbnail = defineAsyncComponent(
+	() => import("@/components/SongThumbnail.vue")
+);
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
+
+const route = useRoute();
+
+const { setJob } = useLongJobsStore();
+
+const { socket } = useWebsocketsStore();
+
+const columnDefault = ref(<TableColumn>{
+	sortable: true,
+	hidable: true,
+	defaultVisibility: "shown",
+	draggable: true,
+	resizable: true,
+	minWidth: 200,
+	maxWidth: 600
+});
+const columns = ref(<TableColumn[]>[
+	{
+		name: "options",
+		displayName: "Options",
+		properties: ["_id", "verified", "youtubeId"],
+		sortable: false,
+		hidable: false,
+		resizable: false,
+		minWidth: 129,
+		defaultWidth: 129
+	},
+	{
+		name: "thumbnailImage",
+		displayName: "Thumb",
+		properties: ["thumbnail"],
+		sortable: false,
+		minWidth: 75,
+		defaultWidth: 75,
+		maxWidth: 75,
+		resizable: false
+	},
+	{
+		name: "title",
+		displayName: "Title",
+		properties: ["title"],
+		sortProperty: "title"
+	},
+	{
+		name: "artists",
+		displayName: "Artists",
+		properties: ["artists"],
+		sortable: false
+	},
+	{
+		name: "genres",
+		displayName: "Genres",
+		properties: ["genres"],
+		sortable: false
+	},
+	{
+		name: "tags",
+		displayName: "Tags",
+		properties: ["tags"],
+		sortable: false
+	},
+	{
+		name: "_id",
+		displayName: "Song ID",
+		properties: ["_id"],
+		sortProperty: "_id",
+		minWidth: 215,
+		defaultWidth: 215
+	},
+	{
+		name: "youtubeId",
+		displayName: "YouTube ID",
+		properties: ["youtubeId"],
+		sortProperty: "youtubeId",
+		minWidth: 120,
+		defaultWidth: 120
+	},
+	{
+		name: "verified",
+		displayName: "Verified",
+		properties: ["verified"],
+		sortProperty: "verified",
+		minWidth: 120,
+		defaultWidth: 120
+	},
+	{
+		name: "thumbnailUrl",
+		displayName: "Thumbnail (URL)",
+		properties: ["thumbnail"],
+		sortProperty: "thumbnail",
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "duration",
+		displayName: "Duration",
+		properties: ["duration"],
+		sortProperty: "duration",
+		defaultWidth: 200,
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "skipDuration",
+		displayName: "Skip Duration",
+		properties: ["skipDuration"],
+		sortProperty: "skipDuration",
+		defaultWidth: 200,
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "requestedBy",
+		displayName: "Requested By",
+		properties: ["requestedBy"],
+		sortProperty: "requestedBy",
+		defaultWidth: 200,
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "requestedAt",
+		displayName: "Requested At",
+		properties: ["requestedAt"],
+		sortProperty: "requestedAt",
+		defaultWidth: 200,
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "verifiedBy",
+		displayName: "Verified By",
+		properties: ["verifiedBy"],
+		sortProperty: "verifiedBy",
+		defaultWidth: 200,
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "verifiedAt",
+		displayName: "Verified At",
+		properties: ["verifiedAt"],
+		sortProperty: "verifiedAt",
+		defaultWidth: 200,
+		defaultVisibility: "hidden"
+	}
+]);
+const filters = ref(<TableFilter[]>[
+	{
+		name: "_id",
+		displayName: "Song ID",
+		property: "_id",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact"
+	},
+	{
+		name: "youtubeId",
+		displayName: "YouTube ID",
+		property: "youtubeId",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "title",
+		displayName: "Title",
+		property: "title",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "artists",
+		displayName: "Artists",
+		property: "artists",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains",
+		autosuggest: true,
+		autosuggestDataAction: "songs.getArtists"
+	},
+	{
+		name: "genres",
+		displayName: "Genres",
+		property: "genres",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains",
+		autosuggest: true,
+		autosuggestDataAction: "songs.getGenres"
+	},
+	{
+		name: "tags",
+		displayName: "Tags",
+		property: "tags",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains",
+		autosuggest: true,
+		autosuggestDataAction: "songs.getTags"
+	},
+	{
+		name: "thumbnail",
+		displayName: "Thumbnail",
+		property: "thumbnail",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "requestedBy",
+		displayName: "Requested By",
+		property: "requestedBy",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "requestedAt",
+		displayName: "Requested At",
+		property: "requestedAt",
+		filterTypes: ["datetimeBefore", "datetimeAfter"],
+		defaultFilterType: "datetimeBefore"
+	},
+	{
+		name: "verifiedBy",
+		displayName: "Verified By",
+		property: "verifiedBy",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "verifiedAt",
+		displayName: "Verified At",
+		property: "verifiedAt",
+		filterTypes: ["datetimeBefore", "datetimeAfter"],
+		defaultFilterType: "datetimeBefore"
+	},
+	{
+		name: "verified",
+		displayName: "Verified",
+		property: "verified",
+		filterTypes: ["boolean"],
+		defaultFilterType: "boolean"
+	},
+	{
+		name: "duration",
+		displayName: "Duration",
+		property: "duration",
+		filterTypes: [
+			"numberLesserEqual",
+			"numberLesser",
+			"numberGreater",
+			"numberGreaterEqual",
+			"numberEquals"
+		],
+		defaultFilterType: "numberLesser"
+	},
+	{
+		name: "skipDuration",
+		displayName: "Skip Duration",
+		property: "skipDuration",
+		filterTypes: [
+			"numberLesserEqual",
+			"numberLesser",
+			"numberGreater",
+			"numberGreaterEqual",
+			"numberEquals"
+		],
+		defaultFilterType: "numberLesser"
+	}
+]);
+const events = ref(<TableEvents>{
+	adminRoom: "songs",
+	updated: {
+		event: "admin.song.updated",
+		id: "song._id",
+		item: "song"
+	},
+	removed: {
+		event: "admin.song.removed",
+		id: "songId"
+	}
+});
+const jobs = ref([
+	{
+		name: "Update all songs",
+		socket: "songs.updateAll"
+	},
+	{
+		name: "Recalculate all ratings",
+		socket: "media.recalculateAllRatings"
+	}
+]);
+
+const { openModal } = useModalsStore();
+
+const create = () => {
+	openModal({
+		modal: "editSong",
+		data: { song: { newSong: true } }
+	});
+};
+
+const editOne = song => {
+	openModal({
+		modal: "editSong",
+		data: { song }
+	});
+};
+
+const editMany = selectedRows => {
+	if (selectedRows.length === 1) editOne(selectedRows[0]);
+	else {
+		const songs = selectedRows.map(row => ({
+			youtubeId: row.youtubeId
+		}));
+		openModal({ modal: "editSong", data: { songs } });
+	}
+};
+
+const verifyOne = songId => {
+	socket.dispatch("songs.verify", songId, res => {
+		new Toast(res.message);
+	});
+};
+
+const verifyMany = selectedRows => {
+	let id;
+	let title;
+
+	socket.dispatch(
+		"songs.verifyMany",
+		selectedRows.map(row => row._id),
+		{
+			cb: () => {},
+			onProgress: res => {
+				if (res.status === "started") {
+					id = res.id;
+					title = res.title;
+				}
+
+				if (id)
+					setJob({
+						id,
+						name: title,
+						...res
+					});
+			}
+		}
+	);
+};
+
+const unverifyOne = songId => {
+	socket.dispatch("songs.unverify", songId, res => {
+		new Toast(res.message);
+	});
+};
+
+const unverifyMany = selectedRows => {
+	let id;
+	let title;
+
+	socket.dispatch(
+		"songs.unverifyMany",
+		selectedRows.map(row => row._id),
+		{
+			cb: () => {},
+			onProgress: res => {
+				if (res.status === "started") {
+					id = res.id;
+					title = res.title;
+				}
+
+				if (id)
+					setJob({
+						id,
+						name: title,
+						...res
+					});
+			}
+		}
+	);
+};
+
+const importAlbum = selectedRows => {
+	const youtubeIds = selectedRows.map(({ youtubeId }) => youtubeId);
+	socket.dispatch("songs.getSongsFromYoutubeIds", youtubeIds, res => {
+		if (res.status === "success") {
+			openModal({
+				modal: "importAlbum",
+				data: { songs: res.data.songs }
+			});
+		}
+	});
+};
+
+const setTags = selectedRows => {
+	openModal({
+		modal: "bulkActions",
+		data: {
+			type: {
+				name: "tags",
+				action: "songs.editTags",
+				items: selectedRows.map(row => row._id),
+				regex: /^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/,
+				autosuggest: true,
+				autosuggestDataAction: "songs.getTags"
+			}
+		}
+	});
+};
+
+const setArtists = selectedRows => {
+	openModal({
+		modal: "bulkActions",
+		data: {
+			type: {
+				name: "artists",
+				action: "songs.editArtists",
+				items: selectedRows.map(row => row._id),
+				regex: /^(?=.{1,64}$).*$/,
+				autosuggest: true,
+				autosuggestDataAction: "songs.getArtists"
+			}
+		}
+	});
+};
+
+const setGenres = selectedRows => {
+	openModal({
+		modal: "bulkActions",
+		data: {
+			type: {
+				name: "genres",
+				action: "songs.editGenres",
+				items: selectedRows.map(row => row._id),
+				regex: /^[\x00-\x7F]{1,32}$/,
+				autosuggest: true,
+				autosuggestDataAction: "songs.getGenres"
+			}
+		}
+	});
+};
+
+const deleteOne = songId => {
+	socket.dispatch("songs.remove", songId, res => {
+		new Toast(res.message);
+	});
+};
+
+const deleteMany = selectedRows => {
+	let id;
+	let title;
+
+	socket.dispatch(
+		"songs.removeMany",
+		selectedRows.map(row => row._id),
+		{
+			cb: () => {},
+			onProgress: res => {
+				if (res.status === "started") {
+					id = res.id;
+					title = res.title;
+				}
+
+				if (id)
+					setJob({
+						id,
+						name: title,
+						...res
+					});
+			}
+		}
+	);
+};
+
+const getDateFormatted = createdAt => {
+	const date = new Date(createdAt);
+	const year = date.getFullYear();
+	const month = `${date.getMonth() + 1}`.padStart(2, "0");
+	const day = `${date.getDate()}`.padStart(2, "0");
+	const hour = `${date.getHours()}`.padStart(2, "0");
+	const minute = `${date.getMinutes()}`.padStart(2, "0");
+	return `${year}-${month}-${day} ${hour}:${minute}`;
+};
+
+const handleConfirmed = ({ action, params }) => {
+	if (typeof action === "function") {
+		if (params) action(params);
+		else action();
+	}
+};
+
+const confirmAction = ({ message, action, params }) => {
+	openModal({
+		modal: "confirm",
+		data: {
+			message,
+			action,
+			params,
+			onCompleted: handleConfirmed
+		}
+	});
+};
+
+onMounted(() => {
+	if (route.query.songId) {
+		socket.dispatch("songs.getSongFromSongId", route.query.songId, res => {
+			if (res.status === "success") editMany([res.data.song]);
+			else new Toast("Song with that ID not found");
+		});
+	}
+});
+</script>
+
 <template>
 	<div class="admin-tab">
 		<page-metadata title="Admin | Songs" />
@@ -67,7 +594,7 @@
 							confirmAction({
 								message:
 									'Removing this song will remove it from all playlists and cause a ratings recalculation.',
-								action: 'deleteOne',
+								action: deleteOne,
 								params: slotProps.item._id
 							})
 						"
@@ -142,15 +669,16 @@
 				<user-link :user-id="slotProps.item.requestedBy" />
 			</template>
 			<template #column-requestedAt="slotProps">
-				<span :title="new Date(slotProps.item.requestedAt)">{{
-					getDateFormatted(slotProps.item.requestedAt)
-				}}</span>
+				<span
+					:title="new Date(slotProps.item.requestedAt).toString()"
+					>{{ getDateFormatted(slotProps.item.requestedAt) }}</span
+				>
 			</template>
 			<template #column-verifiedBy="slotProps">
 				<user-link :user-id="slotProps.item.verifiedBy" />
 			</template>
 			<template #column-verifiedAt="slotProps">
-				<span :title="new Date(slotProps.item.verifiedAt)">{{
+				<span :title="new Date(slotProps.item.verifiedAt).toString()">{{
 					getDateFormatted(slotProps.item.verifiedAt)
 				}}</span>
 			</template>
@@ -229,7 +757,7 @@
 							confirmAction({
 								message:
 									'Removing these songs will remove them from all playlists and cause a ratings recalculation.',
-								action: 'deleteMany',
+								action: deleteMany,
 								params: slotProps.item
 							})
 						"
@@ -244,521 +772,6 @@
 		</advanced-table>
 	</div>
 </template>
-
-<script>
-import { mapState, mapActions, mapGetters } from "vuex";
-
-import Toast from "toasters";
-
-import AdvancedTable from "@/components/AdvancedTable.vue";
-import RunJobDropdown from "@/components/RunJobDropdown.vue";
-
-export default {
-	components: {
-		AdvancedTable,
-		RunJobDropdown
-	},
-	data() {
-		return {
-			columnDefault: {
-				sortable: true,
-				hidable: true,
-				defaultVisibility: "shown",
-				draggable: true,
-				resizable: true,
-				minWidth: 200,
-				maxWidth: 600
-			},
-			columns: [
-				{
-					name: "options",
-					displayName: "Options",
-					properties: ["_id", "verified", "youtubeId"],
-					sortable: false,
-					hidable: false,
-					resizable: false,
-					minWidth: 129,
-					defaultWidth: 129
-				},
-				{
-					name: "thumbnailImage",
-					displayName: "Thumb",
-					properties: ["thumbnail"],
-					sortable: false,
-					minWidth: 75,
-					defaultWidth: 75,
-					maxWidth: 75,
-					resizable: false
-				},
-				{
-					name: "title",
-					displayName: "Title",
-					properties: ["title"],
-					sortProperty: "title"
-				},
-				{
-					name: "artists",
-					displayName: "Artists",
-					properties: ["artists"],
-					sortable: false
-				},
-				{
-					name: "genres",
-					displayName: "Genres",
-					properties: ["genres"],
-					sortable: false
-				},
-				{
-					name: "tags",
-					displayName: "Tags",
-					properties: ["tags"],
-					sortable: false
-				},
-				{
-					name: "_id",
-					displayName: "Song ID",
-					properties: ["_id"],
-					sortProperty: "_id",
-					minWidth: 215,
-					defaultWidth: 215
-				},
-				{
-					name: "youtubeId",
-					displayName: "YouTube ID",
-					properties: ["youtubeId"],
-					sortProperty: "youtubeId",
-					minWidth: 120,
-					defaultWidth: 120
-				},
-				{
-					name: "verified",
-					displayName: "Verified",
-					properties: ["verified"],
-					sortProperty: "verified",
-					minWidth: 120,
-					defaultWidth: 120
-				},
-				{
-					name: "thumbnailUrl",
-					displayName: "Thumbnail (URL)",
-					properties: ["thumbnail"],
-					sortProperty: "thumbnail",
-					defaultVisibility: "hidden"
-				},
-				{
-					name: "duration",
-					displayName: "Duration",
-					properties: ["duration"],
-					sortProperty: "duration",
-					defaultWidth: 200,
-					defaultVisibility: "hidden"
-				},
-				{
-					name: "skipDuration",
-					displayName: "Skip Duration",
-					properties: ["skipDuration"],
-					sortProperty: "skipDuration",
-					defaultWidth: 200,
-					defaultVisibility: "hidden"
-				},
-				{
-					name: "requestedBy",
-					displayName: "Requested By",
-					properties: ["requestedBy"],
-					sortProperty: "requestedBy",
-					defaultWidth: 200,
-					defaultVisibility: "hidden"
-				},
-				{
-					name: "requestedAt",
-					displayName: "Requested At",
-					properties: ["requestedAt"],
-					sortProperty: "requestedAt",
-					defaultWidth: 200,
-					defaultVisibility: "hidden"
-				},
-				{
-					name: "verifiedBy",
-					displayName: "Verified By",
-					properties: ["verifiedBy"],
-					sortProperty: "verifiedBy",
-					defaultWidth: 200,
-					defaultVisibility: "hidden"
-				},
-				{
-					name: "verifiedAt",
-					displayName: "Verified At",
-					properties: ["verifiedAt"],
-					sortProperty: "verifiedAt",
-					defaultWidth: 200,
-					defaultVisibility: "hidden"
-				}
-			],
-			filters: [
-				{
-					name: "_id",
-					displayName: "Song ID",
-					property: "_id",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact"
-				},
-				{
-					name: "youtubeId",
-					displayName: "YouTube ID",
-					property: "youtubeId",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "title",
-					displayName: "Title",
-					property: "title",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "artists",
-					displayName: "Artists",
-					property: "artists",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains",
-					autosuggest: true,
-					autosuggestDataAction: "songs.getArtists"
-				},
-				{
-					name: "genres",
-					displayName: "Genres",
-					property: "genres",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains",
-					autosuggest: true,
-					autosuggestDataAction: "songs.getGenres"
-				},
-				{
-					name: "tags",
-					displayName: "Tags",
-					property: "tags",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains",
-					autosuggest: true,
-					autosuggestDataAction: "songs.getTags"
-				},
-				{
-					name: "thumbnail",
-					displayName: "Thumbnail",
-					property: "thumbnail",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "requestedBy",
-					displayName: "Requested By",
-					property: "requestedBy",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "requestedAt",
-					displayName: "Requested At",
-					property: "requestedAt",
-					filterTypes: ["datetimeBefore", "datetimeAfter"],
-					defaultFilterType: "datetimeBefore"
-				},
-				{
-					name: "verifiedBy",
-					displayName: "Verified By",
-					property: "verifiedBy",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "verifiedAt",
-					displayName: "Verified At",
-					property: "verifiedAt",
-					filterTypes: ["datetimeBefore", "datetimeAfter"],
-					defaultFilterType: "datetimeBefore"
-				},
-				{
-					name: "verified",
-					displayName: "Verified",
-					property: "verified",
-					filterTypes: ["boolean"],
-					defaultFilterType: "boolean"
-				},
-				{
-					name: "duration",
-					displayName: "Duration",
-					property: "duration",
-					filterTypes: [
-						"numberLesserEqual",
-						"numberLesser",
-						"numberGreater",
-						"numberGreaterEqual",
-						"numberEquals"
-					],
-					defaultFilterType: "numberLesser"
-				},
-				{
-					name: "skipDuration",
-					displayName: "Skip Duration",
-					property: "skipDuration",
-					filterTypes: [
-						"numberLesserEqual",
-						"numberLesser",
-						"numberGreater",
-						"numberGreaterEqual",
-						"numberEquals"
-					],
-					defaultFilterType: "numberLesser"
-				}
-			],
-			events: {
-				adminRoom: "songs",
-				updated: {
-					event: "admin.song.updated",
-					id: "song._id",
-					item: "song"
-				},
-				removed: {
-					event: "admin.song.removed",
-					id: "songId"
-				}
-			},
-			jobs: [
-				{
-					name: "Update all songs",
-					socket: "songs.updateAll"
-				},
-				{
-					name: "Recalculate all ratings",
-					socket: "media.recalculateAllRatings"
-				}
-			]
-		};
-	},
-	computed: {
-		...mapState("modals/editSong", {
-			song: state => state.song
-		}),
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	mounted() {
-		if (this.$route.query.songId) {
-			this.socket.dispatch(
-				"songs.getSongFromSongId",
-				this.$route.query.songId,
-				res => {
-					if (res.status === "success")
-						this.editMany([res.data.song]);
-					else new Toast("Song with that ID not found");
-				}
-			);
-		}
-	},
-	methods: {
-		create() {
-			this.openModal({
-				modal: "editSong",
-				data: { song: { newSong: true } }
-			});
-		},
-		editOne(song) {
-			this.openModal({
-				modal: "editSong",
-				data: { song }
-			});
-		},
-		editMany(selectedRows) {
-			if (selectedRows.length === 1) this.editOne(selectedRows[0]);
-			else {
-				const songs = selectedRows.map(row => ({
-					youtubeId: row.youtubeId
-				}));
-				this.openModal({ modal: "editSongs", data: { songs } });
-			}
-		},
-		verifyOne(songId) {
-			this.socket.dispatch("songs.verify", songId, res => {
-				new Toast(res.message);
-			});
-		},
-		verifyMany(selectedRows) {
-			let id;
-			let title;
-
-			this.socket.dispatch(
-				"songs.verifyMany",
-				selectedRows.map(row => row._id),
-				{
-					cb: () => {},
-					onProgress: res => {
-						if (res.status === "started") {
-							id = res.id;
-							title = res.title;
-						}
-
-						if (id)
-							this.setJob({
-								id,
-								name: title,
-								...res
-							});
-					}
-				}
-			);
-		},
-		unverifyOne(songId) {
-			this.socket.dispatch("songs.unverify", songId, res => {
-				new Toast(res.message);
-			});
-		},
-		unverifyMany(selectedRows) {
-			let id;
-			let title;
-
-			this.socket.dispatch(
-				"songs.unverifyMany",
-				selectedRows.map(row => row._id),
-				{
-					cb: () => {},
-					onProgress: res => {
-						if (res.status === "started") {
-							id = res.id;
-							title = res.title;
-						}
-
-						if (id)
-							this.setJob({
-								id,
-								name: title,
-								...res
-							});
-					}
-				}
-			);
-		},
-		importAlbum(selectedRows) {
-			const youtubeIds = selectedRows.map(({ youtubeId }) => youtubeId);
-			this.socket.dispatch(
-				"songs.getSongsFromYoutubeIds",
-				youtubeIds,
-				res => {
-					if (res.status === "success") {
-						this.openModal({
-							modal: "importAlbum",
-							data: { songs: res.data.songs }
-						});
-					}
-				}
-			);
-		},
-		setTags(selectedRows) {
-			this.openModal({
-				modal: "bulkActions",
-				data: {
-					type: {
-						name: "tags",
-						action: "songs.editTags",
-						items: selectedRows.map(row => row._id),
-						regex: /^[a-zA-Z0-9_]{1,64}$|^[a-zA-Z0-9_]{1,64}\[[a-zA-Z0-9_]{1,64}\]$/,
-						autosuggest: true,
-						autosuggestDataAction: "songs.getTags"
-					}
-				}
-			});
-		},
-		setArtists(selectedRows) {
-			this.openModal({
-				modal: "bulkActions",
-				data: {
-					type: {
-						name: "artists",
-						action: "songs.editArtists",
-						items: selectedRows.map(row => row._id),
-						regex: /^(?=.{1,64}$).*$/,
-						autosuggest: true,
-						autosuggestDataAction: "songs.getArtists"
-					}
-				}
-			});
-		},
-		setGenres(selectedRows) {
-			this.openModal({
-				modal: "bulkActions",
-				data: {
-					type: {
-						name: "genres",
-						action: "songs.editGenres",
-						items: selectedRows.map(row => row._id),
-						regex: /^[\x00-\x7F]{1,32}$/,
-						autosuggest: true,
-						autosuggestDataAction: "songs.getGenres"
-					}
-				}
-			});
-		},
-		deleteOne(songId) {
-			this.socket.dispatch("songs.remove", songId, res => {
-				new Toast(res.message);
-			});
-		},
-		deleteMany(selectedRows) {
-			let id;
-			let title;
-
-			this.socket.dispatch(
-				"songs.removeMany",
-				selectedRows.map(row => row._id),
-				{
-					cb: () => {},
-					onProgress: res => {
-						if (res.status === "started") {
-							id = res.id;
-							title = res.title;
-						}
-
-						if (id)
-							this.setJob({
-								id,
-								name: title,
-								...res
-							});
-					}
-				}
-			);
-		},
-		getDateFormatted(createdAt) {
-			const date = new Date(createdAt);
-			const year = date.getFullYear();
-			const month = `${date.getMonth() + 1}`.padStart(2, 0);
-			const day = `${date.getDate()}`.padStart(2, 0);
-			const hour = `${date.getHours()}`.padStart(2, 0);
-			const minute = `${date.getMinutes()}`.padStart(2, 0);
-			return `${year}-${month}-${day} ${hour}:${minute}`;
-		},
-		confirmAction({ message, action, params }) {
-			this.openModal({
-				modal: "confirm",
-				data: {
-					message,
-					action,
-					params,
-					onCompleted: this.handleConfirmed
-				}
-			});
-		},
-		handleConfirmed({ action, params }) {
-			if (typeof this[action] === "function") {
-				if (params) this[action](params);
-				else this[action]();
-			}
-		},
-		...mapActions("modalVisibility", ["openModal"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 :deep(.song-thumbnail) {

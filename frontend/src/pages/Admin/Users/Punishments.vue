@@ -1,3 +1,201 @@
+<script setup lang="ts">
+import { defineAsyncComponent, ref } from "vue";
+import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
+import { useModalsStore } from "@/stores/modals";
+import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
+
+const AdvancedTable = defineAsyncComponent(
+	() => import("@/components/AdvancedTable.vue")
+);
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
+);
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
+
+const { socket } = useWebsocketsStore();
+
+const ipBan = ref({
+	ip: "",
+	reason: "",
+	expiresAt: "1h"
+});
+const columnDefault = ref(<TableColumn>{
+	sortable: true,
+	hidable: true,
+	defaultVisibility: "shown",
+	draggable: true,
+	resizable: true,
+	minWidth: 150,
+	maxWidth: 600
+});
+const columns = ref(<TableColumn[]>[
+	{
+		name: "options",
+		displayName: "Options",
+		properties: ["_id", "status"],
+		sortable: false,
+		hidable: false,
+		resizable: false,
+		minWidth: 76,
+		defaultWidth: 76
+	},
+	{
+		name: "status",
+		displayName: "Status",
+		properties: ["status"],
+		sortable: false,
+		defaultWidth: 150
+	},
+	{
+		name: "type",
+		displayName: "Type",
+		properties: ["type"],
+		sortProperty: "type"
+	},
+	{
+		name: "value",
+		displayName: "Value",
+		properties: ["value"],
+		sortProperty: "value",
+		defaultWidth: 150
+	},
+	{
+		name: "reason",
+		displayName: "Reason",
+		properties: ["reason"],
+		sortProperty: "reason"
+	},
+	{
+		name: "punishedBy",
+		displayName: "Punished By",
+		properties: ["punishedBy"],
+		sortProperty: "punishedBy",
+		defaultWidth: 200,
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "punishedAt",
+		displayName: "Punished At",
+		properties: ["punishedAt"],
+		sortProperty: "punishedAt",
+		defaultWidth: 200,
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "expiresAt",
+		displayName: "Expires At",
+		properties: ["expiresAt"],
+		sortProperty: "verifiedAt",
+		defaultWidth: 200,
+		defaultVisibility: "hidden"
+	}
+]);
+const filters = ref(<TableFilter[]>[
+	{
+		name: "status",
+		displayName: "Status",
+		property: "status",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact",
+		dropdown: [
+			["Active", "Active"],
+			["Inactive", "Inactive"]
+		]
+	},
+	{
+		name: "type",
+		displayName: "Type",
+		property: "type",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact",
+		dropdown: [
+			["banUserId", "User ID"],
+			["banUserIp", "IP Address"]
+		]
+	},
+	{
+		name: "value",
+		displayName: "Value",
+		property: "value",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "reason",
+		displayName: "Reason",
+		property: "reason",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "punishedBy",
+		displayName: "Punished By",
+		property: "punishedBy",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "punishedAt",
+		displayName: "Punished At",
+		property: "punishedAt",
+		filterTypes: ["datetimeBefore", "datetimeAfter"],
+		defaultFilterType: "datetimeBefore"
+	},
+	{
+		name: "expiresAt",
+		displayName: "Expires At",
+		property: "expiresAt",
+		filterTypes: ["datetimeBefore", "datetimeAfter"],
+		defaultFilterType: "datetimeBefore"
+	}
+]);
+const events = ref(<TableEvents>{
+	adminRoom: "punishments",
+	updated: {
+		event: "admin.punishment.updated",
+		id: "punishment._id",
+		item: "punishment"
+	}
+});
+
+const { openModal } = useModalsStore();
+
+const banIP = () => {
+	socket.dispatch(
+		"punishments.banIP",
+		ipBan.value.ip,
+		ipBan.value.reason,
+		ipBan.value.expiresAt,
+		res => {
+			new Toast(res.message);
+		}
+	);
+};
+
+const getDateFormatted = createdAt => {
+	const date = new Date(createdAt);
+	const year = date.getFullYear();
+	const month = `${date.getMonth() + 1}`.padStart(2, "0");
+	const day = `${date.getDate()}`.padStart(2, "0");
+	const hour = `${date.getHours()}`.padStart(2, "0");
+	const minute = `${date.getMinutes()}`.padStart(2, "0");
+	return `${year}-${month}-${day} ${hour}:${minute}`;
+};
+
+const deactivatePunishment = punishmentId => {
+	socket.dispatch("punishments.deactivatePunishment", punishmentId, res => {
+		if (res.status === "success") {
+			new Toast("Successfully deactivated punishment.");
+		} else {
+			new Toast(res.message);
+		}
+	});
+};
+</script>
+
 <template>
 	<div class="admin-tab container">
 		<page-metadata title="Admin | Users | Punishments" />
@@ -11,6 +209,7 @@
 			:column-default="columnDefault"
 			:columns="columns"
 			:filters="filters"
+			:events="events"
 			data-action="punishments.getData"
 			name="admin-punishments"
 			:max-width="1200"
@@ -31,6 +230,30 @@
 					>
 						open_in_full
 					</button>
+					<quick-confirm
+						@confirm="deactivatePunishment(slotProps.item._id)"
+						:disabled="
+							slotProps.item.status === 'Inactive' ||
+							slotProps.item.removed
+						"
+					>
+						<button
+							class="button is-danger icon-with-button material-icons"
+							:class="{
+								disabled:
+									slotProps.item.status === 'Inactive' ||
+									slotProps.item.removed
+							}"
+							:disabled="
+								slotProps.item.status === 'Inactive' ||
+								slotProps.item.removed
+							"
+							content="Deactivate Punishment"
+							v-tippy
+						>
+							gavel
+						</button>
+					</quick-confirm>
 				</div>
 			</template>
 			<template #column-status="slotProps">
@@ -69,12 +292,12 @@
 				<user-link :user-id="slotProps.item.punishedBy" />
 			</template>
 			<template #column-punishedAt="slotProps">
-				<span :title="new Date(slotProps.item.punishedAt)">{{
+				<span :title="new Date(slotProps.item.punishedAt).toString()">{{
 					getDateFormatted(slotProps.item.punishedAt)
 				}}</span>
 			</template>
 			<template #column-expiresAt="slotProps">
-				<span :title="new Date(slotProps.item.expiresAt)">{{
+				<span :title="new Date(slotProps.item.expiresAt).toString()">{{
 					getDateFormatted(slotProps.item.expiresAt)
 				}}</span>
 			</template>
@@ -121,184 +344,6 @@
 		</div>
 	</div>
 </template>
-
-<script>
-import { mapGetters, mapActions } from "vuex";
-import Toast from "toasters";
-
-import AdvancedTable from "@/components/AdvancedTable.vue";
-
-export default {
-	components: {
-		AdvancedTable
-	},
-	data() {
-		return {
-			ipBan: {
-				expiresAt: "1h"
-			},
-			columnDefault: {
-				sortable: true,
-				hidable: true,
-				defaultVisibility: "shown",
-				draggable: true,
-				resizable: true,
-				minWidth: 150,
-				maxWidth: 600
-			},
-			columns: [
-				{
-					name: "options",
-					displayName: "Options",
-					properties: ["_id"],
-					sortable: false,
-					hidable: false,
-					resizable: false,
-					minWidth: 76,
-					defaultWidth: 76
-				},
-				{
-					name: "status",
-					displayName: "Status",
-					properties: ["status"],
-					sortable: false,
-					defaultWidth: 150
-				},
-				{
-					name: "type",
-					displayName: "Type",
-					properties: ["type"],
-					sortProperty: "type"
-				},
-				{
-					name: "value",
-					displayName: "Value",
-					properties: ["value"],
-					sortProperty: "value",
-					defaultWidth: 150
-				},
-				{
-					name: "reason",
-					displayName: "Reason",
-					properties: ["reason"],
-					sortProperty: "reason"
-				},
-				{
-					name: "punishedBy",
-					displayName: "Punished By",
-					properties: ["punishedBy"],
-					sortProperty: "punishedBy",
-					defaultWidth: 200,
-					defaultVisibility: "hidden"
-				},
-				{
-					name: "punishedAt",
-					displayName: "Punished At",
-					properties: ["punishedAt"],
-					sortProperty: "punishedAt",
-					defaultWidth: 200,
-					defaultVisibility: "hidden"
-				},
-				{
-					name: "expiresAt",
-					displayName: "Expires At",
-					properties: ["expiresAt"],
-					sortProperty: "verifiedAt",
-					defaultWidth: 200,
-					defaultVisibility: "hidden"
-				}
-			],
-			filters: [
-				{
-					name: "status",
-					displayName: "Status",
-					property: "status",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact",
-					dropdown: [
-						["Active", "Active"],
-						["Inactive", "Inactive"]
-					]
-				},
-				{
-					name: "type",
-					displayName: "Type",
-					property: "type",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact",
-					dropdown: [
-						["banUserId", "User ID"],
-						["banUserIp", "IP Address"]
-					]
-				},
-				{
-					name: "value",
-					displayName: "Value",
-					property: "value",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "reason",
-					displayName: "Reason",
-					property: "reason",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "punishedBy",
-					displayName: "Punished By",
-					property: "punishedBy",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				},
-				{
-					name: "punishedAt",
-					displayName: "Punished At",
-					property: "punishedAt",
-					filterTypes: ["datetimeBefore", "datetimeAfter"],
-					defaultFilterType: "datetimeBefore"
-				},
-				{
-					name: "expiresAt",
-					displayName: "Expires At",
-					property: "expiresAt",
-					filterTypes: ["datetimeBefore", "datetimeAfter"],
-					defaultFilterType: "datetimeBefore"
-				}
-			]
-		};
-	},
-	computed: {
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	methods: {
-		banIP() {
-			this.socket.dispatch(
-				"punishments.banIP",
-				this.ipBan.ip,
-				this.ipBan.reason,
-				this.ipBan.expiresAt,
-				res => {
-					new Toast(res.message);
-				}
-			);
-		},
-		getDateFormatted(createdAt) {
-			const date = new Date(createdAt);
-			const year = date.getFullYear();
-			const month = `${date.getMonth() + 1}`.padStart(2, 0);
-			const day = `${date.getDate()}`.padStart(2, 0);
-			const hour = `${date.getHours()}`.padStart(2, 0);
-			const minute = `${date.getMinutes()}`.padStart(2, 0);
-			return `${year}-${month}-${day} ${hour}:${minute}`;
-		},
-		...mapActions("modalVisibility", ["openModal"])
-	}
-};
-</script>
 
 <style lang="less" scoped>
 .card .button.is-primary {

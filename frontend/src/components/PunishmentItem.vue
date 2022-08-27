@@ -1,10 +1,42 @@
+<script setup lang="ts">
+import { defineAsyncComponent, computed } from "vue";
+import { format, formatDistance, parseISO } from "date-fns";
+
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
+
+const props = defineProps({
+	punishment: { type: Object, default: () => {} }
+});
+
+defineEmits(["deactivate"]);
+
+const active = computed(
+	() =>
+		props.punishment.active &&
+		new Date(props.punishment.expiresAt).getTime() > Date.now()
+);
+</script>
+
 <template>
 	<div class="universal-item punishment-item">
 		<div class="item-icon">
 			<p class="is-expanded checkbox-control">
-				<label class="switch">
-					<input type="checkbox" v-model="active" disabled />
-					<span class="slider round"></span>
+				<label class="switch" :class="{ disabled: !active }">
+					<input
+						type="checkbox"
+						:checked="active"
+						@click="
+							active
+								? $emit('deactivate', $event)
+								: $event.preventDefault()
+						"
+					/>
+					<span
+						class="slider round"
+						:class="{ disabled: !active }"
+					></span>
 				</label>
 			</p>
 			<p>
@@ -70,35 +102,6 @@
 	</div>
 </template>
 
-<script>
-import { mapActions } from "vuex";
-import { format, formatDistance, parseISO } from "date-fns";
-
-export default {
-	props: {
-		punishment: { type: Object, default: () => {} }
-	},
-	data() {
-		return {
-			active: false
-		};
-	},
-	watch: {
-		punishment(punishment) {
-			this.active =
-				punishment.active &&
-				new Date(this.punishment.expiresAt).getTime() > Date.now();
-		}
-	},
-	methods: {
-		formatDistance,
-		format,
-		parseISO,
-		...mapActions("modalVisibility", ["closeModal"])
-	}
-};
-</script>
-
 <style lang="less" scoped>
 .night-mode {
 	.punishment-item {
@@ -123,10 +126,6 @@ export default {
 		justify-content: space-evenly;
 		border: 1px solid var(--light-grey-3);
 		border-radius: @border-radius;
-
-		.checkbox-control .slider {
-			cursor: default;
-		}
 	}
 
 	.item-title {

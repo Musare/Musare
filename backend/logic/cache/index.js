@@ -51,27 +51,22 @@ class _CacheModule extends CoreClass {
 			this.client = redis.createClient({
 				url: this.url,
 				password: this.password,
-				retry_strategy: options => {
-					if (this.getStatus() === "LOCKDOWN") return;
-					if (this.getStatus() !== "RECONNECTING") this.setStatus("RECONNECTING");
+				reconnectStrategy: retries => {
+					if (this.getStatus() !== "LOCKDOWN") {
+						if (this.getStatus() !== "RECONNECTING") this.setStatus("RECONNECTING");
 
-					this.log("INFO", `Attempting to reconnect.`);
+						this.log("INFO", `Attempting to reconnect.`);
 
-					if (options.attempt >= 10) {
-						this.log("ERROR", `Stopped trying to reconnect.`);
+						if (retries >= 10) {
+							this.log("ERROR", `Stopped trying to reconnect.`);
 
-						this.setStatus("FAILED");
+							this.setStatus("FAILED");
+							new Error("Stopped trying to reconnect.");
+						} else {
+							Math.min(retries * 50, 500);
+						}
 					}
 				}
-			});
-
-			// TODO move to a better place
-			CacheModule.runJob("KEYS", { pattern: "longJobs.*" }).then(keys => {
-				async.eachLimit(keys, 1, (key, next) => {
-					CacheModule.runJob("DEL", { key }).finally(() => {
-						next();
-					});
-				});
 			});
 
 			this.client.on("error", err => {
@@ -81,11 +76,23 @@ class _CacheModule extends CoreClass {
 				this.log("ERROR", `Error ${err.message}.`);
 			});
 
-			this.client.on("connect", () => {
-				this.log("INFO", "Connected succesfully.");
-
+			this.client.on("ready", () => {
+				this.log("INFO", "Redis is ready.");
 				if (this.getStatus() === "INITIALIZING") resolve();
 				else if (this.getStatus() === "FAILED" || this.getStatus() === "RECONNECTING") this.setStatus("READY");
+			});
+
+			this.client.connect().then(async () => {
+				this.log("INFO", "Connected succesfully.");
+			});
+
+			// TODO move to a better place
+			CacheModule.runJob("KEYS", { pattern: "longJobs.*" }).then(keys => {
+				async.eachLimit(keys, 1, (key, next) => {
+					CacheModule.runJob("DEL", { key }).finally(() => {
+						next();
+					});
+				});
 			});
 		});
 	}
@@ -125,10 +132,10 @@ class _CacheModule extends CoreClass {
 			// automatically stringify objects and arrays into JSON
 			if (["object", "array"].includes(typeof value)) value = JSON.stringify(value);
 
-			CacheModule.client.hset(payload.table, key, value, err => {
-				if (err) return reject(new Error(err));
-				return resolve(JSON.parse(value));
-			});
+			CacheModule.client
+				.HSET(payload.table, key, value)
+				.then(() => resolve(JSON.parse(value)))
+				.catch(err => reject(new Error(err)));
 		});
 	}
 
@@ -155,20 +162,19 @@ class _CacheModule extends CoreClass {
 			}
 			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 
-			CacheModule.client.hget(payload.table, key, (err, value) => {
-				if (err) {
-					reject(new Error(err));
-					return;
-				}
-				try {
-					value = JSON.parse(value);
-				} catch (e) {
-					reject(err);
-					return;
-				}
+			CacheModule.client
+				.HGET(payload.table, key, payload.value)
+				.then(value => {
+					let parsedValue;
+					try {
+						parsedValue = JSON.parse(value);
+					} catch (err) {
+						return reject(err);
+					}
 
-				resolve(value);
-			});
+					return resolve(parsedValue);
+				})
+				.catch(err => reject(new Error(err)));
 		});
 	}
 
@@ -195,13 +201,10 @@ class _CacheModule extends CoreClass {
 
 			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 
-			CacheModule.client.hdel(payload.table, key, err => {
-				if (err) {
-					reject(new Error(err));
-					return;
-				}
-				resolve();
-			});
+			CacheModule.client
+				.HDEL(payload.table, key)
+				.then(() => resolve())
+				.catch(err => reject(new Error(err)));
 		});
 	}
 
@@ -220,19 +223,17 @@ class _CacheModule extends CoreClass {
 				return;
 			}
 
-			CacheModule.client.hgetall(payload.table, (err, obj) => {
-				if (err) {
-					reject(new Error(err));
-					return;
-				}
-				if (obj)
-					Object.keys(obj).forEach(key => {
-						obj[key] = JSON.parse(obj[key]);
-					});
-				else if (!obj) obj = [];
-
-				resolve(obj);
-			});
+			CacheModule.client
+				.HGETALL(payload.table)
+				.then(obj => {
+					if (obj)
+						Object.keys(obj).forEach(key => {
+							obj[key] = JSON.parse(obj[key]);
+						});
+					else if (!obj) obj = [];
+					resolve(obj);
+				})
+				.catch(err => reject(new Error(err)));
 		});
 	}
 
@@ -254,13 +255,10 @@ class _CacheModule extends CoreClass {
 
 			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 
-			CacheModule.client.del(key, err => {
-				if (err) {
-					reject(new Error(err));
-					return;
-				}
-				resolve();
-			});
+			CacheModule.client
+				.DEL(key)
+				.then(() => resolve())
+				.catch(err => reject(new Error(err)));
 		});
 	}
 
@@ -288,10 +286,10 @@ class _CacheModule extends CoreClass {
 
 			if (["object", "array"].includes(typeof value)) value = JSON.stringify(value);
 
-			CacheModule.client.publish(payload.channel, value, err => {
-				if (err) reject(err);
-				else resolve();
-			});
+			CacheModule.client
+				.publish(payload.channel, value)
+				.then(() => resolve())
+				.catch(err => reject(new Error(err)));
 		});
 	}
 
@@ -318,21 +316,20 @@ class _CacheModule extends CoreClass {
 					}),
 					cbs: []
 				};
+				subs[payload.channel].client.connect().then(() => {
+					subs[payload.channel].client.subscribe(payload.channel, (message, channel) => {
+						if (message.startsWith("[") || message.startsWith("{"))
+							try {
+								message = JSON.parse(message);
+							} catch (err) {
+								console.error(err);
+							}
+						else if (message.startsWith('"') && message.endsWith('"'))
+							message = message.substring(1).substring(0, message.length - 2);
 
-				subs[payload.channel].client.on("message", (channel, message) => {
-					if (message.startsWith("[") || message.startsWith("{"))
-						try {
-							message = JSON.parse(message);
-						} catch (err) {
-							console.error(err);
-						}
-					else if (message.startsWith('"') && message.endsWith('"'))
-						message = message.substring(1).substring(0, message.length - 2);
-
-					return subs[channel].cbs.forEach(cb => cb(message));
+						subs[channel].cbs.forEach(cb => cb(message));
+					});
 				});
-
-				subs[payload.channel].client.subscribe(payload.channel);
 			}
 
 			subs[payload.channel].cbs.push(payload.cb);
@@ -358,14 +355,10 @@ class _CacheModule extends CoreClass {
 			}
 			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 
-			CacheModule.client.LRANGE(key, 0, -1, (err, list) => {
-				if (err) {
-					reject(new Error(err));
-					return;
-				}
-
-				resolve(list);
-			});
+			CacheModule.client
+				.LRANGE(key, 0, -1)
+				.then(list => resolve(list))
+				.catch(err => reject(new Error(err)));
 		});
 	}
 
@@ -380,17 +373,16 @@ class _CacheModule extends CoreClass {
 	 */
 	RPUSH(payload) {
 		return new Promise((resolve, reject) => {
-			let { key } = payload;
-			let { value } = payload;
+			let { key, value } = payload;
 
 			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 			// automatically stringify objects and arrays into JSON
 			if (["object", "array"].includes(typeof value)) value = JSON.stringify(value);
 
-			CacheModule.client.RPUSH(key, value, err => {
-				if (err) return reject(new Error(err));
-				return resolve();
-			});
+			CacheModule.client
+				.RPUSH(key, value)
+				.then(() => resolve())
+				.catch(err => reject(new Error(err)));
 		});
 	}
 
@@ -405,17 +397,16 @@ class _CacheModule extends CoreClass {
 	 */
 	LREM(payload) {
 		return new Promise((resolve, reject) => {
-			let { key } = payload;
-			let { value } = payload;
+			let { key, value } = payload;
 
 			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 			// automatically stringify objects and arrays into JSON
 			if (["object", "array"].includes(typeof value)) value = JSON.stringify(value);
 
-			CacheModule.client.LREM(key, 1, value, err => {
-				if (err) return reject(new Error(err));
-				return resolve();
-			});
+			CacheModule.client
+				.LREM(key, 1, value)
+				.then(() => resolve())
+				.catch(err => reject(new Error(err)));
 		});
 	}
 
@@ -430,10 +421,10 @@ class _CacheModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			const { pattern } = payload;
 
-			CacheModule.client.KEYS(pattern, (err, keys) => {
-				if (err) return reject(new Error(err));
-				return resolve(keys);
-			});
+			CacheModule.client
+				.KEYS(pattern)
+				.then(keys => resolve(keys))
+				.catch(err => reject(new Error(err)));
 		});
 	}
 

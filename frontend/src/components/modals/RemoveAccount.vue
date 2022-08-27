@@ -1,3 +1,123 @@
+<script setup lang="ts">
+import { defineAsyncComponent, ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
+import Toast from "toasters";
+import { storeToRefs } from "pinia";
+import { useSettingsStore } from "@/stores/settings";
+import { useWebsocketsStore } from "@/stores/websockets";
+import { useRemoveAccountStore } from "@/stores/removeAccount";
+import { useModalsStore } from "@/stores/modals";
+
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
+);
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" }
+});
+
+const settingsStore = useSettingsStore();
+const route = useRoute();
+
+const { socket } = useWebsocketsStore();
+
+const removeAccountStore = useRemoveAccountStore(props);
+const { githubLinkConfirmed } = storeToRefs(removeAccountStore);
+
+const { isPasswordLinked, isGithubLinked } = settingsStore;
+
+const { closeCurrentModal } = useModalsStore();
+
+const step = ref("confirm-identity");
+const apiDomain = ref("");
+const accountRemovalMessage = ref("");
+const password = ref({
+	value: "",
+	visible: false
+});
+const passwordElement = ref();
+const githubAuthentication = ref(false);
+
+const checkForAutofill = (cb, event) => {
+	if (
+		event.target.value !== "" &&
+		event.inputType === undefined &&
+		event.data === undefined &&
+		event.dataTransfer === undefined &&
+		event.isComposing === undefined
+	)
+		cb();
+};
+
+const submitOnEnter = (cb, event) => {
+	if (event.which === 13) cb();
+};
+
+const togglePasswordVisibility = () => {
+	if (passwordElement.value.type === "password") {
+		passwordElement.value.type = "text";
+		password.value.visible = true;
+	} else {
+		passwordElement.value.type = "password";
+		password.value.visible = false;
+	}
+};
+
+const confirmPasswordMatch = () =>
+	socket.dispatch("users.confirmPasswordMatch", password.value.value, res => {
+		if (res.status === "success") step.value = "remove-account";
+		else new Toast(res.message);
+	});
+
+const confirmGithubLink = () =>
+	socket.dispatch("users.confirmGithubLink", res => {
+		if (res.status === "success") {
+			if (res.data.linked) step.value = "remove-account";
+			else {
+				new Toast(
+					`Your GitHub account isn't linked. Please re-link your account and try again.`
+				);
+				step.value = "relink-github";
+			}
+		} else new Toast(res.message);
+	});
+
+const relinkGithub = () => {
+	localStorage.setItem(
+		"github_redirect",
+		`${window.location.pathname + window.location.search}${
+			!route.query.removeAccount ? "&removeAccount=relinked-github" : ""
+		}`
+	);
+};
+
+const remove = () =>
+	socket.dispatch("users.remove", res => {
+		if (res.status === "success") {
+			return socket.dispatch("users.logout", () =>
+				lofig.get("cookie").then(cookie => {
+					document.cookie = `${cookie.SIDname}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+					closeCurrentModal();
+					window.location.href = "/";
+				})
+			);
+		}
+
+		return new Toast(res.message);
+	});
+
+onMounted(async () => {
+	apiDomain.value = await lofig.get("backend.apiDomain");
+	accountRemovalMessage.value = await lofig.get("messages.accountRemoval");
+	githubAuthentication.value = await lofig.get(
+		"siteSettings.githubAuthentication"
+	);
+
+	if (githubLinkConfirmed.value === true) confirmGithubLink();
+});
+</script>
+
 <template>
 	<modal
 		title="Confirm Account Removal"
@@ -46,7 +166,10 @@
 			<div
 				class="content-box"
 				id="password-linked"
-				v-if="step === 'confirm-identity' && isPasswordLinked"
+				v-if="
+					step === 'confirm-identity' &&
+					(isPasswordLinked || !githubAuthentication)
+				"
 			>
 				<h2 class="content-box-title">Enter your password</h2>
 				<p class="content-box-description">
@@ -67,7 +190,7 @@
 								type="password"
 								placeholder="Enter password here..."
 								autofocus
-								ref="password"
+								ref="passwordElement"
 								v-model="password.value"
 								@input="
 									checkForAutofill(
@@ -103,7 +226,11 @@
 
 			<div
 				class="content-box"
-				v-else-if="isGithubLinked && step === 'confirm-identity'"
+				v-else-if="
+					githubAuthentication &&
+					isGithubLinked &&
+					step === 'confirm-identity'
+				"
 			>
 				<h2 class="content-box-title">Verify your GitHub</h2>
 				<p class="content-box-description">
@@ -123,7 +250,10 @@
 				</div>
 			</div>
 
-			<div class="content-box" v-if="step === 'relink-github'">
+			<div
+				class="content-box"
+				v-if="githubAuthentication && step === 'relink-github'"
+			>
 				<h2 class="content-box-title">Re-link GitHub</h2>
 				<p class="content-box-description">
 					Re-link your GitHub account in order to verify your
@@ -173,112 +303,6 @@
 		</template>
 	</modal>
 </template>
-
-<script>
-import { mapActions, mapGetters } from "vuex";
-
-import Toast from "toasters";
-
-export default {
-	props: {
-		modalUuid: { type: String, default: "" }
-	},
-	data() {
-		return {
-			name: "RemoveAccount",
-			step: "confirm-identity",
-			apiDomain: "",
-			accountRemovalMessage: "",
-			password: {
-				value: "",
-				visible: false
-			}
-		};
-	},
-	computed: mapGetters({
-		isPasswordLinked: "settings/isPasswordLinked",
-		isGithubLinked: "settings/isGithubLinked",
-		socket: "websockets/getSocket"
-	}),
-	async mounted() {
-		this.apiDomain = await lofig.get("backend.apiDomain");
-		this.accountRemovalMessage = await lofig.get("messages.accountRemoval");
-	},
-	methods: {
-		checkForAutofill(cb, event) {
-			if (
-				event.target.value !== "" &&
-				event.inputType === undefined &&
-				event.data === undefined &&
-				event.dataTransfer === undefined &&
-				event.isComposing === undefined
-			)
-				cb();
-		},
-		submitOnEnter(cb, event) {
-			if (event.which === 13) cb();
-		},
-		togglePasswordVisibility() {
-			if (this.$refs.password.type === "password") {
-				this.$refs.password.type = "text";
-				this.password.visible = true;
-			} else {
-				this.$refs.password.type = "password";
-				this.password.visible = false;
-			}
-		},
-		confirmPasswordMatch() {
-			return this.socket.dispatch(
-				"users.confirmPasswordMatch",
-				this.password.value,
-				res => {
-					if (res.status === "success") this.step = "remove-account";
-					else new Toast(res.message);
-				}
-			);
-		},
-		confirmGithubLink() {
-			return this.socket.dispatch("users.confirmGithubLink", res => {
-				if (res.status === "success") {
-					if (res.data.linked) this.step = "remove-account";
-					else {
-						new Toast(
-							`Your GitHub account isn't linked. Please re-link your account and try again.`
-						);
-						this.step = "relink-github";
-					}
-				} else new Toast(res.message);
-			});
-		},
-		relinkGithub() {
-			localStorage.setItem(
-				"github_redirect",
-				`${window.location.pathname + window.location.search}${
-					!this.$route.query.removeAccount
-						? "&removeAccount=relinked-github"
-						: ""
-				}`
-			);
-		},
-		remove() {
-			return this.socket.dispatch("users.remove", res => {
-				if (res.status === "success") {
-					return this.socket.dispatch("users.logout", () =>
-						lofig.get("cookie").then(cookie => {
-							document.cookie = `${cookie.SIDname}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
-							this.closeModal("removeAccount");
-							window.location.href = "/";
-						})
-					);
-				}
-
-				return new Toast(res.message);
-			});
-		},
-		...mapActions("modalVisibility", ["closeModal", "openModal"])
-	}
-};
-</script>
 
 <style lang="less">
 .confirm-account-removal-modal {

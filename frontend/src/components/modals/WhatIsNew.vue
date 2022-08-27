@@ -1,3 +1,44 @@
+<script setup lang="ts">
+import { defineAsyncComponent, onMounted, onBeforeUnmount } from "vue";
+import { storeToRefs } from "pinia";
+import { formatDistance } from "date-fns";
+import { marked } from "marked";
+import dompurify from "dompurify";
+import { useWhatIsNewStore } from "@/stores/whatIsNew";
+
+const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
+const UserLink = defineAsyncComponent(
+	() => import("@/components/UserLink.vue")
+);
+
+const props = defineProps({
+	modalUuid: { type: String, default: "" }
+});
+
+const whatIsNewStore = useWhatIsNewStore(props);
+const { news } = storeToRefs(whatIsNewStore);
+
+onMounted(() => {
+	marked.use({
+		renderer: {
+			table(header, body) {
+				return `<table class="table">
+					<thead>${header}</thead>
+					<tbody>${body}</tbody>
+					</table>`;
+			}
+		}
+	});
+});
+
+onBeforeUnmount(() => {
+	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
+	whatIsNewStore.$dispose();
+});
+
+const { sanitize } = dompurify;
+</script>
+
 <template>
 	<modal title="News" class="what-is-news-modal">
 		<template #body>
@@ -12,7 +53,7 @@
 				<user-link
 					:user-id="news.createdBy"
 					:alt="news.createdBy" /></span
-			>&nbsp;<span :title="new Date(news.createdAt)">
+			>&nbsp;<span :title="new Date(news.createdAt).toString()">
 				{{
 					formatDistance(news.createdAt, new Date(), {
 						addSuffix: true
@@ -22,48 +63,6 @@
 		</template>
 	</modal>
 </template>
-
-<script>
-import { formatDistance } from "date-fns";
-import { marked } from "marked";
-import { sanitize } from "dompurify";
-import { mapActions } from "vuex";
-
-import { mapModalState } from "@/vuex_helpers";
-
-export default {
-	props: {
-		modalUuid: { type: String, default: "" }
-	},
-	computed: {
-		...mapModalState("modals/whatIsNew/MODAL_UUID", {
-			news: state => state.news
-		})
-	},
-	mounted() {
-		marked.use({
-			renderer: {
-				table(header, body) {
-					return `<table class="table">
-					<thead>${header}</thead>
-					<tbody>${body}</tbody>
-					</table>`;
-				}
-			}
-		});
-	},
-	beforeUnmount() {
-		// Delete the VueX module that was created for this modal, after all other cleanup tasks are performed
-		this.$store.unregisterModule(["modals", "whatIsNew", this.modalUuid]);
-	},
-	methods: {
-		marked,
-		sanitize,
-		formatDistance,
-		...mapActions("modalVisibility", ["openModal"])
-	}
-};
-</script>
 
 <style lang="less">
 .what-is-news-modal .modal-card .modal-card-foot {

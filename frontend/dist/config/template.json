@@ -8,8 +8,8 @@
 		"websocketsDomain": "ws://localhost/backend/ws"
 	},
 	"devServer": {
-		"port": "81",
-		"webSocketURL": "ws://localhost/ws"
+		"port": 81,
+		"hmrClientPort": 80
 	},
 	"frontendDomain": "http://localhost",
 	"mode": "development",
@@ -28,7 +28,8 @@
 		},
 		"mediasession": false,
 		"christmas": false,
-		"registrationDisabled": false
+		"registrationDisabled": false,
+		"githubAuthentication": false
 	},
 	"messages": {
 		"accountRemoval": "Your account will be deactivated instantly and your data will shortly be deleted by an admin."
@@ -53,5 +54,5 @@
 		"version": true
 	},
 	"skipConfigVersionCheck": false,
-	"configVersion": 11
+	"configVersion": 13
 }

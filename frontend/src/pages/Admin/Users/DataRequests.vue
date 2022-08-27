@@ -1,3 +1,100 @@
+<script setup lang="ts">
+import { defineAsyncComponent, ref } from "vue";
+import Toast from "toasters";
+import { useWebsocketsStore } from "@/stores/websockets";
+import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
+
+const AdvancedTable = defineAsyncComponent(
+	() => import("@/components/AdvancedTable.vue")
+);
+
+const { socket } = useWebsocketsStore();
+
+const columnDefault = ref(<TableColumn>{
+	sortable: true,
+	hidable: true,
+	defaultVisibility: "shown",
+	draggable: true,
+	resizable: true,
+	minWidth: 230,
+	maxWidth: 600
+});
+const columns = ref(<TableColumn[]>[
+	{
+		name: "options",
+		displayName: "Options",
+		properties: ["_id"],
+		sortable: false,
+		hidable: false,
+		resizable: false,
+		minWidth: 76,
+		defaultWidth: 76
+	},
+	{
+		name: "resolved",
+		displayName: "Resolved",
+		properties: ["resolved"],
+		sortProperty: "resolved",
+		minWidth: 150
+	},
+	{
+		name: "type",
+		displayName: "Type",
+		properties: ["type"],
+		sortable: false
+	},
+	{
+		name: "userId",
+		displayName: "User ID",
+		properties: ["userId"],
+		sortProperty: "userId"
+	},
+	{
+		name: "_id",
+		displayName: "Request ID",
+		properties: ["_id"],
+		sortProperty: "_id"
+	}
+]);
+const filters = ref(<TableFilter[]>[
+	{
+		name: "_id",
+		displayName: "Request ID",
+		property: "_id",
+		filterTypes: ["exact"],
+		defaultFilterType: "exact"
+	},
+	{
+		name: "userId",
+		displayName: "User ID",
+		property: "userId",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "resolved",
+		displayName: "Resolved",
+		property: "resolved",
+		filterTypes: ["boolean"],
+		defaultFilterType: "boolean"
+	}
+]);
+const events = ref(<TableEvents>{
+	adminRoom: "users",
+	updated: {
+		event: "admin.dataRequests.updated",
+		id: "dataRequest._id",
+		item: "dataRequest"
+	}
+});
+
+const resolveDataRequest = (id, resolved) => {
+	socket.dispatch("dataRequests.resolve", id, resolved, res => {
+		if (res.status === "success") new Toast(res.message);
+	});
+};
+</script>
+
 <template>
 	<div class="admin-tab container">
 		<page-metadata title="Admin | Users | Data Requests" />
@@ -18,20 +115,32 @@
 		>
 			<template #column-options="slotProps">
 				<div class="row-options">
-					<quick-confirm
-						placement="right"
-						@confirm="resolveDataRequest(slotProps.item._id)"
+					<button
+						v-if="slotProps.item.resolved"
+						class="button is-danger material-icons icon-with-button"
+						@click="resolveDataRequest(slotProps.item._id, false)"
 						:disabled="slotProps.item.removed"
+						content="Unresolve Data Request"
+						v-tippy
 					>
-						<button
-							class="button is-success icon-with-button material-icons"
-							content="Resolve Data Request"
-							v-tippy
-						>
-							done_all
-						</button>
-					</quick-confirm>
+						remove_done
+					</button>
+					<button
+						v-else
+						class="button is-success material-icons icon-with-button"
+						@click="resolveDataRequest(slotProps.item._id, true)"
+						:disabled="slotProps.item.removed"
+						content="Resolve Data Request"
+						v-tippy
+					>
+						done_all
+					</button>
 				</div>
+			</template>
+			<template #column-resolved="slotProps">
+				<span :title="slotProps.item.resolved">{{
+					slotProps.item.resolved
+				}}</span>
 			</template>
 			<template #column-type="slotProps">
 				<span
@@ -60,94 +169,3 @@
 		</advanced-table>
 	</div>
 </template>
-
-<script>
-import { mapGetters } from "vuex";
-import Toast from "toasters";
-
-import AdvancedTable from "@/components/AdvancedTable.vue";
-
-export default {
-	components: {
-		AdvancedTable
-	},
-	data() {
-		return {
-			columnDefault: {
-				sortable: true,
-				hidable: true,
-				defaultVisibility: "shown",
-				draggable: true,
-				resizable: true,
-				minWidth: 150,
-				maxWidth: 600
-			},
-			columns: [
-				{
-					name: "options",
-					displayName: "Options",
-					properties: ["_id"],
-					sortable: false,
-					hidable: false,
-					resizable: false,
-					minWidth: 76,
-					defaultWidth: 76
-				},
-				{
-					name: "type",
-					displayName: "Type",
-					properties: ["type"],
-					sortable: false
-				},
-				{
-					name: "userId",
-					displayName: "User ID",
-					properties: ["userId"],
-					sortProperty: "userId"
-				},
-				{
-					name: "_id",
-					displayName: "Request ID",
-					properties: ["_id"],
-					sortProperty: "_id"
-				}
-			],
-			filters: [
-				{
-					name: "_id",
-					displayName: "Request ID",
-					property: "_id",
-					filterTypes: ["exact"],
-					defaultFilterType: "exact"
-				},
-				{
-					name: "userId",
-					displayName: "User ID",
-					property: "userId",
-					filterTypes: ["contains", "exact", "regex"],
-					defaultFilterType: "contains"
-				}
-			],
-			events: {
-				adminRoom: "users",
-				removed: {
-					event: "admin.dataRequests.resolved",
-					id: "dataRequestId"
-				}
-			}
-		};
-	},
-	computed: {
-		...mapGetters({
-			socket: "websockets/getSocket"
-		})
-	},
-	methods: {
-		resolveDataRequest(id) {
-			this.socket.dispatch("dataRequests.resolve", id, res => {
-				if (res.status === "success") new Toast(res.message);
-			});
-		}
-	}
-};
-</script>
