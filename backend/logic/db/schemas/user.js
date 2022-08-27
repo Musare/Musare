@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 export default {
 	username: { type: String, required: true },
-	role: { type: String, default: "default", required: true },
+	role: { type: String, default: "user", enum: ["user", "moderator", "admin"], required: true },
 	email: {
 		verified: { type: Boolean, default: false, required: true },
 		verificationToken: String,
@@ -48,5 +48,5 @@ export default {
 		anonymousSongRequests: { type: Boolean, default: false, required: true },
 		activityWatch: { type: Boolean, default: false, required: true }
 	},
-	documentVersion: { type: Number, default: 3, required: true }
+	documentVersion: { type: Number, default: 4, required: true }
 };

@@ -212,7 +212,8 @@ onBeforeUnmount(() => {
 					<div class="control is-grouped">
 						<div class="control is-expanded select">
 							<select v-model="user.role">
-								<option>default</option>
+								<option>user</option>
+								<option>moderator</option>
 								<option>admin</option>
 							</select>
 						</div>

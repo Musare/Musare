@@ -154,7 +154,8 @@ const filters = ref(<TableFilter[]>[
 		defaultFilterType: "exact",
 		dropdown: [
 			["admin", "Admin"],
-			["default", "Default"]
+			["moderator", "Moderator"],
+			["user", "User"]
 		]
 	},
 	{

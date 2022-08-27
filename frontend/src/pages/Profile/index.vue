@@ -83,6 +83,11 @@ onMounted(() => {
 								v-if="user.role === 'admin'"
 								>admin</span
 							>
+							<span
+								class="role moderator"
+								v-if="user.role === 'moderator'"
+								>moderator</span
+							>
 						</div>
 						<div class="username-row">
 							<h2 class="username">@{{ user.username }}</h2>
@@ -90,6 +95,13 @@ onMounted(() => {
 								class="role admin"
 								v-if="user.role === 'admin' && !user.name"
 								>admin</span
+							>
+							<span
+								class="role moderator"
+								v-else-if="
+									user.role === 'moderator' && !user.name
+								"
+								>moderator</span
 							>
 						</div>
 					</div>
@@ -285,6 +297,10 @@ onMounted(() => {
 
 		&.admin {
 			background-color: var(--dark-red);
+		}
+
+		&.moderator {
+			background-color: var(--blue);
 		}
 	}
 
