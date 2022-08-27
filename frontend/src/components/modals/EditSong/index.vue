@@ -1199,9 +1199,11 @@ watch(
 	() => drawCanvas()
 );
 watch(youtubeId, (_youtubeId, _oldYoutubeId) => {
-	console.log("NEW YOUTUBE ID", _youtubeId);
-	unloadSong(_oldYoutubeId);
-	loadSong(_youtubeId);
+	if (!newSong.value) {
+		console.log("NEW YOUTUBE ID", _youtubeId);
+		unloadSong(_oldYoutubeId);
+		loadSong(_youtubeId);
+	}
 });
 
 onMounted(async () => {
