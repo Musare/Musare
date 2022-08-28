@@ -49,8 +49,18 @@ const columns = ref(<TableColumn[]>[
 		sortable: false,
 		hidable: false,
 		resizable: false,
-		minWidth: 129,
-		defaultWidth: 129
+		minWidth:
+			hasPermission("songs.verify") &&
+			hasPermission("songs.update") &&
+			hasPermission("songs.remove")
+				? 129
+				: 85,
+		defaultWidth:
+			hasPermission("songs.verify") &&
+			hasPermission("songs.update") &&
+			hasPermission("songs.remove")
+				? 129
+				: 85
 	},
 	{
 		name: "thumbnailImage",
@@ -538,10 +548,18 @@ onMounted(() => {
 				<p>Create, edit and manage songs in the catalogue</p>
 			</div>
 			<div class="button-row">
-				<button class="button is-primary" @click="create()">
+				<button
+					v-if="hasPermission('songs.create')"
+					class="button is-primary"
+					@click="create()"
+				>
 					Create song
 				</button>
 				<button
+					v-if="
+						hasPermission('songs.create') ||
+						hasPermission('songs.update')
+					"
 					class="button is-primary"
 					@click="openModal('importAlbum')"
 				>

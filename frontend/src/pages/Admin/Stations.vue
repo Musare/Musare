@@ -3,6 +3,7 @@ import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
+import { useUserAuthStore } from "@/stores/userAuth";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
@@ -19,6 +20,8 @@ const UserLink = defineAsyncComponent(
 );
 
 const { socket } = useWebsocketsStore();
+
+const { hasPermission } = useUserAuthStore();
 
 const columnDefault = ref(<TableColumn>{
 	sortable: true,
@@ -37,8 +40,8 @@ const columns = ref(<TableColumn[]>[
 		sortable: false,
 		hidable: false,
 		resizable: false,
-		minWidth: 129,
-		defaultWidth: 129
+		minWidth: hasPermission("stations.remove") ? 129 : 85,
+		defaultWidth: hasPermission("stations.remove") ? 129 : 85
 	},
 	{
 		name: "_id",
@@ -296,12 +299,12 @@ const events = ref(<TableEvents>{
 		id: "stationId"
 	}
 });
-const jobs = ref([
-	{
+const jobs = ref([]);
+if (hasPermission("stations.clearEveryStationQueue"))
+	jobs.value.push({
 		name: "Clear every station queue",
 		socket: "stations.clearEveryStationQueue"
-	}
-]);
+	});
 
 const { openModal } = useModalsStore();
 
@@ -324,6 +327,7 @@ const remove = stationId => {
 			</div>
 			<div class="button-row">
 				<button
+					v-if="hasPermission('stations.create.official')"
 					class="button is-primary"
 					@click="
 						openModal({
@@ -365,6 +369,7 @@ const remove = stationId => {
 						settings
 					</button>
 					<quick-confirm
+						v-if="hasPermission('stations.remove')"
 						@confirm="remove(slotProps.item._id)"
 						:disabled="slotProps.item.removed"
 					>

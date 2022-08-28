@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from "vue";
 import { useModalsStore } from "@/stores/modals";
+import { useUserAuthStore } from "@/stores/userAuth";
 import utils from "@/utils";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
@@ -13,6 +14,8 @@ const RunJobDropdown = defineAsyncComponent(
 const UserLink = defineAsyncComponent(
 	() => import("@/components/UserLink.vue")
 );
+
+const { hasPermission } = useUserAuthStore();
 
 const columnDefault = ref(<TableColumn>{
 	sortable: true,
@@ -199,32 +202,37 @@ const events = ref(<TableEvents>{
 		id: "playlistId"
 	}
 });
-const jobs = ref([
-	{
+const jobs = ref([]);
+if (hasPermission("playlists.deleteOrphaned")) {
+	jobs.value.push({
 		name: "Delete orphaned station playlists",
 		socket: "playlists.deleteOrphanedStationPlaylists"
-	},
-	{
+	});
+	jobs.value.push({
 		name: "Delete orphaned genre playlists",
 		socket: "playlists.deleteOrphanedGenrePlaylists"
-	},
-	{
+	});
+}
+if (hasPermission("playlists.requestOrphanedPlaylistSongs"))
+	jobs.value.push({
 		name: "Request orphaned playlist songs",
 		socket: "playlists.requestOrphanedPlaylistSongs"
-	},
-	{
+	});
+if (hasPermission("playlists.clearAndRefillAll")) {
+	jobs.value.push({
 		name: "Clear and refill all station playlists",
 		socket: "playlists.clearAndRefillAllStationPlaylists"
-	},
-	{
+	});
+	jobs.value.push({
 		name: "Clear and refill all genre playlists",
 		socket: "playlists.clearAndRefillAllGenrePlaylists"
-	},
-	{
+	});
+}
+if (hasPermission("playlists.createMissing"))
+	jobs.value.push({
 		name: "Create missing genre playlists",
 		socket: "playlists.createMissingGenrePlaylists"
-	}
-]);
+	});
 
 const { openModal } = useModalsStore();
 

@@ -5,6 +5,7 @@ import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useViewReportStore } from "@/stores/viewReport";
+import { useUserAuthStore } from "@/stores/userAuth";
 import { useReports } from "@/composables/useReports";
 import ws from "@/ws";
 import { Report } from "@/types/report";
@@ -32,6 +33,9 @@ const { reportId } = storeToRefs(viewReportStore);
 const { openModal, closeCurrentModal } = useModalsStore();
 
 const { resolveReport, removeReport } = useReports();
+
+const userAuthStore = useUserAuthStore();
+const { hasPermission } = userAuthStore;
 
 const icons = ref({
 	duration: "timer",
@@ -188,7 +192,10 @@ onBeforeUnmount(() => {
 								class="material-icons resolve-icon"
 								content="Resolve"
 								v-tippy
-								v-if="!issue.resolved"
+								v-if="
+									!issue.resolved &&
+									hasPermission('reports.update')
+								"
 								@click="toggleIssue(issue._id)"
 							>
 								done
@@ -197,7 +204,10 @@ onBeforeUnmount(() => {
 								class="material-icons unresolve-icon"
 								content="Unresolve"
 								v-tippy
-								v-else
+								v-else-if="
+									issue.resolved &&
+									hasPermission('reports.update')
+								"
 								@click="toggleIssue(issue._id)"
 							>
 								remove
@@ -209,6 +219,7 @@ onBeforeUnmount(() => {
 		</template>
 		<template #footer v-if="report && report._id">
 			<a
+				v-if="hasPermission('songs.update')"
 				class="button is-primary material-icons icon-with-button"
 				@click="openSong()"
 				content="Edit Song"
@@ -217,7 +228,7 @@ onBeforeUnmount(() => {
 				edit
 			</a>
 			<button
-				v-if="report.resolved"
+				v-if="report.resolved && hasPermission('reports.update')"
 				class="button is-danger material-icons icon-with-button"
 				@click="resolve(false)"
 				content="Unresolve"
@@ -226,7 +237,7 @@ onBeforeUnmount(() => {
 				remove_done
 			</button>
 			<button
-				v-else
+				v-else-if="!report.resolved && hasPermission('reports.update')"
 				class="button is-success material-icons icon-with-button"
 				@click="resolve(true)"
 				content="Resolve"
@@ -235,7 +246,10 @@ onBeforeUnmount(() => {
 				done_all
 			</button>
 			<div class="right">
-				<quick-confirm @confirm="remove()">
+				<quick-confirm
+					v-if="hasPermission('reports.remove')"
+					@confirm="remove()"
+				>
 					<button
 						class="button is-danger material-icons icon-with-button"
 						content="Delete Report"

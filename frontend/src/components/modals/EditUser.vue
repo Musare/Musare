@@ -13,6 +13,7 @@ import validation from "@/validation";
 import { useEditUserStore } from "@/stores/editUser";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
+import { useUserAuthStore } from "@/stores/userAuth";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const QuickConfirm = defineAsyncComponent(
@@ -31,6 +32,8 @@ const { userId, user } = storeToRefs(editUserStore);
 const { setUser } = editUserStore;
 
 const { closeCurrentModal } = useModalsStore();
+
+const { hasPermission } = useUserAuthStore();
 
 const ban = ref({ reason: "", expiresAt: "1h" });
 
@@ -183,7 +186,10 @@ onBeforeUnmount(() => {
 								autofocus
 							/>
 						</span>
-						<span class="control">
+						<span
+							v-if="hasPermission('users.update')"
+							class="control"
+						>
 							<a class="button is-info" @click="updateUsername()"
 								>Update Username</a
 							>
@@ -201,7 +207,10 @@ onBeforeUnmount(() => {
 								autofocus
 							/>
 						</span>
-						<span class="control">
+						<span
+							v-if="hasPermission('users.update')"
+							class="control"
+						>
 							<a class="button is-info" @click="updateEmail()"
 								>Update Email Address</a
 							>
@@ -211,13 +220,21 @@ onBeforeUnmount(() => {
 					<label class="label"> Change user role </label>
 					<div class="control is-grouped">
 						<div class="control is-expanded select">
-							<select v-model="user.role">
+							<select
+								v-model="user.role"
+								:disabled="
+									!hasPermission('users.update.restricted')
+								"
+							>
 								<option>user</option>
 								<option>moderator</option>
 								<option>admin</option>
 							</select>
 						</div>
-						<p class="control">
+						<p
+							v-if="hasPermission('users.update.restricted')"
+							class="control"
+						>
 							<a class="button is-info" @click="updateRole()"
 								>Update Role</a
 							>
@@ -225,7 +242,7 @@ onBeforeUnmount(() => {
 					</div>
 				</div>
 
-				<div class="section">
+				<div v-if="hasPermission('users.ban')" class="section">
 					<label class="label"> Punish/Ban User </label>
 					<p class="control is-grouped">
 						<span class="control select">
@@ -258,16 +275,28 @@ onBeforeUnmount(() => {
 				</div>
 			</template>
 			<template #footer>
-				<quick-confirm @confirm="resendVerificationEmail()">
+				<quick-confirm
+					v-if="hasPermission('users.resendVerifyEmail')"
+					@confirm="resendVerificationEmail()"
+				>
 					<a class="button is-warning"> Resend verification email </a>
 				</quick-confirm>
-				<quick-confirm @confirm="requestPasswordReset()">
+				<quick-confirm
+					v-if="hasPermission('users.requestPasswordReset')"
+					@confirm="requestPasswordReset()"
+				>
 					<a class="button is-warning"> Request password reset </a>
 				</quick-confirm>
-				<quick-confirm @confirm="removeSessions()">
+				<quick-confirm
+					v-if="hasPermission('users.remove.sessions')"
+					@confirm="removeSessions()"
+				>
 					<a class="button is-warning"> Remove all sessions </a>
 				</quick-confirm>
-				<quick-confirm @confirm="removeAccount()">
+				<quick-confirm
+					v-if="hasPermission('users.remove')"
+					@confirm="removeAccount()"
+				>
 					<a class="button is-danger"> Remove account </a>
 				</quick-confirm>
 			</template>

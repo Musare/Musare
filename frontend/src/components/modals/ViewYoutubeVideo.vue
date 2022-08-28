@@ -8,6 +8,7 @@ import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useViewYoutubeVideoStore } from "@/stores/viewYoutubeVideo";
 import { useStationStore } from "@/stores/station";
+import { useUserAuthStore } from "@/stores/userAuth";
 
 import Modal from "@/components/Modal.vue";
 
@@ -46,6 +47,9 @@ const { updateMediaModalPlayingAudio } = stationStore;
 const { openModal, closeCurrentModal } = useModalsStore();
 
 const { socket } = useWebsocketsStore();
+
+const userAuthStore = useUserAuthStore();
+const { hasPermission } = userAuthStore;
 
 const remove = () => {
 	socket.dispatch("youtube.removeVideos", videoId.value, res => {
@@ -693,6 +697,10 @@ onBeforeUnmount(() => {
 		</template>
 		<template #footer>
 			<button
+				v-if="
+					hasPermission('songs.create') ||
+					hasPermission('songs.update')
+				"
 				class="button is-primary icon-with-button material-icons"
 				@click.prevent="
 					openModal({ modal: 'editSong', data: { song: video } })
@@ -704,6 +712,7 @@ onBeforeUnmount(() => {
 			</button>
 			<div class="right">
 				<button
+					v-if="hasPermission('youtube.removeVideos')"
 					class="button is-danger icon-with-button material-icons"
 					@click.prevent="
 						confirmAction({

@@ -4,6 +4,7 @@ import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
 import { useModalsStore } from "@/stores/modals";
+import { useUserAuthStore } from "@/stores/userAuth";
 import {
 	TableColumn,
 	TableFilter,
@@ -25,6 +26,9 @@ const { setJob } = useLongJobsStore();
 
 const { socket } = useWebsocketsStore();
 
+const userAuthStore = useUserAuthStore();
+const { hasPermission } = userAuthStore;
+
 const columnDefault = ref(<TableColumn>{
 	sortable: true,
 	hidable: true,
@@ -42,8 +46,16 @@ const columns = ref(<TableColumn[]>[
 		sortable: false,
 		hidable: false,
 		resizable: false,
-		minWidth: 129,
-		defaultWidth: 129
+		minWidth:
+			(hasPermission("songs.create") || hasPermission("songs.update")) &&
+			hasPermission("youtube.removeVideos")
+				? 129
+				: 85,
+		defaultWidth:
+			(hasPermission("songs.create") || hasPermission("songs.update")) &&
+			hasPermission("youtube.removeVideos")
+				? 129
+				: 85
 	},
 	{
 		name: "thumbnailImage",
@@ -184,12 +196,12 @@ const events = ref(<TableEvents>{
 	}
 });
 const bulkActions = ref(<TableBulkActions>{ width: 200 });
-const jobs = ref([
-	{
+const jobs = ref([]);
+if (hasPermission("media.recalculateAllRatings"))
+	jobs.value.push({
 		name: "Recalculate all ratings",
 		socket: "media.recalculateAllRatings"
-	}
-]);
+	});
 
 const { openModal } = useModalsStore();
 
@@ -315,6 +327,10 @@ const confirmAction = ({ message, action, params }) => {
 						open_in_full
 					</button>
 					<button
+						v-if="
+							hasPermission('songs.create') ||
+							hasPermission('songs.update')
+						"
 						class="button is-primary icon-with-button material-icons"
 						@click="editOne(slotProps.item)"
 						:disabled="slotProps.item.removed"
@@ -328,6 +344,7 @@ const confirmAction = ({ message, action, params }) => {
 						music_note
 					</button>
 					<button
+						v-if="hasPermission('youtube.removeVideos')"
 						class="button is-danger icon-with-button material-icons"
 						@click.prevent="
 							confirmAction({
@@ -392,6 +409,10 @@ const confirmAction = ({ message, action, params }) => {
 			<template #bulk-actions="slotProps">
 				<div class="bulk-actions">
 					<i
+						v-if="
+							hasPermission('songs.create') ||
+							hasPermission('songs.update')
+						"
 						class="material-icons create-songs-icon"
 						@click.prevent="editMany(slotProps.item)"
 						content="Create/edit songs from videos"
@@ -401,6 +422,10 @@ const confirmAction = ({ message, action, params }) => {
 						music_note
 					</i>
 					<i
+						v-if="
+							hasPermission('songs.create') ||
+							hasPermission('songs.update')
+						"
 						class="material-icons import-album-icon"
 						@click.prevent="importAlbum(slotProps.item)"
 						content="Import album from videos"
@@ -410,6 +435,7 @@ const confirmAction = ({ message, action, params }) => {
 						album
 					</i>
 					<i
+						v-if="hasPermission('youtube.removeVideos')"
 						class="material-icons delete-icon"
 						@click.prevent="
 							confirmAction({

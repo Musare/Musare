@@ -3,6 +3,7 @@ import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
+import { useUserAuthStore } from "@/stores/userAuth";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
@@ -163,6 +164,8 @@ const events = ref(<TableEvents>{
 
 const { openModal } = useModalsStore();
 
+const { hasPermission } = useUserAuthStore();
+
 const banIP = () => {
 	socket.dispatch(
 		"punishments.banIP",
@@ -231,6 +234,7 @@ const deactivatePunishment = punishmentId => {
 						open_in_full
 					</button>
 					<quick-confirm
+						v-if="hasPermission('punishments.deactivate')"
 						@confirm="deactivatePunishment(slotProps.item._id)"
 						:disabled="
 							slotProps.item.status === 'Inactive' ||
@@ -302,7 +306,7 @@ const deactivatePunishment = punishmentId => {
 				}}</span>
 			</template>
 		</advanced-table>
-		<div class="card">
+		<div v-if="hasPermission('punishments.banIP')" class="card">
 			<h4>Ban an IP</h4>
 			<hr class="section-horizontal-rule" />
 			<div class="card-content">

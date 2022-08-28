@@ -20,6 +20,7 @@ import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useEditSongStore } from "@/stores/editSong";
 import { useStationStore } from "@/stores/station";
+import { useUserAuthStore } from "@/stores/userAuth";
 
 import Modal from "@/components/Modal.vue";
 
@@ -55,10 +56,12 @@ const props = defineProps({
 const editSongStore = useEditSongStore(props);
 const stationStore = useStationStore();
 const { socket } = useWebsocketsStore();
+const userAuthStore = useUserAuthStore();
 
 const modalsStore = useModalsStore();
 const { modals, activeModals } = storeToRefs(modalsStore);
 const { openModal } = modalsStore;
+const { hasPermission } = userAuthStore;
 
 const {
 	tab,
@@ -2333,6 +2336,7 @@ onBeforeUnmount(() => {
 
 					<div class="right">
 						<button
+							v-if="hasPermission('songs.remove')"
 							class="button is-danger icon-with-button material-icons"
 							@click.prevent="
 								confirmAction({

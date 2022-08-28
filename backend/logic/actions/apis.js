@@ -200,9 +200,10 @@ export default {
 			page === "punishments" ||
 			page === "youtube" ||
 			page === "youtubeVideos" ||
-			page === "import"
+			page === "import" ||
+			page === "dataRequests"
 		) {
-			hasPermission(`apis.joinAdminRoom.${page}`, session.userId)
+			hasPermission(`admin.view.${page}`, session.userId)
 				.then(() =>
 					WSModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session.socketId }).then(() => {
 						WSModule.runJob(

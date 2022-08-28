@@ -3,6 +3,7 @@ import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
+import { useUserAuthStore } from "@/stores/userAuth";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
@@ -123,6 +124,8 @@ const events = ref(<TableEvents>{
 
 const { openModal } = useModalsStore();
 
+const { hasPermission } = useUserAuthStore();
+
 const remove = id => {
 	socket.dispatch("news.remove", id, res => new Toast(res.message));
 };
@@ -138,6 +141,7 @@ const remove = id => {
 			</div>
 			<div class="button-row">
 				<button
+					v-if="hasPermission('news.create')"
 					class="is-primary button"
 					@click="
 						openModal({
@@ -162,6 +166,7 @@ const remove = id => {
 			<template #column-options="slotProps">
 				<div class="row-options">
 					<button
+						v-if="hasPermission('news.update')"
 						class="button is-primary icon-with-button material-icons"
 						@click="
 							openModal({
@@ -175,6 +180,7 @@ const remove = id => {
 						edit
 					</button>
 					<quick-confirm
+						v-if="hasPermission('news.remove')"
 						@confirm="remove(slotProps.item._id)"
 						:disabled="slotProps.item.removed"
 					>

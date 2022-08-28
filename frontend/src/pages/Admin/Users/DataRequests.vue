@@ -81,7 +81,7 @@ const filters = ref(<TableFilter[]>[
 	}
 ]);
 const events = ref(<TableEvents>{
-	adminRoom: "users",
+	adminRoom: "dataRequests",
 	updated: {
 		event: "admin.dataRequests.updated",
 		id: "dataRequest._id",

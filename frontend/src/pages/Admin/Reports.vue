@@ -2,6 +2,7 @@
 import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
 import { useModalsStore } from "@/stores/modals";
+import { useUserAuthStore } from "@/stores/userAuth";
 import { useReports } from "@/composables/useReports";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
@@ -151,6 +152,9 @@ const { openModal } = useModalsStore();
 
 const { resolveReport } = useReports();
 
+const userAuthStore = useUserAuthStore();
+const { hasPermission } = userAuthStore;
+
 const resolve = (reportId, value) =>
 	resolveReport({ reportId, value })
 		.then((res: any) => {
@@ -204,7 +208,10 @@ const getDateFormatted = createdAt => {
 						open_in_full
 					</button>
 					<button
-						v-if="slotProps.item.resolved"
+						v-if="
+							slotProps.item.resolved &&
+							hasPermission('reports.update')
+						"
 						class="button is-danger material-icons icon-with-button"
 						@click="resolve(slotProps.item._id, false)"
 						:disabled="slotProps.item.removed"
@@ -214,7 +221,10 @@ const getDateFormatted = createdAt => {
 						remove_done
 					</button>
 					<button
-						v-else
+						v-else-if="
+							!slotProps.item.resolved &&
+							hasPermission('reports.update')
+						"
 						class="button is-success material-icons icon-with-button"
 						@click="resolve(slotProps.item._id, true)"
 						:disabled="slotProps.item.removed"

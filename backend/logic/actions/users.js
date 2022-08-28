@@ -2447,61 +2447,64 @@ export default {
 	 * @param {string} newRole - the new role
 	 * @param {Function} cb - gets called with the result
 	 */
-	updateRole: useHasPermission("users.update", async function updateRole(session, updatingUserId, newRole, cb) {
-		newRole = newRole.toLowerCase();
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+	updateRole: useHasPermission(
+		"users.update.restricted",
+		async function updateRole(session, updatingUserId, newRole, cb) {
+			newRole = newRole.toLowerCase();
+			const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
-		async.waterfall(
-			[
-				next => {
-					userModel.findOne({ _id: updatingUserId }, next);
-				},
+			async.waterfall(
+				[
+					next => {
+						userModel.findOne({ _id: updatingUserId }, next);
+					},
 
-				(user, next) => {
-					if (!user) return next("User not found.");
-					if (user.role === newRole) return next("New role can't be the same as the old role.");
-					return next();
-				},
-				next => {
-					userModel.updateOne(
-						{ _id: updatingUserId },
-						{ $set: { role: newRole } },
-						{ runValidators: true },
-						next
-					);
-				}
-			],
-			async err => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					(user, next) => {
+						if (!user) return next("User not found.");
+						if (user.role === newRole) return next("New role can't be the same as the old role.");
+						return next();
+					},
+					next => {
+						userModel.updateOne(
+							{ _id: updatingUserId },
+							{ $set: { role: newRole } },
+							{ runValidators: true },
+							next
+						);
+					}
+				],
+				async err => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+						this.log(
+							"ERROR",
+							"UPDATE_ROLE",
+							`User "${session.userId}" couldn't update role for user "${updatingUserId}" to role "${newRole}". "${err}"`
+						);
+
+						return cb({ status: "error", message: err });
+					}
 
 					this.log(
-						"ERROR",
+						"SUCCESS",
 						"UPDATE_ROLE",
-						`User "${session.userId}" couldn't update role for user "${updatingUserId}" to role "${newRole}". "${err}"`
+						`User "${session.userId}" updated the role of user "${updatingUserId}" to role "${newRole}".`
 					);
 
-					return cb({ status: "error", message: err });
+					CacheModule.runJob("PUB", {
+						channel: "user.updated",
+						value: { userId: updatingUserId }
+					});
+
+					return cb({
+						status: "success",
+						message: "Role successfully updated."
+					});
 				}
-
-				this.log(
-					"SUCCESS",
-					"UPDATE_ROLE",
-					`User "${session.userId}" updated the role of user "${updatingUserId}" to role "${newRole}".`
-				);
-
-				CacheModule.runJob("PUB", {
-					channel: "user.updated",
-					value: { userId: updatingUserId }
-				});
-
-				return cb({
-					status: "success",
-					message: "Role successfully updated."
-				});
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Updates a user's password

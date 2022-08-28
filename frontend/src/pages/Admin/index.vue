@@ -230,7 +230,7 @@ onBeforeUnmount(() => {
 							</div>
 							<router-link
 								v-else-if="
-									hasPermission('admin.view.users') &&
+									hasPermission('admin.view.songs') &&
 									!sidebarActive
 								"
 								class="sidebar-item songs"
@@ -317,12 +317,22 @@ onBeforeUnmount(() => {
 										Users
 									</router-link>
 									<router-link
+										v-if="
+											hasPermission(
+												'admin.view.dataRequests'
+											)
+										"
 										class="sidebar-item-child"
 										to="/admin/users/data-requests"
 									>
 										Data Requests
 									</router-link>
 									<router-link
+										v-if="
+											hasPermission(
+												'admin.view.punishments'
+											)
+										"
 										class="sidebar-item-child"
 										to="/admin/users/punishments"
 									>

@@ -196,7 +196,7 @@ const router = createRouter({
 					path: "users/data-requests",
 					component: () =>
 						import("@/pages/Admin/Users/DataRequests.vue"),
-					meta: { permissionRequired: "admin.view.users" }
+					meta: { permissionRequired: "admin.view.dataRequests" }
 				},
 				{
 					path: "users/punishments",

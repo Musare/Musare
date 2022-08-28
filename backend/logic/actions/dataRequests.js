@@ -19,7 +19,7 @@ CacheModule.runJob("SUB", {
 
 		dataRequestModel.findOne({ _id: dataRequestId }, (err, dataRequest) => {
 			WSModule.runJob("EMIT_TO_ROOM", {
-				room: "admin.users",
+				room: "admin.dataRequests",
 				args: ["event:admin.dataRequests.updated", { data: { dataRequest } }]
 			});
 		});
@@ -40,7 +40,7 @@ export default {
 	 * @param cb
 	 */
 	getData: useHasPermission(
-		"admin.view.users",
+		"admin.view.dataRequests",
 		async function getData(session, page, pageSize, properties, sort, queries, operator, cb) {
 			async.waterfall(
 				[

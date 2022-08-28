@@ -1518,7 +1518,7 @@ button.delete:focus {
 			&.label {
 				border-radius: 0;
 			}
-			&:first-child {
+			&:first-child:not(:only-child) {
 				& > input,
 				& > select,
 				& > .button,
@@ -1526,12 +1526,20 @@ button.delete:focus {
 					border-radius: @border-radius 0 0 @border-radius;
 				}
 			}
-			&:last-child {
+			&:last-child:not(:only-child) {
 				& > input,
 				& > select,
 				& > .button,
 				&.label {
 					border-radius: 0 @border-radius @border-radius 0;
+				}
+			}
+			&:only-child {
+				& > input,
+				& > select,
+				& > .button,
+				&.label {
+					border-radius: @border-radius;
 				}
 			}
 		}

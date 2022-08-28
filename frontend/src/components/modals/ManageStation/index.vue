@@ -394,20 +394,20 @@ onBeforeUnmount(() => {
 	<modal
 		v-if="station"
 		:title="
-			sector === 'home' && !hasPermission('stations.update')
+			sector === 'home' && !hasPermission('stations.view.manage')
 				? 'View Queue'
-				: !hasPermission('stations.update')
+				: !hasPermission('stations.view.manage')
 				? 'Add Song to Queue'
 				: 'Manage Station'
 		"
 		:style="`--primary-color: var(--${station.theme})`"
 		class="manage-station-modal"
 		:size="
-			hasPermission('stations.update') || sector !== 'home'
+			hasPermission('stations.view.manage') || sector !== 'home'
 				? 'wide'
 				: null
 		"
-		:split="hasPermission('stations.update') || sector !== 'home'"
+		:split="hasPermission('stations.view.manage') || sector !== 'home'"
 	>
 		<template #body v-if="station && station._id">
 			<div class="left-section">
@@ -423,7 +423,7 @@ onBeforeUnmount(() => {
 					</div>
 					<div
 						v-if="
-							hasPermission('stations.update') ||
+							hasPermission('stations.view.manage') ||
 							sector !== 'home'
 						"
 					>
@@ -448,7 +448,7 @@ onBeforeUnmount(() => {
 							</button>
 							<button
 								v-if="
-									hasPermission('stations.view.manage') &&
+									hasPermission('stations.autofill') &&
 									station.autofill.enabled
 								"
 								class="button is-default"
@@ -459,7 +459,7 @@ onBeforeUnmount(() => {
 								Autofill
 							</button>
 							<button
-								v-if="hasPermission('stations.view.manage')"
+								v-if="hasPermission('stations.blacklist')"
 								class="button is-default"
 								:class="{ selected: tab === 'blacklist' }"
 								:ref="el => (tabs['blacklist-tab'] = el)"
@@ -485,7 +485,7 @@ onBeforeUnmount(() => {
 						/>
 						<playlist-tab-base
 							v-if="
-								hasPermission('stations.view.manage') &&
+								hasPermission('stations.autofill') &&
 								station.autofill.enabled
 							"
 							class="tab"
@@ -501,7 +501,7 @@ onBeforeUnmount(() => {
 							</template>
 						</playlist-tab-base>
 						<playlist-tab-base
-							v-if="hasPermission('stations.view.manage')"
+							v-if="hasPermission('stations.blacklist')"
 							class="tab"
 							v-show="tab === 'blacklist'"
 							:type="'blacklist'"
@@ -543,7 +543,7 @@ onBeforeUnmount(() => {
 					<a class="button is-danger">Reset queue</a>
 				</quick-confirm>
 				<quick-confirm
-					v-if="hasPermission('stations.queue.reset')"
+					v-if="hasPermission('stations.remove')"
 					@confirm="removeStation()"
 				>
 					<button class="button is-danger">Delete station</button>
