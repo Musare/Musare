@@ -376,9 +376,24 @@ const loadSong = _youtubeId => {
 				video.value.player.cueVideoById(_youtubeId, _song.skipDuration);
 			}
 		} else {
-			new Toast("Song with that ID not found");
-			if (bulk.value) songNotFound.value = true;
-			if (!bulk.value) modalsStore.closeCurrentModal();
+			songNotFound.value = true;
+			if (bulk.value) {
+				setSong({
+					youtubeId: _youtubeId,
+					title: "",
+					artists: [],
+					genres: [],
+					tags: [],
+					duration: 0,
+					skipDuration: 0,
+					thumbnail: "",
+					verified: false
+				});
+			}
+			if (!newSong.value) {
+				new Toast("Song with that ID not found");
+				modalsStore.closeCurrentModal();
+			}
 		}
 	});
 };
@@ -1199,7 +1214,7 @@ watch(
 	() => drawCanvas()
 );
 watch(youtubeId, (_youtubeId, _oldYoutubeId) => {
-	if (!newSong.value) {
+	if (!(newSong.value && !bulk.value)) {
 		console.log("NEW YOUTUBE ID", _youtubeId);
 		unloadSong(_oldYoutubeId);
 		loadSong(_youtubeId);
