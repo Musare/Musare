@@ -9,8 +9,6 @@ import { EventEmitter } from "events";
 
 import CoreClass from "../core";
 
-import { getUserPermissions } from "./hooks/hasPermission";
-
 let WSModule;
 let AppModule;
 let CacheModule;
@@ -610,17 +608,9 @@ class _WSModule extends CoreClass {
 									userId = session.userId;
 								}
 
-								return getUserPermissions(session.userId)
-									.then(permissions =>
-										socket.dispatch("ready", {
-											data: { loggedIn: true, role, username, userId, email, permissions }
-										})
-									)
-									.catch(() =>
-										socket.dispatch("ready", {
-											data: { loggedIn: true, role, username, userId, email }
-										})
-									);
+								return socket.dispatch("ready", {
+									data: { loggedIn: true, role, username, userId, email }
+								});
 							});
 						} else socket.dispatch("ready", { data: { loggedIn: false } });
 					})

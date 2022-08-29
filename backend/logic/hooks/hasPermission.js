@@ -19,6 +19,8 @@ permissions.dj = {
 };
 permissions.owner = {
 	...permissions.dj,
+	"stations.djs.add": true,
+	"stations.djs.remove": true,
 	"stations.remove": true,
 	"stations.update": true
 };
@@ -133,8 +135,8 @@ export const hasPermission = async (permission, session, stationId) => {
 							if (!station) return next("Station not found.");
 							if (station.type === "community" && station.owner === user._id.toString())
 								return next(null, [user.role, "owner"]);
-							// if (station.type === "community" && station.djs.find(userId))
-							// 	return next(null, [user.role, "dj"]);
+							if (station.type === "community" && station.djs.find(dj => dj === user._id.toString()))
+								return next(null, [user.role, "dj"]);
 							if (user.role === "admin" || user.role === "moderator") return next(null, [user.role]);
 							return next("Invalid permissions.");
 						})
@@ -177,14 +179,13 @@ export const useHasPermission = (options, destination) =>
 	async function useHasPermission(session, ...args) {
 		const UtilsModule = moduleManager.modules.utils;
 		const permission = typeof options === "object" ? options.permission : options;
-		const stationId = typeof options === "object" ? options.stationId : null;
 		const cb = args[args.length - 1];
 
 		async.waterfall(
 			[
 				next => {
 					if (!session || !session.sessionId) return next("Login required.");
-					return hasPermission(permission, session, stationId)
+					return hasPermission(permission, session)
 						.then(() => next())
 						.catch(next);
 				}
@@ -249,8 +250,8 @@ export const getUserPermissions = async (session, stationId) => {
 							if (!station) return next("Station not found.");
 							if (station.type === "community" && station.owner === user._id.toString())
 								return next(null, [user.role, "owner"]);
-							// if (station.type === "community" && station.djs.find(userId))
-							// 	return next(null, [user.role, "dj"]);
+							if (station.type === "community" && station.djs.find(dj => dj === user._id.toString()))
+								return next(null, [user.role, "dj"]);
 							if (user.role === "admin" || user.role === "moderator") return next(null, [user.role]);
 							return next("Invalid permissions.");
 						})

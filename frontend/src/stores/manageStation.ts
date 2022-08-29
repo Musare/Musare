@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { Station } from "@/types/station";
 import { Playlist } from "@/types/playlist";
 import { CurrentSong, Song } from "@/types/song";
+import ws from "@/ws";
 
 export const useManageStationStore = props => {
 	const { modalUuid } = props;
@@ -17,7 +18,8 @@ export const useManageStationStore = props => {
 			blacklist: <Playlist[]>[],
 			songsList: <Song[]>[],
 			stationPaused: true,
-			currentSong: <CurrentSong>{}
+			currentSong: <CurrentSong>{},
+			permissions: {}
 		}),
 		actions: {
 			init({ stationId, sector }) {
@@ -44,6 +46,7 @@ export const useManageStationStore = props => {
 				this.songsList = [];
 				this.stationPaused = true;
 				this.currentSong = {};
+				this.permissions = {};
 			},
 			updateSongsList(songsList) {
 				this.songsList = songsList;
@@ -77,10 +80,29 @@ export const useManageStationStore = props => {
 				this.station.isFavorited = isFavorited;
 			},
 			hasPermission(permission) {
-				return !!(
-					this.station.permissions &&
-					this.station.permissions[permission]
-				);
+				return !!(this.permissions && this.permissions[permission]);
+			},
+			updatePermissions() {
+				return new Promise(resolve => {
+					ws.socket.dispatch(
+						"utils.getPermissions",
+						this.station._id,
+						res => {
+							this.permissions = res.data.permissions;
+							resolve(this.permissions);
+						}
+					);
+				});
+			},
+			addDj(user) {
+				this.station.djs.push(user);
+			},
+			removeDj(user) {
+				this.station.djs.forEach((dj, index) => {
+					if (dj._id === user._id) {
+						this.station.djs.splice(index, 1);
+					}
+				});
 			}
 		}
 	})();

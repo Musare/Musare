@@ -771,7 +771,8 @@ export default {
 	 * @param {string} stationIdentifier - the station name or station id
 	 * @param {Function} cb - callback
 	 */
-	join(session, stationIdentifier, cb) {
+	async join(session, stationIdentifier, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 		async.waterfall(
 			[
 				next => {
@@ -817,12 +818,26 @@ export default {
 						autofill: station.autofill,
 						owner: station.owner,
 						blacklist: station.blacklist,
-						theme: station.theme
+						theme: station.theme,
+						djs: station.djs
 					};
 
 					StationsModule.userList[session.socketId] = station._id;
 
 					next(null, data);
+				},
+
+				(data, next) => {
+					userModel.find({ _id: { $in: data.djs } }, (err, users) => {
+						if (err) next(err);
+						else {
+							data.djs = users.map(user => {
+								const { _id, name, username, avatar } = user._doc;
+								return { _id, name, username, avatar };
+							});
+							next(null, data);
+						}
+					});
 				},
 
 				(data, next) => {
@@ -862,18 +877,6 @@ export default {
 					}
 
 					return next(null, data);
-				},
-
-				(data, next) => {
-					getUserPermissions(session.userId, data._id)
-						.then(permissions => {
-							data.permissions = permissions;
-							next(null, data);
-						})
-						.catch(() => {
-							data.permissions = {};
-							next(null, data);
-						});
 				}
 			],
 			async (err, data) => {
@@ -2563,9 +2566,15 @@ export default {
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - gets called with the result
 	 */
-	resetQueue: useHasPermission("stations.queue.reset", async function resetQueue(session, stationId, cb) {
+	async resetQueue(session, stationId, cb) {
 		async.waterfall(
 			[
+				next => {
+					hasPermission("stations.queue.reset", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
 				next => {
 					StationsModule.runJob("RESET_QUEUE", { stationId }, this)
 						.then(() => next())
@@ -2582,7 +2591,7 @@ export default {
 				return cb({ status: "success", message: "Successfully reset station queue." });
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Gets skip votes for a station
@@ -2637,5 +2646,75 @@ export default {
 				});
 			}
 		);
-	})
+	}),
+
+	/**
+	 * Add DJ to station
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {string} stationId - the station id
+	 * @param {string} userId - the dj user id
+	 * @param {Function} cb - gets called with the result
+	 */
+	async addDj(session, stationId, userId, cb) {
+		async.waterfall(
+			[
+				next => {
+					hasPermission("stations.djs.add", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
+				next => {
+					StationsModule.runJob("ADD_DJ", { stationId, userId }, this)
+						.then(() => next())
+						.catch(next);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "ADD_DJ", `Adding DJ failed. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "ADD_DJ", "Adding DJ was successful.");
+				return cb({ status: "success", message: "Successfully added DJ." });
+			}
+		);
+	},
+
+	/**
+	 * Remove DJ from station
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {string} stationId - the station id
+	 * @param {string} userId - the dj user id
+	 * @param {Function} cb - gets called with the result
+	 */
+	async removeDj(session, stationId, userId, cb) {
+		async.waterfall(
+			[
+				next => {
+					hasPermission("stations.djs.remove", session, stationId)
+						.then(() => next())
+						.catch(next);
+				},
+
+				next => {
+					StationsModule.runJob("REMOVE_DJ", { stationId, userId }, this)
+						.then(() => next())
+						.catch(next);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "REMOVE_DJ", `Removing DJ failed. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "REMOVE_DJ", "Removing DJ was successful.");
+				return cb({ status: "success", message: "Successfully removed DJ." });
+			}
+		);
+	}
 };

@@ -171,6 +171,17 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
+	channel: "user.updateRole",
+	cb: ({ user }) => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: user._id }).then(sockets => {
+			sockets.forEach(socket => {
+				socket.dispatch("keep.event:user.role.updated", { data: { role: user.role } });
+			});
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
 	channel: "user.updated",
 	cb: async data => {
 		const userModel = await DBModule.runJob("GET_MODEL", {
@@ -2462,18 +2473,19 @@ export default {
 					(user, next) => {
 						if (!user) return next("User not found.");
 						if (user.role === newRole) return next("New role can't be the same as the old role.");
-						return next();
+						return next(null, user);
 					},
-					next => {
+
+					(user, next) => {
 						userModel.updateOne(
 							{ _id: updatingUserId },
 							{ $set: { role: newRole } },
 							{ runValidators: true },
-							next
+							err => next(err, user)
 						);
 					}
 				],
-				async err => {
+				async (err, user) => {
 					if (err && err !== true) {
 						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
@@ -2495,6 +2507,11 @@ export default {
 					CacheModule.runJob("PUB", {
 						channel: "user.updated",
 						value: { userId: updatingUserId }
+					});
+
+					CacheModule.runJob("PUB", {
+						channel: "user.updateRole",
+						value: { user }
 					});
 
 					return cb({

@@ -37,7 +37,7 @@ const props = defineProps({
 const tabs = ref([]);
 
 const userAuthStore = useUserAuthStore();
-const { loggedIn } = storeToRefs(userAuthStore);
+const { loggedIn, userId } = storeToRefs(userAuthStore);
 
 const { socket } = useWebsocketsStore();
 
@@ -65,7 +65,10 @@ const {
 	updateCurrentSong,
 	updateStation,
 	updateIsFavorited,
-	hasPermission
+	hasPermission,
+	addDj,
+	removeDj,
+	updatePermissions
 } = manageStationStore;
 
 const { closeCurrentModal } = useModalsStore();
@@ -123,9 +126,11 @@ watch(
 );
 
 onMounted(() => {
-	socket.dispatch(`stations.getStationById`, stationId.value, res => {
+	socket.dispatch(`stations.getStationById`, stationId.value, async res => {
 		if (res.status === "success") {
 			editStation(res.data.station);
+
+			await updatePermissions();
 
 			if (!hasPermission("stations.update")) showTab("request");
 
@@ -311,6 +316,24 @@ onMounted(() => {
 		},
 		{ modalUuid: props.modalUuid }
 	);
+
+	socket.on("event:manageStation.djs.added", res => {
+		if (res.data.stationId === stationId.value) {
+			if (res.data.user._id === userId.value) updatePermissions();
+			addDj(res.data.user);
+		}
+	});
+
+	socket.on("event:manageStation.djs.removed", res => {
+		if (res.data.stationId === stationId.value) {
+			if (res.data.user._id === userId.value) updatePermissions();
+			removeDj(res.data.user);
+		}
+	});
+
+	socket.on("keep.event:user.role.updated", () => {
+		updatePermissions();
+	});
 
 	if (hasPermission("stations.view")) {
 		socket.on(
@@ -537,7 +560,7 @@ onBeforeUnmount(() => {
 		<template #footer>
 			<div class="right">
 				<quick-confirm
-					v-if="hasPermission('stations.queue.remove')"
+					v-if="hasPermission('stations.queue.reset')"
 					@confirm="resetQueue()"
 				>
 					<a class="button is-danger">Reset queue</a>

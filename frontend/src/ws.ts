@@ -189,6 +189,8 @@ export default {
 					pendingDispatches.forEach(cb => cb());
 					pendingDispatches = [];
 				}, 150); // small delay between readyState being 1 and the server actually receiving dispatches
+
+				userAuthStore.updatePermissions();
 			});
 		}
 	}

@@ -232,7 +232,6 @@ export const useUserAuthStore = defineStore("userAuth", {
 			this.username = data.username;
 			this.email = data.email;
 			this.userId = data.userId;
-			this.permissions = data.permissions || {};
 			this.gotData = true;
 		},
 		banUser(ban) {
@@ -242,8 +241,20 @@ export const useUserAuthStore = defineStore("userAuth", {
 		updateUsername(username) {
 			this.username = username;
 		},
+		updateRole(role) {
+			this.role = role;
+			this.updatePermissions();
+		},
 		hasPermission(permission) {
 			return !!(this.permissions && this.permissions[permission]);
+		},
+		updatePermissions() {
+			return new Promise(resolve => {
+				ws.socket.dispatch("utils.getPermissions", res => {
+					this.permissions = res.data.permissions;
+					resolve(this.permissions);
+				});
+			});
 		}
 	}
 });

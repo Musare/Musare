@@ -326,16 +326,14 @@ lofig.folder = defaultConfigURL;
 	if (await lofig.get("siteSettings.mediasession")) ms.init();
 
 	ws.socket.on("ready", res => {
-		const { loggedIn, role, username, userId, email, permissions } =
-			res.data;
+		const { loggedIn, role, username, userId, email } = res.data;
 
 		userAuthStore.authData({
 			loggedIn,
 			role,
 			username,
 			email,
-			userId,
-			permissions
+			userId
 		});
 	});
 
@@ -374,6 +372,10 @@ lofig.folder = defaultConfigURL;
 
 		if (preferences.activityWatch !== undefined)
 			changeActivityWatch(preferences.activityWatch);
+	});
+
+	ws.socket.on("keep.event:user.role.updated", res => {
+		userAuthStore.updateRole(res.data.role);
 	});
 
 	app.mount("#root");

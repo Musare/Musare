@@ -169,7 +169,10 @@ const {
 	updateOwnCurrentSongRatings,
 	updateCurrentSongSkipVotes,
 	updateAutoRequestLock,
-	hasPermission
+	hasPermission,
+	addDj,
+	removeDj,
+	updatePermissions
 } = stationStore;
 
 // TODO fix this if it still has some use
@@ -798,7 +801,7 @@ const resetKeyboardShortcutsHelper = () => {
 	keyboardShortcutsHelper.value.resetBox();
 };
 const join = () => {
-	socket.dispatch("stations.join", stationIdentifier.value, res => {
+	socket.dispatch("stations.join", stationIdentifier.value, async res => {
 		if (res.status === "success") {
 			setTimeout(() => {
 				loading.value = false;
@@ -817,7 +820,7 @@ const join = () => {
 				isFavorited,
 				theme,
 				requests,
-				permissions
+				djs
 			} = res.data;
 
 			// change url to use station name instead of station id
@@ -839,7 +842,7 @@ const join = () => {
 				isFavorited,
 				theme,
 				requests,
-				permissions
+				djs
 			});
 
 			document.getElementsByTagName(
@@ -856,6 +859,8 @@ const join = () => {
 
 			updateUserCount(res.data.userCount);
 			updateUsers(res.data.users);
+
+			await updatePermissions();
 
 			socket.dispatch(
 				"stations.getStationAutofillPlaylistsById",
@@ -1336,6 +1341,20 @@ onMounted(async () => {
 	socket.on("event:user.station.unfavorited", res => {
 		if (res.data.stationId === station.value._id)
 			updateIfStationIsFavorited({ isFavorited: false });
+	});
+
+	socket.on("event:station.djs.added", res => {
+		if (res.data.user._id === userId.value) updatePermissions();
+		addDj(res.data.user);
+	});
+
+	socket.on("event:station.djs.removed", res => {
+		if (res.data.user._id === userId.value) updatePermissions();
+		removeDj(res.data.user);
+	});
+
+	socket.on("keep.event:user.role.updated", () => {
+		updatePermissions();
 	});
 
 	if (JSON.parse(localStorage.getItem("muted"))) {

@@ -79,6 +79,48 @@ class _StationsModule extends CoreClass {
 			}
 		});
 
+		const userModel = (this.userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }));
+
+		CacheModule.runJob("SUB", {
+			channel: "station.djs.added",
+			cb: async ({ stationId, userId }) => {
+				userModel.findOne({ _id: userId }, (err, user) => {
+					if (!err && user) {
+						const { _id, name, username, avatar } = user;
+						const data = { user: { _id, name, username, avatar } };
+						WSModule.runJob("EMIT_TO_ROOM", {
+							room: `station.${stationId}`,
+							args: ["event:station.djs.added", { data }]
+						});
+						WSModule.runJob("EMIT_TO_ROOM", {
+							room: `manage-station.${stationId}`,
+							args: ["event:manageStation.djs.added", { data: { ...data, stationId } }]
+						});
+					}
+				});
+			}
+		});
+
+		CacheModule.runJob("SUB", {
+			channel: "station.djs.removed",
+			cb: async ({ stationId, userId }) => {
+				userModel.findOne({ _id: userId }, (err, user) => {
+					if (!err && user) {
+						const { _id, name, username, avatar } = user;
+						const data = { user: { _id, name, username, avatar } };
+						WSModule.runJob("EMIT_TO_ROOM", {
+							room: `station.${stationId}`,
+							args: ["event:station.djs.removed", { data }]
+						});
+						WSModule.runJob("EMIT_TO_ROOM", {
+							room: `manage-station.${stationId}`,
+							args: ["event:manageStation.djs.removed", { data: { ...data, stationId } }]
+						});
+					}
+				});
+			}
+		});
+
 		const stationModel = (this.stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }));
 		const stationSchema = (this.stationSchema = await CacheModule.runJob("GET_SCHEMA", { schemaName: "station" }));
 
@@ -1908,6 +1950,122 @@ class _StationsModule extends CoreClass {
 							{
 								channel: "station.queueUpdate",
 								value: stationId
+							},
+							this
+						)
+							.then(() => next())
+							.catch(next)
+				],
+				err => {
+					if (err) reject(err);
+					else resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Add DJ to station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - the station id
+	 * @param {string} payload.userId - the dj user id
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	ADD_DJ(payload) {
+		return new Promise((resolve, reject) => {
+			const { stationId, userId } = payload;
+			async.waterfall(
+				[
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId }, this)
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
+
+					(station, next) => {
+						if (!station) return next("Station not found.");
+						if (station.djs.find(dj => dj === userId)) return next("That user is already a DJ.");
+
+						return StationsModule.stationModel.updateOne(
+							{ _id: stationId },
+							{ $push: { djs: userId } },
+							next
+						);
+					},
+
+					(res, next) => {
+						StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+							.then(() => next())
+							.catch(next);
+					},
+
+					next =>
+						CacheModule.runJob(
+							"PUB",
+							{
+								channel: "station.djs.added",
+								value: { stationId, userId }
+							},
+							this
+						)
+							.then(() => next())
+							.catch(next)
+				],
+				err => {
+					if (err) reject(err);
+					else resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Remove DJ from station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - the station id
+	 * @param {string} payload.userId - the dj user id
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	REMOVE_DJ(payload) {
+		return new Promise((resolve, reject) => {
+			const { stationId, userId } = payload;
+			async.waterfall(
+				[
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId }, this)
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
+
+					(station, next) => {
+						if (!station) return next("Station not found.");
+						if (!station.djs.find(dj => dj === userId)) return next("That user is not currently a DJ.");
+
+						return StationsModule.stationModel.updateOne(
+							{ _id: stationId },
+							{ $pull: { djs: userId } },
+							next
+						);
+					},
+
+					(res, next) => {
+						StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+							.then(() => next())
+							.catch(next);
+					},
+
+					next =>
+						CacheModule.runJob(
+							"PUB",
+							{
+								channel: "station.djs.removed",
+								value: { stationId, userId }
 							},
 							this
 						)

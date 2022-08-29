@@ -3,6 +3,7 @@ import { Playlist } from "@/types/playlist";
 import { Song, CurrentSong } from "@/types/song";
 import { Station } from "@/types/station";
 import { User } from "@/types/user";
+import ws from "@/ws";
 
 export const useStationStore = defineStore("station", {
 	state: () => ({
@@ -23,7 +24,8 @@ export const useStationStore = defineStore("station", {
 		noSong: true,
 		autofill: <Playlist[]>[],
 		blacklist: <Playlist[]>[],
-		mediaModalPlayingAudio: false
+		mediaModalPlayingAudio: false,
+		permissions: {}
 	}),
 	actions: {
 		joinStation(station) {
@@ -47,6 +49,7 @@ export const useStationStore = defineStore("station", {
 			this.noSong = true;
 			this.autofill = [];
 			this.blacklist = [];
+			this.permissions = {};
 		},
 		editStation(station) {
 			this.editing = { ...station };
@@ -133,9 +136,29 @@ export const useStationStore = defineStore("station", {
 			this.mediaModalPlayingAudio = mediaModalPlayingAudio;
 		},
 		hasPermission(permission) {
-			return !!(
-				this.station.permissions && this.station.permissions[permission]
-			);
+			return !!(this.permissions && this.permissions[permission]);
+		},
+		updatePermissions() {
+			return new Promise(resolve => {
+				ws.socket.dispatch(
+					"utils.getPermissions",
+					this.station._id,
+					res => {
+						this.permissions = res.data.permissions;
+						resolve(this.permissions);
+					}
+				);
+			});
+		},
+		addDj(user) {
+			this.station.djs.push(user);
+		},
+		removeDj(user) {
+			this.station.djs.forEach((dj, index) => {
+				if (dj._id === user._id) {
+					this.station.djs.splice(index, 1);
+				}
+			});
 		}
 	}
 });
