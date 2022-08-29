@@ -28,6 +28,19 @@ const init = () => {
 	socket.dispatch(`punishments.findOne`, punishmentId.value, res => {
 		if (res.status === "success") {
 			viewPunishment(res.data.punishment);
+
+			socket.dispatch(
+				"apis.joinRoom",
+				`view-punishment.${punishmentId.value}`
+			);
+
+			socket.on(
+				"event:admin.punishment.updated",
+				({ data }) => {
+					punishment.value = data.punishment;
+				},
+				{ modalUuid: props.modalUuid }
+			);
 		} else {
 			new Toast("Punishment with that ID not found");
 			closeCurrentModal();
@@ -55,6 +68,12 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+	socket.dispatch(
+		"apis.leaveRoom",
+		`view-punishment.${punishmentId.value}`,
+		() => {}
+	);
+
 	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
 	viewPunishmentStore.$dispose();
 });
