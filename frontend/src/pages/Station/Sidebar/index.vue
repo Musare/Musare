@@ -32,7 +32,7 @@ const canRequest = (requireLogin = true) =>
 			hasPermission("stations.request")));
 
 watch(
-	() => station.value.requests,
+	() => [station.value.requests, hasPermission("stations.request")],
 	() => {
 		if (tab.value === "request" && !canRequest()) showTab("queue");
 	}
@@ -49,8 +49,8 @@ onMounted(() => {
 </script>
 
 <template>
-	<div id="tabs-container">
-		<div id="tab-selection">
+	<div class="tabs-container">
+		<div class="tab-selection">
 			<button
 				class="button is-default"
 				:class="{ selected: tab === 'queue' }"
@@ -95,7 +95,7 @@ onMounted(() => {
 
 <style lang="less" scoped>
 .night-mode {
-	#tab-selection .button {
+	.tab-selection .button {
 		background: var(--dark-grey);
 		color: var(--white);
 	}
@@ -106,7 +106,7 @@ onMounted(() => {
 	}
 }
 
-#tabs-container .tab {
+.tabs-container .tab {
 	width: 100%;
 	height: calc(100% - 36px);
 	position: absolute;
@@ -114,7 +114,7 @@ onMounted(() => {
 	border-top: 0;
 }
 
-#tab-selection {
+.tab-selection {
 	display: flex;
 	overflow-x: auto;
 

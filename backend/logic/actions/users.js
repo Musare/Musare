@@ -3337,5 +3337,64 @@ export default {
 				});
 			}
 		);
+	}),
+
+	/**
+	 * Search for a user by username or name
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} query - the query
+	 * @param {string} page - page
+	 * @param {Function} cb - gets called with the result
+	 */
+	search: isLoginRequired(async function search(session, query, page, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		async.waterfall(
+			[
+				next => {
+					if ((!query && query !== "") || typeof query !== "string") next("Invalid query.");
+					else next();
+				},
+
+				next => {
+					const findQuery = {
+						$or: [{ name: new RegExp(`${query}`, "i"), username: new RegExp(`${query}`, "i") }]
+					};
+					const pageSize = 15;
+					const skipAmount = pageSize * (page - 1);
+
+					userModel.find(findQuery).count((err, count) => {
+						if (err) next(err);
+						else {
+							userModel
+								.find(findQuery, { _id: true, name: true, username: true, avatar: true })
+								.skip(skipAmount)
+								.limit(pageSize)
+								.exec((err, users) => {
+									if (err) next(err);
+									else {
+										next(null, {
+											users,
+											page,
+											pageSize,
+											skipAmount,
+											count
+										});
+									}
+								});
+						}
+					});
+				}
+			],
+			async (err, data) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "USERS_SEARCH", `Searching users failed. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "USERS_SEARCH", "Searching users successful.");
+				return cb({ status: "success", data });
+			}
+		);
 	})
 };

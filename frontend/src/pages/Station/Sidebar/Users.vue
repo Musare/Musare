@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { useRoute } from "vue-router";
-import { defineAsyncComponent, ref, onMounted } from "vue";
+import {
+	defineAsyncComponent,
+	ref,
+	reactive,
+	computed,
+	watch,
+	onMounted
+} from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
@@ -18,10 +25,43 @@ const notesUri = ref("");
 const frontendDomain = ref("");
 const tab = ref("active");
 const tabs = ref([]);
+const search = reactive({
+	query: "",
+	searchedQuery: "",
+	page: 0,
+	count: 0,
+	resultsLeft: 0,
+	pageSize: 0,
+	results: []
+});
 
 const { socket } = useWebsocketsStore();
 
 const { station, users, userCount } = storeToRefs(stationStore);
+
+const sortedUsers = computed(() =>
+	users.value && users.value.loggedIn
+		? users.value.loggedIn
+				.slice()
+				.sort(
+					(a, b) =>
+						Number(station.value.owner === b._id) -
+							Number(station.value.owner === a._id) ||
+						Number(
+							!station.value.djs.find(dj => dj._id === a._id)
+						) -
+							Number(
+								!station.value.djs.find(dj => dj._id === b._id)
+							)
+				)
+		: []
+);
+
+const resultsLeftCount = computed(() => search.count - search.results.length);
+
+const nextPageResultsCount = computed(() =>
+	Math.min(search.pageSize, resultsLeftCount.value)
+);
 
 const { hasPermission } = useUserAuthStore();
 
@@ -52,6 +92,43 @@ const removeDj = userId => {
 	});
 };
 
+const searchForUser = page => {
+	if (search.page >= page || search.searchedQuery !== search.query) {
+		search.results = [];
+		search.page = 0;
+		search.count = 0;
+		search.resultsLeft = 0;
+		search.pageSize = 0;
+	}
+
+	search.searchedQuery = search.query;
+	socket.dispatch("users.search", search.query, page, res => {
+		const { data } = res;
+		if (res.status === "success") {
+			const { count, pageSize, users } = data;
+			search.results = [...search.results, ...users];
+			search.page = page;
+			search.count = count;
+			search.resultsLeft = count - search.results.length;
+			search.pageSize = pageSize;
+		} else if (res.status === "error") {
+			search.results = [];
+			search.page = 0;
+			search.count = 0;
+			search.resultsLeft = 0;
+			search.pageSize = 0;
+			new Toast(res.message);
+		}
+	});
+};
+
+watch(
+	() => hasPermission("stations.update"),
+	value => {
+		if (!value && tab.value === "djs") showTab("active");
+	}
+);
+
 onMounted(async () => {
 	frontendDomain.value = await lofig.get("frontendDomain");
 	notesUri.value = encodeURI(`${frontendDomain.value}/assets/notes.png`);
@@ -61,7 +138,13 @@ onMounted(async () => {
 <template>
 	<div id="users">
 		<div class="tabs-container">
-			<div v-if="hasPermission('stations.update')" class="tab-selection">
+			<div
+				v-if="
+					hasPermission('stations.update') &&
+					station.type === 'community'
+				"
+				class="tab-selection"
+			>
 				<button
 					class="button is-default"
 					:ref="el => (tabs['active-tab'] = el)"
@@ -77,6 +160,14 @@ onMounted(async () => {
 					@click="showTab('djs')"
 				>
 					DJs
+				</button>
+				<button
+					class="button is-default"
+					:ref="el => (tabs['add-dj-tab'] = el)"
+					:class="{ selected: tab === 'add-dj' }"
+					@click="showTab('add-dj')"
+				>
+					Add DJ
 				</button>
 			</div>
 			<div class="tab" v-show="tab === 'active'">
@@ -116,7 +207,7 @@ onMounted(async () => {
 
 				<aside class="menu">
 					<ul class="menu-list scrollable-list">
-						<li v-for="user in users.loggedIn" :key="user.username">
+						<li v-for="user in sortedUsers" :key="user.username">
 							<router-link
 								:to="{
 									name: 'profile',
@@ -153,6 +244,7 @@ onMounted(async () => {
 								<button
 									v-if="
 										hasPermission('stations.djs.add') &&
+										station.type === 'community' &&
 										!station.djs.find(
 											dj => dj._id === user._id
 										) &&
@@ -168,6 +260,7 @@ onMounted(async () => {
 								<button
 									v-else-if="
 										hasPermission('stations.djs.remove') &&
+										station.type === 'community' &&
 										station.djs.find(
 											dj => dj._id === user._id
 										)
@@ -190,8 +283,8 @@ onMounted(async () => {
 				v-show="tab === 'djs'"
 			>
 				<h5 class="has-text-centered">Station DJs</h5>
-				<h6 class="has-text-centered">
-					Add/remove DJs, who can manage the station and queue.
+				<h6 v-if="station.djs.length === 0" class="has-text-centered">
+					There are currently no DJs.
 				</h6>
 				<aside class="menu">
 					<ul class="menu-list scrollable-list">
@@ -228,6 +321,116 @@ onMounted(async () => {
 								</button>
 							</router-link>
 						</li>
+					</ul>
+				</aside>
+			</div>
+			<div
+				v-if="hasPermission('stations.update')"
+				class="tab"
+				v-show="tab === 'add-dj'"
+			>
+				<h5 class="has-text-centered">Add Station DJ</h5>
+				<h6 class="has-text-centered">
+					Search for users to promote to DJ.
+				</h6>
+
+				<div class="control is-grouped input-with-button">
+					<p class="control is-expanded">
+						<input
+							class="input"
+							type="text"
+							placeholder="Enter your user query here..."
+							v-model="search.query"
+							@keyup.enter="searchForUser(1)"
+						/>
+					</p>
+					<p class="control">
+						<button
+							class="button is-primary"
+							@click="searchForUser(1)"
+						>
+							<i class="material-icons icon-with-button">search</i
+							>Search
+						</button>
+					</p>
+				</div>
+
+				<aside class="menu">
+					<ul class="menu-list scrollable-list">
+						<li v-for="user in search.results" :key="user.username">
+							<router-link
+								:to="{
+									name: 'profile',
+									params: { username: user.username }
+								}"
+								target="_blank"
+							>
+								<profile-picture
+									:avatar="user.avatar"
+									:name="user.name || user.username"
+								/>
+
+								{{ user.name || user.username }}
+
+								<span
+									v-if="user._id === station.owner"
+									class="material-icons user-rank"
+									content="Station Owner"
+									v-tippy="{ theme: 'info' }"
+									>local_police</span
+								>
+								<span
+									v-else-if="
+										station.djs.find(
+											dj => dj._id === user._id
+										)
+									"
+									class="material-icons user-rank"
+									content="Station DJ"
+									v-tippy="{ theme: 'info' }"
+									>shield</span
+								>
+
+								<button
+									v-if="
+										hasPermission('stations.djs.add') &&
+										station.type === 'community' &&
+										!station.djs.find(
+											dj => dj._id === user._id
+										) &&
+										station.owner !== user._id
+									"
+									class="button is-primary material-icons"
+									@click.prevent="addDj(user._id)"
+									content="Promote user to DJ"
+									v-tippy
+								>
+									add_moderator
+								</button>
+								<button
+									v-else-if="
+										hasPermission('stations.djs.remove') &&
+										station.type === 'community' &&
+										station.djs.find(
+											dj => dj._id === user._id
+										)
+									"
+									class="button is-danger material-icons"
+									@click.prevent="removeDj(user._id)"
+									content="Demote user from DJ"
+									v-tippy
+								>
+									remove_moderator
+								</button>
+							</router-link>
+						</li>
+						<button
+							v-if="resultsLeftCount > 0"
+							class="button is-primary load-more-button"
+							@click="searchForUser(search.page + 1)"
+						>
+							Load {{ nextPageResultsCount }} more results
+						</button>
 					</ul>
 				</aside>
 			</div>
@@ -309,15 +512,21 @@ onMounted(async () => {
 			}
 		}
 		.tab {
+			position: absolute;
+			height: calc(100% - 120px);
+			width: calc(100% - 20px);
+			overflow-y: auto;
+
 			.menu {
-				margin-top: 20px;
+				margin-top: 10px;
 				width: 100%;
-				overflow: auto;
-				height: calc(100% - 20px - 40px);
 
 				.menu-list {
 					margin-left: 0;
 					padding: 0;
+					&.scrollable-list {
+						max-height: unset;
+					}
 				}
 
 				li {
@@ -367,6 +576,18 @@ onMounted(async () => {
 
 			h5 {
 				font-size: 20px;
+			}
+
+			.control.is-grouped.input-with-button {
+				margin: 10px 0 0 0 !important;
+				& > .control {
+					margin-bottom: 0 !important;
+				}
+			}
+
+			.load-more-button {
+				width: 100%;
+				margin-top: 10px;
 			}
 		}
 	}

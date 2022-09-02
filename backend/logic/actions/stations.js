@@ -2,7 +2,7 @@ import async from "async";
 import mongoose from "mongoose";
 import config from "config";
 
-import { hasPermission, useHasPermission, getUserPermissions } from "../hooks/hasPermission";
+import { hasPermission, useHasPermission } from "../hooks/hasPermission";
 import isLoginRequired from "../hooks/loginRequired";
 
 // eslint-disable-next-line
@@ -962,22 +962,11 @@ export default {
 						theme: station.theme,
 						paused: station.paused,
 						currentSong: station.currentSong,
-						isFavorited: station.isFavorited
+						isFavorited: station.isFavorited,
+						djs: station.djs
 					};
 
 					next(null, data);
-				},
-
-				(data, next) => {
-					getUserPermissions(session.userId, data._id)
-						.then(permissions => {
-							data.permissions = permissions;
-							next(null, data);
-						})
-						.catch(() => {
-							data.permissions = {};
-							next(null, data);
-						});
 				}
 			],
 			async (err, data) => {

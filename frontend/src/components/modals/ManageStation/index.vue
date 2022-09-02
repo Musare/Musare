@@ -105,23 +105,36 @@ const resetQueue = () => {
 	});
 };
 
+const findTabOrClose = () => {
+	if (hasPermission("stations.update")) return showTab("settings");
+	if (hasPermission("stations.request")) return showTab("request");
+	if (hasPermission("stations.autofill")) return showTab("autofill");
+	if (hasPermission("stations.blacklist")) return showTab("blacklist");
+	return closeCurrentModal();
+};
+
 watch(
-	() => station.value.requests,
-	() => {
-		if (tab.value === "request" && !canRequest()) {
-			if (hasPermission("stations.update")) showTab("settings");
-			else if (
-				!(sector.value === "home" && !hasPermission("stations.update"))
-			)
-				closeCurrentModal();
-		}
+	() => hasPermission("stations.update"),
+	value => {
+		if (!value && tab.value === "settings") findTabOrClose();
 	}
 );
 watch(
-	() => station.value.autofill,
+	() => hasPermission("stations.request") && station.value.requests.enabled,
 	value => {
-		if (tab.value === "autofill" && value && !value.enabled)
-			showTab("settings");
+		if (!value && tab.value === "request") findTabOrClose();
+	}
+);
+watch(
+	() => hasPermission("stations.autofill") && station.value.autofill.enabled,
+	value => {
+		if (!value && tab.value === "autofill") findTabOrClose();
+	}
+);
+watch(
+	() => hasPermission("stations.blacklist"),
+	value => {
+		if (!value && tab.value === "blacklist") findTabOrClose();
 	}
 );
 
