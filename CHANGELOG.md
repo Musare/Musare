@@ -1,5 +1,23 @@
 # Changelog
 
+## [v3.7.1] - 2022-09-02
+
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Added
+
+- feat: Added update events to view punishment modal
+
+### Fixed
+
+- fix: Unable to resume station with no current song
+- fix: Unable to create new songs with editSong modal
+- fix: Unable to change casing of username
+
+### Removed
+
+- chore: Removed dependabot action
+
 ## [v3.7.0] - 2022-08-27
 
 This release contains mostly internal refactors, and includes all
