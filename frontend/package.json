@@ -29,7 +29,7 @@
     "prettier": "^2.7.1",
     "vite-plugin-dynamic-import": "^1.2.0",
     "vue-eslint-parser": "^9.0.3",
-    "vue-tsc": "^0.39.5"
+    "vue-tsc": "^0.40.5"
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^3.0.3",
