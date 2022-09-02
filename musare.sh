@@ -321,6 +321,52 @@ case $1 in
         fi
         ;;
 
+    test)
+        echo -e "${CYAN}Musare | Test${NC}"
+        servicesString=$(handleServices "frontend" "${@:2}")
+        if [[ ${servicesString:0:1} == 1 ]]; then
+            if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *frontend* ]]; then
+                echo -e "${CYAN}Running frontend tests...${NC}"
+                ${dockerCompose} exec -T frontend npm run test -- --run
+                frontendExitValue=$?
+            fi
+            if [[ ${frontendExitValue} -gt 0 ]]; then
+                exitValue=1
+            else
+                exitValue=0
+            fi
+        else
+            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") test [frontend]${NC}"
+            exitValue=1
+        fi
+        if [[ ${exitValue} -gt 0 ]]; then
+            exit ${exitValue}
+        fi
+        ;;
+
+    test:coverage)
+        echo -e "${CYAN}Musare | Test Coverage${NC}"
+        servicesString=$(handleServices "frontend" "${@:2}")
+        if [[ ${servicesString:0:1} == 1 ]]; then
+            if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *frontend* ]]; then
+                echo -e "${CYAN}Running frontend test coverage report...${NC}"
+                ${dockerCompose} exec -T frontend npm run coverage
+                frontendExitValue=$?
+            fi
+            if [[ ${frontendExitValue} -gt 0 ]]; then
+                exitValue=1
+            else
+                exitValue=0
+            fi
+        else
+            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") test:coverage [frontend]${NC}"
+            exitValue=1
+        fi
+        if [[ ${exitValue} -gt 0 ]]; then
+            exit ${exitValue}
+        fi
+        ;;
+
     update)
         echo -e "${CYAN}Musare | Update${NC}"
         git fetch

@@ -13,7 +13,7 @@
       ]
     },
     "jsx": "preserve",
-    "types": ["vite/client"]
+    "types": ["vite/client", "vitest/globals"]
   },
   "exclude": ["./src/index.html"]
 }

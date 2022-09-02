@@ -1,0 +1,31 @@
+// Vitest Snapshot v1
+
+exports[`christmas lights component > loggedIn state 1`] = `
+"<div class=\\"christmas-lights loggedIn\\" data-v-1ff8e05a=\\"\\">
+  <div class=\\"christmas-wire\\" data-v-1ff8e05a=\\"\\"></div><span class=\\"christmas-light\\" data-v-1ff8e05a=\\"\\"></span>
+  <div class=\\"christmas-wire\\" data-v-1ff8e05a=\\"\\"></div>
+</div>"
+`;
+
+exports[`christmas lights component > mount 1`] = `
+"<div class=\\"christmas-lights\\" data-v-1ff8e05a=\\"\\">
+  <div class=\\"christmas-wire\\" data-v-1ff8e05a=\\"\\"></div><span class=\\"christmas-light\\" data-v-1ff8e05a=\\"\\"></span>
+  <div class=\\"christmas-wire\\" data-v-1ff8e05a=\\"\\"></div>
+</div>"
+`;
+
+exports[`christmas lights component > props 1`] = `
+"<div class=\\"christmas-lights christmas-lights-small\\" data-v-1ff8e05a=\\"\\">
+  <div class=\\"christmas-wire\\" data-v-1ff8e05a=\\"\\"></div><span class=\\"christmas-light\\" data-v-1ff8e05a=\\"\\"></span>
+  <div class=\\"christmas-wire\\" data-v-1ff8e05a=\\"\\"></div><span class=\\"christmas-light\\" data-v-1ff8e05a=\\"\\"></span>
+  <div class=\\"christmas-wire\\" data-v-1ff8e05a=\\"\\"></div><span class=\\"christmas-light\\" data-v-1ff8e05a=\\"\\"></span>
+  <div class=\\"christmas-wire\\" data-v-1ff8e05a=\\"\\"></div><span class=\\"christmas-light\\" data-v-1ff8e05a=\\"\\"></span>
+  <div class=\\"christmas-wire\\" data-v-1ff8e05a=\\"\\"></div><span class=\\"christmas-light\\" data-v-1ff8e05a=\\"\\"></span>
+  <div class=\\"christmas-wire\\" data-v-1ff8e05a=\\"\\"></div><span class=\\"christmas-light\\" data-v-1ff8e05a=\\"\\"></span>
+  <div class=\\"christmas-wire\\" data-v-1ff8e05a=\\"\\"></div><span class=\\"christmas-light\\" data-v-1ff8e05a=\\"\\"></span>
+  <div class=\\"christmas-wire\\" data-v-1ff8e05a=\\"\\"></div><span class=\\"christmas-light\\" data-v-1ff8e05a=\\"\\"></span>
+  <div class=\\"christmas-wire\\" data-v-1ff8e05a=\\"\\"></div><span class=\\"christmas-light\\" data-v-1ff8e05a=\\"\\"></span>
+  <div class=\\"christmas-wire\\" data-v-1ff8e05a=\\"\\"></div><span class=\\"christmas-light\\" data-v-1ff8e05a=\\"\\"></span>
+  <div class=\\"christmas-wire\\" data-v-1ff8e05a=\\"\\"></div>
+</div>"
+`;

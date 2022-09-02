@@ -170,5 +170,13 @@ export default {
 	server,
 	build: {
 		outDir: "../build"
+	},
+	test: {
+		globals: true,
+		environment: "jsdom",
+		coverage: {
+			all: true,
+			extension: [".ts", ".vue"]
+		}
 	}
 };
