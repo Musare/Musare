@@ -148,9 +148,9 @@ class _PunishmentsModule extends CoreClass {
 									this
 								).finally(() => {
 									WSModule.runJob(
-										"EMIT_TO_ROOM",
+										"EMIT_TO_ROOMS",
 										{
-											room: `admin.punishments`,
+											rooms: [`admin.punishments`, `view-punishment.${punishment.punishmentId}`],
 											args: [
 												"event:admin.punishment.updated",
 												{ data: { punishment: { ...punishment, status: "Inactive" } } }

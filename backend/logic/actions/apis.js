@@ -134,6 +134,7 @@ export default {
 			room.startsWith("edit-user.") ||
 			room.startsWith("view-api-request.") ||
 			room.startsWith("view-youtube-video.") ||
+			room.startsWith("view-punishment.") ||
 			room === "import-album" ||
 			room === "edit-songs"
 		) {

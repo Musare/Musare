@@ -2001,7 +2001,7 @@ export default {
 
 				(user, next) => {
 					if (!user) return next();
-					if (user._id === updatingUserId) return next();
+					if (user._id.toString() === updatingUserId) return next();
 					return next("That username is already in use.");
 				},
 

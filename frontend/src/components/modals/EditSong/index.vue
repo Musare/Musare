@@ -1200,8 +1200,8 @@ watch(
 );
 watch(youtubeId, (_youtubeId, _oldYoutubeId) => {
 	console.log("NEW YOUTUBE ID", _youtubeId);
-	unloadSong(_oldYoutubeId);
-	loadSong(_youtubeId);
+	if (_oldYoutubeId) unloadSong(_oldYoutubeId);
+	if (_youtubeId) loadSong(_youtubeId);
 });
 
 onMounted(async () => {

@@ -757,11 +757,14 @@ class _StationsModule extends CoreClass {
 					},
 
 					(station, sockets, next) => {
-						const skipVotes = station.currentSong.skipVotes.length;
+						const skipVotes =
+							station.currentSong && station.currentSong.skipVotes
+								? station.currentSong.skipVotes.length
+								: 0;
 						let shouldSkip = false;
 
-						if (sockets.length <= skipVotes) {
-							if (!station.paused) shouldSkip = true;
+						if (skipVotes === 0) {
+							if (!station.paused && !station.currentSong && station.queue.length > 0) shouldSkip = true;
 							return next(null, shouldSkip);
 						}
 
