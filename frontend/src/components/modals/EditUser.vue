@@ -158,6 +158,12 @@ const removeSessions = () => {
 
 // When the userId changes, run init. There can be a delay between the modal opening and the required data (userId) being available
 watch(userId, () => init());
+watch(
+	() => hasPermission("users.get") && hasPermission("users.update"),
+	value => {
+		if (!value) closeCurrentModal();
+	}
+);
 
 onMounted(() => {
 	ws.onConnect(init);

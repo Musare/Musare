@@ -107,10 +107,12 @@ const resetQueue = () => {
 
 const findTabOrClose = () => {
 	if (hasPermission("stations.update")) return showTab("settings");
-	if (hasPermission("stations.request")) return showTab("request");
+	if (canRequest()) return showTab("request");
 	if (hasPermission("stations.autofill")) return showTab("autofill");
 	if (hasPermission("stations.blacklist")) return showTab("blacklist");
-	return closeCurrentModal();
+	if (!(sector.value === "home" && hasPermission("stations.view")))
+		return closeCurrentModal();
+	return null;
 };
 
 watch(
@@ -145,7 +147,7 @@ onMounted(() => {
 
 			await updatePermissions();
 
-			if (!hasPermission("stations.update")) showTab("request");
+			findTabOrClose();
 
 			const currentSong = res.data.station.currentSong
 				? res.data.station.currentSong

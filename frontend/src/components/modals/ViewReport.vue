@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
+import {
+	defineAsyncComponent,
+	ref,
+	watch,
+	onMounted,
+	onBeforeUnmount
+} from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
@@ -125,6 +131,13 @@ const openSong = () => {
 		data: { song: report.value.song }
 	});
 };
+
+watch(
+	() => hasPermission("reports.get"),
+	value => {
+		if (!value) closeCurrentModal();
+	}
+);
 
 onMounted(() => {
 	ws.onConnect(init);

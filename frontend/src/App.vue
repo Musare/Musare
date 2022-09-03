@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRoute, useRouter } from "vue-router";
+import { useRouter } from "vue-router";
 import { defineAsyncComponent, ref, computed, watch, onMounted } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";

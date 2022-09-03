@@ -87,14 +87,14 @@ class _StationsModule extends CoreClass {
 				userModel.findOne({ _id: userId }, (err, user) => {
 					if (!err && user) {
 						const { _id, name, username, avatar } = user;
-						const data = { user: { _id, name, username, avatar } };
-						WSModule.runJob("EMIT_TO_ROOM", {
-							room: `station.${stationId}`,
-							args: ["event:station.djs.added", { data }]
+						const data = { data: { user: { _id, name, username, avatar }, stationId } };
+						WSModule.runJob("EMIT_TO_ROOMS", {
+							rooms: [`station.${stationId}`, "home"],
+							args: ["event:station.djs.added", data]
 						});
 						WSModule.runJob("EMIT_TO_ROOM", {
 							room: `manage-station.${stationId}`,
-							args: ["event:manageStation.djs.added", { data: { ...data, stationId } }]
+							args: ["event:manageStation.djs.added", data]
 						});
 					}
 				});
@@ -107,14 +107,14 @@ class _StationsModule extends CoreClass {
 				userModel.findOne({ _id: userId }, (err, user) => {
 					if (!err && user) {
 						const { _id, name, username, avatar } = user;
-						const data = { user: { _id, name, username, avatar } };
-						WSModule.runJob("EMIT_TO_ROOM", {
-							room: `station.${stationId}`,
-							args: ["event:station.djs.removed", { data }]
+						const data = { data: { user: { _id, name, username, avatar }, stationId } };
+						WSModule.runJob("EMIT_TO_ROOMS", {
+							rooms: [`station.${stationId}`, "home"],
+							args: ["event:station.djs.removed", data]
 						});
 						WSModule.runJob("EMIT_TO_ROOM", {
 							room: `manage-station.${stationId}`,
-							args: ["event:manageStation.djs.removed", { data: { ...data, stationId } }]
+							args: ["event:manageStation.djs.removed", data]
 						});
 					}
 				});

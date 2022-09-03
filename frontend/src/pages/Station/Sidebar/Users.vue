@@ -39,20 +39,17 @@ const { socket } = useWebsocketsStore();
 
 const { station, users, userCount } = storeToRefs(stationStore);
 
+const isOwner = userId => station.value.owner === userId;
+const isDj = userId => !!station.value.djs.find(dj => dj._id === userId);
+
 const sortedUsers = computed(() =>
 	users.value && users.value.loggedIn
 		? users.value.loggedIn
 				.slice()
 				.sort(
 					(a, b) =>
-						Number(station.value.owner === b._id) -
-							Number(station.value.owner === a._id) ||
-						Number(
-							!station.value.djs.find(dj => dj._id === a._id)
-						) -
-							Number(
-								!station.value.djs.find(dj => dj._id === b._id)
-							)
+						Number(isOwner(b._id)) - Number(isOwner(a._id)) ||
+						Number(!isOwner(a._id)) - Number(!isOwner(b._id))
 				)
 		: []
 );
@@ -224,18 +221,14 @@ onMounted(async () => {
 								{{ user.name || user.username }}
 
 								<span
-									v-if="user._id === station.owner"
+									v-if="isOwner(user._id)"
 									class="material-icons user-rank"
 									content="Station Owner"
 									v-tippy="{ theme: 'info' }"
 									>local_police</span
 								>
 								<span
-									v-else-if="
-										station.djs.find(
-											dj => dj._id === user._id
-										)
-									"
+									v-else-if="isDj(user._id)"
 									class="material-icons user-rank"
 									content="Station DJ"
 									v-tippy="{ theme: 'info' }"
@@ -246,10 +239,8 @@ onMounted(async () => {
 									v-if="
 										hasPermission('stations.djs.add') &&
 										station.type === 'community' &&
-										!station.djs.find(
-											dj => dj._id === user._id
-										) &&
-										station.owner !== user._id
+										!isDj(user._id) &&
+										!isOwner(user._id)
 									"
 									class="button is-primary material-icons"
 									@click.prevent="addDj(user._id)"
@@ -262,9 +253,7 @@ onMounted(async () => {
 									v-else-if="
 										hasPermission('stations.djs.remove') &&
 										station.type === 'community' &&
-										station.djs.find(
-											dj => dj._id === user._id
-										)
+										isDj(user._id)
 									"
 									class="button is-danger material-icons"
 									@click.prevent="removeDj(user._id)"
@@ -374,18 +363,14 @@ onMounted(async () => {
 								{{ user.name || user.username }}
 
 								<span
-									v-if="user._id === station.owner"
+									v-if="isOwner(user._id)"
 									class="material-icons user-rank"
 									content="Station Owner"
 									v-tippy="{ theme: 'info' }"
 									>local_police</span
 								>
 								<span
-									v-else-if="
-										station.djs.find(
-											dj => dj._id === user._id
-										)
-									"
+									v-else-if="isDj(user._id)"
 									class="material-icons user-rank"
 									content="Station DJ"
 									v-tippy="{ theme: 'info' }"
@@ -396,10 +381,8 @@ onMounted(async () => {
 									v-if="
 										hasPermission('stations.djs.add') &&
 										station.type === 'community' &&
-										!station.djs.find(
-											dj => dj._id === user._id
-										) &&
-										station.owner !== user._id
+										!isDj(user._id) &&
+										!isOwner(user._id)
 									"
 									class="button is-primary material-icons"
 									@click.prevent="addDj(user._id)"
@@ -412,9 +395,7 @@ onMounted(async () => {
 									v-else-if="
 										hasPermission('stations.djs.remove') &&
 										station.type === 'community' &&
-										station.djs.find(
-											dj => dj._id === user._id
-										)
+										isDj(user._id)
 									"
 									class="button is-danger material-icons"
 									@click.prevent="removeDj(user._id)"

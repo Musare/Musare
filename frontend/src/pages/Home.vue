@@ -4,6 +4,7 @@ import {
 	defineAsyncComponent,
 	ref,
 	computed,
+	watch,
 	onMounted,
 	onBeforeUnmount
 } from "vue";
@@ -49,6 +50,9 @@ const orderOfFavoriteStations = ref([]);
 const handledLoginRegisterRedirect = ref(false);
 
 const isOwner = station => loggedIn.value && station.owner === userId.value;
+const isDj = station =>
+	loggedIn.value && !!station.djs.find(dj => dj === userId.value);
+const isOwnerOrDj = station => isOwner(station) || isDj(station);
 
 const isPlaying = station => typeof station.currentSong.title !== "undefined";
 
@@ -64,6 +68,7 @@ const filteredStations = computed(() => {
 		.sort(
 			(a, b) =>
 				Number(isOwner(b)) - Number(isOwner(a)) ||
+				Number(isDj(b)) - Number(isDj(a)) ||
 				Number(isPlaying(b)) - Number(isPlaying(a)) ||
 				a.paused - b.paused ||
 				privacyOrder.indexOf(a.privacy) -
@@ -84,15 +89,13 @@ const favoriteStations = computed(() =>
 
 const { openModal } = useModalsStore();
 
-const init = () => {
+const fetchStations = () => {
 	socket.dispatch(
 		"stations.index",
 		route.query.adminFilter === undefined,
 		res => {
-			stations.value = [];
-
 			if (res.status === "success") {
-				res.data.stations.forEach(station => {
+				stations.value = res.data.stations.map(station => {
 					const modifiableStation = station;
 
 					if (!modifiableStation.currentSong)
@@ -106,15 +109,19 @@ const init = () => {
 					)
 						modifiableStation.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.youtubeId}/mqdefault.jpg`;
 
-					stations.value.push(modifiableStation);
+					return modifiableStation;
 				});
 
 				orderOfFavoriteStations.value = res.data.favorited;
 			}
 		}
 	);
+};
 
+const init = () => {
 	socket.dispatch("apis.joinRoom", "home");
+
+	fetchStations();
 };
 
 const canRequest = (station, requireLogin = true) =>
@@ -124,7 +131,7 @@ const canRequest = (station, requireLogin = true) =>
 	station.requests.enabled &&
 	(station.requests.access === "user" ||
 		(station.requests.access === "owner" &&
-			(isOwner(station) || hasPermission("stations.request"))));
+			(isOwnerOrDj(station) || hasPermission("stations.request"))));
 
 const favoriteStation = stationId => {
 	socket.dispatch("stations.favoriteStation", stationId, res => {
@@ -150,6 +157,19 @@ const changeFavoriteOrder = ({ moved }) => {
 		res => new Toast(res.message)
 	);
 };
+
+watch(
+	() => hasPermission("stations.index.other"),
+	value => {
+		if (!value && route.query.adminFilter === null)
+			router.push({
+				query: {
+					...route.query,
+					adminFilter: undefined
+				}
+			});
+	}
+);
 
 onMounted(async () => {
 	siteSettings.value = await lofig.get("siteSettings");
@@ -298,6 +318,18 @@ onMounted(async () => {
 		orderOfFavoriteStations.value = res.data.order;
 	});
 
+	socket.on("event:station.djs.added", res => {
+		if (res.data.user._id === userId.value) fetchStations();
+	});
+
+	socket.on("event:station.djs.removed", res => {
+		if (res.data.user._id === userId.value) fetchStations();
+	});
+
+	socket.on("keep.event:user.role.updated", () => {
+		fetchStations();
+	});
+
 	// ctrl + alt + f
 	keyboardShortcuts.registerShortcut("home.toggleAdminFilter", {
 		keyCode: 70,
@@ -397,7 +429,8 @@ onBeforeUnmount(() => {
 							:class="{
 								'station-card': true,
 								isPrivate: element.privacy === 'private',
-								isMine: isOwner(element)
+								isMine: isOwner(element),
+								isDj: isDj(element)
 							}"
 							:style="
 								'--primary-color: var(--' + element.theme + ')'
@@ -409,7 +442,7 @@ onBeforeUnmount(() => {
 										<div class="icon-container">
 											<div
 												v-if="
-													isOwner(element) ||
+													isOwnerOrDj(element) ||
 													hasPermission(
 														'stations.view.manage'
 													)
@@ -525,6 +558,17 @@ onBeforeUnmount(() => {
 												content="This is your station."
 												v-tippy="{ theme: 'info' }"
 												>home</i
+											>
+											<i
+												v-if="
+													element.type ===
+														'community' &&
+													isDj(element)
+												"
+												class="djIcon material-icons"
+												content="You are a DJ in this station."
+												v-tippy="{ theme: 'info' }"
+												>shield</i
 											>
 											<i
 												v-if="
@@ -668,7 +712,8 @@ onBeforeUnmount(() => {
 					class="station-card"
 					:class="{
 						isPrivate: station.privacy === 'private',
-						isMine: isOwner(station)
+						isMine: isOwner(station),
+						isDj: isDj(station)
 					}"
 					:style="'--primary-color: var(--' + station.theme + ')'"
 				>
@@ -678,7 +723,7 @@ onBeforeUnmount(() => {
 								<div class="icon-container">
 									<div
 										v-if="
-											isOwner(station) ||
+											isOwnerOrDj(station) ||
 											hasPermission(
 												'stations.view.manage'
 											)
@@ -778,6 +823,16 @@ onBeforeUnmount(() => {
 										content="This is your station."
 										v-tippy="{ theme: 'info' }"
 										>home</i
+									>
+									<i
+										v-if="
+											station.type === 'community' &&
+											isDj(station)
+										"
+										class="djIcon material-icons"
+										content="You are a DJ in this station."
+										v-tippy="{ theme: 'info' }"
+										>shield</i
 									>
 									<i
 										v-if="station.privacy === 'private'"
@@ -1221,6 +1276,9 @@ html {
 					}
 					.homeIcon {
 						color: var(--light-purple);
+					}
+					.djIcon {
+						color: var(--primary-color);
 					}
 				}
 

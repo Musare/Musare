@@ -273,9 +273,7 @@ router.beforeEach((to, from, next) => {
 		const { query } = to;
 		delete query.toast;
 		next({ ...to, query });
-	}
-
-	if (
+	} else if (
 		to.meta.loginRequired ||
 		to.meta.permissionRequired ||
 		to.meta.guestsOnly

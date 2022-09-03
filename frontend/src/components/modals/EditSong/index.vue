@@ -1206,6 +1206,12 @@ watch(youtubeId, (_youtubeId, _oldYoutubeId) => {
 	if (_oldYoutubeId) unloadSong(_oldYoutubeId);
 	if (_youtubeId) loadSong(_youtubeId);
 });
+watch(
+	() => hasPermission("songs.update"),
+	value => {
+		if (!value) modalsStore.closeCurrentModal();
+	}
+);
 
 onMounted(async () => {
 	activityWatchVideoDataInterval.value = setInterval(() => {
