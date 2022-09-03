@@ -1344,17 +1344,40 @@ onMounted(async () => {
 	});
 
 	socket.on("event:station.djs.added", res => {
-		if (res.data.user._id === userId.value) updatePermissions();
+		if (res.data.user._id === userId.value)
+			updatePermissions().then(() => {
+				if (
+					!hasPermission("stations.view") &&
+					station.value.privacy === "private"
+				)
+					window.location.href =
+						"/?msg=You no longer have access to the station you were in.";
+			});
 		addDj(res.data.user);
 	});
 
 	socket.on("event:station.djs.removed", res => {
-		if (res.data.user._id === userId.value) updatePermissions();
+		if (res.data.user._id === userId.value)
+			updatePermissions().then(() => {
+				if (
+					!hasPermission("stations.view") &&
+					station.value.privacy === "private"
+				)
+					window.location.href =
+						"/?msg=You no longer have access to the station you were in.";
+			});
 		removeDj(res.data.user);
 	});
 
 	socket.on("keep.event:user.role.updated", () => {
-		updatePermissions();
+		updatePermissions().then(() => {
+			if (
+				!hasPermission("stations.view") &&
+				station.value.privacy === "private"
+			)
+				window.location.href =
+					"/?msg=You no longer have access to the station you were in.";
+		});
 	});
 
 	if (JSON.parse(localStorage.getItem("muted"))) {

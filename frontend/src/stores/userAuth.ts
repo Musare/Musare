@@ -19,6 +19,7 @@ export const useUserAuthStore = defineStore("userAuth", {
 			expiresAt: null
 		},
 		gotData: false,
+		gotPermissions: false,
 		permissions: {}
 	}),
 	actions: {
@@ -243,7 +244,6 @@ export const useUserAuthStore = defineStore("userAuth", {
 		},
 		updateRole(role) {
 			this.role = role;
-			this.updatePermissions();
 		},
 		hasPermission(permission) {
 			return !!(this.permissions && this.permissions[permission]);
@@ -252,6 +252,7 @@ export const useUserAuthStore = defineStore("userAuth", {
 			return new Promise(resolve => {
 				ws.socket.dispatch("utils.getPermissions", res => {
 					this.permissions = res.data.permissions;
+					this.gotPermissions = true;
 					resolve(this.permissions);
 				});
 			});

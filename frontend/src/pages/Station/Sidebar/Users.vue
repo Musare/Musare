@@ -125,7 +125,8 @@ const searchForUser = page => {
 watch(
 	() => hasPermission("stations.update"),
 	value => {
-		if (!value && tab.value === "djs") showTab("active");
+		if (!value && (tab.value === "djs" || tab.value === "add-dj"))
+			showTab("active");
 	}
 );
 
@@ -326,7 +327,7 @@ onMounted(async () => {
 			</div>
 			<div
 				v-if="hasPermission('stations.update')"
-				class="tab"
+				class="tab add-dj-tab"
 				v-show="tab === 'add-dj'"
 			>
 				<h5 class="has-text-centered">Add Station DJ</h5>
@@ -489,7 +490,7 @@ onMounted(async () => {
 		.tab-selection {
 			display: flex;
 			overflow-x: auto;
-			margin-bottom: 20px;
+			margin-bottom: 10px;
 			.button {
 				border-radius: 0;
 				border: 0;
@@ -518,7 +519,7 @@ onMounted(async () => {
 			overflow-y: auto;
 
 			.menu {
-				margin-top: 10px;
+				margin-top: 20px;
 				width: 100%;
 
 				.menu-list {
@@ -578,16 +579,22 @@ onMounted(async () => {
 				font-size: 20px;
 			}
 
-			.control.is-grouped.input-with-button {
-				margin: 10px 0 0 0 !important;
-				& > .control {
-					margin-bottom: 0 !important;
+			&.add-dj-tab {
+				.control.is-grouped.input-with-button {
+					margin: 20px 0 0 0 !important;
+					& > .control {
+						margin-bottom: 0 !important;
+					}
 				}
-			}
 
-			.load-more-button {
-				width: 100%;
-				margin-top: 10px;
+				.menu {
+					margin-top: 10px;
+				}
+
+				.load-more-button {
+					width: 100%;
+					margin-top: 10px;
+				}
 			}
 		}
 	}

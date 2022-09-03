@@ -281,13 +281,17 @@ router.beforeEach((to, from, next) => {
 			else next();
 		};
 
-		if (userAuthStore.gotData) gotData();
+		if (userAuthStore.gotData && userAuthStore.gotPermissions) gotData();
 		else {
 			const unsubscribe = userAuthStore.$onAction(
 				({ name, after, onError }) => {
-					if (name === "authData") {
+					if (name === "authData" || name === "updatePermissions") {
 						after(() => {
-							gotData();
+							if (
+								userAuthStore.gotData &&
+								userAuthStore.gotPermissions
+							)
+								gotData();
 							unsubscribe();
 						});
 
@@ -376,6 +380,16 @@ lofig.folder = defaultConfigURL;
 
 	ws.socket.on("keep.event:user.role.updated", res => {
 		userAuthStore.updateRole(res.data.role);
+		userAuthStore.updatePermissions().then(() => {
+			const { meta } = router.currentRoute.value;
+			if (
+				meta &&
+				meta.permissionRequired &&
+				!userAuthStore.hasPermission(meta.permissionRequired)
+			)
+				window.location.href =
+					"/?msg=You no longer have access to the page you were viewing.";
+		});
 	});
 
 	app.mount("#root");
