@@ -1217,8 +1217,12 @@ onMounted(async () => {
 	});
 
 	socket.on("event:station.deleted", () => {
-		window.location.href = "/?msg=The station you were in was deleted.";
-		return true;
+		router.push({
+			path: "/",
+			query: {
+				toast: "The station you were in was deleted."
+			}
+		});
 	});
 
 	socket.on("event:ratings.liked", res => {
@@ -1295,8 +1299,12 @@ onMounted(async () => {
 		const { name, theme, privacy } = res.data.station;
 
 		if (!hasPermission("stations.view") && privacy === "private") {
-			window.location.href =
-				"/?msg=The station you were in was made private.";
+			router.push({
+				path: "/",
+				query: {
+					toast: "The station you were in was made private."
+				}
+			});
 		} else {
 			if (station.value.name !== name) {
 				await router.push(
@@ -1350,8 +1358,12 @@ onMounted(async () => {
 					!hasPermission("stations.view") &&
 					station.value.privacy === "private"
 				)
-					window.location.href =
-						"/?msg=You no longer have access to the station you were in.";
+					router.push({
+						path: "/",
+						query: {
+							toast: "You no longer have access to the station you were in."
+						}
+					});
 			});
 		addDj(res.data.user);
 	});
@@ -1363,8 +1375,12 @@ onMounted(async () => {
 					!hasPermission("stations.view") &&
 					station.value.privacy === "private"
 				)
-					window.location.href =
-						"/?msg=You no longer have access to the station you were in.";
+					router.push({
+						path: "/",
+						query: {
+							toast: "You no longer have access to the station you were in."
+						}
+					});
 			});
 		removeDj(res.data.user);
 	});
@@ -1375,8 +1391,12 @@ onMounted(async () => {
 				!hasPermission("stations.view") &&
 				station.value.privacy === "private"
 			)
-				window.location.href =
-					"/?msg=You no longer have access to the station you were in.";
+				router.push({
+					path: "/",
+					query: {
+						toast: "You no longer have access to the station you were in."
+					}
+				});
 		});
 	});
 

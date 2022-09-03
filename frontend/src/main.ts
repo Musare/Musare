@@ -5,6 +5,7 @@ import VueTippy, { Tippy } from "vue-tippy";
 import { createRouter, createWebHistory } from "vue-router";
 import { createPinia } from "pinia";
 import "lofig";
+import Toast from "toasters";
 
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPreferencesStore } from "@/stores/userPreferences";
@@ -263,6 +264,17 @@ router.beforeEach((to, from, next) => {
 		ws.destroyListeners();
 	}
 
+	if (to.query.toast) {
+		const toast =
+			typeof to.query.toast === "string"
+				? { content: to.query.toast, timeout: 20000 }
+				: to.query.toast;
+		new Toast(toast);
+		const { query } = to;
+		delete query.toast;
+		next({ ...to, query });
+	}
+
 	if (
 		to.meta.loginRequired ||
 		to.meta.permissionRequired ||
@@ -387,8 +399,12 @@ lofig.folder = defaultConfigURL;
 				meta.permissionRequired &&
 				!userAuthStore.hasPermission(meta.permissionRequired)
 			)
-				window.location.href =
-					"/?msg=You no longer have access to the page you were viewing.";
+				router.push({
+					path: "/",
+					query: {
+						toast: "You no longer have access to the page you were viewing."
+					}
+				});
 		});
 	});
 

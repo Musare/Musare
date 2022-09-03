@@ -22,7 +22,6 @@ const FallingSnow = defineAsyncComponent(
 	() => import("@/components/FallingSnow.vue")
 );
 
-const route = useRoute();
 const router = useRouter();
 
 const { socket } = useWebsocketsStore();
@@ -247,24 +246,6 @@ onMounted(async () => {
 	apiDomain.value = await lofig.get("backend.apiDomain");
 
 	router.isReady().then(() => {
-		if (route.query.err) {
-			let { err } = route.query;
-			err = JSON.stringify(err)
-				.replace(/</g, "&lt;")
-				.replace(/>/g, "&gt;");
-			router.push({ query: {} });
-			new Toast({ content: err, timeout: 20000 });
-		}
-
-		if (route.query.msg) {
-			let { msg } = route.query;
-			msg = JSON.stringify(msg)
-				.replace(/</g, "&lt;")
-				.replace(/>/g, "&gt;");
-			router.push({ query: {} });
-			new Toast({ content: msg, timeout: 20000 });
-		}
-
 		lofig.get("siteSettings.githubAuthentication").then(enabled => {
 			if (enabled && localStorage.getItem("github_redirect")) {
 				router.push(localStorage.getItem("github_redirect"));
