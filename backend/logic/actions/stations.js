@@ -1211,9 +1211,9 @@ export default {
 	/**
 	 * Force skips a station
 	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param cb
+	 * @param {object} session - user session
+	 * @param {string} stationId - the station id
+	 * @param {Function} cb - callback
 	 */
 	forceSkip(session, stationId, cb) {
 		async.waterfall(
@@ -1300,11 +1300,10 @@ export default {
 	/**
 	 * Updates a station's settings
 	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param station - updated station object
-	 * @param newStation
-	 * @param cb
+	 * @param {object} session - user session
+	 * @param {string} stationId - the station id
+	 * @param {object} newStation - updated station object
+	 * @param {Function} cb - callback
 	 */
 	async update(session, stationId, newStation, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
@@ -1408,9 +1407,9 @@ export default {
 	/**
 	 * Pauses a station
 	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param cb
+	 * @param {object} session - user session
+	 * @param {string} stationId - the station id
+	 * @param {Function} cb - callback
 	 */
 	async pause(session, stationId, cb) {
 		const stationModel = await DBModule.runJob(
@@ -1477,9 +1476,9 @@ export default {
 	/**
 	 * Resumes a station
 	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param cb
+	 * @param {object} session - user session
+	 * @param {string} stationId - the station id
+	 * @param {Function} cb - callback
 	 */
 	async resume(session, stationId, cb) {
 		const stationModel = await DBModule.runJob(
@@ -1553,9 +1552,9 @@ export default {
 	/**
 	 * Removes a station
 	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param cb
+	 * @param {object} session - user session
+	 * @param {string} stationId - the station id
+	 * @param {Function} cb - callback
 	 */
 	async remove(session, stationId, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
@@ -1895,10 +1894,10 @@ export default {
 	/**
 	 * Removes song from station queue
 	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param youtubeId - the youtube id
-	 * @param cb
+	 * @param {object} session - user session
+	 * @param {string} stationId - the station id
+	 * @param {string} youtubeId - the youtube id
+	 * @param {Function} cb - callback
 	 */
 	async removeFromQueue(session, stationId, youtubeId, cb) {
 		async.waterfall(
@@ -1999,11 +1998,11 @@ export default {
 	 * Reposition a song in station queue
 	 *
 	 * @param {object} session - user session
+	 * @param {string} stationId - the station id
 	 * @param {object} song - contains details about the song that is to be repositioned
 	 * @param {string} song.youtubeId - the youtube id of the song
 	 * @param {number} song.newIndex - the new position for the song in the queue
 	 * @param {number} song.oldIndex - the old position of the song in the queue
-	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
 	 */
 	async repositionSongInQueue(session, stationId, song, cb) {
@@ -2087,10 +2086,10 @@ export default {
 	/**
 	 * Autofill a playlist in a station
 	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param playlistId - the playlist id
-	 * @param cb
+	 * @param {object} session - user session
+	 * @param {string} stationId - the station id
+	 * @param {string} playlistId - the playlist id
+	 * @param {Function} cb - callback
 	 */
 	async autofillPlaylist(session, stationId, playlistId, cb) {
 		async.waterfall(
@@ -2162,10 +2161,10 @@ export default {
 	/**
 	 * Remove autofilled playlist from a station
 	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param playlistId - the playlist id
-	 * @param cb
+	 * @param {object} session - user session
+	 * @param {string} stationId - the station id
+	 * @param {string} playlistId - the playlist id
+	 * @param {Function} cb - callback
 	 */
 	async removeAutofillPlaylist(session, stationId, playlistId, cb) {
 		async.waterfall(
@@ -2235,10 +2234,10 @@ export default {
 	/**
 	 * Blacklist a playlist in a station
 	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param playlistId - the playlist id
-	 * @param cb
+	 * @param {object} session - user session
+	 * @param {string} stationId - the station id
+	 * @param {string} playlistId - the playlist id
+	 * @param {Function} cb - callback
 	 */
 	async blacklistPlaylist(session, stationId, playlistId, cb) {
 		async.waterfall(
@@ -2308,10 +2307,10 @@ export default {
 	/**
 	 * Remove blacklisted a playlist from a station
 	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param playlistId - the playlist id
-	 * @param cb
+	 * @param {object} session - user session
+	 * @param {string} stationId - the station id
+	 * @param {string} playlistId - the playlist id
+	 * @param {Function} cb - callback
 	 */
 	async removeBlacklistedPlaylist(session, stationId, playlistId, cb) {
 		async.waterfall(
