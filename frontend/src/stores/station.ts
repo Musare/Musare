@@ -117,10 +117,11 @@ export const useStationStore = defineStore("station", {
 			this.currentSong.liked = ownSongRatings.liked;
 			this.currentSong.disliked = ownSongRatings.disliked;
 		},
-		updateCurrentSongSkipVotes({ skipVotes, skipVotesCurrent }) {
+		updateCurrentSongSkipVotes({ skipVotes, skipVotesCurrent, voted }) {
 			this.currentSong.skipVotes = skipVotes;
 			if (skipVotesCurrent !== null)
 				this.currentSong.skipVotesCurrent = skipVotesCurrent;
+			this.currentSong.voted = voted;
 		},
 		addPlaylistToAutoRequest(playlist) {
 			this.autoRequest.push(playlist);

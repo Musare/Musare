@@ -392,12 +392,12 @@ const playVideo = () => {
 		}, 150);
 	}
 };
-const voteSkipStation = (message?) => {
-	socket.dispatch("stations.voteSkip", station.value._id, data => {
+const toggleSkipVote = (message?) => {
+	socket.dispatch("stations.toggleSkipVote", station.value._id, data => {
 		if (data.status !== "success") new Toast(`Error: ${data.message}`);
 		else
 			new Toast(
-				message || "Successfully voted to skip the current song."
+				message || "Successfully toggled vote to skip the current song."
 			);
 	});
 };
@@ -453,9 +453,12 @@ const youtubeReady = () => {
 					console.log("error with youtube video", err);
 
 					if (err.data === 150 && loggedIn.value) {
-						if (!(localPaused.value || stationPaused.value)) {
+						if (
+							!(localPaused.value || stationPaused.value) &&
+							!currentSong.value.voted
+						) {
 							// automatically vote to skip
-							voteSkipStation(
+							toggleSkipVote(
 								"Automatically voted to skip as this song isn't available for you."
 							);
 						}
@@ -624,14 +627,15 @@ const setCurrentSong = data => {
 			currentSongId,
 			res => {
 				if (res.status === "success") {
-					const { skipVotes, skipVotesCurrent } = res.data;
+					const { skipVotes, skipVotesCurrent, voted } = res.data;
 					if (
 						!noSong.value &&
 						currentSong.value._id === currentSongId
 					) {
 						updateCurrentSongSkipVotes({
 							skipVotes,
-							skipVotesCurrent
+							skipVotesCurrent,
+							voted
 						});
 					}
 				}
@@ -660,9 +664,10 @@ const setCurrentSong = data => {
 						if (
 							autoSkipDisliked.value &&
 							res.data.disliked === true &&
-							!(localPaused.value || stationPaused.value)
+							!(localPaused.value || stationPaused.value) &&
+							!currentSong.value.voted
 						) {
-							voteSkipStation(
+							toggleSkipVote(
 								"Automatically voted to skip disliked song."
 							);
 						}
@@ -1184,7 +1189,7 @@ onMounted(async () => {
 		},
 		nexttrack: () => {
 			if (hasPermission("stations.skip")) skipStation();
-			else voteSkipStation();
+			else if (!currentSong.value.voted) toggleSkipVote();
 		}
 	});
 
@@ -1287,11 +1292,17 @@ onMounted(async () => {
 		updateNextSong(nextSong);
 	});
 
-	socket.on("event:station.voteSkipSong", () => {
+	socket.on("event:station.toggleSkipVote", res => {
 		if (currentSong.value)
 			updateCurrentSongSkipVotes({
-				skipVotes: currentSong.value.skipVotes + 1,
-				skipVotesCurrent: null
+				skipVotes: res.data.voted
+					? currentSong.value.skipVotes + 1
+					: currentSong.value.skipVotes - 1,
+				skipVotesCurrent: null,
+				voted:
+					res.data.userId === userId.value
+						? res.data.voted
+						: currentSong.value.voted
 			});
 	});
 
@@ -1727,9 +1738,17 @@ onBeforeUnmount(() => {
 									</button>
 									<button
 										v-else-if="loggedIn"
-										class="button is-primary"
-										@click="voteSkipStation()"
-										content="Vote to Skip Song"
+										:class="[
+											'button',
+											'is-primary',
+											{ voted: currentSong.voted }
+										]"
+										@click="toggleSkipVote()"
+										:content="`${
+											currentSong.voted
+												? 'Remove vote'
+												: 'Vote'
+										} to Skip Song`"
 										v-tippy
 									>
 										<i

@@ -771,9 +771,9 @@ class _StationsModule extends CoreClass {
 	 * @param {string} payload.stationId - the id of the station to process
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	PROCESS_VOTE_SKIPS(payload) {
+	PROCESS_SKIP_VOTES(payload) {
 		return new Promise((resolve, reject) => {
-			StationsModule.log("INFO", `Processing vote skips for station ${payload.stationId}.`);
+			StationsModule.log("INFO", `Processing skip votes for station ${payload.stationId}.`);
 
 			async.waterfall(
 				[

@@ -213,11 +213,12 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
-	channel: "station.voteSkipSong",
-	cb: stationId => {
+	channel: "station.toggleSkipVote",
+	cb: res => {
+		const { stationId, voted, userId } = res;
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
-			args: ["event:station.voteSkipSong"]
+			args: ["event:station.toggleSkipVote", { data: { voted, userId } }]
 		});
 	}
 });
@@ -1124,13 +1125,13 @@ export default {
 	},
 
 	/**
-	 * Votes to skip a station
+	 * Toggle votes to skip a station
 	 *
 	 * @param session
 	 * @param stationId - the station id
 	 * @param cb
 	 */
-	voteSkip: isLoginRequired(async function voteSkip(session, stationId, cb) {
+	toggleSkipVote: isLoginRequired(async function toggleSkipVote(session, stationId, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 
 		async.waterfall(
@@ -1153,51 +1154,55 @@ export default {
 
 				(station, next) => {
 					if (!station.currentSong) return next("There is currently no song to skip.");
-					if (station.currentSong.skipVotes.indexOf(session.userId) !== -1)
-						return next("You have already voted to skip this song.");
-					return next(null, station);
+					const query = {};
+					const voted = station.currentSong.skipVotes.indexOf(session.userId) !== -1;
+					if (!voted) query.$push = { "currentSong.skipVotes": session.userId };
+					else query.$pull = { "currentSong.skipVotes": session.userId };
+					return stationModel.updateOne({ _id: stationId }, query, err => {
+						if (err) next(err);
+						else next(null, !voted);
+					});
 				},
 
-				(station, next) => {
-					stationModel.updateOne(
-						{ _id: stationId },
-						{ $push: { "currentSong.skipVotes": session.userId } },
-						next
-					);
-				},
-
-				(res, next) => {
+				(voted, next) => {
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
 						.then(station => {
-							next(null, station);
+							next(null, station, voted);
 						})
 						.catch(next);
 				},
 
-				(station, next) => {
+				(station, voted, next) => {
 					if (!station) return next("Station not found.");
 
-					return StationsModule.runJob("PROCESS_VOTE_SKIPS", { stationId }, this)
-						.then(() => next())
+					return StationsModule.runJob("PROCESS_SKIP_VOTES", { stationId }, this)
+						.then(() => next(null, voted))
 						.catch(next);
 				}
 			],
-			async err => {
+			async (err, voted) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "STATIONS_VOTE_SKIP", `Vote skipping station "${stationId}" failed. "${err}"`);
+					this.log(
+						"ERROR",
+						"STATIONS_TOGGLE_SKIP_VOTE",
+						`Toggling skip vote on "${stationId}" failed. "${err}"`
+					);
 					return cb({ status: "error", message: err });
 				}
-				this.log("SUCCESS", "STATIONS_VOTE_SKIP", `Vote skipping "${stationId}" successful.`);
+				this.log("SUCCESS", "STATIONS_TOGGLE_SKIP_VOTE", `Toggling skip vote on "${stationId}" successful.`);
 
 				CacheModule.runJob("PUB", {
-					channel: "station.voteSkipSong",
-					value: stationId
+					channel: "station.toggleSkipVote",
+					value: { stationId, voted, userId: session.userId }
 				});
 
 				return cb({
 					status: "success",
-					message: "Successfully voted to skip the song."
+					message: voted
+						? "Successfully voted to skip the song."
+						: "Successfully removed vote to skip the song.",
+					data: { voted }
 				});
 			}
 		);
@@ -1521,7 +1526,7 @@ export default {
 				},
 
 				next => {
-					StationsModule.runJob("PROCESS_VOTE_SKIPS", { stationId }, this)
+					StationsModule.runJob("PROCESS_SKIP_VOTES", { stationId }, this)
 						.then(() => next())
 						.catch(next);
 				}
@@ -2604,12 +2609,14 @@ export default {
 					if (currentSong && currentSong._id === songId)
 						next(null, {
 							skipVotes: currentSong.skipVotes.length,
-							skipVotesCurrent: true
+							skipVotesCurrent: true,
+							voted: currentSong.skipVotes.indexOf(session.userId) !== -1
 						});
 					else
 						next(null, {
 							skipVotes: 0,
-							skipVotesCurrent: false
+							skipVotesCurrent: false,
+							voted: false
 						});
 				}
 			],
@@ -2624,14 +2631,9 @@ export default {
 					return cb({ status: "error", message: err });
 				}
 
-				const { skipVotes, skipVotesCurrent } = data;
-
 				return cb({
 					status: "success",
-					data: {
-						skipVotes,
-						skipVotesCurrent
-					}
+					data
 				});
 			}
 		);
