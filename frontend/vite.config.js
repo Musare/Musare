@@ -1,6 +1,7 @@
 import path from "path";
 import vue from "@vitejs/plugin-vue";
 import dynamicImport from "vite-plugin-dynamic-import";
+import vueI18n from "@intlify/vite-plugin-vue-i18n";
 import config from "config";
 import fs from "fs";
 
@@ -157,9 +158,15 @@ export default {
 		MUSARE_GIT_LATEST_COMMIT: JSON.stringify(debug.git.latestCommit),
 		MUSARE_GIT_LATEST_COMMIT_SHORT: JSON.stringify(
 			debug.git.latestCommitShort
-		)
+		),
+		__VUE_I18N_LEGACY_API__: false
 	},
-	plugins: [vue(), htmlPlugin(), dynamicImport()],
+	plugins: [
+		vue(),
+		htmlPlugin(),
+		dynamicImport(),
+		vueI18n({ include: path.resolve(__dirname, "src/locales/**") })
+	],
 	css: {
 		preprocessorOptions: {
 			less: {

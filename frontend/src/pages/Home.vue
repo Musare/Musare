@@ -11,6 +11,7 @@ import {
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { DraggableList } from "vue-draggable-list";
+import { useI18n } from "vue-i18n";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
@@ -29,6 +30,8 @@ const SongThumbnail = defineAsyncComponent(
 const UserLink = defineAsyncComponent(
 	() => import("@/components/UserLink.vue")
 );
+
+const { t } = useI18n();
 
 const userAuthStore = useUserAuthStore();
 const route = useRoute();
@@ -368,7 +371,7 @@ onBeforeUnmount(() => {
 
 <template>
 	<div>
-		<page-metadata title="Home" />
+		<page-metadata :title="t('home')" />
 		<div class="app home-page">
 			<main-header
 				:hide-logo="true"
@@ -394,14 +397,14 @@ onBeforeUnmount(() => {
 								class="button login"
 								@click="openModal('login')"
 							>
-								Login
+								{{ t("login") }}
 							</button>
 							<button
 								v-if="!siteSettings.registrationDisabled"
 								class="button register"
 								@click="openModal('register')"
 							>
-								Register
+								{{ t("register") }}
 							</button>
 						</div>
 					</div>
@@ -410,7 +413,7 @@ onBeforeUnmount(() => {
 			<div class="group" v-show="favoriteStations.length > 0">
 				<div class="group-title">
 					<div>
-						<h2>My Favorites</h2>
+						<h2>{{ t("favoriteStations") }}</h2>
 					</div>
 				</div>
 
@@ -458,7 +461,7 @@ onBeforeUnmount(() => {
 														}
 													})
 												"
-												content="Manage Station"
+												:content="t('manageStation')"
 												v-tippy
 											>
 												settings
@@ -654,7 +657,7 @@ onBeforeUnmount(() => {
 			<div class="group bottom">
 				<div class="group-title">
 					<div>
-						<h1>Stations</h1>
+						<h1>{{ t("station", 0) }}</h1>
 					</div>
 				</div>
 				<a
@@ -738,7 +741,7 @@ onBeforeUnmount(() => {
 												}
 											})
 										"
-										content="Manage Station"
+										:content="t('manageStation')"
 										v-tippy
 									>
 										settings
@@ -906,7 +909,7 @@ onBeforeUnmount(() => {
 					</div>
 				</router-link>
 				<h4 v-if="stations.length === 0">
-					There are no stations to display
+					{{ t("noStations", 0) }}
 				</h4>
 			</div>
 			<main-footer />

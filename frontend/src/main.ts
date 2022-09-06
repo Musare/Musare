@@ -12,6 +12,7 @@ import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useModalsStore } from "@/stores/modals";
 import ws from "@/ws";
 import ms from "@/ms";
+import i18n from "@/i18n";
 
 import AppComponent from "./App.vue";
 
@@ -35,6 +36,8 @@ const handleMetadata = attrs => {
 };
 
 const app = createApp(AppComponent);
+
+app.use(i18n);
 
 app.use(VueTippy, {
 	directive: "tippy", // => v-tippy

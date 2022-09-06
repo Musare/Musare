@@ -32,6 +32,7 @@
     "vue-tsc": "^0.39.5"
   },
   "dependencies": {
+    "@intlify/vite-plugin-vue-i18n": "^6.0.1",
     "@vitejs/plugin-vue": "^3.0.3",
     "can-autoplay": "^3.0.2",
     "chart.js": "^3.9.1",
@@ -50,6 +51,7 @@
     "vue-chartjs": "^4.1.1",
     "vue-content-loader": "^2.0.1",
     "vue-draggable-list": "^0.1.1",
+    "vue-i18n": "^9.2.2",
     "vue-json-pretty": "^2.2.2",
     "vue-router": "^4.1.5",
     "vue-tippy": "^6.0.0-alpha.63"
