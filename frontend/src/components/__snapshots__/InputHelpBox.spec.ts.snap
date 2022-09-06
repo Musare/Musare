@@ -1,3 +1,0 @@
-// Vitest Snapshot v1
-
-exports[`input help box component props 1`] = `"<p class=\\"help is-danger\\" data-v-109db604=\\"\\">This input has potentially been entered and is invalid.</p>"`;

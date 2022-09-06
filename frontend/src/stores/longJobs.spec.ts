@@ -1,13 +1,13 @@
 import { setActivePinia, createPinia } from "pinia";
 import { useLongJobsStore } from "@/stores/longJobs";
 
-describe("long jobs store", () => {
-	beforeEach(() => {
+describe("longJobs store", () => {
+	beforeEach(context => {
 		setActivePinia(createPinia());
+		context.longJobsStore = useLongJobsStore();
 	});
 
-	test("setJobs", () => {
-		const longJobsStore = useLongJobsStore();
+	test("setJobs", ({ longJobsStore }) => {
 		const jobs = [
 			{
 				id: "f9c51c9b-2709-4c79-8263-998026fd8afb",
@@ -20,8 +20,7 @@ describe("long jobs store", () => {
 		expect(longJobsStore.activeJobs).toEqual(jobs);
 	});
 
-	test("setJob new", () => {
-		const longJobsStore = useLongJobsStore();
+	test("setJob new", ({ longJobsStore }) => {
 		const job = {
 			id: "f9c51c9b-2709-4c79-8263-998026fd8afb",
 			name: "Bulk verifying songs",
@@ -32,8 +31,7 @@ describe("long jobs store", () => {
 		expect(longJobsStore.activeJobs).toEqual([job]);
 	});
 
-	test("setJob update", () => {
-		const longJobsStore = useLongJobsStore();
+	test("setJob update", ({ longJobsStore }) => {
 		longJobsStore.setJob({
 			id: "f9c51c9b-2709-4c79-8263-998026fd8afb",
 			name: "Bulk verifying songs",
@@ -50,8 +48,7 @@ describe("long jobs store", () => {
 		expect(longJobsStore.activeJobs).toEqual([updatedJob]);
 	});
 
-	test("setJob already removed", () => {
-		const longJobsStore = useLongJobsStore();
+	test("setJob already removed", ({ longJobsStore }) => {
 		const job = {
 			id: "f9c51c9b-2709-4c79-8263-998026fd8afb",
 			name: "Bulk verifying songs",
@@ -67,8 +64,7 @@ describe("long jobs store", () => {
 		]);
 	});
 
-	test("removeJob", () => {
-		const longJobsStore = useLongJobsStore();
+	test("removeJob", ({ longJobsStore }) => {
 		longJobsStore.setJobs([
 			{
 				id: "f9c51c9b-2709-4c79-8263-998026fd8afb",

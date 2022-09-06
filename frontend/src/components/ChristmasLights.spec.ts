@@ -1,67 +1,40 @@
-import { mount, flushPromises } from "@vue/test-utils";
-import { createTestingPinia } from "@pinia/testing";
+import { flushPromises } from "@vue/test-utils";
 import ChristmasLights from "@/components/ChristmasLights.vue";
+import { useTestUtils } from "@/composables/useTestUtils";
 import { useUserAuthStore } from "@/stores/userAuth";
 
-describe("christmas lights component", () => {
-	test("mount", async () => {
-		expect(ChristmasLights).toBeTruthy();
+const { getWrapper } = useTestUtils();
 
-		const wrapper = mount(ChristmasLights, {
-			global: {
-				plugins: [createTestingPinia()]
-			}
-		});
-
-		expect(wrapper.classes()).toContain("christmas-lights");
-		expect(wrapper.html()).toMatchSnapshot();
+describe("ChristmasLights component", () => {
+	beforeEach(context => {
+		context.wrapper = getWrapper(ChristmasLights);
 	});
 
-	test("props", async () => {
-		expect(ChristmasLights).toBeTruthy();
-
-		const wrapper = mount(ChristmasLights, {
-			global: {
-				plugins: [createTestingPinia()]
-			},
-			props: {
-				small: false,
-				lights: 1
-			}
+	test("small prop", async ({ wrapper }) => {
+		await wrapper.setProps({
+			small: false
 		});
-
 		expect(wrapper.classes()).not.toContain("christmas-lights-small");
-		expect(
-			wrapper.findAll(".christmas-lights .christmas-wire").length
-		).toBe(1 + 1);
-		expect(
-			wrapper.findAll(".christmas-lights .christmas-light").length
-		).toBe(1);
 
 		await wrapper.setProps({
-			small: true,
-			lights: 10
+			small: true
 		});
 		expect(wrapper.classes()).toContain("christmas-lights-small");
+	});
+
+	test("lights prop", async ({ wrapper }) => {
+		await wrapper.setProps({
+			lights: 10
+		});
 		expect(
 			wrapper.findAll(".christmas-lights .christmas-wire").length
 		).toBe(10 + 1);
 		expect(
 			wrapper.findAll(".christmas-lights .christmas-light").length
 		).toBe(10);
-
-		expect(wrapper.html()).toMatchSnapshot();
 	});
 
-	test("loggedIn state", async () => {
-		expect(ChristmasLights).toBeTruthy();
-
-		const wrapper = mount(ChristmasLights, {
-			global: {
-				plugins: [createTestingPinia()]
-			}
-		});
-
+	test("loggedIn state", async ({ wrapper }) => {
 		const userAuthStore = useUserAuthStore();
 
 		expect(userAuthStore.loggedIn).toEqual(false);
@@ -71,7 +44,5 @@ describe("christmas lights component", () => {
 		await flushPromises();
 		expect(userAuthStore.loggedIn).toEqual(true);
 		expect(wrapper.classes()).toContain("loggedIn");
-
-		expect(wrapper.html()).toMatchSnapshot();
 	});
 });
