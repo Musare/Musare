@@ -12,7 +12,6 @@ import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
-import { useUserAuthStore } from "@/stores/userAuth";
 
 const ProfilePicture = defineAsyncComponent(
 	() => import("@/components/ProfilePicture.vue")
@@ -60,7 +59,7 @@ const nextPageResultsCount = computed(() =>
 	Math.min(search.pageSize, resultsLeftCount.value)
 );
 
-const { hasPermission } = useUserAuthStore();
+const { hasPermission } = stationStore;
 
 const copyToClipboard = async () => {
 	try {
