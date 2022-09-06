@@ -13,7 +13,11 @@
       ]
     },
     "jsx": "preserve",
-    "types": ["vite/client", "@intlify/vite-plugin-vue-i18n/client"]
+    "types": [
+      "vite/client",
+      "@intlify/vite-plugin-vue-i18n/client",
+      "vitest/globals"
+    ]
   },
   "exclude": ["./src/index.html"]
 }

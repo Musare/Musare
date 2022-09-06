@@ -384,7 +384,7 @@ const playVideo = () => {
 		);
 
 		if (window.stationInterval !== 0) clearInterval(window.stationInterval);
-		window.stationInterval = setInterval(() => {
+		window.stationInterval = window.setInterval(() => {
 			if (!stationPaused.value) {
 				resizeSeekerbar();
 				calculateTimeElapsed();
