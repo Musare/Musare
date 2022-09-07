@@ -8,7 +8,6 @@ import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useEditNewsStore } from "@/stores/editNews";
 import { useModalsStore } from "@/stores/modals";
-import ws from "@/ws";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const SaveButton = defineAsyncComponent(
@@ -142,7 +141,7 @@ onMounted(() => {
 		}
 	});
 
-	ws.onConnect(init);
+	socket.onConnect(init);
 });
 </script>
 

@@ -5,7 +5,6 @@ import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPlaylistsStore } from "@/stores/userPlaylists";
-import ws from "@/ws";
 
 export const useSortablePlaylists = () => {
 	const orderOfPlaylists = ref([]);
@@ -61,7 +60,7 @@ export const useSortablePlaylists = () => {
 
 		if (!userId.value) userId.value = myUserId.value;
 
-		ws.onConnect(() => {
+		socket.onConnect(() => {
 			if (!isCurrentUser.value)
 				socket.dispatch(
 					"apis.joinRoom",

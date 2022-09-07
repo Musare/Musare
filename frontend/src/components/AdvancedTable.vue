@@ -17,7 +17,6 @@ import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import keyboardShortcuts from "@/keyboardShortcuts";
-import ws from "@/ws";
 import { useDragBox } from "@/composables/useDragBox";
 import {
 	TableColumn,
@@ -934,7 +933,7 @@ onMounted(async () => {
 		}
 	}
 
-	ws.onConnect(init);
+	socket.onConnect(init);
 
 	// TODO, this doesn't address special properties
 	if (props.events && props.events.updated)

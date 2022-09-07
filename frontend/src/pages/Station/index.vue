@@ -19,7 +19,6 @@ import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useModalsStore } from "@/stores/modals";
 import aw from "@/aw";
 import ms from "@/ms";
-import ws from "@/ws";
 import keyboardShortcuts from "@/keyboardShortcuts";
 import utils from "@/utils";
 
@@ -1121,13 +1120,13 @@ onMounted(async () => {
 	}, 1000);
 
 	if (socket.readyState === 1) join();
-	ws.onConnect(() => {
+	socket.onConnect(() => {
 		socketConnected.value = true;
 		clearTimeout(window.stationNextSongTimeout);
 		join();
 	});
 
-	ws.onDisconnect(true, () => {
+	socket.onDisconnect(true, () => {
 		socketConnected.value = false;
 		const _currentSong = currentSong.value;
 		if (nextSong.value)

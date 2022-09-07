@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import Toast from "toasters";
 import validation from "@/validation";
-import ws from "@/ws";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 export const useUserAuthStore = defineStore("userAuth", {
 	state: () => ({
@@ -70,8 +70,9 @@ export const useUserAuthStore = defineStore("userAuth", {
 							"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character."
 						)
 					);
-				else
-					ws.socket.dispatch(
+				else {
+					const { socket } = useWebsocketsStore();
+					socket.dispatch(
 						"users.register",
 						username,
 						email,
@@ -112,13 +113,15 @@ export const useUserAuthStore = defineStore("userAuth", {
 							return reject(new Error(res.message));
 						}
 					);
+				}
 			});
 		},
 		login(user) {
 			return new Promise((resolve, reject) => {
 				const { email, password } = user;
 
-				ws.socket.dispatch("users.login", email, password, res => {
+				const { socket } = useWebsocketsStore();
+				socket.dispatch("users.login", email, password, res => {
 					if (res.status === "success") {
 						return lofig.get("cookie").then(cookie => {
 							const date = new Date();
@@ -156,7 +159,8 @@ export const useUserAuthStore = defineStore("userAuth", {
 		},
 		logout() {
 			return new Promise((resolve, reject) => {
-				ws.socket.dispatch("users.logout", res => {
+				const { socket } = useWebsocketsStore();
+				socket.dispatch("users.logout", res => {
 					if (res.status === "success") {
 						return resolve(
 							lofig.get("cookie").then(cookie => {
@@ -175,32 +179,29 @@ export const useUserAuthStore = defineStore("userAuth", {
 				if (typeof this.userIdMap[`Z${userId}`] !== "string") {
 					if (this.userIdRequested[`Z${userId}`] !== true) {
 						this.requestingUserId(userId);
-						ws.socket.dispatch(
-							"users.getBasicUser",
-							userId,
-							res => {
-								if (res.status === "success") {
-									const user = res.data;
+						const { socket } = useWebsocketsStore();
+						socket.dispatch("users.getBasicUser", userId, res => {
+							if (res.status === "success") {
+								const user = res.data;
 
-									this.mapUserId({
-										userId,
-										user: {
-											name: user.name,
-											username: user.username
-										}
-									});
+								this.mapUserId({
+									userId,
+									user: {
+										name: user.name,
+										username: user.username
+									}
+								});
 
-									this.pendingUserIdCallbacks[
-										`Z${userId}`
-									].forEach(cb => cb(user));
+								this.pendingUserIdCallbacks[
+									`Z${userId}`
+								].forEach(cb => cb(user));
 
-									this.clearPendingCallbacks(userId);
+								this.clearPendingCallbacks(userId);
 
-									return resolve(user);
-								}
-								return resolve(null);
+								return resolve(user);
 							}
-						);
+							return resolve(null);
+						});
 					} else {
 						this.pendingUser({
 							userId,
@@ -250,7 +251,8 @@ export const useUserAuthStore = defineStore("userAuth", {
 		},
 		updatePermissions() {
 			return new Promise(resolve => {
-				ws.socket.dispatch("utils.getPermissions", res => {
+				const { socket } = useWebsocketsStore();
+				socket.dispatch("utils.getPermissions", res => {
 					this.permissions = res.data.permissions;
 					this.gotPermissions = true;
 					resolve(this.permissions);

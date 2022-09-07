@@ -8,7 +8,6 @@ import {
 } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
-import ws from "@/ws";
 import validation from "@/validation";
 import { useEditUserStore } from "@/stores/editUser";
 import { useWebsocketsStore } from "@/stores/websockets";
@@ -166,7 +165,7 @@ watch(
 );
 
 onMounted(() => {
-	ws.onConnect(init);
+	socket.onConnect(init);
 });
 
 onBeforeUnmount(() => {

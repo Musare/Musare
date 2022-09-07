@@ -10,7 +10,6 @@ import {
 } from "vue";
 import Toast from "toasters";
 import aw from "@/aw";
-import ws from "@/ws";
 import validation from "@/validation";
 import keyboardShortcuts from "@/keyboardShortcuts";
 
@@ -1220,7 +1219,7 @@ onMounted(async () => {
 
 	useHTTPS.value = await lofig.get("cookie.secure");
 
-	ws.onConnect(init);
+	socket.onConnect(init);
 
 	let volume = parseFloat(localStorage.getItem("volume"));
 	volume = typeof volume === "number" && !Number.isNaN(volume) ? volume : 20;

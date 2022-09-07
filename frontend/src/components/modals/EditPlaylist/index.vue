@@ -14,7 +14,6 @@ import { useEditPlaylistStore } from "@/stores/editPlaylist";
 import { useStationStore } from "@/stores/station";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
-import ws from "@/ws";
 import utils from "@/utils";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
@@ -257,7 +256,7 @@ const clearAndRefillGenrePlaylist = () => {
 };
 
 onMounted(() => {
-	ws.onConnect(init);
+	socket.onConnect(init);
 
 	socket.on(
 		"event:playlist.song.added",

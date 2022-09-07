@@ -13,7 +13,6 @@ import { useModalsStore } from "@/stores/modals";
 import { useViewReportStore } from "@/stores/viewReport";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useReports } from "@/composables/useReports";
-import ws from "@/ws";
 import { Report } from "@/types/report";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
@@ -140,7 +139,7 @@ watch(
 );
 
 onMounted(() => {
-	ws.onConnect(init);
+	socket.onConnect(init);
 });
 
 onBeforeUnmount(() => {

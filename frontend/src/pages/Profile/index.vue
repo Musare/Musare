@@ -5,7 +5,6 @@ import { format, parseISO } from "date-fns";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
-import ws from "@/ws";
 import { useTabQueryHandler } from "@/composables/useTabQueryHandler";
 
 const MainHeader = defineAsyncComponent(
@@ -60,7 +59,7 @@ onMounted(() => {
 	)
 		tab.value = route.query.tab;
 
-	ws.onConnect(init);
+	socket.onConnect(init);
 });
 </script>
 

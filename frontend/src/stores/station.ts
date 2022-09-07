@@ -3,7 +3,7 @@ import { Playlist } from "@/types/playlist";
 import { Song, CurrentSong } from "@/types/song";
 import { Station } from "@/types/station";
 import { User } from "@/types/user";
-import ws from "@/ws";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 export const useStationStore = defineStore("station", {
 	state: () => ({
@@ -141,7 +141,8 @@ export const useStationStore = defineStore("station", {
 		},
 		updatePermissions() {
 			return new Promise(resolve => {
-				ws.socket.dispatch(
+				const { socket } = useWebsocketsStore();
+				socket.dispatch(
 					"utils.getPermissions",
 					this.station._id,
 					res => {

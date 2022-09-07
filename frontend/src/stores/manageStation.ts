@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { Station } from "@/types/station";
 import { Playlist } from "@/types/playlist";
 import { CurrentSong, Song } from "@/types/song";
-import ws from "@/ws";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 export const useManageStationStore = props => {
 	const { modalUuid } = props;
@@ -84,7 +84,8 @@ export const useManageStationStore = props => {
 			},
 			updatePermissions() {
 				return new Promise(resolve => {
-					ws.socket.dispatch(
+					const { socket } = useWebsocketsStore();
+					socket.dispatch(
 						"utils.getPermissions",
 						this.station._id,
 						res => {

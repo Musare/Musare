@@ -7,7 +7,6 @@ import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useModalsStore } from "@/stores/modals";
-import ws from "@/ws";
 import aw from "@/aw";
 import keyboardShortcuts from "@/keyboardShortcuts";
 
@@ -179,7 +178,7 @@ onMounted(async () => {
 
 	disconnectedMessage.value.hide();
 
-	ws.onConnect(() => {
+	socket.onConnect(() => {
 		socketConnected.value = true;
 
 		socket.dispatch("users.getPreferences", res => {
@@ -239,7 +238,7 @@ onMounted(async () => {
 		});
 	});
 
-	ws.onDisconnect(true, () => {
+	socket.onDisconnect(true, () => {
 		socketConnected.value = false;
 	});
 

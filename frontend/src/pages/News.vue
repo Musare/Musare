@@ -6,8 +6,6 @@ import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { useWebsocketsStore } from "@/stores/websockets";
 
-import ws from "@/ws";
-
 const MainHeader = defineAsyncComponent(
 	() => import("@/components/MainHeader.vue")
 );
@@ -67,7 +65,7 @@ onMounted(() => {
 		news.value = news.value.filter(item => item._id !== res.data.newsId);
 	});
 
-	ws.onConnect(init);
+	socket.onConnect(init);
 });
 </script>
 

@@ -4,7 +4,6 @@ import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
-import ws from "@/ws";
 
 const ActivityItem = defineAsyncComponent(
 	() => import("@/components/ActivityItem.vue")
@@ -87,7 +86,7 @@ const handleScroll = () => {
 onMounted(() => {
 	window.addEventListener("scroll", handleScroll);
 
-	ws.onConnect(init);
+	socket.onConnect(init);
 
 	socket.on("event:activity.updated", res => {
 		activities.value.find(

@@ -4,7 +4,6 @@ import { useRoute } from "vue-router";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
-import ws from "@/ws";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
@@ -193,7 +192,7 @@ const removeApiRequest = requestId => {
 };
 
 onMounted(() => {
-	ws.onConnect(init);
+	socket.onConnect(init);
 });
 </script>
 

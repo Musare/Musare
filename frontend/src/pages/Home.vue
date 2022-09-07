@@ -16,7 +16,6 @@ import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
 import keyboardShortcuts from "@/keyboardShortcuts";
-import ws from "@/ws";
 
 const MainHeader = defineAsyncComponent(
 	() => import("@/components/MainHeader.vue")
@@ -192,7 +191,7 @@ onMounted(async () => {
 		openModal(route.redirectedFrom.name);
 	}
 
-	ws.onConnect(init);
+	socket.onConnect(init);
 
 	socket.on("event:station.created", res => {
 		const { station } = res.data;

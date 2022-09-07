@@ -2,7 +2,6 @@
 import { defineAsyncComponent, ref, reactive, computed, onMounted } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
-import ws from "@/ws";
 
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
@@ -296,7 +295,7 @@ const searchForPlaylists = page => {
 onMounted(() => {
 	showTab("search");
 
-	ws.onConnect(init);
+	socket.onConnect(init);
 });
 </script>
 

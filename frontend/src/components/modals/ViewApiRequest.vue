@@ -6,7 +6,6 @@ import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useViewApiRequestStore } from "@/stores/viewApiRequest";
-import ws from "@/ws";
 import "vue-json-pretty/lib/styles.css";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
@@ -69,7 +68,7 @@ const remove = () => {
 };
 
 onMounted(() => {
-	ws.onConnect(init);
+	socket.onConnect(init);
 });
 
 onBeforeUnmount(() => {

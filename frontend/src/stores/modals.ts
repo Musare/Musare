@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { defineAsyncComponent } from "vue";
-import ws from "@/ws";
 
+import { useWebsocketsStore } from "@/stores/websockets";
 import { useEditUserStore } from "@/stores/editUser";
 import { useEditSongStore } from "@/stores/editSong";
 import { useBulkActionsStore } from "@/stores/bulkActions";
@@ -33,7 +33,8 @@ export const useModalsStore = defineStore("modals", {
 
 			Object.entries(this.modals).forEach(([uuid, _modal]) => {
 				if (modal === _modal) {
-					ws.destroyModalListeners(uuid);
+					const { socket } = useWebsocketsStore();
+					socket.destroyModalListeners(uuid);
 					this.activeModals.splice(
 						this.activeModals.indexOf(uuid),
 						1
@@ -133,15 +134,17 @@ export const useModalsStore = defineStore("modals", {
 				this.activeModals[this.activeModals.length - 1];
 			// TODO: make sure to only destroy/register modal listeners for a unique modal
 			// remove any websocket listeners for the modal
-			ws.destroyModalListeners(currentlyActiveModalUuid);
+			const { socket } = useWebsocketsStore();
+			socket.destroyModalListeners(currentlyActiveModalUuid);
 
 			this.activeModals.pop();
 
 			delete this.modals[currentlyActiveModalUuid];
 		},
 		closeAllModals() {
+			const { socket } = useWebsocketsStore();
 			this.activeModals.forEach(modalUuid => {
-				ws.destroyModalListeners(modalUuid);
+				socket.destroyModalListeners(modalUuid);
 			});
 
 			this.activeModals = [];

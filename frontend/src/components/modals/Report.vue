@@ -5,7 +5,6 @@ import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useReportStore } from "@/stores/report";
-import ws from "@/ws";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const SongItem = defineAsyncComponent(
@@ -204,7 +203,7 @@ const create = () => {
 };
 
 onMounted(() => {
-	ws.onConnect(init);
+	socket.onConnect(init);
 });
 
 onBeforeUnmount(() => {

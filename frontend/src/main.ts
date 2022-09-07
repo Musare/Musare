@@ -10,7 +10,7 @@ import Toast from "toasters";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useModalsStore } from "@/stores/modals";
-import ws from "@/ws";
+import { useWebsocketsStore } from "@/stores/websockets";
 import ms from "@/ms";
 import i18n from "@/i18n";
 
@@ -262,9 +262,11 @@ router.beforeEach((to, from, next) => {
 
 	modalsStore.closeAllModals();
 
-	if (ws.socket && to.fullPath !== from.fullPath) {
-		ws.clearCallbacks();
-		ws.destroyListeners();
+	const { socket } = useWebsocketsStore();
+
+	if (socket.ready && to.fullPath !== from.fullPath) {
+		socket.clearCallbacks();
+		socket.destroyListeners();
 	}
 
 	if (to.query.toast) {
@@ -337,77 +339,77 @@ lofig.folder = defaultConfigURL;
 		}
 	});
 
-	const websocketsDomain = await lofig.get("backend.websocketsDomain");
-	ws.init(websocketsDomain);
+	const { createSocket } = useWebsocketsStore();
+	createSocket().then(socket => {
+		socket.on("ready", res => {
+			const { loggedIn, role, username, userId, email } = res.data;
+
+			userAuthStore.authData({
+				loggedIn,
+				role,
+				username,
+				email,
+				userId
+			});
+		});
+
+		socket.on("keep.event:user.banned", res =>
+			userAuthStore.banUser(res.data.ban)
+		);
+
+		socket.on("keep.event:user.username.updated", res =>
+			userAuthStore.updateUsername(res.data.username)
+		);
+
+		socket.on("keep.event:user.preferences.updated", res => {
+			const { preferences } = res.data;
+
+			const {
+				changeAutoSkipDisliked,
+				changeNightmode,
+				changeActivityLogPublic,
+				changeAnonymousSongRequests,
+				changeActivityWatch
+			} = useUserPreferencesStore();
+
+			if (preferences.autoSkipDisliked !== undefined)
+				changeAutoSkipDisliked(preferences.autoSkipDisliked);
+
+			if (preferences.nightmode !== undefined) {
+				localStorage.setItem("nightmode", preferences.nightmode);
+				changeNightmode(preferences.nightmode);
+			}
+
+			if (preferences.activityLogPublic !== undefined)
+				changeActivityLogPublic(preferences.activityLogPublic);
+
+			if (preferences.anonymousSongRequests !== undefined)
+				changeAnonymousSongRequests(preferences.anonymousSongRequests);
+
+			if (preferences.activityWatch !== undefined)
+				changeActivityWatch(preferences.activityWatch);
+		});
+
+		socket.on("keep.event:user.role.updated", res => {
+			userAuthStore.updateRole(res.data.role);
+			userAuthStore.updatePermissions().then(() => {
+				const { meta } = router.currentRoute.value;
+				if (
+					meta &&
+					meta.permissionRequired &&
+					!userAuthStore.hasPermission(meta.permissionRequired)
+				)
+					router.push({
+						path: "/",
+						query: {
+							toast: "You no longer have access to the page you were viewing."
+						}
+					});
+			});
+		});
+	});
 
 	if (await lofig.get("siteSettings.mediasession")) ms.init();
-
-	ws.socket.on("ready", res => {
-		const { loggedIn, role, username, userId, email } = res.data;
-
-		userAuthStore.authData({
-			loggedIn,
-			role,
-			username,
-			email,
-			userId
-		});
-	});
-
-	ws.socket.on("keep.event:user.banned", res =>
-		userAuthStore.banUser(res.data.ban)
-	);
-
-	ws.socket.on("keep.event:user.username.updated", res =>
-		userAuthStore.updateUsername(res.data.username)
-	);
-
-	ws.socket.on("keep.event:user.preferences.updated", res => {
-		const { preferences } = res.data;
-
-		const {
-			changeAutoSkipDisliked,
-			changeNightmode,
-			changeActivityLogPublic,
-			changeAnonymousSongRequests,
-			changeActivityWatch
-		} = useUserPreferencesStore();
-
-		if (preferences.autoSkipDisliked !== undefined)
-			changeAutoSkipDisliked(preferences.autoSkipDisliked);
-
-		if (preferences.nightmode !== undefined) {
-			localStorage.setItem("nightmode", preferences.nightmode);
-			changeNightmode(preferences.nightmode);
-		}
-
-		if (preferences.activityLogPublic !== undefined)
-			changeActivityLogPublic(preferences.activityLogPublic);
-
-		if (preferences.anonymousSongRequests !== undefined)
-			changeAnonymousSongRequests(preferences.anonymousSongRequests);
-
-		if (preferences.activityWatch !== undefined)
-			changeActivityWatch(preferences.activityWatch);
-	});
-
-	ws.socket.on("keep.event:user.role.updated", res => {
-		userAuthStore.updateRole(res.data.role);
-		userAuthStore.updatePermissions().then(() => {
-			const { meta } = router.currentRoute.value;
-			if (
-				meta &&
-				meta.permissionRequired &&
-				!userAuthStore.hasPermission(meta.permissionRequired)
-			)
-				router.push({
-					path: "/",
-					query: {
-						toast: "You no longer have access to the page you were viewing."
-					}
-				});
-		});
-	});
 
 	app.mount("#root");
 })();

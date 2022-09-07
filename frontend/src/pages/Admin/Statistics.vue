@@ -2,7 +2,6 @@
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useWebsocketsStore } from "@/stores/websockets";
-import ws from "@/ws";
 
 const route = useRoute();
 
@@ -28,7 +27,7 @@ const init = () => {
 };
 
 onMounted(() => {
-	ws.onConnect(init);
+	socket.onConnect(init);
 });
 </script>
 

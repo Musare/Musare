@@ -12,7 +12,6 @@ import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useImportAlbumStore } from "@/stores/importAlbum";
-import ws from "@/ws";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const SongItem = defineAsyncComponent(
@@ -332,7 +331,7 @@ const updateTrackSong = updatedSong => {
 };
 
 onMounted(() => {
-	ws.onConnect(init);
+	socket.onConnect(init);
 
 	socket.on("event:admin.song.updated", res => {
 		updateTrackSong(res.data.song);

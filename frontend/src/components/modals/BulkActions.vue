@@ -6,7 +6,6 @@ import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
 import { useBulkActionsStore } from "@/stores/bulkActions";
 import { useModalsStore } from "@/stores/modals";
-import ws from "@/ws";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const AutoSuggest = defineAsyncComponent(
@@ -96,7 +95,7 @@ onBeforeUnmount(() => {
 });
 
 onMounted(() => {
-	ws.onConnect(init);
+	socket.onConnect(init);
 });
 </script>
 

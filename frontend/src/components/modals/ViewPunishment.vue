@@ -5,7 +5,6 @@ import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useViewPunishmentStore } from "@/stores/viewPunishment";
-import ws from "@/ws";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const PunishmentItem = defineAsyncComponent(
@@ -64,7 +63,7 @@ const deactivatePunishment = event => {
 };
 
 onMounted(() => {
-	ws.onConnect(init);
+	socket.onConnect(init);
 });
 
 onBeforeUnmount(() => {

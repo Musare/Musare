@@ -3,7 +3,6 @@ import { defineAsyncComponent, onMounted, onBeforeUnmount, ref } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import aw from "@/aw";
-import ws from "@/ws";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useViewYoutubeVideoStore } from "@/stores/viewYoutubeVideo";
@@ -457,7 +456,7 @@ const init = () => {
 };
 
 onMounted(() => {
-	ws.onConnect(init);
+	socket.onConnect(init);
 });
 
 onBeforeUnmount(() => {

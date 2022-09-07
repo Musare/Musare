@@ -4,7 +4,6 @@ import { onMounted, defineAsyncComponent } from "vue";
 import Toast from "toasters";
 import { useSettingsStore } from "@/stores/settings";
 import { useWebsocketsStore } from "@/stores/websockets";
-import ws from "@/ws";
 import { useTabQueryHandler } from "@/composables/useTabQueryHandler";
 
 const MainHeader = defineAsyncComponent(
@@ -53,7 +52,7 @@ onMounted(() => {
 
 	// this.localNightmode = this.nightmode;
 
-	ws.onConnect(init);
+	socket.onConnect(init);
 
 	socket.on("event:user.password.linked", () =>
 		updateOriginalUser({

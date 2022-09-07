@@ -5,7 +5,6 @@ import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserPlaylistsStore } from "@/stores/userPlaylists";
 import { useModalsStore } from "@/stores/modals";
-import ws from "@/ws";
 
 const props = defineProps({
 	song: {
@@ -71,7 +70,7 @@ const createPlaylist = () => {
 };
 
 onMounted(() => {
-	ws.onConnect(init);
+	socket.onConnect(init);
 
 	socket.on("event:playlist.created", res => addPlaylist(res.data.playlist), {
 		replaceable: true

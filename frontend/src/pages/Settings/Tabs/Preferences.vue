@@ -4,7 +4,6 @@ import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserPreferencesStore } from "@/stores/userPreferences";
-import ws from "@/ws";
 
 const SaveButton = defineAsyncComponent(
 	() => import("@/components/SaveButton.vue")
@@ -66,7 +65,7 @@ const saveChanges = () => {
 };
 
 onMounted(() => {
-	ws.onConnect(() =>
+	socket.onConnect(() =>
 		socket.dispatch("users.getPreferences", res => {
 			const { preferences } = res.data;
 
