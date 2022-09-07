@@ -22,53 +22,20 @@ describe("InputHelpBox component", () => {
 		);
 	});
 
-	describe("valid and entered props", () => {
-		test("valid and entered", async ({ wrapper }) => {
+	describe.each([
+		{ valid: true, entered: true, expected: "is-success" },
+		{ valid: true, entered: false, expected: "is-grey" },
+		{ valid: true, entered: undefined, expected: "is-success" },
+		{ valid: false, entered: true, expected: "is-danger" },
+		{ valid: false, entered: false, expected: "is-grey" },
+		{ valid: false, entered: undefined, expected: "is-danger" }
+	])("valid and entered props", ({ valid, entered, expected }) => {
+		test("class updated", async ({ wrapper }) => {
 			await wrapper.setProps({
-				valid: true,
-				entered: true
+				valid,
+				entered
 			});
-			expect(wrapper.classes()).toContain("is-success");
-		});
-
-		test("valid and not entered", async ({ wrapper }) => {
-			await wrapper.setProps({
-				valid: true,
-				entered: false
-			});
-			expect(wrapper.classes()).toContain("is-grey");
-		});
-
-		test("valid and entered undefined", async ({ wrapper }) => {
-			await wrapper.setProps({
-				valid: true,
-				entered: undefined
-			});
-			expect(wrapper.classes()).toContain("is-success");
-		});
-
-		test("not valid and entered", async ({ wrapper }) => {
-			await wrapper.setProps({
-				valid: false,
-				entered: true
-			});
-			expect(wrapper.classes()).toContain("is-danger");
-		});
-
-		test("not valid and not entered", async ({ wrapper }) => {
-			await wrapper.setProps({
-				valid: false,
-				entered: false
-			});
-			expect(wrapper.classes()).toContain("is-grey");
-		});
-
-		test("not valid and entered undefined", async ({ wrapper }) => {
-			await wrapper.setProps({
-				valid: false,
-				entered: undefined
-			});
-			expect(wrapper.classes()).toContain("is-danger");
+			expect(wrapper.classes()).toContain(expected);
 		});
 	});
 });

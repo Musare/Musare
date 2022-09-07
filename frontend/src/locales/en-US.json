@@ -1,3 +1,9 @@
 {
-    "favoriteStations": "My Favorites"
+    "login": "Login",
+    "register": "Register",
+    "station": "Station | Stations",
+    "manageStation": "Manage @:station",
+    "favoriteStations": "My Favorites",
+    "noStations": "There are no @.lower:station to display",
+    "home": "Home"
 }
