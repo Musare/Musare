@@ -34,15 +34,7 @@
 	"messages": {
 		"accountRemoval": "Your account will be deactivated instantly and your data will shortly be deleted by an admin."
 	},
-	// "shortcutOverrides": {
-	// 	"editSong.useAllDiscogs": {
-	// 		"keyCode": 68,
-	// 		"ctrl": true,
-	// 		"alt": true,
-	// 		"shift": false,
-	// 		"preventDefault": true
-	// 	}
-	// },
+	"shortcutOverrides": {},
 	"debug": {
 		"git": {
 			"remote": false,

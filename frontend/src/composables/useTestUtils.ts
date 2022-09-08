@@ -1,9 +1,16 @@
 import { createTestingPinia } from "@pinia/testing";
 import VueTippy, { Tippy } from "vue-tippy";
-import { mount } from "@vue/test-utils";
+import { flushPromises, mount } from "@vue/test-utils";
+import "lofig";
+
+const config = await import("../../dist/config/template.json");
 
 export const useTestUtils = () => {
-	const getWrapper = (component, options?) => {
+	const getWrapper = async (component, options?) => {
+		const opts = options || {};
+
+		if (!opts.global) opts.global = {};
+
 		const plugins = [
 			createTestingPinia(),
 			[
@@ -23,14 +30,11 @@ export const useTestUtils = () => {
 				}
 			]
 		];
-
-		const components = { Tippy };
-
-		const opts = options || {};
-		if (!opts.global) opts.global = {};
 		if (opts.global.plugins)
 			opts.global.plugins = [...opts.global.plugins, ...plugins];
 		else opts.global.plugins = plugins;
+
+		const components = { Tippy };
 		if (opts.global.components)
 			opts.global.components = {
 				...opts.global.components,
@@ -38,7 +42,17 @@ export const useTestUtils = () => {
 			};
 		else opts.global.components = components;
 
-		return mount(component, opts);
+		if (opts.lofig) {
+			lofig.config = {
+				...config,
+				...opts.lofig
+			};
+			delete opts.lofig;
+		} else lofig.config = config;
+
+		const wrapper = mount(component, opts);
+		await flushPromises();
+		return wrapper;
 	};
 
 	return { getWrapper };

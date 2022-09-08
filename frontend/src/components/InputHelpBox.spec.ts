@@ -4,8 +4,8 @@ import { useTestUtils } from "@/composables/useTestUtils";
 const { getWrapper } = useTestUtils();
 
 describe("InputHelpBox component", () => {
-	beforeEach(context => {
-		context.wrapper = getWrapper(InputHelpBox, {
+	beforeEach(async context => {
+		context.wrapper = await getWrapper(InputHelpBox, {
 			props: {
 				message: "",
 				valid: true
@@ -29,7 +29,7 @@ describe("InputHelpBox component", () => {
 		{ valid: false, entered: true, expected: "is-danger" },
 		{ valid: false, entered: false, expected: "is-grey" },
 		{ valid: false, entered: undefined, expected: "is-danger" }
-	])("valid and entered props", ({ valid, entered, expected }) => {
+	])("valid and entered props %j", ({ valid, entered, expected }) => {
 		test("class updated", async ({ wrapper }) => {
 			await wrapper.setProps({
 				valid,

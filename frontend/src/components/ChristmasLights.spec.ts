@@ -6,8 +6,8 @@ import { useUserAuthStore } from "@/stores/userAuth";
 const { getWrapper } = useTestUtils();
 
 describe("ChristmasLights component", () => {
-	beforeEach(context => {
-		context.wrapper = getWrapper(ChristmasLights);
+	beforeEach(async context => {
+		context.wrapper = await getWrapper(ChristmasLights);
 	});
 
 	test("small prop", async ({ wrapper }) => {

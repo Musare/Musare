@@ -4,7 +4,7 @@ import { useTestUtils } from "@/composables/useTestUtils";
 const { getWrapper } = useTestUtils();
 
 test("InfoIcon component", async () => {
-	const wrapper = getWrapper(InfoIcon, {
+	const wrapper = await getWrapper(InfoIcon, {
 		props: { tooltip: "This is a tooltip" }
 	});
 
