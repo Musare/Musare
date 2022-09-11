@@ -1,9 +1,7 @@
 import { flushPromises } from "@vue/test-utils";
 import ChristmasLights from "@/components/ChristmasLights.vue";
-import { useTestUtils } from "@/composables/useTestUtils";
+import { getWrapper } from "@/tests/utils/utils";
 import { useUserAuthStore } from "@/stores/userAuth";
-
-const { getWrapper } = useTestUtils();
 
 describe("ChristmasLights component", () => {
 	beforeEach(async context => {

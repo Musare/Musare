@@ -23,6 +23,10 @@ export default class CustomWebSocket extends WebSocket {
 
 	PROGRESS_CB_REFS: object;
 
+	data: any; // Mock only
+
+	triggerEvent: (target: string, data: any) => void; // Mock only
+
 	constructor(url) {
 		super(url);
 

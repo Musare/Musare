@@ -1,7 +1,5 @@
 import InfoIcon from "@/components/InfoIcon.vue";
-import { useTestUtils } from "@/composables/useTestUtils";
-
-const { getWrapper } = useTestUtils();
+import { getWrapper } from "@/tests/utils/utils";
 
 test("InfoIcon component", async () => {
 	const wrapper = await getWrapper(InfoIcon, {

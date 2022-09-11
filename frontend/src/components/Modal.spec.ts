@@ -1,10 +1,8 @@
 import { flushPromises } from "@vue/test-utils";
 import { h } from "vue";
-import { useTestUtils } from "@/composables/useTestUtils";
+import { getWrapper } from "@/tests/utils/utils";
 import { useModalsStore } from "@/stores/modals";
 import Modal from "@/components/Modal.vue";
-
-const { getWrapper } = useTestUtils();
 
 describe("Modal component", () => {
 	beforeEach(async context => {

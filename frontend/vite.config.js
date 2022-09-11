@@ -184,6 +184,7 @@ export default {
 		coverage: {
 			all: true,
 			extension: [".ts", ".vue"]
-		}
+		},
+		setupFiles: "tests/utils/setup.ts"
 	}
 };

@@ -1,7 +1,5 @@
 import InputHelpBox from "@/components/InputHelpBox.vue";
-import { useTestUtils } from "@/composables/useTestUtils";
-
-const { getWrapper } = useTestUtils();
+import { getWrapper } from "@/tests/utils/utils";
 
 describe("InputHelpBox component", () => {
 	beforeEach(async context => {

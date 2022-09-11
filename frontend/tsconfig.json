@@ -20,5 +20,5 @@
       "vitest/globals"
     ]
   },
-  "exclude": ["./src/index.html"]
+  "exclude": ["./src/index.html", "./src/coverage"]
 }
