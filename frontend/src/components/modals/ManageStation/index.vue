@@ -110,7 +110,13 @@ const findTabOrClose = () => {
 	if (canRequest()) return showTab("request");
 	if (hasPermission("stations.autofill")) return showTab("autofill");
 	if (hasPermission("stations.blacklist")) return showTab("blacklist");
-	if (!(sector.value === "home" && hasPermission("stations.view")))
+	if (
+		!(
+			sector.value === "home" &&
+			(hasPermission("stations.view") ||
+				station.value.privacy === "public")
+		)
+	)
 		return closeCurrentModal();
 	return null;
 };
