@@ -6,9 +6,15 @@ export default class CustomWebSocketMock {
 	url: string;
 
 	data: {
-		dispatch?: any;
-		onProgress?: any[];
-		progressInterval?: number;
+		dispatch?: {
+			[key: string]: (...args: any[]) => any;
+		};
+		progress?: {
+			[key: string]: (...args: any[]) => any;
+		};
+		on?: {
+			[key: string]: any;
+		};
 	};
 
 	onDisconnectCbs: {
@@ -16,44 +22,81 @@ export default class CustomWebSocketMock {
 		persist: any[];
 	};
 
+	executeDispatch: boolean;
+
 	constructor(url) {
 		this.dispatcher = new ListenerHandler();
 		this.url = url;
 		this.data = {
 			dispatch: {},
-			onProgress: [{}],
-			progressInterval: 10
+			progress: {},
+			on: {}
 		};
 		this.onDisconnectCbs = {
 			temp: [],
 			persist: []
 		};
+		this.executeDispatch = true;
 	}
 
 	on(target, cb, options?) {
+		const onData = this.data.on && this.data.on[target];
 		this.dispatcher.addEventListener(
-			target,
-			event => cb(event.detail),
+			`on.${target}`,
+			event => cb(event.detail() || onData),
 			options
 		);
 	}
 
 	dispatch(target, ...args) {
 		const lastArg = args[args.length - 1];
+		const _args = args.slice(0, -1);
+		const dispatchData = () =>
+			this.data.dispatch &&
+			typeof this.data.dispatch[target] === "function"
+				? this.data.dispatch[target](..._args)
+				: undefined;
+		const progressData = () =>
+			this.data.progress &&
+			typeof this.data.progress[target] === "function"
+				? this.data.progress[target](..._args)
+				: undefined;
 
 		if (typeof lastArg === "function") {
-			if (this.data.dispatch && this.data.dispatch[target])
-				lastArg(this.data.dispatch[target]);
-		} else if (typeof lastArg === "object") {
-			if (this.data.onProgress && this.data.onProgress[target])
-				this.data.onProgress[target].forEach(data =>
-					setInterval(
-						() => lastArg.onProgress(data),
-						this.data.progressInterval || 0
-					)
+			if (this.executeDispatch && dispatchData()) lastArg(dispatchData());
+			else if (!this.executeDispatch)
+				this.dispatcher.addEventListener(
+					`dispatch.${target}`,
+					event => lastArg(event.detail(..._args) || dispatchData()),
+					false
 				);
-			if (this.data.dispatch && this.data.dispatch[target])
-				lastArg.cb(this.data.dispatch[target]);
+		} else if (typeof lastArg === "object") {
+			if (this.executeDispatch) {
+				if (progressData())
+					progressData().forEach(data => {
+						lastArg.onProgress(data);
+					});
+				if (dispatchData()) lastArg.cb(dispatchData());
+			} else {
+				this.dispatcher.addEventListener(
+					`progress.${target}`,
+					event => {
+						if (event.detail(..._args))
+							lastArg.onProgress(event.detail(..._args));
+						else if (progressData())
+							progressData().forEach(data => {
+								lastArg.onProgress(data);
+							});
+					},
+					false
+				);
+				this.dispatcher.addEventListener(
+					`dispatch.${target}`,
+					event =>
+						lastArg.cb(event.detail(..._args) || dispatchData()),
+					false
+				);
+			}
 		}
 	}
 
@@ -83,10 +126,14 @@ export default class CustomWebSocketMock {
 	// eslint-disable-next-line class-methods-use-this
 	destroyModalListeners() {}
 
-	triggerEvent(target, data) {
+	trigger(type, target, data?) {
 		this.dispatcher.dispatchEvent(
-			new CustomEvent(target, {
-				detail: data
+			new CustomEvent(`${type}.${target}`, {
+				detail: (...args) => {
+					if (typeof data === "function") return data(...args);
+					if (typeof data === "undefined") return undefined;
+					return JSON.parse(JSON.stringify(data));
+				}
 			})
 		);
 	}

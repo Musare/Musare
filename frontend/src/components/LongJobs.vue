@@ -134,7 +134,7 @@ onMounted(() => {
 							ref="longJobMessage"
 							:append-to="body"
 						>
-							<i class="material-icons">chat</i>
+							<i class="material-icons message">chat</i>
 
 							<template #content>
 								<div class="long-job-message">

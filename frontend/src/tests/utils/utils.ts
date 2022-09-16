@@ -2,6 +2,7 @@ import { createTestingPinia } from "@pinia/testing";
 import VueTippy, { Tippy } from "vue-tippy";
 import { flushPromises, mount } from "@vue/test-utils";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserAuthStore } from "@/stores/userAuth";
 
 let config;
 const getConfig = async () => {
@@ -69,10 +70,19 @@ export const getWrapper = async (component, options?) => {
 		const websocketsStore = useWebsocketsStore();
 		await websocketsStore.createSocket();
 		await flushPromises();
-		websocketsStore.socket.data = JSON.parse(
-			JSON.stringify(opts.mockSocket)
-		);
+		if (opts.mockSocket.data)
+			websocketsStore.socket.data = opts.mockSocket.data;
+		if (typeof opts.mockSocket.executeDispatch !== "undefined")
+			websocketsStore.socket.executeDispatch =
+				opts.mockSocket.executeDispatch;
 		delete opts.mockSocket;
+	}
+
+	if (opts.loginRequired) {
+		const userAuthStore = useUserAuthStore();
+		userAuthStore.loggedIn = true;
+		await flushPromises();
+		delete opts.loginRequired;
 	}
 
 	if (opts.beforeMount) {
@@ -80,6 +90,17 @@ export const getWrapper = async (component, options?) => {
 		delete opts.beforeMount;
 	}
 
+	if (opts.baseTemplate) {
+		document.body.innerHTML = opts.baseTemplate;
+		delete opts.baseTemplate;
+	} else
+		document.body.innerHTML = `
+			<div id="root"></div>
+			<div id="toasts-container" class="position-right position-bottom">
+				<div id="toasts-content"></div>
+			</div>
+		`;
+	if (!opts.attachTo) opts.attachTo = document.getElementById("root");
 	const wrapper = mount(component, opts);
 	if (opts.onMount) {
 		await opts.onMount();
