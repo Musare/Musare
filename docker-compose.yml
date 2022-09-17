@@ -9,6 +9,7 @@ services:
     volumes:
       - ./.git:/opt/app/.parent_git:ro
       - ./backend/config:/opt/app/config
+      - ./@musare_types:/opt/@musare_types
     environment:
       - CONTAINER_MODE=${CONTAINER_MODE:-prod}
     links:
@@ -30,6 +31,7 @@ services:
     volumes:
       - ./.git:/opt/app/.parent_git:ro
       - ./frontend/dist/config:/opt/app/dist/config
+      - ./@musare_types:/opt/@musare_types
     environment:
       - FRONTEND_MODE=${FRONTEND_MODE:-prod}
       - CONTAINER_MODE=${CONTAINER_MODE:-prod}

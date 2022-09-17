@@ -18,7 +18,7 @@ ENV NODE_CONFIG_DIR=./dist/config
 RUN apt-get update
 RUN apt-get install nginx -y
 
-RUN mkdir -p /opt/app
+RUN mkdir -p /opt/app /opt/@musare_types
 WORKDIR /opt/app
 
 COPY . /opt/app

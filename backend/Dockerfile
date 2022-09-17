@@ -13,7 +13,7 @@ FROM node:16.15 AS musare_backend
 ARG CONTAINER_MODE=prod
 ENV CONTAINER_MODE=${CONTAINER_MODE}
 
-RUN mkdir -p /opt/app
+RUN mkdir -p /opt/app /opt/@musare_types
 WORKDIR /opt/app
 
 COPY . /opt/app
