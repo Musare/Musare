@@ -2,6 +2,11 @@
 import { ref, onMounted } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
+import {
+	AddSongToPlaylistResponse,
+	IndexMyPlaylistsResponse,
+	RemoveSongFromPlaylistResponse
+} from "@musare_types/actions/PlaylistsActions";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserPlaylistsStore } from "@/stores/userPlaylists";
 import { useModalsStore } from "@/stores/modals";
@@ -31,10 +36,14 @@ const { openModal } = useModalsStore();
 
 const init = () => {
 	if (!fetchedPlaylists.value)
-		socket.dispatch("playlists.indexMyPlaylists", res => {
-			if (res.status === "success")
-				if (!fetchedPlaylists.value) setPlaylists(res.data.playlists);
-		});
+		socket.dispatch(
+			"playlists.indexMyPlaylists",
+			(res: IndexMyPlaylistsResponse) => {
+				if (res.status === "success")
+					if (!fetchedPlaylists.value)
+						setPlaylists(res.data.playlists);
+			}
+		);
 };
 const hasSong = playlist =>
 	playlist.songs.map(song => song.youtubeId).indexOf(props.song.youtubeId) !==
@@ -47,14 +56,14 @@ const toggleSongInPlaylist = playlistIndex => {
 			false,
 			props.song.youtubeId,
 			playlist._id,
-			res => new Toast(res.message)
+			(res: AddSongToPlaylistResponse) => new Toast(res.message)
 		);
 	} else {
 		socket.dispatch(
 			"playlists.removeSongFromPlaylist",
 			props.song.youtubeId,
 			playlist._id,
-			res => new Toast(res.message)
+			(res: RemoveSongFromPlaylistResponse) => new Toast(res.message)
 		);
 	}
 };
