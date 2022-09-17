@@ -3,6 +3,11 @@ import { useRouter } from "vue-router";
 import { defineAsyncComponent, ref, computed, watch, onMounted } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
+import {
+	GetPreferencesResponse,
+	UpdatePreferencesResponse
+} from "@musare_types/actions/UsersActions";
+import { NewestResponse } from "@musare_types/actions/NewsActions";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPreferencesStore } from "@/stores/userPreferences";
@@ -58,7 +63,7 @@ const toggleNightMode = () => {
 		socket.dispatch(
 			"users.updatePreferences",
 			{ nightmode: !nightmode.value },
-			res => {
+			(res: UpdatePreferencesResponse) => {
 				if (res.status !== "success") new Toast(res.message);
 			}
 		);
@@ -181,27 +186,32 @@ onMounted(async () => {
 	socket.onConnect(() => {
 		socketConnected.value = true;
 
-		socket.dispatch("users.getPreferences", res => {
-			if (res.status === "success") {
-				const { preferences } = res.data;
+		socket.dispatch(
+			"users.getPreferences",
+			(res: GetPreferencesResponse) => {
+				if (res.status === "success") {
+					const { preferences } = res.data;
 
-				changeAutoSkipDisliked(preferences.autoSkipDisliked);
-				changeNightmode(preferences.nightmode);
-				changeActivityLogPublic(preferences.activityLogPublic);
-				changeAnonymousSongRequests(preferences.anonymousSongRequests);
-				changeActivityWatch(preferences.activityWatch);
+					changeAutoSkipDisliked(preferences.autoSkipDisliked);
+					changeNightmode(preferences.nightmode);
+					changeActivityLogPublic(preferences.activityLogPublic);
+					changeAnonymousSongRequests(
+						preferences.anonymousSongRequests
+					);
+					changeActivityWatch(preferences.activityWatch);
 
-				if (nightmode.value) enableNightmode();
-				else disableNightmode();
+					if (nightmode.value) enableNightmode();
+					else disableNightmode();
+				}
 			}
-		});
+		);
 
 		socket.on("keep.event:user.session.deleted", () =>
 			window.location.reload()
 		);
 
 		const newUser = !localStorage.getItem("firstVisited");
-		socket.dispatch("news.newest", newUser, res => {
+		socket.dispatch("news.newest", newUser, (res: NewestResponse) => {
 			if (res.status !== "success") return;
 
 			const { news } = res.data;
@@ -211,25 +221,33 @@ onMounted(async () => {
 					openModal({ modal: "whatIsNew", data: { news } });
 				} else if (localStorage.getItem("whatIsNew")) {
 					if (
-						parseInt(localStorage.getItem("whatIsNew")) <
+						parseInt(localStorage.getItem("whatIsNew") as string) <
 						news.createdAt
 					) {
 						openModal({
 							modal: "whatIsNew",
 							data: { news }
 						});
-						localStorage.setItem("whatIsNew", news.createdAt);
+						localStorage.setItem(
+							"whatIsNew",
+							news.createdAt.toString()
+						);
 					}
 				} else {
 					if (
-						parseInt(localStorage.getItem("firstVisited")) <
-						news.createdAt
+						localStorage.getItem("firstVisited") &&
+						parseInt(
+							localStorage.getItem("firstVisited") as string
+						) < news.createdAt
 					)
 						openModal({
 							modal: "whatIsNew",
 							data: { news }
 						});
-					localStorage.setItem("whatIsNew", news.createdAt);
+					localStorage.setItem(
+						"whatIsNew",
+						news.createdAt.toString()
+					);
 				}
 			}
 
@@ -245,12 +263,16 @@ onMounted(async () => {
 	apiDomain.value = await lofig.get("backend.apiDomain");
 
 	router.isReady().then(() => {
-		lofig.get("siteSettings.githubAuthentication").then(enabled => {
-			if (enabled && localStorage.getItem("github_redirect")) {
-				router.push(localStorage.getItem("github_redirect"));
-				localStorage.removeItem("github_redirect");
-			}
-		});
+		lofig
+			.get("siteSettings.githubAuthentication")
+			.then((enabled: boolean) => {
+				if (enabled && localStorage.getItem("github_redirect")) {
+					router.push(
+						localStorage.getItem("github_redirect") as string
+					);
+					localStorage.removeItem("github_redirect");
+				}
+			});
 	});
 
 	if (localStorage.getItem("nightmode") === "true") {
@@ -258,7 +280,7 @@ onMounted(async () => {
 		enableNightmode();
 	}
 
-	lofig.get("siteSettings.christmas").then(enabled => {
+	lofig.get("siteSettings.christmas").then((enabled: boolean) => {
 		if (enabled) {
 			christmas.value = true;
 			enableChristmasMode();

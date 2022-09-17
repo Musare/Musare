@@ -144,6 +144,10 @@ export default {
 	resolve: {
 		alias: [
 			{
+				find: "@musare_types",
+				replacement: path.resolve(__dirname, "../musare_types")
+			},
+			{
 				find: "@",
 				replacement: path.resolve(__dirname, "src")
 			}

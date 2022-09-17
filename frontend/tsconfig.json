@@ -9,9 +9,12 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
+      "@musare_types/*": [
+        "../musare_types/*"
+      ],
       "@/*": [
         "./src/*"
-      ]
+      ],
     },
     "jsx": "preserve",
     "types": [
