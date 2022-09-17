@@ -4,12 +4,10 @@ services:
       - "${BACKEND_HOST:-0.0.0.0}:${BACKEND_PORT:-8080}:8080"
     volumes:
       - ./backend:/opt/app
-      - ./types:/opt/types
 
   frontend:
     volumes:
       - ./frontend:/opt/app
-      - ./types:/opt/types
 
   mongo:
     ports:
