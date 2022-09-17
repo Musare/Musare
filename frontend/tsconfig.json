@@ -18,7 +18,11 @@
       "vite/client",
       "@intlify/vite-plugin-vue-i18n/client",
       "vitest/globals"
-    ]
+    ],
+    "strict": true
   },
-  "exclude": ["./src/index.html", "./src/coverage"]
+  "exclude": [
+    "./src/index.html",
+    "./src/coverage"
+  ]
 }
