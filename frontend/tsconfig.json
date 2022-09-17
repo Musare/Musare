@@ -10,7 +10,7 @@
     "baseUrl": ".",
     "paths": {
       "@musare_types/*": [
-        "../musare_types/*"
+        "../types/*"
       ],
       "@/*": [
         "./src/*"
