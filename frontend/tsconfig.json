@@ -22,7 +22,8 @@
       "@intlify/vite-plugin-vue-i18n/client",
       "vitest/globals"
     ],
-    "strict": true
+    "strict": true,
+    "allowSyntheticDefaultImports": true
   },
   "exclude": [
     "./src/index.html",
