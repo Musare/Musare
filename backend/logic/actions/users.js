@@ -2083,7 +2083,7 @@ export default {
 			[
 				next => {
 					if (updatingUserId === session.userId) return next();
-					return hasPermission("users.update", session)
+					return hasPermission("users.update.restricted", session)
 						.then(() => next())
 						.catch(() => next("Invalid permissions."));
 				},

@@ -210,10 +210,13 @@ onBeforeUnmount(() => {
 								type="text"
 								placeholder="Email Address"
 								autofocus
+								:disabled="
+									!hasPermission('users.update.restricted')
+								"
 							/>
 						</span>
 						<span
-							v-if="hasPermission('users.update')"
+							v-if="hasPermission('users.update.restricted')"
 							class="control"
 						>
 							<a class="button is-info" @click="updateEmail()"
