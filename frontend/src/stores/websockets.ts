@@ -1,21 +1,21 @@
 import { defineStore } from "pinia";
-import CustomWebSocket from "@/classes/CustomWebSocket.class";
+import SocketHandler from "@/classes/SocketHandler.class";
 
 export const useWebsocketsStore = defineStore("websockets", {
 	state: () => ({
-		socket: <CustomWebSocket>{
+		socket: <SocketHandler>{
 			dispatcher: {}
 		}
 	}),
 	actions: {
-		createSocket(): Promise<CustomWebSocket> {
+		createSocket(): Promise<SocketHandler> {
 			return new Promise((resolve, reject) => {
 				lofig
 					.get("backend.websocketsDomain")
 					.then(websocketsDomain => {
 						const { listeners } = this.socket.dispatcher;
 
-						this.socket = new CustomWebSocket(websocketsDomain);
+						this.socket = new SocketHandler(websocketsDomain);
 
 						// only executes if the websocket object is being replaced
 						if (listeners) {

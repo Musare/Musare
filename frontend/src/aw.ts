@@ -1,4 +1,5 @@
 import Toast from "toasters";
+import utils from "@/utils";
 
 let gotPong = false;
 let pingTries = 0;
@@ -66,21 +67,7 @@ export default {
 
 	enable() {
 		if (!enabled) {
-			uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
-				/[xy]/g,
-				symbol => {
-					let array;
-
-					if (symbol === "y") {
-						array = ["8", "9", "a", "b"];
-						return array[Math.floor(Math.random() * array.length)];
-					}
-
-					array = new Uint8Array(1);
-					window.crypto.getRandomValues(array);
-					return (array[0] % 16).toString(16);
-				}
-			);
+			uuid = utils.guid();
 
 			document.addEventListener(
 				"ActivityWatchMusareEvent",

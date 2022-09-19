@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { defineAsyncComponent } from "vue";
+import utils from "@/utils";
 
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useEditUserStore } from "@/stores/editUser";
@@ -44,21 +45,7 @@ export const useModalsStore = defineStore("modals", {
 			});
 		},
 		openModal(dataOrModal) {
-			const uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
-				/[xy]/g,
-				symbol => {
-					let array;
-
-					if (symbol === "y") {
-						array = ["8", "9", "a", "b"];
-						return array[Math.floor(Math.random() * array.length)];
-					}
-
-					array = new Uint8Array(1);
-					window.crypto.getRandomValues(array);
-					return (array[0] % 16).toString(16);
-				}
-			);
+			const uuid = utils.guid();
 
 			let modal;
 			let data;

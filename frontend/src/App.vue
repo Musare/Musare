@@ -183,7 +183,7 @@ onMounted(async () => {
 
 	disconnectedMessage.value.hide();
 
-	socket.onConnect(() => {
+	socket.onConnect(true, () => {
 		socketConnected.value = true;
 
 		socket.dispatch(

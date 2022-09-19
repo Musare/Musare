@@ -1,6 +1,6 @@
 import ListenerHandler from "@/classes/ListenerHandler.class";
 
-export default class CustomWebSocketMock {
+export default class SocketHandlerMock {
 	dispatcher: ListenerHandler;
 
 	url: string;

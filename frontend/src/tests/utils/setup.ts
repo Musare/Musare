@@ -1,8 +1,8 @@
 import "lofig";
-import CustomWebSocketMock from "@/classes/__mocks__/CustomWebSocket.class";
+import SocketHandlerMock from "@/classes/__mocks__/SocketHandler.class";
 
 vi.clearAllMocks();
 
-vi.spyOn(CustomWebSocketMock.prototype, "on");
-vi.spyOn(CustomWebSocketMock.prototype, "dispatch");
-vi.mock("@/classes/CustomWebSocket.class");
+vi.spyOn(SocketHandlerMock.prototype, "on");
+vi.spyOn(SocketHandlerMock.prototype, "dispatch");
+vi.mock("@/classes/SocketHandler.class");

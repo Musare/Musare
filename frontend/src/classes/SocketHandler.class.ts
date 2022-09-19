@@ -1,10 +1,18 @@
 import ListenerHandler from "@/classes/ListenerHandler.class";
 import { useUserAuthStore } from "@/stores/userAuth";
+import utils from "@/utils";
 
-export default class CustomWebSocket extends WebSocket {
+export default class SocketHandler {
+	socket: WebSocket;
+
+	url: string;
+
 	dispatcher: ListenerHandler;
 
-	onConnectCbs: any[];
+	onConnectCbs: {
+		temp: any[];
+		persist: any[];
+	};
 
 	ready: boolean;
 
@@ -16,8 +24,6 @@ export default class CustomWebSocket extends WebSocket {
 		temp: any[];
 		persist: any[];
 	};
-
-	CB_REF: number;
 
 	CB_REFS: object;
 
@@ -39,12 +45,16 @@ export default class CustomWebSocket extends WebSocket {
 
 	trigger: (type: string, target: string, data?: any) => void; // Mock only
 
-	constructor(url) {
-		super(url);
-
+	constructor(url: string) {
 		this.dispatcher = new ListenerHandler();
 
-		this.onConnectCbs = [];
+		this.url = url;
+
+		this.onConnectCbs = {
+			temp: [],
+			persist: []
+		};
+
 		this.ready = false;
 		this.firstInit = true;
 
@@ -56,7 +66,6 @@ export default class CustomWebSocket extends WebSocket {
 		};
 
 		// references for when a dispatch event is ready to callback from server to client
-		this.CB_REF = 0;
 		this.CB_REFS = {};
 		this.PROGRESS_CB_REFS = {};
 
@@ -64,13 +73,15 @@ export default class CustomWebSocket extends WebSocket {
 	}
 
 	init() {
+		this.socket = new WebSocket(this.url);
+
 		const userAuthStore = useUserAuthStore();
 
-		this.onopen = () => {
+		this.socket.onopen = () => {
 			console.log("WS: SOCKET OPENED");
 		};
 
-		this.onmessage = message => {
+		this.socket.onmessage = message => {
 			const data = JSON.parse(message.data);
 			const name = data.shift(0);
 
@@ -93,10 +104,11 @@ export default class CustomWebSocket extends WebSocket {
 			);
 		};
 
-		this.onclose = () => {
+		this.socket.onclose = () => {
 			console.log("WS: SOCKET CLOSED");
 
 			this.ready = false;
+			this.firstInit = false;
 
 			this.onDisconnectCbs.temp.forEach(cb => cb());
 			this.onDisconnectCbs.persist.forEach(cb => cb());
@@ -105,7 +117,7 @@ export default class CustomWebSocket extends WebSocket {
 			if (!userAuthStore.banned) setTimeout(() => this.init(), 1000);
 		};
 
-		this.onerror = err => {
+		this.socket.onerror = err => {
 			console.log("WS: SOCKET ERROR", err);
 		};
 
@@ -114,7 +126,8 @@ export default class CustomWebSocket extends WebSocket {
 			this.on("ready", () => {
 				console.log("WS: SOCKET READY");
 
-				this.onConnectCbs.forEach(cb => cb());
+				this.onConnectCbs.temp.forEach(cb => cb());
+				this.onConnectCbs.persist.forEach(cb => cb());
 
 				this.ready = true;
 
@@ -138,47 +151,50 @@ export default class CustomWebSocket extends WebSocket {
 	}
 
 	dispatch(...args) {
-		if (this.readyState !== 1)
+		if (this.socket.readyState !== 1)
 			return this.pendingDispatches.push(() => this.dispatch(...args));
 
 		const lastArg = args[args.length - 1];
+		const CB_REF = utils.guid();
 
 		if (typeof lastArg === "function") {
-			this.CB_REF += 1;
-			this.CB_REFS[this.CB_REF] = lastArg;
+			this.CB_REFS[CB_REF] = lastArg;
 
-			return this.send(
-				JSON.stringify([...args.slice(0, -1), { CB_REF: this.CB_REF }])
+			return this.socket.send(
+				JSON.stringify([...args.slice(0, -1), { CB_REF }])
 			);
 		}
 		if (typeof lastArg === "object") {
-			this.CB_REF += 1;
-			this.CB_REFS[this.CB_REF] = lastArg.cb;
-			this.PROGRESS_CB_REFS[this.CB_REF] = lastArg.onProgress;
+			this.CB_REFS[CB_REF] = lastArg.cb;
+			this.PROGRESS_CB_REFS[CB_REF] = lastArg.onProgress;
 
-			return this.send(
+			return this.socket.send(
 				JSON.stringify([
 					...args.slice(0, -1),
-					{ CB_REF: this.CB_REF, onProgress: true }
+					{ CB_REF, onProgress: true }
 				])
 			);
 		}
 
-		return this.send(JSON.stringify([...args]));
+		return this.socket.send(JSON.stringify([...args]));
 	}
 
-	onConnect(cb) {
-		if (this.readyState === 1 && this.ready) cb();
+	onConnect(...args) {
+		const cb = args[1] || args[0];
+		if (this.socket.readyState === 1 && this.ready) cb();
 
-		return this.onConnectCbs.push(cb);
+		if (args[0] === true) this.onConnectCbs.persist.push(cb);
+		else this.onConnectCbs.temp.push(cb);
 	}
 
 	onDisconnect(...args) {
-		if (args[0] === true) this.onDisconnectCbs.persist.push(args[1]);
-		else this.onDisconnectCbs.temp.push(args[0]);
+		const cb = args[1] || args[0];
+		if (args[0] === true) this.onDisconnectCbs.persist.push(cb);
+		else this.onDisconnectCbs.temp.push(cb);
 	}
 
 	clearCallbacks() {
+		this.onConnectCbs.temp = [];
 		this.onDisconnectCbs.temp = [];
 	}
 
