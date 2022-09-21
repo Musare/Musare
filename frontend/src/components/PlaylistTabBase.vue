@@ -106,39 +106,6 @@ const { setPlaylists } = useUserPlaylistsStore();
 const { addPlaylistToAutoRequest, removePlaylistFromAutoRequest } =
 	stationStore;
 
-const init = () => {
-	socket.dispatch("playlists.indexMyPlaylists", res => {
-		if (res.status === "success") setPlaylists(res.data.playlists);
-		orderOfPlaylists.value = calculatePlaylistOrder(); // order in regards to the database
-	});
-
-	socket.dispatch("playlists.indexFeaturedPlaylists", res => {
-		if (res.status === "success")
-			featuredPlaylists.value = res.data.playlists;
-	});
-
-	if (props.type === "autofill")
-		socket.dispatch(
-			`stations.getStationAutofillPlaylistsById`,
-			station.value._id,
-			res => {
-				if (res.status === "success") {
-					station.value.autofill.playlists = res.data.playlists;
-				}
-			}
-		);
-
-	socket.dispatch(
-		`stations.getStationBlacklistById`,
-		station.value._id,
-		res => {
-			if (res.status === "success") {
-				station.value.blacklist = res.data.playlists;
-			}
-		}
-	);
-};
-
 const showTab = _tab => {
 	tabs.value[`${_tab}-tab`].scrollIntoView({ block: "nearest" });
 	tab.value = _tab;
@@ -295,7 +262,38 @@ const searchForPlaylists = page => {
 onMounted(() => {
 	showTab("search");
 
-	socket.onConnect(init);
+	socket.onConnect(() => {
+		socket.dispatch("playlists.indexMyPlaylists", res => {
+			if (res.status === "success") setPlaylists(res.data.playlists);
+			orderOfPlaylists.value = calculatePlaylistOrder(); // order in regards to the database
+		});
+
+		socket.dispatch("playlists.indexFeaturedPlaylists", res => {
+			if (res.status === "success")
+				featuredPlaylists.value = res.data.playlists;
+		});
+
+		if (props.type === "autofill")
+			socket.dispatch(
+				`stations.getStationAutofillPlaylistsById`,
+				station.value._id,
+				res => {
+					if (res.status === "success") {
+						station.value.autofill.playlists = res.data.playlists;
+					}
+				}
+			);
+
+		socket.dispatch(
+			`stations.getStationBlacklistById`,
+			station.value._id,
+			res => {
+				if (res.status === "success") {
+					station.value.blacklist = res.data.playlists;
+				}
+			}
+		);
+	});
 });
 </script>
 

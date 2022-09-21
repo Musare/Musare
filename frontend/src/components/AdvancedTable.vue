@@ -762,33 +762,6 @@ const removeData = index => {
 	};
 };
 
-const init = () => {
-	getData();
-	if (props.query) setQuery();
-	if (props.events) {
-		// if (props.events.room)
-		// 	socket.dispatch("apis.joinRoom", props.events.room, () => {});
-		if (props.events.adminRoom)
-			socket.dispatch(
-				"apis.joinAdminRoom",
-				props.events.adminRoom,
-				() => {}
-			);
-	}
-	props.filters.forEach(filter => {
-		if (filter.autosuggest && filter.autosuggestDataAction) {
-			socket.dispatch(filter.autosuggestDataAction, res => {
-				if (res.status === "success") {
-					const { items } = res.data;
-					autosuggest.value.allItems[filter.name] = items;
-				} else {
-					new Toast(res.message);
-				}
-			});
-		}
-	});
-};
-
 onMounted(async () => {
 	const tableSettings = getTableSettings();
 
@@ -933,58 +906,82 @@ onMounted(async () => {
 		}
 	}
 
-	socket.onConnect(init);
-
-	// TODO, this doesn't address special properties
-	if (props.events && props.events.updated)
-		socket.on(`event:${props.events.updated.event}`, res => {
-			const index = rows.value
-				.map(row => row._id)
-				.indexOf(
-					props.events.updated.id
-						.split(".")
-						.reduce(
-							(previous, current) =>
-								previous &&
-								previous[current] !== null &&
-								previous[current] !== undefined
-									? previous[current]
-									: null,
-							res.data
-						)
+	socket.onConnect(() => {
+		getData();
+		if (props.query) setQuery();
+		if (props.events) {
+			// if (props.events.room)
+			// 	socket.dispatch("apis.joinRoom", props.events.room, () => {});
+			if (props.events.adminRoom)
+				socket.dispatch(
+					"apis.joinAdminRoom",
+					props.events.adminRoom,
+					() => {}
 				);
-			const row = props.events.updated.item
-				.split(".")
-				.reduce(
-					(previous, current) =>
-						previous &&
-						previous[current] !== null &&
-						previous[current] !== undefined
-							? previous[current]
-							: null,
-					res.data
-				);
-			updateData(index, row);
+		}
+		props.filters.forEach(filter => {
+			if (filter.autosuggest && filter.autosuggestDataAction) {
+				socket.dispatch(filter.autosuggestDataAction, res => {
+					if (res.status === "success") {
+						const { items } = res.data;
+						autosuggest.value.allItems[filter.name] = items;
+					} else {
+						new Toast(res.message);
+					}
+				});
+			}
 		});
-	if (props.events && props.events.removed)
-		socket.on(`event:${props.events.removed.event}`, res => {
-			const index = rows.value
-				.map(row => row._id)
-				.indexOf(
-					props.events.removed.id
-						.split(".")
-						.reduce(
-							(previous, current) =>
-								previous &&
-								previous[current] !== null &&
-								previous[current] !== undefined
-									? previous[current]
-									: null,
-							res.data
-						)
-				);
-			removeData(index);
-		});
+		// TODO, this doesn't address special properties
+		if (props.events && props.events.updated)
+			socket.on(`event:${props.events.updated.event}`, res => {
+				const index = rows.value
+					.map(row => row._id)
+					.indexOf(
+						props.events.updated.id
+							.split(".")
+							.reduce(
+								(previous, current) =>
+									previous &&
+									previous[current] !== null &&
+									previous[current] !== undefined
+										? previous[current]
+										: null,
+								res.data
+							)
+					);
+				const row = props.events.updated.item
+					.split(".")
+					.reduce(
+						(previous, current) =>
+							previous &&
+							previous[current] !== null &&
+							previous[current] !== undefined
+								? previous[current]
+								: null,
+						res.data
+					);
+				updateData(index, row);
+			});
+		if (props.events && props.events.removed)
+			socket.on(`event:${props.events.removed.event}`, res => {
+				const index = rows.value
+					.map(row => row._id)
+					.indexOf(
+						props.events.removed.id
+							.split(".")
+							.reduce(
+								(previous, current) =>
+									previous &&
+									previous[current] !== null &&
+									previous[current] !== undefined
+										? previous[current]
+										: null,
+								res.data
+							)
+					);
+				removeData(index);
+			});
+	});
 
 	if (props.keyboardShortcuts) {
 		// Navigation section

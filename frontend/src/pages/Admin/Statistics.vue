@@ -10,24 +10,22 @@ const { socket } = useWebsocketsStore();
 const modules = ref([]);
 const activeModule = ref();
 
-const init = () => {
-	socket.dispatch("utils.getModules", res => {
-		if (res.status === "success") modules.value = res.data.modules;
-	});
-
-	if (route.query.moduleName) {
-		socket.dispatch("utils.getModule", route.query.moduleName, res => {
-			if (res.status === "success")
-				activeModule.value = {
-					runningJobs: res.data.runningJobs,
-					jobStatistics: res.data.jobStatistics
-				};
-		});
-	}
-};
-
 onMounted(() => {
-	socket.onConnect(init);
+	socket.onConnect(() => {
+		socket.dispatch("utils.getModules", res => {
+			if (res.status === "success") modules.value = res.data.modules;
+		});
+
+		if (route.query.moduleName) {
+			socket.dispatch("utils.getModule", route.query.moduleName, res => {
+				if (res.status === "success")
+					activeModule.value = {
+						runningJobs: res.data.runningJobs,
+						jobStatistics: res.data.jobStatistics
+					};
+			});
+		}
+	});
 });
 </script>
 

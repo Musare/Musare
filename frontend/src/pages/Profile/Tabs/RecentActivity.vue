@@ -60,20 +60,6 @@ const getSet = () => {
 	);
 };
 
-const init = () => {
-	if (myUserId.value !== props.userId)
-		getBasicUser(props.userId).then((user: any) => {
-			if (user && user.username) username.value = user.username;
-		});
-
-	socket.dispatch("activities.length", props.userId, res => {
-		if (res.status === "success") {
-			maxPosition.value = Math.ceil(res.data.length / 15) + 1;
-			getSet();
-		}
-	});
-};
-
 const handleScroll = () => {
 	const scrollPosition = document.body.clientHeight + window.scrollY;
 	const bottomPosition = document.body.scrollHeight;
@@ -86,32 +72,44 @@ const handleScroll = () => {
 onMounted(() => {
 	window.addEventListener("scroll", handleScroll);
 
-	socket.onConnect(init);
+	socket.onConnect(() => {
+		if (myUserId.value !== props.userId)
+			getBasicUser(props.userId).then((user: any) => {
+				if (user && user.username) username.value = user.username;
+			});
 
-	socket.on("event:activity.updated", res => {
-		activities.value.find(
-			activity => activity._id === res.data.activityId
-		).payload.message = res.data.message;
-	});
+		socket.dispatch("activities.length", props.userId, res => {
+			if (res.status === "success") {
+				maxPosition.value = Math.ceil(res.data.length / 15) + 1;
+				getSet();
+			}
+		});
 
-	socket.on("event:activity.created", res => {
-		activities.value.unshift(res.data.activity);
-		offsettedFromNextSet.value += 1;
-	});
+		socket.on("event:activity.updated", res => {
+			activities.value.find(
+				activity => activity._id === res.data.activityId
+			).payload.message = res.data.message;
+		});
 
-	socket.on("event:activity.hidden", res => {
-		activities.value = activities.value.filter(
-			activity => activity._id !== res.data.activityId
-		);
+		socket.on("event:activity.created", res => {
+			activities.value.unshift(res.data.activity);
+			offsettedFromNextSet.value += 1;
+		});
 
-		offsettedFromNextSet.value -= 1;
-	});
+		socket.on("event:activity.hidden", res => {
+			activities.value = activities.value.filter(
+				activity => activity._id !== res.data.activityId
+			);
 
-	socket.on("event:activity.removeAllForUser", () => {
-		activities.value = [];
-		position.value = 1;
-		maxPosition.value = 1;
-		offsettedFromNextSet.value = 0;
+			offsettedFromNextSet.value -= 1;
+		});
+
+		socket.on("event:activity.removeAllForUser", () => {
+			activities.value = [];
+			position.value = 1;
+			maxPosition.value = 1;
+			offsettedFromNextSet.value = 0;
+		});
 	});
 });
 

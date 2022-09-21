@@ -71,10 +71,6 @@ const showDiscogsTab = tab => {
 	return importAlbumStore.showDiscogsTab(tab);
 };
 
-const init = () => {
-	socket.dispatch("apis.joinRoom", "import-album");
-};
-
 const startEditingSongs = () => {
 	songsToEdit.value = [];
 	trackSongs.value.forEach((songs, index) => {
@@ -331,10 +327,12 @@ const updateTrackSong = updatedSong => {
 };
 
 onMounted(() => {
-	socket.onConnect(init);
+	socket.onConnect(() => {
+		socket.dispatch("apis.joinRoom", "import-album");
 
-	socket.on("event:admin.song.updated", res => {
-		updateTrackSong(res.data.song);
+		socket.on("event:admin.song.updated", res => {
+			updateTrackSong(res.data.song);
+		});
 	});
 });
 

@@ -147,276 +147,299 @@ watch(
 );
 
 onMounted(() => {
-	socket.dispatch(`stations.getStationById`, stationId.value, async res => {
-		if (res.status === "success") {
-			editStation(res.data.station);
+	socket.onConnect(() => {
+		socket.dispatch(
+			`stations.getStationById`,
+			stationId.value,
+			async res => {
+				if (res.status === "success") {
+					editStation(res.data.station);
 
-			await updatePermissions();
+					await updatePermissions();
 
-			findTabOrClose();
+					findTabOrClose();
 
-			const currentSong = res.data.station.currentSong
-				? res.data.station.currentSong
-				: {};
+					const currentSong = res.data.station.currentSong
+						? res.data.station.currentSong
+						: {};
 
-			updateCurrentSong(currentSong);
+					updateCurrentSong(currentSong);
 
-			updateStationPaused(res.data.station.paused);
+					updateStationPaused(res.data.station.paused);
 
-			socket.dispatch(
-				"stations.getStationAutofillPlaylistsById",
-				stationId.value,
-				res => {
-					if (res.status === "success")
-						setAutofillPlaylists(res.data.playlists);
-				}
-			);
-
-			socket.dispatch(
-				"stations.getStationBlacklistById",
-				stationId.value,
-				res => {
-					if (res.status === "success")
-						setBlacklist(res.data.playlists);
-				}
-			);
-
-			if (hasPermission("stations.view")) {
-				socket.dispatch(
-					"playlists.getPlaylistForStation",
-					stationId.value,
-					true,
-					res => {
-						if (res.status === "success") {
-							updateStationPlaylist(res.data.playlist);
+					socket.dispatch(
+						"stations.getStationAutofillPlaylistsById",
+						stationId.value,
+						res => {
+							if (res.status === "success")
+								setAutofillPlaylists(res.data.playlists);
 						}
-					}
-				);
-			}
+					);
 
-			socket.dispatch("stations.getQueue", stationId.value, res => {
-				if (res.status === "success") updateSongsList(res.data.queue);
-			});
+					socket.dispatch(
+						"stations.getStationBlacklistById",
+						stationId.value,
+						res => {
+							if (res.status === "success")
+								setBlacklist(res.data.playlists);
+						}
+					);
 
-			socket.dispatch(
-				"apis.joinRoom",
-				`manage-station.${stationId.value}`
-			);
-
-			socket.on(
-				"event:station.updated",
-				res => {
-					updateStation(res.data.station);
-				},
-				{ modalUuid: props.modalUuid }
-			);
-
-			socket.on(
-				"event:station.autofillPlaylist",
-				res => {
-					const { playlist } = res.data;
-					const playlistIndex = autofill.value
-						.map(autofillPlaylist => autofillPlaylist._id)
-						.indexOf(playlist._id);
-					if (playlistIndex === -1) autofill.value.push(playlist);
-				},
-				{ modalUuid: props.modalUuid }
-			);
-
-			socket.on(
-				"event:station.blacklistedPlaylist",
-				res => {
-					const { playlist } = res.data;
-					const playlistIndex = blacklist.value
-						.map(blacklistedPlaylist => blacklistedPlaylist._id)
-						.indexOf(playlist._id);
-					if (playlistIndex === -1) blacklist.value.push(playlist);
-				},
-				{ modalUuid: props.modalUuid }
-			);
-
-			socket.on(
-				"event:station.removedAutofillPlaylist",
-				res => {
-					const { playlistId } = res.data;
-					const playlistIndex = autofill.value
-						.map(playlist => playlist._id)
-						.indexOf(playlistId);
-					if (playlistIndex >= 0)
-						autofill.value.splice(playlistIndex, 1);
-				},
-				{ modalUuid: props.modalUuid }
-			);
-
-			socket.on(
-				"event:station.removedBlacklistedPlaylist",
-				res => {
-					const { playlistId } = res.data;
-					const playlistIndex = blacklist.value
-						.map(playlist => playlist._id)
-						.indexOf(playlistId);
-					if (playlistIndex >= 0)
-						blacklist.value.splice(playlistIndex, 1);
-				},
-				{ modalUuid: props.modalUuid }
-			);
-
-			socket.on(
-				"event:station.deleted",
-				() => {
-					new Toast(`The station you were editing was deleted.`);
-					closeCurrentModal();
-				},
-				{ modalUuid: props.modalUuid }
-			);
-
-			socket.on(
-				"event:user.station.favorited",
-				res => {
-					if (res.data.stationId === stationId.value)
-						updateIsFavorited(true);
-				},
-				{ modalUuid: props.modalUuid }
-			);
-
-			socket.on(
-				"event:user.station.unfavorited",
-				res => {
-					if (res.data.stationId === stationId.value)
-						updateIsFavorited(false);
-				},
-				{ modalUuid: props.modalUuid }
-			);
-		} else {
-			new Toast(`Station with that ID not found`);
-			closeCurrentModal();
-		}
-	});
-
-	socket.on(
-		"event:manageStation.queue.updated",
-		res => {
-			if (res.data.stationId === stationId.value)
-				updateSongsList(res.data.queue);
-		},
-		{ modalUuid: props.modalUuid }
-	);
-
-	socket.on(
-		"event:manageStation.queue.song.repositioned",
-		res => {
-			if (res.data.stationId === stationId.value)
-				repositionSongInList(res.data.song);
-		},
-		{ modalUuid: props.modalUuid }
-	);
-
-	socket.on(
-		"event:station.pause",
-		res => {
-			if (res.data.stationId === stationId.value)
-				updateStationPaused(true);
-		},
-		{ modalUuid: props.modalUuid }
-	);
-
-	socket.on(
-		"event:station.resume",
-		res => {
-			if (res.data.stationId === stationId.value)
-				updateStationPaused(false);
-		},
-		{ modalUuid: props.modalUuid }
-	);
-
-	socket.on(
-		"event:station.nextSong",
-		res => {
-			if (res.data.stationId === stationId.value)
-				updateCurrentSong(res.data.currentSong || {});
-		},
-		{ modalUuid: props.modalUuid }
-	);
-
-	socket.on("event:manageStation.djs.added", res => {
-		if (res.data.stationId === stationId.value) {
-			if (res.data.user._id === userId.value) updatePermissions();
-			addDj(res.data.user);
-		}
-	});
-
-	socket.on("event:manageStation.djs.removed", res => {
-		if (res.data.stationId === stationId.value) {
-			if (res.data.user._id === userId.value) updatePermissions();
-			removeDj(res.data.user);
-		}
-	});
-
-	socket.on("keep.event:user.role.updated", () => {
-		updatePermissions();
-	});
-
-	if (hasPermission("stations.view")) {
-		socket.on(
-			"event:playlist.song.added",
-			res => {
-				if (stationPlaylist.value._id === res.data.playlistId)
-					stationPlaylist.value.songs.push(res.data.song);
-			},
-			{
-				modalUuid: props.modalUuid
-			}
-		);
-
-		socket.on(
-			"event:playlist.song.removed",
-			res => {
-				if (stationPlaylist.value._id === res.data.playlistId) {
-					// remove song from array of playlists
-					stationPlaylist.value.songs.forEach((song, index) => {
-						if (song.youtubeId === res.data.youtubeId)
-							stationPlaylist.value.songs.splice(index, 1);
-					});
-				}
-			},
-			{
-				modalUuid: props.modalUuid
-			}
-		);
-
-		socket.on(
-			"event:playlist.songs.repositioned",
-			res => {
-				if (stationPlaylist.value._id === res.data.playlistId) {
-					// for each song that has a new position
-					res.data.songsBeingChanged.forEach(changedSong => {
-						stationPlaylist.value.songs.forEach((song, index) => {
-							// find song locally
-							if (song.youtubeId === changedSong.youtubeId) {
-								// change song position attribute
-								stationPlaylist.value.songs[index].position =
-									changedSong.position;
-
-								// reposition in array if needed
-								if (index !== changedSong.position - 1)
-									stationPlaylist.value.songs.splice(
-										changedSong.position - 1,
-										0,
-										stationPlaylist.value.songs.splice(
-											index,
-											1
-										)[0]
-									);
+					if (hasPermission("stations.view")) {
+						socket.dispatch(
+							"playlists.getPlaylistForStation",
+							stationId.value,
+							true,
+							res => {
+								if (res.status === "success") {
+									updateStationPlaylist(res.data.playlist);
+								}
 							}
-						});
-					});
+						);
+					}
+
+					socket.dispatch(
+						"stations.getQueue",
+						stationId.value,
+						res => {
+							if (res.status === "success")
+								updateSongsList(res.data.queue);
+						}
+					);
+
+					socket.dispatch(
+						"apis.joinRoom",
+						`manage-station.${stationId.value}`
+					);
+
+					socket.on(
+						"event:station.updated",
+						res => {
+							updateStation(res.data.station);
+						},
+						{ modalUuid: props.modalUuid }
+					);
+
+					socket.on(
+						"event:station.autofillPlaylist",
+						res => {
+							const { playlist } = res.data;
+							const playlistIndex = autofill.value
+								.map(autofillPlaylist => autofillPlaylist._id)
+								.indexOf(playlist._id);
+							if (playlistIndex === -1)
+								autofill.value.push(playlist);
+						},
+						{ modalUuid: props.modalUuid }
+					);
+
+					socket.on(
+						"event:station.blacklistedPlaylist",
+						res => {
+							const { playlist } = res.data;
+							const playlistIndex = blacklist.value
+								.map(
+									blacklistedPlaylist =>
+										blacklistedPlaylist._id
+								)
+								.indexOf(playlist._id);
+							if (playlistIndex === -1)
+								blacklist.value.push(playlist);
+						},
+						{ modalUuid: props.modalUuid }
+					);
+
+					socket.on(
+						"event:station.removedAutofillPlaylist",
+						res => {
+							const { playlistId } = res.data;
+							const playlistIndex = autofill.value
+								.map(playlist => playlist._id)
+								.indexOf(playlistId);
+							if (playlistIndex >= 0)
+								autofill.value.splice(playlistIndex, 1);
+						},
+						{ modalUuid: props.modalUuid }
+					);
+
+					socket.on(
+						"event:station.removedBlacklistedPlaylist",
+						res => {
+							const { playlistId } = res.data;
+							const playlistIndex = blacklist.value
+								.map(playlist => playlist._id)
+								.indexOf(playlistId);
+							if (playlistIndex >= 0)
+								blacklist.value.splice(playlistIndex, 1);
+						},
+						{ modalUuid: props.modalUuid }
+					);
+
+					socket.on(
+						"event:station.deleted",
+						() => {
+							new Toast(
+								`The station you were editing was deleted.`
+							);
+							closeCurrentModal();
+						},
+						{ modalUuid: props.modalUuid }
+					);
+
+					socket.on(
+						"event:user.station.favorited",
+						res => {
+							if (res.data.stationId === stationId.value)
+								updateIsFavorited(true);
+						},
+						{ modalUuid: props.modalUuid }
+					);
+
+					socket.on(
+						"event:user.station.unfavorited",
+						res => {
+							if (res.data.stationId === stationId.value)
+								updateIsFavorited(false);
+						},
+						{ modalUuid: props.modalUuid }
+					);
+				} else {
+					new Toast(`Station with that ID not found`);
+					closeCurrentModal();
 				}
-			},
-			{
-				modalUuid: props.modalUuid
 			}
 		);
-	}
+
+		socket.on(
+			"event:manageStation.queue.updated",
+			res => {
+				if (res.data.stationId === stationId.value)
+					updateSongsList(res.data.queue);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:manageStation.queue.song.repositioned",
+			res => {
+				if (res.data.stationId === stationId.value)
+					repositionSongInList(res.data.song);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:station.pause",
+			res => {
+				if (res.data.stationId === stationId.value)
+					updateStationPaused(true);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:station.resume",
+			res => {
+				if (res.data.stationId === stationId.value)
+					updateStationPaused(false);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:station.nextSong",
+			res => {
+				if (res.data.stationId === stationId.value)
+					updateCurrentSong(res.data.currentSong || {});
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on("event:manageStation.djs.added", res => {
+			if (res.data.stationId === stationId.value) {
+				if (res.data.user._id === userId.value) updatePermissions();
+				addDj(res.data.user);
+			}
+		});
+
+		socket.on("event:manageStation.djs.removed", res => {
+			if (res.data.stationId === stationId.value) {
+				if (res.data.user._id === userId.value) updatePermissions();
+				removeDj(res.data.user);
+			}
+		});
+
+		socket.on("keep.event:user.role.updated", () => {
+			updatePermissions();
+		});
+
+		if (hasPermission("stations.view")) {
+			socket.on(
+				"event:playlist.song.added",
+				res => {
+					if (stationPlaylist.value._id === res.data.playlistId)
+						stationPlaylist.value.songs.push(res.data.song);
+				},
+				{
+					modalUuid: props.modalUuid
+				}
+			);
+
+			socket.on(
+				"event:playlist.song.removed",
+				res => {
+					if (stationPlaylist.value._id === res.data.playlistId) {
+						// remove song from array of playlists
+						stationPlaylist.value.songs.forEach((song, index) => {
+							if (song.youtubeId === res.data.youtubeId)
+								stationPlaylist.value.songs.splice(index, 1);
+						});
+					}
+				},
+				{
+					modalUuid: props.modalUuid
+				}
+			);
+
+			socket.on(
+				"event:playlist.songs.repositioned",
+				res => {
+					if (stationPlaylist.value._id === res.data.playlistId) {
+						// for each song that has a new position
+						res.data.songsBeingChanged.forEach(changedSong => {
+							stationPlaylist.value.songs.forEach(
+								(song, index) => {
+									// find song locally
+									if (
+										song.youtubeId === changedSong.youtubeId
+									) {
+										// change song position attribute
+										stationPlaylist.value.songs[
+											index
+										].position = changedSong.position;
+
+										// reposition in array if needed
+										if (index !== changedSong.position - 1)
+											stationPlaylist.value.songs.splice(
+												changedSong.position - 1,
+												0,
+												stationPlaylist.value.songs.splice(
+													index,
+													1
+												)[0]
+											);
+									}
+								}
+							);
+						});
+					}
+				},
+				{
+					modalUuid: props.modalUuid
+				}
+			);
+		}
+	});
 });
 
 onBeforeUnmount(() => {

@@ -120,12 +120,6 @@ const fetchStations = () => {
 	);
 };
 
-const init = () => {
-	socket.dispatch("apis.joinRoom", "home");
-
-	fetchStations();
-};
-
 const canRequest = (station, requireLogin = true) =>
 	station &&
 	(!requireLogin || loggedIn.value) &&
@@ -191,145 +185,149 @@ onMounted(async () => {
 		openModal(route.redirectedFrom.name);
 	}
 
-	socket.onConnect(init);
+	socket.onConnect(() => {
+		socket.dispatch("apis.joinRoom", "home");
 
-	socket.on("event:station.created", res => {
-		const { station } = res.data;
+		fetchStations();
 
-		if (stations.value.find(_station => _station._id === station._id)) {
-			stations.value.forEach(s => {
-				const _station = s;
-				if (_station._id === station._id) {
-					_station.privacy = station.privacy;
-				}
-			});
-		} else {
-			if (!station.currentSong)
-				station.currentSong = {
-					thumbnail: "/assets/notes-transparent.png"
+		socket.on("event:station.created", res => {
+			const { station } = res.data;
+
+			if (stations.value.find(_station => _station._id === station._id)) {
+				stations.value.forEach(s => {
+					const _station = s;
+					if (_station._id === station._id) {
+						_station.privacy = station.privacy;
+					}
+				});
+			} else {
+				if (!station.currentSong)
+					station.currentSong = {
+						thumbnail: "/assets/notes-transparent.png"
+					};
+				if (station.currentSong && !station.currentSong.thumbnail)
+					station.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.youtubeId}/mqdefault.jpg`;
+				stations.value.push(station);
+			}
+		});
+
+		socket.on("event:station.deleted", res => {
+			const { stationId } = res.data;
+
+			const station = stations.value.find(
+				station => station._id === stationId
+			);
+
+			if (station) {
+				const stationIndex = stations.value.indexOf(station);
+				stations.value.splice(stationIndex, 1);
+
+				if (station.isFavorited)
+					orderOfFavoriteStations.value =
+						orderOfFavoriteStations.value.filter(
+							favoritedId => favoritedId !== stationId
+						);
+			}
+		});
+
+		socket.on("event:station.userCount.updated", res => {
+			const station = stations.value.find(
+				station => station._id === res.data.stationId
+			);
+
+			if (station) station.userCount = res.data.userCount;
+		});
+
+		socket.on("event:station.updated", res => {
+			const stationIndex = stations.value
+				.map(station => station._id)
+				.indexOf(res.data.station._id);
+
+			if (stationIndex !== -1) {
+				stations.value[stationIndex] = {
+					...stations.value[stationIndex],
+					...res.data.station
 				};
-			if (station.currentSong && !station.currentSong.thumbnail)
-				station.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.youtubeId}/mqdefault.jpg`;
-			stations.value.push(station);
-		}
-	});
+			}
+		});
 
-	socket.on("event:station.deleted", res => {
-		const { stationId } = res.data;
+		socket.on("event:station.nextSong", res => {
+			const station = stations.value.find(
+				station => station._id === res.data.stationId
+			);
 
-		const station = stations.value.find(
-			station => station._id === stationId
-		);
+			if (station) {
+				let newSong = res.data.currentSong;
 
-		if (station) {
-			const stationIndex = stations.value.indexOf(station);
-			stations.value.splice(stationIndex, 1);
+				if (!newSong)
+					newSong = {
+						thumbnail: "/assets/notes-transparent.png"
+					};
 
-			if (station.isFavorited)
+				station.currentSong = newSong;
+			}
+		});
+
+		socket.on("event:station.pause", res => {
+			const station = stations.value.find(
+				station => station._id === res.data.stationId
+			);
+
+			if (station) station.paused = true;
+		});
+
+		socket.on("event:station.resume", res => {
+			const station = stations.value.find(
+				station => station._id === res.data.stationId
+			);
+
+			if (station) station.paused = false;
+		});
+
+		socket.on("event:user.station.favorited", res => {
+			const { stationId } = res.data;
+
+			const station = stations.value.find(
+				station => station._id === stationId
+			);
+
+			if (station) {
+				station.isFavorited = true;
+				orderOfFavoriteStations.value.push(stationId);
+			}
+		});
+
+		socket.on("event:user.station.unfavorited", res => {
+			const { stationId } = res.data;
+
+			const station = stations.value.find(
+				station => station._id === stationId
+			);
+
+			if (station) {
+				station.isFavorited = false;
 				orderOfFavoriteStations.value =
 					orderOfFavoriteStations.value.filter(
 						favoritedId => favoritedId !== stationId
 					);
-		}
-	});
+			}
+		});
 
-	socket.on("event:station.userCount.updated", res => {
-		const station = stations.value.find(
-			station => station._id === res.data.stationId
-		);
+		socket.on("event:user.orderOfFavoriteStations.updated", res => {
+			orderOfFavoriteStations.value = res.data.order;
+		});
 
-		if (station) station.userCount = res.data.userCount;
-	});
+		socket.on("event:station.djs.added", res => {
+			if (res.data.user._id === userId.value) fetchStations();
+		});
 
-	socket.on("event:station.updated", res => {
-		const stationIndex = stations.value
-			.map(station => station._id)
-			.indexOf(res.data.station._id);
+		socket.on("event:station.djs.removed", res => {
+			if (res.data.user._id === userId.value) fetchStations();
+		});
 
-		if (stationIndex !== -1) {
-			stations.value[stationIndex] = {
-				...stations.value[stationIndex],
-				...res.data.station
-			};
-		}
-	});
-
-	socket.on("event:station.nextSong", res => {
-		const station = stations.value.find(
-			station => station._id === res.data.stationId
-		);
-
-		if (station) {
-			let newSong = res.data.currentSong;
-
-			if (!newSong)
-				newSong = {
-					thumbnail: "/assets/notes-transparent.png"
-				};
-
-			station.currentSong = newSong;
-		}
-	});
-
-	socket.on("event:station.pause", res => {
-		const station = stations.value.find(
-			station => station._id === res.data.stationId
-		);
-
-		if (station) station.paused = true;
-	});
-
-	socket.on("event:station.resume", res => {
-		const station = stations.value.find(
-			station => station._id === res.data.stationId
-		);
-
-		if (station) station.paused = false;
-	});
-
-	socket.on("event:user.station.favorited", res => {
-		const { stationId } = res.data;
-
-		const station = stations.value.find(
-			station => station._id === stationId
-		);
-
-		if (station) {
-			station.isFavorited = true;
-			orderOfFavoriteStations.value.push(stationId);
-		}
-	});
-
-	socket.on("event:user.station.unfavorited", res => {
-		const { stationId } = res.data;
-
-		const station = stations.value.find(
-			station => station._id === stationId
-		);
-
-		if (station) {
-			station.isFavorited = false;
-			orderOfFavoriteStations.value =
-				orderOfFavoriteStations.value.filter(
-					favoritedId => favoritedId !== stationId
-				);
-		}
-	});
-
-	socket.on("event:user.orderOfFavoriteStations.updated", res => {
-		orderOfFavoriteStations.value = res.data.order;
-	});
-
-	socket.on("event:station.djs.added", res => {
-		if (res.data.user._id === userId.value) fetchStations();
-	});
-
-	socket.on("event:station.djs.removed", res => {
-		if (res.data.user._id === userId.value) fetchStations();
-	});
-
-	socket.on("keep.event:user.role.updated", () => {
-		fetchStations();
+		socket.on("keep.event:user.role.updated", () => {
+			fetchStations();
+		});
 	});
 
 	// ctrl + alt + f

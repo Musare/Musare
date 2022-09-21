@@ -183,7 +183,7 @@ onMounted(async () => {
 
 	disconnectedMessage.value.hide();
 
-	socket.onConnect(true, () => {
+	socket.onConnect(() => {
 		socketConnected.value = true;
 
 		socket.dispatch(
@@ -254,11 +254,11 @@ onMounted(async () => {
 			if (!localStorage.getItem("firstVisited"))
 				localStorage.setItem("firstVisited", Date.now().toString());
 		});
-	});
+	}, true);
 
-	socket.onDisconnect(true, () => {
+	socket.onDisconnect(() => {
 		socketConnected.value = false;
-	});
+	}, true);
 
 	apiDomain.value = await lofig.get("backend.apiDomain");
 

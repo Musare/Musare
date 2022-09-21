@@ -3,31 +3,35 @@ import { useUserAuthStore } from "@/stores/userAuth";
 import utils from "@/utils";
 
 export default class SocketHandler {
-	socket: WebSocket;
+	socket?: WebSocket;
 
 	url: string;
 
 	dispatcher: ListenerHandler;
 
 	onConnectCbs: {
-		temp: any[];
-		persist: any[];
+		temp: ((...args: any[]) => any)[];
+		persist: ((...args: any[]) => any)[];
 	};
 
 	ready: boolean;
 
 	firstInit: boolean;
 
-	pendingDispatches: any[];
+	pendingDispatches: ((...args: any[]) => any)[];
 
 	onDisconnectCbs: {
-		temp: any[];
-		persist: any[];
+		temp: ((...args: any[]) => any)[];
+		persist: ((...args: any[]) => any)[];
 	};
 
-	CB_REFS: object;
+	CB_REFS: {
+		[key: string]: (...args: any[]) => any;
+	};
 
-	PROGRESS_CB_REFS: object;
+	PROGRESS_CB_REFS: {
+		[key: string]: (...args: any[]) => any;
+	};
 
 	data: {
 		dispatch?: {
@@ -70,6 +74,11 @@ export default class SocketHandler {
 		this.PROGRESS_CB_REFS = {};
 
 		this.init();
+
+		// Mock only
+		this.data = {};
+		this.executeDispatch = true;
+		this.trigger = () => {};
 	}
 
 	init() {
@@ -142,17 +151,23 @@ export default class SocketHandler {
 		}
 	}
 
-	on(target, cb, options?) {
+	on(
+		target: string,
+		cb: (...args: any[]) => any,
+		options?: EventListenerOptions
+	) {
 		this.dispatcher.addEventListener(
 			target,
-			event => cb(...event.detail),
+			(event: CustomEvent) => cb(...event.detail),
 			options
 		);
 	}
 
-	dispatch(...args) {
-		if (this.socket.readyState !== 1)
-			return this.pendingDispatches.push(() => this.dispatch(...args));
+	dispatch(...args: [string, ...any[]]) {
+		if (!this.socket || this.socket.readyState !== 1) {
+			this.pendingDispatches.push(() => this.dispatch(...args));
+			return undefined;
+		}
 
 		const lastArg = args[args.length - 1];
 		const CB_REF = utils.guid();
@@ -179,17 +194,15 @@ export default class SocketHandler {
 		return this.socket.send(JSON.stringify([...args]));
 	}
 
-	onConnect(...args) {
-		const cb = args[1] || args[0];
-		if (this.socket.readyState === 1 && this.ready) cb();
+	onConnect(cb: (...args: any[]) => any, persist = false) {
+		if (this.socket && this.socket.readyState === 1 && this.ready) cb();
 
-		if (args[0] === true) this.onConnectCbs.persist.push(cb);
+		if (persist) this.onConnectCbs.persist.push(cb);
 		else this.onConnectCbs.temp.push(cb);
 	}
 
-	onDisconnect(...args) {
-		const cb = args[1] || args[0];
-		if (args[0] === true) this.onDisconnectCbs.persist.push(cb);
+	onDisconnect(cb: (...args: any[]) => any, persist = false) {
+		if (persist) this.onDisconnectCbs.persist.push(cb);
 		else this.onDisconnectCbs.temp.push(cb);
 	}
 
@@ -222,7 +235,7 @@ export default class SocketHandler {
 		});
 	}
 
-	destroyModalListeners(modalUuid) {
+	destroyModalListeners(modalUuid: string) {
 		// destroy all listeners for a specific modal
 		Object.keys(this.dispatcher.listeners).forEach(type =>
 			this.dispatcher.listeners[type].forEach((element, index) => {

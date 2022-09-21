@@ -35,23 +35,6 @@ const userAuthStore = useUserAuthStore();
 const { userId: myUserId } = storeToRefs(userAuthStore);
 const { hasPermission } = userAuthStore;
 
-const init = () => {
-	socket.dispatch("users.getBasicUser", route.params.username, res => {
-		if (res.status === "error") router.push("/404");
-		else {
-			user.value = res.data;
-
-			user.value.createdAt = format(
-				parseISO(user.value.createdAt),
-				"MMMM do yyyy"
-			);
-
-			isUser.value = true;
-			userId.value = user.value._id;
-		}
-	});
-};
-
 onMounted(() => {
 	if (
 		route.query.tab === "recent-activity" ||
@@ -59,7 +42,22 @@ onMounted(() => {
 	)
 		tab.value = route.query.tab;
 
-	socket.onConnect(init);
+	socket.onConnect(() => {
+		socket.dispatch("users.getBasicUser", route.params.username, res => {
+			if (res.status === "error") router.push("/404");
+			else {
+				user.value = res.data;
+
+				user.value.createdAt = format(
+					parseISO(user.value.createdAt),
+					"MMMM do yyyy"
+				);
+
+				isUser.value = true;
+				userId.value = user.value._id;
+			}
+		});
+	});
 });
 </script>
 

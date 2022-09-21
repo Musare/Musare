@@ -36,23 +36,6 @@ const showToNewUsers = ref(false);
 const createdBy = ref();
 const createdAt = ref(0);
 
-const init = () => {
-	if (newsId && !createNews.value) {
-		socket.dispatch(`news.getNewsFromId`, newsId.value, res => {
-			if (res.status === "success") {
-				markdown.value = res.data.news.markdown;
-				status.value = res.data.news.status;
-				showToNewUsers.value = res.data.news.showToNewUsers;
-				createdBy.value = res.data.news.createdBy;
-				createdAt.value = res.data.news.createdAt;
-			} else {
-				new Toast("News with that ID not found.");
-				closeCurrentModal();
-			}
-		});
-	}
-};
-
 const getTitle = () => {
 	let title = "";
 	const preview = document.getElementById("preview");
@@ -141,7 +124,22 @@ onMounted(() => {
 		}
 	});
 
-	socket.onConnect(init);
+	socket.onConnect(() => {
+		if (newsId.value && !createNews.value) {
+			socket.dispatch(`news.getNewsFromId`, newsId.value, res => {
+				if (res.status === "success") {
+					markdown.value = res.data.news.markdown;
+					status.value = res.data.news.status;
+					showToNewUsers.value = res.data.news.showToNewUsers;
+					createdBy.value = res.data.news.createdBy;
+					createdAt.value = res.data.news.createdAt;
+				} else {
+					new Toast("News with that ID not found.");
+					closeCurrentModal();
+				}
+			});
+		}
+	});
 });
 </script>
 

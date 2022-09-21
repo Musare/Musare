@@ -84,7 +84,6 @@ const nextCurrentSong = ref(null);
 const mediaModalWatcher = ref(null);
 const beforeMediaModalLocalPausedLock = ref(false);
 const beforeMediaModalLocalPaused = ref(null);
-const socketConnected = ref(null);
 const persistentToastCheckerInterval = ref(null);
 const persistentToasts = ref([]);
 const mediasession = ref(false);
@@ -587,7 +586,7 @@ const setCurrentSong = data => {
 		else playVideo();
 
 		// If the station is playing and the backend is not connected, set the next song to skip to after this song and set a timer to skip
-		if (!stationPaused.value && !socketConnected.value) {
+		if (!stationPaused.value && !socket.ready) {
 			if (nextSong)
 				setNextCurrentSong(
 					{
@@ -804,238 +803,6 @@ const toggleKeyboardShortcutsHelper = () => {
 const resetKeyboardShortcutsHelper = () => {
 	keyboardShortcutsHelper.value.resetBox();
 };
-const join = () => {
-	socket.dispatch("stations.join", stationIdentifier.value, async res => {
-		if (res.status === "success") {
-			setTimeout(() => {
-				loading.value = false;
-			}, 1000); // prevents popping in of youtube embed etc.
-
-			const {
-				_id,
-				displayName,
-				name,
-				description,
-				privacy,
-				owner,
-				autofill,
-				blacklist,
-				type,
-				isFavorited,
-				theme,
-				requests,
-				djs
-			} = res.data;
-
-			// change url to use station name instead of station id
-			if (name !== stationIdentifier.value) {
-				// eslint-disable-next-line no-restricted-globals
-				router.replace(name);
-			}
-
-			joinStation({
-				_id,
-				name,
-				displayName,
-				description,
-				privacy,
-				owner,
-				autofill,
-				blacklist,
-				type,
-				isFavorited,
-				theme,
-				requests,
-				djs
-			});
-
-			document.getElementsByTagName(
-				"html"
-			)[0].style.cssText = `--primary-color: var(--${res.data.theme})`;
-
-			setCurrentSong({
-				currentSong: res.data.currentSong,
-				startedAt: res.data.startedAt,
-				paused: res.data.paused,
-				timePaused: res.data.timePaused,
-				pausedAt: res.data.pausedAt
-			});
-
-			updateUserCount(res.data.userCount);
-			updateUsers(res.data.users);
-
-			await updatePermissions();
-
-			socket.dispatch(
-				"stations.getStationAutofillPlaylistsById",
-				station.value._id,
-				res => {
-					if (res.status === "success") {
-						setAutofillPlaylists(res.data.playlists);
-					}
-				}
-			);
-
-			socket.dispatch(
-				"stations.getStationBlacklistById",
-				station.value._id,
-				res => {
-					if (res.status === "success") {
-						setBlacklist(res.data.playlists);
-					}
-				}
-			);
-
-			socket.dispatch("stations.getQueue", _id, res => {
-				if (res.status === "success") {
-					const { queue } = res.data;
-					updateSongsList(queue);
-					const [nextSong] = queue;
-
-					updateNextSong(nextSong);
-				}
-			});
-
-			if (hasPermission("stations.playback.toggle"))
-				keyboardShortcuts.registerShortcut("station.pauseResume", {
-					keyCode: 32, // Spacebar
-					shift: false,
-					ctrl: true,
-					preventDefault: true,
-					handler: () => {
-						if (aModalIsOpen.value) return;
-						if (stationPaused.value) resumeStation();
-						else pauseStation();
-					}
-				});
-
-			if (hasPermission("stations.skip"))
-				keyboardShortcuts.registerShortcut("station.skipStation", {
-					keyCode: 39, // Right arrow key
-					shift: false,
-					ctrl: true,
-					preventDefault: true,
-					handler: () => {
-						if (aModalIsOpen.value) return;
-						skipStation();
-					}
-				});
-
-			keyboardShortcuts.registerShortcut("station.lowerVolumeLarge", {
-				keyCode: 40, // Down arrow key
-				shift: false,
-				ctrl: true,
-				preventDefault: true,
-				handler: () => {
-					if (aModalIsOpen.value) return;
-					volumeSliderValue.value -= 10;
-					changeVolume();
-				}
-			});
-
-			keyboardShortcuts.registerShortcut("station.lowerVolumeSmall", {
-				keyCode: 40, // Down arrow key
-				shift: true,
-				ctrl: true,
-				preventDefault: true,
-				handler: () => {
-					if (aModalIsOpen.value) return;
-					volumeSliderValue.value -= 1;
-					changeVolume();
-				}
-			});
-
-			keyboardShortcuts.registerShortcut("station.increaseVolumeLarge", {
-				keyCode: 38, // Up arrow key
-				shift: false,
-				ctrl: true,
-				preventDefault: true,
-				handler: () => {
-					if (aModalIsOpen.value) return;
-					volumeSliderValue.value += 10;
-					changeVolume();
-				}
-			});
-
-			keyboardShortcuts.registerShortcut("station.increaseVolumeSmall", {
-				keyCode: 38, // Up arrow key
-				shift: true,
-				ctrl: true,
-				preventDefault: true,
-				handler: () => {
-					if (aModalIsOpen.value) return;
-					volumeSliderValue.value += 1;
-					changeVolume();
-				}
-			});
-
-			keyboardShortcuts.registerShortcut("station.toggleDebug", {
-				keyCode: 68, // D key
-				shift: false,
-				ctrl: true,
-				preventDefault: true,
-				handler: () => {
-					if (aModalIsOpen.value) return;
-					togglePlayerDebugBox();
-				}
-			});
-
-			keyboardShortcuts.registerShortcut(
-				"station.toggleKeyboardShortcutsHelper",
-				{
-					keyCode: 191, // '/' key
-					ctrl: true,
-					preventDefault: true,
-					handler: () => {
-						if (aModalIsOpen.value) return;
-						toggleKeyboardShortcutsHelper();
-					}
-				}
-			);
-
-			keyboardShortcuts.registerShortcut(
-				"station.resetKeyboardShortcutsHelper",
-				{
-					keyCode: 191, // '/' key
-					ctrl: true,
-					shift: true,
-					preventDefault: true,
-					handler: () => {
-						if (aModalIsOpen.value) return;
-						resetKeyboardShortcutsHelper();
-					}
-				}
-			);
-
-			// UNIX client time before ping
-			const beforePing = Date.now();
-			socket.dispatch("apis.ping", res => {
-				if (res.status === "success") {
-					// UNIX client time after ping
-					const afterPing = Date.now();
-					// Average time in MS it took between the server responding and the client receiving
-					const connectionLatency = (afterPing - beforePing) / 2;
-					console.log(connectionLatency, beforePing - afterPing);
-					// UNIX server time
-					const serverDate = res.data.date;
-					// Difference between the server UNIX time and the client UNIX time after ping, with the connectionLatency added to the server UNIX time
-					const difference =
-						serverDate + connectionLatency - afterPing;
-					console.log("Difference: ", difference);
-					if (difference > 3000 || difference < -3000) {
-						console.log(
-							"System time difference is bigger than 3 seconds."
-						);
-					}
-					systemDifference.value = difference;
-				}
-			});
-		} else {
-			loading.value = false;
-			exists.value = false;
-		}
-	});
-};
 const sendActivityWatchVideoData = () => {
 	if (!stationPaused.value && !localPaused.value && !noSong.value) {
 		if (activityWatchVideoLastStatus.value !== "playing") {
@@ -1119,15 +886,490 @@ onMounted(async () => {
 		);
 	}, 1000);
 
-	if (socket.readyState === 1) join();
 	socket.onConnect(() => {
-		socketConnected.value = true;
 		clearTimeout(window.stationNextSongTimeout);
-		join();
+
+		socket.dispatch("stations.join", stationIdentifier.value, async res => {
+			if (res.status === "success") {
+				setTimeout(() => {
+					loading.value = false;
+				}, 1000); // prevents popping in of youtube embed etc.
+
+				const {
+					_id,
+					displayName,
+					name,
+					description,
+					privacy,
+					owner,
+					autofill,
+					blacklist,
+					type,
+					isFavorited,
+					theme,
+					requests,
+					djs
+				} = res.data;
+
+				// change url to use station name instead of station id
+				if (name !== stationIdentifier.value) {
+					// eslint-disable-next-line no-restricted-globals
+					router.replace(name);
+				}
+
+				joinStation({
+					_id,
+					name,
+					displayName,
+					description,
+					privacy,
+					owner,
+					autofill,
+					blacklist,
+					type,
+					isFavorited,
+					theme,
+					requests,
+					djs
+				});
+
+				document.getElementsByTagName(
+					"html"
+				)[0].style.cssText = `--primary-color: var(--${res.data.theme})`;
+
+				setCurrentSong({
+					currentSong: res.data.currentSong,
+					startedAt: res.data.startedAt,
+					paused: res.data.paused,
+					timePaused: res.data.timePaused,
+					pausedAt: res.data.pausedAt
+				});
+
+				updateUserCount(res.data.userCount);
+				updateUsers(res.data.users);
+
+				await updatePermissions();
+
+				socket.dispatch(
+					"stations.getStationAutofillPlaylistsById",
+					station.value._id,
+					res => {
+						if (res.status === "success") {
+							setAutofillPlaylists(res.data.playlists);
+						}
+					}
+				);
+
+				socket.dispatch(
+					"stations.getStationBlacklistById",
+					station.value._id,
+					res => {
+						if (res.status === "success") {
+							setBlacklist(res.data.playlists);
+						}
+					}
+				);
+
+				socket.dispatch("stations.getQueue", _id, res => {
+					if (res.status === "success") {
+						const { queue } = res.data;
+						updateSongsList(queue);
+						const [nextSong] = queue;
+
+						updateNextSong(nextSong);
+					}
+				});
+
+				if (hasPermission("stations.playback.toggle"))
+					keyboardShortcuts.registerShortcut("station.pauseResume", {
+						keyCode: 32, // Spacebar
+						shift: false,
+						ctrl: true,
+						preventDefault: true,
+						handler: () => {
+							if (aModalIsOpen.value) return;
+							if (stationPaused.value) resumeStation();
+							else pauseStation();
+						}
+					});
+
+				if (hasPermission("stations.skip"))
+					keyboardShortcuts.registerShortcut("station.skipStation", {
+						keyCode: 39, // Right arrow key
+						shift: false,
+						ctrl: true,
+						preventDefault: true,
+						handler: () => {
+							if (aModalIsOpen.value) return;
+							skipStation();
+						}
+					});
+
+				keyboardShortcuts.registerShortcut("station.lowerVolumeLarge", {
+					keyCode: 40, // Down arrow key
+					shift: false,
+					ctrl: true,
+					preventDefault: true,
+					handler: () => {
+						if (aModalIsOpen.value) return;
+						volumeSliderValue.value -= 10;
+						changeVolume();
+					}
+				});
+
+				keyboardShortcuts.registerShortcut("station.lowerVolumeSmall", {
+					keyCode: 40, // Down arrow key
+					shift: true,
+					ctrl: true,
+					preventDefault: true,
+					handler: () => {
+						if (aModalIsOpen.value) return;
+						volumeSliderValue.value -= 1;
+						changeVolume();
+					}
+				});
+
+				keyboardShortcuts.registerShortcut(
+					"station.increaseVolumeLarge",
+					{
+						keyCode: 38, // Up arrow key
+						shift: false,
+						ctrl: true,
+						preventDefault: true,
+						handler: () => {
+							if (aModalIsOpen.value) return;
+							volumeSliderValue.value += 10;
+							changeVolume();
+						}
+					}
+				);
+
+				keyboardShortcuts.registerShortcut(
+					"station.increaseVolumeSmall",
+					{
+						keyCode: 38, // Up arrow key
+						shift: true,
+						ctrl: true,
+						preventDefault: true,
+						handler: () => {
+							if (aModalIsOpen.value) return;
+							volumeSliderValue.value += 1;
+							changeVolume();
+						}
+					}
+				);
+
+				keyboardShortcuts.registerShortcut("station.toggleDebug", {
+					keyCode: 68, // D key
+					shift: false,
+					ctrl: true,
+					preventDefault: true,
+					handler: () => {
+						if (aModalIsOpen.value) return;
+						togglePlayerDebugBox();
+					}
+				});
+
+				keyboardShortcuts.registerShortcut(
+					"station.toggleKeyboardShortcutsHelper",
+					{
+						keyCode: 191, // '/' key
+						ctrl: true,
+						preventDefault: true,
+						handler: () => {
+							if (aModalIsOpen.value) return;
+							toggleKeyboardShortcutsHelper();
+						}
+					}
+				);
+
+				keyboardShortcuts.registerShortcut(
+					"station.resetKeyboardShortcutsHelper",
+					{
+						keyCode: 191, // '/' key
+						ctrl: true,
+						shift: true,
+						preventDefault: true,
+						handler: () => {
+							if (aModalIsOpen.value) return;
+							resetKeyboardShortcutsHelper();
+						}
+					}
+				);
+
+				// UNIX client time before ping
+				const beforePing = Date.now();
+				socket.dispatch("apis.ping", res => {
+					if (res.status === "success") {
+						// UNIX client time after ping
+						const afterPing = Date.now();
+						// Average time in MS it took between the server responding and the client receiving
+						const connectionLatency = (afterPing - beforePing) / 2;
+						console.log(connectionLatency, beforePing - afterPing);
+						// UNIX server time
+						const serverDate = res.data.date;
+						// Difference between the server UNIX time and the client UNIX time after ping, with the connectionLatency added to the server UNIX time
+						const difference =
+							serverDate + connectionLatency - afterPing;
+						console.log("Difference: ", difference);
+						if (difference > 3000 || difference < -3000) {
+							console.log(
+								"System time difference is bigger than 3 seconds."
+							);
+						}
+						systemDifference.value = difference;
+					}
+				});
+			} else {
+				loading.value = false;
+				exists.value = false;
+			}
+		});
+
+		socket.dispatch(
+			"stations.existsByName",
+			stationIdentifier.value,
+			res => {
+				if (res.status === "error" || !res.data.exists) {
+					// station identifier may be using stationid instead
+					socket.dispatch(
+						"stations.existsById",
+						stationIdentifier.value,
+						res => {
+							if (res.status === "error" || !res.data.exists) {
+								loading.value = false;
+								exists.value = false;
+							}
+						}
+					);
+				}
+			}
+		);
+
+		socket.on("event:station.nextSong", res => {
+			const { currentSong, startedAt, paused, timePaused } = res.data;
+
+			setCurrentSong({
+				currentSong,
+				startedAt,
+				paused,
+				timePaused,
+				pausedAt: 0
+			});
+		});
+
+		socket.on("event:station.pause", res => {
+			pausedAt.value = res.data.pausedAt;
+			updateStationPaused(true);
+			pauseLocalPlayer();
+
+			clearTimeout(window.stationNextSongTimeout);
+		});
+
+		socket.on("event:station.resume", res => {
+			timePaused.value = res.data.timePaused;
+			updateStationPaused(false);
+			if (!localPaused.value) resumeLocalPlayer();
+
+			autoRequestSong();
+		});
+
+		socket.on("event:station.deleted", () => {
+			router.push({
+				path: "/",
+				query: {
+					toast: "The station you were in was deleted."
+				}
+			});
+		});
+
+		socket.on("event:ratings.liked", res => {
+			if (!noSong.value) {
+				if (res.data.youtubeId === currentSong.value.youtubeId) {
+					updateCurrentSongRatings(res.data);
+				}
+			}
+		});
+
+		socket.on("event:ratings.disliked", res => {
+			if (!noSong.value) {
+				if (res.data.youtubeId === currentSong.value.youtubeId) {
+					updateCurrentSongRatings(res.data);
+				}
+			}
+		});
+
+		socket.on("event:ratings.unliked", res => {
+			if (!noSong.value) {
+				if (res.data.youtubeId === currentSong.value.youtubeId) {
+					updateCurrentSongRatings(res.data);
+				}
+			}
+		});
+
+		socket.on("event:ratings.undisliked", res => {
+			if (!noSong.value) {
+				if (res.data.youtubeId === currentSong.value.youtubeId) {
+					updateCurrentSongRatings(res.data);
+				}
+			}
+		});
+
+		socket.on("event:ratings.updated", res => {
+			if (!noSong.value) {
+				if (res.data.youtubeId === currentSong.value.youtubeId) {
+					updateOwnCurrentSongRatings(res.data);
+				}
+			}
+		});
+
+		socket.on("event:station.queue.updated", res => {
+			updateSongsList(res.data.queue);
+
+			let nextSong = null;
+			if (songsList.value[0])
+				nextSong = songsList.value[0].youtubeId
+					? songsList.value[0]
+					: null;
+
+			updateNextSong(nextSong);
+
+			autoRequestSong();
+		});
+
+		socket.on("event:station.queue.song.repositioned", res => {
+			repositionSongInList(res.data.song);
+
+			let nextSong = null;
+			if (songsList.value[0])
+				nextSong = songsList.value[0].youtubeId
+					? songsList.value[0]
+					: null;
+
+			updateNextSong(nextSong);
+		});
+
+		socket.on("event:station.toggleSkipVote", res => {
+			if (currentSong.value)
+				updateCurrentSongSkipVotes({
+					skipVotes: res.data.voted
+						? currentSong.value.skipVotes + 1
+						: currentSong.value.skipVotes - 1,
+					skipVotesCurrent: null,
+					voted:
+						res.data.userId === userId.value
+							? res.data.voted
+							: currentSong.value.voted
+				});
+		});
+
+		socket.on("event:station.updated", async res => {
+			const { name, theme, privacy } = res.data.station;
+
+			if (!hasPermission("stations.view") && privacy === "private") {
+				router.push({
+					path: "/",
+					query: {
+						toast: "The station you were in was made private."
+					}
+				});
+			} else {
+				if (station.value.name !== name) {
+					await router.push(
+						`${name}?${Object.keys(route.query)
+							.map(
+								key =>
+									`${encodeURIComponent(
+										key
+									)}=${encodeURIComponent(
+										JSON.stringify(route.query[key])
+									)}`
+							)
+							.join("&")}`
+					);
+
+					// eslint-disable-next-line no-restricted-globals
+					history.replaceState({ ...history.state, ...{} }, null);
+				}
+
+				if (station.value.theme !== theme)
+					document.getElementsByTagName(
+						"html"
+					)[0].style.cssText = `--primary-color: var(--${theme})`;
+
+				updateStation(res.data.station);
+			}
+		});
+
+		socket.on("event:station.users.updated", res =>
+			updateUsers(res.data.users)
+		);
+
+		socket.on("event:station.userCount.updated", res =>
+			updateUserCount(res.data.userCount)
+		);
+
+		socket.on("event:user.station.favorited", res => {
+			if (res.data.stationId === station.value._id)
+				updateIfStationIsFavorited({ isFavorited: true });
+		});
+
+		socket.on("event:user.station.unfavorited", res => {
+			if (res.data.stationId === station.value._id)
+				updateIfStationIsFavorited({ isFavorited: false });
+		});
+
+		socket.on("event:station.djs.added", res => {
+			if (res.data.user._id === userId.value)
+				updatePermissions().then(() => {
+					if (
+						!hasPermission("stations.view") &&
+						station.value.privacy === "private"
+					)
+						router.push({
+							path: "/",
+							query: {
+								toast: "You no longer have access to the station you were in."
+							}
+						});
+				});
+			addDj(res.data.user);
+		});
+
+		socket.on("event:station.djs.removed", res => {
+			if (res.data.user._id === userId.value)
+				updatePermissions().then(() => {
+					if (
+						!hasPermission("stations.view") &&
+						station.value.privacy === "private"
+					)
+						router.push({
+							path: "/",
+							query: {
+								toast: "You no longer have access to the station you were in."
+							}
+						});
+				});
+			removeDj(res.data.user);
+		});
+
+		socket.on("keep.event:user.role.updated", () => {
+			updatePermissions().then(() => {
+				if (
+					!hasPermission("stations.view") &&
+					station.value.privacy === "private"
+				)
+					router.push({
+						path: "/",
+						query: {
+							toast: "You no longer have access to the station you were in."
+						}
+					});
+			});
+		});
 	});
 
-	socket.onDisconnect(true, () => {
-		socketConnected.value = false;
+	socket.onDisconnect(() => {
 		const _currentSong = currentSong.value;
 		if (nextSong.value)
 			setNextCurrentSong(
@@ -1154,28 +1396,12 @@ onMounted(async () => {
 			if (!noSong.value && currentSong.value._id === _currentSong._id)
 				skipSong();
 		}, getTimeRemaining());
-	});
+	}, true);
 
 	frontendDevMode.value = await lofig.get("mode");
 	mediasession.value = await lofig.get("siteSettings.mediasession");
 	christmas.value = await lofig.get("siteSettings.christmas");
 	sitename.value = await lofig.get("siteSettings.sitename");
-
-	socket.dispatch("stations.existsByName", stationIdentifier.value, res => {
-		if (res.status === "error" || !res.data.exists) {
-			// station identifier may be using stationid instead
-			socket.dispatch(
-				"stations.existsById",
-				stationIdentifier.value,
-				res => {
-					if (res.status === "error" || !res.data.exists) {
-						loading.value = false;
-						exists.value = false;
-					}
-				}
-			);
-		}
-	});
 
 	ms.setListeners(0, {
 		play: () => {
@@ -1190,224 +1416,6 @@ onMounted(async () => {
 			if (hasPermission("stations.skip")) skipStation();
 			else if (!currentSong.value.voted) toggleSkipVote();
 		}
-	});
-
-	socket.on("event:station.nextSong", res => {
-		const { currentSong, startedAt, paused, timePaused } = res.data;
-
-		setCurrentSong({
-			currentSong,
-			startedAt,
-			paused,
-			timePaused,
-			pausedAt: 0
-		});
-	});
-
-	socket.on("event:station.pause", res => {
-		pausedAt.value = res.data.pausedAt;
-		updateStationPaused(true);
-		pauseLocalPlayer();
-
-		clearTimeout(window.stationNextSongTimeout);
-	});
-
-	socket.on("event:station.resume", res => {
-		timePaused.value = res.data.timePaused;
-		updateStationPaused(false);
-		if (!localPaused.value) resumeLocalPlayer();
-
-		autoRequestSong();
-	});
-
-	socket.on("event:station.deleted", () => {
-		router.push({
-			path: "/",
-			query: {
-				toast: "The station you were in was deleted."
-			}
-		});
-	});
-
-	socket.on("event:ratings.liked", res => {
-		if (!noSong.value) {
-			if (res.data.youtubeId === currentSong.value.youtubeId) {
-				updateCurrentSongRatings(res.data);
-			}
-		}
-	});
-
-	socket.on("event:ratings.disliked", res => {
-		if (!noSong.value) {
-			if (res.data.youtubeId === currentSong.value.youtubeId) {
-				updateCurrentSongRatings(res.data);
-			}
-		}
-	});
-
-	socket.on("event:ratings.unliked", res => {
-		if (!noSong.value) {
-			if (res.data.youtubeId === currentSong.value.youtubeId) {
-				updateCurrentSongRatings(res.data);
-			}
-		}
-	});
-
-	socket.on("event:ratings.undisliked", res => {
-		if (!noSong.value) {
-			if (res.data.youtubeId === currentSong.value.youtubeId) {
-				updateCurrentSongRatings(res.data);
-			}
-		}
-	});
-
-	socket.on("event:ratings.updated", res => {
-		if (!noSong.value) {
-			if (res.data.youtubeId === currentSong.value.youtubeId) {
-				updateOwnCurrentSongRatings(res.data);
-			}
-		}
-	});
-
-	socket.on("event:station.queue.updated", res => {
-		updateSongsList(res.data.queue);
-
-		let nextSong = null;
-		if (songsList.value[0])
-			nextSong = songsList.value[0].youtubeId ? songsList.value[0] : null;
-
-		updateNextSong(nextSong);
-
-		autoRequestSong();
-	});
-
-	socket.on("event:station.queue.song.repositioned", res => {
-		repositionSongInList(res.data.song);
-
-		let nextSong = null;
-		if (songsList.value[0])
-			nextSong = songsList.value[0].youtubeId ? songsList.value[0] : null;
-
-		updateNextSong(nextSong);
-	});
-
-	socket.on("event:station.toggleSkipVote", res => {
-		if (currentSong.value)
-			updateCurrentSongSkipVotes({
-				skipVotes: res.data.voted
-					? currentSong.value.skipVotes + 1
-					: currentSong.value.skipVotes - 1,
-				skipVotesCurrent: null,
-				voted:
-					res.data.userId === userId.value
-						? res.data.voted
-						: currentSong.value.voted
-			});
-	});
-
-	socket.on("event:station.updated", async res => {
-		const { name, theme, privacy } = res.data.station;
-
-		if (!hasPermission("stations.view") && privacy === "private") {
-			router.push({
-				path: "/",
-				query: {
-					toast: "The station you were in was made private."
-				}
-			});
-		} else {
-			if (station.value.name !== name) {
-				await router.push(
-					`${name}?${Object.keys(route.query)
-						.map(
-							key =>
-								`${encodeURIComponent(
-									key
-								)}=${encodeURIComponent(
-									JSON.stringify(route.query[key])
-								)}`
-						)
-						.join("&")}`
-				);
-
-				// eslint-disable-next-line no-restricted-globals
-				history.replaceState({ ...history.state, ...{} }, null);
-			}
-
-			if (station.value.theme !== theme)
-				document.getElementsByTagName(
-					"html"
-				)[0].style.cssText = `--primary-color: var(--${theme})`;
-
-			updateStation(res.data.station);
-		}
-	});
-
-	socket.on("event:station.users.updated", res =>
-		updateUsers(res.data.users)
-	);
-
-	socket.on("event:station.userCount.updated", res =>
-		updateUserCount(res.data.userCount)
-	);
-
-	socket.on("event:user.station.favorited", res => {
-		if (res.data.stationId === station.value._id)
-			updateIfStationIsFavorited({ isFavorited: true });
-	});
-
-	socket.on("event:user.station.unfavorited", res => {
-		if (res.data.stationId === station.value._id)
-			updateIfStationIsFavorited({ isFavorited: false });
-	});
-
-	socket.on("event:station.djs.added", res => {
-		if (res.data.user._id === userId.value)
-			updatePermissions().then(() => {
-				if (
-					!hasPermission("stations.view") &&
-					station.value.privacy === "private"
-				)
-					router.push({
-						path: "/",
-						query: {
-							toast: "You no longer have access to the station you were in."
-						}
-					});
-			});
-		addDj(res.data.user);
-	});
-
-	socket.on("event:station.djs.removed", res => {
-		if (res.data.user._id === userId.value)
-			updatePermissions().then(() => {
-				if (
-					!hasPermission("stations.view") &&
-					station.value.privacy === "private"
-				)
-					router.push({
-						path: "/",
-						query: {
-							toast: "You no longer have access to the station you were in."
-						}
-					});
-			});
-		removeDj(res.data.user);
-	});
-
-	socket.on("keep.event:user.role.updated", () => {
-		updatePermissions().then(() => {
-			if (
-				!hasPermission("stations.view") &&
-				station.value.privacy === "private"
-			)
-				router.push({
-					path: "/",
-					query: {
-						toast: "You no longer have access to the station you were in."
-					}
-				});
-		});
 	});
 
 	if (JSON.parse(localStorage.getItem("muted"))) {

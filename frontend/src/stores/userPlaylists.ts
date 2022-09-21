@@ -3,12 +3,10 @@ import { Playlist } from "@/types/playlist";
 
 export const useUserPlaylistsStore = defineStore("userPlaylists", {
 	state: () => ({
-		playlists: <Playlist[]>[],
-		fetchedPlaylists: false
+		playlists: <Playlist[]>[]
 	}),
 	actions: {
 		setPlaylists(playlists) {
-			this.fetchedPlaylists = true;
 			this.playlists = playlists;
 		},
 		updatePlaylists(playlists) {

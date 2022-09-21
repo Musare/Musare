@@ -27,34 +27,6 @@ const { closeCurrentModal } = useModalsStore();
 
 const loaded = ref(false);
 
-const init = () => {
-	loaded.value = false;
-	socket.dispatch("youtube.getApiRequest", requestId.value, res => {
-		if (res.status === "success") {
-			const { apiRequest } = res.data;
-			viewApiRequest(apiRequest);
-			loaded.value = true;
-
-			socket.dispatch(
-				"apis.joinRoom",
-				`view-api-request.${requestId.value}`
-			);
-
-			socket.on(
-				"event:youtubeApiRequest.removed",
-				() => {
-					new Toast("This API request was removed.");
-					closeCurrentModal();
-				},
-				{ modalUuid: props.modalUuid }
-			);
-		} else {
-			new Toast("API request with that ID not found");
-			closeCurrentModal();
-		}
-	});
-};
-
 const remove = () => {
 	if (removeAction.value)
 		socket.dispatch(removeAction.value, requestId.value, res => {
@@ -68,7 +40,33 @@ const remove = () => {
 };
 
 onMounted(() => {
-	socket.onConnect(init);
+	socket.onConnect(() => {
+		loaded.value = false;
+		socket.dispatch("youtube.getApiRequest", requestId.value, res => {
+			if (res.status === "success") {
+				const { apiRequest } = res.data;
+				viewApiRequest(apiRequest);
+				loaded.value = true;
+
+				socket.dispatch(
+					"apis.joinRoom",
+					`view-api-request.${requestId.value}`
+				);
+
+				socket.on(
+					"event:youtubeApiRequest.removed",
+					() => {
+						new Toast("This API request was removed.");
+						closeCurrentModal();
+					},
+					{ modalUuid: props.modalUuid }
+				);
+			} else {
+				new Toast("API request with that ID not found");
+				closeCurrentModal();
+			}
+		});
+	});
 });
 
 onBeforeUnmount(() => {

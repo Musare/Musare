@@ -145,27 +145,6 @@ const predefinedCategories = ref([
 	}
 ]);
 
-const init = () => {
-	socket.dispatch("reports.myReportsForSong", song.value._id, res => {
-		if (res.status === "success") {
-			existingReports.value = res.data.reports;
-			existingReports.value.forEach(report =>
-				socket.dispatch("apis.joinRoom", `view-report.${report._id}`)
-			);
-		}
-	});
-
-	socket.on(
-		"event:admin.report.resolved",
-		res => {
-			existingReports.value = existingReports.value.filter(
-				report => report._id !== res.data.reportId
-			);
-		},
-		{ modalUuid: props.modalUuid }
-	);
-};
-
 const create = () => {
 	const issues = [];
 
@@ -203,7 +182,29 @@ const create = () => {
 };
 
 onMounted(() => {
-	socket.onConnect(init);
+	socket.onConnect(() => {
+		socket.dispatch("reports.myReportsForSong", song.value._id, res => {
+			if (res.status === "success") {
+				existingReports.value = res.data.reports;
+				existingReports.value.forEach(report =>
+					socket.dispatch(
+						"apis.joinRoom",
+						`view-report.${report._id}`
+					)
+				);
+			}
+		});
+
+		socket.on(
+			"event:admin.report.resolved",
+			res => {
+				existingReports.value = existingReports.value.filter(
+					report => report._id !== res.data.reportId
+				);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+	});
 });
 
 onBeforeUnmount(() => {

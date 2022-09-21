@@ -24,7 +24,7 @@ export default class SocketHandlerMock {
 
 	executeDispatch: boolean;
 
-	constructor(url) {
+	constructor(url: string) {
 		this.dispatcher = new ListenerHandler();
 		this.url = url;
 		this.data = {
@@ -39,16 +39,20 @@ export default class SocketHandlerMock {
 		this.executeDispatch = true;
 	}
 
-	on(target, cb, options?) {
+	on(
+		target: string,
+		cb: (...args: any[]) => any,
+		options?: EventListenerOptions
+	) {
 		const onData = this.data.on && this.data.on[target];
 		this.dispatcher.addEventListener(
 			`on.${target}`,
-			event => cb(event.detail() || onData),
+			(event: CustomEvent) => cb(event.detail() || onData),
 			options
 		);
 	}
 
-	dispatch(target, ...args) {
+	dispatch(target: string, ...args: any[]) {
 		const lastArg = args[args.length - 1];
 		const _args = args.slice(0, -1);
 		const dispatchData = () =>
@@ -67,24 +71,25 @@ export default class SocketHandlerMock {
 			else if (!this.executeDispatch)
 				this.dispatcher.addEventListener(
 					`dispatch.${target}`,
-					event => lastArg(event.detail(..._args) || dispatchData()),
+					(event: CustomEvent) =>
+						lastArg(event.detail(..._args) || dispatchData()),
 					false
 				);
 		} else if (typeof lastArg === "object") {
 			if (this.executeDispatch) {
 				if (progressData())
-					progressData().forEach(data => {
+					progressData().forEach((data: any) => {
 						lastArg.onProgress(data);
 					});
 				if (dispatchData()) lastArg.cb(dispatchData());
 			} else {
 				this.dispatcher.addEventListener(
 					`progress.${target}`,
-					event => {
+					(event: CustomEvent) => {
 						if (event.detail(..._args))
 							lastArg.onProgress(event.detail(..._args));
 						else if (progressData())
-							progressData().forEach(data => {
+							progressData().forEach((data: any) => {
 								lastArg.onProgress(data);
 							});
 					},
@@ -92,7 +97,7 @@ export default class SocketHandlerMock {
 				);
 				this.dispatcher.addEventListener(
 					`dispatch.${target}`,
-					event =>
+					(event: CustomEvent) =>
 						lastArg.cb(event.detail(..._args) || dispatchData()),
 					false
 				);
@@ -101,19 +106,19 @@ export default class SocketHandlerMock {
 	}
 
 	// eslint-disable-next-line class-methods-use-this
-	onConnect(cb) {
+	onConnect(cb: (...args: any[]) => any) {
 		cb();
 	}
 
-	onDisconnect(...args) {
-		if (args[0] === true) this.onDisconnectCbs.persist.push(args[1]);
-		else this.onDisconnectCbs.temp.push(args[0]);
+	onDisconnect(cb: (...args: any[]) => any, persist = false) {
+		if (persist) this.onDisconnectCbs.persist.push(cb);
+		else this.onDisconnectCbs.temp.push(cb);
 
 		this.dispatcher.addEventListener(
 			"socket.disconnect",
 			() => {
-				this.onDisconnectCbs.temp.forEach(cb => cb());
-				this.onDisconnectCbs.persist.forEach(cb => cb());
+				this.onDisconnectCbs.temp.forEach(callback => callback());
+				this.onDisconnectCbs.persist.forEach(callback => callback());
 			},
 			false
 		);
@@ -126,10 +131,10 @@ export default class SocketHandlerMock {
 	// eslint-disable-next-line class-methods-use-this
 	destroyModalListeners() {}
 
-	trigger(type, target, data?) {
+	trigger(type: string, target: string, data?: any) {
 		this.dispatcher.dispatchEvent(
 			new CustomEvent(`${type}.${target}`, {
-				detail: (...args) => {
+				detail: (...args: any[]) => {
 					if (typeof data === "function") return data(...args);
 					if (typeof data === "undefined") return undefined;
 					return JSON.parse(JSON.stringify(data));

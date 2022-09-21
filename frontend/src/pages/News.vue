@@ -20,14 +20,6 @@ const { socket } = useWebsocketsStore();
 
 const news = ref([]);
 
-const init = () => {
-	socket.dispatch("news.getPublished", res => {
-		if (res.status === "success") news.value = res.data.news;
-	});
-
-	socket.dispatch("apis.joinRoom", "news");
-};
-
 const { sanitize } = DOMPurify;
 
 onMounted(() => {
@@ -42,30 +34,40 @@ onMounted(() => {
 		}
 	});
 
-	socket.on("event:news.created", res => news.value.unshift(res.data.news));
+	socket.onConnect(() => {
+		socket.dispatch("news.getPublished", res => {
+			if (res.status === "success") news.value = res.data.news;
+		});
 
-	socket.on("event:news.updated", res => {
-		if (res.data.news.status === "draft") {
+		socket.dispatch("apis.joinRoom", "news");
+
+		socket.on("event:news.created", res =>
+			news.value.unshift(res.data.news)
+		);
+
+		socket.on("event:news.updated", res => {
+			if (res.data.news.status === "draft") {
+				news.value = news.value.filter(
+					item => item._id !== res.data.news._id
+				);
+				return;
+			}
+
+			for (let n = 0; n < news.value.length; n += 1) {
+				if (news.value[n]._id === res.data.news._id)
+					news.value[n] = {
+						...news.value[n],
+						...res.data.news
+					};
+			}
+		});
+
+		socket.on("event:news.deleted", res => {
 			news.value = news.value.filter(
-				item => item._id !== res.data.news._id
+				item => item._id !== res.data.newsId
 			);
-			return;
-		}
-
-		for (let n = 0; n < news.value.length; n += 1) {
-			if (news.value[n]._id === res.data.news._id)
-				news.value[n] = {
-					...news.value[n],
-					...res.data.news
-				};
-		}
+		});
 	});
-
-	socket.on("event:news.deleted", res => {
-		news.value = news.value.filter(item => item._id !== res.data.newsId);
-	});
-
-	socket.onConnect(init);
 });
 </script>
 

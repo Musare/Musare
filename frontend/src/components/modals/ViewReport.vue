@@ -53,57 +53,6 @@ const icons = ref({
 const report = ref(<Report>{});
 const song = ref();
 
-const init = () => {
-	socket.dispatch("reports.findOne", reportId.value, res => {
-		if (res.status === "success") {
-			report.value = res.data.report;
-
-			socket.dispatch("apis.joinRoom", `view-report.${reportId.value}`);
-
-			socket.dispatch(
-				"songs.getSongFromSongId",
-				report.value.song._id,
-				res => {
-					if (res.status === "success") song.value = res.data.song;
-					else {
-						new Toast("Cannot find the report's associated song");
-						closeCurrentModal();
-					}
-				}
-			);
-
-			socket.on(
-				"event:admin.report.resolved",
-				res => {
-					report.value.resolved = res.data.resolved;
-				},
-				{ modalUuid: props.modalUuid }
-			);
-
-			socket.on("event:admin.report.removed", () => closeCurrentModal(), {
-				modalUuid: props.modalUuid
-			});
-
-			socket.on(
-				"event:admin.report.issue.toggled",
-				res => {
-					if (reportId.value === res.data.reportId) {
-						const issue = report.value.issues.find(
-							issue => issue._id.toString() === res.data.issueId
-						);
-
-						issue.resolved = res.data.resolved;
-					}
-				},
-				{ modalUuid: props.modalUuid }
-			);
-		} else {
-			new Toast("Report with that ID not found");
-			closeCurrentModal();
-		}
-	});
-};
-
 const resolve = value =>
 	resolveReport({ reportId: reportId.value, value })
 		.then((res: any) => {
@@ -139,7 +88,67 @@ watch(
 );
 
 onMounted(() => {
-	socket.onConnect(init);
+	socket.onConnect(() => {
+		socket.dispatch("reports.findOne", reportId.value, res => {
+			if (res.status === "success") {
+				report.value = res.data.report;
+
+				socket.dispatch(
+					"apis.joinRoom",
+					`view-report.${reportId.value}`
+				);
+
+				socket.dispatch(
+					"songs.getSongFromSongId",
+					report.value.song._id,
+					res => {
+						if (res.status === "success")
+							song.value = res.data.song;
+						else {
+							new Toast(
+								"Cannot find the report's associated song"
+							);
+							closeCurrentModal();
+						}
+					}
+				);
+
+				socket.on(
+					"event:admin.report.resolved",
+					res => {
+						report.value.resolved = res.data.resolved;
+					},
+					{ modalUuid: props.modalUuid }
+				);
+
+				socket.on(
+					"event:admin.report.removed",
+					() => closeCurrentModal(),
+					{
+						modalUuid: props.modalUuid
+					}
+				);
+
+				socket.on(
+					"event:admin.report.issue.toggled",
+					res => {
+						if (reportId.value === res.data.reportId) {
+							const issue = report.value.issues.find(
+								issue =>
+									issue._id.toString() === res.data.issueId
+							);
+
+							issue.resolved = res.data.resolved;
+						}
+					},
+					{ modalUuid: props.modalUuid }
+				);
+			} else {
+				new Toast("Report with that ID not found");
+				closeCurrentModal();
+			}
+		});
+	});
 });
 
 onBeforeUnmount(() => {

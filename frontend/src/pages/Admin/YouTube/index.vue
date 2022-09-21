@@ -143,36 +143,6 @@ const jobs = ref([
 
 const { openModal } = useModalsStore();
 
-const init = () => {
-	if (route.query.fromDate) fromDate.value = route.query.fromDate;
-
-	socket.dispatch("youtube.getQuotaStatus", fromDate.value, res => {
-		if (res.status === "success") quotaStatus.value = res.data.status;
-	});
-
-	socket.dispatch(
-		"youtube.getQuotaChartData",
-		"days",
-		new Date().setDate(new Date().getDate() - 6),
-		new Date().setDate(new Date().getDate() + 1),
-		"usage",
-		res => {
-			if (res.status === "success") charts.value.quotaUsage = res.data;
-		}
-	);
-
-	socket.dispatch(
-		"youtube.getQuotaChartData",
-		"days",
-		new Date().setDate(new Date().getDate() - 6),
-		new Date().setDate(new Date().getDate() + 1),
-		"count",
-		res => {
-			if (res.status === "success") charts.value.apiRequests = res.data;
-		}
-	);
-};
-
 const getDateFormatted = createdAt => {
 	const date = new Date(createdAt);
 	const year = date.getFullYear();
@@ -192,7 +162,37 @@ const removeApiRequest = requestId => {
 };
 
 onMounted(() => {
-	socket.onConnect(init);
+	socket.onConnect(() => {
+		if (route.query.fromDate) fromDate.value = route.query.fromDate;
+
+		socket.dispatch("youtube.getQuotaStatus", fromDate.value, res => {
+			if (res.status === "success") quotaStatus.value = res.data.status;
+		});
+
+		socket.dispatch(
+			"youtube.getQuotaChartData",
+			"days",
+			new Date().setDate(new Date().getDate() - 6),
+			new Date().setDate(new Date().getDate() + 1),
+			"usage",
+			res => {
+				if (res.status === "success")
+					charts.value.quotaUsage = res.data;
+			}
+		);
+
+		socket.dispatch(
+			"youtube.getQuotaChartData",
+			"days",
+			new Date().setDate(new Date().getDate() - 6),
+			new Date().setDate(new Date().getDate() + 1),
+			"count",
+			res => {
+				if (res.status === "success")
+					charts.value.apiRequests = res.data;
+			}
+		);
+	});
 });
 </script>
 

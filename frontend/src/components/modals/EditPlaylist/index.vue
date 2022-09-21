@@ -79,16 +79,6 @@ const isEditable = permission =>
 		permission === "playlists.update.privacy" &&
 		hasPermission(permission));
 
-const init = () => {
-	gettingSongs.value = true;
-	socket.dispatch("playlists.getPlaylist", playlistId.value, res => {
-		if (res.status === "success") {
-			setPlaylist(res.data.playlist);
-		} else new Toast(res.message);
-		gettingSongs.value = false;
-	});
-};
-
 const repositionSong = ({ moved }) => {
 	const { oldIndex, newIndex } = moved;
 	if (oldIndex === newIndex) return; // we only need to update when song is moved
@@ -256,54 +246,62 @@ const clearAndRefillGenrePlaylist = () => {
 };
 
 onMounted(() => {
-	socket.onConnect(init);
+	socket.onConnect(() => {
+		gettingSongs.value = true;
+		socket.dispatch("playlists.getPlaylist", playlistId.value, res => {
+			if (res.status === "success") {
+				setPlaylist(res.data.playlist);
+			} else new Toast(res.message);
+			gettingSongs.value = false;
+		});
 
-	socket.on(
-		"event:playlist.song.added",
-		res => {
-			if (playlist.value._id === res.data.playlistId)
-				addSong(res.data.song);
-		},
-		{ modalUuid: props.modalUuid }
-	);
+		socket.on(
+			"event:playlist.song.added",
+			res => {
+				if (playlist.value._id === res.data.playlistId)
+					addSong(res.data.song);
+			},
+			{ modalUuid: props.modalUuid }
+		);
 
-	socket.on(
-		"event:playlist.song.removed",
-		res => {
-			if (playlist.value._id === res.data.playlistId) {
-				// remove song from array of playlists
-				removeSong(res.data.youtubeId);
-			}
-		},
-		{ modalUuid: props.modalUuid }
-	);
-
-	socket.on(
-		"event:playlist.displayName.updated",
-		res => {
-			if (playlist.value._id === res.data.playlistId) {
-				setPlaylist({
-					displayName: res.data.displayName,
-					...playlist.value
-				});
-			}
-		},
-		{ modalUuid: props.modalUuid }
-	);
-
-	socket.on(
-		"event:playlist.song.repositioned",
-		res => {
-			if (playlist.value._id === res.data.playlistId) {
-				const { song, playlistId } = res.data;
-
-				if (playlist.value._id === playlistId) {
-					repositionedSong(song);
+		socket.on(
+			"event:playlist.song.removed",
+			res => {
+				if (playlist.value._id === res.data.playlistId) {
+					// remove song from array of playlists
+					removeSong(res.data.youtubeId);
 				}
-			}
-		},
-		{ modalUuid: props.modalUuid }
-	);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:playlist.displayName.updated",
+			res => {
+				if (playlist.value._id === res.data.playlistId) {
+					setPlaylist({
+						displayName: res.data.displayName,
+						...playlist.value
+					});
+				}
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:playlist.song.repositioned",
+			res => {
+				if (playlist.value._id === res.data.playlistId) {
+					const { song, playlistId } = res.data;
+
+					if (playlist.value._id === playlistId) {
+						repositionedSong(song);
+					}
+				}
+			},
+			{ modalUuid: props.modalUuid }
+		);
+	});
 });
 
 onBeforeUnmount(() => {

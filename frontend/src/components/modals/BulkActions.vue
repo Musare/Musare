@@ -30,18 +30,6 @@ const items = ref([]);
 const itemInput = ref();
 const allItems = ref([]);
 
-const init = () => {
-	if (type.value.autosuggest && type.value.autosuggestDataAction)
-		socket.dispatch(type.value.autosuggestDataAction, res => {
-			if (res.status === "success") {
-				const { items } = res.data;
-				allItems.value = items;
-			} else {
-				new Toast(res.message);
-			}
-		});
-};
-
 const addItem = () => {
 	if (!itemInput.value) return;
 	if (type.value.regex && !type.value.regex.test(itemInput.value)) {
@@ -95,7 +83,17 @@ onBeforeUnmount(() => {
 });
 
 onMounted(() => {
-	socket.onConnect(init);
+	socket.onConnect(() => {
+		if (type.value.autosuggest && type.value.autosuggestDataAction)
+			socket.dispatch(type.value.autosuggestDataAction, res => {
+				if (res.status === "success") {
+					const { items } = res.data;
+					allItems.value = items;
+				} else {
+					new Toast(res.message);
+				}
+			});
+	});
 });
 </script>
 
