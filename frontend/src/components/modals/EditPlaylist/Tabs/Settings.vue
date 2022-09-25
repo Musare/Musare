@@ -119,9 +119,9 @@ const {
 
 watch(playlist, (value, oldValue) => {
 	if (value.displayName !== oldValue.displayName)
-		setDisplayName("displayName", value.displayName);
+		setDisplayName({ displayName: value.displayName });
 	if (value.privacy !== oldValue.privacy)
-		setPrivacy("privacy", value.privacy);
+		setPrivacy({ privacy: value.privacy });
 });
 
 onMounted(() => {

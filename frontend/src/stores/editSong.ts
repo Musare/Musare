@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { ComputedRef, Ref } from "vue";
 import { Song } from "@/types/song";
 import { Report } from "@/types/report";
 
@@ -15,14 +16,33 @@ export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 			},
 			youtubeId: null,
 			song: <Song>{},
-			originalSong: <Song>{},
 			reports: <Report[]>[],
 			tab: "discogs",
 			newSong: false,
 			prefillData: {},
 			bulk: false,
 			youtubeIds: [],
-			songPrefillData: {}
+			songPrefillData: {},
+			form: <
+				{
+					inputs: Ref<{
+						[key: string]:
+							| {
+									value: any;
+									originalValue: any;
+									validate?: (value: any) => boolean | string;
+									errors: string[];
+									ref: Ref;
+									sourceChanged: boolean;
+							  }
+							| any;
+					}>;
+					unsavedChanges: ComputedRef<string[]>;
+					save: (saveCb?: () => void) => void;
+					setValue: (value: { [key: string]: any }) => void;
+					setOriginalValue: (value: { [key: string]: any }) => void;
+				}
+			>{}
 		}),
 		actions: {
 			init({ song, songs }) {
@@ -45,25 +65,30 @@ export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 				this.youtubeId = song.youtubeId || null;
 				this.prefillData = song.prefill ? song.prefill : {};
 			},
-			setSong(song) {
+			setSong(song, reset?: boolean) {
 				if (song.discogs === undefined) song.discogs = null;
-				this.originalSong = JSON.parse(JSON.stringify(song));
 				this.song = JSON.parse(JSON.stringify(song));
 				this.newSong = !song._id;
 				this.youtubeId = song.youtubeId;
-			},
-			updateOriginalSong(song) {
-				this.originalSong = JSON.parse(JSON.stringify(song));
+				const formSong = {
+					title: song.title,
+					duration: song.duration,
+					skipDuration: song.skipDuration,
+					thumbnail: song.thumbnail,
+					youtubeId: song.youtubeId,
+					verified: song.verified,
+					artists: song.artists,
+					genres: song.genres,
+					tags: song.tags
+				};
+				if (reset && this.form.setValue) this.form.setValue(formSong);
+				else if (!reset && this.form.setOriginalValue)
+					this.form.setOriginalValue(formSong);
 			},
 			resetSong(youtubeId) {
 				if (this.youtubeId === youtubeId) this.youtubeId = "";
 				if (this.song && this.song.youtubeId === youtubeId)
 					this.song = {};
-				if (
-					this.originalSong &&
-					this.originalSong.youtubeId === youtubeId
-				)
-					this.originalSong = {};
 			},
 			stopVideo() {
 				if (this.video.player && this.video.player.pauseVideo) {

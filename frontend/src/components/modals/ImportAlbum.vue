@@ -36,7 +36,7 @@ const {
 	updatePlaylistSong
 } = importAlbumStore;
 
-const { openModal } = useModalsStore();
+const { openModal, preventCloseCbs } = useModalsStore();
 
 const isImportingPlaylist = ref(false);
 const trackSongs = ref([]);
@@ -327,6 +327,32 @@ const updateTrackSong = updatedSong => {
 };
 
 onMounted(() => {
+	preventCloseCbs[props.modalUuid] = (): Promise<void> =>
+		new Promise(resolve => {
+			const confirmReasons = [];
+
+			let unverifiedSongs = 0;
+			trackSongs.value.forEach(songs => {
+				songs.forEach(song => {
+					if (!song.verified) unverifiedSongs += 1;
+				});
+			});
+			if (unverifiedSongs > 0)
+				confirmReasons.push(
+					`There are still ${unverifiedSongs} unverified songs. Are you sure you want to close Import Album?`
+				);
+
+			if (confirmReasons.length > 0)
+				openModal({
+					modal: "confirm",
+					data: {
+						message: confirmReasons,
+						onCompleted: resolve
+					}
+				});
+			else resolve();
+		});
+
 	socket.onConnect(() => {
 		socket.dispatch("apis.joinRoom", "import-album");
 
@@ -337,6 +363,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+	delete preventCloseCbs[props.modalUuid];
 	selectDiscogsAlbum({});
 	setPlaylistSongs([]);
 	showDiscogsTab("search");

@@ -126,27 +126,20 @@ const { inputs, save, setOriginalValue } = useForm(
 	}
 );
 
-watch(station, (value, oldValue) => {
-	if (value.name !== oldValue.name) setOriginalValue("name", value.name);
-	if (value.displayName !== oldValue.displayName)
-		setOriginalValue("displayName", value.displayName);
-	if (value.description !== oldValue.description)
-		setOriginalValue("description", value.description);
-	if (value.theme !== oldValue.theme) setOriginalValue("theme", value.theme);
-	if (value.privacy !== oldValue.privacy)
-		setOriginalValue("privacy", value.privacy);
-	if (value.requests.enabled !== oldValue.requests.enabled)
-		setOriginalValue("requestsEnabled", value.requests.enabled);
-	if (value.requests.access !== oldValue.requests.access)
-		setOriginalValue("requestsAccess", value.requests.access);
-	if (value.requests.limit !== oldValue.requests.limit)
-		setOriginalValue("requestsLimit", value.requests.limit);
-	if (value.autofill.enabled !== oldValue.autofill.enabled)
-		setOriginalValue("autofillEnabled", value.autofill.enabled);
-	if (value.autofill.limit !== oldValue.autofill.limit)
-		setOriginalValue("autofillLimit", value.autofill.limit);
-	if (value.autofill.mode !== oldValue.autofill.mode)
-		setOriginalValue("autofillMode", value.autofill.mode);
+watch(station, value => {
+	setOriginalValue({
+		name: value.name,
+		displayName: value.displayName,
+		description: value.description,
+		theme: value.theme,
+		privacy: value.privacy,
+		requestsEnabled: value.requests.enabled,
+		requestsAccess: value.requests.access,
+		requestsLimit: value.requests.limit,
+		autofillEnabled: value.autofill.enabled,
+		autofillLimit: value.autofill.limit,
+		autofillMode: value.autofill.mode
+	});
 });
 </script>
 

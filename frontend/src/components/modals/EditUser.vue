@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import {
-	defineAsyncComponent,
-	ref,
-	watch,
-	onMounted,
-	onBeforeUnmount
-} from "vue";
+import { defineAsyncComponent, watch, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import validation from "@/validation";
@@ -13,6 +7,7 @@ import { useEditUserStore } from "@/stores/editUser";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useUserAuthStore } from "@/stores/userAuth";
+import { useForm } from "@/composables/useForm";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const QuickConfirm = defineAsyncComponent(
@@ -30,106 +25,186 @@ const { socket } = useWebsocketsStore();
 const { userId, user } = storeToRefs(editUserStore);
 const { setUser } = editUserStore;
 
-const { closeCurrentModal } = useModalsStore();
+const { closeCurrentModal, preventCloseUnsaved } = useModalsStore();
 
 const { hasPermission } = useUserAuthStore();
 
-const ban = ref({ reason: "", expiresAt: "1h" });
-
-const init = () => {
-	if (userId.value)
-		socket.dispatch(`users.getUserFromId`, userId.value, res => {
-			if (res.status === "success") {
-				setUser(res.data);
-
-				socket.dispatch("apis.joinRoom", `edit-user.${userId.value}`);
-
-				socket.on(
-					"event:user.removed",
-					res => {
-						if (res.data.userId === userId.value)
-							closeCurrentModal();
-					},
-					{ modalUuid: props.modalUuid }
-				);
-			} else {
-				new Toast("User with that ID not found");
-				closeCurrentModal();
+const {
+	inputs: usernameInputs,
+	unsavedChanges: usernameUnsaved,
+	save: saveUsername,
+	setOriginalValue: setUsername
+} = useForm(
+	{
+		username: {
+			value: user.value.username,
+			validate: value => {
+				if (!validation.isLength(value, 2, 32)) {
+					const err =
+						"Username must have between 2 and 32 characters.";
+					new Toast(err);
+					return err;
+				}
+				if (!validation.regex.custom("a-zA-Z0-9_-").test(value)) {
+					const err =
+						"Invalid username format. Allowed characters: a-z, A-Z, 0-9, _ and -.";
+					new Toast(err);
+					return err;
+				}
+				return true;
 			}
-		});
-};
-
-const updateUsername = () => {
-	const { username } = user.value;
-
-	if (!validation.isLength(username, 2, 32))
-		return new Toast("Username must have between 2 and 32 characters.");
-
-	if (!validation.regex.custom("a-zA-Z0-9_-").test(username))
-		return new Toast(
-			"Invalid username format. Allowed characters: a-z, A-Z, 0-9, _ and -."
-		);
-
-	return socket.dispatch(
-		`users.updateUsername`,
-		user.value._id,
-		username,
-		res => {
-			new Toast(res.message);
 		}
-	);
-};
+	},
+	(status, message, values) =>
+		new Promise((resolve, reject) => {
+			if (status === "success")
+				socket.dispatch(
+					"users.updateUsername",
+					user.value._id,
+					values.username,
+					res => {
+						user.value.username = values.username;
+						if (res.status === "success") {
+							resolve();
+							new Toast(res.message);
+						} else reject(new Error(res.message));
+					}
+				);
+			else new Toast(message);
+		}),
+	{
+		modalUuid: props.modalUuid,
+		preventCloseUnsaved: false
+	}
+);
 
-const updateEmail = () => {
-	const email = user.value.email.address;
-
-	if (!validation.isLength(email, 3, 254))
-		return new Toast("Email must have between 3 and 254 characters.");
-
-	if (
-		email.indexOf("@") !== email.lastIndexOf("@") ||
-		!validation.regex.emailSimple.test(email) ||
-		!validation.regex.ascii.test(email)
-	)
-		return new Toast("Invalid email format.");
-
-	return socket.dispatch(`users.updateEmail`, user.value._id, email, res => {
-		new Toast(res.message);
-	});
-};
-
-const updateRole = () => {
-	socket.dispatch(
-		`users.updateRole`,
-		user.value._id,
-		user.value.role,
-		res => {
-			new Toast(res.message);
+const {
+	inputs: emailInputs,
+	unsavedChanges: emailUnsaved,
+	save: saveEmail,
+	setOriginalValue: setEmail
+} = useForm(
+	{
+		email: {
+			value: "",
+			validate: value => {
+				if (!validation.isLength(value, 3, 254)) {
+					const err = "Email must have between 3 and 254 characters.";
+					new Toast(err);
+					return err;
+				}
+				if (
+					value.indexOf("@") !== value.lastIndexOf("@") ||
+					!validation.regex.emailSimple.test(value) ||
+					!validation.regex.ascii.test(value)
+				) {
+					const err = "Invalid email format.";
+					new Toast(err);
+					return err;
+				}
+				return true;
+			}
 		}
-	);
-};
+	},
+	(status, message, values) =>
+		new Promise((resolve, reject) => {
+			if (status === "success")
+				socket.dispatch(
+					"users.updateEmail",
+					user.value._id,
+					values.email,
+					res => {
+						user.value.email.address = values.email;
+						if (res.status === "success") {
+							resolve();
+							new Toast(res.message);
+						} else reject(new Error(res.message));
+					}
+				);
+			else new Toast(message);
+		}),
+	{
+		modalUuid: props.modalUuid,
+		preventCloseUnsaved: false
+	}
+);
 
-const banUser = () => {
-	const { reason } = ban.value;
+const {
+	inputs: roleInputs,
+	unsavedChanges: roleUnsaved,
+	save: saveRole,
+	setOriginalValue: setRole
+} = useForm(
+	{ role: user.value.role },
+	(status, message, values) =>
+		new Promise((resolve, reject) => {
+			if (status === "success")
+				socket.dispatch(
+					"users.updateRole",
+					user.value._id,
+					values.role,
+					res => {
+						user.value.role = values.role;
+						if (res.status === "success") {
+							resolve();
+							new Toast(res.message);
+						} else reject(new Error(res.message));
+					}
+				);
+			else new Toast(message);
+		}),
+	{
+		modalUuid: props.modalUuid,
+		preventCloseUnsaved: false
+	}
+);
 
-	if (!validation.isLength(reason, 1, 64))
-		return new Toast("Reason must have between 1 and 64 characters.");
-
-	if (!validation.regex.ascii.test(reason))
-		return new Toast(
-			"Invalid reason format. Only ascii characters are allowed."
-		);
-
-	return socket.dispatch(
-		`users.banUserById`,
-		user.value._id,
-		ban.value.reason,
-		ban.value.expiresAt,
-		res => {
-			new Toast(res.message);
-		}
-	);
-};
+const {
+	inputs: banInputs,
+	unsavedChanges: banUnsaved,
+	save: saveBan
+} = useForm(
+	{
+		reason: {
+			value: "",
+			validate: value => {
+				if (!validation.isLength(value, 1, 64)) {
+					const err = "Reason must have between 1 and 64 characters.";
+					new Toast(err);
+					return err;
+				}
+				if (!validation.regex.ascii.test(value)) {
+					const err =
+						"Invalid reason format. Only ascii characters are allowed.";
+					new Toast(err);
+					return err;
+				}
+				return true;
+			}
+		},
+		expiresAt: "1h"
+	},
+	(status, message, values) =>
+		new Promise((resolve, reject) => {
+			if (status === "success")
+				socket.dispatch(
+					"users.banUserById",
+					user.value._id,
+					values.reason,
+					values.expiresAt,
+					res => {
+						new Toast(res.message);
+						if (res.status === "success") resolve();
+						else reject(new Error(res.message));
+					}
+				);
+			else if (status === "unchanged") new Toast(message);
+		}),
+	{
+		modalUuid: props.modalUuid,
+		preventCloseUnsaved: false
+	}
+);
 
 const resendVerificationEmail = () => {
 	socket.dispatch(`users.resendVerifyEmail`, user.value._id, res => {
@@ -155,20 +230,57 @@ const removeSessions = () => {
 	});
 };
 
-// When the userId changes, run init. There can be a delay between the modal opening and the required data (userId) being available
-watch(userId, () => init());
 watch(
 	() => hasPermission("users.get") && hasPermission("users.update"),
 	value => {
 		if (!value) closeCurrentModal();
 	}
 );
+watch(user, (value, oldValue) => {
+	if (value.username !== oldValue.username)
+		setUsername({ username: value.username });
+	if (
+		value.email &&
+		(value.email.address !== (oldValue.email && oldValue.email.address) ||
+			!emailInputs.value.email.value)
+	)
+		setEmail({ email: value.email.address });
+	if (value.role !== oldValue.role) setRole({ role: value.role });
+});
 
 onMounted(() => {
-	socket.onConnect(init);
+	preventCloseUnsaved[props.modalUuid] = () =>
+		usernameUnsaved.value.length +
+			emailUnsaved.value.length +
+			roleUnsaved.value.length +
+			banUnsaved.value.length >
+		0;
+
+	socket.onConnect(() => {
+		socket.dispatch(`users.getUserFromId`, userId.value, res => {
+			if (res.status === "success") {
+				setUser(res.data);
+
+				socket.dispatch("apis.joinRoom", `edit-user.${userId.value}`);
+
+				socket.on(
+					"event:user.removed",
+					res => {
+						if (res.data.userId === userId.value)
+							closeCurrentModal();
+					},
+					{ modalUuid: props.modalUuid }
+				);
+			} else {
+				new Toast("User with that ID not found");
+				closeCurrentModal();
+			}
+		});
+	});
 });
 
 onBeforeUnmount(() => {
+	delete preventCloseUnsaved[props.modalUuid];
 	socket.dispatch("apis.leaveRoom", `edit-user.${userId.value}`, () => {});
 	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
 	editUserStore.$dispose();
@@ -184,7 +296,7 @@ onBeforeUnmount(() => {
 					<p class="control is-grouped">
 						<span class="control is-expanded">
 							<input
-								v-model="user.username"
+								v-model="usernameInputs['username'].value"
 								class="input"
 								type="text"
 								placeholder="Username"
@@ -195,7 +307,7 @@ onBeforeUnmount(() => {
 							v-if="hasPermission('users.update')"
 							class="control"
 						>
-							<a class="button is-info" @click="updateUsername()"
+							<a class="button is-info" @click="saveUsername()"
 								>Update Username</a
 							>
 						</span>
@@ -205,7 +317,7 @@ onBeforeUnmount(() => {
 					<p class="control is-grouped">
 						<span class="control is-expanded">
 							<input
-								v-model="user.email.address"
+								v-model="emailInputs['email'].value"
 								class="input"
 								type="text"
 								placeholder="Email Address"
@@ -219,7 +331,7 @@ onBeforeUnmount(() => {
 							v-if="hasPermission('users.update.restricted')"
 							class="control"
 						>
-							<a class="button is-info" @click="updateEmail()"
+							<a class="button is-info" @click="saveEmail()"
 								>Update Email Address</a
 							>
 						</span>
@@ -229,7 +341,7 @@ onBeforeUnmount(() => {
 					<div class="control is-grouped">
 						<div class="control is-expanded select">
 							<select
-								v-model="user.role"
+								v-model="roleInputs['role'].value"
 								:disabled="
 									!hasPermission('users.update.restricted')
 								"
@@ -243,7 +355,7 @@ onBeforeUnmount(() => {
 							v-if="hasPermission('users.update.restricted')"
 							class="control"
 						>
-							<a class="button is-info" @click="updateRole()"
+							<a class="button is-info" @click="saveRole()"
 								>Update Role</a
 							>
 						</p>
@@ -254,7 +366,7 @@ onBeforeUnmount(() => {
 					<label class="label"> Punish/Ban User </label>
 					<p class="control is-grouped">
 						<span class="control select">
-							<select v-model="ban.expiresAt">
+							<select v-model="banInputs['expiresAt'].value">
 								<option value="1h">1 Hour</option>
 								<option value="12h">12 Hours</option>
 								<option value="1d">1 Day</option>
@@ -267,7 +379,7 @@ onBeforeUnmount(() => {
 						</span>
 						<span class="control is-expanded">
 							<input
-								v-model="ban.reason"
+								v-model="banInputs['reason'].value"
 								class="input"
 								type="text"
 								placeholder="Ban reason"
@@ -275,7 +387,7 @@ onBeforeUnmount(() => {
 							/>
 						</span>
 						<span class="control">
-							<a class="button is-danger" @click="banUser()">
+							<a class="button is-danger" @click="saveBan()">
 								Ban user
 							</a>
 						</span>

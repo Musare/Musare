@@ -120,12 +120,11 @@ onMounted(() => {
 		if (newsId.value && !createNews.value) {
 			socket.dispatch(`news.getNewsFromId`, newsId.value, res => {
 				if (res.status === "success") {
-					setOriginalValue("markdown", res.data.news.markdown);
-					setOriginalValue("status", res.data.news.status);
-					setOriginalValue(
-						"showToNewUsers",
-						res.data.news.showToNewUsers
-					);
+					setOriginalValue({
+						markdown: res.data.news.markdown,
+						status: res.data.news.status,
+						showToNewUsers: res.data.news.showToNewUsers
+					});
 					createdBy.value = res.data.news.createdBy;
 					createdAt.value = res.data.news.createdAt;
 				} else {

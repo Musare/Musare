@@ -271,7 +271,7 @@ onMounted(async () => {
 	if (localStorage.getItem("nightmode") === "true") {
 		changeNightmode(true);
 		enableNightmode();
-	}
+	} else changeNightmode(false);
 
 	lofig.get("siteSettings.christmas").then((enabled: boolean) => {
 		if (enabled) {

@@ -131,16 +131,30 @@ export const useForm = (
 		}
 	};
 
-	const setOriginalValue = (input: string, value: any) => {
-		if (
-			JSON.stringify(value) !==
-			JSON.stringify(inputs.value[input].originalValue)
-		) {
-			if (unsavedChanges.value.find(change => change === input))
-				inputs.value[input].sourceChanged = true;
-			else inputs.value[input].value = value;
-			inputs.value[input].originalValue = value;
-		}
+	const setValue = (value: { [key: string]: any }) => {
+		Object.entries(value).forEach(([name, inputValue]) => {
+			if (inputs.value[name]) {
+				inputs.value[name].sourceChanged = false;
+				inputs.value[name].value = inputValue;
+				inputs.value[name].originalValue = inputValue;
+			}
+		});
+	};
+
+	const setOriginalValue = (value: { [key: string]: any }) => {
+		Object.entries(value).forEach(([name, inputValue]) => {
+			if (inputs.value[name]) {
+				if (
+					JSON.stringify(inputValue) !==
+					JSON.stringify(inputs.value[name].originalValue)
+				) {
+					if (unsavedChanges.value.find(change => change === name))
+						inputs.value[name].sourceChanged = true;
+					else inputs.value[name].value = inputValue;
+					inputs.value[name].originalValue = inputValue;
+				}
+			}
+		});
 	};
 
 	onMounted(() => {
@@ -166,6 +180,7 @@ export const useForm = (
 		inputs,
 		unsavedChanges,
 		save,
+		setValue,
 		setOriginalValue
 	};
 };
