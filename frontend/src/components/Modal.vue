@@ -6,23 +6,15 @@ const ChristmasLights = defineAsyncComponent(
 	() => import("@/components/ChristmasLights.vue")
 );
 
-const props = defineProps({
+defineProps({
 	title: { type: String, default: "Modal" },
 	size: { type: String, default: null },
-	split: { type: Boolean, default: false },
-	interceptClose: { type: Boolean, default: false }
+	split: { type: Boolean, default: false }
 });
-
-const emit = defineEmits(["close"]);
 
 const christmas = ref(false);
 
 const { closeCurrentModal } = useModalsStore();
-
-const closeCurrentModalClick = () => {
-	if (props.interceptClose) emit("close");
-	else closeCurrentModal();
-};
 
 onMounted(async () => {
 	christmas.value = await lofig.get("siteSettings.christmas");
@@ -31,7 +23,7 @@ onMounted(async () => {
 
 <template>
 	<div class="modal is-active">
-		<div class="modal-background" @click="closeCurrentModalClick()" />
+		<div class="modal-background" @click="closeCurrentModal()" />
 		<slot name="sidebar" />
 		<div
 			:class="{
@@ -46,9 +38,7 @@ onMounted(async () => {
 				<h2 class="modal-card-title is-marginless">
 					{{ title }}
 				</h2>
-				<span
-					class="delete material-icons"
-					@click="closeCurrentModalClick()"
+				<span class="delete material-icons" @click="closeCurrentModal()"
 					>highlight_off</span
 				>
 				<christmas-lights v-if="christmas" small :lights="5" />

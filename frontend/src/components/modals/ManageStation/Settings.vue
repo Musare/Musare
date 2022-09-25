@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted } from "vue";
+import { defineAsyncComponent, watch } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import validation from "@/validation";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useManageStationStore } from "@/stores/manageStation";
+import { useForm } from "@/composables/useForm";
 
 const InfoIcon = defineAsyncComponent(
 	() => import("@/components/InfoIcon.vue")
@@ -20,104 +21,132 @@ const manageStationStore = useManageStationStore(props);
 const { station } = storeToRefs(manageStationStore);
 const { editStation } = manageStationStore;
 
-const localStation = ref({
-	name: "",
-	displayName: "",
-	description: "",
-	theme: "blue",
-	privacy: "private",
-	requests: {
-		enabled: true,
-		access: "owner",
-		limit: 3
-	},
-	autofill: {
-		enabled: true,
-		limit: 30,
-		mode: "random"
-	}
-});
-
-const update = () => {
-	if (
-		JSON.stringify({
-			name: localStation.value.name,
-			displayName: localStation.value.displayName,
-			description: localStation.value.description,
-			theme: localStation.value.theme,
-			privacy: localStation.value.privacy,
-			requests: {
-				enabled: localStation.value.requests.enabled,
-				access: localStation.value.requests.access,
-				limit: localStation.value.requests.limit
-			},
-			autofill: {
-				enabled: localStation.value.autofill.enabled,
-				limit: localStation.value.autofill.limit,
-				mode: localStation.value.autofill.mode
-			}
-		}) !==
-		JSON.stringify({
-			name: station.value.name,
-			displayName: station.value.displayName,
-			description: station.value.description,
-			theme: station.value.theme,
-			privacy: station.value.privacy,
-			requests: {
-				enabled: station.value.requests.enabled,
-				access: station.value.requests.access,
-				limit: station.value.requests.limit
-			},
-			autofill: {
-				enabled: station.value.autofill.enabled,
-				limit: station.value.autofill.limit,
-				mode: station.value.autofill.mode
-			}
-		})
-	) {
-		const { name, displayName, description } = localStation.value;
-
-		if (!validation.isLength(name, 2, 16))
-			new Toast("Name must have between 2 and 16 characters.");
-		else if (!validation.regex.az09_.test(name))
-			new Toast(
-				"Invalid name format. Allowed characters: a-z, 0-9 and _."
-			);
-		else if (!validation.isLength(displayName, 2, 32))
-			new Toast("Display name must have between 2 and 32 characters.");
-		else if (!validation.regex.ascii.test(displayName))
-			new Toast(
-				"Invalid display name format. Only ASCII characters are allowed."
-			);
-		else if (!validation.isLength(description, 2, 200))
-			new Toast("Description must have between 2 and 200 characters.");
-		else if (
-			description
-				.split("")
-				.filter(character => character.charCodeAt(0) === 21328)
-				.length !== 0
-		)
-			new Toast("Invalid description format.");
-		else
-			socket.dispatch(
-				"stations.update",
-				station.value._id,
-				localStation.value,
-				res => {
-					new Toast(res.message);
-
-					if (res.status === "success") {
-						editStation(localStation.value);
-					}
+const { inputs, save, setOriginalValue } = useForm(
+	{
+		name: {
+			value: station.value.name,
+			validate: value => {
+				if (!validation.isLength(value, 2, 16)) {
+					const err = "Name must have between 2 and 16 characters.";
+					new Toast(err);
+					return err;
 				}
-			);
-	} else {
-		new Toast("Please make a change before saving.");
+				if (!validation.regex.az09_.test(value)) {
+					const err =
+						"Invalid name format. Allowed characters: a-z, 0-9 and _.";
+					new Toast(err);
+					return err;
+				}
+				return true;
+			}
+		},
+		displayName: {
+			value: station.value.displayName,
+			validate: value => {
+				if (!validation.isLength(value, 2, 32)) {
+					const err =
+						"Display name must have between 2 and 32 characters.";
+					new Toast(err);
+					return err;
+				}
+				if (!validation.regex.ascii.test(value)) {
+					const err =
+						"Invalid display name format. Only ASCII characters are allowed.";
+					new Toast(err);
+					return err;
+				}
+				return true;
+			}
+		},
+		description: {
+			value: station.value.description,
+			validate: value => {
+				if (
+					value
+						.split("")
+						.filter(character => character.charCodeAt(0) === 21328)
+						.length !== 0
+				) {
+					const err = "Invalid description format.";
+					new Toast(err);
+					return err;
+				}
+				return true;
+			}
+		},
+		theme: station.value.theme,
+		privacy: station.value.privacy,
+		requestsEnabled: station.value.requests.enabled,
+		requestsAccess: station.value.requests.access,
+		requestsLimit: station.value.requests.limit,
+		autofillEnabled: station.value.autofill.enabled,
+		autofillLimit: station.value.autofill.limit,
+		autofillMode: station.value.autofill.mode
+	},
+	(status, message, values) =>
+		new Promise((resolve, reject) => {
+			if (status === "success") {
+				const oldStation = JSON.parse(JSON.stringify(station.value));
+				const updatedStation = {
+					...oldStation,
+					name: values.name,
+					displayName: values.displayName,
+					description: values.description,
+					theme: values.theme,
+					privacy: values.privacy,
+					requests: {
+						...oldStation.requests,
+						enabled: values.requestsEnabled,
+						access: values.requestsAccess,
+						limit: values.requestsLimit
+					},
+					autofill: {
+						...oldStation.autofill,
+						enabled: values.autofillEnabled,
+						limit: values.autofillLimit,
+						mode: values.autofillMode
+					}
+				};
+				socket.dispatch(
+					"stations.update",
+					station.value._id,
+					updatedStation,
+					res => {
+						new Toast(res.message);
+						if (res.status === "success") {
+							editStation(updatedStation);
+							resolve();
+						} else reject(new Error(res.message));
+					}
+				);
+			} else new Toast(message);
+		}),
+	{
+		modalUuid: props.modalUuid
 	}
-};
+);
 
-onMounted(() => {
-	localStation.value = JSON.parse(JSON.stringify(station.value));
+watch(station, (value, oldValue) => {
+	if (value.name !== oldValue.name) setOriginalValue("name", value.name);
+	if (value.displayName !== oldValue.displayName)
+		setOriginalValue("displayName", value.displayName);
+	if (value.description !== oldValue.description)
+		setOriginalValue("description", value.description);
+	if (value.theme !== oldValue.theme) setOriginalValue("theme", value.theme);
+	if (value.privacy !== oldValue.privacy)
+		setOriginalValue("privacy", value.privacy);
+	if (value.requests.enabled !== oldValue.requests.enabled)
+		setOriginalValue("requestsEnabled", value.requests.enabled);
+	if (value.requests.access !== oldValue.requests.access)
+		setOriginalValue("requestsAccess", value.requests.access);
+	if (value.requests.limit !== oldValue.requests.limit)
+		setOriginalValue("requestsLimit", value.requests.limit);
+	if (value.autofill.enabled !== oldValue.autofill.enabled)
+		setOriginalValue("autofillEnabled", value.autofill.enabled);
+	if (value.autofill.limit !== oldValue.autofill.limit)
+		setOriginalValue("autofillLimit", value.autofill.limit);
+	if (value.autofill.mode !== oldValue.autofill.mode)
+		setOriginalValue("autofillMode", value.autofill.mode);
 });
 </script>
 
@@ -125,7 +154,7 @@ onMounted(() => {
 	<div class="station-settings">
 		<label class="label">Name</label>
 		<div class="control is-expanded">
-			<input class="input" type="text" v-model="localStation.name" />
+			<input class="input" type="text" v-model="inputs['name'].value" />
 		</div>
 
 		<label class="label">Display Name</label>
@@ -133,7 +162,7 @@ onMounted(() => {
 			<input
 				class="input"
 				type="text"
-				v-model="localStation.displayName"
+				v-model="inputs['displayName'].value"
 			/>
 		</div>
 
@@ -142,7 +171,7 @@ onMounted(() => {
 			<input
 				class="input"
 				type="text"
-				v-model="localStation.description"
+				v-model="inputs['description'].value"
 			/>
 		</div>
 
@@ -150,7 +179,7 @@ onMounted(() => {
 			<div class="small-section">
 				<label class="label">Theme</label>
 				<div class="control is-expanded select">
-					<select v-model="localStation.theme">
+					<select v-model="inputs['theme'].value">
 						<option value="blue" selected>Blue</option>
 						<option value="purple">Purple</option>
 						<option value="teal">Teal</option>
@@ -163,7 +192,7 @@ onMounted(() => {
 			<div class="small-section">
 				<label class="label">Privacy</label>
 				<div class="control is-expanded select">
-					<select v-model="localStation.privacy">
+					<select v-model="inputs['privacy'].value">
 						<option value="public">Public</option>
 						<option value="unlisted">Unlisted</option>
 						<option value="private" selected>Private</option>
@@ -172,9 +201,8 @@ onMounted(() => {
 			</div>
 
 			<div
-				v-if="localStation.requests"
 				class="requests-settings"
-				:class="{ enabled: localStation.requests.enabled }"
+				:class="{ enabled: inputs['requestsEnabled'].value }"
 			>
 				<div class="toggle-row">
 					<label class="label">
@@ -188,7 +216,7 @@ onMounted(() => {
 							<input
 								type="checkbox"
 								id="toggle-requests"
-								v-model="localStation.requests.enabled"
+								v-model="inputs['requestsEnabled'].value"
 							/>
 							<span class="slider round"></span>
 						</label>
@@ -196,7 +224,7 @@ onMounted(() => {
 						<label for="toggle-requests">
 							<p>
 								{{
-									localStation.requests.enabled
+									inputs["requestsEnabled"].value
 										? "Enabled"
 										: "Disabled"
 								}}
@@ -205,17 +233,23 @@ onMounted(() => {
 					</p>
 				</div>
 
-				<div v-if="localStation.requests.enabled" class="small-section">
+				<div
+					v-if="inputs['requestsEnabled'].value"
+					class="small-section"
+				>
 					<label class="label">Minimum access</label>
 					<div class="control is-expanded select">
-						<select v-model="localStation.requests.access">
+						<select v-model="inputs['requestsAccess'].value">
 							<option value="owner" selected>Owner</option>
 							<option value="user">User</option>
 						</select>
 					</div>
 				</div>
 
-				<div v-if="localStation.requests.enabled" class="small-section">
+				<div
+					v-if="inputs['requestsEnabled'].value"
+					class="small-section"
+				>
 					<label class="label">Per user request limit</label>
 					<div class="control is-expanded">
 						<input
@@ -223,16 +257,15 @@ onMounted(() => {
 							type="number"
 							min="1"
 							max="50"
-							v-model="localStation.requests.limit"
+							v-model="inputs['requestsLimit'].value"
 						/>
 					</div>
 				</div>
 			</div>
 
 			<div
-				v-if="localStation.autofill"
 				class="autofill-settings"
-				:class="{ enabled: localStation.autofill.enabled }"
+				:class="{ enabled: inputs['autofillEnabled'].value }"
 			>
 				<div class="toggle-row">
 					<label class="label">
@@ -246,7 +279,7 @@ onMounted(() => {
 							<input
 								type="checkbox"
 								id="toggle-autofill"
-								v-model="localStation.autofill.enabled"
+								v-model="inputs['autofillEnabled'].value"
 							/>
 							<span class="slider round"></span>
 						</label>
@@ -254,7 +287,7 @@ onMounted(() => {
 						<label for="toggle-autofill">
 							<p>
 								{{
-									localStation.autofill.enabled
+									inputs["autofillEnabled"].value
 										? "Enabled"
 										: "Disabled"
 								}}
@@ -263,7 +296,10 @@ onMounted(() => {
 					</p>
 				</div>
 
-				<div v-if="localStation.autofill.enabled" class="small-section">
+				<div
+					v-if="inputs['autofillEnabled'].value"
+					class="small-section"
+				>
 					<label class="label">Song limit</label>
 					<div class="control is-expanded">
 						<input
@@ -271,15 +307,18 @@ onMounted(() => {
 							type="number"
 							min="1"
 							max="50"
-							v-model="localStation.autofill.limit"
+							v-model="inputs['autofillLimit'].value"
 						/>
 					</div>
 				</div>
 
-				<div v-if="localStation.autofill.enabled" class="small-section">
+				<div
+					v-if="inputs['autofillEnabled'].value"
+					class="small-section"
+				>
 					<label class="label">Play mode</label>
 					<div class="control is-expanded select">
-						<select v-model="localStation.autofill.mode">
+						<select v-model="inputs['autofillMode'].value">
 							<option value="random" selected>Random</option>
 							<option value="sequential">Sequential</option>
 						</select>
@@ -288,7 +327,7 @@ onMounted(() => {
 			</div>
 		</div>
 
-		<button class="control is-expanded button is-primary" @click="update()">
+		<button class="control is-expanded button is-primary" @click="save()">
 			Save Changes
 		</button>
 	</div>

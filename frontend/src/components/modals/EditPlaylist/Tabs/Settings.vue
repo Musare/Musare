@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
+import { onBeforeUnmount, onMounted, watch } from "vue";
 import validation from "@/validation";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";
+import { useModalsStore } from "@/stores/modals";
+import { useForm } from "@/composables/useForm";
 
 const props = defineProps({
 	modalUuid: { type: String, default: "" }
@@ -19,6 +22,8 @@ const { socket } = useWebsocketsStore();
 const editPlaylistStore = useEditPlaylistStore(props);
 const { playlist } = storeToRefs(editPlaylistStore);
 
+const { preventCloseUnsaved } = useModalsStore();
+
 const isOwner = () =>
 	loggedIn.value && userId.value === playlist.value.createdBy;
 
@@ -31,40 +36,102 @@ const isEditable = permission =>
 		permission === "playlists.update.privacy" &&
 		hasPermission(permission));
 
-const renamePlaylist = () => {
-	const { displayName } = playlist.value;
-	if (!validation.isLength(displayName, 2, 32))
-		return new Toast("Display name must have between 2 and 32 characters.");
-	if (!validation.regex.ascii.test(displayName))
-		return new Toast(
-			"Invalid display name format. Only ASCII characters are allowed."
-		);
-
-	return socket.dispatch(
-		"playlists.updateDisplayName",
-		playlist.value._id,
-		playlist.value.displayName,
-		res => {
-			new Toast(res.message);
-		}
-	);
-};
-
-const updatePrivacy = () => {
-	const { privacy } = playlist.value;
-	if (privacy === "public" || privacy === "private") {
-		socket.dispatch(
-			playlist.value.type === "genre"
-				? "playlists.updatePrivacyAdmin"
-				: "playlists.updatePrivacy",
-			playlist.value._id,
-			privacy,
-			res => {
-				new Toast(res.message);
+const {
+	inputs: displayNameInputs,
+	unsavedChanges: displayNameUnsaved,
+	save: saveDisplayName,
+	setOriginalValue: setDisplayName
+} = useForm(
+	{
+		displayName: {
+			value: playlist.value.displayName,
+			validate: value => {
+				if (!validation.isLength(value, 2, 32)) {
+					const err =
+						"Display name must have between 2 and 32 characters.";
+					new Toast(err);
+					return err;
+				}
+				if (!validation.regex.ascii.test(value)) {
+					const err =
+						"Invalid display name format. Only ASCII characters are allowed.";
+					new Toast(err);
+					return err;
+				}
+				return true;
 			}
-		);
+		}
+	},
+	(status, message, values) =>
+		new Promise((resolve, reject) => {
+			if (status === "success")
+				socket.dispatch(
+					"playlists.updateDisplayName",
+					playlist.value._id,
+					values.displayName,
+					res => {
+						playlist.value.displayName = values.displayName;
+						if (res.status === "success") {
+							resolve();
+							new Toast(res.message);
+						} else reject(new Error(res.message));
+					}
+				);
+			else new Toast(message);
+		}),
+	{
+		modalUuid: props.modalUuid,
+		preventCloseUnsaved: false
 	}
-};
+);
+
+const {
+	inputs: privacyInputs,
+	unsavedChanges: privacyUnsaved,
+	save: savePrivacy,
+	setOriginalValue: setPrivacy
+} = useForm(
+	{ privacy: playlist.value.privacy },
+	(status, message, values) =>
+		new Promise((resolve, reject) => {
+			if (status === "success")
+				socket.dispatch(
+					playlist.value.type === "genre"
+						? "playlists.updatePrivacyAdmin"
+						: "playlists.updatePrivacy",
+					playlist.value._id,
+					values.privacy,
+					res => {
+						playlist.value.privacy = values.privacy;
+						if (res.status === "success") {
+							resolve();
+							new Toast(res.message);
+						} else reject(new Error(res.message));
+					}
+				);
+			else new Toast(message);
+		}),
+	{
+		modalUuid: props.modalUuid,
+		preventCloseUnsaved: false
+	}
+);
+
+watch(playlist, (value, oldValue) => {
+	if (value.displayName !== oldValue.displayName)
+		setDisplayName("displayName", value.displayName);
+	if (value.privacy !== oldValue.privacy)
+		setPrivacy("privacy", value.privacy);
+});
+
+onMounted(() => {
+	preventCloseUnsaved[props.modalUuid] = () =>
+		displayNameUnsaved.value.length + privacyUnsaved.value.length > 0;
+});
+
+onBeforeUnmount(() => {
+	delete preventCloseUnsaved[props.modalUuid];
+});
 </script>
 
 <template>
@@ -83,17 +150,17 @@ const updatePrivacy = () => {
 			<div class="control is-grouped input-with-button">
 				<p class="control is-expanded">
 					<input
-						v-model="playlist.displayName"
+						v-model="displayNameInputs['displayName'].value"
 						class="input"
 						type="text"
 						placeholder="Playlist Display Name"
-						@keyup.enter="renamePlaylist()"
+						@keyup.enter="saveDisplayName()"
 					/>
 				</p>
 				<p class="control">
 					<button
 						class="button is-info"
-						@click.prevent="renamePlaylist()"
+						@click.prevent="saveDisplayName()"
 					>
 						Rename
 					</button>
@@ -105,7 +172,7 @@ const updatePrivacy = () => {
 			<label class="label"> Change privacy </label>
 			<div class="control is-grouped input-with-button">
 				<div class="control is-expanded select">
-					<select v-model="playlist.privacy">
+					<select v-model="privacyInputs['privacy'].value">
 						<option value="private">Private</option>
 						<option value="public">Public</option>
 					</select>
@@ -113,7 +180,7 @@ const updatePrivacy = () => {
 				<p class="control">
 					<button
 						class="button is-info"
-						@click.prevent="updatePrivacy()"
+						@click.prevent="savePrivacy()"
 					>
 						Update Privacy
 					</button>

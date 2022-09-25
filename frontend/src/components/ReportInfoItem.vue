@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { defineAsyncComponent } from "vue";
 import { formatDistance } from "date-fns";
-import { useModalsStore } from "@/stores/modals";
 
 const ProfilePicture = defineAsyncComponent(
 	() => import("@/components/ProfilePicture.vue")
@@ -11,8 +10,6 @@ defineProps({
 	createdBy: { type: Object, default: () => {} },
 	createdAt: { type: String, default: "" }
 });
-
-const { closeModal } = useModalsStore();
 </script>
 
 <template>
@@ -40,7 +37,6 @@ const { closeModal } = useModalsStore();
 						path: `/u/${createdBy.username}`
 					}"
 					:title="createdBy._id"
-					@click="closeModal('viewReport')"
 				>
 					{{ createdBy.username }}
 				</router-link>

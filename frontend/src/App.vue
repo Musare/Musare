@@ -51,7 +51,7 @@ const {
 	changeAnonymousSongRequests,
 	changeActivityWatch
 } = userPreferencesStore;
-const { modals, activeModals } = storeToRefs(modalsStore);
+const { activeModals } = storeToRefs(modalsStore);
 const { openModal, closeCurrentModal } = modalsStore;
 
 const aModalIsOpen = computed(() => Object.keys(activeModals.value).length > 0);
@@ -165,12 +165,7 @@ onMounted(async () => {
 		shift: false,
 		ctrl: false,
 		handler: () => {
-			if (
-				Object.keys(activeModals.value).length !== 0 &&
-				modals.value[
-					activeModals.value[activeModals.value.length - 1]
-				] !== "editSong"
-			)
+			if (Object.keys(activeModals.value).length !== 0)
 				closeCurrentModal();
 		}
 	});

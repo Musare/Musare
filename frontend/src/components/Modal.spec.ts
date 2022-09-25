@@ -41,17 +41,7 @@ describe("Modal component", () => {
 		).toBeTruthy();
 	});
 
-	test("click to close modal emits if intercepted", async ({ wrapper }) => {
-		await wrapper.setProps({ interceptClose: true });
-		await wrapper.find(".modal-background").trigger("click");
-		await wrapper.find(".modal-card-head > .delete").trigger("click");
-		expect(wrapper.emitted()).toHaveProperty("close");
-		expect(wrapper.emitted().close).toHaveLength(2);
-	});
-
-	test("click to close modal calls store action if not intercepted", async ({
-		wrapper
-	}) => {
+	test("click to close modal calls store action", async ({ wrapper }) => {
 		const modalsStore = useModalsStore();
 		await wrapper.find(".modal-background").trigger("click");
 		await wrapper.find(".modal-card-head > .delete").trigger("click");

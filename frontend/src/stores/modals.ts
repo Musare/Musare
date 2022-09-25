@@ -23,24 +23,44 @@ import { useWhatIsNewStore } from "@/stores/whatIsNew";
 export const useModalsStore = defineStore("modals", {
 	state: () => ({
 		modals: {},
-		activeModals: []
+		activeModals: [],
+		preventCloseUnsaved: <{ [uuid: string]: () => boolean }>{},
+		preventCloseCbs: <{ [uuid: string]: () => Promise<void> }>{}
 	}),
 	actions: {
-		closeModal(modal) {
-			if (modal === "register")
-				lofig.get("recaptcha.enabled").then(enabled => {
-					if (enabled) window.location.reload();
-				});
-
-			Object.entries(this.modals).forEach(([uuid, _modal]) => {
-				if (modal === _modal) {
-					const { socket } = useWebsocketsStore();
-					socket.destroyModalListeners(uuid);
-					this.activeModals.splice(
-						this.activeModals.indexOf(uuid),
-						1
-					);
-					delete this.modals[uuid];
+		closeModal(uuid: string) {
+			Object.entries(this.modals).forEach(([_uuid, modal]) => {
+				if (uuid === _uuid) {
+					if (modal === "register")
+						lofig.get("recaptcha.enabled").then(enabled => {
+							if (enabled) window.location.reload();
+						});
+					const close = () => {
+						const { socket } = useWebsocketsStore();
+						socket.destroyModalListeners(uuid);
+						this.activeModals.splice(
+							this.activeModals.indexOf(uuid),
+							1
+						);
+						delete this.modals[uuid];
+					};
+					if (typeof this.preventCloseCbs[uuid] !== "undefined")
+						this.preventCloseCbs[uuid]().then(() => {
+							close();
+						});
+					else if (
+						typeof this.preventCloseUnsaved[uuid] !== "undefined" &&
+						this.preventCloseUnsaved[uuid]()
+					) {
+						this.openModal({
+							modal: "confirm",
+							data: {
+								message:
+									"You have unsaved changes. Are you sure you want to discard these changes and close the modal?",
+								onCompleted: close
+							}
+						});
+					} else close();
 				}
 			});
 		},
@@ -119,14 +139,7 @@ export const useModalsStore = defineStore("modals", {
 		closeCurrentModal() {
 			const currentlyActiveModalUuid =
 				this.activeModals[this.activeModals.length - 1];
-			// TODO: make sure to only destroy/register modal listeners for a unique modal
-			// remove any websocket listeners for the modal
-			const { socket } = useWebsocketsStore();
-			socket.destroyModalListeners(currentlyActiveModalUuid);
-
-			this.activeModals.pop();
-
-			delete this.modals[currentlyActiveModalUuid];
+			this.closeModal(currentlyActiveModalUuid);
 		},
 		closeAllModals() {
 			const { socket } = useWebsocketsStore();

@@ -57,9 +57,7 @@ const stationStore = useStationStore();
 const { socket } = useWebsocketsStore();
 const userAuthStore = useUserAuthStore();
 
-const modalsStore = useModalsStore();
-const { modals, activeModals } = storeToRefs(modalsStore);
-const { openModal } = modalsStore;
+const { openModal, closeCurrentModal, preventCloseCbs } = useModalsStore();
 const { hasPermission } = userAuthStore;
 
 const {
@@ -380,7 +378,7 @@ const loadSong = _youtubeId => {
 		} else {
 			new Toast("Song with that ID not found");
 			if (bulk.value) songNotFound.value = true;
-			if (!bulk.value) modalsStore.closeCurrentModal();
+			if (!bulk.value) closeCurrentModal();
 		}
 	});
 };
@@ -633,7 +631,7 @@ const save = (songToCopy, closeOrNext, saveButtonRefName, _newSong = false) => {
 			}
 
 			if (bulk.value) editNextSong();
-			else modalsStore.closeCurrentModal();
+			else closeCurrentModal();
 		});
 	return socket.dispatch(`songs.update`, _song._id, _song, res => {
 		new Toast(res.message);
@@ -652,7 +650,7 @@ const save = (songToCopy, closeOrNext, saveButtonRefName, _newSong = false) => {
 		if (!closeOrNext) return;
 
 		if (bulk.value) editNextSong();
-		else modalsStore.closeCurrentModal();
+		else closeCurrentModal();
 	});
 };
 
@@ -911,56 +909,57 @@ const confirmAction = ({ message, action, params }) => {
 	});
 };
 
-const onCloseModal = () => {
-	const songStringified = JSON.stringify({
-		...song.value,
-		...{
-			duration: Number(song.value.duration).toFixed(3)
-		}
-	});
-	const originalSongStringified = JSON.stringify({
-		...originalSong.value,
-		...{
-			duration: Number(originalSong.value.duration).toFixed(3)
-		}
-	});
-	const unsavedChanges = songStringified !== originalSongStringified;
-
-	const confirmReasons = [];
-
-	if (unsavedChanges) {
-		confirmReasons.push(
-			"You have unsaved changes. Are you sure you want to discard unsaved changes?"
-		);
-	}
-
-	if (bulk.value) {
-		const doneItems = items.value.filter(
-			item => item.status === "done"
-		).length;
-		const flaggedItems = items.value.filter(item => item.flagged).length;
-		const notDoneItems = items.value.length - doneItems;
-
-		if (doneItems > 0 && notDoneItems > 0)
-			confirmReasons.push(
-				"You have songs which are not done yet. Are you sure you want to stop editing songs?"
-			);
-		else if (flaggedItems > 0)
-			confirmReasons.push(
-				"You have songs which are flagged. Are you sure you want to stop editing songs?"
-			);
-	}
-
-	if (confirmReasons.length > 0) {
-		return confirmAction({
-			message: confirmReasons,
-			action: modalsStore.closeCurrentModal,
-			params: null
+const onCloseModal = (): Promise<void> =>
+	new Promise(resolve => {
+		const songStringified = JSON.stringify({
+			...song.value,
+			...{
+				duration: Number(song.value.duration).toFixed(3)
+			}
 		});
-	}
+		const originalSongStringified = JSON.stringify({
+			...originalSong.value,
+			...{
+				duration: Number(originalSong.value.duration).toFixed(3)
+			}
+		});
+		const unsavedChanges = songStringified !== originalSongStringified;
 
-	return modalsStore.closeCurrentModal();
-};
+		const confirmReasons = [];
+
+		if (unsavedChanges) {
+			confirmReasons.push(
+				"You have unsaved changes. Are you sure you want to discard unsaved changes?"
+			);
+		}
+
+		if (bulk.value) {
+			const doneItems = items.value.filter(
+				item => item.status === "done"
+			).length;
+			const flaggedItems = items.value.filter(
+				item => item.flagged
+			).length;
+			const notDoneItems = items.value.length - doneItems;
+
+			if (doneItems > 0 && notDoneItems > 0)
+				confirmReasons.push(
+					"You have songs which are not done yet. Are you sure you want to stop editing songs?"
+				);
+			else if (flaggedItems > 0)
+				confirmReasons.push(
+					"You have songs which are flagged. Are you sure you want to stop editing songs?"
+				);
+		}
+
+		if (confirmReasons.length > 0)
+			confirmAction({
+				message: confirmReasons,
+				action: resolve,
+				params: null
+			});
+		else resolve();
+	});
 
 watch(
 	() => song.value.duration,
@@ -978,11 +977,13 @@ watch(youtubeId, (_youtubeId, _oldYoutubeId) => {
 watch(
 	() => hasPermission("songs.update"),
 	value => {
-		if (!value) modalsStore.closeCurrentModal();
+		if (!value) closeCurrentModal();
 	}
 );
 
 onMounted(async () => {
+	preventCloseCbs[props.modalUuid] = onCloseModal;
+
 	activityWatchVideoDataInterval.value = setInterval(() => {
 		sendActivityWatchVideoData();
 	}, 1000);
@@ -1007,7 +1008,7 @@ onMounted(async () => {
 		} else if (youtubeId.value) loadSong(youtubeId.value);
 		else if (!bulk.value) {
 			new Toast("You can't open EditSong without editing a song");
-			return modalsStore.closeCurrentModal();
+			return closeCurrentModal();
 		}
 
 		interval.value = setInterval(() => {
@@ -1238,7 +1239,7 @@ onMounted(async () => {
 				youtubeIds.value,
 				res => {
 					if (res.data.songs.length === 0) {
-						modalsStore.closeCurrentModal();
+						closeCurrentModal();
 						new Toast("You can't edit 0 songs.");
 					} else {
 						items.value = res.data.songs.map(song => ({
@@ -1434,19 +1435,6 @@ onMounted(async () => {
 		}
 	});
 
-	keyboardShortcuts.registerShortcut("editSong.closeModal", {
-		keyCode: 27,
-		handler: () => {
-			if (
-				modals.value[
-					activeModals.value[activeModals.value.length - 1]
-				] === "editSong"
-			) {
-				onCloseModal();
-			}
-		}
-	});
-
 	/*
 
 	editSong.pauseResume - Num 5 - Pause/resume song
@@ -1508,6 +1496,8 @@ onBeforeUnmount(() => {
 		keyboardShortcuts.unregisterShortcut(shortcutName);
 	});
 
+	delete preventCloseCbs[props.modalUuid];
+
 	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
 	editSongStore.$dispose();
 });
@@ -1520,8 +1510,6 @@ onBeforeUnmount(() => {
 			class="song-modal"
 			:size="'wide'"
 			:split="true"
-			:intercept-close="true"
-			@close="onCloseModal"
 		>
 			<template #toggleMobileSidebar v-if="bulk">
 				<i
