@@ -65,8 +65,7 @@ watch(localNightmode, nightmode => {
 });
 
 onMounted(async () => {
-	localNightmode.value = JSON.parse(localStorage.getItem("nightmode"));
-	if (localNightmode.value === null) localNightmode.value = false;
+	localNightmode.value = localStorage.getItem("nightmode") === "true";
 
 	frontendDomain.value = await lofig.get("frontendDomain");
 	siteSettings.value = await lofig.get("siteSettings");

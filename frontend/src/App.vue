@@ -57,8 +57,6 @@ const { openModal, closeCurrentModal } = modalsStore;
 const aModalIsOpen = computed(() => Object.keys(activeModals.value).length > 0);
 
 const toggleNightMode = () => {
-	localStorage.setItem("nightmode", `${!nightmode.value}`);
-
 	if (loggedIn.value) {
 		socket.dispatch(
 			"users.updatePreferences",

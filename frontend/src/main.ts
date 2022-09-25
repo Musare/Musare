@@ -375,7 +375,6 @@ createSocket().then(async socket => {
 			changeAutoSkipDisliked(preferences.autoSkipDisliked);
 
 		if (preferences.nightmode !== undefined) {
-			localStorage.setItem("nightmode", preferences.nightmode);
 			changeNightmode(preferences.nightmode);
 		}
 

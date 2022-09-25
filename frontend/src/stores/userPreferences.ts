@@ -11,6 +11,7 @@ export const useUserPreferencesStore = defineStore("userPreferences", {
 	actions: {
 		changeNightmode(nightmode) {
 			this.nightmode = nightmode;
+			localStorage.setItem("nightmode", `${nightmode}`);
 		},
 		changeAutoSkipDisliked(autoSkipDisliked) {
 			this.autoSkipDisliked = autoSkipDisliked;
