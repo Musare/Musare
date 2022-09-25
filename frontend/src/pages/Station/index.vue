@@ -1468,6 +1468,9 @@ onBeforeUnmount(() => {
 	socket.dispatch("stations.leave", station.value._id, () => {});
 
 	leaveStation();
+
+	// Delete the Pinia store that was created for this station, after all other cleanup tasks are performed
+	stationStore.$dispose();
 });
 </script>
 

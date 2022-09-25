@@ -1,10 +1,8 @@
 import { defineStore } from "pinia";
 import { Song } from "@/types/song";
 
-export const useReportStore = props => {
-	const { modalUuid } = props;
-	if (!modalUuid) return null;
-	return defineStore(`report-${modalUuid}`, {
+export const useReportStore = ({ modalUuid }: { modalUuid: string }) =>
+	defineStore(`report-${modalUuid}`, {
 		state: () => ({
 			song: <Song>{}
 		}),
@@ -14,4 +12,3 @@ export const useReportStore = props => {
 			}
 		}
 	})();
-};

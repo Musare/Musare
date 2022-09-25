@@ -9,7 +9,7 @@ import { useEditSongStore } from "@/stores/editSong";
 import { useWebsocketsStore } from "@/stores/websockets";
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" },
+	modalUuid: { type: String, required: true },
 	modalModulePath: {
 		type: String,
 		default: "modals/editSong/MODAL_UUID"

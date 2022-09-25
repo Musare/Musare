@@ -10,7 +10,7 @@ import { useModalsStore } from "@/stores/modals";
 import { useForm } from "@/composables/useForm";
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" }
+	modalUuid: { type: String, required: true }
 });
 
 const userAuthStore = useUserAuthStore();

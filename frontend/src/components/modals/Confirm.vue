@@ -7,7 +7,7 @@ import { useModalsStore } from "@/stores/modals";
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" }
+	modalUuid: { type: String, required: true }
 });
 
 const confirmStore = useConfirmStore(props);

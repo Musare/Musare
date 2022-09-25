@@ -8,7 +8,7 @@ import { useModalsStore } from "@/stores/modals";
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 
 defineProps({
-	modalUuid: { type: String, default: "" }
+	modalUuid: { type: String, required: true }
 });
 
 const playlist = ref({

@@ -1,10 +1,8 @@
 import { defineStore } from "pinia";
 import { Song } from "@/types/song";
 
-export const useImportAlbumStore = props => {
-	const { modalUuid } = props;
-	if (!modalUuid) return null;
-	return defineStore(`importAlbum-${modalUuid}`, {
+export const useImportAlbumStore = ({ modalUuid }: { modalUuid: string }) =>
+	defineStore(`importAlbum-${modalUuid}`, {
 		state: () => ({
 			discogsAlbum: <
 				{
@@ -82,4 +80,3 @@ export const useImportAlbumStore = props => {
 			}
 		}
 	})();
-};

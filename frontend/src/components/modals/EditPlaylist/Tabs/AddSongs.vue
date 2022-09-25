@@ -13,7 +13,7 @@ const SearchQueryItem = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" }
+	modalUuid: { type: String, required: true }
 });
 
 const editPlaylistStore = useEditPlaylistStore(props);

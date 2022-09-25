@@ -1,9 +1,7 @@
 import { defineStore } from "pinia";
 
-export const useCreateStationStore = props => {
-	const { modalUuid } = props;
-	if (!modalUuid) return null;
-	return defineStore(`createStation-${modalUuid}`, {
+export const useCreateStationStore = ({ modalUuid }: { modalUuid: string }) =>
+	defineStore(`createStation-${modalUuid}`, {
 		state: () => ({
 			official: false
 		}),
@@ -13,4 +11,3 @@ export const useCreateStationStore = props => {
 			}
 		}
 	})();
-};

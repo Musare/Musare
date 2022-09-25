@@ -1,10 +1,8 @@
 import { defineStore } from "pinia";
 import { User } from "@/types/user";
 
-export const useEditUserStore = props => {
-	const { modalUuid } = props;
-	if (!modalUuid) return null;
-	return defineStore(`editUser-${modalUuid}`, {
+export const useEditUserStore = ({ modalUuid }: { modalUuid: string }) =>
+	defineStore(`editUser-${modalUuid}`, {
 		state: () => ({
 			userId: null,
 			user: <User>{}
@@ -18,4 +16,3 @@ export const useEditUserStore = props => {
 			}
 		}
 	})();
-};

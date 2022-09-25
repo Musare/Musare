@@ -27,7 +27,7 @@ const QuickConfirm = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" }
+	modalUuid: { type: String, required: true }
 });
 
 const { socket } = useWebsocketsStore();

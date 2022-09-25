@@ -44,7 +44,7 @@ const SongThumbnail = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" },
+	modalUuid: { type: String, required: true },
 	modalModulePath: {
 		type: String,
 		default: "modals/editSong/MODAL_UUID"

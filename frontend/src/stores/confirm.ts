@@ -1,9 +1,7 @@
 import { defineStore } from "pinia";
 
-export const useConfirmStore = props => {
-	const { modalUuid } = props;
-	if (!modalUuid) return null;
-	return defineStore(`confirm-${modalUuid}`, {
+export const useConfirmStore = ({ modalUuid }: { modalUuid: string }) =>
+	defineStore(`confirm-${modalUuid}`, {
 		state: () => ({
 			message: "",
 			onCompleted: null,
@@ -25,4 +23,3 @@ export const useConfirmStore = props => {
 			}
 		}
 	})();
-};

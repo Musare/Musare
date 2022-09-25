@@ -7,7 +7,7 @@ import { useLongJobsStore } from "@/stores/longJobs";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" }
+	modalUuid: { type: String, required: true }
 });
 
 const { socket } = useWebsocketsStore();

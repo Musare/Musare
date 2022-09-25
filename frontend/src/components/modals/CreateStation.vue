@@ -10,7 +10,7 @@ import validation from "@/validation";
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" }
+	modalUuid: { type: String, required: true }
 });
 
 const { socket } = useWebsocketsStore();

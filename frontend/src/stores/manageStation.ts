@@ -4,10 +4,8 @@ import { Playlist } from "@/types/playlist";
 import { CurrentSong, Song } from "@/types/song";
 import { useWebsocketsStore } from "@/stores/websockets";
 
-export const useManageStationStore = props => {
-	const { modalUuid } = props;
-	if (!modalUuid) return null;
-	return defineStore(`manageStation-${modalUuid}`, {
+export const useManageStationStore = ({ modalUuid }: { modalUuid: string }) =>
+	defineStore(`manageStation-${modalUuid}`, {
 		state: () => ({
 			stationId: null,
 			sector: "admin",
@@ -107,4 +105,3 @@ export const useManageStationStore = props => {
 			}
 		}
 	})();
-};

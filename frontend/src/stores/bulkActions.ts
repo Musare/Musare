@@ -1,9 +1,7 @@
 import { defineStore } from "pinia";
 
-export const useBulkActionsStore = props => {
-	const { modalUuid } = props;
-	if (!modalUuid) return null;
-	return defineStore(`bulkActions-${modalUuid}`, {
+export const useBulkActionsStore = ({ modalUuid }: { modalUuid: string }) =>
+	defineStore(`bulkActions-${modalUuid}`, {
 		state: () => ({
 			type: null
 		}),
@@ -13,4 +11,3 @@ export const useBulkActionsStore = props => {
 			}
 		}
 	})();
-};

@@ -2,10 +2,8 @@ import { defineStore } from "pinia";
 import { Song } from "@/types/song";
 import { Report } from "@/types/report";
 
-export const useEditSongStore = props => {
-	const { modalUuid } = props;
-	if (!modalUuid) return null;
-	return defineStore(`editSong-${modalUuid}`, {
+export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
+	defineStore(`editSong-${modalUuid}`, {
 		state: () => ({
 			video: {
 				player: null,
@@ -132,4 +130,3 @@ export const useEditSongStore = props => {
 			}
 		}
 	})();
-};

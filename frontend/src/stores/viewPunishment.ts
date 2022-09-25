@@ -1,9 +1,7 @@
 import { defineStore } from "pinia";
 
-export const useViewPunishmentStore = props => {
-	const { modalUuid } = props;
-	if (!modalUuid) return null;
-	return defineStore(`viewPunishment-${modalUuid}`, {
+export const useViewPunishmentStore = ({ modalUuid }: { modalUuid: string }) =>
+	defineStore(`viewPunishment-${modalUuid}`, {
 		state: () => ({
 			punishmentId: null,
 			punishment: {
@@ -22,4 +20,3 @@ export const useViewPunishmentStore = props => {
 			}
 		}
 	})();
-};

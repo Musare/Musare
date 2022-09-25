@@ -22,8 +22,12 @@ import { useWhatIsNewStore } from "@/stores/whatIsNew";
 
 export const useModalsStore = defineStore("modals", {
 	state: () => ({
-		modals: {},
-		activeModals: [],
+		modals: <
+			{
+				[key: string]: string;
+			}
+		>{},
+		activeModals: <string[]>[],
 		preventCloseUnsaved: <{ [uuid: string]: () => boolean }>{},
 		preventCloseCbs: <{ [uuid: string]: () => Promise<void> }>{}
 	}),
@@ -32,9 +36,11 @@ export const useModalsStore = defineStore("modals", {
 			Object.entries(this.modals).forEach(([_uuid, modal]) => {
 				if (uuid === _uuid) {
 					if (modal === "register")
-						lofig.get("recaptcha.enabled").then(enabled => {
-							if (enabled) window.location.reload();
-						});
+						lofig
+							.get("recaptcha.enabled")
+							.then((enabled: boolean) => {
+								if (enabled) window.location.reload();
+							});
 					const close = () => {
 						const { socket } = useWebsocketsStore();
 						socket.destroyModalListeners(uuid);
@@ -64,7 +70,7 @@ export const useModalsStore = defineStore("modals", {
 				}
 			});
 		},
-		openModal(dataOrModal) {
+		openModal(dataOrModal: string | { modal: string; data?: any }) {
 			const uuid = utils.guid();
 
 			let modal;
@@ -153,8 +159,11 @@ export const useModalsStore = defineStore("modals", {
 	}
 });
 
-export const useModalComponents = (baseDirectory, map) => {
-	const modalComponents = {};
+export const useModalComponents = (
+	baseDirectory: string,
+	map: { [key: string]: string }
+) => {
+	const modalComponents = <{ [key: string]: string }>{};
 	Object.entries(map).forEach(([mapKey, mapValue]) => {
 		modalComponents[mapKey] = defineAsyncComponent(
 			() => import(`@/${baseDirectory}/${mapValue}`)

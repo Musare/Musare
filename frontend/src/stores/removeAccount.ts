@@ -1,9 +1,7 @@
 import { defineStore } from "pinia";
 
-export const useRemoveAccountStore = props => {
-	const { modalUuid } = props;
-	if (!modalUuid) return null;
-	return defineStore(`removeAccount-${modalUuid}`, {
+export const useRemoveAccountStore = ({ modalUuid }: { modalUuid: string }) =>
+	defineStore(`removeAccount-${modalUuid}`, {
 		state: () => ({
 			githubLinkConfirmed: false
 		}),
@@ -13,4 +11,3 @@ export const useRemoveAccountStore = props => {
 			}
 		}
 	})();
-};
