@@ -34,12 +34,17 @@ export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 									errors: string[];
 									ref: Ref;
 									sourceChanged: boolean;
+									required: boolean;
+									ignoreUnsaved: boolean;
 							  }
 							| any;
 					}>;
 					unsavedChanges: ComputedRef<string[]>;
 					save: (saveCb?: () => void) => void;
-					setValue: (value: { [key: string]: any }) => void;
+					setValue: (
+						value: { [key: string]: any },
+						reset?: boolean
+					) => void;
 					setOriginalValue: (value: { [key: string]: any }) => void;
 				}
 			>{}
@@ -77,18 +82,41 @@ export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 					thumbnail: song.thumbnail,
 					youtubeId: song.youtubeId,
 					verified: song.verified,
+					addArtist: "",
 					artists: song.artists,
+					addGenre: "",
 					genres: song.genres,
-					tags: song.tags
+					addTag: "",
+					tags: song.tags,
+					discogs: song.discogs
 				};
-				if (reset && this.form.setValue) this.form.setValue(formSong);
-				else if (!reset && this.form.setOriginalValue)
-					this.form.setOriginalValue(formSong);
+				if (reset) this.form.setValue(formSong, true);
+				else this.form.setOriginalValue(formSong);
 			},
 			resetSong(youtubeId) {
 				if (this.youtubeId === youtubeId) this.youtubeId = "";
-				if (this.song && this.song.youtubeId === youtubeId)
+				if (this.song && this.song.youtubeId === youtubeId) {
 					this.song = {};
+					if (this.form.setValue)
+						this.form.setValue(
+							{
+								title: "",
+								duration: 0,
+								skipDuration: 0,
+								thumbnail: "",
+								youtubeId: "",
+								verified: false,
+								addArtist: "",
+								artists: [],
+								addGenre: "",
+								genres: [],
+								addTag: "",
+								tags: [],
+								discogs: {}
+							},
+							true
+						);
+				}
 			},
 			stopVideo() {
 				if (this.video.player && this.video.player.pauseVideo) {
@@ -102,7 +130,7 @@ export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 				}
 			},
 			loadVideoById(id, skipDuration) {
-				this.song.duration = -1;
+				this.form.setValue({ duration: -1 });
 				this.video.player.loadVideoById(id, skipDuration);
 			},
 			pauseVideo(status) {
@@ -115,11 +143,8 @@ export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 				}
 				this.video.paused = status;
 			},
-			updateSongField(data) {
-				this.song[data.field] = data.value;
-			},
 			selectDiscogsInfo(discogsInfo) {
-				this.song.discogs = discogsInfo;
+				this.form.setValue({ discogs: discogsInfo });
 			},
 			updateReports(reports) {
 				this.reports = reports;
@@ -130,14 +155,8 @@ export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 				);
 			},
 			updateYoutubeId(youtubeId) {
-				this.song.youtubeId = youtubeId;
+				this.form.setValue({ youtubeId });
 				this.loadVideoById(youtubeId, 0);
-			},
-			updateTitle(title) {
-				this.song.title = title;
-			},
-			updateThumbnail(thumbnail) {
-				this.song.thumbnail = thumbnail;
 			},
 			setPlaybackRate(rate) {
 				if (rate) {

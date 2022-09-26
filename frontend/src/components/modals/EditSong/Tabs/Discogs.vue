@@ -21,7 +21,7 @@ const editSongStore = useEditSongStore(props);
 
 const { socket } = useWebsocketsStore();
 
-const { song } = storeToRefs(editSongStore);
+const { form } = storeToRefs(editSongStore);
 
 const { selectDiscogsInfo } = editSongStore;
 
@@ -136,7 +136,7 @@ const selectTrack = (apiResultIndex, trackIndex) => {
 };
 
 onMounted(() => {
-	discogsQuery.value = song.value.title;
+	discogsQuery.value = form.value.inputs.title.value;
 
 	keyboardShortcuts.registerShortcut("editSong.focusDiscogs", {
 		keyCode: 35,
@@ -150,21 +150,25 @@ onMounted(() => {
 
 <template>
 	<div class="discogs-tab">
-		<div class="selected-discogs-info" v-if="!song.discogs">
-			<p class="selected-discogs-info-none">None</p>
-		</div>
-		<div class="selected-discogs-info" v-if="song.discogs">
+		<div
+			class="selected-discogs-info"
+			v-if="form.inputs.discogs.value && form.inputs.discogs.value.album"
+		>
 			<div class="top-container">
-				<img :src="song.discogs.album.albumArt" />
+				<img :src="form.inputs.discogs.value.album.albumArt" />
 				<div class="right-container">
 					<p class="album-title">
-						{{ song.discogs.album.title }}
+						{{ form.inputs.discogs.value.album.title }}
 					</p>
 					<div class="bottom-row">
 						<p class="type-year">
-							<span>{{ song.discogs.album.type }}</span>
+							<span>{{
+								form.inputs.discogs.value.album.type
+							}}</span>
 							•
-							<span>{{ song.discogs.album.year }}</span>
+							<span>{{
+								form.inputs.discogs.value.album.year
+							}}</span>
 						</p>
 					</div>
 				</div>
@@ -172,24 +176,31 @@ onMounted(() => {
 			<div class="bottom-container">
 				<p class="bottom-container-field">
 					Artists:
-					<span>{{ song.discogs.album.artists.join(", ") }}</span>
+					<span>{{
+						form.inputs.discogs.value.album.artists.join(", ")
+					}}</span>
 				</p>
 				<p class="bottom-container-field">
 					Genres:
-					<span>{{ song.discogs.album.genres.join(", ") }}</span>
+					<span>{{
+						form.inputs.discogs.value.album.genres.join(", ")
+					}}</span>
 				</p>
 				<p class="bottom-container-field">
 					Data quality:
-					<span>{{ song.discogs.dataQuality }}</span>
+					<span>{{ form.inputs.discogs.value.dataQuality }}</span>
 				</p>
 				<p class="bottom-container-field">
 					Track:
 					<span
-						>{{ song.discogs.track.position }}.
-						{{ song.discogs.track.title }}</span
+						>{{ form.inputs.discogs.value.track.position }}.
+						{{ form.inputs.discogs.value.track.title }}</span
 					>
 				</p>
 			</div>
+		</div>
+		<div class="selected-discogs-info" v-else>
+			<p class="selected-discogs-info-none">None</p>
 		</div>
 
 		<label class="label"> Search for a song from Discogs </label>

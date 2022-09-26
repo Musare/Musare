@@ -12,7 +12,7 @@ export const useForm = (
 	},
 	cb: (
 		status: string,
-		message: string,
+		messages: { [key: string]: string },
 		values: { [key: string]: any }
 	) => Promise<void>,
 	options?: {
@@ -33,7 +33,10 @@ export const useForm = (
 						originalValue: input.value,
 						errors: <string[]>[],
 						ref: ref(),
-						sourceChanged: false
+						sourceChanged: false,
+						ignoreUnsaved: input.ignoreUnsaved === true,
+						required:
+							input.required === undefined ? true : input.required
 					}
 				];
 			})
@@ -44,8 +47,9 @@ export const useForm = (
 		const changed = <string[]>[];
 		Object.entries(inputs.value).forEach(([name, input]) => {
 			if (
+				!input.ignoreUnsaved &&
 				JSON.stringify(input.value) !==
-				JSON.stringify(input.originalValue)
+					JSON.stringify(input.originalValue)
 			)
 				changed.push(name);
 		});
@@ -55,15 +59,22 @@ export const useForm = (
 	const sourceChanged = computed(() => {
 		const _sourceChanged = <string[]>[];
 		Object.entries(inputs.value).forEach(([name, input]) => {
-			if (input.sourceChanged) _sourceChanged.push(name);
+			if (
+				input.sourceChanged &&
+				unsavedChanges.value.find(change => change === name)
+			)
+				_sourceChanged.push(name);
 		});
 		return _sourceChanged;
 	});
 
-	const useCallback = (status: string, message?: string) =>
+	const useCallback = (
+		status: string,
+		messages?: { [key: string]: string }
+	) =>
 		cb(
 			status,
-			message || status,
+			{ ...messages },
 			Object.fromEntries(
 				Object.entries(inputs.value).map(([name, input]) => [
 					name,
@@ -86,32 +97,43 @@ export const useForm = (
 	};
 
 	const validate = () => {
-		const invalid = <string[]>[];
+		const invalid = <{ [key: string]: string[] }>{};
 		Object.entries(inputs.value).forEach(([name, input]) => {
 			input.errors = [];
+			if (
+				input.required &&
+				(input.value === undefined ||
+					input.value === "" ||
+					input.value === null)
+			)
+				input.errors.push(`Invalid ${name}. Please provide value`);
 			if (input.validate) {
 				const valid = input.validate(input.value);
 				if (valid !== true) {
-					invalid.push(name);
 					input.errors.push(
 						valid === false ? `Invalid ${name}` : valid
 					);
 				}
 			}
+			if (input.errors.length > 0)
+				invalid[name] = input.errors.join(", ");
 		});
 		return invalid;
 	};
 
 	const save = (saveCb?: () => void) => {
-		const invalid = validate();
-		if (invalid.length === 0 && unsavedChanges.value.length > 0) {
+		const errors = validate();
+		const errorCount = Object.keys(errors).length;
+		if (errorCount === 0 && unsavedChanges.value.length > 0) {
 			const onSave = () => {
 				useCallback("success")
 					.then(() => {
 						resetOriginalValues();
 						if (saveCb) saveCb();
 					})
-					.catch((err: Error) => useCallback("error", err.message));
+					.catch((err: Error) =>
+						useCallback("error", { error: err.message })
+					);
 			};
 			if (sourceChanged.value.length > 0)
 				openModal({
@@ -123,20 +145,31 @@ export const useForm = (
 					}
 				});
 			else onSave();
-		} else if (invalid.length === 0) {
-			useCallback("unchanged", "No changes to update");
+		} else if (errorCount === 0) {
+			useCallback("unchanged", { unchanged: "No changes to update" });
 			if (saveCb) saveCb();
 		} else {
-			useCallback("error", `${invalid.length} inputs failed validation.`);
+			useCallback("error", {
+				...errors,
+				error: `${errorCount} ${
+					errorCount === 1 ? "input" : "inputs"
+				} failed validation.`
+			});
 		}
 	};
 
-	const setValue = (value: { [key: string]: any }) => {
+	const setValue = (value: { [key: string]: any }, reset?: boolean) => {
 		Object.entries(value).forEach(([name, inputValue]) => {
 			if (inputs.value[name]) {
-				inputs.value[name].sourceChanged = false;
-				inputs.value[name].value = inputValue;
-				inputs.value[name].originalValue = inputValue;
+				inputs.value[name].value = JSON.parse(
+					JSON.stringify(inputValue)
+				);
+				if (reset) {
+					inputs.value[name].sourceChanged = false;
+					inputs.value[name].originalValue = JSON.parse(
+						JSON.stringify(inputValue)
+					);
+				}
 			}
 		});
 	};
@@ -150,8 +183,13 @@ export const useForm = (
 				) {
 					if (unsavedChanges.value.find(change => change === name))
 						inputs.value[name].sourceChanged = true;
-					else inputs.value[name].value = inputValue;
-					inputs.value[name].originalValue = inputValue;
+					else
+						inputs.value[name].value = JSON.parse(
+							JSON.stringify(inputValue)
+						);
+					inputs.value[name].originalValue = JSON.parse(
+						JSON.stringify(inputValue)
+					);
 				}
 			}
 		});

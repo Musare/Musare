@@ -146,17 +146,7 @@ const currentSong = ref(<Song>{});
 const flagFilter = ref(false);
 const sidebarMobileActive = ref(false);
 const songItems = ref([]);
-// EditSongs end
 
-const isYoutubeThumbnail = computed(
-	() =>
-		songDataLoaded.value &&
-		song.value.youtubeId &&
-		song.value.thumbnail &&
-		(song.value.thumbnail.lastIndexOf("i.ytimg.com") !== -1 ||
-			song.value.thumbnail.lastIndexOf("img.youtube.com") !== -1)
-);
-// EditSongs
 const editingItemIndex = computed(() =>
 	items.value.findIndex(
 		item => item.song.youtubeId === currentSong.value.youtubeId
@@ -193,90 +183,55 @@ const {
 	pauseVideo,
 	setSong,
 	resetSong,
-	updateSongField,
 	updateReports,
 	setPlaybackRate
 } = editSongStore;
 
 const { updateMediaModalPlayingAudio } = stationStore;
 
-const showTab = payload => {
-	if (tabs.value[`${payload}-tab`])
-		tabs.value[`${payload}-tab`].scrollIntoView({ block: "nearest" });
-	editSongStore.showTab(payload);
+const unloadSong = (_youtubeId, songId?) => {
+	songDataLoaded.value = false;
+	songDeleted.value = false;
+	stopVideo();
+	pauseVideo(true);
+
+	resetSong(_youtubeId);
+	thumbnailNotSquare.value = false;
+	thumbnailWidth.value = null;
+	thumbnailHeight.value = null;
+	youtubeVideoCurrentTime.value = "0.000";
+	youtubeVideoDuration.value = "0.000";
+	youtubeVideoNote.value = "";
+	if (songId) socket.dispatch("apis.leaveRoom", `edit-song.${songId}`);
+	if (saveButtonRefs.value.saveButton)
+		saveButtonRefs.value.saveButton.status = "default";
 };
 
-// EditSongs
-const toggleDone = (index, overwrite = null) => {
-	const { status } = filteredItems.value[index];
+const loadSong = (_youtubeId: string, reset?: boolean) => {
+	songNotFound.value = false;
+	socket.dispatch(`songs.getSongsFromYoutubeIds`, [_youtubeId], res => {
+		const { songs } = res.data;
+		if (res.status === "success" && songs.length > 0) {
+			let _song = songs[0];
+			_song = Object.assign(_song, prefillData.value);
 
-	if (status === "done" && overwrite !== "done")
-		filteredItems.value[index].status = "todo";
-	else {
-		filteredItems.value[index].status = "done";
-		filteredItems.value[index].flagged = false;
-	}
-};
+			setSong(_song, reset);
 
-const toggleFlagFilter = () => {
-	flagFilter.value = !flagFilter.value;
-};
+			songDataLoaded.value = true;
 
-const toggleMobileSidebar = () => {
-	sidebarMobileActive.value = !sidebarMobileActive.value;
-};
-
-const pickSong = song => {
-	editSong({
-		youtubeId: song.youtubeId,
-		prefill: songPrefillData.value[song.youtubeId]
-	});
-	currentSong.value = song;
-	if (songItems.value[`edit-songs-item-${song.youtubeId}`])
-		songItems.value[`edit-songs-item-${song.youtubeId}`].scrollIntoView();
-};
-
-const editNextSong = () => {
-	const currentlyEditingSongIndex = filteredEditingItemIndex.value;
-	let newEditingSongIndex = -1;
-	const index =
-		currentlyEditingSongIndex + 1 === filteredItems.value.length
-			? 0
-			: currentlyEditingSongIndex + 1;
-	for (let i = index; i < filteredItems.value.length; i += 1) {
-		if (!flagFilter.value || filteredItems.value[i].flagged) {
-			newEditingSongIndex = i;
-			break;
+			if (_song._id) {
+				socket.dispatch("apis.joinRoom", `edit-song.${_song._id}`);
+				socket.dispatch("reports.getReportsForSong", _song._id, res => {
+					updateReports(res.data.reports);
+				});
+				newSong.value = false;
+			}
+		} else {
+			new Toast("Song with that ID not found");
+			if (bulk.value) songNotFound.value = true;
+			if (!bulk.value) closeCurrentModal();
 		}
-	}
-
-	if (newEditingSongIndex > -1) {
-		const nextSong = filteredItems.value[newEditingSongIndex].song;
-		if (nextSong.removed) editNextSong();
-		else pickSong(nextSong);
-	}
-};
-
-const toggleFlag = (songIndex = null) => {
-	if (songIndex && songIndex > -1) {
-		filteredItems.value[songIndex].flagged =
-			!filteredItems.value[songIndex].flagged;
-		new Toast(
-			`Successfully ${
-				filteredItems.value[songIndex].flagged ? "flagged" : "unflagged"
-			} song.`
-		);
-	} else if (!songIndex && editingItemIndex.value > -1) {
-		items.value[editingItemIndex.value].flagged =
-			!items.value[editingItemIndex.value].flagged;
-		new Toast(
-			`Successfully ${
-				items.value[editingItemIndex.value].flagged
-					? "flagged"
-					: "unflagged"
-			} song.`
-		);
-	}
+	});
 };
 
 const onSavedSuccess = youtubeId => {
@@ -296,31 +251,11 @@ const onSavedError = youtubeId => {
 	if (itemIndex > -1) items.value[itemIndex].status = "error";
 };
 
-// const onSaving = youtubeId => {
-// 	const itemIndex = items.value.findIndex(
-// 		item => item.song.youtubeId === youtubeId
-// 	);
-// 	if (itemIndex > -1) items.value[itemIndex].status = "saving";
-// };
-// EditSongs end
-
-const onThumbnailLoad = () => {
-	if (thumbnailElement.value) {
-		const height = thumbnailElement.value.naturalHeight;
-		const width = thumbnailElement.value.naturalWidth;
-
-		thumbnailNotSquare.value = height !== width;
-		thumbnailHeight.value = height;
-		thumbnailWidth.value = width;
-	} else {
-		thumbnailNotSquare.value = false;
-		thumbnailHeight.value = null;
-		thumbnailWidth.value = null;
-	}
-};
-
-const onThumbnailLoadError = error => {
-	thumbnailLoadError.value = error !== 0;
+const onSaving = youtubeId => {
+	const itemIndex = items.value.findIndex(
+		item => item.song.youtubeId === youtubeId
+	);
+	if (itemIndex > -1) items.value[itemIndex].status = "saving";
 };
 
 const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
@@ -376,7 +311,11 @@ const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 			}
 		},
 		verified: false,
-		addArtist: "",
+		addArtist: {
+			value: "",
+			ignoreUnsaved: true,
+			required: false
+		},
 		artists: {
 			value: [],
 			validate: value => {
@@ -397,7 +336,11 @@ const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 				return error || true;
 			}
 		},
-		addGenre: "",
+		addGenre: {
+			value: "",
+			ignoreUnsaved: true,
+			required: false
+		},
 		genres: {
 			value: [],
 			validate: value => {
@@ -418,7 +361,11 @@ const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 				return error || true;
 			}
 		},
-		addTag: "",
+		addTag: {
+			value: "",
+			ignoreUnsaved: true,
+			required: false
+		},
 		tags: {
 			value: [],
 			validate: value => {
@@ -433,16 +380,20 @@ const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 				});
 				return error || true;
 			}
+		},
+		discogs: {
+			value: {},
+			required: false
 		}
 	},
-	(status, message, values) =>
+	(status, messages, values) =>
 		new Promise((resolve, reject) => {
 			const saveButtonRef = saveButtonRefs.value[saveButtonRefName.value];
-			const mergedValues = {
-				...JSON.parse(JSON.stringify(song.value)),
-				...values
-			};
-			if (status === "success") {
+			if (
+				status === "success" ||
+				(status === "unchanged" && newSong.value)
+			) {
+				const mergedValues = Object.assign(song.value, values);
 				const cb = res => {
 					if (res.status === "error") {
 						reject(new Error(res.message));
@@ -451,7 +402,9 @@ const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 					new Toast(res.message);
 					saveButtonRef.handleSuccessfulSave();
 					onSavedSuccess(values.youtubeId);
-					if (!newSong.value) setSong(mergedValues);
+					if (newSong.value) loadSong(values.youtubeId, true);
+					else setSong(mergedValues);
+					resolve();
 				};
 				if (newSong.value)
 					socket.dispatch("songs.create", mergedValues, cb);
@@ -463,82 +416,198 @@ const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 						cb
 					);
 			} else {
-				new Toast(message);
-				if (status === "unchanged" && !newSong.value) {
+				if (status === "unchanged") {
+					new Toast(messages.unchanged);
 					saveButtonRef.handleSuccessfulSave();
 					onSavedSuccess(values.youtubeId);
 				} else {
+					Object.values(messages).forEach(message => {
+						new Toast({ content: message, timeout: 8000 });
+					});
 					saveButtonRef.handleFailedSave();
 					onSavedError(values.youtubeId);
 				}
+				resolve();
 			}
 		}),
 	{ modalUuid: props.modalUuid, preventCloseUnsaved: false }
 );
 
+const showTab = payload => {
+	if (tabs.value[`${payload}-tab`])
+		tabs.value[`${payload}-tab`].scrollIntoView({ block: "nearest" });
+	editSongStore.showTab(payload);
+};
+
+const toggleDone = (index, overwrite = null) => {
+	const { status } = filteredItems.value[index];
+
+	if (status === "done" && overwrite !== "done")
+		filteredItems.value[index].status = "todo";
+	else {
+		filteredItems.value[index].status = "done";
+		filteredItems.value[index].flagged = false;
+	}
+};
+
+const toggleFlagFilter = () => {
+	flagFilter.value = !flagFilter.value;
+};
+
+const toggleMobileSidebar = () => {
+	sidebarMobileActive.value = !sidebarMobileActive.value;
+};
+
+const handleConfirmed = ({ action, params }) => {
+	if (typeof action === "function") {
+		if (params) action(params);
+		else action();
+	}
+};
+
+const confirmAction = ({ message, action, params }) => {
+	openModal({
+		modal: "confirm",
+		data: {
+			message,
+			action,
+			params,
+			onCompleted: handleConfirmed
+		}
+	});
+};
+
+const onCloseOrNext = (next?: boolean): Promise<void> =>
+	new Promise(resolve => {
+		const confirmReasons = [];
+
+		if (unsavedChanges.value.length > 0) {
+			confirmReasons.push(
+				"You have unsaved changes. Are you sure you want to discard unsaved changes?"
+			);
+		}
+
+		if (!next && bulk.value) {
+			const doneItems = items.value.filter(
+				item => item.status === "done"
+			).length;
+			const flaggedItems = items.value.filter(
+				item => item.flagged
+			).length;
+			const notDoneItems = items.value.length - doneItems;
+
+			if (doneItems > 0 && notDoneItems > 0)
+				confirmReasons.push(
+					"You have songs which are not done yet. Are you sure you want to stop editing songs?"
+				);
+			else if (flaggedItems > 0)
+				confirmReasons.push(
+					"You have songs which are flagged. Are you sure you want to stop editing songs?"
+				);
+		}
+
+		if (confirmReasons.length > 0)
+			confirmAction({
+				message: confirmReasons,
+				action: resolve,
+				params: null
+			});
+		else resolve();
+	});
+
+const pickSong = song => {
+	onCloseOrNext(true).then(() => {
+		editSong({
+			youtubeId: song.youtubeId,
+			prefill: songPrefillData.value[song.youtubeId]
+		});
+		currentSong.value = song;
+		if (songItems.value[`edit-songs-item-${song.youtubeId}`])
+			songItems.value[
+				`edit-songs-item-${song.youtubeId}`
+			].scrollIntoView();
+	});
+};
+
+const editNextSong = () => {
+	const currentlyEditingSongIndex = filteredEditingItemIndex.value;
+	let newEditingSongIndex = -1;
+	const index =
+		currentlyEditingSongIndex + 1 === filteredItems.value.length
+			? 0
+			: currentlyEditingSongIndex + 1;
+	for (let i = index; i < filteredItems.value.length; i += 1) {
+		if (!flagFilter.value || filteredItems.value[i].flagged) {
+			newEditingSongIndex = i;
+			break;
+		}
+	}
+
+	if (newEditingSongIndex > -1) {
+		const nextSong = filteredItems.value[newEditingSongIndex].song;
+		if (nextSong.removed) editNextSong();
+		else pickSong(nextSong);
+	}
+};
+
 const saveSong = (refName: string, closeOrNext?: boolean) => {
 	saveButtonRefName.value = refName;
+	onSaving(inputs.value.youtubeId.value);
 	save(() => {
 		if (closeOrNext && bulk.value) editNextSong();
 		else if (closeOrNext) closeCurrentModal();
 	});
 };
 
-const unloadSong = (_youtubeId, songId?) => {
-	songDataLoaded.value = false;
-	songDeleted.value = false;
-	stopVideo();
-	pauseVideo(true);
-
-	resetSong(_youtubeId);
-	thumbnailNotSquare.value = false;
-	thumbnailWidth.value = null;
-	thumbnailHeight.value = null;
-	youtubeVideoCurrentTime.value = "0.000";
-	youtubeVideoDuration.value = "0.000";
-	youtubeVideoNote.value = "";
-	if (songId) socket.dispatch("apis.leaveRoom", `edit-song.${songId}`);
-	if (saveButtonRefs.value.saveButton)
-		saveButtonRefs.value.saveButton.status = "default";
+const toggleFlag = (songIndex = null) => {
+	if (songIndex && songIndex > -1) {
+		filteredItems.value[songIndex].flagged =
+			!filteredItems.value[songIndex].flagged;
+		new Toast(
+			`Successfully ${
+				filteredItems.value[songIndex].flagged ? "flagged" : "unflagged"
+			} song.`
+		);
+	} else if (!songIndex && editingItemIndex.value > -1) {
+		items.value[editingItemIndex.value].flagged =
+			!items.value[editingItemIndex.value].flagged;
+		new Toast(
+			`Successfully ${
+				items.value[editingItemIndex.value].flagged
+					? "flagged"
+					: "unflagged"
+			} song.`
+		);
+	}
 };
 
-const loadSong = (_youtubeId: string, reset?: boolean) => {
-	console.log(`LOAD SONG ${_youtubeId}`);
-	songNotFound.value = false;
-	socket.dispatch(`songs.getSongsFromYoutubeIds`, [_youtubeId], res => {
-		const { songs } = res.data;
-		if (res.status === "success" && songs.length > 0) {
-			let _song = songs[0];
-			_song = Object.assign(_song, prefillData.value);
+const onThumbnailLoad = () => {
+	if (thumbnailElement.value) {
+		const height = thumbnailElement.value.naturalHeight;
+		const width = thumbnailElement.value.naturalWidth;
 
-			setSong(_song, reset);
-
-			songDataLoaded.value = true;
-
-			if (_song._id) {
-				socket.dispatch("apis.joinRoom", `edit-song.${_song._id}`);
-
-				if (!newSong.value)
-					socket.dispatch(
-						"reports.getReportsForSong",
-						_song._id,
-						res => {
-							console.log(222, res);
-							updateReports(res.data.reports);
-						}
-					);
-			}
-
-			if (video.value.player && video.value.player.cueVideoById) {
-				video.value.player.cueVideoById(_youtubeId, _song.skipDuration);
-			}
-		} else {
-			new Toast("Song with that ID not found");
-			if (bulk.value) songNotFound.value = true;
-			if (!bulk.value) closeCurrentModal();
-		}
-	});
+		thumbnailNotSquare.value = height !== width;
+		thumbnailHeight.value = height;
+		thumbnailWidth.value = width;
+	} else {
+		thumbnailNotSquare.value = false;
+		thumbnailHeight.value = null;
+		thumbnailWidth.value = null;
+	}
 };
+
+const onThumbnailLoadError = error => {
+	thumbnailLoadError.value = error !== 0;
+};
+
+const isYoutubeThumbnail = computed(
+	() =>
+		songDataLoaded.value &&
+		inputs.value.youtubeId.value &&
+		inputs.value.thumbnail.value &&
+		(inputs.value.thumbnail.value.lastIndexOf("i.ytimg.com") !== -1 ||
+			inputs.value.thumbnail.value.lastIndexOf("img.youtube.com") !== -1)
+);
 
 const drawCanvas = () => {
 	if (!songDataLoaded.value || !canvasElement.value) return;
@@ -546,8 +615,8 @@ const drawCanvas = () => {
 
 	const videoDuration = Number(youtubeVideoDuration.value);
 
-	const skipDuration = Number(song.value.skipDuration);
-	const duration = Number(song.value.duration);
+	const skipDuration = Number(inputs.value.skipDuration.value);
+	const duration = Number(inputs.value.duration.value);
 	const afterDuration = videoDuration - (skipDuration + duration);
 
 	const width = 530;
@@ -586,26 +655,22 @@ const seekTo = position => {
 };
 
 const getAlbumData = type => {
-	if (!song.value.discogs) return;
+	if (!inputs.value.discogs.value) return;
 	if (type === "title")
-		updateSongField({
-			field: "title",
-			value: song.value.discogs.track.title
-		});
+		setValue({ title: inputs.value.discogs.value.track.title });
 	if (type === "albumArt")
-		updateSongField({
-			field: "thumbnail",
-			value: song.value.discogs.album.albumArt
-		});
+		setValue({ thumbnail: inputs.value.discogs.value.album.albumArt });
 	if (type === "genres")
-		updateSongField({
-			field: "genres",
-			value: JSON.parse(JSON.stringify(song.value.discogs.album.genres))
+		setValue({
+			genres: JSON.parse(
+				JSON.stringify(inputs.value.discogs.value.album.genres)
+			)
 		});
 	if (type === "artists")
-		updateSongField({
-			field: "artists",
-			value: JSON.parse(JSON.stringify(song.value.discogs.album.artists))
+		setValue({
+			artists: JSON.parse(
+				JSON.stringify(inputs.value.discogs.value.album.artists)
+			)
 		});
 };
 
@@ -614,11 +679,7 @@ const getYouTubeData = type => {
 		try {
 			const { title } = video.value.player.getVideoData();
 
-			if (title)
-				updateSongField({
-					field: "title",
-					value: title
-				});
+			if (title) setValue({ title });
 			else throw new Error("No title found");
 		} catch (e) {
 			new Toast(
@@ -627,9 +688,8 @@ const getYouTubeData = type => {
 		}
 	}
 	if (type === "thumbnail")
-		updateSongField({
-			field: "thumbnail",
-			value: `https://img.youtube.com/vi/${song.value.youtubeId}/mqdefault.jpg`
+		setValue({
+			thumbnail: `https://img.youtube.com/vi/${inputs.value.youtubeId.value}/mqdefault.jpg`
 		});
 	if (type === "author") {
 		try {
@@ -646,8 +706,11 @@ const getYouTubeData = type => {
 };
 
 const fillDuration = () => {
-	song.value.duration =
-		Number.parseInt(youtubeVideoDuration.value) - song.value.skipDuration;
+	setValue({
+		duration:
+			Number.parseInt(youtubeVideoDuration.value) -
+			inputs.value.skipDuration.value
+	});
 };
 
 const settings = type => {
@@ -671,7 +734,11 @@ const settings = type => {
 
 			break;
 		case "skipToLast10Secs":
-			seekTo(song.value.duration - 10 + song.value.skipDuration);
+			seekTo(
+				inputs.value.duration.value -
+					10 +
+					inputs.value.skipDuration.value
+			);
 			break;
 		default:
 			break;
@@ -679,9 +746,15 @@ const settings = type => {
 };
 
 const play = () => {
-	if (video.value.player.getVideoData().video_id !== song.value.youtubeId) {
-		song.value.duration = -1;
-		loadVideoById(song.value.youtubeId, song.value.skipDuration);
+	if (
+		video.value.player.getVideoData().video_id !==
+		inputs.value.youtubeId.value
+	) {
+		setValue({ duration: -1 });
+		loadVideoById(
+			inputs.value.youtubeId.value,
+			inputs.value.skipDuration.value
+		);
 	}
 	settings("play");
 };
@@ -717,7 +790,7 @@ const addTag = (type, value?) => {
 			return new Toast("Genre already exists");
 		if (genre) {
 			inputs.value.genres.value.push(genre);
-			inputs.value.addGenre.value = "";
+			setValue({ addGenre: "" });
 			return false;
 		}
 
@@ -729,7 +802,7 @@ const addTag = (type, value?) => {
 			return new Toast("Artist already exists");
 		if (artist !== "") {
 			inputs.value.artists.value.push(artist);
-			inputs.value.addArtist.value = "";
+			setValue({ addArtist: "" });
 			return false;
 		}
 		return new Toast("Artist cannot be empty");
@@ -740,7 +813,7 @@ const addTag = (type, value?) => {
 			return new Toast("Tag already exists");
 		if (tag !== "") {
 			inputs.value.tags.value.push(tag);
-			inputs.value.addTag.value = "";
+			setValue({ addTag: "" });
 			return false;
 		}
 		return new Toast("Tag cannot be empty");
@@ -790,11 +863,11 @@ const sendActivityWatchVideoData = () => {
 		if (activityWatchVideoLastStatus.value !== "playing") {
 			activityWatchVideoLastStatus.value = "playing";
 			if (
-				song.value.skipDuration > 0 &&
+				inputs.value.skipDuration.value > 0 &&
 				Number(youtubeVideoCurrentTime.value) === 0
 			) {
 				activityWatchVideoLastStartDuration.value = Math.floor(
-					song.value.skipDuration +
+					inputs.value.skipDuration.value +
 						Number(youtubeVideoCurrentTime.value)
 				);
 			} else {
@@ -805,16 +878,18 @@ const sendActivityWatchVideoData = () => {
 		}
 
 		const videoData = {
-			title: song.value.title,
-			artists: song.value.artists ? song.value.artists.join(", ") : null,
-			youtubeId: song.value.youtubeId,
+			title: inputs.value.title.value,
+			artists: inputs.value.artists.value
+				? inputs.value.artists.value.join(", ")
+				: null,
+			youtubeId: inputs.value.youtubeId.value,
 			muted: muted.value,
 			volume: volumeSliderValue.value,
 			startedDuration:
 				activityWatchVideoLastStartDuration.value <= 0
 					? 0
 					: activityWatchVideoLastStartDuration.value,
-			source: `editSong#${song.value.youtubeId}`,
+			source: `editSong#${inputs.value.youtubeId.value}`,
 			hostname: window.location.hostname
 		};
 
@@ -830,76 +905,24 @@ const remove = id => {
 	});
 };
 
-const handleConfirmed = ({ action, params }) => {
-	if (typeof action === "function") {
-		if (params) action(params);
-		else action();
-	}
-};
-
-const confirmAction = ({ message, action, params }) => {
-	openModal({
-		modal: "confirm",
-		data: {
-			message,
-			action,
-			params,
-			onCompleted: handleConfirmed
-		}
-	});
-};
-
-const onCloseModal = (): Promise<void> =>
-	new Promise(resolve => {
-		const confirmReasons = [];
-
-		if (unsavedChanges.value.length > 0) {
-			confirmReasons.push(
-				"You have unsaved changes. Are you sure you want to discard unsaved changes?"
-			);
-		}
-
-		if (bulk.value) {
-			const doneItems = items.value.filter(
-				item => item.status === "done"
-			).length;
-			const flaggedItems = items.value.filter(
-				item => item.flagged
-			).length;
-			const notDoneItems = items.value.length - doneItems;
-
-			if (doneItems > 0 && notDoneItems > 0)
-				confirmReasons.push(
-					"You have songs which are not done yet. Are you sure you want to stop editing songs?"
-				);
-			else if (flaggedItems > 0)
-				confirmReasons.push(
-					"You have songs which are flagged. Are you sure you want to stop editing songs?"
-				);
-		}
-
-		if (confirmReasons.length > 0)
-			confirmAction({
-				message: confirmReasons,
-				action: resolve,
-				params: null
-			});
-		else resolve();
-	});
-
 watch(
-	() => song.value.duration,
-	() => drawCanvas()
-);
-watch(
-	() => song.value.skipDuration,
+	[() => inputs.value.duration.value, () => inputs.value.skipDuration.value],
 	() => drawCanvas()
 );
 watch(youtubeId, (_youtubeId, _oldYoutubeId) => {
-	console.log("NEW YOUTUBE ID", _youtubeId);
 	if (_oldYoutubeId) unloadSong(_oldYoutubeId);
-	if (_youtubeId) loadSong(_youtubeId, _youtubeId !== _oldYoutubeId);
+	if (_youtubeId) loadSong(_youtubeId, true);
 });
+watch(
+	() => inputs.value.youtubeId.value,
+	value => {
+		if (video.value.player && video.value.player.cueVideoById)
+			video.value.player.cueVideoById(
+				value,
+				inputs.value.skipDuration.value
+			);
+	}
+);
 watch(
 	() => hasPermission("songs.update"),
 	value => {
@@ -915,7 +938,7 @@ onMounted(async () => {
 		setValue,
 		setOriginalValue
 	};
-	preventCloseCbs[props.modalUuid] = onCloseModal;
+	preventCloseCbs[props.modalUuid] = onCloseOrNext;
 
 	activityWatchVideoDataInterval.value = setInterval(() => {
 		sendActivityWatchVideoData();
@@ -946,11 +969,12 @@ onMounted(async () => {
 
 		interval.value = setInterval(() => {
 			if (
-				song.value.duration !== -1 &&
+				inputs.value.duration.value !== -1 &&
 				video.value.paused === false &&
 				playerReady.value &&
-				(video.value.player.getCurrentTime() - song.value.skipDuration >
-					song.value.duration ||
+				(video.value.player.getCurrentTime() -
+					inputs.value.skipDuration.value >
+					inputs.value.duration.value ||
 					(video.value.player.getCurrentTime() > 0 &&
 						video.value.player.getCurrentTime() >=
 							video.value.player.getDuration()))
@@ -965,7 +989,7 @@ onMounted(async () => {
 				video.value.player.getVideoData &&
 				video.value.player.getVideoData() &&
 				video.value.player.getVideoData().video_id ===
-					song.value.youtubeId
+					inputs.value.youtubeId.value
 			) {
 				const currentTime = video.value.player.getCurrentTime();
 
@@ -978,9 +1002,9 @@ onMounted(async () => {
 					if (duration !== undefined) {
 						if (
 							`${youtubeVideoDuration.value}` ===
-							`${Number(song.value.duration).toFixed(3)}`
+							`${Number(inputs.value.duration.value).toFixed(3)}`
 						)
-							song.value.duration = duration.toFixed(3);
+							setValue({ duration: duration.toFixed(3) });
 
 						youtubeVideoDuration.value = duration.toFixed(3);
 						if (youtubeVideoDuration.value.indexOf(".000") !== -1)
@@ -1010,7 +1034,7 @@ onMounted(async () => {
 						showinfo: 0,
 						autoplay: 0
 					},
-					startSeconds: song.value.skipDuration,
+					startSeconds: inputs.value.skipDuration.value,
 					events: {
 						onReady: () => {
 							let volume = parseFloat(
@@ -1022,10 +1046,10 @@ onMounted(async () => {
 
 							playerReady.value = true;
 
-							if (song.value && song.value.youtubeId)
+							if (inputs.value.youtubeId.value)
 								video.value.player.cueVideoById(
-									song.value.youtubeId,
-									song.value.skipDuration
+									inputs.value.youtubeId.value,
+									inputs.value.skipDuration.value
 								);
 
 							setPlaybackRate(null);
@@ -1051,12 +1075,12 @@ onMounted(async () => {
 										`${newYoutubeVideoDuration}`
 								) {
 									const songDurationNumber = Number(
-										song.value.duration
+										inputs.value.duration.value
 									);
 									const songDurationNumber2 =
-										Number(song.value.duration) + 1;
+										Number(inputs.value.duration.value) + 1;
 									const songDurationNumber3 =
-										Number(song.value.duration) - 1;
+										Number(inputs.value.duration.value) - 1;
 									const fixedSongDuration =
 										songDurationNumber.toFixed(3);
 									const fixedSongDuration2 =
@@ -1067,7 +1091,7 @@ onMounted(async () => {
 									if (
 										`${youtubeVideoDuration.value}` ===
 											`${Number(
-												song.value.duration
+												inputs.value.duration.value
 											).toFixed(3)}` &&
 										(fixedSongDuration ===
 											youtubeVideoDuration.value ||
@@ -1076,8 +1100,9 @@ onMounted(async () => {
 											fixedSongDuration3 ===
 												youtubeVideoDuration.value)
 									)
-										song.value.duration =
-											newYoutubeVideoDuration;
+										setValue({
+											duration: newYoutubeVideoDuration
+										});
 
 									youtubeVideoDuration.value =
 										newYoutubeVideoDuration;
@@ -1090,13 +1115,19 @@ onMounted(async () => {
 									else youtubeVideoNote.value = "";
 								}
 
-								if (song.value.duration === -1)
-									song.value.duration = Number.parseInt(
-										youtubeVideoDuration.value
-									);
+								if (inputs.value.duration.value === -1)
+									setValue({
+										duration: Number.parseInt(
+											youtubeVideoDuration.value
+										)
+									});
 
-								youtubeDuration -= song.value.skipDuration;
-								if (song.value.duration > youtubeDuration + 1) {
+								youtubeDuration -=
+									inputs.value.skipDuration.value;
+								if (
+									inputs.value.duration.value >
+									youtubeDuration + 1
+								) {
 									stopVideo();
 									pauseVideo(true);
 
@@ -1104,7 +1135,7 @@ onMounted(async () => {
 										"Video can't play. Specified duration is bigger than the YouTube song duration."
 									);
 								}
-								if (song.value.duration <= 0) {
+								if (inputs.value.duration.value <= 0) {
 									stopVideo();
 									pauseVideo(true);
 
@@ -1115,9 +1146,11 @@ onMounted(async () => {
 
 								if (
 									video.value.player.getCurrentTime() <
-									song.value.skipDuration
+									inputs.value.skipDuration.value
 								) {
-									return seekTo(song.value.skipDuration);
+									return seekTo(
+										inputs.value.skipDuration.value
+									);
 								}
 
 								setPlaybackRate(null);
@@ -1153,6 +1186,37 @@ onMounted(async () => {
 				}
 			);
 		});
+
+		socket.on(
+			`event:admin.song.updated`,
+			res => {
+				if (song.value._id === res.data.song._id)
+					setOriginalValue({
+						title: res.data.song.title,
+						duration: res.data.song.duration,
+						skipDuration: res.data.song.skipDuration,
+						thumbnail: res.data.song.thumbnail,
+						youtubeId: res.data.song.youtubeId,
+						verified: res.data.song.verified,
+						artists: res.data.song.artists,
+						genres: res.data.song.genres,
+						tags: res.data.song.tags,
+						discogs: res.data.song.discogs
+					});
+				if (bulk.value) {
+					const index = items.value
+						.map(item => item.song.youtubeId)
+						.indexOf(res.data.song.youtubeId);
+					if (index >= 0)
+						items.value[index].song = {
+							...items.value[index].song,
+							...res.data.song,
+							updated: true
+						};
+				}
+			},
+			{ modalUuid: props.modalUuid }
+		);
 
 		socket.on(
 			"event:admin.song.removed",
@@ -1196,22 +1260,6 @@ onMounted(async () => {
 							...items.value[index].song,
 							...res.data.song,
 							created: true
-						};
-				},
-				{ modalUuid: props.modalUuid }
-			);
-
-			socket.on(
-				`event:admin.song.updated`,
-				res => {
-					const index = items.value
-						.map(item => item.song.youtubeId)
-						.indexOf(res.data.song.youtubeId);
-					if (index >= 0)
-						items.value[index].song = {
-							...items.value[index].song,
-							...res.data.song,
-							updated: true
 						};
 				},
 				{ modalUuid: props.modalUuid }
@@ -1333,7 +1381,7 @@ onMounted(async () => {
 		ctrl: true,
 		preventDefault: true,
 		handler: () => {
-			save(song.value, false, "saveButton");
+			saveSong("saveButton");
 		}
 	});
 
@@ -1343,7 +1391,7 @@ onMounted(async () => {
 		alt: true,
 		preventDefault: true,
 		handler: () => {
-			save(song.value, true, "saveAndCloseButton");
+			saveSong("saveAndCloseButton", true);
 		}
 	});
 
@@ -1826,7 +1874,10 @@ onBeforeUnmount(() => {
 						</div>
 						<song-thumbnail
 							v-if="songDataLoaded && !songDeleted"
-							:song="song"
+							:song="{
+								youtubeId: inputs['youtubeId'].value,
+								thumbnail: inputs['thumbnail'].value
+							}"
 							:fallback="false"
 							class="thumbnail-preview"
 							@load-error="onThumbnailLoadError"

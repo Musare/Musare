@@ -59,24 +59,16 @@ const { inputs, save, setOriginalValue } = useForm(
 		markdown: {
 			value: "# Header\n## Sub-Header\n- **So**\n- _Many_\n- ~Points~\n\nOther things you want to say and [link](https://example.com).\n\n### Sub-Sub-Header\n> Oh look, a quote!\n\n`lil code`\n\n```\nbig code\n```\n",
 			validate: value => {
-				if (value === "") {
-					const err = "News item cannot be empty.";
-					new Toast(err);
-					return err;
-				}
-				if (!getTitle()) {
-					const err =
-						"Please provide a title (heading level 1) at the top of the document.";
-					new Toast(err);
-					return err;
-				}
+				if (value === "") return "News item cannot be empty.";
+				if (!getTitle())
+					return "Please provide a title (heading level 1) at the top of the document.";
 				return true;
 			}
 		},
 		status: "published",
 		showToNewUsers: false
 	},
-	(status, message, values) =>
+	(status, messages, values) =>
 		new Promise((resolve, reject) => {
 			if (status === "success") {
 				const data = {
@@ -92,7 +84,11 @@ const { inputs, save, setOriginalValue } = useForm(
 				};
 				if (createNews.value) socket.dispatch("news.create", data, cb);
 				else socket.dispatch("news.update", newsId.value, data, cb);
-			} else if (status === "unchanged") new Toast(message);
+			} else if (status === "unchanged") new Toast(messages.unchanged);
+			else if (status === "error")
+				Object.values(messages).forEach(message => {
+					new Toast({ content: message, timeout: 8000 });
+				});
 		}),
 	{
 		modalUuid: props.modalUuid

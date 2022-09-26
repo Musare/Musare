@@ -26,35 +26,20 @@ const { inputs, save, setOriginalValue } = useForm(
 		name: {
 			value: station.value.name,
 			validate: value => {
-				if (!validation.isLength(value, 2, 16)) {
-					const err = "Name must have between 2 and 16 characters.";
-					new Toast(err);
-					return err;
-				}
-				if (!validation.regex.az09_.test(value)) {
-					const err =
-						"Invalid name format. Allowed characters: a-z, 0-9 and _.";
-					new Toast(err);
-					return err;
-				}
+				if (!validation.isLength(value, 2, 16))
+					return "Name must have between 2 and 16 characters.";
+				if (!validation.regex.az09_.test(value))
+					return "Invalid name format. Allowed characters: a-z, 0-9 and _.";
 				return true;
 			}
 		},
 		displayName: {
 			value: station.value.displayName,
 			validate: value => {
-				if (!validation.isLength(value, 2, 32)) {
-					const err =
-						"Display name must have between 2 and 32 characters.";
-					new Toast(err);
-					return err;
-				}
-				if (!validation.regex.ascii.test(value)) {
-					const err =
-						"Invalid display name format. Only ASCII characters are allowed.";
-					new Toast(err);
-					return err;
-				}
+				if (!validation.isLength(value, 2, 32))
+					return "Display name must have between 2 and 32 characters.";
+				if (!validation.regex.ascii.test(value))
+					return "Invalid display name format. Only ASCII characters are allowed.";
 				return true;
 			}
 		},
@@ -66,11 +51,8 @@ const { inputs, save, setOriginalValue } = useForm(
 						.split("")
 						.filter(character => character.charCodeAt(0) === 21328)
 						.length !== 0
-				) {
-					const err = "Invalid description format.";
-					new Toast(err);
-					return err;
-				}
+				)
+					return "Invalid description format.";
 				return true;
 			}
 		},
@@ -83,7 +65,7 @@ const { inputs, save, setOriginalValue } = useForm(
 		autofillLimit: station.value.autofill.limit,
 		autofillMode: station.value.autofill.mode
 	},
-	(status, message, values) =>
+	(status, messages, values) =>
 		new Promise((resolve, reject) => {
 			if (status === "success") {
 				const oldStation = JSON.parse(JSON.stringify(station.value));
@@ -119,7 +101,10 @@ const { inputs, save, setOriginalValue } = useForm(
 						} else reject(new Error(res.message));
 					}
 				);
-			} else new Toast(message);
+			} else
+				Object.values(messages).forEach(message => {
+					new Toast({ content: message, timeout: 8000 });
+				});
 		}),
 	{
 		modalUuid: props.modalUuid

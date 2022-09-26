@@ -39,23 +39,15 @@ const {
 		username: {
 			value: user.value.username,
 			validate: value => {
-				if (!validation.isLength(value, 2, 32)) {
-					const err =
-						"Username must have between 2 and 32 characters.";
-					new Toast(err);
-					return err;
-				}
-				if (!validation.regex.custom("a-zA-Z0-9_-").test(value)) {
-					const err =
-						"Invalid username format. Allowed characters: a-z, A-Z, 0-9, _ and -.";
-					new Toast(err);
-					return err;
-				}
+				if (!validation.isLength(value, 2, 32))
+					return "Username must have between 2 and 32 characters.";
+				if (!validation.regex.custom("a-zA-Z0-9_-").test(value))
+					return "Invalid username format. Allowed characters: a-z, A-Z, 0-9, _ and -.";
 				return true;
 			}
 		}
 	},
-	(status, message, values) =>
+	(status, messages, values) =>
 		new Promise((resolve, reject) => {
 			if (status === "success")
 				socket.dispatch(
@@ -70,7 +62,10 @@ const {
 						} else reject(new Error(res.message));
 					}
 				);
-			else new Toast(message);
+			else
+				Object.values(messages).forEach(message => {
+					new Toast({ content: message, timeout: 8000 });
+				});
 		}),
 	{
 		modalUuid: props.modalUuid,
@@ -88,25 +83,19 @@ const {
 		email: {
 			value: "",
 			validate: value => {
-				if (!validation.isLength(value, 3, 254)) {
-					const err = "Email must have between 3 and 254 characters.";
-					new Toast(err);
-					return err;
-				}
+				if (!validation.isLength(value, 3, 254))
+					return "Email must have between 3 and 254 characters.";
 				if (
 					value.indexOf("@") !== value.lastIndexOf("@") ||
 					!validation.regex.emailSimple.test(value) ||
 					!validation.regex.ascii.test(value)
-				) {
-					const err = "Invalid email format.";
-					new Toast(err);
-					return err;
-				}
+				)
+					return "Invalid email format.";
 				return true;
 			}
 		}
 	},
-	(status, message, values) =>
+	(status, messages, values) =>
 		new Promise((resolve, reject) => {
 			if (status === "success")
 				socket.dispatch(
@@ -121,7 +110,10 @@ const {
 						} else reject(new Error(res.message));
 					}
 				);
-			else new Toast(message);
+			else
+				Object.values(messages).forEach(message => {
+					new Toast({ content: message, timeout: 8000 });
+				});
 		}),
 	{
 		modalUuid: props.modalUuid,
@@ -136,7 +128,7 @@ const {
 	setOriginalValue: setRole
 } = useForm(
 	{ role: user.value.role },
-	(status, message, values) =>
+	(status, messages, values) =>
 		new Promise((resolve, reject) => {
 			if (status === "success")
 				socket.dispatch(
@@ -151,7 +143,10 @@ const {
 						} else reject(new Error(res.message));
 					}
 				);
-			else new Toast(message);
+			else
+				Object.values(messages).forEach(message => {
+					new Toast({ content: message, timeout: 8000 });
+				});
 		}),
 	{
 		modalUuid: props.modalUuid,
@@ -168,23 +163,16 @@ const {
 		reason: {
 			value: "",
 			validate: value => {
-				if (!validation.isLength(value, 1, 64)) {
-					const err = "Reason must have between 1 and 64 characters.";
-					new Toast(err);
-					return err;
-				}
-				if (!validation.regex.ascii.test(value)) {
-					const err =
-						"Invalid reason format. Only ascii characters are allowed.";
-					new Toast(err);
-					return err;
-				}
+				if (!validation.isLength(value, 1, 64))
+					return "Reason must have between 1 and 64 characters.";
+				if (!validation.regex.ascii.test(value))
+					return "Invalid reason format. Only ascii characters are allowed.";
 				return true;
 			}
 		},
 		expiresAt: "1h"
 	},
-	(status, message, values) =>
+	(status, messages, values) =>
 		new Promise((resolve, reject) => {
 			if (status === "success")
 				socket.dispatch(
@@ -198,7 +186,10 @@ const {
 						else reject(new Error(res.message));
 					}
 				);
-			else if (status === "unchanged") new Toast(message);
+			else
+				Object.values(messages).forEach(message => {
+					new Toast({ content: message, timeout: 8000 });
+				});
 		}),
 	{
 		modalUuid: props.modalUuid,

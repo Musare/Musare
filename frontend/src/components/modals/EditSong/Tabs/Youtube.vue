@@ -14,19 +14,20 @@ const props = defineProps({
 
 const editSongStore = useEditSongStore(props);
 
-const { song, newSong } = storeToRefs(editSongStore);
+const { form, newSong } = storeToRefs(editSongStore);
 
-const { updateYoutubeId, updateTitle, updateThumbnail } = editSongStore;
+const { updateYoutubeId } = editSongStore;
 
 const { youtubeSearch, searchForSongs, loadMoreSongs } = useSearchYoutube();
 
 const selectSong = result => {
 	updateYoutubeId(result.id);
 
-	if (newSong) {
-		updateTitle(result.title);
-		updateThumbnail(result.thumbnail);
-	}
+	if (newSong)
+		form.value.setValue({
+			title: result.title,
+			thumbnail: result.thumbnail
+		});
 };
 </script>
 
@@ -66,7 +67,7 @@ const selectSong = result => {
 				<template #actions>
 					<i
 						class="material-icons icon-selected"
-						v-if="result.id === song.youtubeId"
+						v-if="result.id === form.inputs.youtubeId.value"
 						key="selected"
 						>radio_button_checked
 					</i>
