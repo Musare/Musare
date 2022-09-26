@@ -74,7 +74,7 @@ onMounted(() => {
 
 	socket.onConnect(() => {
 		if (myUserId.value !== props.userId)
-			getBasicUser(props.userId).then((user: any) => {
+			getBasicUser(props.userId).then(user => {
 				if (user && user.username) username.value = user.username;
 			});
 

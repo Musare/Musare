@@ -54,26 +54,25 @@ const {
 			}
 		}
 	},
-	(status, messages, values) =>
-		new Promise((resolve, reject) => {
-			if (status === "success")
-				socket.dispatch(
-					"playlists.updateDisplayName",
-					playlist.value._id,
-					values.displayName,
-					res => {
-						playlist.value.displayName = values.displayName;
-						if (res.status === "success") {
-							resolve();
-							new Toast(res.message);
-						} else reject(new Error(res.message));
-					}
-				);
-			else
-				Object.values(messages).forEach(message => {
-					new Toast({ content: message, timeout: 8000 });
-				});
-		}),
+	({ status, messages, values }, resolve, reject) => {
+		if (status === "success")
+			socket.dispatch(
+				"playlists.updateDisplayName",
+				playlist.value._id,
+				values.displayName,
+				res => {
+					playlist.value.displayName = values.displayName;
+					if (res.status === "success") {
+						resolve();
+						new Toast(res.message);
+					} else reject(new Error(res.message));
+				}
+			);
+		else
+			Object.values(messages).forEach(message => {
+				new Toast({ content: message, timeout: 8000 });
+			});
+	},
 	{
 		modalUuid: props.modalUuid,
 		preventCloseUnsaved: false
@@ -87,25 +86,24 @@ const {
 	setOriginalValue: setPrivacy
 } = useForm(
 	{ privacy: playlist.value.privacy },
-	(status, messages, values) =>
-		new Promise((resolve, reject) => {
-			if (status === "success")
-				socket.dispatch(
-					playlist.value.type === "genre"
-						? "playlists.updatePrivacyAdmin"
-						: "playlists.updatePrivacy",
-					playlist.value._id,
-					values.privacy,
-					res => {
-						playlist.value.privacy = values.privacy;
-						if (res.status === "success") {
-							resolve();
-							new Toast(res.message);
-						} else reject(new Error(res.message));
-					}
-				);
-			else if (messages[status]) new Toast(messages[status]);
-		}),
+	({ status, messages, values }, resolve, reject) => {
+		if (status === "success")
+			socket.dispatch(
+				playlist.value.type === "genre"
+					? "playlists.updatePrivacyAdmin"
+					: "playlists.updatePrivacy",
+				playlist.value._id,
+				values.privacy,
+				res => {
+					playlist.value.privacy = values.privacy;
+					if (res.status === "success") {
+						resolve();
+						new Toast(res.message);
+					} else reject(new Error(res.message));
+				}
+			);
+		else if (messages[status]) new Toast(messages[status]);
+	},
 	{
 		modalUuid: props.modalUuid,
 		preventCloseUnsaved: false

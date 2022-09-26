@@ -5,9 +5,16 @@ import { useWebsocketsStore } from "@/stores/websockets";
 
 export const useUserAuthStore = defineStore("userAuth", {
 	state: () => ({
-		userIdMap: {},
-		userIdRequested: {},
-		pendingUserIdCallbacks: {},
+		userIdMap: <{ [key: string]: { name: string; username: string } }>{},
+		userIdRequested: <{ [key: string]: boolean }>{},
+		pendingUserIdCallbacks: <
+			{
+				[key: string]: ((basicUser: {
+					name: string;
+					username: string;
+				}) => void)[];
+			}
+		>{},
 		loggedIn: false,
 		role: "",
 		username: "",
@@ -174,44 +181,51 @@ export const useUserAuthStore = defineStore("userAuth", {
 				});
 			});
 		},
-		getBasicUser(userId) {
-			return new Promise(resolve => {
-				if (typeof this.userIdMap[`Z${userId}`] !== "string") {
-					if (this.userIdRequested[`Z${userId}`] !== true) {
-						this.requestingUserId(userId);
-						const { socket } = useWebsocketsStore();
-						socket.dispatch("users.getBasicUser", userId, res => {
-							if (res.status === "success") {
-								const user = res.data;
+		getBasicUser(userId: string) {
+			return new Promise(
+				(
+					resolve: (
+						basicUser: { name: string; username: string } | null
+					) => void
+				) => {
+					if (typeof this.userIdMap[`Z${userId}`] !== "string") {
+						if (this.userIdRequested[`Z${userId}`] !== true) {
+							this.requestingUserId(userId);
+							const { socket } = useWebsocketsStore();
+							socket.dispatch(
+								"users.getBasicUser",
+								userId,
+								res => {
+									if (res.status === "success") {
+										const user = res.data;
 
-								this.mapUserId({
-									userId,
-									user: {
-										name: user.name,
-										username: user.username
+										this.mapUserId({
+											userId,
+											user: {
+												name: user.name,
+												username: user.username
+											}
+										});
+
+										this.pendingUserIdCallbacks[
+											`Z${userId}`
+										].forEach(cb => cb(user));
+
+										this.clearPendingCallbacks(userId);
+
+										return resolve(user);
 									}
-								});
-
-								this.pendingUserIdCallbacks[
-									`Z${userId}`
-								].forEach(cb => cb(user));
-
-								this.clearPendingCallbacks(userId);
-
-								return resolve(user);
-							}
-							return resolve(null);
-						});
+									return resolve(null);
+								}
+							);
+						} else {
+							this.pendingUser(userId, user => resolve(user));
+						}
 					} else {
-						this.pendingUser({
-							userId,
-							callback: user => resolve(user)
-						});
+						resolve(this.userIdMap[`Z${userId}`]);
 					}
-				} else {
-					resolve(this.userIdMap[`Z${userId}`]);
 				}
-			});
+			);
 		},
 		mapUserId(data) {
 			this.userIdMap[`Z${data.userId}`] = data.user;
@@ -222,10 +236,13 @@ export const useUserAuthStore = defineStore("userAuth", {
 			if (!this.pendingUserIdCallbacks[`Z${userId}`])
 				this.pendingUserIdCallbacks[`Z${userId}`] = [];
 		},
-		pendingUser(data) {
-			this.pendingUserIdCallbacks[`Z${data.userId}`].push(data.callback);
+		pendingUser(
+			userId: string,
+			callback: (basicUser: { name: string; username: string }) => void
+		) {
+			this.pendingUserIdCallbacks[`Z${userId}`].push(callback);
 		},
-		clearPendingCallbacks(userId) {
+		clearPendingCallbacks(userId: string) {
 			this.pendingUserIdCallbacks[`Z${userId}`] = [];
 		},
 		authData(data) {

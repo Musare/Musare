@@ -68,28 +68,27 @@ const { inputs, save, setOriginalValue } = useForm(
 		status: "published",
 		showToNewUsers: false
 	},
-	(status, messages, values) =>
-		new Promise((resolve, reject) => {
-			if (status === "success") {
-				const data = {
-					title: getTitle(),
-					markdown: values.markdown,
-					status: values.status,
-					showToNewUsers: values.showToNewUsers
-				};
-				const cb = res => {
-					new Toast(res.message);
-					if (res.status === "success") resolve();
-					else reject(new Error(res.message));
-				};
-				if (createNews.value) socket.dispatch("news.create", data, cb);
-				else socket.dispatch("news.update", newsId.value, data, cb);
-			} else if (status === "unchanged") new Toast(messages.unchanged);
-			else if (status === "error")
-				Object.values(messages).forEach(message => {
-					new Toast({ content: message, timeout: 8000 });
-				});
-		}),
+	({ status, messages, values }, resolve, reject) => {
+		if (status === "success") {
+			const data = {
+				title: getTitle(),
+				markdown: values.markdown,
+				status: values.status,
+				showToNewUsers: values.showToNewUsers
+			};
+			const cb = res => {
+				new Toast(res.message);
+				if (res.status === "success") resolve();
+				else reject(new Error(res.message));
+			};
+			if (createNews.value) socket.dispatch("news.create", data, cb);
+			else socket.dispatch("news.update", newsId.value, data, cb);
+		} else if (status === "unchanged") new Toast(messages.unchanged);
+		else if (status === "error")
+			Object.values(messages).forEach(message => {
+				new Toast({ content: message, timeout: 8000 });
+			});
+	},
 	{
 		modalUuid: props.modalUuid
 	}

@@ -65,47 +65,46 @@ const { inputs, save, setOriginalValue } = useForm(
 		autofillLimit: station.value.autofill.limit,
 		autofillMode: station.value.autofill.mode
 	},
-	(status, messages, values) =>
-		new Promise((resolve, reject) => {
-			if (status === "success") {
-				const oldStation = JSON.parse(JSON.stringify(station.value));
-				const updatedStation = {
-					...oldStation,
-					name: values.name,
-					displayName: values.displayName,
-					description: values.description,
-					theme: values.theme,
-					privacy: values.privacy,
-					requests: {
-						...oldStation.requests,
-						enabled: values.requestsEnabled,
-						access: values.requestsAccess,
-						limit: values.requestsLimit
-					},
-					autofill: {
-						...oldStation.autofill,
-						enabled: values.autofillEnabled,
-						limit: values.autofillLimit,
-						mode: values.autofillMode
-					}
-				};
-				socket.dispatch(
-					"stations.update",
-					station.value._id,
-					updatedStation,
-					res => {
-						new Toast(res.message);
-						if (res.status === "success") {
-							editStation(updatedStation);
-							resolve();
-						} else reject(new Error(res.message));
-					}
-				);
-			} else
-				Object.values(messages).forEach(message => {
-					new Toast({ content: message, timeout: 8000 });
-				});
-		}),
+	({ status, messages, values }, resolve, reject) => {
+		if (status === "success") {
+			const oldStation = JSON.parse(JSON.stringify(station.value));
+			const updatedStation = {
+				...oldStation,
+				name: values.name,
+				displayName: values.displayName,
+				description: values.description,
+				theme: values.theme,
+				privacy: values.privacy,
+				requests: {
+					...oldStation.requests,
+					enabled: values.requestsEnabled,
+					access: values.requestsAccess,
+					limit: values.requestsLimit
+				},
+				autofill: {
+					...oldStation.autofill,
+					enabled: values.autofillEnabled,
+					limit: values.autofillLimit,
+					mode: values.autofillMode
+				}
+			};
+			socket.dispatch(
+				"stations.update",
+				station.value._id,
+				updatedStation,
+				res => {
+					new Toast(res.message);
+					if (res.status === "success") {
+						editStation(updatedStation);
+						resolve();
+					} else reject(new Error(res.message));
+				}
+			);
+		} else
+			Object.values(messages).forEach(message => {
+				new Toast({ content: message, timeout: 8000 });
+			});
+	},
 	{
 		modalUuid: props.modalUuid
 	}

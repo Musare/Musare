@@ -11,10 +11,14 @@ export const useForm = (
 			| any;
 	},
 	cb: (
-		status: string,
-		messages: { [key: string]: string },
-		values: { [key: string]: any }
-	) => Promise<void>,
+		response: {
+			status: string;
+			messages: { [key: string]: string };
+			values: { [key: string]: any };
+		},
+		resolve: (value?: undefined) => void,
+		reject: (value: Error) => void
+	) => void,
 	options?: {
 		modalUuid?: string;
 		preventCloseUnsaved?: boolean;
@@ -72,16 +76,22 @@ export const useForm = (
 		status: string,
 		messages?: { [key: string]: string }
 	) =>
-		cb(
-			status,
-			{ ...messages },
-			Object.fromEntries(
-				Object.entries(inputs.value).map(([name, input]) => [
-					name,
-					input.value
-				])
-			)
-		);
+		new Promise((resolve, reject: (reason: Error) => void) => {
+			cb(
+				{
+					status,
+					messages: { ...messages },
+					values: Object.fromEntries(
+						Object.entries(inputs.value).map(([name, input]) => [
+							name,
+							input.value
+						])
+					)
+				},
+				resolve,
+				reject
+			);
+		});
 
 	const resetOriginalValues = () => {
 		inputs.value = Object.fromEntries(

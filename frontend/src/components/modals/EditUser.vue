@@ -47,26 +47,25 @@ const {
 			}
 		}
 	},
-	(status, messages, values) =>
-		new Promise((resolve, reject) => {
-			if (status === "success")
-				socket.dispatch(
-					"users.updateUsername",
-					user.value._id,
-					values.username,
-					res => {
-						user.value.username = values.username;
-						if (res.status === "success") {
-							resolve();
-							new Toast(res.message);
-						} else reject(new Error(res.message));
-					}
-				);
-			else
-				Object.values(messages).forEach(message => {
-					new Toast({ content: message, timeout: 8000 });
-				});
-		}),
+	({ status, messages, values }, resolve, reject) => {
+		if (status === "success")
+			socket.dispatch(
+				"users.updateUsername",
+				user.value._id,
+				values.username,
+				res => {
+					user.value.username = values.username;
+					if (res.status === "success") {
+						resolve();
+						new Toast(res.message);
+					} else reject(new Error(res.message));
+				}
+			);
+		else
+			Object.values(messages).forEach(message => {
+				new Toast({ content: message, timeout: 8000 });
+			});
+	},
 	{
 		modalUuid: props.modalUuid,
 		preventCloseUnsaved: false
@@ -95,26 +94,25 @@ const {
 			}
 		}
 	},
-	(status, messages, values) =>
-		new Promise((resolve, reject) => {
-			if (status === "success")
-				socket.dispatch(
-					"users.updateEmail",
-					user.value._id,
-					values.email,
-					res => {
-						user.value.email.address = values.email;
-						if (res.status === "success") {
-							resolve();
-							new Toast(res.message);
-						} else reject(new Error(res.message));
-					}
-				);
-			else
-				Object.values(messages).forEach(message => {
-					new Toast({ content: message, timeout: 8000 });
-				});
-		}),
+	({ status, messages, values }, resolve, reject) => {
+		if (status === "success")
+			socket.dispatch(
+				"users.updateEmail",
+				user.value._id,
+				values.email,
+				res => {
+					user.value.email.address = values.email;
+					if (res.status === "success") {
+						resolve();
+						new Toast(res.message);
+					} else reject(new Error(res.message));
+				}
+			);
+		else
+			Object.values(messages).forEach(message => {
+				new Toast({ content: message, timeout: 8000 });
+			});
+	},
 	{
 		modalUuid: props.modalUuid,
 		preventCloseUnsaved: false
@@ -128,26 +126,25 @@ const {
 	setOriginalValue: setRole
 } = useForm(
 	{ role: user.value.role },
-	(status, messages, values) =>
-		new Promise((resolve, reject) => {
-			if (status === "success")
-				socket.dispatch(
-					"users.updateRole",
-					user.value._id,
-					values.role,
-					res => {
-						user.value.role = values.role;
-						if (res.status === "success") {
-							resolve();
-							new Toast(res.message);
-						} else reject(new Error(res.message));
-					}
-				);
-			else
-				Object.values(messages).forEach(message => {
-					new Toast({ content: message, timeout: 8000 });
-				});
-		}),
+	({ status, messages, values }, resolve, reject) => {
+		if (status === "success")
+			socket.dispatch(
+				"users.updateRole",
+				user.value._id,
+				values.role,
+				res => {
+					user.value.role = values.role;
+					if (res.status === "success") {
+						resolve();
+						new Toast(res.message);
+					} else reject(new Error(res.message));
+				}
+			);
+		else
+			Object.values(messages).forEach(message => {
+				new Toast({ content: message, timeout: 8000 });
+			});
+	},
 	{
 		modalUuid: props.modalUuid,
 		preventCloseUnsaved: false
@@ -172,25 +169,24 @@ const {
 		},
 		expiresAt: "1h"
 	},
-	(status, messages, values) =>
-		new Promise((resolve, reject) => {
-			if (status === "success")
-				socket.dispatch(
-					"users.banUserById",
-					user.value._id,
-					values.reason,
-					values.expiresAt,
-					res => {
-						new Toast(res.message);
-						if (res.status === "success") resolve();
-						else reject(new Error(res.message));
-					}
-				);
-			else
-				Object.values(messages).forEach(message => {
-					new Toast({ content: message, timeout: 8000 });
-				});
-		}),
+	({ status, messages, values }, resolve, reject) => {
+		if (status === "success")
+			socket.dispatch(
+				"users.banUserById",
+				user.value._id,
+				values.reason,
+				values.expiresAt,
+				res => {
+					new Toast(res.message);
+					if (res.status === "success") resolve();
+					else reject(new Error(res.message));
+				}
+			);
+		else
+			Object.values(messages).forEach(message => {
+				new Toast({ content: message, timeout: 8000 });
+			});
+	},
 	{
 		modalUuid: props.modalUuid,
 		preventCloseUnsaved: false

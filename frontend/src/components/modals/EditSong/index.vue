@@ -386,50 +386,46 @@ const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 			required: false
 		}
 	},
-	(status, messages, values) =>
-		new Promise((resolve, reject) => {
-			const saveButtonRef = saveButtonRefs.value[saveButtonRefName.value];
-			if (
-				status === "success" ||
-				(status === "unchanged" && newSong.value)
-			) {
-				const mergedValues = Object.assign(song.value, values);
-				const cb = res => {
-					if (res.status === "error") {
-						reject(new Error(res.message));
-						return;
-					}
-					new Toast(res.message);
-					saveButtonRef.handleSuccessfulSave();
-					onSavedSuccess(values.youtubeId);
-					if (newSong.value) loadSong(values.youtubeId, true);
-					else setSong(mergedValues);
-					resolve();
-				};
-				if (newSong.value)
-					socket.dispatch("songs.create", mergedValues, cb);
-				else
-					socket.dispatch(
-						"songs.update",
-						song.value._id,
-						mergedValues,
-						cb
-					);
-			} else {
-				if (status === "unchanged") {
-					new Toast(messages.unchanged);
-					saveButtonRef.handleSuccessfulSave();
-					onSavedSuccess(values.youtubeId);
-				} else {
-					Object.values(messages).forEach(message => {
-						new Toast({ content: message, timeout: 8000 });
-					});
-					saveButtonRef.handleFailedSave();
-					onSavedError(values.youtubeId);
+	({ status, messages, values }, resolve, reject) => {
+		const saveButtonRef = saveButtonRefs.value[saveButtonRefName.value];
+		if (status === "success" || (status === "unchanged" && newSong.value)) {
+			const mergedValues = Object.assign(song.value, values);
+			const cb = res => {
+				if (res.status === "error") {
+					reject(new Error(res.message));
+					return;
 				}
+				new Toast(res.message);
+				saveButtonRef.handleSuccessfulSave();
+				onSavedSuccess(values.youtubeId);
+				if (newSong.value) loadSong(values.youtubeId, true);
+				else setSong(mergedValues);
 				resolve();
+			};
+			if (newSong.value)
+				socket.dispatch("songs.create", mergedValues, cb);
+			else
+				socket.dispatch(
+					"songs.update",
+					song.value._id,
+					mergedValues,
+					cb
+				);
+		} else {
+			if (status === "unchanged") {
+				new Toast(messages.unchanged);
+				saveButtonRef.handleSuccessfulSave();
+				onSavedSuccess(values.youtubeId);
+			} else {
+				Object.values(messages).forEach(message => {
+					new Toast({ content: message, timeout: 8000 });
+				});
+				saveButtonRef.handleFailedSave();
+				onSavedError(values.youtubeId);
 			}
-		}),
+			resolve();
+		}
+	},
 	{ modalUuid: props.modalUuid, preventCloseUnsaved: false }
 );
 

@@ -154,7 +154,7 @@ export default {
 		]
 	},
 	define: {
-		__VUE_PROD_DEVTOOLS__: false,
+		__VUE_PROD_DEVTOOLS__: config.get("mode") === "development",
 		MUSARE_VERSION: JSON.stringify(debug.version),
 		MUSARE_GIT_REMOTE: JSON.stringify(debug.git.remote),
 		MUSARE_GIT_REMOTE_URL: JSON.stringify(debug.git.remoteUrl),
