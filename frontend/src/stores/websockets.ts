@@ -2,8 +2,10 @@ import { defineStore } from "pinia";
 import SocketHandler from "@/classes/SocketHandler.class";
 
 export const useWebsocketsStore = defineStore("websockets", {
-	state: () => ({
-		socket: <SocketHandler>{
+	state: (): {
+		socket: SocketHandler;
+	} => ({
+		socket: {
 			dispatcher: {}
 		}
 	}),

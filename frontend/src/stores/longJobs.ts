@@ -1,7 +1,15 @@
 import { defineStore } from "pinia";
 
 export const useLongJobsStore = defineStore("longJobs", {
-	state: () => ({
+	state: (): {
+		activeJobs: {
+			id: string;
+			name: string;
+			status: string;
+			message: string;
+		}[];
+		removedJobIds: string[];
+	} => ({
 		activeJobs: [],
 		removedJobIds: []
 	}),

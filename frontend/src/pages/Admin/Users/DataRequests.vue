@@ -11,7 +11,7 @@ const AdvancedTable = defineAsyncComponent(
 
 const { socket } = useWebsocketsStore();
 
-const columnDefault = ref(<TableColumn>{
+const columnDefault = ref<TableColumn>({
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -20,7 +20,7 @@ const columnDefault = ref(<TableColumn>{
 	minWidth: 230,
 	maxWidth: 600
 });
-const columns = ref(<TableColumn[]>[
+const columns = ref<TableColumn[]>([
 	{
 		name: "options",
 		displayName: "Options",
@@ -57,7 +57,7 @@ const columns = ref(<TableColumn[]>[
 		sortProperty: "_id"
 	}
 ]);
-const filters = ref(<TableFilter[]>[
+const filters = ref<TableFilter[]>([
 	{
 		name: "_id",
 		displayName: "Request ID",
@@ -80,7 +80,7 @@ const filters = ref(<TableFilter[]>[
 		defaultFilterType: "boolean"
 	}
 ]);
-const events = ref(<TableEvents>{
+const events = ref<TableEvents>({
 	adminRoom: "dataRequests",
 	updated: {
 		event: "admin.dataRequests.updated",

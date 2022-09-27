@@ -3,10 +3,14 @@ import { Playlist } from "@/types/playlist";
 
 export const useEditPlaylistStore = ({ modalUuid }: { modalUuid: string }) =>
 	defineStore(`editPlaylist-${modalUuid}`, {
-		state: () => ({
+		state: (): {
+			playlistId: string;
+			tab: string;
+			playlist: Playlist;
+		} => ({
 			playlistId: null,
 			tab: "settings",
-			playlist: <Playlist>{ songs: [] }
+			playlist: { songs: [] }
 		}),
 		actions: {
 			init({ playlistId }) {

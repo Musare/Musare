@@ -14,7 +14,7 @@ const ProfilePicture = defineAsyncComponent(
 
 const route = useRoute();
 
-const columnDefault = ref(<TableColumn>{
+const columnDefault = ref<TableColumn>({
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -23,7 +23,7 @@ const columnDefault = ref(<TableColumn>{
 	minWidth: 150,
 	maxWidth: 600
 });
-const columns = ref(<TableColumn[]>[
+const columns = ref<TableColumn[]>([
 	{
 		name: "options",
 		displayName: "Options",
@@ -110,7 +110,7 @@ const columns = ref(<TableColumn[]>[
 		defaultWidth: 170
 	}
 ]);
-const filters = ref(<TableFilter[]>[
+const filters = ref<TableFilter[]>([
 	{
 		name: "_id",
 		displayName: "User ID",
@@ -186,7 +186,7 @@ const filters = ref(<TableFilter[]>[
 		defaultFilterType: "numberLesser"
 	}
 ]);
-const events = ref(<TableEvents>{
+const events = ref<TableEvents>({
 	adminRoom: "users",
 	updated: {
 		event: "admin.user.updated",

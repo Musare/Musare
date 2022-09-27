@@ -1,5 +1,4 @@
 import { defineStore } from "pinia";
-import { defineAsyncComponent } from "vue";
 import utils from "@/utils";
 
 import { useWebsocketsStore } from "@/stores/websockets";
@@ -21,15 +20,18 @@ import { useViewYoutubeVideoStore } from "@/stores/viewYoutubeVideo";
 import { useWhatIsNewStore } from "@/stores/whatIsNew";
 
 export const useModalsStore = defineStore("modals", {
-	state: () => ({
-		modals: <
-			{
-				[key: string]: string;
-			}
-		>{},
-		activeModals: <string[]>[],
-		preventCloseUnsaved: <{ [uuid: string]: () => boolean }>{},
-		preventCloseCbs: <{ [uuid: string]: () => Promise<void> }>{}
+	state: (): {
+		modals: {
+			[key: string]: string;
+		};
+		activeModals: string[];
+		preventCloseUnsaved: { [uuid: string]: () => boolean };
+		preventCloseCbs: { [uuid: string]: () => Promise<void> };
+	} => ({
+		modals: {},
+		activeModals: [],
+		preventCloseUnsaved: {},
+		preventCloseCbs: {}
 	}),
 	actions: {
 		closeModal(uuid: string) {
@@ -158,16 +160,3 @@ export const useModalsStore = defineStore("modals", {
 		}
 	}
 });
-
-export const useModalComponents = (
-	baseDirectory: string,
-	map: { [key: string]: string }
-) => {
-	const modalComponents = <{ [key: string]: string }>{};
-	Object.entries(map).forEach(([mapKey, mapValue]) => {
-		modalComponents[mapKey] = defineAsyncComponent(
-			() => import(`@/${baseDirectory}/${mapValue}`)
-		);
-	});
-	return modalComponents;
-};

@@ -2,7 +2,18 @@ import { defineStore } from "pinia";
 
 export const useViewApiRequestStore = ({ modalUuid }: { modalUuid: string }) =>
 	defineStore(`viewApiRequest-${modalUuid}`, {
-		state: () => ({
+		state: (): {
+			requestId: string;
+			request: {
+				_id: string;
+				url: string;
+				params: object;
+				results: any;
+				date: number;
+				quotaCost: number;
+			};
+			removeAction: string | null;
+		} => ({
 			requestId: null,
 			request: {
 				_id: null,

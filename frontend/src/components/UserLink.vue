@@ -8,7 +8,7 @@ const props = defineProps({
 	link: { type: Boolean, default: true }
 });
 
-const user = ref(<{ name: string; username?: string }>{
+const user = ref<{ name: string; username?: string }>({
 	name: "Unknown"
 });
 

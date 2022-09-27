@@ -28,7 +28,7 @@ const createImport = ref({
 	youtubeUrl: "",
 	isImportingOnlyMusic: false
 });
-const columnDefault = ref(<TableColumn>{
+const columnDefault = ref<TableColumn>({
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -37,7 +37,7 @@ const columnDefault = ref(<TableColumn>{
 	minWidth: 200,
 	maxWidth: 600
 });
-const columns = ref(<TableColumn[]>[
+const columns = ref<TableColumn[]>([
 	{
 		name: "options",
 		displayName: "Options",
@@ -123,7 +123,7 @@ const columns = ref(<TableColumn[]>[
 		defaultVisibility: "hidden"
 	}
 ]);
-const filters = ref(<TableFilter[]>[
+const filters = ref<TableFilter[]>([
 	{
 		name: "_id",
 		displayName: "Import ID",
@@ -230,7 +230,7 @@ const filters = ref(<TableFilter[]>[
 		]
 	}
 ]);
-const events = ref(<TableEvents>{
+const events = ref<TableEvents>({
 	adminRoom: "import",
 	updated: {
 		event: "admin.importJob.updated",

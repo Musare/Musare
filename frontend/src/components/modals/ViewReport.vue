@@ -50,7 +50,7 @@ const icons = ref({
 	title: "title",
 	custom: "lightbulb"
 });
-const report = ref(<Report>{});
+const report = ref<Report>({});
 const song = ref();
 
 const resolve = value =>

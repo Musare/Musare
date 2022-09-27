@@ -3,27 +3,32 @@ import { Song } from "@/types/song";
 
 export const useImportAlbumStore = ({ modalUuid }: { modalUuid: string }) =>
 	defineStore(`importAlbum-${modalUuid}`, {
-		state: () => ({
-			discogsAlbum: <
-				{
-					album?: {
-						albumArt: string;
-						title: string;
-						type: string;
-						year: string;
-						artists: string[];
-						genres: string[];
-					};
-					dataQuality?: string;
-					tracks?: {
-						position: string;
-						title: string;
-					}[];
-					expanded?: boolean;
-				}
-			>{},
-			originalPlaylistSongs: <Song[]>[],
-			playlistSongs: <Song[]>[],
+		state: (): {
+			discogsAlbum: {
+				album?: {
+					albumArt: string;
+					title: string;
+					type: string;
+					year: string;
+					artists: string[];
+					genres: string[];
+				};
+				dataQuality?: string;
+				tracks?: {
+					position: string;
+					title: string;
+				}[];
+				expanded?: boolean;
+			};
+			originalPlaylistSongs: Song[];
+			playlistSongs: Song[];
+			editingSongs: boolean;
+			discogsTab: "search" | "selected";
+			prefillDiscogs: boolean;
+		} => ({
+			discogsAlbum: {},
+			originalPlaylistSongs: [],
+			playlistSongs: [],
 			editingSongs: false,
 			discogsTab: "search",
 			prefillDiscogs: false

@@ -6,24 +6,44 @@ import { User } from "@/types/user";
 import { useWebsocketsStore } from "@/stores/websockets";
 
 export const useStationStore = defineStore("station", {
-	state: () => ({
-		station: <Station>{},
-		autoRequest: <Playlist[]>[],
+	state: (): {
+		station: Station;
+		autoRequest: Playlist[];
+		autoRequestLock: boolean;
+		userCount: number;
+		users: {
+			loggedIn: User[];
+			loggedOut: User[];
+		};
+		currentSong: CurrentSong | undefined;
+		nextSong: Song | undefined | null;
+		songsList: Song[];
+		stationPaused: boolean;
+		localPaused: boolean;
+		noSong: boolean;
+		autofill: Playlist[];
+		blacklist: Playlist[];
+		mediaModalPlayingAudio: boolean;
+		permissions: {
+			[permission: string]: boolean;
+		};
+	} => ({
+		station: {},
+		autoRequest: [],
 		autoRequestLock: false,
-		editing: {},
 		userCount: 0,
 		users: {
-			loggedIn: <User[]>[],
-			loggedOut: <User[]>[]
+			loggedIn: [],
+			loggedOut: []
 		},
-		currentSong: <CurrentSong | undefined>{},
-		nextSong: <Song | undefined | null>null,
-		songsList: <Song[]>[],
+		currentSong: {},
+		nextSong: null,
+		songsList: [],
 		stationPaused: true,
 		localPaused: false,
 		noSong: true,
-		autofill: <Playlist[]>[],
-		blacklist: <Playlist[]>[],
+		autofill: [],
+		blacklist: [],
 		mediaModalPlayingAudio: false,
 		permissions: {}
 	}),

@@ -1,7 +1,7 @@
 export interface TableColumn {
-	name: string;
-	displayName: string;
-	properties: string[];
+	name?: string;
+	displayName?: string;
+	properties?: string[];
 	sortable?: boolean;
 	sortProperty?: string;
 	hidable?: boolean;
@@ -22,7 +22,7 @@ export interface TableFilter {
 	defaultFilterType: string;
 	autosuggest?: boolean;
 	autosuggestDataAction?: string;
-	dropdown?: [string[]];
+	dropdown?: [string | boolean | number, string][];
 }
 
 export interface TableEvents {
@@ -39,6 +39,6 @@ export interface TableEvents {
 }
 
 export interface TableBulkActions {
-	width: number;
-	height: number;
+	width?: number;
+	height?: number;
 }

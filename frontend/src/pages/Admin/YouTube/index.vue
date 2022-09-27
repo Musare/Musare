@@ -23,20 +23,16 @@ const route = useRoute();
 
 const { socket } = useWebsocketsStore();
 
-const quotaStatus = ref(
-	<
-		{
-			[key: string]: {
-				title: string;
-				quotaUsed: number;
-				limit: number;
-				quotaExceeded: boolean;
-			};
-		}
-	>{}
-);
+const quotaStatus = ref<{
+	[key: string]: {
+		title: string;
+		quotaUsed: number;
+		limit: number;
+		quotaExceeded: boolean;
+	};
+}>({});
 const fromDate = ref();
-const columnDefault = ref(<TableColumn>{
+const columnDefault = ref<TableColumn>({
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -45,7 +41,7 @@ const columnDefault = ref(<TableColumn>{
 	minWidth: 150,
 	maxWidth: 600
 });
-const columns = ref(<TableColumn[]>[
+const columns = ref<TableColumn[]>([
 	{
 		name: "options",
 		displayName: "Options",
@@ -60,7 +56,7 @@ const columns = ref(<TableColumn[]>[
 		name: "quotaCost",
 		displayName: "Quota Cost",
 		properties: ["quotaCost"],
-		sortProperty: ["quotaCost"],
+		sortProperty: "quotaCost",
 		minWidth: 150,
 		defaultWidth: 150
 	},
@@ -68,7 +64,7 @@ const columns = ref(<TableColumn[]>[
 		name: "timestamp",
 		displayName: "Timestamp",
 		properties: ["date"],
-		sortProperty: ["date"],
+		sortProperty: "date",
 		minWidth: 150,
 		defaultWidth: 150
 	},
@@ -76,18 +72,18 @@ const columns = ref(<TableColumn[]>[
 		name: "url",
 		displayName: "URL",
 		properties: ["url"],
-		sortProperty: ["url"]
+		sortProperty: "url"
 	},
 	{
 		name: "_id",
 		displayName: "Request ID",
 		properties: ["_id"],
-		sortProperty: ["_id"],
+		sortProperty: "_id",
 		minWidth: 230,
 		defaultWidth: 230
 	}
 ]);
-const filters = ref(<TableFilter[]>[
+const filters = ref<TableFilter[]>([
 	{
 		name: "_id",
 		displayName: "Request ID",
@@ -123,7 +119,7 @@ const filters = ref(<TableFilter[]>[
 		defaultFilterType: "contains"
 	}
 ]);
-const events = ref(<TableEvents>{
+const events = ref<TableEvents>({
 	adminRoom: "youtube",
 	removed: {
 		event: "admin.youtubeApiRequest.removed",

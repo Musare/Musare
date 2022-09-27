@@ -50,7 +50,7 @@ const sortedByCategory = computed(() => {
 		})
 	);
 
-	return <any>categories;
+	return categories;
 });
 
 const { resolveReport } = editSongStore;

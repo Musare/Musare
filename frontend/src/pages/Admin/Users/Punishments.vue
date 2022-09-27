@@ -23,7 +23,7 @@ const ipBan = ref({
 	reason: "",
 	expiresAt: "1h"
 });
-const columnDefault = ref(<TableColumn>{
+const columnDefault = ref<TableColumn>({
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -32,7 +32,7 @@ const columnDefault = ref(<TableColumn>{
 	minWidth: 150,
 	maxWidth: 600
 });
-const columns = ref(<TableColumn[]>[
+const columns = ref<TableColumn[]>([
 	{
 		name: "options",
 		displayName: "Options",
@@ -94,7 +94,7 @@ const columns = ref(<TableColumn[]>[
 		defaultVisibility: "hidden"
 	}
 ]);
-const filters = ref(<TableFilter[]>[
+const filters = ref<TableFilter[]>([
 	{
 		name: "status",
 		displayName: "Status",
@@ -153,7 +153,7 @@ const filters = ref(<TableFilter[]>[
 		defaultFilterType: "datetimeBefore"
 	}
 ]);
-const events = ref(<TableEvents>{
+const events = ref<TableEvents>({
 	adminRoom: "punishments",
 	updated: {
 		event: "admin.punishment.updated",

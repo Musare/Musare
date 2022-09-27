@@ -2,7 +2,9 @@ import { defineStore } from "pinia";
 
 export const useRemoveAccountStore = ({ modalUuid }: { modalUuid: string }) =>
 	defineStore(`removeAccount-${modalUuid}`, {
-		state: () => ({
+		state: (): {
+			githubLinkConfirmed: boolean;
+		} => ({
 			githubLinkConfirmed: false
 		}),
 		actions: {

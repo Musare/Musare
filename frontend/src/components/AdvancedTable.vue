@@ -47,7 +47,10 @@ const props = defineProps({
 	width: Width of column, e.g. 100px
 	maxWidth: Maximum width of column, e.g. 150px
 	*/
-	columnDefault: { type: Object as PropType<TableColumn>, default: () => {} },
+	columnDefault: {
+		type: Object as PropType<TableColumn>,
+		default: () => ({})
+	},
 	columns: {
 		type: Array as PropType<TableColumn[]>,
 		default: () => []
@@ -64,7 +67,7 @@ const props = defineProps({
 	events: { type: Object as PropType<TableEvents>, default: () => {} },
 	bulkActions: {
 		type: Object as PropType<TableBulkActions>,
-		default: () => {}
+		default: () => ({})
 	}
 });
 
@@ -669,50 +672,42 @@ const columnOrderChanged = () => {
 };
 
 const getTableSettings = () => {
-	const urlTableSettings = <
-		{
-			page: number;
-			pageSize: number;
-			shownColumns: string[];
-			columnOrder: string[];
-			columnWidths: {
-				name: string;
-				width: number;
-			}[];
-			columnSort: {
-				[name: string]: string;
-			};
-			filter: {
-				appliedFilters: TableFilter[];
-				appliedFilterOperator: string;
-			};
-		}
-	>{};
+	const urlTableSettings: {
+		page: number;
+		pageSize: number;
+		shownColumns: string[];
+		columnOrder: string[];
+		columnWidths: {
+			name: string;
+			width: number;
+		}[];
+		columnSort: {
+			[name: string]: string;
+		};
+		filter: {
+			appliedFilters: TableFilter[];
+			appliedFilterOperator: string;
+		};
+	} = {};
 	if (props.query) {
 		if (route.query.page)
-			urlTableSettings.page = Number.parseInt(<string>route.query.page);
+			urlTableSettings.page = Number.parseInt(route.query.page);
 		if (route.query.pageSize)
-			urlTableSettings.pageSize = Number.parseInt(
-				<string>route.query.pageSize
-			);
+			urlTableSettings.pageSize = Number.parseInt(route.query.pageSize);
 		if (route.query.shownColumns)
 			urlTableSettings.shownColumns = JSON.parse(
-				<string>route.query.shownColumns
+				route.query.shownColumns
 			);
 		if (route.query.columnOrder)
-			urlTableSettings.columnOrder = JSON.parse(
-				<string>route.query.columnOrder
-			);
+			urlTableSettings.columnOrder = JSON.parse(route.query.columnOrder);
 		if (route.query.columnWidths)
 			urlTableSettings.columnWidths = JSON.parse(
-				<string>route.query.columnWidths
+				route.query.columnWidths
 			);
 		if (route.query.columnSort)
-			urlTableSettings.columnSort = JSON.parse(
-				<string>route.query.columnSort
-			);
+			urlTableSettings.columnSort = JSON.parse(route.query.columnSort);
 		if (route.query.filter)
-			urlTableSettings.filter = JSON.parse(<string>route.query.filter);
+			urlTableSettings.filter = JSON.parse(route.query.filter);
 	}
 
 	const localStorageTableSettings = JSON.parse(
@@ -767,7 +762,9 @@ onMounted(async () => {
 
 	const columns = [
 		...props.columns.map(column => ({
-			...props.columnDefault,
+			...(typeof props.columnDefault === "object"
+				? props.columnDefault
+				: {}),
 			...column
 		})),
 		{

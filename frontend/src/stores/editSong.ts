@@ -5,7 +5,48 @@ import { Report } from "@/types/report";
 
 export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 	defineStore(`editSong-${modalUuid}`, {
-		state: () => ({
+		state: (): {
+			video: {
+				player: any;
+				paused: boolean;
+				playerReady: boolean;
+				autoPlayed: boolean;
+				currentTime: number;
+				playbackRate: 0.5 | 1 | 2;
+			};
+			youtubeId: string;
+			song: Song;
+			reports: Report[];
+			tab: "discogs" | "reports" | "youtube" | "musare-songs";
+			newSong: boolean;
+			prefillData: any;
+			bulk: boolean;
+			youtubeIds: string[];
+			songPrefillData: any;
+			form: {
+				inputs: Ref<{
+					[key: string]:
+						| {
+								value: any;
+								originalValue: any;
+								validate?: (value: any) => boolean | string;
+								errors: string[];
+								ref: Ref;
+								sourceChanged: boolean;
+								required: boolean;
+								ignoreUnsaved: boolean;
+						  }
+						| any;
+				}>;
+				unsavedChanges: ComputedRef<string[]>;
+				save: (saveCb?: () => void) => void;
+				setValue: (
+					value: { [key: string]: any },
+					reset?: boolean
+				) => void;
+				setOriginalValue: (value: { [key: string]: any }) => void;
+			};
+		} => ({
 			video: {
 				player: null,
 				paused: true,
@@ -15,39 +56,15 @@ export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 				playbackRate: 1
 			},
 			youtubeId: null,
-			song: <Song>{},
-			reports: <Report[]>[],
+			song: {},
+			reports: [],
 			tab: "discogs",
 			newSong: false,
 			prefillData: {},
 			bulk: false,
 			youtubeIds: [],
 			songPrefillData: {},
-			form: <
-				{
-					inputs: Ref<{
-						[key: string]:
-							| {
-									value: any;
-									originalValue: any;
-									validate?: (value: any) => boolean | string;
-									errors: string[];
-									ref: Ref;
-									sourceChanged: boolean;
-									required: boolean;
-									ignoreUnsaved: boolean;
-							  }
-							| any;
-					}>;
-					unsavedChanges: ComputedRef<string[]>;
-					save: (saveCb?: () => void) => void;
-					setValue: (
-						value: { [key: string]: any },
-						reset?: boolean
-					) => void;
-					setOriginalValue: (value: { [key: string]: any }) => void;
-				}
-			>{}
+			form: {}
 		}),
 		actions: {
 			init({ song, songs }) {

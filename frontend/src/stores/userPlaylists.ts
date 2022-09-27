@@ -2,8 +2,10 @@ import { defineStore } from "pinia";
 import { Playlist } from "@/types/playlist";
 
 export const useUserPlaylistsStore = defineStore("userPlaylists", {
-	state: () => ({
-		playlists: <Playlist[]>[]
+	state: (): {
+		playlists: Playlist[];
+	} => ({
+		playlists: []
 	}),
 	actions: {
 		setPlaylists(playlists) {

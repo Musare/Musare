@@ -6,17 +6,31 @@ import { useWebsocketsStore } from "@/stores/websockets";
 
 export const useManageStationStore = ({ modalUuid }: { modalUuid: string }) =>
 	defineStore(`manageStation-${modalUuid}`, {
-		state: () => ({
+		state: (): {
+			stationId: string;
+			sector: "station" | "home" | "admin";
+			tab: "settings" | "request" | "autofill" | "blacklist";
+			station: Station;
+			stationPlaylist: Playlist;
+			autofill: Playlist[];
+			blacklist: Playlist[];
+			songsList: Song[];
+			stationPaused: boolean;
+			currentSong: CurrentSong;
+			permissions: {
+				[permission: string]: boolean;
+			};
+		} => ({
 			stationId: null,
 			sector: "admin",
 			tab: "settings",
-			station: <Station>{},
-			stationPlaylist: <Playlist>{ songs: [] },
-			autofill: <Playlist[]>[],
-			blacklist: <Playlist[]>[],
-			songsList: <Song[]>[],
+			station: {},
+			stationPlaylist: { songs: [] },
+			autofill: [],
+			blacklist: [],
+			songsList: [],
 			stationPaused: true,
-			currentSong: <CurrentSong>{},
+			currentSong: {},
 			permissions: {}
 		}),
 		actions: {

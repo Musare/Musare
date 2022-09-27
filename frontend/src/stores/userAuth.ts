@@ -4,17 +4,34 @@ import validation from "@/validation";
 import { useWebsocketsStore } from "@/stores/websockets";
 
 export const useUserAuthStore = defineStore("userAuth", {
-	state: () => ({
-		userIdMap: <{ [key: string]: { name: string; username: string } }>{},
-		userIdRequested: <{ [key: string]: boolean }>{},
-		pendingUserIdCallbacks: <
-			{
-				[key: string]: ((basicUser: {
-					name: string;
-					username: string;
-				}) => void)[];
-			}
-		>{},
+	state: (): {
+		userIdMap: { [key: string]: { name: string; username: string } };
+		userIdRequested: { [key: string]: boolean };
+		pendingUserIdCallbacks: {
+			[key: string]: ((basicUser: {
+				name: string;
+				username: string;
+			}) => void)[];
+		};
+		loggedIn: boolean;
+		role: "user" | "moderator" | "admin";
+		username: string;
+		email: string;
+		userId: string;
+		banned: boolean;
+		ban: {
+			reason: string;
+			expiresAt: number;
+		};
+		gotData: boolean;
+		gotPermissions: boolean;
+		permissions: {
+			[permission: string]: boolean;
+		};
+	} => ({
+		userIdMap: {},
+		userIdRequested: {},
+		pendingUserIdCallbacks: {},
 		loggedIn: false,
 		role: "",
 		username: "",

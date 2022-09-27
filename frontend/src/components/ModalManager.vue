@@ -1,13 +1,23 @@
 <script setup lang="ts">
-import { shallowRef } from "vue";
+import { defineAsyncComponent, shallowRef } from "vue";
 import { storeToRefs } from "pinia";
-import { useModalsStore, useModalComponents } from "@/stores/modals";
+import { useModalsStore } from "@/stores/modals";
 
 const modalsStore = useModalsStore();
 const { modals, activeModals } = storeToRefs(modalsStore);
 
+const useModalComponents = (map: { [key: string]: string }) => {
+	const modalComponents: { [key: string]: string } = {};
+	Object.entries(map).forEach(([mapKey, mapValue]) => {
+		modalComponents[mapKey] = defineAsyncComponent(
+			() => import(`./modals/${mapValue}`)
+		);
+	});
+	return modalComponents;
+};
+
 const modalComponents = shallowRef(
-	useModalComponents("components/modals", {
+	useModalComponents({
 		editUser: "EditUser.vue",
 		login: "Login.vue",
 		register: "Register.vue",

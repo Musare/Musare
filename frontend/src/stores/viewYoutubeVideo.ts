@@ -6,7 +6,32 @@ export const useViewYoutubeVideoStore = ({
 	modalUuid: string;
 }) =>
 	defineStore(`viewYoutubeVideo-${modalUuid}`, {
-		state: () => ({
+		state: (): {
+			videoId: string;
+			youtubeId: string;
+			video: {
+				_id: string;
+				youtubeId: string;
+				title: string;
+				author: string;
+				duration: number;
+			};
+			player: {
+				error: boolean;
+				errorMessage: string;
+				player: null;
+				paused: boolean;
+				playerReady: boolean;
+				autoPlayed: boolean;
+				duration: string;
+				currentTime: number;
+				playbackRate: number;
+				videoNote: string;
+				volume: number;
+				muted: boolean;
+				showRateDropdown: boolean;
+			};
+		} => ({
 			videoId: null,
 			youtubeId: null,
 			video: {

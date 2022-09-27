@@ -1,7 +1,13 @@
 import { defineStore } from "pinia";
 
 export const useUserPreferencesStore = defineStore("userPreferences", {
-	state: () => ({
+	state: (): {
+		nightmode: boolean;
+		autoSkipDisliked: boolean;
+		activityLogPublic: boolean;
+		anonymousSongRequests: boolean;
+		activityWatch: boolean;
+	} => ({
 		nightmode: false,
 		autoSkipDisliked: true,
 		activityLogPublic: false,

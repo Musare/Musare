@@ -2,7 +2,9 @@ import { defineStore } from "pinia";
 
 export const useViewReportStore = ({ modalUuid }: { modalUuid: string }) =>
 	defineStore(`viewReport-${modalUuid}`, {
-		state: () => ({
+		state: (): {
+			reportId: string;
+		} => ({
 			reportId: null
 		}),
 		actions: {

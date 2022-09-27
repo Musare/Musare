@@ -29,7 +29,7 @@ const { socket } = useWebsocketsStore();
 const userAuthStore = useUserAuthStore();
 const { hasPermission } = userAuthStore;
 
-const columnDefault = ref(<TableColumn>{
+const columnDefault = ref<TableColumn>({
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -38,7 +38,7 @@ const columnDefault = ref(<TableColumn>{
 	minWidth: 200,
 	maxWidth: 600
 });
-const columns = ref(<TableColumn[]>[
+const columns = ref<TableColumn[]>([
 	{
 		name: "options",
 		displayName: "Options",
@@ -119,7 +119,7 @@ const columns = ref(<TableColumn[]>[
 		defaultVisibility: "hidden"
 	}
 ]);
-const filters = ref(<TableFilter[]>[
+const filters = ref<TableFilter[]>([
 	{
 		name: "_id",
 		displayName: "Video ID",
@@ -183,7 +183,7 @@ const filters = ref(<TableFilter[]>[
 		defaultFilterType: "contains"
 	}
 ]);
-const events = ref(<TableEvents>{
+const events = ref<TableEvents>({
 	adminRoom: "youtubeVideos",
 	updated: {
 		event: "admin.youtubeVideo.updated",
@@ -195,7 +195,7 @@ const events = ref(<TableEvents>{
 		id: "videoId"
 	}
 });
-const bulkActions = ref(<TableBulkActions>{ width: 200 });
+const bulkActions = ref<TableBulkActions>({ width: 200 });
 const jobs = ref([]);
 if (hasPermission("media.recalculateAllRatings"))
 	jobs.value.push({

@@ -3,9 +3,12 @@ import { User } from "@/types/user";
 
 export const useEditUserStore = ({ modalUuid }: { modalUuid: string }) =>
 	defineStore(`editUser-${modalUuid}`, {
-		state: () => ({
+		state: (): {
+			userId: string;
+			user: User;
+		} => ({
 			userId: null,
-			user: <User>{}
+			user: {}
 		}),
 		actions: {
 			init({ userId }) {
