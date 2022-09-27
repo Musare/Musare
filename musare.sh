@@ -400,19 +400,27 @@ case $1 in
         if [[ ${exitValue} -gt 0 ]]; then
             exit ${exitValue}
         fi
-        if [[ $(git rev-parse HEAD) == $(git rev-parse @\{u\}) ]]; then
+        updated=$(git log --name-only --oneline HEAD..@\{u\})
+        if [[ ${updated} == "" ]]; then
             echo -e "${GREEN}Already up to date${NC}"
-        else
-            dbChange=$(git log --name-only --oneline HEAD..origin/"$(git rev-parse --abbrev-ref HEAD)" | grep "backend/logic/db/schemas")
-            fcChange=$(git log --name-only --oneline HEAD..origin/"$(git rev-parse --abbrev-ref HEAD)" | grep "frontend/dist/config/template.json")
-            bcChange=$(git log --name-only --oneline HEAD..origin/"$(git rev-parse --abbrev-ref HEAD)" | grep "backend/config/template.json")
-            if [[ ( $2 == "auto" && -z $dbChange && -z $fcChange && -z $bcChange ) || -z $2 ]]; then
-                echo -e "${CYAN}Updating...${NC}"
+            exit ${exitValue}
+        fi
+        musareshChange=$(echo "${updated}" | grep "musare.sh")
+        dbChange=$(echo "${updated}" | grep "backend/logic/db/schemas")
+        fcChange=$(echo "${updated}" | grep "frontend/dist/config/template.json")
+        bcChange=$(echo "${updated}" | grep "backend/config/template.json")
+        if [[ ( $2 == "auto" && -z $dbChange && -z $fcChange && -z $bcChange && -z $musareshChange ) || -z $2 ]]; then
+            if [[ -n $musareshChange ]]; then
+                git checkout @\{u\} -- musare.sh
+                echo -e "${YELLOW}musare.sh has been updated, please run the update command again to continue${NC}"
+                exit 1
+            else
                 git pull
                 exitValue=$?
                 if [[ ${exitValue} -gt 0 ]]; then
                     exit ${exitValue}
                 fi
+                echo -e "${CYAN}Updating...${NC}"
                 runDockerCommand "$(basename "$0") $1" pull
                 runDockerCommand "$(basename "$0") $1" build
                 runDockerCommand "$(basename "$0") $1" restart
@@ -426,10 +434,10 @@ case $1 in
                 if [[ -n $bcChange ]]; then
                     echo -e "${RED}Backend config has changed, please update!${NC}"
                 fi
-            elif [[ $2 == "auto" ]]; then
-                echo -e "${RED}Auto Update Failed! Database and/or config has changed!${NC}"
-                exit 1
             fi
+        elif [[ $2 == "auto" ]]; then
+            echo -e "${RED}Auto Update Failed! musare.sh, database and/or config has changed!${NC}"
+            exit 1
         fi
         ;;
 
