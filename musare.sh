@@ -84,8 +84,26 @@ runDockerCommand()
         if [[ ${servicesString:0:1} == 1 ]]; then
             if [[ ${servicesString:2:4} == "all" ]]; then
                 servicesString=""
+                pullServices="mongo redis"
+                buildServices="backend frontend"
             else
                 servicesString=${servicesString:2}
+                pullArray=()
+                buildArray=()
+                if [[ "${servicesString}" == *mongo* ]]; then
+                    pullArray+=("mongo")
+                fi
+                if [[ "${servicesString}" == *redis* ]]; then
+                    pullArray+=("redis")
+                fi
+                if [[ "${servicesString}" == *backend* ]]; then
+                    buildArray+=("backend")
+                fi
+                if [[ "${servicesString}" == *frontend* ]]; then
+                    buildArray+=("frontend")
+                fi
+                pullServices="${pullArray[*]}"
+                buildServices="${buildArray[*]}"
             fi
 
             if [[ ${2} == "stop" || ${2} == "restart" ]]; then
@@ -96,7 +114,15 @@ runDockerCommand()
                 # shellcheck disable=SC2086
                 ${dockerCompose} up -d ${servicesString}
             fi
-            if [[ ${2} == "pull" || ${2} == "build" || ${2} == "ps" || ${2} == "logs" ]]; then
+            if [[ ${2} == "pull" && ${pullServices} != "" ]]; then
+                # shellcheck disable=SC2086
+                ${dockerCompose} "${2}" ${pullServices}
+            fi
+            if [[ ${2} == "build" && ${buildServices} != "" ]]; then
+                # shellcheck disable=SC2086
+                ${dockerCompose} "${2}" ${buildServices}
+            fi
+            if [[ ${2} == "ps" || ${2} == "logs" ]]; then
                 # shellcheck disable=SC2086
                 ${dockerCompose} "${2}" ${servicesString}
             fi
@@ -387,6 +413,7 @@ case $1 in
                 if [[ ${exitValue} -gt 0 ]]; then
                     exit ${exitValue}
                 fi
+                runDockerCommand "$(basename "$0") $1" pull
                 runDockerCommand "$(basename "$0") $1" build
                 runDockerCommand "$(basename "$0") $1" restart
                 echo -e "${GREEN}Updated!${NC}"
