@@ -1,7 +1,6 @@
 import { UserPreferences } from "../models/User";
-import { BaseResponse } from "./BaseActions";
+import { GenericResponse } from "./GenericActions";
 
-export type UpdatePreferencesResponse = BaseResponse;
-export type GetPreferencesResponse = BaseResponse & {
+export type GetPreferencesResponse = GenericResponse & {
 	data: { preferences: UserPreferences };
 };

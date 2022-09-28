@@ -3,10 +3,8 @@ import { useRouter } from "vue-router";
 import { defineAsyncComponent, ref, computed, watch, onMounted } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
-import {
-	GetPreferencesResponse,
-	UpdatePreferencesResponse
-} from "@musare_types/actions/UsersActions";
+import { GenericResponse } from "@musare_types/actions/GenericActions";
+import { GetPreferencesResponse } from "@musare_types/actions/UsersActions";
 import { NewestResponse } from "@musare_types/actions/NewsActions";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
@@ -61,7 +59,7 @@ const toggleNightMode = () => {
 		socket.dispatch(
 			"users.updatePreferences",
 			{ nightmode: !nightmode.value },
-			(res: UpdatePreferencesResponse) => {
+			(res: GenericResponse) => {
 				if (res.status !== "success") new Toast(res.message);
 			}
 		);
@@ -122,7 +120,7 @@ onMounted(async () => {
 	if (!loggedIn.value) {
 		lofig.get("cookie.SIDname").then(sid => {
 			broadcastChannel.value = new BroadcastChannel(`${sid}.user_login`);
-			broadcastChannel.value.onmessage = data => {
+			broadcastChannel.value.onmessage = (data: boolean) => {
 				if (data) {
 					broadcastChannel.value.close();
 					window.location.reload();
@@ -131,7 +129,7 @@ onMounted(async () => {
 		});
 	}
 
-	document.onkeydown = (ev: any) => {
+	document.onkeydown = (ev: KeyboardEvent) => {
 		const event = ev || window.event;
 		const { keyCode } = event;
 		const shift = event.shiftKey;

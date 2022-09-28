@@ -371,7 +371,8 @@ const calculateTimeElapsed = () => {
 	if (playerReady.value && songDuration <= duration)
 		player.value.pauseVideo();
 	if (duration <= songDuration)
-		timeElapsed.value = utils.formatTime(duration) || "0";
+		timeElapsed.value =
+			typeof duration === "number" ? utils.formatTime(duration) : "0";
 };
 const playVideo = () => {
 	if (playerReady.value) {

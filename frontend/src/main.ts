@@ -73,7 +73,7 @@ app.component("PageMetadata", {
 
 app.directive("scroll", {
 	mounted(el, binding) {
-		const f = evt => {
+		const f = (evt: Event) => {
 			clearTimeout(window.scrollDebounceId);
 			window.scrollDebounceId = setTimeout(() => {
 				if (binding.value(evt, el)) {
@@ -273,7 +273,7 @@ createSocket().then(async socket => {
 			const toast =
 				typeof to.query.toast === "string"
 					? { content: to.query.toast, timeout: 20000 }
-					: to.query.toast;
+					: { ...to.query.toast };
 			new Toast(toast);
 			const { query } = to;
 			delete query.toast;
@@ -288,7 +288,9 @@ createSocket().then(async socket => {
 					next({ path: "/login" });
 				else if (
 					to.meta.permissionRequired &&
-					!userAuthStore.hasPermission(to.meta.permissionRequired)
+					!userAuthStore.hasPermission(
+						`${to.meta.permissionRequired}`
+					)
 				)
 					next({ path: "/" });
 				else if (to.meta.guestsOnly && userAuthStore.loggedIn)
@@ -395,7 +397,7 @@ createSocket().then(async socket => {
 			if (
 				meta &&
 				meta.permissionRequired &&
-				!userAuthStore.hasPermission(meta.permissionRequired)
+				!userAuthStore.hasPermission(`${meta.permissionRequired}`)
 			)
 				router.push({
 					path: "/",

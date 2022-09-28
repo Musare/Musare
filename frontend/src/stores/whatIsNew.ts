@@ -9,7 +9,7 @@ export const useWhatIsNewStore = ({ modalUuid }: { modalUuid: string }) =>
 			news: null
 		}),
 		actions: {
-			init({ news }) {
+			init({ news }: { news: NewsModel }) {
 				this.news = news;
 			}
 		}

@@ -8,7 +8,7 @@ export const useViewReportStore = ({ modalUuid }: { modalUuid: string }) =>
 			reportId: null
 		}),
 		actions: {
-			init({ reportId }) {
+			init({ reportId }: { reportId: string }) {
 				this.reportId = reportId;
 			}
 		}

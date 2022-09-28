@@ -5,11 +5,8 @@ import DOMPurify from "dompurify";
 import Toast from "toasters";
 import { formatDistance } from "date-fns";
 import { storeToRefs } from "pinia";
-import {
-	GetNewsResponse,
-	CreateNewsResponse,
-	UpdateNewsResponse
-} from "@musare_types/actions/NewsActions";
+import { GetNewsResponse } from "@musare_types/actions/NewsActions";
+import { GenericResponse } from "@musare_types/actions/GenericActions";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useEditNewsStore } from "@/stores/editNews";
 import { useModalsStore } from "@/stores/modals";
@@ -81,7 +78,7 @@ const { inputs, save, setOriginalValue } = useForm(
 				status: values.status,
 				showToNewUsers: values.showToNewUsers
 			};
-			const cb = (res: CreateNewsResponse | UpdateNewsResponse) => {
+			const cb = (res: GenericResponse) => {
 				new Toast(res.message);
 				if (res.status === "success") resolve();
 				else reject(new Error(res.message));

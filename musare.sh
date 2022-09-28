@@ -411,8 +411,12 @@ case $1 in
         bcChange=$(echo "${updated}" | grep "backend/config/template.json")
         if [[ ( $2 == "auto" && -z $dbChange && -z $fcChange && -z $bcChange && -z $musareshChange ) || -z $2 ]]; then
             if [[ -n $musareshChange ]]; then
-                git checkout @\{u\} -- musare.sh
-                echo -e "${YELLOW}musare.sh has been updated, please run the update command again to continue${NC}"
+                if [[ $(git diff HEAD -- musare.sh) != "" ]]; then
+                    echo -e "${RED}musare.sh has been modified, please reset or commit these changes and run the update command again to continue.${NC}"
+                else
+                    git checkout @\{u\} -- musare.sh
+                    echo -e "${YELLOW}musare.sh has been updated, please run the update command again to continue.${NC}"
+                fi
                 exit 1
             else
                 git pull

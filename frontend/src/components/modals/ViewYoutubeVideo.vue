@@ -329,7 +329,7 @@ onMounted(() => {
 												video.value.youtubeId
 											);
 
-										setPlaybackRate(null);
+										setPlaybackRate();
 
 										drawCanvas();
 									},
@@ -429,7 +429,7 @@ onMounted(() => {
 												);
 											}
 
-											setPlaybackRate(null);
+											setPlaybackRate();
 										} else if (event.data === 2) {
 											player.value.paused = true;
 											updateMediaModalPlayingAudio(false);

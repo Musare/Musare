@@ -8,16 +8,16 @@ export const useUserPlaylistsStore = defineStore("userPlaylists", {
 		playlists: []
 	}),
 	actions: {
-		setPlaylists(playlists) {
+		setPlaylists(playlists: Playlist[]) {
 			this.playlists = playlists;
 		},
-		updatePlaylists(playlists) {
+		updatePlaylists(playlists: Playlist[]) {
 			this.playlists = playlists;
 		},
-		addPlaylist(playlist) {
+		addPlaylist(playlist: Playlist) {
 			this.playlists.push(playlist);
 		},
-		removePlaylist(playlistId) {
+		removePlaylist(playlistId: string) {
 			this.playlists.forEach((playlist, index) => {
 				if (playlist._id === playlistId)
 					this.playlists.splice(index, 1);

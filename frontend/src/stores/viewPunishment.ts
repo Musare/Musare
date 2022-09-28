@@ -14,7 +14,7 @@ export const useViewPunishmentStore = ({ modalUuid }: { modalUuid: string }) =>
 			}
 		}),
 		actions: {
-			init({ punishmentId }) {
+			init({ punishmentId }: { punishmentId: string }) {
 				this.punishmentId = punishmentId;
 			},
 			viewPunishment(punishment) {

@@ -12,34 +12,31 @@ export default {
 			window.crypto.getRandomValues(array);
 			return (array[0] % 16).toString(16);
 		}),
-	formatTime: originalDuration => {
-		if (typeof originalDuration === "number") {
-			if (originalDuration <= 0) return "0:00";
+	formatTime: (originalDuration: number) => {
+		if (originalDuration <= 0) return "0:00";
 
-			let duration = originalDuration;
-			let hours: number | string = Math.floor(duration / (60 * 60));
-			duration -= hours * 60 * 60;
-			let minutes: number | string = Math.floor(duration / 60);
-			duration -= minutes * 60;
-			let seconds: number | string = Math.floor(duration);
+		let duration = originalDuration;
+		let hours: number | string = Math.floor(duration / (60 * 60));
+		duration -= hours * 60 * 60;
+		let minutes: number | string = Math.floor(duration / 60);
+		duration -= minutes * 60;
+		let seconds: number | string = Math.floor(duration);
 
-			if (hours === 0) {
-				hours = "";
-			}
-
-			if (hours > 0) {
-				if (minutes < 10) minutes = `0${minutes}`;
-			}
-
-			if (seconds < 10) {
-				seconds = `0${seconds}`;
-			}
-
-			return `${hours}${hours ? ":" : ""}${minutes}:${seconds}`;
+		if (hours === 0) {
+			hours = "";
 		}
-		return false;
+
+		if (hours > 0) {
+			if (minutes < 10) minutes = `0${minutes}`;
+		}
+
+		if (seconds < 10) {
+			seconds = `0${seconds}`;
+		}
+
+		return `${hours}${hours ? ":" : ""}${minutes}:${seconds}`;
 	},
-	formatTimeLong: duration => {
+	formatTimeLong: (duration: number) => {
 		if (duration <= 0) return "0 seconds";
 
 		const hours = Math.floor(duration / (60 * 60));

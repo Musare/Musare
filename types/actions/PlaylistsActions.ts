@@ -1,17 +1,17 @@
 import { PlaylistModel, PlaylistSong } from "../models/Playlist";
-import { BaseResponse } from "./BaseActions";
+import { GenericResponse } from "./GenericActions";
 
-export type IndexMyPlaylistsResponse = BaseResponse & {
+export type IndexMyPlaylistsResponse = GenericResponse & {
 	data: {
 		playlists: (PlaylistModel & { weight: number })[];
 	};
 };
-export type AddSongToPlaylistResponse = BaseResponse & {
+export type AddSongToPlaylistResponse = GenericResponse & {
 	data: {
 		songs: PlaylistSong[];
 	};
 };
-export type RemoveSongFromPlaylistResponse = BaseResponse & {
+export type RemoveSongFromPlaylistResponse = GenericResponse & {
 	data: {
 		songs: PlaylistSong[];
 	};

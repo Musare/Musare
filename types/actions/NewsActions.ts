@@ -1,7 +1,7 @@
-import { BaseResponse } from "./BaseActions";
+import { GenericResponse } from "./GenericActions";
 import { NewsModel } from "../models/News";
 
-type BaseNewsResponse = BaseResponse & {
+type BaseNewsResponse = GenericResponse & {
 	data: {
 		news: NewsModel;
 	};
@@ -9,11 +9,8 @@ type BaseNewsResponse = BaseResponse & {
 
 export type NewestResponse = BaseNewsResponse;
 export type GetNewsResponse = BaseNewsResponse;
-export type GetPublishedNewsResponse = BaseResponse & {
+export type GetPublishedNewsResponse = GenericResponse & {
 	data: {
 		news: NewsModel[]
 	}
 };
-export type CreateNewsResponse = BaseResponse;
-export type UpdateNewsResponse = BaseResponse;
-export type RemoveNewsResponse = BaseResponse;

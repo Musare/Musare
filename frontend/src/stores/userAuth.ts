@@ -47,7 +47,12 @@ export const useUserAuthStore = defineStore("userAuth", {
 		permissions: {}
 	}),
 	actions: {
-		register(user) {
+		register(user: {
+			username: string;
+			email: string;
+			password: string;
+			recaptchaToken: string;
+		}) {
 			return new Promise((resolve, reject) => {
 				const { username, email, password, recaptchaToken } = user;
 
@@ -140,7 +145,7 @@ export const useUserAuthStore = defineStore("userAuth", {
 				}
 			});
 		},
-		login(user) {
+		login(user: { email: string; password: string }) {
 			return new Promise((resolve, reject) => {
 				const { email, password } = user;
 
@@ -244,11 +249,14 @@ export const useUserAuthStore = defineStore("userAuth", {
 				}
 			);
 		},
-		mapUserId(data) {
+		mapUserId(data: {
+			userId: string;
+			user: { name: string; username: string };
+		}) {
 			this.userIdMap[`Z${data.userId}`] = data.user;
 			this.userIdRequested[`Z${data.userId}`] = false;
 		},
-		requestingUserId(userId) {
+		requestingUserId(userId: string) {
 			this.userIdRequested[`Z${userId}`] = true;
 			if (!this.pendingUserIdCallbacks[`Z${userId}`])
 				this.pendingUserIdCallbacks[`Z${userId}`] = [];
@@ -262,7 +270,13 @@ export const useUserAuthStore = defineStore("userAuth", {
 		clearPendingCallbacks(userId: string) {
 			this.pendingUserIdCallbacks[`Z${userId}`] = [];
 		},
-		authData(data) {
+		authData(data: {
+			loggedIn: boolean;
+			role: string;
+			username: string;
+			email: string;
+			userId: string;
+		}) {
 			this.loggedIn = data.loggedIn;
 			this.role = data.role;
 			this.username = data.username;
@@ -270,17 +284,17 @@ export const useUserAuthStore = defineStore("userAuth", {
 			this.userId = data.userId;
 			this.gotData = true;
 		},
-		banUser(ban) {
+		banUser(ban: { reason: string; expiresAt: number }) {
 			this.banned = true;
 			this.ban = ban;
 		},
-		updateUsername(username) {
+		updateUsername(username: string) {
 			this.username = username;
 		},
-		updateRole(role) {
+		updateRole(role: string) {
 			this.role = role;
 		},
-		hasPermission(permission) {
+		hasPermission(permission: string) {
 			return !!(this.permissions && this.permissions[permission]);
 		},
 		updatePermissions() {

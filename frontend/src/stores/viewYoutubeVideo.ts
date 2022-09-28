@@ -58,7 +58,13 @@ export const useViewYoutubeVideoStore = ({
 			}
 		}),
 		actions: {
-			init({ videoId, youtubeId }) {
+			init({
+				videoId,
+				youtubeId
+			}: {
+				videoId: string;
+				youtubeId: string;
+			}) {
 				this.videoId = videoId;
 				this.youtubeId = youtubeId;
 			},
@@ -79,7 +85,7 @@ export const useViewYoutubeVideoStore = ({
 			loadVideoById(id) {
 				this.player.player.loadVideoById(id);
 			},
-			pauseVideo(status) {
+			pauseVideo(status: boolean) {
 				if (
 					(this.player.player && this.player.player.pauseVideo) ||
 					this.player.playVideo
@@ -89,8 +95,8 @@ export const useViewYoutubeVideoStore = ({
 				}
 				this.player.paused = status;
 			},
-			setPlaybackRate(rate) {
-				if (rate) {
+			setPlaybackRate(rate?: number) {
+				if (typeof rate === "number") {
 					this.player.playbackRate = rate;
 					this.player.player.setPlaybackRate(rate);
 				} else if (
