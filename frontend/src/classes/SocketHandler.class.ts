@@ -10,27 +10,27 @@ export default class SocketHandler {
 	dispatcher: ListenerHandler;
 
 	onConnectCbs: {
-		temp: ((...args: any[]) => any)[];
-		persist: ((...args: any[]) => any)[];
+		temp: (() => void)[];
+		persist: (() => void)[];
 	};
 
 	ready: boolean;
 
 	firstInit: boolean;
 
-	pendingDispatches: ((...args: any[]) => any)[];
+	pendingDispatches: (() => void)[];
 
 	onDisconnectCbs: {
-		temp: ((...args: any[]) => any)[];
-		persist: ((...args: any[]) => any)[];
+		temp: (() => void)[];
+		persist: (() => void)[];
 	};
 
 	CB_REFS: {
-		[key: string]: (...args: any[]) => any;
+		[key: string]: (...args: any[]) => void;
 	};
 
 	PROGRESS_CB_REFS: {
-		[key: string]: (...args: any[]) => any;
+		[key: string]: (...args: any[]) => void;
 	};
 
 	data: {

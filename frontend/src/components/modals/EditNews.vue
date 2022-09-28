@@ -5,6 +5,11 @@ import DOMPurify from "dompurify";
 import Toast from "toasters";
 import { formatDistance } from "date-fns";
 import { storeToRefs } from "pinia";
+import {
+	GetNewsResponse,
+	CreateNewsResponse,
+	UpdateNewsResponse
+} from "@musare_types/actions/NewsActions";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useEditNewsStore } from "@/stores/editNews";
 import { useModalsStore } from "@/stores/modals";
@@ -38,18 +43,18 @@ const getTitle = () => {
 
 	// validate existence of h1 for the page title
 
-	if (preview.childNodes.length === 0) return "";
+	if (!preview || preview.childNodes.length === 0) return "";
 
 	if (preview.childNodes[0].nodeName !== "H1") {
 		for (let node = 0; node < preview.childNodes.length; node += 1) {
 			if (preview.childNodes[node].nodeName) {
 				if (preview.childNodes[node].nodeName === "H1")
-					title = preview.childNodes[node].textContent;
+					title = preview.childNodes[node].textContent || "";
 
 				break;
 			}
 		}
-	} else title = preview.childNodes[0].textContent;
+	} else title = preview.childNodes[0].textContent || "";
 
 	return title;
 };
@@ -58,7 +63,7 @@ const { inputs, save, setOriginalValue } = useForm(
 	{
 		markdown: {
 			value: "# Header\n## Sub-Header\n- **So**\n- _Many_\n- ~Points~\n\nOther things you want to say and [link](https://example.com).\n\n### Sub-Sub-Header\n> Oh look, a quote!\n\n`lil code`\n\n```\nbig code\n```\n",
-			validate: value => {
+			validate: (value: string) => {
 				if (value === "") return "News item cannot be empty.";
 				if (!getTitle())
 					return "Please provide a title (heading level 1) at the top of the document.";
@@ -76,7 +81,7 @@ const { inputs, save, setOriginalValue } = useForm(
 				status: values.status,
 				showToNewUsers: values.showToNewUsers
 			};
-			const cb = res => {
+			const cb = (res: CreateNewsResponse | UpdateNewsResponse) => {
 				new Toast(res.message);
 				if (res.status === "success") resolve();
 				else reject(new Error(res.message));
@@ -113,20 +118,24 @@ onMounted(() => {
 
 	socket.onConnect(() => {
 		if (newsId.value && !createNews.value) {
-			socket.dispatch(`news.getNewsFromId`, newsId.value, res => {
-				if (res.status === "success") {
-					setOriginalValue({
-						markdown: res.data.news.markdown,
-						status: res.data.news.status,
-						showToNewUsers: res.data.news.showToNewUsers
-					});
-					createdBy.value = res.data.news.createdBy;
-					createdAt.value = res.data.news.createdAt;
-				} else {
-					new Toast("News with that ID not found.");
-					closeCurrentModal();
+			socket.dispatch(
+				`news.getNewsFromId`,
+				newsId.value,
+				(res: GetNewsResponse) => {
+					if (res.status === "success") {
+						setOriginalValue({
+							markdown: res.data.news.markdown,
+							status: res.data.news.status,
+							showToNewUsers: res.data.news.showToNewUsers
+						});
+						createdBy.value = res.data.news.createdBy;
+						createdAt.value = res.data.news.createdAt;
+					} else {
+						new Toast("News with that ID not found.");
+						closeCurrentModal();
+					}
 				}
-			});
+			);
 		}
 	});
 });

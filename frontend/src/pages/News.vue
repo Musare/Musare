@@ -4,6 +4,13 @@ import { defineAsyncComponent, ref, onMounted } from "vue";
 import { formatDistance } from "date-fns";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
+import { NewsModel } from "@musare_types/models/News";
+import {
+	NewsCreatedResponse,
+	NewsUpdatedResponse,
+	NewsRemovedResponse
+} from "@musare_types/events/NewsEvents";
+import { GetPublishedNewsResponse } from "@musare_types/actions/NewsActions";
 import { useWebsocketsStore } from "@/stores/websockets";
 
 const MainHeader = defineAsyncComponent(
@@ -18,7 +25,7 @@ const UserLink = defineAsyncComponent(
 
 const { socket } = useWebsocketsStore();
 
-const news = ref([]);
+const news = ref<NewsModel[]>([]);
 
 const { sanitize } = DOMPurify;
 
@@ -35,17 +42,20 @@ onMounted(() => {
 	});
 
 	socket.onConnect(() => {
-		socket.dispatch("news.getPublished", res => {
-			if (res.status === "success") news.value = res.data.news;
-		});
+		socket.dispatch(
+			"news.getPublished",
+			(res: GetPublishedNewsResponse) => {
+				if (res.status === "success") news.value = res.data.news;
+			}
+		);
 
 		socket.dispatch("apis.joinRoom", "news");
 
-		socket.on("event:news.created", res =>
+		socket.on("event:news.created", (res: NewsCreatedResponse) =>
 			news.value.unshift(res.data.news)
 		);
 
-		socket.on("event:news.updated", res => {
+		socket.on("event:news.updated", (res: NewsUpdatedResponse) => {
 			if (res.data.news.status === "draft") {
 				news.value = news.value.filter(
 					item => item._id !== res.data.news._id
@@ -62,7 +72,7 @@ onMounted(() => {
 			}
 		});
 
-		socket.on("event:news.deleted", res => {
+		socket.on("event:news.deleted", (res: NewsRemovedResponse) => {
 			news.value = news.value.filter(
 				item => item._id !== res.data.newsId
 			);

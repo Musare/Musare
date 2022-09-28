@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
+import { RemoveNewsResponse } from "@musare_types/actions/NewsActions";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useUserAuthStore } from "@/stores/userAuth";
@@ -126,8 +127,12 @@ const { openModal } = useModalsStore();
 
 const { hasPermission } = useUserAuthStore();
 
-const remove = id => {
-	socket.dispatch("news.remove", id, res => new Toast(res.message));
+const remove = (id: string) => {
+	socket.dispatch(
+		"news.remove",
+		id,
+		(res: RemoveNewsResponse) => new Toast(res.message)
+	);
 };
 </script>
 
