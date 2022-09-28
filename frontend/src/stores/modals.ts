@@ -1,3 +1,4 @@
+import { defineAsyncComponent } from "vue";
 import { defineStore } from "pinia";
 import utils from "@/utils";
 
@@ -160,3 +161,16 @@ export const useModalsStore = defineStore("modals", {
 		}
 	}
 });
+
+export const useModalComponents = (
+	baseDirectory: string,
+	map: { [key: string]: string }
+) => {
+	const modalComponents = <{ [key: string]: string }>{};
+	Object.entries(map).forEach(([mapKey, mapValue]) => {
+		modalComponents[mapKey] = defineAsyncComponent(
+			() => import(`@/${baseDirectory}/${mapValue}`)
+		);
+	});
+	return modalComponents;
+};
