@@ -2,19 +2,19 @@ import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { useModalsStore } from "@/stores/modals";
 
 export const useForm = (
-	inputOptions: {
-		[key: string]:
-			| {
-					value: any;
-					validate?: (value: any) => boolean | string;
-			  }
-			| any;
-	},
+	inputOptions: Record<
+		string,
+		| {
+				value: any;
+				validate?: (value: any) => boolean | string;
+		  }
+		| any
+	>,
 	cb: (
 		response: {
 			status: string;
-			messages: { [key: string]: string };
-			values: { [key: string]: any };
+			messages: Record<string, string>;
+			values: Record<string, any>;
 		},
 		resolve: (value?: undefined) => void,
 		reject: (value: Error) => void
@@ -72,10 +72,7 @@ export const useForm = (
 		return _sourceChanged;
 	});
 
-	const useCallback = (
-		status: string,
-		messages?: { [key: string]: string }
-	) =>
+	const useCallback = (status: string, messages?: Record<string, string>) =>
 		new Promise((resolve, reject: (reason: Error) => void) => {
 			cb(
 				{
@@ -107,7 +104,7 @@ export const useForm = (
 	};
 
 	const validate = () => {
-		const invalid = <{ [key: string]: string[] }>{};
+		const invalid = <Record<string, string[]>>{};
 		Object.entries(inputs.value).forEach(([name, input]) => {
 			input.errors = [];
 			if (
@@ -168,7 +165,7 @@ export const useForm = (
 		}
 	};
 
-	const setValue = (value: { [key: string]: any }, reset?: boolean) => {
+	const setValue = (value: Record<string, any>, reset?: boolean) => {
 		Object.entries(value).forEach(([name, inputValue]) => {
 			if (inputs.value[name]) {
 				inputs.value[name].value = JSON.parse(
@@ -184,7 +181,7 @@ export const useForm = (
 		});
 	};
 
-	const setOriginalValue = (value: { [key: string]: any }) => {
+	const setOriginalValue = (value: Record<string, any>) => {
 		Object.entries(value).forEach(([name, inputValue]) => {
 			if (inputs.value[name]) {
 				if (

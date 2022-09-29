@@ -1,10 +1,11 @@
 export default class ListenerHandler extends EventTarget {
-	listeners: {
-		[name: string]: Array<{
+	listeners: Record<
+		string,
+		{
 			cb: (event: any) => void;
 			options: { replaceable: boolean; modalUuid?: string };
-		}>;
-	};
+		}[]
+	>;
 
 	constructor() {
 		super();

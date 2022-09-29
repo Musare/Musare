@@ -23,14 +23,17 @@ const route = useRoute();
 
 const { socket } = useWebsocketsStore();
 
-const quotaStatus = ref<{
-	[key: string]: {
-		title: string;
-		quotaUsed: number;
-		limit: number;
-		quotaExceeded: boolean;
-	};
-}>({});
+const quotaStatus = ref<
+	Record<
+		string,
+		{
+			title: string;
+			quotaUsed: number;
+			limit: number;
+			quotaExceeded: boolean;
+		}
+	>
+>({});
 const fromDate = ref();
 const columnDefault = ref<TableColumn>({
 	sortable: true,

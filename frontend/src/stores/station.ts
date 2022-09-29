@@ -24,9 +24,7 @@ export const useStationStore = defineStore("station", {
 		autofill: Playlist[];
 		blacklist: Playlist[];
 		mediaModalPlayingAudio: boolean;
-		permissions: {
-			[permission: string]: boolean;
-		};
+		permissions: Record<string, boolean>;
 	} => ({
 		station: {},
 		autoRequest: [],

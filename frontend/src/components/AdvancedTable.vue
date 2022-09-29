@@ -681,9 +681,7 @@ const getTableSettings = () => {
 			name: string;
 			width: number;
 		}[];
-		columnSort: {
-			[name: string]: string;
-		};
+		columnSort: Record<string, string>;
 		filter: {
 			appliedFilters: TableFilter[];
 			appliedFilterOperator: string;

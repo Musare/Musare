@@ -25,24 +25,14 @@ export default class SocketHandler {
 		persist: (() => void)[];
 	};
 
-	CB_REFS: {
-		[key: string]: (...args: any[]) => void;
-	};
+	CB_REFS: Record<string, (...args: any[]) => void>;
 
-	PROGRESS_CB_REFS: {
-		[key: string]: (...args: any[]) => void;
-	};
+	PROGRESS_CB_REFS: Record<string, (...args: any[]) => void>;
 
 	data: {
-		dispatch?: {
-			[key: string]: (...args: any[]) => any;
-		};
-		progress?: {
-			[key: string]: (...args: any[]) => any;
-		};
-		on?: {
-			[key: string]: any;
-		};
+		dispatch?: Record<string, (...args: any[]) => any>;
+		progress?: Record<string, (...args: any[]) => any>;
+		on?: Record<string, any>;
 	}; // Mock only
 
 	executeDispatch: boolean; // Mock only

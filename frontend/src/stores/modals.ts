@@ -22,12 +22,10 @@ import { useWhatIsNewStore } from "@/stores/whatIsNew";
 
 export const useModalsStore = defineStore("modals", {
 	state: (): {
-		modals: {
-			[key: string]: string;
-		};
+		modals: Record<string, string>;
 		activeModals: string[];
-		preventCloseUnsaved: { [uuid: string]: () => boolean };
-		preventCloseCbs: { [uuid: string]: () => Promise<void> };
+		preventCloseUnsaved: Record<string, () => boolean>;
+		preventCloseCbs: Record<string, () => Promise<void>>;
 	} => ({
 		modals: {},
 		activeModals: [],
@@ -164,9 +162,9 @@ export const useModalsStore = defineStore("modals", {
 
 export const useModalComponents = (
 	baseDirectory: string,
-	map: { [key: string]: string }
+	map: Record<string, string>
 ) => {
-	const modalComponents = <{ [key: string]: string }>{};
+	const modalComponents: Record<string, any> = {};
 	Object.entries(map).forEach(([mapKey, mapValue]) => {
 		modalComponents[mapKey] = defineAsyncComponent(
 			() => import(`@/${baseDirectory}/${mapValue}`)

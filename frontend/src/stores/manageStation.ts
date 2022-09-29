@@ -17,9 +17,7 @@ export const useManageStationStore = ({ modalUuid }: { modalUuid: string }) =>
 			songsList: Song[];
 			stationPaused: boolean;
 			currentSong: CurrentSong;
-			permissions: {
-				[permission: string]: boolean;
-			};
+			permissions: Record<string, boolean>;
 		} => ({
 			stationId: null,
 			sector: "admin",

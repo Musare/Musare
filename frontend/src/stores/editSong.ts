@@ -24,8 +24,9 @@ export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 			youtubeIds: string[];
 			songPrefillData: any;
 			form: {
-				inputs: Ref<{
-					[key: string]:
+				inputs: Ref<
+					Record<
+						string,
 						| {
 								value: any;
 								originalValue: any;
@@ -36,15 +37,13 @@ export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 								required: boolean;
 								ignoreUnsaved: boolean;
 						  }
-						| any;
-				}>;
+						| any
+					>
+				>;
 				unsavedChanges: ComputedRef<string[]>;
 				save: (saveCb?: () => void) => void;
-				setValue: (
-					value: { [key: string]: any },
-					reset?: boolean
-				) => void;
-				setOriginalValue: (value: { [key: string]: any }) => void;
+				setValue: (value: Record<string, any>, reset?: boolean) => void;
+				setOriginalValue: (value: Record<string, any>) => void;
 			};
 		} => ({
 			video: {

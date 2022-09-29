@@ -5,14 +5,12 @@ import { useWebsocketsStore } from "@/stores/websockets";
 
 export const useUserAuthStore = defineStore("userAuth", {
 	state: (): {
-		userIdMap: { [key: string]: { name: string; username: string } };
-		userIdRequested: { [key: string]: boolean };
-		pendingUserIdCallbacks: {
-			[key: string]: ((basicUser: {
-				name: string;
-				username: string;
-			}) => void)[];
-		};
+		userIdMap: Record<string, { name: string; username: string }>;
+		userIdRequested: Record<string, boolean>;
+		pendingUserIdCallbacks: Record<
+			string,
+			((basicUser: { name: string; username: string }) => void)[]
+		>;
 		loggedIn: boolean;
 		role: "user" | "moderator" | "admin";
 		username: string;
@@ -25,9 +23,7 @@ export const useUserAuthStore = defineStore("userAuth", {
 		};
 		gotData: boolean;
 		gotPermissions: boolean;
-		permissions: {
-			[permission: string]: boolean;
-		};
+		permissions: Record<string, boolean>;
 	} => ({
 		userIdMap: {},
 		userIdRequested: {},

@@ -6,15 +6,9 @@ declare module "vitest" {
 		wrapper?: VueWrapper;
 		mockSocket?: {
 			data?: {
-				dispatch?: {
-					[key: string]: (...args: any[]) => any;
-				};
-				progress?: {
-					[key: string]: (...args: any[]) => any;
-				};
-				on?: {
-					[key: string]: any;
-				};
+				dispatch?: Record<string, (...args: any[]) => any>;
+				progress?: Record<string, (...args: any[]) => any>;
+				on?: Record<string, any>;
 			};
 			executeDispatch?: boolean;
 		};
