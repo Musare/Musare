@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
-import { defineAsyncComponent, ref, computed, watch, onMounted } from "vue";
+import { defineAsyncComponent, ref, watch, onMounted } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { GenericResponse } from "@musare_types/actions/GenericActions";
@@ -34,8 +34,6 @@ const modalsStore = useModalsStore();
 const apiDomain = ref("");
 const socketConnected = ref(true);
 const keyIsDown = ref("");
-const scrollPosition = ref({ y: 0, x: 0 });
-const aModalIsOpen2 = ref(false);
 const broadcastChannel = ref();
 const christmas = ref(false);
 const disconnectedMessage = ref();
@@ -51,8 +49,6 @@ const {
 } = userPreferencesStore;
 const { activeModals } = storeToRefs(modalsStore);
 const { openModal, closeCurrentModal } = modalsStore;
-
-const aModalIsOpen = computed(() => Object.keys(activeModals.value).length > 0);
 
 const toggleNightMode = () => {
 	if (loggedIn.value) {
@@ -94,20 +90,6 @@ watch(nightmode, enabled => {
 watch(activityWatch, enabled => {
 	if (enabled) aw.enable();
 	else aw.disable();
-});
-watch(aModalIsOpen, isOpen => {
-	if (isOpen) {
-		scrollPosition.value = {
-			x: window.scrollX,
-			y: window.scrollY
-		};
-		aModalIsOpen2.value = true;
-	} else {
-		aModalIsOpen2.value = false;
-		setTimeout(() => {
-			window.scrollTo(scrollPosition.value.x, scrollPosition.value.y);
-		}, 10);
-	}
 });
 
 onMounted(async () => {
