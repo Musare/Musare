@@ -19,7 +19,8 @@ const SongItem = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, required: true }
+	modalUuid: { type: String, required: true },
+	songs: { type: Array, required: true }
 });
 
 const { socket } = useWebsocketsStore();
@@ -117,7 +118,7 @@ const startEditingSongs = () => {
 	else {
 		openModal({
 			modal: "editSong",
-			data: { songs: songsToEdit.value }
+			props: { songs: songsToEdit.value }
 		});
 	}
 };
@@ -325,6 +326,8 @@ const updateTrackSong = updatedSong => {
 };
 
 onMounted(() => {
+	setPlaylistSongs(props.songs);
+
 	preventCloseCbs[props.modalUuid] = (): Promise<void> =>
 		new Promise(resolve => {
 			const confirmReasons = [];
@@ -343,7 +346,7 @@ onMounted(() => {
 			if (confirmReasons.length > 0)
 				openModal({
 					modal: "confirm",
-					data: {
+					props: {
 						message: confirmReasons,
 						onCompleted: resolve
 					}

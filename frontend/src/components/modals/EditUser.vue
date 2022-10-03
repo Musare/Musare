@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent, watch, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
-import { storeToRefs } from "pinia";
 import validation from "@/validation";
-import { useEditUserStore } from "@/stores/editUser";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useUserAuthStore } from "@/stores/userAuth";
@@ -15,15 +13,11 @@ const QuickConfirm = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, required: true }
+	modalUuid: { type: String, required: true },
+	userId: { type: String, required: true }
 });
 
-const editUserStore = useEditUserStore(props);
-
 const { socket } = useWebsocketsStore();
-
-const { userId, user } = storeToRefs(editUserStore);
-const { setUser } = editUserStore;
 
 const { closeCurrentModal, preventCloseUnsaved } = useModalsStore();
 
@@ -37,7 +31,7 @@ const {
 } = useForm(
 	{
 		username: {
-			value: user.value.username,
+			value: "",
 			validate: value => {
 				if (!validation.isLength(value, 2, 32))
 					return "Username must have between 2 and 32 characters.";
@@ -51,10 +45,9 @@ const {
 		if (status === "success")
 			socket.dispatch(
 				"users.updateUsername",
-				user.value._id,
+				props.userId,
 				values.username,
 				res => {
-					user.value.username = values.username;
 					if (res.status === "success") {
 						resolve();
 						new Toast(res.message);
@@ -100,10 +93,9 @@ const {
 		if (status === "success")
 			socket.dispatch(
 				"users.updateEmail",
-				user.value._id,
+				props.userId,
 				values.email,
 				res => {
-					user.value.email.address = values.email;
 					if (res.status === "success") {
 						resolve();
 						new Toast(res.message);
@@ -129,15 +121,14 @@ const {
 	save: saveRole,
 	setOriginalValue: setRole
 } = useForm(
-	{ role: user.value.role },
+	{ role: "" },
 	({ status, messages, values }, resolve, reject) => {
 		if (status === "success")
 			socket.dispatch(
 				"users.updateRole",
-				user.value._id,
+				props.userId,
 				values.role,
 				res => {
-					user.value.role = values.role;
 					if (res.status === "success") {
 						resolve();
 						new Toast(res.message);
@@ -179,7 +170,7 @@ const {
 		if (status === "success")
 			socket.dispatch(
 				"users.banUserById",
-				user.value._id,
+				props.userId,
 				values.reason,
 				values.expiresAt,
 				res => {
@@ -202,25 +193,25 @@ const {
 );
 
 const resendVerificationEmail = () => {
-	socket.dispatch(`users.resendVerifyEmail`, user.value._id, res => {
+	socket.dispatch(`users.resendVerifyEmail`, props.userId, res => {
 		new Toast(res.message);
 	});
 };
 
 const requestPasswordReset = () => {
-	socket.dispatch(`users.adminRequestPasswordReset`, user.value._id, res => {
+	socket.dispatch(`users.adminRequestPasswordReset`, props.userId, res => {
 		new Toast(res.message);
 	});
 };
 
 const removeAccount = () => {
-	socket.dispatch(`users.adminRemove`, user.value._id, res => {
+	socket.dispatch(`users.adminRemove`, props.userId, res => {
 		new Toast(res.message);
 	});
 };
 
 const removeSessions = () => {
-	socket.dispatch(`users.removeSessions`, user.value._id, res => {
+	socket.dispatch(`users.removeSessions`, props.userId, res => {
 		new Toast(res.message);
 	});
 };
@@ -231,17 +222,6 @@ watch(
 		if (!value) closeCurrentModal();
 	}
 );
-watch(user, (value, oldValue) => {
-	if (value.username !== oldValue.username)
-		setUsername({ username: value.username });
-	if (
-		value.email &&
-		(value.email.address !== (oldValue.email && oldValue.email.address) ||
-			!emailInputs.value.email.value)
-	)
-		setEmail({ email: value.email.address });
-	if (value.role !== oldValue.role) setRole({ role: value.role });
-});
 
 onMounted(() => {
 	preventCloseUnsaved[props.modalUuid] = () =>
@@ -252,16 +232,18 @@ onMounted(() => {
 		0;
 
 	socket.onConnect(() => {
-		socket.dispatch(`users.getUserFromId`, userId.value, res => {
+		socket.dispatch(`users.getUserFromId`, props.userId, res => {
 			if (res.status === "success") {
-				setUser(res.data);
+				setUsername({ username: res.data.username });
+				setEmail({ email: res.data.email.address });
+				setRole({ role: res.data.role });
 
-				socket.dispatch("apis.joinRoom", `edit-user.${userId.value}`);
+				socket.dispatch("apis.joinRoom", `edit-user.${props.userId}`);
 
 				socket.on(
 					"event:user.removed",
 					res => {
-						if (res.data.userId === userId.value)
+						if (res.data.userId === props.userId)
 							closeCurrentModal();
 					},
 					{ modalUuid: props.modalUuid }
@@ -276,16 +258,14 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
 	delete preventCloseUnsaved[props.modalUuid];
-	socket.dispatch("apis.leaveRoom", `edit-user.${userId.value}`, () => {});
-	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
-	editUserStore.$dispose();
+	socket.dispatch("apis.leaveRoom", `edit-user.${props.userId}`, () => {});
 });
 </script>
 
 <template>
 	<div>
 		<modal title="Edit User">
-			<template #body v-if="user && user._id">
+			<template #body>
 				<div class="section">
 					<label class="label"> Change username </label>
 					<p class="control is-grouped">

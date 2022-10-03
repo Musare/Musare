@@ -30,7 +30,8 @@ const QuickConfirm = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, required: true }
+	modalUuid: { type: String, required: true },
+	playlistId: { type: String, required: true }
 });
 
 const { socket } = useWebsocketsStore();
@@ -54,7 +55,7 @@ const playlistSongs = computed({
 	}
 });
 
-const { playlistId, tab, playlist } = storeToRefs(editPlaylistStore);
+const { tab, playlist } = storeToRefs(editPlaylistStore);
 const { setPlaylist, clearPlaylist, addSong, removeSong, repositionedSong } =
 	editPlaylistStore;
 
@@ -248,7 +249,7 @@ const clearAndRefillGenrePlaylist = () => {
 onMounted(() => {
 	socket.onConnect(() => {
 		gettingSongs.value = true;
-		socket.dispatch("playlists.getPlaylist", playlistId.value, res => {
+		socket.dispatch("playlists.getPlaylist", props.playlistId, res => {
 			if (res.status === "success") {
 				setPlaylist(res.data.playlist);
 			} else new Toast(res.message);

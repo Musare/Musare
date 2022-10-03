@@ -145,7 +145,7 @@ export const useForm = (
 			if (sourceChanged.value.length > 0)
 				openModal({
 					modal: "confirm",
-					data: {
+					props: {
 						message:
 							"Updates have been made whilst you were making changes. Are you sure you want to continue?",
 						onCompleted: onSave

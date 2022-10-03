@@ -1,16 +1,8 @@
 <script setup lang="ts">
-import {
-	defineAsyncComponent,
-	ref,
-	onMounted,
-	onBeforeUnmount,
-	computed
-} from "vue";
+import { defineAsyncComponent, ref, onMounted, computed } from "vue";
 import Toast from "toasters";
-import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
-import { useReportStore } from "@/stores/report";
 import { useForm } from "@/composables/useForm";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
@@ -22,13 +14,11 @@ const ReportInfoItem = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, required: true }
+	modalUuid: { type: String, required: true },
+	song: { type: Object, required: true }
 });
 
 const { socket } = useWebsocketsStore();
-
-const reportStore = useReportStore(props);
-const { song } = storeToRefs(reportStore);
 
 const { openModal, closeCurrentModal } = useModalsStore();
 
@@ -190,7 +180,7 @@ const { inputs, save } = useForm(
 					"reports.create",
 					{
 						issues,
-						youtubeId: song.value.youtubeId
+						youtubeId: props.song.youtubeId
 					},
 					res => {
 						if (res.status === "success") {
@@ -225,7 +215,7 @@ const categories = computed(() =>
 
 onMounted(() => {
 	socket.onConnect(() => {
-		socket.dispatch("reports.myReportsForSong", song.value._id, res => {
+		socket.dispatch("reports.myReportsForSong", props.song._id, res => {
 			if (res.status === "success") {
 				existingReports.value = res.data.reports;
 				existingReports.value.forEach(report =>
@@ -257,11 +247,6 @@ onMounted(() => {
 			{ modalUuid: props.modalUuid }
 		);
 	});
-});
-
-onBeforeUnmount(() => {
-	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
-	reportStore.$dispose();
 });
 </script>
 
@@ -446,7 +431,7 @@ onBeforeUnmount(() => {
 											@click="
 												openModal({
 													modal: 'viewReport',
-													data: {
+													props: {
 														reportId: report._id
 													}
 												})

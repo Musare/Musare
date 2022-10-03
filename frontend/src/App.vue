@@ -209,7 +209,7 @@ onMounted(async () => {
 
 			if (news) {
 				if (newUser) {
-					openModal({ modal: "whatIsNew", data: { news } });
+					openModal({ modal: "whatIsNew", props: { news } });
 				} else if (localStorage.getItem("whatIsNew")) {
 					if (
 						parseInt(localStorage.getItem("whatIsNew") as string) <
@@ -217,7 +217,7 @@ onMounted(async () => {
 					) {
 						openModal({
 							modal: "whatIsNew",
-							data: { news }
+							props: { news }
 						});
 						localStorage.setItem(
 							"whatIsNew",
@@ -233,7 +233,7 @@ onMounted(async () => {
 					)
 						openModal({
 							modal: "whatIsNew",
-							data: { news }
+							props: { news }
 						});
 					localStorage.setItem(
 						"whatIsNew",

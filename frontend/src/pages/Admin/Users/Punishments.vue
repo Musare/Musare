@@ -224,7 +224,7 @@ const deactivatePunishment = punishmentId => {
 						@click="
 							openModal({
 								modal: 'viewPunishment',
-								data: { punishmentId: slotProps.item._id }
+								props: { punishmentId: slotProps.item._id }
 							})
 						"
 						:disabled="slotProps.item.removed"

@@ -69,7 +69,7 @@ onMounted(() => {
 								@click="
 									openModal({
 										modal: 'editPlaylist',
-										data: { playlistId: element._id }
+										props: { playlistId: element._id }
 									})
 								"
 								class="material-icons edit-icon"
@@ -82,7 +82,7 @@ onMounted(() => {
 								@click="
 									openModal({
 										modal: 'editPlaylist',
-										data: { playlistId: element._id }
+										props: { playlistId: element._id }
 									})
 								"
 								class="material-icons view-icon"

@@ -492,7 +492,7 @@ onMounted(() => {
 								@click="
 									openModal({
 										modal: 'editPlaylist',
-										data: {
+										props: {
 											playlistId: featuredPlaylist._id
 										}
 									})
@@ -511,7 +511,7 @@ onMounted(() => {
 								@click="
 									openModal({
 										modal: 'editPlaylist',
-										data: {
+										props: {
 											playlistId: featuredPlaylist._id
 										}
 									})
@@ -676,7 +676,7 @@ onMounted(() => {
 								@click="
 									openModal({
 										modal: 'editPlaylist',
-										data: { playlistId: playlist._id }
+										props: { playlistId: playlist._id }
 									})
 								"
 								class="material-icons edit-icon"
@@ -693,7 +693,7 @@ onMounted(() => {
 								@click="
 									openModal({
 										modal: 'editPlaylist',
-										data: { playlistId: playlist._id }
+										props: { playlistId: playlist._id }
 									})
 								"
 								class="material-icons edit-icon"
@@ -758,7 +758,7 @@ onMounted(() => {
 								@click="
 									openModal({
 										modal: 'editPlaylist',
-										data: { playlistId: playlist._id }
+										props: { playlistId: playlist._id }
 									})
 								"
 								class="material-icons edit-icon"
@@ -775,7 +775,7 @@ onMounted(() => {
 								@click="
 									openModal({
 										modal: 'editPlaylist',
-										data: { playlistId: playlist._id }
+										props: { playlistId: playlist._id }
 									})
 								"
 								class="material-icons edit-icon"
@@ -949,7 +949,7 @@ onMounted(() => {
 										@click="
 											openModal({
 												modal: 'editPlaylist',
-												data: {
+												props: {
 													playlistId: element._id
 												}
 											})

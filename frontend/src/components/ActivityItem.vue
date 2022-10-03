@@ -126,7 +126,7 @@ onMounted(() => {
 						@click="
 							openModal({
 								modal: 'viewReport',
-								data: { reportId: activity.payload.reportId }
+								props: { reportId: activity.payload.reportId }
 							})
 						"
 						>report</a
@@ -139,7 +139,7 @@ onMounted(() => {
 						@click="
 							openModal({
 								modal: 'editPlaylist',
-								data: {
+								props: {
 									playlistId: activity.payload.playlistId
 								}
 							})

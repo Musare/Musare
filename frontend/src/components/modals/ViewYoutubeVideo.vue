@@ -16,7 +16,9 @@ const SongThumbnail = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, required: true }
+	modalUuid: { type: String, required: true },
+	videoId: { type: String, default: null },
+	youtubeId: { type: String, default: null }
 });
 
 const interval = ref(null);
@@ -30,9 +32,7 @@ const activityWatchVideoLastStartDuration = ref(0);
 
 const viewYoutubeVideoStore = useViewYoutubeVideoStore(props);
 const stationStore = useStationStore();
-const { videoId, youtubeId, video, player } = storeToRefs(
-	viewYoutubeVideoStore
-);
+const { video, player } = storeToRefs(viewYoutubeVideoStore);
 const {
 	updatePlayer,
 	stopVideo,
@@ -51,31 +51,12 @@ const userAuthStore = useUserAuthStore();
 const { hasPermission } = userAuthStore;
 
 const remove = () => {
-	socket.dispatch("youtube.removeVideos", videoId.value, res => {
+	socket.dispatch("youtube.removeVideos", video.value._id, res => {
 		if (res.status === "success") {
 			new Toast("YouTube video successfully removed.");
 			closeCurrentModal();
 		} else {
 			new Toast("Youtube video with that ID not found.");
-		}
-	});
-};
-
-const handleConfirmed = ({ action, params }) => {
-	if (typeof action === "function") {
-		if (params) action(params);
-		else action();
-	}
-};
-
-const confirmAction = ({ message, action }) => {
-	openModal({
-		modal: "confirm",
-		data: {
-			message,
-			action,
-			params: null,
-			onCompleted: handleConfirmed
 		}
 	});
 };
@@ -222,7 +203,7 @@ onMounted(() => {
 		loaded.value = false;
 		socket.dispatch(
 			"youtube.getVideo",
-			videoId.value || youtubeId.value,
+			props.videoId || props.youtubeId,
 			true,
 			res => {
 				if (res.status === "success") {
@@ -457,7 +438,7 @@ onMounted(() => {
 
 					socket.dispatch(
 						"apis.joinRoom",
-						`view-youtube-video.${videoId.value}`
+						`view-youtube-video.${video.value._id}`
 					);
 
 					socket.on(
@@ -491,7 +472,7 @@ onBeforeUnmount(() => {
 
 	socket.dispatch(
 		"apis.leaveRoom",
-		`view-youtube-video.${videoId.value}`,
+		`view-youtube-video.${video.value._id}`,
 		() => {}
 	);
 
@@ -720,7 +701,7 @@ onBeforeUnmount(() => {
 				"
 				class="button is-primary icon-with-button material-icons"
 				@click.prevent="
-					openModal({ modal: 'editSong', data: { song: video } })
+					openModal({ modal: 'editSong', props: { song: video } })
 				"
 				content="Create/edit song from video"
 				v-tippy
@@ -732,10 +713,13 @@ onBeforeUnmount(() => {
 					v-if="hasPermission('youtube.removeVideos')"
 					class="button is-danger icon-with-button material-icons"
 					@click.prevent="
-						confirmAction({
-							message:
-								'Removing this video will remove it from all playlists and cause a ratings recalculation.',
-							action: remove
+						openModal({
+							modal: 'confirm',
+							props: {
+								message:
+									'Removing this video will remove it from all playlists and cause a ratings recalculation.',
+								onCompleted: remove
+							}
 						})
 					"
 					content="Delete Video"

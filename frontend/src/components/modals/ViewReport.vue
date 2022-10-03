@@ -7,10 +7,8 @@ import {
 	onBeforeUnmount
 } from "vue";
 import Toast from "toasters";
-import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
-import { useViewReportStore } from "@/stores/viewReport";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useReports } from "@/composables/useReports";
 import { Report } from "@/types/report";
@@ -27,13 +25,11 @@ const QuickConfirm = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, required: true }
+	modalUuid: { type: String, required: true },
+	reportId: { type: String, required: true }
 });
 
 const { socket } = useWebsocketsStore();
-
-const viewReportStore = useViewReportStore(props);
-const { reportId } = storeToRefs(viewReportStore);
 
 const { openModal, closeCurrentModal } = useModalsStore();
 
@@ -54,21 +50,21 @@ const report = ref<Report>({});
 const song = ref();
 
 const resolve = value =>
-	resolveReport({ reportId: reportId.value, value })
+	resolveReport({ reportId: props.reportId, value })
 		.then((res: any) => {
 			if (res.status !== "success") new Toast(res.message);
 		})
 		.catch(err => new Toast(err.message));
 
 const remove = () =>
-	removeReport(reportId.value)
+	removeReport(props.reportId)
 		.then((res: any) => {
 			if (res.status === "success") closeCurrentModal();
 		})
 		.catch(err => new Toast(err.message));
 
 const toggleIssue = issueId => {
-	socket.dispatch("reports.toggleIssue", reportId.value, issueId, res => {
+	socket.dispatch("reports.toggleIssue", props.reportId, issueId, res => {
 		if (res.status !== "success") new Toast(res.message);
 	});
 };
@@ -76,7 +72,7 @@ const toggleIssue = issueId => {
 const openSong = () => {
 	openModal({
 		modal: "editSong",
-		data: { song: report.value.song }
+		props: { song: report.value.song }
 	});
 };
 
@@ -89,13 +85,13 @@ watch(
 
 onMounted(() => {
 	socket.onConnect(() => {
-		socket.dispatch("reports.findOne", reportId.value, res => {
+		socket.dispatch("reports.findOne", props.reportId, res => {
 			if (res.status === "success") {
 				report.value = res.data.report;
 
 				socket.dispatch(
 					"apis.joinRoom",
-					`view-report.${reportId.value}`
+					`view-report.${props.reportId}`
 				);
 
 				socket.dispatch(
@@ -132,7 +128,7 @@ onMounted(() => {
 				socket.on(
 					"event:admin.report.issue.toggled",
 					res => {
-						if (reportId.value === res.data.reportId) {
+						if (props.reportId === res.data.reportId) {
 							const issue = report.value.issues.find(
 								issue =>
 									issue._id.toString() === res.data.issueId
@@ -152,9 +148,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-	socket.dispatch("apis.leaveRoom", `view-report.${reportId.value}`);
-	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
-	viewReportStore.$dispose();
+	socket.dispatch("apis.leaveRoom", `view-report.${props.reportId}`);
 });
 </script>
 

@@ -332,7 +332,7 @@ const remove = stationId => {
 					@click="
 						openModal({
 							modal: 'createStation',
-							data: { official: true }
+							props: { official: true }
 						})
 					"
 				>
@@ -356,7 +356,7 @@ const remove = stationId => {
 						@click="
 							openModal({
 								modal: 'manageStation',
-								data: {
+								props: {
 									stationId: slotProps.item._id,
 									sector: 'admin'
 								}

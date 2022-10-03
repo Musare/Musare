@@ -151,7 +151,7 @@ const remove = (id: string) => {
 					@click="
 						openModal({
 							modal: 'editNews',
-							data: { createNews: true }
+							props: { createNews: true }
 						})
 					"
 				>
@@ -176,7 +176,7 @@ const remove = (id: string) => {
 						@click="
 							openModal({
 								modal: 'editNews',
-								data: { newsId: slotProps.item._id }
+								props: { newsId: slotProps.item._id }
 							})
 						"
 						content="Edit News"

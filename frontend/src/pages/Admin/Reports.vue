@@ -198,7 +198,7 @@ const getDateFormatted = createdAt => {
 						@click="
 							openModal({
 								modal: 'viewReport',
-								data: { reportId: slotProps.item._id }
+								props: { reportId: slotProps.item._id }
 							})
 						"
 						:disabled="slotProps.item.removed"

@@ -40,7 +40,7 @@ const createPlaylist = () => {
 			if (!window.addToPlaylistDropdown) {
 				openModal({
 					modal: "editPlaylist",
-					data: { playlistId: res.data.playlistId }
+					props: { playlistId: res.data.playlistId }
 				});
 			}
 		}

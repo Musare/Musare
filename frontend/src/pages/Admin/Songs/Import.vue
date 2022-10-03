@@ -361,7 +361,7 @@ const importAlbum = youtubeIds => {
 		if (res.status === "success") {
 			openModal({
 				modal: "importAlbum",
-				data: { songs: res.data.songs }
+				props: { songs: res.data.songs }
 			});
 		} else new Toast("Could not get songs.");
 	});
@@ -370,25 +370,6 @@ const importAlbum = youtubeIds => {
 const removeImportJob = jobId => {
 	socket.dispatch("media.removeImportJobs", jobId, res => {
 		new Toast(res.message);
-	});
-};
-
-const handleConfirmed = ({ action, params }) => {
-	if (typeof action === "function") {
-		if (params) action(params);
-		else action();
-	}
-};
-
-const confirmAction = ({ message, action, params }) => {
-	openModal({
-		modal: "confirm",
-		data: {
-			message,
-			action,
-			params,
-			onCompleted: handleConfirmed
-		}
 	});
 };
 </script>
@@ -574,11 +555,16 @@ const confirmAction = ({ message, action, params }) => {
 									"
 									class="button is-danger icon-with-button material-icons"
 									@click.prevent="
-										confirmAction({
-											message:
-												'Note: Removing an import will not remove any videos or songs.',
-											action: removeImportJob,
-											params: slotProps.item._id
+										openModal({
+											modal: 'confirm',
+											props: {
+												message:
+													'Note: Removing an import will not remove any videos or songs.',
+												onCompleted: () =>
+													removeImportJob(
+														slotProps.item._id
+													)
+											}
 										})
 									"
 									:disabled="

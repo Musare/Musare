@@ -323,14 +323,14 @@ const { openModal } = useModalsStore();
 const create = () => {
 	openModal({
 		modal: "editSong",
-		data: { song: { newSong: true } }
+		props: { song: { newSong: true } }
 	});
 };
 
 const editOne = song => {
 	openModal({
 		modal: "editSong",
-		data: { song }
+		props: { song }
 	});
 };
 
@@ -340,7 +340,7 @@ const editMany = selectedRows => {
 		const songs = selectedRows.map(row => ({
 			youtubeId: row.youtubeId
 		}));
-		openModal({ modal: "editSong", data: { songs } });
+		openModal({ modal: "editSong", props: { songs } });
 	}
 };
 
@@ -414,7 +414,7 @@ const importAlbum = selectedRows => {
 		if (res.status === "success") {
 			openModal({
 				modal: "importAlbum",
-				data: { songs: res.data.songs }
+				props: { songs: res.data.songs }
 			});
 		}
 	});
@@ -423,7 +423,7 @@ const importAlbum = selectedRows => {
 const setTags = selectedRows => {
 	openModal({
 		modal: "bulkActions",
-		data: {
+		props: {
 			type: {
 				name: "tags",
 				action: "songs.editTags",
@@ -439,7 +439,7 @@ const setTags = selectedRows => {
 const setArtists = selectedRows => {
 	openModal({
 		modal: "bulkActions",
-		data: {
+		props: {
 			type: {
 				name: "artists",
 				action: "songs.editArtists",
@@ -455,7 +455,7 @@ const setArtists = selectedRows => {
 const setGenres = selectedRows => {
 	openModal({
 		modal: "bulkActions",
-		data: {
+		props: {
 			type: {
 				name: "genres",
 				action: "songs.editGenres",
@@ -508,25 +508,6 @@ const getDateFormatted = createdAt => {
 	const hour = `${date.getHours()}`.padStart(2, "0");
 	const minute = `${date.getMinutes()}`.padStart(2, "0");
 	return `${year}-${month}-${day} ${hour}:${minute}`;
-};
-
-const handleConfirmed = ({ action, params }) => {
-	if (typeof action === "function") {
-		if (params) action(params);
-		else action();
-	}
-};
-
-const confirmAction = ({ message, action, params }) => {
-	openModal({
-		modal: "confirm",
-		data: {
-			message,
-			action,
-			params,
-			onCompleted: handleConfirmed
-		}
-	});
 };
 
 onMounted(() => {
@@ -618,11 +599,14 @@ onMounted(() => {
 						v-if="hasPermission('songs.remove')"
 						class="button is-danger icon-with-button material-icons"
 						@click.prevent="
-							confirmAction({
-								message:
-									'Removing this song will remove it from all playlists and cause a ratings recalculation.',
-								action: deleteOne,
-								params: slotProps.item._id
+							openModal({
+								modal: 'confirm',
+								props: {
+									message:
+										'Removing this song will remove it from all playlists and cause a ratings recalculation.',
+									onCompleted: () =>
+										deleteOne(slotProps.item._id)
+								}
 							})
 						"
 						:disabled="slotProps.item.removed"
@@ -792,11 +776,14 @@ onMounted(() => {
 						v-if="hasPermission('songs.remove')"
 						class="material-icons delete-icon"
 						@click.prevent="
-							confirmAction({
-								message:
-									'Removing these songs will remove them from all playlists and cause a ratings recalculation.',
-								action: deleteMany,
-								params: slotProps.item
+							openModal({
+								modal: 'confirm',
+								props: {
+									message:
+										'Removing these songs will remove them from all playlists and cause a ratings recalculation.',
+									onCompleted: () =>
+										deleteMany(slotProps.item)
+								}
 							})
 						"
 						content="Delete Songs"

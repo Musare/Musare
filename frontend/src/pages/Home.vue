@@ -451,7 +451,7 @@ onBeforeUnmount(() => {
 												@click.prevent="
 													openModal({
 														modal: 'manageStation',
-														data: {
+														props: {
 															stationId:
 																element._id,
 															sector: 'home'
@@ -469,7 +469,7 @@ onBeforeUnmount(() => {
 												@click.prevent="
 													openModal({
 														modal: 'manageStation',
-														data: {
+														props: {
 															stationId:
 																element._id,
 															sector: 'home'
@@ -732,7 +732,7 @@ onBeforeUnmount(() => {
 										@click.prevent="
 											openModal({
 												modal: 'manageStation',
-												data: {
+												props: {
 													stationId: station._id,
 													sector: 'home'
 												}
@@ -749,7 +749,7 @@ onBeforeUnmount(() => {
 										@click.prevent="
 											openModal({
 												modal: 'manageStation',
-												data: {
+												props: {
 													stationId: station._id,
 													sector: 'home'
 												}

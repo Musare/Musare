@@ -208,7 +208,7 @@ const { openModal } = useModalsStore();
 const editOne = song => {
 	openModal({
 		modal: "editSong",
-		data: { song }
+		props: { song }
 	});
 };
 
@@ -218,7 +218,7 @@ const editMany = selectedRows => {
 		const songs = selectedRows.map(row => ({
 			youtubeId: row.youtubeId
 		}));
-		openModal({ modal: "editSong", data: { songs } });
+		openModal({ modal: "editSong", props: { songs } });
 	}
 };
 
@@ -228,7 +228,7 @@ const importAlbum = selectedRows => {
 		if (res.status === "success") {
 			openModal({
 				modal: "importAlbum",
-				data: { songs: res.data.songs }
+				props: { songs: res.data.songs }
 			});
 		} else new Toast("Could not get songs.");
 	});
@@ -265,25 +265,6 @@ const getDateFormatted = createdAt => {
 	const minute = `${date.getMinutes()}`.padStart(2, "0");
 	return `${year}-${month}-${day} ${hour}:${minute}`;
 };
-
-const handleConfirmed = ({ action, params }) => {
-	if (typeof action === "function") {
-		if (params) action(params);
-		else action();
-	}
-};
-
-const confirmAction = ({ message, action, params }) => {
-	openModal({
-		modal: "confirm",
-		data: {
-			message,
-			action,
-			params,
-			onCompleted: handleConfirmed
-		}
-	});
-};
 </script>
 
 <template>
@@ -315,7 +296,7 @@ const confirmAction = ({ message, action, params }) => {
 						@click="
 							openModal({
 								modal: 'viewYoutubeVideo',
-								data: {
+								props: {
 									videoId: slotProps.item._id
 								}
 							})
@@ -347,11 +328,14 @@ const confirmAction = ({ message, action, params }) => {
 						v-if="hasPermission('youtube.removeVideos')"
 						class="button is-danger icon-with-button material-icons"
 						@click.prevent="
-							confirmAction({
-								message:
-									'Removing this video will remove it from all playlists and cause a ratings recalculation.',
-								action: removeVideos,
-								params: slotProps.item._id
+							openModal({
+								modal: 'confirm',
+								props: {
+									message:
+										'Removing this video will remove it from all playlists and cause a ratings recalculation.',
+									onCompleted: () =>
+										removeVideos(slotProps.item._id)
+								}
 							})
 						"
 						:disabled="slotProps.item.removed"
@@ -438,11 +422,18 @@ const confirmAction = ({ message, action, params }) => {
 						v-if="hasPermission('youtube.removeVideos')"
 						class="material-icons delete-icon"
 						@click.prevent="
-							confirmAction({
-								message:
-									'Removing these videos will remove them from all playlists and cause a ratings recalculation.',
-								action: removeVideos,
-								params: slotProps.item.map(video => video._id)
+							openModal({
+								modal: 'confirm',
+								props: {
+									message:
+										'Removing these videos will remove them from all playlists and cause a ratings recalculation.',
+									onCompleted: () =>
+										removeVideos(
+											slotProps.item.map(
+												video => video._id
+											)
+										)
+								}
 							})
 						"
 						content="Delete Videos"

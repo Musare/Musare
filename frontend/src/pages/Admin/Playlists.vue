@@ -276,7 +276,7 @@ const formatTimeLong = length => utils.formatTimeLong(length);
 						@click="
 							openModal({
 								modal: 'editPlaylist',
-								data: { playlistId: slotProps.item._id }
+								props: { playlistId: slotProps.item._id }
 							})
 						"
 						:disabled="slotProps.item.removed"

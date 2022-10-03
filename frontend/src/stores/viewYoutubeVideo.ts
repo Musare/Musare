@@ -7,8 +7,6 @@ export const useViewYoutubeVideoStore = ({
 }) =>
 	defineStore(`viewYoutubeVideo-${modalUuid}`, {
 		state: (): {
-			videoId: string;
-			youtubeId: string;
 			video: {
 				_id: string;
 				youtubeId: string;
@@ -32,8 +30,6 @@ export const useViewYoutubeVideoStore = ({
 				showRateDropdown: boolean;
 			};
 		} => ({
-			videoId: null,
-			youtubeId: null,
 			video: {
 				_id: null,
 				youtubeId: null,
@@ -58,19 +54,7 @@ export const useViewYoutubeVideoStore = ({
 			}
 		}),
 		actions: {
-			init({
-				videoId,
-				youtubeId
-			}: {
-				videoId: string;
-				youtubeId: string;
-			}) {
-				this.videoId = videoId;
-				this.youtubeId = youtubeId;
-			},
 			viewYoutubeVideo(video) {
-				this.videoId = this.videoId || video._id;
-				this.youtubeId = video.youtubeId || video.youtubeId;
 				this.video = video;
 			},
 			updatePlayer(player) {

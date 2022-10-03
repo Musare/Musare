@@ -143,7 +143,7 @@ const unfavoriteStation = () => {
 				@click="
 					openModal({
 						modal: 'manageStation',
-						data: {
+						props: {
 							stationId: station._id,
 							sector: 'station'
 						}

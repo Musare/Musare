@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { defineAsyncComponent, onMounted, onBeforeUnmount } from "vue";
+import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
-import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
-import { useViewPunishmentStore } from "@/stores/viewPunishment";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const PunishmentItem = defineAsyncComponent(
@@ -12,25 +10,24 @@ const PunishmentItem = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, required: true }
+	modalUuid: { type: String, required: true },
+	punishmentId: { type: String, required: true }
 });
 
 const { socket } = useWebsocketsStore();
 
-const viewPunishmentStore = useViewPunishmentStore(props);
-const { punishmentId, punishment } = storeToRefs(viewPunishmentStore);
-const { viewPunishment } = viewPunishmentStore;
-
 const { closeCurrentModal } = useModalsStore();
+
+const punishment = ref({});
 
 const deactivatePunishment = event => {
 	event.preventDefault();
 	socket.dispatch(
 		"punishments.deactivatePunishment",
-		punishmentId.value,
+		props.punishmentId,
 		res => {
 			if (res.status === "success") {
-				viewPunishmentStore.deactivatePunishment();
+				punishment.value.active = false;
 			} else {
 				new Toast(res.message);
 			}
@@ -40,13 +37,13 @@ const deactivatePunishment = event => {
 
 onMounted(() => {
 	socket.onConnect(() => {
-		socket.dispatch(`punishments.findOne`, punishmentId.value, res => {
+		socket.dispatch(`punishments.findOne`, props.punishmentId, res => {
 			if (res.status === "success") {
-				viewPunishment(res.data.punishment);
+				punishment.value = res.data.punishment;
 
 				socket.dispatch(
 					"apis.joinRoom",
-					`view-punishment.${punishmentId.value}`
+					`view-punishment.${props.punishmentId}`
 				);
 
 				socket.on(
@@ -67,12 +64,9 @@ onMounted(() => {
 onBeforeUnmount(() => {
 	socket.dispatch(
 		"apis.leaveRoom",
-		`view-punishment.${punishmentId.value}`,
+		`view-punishment.${props.punishmentId}`,
 		() => {}
 	);
-
-	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
-	viewPunishmentStore.$dispose();
 });
 </script>
 

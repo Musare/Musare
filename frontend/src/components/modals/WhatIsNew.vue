@@ -1,22 +1,18 @@
 <script setup lang="ts">
-import { defineAsyncComponent, onMounted, onBeforeUnmount } from "vue";
-import { storeToRefs } from "pinia";
+import { defineAsyncComponent, onMounted } from "vue";
 import { formatDistance } from "date-fns";
 import { marked } from "marked";
 import dompurify from "dompurify";
-import { useWhatIsNewStore } from "@/stores/whatIsNew";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const UserLink = defineAsyncComponent(
 	() => import("@/components/UserLink.vue")
 );
 
-const props = defineProps({
-	modalUuid: { type: String, required: true }
+defineProps({
+	modalUuid: { type: String, required: true },
+	news: { type: Object, required: true }
 });
-
-const whatIsNewStore = useWhatIsNewStore(props);
-const { news } = storeToRefs(whatIsNewStore);
 
 onMounted(() => {
 	marked.use({
@@ -29,11 +25,6 @@ onMounted(() => {
 			}
 		}
 	});
-});
-
-onBeforeUnmount(() => {
-	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
-	whatIsNewStore.$dispose();
 });
 
 const { sanitize } = dompurify;

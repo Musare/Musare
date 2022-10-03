@@ -31,7 +31,9 @@ const QuickConfirm = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, required: true }
+	modalUuid: { type: String, required: true },
+	stationId: { type: String, required: true },
+	sector: { type: String, default: "admin" }
 });
 
 const tabs = ref([]);
@@ -147,6 +149,11 @@ watch(
 );
 
 onMounted(() => {
+	manageStationStore.init({
+		stationId: props.stationId,
+		sector: props.sector
+	});
+
 	socket.onConnect(() => {
 		socket.dispatch(
 			`stations.getStationById`,

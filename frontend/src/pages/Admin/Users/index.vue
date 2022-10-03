@@ -204,7 +204,7 @@ const { openModal } = useModalsStore();
 const { hasPermission } = useUserAuthStore();
 
 const edit = userId => {
-	openModal({ modal: "editUser", data: { userId } });
+	openModal({ modal: "editUser", props: { userId } });
 };
 
 onMounted(() => {

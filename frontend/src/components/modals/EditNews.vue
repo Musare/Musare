@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
+import { defineAsyncComponent, ref, onMounted } from "vue";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import Toast from "toasters";
 import { formatDistance } from "date-fns";
-import { storeToRefs } from "pinia";
 import { GetNewsResponse } from "@musare_types/actions/NewsActions";
 import { GenericResponse } from "@musare_types/actions/GenericActions";
 import { useWebsocketsStore } from "@/stores/websockets";
-import { useEditNewsStore } from "@/stores/editNews";
 import { useModalsStore } from "@/stores/modals";
 import { useForm } from "@/composables/useForm";
 
@@ -21,13 +19,13 @@ const UserLink = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, required: true }
+	modalUuid: { type: String, required: true },
+	createNews: { type: Boolean, default: false },
+	newsId: { type: String, default: null },
+	sector: { type: String, default: "admin" }
 });
 
 const { socket } = useWebsocketsStore();
-
-const editNewsStore = useEditNewsStore(props);
-const { createNews, newsId } = storeToRefs(editNewsStore);
 
 const { closeCurrentModal } = useModalsStore();
 
@@ -83,8 +81,8 @@ const { inputs, save, setOriginalValue } = useForm(
 				if (res.status === "success") resolve();
 				else reject(new Error(res.message));
 			};
-			if (createNews.value) socket.dispatch("news.create", data, cb);
-			else socket.dispatch("news.update", newsId.value, data, cb);
+			if (props.createNews) socket.dispatch("news.create", data, cb);
+			else socket.dispatch("news.update", props.newsId, data, cb);
 		} else {
 			if (status === "unchanged") new Toast(messages.unchanged);
 			else if (status === "error")
@@ -99,11 +97,6 @@ const { inputs, save, setOriginalValue } = useForm(
 	}
 );
 
-onBeforeUnmount(() => {
-	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
-	editNewsStore.$dispose();
-});
-
 onMounted(() => {
 	marked.use({
 		renderer: {
@@ -117,10 +110,10 @@ onMounted(() => {
 	});
 
 	socket.onConnect(() => {
-		if (newsId.value && !createNews.value) {
+		if (props.newsId && !props.createNews) {
 			socket.dispatch(
 				`news.getNewsFromId`,
-				newsId.value,
+				props.newsId,
 				(res: GetNewsResponse) => {
 					if (res.status === "success") {
 						setOriginalValue({

@@ -50,7 +50,9 @@ const props = defineProps({
 		type: String,
 		default: "modals/editSong/MODAL_UUID"
 	},
-	discogsAlbum: { type: Object, default: null }
+	discogsAlbum: { type: Object, default: null },
+	song: { type: Object, default: null },
+	songs: { type: Array, default: null }
 });
 
 const editSongStore = useEditSongStore(props);
@@ -454,25 +456,6 @@ const toggleMobileSidebar = () => {
 	sidebarMobileActive.value = !sidebarMobileActive.value;
 };
 
-const handleConfirmed = ({ action, params }) => {
-	if (typeof action === "function") {
-		if (params) action(params);
-		else action();
-	}
-};
-
-const confirmAction = ({ message, action, params }) => {
-	openModal({
-		modal: "confirm",
-		data: {
-			message,
-			action,
-			params,
-			onCompleted: handleConfirmed
-		}
-	});
-};
-
 const onCloseOrNext = (next?: boolean): Promise<void> =>
 	new Promise(resolve => {
 		const confirmReasons = [];
@@ -503,10 +486,12 @@ const onCloseOrNext = (next?: boolean): Promise<void> =>
 		}
 
 		if (confirmReasons.length > 0)
-			confirmAction({
-				message: confirmReasons,
-				action: resolve,
-				params: null
+			openModal({
+				modal: "confirm",
+				props: {
+					message: confirmReasons,
+					onCompleted: resolve
+				}
 			});
 		else resolve();
 	});
@@ -927,6 +912,8 @@ watch(
 );
 
 onMounted(async () => {
+	editSongStore.init({ song: props.song, songs: props.songs });
+
 	editSongStore.form = {
 		inputs,
 		unsavedChanges,
@@ -2317,11 +2304,13 @@ onBeforeUnmount(() => {
 							v-if="hasPermission('songs.remove')"
 							class="button is-danger icon-with-button material-icons"
 							@click.prevent="
-								confirmAction({
-									message:
-										'Removing this song will remove it from all playlists and cause a ratings recalculation.',
-									action: remove,
-									params: song._id
+								openModal({
+									modal: 'confirm',
+									props: {
+										message:
+											'Removing this song will remove it from all playlists and cause a ratings recalculation.',
+										onCompleted: () => remove(song._id)
+									}
 								})
 							"
 							content="Delete Song"

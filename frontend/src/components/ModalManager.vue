@@ -35,8 +35,9 @@ const modalComponents = shallowRef(
 	<div>
 		<div v-for="activeModalUuid in activeModals" :key="activeModalUuid">
 			<component
-				:is="modalComponents[modals[activeModalUuid]]"
+				:is="modalComponents[modals[activeModalUuid].modal]"
 				:modal-uuid="activeModalUuid"
+				v-bind="modals[activeModalUuid].props"
 			/>
 		</div>
 	</div>

@@ -34,10 +34,6 @@ export const useImportAlbumStore = ({ modalUuid }: { modalUuid: string }) =>
 			prefillDiscogs: false
 		}),
 		actions: {
-			init({ songs }) {
-				this.originalPlaylistSongs = JSON.parse(JSON.stringify(songs));
-				this.playlistSongs = JSON.parse(JSON.stringify(songs));
-			},
 			showDiscogsTab(tab) {
 				this.discogsTab = tab;
 			},

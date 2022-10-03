@@ -270,7 +270,7 @@ onMounted(() => {
 							@click="
 								openModal({
 									modal: 'viewApiRequest',
-									data: {
+									props: {
 										requestId: slotProps.item._id,
 										removeAction:
 											'youtube.removeStoredApiRequest'

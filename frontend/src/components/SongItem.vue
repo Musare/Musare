@@ -93,14 +93,14 @@ const hoverTippy = () => {
 
 const report = song => {
 	hideTippyElements();
-	openModal({ modal: "report", data: { song } });
+	openModal({ modal: "report", props: { song } });
 };
 
 const edit = song => {
 	hideTippyElements();
 	openModal({
 		modal: "editSong",
-		data: { song }
+		props: { song }
 	});
 };
 
@@ -204,7 +204,7 @@ onUnmounted(() => {
 								@click="
 									openModal({
 										modal: 'viewYoutubeVideo',
-										data: {
+										props: {
 											youtubeId: song.youtubeId
 										}
 									})

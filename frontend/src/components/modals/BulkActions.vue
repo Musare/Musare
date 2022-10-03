@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { ref, defineAsyncComponent, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
-import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
-import { useBulkActionsStore } from "@/stores/bulkActions";
 import { useModalsStore } from "@/stores/modals";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
@@ -13,7 +11,8 @@ const AutoSuggest = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, required: true }
+	modalUuid: { type: String, required: true },
+	type: { type: Object, required: true }
 });
 
 const { closeCurrentModal } = useModalsStore();
@@ -22,9 +21,6 @@ const { setJob } = useLongJobsStore();
 
 const { socket } = useWebsocketsStore();
 
-const bulkActionsStore = useBulkActionsStore(props);
-const { type } = storeToRefs(bulkActionsStore);
-
 const method = ref("add");
 const items = ref([]);
 const itemInput = ref();
@@ -32,10 +28,10 @@ const allItems = ref([]);
 
 const addItem = () => {
 	if (!itemInput.value) return;
-	if (type.value.regex && !type.value.regex.test(itemInput.value)) {
-		new Toast(`Invalid ${type.value.name} format.`);
+	if (props.type.regex && !props.type.regex.test(itemInput.value)) {
+		new Toast(`Invalid ${props.type.name} format.`);
 	} else if (items.value.includes(itemInput.value)) {
-		new Toast(`Duplicate ${type.value.name} specified.`);
+		new Toast(`Duplicate ${props.type.name} specified.`);
 	} else {
 		items.value.push(itemInput.value);
 		itemInput.value = null;
@@ -51,10 +47,10 @@ const applyChanges = () => {
 	let title;
 
 	socket.dispatch(
-		type.value.action,
+		props.type.action,
 		method.value,
 		items.value,
-		type.value.items,
+		props.type.items,
 		{
 			cb: () => {},
 			onProgress: res => {
@@ -78,14 +74,12 @@ const applyChanges = () => {
 onBeforeUnmount(() => {
 	itemInput.value = null;
 	items.value = [];
-	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
-	bulkActionsStore.$dispose();
 });
 
 onMounted(() => {
 	socket.onConnect(() => {
-		if (type.value.autosuggest && type.value.autosuggestDataAction)
-			socket.dispatch(type.value.autosuggestDataAction, res => {
+		if (props.type.autosuggest && props.type.autosuggestDataAction)
+			socket.dispatch(props.type.autosuggestDataAction, res => {
 				if (res.status === "success") {
 					const { items } = res.data;
 					allItems.value = items;
