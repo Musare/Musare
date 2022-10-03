@@ -1,4 +1,4 @@
-FROM node:16.15 AS frontend_node_modules
+FROM node:18 AS frontend_node_modules
 
 RUN mkdir -p /opt/app
 WORKDIR /opt/app
@@ -8,7 +8,7 @@ COPY package-lock.json /opt/app/package-lock.json
 
 RUN npm install --silent
 
-FROM node:16.15 AS musare_frontend
+FROM node:18 AS musare_frontend
 
 ARG FRONTEND_MODE=prod
 ENV FRONTEND_MODE=${FRONTEND_MODE}
