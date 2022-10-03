@@ -8,6 +8,7 @@ import { useModalsStore } from "@/stores/modals";
 import { useViewYoutubeVideoStore } from "@/stores/viewYoutubeVideo";
 import { useStationStore } from "@/stores/station";
 import { useUserAuthStore } from "@/stores/userAuth";
+import utils from "@/utils";
 
 import Modal from "@/components/Modal.vue";
 
@@ -515,6 +516,21 @@ onBeforeUnmount(() => {
 						<span :title="`${video.duration}`">{{
 							video.duration
 						}}</span>
+					</p>
+					<p>
+						<strong>Upload Date:</strong>
+						<span
+							:title="
+								video.uploadedAt
+									? new Date(video.uploadedAt).toString()
+									: 'Unknown'
+							"
+							>{{
+								video.uploadedAt
+									? utils.getDateFormatted(video.uploadedAt)
+									: "Unknown"
+							}}</span
+						>
 					</p>
 				</div>
 				<div class="right-section">

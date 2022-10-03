@@ -1434,7 +1434,8 @@ class _YouTubeModule extends CoreClass {
 									title: data.items[0].snippet.title,
 									author: data.items[0].snippet.channelTitle,
 									thumbnail: data.items[0].snippet.thumbnails.default.url,
-									duration
+									duration,
+									uploadedAt: new Date(data.items[0].snippet.publishedAt)
 								};
 
 								return next(null, false, youtubeVideo);
