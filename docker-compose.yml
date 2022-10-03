@@ -54,7 +54,7 @@ services:
       - ${MONGO_DATA_LOCATION:-./db}:/data/db
 
   redis:
-    image: docker.io/redis:6.2
+    image: docker.io/redis:7
     restart: ${RESTART_POLICY:-unless-stopped}
     command: "--notify-keyspace-events Ex --requirepass ${REDIS_PASSWORD} --appendonly yes"
     volumes:
