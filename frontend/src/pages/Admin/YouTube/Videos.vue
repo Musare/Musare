@@ -11,6 +11,7 @@ import {
 	TableEvents,
 	TableBulkActions
 } from "@/types/advancedTable";
+import utils from "@/utils";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -255,16 +256,6 @@ const removeVideos = videoIds => {
 		}
 	});
 };
-
-const getDateFormatted = createdAt => {
-	const date = new Date(createdAt);
-	const year = date.getFullYear();
-	const month = `${date.getMonth() + 1}`.padStart(2, "0");
-	const day = `${date.getDate()}`.padStart(2, "0");
-	const hour = `${date.getHours()}`.padStart(2, "0");
-	const minute = `${date.getMinutes()}`.padStart(2, "0");
-	return `${year}-${month}-${day} ${hour}:${minute}`;
-};
 </script>
 
 <template>
@@ -382,7 +373,7 @@ const getDateFormatted = createdAt => {
 			</template>
 			<template #column-createdAt="slotProps">
 				<span :title="new Date(slotProps.item.createdAt).toString()">{{
-					getDateFormatted(slotProps.item.createdAt)
+					utils.getDateFormatted(slotProps.item.createdAt)
 				}}</span>
 			</template>
 			<template #column-songId="slotProps">

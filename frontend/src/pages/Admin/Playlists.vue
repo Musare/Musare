@@ -235,18 +235,6 @@ if (hasPermission("playlists.createMissing"))
 	});
 
 const { openModal } = useModalsStore();
-
-const getDateFormatted = createdAt => {
-	const date = new Date(createdAt);
-	const year = date.getFullYear();
-	const month = `${date.getMonth() + 1}`.padStart(2, "0");
-	const day = `${date.getDate()}`.padStart(2, "0");
-	const hour = `${date.getHours()}`.padStart(2, "0");
-	const minute = `${date.getMinutes()}`.padStart(2, "0");
-	return `${year}-${month}-${day} ${hour}:${minute}`;
-};
-
-const formatTimeLong = length => utils.formatTimeLong(length);
 </script>
 
 <template>
@@ -308,9 +296,12 @@ const formatTimeLong = length => utils.formatTimeLong(length);
 				}}</span>
 			</template>
 			<template #column-totalLength="slotProps">
-				<span :title="formatTimeLong(slotProps.item.totalLength)">{{
-					formatTimeLong(slotProps.item.totalLength)
-				}}</span>
+				<span
+					:title="utils.formatTimeLong(slotProps.item.totalLength)"
+					>{{
+						utils.formatTimeLong(slotProps.item.totalLength)
+					}}</span
+				>
 			</template>
 			<template #column-createdBy="slotProps">
 				<span v-if="slotProps.item.createdBy === 'Musare'">Musare</span>
@@ -318,7 +309,7 @@ const formatTimeLong = length => utils.formatTimeLong(length);
 			</template>
 			<template #column-createdAt="slotProps">
 				<span :title="new Date(slotProps.item.createdAt).toString()">{{
-					getDateFormatted(slotProps.item.createdAt)
+					utils.getDateFormatted(slotProps.item.createdAt)
 				}}</span>
 			</template>
 			<template #column-createdFor="slotProps">

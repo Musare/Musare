@@ -5,6 +5,7 @@ import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
+import utils from "@/utils";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -178,16 +179,6 @@ const banIP = () => {
 	);
 };
 
-const getDateFormatted = createdAt => {
-	const date = new Date(createdAt);
-	const year = date.getFullYear();
-	const month = `${date.getMonth() + 1}`.padStart(2, "0");
-	const day = `${date.getDate()}`.padStart(2, "0");
-	const hour = `${date.getHours()}`.padStart(2, "0");
-	const minute = `${date.getMinutes()}`.padStart(2, "0");
-	return `${year}-${month}-${day} ${hour}:${minute}`;
-};
-
 const deactivatePunishment = punishmentId => {
 	socket.dispatch("punishments.deactivatePunishment", punishmentId, res => {
 		if (res.status === "success") {
@@ -297,12 +288,12 @@ const deactivatePunishment = punishmentId => {
 			</template>
 			<template #column-punishedAt="slotProps">
 				<span :title="new Date(slotProps.item.punishedAt).toString()">{{
-					getDateFormatted(slotProps.item.punishedAt)
+					utils.getDateFormatted(slotProps.item.punishedAt)
 				}}</span>
 			</template>
 			<template #column-expiresAt="slotProps">
 				<span :title="new Date(slotProps.item.expiresAt).toString()">{{
-					getDateFormatted(slotProps.item.expiresAt)
+					utils.getDateFormatted(slotProps.item.expiresAt)
 				}}</span>
 			</template>
 		</advanced-table>

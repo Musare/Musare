@@ -5,6 +5,7 @@ import { useModalsStore } from "@/stores/modals";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useReports } from "@/composables/useReports";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
+import utils from "@/utils";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -161,16 +162,6 @@ const resolve = (reportId, value) =>
 			if (res.status !== "success") new Toast(res.message);
 		})
 		.catch(err => new Toast(err.message));
-
-const getDateFormatted = createdAt => {
-	const date = new Date(createdAt);
-	const year = date.getFullYear();
-	const month = `${date.getMonth() + 1}`.padStart(2, "0");
-	const day = `${date.getDate()}`.padStart(2, "0");
-	const hour = `${date.getHours()}`.padStart(2, "0");
-	const minute = `${date.getMinutes()}`.padStart(2, "0");
-	return `${year}-${month}-${day} ${hour}:${minute}`;
-};
 </script>
 
 <template>
@@ -281,7 +272,7 @@ const getDateFormatted = createdAt => {
 			</template>
 			<template #column-createdAt="slotProps">
 				<span :title="new Date(slotProps.item.createdAt).toString()">{{
-					getDateFormatted(slotProps.item.createdAt)
+					utils.getDateFormatted(slotProps.item.createdAt)
 				}}</span>
 			</template>
 		</advanced-table>

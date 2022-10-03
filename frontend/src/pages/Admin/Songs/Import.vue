@@ -7,6 +7,7 @@ import { useLongJobsStore } from "@/stores/longJobs";
 import { useModalsStore } from "@/stores/modals";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
+import utils from "@/utils";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -339,16 +340,6 @@ const submitCreateImport = stage => {
 // 	if (stage === 2) createImport.value.stage = 1;
 // };
 
-const getDateFormatted = createdAt => {
-	const date = new Date(createdAt);
-	const year = date.getFullYear();
-	const month = `${date.getMonth() + 1}`.padStart(2, "0");
-	const day = `${date.getDate()}`.padStart(2, "0");
-	const hour = `${date.getHours()}`.padStart(2, "0");
-	const minute = `${date.getMinutes()}`.padStart(2, "0");
-	return `${year}-${month}-${day} ${hour}:${minute}`;
-};
-
 const editSongs = videos => {
 	const songs = videos.map(youtubeId => ({ youtubeId }));
 	if (songs.length === 1)
@@ -594,7 +585,9 @@ const removeImportJob = jobId => {
 									).toString()
 								"
 								>{{
-									getDateFormatted(slotProps.item.requestedAt)
+									utils.getDateFormatted(
+										slotProps.item.requestedAt
+									)
 								}}</span
 							>
 						</template>

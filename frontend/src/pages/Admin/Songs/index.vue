@@ -7,6 +7,7 @@ import { useLongJobsStore } from "@/stores/longJobs";
 import { useModalsStore } from "@/stores/modals";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
+import utils from "@/utils";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -500,16 +501,6 @@ const deleteMany = selectedRows => {
 	);
 };
 
-const getDateFormatted = createdAt => {
-	const date = new Date(createdAt);
-	const year = date.getFullYear();
-	const month = `${date.getMonth() + 1}`.padStart(2, "0");
-	const day = `${date.getDate()}`.padStart(2, "0");
-	const hour = `${date.getHours()}`.padStart(2, "0");
-	const minute = `${date.getMinutes()}`.padStart(2, "0");
-	return `${year}-${month}-${day} ${hour}:${minute}`;
-};
-
 onMounted(() => {
 	if (route.query.songId) {
 		socket.dispatch("songs.getSongFromSongId", route.query.songId, res => {
@@ -682,7 +673,9 @@ onMounted(() => {
 			<template #column-requestedAt="slotProps">
 				<span
 					:title="new Date(slotProps.item.requestedAt).toString()"
-					>{{ getDateFormatted(slotProps.item.requestedAt) }}</span
+					>{{
+						utils.getDateFormatted(slotProps.item.requestedAt)
+					}}</span
 				>
 			</template>
 			<template #column-verifiedBy="slotProps">
@@ -690,7 +683,7 @@ onMounted(() => {
 			</template>
 			<template #column-verifiedAt="slotProps">
 				<span :title="new Date(slotProps.item.verifiedAt).toString()">{{
-					getDateFormatted(slotProps.item.verifiedAt)
+					utils.getDateFormatted(slotProps.item.verifiedAt)
 				}}</span>
 			</template>
 			<template #bulk-actions="slotProps">

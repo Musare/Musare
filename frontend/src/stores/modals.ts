@@ -17,6 +17,21 @@ export const useModalsStore = defineStore("modals", {
 		preventCloseCbs: {}
 	}),
 	actions: {
+		openModal(
+			dataOrModal: string | { modal: string; props?: Record<string, any> }
+		) {
+			const uuid = utils.guid();
+			let modal;
+			let props;
+			if (typeof dataOrModal === "string") modal = dataOrModal;
+			else {
+				modal = dataOrModal.modal;
+				props = dataOrModal.props;
+			}
+			this.modals[uuid] = { modal, props };
+			this.activeModals.push(uuid);
+			return { uuid };
+		},
 		closeModal(uuid: string) {
 			Object.entries(this.modals).forEach(([_uuid, modal]) => {
 				if (uuid === _uuid) {
@@ -54,23 +69,6 @@ export const useModalsStore = defineStore("modals", {
 					} else close();
 				}
 			});
-		},
-		openModal(
-			propsOrModal:
-				| string
-				| { modal: string; props?: Record<string, any> }
-		) {
-			const uuid = utils.guid();
-			let modal;
-			let props;
-			if (typeof propsOrModal === "string") modal = propsOrModal;
-			else {
-				modal = propsOrModal.modal;
-				props = propsOrModal.props;
-			}
-			this.modals[uuid] = { modal, props };
-			this.activeModals.push(uuid);
-			return { uuid };
 		},
 		closeCurrentModal() {
 			const currentlyActiveModalUuid =
