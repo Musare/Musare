@@ -34,8 +34,8 @@ export const useForm = (
 					name,
 					{
 						...input,
-						originalValue: input.value,
-						errors: <string[]>[],
+						originalValue: JSON.parse(JSON.stringify(input.value)),
+						errors: [],
 						ref: ref(),
 						sourceChanged: false,
 						ignoreUnsaved: input.ignoreUnsaved === true,
@@ -48,7 +48,7 @@ export const useForm = (
 	);
 
 	const unsavedChanges = computed(() => {
-		const changed = <string[]>[];
+		const changed: string[] = [];
 		Object.entries(inputs.value).forEach(([name, input]) => {
 			if (
 				!input.ignoreUnsaved &&
@@ -61,7 +61,7 @@ export const useForm = (
 	});
 
 	const sourceChanged = computed(() => {
-		const _sourceChanged = <string[]>[];
+		const _sourceChanged: string[] = [];
 		Object.entries(inputs.value).forEach(([name, input]) => {
 			if (
 				input.sourceChanged &&
@@ -104,7 +104,7 @@ export const useForm = (
 	};
 
 	const validate = () => {
-		const invalid = <Record<string, string[]>>{};
+		const invalid: Record<string, string[]> = {};
 		Object.entries(inputs.value).forEach(([name, input]) => {
 			input.errors = [];
 			if (
@@ -153,8 +153,13 @@ export const useForm = (
 				});
 			else onSave();
 		} else if (errorCount === 0) {
-			useCallback("unchanged", { unchanged: "No changes to update" });
-			if (saveCb) saveCb();
+			useCallback("unchanged", { unchanged: "No changes have been made" })
+				.then(() => {
+					if (saveCb) saveCb();
+				})
+				.catch((err: Error) =>
+					useCallback("error", { error: err.message })
+				);
 		} else {
 			useCallback("error", {
 				...errors,

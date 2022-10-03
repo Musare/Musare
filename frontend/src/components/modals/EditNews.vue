@@ -85,11 +85,14 @@ const { inputs, save, setOriginalValue } = useForm(
 			};
 			if (createNews.value) socket.dispatch("news.create", data, cb);
 			else socket.dispatch("news.update", newsId.value, data, cb);
-		} else if (status === "unchanged") new Toast(messages.unchanged);
-		else if (status === "error")
-			Object.values(messages).forEach(message => {
-				new Toast({ content: message, timeout: 8000 });
-			});
+		} else {
+			if (status === "unchanged") new Toast(messages.unchanged);
+			else if (status === "error")
+				Object.values(messages).forEach(message => {
+					new Toast({ content: message, timeout: 8000 });
+				});
+			resolve();
+		}
 	},
 	{
 		modalUuid: props.modalUuid

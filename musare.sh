@@ -395,6 +395,7 @@ case $1 in
 
     update)
         echo -e "${CYAN}Musare | Update${NC}"
+        musareshModified=$(git diff HEAD -- musare.sh)
         git fetch
         exitValue=$?
         if [[ ${exitValue} -gt 0 ]]; then
@@ -411,8 +412,8 @@ case $1 in
         bcChange=$(echo "${updated}" | grep "backend/config/template.json")
         if [[ ( $2 == "auto" && -z $dbChange && -z $fcChange && -z $bcChange && -z $musareshChange ) || -z $2 ]]; then
             if [[ -n $musareshChange && $(git diff @\{u\} -- musare.sh) != "" ]]; then
-                if [[ $(git diff HEAD -- musare.sh) != "" ]]; then
-                    echo -e "${RED}musare.sh has been modified, please reset or commit these changes and run the update command again to continue.${NC}"
+                if [[ $musareshModified != "" ]]; then
+                    echo -e "${RED}musare.sh has been modified, please reset these changes and run the update command again to continue.${NC}"
                 else
                     git checkout @\{u\} -- musare.sh
                     echo -e "${YELLOW}musare.sh has been updated, please run the update command again to continue.${NC}"

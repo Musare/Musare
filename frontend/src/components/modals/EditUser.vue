@@ -61,10 +61,12 @@ const {
 					} else reject(new Error(res.message));
 				}
 			);
-		else
+		else {
 			Object.values(messages).forEach(message => {
 				new Toast({ content: message, timeout: 8000 });
 			});
+			resolve();
+		}
 	},
 	{
 		modalUuid: props.modalUuid,
@@ -108,10 +110,12 @@ const {
 					} else reject(new Error(res.message));
 				}
 			);
-		else
+		else {
 			Object.values(messages).forEach(message => {
 				new Toast({ content: message, timeout: 8000 });
 			});
+			resolve();
+		}
 	},
 	{
 		modalUuid: props.modalUuid,
@@ -140,10 +144,12 @@ const {
 					} else reject(new Error(res.message));
 				}
 			);
-		else
+		else {
 			Object.values(messages).forEach(message => {
 				new Toast({ content: message, timeout: 8000 });
 			});
+			resolve();
+		}
 	},
 	{
 		modalUuid: props.modalUuid,
@@ -182,10 +188,12 @@ const {
 					else reject(new Error(res.message));
 				}
 			);
-		else
+		else {
 			Object.values(messages).forEach(message => {
 				new Toast({ content: message, timeout: 8000 });
 			});
+			resolve();
+		}
 	},
 	{
 		modalUuid: props.modalUuid,

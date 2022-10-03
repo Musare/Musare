@@ -10,7 +10,27 @@ const getConfig = async () => {
 	return config;
 };
 
-export const getWrapper = async (component, options?) => {
+export const getWrapper = async (
+	component: any,
+	options?: {
+		global?: {
+			plugins?: any[];
+			components?: { [key: string]: any };
+		};
+		usePinia?: boolean;
+		pinia?: {
+			stubActions?: boolean;
+		};
+		mockSocket?: boolean | { data?: any; executeDispatch?: boolean };
+		lofig?: any;
+		loginRequired?: boolean;
+		baseTemplate?: string;
+		attachTo?: HTMLElement | null;
+		beforeMount?: () => void;
+		onMount?: () => void;
+		afterMount?: () => void;
+	}
+) => {
 	const opts = options || {};
 
 	if (!opts.global) opts.global = {};
@@ -70,11 +90,13 @@ export const getWrapper = async (component, options?) => {
 		const websocketsStore = useWebsocketsStore();
 		await websocketsStore.createSocket();
 		await flushPromises();
-		if (opts.mockSocket.data)
-			websocketsStore.socket.data = opts.mockSocket.data;
-		if (typeof opts.mockSocket.executeDispatch !== "undefined")
-			websocketsStore.socket.executeDispatch =
-				opts.mockSocket.executeDispatch;
+		if (typeof opts.mockSocket === "object") {
+			if (opts.mockSocket.data)
+				websocketsStore.socket.data = opts.mockSocket.data;
+			if (typeof opts.mockSocket.executeDispatch !== "undefined")
+				websocketsStore.socket.executeDispatch =
+					opts.mockSocket.executeDispatch;
+		}
 		delete opts.mockSocket;
 	}
 

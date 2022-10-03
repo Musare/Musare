@@ -144,7 +144,10 @@ export default class SocketHandler {
 	on(
 		target: string,
 		cb: (...args: any[]) => any,
-		options?: EventListenerOptions
+		options?: EventListenerOptions & {
+			replaceable?: boolean;
+			modalUuid?: string;
+		}
 	) {
 		this.dispatcher.addEventListener(
 			target,
