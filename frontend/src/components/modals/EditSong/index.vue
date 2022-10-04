@@ -907,7 +907,7 @@ watch(
 watch(
 	() => hasPermission("songs.update"),
 	value => {
-		if (!value) closeCurrentModal();
+		if (!value) closeCurrentModal(true);
 	}
 );
 
@@ -1206,6 +1206,7 @@ onMounted(async () => {
 			res => {
 				if (res.data.songId === song.value._id) {
 					songDeleted.value = true;
+					if (!bulk.value) closeCurrentModal(true);
 				}
 			},
 			{ modalUuid: props.modalUuid }

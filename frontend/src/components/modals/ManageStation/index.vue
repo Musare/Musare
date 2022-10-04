@@ -119,7 +119,7 @@ const findTabOrClose = () => {
 				station.value.privacy === "public")
 		)
 	)
-		return closeCurrentModal();
+		return closeCurrentModal(true);
 	return null;
 };
 
@@ -288,7 +288,7 @@ onMounted(() => {
 							new Toast(
 								`The station you were editing was deleted.`
 							);
-							closeCurrentModal();
+							closeCurrentModal(true);
 						},
 						{ modalUuid: props.modalUuid }
 					);

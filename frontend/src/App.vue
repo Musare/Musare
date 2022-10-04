@@ -266,11 +266,7 @@ onMounted(async () => {
 	<div class="upper-container">
 		<banned-page v-if="banned" />
 		<div v-else class="upper-container">
-			<router-view
-				:key="$route.fullPath"
-				class="main-container"
-				:class="{ 'main-container-modal-active': aModalIsOpen2 }"
-			/>
+			<router-view :key="$route.fullPath" class="main-container" />
 		</div>
 		<falling-snow v-if="christmas" />
 		<modal-manager />
@@ -744,11 +740,6 @@ textarea {
 	display: flex;
 	flex-direction: column;
 	max-width: 100%;
-
-	&.main-container-modal-active {
-		height: 100% !important;
-		overflow: hidden !important;
-	}
 
 	> .container {
 		position: relative;

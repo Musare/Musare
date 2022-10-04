@@ -6,7 +6,7 @@ const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 
 const props = defineProps({
 	modalUuid: { type: String, required: true },
-	message: { type: String || Array, required: true },
+	message: { type: [String, Array], required: true },
 	onCompleted: { type: Function, required: true }
 });
 

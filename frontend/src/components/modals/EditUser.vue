@@ -219,7 +219,7 @@ const removeSessions = () => {
 watch(
 	() => hasPermission("users.get") && hasPermission("users.update"),
 	value => {
-		if (!value) closeCurrentModal();
+		if (!value) closeCurrentModal(true);
 	}
 );
 
@@ -244,7 +244,7 @@ onMounted(() => {
 					"event:user.removed",
 					res => {
 						if (res.data.userId === props.userId)
-							closeCurrentModal();
+							closeCurrentModal(true);
 					},
 					{ modalUuid: props.modalUuid }
 				);

@@ -32,7 +32,7 @@ export const useModalsStore = defineStore("modals", {
 			this.activeModals.push(uuid);
 			return { uuid };
 		},
-		closeModal(uuid: string) {
+		closeModal(uuid: string, force = false) {
 			Object.entries(this.modals).forEach(([_uuid, modal]) => {
 				if (uuid === _uuid) {
 					if (modal.modal === "register")
@@ -49,12 +49,18 @@ export const useModalsStore = defineStore("modals", {
 							1
 						);
 						delete this.modals[uuid];
+						delete this.preventCloseCbs[uuid];
+						delete this.preventCloseUnsaved[uuid];
 					};
-					if (typeof this.preventCloseCbs[uuid] !== "undefined")
+					if (
+						!force &&
+						typeof this.preventCloseCbs[uuid] !== "undefined"
+					)
 						this.preventCloseCbs[uuid]().then(() => {
 							close();
 						});
 					else if (
+						!force &&
 						typeof this.preventCloseUnsaved[uuid] !== "undefined" &&
 						this.preventCloseUnsaved[uuid]()
 					) {
@@ -70,10 +76,10 @@ export const useModalsStore = defineStore("modals", {
 				}
 			});
 		},
-		closeCurrentModal() {
+		closeCurrentModal(force = false) {
 			const currentlyActiveModalUuid =
 				this.activeModals[this.activeModals.length - 1];
-			this.closeModal(currentlyActiveModalUuid);
+			this.closeModal(currentlyActiveModalUuid, force);
 		},
 		closeAllModals() {
 			const { socket } = useWebsocketsStore();
