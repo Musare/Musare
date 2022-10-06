@@ -27,12 +27,22 @@ elif [[ ${DOCKER_COMMAND} != "docker" && ${DOCKER_COMMAND} != "podman" ]]; then
 fi
 
 docker="${DOCKER_COMMAND}"
-dockerCompose="${DOCKER_COMMAND}-compose"
+${docker} --version > /dev/null 2>&1
+dockerInstalled=$?
 
-if [[ ! -x "$(command -v ${docker})" || ! -x "$(command -v ${dockerCompose})" ]]; then
-    if [[ -x "$(command -v ${docker})" && ! -x "$(command -v ${dockerCompose})" ]]; then
+dockerCompose="${docker} compose"
+${dockerCompose} version > /dev/null 2>&1
+composeInstalled=$?
+if [[ ${composeInstalled} -gt 0 ]]; then
+    dockerCompose="${docker}-compose"
+    ${dockerCompose} --version > /dev/null 2>&1
+    composeInstalled=$?
+fi
+
+if [[ ${dockerInstalled} -gt 0 || ${composeInstalled} -gt 0 ]]; then
+    if [[ ${dockerInstalled} -eq 0 && ${composeInstalled} -gt 0 ]]; then
         echo -e "${RED}Error: ${dockerCompose} not installed.${NC}"
-    elif [[ ! -x "$(command -v ${docker})" && -x "$(command -v ${dockerCompose})" ]]; then
+    elif [[ ${dockerInstalled} -gt 0 && ${composeInstalled} -eq 0 ]]; then
         echo -e "${RED}Error: ${docker} not installed.${NC}"
     else
         echo -e "${RED}Error: ${docker} and ${dockerCompose} not installed.${NC}"
@@ -51,7 +61,7 @@ dockerCompose="${dockerCompose} ${composeFiles}"
 
 handleServices()
 {
-    validServices=($1)
+    IFS=" " read -r -a validServices <<< "${1}"
     servicesArray=()
     invalidServices=false
     for x in "${@:2}"; do
@@ -273,12 +283,14 @@ case $1 in
 
     lint|eslint)
         echo -e "${CYAN}Musare | Lint${NC}"
+        # shellcheck disable=SC2001
         services=$(sed "s/\(\ \)\{0,1\}\(-\)\{0,2\}fix//g;t;q1" <<< "${@:2}")
         fixFound=$?
         if [[ $fixFound -eq 0 ]]; then
             fix="--fix"
             echo -e "${GREEN}Auto-fix enabled${NC}"
         fi
+        # shellcheck disable=SC2001
         services=$(sed "s/\(\ \)\{0,1\}\(-\)\{0,2\}no-cache//g;t;q1" <<< "${services}")
         noCacheFound=$?
         cache="--cache"
@@ -291,12 +303,12 @@ case $1 in
         if [[ ${servicesString:0:1} == 1 ]]; then
             if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *frontend* ]]; then
                 echo -e "${CYAN}Running frontend lint...${NC}"
-                ${dockerCompose} exec -T frontend npx eslint $cache src --ext .js,.ts,.vue $fix
+                ${dockerCompose} exec -T frontend npx eslint "${cache}" src --ext .js,.ts,.vue "${fix}"
                 frontendExitValue=$?
             fi
             if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *backend* ]]; then
                 echo -e "${CYAN}Running backend lint...${NC}"
-                ${dockerCompose} exec -T backend npx eslint $cache logic $fix
+                ${dockerCompose} exec -T backend npx eslint "${cache}" logic "${fix}"
                 backendExitValue=$?
             fi
             if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *docs* ]]; then
