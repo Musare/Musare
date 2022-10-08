@@ -19,7 +19,7 @@ const QuickConfirm = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, required: true },
+	modalUuid: { type: String, default: null },
 	type: {
 		type: String,
 		default: ""

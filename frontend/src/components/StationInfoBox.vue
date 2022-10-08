@@ -12,7 +12,7 @@ const props = defineProps({
 	stationPaused: { type: Boolean, default: null },
 	showManageStation: { type: Boolean, default: false },
 	showGoToStation: { type: Boolean, default: false },
-	modalUuid: { type: String, required: true },
+	modalUuid: { type: String, default: null },
 	sector: { type: String, default: "station" }
 });
 

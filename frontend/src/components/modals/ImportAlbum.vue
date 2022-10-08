@@ -20,7 +20,7 @@ const SongItem = defineAsyncComponent(
 
 const props = defineProps({
 	modalUuid: { type: String, required: true },
-	songs: { type: Array, required: true }
+	songs: { type: Array, default: () => [] }
 });
 
 const { socket } = useWebsocketsStore();

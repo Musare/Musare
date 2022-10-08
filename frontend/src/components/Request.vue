@@ -18,7 +18,7 @@ const PlaylistTabBase = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, required: true },
+	modalUuid: { type: String, default: null },
 	sector: { type: String, default: "station" },
 	disableAutoRequest: { type: Boolean, default: false }
 });
