@@ -68,7 +68,7 @@ export default {
 
 		return formatHours() + formatMinutes() + formatSeconds();
 	},
-	getDateFormatted: (createdAt: number) => {
+	getDateFormatted: (createdAt: number | Date) => {
 		const date = new Date(createdAt);
 		const year = date.getFullYear();
 		const month = `${date.getMonth() + 1}`.padStart(2, "0");

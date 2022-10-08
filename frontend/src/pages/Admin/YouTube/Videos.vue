@@ -118,6 +118,14 @@ const columns = ref<TableColumn[]>([
 		sortProperty: "songId",
 		defaultWidth: 220,
 		defaultVisibility: "hidden"
+	},
+	{
+		name: "uploadedAt",
+		displayName: "Uploaded At",
+		properties: ["uploadedAt"],
+		sortProperty: "uploadedAt",
+		defaultWidth: 200,
+		defaultVisibility: "hidden"
 	}
 ]);
 const filters = ref<TableFilter[]>([
@@ -182,6 +190,13 @@ const filters = ref<TableFilter[]>([
 		property: "songId",
 		filterTypes: ["contains", "exact", "regex"],
 		defaultFilterType: "contains"
+	},
+	{
+		name: "uploadedAt",
+		displayName: "Uploaded At",
+		property: "uploadedAt",
+		filterTypes: ["datetimeBefore", "datetimeAfter"],
+		defaultFilterType: "datetimeBefore"
 	}
 ]);
 const events = ref<TableEvents>({
@@ -379,6 +394,11 @@ const removeVideos = videoIds => {
 			<template #column-songId="slotProps">
 				<span :title="slotProps.item.songId">{{
 					slotProps.item.songId
+				}}</span>
+			</template>
+			<template #column-uploadedAt="slotProps">
+				<span :title="new Date(slotProps.item.uploadedAt).toString()">{{
+					utils.getDateFormatted(slotProps.item.uploadedAt)
 				}}</span>
 			</template>
 			<template #bulk-actions="slotProps">

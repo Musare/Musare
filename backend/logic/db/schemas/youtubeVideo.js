@@ -3,7 +3,7 @@ export default {
 	title: { type: String, trim: true, required: true },
 	author: { type: String, trim: true, required: true },
 	duration: { type: Number, required: true },
-	uploadedAt: { type: Number },
+	uploadedAt: { type: Date },
 	createdAt: { type: Date, default: Date.now, required: true },
 	documentVersion: { type: Number, default: 1, required: true }
 };

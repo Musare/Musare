@@ -13,7 +13,7 @@ export const useViewYoutubeVideoStore = ({
 				title: string;
 				author: string;
 				duration: number;
-				uploadedAt?: number;
+				uploadedAt?: Date;
 			};
 			player: {
 				error: boolean;
