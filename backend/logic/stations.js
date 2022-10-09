@@ -1053,22 +1053,21 @@ class _StationsModule extends CoreClass {
 							if (session.sessionId) {
 								CacheModule.runJob("HGET", { table: "sessions", key: session.sessionId }).then(
 									session => {
-										if (session && session.userId)
-											StationsModule.runJob(
-												"CAN_USER_VIEW_STATION",
-												{ station, userId: session.userId },
-												this
-											)
-												.then(canView => {
-													if (canView)
-														socket.dispatch("event:station.nextSong", {
-															data: {
-																stationId: station._id,
-																currentSong
-															}
-														});
-												})
-												.catch(() => {});
+										const dispatchNextSong = () => {
+											socket.dispatch("event:station.nextSong", {
+												data: {
+													stationId: station._id,
+													currentSong
+												}
+											});
+										};
+										hasPermission("stations.index", session, station._id)
+											.then(() => dispatchNextSong())
+											.catch(() => {
+												hasPermission("stations.index.other", session)
+													.then(() => dispatchNextSong())
+													.catch(() => {});
+											});
 									}
 								);
 							}
