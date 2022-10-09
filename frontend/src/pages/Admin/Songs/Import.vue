@@ -343,8 +343,8 @@ const submitCreateImport = stage => {
 const editSongs = videos => {
 	const songs = videos.map(youtubeId => ({ youtubeId }));
 	if (songs.length === 1)
-		openModal({ modal: "editSong", data: { song: songs[0] } });
-	else openModal({ modal: "editSong", data: { songs } });
+		openModal({ modal: "editSong", props: { song: songs[0] } });
+	else openModal({ modal: "editSong", props: { songs } });
 };
 
 const importAlbum = youtubeIds => {
