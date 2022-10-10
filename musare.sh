@@ -331,16 +331,23 @@ case $1 in
 
     typescript|ts)
         echo -e "${CYAN}Musare | TypeScript Check${NC}"
-        servicesString=$(handleServices "backend frontend" "${@:2}")
+        services=$(sed "s/\(\ \)\{0,1\}\(-\)\{0,2\}strict//g;t;q1" <<< "${@:2}")
+        strictFound=$?
+        if [[ $strictFound -eq 0 ]]; then
+            strict="--strict"
+            echo -e "${GREEN}Strict mode enabled${NC}"
+        fi
+        # shellcheck disable=SC2068
+        servicesString=$(handleServices "backend frontend" ${services[@]})
         if [[ ${servicesString:0:1} == 1 ]]; then
             if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *frontend* ]]; then
                 echo -e "${CYAN}Running frontend typescript check...${NC}"
-                ${dockerCompose} exec -T frontend npm run typescript
+                ${dockerCompose} exec -T frontend npm run typescript -- $strict
                 frontendExitValue=$?
             fi
             if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *backend* ]]; then
                 echo -e "${CYAN}Running backend typescript check...${NC}"
-                ${dockerCompose} exec -T backend npm run typescript
+                ${dockerCompose} exec -T backend npm run typescript -- $strict
                 backendExitValue=$?
             fi
             if [[ ${frontendExitValue} -gt 0 || ${backendExitValue} -gt 0 ]]; then
@@ -349,7 +356,7 @@ case $1 in
                 exitValue=0
             fi
         else
-            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") typescript [backend, frontend]${NC}"
+            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") typescript [backend, frontend] [strict]${NC}"
             exitValue=1
         fi
         if [[ ${exitValue} -gt 0 ]]; then
