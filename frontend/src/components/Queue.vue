@@ -20,7 +20,9 @@ const props = defineProps({
 
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
-const manageStationStore = useManageStationStore(props);
+const manageStationStore = useManageStationStore({
+	modalUuid: props.modalUuid
+});
 
 const actionableButtonVisible = ref(false);
 const drag = ref(false);

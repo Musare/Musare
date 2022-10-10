@@ -19,7 +19,7 @@ const { hasPermission } = userAuthStore;
 
 const { socket } = useWebsocketsStore();
 
-const editPlaylistStore = useEditPlaylistStore(props);
+const editPlaylistStore = useEditPlaylistStore({ modalUuid: props.modalUuid });
 const { playlist } = storeToRefs(editPlaylistStore);
 
 const { preventCloseUnsaved } = useModalsStore();

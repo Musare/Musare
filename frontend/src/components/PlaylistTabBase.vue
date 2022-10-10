@@ -60,7 +60,9 @@ const {
 
 const { autoRequest } = storeToRefs(stationStore);
 
-const manageStationStore = useManageStationStore(props);
+const manageStationStore = useManageStationStore({
+	modalUuid: props.modalUuid
+});
 const { autofill } = storeToRefs(manageStationStore);
 
 const station = computed({

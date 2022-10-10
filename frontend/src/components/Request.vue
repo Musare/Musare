@@ -28,7 +28,9 @@ const { musareSearch, searchForMusareSongs } = useSearchMusare();
 
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
-const manageStationStore = useManageStationStore(props);
+const manageStationStore = useManageStationStore({
+	modalUuid: props.modalUuid
+});
 
 const tab = ref("songs");
 const sitename = ref("Musare");

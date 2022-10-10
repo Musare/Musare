@@ -55,7 +55,7 @@ const props = defineProps({
 	songs: { type: Array, default: null }
 });
 
-const editSongStore = useEditSongStore(props);
+const editSongStore = useEditSongStore({ modalUuid: props.modalUuid });
 const stationStore = useStationStore();
 const { socket } = useWebsocketsStore();
 const userAuthStore = useUserAuthStore();

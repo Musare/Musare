@@ -25,7 +25,7 @@ const props = defineProps({
 
 const { socket } = useWebsocketsStore();
 
-const importAlbumStore = useImportAlbumStore(props);
+const importAlbumStore = useImportAlbumStore({ modalUuid: props.modalUuid });
 const { discogsTab, discogsAlbum, prefillDiscogs, playlistSongs } =
 	storeToRefs(importAlbumStore);
 const {

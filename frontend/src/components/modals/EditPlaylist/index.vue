@@ -35,7 +35,7 @@ const props = defineProps({
 });
 
 const { socket } = useWebsocketsStore();
-const editPlaylistStore = useEditPlaylistStore(props);
+const editPlaylistStore = useEditPlaylistStore({ modalUuid: props.modalUuid });
 const stationStore = useStationStore();
 const userAuthStore = useUserAuthStore();
 

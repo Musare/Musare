@@ -31,7 +31,9 @@ const activityWatchVideoDataInterval = ref(null);
 const activityWatchVideoLastStatus = ref("");
 const activityWatchVideoLastStartDuration = ref(0);
 
-const viewYoutubeVideoStore = useViewYoutubeVideoStore(props);
+const viewYoutubeVideoStore = useViewYoutubeVideoStore({
+	modalUuid: props.modalUuid
+});
 const stationStore = useStationStore();
 const { video, player } = storeToRefs(viewYoutubeVideoStore);
 const {

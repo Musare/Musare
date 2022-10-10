@@ -17,7 +17,7 @@ const props = defineProps({
 	bulk: { type: Boolean, default: false }
 });
 
-const editSongStore = useEditSongStore(props);
+const editSongStore = useEditSongStore({ modalUuid: props.modalUuid });
 
 const { socket } = useWebsocketsStore();
 

@@ -12,7 +12,7 @@ const props = defineProps({
 	modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
 });
 
-const editSongStore = useEditSongStore(props);
+const editSongStore = useEditSongStore({ modalUuid: props.modalUuid });
 
 const { form, newSong } = storeToRefs(editSongStore);
 

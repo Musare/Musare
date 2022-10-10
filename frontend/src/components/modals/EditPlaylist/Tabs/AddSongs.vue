@@ -16,7 +16,7 @@ const props = defineProps({
 	modalUuid: { type: String, required: true }
 });
 
-const editPlaylistStore = useEditPlaylistStore(props);
+const editPlaylistStore = useEditPlaylistStore({ modalUuid: props.modalUuid });
 const { playlist } = storeToRefs(editPlaylistStore);
 
 const sitename = ref("Musare");

@@ -18,7 +18,9 @@ const props = defineProps({
 
 const userAuthStore = useUserAuthStore();
 const stationStore = useStationStore();
-const manageStationStore = useManageStationStore(props);
+const manageStationStore = useManageStationStore({
+	modalUuid: props.modalUuid
+});
 
 const { socket } = useWebsocketsStore();
 const { loggedIn } = storeToRefs(userAuthStore);

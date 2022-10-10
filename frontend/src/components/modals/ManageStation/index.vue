@@ -43,7 +43,9 @@ const { loggedIn, userId } = storeToRefs(userAuthStore);
 
 const { socket } = useWebsocketsStore();
 
-const manageStationStore = useManageStationStore(props);
+const manageStationStore = useManageStationStore({
+	modalUuid: props.modalUuid
+});
 const {
 	stationId,
 	sector,

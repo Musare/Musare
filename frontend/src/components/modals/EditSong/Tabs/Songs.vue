@@ -16,7 +16,7 @@ const props = defineProps({
 
 const sitename = ref("Musare");
 
-const { form } = useEditSongStore(props);
+const { form } = useEditSongStore({ modalUuid: props.modalUuid });
 
 const {
 	musareSearch,

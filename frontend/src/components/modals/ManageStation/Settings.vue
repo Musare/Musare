@@ -17,7 +17,9 @@ const props = defineProps({
 
 const { socket } = useWebsocketsStore();
 
-const manageStationStore = useManageStationStore(props);
+const manageStationStore = useManageStationStore({
+	modalUuid: props.modalUuid
+});
 const { station } = storeToRefs(manageStationStore);
 const { editStation } = manageStationStore;
 

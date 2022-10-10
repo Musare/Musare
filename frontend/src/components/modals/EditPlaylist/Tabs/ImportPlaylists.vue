@@ -12,7 +12,7 @@ const props = defineProps({
 
 const { socket } = useWebsocketsStore();
 
-const editPlaylistStore = useEditPlaylistStore(props);
+const editPlaylistStore = useEditPlaylistStore({ modalUuid: props.modalUuid });
 const { playlist } = storeToRefs(editPlaylistStore);
 
 const { setJob } = useLongJobsStore();

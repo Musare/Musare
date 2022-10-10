@@ -4,8 +4,8 @@
 declare global {
 	var lofig: {
 		config: object;
-		fetchConfig: () => Promise<unknown>;
-		get: (setting: string) => unknown;
+		fetchConfig: () => Promise<any>;
+		get: (setting: string) => any;
 	};
 	var stationInterval: number;
 	var YT: any;
