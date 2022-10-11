@@ -1,9 +1,0 @@
-{
-    "login": "Login",
-    "register": "Register",
-    "station": "Station | Stations",
-    "manageStation": "Manage @:station",
-    "favoriteStations": "My Favourites",
-    "noStations": "There are no @.lower:station to display",
-    "home": "Home"
-}

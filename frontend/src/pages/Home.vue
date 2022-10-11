@@ -368,7 +368,7 @@ onBeforeUnmount(() => {
 
 <template>
 	<div>
-		<page-metadata :title="t('home')" />
+		<page-metadata :title="t('Home')" />
 		<div class="app home-page">
 			<main-header
 				:hide-logo="true"
@@ -394,14 +394,14 @@ onBeforeUnmount(() => {
 								class="button login"
 								@click="openModal('login')"
 							>
-								{{ t("login") }}
+								{{ t("Login") }}
 							</button>
 							<button
 								v-if="!siteSettings.registrationDisabled"
 								class="button register"
 								@click="openModal('register')"
 							>
-								{{ t("register") }}
+								{{ t("Register") }}
 							</button>
 						</div>
 					</div>
@@ -410,7 +410,7 @@ onBeforeUnmount(() => {
 			<div class="group" v-show="favoriteStations.length > 0">
 				<div class="group-title">
 					<div>
-						<h2>{{ t("favoriteStations") }}</h2>
+						<h2>{{ t("MyFavorites") }}</h2>
 					</div>
 				</div>
 
@@ -458,10 +458,10 @@ onBeforeUnmount(() => {
 														}
 													})
 												"
-												:content="t('manageStation')"
+												:content="t('ManageStation')"
 												v-tippy
 											>
-												settings
+												{{ t("Icons.ManageStation") }}
 											</div>
 											<div
 												v-else
@@ -476,10 +476,10 @@ onBeforeUnmount(() => {
 														}
 													})
 												"
-												content="View Queue"
+												:content="t('ViewQueue')"
 												v-tippy
 											>
-												queue_music
+												{{ t("Icons.ViewQueue") }}
 											</div>
 										</div>
 									</template>
@@ -494,9 +494,9 @@ onBeforeUnmount(() => {
 												favoriteStation(element._id)
 											"
 											class="favorite material-icons"
-											content="Favorite Station"
+											:content="t('FavoriteStation')"
 											v-tippy
-											>star_border</i
+											>{{ t("Icons.Favorite") }}</i
 										>
 										<i
 											v-if="
@@ -506,20 +506,20 @@ onBeforeUnmount(() => {
 												unfavoriteStation(element._id)
 											"
 											class="favorite material-icons"
-											content="Unfavorite Station"
+											:content="t('UnfavoriteStation')"
 											v-tippy
-											>star</i
+											>{{ t("Icons.Unfavorite") }}</i
 										>
 										<h5>{{ element.displayName }}</h5>
 										<i
 											v-if="element.type === 'official'"
 											class="material-icons verified-station"
-											content="Verified Station"
+											:content="t('OfficialStation')"
 											v-tippy="{
 												theme: 'info'
 											}"
 										>
-											check_circle
+											{{ t("Icons.Verified") }}
 										</i>
 									</div>
 									<div class="content">
@@ -527,7 +527,7 @@ onBeforeUnmount(() => {
 									</div>
 									<div class="under-content">
 										<p class="hostedBy">
-											Hosted by
+											{{ t("HostedBy") }}
 											<span class="host">
 												<span
 													v-if="
@@ -555,9 +555,9 @@ onBeforeUnmount(() => {
 													isOwner(element)
 												"
 												class="homeIcon material-icons"
-												content="This is your station."
+												:content="t('UserOwnsStation')"
 												v-tippy="{ theme: 'info' }"
-												>home</i
+												>{{ t("Icons.Home") }}</i
 											>
 											<i
 												v-if="
@@ -566,9 +566,9 @@ onBeforeUnmount(() => {
 													isDj(element)
 												"
 												class="djIcon material-icons"
-												content="You are a DJ in this station."
+												:content="t('UserIsDj')"
 												v-tippy="{ theme: 'info' }"
-												>shield</i
+												>{{ t("Icons.DJ") }}</i
 											>
 											<i
 												v-if="
@@ -576,9 +576,9 @@ onBeforeUnmount(() => {
 													'private'
 												"
 												class="privateIcon material-icons"
-												content="This station is not visible to other users."
+												:content="t('StationPrivate')"
 												v-tippy="{ theme: 'info' }"
-												>lock</i
+												>{{ t("Icons.Private") }}</i
 											>
 											<i
 												v-if="
@@ -586,9 +586,9 @@ onBeforeUnmount(() => {
 													'unlisted'
 												"
 												class="unlistedIcon material-icons"
-												content="Unlisted Station"
+												:content="t('StationUnlisted')"
 												v-tippy="{ theme: 'info' }"
-												>link</i
+												>{{ t("Icons.Unlisted") }}</i
 											>
 										</div>
 									</div>
@@ -601,16 +601,18 @@ onBeforeUnmount(() => {
 										element.currentSong.title
 									"
 									class="material-icons"
-									content="Station Paused"
+									:content="t('StationPaused')"
 									v-tippy="{ theme: 'info' }"
-									>pause</i
+									>{{ t("Icons.Pause") }}</i
 								>
 								<i
 									v-else-if="element.currentSong.title"
 									class="material-icons"
-									>music_note</i
+									>{{ t("Icons.Song") }}</i
 								>
-								<i v-else class="material-icons">music_off</i>
+								<i v-else class="material-icons">{{
+									t("Icons.NoSong")
+								}}</i>
 								<span
 									v-if="element.currentSong.title"
 									class="songTitle"
@@ -635,16 +637,16 @@ onBeforeUnmount(() => {
 											: ""
 									}}</span
 								>
-								<span v-else class="songTitle"
-									>No Songs Playing</span
-								>
+								<span v-else class="songTitle">{{
+									t("NoSongsPlaying")
+								}}</span>
 								<i
 									v-if="canRequest(element)"
 									class="material-icons"
 									content="You can request songs in this station"
 									v-tippy="{ theme: 'info' }"
 								>
-									queue
+									{{ t("Icons.RequestSong") }}
 								</i>
 							</div>
 						</router-link>
@@ -654,7 +656,7 @@ onBeforeUnmount(() => {
 			<div class="group bottom">
 				<div class="group-title">
 					<div>
-						<h1>{{ t("station", 0) }}</h1>
+						<h1>{{ t("Station", 0) }}</h1>
 					</div>
 				</div>
 				<a
@@ -665,15 +667,17 @@ onBeforeUnmount(() => {
 					<div class="card-content">
 						<div class="thumbnail">
 							<figure class="image">
-								<i class="material-icons">radio</i>
+								<i class="material-icons">{{
+									t("Icons.Station")
+								}}</i>
 							</figure>
 						</div>
 						<div class="media">
 							<div class="displayName">
-								<h5>Create Station</h5>
+								<h5>{{ t("CreateStation") }}</h5>
 							</div>
 							<div class="content">
-								Click here to create your own station!
+								{{ t("ClickToCreateStation") }}
 							</div>
 						</div>
 					</div>
@@ -687,15 +691,17 @@ onBeforeUnmount(() => {
 					<div class="card-content">
 						<div class="thumbnail">
 							<figure class="image">
-								<i class="material-icons">radio</i>
+								<i class="material-icons">{{
+									t("Icons.RequestSong")
+								}}</i>
 							</figure>
 						</div>
 						<div class="media">
 							<div class="displayName">
-								<h5>Create Station</h5>
+								<h5>{{ t("CreateStation") }}</h5>
 							</div>
 							<div class="content">
-								Login to create a station!
+								{{ t("LoginToCreateStation") }}
 							</div>
 						</div>
 					</div>
@@ -738,10 +744,10 @@ onBeforeUnmount(() => {
 												}
 											})
 										"
-										:content="t('manageStation')"
+										:content="t('ManageStation')"
 										v-tippy
 									>
-										settings
+										{{ t("Icons.ManageStation") }}
 									</div>
 									<div
 										v-else
@@ -755,10 +761,10 @@ onBeforeUnmount(() => {
 												}
 											})
 										"
-										content="View Queue"
+										:content="t('ViewQueue')"
 										v-tippy
 									>
-										queue_music
+										{{ t("Icons.ViewQueue") }}
 									</div>
 								</div>
 							</template>
@@ -771,9 +777,9 @@ onBeforeUnmount(() => {
 										favoriteStation(station._id)
 									"
 									class="favorite material-icons"
-									content="Favorite Station"
+									:content="t('FavoriteStation')"
 									v-tippy
-									>star_border</i
+									>{{ t("Icons.Favorite") }}</i
 								>
 								<i
 									v-if="loggedIn && station.isFavorited"
@@ -781,18 +787,18 @@ onBeforeUnmount(() => {
 										unfavoriteStation(station._id)
 									"
 									class="favorite material-icons"
-									content="Unfavorite Station"
+									:content="t('UnfavoriteStation')"
 									v-tippy
-									>star</i
+									>{{ t("Icons.Unfavorite") }}</i
 								>
 								<h5>{{ station.displayName }}</h5>
 								<i
 									v-if="station.type === 'official'"
 									class="material-icons verified-station"
-									content="Verified Station"
+									:content="t('OfficialStation')"
 									v-tippy="{ theme: 'info' }"
 								>
-									check_circle
+									{{ t("Icons.Verified") }}
 								</i>
 							</div>
 							<div class="content">
@@ -800,7 +806,7 @@ onBeforeUnmount(() => {
 							</div>
 							<div class="under-content">
 								<p class="hostedBy">
-									Hosted by
+									{{ t("HostedBy") }}
 									<span class="host">
 										<span
 											v-if="station.type === 'official'"
@@ -820,9 +826,9 @@ onBeforeUnmount(() => {
 											isOwner(station)
 										"
 										class="homeIcon material-icons"
-										content="This is your station."
+										:content="t('UserOwnsStation')"
 										v-tippy="{ theme: 'info' }"
-										>home</i
+										>{{ t("Icons.Home") }}</i
 									>
 									<i
 										v-if="
@@ -830,23 +836,23 @@ onBeforeUnmount(() => {
 											isDj(station)
 										"
 										class="djIcon material-icons"
-										content="You are a DJ in this station."
+										:content="t('UserIsDj')"
 										v-tippy="{ theme: 'info' }"
-										>shield</i
+										>{{ t("Icons.DJ") }}</i
 									>
 									<i
 										v-if="station.privacy === 'private'"
 										class="privateIcon material-icons"
-										content="This station is not visible to other users."
+										:content="t('StationPrivate')"
 										v-tippy="{ theme: 'info' }"
-										>lock</i
+										>{{ t("Icons.Private") }}</i
 									>
 									<i
 										v-if="station.privacy === 'unlisted'"
 										class="unlistedIcon material-icons"
-										content="Unlisted Station"
+										:content="t('StationUnlisted')"
 										v-tippy="{ theme: 'info' }"
-										>link</i
+										>{{ t("Icons.Unlisted") }}</i
 									>
 								</div>
 							</div>
@@ -856,16 +862,18 @@ onBeforeUnmount(() => {
 						<i
 							v-if="station.paused && station.currentSong.title"
 							class="material-icons"
-							content="Station Paused"
+							:content="t('StationPaused')"
 							v-tippy="{ theme: 'info' }"
-							>pause</i
+							>{{ t("Icons.Pause") }}</i
 						>
 						<i
 							v-else-if="station.currentSong.title"
 							class="material-icons"
-							>music_note</i
+							>{{ t("Icons.Song") }}</i
 						>
-						<i v-else class="material-icons">music_off</i>
+						<i v-else class="material-icons">{{
+							t("Icons.NoSong")
+						}}</i>
 						<span
 							v-if="station.currentSong.title"
 							class="songTitle"
@@ -886,27 +894,29 @@ onBeforeUnmount(() => {
 									: ""
 							}}</span
 						>
-						<span v-else class="songTitle">No Songs Playing</span>
+						<span v-else class="songTitle">{{
+							t("NoSongsPlaying")
+						}}</span>
 						<i
 							v-if="canRequest(station)"
 							class="material-icons"
-							content="You can request songs in this station"
+							:content="t('CanRequestInStation')"
 							v-tippy="{ theme: 'info' }"
 						>
-							queue
+							{{ t("Icons.RequestSong") }}
 						</i>
 						<i
 							v-else-if="canRequest(station, false)"
 							class="material-icons"
-							content="Login to request songs in this station"
+							:content="t('LoginToRequestInStation')"
 							v-tippy="{ theme: 'info' }"
 						>
-							queue
+							{{ t("Icons.RequestSong") }}
 						</i>
 					</div>
 				</router-link>
 				<h4 v-if="stations.length === 0">
-					{{ t("noStations", 0) }}
+					{{ t("NoStations", 0) }}
 				</h4>
 			</div>
 			<main-footer />
