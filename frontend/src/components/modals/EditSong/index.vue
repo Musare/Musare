@@ -219,6 +219,11 @@ const loadSong = (_youtubeId: string, reset?: boolean) => {
 
 			setSong(_song, reset);
 
+			// Reset the youtube data one more time so it can properly reset
+			youtubeVideoCurrentTime.value = "0.000";
+			youtubeVideoDuration.value = "0.000";
+			youtubeVideoNote.value = "";
+
 			songDataLoaded.value = true;
 
 			if (_song._id) {
