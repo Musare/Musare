@@ -256,54 +256,54 @@ onMounted(() => {
 			} else new Toast(res.message);
 			gettingSongs.value = false;
 		});
-
-		socket.on(
-			"event:playlist.song.added",
-			res => {
-				if (playlist.value._id === res.data.playlistId)
-					addSong(res.data.song);
-			},
-			{ modalUuid: props.modalUuid }
-		);
-
-		socket.on(
-			"event:playlist.song.removed",
-			res => {
-				if (playlist.value._id === res.data.playlistId) {
-					// remove song from array of playlists
-					removeSong(res.data.youtubeId);
-				}
-			},
-			{ modalUuid: props.modalUuid }
-		);
-
-		socket.on(
-			"event:playlist.displayName.updated",
-			res => {
-				if (playlist.value._id === res.data.playlistId) {
-					setPlaylist({
-						displayName: res.data.displayName,
-						...playlist.value
-					});
-				}
-			},
-			{ modalUuid: props.modalUuid }
-		);
-
-		socket.on(
-			"event:playlist.song.repositioned",
-			res => {
-				if (playlist.value._id === res.data.playlistId) {
-					const { song, playlistId } = res.data;
-
-					if (playlist.value._id === playlistId) {
-						repositionedSong(song);
-					}
-				}
-			},
-			{ modalUuid: props.modalUuid }
-		);
 	});
+
+	socket.on(
+		"event:playlist.song.added",
+		res => {
+			if (playlist.value._id === res.data.playlistId)
+				addSong(res.data.song);
+		},
+		{ modalUuid: props.modalUuid }
+	);
+
+	socket.on(
+		"event:playlist.song.removed",
+		res => {
+			if (playlist.value._id === res.data.playlistId) {
+				// remove song from array of playlists
+				removeSong(res.data.youtubeId);
+			}
+		},
+		{ modalUuid: props.modalUuid }
+	);
+
+	socket.on(
+		"event:playlist.displayName.updated",
+		res => {
+			if (playlist.value._id === res.data.playlistId) {
+				setPlaylist({
+					displayName: res.data.displayName,
+					...playlist.value
+				});
+			}
+		},
+		{ modalUuid: props.modalUuid }
+	);
+
+	socket.on(
+		"event:playlist.song.repositioned",
+		res => {
+			if (playlist.value._id === res.data.playlistId) {
+				const { song, playlistId } = res.data;
+
+				if (playlist.value._id === playlistId) {
+					repositionedSong(song);
+				}
+			}
+		},
+		{ modalUuid: props.modalUuid }
+	);
 });
 
 onBeforeUnmount(() => {

@@ -43,29 +43,25 @@ onMounted(() => {
 					setJob(res);
 				}
 			});
-
-			socket.on("keep.event:longJob.removed", ({ data }) => {
-				removeJob(data.jobId);
-			});
-
-			socket.on("keep.event:longJob.added", ({ data }) => {
-				if (
-					!activeJobs.value.find(
-						activeJob => activeJob.id === data.jobId
-					)
-				)
-					socket.dispatch("users.getLongJob", data.jobId, {
-						cb: res => {
-							if (res.status === "success") {
-								setJob(res.data.longJob);
-							} else console.log(res.message);
-						},
-						onProgress: res => {
-							setJob(res);
-						}
-					});
-			});
 		}
+	});
+
+	socket.on("keep.event:longJob.removed", ({ data }) => {
+		removeJob(data.jobId);
+	});
+
+	socket.on("keep.event:longJob.added", ({ data }) => {
+		if (!activeJobs.value.find(activeJob => activeJob.id === data.jobId))
+			socket.dispatch("users.getLongJob", data.jobId, {
+				cb: res => {
+					if (res.status === "success") {
+						setJob(res.data.longJob);
+					} else console.log(res.message);
+				},
+				onProgress: res => {
+					setJob(res);
+				}
+			});
 	});
 });
 </script>

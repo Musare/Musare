@@ -50,35 +50,35 @@ onMounted(() => {
 			if (res.status === "success") setUser(res.data.user);
 			else new Toast("You're not currently signed in.");
 		});
-
-		socket.on("event:user.password.linked", () =>
-			updateOriginalUser({
-				property: "password",
-				value: true
-			})
-		);
-
-		socket.on("event:user.password.unlinked", () =>
-			updateOriginalUser({
-				property: "password",
-				value: false
-			})
-		);
-
-		socket.on("event:user.github.linked", () =>
-			updateOriginalUser({
-				property: "github",
-				value: true
-			})
-		);
-
-		socket.on("event:user.github.unlinked", () =>
-			updateOriginalUser({
-				property: "github",
-				value: false
-			})
-		);
 	});
+
+	socket.on("event:user.password.linked", () =>
+		updateOriginalUser({
+			property: "password",
+			value: true
+		})
+	);
+
+	socket.on("event:user.password.unlinked", () =>
+		updateOriginalUser({
+			property: "password",
+			value: false
+		})
+	);
+
+	socket.on("event:user.github.linked", () =>
+		updateOriginalUser({
+			property: "github",
+			value: true
+		})
+	);
+
+	socket.on("event:user.github.unlinked", () =>
+		updateOriginalUser({
+			property: "github",
+			value: false
+		})
+	);
 });
 </script>
 

@@ -226,27 +226,27 @@ onMounted(() => {
 				);
 			}
 		});
-
-		socket.on(
-			"event:admin.report.resolved",
-			res => {
-				existingReports.value = existingReports.value.filter(
-					report => report._id !== res.data.reportId
-				);
-			},
-			{ modalUuid: props.modalUuid }
-		);
-
-		socket.on(
-			"event:admin.report.removed",
-			res => {
-				existingReports.value = existingReports.value.filter(
-					report => report._id !== res.data.reportId
-				);
-			},
-			{ modalUuid: props.modalUuid }
-		);
 	});
+
+	socket.on(
+		"event:admin.report.resolved",
+		res => {
+			existingReports.value = existingReports.value.filter(
+				report => report._id !== res.data.reportId
+			);
+		},
+		{ modalUuid: props.modalUuid }
+	);
+
+	socket.on(
+		"event:admin.report.removed",
+		res => {
+			existingReports.value = existingReports.value.filter(
+				report => report._id !== res.data.reportId
+			);
+		},
+		{ modalUuid: props.modalUuid }
+	);
 });
 </script>
 

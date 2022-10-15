@@ -108,43 +108,38 @@ onMounted(() => {
 						}
 					}
 				);
-
-				socket.on(
-					"event:admin.report.resolved",
-					res => {
-						report.value.resolved = res.data.resolved;
-					},
-					{ modalUuid: props.modalUuid }
-				);
-
-				socket.on(
-					"event:admin.report.removed",
-					() => closeCurrentModal(),
-					{
-						modalUuid: props.modalUuid
-					}
-				);
-
-				socket.on(
-					"event:admin.report.issue.toggled",
-					res => {
-						if (props.reportId === res.data.reportId) {
-							const issue = report.value.issues.find(
-								issue =>
-									issue._id.toString() === res.data.issueId
-							);
-
-							issue.resolved = res.data.resolved;
-						}
-					},
-					{ modalUuid: props.modalUuid }
-				);
 			} else {
 				new Toast("Report with that ID not found");
 				closeCurrentModal();
 			}
 		});
 	});
+
+	socket.on(
+		"event:admin.report.resolved",
+		res => {
+			report.value.resolved = res.data.resolved;
+		},
+		{ modalUuid: props.modalUuid }
+	);
+
+	socket.on("event:admin.report.removed", () => closeCurrentModal(), {
+		modalUuid: props.modalUuid
+	});
+
+	socket.on(
+		"event:admin.report.issue.toggled",
+		res => {
+			if (props.reportId === res.data.reportId) {
+				const issue = report.value.issues.find(
+					issue => issue._id.toString() === res.data.issueId
+				);
+
+				issue.resolved = res.data.resolved;
+			}
+		},
+		{ modalUuid: props.modalUuid }
+	);
 });
 
 onBeforeUnmount(() => {

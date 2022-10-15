@@ -179,10 +179,6 @@ onMounted(async () => {
 			}
 		);
 
-		socket.on("keep.event:user.session.deleted", () =>
-			window.location.reload()
-		);
-
 		const newUser = !localStorage.getItem("firstVisited");
 		socket.dispatch("news.newest", newUser, (res: NewestResponse) => {
 			if (res.status !== "success") return;
@@ -232,6 +228,10 @@ onMounted(async () => {
 	socket.onDisconnect(() => {
 		socketConnected.value = false;
 	}, true);
+
+	socket.on("keep.event:user.session.deleted", () =>
+		window.location.reload()
+	);
 
 	apiDomain.value = await lofig.get("backend.apiDomain");
 

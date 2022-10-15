@@ -220,103 +220,95 @@ onMounted(() => {
 						"apis.joinRoom",
 						`manage-station.${stationId.value}`
 					);
-
-					socket.on(
-						"event:station.updated",
-						res => {
-							updateStation(res.data.station);
-						},
-						{ modalUuid: props.modalUuid }
-					);
-
-					socket.on(
-						"event:station.autofillPlaylist",
-						res => {
-							const { playlist } = res.data;
-							const playlistIndex = autofill.value
-								.map(autofillPlaylist => autofillPlaylist._id)
-								.indexOf(playlist._id);
-							if (playlistIndex === -1)
-								autofill.value.push(playlist);
-						},
-						{ modalUuid: props.modalUuid }
-					);
-
-					socket.on(
-						"event:station.blacklistedPlaylist",
-						res => {
-							const { playlist } = res.data;
-							const playlistIndex = blacklist.value
-								.map(
-									blacklistedPlaylist =>
-										blacklistedPlaylist._id
-								)
-								.indexOf(playlist._id);
-							if (playlistIndex === -1)
-								blacklist.value.push(playlist);
-						},
-						{ modalUuid: props.modalUuid }
-					);
-
-					socket.on(
-						"event:station.removedAutofillPlaylist",
-						res => {
-							const { playlistId } = res.data;
-							const playlistIndex = autofill.value
-								.map(playlist => playlist._id)
-								.indexOf(playlistId);
-							if (playlistIndex >= 0)
-								autofill.value.splice(playlistIndex, 1);
-						},
-						{ modalUuid: props.modalUuid }
-					);
-
-					socket.on(
-						"event:station.removedBlacklistedPlaylist",
-						res => {
-							const { playlistId } = res.data;
-							const playlistIndex = blacklist.value
-								.map(playlist => playlist._id)
-								.indexOf(playlistId);
-							if (playlistIndex >= 0)
-								blacklist.value.splice(playlistIndex, 1);
-						},
-						{ modalUuid: props.modalUuid }
-					);
-
-					socket.on(
-						"event:station.deleted",
-						() => {
-							new Toast(
-								`The station you were editing was deleted.`
-							);
-							closeCurrentModal(true);
-						},
-						{ modalUuid: props.modalUuid }
-					);
-
-					socket.on(
-						"event:user.station.favorited",
-						res => {
-							if (res.data.stationId === stationId.value)
-								updateIsFavorited(true);
-						},
-						{ modalUuid: props.modalUuid }
-					);
-
-					socket.on(
-						"event:user.station.unfavorited",
-						res => {
-							if (res.data.stationId === stationId.value)
-								updateIsFavorited(false);
-						},
-						{ modalUuid: props.modalUuid }
-					);
 				} else {
 					new Toast(`Station with that ID not found`);
 					closeCurrentModal();
 				}
 			}
+		);
+
+		socket.on(
+			"event:station.updated",
+			res => {
+				updateStation(res.data.station);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:station.autofillPlaylist",
+			res => {
+				const { playlist } = res.data;
+				const playlistIndex = autofill.value
+					.map(autofillPlaylist => autofillPlaylist._id)
+					.indexOf(playlist._id);
+				if (playlistIndex === -1) autofill.value.push(playlist);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:station.blacklistedPlaylist",
+			res => {
+				const { playlist } = res.data;
+				const playlistIndex = blacklist.value
+					.map(blacklistedPlaylist => blacklistedPlaylist._id)
+					.indexOf(playlist._id);
+				if (playlistIndex === -1) blacklist.value.push(playlist);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:station.removedAutofillPlaylist",
+			res => {
+				const { playlistId } = res.data;
+				const playlistIndex = autofill.value
+					.map(playlist => playlist._id)
+					.indexOf(playlistId);
+				if (playlistIndex >= 0) autofill.value.splice(playlistIndex, 1);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:station.removedBlacklistedPlaylist",
+			res => {
+				const { playlistId } = res.data;
+				const playlistIndex = blacklist.value
+					.map(playlist => playlist._id)
+					.indexOf(playlistId);
+				if (playlistIndex >= 0)
+					blacklist.value.splice(playlistIndex, 1);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:station.deleted",
+			() => {
+				new Toast(`The station you were editing was deleted.`);
+				closeCurrentModal(true);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:user.station.favorited",
+			res => {
+				if (res.data.stationId === stationId.value)
+					updateIsFavorited(true);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:user.station.unfavorited",
+			res => {
+				if (res.data.stationId === stationId.value)
+					updateIsFavorited(false);
+			},
+			{ modalUuid: props.modalUuid }
 		);
 
 		socket.on(

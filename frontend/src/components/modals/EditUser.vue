@@ -239,21 +239,20 @@ onMounted(() => {
 				setRole({ role: res.data.role });
 
 				socket.dispatch("apis.joinRoom", `edit-user.${props.userId}`);
-
-				socket.on(
-					"event:user.removed",
-					res => {
-						if (res.data.userId === props.userId)
-							closeCurrentModal(true);
-					},
-					{ modalUuid: props.modalUuid }
-				);
 			} else {
 				new Toast("User with that ID not found");
 				closeCurrentModal();
 			}
 		});
 	});
+
+	socket.on(
+		"event:user.removed",
+		res => {
+			if (res.data.userId === props.userId) closeCurrentModal(true);
+		},
+		{ modalUuid: props.modalUuid }
+	);
 });
 
 onBeforeUnmount(() => {

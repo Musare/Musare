@@ -78,26 +78,26 @@ onMounted(() => {
 				localActivityWatch.value = preferences.activityWatch;
 			}
 		});
+	});
 
-		socket.on("keep.event:user.preferences.updated", res => {
-			const { preferences } = res.data;
+	socket.on("keep.event:user.preferences.updated", res => {
+		const { preferences } = res.data;
 
-			if (preferences.nightmode !== undefined)
-				localNightmode.value = preferences.nightmode;
+		if (preferences.nightmode !== undefined)
+			localNightmode.value = preferences.nightmode;
 
-			if (preferences.autoSkipDisliked !== undefined)
-				localAutoSkipDisliked.value = preferences.autoSkipDisliked;
+		if (preferences.autoSkipDisliked !== undefined)
+			localAutoSkipDisliked.value = preferences.autoSkipDisliked;
 
-			if (preferences.activityLogPublic !== undefined)
-				localActivityLogPublic.value = preferences.activityLogPublic;
+		if (preferences.activityLogPublic !== undefined)
+			localActivityLogPublic.value = preferences.activityLogPublic;
 
-			if (preferences.anonymousSongRequests !== undefined)
-				localAnonymousSongRequests.value =
-					preferences.anonymousSongRequests;
+		if (preferences.anonymousSongRequests !== undefined)
+			localAnonymousSongRequests.value =
+				preferences.anonymousSongRequests;
 
-			if (preferences.activityWatch !== undefined)
-				localActivityWatch.value = preferences.activityWatch;
-		});
+		if (preferences.activityWatch !== undefined)
+			localActivityWatch.value = preferences.activityWatch;
 	});
 });
 </script>

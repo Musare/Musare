@@ -71,35 +71,33 @@ const toggleIssue = (reportId, issueId) => {
 };
 
 onMounted(() => {
-	socket.onConnect(() => {
-		socket.on(
-			"event:admin.report.created",
-			res => reports.value.unshift(res.data.report),
-			{ modalUuid: props.modalUuid }
-		);
+	socket.on(
+		"event:admin.report.created",
+		res => reports.value.unshift(res.data.report),
+		{ modalUuid: props.modalUuid }
+	);
 
-		socket.on(
-			"event:admin.report.resolved",
-			res => resolveReport(res.data.reportId),
-			{ modalUuid: props.modalUuid }
-		);
+	socket.on(
+		"event:admin.report.resolved",
+		res => resolveReport(res.data.reportId),
+		{ modalUuid: props.modalUuid }
+	);
 
-		socket.on(
-			"event:admin.report.issue.toggled",
-			res => {
-				reports.value.forEach((report, index) => {
-					if (report._id === res.data.reportId) {
-						const issue = reports.value[index].issues.find(
-							issue => issue._id.toString() === res.data.issueId
-						);
+	socket.on(
+		"event:admin.report.issue.toggled",
+		res => {
+			reports.value.forEach((report, index) => {
+				if (report._id === res.data.reportId) {
+					const issue = reports.value[index].issues.find(
+						issue => issue._id.toString() === res.data.issueId
+					);
 
-						issue.resolved = res.data.resolved;
-					}
-				});
-			},
-			{ modalUuid: props.modalUuid }
-		);
-	});
+					issue.resolved = res.data.resolved;
+				}
+			});
+		},
+		{ modalUuid: props.modalUuid }
+	);
 });
 </script>
 

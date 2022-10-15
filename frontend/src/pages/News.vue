@@ -50,33 +50,31 @@ onMounted(() => {
 		);
 
 		socket.dispatch("apis.joinRoom", "news");
+	});
 
-		socket.on("event:news.created", (res: NewsCreatedResponse) =>
-			news.value.unshift(res.data.news)
-		);
+	socket.on("event:news.created", (res: NewsCreatedResponse) =>
+		news.value.unshift(res.data.news)
+	);
 
-		socket.on("event:news.updated", (res: NewsUpdatedResponse) => {
-			if (res.data.news.status === "draft") {
-				news.value = news.value.filter(
-					item => item._id !== res.data.news._id
-				);
-				return;
-			}
-
-			for (let n = 0; n < news.value.length; n += 1) {
-				if (news.value[n]._id === res.data.news._id)
-					news.value[n] = {
-						...news.value[n],
-						...res.data.news
-					};
-			}
-		});
-
-		socket.on("event:news.deleted", (res: NewsRemovedResponse) => {
+	socket.on("event:news.updated", (res: NewsUpdatedResponse) => {
+		if (res.data.news.status === "draft") {
 			news.value = news.value.filter(
-				item => item._id !== res.data.newsId
+				item => item._id !== res.data.news._id
 			);
-		});
+			return;
+		}
+
+		for (let n = 0; n < news.value.length; n += 1) {
+			if (news.value[n]._id === res.data.news._id)
+				news.value[n] = {
+					...news.value[n],
+					...res.data.news
+				};
+		}
+	});
+
+	socket.on("event:news.deleted", (res: NewsRemovedResponse) => {
+		news.value = news.value.filter(item => item._id !== res.data.newsId);
 	});
 });
 </script>

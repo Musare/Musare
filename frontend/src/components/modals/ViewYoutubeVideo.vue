@@ -443,15 +443,6 @@ onMounted(() => {
 						"apis.joinRoom",
 						`view-youtube-video.${video.value._id}`
 					);
-
-					socket.on(
-						"event:youtubeVideo.removed",
-						() => {
-							new Toast("This YouTube video was removed.");
-							closeCurrentModal();
-						},
-						{ modalUuid: props.modalUuid }
-					);
 				} else {
 					new Toast("YouTube video with that ID not found");
 					closeCurrentModal();
@@ -459,6 +450,15 @@ onMounted(() => {
 			}
 		);
 	});
+
+	socket.on(
+		"event:youtubeVideo.removed",
+		() => {
+			new Toast("This YouTube video was removed.");
+			closeCurrentModal();
+		},
+		{ modalUuid: props.modalUuid }
+	);
 });
 
 onBeforeUnmount(() => {

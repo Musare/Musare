@@ -84,32 +84,32 @@ onMounted(() => {
 				getSet();
 			}
 		});
+	});
 
-		socket.on("event:activity.updated", res => {
-			activities.value.find(
-				activity => activity._id === res.data.activityId
-			).payload.message = res.data.message;
-		});
+	socket.on("event:activity.updated", res => {
+		activities.value.find(
+			activity => activity._id === res.data.activityId
+		).payload.message = res.data.message;
+	});
 
-		socket.on("event:activity.created", res => {
-			activities.value.unshift(res.data.activity);
-			offsettedFromNextSet.value += 1;
-		});
+	socket.on("event:activity.created", res => {
+		activities.value.unshift(res.data.activity);
+		offsettedFromNextSet.value += 1;
+	});
 
-		socket.on("event:activity.hidden", res => {
-			activities.value = activities.value.filter(
-				activity => activity._id !== res.data.activityId
-			);
+	socket.on("event:activity.hidden", res => {
+		activities.value = activities.value.filter(
+			activity => activity._id !== res.data.activityId
+		);
 
-			offsettedFromNextSet.value -= 1;
-		});
+		offsettedFromNextSet.value -= 1;
+	});
 
-		socket.on("event:activity.removeAllForUser", () => {
-			activities.value = [];
-			position.value = 1;
-			maxPosition.value = 1;
-			offsettedFromNextSet.value = 0;
-		});
+	socket.on("event:activity.removeAllForUser", () => {
+		activities.value = [];
+		position.value = 1;
+		maxPosition.value = 1;
+		offsettedFromNextSet.value = 0;
 	});
 });
 

@@ -926,57 +926,58 @@ onMounted(async () => {
 				});
 			}
 		});
-		// TODO, this doesn't address special properties
-		if (props.events && props.events.updated)
-			socket.on(`event:${props.events.updated.event}`, res => {
-				const index = rows.value
-					.map(row => row._id)
-					.indexOf(
-						props.events.updated.id
-							.split(".")
-							.reduce(
-								(previous, current) =>
-									previous &&
-									previous[current] !== null &&
-									previous[current] !== undefined
-										? previous[current]
-										: null,
-								res.data
-							)
-					);
-				const row = props.events.updated.item
-					.split(".")
-					.reduce(
-						(previous, current) =>
-							previous &&
-							previous[current] !== null &&
-							previous[current] !== undefined
-								? previous[current]
-								: null,
-						res.data
-					);
-				updateData(index, row);
-			});
-		if (props.events && props.events.removed)
-			socket.on(`event:${props.events.removed.event}`, res => {
-				const index = rows.value
-					.map(row => row._id)
-					.indexOf(
-						props.events.removed.id
-							.split(".")
-							.reduce(
-								(previous, current) =>
-									previous &&
-									previous[current] !== null &&
-									previous[current] !== undefined
-										? previous[current]
-										: null,
-								res.data
-							)
-					);
-				removeData(index);
-			});
 	});
+
+	// TODO, this doesn't address special properties
+	if (props.events && props.events.updated)
+		socket.on(`event:${props.events.updated.event}`, res => {
+			const index = rows.value
+				.map(row => row._id)
+				.indexOf(
+					props.events.updated.id
+						.split(".")
+						.reduce(
+							(previous, current) =>
+								previous &&
+								previous[current] !== null &&
+								previous[current] !== undefined
+									? previous[current]
+									: null,
+							res.data
+						)
+				);
+			const row = props.events.updated.item
+				.split(".")
+				.reduce(
+					(previous, current) =>
+						previous &&
+						previous[current] !== null &&
+						previous[current] !== undefined
+							? previous[current]
+							: null,
+					res.data
+				);
+			updateData(index, row);
+		});
+	if (props.events && props.events.removed)
+		socket.on(`event:${props.events.removed.event}`, res => {
+			const index = rows.value
+				.map(row => row._id)
+				.indexOf(
+					props.events.removed.id
+						.split(".")
+						.reduce(
+							(previous, current) =>
+								previous &&
+								previous[current] !== null &&
+								previous[current] !== undefined
+									? previous[current]
+									: null,
+							res.data
+						)
+				);
+			removeData(index);
+		});
 
 	if (props.keyboardShortcuts) {
 		// Navigation section

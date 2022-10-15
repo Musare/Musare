@@ -356,10 +356,10 @@ onMounted(() => {
 
 	socket.onConnect(() => {
 		socket.dispatch("apis.joinRoom", "import-album");
+	});
 
-		socket.on("event:admin.song.updated", res => {
-			updateTrackSong(res.data.song);
-		});
+	socket.on("event:admin.song.updated", res => {
+		updateTrackSong(res.data.song);
 	});
 });
 

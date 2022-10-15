@@ -1186,48 +1186,6 @@ onMounted(async () => {
 			);
 		});
 
-		socket.on(
-			`event:admin.song.updated`,
-			res => {
-				if (song.value._id === res.data.song._id)
-					setOriginalValue({
-						title: res.data.song.title,
-						duration: res.data.song.duration,
-						skipDuration: res.data.song.skipDuration,
-						thumbnail: res.data.song.thumbnail,
-						youtubeId: res.data.song.youtubeId,
-						verified: res.data.song.verified,
-						artists: res.data.song.artists,
-						genres: res.data.song.genres,
-						tags: res.data.song.tags,
-						discogs: res.data.song.discogs
-					});
-				if (bulk.value) {
-					const index = items.value
-						.map(item => item.song.youtubeId)
-						.indexOf(res.data.song.youtubeId);
-					if (index >= 0)
-						items.value[index].song = {
-							...items.value[index].song,
-							...res.data.song,
-							updated: true
-						};
-				}
-			},
-			{ modalUuid: props.modalUuid }
-		);
-
-		socket.on(
-			"event:admin.song.removed",
-			res => {
-				if (res.data.songId === song.value._id) {
-					songDeleted.value = true;
-					if (!bulk.value) closeCurrentModal(true);
-				}
-			},
-			{ modalUuid: props.modalUuid }
-		);
-
 		if (bulk.value) {
 			socket.dispatch("apis.joinRoom", "edit-songs");
 
@@ -1248,48 +1206,92 @@ onMounted(async () => {
 					}
 				}
 			);
-
-			socket.on(
-				`event:admin.song.created`,
-				res => {
-					const index = items.value
-						.map(item => item.song.youtubeId)
-						.indexOf(res.data.song.youtubeId);
-					if (index >= 0)
-						items.value[index].song = {
-							...items.value[index].song,
-							...res.data.song,
-							created: true
-						};
-				},
-				{ modalUuid: props.modalUuid }
-			);
-
-			socket.on(
-				`event:admin.song.removed`,
-				res => {
-					const index = items.value
-						.map(item => item.song._id)
-						.indexOf(res.data.songId);
-					if (index >= 0) items.value[index].song.removed = true;
-				},
-				{ modalUuid: props.modalUuid }
-			);
-
-			socket.on(
-				`event:admin.youtubeVideo.removed`,
-				res => {
-					const index = items.value
-						.map(item => item.song.youtubeVideoId)
-						.indexOf(res.videoId);
-					if (index >= 0) items.value[index].song.removed = true;
-				},
-				{ modalUuid: props.modalUuid }
-			);
 		}
 
 		return null;
 	});
+
+	socket.on(
+		`event:admin.song.updated`,
+		res => {
+			if (song.value._id === res.data.song._id)
+				setOriginalValue({
+					title: res.data.song.title,
+					duration: res.data.song.duration,
+					skipDuration: res.data.song.skipDuration,
+					thumbnail: res.data.song.thumbnail,
+					youtubeId: res.data.song.youtubeId,
+					verified: res.data.song.verified,
+					artists: res.data.song.artists,
+					genres: res.data.song.genres,
+					tags: res.data.song.tags,
+					discogs: res.data.song.discogs
+				});
+			if (bulk.value) {
+				const index = items.value
+					.map(item => item.song.youtubeId)
+					.indexOf(res.data.song.youtubeId);
+				if (index >= 0)
+					items.value[index].song = {
+						...items.value[index].song,
+						...res.data.song,
+						updated: true
+					};
+			}
+		},
+		{ modalUuid: props.modalUuid }
+	);
+
+	socket.on(
+		"event:admin.song.removed",
+		res => {
+			if (res.data.songId === song.value._id) {
+				songDeleted.value = true;
+				if (!bulk.value) closeCurrentModal(true);
+			}
+		},
+		{ modalUuid: props.modalUuid }
+	);
+
+	if (bulk.value) {
+		socket.on(
+			`event:admin.song.created`,
+			res => {
+				const index = items.value
+					.map(item => item.song.youtubeId)
+					.indexOf(res.data.song.youtubeId);
+				if (index >= 0)
+					items.value[index].song = {
+						...items.value[index].song,
+						...res.data.song,
+						created: true
+					};
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			`event:admin.song.removed`,
+			res => {
+				const index = items.value
+					.map(item => item.song._id)
+					.indexOf(res.data.songId);
+				if (index >= 0) items.value[index].song.removed = true;
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			`event:admin.youtubeVideo.removed`,
+			res => {
+				const index = items.value
+					.map(item => item.song.youtubeVideoId)
+					.indexOf(res.videoId);
+				if (index >= 0) items.value[index].song.removed = true;
+			},
+			{ modalUuid: props.modalUuid }
+		);
+	}
 
 	let volume = parseFloat(localStorage.getItem("volume"));
 	volume = typeof volume === "number" && !Number.isNaN(volume) ? volume : 20;

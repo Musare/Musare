@@ -45,20 +45,20 @@ onMounted(() => {
 					"apis.joinRoom",
 					`view-punishment.${props.punishmentId}`
 				);
-
-				socket.on(
-					"event:admin.punishment.updated",
-					({ data }) => {
-						punishment.value = data.punishment;
-					},
-					{ modalUuid: props.modalUuid }
-				);
 			} else {
 				new Toast("Punishment with that ID not found");
 				closeCurrentModal();
 			}
 		});
 	});
+
+	socket.on(
+		"event:admin.punishment.updated",
+		({ data }) => {
+			punishment.value = data.punishment;
+		},
+		{ modalUuid: props.modalUuid }
+	);
 });
 
 onBeforeUnmount(() => {

@@ -54,21 +54,21 @@ onMounted(() => {
 					"apis.joinRoom",
 					`view-api-request.${props.requestId}`
 				);
-
-				socket.on(
-					"event:youtubeApiRequest.removed",
-					() => {
-						new Toast("This API request was removed.");
-						closeCurrentModal();
-					},
-					{ modalUuid: props.modalUuid }
-				);
 			} else {
 				new Toast("API request with that ID not found");
 				closeCurrentModal();
 			}
 		});
 	});
+
+	socket.on(
+		"event:youtubeApiRequest.removed",
+		() => {
+			new Toast("This API request was removed.");
+			closeCurrentModal();
+		},
+		{ modalUuid: props.modalUuid }
+	);
 });
 
 onBeforeUnmount(() => {

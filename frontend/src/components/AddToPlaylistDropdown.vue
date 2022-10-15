@@ -75,34 +75,29 @@ onMounted(() => {
 				if (res.status === "success") setPlaylists(res.data.playlists);
 			}
 		);
-
-		socket.on(
-			"event:playlist.created",
-			res => addPlaylist(res.data.playlist),
-			{
-				replaceable: true
-			}
-		);
-
-		socket.on(
-			"event:playlist.deleted",
-			res => removePlaylist(res.data.playlistId),
-			{ replaceable: true }
-		);
-
-		socket.on(
-			"event:playlist.displayName.updated",
-			res => {
-				playlists.value.forEach((playlist, index) => {
-					if (playlist._id === res.data.playlistId) {
-						playlists.value[index].displayName =
-							res.data.displayName;
-					}
-				});
-			},
-			{ replaceable: true }
-		);
 	});
+
+	socket.on("event:playlist.created", res => addPlaylist(res.data.playlist), {
+		replaceable: true
+	});
+
+	socket.on(
+		"event:playlist.deleted",
+		res => removePlaylist(res.data.playlistId),
+		{ replaceable: true }
+	);
+
+	socket.on(
+		"event:playlist.displayName.updated",
+		res => {
+			playlists.value.forEach((playlist, index) => {
+				if (playlist._id === res.data.playlistId) {
+					playlists.value[index].displayName = res.data.displayName;
+				}
+			});
+		},
+		{ replaceable: true }
+	);
 });
 </script>
 
