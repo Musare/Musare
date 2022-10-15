@@ -61,7 +61,7 @@ const getSet = () => {
 };
 
 const handleScroll = () => {
-	const scrollPosition = document.body.clientHeight + window.scrollY;
+	const scrollPosition = window.scrollY + window.innerHeight;
 	const bottomPosition = document.body.scrollHeight;
 
 	if (scrollPosition + 400 >= bottomPosition) getSet();
