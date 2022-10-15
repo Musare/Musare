@@ -873,7 +873,7 @@ onMounted(async () => {
 		}
 	});
 
-	window.scrollTo(0, 0);
+	document.body.scrollTo(0, 0);
 
 	stationIdentifier.value = route.params.id;
 

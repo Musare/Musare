@@ -61,7 +61,7 @@ const getSet = () => {
 };
 
 const handleScroll = () => {
-	const scrollPosition = window.scrollY + window.innerHeight;
+	const scrollPosition = document.body.scrollTop + document.body.clientHeight;
 	const bottomPosition = document.body.scrollHeight;
 
 	if (scrollPosition + 400 >= bottomPosition) getSet();
@@ -70,7 +70,7 @@ const handleScroll = () => {
 };
 
 onMounted(() => {
-	window.addEventListener("scroll", handleScroll);
+	document.body.addEventListener("scroll", handleScroll);
 
 	socket.onConnect(() => {
 		if (myUserId.value !== props.userId)
@@ -114,7 +114,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-	window.removeEventListener("scroll", handleScroll);
+	document.body.removeEventListener("scroll", handleScroll);
 });
 </script>
 

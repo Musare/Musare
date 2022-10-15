@@ -123,7 +123,7 @@ onMounted(async () => {
 		sidebarActive.value = !(document.body.clientWidth <= 768);
 
 	calculateSidebarPadding();
-	window.addEventListener("scroll", calculateSidebarPadding);
+	document.body.addEventListener("scroll", calculateSidebarPadding);
 
 	keyboardShortcuts.registerShortcut("admin.toggleKeyboardShortcutsHelper", {
 		keyCode: 191, // '/' key
@@ -148,7 +148,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
 	socket.dispatch("apis.leaveRooms");
 
-	window.removeEventListener("scroll", calculateSidebarPadding);
+	document.body.removeEventListener("scroll", calculateSidebarPadding);
 
 	const shortcutNames = [
 		"admin.toggleKeyboardShortcutsHelper",

@@ -536,10 +536,8 @@ code {
 }
 
 html {
-	overflow-y: auto !important;
-	overflow-x: hidden;
 	height: 100%;
-	background-color: inherit;
+	overflow: hidden;
 	font-size: 14px;
 }
 
@@ -549,7 +547,10 @@ body {
 	line-height: 1.4285714;
 	font-size: 1rem;
 	font-family: "Inter", Helvetica, Arial, sans-serif;
+	height: 100%;
 	max-width: 100%;
+	overflow-y: auto !important;
+	overflow-x: hidden;
 }
 
 .app {

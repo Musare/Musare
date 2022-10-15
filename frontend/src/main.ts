@@ -77,11 +77,11 @@ app.directive("scroll", {
 			clearTimeout(window.scrollDebounceId);
 			window.scrollDebounceId = setTimeout(() => {
 				if (binding.value(evt, el)) {
-					window.removeEventListener("scroll", f);
+					document.body.removeEventListener("scroll", f);
 				}
 			}, 200);
 		};
-		window.addEventListener("scroll", f);
+		document.body.addEventListener("scroll", f);
 	}
 });
 
