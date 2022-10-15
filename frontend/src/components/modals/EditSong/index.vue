@@ -273,13 +273,24 @@ const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 		duration: {
 			value: 0,
 			validate: value => {
-				if (
-					Number(inputs.value.skipDuration.value) + Number(value) >
-						Number.parseInt(youtubeVideoDuration.value) &&
-					(((!newSong.value || bulk.value) && !youtubeError.value) ||
-						inputs.value.duration.originalValue !== value)
-				)
-					return "Duration can't be higher than the length of the video";
+				// If the original duration is the same as the current value, just accept the validation
+				if (inputs.value.duration.originalValue === value) return true;
+
+				// Sum of the specified duration and skipDuration
+				const totalDuration =
+					Number(inputs.value.skipDuration.value) + Number(value);
+				// Duration of the video itself
+				const videoDuration = Number.parseFloat(
+					youtubeVideoDuration.value
+				);
+
+				// If the total duration specified is bigger than the video duration
+				if (totalDuration > videoDuration)
+					if ((!newSong.value || bulk.value) && !youtubeError.value)
+						// If there is no youtube error and this is in bulk mode or not a new song, throw an error
+						return "Duration can't be higher than the length of the video";
+
+				// In all other cases, pass validation
 				return true;
 			}
 		},
@@ -689,7 +700,7 @@ const getYouTubeData = type => {
 const fillDuration = () => {
 	setValue({
 		duration:
-			Number.parseInt(youtubeVideoDuration.value) -
+			Number.parseFloat(youtubeVideoDuration.value) -
 			inputs.value.skipDuration.value
 	});
 };
@@ -1100,7 +1111,7 @@ onMounted(async () => {
 
 								if (inputs.value.duration.value === -1)
 									setValue({
-										duration: Number.parseInt(
+										duration: Number.parseFloat(
 											youtubeVideoDuration.value
 										)
 									});
