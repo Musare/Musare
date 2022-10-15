@@ -24,7 +24,7 @@ A production demonstration instance of Musare can be found at [demo.musare.com](
 ## Features
 
 - **Playlists**
-  - User created playlists
+  - User and admin created playlists
   - Automatically generated playlists for genres
   - Privacy configuration
   - Liked and Disliked songs playlists per user
@@ -32,12 +32,13 @@ A production demonstration instance of Musare can be found at [demo.musare.com](
   - Add songs from verified catalogue or YouTube videos
   - Ability to download in JSON format
 - **Stations**
+  - DJs - Allow other users to manage the station queue
   - Requests - Toggleable module to allow users to add songs to the queue
     - Configurable access level and per user request limit
     - Automatically request songs from selected playlists
     - Ability to search for songs from verified catalogue or YouTube videos
-  - Autofill - Toggleable module to allow owners to configure automatic filling
-  of the queue from selected playlists
+  - Autofill - Toggleable module to allow owners or DJs to configure automatic
+  filling of the queue from selected playlists
     - Configurable song limit
     - Play mode option to randomly play many playlists, or sequentially play one
     playlist
@@ -49,9 +50,9 @@ A production demonstration instance of Musare can be found at [demo.musare.com](
   - Official stations controlled by admins
   - User created and controlled stations
   - Pause playback just in local session
-  - Station-wide pausing by admins or owners
+  - Station-wide pausing by admins, owners or DJs
   - Vote to skip songs
-  - Force skipping song by admins or owners
+  - Force skipping song by admins, owners or DJs
 - **Song Management**
   - Verify songs to allow them to be searched for and added to automatically
   generated genre playlists
@@ -75,6 +76,7 @@ A production demonstration instance of Musare can be found at [demo.musare.com](
   - Password reset
   - Data deletion management
   - ActivityWatch integration
+  - Admin and moderator roles
 - **Punishments**
   - Ban users
   - Ban IPs
@@ -85,10 +87,11 @@ A production demonstration instance of Musare can be found at [demo.musare.com](
 - **Administration**
   - Admin area to manage instance
   - Configurable data tables
-    - Reorder, resize, sort by and toggle visibilty of columns
+    - Reorder, resize, sort by and toggle visibility of columns
     - Advanced queries
   - Bulk management
   - View backend statistics
+  - Limited administration privileges granted to moderators
 
 ---
 
