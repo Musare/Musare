@@ -1179,7 +1179,7 @@ export default {
 
 					if (playlist.type === "user-liked") {
 						CacheModule.runJob("PUB", {
-							channel: "song.like",
+							channel: "ratings.like",
 							value: JSON.stringify({
 								youtubeId,
 								userId: session.userId,
@@ -1199,7 +1199,7 @@ export default {
 						});
 					} else {
 						CacheModule.runJob("PUB", {
-							channel: "song.dislike",
+							channel: "ratings.dislike",
 							value: JSON.stringify({
 								youtubeId,
 								userId: session.userId,
@@ -1531,7 +1531,7 @@ export default {
 							});
 						} else {
 							CacheModule.runJob("PUB", {
-								channel: "song.undislike",
+								channel: "ratings.undislike",
 								value: JSON.stringify({
 									youtubeId: newSong.youtubeId,
 									userId: session.userId,
