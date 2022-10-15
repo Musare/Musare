@@ -30,7 +30,8 @@ const isOwner = () =>
 const isEditable = permission =>
 	((playlist.value.type === "user" ||
 		playlist.value.type === "user-liked" ||
-		playlist.value.type === "user-disliked") &&
+		playlist.value.type === "user-disliked" ||
+		playlist.value.type === "admin") &&
 		(isOwner() || hasPermission(permission))) ||
 	(playlist.value.type === "genre" &&
 		permission === "playlists.update.privacy" &&
@@ -91,7 +92,8 @@ const {
 	({ status, messages, values }, resolve, reject) => {
 		if (status === "success")
 			socket.dispatch(
-				playlist.value.type === "genre"
+				playlist.value.type === "genre" ||
+					playlist.value.type === "admin"
 					? "playlists.updatePrivacyAdmin"
 					: "playlists.updatePrivacy",
 				playlist.value._id,

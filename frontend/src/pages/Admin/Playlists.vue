@@ -128,7 +128,8 @@ const filters = ref<TableFilter[]>([
 			["station", "Station"],
 			["user", "User"],
 			["user-disliked", "User Disliked"],
-			["user-liked", "User Liked"]
+			["user-liked", "User Liked"],
+			["admin", "Admin"]
 		]
 	},
 	{
@@ -235,6 +236,13 @@ if (hasPermission("playlists.createMissing"))
 	});
 
 const { openModal } = useModalsStore();
+
+const create = () => {
+	openModal({
+		modal: "createPlaylist",
+		props: { admin: true }
+	});
+};
 </script>
 
 <template>
@@ -246,6 +254,13 @@ const { openModal } = useModalsStore();
 				<p>Manage playlists</p>
 			</div>
 			<div class="button-row">
+				<button
+					v-if="hasPermission('playlists.create.admin')"
+					class="button is-primary"
+					@click="create()"
+				>
+					Create playlist
+				</button>
 				<run-job-dropdown :jobs="jobs" />
 			</div>
 		</div>

@@ -20,15 +20,17 @@ const MediaModule = moduleManager.modules.media;
 CacheModule.runJob("SUB", {
 	channel: "playlist.create",
 	cb: playlist => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy }, this).then(sockets =>
-			sockets.forEach(socket => socket.dispatch("event:playlist.created", { data: { playlist } }))
-		);
+		if (playlist.createdBy !== "Musare") {
+			WSModule.runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy }, this).then(sockets =>
+				sockets.forEach(socket => socket.dispatch("event:playlist.created", { data: { playlist } }))
+			);
 
-		if (playlist.privacy === "public")
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `profile.${playlist.createdBy}.playlists`,
-				args: ["event:playlist.created", { data: { playlist } }]
-			});
+			if (playlist.privacy === "public")
+				WSModule.runJob("EMIT_TO_ROOM", {
+					room: `profile.${playlist.createdBy}.playlists`,
+					args: ["event:playlist.created", { data: { playlist } }]
+				});
+		}
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.playlists",
@@ -40,16 +42,18 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.delete",
 	cb: res => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:playlist.deleted", { data: { playlistId: res.playlistId } });
+		if (res.createdBy !== "Musare") {
+			WSModule.runJob("SOCKETS_FROM_USER", { userId: res.createdBy }, this).then(sockets => {
+				sockets.forEach(socket => {
+					socket.dispatch("event:playlist.deleted", { data: { playlistId: res.playlistId } });
+				});
 			});
-		});
 
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `profile.${res.userId}.playlists`,
-			args: ["event:playlist.deleted", { data: { playlistId: res.playlistId } }]
-		});
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: `profile.${res.createdBy}.playlists`,
+				args: ["event:playlist.deleted", { data: { playlistId: res.playlistId } }]
+			});
+		}
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.playlists",
@@ -61,45 +65,49 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.repositionSong",
 	cb: res => {
-		const { userId, playlistId, song } = res;
+		const { createdBy, playlistId, song } = res;
 
-		WSModule.runJob("SOCKETS_FROM_USER", { userId }, this).then(sockets =>
-			sockets.forEach(socket =>
-				socket.dispatch("event:playlist.song.repositioned", {
-					data: { playlistId, song }
-				})
-			)
-		);
+		if (createdBy !== "Musare") {
+			WSModule.runJob("SOCKETS_FROM_USER", { userId: createdBy }, this).then(sockets =>
+				sockets.forEach(socket =>
+					socket.dispatch("event:playlist.song.repositioned", {
+						data: { playlistId, song }
+					})
+				)
+			);
+		}
 	}
 });
 
 CacheModule.runJob("SUB", {
 	channel: "playlist.addSong",
 	cb: res => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:playlist.song.added", {
-					data: {
-						playlistId: res.playlistId,
-						song: res.song
-					}
-				});
-			});
-		});
-
-		if (res.privacy === "public")
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `profile.${res.userId}.playlists`,
-				args: [
-					"event:playlist.song.added",
-					{
+		if (res.createdBy !== "Musare") {
+			WSModule.runJob("SOCKETS_FROM_USER", { userId: res.createdBy }, this).then(sockets => {
+				sockets.forEach(socket => {
+					socket.dispatch("event:playlist.song.added", {
 						data: {
 							playlistId: res.playlistId,
 							song: res.song
 						}
-					}
-				]
+					});
+				});
 			});
+
+			if (res.privacy === "public")
+				WSModule.runJob("EMIT_TO_ROOM", {
+					room: `profile.${res.createdBy}.playlists`,
+					args: [
+						"event:playlist.song.added",
+						{
+							data: {
+								playlistId: res.playlistId,
+								song: res.song
+							}
+						}
+					]
+				});
+		}
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.playlists",
@@ -111,30 +119,32 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.removeSong",
 	cb: res => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:playlist.song.removed", {
-					data: {
-						playlistId: res.playlistId,
-						youtubeId: res.youtubeId
-					}
-				});
-			});
-		});
-
-		if (res.privacy === "public")
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `profile.${res.userId}.playlists`,
-				args: [
-					"event:playlist.song.removed",
-					{
+		if (res.createdBy !== "Musare") {
+			WSModule.runJob("SOCKETS_FROM_USER", { userId: res.createdBy }, this).then(sockets => {
+				sockets.forEach(socket => {
+					socket.dispatch("event:playlist.song.removed", {
 						data: {
 							playlistId: res.playlistId,
 							youtubeId: res.youtubeId
 						}
-					}
-				]
+					});
+				});
 			});
+
+			if (res.privacy === "public")
+				WSModule.runJob("EMIT_TO_ROOM", {
+					room: `profile.${res.createdBy}.playlists`,
+					args: [
+						"event:playlist.song.removed",
+						{
+							data: {
+								playlistId: res.playlistId,
+								youtubeId: res.youtubeId
+							}
+						}
+					]
+				});
+		}
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.playlists",
@@ -149,30 +159,32 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.updateDisplayName",
 	cb: res => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:playlist.displayName.updated", {
-					data: {
-						playlistId: res.playlistId,
-						displayName: res.displayName
-					}
-				});
-			});
-		});
-
-		if (res.privacy === "public")
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `profile.${res.userId}.playlists`,
-				args: [
-					"event:playlist.displayName.updated",
-					{
+		if (res.createdBy !== "Musare") {
+			WSModule.runJob("SOCKETS_FROM_USER", { userId: res.createdBy }, this).then(sockets => {
+				sockets.forEach(socket => {
+					socket.dispatch("event:playlist.displayName.updated", {
 						data: {
 							playlistId: res.playlistId,
 							displayName: res.displayName
 						}
-					}
-				]
+					});
+				});
 			});
+
+			if (res.privacy === "public")
+				WSModule.runJob("EMIT_TO_ROOM", {
+					room: `profile.${res.createdBy}.playlists`,
+					args: [
+						"event:playlist.displayName.updated",
+						{
+							data: {
+								playlistId: res.playlistId,
+								displayName: res.displayName
+							}
+						}
+					]
+				});
+		}
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.playlists",
@@ -187,16 +199,6 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.updatePrivacy",
 	cb: res => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:playlist.privacy.updated", {
-					data: {
-						playlist: res.playlist
-					}
-				});
-			});
-		});
-
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.playlists",
 			args: [
@@ -205,30 +207,43 @@ CacheModule.runJob("SUB", {
 			]
 		});
 
-		if (res.playlist.privacy === "public")
+		if (res.createdBy !== "Musare") {
+			WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
+				sockets.forEach(socket => {
+					socket.dispatch("event:playlist.privacy.updated", {
+						data: {
+							playlist: res.playlist
+						}
+					});
+				});
+			});
+
+			if (res.playlist.privacy === "public")
+				return WSModule.runJob("EMIT_TO_ROOM", {
+					room: `profile.${res.userId}.playlists`,
+					args: [
+						"event:playlist.created",
+						{
+							data: {
+								playlist: res.playlist
+							}
+						}
+					]
+				});
+
 			return WSModule.runJob("EMIT_TO_ROOM", {
 				room: `profile.${res.userId}.playlists`,
 				args: [
-					"event:playlist.created",
+					"event:playlist.deleted",
 					{
 						data: {
-							playlist: res.playlist
+							playlistId: res.playlist._id
 						}
 					}
 				]
 			});
-
-		return WSModule.runJob("EMIT_TO_ROOM", {
-			room: `profile.${res.userId}.playlists`,
-			args: [
-				"event:playlist.deleted",
-				{
-					data: {
-						playlistId: res.playlist._id
-					}
-				}
-			]
-		});
+		}
+		return null;
 	}
 });
 
@@ -404,6 +419,7 @@ export default {
 						query,
 						includeUser: true,
 						includeGenre: true,
+						includeAdmin: true,
 						includeOwn: true,
 						includeSongs: true,
 						userId: session.userId,
@@ -451,6 +467,7 @@ export default {
 						includeGenre: true,
 						includePrivate: true,
 						includeSongs: true,
+						includeAdmin: true,
 						page
 					})
 						.then(response => {
@@ -727,7 +744,7 @@ export default {
 				next => (data ? next() : cb({ status: "error", message: "Invalid data" })),
 
 				next => {
-					const { displayName, songs, privacy } = data;
+					const { displayName, songs, privacy, admin } = data;
 
 					if (blacklist.indexOf(displayName.toLowerCase()) !== -1)
 						return next("That playlist name is blacklisted. Please use a different name.");
@@ -737,33 +754,39 @@ export default {
 							displayName,
 							songs,
 							privacy,
-							createdBy: session.userId,
+							createdBy: admin ? "Musare" : session.userId,
 							createdAt: Date.now(),
 							createdFor: null,
-							type: "user"
+							type: admin ? "admin" : "user"
 						},
 						next
 					);
 				},
 
 				(playlist, next) => {
-					userModel.updateOne(
-						{ _id: session.userId },
-						{ $push: { "preferences.orderOfPlaylists": playlist._id } },
-						err => {
-							if (err) return next(err);
-							return next(null, playlist);
-						}
-					);
+					if (data.admin) next(null, playlist);
+					else
+						userModel.updateOne(
+							{ _id: session.userId },
+							{ $push: { "preferences.orderOfPlaylists": playlist._id } },
+							err => {
+								if (err) return next(err);
+								return next(null, playlist);
+							}
+						);
 				}
 			],
 			async (err, playlist) => {
+				let type = "unknown";
+				if (data && data.admin) type = "admin";
+				else if (data && !data.admin) type = "user";
+
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
 						"PLAYLIST_CREATE",
-						`Creating private playlist failed for user "${session.userId}". "${err}"`
+						`Creating ${type} playlist failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -773,19 +796,20 @@ export default {
 					value: playlist
 				});
 
-				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: playlist.createdBy,
-					type: "playlist__create",
-					payload: {
-						message: `Created playlist <playlistId>${playlist.displayName}</playlistId>`,
-						playlistId: playlist._id
-					}
-				});
+				if (!data.admin)
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
+						userId: playlist.createdBy,
+						type: "playlist__create",
+						payload: {
+							message: `Created playlist <playlistId>${playlist.displayName}</playlistId>`,
+							playlistId: playlist._id
+						}
+					});
 
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_CREATE",
-					`Successfully created private playlist for user "${session.userId}".`
+					`Successfully created ${type} playlist for user "${session.userId}".`
 				);
 
 				return cb({
@@ -1032,7 +1056,7 @@ export default {
 						.catch(next);
 				}
 			],
-			async err => {
+			async (err, playlist) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
@@ -1054,7 +1078,7 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "playlist.repositionSong",
 					value: {
-						userId: session.userId,
+						createdBy: playlist.createdBy,
 						playlistId,
 						song
 					}
@@ -1161,7 +1185,7 @@ export default {
 					value: {
 						playlistId: playlist._id,
 						song: newSong,
-						userId: session.userId,
+						createdBy: playlist.createdBy,
 						privacy: playlist.privacy
 					}
 				});
@@ -1579,7 +1603,7 @@ export default {
 					value: {
 						playlistId: playlist._id,
 						youtubeId,
-						userId: session.userId,
+						createdBy: playlist.createdBy,
 						privacy: playlist.privacy
 					}
 				});
@@ -1612,13 +1636,18 @@ export default {
 				},
 
 				(playlist, next) => {
-					if (playlist.type !== "user") return next("Playlist cannot be modified.");
-					return next(null);
+					if (playlist.type === "admin")
+						hasPermission("playlists.update.displayName", session)
+							.then(() => next())
+							.catch(() => next("Invalid permissions."));
+					else if (playlist.type !== "user" || playlist.createdBy !== session.userId)
+						next("Playlist cannot be modified.");
+					else next(null);
 				},
 
 				next => {
 					playlistModel.updateOne(
-						{ _id: playlistId, createdBy: session.userId },
+						{ _id: playlistId },
 						{ $set: { displayName } },
 						{ runValidators: true },
 						next
@@ -1637,7 +1666,7 @@ export default {
 					this.log(
 						"ERROR",
 						"PLAYLIST_UPDATE_DISPLAY_NAME",
-						`Updating display name to "${displayName}" for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						`Updating display name to "${displayName}" for playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -1645,7 +1674,7 @@ export default {
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_UPDATE_DISPLAY_NAME",
-					`Successfully updated display name to "${displayName}" for private playlist "${playlistId}" for user "${session.userId}".`
+					`Successfully updated display name to "${displayName}" for playlist "${playlistId}" for user "${session.userId}".`
 				);
 
 				CacheModule.runJob("PUB", {
@@ -1653,7 +1682,7 @@ export default {
 					value: {
 						playlistId,
 						displayName,
-						userId: session.userId,
+						createdBy: playlist.createdBy,
 						privacy: playlist.privacy
 					}
 				});
@@ -1663,14 +1692,15 @@ export default {
 					value: { playlistId }
 				});
 
-				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: session.userId,
-					type: "playlist__edit_display_name",
-					payload: {
-						message: `Changed display name of playlist <playlistId>${displayName}</playlistId>`,
-						playlistId
-					}
-				});
+				if (playlist.type !== "admin")
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
+						userId: session.userId,
+						type: "playlist__edit_display_name",
+						payload: {
+							message: `Changed display name of playlist <playlistId>${displayName}</playlistId>`,
+							playlistId
+						}
+					});
 
 				return cb({
 					status: "success",
@@ -1738,7 +1768,7 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "playlist.delete",
 					value: {
-						userId: session.userId,
+						createdBy: playlist.createdBy,
 						playlistId
 					}
 				});
@@ -1780,19 +1810,22 @@ export default {
 				},
 
 				(playlist, next) => {
-					if (playlist.type !== "user") return next("Playlist cannot be removed.");
+					if (playlist.type !== "user" && playlist.type !== "admin")
+						return next("Playlist cannot be removed.");
 					return next(null, playlist);
 				},
 
 				(playlist, next) => {
-					userModel.updateOne(
-						{ _id: playlist.createdBy },
-						{ $pull: { "preferences.orderOfPlaylists": playlist._id } },
-						err => next(err, playlist, playlist.createdBy)
-					);
+					if (playlist.type === "admin") next(null, null);
+					else
+						userModel.updateOne(
+							{ _id: playlist.createdBy },
+							{ $pull: { "preferences.orderOfPlaylists": playlist._id } },
+							err => next(err, playlist.createdBy)
+						);
 				},
 
-				(playlist, playlistCreator, next) => {
+				(playlistCreator, next) => {
 					PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId }, this)
 						.then(() => next(null, playlistCreator))
 						.catch(next);
@@ -1804,7 +1837,7 @@ export default {
 					this.log(
 						"ERROR",
 						"PLAYLIST_REMOVE_ADMIN",
-						`Removing private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						`Removing playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -1812,13 +1845,13 @@ export default {
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_REMOVE_ADMIN",
-					`Successfully removed private playlist "${playlistId}" for user "${session.userId}".`
+					`Successfully removed playlist "${playlistId}" for user "${session.userId}".`
 				);
 
 				CacheModule.runJob("PUB", {
 					channel: "playlist.delete",
 					value: {
-						userId: playlistCreator,
+						createdBy: playlistCreator,
 						playlistId
 					}
 				});
@@ -1887,7 +1920,7 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "playlist.updatePrivacy",
 					value: {
-						userId: session.userId,
+						createdBy: playlist.createdBy,
 						playlist
 					}
 				});

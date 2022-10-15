@@ -1152,6 +1152,7 @@ class _PlaylistsModule extends CoreClass {
 	 * @param {string} payload.includeStation - include station playlists
 	 * @param {string} payload.includeUser - include user playlists
 	 * @param {string} payload.includeGenre - include genre playlists
+	 * @param {string} payload.includeAdmin - include admin playlists
 	 * @param {string} payload.includeOwn - include own user playlists
 	 * @param {string} payload.userId - the user id of the person requesting
 	 * @param {string} payload.includeSongs - include songs
@@ -1167,6 +1168,7 @@ class _PlaylistsModule extends CoreClass {
 						if (payload.includeStation) types.push("station");
 						if (payload.includeUser) types.push("user");
 						if (payload.includeGenre) types.push("genre");
+						if (payload.includeAdmin) types.push("admin");
 						if (types.length === 0 && !payload.includeOwn) return next("No types have been included.");
 
 						const privacies = ["public"];

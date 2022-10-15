@@ -74,7 +74,8 @@ const isOwner = () =>
 const isEditable = permission =>
 	((playlist.value.type === "user" ||
 		playlist.value.type === "user-liked" ||
-		playlist.value.type === "user-disliked") &&
+		playlist.value.type === "user-disliked" ||
+		playlist.value.type === "admin") &&
 		(isOwner() || hasPermission(permission))) ||
 	(playlist.value.type === "genre" &&
 		permission === "playlists.update.privacy" &&
@@ -316,8 +317,8 @@ onBeforeUnmount(() => {
 	<modal
 		:title="
 			isEditable('playlists.update.privacy')
-				? 'Edit Playlist'
-				: 'View Playlist'
+				? `Edit ${playlist.type === 'admin' ? 'Admin ' : ''}Playlist`
+				: `View ${playlist.type === 'admin' ? 'Admin ' : ''}Playlist`
 		"
 		:class="{
 			'edit-playlist-modal': true,

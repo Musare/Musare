@@ -131,6 +131,7 @@ export default {
 			room.startsWith("profile.") ||
 			room.startsWith("manage-station.") ||
 			room.startsWith("edit-song.") ||
+			room.startsWith("edit-playlist.") ||
 			room.startsWith("view-report.") ||
 			room.startsWith("edit-user.") ||
 			room.startsWith("view-api-request.") ||
