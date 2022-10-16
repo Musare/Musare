@@ -380,7 +380,12 @@ export default {
 					});
 				},
 
+				// remove user as station DJ
 				next => {
+					stationModel.updateMany({ djs: session.userId }, { $pull: { djs: session.userId } }, next);
+				},
+
+				(res, next) => {
 					playlistModel.findOne({ createdBy: session.userId, type: "user-liked" }, next);
 				},
 
@@ -606,7 +611,12 @@ export default {
 					});
 				},
 
+				// remove user as station DJ
 				next => {
+					stationModel.updateMany({ djs: userId }, { $pull: { djs: userId } }, next);
+				},
+
+				(res, next) => {
 					playlistModel.findOne({ createdBy: userId, type: "user-liked" }, next);
 				},
 
