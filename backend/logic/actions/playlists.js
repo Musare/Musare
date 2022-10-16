@@ -498,7 +498,7 @@ export default {
 	 * @param {string} query - the page
 	 * @param {Function} cb - gets called with the result
 	 */
-	 searchAdmin: useHasPermission("playlists.get", async function searchAdmin(session, query, page, cb) {
+	searchAdmin: useHasPermission("playlists.get", async function searchAdmin(session, query, page, cb) {
 		async.waterfall(
 			[
 				next => {

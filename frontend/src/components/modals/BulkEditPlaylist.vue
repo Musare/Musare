@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import {
-	reactive,
-	computed,
-	defineAsyncComponent,
-	onMounted,
-	onBeforeUnmount
-} from "vue";
+import { reactive, computed, defineAsyncComponent } from "vue";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
