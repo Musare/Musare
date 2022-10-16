@@ -916,7 +916,7 @@ onBeforeUnmount(() => {
 					</div>
 				</router-link>
 				<h4 v-if="stations.length === 0">
-					{{ t("NoStations", 0) }}
+					{{ t("NoStationsToDisplay", 0) }}
 				</h4>
 			</div>
 			<main-footer />
