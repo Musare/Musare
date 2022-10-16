@@ -125,32 +125,43 @@ export default {
 	 * @param {Function} cb - callback
 	 */
 	joinRoom(session, room, cb) {
-		if (
-			room === "home" ||
-			room === "news" ||
-			room.startsWith("profile.") ||
-			room.startsWith("manage-station.") ||
-			room.startsWith("edit-song.") ||
-			room.startsWith("edit-playlist.") ||
-			room.startsWith("view-report.") ||
-			room.startsWith("edit-user.") ||
-			room.startsWith("view-api-request.") ||
-			room.startsWith("view-youtube-video.") ||
-			room.startsWith("view-punishment.") ||
-			room === "import-album" ||
-			room === "edit-songs"
-		) {
-			WSModule.runJob("SOCKET_JOIN_ROOM", {
-				socketId: session.socketId,
-				room
-			})
-				.then(() => {})
-				.catch(err => {
-					this.log("ERROR", `Joining room failed: ${err.message}`);
-				});
-		}
-
-		cb({ status: "success", message: "Successfully joined room." });
+		const roomName = room.split(".")[0];
+		// const roomId = room.split(".")[1];
+		const rooms = {
+			home: null,
+			news: null,
+			profile: null,
+			"view-youtube-video": null,
+			"manage-station": null,
+			// "manage-station": "stations.view",
+			"edit-song": "songs.update",
+			"edit-songs": "songs.update",
+			"import-album": "songs.update",
+			// "edit-playlist": "playlists.update",
+			"view-report": "reports.get",
+			"edit-user": "users.update",
+			"view-api-request": "youtube.getApiRequest",
+			"view-punishment": "punishments.get"
+		};
+		const join = (status, error) => {
+			if (status === "success")
+				WSModule.runJob("SOCKET_JOIN_ROOM", {
+					socketId: session.socketId,
+					room
+				})
+					.then(() => cb({ status: "success", message: "Successfully joined room." }))
+					.catch(err => join("error", err.message));
+			else {
+				this.log("ERROR", `Joining room failed: ${error}`);
+				cb({ status: "error", message: error });
+			}
+		};
+		if (rooms[roomName] === null) join("success");
+		else if (rooms[roomName])
+			hasPermission(rooms[roomName], session)
+				.then(() => join("success"))
+				.catch(err => join("error", err));
+		else join("error", "Room not found");
 	},
 
 	/**
