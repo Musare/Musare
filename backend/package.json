@@ -1,7 +1,7 @@
 {
   "name": "musare-backend",
   "private": true,
-  "version": "3.8.0-dev",
+  "version": "3.8.0-rc1",
   "type": "module",
   "description": "An open-source collaborative music listening and catalogue curation application. Currently supporting YouTube based content.",
   "main": "index.js",
