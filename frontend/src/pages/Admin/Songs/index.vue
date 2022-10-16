@@ -469,6 +469,15 @@ const setGenres = selectedRows => {
 	});
 };
 
+const bulkEditPlaylist = selectedRows => {
+	openModal({
+		modal: "bulkEditPlaylist",
+		props: {
+			youtubeIds: selectedRows.map(row => row.youtubeId)
+		}
+	});
+};
+
 const deleteOne = songId => {
 	socket.dispatch("songs.remove", songId, res => {
 		new Toast(res.message);
@@ -764,6 +773,16 @@ onMounted(() => {
 						tabindex="0"
 					>
 						theater_comedy
+					</i>
+					<i
+						v-if="hasPermission('playlists.songs.add')"
+						class="material-icons playlist-bulk-edit-icon"
+						@click.prevent="bulkEditPlaylist(slotProps.item)"
+						content="Add To Playlist"
+						v-tippy
+						tabindex="0"
+					>
+						playlist_add
 					</i>
 					<i
 						v-if="hasPermission('songs.remove')"

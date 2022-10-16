@@ -250,6 +250,15 @@ const importAlbum = selectedRows => {
 	});
 };
 
+const bulkEditPlaylist = selectedRows => {
+	openModal({
+		modal: "bulkEditPlaylist",
+		props: {
+			youtubeIds: selectedRows.map(row => row.youtubeId)
+		}
+	});
+};
+
 const removeVideos = videoIds => {
 	let id;
 	let title;
@@ -428,6 +437,16 @@ const removeVideos = videoIds => {
 						tabindex="0"
 					>
 						album
+					</i>
+					<i
+						v-if="hasPermission('playlists.songs.add')"
+						class="material-icons playlist-bulk-edit-icon"
+						@click.prevent="bulkEditPlaylist(slotProps.item)"
+						content="Add To Playlist"
+						v-tippy
+						tabindex="0"
+					>
+						playlist_add
 					</i>
 					<i
 						v-if="hasPermission('youtube.removeVideos')"

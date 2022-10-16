@@ -1702,6 +1702,7 @@ h4.section-title {
 		}
 
 		.stop-icon,
+		.remove-from-playlist-icon,
 		.delete-icon {
 			color: var(--dark-red);
 		}

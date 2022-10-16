@@ -491,6 +491,50 @@ export default {
 	}),
 
 	/**
+	 * Searches through all admin playlists
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} query - the query
+	 * @param {string} query - the page
+	 * @param {Function} cb - gets called with the result
+	 */
+	 searchAdmin: useHasPermission("playlists.get", async function searchAdmin(session, query, page, cb) {
+		async.waterfall(
+			[
+				next => {
+					if ((!query && query !== "") || typeof query !== "string") next("Invalid query.");
+					else next();
+				},
+
+				next => {
+					PlaylistsModule.runJob("SEARCH", {
+						query,
+						includePrivate: true,
+						includeSongs: true,
+						includeAdmin: true,
+						page
+					})
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async (err, data) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "PLAYLISTS_SEARCH_ADMIN", `Searching playlists failed. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "PLAYLISTS_SEARCH_ADMIN", "Searching playlists successful.");
+				return cb({ status: "success", data });
+			}
+		);
+	}),
+
+	/**
 	 * Gets the first song from a private playlist
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
@@ -1252,6 +1296,336 @@ export default {
 			}
 		);
 	}),
+
+	/**
+	 * Adds songs to a playlist
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} playlistId - the id of the playlist we are adding the songs to
+	 * @param {Array} youtubeIds - the YouTube ids of the songs we are trying to add
+	 * @param {Function} cb - gets called with the result
+	 */
+	addSongsToPlaylist: useHasPermission(
+		"playlists.songs.add",
+		async function addSongsToPlaylist(session, playlistId, youtubeIds, cb) {
+			const successful = [];
+			const existing = [];
+			const failed = {};
+			const errors = {};
+			const lastYoutubeId = "none";
+
+			const addError = message => {
+				if (!errors[message]) errors[message] = 1;
+				else errors[message] += 1;
+			};
+
+			this.keepLongJob();
+			this.publishProgress({
+				status: "started",
+				title: "Bulk add songs to playlist",
+				message: "Adding songs to playlist.",
+				id: this.toString()
+			});
+			await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+			await CacheModule.runJob(
+				"PUB",
+				{
+					channel: "longJob.added",
+					value: { jobId: this.toString(), userId: session.userId }
+				},
+				this
+			);
+
+			async.waterfall(
+				[
+					next => {
+						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+							.then(playlist => {
+								if (!playlist) return next("Playlist not found.");
+								return next(null, playlist);
+							})
+							.catch(next);
+					},
+
+					(playlist, next) => {
+						if (playlist.type !== "admin") return next("Playlist must be of type admin.");
+						return next();
+					},
+
+					next => {
+						async.eachLimit(
+							youtubeIds,
+							1,
+							(youtubeId, next) => {
+								this.publishProgress({ status: "update", message: `Adding song "${youtubeId}"` });
+								PlaylistsModule.runJob("ADD_SONG_TO_PLAYLIST", { playlistId, youtubeId }, this)
+									.then(() => {
+										successful.push(youtubeId);
+										next();
+									})
+									.catch(async err => {
+										err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+										if (err === "That song is already in the playlist.") {
+											existing.push(youtubeId);
+											next();
+										} else {
+											addError(err);
+											failed[youtubeId] = err;
+											next();
+										}
+									});
+							},
+							err => {
+								if (err) next(err);
+								else next();
+							}
+						);
+					},
+
+					next => {
+						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+							.then(playlist => {
+								if (!playlist) return next("Playlist not found.");
+								return next(null, playlist);
+							})
+							.catch(next);
+					}
+				],
+				async (err, playlist) => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log(
+							"ERROR",
+							"PLAYLIST_ADD_SONGS",
+							`Adding songs to playlist "${playlistId}" failed for user "${
+								session.userId
+							}". "${err}". Stats: successful:${successful.length}, existing:${existing.length}, failed:${
+								Object.keys(failed).length
+							}, last youtubeId:${lastYoutubeId}, youtubeIds length:${
+								youtubeIds ? youtubeIds.length : null
+							}`
+						);
+						return cb({
+							status: "error",
+							message: err,
+							data: {
+								stats: {
+									successful,
+									existing,
+									failed,
+									errors
+								}
+							}
+						});
+					}
+
+					this.log(
+						"SUCCESS",
+						"PLAYLIST_ADD_SONGS",
+						`Successfully added songs to playlist "${playlistId}" for user "${
+							session.userId
+						}". Stats: successful:${successful.length}, existing:${existing.length}, failed:${
+							Object.keys(failed).length
+						}, youtubeIds length:${youtubeIds ? youtubeIds.length : null}`
+					);
+
+					CacheModule.runJob("PUB", {
+						channel: "playlist.updated",
+						value: { playlistId }
+					});
+
+					const message = `Done adding songs. Succesful: ${successful.length}, failed: ${
+						Object.keys(failed).length
+					}, existing: ${existing.length}.`;
+
+					this.publishProgress({
+						status: "success",
+						message
+					});
+
+					return cb({
+						status: "success",
+						message,
+						data: {
+							songs: playlist.songs,
+							stats: {
+								successful,
+								existing,
+								failed,
+								errors
+							}
+						}
+					});
+				}
+			);
+		}
+	),
+
+	/**
+	 * Removes songs from a playlist
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} playlistId - the id of the playlist we are removing the songs from
+	 * @param {Array} youtubeIds - the YouTube ids of the songs we are trying to remove
+	 * @param {Function} cb - gets called with the result
+	 */
+	removeSongsFromPlaylist: useHasPermission(
+		"playlists.songs.remove",
+		async function removeSongsFromPlaylist(session, playlistId, youtubeIds, cb) {
+			const successful = [];
+			const notInPlaylist = [];
+			const failed = {};
+			const errors = {};
+			const lastYoutubeId = "none";
+
+			const addError = message => {
+				if (!errors[message]) errors[message] = 1;
+				else errors[message] += 1;
+			};
+
+			this.keepLongJob();
+			this.publishProgress({
+				status: "started",
+				title: "Bulk remove songs from playlist",
+				message: "Removing songs from playlist.",
+				id: this.toString()
+			});
+			await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+			await CacheModule.runJob(
+				"PUB",
+				{
+					channel: "longJob.added",
+					value: { jobId: this.toString(), userId: session.userId }
+				},
+				this
+			);
+
+			async.waterfall(
+				[
+					next => {
+						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+							.then(playlist => {
+								if (!playlist) return next("Playlist not found.");
+								return next(null, playlist);
+							})
+							.catch(next);
+					},
+
+					(playlist, next) => {
+						if (playlist.type !== "admin") return next("Playlist must be of type admin.");
+						return next();
+					},
+
+					next => {
+						async.eachLimit(
+							youtubeIds,
+							1,
+							(youtubeId, next) => {
+								this.publishProgress({ status: "update", message: `Removing song "${youtubeId}"` });
+								PlaylistsModule.runJob("REMOVE_FROM_PLAYLIST", { playlistId, youtubeId }, this)
+									.then(() => {
+										successful.push(youtubeId);
+										next();
+									})
+									.catch(async err => {
+										err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+										if (err === "That song is not currently in the playlist.") {
+											notInPlaylist.push(youtubeId);
+											next();
+										} else {
+											addError(err);
+											failed[youtubeId] = err;
+											next();
+										}
+									});
+							},
+							err => {
+								if (err) next(err);
+								else next();
+							}
+						);
+					},
+
+					next => {
+						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+							.then(playlist => {
+								if (!playlist) return next("Playlist not found.");
+								return next(null, playlist);
+							})
+							.catch(next);
+					}
+				],
+				async (err, playlist) => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log(
+							"ERROR",
+							"PLAYLIST_REMOVE_SONGS",
+							`Removing songs from playlist "${playlistId}" failed for user "${
+								session.userId
+							}". "${err}". Stats: successful:${successful.length}, notInPlaylist:${
+								notInPlaylist.length
+							}, failed:${
+								Object.keys(failed).length
+							}, last youtubeId:${lastYoutubeId}, youtubeIds length:${
+								youtubeIds ? youtubeIds.length : null
+							}`
+						);
+						return cb({
+							status: "error",
+							message: err,
+							data: {
+								stats: {
+									successful,
+									notInPlaylist,
+									failed,
+									errors
+								}
+							}
+						});
+					}
+
+					this.log(
+						"SUCCESS",
+						"PLAYLIST_REMOVE_SONGS",
+						`Successfully removed songs from playlist "${playlistId}" for user "${
+							session.userId
+						}". Stats: successful:${successful.length}, notInPlaylist:${notInPlaylist.length}, failed:${
+							Object.keys(failed).length
+						}, youtubeIds length:${youtubeIds ? youtubeIds.length : null}`
+					);
+
+					CacheModule.runJob("PUB", {
+						channel: "playlist.updated",
+						value: { playlistId }
+					});
+
+					const message = `Done removing songs. Succesful: ${successful.length}, failed: ${
+						Object.keys(failed).length
+					}, not in playlist: ${notInPlaylist.length}.`;
+
+					this.publishProgress({
+						status: "success",
+						message
+					});
+
+					return cb({
+						status: "success",
+						message,
+						data: {
+							songs: playlist.songs,
+							stats: {
+								successful,
+								notInPlaylist,
+								failed,
+								errors
+							}
+						}
+					});
+				}
+			);
+		}
+	),
 
 	/**
 	 * Adds a set of songs to a private playlist
