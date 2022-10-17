@@ -672,7 +672,7 @@ export default {
 				(res, next) => {
 					CacheModule.runJob("PUB", {
 						channel: "user.removeSessions",
-						value: session.userId
+						value: userId
 					});
 
 					async.waterfall(
@@ -695,7 +695,6 @@ export default {
 
 							(keys, sessions, next) => {
 								// temp fix, need to wait properly for the SUB/PUB refactor (on wekan)
-								const { userId } = session;
 								setTimeout(
 									() =>
 										async.each(
