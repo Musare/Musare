@@ -79,7 +79,7 @@ const frontendDevMode = ref("production");
 const activityWatchVideoDataInterval = ref(null);
 const activityWatchVideoLastStatus = ref("");
 const activityWatchVideoLastYouTubeId = ref("");
-// const activityWatchVideoLastStartDuration = ref("");
+const activityWatchVideoLastStartDuration = ref(0);
 const nextCurrentSong = ref(null);
 const mediaModalWatcher = ref(null);
 const beforeMediaModalLocalPausedLock = ref(false);
@@ -808,9 +808,8 @@ const sendActivityWatchVideoData = () => {
 	if (!stationPaused.value && !localPaused.value && !noSong.value) {
 		if (activityWatchVideoLastStatus.value !== "playing") {
 			activityWatchVideoLastStatus.value = "playing";
-			activityWatchVideoLastStatus.value = `${
-				currentSong.value.skipDuration + getTimeElapsed()
-			}`;
+			activityWatchVideoLastStartDuration.value =
+				currentSong.value.skipDuration + getTimeElapsed();
 		}
 
 		if (
@@ -818,9 +817,8 @@ const sendActivityWatchVideoData = () => {
 			currentSong.value.youtubeId
 		) {
 			activityWatchVideoLastYouTubeId.value = currentSong.value.youtubeId;
-			activityWatchVideoLastStatus.value = `${
-				currentSong.value.skipDuration + getTimeElapsed()
-			}`;
+			activityWatchVideoLastStartDuration.value =
+				currentSong.value.skipDuration + getTimeElapsed();
 		}
 
 		const videoData = {
@@ -833,10 +831,10 @@ const sendActivityWatchVideoData = () => {
 			muted: muted.value,
 			volume: volumeSliderValue.value,
 			startedDuration:
-				Number(activityWatchVideoLastStatus.value) <= 0
+				activityWatchVideoLastStartDuration.value <= 0
 					? 0
 					: Math.floor(
-							Number(activityWatchVideoLastStatus.value) / 1000
+							activityWatchVideoLastStartDuration.value / 1000
 					  ),
 			source: `station#${station.value.name}`,
 			hostname: window.location.hostname
