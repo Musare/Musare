@@ -778,7 +778,7 @@ onMounted(() => {
 						v-if="hasPermission('playlists.songs.add')"
 						class="material-icons playlist-bulk-edit-icon"
 						@click.prevent="bulkEditPlaylist(slotProps.item)"
-						content="Add To Playlist"
+						content="Add/remove to/from playlist"
 						v-tippy
 						tabindex="0"
 					>

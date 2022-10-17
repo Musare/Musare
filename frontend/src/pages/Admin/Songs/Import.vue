@@ -46,8 +46,8 @@ const columns = ref<TableColumn[]>([
 		sortable: false,
 		hidable: false,
 		resizable: false,
-		minWidth: 160,
-		defaultWidth: 160
+		minWidth: 200,
+		defaultWidth: 200
 	},
 	{
 		name: "type",
@@ -358,6 +358,15 @@ const importAlbum = youtubeIds => {
 	});
 };
 
+const bulkEditPlaylist = youtubeIds => {
+	openModal({
+		modal: "bulkEditPlaylist",
+		props: {
+			youtubeIds
+		}
+	});
+};
+
 const removeImportJob = jobId => {
 	socket.dispatch("media.removeImportJobs", jobId, res => {
 		new Toast(res.message);
@@ -539,6 +548,24 @@ const removeImportJob = jobId => {
 									v-tippy
 								>
 									album
+								</button>
+								<button
+									v-if="hasPermission('playlists.songs.add')"
+									class="button is-primary icon-with-button material-icons"
+									@click="
+										bulkEditPlaylist(
+											slotProps.item.response
+												.successfulVideoIds
+										)
+									"
+									:disabled="
+										slotProps.item.removed ||
+										slotProps.item.status !== 'success'
+									"
+									content="Add/remove media to/from playlist"
+									v-tippy
+								>
+									playlist_add
 								</button>
 								<button
 									v-if="
