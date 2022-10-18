@@ -2,18 +2,18 @@
   "name": "musare-backend",
   "private": true,
   "version": "3.9.0-dev",
-  "type": "module",
+  "type": "commonjs",
   "description": "An open-source collaborative music listening and catalogue curation application. Currently supporting YouTube based content.",
   "main": "index.js",
   "author": "Musare Team",
   "license": "GPL-3.0",
   "repository": "https://github.com/Musare/Musare",
   "scripts": {
-    "dev": "nodemon --es-module-specifier-resolution=node",
-    "docker:dev": "nodemon --es-module-specifier-resolution=node --legacy-watch --no-stdin /opt/app",
-    "docker:prod": "node --es-module-specifier-resolution=node /opt/app",
-    "lint": "eslint --cache logic",
-    "typescript": "tsc --noEmit --skipLibCheck"
+    "dev": "nodemon",
+    "build": "tsc",
+    "prod": "node build/src/main.js",
+    "lint": "eslint --cache logic src",
+    "typescript": "tsc --noEmit"
   },
   "dependencies": {
     "async": "^3.2.4",

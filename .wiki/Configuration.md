@@ -119,6 +119,7 @@ application within the container is listening on `21017`.
 | `DOCKER_COMMAND` | Should be either `docker` or `podman`.  |
 | `BACKEND_HOST` | Backend container host. |
 | `BACKEND_PORT` | Backend container port. |
+| `BACKEND_MODE` | Should be either `prod` or `dev`. |
 | `FRONTEND_HOST` | Frontend container host. |
 | `FRONTEND_PORT` | Frontend container port. |
 | `FRONTEND_MODE` | Should be either `prod` or `dev`. |

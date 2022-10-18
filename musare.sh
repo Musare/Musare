@@ -306,7 +306,7 @@ case $1 in
             fi
             if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *backend* ]]; then
                 echo -e "${CYAN}Running backend lint...${NC}"
-                ${dockerCompose} exec -T backend npx eslint $cache logic $fix
+                ${dockerCompose} exec -T backend npx eslint $cache logic src $fix
                 backendExitValue=$?
             fi
             if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *docs* ]]; then

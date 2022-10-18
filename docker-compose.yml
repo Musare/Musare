@@ -5,12 +5,15 @@ services:
     build:
       context: ./backend
       target: musare_backend
+      args:
+        BACKEND_MODE: "${BACKEND_MODE:-prod}"
     restart: ${RESTART_POLICY:-unless-stopped}
     volumes:
       - ./.git:/opt/app/.parent_git:ro
       - ./backend/config:/opt/app/config
       - ./types:/opt/types
     environment:
+      - BACKEND_MODE=${BACKEND_MODE:-prod}
       - CONTAINER_MODE=${CONTAINER_MODE:-prod}
     links:
       - mongo
