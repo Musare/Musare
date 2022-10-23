@@ -12,7 +12,7 @@
     "dev": "nodemon",
     "build": "tsc",
     "prod": "node build/src/main.js",
-    "lint": "eslint --cache logic src",
+    "lint": "eslint . --ext .js,.ts",
     "typescript": "tsc --noEmit"
   },
   "dependencies": {
