@@ -120,6 +120,8 @@ application within the container is listening on `21017`.
 | `BACKEND_HOST` | Backend container host. |
 | `BACKEND_PORT` | Backend container port. |
 | `BACKEND_MODE` | Should be either `prod` or `dev`. |
+| `BACKEND_DEBUG` | Should be either `true` or `false`. If enabled backend will await debugger connection and trigger to start. |
+| `BACKEND_DEBUG_PORT` | Backend container debug port, if enabled. |
 | `FRONTEND_HOST` | Frontend container host. |
 | `FRONTEND_PORT` | Frontend container port. |
 | `FRONTEND_MODE` | Should be either `prod` or `dev`. |

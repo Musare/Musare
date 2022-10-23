@@ -1,0 +1,10 @@
+{
+    "recommendations": [
+        "ms-azuretools.vscode-docker",
+        "dbaeumer.vscode-eslint",
+        "eamodio.gitlens",
+        "rvest.vs-code-prettier-eslint",
+        "Vue.vscode-typescript-vue-plugin",
+        "Vue.volar"
+    ]
+}

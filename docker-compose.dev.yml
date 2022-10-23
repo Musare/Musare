@@ -2,8 +2,11 @@ services:
   backend:
     ports:
       - "${BACKEND_HOST:-0.0.0.0}:${BACKEND_PORT:-8080}:8080"
+      - "${BACKEND_HOST:-0.0.0.0}:${BACKEND_DEBUG_PORT:-9229}:9229"
     volumes:
       - ./backend:/opt/app
+    environment:
+      - BACKEND_DEBUG=${BACKEND_DEBUG:-false}
 
   frontend:
     volumes:

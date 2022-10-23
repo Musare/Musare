@@ -7,4 +7,10 @@ if [[ "${CONTAINER_MODE}" == "dev" ]]; then
     fi
 fi
 
+if [[ "${BACKEND_DEBUG}" == "true" ]]; then
+    export INSPECT_BRK="--inspect-brk=0.0.0.0"
+else
+    export INSPECT_BRK=""
+fi
+
 npm run "${BACKEND_MODE}"
