@@ -117,15 +117,16 @@
 
 		<script src="https://www.youtube.com/iframe_api"></script>
 
-		<!--Musare version: {{ version }}-->
-		<!--
-			Git info
-			Remote: {{ gitRemote }}
-			Remote URL: {{ gitRemoteUrl }}
-			Branch: {{ gitBranch }}
-			Latest commit: {{ gitLatestCommit }}
-			Latest commit short: {{ gitLatestCommitShort }}
-		-->
+		<script>
+			const MUSARE_VERSION = "{{ version }}";
+			const MUSARE_GIT = {
+				remote: "{{ gitRemote }}",
+				remoteUrl: "{{ gitRemoteUrl }}",
+				branch: "{{ gitBranch }}",
+				latestCommit: "{{ gitLatestCommit }}",
+				latestCommitShort: "{{ gitLatestCommitShort }}"
+			};
+		</script>
 	</head>
 
 	<body>

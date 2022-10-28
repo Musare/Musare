@@ -156,13 +156,7 @@ export default {
 	define: {
 		__VUE_PROD_DEVTOOLS__: config.get("mode") === "development",
 		MUSARE_VERSION: JSON.stringify(debug.version),
-		MUSARE_GIT_REMOTE: JSON.stringify(debug.git.remote),
-		MUSARE_GIT_REMOTE_URL: JSON.stringify(debug.git.remoteUrl),
-		MUSARE_GIT_BRANCH: JSON.stringify(debug.git.branch),
-		MUSARE_GIT_LATEST_COMMIT: JSON.stringify(debug.git.latestCommit),
-		MUSARE_GIT_LATEST_COMMIT_SHORT: JSON.stringify(
-			debug.git.latestCommitShort
-		),
+		MUSARE_GIT: debug.git,
 		__VUE_I18N_LEGACY_API__: false
 	},
 	plugins: [

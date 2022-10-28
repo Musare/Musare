@@ -24,6 +24,14 @@ declare global {
 				initialItemIndex: number;
 				initialItemListUuid: string;
 		  };
+	var MUSARE_VERSION: string;
+	var MUSARE_GIT: {
+		remote: string;
+		remoteUrl: string;
+		branch: string;
+		latestCommit: string;
+		latestCommitShort: string;
+	};
 }
 
 export {};
