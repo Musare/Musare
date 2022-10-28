@@ -39,6 +39,17 @@ process.on("uncaughtException", err => {
 	console.log(`UNCAUGHT EXCEPTION: ${err.stack}`);
 });
 
+const shutdown = () => {
+	moduleManager
+		.shutdown()
+		.then(() => process.exit(0))
+		.catch(() => process.exit(1));
+};
+process.on("SIGINT", shutdown);
+process.on("SIGQUIT", shutdown);
+process.on("SIGTERM", shutdown);
+process.on("SIGUSR2", shutdown);
+
 const runCommand = (line: string) => {
 	const [command, ...args] = line.split(" ");
 	switch (command) {
@@ -87,7 +98,7 @@ const runCommand = (line: string) => {
 			break;
 		}
 		default: {
-			if (!/^\s*$/.test(command))
+			if (!/^\s*$/.test(command) && command !== "rs")
 				console.log(`Command "${command}" not found`);
 		}
 	}

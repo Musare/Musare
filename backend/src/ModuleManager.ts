@@ -1,3 +1,4 @@
+import async from "async";
 import BaseModule from "./BaseModule";
 import Job from "./Job";
 import JobQueue from "./JobQueue";
@@ -10,7 +11,7 @@ type ModuleClass<Module extends typeof BaseModule> = {
 };
 
 export default class ModuleManager {
-	private modules: Modules | null;
+	private modules?: Modules;
 
 	private jobQueue: JobQueue;
 
@@ -19,7 +20,6 @@ export default class ModuleManager {
 	 *
 	 */
 	public constructor() {
-		this.modules = null;
 		this.jobQueue = new JobQueue();
 	}
 
@@ -29,14 +29,10 @@ export default class ModuleManager {
 	 * @returns {object} Module statuses
 	 */
 	public getStatus() {
-		if (!this.modules) return {};
-
 		const status: Record<string, ModuleStatus> = {};
-
-		Object.entries(this.modules).forEach(([name, module]) => {
+		Object.entries(this.modules || {}).forEach(([name, module]) => {
 			status[name] = module.getStatus();
 		});
-
 		return status;
 	}
 
@@ -68,23 +64,26 @@ export default class ModuleManager {
 	}
 
 	/**
+	 * loadModule - Load and initialize module
 	 *
 	 * @param {string} moduleName Name of the module
 	 * @returns {typeof BaseModule} Module
 	 */
-	private getModule<T extends keyof Modules>(
+	private loadModule<T extends keyof Modules>(
 		moduleName: T
 	): Promise<Modules[T]> {
 		return new Promise(resolve => {
 			const mapper = {
 				stations: "StationModule",
-				others: "OtherModule"
+				others: "OtherModule",
+				data: "DataModule"
 			};
-			import(`./modules/${mapper[moduleName]}`).then(response => {
-				const Module: ModuleClass<Modules[T]> = response.default;
-				const module = new Module(this);
-				resolve(module);
-			});
+			import(`./modules/${mapper[moduleName]}`).then(
+				({ default: Module }: { default: ModuleClass<Modules[T]> }) => {
+					const module = new Module(this);
+					resolve(module);
+				}
+			);
 		});
 	}
 
@@ -93,16 +92,12 @@ export default class ModuleManager {
 	 *
 	 * @returns {Promise} Promise
 	 */
-	/**
-	 * loadModules - Load and initialize all modules
-	 *
-	 * @returns {Promise} Promise
-	 */
 	private loadModules(): Promise<void> {
 		return new Promise((resolve, reject) => {
 			const fetchModules = async () => ({
-				stations: await this.getModule("stations"),
-				others: await this.getModule("others")
+				data: await this.loadModule("data"),
+				others: await this.loadModule("others"),
+				stations: await this.loadModule("stations")
 			});
 			fetchModules()
 				.then(modules => {
@@ -121,20 +116,60 @@ export default class ModuleManager {
 	public startup(): void {
 		this.loadModules()
 			.then(() => {
-				if (!this.modules) return;
-				Object.values(this.modules).forEach(module => module.startup());
-				this.jobQueue.resume();
+				if (!this.modules) throw new Error("No modules were loaded");
+				async.each(
+					Object.values(this.modules),
+					(module, next) => {
+						module
+							.startup()
+							.then(() => next())
+							.catch(err => {
+								module.setStatus("ERROR");
+								next(err);
+							});
+					},
+					async err => {
+						if (err) {
+							await this.shutdown();
+							throw err;
+						}
+						this.jobQueue.resume();
+					}
+				);
 			})
-			.catch(() => this.shutdown());
+			.catch(async err => {
+				await this.shutdown();
+				throw err;
+			});
 	}
 
 	/**
 	 * shutdown - Handle shutdown
 	 */
-	public shutdown(): void {
-		if (!this.modules) return;
-		console.log(this.modules);
-		Object.values(this.modules).forEach(module => module.shutdown());
+	public shutdown(): Promise<void> {
+		return new Promise((resolve, reject) => {
+			// TODO: await jobQueue completion/handle shutdown
+			if (this.modules)
+				async.each(
+					Object.values(this.modules),
+					(module, next) => {
+						if (
+							module.getStatus() === "STARTED" ||
+							module.getStatus() === "STARTING" || // TODO: Handle better
+							module.getStatus() === "ERROR"
+						)
+							module
+								.shutdown()
+								.then(() => next())
+								.catch(next);
+					},
+					err => {
+						if (err) reject(err);
+						else resolve();
+					}
+				);
+			else resolve();
+		});
 	}
 
 	/**
@@ -163,8 +198,7 @@ export default class ModuleManager {
 	): Promise<ReturnType> {
 		const [payload, options] = params;
 		return new Promise<ReturnType>((resolve, reject) => {
-			if (!this.modules) return;
-			const module = this.modules[moduleName];
+			const module = this.modules && this.modules[moduleName];
 			if (!module) reject(new Error("Module not found."));
 			else {
 				const jobFunction = module[jobName];

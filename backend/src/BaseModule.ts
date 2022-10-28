@@ -46,16 +46,19 @@ export default abstract class BaseModule {
 	 *
 	 * @param {ModuleStatus} status Module status
 	 */
-	protected setStatus(status: ModuleStatus): void {
+	public setStatus(status: ModuleStatus): void {
 		this.status = status;
 	}
 
 	/**
 	 * startup - Startup module
 	 */
-	public startup(): void {
-		console.log(`Module (${this.name}) starting`);
-		this.setStatus("STARTING");
+	public startup(): Promise<void> {
+		return new Promise(resolve => {
+			console.log(`Module (${this.name}) starting`);
+			this.setStatus("STARTING");
+			resolve();
+		});
 	}
 
 	/**
@@ -69,9 +72,13 @@ export default abstract class BaseModule {
 	/**
 	 * shutdown - Shutdown module
 	 */
-	public shutdown(): void {
-		console.log(`Module (${this.name}) stopping`);
-		this.setStatus("STOPPING");
+	public shutdown(): Promise<void> {
+		return new Promise(resolve => {
+			console.log(`Module (${this.name}) stopping`);
+			this.setStatus("STOPPING");
+			this.stopped();
+			resolve();
+		});
 	}
 
 	/**

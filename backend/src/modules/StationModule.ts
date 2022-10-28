@@ -15,12 +15,17 @@ export default class StationModule extends BaseModule {
 	/**
 	 * startup - Startup station module
 	 */
-	public override startup(): void {
-		super.startup();
-
-		console.log("Station Startup");
-
-		super.started();
+	public override startup(): Promise<void> {
+		return new Promise((resolve, reject) => {
+			super
+				.startup()
+				.then(() => {
+					console.log("Station Startup");
+					super.started();
+					resolve();
+				})
+				.catch(err => reject(err));
+		});
 	}
 
 	/**

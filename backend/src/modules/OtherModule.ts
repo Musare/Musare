@@ -15,12 +15,17 @@ export default class OtherModule extends BaseModule {
 	/**
 	 * startup - Startup other module
 	 */
-	public override startup(): void {
-		super.startup();
-
-		console.log("Other Startup");
-
-		super.started();
+	public override startup(): Promise<void> {
+		return new Promise((resolve, reject) => {
+			super
+				.startup()
+				.then(() => {
+					console.log("Other Startup");
+					super.started();
+					resolve();
+				})
+				.catch(err => reject(err));
+		});
 	}
 
 	/**
