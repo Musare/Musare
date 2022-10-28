@@ -1,5 +1,5 @@
 import ModuleManager from "./ModuleManager";
-import { ModuleStatus } from "./types/ModuleStatus";
+import { ModuleStatus } from "./types/Modules";
 
 // type ModuleName = keyof Modules;
 

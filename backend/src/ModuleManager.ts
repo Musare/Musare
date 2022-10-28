@@ -2,13 +2,7 @@ import async from "async";
 import BaseModule from "./BaseModule";
 import Job from "./Job";
 import JobQueue from "./JobQueue";
-import { ModuleStatus } from "./types/ModuleStatus";
-import { Jobs, Modules } from "./types/TestModules";
-
-type ModuleClass<Module extends typeof BaseModule> = {
-	// eslint-disable-next-line
-	new (moduleManager: ModuleManager): Module;
-};
+import { Jobs, Modules, ModuleStatus, ModuleClass } from "./types/Modules";
 
 export default class ModuleManager {
 	private modules?: Modules;
@@ -180,24 +174,19 @@ export default class ModuleManager {
 	 * @param {[ any, { priority?: number }? ]} params Params
 	 */
 	public runJob<
-		ModuleName extends keyof Jobs & keyof Modules,
-		JobName extends keyof Jobs[ModuleName] &
-			keyof Omit<Modules[ModuleName], keyof BaseModule>,
-		Payload extends "payload" extends keyof Jobs[ModuleName][JobName]
-			? Jobs[ModuleName][JobName]["payload"]
+		M extends keyof Jobs & keyof Modules,
+		J extends keyof Jobs[M] & keyof Omit<Modules[M], keyof BaseModule>,
+		P extends "payload" extends keyof Jobs[M][J]
+			? Jobs[M][J]["payload"]
 			: undefined,
-		ReturnType = "returns" extends keyof Jobs[ModuleName][JobName]
-			? Jobs[ModuleName][JobName]["returns"]
-			: never
+		R = "returns" extends keyof Jobs[M][J] ? Jobs[M][J]["returns"] : never
 	>(
-		moduleName: ModuleName,
-		jobName: JobName,
-		...params: Payload extends undefined
-			? []
-			: [Payload, { priority?: number }?]
-	): Promise<ReturnType> {
+		moduleName: M,
+		jobName: J,
+		...params: P extends undefined ? [] : [P, { priority?: number }?]
+	): Promise<R> {
 		const [payload, options] = params;
-		return new Promise<ReturnType>((resolve, reject) => {
+		return new Promise<R>((resolve, reject) => {
 			const module = this.modules && this.modules[moduleName];
 			if (!module) reject(new Error("Module not found."));
 			else {
@@ -213,15 +202,16 @@ export default class ModuleManager {
 						new Job(
 							jobName.toString(),
 							moduleName,
-							async (resolveJob, rejectJob) => {
-								jobFunction(payload)
-									.then((response: ReturnType) => {
+							(resolveJob, rejectJob) => {
+								jobFunction
+									.apply(module, [payload])
+									.then((response: R) => {
 										resolveJob();
 										resolve(response);
 									})
-									.catch(() => {
+									.catch((err: any) => {
 										rejectJob();
-										reject();
+										reject(err);
 									});
 							},
 							{

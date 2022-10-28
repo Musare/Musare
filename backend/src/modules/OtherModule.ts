@@ -1,4 +1,4 @@
-import { UniqueMethods } from "../types/TestModules";
+import { UniqueMethods } from "../types/Modules";
 import BaseModule from "../BaseModule";
 import ModuleManager from "../ModuleManager";
 
