@@ -234,9 +234,10 @@ const autoRequestSong = () => {
 const dateCurrently = () => new Date().getTime() + systemDifference.value;
 const getTimeElapsed = () => {
 	if (currentSong.value) {
+		let localTimePaused = timePaused.value;
 		if (stationPaused.value)
-			timePaused.value += dateCurrently() - pausedAt.value;
-		return dateCurrently() - startedAt.value - timePaused.value;
+			localTimePaused += dateCurrently() - pausedAt.value;
+		return dateCurrently() - startedAt.value - localTimePaused;
 	}
 	return 0;
 };
@@ -361,11 +362,12 @@ const calculateTimeElapsed = () => {
 		}
 	}
 
+	let localTimePaused = timePaused.value;
 	if (stationPaused.value)
-		timePaused.value += dateCurrently() - pausedAt.value;
+		localTimePaused += dateCurrently() - pausedAt.value;
 
 	const duration =
-		(dateCurrently() - startedAt.value - timePaused.value) / 1000;
+		(dateCurrently() - startedAt.value - localTimePaused) / 1000;
 
 	const songDuration = currentSong.value.duration;
 	if (playerReady.value && songDuration <= duration)
@@ -2071,6 +2073,12 @@ onBeforeUnmount(() => {
 				<span><b>Volume slider value</b>: {{ volumeSliderValue }}</span>
 				<span><b>Local paused</b>: {{ localPaused }}</span>
 				<span><b>Station paused</b>: {{ stationPaused }}</span>
+				<span :title="new Date(pausedAt).toString()"
+					><b>Paused at</b>: {{ pausedAt }}</span
+				>
+				<span :title="new Date(startedAt).toString()"
+					><b>Started at</b>: {{ startedAt }}</span
+				>
 				<span
 					><b>Requests enabled</b>:
 					{{ station.requests.enabled }}</span
