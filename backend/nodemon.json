@@ -1,9 +1,0 @@
-{
-	"watch": ["src", "config"],
-	"ext": "ts,json",
-	"ignore": ["src/**/*.spec.ts", "node_modules"],
-	"stdin": true,
-	"stdout": true,
-	"signal": "SIGUSR2",
-	"exec": "NODE_OPTIONS=${INSPECT_BRK} ts-node -i ./src/main.ts"
-}

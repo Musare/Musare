@@ -103,7 +103,7 @@ const runCommand = (line: string) => {
 			break;
 		}
 		default: {
-			if (!/^\s*$/.test(command) && command !== "rs")
+			if (!/^\s*$/.test(command))
 				console.log(`Command "${command}" not found`);
 		}
 	}
