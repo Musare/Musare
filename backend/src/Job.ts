@@ -27,12 +27,10 @@ export default class Job {
 	/**
 	 * Job
 	 *
-	 * @param {string} name Job name
-	 * @param {string} module Job module
-	 * @param {Function} callback Job callback
-	 * @param {object|undefined} options Job options
-	 * @param {number|undefined} options.priority Job priority
-	 * @param {string|undefined} options.longJob Long job title, providing makes job a long job
+	 * @param name - Job name
+	 * @param module - Job module
+	 * @param callback - Job callback
+	 * @param options - Job options
 	 */
 	public constructor(
 		name: string,
@@ -70,7 +68,7 @@ export default class Job {
 	/**
 	 * getName - Get job name
 	 *
-	 * @returns {string} module.name
+	 * @returns module.name
 	 */
 	public getName(): string {
 		return `${this.module}.${this.name}`;
@@ -79,7 +77,7 @@ export default class Job {
 	/**
 	 * getPriority - Get job priority
 	 *
-	 * @returns {number} priority
+	 * @returns priority
 	 */
 	public getPriority(): number {
 		return this.priority;
@@ -88,7 +86,7 @@ export default class Job {
 	/**
 	 * getUuid - Get job UUID
 	 *
-	 * @returns {string} UUID
+	 * @returns UUID
 	 */
 	public getUuid(): string {
 		return this.uuid;
@@ -97,7 +95,7 @@ export default class Job {
 	/**
 	 * getStatus - Get job status
 	 *
-	 * @returns {JobStatus} status
+	 * @returns status
 	 */
 	public getStatus(): JobStatus {
 		return this.status;
@@ -106,7 +104,7 @@ export default class Job {
 	/**
 	 * setStatus - Set job status
 	 *
-	 * @param {JobStatus} status Job status
+	 * @param status - Job status
 	 */
 	public setStatus(status: JobStatus): void {
 		this.status = status;
@@ -115,7 +113,7 @@ export default class Job {
 	/**
 	 * execute - Execute job
 	 *
-	 * @returns {Promise<void>} Promise
+	 * @returns Promise
 	 */
 	public execute(): Promise<void> {
 		return new Promise((resolve, reject) => {

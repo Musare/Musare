@@ -34,7 +34,7 @@ export default class JobQueue {
 	/**
 	 * add - Add job to queue
 	 *
-	 * @param {Job} job Job
+	 * @param job - Job
 	 */
 	public add(job: Job): void {
 		this.queue.push(job);
@@ -47,8 +47,8 @@ export default class JobQueue {
 	/**
 	 * getJob - Fetch job
 	 *
-	 * @param {jobId} jobId Job UUID
-	 * @returns {Job|undefined} Job if found
+	 * @param jobId - Job UUID
+	 * @returns Job if found
 	 */
 	public getJob(jobId: string): Job | undefined {
 		return (
@@ -111,7 +111,7 @@ export default class JobQueue {
 	/**
 	 * getStatus - Get status of job queue
 	 *
-	 * @returns {object} Job queue status
+	 * @returns Job queue status
 	 */
 	public getStatus() {
 		return {
@@ -125,7 +125,7 @@ export default class JobQueue {
 	/**
 	 * getStats - Get statistics of job queue
 	 *
-	 * @returns {object} Job queue statistics
+	 * @returns Job queue statistics
 	 */
 	public getStats() {
 		return {
@@ -142,8 +142,8 @@ export default class JobQueue {
 	/**
 	 * getQueueStatus - Get statistics of queued or active jobs
 	 *
-	 * @param {JobStatus|undefined} type Job type filter
-	 * @returns {object} Job queue statistics
+	 * @param type - Job type filter
+	 * @returns Job queue statistics
 	 */
 	public getQueueStatus(type?: JobStatus) {
 		const status: Record<
@@ -169,8 +169,8 @@ export default class JobQueue {
 	/**
 	 * updateStats - Update job statistics
 	 *
-	 * @param {string} jobName Job name
-	 * @param {"successful"|"failed"|"total"} type Stats type
+	 * @param jobName - Job name
+	 * @param type - Stats type
 	 */
 	private updateStats(
 		jobName: string,

@@ -13,8 +13,8 @@ export default abstract class BaseModule {
 	/**
 	 * Base Module
 	 *
-	 * @param {ModuleManager} moduleManager Module manager class
-	 * @param {string} name Module name
+	 * @param moduleManager - Module manager class
+	 * @param name - Module name
 	 */
 	public constructor(moduleManager: ModuleManager, name: string) {
 		this.moduleManager = moduleManager;
@@ -26,7 +26,7 @@ export default abstract class BaseModule {
 	/**
 	 * getName - Get module name
 	 *
-	 * @returns {string} name
+	 * @returns name
 	 */
 	public getName(): string {
 		return this.name;
@@ -35,7 +35,7 @@ export default abstract class BaseModule {
 	/**
 	 * getStatus - Get module status
 	 *
-	 * @returns {ModuleStatus} status
+	 * @returns status
 	 */
 	public getStatus(): ModuleStatus {
 		return this.status;
@@ -44,7 +44,7 @@ export default abstract class BaseModule {
 	/**
 	 * setStatus - Set module status
 	 *
-	 * @param {ModuleStatus} status Module status
+	 * @param status - Module status
 	 */
 	public setStatus(status: ModuleStatus): void {
 		this.status = status;

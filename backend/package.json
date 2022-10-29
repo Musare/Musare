@@ -37,6 +37,7 @@
 		"ws": "^8.9.0"
 	},
 	"devDependencies": {
+		"@microsoft/tsdoc": "^0.14.2",
 		"@types/async": "^3.2.15",
 		"@types/config": "^3.3.0",
 		"@typescript-eslint/eslint-plugin": "^5.40.0",
@@ -45,8 +46,8 @@
 		"eslint-config-airbnb-base": "^15.0.0",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-plugin-import": "^2.26.0",
-		"eslint-plugin-jsdoc": "^39.3.6",
 		"eslint-plugin-prettier": "^4.2.1",
+		"eslint-plugin-tsdoc": "^0.2.17",
 		"prettier": "2.7.1",
 		"trace-unhandled": "^2.0.1",
 		"ts-node": "^10.9.1",

@@ -6,7 +6,7 @@ export default class OtherModule extends BaseModule {
 	/**
 	 * Other Module
 	 *
-	 * @param {ModuleManager} moduleManager Module manager class
+	 * @param moduleManager - Module manager class
 	 */
 	public constructor(moduleManager: ModuleManager) {
 		super(moduleManager, "others");
@@ -31,10 +31,8 @@ export default class OtherModule extends BaseModule {
 	/**
 	 * doThing - Do thing
 	 *
-	 * @param {object} payload Payload
-	 * @param {string} payload.test Test1
-	 * @param {number} payload.test2 Test2
-	 * @returns {{ message: string }} Return object
+	 * @param payload - Payload
+	 * @returns Returned object
 	 */
 	public doThing(payload: { test: string; test2: number }): Promise<{
 		res: number;

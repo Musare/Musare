@@ -15,7 +15,7 @@ export default class DataModule extends BaseModule {
 	/**
 	 * Data Module
 	 *
-	 * @param {ModuleManager} moduleManager Module manager class
+	 * @param moduleManager - Module manager class
 	 */
 	public constructor(moduleManager: ModuleManager) {
 		super(moduleManager, "data");
@@ -117,8 +117,8 @@ export default class DataModule extends BaseModule {
 	/**
 	 * loadColllection - Import and load collection schema
 	 *
-	 * @param {string} collectionName Name of the collection
-	 * @returns {Collections[T]} Collection
+	 * @param collectionName - Name of the collection
+	 * @returns Collection
 	 */
 	private loadCollection<T extends keyof Collections>(
 		collectionName: T
@@ -150,7 +150,7 @@ export default class DataModule extends BaseModule {
 	/**
 	 * loadCollections - Load and initialize all collections
 	 *
-	 * @returns {Promise} Promise
+	 * @returns Promise
 	 */
 	private loadCollections(): Promise<void> {
 		return new Promise((resolve, reject) => {
@@ -180,13 +180,8 @@ export default class DataModule extends BaseModule {
 	/**
 	 * find - Find data
 	 *
-	 * @param {object} payload Payload
-	 * @param {string} payload.collection Name of collection to fetch from
-	 * @param {object} payload.query Query
-	 * @param {object} payload.values Return specific values
-	 * @param {number} payload.limit Returned data limit
-	 * @param {number} payload.cache Cache expiry in seconds (-1 to disable)
-	 * @returns {Promise} Return object
+	 * @param payload - Payload
+	 * @returns Returned object
 	 */
 	public find<T extends keyof Collections>({
 		collection,

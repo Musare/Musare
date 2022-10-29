@@ -20,7 +20,7 @@ export default class ModuleManager {
 	/**
 	 * getStatus - Get status of modules
 	 *
-	 * @returns {object} Module statuses
+	 * @returns Module statuses
 	 */
 	public getStatus() {
 		const status: Record<string, ModuleStatus> = {};
@@ -33,7 +33,7 @@ export default class ModuleManager {
 	/**
 	 * getJobsStats - Get statistics of job queue
 	 *
-	 * @returns {object} Job queue statistics
+	 * @returns Job queue statistics
 	 */
 	public getJobsStats() {
 		return this.jobQueue.getStats();
@@ -42,7 +42,7 @@ export default class ModuleManager {
 	/**
 	 * getJobsStatus - Get status of job queue
 	 *
-	 * @returns {object} Job queue status
+	 * @returns Job queue status
 	 */
 	public getJobsStatus() {
 		return this.jobQueue.getStatus();
@@ -51,7 +51,7 @@ export default class ModuleManager {
 	/**
 	 * getQueueStatus - Get status of queued jobs
 	 *
-	 * @returns {object} Job statuses
+	 * @returns Job statuses
 	 */
 	public getQueueStatus() {
 		return this.jobQueue.getQueueStatus();
@@ -60,8 +60,8 @@ export default class ModuleManager {
 	/**
 	 * loadModule - Load and initialize module
 	 *
-	 * @param {string} moduleName Name of the module
-	 * @returns {typeof BaseModule} Module
+	 * @param moduleName - Name of the module
+	 * @returns Module
 	 */
 	private loadModule<T extends keyof Modules>(
 		moduleName: T
@@ -84,7 +84,7 @@ export default class ModuleManager {
 	/**
 	 * loadModules - Load and initialize all modules
 	 *
-	 * @returns {Promise} Promise
+	 * @returns Promise
 	 */
 	private loadModules(): Promise<void> {
 		return new Promise((resolve, reject) => {
@@ -169,9 +169,9 @@ export default class ModuleManager {
 	/**
 	 * runJob - Run a job
 	 *
-	 * @param {string} moduleName Module name
-	 * @param {string} jobName Job name
-	 * @param {[ any, { priority?: number }? ]} params Params
+	 * @param moduleName - Module name
+	 * @param jobName - Job name
+	 * @param params - Params
 	 */
 	public runJob<
 		M extends keyof Jobs & keyof Modules,

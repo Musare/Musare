@@ -6,7 +6,7 @@ export default class StationModule extends BaseModule {
 	/**
 	 * Station Module
 	 *
-	 * @param {ModuleManager} moduleManager Module manager class
+	 * @param moduleManager - Module manager class
 	 */
 	public constructor(moduleManager: ModuleManager) {
 		super(moduleManager, "stations");
@@ -31,8 +31,7 @@ export default class StationModule extends BaseModule {
 	/**
 	 * addToQueue - Add media to queue
 	 *
-	 * @param {object} payload Payload
-	 * @param {string} payload.songId Song ID
+	 * @param payload - Payload
 	 */
 	public addToQueue(payload: { songId: string }): Promise<void> {
 		return new Promise((resolve, reject) => {
@@ -45,19 +44,12 @@ export default class StationModule extends BaseModule {
 		});
 	}
 
-	/**
-	 *
-	 * @returns {{ number: number }} return
-	 */
 	public addA(): Promise<{ number: number }> {
 		return new Promise<{ number: number }>(resolve => {
 			resolve({ number: 123 });
 		});
 	}
 
-	/**
-	 *
-	 */
 	public addB(): Promise<void> {
 		return new Promise<void>(resolve => {
 			resolve();
