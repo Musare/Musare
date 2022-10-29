@@ -20,7 +20,6 @@ export default class OtherModule extends BaseModule {
 			super
 				.startup()
 				.then(() => {
-					console.log("Other Startup");
 					super.started();
 					resolve();
 				})

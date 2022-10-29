@@ -2,18 +2,23 @@ import async from "async";
 import BaseModule from "./BaseModule";
 import Job from "./Job";
 import JobQueue from "./JobQueue";
+import LogBook from "./LogBook";
 import { Jobs, Modules, ModuleStatus, ModuleClass } from "./types/Modules";
 
 export default class ModuleManager {
 	private modules?: Modules;
+
+	public logBook: LogBook;
 
 	private jobQueue: JobQueue;
 
 	/**
 	 * Module Manager
 	 *
+	 * @param logBook - Logbook
 	 */
-	public constructor() {
+	public constructor(logBook: LogBook) {
+		this.logBook = logBook;
 		this.jobQueue = new JobQueue();
 	}
 
@@ -202,14 +207,33 @@ export default class ModuleManager {
 						new Job(
 							jobName.toString(),
 							moduleName,
-							(resolveJob, rejectJob) => {
+							(job, resolveJob, rejectJob) => {
 								jobFunction
 									.apply(module, [payload])
 									.then((response: R) => {
+										this.logBook.log({
+											message:
+												"Job completed successfully",
+											type: "success",
+											category: "jobs",
+											data: {
+												jobName: job.getName(),
+												jobId: job.getUuid()
+											}
+										});
 										resolveJob();
 										resolve(response);
 									})
 									.catch((err: any) => {
+										this.logBook.log({
+											message: `Job failed with error "${err}"`,
+											type: "error",
+											category: "jobs",
+											data: {
+												jobName: job.getName(),
+												jobId: job.getUuid()
+											}
+										});
 										rejectJob();
 										reject(err);
 									});

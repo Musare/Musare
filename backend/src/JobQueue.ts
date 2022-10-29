@@ -130,12 +130,20 @@ export default class JobQueue {
 	public getStats() {
 		return {
 			...this.stats,
-			total: Object.values(this.stats).reduce((a, b) => ({
-				successful: a.successful + b.successful,
-				failed: a.failed + b.failed,
-				total: a.total + b.total,
-				added: a.added + b.added
-			}))
+			total: Object.values(this.stats).reduce(
+				(a, b) => ({
+					successful: a.successful + b.successful,
+					failed: a.failed + b.failed,
+					total: a.total + b.total,
+					added: a.added + b.added
+				}),
+				{
+					successful: 0,
+					failed: 0,
+					total: 0,
+					added: 0
+				}
+			)
 		};
 	}
 

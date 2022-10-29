@@ -5,7 +5,11 @@ export default class Job {
 
 	protected module: string;
 
-	protected callback: (resolve: () => void, reject: () => void) => void;
+	protected callback: (
+		job: this,
+		resolve: () => void,
+		reject: () => void
+	) => void;
 
 	protected priority: number;
 
@@ -35,7 +39,7 @@ export default class Job {
 	public constructor(
 		name: string,
 		module: string,
-		callback: (resolve: () => void, reject: () => void) => void,
+		callback: (job: Job, resolve: () => void, reject: () => void) => void,
 		options?: { priority: number; longJob?: string }
 	) {
 		this.name = name;
@@ -118,7 +122,7 @@ export default class Job {
 	public execute(): Promise<void> {
 		return new Promise((resolve, reject) => {
 			this.setStatus("ACTIVE");
-			this.callback(resolve, reject);
+			this.callback(this, resolve, reject);
 		});
 	}
 }

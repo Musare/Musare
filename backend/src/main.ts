@@ -1,22 +1,9 @@
-import util from "util";
 import * as readline from "node:readline";
 import ModuleManager from "./ModuleManager";
+import LogBook from "./LogBook";
 
-// Replace console.log with something that replaced certain phrases/words
-const blacklistedConsoleLogs: string[] = [];
-const oldConsole = { log: console.log };
-console.log = (...args) => {
-	const string = util.format.apply(null, args);
-	let blacklisted = false;
-
-	blacklistedConsoleLogs.forEach(blacklistedConsoleLog => {
-		if (string.indexOf(blacklistedConsoleLog) !== -1) blacklisted = true;
-	});
-
-	if (!blacklisted) oldConsole.log.apply(null, args);
-};
-
-const moduleManager = new ModuleManager();
+const logBook = new LogBook();
+const moduleManager = new ModuleManager(logBook);
 moduleManager.startup();
 
 // TOOD remove, or put behind debug option
@@ -100,6 +87,37 @@ const runCommand = (line: string) => {
 		case "debug": {
 			// eslint-disable-next-line no-debugger
 			debugger;
+			break;
+		}
+		case "log": {
+			const [filter, action, ...filters] = args;
+			if (!filter) {
+				console.log(`Missing filter type`);
+				break;
+			}
+			if (
+				!(
+					filter === "silence" ||
+					filter === "include" ||
+					filter === "exclude"
+				)
+			) {
+				console.log(`Invalid filter type "${filter}"`);
+				break;
+			}
+			if (!(action === "set" || action === "add" || action === "reset")) {
+				console.log(`Invalid filter action "${action}"`);
+				break;
+			}
+			if (filters.length === 0 && action !== "reset") {
+				console.log(`No filters defined for "${filter}"`);
+				break;
+			}
+			logBook.setFilter(
+				filter,
+				action,
+				filters.map(_filter => JSON.parse(_filter))
+			);
 			break;
 		}
 		default: {

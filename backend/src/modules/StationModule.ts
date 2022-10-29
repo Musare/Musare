@@ -20,7 +20,7 @@ export default class StationModule extends BaseModule {
 			super
 				.startup()
 				.then(() => {
-					console.log("Station Startup");
+					this.log("Station Startup");
 					super.started();
 					resolve();
 				})

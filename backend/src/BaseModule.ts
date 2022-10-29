@@ -20,7 +20,7 @@ export default abstract class BaseModule {
 		this.moduleManager = moduleManager;
 		this.name = name;
 		this.status = "LOADED";
-		// console.log(`Module (${this.name}) starting`);
+		this.log(`Module (${this.name}) loaded`);
 	}
 
 	/**
@@ -55,7 +55,7 @@ export default abstract class BaseModule {
 	 */
 	public startup(): Promise<void> {
 		return new Promise(resolve => {
-			console.log(`Module (${this.name}) starting`);
+			this.log(`Module (${this.name}) starting`);
 			this.setStatus("STARTING");
 			resolve();
 		});
@@ -65,7 +65,7 @@ export default abstract class BaseModule {
 	 * started - called with the module has started
 	 */
 	protected started(): void {
-		console.log(`Module (${this.name}) started`);
+		this.log(`Module (${this.name}) started`);
 		this.setStatus("STARTED");
 	}
 
@@ -74,7 +74,7 @@ export default abstract class BaseModule {
 	 */
 	public shutdown(): Promise<void> {
 		return new Promise(resolve => {
-			console.log(`Module (${this.name}) stopping`);
+			this.log(`Module (${this.name}) stopping`);
 			this.setStatus("STOPPING");
 			this.stopped();
 			resolve();
@@ -85,7 +85,22 @@ export default abstract class BaseModule {
 	 * stopped - called when the module has stopped
 	 */
 	protected stopped(): void {
-		console.log(`Module (${this.name}) stopped`);
+		this.log(`Module (${this.name}) stopped`);
 		this.setStatus("STOPPED");
+	}
+
+	/**
+	 * log - Add log to logbook
+	 *
+	 * @param message - Log message
+	 */
+	protected log(message: string) {
+		this.moduleManager.logBook.log({
+			message,
+			category: `modules`,
+			data: {
+				moduleName: this.name
+			}
+		});
 	}
 }
