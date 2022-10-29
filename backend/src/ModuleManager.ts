@@ -192,7 +192,7 @@ export default class ModuleManager {
 			else {
 				const jobFunction = module[jobName];
 				if (!jobFunction || typeof jobFunction !== "function")
-					reject(new Error("Job function not found."));
+					reject(new Error("Job not found."));
 				else if (
 					Object.prototype.hasOwnProperty.call(BaseModule, jobName)
 				)

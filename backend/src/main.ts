@@ -19,19 +19,24 @@ console.log = (...args) => {
 const moduleManager = new ModuleManager();
 moduleManager.startup();
 
-const interval = setInterval(() => {
-	moduleManager
-		.runJob("stations", "addToQueue", { songId: "TestId" })
-		.catch(() => {});
-	moduleManager.runJob("stations", "addA").catch(() => {});
-	moduleManager
-		.runJob("others", "doThing", { test: "Test", test2: 123 })
-		.catch(() => {});
-}, 40);
+// TOOD remove, or put behind debug option
+// eslint-disable-next-line
+// @ts-ignore
+global.moduleManager = moduleManager;
 
-setTimeout(() => {
-	clearTimeout(interval);
-}, 20000);
+// const interval = setInterval(() => {
+// 	moduleManager
+// 		.runJob("stations", "addToQueue", { songId: "TestId" })
+// 		.catch(() => {});
+// 	moduleManager.runJob("stations", "addA").catch(() => {});
+// 	moduleManager
+// 		.runJob("others", "doThing", { test: "Test", test2: 123 })
+// 		.catch(() => {});
+// }, 40);
+
+// setTimeout(() => {
+// 	clearTimeout(interval);
+// }, 20000);
 
 process.on("uncaughtException", err => {
 	if (err.name === "ECONNREFUSED" || err.name === "UNCERTAIN_STATE") return;
@@ -39,16 +44,16 @@ process.on("uncaughtException", err => {
 	console.log(`UNCAUGHT EXCEPTION: ${err.stack}`);
 });
 
-const shutdown = () => {
-	moduleManager
-		.shutdown()
-		.then(() => process.exit(0))
-		.catch(() => process.exit(1));
-};
-process.on("SIGINT", shutdown);
-process.on("SIGQUIT", shutdown);
-process.on("SIGTERM", shutdown);
-process.on("SIGUSR2", shutdown);
+// const shutdown = () => {
+// 	moduleManager
+// 		.shutdown()
+// 		.then(() => process.exit(0))
+// 		.catch(() => process.exit(1));
+// };
+// process.on("SIGINT", shutdown);
+// process.on("SIGQUIT", shutdown);
+// process.on("SIGTERM", shutdown);
+// process.on("SIGUSR2", shutdown);
 
 const runCommand = (line: string) => {
 	const [command, ...args] = line.split(" ");

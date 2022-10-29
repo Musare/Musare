@@ -17,7 +17,8 @@ export const schema: AbcCollection = {
 	document: {
 		_id: {
 			type: mongoose.Schema.Types.ObjectId,
-			required: true
+			required: true,
+			cacheKey: true
 		},
 		createdAt: {
 			type: Date,

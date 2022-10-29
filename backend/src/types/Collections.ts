@@ -9,6 +9,7 @@ export type DocumentAttribute<
 > = {
 	type: T["type"];
 	required: T extends { required: false } ? false : true;
+	cacheKey?: boolean;
 };
 
 export type DefaultSchema = {
