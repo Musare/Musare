@@ -807,7 +807,12 @@ const resetKeyboardShortcutsHelper = () => {
 	keyboardShortcutsHelper.value.resetBox();
 };
 const sendActivityWatchVideoData = () => {
-	if (!stationPaused.value && !localPaused.value && !noSong.value) {
+	if (
+		!stationPaused.value &&
+		!localPaused.value &&
+		!noSong.value &&
+		player.value.getPlayerState() === window.YT.PlayerState.PLAYING
+	) {
 		if (activityWatchVideoLastStatus.value !== "playing") {
 			activityWatchVideoLastStatus.value = "playing";
 			activityWatchVideoLastStartDuration.value =
@@ -839,7 +844,12 @@ const sendActivityWatchVideoData = () => {
 							activityWatchVideoLastStartDuration.value / 1000
 					  ),
 			source: `station#${station.value.name}`,
-			hostname: window.location.hostname
+			hostname: window.location.hostname,
+			playerState: Object.keys(window.YT.PlayerState).find(
+				key =>
+					window.YT.PlayerState[key] === player.value.getPlayerState()
+			),
+			playbackRate: playbackRate.value
 		};
 
 		aw.sendVideoData(videoData);

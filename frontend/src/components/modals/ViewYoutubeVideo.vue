@@ -173,7 +173,10 @@ const setTrackPosition = event => {
 	);
 };
 const sendActivityWatchVideoData = () => {
-	if (!player.value.paused) {
+	if (
+		!player.value.paused &&
+		player.value.player.getPlayerState() === window.YT.PlayerState.PLAYING
+	) {
 		if (activityWatchVideoLastStatus.value !== "playing") {
 			activityWatchVideoLastStatus.value = "playing";
 			activityWatchVideoLastStartDuration.value = Math.floor(
@@ -192,7 +195,13 @@ const sendActivityWatchVideoData = () => {
 					? 0
 					: activityWatchVideoLastStartDuration.value,
 			source: `viewYoutubeVideo#${video.value.youtubeId}`,
-			hostname: window.location.hostname
+			hostname: window.location.hostname,
+			playerState: Object.keys(window.YT.PlayerState).find(
+				key =>
+					window.YT.PlayerState[key] ===
+					player.value.player.getPlayerState()
+			),
+			playbackRate: player.value.playbackRate
 		};
 
 		aw.sendVideoData(videoData);
