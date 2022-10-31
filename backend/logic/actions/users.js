@@ -380,7 +380,12 @@ export default {
 					});
 				},
 
+				// remove user as station DJ
 				next => {
+					stationModel.updateMany({ djs: session.userId }, { $pull: { djs: session.userId } }, next);
+				},
+
+				(res, next) => {
 					playlistModel.findOne({ createdBy: session.userId, type: "user-liked" }, next);
 				},
 
@@ -606,7 +611,12 @@ export default {
 					});
 				},
 
+				// remove user as station DJ
 				next => {
+					stationModel.updateMany({ djs: userId }, { $pull: { djs: userId } }, next);
+				},
+
+				(res, next) => {
 					playlistModel.findOne({ createdBy: userId, type: "user-liked" }, next);
 				},
 
@@ -662,7 +672,7 @@ export default {
 				(res, next) => {
 					CacheModule.runJob("PUB", {
 						channel: "user.removeSessions",
-						value: session.userId
+						value: userId
 					});
 
 					async.waterfall(
@@ -685,7 +695,6 @@ export default {
 
 							(keys, sessions, next) => {
 								// temp fix, need to wait properly for the SUB/PUB refactor (on wekan)
-								const { userId } = session;
 								setTimeout(
 									() =>
 										async.each(

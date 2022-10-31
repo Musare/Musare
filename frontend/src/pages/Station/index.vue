@@ -79,7 +79,7 @@ const frontendDevMode = ref("production");
 const activityWatchVideoDataInterval = ref(null);
 const activityWatchVideoLastStatus = ref("");
 const activityWatchVideoLastYouTubeId = ref("");
-// const activityWatchVideoLastStartDuration = ref("");
+const activityWatchVideoLastStartDuration = ref(0);
 const nextCurrentSong = ref(null);
 const mediaModalWatcher = ref(null);
 const beforeMediaModalLocalPausedLock = ref(false);
@@ -234,9 +234,10 @@ const autoRequestSong = () => {
 const dateCurrently = () => new Date().getTime() + systemDifference.value;
 const getTimeElapsed = () => {
 	if (currentSong.value) {
+		let localTimePaused = timePaused.value;
 		if (stationPaused.value)
-			timePaused.value += dateCurrently() - pausedAt.value;
-		return dateCurrently() - startedAt.value - timePaused.value;
+			localTimePaused += dateCurrently() - pausedAt.value;
+		return dateCurrently() - startedAt.value - localTimePaused;
 	}
 	return 0;
 };
@@ -361,11 +362,12 @@ const calculateTimeElapsed = () => {
 		}
 	}
 
+	let localTimePaused = timePaused.value;
 	if (stationPaused.value)
-		timePaused.value += dateCurrently() - pausedAt.value;
+		localTimePaused += dateCurrently() - pausedAt.value;
 
 	const duration =
-		(dateCurrently() - startedAt.value - timePaused.value) / 1000;
+		(dateCurrently() - startedAt.value - localTimePaused) / 1000;
 
 	const songDuration = currentSong.value.duration;
 	if (playerReady.value && songDuration <= duration)
@@ -805,12 +807,16 @@ const resetKeyboardShortcutsHelper = () => {
 	keyboardShortcutsHelper.value.resetBox();
 };
 const sendActivityWatchVideoData = () => {
-	if (!stationPaused.value && !localPaused.value && !noSong.value) {
+	if (
+		!stationPaused.value &&
+		!localPaused.value &&
+		!noSong.value &&
+		player.value.getPlayerState() === window.YT.PlayerState.PLAYING
+	) {
 		if (activityWatchVideoLastStatus.value !== "playing") {
 			activityWatchVideoLastStatus.value = "playing";
-			activityWatchVideoLastStatus.value = `${
-				currentSong.value.skipDuration + getTimeElapsed()
-			}`;
+			activityWatchVideoLastStartDuration.value =
+				currentSong.value.skipDuration + getTimeElapsed();
 		}
 
 		if (
@@ -818,9 +824,8 @@ const sendActivityWatchVideoData = () => {
 			currentSong.value.youtubeId
 		) {
 			activityWatchVideoLastYouTubeId.value = currentSong.value.youtubeId;
-			activityWatchVideoLastStatus.value = `${
-				currentSong.value.skipDuration + getTimeElapsed()
-			}`;
+			activityWatchVideoLastStartDuration.value =
+				currentSong.value.skipDuration + getTimeElapsed();
 		}
 
 		const videoData = {
@@ -833,13 +838,18 @@ const sendActivityWatchVideoData = () => {
 			muted: muted.value,
 			volume: volumeSliderValue.value,
 			startedDuration:
-				Number(activityWatchVideoLastStatus.value) <= 0
+				activityWatchVideoLastStartDuration.value <= 0
 					? 0
 					: Math.floor(
-							Number(activityWatchVideoLastStatus.value) / 1000
+							activityWatchVideoLastStartDuration.value / 1000
 					  ),
 			source: `station#${station.value.name}`,
-			hostname: window.location.hostname
+			hostname: window.location.hostname,
+			playerState: Object.keys(window.YT.PlayerState).find(
+				key =>
+					window.YT.PlayerState[key] === player.value.getPlayerState()
+			),
+			playbackRate: playbackRate.value
 		};
 
 		aw.sendVideoData(videoData);
@@ -2073,6 +2083,12 @@ onBeforeUnmount(() => {
 				<span><b>Volume slider value</b>: {{ volumeSliderValue }}</span>
 				<span><b>Local paused</b>: {{ localPaused }}</span>
 				<span><b>Station paused</b>: {{ stationPaused }}</span>
+				<span :title="new Date(pausedAt).toString()"
+					><b>Paused at</b>: {{ pausedAt }}</span
+				>
+				<span :title="new Date(startedAt).toString()"
+					><b>Started at</b>: {{ startedAt }}</span
+				>
 				<span
 					><b>Requests enabled</b>:
 					{{ station.requests.enabled }}</span

@@ -34,7 +34,10 @@ const modalsStore = useModalsStore();
 const apiDomain = ref("");
 const socketConnected = ref(true);
 const keyIsDown = ref("");
-const broadcastChannel = ref();
+const broadcastChannel = ref({
+	user_login: null,
+	nightmode: null
+});
 const christmas = ref(false);
 const disconnectedMessage = ref();
 
@@ -59,9 +62,9 @@ const toggleNightMode = () => {
 				if (res.status !== "success") new Toast(res.message);
 			}
 		);
+	} else {
+		broadcastChannel.value.nightmode.postMessage(!nightmode.value);
 	}
-
-	changeNightmode(!nightmode.value);
 };
 
 const enableNightmode = () => {
@@ -96,17 +99,26 @@ onMounted(async () => {
 	window
 		.matchMedia("(prefers-color-scheme: dark)")
 		.addEventListener("change", e => {
-			if (e.matches === !nightmode.value) toggleNightMode();
+			if (e.matches === !nightmode.value) changeNightmode(true);
 		});
 
 	if (!loggedIn.value) {
 		lofig.get("cookie.SIDname").then(sid => {
-			broadcastChannel.value = new BroadcastChannel(`${sid}.user_login`);
-			broadcastChannel.value.onmessage = (data: boolean) => {
-				if (data) {
-					broadcastChannel.value.close();
+			broadcastChannel.value.user_login = new BroadcastChannel(
+				`${sid}.user_login`
+			);
+			broadcastChannel.value.user_login.onmessage = res => {
+				if (res.data) {
+					broadcastChannel.value.user_login.close();
 					window.location.reload();
 				}
+			};
+
+			broadcastChannel.value.nightmode = new BroadcastChannel(
+				`${sid}.nightmode`
+			);
+			broadcastChannel.value.nightmode.onmessage = res => {
+				changeNightmode(!!res.data);
 			};
 		});
 	}
@@ -172,9 +184,6 @@ onMounted(async () => {
 						preferences.anonymousSongRequests
 					);
 					changeActivityWatch(preferences.activityWatch);
-
-					if (nightmode.value) enableNightmode();
-					else disableNightmode();
 				}
 			}
 		);
@@ -250,7 +259,6 @@ onMounted(async () => {
 
 	if (localStorage.getItem("nightmode") === "true") {
 		changeNightmode(true);
-		enableNightmode();
 	} else changeNightmode(false);
 
 	lofig.get("siteSettings.christmas").then((enabled: boolean) => {

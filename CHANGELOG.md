@@ -1,5 +1,29 @@
 # Changelog
 
+## [v3.8.0-rc2] - 2022-10-31
+
+This release includes all changes from v3.8.0-rc1, in addition to the following.
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Added
+
+- feat: Add/remove media to/from admin playlist from admin/songs/import
+
+### Changed
+
+- refactor: Do not send ActivtyWatch watch event when video is buffering
+- refactor: Include playback rate in ActivtyWatch watch event
+
+### Fixed
+
+- fix: Toggling night mode does not update other tabs if logged out
+- fix: User not removed as DJ from station on deletion
+- fix: Clicking view YouTube video in song item does not close actions tippy
+- fix: ActivityWatch integration event started at was broken
+- fix: AddToPlaylistDropdown missing song added and removed event handling
+- fix: User logged out after removing another user
+- fix: Paused station elapsed duration incorrectly set
+
 ## [v3.8.0-rc1] - 2022-10-16
 
 Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).

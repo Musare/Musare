@@ -91,6 +91,16 @@ const hoverTippy = () => {
 	hoveredTippy.value = true;
 };
 
+const viewYoutubeVideo = youtubeId => {
+	hideTippyElements();
+	openModal({
+		modal: "viewYoutubeVideo",
+		props: {
+			youtubeId
+		}
+	});
+};
+
 const report = song => {
 	hideTippyElements();
 	openModal({ modal: "report", props: { song } });
@@ -201,14 +211,7 @@ onUnmounted(() => {
 						<div class="icons-group">
 							<i
 								v-if="disabledActions.indexOf('youtube') === -1"
-								@click="
-									openModal({
-										modal: 'viewYoutubeVideo',
-										props: {
-											youtubeId: song.youtubeId
-										}
-									})
-								"
+								@click="viewYoutubeVideo(song.youtubeId)"
 								content="View YouTube Video"
 								v-tippy
 							>

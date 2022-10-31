@@ -98,6 +98,39 @@ onMounted(() => {
 		},
 		{ replaceable: true }
 	);
+
+	socket.on(
+		"event:playlist.song.added",
+		res => {
+			playlists.value.forEach((playlist, index) => {
+				if (playlist._id === res.data.playlistId) {
+					playlists.value[index].songs.push(res.data.song);
+				}
+			});
+		},
+		{ replaceable: true }
+	);
+
+	socket.on(
+		"event:playlist.song.removed",
+		res => {
+			playlists.value.forEach((playlist, playlistIndex) => {
+				if (playlist._id === res.data.playlistId) {
+					playlists.value[playlistIndex].songs.forEach(
+						(song, songIndex) => {
+							if (song.youtubeId === res.data.youtubeId) {
+								playlists.value[playlistIndex].songs.splice(
+									songIndex,
+									1
+								);
+							}
+						}
+					);
+				}
+			});
+		},
+		{ replaceable: true }
+	);
 });
 </script>
 

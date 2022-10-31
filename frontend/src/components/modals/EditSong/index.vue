@@ -856,7 +856,10 @@ const resetGenreHelper = () => {
 };
 
 const sendActivityWatchVideoData = () => {
-	if (!video.value.paused) {
+	if (
+		!video.value.paused &&
+		video.value.player.getPlayerState() === window.YT.PlayerState.PLAYING
+	) {
 		if (activityWatchVideoLastStatus.value !== "playing") {
 			activityWatchVideoLastStatus.value = "playing";
 			if (
@@ -887,7 +890,13 @@ const sendActivityWatchVideoData = () => {
 					? 0
 					: activityWatchVideoLastStartDuration.value,
 			source: `editSong#${inputs.value.youtubeId.value}`,
-			hostname: window.location.hostname
+			hostname: window.location.hostname,
+			playerState: Object.keys(window.YT.PlayerState).find(
+				key =>
+					window.YT.PlayerState[key] ===
+					video.value.player.getPlayerState()
+			),
+			playbackRate: video.value.playbackRate
 		};
 
 		aw.sendVideoData(videoData);
