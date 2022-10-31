@@ -90,34 +90,29 @@ const runCommand = (line: string) => {
 			break;
 		}
 		case "log": {
-			const [filter, action, ...filters] = args;
-			if (!filter) {
-				console.log(`Missing filter type`);
-				break;
-			}
+			const [output, key, action, ...values] = args;
 			if (
-				!(
-					filter === "silence" ||
-					filter === "include" ||
-					filter === "exclude"
-				)
+				output === undefined ||
+				key === undefined ||
+				action === undefined
 			) {
-				console.log(`Invalid filter type "${filter}"`);
+				console.log(
+					`Missing required parameters (log <output> <key> <action> [values])`
+				);
 				break;
 			}
-			if (!(action === "set" || action === "add" || action === "reset")) {
-				console.log(`Invalid filter action "${action}"`);
-				break;
+			let value: any[] | undefined;
+			if (values !== undefined && values.length >= 1) {
+				value = values.map(_filter => JSON.parse(_filter));
+				if (value.length === 1) [value] = value;
 			}
-			if (filters.length === 0 && action !== "reset") {
-				console.log(`No filters defined for "${filter}"`);
-				break;
-			}
-			logBook.setFilter(
-				filter,
-				action,
-				filters.map(_filter => JSON.parse(_filter))
-			);
+			logBook
+				// @ts-ignore
+				.updateOutput(output, key, action, value)
+				.then(() => console.log("Successfully updated outputs"))
+				.catch((err: Error) =>
+					console.log(`Error updating outputs "${err.message}"`)
+				);
 			break;
 		}
 		default: {

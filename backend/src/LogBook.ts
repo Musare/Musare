@@ -1,3 +1,5 @@
+import fs from "fs";
+
 export type Log = {
 	timestamp: number;
 	message: string;
@@ -6,41 +8,66 @@ export type Log = {
 	data?: Record<string, any>;
 };
 
+export type LogFilters = {
+	include: Partial<Omit<Log, "timestamp">>[];
+	exclude: Partial<Omit<Log, "timestamp">>[];
+};
+
+export type LogOutputOptions = Record<
+	"timestamp" | "title" | "type" | "message" | "data" | "color",
+	boolean
+> &
+	Partial<LogFilters>;
+
+export type LogOutputs = {
+	console: LogOutputOptions;
+	file: LogOutputOptions;
+	memory: { enabled: boolean } & Partial<LogFilters>;
+};
+
 export default class LogBook {
 	private logs: Log[];
 
-	private filter: {
-		include: Partial<Omit<Log, "timestamp">>[];
-		exclude: Partial<Omit<Log, "timestamp">>[];
-		silence: Partial<Omit<Log, "timestamp">>[];
-	};
+	private outputs: LogOutputs;
 
-	private display: Record<
-		"timestamp" | "title" | "type" | "message" | "data",
-		boolean
-	>;
+	private stream: fs.WriteStream;
 
 	/**
 	 * Log Book
 	 */
-	public constructor() {
+	public constructor(file = "logs/backend.log") {
 		this.logs = [];
-		this.filter = {
-			include: [],
-			exclude: [],
-			silence: [
-				{
-					category: "jobs"
-				}
-			]
+		this.outputs = {
+			console: {
+				timestamp: true,
+				title: true,
+				type: false,
+				message: true,
+				data: false,
+				color: true,
+				exclude: [
+					{
+						category: "jobs",
+						type: "success"
+					},
+					{
+						type: "debug"
+					}
+				]
+			},
+			file: {
+				timestamp: true,
+				title: true,
+				type: true,
+				message: true,
+				data: false,
+				color: false
+			},
+			memory: {
+				enabled: false
+			}
 		};
-		this.display = {
-			timestamp: true,
-			title: true,
-			type: false,
-			message: true,
-			data: false
-		};
+		this.stream = fs.createWriteStream(file, { flags: "a" });
 	}
 
 	/**
@@ -53,46 +80,57 @@ export default class LogBook {
 			timestamp: Date.now(),
 			...(typeof log === "string" ? { message: log } : log)
 		};
-		let exclude = false;
-		let silence = false;
+		const exclude = {
+			console: false,
+			file: false,
+			memory: false
+		};
 		Object.entries(logObject).forEach(([key, value]) => {
-			if (
-				(this.filter.include.length > 0 &&
+			Object.entries(this.outputs).forEach(([outputName, output]) => {
+				if (
+					(output.include &&
+						output.include.length > 0 &&
+						output.include.filter(
+							// @ts-ignore
+							filter => filter[key] === value
+						).length === 0) ||
+					(output.exclude &&
+						output.exclude.filter(
+							// @ts-ignore
+							filter => filter[key] === value
+						).length > 0)
+				)
 					// @ts-ignore
-					this.filter.include.filter(filter => filter[key] === value)
-						.length === 0) ||
-				// @ts-ignore
-				this.filter.exclude.filter(filter => filter[key] === value)
-					.length > 0
-			)
-				exclude = true;
-			if (
-				// @ts-ignore
-				this.filter.silence.filter(filter => filter[key] === value)
-					.length > 0
-			)
-				silence = true;
+					exclude[outputName] = true;
+			});
 		});
-		if (!exclude) {
-			this.logs.push(logObject); // TODO: Replace with file storage
-			if (!silence) {
-				this.printMessage(
-					logObject,
-					(logObject.data && logObject.data.jobName) ||
-						logObject.category ||
-						undefined
-				);
-			}
-		}
+		const title =
+			(logObject.data && logObject.data.jobName) ||
+			logObject.category ||
+			undefined;
+		if (!exclude.memory && this.outputs.memory.enabled)
+			this.logs.push(logObject);
+		if (!exclude.console)
+			console.log(this.formatMessage(logObject, title, "console"));
+		if (!exclude.file)
+			this.stream.write(
+				`${this.formatMessage(logObject, title, "file")}\n`
+			);
 	}
 
 	/**
-	 * printMessage - Output formatted log to stdout
+	 * formatMessage - Format log to string
 	 *
 	 * @param log - Log
 	 * @param title - Log title
+	 * @param destination - Message destination
+	 * @returns Formatted log string
 	 */
-	private printMessage(log: Log, title?: string) {
+	private formatMessage(
+		log: Log,
+		title: string | undefined,
+		destination: "console" | "file"
+	): string {
 		const centerString = (string: string, length: number) => {
 			const spaces = Array(
 				Math.floor((length - Math.max(0, string.length)) / 2)
@@ -102,54 +140,90 @@ export default class LogBook {
 			} `;
 		};
 		let message = "";
-		switch (log.type) {
-			case "success":
-				message += "\x1b[32m";
-				break;
-			case "error":
-				message += "\x1b[31m";
-				break;
-			case "debug":
-				message += "\x1b[33m";
-				break;
-			case "info":
-			default:
-				message += "\x1b[36m";
-				break;
-		}
-		if (this.display.timestamp) message += `| ${log.timestamp} `;
-		if (this.display.title)
+		if (this.outputs[destination].color)
+			switch (log.type) {
+				case "success":
+					message += "\x1b[32m";
+					break;
+				case "error":
+					message += "\x1b[31m";
+					break;
+				case "debug":
+					message += "\x1b[33m";
+					break;
+				case "info":
+				default:
+					message += "\x1b[36m";
+					break;
+			}
+		if (this.outputs[destination].timestamp)
+			message += `| ${log.timestamp} `;
+		if (this.outputs[destination].title)
 			message += centerString(title ? title.substring(0, 20) : "", 24);
-		if (this.display.type)
+		if (this.outputs[destination].type)
 			message += centerString(
 				log.type ? log.type.toUpperCase() : "INFO",
 				10
 			);
-		if (this.display.message) message += `| ${log.message} `;
-		if (this.display.data) message += `| ${JSON.stringify(log.data)} `;
-		message += "\x1b[0m";
-		console.log(message);
+		if (this.outputs[destination].message) message += `| ${log.message} `;
+		if (this.outputs[destination].data)
+			message += `| ${JSON.stringify(log.data)} `;
+		if (this.outputs[destination].color) message += "\x1b[0m";
+		return message;
 	}
 
 	/**
-	 * setFilter - Apply filters for current session
+	 * updateOutput - Update output settings
 	 *
-	 * @param filter - Filter type
-	 * @param action - Action
-	 * @param filters - Filters
+	 * @param output - Output name
+	 * @param key - Output key to update
+	 * @param action - Update action
+	 * @param values - Updated value
 	 */
-	public setFilter<T extends keyof LogBook["filter"]>(
-		filter: T,
+	public async updateOutput(
+		output: "console" | "file" | "memory",
+		key: keyof LogOutputOptions | "enabled",
 		action: "set" | "add" | "reset",
-		filters?: LogBook["filter"][T]
+		values?: any
 	) {
-		if (action === "reset") this.filter[filter] = [];
-		if (action === "set" || action === "add") {
-			if (!filters || filters.length === 0)
-				throw new Error("No filters provided");
-			if (action === "set") this.filter[filter] = filters;
-			if (action === "add")
-				this.filter[filter] = [...this.filter[filter], ...filters];
+		switch (key) {
+			case "include":
+			case "exclude": {
+				if (action === "set" || action === "add") {
+					if (!values) throw new Error("No filters provided");
+					const filters = Array.isArray(values) ? values : [values];
+					if (action === "set") this.outputs[output][key] = filters;
+					if (action === "add")
+						this.outputs[output][key] = [
+							...(this.outputs[output][key] || []),
+							...filters
+						];
+				} else if (action === "reset") {
+					this.outputs[output][key] = [];
+				} else
+					throw new Error(
+						`Action "${action}" not found for ${key} in ${output}`
+					);
+				break;
+			}
+			case "enabled": {
+				if (output === "memory" && action === "set")
+					this.outputs[output][key] = values;
+				else
+					throw new Error(
+						`Action "${action}" not found for ${key} in ${output}`
+					);
+				break;
+			}
+			default: {
+				if (output !== "memory" && action === "set") {
+					if (!values) throw new Error("No value provided");
+					this.outputs[output][key] = values;
+				} else
+					throw new Error(
+						`Action "${action}" not found for ${key} in ${output}`
+					);
+			}
 		}
 	}
 }
