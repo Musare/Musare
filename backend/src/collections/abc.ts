@@ -7,7 +7,8 @@ export type AbcCollection = DefaultSchema & {
 		autofill: {
 			enabled: DocumentAttribute<{
 				type: BooleanConstructor;
-				required: true;
+				required: false;
+				restricted: true;
 			}>;
 		};
 	};
@@ -16,26 +17,31 @@ export type AbcCollection = DefaultSchema & {
 export const schema: AbcCollection = {
 	document: {
 		_id: {
-			type: mongoose.Schema.Types.ObjectId,
+			type: mongoose.Types.ObjectId,
 			required: true,
-			cacheKey: true
+			cacheKey: true,
+			restricted: false
 		},
 		createdAt: {
 			type: Date,
-			required: true
+			required: true,
+			restricted: false
 		},
 		updatedAt: {
 			type: Date,
-			required: true
+			required: true,
+			restricted: false
 		},
 		name: {
 			type: String,
-			required: true
+			required: true,
+			restricted: false
 		},
 		autofill: {
 			enabled: {
 				type: Boolean,
-				required: true // TODO: Set to false when fixed
+				required: false,
+				restricted: true // TODO: Set to false when empty 2nd layer object fixed
 			}
 		}
 	},

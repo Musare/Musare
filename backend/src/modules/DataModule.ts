@@ -1,6 +1,7 @@
 import async from "async";
 import config from "config";
 import mongoose, { Schema } from "mongoose";
+import hash from "object-hash";
 import { createClient, RedisClientType } from "redis";
 import BaseModule from "../BaseModule";
 import ModuleManager from "../ModuleManager";
@@ -40,8 +41,10 @@ export default class DataModule extends BaseModule {
 
 					async () => {
 						if (this.collections) {
-							Object.values(this.collections).forEach(
-								collection => collection.model.syncIndexes()
+							await async.each(
+								Object.values(this.collections),
+								async collection =>
+									collection.model.syncIndexes()
 							);
 						} else
 							throw new Error("Collections have not been loaded");
@@ -168,15 +171,109 @@ export default class DataModule extends BaseModule {
 		});
 	}
 
-	// TODO decide on whether to throw an exception if no results found, possible configurable via param
+	// TODO split core into parseDocument(document, schema, { partial: boolean;  })
+	/**
+	 * parseQuery - Ensure validity of query
+	 *
+	 * @param query - Query
+	 * @param schema - Schema of collection document
+	 * @param options - Parser options
+	 * @returns Promise returning object with query values cast to schema types
+	 * 			and whether query includes restricted attributes
+	 */
+	private async parseQuery(
+		query: any,
+		schema: any,
+		options?: {
+			operators?: boolean;
+		}
+	): Promise<{ castQuery: any; restricted: boolean }> {
+		if (!query || typeof query !== "object")
+			throw new Error("Invalid query provided. Query must be an object.");
+		const keys = Object.keys(query);
+		if (keys.length === 0)
+			throw new Error("Invalid query provided. Query must contain keys.");
+		const operators = !(options && options.operators === false);
+		const castQuery: any = {};
+		let restricted = false;
+		await async.each(Object.entries(query), async ([key, value]) => {
+			if (operators && (key === "$or" || key === "$and")) {
+				if (!Array.isArray(value))
+					throw new Error(
+						`Key "${key}" must contain array of queries`
+					);
+				castQuery[key] = [];
+				await async.each(value, async _value => {
+					const { castQuery: _castQuery, restricted: _restricted } =
+						await this.parseQuery(_value, schema, options);
+					castQuery[key].push(_castQuery);
+					restricted = restricted || _restricted;
+				});
+			} else if (schema[key] !== undefined) {
+				if (schema[key].restricted) restricted = true;
+				if (
+					schema[key].type === undefined &&
+					Object.keys(schema[key]).length > 0
+				) {
+					const { castQuery: _castQuery, restricted: _restricted } =
+						await this.parseQuery(value, schema[key], options);
+					castQuery[key] = _castQuery;
+					restricted = restricted || _restricted;
+				} else if (
+					operators &&
+					typeof value === "object" &&
+					Object.keys(value).length === 1 &&
+					Array.isArray(value.$in)
+				) {
+					if (value.$in.length > 0)
+						castQuery[key] = {
+							$in: await async.map(
+								value.$in,
+								async (_value: any) => {
+									if (
+										key === "_id" &&
+										!schema[key].type.isValid(_value)
+									)
+										throw new Error(
+											"Invalid value for _id"
+										);
+									if (typeof schema[key].type === "function")
+										return new schema[key].type(_value);
+									throw new Error(
+										`Invalid schema type for ${key}`
+									);
+								}
+							)
+						};
+					else throw new Error(`Invalid value for ${key}`);
+				} else {
+					if (key === "_id" && !schema[key].type.isValid(value))
+						throw new Error("Invalid value for _id");
+					if (typeof schema[key].type === "function")
+						castQuery[key] = new schema[key].type(value);
+					else throw new Error(`Invalid schema type for ${key}`);
+				}
+			} else {
+				throw new Error(
+					`Invalid query provided. Key "${key}" not found`
+				);
+			}
+		});
+		return { castQuery, restricted };
+	}
+
 	// TODO hide sensitive fields
-	// TOOD don't store sensitive fields in cache
 	// TODO improve caching
 	// TODO add option to only request certain fields
 	// TODO add support for computed fields
-	// TODO parse query
+	// TODO parse query - validation
 	// TODO add proper typescript support
 	// TODO add proper jsdoc
+	// TODO add support for enum document attributes
+	// TODO add support for array document attributes
+	// TODO add support for reference document attributes
+	// TODO prevent caching if requiring restricted values
+	// TODO fix 2nd layer of schema
 	/**
 	 * find - Find data
 	 *
@@ -189,8 +286,7 @@ export default class DataModule extends BaseModule {
 		values, // TODO: Add support
 		limit = 1, // TODO have limit off by default?
 		page = 1,
-		useCache = true,
-		convertArrayToSingle = false
+		useCache = true
 	}: {
 		collection: T;
 		query: Record<string, any>;
@@ -198,11 +294,10 @@ export default class DataModule extends BaseModule {
 		limit?: number;
 		page?: number;
 		useCache?: boolean;
-		convertArrayToSingle?: boolean;
-	}): Promise<any> {
+	}): Promise<any | null> {
 		return new Promise((resolve, reject) => {
-			let addToCache = false;
-			let cacheKeyName: string | null = null;
+			let queryHash: string | null = null;
+			let cacheable = useCache !== false;
 
 			async.waterfall(
 				[
@@ -215,129 +310,100 @@ export default class DataModule extends BaseModule {
 					},
 
 					// Verify whether the query is valid-enough to continue
-					async () => {
-						if (
-							!query ||
-							typeof query !== "object" ||
-							Object.keys(query).length === 0
-						)
-							new Error(
-								"Invalid query provided. Query must be an object."
-							);
-					},
+					async () =>
+						this.parseQuery(
+							query,
+							this.collections![collection].schema.document
+						),
 
 					// If we can use cache, get from the cache, and if we get results return those, otherwise return null
-					async () => {
-						// Not using cache, so return
-						if (!useCache) return null;
-						// More than one query key, so impossible to get from cache
-						if (Object.keys(query).length > 1) return null;
-
-						// First key and only key in query object
-						const queryPropertyName = Object.keys(query)[0];
-						// Corresponding property from schema document
-						const documentProperty =
-							this.collections![collection].schema.document[
-								queryPropertyName
-							];
-
-						if (!documentProperty)
-							throw new Error(
-								`Query property ${queryPropertyName} not found in document.`
-							);
-						// If query name is not a cache key, just continue
-						if (!documentProperty.cacheKey) return null;
-
-						const values = [];
-						if (
-							Object.prototype.hasOwnProperty.call(
-								query[queryPropertyName],
-								"$in"
-							)
-						)
-							values.push(...query[queryPropertyName].$in);
-						else values.push(query[queryPropertyName]);
-
-						const cachedDocuments: any[] = [];
-
-						await async.each(values, async value =>
-							this.redis
-								?.GET(
-									`${collection}.${queryPropertyName}.${value.toString()}`
-								)
-								.then((cachedDocument: any) => {
-									if (cachedDocument)
-										cachedDocuments.push(
-											JSON.parse(cachedDocument)
-										);
-								})
+					async ({ castQuery, restricted }: any) => {
+						// Not using cache or query contains restricted values, so return
+						if (!cacheable || restricted)
+							return { castQuery, cachedDocuments: null };
+						queryHash = hash(
+							{ collection, castQuery, values, limit, page },
+							{
+								algorithm: "sha1"
+							}
 						);
-
-						// TODO optimize this
-						if (cachedDocuments.length !== values.length) {
-							addToCache = true;
-							cacheKeyName = queryPropertyName;
-							return null;
-						}
-
-						return cachedDocuments;
+						const cachedQuery = await this.redis?.GET(
+							`query.find.${queryHash}`
+						);
+						return {
+							castQuery,
+							cachedDocuments: cachedQuery
+								? JSON.parse(cachedQuery)
+								: null
+						};
 					},
 
 					// If we didn't get documents from the cache, get them from mongo
-					async (cachedDocuments: any[] | null) => {
-						if (cachedDocuments) return cachedDocuments;
-
+					async ({ castQuery, cachedDocuments }: any) => {
+						if (cachedDocuments) {
+							cacheable = false;
+							return cachedDocuments;
+						}
+						const getFindValues = async (object: any) => {
+							const find: any = {};
+							await async.each(
+								Object.entries(object),
+								async ([key, value]) => {
+									if (
+										value.type === undefined &&
+										Object.keys(value).length > 0
+									) {
+										const _find = await getFindValues(
+											value
+										);
+										if (Object.keys(_find).length > 0)
+											find[key] = _find;
+									} else if (!value.restricted)
+										find[key] = true;
+								}
+							);
+							return find;
+						};
+						const find: any = await getFindValues(
+							this.collections![collection].schema.document
+						);
 						return this.collections?.[collection].model
-							.find(query)
+							.find(castQuery, find)
 							.limit(limit)
 							.skip((page - 1) * limit);
 					},
 
-					// Convert documents from Mongoose model to regular objects, and if we got no documents throw an error
-					async (documents: any[]) => {
-						if (documents.length === 0)
-							throw new Error("No results found.");
-
-						return documents.map(document => {
-							if (!document._doc) return document;
-
-							const rawDocument = document._doc;
-							rawDocument._id = rawDocument._id.toString();
-							return rawDocument;
-						});
-					},
+					// Convert documents from Mongoose model to regular objects
+					async (documents: any[]) =>
+						async.map(documents, async (document: any) => {
+							const { castQuery } = await this.parseQuery(
+								document._doc || document,
+								this.collections![collection].schema.document,
+								{ operators: false }
+							);
+							return castQuery;
+						}),
 
 					// Add documents to the cache
 					async (documents: any[]) => {
-						// TODO only add new things to cache
-						// Adds the fetched documents to the cache, but doesn't wait for it to complete
-						if (addToCache && cacheKeyName) {
-							async.each(
-								documents,
-								// TODO verify that the cache key name property actually exists for these documents
-								async (document: any) =>
-									this.redis!.SET(
-										`${collection}.${cacheKeyName}.${document[
-											cacheKeyName!
-										].toString()}`,
-										JSON.stringify(document),
-										{
-											EX: 60
-										}
-									)
+						// Adds query results to cache but doesnt await
+						if (cacheable && queryHash) {
+							this.redis!.SET(
+								`query.find.${queryHash}`,
+								JSON.stringify(documents),
+								{
+									EX: 60
+								}
 							);
 						}
-
 						return documents;
 					}
 				],
 				(err, documents?: any[]) => {
 					if (err) reject(err);
-					else if (convertArrayToSingle)
-						resolve(
-							documents!.length === 1 ? documents![0] : documents
-						);
-					else resolve(documents);
+					else if (!documents || documents!.length === 0)
+						resolve(limit === 1 ? null : []);
+					else resolve(limit === 1 ? documents![0] : documents);
 				}
 			);
 		});

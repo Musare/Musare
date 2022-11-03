@@ -5,11 +5,14 @@ export type DocumentAttribute<
 	T extends {
 		type: unknown;
 		required?: boolean;
+		cacheKey?: boolean;
+		restricted?: boolean;
 	}
 > = {
 	type: T["type"];
-	required: T extends { required: false } ? false : true;
-	cacheKey?: boolean;
+	required: T["required"]; // TODO fix default unknown
+	cacheKey?: T["cacheKey"]; // TODO fix default unknown
+	restricted: T["restricted"]; // TODO fix default unknown
 };
 
 export type DefaultSchema = {
@@ -19,7 +22,7 @@ export type DefaultSchema = {
 		| Record<string, DocumentAttribute<{ type: unknown }>>
 	> & {
 		_id: DocumentAttribute<{
-			type: typeof mongoose.Schema.Types.ObjectId;
+			type: typeof mongoose.Types.ObjectId;
 		}>;
 		createdAt: DocumentAttribute<{ type: DateConstructor }>;
 		updatedAt: DocumentAttribute<{ type: DateConstructor }>;
