@@ -9,7 +9,7 @@
 	"license": "GPL-3.0",
 	"repository": "https://github.com/Musare/Musare",
 	"scripts": {
-		"dev": "NODE_OPTIONS=${INSPECT_BRK} ts-node-dev -i --transpile-only ./src/main.ts",
+		"dev": "ts-node-dev -i --transpile-only ${INSPECT_BRK} ./src/main.ts",
 		"build": "tsc",
 		"prod": "node build/src/main.js",
 		"lint": "eslint . --ext .js,.ts",
