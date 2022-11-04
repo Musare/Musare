@@ -20,7 +20,11 @@ export const schema: AbcCollection = {
 			type: mongoose.Types.ObjectId,
 			required: true,
 			cacheKey: true,
-			restricted: false
+			restricted: false,
+			validate: async (value: any) => {
+				if (!mongoose.Types.ObjectId.isValid(value))
+					throw new Error("Value is not a valid ObjectId");
+			}
 		},
 		createdAt: {
 			type: Date,
@@ -35,7 +39,17 @@ export const schema: AbcCollection = {
 		name: {
 			type: String,
 			required: true,
-			restricted: false
+			restricted: false,
+			validate: async (value: any) => {
+				if (value.length < 1 || value.length > 64)
+					throw new Error("Name must be 1-64 characters");
+				if (!/^[\p{Letter}0-9 .'_-]+$/gu.test(value))
+					throw new Error("Invalid name provided");
+				if (value.replaceAll(/[ .'_-]/g, "").length === 0)
+					throw new Error(
+						"Name must contain at least 1 letter or number"
+					);
+			}
 		},
 		autofill: {
 			enabled: {

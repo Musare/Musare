@@ -7,12 +7,14 @@ export type DocumentAttribute<
 		required?: boolean;
 		cacheKey?: boolean;
 		restricted?: boolean;
+		validate?: (value: any) => Promise<void>;
 	}
 > = {
 	type: T["type"];
 	required: T["required"]; // TODO fix default unknown
 	cacheKey?: T["cacheKey"]; // TODO fix default unknown
 	restricted: T["restricted"]; // TODO fix default unknown
+	validate?: T["validate"]; // TODO fix default unknown
 };
 
 export type DefaultSchema = {

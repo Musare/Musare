@@ -112,63 +112,40 @@ export default class ModuleManager {
 	/**
 	 * startup - Handle startup
 	 */
-	public startup(): void {
-		this.loadModules()
-			.then(() => {
-				if (!this.modules) throw new Error("No modules were loaded");
-				async.each(
-					Object.values(this.modules),
-					(module, next) => {
-						module
-							.startup()
-							.then(() => next())
-							.catch(err => {
-								module.setStatus("ERROR");
-								next(err);
-							});
-					},
-					async err => {
-						if (err) {
-							await this.shutdown();
-							throw err;
-						}
-						this.jobQueue.resume();
-					}
-				);
+	public async startup(): Promise<void> {
+		await this.loadModules().catch(async err => {
+			await this.shutdown();
+			throw err;
+		});
+		if (!this.modules) throw new Error("No modules were loaded");
+		await async
+			.each(Object.values(this.modules), async module => {
+				await module.startup().catch(async err => {
+					module.setStatus("ERROR");
+					throw err;
+				});
 			})
 			.catch(async err => {
 				await this.shutdown();
 				throw err;
 			});
+		this.jobQueue.resume();
 	}
 
 	/**
 	 * shutdown - Handle shutdown
 	 */
-	public shutdown(): Promise<void> {
-		return new Promise((resolve, reject) => {
-			// TODO: await jobQueue completion/handle shutdown
-			if (this.modules)
-				async.each(
-					Object.values(this.modules),
-					(module, next) => {
-						if (
-							module.getStatus() === "STARTED" ||
-							module.getStatus() === "STARTING" || // TODO: Handle better
-							module.getStatus() === "ERROR"
-						)
-							module
-								.shutdown()
-								.then(() => next())
-								.catch(next);
-					},
-					err => {
-						if (err) reject(err);
-						else resolve();
-					}
-				);
-			else resolve();
-		});
+	public async shutdown(): Promise<void> {
+		// TODO: await jobQueue completion/handle shutdown
+		if (this.modules)
+			await async.each(Object.values(this.modules), async module => {
+				if (
+					module.getStatus() === "STARTED" ||
+					module.getStatus() === "STARTING" || // TODO: Handle better
+					module.getStatus() === "ERROR"
+				)
+					await module.shutdown();
+			});
 	}
 
 	/**

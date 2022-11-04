@@ -108,10 +108,10 @@ export default class DataModule extends BaseModule {
 		return new Promise(resolve => {
 			super
 				.shutdown()
-				.then(() => {
+				.then(async () => {
 					// TODO: Ensure the following shutdown correctly
-					if (this.redis) this.redis.disconnect();
-					mongoose.connection.close(false);
+					if (this.redis) await this.redis.quit();
+					await mongoose.connection.close(false);
 				})
 				.finally(() => resolve());
 		});
@@ -231,14 +231,20 @@ export default class DataModule extends BaseModule {
 								value.$in,
 								async (_value: any) => {
 									if (
-										key === "_id" &&
-										!schema[key].type.isValid(_value)
-									)
-										throw new Error(
-											"Invalid value for _id"
-										);
-									if (typeof schema[key].type === "function")
-										return new schema[key].type(_value);
+										typeof schema[key].type === "function"
+									) {
+										const Type = schema[key].type;
+										const castValue = new Type(_value);
+										if (schema[key].validate)
+											await schema[key]
+												.validate(castValue)
+												.catch(err => {
+													throw new Error(
+														`Invalid value for ${key}, ${err}`
+													);
+												});
+										return castValue;
+									}
 									throw new Error(
 										`Invalid schema type for ${key}`
 									);
@@ -246,13 +252,15 @@ export default class DataModule extends BaseModule {
 							)
 						};
 					else throw new Error(`Invalid value for ${key}`);
-				} else {
-					if (key === "_id" && !schema[key].type.isValid(value))
-						throw new Error("Invalid value for _id");
-					if (typeof schema[key].type === "function")
-						castQuery[key] = new schema[key].type(value);
-					else throw new Error(`Invalid schema type for ${key}`);
-				}
+				} else if (typeof schema[key].type === "function") {
+					const Type = schema[key].type;
+					const castValue = new Type(value);
+					if (schema[key].validate)
+						await schema[key].validate(castValue).catch(err => {
+							throw new Error(`Invalid value for ${key}, ${err}`);
+						});
+					castQuery[key] = castValue;
+				} else throw new Error(`Invalid schema type for ${key}`);
 			} else {
 				throw new Error(
 					`Invalid query provided. Key "${key}" not found`

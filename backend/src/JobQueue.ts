@@ -17,6 +17,7 @@ export default class JobQueue {
 			failed: number;
 			total: number;
 			added: number;
+			averageTime: number;
 		}
 	>;
 
@@ -91,6 +92,7 @@ export default class JobQueue {
 
 		this.queue.splice(this.queue.indexOf(job), 1);
 		this.active.push(job);
+		const startTime = Date.now();
 
 		job.execute()
 			.then(() => {
@@ -101,6 +103,11 @@ export default class JobQueue {
 			})
 			.finally(() => {
 				this.updateStats(job.getName(), "total");
+				this.updateStats(
+					job.getName(),
+					"averageTime",
+					Date.now() - startTime
+				);
 				this.active.splice(this.active.indexOf(job), 1);
 				setTimeout(() => {
 					this.process();
@@ -135,13 +142,15 @@ export default class JobQueue {
 					successful: a.successful + b.successful,
 					failed: a.failed + b.failed,
 					total: a.total + b.total,
-					added: a.added + b.added
+					added: a.added + b.added,
+					averageTime: -1
 				}),
 				{
 					successful: 0,
 					failed: 0,
 					total: 0,
-					added: 0
+					added: 0,
+					averageTime: -1
 				}
 			)
 		};
@@ -182,15 +191,21 @@ export default class JobQueue {
 	 */
 	private updateStats(
 		jobName: string,
-		type: "successful" | "failed" | "total" | "added"
+		type: "successful" | "failed" | "total" | "added" | "averageTime",
+		duration?: number
 	) {
 		if (!this.stats[jobName])
 			this.stats[jobName] = {
 				successful: 0,
 				failed: 0,
 				total: 0,
-				added: 0
+				added: 0,
+				averageTime: 0
 			};
-		this.stats[jobName][type] += 1;
+		if (type === "averageTime" && duration)
+			this.stats[jobName].averageTime +=
+				(duration - this.stats[jobName].averageTime) /
+				this.stats[jobName].total;
+		else this.stats[jobName][type] += 1;
 	}
 }
