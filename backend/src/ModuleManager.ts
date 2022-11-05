@@ -1,8 +1,10 @@
 import async from "async";
 import BaseModule from "./BaseModule";
 import Job from "./Job";
+import JobContext from "./JobContext";
 import JobQueue from "./JobQueue";
 import LogBook from "./LogBook";
+import { JobOptions } from "./types/JobOptions";
 import { Jobs, Modules, ModuleStatus, ModuleClass } from "./types/Modules";
 
 export default class ModuleManager {
@@ -156,19 +158,24 @@ export default class ModuleManager {
 	 * @param params - Params
 	 */
 	public runJob<
-		M extends keyof Jobs & keyof Modules,
-		J extends keyof Jobs[M] & keyof Omit<Modules[M], keyof BaseModule>,
-		P extends "payload" extends keyof Jobs[M][J]
-			? Jobs[M][J]["payload"]
-			: undefined,
-		R = "returns" extends keyof Jobs[M][J] ? Jobs[M][J]["returns"] : never
+		ModuleNameType extends keyof Jobs & keyof Modules,
+		JobNameType extends keyof Jobs[ModuleNameType] &
+			keyof Omit<Modules[ModuleNameType], keyof BaseModule>,
+		PayloadType extends "payload" extends keyof Jobs[ModuleNameType][JobNameType]
+			? Jobs[ModuleNameType][JobNameType]["payload"] extends undefined
+				? void
+				: Jobs[ModuleNameType][JobNameType]["payload"]
+			: void,
+		ReturnType = "returns" extends keyof Jobs[ModuleNameType][JobNameType]
+			? Jobs[ModuleNameType][JobNameType]["returns"]
+			: never
 	>(
-		moduleName: M,
-		jobName: J,
-		...params: P extends undefined ? [] : [P, { priority?: number }?]
-	): Promise<R> {
-		const [payload, options] = params;
-		return new Promise<R>((resolve, reject) => {
+		moduleName: ModuleNameType,
+		jobName: JobNameType,
+		payload: PayloadType,
+		options?: JobOptions
+	): Promise<ReturnType> {
+		return new Promise<ReturnType>((resolve, reject) => {
 			const module = this.modules && this.modules[moduleName];
 			if (!module) reject(new Error("Module not found."));
 			else {
@@ -180,46 +187,53 @@ export default class ModuleManager {
 				)
 					reject(new Error("Illegal job function."));
 				else {
-					this.jobQueue.add(
-						new Job(
-							jobName.toString(),
-							moduleName,
-							(job, resolveJob, rejectJob) => {
-								jobFunction
-									.apply(module, [payload])
-									.then((response: R) => {
-										this.logBook.log({
-											message:
-												"Job completed successfully",
-											type: "success",
-											category: "jobs",
-											data: {
-												jobName: job.getName(),
-												jobId: job.getUuid()
-											}
-										});
-										resolveJob();
-										resolve(response);
-									})
-									.catch((err: any) => {
-										this.logBook.log({
-											message: `Job failed with error "${err}"`,
-											type: "error",
-											category: "jobs",
-											data: {
-												jobName: job.getName(),
-												jobId: job.getUuid()
-											}
-										});
-										rejectJob();
-										reject(err);
+					const job = new Job(
+						jobName.toString(),
+						module,
+						(job, resolveJob, rejectJob) => {
+							const jobContext = new JobContext(
+								this,
+								this.logBook,
+								job
+							);
+							jobFunction
+								.apply(jobContext, [payload])
+								.then((response: ReturnType) => {
+									this.logBook.log({
+										message: "Job completed successfully",
+										type: "success",
+										category: "jobs",
+										data: {
+											jobName: job.getName(),
+											jobId: job.getUuid()
+										}
 									});
-							},
-							{
-								priority: (options && options.priority) || 10
-							}
-						)
+									resolveJob();
+									resolve(response);
+								})
+								.catch((err: any) => {
+									this.logBook.log({
+										message: `Job failed with error "${err}"`,
+										type: "error",
+										category: "jobs",
+										data: {
+											jobName: job.getName(),
+											jobId: job.getUuid()
+										}
+									});
+									rejectJob();
+									reject(err);
+								});
+						},
+						{
+							priority: (options && options.priority) || 10
+						}
 					);
+
+					// If a job options.runDirectly is set to true, skip the queue and run a job directly
+					if (options && options.runDirectly)
+						this.jobQueue.runJob(job);
+					else this.jobQueue.add(job);
 				}
 			}
 		});

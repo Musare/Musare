@@ -1,3 +1,4 @@
+import JobContext from "src/JobContext";
 import { UniqueMethods } from "../types/Modules";
 import BaseModule from "../BaseModule";
 import ModuleManager from "../ModuleManager";
@@ -44,14 +45,29 @@ export default class StationModule extends BaseModule {
 		});
 	}
 
-	public addA(): Promise<{ number: number }> {
+	public addA(this: JobContext): Promise<{ number: number }> {
 		return new Promise<{ number: number }>(resolve => {
-			resolve({ number: 123 });
+			this.log("ADDA");
+			this.runJob("stations", "addB", void 0, { priority: 5 }).then(
+				() => {
+					resolve({ number: 123 });
+				}
+			);
 		});
 	}
 
-	public addB(): Promise<void> {
+	public addB(this: JobContext): Promise<void> {
 		return new Promise<void>(resolve => {
+			this.log("ADDB");
+			this.runJob("stations", "addC", void 0).then(() => {
+				resolve();
+			});
+		});
+	}
+
+	public addC(this: JobContext): Promise<void> {
+		return new Promise<void>(resolve => {
+			this.log("ADDC");
 			resolve();
 		});
 	}

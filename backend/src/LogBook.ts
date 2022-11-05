@@ -46,13 +46,13 @@ export default class LogBook {
 				data: false,
 				color: true,
 				exclude: [
-					{
-						category: "jobs",
-						type: "success"
-					},
-					{
-						type: "debug"
-					}
+					// {
+					// 	category: "jobs",
+					// 	type: "success"
+					// },
+					// {
+					// 	type: "debug"
+					// }
 				]
 			},
 			file: {
@@ -157,7 +157,7 @@ export default class LogBook {
 					break;
 			}
 		if (this.outputs[destination].timestamp)
-			message += `| ${log.timestamp} `;
+			message += `| ${new Date(log.timestamp).toISOString()} `;
 		if (this.outputs[destination].title)
 			message += centerString(title ? title.substring(0, 20) : "", 24);
 		if (this.outputs[destination].type)

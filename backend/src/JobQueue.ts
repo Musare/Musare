@@ -21,15 +21,18 @@ export default class JobQueue {
 		}
 	>;
 
+	private processLock: boolean;
+
 	/**
 	 * Job Queue
 	 */
 	public constructor() {
-		this.concurrency = 10;
+		this.concurrency = 1;
 		this.isPaused = true;
 		this.queue = [];
 		this.active = [];
 		this.stats = {};
+		this.processLock = false;
 	}
 
 	/**
@@ -75,23 +78,13 @@ export default class JobQueue {
 	}
 
 	/**
-	 * process - Process queue
+	 * Actually run a job function
+	 *
+	 * @param {Job} job
+	 * @memberof JobQueue
 	 */
-	private process(): void {
-		if (
-			this.isPaused ||
-			this.active.length >= this.concurrency ||
-			this.queue.length === 0
-		)
-			return;
-
-		const job = this.queue.reduce((a, b) =>
-			a.getPriority() <= b.getPriority() ? a : b
-		);
-		if (job.getPriority() === -1) return;
-
-		this.queue.splice(this.queue.indexOf(job), 1);
-		this.active.push(job);
+	public runJob(job: Job) {
+		// Record when we started a job
 		const startTime = Date.now();
 
 		job.execute()
@@ -108,11 +101,61 @@ export default class JobQueue {
 					"averageTime",
 					Date.now() - startTime
 				);
-				this.active.splice(this.active.indexOf(job), 1);
-				setTimeout(() => {
-					this.process();
-				}, 0);
+
+				// If the current job is in the active jobs array, remove it, and then run the process function to run another job
+				const activeJobIndex = this.active.indexOf(job);
+				if (activeJobIndex > -1) {
+					this.active.splice(activeJobIndex, 1);
+					setTimeout(() => {
+						this.process();
+					}, 0);
+				}
 			});
+	}
+
+	/**
+	 * process - Process queue
+	 */
+	private process(): void {
+		// If the process is locked, don't continue. This prevents running process at the same time which could lead to issues
+		if (this.processLock) return;
+		// If the queue is paused, we've reached the maximum number of active jobs, or there are no jobs in the queue, don't continue
+		if (
+			this.isPaused ||
+			this.active.length >= this.concurrency ||
+			this.queue.length === 0
+		)
+			return;
+
+		// Lock the process function
+		this.processLock = true;
+
+		// Sort jobs based on priority, with a lower priority being preferred
+		const jobs = this.queue.sort(
+			(a, b) => a.getPriority() - b.getPriority()
+		);
+
+		// Loop through all jobs
+		for (let i = 0; i < jobs.length; i += 1) {
+			const job = jobs[i];
+
+			// If the module of the job is not started, we can't run the job, so go to the next job in the queue
+			// eslint-disable-next-line no-continue
+			if (job.getModule().getStatus() !== "STARTED") continue;
+
+			// Remove the job from the queue and add it to the active jobs array
+			this.queue.splice(this.queue.indexOf(job), 1);
+			this.active.push(job);
+
+			// Run the job
+			this.runJob(job);
+
+			// Stop the for loop
+			break;
+		}
+
+		// Unlock the process after the for loop is finished, so it can be run again
+		this.processLock = false;
 	}
 
 	/**

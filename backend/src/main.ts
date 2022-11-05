@@ -10,26 +10,41 @@ moduleManager.startup();
 // eslint-disable-next-line
 // @ts-ignore
 global.moduleManager = moduleManager;
+// eslint-disable-next-line
+// @ts-ignore
+global.rs = () => {
+	process.exit();
+};
 
-// const interval = setInterval(() => {
-// 	moduleManager
-// 		.runJob("stations", "addToQueue", { songId: "TestId" })
-// 		.catch(() => {});
-// 	moduleManager.runJob("stations", "addA").catch(() => {});
-// 	moduleManager
-// 		.runJob("others", "doThing", { test: "Test", test2: 123 })
-// 		.catch(() => {});
-// }, 40);
+const interval = setInterval(() => {
+	moduleManager
+		.runJob("stations", "addToQueue", { songId: "TestId" })
+		.catch(() => {});
+	moduleManager
+		.runJob("stations", "addA", void 0, { priority: 5 })
+		.catch(() => {});
+	moduleManager
+		.runJob("others", "doThing", { test: "Test", test2: 123 })
+		.catch(() => {});
+}, 40);
 
-// setTimeout(() => {
-// 	clearTimeout(interval);
-// }, 20000);
+setTimeout(() => {
+	clearTimeout(interval);
+}, 3000);
 
 process.on("uncaughtException", err => {
 	if (err.name === "ECONNREFUSED" || err.name === "UNCERTAIN_STATE") return;
 
 	console.log(`UNCAUGHT EXCEPTION: ${err.stack}`);
 });
+
+const shutdown = async () => {
+	await moduleManager.shutdown().catch(() => process.exit(1));
+	process.exit(0);
+};
+process.on("SIGINT", shutdown);
+process.on("SIGQUIT", shutdown);
+process.on("SIGTERM", shutdown);
 
 // const shutdown = () => {
 // 	moduleManager
@@ -45,6 +60,17 @@ process.on("uncaughtException", err => {
 const runCommand = (line: string) => {
 	const [command, ...args] = line.split(" ");
 	switch (command) {
+		case "help": {
+			console.log("Commands:");
+			console.log("status");
+			console.log("stats");
+			console.log("queue");
+			console.log("active");
+			console.log("eval");
+			console.log("debug");
+			console.log("log");
+			break;
+		}
 		case "status": {
 			console.log("Module Manager Status:");
 			console.table(moduleManager.getStatus());

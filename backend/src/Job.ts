@@ -1,9 +1,10 @@
 import { JobStatus } from "./types/JobStatus";
+import { Module } from "./types/Modules";
 
 export default class Job {
 	protected name: string;
 
-	protected module: string;
+	protected module: Module;
 
 	protected callback: (
 		job: this,
@@ -38,7 +39,7 @@ export default class Job {
 	 */
 	public constructor(
 		name: string,
-		module: string,
+		module: Module,
 		callback: (job: Job, resolve: () => void, reject: () => void) => void,
 		options?: { priority: number; longJob?: string }
 	) {
@@ -70,12 +71,12 @@ export default class Job {
 	}
 
 	/**
-	 * getName - Get job name
+	 * getName - Get module and job name in a dot format, e.g. module.jobName
 	 *
 	 * @returns module.name
 	 */
 	public getName(): string {
-		return `${this.module}.${this.name}`;
+		return `${this.module.getName()}.${this.name}`;
 	}
 
 	/**
@@ -112,6 +113,15 @@ export default class Job {
 	 */
 	public setStatus(status: JobStatus): void {
 		this.status = status;
+	}
+
+	/**
+	 * getModule - Get module
+	 *
+	 * @returns module
+	 */
+	public getModule(): Module {
+		return this.module;
 	}
 
 	/**
