@@ -16,21 +16,23 @@ global.rs = () => {
 	process.exit();
 };
 
-const interval = setInterval(() => {
-	moduleManager
-		.runJob("stations", "addToQueue", { songId: "TestId" })
-		.catch(() => {});
-	moduleManager
-		.runJob("stations", "addA", void 0, { priority: 5 })
-		.catch(() => {});
-	moduleManager
-		.runJob("others", "doThing", { test: "Test", test2: 123 })
-		.catch(() => {});
-}, 40);
+// const interval = setInterval(() => {
+// 	moduleManager
+// 		.runJob("stations", "addToQueue", { songId: "TestId" })
+// 		.catch(() => {});
+// 	moduleManager
+// 		.runJob("stations", "addA", void 0, { priority: 5 })
+// 		.catch(() => {});
+// 	moduleManager
+// 		.runJob("others", "doThing", { test: "Test", test2: 123 })
+// 		.catch(() => {});
+// }, 40);
 
-setTimeout(() => {
-	clearTimeout(interval);
-}, 3000);
+// setTimeout(() => {
+// 	clearTimeout(interval);
+// }, 3000);
+
+
 
 // Temp fix
 process.removeAllListeners("uncaughtException");

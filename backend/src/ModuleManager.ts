@@ -196,7 +196,7 @@ export default class ModuleManager {
 								this.logBook,
 								job
 							);
-							jobFunction(jobContext, payload)
+							jobFunction.apply(module, [jobContext, payload])
 								.then((response: ReturnType) => {
 									this.logBook.log({
 										message: "Job completed successfully",
