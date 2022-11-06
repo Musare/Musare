@@ -32,6 +32,9 @@ setTimeout(() => {
 	clearTimeout(interval);
 }, 3000);
 
+// Temp fix
+process.removeAllListeners("uncaughtException");
+
 process.on("uncaughtException", err => {
 	if (err.name === "ECONNREFUSED" || err.name === "UNCERTAIN_STATE") return;
 

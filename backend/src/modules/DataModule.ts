@@ -7,6 +7,7 @@ import BaseModule from "../BaseModule";
 import ModuleManager from "../ModuleManager";
 import { UniqueMethods } from "../types/Modules";
 import { Collections } from "../types/Collections";
+import JobContext from "src/JobContext";
 
 export default class DataModule extends BaseModule {
 	collections?: Collections;
@@ -288,21 +289,24 @@ export default class DataModule extends BaseModule {
 	 * @param payload - Payload
 	 * @returns Returned object
 	 */
-	public find<T extends keyof Collections>({
-		collection,
-		query,
-		values, // TODO: Add support
-		limit = 1, // TODO have limit off by default?
-		page = 1,
-		useCache = true
-	}: {
-		collection: T;
-		query: Record<string, any>;
-		values?: Record<string, any>;
-		limit?: number;
-		page?: number;
-		useCache?: boolean;
-	}): Promise<any | null> {
+	public find<T extends keyof Collections>(
+		context: JobContext,
+		{
+			collection,
+			query,
+			values, // TODO: Add support
+			limit = 1, // TODO have limit off by default?
+			page = 1,
+			useCache = true
+		}: {
+			collection: T;
+			query: Record<string, any>;
+			values?: Record<string, any>;
+			limit?: number;
+			page?: number;
+			useCache?: boolean;
+		}
+	): Promise<any | null> {
 		return new Promise((resolve, reject) => {
 			let queryHash: string | null = null;
 			let cacheable = useCache !== false;
@@ -420,7 +424,7 @@ export default class DataModule extends BaseModule {
 
 export type DataModuleJobs = {
 	[Property in keyof UniqueMethods<DataModule>]: {
-		payload: Parameters<UniqueMethods<DataModule>[Property]>[0];
+		payload: Parameters<UniqueMethods<DataModule>[Property]>[1];
 		returns: Awaited<ReturnType<UniqueMethods<DataModule>[Property]>>;
 	};
 };

@@ -34,7 +34,10 @@ export default class StationModule extends BaseModule {
 	 *
 	 * @param payload - Payload
 	 */
-	public addToQueue(payload: { songId: string }): Promise<void> {
+	public addToQueue(
+		context: JobContext,
+		payload: { songId: string }
+	): Promise<void> {
 		return new Promise((resolve, reject) => {
 			const { songId } = payload;
 			// console.log(`Adding song ${songId} to the queue.`);
@@ -45,29 +48,27 @@ export default class StationModule extends BaseModule {
 		});
 	}
 
-	public addA(this: JobContext): Promise<{ number: number }> {
+	public addA(context: JobContext): Promise<{ number: number }> {
 		return new Promise<{ number: number }>(resolve => {
-			this.log("ADDA");
-			this.runJob("stations", "addB", void 0, { priority: 5 }).then(
-				() => {
-					resolve({ number: 123 });
-				}
-			);
+			context.log("ADDA");
+			context.runJob("stations", "addB", {}, { priority: 5 }).then(() => {
+				resolve({ number: 123 });
+			});
 		});
 	}
 
-	public addB(this: JobContext): Promise<void> {
+	public addB(context: JobContext): Promise<void> {
 		return new Promise<void>(resolve => {
-			this.log("ADDB");
-			this.runJob("stations", "addC", void 0).then(() => {
+			context.log("ADDB");
+			context.runJob("stations", "addC", {}).then(() => {
 				resolve();
 			});
 		});
 	}
 
-	public addC(this: JobContext): Promise<void> {
+	public addC(context: JobContext): Promise<void> {
 		return new Promise<void>(resolve => {
-			this.log("ADDC");
+			context.log("ADDC");
 			resolve();
 		});
 	}
@@ -75,7 +76,7 @@ export default class StationModule extends BaseModule {
 
 export type StationModuleJobs = {
 	[Property in keyof UniqueMethods<StationModule>]: {
-		payload: Parameters<UniqueMethods<StationModule>[Property]>[0];
+		payload: Parameters<UniqueMethods<StationModule>[Property]>[1];
 		returns: Awaited<ReturnType<UniqueMethods<StationModule>[Property]>>;
 	};
 };

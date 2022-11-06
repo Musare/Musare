@@ -1,3 +1,4 @@
+import JobContext from "src/JobContext";
 import { UniqueMethods } from "../types/Modules";
 import BaseModule from "../BaseModule";
 import ModuleManager from "../ModuleManager";
@@ -33,7 +34,10 @@ export default class OtherModule extends BaseModule {
 	 * @param payload - Payload
 	 * @returns Returned object
 	 */
-	public doThing(payload: { test: string; test2: number }): Promise<{
+	public doThing(
+		context: JobContext,
+		payload: { test: string; test2: number }
+	): Promise<{
 		res: number;
 	}> {
 		return new Promise((resolve, reject) => {
@@ -52,7 +56,7 @@ export default class OtherModule extends BaseModule {
 
 export type OtherModuleJobs = {
 	[Property in keyof UniqueMethods<OtherModule>]: {
-		payload: Parameters<UniqueMethods<OtherModule>[Property]>[0];
+		payload: Parameters<UniqueMethods<OtherModule>[Property]>[1];
 		returns: Awaited<ReturnType<UniqueMethods<OtherModule>[Property]>>;
 	};
 };

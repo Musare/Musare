@@ -60,9 +60,9 @@ export default class JobContext {
 			keyof Omit<Modules[ModuleNameType], keyof BaseModule>,
 		PayloadType extends "payload" extends keyof Jobs[ModuleNameType][JobNameType]
 			? Jobs[ModuleNameType][JobNameType]["payload"] extends undefined
-				? void
+				? Record<string, never>
 				: Jobs[ModuleNameType][JobNameType]["payload"]
-			: void,
+			: Record<string, never>,
 		ReturnType = "returns" extends keyof Jobs[ModuleNameType][JobNameType]
 			? Jobs[ModuleNameType][JobNameType]["returns"]
 			: never

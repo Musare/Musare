@@ -37,3 +37,5 @@ package-lock.json
 
 # Logs
 log/
+
+.vscode/tasks.json
