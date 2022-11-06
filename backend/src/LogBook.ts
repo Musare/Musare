@@ -1,3 +1,4 @@
+import config from "config";
 import fs from "fs";
 
 export type Log = {
@@ -28,6 +29,8 @@ export type LogOutputs = {
 export default class LogBook {
 	private logs: Log[];
 
+	private default: LogOutputs;
+
 	private outputs: LogOutputs;
 
 	private stream: fs.WriteStream;
@@ -37,7 +40,7 @@ export default class LogBook {
 	 */
 	public constructor(file = "logs/backend.log") {
 		this.logs = [];
-		this.outputs = {
+		this.default = {
 			console: {
 				timestamp: true,
 				title: true,
@@ -46,13 +49,13 @@ export default class LogBook {
 				data: false,
 				color: true,
 				exclude: [
-					// {
-					// 	category: "jobs",
-					// 	type: "success"
-					// },
-					// {
-					// 	type: "debug"
-					// }
+					{
+						category: "jobs",
+						type: "success"
+					},
+					{
+						type: "debug"
+					}
 				]
 			},
 			file: {
@@ -67,6 +70,17 @@ export default class LogBook {
 				enabled: false
 			}
 		};
+		if (config.has("logging"))
+			["console", "file", "memory"].forEach(output => {
+				if (config.has(`logging.${output}`))
+					// @ts-ignore
+					this.default[output] = {
+						// @ts-ignore
+						...this.default[output],
+						...config.get<any>(`logging.${output}`)
+					};
+			});
+		this.outputs = this.default;
 		this.stream = fs.createWriteStream(file, { flags: "a" });
 	}
 
@@ -199,7 +213,7 @@ export default class LogBook {
 							...filters
 						];
 				} else if (action === "reset") {
-					this.outputs[output][key] = [];
+					this.outputs[output][key] = this.default[output][key] || [];
 				} else
 					throw new Error(
 						`Action "${action}" not found for ${key} in ${output}`
@@ -219,6 +233,8 @@ export default class LogBook {
 				if (output !== "memory" && action === "set") {
 					if (!values) throw new Error("No value provided");
 					this.outputs[output][key] = values;
+				} else if (output !== "memory" && action === "reset") {
+					this.outputs[output][key] = this.default[output][key];
 				} else
 					throw new Error(
 						`Action "${action}" not found for ${key} in ${output}`

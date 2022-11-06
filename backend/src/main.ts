@@ -3,6 +3,27 @@ import ModuleManager from "./ModuleManager";
 import LogBook from "./LogBook";
 
 const logBook = new LogBook();
+
+process.removeAllListeners("uncaughtException");
+process.on("uncaughtException", err => {
+	if (err.name === "ECONNREFUSED" || err.name === "UNCERTAIN_STATE") return;
+
+	logBook.log({
+		message: err.message || err,
+		type: "error",
+		category: "uncaught-exceptions",
+		data: {
+			error: err.message
+				? {
+						cause: err.cause,
+						name: err.name,
+						stack: err.stack
+				  }
+				: err
+		}
+	});
+});
+
 const moduleManager = new ModuleManager(logBook);
 moduleManager.startup();
 
@@ -32,35 +53,35 @@ global.rs = () => {
 // 	clearTimeout(interval);
 // }, 3000);
 
+const rl = readline.createInterface({
+	input: process.stdin,
+	output: process.stdout,
+	completer: (command: string) => {
+		const parts = command.split(" ");
+		const commands = ["eval "];
 
+		if (parts.length === 1) {
+			const hits = commands.filter(c => c.startsWith(parts[0]));
 
-// Temp fix
-process.removeAllListeners("uncaughtException");
+			return [hits.length ? hits : commands, command];
+		}
 
-process.on("uncaughtException", err => {
-	if (err.name === "ECONNREFUSED" || err.name === "UNCERTAIN_STATE") return;
-
-	console.log(`UNCAUGHT EXCEPTION: ${err.stack}`);
+		return [];
+	},
+	removeHistoryDuplicates: true
 });
 
 const shutdown = async () => {
+	if (rl) {
+		rl.removeAllListeners();
+		rl.close();
+	}
 	await moduleManager.shutdown().catch(() => process.exit(1));
 	process.exit(0);
 };
 process.on("SIGINT", shutdown);
 process.on("SIGQUIT", shutdown);
 process.on("SIGTERM", shutdown);
-
-// const shutdown = () => {
-// 	moduleManager
-// 		.shutdown()
-// 		.then(() => process.exit(0))
-// 		.catch(() => process.exit(1));
-// };
-// process.on("SIGINT", shutdown);
-// process.on("SIGQUIT", shutdown);
-// process.on("SIGTERM", shutdown);
-// process.on("SIGUSR2", shutdown);
 
 const runCommand = (line: string) => {
 	const [command, ...args] = line.split(" ");
@@ -152,22 +173,5 @@ const runCommand = (line: string) => {
 		}
 	}
 };
-
-const rl = readline.createInterface({
-	input: process.stdin,
-	output: process.stdout,
-	completer: (command: string) => {
-		const parts = command.split(" ");
-		const commands = ["eval "];
-
-		if (parts.length === 1) {
-			const hits = commands.filter(c => c.startsWith(parts[0]));
-
-			return [hits.length ? hits : commands, command];
-		}
-
-		return [];
-	}
-});
 
 rl.on("line", runCommand);
