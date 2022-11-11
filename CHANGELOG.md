@@ -1,5 +1,10 @@
 # Changelog
 
+## [v3.8.0] - 2022-11-11
+
+This release includes all changes from v3.8.0-rc1 and v3.8.0-rc2.
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
 ## [v3.8.0-rc2] - 2022-10-31
 
 This release includes all changes from v3.8.0-rc1, in addition to the following.
