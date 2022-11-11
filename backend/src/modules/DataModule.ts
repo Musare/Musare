@@ -174,45 +174,48 @@ export default class DataModule extends BaseModule {
 
 	// TODO split core into parseDocument(document, schema, { partial: boolean;  })
 	/**
-	 * parseQuery - Ensure validity of query and return a mongo query, or the document itself re-constructed
+	 * parseFindFilter - Ensure validity of filter and return a mongo filter ---, or the document itself re-constructed
 	 *
-	 * @param query - Query
+	 * @param filter - Filter
 	 * @param schema - Schema of collection document
 	 * @param options - Parser options
 	 * @returns Promise returning object with query values cast to schema types
 	 * 			and whether query includes restricted attributes
 	 */
-	private async parseQuery(
-		query: any,
+	private async parseFindFilter(
+		filter: any,
 		schema: any,
 		options?: {
 			operators?: boolean;
 		}
-	): Promise<{ castQuery: any; restricted: boolean }> {
-		if (!query || typeof query !== "object")
-			throw new Error("Invalid query provided. Query must be an object.");
+	): Promise<{ mongoFilter: any; containsRestrictedProperties: boolean, canCache: boolean }> {
+		if (!filter || typeof filter !== "object")
+			throw new Error("Invalid filter provided. Filter must be an object.");
 
-		const keys = Object.keys(query);
+		const keys = Object.keys(filter);
 		if (keys.length === 0)
-			throw new Error("Invalid query provided. Query must contain keys.");
+			throw new Error("Invalid filter provided. Filter must contain keys.");
 
 		// Whether to parse operators or not
 		const operators = !(options && options.operators === false);
-		// The MongoDB query we're building
-		const castQuery: any = {};
-		// If the query references any fields that are restricted, this will be true, so that find knows not to cache the query object
-		let restricted = false;
+		// The MongoDB filter we're building
+		const mongoFilter: any = {};
+		// If the filter references any properties that are restricted, this will be true, so that find knows not to cache the query object
+		let containsRestrictedProperties = false;
+		// Whether this filter is cachable or not
+		let canCache = true;
 
 		// Operators at the key level that we support right now
 		const allowedKeyOperators = ["$or", "$and"];
 		// Operators at the value level that we support right now
 		const allowedValueOperators = ["$in"];
 
-		await async.each(Object.entries(query), async ([key, value]) => {
+		// Loop through all key/value properties
+		await async.each(Object.entries(filter), async ([key, value]) => {
 			// Key must be 1 character and exist
 			if (!key || key.length === 0)
 				throw new Error(
-					`Invalid query provided. Key must be at least 1 character.`
+					`Invalid filter provided. Key must be at least 1 character.`
 				);
 
 			// Handle key operators, which always start with a $
@@ -220,7 +223,7 @@ export default class DataModule extends BaseModule {
 				// Operator isn't found, so throw an error
 				if (allowedKeyOperators.indexOf(key) === -1)
 					throw new Error(
-						`Invalid query provided. Operator "${key}" is not allowed.`
+						`Invalid filter provided. Operator "${key}" is not allowed.`
 					);
 
 				// We currently only support $or and $and, but here we can have different logic for different operators
@@ -231,19 +234,19 @@ export default class DataModule extends BaseModule {
 							`Key "${key}" must contain array of queries.`
 						);
 
-					// Add the operator to the mongo query object as an empty array
-					castQuery[key] = [];
+					// Add the operator to the mongo filter object as an empty array
+					mongoFilter[key] = [];
 
-					// Run parseQuery again for child objects and add them to the mongo query operator array
+					// Run parseFindQuery again for child objects and add them to the mongo query operator array
 					await async.each(value, async _value => {
 						const {
-							castQuery: _castQuery,
-							restricted: _restricted
-						} = await this.parseQuery(_value, schema, options);
+							mongoFilter: _mongoFilter,
+							containsRestrictedProperties: _containsRestrictedProperties
+						} = await this.parseFindFilter(_value, schema, options);
 
-						// Actually add the returned query object to the mongo query we're building
-						castQuery[key].push(_castQuery);
-						if (_restricted) restricted = true;
+						// Actually add the returned filter object to the mongo query we're building
+						mongoFilter[key].push(_mongoFilter);
+						if (_containsRestrictedProperties) containsRestrictedProperties = true;
 					});
 				} else
 					throw new Error(
@@ -258,16 +261,16 @@ export default class DataModule extends BaseModule {
 						`Key "${key} does not exist in the schema."`
 					);
 
-				// If the key in the schema is marked as restricted, mark the entire query as restricted
-				if (schema[key].restricted) restricted = true;
+				// If the key in the schema is marked as restricted, containsRestrictedProperties will be true
+				if (schema[key].restricted) containsRestrictedProperties = true;
 
 				// Type will be undefined if it's a nested object
 				if (schema[key].type === undefined) {
-					// Run parseQuery on the nested schema object
-					const { castQuery: _castQuery, restricted: _restricted } =
-						await this.parseQuery(value, schema[key], options);
-					castQuery[key] = _castQuery;
-					if (_restricted) restricted = true;
+					// Run parseFindFilter on the nested schema object
+					const { mongoFilter: _mongoFilter, containsRestrictedProperties: _containsRestrictedProperties } =
+						await this.parseFindFilter(value, schema[key], options);
+						mongoFilter[key] = _mongoFilter;
+					if (_containsRestrictedProperties) containsRestrictedProperties = true;
 				} else if (
 					operators &&
 					typeof value === "object" &&
@@ -278,36 +281,39 @@ export default class DataModule extends BaseModule {
 				) {
 					// This entire if statement is for handling value operators
 
+					const operator = Object.keys(value)[0];
+
 					// Operator isn't found, so throw an error
-					if (allowedValueOperators.indexOf(key) === -1)
+					if (allowedValueOperators.indexOf(operator) === -1)
 						throw new Error(
-							`Invalid query provided. Operator "${key}" is not allowed.`
+							`Invalid filter provided. Operator "${key}" is not allowed.`
 						);
 
 					// Handle the $in value operator
-					if (value.$in) {
-						castQuery[key] = {
+					if (operator === "$in") {
+						mongoFilter[key] = {
 							$in: []
 						};
 
 						if (value.$in.length > 0)
-							castQuery[key].$in = await async.map(
+							mongoFilter[key].$in = await async.map(
 								value.$in,
 								async (_value: any) => {
 									if (
 										typeof schema[key].type === "function"
 									) {
-										const Type = schema[key].type;
-										const castValue = new Type(_value);
-										if (schema[key].validate)
-											await schema[key]
-												.validate(castValue)
-												.catch(err => {
-													throw new Error(
-														`Invalid value for ${key}, ${err}`
-													);
-												});
-										return castValue;
+										//
+										// const Type = schema[key].type;
+										// const castValue = new Type(_value);
+										// if (schema[key].validate)
+										// 	await schema[key]
+										// 		.validate(castValue)
+										// 		.catch(err => {
+										// 			throw new Error(
+										// 				`Invalid value for ${key}, ${err}`
+										// 			);
+										// 		});
+										return _value;
 									}
 									throw new Error(
 										`Invalid schema type for ${key}`
@@ -316,23 +322,26 @@ export default class DataModule extends BaseModule {
 							);
 					} else
 						throw new Error(
-							`Unhandled operator "${
-								Object.keys(value)[0]
-							}", this should never happen!`
+							`Unhandled operator "${operator}", this should never happen!`
 						);
 				} else if (typeof schema[key].type === "function") {
-					const Type = schema[key].type;
-					const castValue = new Type(value);
-					if (schema[key].validate)
-						await schema[key].validate(castValue).catch(err => {
-							throw new Error(`Invalid value for ${key}, ${err}`);
-						});
-					castQuery[key] = castValue;
+					// Do type checking/casting here
+
+					// const Type = schema[key].type;
+					// // const castValue = new Type(value);
+					// if (schema[key].validate)
+					// 	await schema[key].validate(castValue).catch(err => {
+					// 		throw new Error(`Invalid value for ${key}, ${err}`);
+					// 	});
+
+					mongoFilter[key] = value;
 				} else throw new Error(`Invalid schema type for ${key}`);
 			}
 		});
 
-		return { castQuery, restricted };
+		if (containsRestrictedProperties) canCache = false;
+
+		return { mongoFilter, containsRestrictedProperties, canCache };
 	}
 
 	// TODO hide sensitive fields
@@ -353,18 +362,18 @@ export default class DataModule extends BaseModule {
 	 * @param payload - Payload
 	 * @returns Returned object
 	 */
-	public find<T extends keyof Collections>(
+	public find<CollectionNameType extends keyof Collections>(
 		context: JobContext,
 		{
 			collection, // Collection name
-			query, // Similar to MongoDB query
+			filter, // Similar to MongoDB filter
 			values, // TODO: Add support
-			limit = 1, // TODO have limit off by default?
+			limit = 0, // TODO have limit off by default?
 			page = 1,
 			useCache = true
 		}: {
-			collection: T;
-			query: Record<string, any>;
+			collection: CollectionNameType;
+			filter: Record<string, any>;
 			values?: Record<string, any>;
 			limit?: number;
 			page?: number;
@@ -387,70 +396,76 @@ export default class DataModule extends BaseModule {
 
 					// Verify whether the query is valid-enough to continue
 					async () =>
-						this.parseQuery(
-							query,
+						this.parseFindFilter(
+							filter,
 							this.collections![collection].schema.document
 						),
 
 					// If we can use cache, get from the cache, and if we get results return those
-					async ({ castQuery, restricted }: any) => {
-						// If we're allowed to cache, and the query doesn't reference any restricted fields, try to cache the query and its response
-						if (cacheable && !restricted) {
+					async ({ mongoFilter, canCache }: any) => {
+						// console.log(111, mongoFilter, canCache);
+						// If we're allowed to cache, and the filter doesn't reference any restricted fields, try to cache the query and its response
+						if (cacheable && canCache) {
 							// Turn the query object into a sha1 hash that can be used as a Redis key
 							queryHash = hash(
-								{ collection, castQuery, values, limit, page },
+								{ collection, mongoFilter, values, limit, page },
 								{
 									algorithm: "sha1"
 								}
 							);
+
 							// Check if the query hash already exists in Redis, and get it if it is
 							const cachedQuery = await this.redis?.GET(
 								`query.find.${queryHash}`
 							);
 
-							// Return the castQuery along with the cachedDocuments, if any
+							// Return the mongoFilter along with the cachedDocuments, if any
 							return {
-								castQuery,
+								mongoFilter,
 								cachedDocuments: cachedQuery
 									? JSON.parse(cachedQuery)
 									: null
 							};
 						}
 
-						return { castQuery, cachedDocuments: null };
+						return { mongoFilter, cachedDocuments: null };
 					},
 
 					// If we didn't get documents from the cache, get them from mongo
-					async ({ castQuery, cachedDocuments }: any) => {
+					async ({ mongoFilter, cachedDocuments }: any) => {
 						if (cachedDocuments) {
 							cacheable = false;
 							return cachedDocuments;
 						}
-						const getFindValues = async (object: any) => {
-							const find: any = {};
-							await async.each(
-								Object.entries(object),
-								async ([key, value]) => {
-									if (
-										value.type === undefined &&
-										Object.keys(value).length > 0
-									) {
-										const _find = await getFindValues(
-											value
-										);
-										if (Object.keys(_find).length > 0)
-											find[key] = _find;
-									} else if (!value.restricted)
-										find[key] = true;
-								}
-							);
-							return find;
-						};
-						const find: any = await getFindValues(
-							this.collections![collection].schema.document
-						);
+
+						// const getFindValues = async (object: any) => {
+						// 	const find: any = {};
+						// 	await async.each(
+						// 		Object.entries(object),
+						// 		async ([key, value]) => {
+						// 			if (
+						// 				value.type === undefined &&
+						// 				Object.keys(value).length > 0
+						// 			) {
+						// 				const _find = await getFindValues(
+						// 					value
+						// 				);
+						// 				if (Object.keys(_find).length > 0)
+						// 					find[key] = _find;
+						// 			} else if (!value.restricted)
+						// 				find[key] = true;
+						// 		}
+						// 	);
+						// 	return find;
+						// };
+						// const find: any = await getFindValues(
+						// 	this.collections![collection].schema.document
+						// );
+
+						const mongoProjection = null;
+
 						return this.collections?.[collection].model
-							.find(castQuery, find)
+							.find(mongoFilter, mongoProjection)
 							.limit(limit)
 							.skip((page - 1) * limit);
 					},
@@ -458,12 +473,14 @@ export default class DataModule extends BaseModule {
 					// Convert documents from Mongoose model to regular objects
 					async (documents: any[]) =>
 						async.map(documents, async (document: any) => {
-							const { castQuery } = await this.parseQuery(
-								document._doc || document,
-								this.collections![collection].schema.document,
-								{ operators: false }
-							);
-							return castQuery;
+							// const { castQuery } = await this.parseFindQuery(
+							// 	document._doc || document,
+							// 	this.collections![collection].schema.document,
+							// 	{ operators: false }
+							// );
+							// return castQuery;
+							return document._doc ? document._doc : document;
+							// console.log("DIE");
 						}),
 
 					// Add documents to the cache
