@@ -2,8 +2,10 @@
 import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
 import { useModalsStore } from "@/stores/modals";
+import { useUserAuthStore } from "@/stores/userAuth";
 import { useReports } from "@/composables/useReports";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
+import utils from "@/utils";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -12,7 +14,7 @@ const UserLink = defineAsyncComponent(
 	() => import("@/components/UserLink.vue")
 );
 
-const columnDefault = ref(<TableColumn>{
+const columnDefault = ref<TableColumn>({
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -21,7 +23,7 @@ const columnDefault = ref(<TableColumn>{
 	minWidth: 150,
 	maxWidth: 600
 });
-const columns = ref(<TableColumn[]>[
+const columns = ref<TableColumn[]>([
 	{
 		name: "options",
 		displayName: "Options",
@@ -83,7 +85,7 @@ const columns = ref(<TableColumn[]>[
 		defaultWidth: 150
 	}
 ]);
-const filters = ref(<TableFilter[]>[
+const filters = ref<TableFilter[]>([
 	{
 		name: "_id",
 		displayName: "Report ID",
@@ -134,7 +136,7 @@ const filters = ref(<TableFilter[]>[
 		defaultFilterType: "datetimeBefore"
 	}
 ]);
-const events = ref(<TableEvents>{
+const events = ref<TableEvents>({
 	adminRoom: "reports",
 	updated: {
 		event: "admin.report.updated",
@@ -151,22 +153,15 @@ const { openModal } = useModalsStore();
 
 const { resolveReport } = useReports();
 
+const userAuthStore = useUserAuthStore();
+const { hasPermission } = userAuthStore;
+
 const resolve = (reportId, value) =>
 	resolveReport({ reportId, value })
 		.then((res: any) => {
 			if (res.status !== "success") new Toast(res.message);
 		})
 		.catch(err => new Toast(err.message));
-
-const getDateFormatted = createdAt => {
-	const date = new Date(createdAt);
-	const year = date.getFullYear();
-	const month = `${date.getMonth() + 1}`.padStart(2, "0");
-	const day = `${date.getDate()}`.padStart(2, "0");
-	const hour = `${date.getHours()}`.padStart(2, "0");
-	const minute = `${date.getMinutes()}`.padStart(2, "0");
-	return `${year}-${month}-${day} ${hour}:${minute}`;
-};
 </script>
 
 <template>
@@ -194,7 +189,7 @@ const getDateFormatted = createdAt => {
 						@click="
 							openModal({
 								modal: 'viewReport',
-								data: { reportId: slotProps.item._id }
+								props: { reportId: slotProps.item._id }
 							})
 						"
 						:disabled="slotProps.item.removed"
@@ -204,7 +199,10 @@ const getDateFormatted = createdAt => {
 						open_in_full
 					</button>
 					<button
-						v-if="slotProps.item.resolved"
+						v-if="
+							slotProps.item.resolved &&
+							hasPermission('reports.update')
+						"
 						class="button is-danger material-icons icon-with-button"
 						@click="resolve(slotProps.item._id, false)"
 						:disabled="slotProps.item.removed"
@@ -214,7 +212,10 @@ const getDateFormatted = createdAt => {
 						remove_done
 					</button>
 					<button
-						v-else
+						v-else-if="
+							!slotProps.item.resolved &&
+							hasPermission('reports.update')
+						"
 						class="button is-success material-icons icon-with-button"
 						@click="resolve(slotProps.item._id, true)"
 						:disabled="slotProps.item.removed"
@@ -271,7 +272,7 @@ const getDateFormatted = createdAt => {
 			</template>
 			<template #column-createdAt="slotProps">
 				<span :title="new Date(slotProps.item.createdAt).toString()">{{
-					getDateFormatted(slotProps.item.createdAt)
+					utils.getDateFormatted(slotProps.item.createdAt)
 				}}</span>
 			</template>
 		</advanced-table>

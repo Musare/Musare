@@ -42,6 +42,7 @@ const runJob = job => {
 
 <template>
 	<tippy
+		v-if="jobs.length > 0"
 		class="runJobDropdown"
 		:touch="true"
 		:interactive="true"

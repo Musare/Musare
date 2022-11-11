@@ -5,7 +5,6 @@ import { format, parseISO } from "date-fns";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
-import ws from "@/ws";
 import { useTabQueryHandler } from "@/composables/useTabQueryHandler";
 
 const MainHeader = defineAsyncComponent(
@@ -33,24 +32,8 @@ const userId = ref("");
 const isUser = ref(false);
 
 const userAuthStore = useUserAuthStore();
-const { userId: myUserId, role } = storeToRefs(userAuthStore);
-
-const init = () => {
-	socket.dispatch("users.getBasicUser", route.params.username, res => {
-		if (res.status === "error") router.push("/404");
-		else {
-			user.value = res.data;
-
-			user.value.createdAt = format(
-				parseISO(user.value.createdAt),
-				"MMMM do yyyy"
-			);
-
-			isUser.value = true;
-			userId.value = user.value._id;
-		}
-	});
-};
+const { userId: myUserId } = storeToRefs(userAuthStore);
+const { hasPermission } = userAuthStore;
 
 onMounted(() => {
 	if (
@@ -59,7 +42,22 @@ onMounted(() => {
 	)
 		tab.value = route.query.tab;
 
-	ws.onConnect(init);
+	socket.onConnect(() => {
+		socket.dispatch("users.getBasicUser", route.params.username, res => {
+			if (res.status === "error") router.push("/404");
+			else {
+				user.value = res.data;
+
+				user.value.createdAt = format(
+					parseISO(user.value.createdAt),
+					"MMMM do yyyy"
+				);
+
+				isUser.value = true;
+				userId.value = user.value._id;
+			}
+		});
+	});
 });
 </script>
 
@@ -82,6 +80,11 @@ onMounted(() => {
 								v-if="user.role === 'admin'"
 								>admin</span
 							>
+							<span
+								class="role moderator"
+								v-if="user.role === 'moderator'"
+								>moderator</span
+							>
 						</div>
 						<div class="username-row">
 							<h2 class="username">@{{ user.username }}</h2>
@@ -90,17 +93,26 @@ onMounted(() => {
 								v-if="user.role === 'admin' && !user.name"
 								>admin</span
 							>
+							<span
+								class="role moderator"
+								v-else-if="
+									user.role === 'moderator' && !user.name
+								"
+								>moderator</span
+							>
 						</div>
 					</div>
 				</div>
 				<div
 					class="buttons"
-					v-if="myUserId === userId || role === 'admin'"
+					v-if="
+						myUserId === userId || hasPermission('admin.view.users')
+					"
 				>
 					<router-link
 						:to="`/admin/users?userId=${user._id}`"
 						class="button is-primary"
-						v-if="role === 'admin'"
+						v-if="hasPermission('admin.view.users')"
 					>
 						Edit
 					</router-link>
@@ -282,6 +294,10 @@ onMounted(() => {
 
 		&.admin {
 			background-color: var(--dark-red);
+		}
+
+		&.moderator {
+			background-color: var(--blue);
 		}
 	}
 

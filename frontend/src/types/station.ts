@@ -1,5 +1,6 @@
 import { Song } from "./song";
 import { Playlist } from "./playlist";
+import { User } from "./user";
 
 export interface Station {
 	_id: string;
@@ -30,4 +31,5 @@ export interface Station {
 	};
 	theme: string;
 	blacklist: Playlist[];
+	djs: User[];
 }

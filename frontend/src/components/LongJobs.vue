@@ -31,38 +31,38 @@ const remove = job => {
 };
 
 onMounted(() => {
-	if (loggedIn.value) {
-		socket.dispatch("users.getLongJobs", {
-			cb: res => {
-				if (res.status === "success") {
-					setJobs(res.data.longJobs);
-				} else console.log(res.message);
-			},
-			onProgress: res => {
-				setJob(res);
-			}
-		});
+	socket.onConnect(() => {
+		if (loggedIn.value) {
+			socket.dispatch("users.getLongJobs", {
+				cb: res => {
+					if (res.status === "success") {
+						setJobs(res.data.longJobs);
+					} else console.log(res.message);
+				},
+				onProgress: res => {
+					setJob(res);
+				}
+			});
+		}
+	});
 
-		socket.on("keep.event:longJob.removed", ({ data }) => {
-			removeJob(data.jobId);
-		});
+	socket.on("keep.event:longJob.removed", ({ data }) => {
+		removeJob(data.jobId);
+	});
 
-		socket.on("keep.event:longJob.added", ({ data }) => {
-			if (
-				!activeJobs.value.find(activeJob => activeJob.id === data.jobId)
-			)
-				socket.dispatch("users.getLongJob", data.jobId, {
-					cb: res => {
-						if (res.status === "success") {
-							setJob(res.data.longJob);
-						} else console.log(res.message);
-					},
-					onProgress: res => {
-						setJob(res);
-					}
-				});
-		});
-	}
+	socket.on("keep.event:longJob.added", ({ data }) => {
+		if (!activeJobs.value.find(activeJob => activeJob.id === data.jobId))
+			socket.dispatch("users.getLongJob", data.jobId, {
+				cb: res => {
+					if (res.status === "success") {
+						setJob(res.data.longJob);
+					} else console.log(res.message);
+				},
+				onProgress: res => {
+					setJob(res);
+				}
+			});
+	});
 });
 </script>
 
@@ -134,7 +134,7 @@ onMounted(() => {
 							ref="longJobMessage"
 							:append-to="body"
 						>
-							<i class="material-icons">chat</i>
+							<i class="material-icons message">chat</i>
 
 							<template #content>
 								<div class="long-job-message">

@@ -8,25 +8,26 @@ import { useSearchYoutube } from "@/composables/useSearchYoutube";
 import SearchQueryItem from "../../../SearchQueryItem.vue";
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" },
+	modalUuid: { type: String, required: true },
 	modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
 });
 
-const editSongStore = useEditSongStore(props);
+const editSongStore = useEditSongStore({ modalUuid: props.modalUuid });
 
-const { song, newSong } = storeToRefs(editSongStore);
+const { form, newSong } = storeToRefs(editSongStore);
 
-const { updateYoutubeId, updateTitle, updateThumbnail } = editSongStore;
+const { updateYoutubeId } = editSongStore;
 
 const { youtubeSearch, searchForSongs, loadMoreSongs } = useSearchYoutube();
 
 const selectSong = result => {
 	updateYoutubeId(result.id);
 
-	if (newSong) {
-		updateTitle(result.title);
-		updateThumbnail(result.thumbnail);
-	}
+	if (newSong)
+		form.value.setValue({
+			title: result.title,
+			thumbnail: result.thumbnail
+		});
 };
 </script>
 
@@ -66,7 +67,7 @@ const selectSong = result => {
 				<template #actions>
 					<i
 						class="material-icons icon-selected"
-						v-if="result.id === song.youtubeId"
+						v-if="result.id === form.inputs.youtubeId.value"
 						key="selected"
 						>radio_button_checked
 					</i>

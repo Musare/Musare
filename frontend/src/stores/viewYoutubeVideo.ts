@@ -1,12 +1,36 @@
 import { defineStore } from "pinia";
 
-export const useViewYoutubeVideoStore = props => {
-	const { modalUuid } = props;
-	if (!modalUuid) return null;
-	return defineStore(`viewYoutubeVideo-${modalUuid}`, {
-		state: () => ({
-			videoId: null,
-			youtubeId: null,
+export const useViewYoutubeVideoStore = ({
+	modalUuid
+}: {
+	modalUuid: string;
+}) =>
+	defineStore(`viewYoutubeVideo-${modalUuid}`, {
+		state: (): {
+			video: {
+				_id: string;
+				youtubeId: string;
+				title: string;
+				author: string;
+				duration: number;
+				uploadedAt?: Date;
+			};
+			player: {
+				error: boolean;
+				errorMessage: string;
+				player: null;
+				paused: boolean;
+				playerReady: boolean;
+				autoPlayed: boolean;
+				duration: string;
+				currentTime: number;
+				playbackRate: number;
+				videoNote: string;
+				volume: number;
+				muted: boolean;
+				showRateDropdown: boolean;
+			};
+		} => ({
 			video: {
 				_id: null,
 				youtubeId: null,
@@ -31,13 +55,7 @@ export const useViewYoutubeVideoStore = props => {
 			}
 		}),
 		actions: {
-			init({ videoId, youtubeId }) {
-				this.videoId = videoId;
-				this.youtubeId = youtubeId;
-			},
 			viewYoutubeVideo(video) {
-				this.videoId = this.videoId || video._id;
-				this.youtubeId = video.youtubeId || video.youtubeId;
 				this.video = video;
 			},
 			updatePlayer(player) {
@@ -52,7 +70,7 @@ export const useViewYoutubeVideoStore = props => {
 			loadVideoById(id) {
 				this.player.player.loadVideoById(id);
 			},
-			pauseVideo(status) {
+			pauseVideo(status: boolean) {
 				if (
 					(this.player.player && this.player.player.pauseVideo) ||
 					this.player.playVideo
@@ -62,8 +80,8 @@ export const useViewYoutubeVideoStore = props => {
 				}
 				this.player.paused = status;
 			},
-			setPlaybackRate(rate) {
-				if (rate) {
+			setPlaybackRate(rate?: number) {
+				if (typeof rate === "number") {
 					this.player.playbackRate = rate;
 					this.player.player.setPlaybackRate(rate);
 				} else if (
@@ -80,4 +98,3 @@ export const useViewYoutubeVideoStore = props => {
 			}
 		}
 	})();
-};

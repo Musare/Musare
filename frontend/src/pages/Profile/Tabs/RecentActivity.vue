@@ -4,7 +4,6 @@ import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
-import ws from "@/ws";
 
 const ActivityItem = defineAsyncComponent(
 	() => import("@/components/ActivityItem.vue")
@@ -61,22 +60,8 @@ const getSet = () => {
 	);
 };
 
-const init = () => {
-	if (myUserId.value !== props.userId)
-		getBasicUser(props.userId).then((user: any) => {
-			if (user && user.username) username.value = user.username;
-		});
-
-	socket.dispatch("activities.length", props.userId, res => {
-		if (res.status === "success") {
-			maxPosition.value = Math.ceil(res.data.length / 15) + 1;
-			getSet();
-		}
-	});
-};
-
 const handleScroll = () => {
-	const scrollPosition = document.body.clientHeight + window.scrollY;
+	const scrollPosition = document.body.scrollTop + document.body.clientHeight;
 	const bottomPosition = document.body.scrollHeight;
 
 	if (scrollPosition + 400 >= bottomPosition) getSet();
@@ -85,9 +70,21 @@ const handleScroll = () => {
 };
 
 onMounted(() => {
-	window.addEventListener("scroll", handleScroll);
+	document.body.addEventListener("scroll", handleScroll);
 
-	ws.onConnect(init);
+	socket.onConnect(() => {
+		if (myUserId.value !== props.userId)
+			getBasicUser(props.userId).then(user => {
+				if (user && user.username) username.value = user.username;
+			});
+
+		socket.dispatch("activities.length", props.userId, res => {
+			if (res.status === "success") {
+				maxPosition.value = Math.ceil(res.data.length / 15) + 1;
+				getSet();
+			}
+		});
+	});
 
 	socket.on("event:activity.updated", res => {
 		activities.value.find(
@@ -117,7 +114,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-	window.removeEventListener("scroll", handleScroll);
+	document.body.removeEventListener("scroll", handleScroll);
 });
 </script>
 

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
+import { GenericResponse } from "@musare_types/actions/GenericActions";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
+import { useUserAuthStore } from "@/stores/userAuth";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
@@ -17,7 +19,7 @@ const UserLink = defineAsyncComponent(
 
 const { socket } = useWebsocketsStore();
 
-const columnDefault = ref(<TableColumn>{
+const columnDefault = ref<TableColumn>({
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -26,7 +28,7 @@ const columnDefault = ref(<TableColumn>{
 	minWidth: 150,
 	maxWidth: 600
 });
-const columns = ref(<TableColumn[]>[
+const columns = ref<TableColumn[]>([
 	{
 		name: "options",
 		displayName: "Options",
@@ -71,7 +73,7 @@ const columns = ref(<TableColumn[]>[
 		sortProperty: "markdown"
 	}
 ]);
-const filters = ref(<TableFilter[]>[
+const filters = ref<TableFilter[]>([
 	{
 		name: "status",
 		displayName: "Status",
@@ -108,7 +110,7 @@ const filters = ref(<TableFilter[]>[
 		defaultFilterType: "contains"
 	}
 ]);
-const events = ref(<TableEvents>{
+const events = ref<TableEvents>({
 	adminRoom: "news",
 	updated: {
 		event: "admin.news.updated",
@@ -123,8 +125,14 @@ const events = ref(<TableEvents>{
 
 const { openModal } = useModalsStore();
 
-const remove = id => {
-	socket.dispatch("news.remove", id, res => new Toast(res.message));
+const { hasPermission } = useUserAuthStore();
+
+const remove = (id: string) => {
+	socket.dispatch(
+		"news.remove",
+		id,
+		(res: GenericResponse) => new Toast(res.message)
+	);
 };
 </script>
 
@@ -138,11 +146,12 @@ const remove = id => {
 			</div>
 			<div class="button-row">
 				<button
+					v-if="hasPermission('news.create')"
 					class="is-primary button"
 					@click="
 						openModal({
 							modal: 'editNews',
-							data: { createNews: true }
+							props: { createNews: true }
 						})
 					"
 				>
@@ -162,11 +171,12 @@ const remove = id => {
 			<template #column-options="slotProps">
 				<div class="row-options">
 					<button
+						v-if="hasPermission('news.update')"
 						class="button is-primary icon-with-button material-icons"
 						@click="
 							openModal({
 								modal: 'editNews',
-								data: { newsId: slotProps.item._id }
+								props: { newsId: slotProps.item._id }
 							})
 						"
 						content="Edit News"
@@ -175,6 +185,7 @@ const remove = id => {
 						edit
 					</button>
 					<quick-confirm
+						v-if="hasPermission('news.remove')"
 						@confirm="remove(slotProps.item._id)"
 						:disabled="slotProps.item.removed"
 					>

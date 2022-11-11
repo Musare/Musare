@@ -7,8 +7,9 @@ import { useModalsStore } from "@/stores/modals";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 
-defineProps({
-	modalUuid: { type: String, default: "" }
+const props = defineProps({
+	modalUuid: { type: String, required: true },
+	admin: { type: Boolean, default: false }
 });
 
 const playlist = ref({
@@ -31,20 +32,24 @@ const createPlaylist = () => {
 			"Invalid display name format. Only ASCII characters are allowed."
 		);
 
-	return socket.dispatch("playlists.create", playlist.value, res => {
-		new Toast(res.message);
+	return socket.dispatch(
+		"playlists.create",
+		{ ...playlist.value, admin: props.admin },
+		res => {
+			new Toast(res.message);
 
-		if (res.status === "success") {
-			closeCurrentModal();
+			if (res.status === "success") {
+				closeCurrentModal();
 
-			if (!window.addToPlaylistDropdown) {
-				openModal({
-					modal: "editPlaylist",
-					data: { playlistId: res.data.playlistId }
-				});
+				if (!window.addToPlaylistDropdown) {
+					openModal({
+						modal: "editPlaylist",
+						props: { playlistId: res.data.playlistId }
+					});
+				}
 			}
 		}
-	});
+	);
 };
 
 onBeforeUnmount(() => {
@@ -59,7 +64,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-	<modal title="Create Playlist" :size="'slim'">
+	<modal
+		:title="admin ? 'Create Admin Playlist' : 'Create Playlist'"
+		:size="'slim'"
+	>
 		<template #body>
 			<p class="control is-expanded">
 				<label class="label">Display Name</label>

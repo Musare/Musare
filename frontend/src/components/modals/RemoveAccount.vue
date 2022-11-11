@@ -2,10 +2,8 @@
 import { defineAsyncComponent, ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
-import { storeToRefs } from "pinia";
 import { useSettingsStore } from "@/stores/settings";
 import { useWebsocketsStore } from "@/stores/websockets";
-import { useRemoveAccountStore } from "@/stores/removeAccount";
 import { useModalsStore } from "@/stores/modals";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
@@ -14,16 +12,14 @@ const QuickConfirm = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" }
+	modalUuid: { type: String, required: true },
+	githubLinkConfirmed: { type: Boolean, default: false }
 });
 
 const settingsStore = useSettingsStore();
 const route = useRoute();
 
 const { socket } = useWebsocketsStore();
-
-const removeAccountStore = useRemoveAccountStore(props);
-const { githubLinkConfirmed } = storeToRefs(removeAccountStore);
 
 const { isPasswordLinked, isGithubLinked } = settingsStore;
 
@@ -114,7 +110,7 @@ onMounted(async () => {
 		"siteSettings.githubAuthentication"
 	);
 
-	if (githubLinkConfirmed.value === true) confirmGithubLink();
+	if (props.githubLinkConfirmed === true) confirmGithubLink();
 });
 </script>
 

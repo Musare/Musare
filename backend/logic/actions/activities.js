@@ -1,6 +1,6 @@
 import async from "async";
 
-import { isLoginRequired } from "./hooks";
+import isLoginRequired from "../hooks/loginRequired";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";

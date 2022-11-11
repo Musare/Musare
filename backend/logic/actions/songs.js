@@ -1,6 +1,7 @@
 import async from "async";
 
-import { isAdminRequired, isLoginRequired } from "./hooks";
+import isLoginRequired from "../hooks/loginRequired";
+import { useHasPermission } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -47,7 +48,7 @@ export default {
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param cb
 	 */
-	length: isAdminRequired(async function length(session, cb) {
+	length: useHasPermission("songs.get", async function length(session, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
@@ -79,129 +80,132 @@ export default {
 	 * @param operator - the operator for queries
 	 * @param cb
 	 */
-	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
-		async.waterfall(
-			[
-				next => {
-					DBModule.runJob(
-						"GET_DATA",
-						{
-							page,
-							pageSize,
-							properties,
-							sort,
-							queries,
-							operator,
-							modelName: "song",
-							blacklistedProperties: [],
-							specialProperties: {
-								requestedBy: [
-									{
-										$addFields: {
-											requestedByOID: {
-												$convert: {
-													input: "$requestedBy",
-													to: "objectId",
-													onError: "unknown",
-													onNull: "unknown"
+	getData: useHasPermission(
+		"admin.view.songs",
+		async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
+			async.waterfall(
+				[
+					next => {
+						DBModule.runJob(
+							"GET_DATA",
+							{
+								page,
+								pageSize,
+								properties,
+								sort,
+								queries,
+								operator,
+								modelName: "song",
+								blacklistedProperties: [],
+								specialProperties: {
+									requestedBy: [
+										{
+											$addFields: {
+												requestedByOID: {
+													$convert: {
+														input: "$requestedBy",
+														to: "objectId",
+														onError: "unknown",
+														onNull: "unknown"
+													}
 												}
 											}
-										}
-									},
-									{
-										$lookup: {
-											from: "users",
-											localField: "requestedByOID",
-											foreignField: "_id",
-											as: "requestedByUser"
-										}
-									},
-									{
-										$addFields: {
-											requestedByUsername: {
-												$ifNull: ["$requestedByUser.username", "unknown"]
+										},
+										{
+											$lookup: {
+												from: "users",
+												localField: "requestedByOID",
+												foreignField: "_id",
+												as: "requestedByUser"
 											}
-										}
-									},
-									{
-										$project: {
-											requestedByOID: 0,
-											requestedByUser: 0
-										}
-									}
-								],
-								verifiedBy: [
-									{
-										$addFields: {
-											verifiedByOID: {
-												$convert: {
-													input: "$verifiedBy",
-													to: "objectId",
-													onError: "unknown",
-													onNull: "unknown"
+										},
+										{
+											$addFields: {
+												requestedByUsername: {
+													$ifNull: ["$requestedByUser.username", "unknown"]
 												}
 											}
-										}
-									},
-									{
-										$lookup: {
-											from: "users",
-											localField: "verifiedByOID",
-											foreignField: "_id",
-											as: "verifiedByUser"
-										}
-									},
-									{
-										$unwind: {
-											path: "$verifiedByUser",
-											preserveNullAndEmptyArrays: true
-										}
-									},
-									{
-										$addFields: {
-											verifiedByUsername: {
-												$ifNull: ["$verifiedByUser.username", "unknown"]
+										},
+										{
+											$project: {
+												requestedByOID: 0,
+												requestedByUser: 0
 											}
 										}
-									},
-									{
-										$project: {
-											verifiedByOID: 0,
-											verifiedByUser: 0
+									],
+									verifiedBy: [
+										{
+											$addFields: {
+												verifiedByOID: {
+													$convert: {
+														input: "$verifiedBy",
+														to: "objectId",
+														onError: "unknown",
+														onNull: "unknown"
+													}
+												}
+											}
+										},
+										{
+											$lookup: {
+												from: "users",
+												localField: "verifiedByOID",
+												foreignField: "_id",
+												as: "verifiedByUser"
+											}
+										},
+										{
+											$unwind: {
+												path: "$verifiedByUser",
+												preserveNullAndEmptyArrays: true
+											}
+										},
+										{
+											$addFields: {
+												verifiedByUsername: {
+													$ifNull: ["$verifiedByUser.username", "unknown"]
+												}
+											}
+										},
+										{
+											$project: {
+												verifiedByOID: 0,
+												verifiedByUser: 0
+											}
 										}
-									}
-								]
+									]
+								},
+								specialQueries: {
+									requestedBy: newQuery => ({
+										$or: [newQuery, { requestedByUsername: newQuery.requestedBy }]
+									}),
+									verifiedBy: newQuery => ({
+										$or: [newQuery, { verifiedByUsername: newQuery.verifiedBy }]
+									})
+								}
 							},
-							specialQueries: {
-								requestedBy: newQuery => ({
-									$or: [newQuery, { requestedByUsername: newQuery.requestedBy }]
-								}),
-								verifiedBy: newQuery => ({
-									$or: [newQuery, { verifiedByUsername: newQuery.verifiedBy }]
-								})
-							}
-						},
-						this
-					)
-						.then(response => {
-							next(null, response);
-						})
-						.catch(err => {
-							next(err);
-						});
+							this
+						)
+							.then(response => {
+								next(null, response);
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				],
+				async (err, response) => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log("ERROR", "SONGS_GET_DATA", `Failed to get data from songs. "${err}"`);
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "SONGS_GET_DATA", `Got data from songs successfully.`);
+					return cb({ status: "success", message: "Successfully got data from songs.", data: response });
 				}
-			],
-			async (err, response) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "SONGS_GET_DATA", `Failed to get data from songs. "${err}"`);
-					return cb({ status: "error", message: err });
-				}
-				this.log("SUCCESS", "SONGS_GET_DATA", `Got data from songs successfully.`);
-				return cb({ status: "success", message: "Successfully got data from songs.", data: response });
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Updates all songs
@@ -209,7 +213,7 @@ export default {
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param cb
 	 */
-	updateAll: isAdminRequired(async function updateAll(session, cb) {
+	updateAll: useHasPermission("songs.updateAll", async function updateAll(session, cb) {
 		this.keepLongJob();
 		this.publishProgress({
 			status: "started",
@@ -266,7 +270,7 @@ export default {
 	 * @param {string} songId - the song id
 	 * @param {Function} cb
 	 */
-	getSongFromSongId: isAdminRequired(function getSongFromSongId(session, songId, cb) {
+	getSongFromSongId: useHasPermission("songs.get", function getSongFromSongId(session, songId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -295,7 +299,7 @@ export default {
 	 * @param {Array} youtubeIds - the song ids
 	 * @param {Function} cb
 	 */
-	getSongsFromYoutubeIds: isAdminRequired(function getSongsFromYoutubeIds(session, youtubeIds, cb) {
+	getSongsFromYoutubeIds: useHasPermission("songs.get", function getSongsFromYoutubeIds(session, youtubeIds, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -339,7 +343,7 @@ export default {
 	 * @param {object} newSong - the song object
 	 * @param {Function} cb
 	 */
-	create: isAdminRequired(async function create(session, newSong, cb) {
+	create: useHasPermission("songs.create", async function create(session, newSong, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -376,7 +380,7 @@ export default {
 	 * @param {object} song - the updated song object
 	 * @param {Function} cb
 	 */
-	update: isAdminRequired(async function update(session, songId, song, cb) {
+	update: useHasPermission("songs.update", async function update(session, songId, song, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		let existingSong = null;
 		async.waterfall(
@@ -453,7 +457,7 @@ export default {
 	 * @param songId - the song id
 	 * @param cb
 	 */
-	remove: isAdminRequired(async function remove(session, songId, cb) {
+	remove: useHasPermission("songs.remove", async function remove(session, songId, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 
@@ -717,7 +721,7 @@ export default {
 	 * @param songIds - array of song ids
 	 * @param cb
 	 */
-	removeMany: isAdminRequired(async function remove(session, songIds, cb) {
+	removeMany: useHasPermission("songs.remove", async function remove(session, songIds, cb) {
 		const successful = [];
 		const failed = [];
 
@@ -860,7 +864,7 @@ export default {
 	 * @param songId - the song id
 	 * @param cb
 	 */
-	verify: isAdminRequired(async function add(session, songId, cb) {
+	verify: useHasPermission("songs.verify", async function add(session, songId, cb) {
 		const SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
@@ -919,7 +923,7 @@ export default {
 	 * @param songIds - array of song ids
 	 * @param cb
 	 */
-	verifyMany: isAdminRequired(async function verifyMany(session, songIds, cb) {
+	verifyMany: useHasPermission("songs.verify", async function verifyMany(session, songIds, cb) {
 		const successful = [];
 		const failed = [];
 
@@ -1015,7 +1019,7 @@ export default {
 	 * @param songId - the song id
 	 * @param cb
 	 */
-	unverify: isAdminRequired(async function add(session, songId, cb) {
+	unverify: useHasPermission("songs.verify", async function add(session, songId, cb) {
 		const SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
@@ -1080,7 +1084,7 @@ export default {
 	 * @param songIds - array of song ids
 	 * @param cb
 	 */
-	unverifyMany: isAdminRequired(async function unverifyMany(session, songIds, cb) {
+	unverifyMany: useHasPermission("songs.verify", async function unverifyMany(session, songIds, cb) {
 		const successful = [];
 		const failed = [];
 
@@ -1183,7 +1187,7 @@ export default {
 	 * @param session
 	 * @param cb
 	 */
-	getGenres: isAdminRequired(function getGenres(session, cb) {
+	getGenres: useHasPermission("songs.get", function getGenres(session, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1222,7 +1226,7 @@ export default {
 	 * @param songIds Array of songIds to apply genres to
 	 * @param cb
 	 */
-	editGenres: isAdminRequired(async function editGenres(session, method, genres, songIds, cb) {
+	editGenres: useHasPermission("songs.update", async function editGenres(session, method, genres, songIds, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 
 		this.keepLongJob();
@@ -1311,7 +1315,7 @@ export default {
 	 * @param session
 	 * @param cb
 	 */
-	getArtists: isAdminRequired(function getArtists(session, cb) {
+	getArtists: useHasPermission("songs.get", function getArtists(session, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1350,7 +1354,7 @@ export default {
 	 * @param songIds Array of songIds to apply artists to
 	 * @param cb
 	 */
-	editArtists: isAdminRequired(async function editArtists(session, method, artists, songIds, cb) {
+	editArtists: useHasPermission("songs.update", async function editArtists(session, method, artists, songIds, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 
 		this.keepLongJob();
@@ -1439,7 +1443,7 @@ export default {
 	 * @param session
 	 * @param cb
 	 */
-	getTags: isAdminRequired(function getTags(session, cb) {
+	getTags: useHasPermission("songs.get", function getTags(session, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1478,7 +1482,7 @@ export default {
 	 * @param songIds Array of songIds to apply tags to
 	 * @param cb
 	 */
-	editTags: isAdminRequired(async function editTags(session, method, tags, songIds, cb) {
+	editTags: useHasPermission("songs.update", async function editTags(session, method, tags, songIds, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 
 		this.keepLongJob();

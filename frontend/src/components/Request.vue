@@ -18,7 +18,7 @@ const PlaylistTabBase = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" },
+	modalUuid: { type: String, default: null },
 	sector: { type: String, default: "station" },
 	disableAutoRequest: { type: Boolean, default: false }
 });
@@ -28,7 +28,9 @@ const { musareSearch, searchForMusareSongs } = useSearchMusare();
 
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
-const manageStationStore = useManageStationStore(props);
+const manageStationStore = useManageStationStore({
+	modalUuid: props.modalUuid
+});
 
 const tab = ref("songs");
 const sitename = ref("Musare");

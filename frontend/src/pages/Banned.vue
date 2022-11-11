@@ -14,7 +14,7 @@ const { ban } = storeToRefs(userAuthStore);
 		<h4>
 			You are banned for
 			<strong>{{
-				formatDistance(new Date(ban.expiresAt), Date.now())
+				formatDistance(new Date(Number(ban.expiresAt)), Date.now())
 			}}</strong>
 		</h4>
 		<h5 class="reason">

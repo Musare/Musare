@@ -4,8 +4,8 @@ import { useRoute } from "vue-router";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
-import ws from "@/ws";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
+import utils from "@/utils";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -24,20 +24,19 @@ const route = useRoute();
 
 const { socket } = useWebsocketsStore();
 
-const quotaStatus = ref(
-	<
+const quotaStatus = ref<
+	Record<
+		string,
 		{
-			[key: string]: {
-				title: string;
-				quotaUsed: number;
-				limit: number;
-				quotaExceeded: boolean;
-			};
+			title: string;
+			quotaUsed: number;
+			limit: number;
+			quotaExceeded: boolean;
 		}
-	>{}
-);
+	>
+>({});
 const fromDate = ref();
-const columnDefault = ref(<TableColumn>{
+const columnDefault = ref<TableColumn>({
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -46,7 +45,7 @@ const columnDefault = ref(<TableColumn>{
 	minWidth: 150,
 	maxWidth: 600
 });
-const columns = ref(<TableColumn[]>[
+const columns = ref<TableColumn[]>([
 	{
 		name: "options",
 		displayName: "Options",
@@ -61,7 +60,7 @@ const columns = ref(<TableColumn[]>[
 		name: "quotaCost",
 		displayName: "Quota Cost",
 		properties: ["quotaCost"],
-		sortProperty: ["quotaCost"],
+		sortProperty: "quotaCost",
 		minWidth: 150,
 		defaultWidth: 150
 	},
@@ -69,7 +68,7 @@ const columns = ref(<TableColumn[]>[
 		name: "timestamp",
 		displayName: "Timestamp",
 		properties: ["date"],
-		sortProperty: ["date"],
+		sortProperty: "date",
 		minWidth: 150,
 		defaultWidth: 150
 	},
@@ -77,18 +76,18 @@ const columns = ref(<TableColumn[]>[
 		name: "url",
 		displayName: "URL",
 		properties: ["url"],
-		sortProperty: ["url"]
+		sortProperty: "url"
 	},
 	{
 		name: "_id",
 		displayName: "Request ID",
 		properties: ["_id"],
-		sortProperty: ["_id"],
+		sortProperty: "_id",
 		minWidth: 230,
 		defaultWidth: 230
 	}
 ]);
-const filters = ref(<TableFilter[]>[
+const filters = ref<TableFilter[]>([
 	{
 		name: "_id",
 		displayName: "Request ID",
@@ -124,7 +123,7 @@ const filters = ref(<TableFilter[]>[
 		defaultFilterType: "contains"
 	}
 ]);
-const events = ref(<TableEvents>{
+const events = ref<TableEvents>({
 	adminRoom: "youtube",
 	removed: {
 		event: "admin.youtubeApiRequest.removed",
@@ -144,46 +143,6 @@ const jobs = ref([
 
 const { openModal } = useModalsStore();
 
-const init = () => {
-	if (route.query.fromDate) fromDate.value = route.query.fromDate;
-
-	socket.dispatch("youtube.getQuotaStatus", fromDate.value, res => {
-		if (res.status === "success") quotaStatus.value = res.data.status;
-	});
-
-	socket.dispatch(
-		"youtube.getQuotaChartData",
-		"days",
-		new Date().setDate(new Date().getDate() - 6),
-		new Date().setDate(new Date().getDate() + 1),
-		"usage",
-		res => {
-			if (res.status === "success") charts.value.quotaUsage = res.data;
-		}
-	);
-
-	socket.dispatch(
-		"youtube.getQuotaChartData",
-		"days",
-		new Date().setDate(new Date().getDate() - 6),
-		new Date().setDate(new Date().getDate() + 1),
-		"count",
-		res => {
-			if (res.status === "success") charts.value.apiRequests = res.data;
-		}
-	);
-};
-
-const getDateFormatted = createdAt => {
-	const date = new Date(createdAt);
-	const year = date.getFullYear();
-	const month = `${date.getMonth() + 1}`.padStart(2, "0");
-	const day = `${date.getDate()}`.padStart(2, "0");
-	const hour = `${date.getHours()}`.padStart(2, "0");
-	const minute = `${date.getMinutes()}`.padStart(2, "0");
-	return `${year}-${month}-${day} ${hour}:${minute}`;
-};
-
 const removeApiRequest = requestId => {
 	socket.dispatch(
 		"youtube.removeStoredApiRequest",
@@ -193,7 +152,37 @@ const removeApiRequest = requestId => {
 };
 
 onMounted(() => {
-	ws.onConnect(init);
+	socket.onConnect(() => {
+		if (route.query.fromDate) fromDate.value = route.query.fromDate;
+
+		socket.dispatch("youtube.getQuotaStatus", fromDate.value, res => {
+			if (res.status === "success") quotaStatus.value = res.data.status;
+		});
+
+		socket.dispatch(
+			"youtube.getQuotaChartData",
+			"days",
+			new Date().setDate(new Date().getDate() - 6),
+			new Date().setDate(new Date().getDate() + 1),
+			"usage",
+			res => {
+				if (res.status === "success")
+					charts.value.quotaUsage = res.data;
+			}
+		);
+
+		socket.dispatch(
+			"youtube.getQuotaChartData",
+			"days",
+			new Date().setDate(new Date().getDate() - 6),
+			new Date().setDate(new Date().getDate() + 1),
+			"count",
+			res => {
+				if (res.status === "success")
+					charts.value.apiRequests = res.data;
+			}
+		);
+	});
 });
 </script>
 
@@ -272,7 +261,7 @@ onMounted(() => {
 							@click="
 								openModal({
 									modal: 'viewApiRequest',
-									data: {
+									props: {
 										requestId: slotProps.item._id,
 										removeAction:
 											'youtube.removeStoredApiRequest'
@@ -311,7 +300,7 @@ onMounted(() => {
 				</template>
 				<template #column-timestamp="slotProps">
 					<span :title="new Date(slotProps.item.date).toString()">{{
-						getDateFormatted(slotProps.item.date)
+						utils.getDateFormatted(slotProps.item.date)
 					}}</span>
 				</template>
 				<template #column-url="slotProps">

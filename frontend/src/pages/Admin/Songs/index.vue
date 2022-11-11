@@ -5,7 +5,9 @@ import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
 import { useModalsStore } from "@/stores/modals";
+import { useUserAuthStore } from "@/stores/userAuth";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
+import utils from "@/utils";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -29,7 +31,9 @@ const { setJob } = useLongJobsStore();
 
 const { socket } = useWebsocketsStore();
 
-const columnDefault = ref(<TableColumn>{
+const { hasPermission } = useUserAuthStore();
+
+const columnDefault = ref<TableColumn>({
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -38,7 +42,7 @@ const columnDefault = ref(<TableColumn>{
 	minWidth: 200,
 	maxWidth: 600
 });
-const columns = ref(<TableColumn[]>[
+const columns = ref<TableColumn[]>([
 	{
 		name: "options",
 		displayName: "Options",
@@ -46,8 +50,18 @@ const columns = ref(<TableColumn[]>[
 		sortable: false,
 		hidable: false,
 		resizable: false,
-		minWidth: 129,
-		defaultWidth: 129
+		minWidth:
+			hasPermission("songs.verify") &&
+			hasPermission("songs.update") &&
+			hasPermission("songs.remove")
+				? 129
+				: 85,
+		defaultWidth:
+			hasPermission("songs.verify") &&
+			hasPermission("songs.update") &&
+			hasPermission("songs.remove")
+				? 129
+				: 85
 	},
 	{
 		name: "thumbnailImage",
@@ -163,7 +177,7 @@ const columns = ref(<TableColumn[]>[
 		defaultVisibility: "hidden"
 	}
 ]);
-const filters = ref(<TableFilter[]>[
+const filters = ref<TableFilter[]>([
 	{
 		name: "_id",
 		displayName: "Song ID",
@@ -281,7 +295,7 @@ const filters = ref(<TableFilter[]>[
 		defaultFilterType: "numberLesser"
 	}
 ]);
-const events = ref(<TableEvents>{
+const events = ref<TableEvents>({
 	adminRoom: "songs",
 	updated: {
 		event: "admin.song.updated",
@@ -293,30 +307,31 @@ const events = ref(<TableEvents>{
 		id: "songId"
 	}
 });
-const jobs = ref([
-	{
+const jobs = ref([]);
+if (hasPermission("songs.updateAll"))
+	jobs.value.push({
 		name: "Update all songs",
 		socket: "songs.updateAll"
-	},
-	{
+	});
+if (hasPermission("media.recalculateAllRatings"))
+	jobs.value.push({
 		name: "Recalculate all ratings",
 		socket: "media.recalculateAllRatings"
-	}
-]);
+	});
 
 const { openModal } = useModalsStore();
 
 const create = () => {
 	openModal({
 		modal: "editSong",
-		data: { song: { newSong: true } }
+		props: { song: { newSong: true } }
 	});
 };
 
 const editOne = song => {
 	openModal({
 		modal: "editSong",
-		data: { song }
+		props: { song }
 	});
 };
 
@@ -326,7 +341,7 @@ const editMany = selectedRows => {
 		const songs = selectedRows.map(row => ({
 			youtubeId: row.youtubeId
 		}));
-		openModal({ modal: "editSong", data: { songs } });
+		openModal({ modal: "editSong", props: { songs } });
 	}
 };
 
@@ -400,7 +415,7 @@ const importAlbum = selectedRows => {
 		if (res.status === "success") {
 			openModal({
 				modal: "importAlbum",
-				data: { songs: res.data.songs }
+				props: { songs: res.data.songs }
 			});
 		}
 	});
@@ -409,7 +424,7 @@ const importAlbum = selectedRows => {
 const setTags = selectedRows => {
 	openModal({
 		modal: "bulkActions",
-		data: {
+		props: {
 			type: {
 				name: "tags",
 				action: "songs.editTags",
@@ -425,7 +440,7 @@ const setTags = selectedRows => {
 const setArtists = selectedRows => {
 	openModal({
 		modal: "bulkActions",
-		data: {
+		props: {
 			type: {
 				name: "artists",
 				action: "songs.editArtists",
@@ -441,7 +456,7 @@ const setArtists = selectedRows => {
 const setGenres = selectedRows => {
 	openModal({
 		modal: "bulkActions",
-		data: {
+		props: {
 			type: {
 				name: "genres",
 				action: "songs.editGenres",
@@ -450,6 +465,15 @@ const setGenres = selectedRows => {
 				autosuggest: true,
 				autosuggestDataAction: "songs.getGenres"
 			}
+		}
+	});
+};
+
+const bulkEditPlaylist = selectedRows => {
+	openModal({
+		modal: "bulkEditPlaylist",
+		props: {
+			youtubeIds: selectedRows.map(row => row.youtubeId)
 		}
 	});
 };
@@ -486,35 +510,6 @@ const deleteMany = selectedRows => {
 	);
 };
 
-const getDateFormatted = createdAt => {
-	const date = new Date(createdAt);
-	const year = date.getFullYear();
-	const month = `${date.getMonth() + 1}`.padStart(2, "0");
-	const day = `${date.getDate()}`.padStart(2, "0");
-	const hour = `${date.getHours()}`.padStart(2, "0");
-	const minute = `${date.getMinutes()}`.padStart(2, "0");
-	return `${year}-${month}-${day} ${hour}:${minute}`;
-};
-
-const handleConfirmed = ({ action, params }) => {
-	if (typeof action === "function") {
-		if (params) action(params);
-		else action();
-	}
-};
-
-const confirmAction = ({ message, action, params }) => {
-	openModal({
-		modal: "confirm",
-		data: {
-			message,
-			action,
-			params,
-			onCompleted: handleConfirmed
-		}
-	});
-};
-
 onMounted(() => {
 	if (route.query.songId) {
 		socket.dispatch("songs.getSongFromSongId", route.query.songId, res => {
@@ -534,10 +529,18 @@ onMounted(() => {
 				<p>Create, edit and manage songs in the catalogue</p>
 			</div>
 			<div class="button-row">
-				<button class="button is-primary" @click="create()">
+				<button
+					v-if="hasPermission('songs.create')"
+					class="button is-primary"
+					@click="create()"
+				>
 					Create song
 				</button>
 				<button
+					v-if="
+						hasPermission('songs.create') ||
+						hasPermission('songs.update')
+					"
 					class="button is-primary"
 					@click="openModal('importAlbum')"
 				>
@@ -557,6 +560,7 @@ onMounted(() => {
 			<template #column-options="slotProps">
 				<div class="row-options">
 					<button
+						v-if="hasPermission('songs.update')"
 						class="button is-primary icon-with-button material-icons"
 						@click="editOne(slotProps.item)"
 						:disabled="slotProps.item.removed"
@@ -566,7 +570,10 @@ onMounted(() => {
 						edit
 					</button>
 					<quick-confirm
-						v-if="slotProps.item.verified"
+						v-if="
+							hasPermission('songs.verify') &&
+							slotProps.item.verified
+						"
 						@confirm="unverifyOne(slotProps.item._id)"
 					>
 						<button
@@ -579,7 +586,7 @@ onMounted(() => {
 						</button>
 					</quick-confirm>
 					<button
-						v-else
+						v-else-if="hasPermission('songs.verify')"
 						class="button is-success icon-with-button material-icons"
 						@click="verifyOne(slotProps.item._id)"
 						:disabled="slotProps.item.removed"
@@ -589,13 +596,17 @@ onMounted(() => {
 						check_circle
 					</button>
 					<button
+						v-if="hasPermission('songs.remove')"
 						class="button is-danger icon-with-button material-icons"
 						@click.prevent="
-							confirmAction({
-								message:
-									'Removing this song will remove it from all playlists and cause a ratings recalculation.',
-								action: deleteOne,
-								params: slotProps.item._id
+							openModal({
+								modal: 'confirm',
+								props: {
+									message:
+										'Removing this song will remove it from all playlists and cause a ratings recalculation.',
+									onCompleted: () =>
+										deleteOne(slotProps.item._id)
+								}
 							})
 						"
 						:disabled="slotProps.item.removed"
@@ -671,7 +682,9 @@ onMounted(() => {
 			<template #column-requestedAt="slotProps">
 				<span
 					:title="new Date(slotProps.item.requestedAt).toString()"
-					>{{ getDateFormatted(slotProps.item.requestedAt) }}</span
+					>{{
+						utils.getDateFormatted(slotProps.item.requestedAt)
+					}}</span
 				>
 			</template>
 			<template #column-verifiedBy="slotProps">
@@ -679,12 +692,13 @@ onMounted(() => {
 			</template>
 			<template #column-verifiedAt="slotProps">
 				<span :title="new Date(slotProps.item.verifiedAt).toString()">{{
-					getDateFormatted(slotProps.item.verifiedAt)
+					utils.getDateFormatted(slotProps.item.verifiedAt)
 				}}</span>
 			</template>
 			<template #bulk-actions="slotProps">
 				<div class="bulk-actions">
 					<i
+						v-if="hasPermission('songs.update')"
 						class="material-icons edit-songs-icon"
 						@click.prevent="editMany(slotProps.item)"
 						content="Edit Songs"
@@ -694,6 +708,7 @@ onMounted(() => {
 						edit
 					</i>
 					<i
+						v-if="hasPermission('songs.verify')"
 						class="material-icons verify-songs-icon"
 						@click.prevent="verifyMany(slotProps.item)"
 						content="Verify Songs"
@@ -703,6 +718,7 @@ onMounted(() => {
 						check_circle
 					</i>
 					<quick-confirm
+						v-if="hasPermission('songs.verify')"
 						placement="left"
 						@confirm="unverifyMany(slotProps.item)"
 						tabindex="0"
@@ -716,6 +732,10 @@ onMounted(() => {
 						</i>
 					</quick-confirm>
 					<i
+						v-if="
+							hasPermission('songs.update') &&
+							hasPermission('apis.searchDiscogs')
+						"
 						class="material-icons import-album-icon"
 						@click.prevent="importAlbum(slotProps.item)"
 						content="Import Album"
@@ -725,6 +745,7 @@ onMounted(() => {
 						album
 					</i>
 					<i
+						v-if="hasPermission('songs.update')"
 						class="material-icons tag-songs-icon"
 						@click.prevent="setTags(slotProps.item)"
 						content="Set Tags"
@@ -734,6 +755,7 @@ onMounted(() => {
 						local_offer
 					</i>
 					<i
+						v-if="hasPermission('songs.update')"
 						class="material-icons artists-songs-icon"
 						@click.prevent="setArtists(slotProps.item)"
 						content="Set Artists"
@@ -743,6 +765,7 @@ onMounted(() => {
 						group
 					</i>
 					<i
+						v-if="hasPermission('songs.update')"
 						class="material-icons genres-songs-icon"
 						@click.prevent="setGenres(slotProps.item)"
 						content="Set Genres"
@@ -752,13 +775,27 @@ onMounted(() => {
 						theater_comedy
 					</i>
 					<i
+						v-if="hasPermission('playlists.songs.add')"
+						class="material-icons playlist-bulk-edit-icon"
+						@click.prevent="bulkEditPlaylist(slotProps.item)"
+						content="Add/remove to/from playlist"
+						v-tippy
+						tabindex="0"
+					>
+						playlist_add
+					</i>
+					<i
+						v-if="hasPermission('songs.remove')"
 						class="material-icons delete-icon"
 						@click.prevent="
-							confirmAction({
-								message:
-									'Removing these songs will remove them from all playlists and cause a ratings recalculation.',
-								action: deleteMany,
-								params: slotProps.item
+							openModal({
+								modal: 'confirm',
+								props: {
+									message:
+										'Removing these songs will remove them from all playlists and cause a ratings recalculation.',
+									onCompleted: () =>
+										deleteMany(slotProps.item)
+								}
 							})
 						"
 						content="Delete Songs"

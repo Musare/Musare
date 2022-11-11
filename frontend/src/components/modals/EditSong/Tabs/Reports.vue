@@ -12,11 +12,11 @@ const ReportInfoItem = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" },
+	modalUuid: { type: String, required: true },
 	modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
 });
 
-const editSongStore = useEditSongStore(props);
+const editSongStore = useEditSongStore({ modalUuid: props.modalUuid });
 
 const { socket } = useWebsocketsStore();
 
@@ -50,7 +50,7 @@ const sortedByCategory = computed(() => {
 		})
 	);
 
-	return <any>categories;
+	return categories;
 });
 
 const { resolveReport } = editSongStore;

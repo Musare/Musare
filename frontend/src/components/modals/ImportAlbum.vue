@@ -12,7 +12,6 @@ import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useImportAlbumStore } from "@/stores/importAlbum";
-import ws from "@/ws";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const SongItem = defineAsyncComponent(
@@ -20,12 +19,13 @@ const SongItem = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" }
+	modalUuid: { type: String, required: true },
+	songs: { type: Array, default: () => [] }
 });
 
 const { socket } = useWebsocketsStore();
 
-const importAlbumStore = useImportAlbumStore(props);
+const importAlbumStore = useImportAlbumStore({ modalUuid: props.modalUuid });
 const { discogsTab, discogsAlbum, prefillDiscogs, playlistSongs } =
 	storeToRefs(importAlbumStore);
 const {
@@ -37,7 +37,7 @@ const {
 	updatePlaylistSong
 } = importAlbumStore;
 
-const { openModal } = useModalsStore();
+const { openModal, preventCloseCbs } = useModalsStore();
 
 const isImportingPlaylist = ref(false);
 const trackSongs = ref([]);
@@ -72,10 +72,6 @@ const showDiscogsTab = tab => {
 	return importAlbumStore.showDiscogsTab(tab);
 };
 
-const init = () => {
-	socket.dispatch("apis.joinRoom", "import-album");
-};
-
 const startEditingSongs = () => {
 	songsToEdit.value = [];
 	trackSongs.value.forEach((songs, index) => {
@@ -86,18 +82,16 @@ const startEditingSongs = () => {
 			delete album.expanded;
 			delete album.gotMoreInfo;
 
-			const songToEdit = <
-				{
-					youtubeId: string;
-					prefill: {
-						discogs: typeof album;
-						title?: string;
-						thumbnail?: string;
-						genres?: string[];
-						artists?: string[];
-					};
-				}
-			>{
+			const songToEdit: {
+				youtubeId: string;
+				prefill: {
+					discogs: typeof album;
+					title?: string;
+					thumbnail?: string;
+					genres?: string[];
+					artists?: string[];
+				};
+			} = {
 				youtubeId: song.youtubeId,
 				prefill: {
 					discogs: album
@@ -124,7 +118,7 @@ const startEditingSongs = () => {
 	else {
 		openModal({
 			modal: "editSong",
-			data: { songs: songsToEdit.value }
+			props: { songs: songsToEdit.value }
 		});
 	}
 };
@@ -332,7 +326,37 @@ const updateTrackSong = updatedSong => {
 };
 
 onMounted(() => {
-	ws.onConnect(init);
+	setPlaylistSongs(props.songs);
+
+	preventCloseCbs[props.modalUuid] = (): Promise<void> =>
+		new Promise(resolve => {
+			const confirmReasons = [];
+
+			let unverifiedSongs = 0;
+			trackSongs.value.forEach(songs => {
+				songs.forEach(song => {
+					if (!song.verified) unverifiedSongs += 1;
+				});
+			});
+			if (unverifiedSongs > 0)
+				confirmReasons.push(
+					`There are still ${unverifiedSongs} unverified songs. Are you sure you want to close Import Album?`
+				);
+
+			if (confirmReasons.length > 0)
+				openModal({
+					modal: "confirm",
+					props: {
+						message: confirmReasons,
+						onCompleted: resolve
+					}
+				});
+			else resolve();
+		});
+
+	socket.onConnect(() => {
+		socket.dispatch("apis.joinRoom", "import-album");
+	});
 
 	socket.on("event:admin.song.updated", res => {
 		updateTrackSong(res.data.song);
@@ -340,6 +364,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+	delete preventCloseCbs[props.modalUuid];
 	selectDiscogsAlbum({});
 	setPlaylistSongs([]);
 	showDiscogsTab("search");

@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
+import {
+	defineAsyncComponent,
+	ref,
+	watch,
+	onMounted,
+	onBeforeUnmount
+} from "vue";
 import Toast from "toasters";
-import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
-import { useViewReportStore } from "@/stores/viewReport";
+import { useUserAuthStore } from "@/stores/userAuth";
 import { useReports } from "@/composables/useReports";
-import ws from "@/ws";
 import { Report } from "@/types/report";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
@@ -21,17 +25,18 @@ const QuickConfirm = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" }
+	modalUuid: { type: String, required: true },
+	reportId: { type: String, required: true }
 });
 
 const { socket } = useWebsocketsStore();
 
-const viewReportStore = useViewReportStore(props);
-const { reportId } = storeToRefs(viewReportStore);
-
 const { openModal, closeCurrentModal } = useModalsStore();
 
 const { resolveReport, removeReport } = useReports();
+
+const userAuthStore = useUserAuthStore();
+const { hasPermission } = userAuthStore;
 
 const icons = ref({
 	duration: "timer",
@@ -41,76 +46,25 @@ const icons = ref({
 	title: "title",
 	custom: "lightbulb"
 });
-const report = ref(<Report>{});
+const report = ref<Report>({});
 const song = ref();
 
-const init = () => {
-	socket.dispatch("reports.findOne", reportId.value, res => {
-		if (res.status === "success") {
-			report.value = res.data.report;
-
-			socket.dispatch("apis.joinRoom", `view-report.${reportId.value}`);
-
-			socket.dispatch(
-				"songs.getSongFromSongId",
-				report.value.song._id,
-				res => {
-					if (res.status === "success") song.value = res.data.song;
-					else {
-						new Toast("Cannot find the report's associated song");
-						closeCurrentModal();
-					}
-				}
-			);
-
-			socket.on(
-				"event:admin.report.resolved",
-				res => {
-					report.value.resolved = res.data.resolved;
-				},
-				{ modalUuid: props.modalUuid }
-			);
-
-			socket.on("event:admin.report.removed", () => closeCurrentModal(), {
-				modalUuid: props.modalUuid
-			});
-
-			socket.on(
-				"event:admin.report.issue.toggled",
-				res => {
-					if (reportId.value === res.data.reportId) {
-						const issue = report.value.issues.find(
-							issue => issue._id.toString() === res.data.issueId
-						);
-
-						issue.resolved = res.data.resolved;
-					}
-				},
-				{ modalUuid: props.modalUuid }
-			);
-		} else {
-			new Toast("Report with that ID not found");
-			closeCurrentModal();
-		}
-	});
-};
-
 const resolve = value =>
-	resolveReport({ reportId: reportId.value, value })
+	resolveReport({ reportId: props.reportId, value })
 		.then((res: any) => {
 			if (res.status !== "success") new Toast(res.message);
 		})
 		.catch(err => new Toast(err.message));
 
 const remove = () =>
-	removeReport(reportId.value)
+	removeReport(props.reportId)
 		.then((res: any) => {
 			if (res.status === "success") closeCurrentModal();
 		})
 		.catch(err => new Toast(err.message));
 
 const toggleIssue = issueId => {
-	socket.dispatch("reports.toggleIssue", reportId.value, issueId, res => {
+	socket.dispatch("reports.toggleIssue", props.reportId, issueId, res => {
 		if (res.status !== "success") new Toast(res.message);
 	});
 };
@@ -118,18 +72,78 @@ const toggleIssue = issueId => {
 const openSong = () => {
 	openModal({
 		modal: "editSong",
-		data: { song: report.value.song }
+		props: { song: report.value.song }
 	});
 };
 
+watch(
+	() => hasPermission("reports.get"),
+	value => {
+		if (!value) closeCurrentModal();
+	}
+);
+
 onMounted(() => {
-	ws.onConnect(init);
+	socket.onConnect(() => {
+		socket.dispatch("reports.findOne", props.reportId, res => {
+			if (res.status === "success") {
+				report.value = res.data.report;
+
+				socket.dispatch(
+					"apis.joinRoom",
+					`view-report.${props.reportId}`
+				);
+
+				socket.dispatch(
+					"songs.getSongFromSongId",
+					report.value.song._id,
+					res => {
+						if (res.status === "success")
+							song.value = res.data.song;
+						else {
+							new Toast(
+								"Cannot find the report's associated song"
+							);
+							closeCurrentModal();
+						}
+					}
+				);
+			} else {
+				new Toast("Report with that ID not found");
+				closeCurrentModal();
+			}
+		});
+	});
+
+	socket.on(
+		"event:admin.report.resolved",
+		res => {
+			report.value.resolved = res.data.resolved;
+		},
+		{ modalUuid: props.modalUuid }
+	);
+
+	socket.on("event:admin.report.removed", () => closeCurrentModal(), {
+		modalUuid: props.modalUuid
+	});
+
+	socket.on(
+		"event:admin.report.issue.toggled",
+		res => {
+			if (props.reportId === res.data.reportId) {
+				const issue = report.value.issues.find(
+					issue => issue._id.toString() === res.data.issueId
+				);
+
+				issue.resolved = res.data.resolved;
+			}
+		},
+		{ modalUuid: props.modalUuid }
+	);
 });
 
 onBeforeUnmount(() => {
-	socket.dispatch("apis.leaveRoom", `view-report.${reportId.value}`);
-	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
-	viewReportStore.$dispose();
+	socket.dispatch("apis.leaveRoom", `view-report.${props.reportId}`);
 });
 </script>
 
@@ -188,7 +202,10 @@ onBeforeUnmount(() => {
 								class="material-icons resolve-icon"
 								content="Resolve"
 								v-tippy
-								v-if="!issue.resolved"
+								v-if="
+									!issue.resolved &&
+									hasPermission('reports.update')
+								"
 								@click="toggleIssue(issue._id)"
 							>
 								done
@@ -197,7 +214,10 @@ onBeforeUnmount(() => {
 								class="material-icons unresolve-icon"
 								content="Unresolve"
 								v-tippy
-								v-else
+								v-else-if="
+									issue.resolved &&
+									hasPermission('reports.update')
+								"
 								@click="toggleIssue(issue._id)"
 							>
 								remove
@@ -209,6 +229,7 @@ onBeforeUnmount(() => {
 		</template>
 		<template #footer v-if="report && report._id">
 			<a
+				v-if="hasPermission('songs.update')"
 				class="button is-primary material-icons icon-with-button"
 				@click="openSong()"
 				content="Edit Song"
@@ -217,7 +238,7 @@ onBeforeUnmount(() => {
 				edit
 			</a>
 			<button
-				v-if="report.resolved"
+				v-if="report.resolved && hasPermission('reports.update')"
 				class="button is-danger material-icons icon-with-button"
 				@click="resolve(false)"
 				content="Unresolve"
@@ -226,7 +247,7 @@ onBeforeUnmount(() => {
 				remove_done
 			</button>
 			<button
-				v-else
+				v-else-if="!report.resolved && hasPermission('reports.update')"
 				class="button is-success material-icons icon-with-button"
 				@click="resolve(true)"
 				content="Resolve"
@@ -235,7 +256,10 @@ onBeforeUnmount(() => {
 				done_all
 			</button>
 			<div class="right">
-				<quick-confirm @confirm="remove()">
+				<quick-confirm
+					v-if="hasPermission('reports.remove')"
+					@confirm="remove()"
+				>
 					<button
 						class="button is-danger material-icons icon-with-button"
 						content="Delete Report"

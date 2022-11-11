@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent, computed } from "vue";
 import { format, formatDistance, parseISO } from "date-fns";
+import { useUserAuthStore } from "@/stores/userAuth";
 
 const UserLink = defineAsyncComponent(
 	() => import("@/components/UserLink.vue")
@@ -11,6 +12,8 @@ const props = defineProps({
 });
 
 defineEmits(["deactivate"]);
+
+const { hasPermission } = useUserAuthStore();
 
 const active = computed(
 	() =>
@@ -23,19 +26,31 @@ const active = computed(
 	<div class="universal-item punishment-item">
 		<div class="item-icon">
 			<p class="is-expanded checkbox-control">
-				<label class="switch" :class="{ disabled: !active }">
+				<label
+					class="switch"
+					:class="{
+						disabled: !(
+							hasPermission('punishments.deactivate') && active
+						)
+					}"
+				>
 					<input
 						type="checkbox"
 						:checked="active"
 						@click="
-							active
+							hasPermission('punishments.deactivate') && active
 								? $emit('deactivate', $event)
 								: $event.preventDefault()
 						"
 					/>
 					<span
 						class="slider round"
-						:class="{ disabled: !active }"
+						:class="{
+							disabled: !(
+								hasPermission('punishments.deactivate') &&
+								active
+							)
+						}"
 					></span>
 				</label>
 			</p>

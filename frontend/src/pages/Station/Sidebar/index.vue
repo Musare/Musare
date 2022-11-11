@@ -18,13 +18,9 @@ const stationStore = useStationStore();
 
 const { tab, showTab } = useTabQueryHandler("queue");
 
-const { loggedIn, userId, role } = storeToRefs(userAuthStore);
+const { loggedIn } = storeToRefs(userAuthStore);
 const { station } = storeToRefs(stationStore);
-
-const isOwner = () =>
-	loggedIn.value && station.value && userId.value === station.value.owner;
-const isAdmin = () => loggedIn.value && role.value === "admin";
-const isOwnerOrAdmin = () => isOwner() || isAdmin();
+const { hasPermission } = stationStore;
 
 const canRequest = (requireLogin = true) =>
 	station.value &&
@@ -32,10 +28,11 @@ const canRequest = (requireLogin = true) =>
 	station.value.requests &&
 	station.value.requests.enabled &&
 	(station.value.requests.access === "user" ||
-		(station.value.requests.access === "owner" && isOwnerOrAdmin()));
+		(station.value.requests.access === "owner" &&
+			hasPermission("stations.request")));
 
 watch(
-	() => station.value.requests,
+	() => [station.value.requests, hasPermission("stations.request")],
 	() => {
 		if (tab.value === "request" && !canRequest()) showTab("queue");
 	}
@@ -52,8 +49,8 @@ onMounted(() => {
 </script>
 
 <template>
-	<div id="tabs-container">
-		<div id="tab-selection">
+	<div class="tabs-container">
+		<div class="tab-selection">
 			<button
 				class="button is-default"
 				:class="{ selected: tab === 'queue' }"
@@ -98,7 +95,7 @@ onMounted(() => {
 
 <style lang="less" scoped>
 .night-mode {
-	#tab-selection .button {
+	.tab-selection .button {
 		background: var(--dark-grey);
 		color: var(--white);
 	}
@@ -109,7 +106,7 @@ onMounted(() => {
 	}
 }
 
-#tabs-container .tab {
+.tabs-container .tab {
 	width: 100%;
 	height: calc(100% - 36px);
 	position: absolute;
@@ -117,7 +114,7 @@ onMounted(() => {
 	border-top: 0;
 }
 
-#tab-selection {
+.tab-selection {
 	display: flex;
 	overflow-x: auto;
 

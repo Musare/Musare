@@ -31,17 +31,21 @@ const QuickConfirm = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" }
+	modalUuid: { type: String, required: true },
+	stationId: { type: String, required: true },
+	sector: { type: String, default: "admin" }
 });
 
 const tabs = ref([]);
 
 const userAuthStore = useUserAuthStore();
-const { loggedIn, userId, role } = storeToRefs(userAuthStore);
+const { loggedIn, userId } = storeToRefs(userAuthStore);
 
 const { socket } = useWebsocketsStore();
 
-const manageStationStore = useManageStationStore(props);
+const manageStationStore = useManageStationStore({
+	modalUuid: props.modalUuid
+});
 const {
 	stationId,
 	sector,
@@ -64,7 +68,11 @@ const {
 	updateStationPaused,
 	updateCurrentSong,
 	updateStation,
-	updateIsFavorited
+	updateIsFavorited,
+	hasPermission,
+	addDj,
+	removeDj,
+	updatePermissions
 } = manageStationStore;
 
 const { closeCurrentModal } = useModalsStore();
@@ -75,20 +83,14 @@ const showTab = payload => {
 	manageStationStore.showTab(payload);
 };
 
-const isOwner = () =>
-	loggedIn.value && station.value && userId.value === station.value.owner;
-
-const isAdmin = () => loggedIn.value && role.value === "admin";
-
-const isOwnerOrAdmin = () => isOwner() || isAdmin();
-
 const canRequest = () =>
 	station.value &&
 	loggedIn.value &&
 	station.value.requests &&
 	station.value.requests.enabled &&
 	(station.value.requests.access === "user" ||
-		(station.value.requests.access === "owner" && isOwnerOrAdmin()));
+		(station.value.requests.access === "owner" &&
+			hasPermission("stations.request")));
 
 const removeStation = () => {
 	socket.dispatch("stations.remove", stationId.value, res => {
@@ -107,275 +109,338 @@ const resetQueue = () => {
 	});
 };
 
+const findTabOrClose = () => {
+	if (hasPermission("stations.update")) return showTab("settings");
+	if (canRequest()) return showTab("request");
+	if (hasPermission("stations.autofill")) return showTab("autofill");
+	if (hasPermission("stations.blacklist")) return showTab("blacklist");
+	if (
+		!(
+			sector.value === "home" &&
+			(hasPermission("stations.view") ||
+				station.value.privacy === "public")
+		)
+	)
+		return closeCurrentModal(true);
+	return null;
+};
+
 watch(
-	() => station.value.requests,
-	() => {
-		if (tab.value === "request" && !canRequest()) {
-			if (isOwnerOrAdmin()) showTab("settings");
-			else if (!(sector.value === "home" && !isOwnerOrAdmin()))
-				closeCurrentModal();
-		}
+	() => hasPermission("stations.update"),
+	value => {
+		if (!value && tab.value === "settings") findTabOrClose();
 	}
 );
 watch(
-	() => station.value.autofill,
+	() => hasPermission("stations.request") && station.value.requests.enabled,
 	value => {
-		if (tab.value === "autofill" && value && !value.enabled)
-			showTab("settings");
+		if (!value && tab.value === "request") findTabOrClose();
+	}
+);
+watch(
+	() => hasPermission("stations.autofill") && station.value.autofill.enabled,
+	value => {
+		if (!value && tab.value === "autofill") findTabOrClose();
+	}
+);
+watch(
+	() => hasPermission("stations.blacklist"),
+	value => {
+		if (!value && tab.value === "blacklist") findTabOrClose();
 	}
 );
 
 onMounted(() => {
-	socket.dispatch(`stations.getStationById`, stationId.value, res => {
-		if (res.status === "success") {
-			editStation(res.data.station);
-
-			if (!isOwnerOrAdmin()) showTab("request");
-
-			const currentSong = res.data.station.currentSong
-				? res.data.station.currentSong
-				: {};
-
-			updateCurrentSong(currentSong);
-
-			updateStationPaused(res.data.station.paused);
-
-			socket.dispatch(
-				"stations.getStationAutofillPlaylistsById",
-				stationId.value,
-				res => {
-					if (res.status === "success")
-						setAutofillPlaylists(res.data.playlists);
-				}
-			);
-
-			socket.dispatch(
-				"stations.getStationBlacklistById",
-				stationId.value,
-				res => {
-					if (res.status === "success")
-						setBlacklist(res.data.playlists);
-				}
-			);
-
-			if (isOwnerOrAdmin()) {
-				socket.dispatch(
-					"playlists.getPlaylistForStation",
-					stationId.value,
-					true,
-					res => {
-						if (res.status === "success") {
-							updateStationPlaylist(res.data.playlist);
-						}
-					}
-				);
-			}
-
-			socket.dispatch("stations.getQueue", stationId.value, res => {
-				if (res.status === "success") updateSongsList(res.data.queue);
-			});
-
-			socket.dispatch(
-				"apis.joinRoom",
-				`manage-station.${stationId.value}`
-			);
-
-			socket.on(
-				"event:station.updated",
-				res => {
-					updateStation(res.data.station);
-				},
-				{ modalUuid: props.modalUuid }
-			);
-
-			socket.on(
-				"event:station.autofillPlaylist",
-				res => {
-					const { playlist } = res.data;
-					const playlistIndex = autofill.value
-						.map(autofillPlaylist => autofillPlaylist._id)
-						.indexOf(playlist._id);
-					if (playlistIndex === -1) autofill.value.push(playlist);
-				},
-				{ modalUuid: props.modalUuid }
-			);
-
-			socket.on(
-				"event:station.blacklistedPlaylist",
-				res => {
-					const { playlist } = res.data;
-					const playlistIndex = blacklist.value
-						.map(blacklistedPlaylist => blacklistedPlaylist._id)
-						.indexOf(playlist._id);
-					if (playlistIndex === -1) blacklist.value.push(playlist);
-				},
-				{ modalUuid: props.modalUuid }
-			);
-
-			socket.on(
-				"event:station.removedAutofillPlaylist",
-				res => {
-					const { playlistId } = res.data;
-					const playlistIndex = autofill.value
-						.map(playlist => playlist._id)
-						.indexOf(playlistId);
-					if (playlistIndex >= 0)
-						autofill.value.splice(playlistIndex, 1);
-				},
-				{ modalUuid: props.modalUuid }
-			);
-
-			socket.on(
-				"event:station.removedBlacklistedPlaylist",
-				res => {
-					const { playlistId } = res.data;
-					const playlistIndex = blacklist.value
-						.map(playlist => playlist._id)
-						.indexOf(playlistId);
-					if (playlistIndex >= 0)
-						blacklist.value.splice(playlistIndex, 1);
-				},
-				{ modalUuid: props.modalUuid }
-			);
-
-			socket.on(
-				"event:station.deleted",
-				() => {
-					new Toast(`The station you were editing was deleted.`);
-					closeCurrentModal();
-				},
-				{ modalUuid: props.modalUuid }
-			);
-
-			socket.on(
-				"event:user.station.favorited",
-				res => {
-					if (res.data.stationId === stationId.value)
-						updateIsFavorited(true);
-				},
-				{ modalUuid: props.modalUuid }
-			);
-
-			socket.on(
-				"event:user.station.unfavorited",
-				res => {
-					if (res.data.stationId === stationId.value)
-						updateIsFavorited(false);
-				},
-				{ modalUuid: props.modalUuid }
-			);
-		} else {
-			new Toast(`Station with that ID not found`);
-			closeCurrentModal();
-		}
+	manageStationStore.init({
+		stationId: props.stationId,
+		sector: props.sector
 	});
 
-	socket.on(
-		"event:manageStation.queue.updated",
-		res => {
-			if (res.data.stationId === stationId.value)
-				updateSongsList(res.data.queue);
-		},
-		{ modalUuid: props.modalUuid }
-	);
+	socket.onConnect(() => {
+		socket.dispatch(
+			`stations.getStationById`,
+			stationId.value,
+			async res => {
+				if (res.status === "success") {
+					editStation(res.data.station);
 
-	socket.on(
-		"event:manageStation.queue.song.repositioned",
-		res => {
-			if (res.data.stationId === stationId.value)
-				repositionSongInList(res.data.song);
-		},
-		{ modalUuid: props.modalUuid }
-	);
+					await updatePermissions();
 
-	socket.on(
-		"event:station.pause",
-		res => {
-			if (res.data.stationId === stationId.value)
-				updateStationPaused(true);
-		},
-		{ modalUuid: props.modalUuid }
-	);
+					findTabOrClose();
 
-	socket.on(
-		"event:station.resume",
-		res => {
-			if (res.data.stationId === stationId.value)
-				updateStationPaused(false);
-		},
-		{ modalUuid: props.modalUuid }
-	);
+					const currentSong = res.data.station.currentSong
+						? res.data.station.currentSong
+						: {};
 
-	socket.on(
-		"event:station.nextSong",
-		res => {
-			if (res.data.stationId === stationId.value)
-				updateCurrentSong(res.data.currentSong || {});
-		},
-		{ modalUuid: props.modalUuid }
-	);
+					updateCurrentSong(currentSong);
 
-	if (isOwnerOrAdmin()) {
-		socket.on(
-			"event:playlist.song.added",
-			res => {
-				if (stationPlaylist.value._id === res.data.playlistId)
-					stationPlaylist.value.songs.push(res.data.song);
-			},
-			{
-				modalUuid: props.modalUuid
-			}
-		);
+					updateStationPaused(res.data.station.paused);
 
-		socket.on(
-			"event:playlist.song.removed",
-			res => {
-				if (stationPlaylist.value._id === res.data.playlistId) {
-					// remove song from array of playlists
-					stationPlaylist.value.songs.forEach((song, index) => {
-						if (song.youtubeId === res.data.youtubeId)
-							stationPlaylist.value.songs.splice(index, 1);
-					});
-				}
-			},
-			{
-				modalUuid: props.modalUuid
-			}
-		);
+					socket.dispatch(
+						"stations.getStationAutofillPlaylistsById",
+						stationId.value,
+						res => {
+							if (res.status === "success")
+								setAutofillPlaylists(res.data.playlists);
+						}
+					);
 
-		socket.on(
-			"event:playlist.songs.repositioned",
-			res => {
-				if (stationPlaylist.value._id === res.data.playlistId) {
-					// for each song that has a new position
-					res.data.songsBeingChanged.forEach(changedSong => {
-						stationPlaylist.value.songs.forEach((song, index) => {
-							// find song locally
-							if (song.youtubeId === changedSong.youtubeId) {
-								// change song position attribute
-								stationPlaylist.value.songs[index].position =
-									changedSong.position;
+					socket.dispatch(
+						"stations.getStationBlacklistById",
+						stationId.value,
+						res => {
+							if (res.status === "success")
+								setBlacklist(res.data.playlists);
+						}
+					);
 
-								// reposition in array if needed
-								if (index !== changedSong.position - 1)
-									stationPlaylist.value.songs.splice(
-										changedSong.position - 1,
-										0,
-										stationPlaylist.value.songs.splice(
-											index,
-											1
-										)[0]
-									);
+					if (hasPermission("stations.view")) {
+						socket.dispatch(
+							"playlists.getPlaylistForStation",
+							stationId.value,
+							true,
+							res => {
+								if (res.status === "success") {
+									updateStationPlaylist(res.data.playlist);
+								}
 							}
-						});
-					});
+						);
+					}
+
+					socket.dispatch(
+						"stations.getQueue",
+						stationId.value,
+						res => {
+							if (res.status === "success")
+								updateSongsList(res.data.queue);
+						}
+					);
+
+					socket.dispatch(
+						"apis.joinRoom",
+						`manage-station.${stationId.value}`
+					);
+				} else {
+					new Toast(`Station with that ID not found`);
+					closeCurrentModal();
 				}
-			},
-			{
-				modalUuid: props.modalUuid
 			}
 		);
-	}
+
+		socket.on(
+			"event:station.updated",
+			res => {
+				updateStation(res.data.station);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:station.autofillPlaylist",
+			res => {
+				const { playlist } = res.data;
+				const playlistIndex = autofill.value
+					.map(autofillPlaylist => autofillPlaylist._id)
+					.indexOf(playlist._id);
+				if (playlistIndex === -1) autofill.value.push(playlist);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:station.blacklistedPlaylist",
+			res => {
+				const { playlist } = res.data;
+				const playlistIndex = blacklist.value
+					.map(blacklistedPlaylist => blacklistedPlaylist._id)
+					.indexOf(playlist._id);
+				if (playlistIndex === -1) blacklist.value.push(playlist);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:station.removedAutofillPlaylist",
+			res => {
+				const { playlistId } = res.data;
+				const playlistIndex = autofill.value
+					.map(playlist => playlist._id)
+					.indexOf(playlistId);
+				if (playlistIndex >= 0) autofill.value.splice(playlistIndex, 1);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:station.removedBlacklistedPlaylist",
+			res => {
+				const { playlistId } = res.data;
+				const playlistIndex = blacklist.value
+					.map(playlist => playlist._id)
+					.indexOf(playlistId);
+				if (playlistIndex >= 0)
+					blacklist.value.splice(playlistIndex, 1);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:station.deleted",
+			() => {
+				new Toast(`The station you were editing was deleted.`);
+				closeCurrentModal(true);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:user.station.favorited",
+			res => {
+				if (res.data.stationId === stationId.value)
+					updateIsFavorited(true);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:user.station.unfavorited",
+			res => {
+				if (res.data.stationId === stationId.value)
+					updateIsFavorited(false);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:manageStation.queue.updated",
+			res => {
+				if (res.data.stationId === stationId.value)
+					updateSongsList(res.data.queue);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:manageStation.queue.song.repositioned",
+			res => {
+				if (res.data.stationId === stationId.value)
+					repositionSongInList(res.data.song);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:station.pause",
+			res => {
+				if (res.data.stationId === stationId.value)
+					updateStationPaused(true);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:station.resume",
+			res => {
+				if (res.data.stationId === stationId.value)
+					updateStationPaused(false);
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on(
+			"event:station.nextSong",
+			res => {
+				if (res.data.stationId === stationId.value)
+					updateCurrentSong(res.data.currentSong || {});
+			},
+			{ modalUuid: props.modalUuid }
+		);
+
+		socket.on("event:manageStation.djs.added", res => {
+			if (res.data.stationId === stationId.value) {
+				if (res.data.user._id === userId.value) updatePermissions();
+				addDj(res.data.user);
+			}
+		});
+
+		socket.on("event:manageStation.djs.removed", res => {
+			if (res.data.stationId === stationId.value) {
+				if (res.data.user._id === userId.value) updatePermissions();
+				removeDj(res.data.user);
+			}
+		});
+
+		socket.on("keep.event:user.role.updated", () => {
+			updatePermissions();
+		});
+
+		if (hasPermission("stations.view")) {
+			socket.on(
+				"event:playlist.song.added",
+				res => {
+					if (stationPlaylist.value._id === res.data.playlistId)
+						stationPlaylist.value.songs.push(res.data.song);
+				},
+				{
+					modalUuid: props.modalUuid
+				}
+			);
+
+			socket.on(
+				"event:playlist.song.removed",
+				res => {
+					if (stationPlaylist.value._id === res.data.playlistId) {
+						// remove song from array of playlists
+						stationPlaylist.value.songs.forEach((song, index) => {
+							if (song.youtubeId === res.data.youtubeId)
+								stationPlaylist.value.songs.splice(index, 1);
+						});
+					}
+				},
+				{
+					modalUuid: props.modalUuid
+				}
+			);
+
+			socket.on(
+				"event:playlist.songs.repositioned",
+				res => {
+					if (stationPlaylist.value._id === res.data.playlistId) {
+						// for each song that has a new position
+						res.data.songsBeingChanged.forEach(changedSong => {
+							stationPlaylist.value.songs.forEach(
+								(song, index) => {
+									// find song locally
+									if (
+										song.youtubeId === changedSong.youtubeId
+									) {
+										// change song position attribute
+										stationPlaylist.value.songs[
+											index
+										].position = changedSong.position;
+
+										// reposition in array if needed
+										if (index !== changedSong.position - 1)
+											stationPlaylist.value.songs.splice(
+												changedSong.position - 1,
+												0,
+												stationPlaylist.value.songs.splice(
+													index,
+													1
+												)[0]
+											);
+									}
+								}
+							);
+						});
+					}
+				},
+				{
+					modalUuid: props.modalUuid
+				}
+			);
+		}
+	});
 });
 
 onBeforeUnmount(() => {
@@ -385,7 +450,7 @@ onBeforeUnmount(() => {
 		() => {}
 	);
 
-	if (isOwnerOrAdmin()) showTab("settings");
+	if (hasPermission("stations.update")) showTab("settings");
 	clearStation();
 
 	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
@@ -397,16 +462,20 @@ onBeforeUnmount(() => {
 	<modal
 		v-if="station"
 		:title="
-			sector === 'home' && !isOwnerOrAdmin()
+			sector === 'home' && !hasPermission('stations.view.manage')
 				? 'View Queue'
-				: !isOwnerOrAdmin()
+				: !hasPermission('stations.view.manage')
 				? 'Add Song to Queue'
 				: 'Manage Station'
 		"
 		:style="`--primary-color: var(--${station.theme})`"
 		class="manage-station-modal"
-		:size="isOwnerOrAdmin() || sector !== 'home' ? 'wide' : null"
-		:split="isOwnerOrAdmin() || sector !== 'home'"
+		:size="
+			hasPermission('stations.view.manage') || sector !== 'home'
+				? 'wide'
+				: null
+		"
+		:split="hasPermission('stations.view.manage') || sector !== 'home'"
 	>
 		<template #body v-if="station && station._id">
 			<div class="left-section">
@@ -416,12 +485,19 @@ onBeforeUnmount(() => {
 							:station="station"
 							:station-paused="stationPaused"
 							:show-go-to-station="sector !== 'station'"
+							:sector="'manageStation'"
+							:modal-uuid="modalUuid"
 						/>
 					</div>
-					<div v-if="isOwnerOrAdmin() || sector !== 'home'">
+					<div
+						v-if="
+							hasPermission('stations.view.manage') ||
+							sector !== 'home'
+						"
+					>
 						<div class="tab-selection">
 							<button
-								v-if="isOwnerOrAdmin()"
+								v-if="hasPermission('stations.update')"
 								class="button is-default"
 								:class="{ selected: tab === 'settings' }"
 								:ref="el => (tabs['settings-tab'] = el)"
@@ -440,7 +516,8 @@ onBeforeUnmount(() => {
 							</button>
 							<button
 								v-if="
-									isOwnerOrAdmin() && station.autofill.enabled
+									hasPermission('stations.autofill') &&
+									station.autofill.enabled
 								"
 								class="button is-default"
 								:class="{ selected: tab === 'autofill' }"
@@ -450,7 +527,7 @@ onBeforeUnmount(() => {
 								Autofill
 							</button>
 							<button
-								v-if="isOwnerOrAdmin()"
+								v-if="hasPermission('stations.blacklist')"
 								class="button is-default"
 								:class="{ selected: tab === 'blacklist' }"
 								:ref="el => (tabs['blacklist-tab'] = el)"
@@ -460,7 +537,7 @@ onBeforeUnmount(() => {
 							</button>
 						</div>
 						<settings
-							v-if="isOwnerOrAdmin()"
+							v-if="hasPermission('stations.update')"
 							class="tab"
 							v-show="tab === 'settings'"
 							:modal-uuid="modalUuid"
@@ -475,7 +552,10 @@ onBeforeUnmount(() => {
 							:modal-uuid="modalUuid"
 						/>
 						<playlist-tab-base
-							v-if="isOwnerOrAdmin() && station.autofill.enabled"
+							v-if="
+								hasPermission('stations.autofill') &&
+								station.autofill.enabled
+							"
 							class="tab"
 							v-show="tab === 'autofill'"
 							:type="'autofill'"
@@ -489,7 +569,7 @@ onBeforeUnmount(() => {
 							</template>
 						</playlist-tab-base>
 						<playlist-tab-base
-							v-if="isOwnerOrAdmin()"
+							v-if="hasPermission('stations.blacklist')"
 							class="tab"
 							v-show="tab === 'blacklist'"
 							:type="'blacklist'"
@@ -523,11 +603,17 @@ onBeforeUnmount(() => {
 			</div>
 		</template>
 		<template #footer>
-			<div v-if="isOwnerOrAdmin()" class="right">
-				<quick-confirm @confirm="resetQueue()">
+			<div class="right">
+				<quick-confirm
+					v-if="hasPermission('stations.queue.reset')"
+					@confirm="resetQueue()"
+				>
 					<a class="button is-danger">Reset queue</a>
 				</quick-confirm>
-				<quick-confirm @confirm="removeStation()">
+				<quick-confirm
+					v-if="hasPermission('stations.remove')"
+					@confirm="removeStation()"
+				>
 					<button class="button is-danger">Delete station</button>
 				</quick-confirm>
 			</div>

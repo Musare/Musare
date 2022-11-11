@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from "vue";
 import { useModalsStore } from "@/stores/modals";
+import { useUserAuthStore } from "@/stores/userAuth";
 import utils from "@/utils";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
@@ -14,7 +15,9 @@ const UserLink = defineAsyncComponent(
 	() => import("@/components/UserLink.vue")
 );
 
-const columnDefault = ref(<TableColumn>{
+const { hasPermission } = useUserAuthStore();
+
+const columnDefault = ref<TableColumn>({
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -23,7 +26,7 @@ const columnDefault = ref(<TableColumn>{
 	minWidth: 150,
 	maxWidth: 600
 });
-const columns = ref(<TableColumn[]>[
+const columns = ref<TableColumn[]>([
 	{
 		name: "options",
 		displayName: "Options",
@@ -99,7 +102,7 @@ const columns = ref(<TableColumn[]>[
 		defaultWidth: 230
 	}
 ]);
-const filters = ref(<TableFilter[]>[
+const filters = ref<TableFilter[]>([
 	{
 		name: "_id",
 		displayName: "Playlist ID",
@@ -125,7 +128,8 @@ const filters = ref(<TableFilter[]>[
 			["station", "Station"],
 			["user", "User"],
 			["user-disliked", "User Disliked"],
-			["user-liked", "User Liked"]
+			["user-liked", "User Liked"],
+			["admin", "Admin"]
 		]
 	},
 	{
@@ -187,7 +191,7 @@ const filters = ref(<TableFilter[]>[
 		defaultFilterType: "contains"
 	}
 ]);
-const events = ref(<TableEvents>{
+const events = ref<TableEvents>({
 	adminRoom: "playlists",
 	updated: {
 		event: "admin.playlist.updated",
@@ -199,46 +203,46 @@ const events = ref(<TableEvents>{
 		id: "playlistId"
 	}
 });
-const jobs = ref([
-	{
+const jobs = ref([]);
+if (hasPermission("playlists.deleteOrphaned")) {
+	jobs.value.push({
 		name: "Delete orphaned station playlists",
 		socket: "playlists.deleteOrphanedStationPlaylists"
-	},
-	{
+	});
+	jobs.value.push({
 		name: "Delete orphaned genre playlists",
 		socket: "playlists.deleteOrphanedGenrePlaylists"
-	},
-	{
+	});
+}
+if (hasPermission("playlists.requestOrphanedPlaylistSongs"))
+	jobs.value.push({
 		name: "Request orphaned playlist songs",
 		socket: "playlists.requestOrphanedPlaylistSongs"
-	},
-	{
+	});
+if (hasPermission("playlists.clearAndRefillAll")) {
+	jobs.value.push({
 		name: "Clear and refill all station playlists",
 		socket: "playlists.clearAndRefillAllStationPlaylists"
-	},
-	{
+	});
+	jobs.value.push({
 		name: "Clear and refill all genre playlists",
 		socket: "playlists.clearAndRefillAllGenrePlaylists"
-	},
-	{
+	});
+}
+if (hasPermission("playlists.createMissing"))
+	jobs.value.push({
 		name: "Create missing genre playlists",
 		socket: "playlists.createMissingGenrePlaylists"
-	}
-]);
+	});
 
 const { openModal } = useModalsStore();
 
-const getDateFormatted = createdAt => {
-	const date = new Date(createdAt);
-	const year = date.getFullYear();
-	const month = `${date.getMonth() + 1}`.padStart(2, "0");
-	const day = `${date.getDate()}`.padStart(2, "0");
-	const hour = `${date.getHours()}`.padStart(2, "0");
-	const minute = `${date.getMinutes()}`.padStart(2, "0");
-	return `${year}-${month}-${day} ${hour}:${minute}`;
+const create = () => {
+	openModal({
+		modal: "createPlaylist",
+		props: { admin: true }
+	});
 };
-
-const formatTimeLong = length => utils.formatTimeLong(length);
 </script>
 
 <template>
@@ -250,6 +254,13 @@ const formatTimeLong = length => utils.formatTimeLong(length);
 				<p>Manage playlists</p>
 			</div>
 			<div class="button-row">
+				<button
+					v-if="hasPermission('playlists.create.admin')"
+					class="button is-primary"
+					@click="create()"
+				>
+					Create playlist
+				</button>
 				<run-job-dropdown :jobs="jobs" />
 			</div>
 		</div>
@@ -268,7 +279,7 @@ const formatTimeLong = length => utils.formatTimeLong(length);
 						@click="
 							openModal({
 								modal: 'editPlaylist',
-								data: { playlistId: slotProps.item._id }
+								props: { playlistId: slotProps.item._id }
 							})
 						"
 						:disabled="slotProps.item.removed"
@@ -300,9 +311,12 @@ const formatTimeLong = length => utils.formatTimeLong(length);
 				}}</span>
 			</template>
 			<template #column-totalLength="slotProps">
-				<span :title="formatTimeLong(slotProps.item.totalLength)">{{
-					formatTimeLong(slotProps.item.totalLength)
-				}}</span>
+				<span
+					:title="utils.formatTimeLong(slotProps.item.totalLength)"
+					>{{
+						utils.formatTimeLong(slotProps.item.totalLength)
+					}}</span
+				>
 			</template>
 			<template #column-createdBy="slotProps">
 				<span v-if="slotProps.item.createdBy === 'Musare'">Musare</span>
@@ -310,7 +324,7 @@ const formatTimeLong = length => utils.formatTimeLong(length);
 			</template>
 			<template #column-createdAt="slotProps">
 				<span :title="new Date(slotProps.item.createdAt).toString()">{{
-					getDateFormatted(slotProps.item.createdAt)
+					utils.getDateFormatted(slotProps.item.createdAt)
 				}}</span>
 			</template>
 			<template #column-createdFor="slotProps">

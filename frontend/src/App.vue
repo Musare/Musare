@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { useRoute, useRouter } from "vue-router";
-import { defineAsyncComponent, ref, computed, watch, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { defineAsyncComponent, ref, watch, onMounted } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
+import { GenericResponse } from "@musare_types/actions/GenericActions";
+import { GetPreferencesResponse } from "@musare_types/actions/UsersActions";
+import { NewestResponse } from "@musare_types/actions/NewsActions";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useModalsStore } from "@/stores/modals";
-import ws from "@/ws";
 import aw from "@/aw";
 import keyboardShortcuts from "@/keyboardShortcuts";
 
@@ -22,7 +24,6 @@ const FallingSnow = defineAsyncComponent(
 	() => import("@/components/FallingSnow.vue")
 );
 
-const route = useRoute();
 const router = useRouter();
 
 const { socket } = useWebsocketsStore();
@@ -33,9 +34,10 @@ const modalsStore = useModalsStore();
 const apiDomain = ref("");
 const socketConnected = ref(true);
 const keyIsDown = ref("");
-const scrollPosition = ref({ y: 0, x: 0 });
-const aModalIsOpen2 = ref(false);
-const broadcastChannel = ref();
+const broadcastChannel = ref({
+	user_login: null,
+	nightmode: null
+});
 const christmas = ref(false);
 const disconnectedMessage = ref();
 
@@ -48,25 +50,21 @@ const {
 	changeAnonymousSongRequests,
 	changeActivityWatch
 } = userPreferencesStore;
-const { modals, activeModals } = storeToRefs(modalsStore);
+const { activeModals } = storeToRefs(modalsStore);
 const { openModal, closeCurrentModal } = modalsStore;
 
-const aModalIsOpen = computed(() => Object.keys(activeModals.value).length > 0);
-
 const toggleNightMode = () => {
-	localStorage.setItem("nightmode", `${!nightmode.value}`);
-
 	if (loggedIn.value) {
 		socket.dispatch(
 			"users.updatePreferences",
 			{ nightmode: !nightmode.value },
-			res => {
+			(res: GenericResponse) => {
 				if (res.status !== "success") new Toast(res.message);
 			}
 		);
+	} else {
+		broadcastChannel.value.nightmode.postMessage(!nightmode.value);
 	}
-
-	changeNightmode(!nightmode.value);
 };
 
 const enableNightmode = () => {
@@ -96,41 +94,36 @@ watch(activityWatch, enabled => {
 	if (enabled) aw.enable();
 	else aw.disable();
 });
-watch(aModalIsOpen, isOpen => {
-	if (isOpen) {
-		scrollPosition.value = {
-			x: window.scrollX,
-			y: window.scrollY
-		};
-		aModalIsOpen2.value = true;
-	} else {
-		aModalIsOpen2.value = false;
-		setTimeout(() => {
-			window.scrollTo(scrollPosition.value.x, scrollPosition.value.y);
-		}, 10);
-	}
-});
 
 onMounted(async () => {
 	window
 		.matchMedia("(prefers-color-scheme: dark)")
 		.addEventListener("change", e => {
-			if (e.matches === !nightmode.value) toggleNightMode();
+			if (e.matches === !nightmode.value) changeNightmode(true);
 		});
 
 	if (!loggedIn.value) {
 		lofig.get("cookie.SIDname").then(sid => {
-			broadcastChannel.value = new BroadcastChannel(`${sid}.user_login`);
-			broadcastChannel.value.onmessage = data => {
-				if (data) {
-					broadcastChannel.value.close();
+			broadcastChannel.value.user_login = new BroadcastChannel(
+				`${sid}.user_login`
+			);
+			broadcastChannel.value.user_login.onmessage = res => {
+				if (res.data) {
+					broadcastChannel.value.user_login.close();
 					window.location.reload();
 				}
+			};
+
+			broadcastChannel.value.nightmode = new BroadcastChannel(
+				`${sid}.nightmode`
+			);
+			broadcastChannel.value.nightmode.onmessage = res => {
+				changeNightmode(!!res.data);
 			};
 		});
 	}
 
-	document.onkeydown = (ev: any) => {
+	document.onkeydown = (ev: KeyboardEvent) => {
 		const event = ev || window.event;
 		const { keyCode } = event;
 		const shift = event.shiftKey;
@@ -162,12 +155,7 @@ onMounted(async () => {
 		shift: false,
 		ctrl: false,
 		handler: () => {
-			if (
-				Object.keys(activeModals.value).length !== 0 &&
-				modals.value[
-					activeModals.value[activeModals.value.length - 1]
-				] !== "editSong"
-			)
+			if (Object.keys(activeModals.value).length !== 0)
 				closeCurrentModal();
 		}
 	});
@@ -180,105 +168,100 @@ onMounted(async () => {
 
 	disconnectedMessage.value.hide();
 
-	ws.onConnect(() => {
+	socket.onConnect(() => {
 		socketConnected.value = true;
 
-		socket.dispatch("users.getPreferences", res => {
-			if (res.status === "success") {
-				const { preferences } = res.data;
+		socket.dispatch(
+			"users.getPreferences",
+			(res: GetPreferencesResponse) => {
+				if (res.status === "success") {
+					const { preferences } = res.data;
 
-				changeAutoSkipDisliked(preferences.autoSkipDisliked);
-				changeNightmode(preferences.nightmode);
-				changeActivityLogPublic(preferences.activityLogPublic);
-				changeAnonymousSongRequests(preferences.anonymousSongRequests);
-				changeActivityWatch(preferences.activityWatch);
-
-				if (nightmode.value) enableNightmode();
-				else disableNightmode();
+					changeAutoSkipDisliked(preferences.autoSkipDisliked);
+					changeNightmode(preferences.nightmode);
+					changeActivityLogPublic(preferences.activityLogPublic);
+					changeAnonymousSongRequests(
+						preferences.anonymousSongRequests
+					);
+					changeActivityWatch(preferences.activityWatch);
+				}
 			}
-		});
-
-		socket.on("keep.event:user.session.deleted", () =>
-			window.location.reload()
 		);
 
 		const newUser = !localStorage.getItem("firstVisited");
-		socket.dispatch("news.newest", newUser, res => {
+		socket.dispatch("news.newest", newUser, (res: NewestResponse) => {
 			if (res.status !== "success") return;
 
 			const { news } = res.data;
 
 			if (news) {
 				if (newUser) {
-					openModal({ modal: "whatIsNew", data: { news } });
+					openModal({ modal: "whatIsNew", props: { news } });
 				} else if (localStorage.getItem("whatIsNew")) {
 					if (
-						parseInt(localStorage.getItem("whatIsNew")) <
+						parseInt(localStorage.getItem("whatIsNew") as string) <
 						news.createdAt
 					) {
 						openModal({
 							modal: "whatIsNew",
-							data: { news }
+							props: { news }
 						});
-						localStorage.setItem("whatIsNew", news.createdAt);
+						localStorage.setItem(
+							"whatIsNew",
+							news.createdAt.toString()
+						);
 					}
 				} else {
 					if (
-						parseInt(localStorage.getItem("firstVisited")) <
-						news.createdAt
+						localStorage.getItem("firstVisited") &&
+						parseInt(
+							localStorage.getItem("firstVisited") as string
+						) < news.createdAt
 					)
 						openModal({
 							modal: "whatIsNew",
-							data: { news }
+							props: { news }
 						});
-					localStorage.setItem("whatIsNew", news.createdAt);
+					localStorage.setItem(
+						"whatIsNew",
+						news.createdAt.toString()
+					);
 				}
 			}
 
 			if (!localStorage.getItem("firstVisited"))
 				localStorage.setItem("firstVisited", Date.now().toString());
 		});
-	});
+	}, true);
 
-	ws.onDisconnect(true, () => {
+	socket.onDisconnect(() => {
 		socketConnected.value = false;
-	});
+	}, true);
+
+	socket.on("keep.event:user.session.deleted", () =>
+		window.location.reload()
+	);
 
 	apiDomain.value = await lofig.get("backend.apiDomain");
 
 	router.isReady().then(() => {
-		if (route.query.err) {
-			let { err } = route.query;
-			err = JSON.stringify(err)
-				.replace(/</g, "&lt;")
-				.replace(/>/g, "&gt;");
-			router.push({ query: {} });
-			new Toast({ content: err, timeout: 20000 });
-		}
-
-		if (route.query.msg) {
-			let { msg } = route.query;
-			msg = JSON.stringify(msg)
-				.replace(/</g, "&lt;")
-				.replace(/>/g, "&gt;");
-			router.push({ query: {} });
-			new Toast({ content: msg, timeout: 20000 });
-		}
-
-		lofig.get("siteSettings.githubAuthentication").then(enabled => {
-			if (enabled && localStorage.getItem("github_redirect")) {
-				router.push(localStorage.getItem("github_redirect"));
-				localStorage.removeItem("github_redirect");
-			}
-		});
+		lofig
+			.get("siteSettings.githubAuthentication")
+			.then((enabled: boolean) => {
+				if (enabled && localStorage.getItem("github_redirect")) {
+					router.push(
+						localStorage.getItem("github_redirect") as string
+					);
+					localStorage.removeItem("github_redirect");
+				}
+			});
 	});
 
 	if (localStorage.getItem("nightmode") === "true") {
 		changeNightmode(true);
-		enableNightmode();
-	}
+	} else changeNightmode(false);
 
-	lofig.get("siteSettings.christmas").then(enabled => {
+	lofig.get("siteSettings.christmas").then((enabled: boolean) => {
 		if (enabled) {
 			christmas.value = true;
 			enableChristmasMode();
@@ -291,11 +274,7 @@ onMounted(async () => {
 	<div class="upper-container">
 		<banned-page v-if="banned" />
 		<div v-else class="upper-container">
-			<router-view
-				:key="$route.fullPath"
-				class="main-container"
-				:class="{ 'main-container-modal-active': aModalIsOpen2 }"
-			/>
+			<router-view :key="$route.fullPath" class="main-container" />
 		</div>
 		<falling-snow v-if="christmas" />
 		<modal-manager />
@@ -565,20 +544,20 @@ code {
 }
 
 html {
-	overflow: auto !important;
 	height: 100%;
-	background-color: inherit;
+	overflow: hidden;
 	font-size: 14px;
 }
 
 body {
 	background-color: var(--light-grey);
 	color: var(--dark-grey);
-	height: 100%;
 	line-height: 1.4285714;
 	font-size: 1rem;
 	font-family: "Inter", Helvetica, Arial, sans-serif;
+	height: 100%;
 	max-width: 100%;
+	overflow-y: auto !important;
 	overflow-x: hidden;
 }
 
@@ -769,11 +748,6 @@ textarea {
 	display: flex;
 	flex-direction: column;
 	max-width: 100%;
-
-	&.main-container-modal-active {
-		height: 100% !important;
-		overflow: hidden !important;
-	}
 
 	> .container {
 		position: relative;
@@ -1518,7 +1492,7 @@ button.delete:focus {
 			&.label {
 				border-radius: 0;
 			}
-			&:first-child {
+			&:first-child:not(:only-child) {
 				& > input,
 				& > select,
 				& > .button,
@@ -1526,12 +1500,20 @@ button.delete:focus {
 					border-radius: @border-radius 0 0 @border-radius;
 				}
 			}
-			&:last-child {
+			&:last-child:not(:only-child) {
 				& > input,
 				& > select,
 				& > .button,
 				&.label {
 					border-radius: 0 @border-radius @border-radius 0;
+				}
+			}
+			&:only-child {
+				& > input,
+				& > select,
+				& > .button,
+				&.label {
+					border-radius: @border-radius;
 				}
 			}
 		}
@@ -1728,6 +1710,7 @@ h4.section-title {
 		}
 
 		.stop-icon,
+		.remove-from-playlist-icon,
 		.delete-icon {
 			color: var(--dark-red);
 		}

@@ -8,6 +8,7 @@ import {
 } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserAuthStore } from "@/stores/userAuth";
 import keyboardShortcuts from "@/keyboardShortcuts";
 
 const MainHeader = defineAsyncComponent(
@@ -24,6 +25,8 @@ const route = useRoute();
 const router = useRouter();
 
 const { socket } = useWebsocketsStore();
+
+const { hasPermission } = useUserAuthStore();
 
 const currentTab = ref("");
 const siteSettings = ref({
@@ -120,7 +123,7 @@ onMounted(async () => {
 		sidebarActive.value = !(document.body.clientWidth <= 768);
 
 	calculateSidebarPadding();
-	window.addEventListener("scroll", calculateSidebarPadding);
+	document.body.addEventListener("scroll", calculateSidebarPadding);
 
 	keyboardShortcuts.registerShortcut("admin.toggleKeyboardShortcutsHelper", {
 		keyCode: 191, // '/' key
@@ -145,7 +148,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
 	socket.dispatch("apis.leaveRooms");
 
-	window.removeEventListener("scroll", calculateSidebarPadding);
+	document.body.removeEventListener("scroll", calculateSidebarPadding);
 
 	const shortcutNames = [
 		"admin.toggleKeyboardShortcutsHelper",
@@ -182,7 +185,10 @@ onBeforeUnmount(() => {
 								<span>Minimise</span>
 							</div>
 							<div
-								v-if="sidebarActive"
+								v-if="
+									hasPermission('admin.view.songs') &&
+									sidebarActive
+								"
 								class="sidebar-item with-children"
 								:class="{ 'is-active': childrenActive.songs }"
 							>
@@ -212,6 +218,9 @@ onBeforeUnmount(() => {
 										Songs
 									</router-link>
 									<router-link
+										v-if="
+											hasPermission('admin.view.import')
+										"
 										class="sidebar-item-child"
 										to="/admin/songs/import"
 									>
@@ -220,7 +229,10 @@ onBeforeUnmount(() => {
 								</div>
 							</div>
 							<router-link
-								v-else
+								v-else-if="
+									hasPermission('admin.view.songs') &&
+									!sidebarActive
+								"
 								class="sidebar-item songs"
 								to="/admin/songs"
 								content="Songs"
@@ -233,6 +245,7 @@ onBeforeUnmount(() => {
 								<span>Songs</span>
 							</router-link>
 							<router-link
+								v-if="hasPermission('admin.view.reports')"
 								class="sidebar-item reports"
 								to="/admin/reports"
 								content="Reports"
@@ -245,6 +258,7 @@ onBeforeUnmount(() => {
 								<span>Reports</span>
 							</router-link>
 							<router-link
+								v-if="hasPermission('admin.view.stations')"
 								class="sidebar-item stations"
 								to="/admin/stations"
 								content="Stations"
@@ -257,6 +271,7 @@ onBeforeUnmount(() => {
 								<span>Stations</span>
 							</router-link>
 							<router-link
+								v-if="hasPermission('admin.view.playlists')"
 								class="sidebar-item playlists"
 								to="/admin/playlists"
 								content="Playlists"
@@ -269,7 +284,10 @@ onBeforeUnmount(() => {
 								<span>Playlists</span>
 							</router-link>
 							<div
-								v-if="sidebarActive"
+								v-if="
+									hasPermission('admin.view.users') &&
+									sidebarActive
+								"
 								class="sidebar-item with-children"
 								:class="{ 'is-active': childrenActive.users }"
 							>
@@ -299,12 +317,22 @@ onBeforeUnmount(() => {
 										Users
 									</router-link>
 									<router-link
+										v-if="
+											hasPermission(
+												'admin.view.dataRequests'
+											)
+										"
 										class="sidebar-item-child"
 										to="/admin/users/data-requests"
 									>
 										Data Requests
 									</router-link>
 									<router-link
+										v-if="
+											hasPermission(
+												'admin.view.punishments'
+											)
+										"
 										class="sidebar-item-child"
 										to="/admin/users/punishments"
 									>
@@ -313,7 +341,10 @@ onBeforeUnmount(() => {
 								</div>
 							</div>
 							<router-link
-								v-else
+								v-else-if="
+									hasPermission('admin.view.users') &&
+									!sidebarActive
+								"
 								class="sidebar-item users"
 								to="/admin/users"
 								content="Users"
@@ -326,6 +357,7 @@ onBeforeUnmount(() => {
 								<span>Users</span>
 							</router-link>
 							<router-link
+								v-if="hasPermission('admin.view.news')"
 								class="sidebar-item news"
 								to="/admin/news"
 								content="News"
@@ -338,6 +370,7 @@ onBeforeUnmount(() => {
 								<span>News</span>
 							</router-link>
 							<router-link
+								v-if="hasPermission('admin.view.statistics')"
 								class="sidebar-item statistics"
 								to="/admin/statistics"
 								content="Statistics"
@@ -350,12 +383,24 @@ onBeforeUnmount(() => {
 								<span>Statistics</span>
 							</router-link>
 							<div
-								v-if="sidebarActive"
+								v-if="
+									(hasPermission('admin.view.youtube') ||
+										hasPermission(
+											'admin.view.youtubeVideos'
+										)) &&
+									sidebarActive
+								"
 								class="sidebar-item with-children"
 								:class="{ 'is-active': childrenActive.youtube }"
 							>
 								<span>
-									<router-link to="/admin/youtube">
+									<router-link
+										:to="`/admin/youtube${
+											hasPermission('admin.view.youtube')
+												? ''
+												: '/videos'
+										}`"
+									>
 										<i class="material-icons"
 											>smart_display</i
 										>
@@ -376,12 +421,20 @@ onBeforeUnmount(() => {
 								</span>
 								<div class="sidebar-item-children">
 									<router-link
+										v-if="
+											hasPermission('admin.view.youtube')
+										"
 										class="sidebar-item-child"
 										to="/admin/youtube"
 									>
 										YouTube
 									</router-link>
 									<router-link
+										v-if="
+											hasPermission(
+												'admin.view.youtubeVideos'
+											)
+										"
 										class="sidebar-item-child"
 										to="/admin/youtube/videos"
 									>
@@ -390,9 +443,19 @@ onBeforeUnmount(() => {
 								</div>
 							</div>
 							<router-link
-								v-else
+								v-else-if="
+									(hasPermission('admin.view.youtube') ||
+										hasPermission(
+											'admin.view.youtubeVideos'
+										)) &&
+									!sidebarActive
+								"
 								class="sidebar-item youtube"
-								to="/admin/youtube"
+								:to="`/admin/youtube${
+									hasPermission('admin.view.youtube')
+										? ''
+										: '/videos'
+								}`"
 								content="YouTube"
 								v-tippy="{
 									theme: 'info',

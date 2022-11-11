@@ -6,7 +6,8 @@ import mongoose from "mongoose";
 import axios from "axios";
 import bcrypt from "bcrypt";
 import sha256 from "sha256";
-import { isAdminRequired, isLoginRequired } from "./hooks";
+import isLoginRequired from "../hooks/loginRequired";
+import { hasPermission, useHasPermission } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -170,6 +171,17 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
+	channel: "user.updateRole",
+	cb: ({ user }) => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: user._id }).then(sockets => {
+			sockets.forEach(socket => {
+				socket.dispatch("keep.event:user.role.updated", { data: { role: user.role } });
+			});
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
 	channel: "user.updated",
 	cb: async data => {
 		const userModel = await DBModule.runJob("GET_MODEL", {
@@ -245,71 +257,74 @@ export default {
 	 * @param operator - the operator for queries
 	 * @param cb
 	 */
-	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
-		async.waterfall(
-			[
-				next => {
-					DBModule.runJob(
-						"GET_DATA",
-						{
-							page,
-							pageSize,
-							properties,
-							sort,
-							queries,
-							operator,
-							modelName: "user",
-							blacklistedProperties: [
-								"services.password.password",
-								"services.password.reset.code",
-								"services.password.reset.expires",
-								"services.password.set.code",
-								"services.password.set.expires",
-								"services.github.access_token",
-								"email.verificationToken"
-							],
-							specialProperties: {
-								hasPassword: [
-									{
-										$addFields: {
-											hasPassword: {
-												$cond: [
-													{ $eq: [{ $type: "$services.password.password" }, "string"] },
-													true,
-													false
-												]
+	getData: useHasPermission(
+		"users.get",
+		async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
+			async.waterfall(
+				[
+					next => {
+						DBModule.runJob(
+							"GET_DATA",
+							{
+								page,
+								pageSize,
+								properties,
+								sort,
+								queries,
+								operator,
+								modelName: "user",
+								blacklistedProperties: [
+									"services.password.password",
+									"services.password.reset.code",
+									"services.password.reset.expires",
+									"services.password.set.code",
+									"services.password.set.expires",
+									"services.github.access_token",
+									"email.verificationToken"
+								],
+								specialProperties: {
+									hasPassword: [
+										{
+											$addFields: {
+												hasPassword: {
+													$cond: [
+														{ $eq: [{ $type: "$services.password.password" }, "string"] },
+														true,
+														false
+													]
+												}
 											}
 										}
-									}
-								]
+									]
+								},
+								specialQueries: {}
 							},
-							specialQueries: {}
-						},
-						this
-					)
-						.then(response => {
-							next(null, response);
-						})
-						.catch(err => {
-							next(err);
-						});
+							this
+						)
+							.then(response => {
+								next(null, response);
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				],
+				async (err, response) => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log("ERROR", "USERS_GET_DATA", `Failed to get data from users. "${err}"`);
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "USERS_GET_DATA", `Got data from users successfully.`);
+					return cb({
+						status: "success",
+						message: "Successfully got data from users.",
+						data: response
+					});
 				}
-			],
-			async (err, response) => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "USERS_GET_DATA", `Failed to get data from users. "${err}"`);
-					return cb({ status: "error", message: err });
-				}
-				this.log("SUCCESS", "USERS_GET_DATA", `Got data from users successfully.`);
-				return cb({
-					status: "success",
-					message: "Successfully got data from users.",
-					data: response
-				});
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Removes all data held on a user, including their ability to login
@@ -365,7 +380,12 @@ export default {
 					});
 				},
 
+				// remove user as station DJ
 				next => {
+					stationModel.updateMany({ djs: session.userId }, { $pull: { djs: session.userId } }, next);
+				},
+
+				(res, next) => {
 					playlistModel.findOne({ createdBy: session.userId, type: "user-liked" }, next);
 				},
 
@@ -541,7 +561,7 @@ export default {
 	 * @param {string} userId - the user id that is going to be banned
 	 * @param {Function} cb - gets called with the result
 	 */
-	adminRemove: isAdminRequired(async function adminRemove(session, userId, cb) {
+	adminRemove: useHasPermission("users.remove", async function adminRemove(session, userId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		const dataRequestModel = await DBModule.runJob("GET_MODEL", { modelName: "dataRequest" }, this);
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
@@ -591,7 +611,12 @@ export default {
 					});
 				},
 
+				// remove user as station DJ
 				next => {
+					stationModel.updateMany({ djs: userId }, { $pull: { djs: userId } }, next);
+				},
+
+				(res, next) => {
 					playlistModel.findOne({ createdBy: userId, type: "user-liked" }, next);
 				},
 
@@ -647,7 +672,7 @@ export default {
 				(res, next) => {
 					CacheModule.runJob("PUB", {
 						channel: "user.removeSessions",
-						value: session.userId
+						value: userId
 					});
 
 					async.waterfall(
@@ -670,7 +695,6 @@ export default {
 
 							(keys, sessions, next) => {
 								// temp fix, need to wait properly for the SUB/PUB refactor (on wekan)
-								const { userId } = session;
 								setTimeout(
 									() =>
 										async.each(
@@ -1233,17 +1257,13 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	removeSessions: isLoginRequired(async function removeSessions(session, userId, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-
 		async.waterfall(
 			[
 				next => {
-					userModel.findOne({ _id: session.userId }, (err, user) => {
-						if (err) return next(err);
-						if (user.role !== "admin" && session.userId !== userId)
-							return next("Only admins and the owner of the account can remove their sessions.");
-						return next();
-					});
+					if (session.userId === userId) return next();
+					return hasPermission("users.remove.sessions", session)
+						.then(() => next())
+						.catch(() => next("Only admins and the owner of the account can remove their sessions."));
 				},
 
 				next => {
@@ -1850,7 +1870,7 @@ export default {
 	 * @param {string} userId - the userId of the person we are trying to get the username from
 	 * @param {Function} cb - gets called with the result
 	 */
-	getUserFromId: isAdminRequired(async function getUserFromId(session, userId, cb) {
+	getUserFromId: useHasPermission("users.get", async function getUserFromId(session, userId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		userModel
 			.findById(userId)
@@ -1979,14 +1999,13 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					if (updatingUserId === session.userId) return next(null, true);
-					return userModel.findOne({ _id: session.userId }, next);
+					if (updatingUserId === session.userId) return next();
+					return hasPermission("users.update", session)
+						.then(() => next())
+						.catch(() => next("Invalid permissions."));
 				},
 
-				(user, next) => {
-					if (user !== true && (!user || user.role !== "admin")) return next("Invalid permissions.");
-					return userModel.findOne({ _id: updatingUserId }, next);
-				},
+				next => userModel.findOne({ _id: updatingUserId }, next),
 
 				(user, next) => {
 					if (!user) return next("User not found.");
@@ -2072,14 +2091,13 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					if (updatingUserId === session.userId) return next(null, true);
-					return userModel.findOne({ _id: session.userId }, next);
+					if (updatingUserId === session.userId) return next();
+					return hasPermission("users.update.restricted", session)
+						.then(() => next())
+						.catch(() => next("Invalid permissions."));
 				},
 
-				(user, next) => {
-					if (user !== true && (!user || user.role !== "admin")) return next("Invalid permissions.");
-					return userModel.findOne({ _id: updatingUserId }, next);
-				},
+				next => userModel.findOne({ _id: updatingUserId }, next),
 
 				(user, next) => {
 					if (!user) return next("User not found.");
@@ -2183,14 +2201,13 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					if (updatingUserId === session.userId) return next(null, true);
-					return userModel.findOne({ _id: session.userId }, next);
+					if (updatingUserId === session.userId) return next();
+					return hasPermission("users.update", session)
+						.then(() => next())
+						.catch(() => next("Invalid permissions."));
 				},
 
-				(user, next) => {
-					if (user !== true && (!user || user.role !== "admin")) return next("Invalid permissions.");
-					return userModel.findOne({ _id: updatingUserId }, next);
-				},
+				next => userModel.findOne({ _id: updatingUserId }, next),
 
 				(user, next) => {
 					if (!user) return next("User not found.");
@@ -2254,14 +2271,13 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					if (updatingUserId === session.userId) return next(null, true);
-					return userModel.findOne({ _id: session.userId }, next);
+					if (updatingUserId === session.userId) return next();
+					return hasPermission("users.update", session)
+						.then(() => next())
+						.catch(() => next("Invalid permissions."));
 				},
 
-				(user, next) => {
-					if (user !== true && (!user || user.role !== "admin")) return next("Invalid permissions.");
-					return userModel.findOne({ _id: updatingUserId }, next);
-				},
+				next => userModel.findOne({ _id: updatingUserId }, next),
 
 				(user, next) => {
 					if (!user) return next("User not found.");
@@ -2325,14 +2341,13 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					if (updatingUserId === session.userId) return next(null, true);
-					return userModel.findOne({ _id: session.userId }, next);
+					if (updatingUserId === session.userId) return next();
+					return hasPermission("users.update", session)
+						.then(() => next())
+						.catch(() => next("Invalid permissions."));
 				},
 
-				(user, next) => {
-					if (user !== true && (!user || user.role !== "admin")) return next("Invalid permissions.");
-					return userModel.findOne({ _id: updatingUserId }, next);
-				},
+				next => userModel.findOne({ _id: updatingUserId }, next),
 
 				(user, next) => {
 					if (!user) return next("User not found.");
@@ -2390,14 +2405,13 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					if (updatingUserId === session.userId) return next(null, true);
-					return userModel.findOne({ _id: session.userId }, next);
+					if (updatingUserId === session.userId) return next();
+					return hasPermission("users.update", session)
+						.then(() => next())
+						.catch(() => next("Invalid permissions."));
 				},
 
-				(user, next) => {
-					if (user !== true && (!user || user.role !== "admin")) return next("Invalid permissions.");
-					return userModel.findOne({ _id: updatingUserId }, next);
-				},
+				next => userModel.findOne({ _id: updatingUserId }, next),
 
 				(user, next) => {
 					if (!user) return next("User not found.");
@@ -2453,61 +2467,70 @@ export default {
 	 * @param {string} newRole - the new role
 	 * @param {Function} cb - gets called with the result
 	 */
-	updateRole: isAdminRequired(async function updateRole(session, updatingUserId, newRole, cb) {
-		newRole = newRole.toLowerCase();
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+	updateRole: useHasPermission(
+		"users.update.restricted",
+		async function updateRole(session, updatingUserId, newRole, cb) {
+			newRole = newRole.toLowerCase();
+			const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
-		async.waterfall(
-			[
-				next => {
-					userModel.findOne({ _id: updatingUserId }, next);
-				},
+			async.waterfall(
+				[
+					next => {
+						userModel.findOne({ _id: updatingUserId }, next);
+					},
 
-				(user, next) => {
-					if (!user) return next("User not found.");
-					if (user.role === newRole) return next("New role can't be the same as the old role.");
-					return next();
-				},
-				next => {
-					userModel.updateOne(
-						{ _id: updatingUserId },
-						{ $set: { role: newRole } },
-						{ runValidators: true },
-						next
-					);
-				}
-			],
-			async err => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					(user, next) => {
+						if (!user) return next("User not found.");
+						if (user.role === newRole) return next("New role can't be the same as the old role.");
+						return next(null, user);
+					},
+
+					(user, next) => {
+						userModel.updateOne(
+							{ _id: updatingUserId },
+							{ $set: { role: newRole } },
+							{ runValidators: true },
+							err => next(err, user)
+						);
+					}
+				],
+				async (err, user) => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+						this.log(
+							"ERROR",
+							"UPDATE_ROLE",
+							`User "${session.userId}" couldn't update role for user "${updatingUserId}" to role "${newRole}". "${err}"`
+						);
+
+						return cb({ status: "error", message: err });
+					}
 
 					this.log(
-						"ERROR",
+						"SUCCESS",
 						"UPDATE_ROLE",
-						`User "${session.userId}" couldn't update role for user "${updatingUserId}" to role "${newRole}". "${err}"`
+						`User "${session.userId}" updated the role of user "${updatingUserId}" to role "${newRole}".`
 					);
 
-					return cb({ status: "error", message: err });
+					CacheModule.runJob("PUB", {
+						channel: "user.updated",
+						value: { userId: updatingUserId }
+					});
+
+					CacheModule.runJob("PUB", {
+						channel: "user.updateRole",
+						value: { user }
+					});
+
+					return cb({
+						status: "success",
+						message: "Role successfully updated."
+					});
 				}
-
-				this.log(
-					"SUCCESS",
-					"UPDATE_ROLE",
-					`User "${session.userId}" updated the role of user "${updatingUserId}" to role "${newRole}".`
-				);
-
-				CacheModule.runJob("PUB", {
-					channel: "user.updated",
-					value: { userId: updatingUserId }
-				});
-
-				return cb({
-					status: "success",
-					message: "Role successfully updated."
-				});
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Updates a user's password
@@ -2984,73 +3007,76 @@ export default {
 	 * @param {string} email - the email of the user for which the password reset is intended
 	 * @param {Function} cb - gets called with the result
 	 */
-	adminRequestPasswordReset: isAdminRequired(async function adminRequestPasswordReset(session, userId, cb) {
-		const code = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 8 }, this);
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+	adminRequestPasswordReset: useHasPermission(
+		"users.requestPasswordReset",
+		async function adminRequestPasswordReset(session, userId, cb) {
+			const code = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 8 }, this);
+			const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
-		const resetPasswordRequestSchema = await MailModule.runJob(
-			"GET_SCHEMA",
-			{ schemaName: "resetPasswordRequest" },
-			this
-		);
+			const resetPasswordRequestSchema = await MailModule.runJob(
+				"GET_SCHEMA",
+				{ schemaName: "resetPasswordRequest" },
+				this
+			);
 
-		async.waterfall(
-			[
-				next => userModel.findOne({ _id: userId }, next),
+			async.waterfall(
+				[
+					next => userModel.findOne({ _id: userId }, next),
 
-				(user, next) => {
-					if (!user) return next("User not found.");
-					if (!user.services.password || !user.services.password.password)
-						return next("User does not have a password set, and probably uses GitHub to log in.");
-					return next();
-				},
+					(user, next) => {
+						if (!user) return next("User not found.");
+						if (!user.services.password || !user.services.password.password)
+							return next("User does not have a password set, and probably uses GitHub to log in.");
+						return next();
+					},
 
-				next => {
-					const expires = new Date();
-					expires.setDate(expires.getDate() + 1);
-					userModel.findOneAndUpdate(
-						{ _id: userId },
-						{
-							$set: {
-								"services.password.reset": {
-									code,
-									expires
+					next => {
+						const expires = new Date();
+						expires.setDate(expires.getDate() + 1);
+						userModel.findOneAndUpdate(
+							{ _id: userId },
+							{
+								$set: {
+									"services.password.reset": {
+										code,
+										expires
+									}
 								}
-							}
-						},
-						{ runValidators: true },
-						next
-					);
-				},
+							},
+							{ runValidators: true },
+							next
+						);
+					},
 
-				(user, next) => {
-					resetPasswordRequestSchema(user.email.address, user.username, code, next);
-				}
-			],
-			async err => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					(user, next) => {
+						resetPasswordRequestSchema(user.email.address, user.username, code, next);
+					}
+				],
+				async err => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log(
+							"ERROR",
+							"ADMINREQUEST_PASSWORD_RESET",
+							`User '${userId}' failed to get a password reset. '${err}'`
+						);
+						return cb({ status: "error", message: err });
+					}
+
 					this.log(
-						"ERROR",
-						"ADMINREQUEST_PASSWORD_RESET",
-						`User '${userId}' failed to get a password reset. '${err}'`
+						"SUCCESS",
+						"ADMIN_REQUEST_PASSWORD_RESET",
+						`User '${userId}' successfully got sent a password reset.`
 					);
-					return cb({ status: "error", message: err });
+
+					return cb({
+						status: "success",
+						message: "Successfully requested password reset for user."
+					});
 				}
-
-				this.log(
-					"SUCCESS",
-					"ADMIN_REQUEST_PASSWORD_RESET",
-					`User '${userId}' successfully got sent a password reset.`
-				);
-
-				return cb({
-					status: "success",
-					message: "Successfully requested password reset for user."
-				});
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Verifies a reset code
@@ -3171,48 +3197,51 @@ export default {
 	 * @param {string} userId - the user id of the person to resend the email to
 	 * @param {Function} cb - gets called with the result
 	 */
-	resendVerifyEmail: isAdminRequired(async function resendVerifyEmail(session, userId, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		const verifyEmailSchema = await MailModule.runJob("GET_SCHEMA", { schemaName: "verifyEmail" }, this);
+	resendVerifyEmail: useHasPermission(
+		"users.resendVerifyEmail",
+		async function resendVerifyEmail(session, userId, cb) {
+			const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+			const verifyEmailSchema = await MailModule.runJob("GET_SCHEMA", { schemaName: "verifyEmail" }, this);
 
-		async.waterfall(
-			[
-				next => userModel.findOne({ _id: userId }, next),
+			async.waterfall(
+				[
+					next => userModel.findOne({ _id: userId }, next),
 
-				(user, next) => {
-					if (!user) return next("User not found.");
-					if (user.email.verified) return next("The user's email is already verified.");
-					return next(null, user);
-				},
+					(user, next) => {
+						if (!user) return next("User not found.");
+						if (user.email.verified) return next("The user's email is already verified.");
+						return next(null, user);
+					},
 
-				(user, next) => {
-					verifyEmailSchema(user.email.address, user.username, user.email.verificationToken, err => {
-						next(err);
+					(user, next) => {
+						verifyEmailSchema(user.email.address, user.username, user.email.verificationToken, err => {
+							next(err);
+						});
+					}
+				],
+				async err => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+						this.log(
+							"ERROR",
+							"RESEND_VERIFY_EMAIL",
+							`Couldn't resend verify email for user "${userId}". '${err}'`
+						);
+
+						return cb({ status: "error", message: err });
+					}
+
+					this.log("SUCCESS", "RESEND_VERIFY_EMAIL", `Resent verify email for user "${userId}".`);
+
+					return cb({
+						status: "success",
+						message: "Email resent successfully."
 					});
 				}
-			],
-			async err => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-
-					this.log(
-						"ERROR",
-						"RESEND_VERIFY_EMAIL",
-						`Couldn't resend verify email for user "${userId}". '${err}'`
-					);
-
-					return cb({ status: "error", message: err });
-				}
-
-				this.log("SUCCESS", "RESEND_VERIFY_EMAIL", `Resent verify email for user "${userId}".`);
-
-				return cb({
-					status: "success",
-					message: "Email resent successfully."
-				});
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Bans a user by userId
@@ -3223,7 +3252,7 @@ export default {
 	 * @param {string} expiresAt - the time the ban expires
 	 * @param {Function} cb - gets called with the result
 	 */
-	banUserById: isAdminRequired(function banUserById(session, userId, reason, expiresAt, cb) {
+	banUserById: useHasPermission("users.ban", function banUserById(session, userId, reason, expiresAt, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -3315,6 +3344,65 @@ export default {
 					status: "success",
 					message: "Successfully banned user."
 				});
+			}
+		);
+	}),
+
+	/**
+	 * Search for a user by username or name
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} query - the query
+	 * @param {string} page - page
+	 * @param {Function} cb - gets called with the result
+	 */
+	search: isLoginRequired(async function search(session, query, page, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		async.waterfall(
+			[
+				next => {
+					if ((!query && query !== "") || typeof query !== "string") next("Invalid query.");
+					else next();
+				},
+
+				next => {
+					const findQuery = {
+						$or: [{ name: new RegExp(`${query}`, "i"), username: new RegExp(`${query}`, "i") }]
+					};
+					const pageSize = 15;
+					const skipAmount = pageSize * (page - 1);
+
+					userModel.find(findQuery).count((err, count) => {
+						if (err) next(err);
+						else {
+							userModel
+								.find(findQuery, { _id: true, name: true, username: true, avatar: true })
+								.skip(skipAmount)
+								.limit(pageSize)
+								.exec((err, users) => {
+									if (err) next(err);
+									else {
+										next(null, {
+											users,
+											page,
+											pageSize,
+											skipAmount,
+											count
+										});
+									}
+								});
+						}
+					});
+				}
+			],
+			async (err, data) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "USERS_SEARCH", `Searching users failed. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "USERS_SEARCH", "Searching users successful.");
+				return cb({ status: "success", data });
 			}
 		);
 	})

@@ -502,7 +502,7 @@ class _AppModule extends CoreClass {
 
 						this.log("INFO", "VERIFY_EMAIL", `Successfully verified email.`);
 
-						return res.redirect(`${config.get("domain")}?msg=Thank you for verifying your email`);
+						return res.redirect(`${config.get("domain")}?toast=Thank you for verifying your email`);
 					}
 				);
 			});

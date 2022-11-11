@@ -1,6 +1,6 @@
 import async from "async";
 
-import { isAdminRequired } from "./hooks";
+import { useHasPermission, getUserPermissions } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -9,7 +9,7 @@ const UtilsModule = moduleManager.modules.utils;
 const WSModule = moduleManager.modules.ws;
 
 export default {
-	getModules: isAdminRequired(function getModules(session, cb) {
+	getModules: useHasPermission("utils.getModules", function getModules(session, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -51,7 +51,7 @@ export default {
 		);
 	}),
 
-	getModule: isAdminRequired(function getModule(session, moduleName, cb) {
+	getModule: useHasPermission("utils.getModules", function getModule(session, moduleName, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -94,5 +94,38 @@ export default {
 				this.log("ERROR", "GET_ROOMS", `Failed to get rooms. '${err}'`);
 				cb({ status: "error", message: err });
 			});
+	},
+
+	/**
+	 * Get permissions
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {string} stationId - optional, the station id
+	 * @param {Function} cb - gets called with the result
+	 */
+	async getPermissions(session, stationId, cb) {
+		const callback = cb || stationId;
+		async.waterfall(
+			[
+				next => {
+					getUserPermissions(session.userId, cb ? stationId : null)
+						.then(permissions => {
+							next(null, permissions);
+						})
+						.catch(() => {
+							next(null, {});
+						});
+				}
+			],
+			async (err, permissions) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "GET_PERMISSIONS", `Fetching permissions failed. "${err}"`);
+					return callback({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "GET_PERMISSIONS", "Fetching permissions was successful.");
+				return callback({ status: "success", data: { permissions } });
+			}
+		);
 	}
 };

@@ -29,6 +29,7 @@ frontend/bundle-report.html
 frontend/node_modules/
 frontend/build/
 frontend/dist/config/default.json
+frontend/src/coverage/
 
 npm
 node_modules

@@ -35,6 +35,7 @@ export interface Song {
 export interface CurrentSong extends Song {
 	skipVotes: number;
 	skipVotesCurrent: number;
+	voted: boolean;
 	likes: number;
 	dislikes: number;
 	liked: boolean;

@@ -1,35 +1,45 @@
 import { defineStore } from "pinia";
-import { CustomWebSocket } from "@/types/customWebSocket";
+import SocketHandler from "@/classes/SocketHandler.class";
 
 export const useWebsocketsStore = defineStore("websockets", {
-	state: () => ({
-		socket: <CustomWebSocket>{
+	state: (): {
+		socket: SocketHandler;
+	} => ({
+		socket: {
 			dispatcher: {}
 		}
 	}),
 	actions: {
-		createSocket(socket) {
-			const { listeners } = this.socket.dispatcher;
-			this.socket = socket;
+		createSocket(): Promise<SocketHandler> {
+			return new Promise(resolve => {
+				lofig.get("backend.websocketsDomain").then(websocketsDomain => {
+					const { listeners } = this.socket.dispatcher;
 
-			// only executes if the websocket object is being replaced
-			if (listeners) {
-				// for each listener type
-				Object.keys(listeners).forEach(listenerType =>
-					// for each callback previously present for the listener type
-					listeners[listenerType].forEach(element => {
-						// add the listener back after the websocket object is reset
-						this.socket.dispatcher.addEventListener(
-							listenerType,
-							element.cb
+					this.socket = new SocketHandler(websocketsDomain);
+
+					// only executes if the websocket object is being replaced
+					if (listeners) {
+						// for each listener type
+						Object.keys(listeners).forEach(listenerType =>
+							// for each callback previously present for the listener type
+							listeners[listenerType].forEach(element => {
+								// add the listener back after the websocket object is reset
+								this.socket.dispatcher.addEventListener(
+									listenerType,
+									element.cb,
+									element.options
+								);
+							})
 						);
-					})
-				);
-			}
+					}
+
+					resolve(this.socket);
+				});
+			});
 		}
 	},
 	getters: {
-		getSocket() {
+		getSocket(): SocketHandler {
 			return this.socket;
 		}
 	}

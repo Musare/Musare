@@ -2,22 +2,22 @@ import { defineStore } from "pinia";
 import { Playlist } from "@/types/playlist";
 
 export const useUserPlaylistsStore = defineStore("userPlaylists", {
-	state: () => ({
-		playlists: <Playlist[]>[],
-		fetchedPlaylists: false
+	state: (): {
+		playlists: Playlist[];
+	} => ({
+		playlists: []
 	}),
 	actions: {
-		setPlaylists(playlists) {
-			this.fetchedPlaylists = true;
+		setPlaylists(playlists: Playlist[]) {
 			this.playlists = playlists;
 		},
-		updatePlaylists(playlists) {
+		updatePlaylists(playlists: Playlist[]) {
 			this.playlists = playlists;
 		},
-		addPlaylist(playlist) {
+		addPlaylist(playlist: Playlist) {
 			this.playlists.push(playlist);
 		},
-		removePlaylist(playlistId) {
+		removePlaylist(playlistId: string) {
 			this.playlists.forEach((playlist, index) => {
 				if (playlist._id === playlistId)
 					this.playlists.splice(index, 1);

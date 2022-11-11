@@ -27,12 +27,22 @@ elif [[ ${DOCKER_COMMAND} != "docker" && ${DOCKER_COMMAND} != "podman" ]]; then
 fi
 
 docker="${DOCKER_COMMAND}"
-dockerCompose="${DOCKER_COMMAND}-compose"
+${docker} --version > /dev/null 2>&1
+dockerInstalled=$?
 
-if [[ ! -x "$(command -v ${docker})" || ! -x "$(command -v ${dockerCompose})" ]]; then
-    if [[ -x "$(command -v ${docker})" && ! -x "$(command -v ${dockerCompose})" ]]; then
+dockerCompose="${docker} compose"
+${dockerCompose} version > /dev/null 2>&1
+composeInstalled=$?
+if [[ ${composeInstalled} -gt 0 ]]; then
+    dockerCompose="${docker}-compose"
+    ${dockerCompose} --version > /dev/null 2>&1
+    composeInstalled=$?
+fi
+
+if [[ ${dockerInstalled} -gt 0 || ${composeInstalled} -gt 0 ]]; then
+    if [[ ${dockerInstalled} -eq 0 && ${composeInstalled} -gt 0 ]]; then
         echo -e "${RED}Error: ${dockerCompose} not installed.${NC}"
-    elif [[ ! -x "$(command -v ${docker})" && -x "$(command -v ${dockerCompose})" ]]; then
+    elif [[ ${dockerInstalled} -gt 0 && ${composeInstalled} -eq 0 ]]; then
         echo -e "${RED}Error: ${docker} not installed.${NC}"
     else
         echo -e "${RED}Error: ${docker} and ${dockerCompose} not installed.${NC}"
@@ -84,8 +94,26 @@ runDockerCommand()
         if [[ ${servicesString:0:1} == 1 ]]; then
             if [[ ${servicesString:2:4} == "all" ]]; then
                 servicesString=""
+                pullServices="mongo redis"
+                buildServices="backend frontend"
             else
                 servicesString=${servicesString:2}
+                pullArray=()
+                buildArray=()
+                if [[ "${servicesString}" == *mongo* ]]; then
+                    pullArray+=("mongo")
+                fi
+                if [[ "${servicesString}" == *redis* ]]; then
+                    pullArray+=("redis")
+                fi
+                if [[ "${servicesString}" == *backend* ]]; then
+                    buildArray+=("backend")
+                fi
+                if [[ "${servicesString}" == *frontend* ]]; then
+                    buildArray+=("frontend")
+                fi
+                pullServices="${pullArray[*]}"
+                buildServices="${buildArray[*]}"
             fi
 
             if [[ ${2} == "stop" || ${2} == "restart" ]]; then
@@ -96,7 +124,15 @@ runDockerCommand()
                 # shellcheck disable=SC2086
                 ${dockerCompose} up -d ${servicesString}
             fi
-            if [[ ${2} == "pull" || ${2} == "build" || ${2} == "ps" || ${2} == "logs" ]]; then
+            if [[ ${2} == "pull" && ${pullServices} != "" ]]; then
+                # shellcheck disable=SC2086
+                ${dockerCompose} "${2}" ${pullServices}
+            fi
+            if [[ ${2} == "build" && ${buildServices} != "" ]]; then
+                # shellcheck disable=SC2086
+                ${dockerCompose} "${2}" ${buildServices}
+            fi
+            if [[ ${2} == "ps" || ${2} == "logs" ]]; then
                 # shellcheck disable=SC2086
                 ${dockerCompose} "${2}" ${servicesString}
             fi
@@ -295,16 +331,23 @@ case $1 in
 
     typescript|ts)
         echo -e "${CYAN}Musare | TypeScript Check${NC}"
-        servicesString=$(handleServices "backend frontend" "${@:2}")
+        services=$(sed "s/\(\ \)\{0,1\}\(-\)\{0,2\}strict//g;t;q1" <<< "${@:2}")
+        strictFound=$?
+        if [[ $strictFound -eq 0 ]]; then
+            strict="--strict"
+            echo -e "${GREEN}Strict mode enabled${NC}"
+        fi
+        # shellcheck disable=SC2068
+        servicesString=$(handleServices "backend frontend" ${services[@]})
         if [[ ${servicesString:0:1} == 1 ]]; then
             if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *frontend* ]]; then
                 echo -e "${CYAN}Running frontend typescript check...${NC}"
-                ${dockerCompose} exec -T frontend npm run typescript
+                ${dockerCompose} exec -T frontend npm run typescript -- $strict
                 frontendExitValue=$?
             fi
             if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *backend* ]]; then
                 echo -e "${CYAN}Running backend typescript check...${NC}"
-                ${dockerCompose} exec -T backend npm run typescript
+                ${dockerCompose} exec -T backend npm run typescript -- $strict
                 backendExitValue=$?
             fi
             if [[ ${frontendExitValue} -gt 0 || ${backendExitValue} -gt 0 ]]; then
@@ -313,7 +356,53 @@ case $1 in
                 exitValue=0
             fi
         else
-            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") typescript [backend, frontend]${NC}"
+            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") typescript [backend, frontend] [strict]${NC}"
+            exitValue=1
+        fi
+        if [[ ${exitValue} -gt 0 ]]; then
+            exit ${exitValue}
+        fi
+        ;;
+
+    test)
+        echo -e "${CYAN}Musare | Test${NC}"
+        servicesString=$(handleServices "frontend" "${@:2}")
+        if [[ ${servicesString:0:1} == 1 ]]; then
+            if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *frontend* ]]; then
+                echo -e "${CYAN}Running frontend tests...${NC}"
+                ${dockerCompose} exec -T frontend npm run test -- --run
+                frontendExitValue=$?
+            fi
+            if [[ ${frontendExitValue} -gt 0 ]]; then
+                exitValue=1
+            else
+                exitValue=0
+            fi
+        else
+            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") test [frontend]${NC}"
+            exitValue=1
+        fi
+        if [[ ${exitValue} -gt 0 ]]; then
+            exit ${exitValue}
+        fi
+        ;;
+
+    test:coverage)
+        echo -e "${CYAN}Musare | Test Coverage${NC}"
+        servicesString=$(handleServices "frontend" "${@:2}")
+        if [[ ${servicesString:0:1} == 1 ]]; then
+            if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *frontend* ]]; then
+                echo -e "${CYAN}Running frontend test coverage report...${NC}"
+                ${dockerCompose} exec -T frontend npm run coverage
+                frontendExitValue=$?
+            fi
+            if [[ ${frontendExitValue} -gt 0 ]]; then
+                exitValue=1
+            else
+                exitValue=0
+            fi
+        else
+            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") test:coverage [frontend]${NC}"
             exitValue=1
         fi
         if [[ ${exitValue} -gt 0 ]]; then
@@ -323,24 +412,38 @@ case $1 in
 
     update)
         echo -e "${CYAN}Musare | Update${NC}"
+        musareshModified=$(git diff HEAD -- musare.sh)
         git fetch
         exitValue=$?
         if [[ ${exitValue} -gt 0 ]]; then
             exit ${exitValue}
         fi
-        if [[ $(git rev-parse HEAD) == $(git rev-parse @\{u\}) ]]; then
+        updated=$(git log --name-only --oneline HEAD..@\{u\})
+        if [[ ${updated} == "" ]]; then
             echo -e "${GREEN}Already up to date${NC}"
-        else
-            dbChange=$(git log --name-only --oneline HEAD..origin/"$(git rev-parse --abbrev-ref HEAD)" | grep "backend/logic/db/schemas")
-            fcChange=$(git log --name-only --oneline HEAD..origin/"$(git rev-parse --abbrev-ref HEAD)" | grep "frontend/dist/config/template.json")
-            bcChange=$(git log --name-only --oneline HEAD..origin/"$(git rev-parse --abbrev-ref HEAD)" | grep "backend/config/template.json")
-            if [[ ( $2 == "auto" && -z $dbChange && -z $fcChange && -z $bcChange ) || -z $2 ]]; then
-                echo -e "${CYAN}Updating...${NC}"
+            exit ${exitValue}
+        fi
+        musareshChange=$(echo "${updated}" | grep "musare.sh")
+        dbChange=$(echo "${updated}" | grep "backend/logic/db/schemas")
+        fcChange=$(echo "${updated}" | grep "frontend/dist/config/template.json")
+        bcChange=$(echo "${updated}" | grep "backend/config/template.json")
+        if [[ ( $2 == "auto" && -z $dbChange && -z $fcChange && -z $bcChange && -z $musareshChange ) || -z $2 ]]; then
+            if [[ -n $musareshChange && $(git diff @\{u\} -- musare.sh) != "" ]]; then
+                if [[ $musareshModified != "" ]]; then
+                    echo -e "${RED}musare.sh has been modified, please reset these changes and run the update command again to continue.${NC}"
+                else
+                    git checkout @\{u\} -- musare.sh
+                    echo -e "${YELLOW}musare.sh has been updated, please run the update command again to continue.${NC}"
+                fi
+                exit 1
+            else
                 git pull
                 exitValue=$?
                 if [[ ${exitValue} -gt 0 ]]; then
                     exit ${exitValue}
                 fi
+                echo -e "${CYAN}Updating...${NC}"
+                runDockerCommand "$(basename "$0") $1" pull
                 runDockerCommand "$(basename "$0") $1" build
                 runDockerCommand "$(basename "$0") $1" restart
                 echo -e "${GREEN}Updated!${NC}"
@@ -353,10 +456,10 @@ case $1 in
                 if [[ -n $bcChange ]]; then
                     echo -e "${RED}Backend config has changed, please update!${NC}"
                 fi
-            elif [[ $2 == "auto" ]]; then
-                echo -e "${RED}Auto Update Failed! Database and/or config has changed!${NC}"
-                exit 1
             fi
+        elif [[ $2 == "auto" ]]; then
+            echo -e "${RED}Auto Update Failed! musare.sh, database and/or config has changed!${NC}"
+            exit 1
         fi
         ;;
 

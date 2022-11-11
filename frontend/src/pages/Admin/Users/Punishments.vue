@@ -3,7 +3,9 @@ import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
+import { useUserAuthStore } from "@/stores/userAuth";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
+import utils from "@/utils";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -22,7 +24,7 @@ const ipBan = ref({
 	reason: "",
 	expiresAt: "1h"
 });
-const columnDefault = ref(<TableColumn>{
+const columnDefault = ref<TableColumn>({
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -31,7 +33,7 @@ const columnDefault = ref(<TableColumn>{
 	minWidth: 150,
 	maxWidth: 600
 });
-const columns = ref(<TableColumn[]>[
+const columns = ref<TableColumn[]>([
 	{
 		name: "options",
 		displayName: "Options",
@@ -93,7 +95,7 @@ const columns = ref(<TableColumn[]>[
 		defaultVisibility: "hidden"
 	}
 ]);
-const filters = ref(<TableFilter[]>[
+const filters = ref<TableFilter[]>([
 	{
 		name: "status",
 		displayName: "Status",
@@ -152,7 +154,7 @@ const filters = ref(<TableFilter[]>[
 		defaultFilterType: "datetimeBefore"
 	}
 ]);
-const events = ref(<TableEvents>{
+const events = ref<TableEvents>({
 	adminRoom: "punishments",
 	updated: {
 		event: "admin.punishment.updated",
@@ -162,6 +164,8 @@ const events = ref(<TableEvents>{
 });
 
 const { openModal } = useModalsStore();
+
+const { hasPermission } = useUserAuthStore();
 
 const banIP = () => {
 	socket.dispatch(
@@ -173,16 +177,6 @@ const banIP = () => {
 			new Toast(res.message);
 		}
 	);
-};
-
-const getDateFormatted = createdAt => {
-	const date = new Date(createdAt);
-	const year = date.getFullYear();
-	const month = `${date.getMonth() + 1}`.padStart(2, "0");
-	const day = `${date.getDate()}`.padStart(2, "0");
-	const hour = `${date.getHours()}`.padStart(2, "0");
-	const minute = `${date.getMinutes()}`.padStart(2, "0");
-	return `${year}-${month}-${day} ${hour}:${minute}`;
 };
 
 const deactivatePunishment = punishmentId => {
@@ -221,7 +215,7 @@ const deactivatePunishment = punishmentId => {
 						@click="
 							openModal({
 								modal: 'viewPunishment',
-								data: { punishmentId: slotProps.item._id }
+								props: { punishmentId: slotProps.item._id }
 							})
 						"
 						:disabled="slotProps.item.removed"
@@ -231,6 +225,7 @@ const deactivatePunishment = punishmentId => {
 						open_in_full
 					</button>
 					<quick-confirm
+						v-if="hasPermission('punishments.deactivate')"
 						@confirm="deactivatePunishment(slotProps.item._id)"
 						:disabled="
 							slotProps.item.status === 'Inactive' ||
@@ -293,16 +288,16 @@ const deactivatePunishment = punishmentId => {
 			</template>
 			<template #column-punishedAt="slotProps">
 				<span :title="new Date(slotProps.item.punishedAt).toString()">{{
-					getDateFormatted(slotProps.item.punishedAt)
+					utils.getDateFormatted(slotProps.item.punishedAt)
 				}}</span>
 			</template>
 			<template #column-expiresAt="slotProps">
 				<span :title="new Date(slotProps.item.expiresAt).toString()">{{
-					getDateFormatted(slotProps.item.expiresAt)
+					utils.getDateFormatted(slotProps.item.expiresAt)
 				}}</span>
 			</template>
 		</advanced-table>
-		<div class="card">
+		<div v-if="hasPermission('punishments.banIP')" class="card">
 			<h4>Ban an IP</h4>
 			<hr class="section-horizontal-rule" />
 			<div class="card-content">

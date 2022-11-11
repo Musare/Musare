@@ -1,40 +1,39 @@
 import { defineStore } from "pinia";
 import { Song } from "@/types/song";
 
-export const useImportAlbumStore = props => {
-	const { modalUuid } = props;
-	if (!modalUuid) return null;
-	return defineStore(`importAlbum-${modalUuid}`, {
-		state: () => ({
-			discogsAlbum: <
-				{
-					album?: {
-						albumArt: string;
-						title: string;
-						type: string;
-						year: string;
-						artists: string[];
-						genres: string[];
-					};
-					dataQuality?: string;
-					tracks?: {
-						position: string;
-						title: string;
-					}[];
-					expanded?: boolean;
-				}
-			>{},
-			originalPlaylistSongs: <Song[]>[],
-			playlistSongs: <Song[]>[],
+export const useImportAlbumStore = ({ modalUuid }: { modalUuid: string }) =>
+	defineStore(`importAlbum-${modalUuid}`, {
+		state: (): {
+			discogsAlbum: {
+				album?: {
+					albumArt: string;
+					title: string;
+					type: string;
+					year: string;
+					artists: string[];
+					genres: string[];
+				};
+				dataQuality?: string;
+				tracks?: {
+					position: string;
+					title: string;
+				}[];
+				expanded?: boolean;
+			};
+			originalPlaylistSongs: Song[];
+			playlistSongs: Song[];
+			editingSongs: boolean;
+			discogsTab: "search" | "selected";
+			prefillDiscogs: boolean;
+		} => ({
+			discogsAlbum: {},
+			originalPlaylistSongs: [],
+			playlistSongs: [],
 			editingSongs: false,
 			discogsTab: "search",
 			prefillDiscogs: false
 		}),
 		actions: {
-			init({ songs }) {
-				this.originalPlaylistSongs = JSON.parse(JSON.stringify(songs));
-				this.playlistSongs = JSON.parse(JSON.stringify(songs));
-			},
 			showDiscogsTab(tab) {
 				this.discogsTab = tab;
 			},
@@ -82,4 +81,3 @@ export const useImportAlbumStore = props => {
 			}
 		}
 	})();
-};

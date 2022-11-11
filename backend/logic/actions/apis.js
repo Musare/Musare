@@ -2,7 +2,8 @@ import config from "config";
 import async from "async";
 import axios from "axios";
 
-import { isAdminRequired, isLoginRequired } from "./hooks";
+import isLoginRequired from "../hooks/loginRequired";
+import { hasPermission, useHasPermission } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -70,7 +71,7 @@ export default {
 	 * @param query - the query
 	 * @param {Function} cb
 	 */
-	searchDiscogs: isAdminRequired(function searchDiscogs(session, query, page, cb) {
+	searchDiscogs: useHasPermission("apis.searchDiscogs", function searchDiscogs(session, query, page, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -124,31 +125,43 @@ export default {
 	 * @param {Function} cb - callback
 	 */
 	joinRoom(session, room, cb) {
-		if (
-			room === "home" ||
-			room === "news" ||
-			room.startsWith("profile.") ||
-			room.startsWith("manage-station.") ||
-			room.startsWith("edit-song.") ||
-			room.startsWith("view-report.") ||
-			room.startsWith("edit-user.") ||
-			room.startsWith("view-api-request.") ||
-			room.startsWith("view-youtube-video.") ||
-			room.startsWith("view-punishment.") ||
-			room === "import-album" ||
-			room === "edit-songs"
-		) {
-			WSModule.runJob("SOCKET_JOIN_ROOM", {
-				socketId: session.socketId,
-				room
-			})
-				.then(() => {})
-				.catch(err => {
-					this.log("ERROR", `Joining room failed: ${err.message}`);
-				});
-		}
-
-		cb({ status: "success", message: "Successfully joined room." });
+		const roomName = room.split(".")[0];
+		// const roomId = room.split(".")[1];
+		const rooms = {
+			home: null,
+			news: null,
+			profile: null,
+			"view-youtube-video": null,
+			"manage-station": null,
+			// "manage-station": "stations.view",
+			"edit-song": "songs.update",
+			"edit-songs": "songs.update",
+			"import-album": "songs.update",
+			// "edit-playlist": "playlists.update",
+			"view-report": "reports.get",
+			"edit-user": "users.update",
+			"view-api-request": "youtube.getApiRequest",
+			"view-punishment": "punishments.get"
+		};
+		const join = (status, error) => {
+			if (status === "success")
+				WSModule.runJob("SOCKET_JOIN_ROOM", {
+					socketId: session.socketId,
+					room
+				})
+					.then(() => cb({ status: "success", message: "Successfully joined room." }))
+					.catch(err => join("error", err.message));
+			else {
+				this.log("ERROR", `Joining room failed: ${error}`);
+				cb({ status: "error", message: error });
+			}
+		};
+		if (rooms[roomName] === null) join("success");
+		else if (rooms[roomName])
+			hasPermission(rooms[roomName], session)
+				.then(() => join("success"))
+				.catch(err => join("error", err));
+		else join("error", "Room not found");
 	},
 
 	/**
@@ -188,7 +201,7 @@ export default {
 	 * @param {string} page - the admin room to join
 	 * @param {Function} cb - callback
 	 */
-	joinAdminRoom: isAdminRequired((session, page, cb) => {
+	joinAdminRoom(session, page, cb) {
 		if (
 			page === "songs" ||
 			page === "stations" ||
@@ -200,18 +213,25 @@ export default {
 			page === "punishments" ||
 			page === "youtube" ||
 			page === "youtubeVideos" ||
-			page === "import"
+			page === "import" ||
+			page === "dataRequests"
 		) {
-			WSModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session.socketId }).then(() => {
-				WSModule.runJob("SOCKET_JOIN_ROOM", {
-					socketId: session.socketId,
-					room: `admin.${page}`
-				});
-			});
+			hasPermission(`admin.view.${page}`, session.userId)
+				.then(() =>
+					WSModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session.socketId }).then(() => {
+						WSModule.runJob(
+							"SOCKET_JOIN_ROOM",
+							{
+								socketId: session.socketId,
+								room: `admin.${page}`
+							},
+							this
+						).then(() => cb({ status: "success", message: "Successfully joined admin room." }));
+					})
+				)
+				.catch(() => cb({ status: "error", message: "Failed to join admin room." }));
 		}
-
-		cb({ status: "success", message: "Successfully joined admin room." });
-	}),
+	},
 
 	/**
 	 * Leaves all rooms

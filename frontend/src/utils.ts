@@ -1,43 +1,42 @@
 export default {
-	guid: () => {
-		[1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1]
-			.map(b =>
-				b
-					? Math.floor((1 + Math.random()) * 0x10000)
-							.toString(16)
-							.substring(1)
-					: "-"
-			)
-			.join("");
-	},
-	formatTime: originalDuration => {
-		if (typeof originalDuration === "number") {
-			if (originalDuration <= 0) return "0:00";
+	guid: () =>
+		"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, symbol => {
+			let array;
 
-			let duration = originalDuration;
-			let hours: number | string = Math.floor(duration / (60 * 60));
-			duration -= hours * 60 * 60;
-			let minutes: number | string = Math.floor(duration / 60);
-			duration -= minutes * 60;
-			let seconds: number | string = Math.floor(duration);
-
-			if (hours === 0) {
-				hours = "";
+			if (symbol === "y") {
+				array = ["8", "9", "a", "b"];
+				return array[Math.floor(Math.random() * array.length)];
 			}
 
-			if (hours > 0) {
-				if (minutes < 10) minutes = `0${minutes}`;
-			}
+			array = new Uint8Array(1);
+			window.crypto.getRandomValues(array);
+			return (array[0] % 16).toString(16);
+		}),
+	formatTime: (originalDuration: number) => {
+		if (originalDuration <= 0) return "0:00";
 
-			if (seconds < 10) {
-				seconds = `0${seconds}`;
-			}
+		let duration = originalDuration;
+		let hours: number | string = Math.floor(duration / (60 * 60));
+		duration -= hours * 60 * 60;
+		let minutes: number | string = Math.floor(duration / 60);
+		duration -= minutes * 60;
+		let seconds: number | string = Math.floor(duration);
 
-			return `${hours}${hours ? ":" : ""}${minutes}:${seconds}`;
+		if (hours === 0) {
+			hours = "";
 		}
-		return false;
+
+		if (hours > 0) {
+			if (minutes < 10) minutes = `0${minutes}`;
+		}
+
+		if (seconds < 10) {
+			seconds = `0${seconds}`;
+		}
+
+		return `${hours}${hours ? ":" : ""}${minutes}:${seconds}`;
 	},
-	formatTimeLong: duration => {
+	formatTimeLong: (duration: number) => {
 		if (duration <= 0) return "0 seconds";
 
 		const hours = Math.floor(duration / (60 * 60));
@@ -68,5 +67,14 @@ export default {
 		};
 
 		return formatHours() + formatMinutes() + formatSeconds();
+	},
+	getDateFormatted: (createdAt: number | Date) => {
+		const date = new Date(createdAt);
+		const year = date.getFullYear();
+		const month = `${date.getMonth() + 1}`.padStart(2, "0");
+		const day = `${date.getDate()}`.padStart(2, "0");
+		const hour = `${date.getHours()}`.padStart(2, "0");
+		const minute = `${date.getMinutes()}`.padStart(2, "0");
+		return `${year}-${month}-${day} ${hour}:${minute}`;
 	}
 };

@@ -2,10 +2,14 @@
 import { ref, onMounted } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
+import {
+	AddSongToPlaylistResponse,
+	IndexMyPlaylistsResponse,
+	RemoveSongFromPlaylistResponse
+} from "@musare_types/actions/PlaylistsActions";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserPlaylistsStore } from "@/stores/userPlaylists";
 import { useModalsStore } from "@/stores/modals";
-import ws from "@/ws";
 
 const props = defineProps({
 	song: {
@@ -25,18 +29,11 @@ const dropdown = ref(null);
 const { socket } = useWebsocketsStore();
 const userPlaylistsStore = useUserPlaylistsStore();
 
-const { playlists, fetchedPlaylists } = storeToRefs(userPlaylistsStore);
+const { playlists } = storeToRefs(userPlaylistsStore);
 const { setPlaylists, addPlaylist, removePlaylist } = userPlaylistsStore;
 
 const { openModal } = useModalsStore();
 
-const init = () => {
-	if (!fetchedPlaylists.value)
-		socket.dispatch("playlists.indexMyPlaylists", res => {
-			if (res.status === "success")
-				if (!fetchedPlaylists.value) setPlaylists(res.data.playlists);
-		});
-};
 const hasSong = playlist =>
 	playlist.songs.map(song => song.youtubeId).indexOf(props.song.youtubeId) !==
 	-1;
@@ -48,14 +45,14 @@ const toggleSongInPlaylist = playlistIndex => {
 			false,
 			props.song.youtubeId,
 			playlist._id,
-			res => new Toast(res.message)
+			(res: AddSongToPlaylistResponse) => new Toast(res.message)
 		);
 	} else {
 		socket.dispatch(
 			"playlists.removeSongFromPlaylist",
 			props.song.youtubeId,
 			playlist._id,
-			res => new Toast(res.message)
+			(res: RemoveSongFromPlaylistResponse) => new Toast(res.message)
 		);
 	}
 };
@@ -71,7 +68,14 @@ const createPlaylist = () => {
 };
 
 onMounted(() => {
-	ws.onConnect(init);
+	socket.onConnect(() => {
+		socket.dispatch(
+			"playlists.indexMyPlaylists",
+			(res: IndexMyPlaylistsResponse) => {
+				if (res.status === "success") setPlaylists(res.data.playlists);
+			}
+		);
+	});
 
 	socket.on("event:playlist.created", res => addPlaylist(res.data.playlist), {
 		replaceable: true
@@ -89,6 +93,39 @@ onMounted(() => {
 			playlists.value.forEach((playlist, index) => {
 				if (playlist._id === res.data.playlistId) {
 					playlists.value[index].displayName = res.data.displayName;
+				}
+			});
+		},
+		{ replaceable: true }
+	);
+
+	socket.on(
+		"event:playlist.song.added",
+		res => {
+			playlists.value.forEach((playlist, index) => {
+				if (playlist._id === res.data.playlistId) {
+					playlists.value[index].songs.push(res.data.song);
+				}
+			});
+		},
+		{ replaceable: true }
+	);
+
+	socket.on(
+		"event:playlist.song.removed",
+		res => {
+			playlists.value.forEach((playlist, playlistIndex) => {
+				if (playlist._id === res.data.playlistId) {
+					playlists.value[playlistIndex].songs.forEach(
+						(song, songIndex) => {
+							if (song.youtubeId === res.data.youtubeId) {
+								playlists.value[playlistIndex].songs.splice(
+									songIndex,
+									1
+								);
+							}
+						}
+					);
 				}
 			});
 		},

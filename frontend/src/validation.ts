@@ -7,9 +7,9 @@ export default {
 		name: /^[\p{L}0-9 .'_-]+$/u,
 		password:
 			/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]/,
-		custom: regex => new RegExp(`^[${regex}]+$`)
+		custom: (regex: string) => new RegExp(`^[${regex}]+$`)
 	},
-	isLength: (string, min, max) =>
+	isLength: (string: string, min: number, max: number) =>
 		!(
 			typeof string !== "string" ||
 			string.length < min ||

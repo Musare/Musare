@@ -26,7 +26,8 @@ const modalComponents = shallowRef(
 		importAlbum: "ImportAlbum.vue",
 		confirm: "Confirm.vue",
 		editSong: "EditSong/index.vue",
-		viewYoutubeVideo: "ViewYoutubeVideo.vue"
+		viewYoutubeVideo: "ViewYoutubeVideo.vue",
+		bulkEditPlaylist: "BulkEditPlaylist.vue"
 	})
 );
 </script>
@@ -35,8 +36,9 @@ const modalComponents = shallowRef(
 	<div>
 		<div v-for="activeModalUuid in activeModals" :key="activeModalUuid">
 			<component
-				:is="modalComponents[modals[activeModalUuid]]"
+				:is="modalComponents[modals[activeModalUuid].modal]"
 				:modal-uuid="activeModalUuid"
+				v-bind="modals[activeModalUuid].props"
 			/>
 		</div>
 	</div>

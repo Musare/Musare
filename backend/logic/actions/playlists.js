@@ -1,7 +1,8 @@
 import async from "async";
 import config from "config";
 
-import { isAdminRequired, isLoginRequired } from "./hooks";
+import isLoginRequired from "../hooks/loginRequired";
+import { hasPermission, useHasPermission } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -19,15 +20,17 @@ const MediaModule = moduleManager.modules.media;
 CacheModule.runJob("SUB", {
 	channel: "playlist.create",
 	cb: playlist => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy }, this).then(sockets =>
-			sockets.forEach(socket => socket.dispatch("event:playlist.created", { data: { playlist } }))
-		);
+		if (playlist.createdBy !== "Musare") {
+			WSModule.runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy }, this).then(sockets =>
+				sockets.forEach(socket => socket.dispatch("event:playlist.created", { data: { playlist } }))
+			);
 
-		if (playlist.privacy === "public")
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `profile.${playlist.createdBy}.playlists`,
-				args: ["event:playlist.created", { data: { playlist } }]
-			});
+			if (playlist.privacy === "public")
+				WSModule.runJob("EMIT_TO_ROOM", {
+					room: `profile.${playlist.createdBy}.playlists`,
+					args: ["event:playlist.created", { data: { playlist } }]
+				});
+		}
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.playlists",
@@ -39,16 +42,18 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.delete",
 	cb: res => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:playlist.deleted", { data: { playlistId: res.playlistId } });
+		if (res.createdBy !== "Musare") {
+			WSModule.runJob("SOCKETS_FROM_USER", { userId: res.createdBy }, this).then(sockets => {
+				sockets.forEach(socket => {
+					socket.dispatch("event:playlist.deleted", { data: { playlistId: res.playlistId } });
+				});
 			});
-		});
 
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `profile.${res.userId}.playlists`,
-			args: ["event:playlist.deleted", { data: { playlistId: res.playlistId } }]
-		});
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: `profile.${res.createdBy}.playlists`,
+				args: ["event:playlist.deleted", { data: { playlistId: res.playlistId } }]
+			});
+		}
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.playlists",
@@ -60,45 +65,49 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.repositionSong",
 	cb: res => {
-		const { userId, playlistId, song } = res;
+		const { createdBy, playlistId, song } = res;
 
-		WSModule.runJob("SOCKETS_FROM_USER", { userId }, this).then(sockets =>
-			sockets.forEach(socket =>
-				socket.dispatch("event:playlist.song.repositioned", {
-					data: { playlistId, song }
-				})
-			)
-		);
+		if (createdBy !== "Musare") {
+			WSModule.runJob("SOCKETS_FROM_USER", { userId: createdBy }, this).then(sockets =>
+				sockets.forEach(socket =>
+					socket.dispatch("event:playlist.song.repositioned", {
+						data: { playlistId, song }
+					})
+				)
+			);
+		}
 	}
 });
 
 CacheModule.runJob("SUB", {
 	channel: "playlist.addSong",
 	cb: res => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:playlist.song.added", {
-					data: {
-						playlistId: res.playlistId,
-						song: res.song
-					}
-				});
-			});
-		});
-
-		if (res.privacy === "public")
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `profile.${res.userId}.playlists`,
-				args: [
-					"event:playlist.song.added",
-					{
+		if (res.createdBy !== "Musare") {
+			WSModule.runJob("SOCKETS_FROM_USER", { userId: res.createdBy }, this).then(sockets => {
+				sockets.forEach(socket => {
+					socket.dispatch("event:playlist.song.added", {
 						data: {
 							playlistId: res.playlistId,
 							song: res.song
 						}
-					}
-				]
+					});
+				});
 			});
+
+			if (res.privacy === "public")
+				WSModule.runJob("EMIT_TO_ROOM", {
+					room: `profile.${res.createdBy}.playlists`,
+					args: [
+						"event:playlist.song.added",
+						{
+							data: {
+								playlistId: res.playlistId,
+								song: res.song
+							}
+						}
+					]
+				});
+		}
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.playlists",
@@ -110,30 +119,32 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.removeSong",
 	cb: res => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:playlist.song.removed", {
-					data: {
-						playlistId: res.playlistId,
-						youtubeId: res.youtubeId
-					}
-				});
-			});
-		});
-
-		if (res.privacy === "public")
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `profile.${res.userId}.playlists`,
-				args: [
-					"event:playlist.song.removed",
-					{
+		if (res.createdBy !== "Musare") {
+			WSModule.runJob("SOCKETS_FROM_USER", { userId: res.createdBy }, this).then(sockets => {
+				sockets.forEach(socket => {
+					socket.dispatch("event:playlist.song.removed", {
 						data: {
 							playlistId: res.playlistId,
 							youtubeId: res.youtubeId
 						}
-					}
-				]
+					});
+				});
 			});
+
+			if (res.privacy === "public")
+				WSModule.runJob("EMIT_TO_ROOM", {
+					room: `profile.${res.createdBy}.playlists`,
+					args: [
+						"event:playlist.song.removed",
+						{
+							data: {
+								playlistId: res.playlistId,
+								youtubeId: res.youtubeId
+							}
+						}
+					]
+				});
+		}
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.playlists",
@@ -148,30 +159,32 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.updateDisplayName",
 	cb: res => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:playlist.displayName.updated", {
-					data: {
-						playlistId: res.playlistId,
-						displayName: res.displayName
-					}
-				});
-			});
-		});
-
-		if (res.privacy === "public")
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `profile.${res.userId}.playlists`,
-				args: [
-					"event:playlist.displayName.updated",
-					{
+		if (res.createdBy !== "Musare") {
+			WSModule.runJob("SOCKETS_FROM_USER", { userId: res.createdBy }, this).then(sockets => {
+				sockets.forEach(socket => {
+					socket.dispatch("event:playlist.displayName.updated", {
 						data: {
 							playlistId: res.playlistId,
 							displayName: res.displayName
 						}
-					}
-				]
+					});
+				});
 			});
+
+			if (res.privacy === "public")
+				WSModule.runJob("EMIT_TO_ROOM", {
+					room: `profile.${res.createdBy}.playlists`,
+					args: [
+						"event:playlist.displayName.updated",
+						{
+							data: {
+								playlistId: res.playlistId,
+								displayName: res.displayName
+							}
+						}
+					]
+				});
+		}
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.playlists",
@@ -186,16 +199,6 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.updatePrivacy",
 	cb: res => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:playlist.privacy.updated", {
-					data: {
-						playlist: res.playlist
-					}
-				});
-			});
-		});
-
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.playlists",
 			args: [
@@ -204,30 +207,43 @@ CacheModule.runJob("SUB", {
 			]
 		});
 
-		if (res.playlist.privacy === "public")
+		if (res.createdBy !== "Musare") {
+			WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
+				sockets.forEach(socket => {
+					socket.dispatch("event:playlist.privacy.updated", {
+						data: {
+							playlist: res.playlist
+						}
+					});
+				});
+			});
+
+			if (res.playlist.privacy === "public")
+				return WSModule.runJob("EMIT_TO_ROOM", {
+					room: `profile.${res.userId}.playlists`,
+					args: [
+						"event:playlist.created",
+						{
+							data: {
+								playlist: res.playlist
+							}
+						}
+					]
+				});
+
 			return WSModule.runJob("EMIT_TO_ROOM", {
 				room: `profile.${res.userId}.playlists`,
 				args: [
-					"event:playlist.created",
+					"event:playlist.deleted",
 					{
 						data: {
-							playlist: res.playlist
+							playlistId: res.playlist._id
 						}
 					}
 				]
 			});
-
-		return WSModule.runJob("EMIT_TO_ROOM", {
-			room: `profile.${res.userId}.playlists`,
-			args: [
-				"event:playlist.deleted",
-				{
-					data: {
-						playlistId: res.playlist._id
-					}
-				}
-			]
-		});
+		}
+		return null;
 	}
 });
 
@@ -275,107 +291,112 @@ export default {
 	 * @param operator - the operator for queries
 	 * @param cb
 	 */
-	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
-		async.waterfall(
-			[
-				next => {
-					DBModule.runJob(
-						"GET_DATA",
-						{
-							page,
-							pageSize,
-							properties,
-							sort,
-							queries,
-							operator,
-							modelName: "playlist",
-							blacklistedProperties: [],
-							specialProperties: {
-								totalLength: [
-									{
-										$addFields: {
-											totalLength: { $sum: "$songs.duration" }
+	getData: useHasPermission(
+		"admin.view.playlists",
+		async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
+			async.waterfall(
+				[
+					next => {
+						DBModule.runJob(
+							"GET_DATA",
+							{
+								page,
+								pageSize,
+								properties,
+								sort,
+								queries,
+								operator,
+								modelName: "playlist",
+								blacklistedProperties: [],
+								specialProperties: {
+									totalLength: [
+										{
+											$addFields: {
+												totalLength: { $sum: "$songs.duration" }
+											}
 										}
-									}
-								],
-								songsCount: [
-									{
-										$addFields: {
-											songsCount: { $size: "$songs" }
+									],
+									songsCount: [
+										{
+											$addFields: {
+												songsCount: { $size: "$songs" }
+											}
 										}
-									}
-								],
-								createdBy: [
-									{
-										$addFields: {
-											createdByOID: {
-												$convert: {
-													input: "$createdBy",
-													to: "objectId",
-													onError: "unknown",
-													onNull: "unknown"
+									],
+									createdBy: [
+										{
+											$addFields: {
+												createdByOID: {
+													$convert: {
+														input: "$createdBy",
+														to: "objectId",
+														onError: "unknown",
+														onNull: "unknown"
+													}
 												}
 											}
-										}
-									},
-									{
-										$lookup: {
-											from: "users",
-											localField: "createdByOID",
-											foreignField: "_id",
-											as: "createdByUser"
-										}
-									},
-									{
-										$unwind: {
-											path: "$createdByUser",
-											preserveNullAndEmptyArrays: true
-										}
-									},
-									{
-										$addFields: {
-											createdByUsername: {
-												$cond: [
-													{ $eq: ["$createdBy", "Musare"] },
-													"Musare",
-													{ $ifNull: ["$createdByUser.username", "unknown"] }
-												]
+										},
+										{
+											$lookup: {
+												from: "users",
+												localField: "createdByOID",
+												foreignField: "_id",
+												as: "createdByUser"
+											}
+										},
+										{
+											$unwind: {
+												path: "$createdByUser",
+												preserveNullAndEmptyArrays: true
+											}
+										},
+										{
+											$addFields: {
+												createdByUsername: {
+													$cond: [
+														{ $eq: ["$createdBy", "Musare"] },
+														"Musare",
+														{ $ifNull: ["$createdByUser.username", "unknown"] }
+													]
+												}
+											}
+										},
+										{
+											$project: {
+												createdByOID: 0,
+												createdByUser: 0
 											}
 										}
-									},
-									{
-										$project: {
-											createdByOID: 0,
-											createdByUser: 0
-										}
-									}
-								]
+									]
+								},
+								specialQueries: {
+									createdBy: newQuery => ({
+										$or: [newQuery, { createdByUsername: newQuery.createdBy }]
+									})
+								}
 							},
-							specialQueries: {
-								createdBy: newQuery => ({ $or: [newQuery, { createdByUsername: newQuery.createdBy }] })
-							}
-						},
-						this
-					)
-						.then(response => {
-							next(null, response);
-						})
-						.catch(err => {
-							next(err);
-						});
+							this
+						)
+							.then(response => {
+								next(null, response);
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				],
+				async (err, response) => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log("ERROR", "PLAYLISTS_GET_DATA", `Failed to get data from playlists. "${err}"`);
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "PLAYLISTS_GET_DATA", `Got data from playlists successfully.`);
+					return cb({ status: "success", message: "Successfully got data from playlists.", data: response });
 				}
-			],
-			async (err, response) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "PLAYLISTS_GET_DATA", `Failed to get data from playlists. "${err}"`);
-					return cb({ status: "error", message: err });
-				}
-				this.log("SUCCESS", "PLAYLISTS_GET_DATA", `Got data from playlists successfully.`);
-				return cb({ status: "success", message: "Successfully got data from playlists.", data: response });
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Searches through all playlists that can be included in a community station
@@ -398,6 +419,7 @@ export default {
 						query,
 						includeUser: true,
 						includeGenre: true,
+						includeAdmin: true,
 						includeOwn: true,
 						includeSongs: true,
 						userId: session.userId,
@@ -431,7 +453,7 @@ export default {
 	 * @param {string} query - the page
 	 * @param {Function} cb - gets called with the result
 	 */
-	searchOfficial: isAdminRequired(async function searchOfficial(session, query, page, cb) {
+	searchOfficial: useHasPermission("playlists.get", async function searchOfficial(session, query, page, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -445,6 +467,7 @@ export default {
 						includeGenre: true,
 						includePrivate: true,
 						includeSongs: true,
+						includeAdmin: true,
 						page
 					})
 						.then(response => {
@@ -462,6 +485,50 @@ export default {
 					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "PLAYLISTS_SEARCH_OFFICIAL", "Searching playlists successful.");
+				return cb({ status: "success", data });
+			}
+		);
+	}),
+
+	/**
+	 * Searches through all admin playlists
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} query - the query
+	 * @param {string} query - the page
+	 * @param {Function} cb - gets called with the result
+	 */
+	searchAdmin: useHasPermission("playlists.get", async function searchAdmin(session, query, page, cb) {
+		async.waterfall(
+			[
+				next => {
+					if ((!query && query !== "") || typeof query !== "string") next("Invalid query.");
+					else next();
+				},
+
+				next => {
+					PlaylistsModule.runJob("SEARCH", {
+						query,
+						includePrivate: true,
+						includeSongs: true,
+						includeAdmin: true,
+						page
+					})
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async (err, data) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "PLAYLISTS_SEARCH_ADMIN", `Searching playlists failed. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "PLAYLISTS_SEARCH_ADMIN", "Searching playlists successful.");
 				return cb({ status: "success", data });
 			}
 		);
@@ -721,7 +788,7 @@ export default {
 				next => (data ? next() : cb({ status: "error", message: "Invalid data" })),
 
 				next => {
-					const { displayName, songs, privacy } = data;
+					const { displayName, songs, privacy, admin } = data;
 
 					if (blacklist.indexOf(displayName.toLowerCase()) !== -1)
 						return next("That playlist name is blacklisted. Please use a different name.");
@@ -731,33 +798,39 @@ export default {
 							displayName,
 							songs,
 							privacy,
-							createdBy: session.userId,
+							createdBy: admin ? "Musare" : session.userId,
 							createdAt: Date.now(),
 							createdFor: null,
-							type: "user"
+							type: admin ? "admin" : "user"
 						},
 						next
 					);
 				},
 
 				(playlist, next) => {
-					userModel.updateOne(
-						{ _id: session.userId },
-						{ $push: { "preferences.orderOfPlaylists": playlist._id } },
-						err => {
-							if (err) return next(err);
-							return next(null, playlist);
-						}
-					);
+					if (data.admin) next(null, playlist);
+					else
+						userModel.updateOne(
+							{ _id: session.userId },
+							{ $push: { "preferences.orderOfPlaylists": playlist._id } },
+							err => {
+								if (err) return next(err);
+								return next(null, playlist);
+							}
+						);
 				}
 			],
 			async (err, playlist) => {
+				let type = "unknown";
+				if (data && data.admin) type = "admin";
+				else if (data && !data.admin) type = "user";
+
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
 						"PLAYLIST_CREATE",
-						`Creating private playlist failed for user "${session.userId}". "${err}"`
+						`Creating ${type} playlist failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -767,19 +840,20 @@ export default {
 					value: playlist
 				});
 
-				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: playlist.createdBy,
-					type: "playlist__create",
-					payload: {
-						message: `Created playlist <playlistId>${playlist.displayName}</playlistId>`,
-						playlistId: playlist._id
-					}
-				});
+				if (!data.admin)
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
+						userId: playlist.createdBy,
+						type: "playlist__create",
+						payload: {
+							message: `Created playlist <playlistId>${playlist.displayName}</playlistId>`,
+							playlistId: playlist._id
+						}
+					});
 
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_CREATE",
-					`Successfully created private playlist for user "${session.userId}".`
+					`Successfully created ${type} playlist for user "${session.userId}".`
 				);
 
 				return cb({
@@ -811,18 +885,10 @@ export default {
 
 				(playlist, next) => {
 					if (!playlist) return next("Playlist not found");
-					if (playlist.privacy !== "public" && playlist.createdBy !== session.userId) {
-						if (session)
-							// check if user requested to get a playlist is an admin
-							return DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
-								userModel.findOne({ _id: session.userId }, (err, user) => {
-									if (user && user.role === "admin") return next(null, playlist);
-									return next("User unauthorised to view playlist.");
-								});
-							});
-						return next("User unauthorised to view playlist.");
-					}
-
+					if (playlist.privacy !== "public" && playlist.createdBy !== session.userId)
+						return hasPermission("playlists.get", session)
+							.then(() => next(null, playlist))
+							.catch(() => next("User unauthorised to view playlist."));
 					return next(null, playlist);
 				}
 			],
@@ -870,18 +936,10 @@ export default {
 
 				(playlist, next) => {
 					if (!playlist) return next("Playlist not found");
-					if (playlist.privacy !== "public" && playlist.createdBy !== session.userId) {
-						if (session)
-							// check if user requested to get a playlist is an admin
-							return DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
-								userModel.findOne({ _id: session.userId }, (err, user) => {
-									if (user && user.role === "admin") return next(null, playlist);
-									return next("User unauthorised to view playlist.");
-								});
-							});
-						return next("User unauthorised to view playlist.");
-					}
-
+					if (playlist.privacy !== "public")
+						return hasPermission("stations.view", session, stationId)
+							.then(() => next(null, playlist))
+							.catch(() => next("User unauthorised to view playlist."));
 					return next(null, playlist);
 				}
 			],
@@ -1007,14 +1065,11 @@ export default {
 				next => {
 					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
-							if (!playlist || playlist.createdBy !== session.userId) {
-								return DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
-									userModel.findOne({ _id: session.userId }, (err, user) => {
-										if (user && user.role === "admin") return next();
-										return next("Something went wrong when trying to get the playlist");
-									});
-								});
-							}
+							if (!playlist) return next("Playlist not found.");
+							if (playlist.createdBy !== session.userId)
+								return hasPermission("playlists.songs.reposition", session)
+									.then(() => next())
+									.catch(() => next("Invalid permissions."));
 							return next();
 						})
 						.catch(next);
@@ -1045,7 +1100,7 @@ export default {
 						.catch(next);
 				}
 			],
-			async err => {
+			async (err, playlist) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
@@ -1067,7 +1122,7 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "playlist.repositionSong",
 					value: {
-						userId: session.userId,
+						createdBy: playlist.createdBy,
 						playlistId,
 						song
 					}
@@ -1098,14 +1153,12 @@ export default {
 				next => {
 					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
-							if (!playlist || playlist.createdBy !== session.userId) {
-								DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
-									userModel.findOne({ _id: session.userId }, (err, user) => {
-										if (user && user.role === "admin") return next(null, playlist);
-										return next("Something went wrong when trying to get the playlist");
-									});
-								});
-							} else next(null, playlist);
+							if (!playlist) return next("Playlist not found.");
+							if (playlist.createdBy !== session.userId)
+								return hasPermission("playlists.songs.add", session)
+									.then(() => next(null, playlist))
+									.catch(() => next("Invalid permissions."));
+							return next(null, playlist);
 						})
 						.catch(next);
 				},
@@ -1176,7 +1229,7 @@ export default {
 					value: {
 						playlistId: playlist._id,
 						song: newSong,
-						userId: session.userId,
+						createdBy: playlist.createdBy,
 						privacy: playlist.privacy
 					}
 				});
@@ -1194,7 +1247,7 @@ export default {
 
 					if (playlist.type === "user-liked") {
 						CacheModule.runJob("PUB", {
-							channel: "song.like",
+							channel: "ratings.like",
 							value: JSON.stringify({
 								youtubeId,
 								userId: session.userId,
@@ -1214,7 +1267,7 @@ export default {
 						});
 					} else {
 						CacheModule.runJob("PUB", {
-							channel: "song.dislike",
+							channel: "ratings.dislike",
 							value: JSON.stringify({
 								youtubeId,
 								userId: session.userId,
@@ -1243,6 +1296,336 @@ export default {
 			}
 		);
 	}),
+
+	/**
+	 * Adds songs to a playlist
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} playlistId - the id of the playlist we are adding the songs to
+	 * @param {Array} youtubeIds - the YouTube ids of the songs we are trying to add
+	 * @param {Function} cb - gets called with the result
+	 */
+	addSongsToPlaylist: useHasPermission(
+		"playlists.songs.add",
+		async function addSongsToPlaylist(session, playlistId, youtubeIds, cb) {
+			const successful = [];
+			const existing = [];
+			const failed = {};
+			const errors = {};
+			const lastYoutubeId = "none";
+
+			const addError = message => {
+				if (!errors[message]) errors[message] = 1;
+				else errors[message] += 1;
+			};
+
+			this.keepLongJob();
+			this.publishProgress({
+				status: "started",
+				title: "Bulk add songs to playlist",
+				message: "Adding songs to playlist.",
+				id: this.toString()
+			});
+			await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+			await CacheModule.runJob(
+				"PUB",
+				{
+					channel: "longJob.added",
+					value: { jobId: this.toString(), userId: session.userId }
+				},
+				this
+			);
+
+			async.waterfall(
+				[
+					next => {
+						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+							.then(playlist => {
+								if (!playlist) return next("Playlist not found.");
+								return next(null, playlist);
+							})
+							.catch(next);
+					},
+
+					(playlist, next) => {
+						if (playlist.type !== "admin") return next("Playlist must be of type admin.");
+						return next();
+					},
+
+					next => {
+						async.eachLimit(
+							youtubeIds,
+							1,
+							(youtubeId, next) => {
+								this.publishProgress({ status: "update", message: `Adding song "${youtubeId}"` });
+								PlaylistsModule.runJob("ADD_SONG_TO_PLAYLIST", { playlistId, youtubeId }, this)
+									.then(() => {
+										successful.push(youtubeId);
+										next();
+									})
+									.catch(async err => {
+										err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+										if (err === "That song is already in the playlist.") {
+											existing.push(youtubeId);
+											next();
+										} else {
+											addError(err);
+											failed[youtubeId] = err;
+											next();
+										}
+									});
+							},
+							err => {
+								if (err) next(err);
+								else next();
+							}
+						);
+					},
+
+					next => {
+						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+							.then(playlist => {
+								if (!playlist) return next("Playlist not found.");
+								return next(null, playlist);
+							})
+							.catch(next);
+					}
+				],
+				async (err, playlist) => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log(
+							"ERROR",
+							"PLAYLIST_ADD_SONGS",
+							`Adding songs to playlist "${playlistId}" failed for user "${
+								session.userId
+							}". "${err}". Stats: successful:${successful.length}, existing:${existing.length}, failed:${
+								Object.keys(failed).length
+							}, last youtubeId:${lastYoutubeId}, youtubeIds length:${
+								youtubeIds ? youtubeIds.length : null
+							}`
+						);
+						return cb({
+							status: "error",
+							message: err,
+							data: {
+								stats: {
+									successful,
+									existing,
+									failed,
+									errors
+								}
+							}
+						});
+					}
+
+					this.log(
+						"SUCCESS",
+						"PLAYLIST_ADD_SONGS",
+						`Successfully added songs to playlist "${playlistId}" for user "${
+							session.userId
+						}". Stats: successful:${successful.length}, existing:${existing.length}, failed:${
+							Object.keys(failed).length
+						}, youtubeIds length:${youtubeIds ? youtubeIds.length : null}`
+					);
+
+					CacheModule.runJob("PUB", {
+						channel: "playlist.updated",
+						value: { playlistId }
+					});
+
+					const message = `Done adding songs. Succesful: ${successful.length}, failed: ${
+						Object.keys(failed).length
+					}, existing: ${existing.length}.`;
+
+					this.publishProgress({
+						status: "success",
+						message
+					});
+
+					return cb({
+						status: "success",
+						message,
+						data: {
+							songs: playlist.songs,
+							stats: {
+								successful,
+								existing,
+								failed,
+								errors
+							}
+						}
+					});
+				}
+			);
+		}
+	),
+
+	/**
+	 * Removes songs from a playlist
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} playlistId - the id of the playlist we are removing the songs from
+	 * @param {Array} youtubeIds - the YouTube ids of the songs we are trying to remove
+	 * @param {Function} cb - gets called with the result
+	 */
+	removeSongsFromPlaylist: useHasPermission(
+		"playlists.songs.remove",
+		async function removeSongsFromPlaylist(session, playlistId, youtubeIds, cb) {
+			const successful = [];
+			const notInPlaylist = [];
+			const failed = {};
+			const errors = {};
+			const lastYoutubeId = "none";
+
+			const addError = message => {
+				if (!errors[message]) errors[message] = 1;
+				else errors[message] += 1;
+			};
+
+			this.keepLongJob();
+			this.publishProgress({
+				status: "started",
+				title: "Bulk remove songs from playlist",
+				message: "Removing songs from playlist.",
+				id: this.toString()
+			});
+			await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+			await CacheModule.runJob(
+				"PUB",
+				{
+					channel: "longJob.added",
+					value: { jobId: this.toString(), userId: session.userId }
+				},
+				this
+			);
+
+			async.waterfall(
+				[
+					next => {
+						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+							.then(playlist => {
+								if (!playlist) return next("Playlist not found.");
+								return next(null, playlist);
+							})
+							.catch(next);
+					},
+
+					(playlist, next) => {
+						if (playlist.type !== "admin") return next("Playlist must be of type admin.");
+						return next();
+					},
+
+					next => {
+						async.eachLimit(
+							youtubeIds,
+							1,
+							(youtubeId, next) => {
+								this.publishProgress({ status: "update", message: `Removing song "${youtubeId}"` });
+								PlaylistsModule.runJob("REMOVE_FROM_PLAYLIST", { playlistId, youtubeId }, this)
+									.then(() => {
+										successful.push(youtubeId);
+										next();
+									})
+									.catch(async err => {
+										err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+										if (err === "That song is not currently in the playlist.") {
+											notInPlaylist.push(youtubeId);
+											next();
+										} else {
+											addError(err);
+											failed[youtubeId] = err;
+											next();
+										}
+									});
+							},
+							err => {
+								if (err) next(err);
+								else next();
+							}
+						);
+					},
+
+					next => {
+						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+							.then(playlist => {
+								if (!playlist) return next("Playlist not found.");
+								return next(null, playlist);
+							})
+							.catch(next);
+					}
+				],
+				async (err, playlist) => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log(
+							"ERROR",
+							"PLAYLIST_REMOVE_SONGS",
+							`Removing songs from playlist "${playlistId}" failed for user "${
+								session.userId
+							}". "${err}". Stats: successful:${successful.length}, notInPlaylist:${
+								notInPlaylist.length
+							}, failed:${
+								Object.keys(failed).length
+							}, last youtubeId:${lastYoutubeId}, youtubeIds length:${
+								youtubeIds ? youtubeIds.length : null
+							}`
+						);
+						return cb({
+							status: "error",
+							message: err,
+							data: {
+								stats: {
+									successful,
+									notInPlaylist,
+									failed,
+									errors
+								}
+							}
+						});
+					}
+
+					this.log(
+						"SUCCESS",
+						"PLAYLIST_REMOVE_SONGS",
+						`Successfully removed songs from playlist "${playlistId}" for user "${
+							session.userId
+						}". Stats: successful:${successful.length}, notInPlaylist:${notInPlaylist.length}, failed:${
+							Object.keys(failed).length
+						}, youtubeIds length:${youtubeIds ? youtubeIds.length : null}`
+					);
+
+					CacheModule.runJob("PUB", {
+						channel: "playlist.updated",
+						value: { playlistId }
+					});
+
+					const message = `Done removing songs. Succesful: ${successful.length}, failed: ${
+						Object.keys(failed).length
+					}, not in playlist: ${notInPlaylist.length}.`;
+
+					this.publishProgress({
+						status: "success",
+						message
+					});
+
+					return cb({
+						status: "success",
+						message,
+						data: {
+							songs: playlist.songs,
+							stats: {
+								successful,
+								notInPlaylist,
+								failed,
+								errors
+							}
+						}
+					});
+				}
+			);
+		}
+	),
 
 	/**
 	 * Adds a set of songs to a private playlist
@@ -1388,15 +1771,11 @@ export default {
 
 				(playlist, next) => {
 					this.publishProgress({ status: "update", message: `Importing YouTube playlist (stage 4)` });
-					if (!playlist || playlist.createdBy !== session.userId) {
-						return DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
-							userModel.findOne({ _id: session.userId }, (err, user) => {
-								if (user && user.role === "admin") return next(null, playlist);
-								return next("Something went wrong when trying to get the playlist");
-							});
-						});
-					}
-
+					if (!playlist) return next("Playlist not found.");
+					if (playlist.createdBy !== session.userId)
+						return hasPermission("playlists.songs.add", session)
+							.then(() => next(null, playlist))
+							.catch(() => next("Invalid permissions."));
 					return next(null, playlist);
 				}
 			],
@@ -1471,14 +1850,11 @@ export default {
 				next => {
 					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
-							if (!playlist || playlist.createdBy !== session.userId) {
-								return DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
-									userModel.findOne({ _id: session.userId }, (err, user) => {
-										if (user && user.role === "admin") return next(null, playlist);
-										return next("Something went wrong when trying to get the playlist");
-									});
-								});
-							}
+							if (!playlist) return next("Playlist not found.");
+							if (playlist.createdBy !== session.userId)
+								return hasPermission("playlists.songs.remove", session)
+									.then(() => next(null, playlist))
+									.catch(() => next("Invalid permissions."));
 							return next(null, playlist);
 						})
 						.catch(next);
@@ -1553,7 +1929,7 @@ export default {
 							});
 						} else {
 							CacheModule.runJob("PUB", {
-								channel: "song.undislike",
+								channel: "ratings.undislike",
 								value: JSON.stringify({
 									youtubeId: newSong.youtubeId,
 									userId: session.userId,
@@ -1601,7 +1977,7 @@ export default {
 					value: {
 						playlistId: playlist._id,
 						youtubeId,
-						userId: session.userId,
+						createdBy: playlist.createdBy,
 						privacy: playlist.privacy
 					}
 				});
@@ -1634,13 +2010,18 @@ export default {
 				},
 
 				(playlist, next) => {
-					if (playlist.type !== "user") return next("Playlist cannot be modified.");
-					return next(null);
+					if (playlist.type === "admin")
+						hasPermission("playlists.update.displayName", session)
+							.then(() => next())
+							.catch(() => next("Invalid permissions."));
+					else if (playlist.type !== "user" || playlist.createdBy !== session.userId)
+						next("Playlist cannot be modified.");
+					else next(null);
 				},
 
 				next => {
 					playlistModel.updateOne(
-						{ _id: playlistId, createdBy: session.userId },
+						{ _id: playlistId },
 						{ $set: { displayName } },
 						{ runValidators: true },
 						next
@@ -1659,7 +2040,7 @@ export default {
 					this.log(
 						"ERROR",
 						"PLAYLIST_UPDATE_DISPLAY_NAME",
-						`Updating display name to "${displayName}" for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						`Updating display name to "${displayName}" for playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -1667,7 +2048,7 @@ export default {
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_UPDATE_DISPLAY_NAME",
-					`Successfully updated display name to "${displayName}" for private playlist "${playlistId}" for user "${session.userId}".`
+					`Successfully updated display name to "${displayName}" for playlist "${playlistId}" for user "${session.userId}".`
 				);
 
 				CacheModule.runJob("PUB", {
@@ -1675,7 +2056,7 @@ export default {
 					value: {
 						playlistId,
 						displayName,
-						userId: session.userId,
+						createdBy: playlist.createdBy,
 						privacy: playlist.privacy
 					}
 				});
@@ -1685,14 +2066,15 @@ export default {
 					value: { playlistId }
 				});
 
-				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: session.userId,
-					type: "playlist__edit_display_name",
-					payload: {
-						message: `Changed display name of playlist <playlistId>${displayName}</playlistId>`,
-						playlistId
-					}
-				});
+				if (playlist.type !== "admin")
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
+						userId: session.userId,
+						type: "playlist__edit_display_name",
+						payload: {
+							message: `Changed display name of playlist <playlistId>${displayName}</playlistId>`,
+							playlistId
+						}
+					});
 
 				return cb({
 					status: "success",
@@ -1760,7 +2142,7 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "playlist.delete",
 					value: {
-						userId: session.userId,
+						createdBy: playlist.createdBy,
 						playlistId
 					}
 				});
@@ -1790,7 +2172,7 @@ export default {
 	 * @param {string} playlistId - the id of the playlist we are removing
 	 * @param {Function} cb - gets called with the result
 	 */
-	removeAdmin: isAdminRequired(async function removeAdmin(session, playlistId, cb) {
+	removeAdmin: useHasPermission("playlists.removeAdmin", async function removeAdmin(session, playlistId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
@@ -1802,19 +2184,22 @@ export default {
 				},
 
 				(playlist, next) => {
-					if (playlist.type !== "user") return next("Playlist cannot be removed.");
+					if (playlist.type !== "user" && playlist.type !== "admin")
+						return next("Playlist cannot be removed.");
 					return next(null, playlist);
 				},
 
 				(playlist, next) => {
-					userModel.updateOne(
-						{ _id: playlist.createdBy },
-						{ $pull: { "preferences.orderOfPlaylists": playlist._id } },
-						err => next(err, playlist, playlist.createdBy)
-					);
+					if (playlist.type === "admin") next(null, null);
+					else
+						userModel.updateOne(
+							{ _id: playlist.createdBy },
+							{ $pull: { "preferences.orderOfPlaylists": playlist._id } },
+							err => next(err, playlist.createdBy)
+						);
 				},
 
-				(playlist, playlistCreator, next) => {
+				(playlistCreator, next) => {
 					PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId }, this)
 						.then(() => next(null, playlistCreator))
 						.catch(next);
@@ -1826,7 +2211,7 @@ export default {
 					this.log(
 						"ERROR",
 						"PLAYLIST_REMOVE_ADMIN",
-						`Removing private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						`Removing playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -1834,13 +2219,13 @@ export default {
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_REMOVE_ADMIN",
-					`Successfully removed private playlist "${playlistId}" for user "${session.userId}".`
+					`Successfully removed playlist "${playlistId}" for user "${session.userId}".`
 				);
 
 				CacheModule.runJob("PUB", {
 					channel: "playlist.delete",
 					value: {
-						userId: playlistCreator,
+						createdBy: playlistCreator,
 						playlistId
 					}
 				});
@@ -1909,7 +2294,7 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "playlist.updatePrivacy",
 					value: {
-						userId: session.userId,
+						createdBy: playlist.createdBy,
 						playlist
 					}
 				});
@@ -1944,66 +2329,74 @@ export default {
 	 * @param {string} privacy - what the new privacy of the playlist should be e.g. public
 	 * @param {Function} cb - gets called with the result
 	 */
-	updatePrivacyAdmin: isAdminRequired(async function updatePrivacyAdmin(session, playlistId, privacy, cb) {
-		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+	updatePrivacyAdmin: useHasPermission(
+		"playlists.update.privacy",
+		async function updatePrivacyAdmin(session, playlistId, privacy, cb) {
+			const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
-		async.waterfall(
-			[
-				next => {
-					playlistModel.updateOne({ _id: playlistId }, { $set: { privacy } }, { runValidators: true }, next);
-				},
+			async.waterfall(
+				[
+					next => {
+						playlistModel.updateOne(
+							{ _id: playlistId },
+							{ $set: { privacy } },
+							{ runValidators: true },
+							next
+						);
+					},
 
-				(res, next) => {
-					if (res.n === 0) next("No playlist found with that id.");
-					else if (res.nModified === 0) next(`Nothing changed, the playlist was already ${privacy}.`);
-					else {
-						PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
-							.then(playlist => next(null, playlist))
-							.catch(next);
+					(res, next) => {
+						if (res.n === 0) next("No playlist found with that id.");
+						else if (res.nModified === 0) next(`Nothing changed, the playlist was already ${privacy}.`);
+						else {
+							PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
+								.then(playlist => next(null, playlist))
+								.catch(next);
+						}
 					}
-				}
-			],
-			async (err, playlist) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				],
+				async (err, playlist) => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+						this.log(
+							"ERROR",
+							"PLAYLIST_UPDATE_PRIVACY_ADMIN",
+							`Updating privacy to "${privacy}" for playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						);
+
+						return cb({ status: "error", message: err });
+					}
 
 					this.log(
-						"ERROR",
-						"PLAYLIST_UPDATE_PRIVACY_ADMIN",
-						`Updating privacy to "${privacy}" for playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						"SUCCESS",
+						"PLAYLIST_UPDATE_PRIVACY_ADMIn",
+						`Successfully updated privacy to "${privacy}" for playlist "${playlistId}" for user "${session.userId}".`
 					);
 
-					return cb({ status: "error", message: err });
-				}
+					if (playlist.type === "user") {
+						CacheModule.runJob("PUB", {
+							channel: "playlist.updatePrivacy",
+							value: {
+								userId: playlist.createdBy,
+								playlist
+							}
+						});
+					}
 
-				this.log(
-					"SUCCESS",
-					"PLAYLIST_UPDATE_PRIVACY_ADMIn",
-					`Successfully updated privacy to "${privacy}" for playlist "${playlistId}" for user "${session.userId}".`
-				);
-
-				if (playlist.type === "user") {
 					CacheModule.runJob("PUB", {
-						channel: "playlist.updatePrivacy",
-						value: {
-							userId: playlist.createdBy,
-							playlist
-						}
+						channel: "playlist.updated",
+						value: { playlistId }
+					});
+
+					return cb({
+						status: "success",
+						message: "Playlist has been successfully updated"
 					});
 				}
-
-				CacheModule.runJob("PUB", {
-					channel: "playlist.updated",
-					value: { playlistId }
-				});
-
-				return cb({
-					status: "success",
-					message: "Playlist has been successfully updated"
-				});
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Deletes all orphaned station playlists
@@ -2011,7 +2404,7 @@ export default {
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
-	deleteOrphanedStationPlaylists: isAdminRequired(async function index(session, cb) {
+	deleteOrphanedStationPlaylists: useHasPermission("playlists.deleteOrphaned", async function index(session, cb) {
 		this.keepLongJob();
 		this.publishProgress({
 			status: "started",
@@ -2071,7 +2464,7 @@ export default {
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
-	deleteOrphanedGenrePlaylists: isAdminRequired(async function index(session, cb) {
+	deleteOrphanedGenrePlaylists: useHasPermission("playlists.deleteOrphaned", async function index(session, cb) {
 		this.keepLongJob();
 		this.publishProgress({
 			status: "started",
@@ -2131,59 +2524,62 @@ export default {
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
-	requestOrphanedPlaylistSongs: isAdminRequired(async function index(session, cb) {
-		this.keepLongJob();
-		this.publishProgress({
-			status: "started",
-			title: "Request orphaned playlist songs",
-			message: "Requesting orphaned playlist songs.",
-			id: this.toString()
-		});
-		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
-		await CacheModule.runJob(
-			"PUB",
-			{
-				channel: "longJob.added",
-				value: { jobId: this.toString(), userId: session.userId }
-			},
-			this
-		);
+	requestOrphanedPlaylistSongs: useHasPermission(
+		"playlists.requestOrphanedPlaylistSongs",
+		async function index(session, cb) {
+			this.keepLongJob();
+			this.publishProgress({
+				status: "started",
+				title: "Request orphaned playlist songs",
+				message: "Requesting orphaned playlist songs.",
+				id: this.toString()
+			});
+			await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+			await CacheModule.runJob(
+				"PUB",
+				{
+					channel: "longJob.added",
+					value: { jobId: this.toString(), userId: session.userId }
+				},
+				this
+			);
 
-		async.waterfall(
-			[
-				next => {
-					SongsModule.runJob("REQUEST_ORPHANED_PLAYLIST_SONGS", {}, this)
-						.then(() => next())
-						.catch(next);
-				}
-			],
-			async err => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+			async.waterfall(
+				[
+					next => {
+						SongsModule.runJob("REQUEST_ORPHANED_PLAYLIST_SONGS", {}, this)
+							.then(() => next())
+							.catch(next);
+					}
+				],
+				async err => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log(
+							"ERROR",
+							"REQUEST_ORPHANED_PLAYLIST_SONGS",
+							`Requesting orphaned playlist songs failed. "${err}"`
+						);
+						this.publishProgress({
+							status: "error",
+							message: err
+						});
+						return cb({ status: "error", message: err });
+					}
 					this.log(
-						"ERROR",
+						"SUCCESS",
 						"REQUEST_ORPHANED_PLAYLIST_SONGS",
-						`Requesting orphaned playlist songs failed. "${err}"`
+						"Requesting orphaned playlist songs was successful."
 					);
 					this.publishProgress({
-						status: "error",
-						message: err
+						status: "success",
+						message: "Successfully requested orphaned playlist songs."
 					});
-					return cb({ status: "error", message: err });
+					return cb({ status: "success", message: "Successfully requested orphaned playlist songs." });
 				}
-				this.log(
-					"SUCCESS",
-					"REQUEST_ORPHANED_PLAYLIST_SONGS",
-					"Requesting orphaned playlist songs was successful."
-				);
-				this.publishProgress({
-					status: "success",
-					message: "Successfully requested orphaned playlist songs."
-				});
-				return cb({ status: "success", message: "Successfully requested orphaned playlist songs." });
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Clears and refills a station playlist
@@ -2192,48 +2588,51 @@ export default {
 	 * @param {string} playlistId - the id of the playlist we are clearing and refilling
 	 * @param {Function} cb - gets called with the result
 	 */
-	clearAndRefillStationPlaylist: isAdminRequired(async function index(session, playlistId, cb) {
-		async.waterfall(
-			[
-				next => {
-					if (!playlistId) next("Please specify a playlist id");
-					else {
-						PlaylistsModule.runJob("CLEAR_AND_REFILL_STATION_PLAYLIST", { playlistId }, this)
-							.then(() => {
-								next();
-							})
-							.catch(err => {
-								next(err);
-							});
+	clearAndRefillStationPlaylist: useHasPermission(
+		"playlists.clearAndRefill",
+		async function index(session, playlistId, cb) {
+			async.waterfall(
+				[
+					next => {
+						if (!playlistId) next("Please specify a playlist id");
+						else {
+							PlaylistsModule.runJob("CLEAR_AND_REFILL_STATION_PLAYLIST", { playlistId }, this)
+								.then(() => {
+									next();
+								})
+								.catch(err => {
+									next(err);
+								});
+						}
 					}
-				}
-			],
-			async err => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				],
+				async err => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+						this.log(
+							"ERROR",
+							"PLAYLIST_CLEAR_AND_REFILL_STATION_PLAYLIST",
+							`Clearing and refilling station playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						);
+
+						return cb({ status: "error", message: err });
+					}
 
 					this.log(
-						"ERROR",
+						"SUCCESS",
 						"PLAYLIST_CLEAR_AND_REFILL_STATION_PLAYLIST",
-						`Clearing and refilling station playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						`Successfully cleared and refilled station playlist "${playlistId}" for user "${session.userId}".`
 					);
 
-					return cb({ status: "error", message: err });
+					return cb({
+						status: "success",
+						message: "Playlist has been successfully cleared and refilled"
+					});
 				}
-
-				this.log(
-					"SUCCESS",
-					"PLAYLIST_CLEAR_AND_REFILL_STATION_PLAYLIST",
-					`Successfully cleared and refilled station playlist "${playlistId}" for user "${session.userId}".`
-				);
-
-				return cb({
-					status: "success",
-					message: "Playlist has been successfully cleared and refilled"
-				});
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Clears and refills a genre playlist
@@ -2242,48 +2641,51 @@ export default {
 	 * @param {string} playlistId - the id of the playlist we are clearing and refilling
 	 * @param {Function} cb - gets called with the result
 	 */
-	clearAndRefillGenrePlaylist: isAdminRequired(async function index(session, playlistId, cb) {
-		async.waterfall(
-			[
-				next => {
-					if (!playlistId) next("Please specify a playlist id");
-					else {
-						PlaylistsModule.runJob("CLEAR_AND_REFILL_GENRE_PLAYLIST", { playlistId }, this)
-							.then(() => {
-								next();
-							})
-							.catch(err => {
-								next(err);
-							});
+	clearAndRefillGenrePlaylist: useHasPermission(
+		"playlists.clearAndRefill",
+		async function index(session, playlistId, cb) {
+			async.waterfall(
+				[
+					next => {
+						if (!playlistId) next("Please specify a playlist id");
+						else {
+							PlaylistsModule.runJob("CLEAR_AND_REFILL_GENRE_PLAYLIST", { playlistId }, this)
+								.then(() => {
+									next();
+								})
+								.catch(err => {
+									next(err);
+								});
+						}
 					}
-				}
-			],
-			async err => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				],
+				async err => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+						this.log(
+							"ERROR",
+							"PLAYLIST_CLEAR_AND_REFILL_GENRE_PLAYLIST",
+							`Clearing and refilling genre playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						);
+
+						return cb({ status: "error", message: err });
+					}
 
 					this.log(
-						"ERROR",
+						"SUCCESS",
 						"PLAYLIST_CLEAR_AND_REFILL_GENRE_PLAYLIST",
-						`Clearing and refilling genre playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						`Successfully cleared and refilled genre playlist "${playlistId}" for user "${session.userId}".`
 					);
 
-					return cb({ status: "error", message: err });
+					return cb({
+						status: "success",
+						message: "Playlist has been successfully cleared and refilled"
+					});
 				}
-
-				this.log(
-					"SUCCESS",
-					"PLAYLIST_CLEAR_AND_REFILL_GENRE_PLAYLIST",
-					`Successfully cleared and refilled genre playlist "${playlistId}" for user "${session.userId}".`
-				);
-
-				return cb({
-					status: "success",
-					message: "Playlist has been successfully cleared and refilled"
-				});
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Clears and refills all station playlists
@@ -2291,93 +2693,96 @@ export default {
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
-	clearAndRefillAllStationPlaylists: isAdminRequired(async function index(session, cb) {
-		this.keepLongJob();
-		this.publishProgress({
-			status: "started",
-			title: "Clear and refill all station playlists",
-			message: "Clearing and refilling all station playlists.",
-			id: this.toString()
-		});
-		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
-		await CacheModule.runJob(
-			"PUB",
-			{
-				channel: "longJob.added",
-				value: { jobId: this.toString(), userId: session.userId }
-			},
-			this
-		);
-
-		async.waterfall(
-			[
-				next => {
-					PlaylistsModule.runJob("GET_ALL_STATION_PLAYLISTS", {}, this)
-						.then(response => {
-							next(null, response.playlists);
-						})
-						.catch(err => {
-							next(err);
-						});
+	clearAndRefillAllStationPlaylists: useHasPermission(
+		"playlists.clearAndRefillAll",
+		async function index(session, cb) {
+			this.keepLongJob();
+			this.publishProgress({
+				status: "started",
+				title: "Clear and refill all station playlists",
+				message: "Clearing and refilling all station playlists.",
+				id: this.toString()
+			});
+			await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+			await CacheModule.runJob(
+				"PUB",
+				{
+					channel: "longJob.added",
+					value: { jobId: this.toString(), userId: session.userId }
 				},
+				this
+			);
 
-				(playlists, next) => {
-					async.eachLimit(
-						playlists,
-						1,
-						(playlist, next) => {
-							this.publishProgress({
-								status: "update",
-								message: `Clearing and refilling "${playlist._id}"`
+			async.waterfall(
+				[
+					next => {
+						PlaylistsModule.runJob("GET_ALL_STATION_PLAYLISTS", {}, this)
+							.then(response => {
+								next(null, response.playlists);
+							})
+							.catch(err => {
+								next(err);
 							});
-							PlaylistsModule.runJob(
-								"CLEAR_AND_REFILL_STATION_PLAYLIST",
-								{ playlistId: playlist._id },
-								this
-							)
-								.then(() => {
-									next();
-								})
-								.catch(err => {
-									next(err);
+					},
+
+					(playlists, next) => {
+						async.eachLimit(
+							playlists,
+							1,
+							(playlist, next) => {
+								this.publishProgress({
+									status: "update",
+									message: `Clearing and refilling "${playlist._id}"`
 								});
-						},
-						next
-					);
-				}
-			],
-			async err => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+								PlaylistsModule.runJob(
+									"CLEAR_AND_REFILL_STATION_PLAYLIST",
+									{ playlistId: playlist._id },
+									this
+								)
+									.then(() => {
+										next();
+									})
+									.catch(err => {
+										next(err);
+									});
+							},
+							next
+						);
+					}
+				],
+				async err => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+						this.log(
+							"ERROR",
+							"PLAYLIST_CLEAR_AND_REFILL_ALL_STATION_PLAYLISTS",
+							`Clearing and refilling all station playlists failed for user "${session.userId}". "${err}"`
+						);
+						this.publishProgress({
+							status: "error",
+							message: err
+						});
+						return cb({ status: "error", message: err });
+					}
 
 					this.log(
-						"ERROR",
+						"SUCCESS",
 						"PLAYLIST_CLEAR_AND_REFILL_ALL_STATION_PLAYLISTS",
-						`Clearing and refilling all station playlists failed for user "${session.userId}". "${err}"`
+						`Successfully cleared and refilled all station playlists for user "${session.userId}".`
 					);
 					this.publishProgress({
-						status: "error",
-						message: err
+						status: "success",
+						message: "Playlists have been successfully cleared and refilled."
 					});
-					return cb({ status: "error", message: err });
+					return cb({
+						status: "success",
+						message: "Playlists have been successfully cleared and refilled"
+					});
 				}
-
-				this.log(
-					"SUCCESS",
-					"PLAYLIST_CLEAR_AND_REFILL_ALL_STATION_PLAYLISTS",
-					`Successfully cleared and refilled all station playlists for user "${session.userId}".`
-				);
-				this.publishProgress({
-					status: "success",
-					message: "Playlists have been successfully cleared and refilled."
-				});
-				return cb({
-					status: "success",
-					message: "Playlists have been successfully cleared and refilled"
-				});
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Clears and refills all genre playlists
@@ -2385,7 +2790,7 @@ export default {
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
-	clearAndRefillAllGenrePlaylists: isAdminRequired(async function index(session, cb) {
+	clearAndRefillAllGenrePlaylists: useHasPermission("playlists.clearAndRefillAll", async function index(session, cb) {
 		this.keepLongJob();
 		this.publishProgress({
 			status: "started",
@@ -2479,7 +2884,7 @@ export default {
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
-	createMissingGenrePlaylists: isAdminRequired(async function index(session, cb) {
+	createMissingGenrePlaylists: useHasPermission("playlists.createMissing", async function index(session, cb) {
 		this.keepLongJob();
 		this.publishProgress({
 			status: "started",

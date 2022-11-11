@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
+import { defineAsyncComponent, ref, onMounted } from "vue";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import Toast from "toasters";
 import { formatDistance } from "date-fns";
-import { storeToRefs } from "pinia";
+import { GetNewsResponse } from "@musare_types/actions/NewsActions";
+import { GenericResponse } from "@musare_types/actions/GenericActions";
 import { useWebsocketsStore } from "@/stores/websockets";
-import { useEditNewsStore } from "@/stores/editNews";
 import { useModalsStore } from "@/stores/modals";
-import ws from "@/ws";
+import { useForm } from "@/composables/useForm";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const SaveButton = defineAsyncComponent(
@@ -19,40 +19,18 @@ const UserLink = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" }
+	modalUuid: { type: String, required: true },
+	createNews: { type: Boolean, default: false },
+	newsId: { type: String, default: null },
+	sector: { type: String, default: "admin" }
 });
 
 const { socket } = useWebsocketsStore();
 
-const editNewsStore = useEditNewsStore(props);
-const { createNews, newsId } = storeToRefs(editNewsStore);
-
 const { closeCurrentModal } = useModalsStore();
 
-const markdown = ref(
-	"# Header\n## Sub-Header\n- **So**\n- _Many_\n- ~Points~\n\nOther things you want to say and [link](https://example.com).\n\n### Sub-Sub-Header\n> Oh look, a quote!\n\n`lil code`\n\n```\nbig code\n```\n"
-);
-const status = ref("published");
-const showToNewUsers = ref(false);
 const createdBy = ref();
 const createdAt = ref(0);
-
-const init = () => {
-	if (newsId && !createNews.value) {
-		socket.dispatch(`news.getNewsFromId`, newsId.value, res => {
-			if (res.status === "success") {
-				markdown.value = res.data.news.markdown;
-				status.value = res.data.news.status;
-				showToNewUsers.value = res.data.news.showToNewUsers;
-				createdBy.value = res.data.news.createdBy;
-				createdAt.value = res.data.news.createdAt;
-			} else {
-				new Toast("News with that ID not found.");
-				closeCurrentModal();
-			}
-		});
-	}
-};
 
 const getTitle = () => {
 	let title = "";
@@ -60,75 +38,64 @@ const getTitle = () => {
 
 	// validate existence of h1 for the page title
 
-	if (preview.childNodes.length === 0) return "";
+	if (!preview || preview.childNodes.length === 0) return "";
 
 	if (preview.childNodes[0].nodeName !== "H1") {
 		for (let node = 0; node < preview.childNodes.length; node += 1) {
 			if (preview.childNodes[node].nodeName) {
 				if (preview.childNodes[node].nodeName === "H1")
-					title = preview.childNodes[node].textContent;
+					title = preview.childNodes[node].textContent || "";
 
 				break;
 			}
 		}
-	} else title = preview.childNodes[0].textContent;
+	} else title = preview.childNodes[0].textContent || "";
 
 	return title;
 };
 
-const create = close => {
-	if (markdown.value === "") return new Toast("News item cannot be empty.");
-
-	const title = getTitle();
-	if (!title)
-		return new Toast(
-			"Please provide a title (heading level 1) at the top of the document."
-		);
-
-	return socket.dispatch(
-		"news.create",
-		{
-			title,
-			markdown: markdown.value,
-			status: status.value,
-			showToNewUsers: showToNewUsers.value
+const { inputs, save, setOriginalValue } = useForm(
+	{
+		markdown: {
+			value: "# Header\n## Sub-Header\n- **So**\n- _Many_\n- ~Points~\n\nOther things you want to say and [link](https://example.com).\n\n### Sub-Sub-Header\n> Oh look, a quote!\n\n`lil code`\n\n```\nbig code\n```\n",
+			validate: (value: string) => {
+				if (value === "") return "News item cannot be empty.";
+				if (!getTitle())
+					return "Please provide a title (heading level 1) at the top of the document.";
+				return true;
+			}
 		},
-		res => {
-			new Toast(res.message);
-			if (res.status === "success" && close) closeCurrentModal();
+		status: "published",
+		showToNewUsers: false
+	},
+	({ status, messages, values }, resolve, reject) => {
+		if (status === "success") {
+			const data = {
+				title: getTitle(),
+				markdown: values.markdown,
+				status: values.status,
+				showToNewUsers: values.showToNewUsers
+			};
+			const cb = (res: GenericResponse) => {
+				new Toast(res.message);
+				if (res.status === "success") resolve();
+				else reject(new Error(res.message));
+			};
+			if (props.createNews) socket.dispatch("news.create", data, cb);
+			else socket.dispatch("news.update", props.newsId, data, cb);
+		} else {
+			if (status === "unchanged") new Toast(messages.unchanged);
+			else if (status === "error")
+				Object.values(messages).forEach(message => {
+					new Toast({ content: message, timeout: 8000 });
+				});
+			resolve();
 		}
-	);
-};
-
-const update = close => {
-	if (markdown.value === "") return new Toast("News item cannot be empty.");
-
-	const title = getTitle();
-	if (!title)
-		return new Toast(
-			"Please provide a title (heading level 1) at the top of the document."
-		);
-
-	return socket.dispatch(
-		"news.update",
-		newsId.value,
-		{
-			title,
-			markdown: markdown.value,
-			status: status.value,
-			showToNewUsers: showToNewUsers.value
-		},
-		res => {
-			new Toast(res.message);
-			if (res.status === "success" && close) closeCurrentModal();
-		}
-	);
-};
-
-onBeforeUnmount(() => {
-	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
-	editNewsStore.$dispose();
-});
+	},
+	{
+		modalUuid: props.modalUuid
+	}
+);
 
 onMounted(() => {
 	marked.use({
@@ -142,7 +109,28 @@ onMounted(() => {
 		}
 	});
 
-	ws.onConnect(init);
+	socket.onConnect(() => {
+		if (props.newsId && !props.createNews) {
+			socket.dispatch(
+				`news.getNewsFromId`,
+				props.newsId,
+				(res: GetNewsResponse) => {
+					if (res.status === "success") {
+						setOriginalValue({
+							markdown: res.data.news.markdown,
+							status: res.data.news.status,
+							showToNewUsers: res.data.news.showToNewUsers
+						});
+						createdBy.value = res.data.news.createdBy;
+						createdAt.value = res.data.news.createdAt;
+					} else {
+						new Toast("News with that ID not found.");
+						closeCurrentModal();
+					}
+				}
+			);
+		}
+	});
 });
 </script>
 
@@ -156,21 +144,23 @@ onMounted(() => {
 		<template #body>
 			<div class="left-section">
 				<p><strong>Markdown</strong></p>
-				<textarea v-model="markdown"></textarea>
+				<textarea v-model="inputs['markdown'].value"></textarea>
 			</div>
 			<div class="right-section">
 				<p><strong>Preview</strong></p>
 				<div
 					class="news-item"
 					id="preview"
-					v-html="DOMPurify.sanitize(marked(markdown))"
+					v-html="
+						DOMPurify.sanitize(marked(inputs['markdown'].value))
+					"
 				></div>
 			</div>
 		</template>
 		<template #footer>
 			<div>
 				<p class="control select">
-					<select v-model="status">
+					<select v-model="inputs['status'].value">
 						<option value="draft">Draft</option>
 						<option value="published" selected>Publish</option>
 					</select>
@@ -181,7 +171,7 @@ onMounted(() => {
 						<input
 							type="checkbox"
 							id="show-to-new-users"
-							v-model="showToNewUsers"
+							v-model="inputs['showToNewUsers'].value"
 						/>
 						<span class="slider round"></span>
 					</label>
@@ -194,13 +184,13 @@ onMounted(() => {
 				<save-button
 					ref="saveButton"
 					v-if="createNews"
-					@clicked="createNews ? create(false) : update(false)"
+					@clicked="save()"
 				/>
 
 				<save-button
 					ref="saveAndCloseButton"
 					default-message="Save and close"
-					@clicked="createNews ? create(true) : update(true)"
+					@clicked="save(closeCurrentModal)"
 				/>
 				<div class="right" v-if="createdAt > 0">
 					<span>

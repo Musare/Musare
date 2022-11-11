@@ -53,5 +53,6 @@ export default {
 	},
 	theme: { type: String, enum: ["blue", "purple", "teal", "orange", "red"], default: "blue" },
 	blacklist: [{ type: mongoose.Schema.Types.ObjectId, ref: "playlists" }],
+	djs: [{ type: mongoose.Schema.Types.ObjectId, ref: "users" }],
 	documentVersion: { type: Number, default: 8, required: true }
 };

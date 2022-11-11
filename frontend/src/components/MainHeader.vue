@@ -29,19 +29,21 @@ const siteSettings = ref({
 	registrationDisabled: false
 });
 const windowWidth = ref(0);
+const sidName = ref();
+const broadcastChannel = ref();
 
 const { socket } = useWebsocketsStore();
 
-const { loggedIn, username, role } = storeToRefs(userAuthStore);
-const { logout } = userAuthStore;
-const { changeNightmode } = useUserPreferencesStore();
+const { loggedIn, username } = storeToRefs(userAuthStore);
+const { logout, hasPermission } = userAuthStore;
+const userPreferencesStore = useUserPreferencesStore();
+const { nightmode } = storeToRefs(userPreferencesStore);
 
 const { openModal } = useModalsStore();
 
 const toggleNightmode = toggle => {
-	localNightmode.value = toggle || !localNightmode.value;
-
-	localStorage.setItem("nightmode", `${localNightmode.value}`);
+	localNightmode.value =
+		toggle === undefined ? !localNightmode.value : toggle;
 
 	if (loggedIn.value) {
 		socket.dispatch(
@@ -51,29 +53,30 @@ const toggleNightmode = toggle => {
 				if (res.status !== "success") new Toast(res.message);
 			}
 		);
+	} else {
+		broadcastChannel.value.postMessage(localNightmode.value);
 	}
-
-	changeNightmode(localNightmode.value);
 };
 
 const onResize = () => {
 	windowWidth.value = window.innerWidth;
 };
 
-watch(localNightmode, nightmode => {
-	if (localNightmode.value !== nightmode) toggleNightmode(nightmode);
+watch(nightmode, value => {
+	localNightmode.value = value;
 });
 
 onMounted(async () => {
-	localNightmode.value = JSON.parse(localStorage.getItem("nightmode"));
-	if (localNightmode.value === null) localNightmode.value = false;
-
+	localNightmode.value = nightmode.value;
 	frontendDomain.value = await lofig.get("frontendDomain");
 	siteSettings.value = await lofig.get("siteSettings");
+	sidName.value = await lofig.get("cookie.SIDname");
 
 	await nextTick();
 	onResize();
 	window.addEventListener("resize", onResize);
+
+	broadcastChannel.value = new BroadcastChannel(`${sidName.value}.nightmode`);
 });
 </script>
 
@@ -129,7 +132,7 @@ onMounted(async () => {
 			</div>
 			<span v-if="loggedIn" class="grouped">
 				<router-link
-					v-if="role === 'admin'"
+					v-if="hasPermission('admin.view')"
 					class="nav-item admin"
 					to="/admin"
 				>

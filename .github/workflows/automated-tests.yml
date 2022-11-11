@@ -1,0 +1,40 @@
+name: Musare Automated Tests
+
+on: [ push, pull_request, workflow_dispatch ]
+
+env:
+    COMPOSE_PROJECT_NAME: musare
+    RESTART_POLICY: unless-stopped
+    CONTAINER_MODE: prod
+    BACKEND_HOST: 127.0.0.1
+    BACKEND_PORT: 8080
+    FRONTEND_HOST: 127.0.0.1
+    FRONTEND_PORT: 80
+    FRONTEND_MODE: prod
+    MONGO_HOST: 127.0.0.1
+    MONGO_PORT: 27017
+    MONGO_ROOT_PASSWORD: PASSWORD_HERE
+    MONGO_USER_USERNAME: musare
+    MONGO_USER_PASSWORD: OTHER_PASSWORD_HERE
+    MONGO_DATA_LOCATION: .db
+    MONGO_VERSION: 5.0
+    REDIS_HOST: 127.0.0.1
+    REDIS_PORT: 6379
+    REDIS_PASSWORD: PASSWORD
+    REDIS_DATA_LOCATION: .redis
+
+jobs:
+    tests:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - name: Build Musare
+              run: |
+                  cp .env.example .env
+                  cp backend/config/template.json backend/config/default.json
+                  cp frontend/dist/config/template.json frontend/dist/config/default.json
+                  ./musare.sh build
+            - name: Start Musare
+              run: ./musare.sh start
+            - name: Test Frontend
+              run: ./musare.sh test frontend

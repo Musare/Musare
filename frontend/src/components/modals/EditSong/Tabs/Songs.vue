@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref, onMounted } from "vue";
 
-import { storeToRefs } from "pinia";
-
 import { useEditSongStore } from "@/stores/editSong";
 
 import { useSearchMusare } from "@/composables/useSearchMusare";
@@ -12,15 +10,13 @@ const SongItem = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" },
+	modalUuid: { type: String, required: true },
 	modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
 });
 
 const sitename = ref("Musare");
 
-const editSongStore = useEditSongStore(props);
-
-const { song } = storeToRefs(editSongStore);
+const { form } = useEditSongStore({ modalUuid: props.modalUuid });
 
 const {
 	musareSearch,
@@ -32,7 +28,7 @@ const {
 onMounted(async () => {
 	sitename.value = await lofig.get("siteSettings.sitename");
 
-	musareSearch.value.query = song.value.title;
+	musareSearch.value.query = form.inputs.title.value;
 	searchForMusareSongs(1, false);
 });
 </script>

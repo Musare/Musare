@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import { defineAsyncComponent, onMounted, onBeforeUnmount } from "vue";
+import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
-import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
-import { useViewPunishmentStore } from "@/stores/viewPunishment";
-import ws from "@/ws";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const PunishmentItem = defineAsyncComponent(
@@ -13,49 +10,24 @@ const PunishmentItem = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" }
+	modalUuid: { type: String, required: true },
+	punishmentId: { type: String, required: true }
 });
 
 const { socket } = useWebsocketsStore();
 
-const viewPunishmentStore = useViewPunishmentStore(props);
-const { punishmentId, punishment } = storeToRefs(viewPunishmentStore);
-const { viewPunishment } = viewPunishmentStore;
-
 const { closeCurrentModal } = useModalsStore();
 
-const init = () => {
-	socket.dispatch(`punishments.findOne`, punishmentId.value, res => {
-		if (res.status === "success") {
-			viewPunishment(res.data.punishment);
-
-			socket.dispatch(
-				"apis.joinRoom",
-				`view-punishment.${punishmentId.value}`
-			);
-
-			socket.on(
-				"event:admin.punishment.updated",
-				({ data }) => {
-					punishment.value = data.punishment;
-				},
-				{ modalUuid: props.modalUuid }
-			);
-		} else {
-			new Toast("Punishment with that ID not found");
-			closeCurrentModal();
-		}
-	});
-};
+const punishment = ref({});
 
 const deactivatePunishment = event => {
 	event.preventDefault();
 	socket.dispatch(
 		"punishments.deactivatePunishment",
-		punishmentId.value,
+		props.punishmentId,
 		res => {
 			if (res.status === "success") {
-				viewPunishmentStore.deactivatePunishment();
+				punishment.value.active = false;
 			} else {
 				new Toast(res.message);
 			}
@@ -64,18 +36,37 @@ const deactivatePunishment = event => {
 };
 
 onMounted(() => {
-	ws.onConnect(init);
+	socket.onConnect(() => {
+		socket.dispatch(`punishments.findOne`, props.punishmentId, res => {
+			if (res.status === "success") {
+				punishment.value = res.data.punishment;
+
+				socket.dispatch(
+					"apis.joinRoom",
+					`view-punishment.${props.punishmentId}`
+				);
+			} else {
+				new Toast("Punishment with that ID not found");
+				closeCurrentModal();
+			}
+		});
+	});
+
+	socket.on(
+		"event:admin.punishment.updated",
+		({ data }) => {
+			punishment.value = data.punishment;
+		},
+		{ modalUuid: props.modalUuid }
+	);
 });
 
 onBeforeUnmount(() => {
 	socket.dispatch(
 		"apis.leaveRoom",
-		`view-punishment.${punishmentId.value}`,
+		`view-punishment.${props.punishmentId}`,
 		() => {}
 	);
-
-	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
-	viewPunishmentStore.$dispose();
 });
 </script>
 

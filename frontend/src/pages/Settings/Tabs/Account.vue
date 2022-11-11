@@ -149,7 +149,7 @@ onMounted(() => {
 	) {
 		openModal({
 			modal: "removeAccount",
-			data: { githubLinkConfirmed: true }
+			props: { githubLinkConfirmed: true }
 		});
 	}
 });

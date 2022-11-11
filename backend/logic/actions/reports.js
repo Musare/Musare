@@ -1,6 +1,7 @@
 import async from "async";
 
-import { isAdminRequired, isLoginRequired } from "./hooks";
+import isLoginRequired from "../hooks/loginRequired";
+import { useHasPermission } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -99,93 +100,98 @@ export default {
 	 * @param operator - the operator for queries
 	 * @param cb
 	 */
-	getData: isAdminRequired(async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
-		async.waterfall(
-			[
-				next => {
-					DBModule.runJob(
-						"GET_DATA",
-						{
-							page,
-							pageSize,
-							properties,
-							sort,
-							queries,
-							operator,
-							modelName: "report",
-							blacklistedProperties: [],
-							specialProperties: {
-								createdBy: [
-									{
-										$addFields: {
-											createdByOID: {
-												$convert: {
-													input: "$createdBy",
-													to: "objectId",
-													onError: "unknown",
-													onNull: "unknown"
+	getData: useHasPermission(
+		"admin.view.reports",
+		async function getSet(session, page, pageSize, properties, sort, queries, operator, cb) {
+			async.waterfall(
+				[
+					next => {
+						DBModule.runJob(
+							"GET_DATA",
+							{
+								page,
+								pageSize,
+								properties,
+								sort,
+								queries,
+								operator,
+								modelName: "report",
+								blacklistedProperties: [],
+								specialProperties: {
+									createdBy: [
+										{
+											$addFields: {
+												createdByOID: {
+													$convert: {
+														input: "$createdBy",
+														to: "objectId",
+														onError: "unknown",
+														onNull: "unknown"
+													}
 												}
 											}
-										}
-									},
-									{
-										$lookup: {
-											from: "users",
-											localField: "createdByOID",
-											foreignField: "_id",
-											as: "createdByUser"
-										}
-									},
-									{
-										$unwind: {
-											path: "$createdByUser",
-											preserveNullAndEmptyArrays: true
-										}
-									},
-									{
-										$addFields: {
-											createdByUsername: {
-												$ifNull: ["$createdByUser.username", "unknown"]
+										},
+										{
+											$lookup: {
+												from: "users",
+												localField: "createdByOID",
+												foreignField: "_id",
+												as: "createdByUser"
+											}
+										},
+										{
+											$unwind: {
+												path: "$createdByUser",
+												preserveNullAndEmptyArrays: true
+											}
+										},
+										{
+											$addFields: {
+												createdByUsername: {
+													$ifNull: ["$createdByUser.username", "unknown"]
+												}
+											}
+										},
+										{
+											$project: {
+												createdByOID: 0,
+												createdByUser: 0
 											}
 										}
-									},
-									{
-										$project: {
-											createdByOID: 0,
-											createdByUser: 0
-										}
-									}
-								]
+									]
+								},
+								specialQueries: {
+									createdBy: newQuery => ({
+										$or: [newQuery, { createdByUsername: newQuery.createdBy }]
+									})
+								}
 							},
-							specialQueries: {
-								createdBy: newQuery => ({ $or: [newQuery, { createdByUsername: newQuery.createdBy }] })
-							}
-						},
-						this
-					)
-						.then(response => {
-							next(null, response);
-						})
-						.catch(err => {
-							next(err);
-						});
+							this
+						)
+							.then(response => {
+								next(null, response);
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				],
+				async (err, response) => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log("ERROR", "REPORTS_GET_DATA", `Failed to get data from reports. "${err}"`);
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "REPORTS_GET_DATA", `Got data from reports successfully.`);
+					return cb({
+						status: "success",
+						message: "Successfully got data from reports.",
+						data: response
+					});
 				}
-			],
-			async (err, response) => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "REPORTS_GET_DATA", `Failed to get data from reports. "${err}"`);
-					return cb({ status: "error", message: err });
-				}
-				this.log("SUCCESS", "REPORTS_GET_DATA", `Got data from reports successfully.`);
-				return cb({
-					status: "success",
-					message: "Successfully got data from reports.",
-					data: response
-				});
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Gets a specific report
@@ -194,7 +200,7 @@ export default {
 	 * @param {string} reportId - the id of the report to return
 	 * @param {Function} cb - gets called with the result
 	 */
-	findOne: isAdminRequired(async function findOne(session, reportId, cb) {
+	findOne: useHasPermission("reports.get", async function findOne(session, reportId, cb) {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
@@ -243,7 +249,7 @@ export default {
 	 * @param {string} songId - the id of the song to index reports for
 	 * @param {Function} cb - gets called with the result
 	 */
-	getReportsForSong: isAdminRequired(async function getReportsForSong(session, songId, cb) {
+	getReportsForSong: useHasPermission("reports.get", async function getReportsForSong(session, songId, cb) {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
@@ -380,7 +386,7 @@ export default {
 	 * @param {boolean} resolved - whether to set to resolved to true or false
 	 * @param {Function} cb - gets called with the result
 	 */
-	resolve: isAdminRequired(async function resolve(session, reportId, resolved, cb) {
+	resolve: useHasPermission("reports.update", async function resolve(session, reportId, resolved, cb) {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
 
 		async.waterfall(
@@ -445,7 +451,7 @@ export default {
 	 * @param {string} issueId - the id of the issue within the report
 	 * @param {Function} cb - gets called with the result
 	 */
-	toggleIssue: isAdminRequired(async function toggleIssue(session, reportId, issueId, cb) {
+	toggleIssue: useHasPermission("reports.update", async function toggleIssue(session, reportId, issueId, cb) {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
 
 		async.waterfall(
@@ -594,7 +600,7 @@ export default {
 	 * @param {object} reportId - the id of the report item we want to remove
 	 * @param {Function} cb - gets called with the result
 	 */
-	remove: isAdminRequired(async function remove(session, reportId, cb) {
+	remove: useHasPermission("reports.remove", async function remove(session, reportId, cb) {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
 
 		async.waterfall(

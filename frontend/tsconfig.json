@@ -5,15 +5,28 @@
     "moduleResolution": "node",
     "importHelpers": true,
     "isolatedModules": true,
+    "resolveJsonModule": true,
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
+      "@musare_types/*": [
+        "../types/*"
+      ],
       "@/*": [
         "./src/*"
-      ]
+      ],
     },
     "jsx": "preserve",
-    "types": ["vite/client"]
+    "types": [
+      "vite/client",
+      "@intlify/vite-plugin-vue-i18n/client",
+      "vitest/globals"
+    ],
+    "strict": false,
+    "allowSyntheticDefaultImports": true
   },
-  "exclude": ["./src/index.html"]
+  "exclude": [
+    "./src/index.html",
+    "./src/coverage"
+  ]
 }

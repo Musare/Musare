@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, defineExpose, nextTick } from "vue";
+import { onMounted, onUnmounted, ref, nextTick } from "vue";
 import { useDragBox } from "@/composables/useDragBox";
 
 const props = defineProps({

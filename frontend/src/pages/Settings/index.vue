@@ -4,7 +4,6 @@ import { onMounted, defineAsyncComponent } from "vue";
 import Toast from "toasters";
 import { useSettingsStore } from "@/stores/settings";
 import { useWebsocketsStore } from "@/stores/websockets";
-import ws from "@/ws";
 import { useTabQueryHandler } from "@/composables/useTabQueryHandler";
 
 const MainHeader = defineAsyncComponent(
@@ -34,13 +33,6 @@ const { socket } = useWebsocketsStore();
 
 const { setUser, updateOriginalUser } = settingsStore;
 
-const init = () => {
-	socket.dispatch("users.findBySession", res => {
-		if (res.status === "success") setUser(res.data.user);
-		else new Toast("You're not currently signed in.");
-	});
-};
-
 onMounted(() => {
 	if (
 		route.query.tab === "profile" ||
@@ -53,7 +45,12 @@ onMounted(() => {
 
 	// this.localNightmode = this.nightmode;
 
-	ws.onConnect(init);
+	socket.onConnect(() => {
+		socket.dispatch("users.findBySession", res => {
+			if (res.status === "success") setUser(res.data.user);
+			else new Toast("You're not currently signed in.");
+		});
+	});
 
 	socket.on("event:user.password.linked", () =>
 		updateOriginalUser({

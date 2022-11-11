@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 
 const props = defineProps({
@@ -7,16 +8,16 @@ const props = defineProps({
 	link: { type: Boolean, default: true }
 });
 
-const user = ref({
-	name: "Unknown",
-	username: null
+const user = ref<{ name: string; username?: string }>({
+	name: "Unknown"
 });
 
+const { socket } = useWebsocketsStore();
 const { getBasicUser } = useUserAuthStore();
 
 onMounted(() => {
-	getBasicUser(props.userId).then(
-		(basicUser: { name: string; username: string } | null) => {
+	socket.onConnect(() => {
+		getBasicUser(props.userId).then(basicUser => {
 			if (basicUser) {
 				const { name, username } = basicUser;
 				user.value = {
@@ -24,8 +25,8 @@ onMounted(() => {
 					username
 				};
 			}
-		}
-	);
+		});
+	});
 });
 </script>
 

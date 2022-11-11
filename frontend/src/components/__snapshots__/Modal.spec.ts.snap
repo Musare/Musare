@@ -1,0 +1,21 @@
+// Vitest Snapshot v1
+
+exports[`Modal component > renders slots 1`] = `
+"<div class=\\"modal is-active\\">
+  <div class=\\"modal-background\\"></div>
+  <div>Sidebar Slot</div>
+  <div class=\\"modal-card\\">
+    <header class=\\"modal-card-head\\">
+      <div>Toggle Mobile Sidebar Slot</div>
+      <h2 class=\\"modal-card-title is-marginless\\">Modal</h2><span class=\\"delete material-icons\\">highlight_off</span>
+      <!--v-if-->
+    </header>
+    <section class=\\"modal-card-body\\">
+      <div>Body Slot</div>
+    </section>
+    <footer class=\\"modal-card-foot\\">
+      <div>Footer Slot</div>
+    </footer>
+  </div>
+</div>"
+`;

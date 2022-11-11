@@ -1,12 +1,51 @@
 import { defineStore } from "pinia";
+import { ComputedRef, Ref } from "vue";
 import { Song } from "@/types/song";
 import { Report } from "@/types/report";
 
-export const useEditSongStore = props => {
-	const { modalUuid } = props;
-	if (!modalUuid) return null;
-	return defineStore(`editSong-${modalUuid}`, {
-		state: () => ({
+export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
+	defineStore(`editSong-${modalUuid}`, {
+		state: (): {
+			video: {
+				player: any;
+				paused: boolean;
+				playerReady: boolean;
+				autoPlayed: boolean;
+				currentTime: number;
+				playbackRate: 0.5 | 1 | 2;
+			};
+			youtubeId: string;
+			song: Song;
+			reports: Report[];
+			tab: "discogs" | "reports" | "youtube" | "musare-songs";
+			newSong: boolean;
+			prefillData: any;
+			bulk: boolean;
+			youtubeIds: string[];
+			songPrefillData: any;
+			form: {
+				inputs: Ref<
+					Record<
+						string,
+						| {
+								value: any;
+								originalValue: any;
+								validate?: (value: any) => boolean | string;
+								errors: string[];
+								ref: Ref;
+								sourceChanged: boolean;
+								required: boolean;
+								ignoreUnsaved: boolean;
+						  }
+						| any
+					>
+				>;
+				unsavedChanges: ComputedRef<string[]>;
+				save: (saveCb?: () => void) => void;
+				setValue: (value: Record<string, any>, reset?: boolean) => void;
+				setOriginalValue: (value: Record<string, any>) => void;
+			};
+		} => ({
 			video: {
 				player: null,
 				paused: true,
@@ -16,15 +55,15 @@ export const useEditSongStore = props => {
 				playbackRate: 1
 			},
 			youtubeId: null,
-			song: <Song>{},
-			originalSong: <Song>{},
-			reports: <Report[]>[],
+			song: {},
+			reports: [],
 			tab: "discogs",
 			newSong: false,
 			prefillData: {},
 			bulk: false,
 			youtubeIds: [],
-			songPrefillData: {}
+			songPrefillData: {},
+			form: {}
 		}),
 		actions: {
 			init({ song, songs }) {
@@ -47,25 +86,53 @@ export const useEditSongStore = props => {
 				this.youtubeId = song.youtubeId || null;
 				this.prefillData = song.prefill ? song.prefill : {};
 			},
-			setSong(song) {
+			setSong(song, reset?: boolean) {
 				if (song.discogs === undefined) song.discogs = null;
-				this.originalSong = JSON.parse(JSON.stringify(song));
 				this.song = JSON.parse(JSON.stringify(song));
 				this.newSong = !song._id;
 				this.youtubeId = song.youtubeId;
-			},
-			updateOriginalSong(song) {
-				this.originalSong = JSON.parse(JSON.stringify(song));
+				const formSong = {
+					title: song.title,
+					duration: song.duration,
+					skipDuration: song.skipDuration,
+					thumbnail: song.thumbnail,
+					youtubeId: song.youtubeId,
+					verified: song.verified,
+					addArtist: "",
+					artists: song.artists,
+					addGenre: "",
+					genres: song.genres,
+					addTag: "",
+					tags: song.tags,
+					discogs: song.discogs
+				};
+				if (reset) this.form.setValue(formSong, true);
+				else this.form.setOriginalValue(formSong);
 			},
 			resetSong(youtubeId) {
 				if (this.youtubeId === youtubeId) this.youtubeId = "";
-				if (this.song && this.song.youtubeId === youtubeId)
+				if (this.song && this.song.youtubeId === youtubeId) {
 					this.song = {};
-				if (
-					this.originalSong &&
-					this.originalSong.youtubeId === youtubeId
-				)
-					this.originalSong = {};
+					if (this.form.setValue)
+						this.form.setValue(
+							{
+								title: "",
+								duration: 0,
+								skipDuration: 0,
+								thumbnail: "",
+								youtubeId: "",
+								verified: false,
+								addArtist: "",
+								artists: [],
+								addGenre: "",
+								genres: [],
+								addTag: "",
+								tags: [],
+								discogs: {}
+							},
+							true
+						);
+				}
 			},
 			stopVideo() {
 				if (this.video.player && this.video.player.pauseVideo) {
@@ -79,7 +146,7 @@ export const useEditSongStore = props => {
 				}
 			},
 			loadVideoById(id, skipDuration) {
-				this.song.duration = -1;
+				this.form.setValue({ duration: -1 });
 				this.video.player.loadVideoById(id, skipDuration);
 			},
 			pauseVideo(status) {
@@ -92,11 +159,8 @@ export const useEditSongStore = props => {
 				}
 				this.video.paused = status;
 			},
-			updateSongField(data) {
-				this.song[data.field] = data.value;
-			},
 			selectDiscogsInfo(discogsInfo) {
-				this.song.discogs = discogsInfo;
+				this.form.setValue({ discogs: discogsInfo });
 			},
 			updateReports(reports) {
 				this.reports = reports;
@@ -107,14 +171,8 @@ export const useEditSongStore = props => {
 				);
 			},
 			updateYoutubeId(youtubeId) {
-				this.song.youtubeId = youtubeId;
+				this.form.setValue({ youtubeId });
 				this.loadVideoById(youtubeId, 0);
-			},
-			updateTitle(title) {
-				this.song.title = title;
-			},
-			updateThumbnail(thumbnail) {
-				this.song.thumbnail = thumbnail;
 			},
 			setPlaybackRate(rate) {
 				if (rate) {
@@ -132,4 +190,3 @@ export const useEditSongStore = props => {
 			}
 		}
 	})();
-};

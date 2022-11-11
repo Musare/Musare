@@ -2,6 +2,8 @@ import async from "async";
 
 import CoreClass from "../core";
 
+import { hasPermission } from "./hooks/hasPermission";
+
 let StationsModule;
 let CacheModule;
 let DBModule;
@@ -73,6 +75,48 @@ class _StationsModule extends CoreClass {
 						room: `manage-station.${stationId}`,
 						args: ["event:manageStation.queue.updated", { data: { stationId, queue: station.queue } }]
 					});
+				});
+			}
+		});
+
+		const userModel = (this.userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }));
+
+		CacheModule.runJob("SUB", {
+			channel: "station.djs.added",
+			cb: async ({ stationId, userId }) => {
+				userModel.findOne({ _id: userId }, (err, user) => {
+					if (!err && user) {
+						const { _id, name, username, avatar } = user;
+						const data = { data: { user: { _id, name, username, avatar }, stationId } };
+						WSModule.runJob("EMIT_TO_ROOMS", {
+							rooms: [`station.${stationId}`, "home"],
+							args: ["event:station.djs.added", data]
+						});
+						WSModule.runJob("EMIT_TO_ROOM", {
+							room: `manage-station.${stationId}`,
+							args: ["event:manageStation.djs.added", data]
+						});
+					}
+				});
+			}
+		});
+
+		CacheModule.runJob("SUB", {
+			channel: "station.djs.removed",
+			cb: async ({ stationId, userId }) => {
+				userModel.findOne({ _id: userId }, (err, user) => {
+					if (!err && user) {
+						const { _id, name, username, avatar } = user;
+						const data = { data: { user: { _id, name, username, avatar }, stationId } };
+						WSModule.runJob("EMIT_TO_ROOMS", {
+							rooms: [`station.${stationId}`, "home"],
+							args: ["event:station.djs.removed", data]
+						});
+						WSModule.runJob("EMIT_TO_ROOM", {
+							room: `manage-station.${stationId}`,
+							args: ["event:manageStation.djs.removed", data]
+						});
+					}
 				});
 			}
 		});
@@ -727,9 +771,9 @@ class _StationsModule extends CoreClass {
 	 * @param {string} payload.stationId - the id of the station to process
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	PROCESS_VOTE_SKIPS(payload) {
+	PROCESS_SKIP_VOTES(payload) {
 		return new Promise((resolve, reject) => {
-			StationsModule.log("INFO", `Processing vote skips for station ${payload.stationId}.`);
+			StationsModule.log("INFO", `Processing skip votes for station ${payload.stationId}.`);
 
 			async.waterfall(
 				[
@@ -1009,31 +1053,21 @@ class _StationsModule extends CoreClass {
 							if (session.sessionId) {
 								CacheModule.runJob("HGET", { table: "sessions", key: session.sessionId }).then(
 									session => {
-										if (session) {
-											DBModule.runJob("GET_MODEL", { modelName: "user" }).then(userModel => {
-												userModel.findOne({ _id: session.userId }, (err, user) => {
-													if (!err && user) {
-														if (user.role === "admin")
-															socket.dispatch("event:station.nextSong", {
-																data: {
-																	stationId: station._id,
-																	currentSong
-																}
-															});
-														else if (
-															station.type === "community" &&
-															station.owner === session.userId
-														)
-															socket.dispatch("event:station.nextSong", {
-																data: {
-																	stationId: station._id,
-																	currentSong
-																}
-															});
-													}
-												});
+										const dispatchNextSong = () => {
+											socket.dispatch("event:station.nextSong", {
+												data: {
+													stationId: station._id,
+													currentSong
+												}
 											});
-										}
+										};
+										hasPermission("stations.index", session, station._id)
+											.then(() => dispatchNextSong())
+											.catch(() => {
+												hasPermission("stations.index.other", session)
+													.then(() => dispatchNextSong())
+													.catch(() => {});
+											});
 									}
 								);
 							}
@@ -1083,17 +1117,9 @@ class _StationsModule extends CoreClass {
 					},
 
 					next => {
-						DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
-							userModel.findOne({ _id: payload.userId }, next);
-						});
-					},
-
-					(user, next) => {
-						if (!user) return next("Not allowed");
-						if (user.role === "admin" || payload.station.owner === payload.userId) return next(true);
-						if (payload.station.type === "official") return next("Not allowed");
-
-						return next("Not allowed");
+						hasPermission("stations.view", payload.userId, payload.station._id)
+							.then(() => next(true))
+							.catch(() => next("Not allowed"));
 					}
 				],
 				async errOrResult => {
@@ -1190,71 +1216,19 @@ class _StationsModule extends CoreClass {
 										sockets,
 										1,
 										(socket, next) => {
-											const { session } = socket;
-
-											async.waterfall(
-												[
-													next => {
-														if (!session.sessionId) next("No session id");
-														else next();
-													},
-
-													next => {
-														CacheModule.runJob(
-															"HGET",
-															{
-																table: "sessions",
-																key: session.sessionId
-															},
-															this
-														)
-															.then(response => {
-																next(null, response);
-															})
-															.catch(next);
-													},
-
-													(session, next) => {
-														if (!session) next("No session");
-														else {
-															DBModule.runJob("GET_MODEL", { modelName: "user" }, this)
-																.then(userModel => {
-																	next(null, userModel);
-																})
-																.catch(next);
-														}
-													},
-
-													(userModel, next) => {
-														if (!userModel) next("No user model");
-														else
-															userModel.findOne(
-																{
-																	_id: session.userId
-																},
-																next
-															);
-													},
-
-													(user, next) => {
-														if (!user) next("No user found");
-														else if (user.role === "admin") {
-															socketsThatCan.push(socket);
-															next();
-														} else if (
-															payload.station.type === "community" &&
-															payload.station.owner === session.userId
-														) {
-															socketsThatCan.push(socket);
-															next();
-														}
-													}
-												],
-												err => {
-													if (err) socketsThatCannot.push(socket);
-													next();
-												}
-											);
+											if (!(socket.session && socket.session.sessionId)) {
+												socketsThatCannot.push(socket);
+												next();
+											} else
+												hasPermission("stations.view", socket.session, payload.station._id)
+													.then(() => {
+														socketsThatCan.push(socket);
+														next();
+													})
+													.catch(() => {
+														socketsThatCannot.push(socket);
+														next();
+													});
 										},
 										err => {
 											if (err) reject(err);
@@ -1981,6 +1955,122 @@ class _StationsModule extends CoreClass {
 							{
 								channel: "station.queueUpdate",
 								value: stationId
+							},
+							this
+						)
+							.then(() => next())
+							.catch(next)
+				],
+				err => {
+					if (err) reject(err);
+					else resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Add DJ to station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - the station id
+	 * @param {string} payload.userId - the dj user id
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	ADD_DJ(payload) {
+		return new Promise((resolve, reject) => {
+			const { stationId, userId } = payload;
+			async.waterfall(
+				[
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId }, this)
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
+
+					(station, next) => {
+						if (!station) return next("Station not found.");
+						if (station.djs.find(dj => dj === userId)) return next("That user is already a DJ.");
+
+						return StationsModule.stationModel.updateOne(
+							{ _id: stationId },
+							{ $push: { djs: userId } },
+							next
+						);
+					},
+
+					(res, next) => {
+						StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+							.then(() => next())
+							.catch(next);
+					},
+
+					next =>
+						CacheModule.runJob(
+							"PUB",
+							{
+								channel: "station.djs.added",
+								value: { stationId, userId }
+							},
+							this
+						)
+							.then(() => next())
+							.catch(next)
+				],
+				err => {
+					if (err) reject(err);
+					else resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Remove DJ from station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - the station id
+	 * @param {string} payload.userId - the dj user id
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	REMOVE_DJ(payload) {
+		return new Promise((resolve, reject) => {
+			const { stationId, userId } = payload;
+			async.waterfall(
+				[
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId }, this)
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
+
+					(station, next) => {
+						if (!station) return next("Station not found.");
+						if (!station.djs.find(dj => dj === userId)) return next("That user is not currently a DJ.");
+
+						return StationsModule.stationModel.updateOne(
+							{ _id: stationId },
+							{ $pull: { djs: userId } },
+							next
+						);
+					},
+
+					(res, next) => {
+						StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+							.then(() => next())
+							.catch(next);
+					},
+
+					next =>
+						CacheModule.runJob(
+							"PUB",
+							{
+								channel: "station.djs.removed",
+								value: { stationId, userId }
 							},
 							this
 						)

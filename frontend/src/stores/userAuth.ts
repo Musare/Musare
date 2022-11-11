@@ -1,10 +1,30 @@
 import { defineStore } from "pinia";
 import Toast from "toasters";
 import validation from "@/validation";
-import ws from "@/ws";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 export const useUserAuthStore = defineStore("userAuth", {
-	state: () => ({
+	state: (): {
+		userIdMap: Record<string, { name: string; username: string }>;
+		userIdRequested: Record<string, boolean>;
+		pendingUserIdCallbacks: Record<
+			string,
+			((basicUser: { name: string; username: string }) => void)[]
+		>;
+		loggedIn: boolean;
+		role: "user" | "moderator" | "admin";
+		username: string;
+		email: string;
+		userId: string;
+		banned: boolean;
+		ban: {
+			reason: string;
+			expiresAt: number;
+		};
+		gotData: boolean;
+		gotPermissions: boolean;
+		permissions: Record<string, boolean>;
+	} => ({
 		userIdMap: {},
 		userIdRequested: {},
 		pendingUserIdCallbacks: {},
@@ -18,10 +38,17 @@ export const useUserAuthStore = defineStore("userAuth", {
 			reason: null,
 			expiresAt: null
 		},
-		gotData: false
+		gotData: false,
+		gotPermissions: false,
+		permissions: {}
 	}),
 	actions: {
-		register(user) {
+		register(user: {
+			username: string;
+			email: string;
+			password: string;
+			recaptchaToken: string;
+		}) {
 			return new Promise((resolve, reject) => {
 				const { username, email, password, recaptchaToken } = user;
 
@@ -68,8 +95,9 @@ export const useUserAuthStore = defineStore("userAuth", {
 							"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character."
 						)
 					);
-				else
-					ws.socket.dispatch(
+				else {
+					const { socket } = useWebsocketsStore();
+					socket.dispatch(
 						"users.register",
 						username,
 						email,
@@ -110,13 +138,15 @@ export const useUserAuthStore = defineStore("userAuth", {
 							return reject(new Error(res.message));
 						}
 					);
+				}
 			});
 		},
-		login(user) {
+		login(user: { email: string; password: string }) {
 			return new Promise((resolve, reject) => {
 				const { email, password } = user;
 
-				ws.socket.dispatch("users.login", email, password, res => {
+				const { socket } = useWebsocketsStore();
+				socket.dispatch("users.login", email, password, res => {
 					if (res.status === "success") {
 						return lofig.get("cookie").then(cookie => {
 							const date = new Date();
@@ -154,7 +184,8 @@ export const useUserAuthStore = defineStore("userAuth", {
 		},
 		logout() {
 			return new Promise((resolve, reject) => {
-				ws.socket.dispatch("users.logout", res => {
+				const { socket } = useWebsocketsStore();
+				socket.dispatch("users.logout", res => {
 					if (res.status === "success") {
 						return resolve(
 							lofig.get("cookie").then(cookie => {
@@ -168,64 +199,80 @@ export const useUserAuthStore = defineStore("userAuth", {
 				});
 			});
 		},
-		getBasicUser(userId) {
-			return new Promise(resolve => {
-				if (typeof this.userIdMap[`Z${userId}`] !== "string") {
-					if (this.userIdRequested[`Z${userId}`] !== true) {
-						this.requestingUserId(userId);
-						ws.socket.dispatch(
-							"users.getBasicUser",
-							userId,
-							res => {
-								if (res.status === "success") {
-									const user = res.data;
+		getBasicUser(userId: string) {
+			return new Promise(
+				(
+					resolve: (
+						basicUser: { name: string; username: string } | null
+					) => void
+				) => {
+					if (typeof this.userIdMap[`Z${userId}`] !== "string") {
+						if (this.userIdRequested[`Z${userId}`] !== true) {
+							this.requestingUserId(userId);
+							const { socket } = useWebsocketsStore();
+							socket.dispatch(
+								"users.getBasicUser",
+								userId,
+								res => {
+									if (res.status === "success") {
+										const user = res.data;
 
-									this.mapUserId({
-										userId,
-										user: {
-											name: user.name,
-											username: user.username
-										}
-									});
+										this.mapUserId({
+											userId,
+											user: {
+												name: user.name,
+												username: user.username
+											}
+										});
 
-									this.pendingUserIdCallbacks[
-										`Z${userId}`
-									].forEach(cb => cb(user));
+										this.pendingUserIdCallbacks[
+											`Z${userId}`
+										].forEach(cb => cb(user));
 
-									this.clearPendingCallbacks(userId);
+										this.clearPendingCallbacks(userId);
 
-									return resolve(user);
+										return resolve(user);
+									}
+									return resolve(null);
 								}
-								return resolve(null);
-							}
-						);
+							);
+						} else {
+							this.pendingUser(userId, user => resolve(user));
+						}
 					} else {
-						this.pendingUser({
-							userId,
-							callback: user => resolve(user)
-						});
+						resolve(this.userIdMap[`Z${userId}`]);
 					}
-				} else {
-					resolve(this.userIdMap[`Z${userId}`]);
 				}
-			});
+			);
 		},
-		mapUserId(data) {
+		mapUserId(data: {
+			userId: string;
+			user: { name: string; username: string };
+		}) {
 			this.userIdMap[`Z${data.userId}`] = data.user;
 			this.userIdRequested[`Z${data.userId}`] = false;
 		},
-		requestingUserId(userId) {
+		requestingUserId(userId: string) {
 			this.userIdRequested[`Z${userId}`] = true;
 			if (!this.pendingUserIdCallbacks[`Z${userId}`])
 				this.pendingUserIdCallbacks[`Z${userId}`] = [];
 		},
-		pendingUser(data) {
-			this.pendingUserIdCallbacks[`Z${data.userId}`].push(data.callback);
+		pendingUser(
+			userId: string,
+			callback: (basicUser: { name: string; username: string }) => void
+		) {
+			this.pendingUserIdCallbacks[`Z${userId}`].push(callback);
 		},
-		clearPendingCallbacks(userId) {
+		clearPendingCallbacks(userId: string) {
 			this.pendingUserIdCallbacks[`Z${userId}`] = [];
 		},
-		authData(data) {
+		authData(data: {
+			loggedIn: boolean;
+			role: string;
+			username: string;
+			email: string;
+			userId: string;
+		}) {
 			this.loggedIn = data.loggedIn;
 			this.role = data.role;
 			this.username = data.username;
@@ -233,12 +280,28 @@ export const useUserAuthStore = defineStore("userAuth", {
 			this.userId = data.userId;
 			this.gotData = true;
 		},
-		banUser(ban) {
+		banUser(ban: { reason: string; expiresAt: number }) {
 			this.banned = true;
 			this.ban = ban;
 		},
-		updateUsername(username) {
+		updateUsername(username: string) {
 			this.username = username;
+		},
+		updateRole(role: string) {
+			this.role = role;
+		},
+		hasPermission(permission: string) {
+			return !!(this.permissions && this.permissions[permission]);
+		},
+		updatePermissions() {
+			return new Promise(resolve => {
+				const { socket } = useWebsocketsStore();
+				socket.dispatch("utils.getPermissions", res => {
+					this.permissions = res.data.permissions;
+					this.gotPermissions = true;
+					resolve(this.permissions);
+				});
+			});
 		}
 	}
 });

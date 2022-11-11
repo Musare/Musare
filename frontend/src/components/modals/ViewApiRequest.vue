@@ -2,11 +2,8 @@
 import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
 import Toast from "toasters";
 import VueJsonPretty from "vue-json-pretty";
-import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
-import { useViewApiRequestStore } from "@/stores/viewApiRequest";
-import ws from "@/ws";
 import "vue-json-pretty/lib/styles.css";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
@@ -15,71 +12,71 @@ const QuickConfirm = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" }
+	modalUuid: { type: String, required: true },
+	requestId: { type: String, required: true },
+	removeAction: { type: String, required: true }
 });
 
 const { socket } = useWebsocketsStore();
 
-const viewApiRequestStore = useViewApiRequestStore(props);
-const { requestId, request, removeAction } = storeToRefs(viewApiRequestStore);
-const { viewApiRequest } = viewApiRequestStore;
-
 const { closeCurrentModal } = useModalsStore();
 
 const loaded = ref(false);
+const request = ref({
+	_id: null,
+	url: null,
+	params: {},
+	results: [],
+	date: null,
+	quotaCost: null
+});
 
-const init = () => {
-	loaded.value = false;
-	socket.dispatch("youtube.getApiRequest", requestId.value, res => {
+const remove = () => {
+	socket.dispatch(props.removeAction, props.requestId, res => {
 		if (res.status === "success") {
-			const { apiRequest } = res.data;
-			viewApiRequest(apiRequest);
-			loaded.value = true;
-
-			socket.dispatch(
-				"apis.joinRoom",
-				`view-api-request.${requestId.value}`
-			);
-
-			socket.on(
-				"event:youtubeApiRequest.removed",
-				() => {
-					new Toast("This API request was removed.");
-					closeCurrentModal();
-				},
-				{ modalUuid: props.modalUuid }
-			);
-		} else {
-			new Toast("API request with that ID not found");
+			new Toast("API request successfully removed.");
 			closeCurrentModal();
+		} else {
+			new Toast("API request with that ID not found.");
 		}
 	});
 };
 
-const remove = () => {
-	if (removeAction.value)
-		socket.dispatch(removeAction.value, requestId.value, res => {
+onMounted(() => {
+	socket.onConnect(() => {
+		loaded.value = false;
+		socket.dispatch("youtube.getApiRequest", props.requestId, res => {
 			if (res.status === "success") {
-				new Toast("API request successfully removed.");
-				closeCurrentModal();
+				request.value = res.data.apiRequest;
+				loaded.value = true;
+
+				socket.dispatch(
+					"apis.joinRoom",
+					`view-api-request.${props.requestId}`
+				);
 			} else {
-				new Toast("API request with that ID not found.");
+				new Toast("API request with that ID not found");
+				closeCurrentModal();
 			}
 		});
-};
+	});
 
-onMounted(() => {
-	ws.onConnect(init);
+	socket.on(
+		"event:youtubeApiRequest.removed",
+		() => {
+			new Toast("This API request was removed.");
+			closeCurrentModal();
+		},
+		{ modalUuid: props.modalUuid }
+	);
 });
 
 onBeforeUnmount(() => {
 	socket.dispatch(
 		"apis.leaveRoom",
-		`view-api-request.${requestId.value}`,
+		`view-api-request.${props.requestId}`,
 		() => {}
 	);
-	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
-	viewApiRequestStore.$dispose();
 });
 </script>
 

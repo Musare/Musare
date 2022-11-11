@@ -1,5 +1,77 @@
 # Changelog
 
+## [v3.8.0] - 2022-11-11
+
+This release includes all changes from v3.8.0-rc1 and v3.8.0-rc2.
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+## [v3.8.0-rc2] - 2022-10-31
+
+This release includes all changes from v3.8.0-rc1, in addition to the following.
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Added
+
+- feat: Add/remove media to/from admin playlist from admin/songs/import
+
+### Changed
+
+- refactor: Do not send ActivtyWatch watch event when video is buffering
+- refactor: Include playback rate in ActivtyWatch watch event
+
+### Fixed
+
+- fix: Toggling night mode does not update other tabs if logged out
+- fix: User not removed as DJ from station on deletion
+- fix: Clicking view YouTube video in song item does not close actions tippy
+- fix: ActivityWatch integration event started at was broken
+- fix: AddToPlaylistDropdown missing song added and removed event handling
+- fix: User logged out after removing another user
+- fix: Paused station elapsed duration incorrectly set
+
+## [v3.8.0-rc1] - 2022-10-16
+
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Added
+
+- feat: Added moderator user role
+- feat: Added station DJ role
+- feat: Started implementing frontend component and unit testing
+- feat: Started migrating raw text to i18n-backed locales
+- feat: Completed implementing confirmation of closing modal with unsaved changes
+- feat: Added confirmation of saving form if source data has been updated
+- feat: Added support for docker compose v2 to musare.sh
+- feat: Store and display YouTube video upload date for newly created videos
+- feat: Added admin playlist type and ability to add/remove media
+in bulk from admin pages
+
+### Changed
+
+- refactor: Replaced admin and owner authentication with permission nodes
+- refactor: On user role change ensure user is still authorized to view route
+and generally improved handling
+- refactor: Made vote skip toggleable
+- refactor: Refactored CustomWebSocket into SocketHandler
+and improved socket connection handling
+- refactor: Added stage to musare.sh update command to
+update itself before continuing with update
+
+### Fixed
+
+- fix: Unable to update with musare.sh if git pull fails
+- fix: musare.sh update command does not pull docker images
+- fix: Edit Song modal does not close on song deletion if not in bulk mode
+- fix: Opening and closing modal will reset scroll position
+- fix: Invalid TypeScript in frontend
+- fix: Stations can pick up other stations current song
+and/or become out of sync after socket reconnection
+- fix: Site becomes unusable upon socket reconnection
+- fix: Profile page activity sets not loaded on scroll
+- fix: Adding/removing media from liked/disliked playlist does not emit ratings update
+- fix: Edit Song parsing YouTube duration as int rather than float
+- fix: Updating YouTube ID in Edit Song does not always update duration
+
 ## [v3.7.1] - 2022-09-02
 
 Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).

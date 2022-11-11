@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
+import { defineAsyncComponent, ref, onMounted, computed } from "vue";
 import Toast from "toasters";
-import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
-import { useReportStore } from "@/stores/report";
-import ws from "@/ws";
+import { useForm } from "@/composables/useForm";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const SongItem = defineAsyncComponent(
@@ -16,144 +14,218 @@ const ReportInfoItem = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" }
+	modalUuid: { type: String, required: true },
+	song: { type: Object, required: true }
 });
 
 const { socket } = useWebsocketsStore();
 
-const reportStore = useReportStore(props);
-const { song } = storeToRefs(reportStore);
-
 const { openModal, closeCurrentModal } = useModalsStore();
 
 const existingReports = ref([]);
-const customIssues = ref([]);
-const predefinedCategories = ref([
-	{
-		category: "video",
-		issues: [
-			{
-				enabled: false,
-				title: "Doesn't exist",
-				description: "",
-				showDescription: false
-			},
-			{
-				enabled: false,
-				title: "It's private",
-				description: "",
-				showDescription: false
-			},
-			{
-				enabled: false,
-				title: "It's not available in my country",
-				description: "",
-				showDescription: false
-			},
-			{
-				enabled: false,
-				title: "Unofficial",
-				description: "",
-				showDescription: false
-			}
-		]
-	},
-	{
-		category: "title",
-		issues: [
-			{
-				enabled: false,
-				title: "Incorrect",
-				description: "",
-				showDescription: false
-			},
-			{
-				enabled: false,
-				title: "Inappropriate",
-				description: "",
-				showDescription: false
-			}
-		]
-	},
-	{
-		category: "duration",
-		issues: [
-			{
-				enabled: false,
-				title: "Skips too soon",
-				description: "",
-				showDescription: false
-			},
-			{
-				enabled: false,
-				title: "Skips too late",
-				description: "",
-				showDescription: false
-			},
-			{
-				enabled: false,
-				title: "Starts too soon",
-				description: "",
-				showDescription: false
-			},
-			{
-				enabled: false,
-				title: "Starts too late",
-				description: "",
-				showDescription: false
-			}
-		]
-	},
-	{
-		category: "artists",
-		issues: [
-			{
-				enabled: false,
-				title: "Incorrect",
-				description: "",
-				showDescription: false
-			},
-			{
-				enabled: false,
-				title: "Inappropriate",
-				description: "",
-				showDescription: false
-			}
-		]
-	},
-	{
-		category: "thumbnail",
-		issues: [
-			{
-				enabled: false,
-				title: "Incorrect",
-				description: "",
-				showDescription: false
-			},
-			{
-				enabled: false,
-				title: "Inappropriate",
-				description: "",
-				showDescription: false
-			},
-			{
-				enabled: false,
-				title: "Doesn't exist",
-				description: "",
-				showDescription: false
-			}
-		]
-	}
-]);
 
-const init = () => {
-	socket.dispatch("reports.myReportsForSong", song.value._id, res => {
-		if (res.status === "success") {
-			existingReports.value = res.data.reports;
-			existingReports.value.forEach(report =>
-				socket.dispatch("apis.joinRoom", `view-report.${report._id}`)
-			);
+const { inputs, save } = useForm(
+	{
+		video: {
+			value: {
+				category: "video",
+				issues: [
+					{
+						enabled: false,
+						title: "Doesn't exist",
+						description: "",
+						showDescription: false
+					},
+					{
+						enabled: false,
+						title: "It's private",
+						description: "",
+						showDescription: false
+					},
+					{
+						enabled: false,
+						title: "It's not available in my country",
+						description: "",
+						showDescription: false
+					},
+					{
+						enabled: false,
+						title: "Unofficial",
+						description: "",
+						showDescription: false
+					}
+				]
+			}
+		},
+		title: {
+			value: {
+				category: "title",
+				issues: [
+					{
+						enabled: false,
+						title: "Incorrect",
+						description: "",
+						showDescription: false
+					},
+					{
+						enabled: false,
+						title: "Inappropriate",
+						description: "",
+						showDescription: false
+					}
+				]
+			}
+		},
+		duration: {
+			value: {
+				category: "duration",
+				issues: [
+					{
+						enabled: false,
+						title: "Skips too soon",
+						description: "",
+						showDescription: false
+					},
+					{
+						enabled: false,
+						title: "Skips too late",
+						description: "",
+						showDescription: false
+					},
+					{
+						enabled: false,
+						title: "Starts too soon",
+						description: "",
+						showDescription: false
+					},
+					{
+						enabled: false,
+						title: "Starts too late",
+						description: "",
+						showDescription: false
+					}
+				]
+			}
+		},
+		artists: {
+			value: {
+				category: "artists",
+				issues: [
+					{
+						enabled: false,
+						title: "Incorrect",
+						description: "",
+						showDescription: false
+					},
+					{
+						enabled: false,
+						title: "Inappropriate",
+						description: "",
+						showDescription: false
+					}
+				]
+			}
+		},
+		thumbnail: {
+			value: {
+				category: "thumbnail",
+				issues: [
+					{
+						enabled: false,
+						title: "Incorrect",
+						description: "",
+						showDescription: false
+					},
+					{
+						enabled: false,
+						title: "Inappropriate",
+						description: "",
+						showDescription: false
+					},
+					{
+						enabled: false,
+						title: "Doesn't exist",
+						description: "",
+						showDescription: false
+					}
+				]
+			}
+		},
+		custom: { value: [] }
+	},
+	({ status, messages, values }, resolve, reject) => {
+		if (status === "success") {
+			const issues: {
+				category: string;
+				title: string;
+				description?: string;
+			}[] = [];
+			Object.entries(values).forEach(([name, value]) => {
+				if (name === "custom")
+					value.forEach(issue => {
+						issues.push({ category: "custom", title: issue });
+					});
+				else
+					value.issues.forEach(issue => {
+						if (issue.enabled)
+							issues.push({
+								category: name,
+								title: issue.title,
+								description: issue.description
+							});
+					});
+			});
+			if (issues.length > 0)
+				socket.dispatch(
+					"reports.create",
+					{
+						issues,
+						youtubeId: props.song.youtubeId
+					},
+					res => {
+						if (res.status === "success") {
+							new Toast(res.message);
+							resolve();
+						} else reject(new Error(res.message));
+					}
+				);
+			else reject(new Error("Reports must have at least one issue"));
+		} else if (status === "unchanged")
+			reject(new Error("Reports must have at least one issue"));
+		else {
+			Object.values(messages).forEach(message => {
+				new Toast({ content: message, timeout: 8000 });
+			});
+			resolve();
 		}
+	},
+	{
+		modalUuid: props.modalUuid
+	}
+);
+
+const categories = computed(() =>
+	Object.entries(inputs.value)
+		.filter(([name]) => name !== "custom")
+		.map(input => {
+			const { category, issues } = input[1].value;
+			return { category, issues };
+		})
+);
+
+onMounted(() => {
+	socket.onConnect(() => {
+		socket.dispatch("reports.myReportsForSong", props.song._id, res => {
+			if (res.status === "success") {
+				existingReports.value = res.data.reports;
+				existingReports.value.forEach(report =>
+					socket.dispatch(
+						"apis.joinRoom",
+						`view-report.${report._id}`
+					)
+				);
+			}
+		});
 	});
 
 	socket.on(
@@ -165,51 +237,16 @@ const init = () => {
 		},
 		{ modalUuid: props.modalUuid }
 	);
-};
 
-const create = () => {
-	const issues = [];
-
-	// any predefined issues that are enabled
-	predefinedCategories.value.forEach(category =>
-		category.issues.forEach(issue => {
-			if (issue.enabled)
-				issues.push({
-					category: category.category,
-					title: issue.title,
-					description: issue.description
-				});
-		})
-	);
-
-	// any custom issues
-	customIssues.value.forEach(issue =>
-		issues.push({ category: "custom", title: issue })
-	);
-
-	if (issues.length === 0)
-		return new Toast("Reports must have at least one issue");
-
-	return socket.dispatch(
-		"reports.create",
-		{
-			issues,
-			youtubeId: song.value.youtubeId
-		},
+	socket.on(
+		"event:admin.report.removed",
 		res => {
-			new Toast(res.message);
-			if (res.status === "success") closeCurrentModal();
-		}
+			existingReports.value = existingReports.value.filter(
+				report => report._id !== res.data.reportId
+			);
+		},
+		{ modalUuid: props.modalUuid }
 	);
-};
-
-onMounted(() => {
-	ws.onConnect(init);
-});
-
-onBeforeUnmount(() => {
-	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
-	reportStore.$dispose();
 });
 </script>
 
@@ -232,7 +269,7 @@ onBeforeUnmount(() => {
 
 						<div class="columns is-multiline">
 							<div
-								v-for="category in predefinedCategories"
+								v-for="category in categories"
 								class="column is-half"
 								:key="category.category"
 							>
@@ -301,7 +338,9 @@ onBeforeUnmount(() => {
 											class="button tab-actionable-button"
 											content="Add an issue that isn't listed"
 											v-tippy
-											@click="customIssues.push('')"
+											@click="
+												inputs.custom.value.push('')
+											"
 										>
 											<i
 												class="material-icons icon-with-button"
@@ -313,14 +352,17 @@ onBeforeUnmount(() => {
 
 									<div
 										class="custom-issue control is-grouped input-with-button"
-										v-for="(issue, index) in customIssues"
+										v-for="(issue, index) in inputs.custom
+											.value"
 										:key="index"
 									>
 										<p class="control is-expanded">
 											<input
 												type="text"
 												class="input"
-												v-model="customIssues[index]"
+												v-model="
+													inputs.custom.value[index]
+												"
 												placeholder="Provide information..."
 											/>
 										</p>
@@ -330,7 +372,7 @@ onBeforeUnmount(() => {
 												content="Remove custom issue"
 												v-tippy
 												@click="
-													customIssues.splice(
+													inputs.custom.value.splice(
 														index,
 														1
 													)
@@ -345,7 +387,7 @@ onBeforeUnmount(() => {
 
 									<p
 										id="no-issues-listed"
-										v-if="customIssues.length <= 0"
+										v-if="inputs.custom.value.length <= 0"
 									>
 										<em>
 											Add any issues that aren't listed
@@ -389,7 +431,7 @@ onBeforeUnmount(() => {
 											@click="
 												openModal({
 													modal: 'viewReport',
-													data: {
+													props: {
 														reportId: report._id
 													}
 												})
@@ -405,7 +447,10 @@ onBeforeUnmount(() => {
 				</div>
 			</template>
 			<template #footer>
-				<button class="button is-success" @click="create()">
+				<button
+					class="button is-success"
+					@click="save(closeCurrentModal)"
+				>
 					<i class="material-icons save-changes">done</i>
 					<span>&nbsp;Create</span>
 				</button>

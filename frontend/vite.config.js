@@ -1,6 +1,7 @@
 import path from "path";
 import vue from "@vitejs/plugin-vue";
 import dynamicImport from "vite-plugin-dynamic-import";
+import vueI18n from "@intlify/vite-plugin-vue-i18n";
 import config from "config";
 import fs from "fs";
 
@@ -143,13 +144,17 @@ export default {
 	resolve: {
 		alias: [
 			{
+				find: "@musare_types",
+				replacement: path.resolve(__dirname, "../types")
+			},
+			{
 				find: "@",
 				replacement: path.resolve(__dirname, "src")
 			}
 		]
 	},
 	define: {
-		__VUE_PROD_DEVTOOLS__: false,
+		__VUE_PROD_DEVTOOLS__: config.get("mode") === "development",
 		MUSARE_VERSION: JSON.stringify(debug.version),
 		MUSARE_GIT_REMOTE: JSON.stringify(debug.git.remote),
 		MUSARE_GIT_REMOTE_URL: JSON.stringify(debug.git.remoteUrl),
@@ -157,9 +162,15 @@ export default {
 		MUSARE_GIT_LATEST_COMMIT: JSON.stringify(debug.git.latestCommit),
 		MUSARE_GIT_LATEST_COMMIT_SHORT: JSON.stringify(
 			debug.git.latestCommitShort
-		)
+		),
+		__VUE_I18N_LEGACY_API__: false
 	},
-	plugins: [vue(), htmlPlugin(), dynamicImport()],
+	plugins: [
+		vue(),
+		htmlPlugin(),
+		dynamicImport(),
+		vueI18n({ include: path.resolve(__dirname, "src/locales/**") })
+	],
 	css: {
 		preprocessorOptions: {
 			less: {
@@ -170,5 +181,14 @@ export default {
 	server,
 	build: {
 		outDir: "../build"
+	},
+	test: {
+		globals: true,
+		environment: "jsdom",
+		coverage: {
+			all: true,
+			extension: [".ts", ".vue"]
+		},
+		setupFiles: "tests/utils/setup.ts"
 	}
 };

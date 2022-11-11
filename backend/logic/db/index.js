@@ -14,7 +14,7 @@ const REQUIRED_DOCUMENT_VERSIONS = {
 	report: 6,
 	song: 9,
 	station: 8,
-	user: 3,
+	user: 4,
 	youtubeApiRequest: 1,
 	youtubeVideo: 1,
 	ratings: 1,

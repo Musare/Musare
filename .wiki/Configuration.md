@@ -128,7 +128,7 @@ application within the container is listening on `21017`.
 | `MONGO_USER_USERNAME` | Application username for MongoDB. |
 | `MONGO_USER_PASSWORD` | Application password for MongoDB. |
 | `MONGO_DATA_LOCATION` | The location where MongoDB stores its data. Usually the `.db` folder inside the `Musare` folder. |
-| `MONGO_VERSION` | The MongoDB version to use for scripts and docker-compose. Must be numerical. Currently supported MongoDB versions are 4.0, 4.2, 4.4 and 5.0. |
+| `MONGO_VERSION` | The MongoDB version to use for scripts and docker-compose. Must be numerical. Currently supported MongoDB versions are 4.0+. Always backup before changing this value. |
 | `REDIS_HOST` | Redis container host. |
 | `REDIS_PORT` | Redis container port. |
 | `REDIS_PASSWORD` | Redis password. |

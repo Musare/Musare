@@ -2,9 +2,12 @@ import { defineStore } from "pinia";
 import { User } from "@/types/user";
 
 export const useSettingsStore = defineStore("settings", {
-	state: () => ({
-		originalUser: <User>{},
-		modifiedUser: <User>{}
+	state: (): {
+		originalUser: User;
+		modifiedUser: User;
+	} => ({
+		originalUser: {},
+		modifiedUser: {}
 	}),
 	actions: {
 		updateOriginalUser(payload) {

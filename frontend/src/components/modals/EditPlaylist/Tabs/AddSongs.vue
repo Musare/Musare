@@ -13,11 +13,11 @@ const SearchQueryItem = defineAsyncComponent(
 );
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" }
+	modalUuid: { type: String, required: true }
 });
 
-const editPlaylistStore = useEditPlaylistStore(props);
-const { playlistId, playlist } = storeToRefs(editPlaylistStore);
+const editPlaylistStore = useEditPlaylistStore({ modalUuid: props.modalUuid });
+const { playlist } = storeToRefs(editPlaylistStore);
 
 const sitename = ref("Musare");
 
@@ -141,7 +141,7 @@ onMounted(async () => {
 								v-tippy
 								@click="
 									addMusareSongToPlaylist(
-										playlistId,
+										playlist._id,
 										song.youtubeId,
 										index
 									)
@@ -216,7 +216,7 @@ onMounted(async () => {
 								v-tippy
 								@click="
 									addYouTubeSongToPlaylist(
-										playlistId,
+										playlist._id,
 										result.id,
 										index
 									)

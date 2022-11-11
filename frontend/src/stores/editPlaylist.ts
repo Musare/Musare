@@ -1,19 +1,16 @@
 import { defineStore } from "pinia";
 import { Playlist } from "@/types/playlist";
 
-export const useEditPlaylistStore = props => {
-	const { modalUuid } = props;
-	if (!modalUuid) return null;
-	return defineStore(`editPlaylist-${modalUuid}`, {
-		state: () => ({
-			playlistId: null,
+export const useEditPlaylistStore = ({ modalUuid }: { modalUuid: string }) =>
+	defineStore(`editPlaylist-${modalUuid}`, {
+		state: (): {
+			tab: string;
+			playlist: Playlist;
+		} => ({
 			tab: "settings",
-			playlist: <Playlist>{ songs: [] }
+			playlist: { songs: [] }
 		}),
 		actions: {
-			init({ playlistId }) {
-				this.playlistId = playlistId;
-			},
 			showTab(tab) {
 				this.tab = tab;
 			},
@@ -51,4 +48,3 @@ export const useEditPlaylistStore = props => {
 			}
 		}
 	})();
-};

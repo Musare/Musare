@@ -4,12 +4,14 @@ import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
 import { useModalsStore } from "@/stores/modals";
+import { useUserAuthStore } from "@/stores/userAuth";
 import {
 	TableColumn,
 	TableFilter,
 	TableEvents,
 	TableBulkActions
 } from "@/types/advancedTable";
+import utils from "@/utils";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -25,7 +27,10 @@ const { setJob } = useLongJobsStore();
 
 const { socket } = useWebsocketsStore();
 
-const columnDefault = ref(<TableColumn>{
+const userAuthStore = useUserAuthStore();
+const { hasPermission } = userAuthStore;
+
+const columnDefault = ref<TableColumn>({
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -34,7 +39,7 @@ const columnDefault = ref(<TableColumn>{
 	minWidth: 200,
 	maxWidth: 600
 });
-const columns = ref(<TableColumn[]>[
+const columns = ref<TableColumn[]>([
 	{
 		name: "options",
 		displayName: "Options",
@@ -42,8 +47,16 @@ const columns = ref(<TableColumn[]>[
 		sortable: false,
 		hidable: false,
 		resizable: false,
-		minWidth: 129,
-		defaultWidth: 129
+		minWidth:
+			(hasPermission("songs.create") || hasPermission("songs.update")) &&
+			hasPermission("youtube.removeVideos")
+				? 129
+				: 85,
+		defaultWidth:
+			(hasPermission("songs.create") || hasPermission("songs.update")) &&
+			hasPermission("youtube.removeVideos")
+				? 129
+				: 85
 	},
 	{
 		name: "thumbnailImage",
@@ -105,9 +118,17 @@ const columns = ref(<TableColumn[]>[
 		sortProperty: "songId",
 		defaultWidth: 220,
 		defaultVisibility: "hidden"
+	},
+	{
+		name: "uploadedAt",
+		displayName: "Uploaded At",
+		properties: ["uploadedAt"],
+		sortProperty: "uploadedAt",
+		defaultWidth: 200,
+		defaultVisibility: "hidden"
 	}
 ]);
-const filters = ref(<TableFilter[]>[
+const filters = ref<TableFilter[]>([
 	{
 		name: "_id",
 		displayName: "Video ID",
@@ -169,9 +190,16 @@ const filters = ref(<TableFilter[]>[
 		property: "songId",
 		filterTypes: ["contains", "exact", "regex"],
 		defaultFilterType: "contains"
+	},
+	{
+		name: "uploadedAt",
+		displayName: "Uploaded At",
+		property: "uploadedAt",
+		filterTypes: ["datetimeBefore", "datetimeAfter"],
+		defaultFilterType: "datetimeBefore"
 	}
 ]);
-const events = ref(<TableEvents>{
+const events = ref<TableEvents>({
 	adminRoom: "youtubeVideos",
 	updated: {
 		event: "admin.youtubeVideo.updated",
@@ -183,20 +211,20 @@ const events = ref(<TableEvents>{
 		id: "videoId"
 	}
 });
-const bulkActions = ref(<TableBulkActions>{ width: 200 });
-const jobs = ref([
-	{
+const bulkActions = ref<TableBulkActions>({ width: 200 });
+const jobs = ref([]);
+if (hasPermission("media.recalculateAllRatings"))
+	jobs.value.push({
 		name: "Recalculate all ratings",
 		socket: "media.recalculateAllRatings"
-	}
-]);
+	});
 
 const { openModal } = useModalsStore();
 
 const editOne = song => {
 	openModal({
 		modal: "editSong",
-		data: { song }
+		props: { song }
 	});
 };
 
@@ -206,7 +234,7 @@ const editMany = selectedRows => {
 		const songs = selectedRows.map(row => ({
 			youtubeId: row.youtubeId
 		}));
-		openModal({ modal: "editSong", data: { songs } });
+		openModal({ modal: "editSong", props: { songs } });
 	}
 };
 
@@ -216,9 +244,18 @@ const importAlbum = selectedRows => {
 		if (res.status === "success") {
 			openModal({
 				modal: "importAlbum",
-				data: { songs: res.data.songs }
+				props: { songs: res.data.songs }
 			});
 		} else new Toast("Could not get songs.");
+	});
+};
+
+const bulkEditPlaylist = selectedRows => {
+	openModal({
+		modal: "bulkEditPlaylist",
+		props: {
+			youtubeIds: selectedRows.map(row => row.youtubeId)
+		}
 	});
 };
 
@@ -240,35 +277,6 @@ const removeVideos = videoIds => {
 					name: title,
 					...res
 				});
-		}
-	});
-};
-
-const getDateFormatted = createdAt => {
-	const date = new Date(createdAt);
-	const year = date.getFullYear();
-	const month = `${date.getMonth() + 1}`.padStart(2, "0");
-	const day = `${date.getDate()}`.padStart(2, "0");
-	const hour = `${date.getHours()}`.padStart(2, "0");
-	const minute = `${date.getMinutes()}`.padStart(2, "0");
-	return `${year}-${month}-${day} ${hour}:${minute}`;
-};
-
-const handleConfirmed = ({ action, params }) => {
-	if (typeof action === "function") {
-		if (params) action(params);
-		else action();
-	}
-};
-
-const confirmAction = ({ message, action, params }) => {
-	openModal({
-		modal: "confirm",
-		data: {
-			message,
-			action,
-			params,
-			onCompleted: handleConfirmed
 		}
 	});
 };
@@ -303,7 +311,7 @@ const confirmAction = ({ message, action, params }) => {
 						@click="
 							openModal({
 								modal: 'viewYoutubeVideo',
-								data: {
+								props: {
 									videoId: slotProps.item._id
 								}
 							})
@@ -315,6 +323,10 @@ const confirmAction = ({ message, action, params }) => {
 						open_in_full
 					</button>
 					<button
+						v-if="
+							hasPermission('songs.create') ||
+							hasPermission('songs.update')
+						"
 						class="button is-primary icon-with-button material-icons"
 						@click="editOne(slotProps.item)"
 						:disabled="slotProps.item.removed"
@@ -328,13 +340,17 @@ const confirmAction = ({ message, action, params }) => {
 						music_note
 					</button>
 					<button
+						v-if="hasPermission('youtube.removeVideos')"
 						class="button is-danger icon-with-button material-icons"
 						@click.prevent="
-							confirmAction({
-								message:
-									'Removing this video will remove it from all playlists and cause a ratings recalculation.',
-								action: removeVideos,
-								params: slotProps.item._id
+							openModal({
+								modal: 'confirm',
+								props: {
+									message:
+										'Removing this video will remove it from all playlists and cause a ratings recalculation.',
+									onCompleted: () =>
+										removeVideos(slotProps.item._id)
+								}
 							})
 						"
 						:disabled="slotProps.item.removed"
@@ -381,7 +397,7 @@ const confirmAction = ({ message, action, params }) => {
 			</template>
 			<template #column-createdAt="slotProps">
 				<span :title="new Date(slotProps.item.createdAt).toString()">{{
-					getDateFormatted(slotProps.item.createdAt)
+					utils.getDateFormatted(slotProps.item.createdAt)
 				}}</span>
 			</template>
 			<template #column-songId="slotProps">
@@ -389,9 +405,18 @@ const confirmAction = ({ message, action, params }) => {
 					slotProps.item.songId
 				}}</span>
 			</template>
+			<template #column-uploadedAt="slotProps">
+				<span :title="new Date(slotProps.item.uploadedAt).toString()">{{
+					utils.getDateFormatted(slotProps.item.uploadedAt)
+				}}</span>
+			</template>
 			<template #bulk-actions="slotProps">
 				<div class="bulk-actions">
 					<i
+						v-if="
+							hasPermission('songs.create') ||
+							hasPermission('songs.update')
+						"
 						class="material-icons create-songs-icon"
 						@click.prevent="editMany(slotProps.item)"
 						content="Create/edit songs from videos"
@@ -401,6 +426,10 @@ const confirmAction = ({ message, action, params }) => {
 						music_note
 					</i>
 					<i
+						v-if="
+							hasPermission('songs.create') ||
+							hasPermission('songs.update')
+						"
 						class="material-icons import-album-icon"
 						@click.prevent="importAlbum(slotProps.item)"
 						content="Import album from videos"
@@ -410,13 +439,31 @@ const confirmAction = ({ message, action, params }) => {
 						album
 					</i>
 					<i
+						v-if="hasPermission('playlists.songs.add')"
+						class="material-icons playlist-bulk-edit-icon"
+						@click.prevent="bulkEditPlaylist(slotProps.item)"
+						content="Add To Playlist"
+						v-tippy
+						tabindex="0"
+					>
+						playlist_add
+					</i>
+					<i
+						v-if="hasPermission('youtube.removeVideos')"
 						class="material-icons delete-icon"
 						@click.prevent="
-							confirmAction({
-								message:
-									'Removing these videos will remove them from all playlists and cause a ratings recalculation.',
-								action: removeVideos,
-								params: slotProps.item.map(video => video._id)
+							openModal({
+								modal: 'confirm',
+								props: {
+									message:
+										'Removing these videos will remove them from all playlists and cause a ratings recalculation.',
+									onCompleted: () =>
+										removeVideos(
+											slotProps.item.map(
+												video => video._id
+											)
+										)
+								}
 							})
 						"
 						content="Delete Videos"

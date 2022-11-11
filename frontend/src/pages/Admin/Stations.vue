@@ -3,6 +3,7 @@ import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
+import { useUserAuthStore } from "@/stores/userAuth";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
@@ -20,7 +21,9 @@ const UserLink = defineAsyncComponent(
 
 const { socket } = useWebsocketsStore();
 
-const columnDefault = ref(<TableColumn>{
+const { hasPermission } = useUserAuthStore();
+
+const columnDefault = ref<TableColumn>({
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -29,7 +32,7 @@ const columnDefault = ref(<TableColumn>{
 	minWidth: 150,
 	maxWidth: 600
 });
-const columns = ref(<TableColumn[]>[
+const columns = ref<TableColumn[]>([
 	{
 		name: "options",
 		displayName: "Options",
@@ -37,8 +40,8 @@ const columns = ref(<TableColumn[]>[
 		sortable: false,
 		hidable: false,
 		resizable: false,
-		minWidth: 129,
-		defaultWidth: 129
+		minWidth: hasPermission("stations.remove") ? 129 : 85,
+		defaultWidth: hasPermission("stations.remove") ? 129 : 85
 	},
 	{
 		name: "_id",
@@ -148,7 +151,7 @@ const columns = ref(<TableColumn[]>[
 		defaultVisibility: "hidden"
 	}
 ]);
-const filters = ref(<TableFilter[]>[
+const filters = ref<TableFilter[]>([
 	{
 		name: "_id",
 		displayName: "Station ID",
@@ -284,7 +287,7 @@ const filters = ref(<TableFilter[]>[
 		]
 	}
 ]);
-const events = ref(<TableEvents>{
+const events = ref<TableEvents>({
 	adminRoom: "stations",
 	updated: {
 		event: "station.updated",
@@ -296,12 +299,12 @@ const events = ref(<TableEvents>{
 		id: "stationId"
 	}
 });
-const jobs = ref([
-	{
+const jobs = ref([]);
+if (hasPermission("stations.clearEveryStationQueue"))
+	jobs.value.push({
 		name: "Clear every station queue",
 		socket: "stations.clearEveryStationQueue"
-	}
-]);
+	});
 
 const { openModal } = useModalsStore();
 
@@ -324,11 +327,12 @@ const remove = stationId => {
 			</div>
 			<div class="button-row">
 				<button
+					v-if="hasPermission('stations.create.official')"
 					class="button is-primary"
 					@click="
 						openModal({
 							modal: 'createStation',
-							data: { official: true }
+							props: { official: true }
 						})
 					"
 				>
@@ -352,7 +356,7 @@ const remove = stationId => {
 						@click="
 							openModal({
 								modal: 'manageStation',
-								data: {
+								props: {
 									stationId: slotProps.item._id,
 									sector: 'admin'
 								}
@@ -365,6 +369,7 @@ const remove = stationId => {
 						settings
 					</button>
 					<quick-confirm
+						v-if="hasPermission('stations.remove')"
 						@confirm="remove(slotProps.item._id)"
 						:disabled="slotProps.item.removed"
 					>

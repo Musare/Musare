@@ -1,30 +1,21 @@
 <script setup lang="ts">
-import { defineAsyncComponent, onBeforeUnmount } from "vue";
-import { storeToRefs } from "pinia";
-import { useConfirmStore } from "@/stores/confirm";
+import { defineAsyncComponent } from "vue";
 import { useModalsStore } from "@/stores/modals";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" }
+	modalUuid: { type: String, required: true },
+	message: { type: [String, Array], required: true },
+	onCompleted: { type: Function, required: true }
 });
-
-const confirmStore = useConfirmStore(props);
-const { message } = storeToRefs(confirmStore);
-const { confirm } = confirmStore;
 
 const { closeCurrentModal } = useModalsStore();
 
 const confirmAction = () => {
-	confirm();
+	props.onCompleted();
 	closeCurrentModal();
 };
-
-onBeforeUnmount(() => {
-	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
-	confirmStore.$dispose();
-});
 </script>
 
 <template>

@@ -5,12 +5,14 @@ import VueTippy, { Tippy } from "vue-tippy";
 import { createRouter, createWebHistory } from "vue-router";
 import { createPinia } from "pinia";
 import "lofig";
+import Toast from "toasters";
 
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useModalsStore } from "@/stores/modals";
-import ws from "@/ws";
+import { useWebsocketsStore } from "@/stores/websockets";
 import ms from "@/ms";
+import i18n from "@/i18n";
 
 import AppComponent from "./App.vue";
 
@@ -35,6 +37,8 @@ const handleMetadata = attrs => {
 
 const app = createApp(AppComponent);
 
+app.use(i18n);
+
 app.use(VueTippy, {
 	directive: "tippy", // => v-tippy
 	flipDuration: 0,
@@ -48,8 +52,6 @@ app.use(VueTippy, {
 	allowHTML: true,
 	defaultProps: { animation: "scale", touch: "hold" }
 });
-
-app.use(createPinia());
 
 app.component("Tippy", Tippy);
 
@@ -71,15 +73,15 @@ app.component("PageMetadata", {
 
 app.directive("scroll", {
 	mounted(el, binding) {
-		const f = evt => {
+		const f = (evt: Event) => {
 			clearTimeout(window.scrollDebounceId);
 			window.scrollDebounceId = setTimeout(() => {
 				if (binding.value(evt, el)) {
-					window.removeEventListener("scroll", f);
+					document.body.removeEventListener("scroll", f);
 				}
 			}, 200);
 		};
-		window.addEventListener("scroll", f);
+		document.body.addEventListener("scroll", f);
 	}
 });
 
@@ -164,57 +166,75 @@ const router = createRouter({
 			children: [
 				{
 					path: "songs",
-					component: () => import("@/pages/Admin/Songs/index.vue")
+					component: () => import("@/pages/Admin/Songs/index.vue"),
+					meta: { permissionRequired: "admin.view.songs" }
 				},
 				{
 					path: "songs/import",
-					component: () => import("@/pages/Admin/Songs/Import.vue")
+					component: () => import("@/pages/Admin/Songs/Import.vue"),
+					meta: { permissionRequired: "admin.view.import" }
 				},
 				{
 					path: "reports",
-					component: () => import("@/pages/Admin/Reports.vue")
+					component: () => import("@/pages/Admin/Reports.vue"),
+					meta: { permissionRequired: "admin.view.reports" }
 				},
 				{
 					path: "stations",
-					component: () => import("@/pages/Admin/Stations.vue")
+					component: () => import("@/pages/Admin/Stations.vue"),
+					meta: { permissionRequired: "admin.view.stations" }
 				},
 				{
 					path: "playlists",
-					component: () => import("@/pages/Admin/Playlists.vue")
+					component: () => import("@/pages/Admin/Playlists.vue"),
+					meta: { permissionRequired: "admin.view.playlists" }
 				},
 				{
 					path: "users",
-					component: () => import("@/pages/Admin/Users/index.vue")
+					component: () => import("@/pages/Admin/Users/index.vue"),
+					meta: { permissionRequired: "admin.view.users" }
 				},
 				{
 					path: "users/data-requests",
 					component: () =>
-						import("@/pages/Admin/Users/DataRequests.vue")
+						import("@/pages/Admin/Users/DataRequests.vue"),
+					meta: { permissionRequired: "admin.view.dataRequests" }
 				},
 				{
 					path: "users/punishments",
 					component: () =>
-						import("@/pages/Admin/Users/Punishments.vue")
+						import("@/pages/Admin/Users/Punishments.vue"),
+					meta: {
+						permissionRequired: "admin.view.punishments"
+					}
 				},
 				{
 					path: "news",
-					component: () => import("@/pages/Admin/News.vue")
+					component: () => import("@/pages/Admin/News.vue"),
+					meta: { permissionRequired: "admin.view.news" }
 				},
 				{
 					path: "statistics",
-					component: () => import("@/pages/Admin/Statistics.vue")
+					component: () => import("@/pages/Admin/Statistics.vue"),
+					meta: {
+						permissionRequired: "admin.view.statistics"
+					}
 				},
 				{
 					path: "youtube",
-					component: () => import("@/pages/Admin/YouTube/index.vue")
+					component: () => import("@/pages/Admin/YouTube/index.vue"),
+					meta: { permissionRequired: "admin.view.youtube" }
 				},
 				{
 					path: "youtube/videos",
-					component: () => import("@/pages/Admin/YouTube/Videos.vue")
+					component: () => import("@/pages/Admin/YouTube/Videos.vue"),
+					meta: {
+						permissionRequired: "admin.view.youtubeVideos"
+					}
 				}
 			],
 			meta: {
-				adminRequired: true
+				permissionRequired: "admin.view"
 			}
 		},
 		{
@@ -225,62 +245,89 @@ const router = createRouter({
 	]
 });
 
-const userAuthStore = useUserAuthStore();
-const modalsStore = useModalsStore();
+app.use(createPinia());
 
-router.beforeEach((to, from, next) => {
-	if (window.stationInterval) {
-		clearInterval(window.stationInterval);
-		window.stationInterval = 0;
-	}
+const { createSocket } = useWebsocketsStore();
+createSocket().then(async socket => {
+	const userAuthStore = useUserAuthStore();
+	const modalsStore = useModalsStore();
 
-	// if (to.name === "station") {
-	// 	modalsStore.closeModal("manageStation");
-	// }
-
-	modalsStore.closeAllModals();
-
-	if (ws.socket && to.fullPath !== from.fullPath) {
-		ws.clearCallbacks();
-		ws.destroyListeners();
-	}
-
-	if (to.meta.loginRequired || to.meta.adminRequired || to.meta.guestsOnly) {
-		const gotData = () => {
-			if (to.meta.loginRequired && !userAuthStore.loggedIn)
-				next({ path: "/login" });
-			else if (to.meta.adminRequired && userAuthStore.role !== "admin")
-				next({ path: "/" });
-			else if (to.meta.guestsOnly && userAuthStore.loggedIn)
-				next({ path: "/" });
-			else next();
-		};
-
-		if (userAuthStore.gotData) gotData();
-		else {
-			const unsubscribe = userAuthStore.$onAction(
-				({ name, after, onError }) => {
-					if (name === "authData") {
-						after(() => {
-							gotData();
-							unsubscribe();
-						});
-
-						onError(() => {
-							unsubscribe();
-						});
-					}
-				}
-			);
+	router.beforeEach((to, from, next) => {
+		if (window.stationInterval) {
+			clearInterval(window.stationInterval);
+			window.stationInterval = 0;
 		}
-	} else next();
-});
 
-app.use(router);
+		// if (to.name === "station") {
+		// 	modalsStore.closeModal("manageStation");
+		// }
 
-lofig.folder = defaultConfigURL;
+		modalsStore.closeAllModals();
 
-(async () => {
+		if (socket.ready && to.fullPath !== from.fullPath) {
+			socket.clearCallbacks();
+			socket.destroyListeners();
+		}
+
+		if (to.query.toast) {
+			const toast =
+				typeof to.query.toast === "string"
+					? { content: to.query.toast, timeout: 20000 }
+					: { ...to.query.toast };
+			new Toast(toast);
+			const { query } = to;
+			delete query.toast;
+			next({ ...to, query });
+		} else if (
+			to.meta.loginRequired ||
+			to.meta.permissionRequired ||
+			to.meta.guestsOnly
+		) {
+			const gotData = () => {
+				if (to.meta.loginRequired && !userAuthStore.loggedIn)
+					next({ path: "/login" });
+				else if (
+					to.meta.permissionRequired &&
+					!userAuthStore.hasPermission(
+						`${to.meta.permissionRequired}`
+					)
+				)
+					next({ path: "/" });
+				else if (to.meta.guestsOnly && userAuthStore.loggedIn)
+					next({ path: "/" });
+				else next();
+			};
+
+			if (userAuthStore.gotData && userAuthStore.gotPermissions)
+				gotData();
+			else {
+				const unsubscribe = userAuthStore.$onAction(
+					({ name, after, onError }) => {
+						if (
+							name === "authData" ||
+							name === "updatePermissions"
+						) {
+							after(() => {
+								if (
+									userAuthStore.gotData &&
+									userAuthStore.gotPermissions
+								)
+									gotData();
+								unsubscribe();
+							});
+
+							onError(() => {
+								unsubscribe();
+							});
+						}
+					}
+				);
+			}
+		} else next();
+	});
+
+	app.use(router);
+
 	lofig.fetchConfig().then(config => {
 		const { configVersion, skipConfigVersionCheck } = config;
 		if (
@@ -295,12 +342,7 @@ lofig.folder = defaultConfigURL;
 		}
 	});
 
-	const websocketsDomain = await lofig.get("backend.websocketsDomain");
-	ws.init(websocketsDomain);
-
-	if (await lofig.get("siteSettings.mediasession")) ms.init();
-
-	ws.socket.on("ready", res => {
+	socket.on("ready", res => {
 		const { loggedIn, role, username, userId, email } = res.data;
 
 		userAuthStore.authData({
@@ -312,15 +354,15 @@ lofig.folder = defaultConfigURL;
 		});
 	});
 
-	ws.socket.on("keep.event:user.banned", res =>
+	socket.on("keep.event:user.banned", res =>
 		userAuthStore.banUser(res.data.ban)
 	);
 
-	ws.socket.on("keep.event:user.username.updated", res =>
+	socket.on("keep.event:user.username.updated", res =>
 		userAuthStore.updateUsername(res.data.username)
 	);
 
-	ws.socket.on("keep.event:user.preferences.updated", res => {
+	socket.on("keep.event:user.preferences.updated", res => {
 		const { preferences } = res.data;
 
 		const {
@@ -335,7 +377,6 @@ lofig.folder = defaultConfigURL;
 			changeAutoSkipDisliked(preferences.autoSkipDisliked);
 
 		if (preferences.nightmode !== undefined) {
-			localStorage.setItem("nightmode", preferences.nightmode);
 			changeNightmode(preferences.nightmode);
 		}
 
@@ -349,5 +390,25 @@ lofig.folder = defaultConfigURL;
 			changeActivityWatch(preferences.activityWatch);
 	});
 
+	socket.on("keep.event:user.role.updated", res => {
+		userAuthStore.updateRole(res.data.role);
+		userAuthStore.updatePermissions().then(() => {
+			const { meta } = router.currentRoute.value;
+			if (
+				meta &&
+				meta.permissionRequired &&
+				!userAuthStore.hasPermission(`${meta.permissionRequired}`)
+			)
+				router.push({
+					path: "/",
+					query: {
+						toast: "You no longer have access to the page you were viewing."
+					}
+				});
+		});
+	});
+
+	if (await lofig.get("siteSettings.mediasession")) ms.init();
+
 	app.mount("#root");
-})();
+});

@@ -2,6 +2,7 @@
 import { defineAsyncComponent, ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useModalsStore } from "@/stores/modals";
+import { useUserAuthStore } from "@/stores/userAuth";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
@@ -13,7 +14,7 @@ const ProfilePicture = defineAsyncComponent(
 
 const route = useRoute();
 
-const columnDefault = ref(<TableColumn>{
+const columnDefault = ref<TableColumn>({
 	sortable: true,
 	hidable: true,
 	defaultVisibility: "shown",
@@ -22,7 +23,7 @@ const columnDefault = ref(<TableColumn>{
 	minWidth: 150,
 	maxWidth: 600
 });
-const columns = ref(<TableColumn[]>[
+const columns = ref<TableColumn[]>([
 	{
 		name: "options",
 		displayName: "Options",
@@ -109,7 +110,7 @@ const columns = ref(<TableColumn[]>[
 		defaultWidth: 170
 	}
 ]);
-const filters = ref(<TableFilter[]>[
+const filters = ref<TableFilter[]>([
 	{
 		name: "_id",
 		displayName: "User ID",
@@ -153,7 +154,8 @@ const filters = ref(<TableFilter[]>[
 		defaultFilterType: "exact",
 		dropdown: [
 			["admin", "Admin"],
-			["default", "Default"]
+			["moderator", "Moderator"],
+			["user", "User"]
 		]
 	},
 	{
@@ -184,7 +186,7 @@ const filters = ref(<TableFilter[]>[
 		defaultFilterType: "numberLesser"
 	}
 ]);
-const events = ref(<TableEvents>{
+const events = ref<TableEvents>({
 	adminRoom: "users",
 	updated: {
 		event: "admin.user.updated",
@@ -199,8 +201,10 @@ const events = ref(<TableEvents>{
 
 const { openModal } = useModalsStore();
 
+const { hasPermission } = useUserAuthStore();
+
 const edit = userId => {
-	openModal({ modal: "editUser", data: { userId } });
+	openModal({ modal: "editUser", props: { userId } });
 };
 
 onMounted(() => {
@@ -229,6 +233,7 @@ onMounted(() => {
 			<template #column-options="slotProps">
 				<div class="row-options">
 					<button
+						v-if="hasPermission('users.update')"
 						class="button is-primary icon-with-button material-icons"
 						@click="edit(slotProps.item._id)"
 						:disabled="slotProps.item.removed"

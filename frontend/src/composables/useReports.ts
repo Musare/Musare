@@ -1,10 +1,12 @@
 import Toast from "toasters";
-import ws from "@/ws";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 export const useReports = () => {
+	const { socket } = useWebsocketsStore();
+
 	const resolveReport = ({ reportId, value }) =>
 		new Promise((resolve, reject) => {
-			ws.socket.dispatch("reports.resolve", reportId, value, res => {
+			socket.dispatch("reports.resolve", reportId, value, res => {
 				new Toast(res.message);
 				if (res.status === "success")
 					return resolve({ status: "success" });
@@ -14,7 +16,7 @@ export const useReports = () => {
 
 	const removeReport = reportId =>
 		new Promise((resolve, reject) => {
-			ws.socket.dispatch("reports.remove", reportId, res => {
+			socket.dispatch("reports.remove", reportId, res => {
 				new Toast(res.message);
 				if (res.status === "success")
 					return resolve({ status: "success" });

@@ -4,27 +4,33 @@ import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
-
-const userAuthStore = useUserAuthStore();
+import { useStationStore } from "@/stores/station";
+import { useManageStationStore } from "@/stores/manageStation";
 
 const props = defineProps({
 	station: { type: Object, default: null },
 	stationPaused: { type: Boolean, default: null },
 	showManageStation: { type: Boolean, default: false },
-	showGoToStation: { type: Boolean, default: false }
+	showGoToStation: { type: Boolean, default: false },
+	modalUuid: { type: String, default: null },
+	sector: { type: String, default: "station" }
+});
+
+const userAuthStore = useUserAuthStore();
+const stationStore = useStationStore();
+const manageStationStore = useManageStationStore({
+	modalUuid: props.modalUuid
 });
 
 const { socket } = useWebsocketsStore();
-const { loggedIn, userId, role } = storeToRefs(userAuthStore);
+const { loggedIn } = storeToRefs(userAuthStore);
 
 const { openModal } = useModalsStore();
 
-const isOwnerOnly = () =>
-	loggedIn.value && userId.value === props.station.owner;
-
-const isAdminOnly = () => loggedIn.value && role.value === "admin";
-
-const isOwnerOrAdmin = () => isOwnerOnly() || isAdminOnly();
+const hasPermission = permission =>
+	props.sector === "manageStation"
+		? manageStationStore.hasPermission(permission)
+		: stationStore.hasPermission(permission);
 
 const resumeStation = () => {
 	socket.dispatch("stations.resume", props.station._id, data => {
@@ -104,7 +110,9 @@ const unfavoriteStation = () => {
 			<!-- (Admin) Pause/Resume Button -->
 			<button
 				class="button is-danger"
-				v-if="isOwnerOrAdmin() && stationPaused"
+				v-if="
+					hasPermission('stations.playback.toggle') && stationPaused
+				"
 				@click="resumeStation()"
 			>
 				<i class="material-icons icon-with-button">play_arrow</i>
@@ -113,7 +121,9 @@ const unfavoriteStation = () => {
 			<button
 				class="button is-danger"
 				@click="pauseStation()"
-				v-if="isOwnerOrAdmin() && !stationPaused"
+				v-if="
+					hasPermission('stations.playback.toggle') && !stationPaused
+				"
 			>
 				<i class="material-icons icon-with-button">pause</i>
 				<span> Pause Station </span>
@@ -123,7 +133,7 @@ const unfavoriteStation = () => {
 			<button
 				class="button is-danger"
 				@click="skipStation()"
-				v-if="isOwnerOrAdmin()"
+				v-if="hasPermission('stations.skip')"
 			>
 				<i class="material-icons icon-with-button">skip_next</i>
 				<span> Force Skip </span>
@@ -135,13 +145,15 @@ const unfavoriteStation = () => {
 				@click="
 					openModal({
 						modal: 'manageStation',
-						data: {
+						props: {
 							stationId: station._id,
 							sector: 'station'
 						}
 					})
 				"
-				v-if="isOwnerOrAdmin() && showManageStation"
+				v-if="
+					hasPermission('stations.view.manage') && showManageStation
+				"
 			>
 				<i class="material-icons icon-with-button">settings</i>
 				<span> Manage Station </span>

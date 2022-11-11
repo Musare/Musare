@@ -3,27 +3,47 @@ import { Playlist } from "@/types/playlist";
 import { Song, CurrentSong } from "@/types/song";
 import { Station } from "@/types/station";
 import { User } from "@/types/user";
+import { useWebsocketsStore } from "@/stores/websockets";
 
 export const useStationStore = defineStore("station", {
-	state: () => ({
-		station: <Station>{},
-		autoRequest: <Playlist[]>[],
+	state: (): {
+		station: Station;
+		autoRequest: Playlist[];
+		autoRequestLock: boolean;
+		userCount: number;
+		users: {
+			loggedIn: User[];
+			loggedOut: User[];
+		};
+		currentSong: CurrentSong | undefined;
+		nextSong: Song | undefined | null;
+		songsList: Song[];
+		stationPaused: boolean;
+		localPaused: boolean;
+		noSong: boolean;
+		autofill: Playlist[];
+		blacklist: Playlist[];
+		mediaModalPlayingAudio: boolean;
+		permissions: Record<string, boolean>;
+	} => ({
+		station: {},
+		autoRequest: [],
 		autoRequestLock: false,
-		editing: {},
 		userCount: 0,
 		users: {
-			loggedIn: <User[]>[],
-			loggedOut: <User[]>[]
+			loggedIn: [],
+			loggedOut: []
 		},
-		currentSong: <CurrentSong | undefined>{},
-		nextSong: <Song | undefined | null>null,
-		songsList: <Song[]>[],
+		currentSong: {},
+		nextSong: null,
+		songsList: [],
 		stationPaused: true,
 		localPaused: false,
 		noSong: true,
-		autofill: <Playlist[]>[],
-		blacklist: <Playlist[]>[],
-		mediaModalPlayingAudio: false
+		autofill: [],
+		blacklist: [],
+		mediaModalPlayingAudio: false,
+		permissions: {}
 	}),
 	actions: {
 		joinStation(station) {
@@ -47,6 +67,7 @@ export const useStationStore = defineStore("station", {
 			this.noSong = true;
 			this.autofill = [];
 			this.blacklist = [];
+			this.permissions = {};
 		},
 		editStation(station) {
 			this.editing = { ...station };
@@ -114,10 +135,11 @@ export const useStationStore = defineStore("station", {
 			this.currentSong.liked = ownSongRatings.liked;
 			this.currentSong.disliked = ownSongRatings.disliked;
 		},
-		updateCurrentSongSkipVotes({ skipVotes, skipVotesCurrent }) {
+		updateCurrentSongSkipVotes({ skipVotes, skipVotesCurrent, voted }) {
 			this.currentSong.skipVotes = skipVotes;
 			if (skipVotesCurrent !== null)
 				this.currentSong.skipVotesCurrent = skipVotesCurrent;
+			this.currentSong.voted = voted;
 		},
 		addPlaylistToAutoRequest(playlist) {
 			this.autoRequest.push(playlist);
@@ -131,6 +153,32 @@ export const useStationStore = defineStore("station", {
 		},
 		updateMediaModalPlayingAudio(mediaModalPlayingAudio) {
 			this.mediaModalPlayingAudio = mediaModalPlayingAudio;
+		},
+		hasPermission(permission) {
+			return !!(this.permissions && this.permissions[permission]);
+		},
+		updatePermissions() {
+			return new Promise(resolve => {
+				const { socket } = useWebsocketsStore();
+				socket.dispatch(
+					"utils.getPermissions",
+					this.station._id,
+					res => {
+						this.permissions = res.data.permissions;
+						resolve(this.permissions);
+					}
+				);
+			});
+		},
+		addDj(user) {
+			this.station.djs.push(user);
+		},
+		removeDj(user) {
+			this.station.djs.forEach((dj, index) => {
+				if (dj._id === user._id) {
+					this.station.djs.splice(index, 1);
+				}
+			});
 		}
 	}
 });

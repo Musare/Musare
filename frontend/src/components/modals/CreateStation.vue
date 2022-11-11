@@ -1,22 +1,18 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onBeforeUnmount } from "vue";
+import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
-import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
-import { useCreateStationStore } from "@/stores/createStation";
 import { useModalsStore } from "@/stores/modals";
 import validation from "@/validation";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 
 const props = defineProps({
-	modalUuid: { type: String, default: "" }
+	modalUuid: { type: String, required: true },
+	official: { type: Boolean, default: false }
 });
 
 const { socket } = useWebsocketsStore();
-
-const createStationStore = useCreateStationStore(props);
-const { official } = storeToRefs(createStationStore);
 
 const { closeCurrentModal } = useModalsStore();
 
@@ -64,7 +60,7 @@ const submitModal = () => {
 		"stations.create",
 		{
 			name,
-			type: official.value ? "official" : "community",
+			type: props.official ? "official" : "community",
 			displayName,
 			description
 		},
@@ -76,11 +72,6 @@ const submitModal = () => {
 		}
 	);
 };
-
-onBeforeUnmount(() => {
-	// Delete the Pinia store that was created for this modal, after all other cleanup tasks are performed
-	createStationStore.$dispose();
-});
 </script>
 
 <template>
