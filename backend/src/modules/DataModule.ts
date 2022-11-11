@@ -172,7 +172,38 @@ export default class DataModule extends BaseModule {
 		});
 	}
 
-	// TODO split core into parseDocument(document, schema, { partial: boolean;  })
+	/**
+	 * Strip a document object from any unneeded properties, or of any restricted properties
+	 * 
+	 * @param document The document object
+	 * @param schema The schema object
+	 * @param projection The project, which can be null
+	 * @returns 
+	 */
+	private async stripDocument(
+		document: any,
+		schema: any,
+		projection: any
+	) {
+		const allowedByProjection = (property: string) => {
+			if (Array.isArray(projection)) return projection.indexOf(property) !== -1;
+			else if (typeof property === "object") !!projection[property];
+			else return false;
+		}
+
+		const unfilteredEntries = Object.entries(document);
+		const filteredEntries = await async.filter(unfilteredEntries, async ([key, value]) => {
+			if (!schema[key]) return false;
+			if (projection) return allowedByProjection(key);
+			else {
+				if (schema[key].restricted) return false;
+				return true;
+			}
+		});
+		
+		return Object.fromEntries(filteredEntries);
+	}
+
 	/**
 	 * parseFindFilter - Ensure validity of filter and return a mongo filter ---, or the document itself re-constructed
 	 *
@@ -344,9 +375,7 @@ export default class DataModule extends BaseModule {
 		return { mongoFilter, containsRestrictedProperties, canCache };
 	}
 
-	// TODO hide sensitive fields
 	// TODO improve caching
-	// TODO add option to only request certain fields
 	// TODO add support for computed fields
 	// TODO parse query - validation
 	// TODO add proper typescript support
@@ -354,7 +383,6 @@ export default class DataModule extends BaseModule {
 	// TODO add support for enum document attributes
 	// TODO add support for array document attributes
 	// TODO add support for reference document attributes
-	// TODO prevent caching if requiring restricted values
 	// TODO fix 2nd layer of schema
 	/**
 	 * find - Get one or more document(s) from a single collection
@@ -367,6 +395,7 @@ export default class DataModule extends BaseModule {
 		{
 			collection, // Collection name
 			filter, // Similar to MongoDB filter
+			projection,
 			values, // TODO: Add support
 			limit = 0, // TODO have limit off by default?
 			page = 1,
@@ -374,6 +403,7 @@ export default class DataModule extends BaseModule {
 		}: {
 			collection: CollectionNameType;
 			filter: Record<string, any>;
+			projection?: Record<string, any> | string[], 
 			values?: Record<string, any>;
 			limit?: number;
 			page?: number;
@@ -462,6 +492,7 @@ export default class DataModule extends BaseModule {
 						// 	this.collections![collection].schema.document
 						// );
 
+						// TODO, add mongo projection. Make sure to keep in mind caching with queryHash.
 						const mongoProjection = null;
 
 						return this.collections?.[collection].model
@@ -472,16 +503,7 @@ export default class DataModule extends BaseModule {
 
 					// Convert documents from Mongoose model to regular objects
 					async (documents: any[]) =>
-						async.map(documents, async (document: any) => {
-							// const { castQuery } = await this.parseFindQuery(
-							// 	document._doc || document,
-							// 	this.collections![collection].schema.document,
-							// 	{ operators: false }
-							// );
-							// return castQuery;
-							return document._doc ? document._doc : document;
-							// console.log("DIE");
-						}),
+						async.map(documents, async (document: any) => document._doc ? document._doc : document),
 
 					// Add documents to the cache
 					async (documents: any[]) => {
@@ -496,7 +518,12 @@ export default class DataModule extends BaseModule {
 							);
 						}
 						return documents;
-					}
+					},
+
+					// Strips the document of any unneeded properties or properties that are restricted
+					async (documents: any[]) => async.map(documents, async (document: any) => {
+						return await this.stripDocument(document, this.collections![collection].schema.document, projection);
+					})
 				],
 				(err, documents?: any[]) => {
 					if (err) reject(err);
