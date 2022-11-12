@@ -20,7 +20,6 @@ export const schema: AbcCollection = {
 			type: mongoose.Types.ObjectId,
 			required: true,
 			cacheKey: true,
-			restricted: false,
 			validate: async (value: any) => {
 				if (!mongoose.Types.ObjectId.isValid(value))
 					throw new Error("Value is not a valid ObjectId");
@@ -28,18 +27,16 @@ export const schema: AbcCollection = {
 		},
 		createdAt: {
 			type: Date,
-			required: true,
-			restricted: false
+			required: true
 		},
 		updatedAt: {
 			type: Date,
-			required: true,
-			restricted: false
+			required: true
 		},
 		name: {
 			type: String,
 			required: true,
-			restricted: false,
+			restricted: true,
 			validate: async (value: any) => {
 				if (value.length < 1 || value.length > 64)
 					throw new Error("Name must be 1-64 characters");

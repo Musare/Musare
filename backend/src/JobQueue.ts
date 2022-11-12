@@ -75,6 +75,7 @@ export default class JobQueue {
 	 */
 	public resume(): void {
 		this.isPaused = false;
+		this.process();
 	}
 
 	/**
@@ -113,6 +114,7 @@ export default class JobQueue {
 			});
 	}
 
+	// TODO run process in more cases, like when a module starts
 	/**
 	 * process - Process queue
 	 */

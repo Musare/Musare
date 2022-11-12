@@ -42,7 +42,7 @@ global.rs = () => {
 // 		.runJob("stations", "addToQueue", { songId: "TestId" })
 // 		.catch(() => {});
 // 	moduleManager
-// 		.runJob("stations", "addA", void 0, { priority: 5 })
+// 		.runJob("stations", "addA", {}, { priority: 5 })
 // 		.catch(() => {});
 // 	moduleManager
 // 		.runJob("others", "doThing", { test: "Test", test2: 123 })
@@ -52,6 +52,63 @@ global.rs = () => {
 // setTimeout(() => {
 // 	clearTimeout(interval);
 // }, 3000);
+
+setTimeout(async () => {
+	// logBook.log("Find with no projection");
+	// await moduleManager
+	// 	.runJob("data", "find", {
+	// 		collection: "abc",
+	// 		filter: {
+	// 			_id: "636fdc713450b25c3fc4ab0a"
+	// 		}
+	// 	})
+	// 	.then(console.log)
+	// 	.catch(console.error);
+	// logBook.log("Find with array projection");
+	// await moduleManager
+	// 	.runJob("data", "find", {
+	// 		collection: "abc",
+	// 		filter: {
+	// 			_id: "636fdc713450b25c3fc4ab0a"
+	// 		},
+	// 		projection: ["name"]
+	// 	})
+	// 	.then(console.log)
+	// 	.catch(console.error);
+	// logBook.log("Find with object boolean projection");
+	// await moduleManager
+	// 	.runJob("data", "find", {
+	// 		collection: "abc",
+	// 		filter: {
+	// 			_id: "636fdc713450b25c3fc4ab0a"
+	// 		},
+	// 		projection: { name: true }
+	// 	})
+	// 	.then(console.log)
+	// 	.catch(console.error);
+	// logBook.log("Find with object number projection");
+	// await moduleManager
+	// 	.runJob("data", "find", {
+	// 		collection: "abc",
+	// 		filter: {
+	// 			_id: "636fdc713450b25c3fc4ab0a"
+	// 		},
+	// 		projection: { name: 1 }
+	// 	})
+	// 	.then(console.log)
+	// 	.catch(console.error);
+	// logBook.log("Find with object number projection");
+	// await moduleManager
+	// 	.runJob("data", "find", {
+	// 		collection: "abc",
+	// 		filter: {
+	// 			_id: "636fdc713450b25c3fc4ab0a"
+	// 		},
+	// 		projection: { "autofill.enabled": true }
+	// 	})
+	// 	.then(console.log)
+	// 	.catch(console.error);
+}, 0);
 
 const rl = readline.createInterface({
 	input: process.stdin,

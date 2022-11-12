@@ -173,35 +173,194 @@ export default class DataModule extends BaseModule {
 	}
 
 	/**
+	 * Returns the projection array/object that is one level deeper based on the property key
+	 *
+	 * @param projection The projection object/array
+	 * @param key The property key
+	 * @returns Array or Object
+	 */
+	private getDeeperProjection(projection: any, key: string) {
+		let deeperProjection;
+		if (Array.isArray(projection))
+			deeperProjection = projection
+				.filter(property => property.startsWith(`${key}.`))
+				.map(property => property.substr(`${key}.`.length));
+		else if (typeof projection === "object")
+			deeperProjection =
+				projection[key] ??
+				Object.keys(projection).reduce(
+					(wipProjection, property) =>
+						property.startsWith(`${key}.`)
+							? {
+									...wipProjection,
+									[property.substr(`${key}.`.length)]:
+										projection[property]
+							  }
+							: wipProjection,
+					{}
+				);
+		return deeperProjection;
+	}
+
+	/**
+	 * Whether a property is allowed in a projection array/object
+	 *
+	 * @param projection
+	 * @param property
+	 * @returns
+	 */
+	private allowedByProjection(projection: any, property: string) {
+		if (Array.isArray(projection))
+			return projection.indexOf(property) !== -1;
+		if (typeof projection === "object") return !!projection[property];
+		return false;
+	}
+
+	/**
 	 * Strip a document object from any unneeded properties, or of any restricted properties
-	 * 
+	 * If a projection is given
+	 *
 	 * @param document The document object
 	 * @param schema The schema object
-	 * @param projection The project, which can be null
-	 * @returns 
+	 * @param projection The projection, which can be null
+	 * @returns
 	 */
-	private async stripDocument(
-		document: any,
-		schema: any,
-		projection: any
-	) {
-		const allowedByProjection = (property: string) => {
-			if (Array.isArray(projection)) return projection.indexOf(property) !== -1;
-			else if (typeof property === "object") !!projection[property];
-			else return false;
-		}
+	private async stripDocument(document: any, schema: any, projection: any) {
+		// TODO add better comments
+		// TODO add support for nested objects in arrays
+		// TODO handle projection excluding properties, rather than assume it's only including properties
 
 		const unfilteredEntries = Object.entries(document);
-		const filteredEntries = await async.filter(unfilteredEntries, async ([key, value]) => {
-			if (!schema[key]) return false;
-			if (projection) return allowedByProjection(key);
-			else {
-				if (schema[key].restricted) return false;
-				return true;
+		const filteredEntries = await async.reduce(
+			unfilteredEntries,
+			[],
+			async (memo, [key, value]) => {
+				// If the property does not exist in the schema, return the memo
+				if (!schema[key]) return memo;
+
+				// Handle nested object
+				if (schema[key].type === undefined) {
+					// If value is null, it can't be an object, so just return its value
+					if (!value) return [...memo, [key, value]];
+
+					// Get the projection for the next layer
+					const deeperProjection = this.getDeeperProjection(
+						projection,
+						key
+					);
+
+					// Generate a stripped document/object for the current key/value
+					const strippedDocument = await this.stripDocument(
+						value,
+						schema[key],
+						deeperProjection
+					);
+
+					// If the returned stripped document/object has keys, add the current key with that document/object to the memeo
+					if (Object.keys(strippedDocument).length > 0)
+						return [...memo, [key, strippedDocument]];
+
+					// The current key has no values that should be returned, so just return the memo
+					return memo;
+				}
+
+				// If we have a projection, check if the current key is allowed by it. If it is, add the key/value to the memo, otherwise just return the memo
+				if (projection)
+					return this.allowedByProjection(projection, key)
+						? [...memo, [key, value]]
+						: memo;
+
+				// If the property is restricted, return memo
+				if (schema[key].restricted) return memo;
+
+				// The property exists in the schema, is not explicitly allowed, is not restricted, so add it to memo
+				return [...memo, [key, value]];
+			}
+		);
+
+		return Object.fromEntries(filteredEntries);
+	}
+
+	/**
+	 * Parse a projection based on the schema and any given projection
+	 * If no projection is given, it will exclude any restricted properties
+	 * If a projection is given, it will exclude restricted properties that are not explicitly allowed in a projection
+	 * It will return a projection used in Mongo, and if any restricted property is explicitly allowed, return that we can't use the cache
+	 *
+	 * @param schema The schema object
+	 * @param projection The project, which can be null
+	 * @returns
+	 */
+	private async parseFindProjection(projection: any, schema: any) {
+		// The mongo projection object we're going to build
+		const mongoProjection = {};
+		// This will be false if we let Mongo return any restricted properties
+		let canCache = true;
+
+		// TODO add better comments
+		// TODO add support for nested objects in arrays
+
+		const unfilteredEntries = Object.entries(schema);
+		await async.forEach(unfilteredEntries, async ([key, value]) => {
+			// If we have a projection set:
+			if (projection) {
+				const allowed = this.allowedByProjection(projection, key);
+				const { restricted } = value;
+
+				// If the property is explicitly allowed in the projection, but also restricted, find can't use cache
+				if (allowed && restricted) {
+					canCache = false;
+				}
+				// If the property is restricted, but not explicitly allowed, make sure to have mongo exclude it. As it's excluded from Mongo, caching isn't an issue for this property
+				else if (restricted) {
+					mongoProjection[key] = false;
+				}
+				// If the current property is a nested object
+				else if (value.type === undefined) {
+					// Get the projection for the next layer
+					const deeperProjection = this.getDeeperProjection(
+						projection,
+						key
+					);
+
+					// Parse projection for the current value, so one level deeper
+					const parsedProjection = await this.parseFindProjection(
+						deeperProjection,
+						value
+					);
+
+					// If the parsed projection mongo projection contains anything, update our own mongo projection
+					if (
+						Object.keys(parsedProjection.mongoProjection).length > 0
+					)
+						mongoProjection[key] = parsedProjection.mongoProjection;
+
+					// If the parsed projection says we can't use the cache, make sure we can't use cache either
+					canCache = canCache && parsedProjection.canCache;
+				}
+			}
+			// If we have no projection set, and the current property is restricted, exclude the property from mongo, but don't say we can't use the cache
+			else if (value.restricted) mongoProjection[key] = false;
+			// If we have no projection set, and the current property is not restricted, and the current property is a nested object
+			else if (value.type === undefined) {
+				// Pass the nested schema object recursively into the parseFindProjection function
+				const parsedProjection = await this.parseFindProjection(
+					null,
+					value
+				);
+
+				// If the returned mongo projection includes anything special, include it in the mongo projection we're returning
+				if (Object.keys(parsedProjection.mongoProjection).length > 0)
+					mongoProjection[key] = parsedProjection.mongoProjection;
+
+				// Since we're not passing a projection into parseFindProjection, there's no chance that we can't cache
 			}
 		});
-		
-		return Object.fromEntries(filteredEntries);
+
+		return {
+			canCache,
+			mongoProjection
+		};
 	}
 
 	/**
@@ -219,13 +378,21 @@ export default class DataModule extends BaseModule {
 		options?: {
 			operators?: boolean;
 		}
-	): Promise<{ mongoFilter: any; containsRestrictedProperties: boolean, canCache: boolean }> {
+	): Promise<{
+		mongoFilter: any;
+		containsRestrictedProperties: boolean;
+		canCache: boolean;
+	}> {
 		if (!filter || typeof filter !== "object")
-			throw new Error("Invalid filter provided. Filter must be an object.");
+			throw new Error(
+				"Invalid filter provided. Filter must be an object."
+			);
 
 		const keys = Object.keys(filter);
 		if (keys.length === 0)
-			throw new Error("Invalid filter provided. Filter must contain keys.");
+			throw new Error(
+				"Invalid filter provided. Filter must contain keys."
+			);
 
 		// Whether to parse operators or not
 		const operators = !(options && options.operators === false);
@@ -272,12 +439,14 @@ export default class DataModule extends BaseModule {
 					await async.each(value, async _value => {
 						const {
 							mongoFilter: _mongoFilter,
-							containsRestrictedProperties: _containsRestrictedProperties
+							containsRestrictedProperties:
+								_containsRestrictedProperties
 						} = await this.parseFindFilter(_value, schema, options);
 
 						// Actually add the returned filter object to the mongo query we're building
 						mongoFilter[key].push(_mongoFilter);
-						if (_containsRestrictedProperties) containsRestrictedProperties = true;
+						if (_containsRestrictedProperties)
+							containsRestrictedProperties = true;
 					});
 				} else
 					throw new Error(
@@ -298,10 +467,14 @@ export default class DataModule extends BaseModule {
 				// Type will be undefined if it's a nested object
 				if (schema[key].type === undefined) {
 					// Run parseFindFilter on the nested schema object
-					const { mongoFilter: _mongoFilter, containsRestrictedProperties: _containsRestrictedProperties } =
-						await this.parseFindFilter(value, schema[key], options);
-						mongoFilter[key] = _mongoFilter;
-					if (_containsRestrictedProperties) containsRestrictedProperties = true;
+					const {
+						mongoFilter: _mongoFilter,
+						containsRestrictedProperties:
+							_containsRestrictedProperties
+					} = await this.parseFindFilter(value, schema[key], options);
+					mongoFilter[key] = _mongoFilter;
+					if (_containsRestrictedProperties)
+						containsRestrictedProperties = true;
 				} else if (
 					operators &&
 					typeof value === "object" &&
@@ -396,14 +569,13 @@ export default class DataModule extends BaseModule {
 			collection, // Collection name
 			filter, // Similar to MongoDB filter
 			projection,
-			values, // TODO: Add support
 			limit = 0, // TODO have limit off by default?
 			page = 1,
 			useCache = true
 		}: {
 			collection: CollectionNameType;
 			filter: Record<string, any>;
-			projection?: Record<string, any> | string[], 
+			projection?: Record<string, any> | string[];
 			values?: Record<string, any>;
 			limit?: number;
 			page?: number;
@@ -413,6 +585,9 @@ export default class DataModule extends BaseModule {
 		return new Promise((resolve, reject) => {
 			let queryHash: string | null = null;
 			let cacheable = useCache !== false;
+
+			let mongoFilter;
+			let mongoProjection;
 
 			async.waterfall(
 				[
@@ -425,20 +600,41 @@ export default class DataModule extends BaseModule {
 					},
 
 					// Verify whether the query is valid-enough to continue
-					async () =>
-						this.parseFindFilter(
+					async () => {
+						const parsedFilter = await this.parseFindFilter(
 							filter,
 							this.collections![collection].schema.document
-						),
+						);
+
+						cacheable = cacheable && parsedFilter.canCache;
+						mongoFilter = parsedFilter.mongoFilter;
+					},
+
+					// Verify whether the query is valid-enough to continue
+					async () => {
+						const parsedProjection = await this.parseFindProjection(
+							projection,
+							this.collections![collection].schema.document
+						);
+
+						console.log(222, parsedProjection);
+
+						cacheable = cacheable && parsedProjection.canCache;
+						mongoProjection = parsedProjection.mongoProjection;
+					},
 
 					// If we can use cache, get from the cache, and if we get results return those
-					async ({ mongoFilter, canCache }: any) => {
-						// console.log(111, mongoFilter, canCache);
+					async () => {
 						// If we're allowed to cache, and the filter doesn't reference any restricted fields, try to cache the query and its response
-						if (cacheable && canCache) {
+						if (cacheable) {
 							// Turn the query object into a sha1 hash that can be used as a Redis key
 							queryHash = hash(
-								{ collection, mongoFilter, values, limit, page },
+								{
+									collection,
+									mongoFilter,
+									limit,
+									page
+								},
 								{
 									algorithm: "sha1"
 								}
@@ -451,18 +647,17 @@ export default class DataModule extends BaseModule {
 
 							// Return the mongoFilter along with the cachedDocuments, if any
 							return {
-								mongoFilter,
 								cachedDocuments: cachedQuery
 									? JSON.parse(cachedQuery)
 									: null
 							};
 						}
 
-						return { mongoFilter, cachedDocuments: null };
+						return { cachedDocuments: null };
 					},
 
 					// If we didn't get documents from the cache, get them from mongo
-					async ({ mongoFilter, cachedDocuments }: any) => {
+					async ({ cachedDocuments }: any) => {
 						if (cachedDocuments) {
 							cacheable = false;
 							return cachedDocuments;
@@ -493,7 +688,6 @@ export default class DataModule extends BaseModule {
 						// );
 
 						// TODO, add mongo projection. Make sure to keep in mind caching with queryHash.
-						const mongoProjection = null;
 
 						return this.collections?.[collection].model
 							.find(mongoFilter, mongoProjection)
@@ -503,7 +697,9 @@ export default class DataModule extends BaseModule {
 
 					// Convert documents from Mongoose model to regular objects
 					async (documents: any[]) =>
-						async.map(documents, async (document: any) => document._doc ? document._doc : document),
+						async.map(documents, async (document: any) =>
+							document._doc ? document._doc : document
+						),
 
 					// Add documents to the cache
 					async (documents: any[]) => {
@@ -521,9 +717,14 @@ export default class DataModule extends BaseModule {
 					},
 
 					// Strips the document of any unneeded properties or properties that are restricted
-					async (documents: any[]) => async.map(documents, async (document: any) => {
-						return await this.stripDocument(document, this.collections![collection].schema.document, projection);
-					})
+					async (documents: any[]) =>
+						async.map(documents, async (document: any) =>
+							this.stripDocument(
+								document,
+								this.collections![collection].schema.document,
+								projection
+							)
+						)
 				],
 				(err, documents?: any[]) => {
 					if (err) reject(err);
