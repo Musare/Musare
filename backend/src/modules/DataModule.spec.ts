@@ -36,6 +36,12 @@ describe("Data Module", function () {
 				autofill: {
 					enabled: !!Math.floor(Math.random())
 				},
+				someNumbers: Array(Math.round(Math.random() * 50)).map(() =>
+					Math.round(Math.random() * 10000)
+				),
+				songs: Array(Math.round(Math.random() * 10)).map(() => ({
+					_id: new mongoose.Types.ObjectId()
+				})),
 				createdAt: Date.now(),
 				updatedAt: Date.now(),
 				testData: true
@@ -64,7 +70,7 @@ describe("Data Module", function () {
 					useCache
 				});
 
-				find.should.be.a("object");
+				find.should.be.an("object");
 				find._id.should.deep.equal(document._id);
 				find.createdAt.should.deep.equal(document.createdAt);
 
@@ -72,6 +78,29 @@ describe("Data Module", function () {
 					dataModule.redisClient?.GET.should.have.been.called;
 				}
 			});
+		});
+
+		it(`filter by name string without cache`, async function () {
+			const [document] = testData.abc;
+
+			const find = await dataModule.find(jobContext, {
+				collection: "abc",
+				filter: { name: document.name },
+				limit: 1,
+				useCache: false
+			});
+
+			find.should.be.an("object");
+			find._id.should.deep.equal(document._id);
+			find.should.have.keys([
+				"_id",
+				"createdAt",
+				"updatedAt",
+				// "name", - Name is restricted, so it won't be returned
+				"autofill",
+				"someNumbers",
+				"songs"
+			]);
 		});
 	});
 

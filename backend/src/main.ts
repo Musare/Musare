@@ -54,22 +54,36 @@ global.rs = () => {
 // }, 3000);
 
 setTimeout(async () => {
+	const _id = "6371212daf4e9f8fb14444b2";
+
 	// logBook.log("Find with no projection");
 	// await moduleManager
 	// 	.runJob("data", "find", {
 	// 		collection: "abc",
 	// 		filter: {
-	// 			_id: "636fdc713450b25c3fc4ab0a"
+	// 			_id
 	// 		}
 	// 	})
 	// 	.then(console.log)
 	// 	.catch(console.error);
+
+	// logBook.log("Find with no projection, and a more advanced filter");
+	// await moduleManager
+	// 	.runJob("data", "find", {
+	// 		collection: "abc",
+	// 		filter: {
+	// 			"autofill.enabled": true
+	// 		}
+	// 	})
+	// 	.then(console.log)
+	// 	.catch(console.error);
+
 	// logBook.log("Find with array projection");
 	// await moduleManager
 	// 	.runJob("data", "find", {
 	// 		collection: "abc",
 	// 		filter: {
-	// 			_id: "636fdc713450b25c3fc4ab0a"
+	// 			_id
 	// 		},
 	// 		projection: ["name"]
 	// 	})
@@ -80,9 +94,10 @@ setTimeout(async () => {
 	// 	.runJob("data", "find", {
 	// 		collection: "abc",
 	// 		filter: {
-	// 			_id: "636fdc713450b25c3fc4ab0a"
+	// 			_id
 	// 		},
-	// 		projection: { name: true }
+	// 		projection: { name: true },
+	// 		limit: 1
 	// 	})
 	// 	.then(console.log)
 	// 	.catch(console.error);
@@ -91,7 +106,7 @@ setTimeout(async () => {
 	// 	.runJob("data", "find", {
 	// 		collection: "abc",
 	// 		filter: {
-	// 			_id: "636fdc713450b25c3fc4ab0a"
+	// 			_id
 	// 		},
 	// 		projection: { name: 1 }
 	// 	})
@@ -102,9 +117,25 @@ setTimeout(async () => {
 	// 	.runJob("data", "find", {
 	// 		collection: "abc",
 	// 		filter: {
-	// 			_id: "636fdc713450b25c3fc4ab0a"
+	// 			_id
 	// 		},
 	// 		projection: { "autofill.enabled": true }
+	// 	})
+	// 	.then(console.log)
+	// 	.catch(console.error);
+
+	// logBook.log("Find for testing casting");
+	// await moduleManager
+	// 	.runJob("data", "find", {
+	// 		collection: "abc",
+	// 		filter: {
+	// 			_id
+	// 		},
+	// 		// projection: {
+	// 		// 	// songs: true,
+	// 		// 	// someNumbers: false
+	// 		// },
+	// 		limit: 1
 	// 	})
 	// 	.then(console.log)
 	// 	.catch(console.error);

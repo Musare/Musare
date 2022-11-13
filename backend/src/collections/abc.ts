@@ -78,6 +78,11 @@ export const schema: AbcCollection = {
 					}
 				}
 			}
+		},
+		aNumber: {
+			type: Types.Number,
+			required: true,
+			restricted: false
 		}
 	},
 	timestamps: true,
