@@ -1,4 +1,5 @@
-import mongoose, { Model } from "mongoose";
+// @ts-nocheck
+import { Collection } from "mongodb";
 import { AbcCollection } from "../collections/abc";
 
 export enum Types {
@@ -47,6 +48,6 @@ export type DefaultSchema = {
 export type Collections = {
 	abc: {
 		schema: AbcCollection;
-		model: Model<AbcCollection["document"]>;
+		collection: Collection<AbcCollection["document"]>;
 	};
 };

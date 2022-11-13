@@ -3,7 +3,7 @@ import async from "async";
 import chai from "chai";
 import sinon from "sinon";
 import sinonChai from "sinon-chai";
-import mongoose from "mongoose";
+import { ObjectId } from "mongodb";
 import JobContext from "../JobContext";
 import JobQueue from "../JobQueue";
 import LogBook from "../LogBook";
@@ -25,13 +25,13 @@ describe("Data Module", function () {
 
 	before(async function () {
 		await dataModule.startup();
-		dataModule.redis = sinon.spy(dataModule.redis);
+		dataModule.redisClient = sinon.spy(dataModule.redisClient);
 	});
 
 	beforeEach(async function () {
 		testData.abc = await async.map(Array(10), async () =>
-			dataModule.collections?.abc.model.create({
-				_id: new mongoose.Types.ObjectId(),
+			dataModule.collections?.abc.collection.insertOne({
+				_id: new ObjectId(),
 				name: `Test${Math.round(Math.random() * 1000)}`,
 				autofill: {
 					enabled: !!Math.floor(Math.random())
@@ -69,7 +69,7 @@ describe("Data Module", function () {
 				find.createdAt.should.deep.equal(document.createdAt);
 
 				if (useCache) {
-					dataModule.redis?.GET.should.have.been.called;
+					dataModule.redisClient?.GET.should.have.been.called;
 				}
 			});
 		});
@@ -77,7 +77,9 @@ describe("Data Module", function () {
 
 	afterEach(async function () {
 		sinon.reset();
-		await dataModule.collections?.abc.model.deleteMany({ testData: true });
+		await dataModule.collections?.abc.collection.deleteMany({
+			testData: true
+		});
 	});
 
 	after(async function () {

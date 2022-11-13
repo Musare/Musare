@@ -1,19 +1,23 @@
 // @ts-nocheck
 import async from "async";
 import config from "config";
-import mongoose, { Schema, Types as MongooseTypes } from "mongoose";
+import { Db, MongoClient } from "mongodb";
 import hash from "object-hash";
 import { createClient, RedisClientType } from "redis";
 import JobContext from "src/JobContext";
 import BaseModule from "../BaseModule";
 import ModuleManager from "../ModuleManager";
 import { UniqueMethods } from "../types/Modules";
-import { Collections, Types } from "../types/Collections";
+import { Collections } from "../types/Collections";
 
 export default class DataModule extends BaseModule {
-	collections?: Collections;
+	private collections?: Collections;
 
-	redis?: RedisClientType;
+	private mongoClient?: MongoClient;
+
+	private mongoDb?: Db;
+
+	private redisClient?: RedisClientType;
 
 	/**
 	 * Data Module
@@ -36,21 +40,12 @@ export default class DataModule extends BaseModule {
 					async () => {
 						const mongoUrl = config.get<string>("mongo.url");
 
-						return mongoose.connect(mongoUrl);
+						this.mongoClient = new MongoClient(mongoUrl);
+						await this.mongoClient.connect();
+						this.mongoDb = this.mongoClient.db();
 					},
 
 					async () => this.loadCollections(),
-
-					async () => {
-						if (this.collections) {
-							await async.each(
-								Object.values(this.collections),
-								async collection =>
-									collection.model.syncIndexes()
-							);
-						} else
-							throw new Error("Collections have not been loaded");
-					},
 
 					async () => {
 						const { url, password } = config.get<{
@@ -58,19 +53,19 @@ export default class DataModule extends BaseModule {
 							password: string;
 						}>("redis");
 
-						this.redis = createClient({
+						this.redisClient = createClient({
 							url,
 							password
 						});
 
-						return this.redis.connect();
+						return this.redisClient.connect();
 					},
 
 					async () => {
-						if (!this.redis)
+						if (!this.redisClient)
 							throw new Error("Redis connection not established");
 
-						return this.redis.sendCommand([
+						return this.redisClient.sendCommand([
 							"CONFIG",
 							"GET",
 							"notify-keyspace-events"
@@ -112,8 +107,8 @@ export default class DataModule extends BaseModule {
 				.shutdown()
 				.then(async () => {
 					// TODO: Ensure the following shutdown correctly
-					if (this.redis) await this.redis.quit();
-					await mongoose.connection.close(false);
+					if (this.redisClient) await this.redisClient.quit();
+					if (this.mongoClient) await this.mongoClient.close(false);
 				})
 				.finally(() => resolve());
 		});
@@ -188,25 +183,11 @@ export default class DataModule extends BaseModule {
 		return new Promise(resolve => {
 			import(`../collections/${collectionName.toString()}`).then(
 				({ schema }: { schema: Collections[T]["schema"] }) => {
-					// Here we create a Mongoose schema and model based on our schema
-					const mongooseSchemaDocument =
-						this.convertSchemaToMongooseSchema(schema.document);
-
-					const mongoSchema = new Schema<
-						Collections[T]["schema"]["document"]
-					>(mongooseSchemaDocument, {
-						timestamps: schema.timestamps
-					});
-					const model = mongoose.model(
-						collectionName.toString(),
-						mongoSchema
-					);
-					// @ts-ignore
 					resolve({
-						// @ts-ignore
 						schema,
-						// @ts-ignore
-						model
+						collection: this.mongoDb?.collection(
+							collectionName.toString()
+						)
 					});
 				}
 			);
@@ -701,7 +682,7 @@ export default class DataModule extends BaseModule {
 							);
 
 							// Check if the query hash already exists in Redis, and get it if it is
-							const cachedQuery = await this.redis?.GET(
+							const cachedQuery = await this.redisClient?.GET(
 								`query.find.${queryHash}`
 							);
 
@@ -749,13 +730,13 @@ export default class DataModule extends BaseModule {
 
 						// TODO, add mongo projection. Make sure to keep in mind caching with queryHash.
 
-						return this.collections?.[collection].model
+						return this.collections?.[collection].collection
 							.find(mongoFilter, mongoProjection)
 							.limit(limit)
 							.skip((page - 1) * limit);
 					},
 
-					// Convert documents from Mongoose model to regular objects
+					// Convert documents from MongoDB model to regular objects
 					async (documents: any[]) =>
 						async.map(documents, async (document: any) =>
 							document._doc ? document._doc : document
@@ -765,7 +746,7 @@ export default class DataModule extends BaseModule {
 					async (documents: any[]) => {
 						// Adds query results to cache but doesnt await
 						if (cacheable && queryHash) {
-							this.redis!.SET(
+							this.redisClient!.SET(
 								`query.find.${queryHash}`,
 								JSON.stringify(documents),
 								{
