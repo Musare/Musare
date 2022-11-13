@@ -1,9 +1,20 @@
 import mongoose, { Model } from "mongoose";
 import { AbcCollection } from "../collections/abc";
 
+export enum Types {
+	String,
+	Number,
+	Date,
+	Boolean,
+	ObjectId,
+	Array,
+	// Map,
+	Schema
+}
+
 export type DocumentAttribute<
 	T extends {
-		type: unknown;
+		type: Types;
 		required?: boolean;
 		cacheKey?: boolean;
 		restricted?: boolean;
@@ -20,14 +31,14 @@ export type DocumentAttribute<
 export type DefaultSchema = {
 	document: Record<
 		string,
-		| DocumentAttribute<{ type: unknown }>
+		| DocumentAttribute<{ type: Types }>
 		| Record<string, DocumentAttribute<{ type: unknown }>>
 	> & {
 		_id: DocumentAttribute<{
-			type: typeof mongoose.Types.ObjectId;
+			type: Types.ObjectId;
 		}>;
-		createdAt: DocumentAttribute<{ type: DateConstructor }>;
-		updatedAt: DocumentAttribute<{ type: DateConstructor }>;
+		createdAt: DocumentAttribute<{ type: Types.Date }>;
+		updatedAt: DocumentAttribute<{ type: Types.Date }>;
 	};
 	timestamps: boolean;
 	version: number;

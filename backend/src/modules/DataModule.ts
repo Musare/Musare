@@ -1,13 +1,13 @@
 import async from "async";
 import config from "config";
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, Types as MongooseTypes } from "mongoose";
 import hash from "object-hash";
 import { createClient, RedisClientType } from "redis";
 import JobContext from "src/JobContext";
 import BaseModule from "../BaseModule";
 import ModuleManager from "../ModuleManager";
 import { UniqueMethods } from "../types/Modules";
-import { Collections } from "../types/Collections";
+import { Collections, Types } from "../types/Collections";
 
 export default class DataModule extends BaseModule {
 	collections?: Collections;
@@ -119,6 +119,63 @@ export default class DataModule extends BaseModule {
 	}
 
 	/**
+	 *
+	 * @param schema Our own schema format
+	 * @returns A Mongoose-compatible schema format
+	 */
+	private convertSchemaToMongooseSchema(schema: any) {
+		// Convert basic types from our own schema types to Mongoose schema types
+		const typeToMongooseType = (type: Types) => {
+			switch (type) {
+				case Types.String:
+					return String;
+				case Types.Number:
+					return Number;
+				case Types.Date:
+					return Date;
+				case Types.Boolean:
+					return Boolean;
+				case Types.ObjectId:
+					return MongooseTypes.ObjectId;
+				default:
+					return null;
+			}
+		};
+
+		const schemaEntries = Object.entries(schema);
+		const mongooseSchemaEntries = schemaEntries.map(([key, value]) => {
+			let mongooseEntry = {};
+
+			// Handle arrays
+			if (value.type === Types.Array) {
+				// Handle schemas in arrays
+				if (value.item.type === Types.Schema)
+					mongooseEntry = [
+						this.convertSchemaToMongooseSchema(value.item.schema)
+					];
+				// We don't support nested arrays
+				else if (value.item.type === Types.Array)
+					throw new Error("Nested arrays are not supported.");
+				// Handle regular types in array
+				else mongooseEntry.type = [typeToMongooseType(value.item.type)];
+			}
+			// Handle schemas
+			else if (value.type === Types.Schema)
+				mongooseEntry = this.convertSchemaToMongooseSchema(
+					value.schema
+				);
+			// Handle regular types
+			else mongooseEntry.type = typeToMongooseType(value.type);
+
+			return [key, mongooseEntry];
+		});
+
+		const mongooseSchema = Object.fromEntries(mongooseSchemaEntries);
+
+		return mongooseSchema;
+	}
+
+	/**
 	 * loadColllection - Import and load collection schema
 	 *
 	 * @param collectionName - Name of the collection
@@ -130,9 +187,13 @@ export default class DataModule extends BaseModule {
 		return new Promise(resolve => {
 			import(`../collections/${collectionName.toString()}`).then(
 				({ schema }: { schema: Collections[T]["schema"] }) => {
+					// Here we create a Mongoose schema and model based on our schema
+					const mongooseSchemaDocument =
+						this.convertSchemaToMongooseSchema(schema.document);
+
 					const mongoSchema = new Schema<
 						Collections[T]["schema"]["document"]
-					>(schema.document, {
+					>(mongooseSchemaDocument, {
 						timestamps: schema.timestamps
 					});
 					const model = mongoose.model(
