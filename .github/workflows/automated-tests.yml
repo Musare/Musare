@@ -36,5 +36,7 @@ jobs:
                   ./musare.sh build
             - name: Start Musare
               run: ./musare.sh start
+            - name: Test Backend
+              run: ./musare.sh test backend
             - name: Test Frontend
               run: ./musare.sh test frontend

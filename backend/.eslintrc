@@ -46,6 +46,22 @@
 		"@typescript-eslint/no-empty-function": 0,
 		"@typescript-eslint/no-this-alias": 0,
 		"@typescript-eslint/no-non-null-assertion": 0,
-		"no-void": 0
-	}
+		"no-void": 0,
+		"import/no-extraneous-dependencies": [
+			"error",
+			{
+				"devDependencies": ["**/*.test.ts", "**/*.spec.ts"]
+			}
+		]
+	},
+	"overrides": [
+		{
+			"files": ["**/*.test.ts", "**/*.spec.ts"],
+			"rules": {
+				"no-unused-expressions": "off",
+				"prefer-arrow-callback": "off",
+				"func-names": "off"
+			}
+		}
+	]
 }
