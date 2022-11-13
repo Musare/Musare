@@ -366,20 +366,25 @@ case $1 in
 
     test)
         echo -e "${CYAN}Musare | Test${NC}"
-        servicesString=$(handleServices "frontend" "${@:2}")
+        servicesString=$(handleServices "backend frontend" "${@:2}")
         if [[ ${servicesString:0:1} == 1 ]]; then
+            if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *backend* ]]; then
+                echo -e "${CYAN}Running backend tests...${NC}"
+                ${dockerCompose} exec -T backend npm run test
+                backendExitValue=$?
+            fi
             if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *frontend* ]]; then
                 echo -e "${CYAN}Running frontend tests...${NC}"
                 ${dockerCompose} exec -T frontend npm run test -- --run
                 frontendExitValue=$?
             fi
-            if [[ ${frontendExitValue} -gt 0 ]]; then
+            if [[ ${backendExitValue} -gt 0 || ${frontendExitValue} -gt 0 ]]; then
                 exitValue=1
             else
                 exitValue=0
             fi
         else
-            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") test [frontend]${NC}"
+            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") test [backend, frontend]${NC}"
             exitValue=1
         fi
         if [[ ${exitValue} -gt 0 ]]; then

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import async from "async";
 import config from "config";
 import mongoose, { Schema } from "mongoose";
@@ -616,8 +617,6 @@ export default class DataModule extends BaseModule {
 							projection,
 							this.collections![collection].schema.document
 						);
-
-						console.log(222, parsedProjection);
 
 						cacheable = cacheable && parsedProjection.canCache;
 						mongoProjection = parsedProjection.mongoProjection;

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import mongoose from "mongoose";
 import { DocumentAttribute, DefaultSchema } from "../types/Collections";
 
@@ -52,7 +53,7 @@ export const schema: AbcCollection = {
 			enabled: {
 				type: Boolean,
 				required: false,
-				restricted: true // TODO: Set to false when empty 2nd layer object fixed
+				restricted: false
 			}
 		}
 	},
