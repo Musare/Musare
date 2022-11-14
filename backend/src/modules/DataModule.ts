@@ -4,11 +4,12 @@ import config from "config";
 import { Db, MongoClient, ObjectId } from "mongodb";
 import hash from "object-hash";
 import { createClient, RedisClientType } from "redis";
-import JobContext from "src/JobContext";
+import JobContext from "../JobContext";
 import BaseModule from "../BaseModule";
 import ModuleManager from "../ModuleManager";
+import Schema, { Types } from "../Schema";
 import { UniqueMethods } from "../types/Modules";
-import { Collections, Types } from "../types/Collections";
+import { Collections } from "../types/Collections";
 
 export default class DataModule extends BaseModule {
 	private collections?: Collections;
@@ -182,7 +183,7 @@ export default class DataModule extends BaseModule {
 	): Promise<Collections[T]> {
 		return new Promise(resolve => {
 			import(`../collections/${collectionName.toString()}`).then(
-				({ schema }: { schema: Collections[T]["schema"] }) => {
+				({ default: schema }: { default: Schema }) => {
 					resolve({
 						schema,
 						collection: this.mongoDb?.collection(
@@ -202,7 +203,8 @@ export default class DataModule extends BaseModule {
 	private loadCollections(): Promise<void> {
 		return new Promise((resolve, reject) => {
 			const fetchCollections = async () => ({
-				abc: await this.loadCollection("abc")
+				abc: await this.loadCollection("abc"),
+				station: await this.loadCollection("station")
 			});
 			fetchCollections()
 				.then(collections => {
@@ -218,8 +220,8 @@ export default class DataModule extends BaseModule {
 	/**
 	 * Returns the projection array/object that is one level deeper based on the property key
 	 *
-	 * @param projection The projection object/array
-	 * @param key The property key
+	 * @param projection - The projection object/array
+	 * @param key - The property key
 	 * @returns Array or Object
 	 */
 	private getDeeperProjection(projection: any, key: string) {
@@ -248,8 +250,8 @@ export default class DataModule extends BaseModule {
 	/**
 	 * Whether a property is allowed in a projection array/object
 	 *
-	 * @param projection
-	 * @param property
+	 * @param projection - The projection object/array
+	 * @param property - Property name
 	 * @returns
 	 */
 	private allowedByProjection(projection: any, property: string) {
@@ -282,9 +284,9 @@ export default class DataModule extends BaseModule {
 	 * Strip a document object from any unneeded properties, or of any restricted properties
 	 * If a projection is given
 	 *
-	 * @param document The document object
-	 * @param schema The schema object
-	 * @param projection The projection, which can be null
+	 * @param document - The document object
+	 * @param schema - The schema object
+	 * @param projection - The projection, which can be null
 	 * @returns
 	 */
 	private async stripDocument(document: any, schema: any, projection: any) {
@@ -431,8 +433,8 @@ export default class DataModule extends BaseModule {
 	 * If a projection is given, it will exclude restricted properties that are not explicitly allowed in a projection
 	 * It will return a projection used in Mongo, and if any restricted property is explicitly allowed, return that we can't use the cache
 	 *
-	 * @param schema The schema object
-	 * @param projection The project, which can be null
+	 * @param schema - The schema object
+	 * @param projection - The project, which can be null
 	 * @returns
 	 */
 	private async parseFindProjection(projection: any, schema: any) {
@@ -470,7 +472,7 @@ export default class DataModule extends BaseModule {
 					// Parse projection for the current value, so one level deeper
 					const parsedProjection = await this.parseFindProjection(
 						deeperProjection,
-						value
+						value.schema
 					);
 
 					// If the parsed projection mongo projection contains anything, update our own mongo projection
@@ -490,7 +492,7 @@ export default class DataModule extends BaseModule {
 				// Pass the nested schema object recursively into the parseFindProjection function
 				const parsedProjection = await this.parseFindProjection(
 					null,
-					value
+					value.schema
 				);
 
 				// If the returned mongo projection includes anything special, include it in the mongo projection we're returning
@@ -836,7 +838,7 @@ export default class DataModule extends BaseModule {
 					async () => {
 						const parsedFilter = await this.parseFindFilter(
 							filter,
-							this.collections![collection].schema.document
+							this.collections![collection].schema.getDocument()
 						);
 
 						cacheable = cacheable && parsedFilter.canCache;
@@ -847,7 +849,7 @@ export default class DataModule extends BaseModule {
 					async () => {
 						const parsedProjection = await this.parseFindProjection(
 							projection,
-							this.collections![collection].schema.document
+							this.collections![collection].schema.getDocument()
 						);
 
 						cacheable = cacheable && parsedProjection.canCache;
@@ -915,7 +917,7 @@ export default class DataModule extends BaseModule {
 						// 	return find;
 						// };
 						// const find: any = await getFindValues(
-						// 	this.collections![collection].schema.document
+						// 	this.collections![collection].schema.getDocument()
 						// );
 
 						// TODO, add mongo projection. Make sure to keep in mind caching with queryHash.
@@ -952,7 +954,9 @@ export default class DataModule extends BaseModule {
 						async.map(documents, async (document: any) =>
 							this.stripDocument(
 								document,
-								this.collections![collection].schema.document,
+								this.collections![
+									collection
+								].schema.getDocument(),
 								projection
 							)
 						)

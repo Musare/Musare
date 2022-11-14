@@ -124,8 +124,24 @@ export default class LogBook {
 			undefined;
 		if (!exclude.memory && this.outputs.memory.enabled)
 			this.logs.push(logObject);
-		if (!exclude.console)
-			console.log(this.formatMessage(logObject, title, "console"));
+		if (!exclude.console) {
+			const logArgs: any[] = [
+				this.formatMessage(logObject, title, "console")
+			];
+			if (this.outputs.console.data) logArgs.push(logObject.data);
+			switch (logObject.type) {
+				case "debug": {
+					console.debug(...logArgs);
+					break;
+				}
+				case "error": {
+					console.error(...logArgs);
+					break;
+				}
+				default:
+					console.log(...logArgs);
+			}
+		}
 		if (!exclude.file)
 			this.stream.write(
 				`${this.formatMessage(logObject, title, "file")}\n`
@@ -180,7 +196,7 @@ export default class LogBook {
 				10
 			);
 		if (this.outputs[destination].message) message += `| ${log.message} `;
-		if (this.outputs[destination].data)
+		if (destination !== "console" && this.outputs[destination].data)
 			message += `| ${JSON.stringify(log.data)} `;
 		if (this.outputs[destination].color) message += "\x1b[0m";
 		return message;
