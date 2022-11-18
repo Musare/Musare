@@ -225,26 +225,99 @@ export default class DataModule extends BaseModule {
 	 * @returns Array or Object
 	 */
 	private getDeeperProjection(projection: any, key: string) {
-		let deeperProjection;
-		if (Array.isArray(projection))
-			deeperProjection = projection
-				.filter(property => property.startsWith(`${key}.`))
-				.map(property => property.substr(`${key}.`.length));
-		else if (typeof projection === "object")
-			deeperProjection =
-				projection[key] ??
-				Object.keys(projection).reduce(
-					(wipProjection, property) =>
-						property.startsWith(`${key}.`)
-							? {
-									...wipProjection,
-									[property.substr(`${key}.`.length)]:
-										projection[property]
-							  }
-							: wipProjection,
-					{}
+		const newProjection = projection.projection
+			.map(([key2, value]) => {
+				if (key2.indexOf(".") === -1 || !key2.startsWith(`${key}.`))
+					return [];
+				const lowerKey = key2.substring(
+					key2.indexOf(".") + 1,
+					key2.length
 				);
-		return deeperProjection;
+				if (lowerKey.length === 0) return [];
+				return [lowerKey, value];
+			})
+			.filter(entries => entries.length === 2);
+
+		return { projection: newProjection, mode: projection.mode };
+	}
+
+	private flattenProjection(projection: any) {
+		let flattenedProjection = [];
+
+		if (Array.isArray(projection))
+			flattenedProjection = projection.map(key => [key, true]);
+		else if (typeof projection === "object")
+			flattenedProjection = Object.entries(projection);
+
+		flattenedProjection = flattenedProjection.reduce(
+			(currentEntries, [key, value]) => {
+				if (typeof value === "object") {
+					let flattenedValue = this.flattenProjection(value);
+					flattenedValue = flattenedValue.map(([key2, value2]) => [
+						`${key}.${key2}`,
+						value2
+					]);
+					return [...currentEntries, ...flattenedValue];
+				}
+				return [...currentEntries, [key, value]];
+			},
+			[]
+		);
+
+		return flattenedProjection;
+	}
+
+	private normalizeProjection(projection: any) {
+		let initialProjection = projection;
+		if (
+			!(projection && typeof initialProjection === "object") &&
+			!Array.isArray(initialProjection)
+		)
+			initialProjection = [];
+
+		// Flatten the projection into a 2-dimensional array of key-value pairs
+		let flattenedProjection = this.flattenProjection(initialProjection);
+		// Make sure all values are booleans
+		flattenedProjection = flattenedProjection.map(([key, value]) => {
+			if (typeof value !== "boolean") return [key, !!value];
+			return [key, value];
+		});
+
+		const projectionKeys = flattenedProjection.map(([key]) => key);
+		const uniqueProjectionKeys = new Set(projectionKeys);
+		if (uniqueProjectionKeys.size !== flattenedProjection.length)
+			throw new Error("Path collision, non-unique key");
+
+		// Check for path collisions
+		projectionKeys.forEach(key => {
+			if (key.indexOf(".") !== -1) {
+				const recurs = key2 => {
+					const newNextKey = key2.substring(0, key2.lastIndexOf("."));
+
+					if (projectionKeys.indexOf(newNextKey) !== -1)
+						throw new Error(
+							`Path collision! ${key} collides with ${newNextKey}`
+						);
+
+					if (newNextKey.indexOf(".") !== -1) recurs(newNextKey);
+				};
+
+				recurs(key);
+			}
+		});
+
+		const anyNonIdTrues = flattenedProjection.reduce(
+			(anyTrues, [key, value]) => anyTrues || (value && key !== "_id"),
+			false
+		);
+
+		// By default, include everything except keys whose value is false
+		let mode = "includeAllBut";
+
+		// If in the projection we have any keys whose value is true (with the exception of _id), switch to excluding all but keys we explicitly set to true in the projection
+		if (anyNonIdTrues) mode = "excludeAllBut";
+
+		return { projection: flattenedProjection, mode };
 	}
 
 	/**
@@ -254,30 +327,45 @@ export default class DataModule extends BaseModule {
 	 * @param property - Property name
 	 * @returns
 	 */
-	private allowedByProjection(projection: any, property: string) {
-		let topLevelKeys = [];
+	private allowedByProjection(
+		projection: any,
+		restricted: boolean,
+		property: string
+	) {
+		const obj = Object.fromEntries(projection.projection);
 
-		if (Array.isArray(projection))
-			topLevelKeys = projection.map(key => [key, true]);
-		else if (typeof projection === "object")
-			topLevelKeys = Object.entries(projection);
+		if (projection.mode === "excludeAllBut") {
+			// Only allow if explicitly allowed
+			if (obj[property]) return true;
 
-		// Turn a list of properties like ["propertyName", "propertyNameTwo.nestedProperty", "propertyName.test"] and into ["propertyName", "propertyNameTwo"]
-		topLevelKeys = topLevelKeys.reduce((arr, [key, value]) => {
-			let normalizedKey = key;
-			if (normalizedKey.indexOf(".") !== -1)
-				normalizedKey = normalizedKey.substr(
-					0,
-					normalizedKey.indexOf(".")
-				);
-			if (arr.indexOf(normalizedKey) === -1)
-				return [...arr, [normalizedKey, value]];
-			return arr;
-		}, []);
+			// This property is restricted, and not directly allowed, so return false
+			if (restricted) return false;
 
-		topLevelKeys = Object.fromEntries(topLevelKeys);
+			// If this nested property has any allowed properties at some lower level
+			const nestedTrue = projection.projection.reduce(
+				(nestedTrue, [key, value]) => {
+					if (value && key.startsWith(`${property}.`)) return true;
+					return nestedTrue;
+				},
+				false
+			);
 
-		return !!topLevelKeys[property];
+			return nestedTrue;
+		}
+
+		if (projection.mode === "includeAllBut") {
+			// Explicitly excluded, so don't allow
+			if (obj[property] === false) return false;
+
+			// Restricted and not explicitly included, so don't allow
+			if (restricted) return false;
+
+			// Not explicitly excluded, and not restricted at this level, so allow this level
+			return true;
+		}
+
+		// This should never happen
+		return false;
 	}
 
 	/**
@@ -305,14 +393,13 @@ export default class DataModule extends BaseModule {
 				if (!schema[key]) return memo;
 
 				// If we have a projection, check if the current key is allowed by it. If it not, just return the memo
-				if (projection) {
-					const allowedByProjection = this.allowedByProjection(
-						projection,
-						key
-					);
+				const allowedByProjection = this.allowedByProjection(
+					projection,
+					schema[key].restricted,
+					key
+				);
 
-					if (!allowedByProjection) return memo;
-				}
+				if (!allowedByProjection) return memo;
 
 				// Handle nested object
 				if (schema[key].type === Types.Schema) {
@@ -409,7 +496,7 @@ export default class DataModule extends BaseModule {
 				}
 
 				// If the property is restricted, return memo
-				if (schema[key].restricted) return memo;
+				// if (schema[key].restricted) return memo;
 
 				// The property exists in the schema, is not explicitly allowed, is not restricted, so add it to memo
 				// Add type casting here
@@ -448,58 +535,41 @@ export default class DataModule extends BaseModule {
 
 		const unfilteredEntries = Object.entries(schema);
 		await async.forEach(unfilteredEntries, async ([key, value]) => {
-			// If we have a projection set:
-			if (projection) {
-				const allowed = this.allowedByProjection(projection, key);
-				const { restricted } = value;
+			const { restricted } = value;
+			const allowed = this.allowedByProjection(
+				projection,
+				restricted,
+				key
+			);
 
-				// If the property is explicitly allowed in the projection, but also restricted, find can't use cache
-				if (allowed && restricted) {
-					canCache = false;
-				}
-				// If the property is restricted, but not explicitly allowed, make sure to have mongo exclude it. As it's excluded from Mongo, caching isn't an issue for this property
-				else if (restricted) {
-					mongoProjection[key] = false;
-				}
-				// If the current property is a nested schema
-				else if (value.type === Types.Schema) {
-					// Get the projection for the next layer
-					const deeperProjection = this.getDeeperProjection(
-						projection,
-						key
-					);
-
-					// Parse projection for the current value, so one level deeper
-					const parsedProjection = await this.parseFindProjection(
-						deeperProjection,
-						value.schema
-					);
-
-					// If the parsed projection mongo projection contains anything, update our own mongo projection
-					if (
-						Object.keys(parsedProjection.mongoProjection).length > 0
-					)
-						mongoProjection[key] = parsedProjection.mongoProjection;
-
-					// If the parsed projection says we can't use the cache, make sure we can't use cache either
-					canCache = canCache && parsedProjection.canCache;
-				}
+			// If the property is explicitly allowed in the projection, but also restricted, find can't use cache
+			if (allowed && restricted) {
+				canCache = false;
 			}
-			// If we have no projection set, and the current property is restricted, exclude the property from mongo, but don't say we can't use the cache
-			else if (value.restricted) mongoProjection[key] = false;
-			// If we have no projection set, and the current property is not restricted, and the current property is a nested object
+			// If the property is restricted, but not explicitly allowed, make sure to have mongo exclude it. As it's excluded from Mongo, caching isn't an issue for this property
+			else if (restricted) {
+				mongoProjection[key] = false;
+			}
+			// If the current property is a nested schema
 			else if (value.type === Types.Schema) {
-				// Pass the nested schema object recursively into the parseFindProjection function
+				// Get the projection for the next layer
+				const deeperProjection = this.getDeeperProjection(
+					projection,
+					key
+				);
+
+				// Parse projection for the current value, so one level deeper
 				const parsedProjection = await this.parseFindProjection(
-					null,
+					deeperProjection,
 					value.schema
 				);
 
-				// If the returned mongo projection includes anything special, include it in the mongo projection we're returning
+				// If the parsed projection mongo projection contains anything, update our own mongo projection
 				if (Object.keys(parsedProjection.mongoProjection).length > 0)
 					mongoProjection[key] = parsedProjection.mongoProjection;
 
-				// Since we're not passing a projection into parseFindProjection, there's no chance that we can't cache
+				// If the parsed projection says we can't use the cache, make sure we can't use cache either
+				canCache = canCache && parsedProjection.canCache;
 			}
 		});
 
@@ -821,6 +891,8 @@ export default class DataModule extends BaseModule {
 			let queryHash: string | null = null;
 			let cacheable = useCache !== false;
 
+			const newProjection = this.normalizeProjection(projection);
+
 			let mongoFilter;
 			let mongoProjection;
 
@@ -848,7 +920,7 @@ export default class DataModule extends BaseModule {
 					// Verify whether the query is valid-enough to continue
 					async () => {
 						const parsedProjection = await this.parseFindProjection(
-							projection,
+							newProjection,
 							this.collections![collection].schema.getDocument()
 						);
 
@@ -957,7 +1029,7 @@ export default class DataModule extends BaseModule {
 								this.collections![
 									collection
 								].schema.getDocument(),
-								projection
+								newProjection
 							)
 						)
 				],

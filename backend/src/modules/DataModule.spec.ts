@@ -1,6 +1,6 @@
 // @ts-nocheck
 import async from "async";
-import chai from "chai";
+import chai, { expect } from "chai";
 import sinon from "sinon";
 import sinonChai from "sinon-chai";
 import { ObjectId } from "mongodb";
@@ -102,6 +102,156 @@ describe("Data Module", function () {
 				"songs"
 			]);
 		});
+	});
+
+	describe("normalize projection", function () {
+		const dataModuleProjection = Object.getPrototypeOf(dataModule);
+
+		it(`basics`, function () {
+			dataModuleProjection.normalizeProjection.should.be.a("function");
+		});
+
+		it(`empty object/array projection`, function () {
+			const expectedResult = { projection: [], mode: "includeAllBut" };
+
+			const resultWithArray = dataModuleProjection.normalizeProjection(
+				[]
+			);
+			const resultWithObject = dataModuleProjection.normalizeProjection(
+				{}
+			);
+
+			resultWithArray.should.deep.equal(expectedResult);
+			resultWithObject.should.deep.equal(expectedResult);
+		});
+
+		it(`null/undefined projection`, function () {
+			const expectedResult = { projection: [], mode: "includeAllBut" };
+
+			const resultWithNull =
+				dataModuleProjection.normalizeProjection(null);
+			const resultWithUndefined =
+				dataModuleProjection.normalizeProjection(undefined);
+			const resultWithNothing =
+				dataModuleProjection.normalizeProjection();
+
+			resultWithNull.should.deep.equal(expectedResult);
+			resultWithUndefined.should.deep.equal(expectedResult);
+			resultWithNothing.should.deep.equal(expectedResult);
+		});
+
+		it(`simple exclude projection`, function () {
+			const expectedResult = {
+				projection: [["name", false]],
+				mode: "includeAllBut"
+			};
+
+			const resultWithBoolean = dataModuleProjection.normalizeProjection({
+				name: false
+			});
+			const resultWithNumber = dataModuleProjection.normalizeProjection({
+				name: 0
+			});
+
+			resultWithBoolean.should.deep.equal(expectedResult);
+			resultWithNumber.should.deep.equal(expectedResult);
+		});
+
+		it(`simple include projection`, function () {
+			const expectedResult = {
+				projection: [["name", true]],
+				mode: "excludeAllBut"
+			};
+
+			const resultWithObject = dataModuleProjection.normalizeProjection({
+				name: true
+			});
+			const resultWithArray = dataModuleProjection.normalizeProjection([
+				"name"
+			]);
+
+			resultWithObject.should.deep.equal(expectedResult);
+			resultWithArray.should.deep.equal(expectedResult);
+		});
+
+		it(`simple include/exclude projection`, function () {
+			const expectedResult = {
+				projection: [
+					["color", false],
+					["name", true]
+				],
+				mode: "excludeAllBut"
+			};
+
+			const result = dataModuleProjection.normalizeProjection({
+				color: false,
+				name: true
+			});
+
+			result.should.deep.equal(expectedResult);
+		});
+
+		it(`simple nested include projection`, function () {
+			const expectedResult = {
+				projection: [["location.city", true]],
+				mode: "excludeAllBut"
+			};
+
+			const resultWithObject = dataModuleProjection.normalizeProjection({
+				location: {
+					city: true
+				}
+			});
+			const resultWithArray = dataModuleProjection.normalizeProjection([
+				"location.city"
+			]);
+
+			resultWithObject.should.deep.equal(expectedResult);
+			resultWithArray.should.deep.equal(expectedResult);
+		});
+
+		it(`simple nested exclude projection`, function () {
+			const expectedResult = {
+				projection: [["location.city", false]],
+				mode: "includeAllBut"
+			};
+
+			const result = dataModuleProjection.normalizeProjection({
+				location: {
+					city: false
+				}
+			});
+
+			result.should.deep.equal(expectedResult);
+		});
+
+		it(`path collision`, function () {
+			expect(() => {
+				dataModuleProjection.normalizeProjection({
+					location: {
+						city: false
+					},
+					"location.city": true
+				});
+			}).to.throw("Path collision, non-unique key");
+		});
+
+		it(`path collision 2`, function () {
+			expect(() => {
+				dataModuleProjection.normalizeProjection({
+					location: {
+						city: {
+							extra: false
+						}
+					},
+					"location.city": true
+				});
+			}).to.throw(
+				"Path collision! location.city.extra collides with location.city"
+			);
+		});
+
+		// TODO add more test cases
 	});
 
 	afterEach(async function () {
