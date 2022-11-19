@@ -1,15 +1,26 @@
-// @ts-nocheck
 import async from "async";
 import config from "config";
 import { Db, MongoClient, ObjectId } from "mongodb";
 import hash from "object-hash";
 import { createClient, RedisClientType } from "redis";
+import { Document } from "src/types/Document";
 import JobContext from "../JobContext";
 import BaseModule from "../BaseModule";
 import ModuleManager from "../ModuleManager";
 import Schema, { Types } from "../Schema";
 import { UniqueMethods } from "../types/Modules";
 import { Collections } from "../types/Collections";
+
+interface ProjectionObject {
+	[property: string]: boolean | string[] | ProjectionObject;
+}
+
+type Projection = null | undefined | string[] | ProjectionObject;
+
+type NormalizedProjection = {
+	projection: [string, boolean][];
+	mode: "includeAllBut" | "excludeAllBut";
+};
 
 export default class DataModule extends BaseModule {
 	private collections?: Collections;
@@ -27,6 +38,10 @@ export default class DataModule extends BaseModule {
 	 */
 	public constructor(moduleManager: ModuleManager) {
 		super(moduleManager, "data");
+
+		const a = this.normalizeProjection({
+			test123: true
+		});
 	}
 
 	/**
@@ -116,63 +131,6 @@ export default class DataModule extends BaseModule {
 	}
 
 	/**
-	 *
-	 * @param schema Our own schema format
-	 * @returns A Mongoose-compatible schema format
-	 */
-	private convertSchemaToMongooseSchema(schema: any) {
-		// Convert basic types from our own schema types to Mongoose schema types
-		const typeToMongooseType = (type: Types) => {
-			switch (type) {
-				case Types.String:
-					return String;
-				case Types.Number:
-					return Number;
-				case Types.Date:
-					return Date;
-				case Types.Boolean:
-					return Boolean;
-				case Types.ObjectId:
-					return MongooseTypes.ObjectId;
-				default:
-					return null;
-			}
-		};
-
-		const schemaEntries = Object.entries(schema);
-		const mongooseSchemaEntries = schemaEntries.map(([key, value]) => {
-			let mongooseEntry = {};
-
-			// Handle arrays
-			if (value.type === Types.Array) {
-				// Handle schemas in arrays
-				if (value.item.type === Types.Schema)
-					mongooseEntry = [
-						this.convertSchemaToMongooseSchema(value.item.schema)
-					];
-				// We don't support nested arrays
-				else if (value.item.type === Types.Array)
-					throw new Error("Nested arrays are not supported.");
-				// Handle regular types in array
-				else mongooseEntry.type = [typeToMongooseType(value.item.type)];
-			}
-			// Handle schemas
-			else if (value.type === Types.Schema)
-				mongooseEntry = this.convertSchemaToMongooseSchema(
-					value.schema
-				);
-			// Handle regular types
-			else mongooseEntry.type = typeToMongooseType(value.type);
-
-			return [key, mongooseEntry];
-		});
-
-		const mongooseSchema = Object.fromEntries(mongooseSchemaEntries);
-
-		return mongooseSchema;
-	}
-
-	/**
 	 * loadColllection - Import and load collection schema
 	 *
 	 * @param collectionName - Name of the collection
@@ -180,13 +138,16 @@ export default class DataModule extends BaseModule {
 	 */
 	private loadCollection<T extends keyof Collections>(
 		collectionName: T
-	): Promise<Collections[T]> {
+	): Promise<{
+		schema: Collections[T]["schema"];
+		collection: Collections[T]["collection"];
+	}> {
 		return new Promise(resolve => {
 			import(`../collections/${collectionName.toString()}`).then(
 				({ default: schema }: { default: Schema }) => {
 					resolve({
 						schema,
-						collection: this.mongoDb?.collection(
+						collection: this.mongoDb!.collection(
 							collectionName.toString()
 						)
 					});
@@ -223,7 +184,7 @@ export default class DataModule extends BaseModule {
 	 * @param projection The raw projection
 	 * @returns Normalized projection
 	 */
-	private normalizeProjection(projection: any) {
+	private normalizeProjection(projection: Projection): NormalizedProjection {
 		let initialProjection = projection;
 		if (
 			!(projection && typeof initialProjection === "object") &&
@@ -251,7 +212,9 @@ export default class DataModule extends BaseModule {
 			// Non-nested paths don't need to be checked, they're covered by the earlier path collision checking
 			if (key.indexOf(".") !== -1) {
 				// Recursively check for each layer of a key whether that key exists already, and if it does, throw a path collision error
-				const recursivelyCheckForPathCollision = keyToCheck => {
+				const recursivelyCheckForPathCollision = (
+					keyToCheck: string
+				) => {
 					// Remove the last ".prop" from the key we want to check, to check if that has any collisions
 					const subKey = keyToCheck.substring(
 						0,
@@ -279,7 +242,7 @@ export default class DataModule extends BaseModule {
 		);
 
 		// By default, include everything except keys whose value is false
-		let mode = "includeAllBut";
+		let mode: "includeAllBut" | "excludeAllBut" = "includeAllBut";
 
 		// If in the projection we have any keys whose value is true (with the exception of _id), switch to excluding all but keys we explicitly set to true in the projection
 		if (anyNonIdTrues) mode = "excludeAllBut";
@@ -293,8 +256,13 @@ export default class DataModule extends BaseModule {
 	 * @param projection
 	 * @returns
 	 */
-	private flattenProjection(projection: any) {
-		let flattenedProjection = [];
+	private flattenProjection(projection: Projection): [string, boolean][] {
+		let flattenedProjection: [
+			string,
+			boolean | string[] | ProjectionObject
+		][] = [];
+
+		if (!projection) throw new Error("Projection can't be null");
 
 		// Turn object/array into a key/value array
 		if (Array.isArray(projection))
@@ -303,8 +271,8 @@ export default class DataModule extends BaseModule {
 			flattenedProjection = Object.entries(projection);
 
 		// Go through our projection array, and recursively check if there is another layer we need to flatten
-		flattenedProjection = flattenedProjection.reduce(
-			(currentEntries, [key, value]) => {
+		const newProjection: [string, boolean][] = flattenedProjection.reduce(
+			(currentEntries: [string, boolean][], [key, value]) => {
 				if (typeof value === "object") {
 					let flattenedValue = this.flattenProjection(value);
 					flattenedValue = flattenedValue.map(
@@ -320,7 +288,7 @@ export default class DataModule extends BaseModule {
 			[]
 		);
 
-		return flattenedProjection;
+		return newProjection;
 	}
 
 	/**
@@ -334,8 +302,8 @@ export default class DataModule extends BaseModule {
 	 * @returns
 	 */
 	private async parseFindProjection(
-		projection: any,
-		schema: any,
+		projection: NormalizedProjection,
+		schema: Document,
 		allowedRestricted: any
 	) {
 		// The mongo projection object we're going to build
@@ -427,7 +395,10 @@ export default class DataModule extends BaseModule {
 	 * @param property - Property name
 	 * @returns
 	 */
-	private allowedByProjection(projection: any, property: string) {
+	private allowedByProjection(
+		projection: NormalizedProjection,
+		property: string
+	) {
 		const obj = Object.fromEntries(projection.projection);
 
 		if (projection.mode === "excludeAllBut") {
@@ -465,8 +436,11 @@ export default class DataModule extends BaseModule {
 	 * @param key - The property key
 	 * @returns Array or Object
 	 */
-	private getDeeperProjection(projection: any, currentKey: string) {
-		const newProjection = projection.projection
+	private getDeeperProjection(
+		projection: NormalizedProjection,
+		currentKey: string
+	): NormalizedProjection {
+		const newProjection: [string, boolean][] = projection.projection
 			// Go through all key/values
 			.map(([key, value]) => {
 				// If a key has no ".", it has no deeper level, so return false
@@ -486,7 +460,8 @@ export default class DataModule extends BaseModule {
 				return [lowerKey, value];
 			})
 			// Filter out any false's, so only key/value pairs remain
-			.filter(entries => entries);
+			// .filter<[string, boolean]>(entries => !!entries);
+			.filter((entries): entries is [string, boolean] => !!entries);
 
 		// Return the new projection with the projection array, and the same existing mode for the projection
 		return { projection: newProjection, mode: projection.mode };
@@ -533,7 +508,7 @@ export default class DataModule extends BaseModule {
 		return newAllowedRestricted;
 	}
 
-	private getCastedValue(value, schemaType) {
+	private getCastedValue(value, schemaType: Types) {
 		if (schemaType === Types.String) {
 			// Check if value is a string, and if not, convert the value to a string
 			const castedValue =
@@ -596,13 +571,13 @@ export default class DataModule extends BaseModule {
 	 */
 	private async parseFindFilter(
 		filter: any,
-		schema: any,
+		schema: Document,
 		allowedRestricted: boolean | string[] | null | undefined,
 		options?: {
 			operators?: boolean;
 		}
 	): Promise<{
-		mongoFilter: any;
+		mongoFilter;
 		containsRestrictedProperties: boolean;
 		canCache: boolean;
 	}> {
@@ -622,7 +597,7 @@ export default class DataModule extends BaseModule {
 		// Whether to parse operators or not
 		const operators = !(options && options.operators === false);
 		// The MongoDB filter we're building
-		const mongoFilter: any = {};
+		const mongoFilter = {};
 		// If the filter references any properties that are restricted, this will be true, so that find knows not to cache the query object
 		let containsRestrictedProperties = false;
 		// Whether this filter is cachable or not
@@ -922,7 +897,7 @@ export default class DataModule extends BaseModule {
 	private async stripDocument(
 		document: any,
 		schema: any,
-		projection: any,
+		projection: NormalizedProjection,
 		allowedRestricted: boolean | string[] | null | undefined
 	) {
 		// TODO possibly do different things with required properties?
@@ -1099,7 +1074,7 @@ export default class DataModule extends BaseModule {
 		}: {
 			collection: CollectionNameType;
 			filter: Record<string, any>;
-			projection?: Record<string, any> | string[];
+			projection?: Projection;
 			allowedRestricted?: boolean | string[];
 			values?: Record<string, any>;
 			limit?: number;
@@ -1111,9 +1086,9 @@ export default class DataModule extends BaseModule {
 			let queryHash: string | null = null;
 			let cacheable = useCache !== false;
 
-			let schema;
+			let schema: Schema;
 
-			let normalizedProjection;
+			let normalizedProjection: NormalizedProjection;
 
 			let mongoFilter;
 			let mongoProjection;
