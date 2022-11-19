@@ -3,8 +3,7 @@ import Schema, { createAttribute, Types } from "../Schema";
 export default new Schema({
 	document: {
 		name: createAttribute({
-			type: Types.String,
-			restricted: true
+			type: Types.String
 		}),
 		autofill: createAttribute({
 			type: Types.Schema,
@@ -26,9 +25,15 @@ export default new Schema({
 			item: {
 				type: Types.Schema,
 				schema: {
-					_id: createAttribute({ type: Types.ObjectId })
+					_id: createAttribute({
+						type: Types.ObjectId
+					})
 				}
 			}
+		}),
+		restrictedName: createAttribute({
+			type: Types.String,
+			restricted: true
 		}),
 		aNumber: createAttribute({ type: Types.Number })
 	}

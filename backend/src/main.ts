@@ -153,10 +153,26 @@ setTimeout(async () => {
 	// 	.runJob("data", "find", {
 	// 		collection: "abc",
 	// 		filter: {
-	// 			name: {
-	// 				$in: ["Test123", "Test321"]
-	// 			}
+	// 			_id
 	// 		},
+	// 		allowedRestricted: true,
+	// 		// projection: {
+	// 		// 	// songs: true,
+	// 		// 	// someNumbers: false
+	// 		// },
+	// 		limit: 1
+	// 	})
+	// 	.then(console.log)
+	// 	.catch(console.error);
+
+	// logBook.log("Find for testing with $in");
+	// await moduleManager
+	// 	.runJob("data", "find", {
+	// 		collection: "abc",
+	// 		filter: {
+	// 			"songs._id": "6371212daf4e9f8fb14444b0"
+	// 		},
+	// 		allowedRestricted: true,
 	// 		// projection: {
 	// 		// 	// songs: true,
 	// 		// 	// someNumbers: false

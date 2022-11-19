@@ -333,7 +333,11 @@ export default class DataModule extends BaseModule {
 	 * @param projection - The project, which can be null
 	 * @returns
 	 */
-	private async parseFindProjection(projection: any, schema: any) {
+	private async parseFindProjection(
+		projection: any,
+		schema: any,
+		allowedRestricted: any
+	) {
 		// The mongo projection object we're going to build
 		const mongoProjection = {};
 		// This will be false if we let Mongo return any restricted properties
@@ -345,18 +349,17 @@ export default class DataModule extends BaseModule {
 		const unfilteredEntries = Object.entries(schema);
 		await async.forEach(unfilteredEntries, async ([key, value]) => {
 			const { restricted } = value;
-			const allowed = this.allowedByProjection(
-				projection,
-				restricted,
-				key
-			);
+
+			// Check if the current property is allowed or not based on allowedRestricted
+			const allowedByRestricted =
+				!restricted || this.allowedByRestricted(allowedRestricted, key);
 
 			// If the property is explicitly allowed in the projection, but also restricted, find can't use cache
-			if (allowed && restricted) {
+			if (allowedByRestricted && restricted) {
 				canCache = false;
 			}
 			// If the property is restricted, but not explicitly allowed, make sure to have mongo exclude it. As it's excluded from Mongo, caching isn't an issue for this property
-			else if (restricted) {
+			else if (!allowedByRestricted) {
 				mongoProjection[key] = false;
 			}
 			// If the current property is a nested schema
@@ -367,10 +370,17 @@ export default class DataModule extends BaseModule {
 					key
 				);
 
+				// Get the allowedRestricted for the next layer
+				const deeperAllowedRestricted = this.getDeeperAllowedRestricted(
+					allowedRestricted,
+					key
+				);
+
 				// Parse projection for the current value, so one level deeper
 				const parsedProjection = await this.parseFindProjection(
 					deeperProjection,
-					value.schema
+					value.schema,
+					deeperAllowedRestricted
 				);
 
 				// If the parsed projection mongo projection contains anything, update our own mongo projection
@@ -389,27 +399,42 @@ export default class DataModule extends BaseModule {
 	}
 
 	/**
+	 * Whether a property is allowed if it's restricted
+	 *
+	 * @param projection - The projection object/array
+	 * @param property - Property name
+	 * @returns
+	 */
+	private allowedByRestricted(allowedRestricted: any, property: string) {
+		// All restricted properties are allowed, so allow
+		if (allowedRestricted === true) return true;
+		// No restricted properties are allowed, so don't allow
+		if (!allowedRestricted) return false;
+		// allowedRestricted is not valid, so don't allow
+		if (!Array.isArray(allowedRestricted)) return false;
+
+		// This exact property is allowed, so allow
+		if (allowedRestricted.indexOf(property) !== -1) return true;
+
+		// Don't allow by default
+		return false;
+	}
+
+	/**
 	 * Whether a property is allowed in a projection array/object
 	 *
 	 * @param projection - The projection object/array
 	 * @param property - Property name
 	 * @returns
 	 */
-	private allowedByProjection(
-		projection: any,
-		restricted: boolean,
-		property: string
-	) {
+	private allowedByProjection(projection: any, property: string) {
 		const obj = Object.fromEntries(projection.projection);
 
 		if (projection.mode === "excludeAllBut") {
 			// Only allow if explicitly allowed
 			if (obj[property]) return true;
 
-			// This property is restricted, and not directly allowed, so return false
-			if (restricted) return false;
-
-			// If this nested property has any allowed properties at some lower level
+			// If this is a nested property that has any allowed properties at some lower level, allow at this level
 			const nestedTrue = projection.projection.reduce(
 				(nestedTrue, [key, value]) => {
 					if (value && key.startsWith(`${property}.`)) return true;
@@ -425,10 +450,7 @@ export default class DataModule extends BaseModule {
 			// Explicitly excluded, so don't allow
 			if (obj[property] === false) return false;
 
-			// Restricted and not explicitly included, so don't allow
-			if (restricted) return false;
-
-			// Not explicitly excluded, and not restricted at this level, so allow this level
+			// Not explicitly excluded, so allow this level
 			return true;
 		}
 
@@ -470,6 +492,47 @@ export default class DataModule extends BaseModule {
 		return { projection: newProjection, mode: projection.mode };
 	}
 
+	/**
+	 * Returns the allowedRestricted that is one level deeper based on the property key
+	 *
+	 * @param projection - The projection object/array
+	 * @param key - The property key
+	 * @returns Array or Object
+	 */
+	private getDeeperAllowedRestricted(
+		allowedRestricted: any,
+		currentKey: string
+	) {
+		//
+		if (typeof allowedRestricted === "boolean") return allowedRestricted;
+		if (!Array.isArray(allowedRestricted)) return false;
+
+		const newAllowedRestricted = allowedRestricted
+			// Go through all key/values
+			.map(key => {
+				// If a key has no ".", it has no deeper level, so return false
+				// If a key doesn't start with the provided currentKey, it's useless to us, so return false
+				if (
+					key.indexOf(".") === -1 ||
+					!key.startsWith(`${currentKey}.`)
+				)
+					return false;
+				// Get the lower key, so everything after "."
+				const lowerKey = key.substring(
+					key.indexOf(".") + 1,
+					key.length
+				);
+				// If the lower key is empty for some reason, return false, but this should never happen
+				if (lowerKey.length === 0) return false;
+				return lowerKey;
+			})
+			// Filter out any false's, so only keys remain
+			.filter(entries => entries);
+
+		// Return the new allowedRestricted
+		return newAllowedRestricted;
+	}
+
 	private getCastedValue(value, schemaType) {
 		if (schemaType === Types.String) {
 			// Check if value is a string, and if not, convert the value to a string
@@ -486,7 +549,7 @@ export default class DataModule extends BaseModule {
 			// We don't allow NaN for numbers, so throw an error
 			if (Number.isNaN(castedValue))
 				throw new Error(
-					`Cast error, number cannot be NaN, at key ${key} with value ${value}`
+					`Cast error, number cannot be NaN, with value ${value}`
 				);
 			// Any additional validation comes here
 			return castedValue;
@@ -534,6 +597,7 @@ export default class DataModule extends BaseModule {
 	private async parseFindFilter(
 		filter: any,
 		schema: any,
+		allowedRestricted: boolean | string[] | null | undefined,
 		options?: {
 			operators?: boolean;
 		}
@@ -602,7 +666,12 @@ export default class DataModule extends BaseModule {
 							mongoFilter: _mongoFilter,
 							containsRestrictedProperties:
 								_containsRestrictedProperties
-						} = await this.parseFindFilter(_value, schema, options);
+						} = await this.parseFindFilter(
+							_value,
+							schema,
+							allowedRestricted,
+							options
+						);
 
 						// Actually add the returned filter object to the mongo filter we're building
 						mongoFilter[key].push(_mongoFilter);
@@ -645,9 +714,18 @@ export default class DataModule extends BaseModule {
 						);
 				}
 
+				const { restricted } = schema[currentKey];
+
+				// Check if the current property is allowed or not based on allowedRestricted
+				const allowedByRestricted =
+					!restricted ||
+					this.allowedByRestricted(allowedRestricted, currentKey);
+
+				if (!allowedByRestricted)
+					throw new Error(`Key "${currentKey}" is restricted.`);
+
 				// If the key in the schema is marked as restricted, containsRestrictedProperties will be true
-				if (schema[currentKey].restricted)
-					containsRestrictedProperties = true;
+				if (restricted) containsRestrictedProperties = true;
 
 				// Handle schema type
 				if (schema[currentKey].type === Types.Schema) {
@@ -662,6 +740,13 @@ export default class DataModule extends BaseModule {
 						};
 					} else subFilter = value;
 
+					// Get the allowedRestricted for the next layer
+					const deeperAllowedRestricted =
+						this.getDeeperAllowedRestricted(
+							allowedRestricted,
+							currentKey
+						);
+
 					// Run parseFindFilter on the nested schema object
 					const {
 						mongoFilter: _mongoFilter,
@@ -670,6 +755,7 @@ export default class DataModule extends BaseModule {
 					} = await this.parseFindFilter(
 						subFilter,
 						schema[currentKey].schema,
+						deeperAllowedRestricted,
 						options
 					);
 					mongoFilter[currentKey] = _mongoFilter;
@@ -704,6 +790,13 @@ export default class DataModule extends BaseModule {
 							};
 						} else subFilter = value;
 
+						// Get the allowedRestricted for the next layer
+						const deeperAllowedRestricted =
+							this.getDeeperAllowedRestricted(
+								allowedRestricted,
+								currentKey
+							);
+
 						const {
 							mongoFilter: _mongoFilter,
 							containsRestrictedProperties:
@@ -711,6 +804,7 @@ export default class DataModule extends BaseModule {
 						} = await this.parseFindFilter(
 							subFilter,
 							schema[currentKey].item.schema,
+							deeperAllowedRestricted,
 							options
 						);
 						mongoFilter[currentKey] = _mongoFilter;
@@ -816,7 +910,12 @@ export default class DataModule extends BaseModule {
 	 * @param projection - The projection, which can be null
 	 * @returns
 	 */
-	private async stripDocument(document: any, schema: any, projection: any) {
+	private async stripDocument(
+		document: any,
+		schema: any,
+		projection: any,
+		allowedRestricted: boolean | string[] | null | undefined
+	) {
 		// TODO possibly do different things with required properties?
 		// TODO possibly do different things with properties with default?
 
@@ -832,11 +931,15 @@ export default class DataModule extends BaseModule {
 				// If we have a projection, check if the current key is allowed by it. If it not, just return the memo
 				const allowedByProjection = this.allowedByProjection(
 					projection,
-					schema[key].restricted,
 					key
 				);
 
+				const allowedByRestricted =
+					!schema[key].restricted ||
+					this.allowedByRestricted(allowedRestricted, key);
+
 				if (!allowedByProjection) return memo;
+				if (!allowedByRestricted) return memo;
 
 				// Handle nested object
 				if (schema[key].type === Types.Schema) {
@@ -849,12 +952,16 @@ export default class DataModule extends BaseModule {
 						projection,
 						key
 					);
+					// Get the allowedRestricted for the next layer
+					const deeperAllowedRestricted =
+						this.getDeeperAllowedRestricted(allowedRestricted, key);
 
 					// Generate a stripped document/object for the current key/value
 					const strippedDocument = await this.stripDocument(
 						value,
 						schema[key].schema,
-						deeperProjection
+						deeperProjection,
+						deeperAllowedRestricted
 					);
 
 					// If the returned stripped document/object has keys, add the current key with that document/object to the memeo
@@ -891,12 +998,19 @@ export default class DataModule extends BaseModule {
 								projection,
 								key
 							);
+							// Get the allowedRestricted for the next layer
+							const deeperAllowedRestricted =
+								this.getDeeperAllowedRestricted(
+									allowedRestricted,
+									key
+								);
 
 							// Generate a stripped document/object for the current key/value
 							const strippedDocument = await this.stripDocument(
 								item,
 								schema[key].item.schema,
-								deeperProjection
+								deeperProjection,
+								deeperAllowedRestricted
 							);
 
 							// If the returned stripped document/object has keys, return the stripped document
@@ -969,6 +1083,7 @@ export default class DataModule extends BaseModule {
 			collection, // Collection name
 			filter, // Similar to MongoDB filter
 			projection,
+			allowedRestricted,
 			limit = 0, // TODO have limit off by default?
 			page = 1,
 			useCache = true
@@ -976,6 +1091,7 @@ export default class DataModule extends BaseModule {
 			collection: CollectionNameType;
 			filter: Record<string, any>;
 			projection?: Record<string, any> | string[];
+			allowedRestricted?: boolean | string[];
 			values?: Record<string, any>;
 			limit?: number;
 			page?: number;
@@ -1017,7 +1133,8 @@ export default class DataModule extends BaseModule {
 					async () => {
 						const parsedProjection = await this.parseFindProjection(
 							normalizedProjection,
-							schema.getDocument()
+							schema.getDocument(),
+							allowedRestricted
 						);
 
 						cacheable = cacheable && parsedProjection.canCache;
@@ -1028,7 +1145,8 @@ export default class DataModule extends BaseModule {
 					async () => {
 						const parsedFilter = await this.parseFindFilter(
 							filter,
-							schema.getDocument()
+							schema.getDocument(),
+							allowedRestricted
 						);
 
 						cacheable = cacheable && parsedFilter.canCache;
@@ -1108,7 +1226,8 @@ export default class DataModule extends BaseModule {
 							this.stripDocument(
 								document,
 								schema.getDocument(),
-								normalizedProjection
+								normalizedProjection,
+								allowedRestricted
 							)
 						)
 				],
