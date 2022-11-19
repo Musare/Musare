@@ -20,6 +20,11 @@ services:
       - redis
     stdin_open: true
     tty: true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "3"
 
   frontend:
     build:
@@ -40,6 +45,11 @@ services:
       - CONTAINER_MODE=${CONTAINER_MODE:-prod}
     links:
       - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "3"
 
   mongo:
     image: docker.io/mongo:${MONGO_VERSION}
@@ -55,6 +65,11 @@ services:
     volumes:
       - ./tools/docker/setup-mongo.sh:/docker-entrypoint-initdb.d/setup-mongo.sh
       - ${MONGO_DATA_LOCATION:-./db}:/data/db
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "3"
 
   redis:
     image: docker.io/redis:7
@@ -62,3 +77,8 @@ services:
     command: "--notify-keyspace-events Ex --requirepass ${REDIS_PASSWORD} --appendonly yes"
     volumes:
       - /data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "3"
