@@ -1,6 +1,6 @@
 // @ts-nocheck
 import async from "async";
-import chai, { expect } from "chai";
+import chai from "chai";
 import sinon from "sinon";
 import sinonChai from "sinon-chai";
 import chaiAsPromised from "chai-as-promised";
@@ -143,14 +143,14 @@ describe("Data Module", function () {
 		});
 
 		it(`filter by normal array item that doesn't exist`, async function () {
-			const resultDocument = await dataModule.find(jobContext, {
+			const resultDocument = dataModule.find(jobContext, {
 				collection: "abc",
 				filter: { someNumbers: -1 },
 				limit: 1,
 				useCache: false
 			});
 
-			expect(resultDocument).to.be.null;
+			await resultDocument.should.eventually.be.null;
 		});
 
 		it(`filter by schema array item`, async function () {
@@ -175,7 +175,7 @@ describe("Data Module", function () {
 				useCache: false
 			});
 
-			await expect(jobPromise).to.be.rejectedWith(
+			await jobPromise.should.eventually.be.rejectedWith(
 				`Key "randomProperty" does not exist in the schema.`
 			);
 		});
@@ -202,34 +202,61 @@ describe("Data Module", function () {
 				useCache: false
 			});
 
-			await expect(jobPromise).to.be.rejectedWith(
+			await jobPromise.should.eventually.be.rejectedWith(
 				`Key "randomProperty" does not exist in the schema.`
 			);
 		});
 
-		it(`filter with simple $in`, async function () {
-			const [document] = testData.abc;
+		describe("filter $in operator by type", function () {
+			Object.entries({
+				objectId: ["_id", new ObjectId()],
+				string: ["name", "RandomName"],
+				number: ["someNumbers", -1],
+				date: ["createdAt", new Date()]
+			}).forEach(([type, [attribute, invalidValue]]) => {
+				it(`${type}, where document exists`, async function () {
+					const [document] = testData.abc;
+					const filter = {};
+					filter[attribute] = {
+						$in: [
+							Array.isArray(document[attribute])
+								? document[attribute][0]
+								: document[attribute],
+							invalidValue
+						]
+					};
+					const resultDocument = await dataModule.find(jobContext, {
+						collection: "abc",
+						filter,
+						limit: 1,
+						useCache: false
+					});
 
-			const resultDocument = await dataModule.find(jobContext, {
-				collection: "abc",
-				filter: { name: { $in: [document.name, "RandomName"] } },
-				limit: 1,
-				useCache: false
+					resultDocument.should.deep.equal({
+						_id: document._id,
+						autofill: {
+							enabled: document.autofill.enabled
+						},
+						someNumbers: document.someNumbers,
+						songs: document.songs,
+						createdAt: document.createdAt,
+						updatedAt: document.updatedAt
+					});
+				});
+
+				it(`${type}, where document doesnt exist`, async function () {
+					const filter = {};
+					filter[attribute] = { $in: [invalidValue, invalidValue] };
+					const jobPromise = dataModule.find(jobContext, {
+						collection: "abc",
+						filter,
+						limit: 1,
+						useCache: false
+					});
+
+					await jobPromise.should.eventually.be.null;
+				});
 			});
-
-			resultDocument.should.be.an("object");
-			resultDocument._id.should.deep.equal(document._id);
-		});
-
-		it(`filter with simple $in 2`, async function () {
-			const jobPromise = dataModule.find(jobContext, {
-				collection: "abc",
-				filter: { name: { $in: ["RandomName", "RandomName2"] } },
-				limit: 1,
-				useCache: false
-			});
-
-			await jobPromise.should.eventually.be.null;
 		});
 
 		it(`find should not have restricted properties`, async function () {
@@ -429,18 +456,17 @@ describe("Data Module", function () {
 		});
 
 		it(`path collision`, function () {
-			expect(() => {
+			(() =>
 				dataModuleProjection.normalizeProjection({
 					location: {
 						city: false
 					},
 					"location.city": true
-				});
-			}).to.throw("Path collision, non-unique key");
+				})).should.throw("Path collision, non-unique key");
 		});
 
 		it(`path collision 2`, function () {
-			expect(() => {
+			(() =>
 				dataModuleProjection.normalizeProjection({
 					location: {
 						city: {
@@ -448,8 +474,7 @@ describe("Data Module", function () {
 						}
 					},
 					"location.city": true
-				});
-			}).to.throw(
+				})).should.throw(
 				"Path collision! location.city.extra collides with location.city"
 			);
 		});
