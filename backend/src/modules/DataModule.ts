@@ -727,8 +727,67 @@ export default class DataModule extends BaseModule {
 				// If the key in the schema is marked as restricted, containsRestrictedProperties will be true
 				if (restricted) containsRestrictedProperties = true;
 
+				// Handle value operators
+				if (
+					operators &&
+					typeof value === "object" &&
+					value &&
+					Object.keys(value).length === 1 &&
+					Object.keys(value)[0] &&
+					Object.keys(value)[0][0] === "$"
+				) {
+					// This entire if statement is for handling value operators like $in
+					const operator = Object.keys(value)[0];
+
+					// Operator isn't found, so throw an error
+					if (allowedValueOperators.indexOf(operator) === -1)
+						throw new Error(
+							`Invalid filter provided. Operator "${operator}" is not allowed.`
+						);
+
+					// Handle the $in value operator
+					if (operator === "$in") {
+						mongoFilter[currentKey] = {
+							$in: []
+						};
+
+						// Decide what type should be for the values for $in
+						let { type } = schema[currentKey];
+						// We don't allow schema type for $in
+						if (type === Types.Schema)
+							throw new Error(
+								`Key "${currentKey}" is of type schema, which is not allowed with $in`
+							);
+						// Set the type to be the array item type if it's about an array
+						if (type === Types.Array) type = schema[key].item.type;
+
+						// Loop through all $in array items, check if they're not null/undefined, cast them, and return a new array
+						if (value.$in.length > 0)
+							mongoFilter[currentKey].$in = await async.map(
+								value.$in,
+								async (_value: any) => {
+									const isNullOrUndefined =
+										_value === null || _value === undefined;
+									if (isNullOrUndefined)
+										throw new Error(
+											`Value for key ${currentKey} using $in is undefuned/null, which is not allowed.`
+										);
+
+									const castedValue = this.getCastedValue(
+										_value,
+										type
+									);
+
+									return castedValue;
+								}
+							);
+					} else
+						throw new Error(
+							`Unhandled operator "${operator}", this should never happen!`
+						);
+				}
 				// Handle schema type
-				if (schema[currentKey].type === Types.Schema) {
+				else if (schema[currentKey].type === Types.Schema) {
 					let subFilter;
 					if (key.indexOf(".") !== -1) {
 						const subKey = key.substring(
@@ -820,56 +879,6 @@ export default class DataModule extends BaseModule {
 							itemType
 						);
 					}
-				} else if (
-					operators &&
-					typeof value === "object" &&
-					value &&
-					Object.keys(value).length === 1 &&
-					Object.keys(value)[0] &&
-					Object.keys(value)[0][0] === "$"
-				) {
-					// This entire if statement is for handling value operators like $in
-					const operator = Object.keys(value)[0];
-
-					// Operator isn't found, so throw an error
-					if (allowedValueOperators.indexOf(operator) === -1)
-						throw new Error(
-							`Invalid filter provided. Operator "${key}" is not allowed.`
-						);
-
-					// Handle the $in value operator
-					if (operator === "$in") {
-						// TODO handle nested paths for key here
-						mongoFilter[key] = {
-							$in: []
-						};
-
-						// Loop through all $in array items, check if they're not null/undefined, cast them, and return a new array
-						if (value.$in.length > 0)
-							mongoFilter[key].$in = await async.map(
-								value.$in,
-								async (_value: any) => {
-									const isNullOrUndefined =
-										_value === null || _value === undefined;
-									if (isNullOrUndefined)
-										throw new Error(
-											`Value for key ${key} using $in is undefuned/null, which is not allowed.`
-										);
-
-									const schemaType = schema[key].type;
-
-									const castedValue = this.getCastedValue(
-										_value,
-										schemaType
-									);
-
-									return castedValue;
-								}
-							);
-					} else
-						throw new Error(
-							`Unhandled operator "${operator}", this should never happen!`
-						);
 				}
 				// Handle normal types
 				else {

@@ -234,6 +234,7 @@ describe("Data Module", function () {
 
 					resultDocument.should.deep.equal({
 						_id: document._id,
+						name: document.name,
 						autofill: {
 							enabled: document.autofill.enabled
 						},

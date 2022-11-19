@@ -181,6 +181,18 @@ setTimeout(async () => {
 	// 	})
 	// 	.then(console.log)
 	// 	.catch(console.error);
+
+	// logBook.log("Find for testing with $in with numbers");
+	// await moduleManager
+	// 	.runJob("data", "find", {
+	// 		collection: "abc",
+	// 		filter: {
+	// 			someNumbers: { $in: [4] }
+	// 		},
+	// 		limit: 1
+	// 	})
+	// 	.then(console.log)
+	// 	.catch(console.error);
 }, 0);
 
 const rl = readline.createInterface({
