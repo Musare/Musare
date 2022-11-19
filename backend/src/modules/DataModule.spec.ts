@@ -32,28 +32,28 @@ describe("Data Module", function () {
 
 	beforeEach(async function () {
 		testData.abc = await async.map(Array(10), async () => {
-			const result =
-				await dataModule.collections?.abc.collection.insertOne({
-					_id: new ObjectId(),
-					name: `Test${Math.round(Math.random() * 1000)}`,
-					autofill: {
-						enabled: !!Math.round(Math.random())
-					},
-					someNumbers: Array.from({
-						length: Math.max(1, Math.round(Math.random() * 50))
-					}).map(() => Math.round(Math.random() * 10000)),
-					songs: Array.from({
-						length: Math.max(1, Math.round(Math.random() * 10))
-					}).map(() => ({
-						_id: new ObjectId()
-					})),
-					createdAt: Date.now(),
-					updatedAt: Date.now(),
-					testData: true
-				});
-			return dataModule.collections?.abc.collection.findOne({
-				_id: result?.insertedId
+			const doc = {
+				name: `Test${Math.round(Math.random() * 1000)}`,
+				autofill: {
+					enabled: !!Math.round(Math.random())
+				},
+				someNumbers: Array.from({
+					length: Math.max(1, Math.round(Math.random() * 50))
+				}).map(() => Math.round(Math.random() * 10000)),
+				songs: Array.from({
+					length: Math.max(1, Math.round(Math.random() * 10))
+				}).map(() => ({
+					_id: new ObjectId()
+				})),
+				createdAt: new Date(),
+				updatedAt: new Date(),
+				testData: true
+			};
+			const res = await dataModule.collections?.abc.collection.insertOne({
+				...doc,
+				testData: true
 			});
+			return { _id: res.insertedId, ...doc };
 		});
 	});
 
@@ -199,6 +199,31 @@ describe("Data Module", function () {
 			await expect(jobPromise).to.be.rejectedWith(
 				`Key "randomProperty" does not exist in the schema.`
 			);
+		});
+
+		it(`filter with simple $in`, async function () {
+			const [document] = testData.abc;
+
+			const resultDocument = await dataModule.find(jobContext, {
+				collection: "abc",
+				filter: { name: { $in: [document.name, "RandomName"] } },
+				limit: 1,
+				useCache: false
+			});
+
+			resultDocument.should.be.an("object");
+			resultDocument._id.should.deep.equal(document._id);
+		});
+
+		it(`filter with simple $in 2`, async function () {
+			const jobPromise = dataModule.find(jobContext, {
+				collection: "abc",
+				filter: { name: { $in: ["RandomName", "RandomName2"] } },
+				limit: 1,
+				useCache: false
+			});
+
+			await jobPromise.should.eventually.be.null;
 		});
 	});
 

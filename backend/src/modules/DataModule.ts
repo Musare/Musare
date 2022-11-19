@@ -726,65 +726,57 @@ export default class DataModule extends BaseModule {
 							itemType
 						);
 					}
+				} else if (
+					operators &&
+					typeof value === "object" &&
+					value &&
+					Object.keys(value).length === 1 &&
+					Object.keys(value)[0] &&
+					Object.keys(value)[0][0] === "$"
+				) {
+					// This entire if statement is for handling value operators like $in
+					const operator = Object.keys(value)[0];
+
+					// Operator isn't found, so throw an error
+					if (allowedValueOperators.indexOf(operator) === -1)
+						throw new Error(
+							`Invalid filter provided. Operator "${key}" is not allowed.`
+						);
+
+					// Handle the $in value operator
+					if (operator === "$in") {
+						// TODO handle nested paths for key here
+						mongoFilter[key] = {
+							$in: []
+						};
+
+						// Loop through all $in array items, check if they're not null/undefined, cast them, and return a new array
+						if (value.$in.length > 0)
+							mongoFilter[key].$in = await async.map(
+								value.$in,
+								async (_value: any) => {
+									const isNullOrUndefined =
+										_value === null || _value === undefined;
+									if (isNullOrUndefined)
+										throw new Error(
+											`Value for key ${key} using $in is undefuned/null, which is not allowed.`
+										);
+
+									const schemaType = schema[key].type;
+
+									const castedValue = this.getCastedValue(
+										_value,
+										schemaType
+									);
+
+									return castedValue;
+								}
+							);
+					} else
+						throw new Error(
+							`Unhandled operator "${operator}", this should never happen!`
+						);
 				}
-				// else if (
-				// 	operators &&
-				// 	typeof value === "object" &&
-				// 	value &&
-				// 	Object.keys(value).length === 1 &&
-				// 	Object.keys(value)[0] &&
-				// 	Object.keys(value)[0][0] === "$"
-				// ) {
-				// 	// This entire if statement is for handling value operators
-
-				// 	const operator = Object.keys(value)[0];
-
-				// 	// Operator isn't found, so throw an error
-				// 	if (allowedValueOperators.indexOf(operator) === -1)
-				// 		throw new Error(
-				// 			`Invalid filter provided. Operator "${key}" is not allowed.`
-				// 		);
-
-				// 	// Handle the $in value operator
-				// 	if (operator === "$in") {
-				// 		mongoFilter[key] = {
-				// 			$in: []
-				// 		};
-
-				// 		if (value.$in.length > 0)
-				// 			mongoFilter[key].$in = await async.map(
-				// 				value.$in,
-				// 				async (_value: any) => {
-				// 					// if (
-				// 					// 	typeof schema[key].type === "function"
-				// 					// ) {
-				// 					// 	//
-				// 					// 	// const Type = schema[key].type;
-				// 					// 	// const castValue = new Type(_value);
-				// 					// 	// if (schema[key].validate)
-				// 					// 	// 	await schema[key]
-				// 					// 	// 		.validate(castValue)
-				// 					// 	// 		.catch(err => {
-				// 					// 	// 			throw new Error(
-				// 					// 	// 				`Invalid value for ${key}, ${err}`
-				// 					// 	// 			);
-				// 					// 	// 		});
-				// 					// 	return _value;
-				// 					// }
-				// 					// throw new Error(
-				// 					// 	`Invalid schema type for ${key}`
-				// 					// );
-				// 					console.log(_value);
-
-				// 					return _value;
-				// 				}
-				// 			);
-				// 	}
-				// else
-				// 	throw new Error(
-				// 		`Unhandled operator "${operator}", this should never happen!`
-				// 	);
-				// }
 				// Handle normal types
 				else {
 					const isNullOrUndefined =
