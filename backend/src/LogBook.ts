@@ -1,12 +1,11 @@
 import config from "config";
-import fs from "fs";
 
 export type Log = {
 	timestamp: number;
 	message: string;
 	type?: "info" | "success" | "error" | "debug";
 	category?: string;
-	data?: Record<string, any>;
+	data?: Record<string, unknown>;
 };
 
 export type LogFilters = {
@@ -22,7 +21,6 @@ export type LogOutputOptions = Record<
 
 export type LogOutputs = {
 	console: LogOutputOptions;
-	file: LogOutputOptions;
 	memory: { enabled: boolean } & Partial<LogFilters>;
 };
 
@@ -33,12 +31,10 @@ export default class LogBook {
 
 	private outputs: LogOutputs;
 
-	private stream: fs.WriteStream;
-
 	/**
 	 * Log Book
 	 */
-	public constructor(file = "logs/backend.log") {
+	public constructor() {
 		this.logs = [];
 		this.default = {
 			console: {
@@ -58,30 +54,19 @@ export default class LogBook {
 					}
 				]
 			},
-			file: {
-				timestamp: true,
-				title: true,
-				type: true,
-				message: true,
-				data: false,
-				color: false
-			},
 			memory: {
 				enabled: false
 			}
 		};
 		if (config.has("logging"))
-			["console", "file", "memory"].forEach(output => {
+			(["console", "memory"] as (keyof LogOutputs)[]).forEach(output => {
 				if (config.has(`logging.${output}`))
-					// @ts-ignore
 					this.default[output] = {
-						// @ts-ignore
 						...this.default[output],
 						...config.get<any>(`logging.${output}`)
 					};
 			});
 		this.outputs = this.default;
-		this.stream = fs.createWriteStream(file, { flags: "a" });
 	}
 
 	/**
@@ -96,28 +81,33 @@ export default class LogBook {
 		};
 		const exclude = {
 			console: false,
-			file: false,
 			memory: false
 		};
-		Object.entries(logObject).forEach(([key, value]) => {
-			Object.entries(this.outputs).forEach(([outputName, output]) => {
-				if (
-					(output.include &&
-						output.include.length > 0 &&
-						output.include.filter(
-							// @ts-ignore
-							filter => filter[key] === value
-						).length === 0) ||
-					(output.exclude &&
-						output.exclude.filter(
-							// @ts-ignore
-							filter => filter[key] === value
-						).length > 0)
-				)
-					// @ts-ignore
-					exclude[outputName] = true;
-			});
-		});
+		(Object.entries(logObject) as [keyof Log, Log[keyof Log]][]).forEach(
+			([key, value]) => {
+				(
+					Object.entries(this.outputs) as [
+						keyof LogOutputs,
+						LogOutputs[keyof LogOutputs]
+					][]
+				).forEach(([outputName, output]) => {
+					if (
+						(output.include &&
+							output.include.length > 0 &&
+							output.include.filter(
+								filter =>
+									key !== "timestamp" && filter[key] === value
+							).length === 0) ||
+						(output.exclude &&
+							output.exclude.filter(
+								filter =>
+									key !== "timestamp" && filter[key] === value
+							).length > 0)
+					)
+						exclude[outputName] = true;
+				});
+			}
+		);
 		const title =
 			(logObject.data && logObject.data.jobName) ||
 			logObject.category ||
@@ -125,10 +115,10 @@ export default class LogBook {
 		if (!exclude.memory && this.outputs.memory.enabled)
 			this.logs.push(logObject);
 		if (!exclude.console) {
-			const logArgs: any[] = [
-				this.formatMessage(logObject, title, "console")
-			];
-			if (this.outputs.console.data) logArgs.push(logObject.data);
+			const message = this.formatMessage(logObject, String(title));
+			const logArgs = this.outputs.console.data
+				? [message]
+				: [message, logObject.data];
 			switch (logObject.type) {
 				case "debug": {
 					console.debug(...logArgs);
@@ -142,10 +132,6 @@ export default class LogBook {
 					console.log(...logArgs);
 			}
 		}
-		if (!exclude.file)
-			this.stream.write(
-				`${this.formatMessage(logObject, title, "file")}\n`
-			);
 	}
 
 	/**
@@ -153,14 +139,9 @@ export default class LogBook {
 	 *
 	 * @param log - Log
 	 * @param title - Log title
-	 * @param destination - Message destination
 	 * @returns Formatted log string
 	 */
-	private formatMessage(
-		log: Log,
-		title: string | undefined,
-		destination: "console" | "file"
-	): string {
+	private formatMessage(log: Log, title: string | undefined): string {
 		const centerString = (string: string, length: number) => {
 			const spaces = Array(
 				Math.floor((length - Math.max(0, string.length)) / 2)
@@ -170,7 +151,7 @@ export default class LogBook {
 			} `;
 		};
 		let message = "";
-		if (this.outputs[destination].color)
+		if (this.outputs.console.color)
 			switch (log.type) {
 				case "success":
 					message += "\x1b[32m";
@@ -186,19 +167,17 @@ export default class LogBook {
 					message += "\x1b[36m";
 					break;
 			}
-		if (this.outputs[destination].timestamp)
+		if (this.outputs.console.timestamp)
 			message += `| ${new Date(log.timestamp).toISOString()} `;
-		if (this.outputs[destination].title)
+		if (this.outputs.console.title)
 			message += centerString(title ? title.substring(0, 20) : "", 24);
-		if (this.outputs[destination].type)
+		if (this.outputs.console.type)
 			message += centerString(
 				log.type ? log.type.toUpperCase() : "INFO",
 				10
 			);
-		if (this.outputs[destination].message) message += `| ${log.message} `;
-		if (destination !== "console" && this.outputs[destination].data)
-			message += `| ${JSON.stringify(log.data)} `;
-		if (this.outputs[destination].color) message += "\x1b[0m";
+		if (this.outputs.console.message) message += `| ${log.message} `;
+		if (this.outputs.console.color) message += "\x1b[0m";
 		return message;
 	}
 
@@ -211,10 +190,10 @@ export default class LogBook {
 	 * @param values - Updated value
 	 */
 	public async updateOutput(
-		output: "console" | "file" | "memory",
+		output: "console" | "memory",
 		key: keyof LogOutputOptions | "enabled",
 		action: "set" | "add" | "reset",
-		values?: any
+		values?: LogOutputOptions[keyof LogOutputOptions]
 	) {
 		switch (key) {
 			case "include":
@@ -237,9 +216,11 @@ export default class LogBook {
 				break;
 			}
 			case "enabled": {
-				if (output === "memory" && action === "set")
-					this.outputs[output][key] = values;
-				else
+				if (output === "memory" && action === "set") {
+					if (values === undefined)
+						throw new Error("No value provided");
+					this.outputs[output][key] = !!values;
+				} else
 					throw new Error(
 						`Action "${action}" not found for ${key} in ${output}`
 					);
@@ -247,8 +228,9 @@ export default class LogBook {
 			}
 			default: {
 				if (output !== "memory" && action === "set") {
-					if (!values) throw new Error("No value provided");
-					this.outputs[output][key] = values;
+					if (values === undefined)
+						throw new Error("No value provided");
+					this.outputs[output][key] = !!values;
 				} else if (output !== "memory" && action === "reset") {
 					this.outputs[output][key] = this.default[output][key];
 				} else

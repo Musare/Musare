@@ -37,7 +37,7 @@ describe("Data Module", function () {
 					_id: new ObjectId(),
 					name: `Test${Math.round(Math.random() * 1000)}`,
 					autofill: {
-						enabled: !!Math.floor(Math.random())
+						enabled: !!Math.round(Math.random())
 					},
 					someNumbers: Array.from({
 						length: Math.max(1, Math.round(Math.random() * 50))
@@ -66,9 +66,9 @@ describe("Data Module", function () {
 	describe("find job", function () {
 		// Run cache test twice to validate mongo and redis sourced data
 		[false, true, true].forEach(useCache => {
-			it(`filter by one _id string ${
-				useCache ? "with" : "without"
-			} cache`, async function () {
+			const useCacheString = `${useCache ? "with" : "without"} cache`;
+
+			it(`filter by one _id string ${useCacheString}`, async function () {
 				const [document] = testData.abc;
 
 				const find = await dataModule.find(jobContext, {
@@ -78,37 +78,48 @@ describe("Data Module", function () {
 					useCache
 				});
 
-				find.should.be.an("object");
-				find._id.should.deep.equal(document._id);
-				find.createdAt.should.deep.equal(new Date(document.createdAt));
+				find.should.deep.equal({
+					_id: document._id,
+					autofill: {
+						enabled: document.autofill.enabled
+					},
+					someNumbers: document.someNumbers,
+					songs: document.songs,
+					createdAt: document.createdAt,
+					updatedAt: document.updatedAt
+				});
 
 				if (useCache) {
 					dataModule.redisClient?.GET.should.have.been.called;
 				}
 			});
-		});
 
-		it(`filter by name string without cache`, async function () {
-			const [document] = testData.abc;
+			it(`filter by name string ${useCacheString}`, async function () {
+				const [document] = testData.abc;
 
-			const find = await dataModule.find(jobContext, {
-				collection: "abc",
-				filter: { name: document.name },
-				limit: 1,
-				useCache: false
+				const find = await dataModule.find(jobContext, {
+					collection: "abc",
+					filter: { name: document.name },
+					limit: 1,
+					useCache
+				});
+
+				find.should.be.an("object");
+				find._id.should.deep.equal(document._id);
+				find.should.have.keys([
+					"_id",
+					"createdAt",
+					"updatedAt",
+					"autofill",
+					"someNumbers",
+					"songs"
+				]);
+
+				// Name is restricted, so it won't be returned and the query should not be cached
+				find.should.not.have.keys(["name"]);
+				dataModule.redisClient?.GET.should.not.have.been.called;
+				dataModule.redisClient?.SET.should.not.have.been.called;
 			});
-
-			find.should.be.an("object");
-			find._id.should.deep.equal(document._id);
-			find.should.have.keys([
-				"_id",
-				"createdAt",
-				"updatedAt",
-				// "name", - Name is restricted, so it won't be returned
-				"autofill",
-				"someNumbers",
-				"songs"
-			]);
 		});
 
 		it(`filter by normal array item`, async function () {
