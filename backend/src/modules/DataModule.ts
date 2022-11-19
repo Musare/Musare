@@ -542,6 +542,8 @@ export default class DataModule extends BaseModule {
 		containsRestrictedProperties: boolean;
 		canCache: boolean;
 	}> {
+		// TODO validate whether restricted property is allowed
+
 		if (!filter || typeof filter !== "object")
 			throw new Error(
 				"Invalid filter provided. Filter must be an object."
@@ -614,48 +616,116 @@ export default class DataModule extends BaseModule {
 			} else {
 				// Here we handle any normal keys in the query object
 
+				let currentKey = key;
+
 				// If the key doesn't exist in the schema, throw an error
-				if (!Object.hasOwn(schema, key))
-					throw new Error(
-						`Key "${key} does not exist in the schema."`
-					);
+				if (!Object.hasOwn(schema, key)) {
+					if (key.indexOf(".") !== -1) {
+						currentKey = key.substring(0, key.indexOf("."));
+
+						if (!Object.hasOwn(schema, currentKey))
+							throw new Error(
+								`Key "${currentKey}" does not exist in the schema.`
+							);
+
+						if (
+							schema[currentKey].type !== Types.Schema &&
+							(schema[currentKey].type !== Types.Array ||
+								(schema[currentKey].item.type !==
+									Types.Schema &&
+									schema[currentKey].item.type !==
+										Types.Array))
+						)
+							throw new Error(
+								`Key "${currentKey}" is not a schema/array.`
+							);
+					} else
+						throw new Error(
+							`Key "${key}" does not exist in the schema.`
+						);
+				}
 
 				// If the key in the schema is marked as restricted, containsRestrictedProperties will be true
-				if (schema[key].restricted) containsRestrictedProperties = true;
+				if (schema[currentKey].restricted)
+					containsRestrictedProperties = true;
 
 				// Handle schema type
-				if (schema[key].type === Types.Schema) {
+				if (schema[currentKey].type === Types.Schema) {
+					let subFilter;
+					if (key.indexOf(".") !== -1) {
+						const subKey = key.substring(
+							key.indexOf(".") + 1,
+							key.length
+						);
+						subFilter = {
+							[subKey]: value
+						};
+					} else subFilter = value;
+
 					// Run parseFindFilter on the nested schema object
 					const {
 						mongoFilter: _mongoFilter,
 						containsRestrictedProperties:
 							_containsRestrictedProperties
 					} = await this.parseFindFilter(
-						value,
-						schema[key].schema,
+						subFilter,
+						schema[currentKey].schema,
 						options
 					);
-					mongoFilter[key] = _mongoFilter;
+					mongoFilter[currentKey] = _mongoFilter;
 					if (_containsRestrictedProperties)
 						containsRestrictedProperties = true;
 				}
 				// Handle array type
-				else if (schema[key].type === Types.Array) {
-					// // Run parseFindFilter on the nested schema object
-					// const {
-					// 	mongoFilter: _mongoFilter,
-					// 	containsRestrictedProperties:
-					// 		_containsRestrictedProperties
-					// } = await this.parseFindFilter(
-					// 	value,
-					// 	schema[key].schema,
-					// 	options
-					// );
-					// mongoFilter[key] = _mongoFilter;
-					// if (_containsRestrictedProperties)
-					// 	containsRestrictedProperties = true;
+				else if (schema[currentKey].type === Types.Array) {
+					const isNullOrUndefined =
+						value === null || value === undefined;
+					if (isNullOrUndefined)
+						throw new Error(
+							`Value for key ${currentKey} is an array item, so it cannot be null/undefined.`
+						);
 
-					throw new Error("NOT SUPPORTED YET.");
+					// The type of the array items
+					const itemType = schema[currentKey].item.type;
+
+					// Handle nested arrays, which are not supported
+					if (itemType === Types.Array)
+						throw new Error("Nested arrays not supported");
+					// Handle schema array item type
+					else if (itemType === Types.Schema) {
+						let subFilter;
+						if (key.indexOf(".") !== -1) {
+							const subKey = key.substring(
+								key.indexOf(".") + 1,
+								key.length
+							);
+							subFilter = {
+								[subKey]: value
+							};
+						} else subFilter = value;
+
+						const {
+							mongoFilter: _mongoFilter,
+							containsRestrictedProperties:
+								_containsRestrictedProperties
+						} = await this.parseFindFilter(
+							subFilter,
+							schema[currentKey].item.schema,
+							options
+						);
+						mongoFilter[currentKey] = _mongoFilter;
+						if (_containsRestrictedProperties)
+							containsRestrictedProperties = true;
+					}
+					// Normal array item type
+					else {
+						// TODO possibly handle if a user gives some weird value here, like an object or array or $ operator
+
+						mongoFilter[currentKey] = this.getCastedValue(
+							value,
+							itemType
+						);
+					}
 				}
 				// else if (
 				// 	operators &&

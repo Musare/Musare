@@ -124,21 +124,29 @@ setTimeout(async () => {
 	// 	.then(console.log)
 	// 	.catch(console.error);
 
-	logBook.log("Find for testing casting");
-	await moduleManager
-		.runJob("data", "find", {
-			collection: "abc",
-			filter: {
-				_id
-			},
-			// projection: {
-			// 	// songs: true,
-			// 	// someNumbers: false
-			// },
-			limit: 1
-		})
-		.then(console.log)
-		.catch(console.error);
+	// logBook.log("Find for testing casting");
+	// await moduleManager
+	// 	.runJob("data", "find", {
+	// 		collection: "abc",
+	// 		filter: {
+	// 			// "songs._id": "6371212daf4e9f8fb14444b0"
+	// 			// "songs._id": "6371212daf4e9f8fb14444b2"
+	// 			// songs: {
+	// 			// 	_id: "6371212daf4e9f8fb14444b0"
+	// 			// }
+	// 			// songs: {
+	// 			// 	randomProperty: "6371212daf4e9f8fb14444b0"
+	// 			// }
+	// 			"songs.obj.test": "6371212daf4e9f8fb14444b0"
+	// 		},
+	// 		// projection: {
+	// 		// 	// songs: true,
+	// 		// 	// someNumbers: false
+	// 		// },
+	// 		limit: 1
+	// 	})
+	// 	.then(console.log)
+	// 	.catch(console.error);
 }, 0);
 
 const rl = readline.createInterface({

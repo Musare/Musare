@@ -3,6 +3,7 @@ import async from "async";
 import chai, { expect } from "chai";
 import sinon from "sinon";
 import sinonChai from "sinon-chai";
+import chaiAsPromised from "chai-as-promised";
 import { ObjectId } from "mongodb";
 import JobContext from "../JobContext";
 import JobQueue from "../JobQueue";
@@ -12,6 +13,7 @@ import DataModule from "./DataModule";
 
 chai.should();
 chai.use(sinonChai);
+chai.use(chaiAsPromised);
 
 describe("Data Module", function () {
 	const moduleManager = Object.getPrototypeOf(
@@ -29,24 +31,30 @@ describe("Data Module", function () {
 	});
 
 	beforeEach(async function () {
-		testData.abc = await async.map(Array(10), async () =>
-			dataModule.collections?.abc.collection.insertOne({
-				_id: new ObjectId(),
-				name: `Test${Math.round(Math.random() * 1000)}`,
-				autofill: {
-					enabled: !!Math.floor(Math.random())
-				},
-				someNumbers: Array(Math.round(Math.random() * 50)).map(() =>
-					Math.round(Math.random() * 10000)
-				),
-				songs: Array(Math.round(Math.random() * 10)).map(() => ({
-					_id: new mongoose.Types.ObjectId()
-				})),
-				createdAt: Date.now(),
-				updatedAt: Date.now(),
-				testData: true
-			})
-		);
+		testData.abc = await async.map(Array(10), async () => {
+			const result =
+				await dataModule.collections?.abc.collection.insertOne({
+					_id: new ObjectId(),
+					name: `Test${Math.round(Math.random() * 1000)}`,
+					autofill: {
+						enabled: !!Math.floor(Math.random())
+					},
+					someNumbers: Array.from({
+						length: Math.max(1, Math.round(Math.random() * 50))
+					}).map(() => Math.round(Math.random() * 10000)),
+					songs: Array.from({
+						length: Math.max(1, Math.round(Math.random() * 10))
+					}).map(() => ({
+						_id: new ObjectId()
+					})),
+					createdAt: Date.now(),
+					updatedAt: Date.now(),
+					testData: true
+				});
+			return dataModule.collections?.abc.collection.findOne({
+				_id: result?.insertedId
+			});
+		});
 	});
 
 	it("module loaded and started", function () {
@@ -72,7 +80,7 @@ describe("Data Module", function () {
 
 				find.should.be.an("object");
 				find._id.should.deep.equal(document._id);
-				find.createdAt.should.deep.equal(document.createdAt);
+				find.createdAt.should.deep.equal(new Date(document.createdAt));
 
 				if (useCache) {
 					dataModule.redisClient?.GET.should.have.been.called;
@@ -101,6 +109,85 @@ describe("Data Module", function () {
 				"someNumbers",
 				"songs"
 			]);
+		});
+
+		it(`filter by normal array item`, async function () {
+			const [document] = testData.abc;
+
+			const resultDocument = await dataModule.find(jobContext, {
+				collection: "abc",
+				filter: { someNumbers: document.someNumbers[0] },
+				limit: 1,
+				useCache: false
+			});
+
+			resultDocument.should.be.an("object");
+			resultDocument._id.should.deep.equal(document._id);
+		});
+
+		it(`filter by normal array item that doesn't exist`, async function () {
+			const resultDocument = await dataModule.find(jobContext, {
+				collection: "abc",
+				filter: { someNumbers: -1 },
+				limit: 1,
+				useCache: false
+			});
+
+			expect(resultDocument).to.be.null;
+		});
+
+		it(`filter by schema array item`, async function () {
+			const [document] = testData.abc;
+
+			const resultDocument = await dataModule.find(jobContext, {
+				collection: "abc",
+				filter: { songs: { _id: document.songs[0]._id } },
+				limit: 1,
+				useCache: false
+			});
+
+			resultDocument.should.be.an("object");
+			resultDocument._id.should.deep.equal(document._id);
+		});
+
+		it(`filter by schema array item, invalid`, async function () {
+			const jobPromise = dataModule.find(jobContext, {
+				collection: "abc",
+				filter: { songs: { randomProperty: "Value" } },
+				limit: 1,
+				useCache: false
+			});
+
+			await expect(jobPromise).to.be.rejectedWith(
+				`Key "randomProperty" does not exist in the schema.`
+			);
+		});
+
+		it(`filter by schema array item with dot notation`, async function () {
+			const [document] = testData.abc;
+
+			const resultDocument = await dataModule.find(jobContext, {
+				collection: "abc",
+				filter: { "songs._id": document.songs[0]._id },
+				limit: 1,
+				useCache: false
+			});
+
+			resultDocument.should.be.an("object");
+			resultDocument._id.should.deep.equal(document._id);
+		});
+
+		it(`filter by schema array item with dot notation, invalid`, async function () {
+			const jobPromise = dataModule.find(jobContext, {
+				collection: "abc",
+				filter: { "songs.randomProperty": "Value" },
+				limit: 1,
+				useCache: false
+			});
+
+			await expect(jobPromise).to.be.rejectedWith(
+				`Key "randomProperty" does not exist in the schema.`
+			);
 		});
 	});
 
