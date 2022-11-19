@@ -124,21 +124,21 @@ setTimeout(async () => {
 	// 	.then(console.log)
 	// 	.catch(console.error);
 
-	// logBook.log("Find for testing casting");
-	// await moduleManager
-	// 	.runJob("data", "find", {
-	// 		collection: "abc",
-	// 		filter: {
-	// 			_id
-	// 		},
-	// 		// projection: {
-	// 		// 	// songs: true,
-	// 		// 	// someNumbers: false
-	// 		// },
-	// 		limit: 1
-	// 	})
-	// 	.then(console.log)
-	// 	.catch(console.error);
+	logBook.log("Find for testing casting");
+	await moduleManager
+		.runJob("data", "find", {
+			collection: "abc",
+			filter: {
+				_id
+			},
+			// projection: {
+			// 	// songs: true,
+			// 	// someNumbers: false
+			// },
+			limit: 1
+		})
+		.then(console.log)
+		.catch(console.error);
 }, 0);
 
 const rl = readline.createInterface({
