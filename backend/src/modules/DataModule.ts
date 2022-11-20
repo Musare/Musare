@@ -8,7 +8,7 @@ import BaseModule from "../BaseModule";
 import ModuleManager from "../ModuleManager";
 import Schema, { Types } from "../Schema";
 import { Collections } from "../types/Collections";
-import { Document } from "../types/Document";
+import { Document as SchemaDocument } from "../types/Document";
 import { UniqueMethods } from "../types/Modules";
 
 interface ProjectionObject {
@@ -21,6 +21,20 @@ type NormalizedProjection = {
 	projection: [string, boolean][];
 	mode: "includeAllBut" | "excludeAllBut";
 };
+
+type SchemaDocumentSimpleValue = string | number | boolean | Date | ObjectId;
+
+interface MongoFilter {
+	[property: string]:
+		| SchemaDocumentSimpleValue
+		| SchemaDocumentSimpleValue[]
+		| MongoFilter;
+}
+
+// WIP
+interface Document {
+	[property: string]: null;
+}
 
 export default class DataModule extends BaseModule {
 	private collections?: Collections;
@@ -299,7 +313,7 @@ export default class DataModule extends BaseModule {
 	 */
 	private async parseFindProjection(
 		projection: NormalizedProjection,
-		schema: Document,
+		schema: SchemaDocument,
 		allowedRestricted: any
 	) {
 		// The mongo projection object we're going to build
@@ -505,7 +519,10 @@ export default class DataModule extends BaseModule {
 		return newAllowedRestricted;
 	}
 
-	private getCastedValue(value, schemaType: Types) {
+	private getCastedValue(
+		value: SchemaDocumentSimpleValue,
+		schemaType: Types
+	) {
 		if (schemaType === Types.String) {
 			// Check if value is a string, and if not, convert the value to a string
 			const castedValue =
@@ -530,12 +547,14 @@ export default class DataModule extends BaseModule {
 			// Check if value is a Date, and if not, convert the value to a Date
 			const castedValue =
 				Object.prototype.toString.call(value) === "[object Date]"
-					? value
-					: new Date(value);
+					? (value as Date)
+					: new Date(value.toString());
 			// TODO possibly allow this via a validate boolean option?
 			// We don't allow invalid dates, so throw an error
-			// eslint-disable-next-line
-			if (isNaN(castedValue)) throw new Error(`Cast error, date cannot be invalid, at key ${key} with value ${value}`);
+			if (new Date(castedValue).toString() === "Invalid Date")
+				throw new Error(
+					`Cast error, date cannot be invalid, with value ${value}`
+				);
 			// Any additional validation comes here
 			return castedValue;
 		}
@@ -547,6 +566,10 @@ export default class DataModule extends BaseModule {
 			return castedValue;
 		}
 		if (schemaType === Types.ObjectId) {
+			if (typeof value !== "string" && !(value instanceof ObjectId))
+				throw new Error(
+					`Cast error, ObjectId invalid, with value ${value}`
+				);
 			// Cast the value as an ObjectId and let Mongoose handle the rest
 			const castedValue = new ObjectId(value);
 			// Any additional validation comes here
@@ -568,13 +591,13 @@ export default class DataModule extends BaseModule {
 	 */
 	private async parseFindFilter(
 		filter: any,
-		schema: Document,
+		schema: SchemaDocument,
 		allowedRestricted: boolean | string[] | null | undefined,
 		options?: {
 			operators?: boolean;
 		}
 	): Promise<{
-		mongoFilter;
+		mongoFilter: MongoFilter;
 		containsRestrictedProperties: boolean;
 		canCache: boolean;
 	}> {
@@ -594,7 +617,7 @@ export default class DataModule extends BaseModule {
 		// Whether to parse operators or not
 		const operators = !(options && options.operators === false);
 		// The MongoDB filter we're building
-		const mongoFilter = {};
+		const mongoFilter: MongoFilter = {};
 		// If the filter references any properties that are restricted, this will be true, so that find knows not to cache the query object
 		let containsRestrictedProperties = false;
 		// Whether this filter is cachable or not
@@ -731,7 +754,7 @@ export default class DataModule extends BaseModule {
 								`Key "${currentKey}" is of type schema, which is not allowed with $in`
 							);
 						// Set the type to be the array item type if it's about an array
-						if (type === Types.Array) type = schema[key].item.type;
+						if (type === Types.Array) type = schema[key].item!.type;
 
 						// Loop through all $in array items, check if they're not null/undefined, cast them, and return a new array
 						if (value.$in.length > 0)
@@ -785,7 +808,7 @@ export default class DataModule extends BaseModule {
 							_containsRestrictedProperties
 					} = await this.parseFindFilter(
 						subFilter,
-						schema[currentKey].schema,
+						schema[currentKey].schema!,
 						deeperAllowedRestricted,
 						options
 					);
@@ -803,7 +826,7 @@ export default class DataModule extends BaseModule {
 						);
 
 					// The type of the array items
-					const itemType = schema[currentKey].item.type;
+					const itemType = schema[currentKey].item!.type;
 
 					// Handle nested arrays, which are not supported
 					if (itemType === Types.Array)
@@ -834,7 +857,7 @@ export default class DataModule extends BaseModule {
 								_containsRestrictedProperties
 						} = await this.parseFindFilter(
 							subFilter,
-							schema[currentKey].item.schema,
+							schema[currentKey].item!.schema!,
 							deeperAllowedRestricted,
 							options
 						);
@@ -892,11 +915,11 @@ export default class DataModule extends BaseModule {
 	 * @returns
 	 */
 	private async stripDocument(
-		document: any,
-		schema: any,
+		document: Document,
+		schema: SchemaDocument,
 		projection: NormalizedProjection,
 		allowedRestricted: boolean | string[] | null | undefined
-	) {
+	): Promise<Document> {
 		// TODO possibly do different things with required properties?
 		// TODO possibly do different things with properties with default?
 
@@ -940,7 +963,7 @@ export default class DataModule extends BaseModule {
 					// Generate a stripped document/object for the current key/value
 					const strippedDocument = await this.stripDocument(
 						value,
-						schema[key].schema,
+						schema[key].schema!,
 						deeperProjection,
 						deeperAllowedRestricted
 					);
@@ -965,7 +988,7 @@ export default class DataModule extends BaseModule {
 					if (!Array.isArray(value)) return [...memo, [key, null]];
 
 					// The type of the array items
-					const itemType = schema[key].item.type;
+					const itemType = schema[key].item!.type;
 
 					const items = await async.map(value, async item => {
 						// Handle schema objects inside an array
@@ -989,7 +1012,7 @@ export default class DataModule extends BaseModule {
 							// Generate a stripped document/object for the current key/value
 							const strippedDocument = await this.stripDocument(
 								item,
-								schema[key].item.schema,
+								schema[key].item!.schema!,
 								deeperProjection,
 								deeperAllowedRestricted
 							);
@@ -1078,7 +1101,7 @@ export default class DataModule extends BaseModule {
 			page?: number;
 			useCache?: boolean;
 		}
-	): Promise<any | null> {
+	): Promise<Document | Document[] | null> {
 		return new Promise((resolve, reject) => {
 			let queryHash: string | null = null;
 			let cacheable = useCache !== false;
@@ -1087,7 +1110,7 @@ export default class DataModule extends BaseModule {
 
 			let normalizedProjection: NormalizedProjection;
 
-			let mongoFilter;
+			let mongoFilter: MongoFilter;
 			let mongoProjection: ProjectionObject;
 
 			async.waterfall(
@@ -1181,7 +1204,11 @@ export default class DataModule extends BaseModule {
 					},
 
 					// Get documents from Mongo if we got no cached documents
-					async ({ cachedDocuments }: any) => {
+					async ({
+						cachedDocuments
+					}: {
+						cachedDocuments: Document[] | null;
+					}) => {
 						// We got cached documents, so continue with those
 						if (cachedDocuments) {
 							cacheable = false;
@@ -1209,7 +1236,7 @@ export default class DataModule extends BaseModule {
 					},
 
 					// Add documents to the cache
-					async (documents: any[]) => {
+					async (documents: Document[]) => {
 						// Adds query results to cache but doesnt await
 						if (cacheable && queryHash) {
 							this.redisClient!.SET(
@@ -1224,8 +1251,8 @@ export default class DataModule extends BaseModule {
 					},
 
 					// Strips the document of any unneeded properties or properties that are restricted
-					async (documents: any[]) =>
-						async.map(documents, async (document: any) =>
+					async (documents: Document[]) =>
+						async.map(documents, async (document: Document) =>
 							this.stripDocument(
 								document,
 								schema.getDocument(),
