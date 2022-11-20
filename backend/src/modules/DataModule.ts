@@ -3,13 +3,13 @@ import config from "config";
 import { Db, MongoClient, ObjectId } from "mongodb";
 import hash from "object-hash";
 import { createClient, RedisClientType } from "redis";
-import { Document } from "src/types/Document";
 import JobContext from "../JobContext";
 import BaseModule from "../BaseModule";
 import ModuleManager from "../ModuleManager";
 import Schema, { Types } from "../Schema";
-import { UniqueMethods } from "../types/Modules";
 import { Collections } from "../types/Collections";
+import { Document } from "../types/Document";
+import { UniqueMethods } from "../types/Modules";
 
 interface ProjectionObject {
 	[property: string]: boolean | string[] | ProjectionObject;
@@ -38,10 +38,6 @@ export default class DataModule extends BaseModule {
 	 */
 	public constructor(moduleManager: ModuleManager) {
 		super(moduleManager, "data");
-
-		const a = this.normalizeProjection({
-			test123: true
-		});
 	}
 
 	/**
@@ -181,7 +177,7 @@ export default class DataModule extends BaseModule {
 	/**
 	 * Takes a raw projection and turns it into a projection we can easily use
 	 *
-	 * @param projection The raw projection
+	 * @param projection - The raw projection
 	 * @returns Normalized projection
 	 */
 	private normalizeProjection(projection: Projection): NormalizedProjection {
@@ -307,7 +303,7 @@ export default class DataModule extends BaseModule {
 		allowedRestricted: any
 	) {
 		// The mongo projection object we're going to build
-		const mongoProjection = {};
+		const mongoProjection: ProjectionObject = {};
 		// This will be false if we let Mongo return any restricted properties
 		let canCache = true;
 
@@ -344,6 +340,7 @@ export default class DataModule extends BaseModule {
 					key
 				);
 
+				if (!value.schema) throw new Error("Schema is not defined");
 				// Parse projection for the current value, so one level deeper
 				const parsedProjection = await this.parseFindProjection(
 					deeperProjection,
@@ -551,7 +548,7 @@ export default class DataModule extends BaseModule {
 		}
 		if (schemaType === Types.ObjectId) {
 			// Cast the value as an ObjectId and let Mongoose handle the rest
-			const castedValue = ObjectId(value);
+			const castedValue = new ObjectId(value);
 			// Any additional validation comes here
 			return castedValue;
 		}
@@ -675,9 +672,9 @@ export default class DataModule extends BaseModule {
 						if (
 							schema[currentKey].type !== Types.Schema &&
 							(schema[currentKey].type !== Types.Array ||
-								(schema[currentKey].item.type !==
+								(schema[currentKey].item!.type !==
 									Types.Schema &&
-									schema[currentKey].item.type !==
+									schema[currentKey].item!.type !==
 										Types.Array))
 						)
 							throw new Error(
@@ -1068,7 +1065,7 @@ export default class DataModule extends BaseModule {
 			filter, // Similar to MongoDB filter
 			projection,
 			allowedRestricted,
-			limit = 0, // TODO have limit off by default?
+			limit = 1,
 			page = 1,
 			useCache = true
 		}: {
@@ -1091,10 +1088,22 @@ export default class DataModule extends BaseModule {
 			let normalizedProjection: NormalizedProjection;
 
 			let mongoFilter;
-			let mongoProjection;
+			let mongoProjection: ProjectionObject;
 
 			async.waterfall(
 				[
+					// Verify page and limit parameters
+					async () => {
+						if (page < 1)
+							throw new Error("Page must be at least 1");
+						if (limit < 1)
+							throw new Error("Limit must be at least 1");
+						if (limit > 100)
+							throw new Error(
+								"Limit must not be greater than 100"
+							);
+					},
+
 					// Verify whether the collection exists, and get the schema
 					async () => {
 						if (!collection)
@@ -1180,6 +1189,16 @@ export default class DataModule extends BaseModule {
 						}
 
 						// TODO, add mongo projection. Make sure to keep in mind caching with queryHash.
+
+						const totalCount = await this.collections?.[
+							collection
+						].collection.countDocuments({ $expr: mongoFilter });
+						if (totalCount === 0) return [];
+						const lastPage = Math.ceil(totalCount / limit);
+						if (lastPage < page)
+							throw new Error(
+								`The last page available is ${lastPage}`
+							);
 
 						// Create the Mongo cursor and then return the promise that gets the array of documents
 						return this.collections?.[collection].collection
