@@ -1,3 +1,4 @@
+import { Log } from "./LogBook";
 import ModuleManager from "./ModuleManager";
 import { ModuleStatus } from "./types/Modules";
 
@@ -28,7 +29,7 @@ export default abstract class BaseModule {
 	 *
 	 * @returns name
 	 */
-	public getName(): string {
+	public getName() {
 		return this.name;
 	}
 
@@ -37,7 +38,7 @@ export default abstract class BaseModule {
 	 *
 	 * @returns status
 	 */
-	public getStatus(): ModuleStatus {
+	public getStatus() {
 		return this.status;
 	}
 
@@ -46,25 +47,22 @@ export default abstract class BaseModule {
 	 *
 	 * @param status - Module status
 	 */
-	public setStatus(status: ModuleStatus): void {
+	public setStatus(status: ModuleStatus) {
 		this.status = status;
 	}
 
 	/**
 	 * startup - Startup module
 	 */
-	public startup(): Promise<void> {
-		return new Promise(resolve => {
-			this.log(`Module (${this.name}) starting`);
-			this.setStatus("STARTING");
-			resolve();
-		});
+	public async startup() {
+		this.log(`Module (${this.name}) starting`);
+		this.setStatus("STARTING");
 	}
 
 	/**
 	 * started - called with the module has started
 	 */
-	protected started(): void {
+	protected async started() {
 		this.log(`Module (${this.name}) started`);
 		this.setStatus("STARTED");
 	}
@@ -72,19 +70,16 @@ export default abstract class BaseModule {
 	/**
 	 * shutdown - Shutdown module
 	 */
-	public shutdown(): Promise<void> {
-		return new Promise(resolve => {
-			this.log(`Module (${this.name}) stopping`);
-			this.setStatus("STOPPING");
-			this.stopped();
-			resolve();
-		});
+	public async shutdown() {
+		this.log(`Module (${this.name}) stopping`);
+		this.setStatus("STOPPING");
+		await this.stopped();
 	}
 
 	/**
 	 * stopped - called when the module has stopped
 	 */
-	protected stopped(): void {
+	protected async stopped() {
 		this.log(`Module (${this.name}) stopped`);
 		this.setStatus("STOPPED");
 	}
@@ -92,14 +87,23 @@ export default abstract class BaseModule {
 	/**
 	 * log - Add log to logbook
 	 *
-	 * @param message - Log message
+	 * @param log - Log message or object
 	 */
-	protected log(message: string) {
+	protected log(log: string | Omit<Log, "timestamp" | "category">) {
+		const {
+			message,
+			type = undefined,
+			data = {}
+		} = {
+			...(typeof log === "string" ? { message: log } : log)
+		};
 		this.moduleManager.logBook.log({
 			message,
+			type,
 			category: `modules`,
 			data: {
-				moduleName: this.name
+				moduleName: this.name,
+				...data
 			}
 		});
 	}

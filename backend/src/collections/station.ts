@@ -3,22 +3,35 @@ import Schema, { createAttribute, Types } from "../Schema";
 export default new Schema({
 	document: {
 		type: createAttribute({
-			type: Types.String
+			type: Types.String,
+			enumValues: ["official", "community"]
 		}),
 		name: createAttribute({
-			type: Types.String
+			type: Types.String,
+			unique: true,
+			min: 2,
+			max: 16
 		}),
 		displayName: createAttribute({
-			type: Types.String
+			type: Types.String,
+			unique: true,
+			min: 2,
+			max: 32
 		}),
 		description: createAttribute({
-			type: Types.String
+			type: Types.String,
+			min: 2,
+			max: 128
 		}),
 		privacy: createAttribute({
-			type: Types.String
+			type: Types.String,
+			defaultValue: "private",
+			enumValues: ["public", "unlisted", "private"]
 		}),
 		theme: createAttribute({
-			type: Types.String
+			type: Types.String,
+			defaultValue: "blue",
+			enumValues: ["blue", "purple", "teal", "orange", "red"]
 		}),
 		owner: createAttribute({
 			type: Types.ObjectId
@@ -30,22 +43,28 @@ export default new Schema({
 			}
 		}),
 		currentSong: createAttribute({
-			type: Types.ObjectId
+			type: Types.ObjectId,
+			required: false
 		}),
 		currentSongIndex: createAttribute({
-			type: Types.Number
+			type: Types.Number,
+			required: false
 		}),
 		startedAt: createAttribute({
-			type: Types.Date
+			type: Types.Date,
+			required: false
 		}),
 		paused: createAttribute({
-			type: Types.Boolean
+			type: Types.Boolean,
+			defaultValue: false
 		}),
 		timePaused: createAttribute({
-			type: Types.Number
+			type: Types.Number,
+			defaultValue: 0
 		}),
 		pausedAt: createAttribute({
-			type: Types.Date
+			type: Types.Date,
+			required: false
 		}),
 		playlist: createAttribute({
 			type: Types.ObjectId
@@ -66,13 +85,19 @@ export default new Schema({
 			type: Types.Schema,
 			schema: {
 				enabled: createAttribute({
-					type: Types.Boolean
+					type: Types.Boolean,
+					defaultValue: true
 				}),
 				access: createAttribute({
-					type: Types.String
+					type: Types.String,
+					defaultValue: "owner",
+					enumValues: ["owner", "user"]
 				}),
 				limit: createAttribute({
-					type: Types.Number
+					type: Types.Number,
+					defaultValue: 5,
+					min: 1,
+					max: 50
 				})
 			}
 		}),
@@ -80,7 +105,8 @@ export default new Schema({
 			type: Types.Schema,
 			schema: {
 				enabled: createAttribute({
-					type: Types.Boolean
+					type: Types.Boolean,
+					defaultValue: true
 				}),
 				playlists: createAttribute({
 					type: Types.Array,
@@ -89,10 +115,15 @@ export default new Schema({
 					}
 				}),
 				limit: createAttribute({
-					type: Types.Number
+					type: Types.Number,
+					defaultValue: 30,
+					min: 1,
+					max: 50
 				}),
 				mode: createAttribute({
-					type: Types.String
+					type: Types.String,
+					defaultValue: "random",
+					enumValues: ["random", "sequential"]
 				})
 			}
 		})

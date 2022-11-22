@@ -1,4 +1,4 @@
-import JobContext from "src/JobContext";
+import JobContext from "../JobContext";
 import { UniqueMethods } from "../types/Modules";
 import BaseModule from "../BaseModule";
 import ModuleManager from "../ModuleManager";
@@ -16,17 +16,10 @@ export default class StationModule extends BaseModule {
 	/**
 	 * startup - Startup station module
 	 */
-	public override startup(): Promise<void> {
-		return new Promise((resolve, reject) => {
-			super
-				.startup()
-				.then(() => {
-					this.log("Station Startup");
-					super.started();
-					resolve();
-				})
-				.catch(err => reject(err));
-		});
+	public override async startup() {
+		await super.startup();
+		this.log("Station Startup");
+		await super.started();
 	}
 
 	/**
@@ -34,43 +27,27 @@ export default class StationModule extends BaseModule {
 	 *
 	 * @param payload - Payload
 	 */
-	public addToQueue(
-		context: JobContext,
-		payload: { songId: string }
-	): Promise<void> {
-		return new Promise((resolve, reject) => {
-			const { songId } = payload;
-			// console.log(`Adding song ${songId} to the queue.`);
-			setTimeout(
-				() => (Math.round(Math.random()) ? resolve() : reject()),
-				Math.random() * 1000
-			);
-		});
+	public async addToQueue(context: JobContext, payload: { songId: string }) {
+		const { songId } = payload;
+		// console.log(`Adding song ${songId} to the queue.`);
+		setTimeout(() => {
+			if (Math.round(Math.random())) throw new Error();
+		}, Math.random() * 1000);
 	}
 
-	public addA(context: JobContext): Promise<{ number: number }> {
-		return new Promise<{ number: number }>(resolve => {
-			context.log("ADDA");
-			context.runJob("stations", "addB", {}, { priority: 5 }).then(() => {
-				resolve({ number: 123 });
-			});
-		});
+	public async addA(context: JobContext) {
+		context.log("ADDA");
+		await context.runJob("stations", "addB", {}, { priority: 5 });
+		return { number: 123 };
 	}
 
-	public addB(context: JobContext): Promise<void> {
-		return new Promise<void>(resolve => {
-			context.log("ADDB");
-			context.runJob("stations", "addC", {}).then(() => {
-				resolve();
-			});
-		});
+	public async addB(context: JobContext) {
+		context.log("ADDB");
+		await context.runJob("stations", "addC", {});
 	}
 
-	public addC(context: JobContext): Promise<void> {
-		return new Promise<void>(resolve => {
-			context.log("ADDC");
-			resolve();
-		});
+	public addC(context: JobContext) {
+		context.log("ADDC");
 	}
 }
 

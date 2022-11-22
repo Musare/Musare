@@ -1,7 +1,7 @@
 import { Jobs, Modules } from "./types/Modules";
 
 import Job from "./Job";
-import LogBook from "./LogBook";
+import LogBook, { Log } from "./LogBook";
 import ModuleManager from "./ModuleManager";
 import BaseModule from "./BaseModule";
 import { JobOptions } from "./types/JobOptions";
@@ -26,16 +26,24 @@ export default class JobContext {
 	/**
 	 * Log a message in the context of the current job, which automatically sets the category and data
 	 *
-	 * @param {string} message
-	 * @memberof JobContext
+	 * @param log - Log message or object
 	 */
-	public log(message: string) {
+	public log(log: string | Omit<Log, "timestamp" | "category">) {
+		const {
+			message,
+			type = undefined,
+			data = {}
+		} = {
+			...(typeof log === "string" ? { message: log } : log)
+		};
 		this.moduleManager.logBook.log({
 			message,
+			type,
 			category: `${this.job.getModule().getName()}.${this.job.getName()}`,
 			data: {
 				moduleName: this.job.getModule().getName(),
-				jobName: this.job.getName()
+				jobName: this.job.getName(),
+				...data
 			}
 		});
 	}
@@ -43,16 +51,13 @@ export default class JobContext {
 	/**
 	 * Runs a job in the context of an existing job, which by default runs jobs right away
 	 *
-	 * @template ModuleNameType name of the module, which must exist
-	 * @template JobNameType name of the job, which must exist
-	 * @template PayloadType payload type based on the module and job, which is void if there is no payload
-	 * @template ReturnType return type of the Promise, based on the module and job
-	 * @param {ModuleNameType} moduleName
-	 * @param {JobNameType} jobName
-	 * @param {PayloadType} payload
-	 * @param {JobOptions} [options]
-	 * @return {*}  {Promise<ReturnType>}
-	 * @memberof JobContext
+	 * @typeParam ModuleNameType - name of the module, which must exist
+	 * @typeParam JobNameType - name of the job, which must exist
+	 * @typeParam PayloadType - payload type based on the module and job, which is void if there is no payload
+	 * @param moduleName - Module name
+	 * @param jobName - Job name
+	 * @param payload - Job payload, if none then void
+	 * @param options - Job options
 	 */
 	public runJob<
 		ModuleNameType extends keyof Jobs & keyof Modules,
@@ -62,16 +67,13 @@ export default class JobContext {
 			? Jobs[ModuleNameType][JobNameType]["payload"] extends undefined
 				? Record<string, never>
 				: Jobs[ModuleNameType][JobNameType]["payload"]
-			: Record<string, never>,
-		ReturnType = "returns" extends keyof Jobs[ModuleNameType][JobNameType]
-			? Jobs[ModuleNameType][JobNameType]["returns"]
-			: never
+			: Record<string, never>
 	>(
 		moduleName: ModuleNameType,
 		jobName: JobNameType,
 		payload: PayloadType,
 		options?: JobOptions
-	): Promise<ReturnType> {
+	) {
 		// If options doesn't exist, create it
 		const newOptions = options ?? {};
 		// If runDirectly is not set, set it to true

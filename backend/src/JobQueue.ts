@@ -40,7 +40,7 @@ export default class JobQueue {
 	 *
 	 * @param job - Job
 	 */
-	public add(job: Job): void {
+	public add(job: Job) {
 		this.queue.push(job);
 		this.updateStats(job.getName(), "added");
 		setTimeout(() => {
@@ -54,7 +54,7 @@ export default class JobQueue {
 	 * @param jobId - Job UUID
 	 * @returns Job if found
 	 */
-	public getJob(jobId: string): Job | undefined {
+	public getJob(jobId: string) {
 		return (
 			this.queue.find(job => job.getUuid() === jobId) ||
 			this.active.find(job => job.getUuid() === jobId)
@@ -66,14 +66,14 @@ export default class JobQueue {
 	 *
 	 * Pause processing of jobs in queue, active jobs will not be paused.
 	 */
-	public pause(): void {
+	public pause() {
 		this.isPaused = true;
 	}
 
 	/**
 	 * resume - Resume queue
 	 */
-	public resume(): void {
+	public resume() {
 		this.isPaused = false;
 		this.process();
 	}
@@ -81,8 +81,7 @@ export default class JobQueue {
 	/**
 	 * Actually run a job function
 	 *
-	 * @param {Job} job
-	 * @memberof JobQueue
+	 * @param job - Initiated job
 	 */
 	public runJob(job: Job) {
 		// Record when we started a job
@@ -118,7 +117,7 @@ export default class JobQueue {
 	/**
 	 * process - Process queue
 	 */
-	private process(): void {
+	private process() {
 		// If the process is locked, don't continue. This prevents running process at the same time which could lead to issues
 		if (this.processLock) return;
 		// If the queue is paused, we've reached the maximum number of active jobs, or there are no jobs in the queue, don't continue
@@ -233,6 +232,7 @@ export default class JobQueue {
 	 *
 	 * @param jobName - Job name
 	 * @param type - Stats type
+	 * @param duration - Duration of job, for average time stats
 	 */
 	private updateStats(
 		jobName: string,

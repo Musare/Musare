@@ -56,6 +56,12 @@
 	},
 	"overrides": [
 		{
+			"files": ["src/types/*.ts"],
+			"rules": {
+				"import/prefer-default-export": "off"
+			}
+		},
+		{
 			"files": ["**/*.test.ts", "**/*.spec.ts"],
 			"rules": {
 				"no-unused-expressions": "off",

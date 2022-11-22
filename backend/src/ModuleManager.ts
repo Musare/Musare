@@ -70,22 +70,15 @@ export default class ModuleManager {
 	 * @param moduleName - Name of the module
 	 * @returns Module
 	 */
-	private loadModule<T extends keyof Modules>(
-		moduleName: T
-	): Promise<Modules[T]> {
-		return new Promise(resolve => {
-			const mapper = {
-				stations: "StationModule",
-				others: "OtherModule",
-				data: "DataModule"
-			};
-			import(`./modules/${mapper[moduleName]}`).then(
-				({ default: Module }: { default: ModuleClass<Modules[T]> }) => {
-					const module = new Module(this);
-					resolve(module);
-				}
-			);
-		});
+	private async loadModule<T extends keyof Modules>(moduleName: T) {
+		const mapper = {
+			data: "DataModule",
+			events: "EventsModule",
+			stations: "StationModule"
+		};
+		const { default: Module }: { default: ModuleClass<Modules[T]> } =
+			await import(`./modules/${mapper[moduleName]}`);
+		return new Module(this);
 	}
 
 	/**
@@ -93,28 +86,18 @@ export default class ModuleManager {
 	 *
 	 * @returns Promise
 	 */
-	private loadModules(): Promise<void> {
-		return new Promise((resolve, reject) => {
-			const fetchModules = async () => ({
-				data: await this.loadModule("data"),
-				others: await this.loadModule("others"),
-				stations: await this.loadModule("stations")
-			});
-			fetchModules()
-				.then(modules => {
-					this.modules = modules;
-					resolve();
-				})
-				.catch(err => {
-					reject(new Error(err));
-				});
-		});
+	private async loadModules() {
+		this.modules = {
+			data: await this.loadModule("data"),
+			events: await this.loadModule("events"),
+			stations: await this.loadModule("stations")
+		};
 	}
 
 	/**
 	 * startup - Handle startup
 	 */
-	public async startup(): Promise<void> {
+	public async startup() {
 		await this.loadModules().catch(async err => {
 			await this.shutdown();
 			throw err;
@@ -137,7 +120,7 @@ export default class ModuleManager {
 	/**
 	 * shutdown - Handle shutdown
 	 */
-	public async shutdown(): Promise<void> {
+	public async shutdown() {
 		// TODO: await jobQueue completion/handle shutdown
 		if (this.modules)
 			await async.each(Object.values(this.modules), async module => {
@@ -175,7 +158,7 @@ export default class ModuleManager {
 		payload: PayloadType,
 		options?: JobOptions
 	): Promise<ReturnType> {
-		return new Promise<ReturnType>((resolve, reject) => {
+		return new Promise((resolve, reject) => {
 			const module = this.modules && this.modules[moduleName];
 			if (!module) reject(new Error("Module not found."));
 			else {

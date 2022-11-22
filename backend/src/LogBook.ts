@@ -1,4 +1,3 @@
-// @ts-nocheck
 import config from "config";
 
 export type Log = {
@@ -64,7 +63,7 @@ export default class LogBook {
 				if (config.has(`logging.${output}`))
 					this.default[output] = {
 						...this.default[output],
-						...config.get<any>(`logging.${output}`)
+						...config.get(`logging.${output}`)
 					};
 			});
 		this.outputs = this.default;
@@ -200,7 +199,8 @@ export default class LogBook {
 			case "include":
 			case "exclude": {
 				if (action === "set" || action === "add") {
-					if (!values) throw new Error("No filters provided");
+					if (!values || typeof values !== "object")
+						throw new Error("No filters provided");
 					const filters = Array.isArray(values) ? values : [values];
 					if (action === "set") this.outputs[output][key] = filters;
 					if (action === "add")

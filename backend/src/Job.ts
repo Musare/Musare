@@ -75,7 +75,7 @@ export default class Job {
 	 *
 	 * @returns module.name
 	 */
-	public getName(): string {
+	public getName() {
 		return `${this.module.getName()}.${this.name}`;
 	}
 
@@ -84,7 +84,7 @@ export default class Job {
 	 *
 	 * @returns priority
 	 */
-	public getPriority(): number {
+	public getPriority() {
 		return this.priority;
 	}
 
@@ -93,7 +93,7 @@ export default class Job {
 	 *
 	 * @returns UUID
 	 */
-	public getUuid(): string {
+	public getUuid() {
 		return this.uuid;
 	}
 
@@ -102,7 +102,7 @@ export default class Job {
 	 *
 	 * @returns status
 	 */
-	public getStatus(): JobStatus {
+	public getStatus() {
 		return this.status;
 	}
 
@@ -111,7 +111,7 @@ export default class Job {
 	 *
 	 * @param status - Job status
 	 */
-	public setStatus(status: JobStatus): void {
+	public setStatus(status: JobStatus) {
 		this.status = status;
 	}
 
@@ -120,7 +120,7 @@ export default class Job {
 	 *
 	 * @returns module
 	 */
-	public getModule(): Module {
+	public getModule() {
 		return this.module;
 	}
 

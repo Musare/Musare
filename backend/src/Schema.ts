@@ -17,13 +17,23 @@ export const createAttribute = ({
 	required,
 	restricted,
 	item,
-	schema
+	schema,
+	defaultValue,
+	unique,
+	min,
+	max,
+	enumValues
 }: Partial<Attribute> & { type: Attribute["type"] }) => ({
 	type,
 	required: required ?? true,
 	restricted: restricted ?? false,
 	item,
-	schema
+	schema,
+	defaultValue,
+	unique: unique ?? false,
+	min,
+	max,
+	enumValues
 });
 
 export default class Schema {
