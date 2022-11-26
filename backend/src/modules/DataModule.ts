@@ -1,4 +1,3 @@
-import async from "async";
 import config from "config";
 import { Db, MongoClient, ObjectId } from "mongodb";
 import { createHash } from "node:crypto";
@@ -1134,8 +1133,9 @@ export default class DataModule extends BaseModule {
 
 			const totalCount = await this.collections?.[
 				collection
-			].collection.countDocuments({ $expr: mongoFilter });
-			if (totalCount === 0 || totalCount === undefined) return [];
+			].collection.countDocuments(mongoFilter);
+			if (totalCount === 0 || totalCount === undefined)
+				return limit === 1 ? null : [];
 			const lastPage = Math.ceil(totalCount / limit);
 			if (lastPage < page)
 				throw new Error(`The last page available is ${lastPage}`);

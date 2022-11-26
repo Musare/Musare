@@ -187,9 +187,10 @@ setTimeout(async () => {
 	// 	.runJob("data", "find", {
 	// 		collection: "abc",
 	// 		filter: {
-	// 			someNumbers: { $in: [4] }
+	// 			someNumbers: { $in: [54, 84] }
 	// 		},
-	// 		limit: 1
+	// 		limit: 1,
+	// 		useCache: false
 	// 	})
 	// 	.then(console.log)
 	// 	.catch(console.error);

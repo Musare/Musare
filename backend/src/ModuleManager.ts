@@ -72,7 +72,7 @@ export default class ModuleManager {
 	private async loadModule<T extends keyof Modules>(moduleName: T) {
 		const mapper = {
 			data: "DataModule",
-			events: "EventsModule",
+			// events: "EventsModule",
 			stations: "StationModule"
 		};
 		const { default: Module }: { default: ModuleClass<Modules[T]> } =
@@ -88,7 +88,7 @@ export default class ModuleManager {
 	private async loadModules() {
 		this.modules = {
 			data: await this.loadModule("data"),
-			events: await this.loadModule("events"),
+			// events: await this.loadModule("events"),
 			stations: await this.loadModule("stations")
 		};
 	}
