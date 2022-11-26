@@ -1,4 +1,3 @@
-import async from "async";
 import BaseModule from "./BaseModule";
 import Job from "./Job";
 import JobContext from "./JobContext";
@@ -103,17 +102,17 @@ export default class ModuleManager {
 			throw err;
 		});
 		if (!this.modules) throw new Error("No modules were loaded");
-		await async
-			.each(Object.values(this.modules), async module => {
+		await Promise.all(
+			Object.values(this.modules).map(async module => {
 				await module.startup().catch(async err => {
 					module.setStatus("ERROR");
 					throw err;
 				});
 			})
-			.catch(async err => {
-				await this.shutdown();
-				throw err;
-			});
+		).catch(async err => {
+			await this.shutdown();
+			throw err;
+		});
 		this.jobQueue.resume();
 	}
 
@@ -123,14 +122,16 @@ export default class ModuleManager {
 	public async shutdown() {
 		// TODO: await jobQueue completion/handle shutdown
 		if (this.modules)
-			await async.each(Object.values(this.modules), async module => {
-				if (
-					module.getStatus() === "STARTED" ||
-					module.getStatus() === "STARTING" || // TODO: Handle better
-					module.getStatus() === "ERROR"
-				)
-					await module.shutdown();
-			});
+			await Promise.all(
+				Object.values(this.modules).map(async module => {
+					if (
+						module.getStatus() === "STARTED" ||
+						module.getStatus() === "STARTING" || // TODO: Handle better
+						module.getStatus() === "ERROR"
+					)
+						await module.shutdown();
+				})
+			);
 	}
 
 	/**

@@ -1,5 +1,4 @@
 // @ts-nocheck
-import async from "async";
 import chai from "chai";
 import sinon from "sinon";
 import sinonChai from "sinon-chai";
@@ -31,33 +30,36 @@ describe("Data Module", function () {
 	});
 
 	beforeEach(async function () {
-		testData.abc = await async.map(Array(10), async () => {
-			const doc = {
-				name: `Test${Math.round(Math.random() * 1000)}`,
-				autofill: {
-					enabled: !!Math.round(Math.random())
-				},
-				someNumbers: Array.from({
-					length: Math.max(1, Math.round(Math.random() * 50))
-				}).map(() => Math.round(Math.random() * 10000)),
-				songs: Array.from({
-					length: Math.max(1, Math.round(Math.random() * 10))
-				}).map(() => ({
-					_id: new ObjectId()
-				})),
-				restrictedName: `RestrictedTest${Math.round(
-					Math.random() * 1000
-				)}`,
-				createdAt: new Date(),
-				updatedAt: new Date(),
-				testData: true
-			};
-			const res = await dataModule.collections?.abc.collection.insertOne({
-				...doc,
-				testData: true
-			});
-			return { _id: res.insertedId, ...doc };
-		});
+		testData.abc = await Promise.all(
+			Array.from({ length: 10 }).map(async () => {
+				const doc = {
+					name: `Test${Math.round(Math.random() * 1000)}`,
+					autofill: {
+						enabled: !!Math.round(Math.random())
+					},
+					someNumbers: Array.from({
+						length: Math.max(1, Math.round(Math.random() * 50))
+					}).map(() => Math.round(Math.random() * 10000)),
+					songs: Array.from({
+						length: Math.max(1, Math.round(Math.random() * 10))
+					}).map(() => ({
+						_id: new ObjectId()
+					})),
+					restrictedName: `RestrictedTest${Math.round(
+						Math.random() * 1000
+					)}`,
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					testData: true
+				};
+				const res =
+					await dataModule.collections?.abc.collection.insertOne({
+						...doc,
+						testData: true
+					});
+				return { _id: res.insertedId, ...doc };
+			})
+		);
 	});
 
 	it("module loaded and started", function () {

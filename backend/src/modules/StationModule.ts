@@ -30,9 +30,12 @@ export default class StationModule extends BaseModule {
 	public async addToQueue(context: JobContext, payload: { songId: string }) {
 		const { songId } = payload;
 		// console.log(`Adding song ${songId} to the queue.`);
-		setTimeout(() => {
-			if (Math.round(Math.random())) throw new Error();
-		}, Math.random() * 1000);
+		return new Promise(resolve => {
+			setTimeout(() => {
+				if (Math.round(Math.random())) throw new Error();
+				resolve(true);
+			}, Math.random() * 1000);
+		});
 	}
 
 	public async addA(context: JobContext) {

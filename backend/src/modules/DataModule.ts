@@ -54,60 +54,43 @@ export default class DataModule extends BaseModule {
 	 * startup - Startup data module
 	 */
 	public override async startup() {
-		return async.waterfall<void>([
-			async () => super.startup(),
+		await super.startup();
 
-			async () => {
-				const mongoUrl = config.get<string>("mongo.url");
+		const mongoUrl = config.get<string>("mongo.url");
 
-				this.mongoClient = new MongoClient(mongoUrl);
-				await this.mongoClient.connect();
-				this.mongoDb = this.mongoClient.db();
-			},
+		this.mongoClient = new MongoClient(mongoUrl);
+		await this.mongoClient.connect();
+		this.mongoDb = this.mongoClient.db();
 
-			async () => this.loadCollections(),
+		await this.loadCollections();
 
-			async () => {
-				const { url } = config.get<{
-					url: string;
-				}>("redis");
+		const { url } = config.get<{ url: string }>("redis");
 
-				this.redisClient = createClient({
-					url
-				});
+		this.redisClient = createClient({ url });
 
-				return this.redisClient.connect();
-			},
+		await this.redisClient.connect();
 
-			async () => {
-				if (!this.redisClient)
-					throw new Error("Redis connection not established");
-
-				return this.redisClient.sendCommand([
-					"CONFIG",
-					"GET",
-					"notify-keyspace-events"
-				]);
-			},
-
-			async (redisConfigResponse: string[]) => {
-				if (
-					!(
-						Array.isArray(redisConfigResponse) &&
-						redisConfigResponse[1] === "xE"
-					)
-				)
-					throw new Error(
-						`notify-keyspace-events is NOT configured correctly! It is set to: ${
-							(Array.isArray(redisConfigResponse) &&
-								redisConfigResponse[1]) ||
-							"unknown"
-						}`
-					);
-			},
-
-			async () => super.started()
+		const redisConfigResponse = await this.redisClient.sendCommand([
+			"CONFIG",
+			"GET",
+			"notify-keyspace-events"
 		]);
+
+		if (
+			!(
+				Array.isArray(redisConfigResponse) &&
+				redisConfigResponse[1] === "xE"
+			)
+		)
+			throw new Error(
+				`notify-keyspace-events is NOT configured correctly! It is set to: ${
+					(Array.isArray(redisConfigResponse) &&
+						redisConfigResponse[1]) ||
+					"unknown"
+				}`
+			);
+
+		await super.started();
 	}
 
 	/**
@@ -287,51 +270,54 @@ export default class DataModule extends BaseModule {
 		// TODO add support for nested objects in arrays
 
 		const unfilteredEntries = Object.entries(schema);
-		await async.forEach(unfilteredEntries, async ([key, value]) => {
-			const { restricted } = value;
+		await Promise.all(
+			unfilteredEntries.map(async ([key, value]) => {
+				const { restricted } = value;
 
-			// Check if the current property is allowed or not based on allowedRestricted
-			const allowedByRestricted =
-				!restricted || this.allowedByRestricted(allowedRestricted, key);
+				// Check if the current property is allowed or not based on allowedRestricted
+				const allowedByRestricted =
+					!restricted ||
+					this.allowedByRestricted(allowedRestricted, key);
 
-			// If the property is explicitly allowed in the projection, but also restricted, find can't use cache
-			if (allowedByRestricted && restricted) {
-				canCache = false;
-			}
-			// If the property is restricted, but not explicitly allowed, make sure to have mongo exclude it. As it's excluded from Mongo, caching isn't an issue for this property
-			else if (!allowedByRestricted) {
-				mongoProjection[key] = false;
-			}
-			// If the current property is a nested schema
-			else if (value.type === Types.Schema) {
-				// Get the projection for the next layer
-				const deeperProjection = this.getDeeperProjection(
-					projection,
-					key
-				);
+				// If the property is explicitly allowed in the projection, but also restricted, find can't use cache
+				if (allowedByRestricted && restricted) {
+					canCache = false;
+				}
+				// If the property is restricted, but not explicitly allowed, make sure to have mongo exclude it. As it's excluded from Mongo, caching isn't an issue for this property
+				else if (!allowedByRestricted) {
+					mongoProjection[key] = false;
+				}
+				// If the current property is a nested schema
+				else if (value.type === Types.Schema) {
+					// Get the projection for the next layer
+					const deeperProjection = this.getDeeperProjection(
+						projection,
+						key
+					);
 
-				// Get the allowedRestricted for the next layer
-				const deeperAllowedRestricted = this.getDeeperAllowedRestricted(
-					allowedRestricted,
-					key
-				);
+					// Get the allowedRestricted for the next layer
+					const deeperAllowedRestricted =
+						this.getDeeperAllowedRestricted(allowedRestricted, key);
 
-				if (!value.schema) throw new Error("Schema is not defined");
-				// Parse projection for the current value, so one level deeper
-				const parsedProjection = await this.parseFindProjection(
-					deeperProjection,
-					value.schema,
-					deeperAllowedRestricted
-				);
+					if (!value.schema) throw new Error("Schema is not defined");
+					// Parse projection for the current value, so one level deeper
+					const parsedProjection = await this.parseFindProjection(
+						deeperProjection,
+						value.schema,
+						deeperAllowedRestricted
+					);
 
-				// If the parsed projection mongo projection contains anything, update our own mongo projection
-				if (Object.keys(parsedProjection.mongoProjection).length > 0)
-					mongoProjection[key] = parsedProjection.mongoProjection;
+					// If the parsed projection mongo projection contains anything, update our own mongo projection
+					if (
+						Object.keys(parsedProjection.mongoProjection).length > 0
+					)
+						mongoProjection[key] = parsedProjection.mongoProjection;
 
-				// If the parsed projection says we can't use the cache, make sure we can't use cache either
-				canCache = canCache && parsedProjection.canCache;
-			}
-		});
+					// If the parsed projection says we can't use the cache, make sure we can't use cache either
+					canCache = canCache && parsedProjection.canCache;
+				}
+			})
+		);
 
 		return {
 			canCache,
@@ -588,210 +574,164 @@ export default class DataModule extends BaseModule {
 		const allowedValueOperators = ["$in"];
 
 		// Loop through all key/value properties
-		await async.each(Object.entries(filter), async ([key, value]) => {
-			// Key must be 1 character and exist
-			if (!key || key.length === 0)
-				throw new Error(
-					`Invalid filter provided. Key must be at least 1 character.`
-				);
-
-			// Handle key operators, which always start with a $
-			if (operators && key[0] === "$") {
-				// Operator isn't found, so throw an error
-				if (allowedKeyOperators.indexOf(key) === -1)
+		await Promise.all(
+			Object.entries(filter).map(async ([key, value]) => {
+				// Key must be 1 character and exist
+				if (!key || key.length === 0)
 					throw new Error(
-						`Invalid filter provided. Operator "${key}" is not allowed.`
+						`Invalid filter provided. Key must be at least 1 character.`
 					);
 
-				// We currently only support $or and $and, but here we can have different logic for different operators
-				if (key === "$or" || key === "$and") {
-					// $or and $and should always be an array, so check if it is
-					if (!Array.isArray(value) || value.length === 0)
+				// Handle key operators, which always start with a $
+				if (operators && key[0] === "$") {
+					// Operator isn't found, so throw an error
+					if (allowedKeyOperators.indexOf(key) === -1)
 						throw new Error(
-							`Key "${key}" must contain array of filters.`
+							`Invalid filter provided. Operator "${key}" is not allowed.`
 						);
 
-					// Add the operator to the mongo filter object as an empty array
-					mongoFilter[key] = [];
+					// We currently only support $or and $and, but here we can have different logic for different operators
+					if (key === "$or" || key === "$and") {
+						// $or and $and should always be an array, so check if it is
+						if (!Array.isArray(value) || value.length === 0)
+							throw new Error(
+								`Key "${key}" must contain array of filters.`
+							);
 
-					// Run parseFindQuery again for child objects and add them to the mongo filter operator array
-					await async.each(value, async _value => {
-						const {
-							mongoFilter: _mongoFilter,
-							containsRestrictedProperties:
-								_containsRestrictedProperties
-						} = await this.parseFindFilter(
-							_value,
-							schema,
-							allowedRestricted,
-							options
+						// Add the operator to the mongo filter object as an empty array
+						mongoFilter[key] = [];
+
+						// Run parseFindQuery again for child objects and add them to the mongo filter operator array
+						await Promise.all(
+							value.map(async _value => {
+								const {
+									mongoFilter: _mongoFilter,
+									containsRestrictedProperties:
+										_containsRestrictedProperties
+								} = await this.parseFindFilter(
+									_value,
+									schema,
+									allowedRestricted,
+									options
+								);
+
+								// Actually add the returned filter object to the mongo filter we're building
+								mongoFilter[key].push(_mongoFilter);
+								if (_containsRestrictedProperties)
+									containsRestrictedProperties = true;
+							})
 						);
-
-						// Actually add the returned filter object to the mongo filter we're building
-						mongoFilter[key].push(_mongoFilter);
-						if (_containsRestrictedProperties)
-							containsRestrictedProperties = true;
-					});
-				} else
-					throw new Error(
-						`Unhandled operator "${key}", this should never happen!`
-					);
-			} else {
-				// Here we handle any normal keys in the query object
-
-				let currentKey = key;
-
-				// If the key doesn't exist in the schema, throw an error
-				if (!Object.hasOwn(schema, key)) {
-					if (key.indexOf(".") !== -1) {
-						currentKey = key.substring(0, key.indexOf("."));
-
-						if (!Object.hasOwn(schema, currentKey))
-							throw new Error(
-								`Key "${currentKey}" does not exist in the schema.`
-							);
-
-						if (
-							schema[currentKey].type !== Types.Schema &&
-							(schema[currentKey].type !== Types.Array ||
-								(schema[currentKey].item!.type !==
-									Types.Schema &&
-									schema[currentKey].item!.type !==
-										Types.Array))
-						)
-							throw new Error(
-								`Key "${currentKey}" is not a schema/array.`
-							);
 					} else
 						throw new Error(
-							`Key "${key}" does not exist in the schema.`
+							`Unhandled operator "${key}", this should never happen!`
 						);
-				}
+				} else {
+					// Here we handle any normal keys in the query object
 
-				const { restricted } = schema[currentKey];
+					let currentKey = key;
 
-				// Check if the current property is allowed or not based on allowedRestricted
-				const allowedByRestricted =
-					!restricted ||
-					this.allowedByRestricted(allowedRestricted, currentKey);
+					// If the key doesn't exist in the schema, throw an error
+					if (!Object.hasOwn(schema, key)) {
+						if (key.indexOf(".") !== -1) {
+							currentKey = key.substring(0, key.indexOf("."));
 
-				if (!allowedByRestricted)
-					throw new Error(`Key "${currentKey}" is restricted.`);
+							if (!Object.hasOwn(schema, currentKey))
+								throw new Error(
+									`Key "${currentKey}" does not exist in the schema.`
+								);
 
-				// If the key in the schema is marked as restricted, containsRestrictedProperties will be true
-				if (restricted) containsRestrictedProperties = true;
-
-				// Handle value operators
-				if (
-					operators &&
-					typeof value === "object" &&
-					value &&
-					Object.keys(value).length === 1 &&
-					Object.keys(value)[0] &&
-					Object.keys(value)[0][0] === "$"
-				) {
-					// This entire if statement is for handling value operators like $in
-					const operator = Object.keys(value)[0];
-
-					// Operator isn't found, so throw an error
-					if (allowedValueOperators.indexOf(operator) === -1)
-						throw new Error(
-							`Invalid filter provided. Operator "${operator}" is not allowed.`
-						);
-
-					// Handle the $in value operator
-					if (operator === "$in") {
-						mongoFilter[currentKey] = {
-							$in: []
-						};
-
-						// Decide what type should be for the values for $in
-						let { type } = schema[currentKey];
-						// We don't allow schema type for $in
-						if (type === Types.Schema)
+							if (
+								schema[currentKey].type !== Types.Schema &&
+								(schema[currentKey].type !== Types.Array ||
+									(schema[currentKey].item!.type !==
+										Types.Schema &&
+										schema[currentKey].item!.type !==
+											Types.Array))
+							)
+								throw new Error(
+									`Key "${currentKey}" is not a schema/array.`
+								);
+						} else
 							throw new Error(
-								`Key "${currentKey}" is of type schema, which is not allowed with $in`
+								`Key "${key}" does not exist in the schema.`
 							);
-						// Set the type to be the array item type if it's about an array
-						if (type === Types.Array) type = schema[key].item!.type;
+					}
 
-						// Loop through all $in array items, check if they're not null/undefined, cast them, and return a new array
-						if (value.$in.length > 0)
-							mongoFilter[currentKey].$in = await async.map(
-								value.$in,
-								async (_value: any) => {
-									const isNullOrUndefined =
-										_value === null || _value === undefined;
-									if (isNullOrUndefined)
-										throw new Error(
-											`Value for key ${currentKey} using $in is undefuned/null, which is not allowed.`
+					const { restricted } = schema[currentKey];
+
+					// Check if the current property is allowed or not based on allowedRestricted
+					const allowedByRestricted =
+						!restricted ||
+						this.allowedByRestricted(allowedRestricted, currentKey);
+
+					if (!allowedByRestricted)
+						throw new Error(`Key "${currentKey}" is restricted.`);
+
+					// If the key in the schema is marked as restricted, containsRestrictedProperties will be true
+					if (restricted) containsRestrictedProperties = true;
+
+					// Handle value operators
+					if (
+						operators &&
+						typeof value === "object" &&
+						value &&
+						Object.keys(value).length === 1 &&
+						Object.keys(value)[0] &&
+						Object.keys(value)[0][0] === "$"
+					) {
+						// This entire if statement is for handling value operators like $in
+						const operator = Object.keys(value)[0];
+
+						// Operator isn't found, so throw an error
+						if (allowedValueOperators.indexOf(operator) === -1)
+							throw new Error(
+								`Invalid filter provided. Operator "${operator}" is not allowed.`
+							);
+
+						// Handle the $in value operator
+						if (operator === "$in") {
+							mongoFilter[currentKey] = {
+								$in: []
+							};
+
+							// Decide what type should be for the values for $in
+							let { type } = schema[currentKey];
+							// We don't allow schema type for $in
+							if (type === Types.Schema)
+								throw new Error(
+									`Key "${currentKey}" is of type schema, which is not allowed with $in`
+								);
+							// Set the type to be the array item type if it's about an array
+							if (type === Types.Array)
+								type = schema[key].item!.type;
+
+							// Loop through all $in array items, check if they're not null/undefined, cast them, and return a new array
+							if (value.$in.length > 0)
+								mongoFilter[currentKey].$in = await Promise.all(
+									value.$in.map(async (_value: any) => {
+										const isNullOrUndefined =
+											_value === null ||
+											_value === undefined;
+										if (isNullOrUndefined)
+											throw new Error(
+												`Value for key ${currentKey} using $in is undefuned/null, which is not allowed.`
+											);
+
+										const castedValue = this.getCastedValue(
+											_value,
+											type
 										);
 
-									const castedValue = this.getCastedValue(
-										_value,
-										type
-									);
-
-									return castedValue;
-								}
+										return castedValue;
+									})
+								);
+						} else
+							throw new Error(
+								`Unhandled operator "${operator}", this should never happen!`
 							);
-					} else
-						throw new Error(
-							`Unhandled operator "${operator}", this should never happen!`
-						);
-				}
-				// Handle schema type
-				else if (schema[currentKey].type === Types.Schema) {
-					let subFilter;
-					if (key.indexOf(".") !== -1) {
-						const subKey = key.substring(
-							key.indexOf(".") + 1,
-							key.length
-						);
-						subFilter = {
-							[subKey]: value
-						};
-					} else subFilter = value;
-
-					// Get the allowedRestricted for the next layer
-					const deeperAllowedRestricted =
-						this.getDeeperAllowedRestricted(
-							allowedRestricted,
-							currentKey
-						);
-
-					// Run parseFindFilter on the nested schema object
-					const {
-						mongoFilter: _mongoFilter,
-						containsRestrictedProperties:
-							_containsRestrictedProperties
-					} = await this.parseFindFilter(
-						subFilter,
-						schema[currentKey].schema!,
-						deeperAllowedRestricted,
-						options
-					);
-					mongoFilter[currentKey] = _mongoFilter;
-					if (_containsRestrictedProperties)
-						containsRestrictedProperties = true;
-				}
-				// Handle array type
-				else if (schema[currentKey].type === Types.Array) {
-					const isNullOrUndefined =
-						value === null || value === undefined;
-					if (isNullOrUndefined)
-						throw new Error(
-							`Value for key ${currentKey} is an array item, so it cannot be null/undefined.`
-						);
-
-					// The type of the array items
-					const itemType = schema[currentKey].item!.type;
-
-					// Handle nested arrays, which are not supported
-					if (itemType === Types.Array)
-						throw new Error("Nested arrays not supported");
-					// Handle schema array item type
-					else if (itemType === Types.Schema) {
+					}
+					// Handle schema type
+					else if (schema[currentKey].type === Types.Schema) {
 						let subFilter;
 						if (key.indexOf(".") !== -1) {
 							const subKey = key.substring(
@@ -810,13 +750,14 @@ export default class DataModule extends BaseModule {
 								currentKey
 							);
 
+						// Run parseFindFilter on the nested schema object
 						const {
 							mongoFilter: _mongoFilter,
 							containsRestrictedProperties:
 								_containsRestrictedProperties
 						} = await this.parseFindFilter(
 							subFilter,
-							schema[currentKey].item!.schema!,
+							schema[currentKey].schema!,
 							deeperAllowedRestricted,
 							options
 						);
@@ -824,39 +765,89 @@ export default class DataModule extends BaseModule {
 						if (_containsRestrictedProperties)
 							containsRestrictedProperties = true;
 					}
-					// Normal array item type
-					else {
-						// TODO possibly handle if a user gives some weird value here, like an object or array or $ operator
+					// Handle array type
+					else if (schema[currentKey].type === Types.Array) {
+						const isNullOrUndefined =
+							value === null || value === undefined;
+						if (isNullOrUndefined)
+							throw new Error(
+								`Value for key ${currentKey} is an array item, so it cannot be null/undefined.`
+							);
 
-						mongoFilter[currentKey] = this.getCastedValue(
-							value,
-							itemType
-						);
+						// The type of the array items
+						const itemType = schema[currentKey].item!.type;
+
+						// Handle nested arrays, which are not supported
+						if (itemType === Types.Array)
+							throw new Error("Nested arrays not supported");
+						// Handle schema array item type
+						else if (itemType === Types.Schema) {
+							let subFilter;
+							if (key.indexOf(".") !== -1) {
+								const subKey = key.substring(
+									key.indexOf(".") + 1,
+									key.length
+								);
+								subFilter = {
+									[subKey]: value
+								};
+							} else subFilter = value;
+
+							// Get the allowedRestricted for the next layer
+							const deeperAllowedRestricted =
+								this.getDeeperAllowedRestricted(
+									allowedRestricted,
+									currentKey
+								);
+
+							const {
+								mongoFilter: _mongoFilter,
+								containsRestrictedProperties:
+									_containsRestrictedProperties
+							} = await this.parseFindFilter(
+								subFilter,
+								schema[currentKey].item!.schema!,
+								deeperAllowedRestricted,
+								options
+							);
+							mongoFilter[currentKey] = _mongoFilter;
+							if (_containsRestrictedProperties)
+								containsRestrictedProperties = true;
+						}
+						// Normal array item type
+						else {
+							// TODO possibly handle if a user gives some weird value here, like an object or array or $ operator
+
+							mongoFilter[currentKey] = this.getCastedValue(
+								value,
+								itemType
+							);
+						}
+					}
+					// Handle normal types
+					else {
+						const isNullOrUndefined =
+							value === null || value === undefined;
+						if (isNullOrUndefined && schema[key].required)
+							throw new Error(
+								`Value for key ${key} is required, so it cannot be null/undefined.`
+							);
+
+						// If the value is null or undefined, just set it as null
+						if (isNullOrUndefined) mongoFilter[key] = null;
+						// Cast and validate values
+						else {
+							const schemaType = schema[key].type;
+
+							mongoFilter[key] = this.getCastedValue(
+								value,
+								schemaType
+							);
+						}
 					}
 				}
-				// Handle normal types
-				else {
-					const isNullOrUndefined =
-						value === null || value === undefined;
-					if (isNullOrUndefined && schema[key].required)
-						throw new Error(
-							`Value for key ${key} is required, so it cannot be null/undefined.`
-						);
-
-					// If the value is null or undefined, just set it as null
-					if (isNullOrUndefined) mongoFilter[key] = null;
-					// Cast and validate values
-					else {
-						const schemaType = schema[key].type;
-
-						mongoFilter[key] = this.getCastedValue(
-							value,
-							schemaType
-						);
-					}
-				}
-			}
-		});
+			})
+		);
 
 		if (containsRestrictedProperties) canCache = false;
 
@@ -884,12 +875,11 @@ export default class DataModule extends BaseModule {
 
 		const unfilteredEntries = Object.entries(document);
 		// Go through all properties in the document to decide whether to allow it or not, and possibly casts the value to its property type
-		const filteredEntries = await async.reduce(
-			unfilteredEntries,
-			[],
-			async (memo, [key, value]) => {
+		const filteredEntries = [];
+		await Promise.all(
+			unfilteredEntries.map(async ([key, value]) => {
 				// If the property does not exist in the schema, return the memo, so we won't return the key/value in the stripped document
-				if (!schema[key]) return memo;
+				if (!schema[key]) return;
 
 				// If we have a projection, check if the current key is allowed by it. If it not, just return the memo
 				const allowedByProjection = this.allowedByProjection(
@@ -901,14 +891,17 @@ export default class DataModule extends BaseModule {
 					!schema[key].restricted ||
 					this.allowedByRestricted(allowedRestricted, key);
 
-				if (!allowedByProjection) return memo;
-				if (!allowedByRestricted) return memo;
+				if (!allowedByProjection) return;
+				if (!allowedByRestricted) return;
 
 				// Handle nested object
 				if (schema[key].type === Types.Schema) {
 					// TODO possibly return nothing, or an empty object here instead?
 					// If value is falsy, it can't be an object, so just return null
-					if (!value) return [...memo, [key, null]];
+					if (!value) {
+						filteredEntries.push([key, null]);
+						return;
+					}
 
 					// Get the projection for the next layer
 					const deeperProjection = this.getDeeperProjection(
@@ -928,85 +921,95 @@ export default class DataModule extends BaseModule {
 					);
 
 					// If the returned stripped document/object has keys, add the current key with that document/object to the memeo
-					if (Object.keys(strippedDocument).length > 0)
-						return [...memo, [key, strippedDocument]];
+					if (Object.keys(strippedDocument).length > 0) {
+						filteredEntries.push([key, strippedDocument]);
+						return;
+					}
 
 					// TODO possibly return null or an object here for the key instead?
 					// The current key has no values that should be returned, so just return the memo
-					return memo;
+					return;
 				}
 
 				// Handle array type
 				if (schema[key].type === Types.Array) {
 					// TODO possibly return nothing, or an empty array here instead?
 					// If value is falsy, return null with the key instead
-					if (!value) return [...memo, [key, null]];
+					if (!value) {
+						filteredEntries.push([key, null]);
+						return;
+					}
 
 					// TODO possibly return nothing, or an empty array here instead?
 					// If value isn't a valid array, return null with the key instead
-					if (!Array.isArray(value)) return [...memo, [key, null]];
+					if (!Array.isArray(value)) {
+						filteredEntries.push([key, null]);
+						return;
+					}
 
 					// The type of the array items
 					const itemType = schema[key].item!.type;
 
-					const items = await async.map(value, async item => {
-						// Handle schema objects inside an array
-						if (itemType === Types.Schema) {
-							// TODO possibly return nothing, or an empty object here instead?
-							// If item is falsy, it can't be an object, so just return null
-							if (!item) return null;
+					const items = await Promise.all(
+						value.map(async item => {
+							// Handle schema objects inside an array
+							if (itemType === Types.Schema) {
+								// TODO possibly return nothing, or an empty object here instead?
+								// If item is falsy, it can't be an object, so just return null
+								if (!item) return null;
 
-							// Get the projection for the next layer
-							const deeperProjection = this.getDeeperProjection(
-								projection,
-								key
-							);
-							// Get the allowedRestricted for the next layer
-							const deeperAllowedRestricted =
-								this.getDeeperAllowedRestricted(
-									allowedRestricted,
-									key
+								// Get the projection for the next layer
+								const deeperProjection =
+									this.getDeeperProjection(projection, key);
+								// Get the allowedRestricted for the next layer
+								const deeperAllowedRestricted =
+									this.getDeeperAllowedRestricted(
+										allowedRestricted,
+										key
+									);
+
+								// Generate a stripped document/object for the current key/value
+								const strippedDocument =
+									await this.stripDocument(
+										item,
+										schema[key].item!.schema!,
+										deeperProjection,
+										deeperAllowedRestricted
+									);
+
+								// If the returned stripped document/object has keys, return the stripped document
+								if (Object.keys(strippedDocument).length > 0)
+									return strippedDocument;
+
+								// TODO possibly return object here instead?
+								// The current item has no values that should be returned, so just return null
+								return null;
+							}
+							// Nested arrays are not supported
+							if (itemType === Types.Array) {
+								throw new Error("Nested arrays not supported");
+							}
+							// Handle normal types
+							else {
+								// If item is null or undefined, return null
+								const isNullOrUndefined =
+									item === null || item === undefined;
+								if (isNullOrUndefined) return null;
+
+								// TODO possibly don't validate casted in getCastedValue?
+								// Cast item
+								const castedValue = this.getCastedValue(
+									item,
+									itemType
 								);
 
-							// Generate a stripped document/object for the current key/value
-							const strippedDocument = await this.stripDocument(
-								item,
-								schema[key].item!.schema!,
-								deeperProjection,
-								deeperAllowedRestricted
-							);
+								return castedValue;
+							}
+						})
+					);
 
-							// If the returned stripped document/object has keys, return the stripped document
-							if (Object.keys(strippedDocument).length > 0)
-								return strippedDocument;
-
-							// TODO possibly return object here instead?
-							// The current item has no values that should be returned, so just return null
-							return null;
-						}
-						// Nested arrays are not supported
-						if (itemType === Types.Array) {
-							throw new Error("Nested arrays not supported");
-						}
-						// Handle normal types
-						else {
-							// If item is null or undefined, return null
-							const isNullOrUndefined =
-								item === null || item === undefined;
-							if (isNullOrUndefined) return null;
-
-							// TODO possibly don't validate casted in getCastedValue?
-							// Cast item
-							const castedValue = this.getCastedValue(
-								item,
-								itemType
-							);
-
-							return castedValue;
-						}
-					});
-
-					return [...memo, [key, items]];
+					filteredEntries.push([key, items]);
+					return;
 				}
 
 				// Handle normal types
@@ -1018,8 +1021,8 @@ export default class DataModule extends BaseModule {
 					schema[key].type
 				);
 
-				return [...memo, [key, castedValue]];
-			}
+				filteredEntries.push([key, castedValue]);
+			})
 		);
 
 		return Object.fromEntries(filteredEntries);
@@ -1061,160 +1064,116 @@ export default class DataModule extends BaseModule {
 			useCache?: boolean;
 		}
 	) {
+		// Verify page and limit parameters
+		if (page < 1) throw new Error("Page must be at least 1");
+		if (limit < 1) throw new Error("Limit must be at least 1");
+		if (limit > 100) throw new Error("Limit must not be greater than 100");
+
+		// Verify whether the collection exists, and get the schema
+		if (!collection) throw new Error("No collection specified");
+		if (this.collections && !this.collections[collection])
+			throw new Error("Collection not found");
+
+		const { schema } = this.collections![collection];
+
+		// Normalize the projection into something we understand, and which throws an error if we have any path collisions
+		const normalizedProjection = this.normalizeProjection(projection);
+
+		// TODO validate the projection based on the schema here
+		// Parse the projection into a mongo projection, and returns whether this query can be cached or not
+		const parsedProjection = await this.parseFindProjection(
+			normalizedProjection,
+			schema.getDocument(),
+			allowedRestricted
+		);
+
+		let cacheable = useCache !== false && parsedProjection.canCache;
+		const { mongoProjection } = parsedProjection;
+
+		// Parse the filter into a mongo filter, which also validates whether the filter is legal or not, and returns whether this query can be cached or not
+		const parsedFilter = await this.parseFindFilter(
+			filter,
+			schema.getDocument(),
+			allowedRestricted
+		);
+
+		cacheable = cacheable && parsedFilter.canCache;
+		const { mongoFilter } = parsedFilter;
 		let queryHash: string | null = null;
-		let cacheable = useCache !== false;
+		let documents: Document[] | null = null;
 
-		let schema: Schema;
+		// If we can use cache, get from the cache, and if we get results return those
+		// If we're allowed to cache, and the filter doesn't reference any restricted fields, try to cache the query and its response
+		if (cacheable) {
+			// Turn the query object into a md5 hash that can be used as a Redis key
+			queryHash = createHash("md5")
+				.update(
+					JSON.stringify({
+						collection,
+						mongoFilter,
+						limit,
+						page
+					})
+				)
+				.digest("hex");
 
-		let normalizedProjection: NormalizedProjection;
+			// Check if the query hash already exists in Redis, and get it if it is
+			const cachedQuery = await this.redisClient?.GET(
+				`query.find.${queryHash}`
+			);
 
-		let mongoFilter: MongoFilter;
-		let mongoProjection: ProjectionObject;
+			// Return the mongoFilter along with the cachedDocuments, if any
+			documents = cachedQuery ? JSON.parse(cachedQuery) : null;
+		}
 
-		return async.waterfall<Document | Document[] | null>([
-			// Verify page and limit parameters
-			async () => {
-				if (page < 1) throw new Error("Page must be at least 1");
-				if (limit < 1) throw new Error("Limit must be at least 1");
-				if (limit > 100)
-					throw new Error("Limit must not be greater than 100");
-			},
+		// We got cached documents, so continue with those
+		if (documents) {
+			cacheable = false;
+		} else {
+			// TODO, add mongo projection. Make sure to keep in mind caching with queryHash.
 
-			// Verify whether the collection exists, and get the schema
-			async () => {
-				if (!collection) throw new Error("No collection specified");
-				if (this.collections && !this.collections[collection])
-					throw new Error("Collection not found");
+			const totalCount = await this.collections?.[
+				collection
+			].collection.countDocuments({ $expr: mongoFilter });
+			if (totalCount === 0 || totalCount === undefined) return [];
+			const lastPage = Math.ceil(totalCount / limit);
+			if (lastPage < page)
+				throw new Error(`The last page available is ${lastPage}`);
 
-				schema = this.collections![collection].schema;
-			},
+			// Create the Mongo cursor and then return the promise that gets the array of documents
+			documents = (await this.collections?.[collection].collection
+				.find(mongoFilter, mongoProjection)
+				.limit(limit)
+				.skip((page - 1) * limit)
+				.toArray()) as Document[];
+		}
 
-			// Normalize the projection into something we understand, and which throws an error if we have any path collisions
-			async () => {
-				normalizedProjection = this.normalizeProjection(projection);
-			},
+		// Adds query results to cache but doesnt await
+		if (cacheable && queryHash) {
+			this.redisClient!.SET(
+				`query.find.${queryHash}`,
+				JSON.stringify(documents),
+				{
+					EX: 60
+				}
+			);
+		}
 
-			// TOOD validate the projection based on the schema here
-
-			// Parse the projection into a mongo projection, and returns whether this query can be cached or not
-			async () => {
-				const parsedProjection = await this.parseFindProjection(
+		// Strips the document of any unneeded properties or properties that are restricted
+		documents = await Promise.all(
+			documents.map(async (document: Document) =>
+				this.stripDocument(
+					document,
+					schema.getDocument(),
 					normalizedProjection,
-					schema.getDocument(),
 					allowedRestricted
-				);
+				)
+			)
+		);
 
-				cacheable = cacheable && parsedProjection.canCache;
-				mongoProjection = parsedProjection.mongoProjection;
-			},
-
-			// Parse the filter into a mongo filter, which also validates whether the filter is legal or not, and returns whether this query can be cached or not
-			async () => {
-				const parsedFilter = await this.parseFindFilter(
-					filter,
-					schema.getDocument(),
-					allowedRestricted
-				);
-
-				cacheable = cacheable && parsedFilter.canCache;
-				mongoFilter = parsedFilter.mongoFilter;
-			},
-
-			// If we can use cache, get from the cache, and if we get results return those
-			async () => {
-				// If we're allowed to cache, and the filter doesn't reference any restricted fields, try to cache the query and its response
-				if (cacheable) {
-					// Turn the query object into a md5 hash that can be used as a Redis key
-					queryHash = createHash("md5")
-						.update(
-							JSON.stringify({
-								collection,
-								mongoFilter,
-								limit,
-								page
-							})
-						)
-						.digest("hex");
-
-					// Check if the query hash already exists in Redis, and get it if it is
-					const cachedQuery = await this.redisClient?.GET(
-						`query.find.${queryHash}`
-					);
-
-					// Return the mongoFilter along with the cachedDocuments, if any
-					return {
-						cachedDocuments: cachedQuery
-							? JSON.parse(cachedQuery)
-							: null
-					};
-				}
-
-				// We can't use the cache, so just continue with no cached documents
-				return { cachedDocuments: null };
-			},
-
-			// Get documents from Mongo if we got no cached documents
-			async ({
-				cachedDocuments
-			}: {
-				cachedDocuments: Document[] | null;
-			}) => {
-				// We got cached documents, so continue with those
-				if (cachedDocuments) {
-					cacheable = false;
-					return cachedDocuments;
-				}
-
-				// TODO, add mongo projection. Make sure to keep in mind caching with queryHash.
-
-				const totalCount = await this.collections?.[
-					collection
-				].collection.countDocuments({ $expr: mongoFilter });
-				if (totalCount === 0 || totalCount === undefined) return [];
-				const lastPage = Math.ceil(totalCount / limit);
-				if (lastPage < page)
-					throw new Error(`The last page available is ${lastPage}`);
-
-				// Create the Mongo cursor and then return the promise that gets the array of documents
-				return this.collections?.[collection].collection
-					.find(mongoFilter, mongoProjection)
-					.limit(limit)
-					.skip((page - 1) * limit)
-					.toArray();
-			},
-
-			// Add documents to the cache
-			async (documents: Document[]) => {
-				// Adds query results to cache but doesnt await
-				if (cacheable && queryHash) {
-					this.redisClient!.SET(
-						`query.find.${queryHash}`,
-						JSON.stringify(documents),
-						{
-							EX: 60
-						}
-					);
-				}
-				return documents;
-			},
-
-			// Strips the document of any unneeded properties or properties that are restricted
-			async (documents: Document[]) =>
-				async.map(documents, async (document: Document) =>
-					this.stripDocument(
-						document,
-						schema.getDocument(),
-						normalizedProjection,
-						allowedRestricted
-					)
-				),
-
-			async (documents: Document[]) => {
-				if (!documents || documents!.length === 0)
-					return limit === 1 ? null : [];
-				return limit === 1 ? documents![0] : documents;
-			}
-		]);
+		if (!documents || documents!.length === 0)
+			return limit === 1 ? null : [];
+		return limit === 1 ? documents![0] : documents;
 	}
 }
 
