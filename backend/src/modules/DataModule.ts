@@ -11,6 +11,10 @@ import { Document as SchemaDocument } from "../types/Document";
 import { UniqueMethods } from "../types/Modules";
 import { AttributeValue } from "../types/AttributeValue";
 
+type Entries<T> = {
+	[K in keyof T]: [K, T[K]];
+}[keyof T][];
+
 interface ProjectionObject {
 	[property: string]: boolean | string[] | ProjectionObject;
 }
@@ -23,13 +27,23 @@ type NormalizedProjection = {
 };
 
 interface MongoFilter {
-	[property: string]: AttributeValue | AttributeValue[] | MongoFilter;
+	[property: string]:
+		| AttributeValue
+		| AttributeValue[]
+		| MongoFilter
+		| MongoFilter[];
 }
 
 // WIP
 interface Document {
-	[property: string]: null;
+	[property: string]:
+		| AttributeValue
+		| AttributeValue[]
+		| Document
+		| Document[];
 }
+
+type AllowedRestricted = boolean | string[] | null | undefined;
 
 export default class DataModule extends BaseModule {
 	private collections?: Collections;
@@ -207,7 +221,7 @@ export default class DataModule extends BaseModule {
 	/**
 	 * Flatten the projection we've given (which can be an array of an object) into an array with key/value pairs
 	 *
-	 * @param projection
+	 * @param projection - Projection
 	 * @returns
 	 */
 	private flattenProjection(projection: Projection): [string, boolean][] {
@@ -258,7 +272,7 @@ export default class DataModule extends BaseModule {
 	private async parseFindProjection(
 		projection: NormalizedProjection,
 		schema: SchemaDocument,
-		allowedRestricted: any
+		allowedRestricted: AllowedRestricted
 	) {
 		// The mongo projection object we're going to build
 		const mongoProjection: ProjectionObject = {};
@@ -331,7 +345,10 @@ export default class DataModule extends BaseModule {
 	 * @param property - Property name
 	 * @returns
 	 */
-	private allowedByRestricted(allowedRestricted: any, property: string) {
+	private allowedByRestricted(
+		allowedRestricted: AllowedRestricted,
+		property: string
+	) {
 		// All restricted properties are allowed, so allow
 		if (allowedRestricted === true) return true;
 		// No restricted properties are allowed, so don't allow
@@ -433,14 +450,14 @@ export default class DataModule extends BaseModule {
 	 * @returns Array or Object
 	 */
 	private getDeeperAllowedRestricted(
-		allowedRestricted: any,
+		allowedRestricted: AllowedRestricted,
 		currentKey: string
-	) {
+	): AllowedRestricted {
 		//
 		if (typeof allowedRestricted === "boolean") return allowedRestricted;
 		if (!Array.isArray(allowedRestricted)) return false;
 
-		const newAllowedRestricted = allowedRestricted
+		const newAllowedRestricted: string[] = <string[]>allowedRestricted
 			// Go through all key/values
 			.map(key => {
 				// If a key has no ".", it has no deeper level, so return false
@@ -466,7 +483,9 @@ export default class DataModule extends BaseModule {
 		return newAllowedRestricted;
 	}
 
-	private getCastedValue(value: AttributeValue, schemaType: Types) {
+	private getCastedValue(value: unknown, schemaType: Types): AttributeValue {
+		if (value === null || value === undefined) return null;
+
 		if (schemaType === Types.String) {
 			// Check if value is a string, and if not, convert the value to a string
 			const castedValue =
@@ -492,7 +511,7 @@ export default class DataModule extends BaseModule {
 			const castedValue =
 				Object.prototype.toString.call(value) === "[object Date]"
 					? (value as Date)
-					: new Date(value);
+					: new Date(value.toString());
 			// TODO possibly allow this via a validate boolean option?
 			// We don't allow invalid dates, so throw an error
 			if (new Date(castedValue).toString() === "Invalid Date")
@@ -534,9 +553,9 @@ export default class DataModule extends BaseModule {
 	 * 			and whether query includes restricted attributes
 	 */
 	private async parseFindFilter(
-		filter: any,
+		filter: MongoFilter,
 		schema: SchemaDocument,
-		allowedRestricted: boolean | string[] | null | undefined,
+		allowedRestricted: AllowedRestricted,
 		options?: {
 			operators?: boolean;
 		}
@@ -603,19 +622,28 @@ export default class DataModule extends BaseModule {
 						// Run parseFindQuery again for child objects and add them to the mongo filter operator array
 						await Promise.all(
 							value.map(async _value => {
+								// Value must be an actual object, so if it's not, throw an error
+								if (
+									Object.prototype.toString.call(value) !==
+									"[object Object]"
+								)
+									throw Error("not an object");
+
 								const {
 									mongoFilter: _mongoFilter,
 									containsRestrictedProperties:
 										_containsRestrictedProperties
 								} = await this.parseFindFilter(
-									_value,
+									_value as MongoFilter,
 									schema,
 									allowedRestricted,
 									options
 								);
 
 								// Actually add the returned filter object to the mongo filter we're building
-								mongoFilter[key].push(_mongoFilter);
+								(<MongoFilter[]>mongoFilter[key]).push(
+									_mongoFilter
+								);
 								if (_containsRestrictedProperties)
 									containsRestrictedProperties = true;
 							})
@@ -689,10 +717,6 @@ export default class DataModule extends BaseModule {
 
 						// Handle the $in value operator
 						if (operator === "$in") {
-							mongoFilter[currentKey] = {
-								$in: []
-							};
-
 							// Decide what type should be for the values for $in
 							let { type } = schema[currentKey];
 							// We don't allow schema type for $in
@@ -704,10 +728,17 @@ export default class DataModule extends BaseModule {
 							if (type === Types.Array)
 								type = schema[key].item!.type;
 
+							const value$in = (<{ $in: AttributeValue[] }>value)
+								.$in;
+							let filter$in: AttributeValue[] = [];
+
+							if (!Array.isArray(value$in))
+								throw new Error("$in musr be array");
+
 							// Loop through all $in array items, check if they're not null/undefined, cast them, and return a new array
-							if (value.$in.length > 0)
-								mongoFilter[currentKey].$in = await Promise.all(
-									value.$in.map(async (_value: any) => {
+							if (value$in.length > 0)
+								filter$in = await Promise.all(
+									value$in.map(async _value => {
 										const isNullOrUndefined =
 											_value === null ||
 											_value === undefined;
@@ -724,6 +755,8 @@ export default class DataModule extends BaseModule {
 										return castedValue;
 									})
 								);
+
+							mongoFilter[currentKey] = { $in: filter$in };
 						} else
 							throw new Error(
 								`Unhandled operator "${operator}", this should never happen!`
@@ -742,6 +775,13 @@ export default class DataModule extends BaseModule {
 							};
 						} else subFilter = value;
 
+						// Sub-filter must be an actual object, so if it's not, throw an error
+						if (
+							Object.prototype.toString.call(subFilter) !==
+							"[object Object]"
+						)
+							throw Error("not an object");
+
 						// Get the allowedRestricted for the next layer
 						const deeperAllowedRestricted =
 							this.getDeeperAllowedRestricted(
@@ -755,7 +795,7 @@ export default class DataModule extends BaseModule {
 							containsRestrictedProperties:
 								_containsRestrictedProperties
 						} = await this.parseFindFilter(
-							subFilter,
+							subFilter as MongoFilter,
 							schema[currentKey].schema!,
 							deeperAllowedRestricted,
 							options
@@ -792,6 +832,13 @@ export default class DataModule extends BaseModule {
 								};
 							} else subFilter = value;
 
+							// Sub-filter must be an actual object, so if it's not, throw an error
+							if (
+								Object.prototype.toString.call(subFilter) !==
+								"[object Object]"
+							)
+								throw Error("not an object");
+
 							// Get the allowedRestricted for the next layer
 							const deeperAllowedRestricted =
 								this.getDeeperAllowedRestricted(
@@ -804,7 +851,7 @@ export default class DataModule extends BaseModule {
 								containsRestrictedProperties:
 									_containsRestrictedProperties
 							} = await this.parseFindFilter(
-								subFilter,
+								subFilter as MongoFilter,
 								schema[currentKey].item!.schema!,
 								deeperAllowedRestricted,
 								options
@@ -817,8 +864,18 @@ export default class DataModule extends BaseModule {
 						else {
 							// TODO possibly handle if a user gives some weird value here, like an object or array or $ operator
 
+							// Value must not be an array, so if it is, throw an error
+							if (Array.isArray(value)) throw Error("an array");
+
+							// Value must not be an actual object, so if it is, throw an error
+							if (
+								Object.prototype.toString.call(value) ===
+								"[object Object]"
+							)
+								throw Error("an object");
+
 							mongoFilter[currentKey] = this.getCastedValue(
-								value,
+								value as AttributeValue,
 								itemType
 							);
 						}
@@ -838,8 +895,18 @@ export default class DataModule extends BaseModule {
 						else {
 							const schemaType = schema[key].type;
 
+							// Value must not be an array, so if it is, throw an error
+							if (Array.isArray(value)) throw Error("an array");
+
+							// Value must not be an actual object, so if it is, throw an error
+							if (
+								Object.prototype.toString.call(value) ===
+								"[object Object]"
+							)
+								throw Error("an object");
+
 							mongoFilter[key] = this.getCastedValue(
-								value,
+								value as AttributeValue,
 								schemaType
 							);
 						}
@@ -867,14 +934,14 @@ export default class DataModule extends BaseModule {
 		document: Document,
 		schema: SchemaDocument,
 		projection: NormalizedProjection,
-		allowedRestricted: boolean | string[] | null | undefined
+		allowedRestricted: AllowedRestricted
 	): Promise<Document> {
 		// TODO possibly do different things with required properties?
 		// TODO possibly do different things with properties with default?
 
 		const unfilteredEntries = Object.entries(document);
 		// Go through all properties in the document to decide whether to allow it or not, and possibly casts the value to its property type
-		const filteredEntries = [];
+		const filteredEntries: Entries<Document> = [];
 		await Promise.all(
 			unfilteredEntries.map(async ([key, value]) => {
 				// If the property does not exist in the schema, return the memo, so we won't return the key/value in the stripped document
@@ -902,6 +969,13 @@ export default class DataModule extends BaseModule {
 						return;
 					}
 
+					// Value must be an actual object, so if it's not, throw an error
+					if (
+						Object.prototype.toString.call(value) !==
+						"[object Object]"
+					)
+						throw Error("not an object");
+
 					// Get the projection for the next layer
 					const deeperProjection = this.getDeeperProjection(
 						projection,
@@ -913,7 +987,7 @@ export default class DataModule extends BaseModule {
 
 					// Generate a stripped document/object for the current key/value
 					const strippedDocument = await this.stripDocument(
-						value,
+						value as Document, // We can be sure the value is a document, so this is for TypeScript to be happy
 						schema[key].schema!,
 						deeperProjection,
 						deeperAllowedRestricted
@@ -949,13 +1023,20 @@ export default class DataModule extends BaseModule {
 					// The type of the array items
 					const itemType = schema[key].item!.type;
 
-					const items = await Promise.all(
+					const items = (await Promise.all(
 						value.map(async item => {
 							// Handle schema objects inside an array
 							if (itemType === Types.Schema) {
 								// TODO possibly return nothing, or an empty object here instead?
 								// If item is falsy, it can't be an object, so just return null
 								if (!item) return null;
+
+								// Item must be an actual object, so if it's not, throw an error
+								if (
+									Object.prototype.toString.call(item) !==
+									"[object Object]"
+								)
+									throw Error("not an object");
 
 								// Get the projection for the next layer
 								const deeperProjection =
@@ -970,7 +1051,7 @@ export default class DataModule extends BaseModule {
 								// Generate a stripped document/object for the current key/value
 								const strippedDocument =
 									await this.stripDocument(
-										item,
+										item as Document, // We can be sure the item is a document, so this is for TypeScript to be happy
 										schema[key].item!.schema!,
 										deeperProjection,
 										deeperAllowedRestricted
@@ -1005,7 +1086,7 @@ export default class DataModule extends BaseModule {
 								return castedValue;
 							}
 						})
-					);
+					)) as AttributeValue[] | Document[];
 
 					filteredEntries.push([key, items]);
 					return;
@@ -1054,10 +1135,9 @@ export default class DataModule extends BaseModule {
 			useCache = true
 		}: {
 			collection: CollectionNameType;
-			filter: Record<string, any>;
+			filter: MongoFilter;
 			projection?: Projection;
 			allowedRestricted?: boolean | string[];
-			values?: Record<string, any>;
 			limit?: number;
 			page?: number;
 			useCache?: boolean;
