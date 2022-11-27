@@ -522,8 +522,6 @@ describe("Data Module", function () {
 				"Path collision! location.city.extra collides with location.city"
 			);
 		});
-
-		// TODO add more test cases
 	});
 
 	afterEach(async function () {

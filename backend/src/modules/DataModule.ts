@@ -34,7 +34,6 @@ interface MongoFilter {
 		| MongoFilter[];
 }
 
-// WIP
 interface Document {
 	[property: string]:
 		| AttributeValue
@@ -111,7 +110,6 @@ export default class DataModule extends BaseModule {
 	 */
 	public override async shutdown() {
 		await super.shutdown();
-		// TODO: Ensure the following shutdown correctly
 		if (this.redisClient) await this.redisClient.quit();
 		if (this.mongoClient) await this.mongoClient.close(false);
 	}
@@ -278,9 +276,6 @@ export default class DataModule extends BaseModule {
 		const mongoProjection: ProjectionObject = {};
 		// This will be false if we let Mongo return any restricted properties
 		let canCache = true;
-
-		// TODO add better comments
-		// TODO add support for nested objects in arrays
 
 		const unfilteredEntries = Object.entries(schema);
 		await Promise.all(
@@ -497,7 +492,6 @@ export default class DataModule extends BaseModule {
 			// Check if value is a number, and if not, convert the value to a number
 			const castedValue =
 				typeof value === "number" ? value : Number(value);
-			// TODO possibly allow this via a validate boolean option?
 			// We don't allow NaN for numbers, so throw an error
 			if (Number.isNaN(castedValue))
 				throw new Error(
@@ -512,7 +506,6 @@ export default class DataModule extends BaseModule {
 				Object.prototype.toString.call(value) === "[object Date]"
 					? (value as Date)
 					: new Date(value.toString());
-			// TODO possibly allow this via a validate boolean option?
 			// We don't allow invalid dates, so throw an error
 			if (new Date(castedValue).toString() === "Invalid Date")
 				throw new Error(
@@ -564,8 +557,6 @@ export default class DataModule extends BaseModule {
 		containsRestrictedProperties: boolean;
 		canCache: boolean;
 	}> {
-		// TODO validate whether restricted property is allowed
-
 		if (!filter || typeof filter !== "object")
 			throw new Error(
 				"Invalid filter provided. Filter must be an object."
@@ -864,8 +855,6 @@ export default class DataModule extends BaseModule {
 						}
 						// Normal array item type
 						else {
-							// TODO possibly handle if a user gives some weird value here, like an object or array or $ operator
-
 							// Value must not be an array, so if it is, throw an error
 							if (Array.isArray(value)) throw Error("an array");
 
@@ -930,7 +919,6 @@ export default class DataModule extends BaseModule {
 	 * @param document - The document object
 	 * @param schema - The schema object
 	 * @param projection - The projection, which can be null
-	 * @returns
 	 */
 	private async stripDocument(
 		document: Document,
@@ -938,9 +926,6 @@ export default class DataModule extends BaseModule {
 		projection: NormalizedProjection,
 		allowedRestricted: AllowedRestricted
 	): Promise<Document> {
-		// TODO possibly do different things with required properties?
-		// TODO possibly do different things with properties with default?
-
 		const unfilteredEntries = Object.entries(document);
 		// Go through all properties in the document to decide whether to allow it or not, and possibly casts the value to its property type
 		const filteredEntries: Entries<Document> = [];
@@ -964,7 +949,6 @@ export default class DataModule extends BaseModule {
 
 				// Handle nested object
 				if (schema[key].type === Types.Schema) {
-					// TODO possibly return nothing, or an empty object here instead?
 					// If value is falsy, it can't be an object, so just return null
 					if (!value) {
 						filteredEntries.push([key, null]);
@@ -995,32 +979,27 @@ export default class DataModule extends BaseModule {
 						deeperAllowedRestricted
 					);
 
-					// If the returned stripped document/object has keys, add the current key with that document/object to the memeo
+					// If the returned stripped document/object has keys, add the current key with that document/object to the memo
 					if (Object.keys(strippedDocument).length > 0) {
 						filteredEntries.push([key, strippedDocument]);
 						return;
 					}
 
-					// TODO possibly return null or an object here for the key instead?
-					// The current key has no values that should be returned, so just return the memo
+					// The current key has no values that should be returned, so just return empty object
+					filteredEntries.push([key, {}]);
 					return;
 				}
 
 				// Handle array type
 				if (schema[key].type === Types.Array) {
-					// TODO possibly return nothing, or an empty array here instead?
 					// If value is falsy, return null with the key instead
 					if (!value) {
 						filteredEntries.push([key, null]);
 						return;
 					}
 
-					// TODO possibly return nothing, or an empty array here instead?
-					// If value isn't a valid array, return null with the key instead
-					if (!Array.isArray(value)) {
-						filteredEntries.push([key, null]);
-						return;
-					}
+					// If value isn't a valid array, throw error
+					if (!Array.isArray(value)) throw Error("not an array");
 
 					// The type of the array items
 					const itemType = schema[key].item!.type;
@@ -1029,12 +1008,9 @@ export default class DataModule extends BaseModule {
 						value.map(async item => {
 							// Handle schema objects inside an array
 							if (itemType === Types.Schema) {
-								// TODO possibly return nothing, or an empty object here instead?
-								// If item is falsy, it can't be an object, so just return null
-								if (!item) return null;
-
 								// Item must be an actual object, so if it's not, throw an error
 								if (
+									!item ||
 									typeof item !== "object" ||
 									item.constructor.name !== "Object"
 								)
@@ -1063,9 +1039,8 @@ export default class DataModule extends BaseModule {
 								if (Object.keys(strippedDocument).length > 0)
 									return strippedDocument;
 
-								// TODO possibly return object here instead?
-								// The current item has no values that should be returned, so just return null
-								return null;
+								// The current item has no values that should be returned, so just return empty object
+								return {};
 							}
 							// Nested arrays are not supported
 							if (itemType === Types.Array) {
@@ -1078,7 +1053,6 @@ export default class DataModule extends BaseModule {
 									item === null || item === undefined;
 								if (isNullOrUndefined) return null;
 
-								// TODO possibly don't validate casted in getCastedValue?
 								// Cast item
 								const castedValue = this.getCastedValue(
 									item,
@@ -1096,7 +1070,6 @@ export default class DataModule extends BaseModule {
 
 				// Handle normal types
 
-				// TODO possible don't validate casted in getCastedValue?
 				// Cast item
 				const castedValue = this.getCastedValue(
 					value,
@@ -1110,15 +1083,6 @@ export default class DataModule extends BaseModule {
 		return Object.fromEntries(filteredEntries);
 	}
 
-	// TODO improve caching
-	// TODO add support for computed fields
-	// TODO parse query - validation
-	// TODO add proper typescript support
-	// TODO add proper jsdoc
-	// TODO add support for enum document attributes
-	// TODO add support for array document attributes
-	// TODO add support for reference document attributes
-	// TODO fix 2nd layer of schema
 	/**
 	 * find - Get one or more document(s) from a single collection
 	 *
@@ -1160,7 +1124,6 @@ export default class DataModule extends BaseModule {
 		// Normalize the projection into something we understand, and which throws an error if we have any path collisions
 		const normalizedProjection = this.normalizeProjection(projection);
 
-		// TODO validate the projection based on the schema here
 		// Parse the projection into a mongo projection, and returns whether this query can be cached or not
 		const parsedProjection = await this.parseFindProjection(
 			normalizedProjection,
@@ -1211,8 +1174,6 @@ export default class DataModule extends BaseModule {
 		if (documents) {
 			cacheable = false;
 		} else {
-			// TODO, add mongo projection. Make sure to keep in mind caching with queryHash.
-
 			const totalCount = await this.collections?.[
 				collection
 			].collection.countDocuments(mongoFilter);

@@ -120,13 +120,12 @@ export default class ModuleManager {
 	 * shutdown - Handle shutdown
 	 */
 	public async shutdown() {
-		// TODO: await jobQueue completion/handle shutdown
 		if (this.modules)
 			await Promise.all(
 				Object.values(this.modules).map(async module => {
 					if (
 						module.getStatus() === "STARTED" ||
-						module.getStatus() === "STARTING" || // TODO: Handle better
+						module.getStatus() === "STARTING" ||
 						module.getStatus() === "ERROR"
 					)
 						await module.shutdown();

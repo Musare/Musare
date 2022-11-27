@@ -113,7 +113,6 @@ export default class JobQueue {
 			});
 	}
 
-	// TODO run process in more cases, like when a module starts
 	/**
 	 * process - Process queue
 	 */
