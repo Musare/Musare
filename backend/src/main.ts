@@ -1,5 +1,3 @@
-// @ts-ignore
-
 import * as readline from "node:readline";
 import ModuleManager from "./ModuleManager";
 import LogBook from "./LogBook";
@@ -11,7 +9,7 @@ process.on("uncaughtException", err => {
 	if (err.name === "ECONNREFUSED" || err.name === "UNCERTAIN_STATE") return;
 
 	logBook.log({
-		message: err.message || err,
+		message: err.message,
 		type: "error",
 		category: "uncaught-exceptions",
 		data: {
@@ -167,22 +165,22 @@ setTimeout(async () => {
 	// 	.then(console.log)
 	// 	.catch(console.error);
 
-	logBook.log("Find for testing with $in");
-	await moduleManager
-		.runJob("data", "find", {
-			collection: "abc",
-			filter: {
-				"songs._id": "6371212daf4e9f8fb14444b0"
-			},
-			allowedRestricted: true,
-			// projection: {
-			// 	// songs: true,
-			// 	// someNumbers: false
-			// },
-			limit: 1
-		})
-		.then(console.log)
-		.catch(console.error);
+	// logBook.log("Find for testing with $in");
+	// await moduleManager
+	// 	.runJob("data", "find", {
+	// 		collection: "abc",
+	// 		filter: {
+	// 			"songs._id": "6371212daf4e9f8fb14444b0"
+	// 		},
+	// 		allowedRestricted: true,
+	// 		// projection: {
+	// 		// 	// songs: true,
+	// 		// 	// someNumbers: false
+	// 		// },
+	// 		limit: 1
+	// 	})
+	// 	.then(console.log)
+	// 	.catch(console.error);
 
 	// logBook.log("Find for testing with $in with numbers");
 	// await moduleManager
@@ -304,6 +302,7 @@ const runCommand = (line: string) => {
 				if (value.length === 1) [value] = value;
 			}
 			logBook
+				// eslint-disable-next-line
 				// @ts-ignore
 				.updateOutput(output, key, action, value)
 				.then(() => console.log("Successfully updated outputs"))
