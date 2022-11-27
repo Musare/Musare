@@ -10,7 +10,7 @@ import LogBook from "../LogBook";
 import ModuleManager from "../ModuleManager";
 import DataModule from "./DataModule";
 
-chai.should();
+const should = chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
@@ -334,6 +334,47 @@ describe("Data Module", function () {
 				"songs",
 				"restrictedName"
 			]);
+		});
+
+		describe("filter by date types", function () {
+			it("Date", async function () {
+				const [document] = testData.abc;
+				const { createdAt } = document;
+				const resultDocument = await dataModule.find(jobContext, {
+					collection: "abc",
+					filter: { createdAt },
+					limit: 1,
+					useCache: false
+				});
+				should.exist(resultDocument);
+				resultDocument.createdAt.should.deep.equal(document.createdAt);
+			});
+
+			it("String", async function () {
+				const [document] = testData.abc;
+				const { createdAt } = document;
+				const resultDocument = await dataModule.find(jobContext, {
+					collection: "abc",
+					filter: { createdAt: createdAt.toString() },
+					limit: 1,
+					useCache: false
+				});
+				should.exist(resultDocument);
+				resultDocument.createdAt.should.deep.equal(document.createdAt);
+			});
+
+			it("Number", async function () {
+				const [document] = testData.abc;
+				const { createdAt } = document;
+				const resultDocument = await dataModule.find(jobContext, {
+					collection: "abc",
+					filter: { createdAt: createdAt.getTime() },
+					limit: 1,
+					useCache: false
+				});
+				should.exist(resultDocument);
+				resultDocument.createdAt.should.deep.equal(document.createdAt);
+			});
 		});
 	});
 
