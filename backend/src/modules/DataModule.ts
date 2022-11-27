@@ -624,8 +624,9 @@ export default class DataModule extends BaseModule {
 							value.map(async _value => {
 								// Value must be an actual object, so if it's not, throw an error
 								if (
-									Object.prototype.toString.call(value) !==
-									"[object Object]"
+									!_value ||
+									typeof _value !== "object" ||
+									_value.constructor.name !== "Object"
 								)
 									throw Error("not an object");
 
@@ -777,8 +778,9 @@ export default class DataModule extends BaseModule {
 
 						// Sub-filter must be an actual object, so if it's not, throw an error
 						if (
-							Object.prototype.toString.call(subFilter) !==
-							"[object Object]"
+							!subFilter ||
+							typeof subFilter !== "object" ||
+							subFilter.constructor.name !== "Object"
 						)
 							throw Error("not an object");
 
@@ -834,8 +836,8 @@ export default class DataModule extends BaseModule {
 
 							// Sub-filter must be an actual object, so if it's not, throw an error
 							if (
-								Object.prototype.toString.call(subFilter) !==
-								"[object Object]"
+								typeof subFilter !== "object" ||
+								subFilter.constructor.name !== "Object"
 							)
 								throw Error("not an object");
 
@@ -869,8 +871,8 @@ export default class DataModule extends BaseModule {
 
 							// Value must not be an actual object, so if it is, throw an error
 							if (
-								Object.prototype.toString.call(value) ===
-								"[object Object]"
+								typeof value === "object" &&
+								value.constructor.name === "Object"
 							)
 								throw Error("an object");
 
@@ -900,8 +902,8 @@ export default class DataModule extends BaseModule {
 
 							// Value must not be an actual object, so if it is, throw an error
 							if (
-								Object.prototype.toString.call(value) ===
-								"[object Object]"
+								typeof value === "object" &&
+								value.constructor.name === "Object"
 							)
 								throw Error("an object");
 
@@ -971,8 +973,8 @@ export default class DataModule extends BaseModule {
 
 					// Value must be an actual object, so if it's not, throw an error
 					if (
-						Object.prototype.toString.call(value) !==
-						"[object Object]"
+						typeof value !== "object" ||
+						value.constructor.name !== "Object"
 					)
 						throw Error("not an object");
 
@@ -1033,8 +1035,8 @@ export default class DataModule extends BaseModule {
 
 								// Item must be an actual object, so if it's not, throw an error
 								if (
-									Object.prototype.toString.call(item) !==
-									"[object Object]"
+									typeof item !== "object" ||
+									item.constructor.name !== "Object"
 								)
 									throw Error("not an object");
 

@@ -1,4 +1,5 @@
 import * as readline from "node:readline";
+import { ObjectId } from "mongodb";
 import ModuleManager from "./ModuleManager";
 import LogBook from "./LogBook";
 
@@ -194,6 +195,15 @@ setTimeout(async () => {
 	// 	})
 	// 	.then(console.log)
 	// 	.catch(console.error);
+
+	moduleManager
+		.runJob("data", "find", {
+			collection: "abc",
+			filter: { _id: new ObjectId(_id) },
+			limit: 1
+		})
+		.then(console.log)
+		.catch(console.error);
 }, 0);
 
 const rl = readline.createInterface({
