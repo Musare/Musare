@@ -1,4 +1,5 @@
 import async from "async";
+import config from "config";
 
 import CoreClass from "../core";
 
@@ -12,6 +13,7 @@ let WSModule;
 let PlaylistsModule;
 let NotificationsModule;
 let MediaModule;
+let SongsModule;
 
 class _StationsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -34,6 +36,7 @@ class _StationsModule extends CoreClass {
 		PlaylistsModule = this.moduleManager.modules.playlists;
 		NotificationsModule = this.moduleManager.modules.notifications;
 		MediaModule = this.moduleManager.modules.media;
+		SongsModule = this.moduleManager.modules.songs;
 
 		this.userList = {};
 		this.usersPerStation = {};
@@ -533,7 +536,7 @@ class _StationsModule extends CoreClass {
 						} else next(null, playlist.songs, station);
 					},
 
-					(_playlistSongs, station, next) => {
+					async (_playlistSongs, station) => {
 						let playlistSongs = JSON.parse(JSON.stringify(_playlistSongs));
 						if (station.autofill.mode === "sequential") {
 							if (station.currentSongIndex <= playlistSongs.length) {
@@ -550,6 +553,50 @@ class _StationsModule extends CoreClass {
 
 						if (station.currentSong && station.currentSong.youtubeId)
 							currentYoutubeIds.push(station.currentSong.youtubeId);
+
+						if (
+							config.has("experimental.weight_stations") &&
+							config.get("experimental.weight_stations").indexOf(stationId) !== -1
+						) {
+							const weightMap = {};
+							const getYoutubeIds = playlistSongs
+								.map(playlistSong => playlistSong.youtubeId)
+								.filter(youtubeId => currentYoutubeIds.indexOf(youtubeId) === -1);
+
+							const { songs } = await SongsModule.runJob("GET_SONGS", { youtubeIds: getYoutubeIds });
+
+							songs.forEach(song => {
+								let weight = 1;
+
+								song.tags.forEach(tag => {
+									const regexResponse = /weight\[(\d+)\]/.exec(tag);
+									if (regexResponse) weight = Number(regexResponse[1]);
+								});
+
+								if (Number.isNaN(weight)) weight = 1;
+								weight = Math.round(weight);
+								weight = Math.max(1, weight);
+								weight = Math.min(10000, weight);
+
+								weightMap[song.youtubeId] = weight;
+							});
+
+							const adjustedPlaylistSongs = [];
+
+							playlistSongs.forEach(playlistSong => {
+								Array.from({ length: weightMap[playlistSong.youtubeId] }).forEach(() => {
+									adjustedPlaylistSongs.push(playlistSong);
+								});
+							});
+
+							const { array } = await UtilsModule.runJob(
+								"SHUFFLE",
+								{ array: adjustedPlaylistSongs },
+								this
+							);
+
+							playlistSongs = array;
+						}
 
 						playlistSongs.every(song => {
 							if (
@@ -574,10 +621,10 @@ class _StationsModule extends CoreClass {
 							if (indexOfLastSong !== -1) currentSongIndex = indexOfLastSong;
 						}
 
-						next(null, currentSongs, songsToAdd, currentSongIndex);
+						return { currentSongs, songsToAdd, currentSongIndex };
 					},
 
-					(currentSongs, songsToAdd, currentSongIndex, next) => {
+					({ currentSongs, songsToAdd, currentSongIndex }, next) => {
 						const songs = [];
 						async.eachLimit(
 							songsToAdd.map(song => song.youtubeId),
