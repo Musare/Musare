@@ -72,7 +72,7 @@ const blurAutosuggestItem = event => {
 </script>
 
 <template>
-	<div>
+	<div class="autosuggest-container-wrapper">
 		<input
 			v-model="value"
 			class="input"
@@ -110,7 +110,7 @@ const blurAutosuggestItem = event => {
 </template>
 
 <style lang="less" scoped>
-.night-mode .autosuggest-container {
+.night-mode .autosuggest-container-wrapper .autosuggest-container {
 	background-color: var(--dark-grey) !important;
 
 	.autosuggest-item {
@@ -125,40 +125,44 @@ const blurAutosuggestItem = event => {
 	}
 }
 
-.autosuggest-container {
-	position: absolute;
-	background: var(--white);
-	width: calc(100% + 1px);
-	top: 35px;
-	z-index: 200;
-	overflow: auto;
-	max-height: 98px;
-	clear: both;
+.autosuggest-container-wrapper {
+	position: relative;
 
-	.autosuggest-item {
-		padding: 8px;
-		display: block;
-		border: 1px solid var(--light-grey-2);
-		margin-top: -1px;
-		line-height: 16px;
-		cursor: pointer;
-		-webkit-user-select: none;
-		-ms-user-select: none;
-		-moz-user-select: none;
-		user-select: none;
-	}
+	.autosuggest-container {
+		position: absolute;
+		background: var(--white);
+		width: calc(100% + 1px);
+		top: 35px;
+		z-index: 200;
+		overflow: auto;
+		max-height: 98px;
+		clear: both;
 
-	.autosuggest-item:hover,
-	.autosuggest-item:focus {
-		background-color: var(--light-grey);
-	}
+		.autosuggest-item {
+			padding: 8px;
+			display: block;
+			border: 1px solid var(--light-grey-2);
+			margin-top: -1px;
+			line-height: 16px;
+			cursor: pointer;
+			-webkit-user-select: none;
+			-ms-user-select: none;
+			-moz-user-select: none;
+			user-select: none;
+		}
 
-	.autosuggest-item:first-child {
-		border-top: none;
-	}
+		.autosuggest-item:hover,
+		.autosuggest-item:focus {
+			background-color: var(--light-grey);
+		}
 
-	.autosuggest-item:last-child {
-		border-radius: 0 0 @border-radius @border-radius;
+		.autosuggest-item:first-child {
+			border-top: none;
+		}
+
+		.autosuggest-item:last-child {
+			border-radius: 0 0 @border-radius @border-radius;
+		}
 	}
 }
 </style>
