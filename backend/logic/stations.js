@@ -547,13 +547,22 @@ class _StationsModule extends CoreClass {
 						const currentRequests = station.queue.filter(song => !song.requestedBy).length;
 						const songsStillNeeded = station.autofill.limit - currentRequests;
 						const currentSongs = station.queue;
-						const currentYoutubeIds = station.queue.map(song => song.youtubeId);
+						let currentYoutubeIds = station.queue.map(song => song.youtubeId);
 						const songsToAdd = [];
 						let lastSongAdded = null;
 
 						if (station.currentSong && station.currentSong.youtubeId)
 							currentYoutubeIds.push(station.currentSong.youtubeId);
 
+						// Block for experiment: queue_autofill_skip_last_x_played
+						if (config.has(`experimental.queue_autofill_skip_last_x_played.${stationId}`)) {
+							const redisList = `experimental:queue_autofill_skip_last_x_played:${stationId}`;
+							// Get list of last x youtube video's played, to make sure they can't be autofilled
+							const listOfYoutubeIds = await CacheModule.runJob("LRANGE", { key: redisList }, this);
+							currentYoutubeIds = [...currentYoutubeIds, ...listOfYoutubeIds];
+						}
+
+						// Block for experiment: weight_stations
 						if (
 							config.has("experimental.weight_stations") &&
 							config.get("experimental.weight_stations").indexOf(stationId) !== -1
@@ -978,11 +987,46 @@ class _StationsModule extends CoreClass {
 							});
 					},
 
-					(song, station, next) => {
+					async (song, station) => {
 						const $set = {};
 
 						if (song === null) $set.currentSong = null;
 						else {
+							// Block for experiment: queue_autofill_skip_last_x_played
+							if (config.has(`experimental.queue_autofill_skip_last_x_played.${payload.stationId}`)) {
+								const redisList = `experimental:queue_autofill_skip_last_x_played:${payload.stationId}`;
+								const maxListLength = Number(
+									config.get(`experimental.queue_autofill_skip_last_x_played.${payload.stationId}`)
+								);
+
+								// Add youtubeId to list for this station in Redis list
+								await CacheModule.runJob(
+									"LPUSH",
+									{
+										key: `experimental:queue_autofill_skip_last_x_played:${payload.stationId}`,
+										value: song.youtubeId
+									},
+									this
+								);
+
+								const currentListLength = await CacheModule.runJob("LLEN", { key: redisList }, this);
+
+								// Removes oldest youtubeId from list for this station in Redis list
+								if (currentListLength > maxListLength) {
+									const amount = currentListLength - maxListLength;
+									const promises = Array.from({ length: amount }).map(() =>
+										CacheModule.runJob(
+											"RPOP",
+											{
+												key: `experimental:queue_autofill_skip_last_x_played:${payload.stationId}`
+											},
+											this
+										)
+									);
+									await Promise.all(promises);
+								}
+							}
+
 							$set.currentSong = {
 								_id: song._id,
 								youtubeId: song.youtubeId,
@@ -1000,10 +1044,10 @@ class _StationsModule extends CoreClass {
 						$set.startedAt = Date.now();
 						$set.timePaused = 0;
 						if (station.paused) $set.pausedAt = Date.now();
-						next(null, $set, station);
+						return { $set, station };
 					},
 
-					($set, station, next) => {
+					({ $set, station }, next) => {
 						StationsModule.stationModel.updateOne({ _id: station._id }, { $set }, err => {
 							if (err) return next(err);
 
