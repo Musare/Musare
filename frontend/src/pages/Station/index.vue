@@ -89,6 +89,10 @@ const persistentToasts = ref([]);
 const mediasession = ref(false);
 const christmas = ref(false);
 const sitename = ref("Musare");
+// Experimental options
+const experimentalChangableListenModeEnabled = ref(false);
+const experimentalChangableListenMode = ref("listen_and_participate"); // Can be either listen_and_participate or participate
+// End experimental options
 // NEW
 const videoLoading = ref();
 const startedAt = ref();
@@ -858,6 +862,24 @@ const sendActivityWatchVideoData = () => {
 	}
 };
 
+const experimentalChangableListenModeChange = newMode => {
+	if (newMode === "participate") {
+		// Destroy the YouTube player
+		if (player.value) {
+			player.value.destroy();
+			player.value = null;
+		}
+	} else {
+		// Recreate the YouTube player
+		youtubeReady();
+	}
+	experimentalChangableListenMode.value = newMode;
+	localStorage.setItem(
+		`experimental_changeable_listen_mode_${station.value._id}`,
+		newMode
+	);
+};
+
 watch(
 	() => autoRequest.value.length,
 	() => {
@@ -897,6 +919,8 @@ onMounted(async () => {
 		);
 	}, 1000);
 
+	const experimental = await lofig.get("experimental");
+
 	socket.onConnect(() => {
 		clearTimeout(window.stationNextSongTimeout);
 
@@ -921,6 +945,28 @@ onMounted(async () => {
 					requests,
 					djs
 				} = res.data;
+
+				if (experimental && experimental.changable_listen_mode) {
+					if (experimental.changable_listen_mode === true)
+						experimentalChangableListenModeEnabled.value = true;
+					else if (
+						Array.isArray(experimental.changable_listen_mode) &&
+						experimental.changable_listen_mode.indexOf(_id) !== -1
+					)
+						experimentalChangableListenModeEnabled.value = true;
+				}
+				if (experimentalChangableListenModeEnabled.value) {
+					console.log(
+						`Experimental changeable listen mode is enabled`
+					);
+					const experimentalChangeableListenModeLS =
+						localStorage.getItem(
+							`experimental_changeable_listen_mode_${_id}`
+						);
+					if (experimentalChangeableListenModeLS)
+						experimentalChangableListenMode.value =
+							experimentalChangeableListenModeLS;
+				}
 
 				// change url to use station name instead of station id
 				if (name !== stationIdentifier.value) {
@@ -1564,7 +1610,52 @@ onBeforeUnmount(() => {
 						</div>
 					</div>
 					<div id="station-right-column" class="column">
-						<div class="player-container quadrant" v-show="!noSong">
+						<div
+							class="experimental-listen-mode-container quadrant"
+							v-if="experimentalChangableListenModeEnabled"
+							v-show="
+								experimentalChangableListenMode ===
+								'participate'
+							"
+						>
+							<h2>Want to listen to music?</h2>
+							<button
+								class="button is-primary"
+								@click="
+									experimentalChangableListenModeChange(
+										'listen_and_participate'
+									)
+								"
+							>
+								<i class="material-icons icon-with-button"
+									>music_note</i
+								>
+								<span>Listen</span>
+							</button>
+						</div>
+						<div
+							class="player-container quadrant"
+							v-show="
+								!noSong &&
+								(!experimentalChangableListenModeEnabled ||
+									experimentalChangableListenMode ===
+										'listen_and_participate')
+							"
+						>
+							<div
+								class="experimental-changable-listen-mode-player-header"
+								v-if="experimentalChangableListenModeEnabled"
+							>
+								<span
+									class="delete material-icons"
+									@click="
+										experimentalChangableListenModeChange(
+											'participate'
+										)
+									"
+									>highlight_off</span
+								>
+							</div>
 							<div id="video-container">
 								<div
 									id="stationPlayer"
@@ -2799,6 +2890,29 @@ onBeforeUnmount(() => {
 	height: 160px;
 	-webkit-animation-delay: 11s;
 	animation-delay: 11s;
+}
+
+.experimental-listen-mode-container {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	row-gap: 8px;
+	padding: 16px 16px;
+
+	h2 {
+		margin: 0;
+		font-size: 20px;
+	}
+}
+
+.experimental-changable-listen-mode-player-header {
+	padding: 4px;
+	display: flex;
+	flex-direction: row-reverse;
+
+	.delete {
+		cursor: pointer;
+	}
 }
 
 /* Tablet view fix */
