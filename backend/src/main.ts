@@ -2,6 +2,7 @@ import * as readline from "node:readline";
 import { ObjectId } from "mongodb";
 import ModuleManager from "./ModuleManager";
 import LogBook from "./LogBook";
+import Job from "./Job";
 
 const logBook = new LogBook();
 
@@ -38,21 +39,21 @@ global.rs = () => {
 	process.exit();
 };
 
-// const interval = setInterval(() => {
-// 	moduleManager
-// 		.runJob("stations", "addToQueue", { songId: "TestId" })
-// 		.catch(() => {});
-// 	moduleManager
-// 		.runJob("stations", "addA", {}, { priority: 5 })
-// 		.catch(() => {});
-// 	moduleManager
-// 		.runJob("others", "doThing", { test: "Test", test2: 123 })
-// 		.catch(() => {});
-// }, 40);
+const interval = setInterval(() => {
+	moduleManager
+		.runJob("stations", "addToQueue", { songId: "TestId" })
+		.catch(() => {});
+	moduleManager
+		.runJob("stations", "addA", {}, { priority: 5 })
+		.catch(() => {});
+	// moduleManager
+	// 	.runJob("stations", "", { test: "Test", test2: 123 })
+	// 	.catch(() => {});
+}, 40);
 
-// setTimeout(() => {
-// 	clearTimeout(interval);
-// }, 3000);
+setTimeout(() => {
+	clearTimeout(interval);
+}, 3000);
 
 setTimeout(async () => {
 	const _id = "6371212daf4e9f8fb14444b2";
@@ -196,14 +197,14 @@ setTimeout(async () => {
 	// 	.then(console.log)
 	// 	.catch(console.error);
 
-	moduleManager
-		.runJob("data", "find", {
-			collection: "abc",
-			filter: { _id: new ObjectId(_id) },
-			limit: 1
-		})
-		.then(console.log)
-		.catch(console.error);
+	// moduleManager
+	// 	.runJob("data", "find", {
+	// 		collection: "abc",
+	// 		filter: { _id: new ObjectId(_id) },
+	// 		limit: 1
+	// 	})
+	// 	.then(console.log)
+	// 	.catch(console.error);
 }, 0);
 
 const rl = readline.createInterface({
@@ -236,18 +237,51 @@ process.on("SIGINT", shutdown);
 process.on("SIGQUIT", shutdown);
 process.on("SIGTERM", shutdown);
 
+type JobArray = [Job, JobArray[]];
+
+function getNestedChildJobs(job: Job): JobArray {
+	const jobs = job.getJobQueue().getJobs();
+
+	if (jobs.length > 0)
+		return [
+			job,
+			jobs.map((_job: Job) => getNestedChildJobs(_job))
+		] as JobArray;
+
+	return [job, []];
+}
+
+function getJobLines(
+	level: number,
+	[job, jobArrs]: JobArray,
+	seperator = "\t"
+): string[] {
+	const tabs = Array.from({ length: level })
+		.map(() => seperator)
+		.join("");
+	let lines = [
+		`${tabs}${job.getName()} (${job.getStatus()} - ${job.getPriority()} - ${job.getUuid()})`
+	];
+	jobArrs.forEach((jobArr: JobArray) => {
+		lines = [...lines, ...getJobLines(level + 1, jobArr, seperator)];
+	});
+
+	return lines;
+}
+
 const runCommand = (line: string) => {
 	const [command, ...args] = line.split(" ");
 	switch (command) {
 		case "help": {
 			console.log("Commands:");
-			console.log("status");
-			console.log("stats");
-			console.log("queue");
-			console.log("active");
-			console.log("eval");
+			console.log("status - Show module manager and job queue status");
+			console.log("stats - Shows jobs stats");
+			console.log("queue - Shows a table of all jobs in the queue");
+			console.log("active - Shows a table of all jobs currently running");
+			console.log("jobinfo <jobId> - Print all info about a job");
+			console.log("eval - Run a command");
 			console.log("debug");
-			console.log("log");
+			console.log("log - Change LogBook settings");
 			break;
 		}
 		case "status": {
@@ -279,6 +313,55 @@ const runCommand = (line: string) => {
 				console.log("There are no active jobs.");
 			else console.log(`There are ${activeStatus.length} active jobs.`);
 			console.table(activeStatus);
+			break;
+		}
+		case "jobinfo": {
+			if (args.length === 0) console.log("Please specify a jobId");
+			else {
+				const jobId = args[0];
+				const job = moduleManager.getJob(jobId, true);
+
+				if (!job) console.log("Job not found");
+				else {
+					const jobInfo = {
+						jobId: job?.getUuid(),
+						jobName: job?.getName(),
+						jobStatus: job?.getStatus(),
+						jobPriority: job?.getPriority(),
+						moduleName: job?.getModule().getName(),
+						moduleStatus: job?.getModule().getStatus()
+					};
+					console.table(jobInfo);
+
+					// Gets all child jobs of the current job, including the current job, nested
+					const jobArrs = getNestedChildJobs(job);
+
+					const jobLines = getJobLines(0, jobArrs);
+
+					jobLines.forEach(jobLine => {
+						console.log(jobLine);
+					});
+				}
+			}
+			break;
+		}
+		case "jobtree": {
+			const jobs = moduleManager.getJobs();
+
+			let jobLines: string[] = [];
+
+			jobs.forEach(job => {
+				// Gets all child jobs of the current job, including the current job, nested
+				const jobArrs = getNestedChildJobs(job);
+
+				jobLines = [...jobLines, ...getJobLines(0, jobArrs)];
+			});
+
+			console.log("List of jobs:");
+			jobLines.forEach(jobLine => {
+				console.log(jobLine);
+			});
+
 			break;
 		}
 		case "eval": {

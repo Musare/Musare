@@ -20,7 +20,7 @@ export default class ModuleManager {
 	 */
 	public constructor(logBook: LogBook) {
 		this.logBook = logBook;
-		this.jobQueue = new JobQueue();
+		this.jobQueue = new JobQueue(this, logBook);
 	}
 
 	/**
@@ -61,6 +61,30 @@ export default class ModuleManager {
 	 */
 	public getQueueStatus() {
 		return this.jobQueue.getQueueStatus();
+	}
+
+	/**
+	 * Gets a job from the queue by jobId
+	 *
+	 * @returns Job
+	 */
+	public getJob(jobId: string, recursive = false) {
+		return this.jobQueue.getJob(jobId, recursive);
+	}
+
+	/**
+	 * Gets a list of all jobs running directly in the ModuleManager job queue
+	 */
+	public getJobs() {
+		return this.jobQueue.getJobs();
+	}
+
+	/**
+	 * Gets a module
+	 *
+	 */
+	public getModule(moduleName: keyof Modules) {
+		return this.modules && this.modules[moduleName];
 	}
 
 	/**
@@ -158,67 +182,6 @@ export default class ModuleManager {
 		payload: PayloadType,
 		options?: JobOptions
 	): Promise<ReturnType> {
-		return new Promise((resolve, reject) => {
-			const module = this.modules && this.modules[moduleName];
-			if (!module) reject(new Error("Module not found."));
-			else {
-				const jobFunction = module[jobName];
-				if (!jobFunction || typeof jobFunction !== "function")
-					reject(new Error("Job not found."));
-				else if (
-					Object.prototype.hasOwnProperty.call(BaseModule, jobName)
-				)
-					reject(new Error("Illegal job function."));
-				else {
-					const job = new Job(
-						jobName.toString(),
-						module,
-						(job, resolveJob, rejectJob) => {
-							const jobContext = new JobContext(
-								this,
-								this.logBook,
-								job
-							);
-							jobFunction
-								.apply(module, [jobContext, payload])
-								.then((response: ReturnType) => {
-									this.logBook.log({
-										message: "Job completed successfully",
-										type: "success",
-										category: "jobs",
-										data: {
-											jobName: job.getName(),
-											jobId: job.getUuid()
-										}
-									});
-									resolveJob();
-									resolve(response);
-								})
-								.catch((err: any) => {
-									this.logBook.log({
-										message: `Job failed with error "${err}"`,
-										type: "error",
-										category: "jobs",
-										data: {
-											jobName: job.getName(),
-											jobId: job.getUuid()
-										}
-									});
-									rejectJob();
-									reject(err);
-								});
-						},
-						{
-							priority: (options && options.priority) || 10
-						}
-					);
-
-					// If a job options.runDirectly is set to true, skip the queue and run a job directly
-					if (options && options.runDirectly)
-						this.jobQueue.runJob(job);
-					else this.jobQueue.add(job);
-				}
-			}
-		});
+		return this.jobQueue.runJob(moduleName, jobName, payload, options);
 	}
 }

@@ -49,15 +49,11 @@ export default class JobContext {
 	}
 
 	/**
-	 * Runs a job in the context of an existing job, which by default runs jobs right away
+	 * runJob - Run a job
 	 *
-	 * @typeParam ModuleNameType - name of the module, which must exist
-	 * @typeParam JobNameType - name of the job, which must exist
-	 * @typeParam PayloadType - payload type based on the module and job, which is void if there is no payload
 	 * @param moduleName - Module name
 	 * @param jobName - Job name
-	 * @param payload - Job payload, if none then void
-	 * @param options - Job options
+	 * @param params - Params
 	 */
 	public runJob<
 		ModuleNameType extends keyof Jobs & keyof Modules,
@@ -67,25 +63,16 @@ export default class JobContext {
 			? Jobs[ModuleNameType][JobNameType]["payload"] extends undefined
 				? Record<string, never>
 				: Jobs[ModuleNameType][JobNameType]["payload"]
-			: Record<string, never>
+			: Record<string, never>,
+		ReturnType = "returns" extends keyof Jobs[ModuleNameType][JobNameType]
+			? Jobs[ModuleNameType][JobNameType]["returns"]
+			: never
 	>(
 		moduleName: ModuleNameType,
 		jobName: JobNameType,
 		payload: PayloadType,
 		options?: JobOptions
-	) {
-		// If options doesn't exist, create it
-		const newOptions = options ?? {};
-		// If runDirectly is not set, set it to true
-		if (!Object.hasOwn(newOptions, "runDirectly"))
-			newOptions.runDirectly = true;
-
-		// Ask module manager to run the provided job
-		return this.moduleManager.runJob(
-			moduleName,
-			jobName,
-			payload,
-			newOptions
-		);
+	): Promise<ReturnType> {
+		return this.job.runJob(moduleName, jobName, payload, options);
 	}
 }

@@ -29,11 +29,11 @@ export default class StationModule extends BaseModule {
 	 */
 	public async addToQueue(context: JobContext, payload: { songId: string }) {
 		const { songId } = payload;
-		// console.log(`Adding song ${songId} to the queue.`);
-		return new Promise(resolve => {
+		context.log(`Adding song ${songId} to the queue.`);
+		await new Promise((resolve, reject) => {
 			setTimeout(() => {
-				if (Math.round(Math.random())) throw new Error();
-				resolve(true);
+				if (Math.round(Math.random())) reject(new Error("Test321"));
+				else resolve(true);
 			}, Math.random() * 1000);
 		});
 	}
@@ -49,8 +49,9 @@ export default class StationModule extends BaseModule {
 		await context.runJob("stations", "addC", {});
 	}
 
-	public addC(context: JobContext) {
+	public async addC(context: JobContext) {
 		context.log("ADDC");
+		await new Promise(() => {});
 	}
 }
 

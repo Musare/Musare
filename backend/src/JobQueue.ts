@@ -1,10 +1,18 @@
+import BaseModule from "./BaseModule";
 import Job from "./Job";
+import JobContext from "./JobContext";
+import LogBook from "./LogBook";
+import ModuleManager from "./ModuleManager";
+import { JobOptions } from "./types/JobOptions";
 import { JobStatus } from "./types/JobStatus";
+import { Jobs, Modules } from "./types/Modules";
 
 export default class JobQueue {
 	private concurrency: number;
 
 	private isPaused: boolean;
+
+	private jobs: Job[];
 
 	private queue: Job[];
 
@@ -23,16 +31,23 @@ export default class JobQueue {
 
 	private processLock: boolean;
 
+	private moduleManager: ModuleManager;
+
+	private logBook: LogBook;
+
 	/**
 	 * Job Queue
 	 */
-	public constructor() {
+	public constructor(moduleManager: ModuleManager, logBook: LogBook) {
 		this.concurrency = 1;
 		this.isPaused = true;
+		this.jobs = [];
 		this.queue = [];
 		this.active = [];
 		this.stats = {};
 		this.processLock = false;
+		this.moduleManager = moduleManager;
+		this.logBook = logBook;
 	}
 
 	/**
@@ -40,12 +55,17 @@ export default class JobQueue {
 	 *
 	 * @param job - Job
 	 */
-	public add(job: Job) {
-		this.queue.push(job);
+	public add(job: Job, runDirectly: boolean) {
 		this.updateStats(job.getName(), "added");
-		setTimeout(() => {
-			this.process();
-		}, 0);
+		this.jobs.push(job);
+		if (runDirectly) {
+			this.executeJob(job);
+		} else {
+			this.queue.push(job);
+			setTimeout(() => {
+				this.process();
+			}, 0);
+		}
 	}
 
 	/**
@@ -54,11 +74,16 @@ export default class JobQueue {
 	 * @param jobId - Job UUID
 	 * @returns Job if found
 	 */
-	public getJob(jobId: string) {
-		return (
-			this.queue.find(job => job.getUuid() === jobId) ||
-			this.active.find(job => job.getUuid() === jobId)
-		);
+	public getJob(jobId: string, recursive = false) {
+		let job = this.jobs.find(job => job.getUuid() === jobId);
+		if (job || !recursive) return job;
+
+		this.jobs.some(currentJob => {
+			job = currentJob.getJobQueue().getJob(jobId, recursive);
+			return !!job;
+		});
+
+		return job;
 	}
 
 	/**
@@ -79,13 +104,106 @@ export default class JobQueue {
 	}
 
 	/**
+	 * runJob - Run a job
+	 *
+	 * @param moduleName - Module name
+	 * @param jobName - Job name
+	 * @param params - Params
+	 */
+	public runJob<
+		ModuleNameType extends keyof Jobs & keyof Modules,
+		JobNameType extends keyof Jobs[ModuleNameType] &
+			keyof Omit<Modules[ModuleNameType], keyof BaseModule>,
+		PayloadType extends "payload" extends keyof Jobs[ModuleNameType][JobNameType]
+			? Jobs[ModuleNameType][JobNameType]["payload"] extends undefined
+				? Record<string, never>
+				: Jobs[ModuleNameType][JobNameType]["payload"]
+			: Record<string, never>,
+		ReturnType = "returns" extends keyof Jobs[ModuleNameType][JobNameType]
+			? Jobs[ModuleNameType][JobNameType]["returns"]
+			: never
+	>(
+		moduleName: ModuleNameType,
+		jobName: JobNameType,
+		payload: PayloadType,
+		options?: JobOptions
+	): Promise<ReturnType> {
+		return new Promise((resolve, reject) => {
+			const module = this.moduleManager.getModule(
+				moduleName
+			) as Modules[ModuleNameType];
+			if (!module) reject(new Error("Module not found."));
+			else {
+				const jobFunction = module[jobName];
+				if (!jobFunction || typeof jobFunction !== "function")
+					reject(new Error("Job not found."));
+				else if (
+					Object.prototype.hasOwnProperty.call(BaseModule, jobName)
+				)
+					reject(new Error("Illegal job function."));
+				else {
+					const job = new Job(
+						jobName.toString(),
+						module,
+						(job, resolveJob, rejectJob) => {
+							const jobContext = new JobContext(
+								this.moduleManager,
+								this.logBook,
+								job
+							);
+							jobFunction
+								.apply(module, [jobContext, payload])
+								.then((response: ReturnType) => {
+									this.logBook.log({
+										message: "Job completed successfully",
+										type: "success",
+										category: "jobs",
+										data: {
+											jobName: job.getName(),
+											jobId: job.getUuid()
+										}
+									});
+									resolveJob();
+									resolve(response);
+								})
+								.catch((err: any) => {
+									this.logBook.log({
+										message: `Job failed with error "${err}"`,
+										type: "error",
+										category: "jobs",
+										data: {
+											jobName: job.getName(),
+											jobId: job.getUuid()
+										}
+									});
+									rejectJob();
+									reject(err);
+								});
+						},
+						{
+							priority: (options && options.priority) || 10
+						},
+						this.moduleManager,
+						this.logBook
+					);
+
+					const runDirectly = !!(options && options.runDirectly);
+
+					this.add(job, runDirectly);
+				}
+			}
+		});
+	}
+
+	/**
 	 * Actually run a job function
 	 *
 	 * @param job - Initiated job
 	 */
-	public runJob(job: Job) {
+	public executeJob(job: Job) {
 		// Record when we started a job
 		const startTime = Date.now();
+		this.active.push(job);
 
 		job.execute()
 			.then(() => {
@@ -145,10 +263,9 @@ export default class JobQueue {
 
 			// Remove the job from the queue and add it to the active jobs array
 			this.queue.splice(this.queue.indexOf(job), 1);
-			this.active.push(job);
 
-			// Run the job
-			this.runJob(job);
+			// Execute the job
+			this.executeJob(job);
 
 			// Stop the for loop
 			break;
@@ -224,6 +341,14 @@ export default class JobQueue {
 		if (!type || type === "ACTIVE") status.active = this.active.map(format);
 		if (!type || type === "QUEUED") status.queue = this.queue.map(format);
 		return status;
+	}
+
+	/**
+	 * Gets the job array
+	 *
+	 */
+	public getJobs() {
+		return this.jobs;
 	}
 
 	/**

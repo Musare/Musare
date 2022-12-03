@@ -100,7 +100,7 @@ export default abstract class BaseModule {
 		this.moduleManager.logBook.log({
 			message,
 			type,
-			category: `modules`,
+			category: `modules.${this.getName()}`,
 			data: {
 				moduleName: this.name,
 				...data

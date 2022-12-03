@@ -55,15 +55,15 @@ export default class LogBook {
 				data: false,
 				color: true,
 				exclude: [
-					// Success messages for jobs don't tend to be very helpful, so we exclude them by default
-					{
-						category: "jobs",
-						type: "success"
-					},
-					// We don't want to show debug messages in the console by default
-					{
-						type: "debug"
-					}
+					// // Success messages for jobs don't tend to be very helpful, so we exclude them by default
+					// {
+					// 	category: "jobs",
+					// 	type: "success"
+					// },
+					// // We don't want to show debug messages in the console by default
+					// {
+					// 	type: "debug"
+					// }
 				]
 			},
 			memory: {

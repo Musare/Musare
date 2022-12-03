@@ -1,5 +1,10 @@
+import BaseModule from "./BaseModule";
+import JobQueue from "./JobQueue";
+import LogBook from "./LogBook";
+import ModuleManager from "./ModuleManager";
+import { JobOptions } from "./types/JobOptions";
 import { JobStatus } from "./types/JobStatus";
-import { Module } from "./types/Modules";
+import { Jobs, Module, Modules } from "./types/Modules";
 
 export default class Job {
 	protected name: string;
@@ -29,6 +34,12 @@ export default class Job {
 
 	protected startedAt: number;
 
+	protected moduleManager: ModuleManager;
+
+	protected logBook: LogBook;
+
+	protected jobQueue: JobQueue;
+
 	/**
 	 * Job
 	 *
@@ -41,12 +52,19 @@ export default class Job {
 		name: string,
 		module: Module,
 		callback: (job: Job, resolve: () => void, reject: () => void) => void,
-		options?: { priority: number; longJob?: string }
+		options: { priority: number; longJob?: string },
+		moduleManager: ModuleManager,
+		logBook: LogBook
 	) {
 		this.name = name;
 		this.module = module;
 		this.callback = callback;
 		this.priority = 1;
+
+		this.moduleManager = moduleManager;
+		this.logBook = logBook;
+
+		this.jobQueue = new JobQueue(moduleManager, logBook);
 
 		if (options) {
 			const { priority, longJob } = options;
@@ -113,6 +131,8 @@ export default class Job {
 	 */
 	public setStatus(status: JobStatus) {
 		this.status = status;
+		if (this.status === "ACTIVE") this.jobQueue.resume();
+		else if (this.status === "PAUSED") this.jobQueue.pause();
 	}
 
 	/**
@@ -125,6 +145,13 @@ export default class Job {
 	}
 
 	/**
+	 * Gets the job queue for jobs running under this current job
+	 */
+	public getJobQueue() {
+		return this.jobQueue;
+	}
+
+	/**
 	 * execute - Execute job
 	 *
 	 * @returns Promise
@@ -134,5 +161,33 @@ export default class Job {
 			this.setStatus("ACTIVE");
 			this.callback(this, resolve, reject);
 		});
+	}
+
+	/**
+	 * runJob - Run a job
+	 *
+	 * @param moduleName - Module name
+	 * @param jobName - Job name
+	 * @param params - Params
+	 */
+	public runJob<
+		ModuleNameType extends keyof Jobs & keyof Modules,
+		JobNameType extends keyof Jobs[ModuleNameType] &
+			keyof Omit<Modules[ModuleNameType], keyof BaseModule>,
+		PayloadType extends "payload" extends keyof Jobs[ModuleNameType][JobNameType]
+			? Jobs[ModuleNameType][JobNameType]["payload"] extends undefined
+				? Record<string, never>
+				: Jobs[ModuleNameType][JobNameType]["payload"]
+			: Record<string, never>,
+		ReturnType = "returns" extends keyof Jobs[ModuleNameType][JobNameType]
+			? Jobs[ModuleNameType][JobNameType]["returns"]
+			: never
+	>(
+		moduleName: ModuleNameType,
+		jobName: JobNameType,
+		payload: PayloadType,
+		options?: JobOptions
+	): Promise<ReturnType> {
+		return this.jobQueue.runJob(moduleName, jobName, payload, options);
 	}
 }
