@@ -564,9 +564,13 @@ class _StationsModule extends CoreClass {
 
 						// Block for experiment: weight_stations
 						if (
-							config.has("experimental.weight_stations") &&
-							config.get("experimental.weight_stations").indexOf(stationId) !== -1
+							config.has(`experimental.weight_stations.${stationId}`) &&
+							!!config.get(`experimental.weight_stations.${stationId}`)
 						) {
+							const weightTagName =
+								config.get(`experimental.weight_stations.${stationId}`) === true
+									? "weight"
+									: config.get(`experimental.weight_stations.${stationId}`);
 							const weightMap = {};
 							const getYoutubeIds = playlistSongs
 								.map(playlistSong => playlistSong.youtubeId)
@@ -574,11 +578,13 @@ class _StationsModule extends CoreClass {
 
 							const { songs } = await SongsModule.runJob("GET_SONGS", { youtubeIds: getYoutubeIds });
 
+							const weightRegex = new RegExp(`${weightTagName}\\[(\\d+)\\]`);
+
 							songs.forEach(song => {
 								let weight = 1;
 
 								song.tags.forEach(tag => {
-									const regexResponse = /weight\[(\d+)\]/.exec(tag);
+									const regexResponse = weightRegex.exec(tag);
 									if (regexResponse) weight = Number(regexResponse[1]);
 								});
 
