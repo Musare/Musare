@@ -114,5 +114,19 @@
 			]
 		}
 	},
-	"configVersion": 11
+	"configVersion": 11,
+	"experimental": {
+		"weight_stations": [
+			"STATION_ID"
+		],
+		"queue_autofill_skip_last_x_played": {
+			"STATION_ID": 5
+		},
+		"queue_autofill_skip_played_in_last_x_minutes": {
+			"STATION_ID": 5
+		},
+		"queue_add_before_autofilled": {
+			"STATION_ID": true
+		}
+	}
 }

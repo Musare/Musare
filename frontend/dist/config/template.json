@@ -46,5 +46,10 @@
 		"version": true
 	},
 	"skipConfigVersionCheck": false,
-	"configVersion": 13
+	"configVersion": 13,
+	"experimental": {
+		"changable_listen_mode": [
+			"STATION_ID"
+		]
+	}
 }

@@ -1895,14 +1895,14 @@ class _StationsModule extends CoreClass {
 					(song, station, next) => {
 						song.requestedBy = requestUser;
 						song.requestedAt = Date.now();
-						if (station.queue.length === 0) return next(null, song);
+						if (station.queue.length === 0) return next(null, song, station);
 						if (
 							requestUser &&
 							station.queue.filter(queueSong => queueSong.requestedBy === song.requestedBy).length >=
 								station.requests.limit
 						)
 							return next(`The max amount of songs per user is ${station.requests.limit}.`);
-						return next(null, song);
+						return next(null, song, station);
 					},
 
 					// (song, station, next) => {
@@ -1952,7 +1952,38 @@ class _StationsModule extends CoreClass {
 					// 	return next(null, song);
 					// },
 
-					(song, next) => {
+					(song, station, next) => {
+						if (config.has(`experimental.queue_add_before_autofilled`)) {
+							const queueAddBeforeAutofilled = config.get(`experimental.queue_add_before_autofilled`);
+
+							if (
+								queueAddBeforeAutofilled === true ||
+								queueAddBeforeAutofilled.indexOf(stationId) !== -1
+							) {
+								let position = station.queue.length;
+
+								if (station.autofill.enabled && station.queue.length >= station.autofill.limit) {
+									position = -station.autofill.limit;
+								}
+
+								StationsModule.stationModel.updateOne(
+									{ _id: stationId },
+									{
+										$push: {
+											queue: {
+												$each: [song],
+												$position: position
+											}
+										}
+									},
+									{ runValidators: true },
+									next
+								);
+
+								return;
+							}
+						}
+
 						StationsModule.stationModel.updateOne(
 							{ _id: stationId },
 							{ $push: { queue: song } },
