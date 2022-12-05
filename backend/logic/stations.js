@@ -616,7 +616,8 @@ class _StationsModule extends CoreClass {
 						playlistSongs.every(song => {
 							if (
 								songsToAdd.length < songsStillNeeded &&
-								currentYoutubeIds.indexOf(song.youtubeId) === -1
+								currentYoutubeIds.indexOf(song.youtubeId) === -1 &&
+								!songsToAdd.find(songToAdd => songToAdd.youtubeId === song.youtubeId)
 							) {
 								lastSongAdded = song;
 								songsToAdd.push(song);
