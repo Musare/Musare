@@ -1799,20 +1799,6 @@ onBeforeUnmount(() => {
 										'listen_and_participate')
 							"
 						>
-							<div
-								class="experimental-changable-listen-mode-player-header"
-								v-if="experimentalChangableListenModeEnabled"
-							>
-								<span
-									class="delete material-icons"
-									@click="
-										experimentalChangableListenModeChange(
-											'participate'
-										)
-									"
-									>highlight_off</span
-								>
-							</div>
 							<div id="video-container">
 								<div
 									id="stationPlayer"
@@ -2033,6 +2019,26 @@ onBeforeUnmount(() => {
 											>skip_next</i
 										>
 										{{ currentSong.skipVotes }}
+									</button>
+
+									<!-- Close player window -->
+									<button
+										v-if="
+											experimentalChangableListenModeEnabled
+										"
+										class="button is-primary"
+										content="Close this player window"
+										@click="
+											experimentalChangableListenModeChange(
+												'participate'
+											)
+										"
+										v-tippy
+									>
+										<i
+											class="material-icons icon-with-button"
+											>cancel_presentation</i
+										>
 									</button>
 								</div>
 								<div id="duration">
@@ -3079,16 +3085,6 @@ onBeforeUnmount(() => {
 				flex: 1;
 			}
 		}
-	}
-}
-
-.experimental-changable-listen-mode-player-header {
-	padding: 4px;
-	display: flex;
-	flex-direction: row-reverse;
-
-	.delete {
-		cursor: pointer;
 	}
 }
 
