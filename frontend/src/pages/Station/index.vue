@@ -289,6 +289,7 @@ const resizeSeekerbar = () => {
 		(getTimeElapsed() / 1000 / currentSong.value.duration) * 100;
 };
 const calculateTimeElapsed = () => {
+	if (experimentalChangableListenMode.value === "participate") return;
 	if (
 		playerReady.value &&
 		!noSong.value &&
@@ -407,6 +408,7 @@ const toggleSkipVote = (message?) => {
 	});
 };
 const youtubeReady = () => {
+	if (experimentalChangableListenMode.value === "participate") return;
 	if (!player.value) {
 		ms.setYTReady(false);
 		player.value = new window.YT.Player("stationPlayer", {
@@ -813,9 +815,11 @@ const resetKeyboardShortcutsHelper = () => {
 const sendActivityWatchVideoData = () => {
 	if (
 		!stationPaused.value &&
-		!localPaused.value &&
+		(!localPaused.value ||
+			experimentalChangableListenMode.value === "participate") &&
 		!noSong.value &&
-		player.value.getPlayerState() === window.YT.PlayerState.PLAYING
+		(experimentalChangableListenMode.value === "participate" ||
+			player.value.getPlayerState() === window.YT.PlayerState.PLAYING)
 	) {
 		if (activityWatchVideoLastStatus.value !== "playing") {
 			activityWatchVideoLastStatus.value = "playing";
@@ -849,11 +853,17 @@ const sendActivityWatchVideoData = () => {
 					  ),
 			source: `station#${station.value.name}`,
 			hostname: window.location.hostname,
-			playerState: Object.keys(window.YT.PlayerState).find(
-				key =>
-					window.YT.PlayerState[key] === player.value.getPlayerState()
-			),
-			playbackRate: playbackRate.value
+			playerState:
+				experimentalChangableListenMode.value === "participate"
+					? "none"
+					: Object.keys(window.YT.PlayerState).find(
+							key =>
+								window.YT.PlayerState[key] ===
+								player.value.getPlayerState()
+					  ),
+			playbackRate: playbackRate.value,
+			experimentalChangableListenMode:
+				experimentalChangableListenMode.value
 		};
 
 		aw.sendVideoData(videoData);
@@ -863,6 +873,12 @@ const sendActivityWatchVideoData = () => {
 };
 
 const experimentalChangableListenModeChange = newMode => {
+	experimentalChangableListenMode.value = newMode;
+	localStorage.setItem(
+		`experimental_changeable_listen_mode_${station.value._id}`,
+		newMode
+	);
+
 	if (newMode === "participate") {
 		// Destroy the YouTube player
 		if (player.value) {
@@ -873,11 +889,6 @@ const experimentalChangableListenModeChange = newMode => {
 		// Recreate the YouTube player
 		youtubeReady();
 	}
-	experimentalChangableListenMode.value = newMode;
-	localStorage.setItem(
-		`experimental_changeable_listen_mode_${station.value._id}`,
-		newMode
-	);
 };
 
 watch(
@@ -1612,13 +1623,15 @@ onBeforeUnmount(() => {
 					<div id="station-right-column" class="column">
 						<div
 							class="experimental-listen-mode-container quadrant"
-							v-if="experimentalChangableListenModeEnabled"
+							v-if="
+								experimentalChangableListenModeEnabled &&
+								!noSong
+							"
 							v-show="
 								experimentalChangableListenMode ===
 								'participate'
 							"
 						>
-							<h2>Want to listen to music?</h2>
 							<button
 								class="button is-primary"
 								@click="
@@ -1630,8 +1643,152 @@ onBeforeUnmount(() => {
 								<i class="material-icons icon-with-button"
 									>music_note</i
 								>
-								<span>Listen</span>
+								<span>Listen to music</span>
 							</button>
+							<button
+								v-if="!skipVotesLoaded"
+								class="button is-primary disabled"
+								content="Skip votes have not been loaded yet"
+								v-tippy
+							>
+								<i class="material-icons icon-with-button"
+									>skip_next</i
+								>
+								Vote to skip the current song
+							</button>
+							<button
+								v-else-if="loggedIn"
+								:class="[
+									'button',
+									'is-primary',
+									{ voted: currentSong.voted }
+								]"
+								@click="toggleSkipVote()"
+								:content="`${
+									currentSong.voted ? 'Remove vote' : 'Vote'
+								} to Skip Song`"
+								v-tippy
+							>
+								<i class="material-icons icon-with-button"
+									>skip_next</i
+								>
+								Vote to skip the current song -
+								{{ currentSong.skipVotes }} votes
+							</button>
+							<button
+								v-else
+								class="button is-primary disabled"
+								content="Log in to vote to skip songs"
+								v-tippy="{ theme: 'info' }"
+							>
+								<i class="material-icons icon-with-button"
+									>skip_next</i
+								>
+								Vote to skip the current song -
+								{{ currentSong.skipVotes }} votes
+							</button>
+							<div class="row">
+								<!-- Ratings -->
+								<div
+									class="ratings"
+									v-if="ratingsLoaded && ownRatingsLoaded"
+									:class="{
+										liked: currentSong.liked,
+										disliked: currentSong.disliked
+									}"
+								>
+									<!-- Like Song Button -->
+									<button
+										class="button is-success like-song"
+										@click="toggleLike()"
+										content="Like Song"
+										v-tippy
+									>
+										<i
+											class="material-icons icon-with-button"
+											:class="{
+												liked: currentSong.liked
+											}"
+											>thumb_up_alt</i
+										>{{ currentSong.likes }}
+									</button>
+
+									<!-- Dislike Song Button -->
+									<button
+										class="button is-danger dislike-song"
+										@click="toggleDislike()"
+										content="Dislike Song"
+										v-tippy
+									>
+										<i
+											class="material-icons icon-with-button"
+											:class="{
+												disliked: currentSong.disliked
+											}"
+											>thumb_down_alt</i
+										>{{ currentSong.dislikes }}
+									</button>
+								</div>
+								<div id="ratings" class="disabled" v-else>
+									<!-- Like Song Button -->
+									<button
+										class="button is-success like-song disabled"
+										content="Ratings have not been loaded yet"
+										v-tippy
+									>
+										<i
+											class="material-icons icon-with-button"
+											>thumb_up_alt</i
+										>
+									</button>
+
+									<!-- Dislike Song Button -->
+									<button
+										class="button is-danger dislike-song disabled"
+										content="Ratings have not been loaded yet"
+										v-tippy
+									>
+										<i
+											class="material-icons icon-with-button"
+											>thumb_down_alt</i
+										>
+									</button>
+								</div>
+								<add-to-playlist-dropdown
+									:song="currentSong"
+									placement="top-end"
+								>
+									<template #button>
+										<div
+											id="add-song-to-playlist"
+											content="Add Song to Playlist"
+											v-tippy
+										>
+											<div class="control has-addons">
+												<button
+													class="button is-primary"
+												>
+													<i class="material-icons">
+														playlist_add
+													</i>
+												</button>
+												<button
+													class="button"
+													id="dropdown-toggle"
+												>
+													<i class="material-icons">
+														{{
+															showPlaylistDropdown
+																? "expand_more"
+																: "expand_less"
+														}}
+													</i>
+												</button>
+											</div>
+										</div>
+									</template>
+								</add-to-playlist-dropdown>
+							</div>
 						</div>
 						<div
 							class="player-container quadrant"
@@ -2896,12 +3053,32 @@ onBeforeUnmount(() => {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	row-gap: 8px;
+	row-gap: 16px;
 	padding: 16px 16px;
 
-	h2 {
-		margin: 0;
-		font-size: 20px;
+	.row {
+		display: flex;
+		flex-direction: row;
+		column-gap: 16px;
+
+		.ratings {
+			flex: 2;
+			display: flex;
+			flex-direction: row;
+			column-gap: 16px;
+
+			button {
+				flex: 1;
+			}
+		}
+
+		.addToPlaylistDropdown {
+			flex: 1;
+
+			.button.is-primary {
+				flex: 1;
+			}
+		}
 	}
 }
 
@@ -2919,6 +3096,18 @@ onBeforeUnmount(() => {
 @media (max-width: 768px) {
 	.bg-bubbles li:nth-child(10) {
 		display: none;
+	}
+
+	.experimental-listen-mode-container {
+		row-gap: 8px;
+
+		.row {
+			column-gap: 8px;
+
+			.ratings {
+				column-gap: 8px;
+			}
+		}
 	}
 }
 
