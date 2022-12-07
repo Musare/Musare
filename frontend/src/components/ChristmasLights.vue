@@ -59,7 +59,7 @@ const { loggedIn } = storeToRefs(userAuthStore);
 			border-top-right-radius: 50%;
 			border-bottom-left-radius: 50%;
 			border-bottom-right-radius: 50%;
-			z-index: 2;
+			z-index: 11;
 			animation: christmas-lights 30s ease infinite;
 
 			&::before {
@@ -152,7 +152,7 @@ const { loggedIn } = storeToRefs(userAuthStore);
 		.christmas-wire {
 			flex: 1;
 			margin-bottom: 15px;
-			z-index: 1;
+			z-index: 10;
 
 			border-top: 2px solid var(--primary-color);
 			border-radius: 50%;
