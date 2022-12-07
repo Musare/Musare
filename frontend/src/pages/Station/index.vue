@@ -884,6 +884,7 @@ const experimentalChangableListenModeChange = newMode => {
 		if (player.value) {
 			player.value.destroy();
 			player.value = null;
+			playerReady.value = false;
 		}
 	} else {
 		// Recreate the YouTube player
