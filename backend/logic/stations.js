@@ -893,7 +893,11 @@ class _StationsModule extends CoreClass {
 							err => {
 								if (err) return next(err);
 
-								if (!station.paused && users.length <= skipVotes) shouldSkip = true;
+								if (
+									!station.paused &&
+									Math.min(skipVotes, users.length) / users.length >= station.skipVoteThreshold / 100
+								)
+									shouldSkip = true;
 								return next(null, shouldSkip);
 							}
 						);
