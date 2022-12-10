@@ -2937,7 +2937,7 @@ onBeforeUnmount(() => {
 		var(--dark-red) 1rem 2rem
 	);
 
-	background-size: 200% 200%;
+	background-size: 200% 100%;
 	animation: christmas 20s linear infinite;
 }
 
