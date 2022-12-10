@@ -61,6 +61,7 @@ Location: `backend/config/default.json`
 | `experimental.weight_stations` | Experimental option to use weights when autofilling stations, looking at the weight[X] tag for songs. Must be an object, key must be station id's, value can be true or a string. If true, it uses tag name `weight`. If a string, it uses that string as the tag name. |
 | `experimental.queue_autofill_skip_last_x_played` | Experimental option to not autofill songs that were played recently. Must be an object, key must be station id's, value must be a number. The number equals how many songs it will consider recent and use when checking if it can autofill. |
 | `experimental.queue_add_before_autofilled` | Experimental option to have requested songs in queue appear before autofilled songs, based on the autofill number. Must be true or an object. If true, it's enabled for all stations. If an object, key must be station id's, value must be true to enable for that station. |
+| `experimental.disable_youtube_search` | Experimental option to disable YouTube search on the backend. If true, this option is enabled. |
 
 ## Frontend
 
