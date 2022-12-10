@@ -26,7 +26,6 @@
 		"footerLinks": {
 			"GitHub": "https://github.com/Musare/Musare"
 		},
-		"mediasession": false,
 		"christmas": false,
 		"registrationDisabled": false,
 		"githubAuthentication": false
@@ -51,6 +50,7 @@
 		"changable_listen_mode": [
 			"STATION_ID"
 		],
-		"disable_youtube_search": true
+		"disable_youtube_search": true,
+		"media_session": false
 	}
 }

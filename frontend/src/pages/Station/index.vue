@@ -86,12 +86,12 @@ const beforeMediaModalLocalPausedLock = ref(false);
 const beforeMediaModalLocalPaused = ref(null);
 const persistentToastCheckerInterval = ref(null);
 const persistentToasts = ref([]);
-const mediasession = ref(false);
 const christmas = ref(false);
 const sitename = ref("Musare");
 // Experimental options
 const experimentalChangableListenModeEnabled = ref(false);
 const experimentalChangableListenMode = ref("listen_and_participate"); // Can be either listen_and_participate or participate
+const experimentalMediaSession = ref(false);
 // End experimental options
 // NEW
 const videoLoading = ref();
@@ -581,7 +581,7 @@ const setCurrentSong = data => {
 
 	clearTimeout(window.stationNextSongTimeout);
 
-	if (mediasession.value) updateMediaSessionData(_currentSong);
+	if (experimentalMediaSession.value) updateMediaSessionData(_currentSong);
 
 	startedAt.value = _startedAt;
 	updateStationPaused(_paused);
@@ -703,7 +703,8 @@ const changeVolume = () => {
 	}
 };
 const resumeLocalPlayer = () => {
-	if (mediasession.value) updateMediaSessionData(currentSong.value);
+	if (experimentalMediaSession.value)
+		updateMediaSessionData(currentSong.value);
 	if (!noSong.value) {
 		if (playerReady.value) {
 			player.value.seekTo(
@@ -714,7 +715,8 @@ const resumeLocalPlayer = () => {
 	}
 };
 const pauseLocalPlayer = () => {
-	if (mediasession.value) updateMediaSessionData(currentSong.value);
+	if (experimentalMediaSession.value)
+		updateMediaSessionData(currentSong.value);
 	if (!noSong.value) {
 		timeBeforePause.value = getTimeElapsed();
 		if (playerReady.value) player.value.pauseVideo();
@@ -1464,9 +1466,16 @@ onMounted(async () => {
 	});
 
 	frontendDevMode.value = await lofig.get("mode");
-	mediasession.value = await lofig.get("siteSettings.mediasession");
 	christmas.value = await lofig.get("siteSettings.christmas");
 	sitename.value = await lofig.get("siteSettings.sitename");
+	lofig.get("experimental").then(experimental => {
+		if (
+			experimental &&
+			Object.hasOwn(experimental, "media_session") &&
+			experimental.media_session
+		)
+			experimentalMediaSession.value = true;
+	});
 
 	ms.setListeners(0, {
 		play: () => {
@@ -1499,7 +1508,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
 	document.getElementsByTagName("html")[0].style.cssText = "";
 
-	if (mediasession.value) {
+	if (experimentalMediaSession.value) {
 		ms.removeListeners(0);
 		ms.removeMediaSessionData(0);
 	}

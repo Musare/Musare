@@ -85,7 +85,6 @@ Location: `frontend/dist/config/default.json`
 | `siteSettings.logo_small` | Path to the small white logo image, by default it is `/assets/favicon/mstile-144x144.png`. |
 | `siteSettings.sitename` | Should be the name of the site. |
 | `siteSettings.footerLinks` | Add custom links to footer by specifying `"title": "url"`, e.g. `"GitHub": "https://github.com/Musare/Musare"`. You can disable about, team and news links (but not the pages themselves) by setting them to false, e.g. `"about": false`. |
-| `siteSettings.mediasession` | Whether to enable mediasession functionality. |
 | `siteSettings.christmas` | Whether to enable christmas theming. |
 | `siteSettings.registrationDisabled` | If set to true, users can't register accounts. |
 | `messages.accountRemoval` | Message to return to users on account removal. |
@@ -100,6 +99,7 @@ Location: `frontend/dist/config/default.json`
 | `configVersion` | Version of the config. Every time the template changes, you should change your config accordingly and update the configVersion. |
 | `experimental.changable_listen_mode` | Experimental option to allows users on stations to close the player. If true, enables for all stations. If an array of station id's, enable for just those stations. |
 | `experimental.disable_youtube_search` | Experimental option to disable YouTube search on the frontend. If true, this option is enabled. |
+| `experimental.media_session` | Experimental option to enable media session functionality. |
 
 [^1]: Requires a frontend restart to update. The data will be available from the frontend console and by the frontend code.
 
