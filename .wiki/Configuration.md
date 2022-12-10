@@ -57,6 +57,10 @@ Location: `backend/config/default.json`
 | `customLoggingPerModule.[module].hideType` | Where `[module]` is a module name specify hideType as you would `defaultLogging.hideType` to overwrite default. |
 | `customLoggingPerModule.[module].blacklistedTerms` | Where `[module]` is a module name specify blacklistedTerms as you would `defaultLogging.blacklistedTerms` to overwrite default. |
 | `configVersion` | Version of the config. Every time the template changes, you should change your config accordingly and update the configVersion. |
+| `experimental.weight_stations` | Experimental option to use weights when autofilling stations, looking at the weight[X] tag for songs. If true, enables for all stations using default tag name. If an object, key msut b station id's, and if true enables for those stations with default weight tag name, or you can specify an alternative tag name by setting the value to a string. |
+| `experimental.weight_stations` | Experimental option to use weights when autofilling stations, looking at the weight[X] tag for songs. Must be an object, key must be station id's, value can be true or a string. If true, it uses tag name `weight`. If a string, it uses that string as the tag name. |
+| `experimental.queue_autofill_skip_last_x_played` | Experimental option to not autofill songs that were played recently. Must be an object, key must be station id's, value must be a number. The number equals how many songs it will consider recent and use when checking if it can autofill. |
+| `experimental.queue_add_before_autofilled` | Experimental option to have requested songs in queue appear before autofilled songs, based on the autofill number. Must be true or an object. If true, it's enabled for all stations. If an object, key must be station id's, value must be true to enable for that station. |
 
 ## Frontend
 
@@ -93,6 +97,7 @@ Location: `frontend/dist/config/default.json`
 | `debug.version` | Allow the website/users to view the current package.json version. [^1] |
 | `skipConfigVersionCheck` | Skips checking if the config version is outdated or not. Should almost always be set to false. |
 | `configVersion` | Version of the config. Every time the template changes, you should change your config accordingly and update the configVersion. |
+| `experimental.changable_listen_mode` | Experimental option to allows users on stations to close the player. If true, enables for all stations. If an array of station id's, enable for just those stations. |
 
 [^1]: Requires a frontend restart to update. The data will be available from the frontend console and by the frontend code.
 

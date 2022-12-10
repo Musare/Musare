@@ -118,7 +118,7 @@
 	"experimental": {
 		"weight_stations": {
 			"STATION_ID": true,
-			"STATION_ID_2": "alternative_weight",
+			"STATION_ID_2": "alternative_weight"
 		},
 		"queue_autofill_skip_last_x_played": {
 			"STATION_ID": 5,
