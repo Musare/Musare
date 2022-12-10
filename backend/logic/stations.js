@@ -1969,7 +1969,8 @@ class _StationsModule extends CoreClass {
 
 							if (
 								queueAddBeforeAutofilled === true ||
-								(Array.isArray(queueAddBeforeAutofilled) && queueAddBeforeAutofilled.indexOf(stationId) !== -1)
+								(Array.isArray(queueAddBeforeAutofilled) &&
+									queueAddBeforeAutofilled.indexOf(stationId) !== -1)
 							) {
 								let position = station.queue.length;
 
