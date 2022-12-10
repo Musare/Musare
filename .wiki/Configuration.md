@@ -98,6 +98,7 @@ Location: `frontend/dist/config/default.json`
 | `skipConfigVersionCheck` | Skips checking if the config version is outdated or not. Should almost always be set to false. |
 | `configVersion` | Version of the config. Every time the template changes, you should change your config accordingly and update the configVersion. |
 | `experimental.changable_listen_mode` | Experimental option to allows users on stations to close the player. If true, enables for all stations. If an array of station id's, enable for just those stations. |
+| `experimental.disable_youtube_search` | Experimental option to disable YouTube search on the frontend. If true, this option is enabled. |
 
 [^1]: Requires a frontend restart to update. The data will be available from the frontend console and by the frontend code.
 

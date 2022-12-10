@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
+import { onMounted, ref } from "vue";
 
 import { useEditSongStore } from "@/stores/editSong";
 
@@ -22,6 +23,8 @@ const { updateYoutubeId } = editSongStore;
 const { youtubeSearch, searchForSongs, loadMoreSongs } = useSearchYoutube();
 const { youtubeDirect, getYoutubeVideoId } = useYoutubeDirect();
 
+const experimentalDisableYoutubeSearch = ref(false);
+
 const selectSong = (youtubeId, result = null) => {
 	updateYoutubeId(youtubeId);
 
@@ -31,6 +34,18 @@ const selectSong = (youtubeId, result = null) => {
 			thumbnail: result.thumbnail
 		});
 };
+
+onMounted(() => {
+	lofig.get("experimental").then(experimental => {
+		if (
+			experimental &&
+			Object.hasOwn(experimental, "disable_youtube_search") &&
+			experimental.disable_youtube_search
+		) {
+			experimentalDisableYoutubeSearch.value = true;
+		}
+	});
+});
 </script>
 
 <template>
@@ -55,60 +70,63 @@ const selectSong = (youtubeId, result = null) => {
 			</p>
 		</div>
 
-		<label class="label"> Search for a song from YouTube </label>
-		<div class="control is-grouped input-with-button">
-			<p class="control is-expanded">
-				<input
-					class="input"
-					type="text"
-					placeholder="Enter your YouTube query here..."
-					v-model="youtubeSearch.songs.query"
-					autofocus
-					@keyup.enter="searchForSongs()"
-				/>
-			</p>
-			<p class="control">
-				<button
-					class="button is-info"
-					@click.prevent="searchForSongs()"
+		<div v-if="!experimentalDisableYoutubeSearch">
+			<label class="label"> Search for a song from YouTube </label>
+			<div class="control is-grouped input-with-button">
+				<p class="control is-expanded">
+					<input
+						class="input"
+						type="text"
+						placeholder="Enter your YouTube query here..."
+						v-model="youtubeSearch.songs.query"
+						autofocus
+						@keyup.enter="searchForSongs()"
+					/>
+				</p>
+				<p class="control">
+					<button
+						class="button is-info"
+						@click.prevent="searchForSongs()"
+					>
+						<i class="material-icons icon-with-button">search</i
+						>Search
+					</button>
+				</p>
+			</div>
+
+			<div
+				v-if="youtubeSearch.songs.results.length > 0"
+				id="song-query-results"
+			>
+				<search-query-item
+					v-for="result in youtubeSearch.songs.results"
+					:key="result.id"
+					:result="result"
 				>
-					<i class="material-icons icon-with-button">search</i>Search
+					<template #actions>
+						<i
+							class="material-icons icon-selected"
+							v-if="result.id === form.inputs.youtubeId.value"
+							key="selected"
+							>radio_button_checked
+						</i>
+						<i
+							class="material-icons icon-not-selected"
+							v-else
+							@click.prevent="selectSong(result.id, result)"
+							key="not-selected"
+							>radio_button_unchecked
+						</i>
+					</template>
+				</search-query-item>
+
+				<button
+					class="button is-primary load-more-button"
+					@click.prevent="loadMoreSongs()"
+				>
+					Load more...
 				</button>
-			</p>
-		</div>
-
-		<div
-			v-if="youtubeSearch.songs.results.length > 0"
-			id="song-query-results"
-		>
-			<search-query-item
-				v-for="result in youtubeSearch.songs.results"
-				:key="result.id"
-				:result="result"
-			>
-				<template #actions>
-					<i
-						class="material-icons icon-selected"
-						v-if="result.id === form.inputs.youtubeId.value"
-						key="selected"
-						>radio_button_checked
-					</i>
-					<i
-						class="material-icons icon-not-selected"
-						v-else
-						@click.prevent="selectSong(result.id, result)"
-						key="not-selected"
-						>radio_button_unchecked
-					</i>
-				</template>
-			</search-query-item>
-
-			<button
-				class="button is-primary load-more-button"
-				@click.prevent="loadMoreSongs()"
-			>
-				Load more...
-			</button>
+			</div>
 		</div>
 	</div>
 </template>

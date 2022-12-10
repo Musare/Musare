@@ -50,6 +50,7 @@
 	"experimental": {
 		"changable_listen_mode": [
 			"STATION_ID"
-		]
+		],
+		"disable_youtube_search": true
 	}
 }

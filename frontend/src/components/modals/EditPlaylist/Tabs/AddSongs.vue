@@ -21,6 +21,7 @@ const editPlaylistStore = useEditPlaylistStore({ modalUuid: props.modalUuid });
 const { playlist } = storeToRefs(editPlaylistStore);
 
 const sitename = ref("Musare");
+const experimentalDisableYoutubeSearch = ref(false);
 
 const {
 	youtubeSearch,
@@ -92,6 +93,16 @@ watch(
 
 onMounted(async () => {
 	sitename.value = await lofig.get("siteSettings.sitename");
+
+	lofig.get("experimental").then(experimental => {
+		if (
+			experimental &&
+			Object.hasOwn(experimental, "disable_youtube_search") &&
+			experimental.disable_youtube_search
+		) {
+			experimentalDisableYoutubeSearch.value = true;
+		}
+	});
 });
 </script>
 
@@ -185,7 +196,7 @@ onMounted(async () => {
 			</p>
 		</div>
 
-		<div>
+		<div v-if="!experimentalDisableYoutubeSearch">
 			<label class="label"> Search for a song from YouTube </label>
 			<div class="control is-grouped input-with-button">
 				<p class="control is-expanded">
