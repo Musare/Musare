@@ -6,6 +6,7 @@ import { useStationStore } from "@/stores/station";
 import { useManageStationStore } from "@/stores/manageStation";
 import { useSearchYoutube } from "@/composables/useSearchYoutube";
 import { useSearchMusare } from "@/composables/useSearchMusare";
+import { useYoutubeDirect } from "@/composables/useYoutubeDirect";
 
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
@@ -25,6 +26,7 @@ const props = defineProps({
 
 const { youtubeSearch, searchForSongs, loadMoreSongs } = useSearchYoutube();
 const { musareSearch, searchForMusareSongs } = useSearchMusare();
+const { youtubeDirect, addToQueue } = useYoutubeDirect();
 
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
@@ -218,6 +220,30 @@ onMounted(async () => {
 						>
 							Load {{ nextPageMusareResultsCount }} more results
 						</button>
+					</div>
+				</div>
+
+				<div class="youtube-direct">
+					<label class="label"> Add a YouTube song from a URL </label>
+					<div class="control is-grouped input-with-button">
+						<p class="control is-expanded">
+							<input
+								class="input"
+								type="text"
+								placeholder="Enter your YouTube song URL here..."
+								v-model="youtubeDirect"
+								@keyup.enter="addToQueue(station._id)"
+							/>
+						</p>
+						<p class="control">
+							<a
+								class="button is-info"
+								@click="addToQueue(station._id)"
+								><i class="material-icons icon-with-button"
+									>add</i
+								>Add</a
+							>
+						</p>
 					</div>
 				</div>
 

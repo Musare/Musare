@@ -3,6 +3,7 @@ import { defineAsyncComponent, ref, watch, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useSearchYoutube } from "@/composables/useSearchYoutube";
 import { useSearchMusare } from "@/composables/useSearchMusare";
+import { useYoutubeDirect } from "@/composables/useYoutubeDirect";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";
 
 const SongItem = defineAsyncComponent(
@@ -35,6 +36,8 @@ const {
 	searchForMusareSongs,
 	addMusareSongToPlaylist
 } = useSearchMusare();
+
+const { youtubeDirect, addToPlaylist } = useYoutubeDirect();
 
 watch(
 	() => youtubeSearch.value.songs.results,
@@ -163,6 +166,24 @@ onMounted(async () => {
 		</div>
 
 		<br v-if="musareSearch.results.length > 0" />
+
+		<label class="label"> Add a YouTube song from a URL </label>
+		<div class="control is-grouped input-with-button">
+			<p class="control is-expanded">
+				<input
+					class="input"
+					type="text"
+					placeholder="Enter your YouTube song URL here..."
+					v-model="youtubeDirect"
+					@keyup.enter="addToPlaylist(playlist._id)"
+				/>
+			</p>
+			<p class="control">
+				<a class="button is-info" @click="addToPlaylist(playlist._id)"
+					><i class="material-icons icon-with-button">add</i>Add</a
+				>
+			</p>
+		</div>
 
 		<div>
 			<label class="label"> Search for a song from YouTube </label>

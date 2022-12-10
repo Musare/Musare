@@ -4,6 +4,7 @@ import { storeToRefs } from "pinia";
 import { useEditSongStore } from "@/stores/editSong";
 
 import { useSearchYoutube } from "@/composables/useSearchYoutube";
+import { useYoutubeDirect } from "@/composables/useYoutubeDirect";
 
 import SearchQueryItem from "../../../SearchQueryItem.vue";
 
@@ -19,11 +20,12 @@ const { form, newSong } = storeToRefs(editSongStore);
 const { updateYoutubeId } = editSongStore;
 
 const { youtubeSearch, searchForSongs, loadMoreSongs } = useSearchYoutube();
+const { youtubeDirect, getYoutubeVideoId } = useYoutubeDirect();
 
-const selectSong = result => {
-	updateYoutubeId(result.id);
+const selectSong = (youtubeId, result = null) => {
+	updateYoutubeId(youtubeId);
 
-	if (newSong)
+	if (newSong && result)
 		form.value.setValue({
 			title: result.title,
 			thumbnail: result.thumbnail
@@ -33,6 +35,26 @@ const selectSong = result => {
 
 <template>
 	<div class="youtube-tab">
+		<label class="label"> Add a YouTube song from a URL </label>
+		<div class="control is-grouped input-with-button">
+			<p class="control is-expanded">
+				<input
+					class="input"
+					type="text"
+					placeholder="Enter your YouTube song URL here..."
+					v-model="youtubeDirect"
+					@keyup.enter="selectSong(getYoutubeVideoId())"
+				/>
+			</p>
+			<p class="control">
+				<a
+					class="button is-info"
+					@click="selectSong(getYoutubeVideoId())"
+					><i class="material-icons icon-with-button">add</i>Add</a
+				>
+			</p>
+		</div>
+
 		<label class="label"> Search for a song from YouTube </label>
 		<div class="control is-grouped input-with-button">
 			<p class="control is-expanded">
@@ -74,7 +96,7 @@ const selectSong = result => {
 					<i
 						class="material-icons icon-not-selected"
 						v-else
-						@click.prevent="selectSong(result)"
+						@click.prevent="selectSong(result.id, result)"
 						key="not-selected"
 						>radio_button_unchecked
 					</i>
