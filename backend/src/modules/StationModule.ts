@@ -1,16 +1,13 @@
 import JobContext from "../JobContext";
 import { UniqueMethods } from "../types/Modules";
 import BaseModule from "../BaseModule";
-import ModuleManager from "../ModuleManager";
 
 export default class StationModule extends BaseModule {
 	/**
 	 * Station Module
-	 *
-	 * @param moduleManager - Module manager class
 	 */
-	public constructor(moduleManager: ModuleManager) {
-		super(moduleManager, "stations");
+	public constructor() {
+		super("stations");
 	}
 
 	/**
@@ -51,7 +48,7 @@ export default class StationModule extends BaseModule {
 
 	public async addC(context: JobContext) {
 		context.log("ADDC");
-		await new Promise(() => {});
+		// await new Promise(() => {});
 	}
 }
 

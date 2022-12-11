@@ -1,7 +1,5 @@
 import BaseModule from "./BaseModule";
 import JobQueue from "./JobQueue";
-import LogBook from "./LogBook";
-import ModuleManager from "./ModuleManager";
 import { JobOptions } from "./types/JobOptions";
 import { JobStatus } from "./types/JobStatus";
 import { Jobs, Module, Modules } from "./types/Modules";
@@ -34,10 +32,6 @@ export default class Job {
 
 	protected startedAt: number;
 
-	protected moduleManager: ModuleManager;
-
-	protected logBook: LogBook;
-
 	protected jobQueue: JobQueue;
 
 	/**
@@ -52,19 +46,14 @@ export default class Job {
 		name: string,
 		module: Module,
 		callback: (job: Job, resolve: () => void, reject: () => void) => void,
-		options: { priority: number; longJob?: string },
-		moduleManager: ModuleManager,
-		logBook: LogBook
+		options: { priority: number; longJob?: string }
 	) {
 		this.name = name;
 		this.module = module;
 		this.callback = callback;
 		this.priority = 1;
 
-		this.moduleManager = moduleManager;
-		this.logBook = logBook;
-
-		this.jobQueue = new JobQueue(moduleManager, logBook);
+		this.jobQueue = new JobQueue();
 
 		if (options) {
 			const { priority, longJob } = options;

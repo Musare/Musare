@@ -2,25 +2,21 @@ import BaseModule from "./BaseModule";
 import Job from "./Job";
 import JobContext from "./JobContext";
 import JobQueue from "./JobQueue";
-import LogBook from "./LogBook";
 import { JobOptions } from "./types/JobOptions";
 import { Jobs, Modules, ModuleStatus, ModuleClass } from "./types/Modules";
 
 export default class ModuleManager {
-	private modules?: Modules;
+	static primaryInstance: ModuleManager;
 
-	public logBook: LogBook;
+	private modules?: Modules;
 
 	private jobQueue: JobQueue;
 
 	/**
 	 * Module Manager
-	 *
-	 * @param logBook - Logbook
 	 */
-	public constructor(logBook: LogBook) {
-		this.logBook = logBook;
-		this.jobQueue = new JobQueue(this, logBook);
+	public constructor() {
+		this.jobQueue = new JobQueue(this);
 	}
 
 	/**
@@ -101,7 +97,7 @@ export default class ModuleManager {
 		};
 		const { default: Module }: { default: ModuleClass<Modules[T]> } =
 			await import(`./modules/${mapper[moduleName]}`);
-		return new Module(this);
+		return new Module();
 	}
 
 	/**
@@ -183,5 +179,13 @@ export default class ModuleManager {
 		options?: JobOptions
 	): Promise<ReturnType> {
 		return this.jobQueue.runJob(moduleName, jobName, payload, options);
+	}
+
+	static getPrimaryInstance(): ModuleManager {
+		return this.primaryInstance;
+	}
+
+	static setPrimaryInstance(moduleManager: ModuleManager) {
+		this.primaryInstance = moduleManager;
 	}
 }

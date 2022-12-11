@@ -1,12 +1,11 @@
 import DataModule, { DataModuleJobs } from "../modules/DataModule";
 import StationModule, { StationModuleJobs } from "../modules/StationModule";
-import ModuleManager from "../ModuleManager";
 import BaseModule from "../BaseModule";
 
 export type Module = BaseModule;
 
 export type ModuleClass<Module extends typeof BaseModule> = {
-	new (moduleManager: ModuleManager): Module;
+	new (): Module;
 };
 
 export type Jobs = {

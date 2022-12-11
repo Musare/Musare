@@ -1,4 +1,4 @@
-import { Log } from "./LogBook";
+import LogBook, { Log } from "./LogBook";
 import ModuleManager from "./ModuleManager";
 import { ModuleStatus } from "./types/Modules";
 
@@ -7,6 +7,8 @@ import { ModuleStatus } from "./types/Modules";
 export default abstract class BaseModule {
 	protected moduleManager: ModuleManager;
 
+	protected logBook: LogBook;
+
 	protected name: string;
 
 	protected status: ModuleStatus;
@@ -14,11 +16,11 @@ export default abstract class BaseModule {
 	/**
 	 * Base Module
 	 *
-	 * @param moduleManager - Module manager class
 	 * @param name - Module name
 	 */
-	public constructor(moduleManager: ModuleManager, name: string) {
-		this.moduleManager = moduleManager;
+	public constructor(name: string) {
+		this.moduleManager = ModuleManager.getPrimaryInstance();
+		this.logBook = LogBook.getPrimaryInstance();
 		this.name = name;
 		this.status = "LOADED";
 		this.log(`Module (${this.name}) loaded`);
@@ -97,7 +99,7 @@ export default abstract class BaseModule {
 		} = {
 			...(typeof log === "string" ? { message: log } : log)
 		};
-		this.moduleManager.logBook.log({
+		this.logBook.log({
 			message,
 			type,
 			category: `modules.${this.getName()}`,

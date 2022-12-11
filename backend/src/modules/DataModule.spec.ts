@@ -18,9 +18,11 @@ describe("Data Module", function () {
 	const moduleManager = Object.getPrototypeOf(
 		sinon.createStubInstance(ModuleManager)
 	);
-	moduleManager.logBook = sinon.createStubInstance(LogBook);
+	ModuleManager.setPrimaryInstance(moduleManager);
+	const logBook = sinon.createStubInstance(LogBook);
+	LogBook.setPrimaryInstance(logBook);
 	moduleManager.jobQueue = sinon.createStubInstance(JobQueue);
-	const dataModule = new DataModule(moduleManager);
+	const dataModule = new DataModule();
 	const jobContext = sinon.createStubInstance(JobContext);
 	const testData = { abc: [] };
 
@@ -63,7 +65,7 @@ describe("Data Module", function () {
 	});
 
 	it("module loaded and started", function () {
-		moduleManager.logBook.log.should.have.been.called;
+		logBook.log.should.have.been.called;
 		dataModule.getName().should.equal("data");
 		dataModule.getStatus().should.equal("STARTED");
 	});

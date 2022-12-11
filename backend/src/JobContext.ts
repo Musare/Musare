@@ -13,13 +13,9 @@ export default class JobContext {
 
 	protected job: Job;
 
-	public constructor(
-		moduleManager: ModuleManager,
-		logBook: LogBook,
-		job: Job
-	) {
-		this.moduleManager = moduleManager;
-		this.logBook = logBook;
+	public constructor(job: Job) {
+		this.moduleManager = ModuleManager.getPrimaryInstance();
+		this.logBook = LogBook.getPrimaryInstance();
 		this.job = job;
 	}
 
@@ -36,7 +32,7 @@ export default class JobContext {
 		} = {
 			...(typeof log === "string" ? { message: log } : log)
 		};
-		this.moduleManager.logBook.log({
+		this.logBook.log({
 			message,
 			type,
 			category: `${this.job.getModule().getName()}.${this.job.getName()}`,

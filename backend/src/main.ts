@@ -5,6 +5,7 @@ import LogBook from "./LogBook";
 import Job from "./Job";
 
 const logBook = new LogBook();
+LogBook.setPrimaryInstance(logBook);
 
 process.removeAllListeners("uncaughtException");
 process.on("uncaughtException", err => {
@@ -26,7 +27,8 @@ process.on("uncaughtException", err => {
 	});
 });
 
-const moduleManager = new ModuleManager(logBook);
+const moduleManager = new ModuleManager();
+ModuleManager.setPrimaryInstance(moduleManager);
 moduleManager.startup();
 
 // TOOD remove, or put behind debug option

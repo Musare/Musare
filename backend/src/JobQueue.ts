@@ -38,7 +38,7 @@ export default class JobQueue {
 	/**
 	 * Job Queue
 	 */
-	public constructor(moduleManager: ModuleManager, logBook: LogBook) {
+	public constructor(moduleManager: ModuleManager | null = null) {
 		this.concurrency = 1;
 		this.isPaused = true;
 		this.jobs = [];
@@ -46,8 +46,9 @@ export default class JobQueue {
 		this.active = [];
 		this.stats = {};
 		this.processLock = false;
-		this.moduleManager = moduleManager;
-		this.logBook = logBook;
+		this.moduleManager =
+			moduleManager ?? ModuleManager.getPrimaryInstance();
+		this.logBook = LogBook.getPrimaryInstance();
 	}
 
 	/**
@@ -146,11 +147,7 @@ export default class JobQueue {
 						jobName.toString(),
 						module,
 						(job, resolveJob, rejectJob) => {
-							const jobContext = new JobContext(
-								this.moduleManager,
-								this.logBook,
-								job
-							);
+							const jobContext = new JobContext(job);
 							jobFunction
 								.apply(module, [jobContext, payload])
 								.then((response: ReturnType) => {
@@ -182,9 +179,7 @@ export default class JobQueue {
 						},
 						{
 							priority: (options && options.priority) || 10
-						},
-						this.moduleManager,
-						this.logBook
+						}
 					);
 
 					const runDirectly = !!(options && options.runDirectly);

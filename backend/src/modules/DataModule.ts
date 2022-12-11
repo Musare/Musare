@@ -4,7 +4,6 @@ import { createHash } from "node:crypto";
 import { createClient, RedisClientType } from "redis";
 import JobContext from "../JobContext";
 import BaseModule from "../BaseModule";
-import ModuleManager from "../ModuleManager";
 import Schema, { Types } from "../Schema";
 import { Collections } from "../types/Collections";
 import { Document as SchemaDocument } from "../types/Document";
@@ -55,11 +54,9 @@ export default class DataModule extends BaseModule {
 
 	/**
 	 * Data Module
-	 *
-	 * @param moduleManager - Module manager class
 	 */
-	public constructor(moduleManager: ModuleManager) {
-		super(moduleManager, "data");
+	public constructor() {
+		super("data");
 	}
 
 	/**
