@@ -43,6 +43,7 @@ export default class StationModule extends BaseModule {
 
 	public async addB(context: JobContext) {
 		context.log("ADDB");
+		await context.runJob("stations", "addToQueue", { songId: "test" });
 		await context.runJob("stations", "addC", {});
 	}
 

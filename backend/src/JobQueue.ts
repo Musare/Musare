@@ -207,6 +207,8 @@ export default class JobQueue {
 					Date.now() - startTime
 				);
 
+				job.setStatus("COMPLETED");
+
 				// If the current job is in the active jobs array, remove it, and then run the process function to run another job
 				const activeJobIndex = this.active.indexOf(job);
 				if (activeJobIndex > -1) {

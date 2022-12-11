@@ -1,5 +1,6 @@
 import BaseModule from "./BaseModule";
 import JobQueue from "./JobQueue";
+import LogBook from "./LogBook";
 import { JobOptions } from "./types/JobOptions";
 import { JobStatus } from "./types/JobStatus";
 import { Jobs, Module, Modules } from "./types/Modules";
@@ -34,6 +35,8 @@ export default class Job {
 
 	protected jobQueue: JobQueue;
 
+	protected logBook: LogBook;
+
 	/**
 	 * Job
 	 *
@@ -54,6 +57,7 @@ export default class Job {
 		this.priority = 1;
 
 		this.jobQueue = new JobQueue();
+		this.logBook = LogBook.getPrimaryInstance();
 
 		if (options) {
 			const { priority, longJob } = options;
@@ -177,6 +181,25 @@ export default class Job {
 		payload: PayloadType,
 		options?: JobOptions
 	): Promise<ReturnType> {
-		return this.jobQueue.runJob(moduleName, jobName, payload, options);
+		if (this.getStatus() !== "ACTIVE")
+			throw new Error(
+				`Cannot run a child job when the current job is not active. Current job: ${this.getName()}, attempted to run job: ${moduleName}.${jobName.toString()}.`
+			);
+
+		return new Promise<Awaited<Promise<ReturnType>>>((resolve, reject) => {
+			this.jobQueue
+				.runJob(moduleName, jobName, payload, options)
+				// @ts-ignore
+				.then(resolve)
+				.catch(reject)
+				.finally(() => {
+					if (this.getStatus() !== "ACTIVE")
+						this.logBook.log({
+							type: "error",
+							category: "jobs",
+							message: `Job ${this.getName()}(${this.getUuid()}) has had a child job (${moduleName}.${jobName.toString()}) complete, but the job was not active. This should never happen!`
+						});
+				});
+		});
 	}
 }

@@ -1,1 +1,1 @@
-export type JobStatus = "QUEUED" | "ACTIVE" | "PAUSED";
+export type JobStatus = "QUEUED" | "ACTIVE" | "PAUSED" | "COMPLETED";
