@@ -1,6 +1,7 @@
 import BaseModule from "./BaseModule";
 import Job from "./Job";
 import JobContext from "./JobContext";
+import JobStatistics from "./JobStatistics";
 import LogBook from "./LogBook";
 import ModuleManager from "./ModuleManager";
 import { JobOptions } from "./types/JobOptions";
@@ -18,22 +19,13 @@ export default class JobQueue {
 
 	private active: Job[];
 
-	private stats: Record<
-		string,
-		{
-			successful: number;
-			failed: number;
-			total: number;
-			added: number;
-			averageTime: number;
-		}
-	>;
-
 	private processLock: boolean;
 
 	private moduleManager: ModuleManager;
 
 	private logBook: LogBook;
+
+	private jobStatistics: JobStatistics;
 
 	/**
 	 * Job Queue
@@ -44,11 +36,11 @@ export default class JobQueue {
 		this.jobs = [];
 		this.queue = [];
 		this.active = [];
-		this.stats = {};
 		this.processLock = false;
 		this.moduleManager =
 			moduleManager ?? ModuleManager.getPrimaryInstance();
 		this.logBook = LogBook.getPrimaryInstance();
+		this.jobStatistics = JobStatistics.getPrimaryInstance();
 	}
 
 	/**
@@ -57,7 +49,7 @@ export default class JobQueue {
 	 * @param job - Job
 	 */
 	public add(job: Job, runDirectly: boolean) {
-		this.updateStats(job.getName(), "added");
+		this.jobStatistics.updateStats(job.getName(), "added");
 		this.jobs.push(job);
 		if (runDirectly) {
 			this.executeJob(job);
@@ -202,14 +194,14 @@ export default class JobQueue {
 
 		job.execute()
 			.then(() => {
-				this.updateStats(job.getName(), "successful");
+				this.jobStatistics.updateStats(job.getName(), "successful");
 			})
 			.catch(() => {
-				this.updateStats(job.getName(), "failed");
+				this.jobStatistics.updateStats(job.getName(), "failed");
 			})
 			.finally(() => {
-				this.updateStats(job.getName(), "total");
-				this.updateStats(
+				this.jobStatistics.updateStats(job.getName(), "total");
+				this.jobStatistics.updateStats(
 					job.getName(),
 					"averageTime",
 					Date.now() - startTime
@@ -285,33 +277,6 @@ export default class JobQueue {
 	}
 
 	/**
-	 * getStats - Get statistics of job queue
-	 *
-	 * @returns Job queue statistics
-	 */
-	public getStats() {
-		return {
-			...this.stats,
-			total: Object.values(this.stats).reduce(
-				(a, b) => ({
-					successful: a.successful + b.successful,
-					failed: a.failed + b.failed,
-					total: a.total + b.total,
-					added: a.added + b.added,
-					averageTime: -1
-				}),
-				{
-					successful: 0,
-					failed: 0,
-					total: 0,
-					added: 0,
-					averageTime: -1
-				}
-			)
-		};
-	}
-
-	/**
 	 * getQueueStatus - Get statistics of queued or active jobs
 	 *
 	 * @param type - Job type filter
@@ -344,32 +309,5 @@ export default class JobQueue {
 	 */
 	public getJobs() {
 		return this.jobs;
-	}
-
-	/**
-	 * updateStats - Update job statistics
-	 *
-	 * @param jobName - Job name
-	 * @param type - Stats type
-	 * @param duration - Duration of job, for average time stats
-	 */
-	private updateStats(
-		jobName: string,
-		type: "successful" | "failed" | "total" | "added" | "averageTime",
-		duration?: number
-	) {
-		if (!this.stats[jobName])
-			this.stats[jobName] = {
-				successful: 0,
-				failed: 0,
-				total: 0,
-				added: 0,
-				averageTime: 0
-			};
-		if (type === "averageTime" && duration)
-			this.stats[jobName].averageTime +=
-				(duration - this.stats[jobName].averageTime) /
-				this.stats[jobName].total;
-		else this.stats[jobName][type] += 1;
 	}
 }

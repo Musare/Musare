@@ -3,6 +3,7 @@ import { ObjectId } from "mongodb";
 import ModuleManager from "./ModuleManager";
 import LogBook from "./LogBook";
 import Job from "./Job";
+import JobStatistics from "./JobStatistics";
 
 const logBook = new LogBook();
 LogBook.setPrimaryInstance(logBook);
@@ -26,6 +27,9 @@ process.on("uncaughtException", err => {
 		}
 	});
 });
+
+const jobStatistics = new JobStatistics();
+JobStatistics.setPrimaryInstance(jobStatistics);
 
 const moduleManager = new ModuleManager();
 ModuleManager.setPrimaryInstance(moduleManager);

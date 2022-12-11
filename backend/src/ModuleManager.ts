@@ -1,7 +1,6 @@
 import BaseModule from "./BaseModule";
-import Job from "./Job";
-import JobContext from "./JobContext";
 import JobQueue from "./JobQueue";
+import JobStatistics from "./JobStatistics";
 import { JobOptions } from "./types/JobOptions";
 import { Jobs, Modules, ModuleStatus, ModuleClass } from "./types/Modules";
 
@@ -12,11 +11,14 @@ export default class ModuleManager {
 
 	private jobQueue: JobQueue;
 
+	private jobStatistics: JobStatistics;
+
 	/**
 	 * Module Manager
 	 */
 	public constructor() {
 		this.jobQueue = new JobQueue(this);
+		this.jobStatistics = JobStatistics.getPrimaryInstance();
 	}
 
 	/**
@@ -38,7 +40,7 @@ export default class ModuleManager {
 	 * @returns Job queue statistics
 	 */
 	public getJobsStats() {
-		return this.jobQueue.getStats();
+		return this.jobStatistics.getStats();
 	}
 
 	/**
