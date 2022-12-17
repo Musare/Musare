@@ -2286,7 +2286,7 @@ onBeforeUnmount(() => {
 								:class="{ 'no-currently-playing': noSong }"
 							>
 								<song-item
-									:key="`songItem-currentSong-${currentSong._id}`"
+									:key="`songItem-currentSong-${currentSong.youtubeId}`"
 									:song="currentSong"
 									:duration="false"
 									:requested-by="true"
@@ -2299,7 +2299,7 @@ onBeforeUnmount(() => {
 								class="quadrant"
 							>
 								<song-item
-									:key="`songItem-nextSong-${nextSong._id}`"
+									:key="`songItem-nextSong-${nextSong.youtubeId}`"
 									:song="nextSong"
 									:duration="false"
 									:requested-by="true"

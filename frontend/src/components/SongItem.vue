@@ -172,7 +172,7 @@ onUnmounted(() => {
 					<strong>
 						<user-link
 							v-if="song.requestedBy"
-							:key="song._id"
+							:key="song.youtubeId"
 							:user-id="song.requestedBy"
 						/>
 						<span v-else>station</span>
