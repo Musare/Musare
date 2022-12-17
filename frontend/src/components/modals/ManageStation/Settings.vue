@@ -64,6 +64,8 @@ const { inputs, save, setOriginalValue } = useForm(
 		requestsEnabled: station.value.requests.enabled,
 		requestsAccess: station.value.requests.access,
 		requestsLimit: station.value.requests.limit,
+		requestsAllowAutorequest: station.value.requests.allowAutorequest,
+		requestsAutorequestLimit: station.value.requests.autorequestLimit,
 		autofillEnabled: station.value.autofill.enabled,
 		autofillLimit: station.value.autofill.limit,
 		autofillMode: station.value.autofill.mode
@@ -83,7 +85,9 @@ const { inputs, save, setOriginalValue } = useForm(
 					...oldStation.requests,
 					enabled: values.requestsEnabled,
 					access: values.requestsAccess,
-					limit: values.requestsLimit
+					limit: values.requestsLimit,
+					allowAutorequest: values.requestsAllowAutorequest,
+					autorequestLimit: values.requestsAutorequestLimit
 				},
 				autofill: {
 					...oldStation.autofill,
@@ -127,6 +131,8 @@ watch(station, value => {
 		requestsEnabled: value.requests.enabled,
 		requestsAccess: value.requests.access,
 		requestsLimit: value.requests.limit,
+		requestsAllowAutorequest: value.requests.allowAutorequest,
+		requestsAutorequestLimit: value.requests.autorequestLimit,
 		autofillEnabled: value.autofill.enabled,
 		autofillLimit: value.autofill.limit,
 		autofillMode: value.autofill.mode
@@ -260,6 +266,40 @@ watch(station, value => {
 							min="1"
 							max="50"
 							v-model="inputs['requestsLimit'].value"
+						/>
+					</div>
+				</div>
+
+				<div
+					v-if="inputs['requestsEnabled'].value"
+					class="small-section"
+				>
+					<label class="label">Allow autorequest</label>
+					<p class="is-expanded checkbox-control">
+						<label class="switch">
+							<input
+								type="checkbox"
+								v-model="
+									inputs['requestsAllowAutorequest'].value
+								"
+							/>
+							<span class="slider round"></span>
+						</label>
+					</p>
+				</div>
+
+				<div
+					v-if="inputs['requestsEnabled'].value"
+					class="small-section"
+				>
+					<label class="label">Per user autorequest limit</label>
+					<div class="control is-expanded">
+						<input
+							class="input"
+							type="number"
+							min="1"
+							max="50"
+							v-model="inputs['requestsAutorequestLimit'].value"
 						/>
 					</div>
 				</div>
@@ -490,7 +530,7 @@ watch(station, value => {
 			flex-grow: 1;
 		}
 
-		.checkbox-control {
+		> .checkbox-control {
 			justify-content: end;
 		}
 
@@ -502,6 +542,10 @@ watch(station, value => {
 			&:nth-child(odd) {
 				margin-left: auto;
 				margin-right: 0;
+			}
+
+			.checkbox-control {
+				justify-content: center;
 			}
 		}
 	}

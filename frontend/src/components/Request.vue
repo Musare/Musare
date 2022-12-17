@@ -149,7 +149,9 @@ onMounted(async () => {
 					Songs
 				</button>
 				<button
-					v-if="!disableAutoRequest"
+					v-if="
+						station.requests.allowAutorequest && !disableAutoRequest
+					"
 					class="button is-default"
 					:ref="el => (tabs['autorequest-tab'] = el)"
 					:class="{ selected: tab === 'autorequest' }"
@@ -158,7 +160,7 @@ onMounted(async () => {
 					Autorequest
 				</button>
 				<button
-					v-else
+					v-else-if="station.requests.allowAutorequest"
 					class="button is-default disabled"
 					content="Only available on station pages"
 					v-tippy

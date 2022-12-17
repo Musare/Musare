@@ -195,44 +195,47 @@ const updateMediaSessionData = song => {
 	} else ms.removeMediaSessionData(0);
 };
 const autoRequestSong = () => {
-	if (
-		!autoRequestLock.value &&
-		songsList.value.length < 50 &&
-		currentUserQueueSongs.value < station.value.requests.limit * 0.5 &&
-		autoRequest.value.length > 0
-	) {
-		const selectedPlaylist =
-			autoRequest.value[
-				Math.floor(Math.random() * autoRequest.value.length)
-			];
-		if (selectedPlaylist._id && selectedPlaylist.songs.length > 0) {
-			const selectedSong =
-				selectedPlaylist.songs[
-					Math.floor(Math.random() * selectedPlaylist.songs.length)
-				];
-			if (selectedSong.youtubeId) {
-				updateAutoRequestLock(true);
-				socket.dispatch(
-					"stations.addToQueue",
-					station.value._id,
-					selectedSong.youtubeId,
-					data => {
-						updateAutoRequestLock(false);
-						if (data.status !== "success") {
-							setTimeout(
-								() => {
-									autoRequestSong();
-								},
-								data.message ===
-									"That song is already in the queue."
-									? 5000
-									: 1000
-							);
-						}
-					}
-				);
+	const { limit, allowAutorequest, autorequestLimit } =
+		station.value.requests;
+
+	if (autoRequestLock.value) return;
+	if (!allowAutorequest) return;
+	if (songsList.value.length >= 50) return;
+	if (currentUserQueueSongs.value >= limit) return;
+	if (currentUserQueueSongs.value >= autorequestLimit) return;
+	if (autoRequest.value.length === 0) return;
+
+	const uniqueYoutubeIds = new Set();
+
+	autoRequest.value.forEach(playlist => {
+		playlist.songs.forEach(song => {
+			uniqueYoutubeIds.add(song.youtubeId);
+		});
+	});
+
+	if (uniqueYoutubeIds.size > 0) {
+		const youtubeId = Array.from(uniqueYoutubeIds.values())[
+			Math.floor(Math.random() * uniqueYoutubeIds.size)
+		];
+		updateAutoRequestLock(true);
+		socket.dispatch(
+			"stations.addToQueue",
+			station.value._id,
+			youtubeId,
+			data => {
+				updateAutoRequestLock(false);
+				if (data.status !== "success") {
+					setTimeout(
+						() => {
+							autoRequestSong();
+						},
+						data.message === "That song is already in the queue."
+							? 5000
+							: 1000
+					);
+				}
 			}
-		}
+		);
 	}
 };
 const dateCurrently = () => new Date().getTime() + systemDifference.value;

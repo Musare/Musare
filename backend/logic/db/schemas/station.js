@@ -43,7 +43,9 @@ export default {
 	requests: {
 		enabled: { type: Boolean, default: true },
 		access: { type: String, enum: ["owner", "user"], default: "owner" },
-		limit: { type: Number, min: 1, max: 50, default: 5 }
+		limit: { type: Number, min: 1, max: 50, default: 5 },
+		allowAutorequest: { type: Boolean, default: true, required: true },
+		autorequestLimit: { type: Number, min: 1, max: 50, default: 3, required: true },
 	},
 	autofill: {
 		enabled: { type: Boolean, default: true },
