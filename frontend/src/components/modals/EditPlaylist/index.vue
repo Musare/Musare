@@ -364,7 +364,7 @@ onBeforeUnmount(() => {
 							@click="showTab('import-playlists')"
 							v-if="isEditable('playlists.songs.add')"
 						>
-							Import Playlists
+							Import Songs
 						</button>
 					</div>
 					<settings
