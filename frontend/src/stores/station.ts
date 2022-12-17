@@ -161,7 +161,9 @@ export const useStationStore = defineStore("station", {
 		},
 		updateAutorequestLocalStorage() {
 			const key = `autorequest-${this.station._id}`;
-			const playlistIds = this.autoRequest.map(playlist => playlist._id);
+			const playlistIds = Array.from(
+				new Set(this.autoRequest.map(playlist => playlist._id))
+			);
 			const value = {
 				updatedAt: new Date(),
 				playlistIds

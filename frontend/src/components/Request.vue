@@ -135,11 +135,23 @@ onMounted(async () => {
 
 <template>
 	<div class="station-playlists">
-		<p class="top-info has-text-centered">
+		<p
+			class="top-info has-text-centered"
+			v-if="
+				tab !== 'songs' ||
+				(station.requests.allowAutorequest && !disableAutoRequest)
+			"
+		>
 			Add songs to the queue or automatically request songs from playlists
 		</p>
 		<div class="tabs-container">
-			<div class="tab-selection">
+			<div
+				class="tab-selection"
+				v-if="
+					tab !== 'songs' ||
+					(station.requests.allowAutorequest && !disableAutoRequest)
+				"
+			>
 				<button
 					class="button is-default"
 					:ref="el => (tabs['songs-tab'] = el)"
@@ -367,6 +379,7 @@ onMounted(async () => {
 
 	.tabs-container {
 		.tab-selection {
+			margin-bottom: 10px;
 			display: flex;
 			overflow-x: auto;
 
@@ -392,7 +405,7 @@ onMounted(async () => {
 			}
 		}
 		.tab {
-			padding: 10px 0;
+			padding-bottom: 10px;
 			border-radius: 0;
 			.item.item-draggable:not(:last-of-type) {
 				margin-bottom: 10px;

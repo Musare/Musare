@@ -82,7 +82,7 @@ onMounted(() => {
 				Request
 			</button>
 		</div>
-		<Queue class="tab" v-show="tab === 'queue'" />
+		<Queue class="tab" v-show="tab === 'queue'" @on-change-tab="showTab" />
 		<Users class="tab" v-show="tab === 'users'" />
 		<Request
 			v-if="canRequest()"

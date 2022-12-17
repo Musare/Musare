@@ -266,7 +266,7 @@ const searchForPlaylists = page => {
 };
 
 onMounted(() => {
-	showTab("search");
+	showTab("my-playlists");
 
 	socket.onConnect(() => {
 		socket.dispatch("playlists.indexMyPlaylists", res => {
@@ -304,7 +304,10 @@ onMounted(() => {
 			`autorequest-${station.value._id}`
 		);
 
-		if (autorequestLocalStorageItem) {
+		if (
+			autorequestLocalStorageItem &&
+			station.value.requests.allowAutorequest
+		) {
 			const autorequestParsedItem = JSON.parse(
 				autorequestLocalStorageItem
 			);
@@ -350,6 +353,17 @@ onMounted(() => {
 		<div class="tabs-container">
 			<div class="tab-selection">
 				<button
+					v-if="
+						type === 'autorequest' || station.type === 'community'
+					"
+					class="button is-default"
+					:ref="el => (tabs['my-playlists-tab'] = el)"
+					:class="{ selected: tab === 'my-playlists' }"
+					@click="showTab('my-playlists')"
+				>
+					My Playlists
+				</button>
+				<button
 					class="button is-default"
 					:ref="el => (tabs['search-tab'] = el)"
 					:class="{ selected: tab === 'search' }"
@@ -364,17 +378,6 @@ onMounted(() => {
 					@click="showTab('current')"
 				>
 					Current
-				</button>
-				<button
-					v-if="
-						type === 'autorequest' || station.type === 'community'
-					"
-					class="button is-default"
-					:ref="el => (tabs['my-playlists-tab'] = el)"
-					:class="{ selected: tab === 'my-playlists' }"
-					@click="showTab('my-playlists')"
-				>
-					My Playlists
 				</button>
 			</div>
 			<div class="tab" v-show="tab === 'search'">
@@ -840,13 +843,6 @@ onMounted(() => {
 				class="tab"
 				v-show="tab === 'my-playlists'"
 			>
-				<button
-					class="button is-primary"
-					id="create-new-playlist-button"
-					@click="openModal('createPlaylist')"
-				>
-					Create new playlist
-				</button>
 				<div
 					class="menu-list scrollable-list"
 					v-if="playlists.length > 0"
@@ -1011,8 +1007,16 @@ onMounted(() => {
 				</div>
 
 				<p v-else class="has-text-centered scrollable-list">
-					You don't have any playlists!
+					You don't have any playlists
 				</p>
+
+				<button
+					class="button is-primary"
+					id="create-new-playlist-button"
+					@click="openModal('createPlaylist')"
+				>
+					Create new playlist
+				</button>
 			</div>
 		</div>
 	</div>
