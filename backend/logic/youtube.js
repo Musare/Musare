@@ -1069,15 +1069,11 @@ class _YouTubeModule extends CoreClass {
 				youtubeApiRequest.save();
 
 				const { ...keylessParams } = payload.params;
-				CacheModule.runJob(
-					"HSET",
-					{
-						table: "youtubeApiRequestParams",
-						key: youtubeApiRequest._id.toString(),
-						value: JSON.stringify(keylessParams)
-					},
-					this
-				).then();
+				CacheModule.runJob("HSET", {
+					table: "youtubeApiRequestParams",
+					key: youtubeApiRequest._id.toString(),
+					value: JSON.stringify(keylessParams)
+				}).then();
 
 				YouTubeModule.apiCalls.push({ date: youtubeApiRequest.date, quotaCost });
 
@@ -1090,15 +1086,11 @@ class _YouTubeModule extends CoreClass {
 						if (response.data.error) {
 							reject(new Error(response.data.error));
 						} else {
-							CacheModule.runJob(
-								"HSET",
-								{
-									table: "youtubeApiRequestResults",
-									key: youtubeApiRequest._id.toString(),
-									value: JSON.stringify(response.data)
-								},
-								this
-							).then();
+							CacheModule.runJob("HSET", {
+								table: "youtubeApiRequestResults",
+								key: youtubeApiRequest._id.toString(),
+								value: JSON.stringify(response.data)
+							}).then();
 
 							resolve({ response });
 						}
