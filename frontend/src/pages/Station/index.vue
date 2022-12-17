@@ -171,6 +171,7 @@ const {
 	updateOwnCurrentSongRatings,
 	updateCurrentSongSkipVotes,
 	updateAutoRequestLock,
+	updateAutorequestLocalStorage,
 	hasPermission,
 	addDj,
 	removeDj,
@@ -200,10 +201,13 @@ const autoRequestSong = () => {
 
 	if (autoRequestLock.value) return;
 	if (!allowAutorequest) return;
-	if (songsList.value.length >= 50) return;
+	if (autoRequest.value.length === 0) return;
+
+	updateAutorequestLocalStorage();
+
 	if (currentUserQueueSongs.value >= limit) return;
 	if (currentUserQueueSongs.value >= autorequestLimit) return;
-	if (autoRequest.value.length === 0) return;
+	if (songsList.value.length >= 50) return;
 
 	const uniqueYoutubeIds = new Set();
 
@@ -1543,6 +1547,15 @@ onBeforeUnmount(() => {
 	});
 
 	socket.dispatch("stations.leave", station.value._id, () => {});
+
+	const { allowAutorequest } = station.value.requests;
+
+	if (
+		!autoRequestLock.value &&
+		allowAutorequest &&
+		autoRequest.value.length > 0
+	)
+		updateAutorequestLocalStorage();
 
 	leaveStation();
 

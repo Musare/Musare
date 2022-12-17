@@ -141,8 +141,15 @@ export const useStationStore = defineStore("station", {
 				this.currentSong.skipVotesCurrent = skipVotesCurrent;
 			this.currentSong.voted = voted;
 		},
+		addAutorequestPlaylists(playlists) {
+			playlists.forEach(playlist => {
+				this.autoRequest.push(playlist);
+			});
+			this.updateAutorequestLocalStorage();
+		},
 		addPlaylistToAutoRequest(playlist) {
 			this.autoRequest.push(playlist);
+			this.updateAutorequestLocalStorage();
 		},
 		removePlaylistFromAutoRequest(playlistId) {
 			this.autoRequest.forEach((playlist, index) => {
@@ -150,6 +157,16 @@ export const useStationStore = defineStore("station", {
 					this.autoRequest.splice(index, 1);
 				}
 			});
+			this.updateAutorequestLocalStorage();
+		},
+		updateAutorequestLocalStorage() {
+			const key = `autorequest-${this.station._id}`;
+			const playlistIds = this.autoRequest.map(playlist => playlist._id);
+			const value = {
+				updatedAt: new Date(),
+				playlistIds
+			};
+			localStorage.setItem(key, JSON.stringify(value));
 		},
 		updateMediaModalPlayingAudio(mediaModalPlayingAudio) {
 			this.mediaModalPlayingAudio = mediaModalPlayingAudio;

@@ -105,8 +105,12 @@ const { openModal } = useModalsStore();
 
 const { setPlaylists } = useUserPlaylistsStore();
 
-const { addPlaylistToAutoRequest, removePlaylistFromAutoRequest } =
-	stationStore;
+const {
+	addAutorequestPlaylists,
+	addPlaylistToAutoRequest,
+	removePlaylistFromAutoRequest,
+	updateAutorequestLocalStorage
+} = stationStore;
 
 const showTab = _tab => {
 	tabs.value[`${_tab}-tab`].scrollIntoView({ block: "nearest" });
@@ -295,6 +299,45 @@ onMounted(() => {
 				}
 			}
 		);
+
+		const autorequestLocalStorageItem = localStorage.getItem(
+			`autorequest-${station.value._id}`
+		);
+
+		if (autorequestLocalStorageItem) {
+			const autorequestParsedItem = JSON.parse(
+				autorequestLocalStorageItem
+			);
+			const autorequestUpdatedAt = new Date(
+				autorequestParsedItem.updatedAt
+			);
+			const fiveMinutesAgo = new Date(
+				new Date().getTime() - 5 * 60 * 1000
+			);
+			if (autorequestUpdatedAt > fiveMinutesAgo) {
+				const playlists = [];
+
+				const promises = autorequestParsedItem.playlistIds.map(
+					playlistId =>
+						new Promise<void>(resolve => {
+							socket.dispatch(
+								"playlists.getPlaylist",
+								playlistId,
+								res => {
+									if (res.status === "success") {
+										playlists.push(res.data.playlist);
+									}
+									resolve();
+								}
+							);
+						})
+				);
+
+				Promise.all(promises).then(() => {
+					addAutorequestPlaylists(playlists);
+				});
+			} else updateAutorequestLocalStorage();
+		}
 	});
 });
 </script>
