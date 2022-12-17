@@ -1,7 +1,7 @@
 {
-  "name": "musare-backend",
+  "name": "musare-backend-kris-fork",
   "private": true,
-  "version": "3.9.0-rc1",
+  "version": "3.9.0-rc1-kris-fork",
   "type": "module",
   "description": "An open-source collaborative music listening and catalogue curation application. Currently supporting YouTube based content.",
   "main": "index.js",
