@@ -19,7 +19,7 @@ const stationStore = useStationStore();
 const { tab, showTab } = useTabQueryHandler("queue");
 
 const { loggedIn } = storeToRefs(userAuthStore);
-const { station } = storeToRefs(stationStore);
+const { station, userCount } = storeToRefs(stationStore);
 const { hasPermission } = stationStore;
 
 const canRequest = (requireLogin = true) =>
@@ -64,6 +64,7 @@ onMounted(() => {
 				@click="showTab('users')"
 			>
 				Users
+				<span class="tag">{{ Math.min(userCount, 1) }}</span>
 			</button>
 			<button
 				v-if="canRequest()"

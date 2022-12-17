@@ -1314,7 +1314,29 @@ button.delete:focus {
 }
 
 .tag {
-	padding-right: 6px !important;
+	background-color: var(--dark-grey-3);
+	font-family: monospace;
+	font-weight: 700;
+	color: white;
+	border-radius: 100%;
+	text-align: center;
+	padding: 0 !important;
+	font-size: 12px;
+	line-height: 18px;
+	min-width: 18px;
+	height: 18px;
+	margin-left: 4px;
+
+	.material-icons {
+		font-size: 18px;
+	}
+}
+
+.selected {
+	.tag {
+		background-color: var(--light-grey);
+		color: var(--dark-grey);
+	}
 }
 
 #tab-selection,

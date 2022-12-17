@@ -92,9 +92,14 @@ const songsInQueue = computed(() => {
 // 			queueSong => queueSong.requestedBy === userId.value
 // 		).length
 // );
+const autorequestPlaylistCount = computed(() => {
+	if (props.sector === "station") return stationStore.autoRequest.length;
+	return 0;
+});
 
 const showTab = _tab => {
-	tabs.value[`${_tab}-tab`].scrollIntoView({ block: "nearest" });
+	const tabElement = tabs.value[`${_tab}-tab`];
+	if (tabElement) tabElement.scrollIntoView({ block: "nearest" });
 	tab.value = _tab;
 };
 
@@ -170,6 +175,13 @@ onMounted(async () => {
 					@click="showTab('autorequest')"
 				>
 					Autorequest
+					<span
+						v-tippy
+						content="You are autorequesting playlists"
+						class="tag has-icon"
+						v-if="autorequestPlaylistCount > 0"
+						><i class="material-icons">play_arrow</i></span
+					>
 				</button>
 				<button
 					v-else-if="station.requests.allowAutorequest"

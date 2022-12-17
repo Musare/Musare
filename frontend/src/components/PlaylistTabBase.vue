@@ -306,7 +306,8 @@ onMounted(() => {
 
 		if (
 			autorequestLocalStorageItem &&
-			station.value.requests.allowAutorequest
+			station.value.requests.allowAutorequest &&
+			autoRequest.value.length === 0
 		) {
 			const autorequestParsedItem = JSON.parse(
 				autorequestLocalStorageItem
@@ -378,6 +379,9 @@ onMounted(() => {
 					@click="showTab('current')"
 				>
 					Current
+					<span class="tag" v-if="selectedPlaylists().length > 0">{{
+						selectedPlaylists().length
+					}}</span>
 				</button>
 			</div>
 			<div class="tab" v-show="tab === 'search'">
