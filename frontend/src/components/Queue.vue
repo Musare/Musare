@@ -168,6 +168,7 @@ defineEmits(["onChangeTab"]);
 						<song-item
 							:song="element"
 							:requested-by="true"
+							:requested-type="true"
 							:disabled-actions="[]"
 							:ref="el => (songItems[`song-item-${index}`] = el)"
 							:key="`queue-song-item-${element.youtubeId}`"
@@ -219,7 +220,7 @@ defineEmits(["onChangeTab"]);
 				There are no songs currently queued
 			</p>
 			<button
-				v-if="canRequest && sector === 'station'"
+				v-if="canRequest() && sector === 'station'"
 				class="floating button is-primary"
 				@click="$emit('onChangeTab', 'request')"
 			>

@@ -74,6 +74,7 @@ const addSongToQueue = (youtubeId: string) => {
 		"stations.addToQueue",
 		station.value._id,
 		youtubeId,
+		"manual",
 		res => {
 			if (res.status !== "success") new Toast(`Error: ${res.message}`);
 			else {

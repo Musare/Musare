@@ -1891,7 +1891,7 @@ export default {
 	 * @param youtubeId - the song id
 	 * @param cb
 	 */
-	addToQueue: isLoginRequired(async function addToQueue(session, stationId, youtubeId, cb) {
+	addToQueue: isLoginRequired(async function addToQueue(session, stationId, youtubeId, requestType, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1939,7 +1939,8 @@ export default {
 						{
 							stationId,
 							youtubeId,
-							requestUser: session.userId
+							requestUser: session.userId,
+							requestType
 						},
 						this
 					)

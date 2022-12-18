@@ -207,6 +207,7 @@ const addSongToQueue = youtubeId => {
 		"stations.addToQueue",
 		station.value._id,
 		youtubeId,
+		"manual",
 		data => {
 			if (data.status !== "success")
 				new Toast({

@@ -69,6 +69,7 @@ export const useYoutubeDirect = () => {
 				"stations.addToQueue",
 				stationId,
 				youtubeVideoId,
+				"manual",
 				res => {
 					if (res.status !== "success")
 						new Toast(`Error: ${res.message}`);

@@ -284,6 +284,7 @@ const autoRequestSong = () => {
 			"stations.addToQueue",
 			station.value._id,
 			youtubeId,
+			"autorequest",
 			data => {
 				updateAutoRequestLock(false);
 				if (data.status !== "success") {
@@ -2407,6 +2408,7 @@ onBeforeUnmount(() => {
 									:song="currentSong"
 									:duration="false"
 									:requested-by="true"
+									:requested-type="true"
 									header="Currently Playing.."
 								/>
 							</div>
@@ -2420,6 +2422,7 @@ onBeforeUnmount(() => {
 									:song="nextSong"
 									:duration="false"
 									:requested-by="true"
+									:requested-type="true"
 									header="Next Up.."
 								/>
 							</div>

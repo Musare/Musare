@@ -127,8 +127,12 @@ class _StationsModule extends CoreClass {
 		const stationModel = (this.stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }));
 		const stationSchema = (this.stationSchema = await CacheModule.runJob("GET_SCHEMA", { schemaName: "station" }));
 
-		const stationHistoryModel = (this.stationHistoryModel = await DBModule.runJob("GET_MODEL", { modelName: "stationHistory" }));
-		const stationHistorySchema = (this.stationHistorySchema = await CacheModule.runJob("GET_SCHEMA", { schemaName: "stationHistory" }));
+		const stationHistoryModel = (this.stationHistoryModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "stationHistory"
+		}));
+		const stationHistorySchema = (this.stationHistorySchema = await CacheModule.runJob("GET_SCHEMA", {
+			schemaName: "stationHistory"
+		}));
 
 		return new Promise((resolve, reject) => {
 			async.waterfall(
@@ -687,6 +691,7 @@ class _StationsModule extends CoreClass {
 						const newPlaylist = [...currentSongs, ...songsToAdd].map(song => {
 							if (!song._id) song._id = null;
 							if (!song.requestedAt) song.requestedAt = Date.now();
+							if (!song.requestedType) song.requestedType = "autofill";
 							return song;
 						});
 						next(null, newPlaylist, currentSongIndex);
@@ -774,6 +779,7 @@ class _StationsModule extends CoreClass {
 									verified,
 									requestedAt: queueSong.requestedAt,
 									requestedBy: queueSong.requestedBy,
+									requestedType: queueSong.requestedType,
 									likes: song.likes || 0,
 									dislikes: song.dislikes || 0
 								});
@@ -1115,6 +1121,7 @@ class _StationsModule extends CoreClass {
 								thumbnail: song.thumbnail,
 								requestedAt: song.requestedAt,
 								requestedBy: song.requestedBy,
+								requestedType: song.requestedType,
 								verified: song.verified
 							};
 						}
@@ -1888,11 +1895,12 @@ class _StationsModule extends CoreClass {
 	 * @param {string} payload.stationId - the station id
 	 * @param {string} payload.youtubeId - the youtube id
 	 * @param {string} payload.requestUser - the requesting user id
+	 * @param {string} payload.requestType - the request type
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	ADD_TO_QUEUE(payload) {
 		return new Promise((resolve, reject) => {
-			const { stationId, youtubeId, requestUser } = payload;
+			const { stationId, youtubeId, requestUser, requestType } = payload;
 			async.waterfall(
 				[
 					next => {
@@ -1973,6 +1981,7 @@ class _StationsModule extends CoreClass {
 					(song, station, next) => {
 						song.requestedBy = requestUser;
 						song.requestedAt = Date.now();
+						song.requestedType = requestType;
 						if (station.queue.length === 0) return next(null, song, station);
 						if (
 							requestUser &&

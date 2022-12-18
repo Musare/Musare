@@ -17,6 +17,7 @@ export default {
 		skipVotes: [{ type: String }],
 		requestedBy: { type: String },
 		requestedAt: { type: Date },
+		requestedType: { type: String, enum: ["manual", "autorequest", "autofill"] },
 		verified: { type: Boolean }
 	},
 	currentSongIndex: { type: Number, default: 0, required: true },
@@ -36,6 +37,7 @@ export default {
 			thumbnail: { type: String },
 			requestedBy: { type: String },
 			requestedAt: { type: Date },
+			requestedType: { type: String, enum: ["manual", "autorequest", "autofill"] },
 			verified: { type: Boolean }
 		}
 	],

@@ -23,6 +23,10 @@ const props = defineProps({
 		type: Boolean,
 		default: false
 	},
+	requestedType: {
+		type: Boolean,
+		default: false
+	},
 	duration: {
 		type: Boolean,
 		default: true
@@ -167,7 +171,10 @@ onUnmounted(() => {
 				>
 					{{ formatArtists() }}
 				</h5>
-				<p class="song-request-time" v-if="requestedBy">
+				<p
+					class="song-request-time"
+					v-if="requestedBy && !requestedType"
+				>
 					Requested by
 					<strong>
 						<user-link
@@ -179,6 +186,33 @@ onUnmounted(() => {
 						{{ formatedRequestedAt }}
 						ago
 					</strong>
+				</p>
+				<p
+					class="song-request-time"
+					v-if="requestedBy && requestedType"
+				>
+					<template v-if="song.requestedType === 'automatic'">
+						Requested automaticaly
+						<strong>
+							{{ formatedRequestedAt }}
+							ago
+						</strong>
+					</template>
+					<template v-else>
+						<span v-if="song.requestedType === 'autorequest'"
+							>Autorequested</span
+						><span v-else>Requested</span> by
+						<strong>
+							<user-link
+								v-if="song.requestedBy"
+								:key="song.youtubeId"
+								:user-id="song.requestedBy"
+							/>
+							<span v-else>station</span>
+							{{ formatedRequestedAt }}
+							ago
+						</strong>
+					</template>
 				</p>
 			</div>
 		</div>
