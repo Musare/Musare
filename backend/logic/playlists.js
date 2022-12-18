@@ -160,6 +160,34 @@ class _PlaylistsModule extends CoreClass {
 	}
 
 	/**
+	 * Returns a list of youtube ids in all user playlists of the specified user
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.userId - the user id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_SONG_YOUTUBE_IDS_FROM_PLAYLISTS(payload) {
+		return new Promise((resolve, reject) => {
+			PlaylistsModule.playlistModel.find({ createdBy: payload.userId }, (err, playlists) => {
+				const youtubeIds = new Set();
+
+				if (err) reject(err);
+				else {
+					playlists.forEach(playlist => {
+						playlist.songs.forEach(song => {
+							youtubeIds.add(song.youtubeId);
+						});
+					});
+
+					console.log(Array.from(youtubeIds));
+
+					resolve({ youtubeIds: Array.from(youtubeIds) });
+				}
+			});
+		});
+	}
+
+	/**
 	 * Creates a playlist owned by a user
 	 *
 	 * @param {object} payload - object that contains the payload
