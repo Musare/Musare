@@ -42,6 +42,12 @@
 			"secret": "",
 			"redirect_uri": ""
 		},
+		"google": {
+			"enabled": true,
+			"client": "",
+			"secret": "",
+			"redirect_uri": ""
+		},
 		"discogs": {
 			"client": "",
 			"secret": "",
