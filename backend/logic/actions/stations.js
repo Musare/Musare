@@ -2786,5 +2786,11 @@ export default {
 				return cb({ status: "success", message: "Successfully removed DJ." });
 			}
 		);
+	},
+
+	setStationState(session, newStationState, cb) {
+		session.stationState = newStationState;
+
+		cb({ status: "success" });
 	}
 };

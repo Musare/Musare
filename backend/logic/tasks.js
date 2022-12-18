@@ -15,6 +15,17 @@ let UtilsModule;
 let WSModule;
 let DBModule;
 
+const stationStateWorth = {
+	unknown: 0,
+	no_song: 1,
+	station_paused: 2,
+	participate: 3,
+	local_paused: 4,
+	muted: 5,
+	buffering: 6,
+	playing: 7
+};
+
 class _TasksModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
@@ -403,8 +414,20 @@ class _TasksModule extends CoreClass {
 								(user, next) => {
 									if (!user) return next("User not found.");
 
-									if (usersPerStation[stationId].loggedIn.some(u => user.username === u.username))
+									const state = socket.session.stationState ?? "unknown";
+
+									const existingUserObject = usersPerStation[stationId].loggedIn.findLast(
+										u => user.username === u.username
+									);
+
+									if (existingUserObject) {
+										if (stationStateWorth[state] > stationStateWorth[existingUserObject.state]) {
+											usersPerStation[stationId].loggedIn[
+												usersPerStation[stationId].loggedIn.indexOf(existingUserObject)
+											].state = state;
+										}
 										return next("User already in the list.");
+									}
 
 									usersPerStationCount[stationId] += 1; // increment user count for station
 
@@ -412,7 +435,8 @@ class _TasksModule extends CoreClass {
 										_id: user._id,
 										username: user.username,
 										name: user.name,
-										avatar: user.avatar
+										avatar: user.avatar,
+										state
 									});
 								}
 							],

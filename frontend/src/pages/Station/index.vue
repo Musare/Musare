@@ -80,6 +80,7 @@ const activityWatchVideoDataInterval = ref(null);
 const activityWatchVideoLastStatus = ref("");
 const activityWatchVideoLastYouTubeId = ref("");
 const activityWatchVideoLastStartDuration = ref(0);
+const reportStationStateInterval = ref(null);
 const nextCurrentSong = ref(null);
 const mediaModalWatcher = ref(null);
 const beforeMediaModalLocalPausedLock = ref(false);
@@ -124,6 +125,10 @@ const {
 	history
 } = storeToRefs(stationStore);
 
+const youtubePlayerState = ref<
+	null | "UNSTARTED" | "ENDED" | "PLAYING" | "PAUSED" | "BUFFERING" | "CUED"
+>(null);
+
 const skipVotesLoaded = computed(
 	() =>
 		!noSong.value &&
@@ -151,6 +156,23 @@ const currentUserQueueSongs = computed(
 			queueSong => queueSong.requestedBy === userId.value
 		).length
 );
+
+const stationState = computed(() => {
+	if (noSong.value) return "no_song";
+	if (stationPaused.value) return "station_paused";
+	if (
+		experimentalChangableListenModeEnabled.value &&
+		experimentalChangableListenMode.value === "participate"
+	)
+		return "participate";
+	if (localPaused.value) return "local_paused";
+	if (volumeSliderValue.value === 0 || muted.value) return "muted";
+	if (playerReady.value && youtubePlayerState.value === "PLAYING")
+		return "playing";
+	if (playerReady.value && youtubePlayerState.value === "BUFFERING")
+		return "buffering";
+	return "unknown";
+});
 
 const {
 	joinStation,
@@ -533,6 +555,29 @@ const youtubeReady = () => {
 					}
 				},
 				onStateChange: event => {
+					switch (event.data) {
+						case window.YT.PlayerState.UNSTARTED:
+							youtubePlayerState.value = "UNSTARTED";
+							break;
+						case window.YT.PlayerState.ENDED:
+							youtubePlayerState.value = "ENDED";
+							break;
+						case window.YT.PlayerState.PLAYING:
+							youtubePlayerState.value = "PLAYING";
+							break;
+						case window.YT.PlayerState.PAUSED:
+							youtubePlayerState.value = "PAUSED";
+							break;
+						case window.YT.PlayerState.BUFFERING:
+							youtubePlayerState.value = "BUFFERING";
+							break;
+						case window.YT.PlayerState.CUED:
+							youtubePlayerState.value = "CUED";
+							break;
+						default:
+							youtubePlayerState.value = null;
+					}
+
 					if (
 						event.data === window.YT.PlayerState.PLAYING &&
 						videoLoading.value === true
@@ -920,6 +965,7 @@ const experimentalChangableListenModeChange = newMode => {
 			player.value.destroy();
 			player.value = null;
 			playerReady.value = false;
+			youtubePlayerState.value = null;
 		}
 	} else {
 		// Recreate the YouTube player
@@ -960,6 +1006,13 @@ onMounted(async () => {
 	activityWatchVideoDataInterval.value = setInterval(() => {
 		sendActivityWatchVideoData();
 	}, 1000);
+	reportStationStateInterval.value = setInterval(() => {
+		socket.dispatch(
+			"stations.setStationState",
+			stationState.value,
+			() => {}
+		);
+	}, 5000);
 	persistentToastCheckerInterval.value = setInterval(() => {
 		persistentToasts.value.filter(
 			persistentToast => !persistentToast.checkIfCanRemove()
@@ -1579,6 +1632,7 @@ onBeforeUnmount(() => {
 	clearInterval(activityWatchVideoDataInterval.value);
 	clearTimeout(window.stationNextSongTimeout);
 	clearTimeout(persistentToastCheckerInterval.value);
+	clearInterval(reportStationStateInterval.value);
 	persistentToasts.value.forEach(persistentToast => {
 		persistentToast.toast.destroy();
 	});
