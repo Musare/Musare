@@ -463,10 +463,18 @@ onMounted(() => {
 </template>
 
 <style lang="less">
-.report-modal .song-item .thumbnail {
-	min-width: 130px;
-	width: 130px;
-	height: 130px;
+.report-modal .song-item {
+	height: 130px !important;
+
+	.thumbnail {
+		min-width: 130px;
+		width: 130px;
+		height: 130px;
+	}
+
+	.song-info {
+		margin-left: 130px;
+	}
 }
 </style>
 

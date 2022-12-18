@@ -656,7 +656,11 @@ export default {
 						1,
 						(stationId, next) => {
 							if (!youtubeVideo)
-								StationsModule.runJob("SKIP_STATION", { stationId, natural: false }, this)
+								StationsModule.runJob(
+									"SKIP_STATION",
+									{ stationId, natural: false, skipReason: "other" },
+									this
+								)
 									.then(() => {
 										next();
 									})

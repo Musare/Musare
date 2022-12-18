@@ -61,12 +61,19 @@ watch(
 		<slot name="icon" />
 		<div
 			v-if="-1 < loadError && loadError < 2 && isYoutubeThumbnail"
-			class="yt-thumbnail-bg"
+			class="thumbnail-bg"
 			:style="{
 				'background-image':
 					'url(' +
 					`https://img.youtube.com/vi/${song.youtubeId}/mqdefault.jpg` +
 					')'
+			}"
+		></div>
+		<div
+			v-if="-1 < loadError && loadError < 2 && !isYoutubeThumbnail"
+			class="thumbnail-bg"
+			:style="{
+				'background-image': `url(${song.thumbnail})`
 			}"
 		></div>
 		<img
@@ -94,12 +101,12 @@ watch(
 	margin-bottom: -15px;
 	margin-left: -10px;
 
-	.yt-thumbnail-bg {
-		display: none;
-	}
+	// .yt-thumbnail-bg {
+	// 	display: none;
+	// }
 
 	img {
-		height: 100%;
+		// height: 100%;
 		width: 100%;
 		margin-top: auto;
 		margin-bottom: auto;
@@ -111,21 +118,21 @@ watch(
 		right: 0;
 	}
 
-	&.youtube-thumbnail {
-		.yt-thumbnail-bg {
-			height: 100%;
-			width: 100%;
-			display: block;
-			position: absolute;
-			top: 0;
-			filter: blur(1px);
-			background: url("/assets/notes-transparent.png") no-repeat center
-				center;
-		}
-
-		img {
-			height: auto;
-		}
+	.thumbnail-bg {
+		height: 100%;
+		width: 100%;
+		display: block;
+		position: absolute;
+		top: 0;
+		filter: blur(2px);
+		background: url("/assets/notes-transparent.png") no-repeat center center;
+		background-size: cover;
 	}
+
+	// &.youtube-thumbnail {
+	// 	img {
+	// 		height: auto;
+	// 	}
+	// }
 }
 </style>

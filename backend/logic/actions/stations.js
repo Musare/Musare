@@ -996,6 +996,70 @@ export default {
 		);
 	},
 
+	/**
+	 * Gets station history
+	 *
+	 * @param {object} session - user session
+	 * @param {string} stationId - the station id
+	 * @param {Function} cb - callback
+	 */
+	getHistory(session, stationId, cb) {
+		async.waterfall(
+			[
+				next => {
+					StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => {
+							next(null, station);
+						})
+						.catch(next);
+				},
+
+				(station, next) => {
+					if (!station) return next("Station not found.");
+					return StationsModule.runJob(
+						"CAN_USER_VIEW_STATION",
+						{
+							station,
+							userId: session.userId
+						},
+						this
+					)
+						.then(canView => {
+							if (!canView) next("Not allowed to access station history.");
+							else next();
+						})
+						.catch(err => next(err));
+				},
+
+				async () => {
+					const response = await StationsModule.stationHistoryModel
+						.find({ stationId }, { documentVersion: 0, __v: 0 })
+						.sort({ "payload.skippedAt": -1 })
+						.limit(50);
+
+					return response;
+				}
+			],
+			async (err, history) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"GET_STATION_HISTORY",
+						`Getting station history for station "${stationId}" failed. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+				this.log(
+					"SUCCESS",
+					"GET_STATION_HISTORY",
+					`Got station history for station "${stationId}" successfully.`
+				);
+				return cb({ status: "success", data: { history } });
+			}
+		);
+	},
+
 	getStationAutofillPlaylistsById(session, stationId, cb) {
 		async.waterfall(
 			[
@@ -1257,7 +1321,7 @@ export default {
 					this.log("ERROR", "STATIONS_FORCE_SKIP", `Force skipping station "${stationId}" failed. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
-				StationsModule.runJob("SKIP_STATION", { stationId, natural: false });
+				StationsModule.runJob("SKIP_STATION", { stationId, natural: false, skipReason: "force_skip" });
 				this.log("SUCCESS", "STATIONS_FORCE_SKIP", `Force skipped station "${stationId}" successfully.`);
 				return cb({
 					status: "success",

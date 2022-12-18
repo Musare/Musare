@@ -419,6 +419,7 @@ onMounted(async () => {
 		.tab {
 			padding-bottom: 10px;
 			border-radius: 0;
+
 			.item.item-draggable:not(:last-of-type) {
 				margin-bottom: 10px;
 			}
@@ -428,6 +429,10 @@ onMounted(async () => {
 			}
 		}
 	}
+}
+
+.youtube-direct {
+	margin-top: 10px;
 }
 
 .youtube-search {

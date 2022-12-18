@@ -25,6 +25,7 @@ export const useStationStore = defineStore("station", {
 		blacklist: Playlist[];
 		mediaModalPlayingAudio: boolean;
 		permissions: Record<string, boolean>;
+		history: any[];
 	} => ({
 		station: {},
 		autoRequest: [],
@@ -43,7 +44,8 @@ export const useStationStore = defineStore("station", {
 		autofill: [],
 		blacklist: [],
 		mediaModalPlayingAudio: false,
-		permissions: {}
+		permissions: {},
+		history: []
 	}),
 	actions: {
 		joinStation(station) {
@@ -198,6 +200,12 @@ export const useStationStore = defineStore("station", {
 					this.station.djs.splice(index, 1);
 				}
 			});
+		},
+		setHistory(history) {
+			this.history = history;
+		},
+		addHistoryItem(historyItem) {
+			this.history.unshift(historyItem);
 		}
 	}
 });

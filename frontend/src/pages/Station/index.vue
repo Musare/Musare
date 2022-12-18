@@ -175,7 +175,9 @@ const {
 	hasPermission,
 	addDj,
 	removeDj,
-	updatePermissions
+	updatePermissions,
+	addHistoryItem,
+	setHistory
 } = stationStore;
 
 // TODO fix this if it still has some use
@@ -1058,6 +1060,13 @@ onMounted(async () => {
 					}
 				});
 
+				socket.dispatch("stations.getHistory", _id, res => {
+					if (res.status === "success") {
+						const { history } = res.data;
+						setHistory(history);
+					}
+				});
+
 				if (hasPermission("stations.playback.toggle"))
 					keyboardShortcuts.registerShortcut("station.pauseResume", {
 						keyCode: 32, // Spacebar
@@ -1455,6 +1464,11 @@ onMounted(async () => {
 					});
 			});
 		removeDj(res.data.user);
+	});
+
+	socket.on("event:station.history.new", res => {
+		console.log(1111, res.data.historyItem);
+		addHistoryItem(res.data.historyItem);
 	});
 
 	socket.on("keep.event:user.role.updated", () => {
@@ -2490,10 +2504,16 @@ onBeforeUnmount(() => {
 #currently-playing-container,
 #next-up-container {
 	.song-item {
+		min-height: 130px;
+
 		.thumbnail {
 			min-width: 130px;
 			width: 130px;
 			height: 130px;
+		}
+
+		.song-info {
+			margin-left: 130px;
 		}
 	}
 }

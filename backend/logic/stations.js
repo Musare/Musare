@@ -127,6 +127,9 @@ class _StationsModule extends CoreClass {
 		const stationModel = (this.stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }));
 		const stationSchema = (this.stationSchema = await CacheModule.runJob("GET_SCHEMA", { schemaName: "station" }));
 
+		const stationHistoryModel = (this.stationHistoryModel = await DBModule.runJob("GET_MODEL", { modelName: "stationHistory" }));
+		const stationHistorySchema = (this.stationHistorySchema = await CacheModule.runJob("GET_SCHEMA", { schemaName: "stationHistory" }));
+
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
@@ -269,7 +272,8 @@ class _StationsModule extends CoreClass {
 									cb: () =>
 										StationsModule.runJob("SKIP_STATION", {
 											stationId: station._id,
-											natural: true
+											natural: true,
+											skipReason: "natural"
 										}),
 									unique: true,
 									station
@@ -288,7 +292,8 @@ class _StationsModule extends CoreClass {
 								"SKIP_STATION",
 								{
 									stationId: station._id,
-									natural: false
+									natural: false,
+									skipReason: "other"
 								},
 								this
 							)
@@ -309,7 +314,8 @@ class _StationsModule extends CoreClass {
 								"SKIP_STATION",
 								{
 									stationId: station._id,
-									natural: false
+									natural: false,
+									skipReason: "other"
 								},
 								this
 							)
@@ -909,7 +915,8 @@ class _StationsModule extends CoreClass {
 								"SKIP_STATION",
 								{
 									stationId: payload.stationId,
-									natural: false
+									natural: false,
+									skipReason: "vote_skip"
 								},
 								this
 							)
@@ -927,11 +934,49 @@ class _StationsModule extends CoreClass {
 	}
 
 	/**
+	 *
+	 *
+	 * @param {*} payload
+	 */
+	async ADD_STATION_HISTORY_ITEM(payload) {
+		const { stationId, currentSong, skipReason, skippedAt } = payload;
+
+		let document = await StationsModule.stationHistoryModel.create({
+			stationId,
+			type: "song_played",
+			payload: {
+				song: currentSong,
+				skippedAt,
+				skipReason
+			},
+			documentVersion: 1
+		});
+
+		if (!document) return;
+
+		document = document._doc;
+
+		delete document.__v;
+		delete document.documentVersion;
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `station.${stationId}`,
+			args: ["event:station.history.new", { data: { historyItem: document } }]
+		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `manage-station.${stationId}`,
+			args: ["event:manageStation.history.new", { data: { stationId, historyItem: document } }]
+		});
+	}
+
+	/**
 	 * Skips a station
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the id of the station to skip
 	 * @param {string} payload.natural - whether to skip naturally or forcefully
+	 * @param {string} payload.skipReason - if it was skipped via force skip or via vote skipping or if it was natural
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	SKIP_STATION(payload) {
@@ -969,6 +1014,28 @@ class _StationsModule extends CoreClass {
 					(station, next) => {
 						if (!station) return next("Station not found.");
 
+						const { currentSong } = station;
+						if (!currentSong) return next(null, station);
+
+						const stationId = station._id;
+						const skippedAt = new Date();
+						const { skipReason } = payload;
+
+						return StationsModule.runJob(
+							"ADD_STATION_HISTORY_ITEM",
+							{
+								stationId,
+								currentSong,
+								skippedAt,
+								skipReason
+							},
+							this
+						).finally(() => {
+							next(null, station);
+						});
+					},
+
+					(station, next) => {
 						if (station.autofill.enabled)
 							return StationsModule.runJob("AUTOFILL_STATION", { stationId: station._id }, this)
 								.then(() => next(null, station))

@@ -62,6 +62,12 @@ class _TasksModule extends CoreClass {
 				timeout: 1000 * 3
 			});
 
+			TasksModule.runJob("CREATE_TASK", {
+				name: "historyClearTask",
+				fn: TasksModule.historyClearTask,
+				timeout: 1000 * 60 * 60 * 6
+			});
+
 			resolve();
 		});
 	}
@@ -465,6 +471,26 @@ class _TasksModule extends CoreClass {
 
 			resolve();
 		});
+	}
+
+	/**
+	 * Periodically removes any old history documents
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async historyClearTask() {
+		TasksModule.log("INFO", "TASK_HISTORY_CLEAR", `Removing old history.`);
+
+		const stationHistoryModel = await DBModule.runJob("GET_MODEL", { modelName: "stationHistory" });
+
+		// Remove documents created more than 2 days ago
+		const mongoQuery = { "payload.skippedAt": { $lt: new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 2) } };
+
+		const count = await stationHistoryModel.count(mongoQuery);
+
+		await stationHistoryModel.remove(mongoQuery);
+
+		TasksModule.log("SUCCESS", "TASK_HISTORY_CLEAR", `Removed ${count} history items`);
 	}
 }
 

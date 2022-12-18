@@ -131,7 +131,7 @@ onUnmounted(() => {
 <template>
 	<div
 		class="universal-item song-item"
-		:class="{ 'with-duration': duration }"
+		:class="{ 'with-duration': duration, 'with-header': header }"
 		v-if="song"
 	>
 		<div class="thumbnail-and-info">
@@ -311,7 +311,12 @@ onUnmounted(() => {
 }
 
 .song-item {
-	min-height: 70px;
+	height: 70px;
+
+	&.with-header {
+		height: initial;
+		min-height: 70px;
+	}
 
 	&:not(:last-of-type) {
 		margin-bottom: 10px;
@@ -333,14 +338,19 @@ onUnmounted(() => {
 
 	.thumbnail-and-info {
 		min-width: 0;
+
+		min-height: 70px;
+		position: relative;
 	}
 
 	.thumbnail {
 		min-width: 70px;
 		width: 70px;
-		height: 70px;
 		margin: -7.5px;
 		margin-right: calc(20px - 7.5px);
+
+		height: calc(100% + 15px);
+		position: absolute;
 	}
 
 	.song-info {
@@ -349,6 +359,8 @@ onUnmounted(() => {
 		justify-content: center;
 		// margin-left: 20px;
 		min-width: 0;
+
+		margin-left: 70px;
 
 		*:not(i) {
 			margin: 0;

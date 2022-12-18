@@ -1591,7 +1591,11 @@ class _YouTubeModule extends CoreClass {
 															(station, next) => {
 																StationsModule.runJob(
 																	"SKIP_STATION",
-																	{ stationId: station._id, natural: false },
+																	{
+																		stationId: station._id,
+																		natural: false,
+																		skipReason: "other"
+																	},
 																	this
 																)
 																	.then(() => {

@@ -11,6 +11,9 @@ const Users = defineAsyncComponent(
 	() => import("@/pages/Station/Sidebar/Users.vue")
 );
 const Request = defineAsyncComponent(() => import("@/components/Request.vue"));
+const History = defineAsyncComponent(
+	() => import("@/pages/Station/Sidebar/History.vue")
+);
 
 const route = useRoute();
 const userAuthStore = useUserAuthStore();
@@ -82,6 +85,13 @@ onMounted(() => {
 			>
 				Request
 			</button>
+			<button
+				class="button is-default"
+				:class="{ selected: tab === 'history' }"
+				@click="showTab('history')"
+			>
+				History
+			</button>
 		</div>
 		<Queue class="tab" v-show="tab === 'queue'" @on-change-tab="showTab" />
 		<Users class="tab" v-show="tab === 'users'" />
@@ -91,6 +101,7 @@ onMounted(() => {
 			class="tab requests-tab"
 			sector="station"
 		/>
+		<History class="tab" v-show="tab === 'history'" />
 	</div>
 </template>
 

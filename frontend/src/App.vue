@@ -1318,14 +1318,18 @@ button.delete:focus {
 	font-family: monospace;
 	font-weight: 700;
 	color: white;
-	border-radius: 100%;
+	border-radius: 18px;
 	text-align: center;
-	padding: 0 !important;
+	padding: 0 4px !important;
 	font-size: 12px;
 	line-height: 18px;
 	min-width: 18px;
 	height: 18px;
 	margin-left: 4px;
+
+	&.has-icon {
+		padding: 0 !important;
+	}
 
 	.material-icons {
 		font-size: 18px;

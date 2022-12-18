@@ -18,7 +18,8 @@ const REQUIRED_DOCUMENT_VERSIONS = {
 	youtubeApiRequest: 1,
 	youtubeVideo: 1,
 	ratings: 1,
-	importJob: 1
+	importJob: 1,
+	stationHistory: 1
 };
 
 const regex = {
@@ -75,7 +76,8 @@ class _DBModule extends CoreClass {
 						punishment: {},
 						youtubeApiRequest: {},
 						youtubeVideo: {},
-						ratings: {}
+						ratings: {},
+						stationHistory: {}
 					};
 
 					const importSchema = schemaName =>
@@ -100,6 +102,7 @@ class _DBModule extends CoreClass {
 					await importSchema("youtubeVideo");
 					await importSchema("ratings");
 					await importSchema("importJob");
+					await importSchema("stationHistory");
 
 					this.models = {
 						song: mongoose.model("song", this.schemas.song),
@@ -115,7 +118,8 @@ class _DBModule extends CoreClass {
 						youtubeApiRequest: mongoose.model("youtubeApiRequest", this.schemas.youtubeApiRequest),
 						youtubeVideo: mongoose.model("youtubeVideo", this.schemas.youtubeVideo),
 						ratings: mongoose.model("ratings", this.schemas.ratings),
-						importJob: mongoose.model("importJob", this.schemas.importJob)
+						importJob: mongoose.model("importJob", this.schemas.importJob),
+						stationHistory: mongoose.model("stationHistory", this.schemas.stationHistory)
 					};
 
 					mongoose.connection.on("error", err => {
@@ -261,6 +265,7 @@ class _DBModule extends CoreClass {
 					this.models.youtubeVideo.syncIndexes();
 					this.models.ratings.syncIndexes();
 					this.models.importJob.syncIndexes();
+					this.models.stationHistory.syncIndexes();
 
 					if (config.get("skipDbDocumentsVersionCheck")) resolve();
 					else {
