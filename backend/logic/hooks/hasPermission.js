@@ -136,7 +136,7 @@ export const hasPermission = async (permission, session, stationId) => {
 							if (!station) return next("Station not found.");
 							if (station.type === "community" && station.owner === user._id.toString())
 								return next(null, [user.role, "owner"]);
-							if (station.type === "community" && station.djs.find(dj => dj === user._id.toString()))
+							if (station.djs.find(dj => dj === user._id.toString()))
 								return next(null, [user.role, "dj"]);
 							if (user.role === "admin" || user.role === "moderator") return next(null, [user.role]);
 							return next("Invalid permissions.");
@@ -251,7 +251,7 @@ export const getUserPermissions = async (session, stationId) => {
 							if (!station) return next("Station not found.");
 							if (station.type === "community" && station.owner === user._id.toString())
 								return next(null, [user.role, "owner"]);
-							if (station.type === "community" && station.djs.find(dj => dj === user._id.toString()))
+							if (station.djs.find(dj => dj === user._id.toString()))
 								return next(null, [user.role, "dj"]);
 							if (user.role === "admin" || user.role === "moderator") return next(null, [user.role]);
 							return next("Invalid permissions.");

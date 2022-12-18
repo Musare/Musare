@@ -16,7 +16,7 @@ export default {
 			verified: { type: Boolean }
 		},
 		skippedAt: { type: Date },
-		skipReason: { type: String, enum: ["natural", "force_skip", "vote_skip"] }
+		skipReason: { type: String, enum: ["natural", "force_skip", "vote_skip", "other"] }
 	},
 	documentVersion: { type: Number, default: 1, required: true }
 };

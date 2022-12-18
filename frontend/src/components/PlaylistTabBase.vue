@@ -113,7 +113,8 @@ const {
 } = stationStore;
 
 const showTab = _tab => {
-	tabs.value[`${_tab}-tab`].scrollIntoView({ block: "nearest" });
+	if (tabs.value[`${_tab}-tab`])
+		tabs.value[`${_tab}-tab`].scrollIntoView({ block: "nearest" });
 	tab.value = _tab;
 };
 
@@ -306,6 +307,7 @@ onMounted(() => {
 
 		if (
 			autorequestLocalStorageItem &&
+			station.value.requests &&
 			station.value.requests.allowAutorequest &&
 			autoRequest.value.length === 0
 		) {

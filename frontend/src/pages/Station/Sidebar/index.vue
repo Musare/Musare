@@ -67,7 +67,7 @@ onMounted(() => {
 				@click="showTab('users')"
 			>
 				Users
-				<span class="tag">{{ Math.min(userCount, 1) }}</span>
+				<span class="tag">{{ Math.max(userCount, 1) }}</span>
 			</button>
 			<button
 				v-if="canRequest()"

@@ -72,7 +72,8 @@ const copyToClipboard = async () => {
 };
 
 const showTab = _tab => {
-	tabs.value[`${_tab}-tab`].scrollIntoView({ block: "nearest" });
+	if (tabs.value[`${_tab}-tab`])
+		tabs.value[`${_tab}-tab`].scrollIntoView({ block: "nearest" });
 	tab.value = _tab;
 };
 
@@ -135,13 +136,7 @@ onMounted(async () => {
 <template>
 	<div id="users">
 		<div class="tabs-container">
-			<div
-				v-if="
-					hasPermission('stations.update') &&
-					station.type === 'community'
-				"
-				class="tab-selection"
-			>
+			<div v-if="hasPermission('stations.update')" class="tab-selection">
 				<button
 					class="button is-default"
 					:ref="el => (tabs['active-tab'] = el)"
@@ -238,7 +233,6 @@ onMounted(async () => {
 									<button
 										v-if="
 											hasPermission('stations.djs.add') &&
-											station.type === 'community' &&
 											!isDj(user._id) &&
 											!isOwner(user._id)
 										"
@@ -253,9 +247,7 @@ onMounted(async () => {
 										v-else-if="
 											hasPermission(
 												'stations.djs.remove'
-											) &&
-											station.type === 'community' &&
-											isDj(user._id)
+											) && isDj(user._id)
 										"
 										class="button is-danger material-icons"
 										@click.prevent="removeDj(user._id)"
@@ -421,7 +413,6 @@ onMounted(async () => {
 								<button
 									v-if="
 										hasPermission('stations.djs.add') &&
-										station.type === 'community' &&
 										!isDj(user._id) &&
 										!isOwner(user._id)
 									"
@@ -435,7 +426,6 @@ onMounted(async () => {
 								<button
 									v-else-if="
 										hasPermission('stations.djs.remove') &&
-										station.type === 'community' &&
 										isDj(user._id)
 									"
 									class="button is-danger material-icons"
@@ -571,34 +561,34 @@ onMounted(async () => {
 							color: var(--black);
 						}
 
+						.profile-picture {
+							margin-right: 10px;
+							width: 36px;
+							height: 36px;
+						}
+
+						:deep(.profile-picture.using-initials span) {
+							font-size: calc(
+								36px / 5 * 2
+							); // 2/5th of .profile-picture height/width
+						}
+
+						.user-rank {
+							color: var(--primary-color);
+							font-size: 18px;
+							margin: 0 5px;
+						}
+
+						.button {
+							margin-left: auto;
+							font-size: 18px;
+							width: 36px;
+						}
+
 						.left {
 							display: flex;
 							align-items: center;
 							flex: 1;
-
-							.profile-picture {
-								margin-right: 10px;
-								width: 36px;
-								height: 36px;
-							}
-
-							:deep(.profile-picture.using-initials span) {
-								font-size: calc(
-									36px / 5 * 2
-								); // 2/5th of .profile-picture height/width
-							}
-
-							.user-rank {
-								color: var(--primary-color);
-								font-size: 18px;
-								margin: 0 5px;
-							}
-
-							.button {
-								margin-left: auto;
-								font-size: 18px;
-								width: 36px;
-							}
 						}
 
 						.user-state {

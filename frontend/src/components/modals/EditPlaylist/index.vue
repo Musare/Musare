@@ -62,7 +62,8 @@ const { setPlaylist, clearPlaylist, addSong, removeSong, repositionedSong } =
 const { closeCurrentModal } = useModalsStore();
 
 const showTab = payload => {
-	tabs.value[`${payload}-tab`].scrollIntoView({ block: "nearest" });
+	if (tabs.value[`${payload}-tab`])
+		tabs.value[`${payload}-tab`].scrollIntoView({ block: "nearest" });
 	editPlaylistStore.showTab(payload);
 };
 
