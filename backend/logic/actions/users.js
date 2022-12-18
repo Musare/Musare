@@ -870,7 +870,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	async register(session, username, email, password, recaptcha, cb) {
-		email = email.toLowerCase();
+		email = email.toLowerCase().trim();
 		const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 }, this);
 
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
@@ -881,6 +881,24 @@ export default {
 				next => {
 					if (config.get("registrationDisabled") === true)
 						return next("Registration is not allowed at this time.");
+					if (
+						config.has("experimental.registration_email_whitelist") &&
+						config.get("experimental.registration_email_whitelist")
+					) {
+						const experimentalRegistrationEmailWhitelist = config.get(
+							"experimental.registration_email_whitelist"
+						);
+						if (!Array.isArray(experimentalRegistrationEmailWhitelist)) return next();
+
+						let anyPassed = false;
+
+						experimentalRegistrationEmailWhitelist.forEach(regex => {
+							const newRegex = new RegExp(regex);
+							if (newRegex.test(email)) anyPassed = true;
+						});
+
+						if (!anyPassed) next("Your email is not allowed to register.");
+					}
 					return next();
 				},
 
