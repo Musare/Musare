@@ -256,6 +256,16 @@ const autoRequestSong = () => {
 		);
 	}
 
+	if (songsList.value) {
+		songsList.value.forEach(song => {
+			excludedYoutubeIds.push(song.youtubeId);
+		});
+	}
+
+	if (!noSong.value) {
+		excludedYoutubeIds.push(currentSong.value.youtubeId);
+	}
+
 	const uniqueYoutubeIds = new Set();
 
 	autoRequest.value.forEach(playlist => {
