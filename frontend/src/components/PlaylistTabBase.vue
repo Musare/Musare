@@ -58,7 +58,7 @@ const {
 	calculatePlaylistOrder
 } = useSortablePlaylists();
 
-const { autoRequest } = storeToRefs(stationStore);
+const { autoRequest, history, songsList } = storeToRefs(stationStore);
 
 const manageStationStore = useManageStationStore({
 	modalUuid: props.modalUuid
@@ -95,6 +95,58 @@ const resultsLeftCount = computed(() => search.count - search.results.length);
 const nextPageResultsCount = computed(() =>
 	Math.min(search.pageSize, resultsLeftCount.value)
 );
+
+const excludedYoutubeIds = computed(() => {
+	if (!history.value) return [];
+
+	const {
+		autorequestDisallowRecentlyPlayedEnabled,
+		autorequestDisallowRecentlyPlayedNumber
+	} = station.value.requests;
+
+	const youtubeIds = new Set();
+
+	if (autorequestDisallowRecentlyPlayedEnabled) {
+		history.value.forEach((historyItem, index) => {
+			if (index < autorequestDisallowRecentlyPlayedNumber)
+				youtubeIds.add(historyItem.payload.song.youtubeId);
+		});
+	}
+
+	if (songsList.value) {
+		songsList.value.forEach(song => {
+			youtubeIds.add(song.youtubeId);
+		});
+	}
+
+	if (station.value.currentSong) {
+		youtubeIds.add(station.value.currentSong.youtubeId);
+	}
+
+	return Array.from(youtubeIds);
+});
+
+const totalUniqueAutorequestableYoutubeIds = computed(() => {
+	if (!autoRequest.value) return [];
+
+	const uniqueYoutubeIds = new Set();
+
+	autoRequest.value.forEach(playlist => {
+		playlist.songs.forEach(song => {
+			uniqueYoutubeIds.add(song.youtubeId);
+		});
+	});
+
+	return Array.from(uniqueYoutubeIds);
+});
+
+const actuallyAutorequestingYoutubeIds = computed(() => {
+	const excluded = excludedYoutubeIds.value;
+	const remaining = totalUniqueAutorequestableYoutubeIds.value.filter(
+		youtubeId => excluded.indexOf(youtubeId) === -1
+	);
+	return remaining;
+});
 
 const hasPermission = permission =>
 	props.sector === "manageStation"
@@ -767,6 +819,30 @@ onMounted(() => {
 				</div>
 			</div>
 			<div class="tab" v-show="tab === 'current'">
+				<p
+					class="has-text-centered scrollable-list"
+					v-if="selectedPlaylists().length > 0"
+				>
+					You are currently autorequesting a mix of
+					{{ totalUniqueAutorequestableYoutubeIds.length }} different
+					songs. Of these, we can currently autorequest
+					{{ actuallyAutorequestingYoutubeIds.length }} songs.
+					<br />
+					Songs that
+					<span
+						v-if="
+							station.requests
+								.autorequestDisallowRecentlyPlayedEnabled
+						"
+						>were played recently or</span
+					>
+					are currently in the queue or playing will not be
+					autorequested.
+
+					<br />
+					<br />
+				</p>
+
 				<div v-if="selectedPlaylists().length > 0">
 					<playlist-item
 						v-for="playlist in selectedPlaylists()"
