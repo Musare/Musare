@@ -66,6 +66,10 @@ const { inputs, save, setOriginalValue } = useForm(
 		requestsLimit: station.value.requests.limit,
 		requestsAllowAutorequest: station.value.requests.allowAutorequest,
 		requestsAutorequestLimit: station.value.requests.autorequestLimit,
+		requestsAutorequestDisallowRecentlyPlayedEnabled:
+			station.value.requests.autorequestDisallowRecentlyPlayedEnabled,
+		requestsAutorequestDisallowRecentlyPlayedNumber:
+			station.value.requests.autorequestDisallowRecentlyPlayedNumber,
 		autofillEnabled: station.value.autofill.enabled,
 		autofillLimit: station.value.autofill.limit,
 		autofillMode: station.value.autofill.mode
@@ -87,7 +91,11 @@ const { inputs, save, setOriginalValue } = useForm(
 					access: values.requestsAccess,
 					limit: values.requestsLimit,
 					allowAutorequest: values.requestsAllowAutorequest,
-					autorequestLimit: values.requestsAutorequestLimit
+					autorequestLimit: values.requestsAutorequestLimit,
+					autorequestDisallowRecentlyPlayedEnabled:
+						values.requestsAutorequestDisallowRecentlyPlayedEnabled,
+					autorequestDisallowRecentlyPlayedNumber:
+						values.requestsAutorequestDisallowRecentlyPlayedNumber
 				},
 				autofill: {
 					...oldStation.autofill,
@@ -133,6 +141,10 @@ watch(station, value => {
 		requestsLimit: value.requests.limit,
 		requestsAllowAutorequest: value.requests.allowAutorequest,
 		requestsAutorequestLimit: value.requests.autorequestLimit,
+		requestsAutorequestDisallowRecentlyPlayedEnabled:
+			value.requests.autorequestDisallowRecentlyPlayedEnabled,
+		requestsAutorequestDisallowRecentlyPlayedNumber:
+			value.requests.autorequestDisallowRecentlyPlayedNumber,
 		autofillEnabled: value.autofill.enabled,
 		autofillLimit: value.autofill.limit,
 		autofillMode: value.autofill.mode
@@ -300,6 +312,46 @@ watch(station, value => {
 							min="1"
 							max="50"
 							v-model="inputs['requestsAutorequestLimit'].value"
+						/>
+					</div>
+				</div>
+
+				<div
+					v-if="inputs['requestsEnabled'].value"
+					class="small-section"
+				>
+					<label class="label">Autorequest disallow recent</label>
+					<p class="is-expanded checkbox-control">
+						<label class="switch">
+							<input
+								type="checkbox"
+								v-model="
+									inputs[
+										'requestsAutorequestDisallowRecentlyPlayedEnabled'
+									].value
+								"
+							/>
+							<span class="slider round"></span>
+						</label>
+					</p>
+				</div>
+
+				<div
+					v-if="inputs['requestsEnabled'].value"
+					class="small-section"
+				>
+					<label class="label">Autorequest disallow recent #</label>
+					<div class="control is-expanded">
+						<input
+							class="input"
+							type="number"
+							min="1"
+							max="250"
+							v-model="
+								inputs[
+									'requestsAutorequestDisallowRecentlyPlayedNumber'
+								].value
+							"
 						/>
 					</div>
 				</div>

@@ -46,6 +46,8 @@ export default {
 		limit: { type: Number, min: 1, max: 50, default: 5 },
 		allowAutorequest: { type: Boolean, default: true, required: true },
 		autorequestLimit: { type: Number, min: 1, max: 50, default: 3, required: true },
+		autorequestDisallowRecentlyPlayedEnabled: { type: Boolean, default: true, required: true },
+		autorequestDisallowRecentlyPlayedNumber: { type: Number, min: 1, max: 250, default: 50, required: true }
 	},
 	autofill: {
 		enabled: { type: Boolean, default: true },

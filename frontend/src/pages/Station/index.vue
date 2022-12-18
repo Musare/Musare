@@ -120,7 +120,8 @@ const {
 	localPaused,
 	noSong,
 	autoRequest,
-	autoRequestLock
+	autoRequestLock,
+	history
 } = storeToRefs(stationStore);
 
 const skipVotesLoaded = computed(
@@ -184,6 +185,16 @@ const {
 // const stopVideo = payload =>
 // 	store.dispatch("modals/editSong/stopVideo", payload);
 
+const recentlyPlayedYoutubeIds = (max: number) => {
+	const youtubeIds = new Set();
+
+	history.value.forEach((historyItem, index) => {
+		if (index < max) youtubeIds.add(historyItem.payload.song.youtubeId);
+	});
+
+	return Array.from(youtubeIds);
+};
+
 const updateMediaSessionData = song => {
 	if (song) {
 		ms.setMediaSessionData(
@@ -198,8 +209,13 @@ const updateMediaSessionData = song => {
 	} else ms.removeMediaSessionData(0);
 };
 const autoRequestSong = () => {
-	const { limit, allowAutorequest, autorequestLimit } =
-		station.value.requests;
+	const {
+		limit,
+		allowAutorequest,
+		autorequestLimit,
+		autorequestDisallowRecentlyPlayedEnabled,
+		autorequestDisallowRecentlyPlayedNumber
+	} = station.value.requests;
 
 	if (autoRequestLock.value) return;
 	if (!allowAutorequest) return;
@@ -211,11 +227,19 @@ const autoRequestSong = () => {
 	if (currentUserQueueSongs.value >= autorequestLimit) return;
 	if (songsList.value.length >= 50) return;
 
+	let excludedYoutubeIds = [];
+	if (autorequestDisallowRecentlyPlayedEnabled) {
+		excludedYoutubeIds = recentlyPlayedYoutubeIds(
+			autorequestDisallowRecentlyPlayedNumber
+		);
+	}
+
 	const uniqueYoutubeIds = new Set();
 
 	autoRequest.value.forEach(playlist => {
 		playlist.songs.forEach(song => {
-			uniqueYoutubeIds.add(song.youtubeId);
+			if (excludedYoutubeIds.indexOf(song.youtubeId) === -1)
+				uniqueYoutubeIds.add(song.youtubeId);
 		});
 	});
 
@@ -1467,7 +1491,6 @@ onMounted(async () => {
 	});
 
 	socket.on("event:station.history.new", res => {
-		console.log(1111, res.data.historyItem);
 		addHistoryItem(res.data.historyItem);
 	});
 

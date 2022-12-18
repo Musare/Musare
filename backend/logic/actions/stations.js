@@ -1035,7 +1035,7 @@ export default {
 					const response = await StationsModule.stationHistoryModel
 						.find({ stationId }, { documentVersion: 0, __v: 0 })
 						.sort({ "payload.skippedAt": -1 })
-						.limit(50);
+						.limit(250);
 
 					return response;
 				}
