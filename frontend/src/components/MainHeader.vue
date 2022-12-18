@@ -142,6 +142,16 @@ onMounted(async () => {
 					class="nav-item"
 					:to="{
 						name: 'profile',
+						params: { username },
+						query: { tab: 'playlists' }
+					}"
+				>
+					Playlists
+				</router-link>
+				<router-link
+					class="nav-item"
+					:to="{
+						name: 'profile',
 						params: { username }
 					}"
 				>
