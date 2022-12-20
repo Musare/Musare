@@ -67,12 +67,12 @@ const {
 	tab,
 	video,
 	song,
-	youtubeId,
+	mediaSource,
 	prefillData,
 	reports,
 	newSong,
 	bulk,
-	youtubeIds,
+	mediaSources,
 	songPrefillData
 } = storeToRefs(editSongStore);
 
@@ -151,7 +151,7 @@ const songItems = ref([]);
 
 const editingItemIndex = computed(() =>
 	items.value.findIndex(
-		item => item.song.youtubeId === currentSong.value.youtubeId
+		item => item.song.mediaSource === currentSong.value.mediaSource
 	)
 );
 const filteredItems = computed({
@@ -159,20 +159,20 @@ const filteredItems = computed({
 		items.value.filter(item => (flagFilter.value ? item.flagged : true)),
 	set: (newItem: any) => {
 		const index = items.value.findIndex(
-			item => item.song.youtubeId === newItem.youtubeId
+			item => item.song.mediaSource === newItem.mediaSource
 		);
 		items.value[index] = newItem;
 	}
 });
 const filteredEditingItemIndex = computed(() =>
 	filteredItems.value.findIndex(
-		item => item.song.youtubeId === currentSong.value.youtubeId
+		item => item.song.mediaSource === currentSong.value.mediaSource
 	)
 );
 const currentSongFlagged = computed(
 	() =>
 		items.value.find(
-			item => item.song.youtubeId === currentSong.value.youtubeId
+			item => item.song.mediaSource === currentSong.value.mediaSource
 		)?.flagged
 );
 // EditSongs end
@@ -191,13 +191,13 @@ const {
 
 const { updateMediaModalPlayingAudio } = stationStore;
 
-const unloadSong = (_youtubeId, songId?) => {
+const unloadSong = (_mediaSource, songId?) => {
 	songDataLoaded.value = false;
 	songDeleted.value = false;
 	stopVideo();
 	pauseVideo(true);
 
-	resetSong(_youtubeId);
+	resetSong(_mediaSource);
 	thumbnailNotSquare.value = false;
 	thumbnailWidth.value = null;
 	thumbnailHeight.value = null;
@@ -209,9 +209,10 @@ const unloadSong = (_youtubeId, songId?) => {
 		saveButtonRefs.value.saveButton.status = "default";
 };
 
-const loadSong = (_youtubeId: string, reset?: boolean) => {
+const loadSong = (_mediaSource: string, reset?: boolean) => {
 	songNotFound.value = false;
-	socket.dispatch(`songs.getSongsFromYoutubeIds`, [_youtubeId], res => {
+	console.log(58890, _mediaSource);
+	socket.dispatch(`songs.getSongsFromMediaSources`, [_mediaSource], res => {
 		const { songs } = res.data;
 		if (res.status === "success" && songs.length > 0) {
 			let _song = songs[0];
@@ -241,9 +242,9 @@ const loadSong = (_youtubeId: string, reset?: boolean) => {
 	});
 };
 
-const onSavedSuccess = youtubeId => {
+const onSavedSuccess = mediaSource => {
 	const itemIndex = items.value.findIndex(
-		item => item.song.youtubeId === youtubeId
+		item => item.song.mediaSource === mediaSource
 	);
 	if (itemIndex > -1) {
 		items.value[itemIndex].status = "done";
@@ -251,16 +252,16 @@ const onSavedSuccess = youtubeId => {
 	}
 };
 
-const onSavedError = youtubeId => {
+const onSavedError = mediaSource => {
 	const itemIndex = items.value.findIndex(
-		item => item.song.youtubeId === youtubeId
+		item => item.song.mediaSource === mediaSource
 	);
 	if (itemIndex > -1) items.value[itemIndex].status = "error";
 };
 
-const onSaving = youtubeId => {
+const onSaving = mediaSource => {
 	const itemIndex = items.value.findIndex(
-		item => item.song.youtubeId === youtubeId
+		item => item.song.mediaSource === mediaSource
 	);
 	if (itemIndex > -1) items.value[itemIndex].status = "saving";
 };
@@ -316,15 +317,15 @@ const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 				return true;
 			}
 		},
-		youtubeId: {
+		mediaSource: {
 			value: "",
 			validate: value => {
 				if (
 					!newSong.value &&
 					youtubeError.value &&
-					inputs.value.youtubeId.originalValue !== value
+					inputs.value.mediaSource.originalValue !== value
 				)
-					return "You're not allowed to change the YouTube id while the player is not working";
+					return "You're not allowed to change the media source while the player is not working";
 				return true;
 			}
 		},
@@ -415,8 +416,8 @@ const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 				}
 				new Toast(res.message);
 				saveButtonRef.handleSuccessfulSave();
-				onSavedSuccess(values.youtubeId);
-				if (newSong.value) loadSong(values.youtubeId, true);
+				onSavedSuccess(values.mediaSource);
+				if (newSong.value) loadSong(values.mediaSource, true);
 				else setSong(mergedValues);
 				resolve();
 			};
@@ -433,13 +434,13 @@ const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 			if (status === "unchanged") {
 				new Toast(messages.unchanged);
 				saveButtonRef.handleSuccessfulSave();
-				onSavedSuccess(values.youtubeId);
+				onSavedSuccess(values.mediaSource);
 			} else {
 				Object.values(messages).forEach(message => {
 					new Toast({ content: message, timeout: 8000 });
 				});
 				saveButtonRef.handleFailedSave();
-				onSavedError(values.youtubeId);
+				onSavedError(values.mediaSource);
 			}
 			resolve();
 		}
@@ -515,13 +516,13 @@ const onCloseOrNext = (next?: boolean): Promise<void> =>
 const pickSong = song => {
 	onCloseOrNext(true).then(() => {
 		editSong({
-			youtubeId: song.youtubeId,
-			prefill: songPrefillData.value[song.youtubeId]
+			mediaSource: song.mediaSource,
+			prefill: songPrefillData.value[song.mediaSource]
 		});
 		currentSong.value = song;
-		if (songItems.value[`edit-songs-item-${song.youtubeId}`])
+		if (songItems.value[`edit-songs-item-${song.mediaSource}`])
 			songItems.value[
-				`edit-songs-item-${song.youtubeId}`
+				`edit-songs-item-${song.mediaSource}`
 			].scrollIntoView();
 	});
 };
@@ -549,7 +550,7 @@ const editNextSong = () => {
 
 const saveSong = (refName: string, closeOrNext?: boolean) => {
 	saveButtonRefName.value = refName;
-	onSaving(inputs.value.youtubeId.value);
+	onSaving(inputs.value.mediaSource.value);
 	save(() => {
 		if (closeOrNext && bulk.value) editNextSong();
 		else if (closeOrNext) closeCurrentModal();
@@ -600,7 +601,8 @@ const onThumbnailLoadError = error => {
 const isYoutubeThumbnail = computed(
 	() =>
 		songDataLoaded.value &&
-		inputs.value.youtubeId.value &&
+		inputs.value.mediaSource.value &&
+		inputs.value.mediaSource.value.startsWith("youtube:") &&
 		inputs.value.thumbnail.value &&
 		(inputs.value.thumbnail.value.lastIndexOf("i.ytimg.com") !== -1 ||
 			inputs.value.thumbnail.value.lastIndexOf("img.youtube.com") !== -1)
@@ -686,7 +688,9 @@ const getYouTubeData = type => {
 	}
 	if (type === "thumbnail")
 		setValue({
-			thumbnail: `https://img.youtube.com/vi/${inputs.value.youtubeId.value}/mqdefault.jpg`
+			thumbnail: `https://img.youtube.com/vi/${
+				inputs.value.mediaSource.value.split(":")[1]
+			}/mqdefault.jpg`
 		});
 	if (type === "author") {
 		try {
@@ -744,12 +748,12 @@ const settings = type => {
 
 const play = () => {
 	if (
-		video.value.player.getVideoData().video_id !==
-		inputs.value.youtubeId.value
+		inputs.value.mediaSource.value !==
+		`youtube:${video.value.player.getVideoData().video_id}`
 	) {
 		setValue({ duration: -1 });
 		loadVideoById(
-			inputs.value.youtubeId.value,
+			inputs.value.mediaSource.value.split(":")[1],
 			inputs.value.skipDuration.value
 		);
 	}
@@ -882,14 +886,14 @@ const sendActivityWatchVideoData = () => {
 			artists: inputs.value.artists.value
 				? inputs.value.artists.value.join(", ")
 				: null,
-			youtubeId: inputs.value.youtubeId.value,
+			mediaSource: inputs.value.mediaSource.value,
 			muted: muted.value,
 			volume: volumeSliderValue.value,
 			startedDuration:
 				activityWatchVideoLastStartDuration.value <= 0
 					? 0
 					: activityWatchVideoLastStartDuration.value,
-			source: `editSong#${inputs.value.youtubeId.value}`,
+			source: `editSong#${inputs.value.mediaSource.value}`,
 			hostname: window.location.hostname,
 			playerState: Object.keys(window.YT.PlayerState).find(
 				key =>
@@ -915,16 +919,20 @@ watch(
 	[() => inputs.value.duration.value, () => inputs.value.skipDuration.value],
 	() => drawCanvas()
 );
-watch(youtubeId, (_youtubeId, _oldYoutubeId) => {
-	if (_oldYoutubeId) unloadSong(_oldYoutubeId);
-	if (_youtubeId) loadSong(_youtubeId, true);
+watch(mediaSource, (_mediaSource, _oldMediaSource) => {
+	if (_oldMediaSource) unloadSong(_oldMediaSource);
+	if (_mediaSource) loadSong(_mediaSource, true);
 });
 watch(
-	() => inputs.value.youtubeId.value,
+	() => inputs.value.mediaSource.value,
 	value => {
-		if (video.value.player && video.value.player.cueVideoById)
+		if (
+			video.value.player &&
+			video.value.player.cueVideoById &&
+			value.startsWith("youtube:")
+		)
 			video.value.player.cueVideoById(
-				value,
+				value.split(":")[1],
 				inputs.value.skipDuration.value
 			);
 	}
@@ -955,9 +963,9 @@ onMounted(async () => {
 	useHTTPS.value = await lofig.get("cookie.secure");
 
 	socket.onConnect(() => {
-		if (newSong.value && !youtubeId.value && !bulk.value) {
+		if (newSong.value && !mediaSource.value && !bulk.value) {
 			setSong({
-				youtubeId: "",
+				mediaSource: "",
 				title: "",
 				artists: [],
 				genres: [],
@@ -969,7 +977,7 @@ onMounted(async () => {
 			});
 			songDataLoaded.value = true;
 			showTab("youtube");
-		} else if (youtubeId.value) loadSong(youtubeId.value);
+		} else if (mediaSource.value) loadSong(mediaSource.value);
 		else if (!bulk.value) {
 			new Toast("You can't open EditSong without editing a song");
 			return closeCurrentModal();
@@ -996,8 +1004,8 @@ onMounted(async () => {
 				playerReady.value &&
 				video.value.player.getVideoData &&
 				video.value.player.getVideoData() &&
-				video.value.player.getVideoData().video_id ===
-					inputs.value.youtubeId.value
+				`youtube:${video.value.player.getVideoData().video_id}` ===
+					inputs.value.mediaSource.value
 			) {
 				const currentTime = video.value.player.getCurrentTime();
 
@@ -1054,9 +1062,16 @@ onMounted(async () => {
 
 							playerReady.value = true;
 
-							if (inputs.value.youtubeId.value)
+							if (
+								inputs.value.mediaSource.value &&
+								inputs.value.mediaSource.value.startsWith(
+									"youtube:"
+								)
+							)
 								video.value.player.cueVideoById(
-									inputs.value.youtubeId.value,
+									inputs.value.mediaSource.value.split(
+										":"
+									)[1],
 									inputs.value.skipDuration.value
 								);
 
@@ -1198,9 +1213,11 @@ onMounted(async () => {
 		if (bulk.value) {
 			socket.dispatch("apis.joinRoom", "edit-songs");
 
+			console.log(68768, mediaSources.value);
+
 			socket.dispatch(
-				"songs.getSongsFromYoutubeIds",
-				youtubeIds.value,
+				"songs.getSongsFromMediaSources",
+				mediaSources.value,
 				res => {
 					if (res.data.songs.length === 0) {
 						closeCurrentModal();
@@ -1229,7 +1246,7 @@ onMounted(async () => {
 					duration: res.data.song.duration,
 					skipDuration: res.data.song.skipDuration,
 					thumbnail: res.data.song.thumbnail,
-					youtubeId: res.data.song.youtubeId,
+					mediaSource: res.data.song.mediaSource,
 					verified: res.data.song.verified,
 					artists: res.data.song.artists,
 					genres: res.data.song.genres,
@@ -1238,8 +1255,8 @@ onMounted(async () => {
 				});
 			if (bulk.value) {
 				const index = items.value
-					.map(item => item.song.youtubeId)
-					.indexOf(res.data.song.youtubeId);
+					.map(item => item.song.mediaSource)
+					.indexOf(res.data.song.mediaSource);
 				if (index >= 0)
 					items.value[index].song = {
 						...items.value[index].song,
@@ -1267,8 +1284,8 @@ onMounted(async () => {
 			`event:admin.song.created`,
 			res => {
 				const index = items.value
-					.map(item => item.song.youtubeId)
-					.indexOf(res.data.song.youtubeId);
+					.map(item => item.song.mediaSource)
+					.indexOf(res.data.song.mediaSource);
 				if (index >= 0)
 					items.value[index].song = {
 						...items.value[index].song,
@@ -1459,7 +1476,7 @@ onBeforeUnmount(() => {
 		socket.dispatch("apis.leaveRoom", "edit-songs");
 	}
 
-	unloadSong(youtubeId.value, song.value._id);
+	unloadSong(mediaSource.value, song.value._id);
 
 	updateMediaModalPlayingAudio(false);
 
@@ -1540,7 +1557,7 @@ onBeforeUnmount(() => {
 								:ref="
 									el =>
 										(songItems[
-											`edit-songs-item-${data.song.youtubeId}`
+											`edit-songs-item-${data.song.mediaSource}`
 										] = el)
 								"
 							>
@@ -1561,8 +1578,8 @@ onBeforeUnmount(() => {
 									<template #leftIcon>
 										<i
 											v-if="
-												currentSong.youtubeId ===
-													data.song.youtubeId &&
+												currentSong.mediaSource ===
+													data.song.mediaSource &&
 												!data.song.removed
 											"
 											class="material-icons item-icon editing-icon"
@@ -1675,7 +1692,7 @@ onBeforeUnmount(() => {
 				></div>
 			</template>
 			<template #body>
-				<div v-if="!youtubeId && !newSong" class="notice-container">
+				<div v-if="!mediaSource && !newSong" class="notice-container">
 					<h4>No song has been selected</h4>
 				</div>
 				<div v-if="songDeleted" class="notice-container">
@@ -1683,7 +1700,7 @@ onBeforeUnmount(() => {
 				</div>
 				<div
 					v-if="
-						youtubeId &&
+						mediaSource &&
 						!songDataLoaded &&
 						!songNotFound &&
 						!newSong
@@ -1693,7 +1710,7 @@ onBeforeUnmount(() => {
 					<h4>Song hasn't loaded yet</h4>
 				</div>
 				<div
-					v-if="youtubeId && songNotFound && !newSong"
+					v-if="mediaSource && songNotFound && !newSong"
 					class="notice-container"
 				>
 					<h4>Song was not found</h4>
@@ -1886,7 +1903,7 @@ onBeforeUnmount(() => {
 						<song-thumbnail
 							v-if="songDataLoaded && !songDeleted"
 							:song="{
-								youtubeId: inputs['youtubeId'].value,
+								mediaSource: inputs['mediaSource'].value,
 								thumbnail: inputs['thumbnail'].value
 							}"
 							:fallback="false"
@@ -2051,13 +2068,13 @@ onBeforeUnmount(() => {
 								</p>
 							</div>
 							<div class="youtube-id-container">
-								<label class="label">YouTube ID</label>
+								<label class="label">Media source</label>
 								<p class="control">
 									<input
 										class="input"
 										type="text"
-										placeholder="Enter YouTube ID..."
-										v-model="inputs['youtubeId'].value"
+										placeholder="Enter Media source..."
+										v-model="inputs['mediaSource'].value"
 									/>
 								</p>
 							</div>
@@ -2309,7 +2326,7 @@ onBeforeUnmount(() => {
 					<button
 						class="button is-primary"
 						@click="toggleFlag()"
-						v-if="youtubeId && !songDeleted"
+						v-if="mediaSource && !songDeleted"
 					>
 						{{ currentSongFlagged ? "Unflag" : "Flag" }}
 					</button>

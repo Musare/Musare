@@ -95,12 +95,12 @@ const hoverTippy = () => {
 	hoveredTippy.value = true;
 };
 
-const viewYoutubeVideo = youtubeId => {
+const viewYoutubeVideo = mediaSource => {
 	hideTippyElements();
 	openModal({
 		modal: "viewYoutubeVideo",
 		props: {
-			youtubeId
+			mediaSource: mediaSource.split(":")[1]
 		}
 	});
 };
@@ -179,7 +179,7 @@ onUnmounted(() => {
 					<strong>
 						<user-link
 							v-if="song.requestedBy"
-							:key="song.youtubeId"
+							:key="song.mediaSource"
 							:user-id="song.requestedBy"
 						/>
 						<span v-else>station</span>
@@ -205,7 +205,7 @@ onUnmounted(() => {
 						<strong>
 							<user-link
 								v-if="song.requestedBy"
-								:key="song.youtubeId"
+								:key="song.mediaSource"
 								:user-id="song.requestedBy"
 							/>
 							<span v-else>station</span>
@@ -245,7 +245,7 @@ onUnmounted(() => {
 						<div class="icons-group">
 							<i
 								v-if="disabledActions.indexOf('youtube') === -1"
-								@click="viewYoutubeVideo(song.youtubeId)"
+								@click="viewYoutubeVideo(song.mediaSource)"
 								content="View YouTube Video"
 								v-tippy
 							>

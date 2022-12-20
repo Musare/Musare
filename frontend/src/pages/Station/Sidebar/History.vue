@@ -33,9 +33,9 @@ const songsList = computed({
 const songsInQueue = computed(() => {
 	if (station.value.currentSong)
 		return songsList.value
-			.map(song => song.youtubeId)
-			.concat(station.value.currentSong.youtubeId);
-	return songsList.value.map(song => song.youtubeId);
+			.map(song => song.mediaSource)
+			.concat(station.value.currentSong.mediaSource);
+	return songsList.value.map(song => song.mediaSource);
 });
 
 const formatDate = dateString => {
@@ -69,11 +69,11 @@ const formatSkipReason = skipReason => {
 	return "";
 };
 
-const addSongToQueue = (youtubeId: string) => {
+const addSongToQueue = (mediaSource: string) => {
 	socket.dispatch(
 		"stations.addToQueue",
 		station.value._id,
-		youtubeId,
+		mediaSource,
 		"manual",
 		res => {
 			if (res.status !== "success") new Toast(`Error: ${res.message}`);
@@ -105,7 +105,7 @@ onMounted(async () => {});
 						<i
 							v-if="
 								songsInQueue.indexOf(
-									historyItem.payload.song.youtubeId
+									historyItem.payload.song.mediaSource
 								) !== -1
 							"
 							class="material-icons disabled"
@@ -118,7 +118,7 @@ onMounted(async () => {});
 							class="material-icons add-to-queue-icon"
 							@click="
 								addSongToQueue(
-									historyItem.payload.song.youtubeId
+									historyItem.payload.song.mediaSource
 								)
 							"
 							content="Add Song to Queue"

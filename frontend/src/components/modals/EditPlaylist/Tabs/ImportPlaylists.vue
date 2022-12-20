@@ -105,27 +105,28 @@ const importMusarePlaylistFile = () => {
 	let id;
 	let title;
 
-	let youtubeIds = [];
+	let mediaSources = [];
 
 	if (!importMusarePlaylistFileContents.value)
 		return new Toast("Please choose a Musare playlist file first.");
 
 	if (importMusarePlaylistFileContents.value.playlist) {
-		youtubeIds = importMusarePlaylistFileContents.value.playlist.songs.map(
-			song => song.youtubeId
-		);
+		mediaSources =
+			importMusarePlaylistFileContents.value.playlist.songs.map(
+				song => `youtube:${song.youtubeId}`
+			);
 	} else if (importMusarePlaylistFileContents.value.songs) {
-		youtubeIds = importMusarePlaylistFileContents.value.songs.map(
-			song => song.youtubeId
+		mediaSources = importMusarePlaylistFileContents.value.songs.map(
+			song => `youtube:${song.youtubeId}`
 		);
 	}
 
-	if (youtubeIds.length === 0) return new Toast("No songs to import.");
+	if (mediaSources.length === 0) return new Toast("No songs to import.");
 
 	return socket.dispatch(
 		"playlists.addSongsToPlaylist",
 		playlist.value._id,
-		youtubeIds,
+		mediaSources,
 		{
 			cb: res => {
 				new Toast(res.message);

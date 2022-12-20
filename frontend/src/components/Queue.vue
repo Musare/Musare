@@ -72,11 +72,11 @@ const canRequest = () =>
 		(station.value.requests.access === "owner" &&
 			hasPermission("stations.request")));
 
-const removeFromQueue = youtubeId => {
+const removeFromQueue = mediaSource => {
 	socket.dispatch(
 		"stations.removeFromQueue",
 		station.value._id,
-		youtubeId,
+		mediaSource,
 		res => {
 			if (res.status === "success")
 				new Toast("Successfully removed song from the queue.");
@@ -158,7 +158,7 @@ defineEmits(["onChangeTab"]);
 			>
 				<draggable-list
 					v-model:list="queue"
-					item-key="youtubeId"
+					item-key="mediaSource"
 					@start="drag = true"
 					@end="drag = false"
 					@update="repositionSongInQueue"
@@ -171,7 +171,7 @@ defineEmits(["onChangeTab"]);
 							:requested-type="true"
 							:disabled-actions="[]"
 							:ref="el => (songItems[`song-item-${index}`] = el)"
-							:key="`queue-song-item-${element.youtubeId}`"
+							:key="`queue-song-item-${element.mediaSource}`"
 						>
 							<template
 								v-if="
@@ -185,7 +185,7 @@ defineEmits(["onChangeTab"]);
 									"
 									placement="left"
 									@confirm="
-										removeFromQueue(element.youtubeId)
+										removeFromQueue(element.mediaSource)
 									"
 								>
 									<i

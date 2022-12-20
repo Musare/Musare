@@ -95,7 +95,7 @@ export const useStationStore = defineStore("station", {
 		repositionSongInList(song) {
 			if (
 				this.songsList[song.newIndex] &&
-				this.songsList[song.newIndex].youtubeId === song.youtubeId
+				this.songsList[song.newIndex].mediaSource === song.mediaSource
 			)
 				return;
 

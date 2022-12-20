@@ -202,11 +202,11 @@ const downloadPlaylist = async () => {
 		.catch(() => new Toast("Failed to export and download playlist."));
 };
 
-const addSongToQueue = youtubeId => {
+const addSongToQueue = mediaSource => {
 	socket.dispatch(
 		"stations.addToQueue",
 		station.value._id,
-		youtubeId,
+		mediaSource,
 		"manual",
 		data => {
 			if (data.status !== "success")
@@ -274,7 +274,7 @@ onMounted(() => {
 		res => {
 			if (playlist.value._id === res.data.playlistId) {
 				// remove song from array of playlists
-				removeSong(res.data.youtubeId);
+				removeSong(res.data.mediaSource);
 			}
 		},
 		{ modalUuid: props.modalUuid }
@@ -406,7 +406,7 @@ onBeforeUnmount(() => {
 						<draggable-list
 							v-if="playlistSongs.length > 0"
 							v-model:list="playlistSongs"
-							item-key="youtubeId"
+							item-key="mediaSource"
 							@start="drag = true"
 							@end="drag = false"
 							@update="repositionSong"
@@ -422,7 +422,7 @@ onBeforeUnmount(() => {
 											(songItems[`song-item-${index}`] =
 												el)
 									"
-									:key="`playlist-song-${element.youtubeId}`"
+									:key="`playlist-song-${element.mediaSource}`"
 								>
 									<template #tippyActions>
 										<i
@@ -441,7 +441,7 @@ onBeforeUnmount(() => {
 											"
 											@click="
 												addSongToQueue(
-													element.youtubeId
+													element.mediaSource
 												)
 											"
 											content="Add Song to Queue"
@@ -458,7 +458,7 @@ onBeforeUnmount(() => {
 											placement="left"
 											@confirm="
 												removeSongFromPlaylist(
-													element.youtubeId
+													element.mediaSource
 												)
 											"
 										>

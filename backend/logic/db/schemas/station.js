@@ -8,7 +8,7 @@ export default {
 	paused: { type: Boolean, default: false, required: true },
 	currentSong: {
 		_id: { type: mongoose.Schema.Types.ObjectId },
-		youtubeId: { type: String },
+		mediaSource: { type: String },
 		title: { type: String },
 		artists: [{ type: String }],
 		duration: { type: Number },
@@ -29,7 +29,7 @@ export default {
 	queue: [
 		{
 			_id: { type: mongoose.Schema.Types.ObjectId },
-			youtubeId: { type: String, required: true },
+			mediaSource: { type: String, required: true },
 			title: { type: String },
 			artists: [{ type: String }],
 			duration: { type: Number },
@@ -61,5 +61,5 @@ export default {
 	blacklist: [{ type: mongoose.Schema.Types.ObjectId, ref: "playlists" }],
 	djs: [{ type: mongoose.Schema.Types.ObjectId, ref: "users" }],
 	skipVoteThreshold: { type: Number, min: 0, max: 100, default: 50, required: true },
-	documentVersion: { type: Number, default: 9, required: true }
+	documentVersion: { type: Number, default: 10, required: true }
 };

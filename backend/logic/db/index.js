@@ -6,20 +6,20 @@ import async from "async";
 import CoreClass from "../../core";
 
 const REQUIRED_DOCUMENT_VERSIONS = {
-	activity: 2,
+	activity: 3,
 	news: 3,
-	playlist: 6,
+	playlist: 7,
 	punishment: 1,
 	queueSong: 1,
-	report: 6,
-	song: 9,
-	station: 9,
+	report: 7,
+	song: 10,
+	station: 10,
 	user: 4,
 	youtubeApiRequest: 1,
 	youtubeVideo: 1,
-	ratings: 1,
+	ratings: 2,
 	importJob: 1,
-	stationHistory: 1
+	stationHistory: 2
 };
 
 const regex = {
@@ -199,6 +199,11 @@ class _DBModule extends CoreClass {
 					});
 
 					// Song
+					this.schemas.song.path("mediaSource").validate(mediaSource => {
+						if (mediaSource.startsWith("youtube:")) return true;
+						return false;
+					});
+
 					const songTitle = title => isLength(title, 1, 100);
 					this.schemas.song.path("title").validate(songTitle, "Invalid title.");
 

@@ -174,6 +174,24 @@ const stationState = computed(() => {
 	return "unknown";
 });
 
+const currentYoutubeId = computed(() => {
+	if (
+		!currentSong.value ||
+		!currentSong.value.mediaSource.startsWith("youtube:")
+	)
+		return null;
+	return currentSong.value.mediaSource.split(":")[1];
+});
+
+const currentSongIsYoutube = computed(() => {
+	if (
+		!currentSong.value ||
+		!currentSong.value.mediaSource.startsWith("youtube:")
+	)
+		return false;
+	return true;
+});
+
 const {
 	joinStation,
 	leaveStation,
@@ -208,13 +226,13 @@ const {
 // 	store.dispatch("modals/editSong/stopVideo", payload);
 
 const recentlyPlayedYoutubeIds = (max: number) => {
-	const youtubeIds = new Set();
+	const mediaSources = new Set();
 
 	history.value.forEach((historyItem, index) => {
-		if (index < max) youtubeIds.add(historyItem.payload.song.youtubeId);
+		if (index < max) mediaSources.add(historyItem.payload.song.mediaSource);
 	});
 
-	return Array.from(youtubeIds);
+	return Array.from(mediaSources);
 };
 
 const updateMediaSessionData = song => {
@@ -258,32 +276,32 @@ const autoRequestSong = () => {
 
 	if (songsList.value) {
 		songsList.value.forEach(song => {
-			excludedYoutubeIds.push(song.youtubeId);
+			excludedYoutubeIds.push(song.mediaSource);
 		});
 	}
 
 	if (!noSong.value) {
-		excludedYoutubeIds.push(currentSong.value.youtubeId);
+		excludedYoutubeIds.push(currentSong.value.mediaSource);
 	}
 
 	const uniqueYoutubeIds = new Set();
 
 	autoRequest.value.forEach(playlist => {
 		playlist.songs.forEach(song => {
-			if (excludedYoutubeIds.indexOf(song.youtubeId) === -1)
-				uniqueYoutubeIds.add(song.youtubeId);
+			if (excludedYoutubeIds.indexOf(song.mediaSource) === -1)
+				uniqueYoutubeIds.add(song.mediaSource);
 		});
 	});
 
 	if (uniqueYoutubeIds.size > 0) {
-		const youtubeId = Array.from(uniqueYoutubeIds.values())[
+		const mediaSource = Array.from(uniqueYoutubeIds.values())[
 			Math.floor(Math.random() * uniqueYoutubeIds.size)
 		];
 		updateAutoRequestLock(true);
 		socket.dispatch(
 			"stations.addToQueue",
 			station.value._id,
-			youtubeId,
+			mediaSource,
 			"autorequest",
 			data => {
 				updateAutoRequestLock(false);
@@ -322,8 +340,8 @@ const skipSong = () => {
 		const _songsList = songsList.value.concat([]);
 		if (
 			_songsList.length > 0 &&
-			_songsList[0].youtubeId ===
-				nextCurrentSong.value.currentSong.youtubeId
+			_songsList[0].mediaSource ===
+				nextCurrentSong.value.currentSong.mediaSource
 		) {
 			_songsList.splice(0, 1);
 			updateSongsList(_songsList);
@@ -448,10 +466,10 @@ const calculateTimeElapsed = () => {
 			typeof duration === "number" ? utils.formatTime(duration) : "0";
 };
 const playVideo = () => {
-	if (playerReady.value) {
+	if (playerReady.value && currentSongIsYoutube.value) {
 		videoLoading.value = true;
 		player.value.loadVideoById(
-			currentSong.value.youtubeId,
+			currentYoutubeId.value,
 			getTimeElapsed() / 1000 + currentSong.value.skipDuration
 		);
 
@@ -480,7 +498,8 @@ const youtubeReady = () => {
 		player.value = new window.YT.Player("stationPlayer", {
 			height: 270,
 			width: 480,
-			videoId: currentSong.value.youtubeId,
+			// TODO CHECK TYPE
+			videoId: currentYoutubeId.value,
 			host: "https://www.youtube-nocookie.com",
 			startSeconds:
 				getTimeElapsed() / 1000 + currentSong.value.skipDuration,
@@ -544,13 +563,13 @@ const youtubeReady = () => {
 						});
 
 						// save current song id
-						const erroredYoutubeId = currentSong.value.youtubeId;
+						const erroredYoutubeId = currentSong.value.mediaSource;
 
 						persistentToasts.value.push({
 							toast: persistentToast,
 							checkIfCanRemove: () => {
 								if (
-									currentSong.value.youtubeId !==
+									currentSong.value.mediaSource ===
 									erroredYoutubeId
 								) {
 									persistentToast.destroy();
@@ -654,7 +673,7 @@ const setCurrentSong = data => {
 
 	let nextSong = null;
 	if (songsList.value[0])
-		nextSong = songsList.value[0].youtubeId ? songsList.value[0] : null;
+		nextSong = songsList.value[0].mediaSource ? songsList.value[0] : null;
 
 	updateNextSong(nextSong);
 	setNextCurrentSong(
@@ -738,8 +757,8 @@ const setCurrentSong = data => {
 			}
 		);
 
-		socket.dispatch("media.getRatings", _currentSong.youtubeId, res => {
-			if (_currentSong.youtubeId === currentSong.value.youtubeId) {
+		socket.dispatch("media.getRatings", _currentSong.mediaSource, res => {
+			if (_currentSong.mediaSource === currentSong.value.mediaSource) {
 				const { likes, dislikes } = res.data;
 				updateCurrentSongRatings({ likes, dislikes });
 			}
@@ -748,12 +767,12 @@ const setCurrentSong = data => {
 		if (loggedIn.value) {
 			socket.dispatch(
 				"media.getOwnRatings",
-				_currentSong.youtubeId,
+				_currentSong.mediaSource,
 				res => {
 					console.log("getOwnSongRatings", res);
 					if (
 						res.status === "success" &&
-						currentSong.value.youtubeId === res.data.youtubeId
+						currentSong.value.mediaSource === res.data.mediaSource
 					) {
 						updateOwnCurrentSongRatings(res.data);
 
@@ -864,11 +883,11 @@ const increaseVolume = () => {
 };
 const toggleLike = () => {
 	if (currentSong.value.liked)
-		socket.dispatch("media.unlike", currentSong.value.youtubeId, res => {
+		socket.dispatch("media.unlike", currentSong.value.mediaSource, res => {
 			if (res.status !== "success") new Toast(`Error: ${res.message}`);
 		});
 	else
-		socket.dispatch("media.like", currentSong.value.youtubeId, res => {
+		socket.dispatch("media.like", currentSong.value.mediaSource, res => {
 			if (res.status !== "success") new Toast(`Error: ${res.message}`);
 		});
 };
@@ -876,7 +895,7 @@ const toggleDislike = () => {
 	if (currentSong.value.disliked)
 		return socket.dispatch(
 			"media.undislike",
-			currentSong.value.youtubeId,
+			currentSong.value.mediaSource,
 			res => {
 				if (res.status !== "success")
 					new Toast(`Error: ${res.message}`);
@@ -885,7 +904,7 @@ const toggleDislike = () => {
 
 	return socket.dispatch(
 		"media.dislike",
-		currentSong.value.youtubeId,
+		currentSong.value.mediaSource,
 		res => {
 			if (res.status !== "success") new Toast(`Error: ${res.message}`);
 		}
@@ -920,9 +939,10 @@ const sendActivityWatchVideoData = () => {
 
 		if (
 			activityWatchVideoLastYouTubeId.value !==
-			currentSong.value.youtubeId
+			currentSong.value.mediaSource
 		) {
-			activityWatchVideoLastYouTubeId.value = currentSong.value.youtubeId;
+			activityWatchVideoLastYouTubeId.value =
+				currentSong.value.mediaSource;
 			activityWatchVideoLastStartDuration.value =
 				currentSong.value.skipDuration + getTimeElapsed();
 		}
@@ -933,7 +953,7 @@ const sendActivityWatchVideoData = () => {
 				currentSong.value && currentSong.value.artists
 					? currentSong.value.artists.join(", ")
 					: null,
-			youtubeId: currentSong.value.youtubeId,
+			mediaSource: currentSong.value.mediaSource,
 			muted: muted.value,
 			volume: volumeSliderValue.value,
 			startedDuration:
@@ -1390,7 +1410,7 @@ onMounted(async () => {
 
 	socket.on("event:ratings.liked", res => {
 		if (!noSong.value) {
-			if (res.data.youtubeId === currentSong.value.youtubeId) {
+			if (res.data.mediaSource === currentSong.value.mediaSource) {
 				updateCurrentSongRatings(res.data);
 			}
 		}
@@ -1398,7 +1418,7 @@ onMounted(async () => {
 
 	socket.on("event:ratings.disliked", res => {
 		if (!noSong.value) {
-			if (res.data.youtubeId === currentSong.value.youtubeId) {
+			if (res.data.mediaSource === currentSong.value.mediaSource) {
 				updateCurrentSongRatings(res.data);
 			}
 		}
@@ -1406,7 +1426,7 @@ onMounted(async () => {
 
 	socket.on("event:ratings.unliked", res => {
 		if (!noSong.value) {
-			if (res.data.youtubeId === currentSong.value.youtubeId) {
+			if (res.data.mediaSource === currentSong.value.mediaSource) {
 				updateCurrentSongRatings(res.data);
 			}
 		}
@@ -1414,7 +1434,7 @@ onMounted(async () => {
 
 	socket.on("event:ratings.undisliked", res => {
 		if (!noSong.value) {
-			if (res.data.youtubeId === currentSong.value.youtubeId) {
+			if (res.data.mediaSource === currentSong.value.mediaSource) {
 				updateCurrentSongRatings(res.data);
 			}
 		}
@@ -1422,7 +1442,7 @@ onMounted(async () => {
 
 	socket.on("event:ratings.updated", res => {
 		if (!noSong.value) {
-			if (res.data.youtubeId === currentSong.value.youtubeId) {
+			if (res.data.mediaSource === currentSong.value.mediaSource) {
 				updateOwnCurrentSongRatings(res.data);
 			}
 		}
@@ -1433,7 +1453,9 @@ onMounted(async () => {
 
 		let nextSong = null;
 		if (songsList.value[0])
-			nextSong = songsList.value[0].youtubeId ? songsList.value[0] : null;
+			nextSong = songsList.value[0].mediaSource
+				? songsList.value[0]
+				: null;
 
 		updateNextSong(nextSong);
 
@@ -1445,7 +1467,9 @@ onMounted(async () => {
 
 		let nextSong = null;
 		if (songsList.value[0])
-			nextSong = songsList.value[0].youtubeId ? songsList.value[0] : null;
+			nextSong = songsList.value[0].mediaSource
+				? songsList.value[0]
+				: null;
 
 		updateNextSong(nextSong);
 	});
@@ -1708,10 +1732,10 @@ onBeforeUnmount(() => {
 		<ul
 			v-if="
 				currentSong &&
-				(currentSong.youtubeId === 'l9PxOanFjxQ' ||
-					currentSong.youtubeId === 'xKVcVSYmesU' ||
-					currentSong.youtubeId === '60ItHLz5WEA' ||
-					currentSong.youtubeId === 'e6vkFbtSGm0')
+				(currentSong.mediaSource === 'l9PxOanFjxQ' ||
+					currentSong.mediaSource === 'xKVcVSYmesU' ||
+					currentSong.mediaSource === '60ItHLz5WEA' ||
+					currentSong.mediaSource === 'e6vkFbtSGm0')
 			"
 			class="bg-bubbles"
 		>
@@ -1954,8 +1978,8 @@ onBeforeUnmount(() => {
 										'christmas-seeker': christmas,
 										nyan:
 											currentSong &&
-											currentSong.youtubeId ===
-												'QH2-TGUlwu4'
+											currentSong.mediaSource ===
+												'youtube:QH2-TGUlwu4'
 									}"
 								/>
 								<div
@@ -1967,7 +1991,8 @@ onBeforeUnmount(() => {
 								<img
 									v-if="
 										currentSong &&
-										currentSong.youtubeId === 'QH2-TGUlwu4'
+										currentSong.mediaSource ===
+											'youtube:QH2-TGUlwu4'
 									"
 									src="https://freepngimg.com/thumb/nyan_cat/1-2-nyan-cat-free-download-png.png"
 									:style="{
@@ -1980,14 +2005,14 @@ onBeforeUnmount(() => {
 								<img
 									v-if="
 										currentSong &&
-										(currentSong.youtubeId ===
-											'DtVBCG6ThDk' ||
-											currentSong.youtubeId ===
-												'sI66hcu9fIs' ||
-											currentSong.youtubeId ===
-												'iYYRH4apXDo' ||
-											currentSong.youtubeId ===
-												'tRcPA7Fzebw')
+										(currentSong.mediaSource ===
+											'youtube:DtVBCG6ThDk' ||
+											currentSong.mediaSource ===
+												'youtube:sI66hcu9fIs' ||
+											currentSong.mediaSource ===
+												'youtube:iYYRH4apXDo' ||
+											currentSong.mediaSource ===
+												'youtube:tRcPA7Fzebw')
 									"
 									src="/assets/rocket.svg"
 									:style="{
@@ -2001,7 +2026,8 @@ onBeforeUnmount(() => {
 								<img
 									v-if="
 										currentSong &&
-										currentSong.youtubeId === 'jofNR_WkoCE'
+										currentSong.mediaSource ===
+											'youtube:jofNR_WkoCE'
 									"
 									src="/assets/fox.svg"
 									:style="{
@@ -2016,14 +2042,14 @@ onBeforeUnmount(() => {
 								<img
 									v-if="
 										currentSong &&
-										(currentSong.youtubeId ===
-											'l9PxOanFjxQ' ||
-											currentSong.youtubeId ===
-												'xKVcVSYmesU' ||
-											currentSong.youtubeId ===
-												'60ItHLz5WEA' ||
-											currentSong.youtubeId ===
-												'e6vkFbtSGm0')
+										(currentSong.mediaSource ===
+											'youtube:l9PxOanFjxQ' ||
+											currentSong.mediaSource ===
+												'youtube:xKVcVSYmesU' ||
+											currentSong.mediaSource ===
+												'youtube:60ItHLz5WEA' ||
+											currentSong.mediaSource ===
+												'youtube:e6vkFbtSGm0')
 									"
 									src="/assets/old_logo.png"
 									:style="{
@@ -2041,17 +2067,17 @@ onBeforeUnmount(() => {
 										christmas &&
 										currentSong &&
 										![
-											'QH2-TGUlwu4',
-											'DtVBCG6ThDk',
-											'sI66hcu9fIs',
-											'iYYRH4apXDo',
-											'tRcPA7Fzebw',
-											'jofNR_WkoCE',
-											'l9PxOanFjxQ',
-											'xKVcVSYmesU',
-											'60ItHLz5WEA',
-											'e6vkFbtSGm0'
-										].includes(currentSong.youtubeId)
+											'youtube:QH2-TGUlwu4',
+											'youtube:DtVBCG6ThDk',
+											'youtube:sI66hcu9fIs',
+											'youtube:iYYRH4apXDo',
+											'youtube:tRcPA7Fzebw',
+											'youtube:jofNR_WkoCE',
+											'youtube:l9PxOanFjxQ',
+											'youtube:xKVcVSYmesU',
+											'youtube:60ItHLz5WEA',
+											'youtube:e6vkFbtSGm0'
+										].includes(currentSong.mediaSource)
 									"
 									src="/assets/santa.png"
 									:style="{
@@ -2404,7 +2430,7 @@ onBeforeUnmount(() => {
 								:class="{ 'no-currently-playing': noSong }"
 							>
 								<song-item
-									:key="`songItem-currentSong-${currentSong.youtubeId}`"
+									:key="`songItem-currentSong-${currentSong.mediaSource}`"
 									:song="currentSong"
 									:duration="false"
 									:requested-by="true"
@@ -2418,7 +2444,7 @@ onBeforeUnmount(() => {
 								class="quadrant"
 							>
 								<song-item
-									:key="`songItem-nextSong-${nextSong.youtubeId}`"
+									:key="`songItem-nextSong-${nextSong.mediaSource}`"
 									:song="nextSong"
 									:duration="false"
 									:requested-by="true"
@@ -2442,7 +2468,7 @@ onBeforeUnmount(() => {
 			<template #body>
 				<span><b>No song</b>: {{ noSong }}</span>
 				<span><b>Song id</b>: {{ currentSong._id }}</span>
-				<span><b>YouTube id</b>: {{ currentSong.youtubeId }}</span>
+				<span><b>Media source</b>: {{ currentSong.mediaSource }}</span>
 				<span><b>Duration</b>: {{ currentSong.duration }}</span>
 				<span
 					><b>Skip duration</b>: {{ currentSong.skipDuration }}</span

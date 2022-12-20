@@ -105,7 +105,7 @@ export const useSortablePlaylists = () => {
 					if (playlist._id === res.data.playlistId) {
 						playlists.value[playlistIndex].songs.forEach(
 							(song, songIndex) => {
-								if (song.youtubeId === res.data.youtubeId) {
+								if (song.mediaSource === res.data.mediaSource) {
 									playlists.value[playlistIndex].songs.splice(
 										songIndex,
 										1

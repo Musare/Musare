@@ -265,10 +265,10 @@ export default {
 								blacklistedProperties: [],
 								specialProperties: {
 									songId: [
-										// Fetch songs from songs collection with a matching youtubeId
+										// Fetch songs from songs collection with a matching mediaSource
 										{
 											$lookup: {
-												from: "songs",
+												from: "songs", // TODO fix this to support mediasource, so start with youtube:, so add a new pipeline steps
 												localField: "youtubeId",
 												foreignField: "youtubeId",
 												as: "song"
@@ -376,7 +376,7 @@ export default {
 	 * @returns {{status: string, data: object}}
 	 */
 	getVideo: isLoginRequired(function getVideo(session, identifier, createMissing, cb) {
-		YouTubeModule.runJob("GET_VIDEO", { identifier, createMissing }, this)
+		return YouTubeModule.runJob("GET_VIDEO", { identifier, createMissing }, this)
 			.then(res => {
 				this.log("SUCCESS", "YOUTUBE_GET_VIDEO", `Fetching video was successful.`);
 

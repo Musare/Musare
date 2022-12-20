@@ -125,7 +125,7 @@ CacheModule.runJob("SUB", {
 					socket.dispatch("event:playlist.song.removed", {
 						data: {
 							playlistId: res.playlistId,
-							youtubeId: res.youtubeId
+							mediaSource: res.mediaSource
 						}
 					});
 				});
@@ -139,7 +139,7 @@ CacheModule.runJob("SUB", {
 						{
 							data: {
 								playlistId: res.playlistId,
-								youtubeId: res.youtubeId
+								mediaSource: res.mediaSource
 							}
 						}
 					]
@@ -150,7 +150,7 @@ CacheModule.runJob("SUB", {
 			room: "admin.playlists",
 			args: [
 				"event:admin.playlist.song.removed",
-				{ data: { playlistId: res.playlistId, youtubeId: res.youtubeId } }
+				{ data: { playlistId: res.playlistId, mediaSource: res.mediaSource } }
 			]
 		});
 	}
@@ -1046,7 +1046,7 @@ export default {
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are targeting
 	 * @param {object} song - the song to be repositioned
-	 * @param {string} song.youtubeId - the youtube id of the song being repositioned
+	 * @param {string} song.mediaSource - the media source of the song being repositioned
 	 * @param {string} song.newIndex - the new position of the song in the playlist
 	 * @param {...any} song.args - any other elements that would be included with a song item in a playlist
 	 * @param {Function} cb - gets called with the result
@@ -1058,7 +1058,7 @@ export default {
 			[
 				next => {
 					if (!playlistId) return next("Please provide a playlist.");
-					if (!song || !song.youtubeId) return next("You must provide a song to reposition.");
+					if (!song || !song.mediaSource) return next("You must provide a song to reposition.");
 					return next();
 				},
 
@@ -1079,7 +1079,7 @@ export default {
 				next => {
 					playlistModel.updateOne(
 						{ _id: playlistId },
-						{ $pull: { songs: { youtubeId: song.youtubeId } } },
+						{ $pull: { songs: { mediaSource: song.mediaSource } } },
 						next
 					);
 				},
@@ -1107,7 +1107,7 @@ export default {
 					this.log(
 						"ERROR",
 						"PLAYLIST_REPOSITION_SONG",
-						`Repositioning song ${song.youtubeId}  for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						`Repositioning song ${song.mediaSource}  for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 
 					return cb({ status: "error", message: err });
@@ -1116,7 +1116,7 @@ export default {
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_REPOSITION_SONG",
-					`Successfully repositioned song ${song.youtubeId} for private playlist "${playlistId}" for user "${session.userId}".`
+					`Successfully repositioned song ${song.mediaSource} for private playlist "${playlistId}" for user "${session.userId}".`
 				);
 
 				CacheModule.runJob("PUB", {
@@ -1141,11 +1141,11 @@ export default {
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {boolean} isSet - is the song part of a set of songs to be added
-	 * @param {string} youtubeId - the youtube id of the song we are trying to add
+	 * @param {string} mediaSource - the media source of the song we are trying to add
 	 * @param {string} playlistId - the id of the playlist we are adding the song to
 	 * @param {Function} cb - gets called with the result
 	 */
-	addSongToPlaylist: isLoginRequired(async function addSongToPlaylist(session, isSet, youtubeId, playlistId, cb) {
+	addSongToPlaylist: isLoginRequired(async function addSongToPlaylist(session, isSet, mediaSource, playlistId, cb) {
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
 		async.waterfall(
@@ -1168,7 +1168,7 @@ export default {
 						const oppositeType = playlist.type === "user-liked" ? "user-disliked" : "user-liked";
 						const oppositePlaylistName = oppositeType === "user-liked" ? "Liked Songs" : "Disliked Songs";
 						playlistModel.count(
-							{ type: oppositeType, createdBy: session.userId, "songs.youtubeId": youtubeId },
+							{ type: oppositeType, createdBy: session.userId, "songs.mediaSource": mediaSource },
 							(err, results) => {
 								if (err) next(err);
 								else if (results > 0)
@@ -1182,7 +1182,7 @@ export default {
 				},
 
 				next => {
-					PlaylistsModule.runJob("ADD_SONG_TO_PLAYLIST", { playlistId, youtubeId }, this)
+					PlaylistsModule.runJob("ADD_SONG_TO_PLAYLIST", { playlistId, mediaSource }, this)
 						.then(res => {
 							const { playlist, song, ratings } = res;
 							next(null, playlist, song, ratings);
@@ -1196,7 +1196,7 @@ export default {
 					this.log(
 						"ERROR",
 						"PLAYLIST_ADD_SONG",
-						`Adding song "${youtubeId}" to private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						`Adding song "${mediaSource}" to private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -1204,7 +1204,7 @@ export default {
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_ADD_SONG",
-					`Successfully added song "${youtubeId}" to private playlist "${playlistId}" for user "${session.userId}".`
+					`Successfully added song "${mediaSource}" to private playlist "${playlistId}" for user "${session.userId}".`
 				);
 
 				if (!isSet && playlist.type === "user" && playlist.privacy === "public") {
@@ -1216,10 +1216,10 @@ export default {
 						userId: session.userId,
 						type: "playlist__add_song",
 						payload: {
-							message: `Added <youtubeId>${songName}</youtubeId> to playlist <playlistId>${playlist.displayName}</playlistId>`,
+							message: `Added <mediaSource>${songName}</mediaSource> to playlist <playlistId>${playlist.displayName}</playlistId>`,
 							thumbnail: newSong.thumbnail,
 							playlistId,
-							youtubeId
+							mediaSource
 						}
 					});
 				}
@@ -1240,7 +1240,7 @@ export default {
 				});
 
 				if (ratings && (playlist.type === "user-liked" || playlist.type === "user-disliked")) {
-					const { _id, youtubeId, title, artists, thumbnail } = newSong;
+					const { _id, mediaSource, title, artists, thumbnail } = newSong;
 					const { likes, dislikes } = ratings;
 
 					if (_id) SongsModule.runJob("UPDATE_SONG", { songId: _id });
@@ -1249,7 +1249,7 @@ export default {
 						CacheModule.runJob("PUB", {
 							channel: "ratings.like",
 							value: JSON.stringify({
-								youtubeId,
+								mediaSource,
 								userId: session.userId,
 								likes,
 								dislikes
@@ -1260,8 +1260,8 @@ export default {
 							userId: session.userId,
 							type: "song__like",
 							payload: {
-								message: `Liked song <youtubeId>${title} by ${artists.join(", ")}</youtubeId>`,
-								youtubeId,
+								message: `Liked song <mediaSource>${title} by ${artists.join(", ")}</mediaSource>`,
+								mediaSource,
 								thumbnail
 							}
 						});
@@ -1269,7 +1269,7 @@ export default {
 						CacheModule.runJob("PUB", {
 							channel: "ratings.dislike",
 							value: JSON.stringify({
-								youtubeId,
+								mediaSource,
 								userId: session.userId,
 								likes,
 								dislikes
@@ -1280,8 +1280,10 @@ export default {
 							userId: session.userId,
 							type: "song__dislike",
 							payload: {
-								message: `Disliked song <youtubeId>${title} by ${artists.join(", ")}</youtubeId>`,
-								youtubeId,
+								message: `Disliked song <mediaSource>${title} by ${artists.join(
+									mediaSource
+								)}</mediaSource>`,
+								mediaSource,
 								thumbnail
 							}
 						});
@@ -1302,10 +1304,10 @@ export default {
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are adding the songs to
-	 * @param {Array} youtubeIds - the YouTube ids of the songs we are trying to add
+	 * @param {Array} mediaSources - the media sources of the songs we are trying to add
 	 * @param {Function} cb - gets called with the result
 	 */
-	addSongsToPlaylist: isLoginRequired(async function addSongsToPlaylist(session, playlistId, youtubeIds, cb) {
+	addSongsToPlaylist: isLoginRequired(async function addSongsToPlaylist(session, playlistId, mediaSources, cb) {
 		const successful = [];
 		const existing = [];
 		const failed = {};
@@ -1358,24 +1360,24 @@ export default {
 
 				(nothing, next) => {
 					async.eachLimit(
-						youtubeIds,
+						mediaSources,
 						1,
-						(youtubeId, next) => {
-							this.publishProgress({ status: "update", message: `Adding song "${youtubeId}"` });
-							PlaylistsModule.runJob("ADD_SONG_TO_PLAYLIST", { playlistId, youtubeId }, this)
+						(mediaSource, next) => {
+							this.publishProgress({ status: "update", message: `Adding song "${mediaSource}"` });
+							PlaylistsModule.runJob("ADD_SONG_TO_PLAYLIST", { playlistId, mediaSource }, this)
 								.then(({ song }) => {
-									successful.push(youtubeId);
+									successful.push(mediaSource);
 									songsAdded.push(song);
 									next();
 								})
 								.catch(async err => {
 									err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 									if (err === "That song is already in the playlist.") {
-										existing.push(youtubeId);
+										existing.push(mediaSource);
 										next();
 									} else {
 										addError(err);
-										failed[youtubeId] = err;
+										failed[mediaSource] = err;
 										next();
 									}
 								});
@@ -1406,7 +1408,9 @@ export default {
 							session.userId
 						}". "${err}". Stats: successful:${successful.length}, existing:${existing.length}, failed:${
 							Object.keys(failed).length
-						}, last youtubeId:${lastYoutubeId}, youtubeIds length:${youtubeIds ? youtubeIds.length : null}`
+						}, last mediaSource:${lastYoutubeId}, mediaSources length:${
+							mediaSources ? mediaSources.length : null
+						}`
 					);
 					return cb({
 						status: "error",
@@ -1429,7 +1433,7 @@ export default {
 						session.userId
 					}". Stats: successful:${successful.length}, existing:${existing.length}, failed:${
 						Object.keys(failed).length
-					}, youtubeIds length:${youtubeIds ? youtubeIds.length : null}`
+					}, mediaSources length:${mediaSources ? mediaSources.length : null}`
 				);
 
 				await async.eachLimit(songsAdded, 1, (song, next) => {
@@ -1481,12 +1485,12 @@ export default {
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are removing the songs from
-	 * @param {Array} youtubeIds - the YouTube ids of the songs we are trying to remove
+	 * @param {Array} mediaSources - the media sources of the songs we are trying to remove
 	 * @param {Function} cb - gets called with the result
 	 */
 	removeSongsFromPlaylist: useHasPermission(
 		"playlists.songs.remove",
-		async function removeSongsFromPlaylist(session, playlistId, youtubeIds, cb) {
+		async function removeSongsFromPlaylist(session, playlistId, mediaSources, cb) {
 			const successful = [];
 			const notInPlaylist = [];
 			const failed = {};
@@ -1533,23 +1537,23 @@ export default {
 
 					next => {
 						async.eachLimit(
-							youtubeIds,
+							mediaSources,
 							1,
-							(youtubeId, next) => {
-								this.publishProgress({ status: "update", message: `Removing song "${youtubeId}"` });
-								PlaylistsModule.runJob("REMOVE_FROM_PLAYLIST", { playlistId, youtubeId }, this)
+							(mediaSource, next) => {
+								this.publishProgress({ status: "update", message: `Removing song "${mediaSource}"` });
+								PlaylistsModule.runJob("REMOVE_FROM_PLAYLIST", { playlistId, mediaSource }, this)
 									.then(() => {
-										successful.push(youtubeId);
+										successful.push(mediaSource);
 										next();
 									})
 									.catch(async err => {
 										err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 										if (err === "That song is not currently in the playlist.") {
-											notInPlaylist.push(youtubeId);
+											notInPlaylist.push(mediaSource);
 											next();
 										} else {
 											addError(err);
-											failed[youtubeId] = err;
+											failed[mediaSource] = err;
 											next();
 										}
 									});
@@ -1582,8 +1586,8 @@ export default {
 								notInPlaylist.length
 							}, failed:${
 								Object.keys(failed).length
-							}, last youtubeId:${lastYoutubeId}, youtubeIds length:${
-								youtubeIds ? youtubeIds.length : null
+							}, last mediaSource:${lastYoutubeId}, mediaSources length:${
+								mediaSources ? mediaSources.length : null
 							}`
 						);
 						return cb({
@@ -1607,7 +1611,7 @@ export default {
 							session.userId
 						}". Stats: successful:${successful.length}, notInPlaylist:${notInPlaylist.length}, failed:${
 							Object.keys(failed).length
-						}, youtubeIds length:${youtubeIds ? youtubeIds.length : null}`
+						}, mediaSources length:${mediaSources ? mediaSources.length : null}`
 					);
 
 					CacheModule.runJob("PUB", {
@@ -1714,7 +1718,7 @@ export default {
 							.catch(next);
 					else next("Invalid YouTube URL.");
 				},
-				(youtubeIds, next) => {
+				(mediaSources, next) => {
 					this.publishProgress({ status: "update", message: `Importing YouTube playlist (stage 2)` });
 					let successful = 0;
 					let failed = 0;
@@ -1722,26 +1726,26 @@ export default {
 					let alreadyInLikedPlaylist = 0;
 					let alreadyInDislikedPlaylist = 0;
 
-					if (youtubeIds.length === 0) next();
+					if (mediaSources.length === 0) next();
 
 					async.eachLimit(
-						youtubeIds,
+						mediaSources,
 						1,
-						(youtubeId, next) => {
+						(mediaSource, next) => {
 							WSModule.runJob(
 								"RUN_ACTION2",
 								{
 									session,
 									namespace: "playlists",
 									action: "addSongToPlaylist",
-									args: [true, youtubeId, playlistId]
+									args: [true, mediaSource, playlistId]
 								},
 								this
 							)
 								.then(res => {
 									if (res.status === "success") {
 										successful += 1;
-										addedSongs.push(youtubeId);
+										addedSongs.push(mediaSource);
 									} else failed += 1;
 									if (res.message === "That song is already in the playlist") alreadyInPlaylist += 1;
 									else if (
@@ -1849,16 +1853,21 @@ export default {
 	 * Removes a song from a private playlist
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} youtubeId - the youtube id of the song we are removing from the private playlist
+	 * @param {string} mediaSource - the media source of the song we are removing from the private playlist
 	 * @param {string} playlistId - the id of the playlist we are removing the song from
 	 * @param {Function} cb - gets called with the result
 	 */
-	removeSongFromPlaylist: isLoginRequired(async function removeSongFromPlaylist(session, youtubeId, playlistId, cb) {
+	removeSongFromPlaylist: isLoginRequired(async function removeSongFromPlaylist(
+		session,
+		mediaSource,
+		playlistId,
+		cb
+	) {
 		async.waterfall(
 			[
 				next => {
-					if (!youtubeId || typeof youtubeId !== "string") return next("Invalid song id.");
-					if (!playlistId || typeof youtubeId !== "string") return next("Invalid playlist id.");
+					if (!mediaSource || typeof mediaSource !== "string") return next("Invalid song id.");
+					if (!playlistId || typeof mediaSource !== "string") return next("Invalid playlist id.");
 					return next();
 				},
 
@@ -1876,21 +1885,21 @@ export default {
 				},
 
 				(playlist, next) => {
-					MediaModule.runJob("GET_MEDIA", { youtubeId }, this)
+					MediaModule.runJob("GET_MEDIA", { mediaSource }, this)
 						.then(res =>
 							next(null, playlist, {
 								_id: res.song._id,
 								title: res.song.title,
 								thumbnail: res.song.thumbnail,
 								artists: res.song.artists,
-								youtubeId: res.song.youtubeId
+								mediaSource: res.song.mediaSource
 							})
 						)
 						.catch(next);
 				},
 
 				(playlist, newSong, next) => {
-					PlaylistsModule.runJob("REMOVE_FROM_PLAYLIST", { playlistId, youtubeId }, this)
+					PlaylistsModule.runJob("REMOVE_FROM_PLAYLIST", { playlistId, mediaSource }, this)
 						.then(res => {
 							const { ratings } = res;
 							next(null, playlist, newSong, ratings);
@@ -1907,10 +1916,10 @@ export default {
 							userId: session.userId,
 							type: "playlist__remove_song",
 							payload: {
-								message: `Removed <youtubeId>${songName}</youtubeId> from playlist <playlistId>${playlist.displayName}</playlistId>`,
+								message: `Removed <mediaSource>${songName}</mediaSource> from playlist <playlistId>${playlist.displayName}</playlistId>`,
 								thumbnail,
 								playlistId,
-								youtubeId: newSong.youtubeId
+								mediaSource: newSong.mediaSource
 							}
 						});
 					}
@@ -1924,7 +1933,7 @@ export default {
 							CacheModule.runJob("PUB", {
 								channel: "ratings.unlike",
 								value: JSON.stringify({
-									youtubeId: newSong.youtubeId,
+									mediaSource: newSong.mediaSource,
 									userId: session.userId,
 									likes,
 									dislikes
@@ -1935,10 +1944,10 @@ export default {
 								userId: session.userId,
 								type: "song__unlike",
 								payload: {
-									message: `Removed <youtubeId>${title} by ${artists.join(
+									message: `Removed <mediaSource>${title} by ${artists.join(
 										", "
-									)}</youtubeId> from your Liked Songs`,
-									youtubeId: newSong.youtubeId,
+									)}</mediaSource> from your Liked Songs`,
+									mediaSource: newSong.mediaSource,
 									thumbnail
 								}
 							});
@@ -1946,7 +1955,7 @@ export default {
 							CacheModule.runJob("PUB", {
 								channel: "ratings.undislike",
 								value: JSON.stringify({
-									youtubeId: newSong.youtubeId,
+									mediaSource: newSong.mediaSource,
 									userId: session.userId,
 									likes,
 									dislikes
@@ -1957,10 +1966,10 @@ export default {
 								userId: session.userId,
 								type: "song__undislike",
 								payload: {
-									message: `Removed <youtubeId>${title} by ${artists.join(
+									message: `Removed <mediaSource>${title} by ${artists.join(
 										", "
-									)}</youtubeId> from your Disliked Songs`,
-									youtubeId: newSong.youtubeId,
+									)}</mediaSource> from your Disliked Songs`,
+									mediaSource: newSong.mediaSource,
 									thumbnail
 								}
 							});
@@ -1976,7 +1985,7 @@ export default {
 					this.log(
 						"ERROR",
 						"PLAYLIST_REMOVE_SONG",
-						`Removing song "${youtubeId}" from private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						`Removing song "${mediaSource}" from private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -1984,14 +1993,14 @@ export default {
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_REMOVE_SONG",
-					`Successfully removed song "${youtubeId}" from private playlist "${playlistId}" for user "${session.userId}".`
+					`Successfully removed song "${mediaSource}" from private playlist "${playlistId}" for user "${session.userId}".`
 				);
 
 				CacheModule.runJob("PUB", {
 					channel: "playlist.removeSong",
 					value: {
 						playlistId: playlist._id,
-						youtubeId,
+						mediaSource,
 						createdBy: playlist.createdBy,
 						privacy: playlist.privacy
 					}

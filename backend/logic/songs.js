@@ -68,17 +68,17 @@ class _SongsModule extends CoreClass {
 
 						if (!songs) return next();
 
-						const youtubeIds = Object.keys(songs);
+						const mediaSources = Object.keys(songs);
 
 						return async.each(
-							youtubeIds,
-							(youtubeId, next) => {
-								SongsModule.SongModel.findOne({ youtubeId }, (err, song) => {
+							mediaSources,
+							(mediaSource, next) => {
+								SongsModule.SongModel.findOne({ mediaSource }, (err, song) => {
 									if (err) next(err);
 									else if (!song)
 										CacheModule.runJob("HDEL", {
 											table: "songs",
-											key: youtubeId
+											key: mediaSource
 										})
 											.then(() => next())
 											.catch(next);
@@ -101,7 +101,7 @@ class _SongsModule extends CoreClass {
 							(song, next) => {
 								CacheModule.runJob("HSET", {
 									table: "songs",
-									key: song.youtubeId,
+									key: song.mediaSource,
 									value: SongsModule.SongSchemaCache(song)
 								})
 									.then(() => next())
@@ -171,28 +171,38 @@ class _SongsModule extends CoreClass {
 	 * Gets songs by id from Mongo
 	 *
 	 * @param {object} payload - object containing the payload
-	 * @param {string} payload.youtubeIds - the youtube ids of the songs we are trying to get
+	 * @param {string} payload.mediaSources - the media sources of the songs we are trying to get
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_SONGS(payload) {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
-					next => SongsModule.SongModel.find({ youtubeId: { $in: payload.youtubeIds } }, next),
+					next => SongsModule.SongModel.find({ mediaSource: { $in: payload.mediaSources } }, next),
 
 					(songs, next) => {
-						const youtubeIds = payload.youtubeIds.filter(
-							youtubeId => !songs.find(song => song.youtubeId === youtubeId)
+						const mediaSources = payload.mediaSources.filter(
+							mediaSource => !songs.find(song => song.mediaSource === mediaSource)
 						);
+
+						console.log(536546, songs, payload, mediaSources);
+
+						// TODO support spotify here
 						return YouTubeModule.youtubeVideoModel.find(
-							{ youtubeId: { $in: youtubeIds } },
+							{
+								youtubeId: {
+									$in: mediaSources
+										.filter(mediaSource => mediaSource.startsWith("youtube:"))
+										.map(mediaSource => mediaSource.split(":")[1])
+								}
+							},
 							(err, videos) => {
 								if (err) next(err);
 								else {
 									const youtubeVideos = videos.map(video => {
 										const { youtubeId, title, author, duration, thumbnail } = video;
 										return {
-											youtubeId,
+											mediaSource: `youtube:${youtubeId}`,
 											title,
 											artists: [author],
 											genres: [],
@@ -209,11 +219,11 @@ class _SongsModule extends CoreClass {
 									});
 									next(
 										null,
-										payload.youtubeIds
+										payload.mediaSources
 											.map(
-												youtubeId =>
-													songs.find(song => song.youtubeId === youtubeId) ||
-													youtubeVideos.find(video => video.youtubeId === youtubeId)
+												mediaSource =>
+													songs.find(song => song.mediaSource === mediaSource) ||
+													youtubeVideos.find(video => video.mediaSource === mediaSource)
 											)
 											.filter(song => !!song)
 									);
@@ -276,7 +286,7 @@ class _SongsModule extends CoreClass {
 					},
 
 					(song, next) => {
-						MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId: song.youtubeId }, this)
+						MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource: song.mediaSource }, this)
 							.then(() => next(null, song))
 							.catch(next);
 					},
@@ -336,11 +346,19 @@ class _SongsModule extends CoreClass {
 							this
 						)
 							.then(() => {
-								const { _id, youtubeId, title, artists, thumbnail, duration, skipDuration, verified } =
-									song;
+								const {
+									_id,
+									mediaSource,
+									title,
+									artists,
+									thumbnail,
+									duration,
+									skipDuration,
+									verified
+								} = song;
 								next(null, {
 									_id,
-									youtubeId,
+									mediaSource,
 									title,
 									artists,
 									thumbnail,
@@ -361,7 +379,7 @@ class _SongsModule extends CoreClass {
 
 					(song, next) => {
 						playlistModel.updateMany(
-							{ "songs.youtubeId": song.youtubeId },
+							{ "songs.mediaSource": song.mediaSource },
 							{ $set: { "songs.$": song } },
 							err => {
 								if (err) next(err);
@@ -410,7 +428,7 @@ class _SongsModule extends CoreClass {
 
 					(song, next) => {
 						stationModel.updateMany(
-							{ "queue.youtubeId": song.youtubeId },
+							{ "queue.mediaSource": song.mediaSource },
 							{ $set: { "queue.$": song } },
 							err => {
 								if (err) next(err);
@@ -563,10 +581,10 @@ class _SongsModule extends CoreClass {
 						this.publishProgress({ status: "update", message: `Updating songs (stage 4)` });
 
 						const trimmedSongs = songs.map(song => {
-							const { _id, youtubeId, title, artists, thumbnail, duration, verified } = song;
+							const { _id, mediaSource, title, artists, thumbnail, duration, verified } = song;
 							return {
 								_id,
-								youtubeId,
+								mediaSource,
 								title,
 								artists,
 								thumbnail,
@@ -653,12 +671,12 @@ class _SongsModule extends CoreClass {
 								async.waterfall(
 									[
 										next => {
-											const { youtubeId, title, artists, thumbnail, duration, verified } = song;
+											const { mediaSource, title, artists, thumbnail, duration, verified } = song;
 											stationModel.updateMany(
 												{ "queue._id": song._id },
 												{
 													$set: {
-														"queue.$.youtubeId": youtubeId,
+														"queue.$.mediaSource": mediaSource,
 														"queue.$.title": title,
 														"queue.$.artists": artists,
 														"queue.$.thumbnail": thumbnail,
@@ -976,10 +994,10 @@ class _SongsModule extends CoreClass {
 						else if (payload.trimmed) {
 							next(null, {
 								songs: data.songs.map(song => {
-									const { _id, youtubeId, title, artists, thumbnail, duration, verified } = song;
+									const { _id, mediaSource, title, artists, thumbnail, duration, verified } = song;
 									return {
 										_id,
-										youtubeId,
+										mediaSource,
 										title,
 										artists,
 										thumbnail,
@@ -1077,7 +1095,7 @@ class _SongsModule extends CoreClass {
 				playlistModel.find({}, (err, playlists) => {
 					if (err) reject(new Error(err));
 					else {
-						SongsModule.SongModel.find({}, { _id: true, youtubeId: true }, (err, songs) => {
+						SongsModule.SongModel.find({}, { _id: true, mediaSource: true }, (err, songs) => {
 							if (err) reject(new Error(err));
 							else {
 								const songIds = songs.map(song => song._id.toString());
@@ -1089,9 +1107,9 @@ class _SongsModule extends CoreClass {
 										playlist.songs.forEach(song => {
 											if (
 												(!song._id || songIds.indexOf(song._id.toString() === -1)) &&
-												!orphanedYoutubeIds.has(song.youtubeId)
+												!orphanedYoutubeIds.has(song.mediaSource)
 											) {
-												orphanedYoutubeIds.add(song.youtubeId);
+												orphanedYoutubeIds.add(song.mediaSource);
 											}
 										});
 										next();
@@ -1118,29 +1136,31 @@ class _SongsModule extends CoreClass {
 			DBModule.runJob("GET_MODEL", { modelName: "playlist" })
 				.then(playlistModel => {
 					SongsModule.runJob("GET_ORPHANED_PLAYLIST_SONGS", {}, this).then(response => {
-						const { youtubeIds } = response;
+						const { mediaSources } = response;
 						const playlistsToUpdate = new Set();
 
 						async.eachLimit(
-							youtubeIds,
+							mediaSources,
 							1,
-							(youtubeId, next) => {
+							(mediaSource, next) => {
 								async.waterfall(
 									[
 										next => {
 											this.publishProgress({
 												status: "update",
-												message: `Requesting "${youtubeId}"`
+												message: `Requesting "${mediaSource}"`
 											});
 											console.log(
-												youtubeId,
-												`this is song ${youtubeIds.indexOf(youtubeId) + 1}/${youtubeIds.length}`
+												mediaSource,
+												`this is song ${mediaSources.indexOf(mediaSource) + 1}/${
+													mediaSources.length
+												}`
 											);
 											setTimeout(next, 150);
 										},
 
 										next => {
-											MediaModule.runJob("GET_MEDIA", { youtubeId }, this)
+											MediaModule.runJob("GET_MEDIA", { mediaSource }, this)
 												.then(res => next(null, res.song))
 												.catch(next);
 										},
@@ -1149,7 +1169,7 @@ class _SongsModule extends CoreClass {
 											const { _id, title, artists, thumbnail, duration, verified } = song;
 											const trimmedSong = {
 												_id,
-												youtubeId,
+												mediaSource,
 												title,
 												artists,
 												thumbnail,
@@ -1157,7 +1177,7 @@ class _SongsModule extends CoreClass {
 												verified
 											};
 											playlistModel.updateMany(
-												{ "songs.youtubeId": song.youtubeId },
+												{ "songs.mediaSource": song.mediaSource },
 												{ $set: { "songs.$": trimmedSong } },
 												err => {
 													next(err, song);

@@ -394,7 +394,7 @@ export default {
 					if (!playlist) return next();
 
 					playlist.songs.forEach(song =>
-						songsToAdjustRatings.push({ songId: song._id, youtubeId: song.youtubeId })
+						songsToAdjustRatings.push({ songId: song._id, mediaSource: song.mediaSource })
 					);
 
 					return next();
@@ -408,7 +408,7 @@ export default {
 				(playlist, next) => {
 					if (!playlist) return next();
 
-					playlist.songs.forEach(song => songsToAdjustRatings.push({ youtubeId: song.youtubeId }));
+					playlist.songs.forEach(song => songsToAdjustRatings.push({ mediaSource: song.mediaSource }));
 
 					return next();
 				},
@@ -422,9 +422,9 @@ export default {
 					async.each(
 						songsToAdjustRatings,
 						(song, next) => {
-							const { youtubeId } = song;
+							const { mediaSource } = song;
 
-							MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
+							MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource })
 								.then(() => next())
 								.catch(next);
 						},
@@ -625,7 +625,7 @@ export default {
 					if (!playlist) return next();
 
 					playlist.songs.forEach(song =>
-						songsToAdjustRatings.push({ songId: song._id, youtubeId: song.youtubeId })
+						songsToAdjustRatings.push({ songId: song._id, mediaSource: song.mediaSource })
 					);
 
 					return next();
@@ -639,7 +639,7 @@ export default {
 				(playlist, next) => {
 					if (!playlist) return next();
 
-					playlist.songs.forEach(song => songsToAdjustRatings.push({ youtubeId: song.youtubeId }));
+					playlist.songs.forEach(song => songsToAdjustRatings.push({ mediaSource: song.mediaSource }));
 
 					return next();
 				},
@@ -653,9 +653,9 @@ export default {
 					async.each(
 						songsToAdjustRatings,
 						(song, next) => {
-							const { youtubeId } = song;
+							const { mediaSource } = song;
 
-							MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
+							MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource })
 								.then(() => next())
 								.catch(next);
 						},

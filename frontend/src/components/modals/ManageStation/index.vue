@@ -392,7 +392,7 @@ onMounted(() => {
 					if (stationPlaylist.value._id === res.data.playlistId) {
 						// remove song from array of playlists
 						stationPlaylist.value.songs.forEach((song, index) => {
-							if (song.youtubeId === res.data.youtubeId)
+							if (song.mediaSource === res.data.mediaSource)
 								stationPlaylist.value.songs.splice(index, 1);
 						});
 					}
@@ -412,7 +412,8 @@ onMounted(() => {
 								(song, index) => {
 									// find song locally
 									if (
-										song.youtubeId === changedSong.youtubeId
+										song.mediaSource ===
+										changedSong.mediaSource
 									) {
 										// change song position attribute
 										stationPlaylist.value.songs[
@@ -592,7 +593,7 @@ onBeforeUnmount(() => {
 					</div>
 					<hr class="section-horizontal-rule" />
 					<song-item
-						v-if="currentSong.youtubeId"
+						v-if="currentSong.mediaSource"
 						:song="currentSong"
 						:requested-by="true"
 						header="Currently Playing.."

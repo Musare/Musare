@@ -1,6 +1,6 @@
 export interface Song {
 	_id: string;
-	youtubeId: string;
+	mediaSource: string;
 	title: string;
 	artists: string[];
 	genres: string[];

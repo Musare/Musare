@@ -75,17 +75,17 @@ class _MediaModule extends CoreClass {
 
 						if (!ratings) return next();
 
-						const youtubeIds = Object.keys(ratings);
+						const mediaSources = Object.keys(ratings);
 
 						return async.each(
-							youtubeIds,
-							(youtubeId, next) => {
-								MediaModule.RatingsModel.findOne({ youtubeId }, (err, rating) => {
+							mediaSources,
+							(mediaSource, next) => {
+								MediaModule.RatingsModel.findOne({ mediaSource }, (err, rating) => {
 									if (err) next(err);
 									else if (!rating)
 										CacheModule.runJob("HDEL", {
 											table: "ratings",
-											key: youtubeId
+											key: mediaSource
 										})
 											.then(() => next())
 											.catch(next);
@@ -108,7 +108,7 @@ class _MediaModule extends CoreClass {
 							(rating, next) => {
 								CacheModule.runJob("HSET", {
 									table: "ratings",
-									key: rating.youtubeId,
+									key: rating.mediaSource,
 									value: MediaModule.RatingsSchemaCache(rating)
 								})
 									.then(() => next())
@@ -120,6 +120,7 @@ class _MediaModule extends CoreClass {
 				],
 				async err => {
 					if (err) {
+						console.log(345345, err);
 						err = await UtilsModule.runJob("GET_ERROR", { error: err });
 						reject(new Error(err));
 					} else resolve();
@@ -132,7 +133,7 @@ class _MediaModule extends CoreClass {
 	 * Recalculates dislikes and likes
 	 *
 	 * @param {object} payload - returns an object containing the payload
-	 * @param {string} payload.youtubeId - the youtube id
+	 * @param {string} payload.mediaSource - the media source
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	async RECALCULATE_RATINGS(payload) {
@@ -143,7 +144,7 @@ class _MediaModule extends CoreClass {
 				[
 					next => {
 						playlistModel.countDocuments(
-							{ songs: { $elemMatch: { youtubeId: payload.youtubeId } }, type: "user-liked" },
+							{ songs: { $elemMatch: { mediaSource: payload.mediaSource } }, type: "user-liked" },
 							(err, likes) => {
 								if (err) return next(err);
 								return next(null, likes);
@@ -153,7 +154,7 @@ class _MediaModule extends CoreClass {
 
 					(likes, next) => {
 						playlistModel.countDocuments(
-							{ songs: { $elemMatch: { youtubeId: payload.youtubeId } }, type: "user-disliked" },
+							{ songs: { $elemMatch: { mediaSource: payload.mediaSource } }, type: "user-disliked" },
 							(err, dislikes) => {
 								if (err) return next(err);
 								return next(err, { likes, dislikes });
@@ -163,7 +164,7 @@ class _MediaModule extends CoreClass {
 
 					({ likes, dislikes }, next) => {
 						MediaModule.RatingsModel.findOneAndUpdate(
-							{ youtubeId: payload.youtubeId },
+							{ mediaSource: payload.mediaSource },
 							{
 								$set: {
 									likes,
@@ -180,7 +181,7 @@ class _MediaModule extends CoreClass {
 							"HSET",
 							{
 								table: "ratings",
-								key: payload.youtubeId,
+								key: payload.mediaSource,
 								value: ratings
 							},
 							this
@@ -207,30 +208,31 @@ class _MediaModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						SongsModule.SongModel.find({}, { youtubeId: true }, next);
+						SongsModule.SongModel.find({}, { mediaSource: true }, next);
 					},
 
 					(songs, next) => {
+						// TODO support spotify
 						YouTubeModule.youtubeVideoModel.find({}, { youtubeId: true }, (err, videos) => {
 							if (err) next(err);
 							else
 								next(null, [
-									...songs.map(song => song.youtubeId),
-									...videos.map(video => video.youtubeId)
+									...songs.map(song => song.mediaSource),
+									...videos.map(video => `youtube:${video.youtubeId}`)
 								]);
 						});
 					},
 
-					(youtubeIds, next) => {
+					(mediaSources, next) => {
 						async.eachLimit(
-							youtubeIds,
+							mediaSources,
 							2,
-							(youtubeId, next) => {
+							(mediaSource, next) => {
 								this.publishProgress({
 									status: "update",
-									message: `Recalculating ratings for ${youtubeId}`
+									message: `Recalculating ratings for ${mediaSource}`
 								});
-								MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId }, this)
+								MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource }, this)
 									.then(() => {
 										next();
 									})
@@ -256,7 +258,7 @@ class _MediaModule extends CoreClass {
 	 * Gets ratings by id from the cache or Mongo, and if it isn't in the cache yet, adds it the cache
 	 *
 	 * @param {object} payload - object containing the payload
-	 * @param {string} payload.youtubeId - the youtube id
+	 * @param {string} payload.mediaSource - the media source
 	 * @param {string} payload.createMissing - whether to create missing ratings
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
@@ -265,13 +267,13 @@ class _MediaModule extends CoreClass {
 			async.waterfall(
 				[
 					next =>
-						CacheModule.runJob("HGET", { table: "ratings", key: payload.youtubeId }, this)
+						CacheModule.runJob("HGET", { table: "ratings", key: payload.mediaSource }, this)
 							.then(ratings => next(null, ratings))
 							.catch(next),
 
 					(ratings, next) => {
 						if (ratings) return next(true, ratings);
-						return MediaModule.RatingsModel.findOne({ youtubeId: payload.youtubeId }, next);
+						return MediaModule.RatingsModel.findOne({ mediaSource: payload.mediaSource }, next);
 					},
 
 					(ratings, next) => {
@@ -280,7 +282,7 @@ class _MediaModule extends CoreClass {
 								"HSET",
 								{
 									table: "ratings",
-									key: payload.youtubeId,
+									key: payload.mediaSource,
 									value: ratings
 								},
 								this
@@ -288,13 +290,13 @@ class _MediaModule extends CoreClass {
 
 						if (!payload.createMissing) return next("Ratings not found.");
 
-						return MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId: payload.youtubeId }, this)
+						return MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource: payload.mediaSource }, this)
 							.then(() => next())
 							.catch(next);
 					},
 
 					next =>
-						MediaModule.runJob("GET_RATINGS", { youtubeId: payload.youtubeId }, this)
+						MediaModule.runJob("GET_RATINGS", { mediaSource: payload.mediaSource }, this)
 							.then(res => next(null, res.ratings))
 							.catch(next)
 				],
@@ -310,29 +312,29 @@ class _MediaModule extends CoreClass {
 	 * Remove ratings by id from the cache and Mongo
 	 *
 	 * @param {object} payload - object containing the payload
-	 * @param {string} payload.youtubeIds - the youtube id
+	 * @param {string} payload.mediaSources - the media source
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	REMOVE_RATINGS(payload) {
 		return new Promise((resolve, reject) => {
-			let { youtubeIds } = payload;
-			if (!Array.isArray(youtubeIds)) youtubeIds = [youtubeIds];
+			let { mediaSources } = payload;
+			if (!Array.isArray(mediaSources)) mediaSources = [mediaSources];
 
 			async.eachLimit(
-				youtubeIds,
+				mediaSources,
 				1,
-				(youtubeId, next) => {
+				(mediaSource, next) => {
 					async.waterfall(
 						[
 							next => {
-								MediaModule.RatingsModel.deleteOne({ youtubeId }, err => {
+								MediaModule.RatingsModel.deleteOne({ mediaSource }, err => {
 									if (err) next(err);
 									else next();
 								});
 							},
 
 							next => {
-								CacheModule.runJob("HDEL", { table: "ratings", key: youtubeId }, this)
+								CacheModule.runJob("HDEL", { table: "ratings", key: mediaSource }, this)
 									.then(() => {
 										next();
 									})
@@ -351,10 +353,10 @@ class _MediaModule extends CoreClass {
 	}
 
 	/**
-	 * Get song or youtube video by youtubeId
+	 * Get song or youtube video by mediaSource
 	 *
 	 * @param {object} payload - an object containing the payload
-	 * @param {string} payload.youtubeId - the youtube id of the song/video
+	 * @param {string} payload.mediaSource - the media source of the song/video
 	 * @param {string} payload.userId - the user id
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
@@ -363,23 +365,35 @@ class _MediaModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						SongsModule.SongModel.findOne({ youtubeId: payload.youtubeId }, next);
+						SongsModule.SongModel.findOne({ mediaSource: payload.mediaSource }, next);
 					},
 
 					(song, next) => {
-						if (song && song.duration > 0) next(true, song);
-						else {
-							YouTubeModule.runJob(
+						if (song && song.duration > 0) return next(true, song);
+
+						if (payload.mediaSource.startsWith("youtube:")) {
+							const youtubeId = payload.mediaSource.split(":")[1];
+
+							return YouTubeModule.runJob(
 								"GET_VIDEO",
-								{ identifier: payload.youtubeId, createMissing: true },
+								{ identifier: youtubeId, createMissing: true },
 								this
 							)
 								.then(response => {
 									const { youtubeId, title, author, duration } = response.video;
-									next(null, song, { youtubeId, title, artists: [author], duration });
+									next(null, song, {
+										mediaSource: `youtube:${youtubeId}`,
+										title,
+										artists: [author],
+										duration
+									});
 								})
 								.catch(next);
 						}
+
+						// TODO handle Spotify here
+
+						return next("Invalid media source provided.");
 					},
 
 					(song, youtubeVideo, next) => {

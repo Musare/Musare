@@ -159,33 +159,33 @@ class _PlaylistsModule extends CoreClass {
 		});
 	}
 
-	/**
-	 * Returns a list of youtube ids in all user playlists of the specified user
-	 *
-	 * @param {object} payload - object that contains the payload
-	 * @param {string} payload.userId - the user id
-	 * @returns {Promise} - returns promise (reject, resolve)
-	 */
-	GET_SONG_YOUTUBE_IDS_FROM_PLAYLISTS(payload) {
-		return new Promise((resolve, reject) => {
-			PlaylistsModule.playlistModel.find({ createdBy: payload.userId }, (err, playlists) => {
-				const youtubeIds = new Set();
+	// /**
+	//  * Returns a list of youtube ids in all user playlists of the specified user
+	//  *
+	//  * @param {object} payload - object that contains the payload
+	//  * @param {string} payload.userId - the user id
+	//  * @returns {Promise} - returns promise (reject, resolve)
+	//  */
+	// GET_SONG_YOUTUBE_IDS_FROM_PLAYLISTS(payload) {
+	// 	return new Promise((resolve, reject) => {
+	// 		PlaylistsModule.playlistModel.find({ createdBy: payload.userId }, (err, playlists) => {
+	// 			const youtubeIds = new Set();
 
-				if (err) reject(err);
-				else {
-					playlists.forEach(playlist => {
-						playlist.songs.forEach(song => {
-							youtubeIds.add(song.youtubeId);
-						});
-					});
+	// 			if (err) reject(err);
+	// 			else {
+	// 				playlists.forEach(playlist => {
+	// 					playlist.songs.forEach(song => {
+	// 						youtubeIds.add(song.youtubeId);
+	// 					});
+	// 				});
 
-					console.log(Array.from(youtubeIds));
+	// 				console.log(Array.from(youtubeIds));
 
-					resolve({ youtubeIds: Array.from(youtubeIds) });
-				}
-			});
-		});
-	}
+	// 				resolve({ youtubeIds: Array.from(youtubeIds) });
+	// 			}
+	// 		});
+	// 	});
+	// }
 
 	/**
 	 * Creates a playlist owned by a user
@@ -410,12 +410,12 @@ class _PlaylistsModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the playlist id
-	 * @param {string} payload.youtubeId - the youtube id
+	 * @param {string} payload.mediaSource - the media source
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	ADD_SONG_TO_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
-			const { playlistId, youtubeId } = payload;
+			const { playlistId, mediaSource } = payload;
 
 			async.waterfall(
 				[
@@ -429,19 +429,19 @@ class _PlaylistsModule extends CoreClass {
 
 					(playlist, next) => {
 						if (!playlist) return next("Playlist not found.");
-						if (playlist.songs.find(song => song.youtubeId === youtubeId))
+						if (playlist.songs.find(song => song.mediaSource === mediaSource))
 							return next("That song is already in the playlist.");
 						return next();
 					},
 
 					next => {
-						MediaModule.runJob("GET_MEDIA", { youtubeId }, this)
+						MediaModule.runJob("GET_MEDIA", { mediaSource }, this)
 							.then(response => {
 								const { song } = response;
 								const { _id, title, artists, thumbnail, duration, verified } = song;
 								next(null, {
 									_id,
-									youtubeId,
+									mediaSource,
 									title,
 									artists,
 									thumbnail,
@@ -489,7 +489,7 @@ class _PlaylistsModule extends CoreClass {
 					(playlist, newSong, next) => {
 						if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
 							MediaModule.runJob("RECALCULATE_RATINGS", {
-								youtubeId: newSong.youtubeId
+								mediaSource: newSong.mediaSource
 							})
 								.then(ratings => next(null, playlist, newSong, ratings))
 								.catch(next);
@@ -511,12 +511,12 @@ class _PlaylistsModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the playlist id
-	 * @param {string} payload.youtubeId - the youtube id
+	 * @param {string} payload.mediaSource - the media source
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	REMOVE_FROM_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
-			const { playlistId, youtubeId } = payload;
+			const { playlistId, mediaSource } = payload;
 			async.waterfall(
 				[
 					next => {
@@ -529,12 +529,12 @@ class _PlaylistsModule extends CoreClass {
 
 					(playlist, next) => {
 						if (!playlist) return next("Playlist not found.");
-						if (!playlist.songs.find(song => song.youtubeId === youtubeId))
+						if (!playlist.songs.find(song => song.mediaSource === mediaSource))
 							return next("That song is not currently in the playlist.");
 
 						return PlaylistsModule.playlistModel.updateOne(
 							{ _id: playlistId },
-							{ $pull: { songs: { youtubeId } } },
+							{ $pull: { songs: { mediaSource } } },
 							next
 						);
 					},
@@ -567,7 +567,7 @@ class _PlaylistsModule extends CoreClass {
 
 					(playlist, next) => {
 						if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
-							MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
+							MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource })
 								.then(ratings => next(null, playlist, ratings))
 								.catch(next);
 						} else next(null, playlist, null);
@@ -594,18 +594,18 @@ class _PlaylistsModule extends CoreClass {
 	}
 
 	/**
-	 * Deletes a song from a playlist based on the youtube id
+	 * Deletes a song from a playlist based on the media source
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the playlist id
-	 * @param {string} payload.youtubeId - the youtube id
+	 * @param {string} payload.mediaSource - the media source
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	DELETE_SONG_FROM_PLAYLIST_BY_YOUTUBE_ID(payload) {
+	DELETE_SONG_FROM_PLAYLIST_BY_MEDIA_SOURCE_ID(payload) {
 		return new Promise((resolve, reject) => {
 			PlaylistsModule.playlistModel.updateOne(
 				{ _id: payload.playlistId },
-				{ $pull: { songs: { youtubeId: payload.youtubeId } } },
+				{ $pull: { songs: { mediaSource: payload.mediaSource } } },
 				err => {
 					if (err) reject(new Error(err));
 					else {
@@ -668,10 +668,10 @@ class _PlaylistsModule extends CoreClass {
 
 					(playlistId, _songs, next) => {
 						const songs = _songs.map(song => {
-							const { _id, youtubeId, title, artists, thumbnail, duration, verified } = song;
+							const { _id, mediaSource, title, artists, thumbnail, duration, verified } = song;
 							return {
 								_id,
-								youtubeId,
+								mediaSource,
 								title,
 								artists,
 								thumbnail,
@@ -957,17 +957,17 @@ class _PlaylistsModule extends CoreClass {
 							.flatMap(blacklistedPlaylist => blacklistedPlaylist.songs)
 							.reduce(
 								(items, item) =>
-									items.find(x => x.youtubeId === item.youtubeId) ? [...items] : [...items, item],
+									items.find(x => x.mediaSource === item.mediaSource) ? [...items] : [...items, item],
 								[]
 							);
 						const includedSongs = playlists
 							.flatMap(playlist => playlist.songs)
 							.reduce(
 								(songs, song) =>
-									songs.find(x => x.youtubeId === song.youtubeId) ? [...songs] : [...songs, song],
+									songs.find(x => x.mediaSource === song.mediaSource) ? [...songs] : [...songs, song],
 								[]
 							)
-							.filter(song => !blacklistedSongs.find(x => x.youtubeId === song.youtubeId));
+							.filter(song => !blacklistedSongs.find(x => x.mediaSource === song.mediaSource));
 
 						next(null, station, includedSongs);
 					},

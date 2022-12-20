@@ -239,8 +239,9 @@ const editMany = selectedRows => {
 };
 
 const importAlbum = selectedRows => {
-	const youtubeIds = selectedRows.map(({ youtubeId }) => youtubeId);
-	socket.dispatch("songs.getSongsFromYoutubeIds", youtubeIds, res => {
+	const mediaSources = selectedRows.map(({ youtubeId }) => youtubeId);
+	console.log(77988, mediaSources);
+	socket.dispatch("songs.getSongsFromMediaSources", mediaSources, res => {
 		if (res.status === "success") {
 			openModal({
 				modal: "importAlbum",
@@ -254,7 +255,7 @@ const bulkEditPlaylist = selectedRows => {
 	openModal({
 		modal: "bulkEditPlaylist",
 		props: {
-			youtubeIds: selectedRows.map(row => row.youtubeId)
+			mediaSources: selectedRows.map(row => row.youtubeId)
 		}
 	});
 };
@@ -312,7 +313,7 @@ const removeVideos = videoIds => {
 							openModal({
 								modal: 'viewYoutubeVideo',
 								props: {
-									videoId: slotProps.item._id
+									videoId: slotProps.item.youtubeId
 								}
 							})
 						"

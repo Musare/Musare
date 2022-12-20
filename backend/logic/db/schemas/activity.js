@@ -48,10 +48,10 @@ export default {
 	payload: {
 		message: { type: String, default: "", required: true },
 		thumbnail: { type: String, required: false },
-		youtubeId: { type: String, required: false },
+		mediaSource: { type: String, required: false },
 		stationId: { type: String, required: false },
 		playlistId: { type: String, required: false },
 		reportId: { type: String, required: false }
 	},
-	documentVersion: { type: Number, default: 2, required: true }
+	documentVersion: { type: Number, default: 3, required: true }
 };

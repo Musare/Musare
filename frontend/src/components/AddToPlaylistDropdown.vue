@@ -35,22 +35,23 @@ const { setPlaylists, addPlaylist, removePlaylist } = userPlaylistsStore;
 const { openModal } = useModalsStore();
 
 const hasSong = playlist =>
-	playlist.songs.map(song => song.youtubeId).indexOf(props.song.youtubeId) !==
-	-1;
+	playlist.songs
+		.map(song => song.mediaSource)
+		.indexOf(props.song.mediaSource) !== -1;
 const toggleSongInPlaylist = playlistIndex => {
 	const playlist = playlists.value[playlistIndex];
 	if (!hasSong(playlist)) {
 		socket.dispatch(
 			"playlists.addSongToPlaylist",
 			false,
-			props.song.youtubeId,
+			props.song.mediaSource,
 			playlist._id,
 			(res: AddSongToPlaylistResponse) => new Toast(res.message)
 		);
 	} else {
 		socket.dispatch(
 			"playlists.removeSongFromPlaylist",
-			props.song.youtubeId,
+			props.song.mediaSource,
 			playlist._id,
 			(res: RemoveSongFromPlaylistResponse) => new Toast(res.message)
 		);
@@ -118,7 +119,7 @@ onMounted(() => {
 				if (playlist._id === res.data.playlistId) {
 					playlists.value[playlistIndex].songs.forEach(
 						(song, songIndex) => {
-							if (song.youtubeId === res.data.youtubeId) {
+							if (song.mediaSource === res.data.mediaSource) {
 								playlists.value[playlistIndex].songs.splice(
 									songIndex,
 									1

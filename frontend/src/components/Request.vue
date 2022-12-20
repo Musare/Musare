@@ -82,9 +82,9 @@ const nextPageMusareResultsCount = computed(() =>
 const songsInQueue = computed(() => {
 	if (station.value.currentSong)
 		return songsList.value
-			.map(song => song.youtubeId)
-			.concat(station.value.currentSong.youtubeId);
-	return songsList.value.map(song => song.youtubeId);
+			.map(song => song.mediaSource)
+			.concat(station.value.currentSong.mediaSource);
+	return songsList.value.map(song => song.mediaSource);
 });
 // const currentUserQueueSongs = computed(
 // 	() =>
@@ -103,11 +103,11 @@ const showTab = _tab => {
 	tab.value = _tab;
 };
 
-const addSongToQueue = (youtubeId: string, index?: number) => {
+const addSongToQueue = (mediaSource: string, index?: number) => {
 	socket.dispatch(
 		"stations.addToQueue",
 		station.value._id,
-		youtubeId,
+		mediaSource,
 		"manual",
 		res => {
 			if (res.status !== "success") new Toast(`Error: ${res.message}`);
@@ -232,7 +232,7 @@ onMounted(async () => {
 									<i
 										v-if="
 											songsInQueue.indexOf(
-												song.youtubeId
+												song.mediaSource
 											) !== -1
 										"
 										class="material-icons added-to-playlist-icon"
@@ -243,7 +243,9 @@ onMounted(async () => {
 									<i
 										v-else
 										class="material-icons add-to-queue-icon"
-										@click="addSongToQueue(song.youtubeId)"
+										@click="
+											addSongToQueue(song.mediaSource)
+										"
 										content="Add Song to Queue"
 										v-tippy
 										>queue</i

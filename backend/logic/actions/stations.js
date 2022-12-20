@@ -864,7 +864,7 @@ export default {
 
 					WSModule.runJob("SOCKET_JOIN_SONG_ROOM", {
 						socketId: session.socketId,
-						room: `song.${data.currentSong.youtubeId}`
+						room: `song.${data.currentSong.mediaSource}`
 					});
 
 					data.currentSong.skipVotes = data.currentSong.skipVotes.length;
@@ -1888,10 +1888,10 @@ export default {
 	 *
 	 * @param session
 	 * @param stationId - the station id
-	 * @param youtubeId - the song id
+	 * @param mediaSource the song id
 	 * @param cb
 	 */
-	addToQueue: isLoginRequired(async function addToQueue(session, stationId, youtubeId, requestType, cb) {
+	addToQueue: isLoginRequired(async function addToQueue(session, stationId, mediaSource, requestType, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1938,7 +1938,7 @@ export default {
 						"ADD_TO_QUEUE",
 						{
 							stationId,
-							youtubeId,
+							mediaSource,
 							requestUser: session.userId,
 							requestType
 						},
@@ -1953,7 +1953,7 @@ export default {
 					this.log(
 						"ERROR",
 						"STATIONS_ADD_SONG_TO_QUEUE",
-						`Adding song "${youtubeId}" to station "${stationId}" queue failed. "${err}"`
+						`Adding song "${mediaSource}" to station "${stationId}" queue failed. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -1961,7 +1961,7 @@ export default {
 				this.log(
 					"SUCCESS",
 					"STATIONS_ADD_SONG_TO_QUEUE",
-					`Added song "${youtubeId}" to station "${stationId}" successfully.`
+					`Added song "${mediaSource}" to station "${stationId}" successfully.`
 				);
 
 				return cb({
@@ -1977,10 +1977,10 @@ export default {
 	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
-	 * @param {string} youtubeId - the youtube id
+	 * @param {string} mediaSource - the media source
 	 * @param {Function} cb - callback
 	 */
-	async removeFromQueue(session, stationId, youtubeId, cb) {
+	async removeFromQueue(session, stationId, mediaSource, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1990,8 +1990,8 @@ export default {
 				},
 
 				next => {
-					if (!youtubeId) return next("Invalid youtube id.");
-					return StationsModule.runJob("REMOVE_FROM_QUEUE", { stationId, youtubeId }, this)
+					if (!mediaSource) return next("Invalid media source.");
+					return StationsModule.runJob("REMOVE_FROM_QUEUE", { stationId, mediaSource }, this)
 						.then(() => next())
 						.catch(next);
 				}
@@ -2002,7 +2002,7 @@ export default {
 					this.log(
 						"ERROR",
 						"STATIONS_REMOVE_SONG_TO_QUEUE",
-						`Removing song "${youtubeId}" from station "${stationId}" queue failed. "${err}"`
+						`Removing song "${mediaSource}" from station "${stationId}" queue failed. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -2010,7 +2010,7 @@ export default {
 				this.log(
 					"SUCCESS",
 					"STATIONS_REMOVE_SONG_TO_QUEUE",
-					`Removed song "${youtubeId}" from station "${stationId}" successfully.`
+					`Removed song "${mediaSource}" from station "${stationId}" successfully.`
 				);
 
 				return cb({
@@ -2081,7 +2081,7 @@ export default {
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
 	 * @param {object} song - contains details about the song that is to be repositioned
-	 * @param {string} song.youtubeId - the youtube id of the song
+	 * @param {string} song.mediaSource - the media source of the song
 	 * @param {number} song.newIndex - the new position for the song in the queue
 	 * @param {number} song.oldIndex - the old position of the song in the queue
 	 * @param {Function} cb - callback
@@ -2098,7 +2098,7 @@ export default {
 				},
 
 				next => {
-					if (!song || !song.youtubeId) return next("You must provide a song to reposition.");
+					if (!song || !song.mediaSource) return next("You must provide a song to reposition.");
 					return next();
 				},
 
@@ -2106,7 +2106,7 @@ export default {
 				next => {
 					stationModel.updateOne(
 						{ _id: stationId },
-						{ $pull: { queue: { youtubeId: song.youtubeId } } },
+						{ $pull: { queue: { mediaSource: song.mediaSource } } },
 						next
 					);
 				},
@@ -2133,7 +2133,7 @@ export default {
 					this.log(
 						"ERROR",
 						"STATIONS_REPOSITION_SONG_IN_QUEUE",
-						`Repositioning song ${song.youtubeId} in queue of station "${stationId}" failed. "${err}"`
+						`Repositioning song ${song.mediaSource} in queue of station "${stationId}" failed. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -2141,14 +2141,14 @@ export default {
 				this.log(
 					"SUCCESS",
 					"STATIONS_REPOSITION_SONG_IN_QUEUE",
-					`Repositioned song ${song.youtubeId} in queue of station "${stationId}" successfully.`
+					`Repositioned song ${song.mediaSource} in queue of station "${stationId}" successfully.`
 				);
 
 				CacheModule.runJob("PUB", {
 					channel: "station.repositionSongInQueue",
 					value: {
 						song: {
-							youtubeId: song.youtubeId,
+							mediaSource: song.mediaSource,
 							oldIndex: song.oldIndex,
 							newIndex: song.newIndex
 						},

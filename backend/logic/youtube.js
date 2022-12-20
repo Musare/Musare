@@ -1344,12 +1344,13 @@ class _YouTubeModule extends CoreClass {
 					},
 
 					(youtubeVideos, next) => {
-						const youtubeIds = youtubeVideos.map(video => video.youtubeId);
+						// TODO support spotify here
+						const mediaSources = youtubeVideos.map(video => `youtube:${video.youtubeId}`);
 						async.eachLimit(
-							youtubeIds,
+							mediaSources,
 							2,
-							(youtubeId, next) => {
-								MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId }, this)
+							(mediaSource, next) => {
+								MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource }, this)
 									.then(() => next())
 									.catch(next);
 							},

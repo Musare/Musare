@@ -68,7 +68,7 @@ export const useYoutubeDirect = () => {
 			socket.dispatch(
 				"stations.addToQueue",
 				stationId,
-				youtubeVideoId,
+				`youtube:${youtubeVideoId}`,
 				"manual",
 				res => {
 					if (res.status !== "success")

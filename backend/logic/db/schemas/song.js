@@ -1,5 +1,5 @@
 export default {
-	youtubeId: { type: String, min: 11, max: 11, required: true, index: true, unique: true },
+	mediaSource: { type: String, min: 11, max: 11, required: true, index: true, unique: true },
 	title: { type: String, trim: true, required: true },
 	artists: [{ type: String, trim: true, default: [] }],
 	genres: [{ type: String, trim: true, default: [] }],
@@ -14,5 +14,5 @@ export default {
 	verifiedBy: { type: String },
 	verifiedAt: { type: Date },
 	discogs: { type: Object },
-	documentVersion: { type: Number, default: 9, required: true }
+	documentVersion: { type: Number, default: 10, required: true }
 };

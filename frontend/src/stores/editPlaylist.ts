@@ -24,9 +24,9 @@ export const useEditPlaylistStore = ({ modalUuid }: { modalUuid: string }) =>
 			addSong(song) {
 				this.playlist.songs.push(song);
 			},
-			removeSong(youtubeId) {
+			removeSong(mediaSource) {
 				this.playlist.songs = this.playlist.songs.filter(
-					song => song.youtubeId !== youtubeId
+					song => song.mediaSource !== mediaSource
 				);
 			},
 			updatePlaylistSongs(playlistSongs) {
@@ -35,8 +35,8 @@ export const useEditPlaylistStore = ({ modalUuid }: { modalUuid: string }) =>
 			repositionedSong(song) {
 				if (
 					this.playlist.songs[song.newIndex] &&
-					this.playlist.songs[song.newIndex].youtubeId ===
-						song.youtubeId
+					this.playlist.songs[song.newIndex].mediaSource ===
+						song.mediaSource
 				)
 					return;
 

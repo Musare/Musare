@@ -104,26 +104,26 @@ const excludedYoutubeIds = computed(() => {
 		autorequestDisallowRecentlyPlayedNumber
 	} = station.value.requests;
 
-	const youtubeIds = new Set();
+	const mediaSources = new Set();
 
 	if (autorequestDisallowRecentlyPlayedEnabled) {
 		history.value.forEach((historyItem, index) => {
 			if (index < autorequestDisallowRecentlyPlayedNumber)
-				youtubeIds.add(historyItem.payload.song.youtubeId);
+				mediaSources.add(historyItem.payload.song.mediaSource);
 		});
 	}
 
 	if (songsList.value) {
 		songsList.value.forEach(song => {
-			youtubeIds.add(song.youtubeId);
+			mediaSources.add(song.mediaSource);
 		});
 	}
 
 	if (station.value.currentSong) {
-		youtubeIds.add(station.value.currentSong.youtubeId);
+		mediaSources.add(station.value.currentSong.mediaSource);
 	}
 
-	return Array.from(youtubeIds);
+	return Array.from(mediaSources);
 });
 
 const totalUniqueAutorequestableYoutubeIds = computed(() => {
@@ -133,7 +133,7 @@ const totalUniqueAutorequestableYoutubeIds = computed(() => {
 
 	autoRequest.value.forEach(playlist => {
 		playlist.songs.forEach(song => {
-			uniqueYoutubeIds.add(song.youtubeId);
+			uniqueYoutubeIds.add(song.mediaSource);
 		});
 	});
 
@@ -143,7 +143,7 @@ const totalUniqueAutorequestableYoutubeIds = computed(() => {
 const actuallyAutorequestingYoutubeIds = computed(() => {
 	const excluded = excludedYoutubeIds.value;
 	const remaining = totalUniqueAutorequestableYoutubeIds.value.filter(
-		youtubeId => excluded.indexOf(youtubeId) === -1
+		mediaSource => excluded.indexOf(mediaSource) === -1
 	);
 	return remaining;
 });

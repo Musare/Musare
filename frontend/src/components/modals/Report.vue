@@ -180,7 +180,7 @@ const { inputs, save } = useForm(
 					"reports.create",
 					{
 						issues,
-						youtubeId: props.song.youtubeId
+						mediaSource: props.song.mediaSource
 					},
 					res => {
 						if (res.status === "success") {

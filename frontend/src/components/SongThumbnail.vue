@@ -12,7 +12,9 @@ const loadError = ref(0);
 
 const isYoutubeThumbnail = computed(
 	() =>
-		props.song.youtubeId &&
+		((props.song.mediaSource &&
+			props.song.mediaSource.startsWith("youtube:")) ||
+			props.song.youtubeId) &&
 		((props.song.thumbnail &&
 			(props.song.thumbnail.lastIndexOf("i.ytimg.com") !== -1 ||
 				props.song.thumbnail.lastIndexOf("img.youtube.com") !== -1)) ||
@@ -65,7 +67,11 @@ watch(
 			:style="{
 				'background-image':
 					'url(' +
-					`https://img.youtube.com/vi/${song.youtubeId}/mqdefault.jpg` +
+					`https://img.youtube.com/vi/${
+						song.mediaSource
+							? song.mediaSource.split(':')[1]
+							: song.youtubeId
+					}/mqdefault.jpg` +
 					')'
 			}"
 		></div>
@@ -79,7 +85,11 @@ watch(
 		<img
 			v-if="-1 < loadError && loadError < 2 && isYoutubeThumbnail"
 			loading="lazy"
-			:src="`https://img.youtube.com/vi/${song.youtubeId}/mqdefault.jpg`"
+			:src="`https://img.youtube.com/vi/${
+				song.mediaSource
+					? song.mediaSource.split(':')[1]
+					: song.youtubeId
+			}/mqdefault.jpg`"
 			@error="onLoadError"
 		/>
 		<img
