@@ -112,12 +112,12 @@ const importMusarePlaylistFile = () => {
 
 	if (importMusarePlaylistFileContents.value.playlist) {
 		mediaSources =
-			importMusarePlaylistFileContents.value.playlist.songs.map(
-				song => `youtube:${song.youtubeId}`
+			importMusarePlaylistFileContents.value.playlist.songs.map(song =>
+				song.youtubeId ? `youtube:${song.youtubeId}` : song.mediaSource
 			);
 	} else if (importMusarePlaylistFileContents.value.songs) {
-		mediaSources = importMusarePlaylistFileContents.value.songs.map(
-			song => `youtube:${song.youtubeId}`
+		mediaSources = importMusarePlaylistFileContents.value.songs.map(song =>
+			song.youtubeId ? `youtube:${song.youtubeId}` : song.mediaSource
 		);
 	}
 

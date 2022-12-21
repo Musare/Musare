@@ -964,8 +964,7 @@ class _StationsModule extends CoreClass {
 				song: currentSong,
 				skippedAt,
 				skipReason
-			},
-			documentVersion: 1
+			}
 		});
 
 		if (!document) return;

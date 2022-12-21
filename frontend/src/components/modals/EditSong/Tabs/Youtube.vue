@@ -106,7 +106,13 @@ onMounted(() => {
 					<template #actions>
 						<i
 							class="material-icons icon-selected"
-							v-if="result.id === form.inputs.youtubeId.value"
+							v-if="
+								form.inputs.mediaSource.value.startsWith(
+									'youtube:'
+								) &&
+								result.id ===
+									form.inputs.mediaSource.value.split(':')[1]
+							"
 							key="selected"
 							>radio_button_checked
 						</i>

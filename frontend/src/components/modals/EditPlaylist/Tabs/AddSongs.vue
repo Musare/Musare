@@ -45,10 +45,16 @@ watch(
 	songs => {
 		songs.forEach((searchItem, index) =>
 			playlist.value.songs.find(song => {
-				if (song.youtubeId === searchItem.id)
+				if (
+					song.mediaSource === "youtube:" &&
+					song.mediaSource.split(":")[1] === searchItem.id
+				)
 					youtubeSearch.value.songs.results[index].isAddedToQueue =
 						true;
-				return song.youtubeId === searchItem.id;
+				return (
+					song.mediaSource === "youtube:" &&
+					song.mediaSource.split(":")[1] === searchItem.id
+				);
 			})
 		);
 	}
@@ -72,20 +78,32 @@ watch(
 		youtubeSearch.value.songs.results.forEach((searchItem, index) =>
 			playlist.value.songs.find(song => {
 				youtubeSearch.value.songs.results[index].isAddedToQueue = false;
-				if (song.youtubeId === searchItem.id)
+				if (
+					song.mediaSource === "youtube:" &&
+					song.mediaSource.split(":")[1] === searchItem.id
+				)
 					youtubeSearch.value.songs.results[index].isAddedToQueue =
 						true;
 
-				return song.youtubeId === searchItem.id;
+				return (
+					song.mediaSource === "youtube:" &&
+					song.mediaSource.split(":")[1] === searchItem.id
+				);
 			})
 		);
 		musareSearch.value.results.forEach((searchItem, index) =>
 			playlist.value.songs.find(song => {
 				musareSearch.value.results[index].isAddedToQueue = false;
-				if (song.youtubeId === searchItem.youtubeId)
+				if (
+					song.mediaSource === "youtube:" &&
+					song.mediaSource.split(":")[1] === searchItem.youtubeId
+				)
 					musareSearch.value.results[index].isAddedToQueue = true;
 
-				return song.youtubeId === searchItem.youtubeId;
+				return (
+					song.mediaSource === "youtube:" &&
+					song.mediaSource.split(":")[1] === searchItem.youtubeId
+				);
 			})
 		);
 	}
@@ -156,7 +174,7 @@ onMounted(async () => {
 								@click="
 									addMusareSongToPlaylist(
 										playlist._id,
-										song.youtubeId,
+										song.mediaSource,
 										index
 									)
 								"
