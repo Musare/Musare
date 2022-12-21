@@ -178,25 +178,27 @@ export default async function migrate(MigrationModule) {
 		ratingsModel.find({ documentVersion: 1 }, (err, documents) => {
 			if (err) reject(err);
 			else {
-				async.eachLimit(
-					documents.map(document => document._doc),
-					1,
-					(document, next) => {
-						const updateObject = { $set: { documentVersion: 2 } };
+				ratingsModel.collection.dropIndexes(() => {
+					async.eachLimit(
+						documents.map(document => document._doc),
+						1,
+						(document, next) => {
+							const updateObject = { $set: { documentVersion: 2 } };
 
-						if (document.youtubeId) {
-							updateObject.$set.mediaSource = `youtube:${document.youtubeId}`;
-							updateObject.$unset = { youtubeId: "" };
+							if (document.youtubeId) {
+								updateObject.$set.mediaSource = `youtube:${document.youtubeId}`;
+								updateObject.$unset = { youtubeId: "" };
+							}
+
+							ratingsModel.updateOne({ _id: document._id }, updateObject, next);
+						},
+						err => {
+							this.log("INFO", `Migration 25. Ratings found: ${documents.length}.`);
+							if (err) reject(err);
+							else resolve();
 						}
-
-						ratingsModel.updateOne({ _id: document._id }, updateObject, next);
-					},
-					err => {
-						this.log("INFO", `Migration 25. Ratings found: ${documents.length}.`);
-						if (err) reject(err);
-						else resolve();
-					}
-				);
+					);
+				});
 			}
 		});
 	});
