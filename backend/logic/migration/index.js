@@ -68,7 +68,8 @@ class _MigrationModule extends CoreClass {
 						news: mongoose.model("news", new mongoose.Schema({}, { strict: false })),
 						report: mongoose.model("report", new mongoose.Schema({}, { strict: false })),
 						punishment: mongoose.model("punishment", new mongoose.Schema({}, { strict: false })),
-						ratings: mongoose.model("ratings", new mongoose.Schema({}, { strict: false }))
+						ratings: mongoose.model("ratings", new mongoose.Schema({}, { strict: false })),
+						stationHistory: mongoose.model("stationHistory", new mongoose.Schema({}, { strict: false }))
 					};
 
 					const files = fs.readdirSync(path.join(__dirname, "migrations"));
