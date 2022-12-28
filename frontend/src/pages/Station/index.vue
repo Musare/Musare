@@ -12,6 +12,7 @@ import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { ContentLoader } from "vue-content-loader";
 import canAutoPlay from "can-autoplay";
+import { useSoundcloudPlayer } from "@/composables/useSoundcloudPlayer";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
 import { useUserAuthStore } from "@/stores/userAuth";
@@ -53,6 +54,20 @@ const stationStore = useStationStore();
 const userAuthStore = useUserAuthStore();
 const userPreferencesStore = useUserPreferencesStore();
 
+const {
+	soundcloudIframeElement,
+	soundcloudLoadTrack,
+	soundcloudSeekTo,
+	soundcloudPlay,
+	soundcloudPause,
+	soundcloudSetVolume,
+	soundcloudGetPosition,
+	soundcloudGetIsPaused,
+	soundcloudBindListener,
+	soundcloudDestroy,
+	soundcloudUnload
+} = useSoundcloudPlayer();
+
 // TODO this might need a different place, like onMounted
 const isApple = ref(
 	navigator.platform.match(/iPhone|iPod|iPad/) ||
@@ -60,8 +75,8 @@ const isApple = ref(
 );
 const loading = ref(true);
 const exists = ref(true);
-const playerReady = ref(false);
-const player = ref(undefined);
+const youtubePlayerReady = ref(false);
+const youtubePlayer = ref(undefined);
 const timePaused = ref(0);
 const muted = ref(false);
 const timeElapsed = ref("0:00");
@@ -167,11 +182,30 @@ const stationState = computed(() => {
 		return "participate";
 	if (localPaused.value) return "local_paused";
 	if (volumeSliderValue.value === 0 || muted.value) return "muted";
-	if (playerReady.value && youtubePlayerState.value === "PLAYING")
+	if (youtubePlayerReady.value && youtubePlayerState.value === "PLAYING")
 		return "playing";
-	if (playerReady.value && youtubePlayerState.value === "BUFFERING")
+	if (youtubePlayerReady.value && youtubePlayerState.value === "BUFFERING")
 		return "buffering";
 	return "unknown";
+});
+
+const currentSongMediaType = computed(() => {
+	if (
+		!currentSong.value ||
+		!currentSong.value.mediaSource ||
+		currentSong.value.mediaSource.indexOf(":") === -1
+	)
+		return "none";
+	return currentSong.value.mediaSource.split(":")[0];
+});
+const currentSongMediaValue = computed(() => {
+	if (
+		!currentSong.value ||
+		!currentSong.value.mediaSource ||
+		currentSong.value.mediaSource.indexOf(":") === -1
+	)
+		return null;
+	return currentSong.value.mediaSource.split(":")[1];
 });
 
 const currentYoutubeId = computed(() => {
@@ -335,6 +369,36 @@ const getTimeRemaining = () => {
 	}
 	return 0;
 };
+const getCurrentPlayerTime = () =>
+	new Promise<number>((resolve, reject) => {
+		if (
+			currentSongMediaType.value === "youtube" &&
+			youtubePlayerReady.value
+		) {
+			resolve(
+				Math.max(
+					youtubePlayer.value.getCurrentTime() -
+						currentSong.value.skipDuration,
+					0
+				) * 1000
+			);
+			return;
+		}
+
+		if (currentSongMediaType.value === "soundcloud") {
+			soundcloudGetPosition(position => {
+				resolve(
+					Math.max(
+						position / 1000 - currentSong.value.skipDuration,
+						0
+					) * 1000
+				);
+			});
+			return;
+		}
+
+		reject(new Error("No player."));
+	});
 const skipSong = () => {
 	if (nextCurrentSong.value && nextCurrentSong.value.currentSong) {
 		const _songsList = songsList.value.concat([]);
@@ -372,13 +436,14 @@ const resizeSeekerbar = () => {
 	seekerbarPercentage.value =
 		(getTimeElapsed() / 1000 / currentSong.value.duration) * 100;
 };
-const calculateTimeElapsed = () => {
+const calculateTimeElapsed = async () => {
 	if (experimentalChangableListenMode.value === "participate") return;
 	if (
-		playerReady.value &&
+		youtubePlayerReady.value &&
+		currentSongMediaType.value === "youtube" &&
 		!noSong.value &&
 		currentSong.value &&
-		player.value.getPlayerState() === -1
+		youtubePlayer.value.getPlayerState() === -1
 	) {
 		if (!canAutoplay.value) {
 			if (Date.now() - lastTimeRequestedIfCanAutoplay.value > 2000) {
@@ -393,23 +458,14 @@ const calculateTimeElapsed = () => {
 				});
 			}
 		} else {
-			player.value.playVideo();
+			youtubePlayer.value.playVideo();
 			attemptsToPlayVideo.value += 1;
 		}
 	}
 
-	if (
-		!stationPaused.value &&
-		!localPaused.value &&
-		playerReady.value &&
-		!isApple.value
-	) {
+	if (!stationPaused.value && !localPaused.value && !isApple.value) {
 		const timeElapsed = getTimeElapsed();
-		const currentPlayerTime =
-			Math.max(
-				player.value.getCurrentTime() - currentSong.value.skipDuration,
-				0
-			) * 1000;
+		const currentPlayerTime = await getCurrentPlayerTime();
 
 		const difference = timeElapsed - currentPlayerTime;
 
@@ -418,7 +474,7 @@ const calculateTimeElapsed = () => {
 		if (difference < -2000) {
 			if (!seeking.value) {
 				seeking.value = true;
-				player.value.seekTo(
+				playerSeekTo(
 					getTimeElapsed() / 1000 + currentSong.value.skipDuration
 				);
 			}
@@ -431,7 +487,7 @@ const calculateTimeElapsed = () => {
 		} else if (difference > 2000) {
 			if (!seeking.value) {
 				seeking.value = true;
-				player.value.seekTo(
+				playerSeekTo(
 					getTimeElapsed() / 1000 + currentSong.value.skipDuration
 				);
 			}
@@ -441,12 +497,20 @@ const calculateTimeElapsed = () => {
 			_playbackRate = 1.1;
 		} else if (difference > 25) {
 			_playbackRate = 1.05;
-		} else if (player.value.getPlaybackRate !== 1.0) {
-			player.value.setPlaybackRate(1.0);
+		} else if (
+			currentSongMediaType.value === "youtube" &&
+			youtubeReady.value &&
+			youtubePlayer.value.getPlaybackRate !== 1.0
+		) {
+			youtubePlayer.value.setPlaybackRate(1.0);
 		}
 
-		if (playbackRate.value !== _playbackRate) {
-			player.value.setPlaybackRate(_playbackRate);
+		if (
+			currentSongMediaType.value === "youtube" &&
+			youtubeReady.value &&
+			playbackRate.value !== _playbackRate
+		) {
+			youtubePlayer.value.setPlaybackRate(_playbackRate);
 			playbackRate.value = _playbackRate;
 		}
 	}
@@ -459,27 +523,82 @@ const calculateTimeElapsed = () => {
 		(dateCurrently() - startedAt.value - localTimePaused) / 1000;
 
 	const songDuration = currentSong.value.duration;
-	if (playerReady.value && songDuration <= duration)
-		player.value.pauseVideo();
+	if (youtubePlayerReady.value && songDuration <= duration) playerPause();
 	if (duration <= songDuration)
 		timeElapsed.value =
 			typeof duration === "number" ? utils.formatTime(duration) : "0";
 };
 const playVideo = () => {
-	if (playerReady.value && currentSongIsYoutube.value) {
-		videoLoading.value = true;
-		player.value.loadVideoById(
-			currentYoutubeId.value,
-			getTimeElapsed() / 1000 + currentSong.value.skipDuration
-		);
+	if (currentSongMediaType.value === "youtube") {
+		if (youtubePlayerReady.value) {
+			videoLoading.value = true;
+			youtubePlayer.value.loadVideoById(
+				currentYoutubeId.value,
+				getTimeElapsed() / 1000 + currentSong.value.skipDuration
+			);
+		}
+	} else if (currentSongMediaType.value === "soundcloud") {
+		const soundcloudId = currentSongMediaValue.value;
 
-		if (window.stationInterval !== 0) clearInterval(window.stationInterval);
-		window.stationInterval = window.setInterval(() => {
-			if (!stationPaused.value) {
-				resizeSeekerbar();
-				calculateTimeElapsed();
-			}
-		}, 150);
+		soundcloudLoadTrack(
+			soundcloudId,
+			getTimeElapsed() / 1000 + currentSong.value.skipDuration,
+			localPaused.value || stationPaused.value
+		);
+	}
+
+	if (window.stationInterval !== 0) clearInterval(window.stationInterval);
+	window.stationInterval = window.setInterval(() => {
+		if (!stationPaused.value) {
+			resizeSeekerbar();
+			calculateTimeElapsed();
+		}
+	}, 150);
+};
+const changeSoundcloudPlayerVolume = () => {
+	if (muted.value) soundcloudSetVolume(0);
+	else soundcloudSetVolume(volumeSliderValue.value);
+};
+const changePlayerVolume = () => {
+	if (youtubePlayerReady.value) {
+		youtubePlayer.value.setVolume(volumeSliderValue.value);
+		if (muted.value) youtubePlayer.value.mute();
+		else youtubePlayer.value.unMute();
+	}
+
+	changeSoundcloudPlayerVolume();
+};
+const playerPlay = () => {
+	if (currentSongMediaType.value === "youtube" && youtubePlayerReady.value) {
+		youtubePlayer.value.playVideo();
+	}
+
+	if (currentSongMediaType.value === "soundcloud") {
+		soundcloudPlay();
+	}
+};
+const playerStop = () => {
+	if (youtubePlayerReady.value) {
+		youtubePlayer.value.stopVideo();
+	}
+
+	soundcloudPause();
+};
+const playerPause = () => {
+	if (youtubePlayerReady.value) {
+		youtubePlayer.value.pauseVideo();
+	}
+
+	soundcloudPause();
+};
+const playerSeekTo = position => {
+	// Position is in seconds
+	if (youtubePlayerReady.value) {
+		youtubePlayer.value.seekTo(position * 1000);
+	}
+
+	if (currentSongMediaType.value === "soundcloud") {
+		soundcloudSeekTo(position * 1000);
 	}
 };
 const toggleSkipVote = (message?) => {
@@ -493,9 +612,9 @@ const toggleSkipVote = (message?) => {
 };
 const youtubeReady = () => {
 	if (experimentalChangableListenMode.value === "participate") return;
-	if (!player.value) {
+	if (!youtubePlayer.value) {
 		ms.setYTReady(false);
-		player.value = new window.YT.Player("stationPlayer", {
+		youtubePlayer.value = new window.YT.Player("youtubeStationPlayer", {
 			height: 270,
 			width: 480,
 			// TODO CHECK TYPE
@@ -513,17 +632,10 @@ const youtubeReady = () => {
 			},
 			events: {
 				onReady: () => {
-					playerReady.value = true;
+					youtubePlayerReady.value = true;
 					ms.setYTReady(true);
 
-					let volume = parseFloat(localStorage.getItem("volume"));
-
-					volume = typeof volume === "number" ? volume : 20;
-
-					player.value.setVolume(volume);
-
-					if (volume > 0) player.value.unMute();
-					if (muted.value) player.value.mute();
+					changePlayerVolume();
 
 					playVideo();
 
@@ -531,7 +643,8 @@ const youtubeReady = () => {
 						(dateCurrently() - startedAt.value - timePaused.value) /
 						1000;
 					const songDuration = currentSong.value.duration;
-					if (songDuration <= duration) player.value.pauseVideo();
+					if (songDuration <= duration)
+						youtubePlayer.value.pauseVideo();
 
 					// on ios, playback will be forcibly paused locally
 					if (isApple.value) {
@@ -613,20 +726,23 @@ const youtubeReady = () => {
 						videoLoading.value === true
 					) {
 						videoLoading.value = false;
-						player.value.seekTo(
+						youtubePlayer.value.seekTo(
 							getTimeElapsed() / 1000 +
 								currentSong.value.skipDuration,
 							true
 						);
 						canAutoplay.value = true;
 						if (localPaused.value || stationPaused.value)
-							player.value.pauseVideo();
+							youtubePlayer.value.pauseVideo();
 					} else if (
 						event.data === window.YT.PlayerState.PLAYING &&
 						(localPaused.value || stationPaused.value)
 					) {
-						player.value.seekTo(timeBeforePause.value / 1000, true);
-						player.value.pauseVideo();
+						youtubePlayer.value.seekTo(
+							timeBeforePause.value / 1000,
+							true
+						);
+						youtubePlayer.value.pauseVideo();
 					} else if (
 						event.data === window.YT.PlayerState.PLAYING &&
 						seeking.value === true
@@ -638,15 +754,15 @@ const youtubeReady = () => {
 						!localPaused.value &&
 						!stationPaused.value &&
 						!noSong.value &&
-						player.value.getDuration() / 1000 <
+						youtubePlayer.value.getDuration() / 1000 <
 							currentSong.value.duration
 					) {
-						player.value.seekTo(
+						youtubePlayer.value.seekTo(
 							getTimeElapsed() / 1000 +
 								currentSong.value.skipDuration,
 							true
 						);
-						player.value.playVideo();
+						youtubePlayer.value.playVideo();
 					}
 				}
 			}
@@ -699,8 +815,12 @@ const setCurrentSong = data => {
 	if (_currentSong) {
 		updateNoSong(false);
 
-		if (!playerReady.value) youtubeReady();
-		else playVideo();
+		if (currentSongMediaType.value === "youtube") {
+			if (!youtubePlayerReady.value) youtubeReady();
+			else playVideo();
+		} else if (currentSongMediaType.value === "soundcloud") {
+			playVideo();
+		}
 
 		// If the station is playing and the backend is not connected, set the next song to skip to after this song and set a timer to skip
 		if (!stationPaused.value && !socket.ready) {
@@ -791,7 +911,7 @@ const setCurrentSong = data => {
 			);
 		}
 	} else {
-		if (playerReady.value) player.value.stopVideo();
+		playerStop();
 		updateNoSong(true);
 	}
 
@@ -801,25 +921,17 @@ const setCurrentSong = data => {
 const changeVolume = () => {
 	const volume = volumeSliderValue.value;
 	localStorage.setItem("volume", `${volume}`);
-	if (playerReady.value) {
-		player.value.setVolume(volume);
-		if (volume > 0) {
-			player.value.unMute();
-			localStorage.setItem("muted", "false");
-			muted.value = false;
-		}
-	}
+	muted.value = volume <= 0;
+	localStorage.setItem("muted", `${muted.value}`);
+
+	changePlayerVolume();
 };
 const resumeLocalPlayer = () => {
 	if (experimentalMediaSession.value)
 		updateMediaSessionData(currentSong.value);
 	if (!noSong.value) {
-		if (playerReady.value) {
-			player.value.seekTo(
-				getTimeElapsed() / 1000 + currentSong.value.skipDuration
-			);
-			player.value.playVideo();
-		}
+		playerSeekTo(getTimeElapsed() / 1000 + currentSong.value.skipDuration);
+		playerPlay();
 	}
 };
 const pauseLocalPlayer = () => {
@@ -827,7 +939,7 @@ const pauseLocalPlayer = () => {
 		updateMediaSessionData(currentSong.value);
 	if (!noSong.value) {
 		timeBeforePause.value = getTimeElapsed();
-		if (playerReady.value) player.value.pauseVideo();
+		playerPause();
 	}
 };
 const resumeLocalStation = () => {
@@ -857,29 +969,22 @@ const pauseStation = () => {
 	});
 };
 const toggleMute = () => {
-	if (playerReady.value) {
-		const previousVolume = parseFloat(localStorage.getItem("volume"));
-		const volume = player.value.getVolume() <= 0 ? previousVolume : 0;
-		muted.value = !muted.value;
-		localStorage.setItem("muted", `${muted.value}`);
-		volumeSliderValue.value = volume;
-		player.value.setVolume(volume);
-		if (!muted.value) localStorage.setItem("volume", `${volume}`);
-	}
+	muted.value = !muted.value;
+
+	changePlayerVolume();
 };
 const increaseVolume = () => {
-	if (playerReady.value) {
-		const previousVolume = parseFloat(localStorage.getItem("volume"));
-		let volume = previousVolume + 5;
-		if (previousVolume === 0) {
-			muted.value = false;
-			localStorage.setItem("muted", "false");
-		}
-		if (volume > 100) volume = 100;
-		volumeSliderValue.value = volume;
-		player.value.setVolume(volume);
-		localStorage.setItem("volume", `${volume}`);
+	const previousVolume = parseFloat(localStorage.getItem("volume"));
+	let volume = previousVolume + 5;
+	if (previousVolume === 0) {
+		muted.value = false;
+		localStorage.setItem("muted", "false");
 	}
+	if (volume > 100) volume = 100;
+	volumeSliderValue.value = volume;
+	localStorage.setItem("volume", `${volume}`);
+
+	changePlayerVolume();
 };
 const toggleLike = () => {
 	if (currentSong.value.liked)
@@ -924,12 +1029,14 @@ const resetKeyboardShortcutsHelper = () => {
 };
 const sendActivityWatchVideoData = () => {
 	if (
+		currentSongMediaType.value === "youtube" &&
 		!stationPaused.value &&
 		(!localPaused.value ||
 			experimentalChangableListenMode.value === "participate") &&
 		!noSong.value &&
 		(experimentalChangableListenMode.value === "participate" ||
-			player.value.getPlayerState() === window.YT.PlayerState.PLAYING)
+			youtubePlayer.value.getPlayerState() ===
+				window.YT.PlayerState.PLAYING)
 	) {
 		if (activityWatchVideoLastStatus.value !== "playing") {
 			activityWatchVideoLastStatus.value = "playing";
@@ -970,7 +1077,7 @@ const sendActivityWatchVideoData = () => {
 					: Object.keys(window.YT.PlayerState).find(
 							key =>
 								window.YT.PlayerState[key] ===
-								player.value.getPlayerState()
+								youtubePlayer.value.getPlayerState()
 					  ),
 			playbackRate: playbackRate.value,
 			experimentalChangableListenMode:
@@ -992,12 +1099,14 @@ const experimentalChangableListenModeChange = newMode => {
 
 	if (newMode === "participate") {
 		// Destroy the YouTube player
-		if (player.value) {
-			player.value.destroy();
-			player.value = null;
-			playerReady.value = false;
+		if (youtubePlayer.value) {
+			youtubePlayer.value.destroy();
+			youtubePlayer.value = null;
+			youtubePlayerReady.value = false;
 			youtubePlayerState.value = null;
 		}
+
+		soundcloudDestroy();
 	} else {
 		// Recreate the YouTube player
 		youtubeReady();
@@ -1626,7 +1735,6 @@ onMounted(async () => {
 
 	if (JSON.parse(localStorage.getItem("muted"))) {
 		muted.value = true;
-		player.value.setVolume(0);
 		volumeSliderValue.value = 0;
 	} else {
 		let volume = parseFloat(localStorage.getItem("volume"));
@@ -1635,6 +1743,55 @@ onMounted(async () => {
 		localStorage.setItem("volume", `${volume}`);
 		volumeSliderValue.value = volume;
 	}
+
+	changePlayerVolume();
+
+	soundcloudBindListener("play", () => {
+		if (currentSongMediaType.value !== "soundcloud") {
+			soundcloudPause();
+			return;
+		}
+		console.log("PLAY BIND", localPaused.value, stationPaused.value);
+		if (localPaused.value || stationPaused.value) {
+			soundcloudSeekTo(
+				(getTimeElapsed() / 1000 + currentSong.value.skipDuration) *
+					1000
+			);
+			soundcloudPause();
+		}
+	});
+
+	soundcloudBindListener("pause", () => {
+		if (currentSongMediaType.value !== "soundcloud") return;
+		console.log("PAUSE BIND", localPaused.value, stationPaused.value);
+		if (!localPaused.value && !stationPaused.value) {
+			// soundcloudSeekTo(
+			// 	(getTimeElapsed() / 1000 + currentSong.value.skipDuration) *
+			// 		1000
+			// );
+			// soundcloudPlay();
+
+			// let called = false;
+
+			// soundcloudGetIsPaused(isPaused => {
+			// 	if (called) return;
+			// 	called = true;
+
+			// 	console.log(123, isPaused);
+			// 	if (isPaused) {
+			// 		setTimeout(soundcloudPlay, 500);
+			// 	}
+			// });
+		}
+	});
+
+	soundcloudBindListener("seek", () => {
+		if (seeking.value) seeking.value = false;
+	});
+
+	soundcloudBindListener("error", value => {
+		console.log("SOUNDCLOUD ERROR", value);
+	});
 });
 
 onBeforeUnmount(() => {
@@ -1684,6 +1841,8 @@ onBeforeUnmount(() => {
 		updateAutorequestLocalStorage();
 
 	leaveStation();
+
+	soundcloudUnload();
 
 	// Delete the Pinia store that was created for this station, after all other cleanup tasks are performed
 	stationStore.$dispose();
@@ -1953,13 +2112,29 @@ onBeforeUnmount(() => {
 						>
 							<div id="video-container">
 								<div
-									id="stationPlayer"
+									v-show="currentSongMediaType === 'youtube'"
+									id="youtubeStationPlayer"
 									style="
 										width: 100%;
 										height: 100%;
 										min-height: 200px;
 									"
 								/>
+								<iframe
+									v-show="
+										currentSongMediaType === 'soundcloud'
+									"
+									id="soundcloudStationPlayer"
+									ref="soundcloudIframeElement"
+									style="
+										width: 100%;
+										height: 100%;
+										min-height: 200px;
+									"
+									scrolling="no"
+									frameborder="no"
+									allow="autoplay"
+								></iframe>
 								<div
 									class="player-cannot-autoplay"
 									v-if="!canAutoplay"
@@ -2475,7 +2650,9 @@ onBeforeUnmount(() => {
 				>
 				<span><b>Loading</b>: {{ loading }}</span>
 				<span><b>Can autoplay</b>: {{ canAutoplay }}</span>
-				<span><b>Player ready</b>: {{ playerReady }}</span>
+				<span
+					><b>Youtube player ready</b>: {{ youtubePlayerReady }}</span
+				>
 				<span
 					><b>Attempts to play video</b>:
 					{{ attemptsToPlayVideo }}</span
@@ -2609,7 +2786,8 @@ onBeforeUnmount(() => {
 </template>
 
 <style lang="less">
-#stationPlayer {
+#youtubeStationPlayer,
+#soundcloudStationPlayer {
 	position: absolute;
 	top: 0;
 	left: 0;

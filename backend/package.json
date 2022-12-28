@@ -33,6 +33,7 @@
     "retry-axios": "^3.0.0",
     "sha256": "^0.2.0",
     "socks": "^2.7.1",
+    "soundcloud-key-fetch": "^1.0.13",
     "underscore": "^1.13.6",
     "ws": "^8.11.0"
   },

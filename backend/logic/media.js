@@ -6,6 +6,7 @@ let CacheModule;
 let DBModule;
 let UtilsModule;
 let YouTubeModule;
+let SoundCloudModule;
 let SongsModule;
 let WSModule;
 
@@ -29,6 +30,7 @@ class _MediaModule extends CoreClass {
 		DBModule = this.moduleManager.modules.db;
 		UtilsModule = this.moduleManager.modules.utils;
 		YouTubeModule = this.moduleManager.modules.youtube;
+		SoundCloudModule = this.moduleManager.modules.soundcloud;
 		SongsModule = this.moduleManager.modules.songs;
 		WSModule = this.moduleManager.modules.ws;
 
@@ -385,6 +387,27 @@ class _MediaModule extends CoreClass {
 										mediaSource: `youtube:${youtubeId}`,
 										title,
 										artists: [author],
+										duration
+									});
+								})
+								.catch(next);
+						}
+
+						if (payload.mediaSource.startsWith("soundcloud:")) {
+							const trackId = payload.mediaSource.split(":")[1];
+
+							return SoundCloudModule.runJob(
+								"GET_TRACK",
+								{ identifier: trackId, createMissing: true },
+								this
+							)
+								.then(response => {
+									const { trackId, title, username, artworkUrl, duration } = response.track;
+									next(null, song, {
+										mediaSource: `soundcloud:${trackId}`,
+										title,
+										artists: [username],
+										thumbnail: artworkUrl,
 										duration
 									});
 								})
