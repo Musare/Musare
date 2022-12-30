@@ -43,25 +43,25 @@ const columns = ref<TableColumn[]>([
 	{
 		name: "options",
 		displayName: "Options",
-		properties: ["_id", "youtubeId", "songId"],
+		properties: ["_id", "trackId", "songId"],
 		sortable: false,
 		hidable: false,
 		resizable: false,
 		minWidth:
 			(hasPermission("songs.create") || hasPermission("songs.update")) &&
-			hasPermission("youtube.removeVideos")
+			hasPermission("soundcloud.removeTracks")
 				? 129
 				: 85,
 		defaultWidth:
 			(hasPermission("songs.create") || hasPermission("songs.update")) &&
-			hasPermission("youtube.removeVideos")
+			hasPermission("soundcloud.removeTracks")
 				? 129
 				: 85
 	},
 	{
 		name: "thumbnailImage",
 		displayName: "Thumb",
-		properties: ["youtubeId"],
+		properties: ["trackId", "artworkUrl"],
 		sortable: false,
 		minWidth: 75,
 		defaultWidth: 75,
@@ -69,16 +69,16 @@ const columns = ref<TableColumn[]>([
 		resizable: false
 	},
 	{
-		name: "youtubeId",
-		displayName: "YouTube ID",
-		properties: ["youtubeId"],
-		sortProperty: "youtubeId",
+		name: "trackId",
+		displayName: "Track ID",
+		properties: ["trackId"],
+		sortProperty: "trackId",
 		minWidth: 120,
 		defaultWidth: 120
 	},
 	{
 		name: "_id",
-		displayName: "Video ID",
+		displayName: "Musare Track ID",
 		properties: ["_id"],
 		sortProperty: "_id",
 		minWidth: 215,
@@ -91,10 +91,10 @@ const columns = ref<TableColumn[]>([
 		sortProperty: "title"
 	},
 	{
-		name: "author",
-		displayName: "Author",
-		properties: ["author"],
-		sortProperty: "author"
+		name: "username",
+		displayName: "Username",
+		properties: ["username"],
+		sortProperty: "username"
 	},
 	{
 		name: "duration",
@@ -120,10 +120,58 @@ const columns = ref<TableColumn[]>([
 		defaultVisibility: "hidden"
 	},
 	{
-		name: "uploadedAt",
-		displayName: "Uploaded At",
-		properties: ["uploadedAt"],
-		sortProperty: "uploadedAt",
+		name: "genre",
+		displayName: "Genre",
+		properties: ["genre"],
+		sortProperty: "genre",
+		defaultWidth: 200,
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "license",
+		displayName: "License",
+		properties: ["license"],
+		sortProperty: "license",
+		defaultWidth: 200,
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "likesCount",
+		displayName: "Likes count",
+		properties: ["likesCount"],
+		sortProperty: "likesCount",
+		defaultWidth: 200,
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "playbackCount",
+		displayName: "Playback count",
+		properties: ["playbackCount"],
+		sortProperty: "playbackCount",
+		defaultWidth: 200,
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "public",
+		displayName: "Public",
+		properties: ["public"],
+		sortProperty: "public",
+		defaultWidth: 200,
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "tagList",
+		displayName: "Tag list",
+		properties: ["tagList"],
+		sortProperty: "tagList",
+		defaultWidth: 200,
+		defaultVisibility: "hidden"
+	},
+	{
+		name: "soundcloudCreatedAt",
+		displayName: "Soundcloud Created At",
+		properties: ["soundcloudCreatedAt"],
+		sortProperty: "soundcloudCreatedAt",
 		defaultWidth: 200,
 		defaultVisibility: "hidden"
 	}
@@ -131,15 +179,15 @@ const columns = ref<TableColumn[]>([
 const filters = ref<TableFilter[]>([
 	{
 		name: "_id",
-		displayName: "Video ID",
+		displayName: "Musare Track ID",
 		property: "_id",
 		filterTypes: ["exact"],
 		defaultFilterType: "exact"
 	},
 	{
-		name: "youtubeId",
-		displayName: "YouTube ID",
-		property: "youtubeId",
+		name: "trackId",
+		displayName: "SoundCloud ID",
+		property: "trackId",
 		filterTypes: ["contains", "exact", "regex"],
 		defaultFilterType: "contains"
 	},
@@ -151,9 +199,9 @@ const filters = ref<TableFilter[]>([
 		defaultFilterType: "contains"
 	},
 	{
-		name: "author",
-		displayName: "Author",
-		property: "author",
+		name: "username",
+		displayName: "Username",
+		property: "username",
 		filterTypes: ["contains", "exact", "regex"],
 		defaultFilterType: "contains"
 	},
@@ -177,12 +225,54 @@ const filters = ref<TableFilter[]>([
 		filterTypes: ["datetimeBefore", "datetimeAfter"],
 		defaultFilterType: "datetimeBefore"
 	},
+	// {
+	// 	name: "importJob",
+	// 	displayName: "Import Job",
+	// 	property: "importJob",
+	// 	filterTypes: ["special"],
+	// 	defaultFilterType: "special"
+	// },
 	{
-		name: "importJob",
-		displayName: "Import Job",
-		property: "importJob",
-		filterTypes: ["special"],
-		defaultFilterType: "special"
+		name: "genre",
+		displayName: "Genre",
+		property: "genre",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "license",
+		displayName: "License",
+		property: "license",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "likesCount",
+		displayName: "Likes count",
+		property: "likesCount",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "playbackCount",
+		displayName: "Playback count",
+		property: "playbackCount",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "public",
+		displayName: "Public",
+		property: "public",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "tagList",
+		displayName: "Tag list",
+		property: "tagList",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
 	},
 	{
 		name: "songId",
@@ -192,23 +282,23 @@ const filters = ref<TableFilter[]>([
 		defaultFilterType: "contains"
 	},
 	{
-		name: "uploadedAt",
-		displayName: "Uploaded At",
-		property: "uploadedAt",
+		name: "soundcloudCreatedAt",
+		displayName: "Soundcloud Created At",
+		property: "soundcloudCreatedAt",
 		filterTypes: ["datetimeBefore", "datetimeAfter"],
 		defaultFilterType: "datetimeBefore"
 	}
 ]);
 const events = ref<TableEvents>({
-	adminRoom: "youtubeVideos",
+	adminRoom: "soundcloudTracks",
 	updated: {
-		event: "admin.youtubeVideo.updated",
-		id: "youtubeVideo._id",
-		item: "youtubeVideo"
+		event: "admin.soundcloudTrack.updated",
+		id: "soundcloudTrack._id",
+		item: "soundcloudTrack"
 	},
 	removed: {
-		event: "admin.youtubeVideo.removed",
-		id: "videoId"
+		event: "admin.soundcloudTrack.removed",
+		id: "trackId"
 	}
 });
 const bulkActions = ref<TableBulkActions>({ width: 200 });
@@ -222,7 +312,7 @@ if (hasPermission("media.recalculateAllRatings"))
 const { openModal } = useModalsStore();
 
 const rowToSong = row => ({
-	mediaSource: `youtube:${row.youtubeId}`
+	mediaSource: `soundcloud:${row.trackId}`
 });
 
 const editOne = row => {
@@ -242,9 +332,8 @@ const editMany = selectedRows => {
 
 const importAlbum = selectedRows => {
 	const mediaSources = selectedRows.map(
-		({ youtubeId }) => `youtube:${youtubeId}`
+		({ trackId }) => `soundcloud:${trackId}`
 	);
-	console.log(77988, mediaSources);
 	socket.dispatch("songs.getSongsFromMediaSources", mediaSources, res => {
 		if (res.status === "success") {
 			openModal({
@@ -259,16 +348,16 @@ const bulkEditPlaylist = selectedRows => {
 	openModal({
 		modal: "bulkEditPlaylist",
 		props: {
-			mediaSources: selectedRows.map(row => `youtube:${row.youtubeId}`)
+			mediaSources: selectedRows.map(row => row.trackId)
 		}
 	});
 };
 
-const removeVideos = videoIds => {
+const removeTracks = videoIds => {
 	let id;
 	let title;
 
-	socket.dispatch("youtube.removeVideos", videoIds, {
+	socket.dispatch("soundcloud.removeTracks", videoIds, {
 		cb: () => {},
 		onProgress: res => {
 			if (res.status === "started") {
@@ -289,11 +378,11 @@ const removeVideos = videoIds => {
 
 <template>
 	<div class="admin-tab container">
-		<page-metadata title="Admin | YouTube | Videos" />
+		<page-metadata title="Admin | SoundCloud | Tracks" />
 		<div class="card tab-info">
 			<div class="info-row">
-				<h1>YouTube Videos</h1>
-				<p>Manage YouTube video cache</p>
+				<h1>SoundCloud Tracks</h1>
+				<p>Manage SoundCloud track cache</p>
 			</div>
 			<div class="button-row">
 				<run-job-dropdown :jobs="jobs" />
@@ -304,8 +393,8 @@ const removeVideos = videoIds => {
 			:columns="columns"
 			:filters="filters"
 			:events="events"
-			data-action="youtube.getVideos"
-			name="admin-youtube-videos"
+			data-action="soundcloud.getTracks"
+			name="admin-soundcloud-tracks"
 			:max-width="1140"
 			:bulk-actions="bulkActions"
 		>
@@ -315,14 +404,14 @@ const removeVideos = videoIds => {
 						class="button is-primary icon-with-button material-icons"
 						@click="
 							openModal({
-								modal: 'viewYoutubeVideo',
+								modal: 'viewSoundcloudTrack',
 								props: {
-									videoId: slotProps.item.youtubeId
+									trackId: slotProps.item.trackId
 								}
 							})
 						"
 						:disabled="slotProps.item.removed"
-						content="View Video"
+						content="View Track"
 						v-tippy
 					>
 						open_in_full
@@ -338,14 +427,14 @@ const removeVideos = videoIds => {
 						:content="
 							!!slotProps.item.songId
 								? 'Edit Song'
-								: 'Create song from video'
+								: 'Create song from track'
 						"
 						v-tippy
 					>
 						music_note
 					</button>
 					<button
-						v-if="hasPermission('youtube.removeVideos')"
+						v-if="hasPermission('soundcloud.removeTracks')"
 						class="button is-danger icon-with-button material-icons"
 						@click.prevent="
 							openModal({
@@ -354,7 +443,7 @@ const removeVideos = videoIds => {
 									message:
 										'Removing this video will remove it from all playlists and cause a ratings recalculation.',
 									onCompleted: () =>
-										removeVideos(slotProps.item._id)
+										removeTracks(slotProps.item._id)
 								}
 							})
 						"
@@ -367,18 +456,15 @@ const removeVideos = videoIds => {
 				</div>
 			</template>
 			<template #column-thumbnailImage="slotProps">
-				<song-thumbnail class="song-thumbnail" :song="slotProps.item" />
+				<song-thumbnail
+					class="song-thumbnail"
+					:song="{ thumbnail: slotProps.item.artworkUrl }"
+				/>
 			</template>
-			<template #column-youtubeId="slotProps">
-				<a
-					:href="
-						'https://www.youtube.com/watch?v=' +
-						`${slotProps.item.youtubeId}`
-					"
-					target="_blank"
-				>
-					{{ slotProps.item.youtubeId }}
-				</a>
+			<template #column-trackId="slotProps">
+				<span :title="slotProps.item.trackId">
+					{{ slotProps.item.trackId }}
+				</span>
 			</template>
 			<template #column-_id="slotProps">
 				<span :title="slotProps.item._id">{{
@@ -390,9 +476,9 @@ const removeVideos = videoIds => {
 					slotProps.item.title
 				}}</span>
 			</template>
-			<template #column-author="slotProps">
-				<span :title="slotProps.item.author">{{
-					slotProps.item.author
+			<template #column-username="slotProps">
+				<span :title="slotProps.item.username">{{
+					slotProps.item.username
 				}}</span>
 			</template>
 			<template #column-duration="slotProps">
@@ -410,10 +496,47 @@ const removeVideos = videoIds => {
 					slotProps.item.songId
 				}}</span>
 			</template>
-			<template #column-uploadedAt="slotProps">
-				<span :title="new Date(slotProps.item.uploadedAt).toString()">{{
-					utils.getDateFormatted(slotProps.item.uploadedAt)
+			<template #column-genre="slotProps">
+				<span :title="slotProps.item.genre">{{
+					slotProps.item.genre
 				}}</span>
+			</template>
+			<template #column-license="slotProps">
+				<span :title="slotProps.item.license">{{
+					slotProps.item.license
+				}}</span>
+			</template>
+			<template #column-likesCount="slotProps">
+				<span :title="slotProps.item.likesCount">{{
+					slotProps.item.likesCount
+				}}</span>
+			</template>
+			<template #column-playbackCount="slotProps">
+				<span :title="slotProps.item.playbackCount">{{
+					slotProps.item.playbackCount
+				}}</span>
+			</template>
+			<template #column-public="slotProps">
+				<span :title="slotProps.item.public">{{
+					slotProps.item.public
+				}}</span>
+			</template>
+			<template #column-tagList="slotProps">
+				<span :title="slotProps.item.tagList">{{
+					slotProps.item.tagList
+				}}</span>
+			</template>
+			<template #column-soundcloudCreatedAt="slotProps">
+				<span
+					:title="
+						new Date(slotProps.item.soundcloudCreatedAt).toString()
+					"
+					>{{
+						utils.getDateFormatted(
+							slotProps.item.soundcloudCreatedAt
+						)
+					}}</span
+				>
 			</template>
 			<template #bulk-actions="slotProps">
 				<div class="bulk-actions">
@@ -424,7 +547,7 @@ const removeVideos = videoIds => {
 						"
 						class="material-icons create-songs-icon"
 						@click.prevent="editMany(slotProps.item)"
-						content="Create/edit songs from videos"
+						content="Create/edit songs from tracks"
 						v-tippy
 						tabindex="0"
 					>
@@ -437,7 +560,7 @@ const removeVideos = videoIds => {
 						"
 						class="material-icons import-album-icon"
 						@click.prevent="importAlbum(slotProps.item)"
-						content="Import album from videos"
+						content="Import album from tracks"
 						v-tippy
 						tabindex="0"
 					>
@@ -454,16 +577,16 @@ const removeVideos = videoIds => {
 						playlist_add
 					</i>
 					<i
-						v-if="hasPermission('youtube.removeVideos')"
+						v-if="hasPermission('soundcloud.removeTracks')"
 						class="material-icons delete-icon"
 						@click.prevent="
 							openModal({
 								modal: 'confirm',
 								props: {
 									message:
-										'Removing these videos will remove them from all playlists and cause a ratings recalculation.',
+										'Removing these tracks will remove them from all playlists and cause a ratings recalculation.',
 									onCompleted: () =>
-										removeVideos(
+										removeTracks(
 											slotProps.item.map(
 												video => video._id
 											)

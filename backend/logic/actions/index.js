@@ -10,6 +10,7 @@ import news from "./news";
 import punishments from "./punishments";
 import utils from "./utils";
 import youtube from "./youtube";
+import soundcloud from "./soundcloud";
 import media from "./media";
 
 export default {
@@ -25,5 +26,6 @@ export default {
 	punishments,
 	utils,
 	youtube,
+	soundcloud,
 	media
 };

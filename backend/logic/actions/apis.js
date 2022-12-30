@@ -213,6 +213,8 @@ export default {
 			page === "punishments" ||
 			page === "youtube" ||
 			page === "youtubeVideos" ||
+			page === "soundcloud" ||
+			page === "soundcloudTracks" ||
 			page === "import" ||
 			page === "dataRequests"
 		) {
