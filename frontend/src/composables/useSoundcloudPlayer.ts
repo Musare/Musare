@@ -1,6 +1,12 @@
 import { ref, watch } from "vue";
 
+const TAG = "[USP]";
+
+const soundcloudDomain = "https://w.soundcloud.com";
+
 export const useSoundcloudPlayer = () => {
+	console.debug(TAG, "Init start");
+
 	const soundcloudIframeElement = ref();
 	const widgetId = ref();
 	const volume = ref();
@@ -19,17 +25,28 @@ export const useSoundcloudPlayer = () => {
 		};
 
 		if (!soundcloudIframeElement.value) return;
+		if (
+			!soundcloudIframeElement.value.src ||
+			!soundcloudIframeElement.value.src.startsWith(soundcloudDomain)
+		)
+			return;
+
+		// if (method !== "getPosition")
+		// 	console.debug(TAG, "Dispatch message", method, value);
 
 		soundcloudIframeElement.value.contentWindow.postMessage(
 			JSON.stringify(payload),
-			"https://w.soundcloud.com/player"
+			`${soundcloudDomain}/player`
 		);
 	};
 
 	const onLoadListener = () => {};
 
 	const onMessageListener = event => {
-		if (event.origin !== "https://w.soundcloud.com") return;
+		if (event.origin !== soundcloudDomain) return;
+
+		// if (event.data.indexOf("getPosition") === -1)
+		// 	console.debug(TAG, "On message", event.data);
 
 		const data = JSON.parse(event.data);
 		if (data.method !== "getPosition") console.log("MESSAGE DATA", data);
@@ -97,6 +114,8 @@ export const useSoundcloudPlayer = () => {
 
 		console.log("SC PLAY");
 
+		console.debug(TAG, "Soundcloud play");
+
 		dispatchMessage("play");
 	};
 
@@ -105,17 +124,23 @@ export const useSoundcloudPlayer = () => {
 
 		console.log("SC PAUSE");
 
+		console.debug(TAG, "Soundcloud pause");
+
 		dispatchMessage("pause");
 	};
 
 	const soundcloudSetVolume = _volume => {
 		volume.value = _volume;
 
+		console.debug(TAG, "Soundcloud set volume");
+
 		dispatchMessage("setVolume", _volume);
 	};
 
 	const soundcloudSeekTo = time => {
 		console.log("SC SEEK TO", time);
+
+		console.debug(TAG, "Soundcloud seek to");
 
 		dispatchMessage("seekTo", time);
 	};
@@ -151,7 +176,9 @@ export const useSoundcloudPlayer = () => {
 	const soundcloudLoadTrack = (trackId, startTime, _paused) => {
 		if (!soundcloudIframeElement.value) return;
 
-		const url = `https://w.soundcloud.com/player?autoplay=false&buying=false&sharing=false&download=false&show_artwork=false&show_playcount=false&show_user=false&url=${`https://api.soundcloud.com/tracks/${trackId}`}`;
+		console.debug(TAG, "Soundcloud load track");
+
+		const url = `${soundcloudDomain}/player?autoplay=false&buying=false&sharing=false&download=false&show_artwork=false&show_playcount=false&show_user=false&url=${`https://api.soundcloud.com/tracks/${trackId}`}`;
 
 		soundcloudIframeElement.value.setAttribute("src", url);
 
@@ -180,13 +207,15 @@ export const useSoundcloudPlayer = () => {
 	const soundcloudDestroy = () => {
 		if (!soundcloudIframeElement.value) return;
 
-		const url = `https://w.soundcloud.com/player?autoplay=false&buying=false&sharing=false&download=false&show_artwork=false&show_playcount=false&show_user=false&url=${`https://api.soundcloud.com/tracks/${0}`}`;
+		const url = `${soundcloudDomain}/player?autoplay=false&buying=false&sharing=false&download=false&show_artwork=false&show_playcount=false&show_user=false&url=${`https://api.soundcloud.com/tracks/${0}`}`;
 		soundcloudIframeElement.value.setAttribute("src", url);
 	};
 
 	const soundcloudUnload = () => {
 		window.removeEventListener("message", onMessageListener);
 	};
+
+	console.debug(TAG, "Init end");
 
 	return {
 		soundcloudIframeElement,

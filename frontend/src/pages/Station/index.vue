@@ -23,6 +23,8 @@ import ms from "@/ms";
 import keyboardShortcuts from "@/keyboardShortcuts";
 import utils from "@/utils";
 
+const TAG = "[STATION]";
+
 const MainHeader = defineAsyncComponent(
 	() => import("@/components/MainHeader.vue")
 );
@@ -529,6 +531,7 @@ const calculateTimeElapsed = async () => {
 			typeof duration === "number" ? utils.formatTime(duration) : "0";
 };
 const playVideo = () => {
+	console.debug(TAG, "Play video start");
 	if (currentSongMediaType.value === "youtube") {
 		if (youtubePlayerReady.value) {
 			videoLoading.value = true;
@@ -554,6 +557,7 @@ const playVideo = () => {
 			calculateTimeElapsed();
 		}
 	}, 150);
+	console.debug(TAG, "Play video end");
 };
 const changeSoundcloudPlayerVolume = () => {
 	if (muted.value) soundcloudSetVolume(0);
@@ -770,6 +774,8 @@ const youtubeReady = () => {
 	}
 };
 const setCurrentSong = data => {
+	console.debug(TAG, "Set current song start");
+
 	const {
 		currentSong: _currentSong,
 		startedAt: _startedAt,
@@ -917,6 +923,8 @@ const setCurrentSong = data => {
 
 	calculateTimeElapsed();
 	resizeSeekerbar();
+
+	console.debug(TAG, "Set current song end");
 };
 const changeVolume = () => {
 	const volume = volumeSliderValue.value;
@@ -1121,6 +1129,8 @@ watch(
 );
 
 onMounted(async () => {
+	console.debug(TAG, "On mounted start");
+
 	mediaModalWatcher.value = stationStore.$onAction(({ name, args }) => {
 		if (name === "updateMediaModalPlayingAudio") {
 			const [mediaModalPlayingAudio] = args;
@@ -1162,10 +1172,13 @@ onMounted(async () => {
 	const experimental = await lofig.get("experimental");
 
 	socket.onConnect(() => {
+		console.debug(TAG, "On socked connect start");
+
 		clearTimeout(window.stationNextSongTimeout);
 
 		socket.dispatch("stations.join", stationIdentifier.value, async res => {
 			if (res.status === "success") {
+				console.debug(TAG, "Station join start");
 				setTimeout(() => {
 					loading.value = false;
 				}, 1000); // prevents popping in of youtube embed etc.
@@ -1424,6 +1437,7 @@ onMounted(async () => {
 						systemDifference.value = difference;
 					}
 				});
+				console.debug(TAG, "Station join end");
 			} else {
 				loading.value = false;
 				exists.value = false;
@@ -1449,6 +1463,8 @@ onMounted(async () => {
 				}
 			}
 		);
+
+		console.debug(TAG, "On socked connect end");
 	});
 
 	socket.onDisconnect(() => {
@@ -1747,51 +1763,55 @@ onMounted(async () => {
 	changePlayerVolume();
 
 	soundcloudBindListener("play", () => {
+		console.debug(TAG, "Bind on play");
 		if (currentSongMediaType.value !== "soundcloud") {
 			soundcloudPause();
 			return;
 		}
-		console.log("PLAY BIND", localPaused.value, stationPaused.value);
 		if (localPaused.value || stationPaused.value) {
-			soundcloudSeekTo(
+			console.debug(
+				TAG,
+				"Bind on play - pause and seek to",
 				(getTimeElapsed() / 1000 + currentSong.value.skipDuration) *
 					1000
 			);
 			soundcloudPause();
+			soundcloudSeekTo(
+				(getTimeElapsed() / 1000 + currentSong.value.skipDuration) *
+					1000
+			);
 		}
 	});
 
 	soundcloudBindListener("pause", () => {
+		console.debug(TAG, "Bind on pause");
 		if (currentSongMediaType.value !== "soundcloud") return;
-		console.log("PAUSE BIND", localPaused.value, stationPaused.value);
 		if (!localPaused.value && !stationPaused.value) {
-			// soundcloudSeekTo(
-			// 	(getTimeElapsed() / 1000 + currentSong.value.skipDuration) *
-			// 		1000
-			// );
-			// soundcloudPlay();
-
-			// let called = false;
-
-			// soundcloudGetIsPaused(isPaused => {
-			// 	if (called) return;
-			// 	called = true;
-
-			// 	console.log(123, isPaused);
-			// 	if (isPaused) {
-			// 		setTimeout(soundcloudPlay, 500);
-			// 	}
-			// });
+			console.debug(
+				TAG,
+				"Bind on pause - seeking to",
+				(getTimeElapsed() / 1000 + currentSong.value.skipDuration) *
+					1000,
+				"and playing"
+			);
+			soundcloudSeekTo(
+				(getTimeElapsed() / 1000 + currentSong.value.skipDuration) *
+					1000
+			);
+			soundcloudPlay();
 		}
 	});
 
 	soundcloudBindListener("seek", () => {
+		console.debug(TAG, "Bind on seek");
 		if (seeking.value) seeking.value = false;
 	});
 
 	soundcloudBindListener("error", value => {
-		console.log("SOUNDCLOUD ERROR", value);
+		console.debug(TAG, "Bind on error", value);
 	});
+
+	console.debug(TAG, "On mounted end");
 });
 
 onBeforeUnmount(() => {
