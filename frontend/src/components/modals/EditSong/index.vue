@@ -13,6 +13,7 @@ import aw from "@/aw";
 import validation from "@/validation";
 import keyboardShortcuts from "@/keyboardShortcuts";
 import { useForm } from "@/composables/useForm";
+import { useSoundcloudPlayer } from "@/composables/useSoundcloudPlayer";
 
 import { Song } from "@/types/song.js";
 
@@ -59,6 +60,20 @@ const editSongStore = useEditSongStore({ modalUuid: props.modalUuid });
 const stationStore = useStationStore();
 const { socket } = useWebsocketsStore();
 const userAuthStore = useUserAuthStore();
+
+const {
+	soundcloudIframeElement,
+	soundcloudLoadTrack,
+	soundcloudSeekTo,
+	soundcloudPlay,
+	soundcloudPause,
+	soundcloudSetVolume,
+	soundcloudGetPosition,
+	soundcloudGetIsPaused,
+	soundcloudBindListener,
+	soundcloudDestroy,
+	soundcloudUnload
+} = useSoundcloudPlayer();
 
 const { openModal, closeCurrentModal, preventCloseCbs } = useModalsStore();
 const { hasPermission } = userAuthStore;
@@ -447,6 +462,23 @@ const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 	},
 	{ modalUuid: props.modalUuid, preventCloseUnsaved: false }
 );
+
+const currentSongMediaType = computed(() => {
+	if (
+		!inputs.value.mediaSource.value ||
+		inputs.value.mediaSource.value.indexOf(":") === -1
+	)
+		return "none";
+	return inputs.value.mediaSource.value.split(":")[0];
+});
+const currentSongMediaValue = computed(() => {
+	if (
+		!inputs.value.mediaSource.value ||
+		inputs.value.mediaSource.value.indexOf(":") === -1
+	)
+		return null;
+	return inputs.value.mediaSource.value.split(":")[1];
+});
 
 const showTab = payload => {
 	if (tabs.value[`${payload}-tab`])
@@ -1721,7 +1753,31 @@ onBeforeUnmount(() => {
 				>
 					<div class="top-section">
 						<div class="player-section">
-							<div :id="`editSongPlayer-${modalUuid}`" />
+							<div
+								v-show="currentSongMediaType === 'youtube'"
+								:id="`editSongPlayerYouTube-${modalUuid}`"
+							/>
+							<iframe
+								v-show="currentSongMediaType === 'soundcloud'"
+								:id="`editSongPlayerSoundCloud-${modalUuid}`"
+								ref="soundcloudIframeElement"
+								style="
+									width: 100%;
+									height: 100%;
+									min-height: 200px;
+								"
+								scrolling="no"
+								frameborder="no"
+								allow="autoplay"
+							></iframe>
+							<p
+								v-show="
+									currentSongMediaType !== 'youtube' &&
+									currentSongMediaType !== 'soundcloud'
+								"
+							>
+								No media source specified
+							</p>
 
 							<div v-show="youtubeError" class="player-error">
 								<h2>{{ youtubeErrorMessage }}</h2>

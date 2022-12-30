@@ -652,14 +652,20 @@ onMounted(() => {
 			</template>
 			<template #column-mediaSource="slotProps">
 				<a
+					v-if="
+						slotProps.item.mediaSource.split(':')[0] === 'youtube'
+					"
 					:href="
 						'https://www.youtube.com/watch?v=' +
-						`${slotProps.item.youtubeId}`
+						`${slotProps.item.mediaSource.split(':')[1]}`
 					"
 					target="_blank"
 				>
 					{{ slotProps.item.mediaSource }}
 				</a>
+				<span v-else>
+					{{ slotProps.item.mediaSource }}
+				</span>
 			</template>
 			<template #column-verified="slotProps">
 				<span :title="slotProps.item.verified">{{
