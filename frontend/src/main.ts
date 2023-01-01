@@ -408,7 +408,14 @@ createSocket().then(async socket => {
 		});
 	});
 
-	if (await lofig.get("siteSettings.mediasession")) ms.init();
+	lofig.get("experimental").then(experimental => {
+		if (
+			experimental &&
+			Object.hasOwn(experimental, "media_session") &&
+			experimental.media_session
+		)
+			ms.init();
+	});
 
 	app.mount("#root");
 });

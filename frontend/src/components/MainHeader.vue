@@ -193,7 +193,7 @@ onMounted(async () => {
 	position: relative;
 	background-color: var(--primary-color);
 	height: 64px;
-	z-index: 3;
+	z-index: 100;
 
 	&.transparent {
 		background-color: transparent !important;
@@ -243,7 +243,7 @@ onMounted(async () => {
 		}
 
 		span {
-			background-color: var(--white);
+			background-color: var(--white) !important;
 			display: block;
 			height: 1px;
 			left: 50%;
@@ -331,6 +331,7 @@ onMounted(async () => {
 			top: 100%;
 			position: absolute;
 			background: var(--white);
+			z-index: 100;
 		}
 
 		.nav-menu.is-active {

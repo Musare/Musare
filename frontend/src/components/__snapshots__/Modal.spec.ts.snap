@@ -8,7 +8,9 @@ exports[`Modal component > renders slots 1`] = `
     <header class=\\"modal-card-head\\">
       <div>Toggle Mobile Sidebar Slot</div>
       <h2 class=\\"modal-card-title is-marginless\\">Modal</h2><span class=\\"delete material-icons\\">highlight_off</span>
-      <!--v-if-->
+      <transition-stub appear=\\"false\\" persisted=\\"false\\" css=\\"true\\">
+        <!--v-if-->
+      </transition-stub>
     </header>
     <section class=\\"modal-card-body\\">
       <div>Body Slot</div>

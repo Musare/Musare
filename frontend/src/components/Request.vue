@@ -6,6 +6,7 @@ import { useStationStore } from "@/stores/station";
 import { useManageStationStore } from "@/stores/manageStation";
 import { useSearchYoutube } from "@/composables/useSearchYoutube";
 import { useSearchMusare } from "@/composables/useSearchMusare";
+import { useYoutubeDirect } from "@/composables/useYoutubeDirect";
 
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
@@ -25,6 +26,7 @@ const props = defineProps({
 
 const { youtubeSearch, searchForSongs, loadMoreSongs } = useSearchYoutube();
 const { musareSearch, searchForMusareSongs } = useSearchMusare();
+const { youtubeDirect, addToQueue } = useYoutubeDirect();
 
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
@@ -35,6 +37,7 @@ const manageStationStore = useManageStationStore({
 const tab = ref("songs");
 const sitename = ref("Musare");
 const tabs = ref({});
+const experimentalDisableYoutubeSearch = ref(false);
 
 const station = computed({
 	get() {
@@ -115,6 +118,16 @@ const addSongToQueue = (youtubeId: string, index?: number) => {
 
 onMounted(async () => {
 	sitename.value = await lofig.get("siteSettings.sitename");
+
+	lofig.get("experimental").then(experimental => {
+		if (
+			experimental &&
+			Object.hasOwn(experimental, "disable_youtube_search") &&
+			experimental.disable_youtube_search
+		) {
+			experimentalDisableYoutubeSearch.value = true;
+		}
+	});
 
 	showTab("songs");
 });
@@ -221,7 +234,34 @@ onMounted(async () => {
 					</div>
 				</div>
 
-				<div class="youtube-search">
+				<div class="youtube-direct">
+					<label class="label"> Add a YouTube song from a URL </label>
+					<div class="control is-grouped input-with-button">
+						<p class="control is-expanded">
+							<input
+								class="input"
+								type="text"
+								placeholder="Enter your YouTube song URL here..."
+								v-model="youtubeDirect"
+								@keyup.enter="addToQueue(station._id)"
+							/>
+						</p>
+						<p class="control">
+							<a
+								class="button is-info"
+								@click="addToQueue(station._id)"
+								><i class="material-icons icon-with-button"
+									>add</i
+								>Add</a
+							>
+						</p>
+					</div>
+				</div>
+
+				<div
+					class="youtube-search"
+					v-if="!experimentalDisableYoutubeSearch"
+				>
 					<label class="label"> Search for a song on YouTube </label>
 					<div class="control is-grouped input-with-button">
 						<p class="control is-expanded">

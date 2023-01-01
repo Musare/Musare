@@ -216,6 +216,7 @@ class _YouTubeModule extends CoreClass {
 				})
 				.catch(err => {
 					YouTubeModule.log("ERROR", "SEARCH", `${err.message}`);
+					if (err.message === "Searching with YouTube is disabled.") return reject(err);
 					return reject(new Error("An error has occured. Please try again later."));
 				});
 		});
@@ -498,9 +499,9 @@ class _YouTubeModule extends CoreClass {
 				})
 				.catch(err => {
 					YouTubeModule.log("ERROR", "GET_CHANNEL_UPLOADS_PLAYLIST_ID", `${err.message}`);
-					if (err.message === "Request failed with status code 404") {
+					if (err.message === "Request failed with status code 404")
 						return reject(new Error("Channel not found. Is the channel public/unlisted?"));
-					}
+					if (err.message === "Searching with YouTube is disabled.") return reject(err);
 					return reject(new Error("An error has occured. Please try again later."));
 				});
 		});
@@ -588,9 +589,9 @@ class _YouTubeModule extends CoreClass {
 				(err, channelId) => {
 					if (err) {
 						YouTubeModule.log("ERROR", "GET_CHANNEL_ID_FROM_CUSTOM_URL", `${err.message || err}`);
-						if (err.message === "Request failed with status code 404") {
+						if (err.message === "Request failed with status code 404")
 							return reject(new Error("Channel not found. Is the channel public/unlisted?"));
-						}
+						if (err.message === "Searching with YouTube is disabled.") return reject(err);
 						return reject(new Error("An error has occured. Please try again later."));
 					}
 
@@ -714,9 +715,8 @@ class _YouTubeModule extends CoreClass {
 				})
 				.catch(err => {
 					YouTubeModule.log("ERROR", "GET_PLAYLIST_PAGE", `${err.message}`);
-					if (err.message === "Request failed with status code 404") {
+					if (err.message === "Request failed with status code 404")
 						return reject(new Error("Playlist not found. Is the playlist public/unlisted?"));
-					}
 					return reject(new Error("An error has occured. Please try again later."));
 				});
 		});
@@ -1014,6 +1014,14 @@ class _YouTubeModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			const { params } = payload;
 
+			if (
+				config.has("experimental.disable_youtube_search") &&
+				config.get("experimental.disable_youtube_search")
+			) {
+				reject(new Error("Searching with YouTube is disabled."));
+				return;
+			}
+
 			YouTubeModule.runJob(
 				"API_CALL",
 				{
@@ -1061,15 +1069,11 @@ class _YouTubeModule extends CoreClass {
 				youtubeApiRequest.save();
 
 				const { ...keylessParams } = payload.params;
-				CacheModule.runJob(
-					"HSET",
-					{
-						table: "youtubeApiRequestParams",
-						key: youtubeApiRequest._id.toString(),
-						value: JSON.stringify(keylessParams)
-					},
-					this
-				).then();
+				CacheModule.runJob("HSET", {
+					table: "youtubeApiRequestParams",
+					key: youtubeApiRequest._id.toString(),
+					value: JSON.stringify(keylessParams)
+				}).then();
 
 				YouTubeModule.apiCalls.push({ date: youtubeApiRequest.date, quotaCost });
 
@@ -1082,15 +1086,11 @@ class _YouTubeModule extends CoreClass {
 						if (response.data.error) {
 							reject(new Error(response.data.error));
 						} else {
-							CacheModule.runJob(
-								"HSET",
-								{
-									table: "youtubeApiRequestResults",
-									key: youtubeApiRequest._id.toString(),
-									value: JSON.stringify(response.data)
-								},
-								this
-							).then();
+							CacheModule.runJob("HSET", {
+								table: "youtubeApiRequestResults",
+								key: youtubeApiRequest._id.toString(),
+								value: JSON.stringify(response.data)
+							}).then();
 
 							resolve({ response });
 						}

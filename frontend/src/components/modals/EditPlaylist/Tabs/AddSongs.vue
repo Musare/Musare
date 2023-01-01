@@ -3,6 +3,7 @@ import { defineAsyncComponent, ref, watch, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useSearchYoutube } from "@/composables/useSearchYoutube";
 import { useSearchMusare } from "@/composables/useSearchMusare";
+import { useYoutubeDirect } from "@/composables/useYoutubeDirect";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";
 
 const SongItem = defineAsyncComponent(
@@ -20,6 +21,7 @@ const editPlaylistStore = useEditPlaylistStore({ modalUuid: props.modalUuid });
 const { playlist } = storeToRefs(editPlaylistStore);
 
 const sitename = ref("Musare");
+const experimentalDisableYoutubeSearch = ref(false);
 
 const {
 	youtubeSearch,
@@ -35,6 +37,8 @@ const {
 	searchForMusareSongs,
 	addMusareSongToPlaylist
 } = useSearchMusare();
+
+const { youtubeDirect, addToPlaylist } = useYoutubeDirect();
 
 watch(
 	() => youtubeSearch.value.songs.results,
@@ -89,6 +93,16 @@ watch(
 
 onMounted(async () => {
 	sitename.value = await lofig.get("siteSettings.sitename");
+
+	lofig.get("experimental").then(experimental => {
+		if (
+			experimental &&
+			Object.hasOwn(experimental, "disable_youtube_search") &&
+			experimental.disable_youtube_search
+		) {
+			experimentalDisableYoutubeSearch.value = true;
+		}
+	});
 });
 </script>
 
@@ -164,7 +178,25 @@ onMounted(async () => {
 
 		<br v-if="musareSearch.results.length > 0" />
 
-		<div>
+		<label class="label"> Add a YouTube song from a URL </label>
+		<div class="control is-grouped input-with-button">
+			<p class="control is-expanded">
+				<input
+					class="input"
+					type="text"
+					placeholder="Enter your YouTube song URL here..."
+					v-model="youtubeDirect"
+					@keyup.enter="addToPlaylist(playlist._id)"
+				/>
+			</p>
+			<p class="control">
+				<a class="button is-info" @click="addToPlaylist(playlist._id)"
+					><i class="material-icons icon-with-button">add</i>Add</a
+				>
+			</p>
+		</div>
+
+		<div v-if="!experimentalDisableYoutubeSearch">
 			<label class="label"> Search for a song from YouTube </label>
 			<div class="control is-grouped input-with-button">
 				<p class="control is-expanded">

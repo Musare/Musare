@@ -60,6 +60,7 @@ const { inputs, save, setOriginalValue } = useForm(
 		},
 		theme: station.value.theme,
 		privacy: station.value.privacy,
+		skipVoteThreshold: station.value.skipVoteThreshold,
 		requestsEnabled: station.value.requests.enabled,
 		requestsAccess: station.value.requests.access,
 		requestsLimit: station.value.requests.limit,
@@ -77,6 +78,7 @@ const { inputs, save, setOriginalValue } = useForm(
 				description: values.description,
 				theme: values.theme,
 				privacy: values.privacy,
+				skipVoteThreshold: values.skipVoteThreshold,
 				requests: {
 					...oldStation.requests,
 					enabled: values.requestsEnabled,
@@ -121,6 +123,7 @@ watch(station, value => {
 		description: value.description,
 		theme: value.theme,
 		privacy: value.privacy,
+		skipVoteThreshold: value.skipVoteThreshold,
 		requestsEnabled: value.requests.enabled,
 		requestsAccess: value.requests.access,
 		requestsLimit: value.requests.limit,
@@ -178,6 +181,24 @@ watch(station, value => {
 						<option value="unlisted">Unlisted</option>
 						<option value="private" selected>Private</option>
 					</select>
+				</div>
+			</div>
+
+			<div class="small-section">
+				<label class="label">
+					Skip Vote Threshold
+					<info-icon
+						tooltip="The % of logged-in station users required to vote to skip a song"
+					/>
+				</label>
+				<div class="control is-expanded input-slider">
+					<input
+						v-model="inputs['skipVoteThreshold'].value"
+						type="range"
+						min="0"
+						max="100"
+					/>
+					<span>{{ inputs["skipVoteThreshold"].value }}%</span>
 				</div>
 			</div>
 
@@ -339,6 +360,107 @@ watch(station, value => {
 			&:nth-child(even) {
 				margin-right: 0;
 			}
+		}
+	}
+
+	.input-slider {
+		display: flex;
+
+		input[type="range"] {
+			-webkit-appearance: none;
+			margin: 0;
+			padding: 0;
+			width: 100%;
+			min-width: 100px;
+			background: transparent;
+		}
+
+		input[type="range"]:focus {
+			outline: none;
+		}
+
+		input[type="range"]::-webkit-slider-runnable-track {
+			width: 100%;
+			height: 5.2px;
+			cursor: pointer;
+			box-shadow: 0;
+			background: var(--light-grey-3);
+			border-radius: @border-radius;
+			border: 0;
+		}
+
+		input[type="range"]::-webkit-slider-thumb {
+			box-shadow: 0;
+			border: 0;
+			height: 19px;
+			width: 19px;
+			border-radius: 100%;
+			background: var(--primary-color);
+			cursor: pointer;
+			-webkit-appearance: none;
+			margin-top: -6.5px;
+		}
+
+		input[type="range"]::-moz-range-track {
+			width: 100%;
+			height: 5.2px;
+			cursor: pointer;
+			box-shadow: 0;
+			background: var(--light-grey-3);
+			border-radius: @border-radius;
+			border: 0;
+		}
+
+		input[type="range"]::-moz-range-thumb {
+			box-shadow: 0;
+			border: 0;
+			height: 19px;
+			width: 19px;
+			border-radius: 100%;
+			background: var(--primary-color);
+			cursor: pointer;
+			-webkit-appearance: none;
+			margin-top: -6.5px;
+		}
+		input[type="range"]::-ms-track {
+			width: 100%;
+			height: 5.2px;
+			cursor: pointer;
+			box-shadow: 0;
+			background: var(--light-grey-3);
+			border-radius: @border-radius;
+		}
+
+		input[type="range"]::-ms-fill-lower {
+			background: var(--light-grey-3);
+			border: 0;
+			border-radius: 0;
+			box-shadow: 0;
+		}
+
+		input[type="range"]::-ms-fill-upper {
+			background: var(--light-grey-3);
+			border: 0;
+			border-radius: 0;
+			box-shadow: 0;
+		}
+
+		input[type="range"]::-ms-thumb {
+			box-shadow: 0;
+			border: 0;
+			height: 15px;
+			width: 15px;
+			border-radius: 100%;
+			background: var(--primary-color);
+			cursor: pointer;
+			-webkit-appearance: none;
+			margin-top: 1.5px;
+		}
+
+		& > span {
+			min-width: 40px;
+			margin-left: 10px;
+			text-align: center;
 		}
 	}
 

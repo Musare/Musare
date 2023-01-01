@@ -86,9 +86,13 @@ const beforeMediaModalLocalPausedLock = ref(false);
 const beforeMediaModalLocalPaused = ref(null);
 const persistentToastCheckerInterval = ref(null);
 const persistentToasts = ref([]);
-const mediasession = ref(false);
 const christmas = ref(false);
 const sitename = ref("Musare");
+// Experimental options
+const experimentalChangableListenModeEnabled = ref(false);
+const experimentalChangableListenMode = ref("listen_and_participate"); // Can be either listen_and_participate or participate
+const experimentalMediaSession = ref(false);
+// End experimental options
 // NEW
 const videoLoading = ref();
 const startedAt = ref();
@@ -285,6 +289,7 @@ const resizeSeekerbar = () => {
 		(getTimeElapsed() / 1000 / currentSong.value.duration) * 100;
 };
 const calculateTimeElapsed = () => {
+	if (experimentalChangableListenMode.value === "participate") return;
 	if (
 		playerReady.value &&
 		!noSong.value &&
@@ -403,6 +408,7 @@ const toggleSkipVote = (message?) => {
 	});
 };
 const youtubeReady = () => {
+	if (experimentalChangableListenMode.value === "participate") return;
 	if (!player.value) {
 		ms.setYTReady(false);
 		player.value = new window.YT.Player("stationPlayer", {
@@ -575,7 +581,7 @@ const setCurrentSong = data => {
 
 	clearTimeout(window.stationNextSongTimeout);
 
-	if (mediasession.value) updateMediaSessionData(_currentSong);
+	if (experimentalMediaSession.value) updateMediaSessionData(_currentSong);
 
 	startedAt.value = _startedAt;
 	updateStationPaused(_paused);
@@ -697,7 +703,8 @@ const changeVolume = () => {
 	}
 };
 const resumeLocalPlayer = () => {
-	if (mediasession.value) updateMediaSessionData(currentSong.value);
+	if (experimentalMediaSession.value)
+		updateMediaSessionData(currentSong.value);
 	if (!noSong.value) {
 		if (playerReady.value) {
 			player.value.seekTo(
@@ -708,7 +715,8 @@ const resumeLocalPlayer = () => {
 	}
 };
 const pauseLocalPlayer = () => {
-	if (mediasession.value) updateMediaSessionData(currentSong.value);
+	if (experimentalMediaSession.value)
+		updateMediaSessionData(currentSong.value);
 	if (!noSong.value) {
 		timeBeforePause.value = getTimeElapsed();
 		if (playerReady.value) player.value.pauseVideo();
@@ -809,9 +817,11 @@ const resetKeyboardShortcutsHelper = () => {
 const sendActivityWatchVideoData = () => {
 	if (
 		!stationPaused.value &&
-		!localPaused.value &&
+		(!localPaused.value ||
+			experimentalChangableListenMode.value === "participate") &&
 		!noSong.value &&
-		player.value.getPlayerState() === window.YT.PlayerState.PLAYING
+		(experimentalChangableListenMode.value === "participate" ||
+			player.value.getPlayerState() === window.YT.PlayerState.PLAYING)
 	) {
 		if (activityWatchVideoLastStatus.value !== "playing") {
 			activityWatchVideoLastStatus.value = "playing";
@@ -845,16 +855,42 @@ const sendActivityWatchVideoData = () => {
 					  ),
 			source: `station#${station.value.name}`,
 			hostname: window.location.hostname,
-			playerState: Object.keys(window.YT.PlayerState).find(
-				key =>
-					window.YT.PlayerState[key] === player.value.getPlayerState()
-			),
-			playbackRate: playbackRate.value
+			playerState:
+				experimentalChangableListenMode.value === "participate"
+					? "none"
+					: Object.keys(window.YT.PlayerState).find(
+							key =>
+								window.YT.PlayerState[key] ===
+								player.value.getPlayerState()
+					  ),
+			playbackRate: playbackRate.value,
+			experimentalChangableListenMode:
+				experimentalChangableListenMode.value
 		};
 
 		aw.sendVideoData(videoData);
 	} else {
 		activityWatchVideoLastStatus.value = "not_playing";
+	}
+};
+
+const experimentalChangableListenModeChange = newMode => {
+	experimentalChangableListenMode.value = newMode;
+	localStorage.setItem(
+		`experimental_changeable_listen_mode_${station.value._id}`,
+		newMode
+	);
+
+	if (newMode === "participate") {
+		// Destroy the YouTube player
+		if (player.value) {
+			player.value.destroy();
+			player.value = null;
+			playerReady.value = false;
+		}
+	} else {
+		// Recreate the YouTube player
+		youtubeReady();
 	}
 };
 
@@ -897,6 +933,8 @@ onMounted(async () => {
 		);
 	}, 1000);
 
+	const experimental = await lofig.get("experimental");
+
 	socket.onConnect(() => {
 		clearTimeout(window.stationNextSongTimeout);
 
@@ -921,6 +959,28 @@ onMounted(async () => {
 					requests,
 					djs
 				} = res.data;
+
+				if (experimental && experimental.changable_listen_mode) {
+					if (experimental.changable_listen_mode === true)
+						experimentalChangableListenModeEnabled.value = true;
+					else if (
+						Array.isArray(experimental.changable_listen_mode) &&
+						experimental.changable_listen_mode.indexOf(_id) !== -1
+					)
+						experimentalChangableListenModeEnabled.value = true;
+				}
+				if (experimentalChangableListenModeEnabled.value) {
+					console.log(
+						`Experimental changeable listen mode is enabled`
+					);
+					const experimentalChangeableListenModeLS =
+						localStorage.getItem(
+							`experimental_changeable_listen_mode_${_id}`
+						);
+					if (experimentalChangeableListenModeLS)
+						experimentalChangableListenMode.value =
+							experimentalChangeableListenModeLS;
+				}
 
 				// change url to use station name instead of station id
 				if (name !== stationIdentifier.value) {
@@ -1406,9 +1466,16 @@ onMounted(async () => {
 	});
 
 	frontendDevMode.value = await lofig.get("mode");
-	mediasession.value = await lofig.get("siteSettings.mediasession");
 	christmas.value = await lofig.get("siteSettings.christmas");
 	sitename.value = await lofig.get("siteSettings.sitename");
+	lofig.get("experimental").then(experimental => {
+		if (
+			experimental &&
+			Object.hasOwn(experimental, "media_session") &&
+			experimental.media_session
+		)
+			experimentalMediaSession.value = true;
+	});
 
 	ms.setListeners(0, {
 		play: () => {
@@ -1441,7 +1508,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
 	document.getElementsByTagName("html")[0].style.cssText = "";
 
-	if (mediasession.value) {
+	if (experimentalMediaSession.value) {
 		ms.removeListeners(0);
 		ms.removeMediaSessionData(0);
 	}
@@ -1564,7 +1631,184 @@ onBeforeUnmount(() => {
 						</div>
 					</div>
 					<div id="station-right-column" class="column">
-						<div class="player-container quadrant" v-show="!noSong">
+						<div
+							class="experimental-listen-mode-container quadrant"
+							v-if="
+								experimentalChangableListenModeEnabled &&
+								!noSong
+							"
+							v-show="
+								experimentalChangableListenMode ===
+								'participate'
+							"
+						>
+							<button
+								class="button is-primary"
+								@click="
+									experimentalChangableListenModeChange(
+										'listen_and_participate'
+									)
+								"
+							>
+								<i class="material-icons icon-with-button"
+									>music_note</i
+								>
+								<span>Listen to music</span>
+							</button>
+							<button
+								v-if="!skipVotesLoaded"
+								class="button is-primary disabled"
+								content="Skip votes have not been loaded yet"
+								v-tippy
+							>
+								<i class="material-icons icon-with-button"
+									>skip_next</i
+								>
+								Vote to skip the current song
+							</button>
+							<button
+								v-else-if="loggedIn"
+								:class="[
+									'button',
+									'is-primary',
+									{ voted: currentSong.voted }
+								]"
+								@click="toggleSkipVote()"
+								:content="`${
+									currentSong.voted ? 'Remove vote' : 'Vote'
+								} to Skip Song`"
+								v-tippy
+							>
+								<i class="material-icons icon-with-button"
+									>skip_next</i
+								>
+								Vote to skip the current song -
+								{{ currentSong.skipVotes }} votes
+							</button>
+							<button
+								v-else
+								class="button is-primary disabled"
+								content="Log in to vote to skip songs"
+								v-tippy="{ theme: 'info' }"
+							>
+								<i class="material-icons icon-with-button"
+									>skip_next</i
+								>
+								Vote to skip the current song -
+								{{ currentSong.skipVotes }} votes
+							</button>
+							<div class="row">
+								<!-- Ratings -->
+								<div
+									class="ratings"
+									v-if="ratingsLoaded && ownRatingsLoaded"
+									:class="{
+										liked: currentSong.liked,
+										disliked: currentSong.disliked
+									}"
+								>
+									<!-- Like Song Button -->
+									<button
+										class="button is-success like-song"
+										@click="toggleLike()"
+										content="Like Song"
+										v-tippy
+									>
+										<i
+											class="material-icons icon-with-button"
+											:class="{
+												liked: currentSong.liked
+											}"
+											>thumb_up_alt</i
+										>{{ currentSong.likes }}
+									</button>
+
+									<!-- Dislike Song Button -->
+									<button
+										class="button is-danger dislike-song"
+										@click="toggleDislike()"
+										content="Dislike Song"
+										v-tippy
+									>
+										<i
+											class="material-icons icon-with-button"
+											:class="{
+												disliked: currentSong.disliked
+											}"
+											>thumb_down_alt</i
+										>{{ currentSong.dislikes }}
+									</button>
+								</div>
+								<div id="ratings" class="disabled" v-else>
+									<!-- Like Song Button -->
+									<button
+										class="button is-success like-song disabled"
+										content="Ratings have not been loaded yet"
+										v-tippy
+									>
+										<i
+											class="material-icons icon-with-button"
+											>thumb_up_alt</i
+										>
+									</button>
+
+									<!-- Dislike Song Button -->
+									<button
+										class="button is-danger dislike-song disabled"
+										content="Ratings have not been loaded yet"
+										v-tippy
+									>
+										<i
+											class="material-icons icon-with-button"
+											>thumb_down_alt</i
+										>
+									</button>
+								</div>
+								<add-to-playlist-dropdown
+									:song="currentSong"
+									placement="top-end"
+								>
+									<template #button>
+										<div
+											id="add-song-to-playlist"
+											content="Add Song to Playlist"
+											v-tippy
+										>
+											<div class="control has-addons">
+												<button
+													class="button is-primary"
+												>
+													<i class="material-icons">
+														playlist_add
+													</i>
+												</button>
+												<button
+													class="button"
+													id="dropdown-toggle"
+												>
+													<i class="material-icons">
+														{{
+															showPlaylistDropdown
+																? "expand_more"
+																: "expand_less"
+														}}
+													</i>
+												</button>
+											</div>
+										</div>
+									</template>
+								</add-to-playlist-dropdown>
+							</div>
+						</div>
+						<div
+							class="player-container quadrant"
+							v-show="
+								!noSong &&
+								(!experimentalChangableListenModeEnabled ||
+									experimentalChangableListenMode ===
+										'listen_and_participate')
+							"
+						>
 							<div id="video-container">
 								<div
 									id="stationPlayer"
@@ -1785,6 +2029,26 @@ onBeforeUnmount(() => {
 											>skip_next</i
 										>
 										{{ currentSong.skipVotes }}
+									</button>
+
+									<!-- Close player window -->
+									<button
+										v-if="
+											experimentalChangableListenModeEnabled
+										"
+										class="button is-primary"
+										content="Close this player window"
+										@click="
+											experimentalChangableListenModeChange(
+												'participate'
+											)
+										"
+										v-tippy
+									>
+										<i
+											class="material-icons icon-with-button"
+											>cancel_presentation</i
+										>
 									</button>
 								</div>
 								<div id="duration">
@@ -2022,7 +2286,7 @@ onBeforeUnmount(() => {
 								:class="{ 'no-currently-playing': noSong }"
 							>
 								<song-item
-									:key="`songItem-currentSong-${currentSong._id}`"
+									:key="`songItem-currentSong-${currentSong.youtubeId}`"
 									:song="currentSong"
 									:duration="false"
 									:requested-by="true"
@@ -2035,7 +2299,7 @@ onBeforeUnmount(() => {
 								class="quadrant"
 							>
 								<song-item
-									:key="`songItem-nextSong-${nextSong._id}`"
+									:key="`songItem-nextSong-${nextSong.youtubeId}`"
 									:song="nextSong"
 									:duration="false"
 									:requested-by="true"
@@ -2682,7 +2946,7 @@ onBeforeUnmount(() => {
 		var(--dark-red) 1rem 2rem
 	);
 
-	background-size: 200% 200%;
+	background-size: 200% 100%;
 	animation: christmas 20s linear infinite;
 }
 
@@ -2801,10 +3065,55 @@ onBeforeUnmount(() => {
 	animation-delay: 11s;
 }
 
+.experimental-listen-mode-container {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	row-gap: 16px;
+	padding: 16px 16px;
+
+	.row {
+		display: flex;
+		flex-direction: row;
+		column-gap: 16px;
+
+		.ratings {
+			flex: 2;
+			display: flex;
+			flex-direction: row;
+			column-gap: 16px;
+
+			button {
+				flex: 1;
+			}
+		}
+
+		.addToPlaylistDropdown {
+			flex: 1;
+
+			.button.is-primary {
+				flex: 1;
+			}
+		}
+	}
+}
+
 /* Tablet view fix */
 @media (max-width: 768px) {
 	.bg-bubbles li:nth-child(10) {
 		display: none;
+	}
+
+	.experimental-listen-mode-container {
+		row-gap: 8px;
+
+		.row {
+			column-gap: 8px;
+
+			.ratings {
+				column-gap: 8px;
+			}
+		}
 	}
 }
 

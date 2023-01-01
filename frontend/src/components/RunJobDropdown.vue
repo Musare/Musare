@@ -75,7 +75,7 @@ const runJob = job => {
 			<div class="nav-dropdown-items" v-if="jobs.length > 0">
 				<quick-confirm
 					v-for="(job, index) in jobs"
-					:key="`job-${index}`"
+					:key="`job-${index}-${job.name}-${job.id}`"
 					placement="top"
 					@confirm="runJob(job)"
 				>

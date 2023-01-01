@@ -13,7 +13,7 @@ const REQUIRED_DOCUMENT_VERSIONS = {
 	queueSong: 1,
 	report: 6,
 	song: 9,
-	station: 8,
+	station: 9,
 	user: 4,
 	youtubeApiRequest: 1,
 	youtubeVideo: 1,
