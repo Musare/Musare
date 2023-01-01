@@ -151,13 +151,13 @@ export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 				this.video.player.loadVideoById(id, skipDuration);
 			},
 			pauseVideo(status) {
-				if (
-					(this.video.player && this.video.player.pauseVideo) ||
-					this.video.playVideo
-				) {
-					if (status) this.video.player.pauseVideo();
-					else this.video.player.playVideo();
-				}
+				// if (
+				// 	(this.video.player && this.video.player.pauseVideo) ||
+				// 	this.video.playVideo
+				// ) {
+				// 	if (status) this.video.player.pauseVideo();
+				// 	else this.video.player.playVideo();
+				// }
 				this.video.paused = status;
 			},
 			selectDiscogsInfo(discogsInfo) {

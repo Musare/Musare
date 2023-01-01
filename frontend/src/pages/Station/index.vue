@@ -1036,6 +1036,7 @@ const resetKeyboardShortcutsHelper = () => {
 	keyboardShortcutsHelper.value.resetBox();
 };
 const sendActivityWatchVideoData = () => {
+	// TODO have this support soundcloud
 	if (
 		currentSongMediaType.value === "youtube" &&
 		!stationPaused.value &&

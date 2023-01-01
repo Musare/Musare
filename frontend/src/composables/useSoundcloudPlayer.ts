@@ -14,6 +14,7 @@ export const useSoundcloudPlayer = () => {
 	const attemptsToPlay = ref(0);
 
 	const paused = ref(true);
+	const currentTrackId = ref(null);
 
 	const methodCallbacks = {};
 	const eventListenerCallbacks = {};
@@ -49,7 +50,8 @@ export const useSoundcloudPlayer = () => {
 		// 	console.debug(TAG, "On message", event.data);
 
 		const data = JSON.parse(event.data);
-		if (data.method !== "getPosition") console.log("MESSAGE DATA", data);
+		if (data.method !== "getPosition" && data.method !== "getDuration")
+			console.log("MESSAGE DATA", data);
 
 		if (data.method === "ready") {
 			widgetId.value = data.widgetId;
@@ -159,6 +161,20 @@ export const useSoundcloudPlayer = () => {
 		dispatchMessage("getPosition");
 	};
 
+	const soundcloudGetDuration = callback => {
+		let called = false;
+
+		const _callback = value => {
+			if (called) return;
+			called = true;
+
+			callback(value);
+		};
+		addMethodCallback("getDuration", _callback);
+
+		dispatchMessage("getDuration");
+	};
+
 	const soundcloudGetIsPaused = callback => {
 		let called = false;
 
@@ -173,6 +189,8 @@ export const useSoundcloudPlayer = () => {
 		dispatchMessage("isPaused");
 	};
 
+	const soundcloudGetTrackId = () => currentTrackId.value;
+
 	const soundcloudLoadTrack = (trackId, startTime, _paused) => {
 		if (!soundcloudIframeElement.value) return;
 
@@ -183,6 +201,7 @@ export const useSoundcloudPlayer = () => {
 		soundcloudIframeElement.value.setAttribute("src", url);
 
 		paused.value = _paused;
+		currentTrackId.value = trackId;
 
 		readyCallback.value = () => {
 			Object.keys(eventListenerCallbacks).forEach(event => {
@@ -209,6 +228,8 @@ export const useSoundcloudPlayer = () => {
 
 		const url = `${soundcloudDomain}/player?autoplay=false&buying=false&sharing=false&download=false&show_artwork=false&show_playcount=false&show_user=false&url=${`https://api.soundcloud.com/tracks/${0}`}`;
 		soundcloudIframeElement.value.setAttribute("src", url);
+
+		currentTrackId.value = null;
 	};
 
 	const soundcloudUnload = () => {
@@ -225,7 +246,9 @@ export const useSoundcloudPlayer = () => {
 		soundcloudSetVolume,
 		soundcloudLoadTrack,
 		soundcloudGetPosition,
+		soundcloudGetDuration,
 		soundcloudGetIsPaused,
+		soundcloudGetTrackId,
 		soundcloudBindListener,
 		soundcloudDestroy,
 		soundcloudUnload
