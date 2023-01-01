@@ -1,5 +1,18 @@
 # Changelog
 
+## [v3.9.0] - 2023-01-01
+
+This release includes all changes from v3.9.0-rc1, in addition to the following.
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Fixed
+
+- fix: Draggable list items sometimes had wrong key
+- fix: Downgraded axios to 1.1.3 to fix Discogs API requests
+- fix: YouTube API_CALL job would improperly pause the current job
+whilst not waiting for child jobs
+- fix: Add/remove song to/from playlist could throw error if not an official song
+
 ## [v3.9.0-rc1] - 2022-12-10
 
 Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
