@@ -141,7 +141,7 @@ onUpdated(() => {
 		>
 			<draggable-list
 				v-model:list="queue"
-				item-key="_id"
+				item-key="youtubeId"
 				@start="drag = true"
 				@end="drag = false"
 				@update="repositionSongInQueue"
@@ -153,6 +153,7 @@ onUpdated(() => {
 						:requested-by="true"
 						:disabled-actions="[]"
 						:ref="el => (songItems[`song-item-${index}`] = el)"
+						:key="`queue-song-item-${element.youtubeId}`"
 					>
 						<template
 							v-if="hasPermission('stations.queue.reposition')"

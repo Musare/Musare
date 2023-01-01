@@ -628,12 +628,12 @@ onBeforeUnmount(() => {
 					<draggable-list
 						v-if="playlistSongs.length > 0"
 						v-model:list="playlistSongs"
-						item-key="_id"
+						item-key="youtubeId"
 						:group="`import-album-${modalUuid}-songs`"
 					>
 						<template #item="{ element }">
 							<song-item
-								:key="`playlist-song-${element._id}`"
+								:key="`playlist-song-${element.youtubeId}`"
 								:song="element"
 							>
 							</song-item>
@@ -657,12 +657,12 @@ onBeforeUnmount(() => {
 						<div class="track-box-songs-drag-area">
 							<draggable-list
 								v-model:list="trackSongs[index]"
-								item-key="_id"
+								item-key="youtubeId"
 								:group="`import-album-${modalUuid}-songs`"
 							>
 								<template #item="{ element }">
 									<song-item
-										:key="`track-song-${element._id}`"
+										:key="`track-song-${element.youtubeId}`"
 										:song="element"
 									>
 									</song-item>

@@ -1,5 +1,48 @@
 # Changelog
 
+## [v3.9.0] - 2023-01-01
+
+This release includes all changes from v3.9.0-rc1, in addition to the following.
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Fixed
+
+- fix: Draggable list items sometimes had wrong key
+- fix: Downgraded axios to 1.1.3 to fix Discogs API requests
+- fix: YouTube API_CALL job would improperly pause the current job
+whilst not waiting for child jobs
+- fix: Add/remove song to/from playlist could throw error if not an official song
+
+## [v3.9.0-rc1] - 2022-12-10
+
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Added
+
+- feat: Added station setting to configure skip vote threshold
+- feat: Added experimental configuration of song weight when autofilling station
+- feat: Added experimental configuration to prevent repeating recently played
+songs in stations
+- feat: Added experimental configuration to add user requested songs above
+autofilled songs in queue
+- feat: Added experimental station mode to allow users to close player
+- feat: Added ability to add songs to queue and playlist with YouTube URL
+- feat: Added experimental configuration to disable YouTube search
+
+### Changed
+
+- refactor: Renamed frontend configuration option `siteSettings.mediasession`
+to `experimental.media_session`
+
+### Fixed
+
+- fix: Unable to bulk update song genres and artists
+- fix: Auto suggest results blocking input
+- fix: useForm original value can be reactive
+- fix: Unable to open Edit Playlist with christmas theme in frontend production
+- fix: Blue profile picture becomes red with christmas theme
+- fix: Christmas lights can overlay and be overlayed by incorrect elements
+
 ## [v3.8.0] - 2022-11-11
 
 This release includes all changes from v3.8.0-rc1 and v3.8.0-rc2.

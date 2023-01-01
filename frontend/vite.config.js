@@ -151,6 +151,16 @@ export default {
 				find: "@",
 				replacement: path.resolve(__dirname, "src")
 			}
+		],
+		extensions: [
+			".mjs",
+			".js",
+			".mts",
+			".ts",
+			".jsx",
+			".tsx",
+			".json",
+			".vue"
 		]
 	},
 	define: {

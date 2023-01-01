@@ -387,6 +387,66 @@ class _CacheModule extends CoreClass {
 	}
 
 	/**
+	 * Adds a value to a list in Redis using LPUSH
+	 *
+	 * @param {object} payload - object containing payload
+	 * @param {string} payload.key -  name of the list
+	 * @param {*} payload.value - the value we want to set
+	 * @param {boolean} [payload.stringifyJson=true] - stringify 'value' if it's an Object or Array
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	LPUSH(payload) {
+		return new Promise((resolve, reject) => {
+			let { key, value } = payload;
+
+			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
+			// automatically stringify objects and arrays into JSON
+			if (["object", "array"].includes(typeof value)) value = JSON.stringify(value);
+
+			CacheModule.client
+				.LPUSH(key, value)
+				.then(() => resolve())
+				.catch(err => reject(new Error(err)));
+		});
+	}
+
+	/**
+	 * Gets the length of a Redis list
+	 *
+	 * @param {object} payload - object containing payload
+	 * @param {string} payload.key -  name of the list
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	LLEN(payload) {
+		return new Promise((resolve, reject) => {
+			const { key } = payload;
+
+			CacheModule.client
+				.LLEN(key)
+				.then(len => resolve(len))
+				.catch(err => reject(new Error(err)));
+		});
+	}
+
+	/**
+	 * Removes an item from a list using RPOP
+	 *
+	 * @param {object} payload - object containing payload
+	 * @param {string} payload.key -  name of the list
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	RPOP(payload) {
+		return new Promise((resolve, reject) => {
+			const { key } = payload;
+
+			CacheModule.client
+				.RPOP(key)
+				.then(() => resolve())
+				.catch(err => reject(new Error(err)));
+		});
+	}
+
+	/**
 	 * Removes a value from a list in Redis
 	 *
 	 * @param {object} payload - object containing payload

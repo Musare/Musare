@@ -296,7 +296,19 @@ CacheModule.runJob("SUB", {
 
 		stationModel.findOne(
 			{ _id: stationId },
-			["_id", "name", "displayName", "description", "type", "privacy", "owner", "requests", "autofill", "theme"],
+			[
+				"_id",
+				"name",
+				"displayName",
+				"description",
+				"type",
+				"privacy",
+				"owner",
+				"requests",
+				"autofill",
+				"theme",
+				"skipVoteThreshold"
+			],
 			(err, station) => {
 				WSModule.runJob("EMIT_TO_ROOMS", {
 					rooms: [`station.${stationId}`, `manage-station.${stationId}`, "admin.stations"],
@@ -820,7 +832,8 @@ export default {
 						owner: station.owner,
 						blacklist: station.blacklist,
 						theme: station.theme,
-						djs: station.djs
+						djs: station.djs,
+						skipVoteThreshold: station.skipVoteThreshold
 					};
 
 					StationsModule.userList[session.socketId] = station._id;
@@ -964,7 +977,8 @@ export default {
 						paused: station.paused,
 						currentSong: station.currentSong,
 						isFavorited: station.isFavorited,
-						djs: station.djs
+						djs: station.djs,
+						skipVoteThreshold: station.skipVoteThreshold
 					};
 
 					next(null, data);
@@ -1322,7 +1336,8 @@ export default {
 				},
 
 				(previousStation, next) => {
-					const { name, displayName, description, privacy, requests, autofill, theme } = newStation;
+					const { name, displayName, description, privacy, requests, autofill, theme, skipVoteThreshold } =
+						newStation;
 					const { enabled, limit, mode } = autofill;
 					// This object makes sure only certain properties can be changed by a user
 					const setObject = {
@@ -1334,7 +1349,8 @@ export default {
 						"autofill.enabled": enabled,
 						"autofill.limit": limit,
 						"autofill.mode": mode,
-						theme
+						theme,
+						skipVoteThreshold
 					};
 
 					stationModel.updateOne({ _id: stationId }, { $set: setObject }, { runValidators: true }, err => {

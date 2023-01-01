@@ -67,7 +67,7 @@ onMounted(async () => {
 		}
 
 		&.blue {
-			background-color: var(--primary-color);
+			background-color: var(--blue);
 			color: var(--white);
 		}
 		&.orange {

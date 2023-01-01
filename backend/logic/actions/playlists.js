@@ -1243,7 +1243,7 @@ export default {
 					const { _id, youtubeId, title, artists, thumbnail } = newSong;
 					const { likes, dislikes } = ratings;
 
-					SongsModule.runJob("UPDATE_SONG", { songId: _id });
+					if (_id) SongsModule.runJob("UPDATE_SONG", { songId: _id });
 
 					if (playlist.type === "user-liked") {
 						CacheModule.runJob("PUB", {
@@ -1903,7 +1903,7 @@ export default {
 					if (ratings && (playlist.type === "user-liked" || playlist.type === "user-disliked")) {
 						const { likes, dislikes } = ratings;
 
-						SongsModule.runJob("UPDATE_SONG", { songId: _id });
+						if (_id) SongsModule.runJob("UPDATE_SONG", { songId: _id });
 
 						if (playlist.type === "user-liked") {
 							CacheModule.runJob("PUB", {

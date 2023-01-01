@@ -96,7 +96,7 @@ export const useForm = (
 				name,
 				{
 					...input,
-					originalValue: input.value,
+					originalValue: JSON.parse(JSON.stringify(input.value)),
 					sourceChanged: false
 				}
 			])
