@@ -399,7 +399,7 @@ const getCurrentPlayerTime = () =>
 			return;
 		}
 
-		reject(new Error("No player."));
+		resolve(0);
 	});
 const skipSong = () => {
 	if (nextCurrentSong.value && nextCurrentSong.value.currentSong) {
@@ -573,6 +573,12 @@ const changePlayerVolume = () => {
 	changeSoundcloudPlayerVolume();
 };
 const playerPlay = () => {
+	console.debug(
+		TAG,
+		"PLAYER PLAY",
+		currentSongMediaType.value,
+		youtubePlayerReady.value
+	);
 	if (currentSongMediaType.value === "youtube" && youtubePlayerReady.value) {
 		youtubePlayer.value.playVideo();
 	}
@@ -596,9 +602,11 @@ const playerPause = () => {
 	soundcloudPause();
 };
 const playerSeekTo = position => {
+	console.debug("PLAYER SEEK TO", position);
+
 	// Position is in seconds
 	if (youtubePlayerReady.value) {
-		youtubePlayer.value.seekTo(position * 1000);
+		youtubePlayer.value.seekTo(position);
 	}
 
 	if (currentSongMediaType.value === "soundcloud") {
@@ -2134,13 +2142,16 @@ onBeforeUnmount(() => {
 							<div id="video-container">
 								<div
 									v-show="currentSongMediaType === 'youtube'"
-									id="youtubeStationPlayer"
-									style="
-										width: 100%;
-										height: 100%;
-										min-height: 200px;
-									"
-								/>
+								>
+									<div
+										id="youtubeStationPlayer"
+										style="
+											width: 100%;
+											height: 100%;
+											min-height: 200px;
+										"
+									/>
+								</div>
 								<iframe
 									v-show="
 										currentSongMediaType === 'soundcloud'
@@ -2665,6 +2676,13 @@ onBeforeUnmount(() => {
 				<span><b>No song</b>: {{ noSong }}</span>
 				<span><b>Song id</b>: {{ currentSong._id }}</span>
 				<span><b>Media source</b>: {{ currentSong.mediaSource }}</span>
+				<span
+					><b>Media source type</b>: {{ currentSongMediaType }}</span
+				>
+				<span
+					><b>Media source value</b>:
+					{{ currentSongMediaValue }}</span
+				>
 				<span><b>Duration</b>: {{ currentSong.duration }}</span>
 				<span
 					><b>Skip duration</b>: {{ currentSong.skipDuration }}</span
