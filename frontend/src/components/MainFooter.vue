@@ -46,7 +46,7 @@ onMounted(async () => {
 		<div class="container">
 			<div class="footer-content">
 				<div id="footer-copyright">
-					<p>© Copyright Musare 2015 - 2022</p>
+					<p>© Copyright Musare 2015 - 2023</p>
 				</div>
 				<router-link id="footer-logo" to="/">
 					<img
