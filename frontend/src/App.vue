@@ -317,6 +317,7 @@ onMounted(async () => {
 	--dark-grey-3: rgb(34, 34, 34);
 	--dark-grey-4: rgb(26, 26, 26);
 	--youtube: rgb(189, 46, 46);
+	--soundcloud: var(242, 111, 35);
 }
 
 .night-mode {
@@ -1571,8 +1572,16 @@ button.delete:focus {
 			}
 		}
 
-		.input {
+		> .input {
 			margin-right: -1px;
+
+			&:first-child:not(:only-child) {
+				border-radius: @border-radius 0 0 @border-radius;
+			}
+		}
+
+		> div .input {
+			border-right: none;
 
 			&:first-child {
 				border-radius: @border-radius 0 0 @border-radius;
@@ -1772,6 +1781,15 @@ h4.section-title {
 	-webkit-mask: url("/assets/social/youtube.svg") no-repeat center;
 	mask: url("/assets/social/youtube.svg") no-repeat center;
 	background-color: var(--youtube);
+}
+
+.soundcloud-icon {
+	margin-right: 3px;
+	height: 20px;
+	width: 20px;
+	-webkit-mask: url("/assets/social/youtube.svg") no-repeat center;
+	mask: url("/assets/social/youtube.svg") no-repeat center;
+	background-color: var(--soundcloud);
 }
 
 #forgot-password {

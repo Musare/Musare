@@ -73,6 +73,7 @@ const {
 	soundcloudGetPosition,
 	soundcloudGetDuration,
 	soundcloudGetIsPaused,
+	soundcloudGetCurrentSound,
 	soundcloudGetTrackId,
 	soundcloudBindListener,
 	soundcloudDestroy,
@@ -802,12 +803,69 @@ const getYouTubeData = type => {
 	}
 };
 
+const getSoundCloudData = type => {
+	if (type === "title") {
+		try {
+			soundcloudGetCurrentSound(soundcloudCurrentSound => {
+				const { title } = soundcloudCurrentSound;
+
+				if (title) setValue({ title });
+				else throw new Error("No title found");
+			});
+		} catch (e) {
+			new Toast("Unable to fetch SoundCloud track title.");
+		}
+	}
+
+	if (type === "thumbnail") {
+		setValue({
+			thumbnail: `https://img.youtube.com/vi/${
+				inputs.value.mediaSource.value.split(":")[1]
+			}/mqdefault.jpg`
+		});
+
+		try {
+			soundcloudGetCurrentSound(soundcloudCurrentSound => {
+				const { artwork_url: artworkUrl } = soundcloudCurrentSound;
+
+				if (artworkUrl) setValue({ thumbnail: artworkUrl });
+				else throw new Error("No thumbnail found");
+			});
+		} catch (e) {
+			new Toast("Unable to fetch SoundCloud track artwork.");
+		}
+	}
+
+	if (type === "author") {
+		try {
+			soundcloudGetCurrentSound(soundcloudCurrentSound => {
+				const { user } = soundcloudCurrentSound;
+
+				if (user) setValue({ addArtist: user.username });
+				else throw new Error("No artist found");
+			});
+		} catch (e) {
+			new Toast("Unable to fetch SoundCloud track artist.");
+		}
+	}
+};
+
 const fillDuration = () => {
-	setValue({
-		duration:
-			Number.parseFloat(youtubeVideoDuration.value) -
-			inputs.value.skipDuration.value
-	});
+	if (currentSongMediaType.value === "youtube")
+		setValue({
+			duration:
+				Number.parseFloat(youtubeVideoDuration.value) -
+				inputs.value.skipDuration.value
+		});
+	else if (currentSongMediaType.value === "soundcloud") {
+		soundcloudGetDuration(duration => {
+			setValue({
+				duration:
+					Number.parseFloat(duration) / 1000 -
+					inputs.value.skipDuration.value
+			});
+		});
+	}
 };
 
 const playerHardStop = () => {
@@ -2019,11 +2077,15 @@ onBeforeUnmount(() => {
 						<div class="player-section">
 							<div
 								v-show="currentSongMediaType === 'youtube'"
-								:id="`editSongPlayerYouTube-${modalUuid}`"
-							/>
+								class="youtube-player-wrapper"
+							>
+								<div
+									:id="`editSongPlayerYouTube-${modalUuid}`"
+								></div>
+							</div>
 							<iframe
-								v-show="currentSongMediaType === 'soundcloud'"
 								:id="`editSongPlayerSoundCloud-${modalUuid}`"
+								v-show="currentSongMediaType === 'soundcloud'"
 								ref="soundcloudIframeElement"
 								style="
 									width: 100%;
@@ -2264,6 +2326,24 @@ onBeforeUnmount(() => {
 										"
 									/>
 									<button
+										v-if="
+											currentSongMediaType ===
+											'soundcloud'
+										"
+										class="button soundcloud-get-button"
+										@click="getSoundCloudData('title')"
+									>
+										<div
+											class="soundcloud-icon"
+											v-tippy
+											content="Fill from SoundCloud"
+										></div>
+									</button>
+									<button
+										v-if="
+											currentSongMediaType ===
+												'youtube' && youtubePlayerReady
+										"
 										class="button youtube-get-button"
 										@click="getYouTubeData('title')"
 									>
@@ -2274,6 +2354,7 @@ onBeforeUnmount(() => {
 										></div>
 									</button>
 									<button
+										v-if="inputs.discogs.value"
 										class="button album-get-button"
 										@click="getAlbumData('title')"
 									>
@@ -2306,7 +2387,7 @@ onBeforeUnmount(() => {
 										<i
 											class="material-icons"
 											v-tippy
-											content="Sync duration with YouTube"
+											content="Sync duration with player"
 											>sync</i
 										>
 									</button>
@@ -2367,6 +2448,24 @@ onBeforeUnmount(() => {
 										"
 									/>
 									<button
+										v-if="
+											currentSongMediaType ===
+											'soundcloud'
+										"
+										class="button soundcloud-get-button"
+										@click="getSoundCloudData('thumbnail')"
+									>
+										<div
+											class="soundcloud-icon"
+											v-tippy
+											content="Fill from SoundCloud"
+										></div>
+									</button>
+									<button
+										v-if="
+											currentSongMediaType ===
+												'youtube' && youtubePlayerReady
+										"
 										class="button youtube-get-button"
 										@click="getYouTubeData('thumbnail')"
 									>
@@ -2377,6 +2476,7 @@ onBeforeUnmount(() => {
 										></div>
 									</button>
 									<button
+										v-if="inputs.discogs.value"
 										class="button album-get-button"
 										@click="getAlbumData('albumArt')"
 									>
@@ -2432,6 +2532,24 @@ onBeforeUnmount(() => {
 										"
 									/>
 									<button
+										v-if="
+											currentSongMediaType ===
+											'soundcloud'
+										"
+										class="button soundcloud-get-button"
+										@click="getSoundCloudData('author')"
+									>
+										<div
+											class="soundcloud-icon"
+											v-tippy
+											content="Fill from SoundCloud"
+										></div>
+									</button>
+									<button
+										v-if="
+											currentSongMediaType ===
+												'youtube' && youtubePlayerReady
+										"
 										class="button youtube-get-button"
 										@click="getYouTubeData('author')"
 									>
@@ -2442,6 +2560,7 @@ onBeforeUnmount(() => {
 										></div>
 									</button>
 									<button
+										v-if="inputs.discogs.value"
 										class="button album-get-button"
 										@click="getAlbumData('artists')"
 									>
@@ -2502,6 +2621,7 @@ onBeforeUnmount(() => {
 										"
 									/>
 									<button
+										v-if="inputs.discogs.value"
 										class="button album-get-button"
 										@click="getAlbumData('genres')"
 									>
@@ -2745,6 +2865,7 @@ onBeforeUnmount(() => {
 			.album-get-button,
 			.duration-fill-button,
 			.youtube-get-button,
+			.soundcloud-get-button,
 			.add-button {
 				&:focus,
 				&:hover {
@@ -2822,6 +2943,14 @@ onBeforeUnmount(() => {
 			border: 1px solid var(--light-grey-3);
 			border-radius: @border-radius;
 			overflow: hidden;
+
+			.youtube-player-wrapper {
+				display: flex;
+
+				> * {
+					flex: 1;
+				}
+			}
 
 			.duration-canvas {
 				background-color: var(--light-grey-2);
@@ -3054,6 +3183,14 @@ onBeforeUnmount(() => {
 			border-width: 0;
 		}
 
+		.soundcloud-get-button {
+			background-color: var(--orange);
+			color: var(--white);
+			width: 32px;
+			text-align: center;
+			border-width: 0;
+		}
+
 		.add-button {
 			background-color: var(--primary-color) !important;
 			width: 32px;
@@ -3074,11 +3211,13 @@ onBeforeUnmount(() => {
 			}
 		}
 
-		.youtube-get-button {
+		.youtube-get-button,
+		.soundcloud-get-button {
 			padding-left: 4px;
 			padding-right: 4px;
 
-			.youtube-icon {
+			.youtube-icon,
+			.soundcloud-icon {
 				background: var(--white);
 			}
 		}

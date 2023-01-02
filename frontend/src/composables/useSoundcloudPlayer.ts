@@ -189,6 +189,20 @@ export const useSoundcloudPlayer = () => {
 		dispatchMessage("isPaused");
 	};
 
+	const soundcloudGetCurrentSound = callback => {
+		let called = false;
+
+		const _callback = value => {
+			if (called) return;
+			called = true;
+
+			callback(value);
+		};
+		addMethodCallback("getCurrentSound", _callback);
+
+		dispatchMessage("getCurrentSound");
+	};
+
 	const soundcloudGetTrackId = () => currentTrackId.value;
 
 	const soundcloudLoadTrack = (trackId, startTime, _paused) => {
@@ -249,6 +263,7 @@ export const useSoundcloudPlayer = () => {
 		soundcloudGetDuration,
 		soundcloudGetIsPaused,
 		soundcloudGetTrackId,
+		soundcloudGetCurrentSound,
 		soundcloudBindListener,
 		soundcloudDestroy,
 		soundcloudUnload
