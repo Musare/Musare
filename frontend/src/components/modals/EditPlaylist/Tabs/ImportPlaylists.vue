@@ -3,6 +3,7 @@ import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { ref } from "vue";
 import { useSearchYoutube } from "@/composables/useSearchYoutube";
+import { useSearchSoundcloud } from "@/composables/useSearchSoundcloud";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";
@@ -19,6 +20,7 @@ const { playlist } = storeToRefs(editPlaylistStore);
 const { setJob } = useLongJobsStore();
 
 const { youtubeSearch } = useSearchYoutube();
+const { soundcloudSearch } = useSearchSoundcloud();
 
 const importMusarePlaylistFileInput = ref();
 const importMusarePlaylistFileContents = ref(null);
@@ -46,7 +48,7 @@ const importYoutubePlaylist = () => {
 	}
 
 	return socket.dispatch(
-		"playlists.addSetToPlaylist",
+		"playlists.addYoutubeSetToPlaylist",
 		youtubeSearch.value.playlist.query,
 		playlist.value._id,
 		youtubeSearch.value.playlist.isImportingOnlyMusic,
@@ -58,6 +60,35 @@ const importYoutubePlaylist = () => {
 					title = res.title;
 				}
 
+				if (id)
+					setJob({
+						id,
+						name: title,
+						...res
+					});
+			}
+		}
+	);
+};
+
+const importSoundcloudPlaylist = () => {
+	let id;
+	let title;
+	// import query is blank
+	if (!soundcloudSearch.value.playlist.query)
+		return new Toast("Please enter a SoundCloud playlist URL.");
+
+	return socket.dispatch(
+		"playlists.addSoundcloudSetToPlaylist",
+		soundcloudSearch.value.playlist.query,
+		playlist.value._id,
+		{
+			cb: () => {},
+			onProgress: res => {
+				if (res.status === "started") {
+					id = res.id;
+					title = res.title;
+				}
 				if (id)
 					setJob({
 						id,
@@ -150,7 +181,7 @@ const importMusarePlaylistFile = () => {
 </script>
 
 <template>
-	<div class="youtube-tab section">
+	<div class="import-playlist-tab section">
 		<label class="label"> Import songs from YouTube playlist </label>
 		<div class="control is-grouped input-with-button">
 			<p class="control is-expanded">
@@ -174,6 +205,27 @@ const importMusarePlaylistFile = () => {
 				<button
 					class="button is-info"
 					@click.prevent="importYoutubePlaylist()"
+				>
+					<i class="material-icons icon-with-button">publish</i>Import
+				</button>
+			</p>
+		</div>
+
+		<label class="label"> Import songs from SoundCloud playlist </label>
+		<div class="control is-grouped input-with-button">
+			<p class="control is-expanded">
+				<input
+					class="input"
+					type="text"
+					placeholder="Enter SoundCloud Playlist URL here..."
+					v-model="soundcloudSearch.playlist.query"
+					@keyup.enter="importSoundcloudPlaylist()"
+				/>
+			</p>
+			<p class="control has-addons">
+				<button
+					class="button is-info"
+					@click.prevent="importSoundcloudPlaylist()"
 				>
 					<i class="material-icons icon-with-button">publish</i>Import
 				</button>
@@ -228,7 +280,7 @@ input[type="file"]::file-selector-button:hover {
 }
 
 @media screen and (max-width: 1300px) {
-	.youtube-tab #song-query-results,
+	.import-playlist-tab #song-query-results,
 	.section {
 		max-width: 100% !important;
 	}

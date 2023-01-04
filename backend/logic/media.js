@@ -122,7 +122,6 @@ class _MediaModule extends CoreClass {
 				],
 				async err => {
 					if (err) {
-						console.log(345345, err);
 						err = await UtilsModule.runJob("GET_ERROR", { error: err });
 						reject(new Error(err));
 					} else resolve();
@@ -399,6 +398,25 @@ class _MediaModule extends CoreClass {
 							return SoundCloudModule.runJob(
 								"GET_TRACK",
 								{ identifier: trackId, createMissing: true },
+								this
+							)
+								.then(response => {
+									const { trackId, title, username, artworkUrl, duration } = response.track;
+									next(null, song, {
+										mediaSource: `soundcloud:${trackId}`,
+										title,
+										artists: [username],
+										thumbnail: artworkUrl,
+										duration
+									});
+								})
+								.catch(next);
+						}
+
+						if (payload.mediaSource.indexOf("soundcloud.com") !== -1) {
+							return SoundCloudModule.runJob(
+								"GET_TRACK_FROM_URL",
+								{ identifier: payload.mediaSource, createMissing: true },
 								this
 							)
 								.then(response => {

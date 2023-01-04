@@ -8,13 +8,49 @@ import axios from "axios";
 import CoreClass from "../core";
 
 let SoundCloudModule;
-let CacheModule;
 let DBModule;
 let MediaModule;
-let SongsModule;
-let StationsModule;
-let PlaylistsModule;
-let WSModule;
+
+const soundcloudTrackObjectToMusareTrackObject = soundcloudTrackObject => {
+	const {
+		id,
+		title,
+		artwork_url: artworkUrl,
+		created_at: createdAt,
+		duration,
+		genre,
+		kind,
+		license,
+		likes_count: likesCount,
+		playback_count: playbackCount,
+		public: _public,
+		tag_list: tagList,
+		user_id: userId,
+		user,
+		track_format: trackFormat,
+		permalink
+	} = soundcloudTrackObject;
+
+	return {
+		trackId: id,
+		title,
+		artworkUrl,
+		soundcloudCreatedAt: new Date(createdAt),
+		duration: duration / 1000,
+		genre,
+		kind,
+		license,
+		likesCount,
+		playbackCount,
+		public: _public,
+		tagList,
+		userId,
+		username: user.username,
+		userPermalink: user.permalink,
+		trackFormat,
+		permalink
+	};
+};
 
 class RateLimitter {
 	/**
@@ -89,13 +125,13 @@ class _SoundCloudModule extends CoreClass {
 			};
 			rax.attach(this.axios);
 
-			SoundCloudModule.runJob("GET_TRACK", { identifier: 469902882, createMissing: false })
-				.then(res => {
-					console.log(57567, res);
-				})
-				.catch(err => {
-					console.log(78768, err);
-				});
+			// SoundCloudModule.runJob("GET_TRACK", { identifier: 469902882, createMissing: false })
+			// 	.then(res => {
+			// 		console.log(57567, res);
+			// 	})
+			// 	.catch(err => {
+			// 		console.log(78768, err);
+			// 	});
 
 			resolve();
 		});
@@ -184,17 +220,28 @@ class _SoundCloudModule extends CoreClass {
 						}
 					},
 
-					(soundcloudTrack, next) => {
-						const mediaSource = `soundcloud:${soundcloudTrack.trackId}`;
-
-						MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource }, this)
-							.then(() => next(null, soundcloudTrack))
-							.catch(next);
+					(soundcloudTracks, next) => {
+						const mediaSources = soundcloudTracks.map(
+							soundcloudTrack => `soundcloud:${soundcloudTrack.trackId}`
+						);
+						async.eachLimit(
+							mediaSources,
+							2,
+							(mediaSource, next) => {
+								MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource }, this)
+									.then(() => next())
+									.catch(next);
+							},
+							err => {
+								if (err) next(err);
+								else next(null, soundcloudTracks);
+							}
+						);
 					}
 				],
-				(err, soundcloudTrack) => {
+				(err, soundcloudTracks) => {
 					if (err) reject(new Error(err));
-					else resolve({ soundcloudTrack });
+					else resolve({ soundcloudTracks });
 				}
 			);
 		});
@@ -229,39 +276,7 @@ class _SoundCloudModule extends CoreClass {
 								if (!data || !data.id)
 									return next("The specified track does not exist or cannot be publicly accessed.");
 
-								const {
-									id,
-									title,
-									artwork_url: artworkUrl,
-									created_at: createdAt,
-									duration,
-									genre,
-									kind,
-									license,
-									likes_count: likesCount,
-									playback_count: playbackCount,
-									public: _public,
-									tag_list: tagList,
-									user_id: userId,
-									user
-								} = data;
-
-								const soundcloudTrack = {
-									trackId: id,
-									title,
-									artworkUrl,
-									soundcloudCreatedAt: new Date(createdAt),
-									duration: duration / 1000,
-									genre,
-									kind,
-									license,
-									likesCount,
-									playbackCount,
-									public: _public,
-									tagList,
-									userId,
-									username: user.username
-								};
+								const soundcloudTrack = soundcloudTrackObjectToMusareTrackObject(data);
 
 								return next(null, false, soundcloudTrack);
 							})
@@ -271,7 +286,7 @@ class _SoundCloudModule extends CoreClass {
 						if (track) return next(null, track, true);
 						return SoundCloudModule.runJob("CREATE_TRACK", { soundcloudTrack }, this)
 							.then(res => {
-								if (res.soundcloudTrack.length === 1) next(null, res.soundcloudTrack, false);
+								if (res.soundcloudTracks.length === 1) next(null, res.soundcloudTracks[0], false);
 								else next("SoundCloud track not found.");
 							})
 							.catch(next);
@@ -282,6 +297,142 @@ class _SoundCloudModule extends CoreClass {
 					else resolve({ track, existing });
 				}
 			);
+		});
+	}
+
+	/**
+	 * Gets a track from a SoundCloud URL
+	 *
+	 * @param {*} payload
+	 * @returns {Promise}
+	 */
+	GET_TRACK_FROM_URL(payload) {
+		return new Promise((resolve, reject) => {
+			const scRegex =
+				/soundcloud\.com\/(?<userPermalink>[A-Za-z0-9]+([-_][A-Za-z0-9]+)*)\/(?<permalink>[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*)/;
+
+			async.waterfall(
+				[
+					next => {
+						const match = scRegex.exec(payload.identifier);
+
+						if (!match || !match.groups) return next("Invalid SoundCloud URL.");
+
+						const { userPermalink, permalink } = match.groups;
+
+						SoundCloudModule.soundcloudTrackModel.findOne({ userPermalink, permalink }, next);
+					},
+
+					(_dbTrack, next) => {
+						if (_dbTrack) return next(null, _dbTrack, true);
+
+						SoundCloudModule.runJob("API_RESOLVE", { url: payload.identifier }, this)
+							.then(({ response }) => {
+								const { data } = response;
+								if (!data || !data.id)
+									return next("The provided URL does not exist or cannot be accessed.");
+
+								if (data.kind !== "track") return next(`Invalid URL provided. Kind got: ${data.kind}.`);
+
+								// TODO get more data here
+
+								const { id: trackId } = data;
+
+								SoundCloudModule.soundcloudTrackModel.findOne({ trackId }, (err, dbTrack) => {
+									if (err) next(err);
+									else if (dbTrack) {
+										next(null, dbTrack, true);
+									} else {
+										const soundcloudTrack = soundcloudTrackObjectToMusareTrackObject(data);
+
+										SoundCloudModule.runJob("CREATE_TRACK", { soundcloudTrack }, this)
+											.then(res => {
+												if (res.soundcloudTracks.length === 1)
+													next(null, res.soundcloudTracks[0], false);
+												else next("SoundCloud track not found.");
+											})
+											.catch(next);
+									}
+								});
+							})
+							.catch(next);
+					}
+				],
+				(err, track, existing) => {
+					if (err) reject(new Error(err));
+					else resolve({ track, existing });
+				}
+			);
+		});
+	}
+
+	/**
+	 * Returns an array of songs taken from a SoundCloud playlist
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.url - the url of the SoundCloud playlist
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						SoundCloudModule.runJob("API_RESOLVE", { url: payload.url }, this)
+							.then(({ response }) => {
+								const { data } = response;
+								if (!data || !data.id)
+									return next("The provided URL does not exist or cannot be accessed.");
+
+								if (data.kind !== "playlist")
+									return next(`Invalid URL provided. Kind got: ${data.kind}.`);
+
+								const { tracks } = data;
+
+								// TODO get more data here
+
+								const soundcloudTrackIds = tracks.map(track => track.id);
+
+								return next(null, soundcloudTrackIds);
+							})
+							.catch(next);
+					}
+				],
+				(err, soundcloudTrackIds) => {
+					if (err && err !== true) {
+						SoundCloudModule.log("ERROR", "GET_PLAYLIST", "Some error has occurred.", err.message);
+						reject(new Error(err.message));
+					} else {
+						resolve({ songs: soundcloudTrackIds });
+					}
+				}
+			);
+
+			// kind;
+		});
+	}
+
+	/**
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.url - the url of the SoundCloud resource
+	 */
+	API_RESOLVE(payload) {
+		return new Promise((resolve, reject) => {
+			const { url } = payload;
+
+			SoundCloudModule.runJob(
+				"API_CALL",
+				{
+					url: `https://api-v2.soundcloud.com/resolve?url=${encodeURIComponent(url)}`
+				},
+				this
+			)
+				.then(response => {
+					resolve(response);
+				})
+				.catch(err => {
+					reject(err);
+				});
 		});
 	}
 }

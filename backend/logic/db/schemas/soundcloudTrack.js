@@ -1,5 +1,5 @@
 export default {
-	trackId: { type: Number },
+	trackId: { type: Number, unique: true },
 	title: { type: String },
 	artworkUrl: { type: String },
 	soundcloudCreatedAt: { type: Date },
@@ -13,6 +13,9 @@ export default {
 	tagList: { type: String },
 	userId: { type: Number },
 	username: { type: String },
+	userPermalink: { type: String },
+	trackFormat: { type: String },
+	permalink: { type: String },
 	createdAt: { type: Date, default: Date.now, required: true },
 	documentVersion: { type: Number, default: 1, required: true }
 };
