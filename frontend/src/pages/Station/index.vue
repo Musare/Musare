@@ -64,8 +64,8 @@ const {
 	soundcloudPause,
 	soundcloudSetVolume,
 	soundcloudGetPosition,
-	soundcloudGetIsPaused,
 	soundcloudBindListener,
+	soundcloudOnTrackStateChange,
 	soundcloudDestroy,
 	soundcloudUnload
 } = useSoundcloudPlayer();
@@ -1781,43 +1781,40 @@ onMounted(async () => {
 
 	changePlayerVolume();
 
-	soundcloudBindListener("play", () => {
-		console.debug(TAG, "Bind on play");
-		if (currentSongMediaType.value !== "soundcloud") {
-			soundcloudPause();
-			return;
-		}
-		if (localPaused.value || stationPaused.value) {
-			console.debug(
-				TAG,
-				"Bind on play - pause and seek to",
-				(getTimeElapsed() / 1000 + currentSong.value.skipDuration) *
-					1000
-			);
-			soundcloudPause();
-			soundcloudSeekTo(
-				(getTimeElapsed() / 1000 + currentSong.value.skipDuration) *
-					1000
-			);
-		}
-	});
+	soundcloudOnTrackStateChange(newState => {
+		console.debug(TAG, `New state: ${newState}`);
 
-	soundcloudBindListener("pause", () => {
-		console.debug(TAG, "Bind on pause");
-		if (currentSongMediaType.value !== "soundcloud") return;
-		if (!localPaused.value && !stationPaused.value) {
-			console.debug(
-				TAG,
-				"Bind on pause - seeking to",
-				(getTimeElapsed() / 1000 + currentSong.value.skipDuration) *
-					1000,
-				"and playing"
-			);
+		if (newState === "paused") {
+			if (currentSongMediaType.value !== "soundcloud") return;
+			if (!localPaused.value && !stationPaused.value) {
+				new Toast(
+					"Paused the station as the SoundCloud track was paused."
+				);
+
+				pauseLocalStation();
+				soundcloudSeekTo(
+					(getTimeElapsed() / 1000 + currentSong.value.skipDuration) *
+						1000
+				);
+			}
+		} else if (newState === "playing") {
+			if (currentSongMediaType.value !== "soundcloud") {
+				soundcloudDestroy();
+				return;
+			}
+
+			if (localPaused.value) {
+				resumeLocalStation();
+			}
+
+			if (stationPaused.value) {
+				soundcloudPause();
+			}
+
 			soundcloudSeekTo(
 				(getTimeElapsed() / 1000 + currentSong.value.skipDuration) *
 					1000
 			);
-			soundcloudPlay();
 		}
 	});
 

@@ -72,11 +72,10 @@ const {
 	soundcloudSetVolume,
 	soundcloudGetPosition,
 	soundcloudGetDuration,
-	soundcloudGetIsPaused,
 	soundcloudGetCurrentSound,
 	soundcloudGetTrackId,
 	soundcloudBindListener,
-	soundcloudDestroy,
+	soundcloudOnTrackStateChange,
 	soundcloudUnload
 } = useSoundcloudPlayer();
 
@@ -1774,46 +1773,6 @@ onMounted(async () => {
 	Inside Discogs inputs: Ctrl - D - Sets this field to the Discogs data
 
 	*/
-
-	soundcloudBindListener("play", () => {
-		console.debug(TAG, "Bind on play");
-		// if (currentSongMediaType.value !== "soundcloud") {
-		// 	soundcloudPause();
-		// 	return;
-		// }
-		// if (localPaused.value || stationPaused.value) {
-		// 	console.debug(
-		// 		TAG,
-		// 		"Bind on play - pause and seek to",
-		// 		(getTimeElapsed() / 1000 + currentSong.value.skipDuration) *
-		// 			1000
-		// 	);
-		// 	soundcloudPause();
-		// 	soundcloudSeekTo(
-		// 		(getTimeElapsed() / 1000 + currentSong.value.skipDuration) *
-		// 			1000
-		// 	);
-		// }
-	});
-
-	soundcloudBindListener("pause", () => {
-		console.debug(TAG, "Bind on pause");
-		// if (currentSongMediaType.value !== "soundcloud") return;
-		// if (!localPaused.value && !stationPaused.value) {
-		// 	console.debug(
-		// 		TAG,
-		// 		"Bind on pause - seeking to",
-		// 		(getTimeElapsed() / 1000 + currentSong.value.skipDuration) *
-		// 			1000,
-		// 		"and playing"
-		// 	);
-		// 	soundcloudSeekTo(
-		// 		(getTimeElapsed() / 1000 + currentSong.value.skipDuration) *
-		// 			1000
-		// 	);
-		// 	soundcloudPlay();
-		// }
-	});
 
 	soundcloudBindListener("seek", () => {
 		console.debug(TAG, "Bind on seek");
