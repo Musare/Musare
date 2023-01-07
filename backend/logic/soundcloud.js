@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import async from "async";
 import config from "config";
+import sckey from "soundcloud-key-fetch";
 
 import * as rax from "retry-axios";
 import axios from "axios";
@@ -9,6 +10,7 @@ import CoreClass from "../core";
 
 let SoundCloudModule;
 let DBModule;
+let CacheModule;
 let MediaModule;
 
 const soundcloudTrackObjectToMusareTrackObject = soundcloudTrackObject => {
@@ -98,6 +100,7 @@ class _SoundCloudModule extends CoreClass {
 	 */
 	async initialize() {
 		DBModule = this.moduleManager.modules.db;
+		CacheModule = this.moduleManager.modules.cache;
 		MediaModule = this.moduleManager.modules.media;
 
 		// this.youtubeApiRequestModel = this.YoutubeApiRequestModel = await DBModule.runJob("GET_MODEL", {
@@ -108,7 +111,7 @@ class _SoundCloudModule extends CoreClass {
 			modelName: "soundcloudTrack"
 		});
 
-		return new Promise(resolve => {
+		return new Promise((resolve, reject) => {
 			this.rateLimiter = new RateLimitter(config.get("apis.soundcloud.rateLimit"));
 			this.requestTimeout = config.get("apis.soundcloud.requestTimeout");
 
@@ -120,15 +123,91 @@ class _SoundCloudModule extends CoreClass {
 			};
 			rax.attach(this.axios);
 
-			// SoundCloudModule.runJob("GET_TRACK", { identifier: 469902882, createMissing: false })
-			// 	.then(res => {
-			// 		console.log(57567, res);
-			// 	})
-			// 	.catch(err => {
-			// 		console.log(78768, err);
-			// 	});
+			this.apiKey = null;
 
-			resolve();
+			SoundCloudModule.runJob("TEST_SOUNDCLOUD_API_KEY", {}, null, -1)
+				.then(result => {
+					if (result) {
+						resolve();
+						return;
+					}
+
+					SoundCloudModule.runJob("GENERATE_SOUNDCLOUD_API_KEY", {}, null, -1)
+						.then(() => {
+							resolve();
+						})
+						.catch(reject);
+				})
+				.catch(reject);
+		});
+	}
+
+	/**
+	 *
+	 * @returns
+	 */
+	GENERATE_SOUNDCLOUD_API_KEY() {
+		return new Promise((resolve, reject) => {
+			this.log("INFO", "Fetching new SoundCloud API key.");
+			sckey
+				.fetchKey()
+				.then(soundcloudApiKey => {
+					if (!soundcloudApiKey) {
+						this.log("ERROR", "Couldn't fetch new SoundCloud API key.");
+						reject(new Error("Couldn't fetch SoundCloud key."));
+						return;
+					}
+
+					SoundCloudModule.soundcloudApiKey = soundcloudApiKey;
+
+					CacheModule.runJob("SET", { key: "soundcloudApiKey", value: soundcloudApiKey }, this)
+						.then(() => {
+							SoundCloudModule.runJob("TEST_SOUNDCLOUD_API_KEY", {}, this).then(result => {
+								if (!result) {
+									this.log("ERROR", "Fetched SoundCloud API key is invalid.");
+									reject(new Error("SoundCloud key isn't valid."));
+								} else {
+									this.log("INFO", "Fetched new valid SoundCloud API key.");
+									resolve();
+								}
+							});
+						})
+						.catch(err => {
+							this.log("ERROR", `Couldn't set new SoundCloud API key in cache. Error: ${err.message}`);
+							reject(err);
+						});
+				})
+				.catch(err => {
+					this.log("ERROR", `Couldn't fetch new SoundCloud API key. Error: ${err.message}`);
+					reject(new Error("Couldn't fetch SoundCloud key."));
+				});
+		});
+	}
+
+	/**
+	 *
+	 * @returns
+	 */
+	TEST_SOUNDCLOUD_API_KEY() {
+		return new Promise((resolve, reject) => {
+			this.log("INFO", "Testing SoundCloud API key.");
+			CacheModule.runJob("GET", { key: "soundcloudApiKey" }, this).then(soundcloudApiKey => {
+				if (!soundcloudApiKey) {
+					this.log("ERROR", "No SoundCloud API key found in cache.");
+					return resolve(false);
+				}
+
+				sckey
+					.testKey(soundcloudApiKey)
+					.then(res => {
+						this.log("INFO", `Tested SoundCloud API key. Result: ${res}`);
+						resolve(res);
+					})
+					.catch(err => {
+						this.log("ERROR", `Testing SoundCloud API key error: ${err.message}`);
+						reject(err);
+					});
+			});
 		});
 	}
 
@@ -173,8 +252,10 @@ class _SoundCloudModule extends CoreClass {
 			// const { url, params, quotaCost } = payload;
 			const { url } = payload;
 
+			const { soundcloudApiKey } = SoundCloudModule;
+
 			const params = {
-				client_id: config.get("apis.soundcloud.key")
+				client_id: soundcloudApiKey
 			};
 
 			SoundCloudModule.axios
