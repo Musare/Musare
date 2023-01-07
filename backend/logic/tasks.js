@@ -73,11 +73,11 @@ class _TasksModule extends CoreClass {
 				timeout: 1000 * 3
 			});
 
-			TasksModule.runJob("CREATE_TASK", {
-				name: "historyClearTask",
-				fn: TasksModule.historyClearTask,
-				timeout: 1000 * 60 * 60 * 6
-			});
+			// TasksModule.runJob("CREATE_TASK", {
+			//	name: "historyClearTask",
+			//	fn: TasksModule.historyClearTask,
+			//	timeout: 1000 * 60 * 60 * 6
+			// });
 
 			resolve();
 		});
