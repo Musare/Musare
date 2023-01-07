@@ -33,9 +33,9 @@ const loaded = ref(false);
 const canvasWidth = ref(760);
 const volumeSliderValue = ref(20);
 const durationCanvas = ref(null);
-const activityWatchVideoDataInterval = ref(null);
-const activityWatchVideoLastStatus = ref("");
-const activityWatchVideoLastStartDuration = ref(0);
+const activityWatchMediaDataInterval = ref(null);
+const activityWatchMediaLastStatus = ref("");
+const activityWatchMediaLastStartDuration = ref(0);
 
 const viewYoutubeVideoStore = useViewYoutubeVideoStore({
 	modalUuid: props.modalUuid
@@ -186,14 +186,14 @@ const setTrackPosition = event => {
 		)
 	);
 };
-const sendActivityWatchVideoData = () => {
+const sendActivityWatchMediaData = () => {
 	if (
 		!player.value.paused &&
 		player.value.player.getPlayerState() === window.YT.PlayerState.PLAYING
 	) {
-		if (activityWatchVideoLastStatus.value !== "playing") {
-			activityWatchVideoLastStatus.value = "playing";
-			activityWatchVideoLastStartDuration.value = Math.floor(
+		if (activityWatchMediaLastStatus.value !== "playing") {
+			activityWatchMediaLastStatus.value = "playing";
+			activityWatchMediaLastStartDuration.value = Math.floor(
 				Number(player.value.currentTime)
 			);
 		}
@@ -201,13 +201,13 @@ const sendActivityWatchVideoData = () => {
 		const videoData = {
 			title: video.value.title,
 			artists: video.value.author,
-			youtubeId: video.value.youtubeId,
+			mediaSource: `youtube:${video.value.youtubeId}`,
 			muted: player.value.muted,
 			volume: player.value.volume,
 			startedDuration:
-				activityWatchVideoLastStartDuration.value <= 0
+				activityWatchMediaLastStartDuration.value <= 0
 					? 0
-					: activityWatchVideoLastStartDuration.value,
+					: activityWatchMediaLastStartDuration.value,
 			source: `viewYoutubeVideo#${video.value.youtubeId}`,
 			hostname: window.location.hostname,
 			playerState: Object.keys(window.YT.PlayerState).find(
@@ -218,9 +218,9 @@ const sendActivityWatchVideoData = () => {
 			playbackRate: player.value.playbackRate
 		};
 
-		aw.sendVideoData(videoData);
+		aw.sendMediaData(videoData);
 	} else {
-		activityWatchVideoLastStatus.value = "not_playing";
+		activityWatchMediaLastStatus.value = "not_playing";
 	}
 };
 
@@ -286,8 +286,8 @@ onMounted(() => {
 					if (player.value.paused === false) drawCanvas();
 				}, 200);
 
-				activityWatchVideoDataInterval.value = setInterval(() => {
-					sendActivityWatchVideoData();
+				activityWatchMediaDataInterval.value = setInterval(() => {
+					sendActivityWatchMediaData();
 				}, 1000);
 
 				if (window.YT && window.YT.Player) {
@@ -468,7 +468,7 @@ onBeforeUnmount(() => {
 	player.value.playerReady = false;
 	player.value.videoNote = "";
 	clearInterval(interval.value);
-	clearInterval(activityWatchVideoDataInterval.value);
+	clearInterval(activityWatchMediaDataInterval.value);
 	loaded.value = false;
 
 	socket.dispatch(

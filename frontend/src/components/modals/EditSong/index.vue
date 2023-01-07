@@ -106,9 +106,9 @@ const youtubeVideoNote = ref("");
 const useHTTPS = ref(false);
 const muted = ref(false);
 const volumeSliderValue = ref(0);
-const activityWatchVideoDataInterval = ref(null);
-const activityWatchVideoLastStatus = ref("");
-const activityWatchVideoLastStartDuration = ref(0);
+const activityWatchMediaDataInterval = ref(null);
+const activityWatchMediaLastStatus = ref("");
+const activityWatchMediaLastStartDuration = ref(0);
 const recommendedGenres = ref([
 	"Blues",
 	"Country",
@@ -1099,25 +1099,26 @@ const resetGenreHelper = () => {
 	genreHelper.value.resetBox();
 };
 
-const sendActivityWatchVideoData = () => {
+const sendActivityWatchMediaData = () => {
 	// TODO have this support soundcloud
 	if (
-		currentSongMediaType.value === "youtube" &&
 		!video.value.paused &&
-		video.value.player.getPlayerState() === window.YT.PlayerState.PLAYING
+		(currentSongMediaType.value !== "youtube" ||
+			video.value.player.getPlayerState() ===
+				window.YT.PlayerState.PLAYING)
 	) {
-		if (activityWatchVideoLastStatus.value !== "playing") {
-			activityWatchVideoLastStatus.value = "playing";
+		if (activityWatchMediaLastStatus.value !== "playing") {
+			activityWatchMediaLastStatus.value = "playing";
 			if (
 				inputs.value.skipDuration.value > 0 &&
 				Number(youtubeVideoCurrentTime.value) === 0
 			) {
-				activityWatchVideoLastStartDuration.value = Math.floor(
+				activityWatchMediaLastStartDuration.value = Math.floor(
 					inputs.value.skipDuration.value +
 						Number(youtubeVideoCurrentTime.value)
 				);
 			} else {
-				activityWatchVideoLastStartDuration.value = Math.floor(
+				activityWatchMediaLastStartDuration.value = Math.floor(
 					Number(youtubeVideoCurrentTime.value)
 				);
 			}
@@ -1132,9 +1133,9 @@ const sendActivityWatchVideoData = () => {
 			muted: muted.value,
 			volume: volumeSliderValue.value,
 			startedDuration:
-				activityWatchVideoLastStartDuration.value <= 0
+				activityWatchMediaLastStartDuration.value <= 0
 					? 0
-					: activityWatchVideoLastStartDuration.value,
+					: activityWatchMediaLastStartDuration.value,
 			source: `editSong#${inputs.value.mediaSource.value}`,
 			hostname: window.location.hostname,
 			playerState: Object.keys(window.YT.PlayerState).find(
@@ -1145,9 +1146,9 @@ const sendActivityWatchVideoData = () => {
 			playbackRate: video.value.playbackRate
 		};
 
-		aw.sendVideoData(videoData);
+		aw.sendMediaData(videoData);
 	} else {
-		activityWatchVideoLastStatus.value = "not_playing";
+		activityWatchMediaLastStatus.value = "not_playing";
 	}
 };
 
@@ -1215,8 +1216,8 @@ onMounted(async () => {
 	};
 	preventCloseCbs[props.modalUuid] = onCloseOrNext;
 
-	activityWatchVideoDataInterval.value = setInterval(() => {
-		sendActivityWatchVideoData();
+	activityWatchMediaDataInterval.value = setInterval(() => {
+		sendActivityWatchMediaData();
 	}, 1000);
 
 	useHTTPS.value = await lofig.get("cookie.secure");
@@ -1835,7 +1836,7 @@ onBeforeUnmount(() => {
 
 	youtubePlayerReady.value = false;
 	clearInterval(interval.value);
-	clearInterval(activityWatchVideoDataInterval.value);
+	clearInterval(activityWatchMediaDataInterval.value);
 
 	const shortcutNames = [
 		"editSong.pauseResume",

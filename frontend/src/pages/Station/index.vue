@@ -93,10 +93,10 @@ const volumeSliderValue = ref(0);
 const showPlaylistDropdown = ref(false);
 const seekerbarPercentage = ref(0);
 const frontendDevMode = ref("production");
-const activityWatchVideoDataInterval = ref(null);
-const activityWatchVideoLastStatus = ref("");
-const activityWatchVideoLastYouTubeId = ref("");
-const activityWatchVideoLastStartDuration = ref(0);
+const activityWatchMediaDataInterval = ref(null);
+const activityWatchMediaLastStatus = ref("");
+const activityWatchMediaLastMediaSource = ref("");
+const activityWatchMediaLastStartDuration = ref(0);
 const reportStationStateInterval = ref(null);
 const nextCurrentSong = ref(null);
 const mediaModalWatcher = ref(null);
@@ -1044,31 +1044,31 @@ const toggleKeyboardShortcutsHelper = () => {
 const resetKeyboardShortcutsHelper = () => {
 	keyboardShortcutsHelper.value.resetBox();
 };
-const sendActivityWatchVideoData = () => {
+const sendActivityWatchMediaData = () => {
 	// TODO have this support soundcloud
 	if (
-		currentSongMediaType.value === "youtube" &&
 		!stationPaused.value &&
 		(!localPaused.value ||
 			experimentalChangableListenMode.value === "participate") &&
 		!noSong.value &&
 		(experimentalChangableListenMode.value === "participate" ||
+			currentSongMediaType.value !== "youtube" ||
 			youtubePlayer.value.getPlayerState() ===
 				window.YT.PlayerState.PLAYING)
 	) {
-		if (activityWatchVideoLastStatus.value !== "playing") {
-			activityWatchVideoLastStatus.value = "playing";
-			activityWatchVideoLastStartDuration.value =
+		if (activityWatchMediaLastStatus.value !== "playing") {
+			activityWatchMediaLastStatus.value = "playing";
+			activityWatchMediaLastStartDuration.value =
 				currentSong.value.skipDuration + getTimeElapsed();
 		}
 
 		if (
-			activityWatchVideoLastYouTubeId.value !==
+			activityWatchMediaLastMediaSource.value !==
 			currentSong.value.mediaSource
 		) {
-			activityWatchVideoLastYouTubeId.value =
+			activityWatchMediaLastMediaSource.value =
 				currentSong.value.mediaSource;
-			activityWatchVideoLastStartDuration.value =
+			activityWatchMediaLastStartDuration.value =
 				currentSong.value.skipDuration + getTimeElapsed();
 		}
 
@@ -1082,29 +1082,38 @@ const sendActivityWatchVideoData = () => {
 			muted: muted.value,
 			volume: volumeSliderValue.value,
 			startedDuration:
-				activityWatchVideoLastStartDuration.value <= 0
+				activityWatchMediaLastStartDuration.value <= 0
 					? 0
 					: Math.floor(
-							activityWatchVideoLastStartDuration.value / 1000
+							activityWatchMediaLastStartDuration.value / 1000
 					  ),
 			source: `station#${station.value.name}`,
 			hostname: window.location.hostname,
-			playerState:
+			experimentalChangableListenMode:
+				experimentalChangableListenMode.value,
+			playerState: "",
+			playbackRate: -1
+		};
+
+		if (currentSongMediaType.value === "youtube") {
+			videoData.playerState =
 				experimentalChangableListenMode.value === "participate"
 					? "none"
 					: Object.keys(window.YT.PlayerState).find(
 							key =>
 								window.YT.PlayerState[key] ===
 								youtubePlayer.value.getPlayerState()
-					  ),
-			playbackRate: playbackRate.value,
-			experimentalChangableListenMode:
-				experimentalChangableListenMode.value
-		};
+					  );
 
-		aw.sendVideoData(videoData);
+			videoData.playbackRate = playbackRate.value;
+		} else {
+			delete videoData.playerState;
+			delete videoData.playbackRate;
+		}
+
+		aw.sendMediaData(videoData);
 	} else {
-		activityWatchVideoLastStatus.value = "not_playing";
+		activityWatchMediaLastStatus.value = "not_playing";
 	}
 };
 
@@ -1163,8 +1172,8 @@ onMounted(async () => {
 	stationIdentifier.value = route.params.id;
 
 	window.stationInterval = 0;
-	activityWatchVideoDataInterval.value = setInterval(() => {
-		sendActivityWatchVideoData();
+	activityWatchMediaDataInterval.value = setInterval(() => {
+		sendActivityWatchMediaData();
 	}, 1000);
 	reportStationStateInterval.value = setInterval(() => {
 		socket.dispatch(
@@ -1851,7 +1860,7 @@ onBeforeUnmount(() => {
 
 	mediaModalWatcher.value(); // removes the watcher
 
-	clearInterval(activityWatchVideoDataInterval.value);
+	clearInterval(activityWatchMediaDataInterval.value);
 	clearTimeout(window.stationNextSongTimeout);
 	clearTimeout(persistentToastCheckerInterval.value);
 	clearInterval(reportStationStateInterval.value);
