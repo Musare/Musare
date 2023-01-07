@@ -1,4 +1,21 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { defineAsyncComponent, ref } from "vue";
+
+const RunJobDropdown = defineAsyncComponent(
+	() => import("@/components/RunJobDropdown.vue")
+);
+
+const jobs = ref([
+	{
+		name: "Fetch new SoundCloud API key",
+		socket: "soundcloud.fetchNewApiKey"
+	},
+	{
+		name: "Test SoundCloud API key",
+		socket: "soundcloud.testApiKey"
+	}
+]);
+</script>
 
 <template>
 	<div class="admin-tab container">
@@ -8,7 +25,7 @@
 				<h1>SoundCloud API</h1>
 			</div>
 			<div class="button-row">
-				<!-- <run-job-dropdown :jobs="jobs" /> -->
+				<run-job-dropdown :jobs="jobs" />
 			</div>
 		</div>
 	</div>

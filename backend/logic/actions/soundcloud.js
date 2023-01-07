@@ -8,12 +8,50 @@ import { useHasPermission } from "../hooks/hasPermission";
 import moduleManager from "../../index";
 
 const DBModule = moduleManager.modules.db;
-const CacheModule = moduleManager.modules.cache;
 const UtilsModule = moduleManager.modules.utils;
-const YouTubeModule = moduleManager.modules.youtube;
-const MediaModule = moduleManager.modules.media;
+const SoundcloudModule = moduleManager.modules.soundcloud;
 
 export default {
+	/**
+	 * Fetches new SoundCloud API key
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	fetchNewApiKey: useHasPermission("admin.view.soundcloud", function fetchNewApiKey(session, cb) {
+		SoundcloudModule.runJob("GENERATE_SOUNDCLOUD_API_KEY", {}, this)
+			.then(response => {
+				this.log("SUCCESS", "SOUNDCLOUD_FETCH_NEW_API_KEY", `Fetching new API key was successful.`);
+				return cb({ status: "success", data: { status: response.status } });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "SOUNDCLOUD_FETCH_NEW_API_KEY", `Fetching new API key failed. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
+	 * Tests SoundCloud API key
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	testApiKey: useHasPermission("admin.view.soundcloud", function testApiKey(session, cb) {
+		SoundcloudModule.runJob("TEST_SOUNDCLOUD_API_KEY", {}, this)
+			.then(response => {
+				this.log(
+					"SUCCESS",
+					"SOUNDCLOUD_TEST_API_KEY",
+					`Testing API key was successful. Response: ${response}.`
+				);
+				return cb({ status: "success", data: { status: response.status } });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "SOUNDCLOUD_TEST_API_KEY", `Testing API key failed. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	}),
+
 	// /**
 	//  * Returns details about the YouTube quota usage
 	//  *

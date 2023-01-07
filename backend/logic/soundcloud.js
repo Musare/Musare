@@ -197,6 +197,8 @@ class _SoundCloudModule extends CoreClass {
 					return resolve(false);
 				}
 
+				SoundCloudModule.soundcloudApiKey = soundcloudApiKey;
+
 				sckey
 					.testKey(soundcloudApiKey)
 					.then(res => {
@@ -460,7 +462,7 @@ class _SoundCloudModule extends CoreClass {
 								if (!data || !data.id)
 									return next("The provided URL does not exist or cannot be accessed.");
 
-								if (data.kind !== "playlist")
+								if (data.kind !== "playlist" && data.kind !== "system-playlist")
 									return next(`Invalid URL provided. Kind got: ${data.kind}.`);
 
 								const { tracks } = data;
@@ -476,8 +478,13 @@ class _SoundCloudModule extends CoreClass {
 				],
 				(err, soundcloudTrackIds) => {
 					if (err && err !== true) {
-						SoundCloudModule.log("ERROR", "GET_PLAYLIST", "Some error has occurred.", err.message);
-						reject(new Error(err.message));
+						SoundCloudModule.log(
+							"ERROR",
+							"GET_PLAYLIST",
+							"Some error has occurred.",
+							typeof err === "string" ? err : err.message
+						);
+						reject(new Error(typeof err === "string" ? err : err.message));
 					} else {
 						resolve({ songs: soundcloudTrackIds });
 					}
