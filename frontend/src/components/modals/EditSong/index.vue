@@ -230,7 +230,6 @@ const unloadSong = (_mediaSource, songId?) => {
 
 const loadSong = (_mediaSource: string, reset?: boolean) => {
 	songNotFound.value = false;
-	console.log(58890, _mediaSource);
 	socket.dispatch(`songs.getSongsFromMediaSources`, [_mediaSource], res => {
 		const { songs } = res.data;
 		if (res.status === "success" && songs.length > 0) {

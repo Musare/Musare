@@ -97,13 +97,8 @@ class _SoundCloudModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async initialize() {
-		CacheModule = this.moduleManager.modules.cache;
 		DBModule = this.moduleManager.modules.db;
 		MediaModule = this.moduleManager.modules.media;
-		SongsModule = this.moduleManager.modules.songs;
-		StationsModule = this.moduleManager.modules.stations;
-		PlaylistsModule = this.moduleManager.modules.playlists;
-		WSModule = this.moduleManager.modules.ws;
 
 		// this.youtubeApiRequestModel = this.YoutubeApiRequestModel = await DBModule.runJob("GET_MODEL", {
 		// 	modelName: "youtubeApiRequest"

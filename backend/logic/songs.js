@@ -7,6 +7,7 @@ let CacheModule;
 let DBModule;
 let UtilsModule;
 let YouTubeModule;
+let SoundCloudModule;
 let StationsModule;
 let PlaylistsModule;
 let MediaModule;
@@ -32,6 +33,7 @@ class _SongsModule extends CoreClass {
 		DBModule = this.moduleManager.modules.db;
 		UtilsModule = this.moduleManager.modules.utils;
 		YouTubeModule = this.moduleManager.modules.youtube;
+		SoundCloudModule = this.moduleManager.modules.soundcloud;
 		StationsModule = this.moduleManager.modules.stations;
 		PlaylistsModule = this.moduleManager.modules.playlists;
 		MediaModule = this.moduleManager.modules.media;
@@ -185,51 +187,111 @@ class _SongsModule extends CoreClass {
 							mediaSource => !songs.find(song => song.mediaSource === mediaSource)
 						);
 
-						console.log(536546, songs, payload, mediaSources);
+						if (mediaSources.length === 0) return next(null, songs);
 
-						// TODO support spotify here
-						return YouTubeModule.youtubeVideoModel.find(
-							{
-								youtubeId: {
-									$in: mediaSources
-										.filter(mediaSource => mediaSource.startsWith("youtube:"))
-										.map(mediaSource => mediaSource.split(":")[1])
+						const mediaSourceTypes = [];
+						mediaSources.forEach(mediaSource => {
+							const mediaSourceType = mediaSource.split(":")[0];
+							if (mediaSourceTypes.indexOf(mediaSourceType) === -1)
+								mediaSourceTypes.push(mediaSourceType);
+						});
+
+						if (mediaSourceTypes.length !== 1)
+							return next(`Expected 1 media source types, got ${mediaSourceTypes.length}.`);
+						const [mediaSourceType] = mediaSourceTypes;
+
+						if (mediaSourceType === "youtube")
+							return YouTubeModule.youtubeVideoModel.find(
+								{
+									youtubeId: {
+										$in: mediaSources
+											.filter(mediaSource => mediaSource.startsWith("youtube:"))
+											.map(mediaSource => mediaSource.split(":")[1])
+									}
+								},
+								(err, videos) => {
+									if (err) next(err);
+									else {
+										const youtubeVideos = videos.map(video => {
+											const { youtubeId, title, author, duration, thumbnail } = video;
+											return {
+												mediaSource: `youtube:${youtubeId}`,
+												title,
+												artists: [author],
+												genres: [],
+												tags: [],
+												duration,
+												skipDuration: 0,
+												thumbnail:
+													thumbnail ||
+													`https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`,
+												requestedBy: null,
+												requestedAt: Date.now(),
+												verified: false,
+												youtubeVideoId: video._id
+											};
+										});
+										next(
+											null,
+											payload.mediaSources
+												.map(
+													mediaSource =>
+														songs.find(song => song.mediaSource === mediaSource) ||
+														youtubeVideos.find(video => video.mediaSource === mediaSource)
+												)
+												.filter(song => !!song)
+										);
+									}
 								}
-							},
-							(err, videos) => {
-								if (err) next(err);
-								else {
-									const youtubeVideos = videos.map(video => {
-										const { youtubeId, title, author, duration, thumbnail } = video;
-										return {
-											mediaSource: `youtube:${youtubeId}`,
-											title,
-											artists: [author],
-											genres: [],
-											tags: [],
-											duration,
-											skipDuration: 0,
-											thumbnail:
-												thumbnail || `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`,
-											requestedBy: null,
-											requestedAt: Date.now(),
-											verified: false,
-											youtubeVideoId: video._id
-										};
-									});
-									next(
-										null,
-										payload.mediaSources
-											.map(
-												mediaSource =>
-													songs.find(song => song.mediaSource === mediaSource) ||
-													youtubeVideos.find(video => video.mediaSource === mediaSource)
-											)
-											.filter(song => !!song)
-									);
+							);
+
+						if (mediaSourceType === "soundcloud")
+							return SoundCloudModule.soundcloudTrackModel.find(
+								{
+									trackId: {
+										$in: mediaSources
+											.filter(mediaSource => mediaSource.startsWith("soundcloud:"))
+											.map(mediaSource => mediaSource.split(":")[1])
+									}
+								},
+								(err, tracks) => {
+									if (err) next(err);
+									else {
+										const soundcloudSongs = tracks.map(track => {
+											const { trackId, title, username, duration, artworkUrl } = track;
+											return {
+												mediaSource: `soundcloud:${trackId}`,
+												title,
+												artists: [username],
+												genres: [],
+												tags: [],
+												duration,
+												skipDuration: 0,
+												thumbnail: artworkUrl,
+												requestedBy: null,
+												requestedAt: Date.now(),
+												verified: false,
+												soundcloudTrackId: track._id
+											};
+										});
+
+										next(
+											null,
+											payload.mediaSources
+												.map(
+													mediaSource =>
+														songs.find(song => song.mediaSource === mediaSource) ||
+														soundcloudSongs.find(
+															soundcloudSong => soundcloudSong.mediaSource === mediaSource
+														)
+												)
+												.filter(song => !!song)
+										);
+									}
 								}
-							}
-						);
+							);
+
+						return next(`Unknown media source specified: ${mediaSourceType}.`);
 					}
 				],
 				(err, songs) => {

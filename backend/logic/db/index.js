@@ -205,6 +205,7 @@ class _DBModule extends CoreClass {
 					// Song
 					this.schemas.song.path("mediaSource").validate(mediaSource => {
 						if (mediaSource.startsWith("youtube:")) return true;
+						if (mediaSource.startsWith("soundcloud:")) return true;
 						return false;
 					});
 

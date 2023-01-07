@@ -1030,7 +1030,7 @@ class _StationsModule extends CoreClass {
 						if (!station) return next("Station not found.");
 
 						const { currentSong } = station;
-						if (!currentSong) return next(null, station);
+						if (!currentSong || !currentSong.mediaSource) return next(null, station);
 
 						const stationId = station._id;
 						const skippedAt = new Date();

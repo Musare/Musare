@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted, onUnmounted } from "vue";
+import {
+	defineAsyncComponent,
+	ref,
+	computed,
+	onMounted,
+	onUnmounted
+} from "vue";
 import { formatDistance, parseISO } from "date-fns";
 import { storeToRefs } from "pinia";
 import AddToPlaylistDropdown from "./AddToPlaylistDropdown.vue";
@@ -56,6 +62,25 @@ const { hasPermission } = userAuthStore;
 
 const { openModal } = useModalsStore();
 
+const songMediaType = computed(() => {
+	if (
+		!props.song ||
+		!props.song.mediaSource ||
+		props.song.mediaSource.indexOf(":") === -1
+	)
+		return "none";
+	return props.song.mediaSource.split(":")[0];
+});
+const songMediaValue = computed(() => {
+	if (
+		!props.song ||
+		!props.song.mediaSource ||
+		props.song.mediaSource.indexOf(":") === -1
+	)
+		return null;
+	return props.song.mediaSource.split(":")[1];
+});
+
 const formatRequestedAt = () => {
 	if (props.requestedBy && props.song.requestedAt)
 		formatedRequestedAt.value = formatDistance(
@@ -95,12 +120,12 @@ const hoverTippy = () => {
 	hoveredTippy.value = true;
 };
 
-const viewYoutubeVideo = mediaSource => {
+const viewYoutubeVideo = youtubeId => {
 	hideTippyElements();
 	openModal({
 		modal: "viewYoutubeVideo",
 		props: {
-			mediaSource: mediaSource.split(":")[1]
+			youtubeId
 		}
 	});
 };
@@ -244,8 +269,11 @@ onUnmounted(() => {
 					<template #content>
 						<div class="icons-group">
 							<i
-								v-if="disabledActions.indexOf('youtube') === -1"
-								@click="viewYoutubeVideo(song.mediaSource)"
+								v-if="
+									disabledActions.indexOf('youtube') === -1 &&
+									songMediaType === 'youtube'
+								"
+								@click="viewYoutubeVideo(songMediaValue)"
 								content="View YouTube Video"
 								v-tippy
 							>

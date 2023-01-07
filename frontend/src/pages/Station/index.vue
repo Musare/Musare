@@ -592,7 +592,7 @@ const playerStop = () => {
 		youtubePlayer.value.stopVideo();
 	}
 
-	soundcloudPause();
+	soundcloudDestroy();
 };
 const playerPause = () => {
 	if (youtubePlayerReady.value) {
@@ -826,6 +826,8 @@ const setCurrentSong = data => {
 	timePaused.value = _timePaused;
 	pausedAt.value = _pausedAt;
 
+	playerStop();
+
 	if (_currentSong) {
 		updateNoSong(false);
 
@@ -925,7 +927,6 @@ const setCurrentSong = data => {
 			);
 		}
 	} else {
-		playerStop();
 		updateNoSong(true);
 	}
 

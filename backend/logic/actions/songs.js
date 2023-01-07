@@ -305,8 +305,6 @@ export default {
 			async.waterfall(
 				[
 					next => {
-						console.log(687889, mediaSources);
-
 						SongsModule.runJob(
 							"GET_SONGS",
 							{
