@@ -119,20 +119,28 @@ class _CacheModule extends CoreClass {
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.key -  name of the key to set
 	 * @param {*} payload.value - the value we want to set
+	 * @param {number} payload.ttl -  ttl of the key in seconds
 	 * @param {boolean} [payload.stringifyJson=true] - stringify 'value' if it's an Object or Array
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	SET(payload) {
 		return new Promise((resolve, reject) => {
-			let { key } = payload;
-			let { value } = payload;
+			let { key, value } = payload;
+			const { ttl } = payload;
 
 			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 			// automatically stringify objects and arrays into JSON
 			if (["object", "array"].includes(typeof value)) value = JSON.stringify(value);
 
+			let options = null;
+			if (ttl) {
+				options = {
+					EX: ttl
+				};
+			}
+
 			CacheModule.client
-				.SET(key, value)
+				.SET(key, value, options)
 				.then(() => {
 					let parsed = value;
 					try {

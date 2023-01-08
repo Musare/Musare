@@ -4,6 +4,7 @@ import { storeToRefs } from "pinia";
 import { ref } from "vue";
 import { useSearchYoutube } from "@/composables/useSearchYoutube";
 import { useSearchSoundcloud } from "@/composables/useSearchSoundcloud";
+import { useSearchSpotify } from "@/composables/useSearchSpotify";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useLongJobsStore } from "@/stores/longJobs";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";
@@ -21,6 +22,7 @@ const { setJob } = useLongJobsStore();
 
 const { youtubeSearch } = useSearchYoutube();
 const { soundcloudSearch } = useSearchSoundcloud();
+const { spotifySearch } = useSearchSpotify();
 
 const importMusarePlaylistFileInput = ref();
 const importMusarePlaylistFileContents = ref(null);
@@ -81,6 +83,35 @@ const importSoundcloudPlaylist = () => {
 	return socket.dispatch(
 		"playlists.addSoundcloudSetToPlaylist",
 		soundcloudSearch.value.playlist.query,
+		playlist.value._id,
+		{
+			cb: () => {},
+			onProgress: res => {
+				if (res.status === "started") {
+					id = res.id;
+					title = res.title;
+				}
+				if (id)
+					setJob({
+						id,
+						name: title,
+						...res
+					});
+			}
+		}
+	);
+};
+
+const importSpotifyPlaylist = () => {
+	let id;
+	let title;
+	// import query is blank
+	if (!spotifySearch.value.playlist.query)
+		return new Toast("Please enter a Spotify playlist URL.");
+
+	return socket.dispatch(
+		"playlists.addSpotifySetToPlaylist",
+		spotifySearch.value.playlist.query,
 		playlist.value._id,
 		{
 			cb: () => {},
@@ -226,6 +257,27 @@ const importMusarePlaylistFile = () => {
 				<button
 					class="button is-info"
 					@click.prevent="importSoundcloudPlaylist()"
+				>
+					<i class="material-icons icon-with-button">publish</i>Import
+				</button>
+			</p>
+		</div>
+
+		<label class="label"> Import songs from Spotify playlist </label>
+		<div class="control is-grouped input-with-button">
+			<p class="control is-expanded">
+				<input
+					class="input"
+					type="text"
+					placeholder="Enter Spotify Playlist URL here..."
+					v-model="spotifySearch.playlist.query"
+					@keyup.enter="importSpotifyPlaylist()"
+				/>
+			</p>
+			<p class="control has-addons">
+				<button
+					class="button is-info"
+					@click.prevent="importSpotifyPlaylist()"
 				>
 					<i class="material-icons icon-with-button">publish</i>Import
 				</button>

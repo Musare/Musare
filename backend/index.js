@@ -269,6 +269,7 @@ if (!config.get("migration")) {
 	moduleManager.addModule("utils");
 	moduleManager.addModule("youtube");
 	moduleManager.addModule("soundcloud");
+	moduleManager.addModule("spotify");
 } else {
 	moduleManager.addModule("migration");
 }

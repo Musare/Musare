@@ -15,6 +15,7 @@ const CacheModule = moduleManager.modules.cache;
 const PlaylistsModule = moduleManager.modules.playlists;
 const YouTubeModule = moduleManager.modules.youtube;
 const SoundcloudModule = moduleManager.modules.soundcloud;
+const SpotifyModule = moduleManager.modules.spotify;
 const ActivitiesModule = moduleManager.modules.activities;
 const MediaModule = moduleManager.modules.media;
 
@@ -2042,6 +2043,194 @@ export default {
 					"SUCCESS",
 					"PLAYLIST_IMPORT",
 					`Successfully imported a SoundCloud playlist to private playlist "${playlistId}" for user "${session.userId}". Songs in playlist: ${songsInPlaylistTotal}, songs successfully added: ${addSongsStats.successful}, songs failed: ${addSongsStats.failed}, already in playlist: ${addSongsStats.alreadyInPlaylist}, already in liked ${addSongsStats.alreadyInLikedPlaylist}, already in disliked ${addSongsStats.alreadyInDislikedPlaylist}.`
+				);
+				this.publishProgress({
+					status: "success",
+					message: `Playlist has been imported. ${addSongsStats.successful} were added successfully, ${addSongsStats.failed} failed (${addSongsStats.alreadyInPlaylist} were already in the playlist)`
+				});
+				return cb({
+					status: "success",
+					message: `Playlist has been imported. ${addSongsStats.successful} were added successfully, ${addSongsStats.failed} failed (${addSongsStats.alreadyInPlaylist} were already in the playlist)`,
+					data: {
+						songs: playlist.songs,
+						stats: {
+							songsInPlaylistTotal,
+							alreadyInLikedPlaylist: addSongsStats.alreadyInLikedPlaylist,
+							alreadyInDislikedPlaylist: addSongsStats.alreadyInDislikedPlaylist
+						}
+					}
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Adds a set of Spotify songs to a private playlist
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} url - the url of the the Spotify playlist
+	 * @param {string} playlistId - the id of the playlist we are adding the set of songs to
+	 * @param {Function} cb - gets called with the result
+	 */
+	addSpotifySetToPlaylist: isLoginRequired(async function addSpotifySetToPlaylist(session, url, playlistId, cb) {
+		let songsInPlaylistTotal = 0;
+		let addSongsStats = null;
+
+		const addedSongs = [];
+
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Import Spotify playlist",
+			message: "Importing Spotify playlist.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
+		async.waterfall(
+			[
+				next => {
+					DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
+						userModel.findOne({ _id: session.userId }, (err, user) => {
+							if (user && user.role === "admin") return next(null, true);
+							return next(null, false);
+						});
+					});
+				},
+
+				(isAdmin, next) => {
+					this.publishProgress({ status: "update", message: `Importing Spotify playlist (stage 1)` });
+					SpotifyModule.runJob(
+						"GET_PLAYLIST",
+						{
+							url
+						},
+						this
+					)
+						.then(res => {
+							songsInPlaylistTotal = res.songs.length;
+							const mediaSources = res.songs.map(song => `spotify:${song}`);
+							next(null, mediaSources);
+						})
+						.catch(next);
+				},
+				(mediaSources, next) => {
+					this.publishProgress({ status: "update", message: `Importing Spotify playlist (stage 2)` });
+					let successful = 0;
+					let failed = 0;
+					let alreadyInPlaylist = 0;
+					let alreadyInLikedPlaylist = 0;
+					let alreadyInDislikedPlaylist = 0;
+
+					if (mediaSources.length === 0) next();
+
+					async.eachLimit(
+						mediaSources,
+						1,
+						(mediaSource, next) => {
+							WSModule.runJob(
+								"RUN_ACTION2",
+								{
+									session,
+									namespace: "playlists",
+									action: "addSongToPlaylist",
+									args: [true, mediaSource, playlistId]
+								},
+								this
+							)
+								.then(res => {
+									if (res.status === "success") {
+										successful += 1;
+										addedSongs.push(mediaSource);
+									} else failed += 1;
+									if (res.message === "That song is already in the playlist") alreadyInPlaylist += 1;
+									else if (
+										res.message ===
+										"That song is already in your Liked Songs playlist. " +
+											"A song cannot be in both the Liked Songs playlist" +
+											" and the Disliked Songs playlist at the same time."
+									)
+										alreadyInLikedPlaylist += 1;
+									else if (
+										res.message ===
+										"That song is already in your Disliked Songs playlist. " +
+											"A song cannot be in both the Liked Songs playlist " +
+											"and the Disliked Songs playlist at the same time."
+									)
+										alreadyInDislikedPlaylist += 1;
+								})
+								.catch(() => {
+									failed += 1;
+								})
+								.finally(() => next());
+						},
+						() => {
+							addSongsStats = {
+								successful,
+								failed,
+								alreadyInPlaylist,
+								alreadyInLikedPlaylist,
+								alreadyInDislikedPlaylist
+							};
+							next(null);
+						}
+					);
+				},
+
+				next => {
+					this.publishProgress({ status: "update", message: `Importing Spotify playlist (stage 3)` });
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+						.then(playlist => next(null, playlist))
+						.catch(next);
+				},
+
+				(playlist, next) => {
+					this.publishProgress({ status: "update", message: `Importing Spotify playlist (stage 4)` });
+					if (!playlist) return next("Playlist not found.");
+					if (playlist.createdBy !== session.userId)
+						return hasPermission("playlists.songs.add", session)
+							.then(() => next(null, playlist))
+							.catch(() => next("Invalid permissions."));
+					return next(null, playlist);
+				}
+			],
+			async (err, playlist) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"PLAYLIST_IMPORT",
+						`Importing a Spotify playlist to private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+					);
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
+					return cb({ status: "error", message: err });
+				}
+
+				if (playlist.privacy === "public")
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
+						userId: session.userId,
+						type: "playlist__import_playlist",
+						payload: {
+							message: `Imported ${addSongsStats.successful} songs to playlist <playlistId>${playlist.displayName}</playlistId>`,
+							playlistId
+						}
+					});
+
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_IMPORT",
+					`Successfully imported a Spotify playlist to private playlist "${playlistId}" for user "${session.userId}". Songs in playlist: ${songsInPlaylistTotal}, songs successfully added: ${addSongsStats.successful}, songs failed: ${addSongsStats.failed}, already in playlist: ${addSongsStats.alreadyInPlaylist}, already in liked ${addSongsStats.alreadyInLikedPlaylist}, already in disliked ${addSongsStats.alreadyInDislikedPlaylist}.`
 				);
 				this.publishProgress({
 					status: "success",

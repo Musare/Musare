@@ -7,6 +7,7 @@ let DBModule;
 let UtilsModule;
 let YouTubeModule;
 let SoundCloudModule;
+let SpotifyModule;
 let SongsModule;
 let WSModule;
 
@@ -31,6 +32,7 @@ class _MediaModule extends CoreClass {
 		UtilsModule = this.moduleManager.modules.utils;
 		YouTubeModule = this.moduleManager.modules.youtube;
 		SoundCloudModule = this.moduleManager.modules.soundcloud;
+		SpotifyModule = this.moduleManager.modules.spotify;
 		SongsModule = this.moduleManager.modules.songs;
 		WSModule = this.moduleManager.modules.ws;
 
@@ -432,7 +434,22 @@ class _MediaModule extends CoreClass {
 								.catch(next);
 						}
 
-						// TODO handle Spotify here
+						if (payload.mediaSource.startsWith("spotify:")) {
+							const trackId = payload.mediaSource.split(":")[1];
+
+							return SpotifyModule.runJob("GET_TRACK", { identifier: trackId, createMissing: true }, this)
+								.then(response => {
+									const { trackId, name, artists, albumImageUrl, duration } = response.track;
+									next(null, song, {
+										mediaSource: `spotify:${trackId}`,
+										title: name,
+										artists,
+										thumbnail: albumImageUrl,
+										duration
+									});
+								})
+								.catch(next);
+						}
 
 						return next("Invalid media source provided.");
 					},

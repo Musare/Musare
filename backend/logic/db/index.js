@@ -20,7 +20,8 @@ const REQUIRED_DOCUMENT_VERSIONS = {
 	ratings: 2,
 	importJob: 1,
 	stationHistory: 2,
-	soundcloudTrack: 1
+	soundcloudTrack: 1,
+	spotifyTrack: 1
 };
 
 const regex = {
@@ -79,7 +80,8 @@ class _DBModule extends CoreClass {
 						youtubeVideo: {},
 						ratings: {},
 						stationHistory: {},
-						soundcloudTrack: {}
+						soundcloudTrack: {},
+						spotifyTrack: {}
 					};
 
 					const importSchema = schemaName =>
@@ -106,6 +108,7 @@ class _DBModule extends CoreClass {
 					await importSchema("importJob");
 					await importSchema("stationHistory");
 					await importSchema("soundcloudTrack");
+					await importSchema("spotifyTrack");
 
 					this.models = {
 						song: mongoose.model("song", this.schemas.song),
@@ -123,7 +126,8 @@ class _DBModule extends CoreClass {
 						ratings: mongoose.model("ratings", this.schemas.ratings),
 						importJob: mongoose.model("importJob", this.schemas.importJob),
 						stationHistory: mongoose.model("stationHistory", this.schemas.stationHistory),
-						soundcloudTrack: mongoose.model("soundcloudTrack", this.schemas.soundcloudTrack)
+						soundcloudTrack: mongoose.model("soundcloudTrack", this.schemas.soundcloudTrack),
+						spotifyTrack: mongoose.model("spotifyTrack", this.schemas.spotifyTrack)
 					};
 
 					mongoose.connection.on("error", err => {
@@ -206,6 +210,7 @@ class _DBModule extends CoreClass {
 					this.schemas.song.path("mediaSource").validate(mediaSource => {
 						if (mediaSource.startsWith("youtube:")) return true;
 						if (mediaSource.startsWith("soundcloud:")) return true;
+						if (mediaSource.startsWith("spotify:")) return true;
 						return false;
 					});
 
@@ -277,6 +282,7 @@ class _DBModule extends CoreClass {
 					this.models.importJob.syncIndexes();
 					this.models.stationHistory.syncIndexes();
 					this.models.soundcloudTrack.syncIndexes();
+					this.models.spotifyTrack.syncIndexes();
 
 					if (config.get("skipDbDocumentsVersionCheck")) resolve();
 					else {

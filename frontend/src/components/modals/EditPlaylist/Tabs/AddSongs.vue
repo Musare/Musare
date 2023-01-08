@@ -5,6 +5,7 @@ import { useSearchYoutube } from "@/composables/useSearchYoutube";
 import { useSearchMusare } from "@/composables/useSearchMusare";
 import { useYoutubeDirect } from "@/composables/useYoutubeDirect";
 import { useSoundcloudDirect } from "@/composables/useSoundcloudDirect";
+import { useSpotifyDirect } from "@/composables/useSpotifyDirect";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";
 
 const SongItem = defineAsyncComponent(
@@ -42,6 +43,8 @@ const {
 const { youtubeDirect, addToPlaylist } = useYoutubeDirect();
 const { soundcloudDirect, addToPlaylist: soundcloudAddToPlaylist } =
 	useSoundcloudDirect();
+const { spotifyDirect, addToPlaylist: spotifyAddToPlaylist } =
+	useSpotifyDirect();
 
 watch(
 	() => youtubeSearch.value.songs.results,
@@ -304,6 +307,26 @@ onMounted(async () => {
 				<a
 					class="button is-info"
 					@click="soundcloudAddToPlaylist(playlist._id)"
+					><i class="material-icons icon-with-button">add</i>Add</a
+				>
+			</p>
+		</div>
+
+		<label class="label"> Add a Spotify song from a URL </label>
+		<div class="control is-grouped input-with-button">
+			<p class="control is-expanded">
+				<input
+					class="input"
+					type="text"
+					placeholder="Enter your Spotify song URL here..."
+					v-model="spotifyDirect"
+					@keyup.enter="spotifyAddToPlaylist(playlist._id)"
+				/>
+			</p>
+			<p class="control">
+				<a
+					class="button is-info"
+					@click="spotifyAddToPlaylist(playlist._id)"
 					><i class="material-icons icon-with-button">add</i>Add</a
 				>
 			</p>
