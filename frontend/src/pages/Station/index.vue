@@ -3610,6 +3610,8 @@ onBeforeUnmount(() => {
 			}
 
 			#station-right-column {
+				overflow: hidden;
+
 				#current-next-row {
 					flex-direction: column;
 				}
