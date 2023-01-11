@@ -33,6 +33,7 @@
 			]
 		},
 		"spotify": {
+			"enabled": false,
 			"clientId": "",
 			"clientSecret": "",
 			"rateLimit": 500,

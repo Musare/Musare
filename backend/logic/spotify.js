@@ -88,6 +88,11 @@ class _SpotifyModule extends CoreClass {
 		});
 
 		return new Promise((resolve, reject) => {
+			if (!config.has("apis.spotify") || !config.get("apis.spotify.enabled")) {
+				reject(new Error("Spotify is not enabled."));
+				return;
+			}
+
 			this.rateLimiter = new RateLimitter(config.get("apis.spotify.rateLimit"));
 			this.requestTimeout = config.get("apis.spotify.requestTimeout");
 
