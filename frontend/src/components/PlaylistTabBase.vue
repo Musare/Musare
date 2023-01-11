@@ -821,7 +821,9 @@ onMounted(() => {
 			<div class="tab" v-show="tab === 'current'">
 				<p
 					class="has-text-centered scrollable-list"
-					v-if="selectedPlaylists().length > 0"
+					v-if="
+						selectedPlaylists().length > 0 && type === 'autorequest'
+					"
 				>
 					You are currently autorequesting a mix of
 					{{ totalUniqueAutorequestableYoutubeIds.length }} different
