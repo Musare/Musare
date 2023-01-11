@@ -1142,7 +1142,8 @@ const sendActivityWatchMediaData = () => {
 			delete videoData.playbackRate;
 		}
 
-		aw.sendMediaData(videoData);
+		const success = aw.sendMediaData(videoData);
+		if (!success) pauseLocalStation();
 	} else {
 		activityWatchMediaLastStatus.value = "not_playing";
 	}

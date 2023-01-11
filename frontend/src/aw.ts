@@ -47,9 +47,15 @@ competitorToast.hide();
 export default {
 	sendMediaData(mediaData) {
 		if (enabled) {
+			if (!gotPong) return false;
+			if (lastTimeDenied + 1000 > Date.now()) return false;
+			if (lastTimeCompetitor + 1000 > Date.now()) return false;
+
 			lastTimeSentMediaDate = Date.now();
 			this.sendEvent("videoData", mediaData);
 		}
+
+		return true;
 	},
 
 	sendEvent(type, data) {
