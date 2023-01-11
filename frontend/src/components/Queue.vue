@@ -263,6 +263,7 @@ defineEmits(["onChangeTab"]);
 		}
 
 		> .scrollable-list:last-of-type:not(:last-child) {
+			height: 100%;
 			padding-bottom: 50px;
 		}
 
