@@ -55,11 +55,18 @@ const playlistSongs = computed({
 	}
 });
 
+const containsSpotifySongs = computed(
+	() =>
+		playlistSongs.value
+			.map(playlistSong => playlistSong.mediaSource.split(":")[0])
+			.indexOf("spotify") !== -1
+);
+
 const { tab, playlist } = storeToRefs(editPlaylistStore);
 const { setPlaylist, clearPlaylist, addSong, removeSong, repositionedSong } =
 	editPlaylistStore;
 
-const { closeCurrentModal } = useModalsStore();
+const { closeCurrentModal, openModal } = useModalsStore();
 
 const showTab = payload => {
 	if (tabs.value[`${payload}-tab`])
@@ -520,6 +527,18 @@ onBeforeUnmount(() => {
 				@click="downloadPlaylist()"
 			>
 				Download Playlist
+			</button>
+			<button
+				class="button is-default"
+				v-if="isOwner() && containsSpotifySongs"
+				@click="
+					openModal({
+						modal: 'convertSpotifySongs',
+						props: { playlistId: playlist._id }
+					})
+				"
+			>
+				Convert Spotify Songs
 			</button>
 			<div class="right">
 				<quick-confirm

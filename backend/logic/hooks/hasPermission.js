@@ -73,6 +73,7 @@ permissions.admin = {
 	"admin.view.statistics": true,
 	"admin.view.youtube": true,
 	"admin.view.soundcloud": true,
+	"admin.view.spotify": true,
 	"dataRequests.resolve": true,
 	"media.recalculateAllRatings": true,
 	"media.removeImportJobs": true,

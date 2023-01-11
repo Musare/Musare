@@ -7,6 +7,7 @@ import axios from "axios";
 import url from "url";
 
 import CoreClass from "../core";
+import { resolve } from "path";
 
 let SpotifyModule;
 let DBModule;
@@ -319,6 +320,52 @@ class _SpotifyModule extends CoreClass {
 					else resolve({ spotifyTracks });
 				}
 			);
+		});
+	}
+
+	/**
+	 * Gets tracks from media sources
+	 *
+	 * @param {object} payload
+	 * @returns {Promise}
+	 */
+	async GET_TRACKS_FROM_MEDIA_SOURCES(payload) {
+		return new Promise((resolve, reject) => {
+			const { mediaSources } = payload;
+
+			const responses = {};
+
+			const promises = [];
+
+			mediaSources.forEach(mediaSource => {
+				promises.push(
+					new Promise(resolve => {
+						const trackId = mediaSource.split(":")[1];
+						SpotifyModule.runJob("GET_TRACK", { identifier: trackId, createMissing: true }, this)
+							.then(({ track }) => {
+								responses[mediaSource] = track;
+							})
+							.catch(err => {
+								SpotifyModule.log(
+									"ERROR",
+									`Getting tracked with media source ${mediaSource} failed.`,
+									typeof err === "string" ? err : err.message
+								);
+								responses[mediaSource] = typeof err === "string" ? err : err.message;
+							})
+							.finally(() => {
+								resolve();
+							});
+					})
+				);
+			});
+
+			Promise.all(promises)
+				.then(() => {
+					SpotifyModule.log("SUCCESS", `Got all tracks.`);
+					resolve({ tracks: responses });
+				})
+				.catch(reject);
 		});
 	}
 
