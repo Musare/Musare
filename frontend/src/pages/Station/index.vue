@@ -763,8 +763,11 @@ const youtubeReady = () => {
 							true
 						);
 						canAutoplay.value = true;
-						if (localPaused.value || stationPaused.value)
+						if (stationPaused.value)
 							youtubePlayer.value.pauseVideo();
+						else if (localPaused.value) {
+							resumeLocalStation();
+						}
 					} else if (
 						event.data === window.YT.PlayerState.PLAYING &&
 						(localPaused.value || stationPaused.value)
@@ -773,7 +776,9 @@ const youtubeReady = () => {
 							timeBeforePause.value / 1000,
 							true
 						);
-						youtubePlayer.value.pauseVideo();
+						if (stationPaused.value)
+							youtubePlayer.value.pauseVideo();
+						else resumeLocalStation();
 					} else if (
 						event.data === window.YT.PlayerState.PLAYING &&
 						seeking.value === true
@@ -794,7 +799,7 @@ const youtubeReady = () => {
 								currentSong.value.skipDuration,
 							true
 						);
-						youtubePlayer.value.playVideo();
+						pauseLocalStation();
 					}
 				}
 			}
@@ -1850,6 +1855,8 @@ onMounted(async () => {
 				(getTimeElapsed() / 1000 + currentSong.value.skipDuration) *
 					1000
 			);
+		} else if (newState === "error") {
+			autoPaused.value = true;
 		}
 	});
 
