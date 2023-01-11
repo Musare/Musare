@@ -126,8 +126,6 @@ export const useSoundcloudPlayer = () => {
 		trackState.value = newTrackState;
 
 		if (newTrackState !== oldTrackState) {
-			console.debug(TAG, "Changed track state", newTrackState);
-
 			stateChangeCallbacks.forEach(cb => {
 				cb(newTrackState);
 			});
@@ -145,21 +143,31 @@ export const useSoundcloudPlayer = () => {
 		attemptsToPlay.value += 1;
 
 		dispatchMessage("play");
-		dispatchMessage("isPaused", value => {
-			if (trackState.value !== "attempting_to_play") return;
+		setTimeout(() => {
+			soundcloudGetIsPaused(value => {
+				if (trackState.value !== "attempting_to_play") return;
 
-			if (!value || paused.value || attemptsToPlay.value >= 10) {
-				changeTrackState("failed_to_play");
-				attemptsToPlay.value = 0;
-				return;
-			}
+				// Success
+				if (!value) {
+					changeTrackState("playing");
+					return;
+				}
 
-			if (playAttemptTimeout.value)
-				clearTimeout(playAttemptTimeout.value);
-			playAttemptTimeout.value = setTimeout(() => {
-				if (trackState.value === "attempting_to_play") attemptToPlay();
-			}, 500);
-		});
+				// Too many attempts, failed
+				if (attemptsToPlay.value >= 10 && value && !paused.value) {
+					changeTrackState("failed_to_play");
+					attemptsToPlay.value = 0;
+					return;
+				}
+
+				if (playAttemptTimeout.value)
+					clearTimeout(playAttemptTimeout.value);
+				playAttemptTimeout.value = setTimeout(() => {
+					if (trackState.value === "attempting_to_play")
+						attemptToPlay();
+				}, 500);
+			});
+		}, 500);
 	};
 
 	watch(soundcloudIframeElement, (newElement, oldElement) => {
@@ -331,13 +339,15 @@ export const useSoundcloudPlayer = () => {
 	soundcloudBindListener("play", () => {
 		console.debug(TAG, "On play");
 
-		changeTrackState("playing");
+		if (trackState.value !== "attempting_to_play")
+			changeTrackState("playing");
 	});
 
 	soundcloudBindListener("pause", () => {
 		console.debug(TAG, "On pause");
 
-		changeTrackState("paused");
+		if (trackState.value !== "attempting_to_play")
+			changeTrackState("paused");
 	});
 
 	soundcloudBindListener("finish", () => {

@@ -121,6 +121,8 @@ const stationIdentifier = ref();
 const playerDebugBox = ref();
 const keyboardShortcutsHelper = ref();
 
+const autoPaused = ref(false);
+
 const modalsStore = useModalsStore();
 const { activeModals } = storeToRefs(modalsStore);
 
@@ -182,7 +184,7 @@ const stationState = computed(() => {
 		experimentalChangableListenMode.value === "participate"
 	)
 		return "participate";
-	if (localPaused.value) return "local_paused";
+	if (localPaused.value || autoPaused.value) return "local_paused";
 	if (volumeSliderValue.value === 0 || muted.value) return "muted";
 	if (youtubePlayerReady.value && youtubePlayerState.value === "PLAYING")
 		return "playing";
@@ -275,7 +277,7 @@ const updateMediaSessionData = song => {
 	if (song) {
 		ms.setMediaSessionData(
 			0,
-			!localPaused.value && !stationPaused.value, // This should be improved later
+			!localPaused.value && !stationPaused.value && !autoPaused.value, // This should be improved later
 			song.title,
 			song.artists ? song.artists.join(", ") : null,
 			null,
@@ -465,7 +467,12 @@ const calculateTimeElapsed = async () => {
 		}
 	}
 
-	if (!stationPaused.value && !localPaused.value && !isApple.value) {
+	if (
+		!stationPaused.value &&
+		!localPaused.value &&
+		!autoPaused.value &&
+		!isApple.value
+	) {
 		const timeElapsed = getTimeElapsed();
 		const currentPlayerTime = await getCurrentPlayerTime();
 
@@ -592,6 +599,8 @@ const playerStop = () => {
 		youtubePlayer.value.stopVideo();
 	}
 
+	autoPaused.value = false;
+
 	soundcloudDestroy();
 };
 const playerPause = () => {
@@ -605,7 +614,7 @@ const playerSeekTo = position => {
 	console.debug("PLAYER SEEK TO", position);
 
 	// Position is in seconds
-	if (youtubePlayerReady.value) {
+	if (currentSongMediaType.value === "youtube" && youtubePlayerReady.value) {
 		youtubePlayer.value.seekTo(position);
 	}
 
@@ -671,7 +680,11 @@ const youtubeReady = () => {
 
 					if (err.data === 150 && loggedIn.value) {
 						if (
-							!(localPaused.value || stationPaused.value) &&
+							!(
+								localPaused.value ||
+								stationPaused.value ||
+								autoPaused.value
+							) &&
 							!currentSong.value.voted
 						) {
 							// automatically vote to skip
@@ -735,6 +748,12 @@ const youtubeReady = () => {
 
 					if (
 						event.data === window.YT.PlayerState.PLAYING &&
+						(noSong.value ||
+							currentSongMediaType.value !== "youtube")
+					) {
+						youtubePlayer.value.stopVideo();
+					} else if (
+						event.data === window.YT.PlayerState.PLAYING &&
 						videoLoading.value === true
 					) {
 						videoLoading.value = false;
@@ -766,6 +785,7 @@ const youtubeReady = () => {
 						!localPaused.value &&
 						!stationPaused.value &&
 						!noSong.value &&
+						currentSongMediaType.value === "youtube" &&
 						youtubePlayer.value.getDuration() / 1000 <
 							currentSong.value.duration
 					) {
@@ -915,7 +935,11 @@ const setCurrentSong = data => {
 						if (
 							autoSkipDisliked.value &&
 							res.data.disliked === true &&
-							!(localPaused.value || stationPaused.value) &&
+							!(
+								localPaused.value ||
+								stationPaused.value ||
+								autoPaused.value
+							) &&
 							!currentSong.value.voted
 						) {
 							toggleSkipVote(
@@ -961,6 +985,7 @@ const pauseLocalPlayer = () => {
 };
 const resumeLocalStation = () => {
 	updateLocalPaused(false);
+	autoPaused.value = false;
 	if (!stationPaused.value) resumeLocalPlayer();
 };
 const pauseLocalStation = () => {
@@ -1047,6 +1072,7 @@ const resetKeyboardShortcutsHelper = () => {
 const sendActivityWatchMediaData = () => {
 	// TODO have this support soundcloud
 	if (
+		!autoPaused.value &&
 		!stationPaused.value &&
 		(!localPaused.value ||
 			experimentalChangableListenMode.value === "participate") &&
@@ -1132,6 +1158,8 @@ const experimentalChangableListenModeChange = newMode => {
 			youtubePlayerReady.value = false;
 			youtubePlayerState.value = null;
 		}
+
+		autoPaused.value = false;
 
 		soundcloudDestroy();
 	} else {
@@ -1784,18 +1812,23 @@ onMounted(async () => {
 	soundcloudOnTrackStateChange(newState => {
 		console.debug(TAG, `New state: ${newState}`);
 
-		if (newState === "paused") {
+		if (
+			newState === "attempting_to_play" ||
+			newState === "failed_to_play"
+		) {
 			if (currentSongMediaType.value !== "soundcloud") return;
 			if (!localPaused.value && !stationPaused.value) {
-				new Toast(
-					"Paused the station as the SoundCloud track was paused."
-				);
+				if (newState === "failed_to_play")
+					new Toast(
+						"Failed to start SoundCloud player. Please try to manually start it."
+					);
 
+				autoPaused.value = true;
+			}
+		} else if (newState === "paused") {
+			if (currentSongMediaType.value !== "soundcloud") return;
+			if (!localPaused.value && !stationPaused.value) {
 				pauseLocalStation();
-				soundcloudSeekTo(
-					(getTimeElapsed() / 1000 + currentSong.value.skipDuration) *
-						1000
-				);
 			}
 		} else if (newState === "playing") {
 			if (currentSongMediaType.value !== "soundcloud") {
@@ -1803,9 +1836,11 @@ onMounted(async () => {
 				return;
 			}
 
-			if (localPaused.value) {
-				resumeLocalStation();
+			if (autoPaused.value) {
+				autoPaused.value = false;
 			}
+
+			if (localPaused.value) resumeLocalStation();
 
 			if (stationPaused.value) {
 				soundcloudPause();
@@ -2326,7 +2361,7 @@ onBeforeUnmount(() => {
 										class="button is-primary"
 										@click="resumeLocalStation()"
 										id="local-resume"
-										v-if="localPaused"
+										v-if="localPaused || autoPaused"
 										content="Unpause Playback"
 										v-tippy
 									>
@@ -2715,6 +2750,7 @@ onBeforeUnmount(() => {
 				<span><b>Time elapsed</b>: {{ timeElapsed }}</span>
 				<span><b>Volume slider value</b>: {{ volumeSliderValue }}</span>
 				<span><b>Local paused</b>: {{ localPaused }}</span>
+				<span><b>Auto paused</b>: {{ autoPaused }}</span>
 				<span><b>Station paused</b>: {{ stationPaused }}</span>
 				<span :title="new Date(pausedAt).toString()"
 					><b>Paused at</b>: {{ pausedAt }}</span
