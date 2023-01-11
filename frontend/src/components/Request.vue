@@ -7,6 +7,7 @@ import { useManageStationStore } from "@/stores/manageStation";
 import { useSearchYoutube } from "@/composables/useSearchYoutube";
 import { useSearchMusare } from "@/composables/useSearchMusare";
 import { useYoutubeDirect } from "@/composables/useYoutubeDirect";
+import { useSoundcloudDirect } from "@/composables/useSoundcloudDirect";
 
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
@@ -27,6 +28,8 @@ const props = defineProps({
 const { youtubeSearch, searchForSongs, loadMoreSongs } = useSearchYoutube();
 const { musareSearch, searchForMusareSongs } = useSearchMusare();
 const { youtubeDirect, addToQueue } = useYoutubeDirect();
+const { soundcloudDirect, addToQueue: soundcloudAddToQueue } =
+	useSoundcloudDirect();
 
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
@@ -359,6 +362,32 @@ onMounted(async () => {
 						>
 							Load more...
 						</a>
+					</div>
+				</div>
+
+				<div class="soundcloud-direct">
+					<label class="label">
+						Add a SoundCloud song from a URL
+					</label>
+					<div class="control is-grouped input-with-button">
+						<p class="control is-expanded">
+							<input
+								class="input"
+								type="text"
+								placeholder="Enter your SoundCloud song URL here..."
+								v-model="soundcloudDirect"
+								@keyup.enter="soundcloudAddToQueue(station._id)"
+							/>
+						</p>
+						<p class="control">
+							<a
+								class="button is-info"
+								@click="soundcloudAddToQueue(station._id)"
+								><i class="material-icons icon-with-button"
+									>add</i
+								>Add</a
+							>
+						</p>
 					</div>
 				</div>
 			</div>
