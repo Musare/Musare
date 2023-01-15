@@ -11,6 +11,8 @@ import moduleManager from "../../index";
 const UtilsModule = moduleManager.modules.utils;
 const WSModule = moduleManager.modules.ws;
 const YouTubeModule = moduleManager.modules.youtube;
+const SpotifyModule = moduleManager.modules.spotify;
+const CacheModule = moduleManager.modules.cache;
 
 export default {
 	/**
@@ -116,6 +118,413 @@ export default {
 			}
 		);
 	}),
+
+	// /**
+	//  *
+	//  *
+	//  * @param session
+	//  * @param ISRC - the ISRC
+	//  * @param {Function} cb
+	//  */
+	// searchMusicBrainzISRC: useHasPermission("admin.view.spotify", function searchMusicBrainzISRC(session, ISRC, cb) {
+	// 	async.waterfall(
+	// 		[
+	// 			next => {
+	// 				if (!ISRC) {
+	// 					next("Invalid ISRC provided.");
+	// 					return;
+	// 				}
+
+	// 				CacheModule.runJob("HGET", { table: "musicbrainz-isrc-2", key: ISRC })
+	// 					.then(response => {
+	// 						if (response) next(null, response);
+	// 						else next(null, null);
+	// 					})
+	// 					.catch(err => {
+	// 						next(err);
+	// 					});
+	// 			},
+
+	// 			(body, next) => {
+	// 				if (body) {
+	// 					next(null, body);
+	// 					return;
+	// 				}
+
+	// 				const options = {
+	// 					params: { fmt: "json", inc: "url-rels+work-rels" },
+	// 					headers: {
+	// 						"User-Agent": "Musare/3.9.0-fork ( https://git.kvos.dev/kris/MusareFork )" // TODO set this in accordance to https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting
+	// 					}
+	// 				};
+
+	// 				console.log("KRIS101", options, `https://musicbrainz.org/ws/2/isrc/${ISRC}`);
+
+	// 				axios
+	// 					.get(`https://musicbrainz.org/ws/2/isrc/${ISRC}`, options)
+	// 					.then(res => next(null, res.data))
+	// 					.catch(err => next(err));
+	// 			},
+
+	// 			(body, next) => {
+	// 				console.log("KRIS222", body);
+
+	// 				CacheModule.runJob("HSET", { table: "musicbrainz-isrc-2", key: ISRC, value: body })
+	// 					.then(() => {})
+	// 					.catch(() => {});
+
+	// 				next(null, body);
+	// 			},
+
+	// 			(body, next) => {
+	// 				const response = {};
+
+	// 				const recordingUrls = Array.from(
+	// 					new Set(
+	// 						body.recordings
+	// 							.map(recording =>
+	// 								recording.relations
+	// 									.filter(
+	// 										relation =>
+	// 											relation["target-type"] === "url" &&
+	// 											relation.url &&
+	// 											// relation["type-id"] === "7e41ef12-a124-4324-afdb-fdbae687a89c" &&
+	// 											(relation.url.resource.indexOf("youtu.be") !== -1 ||
+	// 												relation.url.resource.indexOf("youtube.com") !== -1 ||
+	// 												relation.url.resource.indexOf("soundcloud.com") !== -1)
+	// 									)
+	// 									.map(relation => relation.url.resource)
+	// 							)
+	// 							.flat()
+	// 					)
+	// 				);
+
+	// 				const workIds = Array.from(
+	// 					new Set(
+	// 						body.recordings
+	// 							.map(recording =>
+	// 								recording.relations
+	// 									.filter(relation => relation["target-type"] === "work" && relation.work)
+	// 									.map(relation => relation.work.id)
+	// 							)
+	// 							.flat()
+	// 					)
+	// 				);
+
+	// 				response.recordingUrls = recordingUrls;
+	// 				response.workIds = workIds;
+
+	// 				response.raw = body;
+
+	// 				next(null, response);
+	// 			}
+	// 		],
+	// 		async (err, response) => {
+	// 			if (err && err !== true) {
+	// 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+	// 				this.log(
+	// 					"ERROR",
+	// 					"APIS_SEARCH_MUSICBRAINZ_ISRC",
+	// 					`Searching MusicBrainz ISRC failed with ISRC "${ISRC}". "${err}"`
+	// 				);
+	// 				return cb({ status: "error", message: err });
+	// 			}
+	// 			this.log(
+	// 				"SUCCESS",
+	// 				"APIS_SEARCH_MUSICBRAINZ_ISRC",
+	// 				`User "${session.userId}" searched MusicBrainz ISRC succesfully for ISRC "${ISRC}".`
+	// 			);
+	// 			return cb({
+	// 				status: "success",
+	// 				data: {
+	// 					response
+	// 				}
+	// 			});
+	// 		}
+	// 	);
+	// }),
+
+	// /**
+	//  *
+	//  *
+	//  * @param session
+	//  * @param trackId - the trackId
+	//  * @param {Function} cb
+	//  */
+	// searchWikidataBySpotifyTrackId: useHasPermission(
+	// 	"admin.view.spotify",
+	// 	function searchWikidataBySpotifyTrackId(session, trackId, cb) {
+	// 		async.waterfall(
+	// 			[
+	// 				next => {
+	// 					if (!trackId) {
+	// 						next("Invalid trackId provided.");
+	// 						return;
+	// 					}
+
+	// 					CacheModule.runJob("HGET", { table: "wikidata-spotify-track", key: trackId })
+	// 						.then(response => {
+	// 							if (response) next(null, response);
+	// 							else next(null, null);
+	// 						})
+	// 						.catch(err => {
+	// 							console.log("WOW", err);
+	// 							next(err);
+	// 						});
+	// 				},
+
+	// 				(body, next) => {
+	// 					if (body) {
+	// 						next(null, body);
+	// 						return;
+	// 					}
+
+	// 					// const options = {
+	// 					// 	params: { fmt: "json", inc: "url-rels" },
+	// 					// 	headers: {
+	// 					// 		"User-Agent": "Musare/3.9.0-fork ( https://git.kvos.dev/kris/MusareFork )" // TODO set this in accordance to https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting
+	// 					// 	}
+	// 					// };
+
+	// 					// axios
+	// 					// 	.get(`https://musicbrainz.org/ws/2/isrc/${ISRC}`, options)
+	// 					// 	.then(res => next(null, res.data))
+	// 					// 	.catch(err => next(err));
+	// 				},
+
+	// 				(body, next) => {
+	// 					CacheModule.runJob("HSET", { table: "musicbrainz-isrc", key: ISRC, value: body })
+	// 						.then(() => {})
+	// 						.catch(() => {});
+
+	// 					next(null, body);
+	// 				},
+
+	// 				(body, next) => {
+	// 					const response = {};
+
+	// 					const recordingUrls = Array.from(
+	// 						new Set(
+	// 							body.recordings
+	// 								.map(recording =>
+	// 									recording.relations
+	// 										.filter(
+	// 											relation =>
+	// 												relation["target-type"] === "url" &&
+	// 												relation.url &&
+	// 												// relation["type-id"] === "7e41ef12-a124-4324-afdb-fdbae687a89c" &&
+	// 												(relation.url.resource.indexOf("youtu.be") !== -1 ||
+	// 													relation.url.resource.indexOf("youtube.com") !== -1 ||
+	// 													relation.url.resource.indexOf("soundcloud.com") !== -1)
+	// 										)
+	// 										.map(relation => relation.url.resource)
+	// 								)
+	// 								.flat()
+	// 						)
+	// 					);
+
+	// 					response.recordingUrls = recordingUrls;
+
+	// 					response.raw = body;
+
+	// 					next(null, response);
+	// 				}
+	// 			],
+	// 			async (err, response) => {
+	// 				if (err && err !== true) {
+	// 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+	// 					this.log(
+	// 						"ERROR",
+	// 						"APIS_SEARCH_TODO",
+	// 						`Searching MusicBrainz ISRC failed with ISRC "${ISRC}". "${err}"`
+	// 					);
+	// 					return cb({ status: "error", message: err });
+	// 				}
+	// 				this.log(
+	// 					"SUCCESS",
+	// 					"APIS_SEARCH_TODO",
+	// 					`User "${session.userId}" searched MusicBrainz ISRC succesfully for ISRC "${ISRC}".`
+	// 				);
+	// 				return cb({
+	// 					status: "success",
+	// 					data: {
+	// 						response
+	// 					}
+	// 				});
+	// 			}
+	// 		);
+	// 	}
+	// ),
+
+	// /**
+	//  *
+	//  *
+	//  * @param session
+	//  * @param trackId - the trackId
+	//  * @param {Function} cb
+	//  */
+	// searchWikidataByMusicBrainzWorkId: useHasPermission(
+	// 	"admin.view.spotify",
+	// 	function searchWikidataByMusicBrainzWorkId(session, workId, cb) {
+	// 		async.waterfall(
+	// 			[
+	// 				next => {
+	// 					if (!workId) {
+	// 						next("Invalid workId provided.");
+	// 						return;
+	// 					}
+
+	// 					CacheModule.runJob("HGET", { table: "wikidata-musicbrainz-work", key: workId })
+	// 						.then(response => {
+	// 							if (response) next(null, response);
+	// 							else next(null, null);
+	// 						})
+	// 						.catch(err => {
+	// 							next(err);
+	// 						});
+	// 				},
+
+	// 				(body, next) => {
+	// 					if (body) {
+	// 						next(null, body);
+	// 						return;
+	// 					}
+
+	// 					const endpointUrl = "https://query.wikidata.org/sparql";
+	// 					const sparqlQuery = `SELECT DISTINCT ?item ?itemLabel ?YouTube_video_ID WHERE {
+	// 					SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
+	// 					{
+	// 						SELECT DISTINCT ?item WHERE {
+	// 						?item p:P435 ?statement0.
+	// 						?statement0 ps:P435 "${workId}".
+	// 						}
+	// 						LIMIT 100
+	// 					}
+	// 					OPTIONAL { ?item wdt:P1651 ?YouTube_video_ID. }
+	// 					}`;
+	// 					// OPTIONAL { ?item wdt:P3040 ?SoundCloud_track_ID. }
+
+	// 					const options = {
+	// 						params: { query: sparqlQuery },
+	// 						headers: {
+	// 							Accept: "application/sparql-results+json"
+	// 						}
+	// 					};
+
+	// 					axios
+	// 						.get(endpointUrl, options)
+	// 						.then(res => next(null, res.data))
+	// 						.catch(err => next(err));
+	// 				},
+
+	// 				(body, next) => {
+	// 					CacheModule.runJob("HSET", { table: "wikidata-musicbrainz-work", key: workId, value: body })
+	// 						.then(() => {})
+	// 						.catch(() => {});
+
+	// 					next(null, body);
+	// 				},
+
+	// 				(body, next) => {
+	// 					const response = {};
+
+	// 					const youtubeIds = Array.from(
+	// 						new Set(
+	// 							body.results.bindings
+	// 								.filter(binding => !!binding.YouTube_video_ID)
+	// 								.map(binding => binding.YouTube_video_ID.value)
+	// 						)
+	// 					);
+	// 					// const soundcloudIds = Array.from(new Set(body.results.bindings.filter(binding => !!binding["SoundCloud_track_ID"]).map(binding => binding["SoundCloud_track_ID"].value)))
+
+	// 					response.youtubeIds = youtubeIds;
+
+	// 					response.raw = body;
+
+	// 					next(null, response);
+	// 				}
+	// 			],
+	// 			async (err, response) => {
+	// 				if (err && err !== true) {
+	// 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+	// 					this.log(
+	// 						"ERROR",
+	// 						"APIS_SEARCH_TODO",
+	// 						`Searching MusicBrainz ISRC failed with ISRC "${workId}". "${err}"`
+	// 					);
+	// 					return cb({ status: "error", message: err });
+	// 				}
+	// 				this.log(
+	// 					"SUCCESS",
+	// 					"APIS_SEARCH_TODO",
+	// 					`User "${session.userId}" searched MusicBrainz ISRC succesfully for ISRC "${workId}".`
+	// 				);
+	// 				return cb({
+	// 					status: "success",
+	// 					data: {
+	// 						response
+	// 					}
+	// 				});
+	// 			}
+	// 		);
+	// 	}
+	// ),
+
+	/**
+	 *
+	 *
+	 * @param session
+	 * @param trackId - the trackId
+	 * @param {Function} cb
+	 */
+	getAlternativeMediaSourcesForTrack: useHasPermission(
+		"admin.view.spotify",
+		function getAlternativeMediaSourcesForTrack(session, mediaSource, cb) {
+			async.waterfall(
+				[
+					next => {
+						if (!mediaSource) {
+							next("Invalid mediaSource provided.");
+							return;
+						}
+
+						next();
+					},
+
+					async () => {
+						const alternativeMediaSources = await SpotifyModule.runJob(
+							"GET_ALTERNATIVE_MEDIA_SOURCES_FOR_TRACK",
+							{ mediaSource }
+						);
+
+						return alternativeMediaSources;
+					}
+				],
+				async (err, alternativeMediaSources) => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log(
+							"ERROR",
+							"APIS_SEARCH_TODO",
+							`Searching MusicBrainz ISRC failed with ISRC "${mediaSource}". "${err}"`
+						);
+						return cb({ status: "error", message: err });
+					}
+					this.log(
+						"SUCCESS",
+						"APIS_SEARCH_TODO",
+						`User "${session.userId}" searched MusicBrainz ISRC succesfully for ISRC "${mediaSource}".`
+					);
+					return cb({
+						status: "success",
+						data: {
+							alternativeMediaSources
+						}
+					});
+				}
+			);
+		}
+	),
 
 	/**
 	 * Joins a room

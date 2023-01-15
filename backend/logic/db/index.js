@@ -21,7 +21,8 @@ const REQUIRED_DOCUMENT_VERSIONS = {
 	importJob: 1,
 	stationHistory: 2,
 	soundcloudTrack: 1,
-	spotifyTrack: 1
+	spotifyTrack: 1,
+	genericApiRequest: 1
 };
 
 const regex = {
@@ -81,7 +82,8 @@ class _DBModule extends CoreClass {
 						ratings: {},
 						stationHistory: {},
 						soundcloudTrack: {},
-						spotifyTrack: {}
+						spotifyTrack: {},
+						genericApiRequest: {}
 					};
 
 					const importSchema = schemaName =>
@@ -109,6 +111,7 @@ class _DBModule extends CoreClass {
 					await importSchema("stationHistory");
 					await importSchema("soundcloudTrack");
 					await importSchema("spotifyTrack");
+					await importSchema("genericApiRequest");
 
 					this.models = {
 						song: mongoose.model("song", this.schemas.song),
@@ -127,7 +130,8 @@ class _DBModule extends CoreClass {
 						importJob: mongoose.model("importJob", this.schemas.importJob),
 						stationHistory: mongoose.model("stationHistory", this.schemas.stationHistory),
 						soundcloudTrack: mongoose.model("soundcloudTrack", this.schemas.soundcloudTrack),
-						spotifyTrack: mongoose.model("spotifyTrack", this.schemas.spotifyTrack)
+						spotifyTrack: mongoose.model("spotifyTrack", this.schemas.spotifyTrack),
+						genericApiRequest: mongoose.model("genericApiRequest", this.schemas.genericApiRequest)
 					};
 
 					mongoose.connection.on("error", err => {
@@ -283,6 +287,7 @@ class _DBModule extends CoreClass {
 					this.models.stationHistory.syncIndexes();
 					this.models.soundcloudTrack.syncIndexes();
 					this.models.spotifyTrack.syncIndexes();
+					this.models.genericApiRequest.syncIndexes();
 
 					if (config.get("skipDbDocumentsVersionCheck")) resolve();
 					else {

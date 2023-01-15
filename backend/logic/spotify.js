@@ -7,12 +7,16 @@ import axios from "axios";
 import url from "url";
 
 import CoreClass from "../core";
-import { resolve } from "path";
 
 let SpotifyModule;
 let DBModule;
 let CacheModule;
 let MediaModule;
+let MusicBrainzModule;
+
+const youtubeVideoUrlRegex =
+	/^(https?:\/\/)?(www\.)?(music\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?(?<youtubeId>[\w-]{11})((&([A-Za-z0-9]+)?)*)?$/;
+const youtubeVideoIdRegex = /^([\w-]{11})$/;
 
 const spotifyTrackObjectToMusareTrackObject = spotifyTrackObject => {
 	return {
@@ -78,6 +82,7 @@ class _SpotifyModule extends CoreClass {
 		DBModule = this.moduleManager.modules.db;
 		CacheModule = this.moduleManager.modules.cache;
 		MediaModule = this.moduleManager.modules.media;
+		MusicBrainzModule = this.moduleManager.modules.musicbrainz;
 
 		// this.youtubeApiRequestModel = this.YoutubeApiRequestModel = await DBModule.runJob("GET_MODEL", {
 		// 	modelName: "youtubeApiRequest"
@@ -526,29 +531,101 @@ class _SpotifyModule extends CoreClass {
 		});
 	}
 
-	// /**
-	//  * @param {object} payload - object that contains the payload
-	//  * @param {string} payload.url - the url of the SoundCloud resource
-	//  */
-	// API_RESOLVE(payload) {
-	// 	return new Promise((resolve, reject) => {
-	// 		const { url } = payload;
+	/**
+	 *
+	 * @param {*} payload
+	 * @returns
+	 */
+	async GET_ALTERNATIVE_MEDIA_SOURCES_FOR_TRACK(payload) {
+		const { mediaSource } = payload;
 
-	// 		SoundCloudModule.runJob(
-	// 			"API_CALL",
-	// 			{
-	// 				url: `https://api-v2.soundcloud.com/resolve?url=${encodeURIComponent(url)}`
-	// 			},
-	// 			this
-	// 		)
-	// 			.then(response => {
-	// 				resolve(response);
-	// 			})
-	// 			.catch(err => {
-	// 				reject(err);
-	// 			});
-	// 	});
-	// }
+		if (!mediaSource || !mediaSource.startsWith("spotify:"))
+			throw new Error("Media source provided is not a valid Spotify media source.");
+
+		const spotifyTrackId = mediaSource.split(":")[1];
+
+		const { track: spotifyTrack } = await SpotifyModule.runJob(
+			"GET_TRACK",
+			{
+				identifier: spotifyTrackId,
+				createMissing: true
+			},
+			this
+		);
+
+		const ISRC = spotifyTrack.externalIds.isrc;
+		if (!ISRC) throw new Error(`ISRC not found for Spotify track ${mediaSource}.`);
+
+		const ISRCApiResponse = await MusicBrainzModule.runJob(
+			"API_CALL",
+			{
+				url: `https://musicbrainz.org/ws/2/isrc/${ISRC}`,
+				params: {
+					fmt: "json",
+					inc: "url-rels+work-rels"
+				}
+			},
+			this
+		);
+
+		console.dir(ISRCApiResponse);
+
+		const mediaSources = new Set();
+		const mediaSourcesOrigins = {};
+
+		ISRCApiResponse.recordings.forEach(recording => {
+			recording.relations.forEach(relation => {
+				if (relation["target-type"] === "url" && relation.url) {
+					// relation["type-id"] === "7e41ef12-a124-4324-afdb-fdbae687a89c"
+					const { resource } = relation.url;
+
+					if (resource.indexOf("soundcloud.com") !== -1) {
+						throw new Error(`Unable to parse SoundCloud resource ${resource}.`);
+
+						return;
+					}
+
+					if (resource.indexOf("youtube.com") !== -1 || resource.indexOf("youtu.be") !== -1) {
+						const match = youtubeVideoUrlRegex.exec(resource);
+						if (!match) throw new Error(`Unable to parse YouTube resource ${resource}.`);
+
+						const { youtubeId } = match.groups;
+						if (!youtubeId) throw new Error(`Unable to parse YouTube resource ${resource}.`);
+
+						const mediaSource = `youtube:${youtubeId}`;
+						const mediaSourceOrigins = [
+							`Spotify track ${spotifyTrackId}`,
+							`ISRC ${ISRC}`,
+							`MusicBrainz recordings`,
+							`MusicBrainz recording ${recording.id}`,
+							`MusicBrainz relations`,
+							`MusicBrainz relation target-type url`,
+							`MusicBrainz relation resource ${resource}`,
+							`YouTube ID ${youtubeId}`
+						];
+
+						mediaSources.add(mediaSource);
+						if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
+
+						mediaSourcesOrigins[mediaSource].push([mediaSourceOrigins]);
+
+						return;
+					}
+
+					return;
+				}
+
+				if (relation["target-type"] === "work") {
+					return;
+				}
+			});
+		});
+
+		return {
+			mediaSources: Array.from(mediaSources),
+			mediaSourcesOrigins
+		};
+	}
 }
 
 export default new _SpotifyModule();

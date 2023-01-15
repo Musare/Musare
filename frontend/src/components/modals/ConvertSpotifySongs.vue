@@ -29,10 +29,15 @@ const props = defineProps({
 const playlist = ref(null);
 const allSongs = ref(null);
 const loaded = ref(false);
-const currentConvertType = ref("artist");
+const currentConvertType = ref("track");
 const sortBy = ref("track_count_des");
 
 const spotifyArtists = ref({});
+
+// const ISRCMap = ref(new Map());
+// const WikidataSpotifyTrackMap = ref(new Map());
+// const WikidataMusicBrainzWorkMap = ref(new Map());
+const AlternativeSourcesForTrackMap = ref(new Map());
 
 const spotifyArtistsArray = computed(() =>
 	Object.entries(spotifyArtists.value)
@@ -48,9 +53,58 @@ const spotifyArtistsArray = computed(() =>
 		})
 );
 
+const spotifyTracksMediaSourcesArray = computed(() =>
+	Object.keys(allSongs.value)
+);
+
 const toggleSpotifyArtistExpanded = spotifyArtistId => {
 	spotifyArtists.value[spotifyArtistId].expanded =
 		!spotifyArtists.value[spotifyArtistId].expanded;
+};
+
+// const getFromISRC = ISRC => {
+// 	socket.dispatch("apis.searchMusicBrainzISRC", ISRC, res => {
+// 		console.log("KRIS111", res);
+// 		if (res.status === "success") {
+// 			// ISRCMap.value.set(ISRC, res.data);
+// 			ISRCMap.value.set(ISRC, res.data.response);
+// 		}
+// 	});
+// };
+
+// const getFromWikidataSpotifyTrack = trackId => {
+// 	socket.dispatch("apis.searchWikidataBySpotifyTrackId", trackId, res => {
+// 		console.log("KRIS11111", res);
+// 		if (res.status === "success") {
+// 			// ISRCMap.value.set(ISRC, res.data);
+// 			WikidataSpotifyTrackMap.value.set(trackId, res.data.response);
+// 		}
+// 	});
+// };
+
+// const getFromWikidataByMusicBrainzWorkId = workId => {
+// 	socket.dispatch("apis.searchWikidataByMusicBrainzWorkId", workId, res => {
+// 		console.log("KRIS111112", res);
+// 		if (res.status === "success") {
+// 			// ISRCMap.value.set(ISRC, res.data);
+// 			WikidataMusicBrainzWorkMap.value.set(workId, res.data.response);
+// 		}
+// 	});
+// };
+
+const getAlternativeMediaSourcesForTrack = mediaSource => {
+	socket.dispatch(
+		"apis.getAlternativeMediaSourcesForTrack",
+		mediaSource,
+		res => {
+			console.log("KRIS111133", res);
+			if (res.status === "success") {
+				AlternativeSourcesForTrackMap.value.set(mediaSource, res.data);
+				// ISRCMap.value.set(ISRC, res.data);
+				// WikidataMusicBrainzWorkMap.value.set(workId, res.data.response);
+			}
+		}
+	);
 };
 
 onMounted(() => {
@@ -130,20 +184,164 @@ onMounted(() => {
 		>
 			<template #body>
 				<p>Converting by {{ currentConvertType }}</p>
-				<p>Sorting by {{ sortBy }}</p>
+				<!-- <p>Sorting by {{ sortBy }}</p> -->
 
 				<br />
 
-				<div class="column-headers">
+				<!-- <div class="column-headers">
 					<div class="spotify-column-header column-header">
 						<h3>Spotify</h3>
 					</div>
 					<div class="soumdcloud-column-header column-header">
 						<h3>Soundcloud</h3>
 					</div>
+				</div> -->
+
+				<div class="tracks" v-if="currentConvertType === 'track'">
+					<div
+						class="track-row"
+						v-for="spotifyTrackMediaSource in spotifyTracksMediaSourcesArray"
+						:key="spotifyTrackMediaSource"
+					>
+						<div class="left">
+							<p>Media source: {{ spotifyTrackMediaSource }}</p>
+							<p>
+								Name:
+								{{
+									allSongs[spotifyTrackMediaSource].track.name
+								}}
+							</p>
+							<p>Artists:</p>
+							<ul>
+								<li
+									v-for="artist in allSongs[
+										spotifyTrackMediaSource
+									].track.artists"
+									:key="artist"
+								>
+									- {{ artist }}
+								</li>
+							</ul>
+							<p>
+								Duration:
+								{{
+									allSongs[spotifyTrackMediaSource].track
+										.duration
+								}}
+							</p>
+							<p>
+								ISRC:
+								{{
+									allSongs[spotifyTrackMediaSource].track
+										.externalIds.isrc
+								}}
+							</p>
+						</div>
+						<div class="right">
+							<button
+								class="button"
+								@click="
+									getAlternativeMediaSourcesForTrack(
+										spotifyTrackMediaSource
+									)
+								"
+							>
+								Get alternative media sources
+							</button>
+							<!-- <button
+								class="button"
+								v-if="
+									!ISRCMap.has(
+										allSongs[spotifyTrackMediaSource].track
+											.externalIds.isrc
+									)
+								"
+								@click="
+									getFromISRC(
+										allSongs[spotifyTrackMediaSource].track
+											.externalIds.isrc
+									)
+								"
+							>
+								Get MusicBrainz ISRC data
+							</button>
+							<div v-else>
+								<p>Recording URL's</p>
+								<ul>
+									<li
+										v-for="recordingUrl in ISRCMap.get(
+											allSongs[spotifyTrackMediaSource]
+												.track.externalIds.isrc
+										).recordingUrls"
+										:key="recordingUrl"
+									>
+										{{ recordingUrl }}
+									</li>
+								</ul>
+								<hr />
+								<p>Work ID's</p>
+								<ul>
+									<li
+										v-for="workId in ISRCMap.get(
+											allSongs[spotifyTrackMediaSource]
+												.track.externalIds.isrc
+										).workIds"
+										:key="workId"
+									>
+										<p>{{ workId }}</p>
+										<button
+											v-if="
+												!WikidataMusicBrainzWorkMap.has(
+													workId
+												)
+											"
+											@click="
+												getFromWikidataByMusicBrainzWorkId(
+													workId
+												)
+											"
+											class="button"
+										>
+											Get WikiData data
+										</button>
+										<div v-else>
+											<p>YouTube ID's</p>
+											<ul>
+												<li
+													v-for="youtubeId in WikidataMusicBrainzWorkMap.get(
+														workId
+													).youtubeIds"
+												>
+													{{ youtubeId }}
+												</li>
+											</ul>
+										</div>
+									</li>
+								</ul>
+							</div>
+							<hr />
+							<button
+								class="button"
+								v-if="
+									!WikidataSpotifyTrackMap.has(
+										allSongs[spotifyTrackMediaSource].track
+											.trackId
+									)
+								"
+								@click="
+									getFromWikidataSpotifyTrack(
+										allSongs[spotifyTrackMediaSource].track
+											.trackId
+									)
+								"
+							>
+								Get WikiData Spotify track data
+							</button> -->
+						</div>
+					</div>
 				</div>
 
-				<div class="artists">
+				<!-- <div class="artists">
 					<div
 						v-for="spotifyArtist in spotifyArtistsArray"
 						:key="spotifyArtist.artistId"
@@ -203,58 +401,72 @@ onMounted(() => {
 							</div>
 						</div>
 					</div>
-				</div>
+				</div> -->
 			</template>
 		</modal>
 	</div>
 </template>
 
 <style lang="less" scoped>
-.column-headers {
-	display: flex;
-	flex-direction: row;
-
-	.column-header {
-		flex: 1;
-	}
-}
-
-.artists {
+.tracks {
 	display: flex;
 	flex-direction: column;
 
-	.artist-item {
-		display: flex;
-		flex-direction: column;
-		row-gap: 8px;
-		box-shadow: inset 0px 0px 1px white;
-		width: 50%;
-
-		position: relative;
-
-		.spotify-section {
-			display: flex;
-			flex-direction: column;
-			row-gap: 8px;
-			padding: 8px 12px;
-
-			.spotify-songs {
-				display: flex;
-				flex-direction: column;
-				row-gap: 4px;
-			}
-		}
-
-		.soundcloud-section {
-			position: absolute;
-			left: 100%;
-			top: 0;
-			width: 100%;
-			height: 100%;
-			overflow: hidden;
+	.track-row {
+		.left,
+		.right {
+			padding: 8px;
+			width: 50%;
 			box-shadow: inset 0px 0px 1px white;
-			padding: 8px 12px;
 		}
 	}
 }
+
+// .column-headers {
+// 	display: flex;
+// 	flex-direction: row;
+
+// 	.column-header {
+// 		flex: 1;
+// 	}
+// }
+
+// .artists {
+// 	display: flex;
+// 	flex-direction: column;
+
+// 	.artist-item {
+// 		display: flex;
+// 		flex-direction: column;
+// 		row-gap: 8px;
+// 		box-shadow: inset 0px 0px 1px white;
+// 		width: 50%;
+
+// 		position: relative;
+
+// 		.spotify-section {
+// 			display: flex;
+// 			flex-direction: column;
+// 			row-gap: 8px;
+// 			padding: 8px 12px;
+
+// 			.spotify-songs {
+// 				display: flex;
+// 				flex-direction: column;
+// 				row-gap: 4px;
+// 			}
+// 		}
+
+// 		.soundcloud-section {
+// 			position: absolute;
+// 			left: 100%;
+// 			top: 0;
+// 			width: 100%;
+// 			height: 100%;
+// 			overflow: hidden;
+// 			box-shadow: inset 0px 0px 1px white;
+// 			padding: 8px 12px;
+// 		}
+// 	}
+// }
 </style>
