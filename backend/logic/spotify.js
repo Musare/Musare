@@ -15,7 +15,7 @@ let MediaModule;
 let MusicBrainzModule;
 
 const youtubeVideoUrlRegex =
-	/^(https?:\/\/)?(www\.)?(music\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?(?<youtubeId>[\w-]{11})((&([A-Za-z0-9]+)?)*)?$/;
+	/^(https?:\/\/)?(www\.)?(m\.)?(music\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?(?<youtubeId>[\w-]{11})((&([A-Za-z0-9]+)?)*)?$/;
 const youtubeVideoIdRegex = /^([\w-]{11})$/;
 
 const spotifyTrackObjectToMusareTrackObject = spotifyTrackObject => {

@@ -1740,7 +1740,7 @@ export default {
 							.catch(next);
 					else next("Invalid YouTube URL.");
 				},
-				(mediaSources, next) => {
+				(youtubeIds, next) => {
 					this.publishProgress({ status: "update", message: `Importing YouTube playlist (stage 2)` });
 					let successful = 0;
 					let failed = 0;
@@ -1748,7 +1748,9 @@ export default {
 					let alreadyInLikedPlaylist = 0;
 					let alreadyInDislikedPlaylist = 0;
 
-					if (mediaSources.length === 0) next();
+					if (youtubeIds.length === 0) next();
+
+					const mediaSources = youtubeIds.map(youtubeId => `youtube:${youtubeId}`);
 
 					async.eachLimit(
 						mediaSources,

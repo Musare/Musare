@@ -620,6 +620,11 @@ class _YouTubeModule extends CoreClass {
 				return;
 			}
 			const playlistId = splitQuery[1];
+			const maxPages = config.has("apis.youtube.maxPlaylistPages")
+				? Number.parseInt(config.get("apis.youtube.maxPlaylistPages"))
+				: 20;
+
+			let currentPage = 0;
 
 			async.waterfall(
 				[
@@ -635,9 +640,10 @@ class _YouTubeModule extends CoreClass {
 										songs.length
 									} songs gotten so far. Is there a next page: ${nextPageToken !== undefined}.`
 								);
-								next(null, nextPageToken !== undefined);
+								next(null, nextPageToken !== undefined && currentPage < maxPages);
 							},
 							next => {
+								currentPage += 1;
 								// Add 250ms delay between each job request
 								setTimeout(() => {
 									YouTubeModule.runJob("GET_PLAYLIST_PAGE", { playlistId, nextPageToken }, this)

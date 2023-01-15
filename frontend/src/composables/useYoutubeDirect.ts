@@ -4,7 +4,7 @@ import { AddSongToPlaylistResponse } from "@musare_types/actions/PlaylistsAction
 import { useWebsocketsStore } from "@/stores/websockets";
 
 const youtubeVideoUrlRegex =
-	/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?([\w-]{11})$/;
+	/^(https?:\/\/)?(www\.)?(m\.)?(music\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?(?<youtubeId>[\w-]{11})((&([A-Za-z0-9]+)?)*)?$/;
 const youtubeVideoIdRegex = /^([\w-]{11})$/;
 
 export const useYoutubeDirect = () => {
@@ -13,12 +13,12 @@ export const useYoutubeDirect = () => {
 	const { socket } = useWebsocketsStore();
 
 	const getYoutubeVideoId = () => {
-		const youtubeVideoUrlParts = youtubeVideoUrlRegex.exec(
+		const youtubeVideoUrlMatch = youtubeVideoUrlRegex.exec(
 			youtubeDirect.value.trim()
 		);
-		if (youtubeVideoUrlParts) {
+		if (youtubeVideoUrlMatch && youtubeVideoUrlMatch.groups.youtubeId) {
 			// eslint-disable-next-line prefer-destructuring
-			return youtubeVideoUrlParts[5];
+			return youtubeVideoUrlMatch.groups.youtubeId;
 		}
 
 		const youtubeVideoIdParts = youtubeVideoIdRegex.exec(
@@ -43,7 +43,7 @@ export const useYoutubeDirect = () => {
 			socket.dispatch(
 				"playlists.addSongToPlaylist",
 				false,
-				youtubeVideoId,
+				`youtube:${youtubeVideoId}`,
 				playlistId,
 				(res: AddSongToPlaylistResponse) => {
 					if (res.status !== "success")
