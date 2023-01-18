@@ -9,6 +9,7 @@ import url from "url";
 import CoreClass from "../core";
 
 let SpotifyModule;
+let SoundcloudModule;
 let DBModule;
 let CacheModule;
 let MediaModule;
@@ -83,6 +84,7 @@ class _SpotifyModule extends CoreClass {
 		CacheModule = this.moduleManager.modules.cache;
 		MediaModule = this.moduleManager.modules.media;
 		MusicBrainzModule = this.moduleManager.modules.musicbrainz;
+		SoundcloudModule = this.moduleManager.modules.soundcloud;
 
 		// this.youtubeApiRequestModel = this.YoutubeApiRequestModel = await DBModule.runJob("GET_MODEL", {
 		// 	modelName: "youtubeApiRequest"
@@ -573,6 +575,8 @@ class _SpotifyModule extends CoreClass {
 		const mediaSources = new Set();
 		const mediaSourcesOrigins = {};
 
+		const jobsToRun = [];
+
 		ISRCApiResponse.recordings.forEach(recording => {
 			recording.relations.forEach(relation => {
 				if (relation["target-type"] === "url" && relation.url) {
@@ -580,7 +584,42 @@ class _SpotifyModule extends CoreClass {
 					const { resource } = relation.url;
 
 					if (resource.indexOf("soundcloud.com") !== -1) {
-						throw new Error(`Unable to parse SoundCloud resource ${resource}.`);
+						// throw new Error(`Unable to parse SoundCloud resource ${resource}.`);
+
+						const promise = new Promise(resolve => {
+							SoundcloudModule.runJob(
+								"GET_TRACK_FROM_URL",
+								{ identifier: resource, createMissing: true },
+								this
+							)
+								.then(response => {
+									const { trackId } = response.track;
+									const mediaSource = `soundcloud:${trackId}`;
+
+									const mediaSourceOrigins = [
+										`Spotify track ${spotifyTrackId}`,
+										`ISRC ${ISRC}`,
+										`MusicBrainz recordings`,
+										`MusicBrainz recording ${recording.id}`,
+										`MusicBrainz relations`,
+										`MusicBrainz relation target-type url`,
+										`MusicBrainz relation resource ${resource}`,
+										`SoundCloud ID ${trackId}`
+									];
+
+									mediaSources.add(mediaSource);
+									if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
+
+									mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
+
+									resolve();
+								})
+								.catch(() => {
+									resolve();
+								});
+						});
+
+						jobsToRun.push(promise);
 
 						return;
 					}
@@ -607,7 +646,7 @@ class _SpotifyModule extends CoreClass {
 						mediaSources.add(mediaSource);
 						if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
 
-						mediaSourcesOrigins[mediaSource].push([mediaSourceOrigins]);
+						mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
 
 						return;
 					}
@@ -620,6 +659,8 @@ class _SpotifyModule extends CoreClass {
 				}
 			});
 		});
+
+		await Promise.allSettled(jobsToRun);
 
 		return {
 			mediaSources: Array.from(mediaSources),

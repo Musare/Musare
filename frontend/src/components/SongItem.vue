@@ -164,8 +164,8 @@ onUnmounted(() => {
 		v-if="song"
 	>
 		<div class="thumbnail-and-info">
-			<slot v-if="$slots.leftIcon" name="leftIcon" />
 			<song-thumbnail :song="song" v-if="thumbnail" />
+			<slot v-if="$slots.leftIcon" name="leftIcon" />
 			<div class="song-info">
 				<h6 v-if="header">{{ header }}</h6>
 				<div class="song-title">
@@ -279,6 +279,17 @@ onUnmounted(() => {
 							>
 								<div class="youtube-icon"></div>
 							</i>
+							<!-- <i
+								v-if="
+									disabledActions.indexOf('youtube') === -1 &&
+									songMediaType === 'spotify'
+								"
+								@click="viewYoutubeVideo(songMediaValue)"
+								content="View Spotify Video"
+								v-tippy
+							>
+								<div class="spotify-icon"></div>
+							</i> -->
 							<i
 								v-if="
 									song._id &&
@@ -415,14 +426,20 @@ onUnmounted(() => {
 		position: absolute;
 	}
 
+	:deep(.left-icon) {
+		margin-left: 70px;
+	}
+
+	.song-info:not(:nth-child(3)) {
+		margin-left: 70px;
+	}
+
 	.song-info {
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
-		// margin-left: 20px;
+		margin-left: 10px;
 		min-width: 0;
-
-		margin-left: 70px;
 
 		*:not(i) {
 			margin: 0;

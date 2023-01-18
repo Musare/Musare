@@ -913,5 +913,28 @@ export default {
 				this.log("ERROR", "MEDIA_REMOVE_IMPORT_JOBS", `Removing import jobs failed. "${err}"`);
 				return cb({ status: "error", message: err });
 			});
+	}),
+
+	/**
+	 * Gets an array of media from media sources
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	getMediaFromMediaSources: isLoginRequired(function getMediaFromMediaSources(session, mediaSources, cb) {
+		MediaModule.runJob("GET_MEDIA_FROM_MEDIA_SOURCES", { mediaSources }, this)
+			.then(songMap => {
+				this.log("SUCCESS", "MEDIA_GET_MEDIA_FROM_MEDIA_SOURCES", `GET_MEDIA_FROM_MEDIA_SOURCES successful.`);
+
+				return cb({ status: "success", message: "GET_MEDIA_FROM_MEDIA_SOURCES success", data: { songMap } });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log(
+					"ERROR",
+					"MEDIA_GET_MEDIA_FROM_MEDIA_SOURCES",
+					`GET_MEDIA_FROM_MEDIA_SOURCES failed. "${err}"`
+				);
+				return cb({ status: "error", message: err });
+			});
 	})
 };

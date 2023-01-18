@@ -481,6 +481,96 @@ class _MediaModule extends CoreClass {
 	}
 
 	/**
+	 * Gets media from media sources
+	 *
+	 * @param {object} payload - an object containing the payload
+	 * @param {string} payload.mediaSources - the media sources
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	GET_MEDIA_FROM_MEDIA_SOURCES(payload) {
+		return new Promise((resolve, reject) => {
+			const songMap = {};
+			const youtubeMediaSources = payload.mediaSources.filter(mediaSource => mediaSource.startsWith("youtube:"));
+			const soundcloudMediaSources = payload.mediaSources.filter(mediaSource =>
+				mediaSource.startsWith("soundcloud:")
+			);
+
+			async.waterfall(
+				[
+					next => {
+						const allPromises = [];
+
+						youtubeMediaSources.forEach(mediaSource => {
+							const youtubeId = mediaSource.split(":")[1];
+
+							const promise = YouTubeModule.runJob(
+								"GET_VIDEO",
+								{ identifier: youtubeId, createMissing: true },
+								this
+							)
+								.then(response => {
+									const { youtubeId, title, author, duration } = response.video;
+									songMap[mediaSource] = {
+										mediaSource: `youtube:${youtubeId}`,
+										title,
+										artists: [author],
+										duration
+									};
+								})
+								.catch(err => {
+									MediaModule.log(
+										"ERROR",
+										`Failed to get media in GET_MEDIA_FROM_MEDIA_SOURCES with mediaSource ${mediaSource} and error`,
+										typeof err === "string" ? err : err.message
+									);
+								});
+
+							allPromises.push(promise);
+						});
+
+						soundcloudMediaSources.forEach(mediaSource => {
+							const trackId = mediaSource.split(":")[1];
+
+							const promise = SoundCloudModule.runJob(
+								"GET_TRACK",
+								{ identifier: trackId, createMissing: true },
+								this
+							)
+								.then(response => {
+									const { trackId, title, username, artworkUrl, duration } = response.track;
+									songMap[mediaSource] = {
+										mediaSource: `soundcloud:${trackId}`,
+										title,
+										artists: [username],
+										thumbnail: artworkUrl,
+										duration
+									};
+								})
+								.catch(err => {
+									MediaModule.log(
+										"ERROR",
+										`Failed to get media in GET_MEDIA_FROM_MEDIA_SOURCES with mediaSource ${mediaSource} and error`,
+										typeof err === "string" ? err : err.message
+									);
+								});
+
+							allPromises.push(promise);
+						});
+
+						Promise.allSettled(allPromises).then(() => {
+							next();
+						});
+					}
+				],
+				err => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve(songMap);
+				}
+			);
+		});
+	}
+
+	/**
 	 * Remove import job by id from Mongo
 	 *
 	 * @param {object} payload - object containing the payload

@@ -16,6 +16,12 @@ export default {
 	userPermalink: { type: String },
 	trackFormat: { type: String },
 	permalink: { type: String },
+	monetizationModel: { type: String },
+	policy: { type: String },
+	streamable: { type: Boolean },
+	sharing: { type: String },
+	state: { type: String },
+	embeddableBy: { type: String },
 	createdAt: { type: Date, default: Date.now, required: true },
 	documentVersion: { type: Number, default: 1, required: true }
 };

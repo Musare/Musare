@@ -33,6 +33,9 @@ const currentConvertType = ref("track");
 const sortBy = ref("track_count_des");
 
 const spotifyArtists = ref({});
+const alternativeSongsMap = ref(new Map());
+
+const showExtra = ref(false);
 
 // const ISRCMap = ref(new Map());
 // const WikidataSpotifyTrackMap = ref(new Map());
@@ -99,7 +102,78 @@ const getAlternativeMediaSourcesForTrack = mediaSource => {
 		res => {
 			console.log("KRIS111133", res);
 			if (res.status === "success") {
-				AlternativeSourcesForTrackMap.value.set(mediaSource, res.data);
+				AlternativeSourcesForTrackMap.value.set(
+					mediaSource,
+					res.data.alternativeMediaSources
+				);
+				console.log(32211, AlternativeSourcesForTrackMap.value);
+				getMissingAlternativeSongs();
+				// ISRCMap.value.set(ISRC, res.data);
+				// WikidataMusicBrainzWorkMap.value.set(workId, res.data.response);
+			}
+		}
+	);
+};
+
+const loadingMediaSourcesMap = ref(new Map());
+const failedToLoadMediaSourcesMap = ref(new Map());
+
+const getMissingAlternativeSongs = () => {
+	const allAlternativeMediaSources = Array.from(
+		new Set(
+			Array.from(AlternativeSourcesForTrackMap.value.values())
+				.map(t => t.mediaSources)
+				.flat()
+		)
+	);
+	const filteredMediaSources = allAlternativeMediaSources.filter(
+		mediaSource => {
+			const alreadyExists = alternativeSongsMap.value.has(mediaSource);
+			if (alreadyExists) return false;
+			const loading = loadingMediaSourcesMap.value.get(mediaSource);
+			if (loading) return false;
+			const failedToLoad =
+				failedToLoadMediaSourcesMap.value.get(mediaSource);
+			if (failedToLoad) return false;
+			return true;
+		}
+	);
+	console.log(
+		321111145668778,
+		allAlternativeMediaSources,
+		filteredMediaSources
+	);
+	filteredMediaSources.forEach(mediaSource => {
+		loadingMediaSourcesMap.value.set(mediaSource, true);
+	});
+
+	socket.dispatch(
+		"media.getMediaFromMediaSources",
+		filteredMediaSources,
+		res => {
+			console.log("KRIS111136663", res);
+			if (res.status === "success") {
+				const { songMap } = res.data;
+				filteredMediaSources.forEach(mediaSource => {
+					if (songMap[mediaSource]) {
+						alternativeSongsMap.value.set(
+							mediaSource,
+							songMap[mediaSource]
+						);
+					} else {
+						failedToLoadMediaSourcesMap.value.set(
+							mediaSource,
+							true
+						);
+					}
+					loadingMediaSourcesMap.value.delete(mediaSource);
+				});
+				// console.log(657567, );
+				// AlternativeSourcesForTrackMap.value.set(
+				// 	mediaSource,
+				// 	res.data.alternativeMediaSources
+				// );
+				// console.log(32211, AlternativeSourcesForTrackMap.value);
 				// ISRCMap.value.set(ISRC, res.data);
 				// WikidataMusicBrainzWorkMap.value.set(workId, res.data.response);
 			}
@@ -184,6 +258,12 @@ onMounted(() => {
 		>
 			<template #body>
 				<p>Converting by {{ currentConvertType }}</p>
+				<button
+					class="button is-primary"
+					@click="showExtra = !showExtra"
+				>
+					Toggle show extra
+				</button>
 				<!-- <p>Sorting by {{ sortBy }}</p> -->
 
 				<br />
@@ -204,31 +284,37 @@ onMounted(() => {
 						:key="spotifyTrackMediaSource"
 					>
 						<div class="left">
+							<song-item
+								:song="{
+									title: allSongs[spotifyTrackMediaSource]
+										.track.name,
+									duration:
+										allSongs[spotifyTrackMediaSource].track
+											.duration,
+									artists:
+										allSongs[spotifyTrackMediaSource].track
+											.artists,
+									thumbnail:
+										allSongs[spotifyTrackMediaSource].track
+											.albumImageUrl
+								}"
+							>
+								<template #leftIcon>
+									<a
+										:href="`https://open.spotify.com/track/${
+											spotifyTrackMediaSource.split(
+												':'
+											)[1]
+										}`"
+										target="_blank"
+									>
+										<div
+											class="spotify-icon left-icon"
+										></div>
+									</a>
+								</template>
+							</song-item>
 							<p>Media source: {{ spotifyTrackMediaSource }}</p>
-							<p>
-								Name:
-								{{
-									allSongs[spotifyTrackMediaSource].track.name
-								}}
-							</p>
-							<p>Artists:</p>
-							<ul>
-								<li
-									v-for="artist in allSongs[
-										spotifyTrackMediaSource
-									].track.artists"
-									:key="artist"
-								>
-									- {{ artist }}
-								</li>
-							</ul>
-							<p>
-								Duration:
-								{{
-									allSongs[spotifyTrackMediaSource].track
-										.duration
-								}}
-							</p>
 							<p>
 								ISRC:
 								{{
@@ -239,6 +325,11 @@ onMounted(() => {
 						</div>
 						<div class="right">
 							<button
+								v-if="
+									!AlternativeSourcesForTrackMap.has(
+										spotifyTrackMediaSource
+									)
+								"
 								class="button"
 								@click="
 									getAlternativeMediaSourcesForTrack(
@@ -248,6 +339,115 @@ onMounted(() => {
 							>
 								Get alternative media sources
 							</button>
+							<template v-else>
+								<div
+									v-for="[
+										alternativeMediaSource,
+										alternativeMediaSourceOrigins
+									] in Object.entries(
+										AlternativeSourcesForTrackMap.get(
+											spotifyTrackMediaSource
+										).mediaSourcesOrigins
+									)"
+									:key="alternativeMediaSource"
+								>
+									<p
+										v-if="
+											loadingMediaSourcesMap.has(
+												alternativeMediaSource
+											)
+										"
+									>
+										Song {{ alternativeMediaSource }} is
+										loading
+									</p>
+									<p
+										v-else-if="
+											failedToLoadMediaSourcesMap.has(
+												alternativeMediaSource
+											)
+										"
+									>
+										Song {{ alternativeMediaSource }} failed
+										to load
+									</p>
+									<p
+										v-else-if="
+											!alternativeSongsMap.has(
+												alternativeMediaSource
+											)
+										"
+									>
+										Song {{ alternativeMediaSource }} not
+										loaded/found
+									</p>
+									<song-item
+										v-else
+										:song="
+											alternativeSongsMap.get(
+												alternativeMediaSource
+											)
+										"
+									>
+										<template #leftIcon>
+											<a
+												v-if="
+													alternativeMediaSource.split(
+														':'
+													)[0] === 'youtube'
+												"
+												:href="`https://youtu.be/${
+													alternativeMediaSource.split(
+														':'
+													)[1]
+												}`"
+												target="_blank"
+											>
+												<div
+													class="youtube-icon left-icon"
+												></div>
+											</a>
+											<a
+												v-if="
+													alternativeMediaSource.split(
+														':'
+													)[0] === 'soundcloud'
+												"
+												target="_blank"
+											>
+												<div
+													class="soundcloud-icon left-icon"
+												></div>
+											</a>
+										</template>
+									</song-item>
+									<ul v-if="showExtra">
+										<li
+											v-for="origin in alternativeMediaSourceOrigins"
+											:key="
+												spotifyTrackMediaSource +
+												alternativeMediaSource +
+												origin
+											"
+										>
+											=
+											<ul>
+												<li
+													v-for="originItem in origin"
+													:key="
+														spotifyTrackMediaSource +
+														alternativeMediaSource +
+														origin +
+														originItem
+													"
+												>
+													+ {{ originItem }}
+												</li>
+											</ul>
+										</li>
+									</ul>
+								</div>
+							</template>
 							<!-- <button
 								class="button"
 								v-if="
@@ -408,6 +608,12 @@ onMounted(() => {
 </template>
 
 <style lang="less" scoped>
+:deep(.song-item) {
+	.left-icon {
+		cursor: pointer;
+	}
+}
+
 .tracks {
 	display: flex;
 	flex-direction: column;
@@ -418,6 +624,9 @@ onMounted(() => {
 			padding: 8px;
 			width: 50%;
 			box-shadow: inset 0px 0px 1px white;
+			display: flex;
+			flex-direction: column;
+			row-gap: 8px;
 		}
 	}
 }

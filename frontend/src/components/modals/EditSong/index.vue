@@ -3176,7 +3176,8 @@ onBeforeUnmount(() => {
 			padding-right: 4px;
 
 			.youtube-icon,
-			.soundcloud-icon {
+			.soundcloud-icon,
+			.spotify-icon {
 				background: var(--white);
 			}
 		}

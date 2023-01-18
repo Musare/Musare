@@ -30,7 +30,13 @@ const soundcloudTrackObjectToMusareTrackObject = soundcloudTrackObject => {
 		user_id: userId,
 		user,
 		track_format: trackFormat,
-		permalink
+		permalink,
+		monetization_model: monetizationModel,
+		policy: policy,
+		streamable,
+		sharing,
+		state,
+		embeddable_by: embeddableBy
 	} = soundcloudTrackObject;
 
 	return {
@@ -50,7 +56,13 @@ const soundcloudTrackObjectToMusareTrackObject = soundcloudTrackObject => {
 		username: user.username,
 		userPermalink: user.permalink,
 		trackFormat,
-		permalink
+		permalink,
+		monetizationModel,
+		policy,
+		streamable,
+		sharing,
+		state,
+		embeddableBy
 	};
 };
 
@@ -372,6 +384,7 @@ class _SoundCloudModule extends CoreClass {
 				],
 				(err, track, existing) => {
 					if (err) reject(new Error(err));
+					else if (track.policy === "SNIP") reject(new Error("Track is premium-only."));
 					else resolve({ track, existing });
 				}
 			);
@@ -438,6 +451,7 @@ class _SoundCloudModule extends CoreClass {
 				],
 				(err, track, existing) => {
 					if (err) reject(new Error(err));
+					else if (track.policy === "SNIP") reject(new Error("Track is premium-only."));
 					else resolve({ track, existing });
 				}
 			);
