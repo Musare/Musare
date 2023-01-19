@@ -1316,6 +1316,194 @@ export default {
 	}),
 
 	/**
+	 * Adds a song to a private playlist
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} oldMediaSource -
+	 * @param {string} newMediaSource -
+	 * @param {string} playlistId -
+	 * @param {Function} cb - gets called with the result
+	 */
+	replaceSongInPlaylist: isLoginRequired(async function replaceSongInPlaylist(
+		session,
+		oldMediaSource,
+		newMediaSource,
+		playlistId,
+		cb
+	) {
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+						.then(playlist => {
+							if (!playlist) return next("Playlist not found.");
+							if (playlist.createdBy !== session.userId)
+								return hasPermission("playlists.songs.add", session)
+									.then(() => next(null, playlist))
+									.catch(() => next("Invalid permissions."));
+							return next(null, playlist);
+						})
+						.catch(next);
+				},
+
+				(playlist, next) => {
+					MediaModule.runJob("GET_MEDIA", { mediaSource: newMediaSource }, this)
+						.then(res =>
+							next(null, playlist, {
+								_id: res.song._id,
+								title: res.song.title,
+								thumbnail: res.song.thumbnail,
+								artists: res.song.artists,
+								mediaSource: res.song.mediaSource
+							})
+						)
+						.catch(next);
+				},
+
+				(playlist, song, next) => {
+					if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
+						const oppositeType = playlist.type === "user-liked" ? "user-disliked" : "user-liked";
+						const oppositePlaylistName = oppositeType === "user-liked" ? "Liked Songs" : "Disliked Songs";
+						playlistModel.count(
+							{ type: oppositeType, createdBy: session.userId, "songs.mediaSource": song.mediaSource },
+							(err, results) => {
+								if (err) next(err);
+								else if (results > 0)
+									next(
+										`That song is already in your ${oppositePlaylistName} playlist. A song cannot be in both the Liked Songs playlist and the Disliked Songs playlist at the same time.`
+									);
+								else next(null, song);
+							}
+						);
+					} else next(null, song);
+				},
+
+				(_song, next) => {
+					PlaylistsModule.runJob(
+						"REPLACE_SONG_IN_PLAYLIST",
+						{ playlistId, oldMediaSource, newMediaSource },
+						this
+					)
+						.then(res => {
+							const { playlist, song, ratings } = res;
+							next(null, playlist, song, ratings);
+						})
+						.catch(next);
+				}
+			],
+			async (err, playlist, newSong, ratings) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"PLAYLIST_ADD_SONG",
+						`Replacing song "${oldMediaSource}" with "${newMediaSource}" in private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_ADD_SONG",
+					`Successfully replaced song "${oldMediaSource}" with "${newMediaSource}" in private playlist "${playlistId}" for user "${session.userId}".`
+				);
+
+				// if (!isSet && playlist.type === "user" && playlist.privacy === "public") {
+				// 	const songName = newSong.artists
+				// 		? `${newSong.title} by ${newSong.artists.join(", ")}`
+				// 		: newSong.title;
+
+				// 	ActivitiesModule.runJob("ADD_ACTIVITY", {
+				// 		userId: session.userId,
+				// 		type: "playlist__add_song",
+				// 		payload: {
+				// 			message: `Added <mediaSource>${songName}</mediaSource> to playlist <playlistId>${playlist.displayName}</playlistId>`,
+				// 			thumbnail: newSong.thumbnail,
+				// 			playlistId,
+				// 			mediaSource
+				// 		}
+				// 	});
+				// }
+
+				CacheModule.runJob("PUB", {
+					channel: "playlist.replaceSong",
+					value: {
+						playlistId: playlist._id,
+						song: newSong,
+						oldMediaSource,
+						createdBy: playlist.createdBy,
+						privacy: playlist.privacy
+					}
+				});
+
+				CacheModule.runJob("PUB", {
+					channel: "playlist.updated",
+					value: { playlistId }
+				});
+
+				// if (ratings && (playlist.type === "user-liked" || playlist.type === "user-disliked")) {
+				// 	const { _id, mediaSource, title, artists, thumbnail } = newSong;
+				// 	const { likes, dislikes } = ratings;
+
+				// 	if (_id) SongsModule.runJob("UPDATE_SONG", { songId: _id });
+
+				// 	if (playlist.type === "user-liked") {
+				// 		CacheModule.runJob("PUB", {
+				// 			channel: "ratings.like",
+				// 			value: JSON.stringify({
+				// 				mediaSource,
+				// 				userId: session.userId,
+				// 				likes,
+				// 				dislikes
+				// 			})
+				// 		});
+
+				// 		ActivitiesModule.runJob("ADD_ACTIVITY", {
+				// 			userId: session.userId,
+				// 			type: "song__like",
+				// 			payload: {
+				// 				message: `Liked song <mediaSource>${title} by ${artists.join(", ")}</mediaSource>`,
+				// 				mediaSource,
+				// 				thumbnail
+				// 			}
+				// 		});
+				// 	} else {
+				// 		CacheModule.runJob("PUB", {
+				// 			channel: "ratings.dislike",
+				// 			value: JSON.stringify({
+				// 				mediaSource,
+				// 				userId: session.userId,
+				// 				likes,
+				// 				dislikes
+				// 			})
+				// 		});
+
+				// 		ActivitiesModule.runJob("ADD_ACTIVITY", {
+				// 			userId: session.userId,
+				// 			type: "song__dislike",
+				// 			payload: {
+				// 				message: `Disliked song <mediaSource>${title} by ${artists.join(
+				// 					mediaSource
+				// 				)}</mediaSource>`,
+				// 				mediaSource,
+				// 				thumbnail
+				// 			}
+				// 		});
+				// 	}
+				// }
+
+				return cb({
+					status: "success",
+					message: "Song has been successfully replaced in the playlist",
+					data: { songs: playlist.songs }
+				});
+			}
+		);
+	}),
+
+	/**
 	 * Adds songs to a playlist
 	 *
 	 * @param {object} session - the session object automatically added by the websocket

@@ -37,6 +37,9 @@ const alternativeSongsMap = ref(new Map());
 
 const showExtra = ref(false);
 
+const preferTopic = ref(true);
+const singleMode = ref(true);
+
 // const ISRCMap = ref(new Map());
 // const WikidataSpotifyTrackMap = ref(new Map());
 // const WikidataMusicBrainzWorkMap = ref(new Map());
@@ -95,33 +98,66 @@ const toggleSpotifyArtistExpanded = spotifyArtistId => {
 // 	});
 // };
 
-const getAlternativeMediaSourcesForTrack = mediaSource => {
-	socket.dispatch(
-		"apis.getAlternativeMediaSourcesForTrack",
-		mediaSource,
-		res => {
+const gettingAlternativeMediaSources = ref(false);
+
+const getAlternativeMediaSourcesForTracks = () => {
+	if (gettingAlternativeMediaSources.value) return;
+	gettingAlternativeMediaSources.value = true;
+
+	const mediaSources = spotifyTracksMediaSourcesArray.value;
+
+	socket.dispatch("apis.getAlternativeMediaSourcesForTracks", mediaSources, {
+		cb: res => {
 			console.log("KRIS111133", res);
-			if (res.status === "success") {
-				AlternativeSourcesForTrackMap.value.set(
-					mediaSource,
-					res.data.alternativeMediaSources
-				);
-				console.log(32211, AlternativeSourcesForTrackMap.value);
-				getMissingAlternativeSongs();
-				// ISRCMap.value.set(ISRC, res.data);
-				// WikidataMusicBrainzWorkMap.value.set(workId, res.data.response);
+			// console.log("Change state to loading");
+			// if (res.status === "success") {
+			// 	AlternativeSourcesForTrackMap.value.set(
+			// 		mediaSource,
+			// 		res.data.alternativeMediaSources
+			// 	);
+			// 	console.log(32211, AlternativeSourcesForTrackMap.value);
+			// 	getMissingAlternativeSongs();
+			// 	// ISRCMap.value.set(ISRC, res.data);
+			// 	// WikidataMusicBrainzWorkMap.value.set(workId, res.data.response);
+			// }
+		},
+		onProgress: data => {
+			console.log("KRIS595959", data);
+			if (data.status === "working") {
+				if (data.data.status === "success") {
+					const { mediaSource, result } = data.data;
+					AlternativeSourcesForTrackMap.value.set(
+						mediaSource,
+						result
+					);
+					console.log(32211, AlternativeSourcesForTrackMap.value);
+					getMissingAlternativeSongs();
+					// ISRCMap.value.set(ISRC, res.data);
+					// WikidataMusicBrainzWorkMap.value.set(workId, res.data.response);
+				}
 			}
 		}
-	);
+	});
 };
 
 const loadingMediaSourcesMap = ref(new Map());
 const failedToLoadMediaSourcesMap = ref(new Map());
 
+const gettingMissingAlternativeSongs = ref(false);
+const getMissingAlternativeSongsAfterAgain = ref(false);
+
 const getMissingAlternativeSongs = () => {
+	if (gettingMissingAlternativeSongs.value) {
+		getMissingAlternativeSongsAfterAgain.value = true;
+		return;
+	}
+	getMissingAlternativeSongsAfterAgain.value = false;
+	gettingMissingAlternativeSongs.value = true;
+
 	const allAlternativeMediaSources = Array.from(
 		new Set(
 			Array.from(AlternativeSourcesForTrackMap.value.values())
+				.filter(t => !!t)
 				.map(t => t.mediaSources)
 				.flat()
 		)
@@ -138,11 +174,6 @@ const getMissingAlternativeSongs = () => {
 			return true;
 		}
 	);
-	console.log(
-		321111145668778,
-		allAlternativeMediaSources,
-		filteredMediaSources
-	);
 	filteredMediaSources.forEach(mediaSource => {
 		loadingMediaSourcesMap.value.set(mediaSource, true);
 	});
@@ -151,7 +182,6 @@ const getMissingAlternativeSongs = () => {
 		"media.getMediaFromMediaSources",
 		filteredMediaSources,
 		res => {
-			console.log("KRIS111136663", res);
 			if (res.status === "success") {
 				const { songMap } = res.data;
 				filteredMediaSources.forEach(mediaSource => {
@@ -168,6 +198,13 @@ const getMissingAlternativeSongs = () => {
 					}
 					loadingMediaSourcesMap.value.delete(mediaSource);
 				});
+
+				if (getMissingAlternativeSongsAfterAgain.value) {
+					setTimeout(() => {
+						gettingMissingAlternativeSongs.value = false;
+						getMissingAlternativeSongs();
+					}, 500);
+				}
 				// console.log(657567, );
 				// AlternativeSourcesForTrackMap.value.set(
 				// 	mediaSource,
@@ -177,6 +214,18 @@ const getMissingAlternativeSongs = () => {
 				// ISRCMap.value.set(ISRC, res.data);
 				// WikidataMusicBrainzWorkMap.value.set(workId, res.data.response);
 			}
+		}
+	);
+};
+
+const replaceSong = (oldMediaSource, newMediaSource) => {
+	socket.dispatch(
+		"playlists.replaceSongInPlaylist",
+		oldMediaSource,
+		newMediaSource,
+		props.playlistId,
+		res => {
+			console.log("KRISWOWOWOW", res);
 		}
 	);
 };
@@ -264,6 +313,36 @@ onMounted(() => {
 				>
 					Toggle show extra
 				</button>
+				<br />
+				<button
+					class="button is-primary"
+					@click="preferTopic = !preferTopic"
+				>
+					Prefer mode:
+					{{ preferTopic ? "first topic" : "first song" }}
+				</button>
+				<br />
+				<button
+					class="button is-primary"
+					@click="getAlternativeMediaSourcesForTracks()"
+				>
+					Get alternatives
+				</button>
+				<br />
+				<button
+					class="button is-primary"
+					@click="singleMode = !singleMode"
+				>
+					Single convert mode: {{ singleMode }}
+				</button>
+				<br />
+				<button
+					class="button is-primary"
+					@click="convertAllTracks()"
+					v-if="!singleMode"
+				>
+					Use prefer mode to convert all available tracks
+				</button>
 				<!-- <p>Sorting by {{ sortBy }}</p> -->
 
 				<br />
@@ -324,21 +403,15 @@ onMounted(() => {
 							</p>
 						</div>
 						<div class="right">
-							<button
+							<p
 								v-if="
 									!AlternativeSourcesForTrackMap.has(
 										spotifyTrackMediaSource
 									)
 								"
-								class="button"
-								@click="
-									getAlternativeMediaSourcesForTrack(
-										spotifyTrackMediaSource
-									)
-								"
 							>
-								Get alternative media sources
-							</button>
+								Track not converted yet
+							</p>
 							<template v-else>
 								<div
 									v-for="[
@@ -381,46 +454,60 @@ onMounted(() => {
 										Song {{ alternativeMediaSource }} not
 										loaded/found
 									</p>
-									<song-item
-										v-else
-										:song="
-											alternativeSongsMap.get(
-												alternativeMediaSource
-											)
-										"
-									>
-										<template #leftIcon>
-											<a
-												v-if="
-													alternativeMediaSource.split(
-														':'
-													)[0] === 'youtube'
-												"
-												:href="`https://youtu.be/${
-													alternativeMediaSource.split(
-														':'
-													)[1]
-												}`"
-												target="_blank"
-											>
-												<div
-													class="youtube-icon left-icon"
-												></div>
-											</a>
-											<a
-												v-if="
-													alternativeMediaSource.split(
-														':'
-													)[0] === 'soundcloud'
-												"
-												target="_blank"
-											>
-												<div
-													class="soundcloud-icon left-icon"
-												></div>
-											</a>
-										</template>
-									</song-item>
+									<template v-else>
+										<song-item
+											:song="
+												alternativeSongsMap.get(
+													alternativeMediaSource
+												)
+											"
+										>
+											<template #leftIcon>
+												<a
+													v-if="
+														alternativeMediaSource.split(
+															':'
+														)[0] === 'youtube'
+													"
+													:href="`https://youtu.be/${
+														alternativeMediaSource.split(
+															':'
+														)[1]
+													}`"
+													target="_blank"
+												>
+													<div
+														class="youtube-icon left-icon"
+													></div>
+												</a>
+												<a
+													v-if="
+														alternativeMediaSource.split(
+															':'
+														)[0] === 'soundcloud'
+													"
+													target="_blank"
+												>
+													<div
+														class="soundcloud-icon left-icon"
+													></div>
+												</a>
+											</template>
+										</song-item>
+										<button
+											class="button is-primary"
+											v-if="singleMode"
+											@click="
+												replaceSong(
+													spotifyTrackMediaSource,
+													alternativeMediaSource
+												)
+											"
+										>
+											Convert to this song
+										</button>
+									</template>
+
 									<ul v-if="showExtra">
 										<li
 											v-for="origin in alternativeMediaSourceOrigins"

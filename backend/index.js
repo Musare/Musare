@@ -271,6 +271,7 @@ if (!config.get("migration")) {
 	moduleManager.addModule("soundcloud");
 	moduleManager.addModule("spotify");
 	moduleManager.addModule("musicbrainz");
+	moduleManager.addModule("wikidata");
 } else {
 	moduleManager.addModule("migration");
 }

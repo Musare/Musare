@@ -404,17 +404,17 @@ export default {
 	// 					}`;
 	// 					// OPTIONAL { ?item wdt:P3040 ?SoundCloud_track_ID. }
 
-	// 					const options = {
-	// 						params: { query: sparqlQuery },
-	// 						headers: {
-	// 							Accept: "application/sparql-results+json"
-	// 						}
-	// 					};
+	// const options = {
+	// 	params: { query: sparqlQuery },
+	// 	headers: {
+	// 		Accept: "application/sparql-results+json"
+	// 	}
+	// };
 
-	// 					axios
-	// 						.get(endpointUrl, options)
-	// 						.then(res => next(null, res.data))
-	// 						.catch(err => next(err));
+	// axios
+	// 	.get(endpointUrl, options)
+	// 	.then(res => next(null, res.data))
+	// 	.catch(err => next(err));
 	// 				},
 
 	// 				(body, next) => {
@@ -477,14 +477,14 @@ export default {
 	 * @param trackId - the trackId
 	 * @param {Function} cb
 	 */
-	getAlternativeMediaSourcesForTrack: useHasPermission(
+	getAlternativeMediaSourcesForTracks: useHasPermission(
 		"admin.view.spotify",
-		function getAlternativeMediaSourcesForTrack(session, mediaSource, cb) {
+		function getAlternativeMediaSourcesForTracks(session, mediaSources, cb) {
 			async.waterfall(
 				[
 					next => {
-						if (!mediaSource) {
-							next("Invalid mediaSource provided.");
+						if (!mediaSources) {
+							next("Invalid mediaSources provided.");
 							return;
 						}
 
@@ -492,34 +492,40 @@ export default {
 					},
 
 					async () => {
-						const alternativeMediaSources = await SpotifyModule.runJob(
-							"GET_ALTERNATIVE_MEDIA_SOURCES_FOR_TRACK",
-							{ mediaSource }
-						);
+						this.keepLongJob();
+						this.publishProgress({
+							status: "started",
+							title: "Getting alternative media sources for Spotify tracks",
+							message: "Starting up",
+							id: this.toString()
+						});
+						console.log("KRIS@4", this.toString());
+						// await CacheModule.runJob(
+						// 	"RPUSH",
+						// 	{ key: `longJobs.${session.userId}`, value: this.toString() },
+						// 	this
+						// );
 
-						return alternativeMediaSources;
+						SpotifyModule.runJob("GET_ALTERNATIVE_MEDIA_SOURCES_FOR_TRACKS", { mediaSources }, this);
 					}
 				],
-				async (err, alternativeMediaSources) => {
+				async err => {
 					if (err) {
 						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 						this.log(
 							"ERROR",
-							"APIS_SEARCH_TODO",
-							`Searching MusicBrainz ISRC failed with ISRC "${mediaSource}". "${err}"`
+							"APIS_GET_ALTERNATIVE_SOURCES",
+							`Getting alternative sources failed for "${mediaSources.join(", ")}". "${err}"`
 						);
 						return cb({ status: "error", message: err });
 					}
 					this.log(
 						"SUCCESS",
-						"APIS_SEARCH_TODO",
-						`User "${session.userId}" searched MusicBrainz ISRC succesfully for ISRC "${mediaSource}".`
+						"APIS_GET_ALTERNATIVE_SOURCES",
+						`User "${session.userId}" started getting alternatives for "${mediaSources.join(", ")}".`
 					);
 					return cb({
-						status: "success",
-						data: {
-							alternativeMediaSources
-						}
+						status: "success"
 					});
 				}
 			);

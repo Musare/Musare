@@ -14,6 +14,7 @@ let DBModule;
 let CacheModule;
 let MediaModule;
 let MusicBrainzModule;
+let WikiDataModule;
 
 const youtubeVideoUrlRegex =
 	/^(https?:\/\/)?(www\.)?(m\.)?(music\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?(?<youtubeId>[\w-]{11})((&([A-Za-z0-9]+)?)*)?$/;
@@ -31,7 +32,8 @@ const spotifyTrackObjectToMusareTrackObject = spotifyTrackObject => {
 		duration: spotifyTrackObject.duration_ms / 1000,
 		explicit: spotifyTrackObject.explicit,
 		externalIds: spotifyTrackObject.external_ids,
-		popularity: spotifyTrackObject.popularity
+		popularity: spotifyTrackObject.popularity,
+		isLocal: spotifyTrackObject.is_local
 	};
 };
 
@@ -85,6 +87,7 @@ class _SpotifyModule extends CoreClass {
 		MediaModule = this.moduleManager.modules.media;
 		MusicBrainzModule = this.moduleManager.modules.musicbrainz;
 		SoundcloudModule = this.moduleManager.modules.soundcloud;
+		WikiDataModule = this.moduleManager.modules.wikidata;
 
 		// this.youtubeApiRequestModel = this.YoutubeApiRequestModel = await DBModule.runJob("GET_MODEL", {
 		// 	modelName: "youtubeApiRequest"
@@ -430,6 +433,7 @@ class _SpotifyModule extends CoreClass {
 				],
 				(err, track, existing) => {
 					if (err) reject(new Error(err));
+					else if (track.isLocal) reject(new Error("Track is local."));
 					else resolve({ track, existing });
 				}
 			);
@@ -538,6 +542,54 @@ class _SpotifyModule extends CoreClass {
 	 * @param {*} payload
 	 * @returns
 	 */
+	async GET_ALTERNATIVE_MEDIA_SOURCES_FOR_TRACKS(payload) {
+		const { mediaSources } = payload;
+
+		// console.log("KR*S94955", mediaSources);
+
+		// this.pub
+
+		await async.eachLimit(mediaSources, 1, async mediaSource => {
+			try {
+				const result = await SpotifyModule.runJob(
+					"GET_ALTERNATIVE_MEDIA_SOURCES_FOR_TRACK",
+					{ mediaSource },
+					this
+				);
+				this.publishProgress({
+					status: "working",
+					message: `Got alternative media for ${mediaSource}`,
+					data: {
+						mediaSource,
+						status: "success",
+						result
+					}
+				});
+			} catch (err) {
+				this.publishProgress({
+					status: "working",
+					message: `Failed to get alternative media for ${mediaSource}`,
+					data: {
+						mediaSource,
+						status: "error"
+					}
+				});
+			}
+		});
+
+		console.log("Done!");
+
+		this.publishProgress({
+			status: "finished",
+			message: `Finished getting alternative media`
+		});
+	}
+
+	/**
+	 *
+	 * @param {*} payload
+	 * @returns
+	 */
 	async GET_ALTERNATIVE_MEDIA_SOURCES_FOR_TRACK(payload) {
 		const { mediaSource } = payload;
 
@@ -570,7 +622,7 @@ class _SpotifyModule extends CoreClass {
 			this
 		);
 
-		console.dir(ISRCApiResponse);
+		console.dir(ISRCApiResponse, { depth: 5 });
 
 		const mediaSources = new Set();
 		const mediaSourcesOrigins = {};
@@ -655,6 +707,82 @@ class _SpotifyModule extends CoreClass {
 				}
 
 				if (relation["target-type"] === "work") {
+					console.log(relation, "GET WORK HERE");
+
+					const promise = new Promise(resolve => {
+						WikiDataModule.runJob("API_GET_DATA_FROM_MUSICBRAINZ_WORK", { workId: relation.work.id }, this)
+							.then(resultBody => {
+								console.log("KRISWORKSUCCESS", resultBody);
+
+								const youtubeIds = Array.from(
+									new Set(
+										resultBody.results.bindings
+											.filter(binding => !!binding.YouTube_video_ID)
+											.map(binding => binding.YouTube_video_ID.value)
+									)
+								);
+								const soundcloudIds = Array.from(
+									new Set(
+										resultBody.results.bindings
+											.filter(binding => !!binding["SoundCloud_track_ID"])
+											.map(binding => binding["SoundCloud_track_ID"].value)
+									)
+								);
+
+								youtubeIds.forEach(youtubeId => {
+									const mediaSource = `youtube:${youtubeId}`;
+									const mediaSourceOrigins = [
+										`Spotify track ${spotifyTrackId}`,
+										`ISRC ${ISRC}`,
+										`MusicBrainz recordings`,
+										`MusicBrainz recording ${recording.id}`,
+										`MusicBrainz relations`,
+										`MusicBrainz relation target-type work`,
+										`MusicBrainz relation work id ${relation.work.id}`,
+										`WikiData select from MusicBrainz work id ${relation.work.id}`,
+										`YouTube ID ${youtubeId}`
+									];
+
+									mediaSources.add(mediaSource);
+									if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
+
+									mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
+								});
+
+								soundcloudIds.forEach(soundcloudId => {
+									const mediaSource = `soundcloud:${soundcloudId}`;
+									const mediaSourceOrigins = [
+										`Spotify track ${spotifyTrackId}`,
+										`ISRC ${ISRC}`,
+										`MusicBrainz recordings`,
+										`MusicBrainz recording ${recording.id}`,
+										`MusicBrainz relations`,
+										`MusicBrainz relation target-type work`,
+										`MusicBrainz relation work id ${relation.work.id}`,
+										`WikiData select from MusicBrainz work id ${relation.work.id}`,
+										`SoundCloud ID ${soundcloudId}`
+									];
+
+									mediaSources.add(mediaSource);
+									if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
+
+									mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
+								});
+
+								console.log("KRISWORKWOW", youtubeIds, soundcloudIds);
+
+								resolve();
+							})
+							.catch(err => {
+								console.log("KRISWORKERR", err);
+								resolve();
+							});
+					});
+
+					jobsToRun.push(promise);
+
+					//WikiDataModule.runJob("API_GET_DATA_FROM_MUSICBRAINZ_WORK", { workId: relation.work.id }, this));
+
 					return;
 				}
 			});

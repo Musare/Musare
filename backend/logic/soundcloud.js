@@ -32,7 +32,7 @@ const soundcloudTrackObjectToMusareTrackObject = soundcloudTrackObject => {
 		track_format: trackFormat,
 		permalink,
 		monetization_model: monetizationModel,
-		policy: policy,
+		policy,
 		streamable,
 		sharing,
 		state,
