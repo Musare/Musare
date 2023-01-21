@@ -519,8 +519,6 @@ class _PlaylistsModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			const { playlistId, newMediaSource, oldMediaSource } = payload;
 
-			console.log("KRISISISIS", payload, newMediaSource, oldMediaSource);
-
 			async.waterfall(
 				[
 					next => {

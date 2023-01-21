@@ -326,7 +326,10 @@ const autoRequestSong = () => {
 
 	autoRequest.value.forEach(playlist => {
 		playlist.songs.forEach(song => {
-			if (excludedYoutubeIds.indexOf(song.mediaSource) === -1)
+			if (
+				excludedYoutubeIds.indexOf(song.mediaSource) === -1 &&
+				!song.mediaSource.startsWith("spotify:")
+			)
 				uniqueYoutubeIds.add(song.mediaSource);
 		});
 	});

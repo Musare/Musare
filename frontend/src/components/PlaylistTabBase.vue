@@ -143,7 +143,9 @@ const totalUniqueAutorequestableYoutubeIds = computed(() => {
 const actuallyAutorequestingYoutubeIds = computed(() => {
 	const excluded = excludedYoutubeIds.value;
 	const remaining = totalUniqueAutorequestableYoutubeIds.value.filter(
-		mediaSource => excluded.indexOf(mediaSource) === -1
+		mediaSource =>
+			excluded.indexOf(mediaSource) === -1 &&
+			!mediaSource.startsWith("spotify:")
 	);
 	return remaining;
 });
@@ -839,7 +841,7 @@ onMounted(() => {
 						>were played recently or</span
 					>
 					are currently in the queue or playing will not be
-					autorequested.
+					autorequested. Spotify songs will also not be autorequested.
 
 					<br />
 					<br />

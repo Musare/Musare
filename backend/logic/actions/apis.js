@@ -479,7 +479,7 @@ export default {
 	 */
 	getAlternativeMediaSourcesForTracks: useHasPermission(
 		"admin.view.spotify",
-		function getAlternativeMediaSourcesForTracks(session, mediaSources, cb) {
+		function getAlternativeMediaSourcesForTracks(session, mediaSources, collectAlternativeMediaSourcesOrigins, cb) {
 			async.waterfall(
 				[
 					next => {
@@ -506,7 +506,11 @@ export default {
 						// 	this
 						// );
 
-						SpotifyModule.runJob("GET_ALTERNATIVE_MEDIA_SOURCES_FOR_TRACKS", { mediaSources }, this);
+						SpotifyModule.runJob(
+							"GET_ALTERNATIVE_MEDIA_SOURCES_FOR_TRACKS",
+							{ mediaSources, collectAlternativeMediaSourcesOrigins },
+							this
+						);
 					}
 				],
 				async err => {

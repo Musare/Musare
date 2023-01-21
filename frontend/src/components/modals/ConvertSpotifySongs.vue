@@ -66,6 +66,21 @@ const preferredAlternativeSongMode = ref<
 // const singleMode = ref(false);
 const showExtra = ref(false);
 
+const collectAlternativeMediaSourcesOrigins = ref(false);
+
+const filteredSpotifySongs = computed(() =>
+	hideSpotifySongsWithNoAlternativesFound.value
+		? spotifySongs.value.filter(
+				spotifySong =>
+					(!gettingAllAlternativeMediaPerTrack.value &&
+						!gotAllAlternativeMediaPerTrack.value) ||
+					(alternativeMediaPerTrack[spotifySong.mediaSource] &&
+						alternativeMediaPerTrack[spotifySong.mediaSource]
+							.mediaSources.length > 0)
+		  )
+		: spotifySongs.value
+);
+
 const missingMediaSources = computed(() => {
 	const missingMediaSources = [];
 
@@ -280,33 +295,38 @@ const getAlternativeMedia = () => {
 
 	const mediaSources = spotifySongs.value.map(song => song.mediaSource);
 
-	socket.dispatch("apis.getAlternativeMediaSourcesForTracks", mediaSources, {
-		cb: res => {
-			console.log(
-				"apis.getAlternativeMediaSourcesForTracks response",
-				res
-			);
-		},
-		onProgress: data => {
-			console.log(
-				"apis.getAlternativeMediaSourcesForTracks onProgress",
-				data
-			);
+	socket.dispatch(
+		"apis.getAlternativeMediaSourcesForTracks",
+		mediaSources,
+		collectAlternativeMediaSourcesOrigins.value,
+		{
+			cb: res => {
+				console.log(
+					"apis.getAlternativeMediaSourcesForTracks response",
+					res
+				);
+			},
+			onProgress: data => {
+				console.log(
+					"apis.getAlternativeMediaSourcesForTracks onProgress",
+					data
+				);
 
-			if (data.status === "working") {
-				if (data.data.status === "success") {
-					const { mediaSource, result } = data.data;
+				if (data.status === "working") {
+					if (data.data.status === "success") {
+						const { mediaSource, result } = data.data;
 
-					if (!spotifyTracks[mediaSource]) return;
+						if (!spotifyTracks[mediaSource]) return;
 
-					alternativeMediaPerTrack[mediaSource] = result;
+						alternativeMediaPerTrack[mediaSource] = result;
+					}
+				} else if (data.status === "finished") {
+					gotAllAlternativeMediaPerTrack.value = true;
+					gettingAllAlternativeMediaPerTrack.value = false;
 				}
-			} else if (data.status === "finished") {
-				gotAllAlternativeMediaPerTrack.value = true;
-				gettingAllAlternativeMediaPerTrack.value = false;
 			}
 		}
-	});
+	);
 };
 
 const loadSpotifyTracks = () =>
@@ -559,6 +579,28 @@ onMounted(() => {
 								<label class="switch">
 									<input
 										type="checkbox"
+										id="collect-alternative-media-sources-origins"
+										v-model="
+											collectAlternativeMediaSourcesOrigins
+										"
+									/>
+									<span class="slider round"></span>
+								</label>
+
+								<label
+									for="collect-alternative-media-sources-origins"
+								>
+									<p>
+										Collect alternative media sources
+										origins
+									</p>
+								</label>
+							</p>
+
+							<p class="is-expanded checkbox-control">
+								<label class="switch">
+									<input
+										type="checkbox"
 										id="show-replace-button-per-alternative"
 										v-model="
 											showReplaceButtonPerAlternative
@@ -728,7 +770,7 @@ onMounted(() => {
 						<h4>Alternative songs</h4>
 
 						<template
-							v-for="spotifySong in spotifySongs"
+							v-for="spotifySong in filteredSpotifySongs"
 							:key="spotifySong.mediaSource"
 						>
 							<div

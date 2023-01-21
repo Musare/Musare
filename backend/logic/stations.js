@@ -629,7 +629,8 @@ class _StationsModule extends CoreClass {
 							if (
 								songsToAdd.length < songsStillNeeded &&
 								currentYoutubeIds.indexOf(song.mediaSource) === -1 &&
-								!songsToAdd.find(songToAdd => songToAdd.mediaSource === song.mediaSource)
+								!songsToAdd.find(songToAdd => songToAdd.mediaSource === song.mediaSource) &&
+								!song.mediaSource.startsWith("spotify:")
 							) {
 								lastSongAdded = song;
 								songsToAdd.push(song);
@@ -1924,6 +1925,7 @@ class _StationsModule extends CoreClass {
 					(station, next) => {
 						if (!station) return next("Station not found.");
 						if (!station.requests.enabled) return next("Requests are disabled in this station.");
+						if (mediaSource.startsWith("spotify:")) return next("Spotify playback is not supported.");
 						if (station.currentSong && station.currentSong.mediaSource === mediaSource)
 							return next("That song is currently playing.");
 						if (station.queue.find(song => song.mediaSource === mediaSource))

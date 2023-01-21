@@ -158,17 +158,57 @@ class _WikiDataModule extends CoreClass {
 	async API_GET_DATA_FROM_MUSICBRAINZ_WORK(payload) {
 		const { workId } = payload;
 
-		const sparqlQuery = `SELECT DISTINCT ?item ?itemLabel ?YouTube_video_ID WHERE {
+		const sparqlQuery = `SELECT DISTINCT ?item ?itemLabel ?YouTube_video_ID ?SoundCloud_track_ID WHERE {
 								SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
 								{
 									SELECT DISTINCT ?item WHERE {
-									?item p:P435 ?statement0.
-									?statement0 ps:P435 "${workId}".
+										?item p:P435 ?statement0.
+										?statement0 ps:P435 "${workId}".
 									}
 									LIMIT 100
 								}
 								OPTIONAL { ?item wdt:P1651 ?YouTube_video_ID. }
-							}`;
+								OPTIONAL { ?item wdt:P3040 ?SoundCloud_track_ID. }
+							}`
+			.replaceAll("\n", "")
+			.replaceAll("\t", "");
+
+		return WikiDataModule.runJob(
+			"API_CALL",
+			{
+				url: "https://query.wikidata.org/sparql",
+				params: {
+					query: sparqlQuery
+				}
+			},
+			this
+		);
+	}
+
+	/**
+	 * Get WikiData data from release group id
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.releaseGroupId - release group id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async API_GET_DATA_FROM_MUSICBRAINZ_RELEASE_GROUP(payload) {
+		const { releaseGroupId } = payload;
+
+		const sparqlQuery = `SELECT DISTINCT ?item ?itemLabel ?YouTube_video_ID ?SoundCloud_track_ID WHERE {
+								SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
+								{
+									SELECT DISTINCT ?item WHERE {
+										?item p:P436 ?statement0.
+										?statement0 ps:P436 "${releaseGroupId}".
+									}
+									LIMIT 100
+								}
+								OPTIONAL { ?item wdt:P1651 ?YouTube_video_ID. }
+								OPTIONAL { ?item wdt:P3040 ?SoundCloud_track_ID. }
+							}`
+			.replaceAll("\n", "")
+			.replaceAll("\t", "");
 
 		return WikiDataModule.runJob(
 			"API_CALL",
