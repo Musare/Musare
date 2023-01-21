@@ -53,8 +53,10 @@ const alternativeMediaFailedMap = reactive({});
 
 const gettingMissingAlternativeMedia = ref(false);
 
-const currentConvertType = ref("track");
+const replacingAllSpotifySongs = ref(false);
 
+const currentConvertType = ref("track");
+const showReplaceButtonPerAlternative = ref(false);
 const hideSpotifySongsWithNoAlternativesFound = ref(false);
 
 const preferredAlternativeSongMode = ref<
@@ -81,6 +83,151 @@ const missingMediaSources = computed(() => {
 	return missingMediaSources;
 });
 
+const preferredAlternativeSongPerTrack = computed(() => {
+	const returnObject = {};
+
+	Object.entries(alternativeMediaPerTrack).forEach(
+		([spotifyMediaSource, { mediaSources }]) => {
+			returnObject[spotifyMediaSource] = null;
+			if (mediaSources.length === 0) return;
+
+			let sortFn = (mediaSourceA, mediaSourceB) => {
+				if (preferredAlternativeSongMode.value === "FIRST") return 0;
+
+				const aHasLyrics =
+					alternativeMediaMap[mediaSourceA].title
+						.toLowerCase()
+						.indexOf("lyric") !== -1;
+				const aHasTopic =
+					alternativeMediaMap[mediaSourceA].artists[0]
+						.toLowerCase()
+						.indexOf("topic") !== -1;
+
+				const bHasLyrics =
+					alternativeMediaMap[mediaSourceB].title
+						.toLowerCase()
+						.indexOf("lyric") !== -1;
+				const bHasTopic =
+					alternativeMediaMap[mediaSourceB].artists[0]
+						.toLowerCase()
+						.indexOf("topic") !== -1;
+
+				if (preferredAlternativeSongMode.value === "LYRICS") {
+					if (aHasLyrics && bHasLyrics) return 0;
+					if (aHasLyrics && !bHasLyrics) return -1;
+					if (!aHasLyrics && bHasLyrics) return 1;
+					return 0;
+				}
+
+				if (preferredAlternativeSongMode.value === "TOPIC") {
+					if (aHasTopic && bHasTopic) return 0;
+					if (aHasTopic && !bHasTopic) return -1;
+					if (!aHasTopic && bHasTopic) return 1;
+					return 0;
+				}
+
+				if (preferredAlternativeSongMode.value === "LYRICS_TOPIC") {
+					if (aHasLyrics && bHasLyrics) return 0;
+					if (aHasLyrics && !bHasLyrics) return -1;
+					if (!aHasLyrics && bHasLyrics) return 1;
+					if (aHasTopic && bHasTopic) return 0;
+					if (aHasTopic && !bHasTopic) return -1;
+					if (!aHasTopic && bHasTopic) return 1;
+					return 0;
+				}
+
+				if (preferredAlternativeSongMode.value === "TOPIC_LYRICS") {
+					if (aHasTopic && bHasTopic) return 0;
+					if (aHasTopic && !bHasTopic) return -1;
+					if (!aHasTopic && bHasTopic) return 1;
+					if (aHasLyrics && bHasLyrics) return 0;
+					if (aHasLyrics && !bHasLyrics) return -1;
+					if (!aHasLyrics && bHasLyrics) return 1;
+					return 0;
+				}
+			};
+
+			if (
+				mediaSources.length === 1 ||
+				preferredAlternativeSongMode.value === "FIRST"
+			)
+				sortFn = () => 0;
+			else if (preferredAlternativeSongMode.value === "LYRICS")
+				sortFn = mediaSourceA => {
+					if (!alternativeMediaMap[mediaSourceA]) return 0;
+					if (
+						alternativeMediaMap[mediaSourceA].title
+							.toLowerCase()
+							.indexOf("lyric") !== -1
+					)
+						return -1;
+					return 1;
+				};
+			else if (preferredAlternativeSongMode.value === "TOPIC")
+				sortFn = mediaSourceA => {
+					if (!alternativeMediaMap[mediaSourceA]) return 0;
+					if (
+						alternativeMediaMap[mediaSourceA].artists[0]
+							.toLowerCase()
+							.indexOf("topic") !== -1
+					)
+						return -1;
+					return 1;
+				};
+
+			const [firstMediaSource] = mediaSources
+				.slice()
+				.filter(mediaSource => !!alternativeMediaMap[mediaSource])
+				.sort(sortFn);
+
+			returnObject[spotifyMediaSource] = firstMediaSource;
+		}
+	);
+
+	return returnObject;
+});
+
+const replaceAllSpotifySongs = async () => {
+	if (replacingAllSpotifySongs.value) return;
+	replacingAllSpotifySongs.value = true;
+
+	const replaceArray = [];
+
+	spotifySongs.value.forEach(spotifySong => {
+		const spotifyMediaSource = spotifySong.mediaSource;
+		const replacementMediaSource =
+			preferredAlternativeSongPerTrack.value[spotifyMediaSource];
+
+		if (!spotifyMediaSource || !replacementMediaSource) return;
+
+		replaceArray.push([spotifyMediaSource, replacementMediaSource]);
+	});
+
+	const promises = replaceArray.map(
+		([spotifyMediaSource, replacementMediaSource]) =>
+			new Promise<void>(resolve => {
+				socket.dispatch(
+					"playlists.replaceSongInPlaylist",
+					spotifyMediaSource,
+					replacementMediaSource,
+					props.playlistId,
+					res => {
+						console.log(
+							"playlists.replaceSongInPlaylist response",
+							res
+						);
+
+						resolve();
+					}
+				);
+			})
+	);
+
+	Promise.allSettled(promises).finally(() => {
+		replacingAllSpotifySongs.value = false;
+	});
+};
+
 const replaceSpotifySong = (oldMediaSource, newMediaSource) => {
 	socket.dispatch(
 		"playlists.replaceSongInPlaylist",
@@ -88,7 +235,7 @@ const replaceSpotifySong = (oldMediaSource, newMediaSource) => {
 		newMediaSource,
 		props.playlistId,
 		res => {
-			console.log("KRISWOWOWOW", res);
+			console.log("playlists.replaceSongInPlaylist response", res);
 		}
 	);
 };
@@ -357,10 +504,11 @@ onMounted(() => {
 							<quick-confirm
 								v-if="
 									gotAllAlternativeMediaPerTrack &&
-									missingMediaSources.length === 0
+									missingMediaSources.length === 0 &&
+									!replacingAllSpotifySongs
 								"
 								placement="top"
-								@confirm="replaceAllAvailableSongs()"
+								@confirm="replaceAllSpotifySongs()"
 							>
 								<button class="button is-primary is-fullwidth">
 									Replace all available songs with provided
@@ -404,6 +552,25 @@ onMounted(() => {
 
 								<label for="show-extra">
 									<p>Show extra info</p>
+								</label>
+							</p>
+
+							<p class="is-expanded checkbox-control">
+								<label class="switch">
+									<input
+										type="checkbox"
+										id="show-replace-button-per-alternative"
+										v-model="
+											showReplaceButtonPerAlternative
+										"
+									/>
+									<span class="slider round"></span>
+								</label>
+
+								<label
+									for="show-replace-button-per-alternative"
+								>
+									<p>Show replace button per alternative</p>
 								</label>
 							</p>
 
@@ -518,11 +685,11 @@ onMounted(() => {
 							</p>
 
 							<p>
-								Getting all alternaitve media per track:
+								Getting all alternative media per track:
 								{{ gettingAllAlternativeMediaPerTrack }}
 							</p>
 							<p>
-								Got all alternaitve media per track:
+								Got all alternative media per track:
 								{{ gotAllAlternativeMediaPerTrack }}
 							</p>
 
@@ -538,6 +705,13 @@ onMounted(() => {
 									Object.keys(alternativeMediaFailedMap)
 										.length
 								}}
+							</p>
+
+							<hr />
+
+							<p>
+								Replacing all Spotify songs:
+								{{ replacingAllSpotifySongs }}
 							</p>
 						</div>
 					</div>
@@ -603,6 +777,15 @@ onMounted(() => {
 									<div class="alternative-media-items">
 										<div
 											class="alternative-media-item"
+											:class="{
+												'selected-alternative-song':
+													preferredAlternativeSongPerTrack[
+														spotifySong.mediaSource
+													] ===
+														alternativeMediaSource &&
+													missingMediaSources.length ===
+														0
+											}"
 											v-for="alternativeMediaSource in alternativeMediaPerTrack[
 												spotifySong.mediaSource
 											].mediaSources"
@@ -677,6 +860,9 @@ onMounted(() => {
 														</template>
 													</song-item>
 													<quick-confirm
+														v-if="
+															showReplaceButtonPerAlternative
+														"
 														placement="top"
 														@confirm="
 															replaceSpotifySong(
@@ -693,35 +879,38 @@ onMounted(() => {
 														</button>
 													</quick-confirm>
 												</div>
+												<ul v-if="showExtra">
+													<li
+														v-for="origin in alternativeMediaPerTrack[
+															spotifySong
+																.mediaSource
+														].mediaSourcesOrigins[
+															alternativeMediaSource
+														]"
+														:key="
+															spotifySong.mediaSource +
+															alternativeMediaSource +
+															origin
+														"
+													>
+														<hr />
+														<ul>
+															<li
+																v-for="originItem in origin"
+																:key="
+																	spotifySong.mediaSource +
+																	alternativeMediaSource +
+																	origin +
+																	originItem
+																"
+															>
+																+
+																{{ originItem }}
+															</li>
+														</ul>
+													</li>
+												</ul>
 											</template>
-
-											<ul v-if="showExtra">
-												<li
-													v-for="origin in alternativeMediaPerTrack[
-														spotifySong.mediaSource
-													].mediaSourceOrigins"
-													:key="
-														spotifySong.mediaSource +
-														alternativeMediaSource +
-														origin
-													"
-												>
-													=
-													<ul>
-														<li
-															v-for="originItem in origin"
-															:key="
-																spotifySong.mediaSource +
-																alternativeMediaSource +
-																origin +
-																originItem
-															"
-														>
-															+ {{ originItem }}
-														</li>
-													</ul>
-												</li>
-											</ul>
 										</div>
 									</div>
 								</template>
@@ -770,9 +959,15 @@ onMounted(() => {
 	gap: 1px;
 
 	.convert-table-cell {
-		outline: 1px solid red;
+		outline: 1px solid white;
 		padding: 4px;
 	}
+}
+
+.selected-alternative-song {
+	// outline: 4px solid red;
+	border-left: 12px solid var(--primary-color);
+	padding: 4px;
 }
 
 .buttons-options-info-row {
