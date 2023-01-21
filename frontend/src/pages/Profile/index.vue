@@ -40,7 +40,7 @@ onMounted(() => {
 		route.query.tab === "recent-activity" ||
 		route.query.tab === "playlists"
 	)
-		tab.value = route.query.tab;
+		showTab(route.query.tab);
 
 	socket.onConnect(() => {
 		socket.dispatch("users.getBasicUser", route.params.username, res => {
@@ -169,6 +169,7 @@ onMounted(() => {
 				/>
 				<recent-activity
 					:user-id="userId"
+					:check-scroll="tab === 'recent-activity'"
 					v-show="tab === 'recent-activity'"
 				/>
 			</div>
