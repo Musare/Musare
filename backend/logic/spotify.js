@@ -566,6 +566,7 @@ class _SpotifyModule extends CoreClass {
 					}
 				});
 			} catch (err) {
+				console.log("ERROR", err);
 				this.publishProgress({
 					status: "working",
 					message: `Failed to get alternative media for ${mediaSource}`,
@@ -615,480 +616,494 @@ class _SpotifyModule extends CoreClass {
 
 		const jobsToRun = [];
 
-		const ISRCApiResponse = await MusicBrainzModule.runJob(
-			"API_CALL",
-			{
-				url: `https://musicbrainz.org/ws/2/isrc/${ISRC}`,
-				params: {
-					fmt: "json",
-					inc: "url-rels+work-rels"
-				}
-			},
-			this
-		);
+		try {
+			const ISRCApiResponse = await MusicBrainzModule.runJob(
+				"API_CALL",
+				{
+					url: `https://musicbrainz.org/ws/2/isrc/${ISRC}`,
+					params: {
+						fmt: "json",
+						inc: "url-rels+work-rels"
+					}
+				},
+				this
+			);
 
-		// console.log("ISRCApiResponse");
-		// console.dir(ISRCApiResponse, { depth: 5 });
+			// console.log("ISRCApiResponse");
+			// console.dir(ISRCApiResponse, { depth: 5 });
 
-		ISRCApiResponse.recordings.forEach(recording => {
-			recording.relations.forEach(relation => {
-				if (relation["target-type"] === "url" && relation.url) {
-					// relation["type-id"] === "7e41ef12-a124-4324-afdb-fdbae687a89c"
-					const { resource } = relation.url;
+			ISRCApiResponse.recordings.forEach(recording => {
+				recording.relations.forEach(relation => {
+					if (relation["target-type"] === "url" && relation.url) {
+						// relation["type-id"] === "7e41ef12-a124-4324-afdb-fdbae687a89c"
+						const { resource } = relation.url;
 
-					if (resource.indexOf("soundcloud.com") !== -1) {
-						// throw new Error(`Unable to parse SoundCloud resource ${resource}.`);
+						if (resource.indexOf("soundcloud.com") !== -1) {
+							// throw new Error(`Unable to parse SoundCloud resource ${resource}.`);
 
+							const promise = new Promise(resolve => {
+								SoundcloudModule.runJob(
+									"GET_TRACK_FROM_URL",
+									{ identifier: resource, createMissing: true },
+									this
+								)
+									.then(response => {
+										const { trackId } = response.track;
+										const mediaSource = `soundcloud:${trackId}`;
+
+										mediaSources.add(mediaSource);
+
+										if (collectAlternativeMediaSourcesOrigins) {
+											const mediaSourceOrigins = [
+												`Spotify track ${spotifyTrackId}`,
+												`ISRC ${ISRC}`,
+												`MusicBrainz recordings`,
+												`MusicBrainz recording ${recording.id}`,
+												`MusicBrainz relations`,
+												`MusicBrainz relation target-type url`,
+												`MusicBrainz relation resource ${resource}`,
+												`SoundCloud ID ${trackId}`
+											];
+
+											if (!mediaSourcesOrigins[mediaSource])
+												mediaSourcesOrigins[mediaSource] = [];
+
+											mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
+										}
+
+										resolve();
+									})
+									.catch(() => {
+										resolve();
+									});
+							});
+
+							jobsToRun.push(promise);
+
+							return;
+						}
+
+						if (resource.indexOf("youtube.com") !== -1 || resource.indexOf("youtu.be") !== -1) {
+							const match = youtubeVideoUrlRegex.exec(resource);
+							if (!match) throw new Error(`Unable to parse YouTube resource ${resource}.`);
+
+							const { youtubeId } = match.groups;
+							if (!youtubeId) throw new Error(`Unable to parse YouTube resource ${resource}.`);
+
+							const mediaSource = `youtube:${youtubeId}`;
+
+							mediaSources.add(mediaSource);
+
+							if (collectAlternativeMediaSourcesOrigins) {
+								const mediaSourceOrigins = [
+									`Spotify track ${spotifyTrackId}`,
+									`ISRC ${ISRC}`,
+									`MusicBrainz recordings`,
+									`MusicBrainz recording ${recording.id}`,
+									`MusicBrainz relations`,
+									`MusicBrainz relation target-type url`,
+									`MusicBrainz relation resource ${resource}`,
+									`YouTube ID ${youtubeId}`
+								];
+
+								if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
+
+								mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
+							}
+
+							return;
+						}
+
+						return;
+					}
+
+					if (relation["target-type"] === "work") {
 						const promise = new Promise(resolve => {
-							SoundcloudModule.runJob(
-								"GET_TRACK_FROM_URL",
-								{ identifier: resource, createMissing: true },
+							WikiDataModule.runJob(
+								"API_GET_DATA_FROM_MUSICBRAINZ_WORK",
+								{ workId: relation.work.id },
 								this
 							)
-								.then(response => {
-									const { trackId } = response.track;
-									const mediaSource = `soundcloud:${trackId}`;
+								.then(resultBody => {
+									const youtubeIds = Array.from(
+										new Set(
+											resultBody.results.bindings
+												.filter(binding => !!binding.YouTube_video_ID)
+												.map(binding => binding.YouTube_video_ID.value)
+										)
+									);
+									// const soundcloudIds = Array.from(
+									// 	new Set(
+									// 		resultBody.results.bindings
+									// 			.filter(binding => !!binding["SoundCloud_track_ID"])
+									// 			.map(binding => binding["SoundCloud_track_ID"].value)
+									// 	)
+									// );
+									const musicVideoEntityUrls = Array.from(
+										new Set(
+											resultBody.results.bindings
+												.filter(binding => !!binding.Music_video_entity_URL)
+												.map(binding => binding.Music_video_entity_URL.value)
+										)
+									);
 
-									mediaSources.add(mediaSource);
+									youtubeIds.forEach(youtubeId => {
+										const mediaSource = `youtube:${youtubeId}`;
 
-									if (collectAlternativeMediaSourcesOrigins) {
-										const mediaSourceOrigins = [
-											`Spotify track ${spotifyTrackId}`,
-											`ISRC ${ISRC}`,
-											`MusicBrainz recordings`,
-											`MusicBrainz recording ${recording.id}`,
-											`MusicBrainz relations`,
-											`MusicBrainz relation target-type url`,
-											`MusicBrainz relation resource ${resource}`,
-											`SoundCloud ID ${trackId}`
-										];
+										mediaSources.add(mediaSource);
 
-										if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
+										if (collectAlternativeMediaSourcesOrigins) {
+											const mediaSourceOrigins = [
+												`Spotify track ${spotifyTrackId}`,
+												`ISRC ${ISRC}`,
+												`MusicBrainz recordings`,
+												`MusicBrainz recording ${recording.id}`,
+												`MusicBrainz relations`,
+												`MusicBrainz relation target-type work`,
+												`MusicBrainz relation work id ${relation.work.id}`,
+												`WikiData select from MusicBrainz work id ${relation.work.id}`,
+												`YouTube ID ${youtubeId}`
+											];
 
-										mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
-									}
+											if (!mediaSourcesOrigins[mediaSource])
+												mediaSourcesOrigins[mediaSource] = [];
 
-									resolve();
+											mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
+										}
+									});
+
+									// soundcloudIds.forEach(soundcloudId => {
+									// 	const mediaSource = `soundcloud:${soundcloudId}`;
+
+									// 	mediaSources.add(mediaSource);
+
+									// 	if (collectAlternativeMediaSourcesOrigins) {
+									// 		const mediaSourceOrigins = [
+									// 			`Spotify track ${spotifyTrackId}`,
+									// 			`ISRC ${ISRC}`,
+									// 			`MusicBrainz recordings`,
+									// 			`MusicBrainz recording ${recording.id}`,
+									// 			`MusicBrainz relations`,
+									// 			`MusicBrainz relation target-type work`,
+									// 			`MusicBrainz relation work id ${relation.work.id}`,
+									// 			`WikiData select from MusicBrainz work id ${relation.work.id}`,
+									// 			`SoundCloud ID ${soundcloudId}`
+									// 		];
+
+									// 		if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
+
+									// 		mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
+									// 	}
+									// });
+
+									const promisesToRun2 = [];
+
+									musicVideoEntityUrls.forEach(musicVideoEntityUrl => {
+										promisesToRun2.push(
+											new Promise(resolve => {
+												WikiDataModule.runJob(
+													"API_GET_DATA_FROM_ENTITY_URL",
+													{ entityUrl: musicVideoEntityUrl },
+													this
+												).then(resultBody => {
+													const youtubeIds = Array.from(
+														new Set(
+															resultBody.results.bindings
+																.filter(binding => !!binding.YouTube_video_ID)
+																.map(binding => binding.YouTube_video_ID.value)
+														)
+													);
+													// const soundcloudIds = Array.from(
+													// 	new Set(
+													// 		resultBody.results.bindings
+													// 			.filter(binding => !!binding["SoundCloud_track_ID"])
+													// 			.map(binding => binding["SoundCloud_track_ID"].value)
+													// 	)
+													// );
+
+													youtubeIds.forEach(youtubeId => {
+														const mediaSource = `youtube:${youtubeId}`;
+
+														mediaSources.add(mediaSource);
+
+														// if (collectAlternativeMediaSourcesOrigins) {
+														// 	const mediaSourceOrigins = [
+														// 		`Spotify track ${spotifyTrackId}`,
+														// 		`ISRC ${ISRC}`,
+														// 		`MusicBrainz recordings`,
+														// 		`MusicBrainz recording ${recording.id}`,
+														// 		`MusicBrainz relations`,
+														// 		`MusicBrainz relation target-type work`,
+														// 		`MusicBrainz relation work id ${relation.work.id}`,
+														// 		`WikiData select from MusicBrainz work id ${relation.work.id}`,
+														// 		`YouTube ID ${youtubeId}`
+														// 	];
+
+														// 	if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
+
+														// 	mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
+														// }
+													});
+
+													// soundcloudIds.forEach(soundcloudId => {
+													// 	const mediaSource = `soundcloud:${soundcloudId}`;
+
+													// 	mediaSources.add(mediaSource);
+
+													// 	// if (collectAlternativeMediaSourcesOrigins) {
+													// 	// 	const mediaSourceOrigins = [
+													// 	// 		`Spotify track ${spotifyTrackId}`,
+													// 	// 		`ISRC ${ISRC}`,
+													// 	// 		`MusicBrainz recordings`,
+													// 	// 		`MusicBrainz recording ${recording.id}`,
+													// 	// 		`MusicBrainz relations`,
+													// 	// 		`MusicBrainz relation target-type work`,
+													// 	// 		`MusicBrainz relation work id ${relation.work.id}`,
+													// 	// 		`WikiData select from MusicBrainz work id ${relation.work.id}`,
+													// 	// 		`SoundCloud ID ${soundcloudId}`
+													// 	// 	];
+
+													// 	// 	if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
+
+													// 	// 	mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
+													// 	// }
+													// });
+
+													resolve();
+												});
+											})
+										);
+									});
+
+									Promise.allSettled(promisesToRun2).then(resolve);
 								})
-								.catch(() => {
+								.catch(err => {
+									console.log("KRISWORKERR", err);
 									resolve();
 								});
 						});
 
 						jobsToRun.push(promise);
 
-						return;
-					}
-
-					if (resource.indexOf("youtube.com") !== -1 || resource.indexOf("youtu.be") !== -1) {
-						const match = youtubeVideoUrlRegex.exec(resource);
-						if (!match) throw new Error(`Unable to parse YouTube resource ${resource}.`);
-
-						const { youtubeId } = match.groups;
-						if (!youtubeId) throw new Error(`Unable to parse YouTube resource ${resource}.`);
-
-						const mediaSource = `youtube:${youtubeId}`;
-
-						mediaSources.add(mediaSource);
-
-						if (collectAlternativeMediaSourcesOrigins) {
-							const mediaSourceOrigins = [
-								`Spotify track ${spotifyTrackId}`,
-								`ISRC ${ISRC}`,
-								`MusicBrainz recordings`,
-								`MusicBrainz recording ${recording.id}`,
-								`MusicBrainz relations`,
-								`MusicBrainz relation target-type url`,
-								`MusicBrainz relation resource ${resource}`,
-								`YouTube ID ${youtubeId}`
-							];
-
-							if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
-
-							mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
-						}
+						//WikiDataModule.runJob("API_GET_DATA_FROM_MUSICBRAINZ_WORK", { workId: relation.work.id }, this));
 
 						return;
 					}
-
-					return;
-				}
-
-				if (relation["target-type"] === "work") {
-					const promise = new Promise(resolve => {
-						WikiDataModule.runJob("API_GET_DATA_FROM_MUSICBRAINZ_WORK", { workId: relation.work.id }, this)
-							.then(resultBody => {
-								const youtubeIds = Array.from(
-									new Set(
-										resultBody.results.bindings
-											.filter(binding => !!binding.YouTube_video_ID)
-											.map(binding => binding.YouTube_video_ID.value)
-									)
-								);
-								// const soundcloudIds = Array.from(
-								// 	new Set(
-								// 		resultBody.results.bindings
-								// 			.filter(binding => !!binding["SoundCloud_track_ID"])
-								// 			.map(binding => binding["SoundCloud_track_ID"].value)
-								// 	)
-								// );
-								const musicVideoEntityUrls = Array.from(
-									new Set(
-										resultBody.results.bindings
-											.filter(binding => !!binding.Music_video_entity_URL)
-											.map(binding => binding.Music_video_entity_URL.value)
-									)
-								);
-
-								youtubeIds.forEach(youtubeId => {
-									const mediaSource = `youtube:${youtubeId}`;
-
-									mediaSources.add(mediaSource);
-
-									if (collectAlternativeMediaSourcesOrigins) {
-										const mediaSourceOrigins = [
-											`Spotify track ${spotifyTrackId}`,
-											`ISRC ${ISRC}`,
-											`MusicBrainz recordings`,
-											`MusicBrainz recording ${recording.id}`,
-											`MusicBrainz relations`,
-											`MusicBrainz relation target-type work`,
-											`MusicBrainz relation work id ${relation.work.id}`,
-											`WikiData select from MusicBrainz work id ${relation.work.id}`,
-											`YouTube ID ${youtubeId}`
-										];
-
-										if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
-
-										mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
-									}
-								});
-
-								// soundcloudIds.forEach(soundcloudId => {
-								// 	const mediaSource = `soundcloud:${soundcloudId}`;
-
-								// 	mediaSources.add(mediaSource);
-
-								// 	if (collectAlternativeMediaSourcesOrigins) {
-								// 		const mediaSourceOrigins = [
-								// 			`Spotify track ${spotifyTrackId}`,
-								// 			`ISRC ${ISRC}`,
-								// 			`MusicBrainz recordings`,
-								// 			`MusicBrainz recording ${recording.id}`,
-								// 			`MusicBrainz relations`,
-								// 			`MusicBrainz relation target-type work`,
-								// 			`MusicBrainz relation work id ${relation.work.id}`,
-								// 			`WikiData select from MusicBrainz work id ${relation.work.id}`,
-								// 			`SoundCloud ID ${soundcloudId}`
-								// 		];
-
-								// 		if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
-
-								// 		mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
-								// 	}
-								// });
-
-								const promisesToRun2 = [];
-
-								musicVideoEntityUrls.forEach(musicVideoEntityUrl => {
-									promisesToRun2.push(
-										new Promise(resolve => {
-											WikiDataModule.runJob(
-												"API_GET_DATA_FROM_ENTITY_URL",
-												{ entityUrl: musicVideoEntityUrl },
-												this
-											).then(resultBody => {
-												const youtubeIds = Array.from(
-													new Set(
-														resultBody.results.bindings
-															.filter(binding => !!binding.YouTube_video_ID)
-															.map(binding => binding.YouTube_video_ID.value)
-													)
-												);
-												// const soundcloudIds = Array.from(
-												// 	new Set(
-												// 		resultBody.results.bindings
-												// 			.filter(binding => !!binding["SoundCloud_track_ID"])
-												// 			.map(binding => binding["SoundCloud_track_ID"].value)
-												// 	)
-												// );
-
-												youtubeIds.forEach(youtubeId => {
-													const mediaSource = `youtube:${youtubeId}`;
-
-													mediaSources.add(mediaSource);
-
-													// if (collectAlternativeMediaSourcesOrigins) {
-													// 	const mediaSourceOrigins = [
-													// 		`Spotify track ${spotifyTrackId}`,
-													// 		`ISRC ${ISRC}`,
-													// 		`MusicBrainz recordings`,
-													// 		`MusicBrainz recording ${recording.id}`,
-													// 		`MusicBrainz relations`,
-													// 		`MusicBrainz relation target-type work`,
-													// 		`MusicBrainz relation work id ${relation.work.id}`,
-													// 		`WikiData select from MusicBrainz work id ${relation.work.id}`,
-													// 		`YouTube ID ${youtubeId}`
-													// 	];
-
-													// 	if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
-
-													// 	mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
-													// }
-												});
-
-												// soundcloudIds.forEach(soundcloudId => {
-												// 	const mediaSource = `soundcloud:${soundcloudId}`;
-
-												// 	mediaSources.add(mediaSource);
-
-												// 	// if (collectAlternativeMediaSourcesOrigins) {
-												// 	// 	const mediaSourceOrigins = [
-												// 	// 		`Spotify track ${spotifyTrackId}`,
-												// 	// 		`ISRC ${ISRC}`,
-												// 	// 		`MusicBrainz recordings`,
-												// 	// 		`MusicBrainz recording ${recording.id}`,
-												// 	// 		`MusicBrainz relations`,
-												// 	// 		`MusicBrainz relation target-type work`,
-												// 	// 		`MusicBrainz relation work id ${relation.work.id}`,
-												// 	// 		`WikiData select from MusicBrainz work id ${relation.work.id}`,
-												// 	// 		`SoundCloud ID ${soundcloudId}`
-												// 	// 	];
-
-												// 	// 	if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
-
-												// 	// 	mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
-												// 	// }
-												// });
-
-												resolve();
-											});
-										})
-									);
-								});
-
-								Promise.allSettled(promisesToRun2).then(resolve);
-							})
-							.catch(err => {
-								console.log("KRISWORKERR", err);
-								resolve();
-							});
-					});
-
-					jobsToRun.push(promise);
-
-					//WikiDataModule.runJob("API_GET_DATA_FROM_MUSICBRAINZ_WORK", { workId: relation.work.id }, this));
-
-					return;
-				}
+				});
 			});
-		});
+		} catch (err) {
+			console.log("Error during initial ISRC getting/parsing", err);
+		}
 
-		const RecordingApiResponse = await MusicBrainzModule.runJob(
-			"API_CALL",
-			{
-				url: `https://musicbrainz.org/ws/2/recording/`,
-				params: {
-					fmt: "json",
-					query: `isrc:${ISRC}`
-				}
-			},
-			this
-		);
+		try {
+			const RecordingApiResponse = await MusicBrainzModule.runJob(
+				"API_CALL",
+				{
+					url: `https://musicbrainz.org/ws/2/recording/`,
+					params: {
+						fmt: "json",
+						query: `isrc:${ISRC}`
+					}
+				},
+				this
+			);
 
-		const releaseIds = new Set();
-		const releaseGroupIds = new Set();
+			const releaseIds = new Set();
+			const releaseGroupIds = new Set();
 
-		RecordingApiResponse.recordings.forEach(recording => {
-			const recordingId = recording.id;
-			// console.log("Recording:", recording.id);
+			RecordingApiResponse.recordings.forEach(recording => {
+				const recordingId = recording.id;
+				// console.log("Recording:", recording.id);
 
-			recording.releases.forEach(release => {
-				const releaseId = release.id;
-				// console.log("Release:", releaseId);
+				recording.releases.forEach(release => {
+					const releaseId = release.id;
+					// console.log("Release:", releaseId);
 
-				const releaseGroupId = release["release-group"].id;
-				// console.log("Release group:", release["release-group"]);
-				// console.log("Release group id:", release["release-group"].id);
-				// console.log("Release group type id:", release["release-group"]["type-id"]);
-				// console.log("Release group primary type id:", release["release-group"]["primary-type-id"]);
-				// console.log("Release group primary type:", release["release-group"]["primary-type"]);
+					const releaseGroupId = release["release-group"].id;
+					// console.log("Release group:", release["release-group"]);
+					// console.log("Release group id:", release["release-group"].id);
+					// console.log("Release group type id:", release["release-group"]["type-id"]);
+					// console.log("Release group primary type id:", release["release-group"]["primary-type-id"]);
+					// console.log("Release group primary type:", release["release-group"]["primary-type"]);
 
-				// d6038452-8ee0-3f68-affc-2de9a1ede0b9 = single
-				// 6d0c5bf6-7a33-3420-a519-44fc63eedebf = EP
-				if (
-					release["release-group"]["type-id"] === "d6038452-8ee0-3f68-affc-2de9a1ede0b9" ||
-					release["release-group"]["type-id"] === "6d0c5bf6-7a33-3420-a519-44fc63eedebf"
-				) {
-					releaseIds.add(releaseId);
-					releaseGroupIds.add(releaseGroupId);
-				}
+					// d6038452-8ee0-3f68-affc-2de9a1ede0b9 = single
+					// 6d0c5bf6-7a33-3420-a519-44fc63eedebf = EP
+					if (
+						release["release-group"]["type-id"] === "d6038452-8ee0-3f68-affc-2de9a1ede0b9" ||
+						release["release-group"]["type-id"] === "6d0c5bf6-7a33-3420-a519-44fc63eedebf"
+					) {
+						releaseIds.add(releaseId);
+						releaseGroupIds.add(releaseGroupId);
+					}
+				});
 			});
-		});
 
-		Array.from(releaseGroupIds).forEach(releaseGroupId => {
-			const promise = new Promise(resolve => {
-				WikiDataModule.runJob("API_GET_DATA_FROM_MUSICBRAINZ_RELEASE_GROUP", { releaseGroupId }, this)
-					.then(resultBody => {
-						const youtubeIds = Array.from(
-							new Set(
-								resultBody.results.bindings
-									.filter(binding => !!binding.YouTube_video_ID)
-									.map(binding => binding.YouTube_video_ID.value)
-							)
-						);
-						// const soundcloudIds = Array.from(
-						// 	new Set(
-						// 		resultBody.results.bindings
-						// 			.filter(binding => !!binding["SoundCloud_track_ID"])
-						// 			.map(binding => binding["SoundCloud_track_ID"].value)
-						// 	)
-						// );
-						const musicVideoEntityUrls = Array.from(
-							new Set(
-								resultBody.results.bindings
-									.filter(binding => !!binding.Music_video_entity_URL)
-									.map(binding => binding.Music_video_entity_URL.value)
-							)
-						);
-
-						youtubeIds.forEach(youtubeId => {
-							const mediaSource = `youtube:${youtubeId}`;
-
-							mediaSources.add(mediaSource);
-
-							// if (collectAlternativeMediaSourcesOrigins) {
-							// 	const mediaSourceOrigins = [
-							// 		`Spotify track ${spotifyTrackId}`,
-							// 		`ISRC ${ISRC}`,
-							// 		`MusicBrainz recordings`,
-							// 		`MusicBrainz recording ${recording.id}`,
-							// 		`MusicBrainz relations`,
-							// 		`MusicBrainz relation target-type work`,
-							// 		`MusicBrainz relation work id ${relation.work.id}`,
-							// 		`WikiData select from MusicBrainz work id ${relation.work.id}`,
-							// 		`YouTube ID ${youtubeId}`
-							// 	];
-
-							// 	if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
-
-							// 	mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
-							// }
-						});
-
-						// soundcloudIds.forEach(soundcloudId => {
-						// 	const mediaSource = `soundcloud:${soundcloudId}`;
-
-						// 	mediaSources.add(mediaSource);
-
-						// 	// if (collectAlternativeMediaSourcesOrigins) {
-						// 	// 	const mediaSourceOrigins = [
-						// 	// 		`Spotify track ${spotifyTrackId}`,
-						// 	// 		`ISRC ${ISRC}`,
-						// 	// 		`MusicBrainz recordings`,
-						// 	// 		`MusicBrainz recording ${recording.id}`,
-						// 	// 		`MusicBrainz relations`,
-						// 	// 		`MusicBrainz relation target-type work`,
-						// 	// 		`MusicBrainz relation work id ${relation.work.id}`,
-						// 	// 		`WikiData select from MusicBrainz work id ${relation.work.id}`,
-						// 	// 		`SoundCloud ID ${soundcloudId}`
-						// 	// 	];
-
-						// 	// 	if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
-
-						// 	// 	mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
-						// 	// }
-						// });
-
-						const promisesToRun2 = [];
-
-						musicVideoEntityUrls.forEach(musicVideoEntityUrl => {
-							promisesToRun2.push(
-								new Promise(resolve => {
-									WikiDataModule.runJob(
-										"API_GET_DATA_FROM_ENTITY_URL",
-										{ entityUrl: musicVideoEntityUrl },
-										this
-									).then(resultBody => {
-										const youtubeIds = Array.from(
-											new Set(
-												resultBody.results.bindings
-													.filter(binding => !!binding.YouTube_video_ID)
-													.map(binding => binding.YouTube_video_ID.value)
-											)
-										);
-										// const soundcloudIds = Array.from(
-										// 	new Set(
-										// 		resultBody.results.bindings
-										// 			.filter(binding => !!binding["SoundCloud_track_ID"])
-										// 			.map(binding => binding["SoundCloud_track_ID"].value)
-										// 	)
-										// );
-
-										youtubeIds.forEach(youtubeId => {
-											const mediaSource = `youtube:${youtubeId}`;
-
-											mediaSources.add(mediaSource);
-
-											// if (collectAlternativeMediaSourcesOrigins) {
-											// 	const mediaSourceOrigins = [
-											// 		`Spotify track ${spotifyTrackId}`,
-											// 		`ISRC ${ISRC}`,
-											// 		`MusicBrainz recordings`,
-											// 		`MusicBrainz recording ${recording.id}`,
-											// 		`MusicBrainz relations`,
-											// 		`MusicBrainz relation target-type work`,
-											// 		`MusicBrainz relation work id ${relation.work.id}`,
-											// 		`WikiData select from MusicBrainz work id ${relation.work.id}`,
-											// 		`YouTube ID ${youtubeId}`
-											// 	];
-
-											// 	if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
-
-											// 	mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
-											// }
-										});
-
-										// soundcloudIds.forEach(soundcloudId => {
-										// 	const mediaSource = `soundcloud:${soundcloudId}`;
-
-										// 	mediaSources.add(mediaSource);
-
-										// 	// if (collectAlternativeMediaSourcesOrigins) {
-										// 	// 	const mediaSourceOrigins = [
-										// 	// 		`Spotify track ${spotifyTrackId}`,
-										// 	// 		`ISRC ${ISRC}`,
-										// 	// 		`MusicBrainz recordings`,
-										// 	// 		`MusicBrainz recording ${recording.id}`,
-										// 	// 		`MusicBrainz relations`,
-										// 	// 		`MusicBrainz relation target-type work`,
-										// 	// 		`MusicBrainz relation work id ${relation.work.id}`,
-										// 	// 		`WikiData select from MusicBrainz work id ${relation.work.id}`,
-										// 	// 		`SoundCloud ID ${soundcloudId}`
-										// 	// 	];
-
-										// 	// 	if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
-
-										// 	// 	mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
-										// 	// }
-										// });
-
-										resolve();
-									});
-								})
+			Array.from(releaseGroupIds).forEach(releaseGroupId => {
+				const promise = new Promise(resolve => {
+					WikiDataModule.runJob("API_GET_DATA_FROM_MUSICBRAINZ_RELEASE_GROUP", { releaseGroupId }, this)
+						.then(resultBody => {
+							const youtubeIds = Array.from(
+								new Set(
+									resultBody.results.bindings
+										.filter(binding => !!binding.YouTube_video_ID)
+										.map(binding => binding.YouTube_video_ID.value)
+								)
 							);
+							// const soundcloudIds = Array.from(
+							// 	new Set(
+							// 		resultBody.results.bindings
+							// 			.filter(binding => !!binding["SoundCloud_track_ID"])
+							// 			.map(binding => binding["SoundCloud_track_ID"].value)
+							// 	)
+							// );
+							const musicVideoEntityUrls = Array.from(
+								new Set(
+									resultBody.results.bindings
+										.filter(binding => !!binding.Music_video_entity_URL)
+										.map(binding => binding.Music_video_entity_URL.value)
+								)
+							);
+
+							youtubeIds.forEach(youtubeId => {
+								const mediaSource = `youtube:${youtubeId}`;
+
+								mediaSources.add(mediaSource);
+
+								// if (collectAlternativeMediaSourcesOrigins) {
+								// 	const mediaSourceOrigins = [
+								// 		`Spotify track ${spotifyTrackId}`,
+								// 		`ISRC ${ISRC}`,
+								// 		`MusicBrainz recordings`,
+								// 		`MusicBrainz recording ${recording.id}`,
+								// 		`MusicBrainz relations`,
+								// 		`MusicBrainz relation target-type work`,
+								// 		`MusicBrainz relation work id ${relation.work.id}`,
+								// 		`WikiData select from MusicBrainz work id ${relation.work.id}`,
+								// 		`YouTube ID ${youtubeId}`
+								// 	];
+
+								// 	if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
+
+								// 	mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
+								// }
+							});
+
+							// soundcloudIds.forEach(soundcloudId => {
+							// 	const mediaSource = `soundcloud:${soundcloudId}`;
+
+							// 	mediaSources.add(mediaSource);
+
+							// 	// if (collectAlternativeMediaSourcesOrigins) {
+							// 	// 	const mediaSourceOrigins = [
+							// 	// 		`Spotify track ${spotifyTrackId}`,
+							// 	// 		`ISRC ${ISRC}`,
+							// 	// 		`MusicBrainz recordings`,
+							// 	// 		`MusicBrainz recording ${recording.id}`,
+							// 	// 		`MusicBrainz relations`,
+							// 	// 		`MusicBrainz relation target-type work`,
+							// 	// 		`MusicBrainz relation work id ${relation.work.id}`,
+							// 	// 		`WikiData select from MusicBrainz work id ${relation.work.id}`,
+							// 	// 		`SoundCloud ID ${soundcloudId}`
+							// 	// 	];
+
+							// 	// 	if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
+
+							// 	// 	mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
+							// 	// }
+							// });
+
+							const promisesToRun2 = [];
+
+							musicVideoEntityUrls.forEach(musicVideoEntityUrl => {
+								promisesToRun2.push(
+									new Promise(resolve => {
+										WikiDataModule.runJob(
+											"API_GET_DATA_FROM_ENTITY_URL",
+											{ entityUrl: musicVideoEntityUrl },
+											this
+										).then(resultBody => {
+											const youtubeIds = Array.from(
+												new Set(
+													resultBody.results.bindings
+														.filter(binding => !!binding.YouTube_video_ID)
+														.map(binding => binding.YouTube_video_ID.value)
+												)
+											);
+											// const soundcloudIds = Array.from(
+											// 	new Set(
+											// 		resultBody.results.bindings
+											// 			.filter(binding => !!binding["SoundCloud_track_ID"])
+											// 			.map(binding => binding["SoundCloud_track_ID"].value)
+											// 	)
+											// );
+
+											youtubeIds.forEach(youtubeId => {
+												const mediaSource = `youtube:${youtubeId}`;
+
+												mediaSources.add(mediaSource);
+
+												// if (collectAlternativeMediaSourcesOrigins) {
+												// 	const mediaSourceOrigins = [
+												// 		`Spotify track ${spotifyTrackId}`,
+												// 		`ISRC ${ISRC}`,
+												// 		`MusicBrainz recordings`,
+												// 		`MusicBrainz recording ${recording.id}`,
+												// 		`MusicBrainz relations`,
+												// 		`MusicBrainz relation target-type work`,
+												// 		`MusicBrainz relation work id ${relation.work.id}`,
+												// 		`WikiData select from MusicBrainz work id ${relation.work.id}`,
+												// 		`YouTube ID ${youtubeId}`
+												// 	];
+
+												// 	if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
+
+												// 	mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
+												// }
+											});
+
+											// soundcloudIds.forEach(soundcloudId => {
+											// 	const mediaSource = `soundcloud:${soundcloudId}`;
+
+											// 	mediaSources.add(mediaSource);
+
+											// 	// if (collectAlternativeMediaSourcesOrigins) {
+											// 	// 	const mediaSourceOrigins = [
+											// 	// 		`Spotify track ${spotifyTrackId}`,
+											// 	// 		`ISRC ${ISRC}`,
+											// 	// 		`MusicBrainz recordings`,
+											// 	// 		`MusicBrainz recording ${recording.id}`,
+											// 	// 		`MusicBrainz relations`,
+											// 	// 		`MusicBrainz relation target-type work`,
+											// 	// 		`MusicBrainz relation work id ${relation.work.id}`,
+											// 	// 		`WikiData select from MusicBrainz work id ${relation.work.id}`,
+											// 	// 		`SoundCloud ID ${soundcloudId}`
+											// 	// 	];
+
+											// 	// 	if (!mediaSourcesOrigins[mediaSource]) mediaSourcesOrigins[mediaSource] = [];
+
+											// 	// 	mediaSourcesOrigins[mediaSource].push(mediaSourceOrigins);
+											// 	// }
+											// });
+
+											resolve();
+										});
+									})
+								);
+							});
+
+							Promise.allSettled(promisesToRun2).then(resolve);
+						})
+						.catch(err => {
+							console.log("KRISWORKERR", err);
+							resolve();
 						});
+				});
 
-						Promise.allSettled(promisesToRun2).then(resolve);
-					})
-					.catch(err => {
-						console.log("KRISWORKERR", err);
-						resolve();
-					});
+				jobsToRun.push(promise);
 			});
-
-			jobsToRun.push(promise);
-		});
+		} catch (err) {
+			console.log("Error during getting releases from ISRC", err);
+		}
 
 		// console.log("RecordingApiResponse");
 		// console.dir(RecordingApiResponse, { depth: 10 });

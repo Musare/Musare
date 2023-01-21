@@ -164,20 +164,34 @@ class _MusicBrainzModule extends CoreClass {
 			url,
 			params
 		});
-		if (genericApiRequest) return genericApiRequest._doc.responseData;
+		if (genericApiRequest) {
+			if (genericApiRequest._doc.responseData.error) throw new Error(genericApiRequest._doc.responseData.error);
+			return genericApiRequest._doc.responseData;
+		}
 
 		await MusicBrainzModule.rateLimiter.continue();
 		MusicBrainzModule.rateLimiter.restart();
 
-		const { data: responseData } = await MusicBrainzModule.axios.get(url, {
-			params,
-			headers: {
-				"User-Agent": "Musare/3.9.0-fork ( https://git.kvos.dev/kris/MusareFork )" // TODO set this in accordance to https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting
-			},
-			timeout: MusicBrainzModule.requestTimeout
+		const responseData = await new Promise((resolve, reject) => {
+			MusicBrainzModule.axios
+				.get(url, {
+					params,
+					headers: {
+						"User-Agent": "Musare/3.9.0-fork ( https://git.kvos.dev/kris/MusareFork )" // TODO set this in accordance to https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting
+					},
+					timeout: MusicBrainzModule.requestTimeout
+				})
+				.then(({ data: responseData }) => {
+					resolve(responseData);
+				})
+				.catch(err => {
+					if (err.response.status === 404) {
+						resolve(err.response.data);
+					} else reject(err);
+				});
 		});
 
-		if (responseData.error) throw new Error(responseData.error);
+		if (responseData.error && responseData.error !== "Not Found") throw new Error(responseData.error);
 
 		genericApiRequest = new MusicBrainzModule.GenericApiRequestModel({
 			url,
@@ -186,6 +200,8 @@ class _MusicBrainzModule extends CoreClass {
 			date: Date.now()
 		});
 		genericApiRequest.save();
+
+		if (responseData.error) throw new Error(responseData.error);
 
 		return responseData;
 	}
