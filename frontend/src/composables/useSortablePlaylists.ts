@@ -120,6 +120,24 @@ export const useSortablePlaylists = () => {
 		);
 
 		socket.on(
+			"event:playlist.song.replaced",
+			res => {
+				playlists.value.forEach((playlist, index) => {
+					if (playlist._id === res.data.playlistId) {
+						playlists.value[index].songs = playlists.value[
+							index
+						].songs.map(song =>
+							song.mediaSource === res.data.oldMediaSource
+								? res.data.song
+								: song
+						);
+					}
+				});
+			},
+			{ replaceable: true }
+		);
+
+		socket.on(
 			"event:playlist.displayName.updated",
 			res => {
 				playlists.value.forEach((playlist, index) => {

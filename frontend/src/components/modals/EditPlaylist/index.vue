@@ -63,8 +63,14 @@ const containsSpotifySongs = computed(
 );
 
 const { tab, playlist } = storeToRefs(editPlaylistStore);
-const { setPlaylist, clearPlaylist, addSong, removeSong, repositionedSong } =
-	editPlaylistStore;
+const {
+	setPlaylist,
+	clearPlaylist,
+	addSong,
+	removeSong,
+	replaceSong,
+	repositionedSong
+} = editPlaylistStore;
 
 const { closeCurrentModal, openModal } = useModalsStore();
 
@@ -282,6 +288,20 @@ onMounted(() => {
 			if (playlist.value._id === res.data.playlistId) {
 				// remove song from array of playlists
 				removeSong(res.data.mediaSource);
+			}
+		},
+		{ modalUuid: props.modalUuid }
+	);
+
+	socket.on(
+		"event:playlist.song.replaced",
+		res => {
+			if (playlist.value._id === res.data.playlistId) {
+				// replace song
+				replaceSong({
+					song: res.data.song,
+					oldMediaSource: res.data.oldMediaSource
+				});
 			}
 		},
 		{ modalUuid: props.modalUuid }

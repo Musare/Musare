@@ -4,6 +4,7 @@ import {
 	defineAsyncComponent,
 	onMounted,
 	ref,
+	reactive,
 	computed
 } from "vue";
 import Toast from "toasters";
@@ -14,6 +15,10 @@ const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
+);
+
+const QuickConfirm = defineAsyncComponent(
+	() => import("@/components/QuickConfirm.vue")
 );
 
 const { openModal, closeCurrentModal } = useModalsStore();
@@ -27,198 +32,56 @@ const props = defineProps({
 });
 
 const playlist = ref(null);
-const allSongs = ref(null);
-const loaded = ref(false);
+
+const spotifySongs = ref([]);
+
+const spotifyTracks = reactive({});
+const spotifyArtists = reactive({});
+
+const loadingPlaylist = ref(false);
+const loadedPlaylist = ref(false);
+
+const loadingSpotifyTracks = ref(false);
+const loadedSpotifyTracks = ref(false);
+
+const gettingAllAlternativeMediaPerTrack = ref(false);
+const gotAllAlternativeMediaPerTrack = ref(false);
+const alternativeMediaPerTrack = reactive({});
+
+const alternativeMediaMap = reactive({});
+const alternativeMediaFailedMap = reactive({});
+
+const gettingMissingAlternativeMedia = ref(false);
+
 const currentConvertType = ref("track");
-const sortBy = ref("track_count_des");
 
-const spotifyArtists = ref({});
-const alternativeSongsMap = ref(new Map());
+const hideSpotifySongsWithNoAlternativesFound = ref(false);
 
+const preferredAlternativeSongMode = ref<
+	"FIRST" | "LYRICS" | "TOPIC" | "LYRICS_TOPIC" | "TOPIC_LYRICS"
+>("FIRST");
+
+// const singleMode = ref(false);
 const showExtra = ref(false);
 
-const preferTopic = ref(true);
-const singleMode = ref(true);
+const missingMediaSources = computed(() => {
+	const missingMediaSources = [];
 
-// const ISRCMap = ref(new Map());
-// const WikidataSpotifyTrackMap = ref(new Map());
-// const WikidataMusicBrainzWorkMap = ref(new Map());
-const AlternativeSourcesForTrackMap = ref(new Map());
-
-const spotifyArtistsArray = computed(() =>
-	Object.entries(spotifyArtists.value)
-		.map(([spotifyArtistId, spotifyArtist]) => ({
-			artistId: spotifyArtistId,
-			...spotifyArtist
-		}))
-		.sort((a, b) => {
-			if (sortBy.value === "track_count_des")
-				return b.songs.length - a.songs.length;
-			if (sortBy.value === "track_count_asc")
-				return a.songs.length - b.songs.length;
-		})
-);
-
-const spotifyTracksMediaSourcesArray = computed(() =>
-	Object.keys(allSongs.value)
-);
-
-const toggleSpotifyArtistExpanded = spotifyArtistId => {
-	spotifyArtists.value[spotifyArtistId].expanded =
-		!spotifyArtists.value[spotifyArtistId].expanded;
-};
-
-// const getFromISRC = ISRC => {
-// 	socket.dispatch("apis.searchMusicBrainzISRC", ISRC, res => {
-// 		console.log("KRIS111", res);
-// 		if (res.status === "success") {
-// 			// ISRCMap.value.set(ISRC, res.data);
-// 			ISRCMap.value.set(ISRC, res.data.response);
-// 		}
-// 	});
-// };
-
-// const getFromWikidataSpotifyTrack = trackId => {
-// 	socket.dispatch("apis.searchWikidataBySpotifyTrackId", trackId, res => {
-// 		console.log("KRIS11111", res);
-// 		if (res.status === "success") {
-// 			// ISRCMap.value.set(ISRC, res.data);
-// 			WikidataSpotifyTrackMap.value.set(trackId, res.data.response);
-// 		}
-// 	});
-// };
-
-// const getFromWikidataByMusicBrainzWorkId = workId => {
-// 	socket.dispatch("apis.searchWikidataByMusicBrainzWorkId", workId, res => {
-// 		console.log("KRIS111112", res);
-// 		if (res.status === "success") {
-// 			// ISRCMap.value.set(ISRC, res.data);
-// 			WikidataMusicBrainzWorkMap.value.set(workId, res.data.response);
-// 		}
-// 	});
-// };
-
-const gettingAlternativeMediaSources = ref(false);
-
-const getAlternativeMediaSourcesForTracks = () => {
-	if (gettingAlternativeMediaSources.value) return;
-	gettingAlternativeMediaSources.value = true;
-
-	const mediaSources = spotifyTracksMediaSourcesArray.value;
-
-	socket.dispatch("apis.getAlternativeMediaSourcesForTracks", mediaSources, {
-		cb: res => {
-			console.log("KRIS111133", res);
-			// console.log("Change state to loading");
-			// if (res.status === "success") {
-			// 	AlternativeSourcesForTrackMap.value.set(
-			// 		mediaSource,
-			// 		res.data.alternativeMediaSources
-			// 	);
-			// 	console.log(32211, AlternativeSourcesForTrackMap.value);
-			// 	getMissingAlternativeSongs();
-			// 	// ISRCMap.value.set(ISRC, res.data);
-			// 	// WikidataMusicBrainzWorkMap.value.set(workId, res.data.response);
-			// }
-		},
-		onProgress: data => {
-			console.log("KRIS595959", data);
-			if (data.status === "working") {
-				if (data.data.status === "success") {
-					const { mediaSource, result } = data.data;
-					AlternativeSourcesForTrackMap.value.set(
-						mediaSource,
-						result
-					);
-					console.log(32211, AlternativeSourcesForTrackMap.value);
-					getMissingAlternativeSongs();
-					// ISRCMap.value.set(ISRC, res.data);
-					// WikidataMusicBrainzWorkMap.value.set(workId, res.data.response);
-				}
-			}
-		}
-	});
-};
-
-const loadingMediaSourcesMap = ref(new Map());
-const failedToLoadMediaSourcesMap = ref(new Map());
-
-const gettingMissingAlternativeSongs = ref(false);
-const getMissingAlternativeSongsAfterAgain = ref(false);
-
-const getMissingAlternativeSongs = () => {
-	if (gettingMissingAlternativeSongs.value) {
-		getMissingAlternativeSongsAfterAgain.value = true;
-		return;
-	}
-	getMissingAlternativeSongsAfterAgain.value = false;
-	gettingMissingAlternativeSongs.value = true;
-
-	const allAlternativeMediaSources = Array.from(
-		new Set(
-			Array.from(AlternativeSourcesForTrackMap.value.values())
-				.filter(t => !!t)
-				.map(t => t.mediaSources)
-				.flat()
-		)
-	);
-	const filteredMediaSources = allAlternativeMediaSources.filter(
-		mediaSource => {
-			const alreadyExists = alternativeSongsMap.value.has(mediaSource);
-			if (alreadyExists) return false;
-			const loading = loadingMediaSourcesMap.value.get(mediaSource);
-			if (loading) return false;
-			const failedToLoad =
-				failedToLoadMediaSourcesMap.value.get(mediaSource);
-			if (failedToLoad) return false;
-			return true;
-		}
-	);
-	filteredMediaSources.forEach(mediaSource => {
-		loadingMediaSourcesMap.value.set(mediaSource, true);
+	Object.values(alternativeMediaPerTrack).forEach(({ mediaSources }) => {
+		mediaSources.forEach(mediaSource => {
+			if (
+				!alternativeMediaMap[mediaSource] &&
+				!alternativeMediaFailedMap[mediaSource] &&
+				missingMediaSources.indexOf(mediaSource) === -1
+			)
+				missingMediaSources.push(mediaSource);
+		});
 	});
 
-	socket.dispatch(
-		"media.getMediaFromMediaSources",
-		filteredMediaSources,
-		res => {
-			if (res.status === "success") {
-				const { songMap } = res.data;
-				filteredMediaSources.forEach(mediaSource => {
-					if (songMap[mediaSource]) {
-						alternativeSongsMap.value.set(
-							mediaSource,
-							songMap[mediaSource]
-						);
-					} else {
-						failedToLoadMediaSourcesMap.value.set(
-							mediaSource,
-							true
-						);
-					}
-					loadingMediaSourcesMap.value.delete(mediaSource);
-				});
+	return missingMediaSources;
+});
 
-				if (getMissingAlternativeSongsAfterAgain.value) {
-					setTimeout(() => {
-						gettingMissingAlternativeSongs.value = false;
-						getMissingAlternativeSongs();
-					}, 500);
-				}
-				// console.log(657567, );
-				// AlternativeSourcesForTrackMap.value.set(
-				// 	mediaSource,
-				// 	res.data.alternativeMediaSources
-				// );
-				// console.log(32211, AlternativeSourcesForTrackMap.value);
-				// ISRCMap.value.set(ISRC, res.data);
-				// WikidataMusicBrainzWorkMap.value.set(workId, res.data.response);
-			}
-		}
-	);
-};
-
-const replaceSong = (oldMediaSource, newMediaSource) => {
+const replaceSpotifySong = (oldMediaSource, newMediaSource) => {
 	socket.dispatch(
 		"playlists.replaceSongInPlaylist",
 		oldMediaSource,
@@ -230,39 +93,89 @@ const replaceSong = (oldMediaSource, newMediaSource) => {
 	);
 };
 
-onMounted(() => {
-	console.debug(TAG, "On mounted start");
+const getMissingAlternativeMedia = () => {
+	if (gettingMissingAlternativeMedia.value) return;
 
-	console.debug(TAG, "Getting playlist", props);
-	socket.dispatch("playlists.getPlaylist", props.playlistId, res => {
-		console.debug(TAG, "Get playlist response", res);
+	gettingMissingAlternativeMedia.value = true;
 
-		if (res.status !== "success") {
-			new Toast(res.message);
-			closeCurrentModal();
-			return;
+	const _missingMediaSources = missingMediaSources.value;
+
+	console.log("Getting missing", _missingMediaSources);
+
+	socket.dispatch(
+		"media.getMediaFromMediaSources",
+		_missingMediaSources,
+		res => {
+			if (res.status === "success") {
+				const { songMap } = res.data;
+
+				_missingMediaSources.forEach(missingMediaSource => {
+					if (songMap[missingMediaSource])
+						alternativeMediaMap[missingMediaSource] =
+							songMap[missingMediaSource];
+					else alternativeMediaFailedMap[missingMediaSource] = true;
+				});
+			}
+
+			gettingMissingAlternativeMedia.value = false;
 		}
+	);
+};
 
-		playlist.value = res.data.playlist;
-		allSongs.value = {};
+const getAlternativeMedia = () => {
+	if (
+		gettingAllAlternativeMediaPerTrack.value ||
+		gotAllAlternativeMediaPerTrack.value
+	)
+		return;
 
-		playlist.value.songs
-			.filter(song => song.mediaSource.startsWith("spotify:"))
-			.forEach(song => {
-				allSongs.value[song.mediaSource] = {
-					song,
-					track: null
-				};
-			});
+	gettingAllAlternativeMediaPerTrack.value = true;
 
-		const mediaSources = Object.keys(allSongs.value);
+	const mediaSources = spotifySongs.value.map(song => song.mediaSource);
 
-		console.debug(TAG, "getTracksFromMediaSources start", mediaSources);
+	socket.dispatch("apis.getAlternativeMediaSourcesForTracks", mediaSources, {
+		cb: res => {
+			console.log(
+				"apis.getAlternativeMediaSourcesForTracks response",
+				res
+			);
+		},
+		onProgress: data => {
+			console.log(
+				"apis.getAlternativeMediaSourcesForTracks onProgress",
+				data
+			);
+
+			if (data.status === "working") {
+				if (data.data.status === "success") {
+					const { mediaSource, result } = data.data;
+
+					if (!spotifyTracks[mediaSource]) return;
+
+					alternativeMediaPerTrack[mediaSource] = result;
+				}
+			} else if (data.status === "finished") {
+				gotAllAlternativeMediaPerTrack.value = true;
+				gettingAllAlternativeMediaPerTrack.value = false;
+			}
+		}
+	});
+};
+
+const loadSpotifyTracks = () =>
+	new Promise<void>(resolve => {
+		console.debug(TAG, "Loading Spotify tracks");
+
+		loadingSpotifyTracks.value = true;
+
+		const mediaSources = spotifySongs.value.map(song => song.mediaSource);
+
 		socket.dispatch(
 			"spotify.getTracksFromMediaSources",
 			mediaSources,
 			res => {
-				console.debug(TAG, "getTracksFromMediaSources response", res);
+				console.debug(TAG, "Get tracks response", res);
+
 				if (res.status !== "success") {
 					new Toast(res.message);
 					closeCurrentModal();
@@ -272,26 +185,149 @@ onMounted(() => {
 				const { tracks } = res.data;
 
 				Object.entries(tracks).forEach(([mediaSource, track]) => {
-					allSongs.value[mediaSource].track = track;
+					spotifyTracks[mediaSource] = track;
 
 					track.artistIds.forEach((artistId, artistIndex) => {
-						if (!spotifyArtists.value[artistId]) {
-							spotifyArtists.value[artistId] = {
+						if (!spotifyArtists[artistId]) {
+							spotifyArtists[artistId] = {
 								name: track.artists[artistIndex],
-								songs: [mediaSource],
+								songs: [],
 								expanded: false
 							};
-						} else
-							spotifyArtists.value[artistId].songs.push(
-								mediaSource
-							);
+						}
+
+						spotifyArtists[artistId].songs.push(mediaSource);
 					});
 				});
 
-				loaded.value = true;
+				console.debug(TAG, "Loaded Spotify tracks");
+
+				loadedSpotifyTracks.value = true;
+				loadingSpotifyTracks.value = false;
+
+				resolve();
 			}
 		);
 	});
+
+const loadPlaylist = () =>
+	new Promise<void>(resolve => {
+		console.debug(TAG, `Loading playlist ${props.playlistId}`);
+
+		loadingPlaylist.value = true;
+
+		socket.dispatch("playlists.getPlaylist", props.playlistId, res => {
+			console.debug(TAG, "Get playlist response", res);
+
+			if (res.status !== "success") {
+				new Toast(res.message);
+				closeCurrentModal();
+				return;
+			}
+
+			playlist.value = res.data.playlist;
+
+			spotifySongs.value = playlist.value.songs.filter(song =>
+				song.mediaSource.startsWith("spotify:")
+			);
+
+			console.debug(TAG, `Loaded playlist ${props.playlistId}`);
+
+			loadedPlaylist.value = true;
+			loadingPlaylist.value = false;
+
+			resolve();
+		});
+	});
+
+const removeSpotifyTrack = mediaSource => {
+	const spotifyTrack = spotifyTracks[mediaSource];
+	if (spotifyTrack) {
+		delete spotifyTracks[mediaSource];
+
+		spotifyTrack.artistIds.forEach(artistId => {
+			const spotifyArtist = spotifyArtists[artistId];
+
+			if (spotifyArtist) {
+				if (spotifyArtist.songs.length === 1)
+					delete spotifyArtists[artistId];
+				else
+					spotifyArtists[artistId].songs = spotifyArtists[
+						artistId
+					].songs.filter(
+						_mediaSource => _mediaSource !== mediaSource
+					);
+			}
+		});
+	}
+};
+
+onMounted(() => {
+	console.debug(TAG, "On mounted start");
+
+	loadPlaylist().then(loadSpotifyTracks);
+
+	socket.on(
+		"event:playlist.song.removed",
+		res => {
+			console.log("SONG REMOVED", res);
+
+			if (
+				loadedPlaylist.value &&
+				playlist.value._id === res.data.playlistId
+			) {
+				const { oldMediaSource } = res.data;
+
+				// remove song
+				playlist.value.songs = playlist.value.songs.filter(
+					song => song.mediaSource !== oldMediaSource
+				);
+
+				spotifySongs.value = spotifySongs.value.filter(
+					song => song.mediaSource !== oldMediaSource
+				);
+
+				removeSpotifyTrack(oldMediaSource);
+
+				delete alternativeMediaMap[oldMediaSource];
+				delete alternativeMediaFailedMap[oldMediaSource];
+			}
+		},
+		{ modalUuid: props.modalUuid }
+	);
+
+	socket.on(
+		"event:playlist.song.replaced",
+		res => {
+			console.log(
+				"SONG REPLACED",
+				res,
+				playlist.value._id === res.data.playlistId
+			);
+
+			if (
+				loadedPlaylist.value &&
+				playlist.value._id === res.data.playlistId
+			) {
+				const { oldMediaSource } = res.data;
+
+				// remove song
+				playlist.value.songs = playlist.value.songs.filter(
+					song => song.mediaSource !== oldMediaSource
+				);
+
+				spotifySongs.value = spotifySongs.value.filter(
+					song => song.mediaSource !== oldMediaSource
+				);
+
+				removeSpotifyTrack(oldMediaSource);
+
+				delete alternativeMediaMap[oldMediaSource];
+				delete alternativeMediaFailedMap[oldMediaSource];
+			}
+		},
+		{ modalUuid: props.modalUuid }
+	);
 
 	console.debug(TAG, "On mounted end");
 });
@@ -306,389 +342,393 @@ onMounted(() => {
 			@closed="closeCurrentModal()"
 		>
 			<template #body>
-				<p>Converting by {{ currentConvertType }}</p>
-				<button
-					class="button is-primary"
-					@click="showExtra = !showExtra"
-				>
-					Toggle show extra
-				</button>
-				<br />
-				<button
-					class="button is-primary"
-					@click="preferTopic = !preferTopic"
-				>
-					Prefer mode:
-					{{ preferTopic ? "first topic" : "first song" }}
-				</button>
-				<br />
-				<button
-					class="button is-primary"
-					@click="getAlternativeMediaSourcesForTracks()"
-				>
-					Get alternatives
-				</button>
-				<br />
-				<button
-					class="button is-primary"
-					@click="singleMode = !singleMode"
-				>
-					Single convert mode: {{ singleMode }}
-				</button>
-				<br />
-				<button
-					class="button is-primary"
-					@click="convertAllTracks()"
-					v-if="!singleMode"
-				>
-					Use prefer mode to convert all available tracks
-				</button>
-				<!-- <p>Sorting by {{ sortBy }}</p> -->
-
-				<br />
-
-				<!-- <div class="column-headers">
-					<div class="spotify-column-header column-header">
-						<h3>Spotify</h3>
-					</div>
-					<div class="soumdcloud-column-header column-header">
-						<h3>Soundcloud</h3>
-					</div>
-				</div> -->
-
-				<div class="tracks" v-if="currentConvertType === 'track'">
-					<div
-						class="track-row"
-						v-for="spotifyTrackMediaSource in spotifyTracksMediaSourcesArray"
-						:key="spotifyTrackMediaSource"
+				<template v-if="loadedPlaylist && spotifySongs.length === 0">
+					<h2>All Spotify songs have been converted</h2>
+					<button
+						class="button is-primary is-fullwidth"
+						@click="closeCurrentModal()"
 					>
-						<div class="left">
-							<song-item
-								:song="{
-									title: allSongs[spotifyTrackMediaSource]
-										.track.name,
-									duration:
-										allSongs[spotifyTrackMediaSource].track
-											.duration,
-									artists:
-										allSongs[spotifyTrackMediaSource].track
-											.artists,
-									thumbnail:
-										allSongs[spotifyTrackMediaSource].track
-											.albumImageUrl
-								}"
+						Close modal
+					</button>
+				</template>
+				<template v-else>
+					<div class="buttons-options-info-row">
+						<div class="buttons">
+							<quick-confirm
+								v-if="
+									gotAllAlternativeMediaPerTrack &&
+									missingMediaSources.length === 0
+								"
+								placement="top"
+								@confirm="replaceAllAvailableSongs()"
 							>
-								<template #leftIcon>
-									<a
-										:href="`https://open.spotify.com/track/${
-											spotifyTrackMediaSource.split(
-												':'
-											)[1]
-										}`"
-										target="_blank"
+								<button class="button is-primary is-fullwidth">
+									Replace all available songs with provided
+									prefer settings
+								</button>
+							</quick-confirm>
+							<button
+								v-if="
+									loadedSpotifyTracks &&
+									!gettingAllAlternativeMediaPerTrack &&
+									!gotAllAlternativeMediaPerTrack
+								"
+								class="button is-primary"
+								@click="getAlternativeMedia()"
+							>
+								Get alternative media
+							</button>
+							<button
+								v-if="
+									gotAllAlternativeMediaPerTrack &&
+									!gettingMissingAlternativeMedia &&
+									missingMediaSources.length > 0
+								"
+								class="button is-primary"
+								@click="getMissingAlternativeMedia()"
+							>
+								Get missing alternative media
+							</button>
+						</div>
+
+						<div class="options">
+							<p class="is-expanded checkbox-control">
+								<label class="switch">
+									<input
+										type="checkbox"
+										id="show-extra"
+										v-model="showExtra"
+									/>
+									<span class="slider round"></span>
+								</label>
+
+								<label for="show-extra">
+									<p>Show extra info</p>
+								</label>
+							</p>
+
+							<p class="is-expanded checkbox-control">
+								<label class="switch">
+									<input
+										type="checkbox"
+										id="hide-spotify-songs-with-no-alternatives-found"
+										v-model="
+											hideSpotifySongsWithNoAlternativesFound
+										"
+									/>
+									<span class="slider round"></span>
+								</label>
+
+								<label
+									for="hide-spotify-songs-with-no-alternatives-found"
+								>
+									<p>
+										Hide Spotify songs with no alternatives
+										found
+									</p>
+								</label>
+							</p>
+
+							<div class="control">
+								<label class="label"
+									>Get alternatives per</label
+								>
+								<p class="control is-expanded select">
+									<select
+										v-model="currentConvertType"
+										:disabled="
+											gettingAllAlternativeMediaPerTrack
+										"
 									>
-										<div
-											class="spotify-icon left-icon"
-										></div>
-									</a>
-								</template>
-							</song-item>
-							<p>Media source: {{ spotifyTrackMediaSource }}</p>
+										<option value="track">Track</option>
+										<option value="artist">Artist</option>
+										<option value="album">Album</option>
+									</select>
+								</p>
+							</div>
+
+							<div class="control">
+								<label class="label"
+									>Preferred track mode</label
+								>
+								<p class="control is-expanded select">
+									<select
+										v-model="preferredAlternativeSongMode"
+										:disabled="false"
+									>
+										<option value="FIRST">
+											First song
+										</option>
+										<option value="LYRICS">
+											First song with lyrics in title
+										</option>
+										<option value="TOPIC">
+											First song from topic channel
+											(YouTube only)
+										</option>
+										<option value="LYRICS_TOPIC">
+											First song with lyrics in title, or
+											from topic channel (YouTube only)
+										</option>
+										<option value="TOPIC_LYRICS">
+											First song from topic channel
+											(YouTube only), or with lyrics in
+											title
+										</option>
+									</select>
+								</p>
+							</div>
+						</div>
+
+						<div class="info">
+							<h6>Status</h6>
+
+							<p>Loading playlist: {{ loadingPlaylist }}</p>
+							<p>Loaded playlist: {{ loadedPlaylist }}</p>
+
 							<p>
-								ISRC:
+								Spotify songs in playlist:
+								{{ spotifySongs.length }}
+							</p>
+
+							<p>Converting by {{ currentConvertType }}</p>
+
+							<hr />
+
+							<p>
+								Loading Spotify tracks:
+								{{ loadingSpotifyTracks }}
+							</p>
+							<p>
+								Loaded Spotify tracks: {{ loadedSpotifyTracks }}
+							</p>
+
+							<p>
+								Spotify tracks loaded:
+								{{ Object.keys(spotifyTracks).length }}
+							</p>
+							<p>
+								Spotify artists:
+								{{ Object.keys(spotifyArtists).length }}
+							</p>
+
+							<p>
+								Getting missing alternative media:
+								{{ gettingMissingAlternativeMedia }}
+							</p>
+
+							<p>
+								Getting all alternaitve media per track:
+								{{ gettingAllAlternativeMediaPerTrack }}
+							</p>
+							<p>
+								Got all alternaitve media per track:
+								{{ gotAllAlternativeMediaPerTrack }}
+							</p>
+
+							<hr />
+
+							<p>
+								Alternative media loaded:
+								{{ Object.keys(alternativeMediaMap).length }}
+							</p>
+							<p>
+								Alternative media that failed to load:
 								{{
-									allSongs[spotifyTrackMediaSource].track
-										.externalIds.isrc
+									Object.keys(alternativeMediaFailedMap)
+										.length
 								}}
 							</p>
 						</div>
-						<div class="right">
-							<p
-								v-if="
-									!AlternativeSourcesForTrackMap.has(
-										spotifyTrackMediaSource
-									)
-								"
-							>
-								Track not converted yet
-							</p>
-							<template v-else>
-								<div
-									v-for="[
-										alternativeMediaSource,
-										alternativeMediaSourceOrigins
-									] in Object.entries(
-										AlternativeSourcesForTrackMap.get(
-											spotifyTrackMediaSource
-										).mediaSourcesOrigins
-									)"
-									:key="alternativeMediaSource"
-								>
-									<p
-										v-if="
-											loadingMediaSourcesMap.has(
-												alternativeMediaSource
-											)
-										"
-									>
-										Song {{ alternativeMediaSource }} is
-										loading
-									</p>
-									<p
-										v-else-if="
-											failedToLoadMediaSourcesMap.has(
-												alternativeMediaSource
-											)
-										"
-									>
-										Song {{ alternativeMediaSource }} failed
-										to load
-									</p>
-									<p
-										v-else-if="
-											!alternativeSongsMap.has(
-												alternativeMediaSource
-											)
-										"
-									>
-										Song {{ alternativeMediaSource }} not
-										loaded/found
-									</p>
-									<template v-else>
-										<song-item
-											:song="
-												alternativeSongsMap.get(
-													alternativeMediaSource
-												)
-											"
-										>
-											<template #leftIcon>
-												<a
-													v-if="
-														alternativeMediaSource.split(
-															':'
-														)[0] === 'youtube'
-													"
-													:href="`https://youtu.be/${
-														alternativeMediaSource.split(
-															':'
-														)[1]
-													}`"
-													target="_blank"
-												>
-													<div
-														class="youtube-icon left-icon"
-													></div>
-												</a>
-												<a
-													v-if="
-														alternativeMediaSource.split(
-															':'
-														)[0] === 'soundcloud'
-													"
-													target="_blank"
-												>
-													<div
-														class="soundcloud-icon left-icon"
-													></div>
-												</a>
-											</template>
-										</song-item>
-										<button
-											class="button is-primary"
-											v-if="singleMode"
-											@click="
-												replaceSong(
-													spotifyTrackMediaSource,
-													alternativeMediaSource
-												)
-											"
-										>
-											Convert to this song
-										</button>
-									</template>
+					</div>
 
-									<ul v-if="showExtra">
-										<li
-											v-for="origin in alternativeMediaSourceOrigins"
+					<br />
+
+					<hr />
+
+					<div
+						class="convert-table convert-song-by-track"
+						v-if="currentConvertType === 'track'"
+					>
+						<h4>Spotify songs</h4>
+						<h4>Alternative songs</h4>
+
+						<template
+							v-for="spotifySong in spotifySongs"
+							:key="spotifySong.mediaSource"
+						>
+							<div
+								class="convert-table-cell convert-table-cell-left"
+							>
+								<song-item :song="spotifySong">
+									<template #leftIcon>
+										<a
+											:href="`https://open.spotify.com/track/${
+												spotifySong.mediaSource.split(
+													':'
+												)[1]
+											}`"
+											target="_blank"
+										>
+											<div
+												class="spotify-icon left-icon"
+											></div>
+										</a>
+									</template>
+								</song-item>
+								<p>
+									Media source: {{ spotifySong.mediaSource }}
+								</p>
+								<p v-if="loadedSpotifyTracks">
+									ISRC:
+									{{
+										spotifyTracks[spotifySong.mediaSource]
+											.externalIds.isrc
+									}}
+								</p>
+							</div>
+							<div
+								class="convert-table-cell convert-table-cell-right"
+							>
+								<p
+									v-if="
+										!alternativeMediaPerTrack[
+											spotifySong.mediaSource
+										]
+									"
+								>
+									Alternatives not loaded yet
+								</p>
+								<template v-else>
+									<div class="alternative-media-items">
+										<div
+											class="alternative-media-item"
+											v-for="alternativeMediaSource in alternativeMediaPerTrack[
+												spotifySong.mediaSource
+											].mediaSources"
 											:key="
-												spotifyTrackMediaSource +
-												alternativeMediaSource +
-												origin
+												spotifySong.mediaSource +
+												alternativeMediaSource
 											"
 										>
-											=
-											<ul>
+											<p
+												v-if="
+													alternativeMediaFailedMap[
+														alternativeMediaSource
+													]
+												"
+											>
+												Song
+												{{ alternativeMediaSource }}
+												failed to load
+											</p>
+											<p
+												v-else-if="
+													!alternativeMediaMap[
+														alternativeMediaSource
+													]
+												"
+											>
+												Song
+												{{ alternativeMediaSource }}
+												hasn't been loaded yet
+											</p>
+											<template v-else>
+												<div>
+													<song-item
+														:song="
+															alternativeMediaMap[
+																alternativeMediaSource
+															]
+														"
+													>
+														<template #leftIcon>
+															<a
+																v-if="
+																	alternativeMediaSource.split(
+																		':'
+																	)[0] ===
+																	'youtube'
+																"
+																:href="`https://youtu.be/${
+																	alternativeMediaSource.split(
+																		':'
+																	)[1]
+																}`"
+																target="_blank"
+															>
+																<div
+																	class="youtube-icon left-icon"
+																></div>
+															</a>
+															<a
+																v-if="
+																	alternativeMediaSource.split(
+																		':'
+																	)[0] ===
+																	'soundcloud'
+																"
+																target="_blank"
+															>
+																<div
+																	class="soundcloud-icon left-icon"
+																></div>
+															</a>
+														</template>
+													</song-item>
+													<quick-confirm
+														placement="top"
+														@confirm="
+															replaceSpotifySong(
+																spotifySong.mediaSource,
+																alternativeMediaSource
+															)
+														"
+													>
+														<button
+															class="button is-primary is-fullwidth"
+														>
+															Replace Spotify song
+															with this song
+														</button>
+													</quick-confirm>
+												</div>
+											</template>
+
+											<ul v-if="showExtra">
 												<li
-													v-for="originItem in origin"
+													v-for="origin in alternativeMediaPerTrack[
+														spotifySong.mediaSource
+													].mediaSourceOrigins"
 													:key="
-														spotifyTrackMediaSource +
+														spotifySong.mediaSource +
 														alternativeMediaSource +
-														origin +
-														originItem
+														origin
 													"
 												>
-													+ {{ originItem }}
-												</li>
-											</ul>
-										</li>
-									</ul>
-								</div>
-							</template>
-							<!-- <button
-								class="button"
-								v-if="
-									!ISRCMap.has(
-										allSongs[spotifyTrackMediaSource].track
-											.externalIds.isrc
-									)
-								"
-								@click="
-									getFromISRC(
-										allSongs[spotifyTrackMediaSource].track
-											.externalIds.isrc
-									)
-								"
-							>
-								Get MusicBrainz ISRC data
-							</button>
-							<div v-else>
-								<p>Recording URL's</p>
-								<ul>
-									<li
-										v-for="recordingUrl in ISRCMap.get(
-											allSongs[spotifyTrackMediaSource]
-												.track.externalIds.isrc
-										).recordingUrls"
-										:key="recordingUrl"
-									>
-										{{ recordingUrl }}
-									</li>
-								</ul>
-								<hr />
-								<p>Work ID's</p>
-								<ul>
-									<li
-										v-for="workId in ISRCMap.get(
-											allSongs[spotifyTrackMediaSource]
-												.track.externalIds.isrc
-										).workIds"
-										:key="workId"
-									>
-										<p>{{ workId }}</p>
-										<button
-											v-if="
-												!WikidataMusicBrainzWorkMap.has(
-													workId
-												)
-											"
-											@click="
-												getFromWikidataByMusicBrainzWorkId(
-													workId
-												)
-											"
-											class="button"
-										>
-											Get WikiData data
-										</button>
-										<div v-else>
-											<p>YouTube ID's</p>
-											<ul>
-												<li
-													v-for="youtubeId in WikidataMusicBrainzWorkMap.get(
-														workId
-													).youtubeIds"
-												>
-													{{ youtubeId }}
+													=
+													<ul>
+														<li
+															v-for="originItem in origin"
+															:key="
+																spotifySong.mediaSource +
+																alternativeMediaSource +
+																origin +
+																originItem
+															"
+														>
+															+ {{ originItem }}
+														</li>
+													</ul>
 												</li>
 											</ul>
 										</div>
-									</li>
-								</ul>
+									</div>
+								</template>
 							</div>
-							<hr />
-							<button
-								class="button"
-								v-if="
-									!WikidataSpotifyTrackMap.has(
-										allSongs[spotifyTrackMediaSource].track
-											.trackId
-									)
-								"
-								@click="
-									getFromWikidataSpotifyTrack(
-										allSongs[spotifyTrackMediaSource].track
-											.trackId
-									)
-								"
-							>
-								Get WikiData Spotify track data
-							</button> -->
-						</div>
+						</template>
 					</div>
-				</div>
-
-				<!-- <div class="artists">
-					<div
-						v-for="spotifyArtist in spotifyArtistsArray"
-						:key="spotifyArtist.artistId"
-						class="artist-item"
-					>
-						<div class="spotify-section">
-							<p
-								@click="
-									toggleSpotifyArtistExpanded(
-										spotifyArtist.artistId
-									)
-								"
-							>
-								{{ spotifyArtist.name }} ({{
-									spotifyArtist.songs.length
-								}}
-								songs)
-							</p>
-
-							<div
-								class="spotify-songs"
-								v-if="spotifyArtist.expanded"
-							>
-								<div
-									v-for="mediaSource in spotifyArtist.songs"
-									:key="`${spotifyArtist.artistId}-${mediaSource}`"
-									class="spotify-song"
-								>
-									<song-item
-										:song="{
-											title: allSongs[mediaSource].track
-												.name,
-											duration:
-												allSongs[mediaSource].track
-													.duration,
-											artists:
-												allSongs[mediaSource].track
-													.artists,
-											thumbnail:
-												allSongs[mediaSource].track
-													.albumImageUrl
-										}"
-										:disabled-actions="[
-											'youtube',
-											'report',
-											'addToPlaylist',
-											'edit'
-										]"
-									></song-item>
-								</div>
-							</div>
-						</div>
-						<div class="soundcloud-section">
-							<p>Not found</p>
-							<div v-if="spotifyArtist.expanded">
-								<button class="button">Get artist</button>
-							</div>
-						</div>
-					</div>
-				</div> -->
+				</template>
 			</template>
 		</modal>
 	</div>
@@ -714,6 +754,40 @@ onMounted(() => {
 			display: flex;
 			flex-direction: column;
 			row-gap: 8px;
+		}
+	}
+}
+
+.alternative-media-items {
+	display: flex;
+	flex-direction: column;
+	row-gap: 12px;
+}
+
+.convert-table {
+	display: grid;
+	grid-template-columns: 50% 50%;
+	gap: 1px;
+
+	.convert-table-cell {
+		outline: 1px solid red;
+		padding: 4px;
+	}
+}
+
+.buttons-options-info-row {
+	display: grid;
+	grid-template-columns: 33.3% 33.3% 33.3%;
+	gap: 8px;
+
+	.buttons,
+	.options {
+		display: flex;
+		flex-direction: column;
+		row-gap: 8px;
+
+		> .control {
+			margin-bottom: 0 !important;
 		}
 	}
 }

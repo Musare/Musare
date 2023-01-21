@@ -159,6 +159,48 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
+	channel: "playlist.replaceSong",
+	cb: res => {
+		if (res.createdBy !== "Musare") {
+			WSModule.runJob("SOCKETS_FROM_USER", { userId: res.createdBy }, this).then(sockets => {
+				sockets.forEach(socket => {
+					socket.dispatch("event:playlist.song.replaced", {
+						data: {
+							playlistId: res.playlistId,
+							song: res.song,
+							oldMediaSource: res.oldMediaSource
+						}
+					});
+				});
+			});
+
+			if (res.privacy === "public")
+				WSModule.runJob("EMIT_TO_ROOM", {
+					room: `profile.${res.createdBy}.playlists`,
+					args: [
+						"event:playlist.song.replaced",
+						{
+							data: {
+								playlistId: res.playlistId,
+								song: res.song,
+								oldMediaSource: res.oldMediaSource
+							}
+						}
+					]
+				});
+		}
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: "admin.playlists",
+			args: [
+				"event:admin.playlist.song.replaced",
+				{ data: { playlistId: res.playlistId, song: res.song, oldMediaSource: res.oldMediaSource } }
+			]
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
 	channel: "playlist.updateDisplayName",
 	cb: res => {
 		if (res.createdBy !== "Musare") {

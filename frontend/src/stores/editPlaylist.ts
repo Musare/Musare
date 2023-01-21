@@ -29,6 +29,11 @@ export const useEditPlaylistStore = ({ modalUuid }: { modalUuid: string }) =>
 					song => song.mediaSource !== mediaSource
 				);
 			},
+			replaceSong({ song, oldMediaSource }) {
+				this.playlist.songs = this.playlist.songs.map(_song =>
+					_song.mediaSource === oldMediaSource ? song : _song
+				);
+			},
 			updatePlaylistSongs(playlistSongs) {
 				this.playlist.songs = playlistSongs;
 			},

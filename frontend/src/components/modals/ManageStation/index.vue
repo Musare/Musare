@@ -403,6 +403,22 @@ onMounted(() => {
 			);
 
 			socket.on(
+				"event:playlist.song.replaced",
+				res => {
+					if (stationPlaylist.value._id === res.data.playlistId)
+						stationPlaylist.value.songs =
+							stationPlaylist.value.songs.map(song =>
+								song.mediaSource === res.data.oldMediaSource
+									? res.data.song
+									: song
+							);
+				},
+				{
+					modalUuid: props.modalUuid
+				}
+			);
+
+			socket.on(
 				"event:playlist.songs.repositioned",
 				res => {
 					if (stationPlaylist.value._id === res.data.playlistId) {
