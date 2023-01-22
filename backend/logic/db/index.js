@@ -22,6 +22,7 @@ const REQUIRED_DOCUMENT_VERSIONS = {
 	stationHistory: 2,
 	soundcloudTrack: 1,
 	spotifyTrack: 1,
+	spotifyAlbum: 1,
 	genericApiRequest: 1
 };
 
@@ -83,6 +84,7 @@ class _DBModule extends CoreClass {
 						stationHistory: {},
 						soundcloudTrack: {},
 						spotifyTrack: {},
+						spotifyAlbum: {},
 						genericApiRequest: {}
 					};
 
@@ -111,6 +113,7 @@ class _DBModule extends CoreClass {
 					await importSchema("stationHistory");
 					await importSchema("soundcloudTrack");
 					await importSchema("spotifyTrack");
+					await importSchema("spotifyAlbum");
 					await importSchema("genericApiRequest");
 
 					this.models = {
@@ -131,6 +134,7 @@ class _DBModule extends CoreClass {
 						stationHistory: mongoose.model("stationHistory", this.schemas.stationHistory),
 						soundcloudTrack: mongoose.model("soundcloudTrack", this.schemas.soundcloudTrack),
 						spotifyTrack: mongoose.model("spotifyTrack", this.schemas.spotifyTrack),
+						spotifyAlbum: mongoose.model("spotifyAlbum", this.schemas.spotifyAlbum),
 						genericApiRequest: mongoose.model("genericApiRequest", this.schemas.genericApiRequest)
 					};
 
@@ -287,6 +291,7 @@ class _DBModule extends CoreClass {
 					this.models.stationHistory.syncIndexes();
 					this.models.soundcloudTrack.syncIndexes();
 					this.models.spotifyTrack.syncIndexes();
+					this.models.spotifyAlbum.syncIndexes();
 					this.models.genericApiRequest.syncIndexes();
 
 					if (config.get("skipDbDocumentsVersionCheck")) resolve();

@@ -36,6 +36,7 @@ const playlist = ref(null);
 const spotifySongs = ref([]);
 
 const spotifyTracks = reactive({});
+const spotifyAlbums = reactive({});
 const spotifyArtists = reactive({});
 
 const loadingPlaylist = ref(false);
@@ -43,6 +44,9 @@ const loadedPlaylist = ref(false);
 
 const loadingSpotifyTracks = ref(false);
 const loadedSpotifyTracks = ref(false);
+
+const loadingSpotifyAlbums = ref(false);
+const loadedSpotifyAlbums = ref(false);
 
 const gettingAllAlternativeMediaPerTrack = ref(false);
 const gotAllAlternativeMediaPerTrack = ref(false);
@@ -55,7 +59,7 @@ const gettingMissingAlternativeMedia = ref(false);
 
 const replacingAllSpotifySongs = ref(false);
 
-const currentConvertType = ref("track");
+const currentConvertType = ref<"track" | "album" | "artist">("album");
 const showReplaceButtonPerAlternative = ref(false);
 const hideSpotifySongsWithNoAlternativesFound = ref(false);
 
@@ -67,6 +71,11 @@ const preferredAlternativeSongMode = ref<
 const showExtra = ref(false);
 
 const collectAlternativeMediaSourcesOrigins = ref(false);
+
+const minimumSongsPerAlbum = ref(2);
+const sortAlbumMode = ref<
+	"SONG_COUNT_ASC" | "SONG_COUNT_DESC" | "NAME_DESC" | "NAME_ASC"
+>("SONG_COUNT_ASC");
 
 const filteredSpotifySongs = computed(() =>
 	hideSpotifySongsWithNoAlternativesFound.value
@@ -80,6 +89,42 @@ const filteredSpotifySongs = computed(() =>
 		  )
 		: spotifySongs.value
 );
+
+const filteredSpotifyAlbums = computed(() => {
+	let albums = Object.values(spotifyAlbums);
+
+	albums = albums.filter(
+		album => album.songs.length >= minimumSongsPerAlbum.value
+	);
+
+	let sortFn = null;
+	if (sortAlbumMode.value === "SONG_COUNT_ASC")
+		sortFn = (albumA, albumB) => albumA.songs.length - albumB.songs.length;
+	else if (sortAlbumMode.value === "SONG_COUNT_DESC")
+		sortFn = (albumA, albumB) => albumB.songs.length - albumA.songs.length;
+	else if (loadedSpotifyAlbums.value && sortAlbumMode.value === "NAME_ASC")
+		sortFn = (albumA, albumB) => {
+			const nameA = albumA.rawData?.name?.toLowerCase();
+			const nameB = albumB.rawData?.name?.toLowerCase();
+
+			if (nameA === nameB) return 0;
+			if (nameA < nameB) return -1;
+			if (nameA > nameB) return 1;
+		};
+	else if (loadedSpotifyAlbums.value && sortAlbumMode.value === "NAME_DESC")
+		sortFn = (albumA, albumB) => {
+			const nameA = albumA.rawData?.name?.toLowerCase();
+			const nameB = albumB.rawData?.name?.toLowerCase();
+
+			if (nameA === nameB) return 0;
+			if (nameA > nameB) return -1;
+			if (nameA < nameB) return 1;
+		};
+
+	if (sortFn) albums = albums.sort(sortFn);
+
+	return albums;
+});
 
 const missingMediaSources = computed(() => {
 	const missingMediaSources = [];
@@ -329,6 +374,40 @@ const getAlternativeMedia = () => {
 	);
 };
 
+const loadSpotifyAlbums = () =>
+	new Promise<void>(resolve => {
+		console.debug(TAG, "Loading Spotify albums");
+
+		loadingSpotifyAlbums.value = true;
+
+		const albumIds = filteredSpotifyAlbums.value.map(
+			album => album.albumId
+		);
+
+		socket.dispatch("spotify.getAlbumsFromIds", albumIds, res => {
+			console.debug(TAG, "Get albums response", res);
+
+			if (res.status !== "success") {
+				new Toast(res.message);
+				closeCurrentModal();
+				return;
+			}
+
+			const { albums } = res.data;
+
+			albums.forEach(album => {
+				spotifyAlbums[album.albumId].rawData = album.rawData;
+			});
+
+			console.debug(TAG, "Loaded Spotify albums");
+
+			loadedSpotifyAlbums.value = true;
+			loadingSpotifyAlbums.value = false;
+
+			resolve();
+		});
+	});
+
 const loadSpotifyTracks = () =>
 	new Promise<void>(resolve => {
 		console.debug(TAG, "Loading Spotify tracks");
@@ -354,10 +433,25 @@ const loadSpotifyTracks = () =>
 				Object.entries(tracks).forEach(([mediaSource, track]) => {
 					spotifyTracks[mediaSource] = track;
 
-					track.artistIds.forEach((artistId, artistIndex) => {
+					const { albumId, albumImageUrl, artistIds, artists } =
+						track;
+
+					if (albumId) {
+						if (!spotifyAlbums[albumId])
+							spotifyAlbums[albumId] = {
+								albumId,
+								albumImageUrl,
+								songs: []
+							};
+
+						spotifyAlbums[albumId].songs.push(mediaSource);
+					}
+
+					artistIds.forEach((artistId, artistIndex) => {
 						if (!spotifyArtists[artistId]) {
 							spotifyArtists[artistId] = {
-								name: track.artists[artistIndex],
+								artistId,
+								name: artists[artistIndex],
 								songs: [],
 								expanded: false
 							};
@@ -539,7 +633,8 @@ onMounted(() => {
 								v-if="
 									loadedSpotifyTracks &&
 									!gettingAllAlternativeMediaPerTrack &&
-									!gotAllAlternativeMediaPerTrack
+									!gotAllAlternativeMediaPerTrack &&
+									currentConvertType === 'track'
 								"
 								class="button is-primary"
 								@click="getAlternativeMedia()"
@@ -548,6 +643,7 @@ onMounted(() => {
 							</button>
 							<button
 								v-if="
+									currentConvertType === 'track' &&
 									gotAllAlternativeMediaPerTrack &&
 									!gettingMissingAlternativeMedia &&
 									missingMediaSources.length > 0
@@ -556,6 +652,19 @@ onMounted(() => {
 								@click="getMissingAlternativeMedia()"
 							>
 								Get missing alternative media
+							</button>
+
+							<button
+								v-if="
+									loadedSpotifyTracks &&
+									!loadingSpotifyAlbums &&
+									!loadedSpotifyAlbums &&
+									currentConvertType === 'album'
+								"
+								class="button is-primary"
+								@click="loadSpotifyAlbums()"
+							>
+								Get Spotify albums
 							</button>
 						</div>
 
@@ -656,7 +765,10 @@ onMounted(() => {
 								</p>
 							</div>
 
-							<div class="control">
+							<div
+								class="control"
+								v-if="currentConvertType === 'track'"
+							>
 								<label class="label"
 									>Preferred track mode</label
 								>
@@ -683,6 +795,43 @@ onMounted(() => {
 											First song from topic channel
 											(YouTube only), or with lyrics in
 											title
+										</option>
+									</select>
+								</p>
+							</div>
+
+							<div
+								class="small-section"
+								v-if="currentConvertType === 'album'"
+							>
+								<label class="label"
+									>Minimum songs per album</label
+								>
+								<div class="control is-expanded">
+									<input
+										class="input"
+										type="number"
+										min="1"
+										v-model="minimumSongsPerAlbum"
+									/>
+								</div>
+							</div>
+
+							<div class="control">
+								<label class="label">Sort album mode</label>
+								<p class="control is-expanded select">
+									<select v-model="sortAlbumMode">
+										<option value="SONG_COUNT_ASC">
+											Song count (ascending)
+										</option>
+										<option value="SONG_COUNT_DESC">
+											Song count (descending)
+										</option>
+										<option value="NAME_ASC">
+											Name (ascending)
+										</option>
+										<option value="NAME_DESC">
+											Name (descending)
 										</option>
 									</select>
 								</p>
@@ -716,6 +865,20 @@ onMounted(() => {
 								Spotify tracks loaded:
 								{{ Object.keys(spotifyTracks).length }}
 							</p>
+
+							<p>
+								Loading Spotify albums:
+								{{ loadingSpotifyAlbums }}
+							</p>
+							<p>
+								Loaded Spotify albums: {{ loadedSpotifyAlbums }}
+							</p>
+
+							<p>
+								Spotify albums:
+								{{ Object.keys(spotifyAlbums).length }}
+							</p>
+
 							<p>
 								Spotify artists:
 								{{ Object.keys(spotifyArtists).length }}
@@ -956,6 +1119,103 @@ onMounted(() => {
 										</div>
 									</div>
 								</template>
+							</div>
+						</template>
+					</div>
+
+					<div
+						class="convert-table convert-song-by-album"
+						v-if="currentConvertType === 'album'"
+					>
+						<h4>Spotify albums</h4>
+						<h4>Alternative songs</h4>
+
+						<template
+							v-for="spotifyAlbum in filteredSpotifyAlbums"
+							:key="spotifyAlbum"
+						>
+							<div
+								class="convert-table-cell convert-table-cell-left"
+							>
+								<p>Album ID: {{ spotifyAlbum.albumId }}</p>
+								<p v-if="loadingSpotifyAlbums">
+									Loading album info...
+								</p>
+								<p
+									v-else-if="
+										loadedSpotifyAlbums &&
+										!spotifyAlbum.rawData
+									"
+								>
+									Failed to load album info...
+								</p>
+								<template v-else-if="loadedSpotifyAlbums">
+									<p>Name: {{ spotifyAlbum.rawData.name }}</p>
+									<p>
+										Label: {{ spotifyAlbum.rawData.label }}
+									</p>
+									<p>
+										Popularity:
+										{{ spotifyAlbum.rawData.popularity }}
+									</p>
+									<p>
+										Release date:
+										{{ spotifyAlbum.rawData.release_date }}
+									</p>
+									<p>
+										Artists:
+										{{
+											spotifyAlbum.rawData.artists
+												.map(artist => artist.name)
+												.join(", ")
+										}}
+									</p>
+									<p>
+										UPC:
+										{{
+											spotifyAlbum.rawData.external_ids
+												.upc
+										}}
+									</p>
+								</template>
+								<song-item
+									v-for="spotifyMediaSource in spotifyAlbum.songs"
+									:key="
+										spotifyAlbum.albumId +
+										spotifyMediaSource
+									"
+									:song="{
+										title: spotifyTracks[spotifyMediaSource]
+											.name,
+										artists:
+											spotifyTracks[spotifyMediaSource]
+												.artists,
+										duration:
+											spotifyTracks[spotifyMediaSource]
+												.duration,
+										thumbnail:
+											spotifyTracks[spotifyMediaSource]
+												.albumImageUrl
+									}"
+								>
+									<template #leftIcon>
+										<a
+											:href="`https://open.spotify.com/track/${
+												spotifyMediaSource.split(':')[1]
+											}`"
+											target="_blank"
+										>
+											<div
+												class="spotify-icon left-icon"
+											></div>
+										</a>
+									</template>
+								</song-item>
+							</div>
+							<div
+								class="convert-table-cell convert-table-cell-right"
+							>
+								<p>Test</p>
 							</div>
 						</template>
 					</div>

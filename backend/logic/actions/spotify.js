@@ -14,7 +14,7 @@ const SpotifyModule = moduleManager.modules.spotify;
 
 export default {
 	/**
-	 * Fetches new SoundCloud API key
+	 * Fetches tracks from media sources
 	 *
 	 * @returns {{status: string, data: object}}
 	 */
@@ -40,5 +40,23 @@ export default {
 					return cb({ status: "error", message: err });
 				});
 		}
-	)
+	),
+
+	/**
+	 * Fetches albums from ids
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	getAlbumsFromIds: useHasPermission("admin.view.spotify", function getTracksFromMediaSources(session, albumIds, cb) {
+		SpotifyModule.runJob("GET_ALBUMS_FROM_IDS", { albumIds }, this)
+			.then(albums => {
+				this.log("SUCCESS", "SPOTIFY_GET_ALBUMS_FROM_IDS", `Getting albums from ids was successful.`);
+				return cb({ status: "success", data: { albums } });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "SPOTIFY_GET_ALBUMS_FROM_IDS", `Getting albums from ids failed. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	})
 };

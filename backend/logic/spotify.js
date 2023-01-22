@@ -96,6 +96,9 @@ class _SpotifyModule extends CoreClass {
 		this.spotifyTrackModel = this.SpotifyTrackModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "spotifyTrack"
 		});
+		this.spotifyAlbumModel = this.SpotifyAlbumModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "spotifyAlbum"
+		});
 
 		return new Promise((resolve, reject) => {
 			if (!config.has("apis.spotify") || !config.get("apis.spotify.enabled")) {
@@ -184,6 +187,36 @@ class _SpotifyModule extends CoreClass {
 	}
 
 	/**
+	 * Perform Spotify API get albums request
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.albumIds - the album ids to get
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	API_GET_ALBUMS(payload) {
+		return new Promise((resolve, reject) => {
+			const { albumIds } = payload;
+
+			SpotifyModule.runJob(
+				"API_CALL",
+				{
+					url: `https://api.spotify.com/v1/albums`,
+					params: {
+						ids: albumIds.join(",")
+					}
+				},
+				this
+			)
+				.then(response => {
+					resolve(response);
+				})
+				.catch(err => {
+					reject(err);
+				});
+		});
+	}
+
+	/**
 	 * Perform Spotify API get track request
 	 *
 	 * @param {object} payload - object that contains the payload
@@ -249,7 +282,7 @@ class _SpotifyModule extends CoreClass {
 	API_CALL(payload) {
 		return new Promise((resolve, reject) => {
 			// const { url, params, quotaCost } = payload;
-			const { url } = payload;
+			const { url, params } = payload;
 
 			SpotifyModule.runJob("GET_API_TOKEN", {}, this)
 				.then(spotifyApiToken => {
@@ -258,7 +291,8 @@ class _SpotifyModule extends CoreClass {
 							headers: {
 								Authorization: `Bearer ${spotifyApiToken}`
 							},
-							timeout: SpotifyModule.requestTimeout
+							timeout: SpotifyModule.requestTimeout,
+							params
 						})
 						.then(response => {
 							if (response.data.error) {
@@ -268,6 +302,7 @@ class _SpotifyModule extends CoreClass {
 							}
 						})
 						.catch(err => {
+							console.log(4443311, err);
 							reject(err);
 						});
 				})
@@ -339,6 +374,36 @@ class _SpotifyModule extends CoreClass {
 	}
 
 	/**
+	 * Create Spotify albums
+	 *
+	 * @param {object} payload - an object containing the payload
+	 * @param {string} payload.spotifyAlbums - the Spotify albums
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	async CREATE_ALBUMS(payload) {
+		const { spotifyAlbums } = payload;
+
+		if (!Array.isArray(spotifyAlbums)) throw new Error("Invalid spotifyAlbums type");
+
+		const albumIds = spotifyAlbums.map(spotifyAlbum => spotifyAlbum.albumId);
+
+		const existingAlbums = (await SpotifyModule.spotifyAlbumModel.find({ albumId: albumIds })).map(
+			album => album._doc
+		);
+		const existingAlbumIds = existingAlbums.map(existingAlbum => existingAlbum.albumId);
+
+		const newSpotifyAlbums = spotifyAlbums.filter(
+			spotifyAlbum => existingAlbumIds.indexOf(spotifyAlbum.albumId) === -1
+		);
+
+		if (newSpotifyAlbums.length === 0) return existingAlbums;
+
+		await SpotifyModule.spotifyAlbumModel.insertMany(newSpotifyAlbums);
+
+		return existingAlbums.concat(newSpotifyAlbums);
+	}
+
+	/**
 	 * Gets tracks from media sources
 	 *
 	 * @param {object} payload
@@ -382,6 +447,58 @@ class _SpotifyModule extends CoreClass {
 				})
 				.catch(reject);
 		});
+	}
+
+	/**
+	 * Gets albums from ids
+	 *
+	 * @param {object} payload
+	 * @returns {Promise}
+	 */
+	async GET_ALBUMS_FROM_IDS(payload) {
+		const { albumIds } = payload;
+
+		console.log(albumIds);
+
+		const existingAlbums = (await SpotifyModule.spotifyAlbumModel.find({ albumId: albumIds })).map(
+			album => album._doc
+		);
+		const existingAlbumIds = existingAlbums.map(existingAlbum => existingAlbum.albumId);
+
+		console.log(existingAlbums);
+
+		const missingAlbumIds = albumIds.filter(albumId => existingAlbumIds.indexOf(albumId) === -1);
+
+		if (missingAlbumIds.length === 0) return existingAlbums;
+
+		console.log(missingAlbumIds);
+
+		const jobsToRun = [];
+
+		const chunkSize = 2;
+		while (missingAlbumIds.length > 0) {
+			const chunkedMissingAlbumIds = missingAlbumIds.splice(0, chunkSize);
+
+			jobsToRun.push(SpotifyModule.runJob("API_GET_ALBUMS", { albumIds: chunkedMissingAlbumIds }, this));
+		}
+
+		const jobResponses = await Promise.all(jobsToRun);
+
+		console.log(jobResponses);
+
+		const newAlbums = jobResponses
+			.map(jobResponse => jobResponse.response.data.albums)
+			.flat()
+			.map(album => ({
+				albumId: album.id,
+				rawData: album
+			}));
+
+		console.log(newAlbums);
+
+		await SpotifyModule.runJob("CREATE_ALBUMS", { spotifyAlbums: newAlbums }, this);
+
+		return existingAlbums.concat(newAlbums);
 	}
 
 	/**
