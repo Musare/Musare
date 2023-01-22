@@ -374,6 +374,8 @@ class _MediaModule extends CoreClass {
 					(song, next) => {
 						if (song && song.duration > 0) return next(true, song);
 
+						console.log(123, payload);
+
 						if (payload.mediaSource.startsWith("youtube:")) {
 							const youtubeId = payload.mediaSource.split(":")[1];
 

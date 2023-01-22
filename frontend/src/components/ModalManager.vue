@@ -28,7 +28,8 @@ const modalComponents = shallowRef(
 		editSong: "EditSong/index.vue",
 		viewYoutubeVideo: "ViewYoutubeVideo.vue",
 		bulkEditPlaylist: "BulkEditPlaylist.vue",
-		convertSpotifySongs: "ConvertSpotifySongs.vue"
+		convertSpotifySongs: "ConvertSpotifySongs.vue",
+		replaceSpotifySongs: "ReplaceSpotifySongs.vue"
 	})
 );
 </script>

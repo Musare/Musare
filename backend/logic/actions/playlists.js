@@ -1192,6 +1192,8 @@ export default {
 	addSongToPlaylist: isLoginRequired(async function addSongToPlaylist(session, isSet, mediaSource, playlistId, cb) {
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
+		console.log(55, isSet, mediaSource, playlistId);
+
 		async.waterfall(
 			[
 				next => {

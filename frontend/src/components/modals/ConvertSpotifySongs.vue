@@ -63,7 +63,7 @@ const gettingMissingAlternativeMedia = ref(false);
 
 const replacingAllSpotifySongs = ref(false);
 
-const currentConvertType = ref<"track" | "album" | "artist">("track");
+const currentConvertType = ref<"track" | "album" | "artist">("album");
 const showReplaceButtonPerAlternative = ref(false);
 const hideSpotifySongsWithNoAlternativesFound = ref(false);
 
@@ -90,6 +90,8 @@ const showReplacementInputs = ref(false);
 const youtubeVideoUrlRegex =
 	/^(https?:\/\/)?(www\.)?(m\.)?(music\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?(?<youtubeId>[\w-]{11})((&([A-Za-z0-9]+)?)*)?$/;
 const youtubeVideoIdRegex = /^([\w-]{11})$/;
+
+const youtubePlaylistUrlRegex = /[\\?&]list=([^&#]*)/;
 
 const filteredSpotifySongs = computed(() =>
 	hideSpotifySongsWithNoAlternativesFound.value
@@ -312,6 +314,44 @@ const replaceSpotifySong = (oldMediaSource, newMediaSource) => {
 			console.log("playlists.replaceSongInPlaylist response", res);
 		}
 	);
+};
+
+const openReplaceAlbumModal = (spotifyAlbumId, youtubePlaylistId) => {
+	console.log(spotifyAlbumId, youtubePlaylistId);
+
+	if (
+		!spotifyAlbums[spotifyAlbumId] ||
+		!spotifyAlbums[spotifyAlbumId].rawData
+	)
+		return new Toast("Album hasn't loaded yet.");
+
+	openModal({
+		modal: "replaceSpotifySongs",
+		props: {
+			playlistId: props.playlistId,
+			youtubePlaylistId,
+			spotifyTracks: spotifyAlbums[spotifyAlbumId].songs.map(
+				mediaSource => spotifyTracks[mediaSource]
+			)
+		}
+	});
+};
+
+const openReplaceAlbumModalFromUrl = spotifyAlbumId => {
+	const replacementUrl = replaceSongUrlMap[`album:${spotifyAlbumId}`];
+
+	console.log(spotifyAlbumId, replacementUrl);
+
+	let youtubePlaylistId = null;
+
+	const youtubePlaylistUrlRegexMatches =
+		youtubePlaylistUrlRegex.exec(replacementUrl);
+	if (youtubePlaylistUrlRegexMatches)
+		youtubePlaylistId = youtubePlaylistUrlRegexMatches[0];
+
+	console.log("Open modal for ", youtubePlaylistId);
+
+	openReplaceAlbumModal(spotifyAlbumId, youtubePlaylistId);
 };
 
 const replaceSongFromUrl = spotifyMediaSource => {
@@ -1352,7 +1392,7 @@ onMounted(() => {
 						v-if="currentConvertType === 'album'"
 					>
 						<h4>Spotify albums</h4>
-						<h4>Alternative songs</h4>
+						<h4>Alternative albums (playlists)</h4>
 
 						<template
 							v-for="spotifyAlbum in filteredSpotifyAlbums"
@@ -1409,6 +1449,7 @@ onMounted(() => {
 										spotifyMediaSource
 									"
 									:song="{
+										mediaSource: spotifyMediaSource,
 										title: spotifyTracks[spotifyMediaSource]
 											.name,
 										artists:
@@ -1439,6 +1480,15 @@ onMounted(() => {
 							<div
 								class="convert-table-cell convert-table-cell-right"
 							>
+								<p
+									v-if="
+										!alternativeAlbumsPerAlbum[
+											spotifyAlbum.albumId
+										]
+									"
+								>
+									No alternatives loaded
+								</p>
 								<div
 									class="alternative-album-items"
 									v-if="
@@ -1447,6 +1497,15 @@ onMounted(() => {
 										]
 									"
 								>
+									<p
+										v-if="
+											alternativeAlbumsPerAlbum[
+												spotifyAlbum.albumId
+											].youtubePlaylistIds.length === 0
+										"
+									>
+										No alternative playlists were found
+									</p>
 									<div
 										class="alternative-album-item"
 										v-for="youtubePlaylistId in alternativeAlbumsPerAlbum[
@@ -1464,9 +1523,65 @@ onMounted(() => {
 										</p>
 										<button
 											class="button is-primary is-fullwidth"
+											@click="
+												openReplaceAlbumModal(
+													spotifyAlbum.albumId,
+													youtubePlaylistId
+												)
+											"
 										>
-											Match songs using this playlist
+											Open replace modal
 										</button>
+									</div>
+								</div>
+
+								<div
+									v-if="
+										showReplacementInputs ||
+										(alternativeAlbumsPerAlbum[
+											spotifyAlbum.albumId
+										] &&
+											alternativeAlbumsPerAlbum[
+												spotifyAlbum.albumId
+											].youtubePlaylistIds.length === 0)
+									"
+								>
+									<div>
+										<label class="label">
+											Enter replacement playlist URL
+										</label>
+										<div
+											class="control is-grouped input-with-button"
+										>
+											<p class="control is-expanded">
+												<input
+													class="input"
+													type="text"
+													placeholder="Enter your playlist URL here..."
+													v-model="
+														replaceSongUrlMap[
+															`album:${spotifyAlbum.albumId}`
+														]
+													"
+													@keyup.enter="
+														openReplaceAlbumModalFromUrl(
+															spotifyAlbum.albumId
+														)
+													"
+												/>
+											</p>
+											<p class="control">
+												<a
+													class="button is-info"
+													@click="
+														openReplaceAlbumModalFromUrl(
+															spotifyAlbum.albumId
+														)
+													"
+													>Open replace modal</a
+												>
+											</p>
+										</div>
 									</div>
 								</div>
 							</div>
