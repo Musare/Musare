@@ -63,7 +63,7 @@ const gettingMissingAlternativeMedia = ref(false);
 
 const replacingAllSpotifySongs = ref(false);
 
-const currentConvertType = ref<"track" | "album" | "artist">("album");
+const currentConvertType = ref<"track" | "album" | "artist">("track");
 const showReplaceButtonPerAlternative = ref(false);
 const hideSpotifySongsWithNoAlternativesFound = ref(false);
 
@@ -80,6 +80,16 @@ const minimumSongsPerAlbum = ref(2);
 const sortAlbumMode = ref<
 	"SONG_COUNT_ASC" | "SONG_COUNT_DESC" | "NAME_DESC" | "NAME_ASC"
 >("SONG_COUNT_ASC");
+
+const showDontConvertButton = ref(true);
+
+const replaceSongUrlMap = reactive({});
+
+const showReplacementInputs = ref(false);
+
+const youtubeVideoUrlRegex =
+	/^(https?:\/\/)?(www\.)?(m\.)?(music\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?(?<youtubeId>[\w-]{11})((&([A-Za-z0-9]+)?)*)?$/;
+const youtubeVideoIdRegex = /^([\w-]{11})$/;
 
 const filteredSpotifySongs = computed(() =>
 	hideSpotifySongsWithNoAlternativesFound.value
@@ -302,6 +312,30 @@ const replaceSpotifySong = (oldMediaSource, newMediaSource) => {
 			console.log("playlists.replaceSongInPlaylist response", res);
 		}
 	);
+};
+
+const replaceSongFromUrl = spotifyMediaSource => {
+	const replacementUrl = replaceSongUrlMap[spotifyMediaSource];
+
+	console.log(spotifyMediaSource, replacementUrl);
+
+	let newMediaSource = null;
+
+	const youtubeVideoUrlRegexMatches =
+		youtubeVideoUrlRegex.exec(replacementUrl);
+	console.log(youtubeVideoUrlRegexMatches);
+
+	const youtubeVideoIdRegexMatches = youtubeVideoIdRegex.exec(replacementUrl);
+	console.log(youtubeVideoIdRegexMatches);
+
+	if (youtubeVideoUrlRegexMatches)
+		newMediaSource = `youtube:${youtubeVideoUrlRegexMatches.groups.youtubeId}`;
+	if (youtubeVideoIdRegexMatches)
+		newMediaSource = `youtube:${youtubeVideoIdRegexMatches[0]}`;
+
+	if (!newMediaSource) return new Toast("Invalid URL/identifier specified.");
+
+	replaceSpotifySong(spotifyMediaSource, newMediaSource);
 };
 
 const getMissingAlternativeMedia = () => {
@@ -549,6 +583,13 @@ const loadPlaylist = () =>
 		});
 	});
 
+const removeAlternativeTrack = (spotifyMediaSource, alternativeMediaSource) => {
+	alternativeMediaPerTrack[spotifyMediaSource].mediaSources =
+		alternativeMediaPerTrack[spotifyMediaSource].mediaSources.filter(
+			mediaSource => mediaSource !== alternativeMediaSource
+		);
+};
+
 const removeSpotifyTrack = mediaSource => {
 	const spotifyTrack = spotifyTracks[mediaSource];
 	if (spotifyTrack) {
@@ -568,7 +609,34 @@ const removeSpotifyTrack = mediaSource => {
 					);
 			}
 		});
+
+		const spotifyAlbum = spotifyAlbums[spotifyTrack.albumId];
+
+		if (spotifyAlbum) {
+			if (spotifyAlbum.songs.length === 1)
+				delete spotifyAlbums[spotifyTrack.albumId];
+			else
+				spotifyAlbums[spotifyTrack.albumId].songs = spotifyAlbums[
+					spotifyTrack.albumId
+				].songs.filter(_mediaSource => _mediaSource !== mediaSource);
+		}
 	}
+};
+
+const removeSpotifySong = mediaSource => {
+	// remove song
+	playlist.value.songs = playlist.value.songs.filter(
+		song => song.mediaSource !== mediaSource
+	);
+
+	spotifySongs.value = spotifySongs.value.filter(
+		song => song.mediaSource !== mediaSource
+	);
+
+	removeSpotifyTrack(mediaSource);
+
+	delete alternativeMediaMap[mediaSource];
+	delete alternativeMediaFailedMap[mediaSource];
 };
 
 onMounted(() => {
@@ -587,19 +655,7 @@ onMounted(() => {
 			) {
 				const { oldMediaSource } = res.data;
 
-				// remove song
-				playlist.value.songs = playlist.value.songs.filter(
-					song => song.mediaSource !== oldMediaSource
-				);
-
-				spotifySongs.value = spotifySongs.value.filter(
-					song => song.mediaSource !== oldMediaSource
-				);
-
-				removeSpotifyTrack(oldMediaSource);
-
-				delete alternativeMediaMap[oldMediaSource];
-				delete alternativeMediaFailedMap[oldMediaSource];
+				removeSpotifySong(oldMediaSource);
 			}
 		},
 		{ modalUuid: props.modalUuid }
@@ -620,19 +676,7 @@ onMounted(() => {
 			) {
 				const { oldMediaSource } = res.data;
 
-				// remove song
-				playlist.value.songs = playlist.value.songs.filter(
-					song => song.mediaSource !== oldMediaSource
-				);
-
-				spotifySongs.value = spotifySongs.value.filter(
-					song => song.mediaSource !== oldMediaSource
-				);
-
-				removeSpotifyTrack(oldMediaSource);
-
-				delete alternativeMediaMap[oldMediaSource];
-				delete alternativeMediaFailedMap[oldMediaSource];
+				removeSpotifySong(oldMediaSource);
 			}
 		},
 		{ modalUuid: props.modalUuid }
@@ -783,6 +827,36 @@ onMounted(() => {
 									for="show-replace-button-per-alternative"
 								>
 									<p>Show replace button per alternative</p>
+								</label>
+							</p>
+
+							<p class="is-expanded checkbox-control">
+								<label class="switch">
+									<input
+										type="checkbox"
+										id="showDontConvertButton"
+										v-model="showDontConvertButton"
+									/>
+									<span class="slider round"></span>
+								</label>
+
+								<label for="showDontConvertButton">
+									<p>Show don't convert buttons</p>
+								</label>
+							</p>
+
+							<p class="is-expanded checkbox-control">
+								<label class="switch">
+									<input
+										type="checkbox"
+										id="showReplacementInputs"
+										v-model="showReplacementInputs"
+									/>
+									<span class="slider round"></span>
+								</label>
+
+								<label for="showReplacementInputs">
+									<p>Show replacement inputs</p>
 								</label>
 							</p>
 
@@ -1016,16 +1090,31 @@ onMounted(() => {
 										</a>
 									</template>
 								</song-item>
-								<p>
-									Media source: {{ spotifySong.mediaSource }}
-								</p>
-								<p v-if="loadedSpotifyTracks">
-									ISRC:
-									{{
-										spotifyTracks[spotifySong.mediaSource]
-											.externalIds.isrc
-									}}
-								</p>
+								<template v-if="showExtra">
+									<p>
+										Media source:
+										{{ spotifySong.mediaSource }}
+									</p>
+									<p v-if="loadedSpotifyTracks">
+										ISRC:
+										{{
+											spotifyTracks[
+												spotifySong.mediaSource
+											].externalIds.isrc
+										}}
+									</p>
+								</template>
+								<button
+									v-if="showDontConvertButton"
+									class="button is-primary is-fullwidth"
+									@click="
+										removeSpotifySong(
+											spotifySong.mediaSource
+										)
+									"
+								>
+									Don't convert this song
+								</button>
 							</div>
 							<div
 								class="convert-table-cell convert-table-cell-right"
@@ -1083,7 +1172,9 @@ onMounted(() => {
 												hasn't been loaded yet
 											</p>
 											<template v-else>
-												<div>
+												<div
+													class="alternative-song-container"
+												>
 													<song-item
 														:song="
 															alternativeMediaMap[
@@ -1140,10 +1231,23 @@ onMounted(() => {
 														<button
 															class="button is-primary is-fullwidth"
 														>
-															Replace Spotify song
-															with this song
+															Use this alternative
 														</button>
 													</quick-confirm>
+													<button
+														v-if="
+															showDontConvertButton
+														"
+														class="button is-primary is-fullwidth"
+														@click="
+															removeAlternativeTrack(
+																spotifySong.mediaSource,
+																alternativeMediaSource
+															)
+														"
+													>
+														Remove this alternative
+													</button>
 												</div>
 												<ul v-if="showExtra">
 													<li
@@ -1179,7 +1283,66 @@ onMounted(() => {
 											</template>
 										</div>
 									</div>
+									<p
+										v-if="
+											alternativeMediaPerTrack[
+												spotifySong.mediaSource
+											].mediaSources.length === 0
+										"
+									>
+										No alternative media sources found
+									</p>
 								</template>
+								<div
+									v-if="
+										showReplacementInputs ||
+										(alternativeMediaPerTrack[
+											spotifySong.mediaSource
+										] &&
+											alternativeMediaPerTrack[
+												spotifySong.mediaSource
+											].mediaSources.length === 0)
+									"
+								>
+									<div>
+										<label class="label">
+											Enter replacement song from URL
+										</label>
+										<div
+											class="control is-grouped input-with-button"
+										>
+											<p class="control is-expanded">
+												<input
+													class="input"
+													type="text"
+													placeholder="Enter your song URL here..."
+													v-model="
+														replaceSongUrlMap[
+															spotifySong
+																.mediaSource
+														]
+													"
+													@keyup.enter="
+														replaceSongFromUrl(
+															spotifySong.mediaSource
+														)
+													"
+												/>
+											</p>
+											<p class="control">
+												<a
+													class="button is-info"
+													@click="
+														replaceSongFromUrl(
+															spotifySong.mediaSource
+														)
+													"
+													>Replace song</a
+												>
+											</p>
+										</div>
+									</div>
+								</div>
 							</div>
 						</template>
 					</div>
@@ -1343,6 +1506,17 @@ onMounted(() => {
 	display: flex;
 	flex-direction: column;
 	row-gap: 12px;
+}
+
+.alternative-song-container,
+.convert-table-cell-left {
+	display: flex;
+	flex-direction: column;
+	row-gap: 12px;
+
+	> * {
+		flex-grow: 0;
+	}
 }
 
 .convert-table {
