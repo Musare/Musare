@@ -558,6 +558,25 @@ class _SpotifyModule extends CoreClass {
 	}
 
 	/**
+	 * Get Spotify album
+	 *
+	 * @param {object} payload - an object containing the payload
+	 * @param {string} payload.identifier - the spotify album ObjectId or track id
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	async GET_ALBUM(payload) {
+		const query = mongoose.isObjectIdOrHexString(payload.identifier)
+			? { _id: payload.identifier }
+			: { albumId: payload.identifier };
+
+		const album = await SpotifyModule.spotifyAlbumModel.findOne(query);
+
+		if (album) return album._doc;
+
+		return null;
+	}
+
+	/**
 	 * Returns an array of songs taken from a Spotify playlist
 	 *
 	 * @param {object} payload - object that contains the payload
@@ -652,6 +671,86 @@ class _SpotifyModule extends CoreClass {
 
 			// kind;
 		});
+	}
+
+	/**
+	 *
+	 * @param {*} payload
+	 * @returns
+	 */
+	async GET_ALTERNATIVE_ALBUM_SOURCES_FOR_ALBUMS(payload) {
+		const { albumIds, collectAlternativeAlbumSourcesOrigins } = payload;
+
+		await async.eachLimit(albumIds, 1, async albumId => {
+			try {
+				const result = await SpotifyModule.runJob(
+					"GET_ALTERNATIVE_ALBUM_SOURCES_FOR_ALBUM",
+					{ albumId, collectAlternativeAlbumSourcesOrigins },
+					this
+				);
+				this.publishProgress({
+					status: "working",
+					message: `Got alternative album source for ${albumId}`,
+					data: {
+						albumId,
+						status: "success",
+						result
+					}
+				});
+			} catch (err) {
+				console.log("ERROR", err);
+				this.publishProgress({
+					status: "working",
+					message: `Failed to get alternative album source for ${albumId}`,
+					data: {
+						albumId,
+						status: "error"
+					}
+				});
+			}
+		});
+
+		console.log("Done!");
+
+		this.publishProgress({
+			status: "finished",
+			message: `Finished getting alternative album sources`
+		});
+	}
+
+	/**
+	 *
+	 * @param {*} payload
+	 * @returns
+	 */
+	async GET_ALTERNATIVE_ALBUM_SOURCES_FOR_ALBUM(payload) {
+		const { albumId, collectAlternativeAlbumSourcesOrigins } = payload;
+
+		if (!albumId) throw new Error("Album id provided is not valid.");
+
+		// const album = await SpotifyModule.runJob(
+		// 	"GET_ALBUM",
+		// 	{
+		// 		identifier: albumId
+		// 	},
+		// 	this
+		// );
+
+		const wikiDataResponse = await WikiDataModule.runJob(
+			"API_GET_DATA_FROM_SPOTIFY_ALBUM",
+			{ spotifyAlbumId: albumId },
+			this
+		);
+
+		const youtubePlaylistIds = Array.from(
+			new Set(
+				wikiDataResponse.results.bindings
+					.filter(binding => !!binding.YouTube_playlist_ID)
+					.map(binding => binding.YouTube_playlist_ID.value)
+			)
+		);
+
+		return youtubePlaylistIds;
 	}
 
 	/**

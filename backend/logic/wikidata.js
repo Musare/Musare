@@ -189,19 +189,19 @@ class _WikiDataModule extends CoreClass {
 		const { workId } = payload;
 
 		const sparqlQuery =
-			`SELECT DISTINCT ?item ?itemLabel ?YouTube_video_ID ?SoundCloud_track_ID ?Music_video_entity_URL WHERE {
-								SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
-								{
-									SELECT DISTINCT ?item WHERE {
-										?item p:P435 ?statement0.
-										?statement0 ps:P435 "${workId}".
-									}
-									LIMIT 100
-								}
-								OPTIONAL { ?item wdt:P1651 ?YouTube_video_ID. }
-								OPTIONAL { ?item wdt:P3040 ?SoundCloud_track_ID. }
-								OPTIONAL { ?item wdt:P6718 ?Music_video_entity_URL. }
-							}`
+			`SELECT DISTINCT ?item ?itemLabel ?YouTube_video_ID ?SoundCloud_ID ?Music_video_entity_URL WHERE {
+				SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
+				{
+					SELECT DISTINCT ?item WHERE {
+						?item p:P435 ?statement0.
+						?statement0 ps:P435 "${workId}".
+					}
+					LIMIT 100
+				}
+				OPTIONAL { ?item wdt:P1651 ?YouTube_video_ID. }
+				OPTIONAL { ?item wdt:P3040 ?SoundCloud_ID. }
+				OPTIONAL { ?item wdt:P6718 ?Music_video_entity_URL. }
+			}`
 				.replaceAll("\n", "")
 				.replaceAll("\t", "");
 
@@ -228,21 +228,60 @@ class _WikiDataModule extends CoreClass {
 		const { releaseGroupId } = payload;
 
 		const sparqlQuery =
-			`SELECT DISTINCT ?item ?itemLabel ?YouTube_video_ID ?SoundCloud_track_ID ?Music_video_entity_URL WHERE {
-								SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
-								{
-									SELECT DISTINCT ?item WHERE {
-										?item p:P436 ?statement0.
-										?statement0 ps:P436 "${releaseGroupId}".
-									}
-									LIMIT 100
-								}
-								OPTIONAL { ?item wdt:P1651 ?YouTube_video_ID. }
-								OPTIONAL { ?item wdt:P3040 ?SoundCloud_track_ID. }
-								OPTIONAL { ?item wdt:P6718 ?Music_video_entity_URL. }
-							}`
+			`SELECT DISTINCT ?item ?itemLabel ?YouTube_video_ID ?SoundCloud_ID ?Music_video_entity_URL WHERE {
+				SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
+				{
+					SELECT DISTINCT ?item WHERE {
+						?item p:P436 ?statement0.
+						?statement0 ps:P436 "${releaseGroupId}".
+					}
+					LIMIT 100
+				}
+				OPTIONAL { ?item wdt:P1651 ?YouTube_video_ID. }
+				OPTIONAL { ?item wdt:P3040 ?SoundCloud_ID. }
+				OPTIONAL { ?item wdt:P6718 ?Music_video_entity_URL. }
+			}`
 				.replaceAll("\n", "")
 				.replaceAll("\t", "");
+
+		return WikiDataModule.runJob(
+			"API_CALL",
+			{
+				url: "https://query.wikidata.org/sparql",
+				params: {
+					query: sparqlQuery
+				}
+			},
+			this
+		);
+	}
+
+	/**
+	 * Get WikiData data from Spotify album id
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.spotifyAlbumId - Spotify album id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async API_GET_DATA_FROM_SPOTIFY_ALBUM(payload) {
+		const { spotifyAlbumId } = payload;
+
+		if (!spotifyAlbumId) throw new Error("Invalid Spotify album ID provided.");
+
+		const sparqlQuery = `SELECT DISTINCT ?item ?itemLabel ?YouTube_playlist_ID ?SoundCloud_ID WHERE {
+				SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
+				{
+					SELECT DISTINCT ?item WHERE {
+						?item p:P2205 ?statement0.
+						?statement0 ps:P2205 "${spotifyAlbumId}".
+					}
+					LIMIT 100
+				}
+				OPTIONAL { ?item wdt:P4300 ?YouTube_playlist_ID. }
+				OPTIONAL { ?item wdt:P3040 ?SoundCloud_ID. }
+			}`
+			.replaceAll("\n", "")
+			.replaceAll("\t", "");
 
 		return WikiDataModule.runJob(
 			"API_CALL",

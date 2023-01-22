@@ -52,6 +52,10 @@ const gettingAllAlternativeMediaPerTrack = ref(false);
 const gotAllAlternativeMediaPerTrack = ref(false);
 const alternativeMediaPerTrack = reactive({});
 
+const gettingAllAlternativeAlbums = ref(false);
+const gotAllAlternativeAlbums = ref(false);
+const alternativeAlbumsPerAlbum = reactive({});
+
 const alternativeMediaMap = reactive({});
 const alternativeMediaFailedMap = reactive({});
 
@@ -325,6 +329,50 @@ const getMissingAlternativeMedia = () => {
 			}
 
 			gettingMissingAlternativeMedia.value = false;
+		}
+	);
+};
+
+const getAlternativeAlbums = () => {
+	if (gettingAllAlternativeAlbums.value || gotAllAlternativeAlbums.value)
+		return;
+
+	gettingAllAlternativeAlbums.value = true;
+
+	const albumIds = filteredSpotifyAlbums.value.map(album => album.albumId);
+
+	socket.dispatch(
+		"apis.getAlternativeAlbumSourcesForAlbums",
+		albumIds,
+		collectAlternativeMediaSourcesOrigins.value,
+		{
+			cb: res => {
+				console.log(
+					"apis.getAlternativeAlbumSourcesForAlbums response",
+					res
+				);
+			},
+			onProgress: data => {
+				console.log(
+					"apis.getAlternativeAlbumSourcesForAlbums onProgress",
+					data
+				);
+
+				if (data.status === "working") {
+					if (data.data.status === "success") {
+						const { albumId, result } = data.data;
+
+						if (!spotifyAlbums[albumId]) return;
+
+						alternativeAlbumsPerAlbum[albumId] = {
+							youtubePlaylistIds: result
+						};
+					}
+				} else if (data.status === "finished") {
+					gotAllAlternativeAlbums.value = true;
+					gettingAllAlternativeAlbums.value = false;
+				}
+			}
 		}
 	);
 };
@@ -665,6 +713,19 @@ onMounted(() => {
 								@click="loadSpotifyAlbums()"
 							>
 								Get Spotify albums
+							</button>
+							<button
+								v-if="
+									loadedSpotifyTracks &&
+									loadedSpotifyAlbums &&
+									!gettingAllAlternativeAlbums &&
+									!gotAllAlternativeAlbums &&
+									currentConvertType === 'album'
+								"
+								class="button is-primary"
+								@click="getAlternativeAlbums()"
+							>
+								Get alternative albums
 							</button>
 						</div>
 
@@ -1215,7 +1276,36 @@ onMounted(() => {
 							<div
 								class="convert-table-cell convert-table-cell-right"
 							>
-								<p>Test</p>
+								<div
+									class="alternative-album-items"
+									v-if="
+										alternativeAlbumsPerAlbum[
+											spotifyAlbum.albumId
+										]
+									"
+								>
+									<div
+										class="alternative-album-item"
+										v-for="youtubePlaylistId in alternativeAlbumsPerAlbum[
+											spotifyAlbum.albumId
+										].youtubePlaylistIds"
+										:key="
+											spotifyAlbum.albumId +
+											youtubePlaylistId
+										"
+									>
+										<p>
+											YouTube Playlist
+											{{ youtubePlaylistId }} has been
+											automatically found
+										</p>
+										<button
+											class="button is-primary is-fullwidth"
+										>
+											Match songs using this playlist
+										</button>
+									</div>
+								</div>
 							</div>
 						</template>
 					</div>

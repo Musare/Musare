@@ -537,6 +537,74 @@ export default {
 	),
 
 	/**
+	 *
+	 *
+	 * @param session
+	 * @param trackId - the trackId
+	 * @param {Function} cb
+	 */
+	getAlternativeAlbumSourcesForAlbums: useHasPermission(
+		"admin.view.spotify",
+		function getAlternativeAlbumSourcesForAlbums(session, albumIds, collectAlternativeAlbumSourcesOrigins, cb) {
+			async.waterfall(
+				[
+					next => {
+						if (!albumIds) {
+							next("Invalid albumIds provided.");
+							return;
+						}
+
+						next();
+					},
+
+					async () => {
+						this.keepLongJob();
+						this.publishProgress({
+							status: "started",
+							title: "Getting alternative album sources for Spotify albums",
+							message: "Starting up",
+							id: this.toString()
+						});
+						console.log("KRIS@4", this.toString());
+						// await CacheModule.runJob(
+						// 	"RPUSH",
+						// 	{ key: `longJobs.${session.userId}`, value: this.toString() },
+						// 	this
+						// );
+
+						SpotifyModule.runJob(
+							"GET_ALTERNATIVE_ALBUM_SOURCES_FOR_ALBUMS",
+							{ albumIds, collectAlternativeAlbumSourcesOrigins },
+							this
+						);
+					}
+				],
+				async err => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log(
+							"ERROR",
+							"APIS_GET_ALTERNATIVE_ALBUM_SOURCES",
+							`Getting alternative album sources failed for "${albumIds.join(", ")}". "${err}"`
+						);
+						return cb({ status: "error", message: err });
+					}
+					this.log(
+						"SUCCESS",
+						"APIS_GET_ALTERNATIVE_ALBUM_SOURCES",
+						`User "${session.userId}" started getting alternative album spirces for "${albumIds.join(
+							", "
+						)}".`
+					);
+					return cb({
+						status: "success"
+					});
+				}
+			);
+		}
+	),
+
+	/**
 	 * Joins a room
 	 *
 	 * @param {object} session - user session
