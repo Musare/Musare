@@ -15,7 +15,8 @@ const props = defineProps({
 	spotifyAlbum: { type: Object, default: () => ({}) },
 	spotifyTracks: { type: Array, default: () => [] },
 	playlistId: { type: String },
-	youtubePlaylistId: { type: String }
+	youtubePlaylistId: { type: String },
+	youtubeChannelUrl: { type: String }
 });
 
 const { socket } = useWebsocketsStore();
@@ -142,6 +143,62 @@ const tryToAutoMove = () => {
 	});
 };
 
+const importChannel = () => {
+	if (hasImportedPlaylist.value)
+		return new Toast("A playlist has already imported.");
+	if (isImportingPlaylist.value)
+		return new Toast("A playlist is already importing.");
+
+	isImportingPlaylist.value = true;
+
+	// don't give starting import message instantly in case of instant error
+	setTimeout(() => {
+		if (isImportingPlaylist.value) {
+			new Toast(
+				"Starting to import your channel. This can take some time to do."
+			);
+		}
+	}, 750);
+
+	return socket.dispatch(
+		"youtube.requestSet",
+		props.youtubeChannelUrl,
+		false,
+		true,
+		res => {
+			const mediaSources = res.videos.map(
+				video => `youtube:${video.youtubeId}`
+			);
+
+			socket.dispatch(
+				"songs.getSongsFromMediaSources",
+				mediaSources,
+				res => {
+					if (res.status === "success") {
+						const { songs } = res.data;
+
+						playlistSongs.value = songs;
+
+						songs.forEach(() => {
+							trackSongs.value.push([]);
+						});
+
+						hasImportedPlaylist.value = true;
+						isImportingPlaylist.value = false;
+
+						tryToAutoMove();
+						return;
+					}
+
+					new Toast("Could not get songs.");
+				}
+			);
+
+			return new Toast({ content: res.message, timeout: 20000 });
+		}
+	);
+};
+
 const importPlaylist = () => {
 	if (hasImportedPlaylist.value)
 		return new Toast("A playlist has already imported.");
@@ -201,7 +258,8 @@ const importPlaylist = () => {
 onMounted(() => {
 	localSpotifyTracks.value = props.spotifyTracks;
 
-	importPlaylist();
+	if (props.youtubePlaylistId) importPlaylist();
+	else if (props.youtubeChannelUrl) importChannel();
 });
 
 onBeforeUnmount(() => {});

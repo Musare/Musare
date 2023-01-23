@@ -58,5 +58,26 @@ export default {
 				this.log("ERROR", "SPOTIFY_GET_ALBUMS_FROM_IDS", `Getting albums from ids failed. "${err}"`);
 				return cb({ status: "error", message: err });
 			});
-	})
+	}),
+
+	/**
+	 * Fetches artists from ids
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	getArtistsFromIds: useHasPermission(
+		"admin.view.spotify",
+		function getTracksFromMediaSources(session, artistIds, cb) {
+			SpotifyModule.runJob("GET_ARTISTS_FROM_IDS", { artistIds }, this)
+				.then(artists => {
+					this.log("SUCCESS", "SPOTIFY_GET_ARTISTS_FROM_IDS", `Getting artists from ids was successful.`);
+					return cb({ status: "success", data: { artists } });
+				})
+				.catch(async err => {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "SPOTIFY_GET_ARTISTS_FROM_IDS", `Getting artists from ids failed. "${err}"`);
+					return cb({ status: "error", message: err });
+				});
+		}
+	)
 };

@@ -48,6 +48,9 @@ const loadedSpotifyTracks = ref(false);
 const loadingSpotifyAlbums = ref(false);
 const loadedSpotifyAlbums = ref(false);
 
+const loadingSpotifyArtists = ref(false);
+const loadedSpotifyArtists = ref(false);
+
 const gettingAllAlternativeMediaPerTrack = ref(false);
 const gotAllAlternativeMediaPerTrack = ref(false);
 const alternativeMediaPerTrack = reactive({});
@@ -56,6 +59,10 @@ const gettingAllAlternativeAlbums = ref(false);
 const gotAllAlternativeAlbums = ref(false);
 const alternativeAlbumsPerAlbum = reactive({});
 
+const gettingAllAlternativeArtists = ref(false);
+const gotAllAlternativeArtists = ref(false);
+const alternativeArtistsPerArtist = reactive({});
+
 const alternativeMediaMap = reactive({});
 const alternativeMediaFailedMap = reactive({});
 
@@ -63,8 +70,8 @@ const gettingMissingAlternativeMedia = ref(false);
 
 const replacingAllSpotifySongs = ref(false);
 
-const currentConvertType = ref<"track" | "album" | "artist">("album");
-const showReplaceButtonPerAlternative = ref(false);
+const currentConvertType = ref<"track" | "album" | "artist">("track");
+const showReplaceButtonPerAlternative = ref(true);
 const hideSpotifySongsWithNoAlternativesFound = ref(false);
 
 const preferredAlternativeSongMode = ref<
@@ -77,7 +84,11 @@ const showExtra = ref(false);
 const collectAlternativeMediaSourcesOrigins = ref(false);
 
 const minimumSongsPerAlbum = ref(2);
+const minimumSongsPerArtist = ref(2);
 const sortAlbumMode = ref<
+	"SONG_COUNT_ASC" | "SONG_COUNT_DESC" | "NAME_DESC" | "NAME_ASC"
+>("SONG_COUNT_ASC");
+const sortArtistMode = ref<
 	"SONG_COUNT_ASC" | "SONG_COUNT_DESC" | "NAME_DESC" | "NAME_ASC"
 >("SONG_COUNT_ASC");
 
@@ -92,6 +103,7 @@ const youtubeVideoUrlRegex =
 const youtubeVideoIdRegex = /^([\w-]{11})$/;
 
 const youtubePlaylistUrlRegex = /[\\?&]list=([^&#]*)/;
+const youtubeChannelUrlRegex = /channel\/([A-Za-z0-9]+)\/?/;
 
 const filteredSpotifySongs = computed(() =>
 	hideSpotifySongsWithNoAlternativesFound.value
@@ -105,6 +117,44 @@ const filteredSpotifySongs = computed(() =>
 		  )
 		: spotifySongs.value
 );
+
+const filteredSpotifyArtists = computed(() => {
+	let artists = Object.values(spotifyArtists);
+
+	artists = artists.filter(
+		artist => artist.songs.length >= minimumSongsPerArtist.value
+	);
+
+	let sortFn = null;
+	if (sortArtistMode.value === "SONG_COUNT_ASC")
+		sortFn = (artistA, artistB) =>
+			artistA.songs.length - artistB.songs.length;
+	else if (sortArtistMode.value === "SONG_COUNT_DESC")
+		sortFn = (artistA, artistB) =>
+			artistB.songs.length - artistA.songs.length;
+	else if (loadedSpotifyArtists.value && sortArtistMode.value === "NAME_ASC")
+		sortFn = (artistA, artistB) => {
+			const nameA = artistA.rawData?.name?.toLowerCase();
+			const nameB = artistB.rawData?.name?.toLowerCase();
+
+			if (nameA === nameB) return 0;
+			if (nameA < nameB) return -1;
+			if (nameA > nameB) return 1;
+		};
+	else if (loadedSpotifyArtists.value && sortArtistMode.value === "NAME_DESC")
+		sortFn = (artistA, artistB) => {
+			const nameA = artistA.rawData?.name?.toLowerCase();
+			const nameB = artistB.rawData?.name?.toLowerCase();
+
+			if (nameA === nameB) return 0;
+			if (nameA > nameB) return -1;
+			if (nameA < nameB) return 1;
+		};
+
+	if (sortFn) artists = artists.sort(sortFn);
+
+	return artists;
+});
 
 const filteredSpotifyAlbums = computed(() => {
 	let albums = Object.values(spotifyAlbums);
@@ -354,6 +404,44 @@ const openReplaceAlbumModalFromUrl = spotifyAlbumId => {
 	openReplaceAlbumModal(spotifyAlbumId, youtubePlaylistId);
 };
 
+const openReplaceArtistModal = (spotifyArtistId, youtubeChannelUrl) => {
+	console.log(spotifyArtistId, youtubeChannelUrl);
+
+	if (
+		!spotifyArtists[spotifyArtistId] ||
+		!spotifyArtists[spotifyArtistId].rawData
+	)
+		return new Toast("Artist hasn't loaded yet.");
+
+	openModal({
+		modal: "replaceSpotifySongs",
+		props: {
+			playlistId: props.playlistId,
+			youtubeChannelUrl,
+			spotifyTracks: spotifyArtists[spotifyArtistId].songs.map(
+				mediaSource => spotifyTracks[mediaSource]
+			)
+		}
+	});
+};
+
+const openReplaceArtistModalFromUrl = spotifyArtistId => {
+	const replacementUrl = replaceSongUrlMap[`artist:${spotifyArtistId}`];
+
+	console.log(spotifyArtistId, replacementUrl);
+
+	// let youtubeChannelId = null;
+
+	// const youtubeChannelUrlRegexMatches =
+	// 	youtubeChannelUrlRegex.exec(replacementUrl);
+	// if (youtubeChannelUrlRegexMatches)
+	// 	youtubeChannelId = youtubeChannelUrlRegexMatches[0];
+
+	console.log("Open modal for ", replacementUrl);
+
+	openReplaceArtistModal(spotifyArtistId, replacementUrl);
+};
+
 const replaceSongFromUrl = spotifyMediaSource => {
 	const replacementUrl = replaceSongUrlMap[spotifyMediaSource];
 
@@ -403,6 +491,52 @@ const getMissingAlternativeMedia = () => {
 			}
 
 			gettingMissingAlternativeMedia.value = false;
+		}
+	);
+};
+
+const getAlternativeArtists = () => {
+	if (gettingAllAlternativeArtists.value || gotAllAlternativeArtists.value)
+		return;
+
+	gettingAllAlternativeArtists.value = true;
+
+	const artistIds = filteredSpotifyArtists.value.map(
+		artist => artist.artistId
+	);
+
+	socket.dispatch(
+		"apis.getAlternativeArtistSourcesForArtists",
+		artistIds,
+		collectAlternativeMediaSourcesOrigins.value,
+		{
+			cb: res => {
+				console.log(
+					"apis.getAlternativeArtistSourcesForArtists response",
+					res
+				);
+			},
+			onProgress: data => {
+				console.log(
+					"apis.getAlternativeArtistSourcesForArtists onProgress",
+					data
+				);
+
+				if (data.status === "working") {
+					if (data.data.status === "success") {
+						const { artistId, result } = data.data;
+
+						if (!spotifyArtists[artistId]) return;
+
+						alternativeArtistsPerArtist[artistId] = {
+							youtubeChannelIds: result
+						};
+					}
+				} else if (data.status === "finished") {
+					gotAllAlternativeArtists.value = true;
+					gettingAllAlternativeArtists.value = false;
+				}
+			}
 		}
 	);
 };
@@ -490,11 +624,47 @@ const getAlternativeMedia = () => {
 				} else if (data.status === "finished") {
 					gotAllAlternativeMediaPerTrack.value = true;
 					gettingAllAlternativeMediaPerTrack.value = false;
+
+					getMissingAlternativeMedia();
 				}
 			}
 		}
 	);
 };
+
+const loadSpotifyArtists = () =>
+	new Promise<void>(resolve => {
+		console.debug(TAG, "Loading Spotify artists");
+
+		loadingSpotifyArtists.value = true;
+
+		const artistIds = filteredSpotifyArtists.value.map(
+			artist => artist.artistId
+		);
+
+		socket.dispatch("spotify.getArtistsFromIds", artistIds, res => {
+			console.debug(TAG, "Get artists response", res);
+
+			if (res.status !== "success") {
+				new Toast(res.message);
+				closeCurrentModal();
+				return;
+			}
+
+			const { artists } = res.data;
+
+			artists.forEach(artist => {
+				spotifyArtists[artist.artistId].rawData = artist.rawData;
+			});
+
+			console.debug(TAG, "Loaded Spotify artists");
+
+			loadedSpotifyArtists.value = true;
+			loadingSpotifyArtists.value = false;
+
+			resolve();
+		});
+	});
 
 const loadSpotifyAlbums = () =>
 	new Promise<void>(resolve => {
@@ -811,6 +981,32 @@ onMounted(() => {
 							>
 								Get alternative albums
 							</button>
+
+							<button
+								v-if="
+									loadedSpotifyTracks &&
+									!loadingSpotifyArtists &&
+									!loadedSpotifyArtists &&
+									currentConvertType === 'artist'
+								"
+								class="button is-primary"
+								@click="loadSpotifyArtists()"
+							>
+								Get Spotify artists
+							</button>
+							<button
+								v-if="
+									loadedSpotifyTracks &&
+									loadedSpotifyArtists &&
+									!gettingAllAlternativeArtists &&
+									!gotAllAlternativeArtists &&
+									currentConvertType === 'artist'
+								"
+								class="button is-primary"
+								@click="getAlternativeArtists()"
+							>
+								Get alternative artists
+							</button>
 						</div>
 
 						<div class="options">
@@ -992,10 +1188,53 @@ onMounted(() => {
 								</div>
 							</div>
 
-							<div class="control">
+							<div
+								class="small-section"
+								v-if="currentConvertType === 'artist'"
+							>
+								<label class="label"
+									>Minimum songs per artist</label
+								>
+								<div class="control is-expanded">
+									<input
+										class="input"
+										type="number"
+										min="1"
+										v-model="minimumSongsPerArtist"
+									/>
+								</div>
+							</div>
+
+							<div
+								class="control"
+								v-if="currentConvertType === 'album'"
+							>
 								<label class="label">Sort album mode</label>
 								<p class="control is-expanded select">
 									<select v-model="sortAlbumMode">
+										<option value="SONG_COUNT_ASC">
+											Song count (ascending)
+										</option>
+										<option value="SONG_COUNT_DESC">
+											Song count (descending)
+										</option>
+										<option value="NAME_ASC">
+											Name (ascending)
+										</option>
+										<option value="NAME_DESC">
+											Name (descending)
+										</option>
+									</select>
+								</p>
+							</div>
+
+							<div
+								class="control"
+								v-if="currentConvertType === 'artist'"
+							>
+								<label class="label">Sort artist mode</label>
+								<p class="control is-expanded select">
+									<select v-model="sortArtistMode">
 										<option value="SONG_COUNT_ASC">
 											Song count (ascending)
 										</option>
@@ -1576,6 +1815,210 @@ onMounted(() => {
 													@click="
 														openReplaceAlbumModalFromUrl(
 															spotifyAlbum.albumId
+														)
+													"
+													>Open replace modal</a
+												>
+											</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</template>
+					</div>
+
+					<div
+						class="convert-table convert-song-by-artist"
+						v-if="currentConvertType === 'artist'"
+					>
+						<h4>Spotify artists</h4>
+						<h4>Alternative artists (channels)</h4>
+
+						<template
+							v-for="spotifyArtist in filteredSpotifyArtists"
+							:key="spotifyArtist"
+						>
+							<div
+								class="convert-table-cell convert-table-cell-left"
+							>
+								<p>Artist ID: {{ spotifyArtist.artistId }}</p>
+								<p v-if="loadingSpotifyArtists">
+									Loading artist info...
+								</p>
+								<p
+									v-else-if="
+										loadedSpotifyArtists &&
+										!spotifyArtist.rawData
+									"
+								>
+									Failed to load artist info...
+								</p>
+								<template v-else-if="loadedSpotifyArtists">
+									<p>
+										Name: {{ spotifyArtist.rawData.name }}
+									</p>
+									<!-- <p>
+										Label: {{ spotifyArtist.rawData.label }}
+									</p>
+									<p>
+										Popularity:
+										{{ spotifyArtist.rawData.popularity }}
+									</p>
+									<p>
+										Release date:
+										{{ spotifyArtist.rawData.release_date }}
+									</p>
+									<p>
+										Artists:
+										{{
+											spotifyArtist.rawData.artists
+												.map(artist => artist.name)
+												.join(", ")
+										}}
+									</p>
+									<p>
+										UPC:
+										{{
+											spotifyArtist.rawData.external_ids
+												.upc
+										}}
+									</p> -->
+								</template>
+								<song-item
+									v-for="spotifyMediaSource in spotifyArtist.songs"
+									:key="
+										spotifyArtist.artistId +
+										spotifyMediaSource
+									"
+									:song="{
+										mediaSource: spotifyMediaSource,
+										title: spotifyTracks[spotifyMediaSource]
+											.name,
+										artists:
+											spotifyTracks[spotifyMediaSource]
+												.artists,
+										duration:
+											spotifyTracks[spotifyMediaSource]
+												.duration,
+										thumbnail:
+											spotifyTracks[spotifyMediaSource]
+												.albumImageUrl
+									}"
+								>
+									<template #leftIcon>
+										<a
+											:href="`https://open.spotify.com/track/${
+												spotifyMediaSource.split(':')[1]
+											}`"
+											target="_blank"
+										>
+											<div
+												class="spotify-icon left-icon"
+											></div>
+										</a>
+									</template>
+								</song-item>
+							</div>
+							<div
+								class="convert-table-cell convert-table-cell-right"
+							>
+								<p
+									v-if="
+										!alternativeArtistsPerArtist[
+											spotifyArtist.artistId
+										]
+									"
+								>
+									No alternatives loaded
+								</p>
+								<div
+									class="alternative-artist-items"
+									v-if="
+										alternativeArtistsPerArtist[
+											spotifyArtist.artistId
+										]
+									"
+								>
+									<p
+										v-if="
+											alternativeArtistsPerArtist[
+												spotifyArtist.artistId
+											].youtubeChannelIds.length === 0
+										"
+									>
+										No alternative channels were found
+									</p>
+									<div
+										class="alternative-artist-item"
+										v-for="youtubeChannelId in alternativeArtistsPerArtist[
+											spotifyArtist.artistId
+										].youtubeChannelIds"
+										:key="
+											spotifyArtist.artistId +
+											youtubeChannelId
+										"
+									>
+										<p>
+											YouTube channel
+											{{ youtubeChannelId }} has been
+											automatically found
+										</p>
+										<button
+											class="button is-primary is-fullwidth"
+											@click="
+												openReplaceArtistModal(
+													spotifyArtist.artistId,
+													`https://youtube.com/channel/${youtubeChannelId}`
+												)
+											"
+										>
+											Open replace modal
+										</button>
+									</div>
+								</div>
+
+								<div
+									v-if="
+										showReplacementInputs ||
+										(alternativeArtistsPerArtist[
+											spotifyArtist.artistId
+										] &&
+											alternativeArtistsPerArtist[
+												spotifyArtist.artistId
+											].youtubeChannelIds.length === 0)
+									"
+								>
+									<div>
+										<label class="label">
+											Enter replacement YouTube channel
+											URL
+										</label>
+										<div
+											class="control is-grouped input-with-button"
+										>
+											<p class="control is-expanded">
+												<input
+													class="input"
+													type="text"
+													placeholder="Enter your channel URL here..."
+													v-model="
+														replaceSongUrlMap[
+															`artist:${spotifyArtist.artistId}`
+														]
+													"
+													@keyup.enter="
+														openReplaceArtistModalFromUrl(
+															spotifyArtist.artistId
+														)
+													"
+												/>
+											</p>
+											<p class="control">
+												<a
+													class="button is-info"
+													@click="
+														openReplaceArtistModalFromUrl(
+															spotifyArtist.artistId
 														)
 													"
 													>Open replace modal</a

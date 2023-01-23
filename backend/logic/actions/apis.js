@@ -605,6 +605,74 @@ export default {
 	),
 
 	/**
+	 *
+	 *
+	 * @param session
+	 * @param trackId - the trackId
+	 * @param {Function} cb
+	 */
+	getAlternativeArtistSourcesForArtists: useHasPermission(
+		"admin.view.spotify",
+		function getAlternativeArtistSourcesForArtists(session, artistIds, collectAlternativeArtistSourcesOrigins, cb) {
+			async.waterfall(
+				[
+					next => {
+						if (!artistIds) {
+							next("Invalid artistIds provided.");
+							return;
+						}
+
+						next();
+					},
+
+					async () => {
+						this.keepLongJob();
+						this.publishProgress({
+							status: "started",
+							title: "Getting alternative artist sources for Spotify artists",
+							message: "Starting up",
+							id: this.toString()
+						});
+						console.log("KRIS@4", this.toString());
+						// await CacheModule.runJob(
+						// 	"RPUSH",
+						// 	{ key: `longJobs.${session.userId}`, value: this.toString() },
+						// 	this
+						// );
+
+						SpotifyModule.runJob(
+							"GET_ALTERNATIVE_ARTIST_SOURCES_FOR_ARTISTS",
+							{ artistIds, collectAlternativeArtistSourcesOrigins },
+							this
+						);
+					}
+				],
+				async err => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log(
+							"ERROR",
+							"APIS_GET_ALTERNATIVE_ARTIST_SOURCES",
+							`Getting alternative artist sources failed for "${artistIds.join(", ")}". "${err}"`
+						);
+						return cb({ status: "error", message: err });
+					}
+					this.log(
+						"SUCCESS",
+						"APIS_GET_ALTERNATIVE_ARTIST_SOURCES",
+						`User "${session.userId}" started getting alternative artist spirces for "${artistIds.join(
+							", "
+						)}".`
+					);
+					return cb({
+						status: "success"
+					});
+				}
+			);
+		}
+	),
+
+	/**
 	 * Joins a room
 	 *
 	 * @param {object} session - user session

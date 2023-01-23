@@ -296,6 +296,47 @@ class _WikiDataModule extends CoreClass {
 	}
 
 	/**
+	 * Get WikiData data from Spotify artist id
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.spotifyArtistId - Spotify artist id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async API_GET_DATA_FROM_SPOTIFY_ARTIST(payload) {
+		const { spotifyArtistId } = payload;
+
+		if (!spotifyArtistId) throw new Error("Invalid Spotify artist ID provided.");
+
+		const sparqlQuery =
+			`SELECT DISTINCT ?item ?itemLabel ?YouTube_channel_ID ?SoundCloud_ID ?MusicBrainz_artist_ID WHERE {
+				SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
+				{
+					SELECT DISTINCT ?item WHERE {
+						?item p:P1902 ?statement0.
+						?statement0 ps:P1902 "${spotifyArtistId}".
+					}
+					LIMIT 100
+				}
+				OPTIONAL { ?item wdt:P2397 ?YouTube_channel_ID. }
+				OPTIONAL { ?item wdt:P3040 ?SoundCloud_ID. }
+				OPTIONAL { ?item wdt:P434 ?MusicBrainz_artist_ID. }
+			}`
+				.replaceAll("\n", "")
+				.replaceAll("\t", "");
+
+		return WikiDataModule.runJob(
+			"API_CALL",
+			{
+				url: "https://query.wikidata.org/sparql",
+				params: {
+					query: sparqlQuery
+				}
+			},
+			this
+		);
+	}
+
+	/**
 	 * Perform WikiData API call
 	 *
 	 * @param {object} payload - object that contains the payload

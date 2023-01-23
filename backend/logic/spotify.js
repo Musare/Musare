@@ -99,6 +99,9 @@ class _SpotifyModule extends CoreClass {
 		this.spotifyAlbumModel = this.SpotifyAlbumModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "spotifyAlbum"
 		});
+		this.spotifyArtistModel = this.SpotifyArtistModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "spotifyArtist"
+		});
 
 		return new Promise((resolve, reject) => {
 			if (!config.has("apis.spotify") || !config.get("apis.spotify.enabled")) {
@@ -203,6 +206,36 @@ class _SpotifyModule extends CoreClass {
 					url: `https://api.spotify.com/v1/albums`,
 					params: {
 						ids: albumIds.join(",")
+					}
+				},
+				this
+			)
+				.then(response => {
+					resolve(response);
+				})
+				.catch(err => {
+					reject(err);
+				});
+		});
+	}
+
+	/**
+	 * Perform Spotify API get artists request
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.artistIds - the artist ids to get
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	API_GET_ARTISTS(payload) {
+		return new Promise((resolve, reject) => {
+			const { artistIds } = payload;
+
+			SpotifyModule.runJob(
+				"API_CALL",
+				{
+					url: `https://api.spotify.com/v1/artists`,
+					params: {
+						ids: artistIds.join(",")
 					}
 				},
 				this
@@ -404,6 +437,36 @@ class _SpotifyModule extends CoreClass {
 	}
 
 	/**
+	 * Create Spotify artists
+	 *
+	 * @param {object} payload - an object containing the payload
+	 * @param {string} payload.spotifyArtists - the Spotify artists
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	async CREATE_ARTISTS(payload) {
+		const { spotifyArtists } = payload;
+
+		if (!Array.isArray(spotifyArtists)) throw new Error("Invalid spotifyArtists type");
+
+		const artistIds = spotifyArtists.map(spotifyArtist => spotifyArtist.artistId);
+
+		const existingArtists = (await SpotifyModule.spotifyArtistModel.find({ artistId: artistIds })).map(
+			artist => artist._doc
+		);
+		const existingArtistIds = existingArtists.map(existingArtist => existingArtist.artistId);
+
+		const newSpotifyArtists = spotifyArtists.filter(
+			spotifyArtist => existingArtistIds.indexOf(spotifyArtist.artistId) === -1
+		);
+
+		if (newSpotifyArtists.length === 0) return existingArtists;
+
+		await SpotifyModule.spotifyArtistModel.insertMany(newSpotifyArtists);
+
+		return existingArtists.concat(newSpotifyArtists);
+	}
+
+	/**
 	 * Gets tracks from media sources
 	 *
 	 * @param {object} payload
@@ -499,6 +562,58 @@ class _SpotifyModule extends CoreClass {
 		await SpotifyModule.runJob("CREATE_ALBUMS", { spotifyAlbums: newAlbums }, this);
 
 		return existingAlbums.concat(newAlbums);
+	}
+
+	/**
+	 * Gets artists from ids
+	 *
+	 * @param {object} payload
+	 * @returns {Promise}
+	 */
+	async GET_ARTISTS_FROM_IDS(payload) {
+		const { artistIds } = payload;
+
+		console.log(artistIds);
+
+		const existingArtists = (await SpotifyModule.spotifyArtistModel.find({ artistId: artistIds })).map(
+			artist => artist._doc
+		);
+		const existingArtistIds = existingArtists.map(existingArtist => existingArtist.artistId);
+
+		console.log(existingArtists);
+
+		const missingArtistIds = artistIds.filter(artistId => existingArtistIds.indexOf(artistId) === -1);
+
+		if (missingArtistIds.length === 0) return existingArtists;
+
+		console.log(missingArtistIds);
+
+		const jobsToRun = [];
+
+		const chunkSize = 2;
+		while (missingArtistIds.length > 0) {
+			const chunkedMissingArtistIds = missingArtistIds.splice(0, chunkSize);
+
+			jobsToRun.push(SpotifyModule.runJob("API_GET_ARTISTS", { artistIds: chunkedMissingArtistIds }, this));
+		}
+
+		const jobResponses = await Promise.all(jobsToRun);
+
+		console.log(jobResponses);
+
+		const newArtists = jobResponses
+			.map(jobResponse => jobResponse.response.data.artists)
+			.flat()
+			.map(artist => ({
+				artistId: artist.id,
+				rawData: artist
+			}));
+
+		console.log(newArtists);
+
+		await SpotifyModule.runJob("CREATE_ARTISTS", { spotifyArtists: newArtists }, this);
+
+		return existingArtists.concat(newArtists);
 	}
 
 	/**
@@ -671,6 +786,106 @@ class _SpotifyModule extends CoreClass {
 
 			// kind;
 		});
+	}
+
+	/**
+	 *
+	 * @param {*} payload
+	 * @returns
+	 */
+	async GET_ALTERNATIVE_ARTIST_SOURCES_FOR_ARTISTS(payload) {
+		const { artistIds, collectAlternativeArtistSourcesOrigins } = payload;
+
+		await async.eachLimit(artistIds, 1, async artistId => {
+			try {
+				const result = await SpotifyModule.runJob(
+					"GET_ALTERNATIVE_ARTIST_SOURCES_FOR_ARTIST",
+					{ artistId, collectAlternativeArtistSourcesOrigins },
+					this
+				);
+				this.publishProgress({
+					status: "working",
+					message: `Got alternative artist source for ${artistId}`,
+					data: {
+						artistId,
+						status: "success",
+						result
+					}
+				});
+			} catch (err) {
+				console.log("ERROR", err);
+				this.publishProgress({
+					status: "working",
+					message: `Failed to get alternative artist source for ${artistId}`,
+					data: {
+						artistId,
+						status: "error"
+					}
+				});
+			}
+		});
+
+		console.log("Done!");
+
+		this.publishProgress({
+			status: "finished",
+			message: `Finished getting alternative artist sources`
+		});
+	}
+
+	/**
+	 *
+	 * @param {*} payload
+	 * @returns
+	 */
+	async GET_ALTERNATIVE_ARTIST_SOURCES_FOR_ARTIST(payload) {
+		const { artistId, collectAlternativeArtistSourcesOrigins } = payload;
+
+		if (!artistId) throw new Error("Artist id provided is not valid.");
+
+		// const artist = await SpotifyModule.runJob(
+		// 	"GET_ARTIST",
+		// 	{
+		// 		identifier: artistId
+		// 	},
+		// 	this
+		// );
+
+		const wikiDataResponse = await WikiDataModule.runJob(
+			"API_GET_DATA_FROM_SPOTIFY_ARTIST",
+			{ spotifyArtistId: artistId },
+			this
+		);
+
+		const youtubeChannelIds = Array.from(
+			new Set(
+				wikiDataResponse.results.bindings
+					.filter(binding => !!binding.YouTube_channel_ID)
+					.map(binding => binding.YouTube_channel_ID.value)
+			)
+		);
+
+		const soundcloudIds = Array.from(
+			new Set(
+				wikiDataResponse.results.bindings
+					.filter(binding => !!binding.SoundCloud_ID)
+					.map(binding => binding.SoundCloud_ID.value)
+			)
+		);
+
+		const musicbrainzArtistIds = Array.from(
+			new Set(
+				wikiDataResponse.results.bindings
+					.filter(binding => !!binding.MusicBrainz_artist_ID)
+					.map(binding => binding.MusicBrainz_artist_ID.value)
+			)
+		);
+
+		console.log("Youtube channel ids", youtubeChannelIds);
+		console.log("Soundcloud ids", soundcloudIds);
+		console.log("Musicbrainz artist ids", musicbrainzArtistIds);
+
+		return youtubeChannelIds;
 	}
 
 	/**
