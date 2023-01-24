@@ -1376,96 +1376,107 @@ class _YouTubeModule extends CoreClass {
 	}
 
 	/**
-	 * Get YouTube video
+	 * Get YouTube videos
 	 *
 	 * @param {object} payload - an object containing the payload
-	 * @param {string} payload.identifier - the youtube video ObjectId or YouTube ID
-	 * @param {string} payload.createMissing - attempt to fetch and create video if not in db
+	 * @param {string} payload.identifiers - an array of YouTube video ObjectId's or YouTube ID's
+	 * @param {string} payload.createMissing - attempt to fetch and create video's if not in db
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	GET_VIDEO(payload) {
-		return new Promise((resolve, reject) => {
-			async.waterfall(
-				[
-					next => {
-						const query = mongoose.Types.ObjectId.isValid(payload.identifier)
-							? { _id: payload.identifier }
-							: { youtubeId: payload.identifier };
+	async GET_VIDEOS(payload) {
+		const { identifiers, createMissing } = payload;
 
-						return YouTubeModule.youtubeVideoModel.findOne(query, next);
-					},
+		console.log(identifiers, createMissing);
 
-					(video, next) => {
-						if (video) return next(null, video, false);
-						if (mongoose.Types.ObjectId.isValid(payload.identifier) || !payload.createMissing)
-							return next("YouTube video not found.");
+		const youtubeIds = identifiers.filter(identifier => !mongoose.Types.ObjectId.isValid(identifier));
+		const objectIds = identifiers.filter(identifier => mongoose.Types.ObjectId.isValid(identifier));
 
-						const params = {
-							part: "snippet,contentDetails,statistics,status",
-							id: payload.identifier
-						};
+		console.log(youtubeIds, objectIds);
 
-						return YouTubeModule.runJob("API_GET_VIDEOS", { params }, this)
-							.then(({ response }) => {
-								const { data } = response;
-								if (data.items[0] === undefined)
-									return next("The specified video does not exist or cannot be publicly accessed.");
+		const existingVideos = (await YouTubeModule.youtubeVideoModel.find({ youtubeId: youtubeIds }))
+			.concat(await YouTubeModule.youtubeVideoModel.find({ _id: objectIds }))
+			.map(video => video._doc);
 
-								// TODO Clean up duration converter
-								let dur = data.items[0].contentDetails.duration;
+		console.log(existingVideos);
 
-								dur = dur.replace("PT", "");
+		const existingYoutubeIds = existingVideos.map(existingVideo => existingVideo.youtubeId);
+		const existingYoutubeObjectIds = existingVideos.map(existingVideo => existingVideo._id.toString());
 
-								let duration = 0;
+		console.log(existingYoutubeIds, existingYoutubeObjectIds);
 
-								dur = dur.replace(/([\d]*)H/, (v, v2) => {
-									v2 = Number(v2);
-									duration = v2 * 60 * 60;
-									return "";
-								});
+		if (!createMissing) return { videos: existingVideos };
+		if (identifiers.length === existingVideos.length || youtubeIds.length === 0) return { videos: existingVideos };
 
-								dur = dur.replace(/([\d]*)M/, (v, v2) => {
-									v2 = Number(v2);
-									duration += v2 * 60;
-									return "";
-								});
+		const missingYoutubeIds = youtubeIds.filter(youtubeId => existingYoutubeIds.indexOf(youtubeId) === -1);
 
-								dur.replace(/([\d]*)S/, (v, v2) => {
-									v2 = Number(v2);
-									duration += v2;
-									return "";
-								});
+		console.log(missingYoutubeIds);
 
-								const youtubeVideo = {
-									youtubeId: data.items[0].id,
-									title: data.items[0].snippet.title,
-									author: data.items[0].snippet.channelTitle,
-									thumbnail: data.items[0].snippet.thumbnails.default.url,
-									duration,
-									uploadedAt: new Date(data.items[0].snippet.publishedAt)
-								};
+		if (missingYoutubeIds.length === 0) return { videos: existingVideos };
 
-								return next(null, false, youtubeVideo);
-							})
-							.catch(next);
-					},
+		const jobsToRun = [];
 
-					(video, youtubeVideo, next) => {
-						if (video) return next(null, video, true);
-						return YouTubeModule.runJob("CREATE_VIDEOS", { youtubeVideos: youtubeVideo }, this)
-							.then(res => {
-								if (res.youtubeVideos.length === 1) next(null, res.youtubeVideos[0], false);
-								else next("YouTube video not found.");
-							})
-							.catch(next);
-					}
-				],
-				(err, video, existing) => {
-					if (err) reject(new Error(err));
-					else resolve({ video, existing });
-				}
-			);
-		});
+		const chunkSize = 50;
+		while (missingYoutubeIds.length > 0) {
+			const chunkedMissingYoutubeIds = missingYoutubeIds.splice(0, chunkSize);
+
+			const params = {
+				part: "snippet,contentDetails,statistics,status",
+				id: chunkedMissingYoutubeIds.join(",")
+			};
+
+			jobsToRun.push(YouTubeModule.runJob("API_GET_VIDEOS", { params }, this));
+		}
+
+		const jobResponses = await Promise.all(jobsToRun);
+
+		console.log(jobResponses);
+
+		const newVideos = jobResponses
+			.map(jobResponse => jobResponse.response.data.items)
+			.flat()
+			.map(item => {
+				// TODO Clean up duration converter
+				let dur = item.contentDetails.duration;
+
+				dur = dur.replace("PT", "");
+
+				let duration = 0;
+
+				dur = dur.replace(/([\d]*)H/, (v, v2) => {
+					v2 = Number(v2);
+					duration = v2 * 60 * 60;
+					return "";
+				});
+
+				dur = dur.replace(/([\d]*)M/, (v, v2) => {
+					v2 = Number(v2);
+					duration += v2 * 60;
+					return "";
+				});
+
+				dur.replace(/([\d]*)S/, (v, v2) => {
+					v2 = Number(v2);
+					duration += v2;
+					return "";
+				});
+
+				const youtubeVideo = {
+					youtubeId: item.id,
+					title: item.snippet.title,
+					author: item.snippet.channelTitle,
+					thumbnail: item.snippet.thumbnails.default.url,
+					duration,
+					uploadedAt: new Date(item.snippet.publishedAt)
+				};
+
+				return youtubeVideo;
+			});
+
+		console.dir(newVideos, { depth: 5 });
+
+		await YouTubeModule.runJob("CREATE_VIDEOS", { youtubeVideos: newVideos }, this);
+
+		return { videos: existingVideos.concat(newVideos) };
 	}
 
 	/**
@@ -1684,54 +1695,16 @@ class _YouTubeModule extends CoreClass {
 						else next("Invalid YouTube URL.");
 					},
 
-					(youtubeIds, next) => {
-						let successful = 0;
-						let failed = 0;
-						let alreadyInDatabase = 0;
+					async youtubeIds => {
+						if (youtubeIds.length === 0) return { videos: [] };
 
-						let videos = {};
-
-						const successfulVideoIds = [];
-						const failedVideoIds = [];
-
-						if (youtubeIds.length === 0) next();
-
-						async.eachOfLimit(
-							youtubeIds,
-							1,
-							(youtubeId, index, next2) => {
-								YouTubeModule.runJob("GET_VIDEO", { identifier: youtubeId, createMissing: true }, this)
-									.then(res => {
-										successful += 1;
-										successfulVideoIds.push(youtubeId);
-
-										if (res.existing) alreadyInDatabase += 1;
-										if (res.video) videos[index] = res.video;
-									})
-									.catch(() => {
-										failed += 1;
-										failedVideoIds.push(youtubeId);
-									})
-									.finally(() => {
-										next2();
-									});
-							},
-							() => {
-								if (payload.returnVideos)
-									videos = Object.keys(videos)
-										.sort()
-										.map(key => videos[key]);
-
-								next(null, {
-									successful,
-									failed,
-									alreadyInDatabase,
-									videos,
-									successfulVideoIds,
-									failedVideoIds
-								});
-							}
+						const { videos } = await YouTubeModule.runJob(
+							"GET_VIDEOS",
+							{ identifiers: youtubeIds, createMissing: true },
+							this
 						);
+
+						return { videos };
 					}
 				],
 				(err, response) => {

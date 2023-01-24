@@ -380,12 +380,12 @@ class _MediaModule extends CoreClass {
 							const youtubeId = payload.mediaSource.split(":")[1];
 
 							return YouTubeModule.runJob(
-								"GET_VIDEO",
-								{ identifier: youtubeId, createMissing: true },
+								"GET_VIDEOS",
+								{ identifiers: [youtubeId], createMissing: true },
 								this
 							)
 								.then(response => {
-									const { youtubeId, title, author, duration } = response.video;
+									const { youtubeId, title, author, duration } = response.videos[0];
 									next(null, song, {
 										mediaSource: `youtube:${youtubeId}`,
 										title,
@@ -506,12 +506,12 @@ class _MediaModule extends CoreClass {
 							const youtubeId = mediaSource.split(":")[1];
 
 							const promise = YouTubeModule.runJob(
-								"GET_VIDEO",
-								{ identifier: youtubeId, createMissing: true },
+								"GET_VIDEOS",
+								{ identifiers: [youtubeId], createMissing: true },
 								this
 							)
 								.then(response => {
-									const { youtubeId, title, author, duration } = response.video;
+									const { youtubeId, title, author, duration } = response.videos[0];
 									songMap[mediaSource] = {
 										mediaSource: `youtube:${youtubeId}`,
 										title,

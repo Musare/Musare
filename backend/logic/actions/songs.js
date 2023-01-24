@@ -473,11 +473,11 @@ export default {
 				(song, next) => {
 					// TODO replace for spotify support
 					YouTubeModule.runJob(
-						"GET_VIDEO",
-						{ identifier: song.mediaSource.split(":")[1], createMissing: true },
+						"GET_VIDEOS",
+						{ identifiers: [song.mediaSource.split(":")[1]], createMissing: true },
 						this
 					)
-						.then(res => next(null, song, res.video))
+						.then(res => next(null, song, res.videos[0]))
 						.catch(() => next(null, song, false));
 				},
 

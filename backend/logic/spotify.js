@@ -590,7 +590,7 @@ class _SpotifyModule extends CoreClass {
 
 		const jobsToRun = [];
 
-		const chunkSize = 2;
+		const chunkSize = 50;
 		while (missingArtistIds.length > 0) {
 			const chunkedMissingArtistIds = missingArtistIds.splice(0, chunkSize);
 

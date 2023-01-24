@@ -376,11 +376,11 @@ export default {
 	 * @returns {{status: string, data: object}}
 	 */
 	getVideo: isLoginRequired(function getVideo(session, identifier, createMissing, cb) {
-		return YouTubeModule.runJob("GET_VIDEO", { identifier, createMissing }, this)
+		return YouTubeModule.runJob("GET_VIDEOS", { identifiers: [identifier], createMissing }, this)
 			.then(res => {
 				this.log("SUCCESS", "YOUTUBE_GET_VIDEO", `Fetching video was successful.`);
 
-				return cb({ status: "success", message: "Successfully fetched YouTube video", data: res.video });
+				return cb({ status: "success", message: "Successfully fetched YouTube video", data: res.videos[0] });
 			})
 			.catch(async err => {
 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
@@ -451,7 +451,7 @@ export default {
 				);
 				return cb({
 					status: "success",
-					message: `Playlist is done importing. ${response.successful} were added succesfully, ${response.failed} failed (${response.alreadyInDatabase} were already in database)`,
+					message: `Playlist is done importing.`,
 					videos: returnVideos ? response.videos : null
 				});
 			})
@@ -572,12 +572,12 @@ export default {
 
 					this.publishProgress({
 						status: "success",
-						message: `Playlist is done importing. ${response.successful} were added succesfully, ${response.failed} failed (${response.alreadyInDatabase} were already in database)`
+						message: `Playlist is done importing.`
 					});
 
 					return cb({
 						status: "success",
-						message: `Playlist is done importing. ${response.successful} were added succesfully, ${response.failed} failed (${response.alreadyInDatabase} were already in database)`,
+						message: `Playlist is done importing.`,
 						videos: returnVideos ? response.videos : null
 					});
 				}
