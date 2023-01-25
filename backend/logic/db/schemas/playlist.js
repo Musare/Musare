@@ -19,5 +19,12 @@ export default {
 	createdFor: { type: String },
 	privacy: { type: String, enum: ["public", "private"], default: "private" },
 	type: { type: String, enum: ["user", "user-liked", "user-disliked", "genre", "station", "admin"], required: true },
+	replacements: [
+		{
+			oldMediaSource: { type: String, required: true },
+			newMediaSource: { type: String, required: true },
+			replacedAt: { type: Date, required: true }
+		}
+	],
 	documentVersion: { type: Number, default: 7, required: true }
 };

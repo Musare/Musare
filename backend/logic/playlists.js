@@ -533,6 +533,8 @@ class _PlaylistsModule extends CoreClass {
 						if (!playlist) return next("Playlist not found.");
 						if (playlist.songs.find(song => song.mediaSource === newMediaSource))
 							return next("The new song is already in the playlist.");
+						if (!playlist.songs.find(song => song.mediaSource === oldMediaSource))
+							return next("The old song is not in the playlist.");
 						return next();
 					},
 
@@ -557,7 +559,10 @@ class _PlaylistsModule extends CoreClass {
 					(newSong, next) => {
 						PlaylistsModule.playlistModel.updateOne(
 							{ _id: playlistId, "songs.mediaSource": oldMediaSource },
-							{ $set: { "songs.$": newSong } },
+							{
+								$set: { "songs.$": newSong },
+								$push: { replacements: { oldMediaSource, newMediaSource, replacedAt: new Date() } }
+							},
 							{ runValidators: true },
 							err => {
 								if (err) return next(err);
