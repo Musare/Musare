@@ -16,7 +16,8 @@ const REQUIRED_DOCUMENT_VERSIONS = {
 	station: 10,
 	user: 4,
 	youtubeApiRequest: 1,
-	youtubeVideo: 1,
+	youtubeVideo: [1, 2],
+	youtubeChannel: 1,
 	ratings: 2,
 	importJob: 1,
 	stationHistory: 2,
@@ -81,6 +82,7 @@ class _DBModule extends CoreClass {
 						punishment: {},
 						youtubeApiRequest: {},
 						youtubeVideo: {},
+						youtubeChannel: {},
 						ratings: {},
 						stationHistory: {},
 						soundcloudTrack: {},
@@ -110,6 +112,7 @@ class _DBModule extends CoreClass {
 					await importSchema("punishment");
 					await importSchema("youtubeApiRequest");
 					await importSchema("youtubeVideo");
+					await importSchema("youtubeChannel");
 					await importSchema("ratings");
 					await importSchema("importJob");
 					await importSchema("stationHistory");
@@ -132,6 +135,7 @@ class _DBModule extends CoreClass {
 						punishment: mongoose.model("punishment", this.schemas.punishment),
 						youtubeApiRequest: mongoose.model("youtubeApiRequest", this.schemas.youtubeApiRequest),
 						youtubeVideo: mongoose.model("youtubeVideo", this.schemas.youtubeVideo),
+						youtubeChannel: mongoose.model("youtubeChannel", this.schemas.youtubeChannel),
 						ratings: mongoose.model("ratings", this.schemas.ratings),
 						importJob: mongoose.model("importJob", this.schemas.importJob),
 						stationHistory: mongoose.model("stationHistory", this.schemas.stationHistory),
@@ -290,6 +294,7 @@ class _DBModule extends CoreClass {
 					this.models.user.syncIndexes();
 					this.models.youtubeApiRequest.syncIndexes();
 					this.models.youtubeVideo.syncIndexes();
+					this.models.youtubeChannel.syncIndexes();
 					this.models.ratings.syncIndexes();
 					this.models.importJob.syncIndexes();
 					this.models.stationHistory.syncIndexes();
@@ -325,17 +330,34 @@ class _DBModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			async.each(
 				Object.keys(REQUIRED_DOCUMENT_VERSIONS),
-				(modelName, next) => {
+				async modelName => {
 					const model = DBModule.models[modelName];
 					const requiredDocumentVersion = REQUIRED_DOCUMENT_VERSIONS[modelName];
-					model.countDocuments({ documentVersion: { $ne: requiredDocumentVersion } }, (err, count) => {
-						if (err) next(err);
-						else if (count > 0)
-							next(
-								`Collection "${modelName}" has ${count} documents with a wrong document version. Run migration.`
-							);
-						else next();
+					const count = await model.countDocuments({
+						documentVersion: {
+							$nin: Array.isArray(requiredDocumentVersion)
+								? requiredDocumentVersion
+								: [requiredDocumentVersion]
+						}
 					});
+
+					if (count > 0)
+						throw new Error(
+							`Collection "${modelName}" has ${count} documents with a wrong document version. Run migration.`
+						);
+
+					if (Array.isArray(requiredDocumentVersion)) {
+						const count2 = await model.countDocuments({
+							documentVersion: {
+								$ne: requiredDocumentVersion[requiredDocumentVersion.length - 1]
+							}
+						});
+
+						if (count2 > 0)
+							console.warn(
+								`Collection "${modelName}" has ${count2} documents with a outdated document version. Run steps manually to update these.`
+							);
+					}
 				},
 				err => {
 					if (err) reject(new Error(err));

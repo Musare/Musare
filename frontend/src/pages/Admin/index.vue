@@ -445,6 +445,17 @@ onBeforeUnmount(() => {
 									>
 										Videos
 									</router-link>
+									<router-link
+										v-if="
+											hasPermission(
+												'admin.view.youtubeVideos'
+											)
+										"
+										class="sidebar-item-child"
+										to="/admin/youtube/channels"
+									>
+										Channels
+									</router-link>
 								</div>
 							</div>
 							<router-link

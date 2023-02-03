@@ -1474,6 +1474,15 @@ class _PlaylistsModule extends CoreClass {
 			);
 		});
 	}
+
+	/**
+	 * Gets a list of all media sources from playlist songs
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async GET_ALL_MEDIA_SOURCES() {
+		return PlaylistsModule.playlistModel.distinct("songs.mediaSource");
+	}
 }
 
 export default new _PlaylistsModule();

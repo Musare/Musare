@@ -47,61 +47,49 @@ const columns = ref<TableColumn[]>([
 		sortable: false,
 		hidable: false,
 		resizable: false,
-		minWidth:
-			(hasPermission("songs.create") || hasPermission("songs.update")) &&
-			hasPermission("youtube.removeVideos")
-				? 129
-				: 85,
-		defaultWidth:
-			(hasPermission("songs.create") || hasPermission("songs.update")) &&
-			hasPermission("youtube.removeVideos")
-				? 129
-				: 85
+		minWidth: 85,
+		defaultWidth: 85
+		// 	(hasPermission("songs.create") || hasPermission("songs.update")) &&
+		// 	hasPermission("youtube.removeVideos")
+		// 		? 129
+		// 		: 85,
+		// defaultWidth:
+		// 	(hasPermission("songs.create") || hasPermission("songs.update")) &&
+		// 	hasPermission("youtube.removeVideos")
+		// 		? 129
+		// 		: 85
 	},
+	// {
+	// 	name: "thumbnailImage",
+	// 	displayName: "Thumb",
+	// 	properties: ["youtubeId"],
+	// 	sortable: false,
+	// 	minWidth: 75,
+	// 	defaultWidth: 75,
+	// 	maxWidth: 75,
+	// 	resizable: false
+	// },
 	{
-		name: "thumbnailImage",
-		displayName: "Thumb",
-		properties: ["youtubeId"],
-		sortable: false,
-		minWidth: 75,
-		defaultWidth: 75,
-		maxWidth: 75,
-		resizable: false
-	},
-	{
-		name: "youtubeId",
-		displayName: "YouTube ID",
-		properties: ["youtubeId"],
-		sortProperty: "youtubeId",
+		name: "channelId",
+		displayName: "Channel ID",
+		properties: ["channelId"],
+		sortProperty: "channelId",
 		minWidth: 120,
 		defaultWidth: 120
 	},
 	{
 		name: "_id",
-		displayName: "Video ID",
+		displayName: "Channel OID",
 		properties: ["_id"],
 		sortProperty: "_id",
 		minWidth: 215,
 		defaultWidth: 215
 	},
 	{
-		name: "title",
-		displayName: "Title",
-		properties: ["title"],
-		sortProperty: "title"
-	},
-	{
-		name: "author",
-		displayName: "Author",
-		properties: ["author"],
-		sortProperty: "author"
-	},
-	{
-		name: "duration",
-		displayName: "Duration",
-		properties: ["duration"],
-		sortProperty: "duration",
-		defaultWidth: 200
+		name: "custom_url",
+		displayName: "Custom URL",
+		properties: ["custom_url"],
+		sortProperty: "custom_url"
 	},
 	{
 		name: "createdAt",
@@ -110,36 +98,20 @@ const columns = ref<TableColumn[]>([
 		sortProperty: "createdAt",
 		defaultWidth: 200,
 		defaultVisibility: "hidden"
-	},
-	{
-		name: "songId",
-		displayName: "Song ID",
-		properties: ["songId"],
-		sortProperty: "songId",
-		defaultWidth: 220,
-		defaultVisibility: "hidden"
-	},
-	{
-		name: "uploadedAt",
-		displayName: "Uploaded At",
-		properties: ["uploadedAt"],
-		sortProperty: "uploadedAt",
-		defaultWidth: 200,
-		defaultVisibility: "hidden"
 	}
 ]);
 const filters = ref<TableFilter[]>([
 	{
 		name: "_id",
-		displayName: "Video ID",
+		displayName: "Channel OID",
 		property: "_id",
 		filterTypes: ["exact"],
 		defaultFilterType: "exact"
 	},
 	{
-		name: "youtubeId",
-		displayName: "YouTube ID",
-		property: "youtubeId",
+		name: "channelId",
+		displayName: "Channel ID",
+		property: "channelId",
 		filterTypes: ["contains", "exact", "regex"],
 		defaultFilterType: "contains"
 	},
@@ -151,24 +123,11 @@ const filters = ref<TableFilter[]>([
 		defaultFilterType: "contains"
 	},
 	{
-		name: "author",
-		displayName: "Author",
-		property: "author",
+		name: "custom_url",
+		displayName: "Custom URL",
+		property: "custom_url",
 		filterTypes: ["contains", "exact", "regex"],
 		defaultFilterType: "contains"
-	},
-	{
-		name: "duration",
-		displayName: "Duration",
-		property: "duration",
-		filterTypes: [
-			"numberLesserEqual",
-			"numberLesser",
-			"numberGreater",
-			"numberGreaterEqual",
-			"numberEquals"
-		],
-		defaultFilterType: "numberLesser"
 	},
 	{
 		name: "createdAt",
@@ -176,132 +135,124 @@ const filters = ref<TableFilter[]>([
 		property: "createdAt",
 		filterTypes: ["datetimeBefore", "datetimeAfter"],
 		defaultFilterType: "datetimeBefore"
-	},
-	{
-		name: "importJob",
-		displayName: "Import Job",
-		property: "importJob",
-		filterTypes: ["special"],
-		defaultFilterType: "special"
-	},
-	{
-		name: "songId",
-		displayName: "Song ID",
-		property: "songId",
-		filterTypes: ["contains", "exact", "regex"],
-		defaultFilterType: "contains"
-	},
-	{
-		name: "uploadedAt",
-		displayName: "Uploaded At",
-		property: "uploadedAt",
-		filterTypes: ["datetimeBefore", "datetimeAfter"],
-		defaultFilterType: "datetimeBefore"
 	}
+	// {
+	// 	name: "importJob",
+	// 	displayName: "Import Job",
+	// 	property: "importJob",
+	// 	filterTypes: ["special"],
+	// 	defaultFilterType: "special"
+	// },
+	// {
+	// 	name: "songId",
+	// 	displayName: "Song ID",
+	// 	property: "songId",
+	// 	filterTypes: ["contains", "exact", "regex"],
+	// 	defaultFilterType: "contains"
+	// },
+	// {
+	// 	name: "uploadedAt",
+	// 	displayName: "Uploaded At",
+	// 	property: "uploadedAt",
+	// 	filterTypes: ["datetimeBefore", "datetimeAfter"],
+	// 	defaultFilterType: "datetimeBefore"
+	// }
 ]);
 const events = ref<TableEvents>({
-	adminRoom: "youtubeVideos",
+	adminRoom: "youtubeChannels",
 	updated: {
-		event: "admin.youtubeVideo.updated",
-		id: "youtubeVideo._id",
-		item: "youtubeVideo"
+		event: "admin.youtubeChannel.updated",
+		id: "youtubeChannel._id",
+		item: "youtubeChannel"
 	},
 	removed: {
-		event: "admin.youtubeVideo.removed",
-		id: "videoId"
+		event: "admin.youtubeChannel.removed",
+		id: "channelId"
 	}
 });
 const bulkActions = ref<TableBulkActions>({ width: 200 });
 const jobs = ref([]);
-if (hasPermission("media.recalculateAllRatings"))
-	jobs.value.push({
-		name: "Recalculate all ratings",
-		socket: "media.recalculateAllRatings"
-	});
+// if (hasPermission("media.recalculateAllRatings"))
 jobs.value.push({
-	name: "Get missing YouTube video's",
-	socket: "youtube.getMissingVideos"
-});
-jobs.value.push({
-	name: "Update V1 video's to V2",
-	socket: "youtube.updateVideosV1ToV2"
+	name: "Get missing YouTube channels from YouTube video's",
+	socket: "media.recalculateAllRatings"
 });
 
 const { openModal } = useModalsStore();
 
-const rowToSong = row => ({
-	mediaSource: `youtube:${row.youtubeId}`
-});
+// const rowToSong = row => ({
+// 	mediaSource: `youtube:${row.channelId}`
+// });
 
-const editOne = row => {
-	openModal({
-		modal: "editSong",
-		props: { song: rowToSong(row) }
-	});
-};
+// const editOne = row => {
+// 	openModal({
+// 		modal: "editSong",
+// 		props: { song: rowToSong(row) }
+// 	});
+// };
 
-const editMany = selectedRows => {
-	if (selectedRows.length === 1) editOne(rowToSong(selectedRows[0]));
-	else {
-		const songs = selectedRows.map(rowToSong);
-		openModal({ modal: "editSong", props: { songs } });
-	}
-};
+// const editMany = selectedRows => {
+// 	if (selectedRows.length === 1) editOne(rowToSong(selectedRows[0]));
+// 	else {
+// 		const songs = selectedRows.map(rowToSong);
+// 		openModal({ modal: "editSong", props: { songs } });
+// 	}
+// };
 
-const importAlbum = selectedRows => {
-	const mediaSources = selectedRows.map(
-		({ youtubeId }) => `youtube:${youtubeId}`
-	);
-	console.log(77988, mediaSources);
-	socket.dispatch("songs.getSongsFromMediaSources", mediaSources, res => {
-		if (res.status === "success") {
-			openModal({
-				modal: "importAlbum",
-				props: { songs: res.data.songs }
-			});
-		} else new Toast("Could not get songs.");
-	});
-};
+// const importAlbum = selectedRows => {
+// 	const mediaSources = selectedRows.map(
+// 		({ youtubeId }) => `youtube:${youtubeId}`
+// 	);
+// 	console.log(77988, mediaSources);
+// 	socket.dispatch("songs.getSongsFromMediaSources", mediaSources, res => {
+// 		if (res.status === "success") {
+// 			openModal({
+// 				modal: "importAlbum",
+// 				props: { songs: res.data.songs }
+// 			});
+// 		} else new Toast("Could not get songs.");
+// 	});
+// };
 
-const bulkEditPlaylist = selectedRows => {
-	openModal({
-		modal: "bulkEditPlaylist",
-		props: {
-			mediaSources: selectedRows.map(row => `youtube:${row.youtubeId}`)
-		}
-	});
-};
+// const bulkEditPlaylist = selectedRows => {
+// 	openModal({
+// 		modal: "bulkEditPlaylist",
+// 		props: {
+// 			mediaSources: selectedRows.map(row => `youtube:${row.youtubeId}`)
+// 		}
+// 	});
+// };
 
-const removeVideos = videoIds => {
-	let id;
-	let title;
+// const removeVideos = videoIds => {
+// 	let id;
+// 	let title;
 
-	socket.dispatch("youtube.removeVideos", videoIds, {
-		cb: () => {},
-		onProgress: res => {
-			if (res.status === "started") {
-				id = res.id;
-				title = res.title;
-			}
+// 	socket.dispatch("youtube.removeVideos", videoIds, {
+// 		cb: () => {},
+// 		onProgress: res => {
+// 			if (res.status === "started") {
+// 				id = res.id;
+// 				title = res.title;
+// 			}
 
-			if (id)
-				setJob({
-					id,
-					name: title,
-					...res
-				});
-		}
-	});
-};
+// 			if (id)
+// 				setJob({
+// 					id,
+// 					name: title,
+// 					...res
+// 				});
+// 		}
+// 	});
+// };
 </script>
 
 <template>
 	<div class="admin-tab container">
-		<page-metadata title="Admin | YouTube | Videos" />
+		<page-metadata title="Admin | YouTube | Channels" />
 		<div class="card tab-info">
 			<div class="info-row">
-				<h1>YouTube Videos</h1>
-				<p>Manage YouTube video cache</p>
+				<h1>YouTube Channels</h1>
+				<p>Manage YouTube channel cache</p>
 			</div>
 			<div class="button-row">
 				<run-job-dropdown :jobs="jobs" />
@@ -312,20 +263,20 @@ const removeVideos = videoIds => {
 			:columns="columns"
 			:filters="filters"
 			:events="events"
-			data-action="youtube.getVideos"
-			name="admin-youtube-videos"
+			data-action="youtube.getChannels"
+			name="admin-youtube-channels"
 			:max-width="1140"
 			:bulk-actions="bulkActions"
 		>
 			<template #column-options="slotProps">
 				<div class="row-options">
-					<button
+					<!-- <button
 						class="button is-primary icon-with-button material-icons"
 						@click="
 							openModal({
-								modal: 'viewYoutubeVideo',
+								modal: 'viewYoutubeChannel',
 								props: {
-									videoId: slotProps.item.youtubeId
+									channelId: slotProps.item.channelId
 								}
 							})
 						"
@@ -371,21 +322,18 @@ const removeVideos = videoIds => {
 						v-tippy
 					>
 						delete_forever
-					</button>
+					</button> -->
 				</div>
 			</template>
-			<template #column-thumbnailImage="slotProps">
+			<!-- <template #column-thumbnailImage="slotProps">
 				<song-thumbnail class="song-thumbnail" :song="slotProps.item" />
-			</template>
-			<template #column-youtubeId="slotProps">
+			</template> -->
+			<template #column-channelId="slotProps">
 				<a
-					:href="
-						'https://www.youtube.com/watch?v=' +
-						`${slotProps.item.youtubeId}`
-					"
+					:href="`https://www.youtube.com/${slotProps.item.channelId}`"
 					target="_blank"
 				>
-					{{ slotProps.item.youtubeId }}
+					{{ slotProps.item.channelId }}
 				</a>
 			</template>
 			<template #column-_id="slotProps">
@@ -398,34 +346,14 @@ const removeVideos = videoIds => {
 					slotProps.item.title
 				}}</span>
 			</template>
-			<template #column-author="slotProps">
-				<span :title="slotProps.item.author">{{
-					slotProps.item.author
-				}}</span>
-			</template>
-			<template #column-duration="slotProps">
-				<span :title="`${slotProps.item.duration}`">{{
-					slotProps.item.duration
-				}}</span>
-			</template>
 			<template #column-createdAt="slotProps">
 				<span :title="new Date(slotProps.item.createdAt).toString()">{{
 					utils.getDateFormatted(slotProps.item.createdAt)
 				}}</span>
 			</template>
-			<template #column-songId="slotProps">
-				<span :title="slotProps.item.songId">{{
-					slotProps.item.songId
-				}}</span>
-			</template>
-			<template #column-uploadedAt="slotProps">
-				<span :title="new Date(slotProps.item.uploadedAt).toString()">{{
-					utils.getDateFormatted(slotProps.item.uploadedAt)
-				}}</span>
-			</template>
 			<template #bulk-actions="slotProps">
 				<div class="bulk-actions">
-					<i
+					<!-- <i
 						v-if="
 							hasPermission('songs.create') ||
 							hasPermission('songs.update')
@@ -484,7 +412,7 @@ const removeVideos = videoIds => {
 						tabindex="0"
 					>
 						delete_forever
-					</i>
+					</i> -->
 				</div>
 			</template>
 		</advanced-table>
@@ -492,11 +420,11 @@ const removeVideos = videoIds => {
 </template>
 
 <style lang="less" scoped>
-:deep(.song-thumbnail) {
-	width: 50px;
-	height: 50px;
-	min-width: 50px;
-	min-height: 50px;
-	margin: 0 auto;
-}
+// :deep(.song-thumbnail) {
+// 	width: 50px;
+// 	height: 50px;
+// 	min-width: 50px;
+// 	min-height: 50px;
+// 	margin: 0 auto;
+// }
 </style>

@@ -1357,6 +1357,15 @@ class _SongsModule extends CoreClass {
 			);
 		});
 	}
+
+	/**
+	 * Gets a list of all media sources
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async GET_ALL_MEDIA_SOURCES() {
+		return SongsModule.SongModel.distinct("mediaSource");
+	}
 }
 
 export default new _SongsModule();

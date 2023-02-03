@@ -1381,102 +1381,120 @@ class _YouTubeModule extends CoreClass {
 	 * @param {object} payload - an object containing the payload
 	 * @param {string} payload.identifiers - an array of YouTube video ObjectId's or YouTube ID's
 	 * @param {string} payload.createMissing - attempt to fetch and create video's if not in db
+	 * @param {string} payload.replaceExisting - replace existing
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	async GET_VIDEOS(payload) {
-		const { identifiers, createMissing } = payload;
+		const getVideosFromYoutubeIds = async youtubeIds => {
+			const jobsToRun = [];
 
-		console.log(identifiers, createMissing);
+			const chunkSize = 50;
+			while (youtubeIds.length > 0) {
+				const chunkedYoutubeIds = youtubeIds.splice(0, chunkSize);
+
+				const params = {
+					part: "snippet,contentDetails,statistics,status",
+					id: chunkedYoutubeIds.join(",")
+				};
+
+				jobsToRun.push(YouTubeModule.runJob("API_GET_VIDEOS", { params }, this));
+			}
+
+			const jobResponses = await Promise.all(jobsToRun);
+
+			console.log(jobResponses);
+
+			return jobResponses
+				.map(jobResponse => jobResponse.response.data.items)
+				.flat()
+				.map(item => {
+					// TODO Clean up duration converter
+					let dur = item.contentDetails.duration;
+
+					dur = dur.replace("PT", "");
+
+					let duration = 0;
+
+					dur = dur.replace(/([\d]*)H/, (v, v2) => {
+						v2 = Number(v2);
+						duration = v2 * 60 * 60;
+						return "";
+					});
+
+					dur = dur.replace(/([\d]*)M/, (v, v2) => {
+						v2 = Number(v2);
+						duration += v2 * 60;
+						return "";
+					});
+
+					dur.replace(/([\d]*)S/, (v, v2) => {
+						v2 = Number(v2);
+						duration += v2;
+						return "";
+					});
+
+					const youtubeVideo = {
+						youtubeId: item.id,
+						title: item.snippet.title,
+						author: item.snippet.channelTitle,
+						thumbnail: item.snippet.thumbnails.default.url,
+						duration,
+						uploadedAt: new Date(item.snippet.publishedAt),
+						rawData: item
+					};
+
+					return youtubeVideo;
+				});
+		};
+
+		const { identifiers, createMissing, replaceExisting } = payload;
+		console.log(identifiers, createMissing, replaceExisting);
 
 		const youtubeIds = identifiers.filter(identifier => !mongoose.Types.ObjectId.isValid(identifier));
 		const objectIds = identifiers.filter(identifier => mongoose.Types.ObjectId.isValid(identifier));
-
 		console.log(youtubeIds, objectIds);
 
 		const existingVideos = (await YouTubeModule.youtubeVideoModel.find({ youtubeId: youtubeIds }))
 			.concat(await YouTubeModule.youtubeVideoModel.find({ _id: objectIds }))
 			.map(video => video._doc);
-
 		console.log(existingVideos);
 
 		const existingYoutubeIds = existingVideos.map(existingVideo => existingVideo.youtubeId);
 		const existingYoutubeObjectIds = existingVideos.map(existingVideo => existingVideo._id.toString());
-
 		console.log(existingYoutubeIds, existingYoutubeObjectIds);
 
-		if (!createMissing) return { videos: existingVideos };
-		if (identifiers.length === existingVideos.length || youtubeIds.length === 0) return { videos: existingVideos };
+		if (!replaceExisting) {
+			if (!createMissing) return { videos: existingVideos };
+			if (identifiers.length === existingVideos.length || youtubeIds.length === 0)
+				return { videos: existingVideos };
 
-		const missingYoutubeIds = youtubeIds.filter(youtubeId => existingYoutubeIds.indexOf(youtubeId) === -1);
+			const missingYoutubeIds = youtubeIds.filter(youtubeId => existingYoutubeIds.indexOf(youtubeId) === -1);
 
-		console.log(missingYoutubeIds);
+			console.log(missingYoutubeIds);
 
-		if (missingYoutubeIds.length === 0) return { videos: existingVideos };
+			if (missingYoutubeIds.length === 0) return { videos: existingVideos };
 
-		const jobsToRun = [];
+			const newVideos = await getVideosFromYoutubeIds(missingYoutubeIds);
 
-		const chunkSize = 50;
-		while (missingYoutubeIds.length > 0) {
-			const chunkedMissingYoutubeIds = missingYoutubeIds.splice(0, chunkSize);
+			console.dir(newVideos, { depth: 5 });
 
-			const params = {
-				part: "snippet,contentDetails,statistics,status",
-				id: chunkedMissingYoutubeIds.join(",")
-			};
+			await YouTubeModule.runJob("CREATE_VIDEOS", { youtubeVideos: newVideos }, this);
 
-			jobsToRun.push(YouTubeModule.runJob("API_GET_VIDEOS", { params }, this));
+			return { videos: existingVideos.concat(newVideos) };
 		}
 
-		const jobResponses = await Promise.all(jobsToRun);
+		const newVideos = await getVideosFromYoutubeIds(existingYoutubeIds);
 
-		console.log(jobResponses);
+		const promises = newVideos.map(newVideo =>
+			YouTubeModule.youtubeVideoModel.updateOne(
+				{ youtubeId: newVideo.youtubeId },
+				{ $set: { ...newVideo, updatedAt: Date.now(), documentVersion: 2 } }
+			)
+		);
 
-		const newVideos = jobResponses
-			.map(jobResponse => jobResponse.response.data.items)
-			.flat()
-			.map(item => {
-				// TODO Clean up duration converter
-				let dur = item.contentDetails.duration;
+		await Promise.allSettled(promises);
 
-				dur = dur.replace("PT", "");
-
-				let duration = 0;
-
-				dur = dur.replace(/([\d]*)H/, (v, v2) => {
-					v2 = Number(v2);
-					duration = v2 * 60 * 60;
-					return "";
-				});
-
-				dur = dur.replace(/([\d]*)M/, (v, v2) => {
-					v2 = Number(v2);
-					duration += v2 * 60;
-					return "";
-				});
-
-				dur.replace(/([\d]*)S/, (v, v2) => {
-					v2 = Number(v2);
-					duration += v2;
-					return "";
-				});
-
-				const youtubeVideo = {
-					youtubeId: item.id,
-					title: item.snippet.title,
-					author: item.snippet.channelTitle,
-					thumbnail: item.snippet.thumbnails.default.url,
-					duration,
-					uploadedAt: new Date(item.snippet.publishedAt)
-				};
-
-				return youtubeVideo;
-			});
-
-		console.dir(newVideos, { depth: 5 });
-
-		await YouTubeModule.runJob("CREATE_VIDEOS", { youtubeVideos: newVideos }, this);
-
-		return { videos: existingVideos.concat(newVideos) };
+		return { videos: newVideos };
 	}
 
 	/**
@@ -1713,6 +1731,62 @@ class _YouTubeModule extends CoreClass {
 				}
 			);
 		});
+	}
+
+	/**
+	 * Gets missing YouTube video's from all playlists, stations and songs
+	 *
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	async GET_MISSING_VIDEOS() {
+		const youtubeIds = Array.from(
+			new Set(
+				[
+					...(await SongsModule.runJob("GET_ALL_MEDIA_SOURCES", {}, this)),
+					...(await PlaylistsModule.runJob("GET_ALL_MEDIA_SOURCES", {}, this))
+				]
+					.filter(mediaSource => mediaSource.startsWith("youtube:"))
+					.map(mediaSource => mediaSource.split(":")[1])
+			)
+		);
+
+		const existingYoutubeIds = await YouTubeModule.youtubeVideoModel.distinct("youtubeId");
+
+		const missingYoutubeIds = youtubeIds.filter(youtubeId => existingYoutubeIds.indexOf(youtubeId) === -1);
+
+		const res = await YouTubeModule.runJob(
+			"GET_VIDEOS",
+			{ identifiers: missingYoutubeIds, createMissing: true },
+			this
+		);
+
+		const gotVideos = res.videos;
+
+		return {
+			all: youtubeIds.length,
+			existing: existingYoutubeIds.length,
+			missing: missingYoutubeIds.length,
+			got: gotVideos.length
+		};
+	}
+
+	/**
+	 * Updates videos from version 1 to version 2
+	 *
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	async UPDATE_VIDEOS_V1_TO_V2() {
+		const videoIds = await YouTubeModule.youtubeVideoModel.distinct("_id", { documentVersion: 1 });
+
+		const res = await YouTubeModule.runJob("GET_VIDEOS", { identifiers: videoIds, replaceExisting: true }, this);
+
+		const v1 = videoIds.length;
+		const v2 = res.videos.length;
+
+		return {
+			v1,
+			v2
+		};
 	}
 }
 

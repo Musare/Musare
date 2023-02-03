@@ -371,6 +371,66 @@ export default {
 	),
 
 	/**
+	 * Gets channels, used in the admin youtube page by the AdvancedTable component
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param page - the page
+	 * @param pageSize - the size per page
+	 * @param properties - the properties to return for each news item
+	 * @param sort - the sort object
+	 * @param queries - the queries array
+	 * @param operator - the operator for queries
+	 * @param cb
+	 */
+	getChannels: useHasPermission(
+		"admin.view.youtubeChannels",
+		async function getChannels(session, page, pageSize, properties, sort, queries, operator, cb) {
+			async.waterfall(
+				[
+					next => {
+						DBModule.runJob(
+							"GET_DATA",
+							{
+								page,
+								pageSize,
+								properties,
+								sort,
+								queries,
+								operator,
+								modelName: "youtubeChannel",
+								blacklistedProperties: [],
+								specialProperties: {},
+								specialQueries: {},
+								specialFilters: {}
+							},
+							this
+						)
+							.then(response => {
+								next(null, response);
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				],
+				async (err, response) => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log("ERROR", "YOUTUBE_GET_CHANNELS", `Failed to get YouTube channels. "${err}"`);
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "YOUTUBE_GET_CHANNELS", `Fetched YouTube channels successfully.`);
+					return cb({
+						status: "success",
+						message: "Successfully fetched YouTube channels.",
+						data: response
+					});
+				}
+			);
+		}
+	),
+
+	/**
 	 * Get a YouTube video
 	 *
 	 * @returns {{status: string, data: object}}
@@ -428,6 +488,44 @@ export default {
 					status: "error",
 					message: err
 				});
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
+	 * Gets missing YouTube video's from all playlists, stations and songs
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	getMissingVideos: useHasPermission("youtube.getApiRequest", function getMissingVideos(session, cb) {
+		return YouTubeModule.runJob("GET_MISSING_VIDEOS", {}, this)
+			.then(response => {
+				this.log("SUCCESS", "YOUTUBE_GET_MISSING_VIDEOS", `Getting missing videos was successful.`);
+				console.log("KRIS", response);
+				return cb({ status: "success", data: { ...response } });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "YOUTUBE_GET_MISSING_VIDEOS", `Getting missing videos failed. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
+	 * Gets missing YouTube video's from all playlists, stations and songs
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	updateVideosV1ToV2: useHasPermission("youtube.getApiRequest", function updateVideosV1ToV2(session, cb) {
+		return YouTubeModule.runJob("UPDATE_VIDEOS_V1_TO_V2", {}, this)
+			.then(response => {
+				this.log("SUCCESS", "YOUTUBE_UPDATE_VIDEOS_V1_TO_V2", `Updating v1 videos to v2 was successful.`);
+				console.log("KRIS", response);
+				return cb({ status: "success", data: { ...response } });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "YOUTUBE_UPDATE_VIDEOS_V1_TO_V2", `Updating v1 videos to v2 failed. "${err}"`);
 				return cb({ status: "error", message: err });
 			});
 	}),
