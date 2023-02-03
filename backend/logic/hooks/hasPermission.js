@@ -36,6 +36,7 @@ permissions.moderator = {
 	"admin.view.stations": true,
 	"admin.view.users": true,
 	"admin.view.youtubeVideos": true,
+	"admin.view.youtubeChannels": true,
 	"admin.view.soundcloudTracks": true,
 	"apis.searchDiscogs": true,
 	"news.create": true,

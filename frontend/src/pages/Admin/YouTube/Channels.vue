@@ -86,6 +86,12 @@ const columns = ref<TableColumn[]>([
 		defaultWidth: 215
 	},
 	{
+		name: "title",
+		displayName: "Title",
+		properties: ["title"],
+		sortProperty: "title"
+	},
+	{
 		name: "custom_url",
 		displayName: "Custom URL",
 		properties: ["custom_url"],
@@ -330,7 +336,7 @@ const { openModal } = useModalsStore();
 			</template> -->
 			<template #column-channelId="slotProps">
 				<a
-					:href="`https://www.youtube.com/${slotProps.item.channelId}`"
+					:href="`https://www.youtube.com/channels/${slotProps.item.channelId}`"
 					target="_blank"
 				>
 					{{ slotProps.item.channelId }}

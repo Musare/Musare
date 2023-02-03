@@ -117,6 +117,10 @@ class _YouTubeModule extends CoreClass {
 			modelName: "youtubeVideo"
 		});
 
+		this.youtubeChannelModel = this.YoutubeChannelModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "youtubeChannel"
+		});
+
 		return new Promise(resolve => {
 			CacheModule.runJob("SUB", {
 				channel: "youtube.removeYoutubeApiRequest",
@@ -1498,6 +1502,85 @@ class _YouTubeModule extends CoreClass {
 	}
 
 	/**
+	 * Get YouTube channels
+	 *
+	 * @param {object} payload - an object containing the payload
+	 * @param {string} payload.channelIds - an array of YouTube channel id's
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	async GET_CHANNELS_FROM_IDS(payload) {
+		const getChannels = async channelIds => {
+			const jobsToRun = [];
+
+			const chunkSize = 50;
+			while (channelIds.length > 0) {
+				const chunkedChannelIds = channelIds.splice(0, chunkSize);
+
+				const params = {
+					part: [
+						"brandingSettings",
+						"contentDetails",
+						"contentOwnerDetails",
+						"id",
+						"localizations",
+						"snippet",
+						"statistics",
+						"status",
+						"topicDetails"
+					].join(","),
+					id: chunkedChannelIds.join(",")
+				};
+
+				jobsToRun.push(YouTubeModule.runJob("API_GET_CHANNELS", { params }, this));
+			}
+
+			const jobResponses = await Promise.all(jobsToRun);
+
+			console.log(jobResponses);
+
+			return jobResponses
+				.map(jobResponse => jobResponse.response.data.items)
+				.flat()
+				.map(item => {
+					const youtubeChannel = {
+						channelId: item.id,
+						title: item.snippet.title,
+						customUrl: item.snippet.customUrl,
+						rawData: item
+					};
+
+					return youtubeChannel;
+				});
+		};
+
+		const { channelIds } = payload;
+		console.log(channelIds);
+
+		const existingChannels = (await YouTubeModule.youtubeChannelModel.find({ channelId: channelIds })).map(
+			channel => channel._doc
+		);
+		console.log(existingChannels);
+
+		const existingChannelIds = existingChannels.map(existingChannel => existingChannel.channelId);
+		const existingChannelObjectIds = existingChannels.map(existingChannel => existingChannel._id.toString());
+		console.log(existingChannelIds, existingChannelObjectIds);
+
+		if (channelIds.length === existingChannels.length) return { channels: existingChannels };
+
+		const missingChannelIds = channelIds.filter(channelId => existingChannelIds.indexOf(channelId) === -1);
+
+		console.log(missingChannelIds);
+
+		if (missingChannelIds.length === 0) return { videos: existingChannels };
+
+		const newChannels = await getChannels(missingChannelIds);
+
+		await YouTubeModule.youtubeChannelModel.insertMany(newChannels);
+
+		return { channels: existingChannels.concat(newChannels) };
+	}
+
+	/**
 	 * Remove YouTube videos
 	 *
 	 * @param {object} payload - an object containing the payload
@@ -1786,6 +1869,33 @@ class _YouTubeModule extends CoreClass {
 		return {
 			v1,
 			v2
+		};
+	}
+
+	/**
+	 * Gets missing YouTube channels based on cached YouTube video's
+	 *
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	async GET_MISSING_CHANNELS() {
+		const currentChannelIds = await YouTubeModule.youtubeChannelModel.distinct("channelId");
+		const videoChannelIds = await YouTubeModule.youtubeVideoModel.distinct("rawData.snippet.channelId");
+
+		const missingChannelIds = videoChannelIds.filter(channelId => currentChannelIds.indexOf(channelId) === -1);
+
+		console.log(currentChannelIds);
+		console.log(videoChannelIds);
+		console.log(currentChannelIds.length, videoChannelIds.length);
+
+		const res = await YouTubeModule.runJob("GET_CHANNELS_FROM_IDS", { channelIds: missingChannelIds }, this);
+
+		const gotChannels = res.channels;
+
+		return {
+			current: currentChannelIds.length,
+			all: videoChannelIds.length,
+			missing: missingChannelIds.length,
+			got: gotChannels.length
 		};
 	}
 }
