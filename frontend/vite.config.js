@@ -1,7 +1,7 @@
 import path from "path";
 import vue from "@vitejs/plugin-vue";
 import dynamicImport from "vite-plugin-dynamic-import";
-import vueI18n from "@intlify/vite-plugin-vue-i18n";
+import VueI18nPlugin from "@intlify/unplugin-vue-i18n/vite";
 import config from "config";
 import fs from "fs";
 
@@ -179,7 +179,7 @@ export default {
 		vue(),
 		htmlPlugin(),
 		dynamicImport(),
-		vueI18n({ include: path.resolve(__dirname, "src/locales/**") })
+		VueI18nPlugin({ include: path.resolve(__dirname, "src/locales/**") })
 	],
 	css: {
 		preprocessorOptions: {
