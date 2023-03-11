@@ -407,72 +407,94 @@ onMounted(async () => {
 	--primary-color: var(--red);
 }
 
-/* inter-regular - latin */
+/* nunito-200 - latin */
 @font-face {
-	font-family: "Inter";
-	font-style: normal;
-	font-weight: 400;
-	src: url("/fonts/inter-v3-latin-regular.eot"); /* IE9 Compat Modes */
-	src: local(""),
-		url("/fonts/inter-v3-latin-regular.eot?#iefix")
-			format("embedded-opentype"),
-		/* IE6-IE8 */ url("/fonts/inter-v3-latin-regular.woff2") format("woff2"),
-		/* Super Modern Browsers */ url("/fonts/inter-v3-latin-regular.woff")
-			format("woff"),
-		/* Modern Browsers */ url("/fonts/inter-v3-latin-regular.ttf")
-			format("truetype"),
-		/* Safari, Android, iOS */
-			url("/fonts/inter-v3-latin-regular.svg#Inter") format("svg"); /* Legacy iOS */
-}
-
-/* inter-200 - latin */
-@font-face {
-	font-family: "Inter";
+	font-family: "Nunito";
 	font-style: normal;
 	font-weight: 200;
-	src: url("/fonts/inter-v3-latin-200.eot"); /* IE9 Compat Modes */
+	src: url("/fonts/nunito-v16-latin-200.eot"); /* IE9 Compat Modes */
 	src: local(""),
-		url("/fonts/inter-v3-latin-200.eot?#iefix") format("embedded-opentype"),
-		/* IE6-IE8 */ url("/fonts/inter-v3-latin-200.woff2") format("woff2"),
-		/* Super Modern Browsers */ url("/fonts/inter-v3-latin-200.woff")
+		url("/fonts/nunito-v16-latin-200.eot?#iefix")
+			format("embedded-opentype"),
+		/* IE6-IE8 */ url("/fonts/nunito-v16-latin-200.woff2") format("woff2"),
+		/* Super Modern Browsers */ url("/fonts/nunito-v16-latin-200.woff")
 			format("woff"),
-		/* Modern Browsers */ url("/fonts/inter-v3-latin-200.ttf")
+		/* Modern Browsers */ url("/fonts/nunito-v16-latin-200.ttf")
 			format("truetype"),
-		/* Safari, Android, iOS */ url("/fonts/inter-v3-latin-200.svg#Inter")
+		/* Safari, Android, iOS */ url("/fonts/nunito-v16-latin-200.svg#Nunito")
 			format("svg"); /* Legacy iOS */
 }
 
-/* inter-800 - latin */
+/* nunito-regular - latin */
 @font-face {
-	font-family: "Inter";
+	font-family: "Nunito";
 	font-style: normal;
-	font-weight: 800;
-	src: url("/fonts/inter-v3-latin-800.eot"); /* IE9 Compat Modes */
+	font-weight: 400;
+	src: url("/fonts/nunito-v16-latin-regular.eot"); /* IE9 Compat Modes */
 	src: local(""),
-		url("/fonts/inter-v3-latin-800.eot?#iefix") format("embedded-opentype"),
-		/* IE6-IE8 */ url("/fonts/inter-v3-latin-800.woff2") format("woff2"),
-		/* Super Modern Browsers */ url("/fonts/inter-v3-latin-800.woff")
+		url("/fonts/nunito-v16-latin-regular.eot?#iefix")
+			format("embedded-opentype"),
+		/* IE6-IE8 */ url("/fonts/nunito-v16-latin-regular.woff2")
+			format("woff2"),
+		/* Super Modern Browsers */ url("/fonts/nunito-v16-latin-regular.woff")
 			format("woff"),
-		/* Modern Browsers */ url("/fonts/inter-v3-latin-800.ttf")
+		/* Modern Browsers */ url("/fonts/nunito-v16-latin-regular.ttf")
 			format("truetype"),
-		/* Safari, Android, iOS */ url("/fonts/inter-v3-latin-800.svg#Inter")
-			format("svg"); /* Legacy iOS */
+		/* Safari, Android, iOS */
+			url("/fonts/nunito-v16-latin-regular.svg#Nunito") format("svg"); /* Legacy iOS */
 }
 
-/* inter-600 - latin */
+/* nunito-600 - latin */
 @font-face {
-	font-family: "Inter";
+	font-family: "Nunito";
 	font-style: normal;
 	font-weight: 600;
-	src: url("/fonts/inter-v3-latin-600.eot"); /* IE9 Compat Modes */
+	src: url("/fonts/nunito-v16-latin-600.eot"); /* IE9 Compat Modes */
 	src: local(""),
-		url("/fonts/inter-v3-latin-600.eot?#iefix") format("embedded-opentype"),
-		/* IE6-IE8 */ url("/fonts/inter-v3-latin-600.woff2") format("woff2"),
-		/* Super Modern Browsers */ url("/fonts/inter-v3-latin-600.woff")
+		url("/fonts/nunito-v16-latin-600.eot?#iefix")
+			format("embedded-opentype"),
+		/* IE6-IE8 */ url("/fonts/nunito-v16-latin-600.woff2") format("woff2"),
+		/* Super Modern Browsers */ url("/fonts/nunito-v16-latin-600.woff")
 			format("woff"),
-		/* Modern Browsers */ url("/fonts/inter-v3-latin-600.ttf")
+		/* Modern Browsers */ url("/fonts/nunito-v16-latin-600.ttf")
 			format("truetype"),
-		/* Safari, Android, iOS */ url("/fonts/inter-v3-latin-600.svg#Inter")
+		/* Safari, Android, iOS */ url("/fonts/nunito-v16-latin-600.svg#Nunito")
+			format("svg"); /* Legacy iOS */
+}
+
+/* nunito-700 - latin */
+@font-face {
+	font-family: "Nunito";
+	font-style: normal;
+	font-weight: 700;
+	src: url("/fonts/nunito-v16-latin-700.eot"); /* IE9 Compat Modes */
+	src: local(""),
+		url("/fonts/nunito-v16-latin-700.eot?#iefix")
+			format("embedded-opentype"),
+		/* IE6-IE8 */ url("/fonts/nunito-v16-latin-700.woff2") format("woff2"),
+		/* Super Modern Browsers */ url("/fonts/nunito-v16-latin-700.woff")
+			format("woff"),
+		/* Modern Browsers */ url("/fonts/nunito-v16-latin-700.ttf")
+			format("truetype"),
+		/* Safari, Android, iOS */ url("/fonts/nunito-v16-latin-700.svg#Nunito")
+			format("svg"); /* Legacy iOS */
+}
+
+/* nunito-800 - latin */
+@font-face {
+	font-family: "Nunito";
+	font-style: normal;
+	font-weight: 800;
+	src: url("/fonts/nunito-v16-latin-800.eot"); /* IE9 Compat Modes */
+	src: local(""),
+		url("/fonts/nunito-v16-latin-800.eot?#iefix")
+			format("embedded-opentype"),
+		/* IE6-IE8 */ url("/fonts/nunito-v16-latin-800.woff2") format("woff2"),
+		/* Super Modern Browsers */ url("/fonts/nunito-v16-latin-800.woff")
+			format("woff"),
+		/* Modern Browsers */ url("/fonts/nunito-v16-latin-800.ttf")
+			format("truetype"),
+		/* Safari, Android, iOS */ url("/fonts/nunito-v16-latin-800.svg#Nunito")
 			format("svg"); /* Legacy iOS */
 }
 
@@ -554,7 +576,7 @@ body {
 	color: var(--dark-grey);
 	line-height: 1.4285714;
 	font-size: 1rem;
-	font-family: "Inter", Helvetica, Arial, sans-serif;
+	font-family: Nunito, Arial, sans-serif;
 	height: 100%;
 	max-width: 100%;
 	overflow-y: auto !important;
@@ -595,7 +617,7 @@ h3,
 h4,
 h5,
 h6 {
-	font-family: "Inter", Helvetica, Arial, sans-serif;
+	font-family: Nunito, Arial, sans-serif;
 	font-weight: 400;
 	line-height: 1.1;
 
@@ -691,7 +713,7 @@ button,
 input,
 select,
 textarea {
-	font-family: "Inter", Helvetica, Arial, sans-serif;
+	font-family: Nunito, Arial, sans-serif;
 }
 
 input,
@@ -1891,14 +1913,14 @@ h4.section-title {
 }
 
 .news-item {
-	font-family: "Karla";
+	font-family: Nunito, Arial, sans-serif;
 	border-radius: @border-radius;
 	padding: 20px;
 	border: unset !important;
 	box-shadow: @box-shadow;
 
 	* {
-		font-family: Karla, Arial, sans-serif;
+		font-family: Nunito, Arial, sans-serif;
 		font-size: 16px;
 	}
 

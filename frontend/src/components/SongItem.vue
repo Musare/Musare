@@ -352,7 +352,7 @@ onUnmounted(() => {
 
 		*:not(i) {
 			margin: 0;
-			font-family: Karla, Arial, sans-serif;
+			font-family: Nunito, Arial, sans-serif;
 		}
 
 		h6 {

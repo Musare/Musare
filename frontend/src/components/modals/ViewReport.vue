@@ -308,13 +308,13 @@ onBeforeUnmount(() => {
 		.item-title-description {
 			.item-title {
 				font-size: 20px;
-				font-family: Karla, Arial, sans-serif;
+				font-family: Nunito, Arial, sans-serif;
 			}
 
 			.item-description {
 				font-size: 14px;
 				line-height: 15px;
-				font-family: Karla, Arial, sans-serif;
+				font-family: Nunito, Arial, sans-serif;
 			}
 		}
 	}

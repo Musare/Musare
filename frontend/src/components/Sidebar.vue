@@ -34,7 +34,7 @@ defineProps({
 }
 
 .sidebar-title {
-	font-family: "Inter", Helvetica, Arial, sans-serif; // Like h1-h6
+	font-family: Nunito, Arial, sans-serif; // Like h1-h6
 	background-color: var(--primary-color);
 	text-align: center;
 	padding: 10px;
