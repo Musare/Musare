@@ -450,6 +450,33 @@ export default {
 	}),
 
 	/**
+	 * Get a YouTube channel from ID
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	getChannel: useHasPermission("youtube.removeVideos", function getChannel(session, channelId, cb) {
+		return YouTubeModule.runJob("GET_CHANNELS_FROM_IDS", { channelIds: [channelId] }, this)
+			.then(res => {
+				if (res.channels.length === 0) {
+					this.log("ERROR", "YOUTUBE_GET_CHANNELS_FROM_IDS", `Fetching channel failed.`);
+					return cb({ status: "error", message: "Failed to get channel" });
+				}
+
+				this.log("SUCCESS", "YOUTUBE_GET_CHANNELS_FROM_IDS", `Fetching channel was successful.`);
+				return cb({
+					status: "success",
+					message: "Successfully fetched YouTube channel",
+					data: res.channels[0]
+				});
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "YOUTUBE_GET_CHANNELS_FROM_IDS", `Fetching video failed. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
 	 * Remove YouTube videos
 	 *
 	 * @returns {{status: string, data: object}}

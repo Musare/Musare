@@ -1952,7 +1952,7 @@ export default {
 
 					if (playlistRegex.exec(url) || channelRegex.exec(url))
 						YouTubeModule.runJob(
-							playlistRegex.exec(url) ? "GET_PLAYLIST" : "GET_CHANNEL",
+							playlistRegex.exec(url) ? "GET_PLAYLIST" : "GET_CHANNEL_VIDEOS",
 							{
 								url,
 								musicOnly,

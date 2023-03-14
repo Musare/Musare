@@ -689,7 +689,7 @@ class _YouTubeModule extends CoreClass {
 	}
 
 	/**
-	 * Returns a a page from a YouTube playlist. Is used internally by GET_PLAYLIST and GET_CHANNEL.
+	 * Returns a a page from a YouTube playlist. Is used internally by GET_PLAYLIST and GET_CHANNEL_VIDEOS.
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {boolean} payload.playlistId - the playlist id to get videos from
@@ -797,7 +797,7 @@ class _YouTubeModule extends CoreClass {
 	 * @param {string} payload.url - the url of the YouTube channel
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	GET_CHANNEL(payload) {
+	GET_CHANNEL_VIDEOS(payload) {
 		return new Promise((resolve, reject) => {
 			const regex =
 				/\.[\w]+\/(?:(?:channel\/(UC[0-9A-Za-z_-]{21}[AQgw]))|(?:user\/?([\w-]+))|(?:c\/?([\w-]+))|(?:\/?([\w-]+)))/;
@@ -1782,7 +1782,7 @@ class _YouTubeModule extends CoreClass {
 							/\.[\w]+\/(?:(?:channel\/(UC[0-9A-Za-z_-]{21}[AQgw]))|(?:user\/?([\w-]+))|(?:c\/?([\w-]+))|(?:\/?([\w-]+)))/;
 						if (playlistRegex.exec(payload.url) || channelRegex.exec(payload.url))
 							YouTubeModule.runJob(
-								playlistRegex.exec(payload.url) ? "GET_PLAYLIST" : "GET_CHANNEL",
+								playlistRegex.exec(payload.url) ? "GET_PLAYLIST" : "GET_CHANNEL_VIDEOS",
 								{
 									url: payload.url,
 									musicOnly: payload.musicOnly

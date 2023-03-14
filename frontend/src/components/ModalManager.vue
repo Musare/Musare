@@ -24,6 +24,7 @@ const modalComponents = shallowRef(
 		viewPunishment: "ViewPunishment.vue",
 		removeAccount: "RemoveAccount.vue",
 		importAlbum: "ImportAlbum.vue",
+		importArtist: "ImportArtist.vue",
 		confirm: "Confirm.vue",
 		editSong: "EditSong/index.vue",
 		viewYoutubeVideo: "ViewYoutubeVideo.vue",

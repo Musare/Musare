@@ -546,6 +546,16 @@ onMounted(() => {
 				>
 					Import album
 				</button>
+				<button
+					v-if="
+						hasPermission('songs.create') ||
+						hasPermission('songs.update')
+					"
+					class="button is-primary"
+					@click="openModal('importArtist')"
+				>
+					Import artist
+				</button>
 				<run-job-dropdown :jobs="jobs" />
 			</div>
 		</div>

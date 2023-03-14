@@ -510,6 +510,68 @@ class _SoundCloudModule extends CoreClass {
 	}
 
 	/**
+	 * Get Soundcloud artists
+	 *
+	 * @param {object} payload - an object containing the payload
+	 * @param {string} payload.userPermalinks - an array of Soundcloud user permalinks
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	async GET_ARTISTS_FROM_PERMALINKS(payload) {
+		const getArtists = async userPermalinks => {
+			const jobsToRun = [];
+
+			userPermalinks.forEach(userPermalink => {
+				const url = `https://soundcloud.com/${userPermalink}`;
+
+				jobsToRun.push(SoundCloudModule.runJob("API_RESOLVE", { url }, this));
+			});
+
+			const jobResponses = await Promise.all(jobsToRun);
+
+			console.log(jobResponses.map(jobResponse => jobResponse.response.data));
+
+			return jobResponses
+				.map(jobResponse => jobResponse.response.data)
+				.map(artist => ({
+					artistId: artist.id,
+					username: artist.username,
+					avatarUrl: artist.avatar_url,
+					permalink: artist.permalink,
+					rawData: artist
+				}));
+		};
+
+		const { userPermalinks } = payload;
+		console.log(userPermalinks);
+
+		// const existingArtists = (
+		// 	await SoundcloudModule.soundcloudArtistsModel.find({ userPermalink: userPermalinks })
+		// ).map(artists => artists._doc);
+		// console.log(existingArtists);
+		const existingArtists = [];
+
+		const existingUserPermalinks = existingArtists.map(existingArtists => existingArtists.userPermalink);
+		const existingArtistsObjectIds = existingArtists.map(existingArtists => existingArtists._id.toString());
+		console.log(existingUserPermalinks, existingArtistsObjectIds);
+
+		if (userPermalinks.length === existingArtists.length) return { artists: existingArtists };
+
+		const missingUserPermalinks = userPermalinks.filter(
+			userPermalink => existingUserPermalinks.indexOf(userPermalink) === -1
+		);
+
+		console.log(missingUserPermalinks);
+
+		if (missingUserPermalinks.length === 0) return { videos: existingArtists };
+
+		const newArtists = await getArtists(missingUserPermalinks);
+
+		// await SoundcloudModule.soundcloudArtistsModel.insertMany(newArtists);
+
+		return { artists: existingArtists.concat(newArtists) };
+	}
+
+	/**
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.url - the url of the SoundCloud resource
 	 */

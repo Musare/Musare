@@ -52,6 +52,33 @@ export default {
 			});
 	}),
 
+	/**
+	 * Get a Soundcloud artist from ID
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	getArtist: useHasPermission("youtube.removeVideos", function getArtist(session, userPermalink, cb) {
+		return SoundcloudModule.runJob("GET_ARTISTS_FROM_PERMALINKS", { userPermalinks: [userPermalink] }, this)
+			.then(res => {
+				if (res.artists.length === 0) {
+					this.log("ERROR", "SOUNDCLOUD_GET_ARTISTS_FROM_PERMALINKS", `Fetching artist failed.`);
+					return cb({ status: "error", message: "Failed to get artist" });
+				}
+
+				this.log("SUCCESS", "SOUNDCLOUD_GET_ARTISTS_FROM_PERMALINKS", `Fetching artist was successful.`);
+				return cb({
+					status: "success",
+					message: "Successfully fetched Soundcloud artist",
+					data: res.artists[0]
+				});
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "SOUNDCLOUD_GET_ARTISTS_FROM_PERMALINKS", `Fetching artist failed. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	}),
+
 	// /**
 	//  * Returns details about the YouTube quota usage
 	//  *
