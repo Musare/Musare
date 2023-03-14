@@ -32,12 +32,31 @@
 				}
 			]
 		},
+		"spotify": {
+			"enabled": false,
+			"clientId": "",
+			"clientSecret": "",
+			"rateLimit": 500,
+			"requestTimeout": 5000,
+			"retryAmount": 2
+		},
+		"soundcloud": {
+			"rateLimit": 500,
+			"requestTimeout": 5000,
+			"retryAmount": 2
+		},
 		"recaptcha": {
 			"secret": "",
 			"enabled": false
 		},
 		"github": {
 			"enabled": false,
+			"client": "",
+			"secret": "",
+			"redirect_uri": ""
+		},
+		"google": {
+			"enabled": true,
 			"client": "",
 			"secret": "",
 			"redirect_uri": ""
@@ -127,6 +146,7 @@
 		"queue_add_before_autofilled": [
 			"STATION_ID"
 		],
-		"disable_youtube_search": true
+		"disable_youtube_search": true,
+		"registration_email_whitelist": false
 	}
 }

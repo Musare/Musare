@@ -25,6 +25,7 @@ export const useStationStore = defineStore("station", {
 		blacklist: Playlist[];
 		mediaModalPlayingAudio: boolean;
 		permissions: Record<string, boolean>;
+		history: any[];
 	} => ({
 		station: {},
 		autoRequest: [],
@@ -43,7 +44,8 @@ export const useStationStore = defineStore("station", {
 		autofill: [],
 		blacklist: [],
 		mediaModalPlayingAudio: false,
-		permissions: {}
+		permissions: {},
+		history: []
 	}),
 	actions: {
 		joinStation(station) {
@@ -93,7 +95,7 @@ export const useStationStore = defineStore("station", {
 		repositionSongInList(song) {
 			if (
 				this.songsList[song.newIndex] &&
-				this.songsList[song.newIndex].youtubeId === song.youtubeId
+				this.songsList[song.newIndex].mediaSource === song.mediaSource
 			)
 				return;
 
@@ -141,8 +143,15 @@ export const useStationStore = defineStore("station", {
 				this.currentSong.skipVotesCurrent = skipVotesCurrent;
 			this.currentSong.voted = voted;
 		},
+		addAutorequestPlaylists(playlists) {
+			playlists.forEach(playlist => {
+				this.autoRequest.push(playlist);
+			});
+			this.updateAutorequestLocalStorage();
+		},
 		addPlaylistToAutoRequest(playlist) {
 			this.autoRequest.push(playlist);
+			this.updateAutorequestLocalStorage();
 		},
 		removePlaylistFromAutoRequest(playlistId) {
 			this.autoRequest.forEach((playlist, index) => {
@@ -150,6 +159,18 @@ export const useStationStore = defineStore("station", {
 					this.autoRequest.splice(index, 1);
 				}
 			});
+			this.updateAutorequestLocalStorage();
+		},
+		updateAutorequestLocalStorage() {
+			const key = `autorequest-${this.station._id}`;
+			const playlistIds = Array.from(
+				new Set(this.autoRequest.map(playlist => playlist._id))
+			);
+			const value = {
+				updatedAt: new Date(),
+				playlistIds
+			};
+			localStorage.setItem(key, JSON.stringify(value));
 		},
 		updateMediaModalPlayingAudio(mediaModalPlayingAudio) {
 			this.mediaModalPlayingAudio = mediaModalPlayingAudio;
@@ -179,6 +200,12 @@ export const useStationStore = defineStore("station", {
 					this.station.djs.splice(index, 1);
 				}
 			});
+		},
+		setHistory(history) {
+			this.history = history;
+		},
+		addHistoryItem(historyItem) {
+			this.history.unshift(historyItem);
 		}
 	}
 });

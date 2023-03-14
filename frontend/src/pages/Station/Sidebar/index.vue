@@ -11,6 +11,9 @@ const Users = defineAsyncComponent(
 	() => import("@/pages/Station/Sidebar/Users.vue")
 );
 const Request = defineAsyncComponent(() => import("@/components/Request.vue"));
+const History = defineAsyncComponent(
+	() => import("@/pages/Station/Sidebar/History.vue")
+);
 
 const route = useRoute();
 const userAuthStore = useUserAuthStore();
@@ -19,7 +22,7 @@ const stationStore = useStationStore();
 const { tab, showTab } = useTabQueryHandler("queue");
 
 const { loggedIn } = storeToRefs(userAuthStore);
-const { station } = storeToRefs(stationStore);
+const { station, userCount } = storeToRefs(stationStore);
 const { hasPermission } = stationStore;
 
 const canRequest = (requireLogin = true) =>
@@ -64,6 +67,7 @@ onMounted(() => {
 				@click="showTab('users')"
 			>
 				Users
+				<span class="tag">{{ Math.max(userCount, 1) }}</span>
 			</button>
 			<button
 				v-if="canRequest()"
@@ -81,8 +85,15 @@ onMounted(() => {
 			>
 				Request
 			</button>
+			<button
+				class="button is-default"
+				:class="{ selected: tab === 'history' }"
+				@click="showTab('history')"
+			>
+				History
+			</button>
 		</div>
-		<Queue class="tab" v-show="tab === 'queue'" />
+		<Queue class="tab" v-show="tab === 'queue'" @on-change-tab="showTab" />
 		<Users class="tab" v-show="tab === 'users'" />
 		<Request
 			v-if="canRequest()"
@@ -90,6 +101,7 @@ onMounted(() => {
 			class="tab requests-tab"
 			sector="station"
 		/>
+		<History class="tab" v-show="tab === 'history'" />
 	</div>
 </template>
 

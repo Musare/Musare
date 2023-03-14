@@ -127,6 +127,13 @@ class _StationsModule extends CoreClass {
 		const stationModel = (this.stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }));
 		const stationSchema = (this.stationSchema = await CacheModule.runJob("GET_SCHEMA", { schemaName: "station" }));
 
+		const stationHistoryModel = (this.stationHistoryModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "stationHistory"
+		}));
+		const stationHistorySchema = (this.stationHistorySchema = await CacheModule.runJob("GET_SCHEMA", {
+			schemaName: "stationHistory"
+		}));
+
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
@@ -269,7 +276,8 @@ class _StationsModule extends CoreClass {
 									cb: () =>
 										StationsModule.runJob("SKIP_STATION", {
 											stationId: station._id,
-											natural: true
+											natural: true,
+											skipReason: "natural"
 										}),
 									unique: true,
 									station
@@ -288,7 +296,8 @@ class _StationsModule extends CoreClass {
 								"SKIP_STATION",
 								{
 									stationId: station._id,
-									natural: false
+									natural: false,
+									skipReason: "other"
 								},
 								this
 							)
@@ -309,7 +318,8 @@ class _StationsModule extends CoreClass {
 								"SKIP_STATION",
 								{
 									stationId: station._id,
-									natural: false
+									natural: false,
+									skipReason: "other"
 								},
 								this
 							)
@@ -547,12 +557,12 @@ class _StationsModule extends CoreClass {
 						const currentRequests = station.queue.filter(song => !song.requestedBy).length;
 						const songsStillNeeded = station.autofill.limit - currentRequests;
 						const currentSongs = station.queue;
-						let currentYoutubeIds = station.queue.map(song => song.youtubeId);
+						let currentYoutubeIds = station.queue.map(song => song.mediaSource);
 						const songsToAdd = [];
 						let lastSongAdded = null;
 
-						if (station.currentSong && station.currentSong.youtubeId)
-							currentYoutubeIds.push(station.currentSong.youtubeId);
+						if (station.currentSong && station.currentSong.mediaSource)
+							currentYoutubeIds.push(station.currentSong.mediaSource);
 
 						// Block for experiment: queue_autofill_skip_last_x_played
 						if (config.has(`experimental.queue_autofill_skip_last_x_played.${stationId}`)) {
@@ -573,10 +583,12 @@ class _StationsModule extends CoreClass {
 									: config.get(`experimental.weight_stations.${stationId}`);
 							const weightMap = {};
 							const getYoutubeIds = playlistSongs
-								.map(playlistSong => playlistSong.youtubeId)
-								.filter(youtubeId => currentYoutubeIds.indexOf(youtubeId) === -1);
+								.map(playlistSong => playlistSong.mediaSource)
+								.filter(mediaSource => currentYoutubeIds.indexOf(mediaSource) === -1);
 
-							const { songs } = await SongsModule.runJob("GET_SONGS", { youtubeIds: getYoutubeIds });
+							console.log(4343, getYoutubeIds);
+
+							const { songs } = await SongsModule.runJob("GET_SONGS", { mediaSources: getYoutubeIds });
 
 							const weightRegex = new RegExp(`${weightTagName}\\[(\\d+)\\]`);
 
@@ -593,13 +605,13 @@ class _StationsModule extends CoreClass {
 								weight = Math.max(1, weight);
 								weight = Math.min(10000, weight);
 
-								weightMap[song.youtubeId] = weight;
+								weightMap[song.mediaSource] = weight;
 							});
 
 							const adjustedPlaylistSongs = [];
 
 							playlistSongs.forEach(playlistSong => {
-								Array.from({ length: weightMap[playlistSong.youtubeId] }).forEach(() => {
+								Array.from({ length: weightMap[playlistSong.mediaSource] }).forEach(() => {
 									adjustedPlaylistSongs.push(playlistSong);
 								});
 							});
@@ -616,8 +628,9 @@ class _StationsModule extends CoreClass {
 						playlistSongs.every(song => {
 							if (
 								songsToAdd.length < songsStillNeeded &&
-								currentYoutubeIds.indexOf(song.youtubeId) === -1 &&
-								!songsToAdd.find(songToAdd => songToAdd.youtubeId === song.youtubeId)
+								currentYoutubeIds.indexOf(song.mediaSource) === -1 &&
+								!songsToAdd.find(songToAdd => songToAdd.mediaSource === song.mediaSource) &&
+								!song.mediaSource.startsWith("spotify:")
 							) {
 								lastSongAdded = song;
 								songsToAdd.push(song);
@@ -631,8 +644,8 @@ class _StationsModule extends CoreClass {
 
 						if (station.autofill.mode === "sequential" && lastSongAdded) {
 							const indexOfLastSong = _playlistSongs
-								.map(song => song.youtubeId)
-								.indexOf(lastSongAdded.youtubeId);
+								.map(song => song.mediaSource)
+								.indexOf(lastSongAdded.mediaSource);
 
 							if (indexOfLastSong !== -1) currentSongIndex = indexOfLastSong;
 						}
@@ -643,17 +656,17 @@ class _StationsModule extends CoreClass {
 					({ currentSongs, songsToAdd, currentSongIndex }, next) => {
 						const songs = [];
 						async.eachLimit(
-							songsToAdd.map(song => song.youtubeId),
+							songsToAdd.map(song => song.mediaSource),
 							2,
-							(youtubeId, next) => {
-								MediaModule.runJob("GET_MEDIA", { youtubeId }, this)
+							(mediaSource, next) => {
+								MediaModule.runJob("GET_MEDIA", { mediaSource }, this)
 									.then(response => {
 										const { song } = response;
 										const { _id, title, artists, thumbnail, duration, skipDuration, verified } =
 											song;
 										songs.push({
 											_id,
-											youtubeId,
+											mediaSource,
 											title,
 											artists,
 											thumbnail,
@@ -669,7 +682,7 @@ class _StationsModule extends CoreClass {
 								if (err) next(err);
 								else {
 									const newSongsToAdd = songsToAdd.map(song =>
-										songs.find(newSong => newSong.youtubeId === song.youtubeId)
+										songs.find(newSong => newSong.mediaSource === song.mediaSource)
 									);
 									next(null, currentSongs, newSongsToAdd, currentSongIndex);
 								}
@@ -681,6 +694,7 @@ class _StationsModule extends CoreClass {
 						const newPlaylist = [...currentSongs, ...songsToAdd].map(song => {
 							if (!song._id) song._id = null;
 							if (!song.requestedAt) song.requestedAt = Date.now();
+							if (!song.requestedType) song.requestedType = "autofill";
 							return song;
 						});
 						next(null, newPlaylist, currentSongIndex);
@@ -749,17 +763,25 @@ class _StationsModule extends CoreClass {
 						MediaModule.runJob(
 							"GET_MEDIA",
 							{
-								youtubeId: queueSong.youtubeId
+								mediaSource: queueSong.mediaSource
 							},
 							this
 						)
 							.then(response => {
 								const { song } = response;
-								const { _id, youtubeId, title, skipDuration, artists, thumbnail, duration, verified } =
-									song;
+								const {
+									_id,
+									mediaSource,
+									title,
+									skipDuration,
+									artists,
+									thumbnail,
+									duration,
+									verified
+								} = song;
 								next(null, {
 									_id,
-									youtubeId,
+									mediaSource,
 									title,
 									skipDuration,
 									artists,
@@ -768,6 +790,7 @@ class _StationsModule extends CoreClass {
 									verified,
 									requestedAt: queueSong.requestedAt,
 									requestedBy: queueSong.requestedBy,
+									requestedType: queueSong.requestedType,
 									likes: song.likes || 0,
 									dislikes: song.dislikes || 0
 								});
@@ -909,7 +932,8 @@ class _StationsModule extends CoreClass {
 								"SKIP_STATION",
 								{
 									stationId: payload.stationId,
-									natural: false
+									natural: false,
+									skipReason: "vote_skip"
 								},
 								this
 							)
@@ -927,11 +951,48 @@ class _StationsModule extends CoreClass {
 	}
 
 	/**
+	 *
+	 *
+	 * @param {*} payload
+	 */
+	async ADD_STATION_HISTORY_ITEM(payload) {
+		const { stationId, currentSong, skipReason, skippedAt } = payload;
+
+		let document = await StationsModule.stationHistoryModel.create({
+			stationId,
+			type: "song_played",
+			payload: {
+				song: currentSong,
+				skippedAt,
+				skipReason
+			}
+		});
+
+		if (!document) return;
+
+		document = document._doc;
+
+		delete document.__v;
+		delete document.documentVersion;
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `station.${stationId}`,
+			args: ["event:station.history.new", { data: { historyItem: document } }]
+		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `manage-station.${stationId}`,
+			args: ["event:manageStation.history.new", { data: { stationId, historyItem: document } }]
+		});
+	}
+
+	/**
 	 * Skips a station
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the id of the station to skip
 	 * @param {string} payload.natural - whether to skip naturally or forcefully
+	 * @param {string} payload.skipReason - if it was skipped via force skip or via vote skipping or if it was natural
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	SKIP_STATION(payload) {
@@ -969,6 +1030,28 @@ class _StationsModule extends CoreClass {
 					(station, next) => {
 						if (!station) return next("Station not found.");
 
+						const { currentSong } = station;
+						if (!currentSong || !currentSong.mediaSource) return next(null, station);
+
+						const stationId = station._id;
+						const skippedAt = new Date();
+						const { skipReason } = payload;
+
+						return StationsModule.runJob(
+							"ADD_STATION_HISTORY_ITEM",
+							{
+								stationId,
+								currentSong,
+								skippedAt,
+								skipReason
+							},
+							this
+						).finally(() => {
+							next(null, station);
+						});
+					},
+
+					(station, next) => {
 						if (station.autofill.enabled)
 							return StationsModule.runJob("AUTOFILL_STATION", { stationId: station._id }, this)
 								.then(() => next(null, station))
@@ -1010,19 +1093,19 @@ class _StationsModule extends CoreClass {
 									config.get(`experimental.queue_autofill_skip_last_x_played.${payload.stationId}`)
 								);
 
-								// Add youtubeId to list for this station in Redis list
+								// Add mediaSource to list for this station in Redis list
 								await CacheModule.runJob(
 									"LPUSH",
 									{
 										key: `experimental:queue_autofill_skip_last_x_played:${payload.stationId}`,
-										value: song.youtubeId
+										value: song.mediaSource
 									},
 									this
 								);
 
 								const currentListLength = await CacheModule.runJob("LLEN", { key: redisList }, this);
 
-								// Removes oldest youtubeId from list for this station in Redis list
+								// Removes oldest mediaSource from list for this station in Redis list
 								if (currentListLength > maxListLength) {
 									const amount = currentListLength - maxListLength;
 									const promises = Array.from({ length: amount }).map(() =>
@@ -1040,7 +1123,7 @@ class _StationsModule extends CoreClass {
 
 							$set.currentSong = {
 								_id: song._id,
-								youtubeId: song.youtubeId,
+								mediaSource: song.mediaSource,
 								title: song.title,
 								artists: song.artists,
 								duration: song.duration,
@@ -1048,6 +1131,7 @@ class _StationsModule extends CoreClass {
 								thumbnail: song.thumbnail,
 								requestedAt: song.requestedAt,
 								requestedBy: song.requestedBy,
+								requestedType: song.requestedType,
 								verified: song.verified
 							};
 						}
@@ -1071,7 +1155,7 @@ class _StationsModule extends CoreClass {
 					},
 
 					(station, next) => {
-						if (station.currentSong !== null && station.currentSong.youtubeId !== undefined) {
+						if (station.currentSong !== null && station.currentSong.mediaSource !== undefined) {
 							station.currentSong.skipVotes = 0;
 						}
 						next(null, station);
@@ -1177,10 +1261,10 @@ class _StationsModule extends CoreClass {
 					}
 
 					WSModule.runJob("GET_SOCKETS_FOR_ROOM", { room: `station.${station._id}` }).then(sockets => {
-						if (station.currentSong !== null && station.currentSong.youtubeId !== undefined) {
+						if (station.currentSong !== null && station.currentSong.mediaSource !== undefined) {
 							WSModule.runJob("SOCKETS_JOIN_SONG_ROOM", {
 								sockets,
-								room: `song.${station.currentSong.youtubeId}`
+								room: `song.${station.currentSong.mediaSource}`
 							});
 							if (!station.paused) {
 								NotificationsModule.runJob("SCHEDULE", {
@@ -1819,13 +1903,15 @@ class _StationsModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the station id
-	 * @param {string} payload.youtubeId - the youtube id
+	 * @param {string} payload.mediaSource - the media source
 	 * @param {string} payload.requestUser - the requesting user id
+	 * @param {string} payload.requestType - the request type
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	ADD_TO_QUEUE(payload) {
 		return new Promise((resolve, reject) => {
-			const { stationId, youtubeId, requestUser } = payload;
+			const { stationId, mediaSource, requestUser, requestType } = payload;
+			console.log(45436546, mediaSource);
 			async.waterfall(
 				[
 					next => {
@@ -1839,16 +1925,17 @@ class _StationsModule extends CoreClass {
 					(station, next) => {
 						if (!station) return next("Station not found.");
 						if (!station.requests.enabled) return next("Requests are disabled in this station.");
-						if (station.currentSong && station.currentSong.youtubeId === youtubeId)
+						if (mediaSource.startsWith("spotify:")) return next("Spotify playback is not supported.");
+						if (station.currentSong && station.currentSong.mediaSource === mediaSource)
 							return next("That song is currently playing.");
-						if (station.queue.find(song => song.youtubeId === youtubeId))
+						if (station.queue.find(song => song.mediaSource === mediaSource))
 							return next("That song is already in the queue.");
 
 						return next(null, station);
 					},
 
 					(station, next) => {
-						MediaModule.runJob("GET_MEDIA", { youtubeId }, this)
+						MediaModule.runJob("GET_MEDIA", { mediaSource }, this)
 							.then(response => {
 								const { song } = response;
 								const { _id, title, skipDuration, artists, thumbnail, duration, verified } = song;
@@ -1856,7 +1943,7 @@ class _StationsModule extends CoreClass {
 									null,
 									{
 										_id,
-										youtubeId,
+										mediaSource,
 										title,
 										skipDuration,
 										artists,
@@ -1894,11 +1981,11 @@ class _StationsModule extends CoreClass {
 							.flatMap(blacklistedPlaylist => blacklistedPlaylist.songs)
 							.reduce(
 								(items, item) =>
-									items.find(x => x.youtubeId === item.youtubeId) ? [...items] : [...items, item],
+									items.find(x => x.mediaSource === item.mediaSource) ? [...items] : [...items, item],
 								[]
 							);
 
-						if (blacklistedSongs.find(blacklistedSong => blacklistedSong.youtubeId === song.youtubeId))
+						if (blacklistedSongs.find(blacklistedSong => blacklistedSong.mediaSource === song.mediaSource))
 							next("That song is in an blacklisted playlist and cannot be played.");
 						else next(null, song, station);
 					},
@@ -1906,6 +1993,7 @@ class _StationsModule extends CoreClass {
 					(song, station, next) => {
 						song.requestedBy = requestUser;
 						song.requestedAt = Date.now();
+						song.requestedType = requestType;
 						if (station.queue.length === 0) return next(null, song, station);
 						if (
 							requestUser &&
@@ -2036,12 +2124,12 @@ class _StationsModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the station id
-	 * @param {string} payload.youtubeId - the youtube id
+	 * @param {string} payload.mediaSource - the media source
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	REMOVE_FROM_QUEUE(payload) {
 		return new Promise((resolve, reject) => {
-			const { stationId, youtubeId } = payload;
+			const { stationId, mediaSource } = payload;
 			async.waterfall(
 				[
 					next => {
@@ -2054,12 +2142,12 @@ class _StationsModule extends CoreClass {
 
 					(station, next) => {
 						if (!station) return next("Station not found.");
-						if (!station.queue.find(song => song.youtubeId === youtubeId))
+						if (!station.queue.find(song => song.mediaSource === mediaSource))
 							return next("That song is not currently in the queue.");
 
 						return StationsModule.stationModel.updateOne(
 							{ _id: stationId },
-							{ $pull: { queue: { youtubeId } } },
+							{ $pull: { queue: { mediaSource } } },
 							next
 						);
 					},

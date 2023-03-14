@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { defineAsyncComponent, onMounted, onBeforeUnmount, ref } from "vue";
+import {
+	defineAsyncComponent,
+	onMounted,
+	onBeforeUnmount,
+	ref,
+	computed
+} from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import aw from "@/aw";
@@ -27,9 +33,9 @@ const loaded = ref(false);
 const canvasWidth = ref(760);
 const volumeSliderValue = ref(20);
 const durationCanvas = ref(null);
-const activityWatchVideoDataInterval = ref(null);
-const activityWatchVideoLastStatus = ref("");
-const activityWatchVideoLastStartDuration = ref(0);
+const activityWatchMediaDataInterval = ref(null);
+const activityWatchMediaLastStatus = ref("");
+const activityWatchMediaLastStartDuration = ref(0);
 
 const viewYoutubeVideoStore = useViewYoutubeVideoStore({
 	modalUuid: props.modalUuid
@@ -52,6 +58,14 @@ const { socket } = useWebsocketsStore();
 
 const userAuthStore = useUserAuthStore();
 const { hasPermission } = userAuthStore;
+
+const youtubeId = computed(() => {
+	if (props.videoId && props.videoId.startsWith("youtube:"))
+		return props.videoId.split(":")[1];
+	if (props.youtubeId && props.youtubeId.startsWith("youtube:"))
+		return props.youtubeId.split(":")[1];
+	return props.videoId || props.youtubeId;
+});
 
 const remove = () => {
 	socket.dispatch("youtube.removeVideos", video.value._id, res => {
@@ -172,14 +186,14 @@ const setTrackPosition = event => {
 		)
 	);
 };
-const sendActivityWatchVideoData = () => {
+const sendActivityWatchMediaData = () => {
 	if (
 		!player.value.paused &&
 		player.value.player.getPlayerState() === window.YT.PlayerState.PLAYING
 	) {
-		if (activityWatchVideoLastStatus.value !== "playing") {
-			activityWatchVideoLastStatus.value = "playing";
-			activityWatchVideoLastStartDuration.value = Math.floor(
+		if (activityWatchMediaLastStatus.value !== "playing") {
+			activityWatchMediaLastStatus.value = "playing";
+			activityWatchMediaLastStartDuration.value = Math.floor(
 				Number(player.value.currentTime)
 			);
 		}
@@ -187,13 +201,13 @@ const sendActivityWatchVideoData = () => {
 		const videoData = {
 			title: video.value.title,
 			artists: video.value.author,
-			youtubeId: video.value.youtubeId,
+			mediaSource: `youtube:${video.value.youtubeId}`,
 			muted: player.value.muted,
 			volume: player.value.volume,
 			startedDuration:
-				activityWatchVideoLastStartDuration.value <= 0
+				activityWatchMediaLastStartDuration.value <= 0
 					? 0
-					: activityWatchVideoLastStartDuration.value,
+					: activityWatchMediaLastStartDuration.value,
 			source: `viewYoutubeVideo#${video.value.youtubeId}`,
 			hostname: window.location.hostname,
 			playerState: Object.keys(window.YT.PlayerState).find(
@@ -204,260 +218,235 @@ const sendActivityWatchVideoData = () => {
 			playbackRate: player.value.playbackRate
 		};
 
-		aw.sendVideoData(videoData);
+		aw.sendMediaData(videoData);
 	} else {
-		activityWatchVideoLastStatus.value = "not_playing";
+		activityWatchMediaLastStatus.value = "not_playing";
 	}
 };
 
 onMounted(() => {
 	socket.onConnect(() => {
 		loaded.value = false;
-		socket.dispatch(
-			"youtube.getVideo",
-			props.videoId || props.youtubeId,
-			true,
-			res => {
-				if (res.status === "success") {
-					const youtubeVideo = res.data;
-					viewYoutubeVideo(youtubeVideo);
-					loaded.value = true;
+		socket.dispatch("youtube.getVideo", youtubeId.value, true, res => {
+			if (res.status === "success") {
+				const youtubeVideo = res.data;
+				viewYoutubeVideo(youtubeVideo);
+				loaded.value = true;
 
-					interval.value = setInterval(() => {
-						if (
-							video.value.duration !== -1 &&
-							player.value.paused === false &&
-							player.value.playerReady &&
-							(player.value.player.getCurrentTime() >
-								video.value.duration ||
-								(player.value.player.getCurrentTime() > 0 &&
-									player.value.player.getCurrentTime() >=
-										player.value.player.getDuration()))
-						) {
-							stopVideo();
-							pauseVideo(true);
-							drawCanvas();
-						}
-						if (
-							player.value.playerReady &&
-							player.value.player.getVideoData &&
-							player.value.player.getVideoData() &&
-							player.value.player.getVideoData().video_id ===
-								video.value.youtubeId
-						) {
-							const currentTime =
-								player.value.player.getCurrentTime();
+				interval.value = setInterval(() => {
+					if (
+						video.value.duration !== -1 &&
+						player.value.paused === false &&
+						player.value.playerReady &&
+						(player.value.player.getCurrentTime() >
+							video.value.duration ||
+							(player.value.player.getCurrentTime() > 0 &&
+								player.value.player.getCurrentTime() >=
+									player.value.player.getDuration()))
+					) {
+						stopVideo();
+						pauseVideo(true);
+						drawCanvas();
+					}
+					if (
+						player.value.playerReady &&
+						player.value.player.getVideoData &&
+						player.value.player.getVideoData() &&
+						player.value.player.getVideoData().video_id ===
+							video.value.youtubeId
+					) {
+						const currentTime =
+							player.value.player.getCurrentTime();
 
-							if (currentTime !== undefined)
-								player.value.currentTime =
-									currentTime.toFixed(3);
+						if (currentTime !== undefined)
+							player.value.currentTime = currentTime.toFixed(3);
 
-							if (player.value.duration.indexOf(".000") !== -1) {
-								const duration =
-									player.value.player.getDuration();
+						if (player.value.duration.indexOf(".000") !== -1) {
+							const duration = player.value.player.getDuration();
 
-								if (duration !== undefined) {
-									if (
-										`${player.value.duration}` ===
-										`${Number(video.value.duration).toFixed(
-											3
-										)}`
-									)
-										video.value.duration =
-											duration.toFixed(3);
+							if (duration !== undefined) {
+								if (
+									`${player.value.duration}` ===
+									`${Number(video.value.duration).toFixed(3)}`
+								)
+									video.value.duration = duration.toFixed(3);
 
-									player.value.duration = duration.toFixed(3);
-									if (
-										player.value.duration.indexOf(
-											".000"
-										) !== -1
-									)
-										player.value.videoNote = "(~)";
-									else player.value.videoNote = "";
+								player.value.duration = duration.toFixed(3);
+								if (
+									player.value.duration.indexOf(".000") !== -1
+								)
+									player.value.videoNote = "(~)";
+								else player.value.videoNote = "";
 
-									drawCanvas();
-								}
+								drawCanvas();
 							}
 						}
+					}
 
-						if (player.value.paused === false) drawCanvas();
-					}, 200);
+					if (player.value.paused === false) drawCanvas();
+				}, 200);
 
-					activityWatchVideoDataInterval.value = setInterval(() => {
-						sendActivityWatchVideoData();
-					}, 1000);
+				activityWatchMediaDataInterval.value = setInterval(() => {
+					sendActivityWatchMediaData();
+				}, 1000);
 
-					if (window.YT && window.YT.Player) {
-						player.value.player = new window.YT.Player(
-							`viewYoutubeVideoPlayer-${props.modalUuid}`,
-							{
-								height: 298,
-								width: 530,
-								videoId: null,
-								host: "https://www.youtube-nocookie.com",
-								playerVars: {
-									controls: 0,
-									iv_load_policy: 3,
-									rel: 0,
-									showinfo: 0,
-									autoplay: 0
-								},
-								events: {
-									onReady: () => {
-										let volume = parseFloat(
-											localStorage.getItem("volume")
+				if (window.YT && window.YT.Player) {
+					player.value.player = new window.YT.Player(
+						`viewYoutubeVideoPlayer-${props.modalUuid}`,
+						{
+							height: 298,
+							width: 530,
+							videoId: null,
+							host: "https://www.youtube-nocookie.com",
+							playerVars: {
+								controls: 0,
+								iv_load_policy: 3,
+								rel: 0,
+								showinfo: 0,
+								autoplay: 0
+							},
+							events: {
+								onReady: () => {
+									let volume = parseFloat(
+										localStorage.getItem("volume")
+									);
+									volume =
+										typeof volume === "number"
+											? volume
+											: 20;
+									player.value.player.setVolume(volume);
+									if (volume > 0)
+										player.value.player.unMute();
+
+									player.value.playerReady = true;
+
+									if (video.value && video.value._id)
+										player.value.player.cueVideoById(
+											video.value.youtubeId
 										);
-										volume =
-											typeof volume === "number"
-												? volume
-												: 20;
-										player.value.player.setVolume(volume);
-										if (volume > 0)
-											player.value.player.unMute();
 
-										player.value.playerReady = true;
+									setPlaybackRate();
 
-										if (video.value && video.value._id)
-											player.value.player.cueVideoById(
-												video.value.youtubeId
+									drawCanvas();
+								},
+								onStateChange: event => {
+									drawCanvas();
+
+									if (event.data === 1) {
+										player.value.paused = false;
+										updateMediaModalPlayingAudio(true);
+										const youtubeDuration =
+											player.value.player.getDuration();
+										const newYoutubeVideoDuration =
+											youtubeDuration.toFixed(3);
+
+										if (
+											player.value.duration.indexOf(
+												".000"
+											) !== -1 &&
+											`${player.value.duration}` !==
+												`${newYoutubeVideoDuration}`
+										) {
+											const songDurationNumber = Number(
+												video.value.duration
 											);
+											const songDurationNumber2 =
+												Number(video.value.duration) +
+												1;
+											const songDurationNumber3 =
+												Number(video.value.duration) -
+												1;
+											const fixedSongDuration =
+												songDurationNumber.toFixed(3);
+											const fixedSongDuration2 =
+												songDurationNumber2.toFixed(3);
+											const fixedSongDuration3 =
+												songDurationNumber3.toFixed(3);
 
-										setPlaybackRate();
+											if (
+												`${player.value.duration}` ===
+													`${Number(
+														video.value.duration
+													).toFixed(3)}` &&
+												(fixedSongDuration ===
+													player.value.duration ||
+													fixedSongDuration2 ===
+														player.value.duration ||
+													fixedSongDuration3 ===
+														player.value.duration)
+											)
+												video.value.duration =
+													newYoutubeVideoDuration;
 
-										drawCanvas();
-									},
-									onStateChange: event => {
-										drawCanvas();
-
-										if (event.data === 1) {
-											player.value.paused = false;
-											updateMediaModalPlayingAudio(true);
-											const youtubeDuration =
-												player.value.player.getDuration();
-											const newYoutubeVideoDuration =
-												youtubeDuration.toFixed(3);
-
+											player.value.duration =
+												newYoutubeVideoDuration;
 											if (
 												player.value.duration.indexOf(
 													".000"
-												) !== -1 &&
-												`${player.value.duration}` !==
-													`${newYoutubeVideoDuration}`
-											) {
-												const songDurationNumber =
-													Number(
-														video.value.duration
-													);
-												const songDurationNumber2 =
-													Number(
-														video.value.duration
-													) + 1;
-												const songDurationNumber3 =
-													Number(
-														video.value.duration
-													) - 1;
-												const fixedSongDuration =
-													songDurationNumber.toFixed(
-														3
-													);
-												const fixedSongDuration2 =
-													songDurationNumber2.toFixed(
-														3
-													);
-												const fixedSongDuration3 =
-													songDurationNumber3.toFixed(
-														3
-													);
-
-												if (
-													`${player.value.duration}` ===
-														`${Number(
-															video.value.duration
-														).toFixed(3)}` &&
-													(fixedSongDuration ===
-														player.value.duration ||
-														fixedSongDuration2 ===
-															player.value
-																.duration ||
-														fixedSongDuration3 ===
-															player.value
-																.duration)
-												)
-													video.value.duration =
-														newYoutubeVideoDuration;
-
-												player.value.duration =
-													newYoutubeVideoDuration;
-												if (
-													player.value.duration.indexOf(
-														".000"
-													) !== -1
-												)
-													player.value.videoNote =
-														"(~)";
-												else
-													player.value.videoNote = "";
-											}
-
-											if (video.value.duration === -1)
-												video.value.duration = Number(
-													player.value.duration
-												);
-
-											if (
-												video.value.duration >
-												youtubeDuration + 1
-											) {
-												stopVideo();
-												pauseVideo(true);
-												return new Toast(
-													"Video can't play. Specified duration is bigger than the YouTube song duration."
-												);
-											}
-											if (video.value.duration <= 0) {
-												stopVideo();
-												pauseVideo(true);
-												return new Toast(
-													"Video can't play. Specified duration has to be more than 0 seconds."
-												);
-											}
-
-											setPlaybackRate();
-										} else if (event.data === 2) {
-											player.value.paused = true;
-											updateMediaModalPlayingAudio(false);
+												) !== -1
+											)
+												player.value.videoNote = "(~)";
+											else player.value.videoNote = "";
 										}
 
-										return false;
+										if (video.value.duration === -1)
+											video.value.duration = Number(
+												player.value.duration
+											);
+
+										if (
+											video.value.duration >
+											youtubeDuration + 1
+										) {
+											stopVideo();
+											pauseVideo(true);
+											return new Toast(
+												"Video can't play. Specified duration is bigger than the YouTube song duration."
+											);
+										}
+										if (video.value.duration <= 0) {
+											stopVideo();
+											pauseVideo(true);
+											return new Toast(
+												"Video can't play. Specified duration has to be more than 0 seconds."
+											);
+										}
+
+										setPlaybackRate();
+									} else if (event.data === 2) {
+										player.value.paused = true;
+										updateMediaModalPlayingAudio(false);
 									}
+
+									return false;
 								}
 							}
-						);
-					} else {
-						updatePlayer({
-							error: true,
-							errorMessage: "Player could not be loaded."
-						});
-					}
-
-					let volume = parseFloat(localStorage.getItem("volume"));
-					volume =
-						typeof volume === "number" && !Number.isNaN(volume)
-							? volume
-							: 20;
-					localStorage.setItem("volume", volume.toString());
-					updatePlayer({ volume });
-
-					socket.dispatch(
-						"apis.joinRoom",
-						`view-youtube-video.${video.value._id}`
+						}
 					);
 				} else {
-					new Toast("YouTube video with that ID not found");
-					closeCurrentModal();
+					updatePlayer({
+						error: true,
+						errorMessage: "Player could not be loaded."
+					});
 				}
+
+				let volume = parseFloat(localStorage.getItem("volume"));
+				volume =
+					typeof volume === "number" && !Number.isNaN(volume)
+						? volume
+						: 20;
+				localStorage.setItem("volume", volume.toString());
+				updatePlayer({ volume });
+
+				socket.dispatch(
+					"apis.joinRoom",
+					`view-youtube-video.${video.value._id}`
+				);
+			} else {
+				new Toast("YouTube video with that ID not found");
+				closeCurrentModal();
 			}
-		);
+		});
 	});
 
 	socket.on(
@@ -479,7 +468,7 @@ onBeforeUnmount(() => {
 	player.value.playerReady = false;
 	player.value.videoNote = "";
 	clearInterval(interval.value);
-	clearInterval(activityWatchVideoDataInterval.value);
+	clearInterval(activityWatchMediaDataInterval.value);
 	loaded.value = false;
 
 	socket.dispatch(

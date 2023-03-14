@@ -41,16 +41,22 @@ const printVersion = () => {
 		const head_contents = fs.readFileSync(".parent_git/HEAD").toString().replaceAll("\n", "");
 		const branch = new RegExp("ref: refs/heads/([A-Za-z0-9_.-]+)").exec(head_contents)[1];
 		const config_contents = fs.readFileSync(".parent_git/config").toString().replaceAll("\t", "").split("\n");
-		const remote = new RegExp("remote = (.+)").exec(config_contents[config_contents.indexOf(`[branch "${branch}"]`) + 1])[1];
-		const remote_url = new RegExp("url = (.+)").exec(config_contents[config_contents.indexOf(`[remote "${remote}"]`) + 1])[1];
+		const remote = new RegExp("remote = (.+)").exec(
+			config_contents[config_contents.indexOf(`[branch "${branch}"]`) + 1]
+		)[1];
+		const remote_url = new RegExp("url = (.+)").exec(
+			config_contents[config_contents.indexOf(`[remote "${remote}"]`) + 1]
+		)[1];
 		const latest_commit = fs.readFileSync(`.parent_git/refs/heads/${branch}`).toString().replaceAll("\n", "");
 		const latest_commit_short = latest_commit.substr(0, 7);
 
-		console.log(`Git branch: ${remote}/${branch}. Remote url: ${remote_url}. Latest commit: ${latest_commit} (${latest_commit_short}).`);
-	} catch(e) {
+		console.log(
+			`Git branch: ${remote}/${branch}. Remote url: ${remote_url}. Latest commit: ${latest_commit} (${latest_commit_short}).`
+		);
+	} catch (e) {
 		console.log(`Could not get Git info: ${e.message}.`);
 	}
-}
+};
 
 printVersion();
 
@@ -262,6 +268,10 @@ if (!config.get("migration")) {
 	moduleManager.addModule("tasks");
 	moduleManager.addModule("utils");
 	moduleManager.addModule("youtube");
+	moduleManager.addModule("soundcloud");
+	moduleManager.addModule("spotify");
+	moduleManager.addModule("musicbrainz");
+	moduleManager.addModule("wikidata");
 } else {
 	moduleManager.addModule("migration");
 }
@@ -298,22 +308,35 @@ function printTask(task, layer) {
 	});
 }
 
-import * as readline from 'node:readline';
+import * as readline from "node:readline";
 
 var rl = readline.createInterface({
 	input: process.stdin,
 	output: process.stdout,
-	completer: function(command) {
+	completer: function (command) {
 		const parts = command.split(" ");
-		const commands = ["version", "lockdown", "status", "running ", "queued ", "paused ", "stats ", "jobinfo ", "runjob ", "eval "];
+		const commands = [
+			"version",
+			"lockdown",
+			"status",
+			"running ",
+			"queued ",
+			"paused ",
+			"stats ",
+			"jobinfo ",
+			"runjob ",
+			"eval "
+		];
 		if (parts.length === 1) {
 			const hits = commands.filter(c => c.startsWith(parts[0]));
 			return [hits.length ? hits : commands, command];
 		} else if (parts.length === 2) {
 			if (["queued", "running", "paused", "runjob", "stats"].indexOf(parts[0]) !== -1) {
 				const modules = Object.keys(moduleManager.modules);
-				const hits = modules.filter(module => module.startsWith(parts[1])).map(module => `${parts[0]} ${module}${parts[0] === "runjob" ? " " : ""}`);
-				return  [hits.length ? hits : modules, command];
+				const hits = modules
+					.filter(module => module.startsWith(parts[1]))
+					.map(module => `${parts[0]} ${module}${parts[0] === "runjob" ? " " : ""}`);
+				return [hits.length ? hits : modules, command];
 			} else {
 				return [];
 			}
@@ -322,8 +345,10 @@ var rl = readline.createInterface({
 				const modules = Object.keys(moduleManager.modules);
 				if (modules.indexOf(parts[1]) !== -1) {
 					const jobs = moduleManager.modules[parts[1]].jobNames;
-					const hits = jobs.filter(job => job.startsWith(parts[2])).map(job => `${parts[0]} ${parts[1]} ${job} `);
-					return  [hits.length ? hits : jobs, command];
+					const hits = jobs
+						.filter(job => job.startsWith(parts[2]))
+						.map(job => `${parts[0]} ${parts[1]} ${job} `);
+					return [hits.length ? hits : jobs, command];
 				}
 			} else {
 				return [];
@@ -334,7 +359,7 @@ var rl = readline.createInterface({
 	}
 });
 
-rl.on("line",function(command) {
+rl.on("line", function (command) {
 	if (command === "version") {
 		printVersion();
 	}

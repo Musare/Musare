@@ -18,6 +18,10 @@ const props = defineProps({
 	userId: {
 		type: String,
 		default: ""
+	},
+	checkScroll: {
+		type: Boolean,
+		default: false
 	}
 });
 
@@ -61,6 +65,8 @@ const getSet = () => {
 };
 
 const handleScroll = () => {
+	if (!props.checkScroll) return false;
+
 	const scrollPosition = document.body.scrollTop + document.body.clientHeight;
 	const bottomPosition = document.body.scrollHeight;
 

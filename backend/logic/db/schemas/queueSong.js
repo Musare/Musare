@@ -1,3 +1,5 @@
+// Legacy file, not used atm, just exists for migration module
+
 export default {
 	songId: { type: String, min: 11, max: 11, required: true, index: true },
 	title: { type: String, required: true },

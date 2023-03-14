@@ -265,10 +265,10 @@ export default {
 								blacklistedProperties: [],
 								specialProperties: {
 									songId: [
-										// Fetch songs from songs collection with a matching youtubeId
+										// Fetch songs from songs collection with a matching mediaSource
 										{
 											$lookup: {
-												from: "songs",
+												from: "songs", // TODO fix this to support mediasource, so start with youtube:, so add a new pipeline steps
 												localField: "youtubeId",
 												foreignField: "youtubeId",
 												as: "song"
@@ -371,20 +371,107 @@ export default {
 	),
 
 	/**
+	 * Gets channels, used in the admin youtube page by the AdvancedTable component
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param page - the page
+	 * @param pageSize - the size per page
+	 * @param properties - the properties to return for each news item
+	 * @param sort - the sort object
+	 * @param queries - the queries array
+	 * @param operator - the operator for queries
+	 * @param cb
+	 */
+	getChannels: useHasPermission(
+		"admin.view.youtubeChannels",
+		async function getChannels(session, page, pageSize, properties, sort, queries, operator, cb) {
+			async.waterfall(
+				[
+					next => {
+						DBModule.runJob(
+							"GET_DATA",
+							{
+								page,
+								pageSize,
+								properties,
+								sort,
+								queries,
+								operator,
+								modelName: "youtubeChannel",
+								blacklistedProperties: [],
+								specialProperties: {},
+								specialQueries: {},
+								specialFilters: {}
+							},
+							this
+						)
+							.then(response => {
+								next(null, response);
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				],
+				async (err, response) => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log("ERROR", "YOUTUBE_GET_CHANNELS", `Failed to get YouTube channels. "${err}"`);
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "YOUTUBE_GET_CHANNELS", `Fetched YouTube channels successfully.`);
+					return cb({
+						status: "success",
+						message: "Successfully fetched YouTube channels.",
+						data: response
+					});
+				}
+			);
+		}
+	),
+
+	/**
 	 * Get a YouTube video
 	 *
 	 * @returns {{status: string, data: object}}
 	 */
 	getVideo: isLoginRequired(function getVideo(session, identifier, createMissing, cb) {
-		YouTubeModule.runJob("GET_VIDEO", { identifier, createMissing }, this)
+		return YouTubeModule.runJob("GET_VIDEOS", { identifiers: [identifier], createMissing }, this)
 			.then(res => {
 				this.log("SUCCESS", "YOUTUBE_GET_VIDEO", `Fetching video was successful.`);
 
-				return cb({ status: "success", message: "Successfully fetched YouTube video", data: res.video });
+				return cb({ status: "success", message: "Successfully fetched YouTube video", data: res.videos[0] });
 			})
 			.catch(async err => {
 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 				this.log("ERROR", "YOUTUBE_GET_VIDEO", `Fetching video failed. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
+	 * Get a YouTube channel from ID
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	getChannel: useHasPermission("youtube.removeVideos", function getChannel(session, channelId, cb) {
+		return YouTubeModule.runJob("GET_CHANNELS_FROM_IDS", { channelIds: [channelId] }, this)
+			.then(res => {
+				if (res.channels.length === 0) {
+					this.log("ERROR", "YOUTUBE_GET_CHANNELS_FROM_IDS", `Fetching channel failed.`);
+					return cb({ status: "error", message: "Failed to get channel" });
+				}
+
+				this.log("SUCCESS", "YOUTUBE_GET_CHANNELS_FROM_IDS", `Fetching channel was successful.`);
+				return cb({
+					status: "success",
+					message: "Successfully fetched YouTube channel",
+					data: res.channels[0]
+				});
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "YOUTUBE_GET_CHANNELS_FROM_IDS", `Fetching video failed. "${err}"`);
 				return cb({ status: "error", message: err });
 			});
 	}),
@@ -433,6 +520,44 @@ export default {
 	}),
 
 	/**
+	 * Gets missing YouTube video's from all playlists, stations and songs
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	getMissingVideos: useHasPermission("youtube.getApiRequest", function getMissingVideos(session, cb) {
+		return YouTubeModule.runJob("GET_MISSING_VIDEOS", {}, this)
+			.then(response => {
+				this.log("SUCCESS", "YOUTUBE_GET_MISSING_VIDEOS", `Getting missing videos was successful.`);
+				console.log("KRIS", response);
+				return cb({ status: "success", data: { ...response } });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "YOUTUBE_GET_MISSING_VIDEOS", `Getting missing videos failed. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
+	 * Gets missing YouTube video's from all playlists, stations and songs
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	updateVideosV1ToV2: useHasPermission("youtube.getApiRequest", function updateVideosV1ToV2(session, cb) {
+		return YouTubeModule.runJob("UPDATE_VIDEOS_V1_TO_V2", {}, this)
+			.then(response => {
+				this.log("SUCCESS", "YOUTUBE_UPDATE_VIDEOS_V1_TO_V2", `Updating v1 videos to v2 was successful.`);
+				console.log("KRIS", response);
+				return cb({ status: "success", data: { ...response } });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "YOUTUBE_UPDATE_VIDEOS_V1_TO_V2", `Updating v1 videos to v2 failed. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
 	 * Requests a set of YouTube videos
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
@@ -451,7 +576,7 @@ export default {
 				);
 				return cb({
 					status: "success",
-					message: `Playlist is done importing. ${response.successful} were added succesfully, ${response.failed} failed (${response.alreadyInDatabase} were already in database)`,
+					message: `Playlist is done importing.`,
 					videos: returnVideos ? response.videos : null
 				});
 			})
@@ -572,12 +697,12 @@ export default {
 
 					this.publishProgress({
 						status: "success",
-						message: `Playlist is done importing. ${response.successful} were added succesfully, ${response.failed} failed (${response.alreadyInDatabase} were already in database)`
+						message: `Playlist is done importing.`
 					});
 
 					return cb({
 						status: "success",
-						message: `Playlist is done importing. ${response.successful} were added succesfully, ${response.failed} failed (${response.alreadyInDatabase} were already in database)`,
+						message: `Playlist is done importing.`,
 						videos: returnVideos ? response.videos : null
 					});
 				}

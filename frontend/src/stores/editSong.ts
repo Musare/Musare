@@ -14,14 +14,14 @@ export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 				currentTime: number;
 				playbackRate: 0.5 | 1 | 2;
 			};
-			youtubeId: string;
+			mediaSource: string;
 			song: Song;
 			reports: Report[];
 			tab: "discogs" | "reports" | "youtube" | "musare-songs";
 			newSong: boolean;
 			prefillData: any;
 			bulk: boolean;
-			youtubeIds: string[];
+			mediaSources: string[];
 			songPrefillData: any;
 			form: {
 				inputs: Ref<
@@ -54,25 +54,26 @@ export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 				currentTime: 0,
 				playbackRate: 1
 			},
-			youtubeId: null,
+			mediaSource: null,
 			song: {},
 			reports: [],
 			tab: "discogs",
 			newSong: false,
 			prefillData: {},
 			bulk: false,
-			youtubeIds: [],
+			mediaSources: [],
 			songPrefillData: {},
 			form: {}
 		}),
 		actions: {
 			init({ song, songs }) {
+				console.log(12357878, song, songs);
 				if (songs) {
 					this.bulk = true;
-					this.youtubeIds = songs.map(song => song.youtubeId);
+					this.mediaSources = songs.map(song => song.mediaSource);
 					this.songPrefillData = Object.fromEntries(
 						songs.map(song => [
-							song.youtubeId,
+							song.mediaSource,
 							song.prefill ? song.prefill : {}
 						])
 					);
@@ -83,20 +84,20 @@ export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 			},
 			editSong(song) {
 				this.newSong = !!song.newSong || !song._id;
-				this.youtubeId = song.youtubeId || null;
+				this.mediaSource = song.mediaSource || null;
 				this.prefillData = song.prefill ? song.prefill : {};
 			},
 			setSong(song, reset?: boolean) {
 				if (song.discogs === undefined) song.discogs = null;
 				this.song = JSON.parse(JSON.stringify(song));
 				this.newSong = !song._id;
-				this.youtubeId = song.youtubeId;
+				this.mediaSource = song.mediaSource;
 				const formSong = {
 					title: song.title,
 					duration: song.duration,
 					skipDuration: song.skipDuration,
 					thumbnail: song.thumbnail,
-					youtubeId: song.youtubeId,
+					mediaSource: song.mediaSource,
 					verified: song.verified,
 					addArtist: "",
 					artists: song.artists,
@@ -109,9 +110,9 @@ export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 				if (reset) this.form.setValue(formSong, true);
 				else this.form.setOriginalValue(formSong);
 			},
-			resetSong(youtubeId) {
-				if (this.youtubeId === youtubeId) this.youtubeId = "";
-				if (this.song && this.song.youtubeId === youtubeId) {
+			resetSong(mediaSource) {
+				if (this.mediaSource === mediaSource) this.mediaSource = "";
+				if (this.song && this.song.mediaSource === mediaSource) {
 					this.song = {};
 					if (this.form.setValue)
 						this.form.setValue(
@@ -120,7 +121,7 @@ export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 								duration: 0,
 								skipDuration: 0,
 								thumbnail: "",
-								youtubeId: "",
+								mediaSource: "",
 								verified: false,
 								addArtist: "",
 								artists: [],
@@ -150,13 +151,13 @@ export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 				this.video.player.loadVideoById(id, skipDuration);
 			},
 			pauseVideo(status) {
-				if (
-					(this.video.player && this.video.player.pauseVideo) ||
-					this.video.playVideo
-				) {
-					if (status) this.video.player.pauseVideo();
-					else this.video.player.playVideo();
-				}
+				// if (
+				// 	(this.video.player && this.video.player.pauseVideo) ||
+				// 	this.video.playVideo
+				// ) {
+				// 	if (status) this.video.player.pauseVideo();
+				// 	else this.video.player.playVideo();
+				// }
 				this.video.paused = status;
 			},
 			selectDiscogsInfo(discogsInfo) {
@@ -171,7 +172,8 @@ export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 				);
 			},
 			updateYoutubeId(youtubeId) {
-				this.form.setValue({ youtubeId });
+				this.form.setValue({ mediaSource: `youtube:${youtubeId}` });
+				// TODO support spotify
 				this.loadVideoById(youtubeId, 0);
 			},
 			setPlaybackRate(rate) {

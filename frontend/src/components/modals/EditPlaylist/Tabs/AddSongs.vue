@@ -4,6 +4,8 @@ import { storeToRefs } from "pinia";
 import { useSearchYoutube } from "@/composables/useSearchYoutube";
 import { useSearchMusare } from "@/composables/useSearchMusare";
 import { useYoutubeDirect } from "@/composables/useYoutubeDirect";
+import { useSoundcloudDirect } from "@/composables/useSoundcloudDirect";
+import { useSpotifyDirect } from "@/composables/useSpotifyDirect";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";
 
 const SongItem = defineAsyncComponent(
@@ -39,16 +41,26 @@ const {
 } = useSearchMusare();
 
 const { youtubeDirect, addToPlaylist } = useYoutubeDirect();
+const { soundcloudDirect, addToPlaylist: soundcloudAddToPlaylist } =
+	useSoundcloudDirect();
+const { spotifyDirect, addToPlaylist: spotifyAddToPlaylist } =
+	useSpotifyDirect();
 
 watch(
 	() => youtubeSearch.value.songs.results,
 	songs => {
 		songs.forEach((searchItem, index) =>
 			playlist.value.songs.find(song => {
-				if (song.youtubeId === searchItem.id)
+				if (
+					song.mediaSource === "youtube:" &&
+					song.mediaSource.split(":")[1] === searchItem.id
+				)
 					youtubeSearch.value.songs.results[index].isAddedToQueue =
 						true;
-				return song.youtubeId === searchItem.id;
+				return (
+					song.mediaSource === "youtube:" &&
+					song.mediaSource.split(":")[1] === searchItem.id
+				);
 			})
 		);
 	}
@@ -72,20 +84,32 @@ watch(
 		youtubeSearch.value.songs.results.forEach((searchItem, index) =>
 			playlist.value.songs.find(song => {
 				youtubeSearch.value.songs.results[index].isAddedToQueue = false;
-				if (song.youtubeId === searchItem.id)
+				if (
+					song.mediaSource === "youtube:" &&
+					song.mediaSource.split(":")[1] === searchItem.id
+				)
 					youtubeSearch.value.songs.results[index].isAddedToQueue =
 						true;
 
-				return song.youtubeId === searchItem.id;
+				return (
+					song.mediaSource === "youtube:" &&
+					song.mediaSource.split(":")[1] === searchItem.id
+				);
 			})
 		);
 		musareSearch.value.results.forEach((searchItem, index) =>
 			playlist.value.songs.find(song => {
 				musareSearch.value.results[index].isAddedToQueue = false;
-				if (song.youtubeId === searchItem.youtubeId)
+				if (
+					song.mediaSource === "youtube:" &&
+					song.mediaSource.split(":")[1] === searchItem.youtubeId
+				)
 					musareSearch.value.results[index].isAddedToQueue = true;
 
-				return song.youtubeId === searchItem.youtubeId;
+				return (
+					song.mediaSource === "youtube:" &&
+					song.mediaSource.split(":")[1] === searchItem.youtubeId
+				);
 			})
 		);
 	}
@@ -156,7 +180,7 @@ onMounted(async () => {
 								@click="
 									addMusareSongToPlaylist(
 										playlist._id,
-										song.youtubeId,
+										song.mediaSource,
 										index
 									)
 								"
@@ -266,6 +290,46 @@ onMounted(async () => {
 					Load more...
 				</button>
 			</div>
+		</div>
+
+		<label class="label"> Add a SoundCloud song from a URL </label>
+		<div class="control is-grouped input-with-button">
+			<p class="control is-expanded">
+				<input
+					class="input"
+					type="text"
+					placeholder="Enter your SoundCloud song URL here..."
+					v-model="soundcloudDirect"
+					@keyup.enter="soundcloudAddToPlaylist(playlist._id)"
+				/>
+			</p>
+			<p class="control">
+				<a
+					class="button is-info"
+					@click="soundcloudAddToPlaylist(playlist._id)"
+					><i class="material-icons icon-with-button">add</i>Add</a
+				>
+			</p>
+		</div>
+
+		<label class="label"> Add a Spotify song from a URL </label>
+		<div class="control is-grouped input-with-button">
+			<p class="control is-expanded">
+				<input
+					class="input"
+					type="text"
+					placeholder="Enter your Spotify song URL here..."
+					v-model="spotifyDirect"
+					@keyup.enter="spotifyAddToPlaylist(playlist._id)"
+				/>
+			</p>
+			<p class="control">
+				<a
+					class="button is-info"
+					@click="spotifyAddToPlaylist(playlist._id)"
+					><i class="material-icons icon-with-button">add</i>Add</a
+				>
+			</p>
 		</div>
 	</div>
 </template>

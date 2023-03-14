@@ -55,14 +55,28 @@ const playlistSongs = computed({
 	}
 });
 
-const { tab, playlist } = storeToRefs(editPlaylistStore);
-const { setPlaylist, clearPlaylist, addSong, removeSong, repositionedSong } =
-	editPlaylistStore;
+const containsSpotifySongs = computed(
+	() =>
+		playlistSongs.value
+			.map(playlistSong => playlistSong.mediaSource.split(":")[0])
+			.indexOf("spotify") !== -1
+);
 
-const { closeCurrentModal } = useModalsStore();
+const { tab, playlist } = storeToRefs(editPlaylistStore);
+const {
+	setPlaylist,
+	clearPlaylist,
+	addSong,
+	removeSong,
+	replaceSong,
+	repositionedSong
+} = editPlaylistStore;
+
+const { closeCurrentModal, openModal } = useModalsStore();
 
 const showTab = payload => {
-	tabs.value[`${payload}-tab`].scrollIntoView({ block: "nearest" });
+	if (tabs.value[`${payload}-tab`])
+		tabs.value[`${payload}-tab`].scrollIntoView({ block: "nearest" });
 	editPlaylistStore.showTab(payload);
 };
 
@@ -201,11 +215,12 @@ const downloadPlaylist = async () => {
 		.catch(() => new Toast("Failed to export and download playlist."));
 };
 
-const addSongToQueue = youtubeId => {
+const addSongToQueue = mediaSource => {
 	socket.dispatch(
 		"stations.addToQueue",
 		station.value._id,
-		youtubeId,
+		mediaSource,
+		"manual",
 		data => {
 			if (data.status !== "success")
 				new Toast({
@@ -272,7 +287,21 @@ onMounted(() => {
 		res => {
 			if (playlist.value._id === res.data.playlistId) {
 				// remove song from array of playlists
-				removeSong(res.data.youtubeId);
+				removeSong(res.data.mediaSource);
+			}
+		},
+		{ modalUuid: props.modalUuid }
+	);
+
+	socket.on(
+		"event:playlist.song.replaced",
+		res => {
+			if (playlist.value._id === res.data.playlistId) {
+				// replace song
+				replaceSong({
+					song: res.data.song,
+					oldMediaSource: res.data.oldMediaSource
+				});
 			}
 		},
 		{ modalUuid: props.modalUuid }
@@ -364,7 +393,7 @@ onBeforeUnmount(() => {
 							@click="showTab('import-playlists')"
 							v-if="isEditable('playlists.songs.add')"
 						>
-							Import Playlists
+							Import Songs
 						</button>
 					</div>
 					<settings
@@ -404,7 +433,7 @@ onBeforeUnmount(() => {
 						<draggable-list
 							v-if="playlistSongs.length > 0"
 							v-model:list="playlistSongs"
-							item-key="youtubeId"
+							item-key="mediaSource"
 							@start="drag = true"
 							@end="drag = false"
 							@update="repositionSong"
@@ -420,7 +449,7 @@ onBeforeUnmount(() => {
 											(songItems[`song-item-${index}`] =
 												el)
 									"
-									:key="`playlist-song-${element.youtubeId}`"
+									:key="`playlist-song-${element.mediaSource}`"
 								>
 									<template #tippyActions>
 										<i
@@ -439,7 +468,7 @@ onBeforeUnmount(() => {
 											"
 											@click="
 												addSongToQueue(
-													element.youtubeId
+													element.mediaSource
 												)
 											"
 											content="Add Song to Queue"
@@ -456,7 +485,7 @@ onBeforeUnmount(() => {
 											placement="left"
 											@confirm="
 												removeSongFromPlaylist(
-													element.youtubeId
+													element.mediaSource
 												)
 											"
 										>
@@ -518,6 +547,18 @@ onBeforeUnmount(() => {
 				@click="downloadPlaylist()"
 			>
 				Download Playlist
+			</button>
+			<button
+				class="button is-default"
+				v-if="isOwner() && containsSpotifySongs"
+				@click="
+					openModal({
+						modal: 'convertSpotifySongs',
+						props: { playlistId: playlist._id }
+					})
+				"
+			>
+				Convert Spotify Songs
 			</button>
 			<div class="right">
 				<quick-confirm

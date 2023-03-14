@@ -392,10 +392,26 @@ onMounted(() => {
 					if (stationPlaylist.value._id === res.data.playlistId) {
 						// remove song from array of playlists
 						stationPlaylist.value.songs.forEach((song, index) => {
-							if (song.youtubeId === res.data.youtubeId)
+							if (song.mediaSource === res.data.mediaSource)
 								stationPlaylist.value.songs.splice(index, 1);
 						});
 					}
+				},
+				{
+					modalUuid: props.modalUuid
+				}
+			);
+
+			socket.on(
+				"event:playlist.song.replaced",
+				res => {
+					if (stationPlaylist.value._id === res.data.playlistId)
+						stationPlaylist.value.songs =
+							stationPlaylist.value.songs.map(song =>
+								song.mediaSource === res.data.oldMediaSource
+									? res.data.song
+									: song
+							);
 				},
 				{
 					modalUuid: props.modalUuid
@@ -412,7 +428,8 @@ onMounted(() => {
 								(song, index) => {
 									// find song locally
 									if (
-										song.youtubeId === changedSong.youtubeId
+										song.mediaSource ===
+										changedSong.mediaSource
 									) {
 										// change song position attribute
 										stationPlaylist.value.songs[
@@ -592,7 +609,7 @@ onBeforeUnmount(() => {
 					</div>
 					<hr class="section-horizontal-rule" />
 					<song-item
-						v-if="currentSong.youtubeId"
+						v-if="currentSong.mediaSource"
 						:song="currentSong"
 						:requested-by="true"
 						header="Currently Playing.."
@@ -628,10 +645,16 @@ onBeforeUnmount(() => {
 		margin-bottom: 10px;
 	}
 	.currently-playing.song-item {
+		height: 130px;
+
 		.thumbnail {
 			min-width: 130px;
 			width: 130px;
 			height: 130px;
+		}
+
+		.song-info {
+			margin-left: 130px;
 		}
 	}
 }

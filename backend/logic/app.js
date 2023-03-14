@@ -447,6 +447,149 @@ class _AppModule extends CoreClass {
 				});
 			}
 
+			if (config.get("apis.google.enabled")) {
+				const oauth2 = new OAuth2(
+					config.get("apis.google.client"),
+					config.get("apis.google.secret"),
+					"https://accounts.google.com/o/oauth2/v2/auth",
+					"https://accounts.google.com/o/oauth2/v2/token",
+					"1.0",
+					null,
+					"HMAC-SHA1"
+				);
+
+				const redirectUri = `${config.get("apis.google.redirect_uri")}`;
+
+				// http://localhost/backend/auth/google/link
+
+				app.get("/auth/google/link", async (req, res) => {
+					if (this.getStatus() !== "READY") {
+						this.log(
+							"INFO",
+							"APP_REJECTED_GOOGLE_AUTHORIZE",
+							`A user tried to use google authorize, but the APP module is currently not ready.`
+						);
+						return redirectOnErr(res, "Something went wrong on our end. Please try again later.");
+					}
+
+					if (!req.cookies[SIDname]) return redirectOnErr(res, "Not logged in.");
+
+					const session = await CacheModule.runJob("HGET", {
+						table: "sessions",
+						key: req.cookies[SIDname]
+					});
+					if (!session) return redirectOnErr(res, "Not logged in.");
+
+					const user = await userModel.findOne({ _id: session.userId });
+					if (!user) return redirectOnErr(res, "Not logged in.");
+					if (user.services.google && user.services.google.id)
+						return redirectOnErr(res, "You already have a Google account linked");
+
+					const state = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 16 });
+					await CacheModule.runJob("HSET", {
+						table: "oauth_google_state",
+						key: state,
+						value: user._id.toString()
+					});
+
+					const params = [
+						`client_id=${config.get("apis.google.client")}`,
+						`redirect_uri=${config.get("apis.google.redirect_uri")}`,
+						`scope=https://www.googleapis.com/auth/youtube.readonly`,
+						`state=${state}`,
+						`response_type=token`
+					].join("&");
+					return res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
+				});
+
+				app.get("/auth/google/authorize/callback", async (req, res) => {
+					if (this.getStatus() !== "READY") {
+						this.log(
+							"INFO",
+							"APP_REJECTED_GOOGLE_AUTHORIZE",
+							`A user tried to use google authorize, but the APP module is currently not ready.`
+						);
+
+						return redirectOnErr(res, "Something went wrong on our end. Please try again later.");
+					}
+
+					const { code } = req.query;
+					let body;
+					let address;
+
+					// TODO parse the proper response from Google, which uses a #
+
+					return;
+
+					const { state } = req.query;
+					if (!state) return redirectOnErr(res, "No state given.");
+
+					const userId = await CacheModule.runJob("HGET", { table: "oauth_google_state", key: state });
+					if (!userId) return redirectOnErr(res, "Invalid state.");
+
+					const user = await userModel.findOne({ _id: userId });
+					if (!user) return redirectOnErr(res, "Invalid state");
+
+					if (user.services.google && user.services.google.id)
+						return redirectOnErr(res, "Account already has Google account linked.");
+
+					if (req.query.error) return redirectOnErr(res, req.query.error_description);
+
+					const { accessToken, refreshToken, results } = await new Promise((resolve, reject) => {
+						oauth2.getOAuthAccessToken(
+							code,
+							{ redirect_uri: redirectUri },
+							(err, accessToken, refreshToken, results) => {
+								if (err) redirectOnErr(err.message);
+								else {
+									resolve({ accessToken, refreshToken, results });
+								}
+							}
+						);
+					});
+					if (results.error) return redirectOnErr(res, results.error_description);
+
+					const options = {
+						headers: {
+							"User-Agent": "request",
+							Authorization: `token ${accessToken}`
+						}
+					};
+
+					const google = await axios.get("https://www.googleapis.com/oauth2/v1/userinfo", options);
+
+					console.log(321, google);
+
+					return;
+
+					await userModel.updateOne(
+						{ _id: userId },
+						{
+							$set: {
+								"services.google": {
+									id: google.data.id,
+									access_token: accessToken,
+									refresh_token: refreshToken
+								}
+							}
+						},
+						{ runValidators: true }
+					);
+
+					CacheModule.runJob("PUB", {
+						channel: "user.linkGoogle",
+						value: userId
+					});
+
+					CacheModule.runJob("PUB", {
+						channel: "user.updated",
+						value: { userId }
+					});
+
+					res.redirect(`${config.get("domain")}/settings?tab=security`);
+				});
+			}
+
 			app.get("/auth/verify_email", async (req, res) => {
 				if (this.getStatus() !== "READY") {
 					this.log(

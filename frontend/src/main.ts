@@ -231,6 +231,28 @@ const router = createRouter({
 					meta: {
 						permissionRequired: "admin.view.youtubeVideos"
 					}
+				},
+				{
+					path: "youtube/channels",
+					component: () =>
+						import("@/pages/Admin/YouTube/Channels.vue"),
+					meta: {
+						permissionRequired: "admin.view.youtubeVideos"
+					}
+				},
+				{
+					path: "soundcloud",
+					component: () =>
+						import("@/pages/Admin/SoundCloud/index.vue"),
+					meta: { permissionRequired: "admin.view.soundcloud" }
+				},
+				{
+					path: "soundcloud/tracks",
+					component: () =>
+						import("@/pages/Admin/SoundCloud/Tracks.vue"),
+					meta: {
+						permissionRequired: "admin.view.soundcloudTracks"
+					}
 				}
 			],
 			meta: {

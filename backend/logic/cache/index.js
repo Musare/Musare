@@ -114,6 +114,48 @@ class _CacheModule extends CoreClass {
 	}
 
 	/**
+	 * Sets a single value
+	 *
+	 * @param {object} payload - object containing payload
+	 * @param {string} payload.key -  name of the key to set
+	 * @param {*} payload.value - the value we want to set
+	 * @param {number} payload.ttl -  ttl of the key in seconds
+	 * @param {boolean} [payload.stringifyJson=true] - stringify 'value' if it's an Object or Array
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	SET(payload) {
+		return new Promise((resolve, reject) => {
+			let { key, value } = payload;
+			const { ttl } = payload;
+
+			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
+			// automatically stringify objects and arrays into JSON
+			if (["object", "array"].includes(typeof value)) value = JSON.stringify(value);
+
+			let options = null;
+			if (ttl) {
+				options = {
+					EX: ttl
+				};
+			}
+
+			CacheModule.client
+				.SET(key, value, options)
+				.then(() => {
+					let parsed = value;
+					try {
+						parsed = JSON.parse(value);
+					} catch {
+						// Do nothing
+					}
+
+					resolve(parsed);
+				})
+				.catch(err => reject(new Error(err)));
+		});
+	}
+
+	/**
 	 * Sets a single value in a table
 	 *
 	 * @param {object} payload - object containing payload
@@ -134,7 +176,52 @@ class _CacheModule extends CoreClass {
 
 			CacheModule.client
 				.HSET(payload.table, key, value)
-				.then(() => resolve(JSON.parse(value)))
+				.then(() => {
+					let parsed = value;
+					try {
+						parsed = JSON.parse(value);
+					} catch {
+						// Do nothing
+					}
+
+					resolve(parsed);
+				})
+				.catch(err => reject(new Error(err)));
+		});
+	}
+
+	/**
+	 * Gets a single value
+	 *
+	 * @param {object} payload - object containing payload
+	 * @param {string} payload.key - name of the key to fetch
+	 * @param {boolean} [payload.parseJson=true] - attempt to parse returned data as JSON
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	GET(payload) {
+		return new Promise((resolve, reject) => {
+			let { key } = payload;
+
+			if (!key) {
+				reject(new Error("Invalid key!"));
+				return;
+			}
+			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
+
+			CacheModule.client
+				.GET(key, payload.value)
+				.then(value => {
+					if (value && !value.startsWith("{") && !value.startsWith("[")) return resolve(value);
+
+					let parsedValue;
+					try {
+						parsedValue = JSON.parse(value);
+					} catch (err) {
+						return reject(err);
+					}
+
+					return resolve(parsedValue);
+				})
 				.catch(err => reject(new Error(err)));
 		});
 	}

@@ -39,7 +39,8 @@ const keyboardShortcutsHelper = ref();
 const childrenActive = ref({
 	songs: false,
 	users: false,
-	youtube: false
+	youtube: false,
+	soundcloud: false
 });
 
 const toggleChildren = payload => {
@@ -63,6 +64,8 @@ const onRouteChange = () => {
 		toggleChildren({ child: "users", force: false });
 	} else if (currentTab.value.startsWith("youtube")) {
 		toggleChildren({ child: "youtube", force: false });
+	} else if (currentTab.value.startsWith("soundcloud")) {
+		toggleChildren({ child: "soundcloud", force: false });
 	}
 	currentTab.value = getTabFromPath();
 	// if (this.$refs[`${currentTab.value}-tab`])
@@ -77,6 +80,8 @@ const onRouteChange = () => {
 		toggleChildren({ child: "users", force: true });
 	else if (currentTab.value.startsWith("youtube"))
 		toggleChildren({ child: "youtube", force: true });
+	else if (currentTab.value.startsWith("soundcloud"))
+		toggleChildren({ child: "soundcloud", force: true });
 };
 
 const toggleKeyboardShortcutsHelper = () => {
@@ -440,6 +445,17 @@ onBeforeUnmount(() => {
 									>
 										Videos
 									</router-link>
+									<router-link
+										v-if="
+											hasPermission(
+												'admin.view.youtubeVideos'
+											)
+										"
+										class="sidebar-item-child"
+										to="/admin/youtube/channels"
+									>
+										Channels
+									</router-link>
 								</div>
 							</div>
 							<router-link
@@ -464,6 +480,95 @@ onBeforeUnmount(() => {
 							>
 								<i class="material-icons">smart_display</i>
 								<span>YouTube</span>
+							</router-link>
+							<div
+								v-if="
+									(hasPermission('admin.view.soundcloud') ||
+										hasPermission(
+											'admin.view.soundcloudTracks'
+										)) &&
+									sidebarActive
+								"
+								class="sidebar-item with-children"
+								:class="{
+									'is-active': childrenActive.soundcloud
+								}"
+							>
+								<span>
+									<router-link
+										:to="`/admin/soundcloud${
+											hasPermission(
+												'admin.view.soundcloud'
+											)
+												? ''
+												: '/videos'
+										}`"
+									>
+										<i class="material-icons">music_note</i>
+										<span>SoundCloud</span>
+									</router-link>
+									<i
+										class="material-icons toggle-sidebar-children"
+										@click="
+											toggleChildren({
+												child: 'soundcloud'
+											})
+										"
+									>
+										{{
+											childrenActive.soundcloud
+												? "expand_less"
+												: "expand_more"
+										}}
+									</i>
+								</span>
+								<div class="sidebar-item-children">
+									<router-link
+										v-if="
+											hasPermission(
+												'admin.view.soundcloud'
+											)
+										"
+										class="sidebar-item-child"
+										to="/admin/soundcloud"
+									>
+										SoundCloud
+									</router-link>
+									<router-link
+										v-if="
+											hasPermission(
+												'admin.view.soundcloudTracks'
+											)
+										"
+										class="sidebar-item-child"
+										to="/admin/soundcloud/tracks"
+									>
+										Tracks
+									</router-link>
+								</div>
+							</div>
+							<router-link
+								v-else-if="
+									(hasPermission('admin.view.soundcloud') ||
+										hasPermission(
+											'admin.view.soundcloudTracks'
+										)) &&
+									!sidebarActive
+								"
+								class="sidebar-item soundcloud"
+								:to="`/admin/soundcloud${
+									hasPermission('admin.view.soundcloud')
+										? ''
+										: '/tracks'
+								}`"
+								content="SoundCloud"
+								v-tippy="{
+									theme: 'info',
+									onShow: () => !sidebarActive
+								}"
+							>
+								<i class="material-icons">music_note</i>
+								<span>SoundCloud</span>
 							</router-link>
 						</div>
 					</div>

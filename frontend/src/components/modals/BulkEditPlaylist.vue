@@ -15,7 +15,7 @@ const QuickConfirm = defineAsyncComponent(
 
 const props = defineProps({
 	modalUuid: { type: String, required: true },
-	youtubeIds: { type: Array, required: true }
+	mediaSources: { type: Array, required: true }
 });
 
 const { closeCurrentModal } = useModalsStore();
@@ -82,7 +82,7 @@ const addSongsToPlaylist = playlistId => {
 	socket.dispatch(
 		"playlists.addSongsToPlaylist",
 		playlistId,
-		props.youtubeIds,
+		props.mediaSources,
 		{
 			cb: () => {},
 			onProgress: res => {
@@ -110,7 +110,7 @@ const removeSongsFromPlaylist = playlistId => {
 	socket.dispatch(
 		"playlists.removeSongsFromPlaylist",
 		playlistId,
-		props.youtubeIds,
+		props.mediaSources,
 		{
 			cb: data => {
 				console.log("FINISHED", data);

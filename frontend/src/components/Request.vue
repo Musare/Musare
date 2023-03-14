@@ -7,6 +7,7 @@ import { useManageStationStore } from "@/stores/manageStation";
 import { useSearchYoutube } from "@/composables/useSearchYoutube";
 import { useSearchMusare } from "@/composables/useSearchMusare";
 import { useYoutubeDirect } from "@/composables/useYoutubeDirect";
+import { useSoundcloudDirect } from "@/composables/useSoundcloudDirect";
 
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
@@ -27,6 +28,8 @@ const props = defineProps({
 const { youtubeSearch, searchForSongs, loadMoreSongs } = useSearchYoutube();
 const { musareSearch, searchForMusareSongs } = useSearchMusare();
 const { youtubeDirect, addToQueue } = useYoutubeDirect();
+const { soundcloudDirect, addToQueue: soundcloudAddToQueue } =
+	useSoundcloudDirect();
 
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
@@ -82,9 +85,9 @@ const nextPageMusareResultsCount = computed(() =>
 const songsInQueue = computed(() => {
 	if (station.value.currentSong)
 		return songsList.value
-			.map(song => song.youtubeId)
-			.concat(station.value.currentSong.youtubeId);
-	return songsList.value.map(song => song.youtubeId);
+			.map(song => song.mediaSource)
+			.concat(station.value.currentSong.mediaSource);
+	return songsList.value.map(song => song.mediaSource);
 });
 // const currentUserQueueSongs = computed(
 // 	() =>
@@ -92,17 +95,23 @@ const songsInQueue = computed(() => {
 // 			queueSong => queueSong.requestedBy === userId.value
 // 		).length
 // );
+const autorequestPlaylistCount = computed(() => {
+	if (props.sector === "station") return stationStore.autoRequest.length;
+	return 0;
+});
 
 const showTab = _tab => {
-	tabs.value[`${_tab}-tab`].scrollIntoView({ block: "nearest" });
+	const tabElement = tabs.value[`${_tab}-tab`];
+	if (tabElement) tabElement.scrollIntoView({ block: "nearest" });
 	tab.value = _tab;
 };
 
-const addSongToQueue = (youtubeId: string, index?: number) => {
+const addSongToQueue = (mediaSource: string, index?: number) => {
 	socket.dispatch(
 		"stations.addToQueue",
 		station.value._id,
-		youtubeId,
+		mediaSource,
+		"manual",
 		res => {
 			if (res.status !== "success") new Toast(`Error: ${res.message}`);
 			else {
@@ -135,11 +144,23 @@ onMounted(async () => {
 
 <template>
 	<div class="station-playlists">
-		<p class="top-info has-text-centered">
+		<p
+			class="top-info has-text-centered"
+			v-if="
+				tab !== 'songs' ||
+				(station.requests.allowAutorequest && !disableAutoRequest)
+			"
+		>
 			Add songs to the queue or automatically request songs from playlists
 		</p>
 		<div class="tabs-container">
-			<div class="tab-selection">
+			<div
+				class="tab-selection"
+				v-if="
+					tab !== 'songs' ||
+					(station.requests.allowAutorequest && !disableAutoRequest)
+				"
+			>
 				<button
 					class="button is-default"
 					:ref="el => (tabs['songs-tab'] = el)"
@@ -149,16 +170,25 @@ onMounted(async () => {
 					Songs
 				</button>
 				<button
-					v-if="!disableAutoRequest"
+					v-if="
+						station.requests.allowAutorequest && !disableAutoRequest
+					"
 					class="button is-default"
 					:ref="el => (tabs['autorequest-tab'] = el)"
 					:class="{ selected: tab === 'autorequest' }"
 					@click="showTab('autorequest')"
 				>
 					Autorequest
+					<span
+						v-tippy
+						content="You are autorequesting playlists"
+						class="tag has-icon"
+						v-if="autorequestPlaylistCount > 0"
+						><i class="material-icons">play_arrow</i></span
+					>
 				</button>
 				<button
-					v-else
+					v-else-if="station.requests.allowAutorequest"
 					class="button is-default disabled"
 					content="Only available on station pages"
 					v-tippy
@@ -205,7 +235,7 @@ onMounted(async () => {
 									<i
 										v-if="
 											songsInQueue.indexOf(
-												song.youtubeId
+												song.mediaSource
 											) !== -1
 										"
 										class="material-icons added-to-playlist-icon"
@@ -216,7 +246,9 @@ onMounted(async () => {
 									<i
 										v-else
 										class="material-icons add-to-queue-icon"
-										@click="addSongToQueue(song.youtubeId)"
+										@click="
+											addSongToQueue(song.mediaSource)
+										"
 										content="Add Song to Queue"
 										v-tippy
 										>queue</i
@@ -332,6 +364,32 @@ onMounted(async () => {
 						</a>
 					</div>
 				</div>
+
+				<div class="soundcloud-direct">
+					<label class="label">
+						Add a SoundCloud song from a URL
+					</label>
+					<div class="control is-grouped input-with-button">
+						<p class="control is-expanded">
+							<input
+								class="input"
+								type="text"
+								placeholder="Enter your SoundCloud song URL here..."
+								v-model="soundcloudDirect"
+								@keyup.enter="soundcloudAddToQueue(station._id)"
+							/>
+						</p>
+						<p class="control">
+							<a
+								class="button is-info"
+								@click="soundcloudAddToQueue(station._id)"
+								><i class="material-icons icon-with-button"
+									>add</i
+								>Add</a
+							>
+						</p>
+					</div>
+				</div>
 			</div>
 			<playlist-tab-base
 				v-if="!disableAutoRequest"
@@ -365,6 +423,7 @@ onMounted(async () => {
 
 	.tabs-container {
 		.tab-selection {
+			margin-bottom: 10px;
 			display: flex;
 			overflow-x: auto;
 
@@ -390,8 +449,9 @@ onMounted(async () => {
 			}
 		}
 		.tab {
-			padding: 10px 0;
+			padding-bottom: 10px;
 			border-radius: 0;
+
 			.item.item-draggable:not(:last-of-type) {
 				margin-bottom: 10px;
 			}
@@ -401,6 +461,10 @@ onMounted(async () => {
 			}
 		}
 	}
+}
+
+.youtube-direct {
+	margin-top: 10px;
 }
 
 .youtube-search {

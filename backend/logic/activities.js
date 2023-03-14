@@ -43,7 +43,7 @@ class _ActivitiesModule extends CoreClass {
 	 * @param {object} payload.payload - the details of the activity e.g. an array of songs that were added
 	 * @param {string} payload.payload.message - the main message describing the activity e.g. 50 songs added to playlist 'playlist name'
 	 * @param {string} payload.payload.thumbnail - url to a thumbnail e.g. song album art to be used when display an activity
-	 * @param {string} payload.payload.youtubeId - (optional) if relevant, the youtube id of the song related to the activity
+	 * @param {string} payload.payload.mediaSource - (optional) if relevant, the media source of the song related to the activity
 	 * @param {string} payload.payload.reportId - (optional) if relevant, the id of the report related to the activity
 	 * @param {string} payload.payload.playlistId - (optional) if relevant, the id of the playlist related to the activity
 	 * @param {string} payload.payload.stationId - (optional) if relevant, the id of the station related to the activity
@@ -287,11 +287,11 @@ class _ActivitiesModule extends CoreClass {
 	 * Removes any references to a station, playlist or song in activities
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {string} payload.type - type of reference. enum: ["youtubeId", "stationId", "playlistId", "playlistId"]
+	 * @param {string} payload.type - type of reference. enum: ["mediaSource", "stationId", "playlistId", "playlistId"]
 	 * @param {string} payload.stationId - (optional) the id of a station
 	 * @param {string} payload.reportId - (optional) the id of a report
 	 * @param {string} payload.playlistId - (optional) the id of a playlist
-	 * @param {string} payload.youtubeId - (optional) the id of a song
+	 * @param {string} payload.mediaSource - (optional) the id of a song
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async REMOVE_ACTIVITY_REFERENCES(payload) {
@@ -302,7 +302,7 @@ class _ActivitiesModule extends CoreClass {
 				[
 					next => {
 						if (
-							(payload.type !== "youtubeId" &&
+							(payload.type !== "mediaSource" &&
 								payload.type !== "stationId" &&
 								payload.type !== "reportId" &&
 								payload.type !== "playlistId") ||
@@ -333,9 +333,9 @@ class _ActivitiesModule extends CoreClass {
 							(activity, next) => {
 								// remove the reference tags
 
-								if (payload.youtubeId) {
+								if (payload.mediaSource) {
 									activity.payload.message = activity.payload.message.replace(
-										/<youtubeId>(.*)<\/youtubeId>/g,
+										/<mediaSource>(.*)<\/mediaSource>/g,
 										"$1"
 									);
 								}

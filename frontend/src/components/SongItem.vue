@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted, onUnmounted } from "vue";
+import {
+	defineAsyncComponent,
+	ref,
+	computed,
+	onMounted,
+	onUnmounted
+} from "vue";
 import { formatDistance, parseISO } from "date-fns";
 import { storeToRefs } from "pinia";
 import AddToPlaylistDropdown from "./AddToPlaylistDropdown.vue";
@@ -20,6 +26,10 @@ const props = defineProps({
 		default: () => {}
 	},
 	requestedBy: {
+		type: Boolean,
+		default: false
+	},
+	requestedType: {
 		type: Boolean,
 		default: false
 	},
@@ -51,6 +61,25 @@ const { loggedIn } = storeToRefs(userAuthStore);
 const { hasPermission } = userAuthStore;
 
 const { openModal } = useModalsStore();
+
+const songMediaType = computed(() => {
+	if (
+		!props.song ||
+		!props.song.mediaSource ||
+		props.song.mediaSource.indexOf(":") === -1
+	)
+		return "none";
+	return props.song.mediaSource.split(":")[0];
+});
+const songMediaValue = computed(() => {
+	if (
+		!props.song ||
+		!props.song.mediaSource ||
+		props.song.mediaSource.indexOf(":") === -1
+	)
+		return null;
+	return props.song.mediaSource.split(":")[1];
+});
 
 const formatRequestedAt = () => {
 	if (props.requestedBy && props.song.requestedAt)
@@ -131,12 +160,12 @@ onUnmounted(() => {
 <template>
 	<div
 		class="universal-item song-item"
-		:class="{ 'with-duration': duration }"
+		:class="{ 'with-duration': duration, 'with-header': header }"
 		v-if="song"
 	>
 		<div class="thumbnail-and-info">
-			<slot v-if="$slots.leftIcon" name="leftIcon" />
 			<song-thumbnail :song="song" v-if="thumbnail" />
+			<slot v-if="$slots.leftIcon" name="leftIcon" />
 			<div class="song-info">
 				<h6 v-if="header">{{ header }}</h6>
 				<div class="song-title">
@@ -167,18 +196,48 @@ onUnmounted(() => {
 				>
 					{{ formatArtists() }}
 				</h5>
-				<p class="song-request-time" v-if="requestedBy">
+				<p
+					class="song-request-time"
+					v-if="requestedBy && !requestedType"
+				>
 					Requested by
 					<strong>
 						<user-link
 							v-if="song.requestedBy"
-							:key="song.youtubeId"
+							:key="song.mediaSource"
 							:user-id="song.requestedBy"
 						/>
 						<span v-else>station</span>
 						{{ formatedRequestedAt }}
 						ago
 					</strong>
+				</p>
+				<p
+					class="song-request-time"
+					v-if="requestedBy && requestedType"
+				>
+					<template v-if="song.requestedType === 'automatic'">
+						Requested automaticaly
+						<strong>
+							{{ formatedRequestedAt }}
+							ago
+						</strong>
+					</template>
+					<template v-else>
+						<span v-if="song.requestedType === 'autorequest'"
+							>Autorequested</span
+						><span v-else>Requested</span> by
+						<strong>
+							<user-link
+								v-if="song.requestedBy"
+								:key="song.mediaSource"
+								:user-id="song.requestedBy"
+							/>
+							<span v-else>station</span>
+							{{ formatedRequestedAt }}
+							ago
+						</strong>
+					</template>
 				</p>
 			</div>
 		</div>
@@ -210,13 +269,27 @@ onUnmounted(() => {
 					<template #content>
 						<div class="icons-group">
 							<i
-								v-if="disabledActions.indexOf('youtube') === -1"
-								@click="viewYoutubeVideo(song.youtubeId)"
+								v-if="
+									disabledActions.indexOf('youtube') === -1 &&
+									songMediaType === 'youtube'
+								"
+								@click="viewYoutubeVideo(songMediaValue)"
 								content="View YouTube Video"
 								v-tippy
 							>
 								<div class="youtube-icon"></div>
 							</i>
+							<!-- <i
+								v-if="
+									disabledActions.indexOf('youtube') === -1 &&
+									songMediaType === 'spotify'
+								"
+								@click="viewYoutubeVideo(songMediaValue)"
+								content="View Spotify Video"
+								v-tippy
+							>
+								<div class="spotify-icon"></div>
+							</i> -->
 							<i
 								v-if="
 									song._id &&
@@ -311,7 +384,12 @@ onUnmounted(() => {
 }
 
 .song-item {
-	min-height: 70px;
+	height: 70px;
+
+	&.with-header {
+		height: initial;
+		min-height: 70px;
+	}
 
 	&:not(:last-of-type) {
 		margin-bottom: 10px;
@@ -333,21 +411,34 @@ onUnmounted(() => {
 
 	.thumbnail-and-info {
 		min-width: 0;
+
+		min-height: 70px;
+		position: relative;
 	}
 
 	.thumbnail {
 		min-width: 70px;
 		width: 70px;
-		height: 70px;
 		margin: -7.5px;
 		margin-right: calc(20px - 7.5px);
+
+		height: calc(100% + 15px);
+		position: absolute;
+	}
+
+	:deep(.left-icon) {
+		margin-left: 70px;
+	}
+
+	.song-info:not(:nth-child(3)) {
+		margin-left: 70px;
 	}
 
 	.song-info {
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
-		// margin-left: 20px;
+		margin-left: 10px;
 		min-width: 0;
 
 		*:not(i) {

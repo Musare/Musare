@@ -36,6 +36,8 @@ permissions.moderator = {
 	"admin.view.stations": true,
 	"admin.view.users": true,
 	"admin.view.youtubeVideos": true,
+	"admin.view.youtubeChannels": true,
+	"admin.view.soundcloudTracks": true,
 	"apis.searchDiscogs": true,
 	"news.create": true,
 	"news.update": true,
@@ -71,6 +73,8 @@ permissions.admin = {
 	"admin.view.dataRequests": true,
 	"admin.view.statistics": true,
 	"admin.view.youtube": true,
+	"admin.view.soundcloud": true,
+	"admin.view.spotify": true,
 	"dataRequests.resolve": true,
 	"media.recalculateAllRatings": true,
 	"media.removeImportJobs": true,
@@ -136,7 +140,7 @@ export const hasPermission = async (permission, session, stationId) => {
 							if (!station) return next("Station not found.");
 							if (station.type === "community" && station.owner === user._id.toString())
 								return next(null, [user.role, "owner"]);
-							if (station.type === "community" && station.djs.find(dj => dj === user._id.toString()))
+							if (station.djs.find(dj => dj === user._id.toString()))
 								return next(null, [user.role, "dj"]);
 							if (user.role === "admin" || user.role === "moderator") return next(null, [user.role]);
 							return next("Invalid permissions.");
@@ -251,7 +255,7 @@ export const getUserPermissions = async (session, stationId) => {
 							if (!station) return next("Station not found.");
 							if (station.type === "community" && station.owner === user._id.toString())
 								return next(null, [user.role, "owner"]);
-							if (station.type === "community" && station.djs.find(dj => dj === user._id.toString()))
+							if (station.djs.find(dj => dj === user._id.toString()))
 								return next(null, [user.role, "dj"]);
 							if (user.role === "admin" || user.role === "moderator") return next(null, [user.role]);
 							return next("Invalid permissions.");

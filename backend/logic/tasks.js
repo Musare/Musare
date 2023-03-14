@@ -15,6 +15,17 @@ let UtilsModule;
 let WSModule;
 let DBModule;
 
+const stationStateWorth = {
+	unknown: 0,
+	no_song: 1,
+	station_paused: 2,
+	participate: 3,
+	local_paused: 4,
+	muted: 5,
+	buffering: 6,
+	playing: 7
+};
+
 class _TasksModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
@@ -61,6 +72,12 @@ class _TasksModule extends CoreClass {
 				fn: TasksModule.collectStationUsersTask,
 				timeout: 1000 * 3
 			});
+
+			// TasksModule.runJob("CREATE_TASK", {
+			//	name: "historyClearTask",
+			//	fn: TasksModule.historyClearTask,
+			//	timeout: 1000 * 60 * 60 * 6
+			// });
 
 			resolve();
 		});
@@ -397,8 +414,20 @@ class _TasksModule extends CoreClass {
 								(user, next) => {
 									if (!user) return next("User not found.");
 
-									if (usersPerStation[stationId].loggedIn.some(u => user.username === u.username))
+									const state = socket.session.stationState ?? "unknown";
+
+									const existingUserObject = usersPerStation[stationId].loggedIn.findLast(
+										u => user.username === u.username
+									);
+
+									if (existingUserObject) {
+										if (stationStateWorth[state] > stationStateWorth[existingUserObject.state]) {
+											usersPerStation[stationId].loggedIn[
+												usersPerStation[stationId].loggedIn.indexOf(existingUserObject)
+											].state = state;
+										}
 										return next("User already in the list.");
+									}
 
 									usersPerStationCount[stationId] += 1; // increment user count for station
 
@@ -406,7 +435,8 @@ class _TasksModule extends CoreClass {
 										_id: user._id,
 										username: user.username,
 										name: user.name,
-										avatar: user.avatar
+										avatar: user.avatar,
+										state
 									});
 								}
 							],
@@ -465,6 +495,26 @@ class _TasksModule extends CoreClass {
 
 			resolve();
 		});
+	}
+
+	/**
+	 * Periodically removes any old history documents
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async historyClearTask() {
+		TasksModule.log("INFO", "TASK_HISTORY_CLEAR", `Removing old history.`);
+
+		const stationHistoryModel = await DBModule.runJob("GET_MODEL", { modelName: "stationHistory" });
+
+		// Remove documents created more than 2 days ago
+		const mongoQuery = { "payload.skippedAt": { $lt: new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 2) } };
+
+		const count = await stationHistoryModel.count(mongoQuery);
+
+		await stationHistoryModel.remove(mongoQuery);
+
+		TasksModule.log("SUCCESS", "TASK_HISTORY_CLEAR", `Removed ${count} history items`);
 	}
 }
 

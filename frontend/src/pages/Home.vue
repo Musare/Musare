@@ -560,11 +560,7 @@ onBeforeUnmount(() => {
 												>{{ t("Icons.Home") }}</i
 											>
 											<i
-												v-if="
-													element.type ===
-														'community' &&
-													isDj(element)
-												"
+												v-if="isDj(element)"
 												class="djIcon material-icons"
 												:content="t('UserIsDj')"
 												v-tippy="{ theme: 'info' }"
@@ -831,10 +827,7 @@ onBeforeUnmount(() => {
 										>{{ t("Icons.Home") }}</i
 									>
 									<i
-										v-if="
-											station.type === 'community' &&
-											isDj(station)
-										"
+										v-if="isDj(station)"
 										class="djIcon material-icons"
 										:content="t('UserIsDj')"
 										v-tippy="{ theme: 'info' }"

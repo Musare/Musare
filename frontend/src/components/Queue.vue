@@ -2,9 +2,11 @@
 import { defineAsyncComponent, ref, computed, onUpdated } from "vue";
 import Toast from "toasters";
 import { DraggableList } from "vue-draggable-list";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
 import { useManageStationStore } from "@/stores/manageStation";
+import { useUserAuthStore } from "@/stores/userAuth";
 
 const SongItem = defineAsyncComponent(
 	() => import("@/components/SongItem.vue")
@@ -17,6 +19,9 @@ const props = defineProps({
 	modalUuid: { type: String, default: null },
 	sector: { type: String, default: "station" }
 });
+
+const userAuthStore = useUserAuthStore();
+const { loggedIn } = storeToRefs(userAuthStore);
 
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
@@ -58,11 +63,20 @@ const hasPermission = permission =>
 		? manageStationStore.hasPermission(permission)
 		: stationStore.hasPermission(permission);
 
-const removeFromQueue = youtubeId => {
+const canRequest = () =>
+	station.value &&
+	loggedIn.value &&
+	station.value.requests &&
+	station.value.requests.enabled &&
+	(station.value.requests.access === "user" ||
+		(station.value.requests.access === "owner" &&
+			hasPermission("stations.request")));
+
+const removeFromQueue = mediaSource => {
 	socket.dispatch(
 		"stations.removeFromQueue",
 		station.value._id,
-		youtubeId,
+		mediaSource,
 		res => {
 			if (res.status === "success")
 				new Toast("Successfully removed song from the queue.");
@@ -128,73 +142,92 @@ onUpdated(() => {
 			.getElementById("queue")
 			.querySelectorAll(".tab-actionable-button").length > 0;
 });
+
+defineEmits(["onChangeTab"]);
 </script>
 
 <template>
 	<div id="queue">
-		<div
-			v-if="queue.length > 0"
-			:class="{
-				'actionable-button-hidden': !actionableButtonVisible,
-				'scrollable-list': true
-			}"
-		>
-			<draggable-list
-				v-model:list="queue"
-				item-key="youtubeId"
-				@start="drag = true"
-				@end="drag = false"
-				@update="repositionSongInQueue"
-				:disabled="!hasPermission('stations.queue.reposition')"
+		<div class="inner-queue">
+			<div
+				v-if="queue.length > 0"
+				:class="{
+					'actionable-button-hidden': !actionableButtonVisible,
+					'scrollable-list': true
+				}"
 			>
-				<template #item="{ element, index }">
-					<song-item
-						:song="element"
-						:requested-by="true"
-						:disabled-actions="[]"
-						:ref="el => (songItems[`song-item-${index}`] = el)"
-						:key="`queue-song-item-${element.youtubeId}`"
-					>
-						<template
-							v-if="hasPermission('stations.queue.reposition')"
-							#tippyActions
+				<draggable-list
+					v-model:list="queue"
+					item-key="mediaSource"
+					@start="drag = true"
+					@end="drag = false"
+					@update="repositionSongInQueue"
+					:disabled="!hasPermission('stations.queue.reposition')"
+				>
+					<template #item="{ element, index }">
+						<song-item
+							:song="element"
+							:requested-by="true"
+							:requested-type="true"
+							:disabled-actions="[]"
+							:ref="el => (songItems[`song-item-${index}`] = el)"
+							:key="`queue-song-item-${element.mediaSource}`"
 						>
-							<quick-confirm
-								v-if="hasPermission('stations.queue.remove')"
-								placement="left"
-								@confirm="removeFromQueue(element.youtubeId)"
+							<template
+								v-if="
+									hasPermission('stations.queue.reposition')
+								"
+								#tippyActions
 							>
-								<i
-									class="material-icons delete-icon"
-									content="Remove Song from Queue"
-									v-tippy
-									>delete_forever</i
+								<quick-confirm
+									v-if="
+										hasPermission('stations.queue.remove')
+									"
+									placement="left"
+									@confirm="
+										removeFromQueue(element.mediaSource)
+									"
 								>
-							</quick-confirm>
-							<i
-								class="material-icons"
-								v-if="index > 0"
-								@click="moveSongToTop(index)"
-								content="Move to top of Queue"
-								v-tippy
-								>vertical_align_top</i
-							>
-							<i
-								v-if="queue.length - 1 !== index"
-								@click="moveSongToBottom(index)"
-								class="material-icons"
-								content="Move to bottom of Queue"
-								v-tippy
-								>vertical_align_bottom</i
-							>
-						</template>
-					</song-item>
-				</template>
-			</draggable-list>
+									<i
+										class="material-icons delete-icon"
+										content="Remove Song from Queue"
+										v-tippy
+										>delete_forever</i
+									>
+								</quick-confirm>
+								<i
+									class="material-icons"
+									v-if="index > 0"
+									@click="moveSongToTop(index)"
+									content="Move to top of Queue"
+									v-tippy
+									>vertical_align_top</i
+								>
+								<i
+									v-if="queue.length - 1 !== index"
+									@click="moveSongToBottom(index)"
+									class="material-icons"
+									content="Move to bottom of Queue"
+									v-tippy
+									>vertical_align_bottom</i
+								>
+							</template>
+						</song-item>
+					</template>
+				</draggable-list>
+			</div>
+			<p class="nothing-here-text has-text-centered" v-else>
+				There are no songs currently queued
+			</p>
+			<button
+				v-if="canRequest() && sector === 'station'"
+				class="floating button is-primary"
+				@click="$emit('onChangeTab', 'request')"
+			>
+				<i class="material-icons icon-with-button">playlist_play</i>
+				<span>Add song to queue</span>
+			</button>
 		</div>
-		<p class="nothing-here-text has-text-centered" v-else>
-			There are no songs currently queued
-		</p>
 	</div>
 </template>
 
@@ -211,17 +244,41 @@ onUpdated(() => {
 	border-radius: 0 0 @border-radius @border-radius;
 	user-select: none;
 
-	.actionable-button-hidden {
-		max-height: 100%;
-	}
+	.inner-queue {
+		position: relative;
+		height: 100%;
+		width: 100%;
 
-	#queue-locked {
-		display: flex;
-		justify-content: center;
-	}
+		.actionable-button-hidden {
+			max-height: 100%;
+		}
 
-	button.disabled {
-		filter: grayscale(0.4);
+		#queue-locked {
+			display: flex;
+			justify-content: center;
+		}
+
+		button.disabled {
+			filter: grayscale(0.4);
+		}
+
+		> .scrollable-list:last-of-type:not(:last-child) {
+			height: 100%;
+			padding-bottom: 50px;
+		}
+
+		.button.floating {
+			position: sticky;
+			z-index: 10;
+
+			bottom: 8px;
+			right: 8px;
+			left: 8px;
+
+			width: calc(100% - 16px);
+
+			margin-top: 50px;
+		}
 	}
 }
 </style>

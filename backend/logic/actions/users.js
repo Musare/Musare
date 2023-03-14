@@ -394,7 +394,7 @@ export default {
 					if (!playlist) return next();
 
 					playlist.songs.forEach(song =>
-						songsToAdjustRatings.push({ songId: song._id, youtubeId: song.youtubeId })
+						songsToAdjustRatings.push({ songId: song._id, mediaSource: song.mediaSource })
 					);
 
 					return next();
@@ -408,7 +408,7 @@ export default {
 				(playlist, next) => {
 					if (!playlist) return next();
 
-					playlist.songs.forEach(song => songsToAdjustRatings.push({ youtubeId: song.youtubeId }));
+					playlist.songs.forEach(song => songsToAdjustRatings.push({ mediaSource: song.mediaSource }));
 
 					return next();
 				},
@@ -422,9 +422,9 @@ export default {
 					async.each(
 						songsToAdjustRatings,
 						(song, next) => {
-							const { youtubeId } = song;
+							const { mediaSource } = song;
 
-							MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
+							MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource })
 								.then(() => next())
 								.catch(next);
 						},
@@ -625,7 +625,7 @@ export default {
 					if (!playlist) return next();
 
 					playlist.songs.forEach(song =>
-						songsToAdjustRatings.push({ songId: song._id, youtubeId: song.youtubeId })
+						songsToAdjustRatings.push({ songId: song._id, mediaSource: song.mediaSource })
 					);
 
 					return next();
@@ -639,7 +639,7 @@ export default {
 				(playlist, next) => {
 					if (!playlist) return next();
 
-					playlist.songs.forEach(song => songsToAdjustRatings.push({ youtubeId: song.youtubeId }));
+					playlist.songs.forEach(song => songsToAdjustRatings.push({ mediaSource: song.mediaSource }));
 
 					return next();
 				},
@@ -653,9 +653,9 @@ export default {
 					async.each(
 						songsToAdjustRatings,
 						(song, next) => {
-							const { youtubeId } = song;
+							const { mediaSource } = song;
 
-							MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
+							MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource })
 								.then(() => next())
 								.catch(next);
 						},
@@ -870,7 +870,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	async register(session, username, email, password, recaptcha, cb) {
-		email = email.toLowerCase();
+		email = email.toLowerCase().trim();
 		const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 }, this);
 
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
@@ -881,6 +881,24 @@ export default {
 				next => {
 					if (config.get("registrationDisabled") === true)
 						return next("Registration is not allowed at this time.");
+					if (
+						config.has("experimental.registration_email_whitelist") &&
+						config.get("experimental.registration_email_whitelist")
+					) {
+						const experimentalRegistrationEmailWhitelist = config.get(
+							"experimental.registration_email_whitelist"
+						);
+						if (!Array.isArray(experimentalRegistrationEmailWhitelist)) return next();
+
+						let anyPassed = false;
+
+						experimentalRegistrationEmailWhitelist.forEach(regex => {
+							const newRegex = new RegExp(regex);
+							if (newRegex.test(email)) anyPassed = true;
+						});
+
+						if (!anyPassed) next("Your email is not allowed to register.");
+					}
 					return next();
 				},
 

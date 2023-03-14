@@ -512,7 +512,7 @@ export default {
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {object} report - the object of the report data
-	 * @param {string} report.youtubeId - the youtube id of the song that is being reported
+	 * @param {string} report.mediaSource - the media source of the song that is being reported
 	 * @param {Array} report.issues - all issues reported (custom or defined)
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -520,11 +520,11 @@ export default {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 
-		const { youtubeId } = report;
+		const { mediaSource } = report;
 
 		async.waterfall(
 			[
-				next => songModel.findOne({ youtubeId }).exec(next),
+				next => songModel.findOne({ mediaSource }).exec(next),
 
 				(song, next) => {
 					if (!song) return next("Song not found.");
@@ -537,10 +537,10 @@ export default {
 				(song, next) => {
 					if (!song) return next("Song not found.");
 
-					delete report.youtubeId;
+					delete report.mediaSource;
 					report.song = {
 						_id: song._id,
-						youtubeId: song.youtubeId
+						mediaSource: song.mediaSource
 					};
 
 					return next(null, { title: song.title, artists: song.artists, thumbnail: song.thumbnail });
@@ -571,8 +571,8 @@ export default {
 					userId: session.userId,
 					type: "song__report",
 					payload: {
-						message: `Created a <reportId>${report._id}</reportId> for song <youtubeId>${song.title}</youtubeId>`,
-						youtubeId: report.song.youtubeId,
+						message: `Created a <reportId>${report._id}</reportId> for song <mediaSource>${song.title}</mediaSource>`,
+						mediaSource: report.song.mediaSource,
 						reportId: report._id,
 						thumbnail: song.thumbnail
 					}
@@ -583,7 +583,7 @@ export default {
 					value: report
 				});
 
-				this.log("SUCCESS", "REPORTS_CREATE", `User "${session.userId}" created report for "${youtubeId}".`);
+				this.log("SUCCESS", "REPORTS_CREATE", `User "${session.userId}" created report for "${mediaSource}".`);
 
 				return cb({
 					status: "success",

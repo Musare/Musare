@@ -218,29 +218,42 @@ if (hasPermission("media.recalculateAllRatings"))
 		name: "Recalculate all ratings",
 		socket: "media.recalculateAllRatings"
 	});
+jobs.value.push({
+	name: "Get missing YouTube video's",
+	socket: "youtube.getMissingVideos"
+});
+jobs.value.push({
+	name: "Update V1 video's to V2",
+	socket: "youtube.updateVideosV1ToV2"
+});
 
 const { openModal } = useModalsStore();
 
-const editOne = song => {
+const rowToSong = row => ({
+	mediaSource: `youtube:${row.youtubeId}`
+});
+
+const editOne = row => {
 	openModal({
 		modal: "editSong",
-		props: { song }
+		props: { song: rowToSong(row) }
 	});
 };
 
 const editMany = selectedRows => {
-	if (selectedRows.length === 1) editOne(selectedRows[0]);
+	if (selectedRows.length === 1) editOne(rowToSong(selectedRows[0]));
 	else {
-		const songs = selectedRows.map(row => ({
-			youtubeId: row.youtubeId
-		}));
+		const songs = selectedRows.map(rowToSong);
 		openModal({ modal: "editSong", props: { songs } });
 	}
 };
 
 const importAlbum = selectedRows => {
-	const youtubeIds = selectedRows.map(({ youtubeId }) => youtubeId);
-	socket.dispatch("songs.getSongsFromYoutubeIds", youtubeIds, res => {
+	const mediaSources = selectedRows.map(
+		({ youtubeId }) => `youtube:${youtubeId}`
+	);
+	console.log(77988, mediaSources);
+	socket.dispatch("songs.getSongsFromMediaSources", mediaSources, res => {
 		if (res.status === "success") {
 			openModal({
 				modal: "importAlbum",
@@ -254,7 +267,7 @@ const bulkEditPlaylist = selectedRows => {
 	openModal({
 		modal: "bulkEditPlaylist",
 		props: {
-			youtubeIds: selectedRows.map(row => row.youtubeId)
+			mediaSources: selectedRows.map(row => `youtube:${row.youtubeId}`)
 		}
 	});
 };
@@ -312,7 +325,7 @@ const removeVideos = videoIds => {
 							openModal({
 								modal: 'viewYoutubeVideo',
 								props: {
-									videoId: slotProps.item._id
+									videoId: slotProps.item.youtubeId
 								}
 							})
 						"

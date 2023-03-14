@@ -296,45 +296,48 @@ export default {
 	 * At this time only used in bulk EditSong
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {Array} youtubeIds - the song ids
+	 * @param {Array} mediaSources - the song media sources
 	 * @param {Function} cb
 	 */
-	getSongsFromYoutubeIds: useHasPermission("songs.get", function getSongsFromYoutubeIds(session, youtubeIds, cb) {
-		async.waterfall(
-			[
-				next => {
-					SongsModule.runJob(
-						"GET_SONGS",
-						{
-							youtubeIds,
-							properties: [
-								"youtubeId",
-								"title",
-								"artists",
-								"thumbnail",
-								"duration",
-								"verified",
-								"_id",
-								"youtubeVideoId"
-							]
-						},
-						this
-					)
-						.then(response => next(null, response.songs))
-						.catch(err => next(err));
+	getSongsFromMediaSources: useHasPermission(
+		"songs.get",
+		function getSongsFromMediaSources(session, mediaSources, cb) {
+			async.waterfall(
+				[
+					next => {
+						SongsModule.runJob(
+							"GET_SONGS",
+							{
+								mediaSources,
+								properties: [
+									"mediaSource",
+									"title",
+									"artists",
+									"thumbnail",
+									"duration",
+									"verified",
+									"_id",
+									"youtubeVideoId"
+								]
+							},
+							this
+						)
+							.then(response => next(null, response.songs))
+							.catch(err => next(err));
+					}
+				],
+				async (err, songs) => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log("ERROR", "SONGS_GET_SONGS_FROM_MUSARE_IDS", `Failed to get songs. "${err}"`);
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "SONGS_GET_SONGS_FROM_MUSARE_IDS", `Got songs successfully.`);
+					return cb({ status: "success", data: { songs } });
 				}
-			],
-			async (err, songs) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "SONGS_GET_SONGS_FROM_MUSARE_IDS", `Failed to get songs. "${err}"`);
-					return cb({ status: "error", message: err });
-				}
-				this.log("SUCCESS", "SONGS_GET_SONGS_FROM_MUSARE_IDS", `Got songs successfully.`);
-				return cb({ status: "success", data: { songs } });
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Creates a song
@@ -468,8 +471,13 @@ export default {
 				},
 
 				(song, next) => {
-					YouTubeModule.runJob("GET_VIDEO", { identifier: song.youtubeId, createMissing: true }, this)
-						.then(res => next(null, song, res.video))
+					// TODO replace for spotify support
+					YouTubeModule.runJob(
+						"GET_VIDEOS",
+						{ identifiers: [song.mediaSource.split(":")[1]], createMissing: true },
+						this
+					)
+						.then(res => next(null, song, res.videos[0]))
 						.catch(() => next(null, song, false));
 				},
 
@@ -524,7 +532,7 @@ export default {
 													session,
 													namespace: "playlists",
 													action: "removeSongFromPlaylist",
-													args: [song.youtubeId, playlistId]
+													args: [song.mediaSource, playlistId]
 												},
 												this
 											)
@@ -627,7 +635,7 @@ export default {
 							if (!youtubeVideo)
 								StationsModule.runJob(
 									"REMOVE_FROM_QUEUE",
-									{ stationId, youtubeId: song.youtubeId },
+									{ stationId, mediaSource: song.mediaSource },
 									this
 								)
 									.then(() => next())
@@ -656,7 +664,11 @@ export default {
 						1,
 						(stationId, next) => {
 							if (!youtubeVideo)
-								StationsModule.runJob("SKIP_STATION", { stationId, natural: false }, this)
+								StationsModule.runJob(
+									"SKIP_STATION",
+									{ stationId, natural: false, skipReason: "other" },
+									this
+								)
 									.then(() => {
 										next();
 									})

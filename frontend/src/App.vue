@@ -317,6 +317,8 @@ onMounted(async () => {
 	--dark-grey-3: rgb(34, 34, 34);
 	--dark-grey-4: rgb(26, 26, 26);
 	--youtube: rgb(189, 46, 46);
+	--soundcloud: rgb(242, 111, 35);
+	--spotify: rgb(30, 215, 96);
 }
 
 .night-mode {
@@ -866,7 +868,9 @@ img {
 				color: var(--white);
 			}
 
-			.youtube-icon {
+			.youtube-icon,
+			.spotify-icon,
+			.soundcloud-icon {
 				background-color: var(--white);
 			}
 		}
@@ -1336,7 +1340,33 @@ button.delete:focus {
 }
 
 .tag {
-	padding-right: 6px !important;
+	background-color: var(--dark-grey-3);
+	font-family: monospace;
+	font-weight: 700;
+	color: white;
+	border-radius: 18px;
+	text-align: center;
+	padding: 0 4px !important;
+	font-size: 12px;
+	line-height: 18px;
+	min-width: 18px;
+	height: 18px;
+	margin-left: 4px;
+
+	&.has-icon {
+		padding: 0 !important;
+	}
+
+	.material-icons {
+		font-size: 18px;
+	}
+}
+
+.selected {
+	.tag {
+		background-color: var(--light-grey);
+		color: var(--dark-grey);
+	}
 }
 
 #tab-selection,
@@ -1567,8 +1597,16 @@ button.delete:focus {
 			}
 		}
 
-		.input {
+		> .input {
 			margin-right: -1px;
+
+			&:first-child:not(:only-child) {
+				border-radius: @border-radius 0 0 @border-radius;
+			}
+		}
+
+		> div .input {
+			border-right: none;
 
 			&:first-child {
 				border-radius: @border-radius 0 0 @border-radius;
@@ -1761,13 +1799,34 @@ h4.section-title {
 	opacity: 0;
 }
 
+.youtube-icon,
+.spotify-icon,
+.soundcloud-icon {
+	height: 20px;
+	min-height: 20px;
+	max-height: 20px;
+	width: 20px;
+	min-width: 20px;
+	max-width: 20px;
+}
+
 .youtube-icon {
 	margin-right: 3px;
-	height: 20px;
-	width: 20px;
 	-webkit-mask: url("/assets/social/youtube.svg") no-repeat center;
 	mask: url("/assets/social/youtube.svg") no-repeat center;
 	background-color: var(--youtube);
+}
+
+.spotify-icon {
+	-webkit-mask: url("/assets/social/spotify.svg") no-repeat center;
+	mask: url("/assets/social/spotify.svg") no-repeat center;
+	background-color: var(--spotify);
+}
+
+.soundcloud-icon {
+	-webkit-mask: url("/assets/social/soundcloud.svg") no-repeat center;
+	mask: url("/assets/social/soundcloud.svg") no-repeat center;
+	background-color: var(--soundcloud);
 }
 
 #forgot-password {
