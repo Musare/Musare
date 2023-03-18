@@ -296,7 +296,7 @@ onMounted(() => {
 						{
 							height: 298,
 							width: 530,
-							videoId: null,
+							videoId: youtubeId.value,
 							host: "https://www.youtube-nocookie.com",
 							playerVars: {
 								controls: 0,
