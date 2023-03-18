@@ -222,6 +222,16 @@ class _DBModule extends CoreClass {
 						message: "User already has 25 stations."
 					});
 
+					this.schemas.station
+						.path("requests.autorequestLimit")
+						.validate(function validateRequestsAutorequestLimit(autorequestLimit) {
+							const { limit } = this.get("requests");
+
+							if (autorequestLimit > limit) return false;
+
+							return true;
+						}, "Autorequest limit cannot be higher than the request limit.");
+
 					// Song
 					this.schemas.song.path("mediaSource").validate(mediaSource => {
 						if (mediaSource.startsWith("youtube:")) return true;

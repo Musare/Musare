@@ -65,7 +65,14 @@ const { inputs, save, setOriginalValue } = useForm(
 		requestsAccess: station.value.requests.access,
 		requestsLimit: station.value.requests.limit,
 		requestsAllowAutorequest: station.value.requests.allowAutorequest,
-		requestsAutorequestLimit: station.value.requests.autorequestLimit,
+		requestsAutorequestLimit: {
+			value: station.value.requests.autorequestLimit,
+			validate: value => {
+				if (value > station.value.requests.limit)
+					return "The autorequest limit cannot be higher than the request limit.";
+				return true;
+			}
+		},
 		requestsAutorequestDisallowRecentlyPlayedEnabled:
 			station.value.requests.autorequestDisallowRecentlyPlayedEnabled,
 		requestsAutorequestDisallowRecentlyPlayedNumber:
@@ -109,7 +116,6 @@ const { inputs, save, setOriginalValue } = useForm(
 				station.value._id,
 				updatedStation,
 				res => {
-					new Toast(res.message);
 					if (res.status === "success") {
 						editStation(updatedStation);
 						resolve();
@@ -310,7 +316,7 @@ watch(station, value => {
 							class="input"
 							type="number"
 							min="1"
-							max="50"
+							:max="Math.min(50, inputs['requestsLimit'].value)"
 							v-model="inputs['requestsAutorequestLimit'].value"
 						/>
 					</div>

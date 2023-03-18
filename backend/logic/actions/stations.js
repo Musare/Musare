@@ -1395,6 +1395,11 @@ export default {
 						.catch(next);
 				},
 
+				async () => {
+					if (newStation.requests.autorequestLimit > newStation.requests.limit)
+						throw new Error("The autorequest limit cannot be higher than the request limit.");
+				},
+
 				next => {
 					stationModel.findOne({ _id: stationId }, next);
 				},
