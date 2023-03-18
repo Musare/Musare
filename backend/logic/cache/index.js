@@ -176,16 +176,7 @@ class _CacheModule extends CoreClass {
 
 			CacheModule.client
 				.HSET(payload.table, key, value)
-				.then(() => {
-					let parsed = value;
-					try {
-						parsed = JSON.parse(value);
-					} catch {
-						// Do nothing
-					}
-
-					resolve(parsed);
-				})
+				.then(() => resolve(JSON.parse(value)))
 				.catch(err => reject(new Error(err)));
 		});
 	}
