@@ -717,7 +717,15 @@ onBeforeUnmount(() => {
 				"
 				class="button is-primary icon-with-button material-icons"
 				@click.prevent="
-					openModal({ modal: 'editSong', props: { song: video } })
+					openModal({
+						modal: 'editSong',
+						props: {
+							song: {
+								mediaSource: `youtube:${video.youtubeId}`,
+								...video
+							}
+						}
+					})
 				"
 				content="Create/edit song from video"
 				v-tippy
