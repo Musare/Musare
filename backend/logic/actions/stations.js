@@ -1395,9 +1395,10 @@ export default {
 						.catch(next);
 				},
 
-				async () => {
+				next => {
 					if (newStation.requests.autorequestLimit > newStation.requests.limit)
-						throw new Error("The autorequest limit cannot be higher than the request limit.");
+						next("The autorequest limit cannot be higher than the request limit.");
+					else next();
 				},
 
 				next => {
