@@ -1,15 +1,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
+import { useConfigStore } from "@/stores/config";
 
-const siteSettings = ref({
-	logo_blue: "/assets/blue_wordmark.png",
-	sitename: "Musare",
-	footerLinks: {}
-});
+const footerLinks = ref({});
+
+const configStore = useConfigStore();
 
 const filteredFooterLinks = computed(() =>
 	Object.fromEntries(
-		Object.entries(siteSettings.value.footerLinks).filter(
+		Object.entries(footerLinks.value).filter(
 			([title, url]) =>
 				!(
 					["about", "team", "news"].includes(title.toLowerCase()) &&
@@ -20,24 +19,17 @@ const filteredFooterLinks = computed(() =>
 );
 
 const getLink = title =>
-	siteSettings.value.footerLinks[
-		Object.keys(siteSettings.value.footerLinks).find(
-			key => key.toLowerCase() === title
-		)
+	footerLinks.value[
+		Object.keys(footerLinks.value).find(key => key.toLowerCase() === title)
 	];
 
-onMounted(async () => {
-	lofig.get("siteSettings").then(settings => {
-		siteSettings.value = {
-			...settings,
-			footerLinks: {
-				about: true,
-				team: true,
-				news: true,
-				...settings.footerLinks
-			}
-		};
-	});
+onMounted(() => {
+	footerLinks.value = {
+		about: true,
+		team: true,
+		news: true,
+		...configStore.get("footerLinks")
+	};
 });
 </script>
 
@@ -50,11 +42,11 @@ onMounted(async () => {
 				</div>
 				<router-link id="footer-logo" to="/">
 					<img
-						v-if="siteSettings.sitename === 'Musare'"
-						:src="siteSettings.logo_blue"
-						:alt="siteSettings.sitename || `Musare`"
+						v-if="configStore.get('sitename') === 'Musare'"
+						src="/assets/blue_wordmark.png"
+						:alt="configStore.get('sitename')"
 					/>
-					<span v-else>{{ siteSettings.sitename }}</span>
+					<span v-else>{{ configStore.get("sitename") }}</span>
 				</router-link>
 				<div id="footer-links">
 					<a

@@ -10,10 +10,8 @@ RUN npm install --silent
 
 FROM node:18 AS musare_frontend
 
-ARG FRONTEND_MODE=prod
+ARG FRONTEND_MODE=production
 ENV FRONTEND_MODE=${FRONTEND_MODE}
-ENV SUPPRESS_NO_CONFIG_WARNING=1
-ENV NODE_CONFIG_DIR=./dist/config
 
 RUN apt update
 RUN apt install nginx -y
@@ -26,7 +24,7 @@ COPY --from=frontend_node_modules /opt/app/node_modules node_modules
 
 RUN mkdir -p /run/nginx
 
-RUN bash -c '([[ "${FRONTEND_MODE}" == "dev" ]] && exit 0) || npm run prod'
+RUN bash -c '([[ "${FRONTEND_MODE}" == "development" ]] && exit 0) || npm run prod'
 
 RUN chmod u+x entrypoint.sh
 

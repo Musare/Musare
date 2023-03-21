@@ -1,4 +1,3 @@
-import "lofig";
 import SocketHandlerMock from "@/classes/__mocks__/SocketHandler.class";
 
 vi.clearAllMocks();

@@ -42,8 +42,8 @@ class _AppModule extends CoreClass {
 			UtilsModule = this.moduleManager.modules.utils;
 
 			const app = (this.app = express());
-			const SIDname = config.get("cookie.SIDname");
-			this.server = http.createServer(app).listen(config.get("serverPort"));
+			const SIDname = config.get("cookie");
+			this.server = http.createServer(app).listen(config.get("port"));
 
 			app.use(cookieParser());
 
@@ -67,7 +67,11 @@ class _AppModule extends CoreClass {
 			 * @param {string} err - custom error message
 			 */
 			function redirectOnErr(res, err) {
-				res.redirect(`${config.get("domain")}?err=${encodeURIComponent(err)}`);
+				res.redirect(
+					`${config.get("url.secure") ? "https" : "http"}://${config.get(
+						"url.host"
+					)}?err=${encodeURIComponent(err)}`
+				);
 			}
 
 			if (config.get("apis.github.enabled")) {
@@ -222,7 +226,11 @@ class _AppModule extends CoreClass {
 													value: { userId: user._id }
 												});
 
-												res.redirect(`${config.get("domain")}/settings?tab=security`);
+												res.redirect(
+													`${config.get("url.secure") ? "https" : "http"}://${config.get(
+														"url.host"
+													)}/settings?tab=security`
+												);
 											}
 										],
 										next
@@ -428,9 +436,9 @@ class _AppModule extends CoreClass {
 
 									res.cookie(SIDname, sessionId, {
 										expires: date,
-										secure: config.get("cookie.secure"),
+										secure: config.get("url.secure"),
 										path: "/",
-										domain: config.get("cookie.domain")
+										domain: config.get("url.host")
 									});
 
 									this.log(
@@ -439,7 +447,9 @@ class _AppModule extends CoreClass {
 										`User "${userId}" successfully authorized with GitHub.`
 									);
 
-									res.redirect(`${config.get("domain")}/`);
+									res.redirect(
+										`${config.get("url.secure") ? "https" : "http"}://${config.get("url.host")}/`
+									);
 								})
 								.catch(err => redirectOnErr(res, err.message));
 						}
@@ -502,7 +512,11 @@ class _AppModule extends CoreClass {
 
 						this.log("INFO", "VERIFY_EMAIL", `Successfully verified email.`);
 
-						return res.redirect(`${config.get("domain")}?toast=Thank you for verifying your email`);
+						return res.redirect(
+							`${config.get("url.secure") ? "https" : "http"}://${config.get(
+								"url.host"
+							)}?toast=Thank you for verifying your email`
+						);
 					}
 				);
 			});

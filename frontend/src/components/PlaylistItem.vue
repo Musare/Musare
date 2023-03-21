@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, computed, onMounted } from "vue";
+import { defineAsyncComponent, computed } from "vue";
 import utils from "@/utils";
+import { useConfigStore } from "@/stores/config";
 
 const UserLink = defineAsyncComponent(
 	() => import("@/components/UserLink.vue")
@@ -11,7 +12,7 @@ const props = defineProps({
 	showOwner: { type: Boolean, default: false }
 });
 
-const sitename = ref("Musare");
+const configStore = useConfigStore();
 
 const totalLength = playlist => {
 	let length = 0;
@@ -27,10 +28,6 @@ const playlistLength = computed(
 			props.playlist.songs.length === 1 ? "song" : "songs"
 		}`
 );
-
-onMounted(async () => {
-	sitename.value = await lofig.get("siteSettings.sitename");
-});
 </script>
 
 <template>
@@ -53,8 +50,8 @@ onMounted(async () => {
 				<span v-if="showOwner"
 					><a
 						v-if="playlist.createdBy === 'Musare'"
-						:title="sitename"
-						>{{ sitename }}</a
+						:title="configStore.get('sitename')"
+						>{{ configStore.get("sitename") }}</a
 					><user-link v-else :user-id="playlist.createdBy" />
 					•
 				</span>

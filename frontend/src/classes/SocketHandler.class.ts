@@ -1,4 +1,5 @@
 import ListenerHandler from "@/classes/ListenerHandler.class";
+import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import utils from "@/utils";
 
@@ -39,10 +40,8 @@ export default class SocketHandler {
 
 	trigger: (type: string, target: string, data?: any) => void; // Mock only
 
-	constructor(url: string) {
+	constructor() {
 		this.dispatcher = new ListenerHandler();
-
-		this.url = url;
 
 		this.onConnectCbs = {
 			temp: [],
@@ -72,9 +71,10 @@ export default class SocketHandler {
 	}
 
 	init() {
-		this.socket = new WebSocket(this.url);
-
+		const configStore = useConfigStore();
 		const userAuthStore = useUserAuthStore();
+
+		this.socket = new WebSocket(configStore.urls.ws);
 
 		this.socket.onopen = () => {
 			console.log("WS: SOCKET OPENED");
@@ -122,8 +122,10 @@ export default class SocketHandler {
 
 		if (this.firstInit) {
 			this.firstInit = false;
-			this.on("ready", () => {
-				console.log("WS: SOCKET READY");
+			this.on("ready", data => {
+				console.log("WS: SOCKET READY", data);
+
+				configStore.setConfig(data.config);
 
 				this.onConnectCbs.temp.forEach(cb => cb());
 				this.onConnectCbs.persist.forEach(cb => cb());

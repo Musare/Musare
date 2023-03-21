@@ -29,10 +29,6 @@ const { socket } = useWebsocketsStore();
 const { hasPermission } = useUserAuthStore();
 
 const currentTab = ref("");
-const siteSettings = ref({
-	logo: "",
-	sitename: ""
-});
 const sidebarActive = ref(true);
 const sidebarPadding = ref(0);
 const keyboardShortcutsHelper = ref();
@@ -118,8 +114,6 @@ onMounted(async () => {
 	} else {
 		router.push(`/admin/songs`);
 	}
-
-	siteSettings.value = await lofig.get("siteSettings");
 
 	sidebarActive.value = JSON.parse(
 		localStorage.getItem("admin-sidebar-active")

@@ -14,6 +14,7 @@ import { ContentLoader } from "vue-content-loader";
 import canAutoPlay from "can-autoplay";
 import { useSoundcloudPlayer } from "@/composables/useSoundcloudPlayer";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useConfigStore } from "@/stores/config";
 import { useStationStore } from "@/stores/station";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPreferencesStore } from "@/stores/userPreferences";
@@ -52,6 +53,7 @@ const route = useRoute();
 const router = useRouter();
 
 const { socket } = useWebsocketsStore();
+const configStore = useConfigStore();
 const stationStore = useStationStore();
 const userAuthStore = useUserAuthStore();
 const userPreferencesStore = useUserPreferencesStore();
@@ -104,12 +106,9 @@ const beforeMediaModalLocalPausedLock = ref(false);
 const beforeMediaModalLocalPaused = ref(null);
 const persistentToastCheckerInterval = ref(null);
 const persistentToasts = ref([]);
-const christmas = ref(false);
-const sitename = ref("Musare");
 // Experimental options
 const experimentalChangableListenModeEnabled = ref(false);
 const experimentalChangableListenMode = ref("listen_and_participate"); // Can be either listen_and_participate or participate
-const experimentalMediaSession = ref(false);
 // End experimental options
 // NEW
 const videoLoading = ref();
@@ -674,7 +673,9 @@ const youtubeReady = () => {
 					if (isApple.value) {
 						updateLocalPaused(true);
 						new Toast(
-							`Please click play manually to use ${sitename.value} on iOS.`
+							`Please click play manually to use ${configStore.get(
+								"sitename"
+							)} on iOS.`
 						);
 					}
 				},
@@ -847,7 +848,8 @@ const setCurrentSong = data => {
 
 	clearTimeout(window.stationNextSongTimeout);
 
-	if (experimentalMediaSession.value) updateMediaSessionData(_currentSong);
+	if (configStore.get("experimental.media_session"))
+		updateMediaSessionData(_currentSong);
 
 	startedAt.value = _startedAt;
 	updateStationPaused(_paused);
@@ -976,7 +978,7 @@ const changeVolume = () => {
 	changePlayerVolume();
 };
 const resumeLocalPlayer = () => {
-	if (experimentalMediaSession.value)
+	if (configStore.get("experimental.media_session"))
 		updateMediaSessionData(currentSong.value);
 	if (!noSong.value) {
 		playerSeekTo(getTimeElapsed() / 1000 + currentSong.value.skipDuration);
@@ -984,7 +986,7 @@ const resumeLocalPlayer = () => {
 	}
 };
 const pauseLocalPlayer = () => {
-	if (experimentalMediaSession.value)
+	if (configStore.get("experimental.media_session"))
 		updateMediaSessionData(currentSong.value);
 	if (!noSong.value) {
 		timeBeforePause.value = getTimeElapsed();
@@ -1225,7 +1227,7 @@ onMounted(async () => {
 		);
 	}, 1000);
 
-	const experimental = await lofig.get("experimental");
+	const experimental = configStore.get("experimental");
 
 	socket.onConnect(() => {
 		console.debug(TAG, "On socked connect start");
@@ -1778,17 +1780,7 @@ onMounted(async () => {
 		});
 	});
 
-	frontendDevMode.value = await lofig.get("mode");
-	christmas.value = await lofig.get("siteSettings.christmas");
-	sitename.value = await lofig.get("siteSettings.sitename");
-	lofig.get("experimental").then(experimental => {
-		if (
-			experimental &&
-			Object.hasOwn(experimental, "media_session") &&
-			experimental.media_session
-		)
-			experimentalMediaSession.value = true;
-	});
+	frontendDevMode.value = process.env.NODE_ENV;
 
 	ms.setListeners(0, {
 		play: () => {
@@ -1879,7 +1871,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
 	document.getElementsByTagName("html")[0].style.cssText = "";
 
-	if (experimentalMediaSession.value) {
+	if (configStore.get("experimental.media_session")) {
 		ms.removeListeners(0);
 		ms.removeMediaSessionData(0);
 	}
@@ -2235,7 +2227,8 @@ onBeforeUnmount(() => {
 								<div
 									id="seeker-bar"
 									:class="{
-										'christmas-seeker': christmas,
+										'christmas-seeker':
+											configStore.get('christmas'),
 										nyan:
 											currentSong &&
 											currentSong.mediaSource ===
@@ -2324,7 +2317,7 @@ onBeforeUnmount(() => {
 								/>
 								<img
 									v-if="
-										christmas &&
+										configStore.get('christmas') &&
 										currentSong &&
 										![
 											'youtube:QH2-TGUlwu4',

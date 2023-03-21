@@ -11,17 +11,18 @@ import {
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useConfigStore } from "@/stores/config";
 import { useStationStore } from "@/stores/station";
 
 const ProfilePicture = defineAsyncComponent(
 	() => import("@/components/ProfilePicture.vue")
 );
 
+const configStore = useConfigStore();
 const stationStore = useStationStore();
 const route = useRoute();
 
 const notesUri = ref("");
-const frontendDomain = ref("");
 const tab = ref("active");
 const tabs = ref([]);
 const search = reactive({
@@ -64,7 +65,7 @@ const { hasPermission } = stationStore;
 const copyToClipboard = async () => {
 	try {
 		await navigator.clipboard.writeText(
-			frontendDomain.value + route.fullPath
+			configStore.urls.client + route.fullPath
 		);
 	} catch (err) {
 		new Toast("Failed to copy to clipboard.");
@@ -127,9 +128,8 @@ watch(
 	}
 );
 
-onMounted(async () => {
-	frontendDomain.value = await lofig.get("frontendDomain");
-	notesUri.value = encodeURI(`${frontendDomain.value}/assets/notes.png`);
+onMounted(() => {
+	notesUri.value = encodeURI(`${configStore.urls.client}/assets/notes.png`);
 });
 </script>
 

@@ -13,6 +13,7 @@ import { storeToRefs } from "pinia";
 import { DraggableList } from "vue-draggable-list";
 import { useI18n } from "vue-i18n";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
 import keyboardShortcuts from "@/keyboardShortcuts";
@@ -32,6 +33,7 @@ const UserLink = defineAsyncComponent(
 
 const { t } = useI18n();
 
+const configStore = useConfigStore();
 const userAuthStore = useUserAuthStore();
 const route = useRoute();
 const router = useRouter();
@@ -43,11 +45,6 @@ const { socket } = useWebsocketsStore();
 
 const stations = ref([]);
 const searchQuery = ref("");
-const siteSettings = ref({
-	logo_white: "",
-	sitename: "Musare",
-	registrationDisabled: false
-});
 const orderOfFavoriteStations = ref([]);
 const handledLoginRegisterRedirect = ref(false);
 
@@ -168,8 +165,6 @@ watch(
 );
 
 onMounted(async () => {
-	siteSettings.value = await lofig.get("siteSettings");
-
 	if (route.query.searchQuery)
 		searchQuery.value = JSON.stringify(route.query.query);
 
@@ -381,13 +376,13 @@ onBeforeUnmount(() => {
 				<div class="content-container">
 					<div class="content">
 						<img
-							v-if="siteSettings.sitename === 'Musare'"
-							:src="siteSettings.logo_white"
-							:alt="siteSettings.sitename || `Musare`"
+							v-if="configStore.get('sitename') === 'Musare'"
+							src="/assets/white_wordmark.png"
+							:alt="configStore.get('sitename')"
 							class="logo"
 						/>
 						<span v-else class="logo">{{
-							siteSettings.sitename
+							configStore.get("sitename")
 						}}</span>
 						<div v-if="!loggedIn" class="buttons">
 							<button
@@ -397,7 +392,7 @@ onBeforeUnmount(() => {
 								{{ t("Login") }}
 							</button>
 							<button
-								v-if="!siteSettings.registrationDisabled"
+								v-if="!configStore.get('registrationDisabled')"
 								class="button register"
 								@click="openModal('register')"
 							>
@@ -535,10 +530,14 @@ onBeforeUnmount(() => {
 														'official'
 													"
 													:title="
-														siteSettings.sitename
+														configStore.get(
+															'sitename'
+														)
 													"
 													>{{
-														siteSettings.sitename
+														configStore.get(
+															"sitename"
+														)
 													}}</span
 												>
 												<user-link
@@ -806,8 +805,10 @@ onBeforeUnmount(() => {
 									<span class="host">
 										<span
 											v-if="station.type === 'official'"
-											:title="siteSettings.sitename"
-											>{{ siteSettings.sitename }}</span
+											:title="configStore.get('sitename')"
+											>{{
+												configStore.get("sitename")
+											}}</span
 										>
 										<user-link
 											v-else

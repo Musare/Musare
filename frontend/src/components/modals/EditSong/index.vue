@@ -18,6 +18,7 @@ import { useSoundcloudPlayer } from "@/composables/useSoundcloudPlayer";
 import { Song } from "@/types/song.js";
 
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useConfigStore } from "@/stores/config";
 import { useModalsStore } from "@/stores/modals";
 import { useEditSongStore } from "@/stores/editSong";
 import { useStationStore } from "@/stores/station";
@@ -102,7 +103,6 @@ const youtubeErrorMessage = ref("");
 const youtubeVideoDuration = ref("0.000");
 const youtubeVideoCurrentTime = ref<number | string>(0);
 const youtubeVideoNote = ref("");
-const useHTTPS = ref(false);
 const muted = ref(false);
 const volumeSliderValue = ref(0);
 const activityWatchMediaDataInterval = ref(null);
@@ -195,6 +195,8 @@ const currentSongFlagged = computed(
 		)?.flagged
 );
 // EditSongs end
+
+const configStore = useConfigStore();
 
 const {
 	editSong,
@@ -323,10 +325,10 @@ const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 			validate: value => {
 				if (!validation.isLength(value, 8, 256))
 					return "Thumbnail must have between 8 and 256 characters.";
-				if (useHTTPS.value && value.indexOf("https://") !== 0)
+				if (configStore.urls.secure && value.indexOf("https://") !== 0)
 					return 'Thumbnail must start with "https://".';
 				if (
-					!useHTTPS.value &&
+					!configStore.urls.secure &&
 					value.indexOf("https://") !== 0 &&
 					value.indexOf("http://") !== 0
 				)
@@ -1218,8 +1220,6 @@ onMounted(async () => {
 	activityWatchMediaDataInterval.value = setInterval(() => {
 		sendActivityWatchMediaData();
 	}, 1000);
-
-	useHTTPS.value = await lofig.get("cookie.secure");
 
 	socket.onConnect(() => {
 		if (newSong.value && !mediaSource.value && !bulk.value) {

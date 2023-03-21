@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted } from "vue";
+import { defineAsyncComponent, onMounted } from "vue";
 
+import { useConfigStore } from "@/stores/config";
 import { useEditSongStore } from "@/stores/editSong";
 
 import { useSearchMusare } from "@/composables/useSearchMusare";
@@ -14,8 +15,7 @@ const props = defineProps({
 	modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
 });
 
-const sitename = ref("Musare");
-
+const configStore = useConfigStore();
 const { form } = useEditSongStore({ modalUuid: props.modalUuid });
 
 const {
@@ -26,8 +26,6 @@ const {
 } = useSearchMusare();
 
 onMounted(async () => {
-	sitename.value = await lofig.get("siteSettings.sitename");
-
 	musareSearch.value.query = form.inputs.title.value;
 	searchForMusareSongs(1, false);
 });
@@ -35,7 +33,9 @@ onMounted(async () => {
 
 <template>
 	<div class="musare-songs-tab">
-		<label class="label"> Search for a song on {{ sitename }} </label>
+		<label class="label">
+			Search for a song on {{ configStore.get("sitename") }}
+		</label>
 		<div class="control is-grouped input-with-button">
 			<p class="control is-expanded">
 				<input

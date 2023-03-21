@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, watch, reactive, onMounted } from "vue";
+import { defineAsyncComponent, ref, watch, reactive } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
+import { useConfigStore } from "@/stores/config";
 import { useSettingsStore } from "@/stores/settings";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
@@ -14,16 +15,12 @@ const QuickConfirm = defineAsyncComponent(
 	() => import("@/components/QuickConfirm.vue")
 );
 
+const configStore = useConfigStore();
 const settingsStore = useSettingsStore();
 const userAuthStore = useUserAuthStore();
 
 const { socket } = useWebsocketsStore();
 
-const apiDomain = ref("");
-const siteSettings = ref({
-	sitename: "Musare",
-	githubAuthentication: false
-});
 const validation = reactive({
 	oldPassword: {
 		value: "",
@@ -97,11 +94,6 @@ const removeSessions = () => {
 		new Toast(res.message);
 	});
 };
-
-onMounted(async () => {
-	apiDomain.value = await lofig.get("backend.apiDomain");
-	siteSettings.value = await lofig.get("siteSettings");
-});
 
 watch(validation, newValidation => {
 	const { value } = newValidation.newPassword;
@@ -220,15 +212,18 @@ watch(validation, newValidation => {
 			<div class="section-margin-bottom" />
 		</div>
 
-		<div v-if="!isGithubLinked && siteSettings.githubAuthentication">
+		<div v-if="!isGithubLinked && configStore.get('githubAuthentication')">
 			<h4 class="section-title">Link your GitHub account</h4>
 			<p class="section-description">
-				Link your {{ siteSettings.sitename }} account with GitHub
+				Link your {{ configStore.get("sitename") }} account with GitHub
 			</p>
 
 			<hr class="section-horizontal-rule" />
 
-			<a class="button is-github" :href="`${apiDomain}/auth/github/link`">
+			<a
+				class="button is-github"
+				:href="`${configStore.urls.api}/auth/github/link`"
+			>
 				<div class="icon">
 					<img class="invert" src="/assets/social/github.svg" />
 				</div>
@@ -248,7 +243,10 @@ watch(validation, newValidation => {
 
 			<div class="row">
 				<quick-confirm
-					v-if="isPasswordLinked && siteSettings.githubAuthentication"
+					v-if="
+						isPasswordLinked &&
+						configStore.get('githubAuthentication')
+					"
 					@confirm="unlinkPassword()"
 				>
 					<a class="button is-danger">

@@ -4,12 +4,6 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 
-let config;
-const getConfig = async () => {
-	if (!config) config = await import("../../../dist/config/template.json");
-	return config;
-};
-
 export const getWrapper = async (
 	component: any,
 	options?: {
@@ -22,7 +16,6 @@ export const getWrapper = async (
 			stubActions?: boolean;
 		};
 		mockSocket?: boolean | { data?: any; executeDispatch?: boolean };
-		lofig?: any;
 		loginRequired?: boolean;
 		baseTemplate?: string;
 		attachTo?: HTMLElement | null;
@@ -76,15 +69,6 @@ export const getWrapper = async (
 			...components
 		};
 	else opts.global.components = components;
-
-	await getConfig();
-	if (opts.lofig) {
-		lofig.config = {
-			...config,
-			...opts.lofig
-		};
-		delete opts.lofig;
-	} else lofig.config = config;
 
 	if (opts.mockSocket) {
 		const websocketsStore = useWebsocketsStore();

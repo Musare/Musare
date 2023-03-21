@@ -10,6 +10,7 @@ import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useConfigStore } from "@/stores/config";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";
 import { useStationStore } from "@/stores/station";
 import { useUserAuthStore } from "@/stores/userAuth";
@@ -35,6 +36,7 @@ const props = defineProps({
 });
 
 const { socket } = useWebsocketsStore();
+const configStore = useConfigStore();
 const editPlaylistStore = useEditPlaylistStore({ modalUuid: props.modalUuid });
 const stationStore = useStationStore();
 const userAuthStore = useUserAuthStore();
@@ -43,7 +45,6 @@ const { station } = storeToRefs(stationStore);
 const { loggedIn, userId, role: userRole } = storeToRefs(userAuthStore);
 
 const drag = ref(false);
-const apiDomain = ref("");
 const gettingSongs = ref(false);
 const tabs = ref([]);
 const songItems = ref([]);
@@ -188,10 +189,7 @@ const removePlaylist = () => {
 };
 
 const downloadPlaylist = async () => {
-	if (apiDomain.value === "")
-		apiDomain.value = await lofig.get("backend.apiDomain");
-
-	fetch(`${apiDomain.value}/export/playlist/${playlist.value._id}`, {
+	fetch(`${configStore.urls.api}/export/playlist/${playlist.value._id}`, {
 		credentials: "include"
 	})
 		.then(res => res.blob())

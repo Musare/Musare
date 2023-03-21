@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted } from "vue";
+import { defineAsyncComponent } from "vue";
+import { useConfigStore } from "@/stores/config";
 import { useModalsStore } from "@/stores/modals";
 
 const ChristmasLights = defineAsyncComponent(
@@ -12,13 +13,8 @@ defineProps({
 	split: { type: Boolean, default: false }
 });
 
-const christmas = ref(false);
-
+const configStore = useConfigStore();
 const { closeCurrentModal } = useModalsStore();
-
-onMounted(async () => {
-	christmas.value = await lofig.get("siteSettings.christmas");
-});
 </script>
 
 <template>
@@ -42,7 +38,11 @@ onMounted(async () => {
 					>highlight_off</span
 				>
 				<Transition>
-					<christmas-lights v-if="christmas" small :lights="5" />
+					<christmas-lights
+						v-if="configStore.get('christmas')"
+						small
+						:lights="5"
+					/>
 				</Transition>
 			</header>
 			<section class="modal-card-body">

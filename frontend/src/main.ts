@@ -4,9 +4,9 @@ import { createApp } from "vue";
 import VueTippy, { Tippy } from "vue-tippy";
 import { createRouter, createWebHistory } from "vue-router";
 import { createPinia } from "pinia";
-import "lofig";
 import Toast from "toasters";
 
+import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useModalsStore } from "@/stores/modals";
@@ -16,23 +16,9 @@ import i18n from "@/i18n";
 
 import AppComponent from "./App.vue";
 
-const defaultConfigURL = new URL(
-	"/config/default.json",
-	import.meta.url
-).toString();
-
-const REQUIRED_CONFIG_VERSION = 13;
-
-lofig.folder = defaultConfigURL;
-
 const handleMetadata = attrs => {
-	lofig.get("siteSettings.sitename").then(siteName => {
-		if (siteName) {
-			document.title = `${siteName} | ${attrs.title}`;
-		} else {
-			document.title = `Musare | ${attrs.title}`;
-		}
-	});
+	const configStore = useConfigStore();
+	document.title = `${configStore.get("sitename")} | ${attrs.title}`;
 };
 
 const app = createApp(AppComponent);
@@ -271,6 +257,7 @@ app.use(createPinia());
 
 const { createSocket } = useWebsocketsStore();
 createSocket().then(async socket => {
+	const configStore = useConfigStore();
 	const userAuthStore = useUserAuthStore();
 	const modalsStore = useModalsStore();
 
@@ -350,22 +337,8 @@ createSocket().then(async socket => {
 
 	app.use(router);
 
-	lofig.fetchConfig().then(config => {
-		const { configVersion, skipConfigVersionCheck } = config;
-		if (
-			configVersion !== REQUIRED_CONFIG_VERSION &&
-			!skipConfigVersionCheck
-		) {
-			// eslint-disable-next-line no-alert
-			alert(
-				"CONFIG VERSION IS WRONG. PLEASE UPDATE YOUR CONFIG WITH THE HELP OF THE TEMPLATE FILE AND THE README FILE."
-			);
-			window.stop();
-		}
-	});
-
 	socket.on("ready", res => {
-		const { loggedIn, role, username, userId, email } = res.data;
+		const { loggedIn, role, username, userId, email } = res.user;
 
 		userAuthStore.authData({
 			loggedIn,
@@ -430,14 +403,7 @@ createSocket().then(async socket => {
 		});
 	});
 
-	lofig.get("experimental").then(experimental => {
-		if (
-			experimental &&
-			Object.hasOwn(experimental, "media_session") &&
-			experimental.media_session
-		)
-			ms.init();
-	});
+	if (configStore.get("experimental.media_session")) ms.init();
 
 	app.mount("#root");
 });

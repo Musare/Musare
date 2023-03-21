@@ -2,7 +2,6 @@ import path from "path";
 import vue from "@vitejs/plugin-vue";
 import dynamicImport from "vite-plugin-dynamic-import";
 import VueI18nPlugin from "@intlify/unplugin-vue-i18n/vite";
-import config from "config";
 import fs from "fs";
 
 const fetchVersionAndGitInfo = () => {
@@ -23,7 +22,7 @@ const fetchVersionAndGitInfo = () => {
 		);
 
 		console.log(`Musare version: ${packageJson.version}.`);
-		if (config.has("debug.version") && config.get("debug.version"))
+		if (process.env.MUSARE_DEBUG_VERSION)
 			debug.version = packageJson.version;
 	} catch (e) {
 		console.log(`Could not get package info: ${e.message}.`);
@@ -78,13 +77,13 @@ const fetchVersionAndGitInfo = () => {
 			console.log(
 				`Git branch: ${remote}/${branch}. Remote url: ${remoteUrl}. Latest commit: ${latestCommit} (${latestCommitShort}).`
 			);
-			if (config.get("debug.git.remote")) debug.git.remote = remote;
-			if (config.get("debug.git.remoteUrl"))
+			if (process.env.MUSARE_DEBUG_GIT_REMOTE) debug.git.remote = remote;
+			if (process.env.MUSARE_DEBUG_GIT_REMOTE_URL)
 				debug.git.remoteUrl = remoteUrl;
-			if (config.get("debug.git.branch")) debug.git.branch = branch;
-			if (config.get("debug.git.latestCommit"))
+			if (process.env.MUSARE_DEBUG_GIT_BRANCH) debug.git.branch = branch;
+			if (process.env.MUSARE_DEBUG_GIT_LATEST_COMMIT)
 				debug.git.latestCommit = latestCommit;
-			if (config.get("debug.git.latestCommitShort"))
+			if (process.env.MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT)
 				debug.git.latestCommitShort = latestCommitShort;
 		}
 	} catch (e) {
@@ -96,16 +95,15 @@ const fetchVersionAndGitInfo = () => {
 
 const debug = fetchVersionAndGitInfo();
 
-const siteName = config.has("siteSettings.sitename")
-	? config.get("siteSettings.sitename")
-	: "Musare";
-
 const htmlPlugin = () => ({
 	name: "html-transform",
 	transformIndexHtml(originalHtml) {
 		let html = originalHtml;
 
-		html = html.replace(/{{ title }}/g, siteName);
+		html = html.replace(
+			/{{ title }}/g,
+			process.env.MUSARE_SITENAME ?? "Musare"
+		);
 		html = html.replace(/{{ version }}/g, debug.version);
 		html = html.replace(/{{ gitRemote }}/g, debug.git.remote);
 		html = html.replace(/{{ gitRemoteUrl }}/g, debug.git.remoteUrl);
@@ -120,24 +118,20 @@ const htmlPlugin = () => ({
 	}
 });
 
-const mode = process.env.FRONTEND_MODE || "dev";
-
 let server = null;
 
-if (mode === "dev")
+if (process.env.FRONTEND_MODE === "development")
 	server = {
 		host: "0.0.0.0",
-		port: config.has("devServer.port") ? config.get("devServer.port") : 81,
+		port: process.env.FRONTEND_DEV_PORT ?? 81,
 		strictPort: true,
 		hmr: {
-			clientPort: config.has("devServer.hmrClientPort")
-				? config.get("devServer.hmrClientPort")
-				: 80
+			clientPort: process.env.FRONTEND_CLIENT_PORT ?? 80
 		}
 	};
 
 export default {
-	mode: mode === "dev" ? "development" : "production",
+	mode: process.env.FRONTEND_MODE,
 	root: "src",
 	publicDir: "../dist",
 	base: "/",
@@ -164,7 +158,7 @@ export default {
 		]
 	},
 	define: {
-		__VUE_PROD_DEVTOOLS__: config.get("mode") === "development",
+		__VUE_PROD_DEVTOOLS__: !!process.env.FRONTEND_PROD_DEVTOOLS,
 		MUSARE_VERSION: JSON.stringify(debug.version),
 		MUSARE_GIT_REMOTE: JSON.stringify(debug.git.remote),
 		MUSARE_GIT_REMOTE_URL: JSON.stringify(debug.git.remoteUrl),

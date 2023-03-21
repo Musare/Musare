@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
+import { useConfigStore } from "@/stores/config";
 
 const props = defineProps({
 	avatar: {
@@ -25,9 +26,10 @@ const initials = computed(() =>
 		.toUpperCase()
 );
 
+const configStore = useConfigStore();
+
 onMounted(async () => {
-	const frontendDomain = await lofig.get("frontendDomain");
-	notes.value = encodeURI(`${frontendDomain}/assets/notes.png`);
+	notes.value = encodeURI(`${configStore.urls.client}/assets/notes.png`);
 });
 </script>
 

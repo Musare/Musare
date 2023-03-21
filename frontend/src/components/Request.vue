@@ -2,6 +2,7 @@
 import { defineAsyncComponent, ref, computed, onMounted, watch } from "vue";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useConfigStore } from "@/stores/config";
 import { useStationStore } from "@/stores/station";
 import { useManageStationStore } from "@/stores/manageStation";
 import { useSearchYoutube } from "@/composables/useSearchYoutube";
@@ -32,15 +33,14 @@ const { soundcloudDirect, addToQueue: soundcloudAddToQueue } =
 	useSoundcloudDirect();
 
 const { socket } = useWebsocketsStore();
+const configStore = useConfigStore();
 const stationStore = useStationStore();
 const manageStationStore = useManageStationStore({
 	modalUuid: props.modalUuid
 });
 
 const tab = ref("songs");
-const sitename = ref("Musare");
 const tabs = ref({});
-const experimentalDisableYoutubeSearch = ref(false);
 
 const station = computed({
 	get() {
@@ -133,18 +133,6 @@ watch(
 );
 
 onMounted(async () => {
-	sitename.value = await lofig.get("siteSettings.sitename");
-
-	lofig.get("experimental").then(experimental => {
-		if (
-			experimental &&
-			Object.hasOwn(experimental, "disable_youtube_search") &&
-			experimental.disable_youtube_search
-		) {
-			experimentalDisableYoutubeSearch.value = true;
-		}
-	});
-
 	showTab("songs");
 });
 </script>
@@ -206,7 +194,7 @@ onMounted(async () => {
 			<div class="tab" v-show="tab === 'songs'">
 				<div class="musare-songs">
 					<label class="label">
-						Search for a song on {{ sitename }}
+						Search for a song on {{ configStore.get("sitename") }}
 					</label>
 					<div class="control is-grouped input-with-button">
 						<p class="control is-expanded">
@@ -299,7 +287,9 @@ onMounted(async () => {
 
 				<div
 					class="youtube-search"
-					v-if="!experimentalDisableYoutubeSearch"
+					v-if="
+						!configStore.get('experimental.disable_youtube_search')
+					"
 				>
 					<label class="label"> Search for a song on YouTube </label>
 					<div class="control is-grouped input-with-button">

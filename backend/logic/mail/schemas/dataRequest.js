@@ -22,9 +22,10 @@ export default (to, userId, type, cb) => {
 				User ${userId} has requested to ${type} the data for their account on Musare.
 				<br>
 				<br>
-				This request can be viewed and resolved in the <a href="${config.get(
-					"domain"
-				)}/admin/users">Users tab of the admin page</a>. Note: All admins will be sent the same message.
+				This request can be viewed and resolved in the
+				<a href="${config.get("url.secure") ? "https" : "http"}://${config.get(
+			"url.host"
+		)}/admin/users">Users tab of the admin page</a>. Note: All admins will be sent the same message.
 			`
 	};
 

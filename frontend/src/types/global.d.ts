@@ -2,11 +2,6 @@
 /* eslint vars-on-top: 0 */
 
 declare global {
-	var lofig: {
-		config: object;
-		fetchConfig: () => Promise<any>;
-		get: (setting: string) => any;
-	};
 	var stationInterval: number;
 	var YT: any;
 	var stationNextSongTimeout: any;

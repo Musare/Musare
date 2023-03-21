@@ -266,7 +266,7 @@ class _DBModule extends CoreClass {
 
 					const songThumbnail = thumbnail => {
 						if (!isLength(thumbnail, 1, 256)) return false;
-						if (config.get("cookie.secure") === true) return thumbnail.startsWith("https://");
+						if (config.get("url.secure") === true) return thumbnail.startsWith("https://");
 						return thumbnail.startsWith("http://") || thumbnail.startsWith("https://");
 					};
 					this.schemas.song.path("thumbnail").validate(songThumbnail, "Invalid thumbnail.");

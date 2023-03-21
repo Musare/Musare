@@ -44,7 +44,7 @@ class _WSModule extends CoreClass {
 
 		this.setStage(2);
 
-		this.SIDname = config.get("cookie.SIDname");
+		this.SIDname = config.get("cookie");
 
 		// TODO: Check every 30s/, for all sockets, if they are still allowed to be in the rooms they are in, and on socket at all (permission changing/banning)
 		const server = await AppModule.runJob("SERVER");
@@ -586,6 +586,29 @@ class _WSModule extends CoreClass {
 				console.error("SOCKET ERROR: ", error);
 			};
 
+			const readyData = {
+				config: {
+					cookie: config.get("cookie"),
+					sitename: config.get("sitename"),
+					recaptcha: {
+						enabled: config.get("apis.recaptcha.enabled"),
+						key: config.get("apis.recaptcha.key")
+					},
+					githubAuthentication: config.get("apis.github.enabled"),
+					messages: config.get("messages"),
+					christmas: config.get("christmas"),
+					footerLinks: config.get("footerLinks"),
+					shortcutOverrides: config.get("shortcutOverrides"),
+					registrationDisabled: config.get("registrationDisabled"),
+					experimental: {
+						changable_listen_mode: config.get("experimental.changable_listen_mode"),
+						media_session: config.get("experimental.media_session"),
+						disable_youtube_search: config.get("experimental.disable_youtube_search")
+					}
+				},
+				user: { loggedIn: false }
+			};
+
 			if (socket.session.sessionId) {
 				CacheModule.runJob("HGET", {
 					table: "sessions",
@@ -594,28 +617,24 @@ class _WSModule extends CoreClass {
 					.then(session => {
 						if (session && session.userId) {
 							WSModule.userModel.findOne({ _id: session.userId }, (err, user) => {
-								if (err || !user) return socket.dispatch("ready", { data: { loggedIn: false } });
-
-								let role = "";
-								let username = "";
-								let userId = "";
-								let email = "";
+								if (err || !user) return socket.dispatch("ready", readyData);
 
 								if (user) {
-									role = user.role;
-									username = user.username;
-									email = user.email.address;
-									userId = session.userId;
+									readyData.user = {
+										loggedIn: true,
+										role: user.role,
+										username: user.username,
+										email: user.email.address,
+										userId: session.userId
+									};
 								}
 
-								return socket.dispatch("ready", {
-									data: { loggedIn: true, role, username, userId, email }
-								});
+								return socket.dispatch("ready", readyData);
 							});
-						} else socket.dispatch("ready", { data: { loggedIn: false } });
+						} else socket.dispatch("ready", readyData);
 					})
-					.catch(() => socket.dispatch("ready", { data: { loggedIn: false } }));
-			} else socket.dispatch("ready", { data: { loggedIn: false } });
+					.catch(() => socket.dispatch("ready", readyData));
+			} else socket.dispatch("ready", readyData);
 
 			socket.onmessage = message => {
 				const data = JSON.parse(message.data);

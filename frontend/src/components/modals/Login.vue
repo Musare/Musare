@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted } from "vue";
+import { defineAsyncComponent, ref } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
+import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
 
@@ -14,13 +15,9 @@ const password = ref({
 	value: "",
 	visible: false
 });
-const apiDomain = ref("");
-const siteSettings = ref({
-	registrationDisabled: false,
-	githubAuthentication: false
-});
 const passwordElement = ref();
 
+const configStore = useConfigStore();
 const { login } = useUserAuthStore();
 
 const { openModal, closeCurrentModal } = useModalsStore();
@@ -65,11 +62,6 @@ const changeToRegisterModal = () => {
 const githubRedirect = () => {
 	localStorage.setItem("github_redirect", route.path);
 };
-
-onMounted(async () => {
-	apiDomain.value = await lofig.get("backend.apiDomain");
-	siteSettings.value = await lofig.get("siteSettings");
-});
 </script>
 
 <template>
@@ -149,9 +141,9 @@ onMounted(async () => {
 						Login
 					</button>
 					<a
-						v-if="siteSettings.githubAuthentication"
+						v-if="configStore.get('githubAuthentication')"
 						class="button is-github"
-						:href="apiDomain + '/auth/github/authorize'"
+						:href="configStore.urls.api + '/auth/github/authorize'"
 						@click="githubRedirect()"
 					>
 						<div class="icon">
@@ -165,7 +157,7 @@ onMounted(async () => {
 				</div>
 
 				<p
-					v-if="!siteSettings.registrationDisabled"
+					v-if="!configStore.get('registrationDisabled')"
 					class="content-box-optional-helper"
 				>
 					<a @click="changeToRegisterModal()">

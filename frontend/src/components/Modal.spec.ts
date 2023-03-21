@@ -1,6 +1,7 @@
 import { flushPromises } from "@vue/test-utils";
 import { h } from "vue";
 import { getWrapper } from "@/tests/utils/utils";
+import { useConfigStore } from "@/stores/config";
 import { useModalsStore } from "@/stores/modals";
 import Modal from "@/components/Modal.vue";
 
@@ -32,9 +33,10 @@ describe("Modal component", () => {
 	});
 
 	test("christmas lights render if enabled", async () => {
+		const configStore = useConfigStore();
+		configStore.config.christmas = true;
 		const wrapper = await getWrapper(Modal, {
-			shallow: true,
-			lofig: { siteSettings: { christmas: true } }
+			shallow: true
 		});
 		expect(
 			wrapper.findComponent({ name: "ChristmasLights" }).exists()

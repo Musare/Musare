@@ -642,7 +642,7 @@ onBeforeUnmount(() => {
 .manage-station-modal.modal .modal-card {
 	.tab > button {
 		width: 100%;
-		margin-bottom: 10px;
+		margin-top: 10px;
 	}
 	.currently-playing.song-item {
 		height: 130px;

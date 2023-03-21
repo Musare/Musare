@@ -6,7 +6,7 @@ import fs from "fs";
 
 import package_json from "./package.json" assert { type: "json" };
 
-const REQUIRED_CONFIG_VERSION = 11;
+const REQUIRED_CONFIG_VERSION = 12;
 
 // eslint-disable-next-line
 Array.prototype.remove = function (item) {

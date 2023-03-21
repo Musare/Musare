@@ -2,6 +2,7 @@
 import { defineAsyncComponent, ref, watch, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
+import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
 import validation from "@/validation";
@@ -33,20 +34,12 @@ const password = ref({
 	message:
 		"Include at least one lowercase letter, one uppercase letter, one number and one special character."
 });
-const recaptcha = ref({
-	key: "",
-	token: "",
-	enabled: false
-});
-const apiDomain = ref("");
-const siteSettings = ref({
-	registrationDisabled: false,
-	githubAuthentication: false
-});
+const recaptchaToken = ref("");
 const passwordElement = ref();
 
 const { register } = useUserAuthStore();
 
+const configStore = useConfigStore();
 const { openModal, closeCurrentModal } = useModalsStore();
 
 const submitModal = () => {
@@ -57,7 +50,7 @@ const submitModal = () => {
 		username: username.value.value,
 		email: email.value.value,
 		password: password.value.value,
-		recaptchaToken: recaptcha.value.token
+		recaptchaToken: recaptchaToken.value
 	})
 		.then((res: any) => {
 			if (res.status === "success") window.location.reload();
@@ -146,39 +139,31 @@ watch(
 );
 
 onMounted(async () => {
-	apiDomain.value = await lofig.get("backend.apiDomain");
-	lofig.get("siteSettings").then(settings => {
-		if (settings.registrationDisabled) {
-			new Toast("Registration is disabled.");
-			closeCurrentModal();
-		} else {
-			siteSettings.value = settings;
-		}
-	});
+	if (configStore.get("registrationDisabled")) {
+		new Toast("Registration is disabled.");
+		closeCurrentModal();
+	}
 
-	lofig.get("recaptcha").then(obj => {
-		recaptcha.value.enabled = obj.enabled;
-		if (obj.enabled === true) {
-			recaptcha.value.key = obj.key;
+	if (configStore.get("recaptcha.enabled")) {
+		const recaptchaScript = document.createElement("script");
+		recaptchaScript.onload = () => {
+			grecaptcha.ready(() => {
+				grecaptcha
+					.execute(configStore.get("recaptcha.key"), {
+						action: "login"
+					})
+					.then(token => {
+						recaptchaToken.value = token;
+					});
+			});
+		};
 
-			const recaptchaScript = document.createElement("script");
-			recaptchaScript.onload = () => {
-				grecaptcha.ready(() => {
-					grecaptcha
-						.execute(recaptcha.value.key, { action: "login" })
-						.then(token => {
-							recaptcha.value.token = token;
-						});
-				});
-			};
-
-			recaptchaScript.setAttribute(
-				"src",
-				`https://www.google.com/recaptcha/api.js?render=${recaptcha.value.key}`
-			);
-			document.head.appendChild(recaptchaScript);
-		}
-	});
+		recaptchaScript.setAttribute(
+			"src",
+			`https://www.google.com/recaptcha/api.js?render=${recaptcha.value.key}`
+		);
+		document.head.appendChild(recaptchaScript);
+	}
 });
 </script>
 
@@ -282,9 +267,9 @@ onMounted(async () => {
 						Register
 					</button>
 					<a
-						v-if="siteSettings.githubAuthentication"
+						v-if="configStore.get('githubAuthentication')"
 						class="button is-github"
-						:href="apiDomain + '/auth/github/authorize'"
+						:href="configStore.urls.api + '/auth/github/authorize'"
 						@click="githubRedirect()"
 					>
 						<div class="icon">

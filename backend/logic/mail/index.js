@@ -32,16 +32,16 @@ class _MailModule extends CoreClass {
 			dataRequest: await importSchema("dataRequest")
 		};
 
-		this.enabled = config.get("smtp.enabled");
+		this.enabled = config.get("mail.smtp.enabled");
 
 		if (this.enabled)
 			this.transporter = nodemailer.createTransport({
-				host: config.get("smtp.host"),
-				port: config.get("smtp.port"),
-				secure: config.get("smtp.secure"),
+				host: config.get("mail.smtp.host"),
+				port: config.get("mail.smtp.port"),
+				secure: config.get("mail.smtp.secure"),
 				auth: {
-					user: config.get("smtp.auth.user"),
-					pass: config.get("smtp.auth.pass")
+					user: config.get("mail.smtp.auth.user"),
+					pass: config.get("mail.smtp.auth.pass")
 				}
 			});
 

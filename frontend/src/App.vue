@@ -7,6 +7,7 @@ import { GenericResponse } from "@musare_types/actions/GenericActions";
 import { GetPreferencesResponse } from "@musare_types/actions/UsersActions";
 import { NewestResponse } from "@musare_types/actions/NewsActions";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useModalsStore } from "@/stores/modals";
@@ -27,11 +28,11 @@ const FallingSnow = defineAsyncComponent(
 const router = useRouter();
 
 const { socket } = useWebsocketsStore();
+const configStore = useConfigStore();
 const userAuthStore = useUserAuthStore();
 const userPreferencesStore = useUserPreferencesStore();
 const modalsStore = useModalsStore();
 
-const apiDomain = ref("");
 const socketConnected = ref(true);
 const keyIsDown = ref("");
 const broadcastChannel = ref({
@@ -102,64 +103,6 @@ onMounted(async () => {
 			if (e.matches === !nightmode.value) changeNightmode(true);
 		});
 
-	if (!loggedIn.value) {
-		lofig.get("cookie.SIDname").then(sid => {
-			broadcastChannel.value.user_login = new BroadcastChannel(
-				`${sid}.user_login`
-			);
-			broadcastChannel.value.user_login.onmessage = res => {
-				if (res.data) {
-					broadcastChannel.value.user_login.close();
-					window.location.reload();
-				}
-			};
-
-			broadcastChannel.value.nightmode = new BroadcastChannel(
-				`${sid}.nightmode`
-			);
-			broadcastChannel.value.nightmode.onmessage = res => {
-				changeNightmode(!!res.data);
-			};
-		});
-	}
-
-	document.onkeydown = (ev: KeyboardEvent) => {
-		const event = ev || window.event;
-		const { keyCode } = event;
-		const shift = event.shiftKey;
-		const ctrl = event.ctrlKey;
-		const alt = event.altKey;
-
-		const identifier = `${keyCode}.${shift}.${ctrl}`;
-
-		if (keyIsDown.value === identifier) return;
-		keyIsDown.value = identifier;
-
-		keyboardShortcuts.handleKeyDown(event, keyCode, shift, ctrl, alt);
-	};
-
-	document.onkeyup = () => {
-		keyIsDown.value = "";
-	};
-
-	// ctrl + alt + n
-	keyboardShortcuts.registerShortcut("nightmode", {
-		keyCode: 78,
-		ctrl: true,
-		alt: true,
-		handler: () => toggleNightMode()
-	});
-
-	keyboardShortcuts.registerShortcut("closeModal", {
-		keyCode: 27,
-		shift: false,
-		ctrl: false,
-		handler: () => {
-			if (Object.keys(activeModals.value).length !== 0)
-				closeCurrentModal();
-		}
-	});
-
 	disconnectedMessage.value = new Toast({
 		content: "Could not connect to the server.",
 		persistent: true,
@@ -170,6 +113,62 @@ onMounted(async () => {
 
 	socket.onConnect(() => {
 		socketConnected.value = true;
+
+		if (!loggedIn.value) {
+			broadcastChannel.value.user_login = new BroadcastChannel(
+				`${configStore.get("cookie")}.user_login`
+			);
+			broadcastChannel.value.user_login.onmessage = res => {
+				if (res.data) {
+					broadcastChannel.value.user_login.close();
+					window.location.reload();
+				}
+			};
+
+			broadcastChannel.value.nightmode = new BroadcastChannel(
+				`${configStore.get("cookie")}.nightmode`
+			);
+			broadcastChannel.value.nightmode.onmessage = res => {
+				changeNightmode(!!res.data);
+			};
+		}
+
+		document.onkeydown = (ev: KeyboardEvent) => {
+			const event = ev || window.event;
+			const { keyCode } = event;
+			const shift = event.shiftKey;
+			const ctrl = event.ctrlKey;
+			const alt = event.altKey;
+
+			const identifier = `${keyCode}.${shift}.${ctrl}`;
+
+			if (keyIsDown.value === identifier) return;
+			keyIsDown.value = identifier;
+
+			keyboardShortcuts.handleKeyDown(event, keyCode, shift, ctrl, alt);
+		};
+
+		document.onkeyup = () => {
+			keyIsDown.value = "";
+		};
+
+		// ctrl + alt + n
+		keyboardShortcuts.registerShortcut("nightmode", {
+			keyCode: 78,
+			ctrl: true,
+			alt: true,
+			handler: () => toggleNightMode()
+		});
+
+		keyboardShortcuts.registerShortcut("closeModal", {
+			keyCode: 27,
+			shift: false,
+			ctrl: false,
+			handler: () => {
+				if (Object.keys(activeModals.value).length !== 0)
+					closeCurrentModal();
+			}
+		});
 
 		socket.dispatch(
 			"users.getPreferences",
@@ -232,6 +231,21 @@ onMounted(async () => {
 			if (!localStorage.getItem("firstVisited"))
 				localStorage.setItem("firstVisited", Date.now().toString());
 		});
+
+		router.isReady().then(() => {
+			if (
+				configStore.get("githubAuthentication") &&
+				localStorage.getItem("github_redirect")
+			) {
+				router.push(localStorage.getItem("github_redirect") as string);
+				localStorage.removeItem("github_redirect");
+			}
+		});
+
+		if (configStore.get("christmas")) {
+			christmas.value = true;
+			enableChristmasMode();
+		}
 	}, true);
 
 	socket.onDisconnect(() => {
@@ -242,31 +256,9 @@ onMounted(async () => {
 		window.location.reload()
 	);
 
-	apiDomain.value = await lofig.get("backend.apiDomain");
-
-	router.isReady().then(() => {
-		lofig
-			.get("siteSettings.githubAuthentication")
-			.then((enabled: boolean) => {
-				if (enabled && localStorage.getItem("github_redirect")) {
-					router.push(
-						localStorage.getItem("github_redirect") as string
-					);
-					localStorage.removeItem("github_redirect");
-				}
-			});
-	});
-
 	if (localStorage.getItem("nightmode") === "true") {
 		changeNightmode(true);
 	} else changeNightmode(false);
-
-	lofig.get("siteSettings.christmas").then((enabled: boolean) => {
-		if (enabled) {
-			christmas.value = true;
-			enableChristmasMode();
-		}
-	});
 });
 </script>
 

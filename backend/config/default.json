@@ -1,13 +1,13 @@
 {
-	"mode": "development",
 	"migration": false,
 	"secret": "default",
-	"domain": "http://localhost",
-	"frontendPort": 80,
-	"serverDomain": "http://localhost/backend",
-	"serverPort": 8080,
-	"registrationDisabled": true,
-	"sendDataRequestEmails": true,
+	"port": 8080,
+	"url": {
+		"host": "localhost",
+		"secure": false
+	},
+	"cookie": "musareSID",
+	"sitename": "Musare",
 	"apis": {
 		"youtube": {
 			"key": "",
@@ -46,8 +46,9 @@
 			"retryAmount": 2
 		},
 		"recaptcha": {
-			"secret": "",
-			"enabled": false
+			"enabled": false,
+			"key": "",
+			"secret": ""
 		},
 		"github": {
 			"enabled": false,
@@ -56,28 +57,26 @@
 			"redirect_uri": ""
 		},
 		"discogs": {
+			"enabled": false,
 			"client": "",
-			"secret": "",
-			"enabled": false
+			"secret": ""
 		}
 	},
 	"cors": {
-		"origin": [
-			"http://localhost"
-		]
-	},
-	"smtp": {
-		"host": "smtp.mailgun.org",
-		"port": 587,
-		"auth": {
-			"user": "",
-			"pass": ""
-		},
-		"secure": false,
-		"enabled": false
+		"origin": ["http://localhost"]
 	},
 	"mail": {
-		"from": "Musare <noreply@localhost>"
+		"from": "Musare <noreply@localhost>",
+		"smtp": {
+			"enabled": false,
+			"host": "smtp.mailgun.org",
+			"port": 587,
+			"auth": {
+				"user": "",
+				"pass": ""
+			},
+			"secure": false
+		}
 	},
 	"redis": {
 		"url": "redis://redis:6379/0",
@@ -86,34 +85,36 @@
 	"mongo": {
 		"url": "mongodb://musare:OTHER_PASSWORD_HERE@mongo:27017/musare"
 	},
-	"cookie": {
-		"domain": "localhost",
-		"secure": false,
-		"SIDname": "SID"
-	},
-	"blacklistedCommunityStationNames": [
-		"musare"
-	],
+	"blacklistedCommunityStationNames": ["musare"],
 	"featuredPlaylists": [],
+	"messages": {
+		"accountRemoval": "Your account will be deactivated instantly and your data will shortly be deleted by an admin."
+	},
+	"christmas": false,
+	"footerLinks": {},
+	"shortcutOverrides": {},
+	"registrationDisabled": false,
+	"sendDataRequestEmails": true,
 	"skipConfigVersionCheck": false,
 	"skipDbDocumentsVersionCheck": false,
 	"debug": {
 		"stationIssue": false,
 		"traceUnhandledPromises": false,
-		"captureJobs": []
+		"captureJobs": [],
+		"git": {
+			"remote": false,
+			"remoteUrl": false,
+			"branch": true,
+			"latestCommit": true,
+			"latestCommitShort": true
+		},
+		"version": true
 	},
 	"defaultLogging": {
-		"hideType": [
-			"INFO"
-		],
+		"hideType": ["INFO"],
 		"blacklistedTerms": []
 	},
 	"customLoggingPerModule": {
-		// "cache": {
-		//     "hideType": [
-		//     ],
-		//     "blacklistedTerms": []
-		// },
 		"migration": {
 			"hideType": [],
 			"blacklistedTerms": [
@@ -127,20 +128,14 @@
 			]
 		}
 	},
-	"configVersion": 11,
 	"experimental": {
-		"weight_stations": {
-			"STATION_ID": true,
-			"STATION_ID_2": "alternative_weight"
-		},
-		"queue_autofill_skip_last_x_played": {
-			"STATION_ID": 5,
-			"STATION_ID_2": 10
-		},
-		"queue_add_before_autofilled": [
-			"STATION_ID"
-		],
+		"weight_stations": {},
+		"queue_autofill_skip_last_x_played": {},
+		"queue_add_before_autofilled": [],
 		"disable_youtube_search": false,
-		"registration_email_whitelist": false
-	}
+		"registration_email_whitelist": false,
+		"changable_listen_mode": [],
+		"media_session": false
+	},
+	"configVersion": 12
 }
