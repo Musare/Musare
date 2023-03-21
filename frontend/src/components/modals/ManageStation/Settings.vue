@@ -259,108 +259,114 @@ watch(station, value => {
 					</p>
 				</div>
 
-				<div
-					v-if="inputs['requestsEnabled'].value"
-					class="small-section"
-				>
-					<label class="label">Minimum access</label>
-					<div class="control is-expanded select">
-						<select v-model="inputs['requestsAccess'].value">
-							<option value="owner" selected>Owner</option>
-							<option value="user">User</option>
-						</select>
+				<template v-if="inputs['requestsEnabled'].value">
+					<div class="small-section">
+						<label class="label">Minimum access</label>
+						<div class="control is-expanded select">
+							<select v-model="inputs['requestsAccess'].value">
+								<option value="owner" selected>Owner</option>
+								<option value="user">User</option>
+							</select>
+						</div>
 					</div>
-				</div>
 
-				<div
-					v-if="inputs['requestsEnabled'].value"
-					class="small-section"
-				>
-					<label class="label">Per user request limit</label>
-					<div class="control is-expanded">
-						<input
-							class="input"
-							type="number"
-							min="1"
-							max="50"
-							v-model="inputs['requestsLimit'].value"
-						/>
-					</div>
-				</div>
-
-				<div
-					v-if="inputs['requestsEnabled'].value"
-					class="small-section"
-				>
-					<label class="label">Allow autorequest</label>
-					<p class="is-expanded checkbox-control">
-						<label class="switch">
+					<div class="small-section">
+						<label class="label">Per user request limit</label>
+						<div class="control is-expanded">
 							<input
-								type="checkbox"
-								v-model="
-									inputs['requestsAllowAutorequest'].value
-								"
+								class="input"
+								type="number"
+								min="1"
+								max="50"
+								v-model="inputs['requestsLimit'].value"
 							/>
-							<span class="slider round"></span>
-						</label>
-					</p>
-				</div>
-
-				<div
-					v-if="inputs['requestsEnabled'].value"
-					class="small-section"
-				>
-					<label class="label">Per user autorequest limit</label>
-					<div class="control is-expanded">
-						<input
-							class="input"
-							type="number"
-							min="1"
-							:max="Math.min(50, inputs['requestsLimit'].value)"
-							v-model="inputs['requestsAutorequestLimit'].value"
-						/>
+						</div>
 					</div>
-				</div>
 
-				<div
-					v-if="inputs['requestsEnabled'].value"
-					class="small-section"
-				>
-					<label class="label">Autorequest disallow recent</label>
-					<p class="is-expanded checkbox-control">
-						<label class="switch">
-							<input
-								type="checkbox"
-								v-model="
-									inputs[
-										'requestsAutorequestDisallowRecentlyPlayedEnabled'
-									].value
-								"
-							/>
-							<span class="slider round"></span>
-						</label>
-					</p>
-				</div>
+					<div class="small-section">
+						<label class="label">Allow autorequest</label>
+						<p class="is-expanded checkbox-control">
+							<label class="switch">
+								<input
+									type="checkbox"
+									v-model="
+										inputs['requestsAllowAutorequest'].value
+									"
+								/>
+								<span class="slider round"></span>
+							</label>
+						</p>
+					</div>
 
-				<div
-					v-if="inputs['requestsEnabled'].value"
-					class="small-section"
-				>
-					<label class="label">Autorequest disallow recent #</label>
-					<div class="control is-expanded">
-						<input
-							class="input"
-							type="number"
-							min="1"
-							max="250"
-							v-model="
+					<template v-if="inputs['requestsAllowAutorequest'].value">
+						<div class="small-section">
+							<label class="label"
+								>Per user autorequest limit</label
+							>
+							<div class="control is-expanded">
+								<input
+									class="input"
+									type="number"
+									min="1"
+									:max="
+										Math.min(
+											50,
+											inputs['requestsLimit'].value
+										)
+									"
+									v-model="
+										inputs['requestsAutorequestLimit'].value
+									"
+								/>
+							</div>
+						</div>
+
+						<div class="small-section">
+							<label class="label"
+								>Autorequest disallow recent</label
+							>
+							<p class="is-expanded checkbox-control">
+								<label class="switch">
+									<input
+										type="checkbox"
+										v-model="
+											inputs[
+												'requestsAutorequestDisallowRecentlyPlayedEnabled'
+											].value
+										"
+									/>
+									<span class="slider round"></span>
+								</label>
+							</p>
+						</div>
+
+						<div
+							v-if="
 								inputs[
-									'requestsAutorequestDisallowRecentlyPlayedNumber'
+									'requestsAutorequestDisallowRecentlyPlayedEnabled'
 								].value
 							"
-						/>
-					</div>
-				</div>
+							class="small-section"
+						>
+							<label class="label"
+								>Autorequest disallow recent #</label
+							>
+							<div class="control is-expanded">
+								<input
+									class="input"
+									type="number"
+									min="1"
+									max="250"
+									v-model="
+										inputs[
+											'requestsAutorequestDisallowRecentlyPlayedNumber'
+										].value
+									"
+								/>
+							</div>
+						</div>
+					</template>
+				</template>
 			</div>
 
 			<div
@@ -396,34 +402,30 @@ watch(station, value => {
 					</p>
 				</div>
 
-				<div
-					v-if="inputs['autofillEnabled'].value"
-					class="small-section"
-				>
-					<label class="label">Song limit</label>
-					<div class="control is-expanded">
-						<input
-							class="input"
-							type="number"
-							min="1"
-							max="50"
-							v-model="inputs['autofillLimit'].value"
-						/>
+				<template v-if="inputs['autofillEnabled'].value">
+					<div class="small-section">
+						<label class="label">Song limit</label>
+						<div class="control is-expanded">
+							<input
+								class="input"
+								type="number"
+								min="1"
+								max="50"
+								v-model="inputs['autofillLimit'].value"
+							/>
+						</div>
 					</div>
-				</div>
 
-				<div
-					v-if="inputs['autofillEnabled'].value"
-					class="small-section"
-				>
-					<label class="label">Play mode</label>
-					<div class="control is-expanded select">
-						<select v-model="inputs['autofillMode'].value">
-							<option value="random" selected>Random</option>
-							<option value="sequential">Sequential</option>
-						</select>
+					<div class="small-section">
+						<label class="label">Play mode</label>
+						<div class="control is-expanded select">
+							<select v-model="inputs['autofillMode'].value">
+								<option value="random" selected>Random</option>
+								<option value="sequential">Sequential</option>
+							</select>
+						</div>
 					</div>
-				</div>
+				</template>
 			</div>
 		</div>
 

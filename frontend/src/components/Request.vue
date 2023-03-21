@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, computed, onMounted } from "vue";
+import { defineAsyncComponent, ref, computed, onMounted, watch } from "vue";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
@@ -124,6 +124,13 @@ const addSongToQueue = (mediaSource: string, index?: number) => {
 		}
 	);
 };
+
+watch(
+	() => props.disableAutoRequest,
+	value => {
+		if (value && tab.value === "autorequest") showTab("songs");
+	}
+);
 
 onMounted(async () => {
 	sitename.value = await lofig.get("siteSettings.sitename");
