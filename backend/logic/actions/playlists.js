@@ -497,7 +497,7 @@ export default {
 	 * @param {string} query - the page
 	 * @param {Function} cb - gets called with the result
 	 */
-	searchOfficial: useHasPermission("playlists.get", async function searchOfficial(session, query, page, cb) {
+	searchOfficial: isLoginRequired(async function searchOfficial(session, query, page, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -505,11 +505,16 @@ export default {
 					else next();
 				},
 
-				next => {
+				next =>
+					hasPermission("playlists.get", session)
+						.then(() => next(null, true))
+						.catch(() => next(null, false)),
+
+				(includePrivate, next) => {
 					PlaylistsModule.runJob("SEARCH", {
 						query,
 						includeGenre: true,
-						includePrivate: true,
+						includePrivate,
 						includeSongs: true,
 						includeAdmin: true,
 						page
