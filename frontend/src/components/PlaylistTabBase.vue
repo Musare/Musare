@@ -321,7 +321,9 @@ const searchForPlaylists = page => {
 };
 
 onMounted(() => {
-	showTab("my-playlists");
+	if (props.type === "autorequest" || station.value.type === "community")
+		showTab("my-playlists");
+	else showTab("search");
 
 	socket.onConnect(() => {
 		socket.dispatch("playlists.indexMyPlaylists", res => {
