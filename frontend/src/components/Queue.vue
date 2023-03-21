@@ -263,19 +263,18 @@ defineEmits(["onChangeTab"]);
 		}
 
 		> .scrollable-list:last-of-type:not(:last-child) {
-			height: 100%;
-			padding-bottom: 50px;
+			height: calc(100% - 56px);
 		}
 
 		.button.floating {
 			position: sticky;
 			z-index: 10;
 
-			bottom: 8px;
-			right: 8px;
-			left: 8px;
+			bottom: 10px;
+			right: 10px;
+			left: 10px;
 
-			width: calc(100% - 16px);
+			width: calc(100% - 20px);
 
 			margin-top: 50px;
 		}
