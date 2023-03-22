@@ -2124,7 +2124,7 @@ export default {
 		playlistId,
 		cb
 	) {
-		if (!(config.has("experimental.soundcloud") && !!config.get("experimental.soundcloud")))
+		if (!config.get("experimental.soundcloud"))
 			return cb({ status: "error", message: "SoundCloud is not enabled" });
 
 		let songsInPlaylistTotal = 0;
@@ -2149,7 +2149,7 @@ export default {
 			this
 		);
 
-		async.waterfall(
+		return async.waterfall(
 			[
 				next => {
 					DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
@@ -2315,8 +2315,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	addSpotifySetToPlaylist: isLoginRequired(async function addSpotifySetToPlaylist(session, url, playlistId, cb) {
-		if (!(config.has("experimental.spotify") && !!config.get("experimental.spotify")))
-			return cb({ status: "error", message: "Spotify is not enabled" });
+		if (!config.get("experimental.spotify")) return cb({ status: "error", message: "Spotify is not enabled" });
 
 		let songsInPlaylistTotal = 0;
 		let addSongsStats = null;
@@ -2340,7 +2339,7 @@ export default {
 			this
 		);
 
-		async.waterfall(
+		return async.waterfall(
 			[
 				next => {
 					DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {

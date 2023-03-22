@@ -624,9 +624,7 @@ class _YouTubeModule extends CoreClass {
 				return;
 			}
 			const playlistId = splitQuery[1];
-			const maxPages = config.has("apis.youtube.maxPlaylistPages")
-				? Number.parseInt(config.get("apis.youtube.maxPlaylistPages"))
-				: 20;
+			const maxPages = Number.parseInt(config.get("apis.youtube.maxPlaylistPages"));
 
 			let currentPage = 0;
 
@@ -1024,10 +1022,7 @@ class _YouTubeModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			const { params } = payload;
 
-			if (
-				config.has("experimental.disable_youtube_search") &&
-				config.get("experimental.disable_youtube_search")
-			) {
+			if (config.get("experimental.disable_youtube_search")) {
 				reject(new Error("Searching with YouTube is disabled."));
 				return;
 			}

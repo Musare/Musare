@@ -99,13 +99,12 @@ permissions.admin = {
 	"youtube.removeVideos": true
 };
 
-if (config.has("experimental.soundcloud") && !!config.get("experimental.soundcloud")) {
+if (config.get("experimental.soundcloud")) {
 	permissions.moderator["admin.view.soundcloudTracks"] = true;
 	permissions.admin["admin.view.soundcloudTracks"] = true;
 	permissions.admin["admin.view.soundcloud"] = true;
 }
-if (config.has("experimental.spotify") && !!config.get("experimental.spotify"))
-	permissions.admin["admin.view.spotify"] = true;
+if (config.get("experimental.spotify")) permissions.admin["admin.view.spotify"] = true;
 
 export const hasPermission = async (permission, session, stationId) => {
 	const CacheModule = moduleManager.modules.cache;

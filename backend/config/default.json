@@ -30,7 +30,8 @@
 					"title": "Queries Per 100 Seconds",
 					"limit": 3000000
 				}
-			]
+			],
+			"maxPlaylistPages": 20
 		},
 		"spotify": {
 			"enabled": false,

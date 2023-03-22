@@ -4,6 +4,7 @@ import util from "util";
 import config from "config";
 import fs from "fs";
 
+import * as readline from "node:readline";
 import package_json from "./package.json" assert { type: "json" };
 
 const REQUIRED_CONFIG_VERSION = 12;
@@ -60,10 +61,7 @@ const printVersion = () => {
 
 printVersion();
 
-if (
-	(!config.has("configVersion") || config.get("configVersion") !== REQUIRED_CONFIG_VERSION) &&
-	!(config.has("skipConfigVersionCheck") && config.get("skipConfigVersionCheck"))
-) {
+if (config.get("configVersion") !== REQUIRED_CONFIG_VERSION && !config.get("skipConfigVersionCheck")) {
 	console.log(
 		"CONFIG VERSION IS WRONG. PLEASE UPDATE YOUR CONFIG WITH THE HELP OF THE TEMPLATE FILE AND THE README FILE."
 	);
@@ -268,10 +266,12 @@ if (!config.get("migration")) {
 	moduleManager.addModule("tasks");
 	moduleManager.addModule("utils");
 	moduleManager.addModule("youtube");
-	moduleManager.addModule("soundcloud");
-	moduleManager.addModule("spotify");
-	moduleManager.addModule("musicbrainz");
-	moduleManager.addModule("wikidata");
+	if (config.get("experimental.soundcloud")) moduleManager.addModule("soundcloud");
+	if (config.get("experimental.spotify")) {
+		moduleManager.addModule("spotify");
+		moduleManager.addModule("musicbrainz");
+		moduleManager.addModule("wikidata");
+	}
 } else {
 	moduleManager.addModule("migration");
 }
@@ -308,12 +308,10 @@ function printTask(task, layer) {
 	});
 }
 
-import * as readline from "node:readline";
-
-var rl = readline.createInterface({
+const rl = readline.createInterface({
 	input: process.stdin,
 	output: process.stdout,
-	completer: function (command) {
+	completer(command) {
 		const parts = command.split(" ");
 		const commands = [
 			"version",
@@ -330,17 +328,18 @@ var rl = readline.createInterface({
 		if (parts.length === 1) {
 			const hits = commands.filter(c => c.startsWith(parts[0]));
 			return [hits.length ? hits : commands, command];
-		} else if (parts.length === 2) {
+		}
+		if (parts.length === 2) {
 			if (["queued", "running", "paused", "runjob", "stats"].indexOf(parts[0]) !== -1) {
 				const modules = Object.keys(moduleManager.modules);
 				const hits = modules
 					.filter(module => module.startsWith(parts[1]))
 					.map(module => `${parts[0]} ${module}${parts[0] === "runjob" ? " " : ""}`);
 				return [hits.length ? hits : modules, command];
-			} else {
-				return [];
 			}
-		} else if (parts.length === 3) {
+			return [];
+		}
+		if (parts.length === 3) {
 			if (parts[0] === "runjob") {
 				const modules = Object.keys(moduleManager.modules);
 				if (modules.indexOf(parts[1]) !== -1) {
@@ -359,7 +358,7 @@ var rl = readline.createInterface({
 	}
 });
 
-rl.on("line", function (command) {
+rl.on("line", command => {
 	if (command === "version") {
 		printVersion();
 	}
@@ -451,7 +450,7 @@ rl.on("line", function (command) {
 		console.log(`Eval response: `, response);
 	}
 	if (command.startsWith("debug")) {
-		moduleManager.modules["youtube"].apiCalls.forEach(apiCall => {
+		moduleManager.modules.youtube.apiCalls.forEach(apiCall => {
 			// console.log(`${apiCall.date.toISOString()} - ${apiCall.url} - ${apiCall.quotaCost} - ${JSON.stringify(apiCall.params)}`);
 			console.log(apiCall);
 		});

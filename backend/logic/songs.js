@@ -1,4 +1,5 @@
 import async from "async";
+import config from "config";
 import mongoose from "mongoose";
 import CoreClass from "../core";
 
@@ -245,7 +246,7 @@ class _SongsModule extends CoreClass {
 								}
 							);
 
-						if (mediaSourceType === "soundcloud")
+						if (config.get("experimental.soundcloud") && mediaSourceType === "soundcloud")
 							return SoundCloudModule.soundcloudTrackModel.find(
 								{
 									trackId: {
@@ -1028,11 +1029,22 @@ class _SongsModule extends CoreClass {
 						const page = payload.page ? payload.page : 1;
 						const pageSize = 15;
 						const skipAmount = pageSize * (page - 1);
+						const query = { $or: filterArray };
 
-						SongsModule.SongModel.find({ $or: filterArray }).count((err, count) => {
+						const mediaSources = [];
+						if (!config.get("experimental.soundcloud")) {
+							mediaSources.push(/^soundcloud:/);
+							mediaSources.push(/.*soundcloud.com.*/);
+						}
+						if (!config.get("experimental.spotify")) {
+							mediaSources.push(/^spotify:/);
+						}
+						if (mediaSources.length > 0) query.mediaSource = { $nin: mediaSources };
+
+						SongsModule.SongModel.find(query).count((err, count) => {
 							if (err) next(err);
 							else {
-								SongsModule.SongModel.find({ $or: filterArray })
+								SongsModule.SongModel.find(query)
 									.skip(skipAmount)
 									.limit(pageSize)
 									.exec((err, songs) => {

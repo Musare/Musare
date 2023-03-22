@@ -881,10 +881,7 @@ export default {
 				next => {
 					if (config.get("registrationDisabled") === true)
 						return next("Registration is not allowed at this time.");
-					if (
-						config.has("experimental.registration_email_whitelist") &&
-						config.get("experimental.registration_email_whitelist")
-					) {
+					if (config.get("experimental.registration_email_whitelist")) {
 						const experimentalRegistrationEmailWhitelist = config.get(
 							"experimental.registration_email_whitelist"
 						);

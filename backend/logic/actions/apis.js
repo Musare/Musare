@@ -769,8 +769,7 @@ export default {
 			page === "youtube" ||
 			page === "youtubeVideos" ||
 			page === "youtubeChannels" ||
-			page === "soundcloud" ||
-			page === "soundcloudTracks" ||
+			(config.get("experimental.soundcloud") && (page === "soundcloud" || page === "soundcloudTracks")) ||
 			page === "import" ||
 			page === "dataRequests"
 		) {

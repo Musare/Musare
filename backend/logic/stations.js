@@ -176,11 +176,33 @@ class _StationsModule extends CoreClass {
 
 					next => {
 						this.setStage(4);
+						const mediaSources = [];
+						if (!config.get("experimental.soundcloud")) {
+							mediaSources.push(/^soundcloud:/);
+							mediaSources.push(/.*soundcloud.com.*/);
+						}
+						if (!config.get("experimental.spotify")) {
+							mediaSources.push(/^spotify:/);
+						}
+						if (mediaSources.length > 0)
+							stationModel.updateMany(
+								{},
+								{ $pull: { queue: { mediaSource: { $in: mediaSources } } } },
+								err => {
+									if (err) next(err);
+									else next();
+								}
+							);
+						else next();
+					},
+
+					next => {
+						this.setStage(5);
 						stationModel.find({}, next);
 					},
 
 					(stations, next) => {
-						this.setStage(5);
+						this.setStage(6);
 						async.each(
 							stations,
 							(station, next2) => {
@@ -291,7 +313,14 @@ class _StationsModule extends CoreClass {
 							});
 					},
 					(station, next) => {
-						if (!station.currentSong) {
+						if (
+							!station.currentSong ||
+							(!config.get("experimental.soundcloud") &&
+								(station.currentSong.mediaSource.startsWith("soundcloud:") ||
+									station.currentSong.mediaSource.indexOf("soundcloud.com") !== -1)) ||
+							(!config.get("experimental.spotify") &&
+								station.currentSong.mediaSource.startsWith("spotify:"))
+						) {
 							return StationsModule.runJob(
 								"SKIP_STATION",
 								{
@@ -956,8 +985,7 @@ class _StationsModule extends CoreClass {
 	 * @param {*} payload
 	 */
 	async ADD_STATION_HISTORY_ITEM(payload) {
-		if (!(config.has("experimental.station_history") && !!config.get("experimental.station_history")))
-			throw new Error("Station history is not enabled");
+		if (!config.get("experimental.station_history")) throw new Error("Station history is not enabled");
 
 		const { stationId, currentSong, skipReason, skippedAt } = payload;
 
@@ -1033,13 +1061,7 @@ class _StationsModule extends CoreClass {
 					(station, next) => {
 						if (!station) return next("Station not found.");
 
-						if (
-							!(
-								config.has("experimental.station_history") &&
-								!!config.get("experimental.station_history")
-							)
-						)
-							return next(null, station);
+						if (!config.get("experimental.station_history")) return next(null, station);
 
 						const { currentSong } = station;
 						if (!currentSong || !currentSong.mediaSource) return next(null, station);
@@ -2063,36 +2085,34 @@ class _StationsModule extends CoreClass {
 					// },
 
 					(song, station, next) => {
-						if (config.has(`experimental.queue_add_before_autofilled`)) {
-							const queueAddBeforeAutofilled = config.get(`experimental.queue_add_before_autofilled`);
+						const queueAddBeforeAutofilled = config.get(`experimental.queue_add_before_autofilled`);
 
-							if (
-								queueAddBeforeAutofilled === true ||
-								(Array.isArray(queueAddBeforeAutofilled) &&
-									queueAddBeforeAutofilled.indexOf(stationId) !== -1)
-							) {
-								let position = station.queue.length;
+						if (
+							queueAddBeforeAutofilled === true ||
+							(Array.isArray(queueAddBeforeAutofilled) &&
+								queueAddBeforeAutofilled.indexOf(stationId) !== -1)
+						) {
+							let position = station.queue.length;
 
-								if (station.autofill.enabled && station.queue.length >= station.autofill.limit) {
-									position = -station.autofill.limit;
-								}
-
-								StationsModule.stationModel.updateOne(
-									{ _id: stationId },
-									{
-										$push: {
-											queue: {
-												$each: [song],
-												$position: position
-											}
-										}
-									},
-									{ runValidators: true },
-									next
-								);
-
-								return;
+							if (station.autofill.enabled && station.queue.length >= station.autofill.limit) {
+								position = -station.autofill.limit;
 							}
+
+							StationsModule.stationModel.updateOne(
+								{ _id: stationId },
+								{
+									$push: {
+										queue: {
+											$each: [song],
+											$position: position
+										}
+									}
+								},
+								{ runValidators: true },
+								next
+							);
+
+							return;
 						}
 
 						StationsModule.stationModel.updateOne(

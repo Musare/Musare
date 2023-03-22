@@ -1007,8 +1007,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					if (!(config.has("experimental.station_history") && !!config.get("experimental.station_history")))
-						return next("Station history is not enabled");
+					if (!config.get("experimental.station_history")) return next("Station history is not enabled");
 					return next();
 				},
 
@@ -1777,8 +1776,7 @@ export default {
 			"station"
 		];
 
-		if (data.type === "community" && config.has("blacklistedCommunityStationNames"))
-			blacklist = [...blacklist, ...config.get("blacklistedCommunityStationNames")];
+		if (data.type === "community") blacklist = [...blacklist, ...config.get("blacklistedCommunityStationNames")];
 
 		async.waterfall(
 			[

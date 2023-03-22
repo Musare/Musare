@@ -1,4 +1,5 @@
 import async from "async";
+import config from "config";
 import CoreClass from "../core";
 
 let MediaModule;
@@ -396,47 +397,49 @@ class _MediaModule extends CoreClass {
 								.catch(next);
 						}
 
-						if (payload.mediaSource.startsWith("soundcloud:")) {
-							const trackId = payload.mediaSource.split(":")[1];
+						if (config.get("experimental.soundcloud")) {
+							if (payload.mediaSource.startsWith("soundcloud:")) {
+								const trackId = payload.mediaSource.split(":")[1];
 
-							return SoundCloudModule.runJob(
-								"GET_TRACK",
-								{ identifier: trackId, createMissing: true },
-								this
-							)
-								.then(response => {
-									const { trackId, title, username, artworkUrl, duration } = response.track;
-									next(null, song, {
-										mediaSource: `soundcloud:${trackId}`,
-										title,
-										artists: [username],
-										thumbnail: artworkUrl,
-										duration
-									});
-								})
-								.catch(next);
+								return SoundCloudModule.runJob(
+									"GET_TRACK",
+									{ identifier: trackId, createMissing: true },
+									this
+								)
+									.then(response => {
+										const { trackId, title, username, artworkUrl, duration } = response.track;
+										next(null, song, {
+											mediaSource: `soundcloud:${trackId}`,
+											title,
+											artists: [username],
+											thumbnail: artworkUrl,
+											duration
+										});
+									})
+									.catch(next);
+							}
+
+							if (payload.mediaSource.indexOf("soundcloud.com") !== -1) {
+								return SoundCloudModule.runJob(
+									"GET_TRACK_FROM_URL",
+									{ identifier: payload.mediaSource, createMissing: true },
+									this
+								)
+									.then(response => {
+										const { trackId, title, username, artworkUrl, duration } = response.track;
+										next(null, song, {
+											mediaSource: `soundcloud:${trackId}`,
+											title,
+											artists: [username],
+											thumbnail: artworkUrl,
+											duration
+										});
+									})
+									.catch(next);
+							}
 						}
 
-						if (payload.mediaSource.indexOf("soundcloud.com") !== -1) {
-							return SoundCloudModule.runJob(
-								"GET_TRACK_FROM_URL",
-								{ identifier: payload.mediaSource, createMissing: true },
-								this
-							)
-								.then(response => {
-									const { trackId, title, username, artworkUrl, duration } = response.track;
-									next(null, song, {
-										mediaSource: `soundcloud:${trackId}`,
-										title,
-										artists: [username],
-										thumbnail: artworkUrl,
-										duration
-									});
-								})
-								.catch(next);
-						}
-
-						if (payload.mediaSource.startsWith("spotify:")) {
+						if (config.get("experimental.spotify") && payload.mediaSource.startsWith("spotify:")) {
 							const trackId = payload.mediaSource.split(":")[1];
 
 							return SpotifyModule.runJob("GET_TRACK", { identifier: trackId, createMissing: true }, this)
@@ -530,34 +533,35 @@ class _MediaModule extends CoreClass {
 							allPromises.push(promise);
 						});
 
-						soundcloudMediaSources.forEach(mediaSource => {
-							const trackId = mediaSource.split(":")[1];
+						if (config.get("experimental.soundcloud"))
+							soundcloudMediaSources.forEach(mediaSource => {
+								const trackId = mediaSource.split(":")[1];
 
-							const promise = SoundCloudModule.runJob(
-								"GET_TRACK",
-								{ identifier: trackId, createMissing: true },
-								this
-							)
-								.then(response => {
-									const { trackId, title, username, artworkUrl, duration } = response.track;
-									songMap[mediaSource] = {
-										mediaSource: `soundcloud:${trackId}`,
-										title,
-										artists: [username],
-										thumbnail: artworkUrl,
-										duration
-									};
-								})
-								.catch(err => {
-									MediaModule.log(
-										"ERROR",
-										`Failed to get media in GET_MEDIA_FROM_MEDIA_SOURCES with mediaSource ${mediaSource} and error`,
-										typeof err === "string" ? err : err.message
-									);
-								});
+								const promise = SoundCloudModule.runJob(
+									"GET_TRACK",
+									{ identifier: trackId, createMissing: true },
+									this
+								)
+									.then(response => {
+										const { trackId, title, username, artworkUrl, duration } = response.track;
+										songMap[mediaSource] = {
+											mediaSource: `soundcloud:${trackId}`,
+											title,
+											artists: [username],
+											thumbnail: artworkUrl,
+											duration
+										};
+									})
+									.catch(err => {
+										MediaModule.log(
+											"ERROR",
+											`Failed to get media in GET_MEDIA_FROM_MEDIA_SOURCES with mediaSource ${mediaSource} and error`,
+											typeof err === "string" ? err : err.message
+										);
+									});
 
-							allPromises.push(promise);
-						});
+								allPromises.push(promise);
+							});
 
 						Promise.allSettled(allPromises).then(() => {
 							next();

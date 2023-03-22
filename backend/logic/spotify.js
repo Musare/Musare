@@ -102,7 +102,7 @@ class _SpotifyModule extends CoreClass {
 		});
 
 		return new Promise((resolve, reject) => {
-			if (!config.has("apis.spotify") || !config.get("apis.spotify.enabled")) {
+			if (!config.get("apis.spotify.enabled")) {
 				reject(new Error("Spotify is not enabled."));
 				return;
 			}
@@ -1067,7 +1067,7 @@ class _SpotifyModule extends CoreClass {
 						// relation["type-id"] === "7e41ef12-a124-4324-afdb-fdbae687a89c"
 						const { resource } = relation.url;
 
-						if (resource.indexOf("soundcloud.com") !== -1) {
+						if (config.get("experimental.soundcloud") && resource.indexOf("soundcloud.com") !== -1) {
 							// throw new Error(`Unable to parse SoundCloud resource ${resource}.`);
 
 							const promise = new Promise(resolve => {
