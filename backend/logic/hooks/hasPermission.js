@@ -1,4 +1,5 @@
 import async from "async";
+import config from "config";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -37,7 +38,6 @@ permissions.moderator = {
 	"admin.view.users": true,
 	"admin.view.youtubeVideos": true,
 	"admin.view.youtubeChannels": true,
-	"admin.view.soundcloudTracks": true,
 	"apis.searchDiscogs": true,
 	"news.create": true,
 	"news.update": true,
@@ -73,8 +73,6 @@ permissions.admin = {
 	"admin.view.dataRequests": true,
 	"admin.view.statistics": true,
 	"admin.view.youtube": true,
-	"admin.view.soundcloud": true,
-	"admin.view.spotify": true,
 	"dataRequests.resolve": true,
 	"media.recalculateAllRatings": true,
 	"media.removeImportJobs": true,
@@ -100,6 +98,14 @@ permissions.admin = {
 	"youtube.removeStoredApiRequest": true,
 	"youtube.removeVideos": true
 };
+
+if (config.has("experimental.soundcloud") && !!config.get("experimental.soundcloud")) {
+	permissions.moderator["admin.view.soundcloudTracks"] = true;
+	permissions.admin["admin.view.soundcloudTracks"] = true;
+	permissions.admin["admin.view.soundcloud"] = true;
+}
+if (config.has("experimental.spotify") && !!config.get("experimental.spotify"))
+	permissions.admin["admin.view.spotify"] = true;
 
 export const hasPermission = async (permission, session, stationId) => {
 	const CacheModule = moduleManager.modules.cache;

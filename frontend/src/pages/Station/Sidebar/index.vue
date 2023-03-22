@@ -2,6 +2,7 @@
 import { useRoute } from "vue-router";
 import { defineAsyncComponent, watch, onMounted } from "vue";
 import { storeToRefs } from "pinia";
+import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useStationStore } from "@/stores/station";
 import { useTabQueryHandler } from "@/composables/useTabQueryHandler";
@@ -16,6 +17,7 @@ const History = defineAsyncComponent(
 );
 
 const route = useRoute();
+const configStore = useConfigStore();
 const userAuthStore = useUserAuthStore();
 const stationStore = useStationStore();
 
@@ -86,6 +88,7 @@ onMounted(() => {
 				Request
 			</button>
 			<button
+				v-if="configStore.get('experimental.station_history')"
 				class="button is-default"
 				:class="{ selected: tab === 'history' }"
 				@click="showTab('history')"
@@ -101,7 +104,11 @@ onMounted(() => {
 			class="tab requests-tab"
 			sector="station"
 		/>
-		<History class="tab" v-show="tab === 'history'" />
+		<History
+			v-if="configStore.get('experimental.station_history')"
+			class="tab"
+			v-show="tab === 'history'"
+		/>
 	</div>
 </template>
 

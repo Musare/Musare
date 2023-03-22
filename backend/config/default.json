@@ -6,7 +6,7 @@
 		"host": "localhost",
 		"secure": false
 	},
-	"cookie": "musareSID",
+	"cookie": "SID",
 	"sitename": "Musare",
 	"apis": {
 		"youtube": {
@@ -91,7 +91,12 @@
 		"accountRemoval": "Your account will be deactivated instantly and your data will shortly be deleted by an admin."
 	},
 	"christmas": false,
-	"footerLinks": {},
+	"footerLinks": {
+		"about": true,
+		"team": true,
+		"news": true,
+		"GitHub": "https://github.com/Musare/Musare"
+	},
 	"shortcutOverrides": {},
 	"registrationDisabled": false,
 	"sendDataRequestEmails": true,
@@ -135,7 +140,10 @@
 		"disable_youtube_search": false,
 		"registration_email_whitelist": false,
 		"changable_listen_mode": [],
-		"media_session": false
+		"media_session": false,
+		"station_history": false,
+		"soundcloud": false,
+		"spotify": false
 	},
 	"configVersion": 12
 }

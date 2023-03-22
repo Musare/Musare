@@ -37,7 +37,6 @@ services:
       - "${FRONTEND_HOST:-0.0.0.0}:${FRONTEND_PORT:-80}:80"
     volumes:
       - ./.git:/opt/app/.parent_git:ro
-      - ./frontend/dist/config:/opt/app/dist/config
       - ./types:/opt/types
     environment:
       - CONTAINER_MODE=${CONTAINER_MODE:-production}
@@ -45,6 +44,7 @@ services:
       - FRONTEND_PORT=${FRONTEND_PORT:-80}
       - FRONTEND_CLIENT_PORT=${FRONTEND_CLIENT_PORT:-80}
       - FRONTEND_DEV_PORT=${FRONTEND_DEV_PORT:-81}
+      - FRONTEND_PROD_DEVTOOLS=${FRONTEND_PROD_DEVTOOLS:-false}
       - MUSARE_SITENAME=${MUSARE_SITENAME:-Musare}
       - MUSARE_DEBUG_VERSION=${MUSARE_DEBUG_VERSION:-true}
       - MUSARE_DEBUG_GIT_REMOTE=${MUSARE_DEBUG_GIT_REMOTE:-false}

@@ -279,45 +279,51 @@ watch(
 			</div>
 		</div>
 
-		<label class="label"> Add a SoundCloud song from a URL </label>
-		<div class="control is-grouped input-with-button">
-			<p class="control is-expanded">
-				<input
-					class="input"
-					type="text"
-					placeholder="Enter your SoundCloud song URL here..."
-					v-model="soundcloudDirect"
-					@keyup.enter="soundcloudAddToPlaylist(playlist._id)"
-				/>
-			</p>
-			<p class="control">
-				<a
-					class="button is-info"
-					@click="soundcloudAddToPlaylist(playlist._id)"
-					><i class="material-icons icon-with-button">add</i>Add</a
-				>
-			</p>
-		</div>
+		<template v-if="configStore.get('experimental.soundcloud')">
+			<label class="label"> Add a SoundCloud song from a URL </label>
+			<div class="control is-grouped input-with-button">
+				<p class="control is-expanded">
+					<input
+						class="input"
+						type="text"
+						placeholder="Enter your SoundCloud song URL here..."
+						v-model="soundcloudDirect"
+						@keyup.enter="soundcloudAddToPlaylist(playlist._id)"
+					/>
+				</p>
+				<p class="control">
+					<a
+						class="button is-info"
+						@click="soundcloudAddToPlaylist(playlist._id)"
+						><i class="material-icons icon-with-button">add</i
+						>Add</a
+					>
+				</p>
+			</div>
+		</template>
 
-		<label class="label"> Add a Spotify song from a URL </label>
-		<div class="control is-grouped input-with-button">
-			<p class="control is-expanded">
-				<input
-					class="input"
-					type="text"
-					placeholder="Enter your Spotify song URL here..."
-					v-model="spotifyDirect"
-					@keyup.enter="spotifyAddToPlaylist(playlist._id)"
-				/>
-			</p>
-			<p class="control">
-				<a
-					class="button is-info"
-					@click="spotifyAddToPlaylist(playlist._id)"
-					><i class="material-icons icon-with-button">add</i>Add</a
-				>
-			</p>
-		</div>
+		<template v-if="configStore.get('experimental.spotify')">
+			<label class="label"> Add a Spotify song from a URL </label>
+			<div class="control is-grouped input-with-button">
+				<p class="control is-expanded">
+					<input
+						class="input"
+						type="text"
+						placeholder="Enter your Spotify song URL here..."
+						v-model="spotifyDirect"
+						@keyup.enter="spotifyAddToPlaylist(playlist._id)"
+					/>
+				</p>
+				<p class="control">
+					<a
+						class="button is-info"
+						@click="spotifyAddToPlaylist(playlist._id)"
+						><i class="material-icons icon-with-button">add</i
+						>Add</a
+					>
+				</p>
+			</div>
+		</template>
 	</div>
 </template>
 

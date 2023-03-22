@@ -1,36 +1,23 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { computed } from "vue";
 import { useConfigStore } from "@/stores/config";
-
-const footerLinks = ref({});
 
 const configStore = useConfigStore();
 
 const filteredFooterLinks = computed(() =>
 	Object.fromEntries(
-		Object.entries(footerLinks.value).filter(
-			([title, url]) =>
-				!(
-					["about", "team", "news"].includes(title.toLowerCase()) &&
-					typeof url === "boolean"
-				)
+		Object.entries(configStore.get("footerLinks")).filter(
+			url => !(typeof url[1] === "boolean")
 		)
 	)
 );
 
 const getLink = title =>
-	footerLinks.value[
-		Object.keys(footerLinks.value).find(key => key.toLowerCase() === title)
+	configStore.get("footerLinks")[
+		Object.keys(configStore.get("footerLinks")).find(
+			key => key.toLowerCase() === title
+		)
 	];
-
-onMounted(() => {
-	footerLinks.value = {
-		about: true,
-		team: true,
-		news: true,
-		...configStore.get("footerLinks")
-	};
-});
 </script>
 
 <template>

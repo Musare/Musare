@@ -20,22 +20,20 @@ const youtubeVideoUrlRegex =
 	/^(https?:\/\/)?(www\.)?(m\.)?(music\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?(?<youtubeId>[\w-]{11})((&([A-Za-z0-9]+)?)*)?$/;
 const youtubeVideoIdRegex = /^([\w-]{11})$/;
 
-const spotifyTrackObjectToMusareTrackObject = spotifyTrackObject => {
-	return {
-		trackId: spotifyTrackObject.id,
-		name: spotifyTrackObject.name,
-		albumId: spotifyTrackObject.album.id,
-		albumTitle: spotifyTrackObject.album.title,
-		albumImageUrl: spotifyTrackObject.album.images[0].url,
-		artists: spotifyTrackObject.artists.map(artist => artist.name),
-		artistIds: spotifyTrackObject.artists.map(artist => artist.id),
-		duration: spotifyTrackObject.duration_ms / 1000,
-		explicit: spotifyTrackObject.explicit,
-		externalIds: spotifyTrackObject.external_ids,
-		popularity: spotifyTrackObject.popularity,
-		isLocal: spotifyTrackObject.is_local
-	};
-};
+const spotifyTrackObjectToMusareTrackObject = spotifyTrackObject => ({
+	trackId: spotifyTrackObject.id,
+	name: spotifyTrackObject.name,
+	albumId: spotifyTrackObject.album.id,
+	albumTitle: spotifyTrackObject.album.title,
+	albumImageUrl: spotifyTrackObject.album.images[0].url,
+	artists: spotifyTrackObject.artists.map(artist => artist.name),
+	artistIds: spotifyTrackObject.artists.map(artist => artist.id),
+	duration: spotifyTrackObject.duration_ms / 1000,
+	explicit: spotifyTrackObject.explicit,
+	externalIds: spotifyTrackObject.external_ids,
+	popularity: spotifyTrackObject.popularity,
+	isLocal: spotifyTrackObject.is_local
+});
 
 class RateLimitter {
 	/**
@@ -1316,9 +1314,7 @@ class _SpotifyModule extends CoreClass {
 
 						jobsToRun.push(promise);
 
-						//WikiDataModule.runJob("API_GET_DATA_FROM_MUSICBRAINZ_WORK", { workId: relation.work.id }, this));
-
-						return;
+						// WikiDataModule.runJob("API_GET_DATA_FROM_MUSICBRAINZ_WORK", { workId: relation.work.id }, this));
 					}
 				});
 			});

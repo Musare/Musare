@@ -362,7 +362,10 @@ onMounted(async () => {
 					</div>
 				</div>
 
-				<div class="soundcloud-direct">
+				<div
+					v-if="configStore.get('experimental.soundcloud')"
+					class="soundcloud-direct"
+				>
 					<label class="label">
 						Add a SoundCloud song from a URL
 					</label>

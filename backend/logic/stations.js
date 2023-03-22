@@ -956,6 +956,9 @@ class _StationsModule extends CoreClass {
 	 * @param {*} payload
 	 */
 	async ADD_STATION_HISTORY_ITEM(payload) {
+		if (!(config.has("experimental.station_history") && !!config.get("experimental.station_history")))
+			throw new Error("Station history is not enabled");
+
 		const { stationId, currentSong, skipReason, skippedAt } = payload;
 
 		let document = await StationsModule.stationHistoryModel.create({
@@ -1029,6 +1032,14 @@ class _StationsModule extends CoreClass {
 
 					(station, next) => {
 						if (!station) return next("Station not found.");
+
+						if (
+							!(
+								config.has("experimental.station_history") &&
+								!!config.get("experimental.station_history")
+							)
+						)
+							return next(null, station);
 
 						const { currentSong } = station;
 						if (!currentSong || !currentSong.mediaSource) return next(null, station);

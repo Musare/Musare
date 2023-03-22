@@ -603,7 +603,10 @@ class _WSModule extends CoreClass {
 					experimental: {
 						changable_listen_mode: config.get("experimental.changable_listen_mode"),
 						media_session: config.get("experimental.media_session"),
-						disable_youtube_search: config.get("experimental.disable_youtube_search")
+						disable_youtube_search: config.get("experimental.disable_youtube_search"),
+						station_history: config.get("experimental.station_history"),
+						soundcloud: config.get("experimental.soundcloud"),
+						spotify: config.get("experimental.spotify")
 					}
 				},
 				user: { loggedIn: false }

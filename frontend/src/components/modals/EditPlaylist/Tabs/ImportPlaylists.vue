@@ -6,6 +6,7 @@ import { useSearchYoutube } from "@/composables/useSearchYoutube";
 import { useSearchSoundcloud } from "@/composables/useSearchSoundcloud";
 import { useSearchSpotify } from "@/composables/useSearchSpotify";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useConfigStore } from "@/stores/config";
 import { useLongJobsStore } from "@/stores/longJobs";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";
 
@@ -15,6 +16,7 @@ const props = defineProps({
 
 const { socket } = useWebsocketsStore();
 
+const configStore = useConfigStore();
 const editPlaylistStore = useEditPlaylistStore({ modalUuid: props.modalUuid });
 const { playlist } = storeToRefs(editPlaylistStore);
 
@@ -242,47 +244,53 @@ const importMusarePlaylistFile = () => {
 			</p>
 		</div>
 
-		<label class="label"> Import songs from SoundCloud playlist </label>
-		<div class="control is-grouped input-with-button">
-			<p class="control is-expanded">
-				<input
-					class="input"
-					type="text"
-					placeholder="Enter SoundCloud Playlist URL here..."
-					v-model="soundcloudSearch.playlist.query"
-					@keyup.enter="importSoundcloudPlaylist()"
-				/>
-			</p>
-			<p class="control has-addons">
-				<button
-					class="button is-info"
-					@click.prevent="importSoundcloudPlaylist()"
-				>
-					<i class="material-icons icon-with-button">publish</i>Import
-				</button>
-			</p>
-		</div>
+		<template v-if="configStore.get('experimental.soundcloud')">
+			<label class="label"> Import songs from SoundCloud playlist </label>
+			<div class="control is-grouped input-with-button">
+				<p class="control is-expanded">
+					<input
+						class="input"
+						type="text"
+						placeholder="Enter SoundCloud Playlist URL here..."
+						v-model="soundcloudSearch.playlist.query"
+						@keyup.enter="importSoundcloudPlaylist()"
+					/>
+				</p>
+				<p class="control has-addons">
+					<button
+						class="button is-info"
+						@click.prevent="importSoundcloudPlaylist()"
+					>
+						<i class="material-icons icon-with-button">publish</i
+						>Import
+					</button>
+				</p>
+			</div>
+		</template>
 
-		<label class="label"> Import songs from Spotify playlist </label>
-		<div class="control is-grouped input-with-button">
-			<p class="control is-expanded">
-				<input
-					class="input"
-					type="text"
-					placeholder="Enter Spotify Playlist URL here..."
-					v-model="spotifySearch.playlist.query"
-					@keyup.enter="importSpotifyPlaylist()"
-				/>
-			</p>
-			<p class="control has-addons">
-				<button
-					class="button is-info"
-					@click.prevent="importSpotifyPlaylist()"
-				>
-					<i class="material-icons icon-with-button">publish</i>Import
-				</button>
-			</p>
-		</div>
+		<template v-if="configStore.get('experimental.spotify')">
+			<label class="label"> Import songs from Spotify playlist </label>
+			<div class="control is-grouped input-with-button">
+				<p class="control is-expanded">
+					<input
+						class="input"
+						type="text"
+						placeholder="Enter Spotify Playlist URL here..."
+						v-model="spotifySearch.playlist.query"
+						@keyup.enter="importSpotifyPlaylist()"
+					/>
+				</p>
+				<p class="control has-addons">
+					<button
+						class="button is-info"
+						@click.prevent="importSpotifyPlaylist()"
+					>
+						<i class="material-icons icon-with-button">publish</i
+						>Import
+					</button>
+				</p>
+			</div>
+		</template>
 
 		<label class="label"> Import songs from a Musare playlist file </label>
 		<div class="control is-grouped input-with-button">

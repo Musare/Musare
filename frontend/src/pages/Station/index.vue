@@ -1348,12 +1348,13 @@ onMounted(async () => {
 					}
 				});
 
-				socket.dispatch("stations.getHistory", _id, res => {
-					if (res.status === "success") {
-						const { history } = res.data;
-						setHistory(history);
-					}
-				});
+				if (configStore.get("experimental.station_history"))
+					socket.dispatch("stations.getHistory", _id, res => {
+						if (res.status === "success") {
+							const { history } = res.data;
+							setHistory(history);
+						}
+					});
 
 				if (hasPermission("stations.playback.toggle"))
 					keyboardShortcuts.registerShortcut("station.pauseResume", {

@@ -3,6 +3,7 @@ import { defineAsyncComponent, ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useConfigStore } from "@/stores/config";
 import { useLongJobsStore } from "@/stores/longJobs";
 import { useModalsStore } from "@/stores/modals";
 import { useUserAuthStore } from "@/stores/userAuth";
@@ -30,6 +31,8 @@ const route = useRoute();
 const { setJob } = useLongJobsStore();
 
 const { socket } = useWebsocketsStore();
+
+const configStore = useConfigStore();
 
 const { hasPermission } = useUserAuthStore();
 
@@ -548,8 +551,9 @@ onMounted(() => {
 				</button>
 				<button
 					v-if="
-						hasPermission('songs.create') ||
-						hasPermission('songs.update')
+						configStore.get('experimental.spotify') &&
+						(hasPermission('songs.create') ||
+							hasPermission('songs.update'))
 					"
 					class="button is-primary"
 					@click="openModal('importArtist')"

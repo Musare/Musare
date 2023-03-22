@@ -19,6 +19,9 @@ export const useConfigStore = defineStore("config", {
 				changable_listen_mode: string[];
 				media_session: boolean;
 				disable_youtube_search: boolean;
+				station_history: boolean;
+				soundcloud: boolean;
+				spotify: boolean;
 			};
 		};
 	} => ({
@@ -41,7 +44,10 @@ export const useConfigStore = defineStore("config", {
 			experimental: {
 				changable_listen_mode: [],
 				media_session: false,
-				disable_youtube_search: false
+				disable_youtube_search: false,
+				station_history: false,
+				soundcloud: false,
+				spotify: false
 			}
 		}
 	}),

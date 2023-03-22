@@ -1007,6 +1007,12 @@ export default {
 		async.waterfall(
 			[
 				next => {
+					if (!(config.has("experimental.station_history") && !!config.get("experimental.station_history")))
+						return next("Station history is not enabled");
+					return next();
+				},
+
+				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
 						.then(station => {
 							next(null, station);
