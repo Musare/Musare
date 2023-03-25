@@ -179,7 +179,6 @@ class _StationsModule extends CoreClass {
 						const mediaSources = [];
 						if (!config.get("experimental.soundcloud")) {
 							mediaSources.push(/^soundcloud:/);
-							mediaSources.push(/.*soundcloud.com.*/);
 						}
 						if (!config.get("experimental.spotify")) {
 							mediaSources.push(/^spotify:/);
@@ -317,8 +316,7 @@ class _StationsModule extends CoreClass {
 							!station.currentSong ||
 							(!config.get("experimental.soundcloud") &&
 								station.currentSong.mediaSource &&
-								(station.currentSong.mediaSource.startsWith("soundcloud:") ||
-									station.currentSong.mediaSource.indexOf("soundcloud.com") !== -1)) ||
+								station.currentSong.mediaSource.startsWith("soundcloud:")) ||
 							(!config.get("experimental.spotify") &&
 								station.currentSong.mediaSource &&
 								station.currentSong.mediaSource.startsWith("spotify:"))

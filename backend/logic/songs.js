@@ -1034,7 +1034,6 @@ class _SongsModule extends CoreClass {
 						const mediaSources = [];
 						if (!config.get("experimental.soundcloud")) {
 							mediaSources.push(/^soundcloud:/);
-							mediaSources.push(/.*soundcloud.com.*/);
 						}
 						if (!config.get("experimental.spotify")) {
 							mediaSources.push(/^spotify:/);
