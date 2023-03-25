@@ -2198,7 +2198,29 @@ export default {
 				},
 
 				(station, next) => {
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+						.then(playlist => next(null, station, playlist))
+						.catch(next);
+				},
+
+				(station, playlist, next) => {
+					if (!playlist) return next("Playlist not found");
+					if (playlist.privacy !== "public" && playlist.createdBy !== session.userId)
+						return hasPermission("playlists.get", session)
+							.then(() => next(null, station, playlist))
+							.catch(() => next("User unauthorised to view playlist."));
+					return next(null, station, playlist);
+				},
+
+				(station, playlist, next) => {
 					if (!station) return next("Station not found.");
+					if (station.type === "official" && ["genre", "admin"].indexOf(playlist.type) === -1)
+						return next("Official statuibs are only allowed to autofill genre and admin playlists.");
+					if (
+						station.type === "community" &&
+						["user", "user-liked", "user-disliked", "genre", "admin"].indexOf(playlist.type) === -1
+					)
+						return next("Community stations are only allowed to autofill user, genre and admin playlists.");
 					if (station.autofill.playlists.indexOf(playlistId) !== -1)
 						return next("That playlist is already autofilling.");
 					if (station.autofill.mode === "sequential" && station.autofill.playlists.length > 0)
