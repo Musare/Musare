@@ -316,9 +316,11 @@ class _StationsModule extends CoreClass {
 						if (
 							!station.currentSong ||
 							(!config.get("experimental.soundcloud") &&
+								station.currentSong.mediaSource &&
 								(station.currentSong.mediaSource.startsWith("soundcloud:") ||
 									station.currentSong.mediaSource.indexOf("soundcloud.com") !== -1)) ||
 							(!config.get("experimental.spotify") &&
+								station.currentSong.mediaSource &&
 								station.currentSong.mediaSource.startsWith("spotify:"))
 						) {
 							return StationsModule.runJob(
