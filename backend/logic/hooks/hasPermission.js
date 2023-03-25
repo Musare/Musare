@@ -96,7 +96,8 @@ permissions.admin = {
 	"youtube.getApiRequest": true,
 	"youtube.resetStoredApiRequests": true,
 	"youtube.removeStoredApiRequest": true,
-	"youtube.removeVideos": true
+	"youtube.removeVideos": true,
+	"youtube.getMissingChannels": true
 };
 
 if (config.get("experimental.soundcloud")) {

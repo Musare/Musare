@@ -181,7 +181,7 @@ const jobs = ref([]);
 // if (hasPermission("media.recalculateAllRatings"))
 jobs.value.push({
 	name: "Get missing YouTube channels from YouTube video's",
-	socket: "media.recalculateAllRatings"
+	socket: "youtube.getMissingChannels"
 });
 
 const { openModal } = useModalsStore();

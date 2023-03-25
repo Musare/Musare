@@ -708,5 +708,23 @@ export default {
 				}
 			);
 		}
-	)
+	),
+
+	/**
+	 * Gets missing YouTube channels
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	getMissingChannels: useHasPermission("youtube.getMissingChannels", function getMissingChannels(session, cb) {
+		return YouTubeModule.runJob("GET_MISSING_CHANNELS", {}, this)
+			.then(response => {
+				this.log("SUCCESS", "YOUTUBE_GET_MISSING_CHANNELS", `Getting missing YouTube channels was successful.`);
+				return cb({ status: "success", data: { ...response } });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "YOUTUBE_GET_MISSING_CHANNELS", `Getting missing YouTube channels failed. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	})
 };
