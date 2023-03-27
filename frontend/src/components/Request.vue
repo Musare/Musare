@@ -126,9 +126,9 @@ const addSongToQueue = (mediaSource: string, index?: number) => {
 };
 
 watch(
-	() => props.disableAutoRequest,
+	() => station.value.requests.allowAutorequest && !props.disableAutoRequest,
 	value => {
-		if (value && tab.value === "autorequest") showTab("songs");
+		if (!value && tab.value === "autorequest") showTab("songs");
 	}
 );
 
