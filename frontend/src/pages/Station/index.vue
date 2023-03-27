@@ -534,7 +534,13 @@ const calculateTimeElapsed = async () => {
 		(dateCurrently() - startedAt.value - localTimePaused) / 1000;
 
 	const songDuration = currentSong.value.duration;
-	if (youtubePlayerReady.value && songDuration <= duration) playerPause();
+	// TODO: we should really move this out of calculateTimeElapsed in the future
+	if (
+		youtubePlayerReady.value &&
+		songDuration <= duration &&
+		currentSongMediaType.value === "youtube"
+	)
+		playerPause();
 	if (duration <= songDuration)
 		timeElapsed.value =
 			typeof duration === "number" ? utils.formatTime(duration) : "0";
@@ -671,6 +677,7 @@ const youtubeReady = () => {
 
 					// on ios, playback will be forcibly paused locally
 					if (isApple.value) {
+						debugger;
 						updateLocalPaused(true);
 						new Toast(
 							`Please click play manually to use ${configStore.get(
@@ -999,6 +1006,7 @@ const resumeLocalStation = () => {
 	if (!stationPaused.value) resumeLocalPlayer();
 };
 const pauseLocalStation = () => {
+	debugger;
 	updateLocalPaused(true);
 	pauseLocalPlayer();
 };

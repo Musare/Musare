@@ -343,8 +343,14 @@ export const useSoundcloudPlayer = () => {
 			changeTrackState("playing");
 	});
 
-	soundcloudBindListener("pause", () => {
-		console.debug(TAG, "On pause");
+	soundcloudBindListener("pause", eventValue => {
+		console.debug(TAG, "On pause", eventValue);
+
+		const finishedPlaying = eventValue.relativePosition === 1;
+		if (finishedPlaying) {
+			changeTrackState("finished");
+			return;
+		}
 
 		if (trackState.value !== "attempting_to_play")
 			changeTrackState("paused");
