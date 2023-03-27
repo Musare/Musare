@@ -110,6 +110,7 @@ watch(
 	margin-top: -15px;
 	margin-bottom: -15px;
 	margin-left: -10px;
+	overflow: hidden;
 
 	// .yt-thumbnail-bg {
 	// 	display: none;

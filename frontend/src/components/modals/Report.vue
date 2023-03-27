@@ -473,7 +473,7 @@ onMounted(() => {
 	}
 
 	.song-info {
-		margin-left: 130px;
+		margin-left: 130px !important;
 	}
 }
 </style>
