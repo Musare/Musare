@@ -442,7 +442,7 @@ onBeforeUnmount(() => {
 									<router-link
 										v-if="
 											hasPermission(
-												'admin.view.youtubeVideos'
+												'admin.view.youtubeChannels'
 											)
 										"
 										class="sidebar-item-child"

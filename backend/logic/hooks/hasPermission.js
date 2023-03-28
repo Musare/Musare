@@ -37,7 +37,6 @@ permissions.moderator = {
 	"admin.view.stations": true,
 	"admin.view.users": true,
 	"admin.view.youtubeVideos": true,
-	"admin.view.youtubeChannels": true,
 	"apis.searchDiscogs": true,
 	"news.create": true,
 	"news.update": true,
@@ -96,8 +95,7 @@ permissions.admin = {
 	"youtube.getApiRequest": true,
 	"youtube.resetStoredApiRequests": true,
 	"youtube.removeStoredApiRequest": true,
-	"youtube.removeVideos": true,
-	"youtube.getMissingChannels": true
+	"youtube.removeVideos": true
 };
 
 if (config.get("experimental.soundcloud")) {
@@ -105,7 +103,12 @@ if (config.get("experimental.soundcloud")) {
 	permissions.admin["admin.view.soundcloudTracks"] = true;
 	permissions.admin["admin.view.soundcloud"] = true;
 }
-if (config.get("experimental.spotify")) permissions.admin["admin.view.spotify"] = true;
+if (config.get("experimental.spotify")) {
+	permissions.moderator["admin.view.youtubeChannels"] = true;
+	permissions.admin["admin.view.youtubeChannels"] = true;
+	permissions.admin["admin.view.spotify"] = true;
+	permissions.admin["youtube.getMissingChannels"] = true;
+}
 
 export const hasPermission = async (permission, session, stationId) => {
 	const CacheModule = moduleManager.modules.cache;

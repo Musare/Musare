@@ -223,7 +223,7 @@ const router = createRouter({
 					component: () =>
 						import("@/pages/Admin/YouTube/Channels.vue"),
 					meta: {
-						permissionRequired: "admin.view.youtubeVideos"
+						permissionRequired: "admin.view.youtubeChannels"
 					}
 				},
 				{
