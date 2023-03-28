@@ -13,8 +13,7 @@ FROM node:18 AS musare_frontend
 ARG FRONTEND_MODE=production
 ENV FRONTEND_MODE=${FRONTEND_MODE}
 
-RUN apt update
-RUN apt install nginx -y
+RUN apt update && apt install nginx -y
 
 RUN mkdir -p /opt/app /opt/types
 WORKDIR /opt/app

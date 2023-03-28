@@ -677,7 +677,6 @@ const youtubeReady = () => {
 
 					// on ios, playback will be forcibly paused locally
 					if (isApple.value) {
-						debugger;
 						updateLocalPaused(true);
 						new Toast(
 							`Please click play manually to use ${configStore.get(
@@ -1006,7 +1005,6 @@ const resumeLocalStation = () => {
 	if (!stationPaused.value) resumeLocalPlayer();
 };
 const pauseLocalStation = () => {
-	debugger;
 	updateLocalPaused(true);
 	pauseLocalPlayer();
 };

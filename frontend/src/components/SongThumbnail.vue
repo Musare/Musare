@@ -9,6 +9,7 @@ const props = defineProps({
 const emit = defineEmits(["loadError"]);
 
 const loadError = ref(0);
+const loaded = ref(false);
 
 const isYoutubeThumbnail = computed(
 	() =>
@@ -44,6 +45,10 @@ const onLoadError = () => {
 	emit("loadError", loadError.value);
 };
 
+const onLoad = () => {
+	loaded.value = true;
+};
+
 watch(
 	() => props.song,
 	() => {
@@ -54,50 +59,39 @@ watch(
 </script>
 
 <template>
-	<div
-		:class="{
-			thumbnail: true,
-			'youtube-thumbnail': isYoutubeThumbnail
-		}"
-	>
+	<div class="thumbnail">
 		<slot name="icon" />
-		<div
-			v-if="-1 < loadError && loadError < 2 && isYoutubeThumbnail"
-			class="thumbnail-bg"
-			:style="{
-				'background-image':
-					'url(' +
-					`https://img.youtube.com/vi/${
-						song.mediaSource
-							? song.mediaSource.split(':')[1]
-							: song.youtubeId
-					}/mqdefault.jpg` +
-					')'
-			}"
-		></div>
-		<div
-			v-if="-1 < loadError && loadError < 2 && !isYoutubeThumbnail"
-			class="thumbnail-bg"
-			:style="{
-				'background-image': `url(${song.thumbnail})`
-			}"
-		></div>
-		<img
-			v-if="-1 < loadError && loadError < 2 && isYoutubeThumbnail"
-			loading="lazy"
-			:src="`https://img.youtube.com/vi/${
-				song.mediaSource
-					? song.mediaSource.split(':')[1]
-					: song.youtubeId
-			}/mqdefault.jpg`"
-			@error="onLoadError"
-		/>
-		<img
-			v-else-if="loadError <= 0"
-			loading="lazy"
-			:src="song.thumbnail"
-			@error="onLoadError"
-		/>
+		<template v-if="loadError < 2">
+			<div
+				v-if="loaded"
+				class="thumbnail-bg"
+				:style="{
+					'background-image': `url('${
+						isYoutubeThumbnail
+							? `https://img.youtube.com/vi/${
+									song.mediaSource
+										? song.mediaSource.split(':')[1]
+										: song.youtubeId
+							  }/mqdefault.jpg`
+							: song.thumbnail
+					}')`
+				}"
+			></div>
+			<img
+				loading="lazy"
+				:src="
+					isYoutubeThumbnail
+						? `https://img.youtube.com/vi/${
+								song.mediaSource
+									? song.mediaSource.split(':')[1]
+									: song.youtubeId
+						  }/mqdefault.jpg`
+						: song.thumbnail
+				"
+				@error="onLoadError"
+				@load="onLoad"
+			/>
+		</template>
 		<img v-else loading="lazy" src="/assets/notes-transparent.png" />
 	</div>
 </template>
@@ -112,12 +106,7 @@ watch(
 	margin-left: -10px;
 	overflow: hidden;
 
-	// .yt-thumbnail-bg {
-	// 	display: none;
-	// }
-
 	img {
-		// height: 100%;
 		width: 100%;
 		margin-top: auto;
 		margin-bottom: auto;
@@ -135,15 +124,9 @@ watch(
 		display: block;
 		position: absolute;
 		top: 0;
-		filter: blur(2px);
+		filter: blur(1px);
 		background: url("/assets/notes-transparent.png") no-repeat center center;
 		background-size: cover;
 	}
-
-	// &.youtube-thumbnail {
-	// 	img {
-	// 		height: auto;
-	// 	}
-	// }
 }
 </style>
