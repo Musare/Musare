@@ -1037,7 +1037,8 @@ export default {
 				},
 
 				async () => {
-					const response = await StationsModule.stationHistoryModel
+					const stationHistoryModel = await DBModule.runJob("GET_MODEL", { modelName: "stationHistory" });
+					const response = await stationHistoryModel
 						.find({ stationId }, { documentVersion: 0, __v: 0 })
 						.sort({ "payload.skippedAt": -1 })
 						.limit(250);

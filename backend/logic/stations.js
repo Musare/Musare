@@ -987,7 +987,9 @@ class _StationsModule extends CoreClass {
 
 		const { stationId, currentSong, skipReason, skippedAt } = payload;
 
-		let document = await StationsModule.stationHistoryModel.create({
+		const stationHistoryModel = await DBModule.runJob("GET_MODEL", { modelName: "stationHistory" });
+
+		let document = await stationHistoryModel.create({
 			stationId,
 			type: "song_played",
 			payload: {
