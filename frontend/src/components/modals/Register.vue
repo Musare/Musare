@@ -160,7 +160,9 @@ onMounted(async () => {
 
 		recaptchaScript.setAttribute(
 			"src",
-			`https://www.google.com/recaptcha/api.js?render=${recaptcha.value.key}`
+			`https://www.google.com/recaptcha/api.js?render=${configStore.get(
+				"recaptcha.key"
+			)}`
 		);
 		document.head.appendChild(recaptchaScript);
 	}

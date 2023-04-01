@@ -220,15 +220,6 @@ const currentYoutubeId = computed(() => {
 	return currentSong.value.mediaSource.split(":")[1];
 });
 
-const currentSongIsYoutube = computed(() => {
-	if (
-		!currentSong.value ||
-		!currentSong.value.mediaSource.startsWith("youtube:")
-	)
-		return false;
-	return true;
-});
-
 const {
 	joinStation,
 	leaveStation,
@@ -376,7 +367,7 @@ const getTimeRemaining = () => {
 	return 0;
 };
 const getCurrentPlayerTime = () =>
-	new Promise<number>((resolve, reject) => {
+	new Promise<number>(resolve => {
 		if (
 			currentSongMediaType.value === "youtube" &&
 			youtubePlayerReady.value
@@ -441,6 +432,25 @@ const setNextCurrentSong = (_nextCurrentSong, skipSkipCheck = false) => {
 const resizeSeekerbar = () => {
 	seekerbarPercentage.value =
 		(getTimeElapsed() / 1000 / currentSong.value.duration) * 100;
+};
+const playerSeekTo = position => {
+	console.debug("PLAYER SEEK TO", position);
+
+	// Position is in seconds
+	if (currentSongMediaType.value === "youtube" && youtubePlayerReady.value) {
+		youtubePlayer.value.seekTo(position);
+	}
+
+	if (currentSongMediaType.value === "soundcloud") {
+		soundcloudSeekTo(position * 1000);
+	}
+};
+const playerPause = () => {
+	if (youtubePlayerReady.value) {
+		youtubePlayer.value.pauseVideo();
+	}
+
+	soundcloudPause();
 };
 const calculateTimeElapsed = async () => {
 	if (experimentalChangableListenMode.value === "participate") return;
@@ -510,7 +520,7 @@ const calculateTimeElapsed = async () => {
 			_playbackRate = 1.05;
 		} else if (
 			currentSongMediaType.value === "youtube" &&
-			youtubeReady.value &&
+			youtubePlayerReady.value &&
 			youtubePlayer.value.getPlaybackRate !== 1.0
 		) {
 			youtubePlayer.value.setPlaybackRate(1.0);
@@ -518,7 +528,7 @@ const calculateTimeElapsed = async () => {
 
 		if (
 			currentSongMediaType.value === "youtube" &&
-			youtubeReady.value &&
+			youtubePlayerReady.value &&
 			playbackRate.value !== _playbackRate
 		) {
 			youtubePlayer.value.setPlaybackRate(_playbackRate);
@@ -611,25 +621,6 @@ const playerStop = () => {
 
 	soundcloudDestroy();
 };
-const playerPause = () => {
-	if (youtubePlayerReady.value) {
-		youtubePlayer.value.pauseVideo();
-	}
-
-	soundcloudPause();
-};
-const playerSeekTo = position => {
-	console.debug("PLAYER SEEK TO", position);
-
-	// Position is in seconds
-	if (currentSongMediaType.value === "youtube" && youtubePlayerReady.value) {
-		youtubePlayer.value.seekTo(position);
-	}
-
-	if (currentSongMediaType.value === "soundcloud") {
-		soundcloudSeekTo(position * 1000);
-	}
-};
 const toggleSkipVote = (message?) => {
 	socket.dispatch("stations.toggleSkipVote", station.value._id, data => {
 		if (data.status !== "success") new Toast(`Error: ${data.message}`);
@@ -638,6 +629,31 @@ const toggleSkipVote = (message?) => {
 				message || "Successfully toggled vote to skip the current song."
 			);
 	});
+};
+const resumeLocalPlayer = () => {
+	if (configStore.get("experimental.media_session"))
+		updateMediaSessionData(currentSong.value);
+	if (!noSong.value) {
+		playerSeekTo(getTimeElapsed() / 1000 + currentSong.value.skipDuration);
+		playerPlay();
+	}
+};
+const resumeLocalStation = () => {
+	updateLocalPaused(false);
+	autoPaused.value = false;
+	if (!stationPaused.value) resumeLocalPlayer();
+};
+const pauseLocalPlayer = () => {
+	if (configStore.get("experimental.media_session"))
+		updateMediaSessionData(currentSong.value);
+	if (!noSong.value) {
+		timeBeforePause.value = getTimeElapsed();
+		playerPause();
+	}
+};
+const pauseLocalStation = () => {
+	updateLocalPaused(true);
+	pauseLocalPlayer();
 };
 const youtubeReady = () => {
 	if (experimentalChangableListenMode.value === "participate") return;
@@ -982,31 +998,6 @@ const changeVolume = () => {
 	localStorage.setItem("muted", `${muted.value}`);
 
 	changePlayerVolume();
-};
-const resumeLocalPlayer = () => {
-	if (configStore.get("experimental.media_session"))
-		updateMediaSessionData(currentSong.value);
-	if (!noSong.value) {
-		playerSeekTo(getTimeElapsed() / 1000 + currentSong.value.skipDuration);
-		playerPlay();
-	}
-};
-const pauseLocalPlayer = () => {
-	if (configStore.get("experimental.media_session"))
-		updateMediaSessionData(currentSong.value);
-	if (!noSong.value) {
-		timeBeforePause.value = getTimeElapsed();
-		playerPause();
-	}
-};
-const resumeLocalStation = () => {
-	updateLocalPaused(false);
-	autoPaused.value = false;
-	if (!stationPaused.value) resumeLocalPlayer();
-};
-const pauseLocalStation = () => {
-	updateLocalPaused(true);
-	pauseLocalPlayer();
 };
 const skipStation = () => {
 	socket.dispatch("stations.forceSkip", station.value._id, data => {
@@ -1704,7 +1695,10 @@ onMounted(async () => {
 				);
 
 				// eslint-disable-next-line no-restricted-globals
-				history.replaceState({ ...history.state, ...{} }, null);
+				window.history.replaceState(
+					{ ...window.history.state, ...{} },
+					null
+				);
 			}
 
 			if (station.value.theme !== theme)
@@ -3180,6 +3174,7 @@ onBeforeUnmount(() => {
 
 					input[type="range"] {
 						-webkit-appearance: none;
+						appearance: none;
 						margin: 7.3px 0;
 					}
 
@@ -3206,6 +3201,7 @@ onBeforeUnmount(() => {
 						background: var(--primary-color);
 						cursor: pointer;
 						-webkit-appearance: none;
+						appearance: none;
 						margin-top: -6.5px;
 					}
 
@@ -3228,6 +3224,7 @@ onBeforeUnmount(() => {
 						background: var(--primary-color);
 						cursor: pointer;
 						-webkit-appearance: none;
+						appearance: none;
 						margin-top: -6.5px;
 					}
 					input[type="range"]::-ms-track {
@@ -3262,6 +3259,7 @@ onBeforeUnmount(() => {
 						background: var(--primary-color);
 						cursor: pointer;
 						-webkit-appearance: none;
+						appearance: none;
 						margin-top: 1.5px;
 					}
 				}

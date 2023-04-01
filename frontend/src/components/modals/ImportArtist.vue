@@ -1,34 +1,23 @@
 <script setup lang="ts">
 import {
 	defineAsyncComponent,
-	ref,
 	reactive,
 	onMounted,
 	onBeforeUnmount
 } from "vue";
-import Toast from "toasters";
-import { DraggableList } from "vue-draggable-list";
-import { useWebsocketsStore } from "@/stores/websockets";
-import { useModalsStore } from "@/stores/modals";
 
 import { useYoutubeChannel } from "@/composables/useYoutubeChannel";
 import { useSoundcloudArtist } from "@/composables/useSoundcloudArtist";
 import { useSpotifyArtist } from "@/composables/useSpotifyArtist";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
-const SongItem = defineAsyncComponent(
-	() => import("@/components/SongItem.vue")
-);
 const ArtistItem = defineAsyncComponent(
 	() => import("@/components/ArtistItem.vue")
 );
 
-const props = defineProps({
+defineProps({
 	modalUuid: { type: String, required: true }
 });
-
-const { socket } = useWebsocketsStore();
-const { closeCurrentModal } = useModalsStore();
 
 const { youtubeChannelURLOrID, getYoutubeChannel, getYoutubeChannelVideos } =
 	useYoutubeChannel();

@@ -132,6 +132,20 @@ export const useSoundcloudPlayer = () => {
 		}
 	};
 
+	const soundcloudGetIsPaused = callback => {
+		let called = false;
+
+		const _callback = value => {
+			if (called) return;
+			called = true;
+
+			callback(value);
+		};
+		addMethodCallback("isPaused", _callback);
+
+		dispatchMessage("isPaused");
+	};
+
 	const attemptToPlay = () => {
 		if (trackState.value === "playing") return;
 
@@ -246,20 +260,6 @@ export const useSoundcloudPlayer = () => {
 		addMethodCallback("getDuration", _callback);
 
 		dispatchMessage("getDuration");
-	};
-
-	const soundcloudGetIsPaused = callback => {
-		let called = false;
-
-		const _callback = value => {
-			if (called) return;
-			called = true;
-
-			callback(value);
-		};
-		addMethodCallback("isPaused", _callback);
-
-		dispatchMessage("isPaused");
 	};
 
 	const soundcloudGetState = () => trackState.value;

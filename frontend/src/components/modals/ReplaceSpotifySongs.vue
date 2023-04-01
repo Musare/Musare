@@ -14,9 +14,9 @@ const props = defineProps({
 	modalUuid: { type: String, required: true },
 	spotifyAlbum: { type: Object, default: () => ({}) },
 	spotifyTracks: { type: Array, default: () => [] },
-	playlistId: { type: String },
-	youtubePlaylistId: { type: String },
-	youtubeChannelUrl: { type: String }
+	playlistId: { type: String, required: true },
+	youtubePlaylistId: { type: String, default: null },
+	youtubeChannelUrl: { type: String, default: null }
 });
 
 const { socket } = useWebsocketsStore();

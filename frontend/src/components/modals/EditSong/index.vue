@@ -76,7 +76,6 @@ const {
 	soundcloudGetCurrentSound,
 	soundcloudGetTrackId,
 	soundcloudBindListener,
-	soundcloudOnTrackStateChange,
 	soundcloudUnload
 } = useSoundcloudPlayer();
 
@@ -211,6 +210,16 @@ const {
 
 const { updateMediaModalPlayingAudio } = stationStore;
 
+const playerHardStop = () => {
+	if (
+		youtubePlayerReady.value &&
+		video.value.player &&
+		video.value.player.stopVideo
+	)
+		video.value.player.stopVideo();
+	soundcloudUnload();
+};
+
 const unloadSong = (_mediaSource, songId?) => {
 	songDataLoaded.value = false;
 	songDeleted.value = false;
@@ -285,6 +294,15 @@ const onSaving = mediaSource => {
 	if (itemIndex > -1) items.value[itemIndex].status = "saving";
 };
 
+const getCurrentSongMediaType = mediaSource => {
+	if (!mediaSource || mediaSource.indexOf(":") === -1) return "none";
+	return mediaSource.split(":")[0];
+};
+const getCurrentSongMediaValue = mediaSource => {
+	if (!mediaSource || mediaSource.indexOf(":") === -1) return null;
+	return mediaSource.split(":")[1];
+};
+
 const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 	{
 		title: {
@@ -339,13 +357,17 @@ const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 		mediaSource: {
 			value: "",
 			validate: value => {
-				if (currentSongMediaType.value === "none")
+				if (
+					getCurrentSongMediaType(inputs.value.mediaSource.value) ===
+					"none"
+				)
 					return "Media source type is not valid.";
-				if (!currentSongMediaValue.value)
+				if (!getCurrentSongMediaValue(inputs.value.mediaSource.value))
 					return "Media source value is not valid.";
 
 				if (
-					currentSongMediaType.value === "youtube" &&
+					getCurrentSongMediaType(inputs.value.mediaSource.value) ===
+						"youtube" &&
 					!newSong.value &&
 					youtubeError.value &&
 					inputs.value.mediaSource.originalValue !== value
@@ -473,24 +495,15 @@ const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 	{ modalUuid: props.modalUuid, preventCloseUnsaved: false }
 );
 
-const currentSongMediaType = computed(() => {
-	if (
-		!inputs.value.mediaSource.value ||
-		inputs.value.mediaSource.value.indexOf(":") === -1
-	)
-		return "none";
-	return inputs.value.mediaSource.value.split(":")[0];
-});
-const currentSongMediaValue = computed(() => {
-	if (
-		!inputs.value.mediaSource.value ||
-		inputs.value.mediaSource.value.indexOf(":") === -1
-	)
-		return null;
-	return inputs.value.mediaSource.value.split(":")[1];
-});
+const currentSongMediaType = computed(() =>
+	getCurrentSongMediaType(inputs.value.mediaSource.value)
+);
+const currentSongMediaValue = computed(() =>
+	getCurrentSongMediaValue(inputs.value.mediaSource.value)
+);
+
 const getCurrentPlayerTime = () =>
-	new Promise<number>((resolve, reject) => {
+	new Promise<number>(resolve => {
 		if (
 			currentSongMediaType.value === "youtube" &&
 			youtubePlayerReady.value
@@ -514,7 +527,7 @@ const getCurrentPlayerTime = () =>
 	});
 
 const getPlayerDuration = () =>
-	new Promise<number>((resolve, reject) => {
+	new Promise<number>(resolve => {
 		if (
 			currentSongMediaType.value === "youtube" &&
 			youtubePlayerReady.value
@@ -733,6 +746,26 @@ const drawCanvas = async () => {
 	ctx.fillRect(widthCurrentTime, 0, 1, 20);
 };
 
+const playerPlay = () => {
+	if (currentSongMediaType.value === "youtube") {
+		soundcloudPause();
+		if (
+			youtubePlayerReady.value &&
+			video.value.player &&
+			video.value.player.playVideo
+		)
+			video.value.player.playVideo();
+	} else if (currentSongMediaType.value === "soundcloud") {
+		if (
+			youtubePlayerReady.value &&
+			video.value.player &&
+			video.value.player.pauseVideo
+		)
+			video.value.player.pauseVideo();
+		soundcloudPlay();
+	}
+};
+
 const seekTo = (position, play = true) => {
 	if (currentSongMediaType.value === "youtube") {
 		if (play) {
@@ -868,16 +901,6 @@ const fillDuration = () => {
 	}
 };
 
-const playerHardStop = () => {
-	if (
-		youtubePlayerReady.value &&
-		video.value.player &&
-		video.value.player.stopVideo
-	)
-		video.value.player.stopVideo();
-	soundcloudUnload();
-};
-
 const playerPause = () => {
 	if (
 		youtubePlayerReady.value &&
@@ -886,26 +909,6 @@ const playerPause = () => {
 	)
 		video.value.player.pauseVideo();
 	soundcloudPause();
-};
-
-const playerPlay = () => {
-	if (currentSongMediaType.value === "youtube") {
-		soundcloudPause();
-		if (
-			youtubePlayerReady.value &&
-			video.value.player &&
-			video.value.player.playVideo
-		)
-			video.value.player.playVideo();
-	} else if (currentSongMediaType.value === "soundcloud") {
-		if (
-			youtubePlayerReady.value &&
-			video.value.player &&
-			video.value.player.pauseVideo
-		)
-			video.value.player.pauseVideo();
-		soundcloudPlay();
-	}
 };
 
 const settings = type => {

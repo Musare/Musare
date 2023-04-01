@@ -3,6 +3,7 @@ import { Playlist } from "@/types/playlist";
 import { Song, CurrentSong } from "@/types/song";
 import { Station } from "@/types/station";
 import { User } from "@/types/user";
+import { StationHistory } from "@/types/stationHistory";
 import { useWebsocketsStore } from "@/stores/websockets";
 
 export const useStationStore = defineStore("station", {
@@ -25,7 +26,7 @@ export const useStationStore = defineStore("station", {
 		blacklist: Playlist[];
 		mediaModalPlayingAudio: boolean;
 		permissions: Record<string, boolean>;
-		history: any[];
+		history: StationHistory[];
 	} => ({
 		station: {},
 		autoRequest: [],
@@ -201,10 +202,10 @@ export const useStationStore = defineStore("station", {
 				}
 			});
 		},
-		setHistory(history) {
+		setHistory(history: StationHistory[]) {
 			this.history = history;
 		},
-		addHistoryItem(historyItem) {
+		addHistoryItem(historyItem: StationHistory) {
 			this.history.unshift(historyItem);
 		}
 	}

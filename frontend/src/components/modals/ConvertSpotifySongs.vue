@@ -103,7 +103,6 @@ const youtubeVideoUrlRegex =
 const youtubeVideoIdRegex = /^([\w-]{11})$/;
 
 const youtubePlaylistUrlRegex = /[\\?&]list=([^&#]*)/;
-const youtubeChannelUrlRegex = /channel\/([A-Za-z0-9]+)\/?/;
 
 const filteredSpotifySongs = computed(() =>
 	hideSpotifySongsWithNoAlternativesFound.value
@@ -140,6 +139,7 @@ const filteredSpotifyArtists = computed(() => {
 			if (nameA === nameB) return 0;
 			if (nameA < nameB) return -1;
 			if (nameA > nameB) return 1;
+			return 0;
 		};
 	else if (loadedSpotifyArtists.value && sortArtistMode.value === "NAME_DESC")
 		sortFn = (artistA, artistB) => {
@@ -149,6 +149,7 @@ const filteredSpotifyArtists = computed(() => {
 			if (nameA === nameB) return 0;
 			if (nameA > nameB) return -1;
 			if (nameA < nameB) return 1;
+			return 0;
 		};
 
 	if (sortFn) artists = artists.sort(sortFn);
@@ -176,6 +177,7 @@ const filteredSpotifyAlbums = computed(() => {
 			if (nameA === nameB) return 0;
 			if (nameA < nameB) return -1;
 			if (nameA > nameB) return 1;
+			return 0;
 		};
 	else if (loadedSpotifyAlbums.value && sortAlbumMode.value === "NAME_DESC")
 		sortFn = (albumA, albumB) => {
@@ -185,6 +187,7 @@ const filteredSpotifyAlbums = computed(() => {
 			if (nameA === nameB) return 0;
 			if (nameA > nameB) return -1;
 			if (nameA < nameB) return 1;
+			return 0;
 		};
 
 	if (sortFn) albums = albums.sort(sortFn);
@@ -271,6 +274,8 @@ const preferredAlternativeSongPerTrack = computed(() => {
 					if (!aHasLyrics && bHasLyrics) return 1;
 					return 0;
 				}
+
+				return 0;
 			};
 
 			if (
@@ -372,8 +377,10 @@ const openReplaceAlbumModal = (spotifyAlbumId, youtubePlaylistId) => {
 	if (
 		!spotifyAlbums[spotifyAlbumId] ||
 		!spotifyAlbums[spotifyAlbumId].rawData
-	)
-		return new Toast("Album hasn't loaded yet.");
+	) {
+		new Toast("Album hasn't loaded yet.");
+		return;
+	}
 
 	openModal({
 		modal: "replaceSpotifySongs",
@@ -397,7 +404,7 @@ const openReplaceAlbumModalFromUrl = spotifyAlbumId => {
 	const youtubePlaylistUrlRegexMatches =
 		youtubePlaylistUrlRegex.exec(replacementUrl);
 	if (youtubePlaylistUrlRegexMatches)
-		youtubePlaylistId = youtubePlaylistUrlRegexMatches[0];
+		[youtubePlaylistId] = youtubePlaylistUrlRegexMatches;
 
 	console.log("Open modal for ", youtubePlaylistId);
 
@@ -410,8 +417,10 @@ const openReplaceArtistModal = (spotifyArtistId, youtubeChannelUrl) => {
 	if (
 		!spotifyArtists[spotifyArtistId] ||
 		!spotifyArtists[spotifyArtistId].rawData
-	)
-		return new Toast("Artist hasn't loaded yet.");
+	) {
+		new Toast("Artist hasn't loaded yet.");
+		return;
+	}
 
 	openModal({
 		modal: "replaceSpotifySongs",
@@ -461,7 +470,10 @@ const replaceSongFromUrl = spotifyMediaSource => {
 	if (youtubeVideoIdRegexMatches)
 		newMediaSource = `youtube:${youtubeVideoIdRegexMatches[0]}`;
 
-	if (!newMediaSource) return new Toast("Invalid URL/identifier specified.");
+	if (!newMediaSource) {
+		new Toast("Invalid URL/identifier specified.");
+		return;
+	}
 
 	replaceSpotifySong(spotifyMediaSource, newMediaSource);
 };
