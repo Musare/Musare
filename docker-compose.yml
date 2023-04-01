@@ -31,6 +31,14 @@ services:
       target: musare_frontend
       args:
         FRONTEND_MODE: "${FRONTEND_MODE:-production}"
+        FRONTEND_PROD_DEVTOOLS: "${FRONTEND_PROD_DEVTOOLS:-false}"
+        MUSARE_SITENAME: "${MUSARE_SITENAME:-Musare}"
+        MUSARE_DEBUG_VERSION: "${MUSARE_DEBUG_VERSION:-true}"
+        MUSARE_DEBUG_GIT_REMOTE: "${MUSARE_DEBUG_GIT_REMOTE:-false}"
+        MUSARE_DEBUG_GIT_REMOTE_URL: "${MUSARE_DEBUG_GIT_REMOTE_URL:-false}"
+        MUSARE_DEBUG_GIT_BRANCH: ${MUSARE_DEBUG_GIT_BRANCH:-true}
+        MUSARE_DEBUG_GIT_LATEST_COMMIT: "${MUSARE_DEBUG_GIT_LATEST_COMMIT:-true}"
+        MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT: "${MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT:-true}"
     restart: ${RESTART_POLICY:-unless-stopped}
     user: root
     ports:
