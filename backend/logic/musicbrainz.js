@@ -50,7 +50,7 @@ class _MusicBrainzModule extends CoreClass {
 	}
 
 	/**
-	 * Initialises the activities module
+	 * Initialises the MusicBrainz module
 	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
