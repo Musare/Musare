@@ -610,7 +610,7 @@ class _PlaylistsModule extends CoreClass {
 							MediaModule.runJob("RECALCULATE_RATINGS", {
 								mediaSource: oldMediaSource
 							})
-								.then(ratings => next(null, playlist, newSong, newRatings, oldRatings))
+								.then(oldRatings => next(null, playlist, newSong, newRatings, oldRatings))
 								.catch(next);
 						} else {
 							next(null, playlist, newSong, null, null);

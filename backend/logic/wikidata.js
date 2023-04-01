@@ -1,5 +1,3 @@
-import config from "config";
-
 import axios from "axios";
 
 import CoreClass from "../core";
@@ -36,13 +34,7 @@ class RateLimitter {
 }
 
 let WikiDataModule;
-let CacheModule;
 let DBModule;
-let MediaModule;
-let SongsModule;
-let StationsModule;
-let PlaylistsModule;
-let WSModule;
 
 class _WikiDataModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -63,13 +55,7 @@ class _WikiDataModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async initialize() {
-		CacheModule = this.moduleManager.modules.cache;
 		DBModule = this.moduleManager.modules.db;
-		MediaModule = this.moduleManager.modules.media;
-		SongsModule = this.moduleManager.modules.songs;
-		StationsModule = this.moduleManager.modules.stations;
-		PlaylistsModule = this.moduleManager.modules.playlists;
-		WSModule = this.moduleManager.modules.ws;
 
 		this.genericApiRequestModel = this.GenericApiRequestModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "genericApiRequest"

@@ -12,7 +12,6 @@ const UtilsModule = moduleManager.modules.utils;
 const WSModule = moduleManager.modules.ws;
 const YouTubeModule = moduleManager.modules.youtube;
 const SpotifyModule = moduleManager.modules.spotify;
-const CacheModule = moduleManager.modules.cache;
 
 export default {
 	/**

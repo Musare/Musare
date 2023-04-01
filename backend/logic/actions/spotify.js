@@ -1,15 +1,9 @@
-import mongoose from "mongoose";
-import async from "async";
-
-import isLoginRequired from "../hooks/loginRequired";
 import { useHasPermission } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
 
-const DBModule = moduleManager.modules.db;
 const UtilsModule = moduleManager.modules.utils;
-const SoundcloudModule = moduleManager.modules.soundcloud;
 const SpotifyModule = moduleManager.modules.spotify;
 
 export default {

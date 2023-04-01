@@ -18,7 +18,6 @@ let WikiDataModule;
 
 const youtubeVideoUrlRegex =
 	/^(https?:\/\/)?(www\.)?(m\.)?(music\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?(?<youtubeId>[\w-]{11})((&([A-Za-z0-9]+)?)*)?$/;
-const youtubeVideoIdRegex = /^([\w-]{11})$/;
 
 const spotifyTrackObjectToMusareTrackObject = spotifyTrackObject => ({
 	trackId: spotifyTrackObject.id,
@@ -123,8 +122,9 @@ class _SpotifyModule extends CoreClass {
 	}
 
 	/**
+	 * Fetches a Spotify API token from either the cache, or Spotify using the client id and secret from the config
 	 *
-	 * @returns
+	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_API_TOKEN() {
 		return new Promise((resolve, reject) => {
@@ -366,7 +366,10 @@ class _SpotifyModule extends CoreClass {
 							const trackIds = spotifyTracks.map(spotifyTrack => spotifyTrack.trackId);
 
 							SpotifyModule.spotifyTrackModel.find({ trackId: trackIds }, (err, existingTracks) => {
-								if (err) return next(err);
+								if (err) {
+									next(err);
+									return;
+								}
 
 								const existingTrackIds = existingTracks.map(existingTrack => existingTrack.trackId);
 
@@ -467,8 +470,9 @@ class _SpotifyModule extends CoreClass {
 	/**
 	 * Gets tracks from media sources
 	 *
-	 * @param {object} payload
-	 * @returns {Promise}
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.mediaSources - the media sources to get tracks from
+	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_TRACKS_FROM_MEDIA_SOURCES(payload) {
 		return new Promise((resolve, reject) => {
@@ -511,10 +515,11 @@ class _SpotifyModule extends CoreClass {
 	}
 
 	/**
-	 * Gets albums from ids
+	 * Gets albums from Spotify album ids
 	 *
-	 * @param {object} payload
-	 * @returns {Promise}
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.albumIds - the Spotify album ids
+	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ALBUMS_FROM_IDS(payload) {
 		const { albumIds } = payload;
@@ -563,10 +568,11 @@ class _SpotifyModule extends CoreClass {
 	}
 
 	/**
-	 * Gets artists from ids
+	 * Gets Spotify artists from Spotify artist ids
 	 *
-	 * @param {object} payload
-	 * @returns {Promise}
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.artistIds - the Spotify artist ids
+	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ARTISTS_FROM_IDS(payload) {
 		const { artistIds } = payload;
@@ -733,8 +739,10 @@ class _SpotifyModule extends CoreClass {
 										.then(({ response }) => {
 											const { data } = response;
 
-											if (!data)
-												return next("The provided URL does not exist or cannot be accessed.");
+											if (!data) {
+												next("The provided URL does not exist or cannot be accessed.");
+												return;
+											}
 
 											total = data.total;
 											nextUrl = data.next;
@@ -753,8 +761,8 @@ class _SpotifyModule extends CoreClass {
 							},
 							err => {
 								if (err) next(err);
-								else {
-									return SpotifyModule.runJob("CREATE_TRACKS", { spotifyTracks }, this)
+								else
+									SpotifyModule.runJob("CREATE_TRACKS", { spotifyTracks }, this)
 										.then(() => {
 											next(
 												null,
@@ -762,7 +770,6 @@ class _SpotifyModule extends CoreClass {
 											);
 										})
 										.catch(next);
-								}
 							}
 						);
 					}
@@ -787,9 +794,12 @@ class _SpotifyModule extends CoreClass {
 	}
 
 	/**
+	 * Tries to get alternative artists sources for a list of Spotify artist ids
 	 *
-	 * @param {*} payload
-	 * @returns
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.artistIds - the Spotify artist ids to try and get alternative artist sources for
+	 * @param {string} payload.collectAlternativeArtistSourcesOrigins - whether to collect the origin of any alternative artist sources found
+	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ALTERNATIVE_ARTIST_SOURCES_FOR_ARTISTS(payload) {
 		const { artistIds, collectAlternativeArtistSourcesOrigins } = payload;
@@ -832,12 +842,15 @@ class _SpotifyModule extends CoreClass {
 	}
 
 	/**
+	 * Tries to get alternative artist sources for a Spotify artist id
 	 *
-	 * @param {*} payload
-	 * @returns
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.artistId - the Spotify artist id to try and get alternative artist sources for
+	 * @param {string} payload.collectAlternativeArtistSourcesOrigins - whether to collect the origin of any alternative artist sources found
+	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ALTERNATIVE_ARTIST_SOURCES_FOR_ARTIST(payload) {
-		const { artistId, collectAlternativeArtistSourcesOrigins } = payload;
+		const { artistId /* , collectAlternativeArtistSourcesOrigins */ } = payload;
 
 		if (!artistId) throw new Error("Artist id provided is not valid.");
 
@@ -887,9 +900,12 @@ class _SpotifyModule extends CoreClass {
 	}
 
 	/**
+	 * Tries to get alternative album sources for a list of Spotify album ids
 	 *
-	 * @param {*} payload
-	 * @returns
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.albumIds - the Spotify album ids to try and get alternative album sources for
+	 * @param {string} payload.collectAlternativeAlbumSourcesOrigins - whether to collect the origin of any alternative album sources found
+	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ALTERNATIVE_ALBUM_SOURCES_FOR_ALBUMS(payload) {
 		const { albumIds, collectAlternativeAlbumSourcesOrigins } = payload;
@@ -932,12 +948,15 @@ class _SpotifyModule extends CoreClass {
 	}
 
 	/**
+	 * Tries to get alternative album sources for a Spotify album id
 	 *
-	 * @param {*} payload
-	 * @returns
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.albumId - the Spotify album id to try and get alternative album sources for
+	 * @param {string} payload.collectAlternativeAlbumSourcesOrigins - whether to collect the origin of any alternative album sources found
+	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ALTERNATIVE_ALBUM_SOURCES_FOR_ALBUM(payload) {
-		const { albumId, collectAlternativeAlbumSourcesOrigins } = payload;
+		const { albumId /* , collectAlternativeAlbumSourcesOrigins */ } = payload;
 
 		if (!albumId) throw new Error("Album id provided is not valid.");
 
@@ -967,9 +986,12 @@ class _SpotifyModule extends CoreClass {
 	}
 
 	/**
+	 * Tries to get alternative track sources for a list of Spotify track media sources
 	 *
-	 * @param {*} payload
-	 * @returns
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.mediaSources - the Spotify media sources to try and get alternative track sources for
+	 * @param {string} payload.collectAlternativeMediaSourcesOrigins - whether to collect the origin of any alternative track sources found
+	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ALTERNATIVE_MEDIA_SOURCES_FOR_TRACKS(payload) {
 		const { mediaSources, collectAlternativeMediaSourcesOrigins } = payload;
@@ -1016,9 +1038,12 @@ class _SpotifyModule extends CoreClass {
 	}
 
 	/**
+	 * Tries to get alternative track sources for a Spotify track media source
 	 *
-	 * @param {*} payload
-	 * @returns
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.mediaSource - the Spotify media source to try and get alternative track sources for
+	 * @param {string} payload.collectAlternativeMediaSourcesOrigins - whether to collect the origin of any alternative track sources found
+	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ALTERNATIVE_MEDIA_SOURCES_FOR_TRACK(payload) {
 		const { mediaSource, collectAlternativeMediaSourcesOrigins } = payload;
@@ -1339,7 +1364,7 @@ class _SpotifyModule extends CoreClass {
 			const releaseGroupIds = new Set();
 
 			RecordingApiResponse.recordings.forEach(recording => {
-				const recordingId = recording.id;
+				// const recordingId = recording.id;
 				// console.log("Recording:", recording.id);
 
 				recording.releases.forEach(release => {

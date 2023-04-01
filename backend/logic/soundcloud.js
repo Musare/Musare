@@ -155,8 +155,9 @@ class _SoundCloudModule extends CoreClass {
 	}
 
 	/**
+	 * Generates/fetches a new SoundCloud API key
 	 *
-	 * @returns
+	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GENERATE_SOUNDCLOUD_API_KEY() {
 		return new Promise((resolve, reject) => {
@@ -197,8 +198,9 @@ class _SoundCloudModule extends CoreClass {
 	}
 
 	/**
+	 * Tests the stored SoundCloud API key
 	 *
-	 * @returns
+	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	TEST_SOUNDCLOUD_API_KEY() {
 		return new Promise((resolve, reject) => {
@@ -206,7 +208,8 @@ class _SoundCloudModule extends CoreClass {
 			CacheModule.runJob("GET", { key: "soundcloudApiKey" }, this).then(soundcloudApiKey => {
 				if (!soundcloudApiKey) {
 					this.log("ERROR", "No SoundCloud API key found in cache.");
-					return resolve(false);
+					resolve(false);
+					return;
 				}
 
 				SoundCloudModule.soundcloudApiKey = soundcloudApiKey;
@@ -392,10 +395,11 @@ class _SoundCloudModule extends CoreClass {
 	}
 
 	/**
-	 * Gets a track from a SoundCloud URL
+	 * Tries to get a SoundCloud track from a URL
 	 *
-	 * @param {*} payload
-	 * @returns {Promise}
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.identifier - the SoundCloud track URL
+	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_TRACK_FROM_URL(payload) {
 		return new Promise((resolve, reject) => {
@@ -407,7 +411,10 @@ class _SoundCloudModule extends CoreClass {
 					next => {
 						const match = scRegex.exec(payload.identifier);
 
-						if (!match || !match.groups) return next("Invalid SoundCloud URL.");
+						if (!match || !match.groups) {
+							next("Invalid SoundCloud URL.");
+							return;
+						}
 
 						const { userPermalink, permalink } = match.groups;
 
@@ -415,15 +422,23 @@ class _SoundCloudModule extends CoreClass {
 					},
 
 					(_dbTrack, next) => {
-						if (_dbTrack) return next(null, _dbTrack, true);
+						if (_dbTrack) {
+							next(null, _dbTrack, true);
+							return;
+						}
 
 						SoundCloudModule.runJob("API_RESOLVE", { url: payload.identifier }, this)
 							.then(({ response }) => {
 								const { data } = response;
-								if (!data || !data.id)
-									return next("The provided URL does not exist or cannot be accessed.");
+								if (!data || !data.id) {
+									next("The provided URL does not exist or cannot be accessed.");
+									return;
+								}
 
-								if (data.kind !== "track") return next(`Invalid URL provided. Kind got: ${data.kind}.`);
+								if (data.kind !== "track") {
+									next(`Invalid URL provided. Kind got: ${data.kind}.`);
+									return;
+								}
 
 								// TODO get more data here
 

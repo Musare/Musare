@@ -1436,13 +1436,13 @@ export default {
 						this
 					)
 						.then(res => {
-							const { playlist, song, ratings } = res;
-							next(null, playlist, song, ratings);
+							const { playlist, song } = res;
+							next(null, playlist, song);
 						})
 						.catch(next);
 				}
 			],
-			async (err, playlist, newSong, ratings) => {
+			async (err, playlist, newSong) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(

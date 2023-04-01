@@ -127,13 +127,6 @@ class _StationsModule extends CoreClass {
 		const stationModel = (this.stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }));
 		const stationSchema = (this.stationSchema = await CacheModule.runJob("GET_SCHEMA", { schemaName: "station" }));
 
-		const stationHistoryModel = (this.stationHistoryModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "stationHistory"
-		}));
-		const stationHistorySchema = (this.stationHistorySchema = await CacheModule.runJob("GET_SCHEMA", {
-			schemaName: "stationHistory"
-		}));
-
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
@@ -980,9 +973,14 @@ class _StationsModule extends CoreClass {
 	}
 
 	/**
+	 * Creates a station history item
 	 *
-	 *
-	 * @param {*} payload
+	 * @param {object} payload - object containing the payload
+	 * @param {string} payload.stationId - the station id to create the history item for
+	 * @param {string} payload.currentSong - the song to create the history item for
+	 * @param {string} payload.skipReason - the reason the song was skipped
+	 * @param {string} payload.skippedAt - the date/time the song was skipped
+	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	async ADD_STATION_HISTORY_ITEM(payload) {
 		if (!config.get("experimental.station_history")) throw new Error("Station history is not enabled");
