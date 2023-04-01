@@ -296,7 +296,10 @@ const autoRequestSong = () => {
 	if (songsList.value.length >= 50) return;
 
 	let excludedYoutubeIds = [];
-	if (autorequestDisallowRecentlyPlayedEnabled) {
+	if (
+		autorequestDisallowRecentlyPlayedEnabled &&
+		configStore.get("experimental.station_history")
+	) {
 		excludedYoutubeIds = recentlyPlayedYoutubeIds(
 			autorequestDisallowRecentlyPlayedNumber
 		);

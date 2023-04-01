@@ -8,7 +8,7 @@ import { useStationStore } from "@/stores/station";
 import { useUserPlaylistsStore } from "@/stores/userPlaylists";
 import { useModalsStore } from "@/stores/modals";
 import { useManageStationStore } from "@/stores/manageStation";
-
+import { useConfigStore } from "@/stores/config";
 import { useSortablePlaylists } from "@/composables/useSortablePlaylists";
 
 const PlaylistItem = defineAsyncComponent(
@@ -31,6 +31,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["selected"]);
+
+const configStore = useConfigStore();
 
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
@@ -106,7 +108,10 @@ const excludedYoutubeIds = computed(() => {
 
 	const mediaSources = new Set();
 
-	if (autorequestDisallowRecentlyPlayedEnabled) {
+	if (
+		autorequestDisallowRecentlyPlayedEnabled &&
+		configStore.get("experimental.station_history")
+	) {
 		history.value.forEach((historyItem, index) => {
 			if (index < autorequestDisallowRecentlyPlayedNumber)
 				mediaSources.add(historyItem.payload.song.mediaSource);

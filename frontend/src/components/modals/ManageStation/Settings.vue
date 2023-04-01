@@ -6,6 +6,7 @@ import validation from "@/validation";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useManageStationStore } from "@/stores/manageStation";
 import { useForm } from "@/composables/useForm";
+import { useConfigStore } from "@/stores/config";
 
 const InfoIcon = defineAsyncComponent(
 	() => import("@/components/InfoIcon.vue")
@@ -16,6 +17,8 @@ const props = defineProps({
 });
 
 const { socket } = useWebsocketsStore();
+
+const configStore = useConfigStore();
 
 const manageStationStore = useManageStationStore({
 	modalUuid: props.modalUuid
@@ -321,7 +324,12 @@ watch(station, value => {
 							</div>
 						</div>
 
-						<div class="small-section">
+						<div
+							class="small-section"
+							v-if="
+								configStore.get('experimental.station_history')
+							"
+						>
 							<label class="label"
 								>Autorequest disallow recent</label
 							>
@@ -344,7 +352,8 @@ watch(station, value => {
 							v-if="
 								inputs[
 									'requestsAutorequestDisallowRecentlyPlayedEnabled'
-								].value
+								].value &&
+								configStore.get('experimental.station_history')
 							"
 							class="small-section"
 						>
