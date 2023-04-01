@@ -125,7 +125,7 @@ export default class SocketHandler {
 			this.on("ready", data => {
 				console.log("WS: SOCKET READY", data);
 
-				configStore.setConfig(data.config);
+				configStore.$patch(data.config);
 
 				this.onConnectCbs.temp.forEach(cb => cb());
 				this.onConnectCbs.persist.forEach(cb => cb());

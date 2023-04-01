@@ -38,6 +38,7 @@ const userAuthStore = useUserAuthStore();
 const route = useRoute();
 const router = useRouter();
 
+const { sitename, registrationDisabled } = storeToRefs(configStore);
 const { loggedIn, userId } = storeToRefs(userAuthStore);
 const { hasPermission } = userAuthStore;
 
@@ -376,14 +377,12 @@ onBeforeUnmount(() => {
 				<div class="content-container">
 					<div class="content">
 						<img
-							v-if="configStore.get('sitename') === 'Musare'"
+							v-if="sitename === 'Musare'"
 							src="/assets/white_wordmark.png"
-							:alt="configStore.get('sitename')"
+							:alt="sitename"
 							class="logo"
 						/>
-						<span v-else class="logo">{{
-							configStore.get("sitename")
-						}}</span>
+						<span v-else class="logo">{{ sitename }}</span>
 						<div v-if="!loggedIn" class="buttons">
 							<button
 								class="button login"
@@ -392,7 +391,7 @@ onBeforeUnmount(() => {
 								{{ t("Login") }}
 							</button>
 							<button
-								v-if="!configStore.get('registrationDisabled')"
+								v-if="!registrationDisabled"
 								class="button register"
 								@click="openModal('register')"
 							>
@@ -529,16 +528,8 @@ onBeforeUnmount(() => {
 														element.type ===
 														'official'
 													"
-													:title="
-														configStore.get(
-															'sitename'
-														)
-													"
-													>{{
-														configStore.get(
-															"sitename"
-														)
-													}}</span
+													:title="sitename"
+													>{{ sitename }}</span
 												>
 												<user-link
 													v-else
@@ -805,10 +796,8 @@ onBeforeUnmount(() => {
 									<span class="host">
 										<span
 											v-if="station.type === 'official'"
-											:title="configStore.get('sitename')"
-											>{{
-												configStore.get("sitename")
-											}}</span
+											:title="sitename"
+											>{{ sitename }}</span
 										>
 										<user-link
 											v-else

@@ -54,6 +54,7 @@ const router = useRouter();
 
 const { socket } = useWebsocketsStore();
 const configStore = useConfigStore();
+const { experimental, sitename, christmas } = storeToRefs(configStore);
 const stationStore = useStationStore();
 const userAuthStore = useUserAuthStore();
 const userPreferencesStore = useUserPreferencesStore();
@@ -298,7 +299,7 @@ const autoRequestSong = () => {
 	let excludedYoutubeIds = [];
 	if (
 		autorequestDisallowRecentlyPlayedEnabled &&
-		configStore.get("experimental.station_history")
+		experimental.value.station_history
 	) {
 		excludedYoutubeIds = recentlyPlayedYoutubeIds(
 			autorequestDisallowRecentlyPlayedNumber
@@ -634,7 +635,7 @@ const toggleSkipVote = (message?) => {
 	});
 };
 const resumeLocalPlayer = () => {
-	if (configStore.get("experimental.media_session"))
+	if (experimental.value.media_session)
 		updateMediaSessionData(currentSong.value);
 	if (!noSong.value) {
 		playerSeekTo(getTimeElapsed() / 1000 + currentSong.value.skipDuration);
@@ -647,7 +648,7 @@ const resumeLocalStation = () => {
 	if (!stationPaused.value) resumeLocalPlayer();
 };
 const pauseLocalPlayer = () => {
-	if (configStore.get("experimental.media_session"))
+	if (experimental.value.media_session)
 		updateMediaSessionData(currentSong.value);
 	if (!noSong.value) {
 		timeBeforePause.value = getTimeElapsed();
@@ -698,9 +699,7 @@ const youtubeReady = () => {
 					if (isApple.value) {
 						updateLocalPaused(true);
 						new Toast(
-							`Please click play manually to use ${configStore.get(
-								"sitename"
-							)} on iOS.`
+							`Please click play manually to use ${sitename.value} on iOS.`
 						);
 					}
 				},
@@ -873,8 +872,7 @@ const setCurrentSong = data => {
 
 	clearTimeout(window.stationNextSongTimeout);
 
-	if (configStore.get("experimental.media_session"))
-		updateMediaSessionData(_currentSong);
+	if (experimental.value.media_session) updateMediaSessionData(_currentSong);
 
 	startedAt.value = _startedAt;
 	updateStationPaused(_paused);
@@ -1227,8 +1225,6 @@ onMounted(async () => {
 		);
 	}, 1000);
 
-	const experimental = configStore.get("experimental");
-
 	socket.onConnect(() => {
 		console.debug(TAG, "On socked connect start");
 
@@ -1257,12 +1253,16 @@ onMounted(async () => {
 					djs
 				} = res.data;
 
-				if (experimental && experimental.changable_listen_mode) {
-					if (experimental.changable_listen_mode === true)
+				if (experimental.value.changable_listen_mode) {
+					if (experimental.value.changable_listen_mode === true)
 						experimentalChangableListenModeEnabled.value = true;
 					else if (
-						Array.isArray(experimental.changable_listen_mode) &&
-						experimental.changable_listen_mode.indexOf(_id) !== -1
+						Array.isArray(
+							experimental.value.changable_listen_mode
+						) &&
+						experimental.value.changable_listen_mode.indexOf(
+							_id
+						) !== -1
 					)
 						experimentalChangableListenModeEnabled.value = true;
 				}
@@ -1348,7 +1348,7 @@ onMounted(async () => {
 					}
 				});
 
-				if (configStore.get("experimental.station_history"))
+				if (experimental.value.station_history)
 					socket.dispatch("stations.getHistory", _id, res => {
 						if (res.status === "success") {
 							const { history } = res.data;
@@ -1875,7 +1875,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
 	document.getElementsByTagName("html")[0].style.cssText = "";
 
-	if (configStore.get("experimental.media_session")) {
+	if (experimental.value.media_session) {
 		ms.removeListeners(0);
 		ms.removeMediaSessionData(0);
 	}
@@ -2231,8 +2231,7 @@ onBeforeUnmount(() => {
 								<div
 									id="seeker-bar"
 									:class="{
-										'christmas-seeker':
-											configStore.get('christmas'),
+										'christmas-seeker': christmas,
 										nyan:
 											currentSong &&
 											currentSong.mediaSource ===
@@ -2321,7 +2320,7 @@ onBeforeUnmount(() => {
 								/>
 								<img
 									v-if="
-										configStore.get('christmas') &&
+										christmas &&
 										currentSong &&
 										![
 											'youtube:QH2-TGUlwu4',

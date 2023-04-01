@@ -2,6 +2,7 @@
 import { defineAsyncComponent, ref } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
@@ -18,6 +19,7 @@ const password = ref({
 const passwordElement = ref();
 
 const configStore = useConfigStore();
+const { githubAuthentication, registrationDisabled } = storeToRefs(configStore);
 const { login } = useUserAuthStore();
 
 const { openModal, closeCurrentModal } = useModalsStore();
@@ -141,7 +143,7 @@ const githubRedirect = () => {
 						Login
 					</button>
 					<a
-						v-if="configStore.get('githubAuthentication')"
+						v-if="githubAuthentication"
 						class="button is-github"
 						:href="configStore.urls.api + '/auth/github/authorize'"
 						@click="githubRedirect()"
@@ -157,7 +159,7 @@ const githubRedirect = () => {
 				</div>
 
 				<p
-					v-if="!configStore.get('registrationDisabled')"
+					v-if="!registrationDisabled"
 					class="content-box-optional-helper"
 				>
 					<a @click="changeToRegisterModal()">

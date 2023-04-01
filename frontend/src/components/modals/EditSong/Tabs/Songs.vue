@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent, onMounted } from "vue";
 
+import { storeToRefs } from "pinia";
 import { useConfigStore } from "@/stores/config";
 import { useEditSongStore } from "@/stores/editSong";
 
@@ -16,6 +17,7 @@ const props = defineProps({
 });
 
 const configStore = useConfigStore();
+const { sitename } = storeToRefs(configStore);
 const { form } = useEditSongStore({ modalUuid: props.modalUuid });
 
 const {
@@ -33,9 +35,7 @@ onMounted(async () => {
 
 <template>
 	<div class="musare-songs-tab">
-		<label class="label">
-			Search for a song on {{ configStore.get("sitename") }}
-		</label>
+		<label class="label"> Search for a song on {{ sitename }} </label>
 		<div class="control is-grouped input-with-button">
 			<p class="control is-expanded">
 				<input

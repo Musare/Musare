@@ -18,7 +18,7 @@ import AppComponent from "./App.vue";
 
 const handleMetadata = attrs => {
 	const configStore = useConfigStore();
-	document.title = `${configStore.get("sitename")} | ${attrs.title}`;
+	document.title = `${configStore.sitename} | ${attrs.title}`;
 };
 
 const app = createApp(AppComponent);
@@ -403,7 +403,7 @@ createSocket().then(async socket => {
 		});
 	});
 
-	if (configStore.get("experimental.media_session")) ms.init();
+	if (configStore.experimental.media_session) ms.init();
 
 	app.mount("#root");
 });

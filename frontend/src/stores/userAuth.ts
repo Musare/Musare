@@ -122,9 +122,7 @@ export const useUserAuthStore = defineStore("userAuth", {
 									if (configStore.urls.host !== "localhost")
 										domain = ` domain=${configStore.urls.host};`;
 
-									document.cookie = `${configStore.get(
-										"cookie"
-									)}=${
+									document.cookie = `${configStore.cookie}=${
 										res.SID
 									}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
 
@@ -164,12 +162,12 @@ export const useUserAuthStore = defineStore("userAuth", {
 						if (configStore.urls.host !== "localhost")
 							domain = ` domain=${configStore.urls.host};`;
 
-						document.cookie = `${configStore.get("cookie")}=${
+						document.cookie = `${configStore.cookie}=${
 							res.data.SID
 						}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
 
 						const bc = new BroadcastChannel(
-							`${configStore.get("cookie")}.user_login`
+							`${configStore.cookie}.user_login`
 						);
 						bc.postMessage(true);
 						bc.close();
@@ -190,9 +188,7 @@ export const useUserAuthStore = defineStore("userAuth", {
 				socket.dispatch("users.logout", res => {
 					if (res.status === "success") {
 						const configStore = useConfigStore();
-						document.cookie = `${configStore.get(
-							"cookie"
-						)}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+						document.cookie = `${configStore.cookie}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
 						window.location.reload();
 						return resolve(true);
 					}

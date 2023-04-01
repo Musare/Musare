@@ -33,11 +33,12 @@ describe("Modal component", () => {
 	});
 
 	test("christmas lights render if enabled", async () => {
-		const configStore = useConfigStore();
-		configStore.config.christmas = true;
 		const wrapper = await getWrapper(Modal, {
 			shallow: true
 		});
+		const configStore = useConfigStore();
+		configStore.christmas = true;
+		await flushPromises();
 		expect(
 			wrapper.findComponent({ name: "ChristmasLights" }).exists()
 		).toBeTruthy();

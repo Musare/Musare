@@ -19,6 +19,7 @@ const props = defineProps({
 const { socket } = useWebsocketsStore();
 
 const configStore = useConfigStore();
+const { experimental } = storeToRefs(configStore);
 
 const manageStationStore = useManageStationStore({
 	modalUuid: props.modalUuid
@@ -326,9 +327,7 @@ watch(station, value => {
 
 						<div
 							class="small-section"
-							v-if="
-								configStore.get('experimental.station_history')
-							"
+							v-if="experimental.station_history"
 						>
 							<label class="label"
 								>Autorequest disallow recent</label
@@ -352,8 +351,7 @@ watch(station, value => {
 							v-if="
 								inputs[
 									'requestsAutorequestDisallowRecentlyPlayedEnabled'
-								].value &&
-								configStore.get('experimental.station_history')
+								].value && experimental.station_history
 							"
 							class="small-section"
 						>

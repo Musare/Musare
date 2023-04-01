@@ -1,22 +1,22 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { storeToRefs } from "pinia";
 import { useConfigStore } from "@/stores/config";
 
 const configStore = useConfigStore();
+const { footerLinks, sitename } = storeToRefs(configStore);
 
 const filteredFooterLinks = computed(() =>
 	Object.fromEntries(
-		Object.entries(configStore.get("footerLinks")).filter(
+		Object.entries(footerLinks.value).filter(
 			url => !(typeof url[1] === "boolean")
 		)
 	)
 );
 
 const getLink = title =>
-	configStore.get("footerLinks")[
-		Object.keys(configStore.get("footerLinks")).find(
-			key => key.toLowerCase() === title
-		)
+	footerLinks.value[
+		Object.keys(footerLinks.value).find(key => key.toLowerCase() === title)
 	];
 </script>
 
@@ -29,11 +29,11 @@ const getLink = title =>
 				</div>
 				<router-link id="footer-logo" to="/">
 					<img
-						v-if="configStore.get('sitename') === 'Musare'"
+						v-if="sitename === 'Musare'"
 						src="/assets/blue_wordmark.png"
-						:alt="configStore.get('sitename')"
+						:alt="sitename"
 					/>
-					<span v-else>{{ configStore.get("sitename") }}</span>
+					<span v-else>{{ sitename }}</span>
 				</router-link>
 				<div id="footer-links">
 					<a

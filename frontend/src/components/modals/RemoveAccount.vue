@@ -2,6 +2,7 @@
 import { defineAsyncComponent, ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useConfigStore } from "@/stores/config";
 import { useSettingsStore } from "@/stores/settings";
 import { useWebsocketsStore } from "@/stores/websockets";
@@ -18,6 +19,7 @@ const props = defineProps({
 });
 
 const configStore = useConfigStore();
+const { cookie, githubAuthentication, messages } = storeToRefs(configStore);
 const settingsStore = useSettingsStore();
 const route = useRoute();
 
@@ -91,9 +93,7 @@ const remove = () =>
 	socket.dispatch("users.remove", res => {
 		if (res.status === "success") {
 			return socket.dispatch("users.logout", () => {
-				document.cookie = `${configStore.get(
-					"cookie"
-				)}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+				document.cookie = `${cookie.value}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
 				closeCurrentModal();
 				window.location.href = "/";
 			});
@@ -157,8 +157,7 @@ onMounted(async () => {
 				id="password-linked"
 				v-if="
 					step === 'confirm-identity' &&
-					(isPasswordLinked ||
-						!configStore.get('githubAuthentication'))
+					(isPasswordLinked || !githubAuthentication)
 				"
 			>
 				<h2 class="content-box-title">Enter your password</h2>
@@ -217,7 +216,7 @@ onMounted(async () => {
 			<div
 				class="content-box"
 				v-else-if="
-					configStore.get('githubAuthentication') &&
+					githubAuthentication &&
 					isGithubLinked &&
 					step === 'confirm-identity'
 				"
@@ -242,10 +241,7 @@ onMounted(async () => {
 
 			<div
 				class="content-box"
-				v-if="
-					configStore.get('githubAuthentication') &&
-					step === 'relink-github'
-				"
+				v-if="githubAuthentication && step === 'relink-github'"
 			>
 				<h2 class="content-box-title">Re-link GitHub</h2>
 				<p class="content-box-description">
@@ -281,7 +277,7 @@ onMounted(async () => {
 			>
 				<h2 class="content-box-title">Remove your account</h2>
 				<p class="content-box-description">
-					{{ configStore.get("messages.accountRemoval") }}
+					{{ messages.accountRemoval }}
 				</p>
 
 				<div class="content-box-inputs">

@@ -16,6 +16,7 @@ const QuickConfirm = defineAsyncComponent(
 );
 
 const configStore = useConfigStore();
+const { githubAuthentication, sitename } = storeToRefs(configStore);
 const settingsStore = useSettingsStore();
 const userAuthStore = useUserAuthStore();
 
@@ -212,10 +213,10 @@ watch(validation, newValidation => {
 			<div class="section-margin-bottom" />
 		</div>
 
-		<div v-if="!isGithubLinked && configStore.get('githubAuthentication')">
+		<div v-if="!isGithubLinked && githubAuthentication">
 			<h4 class="section-title">Link your GitHub account</h4>
 			<p class="section-description">
-				Link your {{ configStore.get("sitename") }} account with GitHub
+				Link your {{ sitename }} account with GitHub
 			</p>
 
 			<hr class="section-horizontal-rule" />
@@ -243,10 +244,7 @@ watch(validation, newValidation => {
 
 			<div class="row">
 				<quick-confirm
-					v-if="
-						isPasswordLinked &&
-						configStore.get('githubAuthentication')
-					"
+					v-if="isPasswordLinked && githubAuthentication"
 					@confirm="unlinkPassword()"
 				>
 					<a class="button is-danger">

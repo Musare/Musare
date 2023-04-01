@@ -116,7 +116,7 @@ onMounted(async () => {
 
 		if (!loggedIn.value) {
 			broadcastChannel.value.user_login = new BroadcastChannel(
-				`${configStore.get("cookie")}.user_login`
+				`${configStore.cookie}.user_login`
 			);
 			broadcastChannel.value.user_login.onmessage = res => {
 				if (res.data) {
@@ -126,7 +126,7 @@ onMounted(async () => {
 			};
 
 			broadcastChannel.value.nightmode = new BroadcastChannel(
-				`${configStore.get("cookie")}.nightmode`
+				`${configStore.cookie}.nightmode`
 			);
 			broadcastChannel.value.nightmode.onmessage = res => {
 				changeNightmode(!!res.data);
@@ -234,7 +234,7 @@ onMounted(async () => {
 
 		router.isReady().then(() => {
 			if (
-				configStore.get("githubAuthentication") &&
+				configStore.githubAuthentication &&
 				localStorage.getItem("github_redirect")
 			) {
 				router.push(localStorage.getItem("github_redirect") as string);
@@ -242,7 +242,7 @@ onMounted(async () => {
 			}
 		});
 
-		if (configStore.get("christmas")) {
+		if (configStore.christmas) {
 			christmas.value = true;
 			enableChristmasMode();
 		}

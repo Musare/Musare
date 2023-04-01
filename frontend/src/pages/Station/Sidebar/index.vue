@@ -23,6 +23,7 @@ const stationStore = useStationStore();
 
 const { tab, showTab } = useTabQueryHandler("queue");
 
+const { experimental } = storeToRefs(configStore);
 const { loggedIn } = storeToRefs(userAuthStore);
 const { station, userCount } = storeToRefs(stationStore);
 const { hasPermission } = stationStore;
@@ -88,7 +89,7 @@ onMounted(() => {
 				Request
 			</button>
 			<button
-				v-if="configStore.get('experimental.station_history')"
+				v-if="experimental.station_history"
 				class="button is-default"
 				:class="{ selected: tab === 'history' }"
 				@click="showTab('history')"
@@ -105,7 +106,7 @@ onMounted(() => {
 			sector="station"
 		/>
 		<History
-			v-if="configStore.get('experimental.station_history')"
+			v-if="experimental.station_history"
 			class="tab"
 			v-show="tab === 'history'"
 		/>

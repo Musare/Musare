@@ -17,6 +17,7 @@ const props = defineProps({
 const { socket } = useWebsocketsStore();
 
 const configStore = useConfigStore();
+const { experimental } = storeToRefs(configStore);
 const editPlaylistStore = useEditPlaylistStore({ modalUuid: props.modalUuid });
 const { playlist } = storeToRefs(editPlaylistStore);
 
@@ -244,7 +245,7 @@ const importMusarePlaylistFile = () => {
 			</p>
 		</div>
 
-		<template v-if="configStore.get('experimental.soundcloud')">
+		<template v-if="experimental.soundcloud">
 			<label class="label"> Import songs from SoundCloud playlist </label>
 			<div class="control is-grouped input-with-button">
 				<p class="control is-expanded">
@@ -268,7 +269,7 @@ const importMusarePlaylistFile = () => {
 			</div>
 		</template>
 
-		<template v-if="configStore.get('experimental.spotify')">
+		<template v-if="experimental.spotify">
 			<label class="label"> Import songs from Spotify playlist </label>
 			<div class="control is-grouped input-with-button">
 				<p class="control is-expanded">

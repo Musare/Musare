@@ -21,6 +21,7 @@ const props = defineProps({
 });
 
 const configStore = useConfigStore();
+const { sitename, experimental } = storeToRefs(configStore);
 const editPlaylistStore = useEditPlaylistStore({ modalUuid: props.modalUuid });
 const { playlist } = storeToRefs(editPlaylistStore);
 
@@ -118,9 +119,7 @@ watch(
 <template>
 	<div class="youtube-tab section">
 		<div>
-			<label class="label">
-				Search for a song on {{ configStore.get("sitename") }}</label
-			>
+			<label class="label"> Search for a song on {{ sitename }}</label>
 			<div class="control is-grouped input-with-button">
 				<p class="control is-expanded">
 					<input
@@ -207,7 +206,7 @@ watch(
 			</p>
 		</div>
 
-		<div v-if="!configStore.get('experimental.disable_youtube_search')">
+		<div v-if="!experimental.disable_youtube_search">
 			<label class="label"> Search for a song from YouTube </label>
 			<div class="control is-grouped input-with-button">
 				<p class="control is-expanded">
@@ -279,7 +278,7 @@ watch(
 			</div>
 		</div>
 
-		<template v-if="configStore.get('experimental.soundcloud')">
+		<template v-if="experimental.soundcloud">
 			<label class="label"> Add a SoundCloud song from a URL </label>
 			<div class="control is-grouped input-with-button">
 				<p class="control is-expanded">
@@ -302,7 +301,7 @@ watch(
 			</div>
 		</template>
 
-		<template v-if="configStore.get('experimental.spotify')">
+		<template v-if="experimental.spotify">
 			<label class="label"> Add a Spotify song from a URL </label>
 			<div class="control is-grouped input-with-button">
 				<p class="control is-expanded">

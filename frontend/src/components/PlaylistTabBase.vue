@@ -110,7 +110,7 @@ const excludedYoutubeIds = computed(() => {
 
 	if (
 		autorequestDisallowRecentlyPlayedEnabled &&
-		configStore.get("experimental.station_history")
+		configStore.experimental.station_history
 	) {
 		history.value.forEach((historyItem, index) => {
 			if (index < autorequestDisallowRecentlyPlayedNumber)

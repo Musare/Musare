@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref, computed, onMounted, watch } from "vue";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useConfigStore } from "@/stores/config";
 import { useStationStore } from "@/stores/station";
@@ -34,6 +35,7 @@ const { soundcloudDirect, addToQueue: soundcloudAddToQueue } =
 
 const { socket } = useWebsocketsStore();
 const configStore = useConfigStore();
+const { sitename, experimental } = storeToRefs(configStore);
 const stationStore = useStationStore();
 const manageStationStore = useManageStationStore({
 	modalUuid: props.modalUuid
@@ -194,7 +196,7 @@ onMounted(async () => {
 			<div class="tab" v-show="tab === 'songs'">
 				<div class="musare-songs">
 					<label class="label">
-						Search for a song on {{ configStore.get("sitename") }}
+						Search for a song on {{ sitename }}
 					</label>
 					<div class="control is-grouped input-with-button">
 						<p class="control is-expanded">
@@ -287,9 +289,7 @@ onMounted(async () => {
 
 				<div
 					class="youtube-search"
-					v-if="
-						!configStore.get('experimental.disable_youtube_search')
-					"
+					v-if="!experimental.disable_youtube_search"
 				>
 					<label class="label"> Search for a song on YouTube </label>
 					<div class="control is-grouped input-with-button">
@@ -362,10 +362,7 @@ onMounted(async () => {
 					</div>
 				</div>
 
-				<div
-					v-if="configStore.get('experimental.soundcloud')"
-					class="soundcloud-direct"
-				>
+				<div v-if="experimental.soundcloud" class="soundcloud-direct">
 					<label class="label">
 						Add a SoundCloud song from a URL
 					</label>

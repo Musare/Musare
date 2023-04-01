@@ -28,6 +28,9 @@ const broadcastChannel = ref();
 const { socket } = useWebsocketsStore();
 
 const configStore = useConfigStore();
+const { cookie, sitename, registrationDisabled, christmas } =
+	storeToRefs(configStore);
+
 const { loggedIn, username } = storeToRefs(userAuthStore);
 const { logout, hasPermission } = userAuthStore;
 const userPreferencesStore = useUserPreferencesStore();
@@ -67,9 +70,7 @@ onMounted(async () => {
 	onResize();
 	window.addEventListener("resize", onResize);
 
-	broadcastChannel.value = new BroadcastChannel(
-		`${configStore.get("cookie")}.nightmode`
-	);
+	broadcastChannel.value = new BroadcastChannel(`${cookie.value}.nightmode`);
 });
 </script>
 
@@ -81,11 +82,11 @@ onMounted(async () => {
 		<div class="nav-left">
 			<router-link v-if="!hideLogo" class="nav-item is-brand" to="/">
 				<img
-					v-if="configStore.get('sitename') === 'Musare'"
+					v-if="sitename === 'Musare'"
 					src="/assets/white_wordmark.png"
-					:alt="configStore.get('sitename')"
+					:alt="sitename"
 				/>
-				<span v-else>{{ configStore.get("sitename") }}</span>
+				<span v-else>{{ sitename }}</span>
 			</router-link>
 		</div>
 
@@ -158,7 +159,7 @@ onMounted(async () => {
 			<span v-if="!loggedIn && !hideLoggedOut" class="grouped">
 				<a class="nav-item" @click="openModal('login')">Login</a>
 				<a
-					v-if="!configStore.get('registrationDisabled')"
+					v-if="!registrationDisabled"
 					class="nav-item"
 					@click="openModal('register')"
 					>Register</a
@@ -167,7 +168,7 @@ onMounted(async () => {
 		</div>
 
 		<christmas-lights
-			v-if="configStore.get('christmas')"
+			v-if="christmas"
 			:lights="Math.min(Math.max(Math.floor(windowWidth / 175), 5), 15)"
 		/>
 	</nav>

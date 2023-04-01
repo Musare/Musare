@@ -38,7 +38,7 @@ export const useModalsStore = defineStore("modals", {
 				if (uuid === _uuid) {
 					if (modal.modal === "register") {
 						const configStore = useConfigStore();
-						if (configStore.get("recaptcha.enabled"))
+						if (configStore.recaptcha.enabled)
 							window.location.reload();
 					}
 					const close = () => {

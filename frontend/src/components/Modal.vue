@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { defineAsyncComponent } from "vue";
+import { storeToRefs } from "pinia";
 import { useConfigStore } from "@/stores/config";
 import { useModalsStore } from "@/stores/modals";
 
@@ -14,6 +15,7 @@ defineProps({
 });
 
 const configStore = useConfigStore();
+const { christmas } = storeToRefs(configStore);
 const { closeCurrentModal } = useModalsStore();
 </script>
 
@@ -38,11 +40,7 @@ const { closeCurrentModal } = useModalsStore();
 					>highlight_off</span
 				>
 				<Transition>
-					<christmas-lights
-						v-if="configStore.get('christmas')"
-						small
-						:lights="5"
-					/>
+					<christmas-lights v-if="christmas" small :lights="5" />
 				</Transition>
 			</header>
 			<section class="modal-card-body">

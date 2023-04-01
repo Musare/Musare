@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { defineAsyncComponent, computed } from "vue";
+import { storeToRefs } from "pinia";
 import utils from "@/utils";
 import { useConfigStore } from "@/stores/config";
 
@@ -13,6 +14,7 @@ const props = defineProps({
 });
 
 const configStore = useConfigStore();
+const { sitename } = storeToRefs(configStore);
 
 const totalLength = playlist => {
 	let length = 0;
@@ -50,8 +52,8 @@ const playlistLength = computed(
 				<span v-if="showOwner"
 					><a
 						v-if="playlist.createdBy === 'Musare'"
-						:title="configStore.get('sitename')"
-						>{{ configStore.get("sitename") }}</a
+						:title="sitename"
+						>{{ sitename }}</a
 					><user-link v-else :user-id="playlist.createdBy" />
 					•
 				</span>

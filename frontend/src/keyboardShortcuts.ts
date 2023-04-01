@@ -35,7 +35,7 @@ const lib = {
 			? shortcuts[name].shift
 			: false;
 		const configStore = useConfigStore();
-		const overrides = configStore.get("shortcutOverrides");
+		const overrides = configStore.shortcutOverrides;
 		if (overrides && overrides[name])
 			shortcuts[name] = Object.assign(shortcuts[name], overrides[name]);
 		lib.remakeShortcutsArray();

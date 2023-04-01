@@ -2,6 +2,7 @@
 import { defineAsyncComponent, ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useConfigStore } from "@/stores/config";
 import { useLongJobsStore } from "@/stores/longJobs";
@@ -33,6 +34,7 @@ const { setJob } = useLongJobsStore();
 const { socket } = useWebsocketsStore();
 
 const configStore = useConfigStore();
+const { experimental } = storeToRefs(configStore);
 
 const { hasPermission } = useUserAuthStore();
 
@@ -551,7 +553,7 @@ onMounted(() => {
 				</button>
 				<button
 					v-if="
-						configStore.get('experimental.spotify') &&
+						experimental.spotify &&
 						(hasPermission('songs.create') ||
 							hasPermission('songs.update'))
 					"

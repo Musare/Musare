@@ -2,6 +2,7 @@
 import { defineAsyncComponent, ref, watch, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
@@ -40,6 +41,8 @@ const passwordElement = ref();
 const { register } = useUserAuthStore();
 
 const configStore = useConfigStore();
+const { registrationDisabled, recaptcha, githubAuthentication } =
+	storeToRefs(configStore);
 const { openModal, closeCurrentModal } = useModalsStore();
 
 const submitModal = () => {
@@ -139,17 +142,17 @@ watch(
 );
 
 onMounted(async () => {
-	if (configStore.get("registrationDisabled")) {
+	if (registrationDisabled.value) {
 		new Toast("Registration is disabled.");
 		closeCurrentModal();
 	}
 
-	if (configStore.get("recaptcha.enabled")) {
+	if (recaptcha.value.enabled) {
 		const recaptchaScript = document.createElement("script");
 		recaptchaScript.onload = () => {
 			grecaptcha.ready(() => {
 				grecaptcha
-					.execute(configStore.get("recaptcha.key"), {
+					.execute(recaptcha.value.key, {
 						action: "login"
 					})
 					.then(token => {
@@ -160,9 +163,7 @@ onMounted(async () => {
 
 		recaptchaScript.setAttribute(
 			"src",
-			`https://www.google.com/recaptcha/api.js?render=${configStore.get(
-				"recaptcha.key"
-			)}`
+			`https://www.google.com/recaptcha/api.js?render=${recaptcha.value.key}`
 		);
 		document.head.appendChild(recaptchaScript);
 	}
@@ -269,7 +270,7 @@ onMounted(async () => {
 						Register
 					</button>
 					<a
-						v-if="configStore.get('githubAuthentication')"
+						v-if="githubAuthentication"
 						class="button is-github"
 						:href="configStore.urls.api + '/auth/github/authorize'"
 						@click="githubRedirect()"

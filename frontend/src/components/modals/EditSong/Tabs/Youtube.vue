@@ -15,6 +15,7 @@ const props = defineProps({
 });
 
 const configStore = useConfigStore();
+const { experimental } = storeToRefs(configStore);
 const editSongStore = useEditSongStore({ modalUuid: props.modalUuid });
 
 const { form, newSong } = storeToRefs(editSongStore);
@@ -57,7 +58,7 @@ const selectSong = (youtubeId, result = null) => {
 			</p>
 		</div>
 
-		<div v-if="!configStore.get('experimental.disable_youtube_search')">
+		<div v-if="!experimental.disable_youtube_search">
 			<label class="label"> Search for a song from YouTube </label>
 			<div class="control is-grouped input-with-button">
 				<p class="control is-expanded">
