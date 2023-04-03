@@ -101,12 +101,23 @@ permissions.admin = {
 if (config.get("experimental.soundcloud")) {
 	permissions.moderator["admin.view.soundcloudTracks"] = true;
 	permissions.admin["admin.view.soundcloudTracks"] = true;
+
 	permissions.admin["admin.view.soundcloud"] = true;
+
+	permissions.admin["soundcloud.fetchNewApiKey"] = true;
+
+	permissions.admin["soundcloud.testApiKey"] = true;
+
+	permissions.moderator["soundcloud.getArtist"] = true;
+	permissions.admin["soundcloud.getArtist"] = true;
 }
+
 if (config.get("experimental.spotify")) {
 	permissions.moderator["admin.view.youtubeChannels"] = true;
 	permissions.admin["admin.view.youtubeChannels"] = true;
+
 	permissions.admin["admin.view.spotify"] = true;
+
 	permissions.admin["youtube.getMissingChannels"] = true;
 }
 
