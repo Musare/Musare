@@ -458,3 +458,5 @@ rl.on("line", command => {
 });
 
 export default moduleManager;
+
+export { MUSARE_VERSION };

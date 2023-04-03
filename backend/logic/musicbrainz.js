@@ -1,6 +1,7 @@
 import axios from "axios";
 
 import CoreClass from "../core";
+import { MUSARE_VERSION } from "..";
 
 class RateLimitter {
 	/**
@@ -163,7 +164,7 @@ class _MusicBrainzModule extends CoreClass {
 				.get(url, {
 					params,
 					headers: {
-						"User-Agent": "Musare/3.9.0-fork ( https://git.kvos.dev/kris/MusareFork )" // TODO set this in accordance to https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting
+						"User-Agent": `Musare/${MUSARE_VERSION} ( https://github.com/Musare/Musare )` // TODO set this in accordance to https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting
 					},
 					timeout: MusicBrainzModule.requestTimeout
 				})
