@@ -13,7 +13,7 @@ export default {
 	 * @returns {{status: string, data: object}}
 	 */
 	getTracksFromMediaSources: useHasPermission(
-		"admin.view.spotify",
+		"spotify.getTracksFromMediaSources",
 		function getTracksFromMediaSources(session, mediaSources, cb) {
 			SpotifyModule.runJob("GET_TRACKS_FROM_MEDIA_SOURCES", { mediaSources }, this)
 				.then(response => {
@@ -41,7 +41,7 @@ export default {
 	 *
 	 * @returns {{status: string, data: object}}
 	 */
-	getAlbumsFromIds: useHasPermission("admin.view.spotify", function getTracksFromMediaSources(session, albumIds, cb) {
+	getAlbumsFromIds: useHasPermission("spotify.getAlbumsFromIds", function getAlbumsFromIds(session, albumIds, cb) {
 		SpotifyModule.runJob("GET_ALBUMS_FROM_IDS", { albumIds }, this)
 			.then(albums => {
 				this.log("SUCCESS", "SPOTIFY_GET_ALBUMS_FROM_IDS", `Getting albums from ids was successful.`);
@@ -60,8 +60,8 @@ export default {
 	 * @returns {{status: string, data: object}}
 	 */
 	getArtistsFromIds: useHasPermission(
-		"admin.view.spotify",
-		function getTracksFromMediaSources(session, artistIds, cb) {
+		"spotify.getArtistsFromIds",
+		function getArtistsFromIds(session, artistIds, cb) {
 			SpotifyModule.runJob("GET_ARTISTS_FROM_IDS", { artistIds }, this)
 				.then(artists => {
 					this.log("SUCCESS", "SPOTIFY_GET_ARTISTS_FROM_IDS", `Getting artists from ids was successful.`);

@@ -36,6 +36,7 @@ permissions.moderator = {
 	"admin.view.songs": true,
 	"admin.view.stations": true,
 	"admin.view.users": true,
+	"admin.view.youtubeChannels": true,
 	"admin.view.youtubeVideos": true,
 	"apis.searchDiscogs": true,
 	"news.create": true,
@@ -93,6 +94,7 @@ permissions.admin = {
 	"users.update.restricted": true,
 	"utils.getModules": true,
 	"youtube.getApiRequest": true,
+	"youtube.getMissingChannels": true,
 	"youtube.resetStoredApiRequests": true,
 	"youtube.removeStoredApiRequest": true,
 	"youtube.removeVideos": true
@@ -102,6 +104,7 @@ if (config.get("experimental.soundcloud")) {
 	permissions.moderator["admin.view.soundcloudTracks"] = true;
 	permissions.admin["admin.view.soundcloudTracks"] = true;
 
+	permissions.moderator["admin.view.soundcloud"] = true;
 	permissions.admin["admin.view.soundcloud"] = true;
 
 	permissions.admin["soundcloud.fetchNewApiKey"] = true;
@@ -113,12 +116,17 @@ if (config.get("experimental.soundcloud")) {
 }
 
 if (config.get("experimental.spotify")) {
-	permissions.moderator["admin.view.youtubeChannels"] = true;
-	permissions.admin["admin.view.youtubeChannels"] = true;
-
+	permissions.moderator["admin.view.spotify"] = true;
 	permissions.admin["admin.view.spotify"] = true;
 
-	permissions.admin["youtube.getMissingChannels"] = true;
+	permissions.moderator["spotify.getTracksFromMediaSources"] = true;
+	permissions.admin["spotify.getTracksFromMediaSources"] = true;
+
+	permissions.moderator["spotify.getAlbumsFromIds"] = true;
+	permissions.admin["spotify.getAlbumsFromIds"] = true;
+
+	permissions.moderator["spotify.getArtistsFromIds"] = true;
+	permissions.admin["spotify.getArtistsFromIds"] = true;
 }
 
 export const hasPermission = async (permission, session, stationId) => {
