@@ -127,6 +127,15 @@ if (config.get("experimental.spotify")) {
 
 	permissions.moderator["spotify.getArtistsFromIds"] = true;
 	permissions.admin["spotify.getArtistsFromIds"] = true;
+
+	permissions.moderator["spotify.getAlternativeArtistSourcesForArtists"] = true;
+	permissions.admin["spotify.getAlternativeArtistSourcesForArtists"] = true;
+
+	permissions.moderator["spotify.getAlternativeAlbumSourcesForAlbums"] = true;
+	permissions.admin["spotify.getAlternativeAlbumSourcesForAlbums"] = true;
+
+	permissions.moderator["spotify.getAlternativeMediaSourcesForTracks"] = true;
+	permissions.admin["spotify.getAlternativeMediaSourcesForTracks"] = true;
 }
 
 export const hasPermission = async (permission, session, stationId) => {
