@@ -454,7 +454,7 @@ export default {
 	 *
 	 * @returns {{status: string, data: object}}
 	 */
-	getChannel: useHasPermission("youtube.removeVideos", function getChannel(session, channelId, cb) {
+	getChannel: useHasPermission("youtube.getChannel", function getChannel(session, channelId, cb) {
 		return YouTubeModule.runJob("GET_CHANNELS_FROM_IDS", { channelIds: [channelId] }, this)
 			.then(res => {
 				if (res.channels.length === 0) {
@@ -524,7 +524,7 @@ export default {
 	 *
 	 * @returns {{status: string, data: object}}
 	 */
-	getMissingVideos: useHasPermission("youtube.getApiRequest", function getMissingVideos(session, cb) {
+	getMissingVideos: useHasPermission("youtube.getMissingVideos", function getMissingVideos(session, cb) {
 		return YouTubeModule.runJob("GET_MISSING_VIDEOS", {}, this)
 			.then(response => {
 				this.log("SUCCESS", "YOUTUBE_GET_MISSING_VIDEOS", `Getting missing videos was successful.`);
@@ -543,7 +543,7 @@ export default {
 	 *
 	 * @returns {{status: string, data: object}}
 	 */
-	updateVideosV1ToV2: useHasPermission("youtube.getApiRequest", function updateVideosV1ToV2(session, cb) {
+	updateVideosV1ToV2: useHasPermission("youtube.updateVideosV1ToV2", function updateVideosV1ToV2(session, cb) {
 		return YouTubeModule.runJob("UPDATE_VIDEOS_V1_TO_V2", {}, this)
 			.then(response => {
 				this.log("SUCCESS", "YOUTUBE_UPDATE_VIDEOS_V1_TO_V2", `Updating v1 videos to v2 was successful.`);

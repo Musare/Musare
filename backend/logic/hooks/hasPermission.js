@@ -66,6 +66,7 @@ permissions.moderator = {
 	"users.requestPasswordReset": true,
 	"users.resendVerifyEmail": true,
 	"users.update": true,
+	"youtube.getChannel": true,
 	"youtube.requestSetAdmin": true
 };
 permissions.admin = {
@@ -95,9 +96,11 @@ permissions.admin = {
 	"utils.getModules": true,
 	"youtube.getApiRequest": true,
 	"youtube.getMissingChannels": true,
+	"youtube.getMissingVideos": true,
 	"youtube.resetStoredApiRequests": true,
 	"youtube.removeStoredApiRequest": true,
-	"youtube.removeVideos": true
+	"youtube.removeVideos": true,
+	"youtube.updateVideosV1ToV2": true
 };
 
 if (config.get("experimental.soundcloud")) {
