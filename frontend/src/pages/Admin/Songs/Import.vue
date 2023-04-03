@@ -346,7 +346,6 @@ const editSongs = youtubeIds => {
 	const mediaSources = youtubeIds.map(youtubeId => ({
 		mediaSource: `youtube:${youtubeId}`
 	}));
-	console.log(59685486, youtubeIds, mediaSources);
 	if (mediaSources.length === 1)
 		openModal({ modal: "editSong", props: { song: mediaSources[0] } });
 	else openModal({ modal: "editSong", props: { songs: mediaSources } });

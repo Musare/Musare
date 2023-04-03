@@ -123,7 +123,7 @@ export default class SocketHandler {
 		if (this.firstInit) {
 			this.firstInit = false;
 			this.on("ready", data => {
-				console.log("WS: SOCKET READY", data);
+				console.log("WS: SOCKET READY");
 
 				configStore.$patch(data.config);
 

@@ -67,7 +67,6 @@ export const useEditSongStore = ({ modalUuid }: { modalUuid: string }) =>
 		}),
 		actions: {
 			init({ song, songs }) {
-				console.log(12357878, song, songs);
 				if (songs) {
 					this.bulk = true;
 					this.mediaSources = songs.map(song => song.mediaSource);

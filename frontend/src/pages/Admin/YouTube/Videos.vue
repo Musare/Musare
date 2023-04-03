@@ -252,7 +252,6 @@ const importAlbum = selectedRows => {
 	const mediaSources = selectedRows.map(
 		({ youtubeId }) => `youtube:${youtubeId}`
 	);
-	console.log(77988, mediaSources);
 	socket.dispatch("songs.getSongsFromMediaSources", mediaSources, res => {
 		if (res.status === "success") {
 			openModal({

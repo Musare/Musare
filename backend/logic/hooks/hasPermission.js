@@ -36,7 +36,6 @@ permissions.moderator = {
 	"admin.view.songs": true,
 	"admin.view.stations": true,
 	"admin.view.users": true,
-	"admin.view.youtubeChannels": true,
 	"admin.view.youtubeVideos": true,
 	"apis.searchDiscogs": true,
 	"news.create": true,
@@ -66,8 +65,27 @@ permissions.moderator = {
 	"users.requestPasswordReset": true,
 	"users.resendVerifyEmail": true,
 	"users.update": true,
-	"youtube.getChannel": true,
-	"youtube.requestSetAdmin": true
+	"youtube.requestSetAdmin": true,
+	...(config.get("experimental.soundcloud")
+		? {
+				"admin.view.soundcloudTracks": true,
+				"admin.view.soundcloud": true,
+				"soundcloud.getArtist": true
+		  }
+		: {}),
+	...(config.get("experimental.spotify")
+		? {
+				"admin.view.spotify": true,
+				"spotify.getTracksFromMediaSources": true,
+				"spotify.getAlbumsFromIds": true,
+				"spotify.getArtistsFromIds": true,
+				"spotify.getAlternativeArtistSourcesForArtists": true,
+				"spotify.getAlternativeAlbumSourcesForAlbums": true,
+				"spotify.getAlternativeMediaSourcesForTracks": true,
+				"admin.view.youtubeChannels": true,
+				"youtube.getChannel": true
+		  }
+		: {})
 };
 permissions.admin = {
 	...permissions.moderator,
@@ -95,51 +113,23 @@ permissions.admin = {
 	"users.update.restricted": true,
 	"utils.getModules": true,
 	"youtube.getApiRequest": true,
-	"youtube.getMissingChannels": true,
 	"youtube.getMissingVideos": true,
 	"youtube.resetStoredApiRequests": true,
 	"youtube.removeStoredApiRequest": true,
 	"youtube.removeVideos": true,
-	"youtube.updateVideosV1ToV2": true
+	"youtube.updateVideosV1ToV2": true,
+	...(config.get("experimental.soundcloud")
+		? {
+				"soundcloud.fetchNewApiKey": true,
+				"soundcloud.testApiKey": true
+		  }
+		: {}),
+	...(config.get("experimental.spotify")
+		? {
+				"youtube.getMissingChannels": true
+		  }
+		: {})
 };
-
-if (config.get("experimental.soundcloud")) {
-	permissions.moderator["admin.view.soundcloudTracks"] = true;
-	permissions.admin["admin.view.soundcloudTracks"] = true;
-
-	permissions.moderator["admin.view.soundcloud"] = true;
-	permissions.admin["admin.view.soundcloud"] = true;
-
-	permissions.admin["soundcloud.fetchNewApiKey"] = true;
-
-	permissions.admin["soundcloud.testApiKey"] = true;
-
-	permissions.moderator["soundcloud.getArtist"] = true;
-	permissions.admin["soundcloud.getArtist"] = true;
-}
-
-if (config.get("experimental.spotify")) {
-	permissions.moderator["admin.view.spotify"] = true;
-	permissions.admin["admin.view.spotify"] = true;
-
-	permissions.moderator["spotify.getTracksFromMediaSources"] = true;
-	permissions.admin["spotify.getTracksFromMediaSources"] = true;
-
-	permissions.moderator["spotify.getAlbumsFromIds"] = true;
-	permissions.admin["spotify.getAlbumsFromIds"] = true;
-
-	permissions.moderator["spotify.getArtistsFromIds"] = true;
-	permissions.admin["spotify.getArtistsFromIds"] = true;
-
-	permissions.moderator["spotify.getAlternativeArtistSourcesForArtists"] = true;
-	permissions.admin["spotify.getAlternativeArtistSourcesForArtists"] = true;
-
-	permissions.moderator["spotify.getAlternativeAlbumSourcesForAlbums"] = true;
-	permissions.admin["spotify.getAlternativeAlbumSourcesForAlbums"] = true;
-
-	permissions.moderator["spotify.getAlternativeMediaSourcesForTracks"] = true;
-	permissions.admin["spotify.getAlternativeMediaSourcesForTracks"] = true;
-}
 
 export const hasPermission = async (permission, session, stationId) => {
 	const CacheModule = moduleManager.modules.cache;

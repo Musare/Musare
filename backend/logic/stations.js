@@ -127,9 +127,9 @@ class _StationsModule extends CoreClass {
 		const stationModel = (this.stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }));
 		const stationSchema = (this.stationSchema = await CacheModule.runJob("GET_SCHEMA", { schemaName: "station" }));
 
-		const stationHistoryModel = (this.stationHistoryModel = await DBModule.runJob("GET_MODEL", {
+		this.stationHistoryModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "stationHistory"
-		}));
+		});
 
 		return new Promise((resolve, reject) => {
 			async.waterfall(
