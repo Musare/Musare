@@ -3,11 +3,12 @@ version: "3.8"
 services:
   backend:
     build:
-      context: ./backend
+      context: .
+      dockerfile: ./backend/Dockerfile
       target: musare_backend
     restart: ${RESTART_POLICY:-unless-stopped}
     volumes:
-      - ./.git:/opt/app/.parent_git:ro
+      - ./.git:/opt/app/.git:ro
       - ./backend/config:/opt/app/config
       - ./types:/opt/types
     environment:
@@ -27,7 +28,8 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: .
+      dockerfile: ./frontend/Dockerfile
       target: musare_frontend
       args:
         FRONTEND_MODE: "${FRONTEND_MODE:-production}"
@@ -44,7 +46,7 @@ services:
     ports:
       - "${FRONTEND_HOST:-0.0.0.0}:${FRONTEND_PORT:-80}:80"
     volumes:
-      - ./.git:/opt/app/.parent_git:ro
+      - ./.git:/opt/app/.git:ro
       - ./types:/opt/types
     environment:
       - CONTAINER_MODE=${CONTAINER_MODE:-production}

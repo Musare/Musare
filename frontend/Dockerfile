@@ -3,8 +3,8 @@ FROM node:18 AS frontend_node_modules
 RUN mkdir -p /opt/app
 WORKDIR /opt/app
 
-COPY package.json /opt/app/package.json
-COPY package-lock.json /opt/app/package-lock.json
+COPY frontend/package.json /opt/app/package.json
+COPY frontend/package-lock.json /opt/app/package-lock.json
 
 RUN npm install --silent
 
@@ -35,7 +35,8 @@ RUN apt update && apt install nginx -y
 RUN mkdir -p /opt/app /opt/types
 WORKDIR /opt/app
 
-COPY . /opt/app
+COPY frontend /opt/app
+COPY .git /opt/app/.git
 COPY --from=frontend_node_modules /opt/app/node_modules node_modules
 
 RUN mkdir -p /run/nginx

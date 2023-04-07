@@ -30,7 +30,7 @@ const fetchVersionAndGitInfo = () => {
 
 	try {
 		let gitFolder = null;
-		if (fs.existsSync(".parent_git/HEAD")) gitFolder = ".parent_git";
+		if (fs.existsSync(".git/HEAD")) gitFolder = ".git";
 		else if (fs.existsSync("../.git/HEAD")) gitFolder = "../.git";
 
 		if (gitFolder) {
@@ -85,7 +85,7 @@ const fetchVersionAndGitInfo = () => {
 				debug.git.latestCommit = latestCommit;
 			if (process.env.MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT)
 				debug.git.latestCommitShort = latestCommitShort;
-		}
+		} else console.log("Could not find .git folder.");
 	} catch (e) {
 		console.log(`Could not get Git info: ${e.message}.`, e);
 	}

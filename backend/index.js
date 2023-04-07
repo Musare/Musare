@@ -39,21 +39,27 @@ const printVersion = () => {
 	console.log(`Musare version: ${MUSARE_VERSION}.`);
 
 	try {
-		const head_contents = fs.readFileSync(".parent_git/HEAD").toString().replaceAll("\n", "");
-		const branch = new RegExp("ref: refs/heads/([A-Za-z0-9_.-]+)").exec(head_contents)[1];
-		const config_contents = fs.readFileSync(".parent_git/config").toString().replaceAll("\t", "").split("\n");
-		const remote = new RegExp("remote = (.+)").exec(
-			config_contents[config_contents.indexOf(`[branch "${branch}"]`) + 1]
-		)[1];
-		const remote_url = new RegExp("url = (.+)").exec(
-			config_contents[config_contents.indexOf(`[remote "${remote}"]`) + 1]
-		)[1];
-		const latest_commit = fs.readFileSync(`.parent_git/refs/heads/${branch}`).toString().replaceAll("\n", "");
-		const latest_commit_short = latest_commit.substr(0, 7);
+		let gitFolder = null;
+		if (fs.existsSync(".git/HEAD")) gitFolder = ".git";
+		else if (fs.existsSync("../.git/HEAD")) gitFolder = "../.git";
 
-		console.log(
-			`Git branch: ${remote}/${branch}. Remote url: ${remote_url}. Latest commit: ${latest_commit} (${latest_commit_short}).`
-		);
+		if (gitFolder) {
+			const head_contents = fs.readFileSync(`${gitFolder}/HEAD`).toString().replaceAll("\n", "");
+			const branch = new RegExp("ref: refs/heads/([A-Za-z0-9_.-]+)").exec(head_contents)[1];
+			const config_contents = fs.readFileSync(`${gitFolder}/config`).toString().replaceAll("\t", "").split("\n");
+			const remote = new RegExp("remote = (.+)").exec(
+				config_contents[config_contents.indexOf(`[branch "${branch}"]`) + 1]
+			)[1];
+			const remote_url = new RegExp("url = (.+)").exec(
+				config_contents[config_contents.indexOf(`[remote "${remote}"]`) + 1]
+			)[1];
+			const latest_commit = fs.readFileSync(`${gitFolder}/refs/heads/${branch}`).toString().replaceAll("\n", "");
+			const latest_commit_short = latest_commit.substr(0, 7);
+
+			console.log(
+				`Git branch: ${remote}/${branch}. Remote url: ${remote_url}. Latest commit: ${latest_commit} (${latest_commit_short}).`
+			);
+		} else console.log("Could not find .git folder.");
 	} catch (e) {
 		console.log(`Could not get Git info: ${e.message}.`);
 	}
