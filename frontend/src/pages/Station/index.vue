@@ -3664,6 +3664,10 @@ onBeforeUnmount(() => {
 		#station-inner-container {
 			flex-direction: column-reverse;
 			flex-wrap: nowrap;
+
+			#station-right-column {
+				overflow: initial;
+			}
 		}
 	}
 }
