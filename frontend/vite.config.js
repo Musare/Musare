@@ -22,7 +22,7 @@ const fetchVersionAndGitInfo = () => {
 		);
 
 		console.log(`Musare version: ${packageJson.version}.`);
-		if (process.env.MUSARE_DEBUG_VERSION)
+		if (process.env.MUSARE_DEBUG_VERSION === "true")
 			debug.version = packageJson.version;
 	} catch (e) {
 		console.log(`Could not get package info: ${e.message}.`);
@@ -77,13 +77,15 @@ const fetchVersionAndGitInfo = () => {
 			console.log(
 				`Git branch: ${remote}/${branch}. Remote url: ${remoteUrl}. Latest commit: ${latestCommit} (${latestCommitShort}).`
 			);
-			if (process.env.MUSARE_DEBUG_GIT_REMOTE) debug.git.remote = remote;
-			if (process.env.MUSARE_DEBUG_GIT_REMOTE_URL)
+			if (process.env.MUSARE_DEBUG_GIT_REMOTE === "true")
+				debug.git.remote = remote;
+			if (process.env.MUSARE_DEBUG_GIT_REMOTE_URL === "true")
 				debug.git.remoteUrl = remoteUrl;
-			if (process.env.MUSARE_DEBUG_GIT_BRANCH) debug.git.branch = branch;
-			if (process.env.MUSARE_DEBUG_GIT_LATEST_COMMIT)
+			if (process.env.MUSARE_DEBUG_GIT_BRANCH === "true")
+				debug.git.branch = branch;
+			if (process.env.MUSARE_DEBUG_GIT_LATEST_COMMIT === "true")
 				debug.git.latestCommit = latestCommit;
-			if (process.env.MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT)
+			if (process.env.MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT === "true")
 				debug.git.latestCommitShort = latestCommitShort;
 		} else console.log("Could not find .git folder.");
 	} catch (e) {
@@ -158,7 +160,7 @@ export default {
 		]
 	},
 	define: {
-		__VUE_PROD_DEVTOOLS__: !!process.env.FRONTEND_PROD_DEVTOOLS,
+		__VUE_PROD_DEVTOOLS__: process.env.FRONTEND_PROD_DEVTOOLS === "true",
 		MUSARE_VERSION: JSON.stringify(debug.version),
 		MUSARE_GIT_REMOTE: JSON.stringify(debug.git.remote),
 		MUSARE_GIT_REMOTE_URL: JSON.stringify(debug.git.remoteUrl),
