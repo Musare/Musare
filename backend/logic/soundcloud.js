@@ -486,17 +486,26 @@ class _SoundCloudModule extends CoreClass {
 				[
 					next => {
 						SoundCloudModule.runJob("API_RESOLVE", { url: payload.url }, this)
-							.then(({ response }) => {
+							.then(async ({ response }) => {
 								const { data } = response;
 								if (!data || !data.id)
 									return next("The provided URL does not exist or cannot be accessed.");
 
-								if (data.kind !== "playlist" && data.kind !== "system-playlist")
+								let tracks;
+
+								if (data.kind === "user")
+									tracks = (
+										await SoundCloudModule.runJob(
+											"GET_ARTIST_TRACKS",
+											{
+												artistId: data.id
+											},
+											this
+										)
+									).tracks;
+								else if (data.kind !== "playlist" && data.kind !== "system-playlist")
 									return next(`Invalid URL provided. Kind got: ${data.kind}.`);
-
-								const { tracks } = data;
-
-								// TODO get more data here
+								else tracks = data.tracks;
 
 								const soundcloudTrackIds = tracks.map(track => track.id);
 
@@ -521,6 +530,79 @@ class _SoundCloudModule extends CoreClass {
 			);
 
 			// kind;
+		});
+	}
+
+	/**
+	 * Returns an array of songs taken from a SoundCloud artist
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.artistId - the id of the SoundCloud artist
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_ARTIST_TRACKS(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						let first = true;
+						let nextHref = null;
+
+						let tracks = [];
+
+						async.whilst(
+							next => {
+								if (nextHref || first) next(null, true);
+								else next(null, false);
+							},
+							next => {
+								let job;
+
+								if (first) {
+									job = SoundCloudModule.runJob(
+										"API_GET_ARTIST_TRACKS",
+										{ artistId: payload.artistId },
+										this
+									);
+									first = false;
+								} else job = SoundCloudModule.runJob("API_GET_ARTIST_TRACKS", { nextHref }, this);
+
+								job.then(({ response }) => {
+									const { data } = response;
+									const { collection, next_href: _nextHref } = data;
+
+									nextHref = _nextHref;
+									tracks = tracks.concat(collection);
+
+									setTimeout(() => {
+										next();
+									}, 500);
+								}).catch(err => {
+									next(err);
+								});
+							},
+							err => {
+								if (err) return next(err);
+
+								return next(null, tracks);
+							}
+						);
+					}
+				],
+				(err, tracks) => {
+					if (err && err !== true) {
+						SoundCloudModule.log(
+							"ERROR",
+							"GET_ARTIST_TRACKS",
+							"Some error has occurred.",
+							typeof err === "string" ? err : err.message
+						);
+						reject(new Error(typeof err === "string" ? err : err.message));
+					} else {
+						resolve({ tracks });
+					}
+				}
+			);
 		});
 	}
 
@@ -598,6 +680,34 @@ class _SoundCloudModule extends CoreClass {
 				"API_CALL",
 				{
 					url: `https://api-v2.soundcloud.com/resolve?url=${encodeURIComponent(url)}`
+				},
+				this
+			)
+				.then(response => {
+					resolve(response);
+				})
+				.catch(err => {
+					reject(err);
+				});
+		});
+	}
+
+	/**
+	 * Calls the API_CALL with the proper URL to get artist/user tracks
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.artistId - the id of the SoundCloud artist
+	 */
+	API_GET_ARTIST_TRACKS(payload) {
+		return new Promise((resolve, reject) => {
+			const { artistId, nextHref } = payload;
+
+			SoundCloudModule.runJob(
+				"API_CALL",
+				{
+					url: artistId
+						? `https://api-v2.soundcloud.com/users/${artistId}/tracks?access=playable&limit=50`
+						: nextHref
 				},
 				this
 			)
