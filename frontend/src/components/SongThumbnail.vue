@@ -39,7 +39,14 @@ const onLoadError = () => {
 	// 1 - Error occured with thumbnail, fallback enabled
 	// 2 - Error occured with youtube thumbnail, fallback enabled
 	if (!props.fallback) loadError.value = -1;
-	else if (loadError.value === 0 && !isYoutubeThumbnail.value)
+	else if (
+		loadError.value === 0 &&
+		!isYoutubeThumbnail.value &&
+		!(
+			props.song.mediaSource &&
+			props.song.mediaSource.startsWith("soundcloud:")
+		)
+	)
 		loadError.value = 1;
 	else loadError.value = 2;
 	emit("loadError", loadError.value);
