@@ -43,14 +43,10 @@ class _CacheModule extends CoreClass {
 		};
 
 		return new Promise((resolve, reject) => {
-			this.url = config.get("redis").url;
-			this.password = config.get("redis").password;
-
 			this.log("INFO", "Connecting...");
 
 			this.client = redis.createClient({
-				url: this.url,
-				password: this.password,
+				...config.get("redis"),
 				reconnectStrategy: retries => {
 					if (this.getStatus() !== "LOCKDOWN") {
 						if (this.getStatus() !== "RECONNECTING") this.setStatus("RECONNECTING");
@@ -388,10 +384,7 @@ class _CacheModule extends CoreClass {
 
 			if (subs[payload.channel] === undefined) {
 				subs[payload.channel] = {
-					client: redis.createClient({
-						url: CacheModule.url,
-						password: CacheModule.password
-					}),
+					client: redis.createClient(config.get("redis")),
 					cbs: []
 				};
 				subs[payload.channel].client.connect().then(() => {

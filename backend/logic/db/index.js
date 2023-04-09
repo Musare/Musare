@@ -61,10 +61,10 @@ class _DBModule extends CoreClass {
 			this.schemas = {};
 			this.models = {};
 
-			const mongoUrl = config.get("mongo").url;
+			const { user, password, host, port, database } = config.get("mongo");
 
 			mongoose
-				.connect(mongoUrl, {
+				.connect(`mongodb://${user}:${password}@${host}:${port}/${database}`, {
 					useNewUrlParser: true,
 					useUnifiedTopology: true
 				})

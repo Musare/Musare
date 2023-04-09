@@ -347,6 +347,8 @@ createSocket().then(async socket => {
 			email,
 			userId
 		});
+
+		if (configStore.experimental.media_session) ms.init();
 	});
 
 	socket.on("keep.event:user.banned", res =>
@@ -402,8 +404,6 @@ createSocket().then(async socket => {
 				});
 		});
 	});
-
-	if (configStore.experimental.media_session) ms.init();
 
 	app.mount("#root");
 });

@@ -64,12 +64,12 @@
 		}
 	},
 	"cors": {
-		"origin": ["http://localhost"]
+		"origin": []
 	},
 	"mail": {
-		"from": "Musare <noreply@localhost>",
+		"enabled": false,
+		"from": "",
 		"smtp": {
-			"enabled": false,
 			"host": "smtp.mailgun.org",
 			"port": 587,
 			"auth": {
@@ -84,7 +84,11 @@
 		"password": "PASSWORD"
 	},
 	"mongo": {
-		"url": "mongodb://musare:OTHER_PASSWORD_HERE@mongo:27017/musare"
+		"user": "musare",
+		"password": "OTHER_PASSWORD_HERE",
+		"host": "mongo",
+		"port": 27017,
+		"database": "musare"
 	},
 	"blacklistedCommunityStationNames": ["musare"],
 	"featuredPlaylists": [],

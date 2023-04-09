@@ -39,9 +39,9 @@ const broadcastChannel = ref({
 	user_login: null,
 	nightmode: null
 });
-const christmas = ref(false);
 const disconnectedMessage = ref();
 
+const { christmas } = storeToRefs(configStore);
 const { loggedIn, banned } = storeToRefs(userAuthStore);
 const { nightmode, activityWatch } = storeToRefs(userPreferencesStore);
 const {
@@ -80,6 +80,10 @@ const enableChristmasMode = () => {
 	document.getElementsByTagName("html")[0].classList.add("christmas-mode");
 };
 
+const disableChristmasMode = () => {
+	document.getElementsByTagName("html")[0].classList.remove("christmas-mode");
+};
+
 watch(socketConnected, connected => {
 	if (!connected && !userAuthStore.banned) disconnectedMessage.value.show();
 	else disconnectedMessage.value.hide();
@@ -94,6 +98,10 @@ watch(nightmode, enabled => {
 watch(activityWatch, enabled => {
 	if (enabled) aw.enable();
 	else aw.disable();
+});
+watch(christmas, enabled => {
+	if (enabled) enableChristmasMode();
+	else disableChristmasMode();
 });
 
 onMounted(async () => {
@@ -237,15 +245,10 @@ onMounted(async () => {
 				configStore.githubAuthentication &&
 				localStorage.getItem("github_redirect")
 			) {
-				router.push(localStorage.getItem("github_redirect") as string);
+				router.push(localStorage.getItem("github_redirect"));
 				localStorage.removeItem("github_redirect");
 			}
 		});
-
-		if (configStore.christmas) {
-			christmas.value = true;
-			enableChristmasMode();
-		}
 	}, true);
 
 	socket.onDisconnect(() => {

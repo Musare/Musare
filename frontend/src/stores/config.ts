@@ -24,7 +24,7 @@ export const useConfigStore = defineStore("config", {
 		};
 	} => ({
 		cookie: "musareSID",
-		sitename: "Musare",
+		sitename: MUSARE_SITENAME,
 		recaptcha: {
 			enabled: false,
 			key: ""

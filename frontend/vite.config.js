@@ -161,6 +161,9 @@ export default {
 	},
 	define: {
 		__VUE_PROD_DEVTOOLS__: process.env.FRONTEND_PROD_DEVTOOLS === "true",
+		MUSARE_SITENAME: JSON.stringify(
+			process.env.MUSARE_SITENAME ?? "Musare"
+		),
 		MUSARE_VERSION: JSON.stringify(debug.version),
 		MUSARE_GIT_REMOTE: JSON.stringify(debug.git.remote),
 		MUSARE_GIT_REMOTE_URL: JSON.stringify(debug.git.remoteUrl),
