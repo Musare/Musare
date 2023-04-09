@@ -340,16 +340,14 @@ const autoRequestSong = () => {
 			"autorequest",
 			data => {
 				updateAutoRequestLock(false);
-				if (data.status !== "success") {
-					setTimeout(
-						() => {
-							autoRequestSong();
-						},
-						data.message === "That song is already in the queue."
-							? 5000
-							: 1000
-					);
-				}
+				setTimeout(
+					() => {
+						autoRequestSong();
+					},
+					data.message === "That song is already in the queue."
+						? 5000
+						: 1000
+				);
 			}
 		);
 	}
