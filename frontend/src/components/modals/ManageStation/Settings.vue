@@ -71,8 +71,8 @@ const { inputs, save, setOriginalValue } = useForm(
 		requestsAllowAutorequest: station.value.requests.allowAutorequest,
 		requestsAutorequestLimit: {
 			value: station.value.requests.autorequestLimit,
-			validate: value => {
-				if (value > station.value.requests.limit)
+			validate: (value, newInputs) => {
+				if (value > newInputs.value.requestsLimit.value)
 					return "The autorequest limit cannot be higher than the request limit.";
 				return true;
 			}
@@ -122,6 +122,7 @@ const { inputs, save, setOriginalValue } = useForm(
 				res => {
 					if (res.status === "success") {
 						editStation(updatedStation);
+						new Toast(res.message);
 						resolve();
 					} else reject(new Error(res.message));
 				}
