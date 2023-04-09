@@ -120,12 +120,12 @@ const hoverTippy = () => {
 	hoveredTippy.value = true;
 };
 
-const viewYoutubeVideo = youtubeId => {
+const viewSong = mediaSource => {
 	hideTippyElements();
 	openModal({
-		modal: "viewYoutubeVideo",
+		modal: "viewSong",
 		props: {
-			youtubeId
+			mediaSource
 		}
 	});
 };
@@ -270,26 +270,21 @@ onUnmounted(() => {
 						<div class="icons-group">
 							<i
 								v-if="
-									disabledActions.indexOf('youtube') === -1 &&
-									songMediaType === 'youtube'
+									disabledActions.indexOf('view-song') ===
+										-1 &&
+									(songMediaType === 'youtube' ||
+										songMediaType === 'soundcloud')
 								"
-								@click="viewYoutubeVideo(songMediaValue)"
-								content="View YouTube Video"
+								@click="viewSong(song.mediaSource)"
+								content="View Song"
 								v-tippy
 							>
-								<div class="youtube-icon"></div>
+								<div
+									v-if="songMediaType === 'youtube'"
+									class="youtube-icon"
+								></div>
+								<div v-else class="soundcloud-icon"></div>
 							</i>
-							<!-- <i
-								v-if="
-									disabledActions.indexOf('youtube') === -1 &&
-									songMediaType === 'spotify'
-								"
-								@click="viewYoutubeVideo(songMediaValue)"
-								content="View Spotify Video"
-								v-tippy
-							>
-								<div class="spotify-icon"></div>
-							</i> -->
 							<i
 								v-if="
 									song._id &&
@@ -343,17 +338,21 @@ onUnmounted(() => {
 					@mouseenter="hoverTippy()"
 					>more_horiz</i
 				>
-				<a
+				<template
 					v-else-if="
-						!loggedIn && disabledActions.indexOf('youtube') === -1
+						!loggedIn && disabledActions.indexOf('view-song') === -1
 					"
-					target="_blank"
-					:href="`https://www.youtube.com/watch?v=${song.youtubeId}`"
-					content="View on Youtube"
-					v-tippy
 				>
-					<div class="youtube-icon"></div>
-				</a>
+					<a
+						v-if="songMediaType === 'youtube'"
+						target="_blank"
+						:href="`https://www.youtube.com/watch?v=${songMediaValue}`"
+						content="View on Youtube"
+						v-tippy
+					>
+						<div class="youtube-icon"></div>
+					</a>
+				</template>
 			</div>
 			<div class="universal-item-actions" v-if="$slots.actions">
 				<slot name="actions" />
