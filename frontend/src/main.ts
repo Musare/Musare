@@ -300,9 +300,14 @@ createSocket().then(async socket => {
 					!userAuthStore.hasPermission(
 						`${to.meta.permissionRequired}`
 					)
-				)
-					next({ path: "/" });
-				else if (to.meta.guestsOnly && userAuthStore.loggedIn)
+				) {
+					if (
+						to.path.startsWith("/admin") &&
+						to.path !== "/admin/songs"
+					)
+						next({ path: "/admin/songs" });
+					else next({ path: "/" });
+				} else if (to.meta.guestsOnly && userAuthStore.loggedIn)
 					next({ path: "/" });
 				else next();
 			};
