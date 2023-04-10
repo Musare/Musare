@@ -38,6 +38,19 @@ const youtubeVideo = ref<YoutubeVideo>({
 const currentSongMediaType = computed(() => props.mediaSource.split(":")[0]);
 const currentSongMediaValue = computed(() => props.mediaSource.split(":")[1]);
 
+const youtubeSongNormalized = computed(() => ({
+	mediaSource: `youtube:${youtubeVideo.value.youtubeId}`,
+	title: youtubeVideo.value.title,
+	artists: [youtubeVideo.value.author],
+	duration: youtubeVideo.value.duration
+}));
+
+const songNormalized = computed(() => {
+	if (currentSongMediaType.value === "youtube")
+		return youtubeSongNormalized.value;
+	return {};
+});
+
 const loaded = ref(false);
 
 const { openModal, closeCurrentModal } = useModalsStore();
@@ -66,35 +79,38 @@ const remove = () => {
 onMounted(() => {
 	socket.onConnect(() => {
 		loaded.value = false;
-		socket.dispatch(
-			"youtube.getVideo",
-			currentSongMediaValue.value,
-			true,
-			res => {
-				if (res.status === "success") {
-					youtubeVideo.value = res.data;
-					loaded.value = true;
 
-					socket.dispatch(
-						"apis.joinRoom",
-						`view-youtube-video.${youtubeVideo.value._id}`
-					);
-				} else {
-					new Toast("YouTube video with that ID not found");
-					closeCurrentModal();
+		if (currentSongMediaType.value === "youtube") {
+			socket.dispatch(
+				"youtube.getVideo",
+				currentSongMediaValue.value,
+				true,
+				res => {
+					if (res.status === "success") {
+						youtubeVideo.value = res.data;
+						loaded.value = true;
+
+						socket.dispatch(
+							"apis.joinRoom",
+							`view-media.${props.mediaSource}`
+						);
+					} else {
+						new Toast("YouTube video with that ID not found");
+						closeCurrentModal();
+					}
 				}
-			}
-		);
-	});
+			);
 
-	socket.on(
-		"event:youtubeVideo.removed",
-		() => {
-			new Toast("This YouTube video was removed.");
-			closeCurrentModal();
-		},
-		{ modalUuid: props.modalUuid }
-	);
+			socket.on(
+				"event:youtubeVideo.removed",
+				() => {
+					new Toast("This YouTube video was removed.");
+					closeCurrentModal();
+				},
+				{ modalUuid: props.modalUuid }
+			);
+		}
+	});
 });
 
 onBeforeUnmount(() => {
@@ -102,7 +118,7 @@ onBeforeUnmount(() => {
 
 	socket.dispatch(
 		"apis.leaveRoom",
-		`view-song.${youtubeVideo.value._id}`,
+		`view-media.${props.mediaSource}`,
 		() => {}
 	);
 });
@@ -111,20 +127,14 @@ onBeforeUnmount(() => {
 <template>
 	<modal title="View Song">
 		<template #body>
-			<youtube-video-info v-if="loaded" :video="youtubeVideo" />
-
-			<youtube-player
-				v-if="loaded"
-				:song="{
-					mediaSource: `youtube:${youtubeVideo.youtubeId}`,
-					title: youtubeVideo.title,
-					artists: [youtubeVideo.author],
-					duration: youtubeVideo.duration
-				}"
-			/>
-
-			<div v-if="!loaded" class="vertical-padding">
-				<p>Video hasn't loaded yet</p>
+			<template v-if="loaded">
+				<template v-if="currentSongMediaType === 'youtube'">
+					<youtube-video-info :video="youtubeVideo" />
+					<youtube-player :song="youtubeSongNormalized" />
+				</template>
+			</template>
+			<div v-else class="vertical-padding">
+				<p>Media hasn't loaded yet</p>
 			</div>
 		</template>
 		<template #footer>
@@ -139,8 +149,8 @@ onBeforeUnmount(() => {
 						modal: 'editSong',
 						props: {
 							song: {
-								mediaSource: `youtube:${youtubeVideo.youtubeId}`,
-								...youtubeVideo
+								mediaSource,
+								...songNormalized
 							}
 						}
 					})
@@ -152,7 +162,10 @@ onBeforeUnmount(() => {
 			</button>
 			<div class="right">
 				<button
-					v-if="hasPermission('youtube.removeVideos')"
+					v-if="
+						currentSongMediaType === 'youtube' &&
+						hasPermission('youtube.removeVideos')
+					"
 					class="button is-danger icon-with-button material-icons"
 					@click.prevent="
 						openModal({

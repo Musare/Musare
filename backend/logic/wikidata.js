@@ -87,7 +87,7 @@ class _WikiDataModule extends CoreClass {
 		// 		const videos = Array.isArray(videoIds) ? videoIds : [videoIds];
 		// 		videos.forEach(videoId => {
 		// 			WSModule.runJob("EMIT_TO_ROOM", {
-		// 				room: `view-youtube-video.${videoId}`,
+		// 				room: `view-media.youtube:${videoId}`,
 		// 				args: ["event:youtubeVideo.removed"]
 		// 			});
 

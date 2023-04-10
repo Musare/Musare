@@ -334,7 +334,7 @@ export default {
 			home: null,
 			news: null,
 			profile: null,
-			"view-youtube-video": null,
+			"view-media": null,
 			"manage-station": null,
 			// "manage-station": "stations.view",
 			"edit-song": "songs.update",
