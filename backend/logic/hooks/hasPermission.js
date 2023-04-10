@@ -37,7 +37,7 @@ permissions.moderator = {
 	"admin.view.stations": true,
 	"admin.view.users": true,
 	"admin.view.youtubeVideos": true,
-	"apis.searchDiscogs": true,
+	"apis.searchDiscogs": config.get("apis.discogs.enabled"),
 	"news.create": true,
 	"news.update": true,
 	"playlists.create.admin": true,

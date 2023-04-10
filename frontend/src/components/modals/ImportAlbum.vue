@@ -3,6 +3,7 @@ import {
 	defineAsyncComponent,
 	ref,
 	computed,
+	watch,
 	onMounted,
 	onBeforeUnmount
 } from "vue";
@@ -12,6 +13,7 @@ import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useImportAlbumStore } from "@/stores/importAlbum";
+import { useUserAuthStore } from "@/stores/userAuth";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const MediaItem = defineAsyncComponent(
@@ -37,7 +39,9 @@ const {
 	updatePlaylistSong
 } = importAlbumStore;
 
-const { openModal, preventCloseCbs } = useModalsStore();
+const { openModal, closeCurrentModal, preventCloseCbs } = useModalsStore();
+
+const { hasPermission } = useUserAuthStore();
 
 const isImportingPlaylist = ref(false);
 const trackSongs = ref([]);
@@ -332,6 +336,13 @@ const updateTrackSong = updatedSong => {
 		});
 	});
 };
+
+watch(
+	() => hasPermission("apis.searchDiscogs"),
+	value => {
+		if (!value) closeCurrentModal(true);
+	}
+);
 
 onMounted(() => {
 	setPlaylistSongs(props.songs);

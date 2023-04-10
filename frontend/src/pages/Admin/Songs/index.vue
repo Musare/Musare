@@ -543,8 +543,9 @@ onMounted(() => {
 				</button>
 				<button
 					v-if="
-						hasPermission('songs.create') ||
-						hasPermission('songs.update')
+						(hasPermission('songs.create') ||
+							hasPermission('songs.update')) &&
+						hasPermission('apis.searchDiscogs')
 					"
 					class="button is-primary"
 					@click="openModal('importAlbum')"

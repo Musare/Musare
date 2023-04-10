@@ -1207,9 +1207,17 @@ watch(
 		if (!value) closeCurrentModal(true);
 	}
 );
+watch(
+	() => hasPermission("apis.searchDiscogs"),
+	value => {
+		if (!value && tab.value === "discogs") showTab("musare-songs");
+	}
+);
 
 onMounted(async () => {
 	editSongStore.init({ song: props.song, songs: props.songs });
+
+	if (!hasPermission("apis.searchDiscogs")) showTab("musare-songs");
 
 	editSongStore.form = {
 		inputs,
@@ -2660,6 +2668,7 @@ onBeforeUnmount(() => {
 					<div id="tabs-container">
 						<div id="tab-selection">
 							<button
+								v-if="hasPermission('apis.searchDiscogs')"
 								class="button is-default"
 								:class="{ selected: tab === 'discogs' }"
 								:ref="el => (tabs['discogs-tab'] = el)"
@@ -2694,6 +2703,7 @@ onBeforeUnmount(() => {
 							</button>
 						</div>
 						<discogs
+							v-if="hasPermission('apis.searchDiscogs')"
 							class="tab"
 							v-show="tab === 'discogs'"
 							:bulk="bulk"
