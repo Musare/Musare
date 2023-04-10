@@ -14,6 +14,7 @@ export const useConfigStore = defineStore("config", {
 		footerLinks: Record<string, string | boolean>;
 		shortcutOverrides: Record<string, any>;
 		registrationDisabled: boolean;
+		mailEnabled: boolean;
 		experimental: {
 			changable_listen_mode: string[] | boolean;
 			media_session: boolean;
@@ -38,6 +39,7 @@ export const useConfigStore = defineStore("config", {
 		footerLinks: {},
 		shortcutOverrides: {},
 		registrationDisabled: false,
+		mailEnabled: true,
 		experimental: {
 			changable_listen_mode: [],
 			media_session: false,
@@ -47,6 +49,15 @@ export const useConfigStore = defineStore("config", {
 			spotify: false
 		}
 	}),
+	actions: {
+		get(query: string) {
+			let config = JSON.parse(JSON.stringify(this.$state));
+			query.split(".").forEach(property => {
+				config = config[property];
+			});
+			return config;
+		}
+	},
 	getters: {
 		urls() {
 			const { protocol, host } = document.location;

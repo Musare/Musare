@@ -600,6 +600,7 @@ class _WSModule extends CoreClass {
 					footerLinks: config.get("footerLinks"),
 					shortcutOverrides: config.get("shortcutOverrides"),
 					registrationDisabled: config.get("registrationDisabled"),
+					mailEnabled: config.get("mail.enabled"),
 					experimental: {
 						changable_listen_mode: config.get("experimental.changable_listen_mode"),
 						media_session: config.get("experimental.media_session"),

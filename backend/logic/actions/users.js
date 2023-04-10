@@ -2956,6 +2956,8 @@ export default {
 		async.waterfall(
 			[
 				next => {
+					if (!config.get("mail.enabled")) return next("Password resets are disabled.");
+
 					if (!email || typeof email !== "string") return next("Invalid email.");
 					email = email.toLowerCase();
 					return userModel.findOne({ "email.address": email }, next);

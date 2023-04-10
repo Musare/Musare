@@ -165,7 +165,10 @@ onMounted(async () => {
 					Confirming your password will let us verify your identity.
 				</p>
 
-				<p class="content-box-optional-helper">
+				<p
+					v-if="configStore.mailEnabled"
+					class="content-box-optional-helper"
+				>
 					<router-link id="forgot-password" to="/reset_password">
 						Forgot password?
 					</router-link>

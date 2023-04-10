@@ -135,13 +135,17 @@ const router = createRouter({
 		},
 		{
 			path: "/reset_password",
-			component: () => import("@/pages/ResetPassword.vue")
+			component: () => import("@/pages/ResetPassword.vue"),
+			meta: {
+				configRequired: "mailEnabled"
+			}
 		},
 		{
 			path: "/set_password",
 			props: { mode: "set" },
 			component: () => import("@/pages/ResetPassword.vue"),
 			meta: {
+				configRequired: "mailEnabled",
 				loginRequired: true
 			}
 		},
@@ -288,12 +292,18 @@ createSocket().then(async socket => {
 			delete query.toast;
 			next({ ...to, query });
 		} else if (
+			to.meta.configRequired ||
 			to.meta.loginRequired ||
 			to.meta.permissionRequired ||
 			to.meta.guestsOnly
 		) {
 			const gotData = () => {
-				if (to.meta.loginRequired && !userAuthStore.loggedIn)
+				if (
+					to.meta.configRequired &&
+					!configStore.get(`${to.meta.configRequired}`)
+				)
+					next({ path: "/" });
+				else if (to.meta.loginRequired && !userAuthStore.loggedIn)
 					next({ path: "/login" });
 				else if (
 					to.meta.permissionRequired &&

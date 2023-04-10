@@ -62,8 +62,8 @@ permissions.moderator = {
 	"stations.remove": false,
 	"users.get": true,
 	"users.ban": true,
-	"users.requestPasswordReset": true,
-	"users.resendVerifyEmail": true,
+	"users.requestPasswordReset": config.get("mail.enabled"),
+	"users.resendVerifyEmail": config.get("mail.enabled"),
 	"users.update": true,
 	"youtube.requestSetAdmin": true,
 	...(config.get("experimental.soundcloud")

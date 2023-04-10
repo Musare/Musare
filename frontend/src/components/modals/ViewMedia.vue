@@ -161,7 +161,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-	<modal title="View Song">
+	<modal title="View Media">
 		<template #body>
 			<template v-if="loaded">
 				<template v-if="currentSongMediaType === 'youtube'">

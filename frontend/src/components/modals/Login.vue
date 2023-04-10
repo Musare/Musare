@@ -114,7 +114,10 @@ const githubRedirect = () => {
 						</a>
 					</div>
 
-					<p class="content-box-optional-helper">
+					<p
+						v-if="configStore.mailEnabled"
+						class="content-box-optional-helper"
+					>
 						<router-link
 							id="forgot-password"
 							to="/reset_password"
