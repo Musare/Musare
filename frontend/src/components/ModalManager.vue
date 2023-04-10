@@ -27,7 +27,7 @@ const modalComponents = shallowRef(
 		importArtist: "ImportArtist.vue",
 		confirm: "Confirm.vue",
 		editSong: "EditSong/index.vue",
-		viewSong: "ViewSong.vue",
+		viewMedia: "ViewMedia.vue",
 		bulkEditPlaylist: "BulkEditPlaylist.vue",
 		convertSpotifySongs: "ConvertSpotifySongs.vue",
 		replaceSpotifySongs: "ReplaceSpotifySongs.vue"

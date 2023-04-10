@@ -120,10 +120,10 @@ const hoverTippy = () => {
 	hoveredTippy.value = true;
 };
 
-const viewSong = mediaSource => {
+const viewMedia = mediaSource => {
 	hideTippyElements();
 	openModal({
-		modal: "viewSong",
+		modal: "viewMedia",
 		props: {
 			mediaSource
 		}
@@ -275,8 +275,8 @@ onUnmounted(() => {
 									(songMediaType === 'youtube' ||
 										songMediaType === 'soundcloud')
 								"
-								@click="viewSong(song.mediaSource)"
-								content="View Song"
+								@click="viewMedia(song.mediaSource)"
+								content="View Media"
 								v-tippy
 							>
 								<div

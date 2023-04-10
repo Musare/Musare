@@ -322,7 +322,7 @@ const removeVideos = videoIds => {
 						class="button is-primary icon-with-button material-icons"
 						@click="
 							openModal({
-								modal: 'viewSong',
+								modal: 'viewMedia',
 								props: {
 									mediaSource: `youtube:${slotProps.item.youtubeId}`
 								}

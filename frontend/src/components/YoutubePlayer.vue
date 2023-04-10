@@ -177,7 +177,7 @@ const sendActivityWatchMediaData = () => {
 				activityWatchMediaLastStartDuration.value <= 0
 					? 0
 					: activityWatchMediaLastStartDuration.value,
-			source: `viewSong#${props.song.mediaSource}`,
+			source: `viewMedia#${props.song.mediaSource}`,
 			hostname: window.location.hostname,
 			playerState: Object.keys(window.YT.PlayerState).find(
 				key =>
