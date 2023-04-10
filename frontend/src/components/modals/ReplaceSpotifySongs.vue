@@ -6,8 +6,8 @@ import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
-const SongItem = defineAsyncComponent(
-	() => import("@/components/SongItem.vue")
+const MediaItem = defineAsyncComponent(
+	() => import("@/components/MediaItem.vue")
 );
 
 const props = defineProps({
@@ -283,11 +283,11 @@ onBeforeUnmount(() => {});
 						:group="`replace-spotify-album-${modalUuid}-songs`"
 					>
 						<template #item="{ element }">
-							<song-item
+							<media-item
 								:key="`playlist-song-${element.mediaSource}`"
 								:song="element"
 							>
-							</song-item>
+							</media-item>
 						</template>
 					</draggable-list>
 				</div>
@@ -311,11 +311,11 @@ onBeforeUnmount(() => {});
 								:group="`replace-spotify-album-${modalUuid}-songs`"
 							>
 								<template #item="{ element }">
-									<song-item
+									<media-item
 										:key="`track-song-${element.mediaSource}`"
 										:song="element"
 									>
-									</song-item>
+									</media-item>
 									<button
 										class="button is-primary is-fullwidth"
 										@click="

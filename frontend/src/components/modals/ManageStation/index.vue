@@ -15,8 +15,8 @@ import { useManageStationStore } from "@/stores/manageStation";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const Queue = defineAsyncComponent(() => import("@/components/Queue.vue"));
-const SongItem = defineAsyncComponent(
-	() => import("@/components/SongItem.vue")
+const MediaItem = defineAsyncComponent(
+	() => import("@/components/MediaItem.vue")
 );
 const StationInfoBox = defineAsyncComponent(
 	() => import("@/components/StationInfoBox.vue")
@@ -608,7 +608,7 @@ onBeforeUnmount(() => {
 						<h4 class="section-title">Queue</h4>
 					</div>
 					<hr class="section-horizontal-rule" />
-					<song-item
+					<media-item
 						v-if="currentSong.mediaSource"
 						:song="currentSong"
 						:requested-by="true"

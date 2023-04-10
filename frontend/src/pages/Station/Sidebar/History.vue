@@ -4,7 +4,7 @@ import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
-import SongItem from "@/components/SongItem.vue";
+import MediaItem from "@/components/MediaItem.vue";
 
 const stationStore = useStationStore();
 
@@ -90,7 +90,7 @@ onMounted(async () => {});
 <template>
 	<div class="station-history">
 		<div v-for="historyItem in history" :key="historyItem._id">
-			<SongItem
+			<media-item
 				:song="historyItem.payload.song"
 				:requested-by="true"
 				:header="`Finished playing at ${formatDate(
@@ -127,7 +127,7 @@ onMounted(async () => {});
 						>
 					</transition>
 				</template>
-			</SongItem>
+			</media-item>
 		</div>
 	</div>
 </template>

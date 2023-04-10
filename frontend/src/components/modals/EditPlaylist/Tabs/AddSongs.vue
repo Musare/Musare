@@ -9,8 +9,8 @@ import { useSpotifyDirect } from "@/composables/useSpotifyDirect";
 import { useConfigStore } from "@/stores/config";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";
 
-const SongItem = defineAsyncComponent(
-	() => import("@/components/SongItem.vue")
+const MediaItem = defineAsyncComponent(
+	() => import("@/components/MediaItem.vue")
 );
 const SearchQueryItem = defineAsyncComponent(
 	() => import("@/components/SearchQueryItem.vue")
@@ -141,7 +141,7 @@ watch(
 				v-if="musareSearch.results.length > 0"
 				class="song-query-results"
 			>
-				<song-item
+				<media-item
 					v-for="(song, index) in musareSearch.results"
 					:key="song._id"
 					:song="song"
@@ -174,7 +174,7 @@ watch(
 							>
 						</transition>
 					</template>
-				</song-item>
+				</media-item>
 
 				<button
 					v-if="resultsLeftCount > 0"

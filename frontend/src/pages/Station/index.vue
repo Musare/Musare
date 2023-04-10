@@ -41,8 +41,8 @@ const StationInfoBox = defineAsyncComponent(
 const AddToPlaylistDropdown = defineAsyncComponent(
 	() => import("@/components/AddToPlaylistDropdown.vue")
 );
-const SongItem = defineAsyncComponent(
-	() => import("@/components/SongItem.vue")
+const MediaItem = defineAsyncComponent(
+	() => import("@/components/MediaItem.vue")
 );
 const Z404 = defineAsyncComponent(() => import("@/pages/404.vue"));
 const StationSidebar = defineAsyncComponent(
@@ -2683,7 +2683,7 @@ onBeforeUnmount(() => {
 								class="quadrant"
 								:class="{ 'no-currently-playing': noSong }"
 							>
-								<song-item
+								<media-item
 									:key="`songItem-currentSong-${currentSong.mediaSource}`"
 									:song="currentSong"
 									:duration="false"
@@ -2697,7 +2697,7 @@ onBeforeUnmount(() => {
 								id="next-up-container"
 								class="quadrant"
 							>
-								<song-item
+								<media-item
 									:key="`songItem-nextSong-${nextSong.mediaSource}`"
 									:song="nextSong"
 									:duration="false"

@@ -37,8 +37,8 @@ const SaveButton = defineAsyncComponent(
 const AutoSuggest = defineAsyncComponent(
 	() => import("@/components/AutoSuggest.vue")
 );
-const SongItem = defineAsyncComponent(
-	() => import("@/components/SongItem.vue")
+const MediaItem = defineAsyncComponent(
+	() => import("@/components/MediaItem.vue")
 );
 const Discogs = defineAsyncComponent(() => import("./Tabs/Discogs.vue"));
 const ReportsTab = defineAsyncComponent(() => import("./Tabs/Reports.vue"));
@@ -1877,7 +1877,7 @@ onBeforeUnmount(() => {
 										] = el)
 								"
 							>
-								<song-item
+								<media-item
 									:song="data.song"
 									:thumbnail="false"
 									:duration="false"
@@ -1977,7 +1977,7 @@ onBeforeUnmount(() => {
 											flag_circle
 										</i>
 									</template>
-								</song-item>
+								</media-item>
 							</div>
 						</div>
 						<p v-if="filteredItems.length === 0" class="no-items">

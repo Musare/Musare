@@ -8,8 +8,8 @@ import { useStationStore } from "@/stores/station";
 import { useManageStationStore } from "@/stores/manageStation";
 import { useUserAuthStore } from "@/stores/userAuth";
 
-const SongItem = defineAsyncComponent(
-	() => import("@/components/SongItem.vue")
+const MediaItem = defineAsyncComponent(
+	() => import("@/components/MediaItem.vue")
 );
 const QuickConfirm = defineAsyncComponent(
 	() => import("@/components/QuickConfirm.vue")
@@ -165,7 +165,7 @@ defineEmits(["onChangeTab"]);
 					:disabled="!hasPermission('stations.queue.reposition')"
 				>
 					<template #item="{ element, index }">
-						<song-item
+						<media-item
 							:song="element"
 							:requested-by="true"
 							:requested-type="true"
@@ -212,7 +212,7 @@ defineEmits(["onChangeTab"]);
 									>vertical_align_bottom</i
 								>
 							</template>
-						</song-item>
+						</media-item>
 					</template>
 				</draggable-list>
 			</div>

@@ -18,8 +18,8 @@ import { useModalsStore } from "@/stores/modals";
 import utils from "@/utils";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
-const SongItem = defineAsyncComponent(
-	() => import("@/components/SongItem.vue")
+const MediaItem = defineAsyncComponent(
+	() => import("@/components/MediaItem.vue")
 );
 const Settings = defineAsyncComponent(() => import("./Tabs/Settings.vue"));
 const AddSongs = defineAsyncComponent(() => import("./Tabs/AddSongs.vue"));
@@ -440,7 +440,7 @@ onBeforeUnmount(() => {
 							"
 						>
 							<template #item="{ element, index }">
-								<song-item
+								<media-item
 									:song="element"
 									:ref="
 										el =>
@@ -521,7 +521,7 @@ onBeforeUnmount(() => {
 											>vertical_align_bottom</i
 										>
 									</template>
-								</song-item>
+								</media-item>
 							</template>
 						</draggable-list>
 						<p v-else-if="gettingSongs" class="nothing-here-text">

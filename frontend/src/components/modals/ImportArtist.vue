@@ -229,11 +229,11 @@ onBeforeUnmount(() => {});
 						:group="`replace-spotify-album-${modalUuid}-songs`"
 					>
 						<template #item="{ element }">
-							<song-item
+							<media-item
 								:key="`playlist-song-${element.mediaSource}`"
 								:song="element"
 							>
-							</song-item>
+							</media-item>
 						</template>
 					</draggable-list>
 				</div> -->
@@ -256,11 +256,11 @@ onBeforeUnmount(() => {});
 								:group="`replace-spotify-album-${modalUuid}-songs`"
 							>
 								<template #item="{ element }">
-									<song-item
+									<media-item
 										:key="`track-song-${element.mediaSource}`"
 										:song="element"
 									>
-									</song-item>
+									</media-item>
 									<button
 										class="button is-primary is-fullwidth"
 										@click="

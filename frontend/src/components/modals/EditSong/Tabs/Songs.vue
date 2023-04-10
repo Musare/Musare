@@ -7,8 +7,8 @@ import { useEditSongStore } from "@/stores/editSong";
 
 import { useSearchMusare } from "@/composables/useSearchMusare";
 
-const SongItem = defineAsyncComponent(
-	() => import("@/components/SongItem.vue")
+const MediaItem = defineAsyncComponent(
+	() => import("@/components/MediaItem.vue")
 );
 
 const props = defineProps({
@@ -54,7 +54,7 @@ onMounted(async () => {
 			</p>
 		</div>
 		<div v-if="musareSearch.results.length > 0">
-			<song-item
+			<media-item
 				v-for="result in musareSearch.results"
 				:key="result._id"
 				:song="result"

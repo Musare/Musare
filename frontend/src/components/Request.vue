@@ -11,8 +11,8 @@ import { useSearchMusare } from "@/composables/useSearchMusare";
 import { useYoutubeDirect } from "@/composables/useYoutubeDirect";
 import { useSoundcloudDirect } from "@/composables/useSoundcloudDirect";
 
-const SongItem = defineAsyncComponent(
-	() => import("@/components/SongItem.vue")
+const MediaItem = defineAsyncComponent(
+	() => import("@/components/MediaItem.vue")
 );
 const SearchQueryItem = defineAsyncComponent(
 	() => import("@/components/SearchQueryItem.vue")
@@ -219,7 +219,7 @@ onMounted(async () => {
 						</p>
 					</div>
 					<div v-if="musareSearch.results.length > 0">
-						<song-item
+						<media-item
 							v-for="song in musareSearch.results"
 							:key="song._id"
 							:song="song"
@@ -252,7 +252,7 @@ onMounted(async () => {
 									>
 								</transition>
 							</template>
-						</song-item>
+						</media-item>
 						<button
 							v-if="musareResultsLeftCount > 0"
 							class="button is-primary load-more-button"

@@ -13,8 +13,8 @@ import { useWebsocketsStore } from "@/stores/websockets";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 
-const SongItem = defineAsyncComponent(
-	() => import("@/components/SongItem.vue")
+const MediaItem = defineAsyncComponent(
+	() => import("@/components/MediaItem.vue")
 );
 
 const QuickConfirm = defineAsyncComponent(
@@ -1365,7 +1365,7 @@ onMounted(() => {
 							<div
 								class="convert-table-cell convert-table-cell-left"
 							>
-								<song-item :song="spotifySong">
+								<media-item :song="spotifySong">
 									<template #leftIcon>
 										<a
 											:href="`https://open.spotify.com/track/${
@@ -1380,7 +1380,7 @@ onMounted(() => {
 											></div>
 										</a>
 									</template>
-								</song-item>
+								</media-item>
 								<template v-if="showExtra">
 									<p>
 										Media source:
@@ -1466,7 +1466,7 @@ onMounted(() => {
 												<div
 													class="alternative-song-container"
 												>
-													<song-item
+													<media-item
 														:song="
 															alternativeMediaMap[
 																alternativeMediaSource
@@ -1506,7 +1506,7 @@ onMounted(() => {
 																></div>
 															</a>
 														</template>
-													</song-item>
+													</media-item>
 													<quick-confirm
 														v-if="
 															showReplaceButtonPerAlternative
@@ -1693,7 +1693,7 @@ onMounted(() => {
 										}}
 									</p>
 								</template>
-								<song-item
+								<media-item
 									v-for="spotifyMediaSource in spotifyAlbum.songs"
 									:key="
 										spotifyAlbum.albumId +
@@ -1726,7 +1726,7 @@ onMounted(() => {
 											></div>
 										</a>
 									</template>
-								</song-item>
+								</media-item>
 							</div>
 							<div
 								class="convert-table-cell convert-table-cell-right"
@@ -1896,7 +1896,7 @@ onMounted(() => {
 										}}
 									</p> -->
 								</template>
-								<song-item
+								<media-item
 									v-for="spotifyMediaSource in spotifyArtist.songs"
 									:key="
 										spotifyArtist.artistId +
@@ -1929,7 +1929,7 @@ onMounted(() => {
 											></div>
 										</a>
 									</template>
-								</song-item>
+								</media-item>
 							</div>
 							<div
 								class="convert-table-cell convert-table-cell-right"
