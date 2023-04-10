@@ -30,8 +30,8 @@ const fetchVersionAndGitInfo = () => {
 
 	try {
 		let gitFolder = null;
-		if (fs.existsSync(".git/HEAD")) gitFolder = ".git";
-		else if (fs.existsSync("../.git/HEAD")) gitFolder = "../.git";
+		if (fs.existsSync("../.git/HEAD")) gitFolder = "../.git";
+		else if (fs.existsSync(".git/HEAD")) gitFolder = ".git";
 
 		if (gitFolder) {
 			const headContents = fs

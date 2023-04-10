@@ -8,9 +8,7 @@ services:
       target: musare_backend
     restart: ${RESTART_POLICY:-unless-stopped}
     volumes:
-      - ./.git:/opt/app/.git:ro
       - ./backend/config:/opt/app/config
-      - ./types:/opt/types
     environment:
       - CONTAINER_MODE=${CONTAINER_MODE:-production}
       - MUSARE_SITENAME=${MUSARE_SITENAME:-Musare}
@@ -48,9 +46,6 @@ services:
     user: root
     ports:
       - "${FRONTEND_HOST:-0.0.0.0}:${FRONTEND_PORT:-80}:80"
-    volumes:
-      - ./.git:/opt/app/.git:ro
-      - ./types:/opt/types
     environment:
       - CONTAINER_MODE=${CONTAINER_MODE:-production}
       - FRONTEND_MODE=${FRONTEND_MODE:-production}

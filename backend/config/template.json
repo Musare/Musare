@@ -18,7 +18,7 @@
 	"mail": {
 		"enabled": true,
 		"smtp": {
-			"host": "smtp.eu.mailgun.org",
+			"host": "smtp.my.domain",
 			"port": 587,
 			"auth": {
 				"user": "CHANGE_ME",

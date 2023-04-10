@@ -40,8 +40,8 @@ const printVersion = () => {
 
 	try {
 		let gitFolder = null;
-		if (fs.existsSync(".git/HEAD")) gitFolder = ".git";
-		else if (fs.existsSync("../.git/HEAD")) gitFolder = "../.git";
+		if (fs.existsSync("../.git/HEAD")) gitFolder = "../.git";
+		else if (fs.existsSync(".git/HEAD")) gitFolder = ".git";
 
 		if (gitFolder) {
 			const head_contents = fs.readFileSync(`${gitFolder}/HEAD`).toString().replaceAll("\n", "");

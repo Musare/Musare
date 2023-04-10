@@ -70,7 +70,7 @@
 		"enabled": false,
 		"from": "",
 		"smtp": {
-			"host": "smtp.mailgun.org",
+			"host": "",
 			"port": 587,
 			"auth": {
 				"user": "",
