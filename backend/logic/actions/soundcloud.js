@@ -1,5 +1,6 @@
 import async from "async";
 
+import isLoginRequired from "../hooks/loginRequired";
 import { useHasPermission } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
@@ -211,5 +212,24 @@ export default {
 				}
 			);
 		}
-	)
+	),
+
+	/**
+	 * Get a SoundCloud track
+	 *
+	 * @returns {{status: string, data: object}}
+	 */
+	getTrack: isLoginRequired(function getTrack(session, identifier, createMissing, cb) {
+		return SoundcloudModule.runJob("GET_TRACK", { identifier, createMissing }, this)
+			.then(res => {
+				this.log("SUCCESS", "SOUNDCLOUD_GET_VIDEO", `Fetching track was successful.`);
+
+				return cb({ status: "success", message: "Successfully fetched SoundCloud video", data: res.track });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "SOUNDCLOUD_GET_VIDEO", `Fetching track failed. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	})
 };

@@ -13,13 +13,17 @@ import { useUserAuthStore } from "@/stores/userAuth";
 
 import Modal from "@/components/Modal.vue";
 import { YoutubeVideo } from "@/components/YoutubeVideoInfo.vue";
+import { SoundcloudTrack } from "@/components/SoundcloudTrackInfo.vue";
 
 const YoutubeVideoInfo = defineAsyncComponent(
 	() => import("@/components/YoutubeVideoInfo.vue")
 );
-
 const YoutubePlayer = defineAsyncComponent(
 	() => import("@/components/YoutubePlayer.vue")
+);
+
+const SoundcloudTrackInfo = defineAsyncComponent(
+	() => import("@/components/SoundcloudTrackInfo.vue")
 );
 
 const props = defineProps({
@@ -33,6 +37,18 @@ const youtubeVideo = ref<YoutubeVideo>({
 	title: null,
 	author: null,
 	duration: 0
+});
+
+const soundcloudTrack = ref<SoundcloudTrack>({
+	_id: null,
+	trackId: null,
+	userPermalink: null,
+	permalink: null,
+	title: null,
+	username: null,
+	duration: 0,
+	soundcloudCreatedAt: null,
+	artworkUrl: null
 });
 
 const currentSongMediaType = computed(() => props.mediaSource.split(":")[0]);
@@ -109,6 +125,26 @@ onMounted(() => {
 				},
 				{ modalUuid: props.modalUuid }
 			);
+		} else if (currentSongMediaType.value === "soundcloud") {
+			socket.dispatch(
+				"soundcloud.getTrack",
+				currentSongMediaValue.value,
+				true,
+				res => {
+					if (res.status === "success") {
+						soundcloudTrack.value = res.data;
+						loaded.value = true;
+
+						socket.dispatch(
+							"apis.joinRoom",
+							`view-media.${props.mediaSource}`
+						);
+					} else {
+						new Toast("SoundCloud track with that ID not found");
+						closeCurrentModal();
+					}
+				}
+			);
 		}
 	});
 });
@@ -131,6 +167,10 @@ onBeforeUnmount(() => {
 				<template v-if="currentSongMediaType === 'youtube'">
 					<youtube-video-info :video="youtubeVideo" />
 					<youtube-player :song="youtubeSongNormalized" />
+				</template>
+				<template v-else-if="currentSongMediaType === 'soundcloud'">
+					<soundcloud-track-info :track="soundcloudTrack" />
+					<!-- <youtube-player :song="youtubeSongNormalized" /> -->
 				</template>
 			</template>
 			<div v-else class="vertical-padding">
