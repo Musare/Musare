@@ -583,19 +583,19 @@ class _StationsModule extends CoreClass {
 						const currentRequests = station.queue.filter(song => !song.requestedBy).length;
 						const songsStillNeeded = station.autofill.limit - currentRequests;
 						const currentSongs = station.queue;
-						let currentYoutubeIds = station.queue.map(song => song.mediaSource);
+						let currentMediaSources = station.queue.map(song => song.mediaSource);
 						const songsToAdd = [];
 						let lastSongAdded = null;
 
 						if (station.currentSong && station.currentSong.mediaSource)
-							currentYoutubeIds.push(station.currentSong.mediaSource);
+							currentMediaSources.push(station.currentSong.mediaSource);
 
 						// Block for experiment: queue_autofill_skip_last_x_played
 						if (config.has(`experimental.queue_autofill_skip_last_x_played.${stationId}`)) {
 							const redisList = `experimental:queue_autofill_skip_last_x_played:${stationId}`;
 							// Get list of last x youtube video's played, to make sure they can't be autofilled
 							const listOfYoutubeIds = await CacheModule.runJob("LRANGE", { key: redisList }, this);
-							currentYoutubeIds = [...currentYoutubeIds, ...listOfYoutubeIds];
+							currentMediaSources = [...currentMediaSources, ...listOfYoutubeIds];
 						}
 
 						// Block for experiment: weight_stations
@@ -610,7 +610,7 @@ class _StationsModule extends CoreClass {
 							const weightMap = {};
 							const getYoutubeIds = playlistSongs
 								.map(playlistSong => playlistSong.mediaSource)
-								.filter(mediaSource => currentYoutubeIds.indexOf(mediaSource) === -1);
+								.filter(mediaSource => currentMediaSources.indexOf(mediaSource) === -1);
 
 							console.log(4343, getYoutubeIds);
 
@@ -652,17 +652,20 @@ class _StationsModule extends CoreClass {
 						}
 
 						playlistSongs.every(song => {
-							if (
-								songsToAdd.length < songsStillNeeded &&
-								currentYoutubeIds.indexOf(song.mediaSource) === -1 &&
-								!songsToAdd.find(songToAdd => songToAdd.mediaSource === song.mediaSource) &&
-								!song.mediaSource.startsWith("spotify:")
-							) {
-								lastSongAdded = song;
-								songsToAdd.push(song);
-								return true;
-							}
 							if (songsToAdd.length >= songsStillNeeded) return false;
+
+							// Skip Spotify songs
+							if (song.mediaSource.startsWith("spotify:")) return true;
+							// Skip SoundCloud songs if Soundcloud isn't enabled
+							if (song.mediaSource.startsWith("soundcloud:") && !config.get("experimental.soundcloud"))
+								return true;
+							// Skip songs already in songsToAdd
+							if (songsToAdd.find(songToAdd => songToAdd.mediaSource === song.mediaSource)) return true;
+							// Skips songs already in the queue
+							if (currentMediaSources.indexOf(song.mediaSource) !== -1) return true;
+
+							lastSongAdded = song;
+							songsToAdd.push(song);
 							return true;
 						});
 
