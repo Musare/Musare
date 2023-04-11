@@ -363,7 +363,8 @@ createSocket().then(async socket => {
 			userId
 		});
 
-		if (configStore.experimental.media_session) ms.init();
+		if (configStore.experimental.media_session) ms.initialize();
+		else ms.uninitialize();
 	});
 
 	socket.on("keep.event:user.banned", res =>
