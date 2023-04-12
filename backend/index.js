@@ -5,7 +5,7 @@ import config from "config";
 import fs from "fs";
 
 import * as readline from "node:readline";
-import package_json from "./package.json" assert { type: "json" };
+import packageJson from "./package.json" assert { type: "json" };
 
 const REQUIRED_CONFIG_VERSION = 12;
 
@@ -33,7 +33,7 @@ console.log = (...args) => {
 	if (!blacklisted) oldConsole.log.apply(null, args);
 };
 
-const MUSARE_VERSION = package_json.version;
+const MUSARE_VERSION = packageJson.version;
 
 const printVersion = () => {
 	console.log(`Musare version: ${MUSARE_VERSION}.`);
@@ -44,20 +44,16 @@ const printVersion = () => {
 		else if (fs.existsSync(".git/HEAD")) gitFolder = ".git";
 
 		if (gitFolder) {
-			const head_contents = fs.readFileSync(`${gitFolder}/HEAD`).toString().replaceAll("\n", "");
-			const branch = new RegExp("ref: refs/heads/([A-Za-z0-9_.-]+)").exec(head_contents)[1];
-			const config_contents = fs.readFileSync(`${gitFolder}/config`).toString().replaceAll("\t", "").split("\n");
-			const remote = new RegExp("remote = (.+)").exec(
-				config_contents[config_contents.indexOf(`[branch "${branch}"]`) + 1]
-			)[1];
-			const remote_url = new RegExp("url = (.+)").exec(
-				config_contents[config_contents.indexOf(`[remote "${remote}"]`) + 1]
-			)[1];
-			const latest_commit = fs.readFileSync(`${gitFolder}/refs/heads/${branch}`).toString().replaceAll("\n", "");
-			const latest_commit_short = latest_commit.substr(0, 7);
+			const headContents = fs.readFileSync(`${gitFolder}/HEAD`).toString().replaceAll("\n", "");
+			const [, branch] = /ref: refs\/heads\/([A-Za-z0-9_.-]+)/.exec(headContents);
+			const configContents = fs.readFileSync(`${gitFolder}/config`).toString().replaceAll("\t", "").split("\n");
+			const [, remote] = /remote = (.+)/.exec(configContents[configContents.indexOf(`[branch "${branch}"]`) + 1]);
+			const [, remoteUrl] = /url = (.+)/.exec(configContents[configContents.indexOf(`[remote "${remote}"]`) + 1]);
+			const latestCommit = fs.readFileSync(`${gitFolder}/refs/heads/${branch}`).toString().replaceAll("\n", "");
+			const latestCommitShort = latestCommit.substr(0, 7);
 
 			console.log(
-				`Git branch: ${remote}/${branch}. Remote url: ${remote_url}. Latest commit: ${latest_commit} (${latest_commit_short}).`
+				`Git branch: ${remote}/${branch}. Remote url: ${remoteUrl}. Latest commit: ${latestCommit} (${latestCommitShort}).`
 			);
 		} else console.log("Could not find .git folder.");
 	} catch (e) {
@@ -76,6 +72,7 @@ if (config.get("configVersion") !== REQUIRED_CONFIG_VERSION && !config.get("skip
 
 if (config.debug && config.debug.traceUnhandledPromises === true) {
 	console.log("Enabled trace-unhandled/register");
+	// eslint-disable-next-line import/no-extraneous-dependencies
 	import("trace-unhandled/register");
 }
 
@@ -343,7 +340,6 @@ const rl = readline.createInterface({
 					.map(module => `${parts[0]} ${module}${parts[0] === "runjob" ? " " : ""}`);
 				return [hits.length ? hits : modules, command];
 			}
-			return [];
 		}
 		if (parts.length === 3) {
 			if (parts[0] === "runjob") {
@@ -355,12 +351,9 @@ const rl = readline.createInterface({
 						.map(job => `${parts[0]} ${parts[1]} ${job} `);
 					return [hits.length ? hits : jobs, command];
 				}
-			} else {
-				return [];
 			}
-		} else {
-			return [];
 		}
+		return [];
 	}
 });
 

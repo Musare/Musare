@@ -12,7 +12,7 @@
     "dev": "nodemon --es-module-specifier-resolution=node",
     "docker:dev": "nodemon --es-module-specifier-resolution=node --legacy-watch --no-stdin /opt/app",
     "docker:prod": "node --es-module-specifier-resolution=node /opt/app",
-    "lint": "eslint --cache logic",
+    "lint": "eslint . --ext .js",
     "typescript": "tsc --noEmit --skipLibCheck"
   },
   "dependencies": {

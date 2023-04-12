@@ -12,7 +12,7 @@
   "license": "GPL-3.0",
   "repository": "https://github.com/Musare/Musare",
   "scripts": {
-    "lint": "eslint --cache src --ext .js,.ts,.vue",
+    "lint": "eslint . --ext .js,.ts,.vue",
     "dev": "vite",
     "prod": "vite build --emptyOutDir",
     "typescript": "vue-tsc --noEmit --skipLibCheck",

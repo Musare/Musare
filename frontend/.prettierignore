@@ -1,2 +1,5 @@
-node_modules/
+.git/
 build/
+dist/fonts/
+dist/assets/
+node_modules/

@@ -301,17 +301,17 @@ case $1 in
         if [[ ${servicesString:0:1} == 1 ]]; then
             if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *frontend* ]]; then
                 echo -e "${CYAN}Running frontend lint...${NC}"
-                ${dockerCompose} exec -T frontend npx eslint $cache src --ext .js,.ts,.vue $fix
+                ${dockerCompose} exec -T frontend npm run lint -- $cache $fix
                 frontendExitValue=$?
             fi
             if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *backend* ]]; then
                 echo -e "${CYAN}Running backend lint...${NC}"
-                ${dockerCompose} exec -T backend npx eslint $cache logic $fix
+                ${dockerCompose} exec -T backend npm run lint -- $cache $fix
                 backendExitValue=$?
             fi
             if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *docs* ]]; then
                 echo -e "${CYAN}Running docs lint...${NC}"
-                ${docker} run -v "${scriptLocation}":/workdir ghcr.io/igorshubovych/markdownlint-cli:latest ".wiki" "*.md" $fix
+                ${docker} run --rm -v "${scriptLocation}":/workdir ghcr.io/igorshubovych/markdownlint-cli:latest ".wiki" "*.md" $fix
                 docsExitValue=$?
             fi
             if [[ ${frontendExitValue} -gt 0 || ${backendExitValue} -gt 0 || ${docsExitValue} -gt 0 ]]; then

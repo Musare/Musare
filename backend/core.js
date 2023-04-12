@@ -267,18 +267,26 @@ class Job {
 		this.module.log(...args);
 	}
 
+	/**
+	 * Set whether to job is a long job.
+	 */
 	keepLongJob() {
 		this.longJob = true;
 	}
 
+	/**
+	 * Forget long job.
+	 */
 	forgetLongJob() {
 		this.longJob = false;
 		this.module.moduleManager.jobManager.removeJob(this);
 	}
 
 	/**
-	 * 
+	 * Update and emit progress of job
+	 *
 	 * @param {data} data - Data to publish upon progress
+	 * @param {boolean} notALongJob - Whether job is not a long job
 	 */
 	publishProgress(data, notALongJob) {
 		if (this.longJob || notALongJob) {
@@ -289,7 +297,7 @@ class Job {
 					this.lastProgressData = data;
 
 					if (data.status === "update") {
-						if ((Date.now() - this.lastProgressTime) > 1000) {
+						if (Date.now() - this.lastProgressTime > 1000) {
 							this.lastProgressTime = Date.now();
 						} else {
 							if (this.lastProgressTimeout) clearTimeout(this.lastProgressTimeout);
@@ -303,11 +311,11 @@ class Job {
 					} else if (data.status === "success" || data.status === "error")
 						if (this.lastProgressTimeout) clearTimeout(this.lastProgressTimeout);
 
-					if (data.title)	this.longJobTitle = data.title;
+					if (data.title) this.longJobTitle = data.title;
 
 					this.onProgress.emit("progress", data);
 				}
-			} else this.log("Progress published, but no onProgress specified.")
+			} else this.log("Progress published, but no onProgress specified.");
 		} else {
 			this.parentJob.publishProgress(data);
 		}
@@ -615,7 +623,8 @@ export default class CoreClass {
 					this[job.name]
 						.apply(job, [job.payload])
 						.then(response => {
-							if (!options.isQuiet) this.log("INFO", `Ran job ${job.name} (${job.toString()}) successfully`);
+							if (!options.isQuiet)
+								this.log("INFO", `Ran job ${job.name} (${job.toString()}) successfully`);
 							job.setStatus("FINISHED");
 							job.setResponse(response);
 							this.jobStatistics[job.name].successful += 1;
@@ -689,8 +698,7 @@ export default class CoreClass {
 							}
 							resolve();
 						});
-				else
-					this.log("ERROR", `Job not found! ${job.name}`)
+				else this.log("ERROR", `Job not found! ${job.name}`);
 			} else {
 				this.log(
 					"INFO",

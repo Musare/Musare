@@ -54,17 +54,17 @@ const fetchVersionAndGitInfo = () => {
 			let latestCommitShort;
 
 			if (configContents.indexOf(`[branch "${branch}"]`) >= 0) {
-				remote = /remote = (.+)/.exec(
+				[, remote] = /remote = (.+)/.exec(
 					configContents[
 						configContents.indexOf(`[branch "${branch}"]`) + 1
 					]
-				)[1];
+				);
 
-				remoteUrl = /url = (.+)/.exec(
+				[, remoteUrl] = /url = (.+)/.exec(
 					configContents[
 						configContents.indexOf(`[remote "${remote}"]`) + 1
 					]
-				)[1];
+				);
 
 				latestCommit = fs
 					.readFileSync(`${gitFolder}/refs/heads/${branch}`)
