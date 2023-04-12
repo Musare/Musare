@@ -316,21 +316,25 @@ const autoRequestSong = () => {
 		excludedYoutubeIds.push(currentSong.value.mediaSource);
 	}
 
-	const uniqueYoutubeIds = new Set();
+	const uniqueMediaSources = new Set();
 
 	autoRequest.value.forEach(playlist => {
 		playlist.songs.forEach(song => {
+			if (excludedYoutubeIds.indexOf(song.mediaSource) !== -1) return;
+			if (song.mediaSource.startsWith("spotify:")) return;
 			if (
-				excludedYoutubeIds.indexOf(song.mediaSource) === -1 &&
-				!song.mediaSource.startsWith("spotify:")
+				!experimental.value.soundcloud &&
+				song.mediaSource.startsWith("soundcloud:")
 			)
-				uniqueYoutubeIds.add(song.mediaSource);
+				return;
+
+			uniqueMediaSources.add(song.mediaSource);
 		});
 	});
 
-	if (uniqueYoutubeIds.size > 0) {
-		const mediaSource = Array.from(uniqueYoutubeIds.values())[
-			Math.floor(Math.random() * uniqueYoutubeIds.size)
+	if (uniqueMediaSources.size > 0) {
+		const mediaSource = Array.from(uniqueMediaSources.values())[
+			Math.floor(Math.random() * uniqueMediaSources.size)
 		];
 		updateAutoRequestLock(true);
 		socket.dispatch(

@@ -60,6 +60,8 @@ const {
 	calculatePlaylistOrder
 } = useSortablePlaylists();
 
+const { experimental } = storeToRefs(configStore);
+
 const { autoRequest, history, songsList } = storeToRefs(stationStore);
 
 const manageStationStore = useManageStationStore({
@@ -98,7 +100,7 @@ const nextPageResultsCount = computed(() =>
 	Math.min(search.pageSize, resultsLeftCount.value)
 );
 
-const excludedYoutubeIds = computed(() => {
+const excludedMediaSources = computed(() => {
 	if (!history.value) return [];
 
 	const {
@@ -110,7 +112,7 @@ const excludedYoutubeIds = computed(() => {
 
 	if (
 		autorequestDisallowRecentlyPlayedEnabled &&
-		configStore.experimental.station_history
+		experimental.value.station_history
 	) {
 		history.value.forEach((historyItem, index) => {
 			if (index < autorequestDisallowRecentlyPlayedNumber)
@@ -131,26 +133,34 @@ const excludedYoutubeIds = computed(() => {
 	return Array.from(mediaSources);
 });
 
-const totalUniqueAutorequestableYoutubeIds = computed(() => {
+const totalUniqueAutorequestableMediaSources = computed<string[]>(() => {
 	if (!autoRequest.value) return [];
 
-	const uniqueYoutubeIds = new Set();
+	const uniqueMediaSources = new Set();
 
 	autoRequest.value.forEach(playlist => {
 		playlist.songs.forEach(song => {
-			uniqueYoutubeIds.add(song.mediaSource);
+			uniqueMediaSources.add(song.mediaSource);
 		});
 	});
 
-	return Array.from(uniqueYoutubeIds);
+	return Array.from(uniqueMediaSources);
 });
 
-const actuallyAutorequestingYoutubeIds = computed(() => {
-	const excluded = excludedYoutubeIds.value;
-	const remaining = totalUniqueAutorequestableYoutubeIds.value.filter(
-		mediaSource =>
-			excluded.indexOf(mediaSource) === -1 &&
-			!mediaSource.startsWith("spotify:")
+const actuallyAutorequestingMediaSources = computed(() => {
+	const excluded = excludedMediaSources.value;
+	const remaining = totalUniqueAutorequestableMediaSources.value.filter(
+		mediaSource => {
+			if (excluded.indexOf(mediaSource) !== -1) return false;
+			if (mediaSource.startsWith("spotify:")) return false;
+			if (
+				!experimental.value.soundcloud &&
+				mediaSource.startsWith("soundcloud:")
+			)
+				return false;
+
+			return true;
+		}
 	);
 	return remaining;
 });
@@ -835,9 +845,9 @@ onMounted(() => {
 					"
 				>
 					You are currently autorequesting a mix of
-					{{ totalUniqueAutorequestableYoutubeIds.length }} different
-					songs. Of these, we can currently autorequest
-					{{ actuallyAutorequestingYoutubeIds.length }} songs.
+					{{ totalUniqueAutorequestableMediaSources.length }}
+					different songs. Of these, we can currently autorequest
+					{{ actuallyAutorequestingMediaSources.length }} songs.
 					<br />
 					Songs that
 					<span
@@ -848,7 +858,9 @@ onMounted(() => {
 						>were played recently or</span
 					>
 					are currently in the queue or playing will not be
-					autorequested. Spotify songs will also not be autorequested.
+					autorequested. Spotify
+					<span v-if="!experimental.soundcloud">and SoundCloud</span>
+					songs will also not be autorequested.
 
 					<br />
 					<br />
