@@ -15,6 +15,7 @@ export const useConfigStore = defineStore("config", {
 		shortcutOverrides: Record<string, any>;
 		registrationDisabled: boolean;
 		mailEnabled: boolean;
+		discogsEnabled: boolean;
 		experimental: {
 			changable_listen_mode: string[] | boolean;
 			media_session: boolean;
@@ -40,6 +41,7 @@ export const useConfigStore = defineStore("config", {
 		shortcutOverrides: {},
 		registrationDisabled: false,
 		mailEnabled: true,
+		discogsEnabled: true,
 		experimental: {
 			changable_listen_mode: [],
 			media_session: false,

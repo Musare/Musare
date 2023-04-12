@@ -196,6 +196,7 @@ const currentSongFlagged = computed(
 // EditSongs end
 
 const configStore = useConfigStore();
+const { discogsEnabled } = storeToRefs(configStore);
 
 const {
 	editSong,
@@ -1208,7 +1209,7 @@ watch(
 	}
 );
 watch(
-	() => hasPermission("apis.searchDiscogs"),
+	() => discogsEnabled.value || inputs.value.discogs.value,
 	value => {
 		if (!value && tab.value === "discogs") showTab("musare-songs");
 	}
@@ -1217,7 +1218,8 @@ watch(
 onMounted(async () => {
 	editSongStore.init({ song: props.song, songs: props.songs });
 
-	if (!hasPermission("apis.searchDiscogs")) showTab("musare-songs");
+	if (!(discogsEnabled.value || inputs.value.discogs.value))
+		showTab("musare-songs");
 
 	editSongStore.form = {
 		inputs,
@@ -2668,7 +2670,7 @@ onBeforeUnmount(() => {
 					<div id="tabs-container">
 						<div id="tab-selection">
 							<button
-								v-if="hasPermission('apis.searchDiscogs')"
+								v-if="discogsEnabled || inputs.discogs.value"
 								class="button is-default"
 								:class="{ selected: tab === 'discogs' }"
 								:ref="el => (tabs['discogs-tab'] = el)"
@@ -2703,7 +2705,7 @@ onBeforeUnmount(() => {
 							</button>
 						</div>
 						<discogs
-							v-if="hasPermission('apis.searchDiscogs')"
+							v-if="discogsEnabled || inputs.discogs.value"
 							class="tab"
 							v-show="tab === 'discogs'"
 							:bulk="bulk"
