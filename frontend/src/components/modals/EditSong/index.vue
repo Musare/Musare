@@ -196,7 +196,7 @@ const currentSongFlagged = computed(
 // EditSongs end
 
 const configStore = useConfigStore();
-const { discogsEnabled } = storeToRefs(configStore);
+const { discogsEnabled, experimental } = storeToRefs(configStore);
 
 const {
 	editSong,
@@ -2056,6 +2056,7 @@ onBeforeUnmount(() => {
 								></div>
 							</div>
 							<iframe
+								v-if="experimental.soundcloud"
 								:id="`editSongPlayerSoundCloud-${modalUuid}`"
 								v-show="currentSongMediaType === 'soundcloud'"
 								ref="soundcloudIframeElement"
@@ -2070,7 +2071,17 @@ onBeforeUnmount(() => {
 							></iframe>
 
 							<div
-								class="no-media-source-specified-message"
+								class="player-message"
+								v-show="
+									currentSongMediaType === 'soundcloud' &&
+									!experimental.soundcloud
+								"
+							>
+								<h2>SoundCloud is not enabled</h2>
+							</div>
+
+							<div
+								class="player-message"
 								v-show="
 									currentSongMediaType !== 'youtube' &&
 									currentSongMediaType !== 'soundcloud'
@@ -2300,7 +2311,8 @@ onBeforeUnmount(() => {
 									<button
 										v-if="
 											currentSongMediaType ===
-											'soundcloud'
+												'soundcloud' &&
+											experimental.soundcloud
 										"
 										class="button soundcloud-get-button"
 										@click="getSoundCloudData('title')"
@@ -2422,7 +2434,8 @@ onBeforeUnmount(() => {
 									<button
 										v-if="
 											currentSongMediaType ===
-											'soundcloud'
+												'soundcloud' &&
+											experimental.soundcloud
 										"
 										class="button soundcloud-get-button"
 										@click="getSoundCloudData('thumbnail')"
@@ -2506,7 +2519,8 @@ onBeforeUnmount(() => {
 									<button
 										v-if="
 											currentSongMediaType ===
-											'soundcloud'
+												'soundcloud' &&
+											experimental.soundcloud
 										"
 										class="button soundcloud-get-button"
 										@click="getSoundCloudData('author')"
@@ -2931,7 +2945,7 @@ onBeforeUnmount(() => {
 			}
 
 			.player-error,
-			.no-media-source-specified-message {
+			.player-message {
 				display: flex;
 				height: 318px;
 				width: 530px;
