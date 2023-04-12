@@ -423,6 +423,11 @@ case $1 in
             echo -e "${GREEN}Already up to date${NC}"
             exit ${exitValue}
         fi
+        breakingConfigChange=$(git rev-list "$(git rev-parse HEAD)" | grep "$(git rev-parse d8b73be1de231821db34c677110b7b97e413451f)")
+        if [[ -f backend/config/default.json && -z $breakingConfigChange ]]; then
+            echo -e "${RED}Configuration has breaking changes. Please rename or remove 'backend/config/default.json' and run the update command again to continue.${NC}"
+            exit 1
+        fi
         musareshChange=$(echo "${updated}" | grep "musare.sh")
         dbChange=$(echo "${updated}" | grep "backend/logic/db/schemas")
         bcChange=$(echo "${updated}" | grep "backend/config/default.json")
