@@ -43,14 +43,20 @@ watch(
 		if (tab.value === "request" && !canRequest()) showTab("queue");
 	}
 );
+watch(
+	() => experimental.value.station_history,
+	value => {
+		if (!value && tab.value === "history") showTab("queue");
+	}
+);
 
 onMounted(() => {
-	if (
-		route.query.tab === "queue" ||
-		route.query.tab === "users" ||
-		route.query.tab === "request"
-	)
-		tab.value = route.query.tab;
+	const validTabs = ["queue", "users"];
+	if (canRequest()) validTabs.push("request");
+	if (experimental.value.station_history) validTabs.push("history");
+	if (validTabs.find(tab => tab === route.query.tab))
+		showTab(route.query.tab);
+	else showTab("queue");
 });
 </script>
 

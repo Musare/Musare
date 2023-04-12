@@ -8,17 +8,16 @@ import MediaItem from "@/components/MediaItem.vue";
 import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 
-const stationStore = useStationStore();
-
 const { socket } = useWebsocketsStore();
 
+const stationStore = useStationStore();
 const { history } = storeToRefs(stationStore);
+const { hasPermission } = stationStore;
 
 const configStore = useConfigStore();
 const { experimental } = storeToRefs(configStore);
 
 const userAuthStore = useUserAuthStore();
-const { loggedIn, userId, role: userRole } = storeToRefs(userAuthStore);
 
 const station = computed({
 	get() {
@@ -45,6 +44,17 @@ const songsInQueue = computed(() => {
 			.concat(station.value.currentSong.mediaSource);
 	return songsList.value.map(song => song.mediaSource);
 });
+
+const canRequest = computed(
+	() =>
+		station.value &&
+		userAuthStore.loggedIn &&
+		station.value.requests &&
+		station.value.requests.enabled &&
+		(station.value.requests.access === "user" ||
+			(station.value.requests.access === "owner" &&
+				hasPermission("stations.request")))
+);
 
 const formatDate = dateString => {
 	const skippedAtDate = new Date(dateString);
@@ -107,14 +117,7 @@ onMounted(async () => {});
 			>
 				<template
 					v-if="
-						loggedIn &&
-						station &&
-						station.requests &&
-						station.requests.enabled &&
-						(station.requests.access === 'user' ||
-							(station.requests.access === 'owner' &&
-								(userRole === 'admin' ||
-									station.owner === userId))) &&
+						canRequest &&
 						(!historyItem.payload.song.mediaSource.startsWith(
 							'soundcloud:'
 						) ||
