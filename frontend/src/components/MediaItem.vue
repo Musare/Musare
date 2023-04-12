@@ -11,6 +11,7 @@ import { storeToRefs } from "pinia";
 import AddToPlaylistDropdown from "./AddToPlaylistDropdown.vue";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
+import { useConfigStore } from "@/stores/config";
 import utils from "@/utils";
 
 const SongThumbnail = defineAsyncComponent(
@@ -55,6 +56,10 @@ const formatedRequestedAt = ref(null);
 const formatRequestedAtInterval = ref();
 const hoveredTippy = ref(false);
 const songActions = ref(null);
+
+const configStore = useConfigStore();
+
+const { experimental, sitename } = storeToRefs(configStore);
 
 const userAuthStore = useUserAuthStore();
 const { loggedIn } = storeToRefs(userAuthStore);
@@ -165,6 +170,16 @@ onUnmounted(() => {
 	>
 		<div class="thumbnail-and-info">
 			<song-thumbnail :song="song" v-if="thumbnail" />
+			<i
+				v-if="
+					songMediaType === 'soundcloud' && !experimental.soundcloud
+				"
+				class="material-icons warning-icon left-icon"
+				:content="`SoundCloud is no longer enabled on ${sitename}`"
+				v-tippy="{ theme: 'warning' }"
+			>
+				warning
+			</i>
 			<slot v-if="$slots.leftIcon" name="leftIcon" />
 			<div class="song-info">
 				<h6 v-if="header">{{ header }}</h6>
@@ -425,7 +440,8 @@ onUnmounted(() => {
 		position: absolute;
 	}
 
-	:deep(.left-icon) {
+	:deep(.left-icon),
+	.left-icon {
 		margin-left: 70px;
 	}
 

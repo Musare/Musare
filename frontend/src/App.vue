@@ -1824,6 +1824,10 @@ h4.section-title {
 	background-color: var(--soundcloud);
 }
 
+.warning-icon {
+	color: var(--orange);
+}
+
 #forgot-password {
 	justify-content: flex-start;
 	margin: 5px 0;
