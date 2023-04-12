@@ -432,80 +432,72 @@ onUnmounted(() => {
 	}
 
 	.thumbnail-and-info {
-		min-width: 0;
-
-		min-height: 70px;
 		position: relative;
-	}
-
-	.thumbnail {
-		min-width: 70px;
-		width: 70px;
-		margin: -7.5px;
-		margin-right: calc(20px - 7.5px);
-
 		height: calc(100% + 15px);
-		position: absolute;
-	}
-
-	:deep(.left-icon),
-	.left-icon {
-		margin-left: 70px;
-	}
-
-	.song-info:not(:nth-child(3)) {
-		margin-left: 70px;
-	}
-
-	.song-info {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		margin-left: 10px;
 		min-width: 0;
 
-		*:not(i) {
-			margin: 0;
-			font-family: Nunito, Arial, sans-serif;
+		.thumbnail {
+			position: relative;
+			height: 100%;
+			min-width: 70px;
+			width: 70px;
+			margin-left: -7.5px;
+			margin-right: 7.5px;
 		}
 
-		h6 {
-			color: var(--primary-color) !important;
-			font-weight: bold;
-			font-size: 17px;
-			margin-bottom: 5px;
+		:deep(.left-icon) {
+			margin-right: 7.5px;
 		}
 
-		.song-title {
+		.song-info {
 			display: flex;
-			flex-direction: row;
+			flex-direction: column;
+			justify-content: center;
+			min-width: 0;
 
-			.item-title {
-				font-size: 18px;
+			*:not(i) {
+				margin: 0;
+				font-family: Nunito, Arial, sans-serif;
 			}
 
-			.verified-song {
-				margin-left: 5px;
+			h6 {
+				color: var(--primary-color) !important;
+				font-weight: bold;
+				font-size: 17px;
+				margin-bottom: 5px;
 			}
 
-			.item-title.no-artists {
-				display: -webkit-inline-box;
-				font-size: 16px;
-				white-space: normal;
-				-webkit-box-orient: vertical;
-				-webkit-line-clamp: 2;
+			.song-title {
+				display: flex;
+				flex-direction: row;
+
+				.item-title {
+					font-size: 18px;
+				}
+
+				.verified-song {
+					margin-left: 5px;
+				}
+
+				.item-title.no-artists {
+					display: -webkit-inline-box;
+					font-size: 16px;
+					white-space: normal;
+					-webkit-box-orient: vertical;
+					-webkit-line-clamp: 2;
+				}
 			}
-		}
 
-		.item-description {
-			line-height: 120%;
-		}
+			.item-description {
+				line-height: 120%;
+			}
 
-		.song-request-time {
-			font-size: 11px;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
+			.song-request-time {
+				font-size: 11px;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
 		}
 	}
 

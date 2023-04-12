@@ -186,16 +186,12 @@ onMounted(async () => {});
 	}
 
 	:deep(.song-item) {
-		height: 90px;
+		min-height: 90px !important;
+		height: 100% !important;
 
-		.thumbnail {
+		.thumbnail-and-info .thumbnail {
 			min-width: 90px;
 			width: 90px;
-			height: 90px;
-		}
-
-		.song-info {
-			margin-left: 90px;
 		}
 	}
 }

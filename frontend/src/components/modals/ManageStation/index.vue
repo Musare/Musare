@@ -645,16 +645,11 @@ onBeforeUnmount(() => {
 		margin-top: 10px;
 	}
 	.currently-playing.song-item {
-		height: 130px;
+		height: 130px !important;
 
-		.thumbnail {
+		.thumbnail-and-info .thumbnail {
 			min-width: 130px;
 			width: 130px;
-			height: 130px;
-		}
-
-		.song-info {
-			margin-left: 130px;
 		}
 	}
 }
