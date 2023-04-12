@@ -5,12 +5,20 @@ import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useStationStore } from "@/stores/station";
 import MediaItem from "@/components/MediaItem.vue";
+import { useConfigStore } from "@/stores/config";
+import { useUserAuthStore } from "@/stores/userAuth";
 
 const stationStore = useStationStore();
 
 const { socket } = useWebsocketsStore();
 
 const { history } = storeToRefs(stationStore);
+
+const configStore = useConfigStore();
+const { experimental } = storeToRefs(configStore);
+
+const userAuthStore = useUserAuthStore();
+const { loggedIn, userId, role: userRole } = storeToRefs(userAuthStore);
 
 const station = computed({
 	get() {
@@ -97,7 +105,23 @@ onMounted(async () => {});
 					historyItem.payload.skippedAt
 				)}${formatSkipReason(historyItem.payload.skipReason)}`"
 			>
-				<template #actions>
+				<template
+					v-if="
+						loggedIn &&
+						station &&
+						station.requests &&
+						station.requests.enabled &&
+						(station.requests.access === 'user' ||
+							(station.requests.access === 'owner' &&
+								(userRole === 'admin' ||
+									station.owner === userId))) &&
+						(!historyItem.payload.song.mediaSource.startsWith(
+							'soundcloud:'
+						) ||
+							experimental.soundcloud)
+					"
+					#actions
+				>
 					<transition
 						name="musare-history-query-actions"
 						mode="out-in"

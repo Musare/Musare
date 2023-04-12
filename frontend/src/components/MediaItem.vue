@@ -263,7 +263,12 @@ onUnmounted(() => {
 			</p>
 			<div
 				class="universal-item-actions"
-				v-if="disabledActions.indexOf('all') === -1"
+				v-if="
+					disabledActions.indexOf('all') === -1 &&
+					(songMediaType !== 'soundcloud' ||
+						experimental.soundcloud ||
+						song._id)
+				"
 			>
 				<tippy
 					v-if="loggedIn && hoveredTippy"
@@ -288,7 +293,8 @@ onUnmounted(() => {
 									disabledActions.indexOf('view-song') ===
 										-1 &&
 									(songMediaType === 'youtube' ||
-										songMediaType === 'soundcloud')
+										(songMediaType === 'soundcloud' &&
+											experimental.soundcloud))
 								"
 								@click="viewMedia(song.mediaSource)"
 								content="View Media"
@@ -315,7 +321,9 @@ onUnmounted(() => {
 							<add-to-playlist-dropdown
 								v-if="
 									disabledActions.indexOf('addToPlaylist') ===
-									-1
+										-1 &&
+									(songMediaType !== 'soundcloud' ||
+										experimental.soundcloud)
 								"
 								:song="song"
 								placement="top-end"

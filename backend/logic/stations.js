@@ -303,20 +303,19 @@ class _StationsModule extends CoreClass {
 									.then()
 									.catch();
 
-								if (station.paused) return next(true, station);
-
 								return next(null, station);
 							});
 					},
 					(station, next) => {
 						if (
-							!station.currentSong ||
-							(!config.get("experimental.soundcloud") &&
-								station.currentSong.mediaSource &&
-								station.currentSong.mediaSource.startsWith("soundcloud:")) ||
-							(!config.get("experimental.spotify") &&
-								station.currentSong.mediaSource &&
-								station.currentSong.mediaSource.startsWith("spotify:"))
+							(!station.paused && !station.currentSong) ||
+							(station.currentSong &&
+								((!config.get("experimental.soundcloud") &&
+									station.currentSong.mediaSource &&
+									station.currentSong.mediaSource.startsWith("soundcloud:")) ||
+									(!config.get("experimental.spotify") &&
+										station.currentSong.mediaSource &&
+										station.currentSong.mediaSource.startsWith("spotify:"))))
 						) {
 							return StationsModule.runJob(
 								"SKIP_STATION",
@@ -328,11 +327,13 @@ class _StationsModule extends CoreClass {
 								this
 							)
 								.then(station => {
-									next(true, station);
+									next(null, station);
 								})
 								.catch(next)
 								.finally(() => {});
 						}
+
+						if (station.paused) return next(null, station);
 
 						let timeLeft =
 							station.currentSong.duration * 1000 - (Date.now() - station.startedAt - station.timePaused);
