@@ -17,15 +17,10 @@ To update an existing installation please see [Upgrading](./Upgrading.md).
 
 1. `git clone https://github.com/Musare/Musare.git`
 2. `cd Musare`
-3. `cp backend/config/template.json backend/config/default.json` and configure
-as per [Configuration](./Configuration.md#Backend)
-4. `cp frontend/dist/config/template.json frontend/dist/config/default.json`
-and configure as per [Configuration](./Configuration.md#Frontend)
-5. `cp .env.example .env` and configure as per
-[Configuration](./Configuration.md#Docker-Environment).
-6. `./musare.sh build`
-7. `./musare.sh start`
-8. **(optional)** Register a new user on the website and grant the admin role
+3. [Configure](./Configuration.md)
+4. `./musare.sh build`
+5. `./musare.sh start`
+6. **(optional)** Register a new user on the website and grant the admin role
 by running `./musare.sh admin add USERNAME`.
 
 ### Fixing the "couldn't connect to docker daemon" error
@@ -59,13 +54,10 @@ by running `./musare.sh admin add USERNAME`.
 2. `cd Musare`
 3. [Setup MongoDB](#setting-up-mongodb)
 4. [Setup Redis](#setting-up-redis)
-5. `cp backend/config/template.json backend/config/default.json` and configure
-as per [Configuration](./Configuration.md#Backend)
-6. `cp frontend/dist/config/template.json frontend/dist/config/default.json`
-and configure as per [Configuration](./Configuration.md#Frontend)
-7. `cd frontend && npm install && cd ..`
-8. `cd backend && npm install && cd ..`
-9. Start services
+5. [Configure](./Configuration.md)
+6. `cd frontend && npm install && cd ..`
+7. `cd backend && npm install && cd ..`
+8. Start services
     - **Linux**
         1. Execute `systemctl start redis mongod`
         2. Execute `cd frontend && npm run dev` and
@@ -77,7 +69,7 @@ and configure as per [Configuration](./Configuration.md#Frontend)
             1. Run `startRedis.cmd` and `startMongo.cmd` to start Redis and Mongo.
             2. Execute `cd frontend && npm run dev` and
             `cd backend && npm run dev` separately.
-10. **(optional)** Register a new user on the website and grant the admin role
+9. **(optional)** Register a new user on the website and grant the admin role
 by running the following in the mongodb shell.
 
     ```bash

@@ -1,4 +1,5 @@
 {
+	"configVersion": 12,
 	"migration": false,
 	"secret": "CHANGE_ME",
 	"url": {
@@ -26,6 +27,5 @@
 			},
 			"secure": true
 		}
-	},
-	"configVersion": 12
+	}
 }
