@@ -415,14 +415,14 @@ const unverifyMany = selectedRows => {
 };
 
 const importAlbum = selectedRows => {
-	const youtubeIds = selectedRows.map(({ mediaSource }) => mediaSource);
-	socket.dispatch("songs.getSongsFromYoutubeIds", youtubeIds, res => {
+	const mediaSources = selectedRows.map(({ mediaSource }) => mediaSource);
+	socket.dispatch("songs.getSongsFromMediaSources", mediaSources, res => {
 		if (res.status === "success") {
 			openModal({
 				modal: "importAlbum",
 				props: { songs: res.data.songs }
 			});
-		}
+		} else new Toast("Could not get media.");
 	});
 };
 
