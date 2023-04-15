@@ -1,5 +1,59 @@
 # Changelog
 
+## [v3.10.0-rc1] - 2023-04-15
+
+### **Breaking Changes**
+
+This release includes breaking changes to our configuration handling.
+The `backend/config/default.json` previously used as the means of configuring
+the backend is now tracked and serves as the source of all default values.
+
+Before updating or pulling changes please make a full backup and rename or
+remove the `backend/config/default.json` file to avoid it being overwritten.
+Please refer to the [Configuration documentation](.wiki/Configuration.md)
+for more information on how you should now configure the application.
+
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Added
+
+- feat: Import playlist media from export file
+- feat: Added additional station settings to configure autorequest functionality:
+  - Allow autorequest toggle
+  - Per user autorequest limit
+  - Disallow recent functionality toggle
+  (requires experimental station history to be enabled)
+  - Disallow recent amount
+  (requires experimental station history to be enabled)
+- feat: Display count of station users and autorequesting playlist in tags
+within tabs
+- feat: Added experimental station history
+- feat: Store and display user playback state in station users tab
+- feat: Added experimental option to restrict registrations to emails matching
+specific regex patterns
+- feat: Allow DJ's in official stations
+- feat: Display the reason media was added to queue
+- feat: Added "Add song to queue" button to station queue
+- feat: Added link to a user's own playlists in header/navbar
+- feat: Added experimental support for SoundCloud media
+- feat: Added experimental support for parsing and converting Spotify media
+- feat: Added experimental support for storing YouTube channel API data
+(requires experimental Spotify integration to be enabled)
+
+### Changed
+
+- refactor: Replace youtubeId usage with mediaSource internally
+- refactor: Serve application configuration from backend
+  - Replaced frontend config with both environment variables and backend config
+  - Define default backend config values in `default.json` and
+  overwrite with `local.json` files or environment variables
+- style: Changed font to Nunito
+
+### Fixed
+
+- fix: Git debug not functional in production
+- fix: Successfully saving station settings via Manage Station does not show a toast
+
 ## [v3.9.0] - 2023-01-01
 
 This release includes all changes from v3.9.0-rc1, in addition to the following.
