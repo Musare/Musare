@@ -307,15 +307,19 @@ class _StationsModule extends CoreClass {
 							});
 					},
 					(station, next) => {
+						// A current song is invalid if it isn't allowed to be played. Spotify songs can never be played, and SoundCloud songs can't be played if SoundCloud isn't enabled
+						let currentSongIsInvalid = false;
+						if (station.currentSong) {
+							if (station.currentSong.mediaSource.startsWith("spotify:")) currentSongIsInvalid = true;
+							if (
+								station.currentSong.mediaSource.startsWith("soundcloud:") &&
+								!config.get("experimental.soundcloud")
+							)
+								currentSongIsInvalid = true;
+						}
 						if (
 							(!station.paused && !station.currentSong) ||
-							(station.currentSong &&
-								((!config.get("experimental.soundcloud") &&
-									station.currentSong.mediaSource &&
-									station.currentSong.mediaSource.startsWith("soundcloud:")) ||
-									(!config.get("experimental.spotify") &&
-										station.currentSong.mediaSource &&
-										station.currentSong.mediaSource.startsWith("spotify:"))))
+							(station.currentSong && currentSongIsInvalid)
 						) {
 							return StationsModule.runJob(
 								"SKIP_STATION",
