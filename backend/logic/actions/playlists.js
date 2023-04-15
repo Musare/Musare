@@ -2532,17 +2532,20 @@ export default {
 				},
 
 				(playlist, next) => {
-					MediaModule.runJob("GET_MEDIA", { mediaSource }, this)
-						.then(res =>
-							next(null, playlist, {
-								_id: res.song._id,
-								title: res.song.title,
-								thumbnail: res.song.thumbnail,
-								artists: res.song.artists,
-								mediaSource: res.song.mediaSource
-							})
-						)
-						.catch(next);
+					let normalizedSong = null;
+
+					const song = playlist.songs.find(song => song.mediaSource === mediaSource);
+					if (song) {
+						normalizedSong = {
+							_id: song._id,
+							title: song.title,
+							thumbnail: song.thumbnail,
+							artists: song.artists,
+							mediaSource: song.mediaSource
+						};
+					}
+
+					next(null, playlist, normalizedSong);
 				},
 
 				(playlist, newSong, next) => {

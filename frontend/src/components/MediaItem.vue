@@ -263,12 +263,7 @@ onUnmounted(() => {
 			</p>
 			<div
 				class="universal-item-actions"
-				v-if="
-					disabledActions.indexOf('all') === -1 &&
-					(songMediaType !== 'soundcloud' ||
-						experimental.soundcloud ||
-						song._id)
-				"
+				v-if="disabledActions.indexOf('all') === -1"
 			>
 				<tippy
 					v-if="loggedIn && hoveredTippy"

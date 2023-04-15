@@ -111,6 +111,13 @@ onMounted(async () => {});
 			<media-item
 				:song="historyItem.payload.song"
 				:requested-by="true"
+				:disabled-actions="
+					historyItem.payload.song.mediaSource.startsWith(
+						'soundcloud:'
+					) && !experimental.soundcloud
+						? ['all']
+						: []
+				"
 				:header="`Finished playing at ${formatDate(
 					historyItem.payload.skippedAt
 				)}${formatSkipReason(historyItem.payload.skipReason)}`"

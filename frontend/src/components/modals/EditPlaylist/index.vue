@@ -37,6 +37,7 @@ const props = defineProps({
 
 const { socket } = useWebsocketsStore();
 const configStore = useConfigStore();
+const { experimental } = configStore;
 const editPlaylistStore = useEditPlaylistStore({ modalUuid: props.modalUuid });
 const stationStore = useStationStore();
 const userAuthStore = useUserAuthStore();
@@ -451,7 +452,7 @@ onBeforeUnmount(() => {
 								>
 									<template #tippyActions>
 										<i
-											class="material-icons add-to-queue-icon"
+											class="material-icons add-to-queue-icon kris111"
 											v-if="
 												station &&
 												station.requests &&
@@ -462,7 +463,11 @@ onBeforeUnmount(() => {
 														'owner' &&
 														(userRole === 'admin' ||
 															station.owner ===
-																userId)))
+																userId))) &&
+												(element.mediaSource.split(
+													':'
+												)[0] !== 'soundcloud' ||
+													experimental.soundcloud)
 											"
 											@click="
 												addSongToQueue(
