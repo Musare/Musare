@@ -12,6 +12,7 @@ export const useSoundcloudPlayer = () => {
 	const volume = ref();
 	const readyCallback = ref();
 	const attemptsToPlay = ref(0);
+	const debouncePause = ref(null);
 
 	const playAttemptTimeout = ref();
 
@@ -121,6 +122,8 @@ export const useSoundcloudPlayer = () => {
 	};
 
 	const changeTrackState = newTrackState => {
+		clearTimeout(debouncePause.value);
+
 		const oldTrackState = trackState.value;
 
 		trackState.value = newTrackState;
@@ -347,13 +350,13 @@ export const useSoundcloudPlayer = () => {
 		console.debug(TAG, "On pause", eventValue);
 
 		const finishedPlaying = eventValue.relativePosition === 1;
-		if (finishedPlaying) {
-			changeTrackState("finished");
-			return;
-		}
+		if (finishedPlaying) return;
 
-		if (trackState.value !== "attempting_to_play")
-			changeTrackState("paused");
+		clearTimeout(debouncePause.value);
+		debouncePause.value = setTimeout(() => {
+			if (trackState.value !== "attempting_to_play")
+				changeTrackState("paused");
+		}, 500);
 	});
 
 	soundcloudBindListener("finish", () => {
