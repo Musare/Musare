@@ -2204,6 +2204,7 @@ onBeforeUnmount(() => {
 									/>
 								</div>
 								<iframe
+									v-if="experimental.soundcloud"
 									v-show="
 										currentSongMediaType === 'soundcloud'
 									"
