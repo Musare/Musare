@@ -6,20 +6,21 @@ Environment variables are the means of configuring application services,
 particularly with our standard Docker environment.
 
 For our standard Docker setup variables should be defined in `.env`,
-an example can be found in `.env.example`.
+an example can be found in `.env.example`
+(when updating please refer to this file).
 After updating values in `.env`, containers should be restarted or rebuilt.  
 If you are using a different setup, you will need to define the relevant
 environment variables yourself.
 
-In the table below, the `[SERVICE]_HOST` properties refer to the IP address that the Docker
-container listens on. Setting this to `127.0.0.1` for will only expose
+In the table below, the `[SERVICE]_HOST` properties refer to the IP address that
+the Docker container listens on. Setting this to `127.0.0.1` for will only expose
 the configured port to localhost, whereas setting this to `0.0.0.0` will expose the
 port on all interfaces.  
-The `[SERVICE]_PORT` properties refer to the external Docker container port, used to access
-services from outside the container. Changing this does not require any changes to
-configuration within container. For example, setting the `MONGO_PORT` to `21018`
-will allow you to access the mongo database through that port on your machine, even though the
-application within the container is listening on `21017`.
+The `[SERVICE]_PORT` properties refer to the external Docker container port, used
+to access services from outside the container. Changing this does not require any
+changes to configuration within container. For example, setting the `MONGO_PORT`
+to `21018` will allow you to access the mongo database through that port on your
+machine, even though the application within the container is listening on `21017`.
 
 | Property | Description |
 | --- | --- |
@@ -60,20 +61,24 @@ application within the container is listening on `21017`.
 
 ## Backend Config
 
-The backend config serves as the primary configuration means of the application.  
+The backend config serves as the primary configuration means of the application.
 The default values can be found in `backend/config/default.json`.
 
-To overwrite these, create `backend/config/local.json`
-and define key/values. A basic template can be found in `backend/config/template.json`.
+To overwrite these, create a local config e.g. `backend/config/local.json` and
+define key/values.
+A basic template can be found in `backend/config/template.json`.
 
 If the default configuration changes, so will the `configVersion`.
 When updating, please refer to the `default.json`, make any required
-changes to your `local.json` and `.env`, and update your `configVersion`.
+changes to your `local.json`, and update your `configVersion`.
 
-Some configuration values defined in `backend/config/default.json` inherit from
-[Environment Variables](#environment-variables)
-and can not be overwritten with `local.json`, they can only be overwritten via the `.env`.  
-These values can be found in `backend/config/custom-environment-variables.json`.  
+Some configuration values are overwritten by
+[Environment Variables](#environment-variables) and can not be
+overwritten with `local.json`.
+These values can be found in `backend/config/custom-environment-variables.json`.
+
+For more information on configuration files please refer to the
+[config package documentation](https://github.com/node-config/node-config/wiki/Configuration-Files).
 
 | Property | Description |
 | --- | --- |

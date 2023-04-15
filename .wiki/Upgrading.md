@@ -23,7 +23,7 @@ or database migrations, you will be notified.
         - Set `migration` to `true` in  `backend/config/local.json`
         - `./musare.sh start backend`
         - Follow backend logs and await migration completion notice
-        `./musare.sh attach backend`. You can exit the attach with `Ctrl` + `P` + `Q`  
+        `./musare.sh attach backend`.
         You can also look at logs with `./musare.sh logs backend`
         - `./musare.sh stop backend`
         - Set `migration` to `false` in  `backend/config/local.json`
