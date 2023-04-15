@@ -11,7 +11,6 @@ To update an existing installation please see [Upgrading](./Upgrading.md).
 
 - [Git](https://github.com/git-guides/install-git)
 - [Docker](https://docs.docker.com/get-docker/)
-- [docker-compose](https://docs.docker.com/compose/install/)
 
 ### Instructions
 
@@ -21,21 +20,7 @@ To update an existing installation please see [Upgrading](./Upgrading.md).
 4. `./musare.sh build`
 5. `./musare.sh start`
 6. **(optional)** Register a new user on the website and grant the admin role
-by running `./musare.sh admin add USERNAME`.
-
-### Fixing the "couldn't connect to docker daemon" error
-
-- **Windows Only**
-
-    Some people have had issues while trying to execute the `docker-compose` command.
-    To fix this, you will have to run `docker-machine env default`.
-    This command will print various variables.
-    At the bottom, it will say something similar to
-    `@FOR /f "tokens=*" %i IN ('docker-machine env default') DO @%i`.
-    Run this command in your shell. You will have to do this command for every
-    shell you want to run `docker-compose` in (every session).
-
----
+by running `./musare.sh admin add USERNAME`
 
 ## Non-Docker
 
