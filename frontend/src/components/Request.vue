@@ -331,8 +331,9 @@ onMounted(async () => {
 								>
 									<i
 										v-if="
-											songsInQueue.indexOf(result.id) !==
-											-1
+											songsInQueue.indexOf(
+												`youtube:${result.id}`
+											) !== -1
 										"
 										class="material-icons added-to-playlist-icon"
 										content="Song is already in queue"
@@ -343,7 +344,10 @@ onMounted(async () => {
 										v-else
 										class="material-icons add-to-queue-icon"
 										@click="
-											addSongToQueue(result.id, index)
+											addSongToQueue(
+												`youtube:${result.id}`,
+												index
+											)
 										"
 										content="Add Song to Queue"
 										v-tippy
