@@ -31,11 +31,10 @@ ENV FRONTEND_MODE=${FRONTEND_MODE} \
 
 RUN apt-get update && apt-get install nginx -y
 
-RUN mkdir -p /opt/.git/refs /opt/types /opt/app /run/nginx
+RUN mkdir -p /opt/.git /opt/types /opt/app /run/nginx
 WORKDIR /opt/app
 
-COPY .git/config .git/HEAD /opt/.git/
-COPY .git/refs /opt/.git/refs
+COPY .git /opt/.git
 COPY types /opt/types
 COPY frontend /opt/app
 COPY --from=frontend_node_modules /opt/app/node_modules node_modules

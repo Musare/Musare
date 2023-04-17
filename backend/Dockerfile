@@ -12,11 +12,10 @@ FROM node:18 AS musare_backend
 ARG CONTAINER_MODE=production
 ENV CONTAINER_MODE=${CONTAINER_MODE}
 
-RUN mkdir -p /opt/.git/refs /opt/types /opt/app
+RUN mkdir -p /opt/.git /opt/types /opt/app
 WORKDIR /opt/app
 
-COPY .git/config .git/HEAD /opt/.git/
-COPY .git/refs /opt/.git/refs
+COPY .git /opt/.git
 COPY types /opt/types
 COPY backend /opt/app
 COPY --from=backend_node_modules /opt/app/node_modules node_modules
