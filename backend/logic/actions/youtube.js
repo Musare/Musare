@@ -524,7 +524,7 @@ export default {
 	 *
 	 * @returns {{status: string, data: object}}
 	 */
-	getMissingVideos: useHasPermission("youtube.getMissingVideos", function getMissingVideos(session, cb) {
+	getMissingVideos: useHasPermission("youtube.getMissingVideos", async function getMissingVideos(session, cb) {
 		this.keepLongJob();
 		this.publishProgress({
 			status: "started",
@@ -532,6 +532,16 @@ export default {
 			message: "Fetching missing YouTube videos.",
 			id: this.toString()
 		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		return YouTubeModule.runJob("GET_MISSING_VIDEOS", {}, this)
 			.then(response => {
 				this.log("SUCCESS", "YOUTUBE_GET_MISSING_VIDEOS", `Getting missing videos was successful.`);
@@ -557,7 +567,7 @@ export default {
 	 *
 	 * @returns {{status: string, data: object}}
 	 */
-	updateVideosV1ToV2: useHasPermission("youtube.updateVideosV1ToV2", function updateVideosV1ToV2(session, cb) {
+	updateVideosV1ToV2: useHasPermission("youtube.updateVideosV1ToV2", async function updateVideosV1ToV2(session, cb) {
 		this.keepLongJob();
 		this.publishProgress({
 			status: "started",
@@ -565,6 +575,16 @@ export default {
 			message: "Updating YouTube videos from v1 to v2.",
 			id: this.toString()
 		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		return YouTubeModule.runJob("UPDATE_VIDEOS_V1_TO_V2", {}, this)
 			.then(response => {
 				this.log("SUCCESS", "YOUTUBE_UPDATE_VIDEOS_V1_TO_V2", `Updating v1 videos to v2 was successful.`);

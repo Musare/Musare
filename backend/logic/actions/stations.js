@@ -1036,13 +1036,13 @@ export default {
 						.catch(err => next(err));
 				},
 
-				async () => {
-					const response = await StationsModule.stationHistoryModel
+				next => {
+					StationsModule.stationHistoryModel
 						.find({ stationId }, { documentVersion: 0, __v: 0 })
 						.sort({ "payload.skippedAt": -1 })
-						.limit(250);
-
-					return response;
+						.limit(250)
+						.then(response => next(null, response))
+						.catch(next);
 				}
 			],
 			async (err, history) => {

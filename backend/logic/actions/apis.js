@@ -139,7 +139,7 @@ export default {
 						next();
 					},
 
-					async () => {
+					next => {
 						this.keepLongJob();
 						this.publishProgress({
 							status: "started",
@@ -147,7 +147,6 @@ export default {
 							message: "Starting up",
 							id: this.toString()
 						});
-						console.log("KRIS@4", this.toString());
 						// await CacheModule.runJob(
 						// 	"RPUSH",
 						// 	{ key: `longJobs.${session.userId}`, value: this.toString() },
@@ -156,9 +155,14 @@ export default {
 
 						SpotifyModule.runJob(
 							"GET_ALTERNATIVE_MEDIA_SOURCES_FOR_TRACKS",
-							{ mediaSources, collectAlternativeMediaSourcesOrigins },
+							{
+								mediaSources,
+								collectAlternativeMediaSourcesOrigins
+							},
 							this
-						);
+						)
+							.then(() => next())
+							.catch(next);
 					}
 				],
 				async err => {
@@ -205,7 +209,7 @@ export default {
 						next();
 					},
 
-					async () => {
+					next => {
 						this.keepLongJob();
 						this.publishProgress({
 							status: "started",
@@ -213,7 +217,6 @@ export default {
 							message: "Starting up",
 							id: this.toString()
 						});
-						console.log("KRIS@4", this.toString());
 						// await CacheModule.runJob(
 						// 	"RPUSH",
 						// 	{ key: `longJobs.${session.userId}`, value: this.toString() },
@@ -224,7 +227,9 @@ export default {
 							"GET_ALTERNATIVE_ALBUM_SOURCES_FOR_ALBUMS",
 							{ albumIds, collectAlternativeAlbumSourcesOrigins },
 							this
-						);
+						)
+							.then(() => next())
+							.catch(next);
 					}
 				],
 				async err => {
@@ -273,7 +278,7 @@ export default {
 						next();
 					},
 
-					async () => {
+					next => {
 						this.keepLongJob();
 						this.publishProgress({
 							status: "started",
@@ -281,7 +286,6 @@ export default {
 							message: "Starting up",
 							id: this.toString()
 						});
-						console.log("KRIS@4", this.toString());
 						// await CacheModule.runJob(
 						// 	"RPUSH",
 						// 	{ key: `longJobs.${session.userId}`, value: this.toString() },
@@ -290,9 +294,14 @@ export default {
 
 						SpotifyModule.runJob(
 							"GET_ALTERNATIVE_ARTIST_SOURCES_FOR_ARTISTS",
-							{ artistIds, collectAlternativeArtistSourcesOrigins },
+							{
+								artistIds,
+								collectAlternativeArtistSourcesOrigins
+							},
 							this
-						);
+						)
+							.then(() => next())
+							.catch(next);
 					}
 				],
 				async err => {

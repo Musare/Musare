@@ -1588,7 +1588,7 @@ export default {
 						.catch(next);
 				},
 
-				async () => {
+				next => {
 					this.keepLongJob();
 					this.publishProgress({
 						status: "started",
@@ -1596,19 +1596,30 @@ export default {
 						message: "Adding songs to playlist.",
 						id: this.toString()
 					});
-					await CacheModule.runJob(
+					CacheModule.runJob(
 						"RPUSH",
-						{ key: `longJobs.${session.userId}`, value: this.toString() },
-						this
-					);
-					await CacheModule.runJob(
-						"PUB",
 						{
-							channel: "longJob.added",
-							value: { jobId: this.toString(), userId: session.userId }
+							key: `longJobs.${session.userId}`,
+							value: this.toString()
 						},
 						this
-					);
+					)
+						.then(() => {
+							CacheModule.runJob(
+								"PUB",
+								{
+									channel: "longJob.added",
+									value: {
+										jobId: this.toString(),
+										userId: session.userId
+									}
+								},
+								this
+							)
+								.then(() => next())
+								.catch(next);
+						})
+						.catch(next);
 				},
 
 				(nothing, next) => {

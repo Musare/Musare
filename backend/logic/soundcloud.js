@@ -625,8 +625,6 @@ class _SoundCloudModule extends CoreClass {
 
 			const jobResponses = await Promise.all(jobsToRun);
 
-			console.log(jobResponses.map(jobResponse => jobResponse.response.data));
-
 			return jobResponses
 				.map(jobResponse => jobResponse.response.data)
 				.map(artist => ({
@@ -639,25 +637,16 @@ class _SoundCloudModule extends CoreClass {
 		};
 
 		const { userPermalinks } = payload;
-		console.log(userPermalinks);
-
-		// const existingArtists = (
-		// 	await SoundcloudModule.soundcloudArtistsModel.find({ userPermalink: userPermalinks })
-		// ).map(artists => artists._doc);
-		// console.log(existingArtists);
 		const existingArtists = [];
 
 		const existingUserPermalinks = existingArtists.map(existingArtists => existingArtists.userPermalink);
-		const existingArtistsObjectIds = existingArtists.map(existingArtists => existingArtists._id.toString());
-		console.log(existingUserPermalinks, existingArtistsObjectIds);
+		// const existingArtistsObjectIds = existingArtists.map(existingArtists => existingArtists._id.toString());
 
 		if (userPermalinks.length === existingArtists.length) return { artists: existingArtists };
 
 		const missingUserPermalinks = userPermalinks.filter(
 			userPermalink => existingUserPermalinks.indexOf(userPermalink) === -1
 		);
-
-		console.log(missingUserPermalinks);
 
 		if (missingUserPermalinks.length === 0) return { videos: existingArtists };
 

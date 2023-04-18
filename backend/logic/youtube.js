@@ -811,11 +811,6 @@ class _YouTubeModule extends CoreClass {
 			const channelCustomUrl = splitQuery[3];
 			const channelUsernameOrCustomUrl = splitQuery[4];
 
-			console.log(`Channel id: ${channelId}`);
-			console.log(`Channel username: ${channelUsername}`);
-			console.log(`Channel custom URL: ${channelCustomUrl}`);
-			console.log(`Channel username or custom URL: ${channelUsernameOrCustomUrl}`);
-
 			const disableSearch = payload.disableSearch || false;
 
 			async.waterfall(
@@ -1401,8 +1396,6 @@ class _YouTubeModule extends CoreClass {
 
 			const jobResponses = await Promise.all(jobsToRun);
 
-			console.log(jobResponses);
-
 			return jobResponses
 				.map(jobResponse => jobResponse.response.data.items)
 				.flat()
@@ -1447,20 +1440,16 @@ class _YouTubeModule extends CoreClass {
 		};
 
 		const { identifiers, createMissing, replaceExisting } = payload;
-		console.log(identifiers, createMissing, replaceExisting);
 
 		const youtubeIds = identifiers.filter(identifier => !mongoose.Types.ObjectId.isValid(identifier));
 		const objectIds = identifiers.filter(identifier => mongoose.Types.ObjectId.isValid(identifier));
-		console.log(youtubeIds, objectIds);
 
 		const existingVideos = (await YouTubeModule.youtubeVideoModel.find({ youtubeId: youtubeIds }))
 			.concat(await YouTubeModule.youtubeVideoModel.find({ _id: objectIds }))
 			.map(video => video._doc);
-		console.log(existingVideos);
 
 		const existingYoutubeIds = existingVideos.map(existingVideo => existingVideo.youtubeId);
-		const existingYoutubeObjectIds = existingVideos.map(existingVideo => existingVideo._id.toString());
-		console.log(existingYoutubeIds, existingYoutubeObjectIds);
+		// const existingYoutubeObjectIds = existingVideos.map(existingVideo => existingVideo._id.toString());
 
 		if (!replaceExisting) {
 			if (!createMissing) return { videos: existingVideos };
@@ -1469,13 +1458,11 @@ class _YouTubeModule extends CoreClass {
 
 			const missingYoutubeIds = youtubeIds.filter(youtubeId => existingYoutubeIds.indexOf(youtubeId) === -1);
 
-			console.log(missingYoutubeIds);
-
 			if (missingYoutubeIds.length === 0) return { videos: existingVideos };
 
 			const newVideos = await getVideosFromYoutubeIds(missingYoutubeIds);
 
-			console.dir(newVideos, { depth: 5 });
+			// console.dir(newVideos, { depth: 5 });
 
 			await YouTubeModule.runJob("CREATE_VIDEOS", { youtubeVideos: newVideos }, this);
 
@@ -1531,8 +1518,6 @@ class _YouTubeModule extends CoreClass {
 
 			const jobResponses = await Promise.all(jobsToRun);
 
-			console.log(jobResponses);
-
 			return jobResponses
 				.map(jobResponse => jobResponse.response.data.items)
 				.flat()
@@ -1549,22 +1534,17 @@ class _YouTubeModule extends CoreClass {
 		};
 
 		const { channelIds } = payload;
-		console.log(channelIds);
 
 		const existingChannels = (await YouTubeModule.youtubeChannelModel.find({ channelId: channelIds })).map(
 			channel => channel._doc
 		);
-		console.log(existingChannels);
 
 		const existingChannelIds = existingChannels.map(existingChannel => existingChannel.channelId);
-		const existingChannelObjectIds = existingChannels.map(existingChannel => existingChannel._id.toString());
-		console.log(existingChannelIds, existingChannelObjectIds);
+		// const existingChannelObjectIds = existingChannels.map(existingChannel => existingChannel._id.toString());
 
 		if (channelIds.length === existingChannels.length) return { channels: existingChannels };
 
 		const missingChannelIds = channelIds.filter(channelId => existingChannelIds.indexOf(channelId) === -1);
-
-		console.log(missingChannelIds);
 
 		if (missingChannelIds.length === 0) return { videos: existingChannels };
 
@@ -1877,10 +1857,6 @@ class _YouTubeModule extends CoreClass {
 		const videoChannelIds = await YouTubeModule.youtubeVideoModel.distinct("rawData.snippet.channelId");
 
 		const missingChannelIds = videoChannelIds.filter(channelId => currentChannelIds.indexOf(channelId) === -1);
-
-		console.log(currentChannelIds);
-		console.log(videoChannelIds);
-		console.log(currentChannelIds.length, videoChannelIds.length);
 
 		const res = await YouTubeModule.runJob("GET_CHANNELS_FROM_IDS", { channelIds: missingChannelIds }, this);
 

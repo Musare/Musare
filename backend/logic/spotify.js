@@ -333,7 +333,6 @@ class _SpotifyModule extends CoreClass {
 							}
 						})
 						.catch(err => {
-							console.log(4443311, err);
 							reject(err);
 						});
 				})
@@ -524,20 +523,14 @@ class _SpotifyModule extends CoreClass {
 	async GET_ALBUMS_FROM_IDS(payload) {
 		const { albumIds } = payload;
 
-		console.log(albumIds);
-
 		const existingAlbums = (await SpotifyModule.spotifyAlbumModel.find({ albumId: albumIds })).map(
 			album => album._doc
 		);
 		const existingAlbumIds = existingAlbums.map(existingAlbum => existingAlbum.albumId);
 
-		console.log(existingAlbums);
-
 		const missingAlbumIds = albumIds.filter(albumId => existingAlbumIds.indexOf(albumId) === -1);
 
 		if (missingAlbumIds.length === 0) return existingAlbums;
-
-		console.log(missingAlbumIds);
 
 		const jobsToRun = [];
 
@@ -550,8 +543,6 @@ class _SpotifyModule extends CoreClass {
 
 		const jobResponses = await Promise.all(jobsToRun);
 
-		console.log(jobResponses);
-
 		const newAlbums = jobResponses
 			.map(jobResponse => jobResponse.response.data.albums)
 			.flat()
@@ -559,8 +550,6 @@ class _SpotifyModule extends CoreClass {
 				albumId: album.id,
 				rawData: album
 			}));
-
-		console.log(newAlbums);
 
 		await SpotifyModule.runJob("CREATE_ALBUMS", { spotifyAlbums: newAlbums }, this);
 
@@ -577,20 +566,14 @@ class _SpotifyModule extends CoreClass {
 	async GET_ARTISTS_FROM_IDS(payload) {
 		const { artistIds } = payload;
 
-		console.log(artistIds);
-
 		const existingArtists = (await SpotifyModule.spotifyArtistModel.find({ artistId: artistIds })).map(
 			artist => artist._doc
 		);
 		const existingArtistIds = existingArtists.map(existingArtist => existingArtist.artistId);
 
-		console.log(existingArtists);
-
 		const missingArtistIds = artistIds.filter(artistId => existingArtistIds.indexOf(artistId) === -1);
 
 		if (missingArtistIds.length === 0) return existingArtists;
-
-		console.log(missingArtistIds);
 
 		const jobsToRun = [];
 
@@ -603,8 +586,6 @@ class _SpotifyModule extends CoreClass {
 
 		const jobResponses = await Promise.all(jobsToRun);
 
-		console.log(jobResponses);
-
 		const newArtists = jobResponses
 			.map(jobResponse => jobResponse.response.data.artists)
 			.flat()
@@ -612,8 +593,6 @@ class _SpotifyModule extends CoreClass {
 				artistId: artist.id,
 				rawData: artist
 			}));
-
-		console.log(newArtists);
 
 		await SpotifyModule.runJob("CREATE_ARTISTS", { spotifyArtists: newArtists }, this);
 
@@ -821,7 +800,6 @@ class _SpotifyModule extends CoreClass {
 					}
 				});
 			} catch (err) {
-				console.log("ERROR", err);
 				this.publishProgress({
 					status: "working",
 					message: `Failed to get alternative artist source for ${artistId}`,
@@ -832,8 +810,6 @@ class _SpotifyModule extends CoreClass {
 				});
 			}
 		});
-
-		console.log("Done!");
 
 		this.publishProgress({
 			status: "finished",
@@ -876,25 +852,21 @@ class _SpotifyModule extends CoreClass {
 			)
 		);
 
-		const soundcloudIds = Array.from(
-			new Set(
-				wikiDataResponse.results.bindings
-					.filter(binding => !!binding.SoundCloud_ID)
-					.map(binding => binding.SoundCloud_ID.value)
-			)
-		);
+		// const soundcloudIds = Array.from(
+		// 	new Set(
+		// 		wikiDataResponse.results.bindings
+		// 			.filter(binding => !!binding.SoundCloud_ID)
+		// 			.map(binding => binding.SoundCloud_ID.value)
+		// 	)
+		// );
 
-		const musicbrainzArtistIds = Array.from(
-			new Set(
-				wikiDataResponse.results.bindings
-					.filter(binding => !!binding.MusicBrainz_artist_ID)
-					.map(binding => binding.MusicBrainz_artist_ID.value)
-			)
-		);
-
-		console.log("Youtube channel ids", youtubeChannelIds);
-		console.log("Soundcloud ids", soundcloudIds);
-		console.log("Musicbrainz artist ids", musicbrainzArtistIds);
+		// const musicbrainzArtistIds = Array.from(
+		// 	new Set(
+		// 		wikiDataResponse.results.bindings
+		// 			.filter(binding => !!binding.MusicBrainz_artist_ID)
+		// 			.map(binding => binding.MusicBrainz_artist_ID.value)
+		// 	)
+		// );
 
 		return youtubeChannelIds;
 	}
@@ -927,7 +899,6 @@ class _SpotifyModule extends CoreClass {
 					}
 				});
 			} catch (err) {
-				console.log("ERROR", err);
 				this.publishProgress({
 					status: "working",
 					message: `Failed to get alternative album source for ${albumId}`,
@@ -938,8 +909,6 @@ class _SpotifyModule extends CoreClass {
 				});
 			}
 		});
-
-		console.log("Done!");
 
 		this.publishProgress({
 			status: "finished",
@@ -996,10 +965,6 @@ class _SpotifyModule extends CoreClass {
 	async GET_ALTERNATIVE_MEDIA_SOURCES_FOR_TRACKS(payload) {
 		const { mediaSources, collectAlternativeMediaSourcesOrigins } = payload;
 
-		// console.log("KR*S94955", mediaSources);
-
-		// this.pub
-
 		await async.eachLimit(mediaSources, 1, async mediaSource => {
 			try {
 				const result = await SpotifyModule.runJob(
@@ -1017,7 +982,6 @@ class _SpotifyModule extends CoreClass {
 					}
 				});
 			} catch (err) {
-				console.log("ERROR", err);
 				this.publishProgress({
 					status: "working",
 					message: `Failed to get alternative media for ${mediaSource}`,
@@ -1028,8 +992,6 @@ class _SpotifyModule extends CoreClass {
 				});
 			}
 		});
-
-		console.log("Done!");
 
 		this.publishProgress({
 			status: "finished",
@@ -1332,7 +1294,7 @@ class _SpotifyModule extends CoreClass {
 									Promise.allSettled(promisesToRun2).then(resolve);
 								})
 								.catch(err => {
-									console.log("KRISWORKERR", err);
+									console.log(err);
 									resolve();
 								});
 						});
@@ -1546,7 +1508,7 @@ class _SpotifyModule extends CoreClass {
 							Promise.allSettled(promisesToRun2).then(resolve);
 						})
 						.catch(err => {
-							console.log("KRISWORKERR", err);
+							console.log(err);
 							resolve();
 						});
 				});

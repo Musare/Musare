@@ -9,6 +9,7 @@ import moduleManager from "../../index";
 const DBModule = moduleManager.modules.db;
 const UtilsModule = moduleManager.modules.utils;
 const SoundcloudModule = moduleManager.modules.soundcloud;
+const CacheModule = moduleManager.modules.cache;
 
 export default {
 	/**
@@ -16,7 +17,7 @@ export default {
 	 *
 	 * @returns {{status: string, data: object}}
 	 */
-	fetchNewApiKey: useHasPermission("soundcloud.fetchNewApiKey", function fetchNewApiKey(session, cb) {
+	fetchNewApiKey: useHasPermission("soundcloud.fetchNewApiKey", async function fetchNewApiKey(session, cb) {
 		this.keepLongJob();
 		this.publishProgress({
 			status: "started",
@@ -24,6 +25,16 @@ export default {
 			message: "Fetching new SoundCloud API key.",
 			id: this.toString()
 		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		SoundcloudModule.runJob("GENERATE_SOUNDCLOUD_API_KEY", {}, this)
 			.then(response => {
 				this.log("SUCCESS", "SOUNDCLOUD_FETCH_NEW_API_KEY", `Fetching new API key was successful.`);
@@ -52,7 +63,7 @@ export default {
 	 *
 	 * @returns {{status: string, data: object}}
 	 */
-	testApiKey: useHasPermission("soundcloud.testApiKey", function testApiKey(session, cb) {
+	testApiKey: useHasPermission("soundcloud.testApiKey", async function testApiKey(session, cb) {
 		this.keepLongJob();
 		this.publishProgress({
 			status: "started",
@@ -60,6 +71,16 @@ export default {
 			message: "Testing SoundCloud API key.",
 			id: this.toString()
 		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
 		SoundcloudModule.runJob("TEST_SOUNDCLOUD_API_KEY", {}, this)
 			.then(response => {
 				this.log(

@@ -617,8 +617,6 @@ class _StationsModule extends CoreClass {
 								.map(playlistSong => playlistSong.mediaSource)
 								.filter(mediaSource => currentMediaSources.indexOf(mediaSource) === -1);
 
-							console.log(4343, getYoutubeIds);
-
 							const { songs } = await SongsModule.runJob("GET_SONGS", { mediaSources: getYoutubeIds });
 
 							const weightRegex = new RegExp(`${weightTagName}\\[(\\d+)\\]`);
@@ -1954,7 +1952,6 @@ class _StationsModule extends CoreClass {
 	ADD_TO_QUEUE(payload) {
 		return new Promise((resolve, reject) => {
 			const { stationId, mediaSource, requestUser, requestType } = payload;
-			console.log(45436546, mediaSource);
 			async.waterfall(
 				[
 					next => {
