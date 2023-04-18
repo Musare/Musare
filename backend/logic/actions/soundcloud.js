@@ -17,14 +17,32 @@ export default {
 	 * @returns {{status: string, data: object}}
 	 */
 	fetchNewApiKey: useHasPermission("soundcloud.fetchNewApiKey", function fetchNewApiKey(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Fetch new SoundCloud API key",
+			message: "Fetching new SoundCloud API key.",
+			id: this.toString()
+		});
 		SoundcloudModule.runJob("GENERATE_SOUNDCLOUD_API_KEY", {}, this)
 			.then(response => {
 				this.log("SUCCESS", "SOUNDCLOUD_FETCH_NEW_API_KEY", `Fetching new API key was successful.`);
-				return cb({ status: "success", data: { status: response.status } });
+				this.publishProgress({
+					status: "success",
+					message: "Successfully fetched new SoundCloud API key."
+				});
+				return cb({
+					status: "success",
+					data: { response }
+				});
 			})
 			.catch(async err => {
 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 				this.log("ERROR", "SOUNDCLOUD_FETCH_NEW_API_KEY", `Fetching new API key failed. "${err}"`);
+				this.publishProgress({
+					status: "error",
+					message: err
+				});
 				return cb({ status: "error", message: err });
 			});
 	}),
@@ -35,6 +53,13 @@ export default {
 	 * @returns {{status: string, data: object}}
 	 */
 	testApiKey: useHasPermission("soundcloud.testApiKey", function testApiKey(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Test SoundCloud API key",
+			message: "Testing SoundCloud API key.",
+			id: this.toString()
+		});
 		SoundcloudModule.runJob("TEST_SOUNDCLOUD_API_KEY", {}, this)
 			.then(response => {
 				this.log(
@@ -42,11 +67,22 @@ export default {
 					"SOUNDCLOUD_TEST_API_KEY",
 					`Testing API key was successful. Response: ${response}.`
 				);
-				return cb({ status: "success", data: { status: response.status } });
+				this.publishProgress({
+					status: "success",
+					message: "Successfully tested SoundCloud API key."
+				});
+				return cb({
+					status: "success",
+					data: { status: response.status }
+				});
 			})
 			.catch(async err => {
 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 				this.log("ERROR", "SOUNDCLOUD_TEST_API_KEY", `Testing API key failed. "${err}"`);
+				this.publishProgress({
+					status: "error",
+					message: err
+				});
 				return cb({ status: "error", message: err });
 			});
 	}),

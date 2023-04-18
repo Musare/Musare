@@ -452,7 +452,7 @@ onBeforeUnmount(() => {
 								>
 									<template #tippyActions>
 										<i
-											class="material-icons add-to-queue-icon kris111"
+											class="material-icons add-to-queue-icon"
 											v-if="
 												station &&
 												station.requests &&

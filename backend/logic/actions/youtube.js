@@ -525,15 +525,29 @@ export default {
 	 * @returns {{status: string, data: object}}
 	 */
 	getMissingVideos: useHasPermission("youtube.getMissingVideos", function getMissingVideos(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Get missing YouTube videos",
+			message: "Fetching missing YouTube videos.",
+			id: this.toString()
+		});
 		return YouTubeModule.runJob("GET_MISSING_VIDEOS", {}, this)
 			.then(response => {
 				this.log("SUCCESS", "YOUTUBE_GET_MISSING_VIDEOS", `Getting missing videos was successful.`);
-				console.log("KRIS", response);
+				this.publishProgress({
+					status: "success",
+					message: "Successfully fetched missing YouTube videos."
+				});
 				return cb({ status: "success", data: { ...response } });
 			})
 			.catch(async err => {
 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 				this.log("ERROR", "YOUTUBE_GET_MISSING_VIDEOS", `Getting missing videos failed. "${err}"`);
+				this.publishProgress({
+					status: "error",
+					message: err
+				});
 				return cb({ status: "error", message: err });
 			});
 	}),
@@ -544,15 +558,29 @@ export default {
 	 * @returns {{status: string, data: object}}
 	 */
 	updateVideosV1ToV2: useHasPermission("youtube.updateVideosV1ToV2", function updateVideosV1ToV2(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Update YouTube videos to v2",
+			message: "Updating YouTube videos from v1 to v2.",
+			id: this.toString()
+		});
 		return YouTubeModule.runJob("UPDATE_VIDEOS_V1_TO_V2", {}, this)
 			.then(response => {
 				this.log("SUCCESS", "YOUTUBE_UPDATE_VIDEOS_V1_TO_V2", `Updating v1 videos to v2 was successful.`);
-				console.log("KRIS", response);
+				this.publishProgress({
+					status: "success",
+					message: "Successfully updated YouTube videos from v1 to v2."
+				});
 				return cb({ status: "success", data: { ...response } });
 			})
 			.catch(async err => {
 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 				this.log("ERROR", "YOUTUBE_UPDATE_VIDEOS_V1_TO_V2", `Updating v1 videos to v2 failed. "${err}"`);
+				this.publishProgress({
+					status: "error",
+					message: err
+				});
 				return cb({ status: "error", message: err });
 			});
 	}),
