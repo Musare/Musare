@@ -793,11 +793,8 @@ const youtubeReady = () => {
 							true
 						);
 						canAutoplay.value = true;
-						if (stationPaused.value)
+						if (stationPaused.value || localPaused.value)
 							youtubePlayer.value.pauseVideo();
-						else if (localPaused.value) {
-							resumeLocalStation();
-						}
 					} else if (
 						event.data === window.YT.PlayerState.PLAYING &&
 						(localPaused.value || stationPaused.value)
