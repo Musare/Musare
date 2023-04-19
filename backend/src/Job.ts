@@ -1,20 +1,22 @@
 import BaseModule from "./BaseModule";
-import JobQueue from "./JobQueue";
-import LogBook from "./LogBook";
+import JobContext from "./JobContext";
+import JobStatistics from "./JobStatistics";
+import LogBook, { Log } from "./LogBook";
+import ModuleManager from "./ModuleManager";
 import { JobOptions } from "./types/JobOptions";
 import { JobStatus } from "./types/JobStatus";
-import { Jobs, Module, Modules } from "./types/Modules";
+import { Modules } from "./types/Modules";
 
 export default class Job {
 	protected name: string;
 
-	protected module: Module;
+	protected module: Modules[keyof Modules];
 
-	protected callback: (
-		job: this,
-		resolve: () => void,
-		reject: () => void
-	) => void;
+	protected jobFunction: any;
+
+	protected payload: any;
+
+	protected context: JobContext;
 
 	protected priority: number;
 
@@ -33,9 +35,9 @@ export default class Job {
 
 	protected startedAt: number;
 
-	protected jobQueue: JobQueue;
-
 	protected logBook: LogBook;
+
+	protected jobStatistics: JobStatistics;
 
 	/**
 	 * Job
@@ -47,17 +49,34 @@ export default class Job {
 	 */
 	public constructor(
 		name: string,
-		module: Module,
-		callback: (job: Job, resolve: () => void, reject: () => void) => void,
-		options: { priority: number; longJob?: string }
+		moduleName: keyof Modules,
+		payload: any,
+		options?: Omit<JobOptions, "runDirectly">
 	) {
 		this.name = name;
-		this.module = module;
-		this.callback = callback;
 		this.priority = 1;
 
-		this.jobQueue = new JobQueue();
+		const module = ModuleManager.getPrimaryInstance().getModule(moduleName);
+		if (!module) throw new Error("Module not found.");
+		this.module = module;
+
+		// eslint-disable-next-line
+		// @ts-ignore
+		const jobFunction = this.module[this.name];
+		if (!jobFunction || typeof jobFunction !== "function")
+			throw new Error("Job not found.");
+		if (Object.prototype.hasOwnProperty.call(BaseModule, this.name))
+			throw new Error("Illegal job function.");
+		this.jobFunction = jobFunction;
+
+		this.payload = payload;
+
+		this.context = new JobContext(this);
+
 		this.logBook = LogBook.getPrimaryInstance();
+
+		this.jobStatistics = JobStatistics.getPrimaryInstance();
+		this.jobStatistics.updateStats(this.getName(), "added");
 
 		if (options) {
 			const { priority, longJob } = options;
@@ -124,8 +143,6 @@ export default class Job {
 	 */
 	public setStatus(status: JobStatus) {
 		this.status = status;
-		if (this.status === "ACTIVE") this.jobQueue.resume();
-		else if (this.status === "PAUSED") this.jobQueue.pause();
 	}
 
 	/**
@@ -138,68 +155,71 @@ export default class Job {
 	}
 
 	/**
-	 * Gets the job queue for jobs running under this current job
-	 */
-	public getJobQueue() {
-		return this.jobQueue;
-	}
-
-	/**
 	 * execute - Execute job
 	 *
 	 * @returns Promise
 	 */
-	public execute(): Promise<void> {
-		return new Promise((resolve, reject) => {
-			this.setStatus("ACTIVE");
-			this.callback(this, resolve, reject);
-		});
+	public async execute() {
+		this.setStatus("ACTIVE");
+		return (
+			this.jobFunction
+				.apply(this.module, [this.context, this.payload])
+				// eslint-disable-next-line
+				// @ts-ignore
+				.then(response => {
+					this.log({
+						message: "Job completed successfully",
+						type: "success"
+					});
+					this.jobStatistics.updateStats(
+						this.getName(),
+						"successful"
+					);
+					return response;
+				})
+				.catch((err: any) => {
+					this.log({
+						message: `Job failed with error "${err}"`,
+						type: "error"
+					});
+					this.jobStatistics.updateStats(this.getName(), "failed");
+					throw err;
+				})
+				.finally(() => {
+					this.jobStatistics.updateStats(this.getName(), "total");
+					this.jobStatistics.updateStats(
+						this.getName(),
+						"averageTime",
+						Date.now() - this.startedAt
+					);
+					this.setStatus("COMPLETED");
+				})
+		);
 	}
 
 	/**
-	 * runJob - Run a job
+	 * Log a message in the context of the current job, which automatically sets the category and data
 	 *
-	 * @param moduleName - Module name
-	 * @param jobName - Job name
-	 * @param params - Params
+	 * @param log - Log message or object
 	 */
-	public runJob<
-		ModuleNameType extends keyof Jobs & keyof Modules,
-		JobNameType extends keyof Jobs[ModuleNameType] &
-			keyof Omit<Modules[ModuleNameType], keyof BaseModule>,
-		PayloadType extends "payload" extends keyof Jobs[ModuleNameType][JobNameType]
-			? Jobs[ModuleNameType][JobNameType]["payload"] extends undefined
-				? Record<string, never>
-				: Jobs[ModuleNameType][JobNameType]["payload"]
-			: Record<string, never>,
-		ReturnType = "returns" extends keyof Jobs[ModuleNameType][JobNameType]
-			? Jobs[ModuleNameType][JobNameType]["returns"]
-			: never
-	>(
-		moduleName: ModuleNameType,
-		jobName: JobNameType,
-		payload: PayloadType,
-		options?: JobOptions
-	): Promise<ReturnType> {
-		if (this.getStatus() !== "ACTIVE")
-			throw new Error(
-				`Cannot run a child job when the current job is not active. Current job: ${this.getName()}, attempted to run job: ${moduleName}.${jobName.toString()}.`
-			);
-
-		return new Promise<Awaited<Promise<ReturnType>>>((resolve, reject) => {
-			this.jobQueue
-				.runJob(moduleName, jobName, payload, options)
-				// @ts-ignore
-				.then(resolve)
-				.catch(reject)
-				.finally(() => {
-					if (this.getStatus() !== "ACTIVE")
-						this.logBook.log({
-							type: "error",
-							category: "jobs",
-							message: `Job ${this.getName()}(${this.getUuid()}) has had a child job (${moduleName}.${jobName.toString()}) complete, but the job was not active. This should never happen!`
-						});
-				});
+	public log(log: string | Omit<Log, "timestamp" | "category">) {
+		const {
+			message,
+			type = undefined,
+			data = {}
+		} = {
+			...(typeof log === "string" ? { message: log } : log)
+		};
+		this.logBook.log({
+			message,
+			type,
+			category: this.getName(),
+			data: {
+				moduleName: this.module.getName(),
+				jobName: this.name,
+				jobUuid: this.uuid,
+				...data
+			}
 		});
 	}
 }

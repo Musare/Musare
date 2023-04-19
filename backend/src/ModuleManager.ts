@@ -1,25 +1,10 @@
-import BaseModule from "./BaseModule";
 import JobQueue from "./JobQueue";
-import JobStatistics from "./JobStatistics";
-import { JobOptions } from "./types/JobOptions";
-import { Jobs, Modules, ModuleStatus, ModuleClass } from "./types/Modules";
+import { Modules, ModuleStatus, ModuleClass } from "./types/Modules";
 
 export default class ModuleManager {
-	static primaryInstance: ModuleManager;
+	static primaryInstance = new this();
 
 	private modules?: Modules;
-
-	private jobQueue: JobQueue;
-
-	private jobStatistics: JobStatistics;
-
-	/**
-	 * Module Manager
-	 */
-	public constructor() {
-		this.jobQueue = new JobQueue(this);
-		this.jobStatistics = JobStatistics.getPrimaryInstance();
-	}
 
 	/**
 	 * getStatus - Get status of modules
@@ -32,49 +17,6 @@ export default class ModuleManager {
 			status[name] = module.getStatus();
 		});
 		return status;
-	}
-
-	/**
-	 * getJobsStats - Get statistics of job queue
-	 *
-	 * @returns Job queue statistics
-	 */
-	public getJobsStats() {
-		return this.jobStatistics.getStats();
-	}
-
-	/**
-	 * getJobsStatus - Get status of job queue
-	 *
-	 * @returns Job queue status
-	 */
-	public getJobsStatus() {
-		return this.jobQueue.getStatus();
-	}
-
-	/**
-	 * getQueueStatus - Get status of queued jobs
-	 *
-	 * @returns Job statuses
-	 */
-	public getQueueStatus() {
-		return this.jobQueue.getQueueStatus();
-	}
-
-	/**
-	 * Gets a job from the queue by jobId
-	 *
-	 * @returns Job
-	 */
-	public getJob(jobId: string, recursive = false) {
-		return this.jobQueue.getJob(jobId, recursive);
-	}
-
-	/**
-	 * Gets a list of all jobs running directly in the ModuleManager job queue
-	 */
-	public getJobs() {
-		return this.jobQueue.getJobs();
 	}
 
 	/**
@@ -135,7 +77,7 @@ export default class ModuleManager {
 			await this.shutdown();
 			throw err;
 		});
-		this.jobQueue.resume();
+		JobQueue.getPrimaryInstance().resume();
 	}
 
 	/**
@@ -155,39 +97,11 @@ export default class ModuleManager {
 			);
 	}
 
-	/**
-	 * runJob - Run a job
-	 *
-	 * @param moduleName - Module name
-	 * @param jobName - Job name
-	 * @param params - Params
-	 */
-	public runJob<
-		ModuleNameType extends keyof Jobs & keyof Modules,
-		JobNameType extends keyof Jobs[ModuleNameType] &
-			keyof Omit<Modules[ModuleNameType], keyof BaseModule>,
-		PayloadType extends "payload" extends keyof Jobs[ModuleNameType][JobNameType]
-			? Jobs[ModuleNameType][JobNameType]["payload"] extends undefined
-				? Record<string, never>
-				: Jobs[ModuleNameType][JobNameType]["payload"]
-			: Record<string, never>,
-		ReturnType = "returns" extends keyof Jobs[ModuleNameType][JobNameType]
-			? Jobs[ModuleNameType][JobNameType]["returns"]
-			: never
-	>(
-		moduleName: ModuleNameType,
-		jobName: JobNameType,
-		payload: PayloadType,
-		options?: JobOptions
-	): Promise<ReturnType> {
-		return this.jobQueue.runJob(moduleName, jobName, payload, options);
-	}
-
 	static getPrimaryInstance(): ModuleManager {
 		return this.primaryInstance;
 	}
 
-	static setPrimaryInstance(moduleManager: ModuleManager) {
-		this.primaryInstance = moduleManager;
+	static setPrimaryInstance(instance: ModuleManager) {
+		this.primaryInstance = instance;
 	}
 }

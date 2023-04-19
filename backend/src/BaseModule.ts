@@ -2,8 +2,6 @@ import LogBook, { Log } from "./LogBook";
 import ModuleManager from "./ModuleManager";
 import { ModuleStatus } from "./types/Modules";
 
-// type ModuleName = keyof Modules;
-
 export default abstract class BaseModule {
 	protected moduleManager: ModuleManager;
 

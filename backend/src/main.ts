@@ -1,12 +1,10 @@
 import * as readline from "node:readline";
-import { ObjectId } from "mongodb";
 import ModuleManager from "./ModuleManager";
 import LogBook from "./LogBook";
-import Job from "./Job";
+import JobQueue from "./JobQueue";
 import JobStatistics from "./JobStatistics";
 
-const logBook = new LogBook();
-LogBook.setPrimaryInstance(logBook);
+const logBook = LogBook.getPrimaryInstance();
 
 process.removeAllListeners("uncaughtException");
 process.on("uncaughtException", err => {
@@ -28,11 +26,9 @@ process.on("uncaughtException", err => {
 	});
 });
 
-const jobStatistics = new JobStatistics();
-JobStatistics.setPrimaryInstance(jobStatistics);
+const moduleManager = ModuleManager.getPrimaryInstance();
+const jobQueue = JobQueue.getPrimaryInstance();
 
-const moduleManager = new ModuleManager();
-ModuleManager.setPrimaryInstance(moduleManager);
 moduleManager.startup();
 
 // TOOD remove, or put behind debug option
@@ -41,28 +37,33 @@ moduleManager.startup();
 global.moduleManager = moduleManager;
 // eslint-disable-next-line
 // @ts-ignore
+global.jobQueue = jobQueue;
+// eslint-disable-next-line
+// @ts-ignore
 global.rs = () => {
 	process.exit();
 };
 
-const interval = setInterval(() => {
-	moduleManager
-		.runJob("stations", "addToQueue", { songId: "TestId" })
-		.catch(() => {});
-	moduleManager
-		.runJob("stations", "addA", {}, { priority: 5 })
-		.catch(() => {});
-	// moduleManager
-	// 	.runJob("stations", "", { test: "Test", test2: 123 })
-	// 	.catch(() => {});
-}, 40);
-
-setTimeout(() => {
-	clearTimeout(interval);
-}, 3000);
-
 setTimeout(async () => {
-	const _id = "6371212daf4e9f8fb14444b2";
+	const start = Date.now();
+	const x = [];
+	while (x.length < 1) {
+		x.push(jobQueue.runJob("stations", "addC", {}).catch(() => {}));
+	}
+	const y = await Promise.all(x);
+	console.log(y);
+	// const a = await jobQueue.runJob("stations", "addC", {}).catch(() => {});
+	// console.log(555, a);
+	const difference = Date.now() - start;
+	console.log({ difference });
+}, 100);
+
+// setTimeout(() => {
+// 	clearTimeout(interval);
+// }, 3000);
+
+// setTimeout(async () => {
+// 	const _id = "6371212daf4e9f8fb14444b2";
 
 	// logBook.log("Find with no projection");
 	// await moduleManager
@@ -211,7 +212,7 @@ setTimeout(async () => {
 	// 	})
 	// 	.then(console.log)
 	// 	.catch(console.error);
-}, 0);
+// }, 0);
 
 const rl = readline.createInterface({
 	input: process.stdin,
@@ -243,38 +244,6 @@ process.on("SIGINT", shutdown);
 process.on("SIGQUIT", shutdown);
 process.on("SIGTERM", shutdown);
 
-type JobArray = [Job, JobArray[]];
-
-function getNestedChildJobs(job: Job): JobArray {
-	const jobs = job.getJobQueue().getJobs();
-
-	if (jobs.length > 0)
-		return [
-			job,
-			jobs.map((_job: Job) => getNestedChildJobs(_job))
-		] as JobArray;
-
-	return [job, []];
-}
-
-function getJobLines(
-	level: number,
-	[job, jobArrs]: JobArray,
-	seperator = "\t"
-): string[] {
-	const tabs = Array.from({ length: level })
-		.map(() => seperator)
-		.join("");
-	let lines = [
-		`${tabs}${job.getName()} (${job.getStatus()} - ${job.getPriority()} - ${job.getUuid()})`
-	];
-	jobArrs.forEach((jobArr: JobArray) => {
-		lines = [...lines, ...getJobLines(level + 1, jobArr, seperator)];
-	});
-
-	return lines;
-}
-
 const runCommand = (line: string) => {
 	const [command, ...args] = line.split(" ");
 	switch (command) {
@@ -294,16 +263,16 @@ const runCommand = (line: string) => {
 			console.log("Module Manager Status:");
 			console.table(moduleManager.getStatus());
 			console.log("Job Queue Status:");
-			console.table(moduleManager.getJobsStatus());
+			console.table(jobQueue.getStatus());
 			break;
 		}
 		case "stats": {
 			console.log("Job Queue Stats:");
-			console.table(moduleManager.getJobsStats());
+			console.table(JobStatistics.getPrimaryInstance().getStats());
 			break;
 		}
 		case "queue": {
-			const queueStatus = moduleManager.getQueueStatus().queue;
+			const queueStatus = jobQueue.getQueueStatus().queue;
 			if (queueStatus.length === 0)
 				console.log("There are no jobs in the queue.");
 			else
@@ -314,7 +283,7 @@ const runCommand = (line: string) => {
 			break;
 		}
 		case "active": {
-			const activeStatus = moduleManager.getQueueStatus().active;
+			const activeStatus = jobQueue.getQueueStatus().active;
 			if (activeStatus.length === 0)
 				console.log("There are no active jobs.");
 			else console.log(`There are ${activeStatus.length} active jobs.`);
@@ -325,7 +294,7 @@ const runCommand = (line: string) => {
 			if (args.length === 0) console.log("Please specify a jobId");
 			else {
 				const jobId = args[0];
-				const job = moduleManager.getJob(jobId, true);
+				const job = jobQueue.getJob(jobId);
 
 				if (!job) console.log("Job not found");
 				else {
@@ -338,36 +307,8 @@ const runCommand = (line: string) => {
 						moduleStatus: job?.getModule().getStatus()
 					};
 					console.table(jobInfo);
-
-					// Gets all child jobs of the current job, including the current job, nested
-					const jobArrs = getNestedChildJobs(job);
-
-					const jobLines = getJobLines(0, jobArrs);
-
-					jobLines.forEach(jobLine => {
-						console.log(jobLine);
-					});
 				}
 			}
-			break;
-		}
-		case "jobtree": {
-			const jobs = moduleManager.getJobs();
-
-			let jobLines: string[] = [];
-
-			jobs.forEach(job => {
-				// Gets all child jobs of the current job, including the current job, nested
-				const jobArrs = getNestedChildJobs(job);
-
-				jobLines = [...jobLines, ...getJobLines(0, jobArrs)];
-			});
-
-			console.log("List of jobs:");
-			jobLines.forEach(jobLine => {
-				console.log(jobLine);
-			});
-
 			break;
 		}
 		case "eval": {

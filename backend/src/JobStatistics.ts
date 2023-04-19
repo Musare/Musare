@@ -1,5 +1,5 @@
 export default class JobStatistics {
-	static primaryInstance: JobStatistics;
+	static primaryInstance = new this();
 
 	private stats: Record<
 		string,
@@ -74,7 +74,7 @@ export default class JobStatistics {
 		return this.primaryInstance;
 	}
 
-	static setPrimaryInstance(jobStatistics: JobStatistics) {
-		this.primaryInstance = jobStatistics;
+	static setPrimaryInstance(instance: JobStatistics) {
+		this.primaryInstance = instance;
 	}
 }

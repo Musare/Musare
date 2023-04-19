@@ -1,22 +1,18 @@
+import BaseModule from "./BaseModule";
+import Job from "./Job";
+import JobQueue from "./JobQueue";
+import { Log } from "./LogBook";
+import { JobOptions } from "./types/JobOptions";
 import { Jobs, Modules } from "./types/Modules";
 
-import Job from "./Job";
-import LogBook, { Log } from "./LogBook";
-import ModuleManager from "./ModuleManager";
-import BaseModule from "./BaseModule";
-import { JobOptions } from "./types/JobOptions";
-
 export default class JobContext {
-	protected moduleManager: ModuleManager;
-
-	protected logBook: LogBook;
-
 	protected job: Job;
 
+	protected jobQueue: JobQueue;
+
 	public constructor(job: Job) {
-		this.moduleManager = ModuleManager.getPrimaryInstance();
-		this.logBook = LogBook.getPrimaryInstance();
 		this.job = job;
+		this.jobQueue = JobQueue.getPrimaryInstance();
 	}
 
 	/**
@@ -25,23 +21,7 @@ export default class JobContext {
 	 * @param log - Log message or object
 	 */
 	public log(log: string | Omit<Log, "timestamp" | "category">) {
-		const {
-			message,
-			type = undefined,
-			data = {}
-		} = {
-			...(typeof log === "string" ? { message: log } : log)
-		};
-		this.logBook.log({
-			message,
-			type,
-			category: `${this.job.getModule().getName()}.${this.job.getName()}`,
-			data: {
-				moduleName: this.job.getModule().getName(),
-				jobName: this.job.getName(),
-				...data
-			}
-		});
+		return this.job.log(log);
 	}
 
 	/**
@@ -51,7 +31,7 @@ export default class JobContext {
 	 * @param jobName - Job name
 	 * @param params - Params
 	 */
-	public runJob<
+	public async runJob<
 		ModuleNameType extends keyof Jobs & keyof Modules,
 		JobNameType extends keyof Jobs[ModuleNameType] &
 			keyof Omit<Modules[ModuleNameType], keyof BaseModule>,
@@ -69,6 +49,9 @@ export default class JobContext {
 		payload: PayloadType,
 		options?: JobOptions
 	): Promise<ReturnType> {
-		return this.job.runJob(moduleName, jobName, payload, options);
+		return this.jobQueue.runJob(moduleName, jobName, payload, {
+			runDirectly: true,
+			...(options ?? {})
+		});
 	}
 }

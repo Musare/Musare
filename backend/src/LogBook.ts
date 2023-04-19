@@ -32,7 +32,7 @@ const COLOR_CYAN = "\x1b[36m";
 const COLOR_RESET = "\x1b[0m";
 
 export default class LogBook {
-	static primaryInstance: LogBook;
+	static primaryInstance = new this();
 
 	// A list of log objects stored in memory, if enabled generally
 	private logs: Log[];
@@ -57,15 +57,15 @@ export default class LogBook {
 				data: false,
 				color: true,
 				exclude: [
-					// // Success messages for jobs don't tend to be very helpful, so we exclude them by default
-					// {
-					// 	category: "jobs",
-					// 	type: "success"
-					// },
-					// // We don't want to show debug messages in the console by default
-					// {
-					// 	type: "debug"
-					// }
+					// Success messages for jobs don't tend to be very helpful, so we exclude them by default
+					{
+						category: "jobs",
+						type: "success"
+					},
+					// We don't want to show debug messages in the console by default
+					{
+						type: "debug"
+					}
 				]
 			},
 			memory: {
@@ -306,7 +306,7 @@ export default class LogBook {
 		return this.primaryInstance;
 	}
 
-	static setPrimaryInstance(logBook: LogBook) {
-		this.primaryInstance = logBook;
+	static setPrimaryInstance(instance: LogBook) {
+		this.primaryInstance = instance;
 	}
 }
