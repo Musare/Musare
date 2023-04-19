@@ -300,6 +300,31 @@ export const useUserAuthStore = defineStore("userAuth", {
 					resolve(this.permissions);
 				});
 			});
+		},
+		resetCookieExpiration() {
+			const cookies = {};
+			document.cookie.split("; ").forEach(cookie => {
+				cookies[cookie.substring(0, cookie.indexOf("="))] =
+					cookie.substring(cookie.indexOf("=") + 1, cookie.length);
+			});
+
+			const configStore = useConfigStore();
+			const SIDName = configStore.cookie;
+
+			if (!cookies[SIDName]) return;
+
+			const date = new Date();
+			date.setTime(new Date().getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+
+			const secure = configStore.urls.secure ? "secure=true; " : "";
+
+			let domain = "";
+			if (configStore.urls.host !== "localhost")
+				domain = ` domain=${configStore.urls.host};`;
+
+			document.cookie = `${configStore.cookie}=${
+				cookies[SIDName]
+			}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
 		}
 	}
 });

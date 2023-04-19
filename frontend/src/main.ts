@@ -363,6 +363,10 @@ createSocket().then(async socket => {
 			userId
 		});
 
+		if (loggedIn) {
+			userAuthStore.resetCookieExpiration();
+		}
+
 		if (configStore.experimental.media_session) ms.initialize();
 		else ms.uninitialize();
 	});
