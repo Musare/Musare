@@ -25,6 +25,8 @@ const { login } = useUserAuthStore();
 const { openModal, closeCurrentModal } = useModalsStore();
 
 const submitModal = () => {
+	if (!email.value || !password.value.value) return;
+
 	login({
 		email: email.value,
 		password: password.value.value
@@ -35,7 +37,7 @@ const submitModal = () => {
 		.catch(err => new Toast(err.message));
 };
 
-const checkForAutofill = event => {
+const checkForAutofill = (type, event) => {
 	if (
 		event.target.value !== "" &&
 		event.inputType === undefined &&
@@ -84,6 +86,7 @@ const githubRedirect = () => {
 							class="input"
 							type="email"
 							placeholder="Username/Email..."
+							@input="checkForAutofill('email', $event)"
 							@keyup.enter="submitModal()"
 						/>
 					</p>
@@ -100,7 +103,7 @@ const githubRedirect = () => {
 							type="password"
 							ref="passwordElement"
 							placeholder="Password..."
-							@input="checkForAutofill($event)"
+							@input="checkForAutofill('password', $event)"
 							@keyup.enter="submitModal()"
 						/>
 						<a @click="togglePasswordVisibility()">
