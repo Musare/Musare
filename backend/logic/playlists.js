@@ -1096,27 +1096,36 @@ class _PlaylistsModule extends CoreClass {
 							{ _id: station.playlist },
 							{ $set: { songs: includedSongs } },
 							err => {
-								next(err, includedSongs);
+								next(err);
 							}
 						);
 					},
 
-					(includedSongs, next) => {
+					next => {
 						PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId: originalPlaylist._id }, this)
 							.then(() => {
-								next(null, includedSongs);
+								next();
 							})
 							.catch(next);
 					},
 
-					(includedSongs, next) => {
-						if (originalPlaylist.songs.length === 0 && includedSongs.length > 0)
-							StationsModule.runJob("SKIP_STATION", {
-								stationId: payload.stationId,
-								natural: false,
-								skipReason: "other"
+					next => {
+						StationsModule.runJob("AUTOFILL_STATION", { stationId: payload.stationId }, this)
+							.then(() => next())
+							.catch(err => {
+								if (err === "Autofill is disabled in this station" || err === "Autofill limit reached")
+									return next();
+								return next(err);
 							});
-						next();
+					},
+
+					next => {
+						CacheModule.runJob("PUB", {
+							channel: "station.queueUpdate",
+							value: payload.stationId
+						})
+							.then(() => next())
+							.catch(next);
 					}
 				],
 				err => {
