@@ -404,9 +404,9 @@ const removeTracks = videoIds => {
 						class="button is-primary icon-with-button material-icons"
 						@click="
 							openModal({
-								modal: 'viewSoundcloudTrack',
+								modal: 'viewMedia',
 								props: {
-									trackId: slotProps.item.trackId
+									mediaSource: `soundcloud:${slotProps.item.trackId}`
 								}
 							})
 						"
