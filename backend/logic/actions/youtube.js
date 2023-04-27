@@ -265,12 +265,20 @@ export default {
 								blacklistedProperties: [],
 								specialProperties: {
 									songId: [
-										// Fetch songs from songs collection with a matching mediaSource
+										// Fetch songs from songs collection with a matching mediaSource, which we first need to assemble
 										{
 											$lookup: {
-												from: "songs", // TODO fix this to support mediasource, so start with youtube:, so add a new pipeline steps
-												localField: "youtubeId",
-												foreignField: "youtubeId",
+												from: "songs",
+												let: {
+													mediaSource: { $concat: ["youtube:", "$youtubeId"] }
+												},
+												pipeline: [
+													{
+														$match: {
+															$expr: { $eq: ["$mediaSource", "$$mediaSource"] }
+														}
+													}
+												],
 												as: "song"
 											}
 										},
