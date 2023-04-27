@@ -179,90 +179,95 @@ onMounted(async () => {
 			@closed="closeCurrentModal()"
 		>
 			<template #body>
-				<!-- email address -->
-				<p class="control">
-					<label class="label">Email</label>
-					<input
-						v-model="email.value"
-						class="input"
-						type="email"
-						placeholder="Email..."
-						@keyup.enter="submitModal()"
-						autofocus
-					/>
-				</p>
-				<transition name="fadein-helpbox">
-					<input-help-box
-						:entered="email.entered"
-						:valid="email.valid"
-						:message="email.message"
-					/>
-				</transition>
+				<form>
+					<!-- email address -->
+					<p class="control">
+						<label class="label">Email</label>
+						<input
+							v-model="email.value"
+							class="input"
+							type="email"
+							autocomplete="username"
+							placeholder="Email..."
+							@keyup.enter="submitModal()"
+							autofocus
+						/>
+					</p>
+					<transition name="fadein-helpbox">
+						<input-help-box
+							:entered="email.entered"
+							:valid="email.valid"
+							:message="email.message"
+						/>
+					</transition>
 
-				<!-- username -->
-				<p class="control">
-					<label class="label">Username</label>
-					<input
-						v-model="username.value"
-						class="input"
-						type="text"
-						placeholder="Username..."
-						@keyup.enter="submitModal()"
-					/>
-				</p>
-				<transition name="fadein-helpbox">
-					<input-help-box
-						:entered="username.entered"
-						:valid="username.valid"
-						:message="username.message"
-					/>
-				</transition>
+					<!-- username -->
+					<p class="control">
+						<label class="label">Username</label>
+						<input
+							v-model="username.value"
+							class="input"
+							type="text"
+							autocomplete="username"
+							placeholder="Username..."
+							@keyup.enter="submitModal()"
+						/>
+					</p>
+					<transition name="fadein-helpbox">
+						<input-help-box
+							:entered="username.entered"
+							:valid="username.valid"
+							:message="username.message"
+						/>
+					</transition>
 
-				<!-- password -->
-				<p class="control">
-					<label class="label">Password</label>
-				</p>
+					<!-- password -->
+					<p class="control">
+						<label class="label">Password</label>
+					</p>
 
-				<div id="password-visibility-container">
-					<input
-						v-model="password.value"
-						class="input"
-						type="password"
-						ref="passwordElement"
-						placeholder="Password..."
-						@keyup.enter="submitModal()"
-					/>
-					<a @click="togglePasswordVisibility()">
-						<i class="material-icons">
-							{{
-								!password.visible
-									? "visibility"
-									: "visibility_off"
-							}}
-						</i>
-					</a>
-				</div>
+					<div id="password-visibility-container">
+						<input
+							v-model="password.value"
+							class="input"
+							type="password"
+							autocomplete="new-password"
+							ref="passwordElement"
+							placeholder="Password..."
+							@keyup.enter="submitModal()"
+						/>
+						<a @click="togglePasswordVisibility()">
+							<i class="material-icons">
+								{{
+									!password.visible
+										? "visibility"
+										: "visibility_off"
+								}}
+							</i>
+						</a>
+					</div>
 
-				<transition name="fadein-helpbox">
-					<input-help-box
-						:valid="password.valid"
-						:entered="password.entered"
-						:message="password.message"
-					/>
-				</transition>
+					<transition name="fadein-helpbox">
+						<input-help-box
+							:valid="password.valid"
+							:entered="password.entered"
+							:message="password.message"
+						/>
+					</transition>
 
-				<br />
+					<br />
 
-				<p>
-					By registering you agree to our
-					<router-link to="/terms" @click="closeCurrentModal()">
-						Terms of Service
-					</router-link>
-					and
-					<router-link to="/privacy" @click="closeCurrentModal()">
-						Privacy Policy</router-link
-					>.
-				</p>
+					<p>
+						By registering you agree to our
+						<router-link to="/terms" @click="closeCurrentModal()">
+							Terms of Service
+						</router-link>
+						and
+						<router-link to="/privacy" @click="closeCurrentModal()">
+							Privacy Policy</router-link
+						>.
+					</p>
+				</form>
 			</template>
 			<template #footer>
 				<div id="actions">
