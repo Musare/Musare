@@ -95,9 +95,11 @@ export const useSoundcloudPlayer = () => {
 		if (data.method === "ready") {
 			widgetId.value = data.widgetId;
 
-			if (!readyCallback.value) return;
+			if (readyCallback.value) readyCallback.value();
 
-			readyCallback.value();
+			eventListenerCallbacks[data.method].forEach(callback => {
+				callback(data.value);
+			});
 
 			return;
 		}
@@ -283,6 +285,8 @@ export const useSoundcloudPlayer = () => {
 
 	const soundcloudGetTrackId = () => currentTrackId.value;
 
+	const soundcloudGetTrackState = () => trackState.value;
+
 	const soundcloudLoadTrack = (trackId, startTime, _paused) => {
 		if (!soundcloudIframeElement.value) return;
 
@@ -386,6 +390,7 @@ export const useSoundcloudPlayer = () => {
 		soundcloudGetState,
 		soundcloudGetTrackId,
 		soundcloudGetCurrentSound,
+		soundcloudGetTrackState,
 		soundcloudBindListener,
 		soundcloudOnTrackStateChange,
 		soundcloudDestroy,

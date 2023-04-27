@@ -25,6 +25,9 @@ const YoutubePlayer = defineAsyncComponent(
 const SoundcloudTrackInfo = defineAsyncComponent(
 	() => import("@/components/SoundcloudTrackInfo.vue")
 );
+const SoundcloudPlayer = defineAsyncComponent(
+	() => import("@/components/SoundcloudPlayer.vue")
+);
 
 const props = defineProps({
 	modalUuid: { type: String, required: true },
@@ -61,9 +64,18 @@ const youtubeSongNormalized = computed(() => ({
 	duration: youtubeVideo.value.duration
 }));
 
+const soundcloudSongNormalized = computed(() => ({
+	mediaSource: `soundcloud:${soundcloudTrack.value.trackId}`,
+	title: soundcloudTrack.value.title,
+	artists: [soundcloudTrack.value.username],
+	duration: soundcloudTrack.value.duration
+}));
+
 const songNormalized = computed(() => {
 	if (currentSongMediaType.value === "youtube")
 		return youtubeSongNormalized.value;
+	if (currentSongMediaType.value === "soundcloud")
+		return soundcloudSongNormalized.value;
 	return {};
 });
 
@@ -170,7 +182,7 @@ onBeforeUnmount(() => {
 				</template>
 				<template v-else-if="currentSongMediaType === 'soundcloud'">
 					<soundcloud-track-info :track="soundcloudTrack" />
-					<!-- <youtube-player :song="youtubeSongNormalized" /> -->
+					<soundcloud-player :song="soundcloudSongNormalized" />
 				</template>
 			</template>
 			<div v-else class="vertical-padding">
