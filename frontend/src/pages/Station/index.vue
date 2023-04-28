@@ -818,8 +818,7 @@ const youtubeReady = () => {
 						!stationPaused.value &&
 						!noSong.value &&
 						currentSongMediaType.value === "youtube" &&
-						youtubePlayer.value.getDuration() / 1000 <
-							currentSong.value.duration
+						getTimeRemaining() > 0
 					) {
 						youtubePlayer.value.seekTo(
 							getTimeElapsed() / 1000 +
