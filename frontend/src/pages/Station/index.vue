@@ -731,21 +731,28 @@ const youtubeReady = () => {
 						});
 
 						// save current song id
-						const erroredYoutubeId = currentSong.value.mediaSource;
+						const erroredMediaSource =
+							currentSong.value.mediaSource;
 
-						persistentToasts.value.push({
+						const self = {
 							toast: persistentToast,
 							checkIfCanRemove: () => {
 								if (
-									currentSong.value.mediaSource ===
-									erroredYoutubeId
+									currentSong.value.mediaSource !==
+									erroredMediaSource
 								) {
 									persistentToast.destroy();
+									persistentToasts.value.splice(
+										persistentToasts.value.indexOf(self),
+										1
+									);
 									return true;
 								}
 								return false;
 							}
-						});
+						};
+
+						persistentToasts.value.push(self);
 					} else {
 						new Toast(
 							"There has been an error with the YouTube Embed"
