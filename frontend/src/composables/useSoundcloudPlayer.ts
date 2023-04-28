@@ -153,6 +153,20 @@ export const useSoundcloudPlayer = () => {
 		dispatchMessage("isPaused");
 	};
 
+	const soundcloudGetCurrentSound = callback => {
+		let called = false;
+
+		const _callback = value => {
+			if (called) return;
+			called = true;
+
+			callback(value);
+		};
+		addMethodCallback("getCurrentSound", _callback);
+
+		dispatchMessage("getCurrentSound");
+	};
+
 	const attemptToPlay = () => {
 		if (trackState.value === "playing") return;
 
@@ -174,19 +188,35 @@ export const useSoundcloudPlayer = () => {
 					return;
 				}
 
-				// Too many attempts, failed
-				if (attemptsToPlay.value >= 10 && value && !paused.value) {
-					changeTrackState("failed_to_play");
-					attemptsToPlay.value = 0;
-					return;
-				}
+				soundcloudGetCurrentSound(sound => {
+					// Sound is not available to play
+					if (
+						value &&
+						!paused.value &&
+						typeof sound === "object" &&
+						(!sound.playable ||
+							!sound.public ||
+							sound.policy === "BLOCK")
+					) {
+						changeTrackState("sound_unavailable");
+						attemptsToPlay.value = 0;
+						return;
+					}
 
-				if (playAttemptTimeout.value)
-					clearTimeout(playAttemptTimeout.value);
-				playAttemptTimeout.value = setTimeout(() => {
-					if (trackState.value === "attempting_to_play")
-						attemptToPlay();
-				}, 500);
+					// Too many attempts, failed
+					if (attemptsToPlay.value >= 10 && value && !paused.value) {
+						changeTrackState("failed_to_play");
+						attemptsToPlay.value = 0;
+						return;
+					}
+
+					if (playAttemptTimeout.value)
+						clearTimeout(playAttemptTimeout.value);
+					playAttemptTimeout.value = setTimeout(() => {
+						if (trackState.value === "attempting_to_play")
+							attemptToPlay();
+					}, 500);
+				});
 			});
 		}, 500);
 	};
@@ -270,20 +300,6 @@ export const useSoundcloudPlayer = () => {
 	};
 
 	const soundcloudGetState = () => trackState.value;
-
-	const soundcloudGetCurrentSound = callback => {
-		let called = false;
-
-		const _callback = value => {
-			if (called) return;
-			called = true;
-
-			callback(value);
-		};
-		addMethodCallback("getCurrentSound", _callback);
-
-		dispatchMessage("getCurrentSound");
-	};
 
 	const soundcloudGetTrackId = () => currentTrackId.value;
 

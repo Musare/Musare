@@ -255,6 +255,8 @@ onMounted(() => {
 						new Toast(
 							"Failed to start SoundCloud player. Please try to manually start it."
 						);
+					else if (newState === "sound_unavailable")
+						new Toast("Sound is currently unavailable.");
 
 					player.value.paused = true;
 				}
