@@ -69,20 +69,6 @@ const playerVolumeControlIcon = computed(() => {
 
 const soundcloudTrackId = computed(() => props.song.mediaSource.split(":")[1]);
 
-const playerSetTrackPosition = event => {
-	console.debug(TAG, "PLAYER SET TRACK POSITION");
-
-	soundcloudGetDuration(duration => {
-		soundcloudSeekTo(
-			Number(
-				Number(duration / 1000) *
-					((event.pageX - event.target.getBoundingClientRect().left) /
-						canvasWidth.value)
-			) * 1000
-		);
-	});
-};
-
 const playerPlay = () => {
 	console.debug(TAG, "PLAYER PLAY");
 
@@ -106,6 +92,21 @@ const playerHardStop = () => {
 	console.debug(TAG, "PLAYER HARD STOP");
 
 	playerStop();
+};
+
+const playerSetTrackPosition = event => {
+	console.debug(TAG, "PLAYER SET TRACK POSITION");
+
+	playerPlay();
+	soundcloudGetDuration(duration => {
+		soundcloudSeekTo(
+			Number(
+				Number(duration / 1000) *
+					((event.pageX - event.target.getBoundingClientRect().left) /
+						canvasWidth.value)
+			) * 1000
+		);
+	});
 };
 
 const playerToggleMute = () => {
