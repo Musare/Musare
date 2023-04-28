@@ -1,11 +1,12 @@
 import { ref, watch } from "vue";
 
-const TAG = "[USP]";
+const debug = (...args) =>
+	process.env.NODE_ENV === "development" && console.debug("[USP]", ...args);
 
 const soundcloudDomain = "https://w.soundcloud.com";
 
 export const useSoundcloudPlayer = () => {
-	console.debug(TAG, "Init start");
+	debug("Init start");
 
 	const soundcloudIframeElement = ref();
 	const widgetId = ref();
@@ -75,7 +76,7 @@ export const useSoundcloudPlayer = () => {
 			return;
 
 		if (method !== "getPosition" && method !== "getDuration")
-			console.debug(TAG, "Dispatch message", method, value);
+			debug("Dispatch message", method, value);
 
 		soundcloudIframeElement.value.contentWindow.postMessage(
 			JSON.stringify(payload),
@@ -90,7 +91,7 @@ export const useSoundcloudPlayer = () => {
 
 		const data = JSON.parse(event.data);
 		if (data.method !== "getPosition" && data.method !== "getDuration")
-			console.log("MESSAGE DATA", data);
+			debug("MESSAGE DATA", data);
 
 		if (data.method === "ready") {
 			widgetId.value = data.widgetId;
@@ -209,7 +210,7 @@ export const useSoundcloudPlayer = () => {
 	const soundcloudPlay = () => {
 		paused.value = false;
 
-		console.debug(TAG, "Soundcloud play");
+		debug("Soundcloud play");
 
 		if (trackState.value !== "attempting_to_play") attemptToPlay();
 	};
@@ -217,7 +218,7 @@ export const useSoundcloudPlayer = () => {
 	const soundcloudPause = () => {
 		paused.value = true;
 
-		console.debug(TAG, "Soundcloud pause");
+		debug("Soundcloud pause");
 
 		if (playAttemptTimeout.value) clearTimeout(playAttemptTimeout.value);
 
@@ -227,15 +228,15 @@ export const useSoundcloudPlayer = () => {
 	const soundcloudSetVolume = _volume => {
 		volume.value = _volume;
 
-		console.debug(TAG, "Soundcloud set volume");
+		debug("Soundcloud set volume");
 
 		dispatchMessage("setVolume", _volume);
 	};
 
 	const soundcloudSeekTo = time => {
-		console.log("SC SEEK TO", time);
+		debug("SC SEEK TO", time);
 
-		console.debug(TAG, "Soundcloud seek to");
+		debug("Soundcloud seek to");
 
 		dispatchMessage("seekTo", time);
 	};
@@ -291,7 +292,7 @@ export const useSoundcloudPlayer = () => {
 	const soundcloudLoadTrack = (trackId, startTime, _paused) => {
 		if (!soundcloudIframeElement.value) return;
 
-		console.debug(TAG, "Soundcloud load track");
+		debug("Soundcloud load track");
 
 		const url = `${soundcloudDomain}/player?autoplay=false&buying=false&sharing=false&download=false&show_artwork=false&show_playcount=false&show_user=false&url=${`https://api.soundcloud.com/tracks/${trackId}`}`;
 
@@ -325,7 +326,7 @@ export const useSoundcloudPlayer = () => {
 	};
 
 	const soundcloudOnTrackStateChange = callback => {
-		console.debug(TAG, "On track state change listener added");
+		debug("On track state change listener added");
 		stateChangeCallbacks.push(callback);
 	};
 
@@ -345,14 +346,14 @@ export const useSoundcloudPlayer = () => {
 	};
 
 	soundcloudBindListener("play", () => {
-		console.debug(TAG, "On play");
+		debug("On play");
 
 		if (trackState.value !== "attempting_to_play")
 			changeTrackState("playing");
 	});
 
 	soundcloudBindListener("pause", eventValue => {
-		console.debug(TAG, "On pause", eventValue);
+		debug("On pause", eventValue);
 
 		const finishedPlaying = eventValue.relativePosition === 1;
 		if (finishedPlaying) return;
@@ -365,18 +366,18 @@ export const useSoundcloudPlayer = () => {
 	});
 
 	soundcloudBindListener("finish", () => {
-		console.debug(TAG, "On finish");
+		debug("On finish");
 
 		changeTrackState("finished");
 	});
 
 	soundcloudBindListener("error", () => {
-		console.debug(TAG, "On error");
+		debug("On error");
 
 		changeTrackState("error");
 	});
 
-	console.debug(TAG, "Init end");
+	debug("Init end");
 
 	return {
 		soundcloudIframeElement,
