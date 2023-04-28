@@ -495,7 +495,7 @@ export default {
 	 * Remove YouTube videos
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {array} videoIds - the YouTube video ids to remove
+	 * @param {Array} videoIds - the YouTube video ids to remove
 	 * @param {Function} cb - gets called with the result
 	 * @returns {{status: string, data: object}}
 	 */
@@ -782,6 +782,7 @@ export default {
 
 	/**
 	 * Gets missing YouTube channels
+	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 * @returns {{status: string, data: object}}

@@ -1327,7 +1327,7 @@ class _YouTubeModule extends CoreClass {
 	 * Create YouTube videos
 	 *
 	 * @param {object} payload - an object containing the payload
-	 * @param {array|object} payload.youtubeVideos - the youtubeVideo object or array of
+	 * @param {Array | object} payload.youtubeVideos - the youtubeVideo object or array of
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	CREATE_VIDEOS(payload) {
@@ -1373,7 +1373,7 @@ class _YouTubeModule extends CoreClass {
 	 * Get YouTube videos
 	 *
 	 * @param {object} payload - an object containing the payload
-	 * @param {array} payload.identifiers - an array of YouTube video ObjectId's or YouTube ID's
+	 * @param {Array} payload.identifiers - an array of YouTube video ObjectId's or YouTube ID's
 	 * @param {boolean} payload.createMissing - attempt to fetch and create video's if not in db
 	 * @param {boolean} payload.replaceExisting - replace existing
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -1485,7 +1485,7 @@ class _YouTubeModule extends CoreClass {
 	 * Get YouTube channels
 	 *
 	 * @param {object} payload - an object containing the payload
-	 * @param {array} payload.channelIds - an array of YouTube channel id's
+	 * @param {Array} payload.channelIds - an array of YouTube channel id's
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	async GET_CHANNELS_FROM_IDS(payload) {

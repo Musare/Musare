@@ -98,7 +98,7 @@ class _WikiDataModule extends CoreClass {
 	 * Get WikiData data from work id
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {strubg} payload.workId - work id
+	 * @param {string} payload.workId - work id
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async API_GET_DATA_FROM_MUSICBRAINZ_WORK(payload) {

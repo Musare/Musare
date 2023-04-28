@@ -225,13 +225,6 @@ const filters = ref<TableFilter[]>([
 		filterTypes: ["datetimeBefore", "datetimeAfter"],
 		defaultFilterType: "datetimeBefore"
 	},
-	// {
-	// 	name: "importJob",
-	// 	displayName: "Import Job",
-	// 	property: "importJob",
-	// 	filterTypes: ["special"],
-	// 	defaultFilterType: "special"
-	// },
 	{
 		name: "genre",
 		displayName: "Genre",

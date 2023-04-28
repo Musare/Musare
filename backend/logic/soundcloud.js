@@ -228,7 +228,7 @@ class _SoundCloudModule extends CoreClass {
 	 * Perform SoundCloud API get track request
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {strubg} payload.trackId - the SoundCloud track id to get
+	 * @param {string} payload.trackId - the SoundCloud track id to get
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	API_GET_TRACK(payload) {
@@ -255,7 +255,7 @@ class _SoundCloudModule extends CoreClass {
 	 * Perform SoundCloud API call
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {strubg} payload.url - request url
+	 * @param {string} payload.url - request url
 	 * @param {object} payload.params - request parameters
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
@@ -604,7 +604,7 @@ class _SoundCloudModule extends CoreClass {
 	 * Get Soundcloud artists
 	 *
 	 * @param {object} payload - an object containing the payload
-	 * @param {array} payload.userPermalinks - an array of Soundcloud user permalinks
+	 * @param {Array} payload.userPermalinks - an array of Soundcloud user permalinks
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	async GET_ARTISTS_FROM_PERMALINKS(payload) {

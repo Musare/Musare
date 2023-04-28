@@ -187,7 +187,7 @@ class _SpotifyModule extends CoreClass {
 	 * Perform Spotify API get albums request
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {array} payload.albumIds - the album ids to get
+	 * @param {Array} payload.albumIds - the album ids to get
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	API_GET_ALBUMS(payload) {
@@ -217,7 +217,7 @@ class _SpotifyModule extends CoreClass {
 	 * Perform Spotify API get artists request
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {array} payload.artistIds - the artist ids to get
+	 * @param {Array} payload.artistIds - the artist ids to get
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	API_GET_ARTISTS(payload) {
@@ -346,7 +346,7 @@ class _SpotifyModule extends CoreClass {
 	 * Create Spotify track
 	 *
 	 * @param {object} payload - an object containing the payload
-	 * @param {array} payload.spotifyTracks - the spotifyTracks
+	 * @param {Array} payload.spotifyTracks - the spotifyTracks
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	CREATE_TRACKS(payload) {
@@ -405,7 +405,7 @@ class _SpotifyModule extends CoreClass {
 	 * Create Spotify albums
 	 *
 	 * @param {object} payload - an object containing the payload
-	 * @param {array} payload.spotifyAlbums - the Spotify albums
+	 * @param {Array} payload.spotifyAlbums - the Spotify albums
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	async CREATE_ALBUMS(payload) {
@@ -435,7 +435,7 @@ class _SpotifyModule extends CoreClass {
 	 * Create Spotify artists
 	 *
 	 * @param {object} payload - an object containing the payload
-	 * @param {array} payload.spotifyArtists - the Spotify artists
+	 * @param {Array} payload.spotifyArtists - the Spotify artists
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	async CREATE_ARTISTS(payload) {
@@ -465,7 +465,7 @@ class _SpotifyModule extends CoreClass {
 	 * Gets tracks from media sources
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {array} payload.mediaSources - the media sources to get tracks from
+	 * @param {Array} payload.mediaSources - the media sources to get tracks from
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_TRACKS_FROM_MEDIA_SOURCES(payload) {
@@ -512,7 +512,7 @@ class _SpotifyModule extends CoreClass {
 	 * Gets albums from Spotify album ids
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {array} payload.albumIds - the Spotify album ids
+	 * @param {Array} payload.albumIds - the Spotify album ids
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ALBUMS_FROM_IDS(payload) {
@@ -555,7 +555,7 @@ class _SpotifyModule extends CoreClass {
 	 * Gets Spotify artists from Spotify artist ids
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {array} payload.artistIds - the Spotify artist ids
+	 * @param {Array} payload.artistIds - the Spotify artist ids
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ARTISTS_FROM_IDS(payload) {

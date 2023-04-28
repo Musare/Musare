@@ -134,8 +134,5 @@ export const useYoutubeVideo = () => {
 		youtubeVideoURLOrID,
 		youtubeVideos,
 		selectYoutubeVideo
-		// searchForSongs,
-		// loadMoreSongs,
-		// addYouTubeSongToPlaylist
 	};
 };

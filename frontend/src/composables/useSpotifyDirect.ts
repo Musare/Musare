@@ -45,28 +45,8 @@ export const useSpotifyDirect = () => {
 		}
 	};
 
-	// const addToQueue = (stationId: string) => {
-	// 	const url = spotifyDirect.value.trim();
-
-	// 	socket.dispatch(
-	// 		"stations.addToQueue",
-	// 		stationId,
-	// 		url,
-	// 		"manual",
-	// 		res => {
-	// 			if (res.status !== "success")
-	// 				new Toast(`Error: ${res.message}`);
-	// 			else {
-	// 				new Toast(res.message);
-	// 				spotifyDirect.value = "";
-	// 			}
-	// 		}
-	// 	);
-	// };
-
 	return {
 		spotifyDirect,
 		addToPlaylist
-		// addToQueue
 	};
 };
