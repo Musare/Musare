@@ -97,9 +97,10 @@ export const useSoundcloudPlayer = () => {
 
 			if (readyCallback.value) readyCallback.value();
 
-			eventListenerCallbacks[data.method].forEach(callback => {
-				callback(data.value);
-			});
+			if (eventListenerCallbacks[data.method])
+				eventListenerCallbacks[data.method].forEach(callback => {
+					callback(data.value);
+				});
 
 			return;
 		}
