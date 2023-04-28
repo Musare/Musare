@@ -86,10 +86,6 @@ class _SpotifyModule extends CoreClass {
 		SoundcloudModule = this.moduleManager.modules.soundcloud;
 		WikiDataModule = this.moduleManager.modules.wikidata;
 
-		// this.youtubeApiRequestModel = this.YoutubeApiRequestModel = await DBModule.runJob("GET_MODEL", {
-		// 	modelName: "youtubeApiRequest"
-		// });
-
 		this.spotifyTrackModel = this.SpotifyTrackModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "spotifyTrack"
 		});
@@ -191,7 +187,7 @@ class _SpotifyModule extends CoreClass {
 	 * Perform Spotify API get albums request
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {object} payload.albumIds - the album ids to get
+	 * @param {array} payload.albumIds - the album ids to get
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	API_GET_ALBUMS(payload) {
@@ -221,7 +217,7 @@ class _SpotifyModule extends CoreClass {
 	 * Perform Spotify API get artists request
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {object} payload.artistIds - the artist ids to get
+	 * @param {array} payload.artistIds - the artist ids to get
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	API_GET_ARTISTS(payload) {
@@ -251,7 +247,7 @@ class _SpotifyModule extends CoreClass {
 	 * Perform Spotify API get track request
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {object} payload.params - request parameters
+	 * @param {string} payload.trackId - the Spotify track id to get
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	API_GET_TRACK(payload) {
@@ -278,7 +274,8 @@ class _SpotifyModule extends CoreClass {
 	 * Perform Spotify API get playlist request
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {object} payload.params - request parameters
+	 * @param {string} payload.playlistId - the Spotify playlist id to get songs from
+	 * @param {string} payload.nextUrl - the next URL to use
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	API_GET_PLAYLIST(payload) {
@@ -305,14 +302,12 @@ class _SpotifyModule extends CoreClass {
 	 * Perform Spotify API call
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {object} payload.url - request url
+	 * @param {string} payload.url - request url
 	 * @param {object} payload.params - request parameters
-	 * @param {object} payload.quotaCost - request quotaCost
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	API_CALL(payload) {
 		return new Promise((resolve, reject) => {
-			// const { url, params, quotaCost } = payload;
 			const { url, params } = payload;
 
 			SpotifyModule.runJob("GET_API_TOKEN", {}, this)
@@ -351,7 +346,7 @@ class _SpotifyModule extends CoreClass {
 	 * Create Spotify track
 	 *
 	 * @param {object} payload - an object containing the payload
-	 * @param {string} payload.spotifyTracks - the spotifyTracks
+	 * @param {array} payload.spotifyTracks - the spotifyTracks
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	CREATE_TRACKS(payload) {
@@ -410,7 +405,7 @@ class _SpotifyModule extends CoreClass {
 	 * Create Spotify albums
 	 *
 	 * @param {object} payload - an object containing the payload
-	 * @param {string} payload.spotifyAlbums - the Spotify albums
+	 * @param {array} payload.spotifyAlbums - the Spotify albums
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	async CREATE_ALBUMS(payload) {
@@ -440,7 +435,7 @@ class _SpotifyModule extends CoreClass {
 	 * Create Spotify artists
 	 *
 	 * @param {object} payload - an object containing the payload
-	 * @param {string} payload.spotifyArtists - the Spotify artists
+	 * @param {array} payload.spotifyArtists - the Spotify artists
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	async CREATE_ARTISTS(payload) {
@@ -470,7 +465,7 @@ class _SpotifyModule extends CoreClass {
 	 * Gets tracks from media sources
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {string} payload.mediaSources - the media sources to get tracks from
+	 * @param {array} payload.mediaSources - the media sources to get tracks from
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_TRACKS_FROM_MEDIA_SOURCES(payload) {
@@ -517,7 +512,7 @@ class _SpotifyModule extends CoreClass {
 	 * Gets albums from Spotify album ids
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {string} payload.albumIds - the Spotify album ids
+	 * @param {array} payload.albumIds - the Spotify album ids
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ALBUMS_FROM_IDS(payload) {
@@ -560,7 +555,7 @@ class _SpotifyModule extends CoreClass {
 	 * Gets Spotify artists from Spotify artist ids
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {string} payload.artistIds - the Spotify artist ids
+	 * @param {array} payload.artistIds - the Spotify artist ids
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ARTISTS_FROM_IDS(payload) {
@@ -604,7 +599,7 @@ class _SpotifyModule extends CoreClass {
 	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {string} payload.identifier - the spotify track ObjectId or track id
-	 * @param {string} payload.createMissing - attempt to fetch and create track if not in db
+	 * @param {boolean} payload.createMissing - attempt to fetch and create track if not in db
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_TRACK(payload) {
@@ -767,8 +762,6 @@ class _SpotifyModule extends CoreClass {
 					}
 				}
 			);
-
-			// kind;
 		});
 	}
 
@@ -777,7 +770,7 @@ class _SpotifyModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.artistIds - the Spotify artist ids to try and get alternative artist sources for
-	 * @param {string} payload.collectAlternativeArtistSourcesOrigins - whether to collect the origin of any alternative artist sources found
+	 * @param {boolean} payload.collectAlternativeArtistSourcesOrigins - whether to collect the origin of any alternative artist sources found
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ALTERNATIVE_ARTIST_SOURCES_FOR_ARTISTS(payload) {
@@ -822,21 +815,13 @@ class _SpotifyModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.artistId - the Spotify artist id to try and get alternative artist sources for
-	 * @param {string} payload.collectAlternativeArtistSourcesOrigins - whether to collect the origin of any alternative artist sources found
+	 * @param {boolean} payload.collectAlternativeArtistSourcesOrigins - whether to collect the origin of any alternative artist sources found
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ALTERNATIVE_ARTIST_SOURCES_FOR_ARTIST(payload) {
 		const { artistId /* , collectAlternativeArtistSourcesOrigins */ } = payload;
 
 		if (!artistId) throw new Error("Artist id provided is not valid.");
-
-		// const artist = await SpotifyModule.runJob(
-		// 	"GET_ARTIST",
-		// 	{
-		// 		identifier: artistId
-		// 	},
-		// 	this
-		// );
 
 		const wikiDataResponse = await WikiDataModule.runJob(
 			"API_GET_DATA_FROM_SPOTIFY_ARTIST",
@@ -876,7 +861,7 @@ class _SpotifyModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.albumIds - the Spotify album ids to try and get alternative album sources for
-	 * @param {string} payload.collectAlternativeAlbumSourcesOrigins - whether to collect the origin of any alternative album sources found
+	 * @param {boolean} payload.collectAlternativeAlbumSourcesOrigins - whether to collect the origin of any alternative album sources found
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ALTERNATIVE_ALBUM_SOURCES_FOR_ALBUMS(payload) {
@@ -921,21 +906,13 @@ class _SpotifyModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.albumId - the Spotify album id to try and get alternative album sources for
-	 * @param {string} payload.collectAlternativeAlbumSourcesOrigins - whether to collect the origin of any alternative album sources found
+	 * @param {boolean} payload.collectAlternativeAlbumSourcesOrigins - whether to collect the origin of any alternative album sources found
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ALTERNATIVE_ALBUM_SOURCES_FOR_ALBUM(payload) {
 		const { albumId /* , collectAlternativeAlbumSourcesOrigins */ } = payload;
 
 		if (!albumId) throw new Error("Album id provided is not valid.");
-
-		// const album = await SpotifyModule.runJob(
-		// 	"GET_ALBUM",
-		// 	{
-		// 		identifier: albumId
-		// 	},
-		// 	this
-		// );
 
 		const wikiDataResponse = await WikiDataModule.runJob(
 			"API_GET_DATA_FROM_SPOTIFY_ALBUM",
@@ -959,7 +936,7 @@ class _SpotifyModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.mediaSources - the Spotify media sources to try and get alternative track sources for
-	 * @param {string} payload.collectAlternativeMediaSourcesOrigins - whether to collect the origin of any alternative track sources found
+	 * @param {boolean} payload.collectAlternativeMediaSourcesOrigins - whether to collect the origin of any alternative track sources found
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ALTERNATIVE_MEDIA_SOURCES_FOR_TRACKS(payload) {
@@ -1004,7 +981,7 @@ class _SpotifyModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.mediaSource - the Spotify media source to try and get alternative track sources for
-	 * @param {string} payload.collectAlternativeMediaSourcesOrigins - whether to collect the origin of any alternative track sources found
+	 * @param {boolean} payload.collectAlternativeMediaSourcesOrigins - whether to collect the origin of any alternative track sources found
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ALTERNATIVE_MEDIA_SOURCES_FOR_TRACK(payload) {
@@ -1045,9 +1022,6 @@ class _SpotifyModule extends CoreClass {
 				this
 			);
 
-			// console.log("ISRCApiResponse");
-			// console.dir(ISRCApiResponse, { depth: 5 });
-
 			ISRCApiResponse.recordings.forEach(recording => {
 				recording.relations.forEach(relation => {
 					if (relation["target-type"] === "url" && relation.url) {
@@ -1055,8 +1029,6 @@ class _SpotifyModule extends CoreClass {
 						const { resource } = relation.url;
 
 						if (config.get("experimental.soundcloud") && resource.indexOf("soundcloud.com") !== -1) {
-							// throw new Error(`Unable to parse SoundCloud resource ${resource}.`);
-
 							const promise = new Promise(resolve => {
 								SoundcloudModule.runJob(
 									"GET_TRACK_FROM_URL",
@@ -1518,10 +1490,6 @@ class _SpotifyModule extends CoreClass {
 		} catch (err) {
 			console.log("Error during getting releases from ISRC", err);
 		}
-
-		// console.log("RecordingApiResponse");
-		// console.dir(RecordingApiResponse, { depth: 10 });
-		// console.dir(RecordingApiResponse.recordings[0].releases[0], { depth: 10 });
 
 		await Promise.allSettled(jobsToRun);
 

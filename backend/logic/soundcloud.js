@@ -115,10 +115,6 @@ class _SoundCloudModule extends CoreClass {
 		CacheModule = this.moduleManager.modules.cache;
 		MediaModule = this.moduleManager.modules.media;
 
-		// this.youtubeApiRequestModel = this.YoutubeApiRequestModel = await DBModule.runJob("GET_MODEL", {
-		// 	modelName: "youtubeApiRequest"
-		// });
-
 		this.soundcloudTrackModel = this.SoundCloudTrackModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "soundcloudTrack"
 		});
@@ -232,7 +228,7 @@ class _SoundCloudModule extends CoreClass {
 	 * Perform SoundCloud API get track request
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {object} payload.params - request parameters
+	 * @param {strubg} payload.trackId - the SoundCloud track id to get
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	API_GET_TRACK(payload) {
@@ -259,14 +255,12 @@ class _SoundCloudModule extends CoreClass {
 	 * Perform SoundCloud API call
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {object} payload.url - request url
+	 * @param {strubg} payload.url - request url
 	 * @param {object} payload.params - request parameters
-	 * @param {object} payload.quotaCost - request quotaCost
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	API_CALL(payload) {
 		return new Promise((resolve, reject) => {
-			// const { url, params, quotaCost } = payload;
 			const { url } = payload;
 
 			const { soundcloudApiKey } = SoundCloudModule;
@@ -298,7 +292,7 @@ class _SoundCloudModule extends CoreClass {
 	 * Create SoundCloud track
 	 *
 	 * @param {object} payload - an object containing the payload
-	 * @param {string} payload.soundcloudTrack - the soundcloudTrack object
+	 * @param {object} payload.soundcloudTrack - the soundcloudTrack object
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	CREATE_TRACK(payload) {
@@ -345,7 +339,7 @@ class _SoundCloudModule extends CoreClass {
 	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {string} payload.identifier - the soundcloud track ObjectId or track id
-	 * @param {string} payload.createMissing - attempt to fetch and create track if not in db
+	 * @param {boolean} payload.createMissing - attempt to fetch and create track if not in db
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_TRACK(payload) {
@@ -610,7 +604,7 @@ class _SoundCloudModule extends CoreClass {
 	 * Get Soundcloud artists
 	 *
 	 * @param {object} payload - an object containing the payload
-	 * @param {string} payload.userPermalinks - an array of Soundcloud user permalinks
+	 * @param {array} payload.userPermalinks - an array of Soundcloud user permalinks
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	async GET_ARTISTS_FROM_PERMALINKS(payload) {
@@ -660,6 +654,7 @@ class _SoundCloudModule extends CoreClass {
 	/**
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.url - the url of the SoundCloud resource
+	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	API_RESOLVE(payload) {
 		return new Promise((resolve, reject) => {
@@ -686,6 +681,8 @@ class _SoundCloudModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.artistId - the id of the SoundCloud artist
+	 * @param {string} payload.nextHref - the next url to call
+	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	API_GET_ARTIST_TRACKS(payload) {
 		return new Promise((resolve, reject) => {

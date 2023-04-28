@@ -10,6 +10,8 @@ export default {
 	/**
 	 * Fetches tracks from media sources
 	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {array} mediaSources - the media sources to get tracks for
 	 * @returns {{status: string, data: object}}
 	 */
 	getTracksFromMediaSources: useHasPermission(
@@ -39,6 +41,8 @@ export default {
 	/**
 	 * Fetches albums from ids
 	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {array} albumIds - the ids of the Spotify albums to get
 	 * @returns {{status: string, data: object}}
 	 */
 	getAlbumsFromIds: useHasPermission("spotify.getAlbumsFromIds", function getAlbumsFromIds(session, albumIds, cb) {
@@ -57,6 +61,8 @@ export default {
 	/**
 	 * Fetches artists from ids
 	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {array} artistIds - the ids of the Spotify artists to get
 	 * @returns {{status: string, data: object}}
 	 */
 	getArtistsFromIds: useHasPermission(

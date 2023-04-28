@@ -119,7 +119,7 @@ export default {
 	}),
 
 	/**
-	 *
+	 * Gets alternative media sources for list of Spotify tracks (media sources)
 	 *
 	 * @param session
 	 * @param trackId - the trackId
@@ -147,11 +147,6 @@ export default {
 							message: "Starting up",
 							id: this.toString()
 						});
-						// await CacheModule.runJob(
-						// 	"RPUSH",
-						// 	{ key: `longJobs.${session.userId}`, value: this.toString() },
-						// 	this
-						// );
 
 						SpotifyModule.runJob(
 							"GET_ALTERNATIVE_MEDIA_SOURCES_FOR_TRACKS",
@@ -189,7 +184,7 @@ export default {
 	),
 
 	/**
-	 *
+	 * Gets alternative album sources (such as YouTube playlists) for a list of Spotify album ids
 	 *
 	 * @param session
 	 * @param trackId - the trackId
@@ -217,11 +212,6 @@ export default {
 							message: "Starting up",
 							id: this.toString()
 						});
-						// await CacheModule.runJob(
-						// 	"RPUSH",
-						// 	{ key: `longJobs.${session.userId}`, value: this.toString() },
-						// 	this
-						// );
 
 						SpotifyModule.runJob(
 							"GET_ALTERNATIVE_ALBUM_SOURCES_FOR_ALBUMS",
@@ -258,7 +248,7 @@ export default {
 	),
 
 	/**
-	 *
+	 * Gets a list of alternative artist sources (such as YouTube channels) for a list of Spotify artist ids
 	 *
 	 * @param session
 	 * @param trackId - the trackId
@@ -286,11 +276,6 @@ export default {
 							message: "Starting up",
 							id: this.toString()
 						});
-						// await CacheModule.runJob(
-						// 	"RPUSH",
-						// 	{ key: `longJobs.${session.userId}`, value: this.toString() },
-						// 	this
-						// );
 
 						SpotifyModule.runJob(
 							"GET_ALTERNATIVE_ARTIST_SOURCES_FOR_ARTISTS",

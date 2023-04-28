@@ -1197,8 +1197,6 @@ export default {
 	addSongToPlaylist: isLoginRequired(async function addSongToPlaylist(session, isSet, mediaSource, playlistId, cb) {
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
-		console.log(55, isSet, mediaSource, playlistId);
-
 		async.waterfall(
 			[
 				next => {
@@ -1365,12 +1363,12 @@ export default {
 	}),
 
 	/**
-	 * Adds a song to a private playlist
+	 * Replaces a song in a playlist with another song, used to replace Spotify songs with playable songs
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} oldMediaSource -
-	 * @param {string} newMediaSource -
-	 * @param {string} playlistId -
+	 * @param {string} oldMediaSource - the media source of the song to be removed
+	 * @param {string} newMediaSource - the media source of the song to be added
+	 * @param {string} playlistId - the playlist to replace the song in
 	 * @param {Function} cb - gets called with the result
 	 */
 	replaceSongInPlaylist: isLoginRequired(async function replaceSongInPlaylist(
@@ -1459,22 +1457,7 @@ export default {
 					`Successfully replaced song "${oldMediaSource}" with "${newMediaSource}" in private playlist "${playlistId}" for user "${session.userId}".`
 				);
 
-				// if (!isSet && playlist.type === "user" && playlist.privacy === "public") {
-				// 	const songName = newSong.artists
-				// 		? `${newSong.title} by ${newSong.artists.join(", ")}`
-				// 		: newSong.title;
-
-				// 	ActivitiesModule.runJob("ADD_ACTIVITY", {
-				// 		userId: session.userId,
-				// 		type: "playlist__add_song",
-				// 		payload: {
-				// 			message: `Added <mediaSource>${songName}</mediaSource> to playlist <playlistId>${playlist.displayName}</playlistId>`,
-				// 			thumbnail: newSong.thumbnail,
-				// 			playlistId,
-				// 			mediaSource
-				// 		}
-				// 	});
-				// }
+				// NOTE: we may want to publish an activity event here
 
 				CacheModule.runJob("PUB", {
 					channel: "playlist.replaceSong",
@@ -1491,57 +1474,6 @@ export default {
 					channel: "playlist.updated",
 					value: { playlistId }
 				});
-
-				// if (ratings && (playlist.type === "user-liked" || playlist.type === "user-disliked")) {
-				// 	const { _id, mediaSource, title, artists, thumbnail } = newSong;
-				// 	const { likes, dislikes } = ratings;
-
-				// 	if (_id) SongsModule.runJob("UPDATE_SONG", { songId: _id });
-
-				// 	if (playlist.type === "user-liked") {
-				// 		CacheModule.runJob("PUB", {
-				// 			channel: "ratings.like",
-				// 			value: JSON.stringify({
-				// 				mediaSource,
-				// 				userId: session.userId,
-				// 				likes,
-				// 				dislikes
-				// 			})
-				// 		});
-
-				// 		ActivitiesModule.runJob("ADD_ACTIVITY", {
-				// 			userId: session.userId,
-				// 			type: "song__like",
-				// 			payload: {
-				// 				message: `Liked song <mediaSource>${title} by ${artists.join(", ")}</mediaSource>`,
-				// 				mediaSource,
-				// 				thumbnail
-				// 			}
-				// 		});
-				// 	} else {
-				// 		CacheModule.runJob("PUB", {
-				// 			channel: "ratings.dislike",
-				// 			value: JSON.stringify({
-				// 				mediaSource,
-				// 				userId: session.userId,
-				// 				likes,
-				// 				dislikes
-				// 			})
-				// 		});
-
-				// 		ActivitiesModule.runJob("ADD_ACTIVITY", {
-				// 			userId: session.userId,
-				// 			type: "song__dislike",
-				// 			payload: {
-				// 				message: `Disliked song <mediaSource>${title} by ${artists.join(
-				// 					mediaSource
-				// 				)}</mediaSource>`,
-				// 				mediaSource,
-				// 				thumbnail
-				// 			}
-				// 		});
-				// 	}
-				// }
 
 				return cb({
 					status: "success",
@@ -1717,6 +1649,8 @@ export default {
 					channel: "playlist.updated",
 					value: { playlistId }
 				});
+
+				// NOTE: we may want to publish an activity event here
 
 				const message = `Done adding songs. Succesful: ${successful.length}, failed: ${
 					Object.keys(failed).length
@@ -1911,7 +1845,7 @@ export default {
 	),
 
 	/**
-	 * Adds a set of songs to a private playlist
+	 * Adds a set of songs to a user playlist
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} url - the url of the the YouTube playlist

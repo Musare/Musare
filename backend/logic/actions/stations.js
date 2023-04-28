@@ -467,7 +467,7 @@ export default {
 	 * @param sort - the sort object
 	 * @param queries - the queries array
 	 * @param operator - the operator for queries
-	 * @param cb
+	 * @param {Function} cb - gets called with the result
 	 */
 	getData: useHasPermission(
 		"admin.view.stations",
@@ -1210,9 +1210,9 @@ export default {
 	/**
 	 * Toggle votes to skip a station
 	 *
-	 * @param session
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param stationId - the station id
-	 * @param cb
+	 *  @param {Function} cb - gets called with the result
 	 */
 	toggleSkipVote: isLoginRequired(async function toggleSkipVote(session, stationId, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
@@ -1727,9 +1727,9 @@ export default {
 	/**
 	 * Create a station
 	 *
-	 * @param session
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param data - the station data
-	 * @param cb
+	 *  @param {Function} cb - gets called with the result
 	 */
 	create: isLoginRequired(async function create(session, data, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
@@ -1896,10 +1896,11 @@ export default {
 	/**
 	 * Adds song to station queue
 	 *
-	 * @param session
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param stationId - the station id
-	 * @param mediaSource the song id
-	 * @param cb
+	 * @param mediaSource - the song id
+	 * @param requestType - whether the song was autorequested or requested normally
+	 *  @param {Function} cb - gets called with the result
 	 */
 	addToQueue: isLoginRequired(async function addToQueue(session, stationId, mediaSource, requestType, cb) {
 		async.waterfall(
@@ -2489,6 +2490,13 @@ export default {
 		);
 	},
 
+	/**
+	 * Favorites a station
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} stationId - the station to favorite
+	 * @param {Function} cb - gets called with the result
+	 */
 	favoriteStation: isLoginRequired(async function favoriteStation(session, stationId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		async.waterfall(
@@ -2556,6 +2564,13 @@ export default {
 		);
 	}),
 
+	/**
+	 * Unfavorites a station
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} stationId - the station to unfavorite
+	 * @param {Function} cb - gets called with the result
+	 */
 	unfavoriteStation: isLoginRequired(async function unfavoriteStation(session, stationId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
@@ -2613,7 +2628,7 @@ export default {
 	/**
 	 * Clears every station queue
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
 	clearEveryStationQueue: useHasPermission(
@@ -2668,7 +2683,7 @@ export default {
 	/**
 	 * Reset a station queue
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -2702,10 +2717,10 @@ export default {
 	/**
 	 * Gets skip votes for a station
 	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param stationId - the song id to get skipvotes for
-	 * @param cb
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} stationId - the station id
+	 * @param {string} songId - the song id to get skipvotes for
+	 * @param {Function} cb - gets called with the result
 	 */
 
 	getSkipVotes: isLoginRequired(async function getSkipVotes(session, stationId, songId, cb) {
@@ -2754,7 +2769,7 @@ export default {
 	/**
 	 * Add DJ to station
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} stationId - the station id
 	 * @param {string} userId - the dj user id
 	 * @param {Function} cb - gets called with the result
@@ -2789,7 +2804,7 @@ export default {
 	/**
 	 * Remove DJ from station
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} stationId - the station id
 	 * @param {string} userId - the dj user id
 	 * @param {Function} cb - gets called with the result
@@ -2821,6 +2836,13 @@ export default {
 		);
 	},
 
+	/**
+	 * Sets the state of the current user session
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} newStationState - the new state
+	 * @param {Function} cb - gets called with the result
+	 */
 	setStationState(session, newStationState, cb) {
 		session.stationState = newStationState;
 

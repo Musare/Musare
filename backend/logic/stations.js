@@ -664,7 +664,7 @@ class _StationsModule extends CoreClass {
 								return true;
 							// Skip songs already in songsToAdd
 							if (songsToAdd.find(songToAdd => songToAdd.mediaSource === song.mediaSource)) return true;
-							// Skips songs already in the queue
+							// Skip songs already in the queue
 							if (currentMediaSources.indexOf(song.mediaSource) !== -1) return true;
 
 							lastSongAdded = song;
@@ -987,7 +987,7 @@ class _StationsModule extends CoreClass {
 	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.stationId - the station id to create the history item for
-	 * @param {string} payload.currentSong - the song to create the history item for
+	 * @param {object} payload.currentSong - the song to create the history item for
 	 * @param {string} payload.skipReason - the reason the song was skipped
 	 * @param {string} payload.skippedAt - the date/time the song was skipped
 	 * @returns {Promise} - returns a promise (resolve, reject)

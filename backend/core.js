@@ -268,7 +268,7 @@ class Job {
 	}
 
 	/**
-	 * Set whether to job is a long job.
+	 * Set whether this job is a long job.
 	 */
 	keepLongJob() {
 		this.longJob = true;

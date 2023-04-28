@@ -212,45 +212,7 @@ export default {
 									]
 								},
 								specialQueries: {},
-								specialFilters: {
-									// importJob: importJobId => [
-									// 	{
-									// 		$lookup: {
-									// 			from: "importjobs",
-									// 			let: { trackId: "$trackId" },
-									// 			pipeline: [
-									// 				{
-									// 					$match: {
-									// 						_id: mongoose.Types.ObjectId(importJobId)
-									// 					}
-									// 				},
-									// 				{
-									// 					$addFields: {
-									// 						importJob: {
-									// 							$in: ["$$trackId", "$response.successfulVideoIds"]
-									// 						}
-									// 					}
-									// 				},
-									// 				{
-									// 					$project: {
-									// 						importJob: 1,
-									// 						_id: 0
-									// 					}
-									// 				}
-									// 			],
-									// 			as: "importJob"
-									// 		}
-									// 	},
-									// 	{
-									// 		$unwind: "$importJob"
-									// 	},
-									// 	{
-									// 		$set: {
-									// 			importJob: "$importJob.importJob"
-									// 		}
-									// 	}
-									// ]
-								}
+								specialFilters: {}
 							},
 							this
 						)
@@ -265,10 +227,10 @@ export default {
 				async (err, response) => {
 					if (err && err !== true) {
 						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-						this.log("ERROR", "SOUNDCLOUD_GET_VIDEOS", `Failed to get SoundCloud tracks. "${err}"`);
+						this.log("ERROR", "SOUNDCLOUD_GET_TRACKS", `Failed to get SoundCloud tracks. "${err}"`);
 						return cb({ status: "error", message: err });
 					}
-					this.log("SUCCESS", "SOUNDCLOUD_GET_VIDEOS", `Fetched SoundCloud tracks successfully.`);
+					this.log("SUCCESS", "SOUNDCLOUD_GET_TRACKS", `Fetched SoundCloud tracks successfully.`);
 					return cb({
 						status: "success",
 						message: "Successfully fetched SoundCloud tracks.",
@@ -282,18 +244,21 @@ export default {
 	/**
 	 * Get a SoundCloud track
 	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param identifier - the identifier of the SoundCloud track
+	 * @param createMissing - whether to create/fetch the SoundCloud track if it's missing
 	 * @returns {{status: string, data: object}}
 	 */
 	getTrack: isLoginRequired(function getTrack(session, identifier, createMissing, cb) {
 		return SoundcloudModule.runJob("GET_TRACK", { identifier, createMissing }, this)
 			.then(res => {
-				this.log("SUCCESS", "SOUNDCLOUD_GET_VIDEO", `Fetching track was successful.`);
+				this.log("SUCCESS", "SOUNDCLOUD_GET_TRACK", `Fetching track was successful.`);
 
-				return cb({ status: "success", message: "Successfully fetched SoundCloud video", data: res.track });
+				return cb({ status: "success", message: "Successfully fetched SoundCloud track", data: res.track });
 			})
 			.catch(async err => {
 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-				this.log("ERROR", "SOUNDCLOUD_GET_VIDEO", `Fetching track failed. "${err}"`);
+				this.log("ERROR", "SOUNDCLOUD_GET_TRACK", `Fetching track failed. "${err}"`);
 				return cb({ status: "error", message: err });
 			});
 	})

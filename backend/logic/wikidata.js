@@ -41,9 +41,6 @@ class _WikiDataModule extends CoreClass {
 	constructor() {
 		super("wikidata", {
 			concurrency: 10
-			// priorities: {
-			// 	GET_PLAYLIST: 11
-			// }
 		});
 
 		WikiDataModule = this;
@@ -61,84 +58,17 @@ class _WikiDataModule extends CoreClass {
 			modelName: "genericApiRequest"
 		});
 
-		// this.youtubeVideoModel = this.YoutubeVideoModel = await DBModule.runJob("GET_MODEL", {
-		// 	modelName: "youtubeVideo"
-		// });
-
-		// return new Promise(resolve => {
-		// CacheModule.runJob("SUB", {
-		// 	channel: "youtube.removeYoutubeApiRequest",
-		// 	cb: requestId => {
-		// 		WSModule.runJob("EMIT_TO_ROOM", {
-		// 			room: `view-api-request.${requestId}`,
-		// 			args: ["event:youtubeApiRequest.removed"]
-		// 		});
-
-		// 		WSModule.runJob("EMIT_TO_ROOM", {
-		// 			room: "admin.youtube",
-		// 			args: ["event:admin.youtubeApiRequest.removed", { data: { requestId } }]
-		// 		});
-		// 	}
-		// });
-
-		// CacheModule.runJob("SUB", {
-		// 	channel: "youtube.removeVideos",
-		// 	cb: videoIds => {
-		// 		const videos = Array.isArray(videoIds) ? videoIds : [videoIds];
-		// 		videos.forEach(videoId => {
-		// 			WSModule.runJob("EMIT_TO_ROOM", {
-		// 				room: `view-media.youtube:${videoId}`,
-		// 				args: ["event:youtubeVideo.removed"]
-		// 			});
-
-		// 			WSModule.runJob("EMIT_TO_ROOM", {
-		// 				room: "admin.youtubeVideos",
-		// 				args: ["event:admin.youtubeVideo.removed", { data: { videoId } }]
-		// 			});
-
-		// 			WSModule.runJob("EMIT_TO_ROOMS", {
-		// 				rooms: ["import-album", "edit-songs"],
-		// 				args: ["event:admin.youtubeVideo.removed", { videoId }]
-		// 			});
-		// 		});
-		// 	}
-		// });
-
 		this.rateLimiter = new RateLimitter(1100);
-		// this.requestTimeout = config.get("apis.youtube.requestTimeout");
 		this.requestTimeout = 5000;
 
 		this.axios = axios.create();
-		// this.axios.defaults.raxConfig = {
-		// 	instance: this.axios,
-		// 	retry: config.get("apis.youtube.retryAmount"),
-		// 	noResponseRetries: config.get("apis.youtube.retryAmount")
-		// };
-		// rax.attach(this.axios);
-
-		// this.youtubeApiRequestModel
-		// 	.find(
-		// 		{ date: { $gte: new Date() - 2 * 24 * 60 * 60 * 1000 } },
-		// 		{ date: true, quotaCost: true, _id: false }
-		// 	)
-		// 	.sort({ date: 1 })
-		// 	.exec((err, youtubeApiRequests) => {
-		// 		if (err) console.log("Couldn't load YouTube API requests.");
-		// 		else {
-		// 			this.apiCalls = youtubeApiRequests;
-		// 			resolve();
-		// 		}
-		// 	});
-
-		// 	resolve();
-		// });
 	}
 
 	/**
 	 * Get WikiData data from entity url
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {object} payload.entityUrl - entity url
+	 * @param {string} payload.entityUrl - entity url
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async API_GET_DATA_FROM_ENTITY_URL(payload) {
@@ -168,7 +98,7 @@ class _WikiDataModule extends CoreClass {
 	 * Get WikiData data from work id
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {object} payload.workId - work id
+	 * @param {strubg} payload.workId - work id
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async API_GET_DATA_FROM_MUSICBRAINZ_WORK(payload) {
@@ -207,7 +137,7 @@ class _WikiDataModule extends CoreClass {
 	 * Get WikiData data from release group id
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {object} payload.releaseGroupId - release group id
+	 * @param {string} payload.releaseGroupId - release group id
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async API_GET_DATA_FROM_MUSICBRAINZ_RELEASE_GROUP(payload) {
@@ -246,7 +176,7 @@ class _WikiDataModule extends CoreClass {
 	 * Get WikiData data from Spotify album id
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {object} payload.spotifyAlbumId - Spotify album id
+	 * @param {string} payload.spotifyAlbumId - Spotify album id
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async API_GET_DATA_FROM_SPOTIFY_ALBUM(payload) {
@@ -285,7 +215,7 @@ class _WikiDataModule extends CoreClass {
 	 * Get WikiData data from Spotify artist id
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {object} payload.spotifyArtistId - Spotify artist id
+	 * @param {string} payload.spotifyArtistId - Spotify artist id
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async API_GET_DATA_FROM_SPOTIFY_ARTIST(payload) {
@@ -326,9 +256,8 @@ class _WikiDataModule extends CoreClass {
 	 * Perform WikiData API call
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {object} payload.url - request url
+	 * @param {string} payload.url - request url
 	 * @param {object} payload.params - request parameters
-	 * @param {object} payload.quotaCost - request quotaCost
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async API_CALL(payload) {

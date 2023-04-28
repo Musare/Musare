@@ -244,7 +244,7 @@ export default {
 	 * @param sort - the sort object
 	 * @param queries - the queries array
 	 * @param operator - the operator for queries
-	 * @param cb
+	 * @param {Function} cb - gets called with the result
 	 */
 	getVideos: useHasPermission(
 		"admin.view.youtubeVideos",
@@ -388,7 +388,7 @@ export default {
 	 * @param sort - the sort object
 	 * @param queries - the queries array
 	 * @param operator - the operator for queries
-	 * @param cb
+	 * @param {Function} cb - gets called with the result
 	 */
 	getChannels: useHasPermission(
 		"admin.view.youtubeChannels",
@@ -441,6 +441,10 @@ export default {
 	/**
 	 * Get a YouTube video
 	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} identifier - the identifier of the video to get
+	 * @param {string} createMissing - whether to create the video if it doesn't exist yet
+	 * @param {Function} cb - gets called with the result
 	 * @returns {{status: string, data: object}}
 	 */
 	getVideo: isLoginRequired(function getVideo(session, identifier, createMissing, cb) {
@@ -460,6 +464,9 @@ export default {
 	/**
 	 * Get a YouTube channel from ID
 	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} channelId - the YouTube channel id to get
+	 * @param {Function} cb - gets called with the result
 	 * @returns {{status: string, data: object}}
 	 */
 	getChannel: useHasPermission("youtube.getChannel", function getChannel(session, channelId, cb) {
@@ -487,6 +494,9 @@ export default {
 	/**
 	 * Remove YouTube videos
 	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {array} videoIds - the YouTube video ids to remove
+	 * @param {Function} cb - gets called with the result
 	 * @returns {{status: string, data: object}}
 	 */
 	removeVideos: useHasPermission("youtube.removeVideos", async function removeVideos(session, videoIds, cb) {
@@ -530,6 +540,8 @@ export default {
 	/**
 	 * Gets missing YouTube video's from all playlists, stations and songs
 	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {Function} cb - gets called with the result
 	 * @returns {{status: string, data: object}}
 	 */
 	getMissingVideos: useHasPermission("youtube.getMissingVideos", async function getMissingVideos(session, cb) {
@@ -571,8 +583,10 @@ export default {
 	}),
 
 	/**
-	 * Gets missing YouTube video's from all playlists, stations and songs
+	 * Updates YouTube video's from version 1 to version 2, by re-fetching the video's
 	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {Function} cb - gets called with the result
 	 * @returns {{status: string, data: object}}
 	 */
 	updateVideosV1ToV2: useHasPermission("youtube.updateVideosV1ToV2", async function updateVideosV1ToV2(session, cb) {
@@ -768,7 +782,8 @@ export default {
 
 	/**
 	 * Gets missing YouTube channels
-	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {Function} cb - gets called with the result
 	 * @returns {{status: string, data: object}}
 	 */
 	getMissingChannels: useHasPermission("youtube.getMissingChannels", function getMissingChannels(session, cb) {
