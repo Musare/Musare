@@ -4,8 +4,14 @@ import JobStatistics from "./JobStatistics";
 import LogBook, { Log } from "./LogBook";
 import ModuleManager from "./ModuleManager";
 import { JobOptions } from "./types/JobOptions";
-import { JobStatus } from "./types/JobStatus";
 import { Modules } from "./types/Modules";
+
+export enum JobStatus {
+	QUEUED = "QUEUED",
+	ACTIVE = "ACTIVE",
+	PAUSED = "PAUSED",
+	COMPLETED = "COMPLETED"
+};
 
 export default class Job {
 	protected name: string;
@@ -96,7 +102,7 @@ export default class Job {
 				return v.toString(16);
 			}
 		);
-		this.status = "QUEUED";
+		this.setStatus(JobStatus.QUEUED);
 		this.startedAt = Date.now();
 	}
 
@@ -141,7 +147,7 @@ export default class Job {
 	 *
 	 * @param status - Job status
 	 */
-	public setStatus(status: JobStatus) {
+	protected setStatus(status: JobStatus) {
 		this.status = status;
 	}
 
@@ -160,7 +166,7 @@ export default class Job {
 	 * @returns Promise
 	 */
 	public async execute() {
-		this.setStatus("ACTIVE");
+		this.setStatus(JobStatus.ACTIVE);
 		return (
 			this.jobFunction
 				.apply(this.module, [this.context, this.payload])
@@ -192,7 +198,7 @@ export default class Job {
 						"averageTime",
 						Date.now() - this.startedAt
 					);
-					this.setStatus("COMPLETED");
+					this.setStatus(JobStatus.COMPLETED);
 				})
 		);
 	}

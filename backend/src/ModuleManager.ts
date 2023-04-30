@@ -1,5 +1,6 @@
+import { ModuleStatus } from "./BaseModule";
 import JobQueue from "./JobQueue";
-import { Modules, ModuleStatus, ModuleClass } from "./types/Modules";
+import { Modules, ModuleClass } from "./types/Modules";
 
 export default class ModuleManager {
 	static primaryInstance = new this();
@@ -69,7 +70,7 @@ export default class ModuleManager {
 		await Promise.all(
 			Object.values(this.modules).map(async module => {
 				await module.startup().catch(async err => {
-					module.setStatus("ERROR");
+					module.setStatus(ModuleStatus.ERROR);
 					throw err;
 				});
 			})
@@ -88,9 +89,11 @@ export default class ModuleManager {
 			await Promise.all(
 				Object.values(this.modules).map(async module => {
 					if (
-						module.getStatus() === "STARTED" ||
-						module.getStatus() === "STARTING" ||
-						module.getStatus() === "ERROR"
+						[
+							ModuleStatus.STARTED,
+							ModuleStatus.STARTING,
+							ModuleStatus.ERROR
+						].includes(module.getStatus())
 					)
 						await module.shutdown();
 				})

@@ -1,6 +1,15 @@
 import LogBook, { Log } from "./LogBook";
 import ModuleManager from "./ModuleManager";
-import { ModuleStatus } from "./types/Modules";
+
+export enum ModuleStatus {
+	LOADED = "LOADED",
+	STARTING = "STARTING",
+	STARTED = "STARTED",
+	STOPPED = "STOPPED",
+	STOPPING = "STOPPING",
+	ERROR = "ERROR",
+	DISABLED = "DISABLED"
+}
 
 export default abstract class BaseModule {
 	protected moduleManager: ModuleManager;
@@ -20,7 +29,7 @@ export default abstract class BaseModule {
 		this.moduleManager = ModuleManager.getPrimaryInstance();
 		this.logBook = LogBook.getPrimaryInstance();
 		this.name = name;
-		this.status = "LOADED";
+		this.status = ModuleStatus.LOADED;
 		this.log(`Module (${this.name}) loaded`);
 	}
 
@@ -56,7 +65,7 @@ export default abstract class BaseModule {
 	 */
 	public async startup() {
 		this.log(`Module (${this.name}) starting`);
-		this.setStatus("STARTING");
+		this.setStatus(ModuleStatus.STARTING);
 	}
 
 	/**
@@ -64,7 +73,7 @@ export default abstract class BaseModule {
 	 */
 	protected async started() {
 		this.log(`Module (${this.name}) started`);
-		this.setStatus("STARTED");
+		this.setStatus(ModuleStatus.STARTED);
 	}
 
 	/**
@@ -72,7 +81,7 @@ export default abstract class BaseModule {
 	 */
 	public async shutdown() {
 		this.log(`Module (${this.name}) stopping`);
-		this.setStatus("STOPPING");
+		this.setStatus(ModuleStatus.STOPPING);
 		await this.stopped();
 	}
 
@@ -81,7 +90,7 @@ export default abstract class BaseModule {
 	 */
 	protected async stopped() {
 		this.log(`Module (${this.name}) stopped`);
-		this.setStatus("STOPPED");
+		this.setStatus(ModuleStatus.STOPPED);
 	}
 
 	/**

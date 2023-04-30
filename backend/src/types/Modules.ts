@@ -22,15 +22,6 @@ export type Modules = {
 	stations: StationModule & typeof BaseModule;
 };
 
-export type ModuleStatus =
-	| "LOADED"
-	| "STARTING"
-	| "STARTED"
-	| "STOPPED"
-	| "STOPPING"
-	| "ERROR"
-	| "DISABLED";
-
 export type Methods<T> = {
 	[P in keyof T as T[P] extends (...args: any) => Awaited<any>
 		? P
