@@ -940,7 +940,8 @@ class _StationsModule extends CoreClass {
 										if (socket && socket.session && socket.session.userId) {
 											if (
 												!users.includes(socket.session.userId) &&
-												socket.session.stationState !== "participate"
+												(socket.session.stationState !== "participate" ||
+													station.currentSong.skippedAt.includes(socket.session.userId))
 											)
 												users.push(socket.session.userId);
 										}
