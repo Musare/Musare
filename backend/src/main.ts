@@ -298,15 +298,7 @@ const runCommand = (line: string) => {
 
 				if (!job) console.log("Job not found");
 				else {
-					const jobInfo = {
-						jobId: job?.getUuid(),
-						jobName: job?.getName(),
-						jobStatus: job?.getStatus(),
-						jobPriority: job?.getPriority(),
-						moduleName: job?.getModule().getName(),
-						moduleStatus: job?.getModule().getStatus()
-					};
-					console.table(jobInfo);
+					console.table(job.toJSON());
 				}
 			}
 			break;

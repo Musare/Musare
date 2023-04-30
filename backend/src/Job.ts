@@ -11,7 +11,7 @@ export enum JobStatus {
 	ACTIVE = "ACTIVE",
 	PAUSED = "PAUSED",
 	COMPLETED = "COMPLETED"
-};
+}
 
 export default class Job {
 	protected name: string;
@@ -39,7 +39,7 @@ export default class Job {
 
 	protected status: JobStatus;
 
-	protected startedAt: number;
+	protected createdAt: number;
 
 	protected logBook: LogBook;
 
@@ -103,7 +103,7 @@ export default class Job {
 			}
 		);
 		this.setStatus(JobStatus.QUEUED);
-		this.startedAt = Date.now();
+		this.createdAt = Date.now();
 	}
 
 	/**
@@ -167,6 +167,7 @@ export default class Job {
 	 */
 	public async execute() {
 		this.setStatus(JobStatus.ACTIVE);
+		const startedAt = Date.now();
 		return (
 			this.jobFunction
 				.apply(this.module, [this.context, this.payload])
@@ -196,7 +197,7 @@ export default class Job {
 					this.jobStatistics.updateStats(
 						this.getName(),
 						"averageTime",
-						Date.now() - this.startedAt
+						Date.now() - startedAt
 					);
 					this.setStatus(JobStatus.COMPLETED);
 				})
@@ -221,11 +222,25 @@ export default class Job {
 			type,
 			category: this.getName(),
 			data: {
-				moduleName: this.module.getName(),
-				jobName: this.name,
-				jobUuid: this.uuid,
+				...this.toJSON(),
 				...data
 			}
 		});
+	}
+
+	/**
+	 * Serialize job info
+	 *
+	 * @returns json
+	 */
+	public toJSON() {
+		return {
+			uuid: this.getUuid(),
+			priority: this.getPriority(),
+			name: this.getName(),
+			status: this.getStatus(),
+			moduleStatus: this.module.getStatus(),
+			createdAt: this.createdAt
+		};
 	}
 }

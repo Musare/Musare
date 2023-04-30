@@ -6,9 +6,9 @@ import { JobOptions } from "./types/JobOptions";
 import { Jobs, Modules } from "./types/Modules";
 
 export default class JobContext {
-	protected job: Job;
+	public readonly job: Job;
 
-	protected jobQueue: JobQueue;
+	public readonly jobQueue: JobQueue;
 
 	public constructor(job: Job) {
 		this.job = job;
@@ -25,13 +25,13 @@ export default class JobContext {
 	}
 
 	/**
-	 * runJob - Run a job
+	 * executeJob - Execute a job
 	 *
 	 * @param moduleName - Module name
 	 * @param jobName - Job name
 	 * @param params - Params
 	 */
-	public async runJob<
+	public async executeJob<
 		ModuleNameType extends keyof Jobs & keyof Modules,
 		JobNameType extends keyof Jobs[ModuleNameType] &
 			keyof Omit<Modules[ModuleNameType], keyof BaseModule>,
@@ -49,9 +49,11 @@ export default class JobContext {
 		payload: PayloadType,
 		options?: JobOptions
 	): Promise<ReturnType> {
-		return this.jobQueue.runJob(moduleName, jobName, payload, {
-			runDirectly: true,
-			...(options ?? {})
-		});
+		return new Job(
+			jobName.toString(),
+			moduleName,
+			payload,
+			options
+		).execute();
 	}
 }

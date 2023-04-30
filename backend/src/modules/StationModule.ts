@@ -37,14 +37,16 @@ export default class StationModule extends BaseModule {
 
 	public async addA(context: JobContext) {
 		context.log("ADDA");
-		await context.runJob("stations", "addB", {}, { priority: 5 });
+		await context.jobQueue.runJob("stations", "addB", {}, { priority: 5 });
 		return { number: 123 };
 	}
 
 	public async addB(context: JobContext) {
 		context.log("ADDB");
-		await context.runJob("stations", "addToQueue", { songId: "test" });
-		await context.runJob("stations", "addC", {});
+		await context.jobQueue.runJob("stations", "addToQueue", {
+			songId: "test"
+		});
+		await context.jobQueue.runJob("stations", "addC", {});
 	}
 
 	public async addC(context: JobContext) {

@@ -21,7 +21,7 @@ export default class JobQueue {
 	private callbacks: Record<
 		string,
 		{
-			resolve: (value: unknown) => void;
+			resolve: (value: any) => void;
 			reject: (reason?: any) => void;
 		}
 	>;
@@ -91,21 +91,55 @@ export default class JobQueue {
 		payload: PayloadType,
 		options?: JobOptions
 	): Promise<ReturnType> {
+		return new Promise<ReturnType>((resolve, reject) => {
+			this.queueJob(
+				moduleName,
+				jobName,
+				payload,
+				{ resolve, reject },
+				options
+			);
+		});
+	}
+
+	/**
+	 * queueJob - Queue a job
+	 *
+	 * @param moduleName - Module name
+	 * @param jobName - Job name
+	 * @param params - Params
+	 */
+	public async queueJob<
+		ModuleNameType extends keyof Jobs & keyof Modules,
+		JobNameType extends keyof Jobs[ModuleNameType] &
+			keyof Omit<Modules[ModuleNameType], keyof BaseModule>,
+		PayloadType extends "payload" extends keyof Jobs[ModuleNameType][JobNameType]
+			? Jobs[ModuleNameType][JobNameType]["payload"] extends undefined
+				? Record<string, never>
+				: Jobs[ModuleNameType][JobNameType]["payload"]
+			: Record<string, never>,
+		ReturnType = "returns" extends keyof Jobs[ModuleNameType][JobNameType]
+			? Jobs[ModuleNameType][JobNameType]["returns"]
+			: never
+	>(
+		moduleName: ModuleNameType,
+		jobName: JobNameType,
+		payload: PayloadType,
+		callback: {
+			resolve: (value: ReturnType) => void;
+			reject: (reason?: any) => void;
+		},
+		options?: JobOptions
+	): Promise<string> {
 		const job = new Job(jobName.toString(), moduleName, payload, options);
 
-		const runDirectly = !!(options && options.runDirectly);
+		this.callbacks[job.getUuid()] = callback;
 
 		this.jobs.push(job);
-		if (runDirectly) {
-			return job.execute();
-		}
-		return new Promise((resolve, reject) => {
-			this.callbacks[job.getUuid()] = { resolve, reject };
-			this.queue.push(job);
-			this.process();
-		}).finally(() => {
-			delete this.callbacks[job.getUuid()];
-		}) as Promise<ReturnType>;
+		this.queue.push(job);
+		this.process();
+
+		return job.getUuid();
 	}
 
 	/**
@@ -149,6 +183,8 @@ export default class JobQueue {
 				.then(callback.resolve)
 				.catch(callback.reject)
 				.finally(() => {
+					delete this.callbacks[job.getUuid()];
+
 					// If the current job is in the active jobs array, remove it, and then run the process function to run another job
 					const activeJobIndex = this.active.indexOf(job);
 					if (activeJobIndex > -1) {
@@ -185,23 +221,11 @@ export default class JobQueue {
 	 * @returns Job queue statistics
 	 */
 	public getQueueStatus(type?: JobStatus) {
-		const status: Record<
-			string,
-			{
-				uuid: string;
-				priority: number;
-				name: string;
-				status: JobStatus;
-			}[]
-		> = {};
-		const format = (job: Job) => ({
-			uuid: job.getUuid(),
-			priority: job.getPriority(),
-			name: job.getName(),
-			status: job.getStatus()
-		});
-		if (!type || type === "ACTIVE") status.active = this.active.map(format);
-		if (!type || type === "QUEUED") status.queue = this.queue.map(format);
+		const status: Record<string, ReturnType<Job["toJSON"]>[]> = {};
+		if (!type || type === JobStatus.ACTIVE)
+			status.active = this.active.map(job => job.toJSON());
+		if (!type || type === JobStatus.QUEUED)
+			status.queue = this.queue.map(job => job.toJSON());
 		return status;
 	}
 
