@@ -938,7 +938,10 @@ class _StationsModule extends CoreClass {
 								WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this)
 									.then(socket => {
 										if (socket && socket.session && socket.session.userId) {
-											if (!users.includes(socket.session.userId))
+											if (
+												!users.includes(socket.session.userId) &&
+												socket.session.stationState !== "participate"
+											)
 												users.push(socket.session.userId);
 										}
 										return next();

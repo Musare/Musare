@@ -289,6 +289,13 @@ onMounted(() => {
 									>
 									<i
 										class="material-icons"
+										v-if="user.state === 'unavailable'"
+										v-tippy
+										content="Unavailable"
+										>warning</i
+									>
+									<i
+										class="material-icons"
 										v-if="user.state === 'buffering'"
 										v-tippy
 										content="Buffering"

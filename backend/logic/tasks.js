@@ -22,8 +22,9 @@ const stationStateWorth = {
 	participate: 3,
 	local_paused: 4,
 	muted: 5,
-	buffering: 6,
-	playing: 7
+	unavailable: 6,
+	buffering: 7,
+	playing: 8
 };
 
 class _TasksModule extends CoreClass {

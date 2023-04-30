@@ -67,6 +67,7 @@ const {
 	soundcloudPause,
 	soundcloudSetVolume,
 	soundcloudGetPosition,
+	soundcloudGetTrackState,
 	soundcloudBindListener,
 	soundcloudOnTrackStateChange,
 	soundcloudDestroy,
@@ -176,23 +177,6 @@ const currentUserQueueSongs = computed(
 		).length
 );
 
-const stationState = computed(() => {
-	if (noSong.value) return "no_song";
-	if (stationPaused.value) return "station_paused";
-	if (
-		experimentalChangableListenModeEnabled.value &&
-		experimentalChangableListenMode.value === "participate"
-	)
-		return "participate";
-	if (localPaused.value || autoPaused.value) return "local_paused";
-	if (volumeSliderValue.value === 0 || muted.value) return "muted";
-	if (youtubePlayerReady.value && youtubePlayerState.value === "PLAYING")
-		return "playing";
-	if (youtubePlayerReady.value && youtubePlayerState.value === "BUFFERING")
-		return "buffering";
-	return "unknown";
-});
-
 const currentSongMediaType = computed(() => {
 	if (
 		!currentSong.value ||
@@ -219,6 +203,29 @@ const currentYoutubeId = computed(() => {
 	)
 		return null;
 	return currentSong.value.mediaSource.split(":")[1];
+});
+
+const stationState = computed(() => {
+	if (noSong.value) return "no_song";
+	if (stationPaused.value) return "station_paused";
+	if (
+		experimentalChangableListenModeEnabled.value &&
+		experimentalChangableListenMode.value === "participate"
+	)
+		return "participate";
+	if (localPaused.value) return "local_paused";
+	if (volumeSliderValue.value === 0 || muted.value) return "muted";
+	if (currentSongMediaType.value === "youtube" && youtubePlayerReady.value) {
+		if (youtubePlayerState.value === "PLAYING") return "playing";
+		if (youtubePlayerState.value === "BUFFERING") return "buffering";
+	}
+	if (
+		currentSongMediaType.value === "soundcloud" &&
+		soundcloudGetTrackState() === "playing"
+	)
+		return "playing";
+	if (autoPaused.value) return "unavailable";
+	return "unknown";
 });
 
 const {
@@ -623,8 +630,6 @@ const playerStop = () => {
 		youtubePlayer.value.stopVideo();
 	}
 
-	autoPaused.value = false;
-
 	soundcloudDestroy();
 };
 const toggleSkipVote = (message?) => {
@@ -650,7 +655,7 @@ const autoSkipVote = () => {
 	// persistent message while song is playing
 	const persistentToast = new Toast({
 		content:
-			"This song is unavailable for you, but is playing for everyone else.",
+			"This song is unavailable for you, but may be working fine for everyone else.",
 		persistent: true
 	});
 
@@ -684,7 +689,6 @@ const resumeLocalPlayer = () => {
 };
 const resumeLocalStation = () => {
 	updateLocalPaused(false);
-	autoPaused.value = false;
 	if (!stationPaused.value) resumeLocalPlayer();
 };
 const pauseLocalPlayer = () => {
@@ -746,11 +750,12 @@ const youtubeReady = () => {
 				onError: err => {
 					console.log("error with youtube video", err);
 
-					if (err.data === 150 && loggedIn.value) autoSkipVote();
+					if (err.data >= 100 && loggedIn.value) autoSkipVote();
 					else
 						new Toast(
 							"There has been an error with the YouTube Embed"
 						);
+
 					autoPaused.value = true;
 				},
 				onStateChange: event => {
@@ -1169,8 +1174,6 @@ const experimentalChangableListenModeChange = newMode => {
 			youtubePlayerReady.value = false;
 			youtubePlayerState.value = null;
 		}
-
-		autoPaused.value = false;
 
 		soundcloudDestroy();
 	} else {
