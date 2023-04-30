@@ -1,5 +1,37 @@
 # Changelog
 
+## [v3.10.0-rc2] - 2023-04-30
+
+This release includes all changes from v3.10.0-rc1, in addition to the following.
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Added
+
+- feat: SoundcloudPlayer component
+- feat: Add extra user station state for unavailable media
+- feat: Add support for SoundCloud media track state in user station state
+
+### Changed
+
+- refactor: Change youtubeId to mediaSource in some GET_DATA special properties
+- refactor: Improve login, register and reset password form and autocompletion
+- refactor: Improve SoundCloud unavailable track handling, to match YouTube
+
+### Fixed
+
+- fix: Unable to add YouTube search result song to station queue
+- fix: Large Docker build context
+- fix: Some jobs available in run admin page job dropdowns did not return result
+- fix: Skipping station can pause/resume local station
+- fix: Cookie expiry not refreshed causes issues in some browsers
+- fix: Autofilling playlist skips station in some cases
+- fix: Unable to open View Media modal from SoundCloud tracks admin page
+- fix: Password managers submitting login form before inputs filled
+- fix: Song unavailable toast does not automatically disappear
+- fix: Don't count participating users in vote to skip users
+(unless they vote-skipped themselves)
+- fix: SoundCloud player doesn't work correctly twice on the same page
+
 ## [v3.10.0-rc1] - 2023-04-15
 
 ### **Breaking Changes**
