@@ -243,7 +243,13 @@ export const useSoundcloudPlayer = () => {
 
 	const changeIframeUrl = url => {
 		iframeUrl.value = url;
-		if (!widgetId.value && window.soundcloudIframeLockUuid !== uuid) return; // Don't change the iframe src if the player hasn't initialized and isn't allowed to initialize yet
+		if (window.soundcloudIframeLockUuid !== uuid) {
+			// Don't change the iframe src if the player hasn't initialized and isn't allowed to initialize yet
+			if (url) window.soundcloudIframeLockUuids.add(uuid);
+			if (!window.soundcloudIframeLockUuid)
+				document.dispatchEvent(new Event("soundcloudUnlock"));
+			return;
+		}
 		soundcloudIframeElement.value.setAttribute("src", url);
 	};
 
@@ -279,8 +285,6 @@ export const useSoundcloudPlayer = () => {
 			newElement.addEventListener("load", onLoadListener);
 
 			window.addEventListener("message", onMessageListener);
-
-			window.soundcloudIframeLockUuids.add(uuid);
 
 			document.removeEventListener(
 				"soundcloudUnlock",
@@ -409,8 +413,7 @@ export const useSoundcloudPlayer = () => {
 	const soundcloudDestroy = () => {
 		if (!soundcloudIframeElement.value) return;
 
-		const url = `${soundcloudDomain}/player?autoplay=false&buying=false&sharing=false&download=false&show_artwork=false&show_playcount=false&show_user=false&url=${`https://api.soundcloud.com/tracks/${0}`}`;
-		changeIframeUrl(url);
+		changeIframeUrl(null);
 
 		currentTrackId.value = null;
 

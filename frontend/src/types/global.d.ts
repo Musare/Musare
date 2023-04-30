@@ -19,6 +19,8 @@ declare global {
 				initialItemIndex: number;
 				initialItemListUuid: string;
 		  };
+	var soundcloudIframeLockUuid: string;
+	var soundcloudIframeLockUuids: Set<string>;
 }
 
 export {};
