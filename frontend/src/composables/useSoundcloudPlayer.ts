@@ -1,12 +1,10 @@
 import { ref, watch } from "vue";
-
-const debug = (...args) =>
-	process.env.NODE_ENV === "development" && console.debug("[USP]", ...args);
+import utils from "@/utils";
 
 const soundcloudDomain = "https://w.soundcloud.com";
 
 export const useSoundcloudPlayer = () => {
-	debug("Init start");
+	const uuid = utils.guid();
 
 	const soundcloudIframeElement = ref();
 	const widgetId = ref();
@@ -14,6 +12,8 @@ export const useSoundcloudPlayer = () => {
 	const readyCallback = ref();
 	const attemptsToPlay = ref(0);
 	const debouncePause = ref(null);
+
+	const iframeUrl = ref("");
 
 	const playAttemptTimeout = ref();
 
@@ -23,6 +23,15 @@ export const useSoundcloudPlayer = () => {
 	const methodCallbacks = {};
 	const eventListenerCallbacks = {};
 	const stateChangeCallbacks = [];
+
+	const debug = (...args) =>
+		process.env.NODE_ENV === "development" &&
+		console.debug("[USP]", uuid, widgetId.value, ...args);
+
+	debug("Init start");
+
+	if (!window.soundcloudIframeLockUuids)
+		window.soundcloudIframeLockUuids = new Set();
 
 	/*
 	EVENTS:
@@ -90,10 +99,16 @@ export const useSoundcloudPlayer = () => {
 		if (event.origin !== soundcloudDomain) return;
 
 		const data = JSON.parse(event.data);
-		if (data.method !== "getPosition" && data.method !== "getDuration")
+		if (
+			data.method !== "getPosition" &&
+			data.method !== "getDuration" &&
+			(data.method === "ready" || data.widgetId === widgetId.value)
+		)
 			debug("MESSAGE DATA", data);
 
 		if (data.method === "ready") {
+			if (window.soundcloudIframeLockUuid !== uuid) return;
+
 			widgetId.value = data.widgetId;
 
 			if (readyCallback.value) readyCallback.value();
@@ -103,8 +118,13 @@ export const useSoundcloudPlayer = () => {
 					callback(data.value);
 				});
 
+			window.soundcloudIframeLockUuid = null;
+			document.dispatchEvent(new Event("soundcloudUnlock"));
+
 			return;
 		}
+
+		if (data.widgetId !== widgetId.value) return;
 
 		if (methodCallbacks[data.method]) {
 			methodCallbacks[data.method].forEach(callback => {
@@ -221,18 +241,59 @@ export const useSoundcloudPlayer = () => {
 		}, 500);
 	};
 
+	const changeIframeUrl = url => {
+		iframeUrl.value = url;
+		if (!widgetId.value && window.soundcloudIframeLockUuid !== uuid) return; // Don't change the iframe src if the player hasn't initialized and isn't allowed to initialize yet
+		soundcloudIframeElement.value.setAttribute("src", url);
+	};
+
+	const documentUnlockEventListener = () => {
+		if (
+			!window.soundcloudIframeLockUuid &&
+			window.soundcloudIframeLockUuids.size > 0 &&
+			window.soundcloudIframeLockUuids.keys().next().value === uuid
+		) {
+			window.soundcloudIframeLockUuid = uuid;
+			window.soundcloudIframeLockUuids.delete(uuid);
+			changeIframeUrl(iframeUrl.value);
+		}
+	};
+
 	watch(soundcloudIframeElement, (newElement, oldElement) => {
 		if (oldElement) {
 			oldElement.removeEventListener("load", onLoadListener);
 
 			window.removeEventListener("message", onMessageListener);
+
+			if (window.soundcloudIframeLockUuid === uuid)
+				window.soundcloudIframeLockUuid = null;
+			window.soundcloudIframeLockUuids.delete(uuid);
+
+			document.removeEventListener(
+				"soundcloudUnlock",
+				documentUnlockEventListener
+			);
 		}
 
 		if (newElement) {
 			newElement.addEventListener("load", onLoadListener);
 
 			window.addEventListener("message", onMessageListener);
+
+			window.soundcloudIframeLockUuids.add(uuid);
+
+			document.removeEventListener(
+				"soundcloudUnlock",
+				documentUnlockEventListener
+			);
+			document.addEventListener(
+				"soundcloudUnlock",
+				documentUnlockEventListener
+			);
 		}
+
+		if (!window.soundcloudIframeLockUuid)
+			document.dispatchEvent(new Event("soundcloudUnlock"));
 	});
 
 	/* Exported functions */
@@ -311,8 +372,7 @@ export const useSoundcloudPlayer = () => {
 		debug("Soundcloud load track");
 
 		const url = `${soundcloudDomain}/player?autoplay=false&buying=false&sharing=false&download=false&show_artwork=false&show_playcount=false&show_user=false&url=${`https://api.soundcloud.com/tracks/${trackId}`}`;
-
-		soundcloudIframeElement.value.setAttribute("src", url);
+		changeIframeUrl(url);
 
 		paused.value = _paused;
 		currentTrackId.value = trackId;
@@ -350,7 +410,7 @@ export const useSoundcloudPlayer = () => {
 		if (!soundcloudIframeElement.value) return;
 
 		const url = `${soundcloudDomain}/player?autoplay=false&buying=false&sharing=false&download=false&show_artwork=false&show_playcount=false&show_user=false&url=${`https://api.soundcloud.com/tracks/${0}`}`;
-		soundcloudIframeElement.value.setAttribute("src", url);
+		changeIframeUrl(url);
 
 		currentTrackId.value = null;
 
