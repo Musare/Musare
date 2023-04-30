@@ -20,7 +20,8 @@
     "types": [
       "vite/client",
       "@intlify/unplugin-vue-i18n/messages",
-      "vitest/globals"
+      "vitest/globals",
+      "vite-plugin-pwa/client"
     ],
     "strict": false,
     "allowSyntheticDefaultImports": true

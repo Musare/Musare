@@ -2,6 +2,7 @@ import path from "path";
 import vue from "@vitejs/plugin-vue";
 import dynamicImport from "vite-plugin-dynamic-import";
 import VueI18nPlugin from "@intlify/unplugin-vue-i18n/vite";
+import { VitePWA } from "vite-plugin-pwa";
 import fs from "fs";
 
 const fetchVersionAndGitInfo = () => {
@@ -97,15 +98,14 @@ const fetchVersionAndGitInfo = () => {
 
 const debug = fetchVersionAndGitInfo();
 
+const sitename = process.env.MUSARE_SITENAME ?? "Musare";
+
 const htmlPlugin = () => ({
 	name: "html-transform",
 	transformIndexHtml(originalHtml) {
 		let html = originalHtml;
 
-		html = html.replace(
-			/{{ title }}/g,
-			process.env.MUSARE_SITENAME ?? "Musare"
-		);
+		html = html.replace(/{{ title }}/g, sitename);
 		html = html.replace(/{{ version }}/g, debug.version);
 		html = html.replace(/{{ gitRemote }}/g, debug.git.remote);
 		html = html.replace(/{{ gitRemoteUrl }}/g, debug.git.remoteUrl);
@@ -161,9 +161,7 @@ export default {
 	},
 	define: {
 		__VUE_PROD_DEVTOOLS__: process.env.FRONTEND_PROD_DEVTOOLS === "true",
-		MUSARE_SITENAME: JSON.stringify(
-			process.env.MUSARE_SITENAME ?? "Musare"
-		),
+		MUSARE_SITENAME: JSON.stringify(sitename),
 		MUSARE_VERSION: JSON.stringify(debug.version),
 		MUSARE_GIT_REMOTE: JSON.stringify(debug.git.remote),
 		MUSARE_GIT_REMOTE_URL: JSON.stringify(debug.git.remoteUrl),
@@ -178,7 +176,62 @@ export default {
 		vue(),
 		htmlPlugin(),
 		dynamicImport(),
-		VueI18nPlugin({ include: path.resolve(__dirname, "src/locales/**") })
+		VueI18nPlugin({ include: path.resolve(__dirname, "src/locales/**") }),
+		VitePWA({
+			useCredentials: true,
+			devOptions: {
+				enabled: true,
+				type: "module",
+				navigateFallback: "index.html",
+				resolveTempFolder: () => path.resolve(__dirname, "dev-dist")
+			},
+			manifest: {
+				name: sitename,
+				short_name: sitename,
+				theme_color: "#03a9f4",
+				display: "standalone",
+				start_url: "/",
+				id: "/",
+				icons: [
+					{
+						src: "/assets/favicon/android-chrome-36x36.png?v=06042016",
+						sizes: "36x36",
+						type: "image/png",
+						density: 0.75
+					},
+					{
+						src: "/assets/favicon/android-chrome-48x48.png?v=06042016",
+						sizes: "48x48",
+						type: "image/png",
+						density: 1
+					},
+					{
+						src: "/assets/favicon/android-chrome-72x72.png?v=06042016",
+						sizes: "72x72",
+						type: "image/png",
+						density: 1.5
+					},
+					{
+						src: "/assets/favicon/android-chrome-96x96.png?v=06042016",
+						sizes: "96x96",
+						type: "image/png",
+						density: 2
+					},
+					{
+						src: "/assets/favicon/android-chrome-144x144.png?v=06042016",
+						sizes: "144x144",
+						type: "image/png",
+						density: 3
+					},
+					{
+						src: "/assets/favicon/android-chrome-192x192.png?v=06042016",
+						sizes: "192x192",
+						type: "image/png",
+						density: 4
+					}
+				]
+			}
+		})
 	],
 	css: {
 		preprocessorOptions: {
