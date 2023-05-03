@@ -243,13 +243,14 @@ export const useSoundcloudPlayer = () => {
 
 	const changeIframeUrl = url => {
 		iframeUrl.value = url;
-		if (window.soundcloudIframeLockUuid !== uuid) {
+		if (url && window.soundcloudIframeLockUuid !== uuid) {
 			// Don't change the iframe src if the player hasn't initialized and isn't allowed to initialize yet
 			if (url) window.soundcloudIframeLockUuids.add(uuid);
 			if (!window.soundcloudIframeLockUuid)
 				document.dispatchEvent(new Event("soundcloudUnlock"));
 			return;
 		}
+		if (!url) widgetId.value = null;
 		soundcloudIframeElement.value.setAttribute("src", url);
 	};
 
