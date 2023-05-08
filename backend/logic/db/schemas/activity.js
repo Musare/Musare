@@ -53,5 +53,5 @@ export default {
 		playlistId: { type: String, required: false },
 		reportId: { type: String, required: false }
 	},
-	documentVersion: { type: Number, default: 3, required: true }
+	documentVersion: { type: Number, default: 4, required: true }
 };
