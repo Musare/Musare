@@ -25,8 +25,8 @@ const { socket } = useWebsocketsStore();
 const createPlaylist = () => {
 	const { displayName } = playlist.value;
 
-	if (!validation.isLength(displayName, 2, 32))
-		return new Toast("Display name must have between 2 and 32 characters.");
+	if (!validation.isLength(displayName, 1, 64))
+		return new Toast("Display name must have between 1 and 64 characters.");
 	if (!validation.regex.ascii.test(displayName))
 		return new Toast(
 			"Invalid display name format. Only ASCII characters are allowed."

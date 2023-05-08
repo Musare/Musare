@@ -41,7 +41,7 @@ Every input needs validation, below is the required formatting of each value.
 - **Playlist**
   - Display Name
     - Description: Any ASCII character.
-    - Length: From 1 to 32 characters.
+    - Length: From 1 to 64 characters.
     - Regex: ```/^[\x00-\x7F]+$/```
 - **Song**
   - Title

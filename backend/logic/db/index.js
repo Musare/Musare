@@ -275,7 +275,7 @@ class _DBModule extends CoreClass {
 					this.schemas.playlist
 						.path("displayName")
 						.validate(
-							displayName => isLength(displayName, 1, 32) && regex.ascii.test(displayName),
+							displayName => isLength(displayName, 1, 64) && regex.ascii.test(displayName),
 							"Invalid display name."
 						);
 
