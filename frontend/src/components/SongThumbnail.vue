@@ -13,39 +13,53 @@ const loaded = ref(false);
 
 const isYoutubeThumbnail = computed(
 	() =>
-		((props.song.mediaSource &&
-			props.song.mediaSource.startsWith("youtube:")) ||
-			props.song.youtubeId) &&
-		((props.song.thumbnail &&
-			(props.song.thumbnail.lastIndexOf("i.ytimg.com") !== -1 ||
-				props.song.thumbnail.lastIndexOf("img.youtube.com") !== -1)) ||
-			(props.fallback &&
-				(!props.song.thumbnail ||
-					(props.song.thumbnail &&
-						(props.song.thumbnail.lastIndexOf(
-							"notes-transparent"
-						) !== -1 ||
-							props.song.thumbnail.lastIndexOf(
-								"/assets/notes.png"
-							) !== -1 ||
-							props.song.thumbnail === "empty")) ||
-					loadError.value === 1)))
+		props.song.thumbnail &&
+		(props.song.thumbnail.lastIndexOf("i.ytimg.com") !== -1 ||
+			props.song.thumbnail.lastIndexOf("img.youtube.com") !== -1)
 );
+
+const isNotesThumbnail = computed(
+	() =>
+		!props.song.thumbnail ||
+		(props.song.thumbnail &&
+			(props.song.thumbnail.lastIndexOf("notes-transparent") !== -1 ||
+				props.song.thumbnail.lastIndexOf("/assets/notes.png") !== -1 ||
+				props.song.thumbnail === "empty"))
+);
+
+const thumbnail = computed(() => {
+	if (
+		(loadError.value === 0 &&
+			!(isNotesThumbnail.value || isYoutubeThumbnail.value)) ||
+		!props.fallback ||
+		loadError.value === -1
+	)
+		return props.song.thumbnail;
+
+	const { mediaSource, youtubeId } = props.song;
+	if (
+		loadError.value < 2 &&
+		((mediaSource && mediaSource.startsWith("youtube:")) || youtubeId)
+	)
+		return `https://img.youtube.com/vi/${
+			mediaSource ? mediaSource.split(":")[1] : youtubeId
+		}/mqdefault.jpg`;
+	return "/assets/notes-transparent.png";
+});
 
 const onLoadError = () => {
 	// Error codes
 	// -1 - Error occured, fallback disabled
 	// 0 - No errors
-	// 1 - Error occured with thumbnail, fallback enabled
-	// 2 - Error occured with youtube thumbnail, fallback enabled
+	// 1 - Error occured with thumbnail, fallback to YouTube
+	// 2 - Error occured with thumbnail, fallback to notes
 	if (!props.fallback) loadError.value = -1;
 	else if (
 		loadError.value === 0 &&
-		!isYoutubeThumbnail.value &&
-		!(
-			props.song.mediaSource &&
-			props.song.mediaSource.startsWith("soundcloud:")
-		)
+		!(isNotesThumbnail.value || isYoutubeThumbnail.value) &&
+		((props.song.mediaSource &&
+			props.song.mediaSource.startsWith("youtube:")) ||
+			props.song.youtubeId)
 	)
 		loadError.value = 1;
 	else loadError.value = 2;
@@ -68,38 +82,23 @@ watch(
 <template>
 	<div class="thumbnail">
 		<slot name="icon" />
-		<template v-if="loadError < 2">
-			<div
-				v-if="loaded"
-				class="thumbnail-bg"
-				:style="{
-					'background-image': `url('${
-						isYoutubeThumbnail
-							? `https://img.youtube.com/vi/${
-									song.mediaSource
-										? song.mediaSource.split(':')[1]
-										: song.youtubeId
-							  }/mqdefault.jpg`
-							: song.thumbnail
-					}')`
-				}"
-			></div>
-			<img
-				loading="lazy"
-				:src="
-					isYoutubeThumbnail
-						? `https://img.youtube.com/vi/${
-								song.mediaSource
-									? song.mediaSource.split(':')[1]
-									: song.youtubeId
-						  }/mqdefault.jpg`
-						: song.thumbnail
-				"
-				@error="onLoadError"
-				@load="onLoad"
-			/>
-		</template>
-		<img v-else loading="lazy" src="/assets/notes-transparent.png" />
+		<div
+			v-if="
+				loaded &&
+				!isNotesThumbnail &&
+				thumbnail !== '/assets/notes-transparent.png'
+			"
+			class="thumbnail-bg"
+			:style="{
+				'background-image': `url('${thumbnail}')`
+			}"
+		></div>
+		<img
+			loading="lazy"
+			:src="thumbnail"
+			@error="onLoadError"
+			@load="onLoad"
+		/>
 	</div>
 </template>
 
