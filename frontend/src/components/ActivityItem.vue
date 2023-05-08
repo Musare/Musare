@@ -26,7 +26,7 @@ const messageStripped = computed(() => {
 	let { message } = props.activity.payload;
 
 	message = message.replace(/<reportId>(.*)<\/reportId>/g, "report");
-	message = message.replace(/<mediaSource>(.*)<\/mediaSource/g, "$1");
+	message = message.replace(/<mediaSource>(.*)<\/mediaSource>/g, "$1");
 	message = message.replace(/<playlistId>(.*)<\/playlistId>/g, `$1`);
 	message = message.replace(/<stationId>(.*)<\/stationId>/g, `$1`);
 

@@ -6,7 +6,7 @@ import async from "async";
 import CoreClass from "../../core";
 
 const REQUIRED_DOCUMENT_VERSIONS = {
-	activity: 3,
+	activity: 4,
 	news: 3,
 	playlist: 7,
 	punishment: 1,

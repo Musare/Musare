@@ -48,6 +48,43 @@ export default async function migrate(MigrationModule) {
 	});
 
 	await new Promise((resolve, reject) => {
+		this.log("INFO", `Migration 25. Updating activity with document version 3.`);
+
+		activityModel.find({ documentVersion: 3 }, (err, activities) => {
+			if (err) reject(err);
+			else {
+				async.eachLimit(
+					activities.map(activity => activity._doc),
+					1,
+					(activity, next) => {
+						const updateObject = { $set: { documentVersion: 4 } };
+
+						if (activity.payload.message) {
+							activity.payload.message = activity.payload.message.replaceAll(
+								"<youtubeId>",
+								"<mediaSource>"
+							);
+							activity.payload.message = activity.payload.message.replaceAll(
+								"</youtubeId>",
+								"</mediaSource>"
+							);
+						}
+
+						updateObject.$set.payload = activity.payload;
+
+						activityModel.updateOne({ _id: activity._id }, updateObject, next);
+					},
+					err => {
+						this.log("INFO", `Migration 25. Activities found: ${activities.length}.`);
+						if (err) reject(err);
+						else resolve();
+					}
+				);
+			}
+		});
+	});
+
+	await new Promise((resolve, reject) => {
 		this.log("INFO", `Migration 25. Updating playlist with document version 6.`);
 
 		playlistModel.find({ documentVersion: 6 }, (err, documents) => {
