@@ -47,6 +47,13 @@ const thumbnail = computed(() => {
 	return "/assets/notes-transparent.png";
 });
 
+const backgroundVisible = computed(
+	() =>
+		loaded.value &&
+		thumbnail.value !== "/assets/notes-transparent.png" &&
+		!((!props.fallback || loadError.value === -1) && isNotesThumbnail.value)
+);
+
 const onLoadError = () => {
 	// Error codes
 	// -1 - Error occured, fallback disabled
@@ -83,11 +90,7 @@ watch(
 	<div class="thumbnail">
 		<slot name="icon" />
 		<div
-			v-if="
-				loaded &&
-				!isNotesThumbnail &&
-				thumbnail !== '/assets/notes-transparent.png'
-			"
+			v-if="backgroundVisible"
 			class="thumbnail-bg"
 			:style="{
 				'background-image': `url('${thumbnail}')`
