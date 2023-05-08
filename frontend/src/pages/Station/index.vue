@@ -472,7 +472,7 @@ const calculateTimeElapsed = async () => {
 		currentSongMediaType.value === "youtube" &&
 		!noSong.value &&
 		currentSong.value &&
-		youtubePlayer.value.getPlayerState() === -1
+		youtubePlayer.value?.getPlayerState() === -1
 	) {
 		if (!canAutoplay.value) {
 			if (Date.now() - lastTimeRequestedIfCanAutoplay.value > 2000) {
@@ -1094,7 +1094,7 @@ const sendActivityWatchMediaData = () => {
 		!noSong.value &&
 		(experimentalChangableListenMode.value === "participate" ||
 			currentSongMediaType.value !== "youtube" ||
-			youtubePlayer.value.getPlayerState() ===
+			youtubePlayer.value?.getPlayerState() ===
 				window.YT.PlayerState.PLAYING)
 	) {
 		if (activityWatchMediaLastStatus.value !== "playing") {
@@ -1143,7 +1143,7 @@ const sendActivityWatchMediaData = () => {
 					: Object.keys(window.YT.PlayerState).find(
 							key =>
 								window.YT.PlayerState[key] ===
-								youtubePlayer.value.getPlayerState()
+								youtubePlayer.value?.getPlayerState()
 					  );
 
 			videoData.playbackRate = playbackRate.value;
