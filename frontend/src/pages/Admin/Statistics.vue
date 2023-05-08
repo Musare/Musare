@@ -20,7 +20,9 @@ onMounted(() => {
 			socket.dispatch("utils.getModule", route.query.moduleName, res => {
 				if (res.status === "success")
 					activeModule.value = {
-						runningJobs: res.data.runningJobs,
+						runningTasks: res.data.runningTasks,
+						queuedTasks: res.data.queuedTasks,
+						pausedTasks: res.data.pausedTasks,
 						jobStatistics: res.data.jobStatistics
 					};
 			});
@@ -84,7 +86,11 @@ onMounted(() => {
 					<thead>
 						<tr>
 							<th>Name</th>
-							<th>Payload</th>
+							<th>UUID</th>
+							<th>Status</th>
+							<th>Priority</th>
+							<th>Parent UUID</th>
+							<th>Parent name</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -93,9 +99,11 @@ onMounted(() => {
 							:key="JSON.stringify(job)"
 						>
 							<td>{{ job.name }}</td>
-							<td>
-								{{ JSON.stringify(job.payload) }}
-							</td>
+							<td>{{ job.uniqueId }}</td>
+							<td>{{ job.status }}</td>
+							<td>{{ job.priority }}</td>
+							<td>{{ job.parentUniqueId }}</td>
+							<td>{{ job.parentName }}</td>
 						</tr>
 					</tbody>
 				</table>
@@ -109,7 +117,11 @@ onMounted(() => {
 					<thead>
 						<tr>
 							<th>Name</th>
-							<th>Payload</th>
+							<th>UUID</th>
+							<th>Status</th>
+							<th>Priority</th>
+							<th>Parent UUID</th>
+							<th>Parent name</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -118,9 +130,11 @@ onMounted(() => {
 							:key="JSON.stringify(job)"
 						>
 							<td>{{ job.name }}</td>
-							<td>
-								{{ JSON.stringify(job.payload) }}
-							</td>
+							<td>{{ job.uniqueId }}</td>
+							<td>{{ job.status }}</td>
+							<td>{{ job.priority }}</td>
+							<td>{{ job.parentUniqueId }}</td>
+							<td>{{ job.parentName }}</td>
 						</tr>
 					</tbody>
 				</table>
@@ -134,7 +148,11 @@ onMounted(() => {
 					<thead>
 						<tr>
 							<th>Name</th>
-							<th>Payload</th>
+							<th>UUID</th>
+							<th>Status</th>
+							<th>Priority</th>
+							<th>Parent UUID</th>
+							<th>Parent name</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -143,9 +161,11 @@ onMounted(() => {
 							:key="JSON.stringify(job)"
 						>
 							<td>{{ job.name }}</td>
-							<td>
-								{{ JSON.stringify(job.payload) }}
-							</td>
+							<td>{{ job.uniqueId }}</td>
+							<td>{{ job.status }}</td>
+							<td>{{ job.priority }}</td>
+							<td>{{ job.parentUniqueId }}</td>
+							<td>{{ job.parentName }}</td>
 						</tr>
 					</tbody>
 				</table>
