@@ -1094,8 +1094,9 @@ const sendActivityWatchMediaData = () => {
 		!noSong.value &&
 		(experimentalChangableListenMode.value === "participate" ||
 			currentSongMediaType.value !== "youtube" ||
-			youtubePlayer.value?.getPlayerState() ===
-				window.YT.PlayerState.PLAYING)
+			(typeof youtubePlayer.value?.getPlayerState === "function" &&
+				youtubePlayer.value?.getPlayerState() ===
+					window.YT.PlayerState.PLAYING))
 	) {
 		if (activityWatchMediaLastStatus.value !== "playing") {
 			activityWatchMediaLastStatus.value = "playing";
