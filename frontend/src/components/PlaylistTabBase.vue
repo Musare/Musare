@@ -9,6 +9,7 @@ import { useUserPlaylistsStore } from "@/stores/userPlaylists";
 import { useModalsStore } from "@/stores/modals";
 import { useManageStationStore } from "@/stores/manageStation";
 import { useConfigStore } from "@/stores/config";
+import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useSortablePlaylists } from "@/composables/useSortablePlaylists";
 
 const PlaylistItem = defineAsyncComponent(
@@ -36,6 +37,9 @@ const configStore = useConfigStore();
 
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
+const userPreferencesStore = useUserPreferencesStore();
+
+const { autoSkipDisliked } = storeToRefs(userPreferencesStore);
 
 const tab = ref("current");
 const search = reactive({
@@ -94,22 +98,47 @@ const blacklist = computed({
 	}
 });
 
+const dislikedPlaylist = computed(() =>
+	playlists.value.find(playlist => playlist.type === "user-disliked")
+);
+
 const resultsLeftCount = computed(() => search.count - search.results.length);
 
 const nextPageResultsCount = computed(() =>
 	Math.min(search.pageSize, resultsLeftCount.value)
 );
 
+// List of media sources that will not be allowed to be autorequested
 const excludedMediaSources = computed(() => {
-	if (!history.value) return [];
+	const mediaSources = new Set();
+
+	// Exclude the current song
+	if (station.value.currentSong)
+		mediaSources.add(station.value.currentSong.mediaSource);
+
+	// Exclude songs in the queue
+	if (songsList.value) {
+		songsList.value.forEach(song => {
+			mediaSources.add(song.mediaSource);
+		});
+	}
+
+	// If auto skip disliked preference is enabled, exclude all songs in the disliked playlist
+	if (autoSkipDisliked.value && dislikedPlaylist.value) {
+		dislikedPlaylist.value.songs.forEach(song => {
+			mediaSources.add(song.mediaSource);
+		});
+	}
+
+	// If no history exists, just stop here
+	if (!history.value) Array.from(mediaSources);
 
 	const {
 		autorequestDisallowRecentlyPlayedEnabled,
 		autorequestDisallowRecentlyPlayedNumber
 	} = station.value.requests;
 
-	const mediaSources = new Set();
-
+	// If the station is set to disallow recently played songs, and station history is enabled, exclude the last X history songs
 	if (
 		autorequestDisallowRecentlyPlayedEnabled &&
 		experimental.value.station_history
@@ -118,16 +147,6 @@ const excludedMediaSources = computed(() => {
 			if (index < autorequestDisallowRecentlyPlayedNumber)
 				mediaSources.add(historyItem.payload.song.mediaSource);
 		});
-	}
-
-	if (songsList.value) {
-		songsList.value.forEach(song => {
-			mediaSources.add(song.mediaSource);
-		});
-	}
-
-	if (station.value.currentSong) {
-		mediaSources.add(station.value.currentSong.mediaSource);
 	}
 
 	return Array.from(mediaSources);
