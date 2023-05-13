@@ -189,8 +189,9 @@ export default class JobQueue {
 					const activeJobIndex = this.active.indexOf(job);
 					if (activeJobIndex > -1) {
 						this.active.splice(activeJobIndex, 1);
-						this.process();
 					}
+
+					this.process();
 				});
 			// Stop the for loop
 			if (this.active.length >= this.concurrency) break;

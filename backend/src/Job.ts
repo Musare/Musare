@@ -41,6 +41,10 @@ export default class Job {
 
 	protected createdAt: number;
 
+	protected startedAt?: number;
+
+	protected completedAt?: number;
+
 	protected logBook: LogBook;
 
 	protected jobStatistics: JobStatistics;
@@ -102,7 +106,7 @@ export default class Job {
 				return v.toString(16);
 			}
 		);
-		this.setStatus(JobStatus.QUEUED);
+		this.status = JobStatus.QUEUED;
 		this.createdAt = Date.now();
 	}
 
@@ -166,8 +170,9 @@ export default class Job {
 	 * @returns Promise
 	 */
 	public async execute() {
+		if (this.startedAt) throw new Error("Job has already been executed.");
 		this.setStatus(JobStatus.ACTIVE);
-		const startedAt = Date.now();
+		this.startedAt = Date.now();
 		return (
 			this.jobFunction
 				.apply(this.module, [this.context, this.payload])
@@ -193,12 +198,14 @@ export default class Job {
 					throw err;
 				})
 				.finally(() => {
+					this.completedAt = Date.now();
 					this.jobStatistics.updateStats(this.getName(), "total");
-					this.jobStatistics.updateStats(
-						this.getName(),
-						"averageTime",
-						Date.now() - startedAt
-					);
+					if (this.startedAt)
+						this.jobStatistics.updateStats(
+							this.getName(),
+							"averageTime",
+							this.completedAt - this.startedAt
+						);
 					this.setStatus(JobStatus.COMPLETED);
 				})
 		);
@@ -240,7 +247,9 @@ export default class Job {
 			name: this.getName(),
 			status: this.getStatus(),
 			moduleStatus: this.module.getStatus(),
-			createdAt: this.createdAt
+			createdAt: this.createdAt,
+			startedAt: this.startedAt,
+			completedAt: this.completedAt
 		};
 	}
 }
