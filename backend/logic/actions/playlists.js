@@ -1513,9 +1513,9 @@ export default {
 							if (!playlist) return next("Playlist not found.");
 							if (playlist.createdBy !== session.userId)
 								return hasPermission("playlists.songs.add", session)
-									.then(() => next(null, playlist))
+									.then(() => next())
 									.catch(() => next("Invalid permissions."));
-							return next(null, playlist);
+							return next();
 						})
 						.catch(next);
 				},
@@ -1554,7 +1554,7 @@ export default {
 						.catch(next);
 				},
 
-				(nothing, next) => {
+				next => {
 					async.eachLimit(
 						mediaSources,
 						1,

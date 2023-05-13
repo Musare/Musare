@@ -384,6 +384,10 @@ class _MediaModule extends CoreClass {
 								this
 							)
 								.then(response => {
+									if (response.videos.length === 0) {
+										next("Media not found.");
+										return;
+									}
 									const { youtubeId, title, author, duration } = response.videos[0];
 									next(null, song, {
 										mediaSource: `youtube:${youtubeId}`,
