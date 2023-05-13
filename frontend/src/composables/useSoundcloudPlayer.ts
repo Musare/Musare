@@ -251,7 +251,10 @@ export const useSoundcloudPlayer = () => {
 			return;
 		}
 		if (!url) widgetId.value = null;
-		soundcloudIframeElement.value.setAttribute("src", url);
+		soundcloudIframeElement.value.setAttribute(
+			"src",
+			url ?? `${soundcloudDomain}/player`
+		);
 	};
 
 	const documentUnlockEventListener = () => {
