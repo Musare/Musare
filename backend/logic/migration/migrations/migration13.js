@@ -4,7 +4,6 @@ import async from "async";
  * Migration 13
  *
  * Migration for allowing titles, descriptions and individual resolving for report issues
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

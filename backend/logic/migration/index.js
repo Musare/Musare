@@ -26,7 +26,6 @@ class _MigrationModule extends CoreClass {
 
 	/**
 	 * Initialises the migration module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	initialize() {
@@ -100,7 +99,6 @@ class _MigrationModule extends CoreClass {
 
 	/**
 	 * Returns a database model
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {object} payload.modelName - name of the model to get
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -113,7 +111,6 @@ class _MigrationModule extends CoreClass {
 
 	/**
 	 * Runs migrations
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {object} payload.index - migration index
 	 * @returns {Promise} - returns promise (reject, resolve)

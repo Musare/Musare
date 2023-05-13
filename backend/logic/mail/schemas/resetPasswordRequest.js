@@ -2,7 +2,6 @@ import mail from "../index";
 
 /**
  * Sends a request password reset email
- *
  * @param {string} to - the email address of the recipient
  * @param {string} username - the username of the recipient
  * @param {string} code - the password reset code of the recipient

@@ -57,7 +57,6 @@ export default class Timer {
 
 	/**
 	 * Gets the amount of time the timer has been paused
-	 *
 	 * @returns {Date} - the amount of time the timer has been paused
 	 */
 	getTimePaused() {

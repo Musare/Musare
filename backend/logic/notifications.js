@@ -19,7 +19,6 @@ class _NotificationsModule extends CoreClass {
 
 	/**
 	 * Initialises the notifications module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	initialize() {
@@ -126,7 +125,6 @@ class _NotificationsModule extends CoreClass {
 	 * Schedules a notification to be dispatched in a specific amount of milliseconds,
 	 * notifications are unique by name, and the first one is always kept, as in
 	 * attempting to schedule a notification that already exists won't do anything
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.name - the name of the notification we want to schedule
 	 * @param {number} payload.time - how long in milliseconds until the notification should be fired
@@ -158,7 +156,6 @@ class _NotificationsModule extends CoreClass {
 
 	/**
 	 * Subscribes a callback function to be called when a notification gets called
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.name - the name of the notification we want to subscribe to
 	 * @param {boolean} payload.unique - only subscribe if another subscription with the same name doesn't already exist
@@ -204,9 +201,8 @@ class _NotificationsModule extends CoreClass {
 
 	/**
 	 * Remove a notification subscription
-	 *
 	 * @param {object} payload - object containing the payload
-	 * @param {object} payload.subscription - the subscription object returned by {@link subscribe}
+	 * @param {object} payload.subscription - the subscription object returned by subscribe
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	REMOVE(payload) {
@@ -220,7 +216,6 @@ class _NotificationsModule extends CoreClass {
 
 	/**
 	 * Unschedules a notification by name (each notification has a unique name)
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.name - the name of the notification we want to schedule
 	 * @returns {Promise} - returns a promise (resolve, reject)

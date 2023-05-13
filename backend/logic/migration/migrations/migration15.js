@@ -4,7 +4,6 @@ import async from "async";
  * Migration 15
  *
  * Migration for setting user name to username if not set
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

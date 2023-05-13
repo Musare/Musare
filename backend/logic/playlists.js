@@ -21,7 +21,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Initialises the playlists module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async initialize() {
@@ -143,7 +142,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Returns a list of playlists that include a specific song
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.songId - the song id
 	 * @param {string} payload.includeSongs - include the songs
@@ -161,7 +159,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Returns a list of youtube ids in all user playlists of the specified user
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.userId - the user id
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -187,7 +184,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Creates a playlist owned by a user
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.userId - the id of the user to create the playlist for
 	 * @param {string} payload.displayName - the display name of the playlist
@@ -215,7 +211,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Creates a playlist that contains all songs of a specific genre
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.genre - the genre
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -249,7 +244,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Gets all genre playlists
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.includeSongs - include the songs
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -266,7 +260,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Gets all station playlists
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.includeSongs - include the songs
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -283,7 +276,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Gets a genre playlist
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.genre - the genre
 	 * @param {string} payload.includeSongs - include the songs
@@ -306,7 +298,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Gets all missing genre playlists
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_MISSING_GENRE_PLAYLISTS() {
@@ -348,7 +339,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Creates all missing genre playlists
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	CREATE_MISSING_GENRE_PLAYLISTS() {
@@ -382,7 +372,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Gets a station playlist
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.staationId - the station id
 	 * @param {string} payload.includeSongs - include the songs
@@ -405,7 +394,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Adds a song to a playlist
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the playlist id
 	 * @param {string} payload.mediaSource - the media source
@@ -506,7 +494,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Replaces a song in a playlist
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the playlist id
 	 * @param {string} payload.newMediaSource - the new media source
@@ -625,7 +612,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Remove from playlist
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the playlist id
 	 * @param {string} payload.mediaSource - the media source
@@ -712,7 +698,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Deletes a song from a playlist based on the media source
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the playlist id
 	 * @param {string} payload.mediaSource - the media source
@@ -739,7 +724,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Fills a genre playlist with songs
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.genre - the genre
 	 * @param {string} payload.createPlaylist - create playlist if it doesn't exist, default false
@@ -846,7 +830,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Gets orphaned genre playlists
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_ORPHANED_GENRE_PLAYLISTS() {
@@ -888,7 +871,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Deletes all orphaned genre playlists
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	DELETE_ORPHANED_GENRE_PLAYLISTS() {
@@ -923,7 +905,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Gets a orphaned station playlists
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_ORPHANED_STATION_PLAYLISTS() {
@@ -962,7 +943,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Deletes all orphaned station playlists
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	DELETE_ORPHANED_STATION_PLAYLISTS() {
@@ -997,7 +977,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Fills a station playlist with songs
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the station id
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -1136,7 +1115,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Gets a playlist by id from the cache or Mongo, and if it isn't in the cache yet, adds it the cache
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the id of the playlist we are trying to get
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -1207,7 +1185,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Gets a playlist from id from Mongo and updates the cache with it
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the id of the playlist we are trying to update
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -1255,7 +1232,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Deletes playlist from id from Mongo and cache
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the id of the playlist we are trying to delete
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -1303,7 +1279,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Searches through playlists
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.query - the query
 	 * @param {string} payload.includePrivate - include private playlists
@@ -1394,7 +1369,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Clears and refills a station playlist
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the id of the playlist we are trying to clear and refill
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -1439,7 +1413,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Clears and refills a genre playlist
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the id of the playlist we are trying to clear and refill
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -1484,7 +1457,6 @@ class _PlaylistsModule extends CoreClass {
 
 	/**
 	 * Gets a list of all media sources from playlist songs
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ALL_MEDIA_SOURCES() {

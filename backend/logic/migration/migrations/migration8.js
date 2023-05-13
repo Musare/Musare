@@ -4,7 +4,6 @@ import async from "async";
  * Migration 8
  *
  * Migration for replacing songId with youtubeId whereever it is used, and using songId for any song's _id uses
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

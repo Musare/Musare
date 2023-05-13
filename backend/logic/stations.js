@@ -25,7 +25,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Initialises the stations module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async initialize() {
@@ -254,7 +253,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Initialises a station
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - id of the station to initialise
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -387,7 +385,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Attempts to get the station from Redis. If it's not in Redis, get it from Mongo and add it to Redis.
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - id of the station
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -439,7 +436,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Attempts to get a station by name, firstly from Redis. If it's not in Redis, get it from Mongo and add it to Redis.
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationName - the unique name of the station
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -474,7 +470,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Updates the station in cache from mongo or deletes station in cache if no longer in mongo.
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the id of the station to update
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -531,7 +526,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Autofill station queue from station playlist
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the id of the station
 	 * @param {string} payload.ignoreExistingQueue - ignore the existing queue songs, replacing the old queue with a completely fresh one
@@ -765,7 +759,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Gets next station song
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the id of the station
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -840,7 +833,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Removes first station queue song
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the id of the station
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -884,7 +876,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Process vote to skips for a station
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the id of the station to process
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -988,7 +979,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Creates a station history item
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.stationId - the station id to create the history item for
 	 * @param {object} payload.currentSong - the song to create the history item for
@@ -1031,7 +1021,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Skips a station
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the id of the station to skip
 	 * @param {string} payload.natural - whether to skip naturally or forcefully
@@ -1329,7 +1318,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Checks if a user can view/access a station
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.station - the station object of the station in question
 	 * @param {string} payload.userId - the id of the user in question
@@ -1373,7 +1361,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Checks if a user has favorited a station or not
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.stationId - the id of the station in question
 	 * @param {string} payload.userId - the id of the user in question
@@ -1409,7 +1396,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Returns a list of sockets in a room that can and can't know about a station
-	 *
 	 * @param {object} payload - the payload object
 	 * @param {object} payload.station - the station object
 	 * @param {string} payload.room - the websockets room to get the sockets from
@@ -1477,7 +1463,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Adds a playlist to autofill a station
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.stationId - the id of the station
 	 * @param {object} payload.playlistId - the id of the playlist
@@ -1551,7 +1536,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Removes a playlist from autofill
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.stationId - the id of the station
 	 * @param {object} payload.playlistId - the id of the playlist
@@ -1617,7 +1601,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Add a playlist to station blacklist
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.stationId - the id of the station
 	 * @param {object} payload.playlistId - the id of the playlist
@@ -1693,7 +1676,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Remove a playlist from station blacklist
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.stationId - the id of the station
 	 * @param {object} payload.playlistId - the id of the playlist
@@ -1759,7 +1741,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Removes autofilled or blacklisted playlist from a station
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the playlist id
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -1805,7 +1786,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Gets stations that autofill or blacklist a specific playlist
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the playlist id
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -1834,7 +1814,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Clears every queue
-	 *
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	CLEAR_EVERY_STATION_QUEUE() {
@@ -1886,7 +1865,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Resets a station queue
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the station id
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -1945,7 +1923,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Add to a station queue
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the station id
 	 * @param {string} payload.mediaSource - the media source
@@ -2163,7 +2140,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Remove from a station queue
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the station id
 	 * @param {string} payload.mediaSource - the media source
@@ -2235,7 +2211,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Add DJ to station
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the station id
 	 * @param {string} payload.userId - the dj user id
@@ -2293,7 +2268,6 @@ class _StationsModule extends CoreClass {
 
 	/**
 	 * Remove DJ from station
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the station id
 	 * @param {string} payload.userId - the dj user id

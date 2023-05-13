@@ -16,7 +16,6 @@ class _MailModule extends CoreClass {
 
 	/**
 	 * Initialises the mail module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async initialize() {
@@ -43,7 +42,6 @@ class _MailModule extends CoreClass {
 
 	/**
 	 * Sends an email
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.data - information such as to, from in order to send the email
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -76,7 +74,6 @@ class _MailModule extends CoreClass {
 
 	/**
 	 * Returns an email schema
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.schemaName - name of the schema to get
 	 * @returns {Promise} - returns promise (reject, resolve)

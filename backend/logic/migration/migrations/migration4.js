@@ -4,7 +4,6 @@ import async from "async";
  * Migration 4
  *
  * Migration for song merging. Merges queueSongs into songs database, and adds verified property to all songs.
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

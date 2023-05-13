@@ -325,7 +325,6 @@ CacheModule.runJob("SUB", {
 export default {
 	/**
 	 * Gets playlists, used in the admin playlists page by the AdvancedTable component
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param page - the page
 	 * @param pageSize - the size per page
@@ -444,7 +443,6 @@ export default {
 
 	/**
 	 * Searches through all playlists that can be included in a community station
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} query - the query
 	 * @param {string} query - the page
@@ -491,7 +489,6 @@ export default {
 
 	/**
 	 * Searches through all playlists that can be included in an official station
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} query - the query
 	 * @param {string} query - the page
@@ -541,7 +538,6 @@ export default {
 
 	/**
 	 * Searches through all admin playlists
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} query - the query
 	 * @param {string} query - the page
@@ -585,7 +581,6 @@ export default {
 
 	/**
 	 * Gets the first song from a private playlist
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are getting the first song from
 	 * @param {Function} cb - gets called with the result
@@ -630,7 +625,6 @@ export default {
 
 	/**
 	 * Gets a list of all the playlists for a specific user
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} userId - the user id in question
 	 * @param {Function} cb - gets called with the result
@@ -708,7 +702,6 @@ export default {
 
 	/**
 	 * Gets all playlists for the user requesting it
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -772,7 +765,6 @@ export default {
 
 	/**
 	 * Gets all playlists playlists
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -821,7 +813,6 @@ export default {
 
 	/**
 	 * Creates a new private playlist
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {object} data - the data for the new private playlist
 	 * @param {Function} cb - gets called with the result
@@ -918,7 +909,6 @@ export default {
 
 	/**
 	 * Gets a playlist from id
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are getting
 	 * @param {Function} cb - gets called with the result
@@ -968,7 +958,6 @@ export default {
 
 	/**
 	 * Gets a playlist from station id
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} stationId - the id of the station we are getting
 	 * @param {string} includeSongs - include songs
@@ -1019,7 +1008,6 @@ export default {
 
 	/**
 	 * Shuffles songs in a private playlist
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are updating
 	 * @param {Function} cb - gets called with the result
@@ -1091,7 +1079,6 @@ export default {
 
 	/**
 	 * Changes the order (position) of a song in a playlist
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are targeting
 	 * @param {object} song - the song to be repositioned
@@ -1187,7 +1174,6 @@ export default {
 
 	/**
 	 * Adds a song to a private playlist
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {boolean} isSet - is the song part of a set of songs to be added
 	 * @param {string} mediaSource - the media source of the song we are trying to add
@@ -1364,7 +1350,6 @@ export default {
 
 	/**
 	 * Replaces a song in a playlist with another song, used to replace Spotify songs with playable songs
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} oldMediaSource - the media source of the song to be removed
 	 * @param {string} newMediaSource - the media source of the song to be added
@@ -1486,7 +1471,6 @@ export default {
 
 	/**
 	 * Adds songs to a playlist
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are adding the songs to
 	 * @param {Array} mediaSources - the media sources of the songs we are trying to add
@@ -1680,7 +1664,6 @@ export default {
 
 	/**
 	 * Removes songs from a playlist
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are removing the songs from
 	 * @param {Array} mediaSources - the media sources of the songs we are trying to remove
@@ -1846,7 +1829,6 @@ export default {
 
 	/**
 	 * Adds a set of songs to a user playlist
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} url - the url of the the YouTube playlist
 	 * @param {string} playlistId - the id of the playlist we are adding the set of songs to
@@ -2057,7 +2039,6 @@ export default {
 
 	/**
 	 * Adds a set of Soundcloud songs to a private playlist
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} url - the url of the the SoundCloud playlist
 	 * @param {string} playlistId - the id of the playlist we are adding the set of songs to
@@ -2253,7 +2234,6 @@ export default {
 
 	/**
 	 * Adds a set of Spotify songs to a private playlist
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} url - the url of the the Spotify playlist
 	 * @param {string} playlistId - the id of the playlist we are adding the set of songs to
@@ -2443,7 +2423,6 @@ export default {
 
 	/**
 	 * Removes a song from a private playlist
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} mediaSource - the media source of the song we are removing from the private playlist
 	 * @param {string} playlistId - the id of the playlist we are removing the song from
@@ -2612,7 +2591,6 @@ export default {
 
 	/**
 	 * Updates the displayName of a private playlist
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are updating the displayName for
 	 * @param {Function} cb - gets called with the result
@@ -2705,7 +2683,6 @@ export default {
 
 	/**
 	 * Removes a user's own modifiable user playlist
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are removing
 	 * @param {Function} cb - gets called with the result
@@ -2786,7 +2763,6 @@ export default {
 
 	/**
 	 * Removes a user's modifiable user playlist as an admin
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are removing
 	 * @param {Function} cb - gets called with the result
@@ -2861,7 +2837,6 @@ export default {
 
 	/**
 	 * Updates the privacy of a private playlist
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are updating the privacy for
 	 * @param {string} privacy - what the new privacy of the playlist should be e.g. public
@@ -2942,7 +2917,6 @@ export default {
 
 	/**
 	 * Updates the privacy of a playlist
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are updating the privacy for
 	 * @param {string} privacy - what the new privacy of the playlist should be e.g. public
@@ -3019,7 +2993,6 @@ export default {
 
 	/**
 	 * Deletes all orphaned station playlists
-	 *
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -3079,7 +3052,6 @@ export default {
 
 	/**
 	 * Deletes all orphaned genre playlists
-	 *
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -3139,7 +3111,6 @@ export default {
 
 	/**
 	 * Requests orpahned playlist songs
-	 *
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -3202,7 +3173,6 @@ export default {
 
 	/**
 	 * Clears and refills a station playlist
-	 *
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {string} playlistId - the id of the playlist we are clearing and refilling
 	 * @param {Function} cb - gets called with the result
@@ -3255,7 +3225,6 @@ export default {
 
 	/**
 	 * Clears and refills a genre playlist
-	 *
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {string} playlistId - the id of the playlist we are clearing and refilling
 	 * @param {Function} cb - gets called with the result
@@ -3308,7 +3277,6 @@ export default {
 
 	/**
 	 * Clears and refills all station playlists
-	 *
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -3405,7 +3373,6 @@ export default {
 
 	/**
 	 * Clears and refills all genre playlists
-	 *
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -3499,7 +3466,6 @@ export default {
 
 	/**
 	 * Create missing genre playlists
-	 *
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */

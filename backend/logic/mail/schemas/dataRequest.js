@@ -4,7 +4,6 @@ import mail from "../index";
 
 /**
  * Sends an email to all admins that a user has submitted a data request
- *
  * @param {string} to - an array of email addresses of admins
  * @param {string} userId - the id of the user the data request is for
  * @param {string} type - the type of data request e.g. remove

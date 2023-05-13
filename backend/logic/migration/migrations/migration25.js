@@ -4,7 +4,6 @@ import async from "async";
  * Migration 25
  *
  * Migration for changing youtubeId to mediaSource
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

@@ -39,7 +39,6 @@ class _TasksModule extends CoreClass {
 
 	/**
 	 * Initialises the tasks module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	initialize() {
@@ -86,7 +85,6 @@ class _TasksModule extends CoreClass {
 
 	/**
 	 * Creates a new task
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.name - the name of the task
 	 * @param {string} payload.fn - the function the task will run
@@ -114,7 +112,6 @@ class _TasksModule extends CoreClass {
 
 	/**
 	 * Pauses a task
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.taskName - the name of the task to pause
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -130,7 +127,6 @@ class _TasksModule extends CoreClass {
 
 	/**
 	 * Resumes a task
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.name - the name of the task to resume
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -144,7 +140,6 @@ class _TasksModule extends CoreClass {
 
 	/**
 	 * Runs a task's function and restarts the timer
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.name - the name of the task to run
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -168,7 +163,6 @@ class _TasksModule extends CoreClass {
 
 	/**
 	 * Periodically checks if any stations need to be skipped
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	checkStationSkipTask() {
@@ -210,7 +204,6 @@ class _TasksModule extends CoreClass {
 
 	/**
 	 * Periodically checks if any sessions are out of date and need to be cleared
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	sessionClearingTask() {
@@ -298,7 +291,6 @@ class _TasksModule extends CoreClass {
 
 	/**
 	 * Periodically warns about the size of any log files
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	logFileSizeCheckTask() {
@@ -353,7 +345,6 @@ class _TasksModule extends CoreClass {
 
 	/**
 	 * Periodically collect users in stations
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async collectStationUsersTask() {
@@ -500,7 +491,6 @@ class _TasksModule extends CoreClass {
 
 	/**
 	 * Periodically removes any old history documents
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async historyClearTask() {

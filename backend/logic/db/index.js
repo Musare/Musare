@@ -53,7 +53,6 @@ class _DBModule extends CoreClass {
 
 	/**
 	 * Initialises the database module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	initialize() {
@@ -333,7 +332,6 @@ class _DBModule extends CoreClass {
 
 	/**
 	 * Checks if all documents have the correct document version
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	CHECK_DOCUMENT_VERSIONS() {
@@ -379,7 +377,6 @@ class _DBModule extends CoreClass {
 
 	/**
 	 * Returns a database model
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {object} payload.modelName - name of the model to get
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -392,7 +389,6 @@ class _DBModule extends CoreClass {
 
 	/**
 	 * Returns a database schema
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {object} payload.schemaName - name of the schema to get
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -405,7 +401,6 @@ class _DBModule extends CoreClass {
 
 	/**
 	 * Gets data
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.page - the page
 	 * @param {string} payload.pageSize - the page size
@@ -618,7 +613,6 @@ class _DBModule extends CoreClass {
 
 	/**
 	 * Checks if a password to be stored in the database has a valid length
-	 *
 	 * @param {object} password - the password itself
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */

@@ -4,7 +4,6 @@ import async from "async";
  * Migration 6
  *
  * Migration for adding activityWatch preference to user object
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

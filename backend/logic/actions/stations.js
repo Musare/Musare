@@ -355,7 +355,6 @@ CacheModule.runJob("SUB", {
 export default {
 	/**
 	 * Get a list of all the stations
-	 *
 	 * @param {object} session - user session
 	 * @param {boolean} adminFilter - whether to filter out stations admins do not own
 	 * @param {Function} cb - callback
@@ -459,7 +458,6 @@ export default {
 
 	/**
 	 * Gets stations, used in the admin stations page by the AdvancedTable component
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param page - the page
 	 * @param pageSize - the size per page
@@ -562,7 +560,6 @@ export default {
 
 	/**
 	 * Obtains basic metadata of a station in order to format an activity
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
@@ -606,7 +603,6 @@ export default {
 
 	/**
 	 * Verifies that a station exists from its name
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationName - the station name
 	 * @param {Function} cb - callback
@@ -651,7 +647,6 @@ export default {
 
 	/**
 	 * Verifies that a station exists from its id
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
@@ -696,7 +691,6 @@ export default {
 
 	/**
 	 * Gets the official playlist for a station
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
@@ -779,7 +773,6 @@ export default {
 
 	/**
 	 * Joins the station by its name
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationIdentifier - the station name or station id
 	 * @param {Function} cb - callback
@@ -908,7 +901,6 @@ export default {
 
 	/**
 	 * Gets a station by id
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
@@ -998,7 +990,6 @@ export default {
 
 	/**
 	 * Gets station history
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
@@ -1209,7 +1200,6 @@ export default {
 
 	/**
 	 * Toggle votes to skip a station
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param stationId - the station id
 	 *  @param {Function} cb - gets called with the result
@@ -1293,7 +1283,6 @@ export default {
 
 	/**
 	 * Force skips a station
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
@@ -1338,7 +1327,6 @@ export default {
 
 	/**
 	 * Leaves the user's current station
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - id of station to leave
 	 * @param {Function} cb - callback
@@ -1382,7 +1370,6 @@ export default {
 
 	/**
 	 * Updates a station's settings
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
 	 * @param {object} newStation - updated station object
@@ -1497,7 +1484,6 @@ export default {
 
 	/**
 	 * Pauses a station
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
@@ -1566,7 +1552,6 @@ export default {
 
 	/**
 	 * Resumes a station
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
@@ -1642,7 +1627,6 @@ export default {
 
 	/**
 	 * Removes a station
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
@@ -1726,7 +1710,6 @@ export default {
 
 	/**
 	 * Create a station
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param data - the station data
 	 *  @param {Function} cb - gets called with the result
@@ -1895,7 +1878,6 @@ export default {
 
 	/**
 	 * Adds song to station queue
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param stationId - the station id
 	 * @param mediaSource - the song id
@@ -1985,7 +1967,6 @@ export default {
 
 	/**
 	 * Removes song from station queue
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
 	 * @param {string} mediaSource - the media source
@@ -2034,7 +2015,6 @@ export default {
 
 	/**
 	 * Gets the queue from a station
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
@@ -2088,7 +2068,6 @@ export default {
 
 	/**
 	 * Reposition a song in station queue
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
 	 * @param {object} song - contains details about the song that is to be repositioned
@@ -2177,7 +2156,6 @@ export default {
 
 	/**
 	 * Autofill a playlist in a station
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
 	 * @param {string} playlistId - the playlist id
@@ -2274,7 +2252,6 @@ export default {
 
 	/**
 	 * Remove autofilled playlist from a station
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
 	 * @param {string} playlistId - the playlist id
@@ -2347,7 +2324,6 @@ export default {
 
 	/**
 	 * Blacklist a playlist in a station
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
 	 * @param {string} playlistId - the playlist id
@@ -2420,7 +2396,6 @@ export default {
 
 	/**
 	 * Remove blacklisted a playlist from a station
-	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
 	 * @param {string} playlistId - the playlist id
@@ -2492,7 +2467,6 @@ export default {
 
 	/**
 	 * Favorites a station
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} stationId - the station to favorite
 	 * @param {Function} cb - gets called with the result
@@ -2566,7 +2540,6 @@ export default {
 
 	/**
 	 * Unfavorites a station
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} stationId - the station to unfavorite
 	 * @param {Function} cb - gets called with the result
@@ -2627,7 +2600,6 @@ export default {
 
 	/**
 	 * Clears every station queue
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -2682,7 +2654,6 @@ export default {
 
 	/**
 	 * Reset a station queue
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - gets called with the result
@@ -2716,7 +2687,6 @@ export default {
 
 	/**
 	 * Gets skip votes for a station
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} stationId - the station id
 	 * @param {string} songId - the song id to get skipvotes for
@@ -2768,7 +2738,6 @@ export default {
 
 	/**
 	 * Add DJ to station
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} stationId - the station id
 	 * @param {string} userId - the dj user id
@@ -2803,7 +2772,6 @@ export default {
 
 	/**
 	 * Remove DJ from station
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} stationId - the station id
 	 * @param {string} userId - the dj user id
@@ -2838,7 +2806,6 @@ export default {
 
 	/**
 	 * Sets the state of the current user session
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} newStationState - the new state
 	 * @param {Function} cb - gets called with the result

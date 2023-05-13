@@ -247,7 +247,6 @@ CacheModule.runJob("SUB", {
 export default {
 	/**
 	 * Gets users, used in the admin users page by the AdvancedTable component
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param page - the page
 	 * @param pageSize - the size per page
@@ -328,7 +327,6 @@ export default {
 
 	/**
 	 * Removes all data held on a user, including their ability to login
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -556,7 +554,6 @@ export default {
 
 	/**
 	 * Removes all data held on a user, including their ability to login, by userId
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} userId - the user id that is going to be banned
 	 * @param {Function} cb - gets called with the result
@@ -782,7 +779,6 @@ export default {
 
 	/**
 	 * Logs user in
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} identifier - the username or email of the user
 	 * @param {string} password - the plaintext of the user
@@ -861,7 +857,6 @@ export default {
 
 	/**
 	 * Registers a new user
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} username - the username for the new user
 	 * @param {string} email - the email for the new user
@@ -1086,7 +1081,6 @@ export default {
 
 	/**
 	 * Logs out a user
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -1137,7 +1131,6 @@ export default {
 
 	/**
 	 * Checks if user's password is correct (e.g. before a sensitive action)
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} password - the password the user entered that we need to validate
 	 * @param {Function} cb - gets called with the result
@@ -1208,7 +1201,6 @@ export default {
 
 	/**
 	 * Checks if user's github access token has expired or not (ie. if their github account is still linked)
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -1266,7 +1258,6 @@ export default {
 
 	/**
 	 * Removes all sessions for a user
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} userId - the id of the user we are trying to delete the sessions of
 	 * @param {Function} cb - gets called with the result
@@ -1352,7 +1343,6 @@ export default {
 
 	/**
 	 * Updates the order of a user's favorite stations
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Array} favoriteStations - array of station ids (with a specific order)
 	 * @param {Function} cb - gets called with the result
@@ -1412,7 +1402,6 @@ export default {
 
 	/**
 	 * Updates the order of a user's playlists
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Array} orderOfPlaylists - array of playlist ids (with a specific order)
 	 * @param {Function} cb - gets called with the result
@@ -1468,7 +1457,6 @@ export default {
 
 	/**
 	 * Updates a user's preferences
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {object} preferences - object containing preferences
 	 * @param {boolean} preferences.nightmode - whether or not the user is using the night mode theme
@@ -1571,7 +1559,6 @@ export default {
 
 	/**
 	 * Retrieves a user's preferences
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -1619,7 +1606,6 @@ export default {
 
 	/**
 	 * Gets user object from ObjectId or username (only a few properties)
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} identifier - the ObjectId or username of the user we are trying to find
 	 * @param {Function} cb - gets called with the result
@@ -1669,7 +1655,6 @@ export default {
 
 	/**
 	 * Gets a list of long jobs, including onprogress events when those long jobs have progress
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -1745,7 +1730,6 @@ export default {
 
 	/**
 	 * Gets a specific long job, including onprogress events when that long job has progress
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} jobId - the if id the long job
 	 * @param {Function} cb - gets called with the result
@@ -1819,7 +1803,6 @@ export default {
 
 	/**
 	 * Removes active long job for a user
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} jobId - array of playlist ids (with a specific order)
 	 * @param {Function} cb - gets called with the result
@@ -1880,7 +1863,6 @@ export default {
 
 	/**
 	 * Gets a user from a userId
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} userId - the userId of the person we are trying to get the username from
 	 * @param {Function} cb - gets called with the result
@@ -1934,7 +1916,6 @@ export default {
 
 	/**
 	 * Gets user info from session
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -2002,7 +1983,6 @@ export default {
 
 	/**
 	 * Updates a user's username
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} updatingUserId - the updating user's id
 	 * @param {string} newUsername - the new username
@@ -2090,7 +2070,6 @@ export default {
 
 	/**
 	 * Updates a user's email
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} updatingUserId - the updating user's id
 	 * @param {string} newEmail - the new email
@@ -2198,7 +2177,6 @@ export default {
 
 	/**
 	 * Updates a user's name
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} updatingUserId - the updating user's id
 	 * @param {string} newBio - the new name
@@ -2268,7 +2246,6 @@ export default {
 
 	/**
 	 * Updates a user's location
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} updatingUserId - the updating user's id
 	 * @param {string} newLocation - the new location
@@ -2344,7 +2321,6 @@ export default {
 
 	/**
 	 * Updates a user's bio
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} updatingUserId - the updating user's id
 	 * @param {string} newBio - the new bio
@@ -2408,7 +2384,6 @@ export default {
 
 	/**
 	 * Updates a user's avatar
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} updatingUserId - the updating user's id
 	 * @param {string} newAvatar - the new avatar object
@@ -2476,7 +2451,6 @@ export default {
 
 	/**
 	 * Updates a user's role
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} updatingUserId - the updating user's id
 	 * @param {string} newRole - the new role
@@ -2549,7 +2523,6 @@ export default {
 
 	/**
 	 * Updates a user's password
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} previousPassword - the previous password
 	 * @param {string} newPassword - the new password
@@ -2626,7 +2599,6 @@ export default {
 
 	/**
 	 * Requests a password for a session
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} email - the email of the user that requests a password reset
 	 * @param {Function} cb - gets called with the result
@@ -2704,7 +2676,6 @@ export default {
 
 	/**
 	 * Verifies a password code
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} code - the password code
 	 * @param {Function} cb - gets called with the result
@@ -2748,7 +2719,6 @@ export default {
 
 	/**
 	 * Adds a password to a user with a code
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} code - the password code
 	 * @param {string} newPassword - the new password code
@@ -2833,7 +2803,6 @@ export default {
 
 	/**
 	 * Unlinks password from user
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -2886,7 +2855,6 @@ export default {
 
 	/**
 	 * Unlinks GitHub from user
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -2938,7 +2906,6 @@ export default {
 
 	/**
 	 * Requests a password reset for an email
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} email - the email of the user that requests a password reset
 	 * @param {Function} cb - gets called with the result
@@ -3019,7 +2986,6 @@ export default {
 
 	/**
 	 * Requests a password reset for a a user as an admin
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} email - the email of the user for which the password reset is intended
 	 * @param {Function} cb - gets called with the result
@@ -3097,7 +3063,6 @@ export default {
 
 	/**
 	 * Verifies a reset code
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} code - the password reset code
 	 * @param {Function} cb - gets called with the result
@@ -3136,7 +3101,6 @@ export default {
 
 	/**
 	 * Changes a user's password with a reset code
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} code - the password reset code
 	 * @param {string} newPassword - the new password reset code
@@ -3209,7 +3173,6 @@ export default {
 
 	/**
 	 * Resends the verify email email
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} userId - the user id of the person to resend the email to
 	 * @param {Function} cb - gets called with the result
@@ -3262,7 +3225,6 @@ export default {
 
 	/**
 	 * Bans a user by userId
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} value - the user id that is going to be banned
 	 * @param {string} reason - the reason for the ban
@@ -3367,7 +3329,6 @@ export default {
 
 	/**
 	 * Search for a user by username or name
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} query - the query
 	 * @param {string} page - page

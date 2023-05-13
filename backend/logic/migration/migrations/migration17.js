@@ -4,7 +4,6 @@ import async from "async";
  * Migration 17
  *
  * Migration for songs to add tags property
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

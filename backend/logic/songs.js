@@ -24,7 +24,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Initialises the songs module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async initialize() {
@@ -126,7 +125,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets a song by id from the cache or Mongo, and if it isn't in the cache yet, adds it the cache
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.songId - the id of the song we are trying to get
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -172,7 +170,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets songs by id from Mongo
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.mediaSources - the media sources of the songs we are trying to get
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -305,7 +302,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Create song
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {string} payload.song - the song object
 	 * @param {string} payload.userId - the user id of the person requesting the song
@@ -373,7 +369,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets a song from id from Mongo and updates the cache with it
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {string} payload.songId - the id of the song we are trying to update
 	 * @param {string} payload.oldStatus - old status of song being updated (optional)
@@ -564,7 +559,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets multiple songs from id from Mongo and updates the cache with it
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {Array} payload.songIds - the ids of the songs we are trying to update
 	 * @param {string} payload.oldStatus - old status of song being updated (optional)
@@ -860,7 +854,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Updates all songs
-	 *
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	UPDATE_ALL_SONGS() {
@@ -985,7 +978,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Searches through songs
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.query - the query
 	 * @param {string} payload.includeUnverified - include unverified songs
@@ -1093,7 +1085,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets an array of all genres
-	 *
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_ALL_GENRES() {
@@ -1128,7 +1119,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets an array of all songs with a specific genre
-	 *
 	 * @param {object} payload - returns an object containing the payload
 	 * @param {string} payload.genre - the genre
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -1159,7 +1149,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets a orphaned playlist songs
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_ORPHANED_PLAYLIST_SONGS() {
@@ -1201,7 +1190,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Requests all orphaned playlist songs, adding them to the database
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	REQUEST_ORPHANED_PLAYLIST_SONGS() {
@@ -1308,7 +1296,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets a list of all genres
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_GENRES() {
@@ -1329,7 +1316,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets a list of all artists
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_ARTISTS() {
@@ -1350,7 +1336,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets a list of all tags
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_TAGS() {
@@ -1371,7 +1356,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets a list of all media sources
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ALL_MEDIA_SOURCES() {

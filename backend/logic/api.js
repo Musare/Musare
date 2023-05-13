@@ -23,7 +23,6 @@ class _APIModule extends CoreClass {
 
 	/**
 	 * Initialises the api module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	initialize() {

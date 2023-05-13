@@ -37,7 +37,6 @@ const spotifyTrackObjectToMusareTrackObject = spotifyTrackObject => ({
 class RateLimitter {
 	/**
 	 * Constructor
-	 *
 	 * @param {number} timeBetween - The time between each allowed YouTube request
 	 */
 	constructor(timeBetween) {
@@ -47,7 +46,6 @@ class RateLimitter {
 
 	/**
 	 * Returns a promise that resolves whenever the ratelimit of a YouTube request is done
-	 *
 	 * @returns {Promise} - promise that gets resolved when the rate limit allows it
 	 */
 	continue() {
@@ -75,7 +73,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Initialises the spotify module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async initialize() {
@@ -119,7 +116,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Fetches a Spotify API token from either the cache, or Spotify using the client id and secret from the config
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_API_TOKEN() {
@@ -185,7 +181,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Perform Spotify API get albums request
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {Array} payload.albumIds - the album ids to get
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -215,7 +210,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Perform Spotify API get artists request
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {Array} payload.artistIds - the artist ids to get
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -245,7 +239,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Perform Spotify API get track request
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.trackId - the Spotify track id to get
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -272,7 +265,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Perform Spotify API get playlist request
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the Spotify playlist id to get songs from
 	 * @param {string} payload.nextUrl - the next URL to use
@@ -300,7 +292,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Perform Spotify API call
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.url - request url
 	 * @param {object} payload.params - request parameters
@@ -344,7 +335,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Create Spotify track
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {Array} payload.spotifyTracks - the spotifyTracks
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -403,7 +393,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Create Spotify albums
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {Array} payload.spotifyAlbums - the Spotify albums
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -433,7 +422,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Create Spotify artists
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {Array} payload.spotifyArtists - the Spotify artists
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -463,7 +451,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Gets tracks from media sources
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {Array} payload.mediaSources - the media sources to get tracks from
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -510,7 +497,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Gets albums from Spotify album ids
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {Array} payload.albumIds - the Spotify album ids
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -553,7 +539,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Gets Spotify artists from Spotify artist ids
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {Array} payload.artistIds - the Spotify artist ids
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -596,7 +581,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Get Spotify track
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {string} payload.identifier - the spotify track ObjectId or track id
 	 * @param {boolean} payload.createMissing - attempt to fetch and create track if not in db
@@ -652,7 +636,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Get Spotify album
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {string} payload.identifier - the spotify album ObjectId or track id
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -671,7 +654,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Returns an array of songs taken from a Spotify playlist
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.url - the id of the Spotify playlist
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -767,7 +749,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Tries to get alternative artists sources for a list of Spotify artist ids
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.artistIds - the Spotify artist ids to try and get alternative artist sources for
 	 * @param {boolean} payload.collectAlternativeArtistSourcesOrigins - whether to collect the origin of any alternative artist sources found
@@ -812,7 +793,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Tries to get alternative artist sources for a Spotify artist id
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.artistId - the Spotify artist id to try and get alternative artist sources for
 	 * @param {boolean} payload.collectAlternativeArtistSourcesOrigins - whether to collect the origin of any alternative artist sources found
@@ -858,7 +838,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Tries to get alternative album sources for a list of Spotify album ids
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.albumIds - the Spotify album ids to try and get alternative album sources for
 	 * @param {boolean} payload.collectAlternativeAlbumSourcesOrigins - whether to collect the origin of any alternative album sources found
@@ -903,7 +882,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Tries to get alternative album sources for a Spotify album id
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.albumId - the Spotify album id to try and get alternative album sources for
 	 * @param {boolean} payload.collectAlternativeAlbumSourcesOrigins - whether to collect the origin of any alternative album sources found
@@ -933,7 +911,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Tries to get alternative track sources for a list of Spotify track media sources
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.mediaSources - the Spotify media sources to try and get alternative track sources for
 	 * @param {boolean} payload.collectAlternativeMediaSourcesOrigins - whether to collect the origin of any alternative track sources found
@@ -978,7 +955,6 @@ class _SpotifyModule extends CoreClass {
 
 	/**
 	 * Tries to get alternative track sources for a Spotify track media source
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.mediaSource - the Spotify media source to try and get alternative track sources for
 	 * @param {boolean} payload.collectAlternativeMediaSourcesOrigins - whether to collect the origin of any alternative track sources found

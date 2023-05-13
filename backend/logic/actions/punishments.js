@@ -30,7 +30,6 @@ CacheModule.runJob("SUB", {
 export default {
 	/**
 	 * Gets punishments, used in the admin punishments page by the AdvancedTable component
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param page - the page
 	 * @param pageSize - the size per page
@@ -200,7 +199,6 @@ export default {
 
 	/**
 	 * Gets all punishments for a user
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} userId - the id of the user
 	 * @param {Function} cb - gets called with the result
@@ -231,7 +229,6 @@ export default {
 
 	/**
 	 * Returns a punishment by id
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} punishmentId - the punishment id
 	 * @param {Function} cb - gets called with the result
@@ -256,7 +253,6 @@ export default {
 
 	/**
 	 * Bans an IP address
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} value - the ip address that is going to be banned
 	 * @param {string} reason - the reason for the ban
@@ -357,7 +353,6 @@ export default {
 
 	/**
 	 * Deactivates a punishment
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} punishmentId - the MongoDB id of the punishment
 	 * @param {Function} cb - gets called with the result
