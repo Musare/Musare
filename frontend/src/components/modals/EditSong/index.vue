@@ -732,7 +732,7 @@ const drawCanvas = async () => {
 	const widthCurrentTime = (currentTime / videoDuration) * width;
 
 	const skipDurationColor = "#F42003";
-	const durationColor = "#03A9F4";
+	const durationColor = configStore.primaryColor;
 	const afterDurationColor = "#41E841";
 	const currentDurationColor = "#3b25e8";
 

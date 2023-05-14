@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import Toast from "toasters";
 import { useYoutubePlayer } from "@/composables/useYoutubePlayer";
+import { useConfigStore } from "@/stores/config";
 import { useStationStore } from "@/stores/station";
 
 import aw from "@/aw";
@@ -25,6 +26,7 @@ const {
 	setPlaybackRate: youtubeSetPlaybackRate
 } = useYoutubePlayer();
 
+const configStore = useConfigStore();
 const { updateMediaModalPlayingAudio } = useStationStore();
 
 const interval = ref(null);
@@ -132,7 +134,7 @@ const drawCanvas = () => {
 
 	const widthCurrentTime = (currentTime / videoDuration) * width;
 
-	const durationColor = "#03A9F4";
+	const durationColor = configStore.primaryColor;
 	const afterDurationColor = "#41E841";
 	const currentDurationColor = "#3b25e8";
 

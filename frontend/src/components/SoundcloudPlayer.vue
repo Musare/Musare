@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import Toast from "toasters";
 import { useSoundcloudPlayer } from "@/composables/useSoundcloudPlayer";
+import { useConfigStore } from "@/stores/config";
 import { useStationStore } from "@/stores/station";
 
 import aw from "@/aw";
@@ -33,6 +34,7 @@ const {
 	soundcloudUnload
 } = useSoundcloudPlayer();
 
+const configStore = useConfigStore();
 const stationStore = useStationStore();
 const { updateMediaModalPlayingAudio } = stationStore;
 
@@ -169,7 +171,7 @@ const drawCanvas = () => {
 
 	const widthCurrentTime = (currentTime / videoDuration) * width;
 
-	const durationColor = "#03A9F4";
+	const durationColor = configStore.primaryColor;
 	const afterDurationColor = "#41E841";
 	const currentDurationColor = "#3b25e8";
 
