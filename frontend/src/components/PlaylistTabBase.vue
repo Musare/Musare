@@ -39,8 +39,6 @@ const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
 const userPreferencesStore = useUserPreferencesStore();
 
-const { autoSkipDisliked } = storeToRefs(userPreferencesStore);
-
 const tab = ref("current");
 const search = reactive({
 	query: "",
@@ -65,8 +63,10 @@ const {
 } = useSortablePlaylists();
 
 const { experimental } = storeToRefs(configStore);
+const { autoSkipDisliked } = storeToRefs(userPreferencesStore);
 
-const { autoRequest, history, songsList } = storeToRefs(stationStore);
+const { autoRequest, autorequestExcludedMediaSources } =
+	storeToRefs(stationStore);
 
 const manageStationStore = useManageStationStore({
 	modalUuid: props.modalUuid
@@ -98,59 +98,11 @@ const blacklist = computed({
 	}
 });
 
-const dislikedPlaylist = computed(() =>
-	playlists.value.find(playlist => playlist.type === "user-disliked")
-);
-
 const resultsLeftCount = computed(() => search.count - search.results.length);
 
 const nextPageResultsCount = computed(() =>
 	Math.min(search.pageSize, resultsLeftCount.value)
 );
-
-// List of media sources that will not be allowed to be autorequested
-const excludedMediaSources = computed(() => {
-	const mediaSources = new Set();
-
-	// Exclude the current song
-	if (station.value.currentSong)
-		mediaSources.add(station.value.currentSong.mediaSource);
-
-	// Exclude songs in the queue
-	if (songsList.value) {
-		songsList.value.forEach(song => {
-			mediaSources.add(song.mediaSource);
-		});
-	}
-
-	// If auto skip disliked preference is enabled, exclude all songs in the disliked playlist
-	if (autoSkipDisliked.value && dislikedPlaylist.value) {
-		dislikedPlaylist.value.songs.forEach(song => {
-			mediaSources.add(song.mediaSource);
-		});
-	}
-
-	// If no history exists, just stop here
-	if (!history.value) Array.from(mediaSources);
-
-	const {
-		autorequestDisallowRecentlyPlayedEnabled,
-		autorequestDisallowRecentlyPlayedNumber
-	} = station.value.requests;
-
-	// If the station is set to disallow recently played songs, and station history is enabled, exclude the last X history songs
-	if (
-		autorequestDisallowRecentlyPlayedEnabled &&
-		experimental.value.station_history
-	) {
-		history.value.forEach((historyItem, index) => {
-			if (index < autorequestDisallowRecentlyPlayedNumber)
-				mediaSources.add(historyItem.payload.song.mediaSource);
-		});
-	}
-
-	return Array.from(mediaSources);
-});
 
 const totalUniqueAutorequestableMediaSources = computed<string[]>(() => {
 	if (!autoRequest.value) return [];
@@ -167,7 +119,7 @@ const totalUniqueAutorequestableMediaSources = computed<string[]>(() => {
 });
 
 const actuallyAutorequestingMediaSources = computed(() => {
-	const excluded = excludedMediaSources.value;
+	const excluded = autorequestExcludedMediaSources.value;
 	const remaining = totalUniqueAutorequestableMediaSources.value.filter(
 		mediaSource => {
 			if (excluded.indexOf(mediaSource) !== -1) return false;
@@ -880,6 +832,10 @@ onMounted(() => {
 					autorequested. Spotify
 					<span v-if="!experimental.soundcloud">and SoundCloud</span>
 					songs will also not be autorequested.
+					<span v-if="autoSkipDisliked"
+						>Disliked songs will also not be autorequested due to
+						your preferences.</span
+					>
 
 					<br />
 					<br />

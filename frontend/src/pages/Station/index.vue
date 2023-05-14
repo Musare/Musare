@@ -142,7 +142,7 @@ const {
 	noSong,
 	autoRequest,
 	autoRequestLock,
-	history
+	autorequestExcludedMediaSources
 } = storeToRefs(stationStore);
 
 const youtubePlayerState = ref<
@@ -261,16 +261,6 @@ const {
 // const stopVideo = payload =>
 // 	store.dispatch("modals/editSong/stopVideo", payload);
 
-const recentlyPlayedYoutubeIds = (max: number) => {
-	const mediaSources = new Set();
-
-	history.value.forEach((historyItem, index) => {
-		if (index < max) mediaSources.add(historyItem.payload.song.mediaSource);
-	});
-
-	return Array.from(mediaSources);
-};
-
 const updateMediaSessionData = song => {
 	if (song) {
 		ms.setMediaSessionData(
@@ -285,13 +275,8 @@ const updateMediaSessionData = song => {
 	} else ms.removeMediaSessionData(0);
 };
 const autoRequestSong = () => {
-	const {
-		limit,
-		allowAutorequest,
-		autorequestLimit,
-		autorequestDisallowRecentlyPlayedEnabled,
-		autorequestDisallowRecentlyPlayedNumber
-	} = station.value.requests;
+	const { limit, allowAutorequest, autorequestLimit } =
+		station.value.requests;
 
 	if (autoRequestLock.value) return;
 	if (!allowAutorequest) return;
@@ -303,31 +288,16 @@ const autoRequestSong = () => {
 	if (currentUserQueueSongs.value >= autorequestLimit) return;
 	if (songsList.value.length >= 50) return;
 
-	let excludedYoutubeIds = [];
-	if (
-		autorequestDisallowRecentlyPlayedEnabled &&
-		experimental.value.station_history
-	) {
-		excludedYoutubeIds = recentlyPlayedYoutubeIds(
-			autorequestDisallowRecentlyPlayedNumber
-		);
-	}
-
-	if (songsList.value) {
-		songsList.value.forEach(song => {
-			excludedYoutubeIds.push(song.mediaSource);
-		});
-	}
-
-	if (!noSong.value) {
-		excludedYoutubeIds.push(currentSong.value.mediaSource);
-	}
-
 	const uniqueMediaSources = new Set();
 
 	autoRequest.value.forEach(playlist => {
 		playlist.songs.forEach(song => {
-			if (excludedYoutubeIds.indexOf(song.mediaSource) !== -1) return;
+			if (
+				autorequestExcludedMediaSources.value.indexOf(
+					song.mediaSource
+				) !== -1
+			)
+				return;
 			if (song.mediaSource.startsWith("spotify:")) return;
 			if (
 				!experimental.value.soundcloud &&
