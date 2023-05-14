@@ -1,5 +1,30 @@
 # Changelog
 
+## [v3.10.0-rc3] - 2023-05-14
+
+This release includes all changes from v3.10.0-rc1 and v3.10.0-rc2,
+in addition to the following.
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Added
+
+- feat: Finished basic implementation of showing jobs on statistics admin page
+- feat: Exclude disliked songs from being autorequested,
+if "Automatically vote to skip disliked songs" preference is enabled
+
+### Changed
+
+- refactor: Increased playlist displayname max length to 64
+- refactor: Improved song thumbnail fallback logic
+
+### Fixed
+
+- fix: SoundCloud player not destroyed properly
+- fix: getPlayerState is not a function thrown in browser console
+- fix: Activity items `<youtubeId>` payload message not migrated
+- fix: Import playlist from file never finishes
+- fix: Tippy can be null and throw an error in console
+
 ## [v3.10.0-rc2] - 2023-04-30
 
 This release includes all changes from v3.10.0-rc1, in addition to the following.
