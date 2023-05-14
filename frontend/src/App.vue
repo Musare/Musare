@@ -105,6 +105,10 @@ watch(christmas, enabled => {
 });
 
 onMounted(async () => {
+	document.getElementsByTagName(
+		"html"
+	)[0].style.cssText = `--primary-color: ${configStore.primaryColor}`;
+
 	window
 		.matchMedia("(prefers-color-scheme: dark)")
 		.addEventListener("change", e => {
@@ -121,6 +125,10 @@ onMounted(async () => {
 
 	socket.onConnect(() => {
 		socketConnected.value = true;
+
+		document.getElementsByTagName(
+			"html"
+		)[0].style.cssText = `--primary-color: ${configStore.primaryColor}`;
 
 		if (!loggedIn.value) {
 			broadcastChannel.value.user_login = new BroadcastChannel(

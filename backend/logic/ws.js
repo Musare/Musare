@@ -579,6 +579,7 @@ class _WSModule extends CoreClass {
 					messages: config.get("messages"),
 					christmas: config.get("christmas"),
 					footerLinks: config.get("footerLinks"),
+					primaryColor: config.get("primaryColor"),
 					shortcutOverrides: config.get("shortcutOverrides"),
 					registrationDisabled: config.get("registrationDisabled"),
 					mailEnabled: config.get("mail.enabled"),

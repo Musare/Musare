@@ -103,6 +103,7 @@
 		"news": true,
 		"GitHub": "https://github.com/Musare/Musare"
 	},
+	"primaryColor": "#03a9f4",
 	"shortcutOverrides": {},
 	"registrationDisabled": false,
 	"sendDataRequestEmails": true,
