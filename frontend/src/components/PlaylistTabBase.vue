@@ -1016,13 +1016,31 @@ onMounted(() => {
 												'blacklist'
 											)
 										"
-										@click="selectPlaylist(element)"
-										class="material-icons play-icon"
-										:content="`${label(
-											'future',
-											null,
-											true
-										)} songs from this playlist`"
+										:class="{
+											'play-icon':
+												type !== 'autorequest' ||
+												!autoSkipDisliked ||
+												element.type !== 'user-disliked'
+										}"
+										@click="
+											type !== 'autorequest' ||
+											!autoSkipDisliked ||
+											element.type !== 'user-disliked'
+												? selectPlaylist(element)
+												: null
+										"
+										class="material-icons"
+										:content="
+											type !== 'autorequest' ||
+											!autoSkipDisliked ||
+											element.type !== 'user-disliked'
+												? `${label(
+														'future',
+														null,
+														true
+												  )} songs from this playlist`
+												: 'Your preferences are set to skip disliked songs'
+										"
 										v-tippy
 										>play_arrow</i
 									>
