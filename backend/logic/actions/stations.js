@@ -1854,12 +1854,26 @@ export default {
 								type,
 								privacy: "private",
 								owner: session.userId,
-								queue: [],
-								currentSong: null
+								queue: []
 							},
 							next
 						);
 					}
+				},
+
+				// This extra step is needed because Mongoose decides to create an object with empty arrays for currentSong for some reason
+				(station, next) => {
+					stationModel.updateOne(
+						{ _id: station._id },
+						{
+							$set: {
+								currentSong: null
+							}
+						},
+						err => {
+							next(err, station);
+						}
+					);
 				}
 			],
 			async (err, station) => {
