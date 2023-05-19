@@ -1854,7 +1854,8 @@ export default {
 								type,
 								privacy: "private",
 								owner: session.userId,
-								queue: []
+								queue: [],
+								currentSong: null
 							},
 							next
 						);
