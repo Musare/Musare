@@ -134,7 +134,6 @@ For more information on configuration files please refer to the
 | `mongo.port` | MongoDB port. |
 | `mongo.database` | MongoDB database name. |
 | `blacklistedCommunityStationNames` | Array of blacklisted community station names. |
-| `featuredPlaylists` | Array of featured playlist id's. Playlist privacy must be public. |
 | `messages.accountRemoval` | Message to display to users when they request their account to be removed. |
 | `siteSettings.christmas` | Whether to enable christmas theme. |
 | `footerLinks` | Add custom links to footer by specifying `"title": "url"`, e.g. `"GitHub": "https://github.com/Musare/Musare"`. You can disable about, team and news links (but not the pages themselves) by setting them to false, e.g. `"about": false`. |

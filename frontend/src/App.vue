@@ -2070,6 +2070,7 @@ h4.section-title {
 		border-radius: 34px;
 
 		&.disabled {
+			filter: grayscale(1);
 			cursor: not-allowed;
 		}
 	}

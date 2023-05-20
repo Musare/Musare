@@ -9,4 +9,5 @@ export interface Playlist {
 	createdFor: string;
 	privacy: string;
 	type: string;
+	featured: boolean;
 }

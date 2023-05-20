@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
-import { onBeforeUnmount, onMounted, watch } from "vue";
+import { ref, onBeforeUnmount, onMounted, watch } from "vue";
 import validation from "@/validation";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
@@ -24,6 +24,8 @@ const { playlist } = storeToRefs(editPlaylistStore);
 
 const { preventCloseUnsaved } = useModalsStore();
 
+const featured = ref(playlist.value.featured);
+
 const isOwner = () =>
 	loggedIn.value && userId.value === playlist.value.createdBy;
 
@@ -34,7 +36,9 @@ const isEditable = permission =>
 		playlist.value.type === "admin") &&
 		(isOwner() || hasPermission(permission))) ||
 	(playlist.value.type === "genre" &&
-		permission === "playlists.update.privacy" &&
+		["playlists.update.privacy", "playlists.update.featured"].includes(
+			permission
+		) &&
 		hasPermission(permission));
 
 const {
@@ -100,6 +104,7 @@ const {
 				values.privacy,
 				res => {
 					playlist.value.privacy = values.privacy;
+					if (values.privacy !== "public") featured.value = false;
 					if (res.status === "success") {
 						resolve();
 						new Toast(res.message);
@@ -117,11 +122,28 @@ const {
 	}
 );
 
+const toggleFeatured = () => {
+	if (playlist.value.privacy !== "public") return;
+	featured.value = !featured.value;
+	socket.dispatch(
+		"playlists.updateFeatured",
+		playlist.value._id,
+		featured.value,
+		res => {
+			playlist.value.featured = featured.value;
+			new Toast(res.message);
+		}
+	);
+};
+
 watch(playlist, (value, oldValue) => {
 	if (value.displayName !== oldValue.displayName)
 		setDisplayName({ displayName: value.displayName });
-	if (value.privacy !== oldValue.privacy)
+	if (value.privacy !== oldValue.privacy) {
 		setPrivacy({ privacy: value.privacy });
+		if (value.privacy !== "public") featured.value = false;
+	}
+	if (value.featured !== oldValue.featured) featured.value = value.featured;
 });
 
 onMounted(() => {
@@ -187,10 +209,41 @@ onBeforeUnmount(() => {
 				</p>
 			</div>
 		</div>
+
+		<div
+			v-if="isEditable('playlists.update.featured')"
+			class="control is-expanded checkbox-control"
+		>
+			<label class="switch">
+				<input
+					type="checkbox"
+					id="featured"
+					:checked="featured"
+					@click="toggleFeatured"
+					:disabled="playlist.privacy !== 'public'"
+				/>
+				<span
+					v-if="playlist.privacy === 'public'"
+					class="slider round"
+				></span>
+				<span
+					v-else
+					class="slider round disabled"
+					content="Only public playlists can be featured"
+					v-tippy
+				></span>
+			</label>
+
+			<label class="label" for="featured">Featured Playlist</label>
+		</div>
 	</div>
 </template>
 
 <style lang="less" scoped>
+.checkbox-control label.label {
+	margin-left: 10px;
+}
+
 @media screen and (max-width: 1300px) {
 	.section {
 		max-width: 100% !important;

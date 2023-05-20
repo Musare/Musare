@@ -42,7 +42,17 @@ class _PlaylistsModule extends CoreClass {
 			cb: async data => {
 				PlaylistsModule.playlistModel.findOne(
 					{ _id: data.playlistId },
-					["_id", "displayName", "type", "privacy", "songs", "createdBy", "createdAt", "createdFor"],
+					[
+						"_id",
+						"displayName",
+						"type",
+						"privacy",
+						"songs",
+						"createdBy",
+						"createdAt",
+						"createdFor",
+						"featured"
+					],
 					(err, playlist) => {
 						const newPlaylist = {
 							...playlist._doc,

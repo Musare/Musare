@@ -56,6 +56,12 @@ const columns = ref<TableColumn[]>([
 		sortProperty: "privacy"
 	},
 	{
+		name: "featured",
+		displayName: "Featured",
+		properties: ["featured"],
+		sortProperty: "featured"
+	},
+	{
 		name: "songsCount",
 		displayName: "Songs #",
 		properties: ["songsCount"],
@@ -142,6 +148,13 @@ const filters = ref<TableFilter[]>([
 			["public", "Public"],
 			["private", "Private"]
 		]
+	},
+	{
+		name: "featured",
+		displayName: "Featured",
+		property: "featured",
+		filterTypes: ["boolean"],
+		defaultFilterType: "boolean"
 	},
 	{
 		name: "songsCount",
@@ -303,6 +316,11 @@ const create = () => {
 			<template #column-privacy="slotProps">
 				<span :title="slotProps.item.privacy">{{
 					slotProps.item.privacy
+				}}</span>
+			</template>
+			<template #column-featured="slotProps">
+				<span :title="slotProps.item.featured">{{
+					slotProps.item.featured
 				}}</span>
 			</template>
 			<template #column-songsCount="slotProps">
