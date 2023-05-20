@@ -766,13 +766,20 @@ export default {
 	/**
 	 * Fetch 3 featured playlists at random
 	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {boolean} includeUser - whether to include user playlists
 	 * @param {Function} cb - gets called with the result
 	 */
-	indexFeaturedPlaylists: isLoginRequired(async function indexMyPlaylists(session, cb) {
+	indexFeaturedPlaylists: isLoginRequired(async function indexMyPlaylists(session, includeUser, cb) {
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
+		const types = ["genre", "admin"];
+		if (includeUser) types.push("user", "user-liked", "user-disliked");
+
 		playlistModel
-			.aggregate([{ $match: { featured: true } }, { $sample: { size: 3 } }])
+			.aggregate([
+				{ $match: { featured: true, privacy: "public", type: { $in: types } } },
+				{ $sample: { size: 3 } }
+			])
 			.exec(async (err, playlists) => {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
