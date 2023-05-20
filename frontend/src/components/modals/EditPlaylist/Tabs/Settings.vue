@@ -29,17 +29,22 @@ const featured = ref(playlist.value.featured);
 const isOwner = () =>
 	loggedIn.value && userId.value === playlist.value.createdBy;
 
-const isEditable = permission =>
-	((playlist.value.type === "user" ||
-		playlist.value.type === "user-liked" ||
-		playlist.value.type === "user-disliked" ||
-		playlist.value.type === "admin") &&
-		(isOwner() || hasPermission(permission))) ||
-	(playlist.value.type === "genre" &&
-		["playlists.update.privacy", "playlists.update.featured"].includes(
-			permission
-		) &&
-		hasPermission(permission));
+const isEditable = permission => {
+	if (permission === "playlists.update.featured")
+		return playlist.value.type !== "station" && hasPermission(permission);
+	if (
+		["user", "user-liked", "user-disliked", "admin"].includes(
+			playlist.value.type
+		)
+	)
+		return isOwner() || hasPermission(permission);
+	if (
+		playlist.value.type === "genre" &&
+		permission === "playlists.update.privacy"
+	)
+		return hasPermission(permission);
+	return false;
+};
 
 const {
 	inputs: displayNameInputs,
