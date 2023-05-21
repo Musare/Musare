@@ -133,7 +133,7 @@ export default class DataModule extends BaseModule {
 	private async loadModels() {
 		this.models = {
 			abc: await this.loadModel("abc"),
-			//			station: await this.loadModel("station")
+			news: await this.loadModel("news"),
 			station: await this.loadModel("station")
 		};
 	}
