@@ -6,7 +6,7 @@ let pingTries = 0;
 let uuid = null;
 let enabled = false;
 
-let lastTimeSentVideoDate = 0;
+let lastTimeSentMediaDate = 0;
 let lastTimeDenied = 0;
 let lastTimeCompetitor = 0;
 
@@ -18,13 +18,13 @@ const notConnectedToast = new Toast({
 
 notConnectedToast.hide();
 
-const sendingVideoDataToast = new Toast({
-	content: "Sending video data to ActivityWatch.",
+const sendingMediaDataToast = new Toast({
+	content: "Sending media data to ActivityWatch.",
 	persistent: true,
 	interactable: false
 });
 
-sendingVideoDataToast.hide();
+sendingMediaDataToast.hide();
 
 const deniedToast = new Toast({
 	content:
@@ -45,11 +45,17 @@ const competitorToast = new Toast({
 competitorToast.hide();
 
 export default {
-	sendVideoData(videoData) {
+	sendMediaData(mediaData) {
 		if (enabled) {
-			lastTimeSentVideoDate = Date.now();
-			this.sendEvent("videoData", videoData);
+			if (!gotPong) return false;
+			if (lastTimeDenied + 1000 > Date.now()) return false;
+			if (lastTimeCompetitor + 1000 > Date.now()) return false;
+
+			lastTimeSentMediaDate = Date.now();
+			this.sendEvent("videoData", mediaData);
 		}
+
+		return true;
 	},
 
 	sendEvent(type, data) {
@@ -97,11 +103,11 @@ export default {
 				if (
 					!(lastTimeDenied + 1000 > Date.now()) &&
 					!(lastTimeCompetitor + 1000 > Date.now()) &&
-					lastTimeSentVideoDate + 1000 > Date.now()
+					lastTimeSentMediaDate + 1000 > Date.now()
 				) {
-					sendingVideoDataToast.show();
+					sendingMediaDataToast.show();
 				} else {
-					sendingVideoDataToast.hide();
+					sendingMediaDataToast.hide();
 				}
 			}, 1000);
 		}

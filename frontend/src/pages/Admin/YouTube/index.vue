@@ -131,8 +131,8 @@ const events = ref<TableEvents>({
 	}
 });
 const charts = ref({
-	quotaUsage: {},
-	apiRequests: {}
+	quotaUsage: null,
+	apiRequests: null
 });
 const jobs = ref([
 	{

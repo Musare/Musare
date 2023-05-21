@@ -14,6 +14,8 @@ const SongsModule = moduleManager.modules.songs;
 const CacheModule = moduleManager.modules.cache;
 const PlaylistsModule = moduleManager.modules.playlists;
 const YouTubeModule = moduleManager.modules.youtube;
+const SoundcloudModule = moduleManager.modules.soundcloud;
+const SpotifyModule = moduleManager.modules.spotify;
 const ActivitiesModule = moduleManager.modules.activities;
 const MediaModule = moduleManager.modules.media;
 
@@ -125,7 +127,7 @@ CacheModule.runJob("SUB", {
 					socket.dispatch("event:playlist.song.removed", {
 						data: {
 							playlistId: res.playlistId,
-							youtubeId: res.youtubeId
+							mediaSource: res.mediaSource
 						}
 					});
 				});
@@ -139,7 +141,7 @@ CacheModule.runJob("SUB", {
 						{
 							data: {
 								playlistId: res.playlistId,
-								youtubeId: res.youtubeId
+								mediaSource: res.mediaSource
 							}
 						}
 					]
@@ -150,7 +152,49 @@ CacheModule.runJob("SUB", {
 			room: "admin.playlists",
 			args: [
 				"event:admin.playlist.song.removed",
-				{ data: { playlistId: res.playlistId, youtubeId: res.youtubeId } }
+				{ data: { playlistId: res.playlistId, mediaSource: res.mediaSource } }
+			]
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "playlist.replaceSong",
+	cb: res => {
+		if (res.createdBy !== "Musare") {
+			WSModule.runJob("SOCKETS_FROM_USER", { userId: res.createdBy }, this).then(sockets => {
+				sockets.forEach(socket => {
+					socket.dispatch("event:playlist.song.replaced", {
+						data: {
+							playlistId: res.playlistId,
+							song: res.song,
+							oldMediaSource: res.oldMediaSource
+						}
+					});
+				});
+			});
+
+			if (res.privacy === "public")
+				WSModule.runJob("EMIT_TO_ROOM", {
+					room: `profile.${res.createdBy}.playlists`,
+					args: [
+						"event:playlist.song.replaced",
+						{
+							data: {
+								playlistId: res.playlistId,
+								song: res.song,
+								oldMediaSource: res.oldMediaSource
+							}
+						}
+					]
+				});
+		}
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: "admin.playlists",
+			args: [
+				"event:admin.playlist.song.replaced",
+				{ data: { playlistId: res.playlistId, song: res.song, oldMediaSource: res.oldMediaSource } }
 			]
 		});
 	}
@@ -453,7 +497,7 @@ export default {
 	 * @param {string} query - the page
 	 * @param {Function} cb - gets called with the result
 	 */
-	searchOfficial: useHasPermission("playlists.get", async function searchOfficial(session, query, page, cb) {
+	searchOfficial: isLoginRequired(async function searchOfficial(session, query, page, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -461,11 +505,16 @@ export default {
 					else next();
 				},
 
-				next => {
+				next =>
+					hasPermission("playlists.get", session)
+						.then(() => next(null, true))
+						.catch(() => next(null, false)),
+
+				(includePrivate, next) => {
 					PlaylistsModule.runJob("SEARCH", {
 						query,
 						includeGenre: true,
-						includePrivate: true,
+						includePrivate,
 						includeSongs: true,
 						includeAdmin: true,
 						page
@@ -1046,7 +1095,7 @@ export default {
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are targeting
 	 * @param {object} song - the song to be repositioned
-	 * @param {string} song.youtubeId - the youtube id of the song being repositioned
+	 * @param {string} song.mediaSource - the media source of the song being repositioned
 	 * @param {string} song.newIndex - the new position of the song in the playlist
 	 * @param {...any} song.args - any other elements that would be included with a song item in a playlist
 	 * @param {Function} cb - gets called with the result
@@ -1058,7 +1107,7 @@ export default {
 			[
 				next => {
 					if (!playlistId) return next("Please provide a playlist.");
-					if (!song || !song.youtubeId) return next("You must provide a song to reposition.");
+					if (!song || !song.mediaSource) return next("You must provide a song to reposition.");
 					return next();
 				},
 
@@ -1079,7 +1128,7 @@ export default {
 				next => {
 					playlistModel.updateOne(
 						{ _id: playlistId },
-						{ $pull: { songs: { youtubeId: song.youtubeId } } },
+						{ $pull: { songs: { mediaSource: song.mediaSource } } },
 						next
 					);
 				},
@@ -1107,7 +1156,7 @@ export default {
 					this.log(
 						"ERROR",
 						"PLAYLIST_REPOSITION_SONG",
-						`Repositioning song ${song.youtubeId}  for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						`Repositioning song ${song.mediaSource}  for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 
 					return cb({ status: "error", message: err });
@@ -1116,7 +1165,7 @@ export default {
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_REPOSITION_SONG",
-					`Successfully repositioned song ${song.youtubeId} for private playlist "${playlistId}" for user "${session.userId}".`
+					`Successfully repositioned song ${song.mediaSource} for private playlist "${playlistId}" for user "${session.userId}".`
 				);
 
 				CacheModule.runJob("PUB", {
@@ -1141,11 +1190,11 @@ export default {
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {boolean} isSet - is the song part of a set of songs to be added
-	 * @param {string} youtubeId - the youtube id of the song we are trying to add
+	 * @param {string} mediaSource - the media source of the song we are trying to add
 	 * @param {string} playlistId - the id of the playlist we are adding the song to
 	 * @param {Function} cb - gets called with the result
 	 */
-	addSongToPlaylist: isLoginRequired(async function addSongToPlaylist(session, isSet, youtubeId, playlistId, cb) {
+	addSongToPlaylist: isLoginRequired(async function addSongToPlaylist(session, isSet, mediaSource, playlistId, cb) {
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
 		async.waterfall(
@@ -1164,25 +1213,39 @@ export default {
 				},
 
 				(playlist, next) => {
+					MediaModule.runJob("GET_MEDIA", { mediaSource }, this)
+						.then(res =>
+							next(null, playlist, {
+								_id: res.song._id,
+								title: res.song.title,
+								thumbnail: res.song.thumbnail,
+								artists: res.song.artists,
+								mediaSource: res.song.mediaSource
+							})
+						)
+						.catch(next);
+				},
+
+				(playlist, song, next) => {
 					if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
 						const oppositeType = playlist.type === "user-liked" ? "user-disliked" : "user-liked";
 						const oppositePlaylistName = oppositeType === "user-liked" ? "Liked Songs" : "Disliked Songs";
 						playlistModel.count(
-							{ type: oppositeType, createdBy: session.userId, "songs.youtubeId": youtubeId },
+							{ type: oppositeType, createdBy: session.userId, "songs.mediaSource": song.mediaSource },
 							(err, results) => {
 								if (err) next(err);
 								else if (results > 0)
 									next(
 										`That song is already in your ${oppositePlaylistName} playlist. A song cannot be in both the Liked Songs playlist and the Disliked Songs playlist at the same time.`
 									);
-								else next();
+								else next(null, song);
 							}
 						);
-					} else next();
+					} else next(null, song);
 				},
 
-				next => {
-					PlaylistsModule.runJob("ADD_SONG_TO_PLAYLIST", { playlistId, youtubeId }, this)
+				(_song, next) => {
+					PlaylistsModule.runJob("ADD_SONG_TO_PLAYLIST", { playlistId, mediaSource: _song.mediaSource }, this)
 						.then(res => {
 							const { playlist, song, ratings } = res;
 							next(null, playlist, song, ratings);
@@ -1196,7 +1259,7 @@ export default {
 					this.log(
 						"ERROR",
 						"PLAYLIST_ADD_SONG",
-						`Adding song "${youtubeId}" to private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						`Adding song "${mediaSource}" to private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -1204,7 +1267,7 @@ export default {
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_ADD_SONG",
-					`Successfully added song "${youtubeId}" to private playlist "${playlistId}" for user "${session.userId}".`
+					`Successfully added song "${mediaSource}" to private playlist "${playlistId}" for user "${session.userId}".`
 				);
 
 				if (!isSet && playlist.type === "user" && playlist.privacy === "public") {
@@ -1216,10 +1279,10 @@ export default {
 						userId: session.userId,
 						type: "playlist__add_song",
 						payload: {
-							message: `Added <youtubeId>${songName}</youtubeId> to playlist <playlistId>${playlist.displayName}</playlistId>`,
+							message: `Added <mediaSource>${songName}</mediaSource> to playlist <playlistId>${playlist.displayName}</playlistId>`,
 							thumbnail: newSong.thumbnail,
 							playlistId,
-							youtubeId
+							mediaSource
 						}
 					});
 				}
@@ -1240,7 +1303,7 @@ export default {
 				});
 
 				if (ratings && (playlist.type === "user-liked" || playlist.type === "user-disliked")) {
-					const { _id, youtubeId, title, artists, thumbnail } = newSong;
+					const { _id, mediaSource, title, artists, thumbnail } = newSong;
 					const { likes, dislikes } = ratings;
 
 					if (_id) SongsModule.runJob("UPDATE_SONG", { songId: _id });
@@ -1249,7 +1312,7 @@ export default {
 						CacheModule.runJob("PUB", {
 							channel: "ratings.like",
 							value: JSON.stringify({
-								youtubeId,
+								mediaSource,
 								userId: session.userId,
 								likes,
 								dislikes
@@ -1260,8 +1323,8 @@ export default {
 							userId: session.userId,
 							type: "song__like",
 							payload: {
-								message: `Liked song <youtubeId>${title} by ${artists.join(", ")}</youtubeId>`,
-								youtubeId,
+								message: `Liked song <mediaSource>${title} by ${artists.join(", ")}</mediaSource>`,
+								mediaSource,
 								thumbnail
 							}
 						});
@@ -1269,7 +1332,7 @@ export default {
 						CacheModule.runJob("PUB", {
 							channel: "ratings.dislike",
 							value: JSON.stringify({
-								youtubeId,
+								mediaSource,
 								userId: session.userId,
 								likes,
 								dislikes
@@ -1280,8 +1343,10 @@ export default {
 							userId: session.userId,
 							type: "song__dislike",
 							payload: {
-								message: `Disliked song <youtubeId>${title} by ${artists.join(", ")}</youtubeId>`,
-								youtubeId,
+								message: `Disliked song <mediaSource>${title} by ${artists.join(
+									mediaSource
+								)}</mediaSource>`,
+								mediaSource,
 								thumbnail
 							}
 						});
@@ -1298,156 +1363,255 @@ export default {
 	}),
 
 	/**
+	 * Replaces a song in a playlist with another song, used to replace Spotify songs with playable songs
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} oldMediaSource - the media source of the song to be removed
+	 * @param {string} newMediaSource - the media source of the song to be added
+	 * @param {string} playlistId - the playlist to replace the song in
+	 * @param {Function} cb - gets called with the result
+	 */
+	replaceSongInPlaylist: isLoginRequired(async function replaceSongInPlaylist(
+		session,
+		oldMediaSource,
+		newMediaSource,
+		playlistId,
+		cb
+	) {
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+						.then(playlist => {
+							if (!playlist) return next("Playlist not found.");
+							if (playlist.createdBy !== session.userId)
+								return hasPermission("playlists.songs.add", session)
+									.then(() => next(null, playlist))
+									.catch(() => next("Invalid permissions."));
+							return next(null, playlist);
+						})
+						.catch(next);
+				},
+
+				(playlist, next) => {
+					MediaModule.runJob("GET_MEDIA", { mediaSource: newMediaSource }, this)
+						.then(res =>
+							next(null, playlist, {
+								_id: res.song._id,
+								title: res.song.title,
+								thumbnail: res.song.thumbnail,
+								artists: res.song.artists,
+								mediaSource: res.song.mediaSource
+							})
+						)
+						.catch(next);
+				},
+
+				(playlist, song, next) => {
+					if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
+						const oppositeType = playlist.type === "user-liked" ? "user-disliked" : "user-liked";
+						const oppositePlaylistName = oppositeType === "user-liked" ? "Liked Songs" : "Disliked Songs";
+						playlistModel.count(
+							{ type: oppositeType, createdBy: session.userId, "songs.mediaSource": song.mediaSource },
+							(err, results) => {
+								if (err) next(err);
+								else if (results > 0)
+									next(
+										`That song is already in your ${oppositePlaylistName} playlist. A song cannot be in both the Liked Songs playlist and the Disliked Songs playlist at the same time.`
+									);
+								else next(null, song);
+							}
+						);
+					} else next(null, song);
+				},
+
+				(_song, next) => {
+					PlaylistsModule.runJob(
+						"REPLACE_SONG_IN_PLAYLIST",
+						{ playlistId, oldMediaSource, newMediaSource },
+						this
+					)
+						.then(res => {
+							const { playlist, song } = res;
+							next(null, playlist, song);
+						})
+						.catch(next);
+				}
+			],
+			async (err, playlist, newSong) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"PLAYLIST_ADD_SONG",
+						`Replacing song "${oldMediaSource}" with "${newMediaSource}" in private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_ADD_SONG",
+					`Successfully replaced song "${oldMediaSource}" with "${newMediaSource}" in private playlist "${playlistId}" for user "${session.userId}".`
+				);
+
+				// NOTE: we may want to publish an activity event here
+
+				CacheModule.runJob("PUB", {
+					channel: "playlist.replaceSong",
+					value: {
+						playlistId: playlist._id,
+						song: newSong,
+						oldMediaSource,
+						createdBy: playlist.createdBy,
+						privacy: playlist.privacy
+					}
+				});
+
+				CacheModule.runJob("PUB", {
+					channel: "playlist.updated",
+					value: { playlistId }
+				});
+
+				return cb({
+					status: "success",
+					message: "Song has been successfully replaced in the playlist",
+					data: { songs: playlist.songs }
+				});
+			}
+		);
+	}),
+
+	/**
 	 * Adds songs to a playlist
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are adding the songs to
-	 * @param {Array} youtubeIds - the YouTube ids of the songs we are trying to add
+	 * @param {Array} mediaSources - the media sources of the songs we are trying to add
 	 * @param {Function} cb - gets called with the result
 	 */
-	addSongsToPlaylist: useHasPermission(
-		"playlists.songs.add",
-		async function addSongsToPlaylist(session, playlistId, youtubeIds, cb) {
-			const successful = [];
-			const existing = [];
-			const failed = {};
-			const errors = {};
-			const lastYoutubeId = "none";
+	addSongsToPlaylist: isLoginRequired(async function addSongsToPlaylist(session, playlistId, mediaSources, cb) {
+		const successful = [];
+		const existing = [];
+		const failed = {};
+		const errors = {};
+		const lastYoutubeId = "none";
+		const songsAdded = [];
 
-			const addError = message => {
-				if (!errors[message]) errors[message] = 1;
-				else errors[message] += 1;
-			};
+		const addError = message => {
+			if (!errors[message]) errors[message] = 1;
+			else errors[message] += 1;
+		};
 
-			this.keepLongJob();
-			this.publishProgress({
-				status: "started",
-				title: "Bulk add songs to playlist",
-				message: "Adding songs to playlist.",
-				id: this.toString()
-			});
-			await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
-			await CacheModule.runJob(
-				"PUB",
-				{
-					channel: "longJob.added",
-					value: { jobId: this.toString(), userId: session.userId }
+		async.waterfall(
+			[
+				next => {
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+						.then(playlist => {
+							if (!playlist) return next("Playlist not found.");
+							if (playlist.createdBy !== session.userId)
+								return hasPermission("playlists.songs.add", session)
+									.then(() => next())
+									.catch(() => next("Invalid permissions."));
+							return next();
+						})
+						.catch(next);
 				},
-				this
-			);
 
-			async.waterfall(
-				[
-					next => {
-						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
-							.then(playlist => {
-								if (!playlist) return next("Playlist not found.");
-								return next(null, playlist);
-							})
-							.catch(next);
-					},
-
-					(playlist, next) => {
-						if (playlist.type !== "admin") return next("Playlist must be of type admin.");
-						return next();
-					},
-
-					next => {
-						async.eachLimit(
-							youtubeIds,
-							1,
-							(youtubeId, next) => {
-								this.publishProgress({ status: "update", message: `Adding song "${youtubeId}"` });
-								PlaylistsModule.runJob("ADD_SONG_TO_PLAYLIST", { playlistId, youtubeId }, this)
-									.then(() => {
-										successful.push(youtubeId);
-										next();
-									})
-									.catch(async err => {
-										err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-										if (err === "That song is already in the playlist.") {
-											existing.push(youtubeId);
-											next();
-										} else {
-											addError(err);
-											failed[youtubeId] = err;
-											next();
-										}
-									});
-							},
-							err => {
-								if (err) next(err);
-								else next();
-							}
-						);
-					},
-
-					next => {
-						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
-							.then(playlist => {
-								if (!playlist) return next("Playlist not found.");
-								return next(null, playlist);
-							})
-							.catch(next);
-					}
-				],
-				async (err, playlist) => {
-					if (err) {
-						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-						this.log(
-							"ERROR",
-							"PLAYLIST_ADD_SONGS",
-							`Adding songs to playlist "${playlistId}" failed for user "${
-								session.userId
-							}". "${err}". Stats: successful:${successful.length}, existing:${existing.length}, failed:${
-								Object.keys(failed).length
-							}, last youtubeId:${lastYoutubeId}, youtubeIds length:${
-								youtubeIds ? youtubeIds.length : null
-							}`
-						);
-						return cb({
-							status: "error",
-							message: err,
-							data: {
-								stats: {
-									successful,
-									existing,
-									failed,
-									errors
-								}
-							}
-						});
-					}
-
-					this.log(
-						"SUCCESS",
-						"PLAYLIST_ADD_SONGS",
-						`Successfully added songs to playlist "${playlistId}" for user "${
-							session.userId
-						}". Stats: successful:${successful.length}, existing:${existing.length}, failed:${
-							Object.keys(failed).length
-						}, youtubeIds length:${youtubeIds ? youtubeIds.length : null}`
-					);
-
-					CacheModule.runJob("PUB", {
-						channel: "playlist.updated",
-						value: { playlistId }
-					});
-
-					const message = `Done adding songs. Succesful: ${successful.length}, failed: ${
-						Object.keys(failed).length
-					}, existing: ${existing.length}.`;
-
+				next => {
+					this.keepLongJob();
 					this.publishProgress({
-						status: "success",
-						message
+						status: "started",
+						title: "Bulk add songs to playlist",
+						message: "Adding songs to playlist.",
+						id: this.toString()
 					});
+					CacheModule.runJob(
+						"RPUSH",
+						{
+							key: `longJobs.${session.userId}`,
+							value: this.toString()
+						},
+						this
+					)
+						.then(() => {
+							CacheModule.runJob(
+								"PUB",
+								{
+									channel: "longJob.added",
+									value: {
+										jobId: this.toString(),
+										userId: session.userId
+									}
+								},
+								this
+							)
+								.then(() => next())
+								.catch(next);
+						})
+						.catch(next);
+				},
 
+				next => {
+					async.eachLimit(
+						mediaSources,
+						1,
+						(mediaSource, next) => {
+							this.publishProgress({ status: "update", message: `Adding song "${mediaSource}"` });
+							PlaylistsModule.runJob("ADD_SONG_TO_PLAYLIST", { playlistId, mediaSource }, this)
+								.then(({ song }) => {
+									successful.push(mediaSource);
+									songsAdded.push(song);
+									next();
+								})
+								.catch(async err => {
+									err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+									if (err === "That song is already in the playlist.") {
+										existing.push(mediaSource);
+										next();
+									} else {
+										addError(err);
+										failed[mediaSource] = err;
+										next();
+									}
+								});
+						},
+						err => {
+							if (err) next(err);
+							else next();
+						}
+					);
+				},
+
+				next => {
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+						.then(playlist => {
+							if (!playlist) return next("Playlist not found.");
+							return next(null, playlist);
+						})
+						.catch(next);
+				}
+			],
+			async (err, playlist) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"PLAYLIST_ADD_SONGS",
+						`Adding songs to playlist "${playlistId}" failed for user "${
+							session.userId
+						}". "${err}". Stats: successful:${successful.length}, existing:${existing.length}, failed:${
+							Object.keys(failed).length
+						}, last mediaSource:${lastYoutubeId}, mediaSources length:${
+							mediaSources ? mediaSources.length : null
+						}`
+					);
 					return cb({
-						status: "success",
-						message,
+						status: "error",
+						message: err,
 						data: {
-							songs: playlist.songs,
 							stats: {
 								successful,
 								existing,
@@ -1457,21 +1621,74 @@ export default {
 						}
 					});
 				}
-			);
-		}
-	),
+
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_ADD_SONGS",
+					`Successfully added songs to playlist "${playlistId}" for user "${
+						session.userId
+					}". Stats: successful:${successful.length}, existing:${existing.length}, failed:${
+						Object.keys(failed).length
+					}, mediaSources length:${mediaSources ? mediaSources.length : null}`
+				);
+
+				await async.eachLimit(songsAdded, 1, (song, next) => {
+					CacheModule.runJob("PUB", {
+						channel: "playlist.addSong",
+						value: {
+							playlistId: playlist._id,
+							song,
+							createdBy: playlist.createdBy,
+							privacy: playlist.privacy
+						}
+					});
+					next();
+				});
+
+				CacheModule.runJob("PUB", {
+					channel: "playlist.updated",
+					value: { playlistId }
+				});
+
+				// NOTE: we may want to publish an activity event here
+
+				const message = `Done adding songs. Succesful: ${successful.length}, failed: ${
+					Object.keys(failed).length
+				}, existing: ${existing.length}.`;
+
+				this.publishProgress({
+					status: "success",
+					message
+				});
+
+				return cb({
+					status: "success",
+					message,
+					data: {
+						songs: playlist.songs,
+						stats: {
+							successful,
+							existing,
+							failed,
+							errors
+						}
+					}
+				});
+			}
+		);
+	}),
 
 	/**
 	 * Removes songs from a playlist
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are removing the songs from
-	 * @param {Array} youtubeIds - the YouTube ids of the songs we are trying to remove
+	 * @param {Array} mediaSources - the media sources of the songs we are trying to remove
 	 * @param {Function} cb - gets called with the result
 	 */
 	removeSongsFromPlaylist: useHasPermission(
 		"playlists.songs.remove",
-		async function removeSongsFromPlaylist(session, playlistId, youtubeIds, cb) {
+		async function removeSongsFromPlaylist(session, playlistId, mediaSources, cb) {
 			const successful = [];
 			const notInPlaylist = [];
 			const failed = {};
@@ -1518,23 +1735,23 @@ export default {
 
 					next => {
 						async.eachLimit(
-							youtubeIds,
+							mediaSources,
 							1,
-							(youtubeId, next) => {
-								this.publishProgress({ status: "update", message: `Removing song "${youtubeId}"` });
-								PlaylistsModule.runJob("REMOVE_FROM_PLAYLIST", { playlistId, youtubeId }, this)
+							(mediaSource, next) => {
+								this.publishProgress({ status: "update", message: `Removing song "${mediaSource}"` });
+								PlaylistsModule.runJob("REMOVE_FROM_PLAYLIST", { playlistId, mediaSource }, this)
 									.then(() => {
-										successful.push(youtubeId);
+										successful.push(mediaSource);
 										next();
 									})
 									.catch(async err => {
 										err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 										if (err === "That song is not currently in the playlist.") {
-											notInPlaylist.push(youtubeId);
+											notInPlaylist.push(mediaSource);
 											next();
 										} else {
 											addError(err);
-											failed[youtubeId] = err;
+											failed[mediaSource] = err;
 											next();
 										}
 									});
@@ -1567,8 +1784,8 @@ export default {
 								notInPlaylist.length
 							}, failed:${
 								Object.keys(failed).length
-							}, last youtubeId:${lastYoutubeId}, youtubeIds length:${
-								youtubeIds ? youtubeIds.length : null
+							}, last mediaSource:${lastYoutubeId}, mediaSources length:${
+								mediaSources ? mediaSources.length : null
 							}`
 						);
 						return cb({
@@ -1592,7 +1809,7 @@ export default {
 							session.userId
 						}". Stats: successful:${successful.length}, notInPlaylist:${notInPlaylist.length}, failed:${
 							Object.keys(failed).length
-						}, youtubeIds length:${youtubeIds ? youtubeIds.length : null}`
+						}, mediaSources length:${mediaSources ? mediaSources.length : null}`
 					);
 
 					CacheModule.runJob("PUB", {
@@ -1628,7 +1845,7 @@ export default {
 	),
 
 	/**
-	 * Adds a set of songs to a private playlist
+	 * Adds a set of songs to a user playlist
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} url - the url of the the YouTube playlist
@@ -1636,7 +1853,13 @@ export default {
 	 * @param {boolean} musicOnly - whether to only add music to the playlist
 	 * @param {Function} cb - gets called with the result
 	 */
-	addSetToPlaylist: isLoginRequired(async function addSetToPlaylist(session, url, playlistId, musicOnly, cb) {
+	addYoutubeSetToPlaylist: isLoginRequired(async function addYoutubeSetToPlaylist(
+		session,
+		url,
+		playlistId,
+		musicOnly,
+		cb
+	) {
 		let videosInPlaylistTotal = 0;
 		let songsInPlaylistTotal = 0;
 		let addSongsStats = null;
@@ -1679,7 +1902,7 @@ export default {
 
 					if (playlistRegex.exec(url) || channelRegex.exec(url))
 						YouTubeModule.runJob(
-							playlistRegex.exec(url) ? "GET_PLAYLIST" : "GET_CHANNEL",
+							playlistRegex.exec(url) ? "GET_PLAYLIST" : "GET_CHANNEL_VIDEOS",
 							{
 								url,
 								musicOnly,
@@ -1709,24 +1932,26 @@ export default {
 
 					if (youtubeIds.length === 0) next();
 
+					const mediaSources = youtubeIds.map(youtubeId => `youtube:${youtubeId}`);
+
 					async.eachLimit(
-						youtubeIds,
+						mediaSources,
 						1,
-						(youtubeId, next) => {
+						(mediaSource, next) => {
 							WSModule.runJob(
 								"RUN_ACTION2",
 								{
 									session,
 									namespace: "playlists",
 									action: "addSongToPlaylist",
-									args: [true, youtubeId, playlistId]
+									args: [true, mediaSource, playlistId]
 								},
 								this
 							)
 								.then(res => {
 									if (res.status === "success") {
 										successful += 1;
-										addedSongs.push(youtubeId);
+										addedSongs.push(mediaSource);
 									} else failed += 1;
 									if (res.message === "That song is already in the playlist") alreadyInPlaylist += 1;
 									else if (
@@ -1831,19 +2056,410 @@ export default {
 	}),
 
 	/**
+	 * Adds a set of Soundcloud songs to a private playlist
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} url - the url of the the SoundCloud playlist
+	 * @param {string} playlistId - the id of the playlist we are adding the set of songs to
+	 * @param {Function} cb - gets called with the result
+	 */
+	addSoundcloudSetToPlaylist: isLoginRequired(async function addSoundcloudSetToPlaylist(
+		session,
+		url,
+		playlistId,
+		cb
+	) {
+		if (!config.get("experimental.soundcloud"))
+			return cb({ status: "error", message: "SoundCloud is not enabled" });
+
+		let songsInPlaylistTotal = 0;
+		let addSongsStats = null;
+
+		const addedSongs = [];
+
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Import SoundCloud playlist",
+			message: "Importing SoundCloud playlist.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
+		return async.waterfall(
+			[
+				next => {
+					DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
+						userModel.findOne({ _id: session.userId }, (err, user) => {
+							if (user && user.role === "admin") return next(null, true);
+							return next(null, false);
+						});
+					});
+				},
+
+				(isAdmin, next) => {
+					this.publishProgress({ status: "update", message: `Importing SoundCloud playlist (stage 1)` });
+					SoundcloudModule.runJob(
+						"GET_PLAYLIST",
+						{
+							url
+						},
+						this
+					)
+						.then(res => {
+							songsInPlaylistTotal = res.songs.length;
+							const mediaSources = res.songs.map(song => `soundcloud:${song}`);
+							next(null, mediaSources);
+						})
+						.catch(next);
+				},
+				(mediaSources, next) => {
+					this.publishProgress({ status: "update", message: `Importing SoundCloud playlist (stage 2)` });
+					let successful = 0;
+					let failed = 0;
+					let alreadyInPlaylist = 0;
+					let alreadyInLikedPlaylist = 0;
+					let alreadyInDislikedPlaylist = 0;
+
+					if (mediaSources.length === 0) next();
+
+					async.eachLimit(
+						mediaSources,
+						1,
+						(mediaSource, next) => {
+							WSModule.runJob(
+								"RUN_ACTION2",
+								{
+									session,
+									namespace: "playlists",
+									action: "addSongToPlaylist",
+									args: [true, mediaSource, playlistId]
+								},
+								this
+							)
+								.then(res => {
+									if (res.status === "success") {
+										successful += 1;
+										addedSongs.push(mediaSource);
+									} else failed += 1;
+									if (res.message === "That song is already in the playlist") alreadyInPlaylist += 1;
+									else if (
+										res.message ===
+										"That song is already in your Liked Songs playlist. " +
+											"A song cannot be in both the Liked Songs playlist" +
+											" and the Disliked Songs playlist at the same time."
+									)
+										alreadyInLikedPlaylist += 1;
+									else if (
+										res.message ===
+										"That song is already in your Disliked Songs playlist. " +
+											"A song cannot be in both the Liked Songs playlist " +
+											"and the Disliked Songs playlist at the same time."
+									)
+										alreadyInDislikedPlaylist += 1;
+								})
+								.catch(() => {
+									failed += 1;
+								})
+								.finally(() => next());
+						},
+						() => {
+							addSongsStats = {
+								successful,
+								failed,
+								alreadyInPlaylist,
+								alreadyInLikedPlaylist,
+								alreadyInDislikedPlaylist
+							};
+							next(null);
+						}
+					);
+				},
+
+				next => {
+					this.publishProgress({ status: "update", message: `Importing SoundCloud playlist (stage 3)` });
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+						.then(playlist => next(null, playlist))
+						.catch(next);
+				},
+
+				(playlist, next) => {
+					this.publishProgress({ status: "update", message: `Importing SoundCloud playlist (stage 4)` });
+					if (!playlist) return next("Playlist not found.");
+					if (playlist.createdBy !== session.userId)
+						return hasPermission("playlists.songs.add", session)
+							.then(() => next(null, playlist))
+							.catch(() => next("Invalid permissions."));
+					return next(null, playlist);
+				}
+			],
+			async (err, playlist) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"PLAYLIST_IMPORT",
+						`Importing a SoundCloud playlist to private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+					);
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
+					return cb({ status: "error", message: err });
+				}
+
+				if (playlist.privacy === "public")
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
+						userId: session.userId,
+						type: "playlist__import_playlist",
+						payload: {
+							message: `Imported ${addSongsStats.successful} songs to playlist <playlistId>${playlist.displayName}</playlistId>`,
+							playlistId
+						}
+					});
+
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_IMPORT",
+					`Successfully imported a SoundCloud playlist to private playlist "${playlistId}" for user "${session.userId}". Songs in playlist: ${songsInPlaylistTotal}, songs successfully added: ${addSongsStats.successful}, songs failed: ${addSongsStats.failed}, already in playlist: ${addSongsStats.alreadyInPlaylist}, already in liked ${addSongsStats.alreadyInLikedPlaylist}, already in disliked ${addSongsStats.alreadyInDislikedPlaylist}.`
+				);
+				this.publishProgress({
+					status: "success",
+					message: `Playlist has been imported. ${addSongsStats.successful} were added successfully, ${addSongsStats.failed} failed (${addSongsStats.alreadyInPlaylist} were already in the playlist)`
+				});
+				return cb({
+					status: "success",
+					message: `Playlist has been imported. ${addSongsStats.successful} were added successfully, ${addSongsStats.failed} failed (${addSongsStats.alreadyInPlaylist} were already in the playlist)`,
+					data: {
+						songs: playlist.songs,
+						stats: {
+							songsInPlaylistTotal,
+							alreadyInLikedPlaylist: addSongsStats.alreadyInLikedPlaylist,
+							alreadyInDislikedPlaylist: addSongsStats.alreadyInDislikedPlaylist
+						}
+					}
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Adds a set of Spotify songs to a private playlist
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} url - the url of the the Spotify playlist
+	 * @param {string} playlistId - the id of the playlist we are adding the set of songs to
+	 * @param {Function} cb - gets called with the result
+	 */
+	addSpotifySetToPlaylist: isLoginRequired(async function addSpotifySetToPlaylist(session, url, playlistId, cb) {
+		if (!config.get("experimental.spotify")) return cb({ status: "error", message: "Spotify is not enabled" });
+
+		let songsInPlaylistTotal = 0;
+		let addSongsStats = null;
+
+		const addedSongs = [];
+
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Import Spotify playlist",
+			message: "Importing Spotify playlist.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
+		return async.waterfall(
+			[
+				next => {
+					DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
+						userModel.findOne({ _id: session.userId }, (err, user) => {
+							if (user && user.role === "admin") return next(null, true);
+							return next(null, false);
+						});
+					});
+				},
+
+				(isAdmin, next) => {
+					this.publishProgress({ status: "update", message: `Importing Spotify playlist (stage 1)` });
+					SpotifyModule.runJob(
+						"GET_PLAYLIST",
+						{
+							url
+						},
+						this
+					)
+						.then(res => {
+							songsInPlaylistTotal = res.songs.length;
+							const mediaSources = res.songs.map(song => `spotify:${song}`);
+							next(null, mediaSources);
+						})
+						.catch(next);
+				},
+				(mediaSources, next) => {
+					this.publishProgress({ status: "update", message: `Importing Spotify playlist (stage 2)` });
+					let successful = 0;
+					let failed = 0;
+					let alreadyInPlaylist = 0;
+					let alreadyInLikedPlaylist = 0;
+					let alreadyInDislikedPlaylist = 0;
+
+					if (mediaSources.length === 0) next();
+
+					async.eachLimit(
+						mediaSources,
+						1,
+						(mediaSource, next) => {
+							WSModule.runJob(
+								"RUN_ACTION2",
+								{
+									session,
+									namespace: "playlists",
+									action: "addSongToPlaylist",
+									args: [true, mediaSource, playlistId]
+								},
+								this
+							)
+								.then(res => {
+									if (res.status === "success") {
+										successful += 1;
+										addedSongs.push(mediaSource);
+									} else failed += 1;
+									if (res.message === "That song is already in the playlist") alreadyInPlaylist += 1;
+									else if (
+										res.message ===
+										"That song is already in your Liked Songs playlist. " +
+											"A song cannot be in both the Liked Songs playlist" +
+											" and the Disliked Songs playlist at the same time."
+									)
+										alreadyInLikedPlaylist += 1;
+									else if (
+										res.message ===
+										"That song is already in your Disliked Songs playlist. " +
+											"A song cannot be in both the Liked Songs playlist " +
+											"and the Disliked Songs playlist at the same time."
+									)
+										alreadyInDislikedPlaylist += 1;
+								})
+								.catch(() => {
+									failed += 1;
+								})
+								.finally(() => next());
+						},
+						() => {
+							addSongsStats = {
+								successful,
+								failed,
+								alreadyInPlaylist,
+								alreadyInLikedPlaylist,
+								alreadyInDislikedPlaylist
+							};
+							next(null);
+						}
+					);
+				},
+
+				next => {
+					this.publishProgress({ status: "update", message: `Importing Spotify playlist (stage 3)` });
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+						.then(playlist => next(null, playlist))
+						.catch(next);
+				},
+
+				(playlist, next) => {
+					this.publishProgress({ status: "update", message: `Importing Spotify playlist (stage 4)` });
+					if (!playlist) return next("Playlist not found.");
+					if (playlist.createdBy !== session.userId)
+						return hasPermission("playlists.songs.add", session)
+							.then(() => next(null, playlist))
+							.catch(() => next("Invalid permissions."));
+					return next(null, playlist);
+				}
+			],
+			async (err, playlist) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"PLAYLIST_IMPORT",
+						`Importing a Spotify playlist to private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+					);
+					this.publishProgress({
+						status: "error",
+						message: err
+					});
+					return cb({ status: "error", message: err });
+				}
+
+				if (playlist.privacy === "public")
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
+						userId: session.userId,
+						type: "playlist__import_playlist",
+						payload: {
+							message: `Imported ${addSongsStats.successful} songs to playlist <playlistId>${playlist.displayName}</playlistId>`,
+							playlistId
+						}
+					});
+
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_IMPORT",
+					`Successfully imported a Spotify playlist to private playlist "${playlistId}" for user "${session.userId}". Songs in playlist: ${songsInPlaylistTotal}, songs successfully added: ${addSongsStats.successful}, songs failed: ${addSongsStats.failed}, already in playlist: ${addSongsStats.alreadyInPlaylist}, already in liked ${addSongsStats.alreadyInLikedPlaylist}, already in disliked ${addSongsStats.alreadyInDislikedPlaylist}.`
+				);
+				this.publishProgress({
+					status: "success",
+					message: `Playlist has been imported. ${addSongsStats.successful} were added successfully, ${addSongsStats.failed} failed (${addSongsStats.alreadyInPlaylist} were already in the playlist)`
+				});
+				return cb({
+					status: "success",
+					message: `Playlist has been imported. ${addSongsStats.successful} were added successfully, ${addSongsStats.failed} failed (${addSongsStats.alreadyInPlaylist} were already in the playlist)`,
+					data: {
+						songs: playlist.songs,
+						stats: {
+							songsInPlaylistTotal,
+							alreadyInLikedPlaylist: addSongsStats.alreadyInLikedPlaylist,
+							alreadyInDislikedPlaylist: addSongsStats.alreadyInDislikedPlaylist
+						}
+					}
+				});
+			}
+		);
+	}),
+
+	/**
 	 * Removes a song from a private playlist
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} youtubeId - the youtube id of the song we are removing from the private playlist
+	 * @param {string} mediaSource - the media source of the song we are removing from the private playlist
 	 * @param {string} playlistId - the id of the playlist we are removing the song from
 	 * @param {Function} cb - gets called with the result
 	 */
-	removeSongFromPlaylist: isLoginRequired(async function removeSongFromPlaylist(session, youtubeId, playlistId, cb) {
+	removeSongFromPlaylist: isLoginRequired(async function removeSongFromPlaylist(
+		session,
+		mediaSource,
+		playlistId,
+		cb
+	) {
 		async.waterfall(
 			[
 				next => {
-					if (!youtubeId || typeof youtubeId !== "string") return next("Invalid song id.");
-					if (!playlistId || typeof youtubeId !== "string") return next("Invalid playlist id.");
+					if (!mediaSource || typeof mediaSource !== "string") return next("Invalid song id.");
+					if (!playlistId || typeof mediaSource !== "string") return next("Invalid playlist id.");
 					return next();
 				},
 
@@ -1861,21 +2477,24 @@ export default {
 				},
 
 				(playlist, next) => {
-					MediaModule.runJob("GET_MEDIA", { youtubeId }, this)
-						.then(res =>
-							next(null, playlist, {
-								_id: res.song._id,
-								title: res.song.title,
-								thumbnail: res.song.thumbnail,
-								artists: res.song.artists,
-								youtubeId: res.song.youtubeId
-							})
-						)
-						.catch(next);
+					let normalizedSong = null;
+
+					const song = playlist.songs.find(song => song.mediaSource === mediaSource);
+					if (song) {
+						normalizedSong = {
+							_id: song._id,
+							title: song.title,
+							thumbnail: song.thumbnail,
+							artists: song.artists,
+							mediaSource: song.mediaSource
+						};
+					}
+
+					next(null, playlist, normalizedSong);
 				},
 
 				(playlist, newSong, next) => {
-					PlaylistsModule.runJob("REMOVE_FROM_PLAYLIST", { playlistId, youtubeId }, this)
+					PlaylistsModule.runJob("REMOVE_FROM_PLAYLIST", { playlistId, mediaSource }, this)
 						.then(res => {
 							const { ratings } = res;
 							next(null, playlist, newSong, ratings);
@@ -1892,10 +2511,10 @@ export default {
 							userId: session.userId,
 							type: "playlist__remove_song",
 							payload: {
-								message: `Removed <youtubeId>${songName}</youtubeId> from playlist <playlistId>${playlist.displayName}</playlistId>`,
+								message: `Removed <mediaSource>${songName}</mediaSource> from playlist <playlistId>${playlist.displayName}</playlistId>`,
 								thumbnail,
 								playlistId,
-								youtubeId: newSong.youtubeId
+								mediaSource: newSong.mediaSource
 							}
 						});
 					}
@@ -1909,7 +2528,7 @@ export default {
 							CacheModule.runJob("PUB", {
 								channel: "ratings.unlike",
 								value: JSON.stringify({
-									youtubeId: newSong.youtubeId,
+									mediaSource: newSong.mediaSource,
 									userId: session.userId,
 									likes,
 									dislikes
@@ -1920,10 +2539,10 @@ export default {
 								userId: session.userId,
 								type: "song__unlike",
 								payload: {
-									message: `Removed <youtubeId>${title} by ${artists.join(
+									message: `Removed <mediaSource>${title} by ${artists.join(
 										", "
-									)}</youtubeId> from your Liked Songs`,
-									youtubeId: newSong.youtubeId,
+									)}</mediaSource> from your Liked Songs`,
+									mediaSource: newSong.mediaSource,
 									thumbnail
 								}
 							});
@@ -1931,7 +2550,7 @@ export default {
 							CacheModule.runJob("PUB", {
 								channel: "ratings.undislike",
 								value: JSON.stringify({
-									youtubeId: newSong.youtubeId,
+									mediaSource: newSong.mediaSource,
 									userId: session.userId,
 									likes,
 									dislikes
@@ -1942,10 +2561,10 @@ export default {
 								userId: session.userId,
 								type: "song__undislike",
 								payload: {
-									message: `Removed <youtubeId>${title} by ${artists.join(
+									message: `Removed <mediaSource>${title} by ${artists.join(
 										", "
-									)}</youtubeId> from your Disliked Songs`,
-									youtubeId: newSong.youtubeId,
+									)}</mediaSource> from your Disliked Songs`,
+									mediaSource: newSong.mediaSource,
 									thumbnail
 								}
 							});
@@ -1961,7 +2580,7 @@ export default {
 					this.log(
 						"ERROR",
 						"PLAYLIST_REMOVE_SONG",
-						`Removing song "${youtubeId}" from private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						`Removing song "${mediaSource}" from private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -1969,14 +2588,14 @@ export default {
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_REMOVE_SONG",
-					`Successfully removed song "${youtubeId}" from private playlist "${playlistId}" for user "${session.userId}".`
+					`Successfully removed song "${mediaSource}" from private playlist "${playlistId}" for user "${session.userId}".`
 				);
 
 				CacheModule.runJob("PUB", {
 					channel: "playlist.removeSong",
 					value: {
 						playlistId: playlist._id,
-						youtubeId,
+						mediaSource,
 						createdBy: playlist.createdBy,
 						privacy: playlist.privacy
 					}

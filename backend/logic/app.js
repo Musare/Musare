@@ -42,8 +42,8 @@ class _AppModule extends CoreClass {
 			UtilsModule = this.moduleManager.modules.utils;
 
 			const app = (this.app = express());
-			const SIDname = config.get("cookie.SIDname");
-			this.server = http.createServer(app).listen(config.get("serverPort"));
+			const SIDname = config.get("cookie");
+			this.server = http.createServer(app).listen(config.get("port"));
 
 			app.use(cookieParser());
 
@@ -57,7 +57,11 @@ class _AppModule extends CoreClass {
 				})
 				.catch(console.error);
 
-			const corsOptions = { ...config.get("cors"), credentials: true };
+			const appUrl = `${config.get("url.secure") ? "https" : "http"}://${config.get("url.host")}`;
+
+			const corsOptions = JSON.parse(JSON.stringify(config.get("cors")));
+			corsOptions.origin.push(appUrl);
+			corsOptions.credentials = true;
 
 			app.use(cors(corsOptions));
 			app.options("*", cors(corsOptions));
@@ -67,7 +71,7 @@ class _AppModule extends CoreClass {
 			 * @param {string} err - custom error message
 			 */
 			function redirectOnErr(res, err) {
-				res.redirect(`${config.get("domain")}?err=${encodeURIComponent(err)}`);
+				res.redirect(`${appUrl}?err=${encodeURIComponent(err)}`);
 			}
 
 			if (config.get("apis.github.enabled")) {
@@ -80,7 +84,10 @@ class _AppModule extends CoreClass {
 					null
 				);
 
-				const redirectUri = `${config.get("apis.github.redirect_uri")}`;
+				const redirectUri =
+					config.get("apis.github.redirect_uri").length > 0
+						? config.get("apis.github.redirect_uri")
+						: `${appUrl}/backend/auth/github/authorize/callback`;
 
 				app.get("/auth/github/authorize", async (req, res) => {
 					if (this.getStatus() !== "READY") {
@@ -94,7 +101,7 @@ class _AppModule extends CoreClass {
 
 					const params = [
 						`client_id=${config.get("apis.github.client")}`,
-						`redirect_uri=${config.get("apis.github.redirect_uri")}`,
+						`redirect_uri=${redirectUri}`,
 						`scope=user:email`
 					].join("&");
 					return res.redirect(`https://github.com/login/oauth/authorize?${params}`);
@@ -112,7 +119,7 @@ class _AppModule extends CoreClass {
 
 					const params = [
 						`client_id=${config.get("apis.github.client")}`,
-						`redirect_uri=${config.get("apis.github.redirect_uri")}`,
+						`redirect_uri=${redirectUri}`,
 						`scope=user:email`,
 						`state=${req.cookies[SIDname]}`
 					].join("&");
@@ -222,7 +229,7 @@ class _AppModule extends CoreClass {
 													value: { userId: user._id }
 												});
 
-												res.redirect(`${config.get("domain")}/settings?tab=security`);
+												res.redirect(`${appUrl}/settings?tab=security`);
 											}
 										],
 										next
@@ -428,9 +435,9 @@ class _AppModule extends CoreClass {
 
 									res.cookie(SIDname, sessionId, {
 										expires: date,
-										secure: config.get("cookie.secure"),
+										secure: config.get("url.secure"),
 										path: "/",
-										domain: config.get("cookie.domain")
+										domain: config.get("url.host")
 									});
 
 									this.log(
@@ -439,7 +446,7 @@ class _AppModule extends CoreClass {
 										`User "${userId}" successfully authorized with GitHub.`
 									);
 
-									res.redirect(`${config.get("domain")}/`);
+									res.redirect(appUrl);
 								})
 								.catch(err => redirectOnErr(res, err.message));
 						}
@@ -502,7 +509,7 @@ class _AppModule extends CoreClass {
 
 						this.log("INFO", "VERIFY_EMAIL", `Successfully verified email.`);
 
-						return res.redirect(`${config.get("domain")}?toast=Thank you for verifying your email`);
+						return res.redirect(`${appUrl}?toast=Thank you for verifying your email`);
 					}
 				);
 			});

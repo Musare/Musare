@@ -1,132 +1,31 @@
 {
-	"mode": "development",
+	"configVersion": 12,
 	"migration": false,
-	"secret": "default",
-	"domain": "http://localhost",
-	"frontendPort": 80,
-	"serverDomain": "http://localhost/backend",
-	"serverPort": 8080,
-	"registrationDisabled": true,
-	"sendDataRequestEmails": true,
+	"secret": "CHANGE_ME",
+	"url": {
+		"host": "my.domain",
+		"secure": true
+	},
 	"apis": {
 		"youtube": {
-			"key": "",
-			"rateLimit": 500,
-			"requestTimeout": 5000,
-			"retryAmount": 2,
-			"quotas": [
-				{
-					"type": "QUERIES_PER_DAY",
-					"title": "Queries Per Day",
-					"limit": 10000
-				},
-				{
-					"type": "QUERIES_PER_MINUTE",
-					"title": "Queries Per Minute",
-					"limit": 1800000
-				},
-				{
-					"type": "QUERIES_PER_100_SECONDS",
-					"title": "Queries Per 100 Seconds",
-					"limit": 3000000
-				}
-			]
-		},
-		"recaptcha": {
-			"secret": "",
-			"enabled": false
-		},
-		"github": {
-			"enabled": false,
-			"client": "",
-			"secret": "",
-			"redirect_uri": ""
+			"key": "CHANGE_ME"
 		},
 		"discogs": {
-			"client": "",
-			"secret": "",
-			"enabled": false
+			"enabled": true,
+			"client": "CHANGE_ME",
+			"secret": "CHANGE_ME"
 		}
-	},
-	"cors": {
-		"origin": [
-			"http://localhost"
-		]
-	},
-	"smtp": {
-		"host": "smtp.mailgun.org",
-		"port": 587,
-		"auth": {
-			"user": "",
-			"pass": ""
-		},
-		"secure": false,
-		"enabled": false
 	},
 	"mail": {
-		"from": "Musare <noreply@localhost>"
-	},
-	"redis": {
-		"url": "redis://redis:6379/0",
-		"password": "PASSWORD"
-	},
-	"mongo": {
-		"url": "mongodb://musare:OTHER_PASSWORD_HERE@mongo:27017/musare"
-	},
-	"cookie": {
-		"domain": "localhost",
-		"secure": false,
-		"SIDname": "SID"
-	},
-	"blacklistedCommunityStationNames": [
-		"musare"
-	],
-	"featuredPlaylists": [],
-	"skipConfigVersionCheck": false,
-	"skipDbDocumentsVersionCheck": false,
-	"debug": {
-		"stationIssue": false,
-		"traceUnhandledPromises": false,
-		"captureJobs": []
-	},
-	"defaultLogging": {
-		"hideType": [
-			"INFO"
-		],
-		"blacklistedTerms": []
-	},
-	"customLoggingPerModule": {
-		// "cache": {
-		//     "hideType": [
-		//     ],
-		//     "blacklistedTerms": []
-		// },
-		"migration": {
-			"hideType": [],
-			"blacklistedTerms": [
-				"Ran job",
-				"Running job",
-				"Queuing job",
-				"Pausing job",
-				"is queued",
-				"is re-queued",
-				"Requeing"
-			]
+		"enabled": true,
+		"smtp": {
+			"host": "smtp.my.domain",
+			"port": 587,
+			"auth": {
+				"user": "CHANGE_ME",
+				"pass": "CHANGE_ME"
+			},
+			"secure": true
 		}
-	},
-	"configVersion": 11,
-	"experimental": {
-		"weight_stations": {
-			"STATION_ID": true,
-			"STATION_ID_2": "alternative_weight"
-		},
-		"queue_autofill_skip_last_x_played": {
-			"STATION_ID": 5,
-			"STATION_ID_2": 10
-		},
-		"queue_add_before_autofilled": [
-			"STATION_ID"
-		],
-		"disable_youtube_search": true
 	}
 }

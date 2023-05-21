@@ -1,3 +1,5 @@
+import { useConfigStore } from "@/stores/config";
+
 const shortcuts = {};
 
 let _shortcuts = [];
@@ -32,13 +34,10 @@ const lib = {
 		shortcuts[name].shift = shortcuts[name].shift
 			? shortcuts[name].shift
 			: false;
-		lofig.get("shortcutOverrides").then(overrides => {
-			if (overrides && overrides[name])
-				shortcuts[name] = Object.assign(
-					shortcuts[name],
-					overrides[name]
-				);
-		});
+		const configStore = useConfigStore();
+		const overrides = configStore.shortcutOverrides;
+		if (overrides && overrides[name])
+			shortcuts[name] = Object.assign(shortcuts[name], overrides[name]);
 		lib.remakeShortcutsArray();
 	},
 

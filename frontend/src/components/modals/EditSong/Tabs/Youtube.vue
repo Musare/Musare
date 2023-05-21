@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { onMounted, ref } from "vue";
 
+import { useConfigStore } from "@/stores/config";
 import { useEditSongStore } from "@/stores/editSong";
 
 import { useSearchYoutube } from "@/composables/useSearchYoutube";
@@ -14,6 +14,8 @@ const props = defineProps({
 	modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
 });
 
+const configStore = useConfigStore();
+const { experimental } = storeToRefs(configStore);
 const editSongStore = useEditSongStore({ modalUuid: props.modalUuid });
 
 const { form, newSong } = storeToRefs(editSongStore);
@@ -22,8 +24,6 @@ const { updateYoutubeId } = editSongStore;
 
 const { youtubeSearch, searchForSongs, loadMoreSongs } = useSearchYoutube();
 const { youtubeDirect, getYoutubeVideoId } = useYoutubeDirect();
-
-const experimentalDisableYoutubeSearch = ref(false);
 
 const selectSong = (youtubeId, result = null) => {
 	updateYoutubeId(youtubeId);
@@ -34,18 +34,6 @@ const selectSong = (youtubeId, result = null) => {
 			thumbnail: result.thumbnail
 		});
 };
-
-onMounted(() => {
-	lofig.get("experimental").then(experimental => {
-		if (
-			experimental &&
-			Object.hasOwn(experimental, "disable_youtube_search") &&
-			experimental.disable_youtube_search
-		) {
-			experimentalDisableYoutubeSearch.value = true;
-		}
-	});
-});
 </script>
 
 <template>
@@ -70,7 +58,7 @@ onMounted(() => {
 			</p>
 		</div>
 
-		<div v-if="!experimentalDisableYoutubeSearch">
+		<div v-if="!experimental.disable_youtube_search">
 			<label class="label"> Search for a song from YouTube </label>
 			<div class="control is-grouped input-with-button">
 				<p class="control is-expanded">
@@ -106,7 +94,13 @@ onMounted(() => {
 					<template #actions>
 						<i
 							class="material-icons icon-selected"
-							v-if="result.id === form.inputs.youtubeId.value"
+							v-if="
+								form.inputs.mediaSource.value.startsWith(
+									'youtube:'
+								) &&
+								result.id ===
+									form.inputs.mediaSource.value.split(':')[1]
+							"
 							key="selected"
 							>radio_button_checked
 						</i>

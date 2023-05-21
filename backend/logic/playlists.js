@@ -160,6 +160,32 @@ class _PlaylistsModule extends CoreClass {
 	}
 
 	/**
+	 * Returns a list of youtube ids in all user playlists of the specified user
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.userId - the user id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_SONG_YOUTUBE_IDS_FROM_USER_PLAYLISTS(payload) {
+		return new Promise((resolve, reject) => {
+			PlaylistsModule.playlistModel.find({ createdBy: payload.userId }, (err, playlists) => {
+				const youtubeIds = new Set();
+
+				if (err) reject(err);
+				else {
+					playlists.forEach(playlist => {
+						playlist.songs.forEach(song => {
+							youtubeIds.add(song.youtubeId);
+						});
+					});
+
+					resolve({ youtubeIds: Array.from(youtubeIds) });
+				}
+			});
+		});
+	}
+
+	/**
 	 * Creates a playlist owned by a user
 	 *
 	 * @param {object} payload - object that contains the payload
@@ -382,12 +408,12 @@ class _PlaylistsModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the playlist id
-	 * @param {string} payload.youtubeId - the youtube id
+	 * @param {string} payload.mediaSource - the media source
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	ADD_SONG_TO_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
-			const { playlistId, youtubeId } = payload;
+			const { playlistId, mediaSource } = payload;
 
 			async.waterfall(
 				[
@@ -401,19 +427,19 @@ class _PlaylistsModule extends CoreClass {
 
 					(playlist, next) => {
 						if (!playlist) return next("Playlist not found.");
-						if (playlist.songs.find(song => song.youtubeId === youtubeId))
+						if (playlist.songs.find(song => song.mediaSource === mediaSource))
 							return next("That song is already in the playlist.");
 						return next();
 					},
 
 					next => {
-						MediaModule.runJob("GET_MEDIA", { youtubeId }, this)
+						MediaModule.runJob("GET_MEDIA", { mediaSource }, this)
 							.then(response => {
 								const { song } = response;
 								const { _id, title, artists, thumbnail, duration, verified } = song;
 								next(null, {
 									_id,
-									youtubeId,
+									mediaSource,
 									title,
 									artists,
 									thumbnail,
@@ -461,7 +487,7 @@ class _PlaylistsModule extends CoreClass {
 					(playlist, newSong, next) => {
 						if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
 							MediaModule.runJob("RECALCULATE_RATINGS", {
-								youtubeId: newSong.youtubeId
+								mediaSource: newSong.mediaSource
 							})
 								.then(ratings => next(null, playlist, newSong, ratings))
 								.catch(next);
@@ -479,16 +505,18 @@ class _PlaylistsModule extends CoreClass {
 	}
 
 	/**
-	 * Remove from playlist
+	 * Replaces a song in a playlist
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the playlist id
-	 * @param {string} payload.youtubeId - the youtube id
-	 * @returns {Promise} - returns a promise (resolve, reject)
+	 * @param {string} payload.newMediaSource - the new media source
+	 * @param {string} payload.oldMediaSource - the old media source
+	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	REMOVE_FROM_PLAYLIST(payload) {
+	REPLACE_SONG_IN_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
-			const { playlistId, youtubeId } = payload;
+			const { playlistId, newMediaSource, oldMediaSource } = payload;
+
 			async.waterfall(
 				[
 					next => {
@@ -501,12 +529,129 @@ class _PlaylistsModule extends CoreClass {
 
 					(playlist, next) => {
 						if (!playlist) return next("Playlist not found.");
-						if (!playlist.songs.find(song => song.youtubeId === youtubeId))
+						if (playlist.songs.find(song => song.mediaSource === newMediaSource))
+							return next("The new song is already in the playlist.");
+						if (!playlist.songs.find(song => song.mediaSource === oldMediaSource))
+							return next("The old song is not in the playlist.");
+						return next();
+					},
+
+					next => {
+						MediaModule.runJob("GET_MEDIA", { mediaSource: newMediaSource }, this)
+							.then(response => {
+								const { song } = response;
+								const { _id, title, artists, thumbnail, duration, verified } = song;
+								next(null, {
+									_id,
+									mediaSource: newMediaSource,
+									title,
+									artists,
+									thumbnail,
+									duration,
+									verified
+								});
+							})
+							.catch(next);
+					},
+
+					(newSong, next) => {
+						PlaylistsModule.playlistModel.updateOne(
+							{ _id: playlistId, "songs.mediaSource": oldMediaSource },
+							{
+								$set: { "songs.$": newSong },
+								$push: { replacements: { oldMediaSource, newMediaSource, replacedAt: new Date() } }
+							},
+							{ runValidators: true },
+							err => {
+								if (err) return next(err);
+								return PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
+									.then(playlist => next(null, playlist, newSong))
+									.catch(next);
+							}
+						);
+					},
+
+					(playlist, newSong, next) => {
+						StationsModule.runJob("GET_STATIONS_THAT_AUTOFILL_OR_BLACKLIST_PLAYLIST", { playlistId })
+							.then(response => {
+								async.each(
+									response.stationIds,
+									(stationId, next) => {
+										PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId })
+											.then()
+											.catch();
+										next();
+									},
+									err => {
+										if (err) next(err);
+										else next(null, playlist, newSong);
+									}
+								);
+							})
+							.catch(next);
+					},
+
+					(playlist, newSong, next) => {
+						if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
+							MediaModule.runJob("RECALCULATE_RATINGS", {
+								mediaSource: newSong.mediaSource
+							})
+								.then(ratings => next(null, playlist, newSong, ratings))
+								.catch(next);
+						} else {
+							next(null, playlist, newSong, null);
+						}
+					},
+
+					(playlist, newSong, newRatings, next) => {
+						if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
+							MediaModule.runJob("RECALCULATE_RATINGS", {
+								mediaSource: oldMediaSource
+							})
+								.then(oldRatings => next(null, playlist, newSong, newRatings, oldRatings))
+								.catch(next);
+						} else {
+							next(null, playlist, newSong, null, null);
+						}
+					}
+				],
+				(err, playlist, song, newRatings, oldRatings) => {
+					if (err) reject(err);
+					else resolve({ playlist, song, newRatings, oldRatings });
+				}
+			);
+		});
+	}
+
+	/**
+	 * Remove from playlist
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.playlistId - the playlist id
+	 * @param {string} payload.mediaSource - the media source
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	REMOVE_FROM_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			const { playlistId, mediaSource } = payload;
+			async.waterfall(
+				[
+					next => {
+						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+							.then(playlist => {
+								next(null, playlist);
+							})
+							.catch(next);
+					},
+
+					(playlist, next) => {
+						if (!playlist) return next("Playlist not found.");
+						if (!playlist.songs.find(song => song.mediaSource === mediaSource))
 							return next("That song is not currently in the playlist.");
 
 						return PlaylistsModule.playlistModel.updateOne(
 							{ _id: playlistId },
-							{ $pull: { songs: { youtubeId } } },
+							{ $pull: { songs: { mediaSource } } },
 							next
 						);
 					},
@@ -539,7 +684,7 @@ class _PlaylistsModule extends CoreClass {
 
 					(playlist, next) => {
 						if (playlist.type === "user-liked" || playlist.type === "user-disliked") {
-							MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
+							MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource })
 								.then(ratings => next(null, playlist, ratings))
 								.catch(next);
 						} else next(null, playlist, null);
@@ -566,18 +711,18 @@ class _PlaylistsModule extends CoreClass {
 	}
 
 	/**
-	 * Deletes a song from a playlist based on the youtube id
+	 * Deletes a song from a playlist based on the media source
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the playlist id
-	 * @param {string} payload.youtubeId - the youtube id
+	 * @param {string} payload.mediaSource - the media source
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	DELETE_SONG_FROM_PLAYLIST_BY_YOUTUBE_ID(payload) {
+	DELETE_SONG_FROM_PLAYLIST_BY_MEDIA_SOURCE_ID(payload) {
 		return new Promise((resolve, reject) => {
 			PlaylistsModule.playlistModel.updateOne(
 				{ _id: payload.playlistId },
-				{ $pull: { songs: { youtubeId: payload.youtubeId } } },
+				{ $pull: { songs: { mediaSource: payload.mediaSource } } },
 				err => {
 					if (err) reject(new Error(err));
 					else {
@@ -640,10 +785,10 @@ class _PlaylistsModule extends CoreClass {
 
 					(playlistId, _songs, next) => {
 						const songs = _songs.map(song => {
-							const { _id, youtubeId, title, artists, thumbnail, duration, verified } = song;
+							const { _id, mediaSource, title, artists, thumbnail, duration, verified } = song;
 							return {
 								_id,
-								youtubeId,
+								mediaSource,
 								title,
 								artists,
 								thumbnail,
@@ -929,17 +1074,17 @@ class _PlaylistsModule extends CoreClass {
 							.flatMap(blacklistedPlaylist => blacklistedPlaylist.songs)
 							.reduce(
 								(items, item) =>
-									items.find(x => x.youtubeId === item.youtubeId) ? [...items] : [...items, item],
+									items.find(x => x.mediaSource === item.mediaSource) ? [...items] : [...items, item],
 								[]
 							);
 						const includedSongs = playlists
 							.flatMap(playlist => playlist.songs)
 							.reduce(
 								(songs, song) =>
-									songs.find(x => x.youtubeId === song.youtubeId) ? [...songs] : [...songs, song],
+									songs.find(x => x.mediaSource === song.mediaSource) ? [...songs] : [...songs, song],
 								[]
 							)
-							.filter(song => !blacklistedSongs.find(x => x.youtubeId === song.youtubeId));
+							.filter(song => !blacklistedSongs.find(x => x.mediaSource === song.mediaSource));
 
 						next(null, station, includedSongs);
 					},
@@ -949,23 +1094,36 @@ class _PlaylistsModule extends CoreClass {
 							{ _id: station.playlist },
 							{ $set: { songs: includedSongs } },
 							err => {
-								next(err, includedSongs);
+								next(err);
 							}
 						);
 					},
 
-					(includedSongs, next) => {
+					next => {
 						PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId: originalPlaylist._id }, this)
 							.then(() => {
-								next(null, includedSongs);
+								next();
 							})
 							.catch(next);
 					},
 
-					(includedSongs, next) => {
-						if (originalPlaylist.songs.length === 0 && includedSongs.length > 0)
-							StationsModule.runJob("SKIP_STATION", { stationId: payload.stationId, natural: false });
-						next();
+					next => {
+						StationsModule.runJob("AUTOFILL_STATION", { stationId: payload.stationId }, this)
+							.then(() => next())
+							.catch(err => {
+								if (err === "Autofill is disabled in this station" || err === "Autofill limit reached")
+									return next();
+								return next(err);
+							});
+					},
+
+					next => {
+						CacheModule.runJob("PUB", {
+							channel: "station.queueUpdate",
+							value: payload.stationId
+						})
+							.then(() => next())
+							.catch(next);
 					}
 				],
 				err => {
@@ -1322,6 +1480,15 @@ class _PlaylistsModule extends CoreClass {
 				}
 			);
 		});
+	}
+
+	/**
+	 * Gets a list of all media sources from playlist songs
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async GET_ALL_MEDIA_SOURCES() {
+		return PlaylistsModule.playlistModel.distinct("songs.mediaSource");
 	}
 }
 

@@ -2,7 +2,9 @@
 import { defineAsyncComponent, ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useConfigStore } from "@/stores/config";
 import { useLongJobsStore } from "@/stores/longJobs";
 import { useModalsStore } from "@/stores/modals";
 import { useUserAuthStore } from "@/stores/userAuth";
@@ -31,6 +33,9 @@ const { setJob } = useLongJobsStore();
 
 const { socket } = useWebsocketsStore();
 
+const configStore = useConfigStore();
+const { experimental } = storeToRefs(configStore);
+
 const { hasPermission } = useUserAuthStore();
 
 const columnDefault = ref<TableColumn>({
@@ -46,7 +51,7 @@ const columns = ref<TableColumn[]>([
 	{
 		name: "options",
 		displayName: "Options",
-		properties: ["_id", "verified", "youtubeId"],
+		properties: ["_id", "verified", "mediaSource"],
 		sortable: false,
 		hidable: false,
 		resizable: false,
@@ -106,10 +111,10 @@ const columns = ref<TableColumn[]>([
 		defaultWidth: 215
 	},
 	{
-		name: "youtubeId",
-		displayName: "YouTube ID",
-		properties: ["youtubeId"],
-		sortProperty: "youtubeId",
+		name: "mediaSource",
+		displayName: "Media source",
+		properties: ["mediaSource"],
+		sortProperty: "mediaSource",
 		minWidth: 120,
 		defaultWidth: 120
 	},
@@ -186,9 +191,9 @@ const filters = ref<TableFilter[]>([
 		defaultFilterType: "exact"
 	},
 	{
-		name: "youtubeId",
-		displayName: "YouTube ID",
-		property: "youtubeId",
+		name: "mediaSource",
+		displayName: "Media source",
+		property: "mediaSource",
 		filterTypes: ["contains", "exact", "regex"],
 		defaultFilterType: "contains"
 	},
@@ -339,7 +344,7 @@ const editMany = selectedRows => {
 	if (selectedRows.length === 1) editOne(selectedRows[0]);
 	else {
 		const songs = selectedRows.map(row => ({
-			youtubeId: row.youtubeId
+			mediaSource: row.mediaSource
 		}));
 		openModal({ modal: "editSong", props: { songs } });
 	}
@@ -410,14 +415,14 @@ const unverifyMany = selectedRows => {
 };
 
 const importAlbum = selectedRows => {
-	const youtubeIds = selectedRows.map(({ youtubeId }) => youtubeId);
-	socket.dispatch("songs.getSongsFromYoutubeIds", youtubeIds, res => {
+	const mediaSources = selectedRows.map(({ mediaSource }) => mediaSource);
+	socket.dispatch("songs.getSongsFromMediaSources", mediaSources, res => {
 		if (res.status === "success") {
 			openModal({
 				modal: "importAlbum",
 				props: { songs: res.data.songs }
 			});
-		}
+		} else new Toast("Could not get media.");
 	});
 };
 
@@ -473,7 +478,7 @@ const bulkEditPlaylist = selectedRows => {
 	openModal({
 		modal: "bulkEditPlaylist",
 		props: {
-			youtubeIds: selectedRows.map(row => row.youtubeId)
+			youtubeIds: selectedRows.map(row => row.mediaSource)
 		}
 	});
 };
@@ -538,13 +543,25 @@ onMounted(() => {
 				</button>
 				<button
 					v-if="
-						hasPermission('songs.create') ||
-						hasPermission('songs.update')
+						(hasPermission('songs.create') ||
+							hasPermission('songs.update')) &&
+						hasPermission('apis.searchDiscogs')
 					"
 					class="button is-primary"
 					@click="openModal('importAlbum')"
 				>
 					Import album
+				</button>
+				<button
+					v-if="
+						experimental.spotify &&
+						(hasPermission('songs.create') ||
+							hasPermission('songs.update'))
+					"
+					class="button is-primary"
+					@click="openModal('importArtist')"
+				>
+					Import artist
 				</button>
 				<run-job-dropdown :jobs="jobs" />
 			</div>
@@ -650,16 +667,22 @@ onMounted(() => {
 					slotProps.item._id
 				}}</span>
 			</template>
-			<template #column-youtubeId="slotProps">
+			<template #column-mediaSource="slotProps">
 				<a
+					v-if="
+						slotProps.item.mediaSource.split(':')[0] === 'youtube'
+					"
 					:href="
 						'https://www.youtube.com/watch?v=' +
-						`${slotProps.item.youtubeId}`
+						`${slotProps.item.mediaSource.split(':')[1]}`
 					"
 					target="_blank"
 				>
-					{{ slotProps.item.youtubeId }}
+					{{ slotProps.item.mediaSource }}
 				</a>
+				<span v-else>
+					{{ slotProps.item.mediaSource }}
+				</span>
 			</template>
 			<template #column-verified="slotProps">
 				<span :title="slotProps.item.verified">{{

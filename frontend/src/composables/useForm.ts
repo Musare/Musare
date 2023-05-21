@@ -115,7 +115,7 @@ export const useForm = (
 			)
 				input.errors.push(`Invalid ${name}. Please provide value`);
 			if (input.validate) {
-				const valid = input.validate(input.value);
+				const valid = input.validate(input.value, inputs);
 				if (valid !== true) {
 					input.errors.push(
 						valid === false ? `Invalid ${name}` : valid

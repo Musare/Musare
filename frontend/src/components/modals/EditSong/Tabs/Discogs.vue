@@ -3,10 +3,9 @@ import { ref, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import Toast from "toasters";
 import keyboardShortcuts from "@/keyboardShortcuts";
-
 import { useEditSongStore } from "@/stores/editSong";
-
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserAuthStore } from "@/stores/userAuth";
 
 const props = defineProps({
 	modalUuid: { type: String, required: true },
@@ -24,6 +23,8 @@ const { socket } = useWebsocketsStore();
 const { form } = storeToRefs(editSongStore);
 
 const { selectDiscogsInfo } = editSongStore;
+
+const { hasPermission } = useUserAuthStore();
 
 const discogs = ref({
 	apiResults: [],
@@ -203,104 +204,113 @@ onMounted(() => {
 			<p class="selected-discogs-info-none">None</p>
 		</div>
 
-		<label class="label"> Search for a song from Discogs </label>
-		<div class="control is-grouped input-with-button">
-			<p class="control is-expanded">
-				<input
-					class="input"
-					type="text"
-					placeholder="Enter your Discogs query here..."
-					ref="discogsInput"
-					v-model="discogsQuery"
-					@keyup.enter="searchDiscogsForPage(1)"
-					@change="onDiscogsQueryChange"
-					v-focus
-				/>
-			</p>
-			<p class="control">
-				<button class="button is-info" @click="searchDiscogsForPage(1)">
-					<i class="material-icons icon-with-button">search</i>Search
-				</button>
-			</p>
-		</div>
-
-		<label class="label" v-if="discogs.apiResults.length > 0"
-			>API results</label
-		>
-		<div class="api-results-container" v-if="discogs.apiResults.length > 0">
-			<div
-				class="api-result"
-				v-for="(result, index) in discogs.apiResults"
-				:key="result.album.id"
-				tabindex="0"
-				@keydown.space.prevent
-				@keyup.enter="toggleAPIResult(index)"
-			>
-				<div class="top-container">
-					<img :src="result.album.albumArt" />
-					<div class="right-container">
-						<p class="album-title">
-							{{ result.album.title }}
-						</p>
-						<div class="bottom-row">
-							<img
-								src="/assets/arrow_up.svg"
-								v-if="result.expanded"
-								@click="toggleAPIResult(index)"
-							/>
-							<img
-								src="/assets/arrow_down.svg"
-								v-if="!result.expanded"
-								@click="toggleAPIResult(index)"
-							/>
-							<p class="type-year">
-								<span>{{ result.album.type }}</span>
-								•
-								<span>{{ result.album.year }}</span>
-							</p>
-						</div>
-					</div>
-				</div>
-				<div class="bottom-container" v-if="result.expanded">
-					<p class="bottom-container-field">
-						Artists:
-						<span>{{ result.album.artists.join(", ") }}</span>
-					</p>
-					<p class="bottom-container-field">
-						Genres:
-						<span>{{ result.album.genres.join(", ") }}</span>
-					</p>
-					<p class="bottom-container-field">
-						Data quality:
-						<span>{{ result.dataQuality }}</span>
-					</p>
-					<div class="tracks">
-						<div
-							class="track"
-							tabindex="0"
-							v-for="(track, trackIndex) in result.tracks"
-							:key="`${track.position}-${track.title}`"
-							@click="selectTrack(index, trackIndex)"
-							@keyup.enter="selectTrack(index, trackIndex)"
-						>
-							<span>{{ track.position }}.</span>
-							<p>{{ track.title }}</p>
-						</div>
-					</div>
-				</div>
+		<template v-if="hasPermission('apis.searchDiscogs')">
+			<label class="label"> Search for a song from Discogs </label>
+			<div class="control is-grouped input-with-button">
+				<p class="control is-expanded">
+					<input
+						class="input"
+						type="text"
+						placeholder="Enter your Discogs query here..."
+						ref="discogsInput"
+						v-model="discogsQuery"
+						@keyup.enter="searchDiscogsForPage(1)"
+						@change="onDiscogsQueryChange"
+						v-focus
+					/>
+				</p>
+				<p class="control">
+					<button
+						class="button is-info"
+						@click="searchDiscogsForPage(1)"
+					>
+						<i class="material-icons icon-with-button">search</i
+						>Search
+					</button>
+				</p>
 			</div>
-			<button
-				v-if="
-					discogs.apiResults.length > 0 &&
-					!discogs.disableLoadMore &&
-					discogs.page < discogs.pages
-				"
-				class="button is-fullwidth is-info discogs-load-more"
-				@click="loadNextDiscogsPage()"
+
+			<label class="label" v-if="discogs.apiResults.length > 0"
+				>API results</label
 			>
-				Load more...
-			</button>
-		</div>
+			<div
+				class="api-results-container"
+				v-if="discogs.apiResults.length > 0"
+			>
+				<div
+					class="api-result"
+					v-for="(result, index) in discogs.apiResults"
+					:key="result.album.id"
+					tabindex="0"
+					@keydown.space.prevent
+					@keyup.enter="toggleAPIResult(index)"
+				>
+					<div class="top-container">
+						<img :src="result.album.albumArt" />
+						<div class="right-container">
+							<p class="album-title">
+								{{ result.album.title }}
+							</p>
+							<div class="bottom-row">
+								<img
+									src="/assets/arrow_up.svg"
+									v-if="result.expanded"
+									@click="toggleAPIResult(index)"
+								/>
+								<img
+									src="/assets/arrow_down.svg"
+									v-if="!result.expanded"
+									@click="toggleAPIResult(index)"
+								/>
+								<p class="type-year">
+									<span>{{ result.album.type }}</span>
+									•
+									<span>{{ result.album.year }}</span>
+								</p>
+							</div>
+						</div>
+					</div>
+					<div class="bottom-container" v-if="result.expanded">
+						<p class="bottom-container-field">
+							Artists:
+							<span>{{ result.album.artists.join(", ") }}</span>
+						</p>
+						<p class="bottom-container-field">
+							Genres:
+							<span>{{ result.album.genres.join(", ") }}</span>
+						</p>
+						<p class="bottom-container-field">
+							Data quality:
+							<span>{{ result.dataQuality }}</span>
+						</p>
+						<div class="tracks">
+							<div
+								class="track"
+								tabindex="0"
+								v-for="(track, trackIndex) in result.tracks"
+								:key="`${track.position}-${track.title}`"
+								@click="selectTrack(index, trackIndex)"
+								@keyup.enter="selectTrack(index, trackIndex)"
+							>
+								<span>{{ track.position }}.</span>
+								<p>{{ track.title }}</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<button
+					v-if="
+						discogs.apiResults.length > 0 &&
+						!discogs.disableLoadMore &&
+						discogs.page < discogs.pages
+					"
+					class="button is-fullwidth is-info discogs-load-more"
+					@click="loadNextDiscogsPage()"
+				>
+					Load more...
+				</button>
+			</div>
+		</template>
 	</div>
 </template>
 

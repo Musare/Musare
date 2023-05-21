@@ -22,6 +22,10 @@ export interface Station {
 		enabled: boolean;
 		access: string;
 		limit: number;
+		allowAutorequest: boolean;
+		autorequestLimit: number;
+		autorequestDisallowRecentlyPlayedEnabled: boolean;
+		autorequestDisallowRecentlyPlayedNumber: number;
 	};
 	autofill: {
 		enabled: boolean;
@@ -32,4 +36,5 @@ export interface Station {
 	theme: string;
 	blacklist: Playlist[];
 	djs: User[];
+	skipVoteThreshold: number;
 }

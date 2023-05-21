@@ -244,7 +244,7 @@ export default {
 	 * @param sort - the sort object
 	 * @param queries - the queries array
 	 * @param operator - the operator for queries
-	 * @param cb
+	 * @param {Function} cb - gets called with the result
 	 */
 	getVideos: useHasPermission(
 		"admin.view.youtubeVideos",
@@ -265,12 +265,20 @@ export default {
 								blacklistedProperties: [],
 								specialProperties: {
 									songId: [
-										// Fetch songs from songs collection with a matching youtubeId
+										// Fetch songs from songs collection with a matching mediaSource, which we first need to assemble
 										{
 											$lookup: {
 												from: "songs",
-												localField: "youtubeId",
-												foreignField: "youtubeId",
+												let: {
+													mediaSource: { $concat: ["youtube:", "$youtubeId"] }
+												},
+												pipeline: [
+													{
+														$match: {
+															$expr: { $eq: ["$mediaSource", "$$mediaSource"] }
+														}
+													}
+												],
 												as: "song"
 											}
 										},
@@ -371,16 +379,80 @@ export default {
 	),
 
 	/**
+	 * Gets channels, used in the admin youtube page by the AdvancedTable component
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param page - the page
+	 * @param pageSize - the size per page
+	 * @param properties - the properties to return for each news item
+	 * @param sort - the sort object
+	 * @param queries - the queries array
+	 * @param operator - the operator for queries
+	 * @param {Function} cb - gets called with the result
+	 */
+	getChannels: useHasPermission(
+		"admin.view.youtubeChannels",
+		async function getChannels(session, page, pageSize, properties, sort, queries, operator, cb) {
+			async.waterfall(
+				[
+					next => {
+						DBModule.runJob(
+							"GET_DATA",
+							{
+								page,
+								pageSize,
+								properties,
+								sort,
+								queries,
+								operator,
+								modelName: "youtubeChannel",
+								blacklistedProperties: [],
+								specialProperties: {},
+								specialQueries: {},
+								specialFilters: {}
+							},
+							this
+						)
+							.then(response => {
+								next(null, response);
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				],
+				async (err, response) => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log("ERROR", "YOUTUBE_GET_CHANNELS", `Failed to get YouTube channels. "${err}"`);
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "YOUTUBE_GET_CHANNELS", `Fetched YouTube channels successfully.`);
+					return cb({
+						status: "success",
+						message: "Successfully fetched YouTube channels.",
+						data: response
+					});
+				}
+			);
+		}
+	),
+
+	/**
 	 * Get a YouTube video
 	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} identifier - the identifier of the video to get
+	 * @param {string} createMissing - whether to create the video if it doesn't exist yet
+	 * @param {Function} cb - gets called with the result
 	 * @returns {{status: string, data: object}}
 	 */
 	getVideo: isLoginRequired(function getVideo(session, identifier, createMissing, cb) {
-		YouTubeModule.runJob("GET_VIDEO", { identifier, createMissing }, this)
+		return YouTubeModule.runJob("GET_VIDEOS", { identifiers: [identifier], createMissing }, this)
 			.then(res => {
 				this.log("SUCCESS", "YOUTUBE_GET_VIDEO", `Fetching video was successful.`);
 
-				return cb({ status: "success", message: "Successfully fetched YouTube video", data: res.video });
+				return cb({ status: "success", message: "Successfully fetched YouTube video", data: res.videos[0] });
 			})
 			.catch(async err => {
 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
@@ -390,8 +462,41 @@ export default {
 	}),
 
 	/**
+	 * Get a YouTube channel from ID
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} channelId - the YouTube channel id to get
+	 * @param {Function} cb - gets called with the result
+	 * @returns {{status: string, data: object}}
+	 */
+	getChannel: useHasPermission("youtube.getChannel", function getChannel(session, channelId, cb) {
+		return YouTubeModule.runJob("GET_CHANNELS_FROM_IDS", { channelIds: [channelId] }, this)
+			.then(res => {
+				if (res.channels.length === 0) {
+					this.log("ERROR", "YOUTUBE_GET_CHANNELS_FROM_IDS", `Fetching channel failed.`);
+					return cb({ status: "error", message: "Failed to get channel" });
+				}
+
+				this.log("SUCCESS", "YOUTUBE_GET_CHANNELS_FROM_IDS", `Fetching channel was successful.`);
+				return cb({
+					status: "success",
+					message: "Successfully fetched YouTube channel",
+					data: res.channels[0]
+				});
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "YOUTUBE_GET_CHANNELS_FROM_IDS", `Fetching video failed. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
 	 * Remove YouTube videos
 	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {Array} videoIds - the YouTube video ids to remove
+	 * @param {Function} cb - gets called with the result
 	 * @returns {{status: string, data: object}}
 	 */
 	removeVideos: useHasPermission("youtube.removeVideos", async function removeVideos(session, videoIds, cb) {
@@ -433,6 +538,96 @@ export default {
 	}),
 
 	/**
+	 * Gets missing YouTube video's from all playlists, stations and songs
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {Function} cb - gets called with the result
+	 * @returns {{status: string, data: object}}
+	 */
+	getMissingVideos: useHasPermission("youtube.getMissingVideos", async function getMissingVideos(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Get missing YouTube videos",
+			message: "Fetching missing YouTube videos.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
+		return YouTubeModule.runJob("GET_MISSING_VIDEOS", {}, this)
+			.then(response => {
+				this.log("SUCCESS", "YOUTUBE_GET_MISSING_VIDEOS", `Getting missing videos was successful.`);
+				this.publishProgress({
+					status: "success",
+					message: "Successfully fetched missing YouTube videos."
+				});
+				return cb({ status: "success", data: { ...response } });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "YOUTUBE_GET_MISSING_VIDEOS", `Getting missing videos failed. "${err}"`);
+				this.publishProgress({
+					status: "error",
+					message: err
+				});
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
+	 * Updates YouTube video's from version 1 to version 2, by re-fetching the video's
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {Function} cb - gets called with the result
+	 * @returns {{status: string, data: object}}
+	 */
+	updateVideosV1ToV2: useHasPermission("youtube.updateVideosV1ToV2", async function updateVideosV1ToV2(session, cb) {
+		this.keepLongJob();
+		this.publishProgress({
+			status: "started",
+			title: "Update YouTube videos to v2",
+			message: "Updating YouTube videos from v1 to v2.",
+			id: this.toString()
+		});
+		await CacheModule.runJob("RPUSH", { key: `longJobs.${session.userId}`, value: this.toString() }, this);
+		await CacheModule.runJob(
+			"PUB",
+			{
+				channel: "longJob.added",
+				value: { jobId: this.toString(), userId: session.userId }
+			},
+			this
+		);
+
+		return YouTubeModule.runJob("UPDATE_VIDEOS_V1_TO_V2", {}, this)
+			.then(response => {
+				this.log("SUCCESS", "YOUTUBE_UPDATE_VIDEOS_V1_TO_V2", `Updating v1 videos to v2 was successful.`);
+				this.publishProgress({
+					status: "success",
+					message: "Successfully updated YouTube videos from v1 to v2."
+				});
+				return cb({ status: "success", data: { ...response } });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "YOUTUBE_UPDATE_VIDEOS_V1_TO_V2", `Updating v1 videos to v2 failed. "${err}"`);
+				this.publishProgress({
+					status: "error",
+					message: err
+				});
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
 	 * Requests a set of YouTube videos
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
@@ -451,7 +646,7 @@ export default {
 				);
 				return cb({
 					status: "success",
-					message: `Playlist is done importing. ${response.successful} were added succesfully, ${response.failed} failed (${response.alreadyInDatabase} were already in database)`,
+					message: `Playlist is done importing.`,
 					videos: returnVideos ? response.videos : null
 				});
 			})
@@ -572,16 +767,36 @@ export default {
 
 					this.publishProgress({
 						status: "success",
-						message: `Playlist is done importing. ${response.successful} were added succesfully, ${response.failed} failed (${response.alreadyInDatabase} were already in database)`
+						message: `Playlist is done importing.`
 					});
 
 					return cb({
 						status: "success",
-						message: `Playlist is done importing. ${response.successful} were added succesfully, ${response.failed} failed (${response.alreadyInDatabase} were already in database)`,
+						message: `Playlist is done importing.`,
 						videos: returnVideos ? response.videos : null
 					});
 				}
 			);
 		}
-	)
+	),
+
+	/**
+	 * Gets missing YouTube channels
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {Function} cb - gets called with the result
+	 * @returns {{status: string, data: object}}
+	 */
+	getMissingChannels: useHasPermission("youtube.getMissingChannels", function getMissingChannels(session, cb) {
+		return YouTubeModule.runJob("GET_MISSING_CHANNELS", {}, this)
+			.then(response => {
+				this.log("SUCCESS", "YOUTUBE_GET_MISSING_CHANNELS", `Getting missing YouTube channels was successful.`);
+				return cb({ status: "success", data: { ...response } });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "YOUTUBE_GET_MISSING_CHANNELS", `Getting missing YouTube channels failed. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	})
 };

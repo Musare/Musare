@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted } from "vue";
+import { defineAsyncComponent, onMounted } from "vue";
 
+import { storeToRefs } from "pinia";
+import { useConfigStore } from "@/stores/config";
 import { useEditSongStore } from "@/stores/editSong";
 
 import { useSearchMusare } from "@/composables/useSearchMusare";
 
-const SongItem = defineAsyncComponent(
-	() => import("@/components/SongItem.vue")
+const MediaItem = defineAsyncComponent(
+	() => import("@/components/MediaItem.vue")
 );
 
 const props = defineProps({
@@ -14,8 +16,8 @@ const props = defineProps({
 	modalModulePath: { type: String, default: "modals/editSong/MODAL_UUID" }
 });
 
-const sitename = ref("Musare");
-
+const configStore = useConfigStore();
+const { sitename } = storeToRefs(configStore);
 const { form } = useEditSongStore({ modalUuid: props.modalUuid });
 
 const {
@@ -26,8 +28,6 @@ const {
 } = useSearchMusare();
 
 onMounted(async () => {
-	sitename.value = await lofig.get("siteSettings.sitename");
-
 	musareSearch.value.query = form.inputs.title.value;
 	searchForMusareSongs(1, false);
 });
@@ -54,7 +54,7 @@ onMounted(async () => {
 			</p>
 		</div>
 		<div v-if="musareSearch.results.length > 0">
-			<song-item
+			<media-item
 				v-for="result in musareSearch.results"
 				:key="result._id"
 				:song="result"

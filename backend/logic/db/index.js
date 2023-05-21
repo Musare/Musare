@@ -6,19 +6,26 @@ import async from "async";
 import CoreClass from "../../core";
 
 const REQUIRED_DOCUMENT_VERSIONS = {
-	activity: 2,
+	activity: 4,
 	news: 3,
-	playlist: 6,
+	playlist: 7,
 	punishment: 1,
 	queueSong: 1,
-	report: 6,
-	song: 9,
-	station: 9,
+	report: 7,
+	song: 10,
+	station: 10,
 	user: 4,
 	youtubeApiRequest: 1,
-	youtubeVideo: 1,
-	ratings: 1,
-	importJob: 1
+	youtubeVideo: [1, 2],
+	youtubeChannel: 1,
+	ratings: 2,
+	importJob: 1,
+	stationHistory: 2,
+	soundcloudTrack: 1,
+	spotifyTrack: 1,
+	spotifyAlbum: 1,
+	spotifyArtist: 1,
+	genericApiRequest: 1
 };
 
 const regex = {
@@ -54,10 +61,10 @@ class _DBModule extends CoreClass {
 			this.schemas = {};
 			this.models = {};
 
-			const mongoUrl = config.get("mongo").url;
+			const { user, password, host, port, database } = config.get("mongo");
 
 			mongoose
-				.connect(mongoUrl, {
+				.connect(`mongodb://${user}:${password}@${host}:${port}/${database}`, {
 					useNewUrlParser: true,
 					useUnifiedTopology: true
 				})
@@ -75,7 +82,14 @@ class _DBModule extends CoreClass {
 						punishment: {},
 						youtubeApiRequest: {},
 						youtubeVideo: {},
-						ratings: {}
+						youtubeChannel: {},
+						ratings: {},
+						stationHistory: {},
+						soundcloudTrack: {},
+						spotifyTrack: {},
+						spotifyAlbum: {},
+						spotifyArtist: {},
+						genericApiRequest: {}
 					};
 
 					const importSchema = schemaName =>
@@ -98,8 +112,15 @@ class _DBModule extends CoreClass {
 					await importSchema("punishment");
 					await importSchema("youtubeApiRequest");
 					await importSchema("youtubeVideo");
+					await importSchema("youtubeChannel");
 					await importSchema("ratings");
 					await importSchema("importJob");
+					await importSchema("stationHistory");
+					await importSchema("soundcloudTrack");
+					await importSchema("spotifyTrack");
+					await importSchema("spotifyAlbum");
+					await importSchema("spotifyArtist");
+					await importSchema("genericApiRequest");
 
 					this.models = {
 						song: mongoose.model("song", this.schemas.song),
@@ -114,8 +135,15 @@ class _DBModule extends CoreClass {
 						punishment: mongoose.model("punishment", this.schemas.punishment),
 						youtubeApiRequest: mongoose.model("youtubeApiRequest", this.schemas.youtubeApiRequest),
 						youtubeVideo: mongoose.model("youtubeVideo", this.schemas.youtubeVideo),
+						youtubeChannel: mongoose.model("youtubeChannel", this.schemas.youtubeChannel),
 						ratings: mongoose.model("ratings", this.schemas.ratings),
-						importJob: mongoose.model("importJob", this.schemas.importJob)
+						importJob: mongoose.model("importJob", this.schemas.importJob),
+						stationHistory: mongoose.model("stationHistory", this.schemas.stationHistory),
+						soundcloudTrack: mongoose.model("soundcloudTrack", this.schemas.soundcloudTrack),
+						spotifyTrack: mongoose.model("spotifyTrack", this.schemas.spotifyTrack),
+						spotifyAlbum: mongoose.model("spotifyAlbum", this.schemas.spotifyAlbum),
+						spotifyArtist: mongoose.model("spotifyArtist", this.schemas.spotifyArtist),
+						genericApiRequest: mongoose.model("genericApiRequest", this.schemas.genericApiRequest)
 					};
 
 					mongoose.connection.on("error", err => {
@@ -194,7 +222,24 @@ class _DBModule extends CoreClass {
 						message: "User already has 25 stations."
 					});
 
+					this.schemas.station
+						.path("requests.autorequestLimit")
+						.validate(function validateRequestsAutorequestLimit(autorequestLimit) {
+							const { limit } = this.get("requests");
+
+							if (autorequestLimit > limit) return false;
+
+							return true;
+						}, "Autorequest limit cannot be higher than the request limit.");
+
 					// Song
+					this.schemas.song.path("mediaSource").validate(mediaSource => {
+						if (mediaSource.startsWith("youtube:")) return true;
+						if (mediaSource.startsWith("soundcloud:")) return true;
+						if (mediaSource.startsWith("spotify:")) return true;
+						return false;
+					});
+
 					const songTitle = title => isLength(title, 1, 100);
 					this.schemas.song.path("title").validate(songTitle, "Invalid title.");
 
@@ -221,7 +266,7 @@ class _DBModule extends CoreClass {
 
 					const songThumbnail = thumbnail => {
 						if (!isLength(thumbnail, 1, 256)) return false;
-						if (config.get("cookie.secure") === true) return thumbnail.startsWith("https://");
+						if (config.get("url.secure") === true) return thumbnail.startsWith("https://");
 						return thumbnail.startsWith("http://") || thumbnail.startsWith("https://");
 					};
 					this.schemas.song.path("thumbnail").validate(songThumbnail, "Invalid thumbnail.");
@@ -230,7 +275,7 @@ class _DBModule extends CoreClass {
 					this.schemas.playlist
 						.path("displayName")
 						.validate(
-							displayName => isLength(displayName, 1, 32) && regex.ascii.test(displayName),
+							displayName => isLength(displayName, 1, 64) && regex.ascii.test(displayName),
 							"Invalid display name."
 						);
 
@@ -259,8 +304,14 @@ class _DBModule extends CoreClass {
 					this.models.user.syncIndexes();
 					this.models.youtubeApiRequest.syncIndexes();
 					this.models.youtubeVideo.syncIndexes();
+					this.models.youtubeChannel.syncIndexes();
 					this.models.ratings.syncIndexes();
 					this.models.importJob.syncIndexes();
+					this.models.stationHistory.syncIndexes();
+					this.models.soundcloudTrack.syncIndexes();
+					this.models.spotifyTrack.syncIndexes();
+					this.models.spotifyArtist.syncIndexes();
+					this.models.genericApiRequest.syncIndexes();
 
 					if (config.get("skipDbDocumentsVersionCheck")) resolve();
 					else {
@@ -289,17 +340,34 @@ class _DBModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			async.each(
 				Object.keys(REQUIRED_DOCUMENT_VERSIONS),
-				(modelName, next) => {
+				async modelName => {
 					const model = DBModule.models[modelName];
 					const requiredDocumentVersion = REQUIRED_DOCUMENT_VERSIONS[modelName];
-					model.countDocuments({ documentVersion: { $ne: requiredDocumentVersion } }, (err, count) => {
-						if (err) next(err);
-						else if (count > 0)
-							next(
-								`Collection "${modelName}" has ${count} documents with a wrong document version. Run migration.`
-							);
-						else next();
+					const count = await model.countDocuments({
+						documentVersion: {
+							$nin: Array.isArray(requiredDocumentVersion)
+								? requiredDocumentVersion
+								: [requiredDocumentVersion]
+						}
 					});
+
+					if (count > 0)
+						throw new Error(
+							`Collection "${modelName}" has ${count} documents with a wrong document version. Run migration.`
+						);
+
+					if (Array.isArray(requiredDocumentVersion)) {
+						const count2 = await model.countDocuments({
+							documentVersion: {
+								$ne: requiredDocumentVersion[requiredDocumentVersion.length - 1]
+							}
+						});
+
+						if (count2 > 0)
+							console.warn(
+								`Collection "${modelName}" has ${count2} documents with a outdated document version. Run steps manually to update these.`
+							);
+					}
 				},
 				err => {
 					if (err) reject(new Error(err));

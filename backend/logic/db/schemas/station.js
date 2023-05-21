@@ -7,17 +7,21 @@ export default {
 	description: { type: String, minlength: 2, maxlength: 128, trim: true, required: true },
 	paused: { type: Boolean, default: false, required: true },
 	currentSong: {
-		_id: { type: mongoose.Schema.Types.ObjectId },
-		youtubeId: { type: String },
-		title: { type: String },
-		artists: [{ type: String }],
-		duration: { type: Number },
-		skipDuration: { type: Number },
-		thumbnail: { type: String },
-		skipVotes: [{ type: String }],
-		requestedBy: { type: String },
-		requestedAt: { type: Date },
-		verified: { type: Boolean }
+		type: {
+			_id: { type: mongoose.Schema.Types.ObjectId },
+			mediaSource: { type: String },
+			title: { type: String },
+			artists: [{ type: String }],
+			duration: { type: Number },
+			skipDuration: { type: Number },
+			thumbnail: { type: String },
+			skipVotes: [{ type: String }],
+			requestedBy: { type: String },
+			requestedAt: { type: Date },
+			requestedType: { type: String, enum: ["manual", "autorequest", "autofill"] },
+			verified: { type: Boolean }
+		},
+		default: null
 	},
 	currentSongIndex: { type: Number, default: 0, required: true },
 	timePaused: { type: Number, default: 0, required: true },
@@ -28,7 +32,7 @@ export default {
 	queue: [
 		{
 			_id: { type: mongoose.Schema.Types.ObjectId },
-			youtubeId: { type: String, required: true },
+			mediaSource: { type: String, required: true },
 			title: { type: String },
 			artists: [{ type: String }],
 			duration: { type: Number },
@@ -36,6 +40,7 @@ export default {
 			thumbnail: { type: String },
 			requestedBy: { type: String },
 			requestedAt: { type: Date },
+			requestedType: { type: String, enum: ["manual", "autorequest", "autofill"] },
 			verified: { type: Boolean }
 		}
 	],
@@ -43,7 +48,11 @@ export default {
 	requests: {
 		enabled: { type: Boolean, default: true },
 		access: { type: String, enum: ["owner", "user"], default: "owner" },
-		limit: { type: Number, min: 1, max: 50, default: 5 }
+		limit: { type: Number, min: 1, max: 50, default: 5 },
+		allowAutorequest: { type: Boolean, default: true, required: true },
+		autorequestLimit: { type: Number, min: 1, max: 50, default: 3, required: true },
+		autorequestDisallowRecentlyPlayedEnabled: { type: Boolean, default: true, required: true },
+		autorequestDisallowRecentlyPlayedNumber: { type: Number, min: 1, max: 250, default: 50, required: true }
 	},
 	autofill: {
 		enabled: { type: Boolean, default: true },
@@ -55,5 +64,5 @@ export default {
 	blacklist: [{ type: mongoose.Schema.Types.ObjectId, ref: "playlists" }],
 	djs: [{ type: mongoose.Schema.Types.ObjectId, ref: "users" }],
 	skipVoteThreshold: { type: Number, min: 0, max: 100, default: 50, required: true },
-	documentVersion: { type: Number, default: 9, required: true }
+	documentVersion: { type: Number, default: 10, required: true }
 };

@@ -17,7 +17,7 @@ const { openModal } = useModalsStore();
 const messageParts = computed(() => {
 	const { message } = props.activity.payload;
 	const messageParts = message.split(
-		/((?:<youtubeId>.*<\/youtubeId>)|(?:<reportId>.*<\/reportId>)|(?:<playlistId>.*<\/playlistId>)|(?:<stationId>.*<\/stationId>))/g
+		/((?:<mediaSource>.*<\/mediaSource>)|(?:<reportId>.*<\/reportId>)|(?:<playlistId>.*<\/playlistId>)|(?:<stationId>.*<\/stationId>))/g
 	);
 
 	return messageParts;
@@ -26,7 +26,7 @@ const messageStripped = computed(() => {
 	let { message } = props.activity.payload;
 
 	message = message.replace(/<reportId>(.*)<\/reportId>/g, "report");
-	message = message.replace(/<youtubeId>(.*)<\/youtubeId>/g, "$1");
+	message = message.replace(/<mediaSource>(.*)<\/mediaSource>/g, "$1");
 	message = message.replace(/<playlistId>(.*)<\/playlistId>/g, `$1`);
 	message = message.replace(/<stationId>(.*)<\/stationId>/g, `$1`);
 
@@ -40,7 +40,7 @@ const getMessagePartText = messagePart => {
 	let message = messagePart;
 
 	message = message.replace(/<reportId>(.*)<\/reportId>/g, "report");
-	message = message.replace(/<youtubeId>(.*)<\/youtubeId>/g, "$1");
+	message = message.replace(/<mediaSource>(.*)<\/mediaSource>/g, "$1");
 	message = message.replace(/<playlistId>(.*)<\/playlistId>/g, `$1`);
 	message = message.replace(/<stationId>(.*)<\/stationId>/g, `$1`);
 
@@ -115,7 +115,7 @@ onMounted(() => {
 			<p :title="messageStripped" class="item-title">
 				<span v-for="messagePart in messageParts" :key="messagePart">
 					<span
-						v-if="getMessagePartType(messagePart) === 'youtubeId'"
+						v-if="getMessagePartType(messagePart) === 'mediaSource'"
 						>{{ getMessagePartText(messagePart) }}</span
 					>
 					<a

@@ -2,6 +2,8 @@
 import { defineAsyncComponent, ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
+import { useConfigStore } from "@/stores/config";
 import { useSettingsStore } from "@/stores/settings";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
@@ -16,6 +18,8 @@ const props = defineProps({
 	githubLinkConfirmed: { type: Boolean, default: false }
 });
 
+const configStore = useConfigStore();
+const { cookie, githubAuthentication, messages } = storeToRefs(configStore);
 const settingsStore = useSettingsStore();
 const route = useRoute();
 
@@ -26,14 +30,11 @@ const { isPasswordLinked, isGithubLinked } = settingsStore;
 const { closeCurrentModal } = useModalsStore();
 
 const step = ref("confirm-identity");
-const apiDomain = ref("");
-const accountRemovalMessage = ref("");
 const password = ref({
 	value: "",
 	visible: false
 });
 const passwordElement = ref();
-const githubAuthentication = ref(false);
 
 const checkForAutofill = (cb, event) => {
 	if (
@@ -91,25 +92,17 @@ const relinkGithub = () => {
 const remove = () =>
 	socket.dispatch("users.remove", res => {
 		if (res.status === "success") {
-			return socket.dispatch("users.logout", () =>
-				lofig.get("cookie").then(cookie => {
-					document.cookie = `${cookie.SIDname}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
-					closeCurrentModal();
-					window.location.href = "/";
-				})
-			);
+			return socket.dispatch("users.logout", () => {
+				document.cookie = `${cookie.value}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+				closeCurrentModal();
+				window.location.href = "/";
+			});
 		}
 
 		return new Toast(res.message);
 	});
 
 onMounted(async () => {
-	apiDomain.value = await lofig.get("backend.apiDomain");
-	accountRemovalMessage.value = await lofig.get("messages.accountRemoval");
-	githubAuthentication.value = await lofig.get(
-		"siteSettings.githubAuthentication"
-	);
-
 	if (props.githubLinkConfirmed === true) confirmGithubLink();
 });
 </script>
@@ -172,7 +165,10 @@ onMounted(async () => {
 					Confirming your password will let us verify your identity.
 				</p>
 
-				<p class="content-box-optional-helper">
+				<p
+					v-if="configStore.mailEnabled"
+					class="content-box-optional-helper"
+				>
 					<router-link id="forgot-password" to="/reset_password">
 						Forgot password?
 					</router-link>
@@ -260,7 +256,7 @@ onMounted(async () => {
 					<a
 						class="button is-github"
 						@click="relinkGithub()"
-						:href="`${apiDomain}/auth/github/link`"
+						:href="`${configStore.urls.api}/auth/github/link`"
 					>
 						<div class="icon">
 							<img
@@ -284,7 +280,7 @@ onMounted(async () => {
 			>
 				<h2 class="content-box-title">Remove your account</h2>
 				<p class="content-box-description">
-					{{ accountRemovalMessage }}
+					{{ messages.accountRemoval }}
 				</p>
 
 				<div class="content-box-inputs">

@@ -10,17 +10,15 @@ import mail from "../index";
  * @param {Function} cb - gets called when an error occurred or when the operation was successful
  */
 export default (to, username, code, cb) => {
+	const url = `${config.get("url.secure") ? "https" : "http"}://${config.get("url.host")}/backend`;
 	const data = {
-		from: config.get("mail.from"),
 		to,
 		subject: "Please verify your email",
 		html: `
 				Hello there ${username},
 				<br>
 				<br>
-				To verify your email, please visit <a href="${config.get("serverDomain")}/auth/verify_email?code=${code}">${config.get(
-			"serverDomain"
-		)}/auth/verify_email?code=${code}</a>.
+				To verify your email, please visit <a href="${url}/auth/verify_email?code=${code}">${url}/auth/verify_email?code=${code}</a>.
 			`
 	};
 

@@ -16,7 +16,7 @@ export const useTabQueryHandler = defaultTab => {
 		tab.value = route.query.tab;
 
 		// eslint-disable-next-line no-restricted-globals
-		history.pushState(
+		window.history.pushState(
 			{},
 			null,
 			`${route.path}?${Object.keys(queries)

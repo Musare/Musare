@@ -24,7 +24,7 @@ const confirm = event => {
 	clickedOnce.value = false;
 	emit("confirm");
 	setTimeout(() => {
-		quickConfirm.value.tippy.hide();
+		quickConfirm.value?.tippy.hide();
 	}, 25);
 };
 

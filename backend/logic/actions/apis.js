@@ -11,6 +11,7 @@ import moduleManager from "../../index";
 const UtilsModule = moduleManager.modules.utils;
 const WSModule = moduleManager.modules.ws;
 const YouTubeModule = moduleManager.modules.youtube;
+const SpotifyModule = moduleManager.modules.spotify;
 
 export default {
 	/**
@@ -118,6 +119,202 @@ export default {
 	}),
 
 	/**
+	 * Gets alternative media sources for list of Spotify tracks (media sources)
+	 *
+	 * @param session
+	 * @param trackId - the trackId
+	 * @param {Function} cb
+	 */
+	getAlternativeMediaSourcesForTracks: useHasPermission(
+		"spotify.getAlternativeMediaSourcesForTracks",
+		function getAlternativeMediaSourcesForTracks(session, mediaSources, collectAlternativeMediaSourcesOrigins, cb) {
+			async.waterfall(
+				[
+					next => {
+						if (!mediaSources) {
+							next("Invalid mediaSources provided.");
+							return;
+						}
+
+						next();
+					},
+
+					next => {
+						this.keepLongJob();
+						this.publishProgress({
+							status: "started",
+							title: "Getting alternative media sources for Spotify tracks",
+							message: "Starting up",
+							id: this.toString()
+						});
+
+						SpotifyModule.runJob(
+							"GET_ALTERNATIVE_MEDIA_SOURCES_FOR_TRACKS",
+							{
+								mediaSources,
+								collectAlternativeMediaSourcesOrigins
+							},
+							this
+						)
+							.then(() => next())
+							.catch(next);
+					}
+				],
+				async err => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log(
+							"ERROR",
+							"APIS_GET_ALTERNATIVE_SOURCES",
+							`Getting alternative sources failed for "${mediaSources.join(", ")}". "${err}"`
+						);
+						return cb({ status: "error", message: err });
+					}
+					this.log(
+						"SUCCESS",
+						"APIS_GET_ALTERNATIVE_SOURCES",
+						`User "${session.userId}" started getting alternatives for "${mediaSources.join(", ")}".`
+					);
+					return cb({
+						status: "success"
+					});
+				}
+			);
+		}
+	),
+
+	/**
+	 * Gets alternative album sources (such as YouTube playlists) for a list of Spotify album ids
+	 *
+	 * @param session
+	 * @param trackId - the trackId
+	 * @param {Function} cb
+	 */
+	getAlternativeAlbumSourcesForAlbums: useHasPermission(
+		"spotify.getAlternativeAlbumSourcesForAlbums",
+		function getAlternativeAlbumSourcesForAlbums(session, albumIds, collectAlternativeAlbumSourcesOrigins, cb) {
+			async.waterfall(
+				[
+					next => {
+						if (!albumIds) {
+							next("Invalid albumIds provided.");
+							return;
+						}
+
+						next();
+					},
+
+					next => {
+						this.keepLongJob();
+						this.publishProgress({
+							status: "started",
+							title: "Getting alternative album sources for Spotify albums",
+							message: "Starting up",
+							id: this.toString()
+						});
+
+						SpotifyModule.runJob(
+							"GET_ALTERNATIVE_ALBUM_SOURCES_FOR_ALBUMS",
+							{ albumIds, collectAlternativeAlbumSourcesOrigins },
+							this
+						)
+							.then(() => next())
+							.catch(next);
+					}
+				],
+				async err => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log(
+							"ERROR",
+							"APIS_GET_ALTERNATIVE_ALBUM_SOURCES",
+							`Getting alternative album sources failed for "${albumIds.join(", ")}". "${err}"`
+						);
+						return cb({ status: "error", message: err });
+					}
+					this.log(
+						"SUCCESS",
+						"APIS_GET_ALTERNATIVE_ALBUM_SOURCES",
+						`User "${session.userId}" started getting alternative album spirces for "${albumIds.join(
+							", "
+						)}".`
+					);
+					return cb({
+						status: "success"
+					});
+				}
+			);
+		}
+	),
+
+	/**
+	 * Gets a list of alternative artist sources (such as YouTube channels) for a list of Spotify artist ids
+	 *
+	 * @param session
+	 * @param trackId - the trackId
+	 * @param {Function} cb
+	 */
+	getAlternativeArtistSourcesForArtists: useHasPermission(
+		"spotify.getAlternativeArtistSourcesForArtists",
+		function getAlternativeArtistSourcesForArtists(session, artistIds, collectAlternativeArtistSourcesOrigins, cb) {
+			async.waterfall(
+				[
+					next => {
+						if (!artistIds) {
+							next("Invalid artistIds provided.");
+							return;
+						}
+
+						next();
+					},
+
+					next => {
+						this.keepLongJob();
+						this.publishProgress({
+							status: "started",
+							title: "Getting alternative artist sources for Spotify artists",
+							message: "Starting up",
+							id: this.toString()
+						});
+
+						SpotifyModule.runJob(
+							"GET_ALTERNATIVE_ARTIST_SOURCES_FOR_ARTISTS",
+							{
+								artistIds,
+								collectAlternativeArtistSourcesOrigins
+							},
+							this
+						)
+							.then(() => next())
+							.catch(next);
+					}
+				],
+				async err => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log(
+							"ERROR",
+							"APIS_GET_ALTERNATIVE_ARTIST_SOURCES",
+							`Getting alternative artist sources failed for "${artistIds.join(", ")}". "${err}"`
+						);
+						return cb({ status: "error", message: err });
+					}
+					this.log(
+						"SUCCESS",
+						"APIS_GET_ALTERNATIVE_ARTIST_SOURCES",
+						`User "${session.userId}" started getting alternative artist spirces for "${artistIds.join(
+							", "
+						)}".`
+					);
+					return cb({
+						status: "success"
+					});
+				}
+			);
+		}
+	),
+
+	/**
 	 * Joins a room
 	 *
 	 * @param {object} session - user session
@@ -131,7 +328,7 @@ export default {
 			home: null,
 			news: null,
 			profile: null,
-			"view-youtube-video": null,
+			"view-media": null,
 			"manage-station": null,
 			// "manage-station": "stations.view",
 			"edit-song": "songs.update",
@@ -213,6 +410,8 @@ export default {
 			page === "punishments" ||
 			page === "youtube" ||
 			page === "youtubeVideos" ||
+			page === "youtubeChannels" ||
+			(config.get("experimental.soundcloud") && (page === "soundcloud" || page === "soundcloudTracks")) ||
 			page === "import" ||
 			page === "dataRequests"
 		) {

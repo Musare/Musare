@@ -3,15 +3,24 @@ version: "3.8"
 services:
   backend:
     build:
-      context: ./backend
+      context: .
+      dockerfile: ./backend/Dockerfile
       target: musare_backend
     restart: ${RESTART_POLICY:-unless-stopped}
     volumes:
-      - ./.git:/opt/app/.parent_git:ro
       - ./backend/config:/opt/app/config
-      - ./types:/opt/types
     environment:
-      - CONTAINER_MODE=${CONTAINER_MODE:-prod}
+      - CONTAINER_MODE=${CONTAINER_MODE:-production}
+      - MUSARE_SITENAME=${MUSARE_SITENAME:-Musare}
+      - MUSARE_DEBUG_VERSION=${MUSARE_DEBUG_VERSION:-true}
+      - MUSARE_DEBUG_GIT_REMOTE=${MUSARE_DEBUG_GIT_REMOTE:-false}
+      - MUSARE_DEBUG_GIT_REMOTE_URL=${MUSARE_DEBUG_GIT_REMOTE_URL:-false}
+      - MUSARE_DEBUG_GIT_BRANCH=${MUSARE_DEBUG_GIT_BRANCH:-true}
+      - MUSARE_DEBUG_GIT_LATEST_COMMIT=${MUSARE_DEBUG_GIT_LATEST_COMMIT:-true}
+      - MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT=${MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT:-true}
+      - MONGO_USER_USERNAME=${MONGO_USER_USERNAME}
+      - MONGO_USER_PASSWORD=${MONGO_USER_PASSWORD}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     links:
       - mongo
       - redis
@@ -20,21 +29,37 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: .
+      dockerfile: ./frontend/Dockerfile
       target: musare_frontend
       args:
-        FRONTEND_MODE: "${FRONTEND_MODE:-prod}"
+        FRONTEND_MODE: "${FRONTEND_MODE:-production}"
+        FRONTEND_PROD_DEVTOOLS: "${FRONTEND_PROD_DEVTOOLS:-false}"
+        MUSARE_SITENAME: "${MUSARE_SITENAME:-Musare}"
+        MUSARE_DEBUG_VERSION: "${MUSARE_DEBUG_VERSION:-true}"
+        MUSARE_DEBUG_GIT_REMOTE: "${MUSARE_DEBUG_GIT_REMOTE:-false}"
+        MUSARE_DEBUG_GIT_REMOTE_URL: "${MUSARE_DEBUG_GIT_REMOTE_URL:-false}"
+        MUSARE_DEBUG_GIT_BRANCH: ${MUSARE_DEBUG_GIT_BRANCH:-true}
+        MUSARE_DEBUG_GIT_LATEST_COMMIT: "${MUSARE_DEBUG_GIT_LATEST_COMMIT:-true}"
+        MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT: "${MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT:-true}"
     restart: ${RESTART_POLICY:-unless-stopped}
     user: root
     ports:
       - "${FRONTEND_HOST:-0.0.0.0}:${FRONTEND_PORT:-80}:80"
-    volumes:
-      - ./.git:/opt/app/.parent_git:ro
-      - ./frontend/dist/config:/opt/app/dist/config
-      - ./types:/opt/types
     environment:
-      - FRONTEND_MODE=${FRONTEND_MODE:-prod}
-      - CONTAINER_MODE=${CONTAINER_MODE:-prod}
+      - CONTAINER_MODE=${CONTAINER_MODE:-production}
+      - FRONTEND_MODE=${FRONTEND_MODE:-production}
+      - FRONTEND_PORT=${FRONTEND_PORT:-80}
+      - FRONTEND_CLIENT_PORT=${FRONTEND_CLIENT_PORT:-80}
+      - FRONTEND_DEV_PORT=${FRONTEND_DEV_PORT:-81}
+      - FRONTEND_PROD_DEVTOOLS=${FRONTEND_PROD_DEVTOOLS:-false}
+      - MUSARE_SITENAME=${MUSARE_SITENAME:-Musare}
+      - MUSARE_DEBUG_VERSION=${MUSARE_DEBUG_VERSION:-true}
+      - MUSARE_DEBUG_GIT_REMOTE=${MUSARE_DEBUG_GIT_REMOTE:-false}
+      - MUSARE_DEBUG_GIT_REMOTE_URL=${MUSARE_DEBUG_GIT_REMOTE_URL:-false}
+      - MUSARE_DEBUG_GIT_BRANCH=${MUSARE_DEBUG_GIT_BRANCH:-true}
+      - MUSARE_DEBUG_GIT_LATEST_COMMIT=${MUSARE_DEBUG_GIT_LATEST_COMMIT:-true}
+      - MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT=${MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT:-true}
     links:
       - backend
 

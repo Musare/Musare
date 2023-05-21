@@ -1,4 +1,5 @@
 import async from "async";
+import config from "config";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -36,7 +37,7 @@ permissions.moderator = {
 	"admin.view.stations": true,
 	"admin.view.users": true,
 	"admin.view.youtubeVideos": true,
-	"apis.searchDiscogs": true,
+	"apis.searchDiscogs": config.get("apis.discogs.enabled"),
 	"news.create": true,
 	"news.update": true,
 	"playlists.create.admin": true,
@@ -61,10 +62,30 @@ permissions.moderator = {
 	"stations.remove": false,
 	"users.get": true,
 	"users.ban": true,
-	"users.requestPasswordReset": true,
-	"users.resendVerifyEmail": true,
+	"users.requestPasswordReset": config.get("mail.enabled"),
+	"users.resendVerifyEmail": config.get("mail.enabled"),
 	"users.update": true,
-	"youtube.requestSetAdmin": true
+	"youtube.requestSetAdmin": true,
+	...(config.get("experimental.soundcloud")
+		? {
+				"admin.view.soundcloudTracks": true,
+				"admin.view.soundcloud": true,
+				"soundcloud.getArtist": true
+		  }
+		: {}),
+	...(config.get("experimental.spotify")
+		? {
+				"admin.view.spotify": true,
+				"spotify.getTracksFromMediaSources": true,
+				"spotify.getAlbumsFromIds": true,
+				"spotify.getArtistsFromIds": true,
+				"spotify.getAlternativeArtistSourcesForArtists": true,
+				"spotify.getAlternativeAlbumSourcesForAlbums": true,
+				"spotify.getAlternativeMediaSourcesForTracks": true,
+				"admin.view.youtubeChannels": true,
+				"youtube.getChannel": true
+		  }
+		: {})
 };
 permissions.admin = {
 	...permissions.moderator,
@@ -92,9 +113,22 @@ permissions.admin = {
 	"users.update.restricted": true,
 	"utils.getModules": true,
 	"youtube.getApiRequest": true,
+	"youtube.getMissingVideos": true,
 	"youtube.resetStoredApiRequests": true,
 	"youtube.removeStoredApiRequest": true,
-	"youtube.removeVideos": true
+	"youtube.removeVideos": true,
+	"youtube.updateVideosV1ToV2": true,
+	...(config.get("experimental.soundcloud")
+		? {
+				"soundcloud.fetchNewApiKey": true,
+				"soundcloud.testApiKey": true
+		  }
+		: {}),
+	...(config.get("experimental.spotify")
+		? {
+				"youtube.getMissingChannels": true
+		  }
+		: {})
 };
 
 export const hasPermission = async (permission, session, stationId) => {
@@ -136,7 +170,7 @@ export const hasPermission = async (permission, session, stationId) => {
 							if (!station) return next("Station not found.");
 							if (station.type === "community" && station.owner === user._id.toString())
 								return next(null, [user.role, "owner"]);
-							if (station.type === "community" && station.djs.find(dj => dj === user._id.toString()))
+							if (station.djs.find(dj => dj === user._id.toString()))
 								return next(null, [user.role, "dj"]);
 							if (user.role === "admin" || user.role === "moderator") return next(null, [user.role]);
 							return next("Invalid permissions.");
@@ -251,7 +285,7 @@ export const getUserPermissions = async (session, stationId) => {
 							if (!station) return next("Station not found.");
 							if (station.type === "community" && station.owner === user._id.toString())
 								return next(null, [user.role, "owner"]);
-							if (station.type === "community" && station.djs.find(dj => dj === user._id.toString()))
+							if (station.djs.find(dj => dj === user._id.toString()))
 								return next(null, [user.role, "dj"]);
 							if (user.role === "admin" || user.role === "moderator") return next(null, [user.role]);
 							return next("Invalid permissions.");

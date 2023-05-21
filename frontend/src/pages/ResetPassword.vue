@@ -244,6 +244,7 @@ onMounted(() => {
 											<input
 												class="input"
 												type="email"
+												autocomplete="username"
 												:ref="
 													el =>
 														(inputElements[
@@ -354,6 +355,7 @@ onMounted(() => {
 											class="input"
 											id="new-password"
 											type="password"
+											autocomplete="new-password"
 											:ref="
 												el =>
 													(inputElements['password'] =
@@ -403,6 +405,7 @@ onMounted(() => {
 											class="input"
 											id="new-password-again"
 											type="password"
+											autocomplete="new-password"
 											:ref="
 												el =>
 													(inputElements[

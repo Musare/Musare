@@ -467,7 +467,7 @@ export default {
 	 * @param sort - the sort object
 	 * @param queries - the queries array
 	 * @param operator - the operator for queries
-	 * @param cb
+	 * @param {Function} cb - gets called with the result
 	 */
 	getData: useHasPermission(
 		"admin.view.stations",
@@ -864,7 +864,7 @@ export default {
 
 					WSModule.runJob("SOCKET_JOIN_SONG_ROOM", {
 						socketId: session.socketId,
-						room: `song.${data.currentSong.youtubeId}`
+						room: `song.${data.currentSong.mediaSource}`
 					});
 
 					data.currentSong.skipVotes = data.currentSong.skipVotes.length;
@@ -992,6 +992,75 @@ export default {
 				}
 				this.log("SUCCESS", "GET_STATION_BY_ID", `Got station "${stationId}" successfully.`);
 				return cb({ status: "success", data: { station: data } });
+			}
+		);
+	},
+
+	/**
+	 * Gets station history
+	 *
+	 * @param {object} session - user session
+	 * @param {string} stationId - the station id
+	 * @param {Function} cb - callback
+	 */
+	getHistory(session, stationId, cb) {
+		async.waterfall(
+			[
+				next => {
+					if (!config.get("experimental.station_history")) return next("Station history is not enabled");
+					return next();
+				},
+
+				next => {
+					StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => {
+							next(null, station);
+						})
+						.catch(next);
+				},
+
+				(station, next) => {
+					if (!station) return next("Station not found.");
+					return StationsModule.runJob(
+						"CAN_USER_VIEW_STATION",
+						{
+							station,
+							userId: session.userId
+						},
+						this
+					)
+						.then(canView => {
+							if (!canView) next("Not allowed to access station history.");
+							else next();
+						})
+						.catch(err => next(err));
+				},
+
+				next => {
+					StationsModule.stationHistoryModel
+						.find({ stationId }, { documentVersion: 0, __v: 0 })
+						.sort({ "payload.skippedAt": -1 })
+						.limit(250)
+						.then(response => next(null, response))
+						.catch(next);
+				}
+			],
+			async (err, history) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"GET_STATION_HISTORY",
+						`Getting station history for station "${stationId}" failed. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+				this.log(
+					"SUCCESS",
+					"GET_STATION_HISTORY",
+					`Got station history for station "${stationId}" successfully.`
+				);
+				return cb({ status: "success", data: { history } });
 			}
 		);
 	},
@@ -1141,9 +1210,9 @@ export default {
 	/**
 	 * Toggle votes to skip a station
 	 *
-	 * @param session
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param stationId - the station id
-	 * @param cb
+	 *  @param {Function} cb - gets called with the result
 	 */
 	toggleSkipVote: isLoginRequired(async function toggleSkipVote(session, stationId, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
@@ -1257,7 +1326,7 @@ export default {
 					this.log("ERROR", "STATIONS_FORCE_SKIP", `Force skipping station "${stationId}" failed. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
-				StationsModule.runJob("SKIP_STATION", { stationId, natural: false });
+				StationsModule.runJob("SKIP_STATION", { stationId, natural: false, skipReason: "force_skip" });
 				this.log("SUCCESS", "STATIONS_FORCE_SKIP", `Force skipped station "${stationId}" successfully.`);
 				return cb({
 					status: "success",
@@ -1329,6 +1398,12 @@ export default {
 					hasPermission("stations.update", session, stationId)
 						.then(() => next())
 						.catch(next);
+				},
+
+				next => {
+					if (newStation.requests.autorequestLimit > newStation.requests.limit)
+						next("The autorequest limit cannot be higher than the request limit.");
+					else next();
 				},
 
 				next => {
@@ -1652,9 +1727,9 @@ export default {
 	/**
 	 * Create a station
 	 *
-	 * @param session
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param data - the station data
-	 * @param cb
+	 *  @param {Function} cb - gets called with the result
 	 */
 	create: isLoginRequired(async function create(session, data, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
@@ -1701,8 +1776,7 @@ export default {
 			"station"
 		];
 
-		if (data.type === "community" && config.has("blacklistedCommunityStationNames"))
-			blacklist = [...blacklist, ...config.get("blacklistedCommunityStationNames")];
+		if (data.type === "community") blacklist = [...blacklist, ...config.get("blacklistedCommunityStationNames")];
 
 		async.waterfall(
 			[
@@ -1786,6 +1860,21 @@ export default {
 							next
 						);
 					}
+				},
+
+				// This extra step is needed because Mongoose decides to create an object with empty arrays for currentSong for some reason
+				(station, next) => {
+					stationModel.updateOne(
+						{ _id: station._id },
+						{
+							$set: {
+								currentSong: null
+							}
+						},
+						err => {
+							next(err, station);
+						}
+					);
 				}
 			],
 			async (err, station) => {
@@ -1822,12 +1911,13 @@ export default {
 	/**
 	 * Adds song to station queue
 	 *
-	 * @param session
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param stationId - the station id
-	 * @param youtubeId - the song id
-	 * @param cb
+	 * @param mediaSource - the song id
+	 * @param requestType - whether the song was autorequested or requested normally
+	 *  @param {Function} cb - gets called with the result
 	 */
-	addToQueue: isLoginRequired(async function addToQueue(session, stationId, youtubeId, cb) {
+	addToQueue: isLoginRequired(async function addToQueue(session, stationId, mediaSource, requestType, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1874,8 +1964,9 @@ export default {
 						"ADD_TO_QUEUE",
 						{
 							stationId,
-							youtubeId,
-							requestUser: session.userId
+							mediaSource,
+							requestUser: session.userId,
+							requestType
 						},
 						this
 					)
@@ -1888,7 +1979,7 @@ export default {
 					this.log(
 						"ERROR",
 						"STATIONS_ADD_SONG_TO_QUEUE",
-						`Adding song "${youtubeId}" to station "${stationId}" queue failed. "${err}"`
+						`Adding song "${mediaSource}" to station "${stationId}" queue failed. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -1896,7 +1987,7 @@ export default {
 				this.log(
 					"SUCCESS",
 					"STATIONS_ADD_SONG_TO_QUEUE",
-					`Added song "${youtubeId}" to station "${stationId}" successfully.`
+					`Added song "${mediaSource}" to station "${stationId}" successfully.`
 				);
 
 				return cb({
@@ -1912,10 +2003,10 @@ export default {
 	 *
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
-	 * @param {string} youtubeId - the youtube id
+	 * @param {string} mediaSource - the media source
 	 * @param {Function} cb - callback
 	 */
-	async removeFromQueue(session, stationId, youtubeId, cb) {
+	async removeFromQueue(session, stationId, mediaSource, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1925,8 +2016,8 @@ export default {
 				},
 
 				next => {
-					if (!youtubeId) return next("Invalid youtube id.");
-					return StationsModule.runJob("REMOVE_FROM_QUEUE", { stationId, youtubeId }, this)
+					if (!mediaSource) return next("Invalid media source.");
+					return StationsModule.runJob("REMOVE_FROM_QUEUE", { stationId, mediaSource }, this)
 						.then(() => next())
 						.catch(next);
 				}
@@ -1937,7 +2028,7 @@ export default {
 					this.log(
 						"ERROR",
 						"STATIONS_REMOVE_SONG_TO_QUEUE",
-						`Removing song "${youtubeId}" from station "${stationId}" queue failed. "${err}"`
+						`Removing song "${mediaSource}" from station "${stationId}" queue failed. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -1945,7 +2036,7 @@ export default {
 				this.log(
 					"SUCCESS",
 					"STATIONS_REMOVE_SONG_TO_QUEUE",
-					`Removed song "${youtubeId}" from station "${stationId}" successfully.`
+					`Removed song "${mediaSource}" from station "${stationId}" successfully.`
 				);
 
 				return cb({
@@ -2016,7 +2107,7 @@ export default {
 	 * @param {object} session - user session
 	 * @param {string} stationId - the station id
 	 * @param {object} song - contains details about the song that is to be repositioned
-	 * @param {string} song.youtubeId - the youtube id of the song
+	 * @param {string} song.mediaSource - the media source of the song
 	 * @param {number} song.newIndex - the new position for the song in the queue
 	 * @param {number} song.oldIndex - the old position of the song in the queue
 	 * @param {Function} cb - callback
@@ -2033,7 +2124,7 @@ export default {
 				},
 
 				next => {
-					if (!song || !song.youtubeId) return next("You must provide a song to reposition.");
+					if (!song || !song.mediaSource) return next("You must provide a song to reposition.");
 					return next();
 				},
 
@@ -2041,7 +2132,7 @@ export default {
 				next => {
 					stationModel.updateOne(
 						{ _id: stationId },
-						{ $pull: { queue: { youtubeId: song.youtubeId } } },
+						{ $pull: { queue: { mediaSource: song.mediaSource } } },
 						next
 					);
 				},
@@ -2068,7 +2159,7 @@ export default {
 					this.log(
 						"ERROR",
 						"STATIONS_REPOSITION_SONG_IN_QUEUE",
-						`Repositioning song ${song.youtubeId} in queue of station "${stationId}" failed. "${err}"`
+						`Repositioning song ${song.mediaSource} in queue of station "${stationId}" failed. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -2076,14 +2167,14 @@ export default {
 				this.log(
 					"SUCCESS",
 					"STATIONS_REPOSITION_SONG_IN_QUEUE",
-					`Repositioned song ${song.youtubeId} in queue of station "${stationId}" successfully.`
+					`Repositioned song ${song.mediaSource} in queue of station "${stationId}" successfully.`
 				);
 
 				CacheModule.runJob("PUB", {
 					channel: "station.repositionSongInQueue",
 					value: {
 						song: {
-							youtubeId: song.youtubeId,
+							mediaSource: song.mediaSource,
 							oldIndex: song.oldIndex,
 							newIndex: song.newIndex
 						},
@@ -2123,7 +2214,29 @@ export default {
 				},
 
 				(station, next) => {
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+						.then(playlist => next(null, station, playlist))
+						.catch(next);
+				},
+
+				(station, playlist, next) => {
+					if (!playlist) return next("Playlist not found");
+					if (playlist.privacy !== "public" && playlist.createdBy !== session.userId)
+						return hasPermission("playlists.get", session)
+							.then(() => next(null, station, playlist))
+							.catch(() => next("User unauthorised to view playlist."));
+					return next(null, station, playlist);
+				},
+
+				(station, playlist, next) => {
 					if (!station) return next("Station not found.");
+					if (station.type === "official" && ["genre", "admin"].indexOf(playlist.type) === -1)
+						return next("Official statuibs are only allowed to autofill genre and admin playlists.");
+					if (
+						station.type === "community" &&
+						["user", "user-liked", "user-disliked", "genre", "admin"].indexOf(playlist.type) === -1
+					)
+						return next("Community stations are only allowed to autofill user, genre and admin playlists.");
 					if (station.autofill.playlists.indexOf(playlistId) !== -1)
 						return next("That playlist is already autofilling.");
 					if (station.autofill.mode === "sequential" && station.autofill.playlists.length > 0)
@@ -2392,6 +2505,13 @@ export default {
 		);
 	},
 
+	/**
+	 * Favorites a station
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} stationId - the station to favorite
+	 * @param {Function} cb - gets called with the result
+	 */
 	favoriteStation: isLoginRequired(async function favoriteStation(session, stationId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		async.waterfall(
@@ -2459,6 +2579,13 @@ export default {
 		);
 	}),
 
+	/**
+	 * Unfavorites a station
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} stationId - the station to unfavorite
+	 * @param {Function} cb - gets called with the result
+	 */
 	unfavoriteStation: isLoginRequired(async function unfavoriteStation(session, stationId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
@@ -2516,7 +2643,7 @@ export default {
 	/**
 	 * Clears every station queue
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
 	clearEveryStationQueue: useHasPermission(
@@ -2571,7 +2698,7 @@ export default {
 	/**
 	 * Reset a station queue
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -2605,10 +2732,10 @@ export default {
 	/**
 	 * Gets skip votes for a station
 	 *
-	 * @param session
-	 * @param stationId - the station id
-	 * @param stationId - the song id to get skipvotes for
-	 * @param cb
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} stationId - the station id
+	 * @param {string} songId - the song id to get skipvotes for
+	 * @param {Function} cb - gets called with the result
 	 */
 
 	getSkipVotes: isLoginRequired(async function getSkipVotes(session, stationId, songId, cb) {
@@ -2657,7 +2784,7 @@ export default {
 	/**
 	 * Add DJ to station
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} stationId - the station id
 	 * @param {string} userId - the dj user id
 	 * @param {Function} cb - gets called with the result
@@ -2692,7 +2819,7 @@ export default {
 	/**
 	 * Remove DJ from station
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} stationId - the station id
 	 * @param {string} userId - the dj user id
 	 * @param {Function} cb - gets called with the result
@@ -2722,5 +2849,18 @@ export default {
 				return cb({ status: "success", message: "Successfully removed DJ." });
 			}
 		);
+	},
+
+	/**
+	 * Sets the state of the current user session
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} newStationState - the new state
+	 * @param {Function} cb - gets called with the result
+	 */
+	setStationState(session, newStationState, cb) {
+		session.stationState = newStationState;
+
+		cb({ status: "success" });
 	}
 };

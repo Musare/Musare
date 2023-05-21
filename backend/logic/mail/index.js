@@ -32,18 +32,9 @@ class _MailModule extends CoreClass {
 			dataRequest: await importSchema("dataRequest")
 		};
 
-		this.enabled = config.get("smtp.enabled");
+		this.enabled = config.get("mail.enabled");
 
-		if (this.enabled)
-			this.transporter = nodemailer.createTransport({
-				host: config.get("smtp.host"),
-				port: config.get("smtp.port"),
-				secure: config.get("smtp.secure"),
-				auth: {
-					user: config.get("smtp.auth.user"),
-					pass: config.get("smtp.auth.pass")
-				}
-			});
+		if (this.enabled) this.transporter = nodemailer.createTransport(config.get("mail.smtp"));
 
 		return new Promise(resolve => {
 			resolve();
@@ -60,6 +51,12 @@ class _MailModule extends CoreClass {
 	SEND_MAIL(payload) {
 		return new Promise((resolve, reject) => {
 			if (MailModule.enabled) {
+				const { data } = payload;
+				if (!data.from)
+					data.from =
+						config.get("mail.from").length > 0
+							? config.get("mail.from")
+							: `${config.get("sitename")} <noreply@${config.get("url.host")}>`;
 				MailModule.transporter
 					.sendMail(payload.data)
 					.then(info => {

@@ -47,8 +47,8 @@ const {
 		displayName: {
 			value: playlist.value.displayName,
 			validate: value => {
-				if (!validation.isLength(value, 2, 32))
-					return "Display name must have between 2 and 32 characters.";
+				if (!validation.isLength(value, 1, 64))
+					return "Display name must have between 1 and 64 characters.";
 				if (!validation.regex.ascii.test(value))
 					return "Invalid display name format. Only ASCII characters are allowed.";
 				return true;

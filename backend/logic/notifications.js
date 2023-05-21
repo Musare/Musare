@@ -24,12 +24,8 @@ class _NotificationsModule extends CoreClass {
 	 */
 	initialize() {
 		return new Promise((resolve, reject) => {
-			const url = (this.url = config.get("redis").url);
-			const password = (this.password = config.get("redis").password);
-
 			this.pub = redis.createClient({
-				url,
-				password,
+				...config.get("redis"),
 				reconnectStrategy: retries => {
 					if (this.getStatus() !== "LOCKDOWN") {
 						if (this.getStatus() !== "RECONNECTING") this.setStatus("RECONNECTING");

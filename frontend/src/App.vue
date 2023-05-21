@@ -7,6 +7,7 @@ import { GenericResponse } from "@musare_types/actions/GenericActions";
 import { GetPreferencesResponse } from "@musare_types/actions/UsersActions";
 import { NewestResponse } from "@musare_types/actions/NewsActions";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useModalsStore } from "@/stores/modals";
@@ -27,20 +28,20 @@ const FallingSnow = defineAsyncComponent(
 const router = useRouter();
 
 const { socket } = useWebsocketsStore();
+const configStore = useConfigStore();
 const userAuthStore = useUserAuthStore();
 const userPreferencesStore = useUserPreferencesStore();
 const modalsStore = useModalsStore();
 
-const apiDomain = ref("");
 const socketConnected = ref(true);
 const keyIsDown = ref("");
 const broadcastChannel = ref({
 	user_login: null,
 	nightmode: null
 });
-const christmas = ref(false);
 const disconnectedMessage = ref();
 
+const { christmas } = storeToRefs(configStore);
 const { loggedIn, banned } = storeToRefs(userAuthStore);
 const { nightmode, activityWatch } = storeToRefs(userPreferencesStore);
 const {
@@ -79,6 +80,10 @@ const enableChristmasMode = () => {
 	document.getElementsByTagName("html")[0].classList.add("christmas-mode");
 };
 
+const disableChristmasMode = () => {
+	document.getElementsByTagName("html")[0].classList.remove("christmas-mode");
+};
+
 watch(socketConnected, connected => {
 	if (!connected && !userAuthStore.banned) disconnectedMessage.value.show();
 	else disconnectedMessage.value.hide();
@@ -94,6 +99,10 @@ watch(activityWatch, enabled => {
 	if (enabled) aw.enable();
 	else aw.disable();
 });
+watch(christmas, enabled => {
+	if (enabled) enableChristmasMode();
+	else disableChristmasMode();
+});
 
 onMounted(async () => {
 	window
@@ -101,64 +110,6 @@ onMounted(async () => {
 		.addEventListener("change", e => {
 			if (e.matches === !nightmode.value) changeNightmode(true);
 		});
-
-	if (!loggedIn.value) {
-		lofig.get("cookie.SIDname").then(sid => {
-			broadcastChannel.value.user_login = new BroadcastChannel(
-				`${sid}.user_login`
-			);
-			broadcastChannel.value.user_login.onmessage = res => {
-				if (res.data) {
-					broadcastChannel.value.user_login.close();
-					window.location.reload();
-				}
-			};
-
-			broadcastChannel.value.nightmode = new BroadcastChannel(
-				`${sid}.nightmode`
-			);
-			broadcastChannel.value.nightmode.onmessage = res => {
-				changeNightmode(!!res.data);
-			};
-		});
-	}
-
-	document.onkeydown = (ev: KeyboardEvent) => {
-		const event = ev || window.event;
-		const { keyCode } = event;
-		const shift = event.shiftKey;
-		const ctrl = event.ctrlKey;
-		const alt = event.altKey;
-
-		const identifier = `${keyCode}.${shift}.${ctrl}`;
-
-		if (keyIsDown.value === identifier) return;
-		keyIsDown.value = identifier;
-
-		keyboardShortcuts.handleKeyDown(event, keyCode, shift, ctrl, alt);
-	};
-
-	document.onkeyup = () => {
-		keyIsDown.value = "";
-	};
-
-	// ctrl + alt + n
-	keyboardShortcuts.registerShortcut("nightmode", {
-		keyCode: 78,
-		ctrl: true,
-		alt: true,
-		handler: () => toggleNightMode()
-	});
-
-	keyboardShortcuts.registerShortcut("closeModal", {
-		keyCode: 27,
-		shift: false,
-		ctrl: false,
-		handler: () => {
-			if (Object.keys(activeModals.value).length !== 0)
-				closeCurrentModal();
-		}
-	});
 
 	disconnectedMessage.value = new Toast({
 		content: "Could not connect to the server.",
@@ -170,6 +121,62 @@ onMounted(async () => {
 
 	socket.onConnect(() => {
 		socketConnected.value = true;
+
+		if (!loggedIn.value) {
+			broadcastChannel.value.user_login = new BroadcastChannel(
+				`${configStore.cookie}.user_login`
+			);
+			broadcastChannel.value.user_login.onmessage = res => {
+				if (res.data) {
+					broadcastChannel.value.user_login.close();
+					window.location.reload();
+				}
+			};
+
+			broadcastChannel.value.nightmode = new BroadcastChannel(
+				`${configStore.cookie}.nightmode`
+			);
+			broadcastChannel.value.nightmode.onmessage = res => {
+				changeNightmode(!!res.data);
+			};
+		}
+
+		document.onkeydown = (ev: KeyboardEvent) => {
+			const event = ev || window.event;
+			const { keyCode } = event;
+			const shift = event.shiftKey;
+			const ctrl = event.ctrlKey;
+			const alt = event.altKey;
+
+			const identifier = `${keyCode}.${shift}.${ctrl}`;
+
+			if (keyIsDown.value === identifier) return;
+			keyIsDown.value = identifier;
+
+			keyboardShortcuts.handleKeyDown(event, keyCode, shift, ctrl, alt);
+		};
+
+		document.onkeyup = () => {
+			keyIsDown.value = "";
+		};
+
+		// ctrl + alt + n
+		keyboardShortcuts.registerShortcut("nightmode", {
+			keyCode: 78,
+			ctrl: true,
+			alt: true,
+			handler: () => toggleNightMode()
+		});
+
+		keyboardShortcuts.registerShortcut("closeModal", {
+			keyCode: 27,
+			shift: false,
+			ctrl: false,
+			handler: () => {
+				if (Object.keys(activeModals.value).length !== 0)
+					closeCurrentModal();
+			}
+		});
 
 		socket.dispatch(
 			"users.getPreferences",
@@ -232,6 +239,16 @@ onMounted(async () => {
 			if (!localStorage.getItem("firstVisited"))
 				localStorage.setItem("firstVisited", Date.now().toString());
 		});
+
+		router.isReady().then(() => {
+			if (
+				configStore.githubAuthentication &&
+				localStorage.getItem("github_redirect")
+			) {
+				router.push(localStorage.getItem("github_redirect"));
+				localStorage.removeItem("github_redirect");
+			}
+		});
 	}, true);
 
 	socket.onDisconnect(() => {
@@ -242,31 +259,9 @@ onMounted(async () => {
 		window.location.reload()
 	);
 
-	apiDomain.value = await lofig.get("backend.apiDomain");
-
-	router.isReady().then(() => {
-		lofig
-			.get("siteSettings.githubAuthentication")
-			.then((enabled: boolean) => {
-				if (enabled && localStorage.getItem("github_redirect")) {
-					router.push(
-						localStorage.getItem("github_redirect") as string
-					);
-					localStorage.removeItem("github_redirect");
-				}
-			});
-	});
-
 	if (localStorage.getItem("nightmode") === "true") {
 		changeNightmode(true);
 	} else changeNightmode(false);
-
-	lofig.get("siteSettings.christmas").then((enabled: boolean) => {
-		if (enabled) {
-			christmas.value = true;
-			enableChristmasMode();
-		}
-	});
 });
 </script>
 
@@ -317,6 +312,8 @@ onMounted(async () => {
 	--dark-grey-3: rgb(34, 34, 34);
 	--dark-grey-4: rgb(26, 26, 26);
 	--youtube: rgb(189, 46, 46);
+	--soundcloud: rgb(242, 111, 35);
+	--spotify: rgb(30, 215, 96);
 }
 
 .night-mode {
@@ -407,72 +404,94 @@ onMounted(async () => {
 	--primary-color: var(--red);
 }
 
-/* inter-regular - latin */
+/* nunito-200 - latin */
 @font-face {
-	font-family: "Inter";
-	font-style: normal;
-	font-weight: 400;
-	src: url("/fonts/inter-v3-latin-regular.eot"); /* IE9 Compat Modes */
-	src: local(""),
-		url("/fonts/inter-v3-latin-regular.eot?#iefix")
-			format("embedded-opentype"),
-		/* IE6-IE8 */ url("/fonts/inter-v3-latin-regular.woff2") format("woff2"),
-		/* Super Modern Browsers */ url("/fonts/inter-v3-latin-regular.woff")
-			format("woff"),
-		/* Modern Browsers */ url("/fonts/inter-v3-latin-regular.ttf")
-			format("truetype"),
-		/* Safari, Android, iOS */
-			url("/fonts/inter-v3-latin-regular.svg#Inter") format("svg"); /* Legacy iOS */
-}
-
-/* inter-200 - latin */
-@font-face {
-	font-family: "Inter";
+	font-family: "Nunito";
 	font-style: normal;
 	font-weight: 200;
-	src: url("/fonts/inter-v3-latin-200.eot"); /* IE9 Compat Modes */
+	src: url("/fonts/nunito-v16-latin-200.eot"); /* IE9 Compat Modes */
 	src: local(""),
-		url("/fonts/inter-v3-latin-200.eot?#iefix") format("embedded-opentype"),
-		/* IE6-IE8 */ url("/fonts/inter-v3-latin-200.woff2") format("woff2"),
-		/* Super Modern Browsers */ url("/fonts/inter-v3-latin-200.woff")
+		url("/fonts/nunito-v16-latin-200.eot?#iefix")
+			format("embedded-opentype"),
+		/* IE6-IE8 */ url("/fonts/nunito-v16-latin-200.woff2") format("woff2"),
+		/* Super Modern Browsers */ url("/fonts/nunito-v16-latin-200.woff")
 			format("woff"),
-		/* Modern Browsers */ url("/fonts/inter-v3-latin-200.ttf")
+		/* Modern Browsers */ url("/fonts/nunito-v16-latin-200.ttf")
 			format("truetype"),
-		/* Safari, Android, iOS */ url("/fonts/inter-v3-latin-200.svg#Inter")
+		/* Safari, Android, iOS */ url("/fonts/nunito-v16-latin-200.svg#Nunito")
 			format("svg"); /* Legacy iOS */
 }
 
-/* inter-800 - latin */
+/* nunito-regular - latin */
 @font-face {
-	font-family: "Inter";
+	font-family: "Nunito";
 	font-style: normal;
-	font-weight: 800;
-	src: url("/fonts/inter-v3-latin-800.eot"); /* IE9 Compat Modes */
+	font-weight: 400;
+	src: url("/fonts/nunito-v16-latin-regular.eot"); /* IE9 Compat Modes */
 	src: local(""),
-		url("/fonts/inter-v3-latin-800.eot?#iefix") format("embedded-opentype"),
-		/* IE6-IE8 */ url("/fonts/inter-v3-latin-800.woff2") format("woff2"),
-		/* Super Modern Browsers */ url("/fonts/inter-v3-latin-800.woff")
+		url("/fonts/nunito-v16-latin-regular.eot?#iefix")
+			format("embedded-opentype"),
+		/* IE6-IE8 */ url("/fonts/nunito-v16-latin-regular.woff2")
+			format("woff2"),
+		/* Super Modern Browsers */ url("/fonts/nunito-v16-latin-regular.woff")
 			format("woff"),
-		/* Modern Browsers */ url("/fonts/inter-v3-latin-800.ttf")
+		/* Modern Browsers */ url("/fonts/nunito-v16-latin-regular.ttf")
 			format("truetype"),
-		/* Safari, Android, iOS */ url("/fonts/inter-v3-latin-800.svg#Inter")
-			format("svg"); /* Legacy iOS */
+		/* Safari, Android, iOS */
+			url("/fonts/nunito-v16-latin-regular.svg#Nunito") format("svg"); /* Legacy iOS */
 }
 
-/* inter-600 - latin */
+/* nunito-600 - latin */
 @font-face {
-	font-family: "Inter";
+	font-family: "Nunito";
 	font-style: normal;
 	font-weight: 600;
-	src: url("/fonts/inter-v3-latin-600.eot"); /* IE9 Compat Modes */
+	src: url("/fonts/nunito-v16-latin-600.eot"); /* IE9 Compat Modes */
 	src: local(""),
-		url("/fonts/inter-v3-latin-600.eot?#iefix") format("embedded-opentype"),
-		/* IE6-IE8 */ url("/fonts/inter-v3-latin-600.woff2") format("woff2"),
-		/* Super Modern Browsers */ url("/fonts/inter-v3-latin-600.woff")
+		url("/fonts/nunito-v16-latin-600.eot?#iefix")
+			format("embedded-opentype"),
+		/* IE6-IE8 */ url("/fonts/nunito-v16-latin-600.woff2") format("woff2"),
+		/* Super Modern Browsers */ url("/fonts/nunito-v16-latin-600.woff")
 			format("woff"),
-		/* Modern Browsers */ url("/fonts/inter-v3-latin-600.ttf")
+		/* Modern Browsers */ url("/fonts/nunito-v16-latin-600.ttf")
 			format("truetype"),
-		/* Safari, Android, iOS */ url("/fonts/inter-v3-latin-600.svg#Inter")
+		/* Safari, Android, iOS */ url("/fonts/nunito-v16-latin-600.svg#Nunito")
+			format("svg"); /* Legacy iOS */
+}
+
+/* nunito-700 - latin */
+@font-face {
+	font-family: "Nunito";
+	font-style: normal;
+	font-weight: 700;
+	src: url("/fonts/nunito-v16-latin-700.eot"); /* IE9 Compat Modes */
+	src: local(""),
+		url("/fonts/nunito-v16-latin-700.eot?#iefix")
+			format("embedded-opentype"),
+		/* IE6-IE8 */ url("/fonts/nunito-v16-latin-700.woff2") format("woff2"),
+		/* Super Modern Browsers */ url("/fonts/nunito-v16-latin-700.woff")
+			format("woff"),
+		/* Modern Browsers */ url("/fonts/nunito-v16-latin-700.ttf")
+			format("truetype"),
+		/* Safari, Android, iOS */ url("/fonts/nunito-v16-latin-700.svg#Nunito")
+			format("svg"); /* Legacy iOS */
+}
+
+/* nunito-800 - latin */
+@font-face {
+	font-family: "Nunito";
+	font-style: normal;
+	font-weight: 800;
+	src: url("/fonts/nunito-v16-latin-800.eot"); /* IE9 Compat Modes */
+	src: local(""),
+		url("/fonts/nunito-v16-latin-800.eot?#iefix")
+			format("embedded-opentype"),
+		/* IE6-IE8 */ url("/fonts/nunito-v16-latin-800.woff2") format("woff2"),
+		/* Super Modern Browsers */ url("/fonts/nunito-v16-latin-800.woff")
+			format("woff"),
+		/* Modern Browsers */ url("/fonts/nunito-v16-latin-800.ttf")
+			format("truetype"),
+		/* Safari, Android, iOS */ url("/fonts/nunito-v16-latin-800.svg#Nunito")
 			format("svg"); /* Legacy iOS */
 }
 
@@ -554,7 +573,7 @@ body {
 	color: var(--dark-grey);
 	line-height: 1.4285714;
 	font-size: 1rem;
-	font-family: "Inter", Helvetica, Arial, sans-serif;
+	font-family: Nunito, Arial, sans-serif;
 	height: 100%;
 	max-width: 100%;
 	overflow-y: auto !important;
@@ -595,7 +614,7 @@ h3,
 h4,
 h5,
 h6 {
-	font-family: "Inter", Helvetica, Arial, sans-serif;
+	font-family: Nunito, Arial, sans-serif;
 	font-weight: 400;
 	line-height: 1.1;
 
@@ -691,7 +710,7 @@ button,
 input,
 select,
 textarea {
-	font-family: "Inter", Helvetica, Arial, sans-serif;
+	font-family: Nunito, Arial, sans-serif;
 }
 
 input,
@@ -844,7 +863,9 @@ img {
 				color: var(--white);
 			}
 
-			.youtube-icon {
+			.youtube-icon,
+			.spotify-icon,
+			.soundcloud-icon {
 				background-color: var(--white);
 			}
 		}
@@ -1314,7 +1335,33 @@ button.delete:focus {
 }
 
 .tag {
-	padding-right: 6px !important;
+	background-color: var(--dark-grey-3);
+	font-family: monospace;
+	font-weight: 700;
+	color: white;
+	border-radius: 18px;
+	text-align: center;
+	padding: 0 4px !important;
+	font-size: 12px;
+	line-height: 18px;
+	min-width: 18px;
+	height: 18px;
+	margin-left: 4px;
+
+	&.has-icon {
+		padding: 0 !important;
+	}
+
+	.material-icons {
+		font-size: 18px;
+	}
+}
+
+.selected {
+	.tag {
+		background-color: var(--light-grey);
+		color: var(--dark-grey);
+	}
 }
 
 #tab-selection,
@@ -1545,8 +1592,16 @@ button.delete:focus {
 			}
 		}
 
-		.input {
+		> .input {
 			margin-right: -1px;
+
+			&:first-child:not(:only-child) {
+				border-radius: @border-radius 0 0 @border-radius;
+			}
+		}
+
+		> div .input {
+			border-right: none;
 
 			&:first-child {
 				border-radius: @border-radius 0 0 @border-radius;
@@ -1739,13 +1794,38 @@ h4.section-title {
 	opacity: 0;
 }
 
+.youtube-icon,
+.spotify-icon,
+.soundcloud-icon {
+	height: 20px;
+	min-height: 20px;
+	max-height: 20px;
+	width: 20px;
+	min-width: 20px;
+	max-width: 20px;
+}
+
 .youtube-icon {
 	margin-right: 3px;
-	height: 20px;
-	width: 20px;
 	-webkit-mask: url("/assets/social/youtube.svg") no-repeat center;
 	mask: url("/assets/social/youtube.svg") no-repeat center;
 	background-color: var(--youtube);
+}
+
+.spotify-icon {
+	-webkit-mask: url("/assets/social/spotify.svg") no-repeat center;
+	mask: url("/assets/social/spotify.svg") no-repeat center;
+	background-color: var(--spotify);
+}
+
+.soundcloud-icon {
+	-webkit-mask: url("/assets/social/soundcloud.svg") no-repeat center;
+	mask: url("/assets/social/soundcloud.svg") no-repeat center;
+	background-color: var(--soundcloud);
+}
+
+.warning-icon {
+	color: var(--orange);
 }
 
 #forgot-password {
@@ -1891,14 +1971,14 @@ h4.section-title {
 }
 
 .news-item {
-	font-family: "Karla";
+	font-family: Nunito, Arial, sans-serif;
 	border-radius: @border-radius;
 	padding: 20px;
 	border: unset !important;
 	box-shadow: @box-shadow;
 
 	* {
-		font-family: Karla, Arial, sans-serif;
+		font-family: Nunito, Arial, sans-serif;
 		font-size: 16px;
 	}
 

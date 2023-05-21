@@ -6,6 +6,7 @@ import validation from "@/validation";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useManageStationStore } from "@/stores/manageStation";
 import { useForm } from "@/composables/useForm";
+import { useConfigStore } from "@/stores/config";
 
 const InfoIcon = defineAsyncComponent(
 	() => import("@/components/InfoIcon.vue")
@@ -16,6 +17,9 @@ const props = defineProps({
 });
 
 const { socket } = useWebsocketsStore();
+
+const configStore = useConfigStore();
+const { experimental } = storeToRefs(configStore);
 
 const manageStationStore = useManageStationStore({
 	modalUuid: props.modalUuid
@@ -64,6 +68,19 @@ const { inputs, save, setOriginalValue } = useForm(
 		requestsEnabled: station.value.requests.enabled,
 		requestsAccess: station.value.requests.access,
 		requestsLimit: station.value.requests.limit,
+		requestsAllowAutorequest: station.value.requests.allowAutorequest,
+		requestsAutorequestLimit: {
+			value: station.value.requests.autorequestLimit,
+			validate: (value, newInputs) => {
+				if (value > newInputs.value.requestsLimit.value)
+					return "The autorequest limit cannot be higher than the request limit.";
+				return true;
+			}
+		},
+		requestsAutorequestDisallowRecentlyPlayedEnabled:
+			station.value.requests.autorequestDisallowRecentlyPlayedEnabled,
+		requestsAutorequestDisallowRecentlyPlayedNumber:
+			station.value.requests.autorequestDisallowRecentlyPlayedNumber,
 		autofillEnabled: station.value.autofill.enabled,
 		autofillLimit: station.value.autofill.limit,
 		autofillMode: station.value.autofill.mode
@@ -83,7 +100,13 @@ const { inputs, save, setOriginalValue } = useForm(
 					...oldStation.requests,
 					enabled: values.requestsEnabled,
 					access: values.requestsAccess,
-					limit: values.requestsLimit
+					limit: values.requestsLimit,
+					allowAutorequest: values.requestsAllowAutorequest,
+					autorequestLimit: values.requestsAutorequestLimit,
+					autorequestDisallowRecentlyPlayedEnabled:
+						values.requestsAutorequestDisallowRecentlyPlayedEnabled,
+					autorequestDisallowRecentlyPlayedNumber:
+						values.requestsAutorequestDisallowRecentlyPlayedNumber
 				},
 				autofill: {
 					...oldStation.autofill,
@@ -97,9 +120,9 @@ const { inputs, save, setOriginalValue } = useForm(
 				station.value._id,
 				updatedStation,
 				res => {
-					new Toast(res.message);
 					if (res.status === "success") {
 						editStation(updatedStation);
+						new Toast(res.message);
 						resolve();
 					} else reject(new Error(res.message));
 				}
@@ -127,6 +150,12 @@ watch(station, value => {
 		requestsEnabled: value.requests.enabled,
 		requestsAccess: value.requests.access,
 		requestsLimit: value.requests.limit,
+		requestsAllowAutorequest: value.requests.allowAutorequest,
+		requestsAutorequestLimit: value.requests.autorequestLimit,
+		requestsAutorequestDisallowRecentlyPlayedEnabled:
+			value.requests.autorequestDisallowRecentlyPlayedEnabled,
+		requestsAutorequestDisallowRecentlyPlayedNumber:
+			value.requests.autorequestDisallowRecentlyPlayedNumber,
 		autofillEnabled: value.autofill.enabled,
 		autofillLimit: value.autofill.limit,
 		autofillMode: value.autofill.mode
@@ -235,34 +264,117 @@ watch(station, value => {
 					</p>
 				</div>
 
-				<div
-					v-if="inputs['requestsEnabled'].value"
-					class="small-section"
-				>
-					<label class="label">Minimum access</label>
-					<div class="control is-expanded select">
-						<select v-model="inputs['requestsAccess'].value">
-							<option value="owner" selected>Owner</option>
-							<option value="user">User</option>
-						</select>
+				<template v-if="inputs['requestsEnabled'].value">
+					<div class="small-section">
+						<label class="label">Minimum access</label>
+						<div class="control is-expanded select">
+							<select v-model="inputs['requestsAccess'].value">
+								<option value="owner" selected>Owner</option>
+								<option value="user">User</option>
+							</select>
+						</div>
 					</div>
-				</div>
 
-				<div
-					v-if="inputs['requestsEnabled'].value"
-					class="small-section"
-				>
-					<label class="label">Per user request limit</label>
-					<div class="control is-expanded">
-						<input
-							class="input"
-							type="number"
-							min="1"
-							max="50"
-							v-model="inputs['requestsLimit'].value"
-						/>
+					<div class="small-section">
+						<label class="label">Per user request limit</label>
+						<div class="control is-expanded">
+							<input
+								class="input"
+								type="number"
+								min="1"
+								max="50"
+								v-model="inputs['requestsLimit'].value"
+							/>
+						</div>
 					</div>
-				</div>
+
+					<div class="small-section">
+						<label class="label">Allow autorequest</label>
+						<p class="is-expanded checkbox-control">
+							<label class="switch">
+								<input
+									type="checkbox"
+									v-model="
+										inputs['requestsAllowAutorequest'].value
+									"
+								/>
+								<span class="slider round"></span>
+							</label>
+						</p>
+					</div>
+
+					<template v-if="inputs['requestsAllowAutorequest'].value">
+						<div class="small-section">
+							<label class="label"
+								>Per user autorequest limit</label
+							>
+							<div class="control is-expanded">
+								<input
+									class="input"
+									type="number"
+									min="1"
+									:max="
+										Math.min(
+											50,
+											inputs['requestsLimit'].value
+										)
+									"
+									v-model="
+										inputs['requestsAutorequestLimit'].value
+									"
+								/>
+							</div>
+						</div>
+
+						<div
+							class="small-section"
+							v-if="experimental.station_history"
+						>
+							<label class="label"
+								>Autorequest disallow recent</label
+							>
+							<p class="is-expanded checkbox-control">
+								<label class="switch">
+									<input
+										type="checkbox"
+										v-model="
+											inputs[
+												'requestsAutorequestDisallowRecentlyPlayedEnabled'
+											].value
+										"
+									/>
+									<span class="slider round"></span>
+								</label>
+							</p>
+						</div>
+
+						<div
+							v-if="
+								inputs[
+									'requestsAutorequestDisallowRecentlyPlayedEnabled'
+								].value && experimental.station_history
+							"
+							class="small-section"
+						>
+							<label class="label"
+								>Autorequest disallow recent #</label
+							>
+							<div class="control is-expanded">
+								<input
+									class="input"
+									type="number"
+									min="1"
+									max="250"
+									v-model="
+										inputs[
+											'requestsAutorequestDisallowRecentlyPlayedNumber'
+										].value
+									"
+								/>
+							</div>
+						</div>
+					</template>
+				</template>
 			</div>
 
 			<div
@@ -298,34 +410,30 @@ watch(station, value => {
 					</p>
 				</div>
 
-				<div
-					v-if="inputs['autofillEnabled'].value"
-					class="small-section"
-				>
-					<label class="label">Song limit</label>
-					<div class="control is-expanded">
-						<input
-							class="input"
-							type="number"
-							min="1"
-							max="50"
-							v-model="inputs['autofillLimit'].value"
-						/>
+				<template v-if="inputs['autofillEnabled'].value">
+					<div class="small-section">
+						<label class="label">Song limit</label>
+						<div class="control is-expanded">
+							<input
+								class="input"
+								type="number"
+								min="1"
+								max="50"
+								v-model="inputs['autofillLimit'].value"
+							/>
+						</div>
 					</div>
-				</div>
 
-				<div
-					v-if="inputs['autofillEnabled'].value"
-					class="small-section"
-				>
-					<label class="label">Play mode</label>
-					<div class="control is-expanded select">
-						<select v-model="inputs['autofillMode'].value">
-							<option value="random" selected>Random</option>
-							<option value="sequential">Sequential</option>
-						</select>
+					<div class="small-section">
+						<label class="label">Play mode</label>
+						<div class="control is-expanded select">
+							<select v-model="inputs['autofillMode'].value">
+								<option value="random" selected>Random</option>
+								<option value="sequential">Sequential</option>
+							</select>
+						</div>
 					</div>
-				</div>
+				</template>
 			</div>
 		</div>
 
@@ -490,7 +598,7 @@ watch(station, value => {
 			flex-grow: 1;
 		}
 
-		.checkbox-control {
+		> .checkbox-control {
 			justify-content: end;
 		}
 
@@ -502,6 +610,10 @@ watch(station, value => {
 			&:nth-child(odd) {
 				margin-left: auto;
 				margin-right: 0;
+			}
+
+			.checkbox-control {
+				justify-content: center;
 			}
 		}
 	}

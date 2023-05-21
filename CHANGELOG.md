@@ -1,5 +1,126 @@
 # Changelog
 
+## [v3.10.0] - 2023-05-21
+
+This release includes all changes from v3.10.0-rc1, v3.10.0-rc2 and v3.10.0-rc3,
+in addition to the following.
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Fixed
+
+- fix: Stations created with empty song object
+
+## [v3.10.0-rc3] - 2023-05-14
+
+This release includes all changes from v3.10.0-rc1 and v3.10.0-rc2,
+in addition to the following.
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Added
+
+- feat: Finished basic implementation of showing jobs on statistics admin page
+- feat: Exclude disliked songs from being autorequested,
+if "Automatically vote to skip disliked songs" preference is enabled
+
+### Changed
+
+- refactor: Increased playlist displayname max length to 64
+- refactor: Improved song thumbnail fallback logic
+
+### Fixed
+
+- fix: SoundCloud player not destroyed properly
+- fix: getPlayerState is not a function thrown in browser console
+- fix: Activity items `<youtubeId>` payload message not migrated
+- fix: Import playlist from file never finishes
+- fix: Tippy can be null and throw an error in console
+
+## [v3.10.0-rc2] - 2023-04-30
+
+This release includes all changes from v3.10.0-rc1, in addition to the following.
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Added
+
+- feat: SoundcloudPlayer component
+- feat: Add extra user station state for unavailable media
+- feat: Add support for SoundCloud media track state in user station state
+
+### Changed
+
+- refactor: Change youtubeId to mediaSource in some GET_DATA special properties
+- refactor: Improve login, register and reset password form and autocompletion
+- refactor: Improve SoundCloud unavailable track handling, to match YouTube
+
+### Fixed
+
+- fix: Unable to add YouTube search result song to station queue
+- fix: Large Docker build context
+- fix: Some jobs available in run admin page job dropdowns did not return result
+- fix: Skipping station can pause/resume local station
+- fix: Cookie expiry not refreshed causes issues in some browsers
+- fix: Autofilling playlist skips station in some cases
+- fix: Unable to open View Media modal from SoundCloud tracks admin page
+- fix: Password managers submitting login form before inputs filled
+- fix: Song unavailable toast does not automatically disappear
+- fix: Don't count participating users in vote to skip users
+(unless they vote-skipped themselves)
+- fix: SoundCloud player doesn't work correctly twice on the same page
+
+## [v3.10.0-rc1] - 2023-04-15
+
+### **Breaking Changes**
+
+This release includes breaking changes to our configuration handling.
+The `backend/config/default.json` previously used as the means of configuring
+the backend is now tracked and serves as the source of all default values.
+
+Before updating or pulling changes please make a full backup and rename or
+remove the `backend/config/default.json` file to avoid it being overwritten.
+Please refer to the [Configuration documentation](.wiki/Configuration.md)
+for more information on how you should now configure the application.
+
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Added
+
+- feat: Import playlist media from export file
+- feat: Added additional station settings to configure autorequest functionality:
+  - Allow autorequest toggle
+  - Per user autorequest limit
+  - Disallow recent functionality toggle
+  (requires experimental station history to be enabled)
+  - Disallow recent amount
+  (requires experimental station history to be enabled)
+- feat: Display count of station users and autorequesting playlist in tags
+within tabs
+- feat: Added experimental station history
+- feat: Store and display user playback state in station users tab
+- feat: Added experimental option to restrict registrations to emails matching
+specific regex patterns
+- feat: Allow DJ's in official stations
+- feat: Display the reason media was added to queue
+- feat: Added "Add song to queue" button to station queue
+- feat: Added link to a user's own playlists in header/navbar
+- feat: Added experimental support for SoundCloud media
+- feat: Added experimental support for parsing and converting Spotify media
+- feat: Added experimental support for storing YouTube channel API data
+(requires experimental Spotify integration to be enabled)
+
+### Changed
+
+- refactor: Replace youtubeId usage with mediaSource internally
+- refactor: Serve application configuration from backend
+  - Replaced frontend config with both environment variables and backend config
+  - Define default backend config values in `default.json` and
+  overwrite with `local.json` files or environment variables
+- style: Changed font to Nunito
+
+### Fixed
+
+- fix: Git debug not functional in production
+- fix: Successfully saving station settings via Manage Station does not show a toast
+
 ## [v3.9.0] - 2023-01-01
 
 This release includes all changes from v3.9.0-rc1, in addition to the following.

@@ -117,6 +117,10 @@ class _YouTubeModule extends CoreClass {
 			modelName: "youtubeVideo"
 		});
 
+		this.youtubeChannelModel = this.YoutubeChannelModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "youtubeChannel"
+		});
+
 		return new Promise(resolve => {
 			CacheModule.runJob("SUB", {
 				channel: "youtube.removeYoutubeApiRequest",
@@ -139,7 +143,7 @@ class _YouTubeModule extends CoreClass {
 					const videos = Array.isArray(videoIds) ? videoIds : [videoIds];
 					videos.forEach(videoId => {
 						WSModule.runJob("EMIT_TO_ROOM", {
-							room: `view-youtube-video.${videoId}`,
+							room: `view-media.youtube:${videoId}`,
 							args: ["event:youtubeVideo.removed"]
 						});
 
@@ -620,6 +624,9 @@ class _YouTubeModule extends CoreClass {
 				return;
 			}
 			const playlistId = splitQuery[1];
+			const maxPages = Number.parseInt(config.get("apis.youtube.maxPlaylistPages"));
+
+			let currentPage = 0;
 
 			async.waterfall(
 				[
@@ -635,9 +642,10 @@ class _YouTubeModule extends CoreClass {
 										songs.length
 									} songs gotten so far. Is there a next page: ${nextPageToken !== undefined}.`
 								);
-								next(null, nextPageToken !== undefined);
+								next(null, nextPageToken !== undefined && currentPage < maxPages);
 							},
 							next => {
+								currentPage += 1;
 								// Add 250ms delay between each job request
 								setTimeout(() => {
 									YouTubeModule.runJob("GET_PLAYLIST_PAGE", { playlistId, nextPageToken }, this)
@@ -679,7 +687,7 @@ class _YouTubeModule extends CoreClass {
 	}
 
 	/**
-	 * Returns a a page from a YouTube playlist. Is used internally by GET_PLAYLIST and GET_CHANNEL.
+	 * Returns a a page from a YouTube playlist. Is used internally by GET_PLAYLIST and GET_CHANNEL_VIDEOS.
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {boolean} payload.playlistId - the playlist id to get videos from
@@ -787,7 +795,7 @@ class _YouTubeModule extends CoreClass {
 	 * @param {string} payload.url - the url of the YouTube channel
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	GET_CHANNEL(payload) {
+	GET_CHANNEL_VIDEOS(payload) {
 		return new Promise((resolve, reject) => {
 			const regex =
 				/\.[\w]+\/(?:(?:channel\/(UC[0-9A-Za-z_-]{21}[AQgw]))|(?:user\/?([\w-]+))|(?:c\/?([\w-]+))|(?:\/?([\w-]+)))/;
@@ -802,11 +810,6 @@ class _YouTubeModule extends CoreClass {
 			const channelUsername = splitQuery[2];
 			const channelCustomUrl = splitQuery[3];
 			const channelUsernameOrCustomUrl = splitQuery[4];
-
-			console.log(`Channel id: ${channelId}`);
-			console.log(`Channel username: ${channelUsername}`);
-			console.log(`Channel custom URL: ${channelCustomUrl}`);
-			console.log(`Channel username or custom URL: ${channelUsernameOrCustomUrl}`);
 
 			const disableSearch = payload.disableSearch || false;
 
@@ -1014,10 +1017,7 @@ class _YouTubeModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			const { params } = payload;
 
-			if (
-				config.has("experimental.disable_youtube_search") &&
-				config.get("experimental.disable_youtube_search")
-			) {
+			if (config.get("experimental.disable_youtube_search")) {
 				reject(new Error("Searching with YouTube is disabled."));
 				return;
 			}
@@ -1327,7 +1327,7 @@ class _YouTubeModule extends CoreClass {
 	 * Create YouTube videos
 	 *
 	 * @param {object} payload - an object containing the payload
-	 * @param {string} payload.youtubeVideos - the youtubeVideo object or array of
+	 * @param {Array | object} payload.youtubeVideos - the youtubeVideo object or array of
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	CREATE_VIDEOS(payload) {
@@ -1344,12 +1344,13 @@ class _YouTubeModule extends CoreClass {
 					},
 
 					(youtubeVideos, next) => {
-						const youtubeIds = youtubeVideos.map(video => video.youtubeId);
+						// TODO support spotify here
+						const mediaSources = youtubeVideos.map(video => `youtube:${video.youtubeId}`);
 						async.eachLimit(
-							youtubeIds,
+							mediaSources,
 							2,
-							(youtubeId, next) => {
-								MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId }, this)
+							(mediaSource, next) => {
+								MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource }, this)
 									.then(() => next())
 									.catch(next);
 							},
@@ -1369,96 +1370,187 @@ class _YouTubeModule extends CoreClass {
 	}
 
 	/**
-	 * Get YouTube video
+	 * Get YouTube videos
 	 *
 	 * @param {object} payload - an object containing the payload
-	 * @param {string} payload.identifier - the youtube video ObjectId or YouTube ID
-	 * @param {string} payload.createMissing - attempt to fetch and create video if not in db
+	 * @param {Array} payload.identifiers - an array of YouTube video ObjectId's or YouTube ID's
+	 * @param {boolean} payload.createMissing - attempt to fetch and create video's if not in db
+	 * @param {boolean} payload.replaceExisting - replace existing
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	GET_VIDEO(payload) {
-		return new Promise((resolve, reject) => {
-			async.waterfall(
-				[
-					next => {
-						const query = mongoose.Types.ObjectId.isValid(payload.identifier)
-							? { _id: payload.identifier }
-							: { youtubeId: payload.identifier };
+	async GET_VIDEOS(payload) {
+		const getVideosFromYoutubeIds = async youtubeIds => {
+			const jobsToRun = [];
 
-						return YouTubeModule.youtubeVideoModel.findOne(query, next);
-					},
+			const chunkSize = 50;
+			while (youtubeIds.length > 0) {
+				const chunkedYoutubeIds = youtubeIds.splice(0, chunkSize);
 
-					(video, next) => {
-						if (video) return next(null, video, false);
-						if (mongoose.Types.ObjectId.isValid(payload.identifier) || !payload.createMissing)
-							return next("YouTube video not found.");
+				const params = {
+					part: "snippet,contentDetails,statistics,status",
+					id: chunkedYoutubeIds.join(",")
+				};
 
-						const params = {
-							part: "snippet,contentDetails,statistics,status",
-							id: payload.identifier
-						};
+				jobsToRun.push(YouTubeModule.runJob("API_GET_VIDEOS", { params }, this));
+			}
 
-						return YouTubeModule.runJob("API_GET_VIDEOS", { params }, this)
-							.then(({ response }) => {
-								const { data } = response;
-								if (data.items[0] === undefined)
-									return next("The specified video does not exist or cannot be publicly accessed.");
+			const jobResponses = await Promise.all(jobsToRun);
 
-								// TODO Clean up duration converter
-								let dur = data.items[0].contentDetails.duration;
+			return jobResponses
+				.map(jobResponse => jobResponse.response.data.items)
+				.flat()
+				.map(item => {
+					// TODO Clean up duration converter
+					let dur = item.contentDetails.duration;
 
-								dur = dur.replace("PT", "");
+					dur = dur.replace("PT", "");
 
-								let duration = 0;
+					let duration = 0;
 
-								dur = dur.replace(/([\d]*)H/, (v, v2) => {
-									v2 = Number(v2);
-									duration = v2 * 60 * 60;
-									return "";
-								});
+					dur = dur.replace(/([\d]*)H/, (v, v2) => {
+						v2 = Number(v2);
+						duration = v2 * 60 * 60;
+						return "";
+					});
 
-								dur = dur.replace(/([\d]*)M/, (v, v2) => {
-									v2 = Number(v2);
-									duration += v2 * 60;
-									return "";
-								});
+					dur = dur.replace(/([\d]*)M/, (v, v2) => {
+						v2 = Number(v2);
+						duration += v2 * 60;
+						return "";
+					});
 
-								dur.replace(/([\d]*)S/, (v, v2) => {
-									v2 = Number(v2);
-									duration += v2;
-									return "";
-								});
+					dur.replace(/([\d]*)S/, (v, v2) => {
+						v2 = Number(v2);
+						duration += v2;
+						return "";
+					});
 
-								const youtubeVideo = {
-									youtubeId: data.items[0].id,
-									title: data.items[0].snippet.title,
-									author: data.items[0].snippet.channelTitle,
-									thumbnail: data.items[0].snippet.thumbnails.default.url,
-									duration,
-									uploadedAt: new Date(data.items[0].snippet.publishedAt)
-								};
+					const youtubeVideo = {
+						youtubeId: item.id,
+						title: item.snippet.title,
+						author: item.snippet.channelTitle,
+						thumbnail: item.snippet.thumbnails.default.url,
+						duration,
+						uploadedAt: new Date(item.snippet.publishedAt),
+						rawData: item
+					};
 
-								return next(null, false, youtubeVideo);
-							})
-							.catch(next);
-					},
+					return youtubeVideo;
+				});
+		};
 
-					(video, youtubeVideo, next) => {
-						if (video) return next(null, video, true);
-						return YouTubeModule.runJob("CREATE_VIDEOS", { youtubeVideos: youtubeVideo }, this)
-							.then(res => {
-								if (res.youtubeVideos.length === 1) next(null, res.youtubeVideos[0], false);
-								else next("YouTube video not found.");
-							})
-							.catch(next);
-					}
-				],
-				(err, video, existing) => {
-					if (err) reject(new Error(err));
-					else resolve({ video, existing });
-				}
-			);
-		});
+		const { identifiers, createMissing, replaceExisting } = payload;
+
+		const youtubeIds = identifiers.filter(identifier => !mongoose.Types.ObjectId.isValid(identifier));
+		const objectIds = identifiers.filter(identifier => mongoose.Types.ObjectId.isValid(identifier));
+
+		const existingVideos = (await YouTubeModule.youtubeVideoModel.find({ youtubeId: youtubeIds }))
+			.concat(await YouTubeModule.youtubeVideoModel.find({ _id: objectIds }))
+			.map(video => video._doc);
+
+		const existingYoutubeIds = existingVideos.map(existingVideo => existingVideo.youtubeId);
+		// const existingYoutubeObjectIds = existingVideos.map(existingVideo => existingVideo._id.toString());
+
+		if (!replaceExisting) {
+			if (!createMissing) return { videos: existingVideos };
+			if (identifiers.length === existingVideos.length || youtubeIds.length === 0)
+				return { videos: existingVideos };
+
+			const missingYoutubeIds = youtubeIds.filter(youtubeId => existingYoutubeIds.indexOf(youtubeId) === -1);
+
+			if (missingYoutubeIds.length === 0) return { videos: existingVideos };
+
+			const newVideos = await getVideosFromYoutubeIds(missingYoutubeIds);
+
+			await YouTubeModule.runJob("CREATE_VIDEOS", { youtubeVideos: newVideos }, this);
+
+			return { videos: existingVideos.concat(newVideos) };
+		}
+
+		const newVideos = await getVideosFromYoutubeIds(existingYoutubeIds);
+
+		const promises = newVideos.map(newVideo =>
+			YouTubeModule.youtubeVideoModel.updateOne(
+				{ youtubeId: newVideo.youtubeId },
+				{ $set: { ...newVideo, updatedAt: Date.now(), documentVersion: 2 } }
+			)
+		);
+
+		await Promise.allSettled(promises);
+
+		return { videos: newVideos };
+	}
+
+	/**
+	 * Get YouTube channels
+	 *
+	 * @param {object} payload - an object containing the payload
+	 * @param {Array} payload.channelIds - an array of YouTube channel id's
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	async GET_CHANNELS_FROM_IDS(payload) {
+		const getChannels = async channelIds => {
+			const jobsToRun = [];
+
+			const chunkSize = 50;
+			while (channelIds.length > 0) {
+				const chunkedChannelIds = channelIds.splice(0, chunkSize);
+
+				const params = {
+					part: [
+						"brandingSettings",
+						"contentDetails",
+						"contentOwnerDetails",
+						"id",
+						"localizations",
+						"snippet",
+						"statistics",
+						"status",
+						"topicDetails"
+					].join(","),
+					id: chunkedChannelIds.join(",")
+				};
+
+				jobsToRun.push(YouTubeModule.runJob("API_GET_CHANNELS", { params }, this));
+			}
+
+			const jobResponses = await Promise.all(jobsToRun);
+
+			return jobResponses
+				.map(jobResponse => jobResponse.response.data.items)
+				.flat()
+				.map(item => {
+					const youtubeChannel = {
+						channelId: item.id,
+						title: item.snippet.title,
+						customUrl: item.snippet.customUrl,
+						rawData: item
+					};
+
+					return youtubeChannel;
+				});
+		};
+
+		const { channelIds } = payload;
+
+		const existingChannels = (await YouTubeModule.youtubeChannelModel.find({ channelId: channelIds })).map(
+			channel => channel._doc
+		);
+
+		const existingChannelIds = existingChannels.map(existingChannel => existingChannel.channelId);
+		// const existingChannelObjectIds = existingChannels.map(existingChannel => existingChannel._id.toString());
+
+		if (channelIds.length === existingChannels.length) return { channels: existingChannels };
+
+		const missingChannelIds = channelIds.filter(channelId => existingChannelIds.indexOf(channelId) === -1);
+
+		if (missingChannelIds.length === 0) return { videos: existingChannels };
+
+		const newChannels = await getChannels(missingChannelIds);
+
+		await YouTubeModule.youtubeChannelModel.insertMany(newChannels);
+
+		return { channels: existingChannels.concat(newChannels) };
 	}
 
 	/**
@@ -1591,7 +1683,11 @@ class _YouTubeModule extends CoreClass {
 															(station, next) => {
 																StationsModule.runJob(
 																	"SKIP_STATION",
-																	{ stationId: station._id, natural: false },
+																	{
+																		stationId: station._id,
+																		natural: false,
+																		skipReason: "other"
+																	},
 																	this
 																)
 																	.then(() => {
@@ -1659,7 +1755,7 @@ class _YouTubeModule extends CoreClass {
 							/\.[\w]+\/(?:(?:channel\/(UC[0-9A-Za-z_-]{21}[AQgw]))|(?:user\/?([\w-]+))|(?:c\/?([\w-]+))|(?:\/?([\w-]+)))/;
 						if (playlistRegex.exec(payload.url) || channelRegex.exec(payload.url))
 							YouTubeModule.runJob(
-								playlistRegex.exec(payload.url) ? "GET_PLAYLIST" : "GET_CHANNEL",
+								playlistRegex.exec(payload.url) ? "GET_PLAYLIST" : "GET_CHANNEL_VIDEOS",
 								{
 									url: payload.url,
 									musicOnly: payload.musicOnly
@@ -1673,54 +1769,16 @@ class _YouTubeModule extends CoreClass {
 						else next("Invalid YouTube URL.");
 					},
 
-					(youtubeIds, next) => {
-						let successful = 0;
-						let failed = 0;
-						let alreadyInDatabase = 0;
+					async youtubeIds => {
+						if (youtubeIds.length === 0) return { videos: [] };
 
-						let videos = {};
-
-						const successfulVideoIds = [];
-						const failedVideoIds = [];
-
-						if (youtubeIds.length === 0) next();
-
-						async.eachOfLimit(
-							youtubeIds,
-							1,
-							(youtubeId, index, next2) => {
-								YouTubeModule.runJob("GET_VIDEO", { identifier: youtubeId, createMissing: true }, this)
-									.then(res => {
-										successful += 1;
-										successfulVideoIds.push(youtubeId);
-
-										if (res.existing) alreadyInDatabase += 1;
-										if (res.video) videos[index] = res.video;
-									})
-									.catch(() => {
-										failed += 1;
-										failedVideoIds.push(youtubeId);
-									})
-									.finally(() => {
-										next2();
-									});
-							},
-							() => {
-								if (payload.returnVideos)
-									videos = Object.keys(videos)
-										.sort()
-										.map(key => videos[key]);
-
-								next(null, {
-									successful,
-									failed,
-									alreadyInDatabase,
-									videos,
-									successfulVideoIds,
-									failedVideoIds
-								});
-							}
+						const { videos } = await YouTubeModule.runJob(
+							"GET_VIDEOS",
+							{ identifiers: youtubeIds, createMissing: true },
+							this
 						);
+
+						return { videos };
 					}
 				],
 				(err, response) => {
@@ -1729,6 +1787,85 @@ class _YouTubeModule extends CoreClass {
 				}
 			);
 		});
+	}
+
+	/**
+	 * Gets missing YouTube video's from all playlists, stations and songs
+	 *
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	async GET_MISSING_VIDEOS() {
+		const youtubeIds = Array.from(
+			new Set(
+				[
+					...(await SongsModule.runJob("GET_ALL_MEDIA_SOURCES", {}, this)),
+					...(await PlaylistsModule.runJob("GET_ALL_MEDIA_SOURCES", {}, this))
+				]
+					.filter(mediaSource => mediaSource.startsWith("youtube:"))
+					.map(mediaSource => mediaSource.split(":")[1])
+			)
+		);
+
+		const existingYoutubeIds = await YouTubeModule.youtubeVideoModel.distinct("youtubeId");
+
+		const missingYoutubeIds = youtubeIds.filter(youtubeId => existingYoutubeIds.indexOf(youtubeId) === -1);
+
+		const res = await YouTubeModule.runJob(
+			"GET_VIDEOS",
+			{ identifiers: missingYoutubeIds, createMissing: true },
+			this
+		);
+
+		const gotVideos = res.videos;
+
+		return {
+			all: youtubeIds.length,
+			existing: existingYoutubeIds.length,
+			missing: missingYoutubeIds.length,
+			got: gotVideos.length
+		};
+	}
+
+	/**
+	 * Updates videos from version 1 to version 2
+	 *
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	async UPDATE_VIDEOS_V1_TO_V2() {
+		const videoIds = await YouTubeModule.youtubeVideoModel.distinct("_id", { documentVersion: 1 });
+
+		const res = await YouTubeModule.runJob("GET_VIDEOS", { identifiers: videoIds, replaceExisting: true }, this);
+
+		const v1 = videoIds.length;
+		const v2 = res.videos.length;
+
+		return {
+			v1,
+			v2
+		};
+	}
+
+	/**
+	 * Gets missing YouTube channels based on cached YouTube video's
+	 *
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	async GET_MISSING_CHANNELS() {
+		const currentChannelIds = await YouTubeModule.youtubeChannelModel.distinct("channelId");
+		const videoChannelIds = await YouTubeModule.youtubeVideoModel.distinct("rawData.snippet.channelId");
+
+		const missingChannelIds = videoChannelIds.filter(channelId => currentChannelIds.indexOf(channelId) === -1);
+
+		const res = await YouTubeModule.runJob("GET_CHANNELS_FROM_IDS", { channelIds: missingChannelIds }, this);
+
+		const gotChannels = res.channels;
+
+		return {
+			current: currentChannelIds.length,
+			all: videoChannelIds.length,
+			missing: missingChannelIds.length,
+			got: gotChannels.length
+		};
 	}
 }
 
