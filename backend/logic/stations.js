@@ -307,7 +307,7 @@ class _StationsModule extends CoreClass {
 					(station, next) => {
 						// A current song is invalid if it isn't allowed to be played. Spotify songs can never be played, and SoundCloud songs can't be played if SoundCloud isn't enabled
 						let currentSongIsInvalid = false;
-						if (station.currentSong) {
+						if (station.currentSong && station.currentSong.mediaSource) {
 							if (station.currentSong.mediaSource.startsWith("spotify:")) currentSongIsInvalid = true;
 							if (
 								station.currentSong.mediaSource.startsWith("soundcloud:") &&

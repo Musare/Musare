@@ -7,18 +7,21 @@ export default {
 	description: { type: String, minlength: 2, maxlength: 128, trim: true, required: true },
 	paused: { type: Boolean, default: false, required: true },
 	currentSong: {
-		_id: { type: mongoose.Schema.Types.ObjectId },
-		mediaSource: { type: String },
-		title: { type: String },
-		artists: [{ type: String }],
-		duration: { type: Number },
-		skipDuration: { type: Number },
-		thumbnail: { type: String },
-		skipVotes: [{ type: String }],
-		requestedBy: { type: String },
-		requestedAt: { type: Date },
-		requestedType: { type: String, enum: ["manual", "autorequest", "autofill"] },
-		verified: { type: Boolean }
+		type: {
+			_id: { type: mongoose.Schema.Types.ObjectId },
+			mediaSource: { type: String },
+			title: { type: String },
+			artists: [{ type: String }],
+			duration: { type: Number },
+			skipDuration: { type: Number },
+			thumbnail: { type: String },
+			skipVotes: [{ type: String }],
+			requestedBy: { type: String },
+			requestedAt: { type: Date },
+			requestedType: { type: String, enum: ["manual", "autorequest", "autofill"] },
+			verified: { type: Boolean }
+		},
+		default: null
 	},
 	currentSongIndex: { type: Number, default: 0, required: true },
 	timePaused: { type: Number, default: 0, required: true },
