@@ -1,6 +1,10 @@
 import config from "config";
-import { createClient, RedisClientType } from "redis";
-import mongoose from "mongoose";
+//import { createClient, RedisClientType } from "redis";
+import mongoose, {
+    MongooseDefaultQueryMiddleware,
+    MongooseDistinctQueryMiddleware,
+    MongooseQueryOrDocumentMiddleware
+} from "mongoose";
 import JobContext from "../JobContext";
 import BaseModule from "../BaseModule";
 import { UniqueMethods } from "../types/Modules";
@@ -9,7 +13,7 @@ import { Models, Schemas } from "../types/Models";
 export default class DataModule extends BaseModule {
 	private models?: Models;
 
-	private redisClient?: RedisClientType;
+	//	private redisClient?: RedisClientType;
 
 	/**
 	 * Data Module
@@ -24,37 +28,43 @@ export default class DataModule extends BaseModule {
 	public override async startup() {
 		await super.startup();
 
-		const mongoUrl = config.get<string>("mongo.url");
+		const { user, password, host, port, database } = config.get<{
+			user: string;
+			password: string;
+			host: string;
+			port: number;
+			database: string;
+		}>("mongo");
+		const mongoUrl = `mongodb://${user}:${password}@${host}:${port}/${database}`;
 
 		await mongoose.connect(mongoUrl);
 
 		await this.loadModels();
 
-		const { url } = config.get<{ url: string }>("redis");
-
-		this.redisClient = createClient({ url });
-
-		await this.redisClient.connect();
-
-		const redisConfigResponse = await this.redisClient.sendCommand([
-			"CONFIG",
-			"GET",
-			"notify-keyspace-events"
-		]);
-
-		if (
-			!(
-				Array.isArray(redisConfigResponse) &&
-				redisConfigResponse[1] === "xE"
-			)
-		)
-			throw new Error(
-				`notify-keyspace-events is NOT configured correctly! It is set to: ${
-					(Array.isArray(redisConfigResponse) &&
-						redisConfigResponse[1]) ||
-					"unknown"
-				}`
-			);
+		// @ts-ignore
+		//        this.redisClient = createClient({ ...config.get("redis") });
+		//
+		//		await this.redisClient.connect();
+		//
+		//		const redisConfigResponse = await this.redisClient.sendCommand([
+		//			"CONFIG",
+		//			"GET",
+		//			"notify-keyspace-events"
+		//		]);
+		//
+		//		if (
+		//			!(
+		//				Array.isArray(redisConfigResponse) &&
+		//				redisConfigResponse[1] === "xE"
+		//			)
+		//		)
+		//			throw new Error(
+		//				`notify-keyspace-events is NOT configured correctly! It is set to: ${
+		//					(Array.isArray(redisConfigResponse) &&
+		//						redisConfigResponse[1]) ||
+		//					"unknown"
+		//				}`
+		//			);
 
 		await super.started();
 	}
@@ -64,7 +74,7 @@ export default class DataModule extends BaseModule {
 	 */
 	public override async shutdown() {
 		await super.shutdown();
-		if (this.redisClient) await this.redisClient.quit();
+		//		if (this.redisClient) await this.redisClient.quit();
 		await mongoose.disconnect();
 	}
 
@@ -80,6 +90,38 @@ export default class DataModule extends BaseModule {
 		const { schema }: { schema: Schemas[ModelName] } = await import(
 			`../models/${modelName.toString()}`
 		);
+
+		const preMethods: string[] = [
+			"aggregate",
+			"count",
+			"countDocuments",
+			"deleteOne",
+			"deleteMany",
+			"estimatedDocumentCount",
+			"find",
+			"findOne",
+			"findOneAndDelete",
+			"findOneAndRemove",
+			"findOneAndReplace",
+			"findOneAndUpdate",
+			"init",
+			"insertMany",
+			"remove",
+			"replaceOne",
+			"save",
+			"update",
+			"updateOne",
+			"updateMany",
+			"validate"
+		];
+
+		preMethods.forEach(preMethod => {
+			// @ts-ignore
+            schema.pre(preMethods, () => {
+				console.log(`Pre-${preMethod}!`);
+			});
+		});
+
 		return mongoose.model(modelName.toString(), schema);
 	}
 
@@ -90,23 +132,24 @@ export default class DataModule extends BaseModule {
 	 */
 	private async loadModels() {
 		this.models = {
-			abc: await this.loadModel("abc"),
-			station: await this.loadModel("station")
+			abc: await this.loadModel("abc")
+			//			station: await this.loadModel("station")
 		};
 	}
 
 	/**
 	 * getModel - Get model
 	 *
-	 * @param modelName - Name of the model
+	 * @param jobContext
+	 * @param payload
 	 * @returns Model
 	 */
-	public getModel<ModelName extends keyof Models>(
+	public async getModel<ModelName extends keyof Models>(
 		jobContext: JobContext,
-		modelName: ModelName
+		payload: { modelName: ModelName }
 	) {
 		if (!this.models) throw new Error("Models not loaded");
-		return this.models[modelName];
+		return this.models[payload.modelName];
 	}
 }
 

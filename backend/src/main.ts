@@ -24,6 +24,8 @@ process.on("uncaughtException", err => {
 				: err
 		}
 	});
+
+	console.log(err);
 });
 
 const moduleManager = ModuleManager.getPrimaryInstance();
@@ -45,18 +47,32 @@ global.rs = () => {
 };
 
 setTimeout(async () => {
-	const start = Date.now();
-	const x = [];
-	while (x.length < 1) {
-		x.push(jobQueue.runJob("stations", "addC", {}).catch(() => {}));
-	}
-	const y = await Promise.all(x);
-	console.log(y);
-	// const a = await jobQueue.runJob("stations", "addC", {}).catch(() => {});
-	// console.log(555, a);
-	const difference = Date.now() - start;
-	console.log({ difference });
+	const model = await jobQueue.runJob("data", "getModel", { modelName: "abc" });
+	console.log("Model", model);
+	const abcs = await model.find({});
+	console.log("Abcs", abcs);
+
+	model.create({
+		name: "Test name",
+		someNumbers: [1, 2, 3, 4],
+		songs: [],
+		aNumber: 941
+	});
 }, 100);
+
+// setTimeout(async () => {
+//	const start = Date.now();
+//	const x = [];
+//	while (x.length < 1) {
+//		x.push(jobQueue.runJob("stations", "addC", {}).catch(() => {}));
+//	}
+//	const y = await Promise.all(x);
+//	console.log(y);
+//	// const a = await jobQueue.runJob("stations", "addC", {}).catch(() => {});
+//	// console.log(555, a);
+//	const difference = Date.now() - start;
+//	console.log({ difference });
+// }, 100);
 
 // setTimeout(() => {
 // 	clearTimeout(interval);
