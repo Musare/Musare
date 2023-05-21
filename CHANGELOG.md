@@ -1,5 +1,15 @@
 # Changelog
 
+## [v3.10.0] - 2023-05-21
+
+This release includes all changes from v3.10.0-rc1, v3.10.0-rc2 and v3.10.0-rc3,
+in addition to the following.
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Fixed
+
+- fix: Stations created with empty song object
+
 ## [v3.10.0-rc3] - 2023-05-14
 
 This release includes all changes from v3.10.0-rc1 and v3.10.0-rc2,
