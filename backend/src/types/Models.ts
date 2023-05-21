@@ -1,8 +1,8 @@
-import { Model, InferSchemaType } from "mongoose";
-import { AbcSchema } from "../models/abc";
+import { Model, InferSchemaType, Schema } from "mongoose";
+import { AbcSchema } from "../schemas/abc";
 
 export type Schemas = {
-	abc: AbcSchema;
+	abc: Schema<AbcSchema>;
 };
 
 export type Models = Record<

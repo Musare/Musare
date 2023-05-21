@@ -1,12 +1,12 @@
 import config from "config";
-//import { createClient, RedisClientType } from "redis";
+// import { createClient, RedisClientType } from "redis";
 import mongoose, {
-    MongooseDefaultQueryMiddleware,
-    MongooseDistinctQueryMiddleware,
-    MongooseQueryOrDocumentMiddleware
+	MongooseDefaultQueryMiddleware,
+	MongooseDistinctQueryMiddleware,
+	MongooseQueryOrDocumentMiddleware
 } from "mongoose";
 import JobContext from "../JobContext";
-import BaseModule from "../BaseModule";
+import BaseModule, { ModuleStatus } from "../BaseModule";
 import { UniqueMethods } from "../types/Modules";
 import { Models, Schemas } from "../types/Models";
 
@@ -88,7 +88,7 @@ export default class DataModule extends BaseModule {
 		modelName: ModelName
 	) {
 		const { schema }: { schema: Schemas[ModelName] } = await import(
-			`../models/${modelName.toString()}`
+			`../schemas/${modelName.toString()}`
 		);
 
 		const preMethods: string[] = [
@@ -117,7 +117,7 @@ export default class DataModule extends BaseModule {
 
 		preMethods.forEach(preMethod => {
 			// @ts-ignore
-            schema.pre(preMethods, () => {
+			schema.pre(preMethods, () => {
 				console.log(`Pre-${preMethod}!`);
 			});
 		});
@@ -140,16 +140,20 @@ export default class DataModule extends BaseModule {
 	/**
 	 * getModel - Get model
 	 *
-	 * @param jobContext
-	 * @param payload
 	 * @returns Model
 	 */
 	public async getModel<ModelName extends keyof Models>(
 		jobContext: JobContext,
-		payload: { modelName: ModelName }
+		payload: ModelName | { name: ModelName }
 	) {
 		if (!this.models) throw new Error("Models not loaded");
-		return this.models[payload.modelName];
+
+		if (this.getStatus() !== ModuleStatus.STARTED)
+			throw new Error("Module not started");
+
+		const name = typeof payload === "object" ? payload.name : payload;
+
+		return this.models[name];
 	}
 }
 

@@ -24,8 +24,6 @@ process.on("uncaughtException", err => {
 				: err
 		}
 	});
-
-	console.log(err);
 });
 
 const moduleManager = ModuleManager.getPrimaryInstance();
@@ -47,12 +45,12 @@ global.rs = () => {
 };
 
 setTimeout(async () => {
-	const model = await jobQueue.runJob("data", "getModel", { modelName: "abc" });
-	console.log("Model", model);
-	const abcs = await model.find({});
+	const Model = await jobQueue.runJob("data", "getModel", { name: "abc" });
+	console.log("Model", Model);
+	const abcs = await Model.find({});
 	console.log("Abcs", abcs);
 
-	model.create({
+	Model.create({
 		name: "Test name",
 		someNumbers: [1, 2, 3, 4],
 		songs: [],

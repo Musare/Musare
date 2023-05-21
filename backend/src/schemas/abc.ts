@@ -1,6 +1,17 @@
-import { InferSchemaType, Schema, SchemaTypes } from "mongoose";
+import { Schema, SchemaTypes, Types } from "mongoose";
 
-export const schema = new Schema({
+export interface AbcSchema {
+	name: string;
+	autofill?: {
+		enabled?: boolean;
+	};
+	someNumbers: number[];
+	songs: { _id: Types.ObjectId }[];
+	restrictedName?: string;
+	aNumber: number;
+}
+
+export const schema = new Schema<AbcSchema>({
 	name: {
 		type: SchemaTypes.String,
 		required: true
@@ -23,5 +34,3 @@ export const schema = new Schema({
 	},
 	aNumber: { type: SchemaTypes.Number, required: true }
 });
-
-export type AbcSchema = typeof schema;
