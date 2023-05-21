@@ -411,10 +411,6 @@ onBeforeUnmount(() => {
 	color: var(--white);
 }
 
-.tag:not(:last-child) {
-	margin-right: 5px;
-}
-
 .select:after {
 	border-color: var(--primary-color);
 }

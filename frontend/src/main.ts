@@ -4,9 +4,9 @@ import { createApp } from "vue";
 import VueTippy, { Tippy } from "vue-tippy";
 import { createRouter, createWebHistory } from "vue-router";
 import { createPinia } from "pinia";
-import "lofig";
 import Toast from "toasters";
 
+import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useModalsStore } from "@/stores/modals";
@@ -16,23 +16,9 @@ import i18n from "@/i18n";
 
 import AppComponent from "./App.vue";
 
-const defaultConfigURL = new URL(
-	"/config/default.json",
-	import.meta.url
-).toString();
-
-const REQUIRED_CONFIG_VERSION = 13;
-
-lofig.folder = defaultConfigURL;
-
 const handleMetadata = attrs => {
-	lofig.get("siteSettings.sitename").then(siteName => {
-		if (siteName) {
-			document.title = `${siteName} | ${attrs.title}`;
-		} else {
-			document.title = `Musare | ${attrs.title}`;
-		}
-	});
+	const configStore = useConfigStore();
+	document.title = `${configStore.sitename} | ${attrs.title}`;
 };
 
 const app = createApp(AppComponent);
@@ -149,13 +135,17 @@ const router = createRouter({
 		},
 		{
 			path: "/reset_password",
-			component: () => import("@/pages/ResetPassword.vue")
+			component: () => import("@/pages/ResetPassword.vue"),
+			meta: {
+				configRequired: "mailEnabled"
+			}
 		},
 		{
 			path: "/set_password",
 			props: { mode: "set" },
 			component: () => import("@/pages/ResetPassword.vue"),
 			meta: {
+				configRequired: "mailEnabled",
 				loginRequired: true
 			}
 		},
@@ -231,6 +221,28 @@ const router = createRouter({
 					meta: {
 						permissionRequired: "admin.view.youtubeVideos"
 					}
+				},
+				{
+					path: "youtube/channels",
+					component: () =>
+						import("@/pages/Admin/YouTube/Channels.vue"),
+					meta: {
+						permissionRequired: "admin.view.youtubeChannels"
+					}
+				},
+				{
+					path: "soundcloud",
+					component: () =>
+						import("@/pages/Admin/SoundCloud/index.vue"),
+					meta: { permissionRequired: "admin.view.soundcloud" }
+				},
+				{
+					path: "soundcloud/tracks",
+					component: () =>
+						import("@/pages/Admin/SoundCloud/Tracks.vue"),
+					meta: {
+						permissionRequired: "admin.view.soundcloudTracks"
+					}
 				}
 			],
 			meta: {
@@ -249,6 +261,7 @@ app.use(createPinia());
 
 const { createSocket } = useWebsocketsStore();
 createSocket().then(async socket => {
+	const configStore = useConfigStore();
 	const userAuthStore = useUserAuthStore();
 	const modalsStore = useModalsStore();
 
@@ -279,21 +292,32 @@ createSocket().then(async socket => {
 			delete query.toast;
 			next({ ...to, query });
 		} else if (
+			to.meta.configRequired ||
 			to.meta.loginRequired ||
 			to.meta.permissionRequired ||
 			to.meta.guestsOnly
 		) {
 			const gotData = () => {
-				if (to.meta.loginRequired && !userAuthStore.loggedIn)
+				if (
+					to.meta.configRequired &&
+					!configStore.get(`${to.meta.configRequired}`)
+				)
+					next({ path: "/" });
+				else if (to.meta.loginRequired && !userAuthStore.loggedIn)
 					next({ path: "/login" });
 				else if (
 					to.meta.permissionRequired &&
 					!userAuthStore.hasPermission(
 						`${to.meta.permissionRequired}`
 					)
-				)
-					next({ path: "/" });
-				else if (to.meta.guestsOnly && userAuthStore.loggedIn)
+				) {
+					if (
+						to.path.startsWith("/admin") &&
+						to.path !== "/admin/songs"
+					)
+						next({ path: "/admin/songs" });
+					else next({ path: "/" });
+				} else if (to.meta.guestsOnly && userAuthStore.loggedIn)
 					next({ path: "/" });
 				else next();
 			};
@@ -328,22 +352,8 @@ createSocket().then(async socket => {
 
 	app.use(router);
 
-	lofig.fetchConfig().then(config => {
-		const { configVersion, skipConfigVersionCheck } = config;
-		if (
-			configVersion !== REQUIRED_CONFIG_VERSION &&
-			!skipConfigVersionCheck
-		) {
-			// eslint-disable-next-line no-alert
-			alert(
-				"CONFIG VERSION IS WRONG. PLEASE UPDATE YOUR CONFIG WITH THE HELP OF THE TEMPLATE FILE AND THE README FILE."
-			);
-			window.stop();
-		}
-	});
-
 	socket.on("ready", res => {
-		const { loggedIn, role, username, userId, email } = res.data;
+		const { loggedIn, role, username, userId, email } = res.user;
 
 		userAuthStore.authData({
 			loggedIn,
@@ -352,6 +362,13 @@ createSocket().then(async socket => {
 			email,
 			userId
 		});
+
+		if (loggedIn) {
+			userAuthStore.resetCookieExpiration();
+		}
+
+		if (configStore.experimental.media_session) ms.initialize();
+		else ms.uninitialize();
 	});
 
 	socket.on("keep.event:user.banned", res =>
@@ -406,15 +423,6 @@ createSocket().then(async socket => {
 					}
 				});
 		});
-	});
-
-	lofig.get("experimental").then(experimental => {
-		if (
-			experimental &&
-			Object.hasOwn(experimental, "media_session") &&
-			experimental.media_session
-		)
-			ms.init();
 	});
 
 	app.mount("#root");

@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted } from "vue";
+import { defineAsyncComponent, ref } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
+import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
 
@@ -14,18 +16,17 @@ const password = ref({
 	value: "",
 	visible: false
 });
-const apiDomain = ref("");
-const siteSettings = ref({
-	registrationDisabled: false,
-	githubAuthentication: false
-});
 const passwordElement = ref();
 
+const configStore = useConfigStore();
+const { githubAuthentication, registrationDisabled } = storeToRefs(configStore);
 const { login } = useUserAuthStore();
 
 const { openModal, closeCurrentModal } = useModalsStore();
 
 const submitModal = () => {
+	if (!email.value || !password.value.value) return;
+
 	login({
 		email: email.value,
 		password: password.value.value
@@ -36,7 +37,7 @@ const submitModal = () => {
 		.catch(err => new Toast(err.message));
 };
 
-const checkForAutofill = event => {
+const checkForAutofill = (type, event) => {
 	if (
 		event.target.value !== "" &&
 		event.inputType === undefined &&
@@ -65,11 +66,6 @@ const changeToRegisterModal = () => {
 const githubRedirect = () => {
 	localStorage.setItem("github_redirect", route.path);
 };
-
-onMounted(async () => {
-	apiDomain.value = await lofig.get("backend.apiDomain");
-	siteSettings.value = await lofig.get("siteSettings");
-});
 </script>
 
 <template>
@@ -89,7 +85,9 @@ onMounted(async () => {
 							v-model="email"
 							class="input"
 							type="email"
+							autocomplete="username"
 							placeholder="Username/Email..."
+							@input="checkForAutofill('email', $event)"
 							@keyup.enter="submitModal()"
 						/>
 					</p>
@@ -104,9 +102,10 @@ onMounted(async () => {
 							v-model="password.value"
 							class="input"
 							type="password"
+							autocomplete="current-password"
 							ref="passwordElement"
 							placeholder="Password..."
-							@input="checkForAutofill($event)"
+							@input="checkForAutofill('password', $event)"
 							@keyup.enter="submitModal()"
 						/>
 						<a @click="togglePasswordVisibility()">
@@ -120,7 +119,10 @@ onMounted(async () => {
 						</a>
 					</div>
 
-					<p class="content-box-optional-helper">
+					<p
+						v-if="configStore.mailEnabled"
+						class="content-box-optional-helper"
+					>
 						<router-link
 							id="forgot-password"
 							to="/reset_password"
@@ -149,9 +151,9 @@ onMounted(async () => {
 						Login
 					</button>
 					<a
-						v-if="siteSettings.githubAuthentication"
+						v-if="githubAuthentication"
 						class="button is-github"
-						:href="apiDomain + '/auth/github/authorize'"
+						:href="configStore.urls.api + '/auth/github/authorize'"
 						@click="githubRedirect()"
 					>
 						<div class="icon">
@@ -165,7 +167,7 @@ onMounted(async () => {
 				</div>
 
 				<p
-					v-if="!siteSettings.registrationDisabled"
+					v-if="!registrationDisabled"
 					class="content-box-optional-helper"
 				>
 					<a @click="changeToRegisterModal()">

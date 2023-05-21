@@ -15,8 +15,8 @@ import { useManageStationStore } from "@/stores/manageStation";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const Queue = defineAsyncComponent(() => import("@/components/Queue.vue"));
-const SongItem = defineAsyncComponent(
-	() => import("@/components/SongItem.vue")
+const MediaItem = defineAsyncComponent(
+	() => import("@/components/MediaItem.vue")
 );
 const StationInfoBox = defineAsyncComponent(
 	() => import("@/components/StationInfoBox.vue")
@@ -392,10 +392,26 @@ onMounted(() => {
 					if (stationPlaylist.value._id === res.data.playlistId) {
 						// remove song from array of playlists
 						stationPlaylist.value.songs.forEach((song, index) => {
-							if (song.youtubeId === res.data.youtubeId)
+							if (song.mediaSource === res.data.mediaSource)
 								stationPlaylist.value.songs.splice(index, 1);
 						});
 					}
+				},
+				{
+					modalUuid: props.modalUuid
+				}
+			);
+
+			socket.on(
+				"event:playlist.song.replaced",
+				res => {
+					if (stationPlaylist.value._id === res.data.playlistId)
+						stationPlaylist.value.songs =
+							stationPlaylist.value.songs.map(song =>
+								song.mediaSource === res.data.oldMediaSource
+									? res.data.song
+									: song
+							);
 				},
 				{
 					modalUuid: props.modalUuid
@@ -412,7 +428,8 @@ onMounted(() => {
 								(song, index) => {
 									// find song locally
 									if (
-										song.youtubeId === changedSong.youtubeId
+										song.mediaSource ===
+										changedSong.mediaSource
 									) {
 										// change song position attribute
 										stationPlaylist.value.songs[
@@ -591,8 +608,8 @@ onBeforeUnmount(() => {
 						<h4 class="section-title">Queue</h4>
 					</div>
 					<hr class="section-horizontal-rule" />
-					<song-item
-						v-if="currentSong.youtubeId"
+					<media-item
+						v-if="currentSong.mediaSource"
 						:song="currentSong"
 						:requested-by="true"
 						header="Currently Playing.."
@@ -625,13 +642,14 @@ onBeforeUnmount(() => {
 .manage-station-modal.modal .modal-card {
 	.tab > button {
 		width: 100%;
-		margin-bottom: 10px;
+		margin-top: 10px;
 	}
 	.currently-playing.song-item {
-		.thumbnail {
+		height: 130px !important;
+
+		.thumbnail-and-info .thumbnail {
 			min-width: 130px;
 			width: 130px;
-			height: 130px;
 		}
 	}
 }

@@ -15,6 +15,18 @@ let UtilsModule;
 let WSModule;
 let DBModule;
 
+const stationStateWorth = {
+	unknown: 0,
+	no_song: 1,
+	station_paused: 2,
+	participate: 3,
+	local_paused: 4,
+	muted: 5,
+	unavailable: 6,
+	buffering: 7,
+	playing: 8
+};
+
 class _TasksModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
@@ -27,7 +39,6 @@ class _TasksModule extends CoreClass {
 
 	/**
 	 * Initialises the tasks module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	initialize() {
@@ -62,13 +73,18 @@ class _TasksModule extends CoreClass {
 				timeout: 1000 * 3
 			});
 
+			// TasksModule.runJob("CREATE_TASK", {
+			//	name: "historyClearTask",
+			//	fn: TasksModule.historyClearTask,
+			//	timeout: 1000 * 60 * 60 * 6
+			// });
+
 			resolve();
 		});
 	}
 
 	/**
 	 * Creates a new task
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.name - the name of the task
 	 * @param {string} payload.fn - the function the task will run
@@ -96,7 +112,6 @@ class _TasksModule extends CoreClass {
 
 	/**
 	 * Pauses a task
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.taskName - the name of the task to pause
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -112,7 +127,6 @@ class _TasksModule extends CoreClass {
 
 	/**
 	 * Resumes a task
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.name - the name of the task to resume
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -126,7 +140,6 @@ class _TasksModule extends CoreClass {
 
 	/**
 	 * Runs a task's function and restarts the timer
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.name - the name of the task to run
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -150,7 +163,6 @@ class _TasksModule extends CoreClass {
 
 	/**
 	 * Periodically checks if any stations need to be skipped
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	checkStationSkipTask() {
@@ -192,7 +204,6 @@ class _TasksModule extends CoreClass {
 
 	/**
 	 * Periodically checks if any sessions are out of date and need to be cleared
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	sessionClearingTask() {
@@ -280,7 +291,6 @@ class _TasksModule extends CoreClass {
 
 	/**
 	 * Periodically warns about the size of any log files
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	logFileSizeCheckTask() {
@@ -335,7 +345,6 @@ class _TasksModule extends CoreClass {
 
 	/**
 	 * Periodically collect users in stations
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async collectStationUsersTask() {
@@ -397,8 +406,20 @@ class _TasksModule extends CoreClass {
 								(user, next) => {
 									if (!user) return next("User not found.");
 
-									if (usersPerStation[stationId].loggedIn.some(u => user.username === u.username))
+									const state = socket.session.stationState ?? "unknown";
+
+									const existingUserObject = usersPerStation[stationId].loggedIn.findLast(
+										u => user.username === u.username
+									);
+
+									if (existingUserObject) {
+										if (stationStateWorth[state] > stationStateWorth[existingUserObject.state]) {
+											usersPerStation[stationId].loggedIn[
+												usersPerStation[stationId].loggedIn.indexOf(existingUserObject)
+											].state = state;
+										}
 										return next("User already in the list.");
+									}
 
 									usersPerStationCount[stationId] += 1; // increment user count for station
 
@@ -406,7 +427,8 @@ class _TasksModule extends CoreClass {
 										_id: user._id,
 										username: user.username,
 										name: user.name,
-										avatar: user.avatar
+										avatar: user.avatar,
+										state
 									});
 								}
 							],
@@ -465,6 +487,25 @@ class _TasksModule extends CoreClass {
 
 			resolve();
 		});
+	}
+
+	/**
+	 * Periodically removes any old history documents
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async historyClearTask() {
+		TasksModule.log("INFO", "TASK_HISTORY_CLEAR", `Removing old history.`);
+
+		const stationHistoryModel = await DBModule.runJob("GET_MODEL", { modelName: "stationHistory" });
+
+		// Remove documents created more than 2 days ago
+		const mongoQuery = { "payload.skippedAt": { $lt: new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 2) } };
+
+		const count = await stationHistoryModel.count(mongoQuery);
+
+		await stationHistoryModel.remove(mongoQuery);
+
+		TasksModule.log("SUCCESS", "TASK_HISTORY_CLEAR", `Removed ${count} history items`);
 	}
 }
 

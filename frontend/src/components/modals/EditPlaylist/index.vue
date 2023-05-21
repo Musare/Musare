@@ -10,6 +10,7 @@ import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useConfigStore } from "@/stores/config";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";
 import { useStationStore } from "@/stores/station";
 import { useUserAuthStore } from "@/stores/userAuth";
@@ -17,8 +18,8 @@ import { useModalsStore } from "@/stores/modals";
 import utils from "@/utils";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
-const SongItem = defineAsyncComponent(
-	() => import("@/components/SongItem.vue")
+const MediaItem = defineAsyncComponent(
+	() => import("@/components/MediaItem.vue")
 );
 const Settings = defineAsyncComponent(() => import("./Tabs/Settings.vue"));
 const AddSongs = defineAsyncComponent(() => import("./Tabs/AddSongs.vue"));
@@ -35,6 +36,8 @@ const props = defineProps({
 });
 
 const { socket } = useWebsocketsStore();
+const configStore = useConfigStore();
+const { experimental } = configStore;
 const editPlaylistStore = useEditPlaylistStore({ modalUuid: props.modalUuid });
 const stationStore = useStationStore();
 const userAuthStore = useUserAuthStore();
@@ -43,7 +46,6 @@ const { station } = storeToRefs(stationStore);
 const { loggedIn, userId, role: userRole } = storeToRefs(userAuthStore);
 
 const drag = ref(false);
-const apiDomain = ref("");
 const gettingSongs = ref(false);
 const tabs = ref([]);
 const songItems = ref([]);
@@ -55,14 +57,28 @@ const playlistSongs = computed({
 	}
 });
 
-const { tab, playlist } = storeToRefs(editPlaylistStore);
-const { setPlaylist, clearPlaylist, addSong, removeSong, repositionedSong } =
-	editPlaylistStore;
+const containsSpotifySongs = computed(
+	() =>
+		playlistSongs.value
+			.map(playlistSong => playlistSong.mediaSource.split(":")[0])
+			.indexOf("spotify") !== -1
+);
 
-const { closeCurrentModal } = useModalsStore();
+const { tab, playlist } = storeToRefs(editPlaylistStore);
+const {
+	setPlaylist,
+	clearPlaylist,
+	addSong,
+	removeSong,
+	replaceSong,
+	repositionedSong
+} = editPlaylistStore;
+
+const { closeCurrentModal, openModal } = useModalsStore();
 
 const showTab = payload => {
-	tabs.value[`${payload}-tab`].scrollIntoView({ block: "nearest" });
+	if (tabs.value[`${payload}-tab`])
+		tabs.value[`${payload}-tab`].scrollIntoView({ block: "nearest" });
 	editPlaylistStore.showTab(payload);
 };
 
@@ -174,10 +190,7 @@ const removePlaylist = () => {
 };
 
 const downloadPlaylist = async () => {
-	if (apiDomain.value === "")
-		apiDomain.value = await lofig.get("backend.apiDomain");
-
-	fetch(`${apiDomain.value}/export/playlist/${playlist.value._id}`, {
+	fetch(`${configStore.urls.api}/export/playlist/${playlist.value._id}`, {
 		credentials: "include"
 	})
 		.then(res => res.blob())
@@ -201,11 +214,12 @@ const downloadPlaylist = async () => {
 		.catch(() => new Toast("Failed to export and download playlist."));
 };
 
-const addSongToQueue = youtubeId => {
+const addSongToQueue = mediaSource => {
 	socket.dispatch(
 		"stations.addToQueue",
 		station.value._id,
-		youtubeId,
+		mediaSource,
+		"manual",
 		data => {
 			if (data.status !== "success")
 				new Toast({
@@ -272,7 +286,21 @@ onMounted(() => {
 		res => {
 			if (playlist.value._id === res.data.playlistId) {
 				// remove song from array of playlists
-				removeSong(res.data.youtubeId);
+				removeSong(res.data.mediaSource);
+			}
+		},
+		{ modalUuid: props.modalUuid }
+	);
+
+	socket.on(
+		"event:playlist.song.replaced",
+		res => {
+			if (playlist.value._id === res.data.playlistId) {
+				// replace song
+				replaceSong({
+					song: res.data.song,
+					oldMediaSource: res.data.oldMediaSource
+				});
 			}
 		},
 		{ modalUuid: props.modalUuid }
@@ -364,7 +392,7 @@ onBeforeUnmount(() => {
 							@click="showTab('import-playlists')"
 							v-if="isEditable('playlists.songs.add')"
 						>
-							Import Playlists
+							Import Songs
 						</button>
 					</div>
 					<settings
@@ -404,7 +432,7 @@ onBeforeUnmount(() => {
 						<draggable-list
 							v-if="playlistSongs.length > 0"
 							v-model:list="playlistSongs"
-							item-key="youtubeId"
+							item-key="mediaSource"
 							@start="drag = true"
 							@end="drag = false"
 							@update="repositionSong"
@@ -413,14 +441,14 @@ onBeforeUnmount(() => {
 							"
 						>
 							<template #item="{ element, index }">
-								<song-item
+								<media-item
 									:song="element"
 									:ref="
 										el =>
 											(songItems[`song-item-${index}`] =
 												el)
 									"
-									:key="`playlist-song-${element.youtubeId}`"
+									:key="`playlist-song-${element.mediaSource}`"
 								>
 									<template #tippyActions>
 										<i
@@ -435,11 +463,15 @@ onBeforeUnmount(() => {
 														'owner' &&
 														(userRole === 'admin' ||
 															station.owner ===
-																userId)))
+																userId))) &&
+												(element.mediaSource.split(
+													':'
+												)[0] !== 'soundcloud' ||
+													experimental.soundcloud)
 											"
 											@click="
 												addSongToQueue(
-													element.youtubeId
+													element.mediaSource
 												)
 											"
 											content="Add Song to Queue"
@@ -456,7 +488,7 @@ onBeforeUnmount(() => {
 											placement="left"
 											@confirm="
 												removeSongFromPlaylist(
-													element.youtubeId
+													element.mediaSource
 												)
 											"
 										>
@@ -494,7 +526,7 @@ onBeforeUnmount(() => {
 											>vertical_align_bottom</i
 										>
 									</template>
-								</song-item>
+								</media-item>
 							</template>
 						</draggable-list>
 						<p v-else-if="gettingSongs" class="nothing-here-text">
@@ -518,6 +550,18 @@ onBeforeUnmount(() => {
 				@click="downloadPlaylist()"
 			>
 				Download Playlist
+			</button>
+			<button
+				class="button is-default"
+				v-if="isOwner() && containsSpotifySongs"
+				@click="
+					openModal({
+						modal: 'convertSpotifySongs',
+						props: { playlistId: playlist._id }
+					})
+				"
+			>
+				Convert Spotify Songs
 			</button>
 			<div class="right">
 				<quick-confirm

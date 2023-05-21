@@ -6,8 +6,8 @@ import { useModalsStore } from "@/stores/modals";
 import { useForm } from "@/composables/useForm";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
-const SongItem = defineAsyncComponent(
-	() => import("@/components/SongItem.vue")
+const MediaItem = defineAsyncComponent(
+	() => import("@/components/MediaItem.vue")
 );
 const ReportInfoItem = defineAsyncComponent(
 	() => import("@/components/ReportInfoItem.vue")
@@ -180,7 +180,7 @@ const { inputs, save } = useForm(
 					"reports.create",
 					{
 						issues,
-						youtubeId: props.song.youtubeId
+						mediaSource: props.song.mediaSource
 					},
 					res => {
 						if (res.status === "success") {
@@ -260,7 +260,7 @@ onMounted(() => {
 			<template #body>
 				<div class="report-modal-inner-container">
 					<div id="left-part">
-						<song-item
+						<media-item
 							:song="song"
 							:duration="false"
 							:disabled-actions="['report']"
@@ -463,10 +463,13 @@ onMounted(() => {
 </template>
 
 <style lang="less">
-.report-modal .song-item .thumbnail {
-	min-width: 130px;
-	width: 130px;
-	height: 130px;
+.report-modal .song-item {
+	height: 130px !important;
+
+	.thumbnail-and-info .thumbnail {
+		min-width: 130px;
+		width: 130px;
+	}
 }
 </style>
 

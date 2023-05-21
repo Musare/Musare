@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if [[ "${CONTAINER_MODE}" == "dev" ]]; then
+if [[ "${CONTAINER_MODE}" == "development" ]]; then
     npm install --silent
-    if [[ "${BACKEND_MODE}" == "prod" ]]; then
+    if [[ "${BACKEND_MODE}" == "production" ]]; then
         npm run build
     fi
 fi
@@ -13,4 +13,8 @@ else
     export INSPECT_BRK=""
 fi
 
-npm run "${BACKEND_MODE}"
+if [[ "${BACKEND_MODE}" == "production" ]]; then
+    npm run prod
+else
+    npm run dev
+fi

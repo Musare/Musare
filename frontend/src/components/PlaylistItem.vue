@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, computed, onMounted } from "vue";
+import { defineAsyncComponent, computed } from "vue";
+import { storeToRefs } from "pinia";
 import utils from "@/utils";
+import { useConfigStore } from "@/stores/config";
 
 const UserLink = defineAsyncComponent(
 	() => import("@/components/UserLink.vue")
@@ -11,7 +13,8 @@ const props = defineProps({
 	showOwner: { type: Boolean, default: false }
 });
 
-const sitename = ref("Musare");
+const configStore = useConfigStore();
+const { sitename } = storeToRefs(configStore);
 
 const totalLength = playlist => {
 	let length = 0;
@@ -27,10 +30,6 @@ const playlistLength = computed(
 			props.playlist.songs.length === 1 ? "song" : "songs"
 		}`
 );
-
-onMounted(async () => {
-	sitename.value = await lofig.get("siteSettings.sitename");
-});
 </script>
 
 <template>

@@ -105,13 +105,31 @@ export const useSortablePlaylists = () => {
 					if (playlist._id === res.data.playlistId) {
 						playlists.value[playlistIndex].songs.forEach(
 							(song, songIndex) => {
-								if (song.youtubeId === res.data.youtubeId) {
+								if (song.mediaSource === res.data.mediaSource) {
 									playlists.value[playlistIndex].songs.splice(
 										songIndex,
 										1
 									);
 								}
 							}
+						);
+					}
+				});
+			},
+			{ replaceable: true }
+		);
+
+		socket.on(
+			"event:playlist.song.replaced",
+			res => {
+				playlists.value.forEach((playlist, index) => {
+					if (playlist._id === res.data.playlistId) {
+						playlists.value[index].songs = playlists.value[
+							index
+						].songs.map(song =>
+							song.mediaSource === res.data.oldMediaSource
+								? res.data.song
+								: song
 						);
 					}
 				});

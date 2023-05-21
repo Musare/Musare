@@ -2,6 +2,8 @@
 import { defineAsyncComponent, ref, watch, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
+import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
 import validation from "@/validation";
@@ -33,20 +35,14 @@ const password = ref({
 	message:
 		"Include at least one lowercase letter, one uppercase letter, one number and one special character."
 });
-const recaptcha = ref({
-	key: "",
-	token: "",
-	enabled: false
-});
-const apiDomain = ref("");
-const siteSettings = ref({
-	registrationDisabled: false,
-	githubAuthentication: false
-});
+const recaptchaToken = ref("");
 const passwordElement = ref();
 
 const { register } = useUserAuthStore();
 
+const configStore = useConfigStore();
+const { registrationDisabled, recaptcha, githubAuthentication } =
+	storeToRefs(configStore);
 const { openModal, closeCurrentModal } = useModalsStore();
 
 const submitModal = () => {
@@ -57,7 +53,7 @@ const submitModal = () => {
 		username: username.value.value,
 		email: email.value.value,
 		password: password.value.value,
-		recaptchaToken: recaptcha.value.token
+		recaptchaToken: recaptchaToken.value
 	})
 		.then((res: any) => {
 			if (res.status === "success") window.location.reload();
@@ -146,39 +142,31 @@ watch(
 );
 
 onMounted(async () => {
-	apiDomain.value = await lofig.get("backend.apiDomain");
-	lofig.get("siteSettings").then(settings => {
-		if (settings.registrationDisabled) {
-			new Toast("Registration is disabled.");
-			closeCurrentModal();
-		} else {
-			siteSettings.value = settings;
-		}
-	});
+	if (registrationDisabled.value) {
+		new Toast("Registration is disabled.");
+		closeCurrentModal();
+	}
 
-	lofig.get("recaptcha").then(obj => {
-		recaptcha.value.enabled = obj.enabled;
-		if (obj.enabled === true) {
-			recaptcha.value.key = obj.key;
+	if (recaptcha.value.enabled) {
+		const recaptchaScript = document.createElement("script");
+		recaptchaScript.onload = () => {
+			grecaptcha.ready(() => {
+				grecaptcha
+					.execute(recaptcha.value.key, {
+						action: "login"
+					})
+					.then(token => {
+						recaptchaToken.value = token;
+					});
+			});
+		};
 
-			const recaptchaScript = document.createElement("script");
-			recaptchaScript.onload = () => {
-				grecaptcha.ready(() => {
-					grecaptcha
-						.execute(recaptcha.value.key, { action: "login" })
-						.then(token => {
-							recaptcha.value.token = token;
-						});
-				});
-			};
-
-			recaptchaScript.setAttribute(
-				"src",
-				`https://www.google.com/recaptcha/api.js?render=${recaptcha.value.key}`
-			);
-			document.head.appendChild(recaptchaScript);
-		}
-	});
+		recaptchaScript.setAttribute(
+			"src",
+			`https://www.google.com/recaptcha/api.js?render=${recaptcha.value.key}`
+		);
+		document.head.appendChild(recaptchaScript);
+	}
 });
 </script>
 
@@ -191,90 +179,95 @@ onMounted(async () => {
 			@closed="closeCurrentModal()"
 		>
 			<template #body>
-				<!-- email address -->
-				<p class="control">
-					<label class="label">Email</label>
-					<input
-						v-model="email.value"
-						class="input"
-						type="email"
-						placeholder="Email..."
-						@keyup.enter="submitModal()"
-						autofocus
-					/>
-				</p>
-				<transition name="fadein-helpbox">
-					<input-help-box
-						:entered="email.entered"
-						:valid="email.valid"
-						:message="email.message"
-					/>
-				</transition>
+				<form>
+					<!-- email address -->
+					<p class="control">
+						<label class="label">Email</label>
+						<input
+							v-model="email.value"
+							class="input"
+							type="email"
+							autocomplete="username"
+							placeholder="Email..."
+							@keyup.enter="submitModal()"
+							autofocus
+						/>
+					</p>
+					<transition name="fadein-helpbox">
+						<input-help-box
+							:entered="email.entered"
+							:valid="email.valid"
+							:message="email.message"
+						/>
+					</transition>
 
-				<!-- username -->
-				<p class="control">
-					<label class="label">Username</label>
-					<input
-						v-model="username.value"
-						class="input"
-						type="text"
-						placeholder="Username..."
-						@keyup.enter="submitModal()"
-					/>
-				</p>
-				<transition name="fadein-helpbox">
-					<input-help-box
-						:entered="username.entered"
-						:valid="username.valid"
-						:message="username.message"
-					/>
-				</transition>
+					<!-- username -->
+					<p class="control">
+						<label class="label">Username</label>
+						<input
+							v-model="username.value"
+							class="input"
+							type="text"
+							autocomplete="username"
+							placeholder="Username..."
+							@keyup.enter="submitModal()"
+						/>
+					</p>
+					<transition name="fadein-helpbox">
+						<input-help-box
+							:entered="username.entered"
+							:valid="username.valid"
+							:message="username.message"
+						/>
+					</transition>
 
-				<!-- password -->
-				<p class="control">
-					<label class="label">Password</label>
-				</p>
+					<!-- password -->
+					<p class="control">
+						<label class="label">Password</label>
+					</p>
 
-				<div id="password-visibility-container">
-					<input
-						v-model="password.value"
-						class="input"
-						type="password"
-						ref="passwordElement"
-						placeholder="Password..."
-						@keyup.enter="submitModal()"
-					/>
-					<a @click="togglePasswordVisibility()">
-						<i class="material-icons">
-							{{
-								!password.visible
-									? "visibility"
-									: "visibility_off"
-							}}
-						</i>
-					</a>
-				</div>
+					<div id="password-visibility-container">
+						<input
+							v-model="password.value"
+							class="input"
+							type="password"
+							autocomplete="new-password"
+							ref="passwordElement"
+							placeholder="Password..."
+							@keyup.enter="submitModal()"
+						/>
+						<a @click="togglePasswordVisibility()">
+							<i class="material-icons">
+								{{
+									!password.visible
+										? "visibility"
+										: "visibility_off"
+								}}
+							</i>
+						</a>
+					</div>
 
-				<transition name="fadein-helpbox">
-					<input-help-box
-						:valid="password.valid"
-						:entered="password.entered"
-						:message="password.message"
-					/>
-				</transition>
+					<transition name="fadein-helpbox">
+						<input-help-box
+							:valid="password.valid"
+							:entered="password.entered"
+							:message="password.message"
+						/>
+					</transition>
 
-				<br />
+					<br />
 
-				<p>
-					By registering you agree to our
-					<router-link to="/terms" @click="closeCurrentModal()">
-						Terms of Service
-					</router-link>
-					and
-					<router-link to="/privacy" @click="closeCurrentModal()">
-						Privacy Policy</router-link
-					>.
-				</p>
+					<p>
+						By registering you agree to our
+						<router-link to="/terms" @click="closeCurrentModal()">
+							Terms of Service
+						</router-link>
+						and
+						<router-link to="/privacy" @click="closeCurrentModal()">
+							Privacy Policy</router-link
+						>.
+					</p>
+				</form>
 			</template>
 			<template #footer>
 				<div id="actions">
@@ -282,9 +275,9 @@ onMounted(async () => {
 						Register
 					</button>
 					<a
-						v-if="siteSettings.githubAuthentication"
+						v-if="githubAuthentication"
 						class="button is-github"
-						:href="apiDomain + '/auth/github/authorize'"
+						:href="configStore.urls.api + '/auth/github/authorize'"
 						@click="githubRedirect()"
 					>
 						<div class="icon">

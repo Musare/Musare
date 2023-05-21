@@ -4,9 +4,10 @@ import util from "util";
 import config from "config";
 import fs from "fs";
 
-import package_json from "./package.json" assert { type: "json" };
+import * as readline from "node:readline";
+import packageJson from "./package.json" assert { type: "json" };
 
-const REQUIRED_CONFIG_VERSION = 11;
+const REQUIRED_CONFIG_VERSION = 12;
 
 // eslint-disable-next-line
 Array.prototype.remove = function (item) {
@@ -32,32 +33,37 @@ console.log = (...args) => {
 	if (!blacklisted) oldConsole.log.apply(null, args);
 };
 
-const MUSARE_VERSION = package_json.version;
+const MUSARE_VERSION = packageJson.version;
 
 const printVersion = () => {
 	console.log(`Musare version: ${MUSARE_VERSION}.`);
 
 	try {
-		const head_contents = fs.readFileSync(".parent_git/HEAD").toString().replaceAll("\n", "");
-		const branch = new RegExp("ref: refs/heads/([A-Za-z0-9_.-]+)").exec(head_contents)[1];
-		const config_contents = fs.readFileSync(".parent_git/config").toString().replaceAll("\t", "").split("\n");
-		const remote = new RegExp("remote = (.+)").exec(config_contents[config_contents.indexOf(`[branch "${branch}"]`) + 1])[1];
-		const remote_url = new RegExp("url = (.+)").exec(config_contents[config_contents.indexOf(`[remote "${remote}"]`) + 1])[1];
-		const latest_commit = fs.readFileSync(`.parent_git/refs/heads/${branch}`).toString().replaceAll("\n", "");
-		const latest_commit_short = latest_commit.substr(0, 7);
+		let gitFolder = null;
+		if (fs.existsSync("../.git/HEAD")) gitFolder = "../.git";
+		else if (fs.existsSync(".git/HEAD")) gitFolder = ".git";
 
-		console.log(`Git branch: ${remote}/${branch}. Remote url: ${remote_url}. Latest commit: ${latest_commit} (${latest_commit_short}).`);
-	} catch(e) {
+		if (gitFolder) {
+			const headContents = fs.readFileSync(`${gitFolder}/HEAD`).toString().replaceAll("\n", "");
+			const [, branch] = /ref: refs\/heads\/([A-Za-z0-9_.-]+)/.exec(headContents);
+			const configContents = fs.readFileSync(`${gitFolder}/config`).toString().replaceAll("\t", "").split("\n");
+			const [, remote] = /remote = (.+)/.exec(configContents[configContents.indexOf(`[branch "${branch}"]`) + 1]);
+			const [, remoteUrl] = /url = (.+)/.exec(configContents[configContents.indexOf(`[remote "${remote}"]`) + 1]);
+			const latestCommit = fs.readFileSync(`${gitFolder}/refs/heads/${branch}`).toString().replaceAll("\n", "");
+			const latestCommitShort = latestCommit.substr(0, 7);
+
+			console.log(
+				`Git branch: ${remote}/${branch}. Remote url: ${remoteUrl}. Latest commit: ${latestCommit} (${latestCommitShort}).`
+			);
+		} else console.log("Could not find .git folder.");
+	} catch (e) {
 		console.log(`Could not get Git info: ${e.message}.`);
 	}
-}
+};
 
 printVersion();
 
-if (
-	(!config.has("configVersion") || config.get("configVersion") !== REQUIRED_CONFIG_VERSION) &&
-	!(config.has("skipConfigVersionCheck") && config.get("skipConfigVersionCheck"))
-) {
+if (config.get("configVersion") !== REQUIRED_CONFIG_VERSION && !config.get("skipConfigVersionCheck")) {
 	console.log(
 		"CONFIG VERSION IS WRONG. PLEASE UPDATE YOUR CONFIG WITH THE HELP OF THE TEMPLATE FILE AND THE README FILE."
 	);
@@ -66,6 +72,7 @@ if (
 
 if (config.debug && config.debug.traceUnhandledPromises === true) {
 	console.log("Enabled trace-unhandled/register");
+	// eslint-disable-next-line import/no-extraneous-dependencies
 	import("trace-unhandled/register");
 }
 
@@ -77,7 +84,6 @@ class JobManager {
 
 	/**
 	 * Adds a job to the list of jobs
-	 *
 	 * @param {object} job - the job object
 	 */
 	addJob(job) {
@@ -87,7 +93,6 @@ class JobManager {
 
 	/**
 	 * Removes a job from the list of running jobs (after it's completed)
-	 *
 	 * @param {object} job - the job object
 	 */
 	removeJob(job) {
@@ -97,7 +102,6 @@ class JobManager {
 
 	/**
 	 * Returns detail about a job via a identifier
-	 *
 	 * @param {string} uuid - the job identifier
 	 * @returns {object} - the job object
 	 */
@@ -130,7 +134,6 @@ class ModuleManager {
 
 	/**
 	 * Adds a new module to the backend server/module manager
-	 *
 	 * @param {string} moduleName - the name of the module (also needs to be the same as the filename of a module located in the logic folder or "logic/moduleName/index.js")
 	 */
 	async addModule(moduleName) {
@@ -168,7 +171,6 @@ class ModuleManager {
 
 	/**
 	 * Called when a module is initialised
-	 *
 	 * @param {object} module - the module object/class
 	 */
 	onInitialize(module) {
@@ -188,7 +190,6 @@ class ModuleManager {
 
 	/**
 	 * Called when a module fails to initialise
-	 *
 	 * @param {object} module - the module object/class
 	 */
 	onFail(module) {
@@ -207,7 +208,6 @@ class ModuleManager {
 
 	/**
 	 * Creates a new log message
-	 *
 	 * @param {...any} args - anything to be included in the log message, the first argument is the type of log
 	 */
 	log(...args) {
@@ -262,6 +262,12 @@ if (!config.get("migration")) {
 	moduleManager.addModule("tasks");
 	moduleManager.addModule("utils");
 	moduleManager.addModule("youtube");
+	if (config.get("experimental.soundcloud")) moduleManager.addModule("soundcloud");
+	if (config.get("experimental.spotify")) {
+		moduleManager.addModule("spotify");
+		moduleManager.addModule("musicbrainz");
+		moduleManager.addModule("wikidata");
+	}
 } else {
 	moduleManager.addModule("migration");
 }
@@ -270,7 +276,6 @@ moduleManager.initialize();
 
 /**
  * Prints a job
- *
  * @param {object} job - the job
  * @param {number} layer - the layer
  */
@@ -286,7 +291,6 @@ function printJob(job, layer) {
 
 /**
  * Prints a task
- *
  * @param {object} task - the task
  * @param {number} layer - the layer
  */
@@ -298,43 +302,53 @@ function printTask(task, layer) {
 	});
 }
 
-import * as readline from 'node:readline';
-
-var rl = readline.createInterface({
+const rl = readline.createInterface({
 	input: process.stdin,
 	output: process.stdout,
-	completer: function(command) {
+	completer(command) {
 		const parts = command.split(" ");
-		const commands = ["version", "lockdown", "status", "running ", "queued ", "paused ", "stats ", "jobinfo ", "runjob ", "eval "];
+		const commands = [
+			"version",
+			"lockdown",
+			"status",
+			"running ",
+			"queued ",
+			"paused ",
+			"stats ",
+			"jobinfo ",
+			"runjob ",
+			"eval "
+		];
 		if (parts.length === 1) {
 			const hits = commands.filter(c => c.startsWith(parts[0]));
 			return [hits.length ? hits : commands, command];
-		} else if (parts.length === 2) {
+		}
+		if (parts.length === 2) {
 			if (["queued", "running", "paused", "runjob", "stats"].indexOf(parts[0]) !== -1) {
 				const modules = Object.keys(moduleManager.modules);
-				const hits = modules.filter(module => module.startsWith(parts[1])).map(module => `${parts[0]} ${module}${parts[0] === "runjob" ? " " : ""}`);
-				return  [hits.length ? hits : modules, command];
-			} else {
-				return [];
+				const hits = modules
+					.filter(module => module.startsWith(parts[1]))
+					.map(module => `${parts[0]} ${module}${parts[0] === "runjob" ? " " : ""}`);
+				return [hits.length ? hits : modules, command];
 			}
-		} else if (parts.length === 3) {
+		}
+		if (parts.length === 3) {
 			if (parts[0] === "runjob") {
 				const modules = Object.keys(moduleManager.modules);
 				if (modules.indexOf(parts[1]) !== -1) {
 					const jobs = moduleManager.modules[parts[1]].jobNames;
-					const hits = jobs.filter(job => job.startsWith(parts[2])).map(job => `${parts[0]} ${parts[1]} ${job} `);
-					return  [hits.length ? hits : jobs, command];
+					const hits = jobs
+						.filter(job => job.startsWith(parts[2]))
+						.map(job => `${parts[0]} ${parts[1]} ${job} `);
+					return [hits.length ? hits : jobs, command];
 				}
-			} else {
-				return [];
 			}
-		} else {
-			return [];
 		}
+		return [];
 	}
 });
 
-rl.on("line",function(command) {
+rl.on("line", command => {
 	if (command === "version") {
 		printVersion();
 	}
@@ -426,7 +440,7 @@ rl.on("line",function(command) {
 		console.log(`Eval response: `, response);
 	}
 	if (command.startsWith("debug")) {
-		moduleManager.modules["youtube"].apiCalls.forEach(apiCall => {
+		moduleManager.modules.youtube.apiCalls.forEach(apiCall => {
 			// console.log(`${apiCall.date.toISOString()} - ${apiCall.url} - ${apiCall.quotaCost} - ${JSON.stringify(apiCall.params)}`);
 			console.log(apiCall);
 		});
@@ -434,3 +448,5 @@ rl.on("line",function(command) {
 });
 
 export default moduleManager;
+
+export { MUSARE_VERSION };

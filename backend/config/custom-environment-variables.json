@@ -1,0 +1,20 @@
+{
+	"sitename": "MUSARE_SITENAME",
+	"redis": {
+		"password": "REDIS_PASSWORD"
+	},
+	"mongo": {
+		"user": "MONGO_USER_USERNAME",
+		"password": "MONGO_USER_PASSWORD"
+	},
+	"debug": {
+		"git": {
+			"remote": "MUSARE_DEBUG_GIT_REMOTE",
+			"remoteUrl": "MUSARE_DEBUG_GIT_REMOTE_URL",
+			"branch": "MUSARE_DEBUG_GIT_BRANCH",
+			"latestCommit": "MUSARE_DEBUG_GIT_LATEST_COMMIT",
+			"latestCommitShort": "MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT"
+		},
+		"version": "MUSARE_DEBUG_VERSION"
+	}
+}

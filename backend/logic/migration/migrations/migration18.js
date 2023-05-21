@@ -4,7 +4,6 @@ import async from "async";
  * Migration 18
  *
  * Migration for song status property.
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

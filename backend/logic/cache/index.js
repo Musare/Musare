@@ -22,7 +22,6 @@ class _CacheModule extends CoreClass {
 
 	/**
 	 * Initialises the cache/redis module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async initialize() {
@@ -43,14 +42,10 @@ class _CacheModule extends CoreClass {
 		};
 
 		return new Promise((resolve, reject) => {
-			this.url = config.get("redis").url;
-			this.password = config.get("redis").password;
-
 			this.log("INFO", "Connecting...");
 
 			this.client = redis.createClient({
-				url: this.url,
-				password: this.password,
+				...config.get("redis"),
 				reconnectStrategy: retries => {
 					if (this.getStatus() !== "LOCKDOWN") {
 						if (this.getStatus() !== "RECONNECTING") this.setStatus("RECONNECTING");
@@ -99,7 +94,6 @@ class _CacheModule extends CoreClass {
 
 	/**
 	 * Quits redis client
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	QUIT() {
@@ -114,8 +108,48 @@ class _CacheModule extends CoreClass {
 	}
 
 	/**
+	 * Sets a single value
+	 * @param {object} payload - object containing payload
+	 * @param {string} payload.key -  name of the key to set
+	 * @param {*} payload.value - the value we want to set
+	 * @param {number} payload.ttl -  ttl of the key in seconds
+	 * @param {boolean} [payload.stringifyJson=true] - stringify 'value' if it's an Object or Array
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	SET(payload) {
+		return new Promise((resolve, reject) => {
+			let { key, value } = payload;
+			const { ttl } = payload;
+
+			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
+			// automatically stringify objects and arrays into JSON
+			if (["object", "array"].includes(typeof value)) value = JSON.stringify(value);
+
+			let options = null;
+			if (ttl) {
+				options = {
+					EX: ttl
+				};
+			}
+
+			CacheModule.client
+				.SET(key, value, options)
+				.then(() => {
+					let parsed = value;
+					try {
+						parsed = JSON.parse(value);
+					} catch {
+						// Do nothing
+					}
+
+					resolve(parsed);
+				})
+				.catch(err => reject(new Error(err)));
+		});
+	}
+
+	/**
 	 * Sets a single value in a table
-	 *
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.table - name of the table we want to set a key of (table === redis hash)
 	 * @param {string} payload.key -  name of the key to set
@@ -140,8 +174,42 @@ class _CacheModule extends CoreClass {
 	}
 
 	/**
+	 * Gets a single value
+	 * @param {object} payload - object containing payload
+	 * @param {string} payload.key - name of the key to fetch
+	 * @param {boolean} [payload.parseJson=true] - attempt to parse returned data as JSON
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	GET(payload) {
+		return new Promise((resolve, reject) => {
+			let { key } = payload;
+
+			if (!key) {
+				reject(new Error("Invalid key!"));
+				return;
+			}
+			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
+
+			CacheModule.client
+				.GET(key, payload.value)
+				.then(value => {
+					if (value && !value.startsWith("{") && !value.startsWith("[")) return resolve(value);
+
+					let parsedValue;
+					try {
+						parsedValue = JSON.parse(value);
+					} catch (err) {
+						return reject(err);
+					}
+
+					return resolve(parsedValue);
+				})
+				.catch(err => reject(new Error(err)));
+		});
+	}
+
+	/**
 	 * Gets a single value from a table
-	 *
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.table - name of the table to get the value from (table === redis hash)
 	 * @param {string} payload.key - name of the key to fetch
@@ -180,7 +248,6 @@ class _CacheModule extends CoreClass {
 
 	/**
 	 * Deletes a single value from a table
-	 *
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.table - name of the table to delete the value from (table === redis hash)
 	 * @param {string} payload.key - name of the key to delete
@@ -210,7 +277,6 @@ class _CacheModule extends CoreClass {
 
 	/**
 	 * Returns all the keys for a table
-	 *
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.table - name of the table to get the values from (table === redis hash)
 	 * @param {boolean} [payload.parseJson=true] - attempts to parse all values as JSON by default
@@ -239,7 +305,6 @@ class _CacheModule extends CoreClass {
 
 	/**
 	 * Deletes a single value
-	 *
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.key - name of the key to delete
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -264,7 +329,6 @@ class _CacheModule extends CoreClass {
 
 	/**
 	 * Publish a message to a channel, caches the redis client connection
-	 *
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.channel - the name of the channel we want to publish a message to
 	 * @param {*} payload.value - the value we want to send
@@ -295,7 +359,6 @@ class _CacheModule extends CoreClass {
 
 	/**
 	 * Subscribe to a channel, caches the redis client connection
-	 *
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.channel - name of the channel to subscribe to
 	 * @param {boolean} [payload.parseJson=true] - parse the message as JSON
@@ -310,10 +373,7 @@ class _CacheModule extends CoreClass {
 
 			if (subs[payload.channel] === undefined) {
 				subs[payload.channel] = {
-					client: redis.createClient({
-						url: CacheModule.url,
-						password: CacheModule.password
-					}),
+					client: redis.createClient(config.get("redis")),
 					cbs: []
 				};
 				subs[payload.channel].client.connect().then(() => {
@@ -340,7 +400,6 @@ class _CacheModule extends CoreClass {
 
 	/**
 	 * Gets a full list from Redis
-	 *
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.key - name of the table to get the value from (table === redis hash)
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -364,7 +423,6 @@ class _CacheModule extends CoreClass {
 
 	/**
 	 * Adds a value to a list in Redis
-	 *
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.key -  name of the list
 	 * @param {*} payload.value - the value we want to set
@@ -388,7 +446,6 @@ class _CacheModule extends CoreClass {
 
 	/**
 	 * Adds a value to a list in Redis using LPUSH
-	 *
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.key -  name of the list
 	 * @param {*} payload.value - the value we want to set
@@ -412,7 +469,6 @@ class _CacheModule extends CoreClass {
 
 	/**
 	 * Gets the length of a Redis list
-	 *
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.key -  name of the list
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -430,7 +486,6 @@ class _CacheModule extends CoreClass {
 
 	/**
 	 * Removes an item from a list using RPOP
-	 *
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.key -  name of the list
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -448,7 +503,6 @@ class _CacheModule extends CoreClass {
 
 	/**
 	 * Removes a value from a list in Redis
-	 *
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.key -  name of the list
 	 * @param {*} payload.value - the value we want to remove
@@ -472,7 +526,6 @@ class _CacheModule extends CoreClass {
 
 	/**
 	 * Gets a list of keys in Redis with a matching pattern
-	 *
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.pattern -  pattern to search for
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -490,7 +543,6 @@ class _CacheModule extends CoreClass {
 
 	/**
 	 * Returns a redis schema
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.schemaName - the name of the schema to get
 	 * @returns {Promise} - returns promise (reject, resolve)

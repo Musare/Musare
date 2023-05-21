@@ -1,7 +1,7 @@
 // TODO check if all of these properties are always present
 export type PlaylistSong = {
 	_id: string;
-	youtubeId: string;
+	mediaSource: string;
 	title: string;
 	artists: string[];
 	duration: number;

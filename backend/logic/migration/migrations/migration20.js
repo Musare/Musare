@@ -5,7 +5,6 @@ import mongoose from "mongoose";
  * Migration 20
  *
  * Migration for station overhaul and preventing migration18 from always running
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

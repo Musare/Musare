@@ -1,9 +1,7 @@
-import config from "config";
 import mail from "../index";
 
 /**
  * Sends a request password reset email
- *
  * @param {string} to - the email address of the recipient
  * @param {string} username - the username of the recipient
  * @param {string} code - the password reset code of the recipient
@@ -11,7 +9,6 @@ import mail from "../index";
  */
 export default (to, username, code, cb) => {
 	const data = {
-		from: config.get("mail.from"),
 		to,
 		subject: "Password reset request",
 		html: `

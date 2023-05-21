@@ -11,17 +11,18 @@ import {
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useConfigStore } from "@/stores/config";
 import { useStationStore } from "@/stores/station";
 
 const ProfilePicture = defineAsyncComponent(
 	() => import("@/components/ProfilePicture.vue")
 );
 
+const configStore = useConfigStore();
 const stationStore = useStationStore();
 const route = useRoute();
 
 const notesUri = ref("");
-const frontendDomain = ref("");
 const tab = ref("active");
 const tabs = ref([]);
 const search = reactive({
@@ -64,7 +65,7 @@ const { hasPermission } = stationStore;
 const copyToClipboard = async () => {
 	try {
 		await navigator.clipboard.writeText(
-			frontendDomain.value + route.fullPath
+			configStore.urls.client + route.fullPath
 		);
 	} catch (err) {
 		new Toast("Failed to copy to clipboard.");
@@ -72,7 +73,8 @@ const copyToClipboard = async () => {
 };
 
 const showTab = _tab => {
-	tabs.value[`${_tab}-tab`].scrollIntoView({ block: "nearest" });
+	if (tabs.value[`${_tab}-tab`])
+		tabs.value[`${_tab}-tab`].scrollIntoView({ block: "nearest" });
 	tab.value = _tab;
 };
 
@@ -126,22 +128,15 @@ watch(
 	}
 );
 
-onMounted(async () => {
-	frontendDomain.value = await lofig.get("frontendDomain");
-	notesUri.value = encodeURI(`${frontendDomain.value}/assets/notes.png`);
+onMounted(() => {
+	notesUri.value = encodeURI(`${configStore.urls.client}/assets/notes.png`);
 });
 </script>
 
 <template>
 	<div id="users">
 		<div class="tabs-container">
-			<div
-				v-if="
-					hasPermission('stations.update') &&
-					station.type === 'community'
-				"
-				class="tab-selection"
-			>
+			<div v-if="hasPermission('stations.update')" class="tab-selection">
 				<button
 					class="button is-default"
 					:ref="el => (tabs['active-tab'] = el)"
@@ -212,55 +207,101 @@ onMounted(async () => {
 								}"
 								target="_blank"
 							>
-								<profile-picture
-									:avatar="user.avatar"
-									:name="user.name || user.username"
-								/>
+								<div class="left">
+									<profile-picture
+										:avatar="user.avatar"
+										:name="user.name || user.username"
+									/>
 
-								{{ user.name || user.username }}
+									{{ user.name || user.username }}
 
-								<span
-									v-if="isOwner(user._id)"
-									class="material-icons user-rank"
-									content="Station Owner"
-									v-tippy="{ theme: 'info' }"
-									>local_police</span
-								>
-								<span
-									v-else-if="isDj(user._id)"
-									class="material-icons user-rank"
-									content="Station DJ"
-									v-tippy="{ theme: 'info' }"
-									>shield</span
-								>
+									<span
+										v-if="isOwner(user._id)"
+										class="material-icons user-rank"
+										content="Station Owner"
+										v-tippy="{ theme: 'info' }"
+										>local_police</span
+									>
+									<span
+										v-else-if="isDj(user._id)"
+										class="material-icons user-rank"
+										content="Station DJ"
+										v-tippy="{ theme: 'info' }"
+										>shield</span
+									>
 
-								<button
-									v-if="
-										hasPermission('stations.djs.add') &&
-										station.type === 'community' &&
-										!isDj(user._id) &&
-										!isOwner(user._id)
-									"
-									class="button is-primary material-icons"
-									@click.prevent="addDj(user._id)"
-									content="Promote user to DJ"
-									v-tippy
-								>
-									add_moderator
-								</button>
-								<button
-									v-else-if="
-										hasPermission('stations.djs.remove') &&
-										station.type === 'community' &&
-										isDj(user._id)
-									"
-									class="button is-danger material-icons"
-									@click.prevent="removeDj(user._id)"
-									content="Demote user from DJ"
-									v-tippy
-								>
-									remove_moderator
-								</button>
+									<button
+										v-if="
+											hasPermission('stations.djs.add') &&
+											!isDj(user._id) &&
+											!isOwner(user._id)
+										"
+										class="button is-primary material-icons"
+										@click.prevent="addDj(user._id)"
+										content="Promote user to DJ"
+										v-tippy
+									>
+										add_moderator
+									</button>
+									<button
+										v-else-if="
+											hasPermission(
+												'stations.djs.remove'
+											) && isDj(user._id)
+										"
+										class="button is-danger material-icons"
+										@click.prevent="removeDj(user._id)"
+										content="Demote user from DJ"
+										v-tippy
+									>
+										remove_moderator
+									</button>
+								</div>
+
+								<div class="user-state">
+									<i
+										class="material-icons"
+										v-if="user.state === 'participate'"
+										v-tippy
+										content="Participating"
+										>group</i
+									>
+									<i
+										class="material-icons"
+										v-if="user.state === 'local_paused'"
+										v-tippy
+										content="Paused"
+										>pause</i
+									>
+									<i
+										class="material-icons"
+										v-if="user.state === 'muted'"
+										v-tippy
+										content="Muted"
+										>volume_mute</i
+									>
+									<i
+										class="material-icons"
+										v-if="user.state === 'playing'"
+										v-tippy
+										content="Listening to music"
+										>play_arrow</i
+									>
+									<i
+										class="material-icons"
+										v-if="user.state === 'unavailable'"
+										v-tippy
+										content="Unavailable"
+										>warning</i
+									>
+									<i
+										class="material-icons"
+										v-if="user.state === 'buffering'"
+										v-tippy
+										content="Buffering"
+										>warning</i
+									>
+								</div>
 							</router-link>
 						</li>
 					</ul>
@@ -379,7 +420,6 @@ onMounted(async () => {
 								<button
 									v-if="
 										hasPermission('stations.djs.add') &&
-										station.type === 'community' &&
 										!isDj(user._id) &&
 										!isOwner(user._id)
 									"
@@ -393,7 +433,6 @@ onMounted(async () => {
 								<button
 									v-else-if="
 										hasPermission('stations.djs.remove') &&
-										station.type === 'community' &&
 										isDj(user._id)
 									"
 									class="button is-danger material-icons"
@@ -517,6 +556,7 @@ onMounted(async () => {
 
 					a {
 						display: flex;
+						flex-direction: row;
 						align-items: center;
 						padding: 5px 10px;
 						border: 0.5px var(--light-grey-3) solid;
@@ -550,6 +590,16 @@ onMounted(async () => {
 							margin-left: auto;
 							font-size: 18px;
 							width: 36px;
+						}
+
+						.left {
+							display: flex;
+							align-items: center;
+							flex: 1;
+						}
+
+						.user-state {
+							display: flex;
 						}
 					}
 				}

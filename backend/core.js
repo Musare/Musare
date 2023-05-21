@@ -51,7 +51,6 @@ class Queue {
 
 	/**
 	 * Returns the amount of jobs in the queue.
-	 *
 	 * @returns {number} - amount of jobs in queue
 	 */
 	lengthQueue() {
@@ -60,7 +59,6 @@ class Queue {
 
 	/**
 	 * Returns the amount of running jobs.
-	 *
 	 * @returns {number} - amount of running jobs
 	 */
 	lengthRunning() {
@@ -69,7 +67,6 @@ class Queue {
 
 	/**
 	 * Returns the amount of running jobs.
-	 *
 	 * @returns {number} - amount of running jobs
 	 */
 	lengthPaused() {
@@ -78,7 +75,6 @@ class Queue {
 
 	/**
 	 * Adds a job to the queue, with a given priority.
-	 *
 	 * @param {object} job - the job that is to be added
 	 * @param {object} options - custom options e.g. isQuiet. Optional.
 	 * @param {number} priority - the priority of the to be added job
@@ -92,7 +88,6 @@ class Queue {
 
 	/**
 	 * Removes a job currently running from the queue.
-	 *
 	 * @param {object} job - the job to be removed
 	 */
 	removeRunningJob(job) {
@@ -101,7 +96,6 @@ class Queue {
 
 	/**
 	 * Pauses a job currently running from the queue.
-	 *
 	 * @param {object} job - the job to be pauses
 	 */
 	pauseRunningJob(job) {
@@ -118,7 +112,6 @@ class Queue {
 
 	/**
 	 * Resumes a job currently paused, adding the job back to the front of the queue
-	 *
 	 * @param {object} job - the job to be pauses
 	 */
 	resumeRunningJob(job) {
@@ -157,7 +150,6 @@ class Queue {
 
 	/**
 	 * Handles a task, calling the handleTaskFunction provided in the constructor
-	 *
 	 * @param {object} task - the task to be handled
 	 */
 	_handleTask(task) {
@@ -198,7 +190,6 @@ class Job {
 
 	/**
 	 * Adds a child job to this job
-	 *
 	 * @param {object} childJob - the child job
 	 */
 	addChildJob(childJob) {
@@ -207,7 +198,6 @@ class Job {
 
 	/**
 	 * Sets the job status
-	 *
 	 * @param {string} status - the new status
 	 */
 	setStatus(status) {
@@ -216,7 +206,6 @@ class Job {
 
 	/**
 	 * Sets the task for a job
-	 *
 	 * @param {string} task - the job task
 	 */
 	setTask(task) {
@@ -225,7 +214,6 @@ class Job {
 
 	/**
 	 * Returns the UUID of the job, allowing you to compare jobs with toString
-	 *
 	 * @returns {string} - the job's UUID/uniqueId
 	 */
 	toString() {
@@ -234,7 +222,6 @@ class Job {
 
 	/**
 	 * Sets the response that will be provided to the onFinish DeferredPromise resolve/reject function, as soon as the job is done if it has no parent, or when the parent job is resumed
-	 *
 	 * @param {object} response - the response
 	 */
 	setResponse(response) {
@@ -243,7 +230,6 @@ class Job {
 
 	/**
 	 * Sets the response type that is paired with the response. If it is RESOLVE/REJECT, then it will resolve/reject with the response. If it is RESOLVED/REJECTED, then it has already resolved/rejected with the response.
-	 *
 	 * @param {string} responseType - the response type, so RESOLVE/REJECT/RESOLVED/REJECTED
 	 */
 	setResponseType(responseType) {
@@ -259,7 +245,6 @@ class Job {
 
 	/**
 	 * Logs to the module of the job
-	 *
 	 * @param  {any} args - Anything to be added to the log e.g. log type, log message
 	 */
 	log(...args) {
@@ -267,18 +252,25 @@ class Job {
 		this.module.log(...args);
 	}
 
+	/**
+	 * Set whether this job is a long job.
+	 */
 	keepLongJob() {
 		this.longJob = true;
 	}
 
+	/**
+	 * Forget long job.
+	 */
 	forgetLongJob() {
 		this.longJob = false;
 		this.module.moduleManager.jobManager.removeJob(this);
 	}
 
 	/**
-	 * 
+	 * Update and emit progress of job
 	 * @param {data} data - Data to publish upon progress
+	 * @param {boolean} notALongJob - Whether job is not a long job
 	 */
 	publishProgress(data, notALongJob) {
 		if (this.longJob || notALongJob) {
@@ -289,7 +281,7 @@ class Job {
 					this.lastProgressData = data;
 
 					if (data.status === "update") {
-						if ((Date.now() - this.lastProgressTime) > 1000) {
+						if (Date.now() - this.lastProgressTime > 1000) {
 							this.lastProgressTime = Date.now();
 						} else {
 							if (this.lastProgressTimeout) clearTimeout(this.lastProgressTimeout);
@@ -303,11 +295,11 @@ class Job {
 					} else if (data.status === "success" || data.status === "error")
 						if (this.lastProgressTimeout) clearTimeout(this.lastProgressTimeout);
 
-					if (data.title)	this.longJobTitle = data.title;
+					if (data.title) this.longJobTitle = data.title;
 
 					this.onProgress.emit("progress", data);
 				}
-			} else this.log("Progress published, but no onProgress specified.")
+			} else this.log("Progress published, but no onProgress specified.");
 		} else {
 			this.parentJob.publishProgress(data);
 		}
@@ -323,7 +315,6 @@ class MovingAverageCalculator {
 
 	/**
 	 * Updates the mean average
-	 *
 	 * @param {number} newValue - the new time it took to complete a job
 	 */
 	update(newValue) {
@@ -334,7 +325,6 @@ class MovingAverageCalculator {
 
 	/**
 	 * Returns the mean average
-	 *
 	 * @returns {number} - returns the mean average
 	 */
 	get mean() {
@@ -378,7 +368,6 @@ export default class CoreClass {
 
 	/**
 	 * Sets the status of a module
-	 *
 	 * @param {string} status - the new status of a module
 	 */
 	setStatus(status) {
@@ -390,7 +379,6 @@ export default class CoreClass {
 
 	/**
 	 * Returns the status of a module
-	 *
 	 * @returns {string} - the status of a module
 	 */
 	getStatus() {
@@ -399,7 +387,6 @@ export default class CoreClass {
 
 	/**
 	 * Changes the current stage of a module
-	 *
 	 * @param {string} stage - the new stage of a module
 	 */
 	setStage(stage) {
@@ -408,7 +395,6 @@ export default class CoreClass {
 
 	/**
 	 * Returns the current stage of a module
-	 *
 	 * @returns {string} - the current stage of a module
 	 */
 	getStage() {
@@ -435,7 +421,6 @@ export default class CoreClass {
 
 	/**
 	 * Creates a new log message
-	 *
 	 * @param {...any} args - anything to be included in the log message, the first argument is the type of log
 	 */
 	log(...args) {
@@ -494,7 +479,6 @@ export default class CoreClass {
 
 	/**
 	 * Runs a job
-	 *
 	 * @param {string} name - the name of the job e.g. GET_PLAYLIST
 	 * @param {object} payload - any expected payload for the job itself
 	 * @param {object} parentJob - the parent job, if any
@@ -582,7 +566,6 @@ export default class CoreClass {
 
 	/**
 	 * UNKNOWN
-	 *
 	 * @param {object} moduleManager - UNKNOWN
 	 */
 	setModuleManager(moduleManager) {
@@ -591,7 +574,6 @@ export default class CoreClass {
 
 	/**
 	 * Actually runs the job? UNKNOWN
-	 *
 	 * @param {object} job - object containing details of the job
 	 * @param {string} job.name - the name of the job e.g. GET_PLAYLIST
 	 * @param {string} job.payload - any expected payload for the job itself
@@ -615,7 +597,8 @@ export default class CoreClass {
 					this[job.name]
 						.apply(job, [job.payload])
 						.then(response => {
-							if (!options.isQuiet) this.log("INFO", `Ran job ${job.name} (${job.toString()}) successfully`);
+							if (!options.isQuiet)
+								this.log("INFO", `Ran job ${job.name} (${job.toString()}) successfully`);
 							job.setStatus("FINISHED");
 							job.setResponse(response);
 							this.jobStatistics[job.name].successful += 1;
@@ -689,8 +672,7 @@ export default class CoreClass {
 							}
 							resolve();
 						});
-				else
-					this.log("ERROR", `Job not found! ${job.name}`)
+				else this.log("ERROR", `Job not found! ${job.name}`);
 			} else {
 				this.log(
 					"INFO",

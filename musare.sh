@@ -51,7 +51,7 @@ if [[ ${dockerInstalled} -gt 0 || ${composeInstalled} -gt 0 ]]; then
 fi
 
 composeFiles="-f docker-compose.yml"
-if [[ ${CONTAINER_MODE} == "dev" ]]; then
+if [[ ${CONTAINER_MODE} == "development" ]]; then
     composeFiles="${composeFiles} -f docker-compose.dev.yml"
 fi
 if [[ -f docker-compose.override.yml ]]; then
@@ -428,11 +428,15 @@ case $1 in
             echo -e "${GREEN}Already up to date${NC}"
             exit ${exitValue}
         fi
+        breakingConfigChange=$(git rev-list "$(git rev-parse HEAD)" | grep d8b73be1de231821db34c677110b7b97e413451f)
+        if [[ -f backend/config/default.json && -z $breakingConfigChange ]]; then
+            echo -e "${RED}Configuration has breaking changes. Please rename or remove 'backend/config/default.json' and run the update command again to continue.${NC}"
+            exit 1
+        fi
         musareshChange=$(echo "${updated}" | grep "musare.sh")
         dbChange=$(echo "${updated}" | grep "backend/logic/db/schemas")
-        fcChange=$(echo "${updated}" | grep "frontend/dist/config/template.json")
-        bcChange=$(echo "${updated}" | grep "backend/config/template.json")
-        if [[ ( $2 == "auto" && -z $dbChange && -z $fcChange && -z $bcChange && -z $musareshChange ) || -z $2 ]]; then
+        bcChange=$(echo "${updated}" | grep "backend/config/default.json")
+        if [[ ( $2 == "auto" && -z $dbChange && -z $bcChange && -z $musareshChange ) || -z $2 ]]; then
             if [[ -n $musareshChange && $(git diff @\{u\} -- musare.sh) != "" ]]; then
                 if [[ $musareshModified != "" ]]; then
                     echo -e "${RED}musare.sh has been modified, please reset these changes and run the update command again to continue.${NC}"
@@ -454,9 +458,6 @@ case $1 in
                 echo -e "${GREEN}Updated!${NC}"
                 if [[ -n $dbChange ]]; then
                     echo -e "${RED}Database schema has changed, please run migration!${NC}"
-                fi
-                if [[ -n $fcChange ]]; then
-                    echo -e "${RED}Frontend config has changed, please update!${NC}"
                 fi
                 if [[ -n $bcChange ]]; then
                     echo -e "${RED}Backend config has changed, please update!${NC}"

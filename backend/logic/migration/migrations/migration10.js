@@ -4,7 +4,6 @@ import async from "async";
  * Migration 10
  *
  * Migration for changes in how the order of songs in a playlist is handled
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

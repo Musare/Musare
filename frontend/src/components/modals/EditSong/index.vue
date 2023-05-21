@@ -13,16 +13,20 @@ import aw from "@/aw";
 import validation from "@/validation";
 import keyboardShortcuts from "@/keyboardShortcuts";
 import { useForm } from "@/composables/useForm";
+import { useSoundcloudPlayer } from "@/composables/useSoundcloudPlayer";
 
 import { Song } from "@/types/song.js";
 
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useConfigStore } from "@/stores/config";
 import { useModalsStore } from "@/stores/modals";
 import { useEditSongStore } from "@/stores/editSong";
 import { useStationStore } from "@/stores/station";
 import { useUserAuthStore } from "@/stores/userAuth";
 
 import Modal from "@/components/Modal.vue";
+
+const TAG = "[EDITSONG]";
 
 const FloatingBox = defineAsyncComponent(
 	() => import("@/components/FloatingBox.vue")
@@ -33,8 +37,8 @@ const SaveButton = defineAsyncComponent(
 const AutoSuggest = defineAsyncComponent(
 	() => import("@/components/AutoSuggest.vue")
 );
-const SongItem = defineAsyncComponent(
-	() => import("@/components/SongItem.vue")
+const MediaItem = defineAsyncComponent(
+	() => import("@/components/MediaItem.vue")
 );
 const Discogs = defineAsyncComponent(() => import("./Tabs/Discogs.vue"));
 const ReportsTab = defineAsyncComponent(() => import("./Tabs/Reports.vue"));
@@ -60,6 +64,21 @@ const stationStore = useStationStore();
 const { socket } = useWebsocketsStore();
 const userAuthStore = useUserAuthStore();
 
+const {
+	soundcloudIframeElement,
+	soundcloudLoadTrack,
+	soundcloudSeekTo,
+	soundcloudPlay,
+	soundcloudPause,
+	soundcloudSetVolume,
+	soundcloudGetPosition,
+	soundcloudGetDuration,
+	soundcloudGetCurrentSound,
+	soundcloudGetTrackId,
+	soundcloudBindListener,
+	soundcloudUnload
+} = useSoundcloudPlayer();
+
 const { openModal, closeCurrentModal, preventCloseCbs } = useModalsStore();
 const { hasPermission } = userAuthStore;
 
@@ -67,12 +86,12 @@ const {
 	tab,
 	video,
 	song,
-	youtubeId,
+	mediaSource,
 	prefillData,
 	reports,
 	newSong,
 	bulk,
-	youtubeIds,
+	mediaSources,
 	songPrefillData
 } = storeToRefs(editSongStore);
 
@@ -83,12 +102,11 @@ const youtubeErrorMessage = ref("");
 const youtubeVideoDuration = ref("0.000");
 const youtubeVideoCurrentTime = ref<number | string>(0);
 const youtubeVideoNote = ref("");
-const useHTTPS = ref(false);
 const muted = ref(false);
 const volumeSliderValue = ref(0);
-const activityWatchVideoDataInterval = ref(null);
-const activityWatchVideoLastStatus = ref("");
-const activityWatchVideoLastStartDuration = ref(0);
+const activityWatchMediaDataInterval = ref(null);
+const activityWatchMediaLastStatus = ref("");
+const activityWatchMediaLastStartDuration = ref(0);
 const recommendedGenres = ref([
 	"Blues",
 	"Country",
@@ -136,7 +154,7 @@ const thumbnailWidth = ref(null);
 const thumbnailHeight = ref(null);
 const thumbnailLoadError = ref(false);
 const tabs = ref([]);
-const playerReady = ref(true);
+const youtubePlayerReady = ref(true);
 const interval = ref();
 const saveButtonRefs = ref([]);
 const canvasElement = ref();
@@ -151,7 +169,7 @@ const songItems = ref([]);
 
 const editingItemIndex = computed(() =>
 	items.value.findIndex(
-		item => item.song.youtubeId === currentSong.value.youtubeId
+		item => item.song.mediaSource === currentSong.value.mediaSource
 	)
 );
 const filteredItems = computed({
@@ -159,28 +177,30 @@ const filteredItems = computed({
 		items.value.filter(item => (flagFilter.value ? item.flagged : true)),
 	set: (newItem: any) => {
 		const index = items.value.findIndex(
-			item => item.song.youtubeId === newItem.youtubeId
+			item => item.song.mediaSource === newItem.mediaSource
 		);
 		items.value[index] = newItem;
 	}
 });
 const filteredEditingItemIndex = computed(() =>
 	filteredItems.value.findIndex(
-		item => item.song.youtubeId === currentSong.value.youtubeId
+		item => item.song.mediaSource === currentSong.value.mediaSource
 	)
 );
 const currentSongFlagged = computed(
 	() =>
 		items.value.find(
-			item => item.song.youtubeId === currentSong.value.youtubeId
+			item => item.song.mediaSource === currentSong.value.mediaSource
 		)?.flagged
 );
 // EditSongs end
 
+const configStore = useConfigStore();
+const { discogsEnabled, experimental } = storeToRefs(configStore);
+
 const {
 	editSong,
 	stopVideo,
-	hardStopVideo,
 	loadVideoById,
 	pauseVideo,
 	setSong,
@@ -191,13 +211,23 @@ const {
 
 const { updateMediaModalPlayingAudio } = stationStore;
 
-const unloadSong = (_youtubeId, songId?) => {
+const playerHardStop = () => {
+	if (
+		youtubePlayerReady.value &&
+		video.value.player &&
+		video.value.player.stopVideo
+	)
+		video.value.player.stopVideo();
+	soundcloudUnload();
+};
+
+const unloadSong = (_mediaSource, songId?) => {
 	songDataLoaded.value = false;
 	songDeleted.value = false;
-	stopVideo();
 	pauseVideo(true);
+	playerHardStop();
 
-	resetSong(_youtubeId);
+	resetSong(_mediaSource);
 	thumbnailNotSquare.value = false;
 	thumbnailWidth.value = null;
 	thumbnailHeight.value = null;
@@ -209,9 +239,9 @@ const unloadSong = (_youtubeId, songId?) => {
 		saveButtonRefs.value.saveButton.status = "default";
 };
 
-const loadSong = (_youtubeId: string, reset?: boolean) => {
+const loadSong = (_mediaSource: string, reset?: boolean) => {
 	songNotFound.value = false;
-	socket.dispatch(`songs.getSongsFromYoutubeIds`, [_youtubeId], res => {
+	socket.dispatch(`songs.getSongsFromMediaSources`, [_mediaSource], res => {
 		const { songs } = res.data;
 		if (res.status === "success" && songs.length > 0) {
 			let _song = songs[0];
@@ -241,9 +271,9 @@ const loadSong = (_youtubeId: string, reset?: boolean) => {
 	});
 };
 
-const onSavedSuccess = youtubeId => {
+const onSavedSuccess = mediaSource => {
 	const itemIndex = items.value.findIndex(
-		item => item.song.youtubeId === youtubeId
+		item => item.song.mediaSource === mediaSource
 	);
 	if (itemIndex > -1) {
 		items.value[itemIndex].status = "done";
@@ -251,18 +281,27 @@ const onSavedSuccess = youtubeId => {
 	}
 };
 
-const onSavedError = youtubeId => {
+const onSavedError = mediaSource => {
 	const itemIndex = items.value.findIndex(
-		item => item.song.youtubeId === youtubeId
+		item => item.song.mediaSource === mediaSource
 	);
 	if (itemIndex > -1) items.value[itemIndex].status = "error";
 };
 
-const onSaving = youtubeId => {
+const onSaving = mediaSource => {
 	const itemIndex = items.value.findIndex(
-		item => item.song.youtubeId === youtubeId
+		item => item.song.mediaSource === mediaSource
 	);
 	if (itemIndex > -1) items.value[itemIndex].status = "saving";
+};
+
+const getCurrentSongMediaType = mediaSource => {
+	if (!mediaSource || mediaSource.indexOf(":") === -1) return "none";
+	return mediaSource.split(":")[0];
+};
+const getCurrentSongMediaValue = mediaSource => {
+	if (!mediaSource || mediaSource.indexOf(":") === -1) return null;
+	return mediaSource.split(":")[1];
 };
 
 const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
@@ -305,10 +344,10 @@ const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 			validate: value => {
 				if (!validation.isLength(value, 8, 256))
 					return "Thumbnail must have between 8 and 256 characters.";
-				if (useHTTPS.value && value.indexOf("https://") !== 0)
+				if (configStore.urls.secure && value.indexOf("https://") !== 0)
 					return 'Thumbnail must start with "https://".';
 				if (
-					!useHTTPS.value &&
+					!configStore.urls.secure &&
 					value.indexOf("https://") !== 0 &&
 					value.indexOf("http://") !== 0
 				)
@@ -316,15 +355,25 @@ const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 				return true;
 			}
 		},
-		youtubeId: {
+		mediaSource: {
 			value: "",
 			validate: value => {
 				if (
+					getCurrentSongMediaType(inputs.value.mediaSource.value) ===
+					"none"
+				)
+					return "Media source type is not valid.";
+				if (!getCurrentSongMediaValue(inputs.value.mediaSource.value))
+					return "Media source value is not valid.";
+
+				if (
+					getCurrentSongMediaType(inputs.value.mediaSource.value) ===
+						"youtube" &&
 					!newSong.value &&
 					youtubeError.value &&
-					inputs.value.youtubeId.originalValue !== value
+					inputs.value.mediaSource.originalValue !== value
 				)
-					return "You're not allowed to change the YouTube id while the player is not working";
+					return "You're not allowed to change the media source while the player is not working";
 				return true;
 			}
 		},
@@ -415,8 +464,8 @@ const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 				}
 				new Toast(res.message);
 				saveButtonRef.handleSuccessfulSave();
-				onSavedSuccess(values.youtubeId);
-				if (newSong.value) loadSong(values.youtubeId, true);
+				onSavedSuccess(values.mediaSource);
+				if (newSong.value) loadSong(values.mediaSource, true);
 				else setSong(mergedValues);
 				resolve();
 			};
@@ -433,19 +482,74 @@ const { inputs, unsavedChanges, save, setValue, setOriginalValue } = useForm(
 			if (status === "unchanged") {
 				new Toast(messages.unchanged);
 				saveButtonRef.handleSuccessfulSave();
-				onSavedSuccess(values.youtubeId);
+				onSavedSuccess(values.mediaSource);
 			} else {
 				Object.values(messages).forEach(message => {
 					new Toast({ content: message, timeout: 8000 });
 				});
 				saveButtonRef.handleFailedSave();
-				onSavedError(values.youtubeId);
+				onSavedError(values.mediaSource);
 			}
 			resolve();
 		}
 	},
 	{ modalUuid: props.modalUuid, preventCloseUnsaved: false }
 );
+
+const currentSongMediaType = computed(() =>
+	getCurrentSongMediaType(inputs.value.mediaSource.value)
+);
+const currentSongMediaValue = computed(() =>
+	getCurrentSongMediaValue(inputs.value.mediaSource.value)
+);
+
+const getCurrentPlayerTime = () =>
+	new Promise<number>(resolve => {
+		if (
+			currentSongMediaType.value === "youtube" &&
+			youtubePlayerReady.value
+		) {
+			resolve(
+				video.value.player && video.value.player.getCurrentTime
+					? video.value.player.getCurrentTime()
+					: 0
+			);
+			return;
+		}
+
+		if (currentSongMediaType.value === "soundcloud") {
+			soundcloudGetPosition(position => {
+				resolve(position / 1000);
+			});
+			return;
+		}
+
+		resolve(0);
+	});
+
+const getPlayerDuration = () =>
+	new Promise<number>(resolve => {
+		if (
+			currentSongMediaType.value === "youtube" &&
+			youtubePlayerReady.value
+		) {
+			resolve(
+				video.value.player && video.value.player.getDuration
+					? video.value.player.getDuration()
+					: 0
+			);
+			return;
+		}
+
+		if (currentSongMediaType.value === "soundcloud") {
+			soundcloudGetDuration(duration => {
+				resolve(duration / 1000);
+			});
+			return;
+		}
+
+		resolve(0);
+	});
 
 const showTab = payload => {
 	if (tabs.value[`${payload}-tab`])
@@ -515,13 +619,13 @@ const onCloseOrNext = (next?: boolean): Promise<void> =>
 const pickSong = song => {
 	onCloseOrNext(true).then(() => {
 		editSong({
-			youtubeId: song.youtubeId,
-			prefill: songPrefillData.value[song.youtubeId]
+			mediaSource: song.mediaSource,
+			prefill: songPrefillData.value[song.mediaSource]
 		});
 		currentSong.value = song;
-		if (songItems.value[`edit-songs-item-${song.youtubeId}`])
+		if (songItems.value[`edit-songs-item-${song.mediaSource}`])
 			songItems.value[
-				`edit-songs-item-${song.youtubeId}`
+				`edit-songs-item-${song.mediaSource}`
 			].scrollIntoView();
 	});
 };
@@ -549,7 +653,7 @@ const editNextSong = () => {
 
 const saveSong = (refName: string, closeOrNext?: boolean) => {
 	saveButtonRefName.value = refName;
-	onSaving(inputs.value.youtubeId.value);
+	onSaving(inputs.value.mediaSource.value);
 	save(() => {
 		if (closeOrNext && bulk.value) editNextSong();
 		else if (closeOrNext) closeCurrentModal();
@@ -600,13 +704,14 @@ const onThumbnailLoadError = error => {
 const isYoutubeThumbnail = computed(
 	() =>
 		songDataLoaded.value &&
-		inputs.value.youtubeId.value &&
+		inputs.value.mediaSource.value &&
+		inputs.value.mediaSource.value.startsWith("youtube:") &&
 		inputs.value.thumbnail.value &&
 		(inputs.value.thumbnail.value.lastIndexOf("i.ytimg.com") !== -1 ||
 			inputs.value.thumbnail.value.lastIndexOf("img.youtube.com") !== -1)
 );
 
-const drawCanvas = () => {
+const drawCanvas = async () => {
 	if (!songDataLoaded.value || !canvasElement.value) return;
 	const ctx = canvasElement.value.getContext("2d");
 
@@ -618,10 +723,7 @@ const drawCanvas = () => {
 
 	const width = 530;
 
-	const currentTime =
-		video.value.player && video.value.player.getCurrentTime
-			? video.value.player.getCurrentTime()
-			: 0;
+	const currentTime = await getCurrentPlayerTime();
 
 	const widthSkipDuration = (skipDuration / videoDuration) * width;
 	const widthDuration = (duration / videoDuration) * width;
@@ -645,10 +747,41 @@ const drawCanvas = () => {
 	ctx.fillRect(widthCurrentTime, 0, 1, 20);
 };
 
-const seekTo = position => {
-	pauseVideo(false);
+const playerPlay = () => {
+	if (currentSongMediaType.value === "youtube") {
+		soundcloudPause();
+		if (
+			youtubePlayerReady.value &&
+			video.value.player &&
+			video.value.player.playVideo
+		)
+			video.value.player.playVideo();
+	} else if (currentSongMediaType.value === "soundcloud") {
+		if (
+			youtubePlayerReady.value &&
+			video.value.player &&
+			video.value.player.pauseVideo
+		)
+			video.value.player.pauseVideo();
+		soundcloudPlay();
+	}
+};
 
-	video.value.player.seekTo(position);
+const seekTo = (position, play = true) => {
+	if (currentSongMediaType.value === "youtube") {
+		if (play) {
+			video.value.player.seekTo(position);
+			pauseVideo(false);
+			playerPlay();
+		}
+	}
+
+	if (currentSongMediaType.value === "soundcloud") {
+		soundcloudSeekTo(position * 1000);
+		if (play) {
+			soundcloudPlay();
+		}
+	}
 };
 
 const getAlbumData = type => {
@@ -686,7 +819,9 @@ const getYouTubeData = type => {
 	}
 	if (type === "thumbnail")
 		setValue({
-			thumbnail: `https://img.youtube.com/vi/${inputs.value.youtubeId.value}/mqdefault.jpg`
+			thumbnail: `https://img.youtube.com/vi/${
+				inputs.value.mediaSource.value.split(":")[1]
+			}/mqdefault.jpg`
 		});
 	if (type === "author") {
 		try {
@@ -702,31 +837,101 @@ const getYouTubeData = type => {
 	}
 };
 
+const getSoundCloudData = type => {
+	if (type === "title") {
+		try {
+			soundcloudGetCurrentSound(soundcloudCurrentSound => {
+				const { title } = soundcloudCurrentSound;
+
+				if (title) setValue({ title });
+				else throw new Error("No title found");
+			});
+		} catch (e) {
+			new Toast("Unable to fetch SoundCloud track title.");
+		}
+	}
+
+	if (type === "thumbnail") {
+		setValue({
+			thumbnail: `https://img.youtube.com/vi/${
+				inputs.value.mediaSource.value.split(":")[1]
+			}/mqdefault.jpg`
+		});
+
+		try {
+			soundcloudGetCurrentSound(soundcloudCurrentSound => {
+				const { artwork_url: artworkUrl } = soundcloudCurrentSound;
+
+				if (artworkUrl) setValue({ thumbnail: artworkUrl });
+				else throw new Error("No thumbnail found");
+			});
+		} catch (e) {
+			new Toast("Unable to fetch SoundCloud track artwork.");
+		}
+	}
+
+	if (type === "author") {
+		try {
+			soundcloudGetCurrentSound(soundcloudCurrentSound => {
+				const { user } = soundcloudCurrentSound;
+
+				if (user) setValue({ addArtist: user.username });
+				else throw new Error("No artist found");
+			});
+		} catch (e) {
+			new Toast("Unable to fetch SoundCloud track artist.");
+		}
+	}
+};
+
 const fillDuration = () => {
-	setValue({
-		duration:
-			Number.parseFloat(youtubeVideoDuration.value) -
-			inputs.value.skipDuration.value
-	});
+	if (currentSongMediaType.value === "youtube")
+		setValue({
+			duration:
+				Number.parseFloat(youtubeVideoDuration.value) -
+				inputs.value.skipDuration.value
+		});
+	else if (currentSongMediaType.value === "soundcloud") {
+		soundcloudGetDuration(duration => {
+			setValue({
+				duration:
+					Number.parseFloat(duration) / 1000 -
+					inputs.value.skipDuration.value
+			});
+		});
+	}
+};
+
+const playerPause = () => {
+	if (
+		youtubePlayerReady.value &&
+		video.value.player &&
+		video.value.player.pauseVideo
+	)
+		video.value.player.pauseVideo();
+	soundcloudPause();
 };
 
 const settings = type => {
 	switch (type) {
 		case "stop":
 			stopVideo();
+			playerPause();
 			pauseVideo(true);
 
 			break;
 		case "hardStop":
-			hardStopVideo();
+			playerHardStop();
 			pauseVideo(true);
 
 			break;
 		case "pause":
+			playerPause();
 			pauseVideo(true);
 
 			break;
 		case "play":
+			playerPlay();
 			pauseVideo(false);
 
 			break;
@@ -744,35 +949,73 @@ const settings = type => {
 
 const play = () => {
 	if (
-		video.value.player.getVideoData().video_id !==
-		inputs.value.youtubeId.value
+		currentSongMediaType.value === "youtube" &&
+		inputs.value.mediaSource.value !==
+			`youtube:${video.value.player.getVideoData().video_id}`
 	) {
 		setValue({ duration: -1 });
 		loadVideoById(
-			inputs.value.youtubeId.value,
+			inputs.value.mediaSource.value.split(":")[1],
 			inputs.value.skipDuration.value
 		);
 	}
+
+	console.log(
+		`|${
+			inputs.value.mediaSource.value
+		}|--|soundcloud:${soundcloudGetTrackId()}|`
+	);
+
+	if (
+		currentSongMediaType.value === "soundcloud" &&
+		`${inputs.value.mediaSource.value}` !==
+			`soundcloud:${soundcloudGetTrackId()}`
+	) {
+		setValue({ duration: -1 });
+		console.log(
+			"ON PLAY LOAD SC",
+			currentSongMediaValue.value,
+			Math.max(Number(inputs.value.skipDuration.value), 0),
+			true
+		);
+		soundcloudLoadTrack(
+			currentSongMediaValue.value,
+			Math.max(Number(inputs.value.skipDuration.value), 0),
+			true
+		);
+	}
+
 	settings("play");
+};
+
+const changeSoundcloudPlayerVolume = () => {
+	if (muted.value) soundcloudSetVolume(0);
+	else soundcloudSetVolume(volumeSliderValue.value);
+};
+
+const changePlayerVolume = () => {
+	if (youtubePlayerReady.value) {
+		video.value.player.setVolume(volumeSliderValue.value);
+		if (muted.value) video.value.player.mute();
+		else video.value.player.unMute();
+	}
+
+	changeSoundcloudPlayerVolume();
 };
 
 const changeVolume = () => {
 	const volume = volumeSliderValue.value;
 	localStorage.setItem("volume", `${volume}`);
-	video.value.player.setVolume(volume);
-	if (volume > 0) {
-		video.value.player.unMute();
-		muted.value = false;
-	}
+	muted.value = volume <= 0;
+	localStorage.setItem("muted", `${muted.value}`);
+
+	changePlayerVolume();
 };
 
 const toggleMute = () => {
-	const previousVolume = parseFloat(localStorage.getItem("volume"));
-	const volume = video.value.player.getVolume() <= 0 ? previousVolume : 0;
 	muted.value = !muted.value;
-	volumeSliderValue.value = volume;
-	video.value.player.setVolume(volume);
-	if (!muted.value) localStorage.setItem("volume", `${volume}`);
+
+	changePlayerVolume();
 };
 
 const addTag = (type, value?) => {
@@ -837,14 +1080,20 @@ const removeTag = (type, value) => {
 		);
 };
 
-const setTrackPosition = event => {
-	seekTo(
-		Number(
-			Number(video.value.player.getDuration()) *
-				((event.pageX - event.target.getBoundingClientRect().left) /
-					530)
-		)
-	);
+const setTrackPosition = async event => {
+	const clickPosition =
+		(event.pageX - event.target.getBoundingClientRect().left) / 530;
+
+	if (currentSongMediaType.value === "youtube" && youtubePlayerReady.value) {
+		seekTo(
+			Number(Number(video.value.player.getDuration()) * clickPosition)
+		);
+	}
+
+	if (currentSongMediaType.value === "soundcloud") {
+		const duration = await getPlayerDuration();
+		seekTo(Number(Number(duration) * clickPosition));
+	}
 };
 
 const toggleGenreHelper = () => {
@@ -855,23 +1104,26 @@ const resetGenreHelper = () => {
 	genreHelper.value.resetBox();
 };
 
-const sendActivityWatchVideoData = () => {
+const sendActivityWatchMediaData = () => {
+	// TODO have this support soundcloud
 	if (
 		!video.value.paused &&
-		video.value.player.getPlayerState() === window.YT.PlayerState.PLAYING
+		(currentSongMediaType.value !== "youtube" ||
+			video.value.player.getPlayerState() ===
+				window.YT.PlayerState.PLAYING)
 	) {
-		if (activityWatchVideoLastStatus.value !== "playing") {
-			activityWatchVideoLastStatus.value = "playing";
+		if (activityWatchMediaLastStatus.value !== "playing") {
+			activityWatchMediaLastStatus.value = "playing";
 			if (
 				inputs.value.skipDuration.value > 0 &&
 				Number(youtubeVideoCurrentTime.value) === 0
 			) {
-				activityWatchVideoLastStartDuration.value = Math.floor(
+				activityWatchMediaLastStartDuration.value = Math.floor(
 					inputs.value.skipDuration.value +
 						Number(youtubeVideoCurrentTime.value)
 				);
 			} else {
-				activityWatchVideoLastStartDuration.value = Math.floor(
+				activityWatchMediaLastStartDuration.value = Math.floor(
 					Number(youtubeVideoCurrentTime.value)
 				);
 			}
@@ -882,14 +1134,14 @@ const sendActivityWatchVideoData = () => {
 			artists: inputs.value.artists.value
 				? inputs.value.artists.value.join(", ")
 				: null,
-			youtubeId: inputs.value.youtubeId.value,
+			mediaSource: inputs.value.mediaSource.value,
 			muted: muted.value,
 			volume: volumeSliderValue.value,
 			startedDuration:
-				activityWatchVideoLastStartDuration.value <= 0
+				activityWatchMediaLastStartDuration.value <= 0
 					? 0
-					: activityWatchVideoLastStartDuration.value,
-			source: `editSong#${inputs.value.youtubeId.value}`,
+					: activityWatchMediaLastStartDuration.value,
+			source: `editSong#${inputs.value.mediaSource.value}`,
 			hostname: window.location.hostname,
 			playerState: Object.keys(window.YT.PlayerState).find(
 				key =>
@@ -899,9 +1151,9 @@ const sendActivityWatchVideoData = () => {
 			playbackRate: video.value.playbackRate
 		};
 
-		aw.sendVideoData(videoData);
+		aw.sendMediaData(videoData);
 	} else {
-		activityWatchVideoLastStatus.value = "not_playing";
+		activityWatchMediaLastStatus.value = "not_playing";
 	}
 };
 
@@ -915,18 +1167,39 @@ watch(
 	[() => inputs.value.duration.value, () => inputs.value.skipDuration.value],
 	() => drawCanvas()
 );
-watch(youtubeId, (_youtubeId, _oldYoutubeId) => {
-	if (_oldYoutubeId) unloadSong(_oldYoutubeId);
-	if (_youtubeId) loadSong(_youtubeId, true);
+watch(mediaSource, (_mediaSource, _oldMediaSource) => {
+	if (_oldMediaSource) unloadSong(_oldMediaSource);
+	if (_mediaSource) loadSong(_mediaSource, true);
 });
 watch(
-	() => inputs.value.youtubeId.value,
+	() => inputs.value.mediaSource.value,
 	value => {
-		if (video.value.player && video.value.player.cueVideoById)
+		if (
+			value.split(":")[0] === "youtube" &&
+			video.value.player &&
+			video.value.player.cueVideoById
+		) {
+			soundcloudUnload();
 			video.value.player.cueVideoById(
-				value,
+				value.split(":")[1],
 				inputs.value.skipDuration.value
 			);
+		}
+
+		if (value.split(":")[0] === "soundcloud") {
+			playerPause();
+			console.log(
+				"ON WATCH LOAD SC",
+				value.split(":")[1],
+				Number(inputs.value.skipDuration.value),
+				true
+			);
+			soundcloudLoadTrack(
+				value.split(":")[1],
+				Number(inputs.value.skipDuration.value),
+				true
+			);
+		}
 	}
 );
 watch(
@@ -935,9 +1208,18 @@ watch(
 		if (!value) closeCurrentModal(true);
 	}
 );
+watch(
+	() => discogsEnabled.value || inputs.value.discogs.value,
+	value => {
+		if (!value && tab.value === "discogs") showTab("musare-songs");
+	}
+);
 
 onMounted(async () => {
 	editSongStore.init({ song: props.song, songs: props.songs });
+
+	if (!(discogsEnabled.value || inputs.value.discogs.value))
+		showTab("musare-songs");
 
 	editSongStore.form = {
 		inputs,
@@ -948,16 +1230,14 @@ onMounted(async () => {
 	};
 	preventCloseCbs[props.modalUuid] = onCloseOrNext;
 
-	activityWatchVideoDataInterval.value = setInterval(() => {
-		sendActivityWatchVideoData();
+	activityWatchMediaDataInterval.value = setInterval(() => {
+		sendActivityWatchMediaData();
 	}, 1000);
 
-	useHTTPS.value = await lofig.get("cookie.secure");
-
 	socket.onConnect(() => {
-		if (newSong.value && !youtubeId.value && !bulk.value) {
+		if (newSong.value && !mediaSource.value && !bulk.value) {
 			setSong({
-				youtubeId: "",
+				mediaSource: "",
 				title: "",
 				artists: [],
 				genres: [],
@@ -969,35 +1249,47 @@ onMounted(async () => {
 			});
 			songDataLoaded.value = true;
 			showTab("youtube");
-		} else if (youtubeId.value) loadSong(youtubeId.value);
+		} else if (mediaSource.value) loadSong(mediaSource.value);
 		else if (!bulk.value) {
 			new Toast("You can't open EditSong without editing a song");
 			return closeCurrentModal();
 		}
 
-		interval.value = setInterval(() => {
+		interval.value = setInterval(async () => {
+			const currentPlayerTime = await getCurrentPlayerTime();
+			const playerDuration = await getPlayerDuration();
+
 			if (
 				inputs.value.duration.value !== -1 &&
-				video.value.paused === false &&
-				playerReady.value &&
-				(video.value.player.getCurrentTime() -
-					inputs.value.skipDuration.value >
-					inputs.value.duration.value ||
-					(video.value.player.getCurrentTime() > 0 &&
-						video.value.player.getCurrentTime() >=
-							video.value.player.getDuration()))
+				video.value.paused === false
 			) {
-				stopVideo();
-				pauseVideo(true);
+				if (
+					(currentSongMediaType.value === "youtube" &&
+						youtubePlayerReady.value) ||
+					currentSongMediaType.value === "soundcloud"
+				) {
+					if (
+						currentPlayerTime - inputs.value.skipDuration.value >
+							inputs.value.duration.value ||
+						(currentPlayerTime > 0 &&
+							currentPlayerTime >= playerDuration)
+					) {
+						pauseVideo(true);
+						playerPause();
+						seekTo(0, false);
 
-				drawCanvas();
+						drawCanvas();
+					}
+				}
 			}
+
 			if (
-				playerReady.value &&
+				currentSongMediaType.value === "youtube" &&
+				youtubePlayerReady.value &&
 				video.value.player.getVideoData &&
 				video.value.player.getVideoData() &&
-				video.value.player.getVideoData().video_id ===
-					inputs.value.youtubeId.value
+				`youtube:${video.value.player.getVideoData().video_id}` ===
+					inputs.value.mediaSource.value
 			) {
 				const currentTime = video.value.player.getCurrentTime();
 
@@ -1024,12 +1316,48 @@ onMounted(async () => {
 				}
 			}
 
+			if (currentSongMediaType.value === "soundcloud") {
+				console.log(
+					"INTERVAL SOUNDCLOUD",
+					currentPlayerTime,
+					playerDuration,
+					youtubeVideoCurrentTime.value,
+					youtubeVideoDuration.value,
+					inputs.value.duration.value
+				);
+
+				if (currentPlayerTime)
+					youtubeVideoCurrentTime.value =
+						Number(currentPlayerTime).toFixed(3);
+
+				if (youtubeVideoDuration.value === "0.000") {
+					if (playerDuration) {
+						youtubeVideoDuration.value =
+							Number(playerDuration).toFixed(3);
+						if (youtubeVideoDuration.value.indexOf(".000") !== -1)
+							youtubeVideoNote.value = "(~)";
+						else youtubeVideoNote.value = "";
+					}
+
+					if (
+						!inputs.value.duration.value ||
+						(Number(inputs.value.duration.value) <= 0 &&
+							playerDuration &&
+							Number(playerDuration) > 0)
+					) {
+						setValue({ duration: playerDuration.toFixed(3) });
+					}
+
+					drawCanvas();
+				}
+			}
+
 			if (video.value.paused === false) drawCanvas();
 		}, 200);
 
 		if (window.YT && window.YT.Player) {
 			video.value.player = new window.YT.Player(
-				`editSongPlayer-${props.modalUuid}`,
+				`editSongPlayerYouTube-${props.modalUuid}`,
 				{
 					height: 298,
 					width: 530,
@@ -1045,18 +1373,20 @@ onMounted(async () => {
 					startSeconds: inputs.value.skipDuration.value,
 					events: {
 						onReady: () => {
-							let volume = parseFloat(
-								localStorage.getItem("volume")
-							);
-							volume = typeof volume === "number" ? volume : 20;
-							video.value.player.setVolume(volume);
-							if (volume > 0) video.value.player.unMute();
+							changePlayerVolume();
 
-							playerReady.value = true;
+							youtubePlayerReady.value = true;
 
-							if (inputs.value.youtubeId.value)
+							if (
+								inputs.value.mediaSource.value &&
+								inputs.value.mediaSource.value.startsWith(
+									"youtube:"
+								)
+							)
 								video.value.player.cueVideoById(
-									inputs.value.youtubeId.value,
+									inputs.value.mediaSource.value.split(
+										":"
+									)[1],
 									inputs.value.skipDuration.value
 								);
 
@@ -1136,16 +1466,18 @@ onMounted(async () => {
 									inputs.value.duration.value >
 									youtubeDuration + 1
 								) {
-									stopVideo();
 									pauseVideo(true);
+									playerPause();
+									seekTo(0, false);
 
 									return new Toast(
 										"Video can't play. Specified duration is bigger than the YouTube song duration."
 									);
 								}
 								if (inputs.value.duration.value <= 0) {
-									stopVideo();
 									pauseVideo(true);
+									playerPause();
+									seekTo(0, false);
 
 									return new Toast(
 										"Video can't play. Specified duration has to be more than 0 seconds."
@@ -1198,9 +1530,11 @@ onMounted(async () => {
 		if (bulk.value) {
 			socket.dispatch("apis.joinRoom", "edit-songs");
 
+			console.log(68768, mediaSources.value);
+
 			socket.dispatch(
-				"songs.getSongsFromYoutubeIds",
-				youtubeIds.value,
+				"songs.getSongsFromMediaSources",
+				mediaSources.value,
 				res => {
 					if (res.data.songs.length === 0) {
 						closeCurrentModal();
@@ -1229,7 +1563,7 @@ onMounted(async () => {
 					duration: res.data.song.duration,
 					skipDuration: res.data.song.skipDuration,
 					thumbnail: res.data.song.thumbnail,
-					youtubeId: res.data.song.youtubeId,
+					mediaSource: res.data.song.mediaSource,
 					verified: res.data.song.verified,
 					artists: res.data.song.artists,
 					genres: res.data.song.genres,
@@ -1238,8 +1572,8 @@ onMounted(async () => {
 				});
 			if (bulk.value) {
 				const index = items.value
-					.map(item => item.song.youtubeId)
-					.indexOf(res.data.song.youtubeId);
+					.map(item => item.song.mediaSource)
+					.indexOf(res.data.song.mediaSource);
 				if (index >= 0)
 					items.value[index].song = {
 						...items.value[index].song,
@@ -1267,8 +1601,8 @@ onMounted(async () => {
 			`event:admin.song.created`,
 			res => {
 				const index = items.value
-					.map(item => item.song.youtubeId)
-					.indexOf(res.data.song.youtubeId);
+					.map(item => item.song.mediaSource)
+					.indexOf(res.data.song.mediaSource);
 				if (index >= 0)
 					items.value[index].song = {
 						...items.value[index].song,
@@ -1452,6 +1786,15 @@ onMounted(async () => {
 	Inside Discogs inputs: Ctrl - D - Sets this field to the Discogs data
 
 	*/
+
+	soundcloudBindListener("seek", () => {
+		console.debug(TAG, "Bind on seek");
+		// if (seeking.value) seeking.value = false;
+	});
+
+	soundcloudBindListener("error", value => {
+		console.debug(TAG, "Bind on error", value);
+	});
 });
 
 onBeforeUnmount(() => {
@@ -1459,13 +1802,13 @@ onBeforeUnmount(() => {
 		socket.dispatch("apis.leaveRoom", "edit-songs");
 	}
 
-	unloadSong(youtubeId.value, song.value._id);
+	unloadSong(mediaSource.value, song.value._id);
 
 	updateMediaModalPlayingAudio(false);
 
-	playerReady.value = false;
+	youtubePlayerReady.value = false;
 	clearInterval(interval.value);
-	clearInterval(activityWatchVideoDataInterval.value);
+	clearInterval(activityWatchMediaDataInterval.value);
 
 	const shortcutNames = [
 		"editSong.pauseResume",
@@ -1540,11 +1883,11 @@ onBeforeUnmount(() => {
 								:ref="
 									el =>
 										(songItems[
-											`edit-songs-item-${data.song.youtubeId}`
+											`edit-songs-item-${data.song.mediaSource}`
 										] = el)
 								"
 							>
-								<song-item
+								<media-item
 									:song="data.song"
 									:thumbnail="false"
 									:duration="false"
@@ -1561,8 +1904,8 @@ onBeforeUnmount(() => {
 									<template #leftIcon>
 										<i
 											v-if="
-												currentSong.youtubeId ===
-													data.song.youtubeId &&
+												currentSong.mediaSource ===
+													data.song.mediaSource &&
 												!data.song.removed
 											"
 											class="material-icons item-icon editing-icon"
@@ -1644,7 +1987,7 @@ onBeforeUnmount(() => {
 											flag_circle
 										</i>
 									</template>
-								</song-item>
+								</media-item>
 							</div>
 						</div>
 						<p v-if="filteredItems.length === 0" class="no-items">
@@ -1675,7 +2018,7 @@ onBeforeUnmount(() => {
 				></div>
 			</template>
 			<template #body>
-				<div v-if="!youtubeId && !newSong" class="notice-container">
+				<div v-if="!mediaSource && !newSong" class="notice-container">
 					<h4>No song has been selected</h4>
 				</div>
 				<div v-if="songDeleted" class="notice-container">
@@ -1683,7 +2026,7 @@ onBeforeUnmount(() => {
 				</div>
 				<div
 					v-if="
-						youtubeId &&
+						mediaSource &&
 						!songDataLoaded &&
 						!songNotFound &&
 						!newSong
@@ -1693,7 +2036,7 @@ onBeforeUnmount(() => {
 					<h4>Song hasn't loaded yet</h4>
 				</div>
 				<div
-					v-if="youtubeId && songNotFound && !newSong"
+					v-if="mediaSource && songNotFound && !newSong"
 					class="notice-container"
 				>
 					<h4>Song was not found</h4>
@@ -1704,7 +2047,48 @@ onBeforeUnmount(() => {
 				>
 					<div class="top-section">
 						<div class="player-section">
-							<div :id="`editSongPlayer-${modalUuid}`" />
+							<div
+								v-show="currentSongMediaType === 'youtube'"
+								class="youtube-player-wrapper"
+							>
+								<div
+									:id="`editSongPlayerYouTube-${modalUuid}`"
+								></div>
+							</div>
+							<iframe
+								v-if="experimental.soundcloud"
+								:id="`editSongPlayerSoundCloud-${modalUuid}`"
+								v-show="currentSongMediaType === 'soundcloud'"
+								ref="soundcloudIframeElement"
+								style="
+									width: 100%;
+									height: 100%;
+									min-height: 200px;
+								"
+								scrolling="no"
+								frameborder="no"
+								allow="autoplay"
+							></iframe>
+
+							<div
+								class="player-message"
+								v-show="
+									currentSongMediaType === 'soundcloud' &&
+									!experimental.soundcloud
+								"
+							>
+								<h2>SoundCloud is not enabled</h2>
+							</div>
+
+							<div
+								class="player-message"
+								v-show="
+									currentSongMediaType !== 'youtube' &&
+									currentSongMediaType !== 'soundcloud'
+								"
+							>
+								<h2>No media source specified</h2>
+							</div>
 
 							<div v-show="youtubeError" class="player-error">
 								<h2>{{ youtubeErrorMessage }}</h2>
@@ -1886,7 +2270,7 @@ onBeforeUnmount(() => {
 						<song-thumbnail
 							v-if="songDataLoaded && !songDeleted"
 							:song="{
-								youtubeId: inputs['youtubeId'].value,
+								mediaSource: inputs['mediaSource'].value,
 								thumbnail: inputs['thumbnail'].value
 							}"
 							:fallback="false"
@@ -1925,6 +2309,25 @@ onBeforeUnmount(() => {
 										"
 									/>
 									<button
+										v-if="
+											currentSongMediaType ===
+												'soundcloud' &&
+											experimental.soundcloud
+										"
+										class="button soundcloud-get-button"
+										@click="getSoundCloudData('title')"
+									>
+										<div
+											class="soundcloud-icon"
+											v-tippy
+											content="Fill from SoundCloud"
+										></div>
+									</button>
+									<button
+										v-if="
+											currentSongMediaType ===
+												'youtube' && youtubePlayerReady
+										"
 										class="button youtube-get-button"
 										@click="getYouTubeData('title')"
 									>
@@ -1935,6 +2338,7 @@ onBeforeUnmount(() => {
 										></div>
 									</button>
 									<button
+										v-if="inputs.discogs.value"
 										class="button album-get-button"
 										@click="getAlbumData('title')"
 									>
@@ -1967,7 +2371,7 @@ onBeforeUnmount(() => {
 										<i
 											class="material-icons"
 											v-tippy
-											content="Sync duration with YouTube"
+											content="Sync duration with player"
 											>sync</i
 										>
 									</button>
@@ -2028,6 +2432,25 @@ onBeforeUnmount(() => {
 										"
 									/>
 									<button
+										v-if="
+											currentSongMediaType ===
+												'soundcloud' &&
+											experimental.soundcloud
+										"
+										class="button soundcloud-get-button"
+										@click="getSoundCloudData('thumbnail')"
+									>
+										<div
+											class="soundcloud-icon"
+											v-tippy
+											content="Fill from SoundCloud"
+										></div>
+									</button>
+									<button
+										v-if="
+											currentSongMediaType ===
+												'youtube' && youtubePlayerReady
+										"
 										class="button youtube-get-button"
 										@click="getYouTubeData('thumbnail')"
 									>
@@ -2038,6 +2461,7 @@ onBeforeUnmount(() => {
 										></div>
 									</button>
 									<button
+										v-if="inputs.discogs.value"
 										class="button album-get-button"
 										@click="getAlbumData('albumArt')"
 									>
@@ -2051,13 +2475,13 @@ onBeforeUnmount(() => {
 								</p>
 							</div>
 							<div class="youtube-id-container">
-								<label class="label">YouTube ID</label>
+								<label class="label">Media source</label>
 								<p class="control">
 									<input
 										class="input"
 										type="text"
-										placeholder="Enter YouTube ID..."
-										v-model="inputs['youtubeId'].value"
+										placeholder="Enter media source..."
+										v-model="inputs['mediaSource'].value"
 									/>
 								</p>
 							</div>
@@ -2093,6 +2517,25 @@ onBeforeUnmount(() => {
 										"
 									/>
 									<button
+										v-if="
+											currentSongMediaType ===
+												'soundcloud' &&
+											experimental.soundcloud
+										"
+										class="button soundcloud-get-button"
+										@click="getSoundCloudData('author')"
+									>
+										<div
+											class="soundcloud-icon"
+											v-tippy
+											content="Fill from SoundCloud"
+										></div>
+									</button>
+									<button
+										v-if="
+											currentSongMediaType ===
+												'youtube' && youtubePlayerReady
+										"
 										class="button youtube-get-button"
 										@click="getYouTubeData('author')"
 									>
@@ -2103,6 +2546,7 @@ onBeforeUnmount(() => {
 										></div>
 									</button>
 									<button
+										v-if="inputs.discogs.value"
 										class="button album-get-button"
 										@click="getAlbumData('artists')"
 									>
@@ -2163,6 +2607,7 @@ onBeforeUnmount(() => {
 										"
 									/>
 									<button
+										v-if="inputs.discogs.value"
 										class="button album-get-button"
 										@click="getAlbumData('genres')"
 									>
@@ -2239,6 +2684,7 @@ onBeforeUnmount(() => {
 					<div id="tabs-container">
 						<div id="tab-selection">
 							<button
+								v-if="discogsEnabled || inputs.discogs.value"
 								class="button is-default"
 								:class="{ selected: tab === 'discogs' }"
 								:ref="el => (tabs['discogs-tab'] = el)"
@@ -2273,6 +2719,7 @@ onBeforeUnmount(() => {
 							</button>
 						</div>
 						<discogs
+							v-if="discogsEnabled || inputs.discogs.value"
 							class="tab"
 							v-show="tab === 'discogs'"
 							:bulk="bulk"
@@ -2309,7 +2756,7 @@ onBeforeUnmount(() => {
 					<button
 						class="button is-primary"
 						@click="toggleFlag()"
-						v-if="youtubeId && !songDeleted"
+						v-if="mediaSource && !songDeleted"
 					>
 						{{ currentSongFlagged ? "Unflag" : "Flag" }}
 					</button>
@@ -2406,6 +2853,7 @@ onBeforeUnmount(() => {
 			.album-get-button,
 			.duration-fill-button,
 			.youtube-get-button,
+			.soundcloud-get-button,
 			.add-button {
 				&:focus,
 				&:hover {
@@ -2484,11 +2932,20 @@ onBeforeUnmount(() => {
 			border-radius: @border-radius;
 			overflow: hidden;
 
+			.youtube-player-wrapper {
+				display: flex;
+
+				> * {
+					flex: 1;
+				}
+			}
+
 			.duration-canvas {
 				background-color: var(--light-grey-2);
 			}
 
-			.player-error {
+			.player-error,
+			.player-message {
 				display: flex;
 				height: 318px;
 				width: 530px;
@@ -2714,6 +3171,14 @@ onBeforeUnmount(() => {
 			border-width: 0;
 		}
 
+		.soundcloud-get-button {
+			background-color: var(--orange);
+			color: var(--white);
+			width: 32px;
+			text-align: center;
+			border-width: 0;
+		}
+
 		.add-button {
 			background-color: var(--primary-color) !important;
 			width: 32px;
@@ -2734,11 +3199,14 @@ onBeforeUnmount(() => {
 			}
 		}
 
-		.youtube-get-button {
+		.youtube-get-button,
+		.soundcloud-get-button {
 			padding-left: 4px;
 			padding-right: 4px;
 
-			.youtube-icon {
+			.youtube-icon,
+			.soundcloud-icon,
+			.spotify-icon {
 				background: var(--white);
 			}
 		}

@@ -26,17 +26,16 @@ class _MigrationModule extends CoreClass {
 
 	/**
 	 * Initialises the migration module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	initialize() {
 		return new Promise((resolve, reject) => {
 			this.models = {};
 
-			const mongoUrl = config.get("mongo").url;
+			const { user, password, host, port, database } = config.get("mongo");
 
 			mongoose
-				.connect(mongoUrl, {
+				.connect(`mongodb://${user}:${password}@${host}:${port}/${database}`, {
 					useNewUrlParser: true,
 					useUnifiedTopology: true
 				})
@@ -68,7 +67,8 @@ class _MigrationModule extends CoreClass {
 						news: mongoose.model("news", new mongoose.Schema({}, { strict: false })),
 						report: mongoose.model("report", new mongoose.Schema({}, { strict: false })),
 						punishment: mongoose.model("punishment", new mongoose.Schema({}, { strict: false })),
-						ratings: mongoose.model("ratings", new mongoose.Schema({}, { strict: false }))
+						ratings: mongoose.model("ratings", new mongoose.Schema({}, { strict: false })),
+						stationHistory: mongoose.model("stationHistory", new mongoose.Schema({}, { strict: false }))
 					};
 
 					const files = fs.readdirSync(path.join(__dirname, "migrations"));
@@ -99,7 +99,6 @@ class _MigrationModule extends CoreClass {
 
 	/**
 	 * Returns a database model
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {object} payload.modelName - name of the model to get
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -112,7 +111,6 @@ class _MigrationModule extends CoreClass {
 
 	/**
 	 * Runs migrations
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {object} payload.index - migration index
 	 * @returns {Promise} - returns promise (reject, resolve)

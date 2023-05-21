@@ -4,7 +4,6 @@ import async from "async";
  * Migration 1
  *
  * This migration is used to set the documentVersion to 1 for all documents that don't have a documentVersion yet, meaning they were created before the migration system
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

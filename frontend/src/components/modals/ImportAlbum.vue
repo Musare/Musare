@@ -3,6 +3,7 @@ import {
 	defineAsyncComponent,
 	ref,
 	computed,
+	watch,
 	onMounted,
 	onBeforeUnmount
 } from "vue";
@@ -12,10 +13,11 @@ import { DraggableList } from "vue-draggable-list";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useImportAlbumStore } from "@/stores/importAlbum";
+import { useUserAuthStore } from "@/stores/userAuth";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
-const SongItem = defineAsyncComponent(
-	() => import("@/components/SongItem.vue")
+const MediaItem = defineAsyncComponent(
+	() => import("@/components/MediaItem.vue")
 );
 
 const props = defineProps({
@@ -37,7 +39,9 @@ const {
 	updatePlaylistSong
 } = importAlbumStore;
 
-const { openModal, preventCloseCbs } = useModalsStore();
+const { openModal, closeCurrentModal, preventCloseCbs } = useModalsStore();
+
+const { hasPermission } = useUserAuthStore();
 
 const isImportingPlaylist = ref(false);
 const trackSongs = ref([]);
@@ -83,7 +87,7 @@ const startEditingSongs = () => {
 			delete album.gotMoreInfo;
 
 			const songToEdit: {
-				youtubeId: string;
+				mediaSource: string;
 				prefill: {
 					discogs: typeof album;
 					title?: string;
@@ -92,7 +96,7 @@ const startEditingSongs = () => {
 					artists?: string[];
 				};
 			} = {
-				youtubeId: song.youtubeId,
+				mediaSource: song.mediaSource,
 				prefill: {
 					discogs: album
 				}
@@ -179,27 +183,35 @@ const importPlaylist = () => {
 		true,
 		res => {
 			isImportingPlaylist.value = false;
-			const youtubeIds = res.videos.map(video => video.youtubeId);
+			const mediaSources = res.videos.map(
+				video => `youtube:${video.youtubeId}`
+			);
 
-			socket.dispatch("songs.getSongsFromYoutubeIds", youtubeIds, res => {
-				if (res.status === "success") {
-					const songs = res.data.songs.filter(song => !song.verified);
-					const songsAlreadyVerified =
-						res.data.songs.length - songs.length;
-					setPlaylistSongs(songs);
-					if (discogsAlbum.value.tracks) {
-						trackSongs.value = discogsAlbum.value.tracks.map(
-							() => []
+			socket.dispatch(
+				"songs.getSongsFromMediaSources",
+				mediaSources,
+				res => {
+					if (res.status === "success") {
+						const songs = res.data.songs.filter(
+							song => !song.verified
 						);
-						tryToAutoMove();
+						const songsAlreadyVerified =
+							res.data.songs.length - songs.length;
+						setPlaylistSongs(songs);
+						if (discogsAlbum.value.tracks) {
+							trackSongs.value = discogsAlbum.value.tracks.map(
+								() => []
+							);
+							tryToAutoMove();
+						}
+						if (songsAlreadyVerified > 0)
+							new Toast(
+								`${songsAlreadyVerified} songs were already verified, skipping those.`
+							);
 					}
-					if (songsAlreadyVerified > 0)
-						new Toast(
-							`${songsAlreadyVerified} songs were already verified, skipping those.`
-						);
+					new Toast("Could not get songs.");
 				}
-				new Toast("Could not get songs.");
-			});
+			);
 
 			return new Toast({ content: res.message, timeout: 20000 });
 		}
@@ -324,6 +336,13 @@ const updateTrackSong = updatedSong => {
 		});
 	});
 };
+
+watch(
+	() => hasPermission("apis.searchDiscogs"),
+	value => {
+		if (!value) closeCurrentModal(true);
+	}
+);
 
 onMounted(() => {
 	setPlaylistSongs(props.songs);
@@ -628,15 +647,15 @@ onBeforeUnmount(() => {
 					<draggable-list
 						v-if="playlistSongs.length > 0"
 						v-model:list="playlistSongs"
-						item-key="youtubeId"
+						item-key="mediaSource"
 						:group="`import-album-${modalUuid}-songs`"
 					>
 						<template #item="{ element }">
-							<song-item
-								:key="`playlist-song-${element.youtubeId}`"
+							<media-item
+								:key="`playlist-song-${element.mediaSource}`"
 								:song="element"
 							>
-							</song-item>
+							</media-item>
 						</template>
 					</draggable-list>
 				</div>
@@ -657,15 +676,15 @@ onBeforeUnmount(() => {
 						<div class="track-box-songs-drag-area">
 							<draggable-list
 								v-model:list="trackSongs[index]"
-								item-key="youtubeId"
+								item-key="mediaSource"
 								:group="`import-album-${modalUuid}-songs`"
 							>
 								<template #item="{ element }">
-									<song-item
-										:key="`track-song-${element.youtubeId}`"
+									<media-item
+										:key="`track-song-${element.mediaSource}`"
 										:song="element"
 									>
-									</song-item>
+									</media-item>
 								</template>
 							</draggable-list>
 						</div>

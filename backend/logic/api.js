@@ -23,7 +23,6 @@ class _APIModule extends CoreClass {
 
 	/**
 	 * Initialises the api module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	initialize() {
@@ -36,7 +35,7 @@ class _APIModule extends CoreClass {
 			CacheModule = this.moduleManager.modules.cache;
 			NotificationsModule = this.moduleManager.modules.notifications;
 
-			const SIDname = config.get("cookie.SIDname");
+			const SIDname = config.get("cookie");
 
 			const isLoggedIn = (req, res, next) => {
 				let SID;

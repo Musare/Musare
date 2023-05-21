@@ -4,7 +4,6 @@ import async from "async";
  * Migration 16
  *
  * Migration for playlists to remove isUserModifiable
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

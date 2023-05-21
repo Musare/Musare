@@ -1,4 +1,5 @@
 import async from "async";
+import config from "config";
 import mongoose from "mongoose";
 import CoreClass from "../core";
 
@@ -7,6 +8,7 @@ let CacheModule;
 let DBModule;
 let UtilsModule;
 let YouTubeModule;
+let SoundCloudModule;
 let StationsModule;
 let PlaylistsModule;
 let MediaModule;
@@ -22,7 +24,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Initialises the songs module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async initialize() {
@@ -32,6 +33,7 @@ class _SongsModule extends CoreClass {
 		DBModule = this.moduleManager.modules.db;
 		UtilsModule = this.moduleManager.modules.utils;
 		YouTubeModule = this.moduleManager.modules.youtube;
+		SoundCloudModule = this.moduleManager.modules.soundcloud;
 		StationsModule = this.moduleManager.modules.stations;
 		PlaylistsModule = this.moduleManager.modules.playlists;
 		MediaModule = this.moduleManager.modules.media;
@@ -68,17 +70,17 @@ class _SongsModule extends CoreClass {
 
 						if (!songs) return next();
 
-						const youtubeIds = Object.keys(songs);
+						const mediaSources = Object.keys(songs);
 
 						return async.each(
-							youtubeIds,
-							(youtubeId, next) => {
-								SongsModule.SongModel.findOne({ youtubeId }, (err, song) => {
+							mediaSources,
+							(mediaSource, next) => {
+								SongsModule.SongModel.findOne({ mediaSource }, (err, song) => {
 									if (err) next(err);
 									else if (!song)
 										CacheModule.runJob("HDEL", {
 											table: "songs",
-											key: youtubeId
+											key: mediaSource
 										})
 											.then(() => next())
 											.catch(next);
@@ -101,7 +103,7 @@ class _SongsModule extends CoreClass {
 							(song, next) => {
 								CacheModule.runJob("HSET", {
 									table: "songs",
-									key: song.youtubeId,
+									key: song.mediaSource,
 									value: SongsModule.SongSchemaCache(song)
 								})
 									.then(() => next())
@@ -123,7 +125,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets a song by id from the cache or Mongo, and if it isn't in the cache yet, adds it the cache
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.songId - the id of the song we are trying to get
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -169,57 +170,126 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets songs by id from Mongo
-	 *
 	 * @param {object} payload - object containing the payload
-	 * @param {string} payload.youtubeIds - the youtube ids of the songs we are trying to get
+	 * @param {string} payload.mediaSources - the media sources of the songs we are trying to get
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_SONGS(payload) {
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
-					next => SongsModule.SongModel.find({ youtubeId: { $in: payload.youtubeIds } }, next),
+					next => SongsModule.SongModel.find({ mediaSource: { $in: payload.mediaSources } }, next),
 
 					(songs, next) => {
-						const youtubeIds = payload.youtubeIds.filter(
-							youtubeId => !songs.find(song => song.youtubeId === youtubeId)
+						const mediaSources = payload.mediaSources.filter(
+							mediaSource => !songs.find(song => song.mediaSource === mediaSource)
 						);
-						return YouTubeModule.youtubeVideoModel.find(
-							{ youtubeId: { $in: youtubeIds } },
-							(err, videos) => {
-								if (err) next(err);
-								else {
-									const youtubeVideos = videos.map(video => {
-										const { youtubeId, title, author, duration, thumbnail } = video;
-										return {
-											youtubeId,
-											title,
-											artists: [author],
-											genres: [],
-											tags: [],
-											duration,
-											skipDuration: 0,
-											thumbnail:
-												thumbnail || `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`,
-											requestedBy: null,
-											requestedAt: Date.now(),
-											verified: false,
-											youtubeVideoId: video._id
-										};
-									});
-									next(
-										null,
-										payload.youtubeIds
-											.map(
-												youtubeId =>
-													songs.find(song => song.youtubeId === youtubeId) ||
-													youtubeVideos.find(video => video.youtubeId === youtubeId)
-											)
-											.filter(song => !!song)
-									);
+
+						if (mediaSources.length === 0) return next(null, songs);
+
+						const mediaSourceTypes = [];
+						mediaSources.forEach(mediaSource => {
+							const mediaSourceType = mediaSource.split(":")[0];
+							if (mediaSourceTypes.indexOf(mediaSourceType) === -1)
+								mediaSourceTypes.push(mediaSourceType);
+						});
+
+						if (mediaSourceTypes.length !== 1)
+							return next(`Expected 1 media source types, got ${mediaSourceTypes.length}.`);
+						const [mediaSourceType] = mediaSourceTypes;
+
+						if (mediaSourceType === "youtube")
+							return YouTubeModule.youtubeVideoModel.find(
+								{
+									youtubeId: {
+										$in: mediaSources
+											.filter(mediaSource => mediaSource.startsWith("youtube:"))
+											.map(mediaSource => mediaSource.split(":")[1])
+									}
+								},
+								(err, videos) => {
+									if (err) next(err);
+									else {
+										const youtubeVideos = videos.map(video => {
+											const { youtubeId, title, author, duration, thumbnail } = video;
+											return {
+												mediaSource: `youtube:${youtubeId}`,
+												title,
+												artists: [author],
+												genres: [],
+												tags: [],
+												duration,
+												skipDuration: 0,
+												thumbnail:
+													thumbnail ||
+													`https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`,
+												requestedBy: null,
+												requestedAt: Date.now(),
+												verified: false,
+												youtubeVideoId: video._id
+											};
+										});
+										next(
+											null,
+											payload.mediaSources
+												.map(
+													mediaSource =>
+														songs.find(song => song.mediaSource === mediaSource) ||
+														youtubeVideos.find(video => video.mediaSource === mediaSource)
+												)
+												.filter(song => !!song)
+										);
+									}
 								}
-							}
-						);
+							);
+
+						if (config.get("experimental.soundcloud") && mediaSourceType === "soundcloud")
+							return SoundCloudModule.soundcloudTrackModel.find(
+								{
+									trackId: {
+										$in: mediaSources
+											.filter(mediaSource => mediaSource.startsWith("soundcloud:"))
+											.map(mediaSource => mediaSource.split(":")[1])
+									}
+								},
+								(err, tracks) => {
+									if (err) next(err);
+									else {
+										const soundcloudSongs = tracks.map(track => {
+											const { trackId, title, username, duration, artworkUrl } = track;
+											return {
+												mediaSource: `soundcloud:${trackId}`,
+												title,
+												artists: [username],
+												genres: [],
+												tags: [],
+												duration,
+												skipDuration: 0,
+												thumbnail: artworkUrl,
+												requestedBy: null,
+												requestedAt: Date.now(),
+												verified: false,
+												soundcloudTrackId: track._id
+											};
+										});
+
+										next(
+											null,
+											payload.mediaSources
+												.map(
+													mediaSource =>
+														songs.find(song => song.mediaSource === mediaSource) ||
+														soundcloudSongs.find(
+															soundcloudSong => soundcloudSong.mediaSource === mediaSource
+														)
+												)
+												.filter(song => !!song)
+										);
+									}
+								}
+							);
+
+						return next(`Unknown media source specified: ${mediaSourceType}.`);
 					}
 				],
 				(err, songs) => {
@@ -232,7 +302,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Create song
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {string} payload.song - the song object
 	 * @param {string} payload.userId - the user id of the person requesting the song
@@ -276,7 +345,7 @@ class _SongsModule extends CoreClass {
 					},
 
 					(song, next) => {
-						MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId: song.youtubeId }, this)
+						MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource: song.mediaSource }, this)
 							.then(() => next(null, song))
 							.catch(next);
 					},
@@ -300,7 +369,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets a song from id from Mongo and updates the cache with it
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {string} payload.songId - the id of the song we are trying to update
 	 * @param {string} payload.oldStatus - old status of song being updated (optional)
@@ -336,11 +404,19 @@ class _SongsModule extends CoreClass {
 							this
 						)
 							.then(() => {
-								const { _id, youtubeId, title, artists, thumbnail, duration, skipDuration, verified } =
-									song;
+								const {
+									_id,
+									mediaSource,
+									title,
+									artists,
+									thumbnail,
+									duration,
+									skipDuration,
+									verified
+								} = song;
 								next(null, {
 									_id,
-									youtubeId,
+									mediaSource,
 									title,
 									artists,
 									thumbnail,
@@ -361,7 +437,7 @@ class _SongsModule extends CoreClass {
 
 					(song, next) => {
 						playlistModel.updateMany(
-							{ "songs.youtubeId": song.youtubeId },
+							{ "songs.mediaSource": song.mediaSource },
 							{ $set: { "songs.$": song } },
 							err => {
 								if (err) next(err);
@@ -410,7 +486,7 @@ class _SongsModule extends CoreClass {
 
 					(song, next) => {
 						stationModel.updateMany(
-							{ "queue.youtubeId": song.youtubeId },
+							{ "queue.mediaSource": song.mediaSource },
 							{ $set: { "queue.$": song } },
 							err => {
 								if (err) next(err);
@@ -483,7 +559,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets multiple songs from id from Mongo and updates the cache with it
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {Array} payload.songIds - the ids of the songs we are trying to update
 	 * @param {string} payload.oldStatus - old status of song being updated (optional)
@@ -563,10 +638,10 @@ class _SongsModule extends CoreClass {
 						this.publishProgress({ status: "update", message: `Updating songs (stage 4)` });
 
 						const trimmedSongs = songs.map(song => {
-							const { _id, youtubeId, title, artists, thumbnail, duration, verified } = song;
+							const { _id, mediaSource, title, artists, thumbnail, duration, verified } = song;
 							return {
 								_id,
-								youtubeId,
+								mediaSource,
 								title,
 								artists,
 								thumbnail,
@@ -653,12 +728,12 @@ class _SongsModule extends CoreClass {
 								async.waterfall(
 									[
 										next => {
-											const { youtubeId, title, artists, thumbnail, duration, verified } = song;
+											const { mediaSource, title, artists, thumbnail, duration, verified } = song;
 											stationModel.updateMany(
 												{ "queue._id": song._id },
 												{
 													$set: {
-														"queue.$.youtubeId": youtubeId,
+														"queue.$.mediaSource": mediaSource,
 														"queue.$.title": title,
 														"queue.$.artists": artists,
 														"queue.$.thumbnail": thumbnail,
@@ -779,7 +854,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Updates all songs
-	 *
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	UPDATE_ALL_SONGS() {
@@ -904,7 +978,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Searches through songs
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.query - the query
 	 * @param {string} payload.includeUnverified - include unverified songs
@@ -948,11 +1021,21 @@ class _SongsModule extends CoreClass {
 						const page = payload.page ? payload.page : 1;
 						const pageSize = 15;
 						const skipAmount = pageSize * (page - 1);
+						const query = { $or: filterArray };
 
-						SongsModule.SongModel.find({ $or: filterArray }).count((err, count) => {
+						const mediaSources = [];
+						if (!config.get("experimental.soundcloud")) {
+							mediaSources.push(/^soundcloud:/);
+						}
+						if (!config.get("experimental.spotify")) {
+							mediaSources.push(/^spotify:/);
+						}
+						if (mediaSources.length > 0) query.mediaSource = { $nin: mediaSources };
+
+						SongsModule.SongModel.find(query).count((err, count) => {
 							if (err) next(err);
 							else {
-								SongsModule.SongModel.find({ $or: filterArray })
+								SongsModule.SongModel.find(query)
 									.skip(skipAmount)
 									.limit(pageSize)
 									.exec((err, songs) => {
@@ -976,10 +1059,10 @@ class _SongsModule extends CoreClass {
 						else if (payload.trimmed) {
 							next(null, {
 								songs: data.songs.map(song => {
-									const { _id, youtubeId, title, artists, thumbnail, duration, verified } = song;
+									const { _id, mediaSource, title, artists, thumbnail, duration, verified } = song;
 									return {
 										_id,
-										youtubeId,
+										mediaSource,
 										title,
 										artists,
 										thumbnail,
@@ -1002,7 +1085,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets an array of all genres
-	 *
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_ALL_GENRES() {
@@ -1037,7 +1119,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets an array of all songs with a specific genre
-	 *
 	 * @param {object} payload - returns an object containing the payload
 	 * @param {string} payload.genre - the genre
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -1068,7 +1149,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets a orphaned playlist songs
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_ORPHANED_PLAYLIST_SONGS() {
@@ -1077,7 +1157,7 @@ class _SongsModule extends CoreClass {
 				playlistModel.find({}, (err, playlists) => {
 					if (err) reject(new Error(err));
 					else {
-						SongsModule.SongModel.find({}, { _id: true, youtubeId: true }, (err, songs) => {
+						SongsModule.SongModel.find({}, { _id: true, mediaSource: true }, (err, songs) => {
 							if (err) reject(new Error(err));
 							else {
 								const songIds = songs.map(song => song._id.toString());
@@ -1089,9 +1169,9 @@ class _SongsModule extends CoreClass {
 										playlist.songs.forEach(song => {
 											if (
 												(!song._id || songIds.indexOf(song._id.toString() === -1)) &&
-												!orphanedYoutubeIds.has(song.youtubeId)
+												!orphanedYoutubeIds.has(song.mediaSource)
 											) {
-												orphanedYoutubeIds.add(song.youtubeId);
+												orphanedYoutubeIds.add(song.mediaSource);
 											}
 										});
 										next();
@@ -1110,7 +1190,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Requests all orphaned playlist songs, adding them to the database
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	REQUEST_ORPHANED_PLAYLIST_SONGS() {
@@ -1118,29 +1197,31 @@ class _SongsModule extends CoreClass {
 			DBModule.runJob("GET_MODEL", { modelName: "playlist" })
 				.then(playlistModel => {
 					SongsModule.runJob("GET_ORPHANED_PLAYLIST_SONGS", {}, this).then(response => {
-						const { youtubeIds } = response;
+						const { mediaSources } = response;
 						const playlistsToUpdate = new Set();
 
 						async.eachLimit(
-							youtubeIds,
+							mediaSources,
 							1,
-							(youtubeId, next) => {
+							(mediaSource, next) => {
 								async.waterfall(
 									[
 										next => {
 											this.publishProgress({
 												status: "update",
-												message: `Requesting "${youtubeId}"`
+												message: `Requesting "${mediaSource}"`
 											});
 											console.log(
-												youtubeId,
-												`this is song ${youtubeIds.indexOf(youtubeId) + 1}/${youtubeIds.length}`
+												mediaSource,
+												`this is song ${mediaSources.indexOf(mediaSource) + 1}/${
+													mediaSources.length
+												}`
 											);
 											setTimeout(next, 150);
 										},
 
 										next => {
-											MediaModule.runJob("GET_MEDIA", { youtubeId }, this)
+											MediaModule.runJob("GET_MEDIA", { mediaSource }, this)
 												.then(res => next(null, res.song))
 												.catch(next);
 										},
@@ -1149,7 +1230,7 @@ class _SongsModule extends CoreClass {
 											const { _id, title, artists, thumbnail, duration, verified } = song;
 											const trimmedSong = {
 												_id,
-												youtubeId,
+												mediaSource,
 												title,
 												artists,
 												thumbnail,
@@ -1157,7 +1238,7 @@ class _SongsModule extends CoreClass {
 												verified
 											};
 											playlistModel.updateMany(
-												{ "songs.youtubeId": song.youtubeId },
+												{ "songs.mediaSource": song.mediaSource },
 												{ $set: { "songs.$": trimmedSong } },
 												err => {
 													next(err, song);
@@ -1215,7 +1296,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets a list of all genres
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_GENRES() {
@@ -1236,7 +1316,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets a list of all artists
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_ARTISTS() {
@@ -1257,7 +1336,6 @@ class _SongsModule extends CoreClass {
 
 	/**
 	 * Gets a list of all tags
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_TAGS() {
@@ -1274,6 +1352,14 @@ class _SongsModule extends CoreClass {
 				}
 			);
 		});
+	}
+
+	/**
+	 * Gets a list of all media sources
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async GET_ALL_MEDIA_SOURCES() {
+		return SongsModule.SongModel.distinct("mediaSource");
 	}
 }
 

@@ -52,9 +52,9 @@ const columns = ref<TableColumn[]>([
 	},
 	{
 		name: "songYoutubeId",
-		displayName: "Song YouTube ID",
+		displayName: "Song media source",
 		properties: ["song"],
-		sortProperty: "song.youtubeId",
+		sortProperty: "song.mediaSource",
 		minWidth: 165,
 		defaultWidth: 165
 	},
@@ -102,8 +102,8 @@ const filters = ref<TableFilter[]>([
 	},
 	{
 		name: "songYoutubeId",
-		displayName: "Song YouTube ID",
-		property: "song.youtubeId",
+		displayName: "Song media source",
+		property: "song.mediaSource",
 		filterTypes: ["contains", "exact", "regex"],
 		defaultFilterType: "contains"
 	},
@@ -244,7 +244,7 @@ const resolve = (reportId, value) =>
 					"
 					target="_blank"
 				>
-					{{ slotProps.item.song.youtubeId }}
+					{{ slotProps.item.song.mediaSource }}
 				</a>
 			</template>
 			<template #column-resolved="slotProps">

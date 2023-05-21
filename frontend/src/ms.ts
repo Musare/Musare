@@ -2,6 +2,7 @@
 /* global MediaMetadata */
 
 export default {
+	initialized: false,
 	mediaSessionData: {},
 	listeners: {},
 	audio: null,
@@ -78,7 +79,9 @@ export default {
 			.sort((a, b) => a - b)
 			.reverse()[0];
 	},
-	init() {
+	initialize() {
+		if (this.initialized) return;
+
 		this.audio = new Audio("/assets/15-seconds-of-silence.mp3");
 
 		this.audio.loop = true;
@@ -99,5 +102,18 @@ export default {
 		this.loopInterval = setInterval(() => {
 			this.updateMediaSession();
 		}, 100);
+
+		this.initialized = true;
+	},
+	uninitialize() {
+		if (!this.initialized) return;
+
+		navigator.mediaSession.setActionHandler("play", null);
+		navigator.mediaSession.setActionHandler("pause", null);
+		navigator.mediaSession.setActionHandler("nexttrack", null);
+
+		clearInterval(this.loopInterval);
+
+		this.initialized = false;
 	}
 };

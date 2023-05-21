@@ -14,8 +14,8 @@ import { useReports } from "@/composables/useReports";
 import { Report } from "@/types/report";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
-const SongItem = defineAsyncComponent(
-	() => import("@/components/SongItem.vue")
+const MediaItem = defineAsyncComponent(
+	() => import("@/components/MediaItem.vue")
 );
 const ReportInfoItem = defineAsyncComponent(
 	() => import("@/components/ReportInfoItem.vue")
@@ -157,7 +157,7 @@ onBeforeUnmount(() => {
 						:created-by="report.createdBy"
 					/>
 
-					<song-item
+					<media-item
 						:song="song"
 						:duration="false"
 						:disabled-actions="['report']"
@@ -308,13 +308,13 @@ onBeforeUnmount(() => {
 		.item-title-description {
 			.item-title {
 				font-size: 20px;
-				font-family: Karla, Arial, sans-serif;
+				font-family: Nunito, Arial, sans-serif;
 			}
 
 			.item-description {
 				font-size: 14px;
 				line-height: 15px;
-				font-family: Karla, Arial, sans-serif;
+				font-family: Nunito, Arial, sans-serif;
 			}
 		}
 	}

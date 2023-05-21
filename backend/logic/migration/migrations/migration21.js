@@ -4,7 +4,6 @@ import async from "async";
  * Migration 21
  *
  * Migration for song ratings
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

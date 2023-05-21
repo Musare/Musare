@@ -8,7 +8,8 @@ import { useStationStore } from "@/stores/station";
 import { useUserPlaylistsStore } from "@/stores/userPlaylists";
 import { useModalsStore } from "@/stores/modals";
 import { useManageStationStore } from "@/stores/manageStation";
-
+import { useConfigStore } from "@/stores/config";
+import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useSortablePlaylists } from "@/composables/useSortablePlaylists";
 
 const PlaylistItem = defineAsyncComponent(
@@ -32,8 +33,11 @@ const props = defineProps({
 
 const emit = defineEmits(["selected"]);
 
+const configStore = useConfigStore();
+
 const { socket } = useWebsocketsStore();
 const stationStore = useStationStore();
+const userPreferencesStore = useUserPreferencesStore();
 
 const tab = ref("current");
 const search = reactive({
@@ -58,7 +62,11 @@ const {
 	calculatePlaylistOrder
 } = useSortablePlaylists();
 
-const { autoRequest } = storeToRefs(stationStore);
+const { experimental } = storeToRefs(configStore);
+const { autoSkipDisliked } = storeToRefs(userPreferencesStore);
+
+const { autoRequest, autorequestExcludedMediaSources } =
+	storeToRefs(stationStore);
 
 const manageStationStore = useManageStationStore({
 	modalUuid: props.modalUuid
@@ -96,6 +104,38 @@ const nextPageResultsCount = computed(() =>
 	Math.min(search.pageSize, resultsLeftCount.value)
 );
 
+const totalUniqueAutorequestableMediaSources = computed<string[]>(() => {
+	if (!autoRequest.value) return [];
+
+	const uniqueMediaSources = new Set();
+
+	autoRequest.value.forEach(playlist => {
+		playlist.songs.forEach(song => {
+			uniqueMediaSources.add(song.mediaSource);
+		});
+	});
+
+	return Array.from(uniqueMediaSources);
+});
+
+const actuallyAutorequestingMediaSources = computed(() => {
+	const excluded = autorequestExcludedMediaSources.value;
+	const remaining = totalUniqueAutorequestableMediaSources.value.filter(
+		mediaSource => {
+			if (excluded.indexOf(mediaSource) !== -1) return false;
+			if (mediaSource.startsWith("spotify:")) return false;
+			if (
+				!experimental.value.soundcloud &&
+				mediaSource.startsWith("soundcloud:")
+			)
+				return false;
+
+			return true;
+		}
+	);
+	return remaining;
+});
+
 const hasPermission = permission =>
 	props.sector === "manageStation"
 		? manageStationStore.hasPermission(permission)
@@ -105,11 +145,16 @@ const { openModal } = useModalsStore();
 
 const { setPlaylists } = useUserPlaylistsStore();
 
-const { addPlaylistToAutoRequest, removePlaylistFromAutoRequest } =
-	stationStore;
+const {
+	addAutorequestPlaylists,
+	addPlaylistToAutoRequest,
+	removePlaylistFromAutoRequest,
+	updateAutorequestLocalStorage
+} = stationStore;
 
 const showTab = _tab => {
-	tabs.value[`${_tab}-tab`].scrollIntoView({ block: "nearest" });
+	if (tabs.value[`${_tab}-tab`])
+		tabs.value[`${_tab}-tab`].scrollIntoView({ block: "nearest" });
 	tab.value = _tab;
 };
 
@@ -262,7 +307,9 @@ const searchForPlaylists = page => {
 };
 
 onMounted(() => {
-	showTab("search");
+	if (props.type === "autorequest" || station.value.type === "community")
+		showTab("my-playlists");
+	else showTab("search");
 
 	socket.onConnect(() => {
 		socket.dispatch("playlists.indexMyPlaylists", res => {
@@ -295,6 +342,50 @@ onMounted(() => {
 				}
 			}
 		);
+
+		const autorequestLocalStorageItem = localStorage.getItem(
+			`autorequest-${station.value._id}`
+		);
+
+		if (
+			autorequestLocalStorageItem &&
+			station.value.requests &&
+			station.value.requests.allowAutorequest &&
+			autoRequest.value.length === 0
+		) {
+			const autorequestParsedItem = JSON.parse(
+				autorequestLocalStorageItem
+			);
+			const autorequestUpdatedAt = new Date(
+				autorequestParsedItem.updatedAt
+			);
+			const fiveMinutesAgo = new Date(
+				new Date().getTime() - 5 * 60 * 1000
+			);
+			if (autorequestUpdatedAt > fiveMinutesAgo) {
+				const playlists = [];
+
+				const promises = autorequestParsedItem.playlistIds.map(
+					playlistId =>
+						new Promise<void>(resolve => {
+							socket.dispatch(
+								"playlists.getPlaylist",
+								playlistId,
+								res => {
+									if (res.status === "success") {
+										playlists.push(res.data.playlist);
+									}
+									resolve();
+								}
+							);
+						})
+				);
+
+				Promise.all(promises).then(() => {
+					addAutorequestPlaylists(playlists);
+				});
+			} else updateAutorequestLocalStorage();
+		}
 	});
 });
 </script>
@@ -306,6 +397,17 @@ onMounted(() => {
 		</div>
 		<div class="tabs-container">
 			<div class="tab-selection">
+				<button
+					v-if="
+						type === 'autorequest' || station.type === 'community'
+					"
+					class="button is-default"
+					:ref="el => (tabs['my-playlists-tab'] = el)"
+					:class="{ selected: tab === 'my-playlists' }"
+					@click="showTab('my-playlists')"
+				>
+					My Playlists
+				</button>
 				<button
 					class="button is-default"
 					:ref="el => (tabs['search-tab'] = el)"
@@ -321,17 +423,9 @@ onMounted(() => {
 					@click="showTab('current')"
 				>
 					Current
-				</button>
-				<button
-					v-if="
-						type === 'autorequest' || station.type === 'community'
-					"
-					class="button is-default"
-					:ref="el => (tabs['my-playlists-tab'] = el)"
-					:class="{ selected: tab === 'my-playlists' }"
-					@click="showTab('my-playlists')"
-				>
-					My Playlists
+					<span class="tag" v-if="selectedPlaylists().length > 0">{{
+						selectedPlaylists().length
+					}}</span>
 				</button>
 			</div>
 			<div class="tab" v-show="tab === 'search'">
@@ -715,6 +809,38 @@ onMounted(() => {
 				</div>
 			</div>
 			<div class="tab" v-show="tab === 'current'">
+				<p
+					class="has-text-centered scrollable-list"
+					v-if="
+						selectedPlaylists().length > 0 && type === 'autorequest'
+					"
+				>
+					You are currently autorequesting a mix of
+					{{ totalUniqueAutorequestableMediaSources.length }}
+					different songs. Of these, we can currently autorequest
+					{{ actuallyAutorequestingMediaSources.length }} songs.
+					<br />
+					Songs that
+					<span
+						v-if="
+							station.requests
+								.autorequestDisallowRecentlyPlayedEnabled
+						"
+						>were played recently or</span
+					>
+					are currently in the queue or playing will not be
+					autorequested. Spotify
+					<span v-if="!experimental.soundcloud">and SoundCloud</span>
+					songs will also not be autorequested.
+					<span v-if="autoSkipDisliked"
+						>Disliked songs will also not be autorequested due to
+						your preferences.</span
+					>
+
+					<br />
+					<br />
+				</p>
+
 				<div v-if="selectedPlaylists().length > 0">
 					<playlist-item
 						v-for="playlist in selectedPlaylists()"
@@ -797,13 +923,6 @@ onMounted(() => {
 				class="tab"
 				v-show="tab === 'my-playlists'"
 			>
-				<button
-					class="button is-primary"
-					id="create-new-playlist-button"
-					@click="openModal('createPlaylist')"
-				>
-					Create new playlist
-				</button>
 				<div
 					class="menu-list scrollable-list"
 					v-if="playlists.length > 0"
@@ -897,13 +1016,31 @@ onMounted(() => {
 												'blacklist'
 											)
 										"
-										@click="selectPlaylist(element)"
-										class="material-icons play-icon"
-										:content="`${label(
-											'future',
-											null,
-											true
-										)} songs from this playlist`"
+										:class="{
+											'play-icon':
+												type !== 'autorequest' ||
+												!autoSkipDisliked ||
+												element.type !== 'user-disliked'
+										}"
+										@click="
+											type !== 'autorequest' ||
+											!autoSkipDisliked ||
+											element.type !== 'user-disliked'
+												? selectPlaylist(element)
+												: null
+										"
+										class="material-icons"
+										:content="
+											type !== 'autorequest' ||
+											!autoSkipDisliked ||
+											element.type !== 'user-disliked'
+												? `${label(
+														'future',
+														null,
+														true
+												  )} songs from this playlist`
+												: 'Your preferences are set to skip disliked songs'
+										"
 										v-tippy
 										>play_arrow</i
 									>
@@ -968,8 +1105,16 @@ onMounted(() => {
 				</div>
 
 				<p v-else class="has-text-centered scrollable-list">
-					You don't have any playlists!
+					You don't have any playlists
 				</p>
+
+				<button
+					class="button is-primary"
+					id="create-new-playlist-button"
+					@click="openModal('createPlaylist')"
+				>
+					Create new playlist
+				</button>
 			</div>
 		</div>
 	</div>

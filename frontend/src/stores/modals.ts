@@ -3,6 +3,7 @@ import { defineStore } from "pinia";
 import utils from "@/utils";
 
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useConfigStore } from "@/stores/config";
 
 export const useModalsStore = defineStore("modals", {
 	state: (): {
@@ -35,12 +36,11 @@ export const useModalsStore = defineStore("modals", {
 		closeModal(uuid: string, force = false) {
 			Object.entries(this.modals).forEach(([_uuid, modal]) => {
 				if (uuid === _uuid) {
-					if (modal.modal === "register")
-						lofig
-							.get("recaptcha.enabled")
-							.then((enabled: boolean) => {
-								if (enabled) window.location.reload();
-							});
+					if (modal.modal === "register") {
+						const configStore = useConfigStore();
+						if (configStore.recaptcha.enabled)
+							window.location.reload();
+					}
 					const close = () => {
 						const { socket } = useWebsocketsStore();
 						socket.destroyModalListeners(uuid);

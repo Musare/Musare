@@ -44,7 +44,6 @@ CacheModule.runJob("SUB", {
 export default {
 	/**
 	 * Returns the length of the songs list
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param cb
 	 */
@@ -70,7 +69,6 @@ export default {
 
 	/**
 	 * Gets songs, used in the admin songs page by the AdvancedTable component
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param page - the page
 	 * @param pageSize - the size per page
@@ -209,7 +207,6 @@ export default {
 
 	/**
 	 * Updates all songs
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param cb
 	 */
@@ -265,7 +262,6 @@ export default {
 
 	/**
 	 * Gets a song from the Musare song id
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} songId - the song id
 	 * @param {Function} cb
@@ -294,51 +290,52 @@ export default {
 	/**
 	 * Gets multiple songs from the Musare song ids
 	 * At this time only used in bulk EditSong
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {Array} youtubeIds - the song ids
+	 * @param {Array} mediaSources - the song media sources
 	 * @param {Function} cb
 	 */
-	getSongsFromYoutubeIds: useHasPermission("songs.get", function getSongsFromYoutubeIds(session, youtubeIds, cb) {
-		async.waterfall(
-			[
-				next => {
-					SongsModule.runJob(
-						"GET_SONGS",
-						{
-							youtubeIds,
-							properties: [
-								"youtubeId",
-								"title",
-								"artists",
-								"thumbnail",
-								"duration",
-								"verified",
-								"_id",
-								"youtubeVideoId"
-							]
-						},
-						this
-					)
-						.then(response => next(null, response.songs))
-						.catch(err => next(err));
+	getSongsFromMediaSources: useHasPermission(
+		"songs.get",
+		function getSongsFromMediaSources(session, mediaSources, cb) {
+			async.waterfall(
+				[
+					next => {
+						SongsModule.runJob(
+							"GET_SONGS",
+							{
+								mediaSources,
+								properties: [
+									"mediaSource",
+									"title",
+									"artists",
+									"thumbnail",
+									"duration",
+									"verified",
+									"_id",
+									"youtubeVideoId"
+								]
+							},
+							this
+						)
+							.then(response => next(null, response.songs))
+							.catch(err => next(err));
+					}
+				],
+				async (err, songs) => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log("ERROR", "SONGS_GET_SONGS_FROM_MUSARE_IDS", `Failed to get songs. "${err}"`);
+						return cb({ status: "error", message: err });
+					}
+					this.log("SUCCESS", "SONGS_GET_SONGS_FROM_MUSARE_IDS", `Got songs successfully.`);
+					return cb({ status: "success", data: { songs } });
 				}
-			],
-			async (err, songs) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "SONGS_GET_SONGS_FROM_MUSARE_IDS", `Failed to get songs. "${err}"`);
-					return cb({ status: "error", message: err });
-				}
-				this.log("SUCCESS", "SONGS_GET_SONGS_FROM_MUSARE_IDS", `Got songs successfully.`);
-				return cb({ status: "success", data: { songs } });
-			}
-		);
-	}),
+			);
+		}
+	),
 
 	/**
 	 * Creates a song
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {object} newSong - the song object
 	 * @param {Function} cb
@@ -374,7 +371,6 @@ export default {
 
 	/**
 	 * Updates a song
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} songId - the song id
 	 * @param {object} song - the updated song object
@@ -452,7 +448,6 @@ export default {
 
 	/**
 	 * Removes a song
-	 *
 	 * @param session
 	 * @param songId - the song id
 	 * @param cb
@@ -468,8 +463,13 @@ export default {
 				},
 
 				(song, next) => {
-					YouTubeModule.runJob("GET_VIDEO", { identifier: song.youtubeId, createMissing: true }, this)
-						.then(res => next(null, song, res.video))
+					// TODO replace for spotify support
+					YouTubeModule.runJob(
+						"GET_VIDEOS",
+						{ identifiers: [song.mediaSource.split(":")[1]], createMissing: true },
+						this
+					)
+						.then(res => next(null, song, res.videos[0]))
 						.catch(() => next(null, song, false));
 				},
 
@@ -524,7 +524,7 @@ export default {
 													session,
 													namespace: "playlists",
 													action: "removeSongFromPlaylist",
-													args: [song.youtubeId, playlistId]
+													args: [song.mediaSource, playlistId]
 												},
 												this
 											)
@@ -627,7 +627,7 @@ export default {
 							if (!youtubeVideo)
 								StationsModule.runJob(
 									"REMOVE_FROM_QUEUE",
-									{ stationId, youtubeId: song.youtubeId },
+									{ stationId, mediaSource: song.mediaSource },
 									this
 								)
 									.then(() => next())
@@ -656,7 +656,11 @@ export default {
 						1,
 						(stationId, next) => {
 							if (!youtubeVideo)
-								StationsModule.runJob("SKIP_STATION", { stationId, natural: false }, this)
+								StationsModule.runJob(
+									"SKIP_STATION",
+									{ stationId, natural: false, skipReason: "other" },
+									this
+								)
 									.then(() => {
 										next();
 									})
@@ -716,7 +720,6 @@ export default {
 
 	/**
 	 * Removes many songs
-	 *
 	 * @param session
 	 * @param songIds - array of song ids
 	 * @param cb
@@ -816,7 +819,6 @@ export default {
 
 	/**
 	 * Searches through official songs
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} query - the query
 	 * @param {string} page - the page
@@ -859,7 +861,6 @@ export default {
 
 	/**
 	 * Verifies a song
-	 *
 	 * @param session
 	 * @param songId - the song id
 	 * @param cb
@@ -918,7 +919,6 @@ export default {
 
 	/**
 	 * Verify many songs
-	 *
 	 * @param session
 	 * @param songIds - array of song ids
 	 * @param cb
@@ -1014,7 +1014,6 @@ export default {
 
 	/**
 	 * Un-verifies a song
-	 *
 	 * @param session
 	 * @param songId - the song id
 	 * @param cb
@@ -1079,7 +1078,6 @@ export default {
 
 	/**
 	 * Unverify many songs
-	 *
 	 * @param session
 	 * @param songIds - array of song ids
 	 * @param cb
@@ -1183,7 +1181,6 @@ export default {
 
 	/**
 	 * Gets a list of all genres
-	 *
 	 * @param session
 	 * @param cb
 	 */
@@ -1219,7 +1216,6 @@ export default {
 
 	/**
 	 * Bulk update genres for selected songs
-	 *
 	 * @param session
 	 * @param method Whether to add, remove or replace genres
 	 * @param genres Array of genres to apply
@@ -1316,7 +1312,6 @@ export default {
 
 	/**
 	 * Gets a list of all artists
-	 *
 	 * @param session
 	 * @param cb
 	 */
@@ -1352,7 +1347,6 @@ export default {
 
 	/**
 	 * Bulk update artists for selected songs
-	 *
 	 * @param session
 	 * @param method Whether to add, remove or replace artists
 	 * @param artists Array of artists to apply
@@ -1449,7 +1443,6 @@ export default {
 
 	/**
 	 * Gets a list of all tags
-	 *
 	 * @param session
 	 * @param cb
 	 */
@@ -1485,7 +1478,6 @@ export default {
 
 	/**
 	 * Bulk update tags for selected songs
-	 *
 	 * @param session
 	 * @param method Whether to add, remove or replace tags
 	 * @param tags Array of tags to apply

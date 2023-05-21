@@ -9,6 +9,8 @@ import { useUserAuthStore } from "@/stores/userAuth";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
 import utils from "@/utils";
 
+// TODO make this page support Spotify
+
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
 );
@@ -340,15 +342,18 @@ const submitCreateImport = stage => {
 // 	if (stage === 2) createImport.value.stage = 1;
 // };
 
-const editSongs = videos => {
-	const songs = videos.map(youtubeId => ({ youtubeId }));
-	if (songs.length === 1)
-		openModal({ modal: "editSong", props: { song: songs[0] } });
-	else openModal({ modal: "editSong", props: { songs } });
+const editSongs = youtubeIds => {
+	const mediaSources = youtubeIds.map(youtubeId => ({
+		mediaSource: `youtube:${youtubeId}`
+	}));
+	if (mediaSources.length === 1)
+		openModal({ modal: "editSong", props: { song: mediaSources[0] } });
+	else openModal({ modal: "editSong", props: { songs: mediaSources } });
 };
 
 const importAlbum = youtubeIds => {
-	socket.dispatch("songs.getSongsFromYoutubeIds", youtubeIds, res => {
+	const mediaSources = youtubeIds.map(youtubeId => `youtube:${youtubeId}`);
+	socket.dispatch("songs.getSongsFromMediaSources", mediaSources, res => {
 		if (res.status === "success") {
 			openModal({
 				modal: "importAlbum",
@@ -359,10 +364,11 @@ const importAlbum = youtubeIds => {
 };
 
 const bulkEditPlaylist = youtubeIds => {
+	const mediaSources = youtubeIds.map(youtubeId => `youtube:${youtubeId}`);
 	openModal({
 		modal: "bulkEditPlaylist",
 		props: {
-			youtubeIds
+			mediaSources
 		}
 	});
 };

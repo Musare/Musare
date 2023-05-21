@@ -18,11 +18,11 @@ CacheModule.runJob("SUB", {
 	channel: "ratings.like",
 	cb: data => {
 		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `song.${data.youtubeId}`,
+			room: `song.${data.mediaSource}`,
 			args: [
 				"event:ratings.liked",
 				{
-					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
+					data: { mediaSource: data.mediaSource, likes: data.likes, dislikes: data.dislikes }
 				}
 			]
 		});
@@ -31,7 +31,7 @@ CacheModule.runJob("SUB", {
 			sockets.forEach(socket => {
 				socket.dispatch("event:ratings.updated", {
 					data: {
-						youtubeId: data.youtubeId,
+						mediaSource: data.mediaSource,
 						liked: true,
 						disliked: false
 					}
@@ -45,11 +45,11 @@ CacheModule.runJob("SUB", {
 	channel: "ratings.dislike",
 	cb: data => {
 		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `song.${data.youtubeId}`,
+			room: `song.${data.mediaSource}`,
 			args: [
 				"event:ratings.disliked",
 				{
-					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
+					data: { mediaSource: data.mediaSource, likes: data.likes, dislikes: data.dislikes }
 				}
 			]
 		});
@@ -58,7 +58,7 @@ CacheModule.runJob("SUB", {
 			sockets.forEach(socket => {
 				socket.dispatch("event:ratings.updated", {
 					data: {
-						youtubeId: data.youtubeId,
+						mediaSource: data.mediaSource,
 						liked: false,
 						disliked: true
 					}
@@ -72,11 +72,11 @@ CacheModule.runJob("SUB", {
 	channel: "ratings.unlike",
 	cb: data => {
 		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `song.${data.youtubeId}`,
+			room: `song.${data.mediaSource}`,
 			args: [
 				"event:ratings.unliked",
 				{
-					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
+					data: { mediaSource: data.mediaSource, likes: data.likes, dislikes: data.dislikes }
 				}
 			]
 		});
@@ -85,7 +85,7 @@ CacheModule.runJob("SUB", {
 			sockets.forEach(socket => {
 				socket.dispatch("event:ratings.updated", {
 					data: {
-						youtubeId: data.youtubeId,
+						mediaSource: data.mediaSource,
 						liked: false,
 						disliked: false
 					}
@@ -99,11 +99,11 @@ CacheModule.runJob("SUB", {
 	channel: "ratings.undislike",
 	cb: data => {
 		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `song.${data.youtubeId}`,
+			room: `song.${data.mediaSource}`,
 			args: [
 				"event:ratings.undisliked",
 				{
-					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
+					data: { mediaSource: data.mediaSource, likes: data.likes, dislikes: data.dislikes }
 				}
 			]
 		});
@@ -112,7 +112,7 @@ CacheModule.runJob("SUB", {
 			sockets.forEach(socket => {
 				socket.dispatch("event:ratings.updated", {
 					data: {
-						youtubeId: data.youtubeId,
+						mediaSource: data.mediaSource,
 						liked: false,
 						disliked: false
 					}
@@ -125,7 +125,6 @@ CacheModule.runJob("SUB", {
 export default {
 	/**
 	 * Recalculates all ratings
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param cb
 	 */
@@ -188,12 +187,11 @@ export default {
 
 	/**
 	 * Like
-	 *
 	 * @param session
-	 * @param youtubeId - the youtube id
+	 * @param mediaSource - the media source
 	 * @param cb
 	 */
-	like: isLoginRequired(async function like(session, youtubeId, cb) {
+	like: isLoginRequired(async function like(session, mediaSource, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
@@ -202,7 +200,7 @@ export default {
 					MediaModule.runJob(
 						"GET_MEDIA",
 						{
-							youtubeId
+							mediaSource
 						},
 						this
 					)
@@ -211,7 +209,7 @@ export default {
 							const { _id, title, artists, thumbnail, duration, verified } = song;
 							next(null, {
 								_id,
-								youtubeId,
+								mediaSource,
 								title,
 								artists,
 								thumbnail,
@@ -234,7 +232,7 @@ export default {
 								session,
 								namespace: "playlists",
 								action: "removeSongFromPlaylist",
-								args: [youtubeId, user.dislikedSongsPlaylist]
+								args: [mediaSource, user.dislikedSongsPlaylist]
 							},
 							this
 						)
@@ -254,7 +252,7 @@ export default {
 								session,
 								namespace: "playlists",
 								action: "addSongToPlaylist",
-								args: [false, youtubeId, likedSongsPlaylist]
+								args: [false, mediaSource, likedSongsPlaylist]
 							},
 							this
 						)
@@ -266,7 +264,7 @@ export default {
 						}),
 
 				(song, next) => {
-					MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
+					MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource })
 						.then(ratings => next(null, song, ratings))
 						.catch(err => next(err));
 				}
@@ -277,7 +275,7 @@ export default {
 					this.log(
 						"ERROR",
 						"MEDIA_RATINGS_LIKE",
-						`User "${session.userId}" failed to like song ${youtubeId}. "${err}"`
+						`User "${session.userId}" failed to like song ${mediaSource}. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -289,7 +287,7 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "ratings.like",
 					value: JSON.stringify({
-						youtubeId,
+						mediaSource,
 						userId: session.userId,
 						likes,
 						dislikes
@@ -300,8 +298,8 @@ export default {
 					userId: session.userId,
 					type: "song__like",
 					payload: {
-						message: `Liked song <youtubeId>${song.title} by ${song.artists.join(", ")}</youtubeId>`,
-						youtubeId,
+						message: `Liked song <mediaSource>${song.title} by ${song.artists.join(", ")}</mediaSource>`,
+						mediaSource,
 						thumbnail: song.thumbnail
 					}
 				});
@@ -316,12 +314,11 @@ export default {
 
 	/**
 	 * Dislike
-	 *
 	 * @param session
-	 * @param youtubeId - the youtube id
+	 * @param mediaSource - the media source
 	 * @param cb
 	 */
-	dislike: isLoginRequired(async function dislike(session, youtubeId, cb) {
+	dislike: isLoginRequired(async function dislike(session, mediaSource, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
@@ -330,7 +327,7 @@ export default {
 					MediaModule.runJob(
 						"GET_MEDIA",
 						{
-							youtubeId
+							mediaSource
 						},
 						this
 					)
@@ -339,7 +336,7 @@ export default {
 							const { _id, title, artists, thumbnail, duration, verified } = song;
 							next(null, {
 								_id,
-								youtubeId,
+								mediaSource,
 								title,
 								artists,
 								thumbnail,
@@ -362,7 +359,7 @@ export default {
 								session,
 								namespace: "playlists",
 								action: "removeSongFromPlaylist",
-								args: [youtubeId, user.likedSongsPlaylist]
+								args: [mediaSource, user.likedSongsPlaylist]
 							},
 							this
 						)
@@ -382,7 +379,7 @@ export default {
 								session,
 								namespace: "playlists",
 								action: "addSongToPlaylist",
-								args: [false, youtubeId, dislikedSongsPlaylist]
+								args: [false, mediaSource, dislikedSongsPlaylist]
 							},
 							this
 						)
@@ -394,7 +391,7 @@ export default {
 						}),
 
 				(song, next) => {
-					MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
+					MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource })
 						.then(ratings => next(null, song, ratings))
 						.catch(err => next(err));
 				}
@@ -405,7 +402,7 @@ export default {
 					this.log(
 						"ERROR",
 						"MEDIA_RATINGS_DISLIKE",
-						`User "${session.userId}" failed to dislike song ${youtubeId}. "${err}"`
+						`User "${session.userId}" failed to dislike song ${mediaSource}. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -417,7 +414,7 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "ratings.dislike",
 					value: JSON.stringify({
-						youtubeId,
+						mediaSource,
 						userId: session.userId,
 						likes,
 						dislikes
@@ -428,8 +425,8 @@ export default {
 					userId: session.userId,
 					type: "song__dislike",
 					payload: {
-						message: `Disliked song <youtubeId>${song.title} by ${song.artists.join(", ")}</youtubeId>`,
-						youtubeId,
+						message: `Disliked song <mediaSource>${song.title} by ${song.artists.join(", ")}</mediaSource>`,
+						mediaSource,
 						thumbnail: song.thumbnail
 					}
 				});
@@ -444,12 +441,11 @@ export default {
 
 	/**
 	 * Undislike
-	 *
 	 * @param session
-	 * @param youtubeId - the youtube id
+	 * @param mediaSource - the media source
 	 * @param cb
 	 */
-	undislike: isLoginRequired(async function undislike(session, youtubeId, cb) {
+	undislike: isLoginRequired(async function undislike(session, mediaSource, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
@@ -458,7 +454,7 @@ export default {
 					MediaModule.runJob(
 						"GET_MEDIA",
 						{
-							youtubeId
+							mediaSource
 						},
 						this
 					)
@@ -467,7 +463,7 @@ export default {
 							const { _id, title, artists, thumbnail, duration, verified } = song;
 							next(null, {
 								_id,
-								youtubeId,
+								mediaSource,
 								title,
 								artists,
 								thumbnail,
@@ -490,7 +486,7 @@ export default {
 								session,
 								namespace: "playlists",
 								action: "removeSongFromPlaylist",
-								args: [youtubeId, user.dislikedSongsPlaylist]
+								args: [mediaSource, user.dislikedSongsPlaylist]
 							},
 							this
 						)
@@ -510,7 +506,7 @@ export default {
 								session,
 								namespace: "playlists",
 								action: "removeSongFromPlaylist",
-								args: [youtubeId, likedSongsPlaylist]
+								args: [mediaSource, likedSongsPlaylist]
 							},
 							this
 						)
@@ -523,7 +519,7 @@ export default {
 				},
 
 				(song, next) => {
-					MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
+					MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource })
 						.then(ratings => next(null, song, ratings))
 						.catch(err => next(err));
 				}
@@ -534,7 +530,7 @@ export default {
 					this.log(
 						"ERROR",
 						"MEDIA_RATINGS_UNDISLIKE",
-						`User "${session.userId}" failed to undislike song ${youtubeId}. "${err}"`
+						`User "${session.userId}" failed to undislike song ${mediaSource}. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -546,7 +542,7 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "ratings.undislike",
 					value: JSON.stringify({
-						youtubeId,
+						mediaSource,
 						userId: session.userId,
 						likes,
 						dislikes
@@ -557,10 +553,10 @@ export default {
 					userId: session.userId,
 					type: "song__undislike",
 					payload: {
-						message: `Removed <youtubeId>${song.title} by ${song.artists.join(
+						message: `Removed <mediaSource>${song.title} by ${song.artists.join(
 							", "
-						)}</youtubeId> from your Disliked Songs`,
-						youtubeId,
+						)}</mediaSource> from your Disliked Songs`,
+						mediaSource,
 						thumbnail: song.thumbnail
 					}
 				});
@@ -575,12 +571,11 @@ export default {
 
 	/**
 	 * Unlike
-	 *
 	 * @param session
-	 * @param youtubeId - the youtube id
+	 * @param mediaSource - the media source
 	 * @param cb
 	 */
-	unlike: isLoginRequired(async function unlike(session, youtubeId, cb) {
+	unlike: isLoginRequired(async function unlike(session, mediaSource, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
@@ -589,7 +584,7 @@ export default {
 					MediaModule.runJob(
 						"GET_MEDIA",
 						{
-							youtubeId
+							mediaSource
 						},
 						this
 					)
@@ -598,7 +593,7 @@ export default {
 							const { _id, title, artists, thumbnail, duration, verified } = song;
 							next(null, {
 								_id,
-								youtubeId,
+								mediaSource,
 								title,
 								artists,
 								thumbnail,
@@ -621,7 +616,7 @@ export default {
 								session,
 								namespace: "playlists",
 								action: "removeSongFromPlaylist",
-								args: [youtubeId, user.dislikedSongsPlaylist]
+								args: [mediaSource, user.dislikedSongsPlaylist]
 							},
 							this
 						)
@@ -641,7 +636,7 @@ export default {
 								session,
 								namespace: "playlists",
 								action: "removeSongFromPlaylist",
-								args: [youtubeId, likedSongsPlaylist]
+								args: [mediaSource, likedSongsPlaylist]
 							},
 							this
 						)
@@ -654,7 +649,7 @@ export default {
 				},
 
 				(song, next) => {
-					MediaModule.runJob("RECALCULATE_RATINGS", { youtubeId })
+					MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource })
 						.then(ratings => next(null, song, ratings))
 						.catch(err => next(err));
 				}
@@ -665,7 +660,7 @@ export default {
 					this.log(
 						"ERROR",
 						"MEDIA_RATINGS_UNLIKE",
-						`User "${session.userId}" failed to unlike song ${youtubeId}. "${err}"`
+						`User "${session.userId}" failed to unlike song ${mediaSource}. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -677,7 +672,7 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "ratings.unlike",
 					value: JSON.stringify({
-						youtubeId,
+						mediaSource,
 						userId: session.userId,
 						likes,
 						dislikes
@@ -688,10 +683,10 @@ export default {
 					userId: session.userId,
 					type: "song__unlike",
 					payload: {
-						message: `Removed <youtubeId>${song.title} by ${song.artists.join(
+						message: `Removed <mediaSource>${song.title} by ${song.artists.join(
 							", "
-						)}</youtubeId> from your Liked Songs`,
-						youtubeId,
+						)}</mediaSource> from your Liked Songs`,
+						mediaSource,
 						thumbnail: song.thumbnail
 					}
 				});
@@ -706,17 +701,16 @@ export default {
 
 	/**
 	 * Get ratings
-	 *
 	 * @param session
-	 * @param youtubeId - the youtube id
+	 * @param mediaSource - the media source
 	 * @param cb
 	 */
 
-	async getRatings(session, youtubeId, cb) {
+	async getRatings(session, mediaSource, cb) {
 		async.waterfall(
 			[
 				next => {
-					MediaModule.runJob("GET_RATINGS", { youtubeId, createMissing: true }, this)
+					MediaModule.runJob("GET_RATINGS", { mediaSource, createMissing: true }, this)
 						.then(res => next(null, res.ratings))
 						.catch(next);
 				},
@@ -734,7 +728,7 @@ export default {
 					this.log(
 						"ERROR",
 						"MEDIA_GET_RATINGS",
-						`User "${session.userId}" failed to get ratings for ${youtubeId}. "${err}"`
+						`User "${session.userId}" failed to get ratings for ${mediaSource}. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -754,12 +748,11 @@ export default {
 
 	/**
 	 * Gets user's own ratings
-	 *
 	 * @param session
-	 * @param youtubeId - the youtube id
+	 * @param mediaSource - the media source
 	 * @param cb
 	 */
-	getOwnRatings: isLoginRequired(async function getOwnRatings(session, youtubeId, cb) {
+	getOwnRatings: isLoginRequired(async function getOwnRatings(session, mediaSource, cb) {
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
 		async.waterfall(
@@ -768,7 +761,7 @@ export default {
 					MediaModule.runJob(
 						"GET_MEDIA",
 						{
-							youtubeId
+							mediaSource
 						},
 						this
 					)
@@ -787,7 +780,7 @@ export default {
 
 							Object.values(playlist.songs).forEach(song => {
 								// song is found in 'liked songs' playlist
-								if (song.youtubeId === youtubeId) isLiked = true;
+								if (song.mediaSource === mediaSource) isLiked = true;
 							});
 
 							return next(null, isLiked);
@@ -805,7 +798,7 @@ export default {
 
 							Object.values(playlist.songs).forEach(song => {
 								// song is found in 'disliked songs' playlist
-								if (song.youtubeId === youtubeId) ratings.isDisliked = true;
+								if (song.mediaSource === mediaSource) ratings.isDisliked = true;
 							});
 
 							return next(null, ratings);
@@ -818,7 +811,7 @@ export default {
 					this.log(
 						"ERROR",
 						"MEDIA_GET_OWN_RATINGS",
-						`User "${session.userId}" failed to get ratings for ${youtubeId}. "${err}"`
+						`User "${session.userId}" failed to get ratings for ${mediaSource}. "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
@@ -828,7 +821,7 @@ export default {
 				return cb({
 					status: "success",
 					data: {
-						youtubeId,
+						mediaSource,
 						liked: isLiked,
 						disliked: isDisliked
 					}
@@ -839,7 +832,6 @@ export default {
 
 	/**
 	 * Gets importJobs, used in the admin import page by the AdvancedTable component
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param page - the page
 	 * @param pageSize - the size per page
@@ -898,7 +890,6 @@ export default {
 
 	/**
 	 * Remove import jobs
-	 *
 	 * @returns {{status: string, data: object}}
 	 */
 	removeImportJobs: useHasPermission("media.removeImportJobs", function removeImportJobs(session, jobIds, cb) {
@@ -911,6 +902,28 @@ export default {
 			.catch(async err => {
 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 				this.log("ERROR", "MEDIA_REMOVE_IMPORT_JOBS", `Removing import jobs failed. "${err}"`);
+				return cb({ status: "error", message: err });
+			});
+	}),
+
+	/**
+	 * Gets an array of media from media sources
+	 * @returns {{status: string, data: object}}
+	 */
+	getMediaFromMediaSources: isLoginRequired(function getMediaFromMediaSources(session, mediaSources, cb) {
+		MediaModule.runJob("GET_MEDIA_FROM_MEDIA_SOURCES", { mediaSources }, this)
+			.then(songMap => {
+				this.log("SUCCESS", "MEDIA_GET_MEDIA_FROM_MEDIA_SOURCES", `GET_MEDIA_FROM_MEDIA_SOURCES successful.`);
+
+				return cb({ status: "success", message: "GET_MEDIA_FROM_MEDIA_SOURCES success", data: { songMap } });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log(
+					"ERROR",
+					"MEDIA_GET_MEDIA_FROM_MEDIA_SOURCES",
+					`GET_MEDIA_FROM_MEDIA_SOURCES failed. "${err}"`
+				);
 				return cb({ status: "error", message: err });
 			});
 	})

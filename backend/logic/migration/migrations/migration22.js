@@ -4,7 +4,6 @@ import async from "async";
  * Migration 22
  *
  * Migration to fix issues in a previous migration (12), where report categories were not turned into lowercase
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

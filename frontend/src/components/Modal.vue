@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted } from "vue";
+import { defineAsyncComponent } from "vue";
+import { storeToRefs } from "pinia";
+import { useConfigStore } from "@/stores/config";
 import { useModalsStore } from "@/stores/modals";
 
 const ChristmasLights = defineAsyncComponent(
@@ -12,13 +14,9 @@ defineProps({
 	split: { type: Boolean, default: false }
 });
 
-const christmas = ref(false);
-
+const configStore = useConfigStore();
+const { christmas } = storeToRefs(configStore);
 const { closeCurrentModal } = useModalsStore();
-
-onMounted(async () => {
-	christmas.value = await lofig.get("siteSettings.christmas");
-});
 </script>
 
 <template>

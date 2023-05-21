@@ -13,7 +13,6 @@ class _UtilsModule extends CoreClass {
 
 	/**
 	 * Initialises the utils module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	initialize() {
@@ -24,7 +23,6 @@ class _UtilsModule extends CoreClass {
 
 	/**
 	 * Parses the cookie into a readable object
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.cookieString - the cookie string
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -62,7 +60,6 @@ class _UtilsModule extends CoreClass {
 
 	/**
 	 * Removes a cookie by name
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.cookieString - the cookie string
 	 * @param {string} payload.cookieName - the unique name of the cookie
@@ -93,7 +90,6 @@ class _UtilsModule extends CoreClass {
 
 	/**
 	 * Replaces any html reserved characters in a string with html entities
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.str - the string to replace characters with html entities
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -112,7 +108,6 @@ class _UtilsModule extends CoreClass {
 
 	/**
 	 * Generates a random string of a specified length
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {number} payload.length - the length the random string should be
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -148,7 +143,6 @@ class _UtilsModule extends CoreClass {
 
 	/**
 	 * Creates a random number within a range
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {number} payload.min - the minimum number the result should be
 	 * @param {number} payload.max - the maximum number the result should be
@@ -163,7 +157,6 @@ class _UtilsModule extends CoreClass {
 
 	/**
 	 * Converts ISO8601 time format (YouTube API) to HH:MM:SS
-	 *
 	 * @param  {object} payload - object contaiing the payload
 	 * @param {string} payload.duration - string in the format of ISO8601
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -216,7 +209,6 @@ class _UtilsModule extends CoreClass {
 
 	/**
 	 * Creates a random identifier for e.g. sessionId
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GUID() {
@@ -237,7 +229,6 @@ class _UtilsModule extends CoreClass {
 
 	/**
 	 * Shuffles an array
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.array - an array of songs that should be shuffled
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -270,7 +261,6 @@ class _UtilsModule extends CoreClass {
 
 	/**
 	 * Shuffles an array of songs by their position property
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.array - an array of songs that should be shuffled
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -312,7 +302,6 @@ class _UtilsModule extends CoreClass {
 
 	/**
 	 * Creates an error
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.error - object that contains the error
 	 * @param {string} payload.message - possible error message
@@ -333,7 +322,6 @@ class _UtilsModule extends CoreClass {
 
 	/**
 	 * Creates the gravatar url for a specified email address
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.email - the email address
 	 * @returns {Promise} - returns promise (reject, resolve)

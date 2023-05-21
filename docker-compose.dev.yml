@@ -4,12 +4,16 @@ services:
       - "${BACKEND_HOST:-0.0.0.0}:${BACKEND_PORT:-8080}:8080"
       - "${BACKEND_HOST:-0.0.0.0}:${BACKEND_DEBUG_PORT:-9229}:9229"
     volumes:
+      - ./.git:/opt/.git:ro
+      - ./types:/opt/types
       - ./backend:/opt/app
     environment:
       - BACKEND_DEBUG=${BACKEND_DEBUG:-false}
 
   frontend:
     volumes:
+      - ./.git:/opt/.git:ro
+      - ./types:/opt/types
       - ./frontend:/opt/app
 
   mongo:

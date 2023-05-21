@@ -26,7 +26,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Initialises the ws module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async initialize() {
@@ -44,7 +43,7 @@ class _WSModule extends CoreClass {
 
 		this.setStage(2);
 
-		this.SIDname = config.get("cookie.SIDname");
+		this.SIDname = config.get("cookie");
 
 		// TODO: Check every 30s/, for all sockets, if they are still allowed to be in the rooms they are in, and on socket at all (permission changing/banning)
 		const server = await AppModule.runJob("SERVER");
@@ -92,7 +91,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Returns the websockets variable
-	 *
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	WS() {
@@ -103,7 +101,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Obtains socket object for a specified socket id
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.socketId - the id of the socket
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -125,7 +122,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Gets all sockets for a specified session id
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.sessionId - user session id
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -154,7 +150,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Returns any sockets for a specific user
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.userId - the user id
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -190,7 +185,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Returns any sockets from a specific ip address
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.ip - the ip address in question
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -220,7 +214,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Returns any sockets from a specific user without using redis/cache
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.userId - the id of the user in question
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -249,7 +242,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Allows a socket to leave any rooms they are connected to
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.socketId - the id of the socket which should leave all their rooms
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -267,7 +259,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Allows a socket to leave a specific room they are connected to
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.socketId - the id of the socket which should leave a room
 	 * @param {string} payload.room - the room
@@ -287,7 +278,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Allows a socket to join a specified room (this will remove them from any rooms they are currently in)
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.socketId - the id of the socket which should join the room
 	 * @param {string} payload.room - the name of the room
@@ -307,7 +297,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Emits arguments to any sockets that are in a specified a room
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.room - the name of the room to emit arguments
 	 * @param {object} payload.args - any arguments to be emitted to the sockets in the specific room
@@ -332,7 +321,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Emits arguments to any sockets that are in specified rooms
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {Array} payload.rooms - array of strings with the name of each room e.g. ["station-page", "song.1234"]
 	 * @param {object} payload.args - any arguments to be emitted to the sockets in the specific room
@@ -353,7 +341,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Allows a socket to join a 'song' room
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.socketId - the id of the socket which should join the room
 	 * @param {string} payload.room - the name of the room
@@ -376,7 +363,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Allows multiple sockets to join a 'song' room
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {Array} payload.sockets - array of socketIds
 	 * @param {object} payload.room - the name of the room
@@ -394,7 +380,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Allows multiple sockets to leave any 'song' rooms they are in
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {Array} payload.sockets - array of socketIds
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -416,7 +401,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Gets any sockets connected to a room
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.room - the name of the room
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -430,7 +414,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Gets any rooms a socket is connected to
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.socketId - the id of the socket to check the rooms for
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -449,7 +432,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Handles use of websockets
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
@@ -541,7 +523,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Handles a websocket connection
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.socket - socket itself
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -586,6 +567,34 @@ class _WSModule extends CoreClass {
 				console.error("SOCKET ERROR: ", error);
 			};
 
+			const readyData = {
+				config: {
+					cookie: config.get("cookie"),
+					sitename: config.get("sitename"),
+					recaptcha: {
+						enabled: config.get("apis.recaptcha.enabled"),
+						key: config.get("apis.recaptcha.key")
+					},
+					githubAuthentication: config.get("apis.github.enabled"),
+					messages: config.get("messages"),
+					christmas: config.get("christmas"),
+					footerLinks: config.get("footerLinks"),
+					shortcutOverrides: config.get("shortcutOverrides"),
+					registrationDisabled: config.get("registrationDisabled"),
+					mailEnabled: config.get("mail.enabled"),
+					discogsEnabled: config.get("apis.discogs.enabled"),
+					experimental: {
+						changable_listen_mode: config.get("experimental.changable_listen_mode"),
+						media_session: config.get("experimental.media_session"),
+						disable_youtube_search: config.get("experimental.disable_youtube_search"),
+						station_history: config.get("experimental.station_history"),
+						soundcloud: config.get("experimental.soundcloud"),
+						spotify: config.get("experimental.spotify")
+					}
+				},
+				user: { loggedIn: false }
+			};
+
 			if (socket.session.sessionId) {
 				CacheModule.runJob("HGET", {
 					table: "sessions",
@@ -594,28 +603,24 @@ class _WSModule extends CoreClass {
 					.then(session => {
 						if (session && session.userId) {
 							WSModule.userModel.findOne({ _id: session.userId }, (err, user) => {
-								if (err || !user) return socket.dispatch("ready", { data: { loggedIn: false } });
-
-								let role = "";
-								let username = "";
-								let userId = "";
-								let email = "";
+								if (err || !user) return socket.dispatch("ready", readyData);
 
 								if (user) {
-									role = user.role;
-									username = user.username;
-									email = user.email.address;
-									userId = session.userId;
+									readyData.user = {
+										loggedIn: true,
+										role: user.role,
+										username: user.username,
+										email: user.email.address,
+										userId: session.userId
+									};
 								}
 
-								return socket.dispatch("ready", {
-									data: { loggedIn: true, role, username, userId, email }
-								});
+								return socket.dispatch("ready", readyData);
 							});
-						} else socket.dispatch("ready", { data: { loggedIn: false } });
+						} else socket.dispatch("ready", readyData);
 					})
-					.catch(() => socket.dispatch("ready", { data: { loggedIn: false } }));
-			} else socket.dispatch("ready", { data: { loggedIn: false } });
+					.catch(() => socket.dispatch("ready", readyData));
+			} else socket.dispatch("ready", readyData);
 
 			socket.onmessage = message => {
 				const data = JSON.parse(message.data);
@@ -672,7 +677,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Runs an action
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
@@ -745,7 +749,6 @@ class _WSModule extends CoreClass {
 
 	/**
 	 * Runs an action
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */

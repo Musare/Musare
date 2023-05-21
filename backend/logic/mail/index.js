@@ -16,7 +16,6 @@ class _MailModule extends CoreClass {
 
 	/**
 	 * Initialises the mail module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async initialize() {
@@ -32,18 +31,9 @@ class _MailModule extends CoreClass {
 			dataRequest: await importSchema("dataRequest")
 		};
 
-		this.enabled = config.get("smtp.enabled");
+		this.enabled = config.get("mail.enabled");
 
-		if (this.enabled)
-			this.transporter = nodemailer.createTransport({
-				host: config.get("smtp.host"),
-				port: config.get("smtp.port"),
-				secure: config.get("smtp.secure"),
-				auth: {
-					user: config.get("smtp.auth.user"),
-					pass: config.get("smtp.auth.pass")
-				}
-			});
+		if (this.enabled) this.transporter = nodemailer.createTransport(config.get("mail.smtp"));
 
 		return new Promise(resolve => {
 			resolve();
@@ -52,7 +42,6 @@ class _MailModule extends CoreClass {
 
 	/**
 	 * Sends an email
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.data - information such as to, from in order to send the email
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -60,6 +49,12 @@ class _MailModule extends CoreClass {
 	SEND_MAIL(payload) {
 		return new Promise((resolve, reject) => {
 			if (MailModule.enabled) {
+				const { data } = payload;
+				if (!data.from)
+					data.from =
+						config.get("mail.from").length > 0
+							? config.get("mail.from")
+							: `${config.get("sitename")} <noreply@${config.get("url.host")}>`;
 				MailModule.transporter
 					.sendMail(payload.data)
 					.then(info => {
@@ -79,7 +74,6 @@ class _MailModule extends CoreClass {
 
 	/**
 	 * Returns an email schema
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.schemaName - name of the schema to get
 	 * @returns {Promise} - returns promise (reject, resolve)

@@ -90,7 +90,6 @@ CacheModule.runJob("SUB", {
 export default {
 	/**
 	 * Gets reports, used in the admin reports page by the AdvancedTable component
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param page - the page
 	 * @param pageSize - the size per page
@@ -195,7 +194,6 @@ export default {
 
 	/**
 	 * Gets a specific report
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} reportId - the id of the report to return
 	 * @param {Function} cb - gets called with the result
@@ -244,7 +242,6 @@ export default {
 
 	/**
 	 * Gets all reports for a songId
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} songId - the id of the song to index reports for
 	 * @param {Function} cb - gets called with the result
@@ -306,7 +303,6 @@ export default {
 
 	/**
 	 * Gets all a users reports for a specific songId
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} songId - the id of the song
 	 * @param {Function} cb - gets called with the result
@@ -380,7 +376,6 @@ export default {
 
 	/**
 	 * Resolves a report as a whole
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} reportId - the id of the report that is getting resolved
 	 * @param {boolean} resolved - whether to set to resolved to true or false
@@ -445,7 +440,6 @@ export default {
 
 	/**
 	 * Resolves/Unresolves an issue within a report
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} reportId - the id of the report that is getting resolved
 	 * @param {string} issueId - the id of the issue within the report
@@ -509,10 +503,9 @@ export default {
 
 	/**
 	 * Creates a new report
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {object} report - the object of the report data
-	 * @param {string} report.youtubeId - the youtube id of the song that is being reported
+	 * @param {string} report.mediaSource - the media source of the song that is being reported
 	 * @param {Array} report.issues - all issues reported (custom or defined)
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -520,11 +513,11 @@ export default {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 
-		const { youtubeId } = report;
+		const { mediaSource } = report;
 
 		async.waterfall(
 			[
-				next => songModel.findOne({ youtubeId }).exec(next),
+				next => songModel.findOne({ mediaSource }).exec(next),
 
 				(song, next) => {
 					if (!song) return next("Song not found.");
@@ -537,10 +530,10 @@ export default {
 				(song, next) => {
 					if (!song) return next("Song not found.");
 
-					delete report.youtubeId;
+					delete report.mediaSource;
 					report.song = {
 						_id: song._id,
-						youtubeId: song.youtubeId
+						mediaSource: song.mediaSource
 					};
 
 					return next(null, { title: song.title, artists: song.artists, thumbnail: song.thumbnail });
@@ -571,8 +564,8 @@ export default {
 					userId: session.userId,
 					type: "song__report",
 					payload: {
-						message: `Created a <reportId>${report._id}</reportId> for song <youtubeId>${song.title}</youtubeId>`,
-						youtubeId: report.song.youtubeId,
+						message: `Created a <reportId>${report._id}</reportId> for song <mediaSource>${song.title}</mediaSource>`,
+						mediaSource: report.song.mediaSource,
 						reportId: report._id,
 						thumbnail: song.thumbnail
 					}
@@ -583,7 +576,7 @@ export default {
 					value: report
 				});
 
-				this.log("SUCCESS", "REPORTS_CREATE", `User "${session.userId}" created report for "${youtubeId}".`);
+				this.log("SUCCESS", "REPORTS_CREATE", `User "${session.userId}" created report for "${mediaSource}".`);
 
 				return cb({
 					status: "success",
@@ -595,7 +588,6 @@ export default {
 
 	/**
 	 * Removes a report
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {object} reportId - the id of the report item we want to remove
 	 * @param {Function} cb - gets called with the result

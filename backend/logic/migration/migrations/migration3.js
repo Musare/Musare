@@ -4,7 +4,6 @@ import async from "async";
  * Migration 3
  *
  * Clean up station object from playlist2 property (replacing old playlist property with playlist2 property), adding a playMode property and removing genres/blacklisted genres
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

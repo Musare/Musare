@@ -19,7 +19,7 @@ lerna-debug.log
 
 # Backend
 backend/node_modules/
-backend/config/default.json
+backend/config/local*.json
 backend/build
 
 # Frontend
@@ -27,7 +27,6 @@ frontend/bundle-stats.json
 frontend/bundle-report.html
 frontend/node_modules/
 frontend/build/
-frontend/dist/config/default.json
 frontend/src/coverage/
 
 npm

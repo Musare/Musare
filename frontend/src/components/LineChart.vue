@@ -43,6 +43,7 @@ const props = defineProps({
 const chartStyles = computed(() => ({
 	position: "relative",
 	height: `${props.height}px`,
+	"max-height": `${props.height}px`,
 	...props.styles
 }));
 const chartOptions = computed(() => ({
@@ -56,13 +57,13 @@ const chartOptions = computed(() => ({
 <template>
 	<Line
 		:ref="`chart-${chartId}`"
-		:chart-options="chartOptions"
-		:chart-data="data"
+		:options="chartOptions"
+		:data="data"
 		:chart-id="chartId"
 		:dataset-id-key="datasetIdKey"
 		:plugins="plugins"
 		:css-classes="cssClasses"
-		:styles="chartStyles"
+		:style="chartStyles"
 		:width="width"
 		:height="height"
 	/>

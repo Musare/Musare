@@ -3,6 +3,7 @@ import { defineAsyncComponent, ref, onMounted, watch, nextTick } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useModalsStore } from "@/stores/modals";
@@ -21,18 +22,14 @@ const userAuthStore = useUserAuthStore();
 
 const localNightmode = ref(false);
 const isMobile = ref(false);
-const frontendDomain = ref("");
-const siteSettings = ref({
-	logo_white: "/assets/white_wordmark.png",
-	sitename: "Musare",
-	christmas: false,
-	registrationDisabled: false
-});
 const windowWidth = ref(0);
-const sidName = ref();
 const broadcastChannel = ref();
 
 const { socket } = useWebsocketsStore();
+
+const configStore = useConfigStore();
+const { cookie, sitename, registrationDisabled, christmas } =
+	storeToRefs(configStore);
 
 const { loggedIn, username } = storeToRefs(userAuthStore);
 const { logout, hasPermission } = userAuthStore;
@@ -68,15 +65,12 @@ watch(nightmode, value => {
 
 onMounted(async () => {
 	localNightmode.value = nightmode.value;
-	frontendDomain.value = await lofig.get("frontendDomain");
-	siteSettings.value = await lofig.get("siteSettings");
-	sidName.value = await lofig.get("cookie.SIDname");
 
 	await nextTick();
 	onResize();
 	window.addEventListener("resize", onResize);
 
-	broadcastChannel.value = new BroadcastChannel(`${sidName.value}.nightmode`);
+	broadcastChannel.value = new BroadcastChannel(`${cookie.value}.nightmode`);
 });
 </script>
 
@@ -88,11 +82,11 @@ onMounted(async () => {
 		<div class="nav-left">
 			<router-link v-if="!hideLogo" class="nav-item is-brand" to="/">
 				<img
-					v-if="siteSettings.sitename === 'Musare'"
-					:src="siteSettings.logo_white"
-					:alt="siteSettings.sitename || `Musare`"
+					v-if="sitename === 'Musare'"
+					src="/assets/white_wordmark.png"
+					:alt="sitename"
 				/>
-				<span v-else>{{ siteSettings.sitename }}</span>
+				<span v-else>{{ sitename }}</span>
 			</router-link>
 		</div>
 
@@ -142,6 +136,16 @@ onMounted(async () => {
 					class="nav-item"
 					:to="{
 						name: 'profile',
+						params: { username },
+						query: { tab: 'playlists' }
+					}"
+				>
+					Playlists
+				</router-link>
+				<router-link
+					class="nav-item"
+					:to="{
+						name: 'profile',
 						params: { username }
 					}"
 				>
@@ -155,7 +159,7 @@ onMounted(async () => {
 			<span v-if="!loggedIn && !hideLoggedOut" class="grouped">
 				<a class="nav-item" @click="openModal('login')">Login</a>
 				<a
-					v-if="!siteSettings.registrationDisabled"
+					v-if="!registrationDisabled"
 					class="nav-item"
 					@click="openModal('register')"
 					>Register</a
@@ -164,7 +168,7 @@ onMounted(async () => {
 		</div>
 
 		<christmas-lights
-			v-if="siteSettings.christmas"
+			v-if="christmas"
 			:lights="Math.min(Math.max(Math.floor(windowWidth / 175), 5), 15)"
 		/>
 	</nav>

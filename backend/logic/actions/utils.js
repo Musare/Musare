@@ -56,9 +56,26 @@ export default {
 			[
 				next => {
 					next(null, UtilsModule.moduleManager.modules[moduleName]);
+				},
+
+				({ jobStatistics, jobQueue }, next) => {
+					const taskMapFn = runningTask => ({
+						name: runningTask.job.name,
+						uniqueId: runningTask.job.uniqueId,
+						status: runningTask.job.status,
+						priority: runningTask.priority,
+						parentUniqueId: runningTask.job.parentJob?.uniqueId ?? "N/A",
+						parentName: runningTask.job.parentJob?.name ?? "N/A"
+					});
+					next(null, {
+						jobStatistics,
+						runningTasks: jobQueue.runningTasks.map(taskMapFn),
+						pausedTasks: jobQueue.pausedTasks.map(taskMapFn),
+						queuedTasks: jobQueue.queue.map(taskMapFn)
+					});
 				}
 			],
-			async (err, module) => {
+			async (err, data) => {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "GET_MODULE", `User ${session.userId} failed to get module. '${err}'`);
@@ -68,9 +85,7 @@ export default {
 					cb({
 						status: "success",
 						message: "Successfully got module info.",
-						data: {
-							jobStatistics: module.jobStatistics
-						}
+						data
 					});
 				}
 			}
@@ -98,7 +113,6 @@ export default {
 
 	/**
 	 * Get permissions
-	 *
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {string} stationId - optional, the station id
 	 * @param {Function} cb - gets called with the result

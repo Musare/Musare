@@ -2,6 +2,7 @@
 import { useRoute } from "vue-router";
 import { defineAsyncComponent, watch, onMounted } from "vue";
 import { storeToRefs } from "pinia";
+import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useStationStore } from "@/stores/station";
 import { useTabQueryHandler } from "@/composables/useTabQueryHandler";
@@ -11,15 +12,20 @@ const Users = defineAsyncComponent(
 	() => import("@/pages/Station/Sidebar/Users.vue")
 );
 const Request = defineAsyncComponent(() => import("@/components/Request.vue"));
+const History = defineAsyncComponent(
+	() => import("@/pages/Station/Sidebar/History.vue")
+);
 
 const route = useRoute();
+const configStore = useConfigStore();
 const userAuthStore = useUserAuthStore();
 const stationStore = useStationStore();
 
 const { tab, showTab } = useTabQueryHandler("queue");
 
+const { experimental } = storeToRefs(configStore);
 const { loggedIn } = storeToRefs(userAuthStore);
-const { station } = storeToRefs(stationStore);
+const { station, userCount } = storeToRefs(stationStore);
 const { hasPermission } = stationStore;
 
 const canRequest = (requireLogin = true) =>
@@ -37,14 +43,20 @@ watch(
 		if (tab.value === "request" && !canRequest()) showTab("queue");
 	}
 );
+watch(
+	() => experimental.value.station_history,
+	value => {
+		if (!value && tab.value === "history") showTab("queue");
+	}
+);
 
 onMounted(() => {
-	if (
-		route.query.tab === "queue" ||
-		route.query.tab === "users" ||
-		route.query.tab === "request"
-	)
-		tab.value = route.query.tab;
+	const validTabs = ["queue", "users"];
+	if (canRequest()) validTabs.push("request");
+	if (experimental.value.station_history) validTabs.push("history");
+	if (validTabs.find(tab => tab === route.query.tab))
+		showTab(route.query.tab);
+	else showTab("queue");
 });
 </script>
 
@@ -64,6 +76,7 @@ onMounted(() => {
 				@click="showTab('users')"
 			>
 				Users
+				<span class="tag">{{ Math.max(userCount, 1) }}</span>
 			</button>
 			<button
 				v-if="canRequest()"
@@ -81,14 +94,27 @@ onMounted(() => {
 			>
 				Request
 			</button>
+			<button
+				v-if="experimental.station_history"
+				class="button is-default"
+				:class="{ selected: tab === 'history' }"
+				@click="showTab('history')"
+			>
+				History
+			</button>
 		</div>
-		<Queue class="tab" v-show="tab === 'queue'" />
+		<Queue class="tab" v-show="tab === 'queue'" @on-change-tab="showTab" />
 		<Users class="tab" v-show="tab === 'users'" />
 		<Request
 			v-if="canRequest()"
 			v-show="tab === 'request'"
 			class="tab requests-tab"
 			sector="station"
+		/>
+		<History
+			v-if="experimental.station_history"
+			class="tab"
+			v-show="tab === 'history'"
 		/>
 	</div>
 </template>

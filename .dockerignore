@@ -1,0 +1,15 @@
+*
+
+!.git/config
+!.git/HEAD
+!.git/refs/
+
+!types/
+!backend/
+!frontend/
+
+*/node_modules/
+*/Dockerfile
+*/build/
+
+backend/config/local*.json

@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, watch, onMounted } from "vue";
+import { defineAsyncComponent, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useSearchYoutube } from "@/composables/useSearchYoutube";
 import { useSearchMusare } from "@/composables/useSearchMusare";
 import { useYoutubeDirect } from "@/composables/useYoutubeDirect";
+import { useSoundcloudDirect } from "@/composables/useSoundcloudDirect";
+import { useSpotifyDirect } from "@/composables/useSpotifyDirect";
+import { useConfigStore } from "@/stores/config";
 import { useEditPlaylistStore } from "@/stores/editPlaylist";
 
-const SongItem = defineAsyncComponent(
-	() => import("@/components/SongItem.vue")
+const MediaItem = defineAsyncComponent(
+	() => import("@/components/MediaItem.vue")
 );
 const SearchQueryItem = defineAsyncComponent(
 	() => import("@/components/SearchQueryItem.vue")
@@ -17,11 +20,10 @@ const props = defineProps({
 	modalUuid: { type: String, required: true }
 });
 
+const configStore = useConfigStore();
+const { sitename, experimental } = storeToRefs(configStore);
 const editPlaylistStore = useEditPlaylistStore({ modalUuid: props.modalUuid });
 const { playlist } = storeToRefs(editPlaylistStore);
-
-const sitename = ref("Musare");
-const experimentalDisableYoutubeSearch = ref(false);
 
 const {
 	youtubeSearch,
@@ -39,16 +41,26 @@ const {
 } = useSearchMusare();
 
 const { youtubeDirect, addToPlaylist } = useYoutubeDirect();
+const { soundcloudDirect, addToPlaylist: soundcloudAddToPlaylist } =
+	useSoundcloudDirect();
+const { spotifyDirect, addToPlaylist: spotifyAddToPlaylist } =
+	useSpotifyDirect();
 
 watch(
 	() => youtubeSearch.value.songs.results,
 	songs => {
 		songs.forEach((searchItem, index) =>
 			playlist.value.songs.find(song => {
-				if (song.youtubeId === searchItem.id)
+				if (
+					song.mediaSource === "youtube:" &&
+					song.mediaSource.split(":")[1] === searchItem.id
+				)
 					youtubeSearch.value.songs.results[index].isAddedToQueue =
 						true;
-				return song.youtubeId === searchItem.id;
+				return (
+					song.mediaSource === "youtube:" &&
+					song.mediaSource.split(":")[1] === searchItem.id
+				);
 			})
 		);
 	}
@@ -72,38 +84,36 @@ watch(
 		youtubeSearch.value.songs.results.forEach((searchItem, index) =>
 			playlist.value.songs.find(song => {
 				youtubeSearch.value.songs.results[index].isAddedToQueue = false;
-				if (song.youtubeId === searchItem.id)
+				if (
+					song.mediaSource === "youtube:" &&
+					song.mediaSource.split(":")[1] === searchItem.id
+				)
 					youtubeSearch.value.songs.results[index].isAddedToQueue =
 						true;
 
-				return song.youtubeId === searchItem.id;
+				return (
+					song.mediaSource === "youtube:" &&
+					song.mediaSource.split(":")[1] === searchItem.id
+				);
 			})
 		);
 		musareSearch.value.results.forEach((searchItem, index) =>
 			playlist.value.songs.find(song => {
 				musareSearch.value.results[index].isAddedToQueue = false;
-				if (song.youtubeId === searchItem.youtubeId)
+				if (
+					song.mediaSource === "youtube:" &&
+					song.mediaSource.split(":")[1] === searchItem.youtubeId
+				)
 					musareSearch.value.results[index].isAddedToQueue = true;
 
-				return song.youtubeId === searchItem.youtubeId;
+				return (
+					song.mediaSource === "youtube:" &&
+					song.mediaSource.split(":")[1] === searchItem.youtubeId
+				);
 			})
 		);
 	}
 );
-
-onMounted(async () => {
-	sitename.value = await lofig.get("siteSettings.sitename");
-
-	lofig.get("experimental").then(experimental => {
-		if (
-			experimental &&
-			Object.hasOwn(experimental, "disable_youtube_search") &&
-			experimental.disable_youtube_search
-		) {
-			experimentalDisableYoutubeSearch.value = true;
-		}
-	});
-});
 </script>
 
 <template>
@@ -131,7 +141,7 @@ onMounted(async () => {
 				v-if="musareSearch.results.length > 0"
 				class="song-query-results"
 			>
-				<song-item
+				<media-item
 					v-for="(song, index) in musareSearch.results"
 					:key="song._id"
 					:song="song"
@@ -156,7 +166,7 @@ onMounted(async () => {
 								@click="
 									addMusareSongToPlaylist(
 										playlist._id,
-										song.youtubeId,
+										song.mediaSource,
 										index
 									)
 								"
@@ -164,7 +174,7 @@ onMounted(async () => {
 							>
 						</transition>
 					</template>
-				</song-item>
+				</media-item>
 
 				<button
 					v-if="resultsLeftCount > 0"
@@ -196,7 +206,7 @@ onMounted(async () => {
 			</p>
 		</div>
 
-		<div v-if="!experimentalDisableYoutubeSearch">
+		<div v-if="!experimental.disable_youtube_search">
 			<label class="label"> Search for a song from YouTube </label>
 			<div class="control is-grouped input-with-button">
 				<p class="control is-expanded">
@@ -267,6 +277,52 @@ onMounted(async () => {
 				</button>
 			</div>
 		</div>
+
+		<template v-if="experimental.soundcloud">
+			<label class="label"> Add a SoundCloud song from a URL </label>
+			<div class="control is-grouped input-with-button">
+				<p class="control is-expanded">
+					<input
+						class="input"
+						type="text"
+						placeholder="Enter your SoundCloud song URL here..."
+						v-model="soundcloudDirect"
+						@keyup.enter="soundcloudAddToPlaylist(playlist._id)"
+					/>
+				</p>
+				<p class="control">
+					<a
+						class="button is-info"
+						@click="soundcloudAddToPlaylist(playlist._id)"
+						><i class="material-icons icon-with-button">add</i
+						>Add</a
+					>
+				</p>
+			</div>
+		</template>
+
+		<template v-if="experimental.spotify">
+			<label class="label"> Add a Spotify song from a URL </label>
+			<div class="control is-grouped input-with-button">
+				<p class="control is-expanded">
+					<input
+						class="input"
+						type="text"
+						placeholder="Enter your Spotify song URL here..."
+						v-model="spotifyDirect"
+						@keyup.enter="spotifyAddToPlaylist(playlist._id)"
+					/>
+				</p>
+				<p class="control">
+					<a
+						class="button is-info"
+						@click="spotifyAddToPlaylist(playlist._id)"
+						><i class="material-icons icon-with-button">add</i
+						>Add</a
+					>
+				</p>
+			</div>
+		</template>
 	</div>
 </template>
 

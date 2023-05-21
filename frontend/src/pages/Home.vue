@@ -13,6 +13,7 @@ import { storeToRefs } from "pinia";
 import { DraggableList } from "vue-draggable-list";
 import { useI18n } from "vue-i18n";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
 import keyboardShortcuts from "@/keyboardShortcuts";
@@ -32,10 +33,12 @@ const UserLink = defineAsyncComponent(
 
 const { t } = useI18n();
 
+const configStore = useConfigStore();
 const userAuthStore = useUserAuthStore();
 const route = useRoute();
 const router = useRouter();
 
+const { sitename, registrationDisabled } = storeToRefs(configStore);
 const { loggedIn, userId } = storeToRefs(userAuthStore);
 const { hasPermission } = userAuthStore;
 
@@ -43,11 +46,6 @@ const { socket } = useWebsocketsStore();
 
 const stations = ref([]);
 const searchQuery = ref("");
-const siteSettings = ref({
-	logo_white: "",
-	sitename: "Musare",
-	registrationDisabled: false
-});
 const orderOfFavoriteStations = ref([]);
 const handledLoginRegisterRedirect = ref(false);
 
@@ -168,8 +166,6 @@ watch(
 );
 
 onMounted(async () => {
-	siteSettings.value = await lofig.get("siteSettings");
-
 	if (route.query.searchQuery)
 		searchQuery.value = JSON.stringify(route.query.query);
 
@@ -381,14 +377,12 @@ onBeforeUnmount(() => {
 				<div class="content-container">
 					<div class="content">
 						<img
-							v-if="siteSettings.sitename === 'Musare'"
-							:src="siteSettings.logo_white"
-							:alt="siteSettings.sitename || `Musare`"
+							v-if="sitename === 'Musare'"
+							src="/assets/white_wordmark.png"
+							:alt="sitename"
 							class="logo"
 						/>
-						<span v-else class="logo">{{
-							siteSettings.sitename
-						}}</span>
+						<span v-else class="logo">{{ sitename }}</span>
 						<div v-if="!loggedIn" class="buttons">
 							<button
 								class="button login"
@@ -397,7 +391,7 @@ onBeforeUnmount(() => {
 								{{ t("Login") }}
 							</button>
 							<button
-								v-if="!siteSettings.registrationDisabled"
+								v-if="!registrationDisabled"
 								class="button register"
 								@click="openModal('register')"
 							>
@@ -534,12 +528,8 @@ onBeforeUnmount(() => {
 														element.type ===
 														'official'
 													"
-													:title="
-														siteSettings.sitename
-													"
-													>{{
-														siteSettings.sitename
-													}}</span
+													:title="sitename"
+													>{{ sitename }}</span
 												>
 												<user-link
 													v-else
@@ -560,11 +550,7 @@ onBeforeUnmount(() => {
 												>{{ t("Icons.Home") }}</i
 											>
 											<i
-												v-if="
-													element.type ===
-														'community' &&
-													isDj(element)
-												"
+												v-if="isDj(element)"
 												class="djIcon material-icons"
 												:content="t('UserIsDj')"
 												v-tippy="{ theme: 'info' }"
@@ -810,8 +796,8 @@ onBeforeUnmount(() => {
 									<span class="host">
 										<span
 											v-if="station.type === 'official'"
-											:title="siteSettings.sitename"
-											>{{ siteSettings.sitename }}</span
+											:title="sitename"
+											>{{ sitename }}</span
 										>
 										<user-link
 											v-else
@@ -831,10 +817,7 @@ onBeforeUnmount(() => {
 										>{{ t("Icons.Home") }}</i
 									>
 									<i
-										v-if="
-											station.type === 'community' &&
-											isDj(station)
-										"
+										v-if="isDj(station)"
 										class="djIcon material-icons"
 										:content="t('UserIsDj')"
 										v-tippy="{ theme: 'info' }"

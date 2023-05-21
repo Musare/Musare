@@ -29,7 +29,6 @@ CacheModule.runJob("SUB", {
 export default {
 	/**
 	 * Gets data requests, used in the admin users page by the AdvancedTable component
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param page - the page
 	 * @param pageSize - the size per page
@@ -88,7 +87,6 @@ export default {
 
 	/**
 	 * Resolves a data request
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} dataRequestId - the id of the data request to resolve
 	 * @param {boolean} resolved - whether to set to resolved to true or false

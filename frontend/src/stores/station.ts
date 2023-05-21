@@ -1,9 +1,21 @@
-import { defineStore } from "pinia";
+import { defineStore, storeToRefs } from "pinia";
 import { Playlist } from "@/types/playlist";
 import { Song, CurrentSong } from "@/types/song";
 import { Station } from "@/types/station";
 import { User } from "@/types/user";
+import { StationHistory } from "@/types/stationHistory";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useUserPreferencesStore } from "@/stores/userPreferences";
+import { useConfigStore } from "@/stores/config";
+import { useSortablePlaylists } from "@/composables/useSortablePlaylists";
+
+const userPreferencesStore = useUserPreferencesStore();
+const configStore = useConfigStore();
+
+const { autoSkipDisliked } = storeToRefs(userPreferencesStore);
+const { experimental } = storeToRefs(configStore);
+
+const { playlists } = useSortablePlaylists();
 
 export const useStationStore = defineStore("station", {
 	state: (): {
@@ -25,6 +37,7 @@ export const useStationStore = defineStore("station", {
 		blacklist: Playlist[];
 		mediaModalPlayingAudio: boolean;
 		permissions: Record<string, boolean>;
+		history: StationHistory[];
 	} => ({
 		station: {},
 		autoRequest: [],
@@ -43,8 +56,59 @@ export const useStationStore = defineStore("station", {
 		autofill: [],
 		blacklist: [],
 		mediaModalPlayingAudio: false,
-		permissions: {}
+		permissions: {},
+		history: []
 	}),
+	getters: {
+		dislikedPlaylist() {
+			return playlists.value.find(
+				playlist => playlist.type === "user-disliked"
+			);
+		},
+		// List of media sources that will not be allowed to be autorequested
+		autorequestExcludedMediaSources() {
+			const mediaSources = new Set();
+
+			// Exclude the current song
+			if (this.currentSong && this.currentSong.mediaSource)
+				mediaSources.add(this.currentSong.mediaSource);
+
+			// Exclude songs in the queue
+			if (this.songsList) {
+				this.songsList.forEach(song => {
+					mediaSources.add(song.mediaSource);
+				});
+			}
+
+			// If auto skip disliked preference is enabled, exclude all songs in the disliked playlist
+			if (autoSkipDisliked.value && this.dislikedPlaylist) {
+				this.dislikedPlaylist.songs.forEach(song => {
+					mediaSources.add(song.mediaSource);
+				});
+			}
+
+			// If no history exists, just stop here
+			if (!this.history) Array.from(mediaSources);
+
+			const {
+				autorequestDisallowRecentlyPlayedEnabled,
+				autorequestDisallowRecentlyPlayedNumber
+			} = this.station.requests;
+
+			// If the station is set to disallow recently played songs, and station history is enabled, exclude the last X history songs
+			if (
+				autorequestDisallowRecentlyPlayedEnabled &&
+				experimental.value.station_history
+			) {
+				this.history.forEach((historyItem, index) => {
+					if (index < autorequestDisallowRecentlyPlayedNumber)
+						mediaSources.add(historyItem.payload.song.mediaSource);
+				});
+			}
+
+			return Array.from(mediaSources);
+		}
+	},
 	actions: {
 		joinStation(station) {
 			this.station = { ...station };
@@ -93,7 +157,7 @@ export const useStationStore = defineStore("station", {
 		repositionSongInList(song) {
 			if (
 				this.songsList[song.newIndex] &&
-				this.songsList[song.newIndex].youtubeId === song.youtubeId
+				this.songsList[song.newIndex].mediaSource === song.mediaSource
 			)
 				return;
 
@@ -141,8 +205,15 @@ export const useStationStore = defineStore("station", {
 				this.currentSong.skipVotesCurrent = skipVotesCurrent;
 			this.currentSong.voted = voted;
 		},
+		addAutorequestPlaylists(playlists) {
+			playlists.forEach(playlist => {
+				this.autoRequest.push(playlist);
+			});
+			this.updateAutorequestLocalStorage();
+		},
 		addPlaylistToAutoRequest(playlist) {
 			this.autoRequest.push(playlist);
+			this.updateAutorequestLocalStorage();
 		},
 		removePlaylistFromAutoRequest(playlistId) {
 			this.autoRequest.forEach((playlist, index) => {
@@ -150,6 +221,18 @@ export const useStationStore = defineStore("station", {
 					this.autoRequest.splice(index, 1);
 				}
 			});
+			this.updateAutorequestLocalStorage();
+		},
+		updateAutorequestLocalStorage() {
+			const key = `autorequest-${this.station._id}`;
+			const playlistIds = Array.from(
+				new Set(this.autoRequest.map(playlist => playlist._id))
+			);
+			const value = {
+				updatedAt: new Date(),
+				playlistIds
+			};
+			localStorage.setItem(key, JSON.stringify(value));
 		},
 		updateMediaModalPlayingAudio(mediaModalPlayingAudio) {
 			this.mediaModalPlayingAudio = mediaModalPlayingAudio;
@@ -179,6 +262,12 @@ export const useStationStore = defineStore("station", {
 					this.station.djs.splice(index, 1);
 				}
 			});
+		},
+		setHistory(history: StationHistory[]) {
+			this.history = history;
+		},
+		addHistoryItem(historyItem: StationHistory) {
+			this.history.unshift(historyItem);
 		}
 	}
 });

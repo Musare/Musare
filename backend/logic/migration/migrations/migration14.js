@@ -4,7 +4,6 @@ import async from "async";
  * Migration 14
  *
  * Migration for removing some data from stations
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

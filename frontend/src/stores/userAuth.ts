@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import Toast from "toasters";
 import validation from "@/validation";
 import { useWebsocketsStore } from "@/stores/websockets";
+import { useConfigStore } from "@/stores/config";
 
 export const useUserAuthStore = defineStore("userAuth", {
 	state: (): {
@@ -97,6 +98,7 @@ export const useUserAuthStore = defineStore("userAuth", {
 					);
 				else {
 					const { socket } = useWebsocketsStore();
+					const configStore = useConfigStore();
 					socket.dispatch(
 						"users.register",
 						username,
@@ -106,29 +108,27 @@ export const useUserAuthStore = defineStore("userAuth", {
 						res => {
 							if (res.status === "success") {
 								if (res.SID) {
-									return lofig.get("cookie").then(cookie => {
-										const date = new Date();
-										date.setTime(
-											new Date().getTime() +
-												2 * 365 * 24 * 60 * 60 * 1000
-										);
+									const date = new Date();
+									date.setTime(
+										new Date().getTime() +
+											2 * 365 * 24 * 60 * 60 * 1000
+									);
 
-										const secure = cookie.secure
-											? "secure=true; "
-											: "";
+									const secure = configStore.urls.secure
+										? "secure=true; "
+										: "";
 
-										let domain = "";
-										if (cookie.domain !== "localhost")
-											domain = ` domain=${cookie.domain};`;
+									let domain = "";
+									if (configStore.urls.host !== "localhost")
+										domain = ` domain=${configStore.urls.host};`;
 
-										document.cookie = `${cookie.SIDname}=${
-											res.SID
-										}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
+									document.cookie = `${configStore.cookie}=${
+										res.SID
+									}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
 
-										return resolve({
-											status: "success",
-											message: "Account registered!"
-										});
+									return resolve({
+										status: "success",
+										message: "Account registered!"
 									});
 								}
 
@@ -146,35 +146,35 @@ export const useUserAuthStore = defineStore("userAuth", {
 				const { email, password } = user;
 
 				const { socket } = useWebsocketsStore();
+				const configStore = useConfigStore();
 				socket.dispatch("users.login", email, password, res => {
 					if (res.status === "success") {
-						return lofig.get("cookie").then(cookie => {
-							const date = new Date();
-							date.setTime(
-								new Date().getTime() +
-									2 * 365 * 24 * 60 * 60 * 1000
-							);
+						const date = new Date();
+						date.setTime(
+							new Date().getTime() + 2 * 365 * 24 * 60 * 60 * 1000
+						);
 
-							const secure = cookie.secure ? "secure=true; " : "";
+						const secure = configStore.urls.secure
+							? "secure=true; "
+							: "";
 
-							let domain = "";
-							if (cookie.domain !== "localhost")
-								domain = ` domain=${cookie.domain};`;
+						let domain = "";
+						if (configStore.urls.host !== "localhost")
+							domain = ` domain=${configStore.urls.host};`;
 
-							document.cookie = `${cookie.SIDname}=${
-								res.data.SID
-							}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
+						document.cookie = `${configStore.cookie}=${
+							res.data.SID
+						}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
 
-							const bc = new BroadcastChannel(
-								`${cookie.SIDname}.user_login`
-							);
-							bc.postMessage(true);
-							bc.close();
+						const bc = new BroadcastChannel(
+							`${configStore.cookie}.user_login`
+						);
+						bc.postMessage(true);
+						bc.close();
 
-							return resolve({
-								status: "success",
-								message: "Logged in!"
-							});
+						return resolve({
+							status: "success",
+							message: "Logged in!"
 						});
 					}
 
@@ -187,12 +187,10 @@ export const useUserAuthStore = defineStore("userAuth", {
 				const { socket } = useWebsocketsStore();
 				socket.dispatch("users.logout", res => {
 					if (res.status === "success") {
-						return resolve(
-							lofig.get("cookie").then(cookie => {
-								document.cookie = `${cookie.SIDname}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
-								return window.location.reload();
-							})
-						);
+						const configStore = useConfigStore();
+						document.cookie = `${configStore.cookie}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+						window.location.reload();
+						return resolve(true);
 					}
 					new Toast(res.message);
 					return reject(new Error(res.message));
@@ -302,6 +300,31 @@ export const useUserAuthStore = defineStore("userAuth", {
 					resolve(this.permissions);
 				});
 			});
+		},
+		resetCookieExpiration() {
+			const cookies = {};
+			document.cookie.split("; ").forEach(cookie => {
+				cookies[cookie.substring(0, cookie.indexOf("="))] =
+					cookie.substring(cookie.indexOf("=") + 1, cookie.length);
+			});
+
+			const configStore = useConfigStore();
+			const SIDName = configStore.cookie;
+
+			if (!cookies[SIDName]) return;
+
+			const date = new Date();
+			date.setTime(new Date().getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+
+			const secure = configStore.urls.secure ? "secure=true; " : "";
+
+			let domain = "";
+			if (configStore.urls.host !== "localhost")
+				domain = ` domain=${configStore.urls.host};`;
+
+			document.cookie = `${configStore.cookie}=${
+				cookies[SIDName]
+			}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
 		}
 	}
 });
