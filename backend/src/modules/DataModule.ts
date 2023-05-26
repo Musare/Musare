@@ -39,6 +39,15 @@ export default class DataModule extends BaseModule {
 
 		await mongoose.connect(mongoUrl);
 
+		mongoose.set({
+			runValidators: true,
+			sanitizeFilter: true,
+			strict: "throw",
+			strictQuery: "throw"
+		});
+
+		mongoose.SchemaTypes.String.set("trim", true);
+
 		await this.loadModels();
 
 		// @ts-ignore
