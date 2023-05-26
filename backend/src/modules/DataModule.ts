@@ -1,6 +1,7 @@
 import config from "config";
 // import { createClient, RedisClientType } from "redis";
 import mongoose, {
+	Connection,
 	MongooseDefaultQueryMiddleware,
 	MongooseDistinctQueryMiddleware,
 	MongooseQueryOrDocumentMiddleware
@@ -12,6 +13,8 @@ import { Models, Schemas } from "../types/Models";
 
 export default class DataModule extends BaseModule {
 	private models?: Models;
+
+	private mongoConnection?: Connection;
 
 	//	private redisClient?: RedisClientType;
 
@@ -37,14 +40,14 @@ export default class DataModule extends BaseModule {
 		}>("mongo");
 		const mongoUrl = `mongodb://${user}:${password}@${host}:${port}/${database}`;
 
-		await mongoose.connect(mongoUrl);
+		this.mongoConnection = await mongoose
+			.createConnection(mongoUrl)
+			.asPromise();
 
-		mongoose.set({
-			runValidators: true,
-			sanitizeFilter: true,
-			strict: "throw",
-			strictQuery: "throw"
-		});
+		this.mongoConnection.set("runValidators", true);
+		this.mongoConnection.set("sanitizeFilter", true);
+		this.mongoConnection.set("strict", "throw");
+		this.mongoConnection.set("strictQuery", "throw");
 
 		mongoose.SchemaTypes.String.set("trim", true);
 
@@ -84,7 +87,7 @@ export default class DataModule extends BaseModule {
 	public override async shutdown() {
 		await super.shutdown();
 		//		if (this.redisClient) await this.redisClient.quit();
-		await mongoose.disconnect();
+		if (this.mongoConnection) await this.mongoConnection.close();
 	}
 
 	/**
@@ -96,6 +99,8 @@ export default class DataModule extends BaseModule {
 	private async loadModel<ModelName extends keyof Models>(
 		modelName: ModelName
 	) {
+		if (!this.mongoConnection) throw new Error("Mongo is not available");
+
 		const { schema }: { schema: Schemas[ModelName] } = await import(
 			`../schemas/${modelName.toString()}`
 		);
@@ -131,7 +136,7 @@ export default class DataModule extends BaseModule {
 			});
 		});
 
-		return mongoose.model(modelName.toString(), schema);
+		return this.mongoConnection.model(modelName.toString(), schema);
 	}
 
 	/**
