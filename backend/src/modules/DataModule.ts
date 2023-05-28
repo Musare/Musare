@@ -58,6 +58,8 @@ export default class DataModule extends BaseModule {
 
 		await this.loadModels();
 
+		await this.syncModelIndexes();
+
 		// @ts-ignore
 		//        this.redisClient = createClient({ ...config.get("redis") });
 		//
@@ -155,6 +157,17 @@ export default class DataModule extends BaseModule {
 			news: await this.loadModel("news"),
 			station: await this.loadModel("station")
 		};
+	}
+
+	/**
+	 * syncModelIndexes - Sync indexes for all models
+	 */
+	private async syncModelIndexes() {
+		if (!this.models) throw new Error("Models not loaded");
+
+		await Promise.all(
+			Object.values(this.models).map(model => model.syncIndexes())
+		);
 	}
 
 	/**
