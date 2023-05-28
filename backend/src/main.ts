@@ -46,9 +46,32 @@ global.rs = () => {
 
 setTimeout(async () => {
 	const Model = await jobQueue.runJob("data", "getModel", { name: "abc" });
-	console.log("Model", Model);
+	// console.log("Model", Model);
 	const abcs = await Model.find({});
 	console.log("Abcs", abcs);
+	console.log(
+		"getData",
+		await Model.getData({
+			page: 1,
+			pageSize: 3,
+			properties: [
+				"title",
+				"markdown",
+				"status",
+				"showToNewUsers",
+				"createdBy"
+			],
+			sort: {},
+			queries: [
+				{
+					data: "v7",
+					filter: { property: "title" },
+					filterType: "contains"
+				}
+			],
+			operator: "and"
+		})
+	);
 
 	Model.create({
 		name: "Test name",

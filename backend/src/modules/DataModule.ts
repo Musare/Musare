@@ -10,6 +10,7 @@ import JobContext from "../JobContext";
 import BaseModule, { ModuleStatus } from "../BaseModule";
 import { UniqueMethods } from "../types/Modules";
 import { Models, Schemas } from "../types/Models";
+import getDataPlugin from "../schemas/plugins/getData";
 
 export default class DataModule extends BaseModule {
 	private models?: Models;
@@ -50,6 +51,10 @@ export default class DataModule extends BaseModule {
 		this.mongoConnection.set("strictQuery", "throw");
 
 		mongoose.SchemaTypes.String.set("trim", true);
+
+		this.mongoConnection.plugin(getDataPlugin, {
+			tags: ["useGetDataPlugin"]
+		});
 
 		await this.loadModels();
 

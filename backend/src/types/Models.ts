@@ -1,15 +1,21 @@
-import { Model, InferSchemaType, Schema } from "mongoose";
+import { Model, Schema } from "mongoose";
 import { AbcSchema } from "../schemas/abc";
-import { NewsSchema } from "../schemas/news";
+import { NewsQueryHelpers, NewsSchema } from "../schemas/news";
 import { StationSchema } from "../schemas/station";
 
 export type Schemas = {
 	abc: Schema<AbcSchema>;
-	news: Schema<NewsSchema>;
+	news: Schema<
+		NewsSchema,
+		Model<NewsSchema, NewsQueryHelpers>,
+		{},
+		NewsQueryHelpers
+	>;
 	station: Schema<StationSchema>;
 };
 
-export type Models = Record<
-	keyof Schemas,
-	Model<InferSchemaType<Schemas[keyof Schemas]>>
->;
+export type Models = {
+	abc: Model<AbcSchema>;
+	news: Model<NewsSchema, NewsQueryHelpers>;
+	station: Model<StationSchema>;
+};

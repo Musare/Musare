@@ -90,6 +90,7 @@ export const schema = new Schema<
 				if (showToNewUsers) return query.where({ showToNewUsers });
 				return query;
 			}
-		}
+		},
+		pluginTags: ["useGetDataPlugin"]
 	}
 );
