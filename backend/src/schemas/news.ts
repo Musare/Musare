@@ -6,6 +6,7 @@ import {
 	SchemaTypes,
 	Types
 } from "mongoose";
+import { GetData } from "./plugins/getData";
 
 export enum NewsStatus {
 	DRAFT = "draft",
@@ -48,12 +49,11 @@ export interface NewsQueryHelpers {
 	>;
 }
 
-export const schema = new Schema<
-	NewsSchema,
-	Model<NewsSchema, NewsQueryHelpers>,
-	{},
-	NewsQueryHelpers
->(
+export interface NewsModel
+	extends Model<NewsSchema, NewsQueryHelpers>,
+		GetData {}
+
+export const schema = new Schema<NewsSchema, NewsModel, {}, NewsQueryHelpers>(
 	{
 		title: {
 			type: SchemaTypes.String,
@@ -94,3 +94,5 @@ export const schema = new Schema<
 		pluginTags: ["useGetDataPlugin"]
 	}
 );
+
+export type NewsSchemaType = typeof schema;

@@ -27,26 +27,35 @@ export interface GetDataSchemaOptions extends SchemaOptions {
 	};
 }
 
+export interface GetData {
+	getData(payload: {
+		page: number;
+		pageSize: number;
+		properties: string[];
+		sort: Record<string, "ascending" | "descending">;
+		queries: {
+			data: any;
+			filter: {
+				property: string;
+			};
+			filterType: FilterType;
+		}[];
+		operator: "and" | "or" | "nor";
+	}): Promise<{
+		data: any[];
+		count: number;
+	}>;
+}
+
 export default function getDataPlugin(
 	schema: Schema,
 	options: GetDataSchemaOptions
 ) {
 	schema.static(
 		"getData",
-		async function getData(payload: {
-			page: number;
-			pageSize: number;
-			properties: string[];
-			sort: Record<string, "ascending" | "descending">;
-			queries: {
-				data: any;
-				filter: {
-					property: string;
-				};
-				filterType: FilterType;
-			}[];
-			operator: "and" | "or" | "nor";
-		}) {
+		async function getData(
+			payload: Parameters<GetData["getData"]>[0]
+		): ReturnType<GetData["getData"]> {
 			const { page, pageSize, properties, sort, queries, operator } =
 				payload;
 

@@ -1,21 +1,15 @@
-import { Model, Schema } from "mongoose";
-import { AbcSchema } from "../schemas/abc";
-import { NewsQueryHelpers, NewsSchema } from "../schemas/news";
-import { StationSchema } from "../schemas/station";
+import { AbcModel, AbcSchemaType } from "../schemas/abc";
+import { NewsModel, NewsSchemaType } from "../schemas/news";
+import { StationModel, StationSchemaType } from "../schemas/station";
 
 export type Schemas = {
-	abc: Schema<AbcSchema>;
-	news: Schema<
-		NewsSchema,
-		Model<NewsSchema, NewsQueryHelpers>,
-		{},
-		NewsQueryHelpers
-	>;
-	station: Schema<StationSchema>;
+	abc: AbcSchemaType;
+	news: NewsSchemaType;
+	station: StationSchemaType;
 };
 
 export type Models = {
-	abc: Model<AbcSchema>;
-	news: Model<NewsSchema, NewsQueryHelpers>;
-	station: Model<StationSchema>;
+	abc: AbcModel;
+	news: NewsModel;
+	station: StationModel;
 };

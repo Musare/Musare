@@ -1,4 +1,5 @@
-import { Schema, SchemaTypes, Types } from "mongoose";
+import { Model, Schema, SchemaTypes, Types } from "mongoose";
+import { GetData } from "./plugins/getData";
 
 export enum StationType {
 	OFFICIAL = "official",
@@ -60,7 +61,9 @@ export interface StationSchema {
 	};
 }
 
-export const schema = new Schema<StationSchema>(
+export interface StationModel extends Model<StationSchema>, GetData {}
+
+export const schema = new Schema<StationSchema, StationModel>(
 	{
 		type: {
 			type: SchemaTypes.String,
@@ -171,3 +174,5 @@ export const schema = new Schema<StationSchema>(
 	},
 	{ pluginTags: ["useGetDataPlugin"] }
 );
+
+export type StationSchemaType = typeof schema;

@@ -110,7 +110,7 @@ export default class DataModule extends BaseModule {
 	 */
 	private async loadModel<ModelName extends keyof Models>(
 		modelName: ModelName
-	) {
+	): Promise<Models[ModelName]> {
 		if (!this.mongoConnection) throw new Error("Mongo is not available");
 
 		const { schema }: { schema: Schemas[ModelName] } = await import(

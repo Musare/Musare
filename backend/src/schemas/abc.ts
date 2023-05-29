@@ -1,4 +1,4 @@
-import { Schema, SchemaTypes, Types } from "mongoose";
+import { Model, Schema, SchemaTypes, Types } from "mongoose";
 
 export interface AbcSchema {
 	name: string;
@@ -11,7 +11,9 @@ export interface AbcSchema {
 	aNumber: number;
 }
 
-export const schema = new Schema<AbcSchema>({
+export type AbcModel = Model<AbcSchema>;
+
+export const schema = new Schema<AbcSchema, AbcModel>({
 	name: {
 		type: SchemaTypes.String,
 		required: true
@@ -34,3 +36,5 @@ export const schema = new Schema<AbcSchema>({
 	},
 	aNumber: { type: SchemaTypes.Number, required: true }
 });
+
+export type AbcSchemaType = typeof schema;
