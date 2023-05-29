@@ -1,4 +1,5 @@
 import DataModule, { DataModuleJobs } from "../modules/DataModule";
+import EventsModule, { EventsModuleJobs } from "../modules/EventsModule";
 import StationModule, { StationModuleJobs } from "../modules/StationModule";
 import BaseModule from "../BaseModule";
 
@@ -12,6 +13,9 @@ export type Jobs = {
 	data: {
 		[Property in keyof DataModuleJobs]: DataModuleJobs[Property];
 	};
+	events: {
+		[Property in keyof EventsModuleJobs]: EventsModuleJobs[Property];
+	};
 	stations: {
 		[Property in keyof StationModuleJobs]: StationModuleJobs[Property];
 	};
@@ -19,6 +23,7 @@ export type Jobs = {
 
 export type Modules = {
 	data: DataModule & typeof BaseModule;
+	events: EventsModule & typeof BaseModule;
 	stations: StationModule & typeof BaseModule;
 };
 

@@ -73,11 +73,37 @@ setTimeout(async () => {
 		})
 	);
 
-	Model.create({
-		name: "Test name",
-		someNumbers: [1, 2, 3, 4],
-		songs: [],
-		aNumber: 941
+	// Model.create({
+	// 	name: "Test name",
+	// 	someNumbers: [1, 2, 3, 4],
+	// 	songs: [],
+	// 	aNumber: 941
+	// });
+
+	// Events schedule (was notifications)
+	const now = Date.now();
+	await jobQueue.runJob("events", "schedule", {
+		channel: "test",
+		time: 30000
+	});
+	await jobQueue.runJob("events", "subscribe", {
+		channel: "test",
+		type: "schedule",
+		callback: () => {
+			console.log(`SCHEDULED: ${now} :: ${Date.now()}`);
+		}
+	});
+
+	// Events (was cache pub/sub)
+	await jobQueue.runJob("events", "subscribe", {
+		channel: "test",
+		callback: value => {
+			console.log(`PUBLISHED: ${value}`);
+		}
+	});
+	await jobQueue.runJob("events", "publish", {
+		channel: "test",
+		value: "a value!"
 	});
 }, 100);
 
