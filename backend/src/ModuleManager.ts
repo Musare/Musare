@@ -38,7 +38,8 @@ export default class ModuleManager {
 		const mapper = {
 			data: "DataModule",
 			events: "EventsModule",
-			stations: "StationModule"
+			stations: "StationModule",
+			websocket: "WebSocketModule"
 		};
 		const { default: Module }: { default: ModuleClass<Modules[T]> } =
 			await import(`./modules/${mapper[moduleName]}`);
@@ -54,7 +55,8 @@ export default class ModuleManager {
 		this.modules = {
 			data: await this.loadModule("data"),
 			events: await this.loadModule("events"),
-			stations: await this.loadModule("stations")
+			stations: await this.loadModule("stations"),
+			websocket: await this.loadModule("websocket")
 		};
 	}
 

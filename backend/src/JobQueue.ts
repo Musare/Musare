@@ -98,7 +98,7 @@ export default class JobQueue {
 				payload,
 				{ resolve, reject },
 				options
-			);
+			).catch(reject);
 		});
 	}
 
