@@ -6,11 +6,14 @@ import mongoose, {
 	MongooseDistinctQueryMiddleware,
 	MongooseQueryOrDocumentMiddleware
 } from "mongoose";
+import { readdir } from "fs/promises";
+import path from "path";
 import JobContext from "../JobContext";
 import BaseModule, { ModuleStatus } from "../BaseModule";
 import { UniqueMethods } from "../types/Modules";
 import { Models, Schemas } from "../types/Models";
 import getDataPlugin from "../schemas/plugins/getData";
+import Migration from "../Migration";
 
 export default class DataModule extends BaseModule {
 	private models?: Models;
@@ -55,6 +58,8 @@ export default class DataModule extends BaseModule {
 		this.mongoConnection.plugin(getDataPlugin, {
 			tags: ["useGetDataPlugin"]
 		});
+
+		await this.runMigrations();
 
 		await this.loadModels();
 
@@ -187,6 +192,32 @@ export default class DataModule extends BaseModule {
 		const name = typeof payload === "object" ? payload.name : payload;
 
 		return this.models[name];
+	}
+
+	private async loadMigrations() {
+		if (!this.mongoConnection) throw new Error("Mongo is not available");
+
+		const migrations = await readdir(
+			path.resolve(__dirname, "../schemas/migrations/")
+		);
+
+		return Promise.all(
+			migrations.map(async migrationFile => {
+				const { default: Migrate }: { default: typeof Migration } =
+					await import(`../schemas/migrations/${migrationFile}`);
+				return new Migrate(this.mongoConnection as Connection);
+			})
+		);
+	}
+
+	private async runMigrations() {
+		const migrations = await this.loadMigrations();
+
+		for (let i = 0; i < migrations.length; i += 1) {
+			const migration = migrations[i];
+			// eslint-disable-next-line no-await-in-loop
+			await migration.up();
+		}
 	}
 }
 
