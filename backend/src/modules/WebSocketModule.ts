@@ -14,6 +14,8 @@ export default class WebSocketModule extends BaseModule {
 
 	private jobQueue: JobQueue;
 
+	private keepAliveInterval?: NodeJS.Timer;
+
 	/**
 	 * WebSocket Module
 	 */
@@ -45,7 +47,37 @@ export default class WebSocketModule extends BaseModule {
 				this.handleConnection(socket, request)
 		);
 
+		this.keepAliveInterval = setInterval(() => this.keepAlive(), 45000);
+
+		this.wsServer.on("close", async () =>
+			clearInterval(this.keepAliveInterval)
+		);
+
 		await super.started();
+	}
+
+	/**
+	 * keepAlive - Ping open clients and terminate closed
+	 */
+	private async keepAlive() {
+		if (!this.wsServer) return;
+
+		for await (const clients of this.wsServer.clients.entries()) {
+			await Promise.all(
+				clients.map(async socket => {
+					switch (socket.readyState) {
+						case socket.OPEN:
+							socket.ping();
+							break;
+						case socket.CLOSED:
+							socket.terminate();
+							break;
+						default:
+							break;
+					}
+				})
+			);
+		}
 	}
 
 	/**
