@@ -7,6 +7,7 @@ import {
 	Types
 } from "mongoose";
 import { GetData } from "./plugins/getData";
+import { BaseSchema, TimestampsSchema } from "../types/Schemas";
 
 export enum NewsStatus {
 	DRAFT = "draft",
@@ -14,7 +15,7 @@ export enum NewsStatus {
 	ARCHIVED = "archived"
 }
 
-export interface NewsSchema {
+export interface NewsSchema extends BaseSchema, TimestampsSchema {
 	title: string;
 	markdown: string;
 	status: NewsStatus;
@@ -80,6 +81,8 @@ export const schema = new Schema<NewsSchema, NewsModel, {}, NewsQueryHelpers>(
 		}
 	},
 	{
+		// @ts-ignore
+		documentVersion: 3,
 		timestamps: true,
 		query: {
 			published() {

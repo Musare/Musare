@@ -11,7 +11,9 @@ import path from "path";
 import JobContext from "../JobContext";
 import BaseModule, { ModuleStatus } from "../BaseModule";
 import { UniqueMethods } from "../types/Modules";
-import { Models, Schemas } from "../types/Models";
+import { Models } from "../types/Models";
+import { Schemas } from "../types/Schemas";
+import documentVersionPlugin from "../schemas/plugins/documentVersion";
 import getDataPlugin from "../schemas/plugins/getData";
 import Migration from "../Migration";
 
@@ -55,6 +57,7 @@ export default class DataModule extends BaseModule {
 
 		mongoose.SchemaTypes.String.set("trim", true);
 
+		this.mongoConnection.plugin(documentVersionPlugin);
 		this.mongoConnection.plugin(getDataPlugin, {
 			tags: ["useGetDataPlugin"]
 		});

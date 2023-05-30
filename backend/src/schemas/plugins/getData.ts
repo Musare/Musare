@@ -47,10 +47,7 @@ export interface GetData {
 	}>;
 }
 
-export default function getDataPlugin(
-	schema: Schema,
-	options: GetDataSchemaOptions
-) {
+export default function getDataPlugin(schema: Schema) {
 	schema.static(
 		"getData",
 		async function getData(
@@ -64,7 +61,7 @@ export default function getDataPlugin(
 				specialFilters,
 				specialProperties,
 				specialQueries
-			} = options.getData ?? {};
+			} = schema.options?.getData ?? {};
 
 			const pipeline: PipelineStage[] = [];
 
