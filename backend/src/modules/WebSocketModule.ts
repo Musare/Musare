@@ -92,6 +92,20 @@ export default class WebSocketModule extends BaseModule {
 			return;
 		}
 
+		socket.log({ type: "debug", message: "WebSocket #ID connected" });
+
+		socket.on("error", error =>
+			socket.log({
+				type: "error",
+				message: error.message,
+				data: { error }
+			})
+		);
+
+		socket.on("close", () =>
+			socket.log({ type: "debug", message: "WebSocket #ID closed" })
+		);
+
 		const readyData = {
 			config: {
 				cookie: config.get("cookie"),
