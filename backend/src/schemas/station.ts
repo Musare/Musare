@@ -1,6 +1,6 @@
 import { Model, Schema, SchemaTypes, Types } from "mongoose";
 import { GetData } from "./plugins/getData";
-import { BaseSchema, TimestampsSchema } from "../types/Schemas";
+import { BaseSchema } from "../types/Schemas";
 
 export enum StationType {
 	OFFICIAL = "official",
@@ -31,7 +31,7 @@ export enum StationAutofillMode {
 	SEQUENTIAL = "sequential"
 }
 
-export interface StationSchema extends BaseSchema, TimestampsSchema {
+export interface StationSchema extends BaseSchema {
 	type: StationType;
 	name: string;
 	displayName: string;
@@ -176,10 +176,9 @@ export const schema = new Schema<StationSchema, StationModel>(
 	{
 		// @ts-ignore
 		documentVersion: 10,
-		timestamps: true,
-		pluginTags: ["useGetDataPlugin"],
 		// @ts-ignore
 		getData: {
+			enabled: true,
 			specialProperties: {
 				owner: [
 					{

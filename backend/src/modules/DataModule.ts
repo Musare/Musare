@@ -6,6 +6,7 @@ import mongoose, {
 	MongooseDistinctQueryMiddleware,
 	MongooseQueryOrDocumentMiddleware
 } from "mongoose";
+import { patchHistoryPlugin, patchEventEmitter } from "ts-patch-mongoose";
 import { readdir } from "fs/promises";
 import path from "path";
 import JobContext from "../JobContext";
@@ -16,6 +17,7 @@ import { Schemas } from "../types/Schemas";
 import documentVersionPlugin from "../schemas/plugins/documentVersion";
 import getDataPlugin from "../schemas/plugins/getData";
 import Migration from "../Migration";
+import JobQueue from "../JobQueue";
 
 export default class DataModule extends BaseModule {
 	private models?: Models;
@@ -24,11 +26,15 @@ export default class DataModule extends BaseModule {
 
 	//	private redisClient?: RedisClientType;
 
+	private jobQueue: JobQueue;
+
 	/**
 	 * Data Module
 	 */
 	public constructor() {
 		super("data");
+
+		this.jobQueue = JobQueue.getPrimaryInstance();
 	}
 
 	/**
@@ -37,30 +43,7 @@ export default class DataModule extends BaseModule {
 	public override async startup() {
 		await super.startup();
 
-		const { user, password, host, port, database } = config.get<{
-			user: string;
-			password: string;
-			host: string;
-			port: number;
-			database: string;
-		}>("mongo");
-		const mongoUrl = `mongodb://${user}:${password}@${host}:${port}/${database}`;
-
-		this.mongoConnection = await mongoose
-			.createConnection(mongoUrl)
-			.asPromise();
-
-		this.mongoConnection.set("runValidators", true);
-		this.mongoConnection.set("sanitizeFilter", true);
-		this.mongoConnection.set("strict", "throw");
-		this.mongoConnection.set("strictQuery", "throw");
-
-		mongoose.SchemaTypes.String.set("trim", true);
-
-		this.mongoConnection.plugin(documentVersionPlugin);
-		this.mongoConnection.plugin(getDataPlugin, {
-			tags: ["useGetDataPlugin"]
-		});
+		await this.createMongoConnection();
 
 		await this.runMigrations();
 
@@ -102,7 +85,90 @@ export default class DataModule extends BaseModule {
 	public override async shutdown() {
 		await super.shutdown();
 		//		if (this.redisClient) await this.redisClient.quit();
+		patchEventEmitter.removeAllListeners();
 		if (this.mongoConnection) await this.mongoConnection.close();
+	}
+
+	/**
+	 * createMongoConnection - Create mongo connection
+	 */
+	private async createMongoConnection() {
+		const { user, password, host, port, database } = config.get<{
+			user: string;
+			password: string;
+			host: string;
+			port: number;
+			database: string;
+		}>("mongo");
+		const mongoUrl = `mongodb://${user}:${password}@${host}:${port}/${database}`;
+
+		this.mongoConnection = await mongoose
+			.createConnection(mongoUrl)
+			.asPromise();
+
+		this.mongoConnection.set("runValidators", true);
+		this.mongoConnection.set("sanitizeFilter", true);
+		this.mongoConnection.set("strict", "throw");
+		this.mongoConnection.set("strictQuery", "throw");
+	}
+
+	/**
+	 * registerEvents - Register events for schema with event module
+	 */
+	private async registerEvents<
+		ModelName extends keyof Models,
+		SchemaType extends Schemas[keyof ModelName]
+	>(modelName: ModelName, schema: SchemaType) {
+		// const preMethods: string[] = [
+		// 	"aggregate",
+		// 	"count",
+		// 	"countDocuments",
+		// 	"deleteOne",
+		// 	"deleteMany",
+		// 	"estimatedDocumentCount",
+		// 	"find",
+		// 	"findOne",
+		// 	"findOneAndDelete",
+		// 	"findOneAndRemove",
+		// 	"findOneAndReplace",
+		// 	"findOneAndUpdate",
+		// 	"init",
+		// 	"insertMany",
+		// 	"remove",
+		// 	"replaceOne",
+		// 	"save",
+		// 	"update",
+		// 	"updateOne",
+		// 	"updateMany",
+		// 	"validate"
+		// ];
+
+		// preMethods.forEach(preMethod => {
+		// 	// @ts-ignore
+		// 	schema.pre(preMethods, () => {
+		// 		console.log(`Pre-${preMethod}!`);
+		// 	});
+		// });
+
+		const { enabled, eventCreated, eventUpdated, eventDeleted } =
+			schema.get("patchHistory") ?? {};
+
+		if (!enabled) return;
+
+		Object.entries({
+			created: eventCreated,
+			updated: eventUpdated,
+			deleted: eventDeleted
+		})
+			.filter(([, event]) => !!event)
+			.forEach(([action, event]) => {
+				patchEventEmitter.on(event, async ({ doc }) => {
+					await this.jobQueue.runJob("events", "publish", {
+						channel: `model.${modelName}.${doc._id}.${action}`,
+						value: doc
+					});
+				});
+			});
 	}
 
 	/**
@@ -120,36 +186,29 @@ export default class DataModule extends BaseModule {
 			`../schemas/${modelName.toString()}`
 		);
 
-		const preMethods: string[] = [
-			"aggregate",
-			"count",
-			"countDocuments",
-			"deleteOne",
-			"deleteMany",
-			"estimatedDocumentCount",
-			"find",
-			"findOne",
-			"findOneAndDelete",
-			"findOneAndRemove",
-			"findOneAndReplace",
-			"findOneAndUpdate",
-			"init",
-			"insertMany",
-			"remove",
-			"replaceOne",
-			"save",
-			"update",
-			"updateOne",
-			"updateMany",
-			"validate"
-		];
+		schema.plugin(documentVersionPlugin);
 
-		preMethods.forEach(preMethod => {
-			// @ts-ignore
-			schema.pre(preMethods, () => {
-				console.log(`Pre-${preMethod}!`);
-			});
-		});
+		schema.set("timestamps", schema.get("timestamps") ?? true);
+
+		const patchHistoryConfig = {
+			enabled: true,
+			patchHistoryDisabled: true,
+			eventCreated: `${modelName}.created`,
+			eventUpdated: `${modelName}.updated`,
+			eventDeleted: `${modelName}.deleted`,
+			...(schema.get("patchHistory") ?? {})
+		};
+		schema.set("patchHistory", patchHistoryConfig);
+
+		if (patchHistoryConfig.enabled) {
+			schema.plugin(patchHistoryPlugin, patchHistoryConfig);
+		}
+
+		const { enabled: getDataEnabled = false } = schema.get("getData") ?? {};
+
+		if (getDataEnabled) schema.plugin(getDataPlugin);
+
+		await this.registerEvents(modelName, schema);
 
 		return this.mongoConnection.model(modelName.toString(), schema);
 	}
@@ -160,6 +219,8 @@ export default class DataModule extends BaseModule {
 	 * @returns Promise
 	 */
 	private async loadModels() {
+		mongoose.SchemaTypes.String.set("trim", true);
+
 		this.models = {
 			abc: await this.loadModel("abc"),
 			news: await this.loadModel("news"),

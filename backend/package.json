@@ -31,6 +31,7 @@
 		"redis": "^4.6.6",
 		"retry-axios": "^3.0.0",
 		"sha256": "^0.2.0",
+		"ts-patch-mongoose": "^2.0.5",
 		"ws": "^8.13.0"
 	},
 	"devDependencies": {

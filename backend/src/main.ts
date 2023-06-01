@@ -89,7 +89,7 @@ setTimeout(async () => {
 	await jobQueue.runJob("events", "subscribe", {
 		channel: "test",
 		type: "schedule",
-		callback: () => {
+		callback: async () => {
 			console.log(`SCHEDULED: ${now} :: ${Date.now()}`);
 		}
 	});
@@ -97,7 +97,7 @@ setTimeout(async () => {
 	// Events (was cache pub/sub)
 	await jobQueue.runJob("events", "subscribe", {
 		channel: "test",
-		callback: value => {
+		callback: async value => {
 			console.log(`PUBLISHED: ${value}`);
 		}
 	});

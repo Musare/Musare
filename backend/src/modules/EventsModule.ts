@@ -10,9 +10,9 @@ export default class EventsModule extends BaseModule {
 
 	private subClient?: RedisClientType;
 
-	private subscriptions: Record<string, ((message: any) => void)[]>;
+	private subscriptions: Record<string, ((message: any) => Promise<void>)[]>;
 
-	private scheduleCallbacks: Record<string, (() => void)[]>;
+	private scheduleCallbacks: Record<string, (() => Promise<void>)[]>;
 
 	/**
 	 * Events Module
@@ -152,7 +152,7 @@ export default class EventsModule extends BaseModule {
 		payload: {
 			type?: "event" | "schedule";
 			channel: string;
-			callback: (message?: any) => void;
+			callback: (message?: any) => Promise<void>;
 			unique?: boolean;
 		}
 	) {
@@ -204,7 +204,7 @@ export default class EventsModule extends BaseModule {
 		payload: {
 			type?: "event" | "schedule";
 			channel: string;
-			callback: (message?: any) => void;
+			callback: (message?: any) => Promise<void>;
 		}
 	) {
 		if (!this.subClient) throw new Error("Redis subClient unavailable.");

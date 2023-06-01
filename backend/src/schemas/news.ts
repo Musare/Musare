@@ -7,7 +7,7 @@ import {
 	Types
 } from "mongoose";
 import { GetData } from "./plugins/getData";
-import { BaseSchema, TimestampsSchema } from "../types/Schemas";
+import { BaseSchema } from "../types/Schemas";
 
 export enum NewsStatus {
 	DRAFT = "draft",
@@ -15,7 +15,7 @@ export enum NewsStatus {
 	ARCHIVED = "archived"
 }
 
-export interface NewsSchema extends BaseSchema, TimestampsSchema {
+export interface NewsSchema extends BaseSchema {
 	title: string;
 	markdown: string;
 	status: NewsStatus;
@@ -83,7 +83,6 @@ export const schema = new Schema<NewsSchema, NewsModel, {}, NewsQueryHelpers>(
 	{
 		// @ts-ignore
 		documentVersion: 3,
-		timestamps: true,
 		query: {
 			published() {
 				return this.where({ status: NewsStatus.PUBLISHED });
@@ -94,9 +93,9 @@ export const schema = new Schema<NewsSchema, NewsModel, {}, NewsQueryHelpers>(
 				return query;
 			}
 		},
-		pluginTags: ["useGetDataPlugin"],
 		// @ts-ignore need to somehow use GetDataSchemaOptions
 		getData: {
+			enabled: true,
 			specialProperties: {
 				createdBy: [
 					{
