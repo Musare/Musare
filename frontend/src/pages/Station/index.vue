@@ -54,7 +54,8 @@ const router = useRouter();
 
 const { socket } = useWebsocketsStore();
 const configStore = useConfigStore();
-const { experimental, sitename, christmas } = storeToRefs(configStore);
+const { experimental, primaryColor, sitename, christmas } =
+	storeToRefs(configStore);
 const stationStore = useStationStore();
 const userAuthStore = useUserAuthStore();
 const userPreferencesStore = useUserPreferencesStore();
@@ -1855,7 +1856,9 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
-	document.getElementsByTagName("html")[0].style.cssText = "";
+	document.getElementsByTagName(
+		"html"
+	)[0].style.cssText = `--primary-color: ${primaryColor.value}`;
 
 	if (experimental.value.media_session) {
 		ms.removeListeners(0);

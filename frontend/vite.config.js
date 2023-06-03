@@ -164,6 +164,9 @@ export default {
 		MUSARE_SITENAME: JSON.stringify(
 			process.env.MUSARE_SITENAME ?? "Musare"
 		),
+		MUSARE_PRIMARY_COLOR: JSON.stringify(
+			process.env.MUSARE_PRIMARY_COLOR ?? "#03a9f4"
+		),
 		MUSARE_VERSION: JSON.stringify(debug.version),
 		MUSARE_GIT_REMOTE: JSON.stringify(debug.git.remote),
 		MUSARE_GIT_REMOTE_URL: JSON.stringify(debug.git.remoteUrl),
