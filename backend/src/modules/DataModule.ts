@@ -34,6 +34,7 @@ export default class DataModule extends BaseModule {
 	public constructor() {
 		super("data");
 
+		this.dependentModules = ["events"];
 		this.jobQueue = JobQueue.getPrimaryInstance();
 	}
 

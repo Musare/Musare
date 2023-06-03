@@ -61,26 +61,57 @@ export default class ModuleManager {
 	}
 
 	/**
+	 * startModule - Start module
+	 */
+	private async startModule(module: Modules[keyof Modules]) {
+		switch (module.getStatus()) {
+			case ModuleStatus.STARTING:
+			case ModuleStatus.STARTED:
+				return;
+			case ModuleStatus.ERROR:
+				throw new Error("Dependent module failed to start");
+			case ModuleStatus.STOPPING:
+			case ModuleStatus.STOPPED:
+			case ModuleStatus.DISABLED:
+				throw new Error("Dependent module is unavailable");
+			default:
+				break;
+		}
+
+		for (const name of module.getDependentModules()) {
+			const dependency = this.getModule(name);
+
+			if (!dependency) throw new Error("Dependent module not found");
+
+			// eslint-disable-next-line no-await-in-loop
+			await this.startModule(dependency);
+		}
+
+		await module.startup().catch(async err => {
+			module.setStatus(ModuleStatus.ERROR);
+			throw err;
+		});
+	}
+
+	/**
 	 * startup - Handle startup
 	 */
 	public async startup() {
-		await this.loadModules().catch(async err => {
+		try {
+			await this.loadModules();
+
+			if (!this.modules) throw new Error("No modules were loaded");
+
+			for (const module of Object.values(this.modules)) {
+				// eslint-disable-next-line no-await-in-loop
+				await this.startModule(module);
+			}
+
+			JobQueue.getPrimaryInstance().resume();
+		} catch (err) {
 			await this.shutdown();
 			throw err;
-		});
-		if (!this.modules) throw new Error("No modules were loaded");
-		await Promise.all(
-			Object.values(this.modules).map(async module => {
-				await module.startup().catch(async err => {
-					module.setStatus(ModuleStatus.ERROR);
-					throw err;
-				});
-			})
-		).catch(async err => {
-			await this.shutdown();
-			throw err;
-		});
-		JobQueue.getPrimaryInstance().resume();
+		}
 	}
 
 	/**

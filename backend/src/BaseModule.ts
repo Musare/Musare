@@ -1,5 +1,6 @@
 import LogBook, { Log } from "./LogBook";
 import ModuleManager from "./ModuleManager";
+import { Modules } from "./types/Modules";
 
 export enum ModuleStatus {
 	LOADED = "LOADED",
@@ -20,6 +21,8 @@ export default abstract class BaseModule {
 
 	protected status: ModuleStatus;
 
+	protected dependentModules: (keyof Modules)[];
+
 	/**
 	 * Base Module
 	 *
@@ -30,6 +33,7 @@ export default abstract class BaseModule {
 		this.logBook = LogBook.getPrimaryInstance();
 		this.name = name;
 		this.status = ModuleStatus.LOADED;
+		this.dependentModules = [];
 		this.log(`Module (${this.name}) loaded`);
 	}
 
@@ -58,6 +62,13 @@ export default abstract class BaseModule {
 	 */
 	public setStatus(status: ModuleStatus) {
 		this.status = status;
+	}
+
+	/**
+	 * getDependentModules - Get module dependencies
+	 */
+	public getDependentModules() {
+		return this.dependentModules;
 	}
 
 	/**

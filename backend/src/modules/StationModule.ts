@@ -8,6 +8,8 @@ export default class StationModule extends BaseModule {
 	 */
 	public constructor() {
 		super("stations");
+
+		this.dependentModules = ["data"];
 	}
 
 	/**
