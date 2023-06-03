@@ -43,6 +43,7 @@ permissions.moderator = {
 	"playlists.create.admin": true,
 	"playlists.get": true,
 	"playlists.update.displayName": true,
+	"playlists.update.featured": true,
 	"playlists.update.privacy": true,
 	"playlists.songs.add": true,
 	"playlists.songs.remove": true,

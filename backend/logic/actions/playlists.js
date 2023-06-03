@@ -300,7 +300,7 @@ CacheModule.runJob("SUB", {
 
 		playlistModel.findOne(
 			{ _id: data.playlistId },
-			["_id", "displayName", "type", "privacy", "songs", "createdBy", "createdAt", "createdFor"],
+			["_id", "displayName", "type", "privacy", "songs", "createdBy", "createdAt", "createdFor", "featured"],
 			(err, playlist) => {
 				const newPlaylist = {
 					...playlist._doc,
@@ -764,39 +764,23 @@ export default {
 	}),
 
 	/**
-	 * Gets all playlists playlists
+	 * Fetch 3 featured playlists at random
 	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {boolean} includeUser - whether to include user playlists
 	 * @param {Function} cb - gets called with the result
 	 */
-	indexFeaturedPlaylists: isLoginRequired(async function indexMyPlaylists(session, cb) {
-		async.waterfall(
-			[
-				next => {
-					const featuredPlaylistIds = config.get("featuredPlaylists");
-					if (featuredPlaylistIds.length === 0) next(true, []);
-					else next(null, featuredPlaylistIds);
-				},
+	indexFeaturedPlaylists: isLoginRequired(async function indexMyPlaylists(session, includeUser, cb) {
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
-				(featuredPlaylistIds, next) => {
-					const featuredPlaylists = [];
-					async.eachLimit(
-						featuredPlaylistIds,
-						1,
-						(playlistId, next) => {
-							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
-								.then(playlist => {
-									if (playlist.privacy === "public") featuredPlaylists.push(playlist);
-									next();
-								})
-								.catch(next);
-						},
-						err => {
-							next(err, featuredPlaylists);
-						}
-					);
-				}
-			],
-			async (err, playlists) => {
+		const types = ["genre", "admin"];
+		if (includeUser) types.push("user", "user-liked", "user-disliked");
+
+		playlistModel
+			.aggregate([
+				{ $match: { featured: true, privacy: "public", type: { $in: types } } },
+				{ $sample: { size: 3 } }
+			])
+			.exec(async (err, playlists) => {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "PLAYLIST_INDEX_FEATURED", `Indexing featured playlists failed. "${err}"`);
@@ -807,8 +791,7 @@ export default {
 					status: "success",
 					data: { playlists }
 				});
-			}
-		);
+			});
 	}),
 
 	/**
@@ -2848,9 +2831,12 @@ export default {
 		async.waterfall(
 			[
 				next => {
+					const update = { $set: { privacy } };
+					if (privacy !== "public") update.$set.featured = false;
+
 					playlistModel.updateOne(
 						{ _id: playlistId, createdBy: session.userId },
-						{ $set: { privacy } },
+						update,
 						{ runValidators: true },
 						next
 					);
@@ -2930,12 +2916,10 @@ export default {
 			async.waterfall(
 				[
 					next => {
-						playlistModel.updateOne(
-							{ _id: playlistId },
-							{ $set: { privacy } },
-							{ runValidators: true },
-							next
-						);
+						const update = { $set: { privacy } };
+						if (privacy !== "public") update.$set.featured = false;
+
+						playlistModel.updateOne({ _id: playlistId }, update, { runValidators: true }, next);
 					},
 
 					(res, next) => {
@@ -2976,6 +2960,89 @@ export default {
 							}
 						});
 					}
+
+					CacheModule.runJob("PUB", {
+						channel: "playlist.updated",
+						value: { playlistId }
+					});
+
+					return cb({
+						status: "success",
+						message: "Playlist has been successfully updated"
+					});
+				}
+			);
+		}
+	),
+
+	/**
+	 * Updates whether a playlist is featured
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} playlistId - the id of the playlist we are updating
+	 * @param {boolean} featured - whether playlist is featured
+	 * @param {Function} cb - gets called with the result
+	 */
+	updateFeatured: useHasPermission(
+		"playlists.update.featured",
+		async function updateFeatured(session, playlistId, featured, cb) {
+			const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+
+			async.waterfall(
+				[
+					next => {
+						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+							.then(playlist => next(null, playlist))
+							.catch(next);
+					},
+
+					(playlist, next) => {
+						if (playlist.type === "station") next("Station playlists can not be featured.");
+						else if (playlist.privacy !== "public") next("Only public playlists can be featured.");
+						else next();
+					},
+
+					next => {
+						playlistModel.updateOne(
+							{ _id: playlistId },
+							{ $set: { featured } },
+							{ runValidators: true },
+							next
+						);
+					},
+
+					(res, next) => {
+						if (res.n === 0) next("No playlist found with that id.");
+						else if (res.nModified === 0)
+							next(`Nothing changed, the playlist was already ${featured ? "true" : "false"}.`);
+						else {
+							PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
+								.then(() => next())
+								.catch(next);
+						}
+					}
+				],
+				async err => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+						this.log(
+							"ERROR",
+							"PLAYLIST_UPDATE_FEATURED",
+							`Updating featured to "${
+								featured ? "true" : "false"
+							}" for playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						);
+
+						return cb({ status: "error", message: err });
+					}
+
+					this.log(
+						"SUCCESS",
+						"PLAYLIST_UPDATE_FEATURED",
+						`Successfully updated featured to "${
+							featured ? "true" : "false"
+						}" for playlist "${playlistId}" for user "${session.userId}".`
+					);
 
 					CacheModule.runJob("PUB", {
 						channel: "playlist.updated",

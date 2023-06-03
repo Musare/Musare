@@ -317,10 +317,14 @@ onMounted(() => {
 			orderOfPlaylists.value = calculatePlaylistOrder(); // order in regards to the database
 		});
 
-		socket.dispatch("playlists.indexFeaturedPlaylists", res => {
-			if (res.status === "success")
-				featuredPlaylists.value = res.data.playlists;
-		});
+		socket.dispatch(
+			"playlists.indexFeaturedPlaylists",
+			station.value.type === "community",
+			res => {
+				if (res.status === "success")
+					featuredPlaylists.value = res.data.playlists;
+			}
+		);
 
 		if (props.type === "autofill")
 			socket.dispatch(

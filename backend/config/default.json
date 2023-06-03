@@ -92,7 +92,6 @@
 		"database": "musare"
 	},
 	"blacklistedCommunityStationNames": ["musare"],
-	"featuredPlaylists": [],
 	"messages": {
 		"accountRemoval": "Your account will be deactivated instantly and your data will shortly be deleted by an admin."
 	},
