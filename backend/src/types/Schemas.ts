@@ -4,6 +4,7 @@ import { AbcSchemaType } from "../schemas/abc";
 import { NewsSchemaType } from "../schemas/news";
 import { SessionSchemaType } from "../schemas/session";
 import { StationSchemaType } from "../schemas/station";
+import { UserSchemaType } from "../schemas/user";
 
 // eslint-disable-next-line
 export interface BaseSchema extends DocumentVersion, TimestampsSchema {
@@ -20,4 +21,5 @@ export type Schemas = {
 	news: NewsSchemaType;
 	session: SessionSchemaType;
 	station: StationSchemaType;
+	user: UserSchemaType;
 };

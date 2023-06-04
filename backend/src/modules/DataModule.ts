@@ -223,6 +223,7 @@ export default class DataModule extends BaseModule {
 			news: await this.loadModel("news"),
 			session: await this.loadModel("session"),
 			station: await this.loadModel("station"),
+			user: await this.loadModel("user")
 		};
 	}
 
