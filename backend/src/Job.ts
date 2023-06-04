@@ -81,7 +81,7 @@ export default class Job {
 
 		this.payload = payload;
 
-		this.context = new JobContext(this);
+		this.context = new JobContext(this, options?.session);
 
 		this.logBook = LogBook.getPrimaryInstance();
 

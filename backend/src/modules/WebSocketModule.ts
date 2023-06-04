@@ -89,6 +89,21 @@ export default class WebSocketModule extends BaseModule {
 
 		socket.log({ type: "debug", message: "WebSocket #ID connected" });
 
+		socket.setSocketId(request.headers["sec-websocket-key"]);
+
+		const sessionCookie = request.headers.cookie
+			?.split("; ")
+			.find(
+				cookie =>
+					cookie.substring(0, cookie.indexOf("=")) ===
+					config.get("cookie")
+			);
+		const sessionId = sessionCookie?.substring(
+			sessionCookie.indexOf("=") + 1,
+			sessionCookie.length
+		);
+		socket.setSessionId(sessionId);
+
 		socket.on("error", error =>
 			socket.log({
 				type: "error",
@@ -157,9 +172,15 @@ export default class WebSocketModule extends BaseModule {
 			const [moduleName, jobName] = moduleJob.split(".");
 			const { CB_REF } = options ?? payload ?? {};
 
-			await this.jobQueue
-				.runJob(moduleName, jobName, payload)
-				.then(res => socket.dispatch("CB_REF", CB_REF, res));
+			const res = await this.jobQueue.runJob("api", "runJob", {
+				moduleName,
+				jobName,
+				payload,
+				socketId: socket.getSocketId(),
+				sessionId: socket.getSessionId()
+			});
+
+			socket.dispatch("CB_REF", CB_REF, res);
 		} catch (error) {
 			const message = error?.message ?? error;
 

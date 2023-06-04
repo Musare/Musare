@@ -2,6 +2,7 @@ import BaseModule from "./BaseModule";
 import Job from "./Job";
 import JobQueue from "./JobQueue";
 import { Log } from "./LogBook";
+import { SessionSchema } from "./schemas/session";
 import { JobOptions } from "./types/JobOptions";
 import { Jobs, Modules } from "./types/Modules";
 
@@ -10,9 +11,12 @@ export default class JobContext {
 
 	public readonly jobQueue: JobQueue;
 
-	public constructor(job: Job) {
+	private session?: SessionSchema;
+
+	public constructor(job: Job, session?: SessionSchema) {
 		this.job = job;
 		this.jobQueue = JobQueue.getPrimaryInstance();
+		this.session = session;
 	}
 
 	/**
@@ -22,6 +26,14 @@ export default class JobContext {
 	 */
 	public log(log: string | Omit<Log, "timestamp" | "category">) {
 		return this.job.log(log);
+	}
+
+	public getSession() {
+		return this.session;
+	}
+
+	public setSession(session?: SessionSchema) {
+		this.session = session;
 	}
 
 	/**
@@ -49,11 +61,9 @@ export default class JobContext {
 		payload: PayloadType,
 		options?: JobOptions
 	): Promise<ReturnType> {
-		return new Job(
-			jobName.toString(),
-			moduleName,
-			payload,
-			options
-		).execute();
+		return new Job(jobName.toString(), moduleName, payload, {
+			session: this.session,
+			...(options ?? {})
+		}).execute();
 	}
 }

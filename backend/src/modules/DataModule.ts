@@ -221,7 +221,8 @@ export default class DataModule extends BaseModule {
 		this.models = {
 			abc: await this.loadModel("abc"),
 			news: await this.loadModel("news"),
-			station: await this.loadModel("station")
+			session: await this.loadModel("session"),
+			station: await this.loadModel("station"),
 		};
 	}
 

@@ -4,6 +4,10 @@ import LogBook, { Log } from "./LogBook";
 export default class WebSocket extends WSWebSocket {
 	protected logBook: LogBook = LogBook.getPrimaryInstance();
 
+	protected socketId?: string;
+
+	protected sessionId?: string;
+
 	public dispatch(name: string, ...args: any[]) {
 		this.send(JSON.stringify([name, ...args]));
 	}
@@ -27,5 +31,21 @@ export default class WebSocket extends WSWebSocket {
 			category: "modules.websocket.socket",
 			data
 		});
+	}
+
+	public getSocketId() {
+		return this.socketId;
+	}
+
+	public setSocketId(socketId?: string) {
+		this.socketId = socketId;
+	}
+
+	public getSessionId() {
+		return this.sessionId;
+	}
+
+	public setSessionId(sessionId?: string) {
+		this.sessionId = sessionId;
 	}
 }
