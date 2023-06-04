@@ -1,3 +1,4 @@
+import APIModule, { APIModuleJobs } from "../modules/APIModule";
 import DataModule, { DataModuleJobs } from "../modules/DataModule";
 import EventsModule, { EventsModuleJobs } from "../modules/EventsModule";
 import StationModule, { StationModuleJobs } from "../modules/StationModule";
@@ -13,6 +14,9 @@ export type ModuleClass<Module extends typeof BaseModule> = {
 };
 
 export type Jobs = {
+	api: {
+		[Property in keyof APIModuleJobs]: APIModuleJobs[Property];
+	};
 	data: {
 		[Property in keyof DataModuleJobs]: DataModuleJobs[Property];
 	};
@@ -28,6 +32,7 @@ export type Jobs = {
 };
 
 export type Modules = {
+	api: APIModule & typeof BaseModule;
 	data: DataModule & typeof BaseModule;
 	events: EventsModule & typeof BaseModule;
 	stations: StationModule & typeof BaseModule;
