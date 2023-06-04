@@ -1,3 +1,4 @@
+import JobQueue from "./JobQueue";
 import LogBook, { Log } from "./LogBook";
 import ModuleManager from "./ModuleManager";
 import { Modules } from "./types/Modules";
@@ -17,6 +18,8 @@ export default abstract class BaseModule {
 
 	protected logBook: LogBook;
 
+	protected jobQueue: JobQueue;
+
 	protected name: string;
 
 	protected status: ModuleStatus;
@@ -31,6 +34,7 @@ export default abstract class BaseModule {
 	public constructor(name: string) {
 		this.moduleManager = ModuleManager.getPrimaryInstance();
 		this.logBook = LogBook.getPrimaryInstance();
+		this.jobQueue = JobQueue.getPrimaryInstance();
 		this.name = name;
 		this.status = ModuleStatus.LOADED;
 		this.dependentModules = [];

@@ -4,15 +4,12 @@ import http, { Server, IncomingMessage } from "node:http";
 import { RawData, WebSocketServer } from "ws";
 import BaseModule from "../BaseModule";
 import { UniqueMethods } from "../types/Modules";
-import JobQueue from "../JobQueue";
 import WebSocket from "../WebSocket";
 
 export default class WebSocketModule extends BaseModule {
 	private httpServer?: Server;
 
 	private wsServer?: WebSocketServer;
-
-	private jobQueue: JobQueue;
 
 	private keepAliveInterval?: NodeJS.Timer;
 
@@ -21,8 +18,6 @@ export default class WebSocketModule extends BaseModule {
 	 */
 	public constructor() {
 		super("websocket");
-
-		this.jobQueue = JobQueue.getPrimaryInstance();
 	}
 
 	/**

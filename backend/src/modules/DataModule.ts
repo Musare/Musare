@@ -17,7 +17,6 @@ import { Schemas } from "../types/Schemas";
 import documentVersionPlugin from "../schemas/plugins/documentVersion";
 import getDataPlugin from "../schemas/plugins/getData";
 import Migration from "../Migration";
-import JobQueue from "../JobQueue";
 
 export default class DataModule extends BaseModule {
 	private models?: Models;
@@ -26,8 +25,6 @@ export default class DataModule extends BaseModule {
 
 	//	private redisClient?: RedisClientType;
 
-	private jobQueue: JobQueue;
-
 	/**
 	 * Data Module
 	 */
@@ -35,7 +32,6 @@ export default class DataModule extends BaseModule {
 		super("data");
 
 		this.dependentModules = ["events"];
-		this.jobQueue = JobQueue.getPrimaryInstance();
 	}
 
 	/**
