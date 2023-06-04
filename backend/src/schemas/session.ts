@@ -3,7 +3,6 @@ import { BaseSchema } from "../types/Schemas";
 
 export interface SessionSchema extends BaseSchema {
 	userId: Types.ObjectId;
-	socketIds: string[];
 }
 
 export type SessionModel = Model<SessionSchema>;
@@ -13,8 +12,7 @@ export const schema = new Schema<SessionSchema, SessionModel>({
 		type: SchemaTypes.ObjectId,
 		ref: "user",
 		required: true
-	},
-	socketIds: [SchemaTypes.String]
+	}
 });
 
 export type SessionSchemaType = typeof schema;

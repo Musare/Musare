@@ -9,6 +9,7 @@ import { Jobs, Modules } from "./types/Modules";
 import { StationType } from "./schemas/station";
 import { UserRole, UserSchema } from "./schemas/user";
 import permissions from "./permissions";
+import { Models } from "./types/Models";
 
 export default class JobContext {
 	public readonly job: Job;
@@ -73,12 +74,16 @@ export default class JobContext {
 		}).execute();
 	}
 
+	public async getModel(model: keyof Models) {
+		return this.executeJob("data", "getModel", model);
+	}
+
 	public async getUser(refresh = false) {
 		if (!this.session?.userId) throw new Error("No user found for session");
 
 		if (this.user && !refresh) return this.user;
 
-		const User = await this.executeJob("data", "getModel", "user");
+		const User = await this.getModel("user");
 
 		this.user = await User.findById(this.session.userId);
 
@@ -102,11 +107,7 @@ export default class JobContext {
 		const roles: (UserRole | "owner" | "dj")[] = [user.role];
 
 		if (scope?.stationId) {
-			const Station = await this.executeJob(
-				"data",
-				"getModel",
-				"station"
-			);
+			const Station = await this.getModel("station");
 
 			const station = await Station.findById(scope.stationId);
 
@@ -115,7 +116,7 @@ export default class JobContext {
 				station.owner === this.session.userId
 			)
 				roles.push("owner");
-			if (station.djs.find(dj => dj === this.session?.userId))
+			else if (station.djs.find(dj => dj === this.session?.userId))
 				roles.push("dj");
 		}
 

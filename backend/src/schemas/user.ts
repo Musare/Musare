@@ -95,7 +95,8 @@ export const schema = new Schema<UserSchema, UserModel>(
 			},
 			verificationToken: {
 				type: SchemaTypes.String,
-				required: false
+				required: false,
+				select: false
 			}
 		},
 		avatar: {
@@ -115,29 +116,62 @@ export const schema = new Schema<UserSchema, UserModel>(
 			}
 		},
 		services: {
-			password: {
-				password: SchemaTypes.String,
-				reset: {
-					code: {
-						type: SchemaTypes.String,
-						minLength: 8,
-						maxLength: 8
+			type: {
+				password: {
+					type: {
+						password: {
+							type: SchemaTypes.String,
+							required: true,
+							select: false
+						},
+						reset: {
+							code: {
+								type: SchemaTypes.String,
+								minLength: 8,
+								maxLength: 8,
+								required: false,
+								select: false
+							},
+							expires: {
+								type: SchemaTypes.Date,
+								required: false,
+								select: false
+							}
+						},
+						set: {
+							code: {
+								type: SchemaTypes.String,
+								minLength: 8,
+								maxLength: 8,
+								required: false,
+								select: false
+							},
+							expires: {
+								type: SchemaTypes.Date,
+								required: false,
+								select: false
+							}
+						}
 					},
-					expires: { type: SchemaTypes.Date }
+					required: false
 				},
-				set: {
-					code: {
-						type: SchemaTypes.String,
-						minLength: 8,
-						maxLength: 8
+				github: {
+					type: {
+						id: {
+							type: SchemaTypes.Number,
+							required: true,
+							select: false
+						},
+						access_token: {
+							type: SchemaTypes.String,
+							required: true,
+							select: false
+						}
 					},
-					expires: { type: SchemaTypes.Date }
+					required: false
 				}
 			},
-			github: {
-				id: SchemaTypes.Number,
-				access_token: SchemaTypes.String
-			}
+			required: true
 		},
 		statistics: {
 			songsRequested: {

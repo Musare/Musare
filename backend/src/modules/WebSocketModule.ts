@@ -2,9 +2,12 @@ import config from "config";
 import express from "express";
 import http, { Server, IncomingMessage } from "node:http";
 import { RawData, WebSocketServer } from "ws";
+import { Types } from "mongoose";
 import BaseModule from "../BaseModule";
 import { UniqueMethods } from "../types/Modules";
 import WebSocket from "../WebSocket";
+import JobContext from "../JobContext";
+import Job from "../Job";
 
 export default class WebSocketModule extends BaseModule {
 	private httpServer?: Server;
@@ -87,22 +90,15 @@ export default class WebSocketModule extends BaseModule {
 			return;
 		}
 
-		socket.log({ type: "debug", message: "WebSocket #ID connected" });
+		const readyData = await new Job("prepareWebsocket", "api", {
+			socket,
+			request
+		}).execute();
 
-		socket.setSocketId(request.headers["sec-websocket-key"]);
-
-		const sessionCookie = request.headers.cookie
-			?.split("; ")
-			.find(
-				cookie =>
-					cookie.substring(0, cookie.indexOf("=")) ===
-					config.get("cookie")
-			);
-		const sessionId = sessionCookie?.substring(
-			sessionCookie.indexOf("=") + 1,
-			sessionCookie.length
-		);
-		socket.setSessionId(sessionId);
+		socket.log({
+			type: "debug",
+			message: `WebSocket opened #${socket.getSocketId()}`
+		});
 
 		socket.on("error", error =>
 			socket.log({
@@ -112,41 +108,12 @@ export default class WebSocketModule extends BaseModule {
 			})
 		);
 
-		socket.on("close", () =>
-			socket.log({ type: "debug", message: "WebSocket #ID closed" })
-		);
-
-		const readyData = {
-			config: {
-				cookie: config.get("cookie"),
-				sitename: config.get("sitename"),
-				recaptcha: {
-					enabled: config.get("apis.recaptcha.enabled"),
-					key: config.get("apis.recaptcha.key")
-				},
-				githubAuthentication: config.get("apis.github.enabled"),
-				messages: config.get("messages"),
-				christmas: config.get("christmas"),
-				footerLinks: config.get("footerLinks"),
-				shortcutOverrides: config.get("shortcutOverrides"),
-				registrationDisabled: config.get("registrationDisabled"),
-				mailEnabled: config.get("mail.enabled"),
-				discogsEnabled: config.get("apis.discogs.enabled"),
-				experimental: {
-					changable_listen_mode: config.get(
-						"experimental.changable_listen_mode"
-					),
-					media_session: config.get("experimental.media_session"),
-					disable_youtube_search: config.get(
-						"experimental.disable_youtube_search"
-					),
-					station_history: config.get("experimental.station_history"),
-					soundcloud: config.get("experimental.soundcloud"),
-					spotify: config.get("experimental.spotify")
-				}
-			},
-			user: { loggedIn: false }
-		};
+		socket.on("close", async () => {
+			socket.log({
+				type: "debug",
+				message: `WebSocket closed #${socket.getSocketId()}`
+			});
+		});
 
 		socket.dispatch("ready", readyData);
 
@@ -176,7 +143,6 @@ export default class WebSocketModule extends BaseModule {
 				moduleName,
 				jobName,
 				payload,
-				socketId: socket.getSocketId(),
 				sessionId: socket.getSessionId()
 			});
 
@@ -188,6 +154,40 @@ export default class WebSocketModule extends BaseModule {
 
 			socket.dispatch("ERROR", error?.message ?? error);
 		}
+	}
+
+	/**
+	 * getSockets - Get websocket clients
+	 */
+	public async getSockets(context: JobContext) {
+		return this.wsServer?.clients;
+	}
+
+	/**
+	 * getSocket - Get websocket client
+	 */
+	public async getSocket(
+		context: JobContext,
+		{
+			socketId,
+			sessionId
+		}: { socketId?: string; sessionId?: Types.ObjectId }
+	) {
+		if (!this.wsServer) return null;
+
+		for (const clients of this.wsServer.clients.entries() as IterableIterator<
+			[WebSocket, WebSocket]
+		>) {
+			const socket = clients.find(socket => {
+				if (socket.getSocketId() === socketId) return true;
+				if (socket.getSessionId() === sessionId) return true;
+				return false;
+			});
+
+			if (socket) return socket;
+		}
+
+		return null;
 	}
 
 	/**

@@ -1,6 +1,10 @@
+import config from "config";
+import { isObjectIdOrHexString } from "mongoose";
+import { IncomingMessage } from "node:http";
 import JobContext from "../JobContext";
 import BaseModule from "../BaseModule";
 import { Jobs, Modules, UniqueMethods } from "../types/Modules";
+import WebSocket from "../WebSocket";
 
 export default class APIModule extends BaseModule {
 	/**
@@ -49,30 +53,115 @@ export default class APIModule extends BaseModule {
 			moduleName,
 			jobName,
 			payload,
-			socketId,
 			sessionId
 		}: {
 			moduleName: ModuleNameType;
 			jobName: JobNameType;
 			payload: PayloadType;
-			socketId?: string;
 			sessionId?: string;
 		}
 	): Promise<ReturnType> {
 		let session;
 		if (sessionId) {
-			const Session = await context.executeJob(
-				"data",
-				"getModel",
-				"session"
-			);
-			session = await Session.findOneAndUpdate(
-				{ _id: sessionId },
-				{ $addToSet: { socketIds: socketId } }
-			);
+			const Session = await context.getModel("session");
+
+			session = await Session.findByIdAndUpdate(sessionId, {
+				updatedAt: Date.now()
+			});
 		}
 
 		return context.executeJob(moduleName, jobName, payload, { session });
+	}
+
+	/**
+	 * getCookieValueFromHeader - Get value of a cookie from cookie header string
+	 */
+	private getCookieValueFromHeader(cookieName: string, header: string) {
+		const cookie = header
+			.split("; ")
+			.find(
+				cookie =>
+					cookie.substring(0, cookie.indexOf("=")) === cookieName
+			);
+
+		return cookie?.substring(cookie.indexOf("=") + 1, cookie.length);
+	}
+
+	/**
+	 * prepareWebsocket - Prepare websocket connection
+	 */
+	public async prepareWebsocket(
+		context: JobContext,
+		{ socket, request }: { socket: WebSocket; request: IncomingMessage }
+	) {
+		const socketId = request.headers["sec-websocket-key"];
+		socket.setSocketId(socketId);
+
+		let sessionId = request.headers.cookie
+			? this.getCookieValueFromHeader(
+					config.get<string>("cookie"),
+					request.headers.cookie
+			  )
+			: undefined;
+
+		if (sessionId && isObjectIdOrHexString(sessionId))
+			socket.setSessionId(sessionId);
+		else sessionId = undefined;
+
+		let user;
+		if (sessionId) {
+			const Session = await context.getModel("session");
+
+			const session = await Session.findByIdAndUpdate(sessionId, {
+				updatedAt: Date.now()
+			});
+
+			if (session) {
+				context.setSession(session);
+
+				user = await context.getUser().catch(() => undefined);
+			}
+		}
+
+		return {
+			config: {
+				cookie: config.get("cookie"),
+				sitename: config.get("sitename"),
+				recaptcha: {
+					enabled: config.get("apis.recaptcha.enabled"),
+					key: config.get("apis.recaptcha.key")
+				},
+				githubAuthentication: config.get("apis.github.enabled"),
+				messages: config.get("messages"),
+				christmas: config.get("christmas"),
+				footerLinks: config.get("footerLinks"),
+				shortcutOverrides: config.get("shortcutOverrides"),
+				registrationDisabled: config.get("registrationDisabled"),
+				mailEnabled: config.get("mail.enabled"),
+				discogsEnabled: config.get("apis.discogs.enabled"),
+				experimental: {
+					changable_listen_mode: config.get(
+						"experimental.changable_listen_mode"
+					),
+					media_session: config.get("experimental.media_session"),
+					disable_youtube_search: config.get(
+						"experimental.disable_youtube_search"
+					),
+					station_history: config.get("experimental.station_history"),
+					soundcloud: config.get("experimental.soundcloud"),
+					spotify: config.get("experimental.spotify")
+				}
+			},
+			user: user
+				? {
+						loggedIn: true,
+						role: user.role,
+						username: user.username,
+						email: user.email.address,
+						userId: user._id
+				  }
+				: { loggedIn: false }
+		};
 	}
 }
 
