@@ -1,10 +1,13 @@
 import config from "config";
-import { isObjectIdOrHexString } from "mongoose";
+import { Types, isObjectIdOrHexString } from "mongoose";
 import { IncomingMessage } from "node:http";
 import JobContext from "../JobContext";
 import BaseModule from "../BaseModule";
 import { Jobs, Modules, UniqueMethods } from "../types/Modules";
 import WebSocket from "../WebSocket";
+import { UserRole } from "../schemas/user";
+import { StationType } from "../schemas/station";
+import permissions from "../permissions";
 
 export default class APIModule extends BaseModule {
 	/**
@@ -162,6 +165,38 @@ export default class APIModule extends BaseModule {
 				  }
 				: { loggedIn: false }
 		};
+	}
+
+	public async getUserPermissions(
+		context: JobContext,
+		{ stationId }: { stationId?: Types.ObjectId }
+	) {
+		const user = await context.getUser();
+
+		const roles: (UserRole | "owner" | "dj")[] = [user.role];
+
+		if (stationId) {
+			const Station = await context.getModel("station");
+
+			const station = await Station.findById(stationId);
+
+			if (!station) throw new Error("Station not found");
+
+			if (
+				station.type === StationType.COMMUNITY &&
+				station.owner === user._id
+			)
+				roles.push("owner");
+			else if (station.djs.find(dj => dj === user._id)) roles.push("dj");
+		}
+
+		let rolePermissions: Record<string, boolean> = {};
+		roles.forEach(role => {
+			if (permissions[role])
+				rolePermissions = { ...rolePermissions, ...permissions[role] };
+		});
+
+		return rolePermissions;
 	}
 }
 

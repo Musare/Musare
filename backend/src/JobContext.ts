@@ -6,9 +6,7 @@ import { Log } from "./LogBook";
 import { SessionSchema } from "./schemas/session";
 import { JobOptions } from "./types/JobOptions";
 import { Jobs, Modules } from "./types/Modules";
-import { StationType } from "./schemas/station";
-import { UserRole, UserSchema } from "./schemas/user";
-import permissions from "./permissions";
+import { UserSchema } from "./schemas/user";
 import { Models } from "./types/Models";
 
 export default class JobContext {
@@ -19,6 +17,8 @@ export default class JobContext {
 	private session?: SessionSchema;
 
 	private user?: UserSchema;
+
+	private permissions?: Record<string, boolean>;
 
 	public constructor(job: Job, session?: SessionSchema) {
 		this.job = job;
@@ -96,36 +96,28 @@ export default class JobContext {
 		if (!this.session?.userId) throw new Error("No user found for session");
 	}
 
+	public async getUserPermissions(
+		scope?: { stationId?: Types.ObjectId },
+		refresh = false
+	) {
+		if (this.permissions && !refresh) return this.permissions;
+
+		this.permissions = await this.executeJob(
+			"api",
+			"getUserPermissions",
+			scope ?? {}
+		);
+
+		return this.permissions;
+	}
+
 	public async assertPermission(
 		permission: string,
 		scope?: { stationId?: Types.ObjectId }
 	) {
-		if (!this.session?.userId) throw new Error("Insufficient permissions");
+		const permissions = await this.getUserPermissions(scope);
 
-		const user = await this.getUser();
-
-		const roles: (UserRole | "owner" | "dj")[] = [user.role];
-
-		if (scope?.stationId) {
-			const Station = await this.getModel("station");
-
-			const station = await Station.findById(scope.stationId);
-
-			if (
-				station.type === StationType.COMMUNITY &&
-				station.owner === this.session.userId
-			)
-				roles.push("owner");
-			else if (station.djs.find(dj => dj === this.session?.userId))
-				roles.push("dj");
-		}
-
-		let hasPermission;
-		roles.forEach(role => {
-			if (permissions[role] && permissions[role][permission])
-				hasPermission = true;
-		});
-
-		if (!hasPermission) throw new Error("Insufficient permissions");
+		if (!permissions[permission])
+			throw new Error("Insufficient permissions");
 	}
 }
