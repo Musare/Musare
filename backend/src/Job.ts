@@ -81,21 +81,27 @@ export default class Job {
 
 		this.payload = payload;
 
-		this.context = new JobContext(this, options?.session);
-
 		this.logBook = LogBook.getPrimaryInstance();
 
 		this.jobStatistics = JobStatistics.getPrimaryInstance();
 		this.jobStatistics.updateStats(this.getName(), "added");
 
+		let contextOptions;
+
 		if (options) {
-			const { priority, longJob } = options;
+			const { priority, longJob, session, socketId } = options;
+
+			if (session || socketId) contextOptions = { session, socketId };
+
 			if (priority) this.priority = priority;
+
 			if (longJob)
 				this.longJob = {
 					title: longJob
 				};
 		}
+
+		this.context = new JobContext(this, contextOptions);
 
 		/* eslint-disable no-bitwise, eqeqeq */
 		this.uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(

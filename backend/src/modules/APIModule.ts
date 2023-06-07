@@ -58,12 +58,14 @@ export default class APIModule extends BaseModule {
 			moduleName,
 			jobName,
 			payload,
-			sessionId
+			sessionId,
+			socketId
 		}: {
 			moduleName: ModuleNameType;
 			jobName: JobNameType;
 			payload: PayloadType;
 			sessionId?: string;
+			socketId?: string;
 		}
 	): Promise<ReturnType> {
 		let session;
@@ -75,7 +77,10 @@ export default class APIModule extends BaseModule {
 			});
 		}
 
-		return context.executeJob(moduleName, jobName, payload, { session });
+		return context.executeJob(moduleName, jobName, payload, {
+			session,
+			socketId
+		});
 	}
 
 	/**

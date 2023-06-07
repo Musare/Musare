@@ -16,14 +16,20 @@ export default class JobContext {
 
 	private session?: SessionSchema;
 
+	private readonly socketId?: string;
+
 	private user?: UserSchema;
 
 	private permissions?: Record<string, boolean>;
 
-	public constructor(job: Job, session?: SessionSchema) {
+	public constructor(
+		job: Job,
+		options?: { session?: SessionSchema; socketId?: string }
+	) {
 		this.job = job;
 		this.jobQueue = JobQueue.getPrimaryInstance();
-		this.session = session;
+		this.session = options?.session;
+		this.socketId = options?.socketId;
 	}
 
 	/**
@@ -41,6 +47,10 @@ export default class JobContext {
 
 	public setSession(session?: SessionSchema) {
 		this.session = session;
+	}
+
+	public getSocketId() {
+		return this.socketId;
 	}
 
 	/**
@@ -70,6 +80,7 @@ export default class JobContext {
 	): Promise<ReturnType> {
 		return new Job(jobName.toString(), moduleName, payload, {
 			session: this.session,
+			socketId: this.socketId,
 			...(options ?? {})
 		}).execute();
 	}

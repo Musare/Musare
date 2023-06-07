@@ -143,7 +143,8 @@ export default class WebSocketModule extends BaseModule {
 				moduleName,
 				jobName,
 				payload,
-				sessionId: socket.getSessionId()
+				sessionId: socket.getSessionId(),
+				socketId: socket.getSocketId()
 			});
 
 			socket.dispatch("CB_REF", CB_REF, res);
