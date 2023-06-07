@@ -84,6 +84,7 @@ export default class DataModule extends BaseModule {
 		//		if (this.redisClient) await this.redisClient.quit();
 		patchEventEmitter.removeAllListeners();
 		if (this.mongoConnection) await this.mongoConnection.close();
+		await this.stopped();
 	}
 
 	/**

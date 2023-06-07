@@ -22,6 +22,14 @@ export default class StationModule extends BaseModule {
 	}
 
 	/**
+	 * shutdown - Shutdown station module
+	 */
+	public override async shutdown() {
+		await super.shutdown();
+		await super.stopped();
+	}
+
+	/**
 	 * addToQueue - Add media to queue
 	 *
 	 * @param payload - Payload

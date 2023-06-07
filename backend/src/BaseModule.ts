@@ -97,7 +97,6 @@ export default abstract class BaseModule {
 	public async shutdown() {
 		this.log(`Module (${this.name}) stopping`);
 		this.setStatus(ModuleStatus.STOPPING);
-		await this.stopped();
 	}
 
 	/**

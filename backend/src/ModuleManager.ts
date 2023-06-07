@@ -120,19 +120,39 @@ export default class ModuleManager {
 	 * shutdown - Handle shutdown
 	 */
 	public async shutdown() {
-		if (this.modules)
-			await Promise.all(
-				Object.values(this.modules).map(async module => {
-					if (
-						[
-							ModuleStatus.STARTED,
-							ModuleStatus.STARTING,
-							ModuleStatus.ERROR
-						].includes(module.getStatus())
-					)
-						await module.shutdown();
-				})
+		if (this.modules) {
+			const modules = Object.entries(this.modules).filter(([, module]) =>
+				[
+					ModuleStatus.STARTED,
+					ModuleStatus.STARTING,
+					ModuleStatus.ERROR
+				].includes(module.getStatus())
 			);
+
+			const shutdownOrder: (keyof Modules)[] = [];
+
+			for (const [name, module] of modules) {
+				if (!shutdownOrder.includes(name)) shutdownOrder.push(name);
+
+				const dependencies = module.getDependentModules();
+
+				dependencies
+					.filter(dependency => shutdownOrder.includes(dependency))
+					.forEach(dependency => {
+						shutdownOrder.splice(
+							shutdownOrder.indexOf(dependency),
+							1
+						);
+					});
+
+				shutdownOrder.push(...dependencies);
+			}
+
+			for (const moduleName of shutdownOrder) {
+				// eslint-disable-next-line no-await-in-loop
+				await this.getModule(moduleName)?.shutdown();
+			}
+		}
 	}
 
 	static getPrimaryInstance(): ModuleManager {

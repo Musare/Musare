@@ -198,6 +198,8 @@ export default class WebSocketModule extends BaseModule {
 
 		if (this.httpServer) this.httpServer.close();
 		if (this.wsServer) this.wsServer.close();
+
+		await this.stopped();
 	}
 }
 

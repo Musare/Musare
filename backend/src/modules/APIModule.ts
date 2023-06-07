@@ -33,6 +33,8 @@ export default class APIModule extends BaseModule {
 	 */
 	public override async shutdown() {
 		await super.shutdown();
+
+		await super.stopped();
 	}
 
 	/**
