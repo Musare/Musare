@@ -192,6 +192,26 @@ export default class WebSocketModule extends BaseModule {
 	}
 
 	/**
+	 * dispatch - Dispatch message to socket
+	 */
+	public async dispatch(
+		context: JobContext,
+		{
+			socketId,
+			channel,
+			value
+		}: { socketId: string; channel: string; value?: any }
+	) {
+		const socket = await context.executeJob("websocket", "getSocket", {
+			socketId
+		});
+
+		if (!socket) return;
+
+		socket.dispatch(channel, value);
+	}
+
+	/**
 	 * shutdown - Shutdown websocket module
 	 */
 	public override async shutdown() {
