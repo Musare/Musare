@@ -120,6 +120,10 @@ export default class DataModule extends BaseModule {
 		super("data");
 
 		this.dependentModules = ["events"];
+
+		this.jobConfig = {
+			getModel: false
+		};
 	}
 
 	/**

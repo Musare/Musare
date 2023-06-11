@@ -22,6 +22,7 @@ export default class EventsModule extends BaseModule {
 
 		this.subscriptions = {};
 		this.scheduleCallbacks = {};
+		this.jobApiDefault = false;
 	}
 
 	/**

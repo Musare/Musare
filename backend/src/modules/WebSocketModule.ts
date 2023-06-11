@@ -21,6 +21,8 @@ export default class WebSocketModule extends BaseModule {
 	 */
 	public constructor() {
 		super("websocket");
+
+		this.jobApiDefault = false;
 	}
 
 	/**
@@ -147,6 +149,12 @@ export default class WebSocketModule extends BaseModule {
 				throw new Error(
 					`No callback reference provided for job ${moduleJob}`
 				);
+
+			const module = this.moduleManager.getModule(moduleName);
+			if (!module) throw new Error(`Module "${moduleName}" not found`);
+
+			const job = module.getJob(jobName);
+			if (!job.api) throw new Error(`Job "${jobName}" not found.`);
 
 			const res = await this.jobQueue.runJob("api", "runJob", {
 				moduleName,
