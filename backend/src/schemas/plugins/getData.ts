@@ -1,4 +1,5 @@
 import { PipelineStage, Schema, SchemaOptions } from "mongoose";
+import JobContext from "../../JobContext";
 
 export enum FilterType {
 	REGEX = "regex",
@@ -28,20 +29,23 @@ export interface GetDataSchemaOptions extends SchemaOptions {
 }
 
 export interface GetData {
-	getData(payload: {
-		page: number;
-		pageSize: number;
-		properties: string[];
-		sort: Record<string, "ascending" | "descending">;
-		queries: {
-			data: any;
-			filter: {
-				property: string;
-			};
-			filterType: FilterType;
-		}[];
-		operator: "and" | "or" | "nor";
-	}): Promise<{
+	getData(
+		context: JobContext,
+		payload: {
+			page: number;
+			pageSize: number;
+			properties: string[];
+			sort: Record<string, "ascending" | "descending">;
+			queries: {
+				data: any;
+				filter: {
+					property: string;
+				};
+				filterType: FilterType;
+			}[];
+			operator: "and" | "or" | "nor";
+		}
+	): Promise<{
 		data: any[];
 		count: number;
 	}>;
@@ -51,6 +55,7 @@ export default function getDataPlugin(schema: Schema) {
 	schema.static(
 		"getData",
 		async function getData(
+			context: JobContext,
 			payload: Parameters<GetData["getData"]>[0]
 		): ReturnType<GetData["getData"]> {
 			const { page, pageSize, properties, sort, queries, operator } =

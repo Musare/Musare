@@ -8,6 +8,7 @@ import {
 } from "mongoose";
 import { GetData } from "./plugins/getData";
 import { BaseSchema } from "../types/Schemas";
+import JobContext from "../JobContext";
 
 export enum NewsStatus {
 	DRAFT = "draft",
@@ -52,7 +53,13 @@ export interface NewsQueryHelpers {
 
 export interface NewsModel
 	extends Model<NewsSchema, NewsQueryHelpers>,
-		GetData {}
+		GetData {
+	published: (context: JobContext) => Promise<NewsSchema[]>;
+	newest: (
+		context: JobContext,
+		payload: { showToNewUsers?: boolean }
+	) => Promise<NewsSchema[]>;
+}
 
 export const schema = new Schema<NewsSchema, NewsModel, {}, NewsQueryHelpers>(
 	{
@@ -91,6 +98,14 @@ export const schema = new Schema<NewsSchema, NewsModel, {}, NewsQueryHelpers>(
 				const query = this.published().sort({ createdAt: "desc" });
 				if (showToNewUsers) return query.where({ showToNewUsers });
 				return query;
+			}
+		},
+		statics: {
+			published() {
+				return this.find().published();
+			},
+			newest(context: JobContext, payload: { showToNewUsers?: boolean }) {
+				return this.find().newest(payload.showToNewUsers);
 			}
 		},
 		// @ts-ignore need to somehow use GetDataSchemaOptions
