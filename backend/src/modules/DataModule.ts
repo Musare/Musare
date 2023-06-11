@@ -136,6 +136,8 @@ export default class DataModule extends BaseModule {
 
 		await this.syncModelIndexes();
 
+		await this.defineModelJobs();
+
 		// @ts-ignore
 		//        this.redisClient = createClient({ ...config.get("redis") });
 		//
@@ -428,6 +430,49 @@ export default class DataModule extends BaseModule {
 			// eslint-disable-next-line no-await-in-loop
 			await migration.up();
 		}
+	}
+
+	private async defineModelJobs() {
+		if (!this.models) throw new Error("Models not loaded");
+
+		await Promise.all(
+			Object.entries(this.models).map(async ([modelName, model]) => {
+				await Promise.all(
+					["findById"].map(async method => {
+						this.jobConfig[`${modelName}.${method}`] = {
+							method: async (context, payload) =>
+								Object.getPrototypeOf(this)[method](context, {
+									...payload,
+									model: modelName
+								})
+						};
+					})
+				);
+
+				await Promise.all(
+					Object.keys(model.schema.statics).map(async name => {
+						this.jobConfig[`${modelName}.${name}`] = {
+							method: async (...args) => model[name](...args)
+						};
+					})
+				);
+			})
+		);
+	}
+
+	private async findById(
+		context: JobContext,
+		payload: { model: keyof Models; _id: Types.ObjectId }
+	) {
+		// await context.assertPermission(
+		// 	`data.${payload.model}.findById.${payload._id}`
+		// );
+
+		const model = await context.getModel(payload.model);
+
+		const query = model.findById(payload._id);
+
+		return query.exec();
 	}
 }
 

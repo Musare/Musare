@@ -138,7 +138,8 @@ export default class WebSocketModule extends BaseModule {
 				throw new Error("Invalid request");
 
 			const [moduleJob, payload, options] = data;
-			const [moduleName, jobName] = moduleJob.split(".");
+			const [moduleName, ...jobNameParts] = moduleJob.split(".");
+			const jobName = jobNameParts.join(".");
 
 			callbackRef = (options ?? payload ?? {}).CB_REF;
 
@@ -147,32 +148,18 @@ export default class WebSocketModule extends BaseModule {
 					`No callback reference provided for job ${moduleJob}`
 				);
 
-			if (moduleName === "data") {
-				const res = await this.jobQueue.runJob("api", "runDataJob", {
-					jobName,
-					payload,
-					sessionId: socket.getSessionId(),
-					socketId: socket.getSocketId()
-				});
+			const res = await this.jobQueue.runJob("api", "runJob", {
+				moduleName,
+				jobName,
+				payload,
+				sessionId: socket.getSessionId(),
+				socketId: socket.getSocketId()
+			});
 
-				socket.dispatch("CB_REF", callbackRef, {
-					status: "success",
-					data: res
-				});
-			} else {
-				const res = await this.jobQueue.runJob("api", "runJob", {
-					moduleName,
-					jobName,
-					payload,
-					sessionId: socket.getSessionId(),
-					socketId: socket.getSocketId()
-				});
-
-				socket.dispatch("CB_REF", callbackRef, {
-					status: "success",
-					data: res
-				});
-			}
+			socket.dispatch("CB_REF", callbackRef, {
+				status: "success",
+				data: res
+			});
 		} catch (error) {
 			const message = error?.message ?? error;
 
