@@ -129,6 +129,8 @@ export default class WebSocketModule extends BaseModule {
 			return;
 		}
 
+		let callbackRef;
+
 		try {
 			const data = JSON.parse(message.toString());
 
@@ -137,7 +139,13 @@ export default class WebSocketModule extends BaseModule {
 
 			const [moduleJob, payload, options] = data;
 			const [moduleName, jobName] = moduleJob.split(".");
-			const { CB_REF } = options ?? payload ?? {};
+
+			callbackRef = (options ?? payload ?? {}).CB_REF;
+
+			if (!callbackRef)
+				throw new Error(
+					`No callback reference provided for job ${moduleJob}`
+				);
 
 			const res = await this.jobQueue.runJob("api", "runJob", {
 				moduleName,
@@ -147,13 +155,21 @@ export default class WebSocketModule extends BaseModule {
 				socketId: socket.getSocketId()
 			});
 
-			socket.dispatch("CB_REF", CB_REF, res);
+			socket.dispatch("CB_REF", callbackRef, {
+				status: "success",
+				data: res
+			});
 		} catch (error) {
 			const message = error?.message ?? error;
 
-			this.log({ type: "error", message });
+			socket.log({ type: "error", message });
 
-			socket.dispatch("ERROR", error?.message ?? error);
+			if (callbackRef)
+				socket.dispatch("CB_REF", callbackRef, {
+					status: "error",
+					message
+				});
+			else socket.dispatch("ERROR", message);
 		}
 	}
 
