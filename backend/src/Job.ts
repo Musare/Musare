@@ -70,14 +70,7 @@ export default class Job {
 		if (!module) throw new Error("Module not found.");
 		this.module = module;
 
-		// eslint-disable-next-line
-		// @ts-ignore
-		const jobFunction = this.module[this.name];
-		if (!jobFunction || typeof jobFunction !== "function")
-			throw new Error("Job not found.");
-		if (Object.prototype.hasOwnProperty.call(BaseModule, this.name))
-			throw new Error("Illegal job function.");
-		this.jobFunction = jobFunction;
+		this.jobFunction = this.module.getJob(this.name).method;
 
 		this.payload = payload;
 

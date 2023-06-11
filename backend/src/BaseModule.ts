@@ -1,3 +1,4 @@
+import JobContext from "./JobContext";
 import JobQueue from "./JobQueue";
 import LogBook, { Log } from "./LogBook";
 import ModuleManager from "./ModuleManager";
@@ -26,6 +27,25 @@ export default abstract class BaseModule {
 
 	protected dependentModules: (keyof Modules)[];
 
+	protected jobApiDefault: boolean;
+
+	protected jobConfig: Record<
+		string,
+		| boolean
+		| {
+				api?: boolean;
+				method?: (context: JobContext, payload?: any) => Promise<any>;
+		  }
+	>;
+
+	protected jobs: Record<
+		string,
+		{
+			api: boolean;
+			method: (context: JobContext, payload?: any) => Promise<any>;
+		}
+	>;
+
 	/**
 	 * Base Module
 	 *
@@ -38,6 +58,9 @@ export default abstract class BaseModule {
 		this.name = name;
 		this.status = ModuleStatus.LOADED;
 		this.dependentModules = [];
+		this.jobApiDefault = true;
+		this.jobConfig = {};
+		this.jobs = {};
 		this.log(`Module (${this.name}) loaded`);
 	}
 
@@ -76,6 +99,68 @@ export default abstract class BaseModule {
 	}
 
 	/**
+	 * loadJobs - Load jobs available via api module
+	 */
+	private async loadJobs() {
+		this.jobs = {};
+
+		const module = Object.getPrototypeOf(this);
+		await Promise.all(
+			Object.getOwnPropertyNames(module).map(async property => {
+				if (
+					typeof module[property] !== "function" ||
+					Object.prototype.hasOwnProperty.call(
+						BaseModule.prototype,
+						property
+					)
+				)
+					return;
+
+				const options = this.jobConfig[property];
+
+				let api = this.jobApiDefault;
+				if (
+					typeof options === "object" &&
+					typeof options.api === "boolean"
+				)
+					api = options.api;
+				else if (typeof options === "boolean") api = options;
+
+				this.jobs[property] = {
+					api,
+					method: module[property]
+				};
+			})
+		);
+
+		await Promise.all(
+			Object.entries(this.jobConfig).map(async ([name, options]) => {
+				if (
+					typeof options === "object" &&
+					typeof options.method === "function"
+				) {
+					if (this.jobs[name])
+						throw new Error(`Job "${name}" is already defined`);
+
+					this.jobs[name] = {
+						api: options.api ?? this.jobApiDefault,
+						method: options.method
+					};
+				}
+			})
+		);
+	}
+
+	/**
+	 * getJob - Get module job
+	 */
+	public getJob(name: string) {
+		if (!this.jobs[name]) throw new Error(`Job "${name}" not found.`);
+
+		return this.jobs[name];
+	}
+
+	/**
 	 * startup - Startup module
 	 */
 	public async startup() {
@@ -87,6 +172,7 @@ export default abstract class BaseModule {
 	 * started - called with the module has started
 	 */
 	protected async started() {
+		await this.loadJobs();
 		this.log(`Module (${this.name}) started`);
 		this.setStatus(ModuleStatus.STARTED);
 	}
