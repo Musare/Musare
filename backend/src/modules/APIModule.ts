@@ -89,6 +89,47 @@ export default class APIModule extends BaseModule {
 	}
 
 	/**
+	 * Experimental: for APIModule<->DataModule
+	 */
+	public async runDataJob(
+		context: JobContext,
+		{
+			jobName,
+			payload,
+			sessionId,
+			socketId
+		}: {
+			jobName: string;
+			payload: any;
+			sessionId?: string;
+			socketId?: string;
+		}
+	) {
+		let session;
+		if (sessionId) {
+			const Session = await context.getModel("session");
+
+			session = await Session.findByIdAndUpdate(sessionId, {
+				updatedAt: Date.now()
+			});
+		}
+
+		const Model = await context.getModel(payload.model);
+
+		if (jobName === "find") {
+			const response = await Model.find(payload.query).setOptions({
+				userContext: {
+					session
+				}
+			});
+
+			return response;
+		}
+
+		return null;
+	}
+
+	/**
 	 * getCookieValueFromHeader - Get value of a cookie from cookie header string
 	 */
 	private getCookieValueFromHeader(cookieName: string, header: string) {

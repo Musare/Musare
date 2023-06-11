@@ -147,18 +147,32 @@ export default class WebSocketModule extends BaseModule {
 					`No callback reference provided for job ${moduleJob}`
 				);
 
-			const res = await this.jobQueue.runJob("api", "runJob", {
-				moduleName,
-				jobName,
-				payload,
-				sessionId: socket.getSessionId(),
-				socketId: socket.getSocketId()
-			});
+			if (moduleName === "data") {
+				const res = await this.jobQueue.runJob("api", "runDataJob", {
+					jobName,
+					payload,
+					sessionId: socket.getSessionId(),
+					socketId: socket.getSocketId()
+				});
 
-			socket.dispatch("CB_REF", callbackRef, {
-				status: "success",
-				data: res
-			});
+				socket.dispatch("CB_REF", callbackRef, {
+					status: "success",
+					data: res
+				});
+			} else {
+				const res = await this.jobQueue.runJob("api", "runJob", {
+					moduleName,
+					jobName,
+					payload,
+					sessionId: socket.getSessionId(),
+					socketId: socket.getSocketId()
+				});
+
+				socket.dispatch("CB_REF", callbackRef, {
+					status: "success",
+					data: res
+				});
+			}
 		} catch (error) {
 			const message = error?.message ?? error;
 

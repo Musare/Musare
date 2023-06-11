@@ -21,10 +21,14 @@ export const schema = new Schema<AbcSchema, AbcModel>(
 			required: true
 		},
 		autofill: {
-			enabled: {
-				type: SchemaTypes.Boolean,
-				required: false
-			}
+			type: {
+				_id: false,
+				enabled: {
+					type: SchemaTypes.Boolean,
+					required: false
+				}
+			},
+			restricted: true
 		},
 		someNumbers: [{ type: SchemaTypes.Number }],
 		songs: [

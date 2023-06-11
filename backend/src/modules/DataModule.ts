@@ -18,6 +18,94 @@ import documentVersionPlugin from "../schemas/plugins/documentVersion";
 import getDataPlugin from "../schemas/plugins/getData";
 import Migration from "../Migration";
 
+/**
+ * Experimental: function to get all nested keys from a MongoDB query object
+ */
+function getAllKeys(obj: object) {
+	const keys: string[] = [];
+
+	function processObject(obj: object, parentKey = "") {
+		let returnChanged = false;
+
+		// eslint-disable-next-line
+		for (let key in obj) {
+			// eslint-disable-next-line
+			if (obj.hasOwnProperty(key)) {
+				if (key.startsWith("$")) {
+					// eslint-disable-next-line
+					// @ts-ignore
+					// eslint-disable-next-line
+					processNestedObject(obj[key], parentKey); // Process nested keys without including the current key
+					// eslint-disable-next-line
+					continue; // Skip the current key
+				}
+
+				const currentKey = parentKey ? `${parentKey}.${key}` : key;
+
+				// eslint-disable-next-line
+				// @ts-ignore
+				if (typeof obj[key] === "object" && obj[key] !== null) {
+					// eslint-disable-next-line
+					// @ts-ignore
+					if (Array.isArray(obj[key])) {
+						// eslint-disable-next-line
+						// @ts-ignore
+						// eslint-disable-next-line
+						if (processArray(obj[key], currentKey)) {
+							returnChanged = true;
+							// eslint-disable-next-line
+							continue;
+						}
+					}
+					// eslint-disable-next-line
+					// @ts-ignore
+					else if (processObject(obj[key], currentKey)) {
+						returnChanged = true;
+						// eslint-disable-next-line
+						continue;
+					}
+				}
+
+				keys.push(currentKey);
+
+				returnChanged = true;
+			}
+		}
+
+		return returnChanged;
+	}
+
+	function processArray(arr: Array<any>, parentKey: string) {
+		let returnChanged = false;
+
+		for (let i = 0; i < arr.length; i += 1) {
+			const currentKey = parentKey;
+
+			if (typeof arr[i] === "object" && arr[i] !== null) {
+				if (Array.isArray(arr[i])) {
+					if (processArray(arr[i], currentKey)) returnChanged = true;
+				} else if (processObject(arr[i], currentKey))
+					returnChanged = true;
+			}
+		}
+
+		return returnChanged;
+	}
+
+	function processNestedObject(obj: object, parentKey: string) {
+		if (typeof obj === "object" && obj !== null) {
+			if (Array.isArray(obj)) {
+				processArray(obj, parentKey);
+			} else {
+				processObject(obj, parentKey);
+			}
+		}
+	}
+
+	processObject(obj);
+	return keys;
+}
+
 export default class DataModule extends BaseModule {
 	private models?: Models;
 
@@ -117,36 +205,94 @@ export default class DataModule extends BaseModule {
 		ModelName extends keyof Models,
 		SchemaType extends Schemas[keyof ModelName]
 	>(modelName: ModelName, schema: SchemaType) {
-		// const preMethods: string[] = [
-		// 	"aggregate",
-		// 	"count",
-		// 	"countDocuments",
-		// 	"deleteOne",
-		// 	"deleteMany",
-		// 	"estimatedDocumentCount",
-		// 	"find",
-		// 	"findOne",
-		// 	"findOneAndDelete",
-		// 	"findOneAndRemove",
-		// 	"findOneAndReplace",
-		// 	"findOneAndUpdate",
-		// 	"init",
-		// 	"insertMany",
-		// 	"remove",
-		// 	"replaceOne",
-		// 	"save",
-		// 	"update",
-		// 	"updateOne",
-		// 	"updateMany",
-		// 	"validate"
-		// ];
+		const methods: string[] = [
+			"aggregate",
+			"count",
+			"countDocuments",
+			"deleteOne",
+			"deleteMany",
+			"estimatedDocumentCount",
+			"find",
+			"findOne",
+			"findOneAndDelete",
+			"findOneAndRemove",
+			"findOneAndReplace",
+			"findOneAndUpdate",
+			// "init",
+			"insertMany",
+			"remove",
+			"replaceOne",
+			"save",
+			"update",
+			"updateOne",
+			"updateMany"
+			// "validate"
+		];
 
-		// preMethods.forEach(preMethod => {
-		// 	// @ts-ignore
-		// 	schema.pre(preMethods, () => {
-		// 		console.log(`Pre-${preMethod}!`);
-		// 	});
-		// });
+		methods.forEach(method => {
+			// NOTE: some Mongo selectors may also search through linked documents. Prevent that
+			schema.pre(method, async function () {
+				console.log(`Pre-${method}! START`);
+
+				if (
+					this.options?.userContext &&
+					["find", "update", "deleteOne", "save"].indexOf(method) ===
+						-1
+				)
+					throw new Error("Method not allowed");
+
+				console.log(`Pre-${method}!`, this.options?.userContext);
+
+				if (["find", "update", "deleteOne"].indexOf(method) !== -1) {
+					const filter = this.getFilter();
+					const filterKeys = getAllKeys(filter);
+
+					filterKeys.forEach(filterKey => {
+						const splitFilterKeys = filterKey
+							.split(".")
+							.reduce(
+								(keys: string[], key: string) =>
+									keys.length > 0
+										? [
+												...keys,
+												`${
+													keys[keys.length - 1]
+												}.${key}`
+										  ]
+										: [key],
+								[]
+							);
+						splitFilterKeys.forEach(splitFilterKey => {
+							const path = this.schema.path(splitFilterKey);
+							if (!path) {
+								throw new Error(
+									"Attempted to query with non-existant property"
+								);
+							}
+							if (path.options.restricted) {
+								throw new Error(
+									"Attempted to query with restricted property"
+								);
+							}
+						});
+					});
+
+					console.log(`Pre-${method}!`, filterKeys);
+
+					// Here we want to always exclude some properties depending on the model, like passwords/tokens
+					this.projection({ restrictedName: 0 });
+				}
+
+				console.log(`Pre-${method}! END`);
+			});
+
+			schema.post(method, async function (docOrDocs) {
+				console.log(`Post-${method} START!`);
+				console.log(`Post-${method}!`, docOrDocs);
+				console.log(`Post-${method}!`, this);
+				console.log(`Post-${method} END!`);
+			});
+		});
 
 		const { enabled, eventCreated, eventUpdated, eventDeleted } =
 			schema.get("patchHistory") ?? {};
