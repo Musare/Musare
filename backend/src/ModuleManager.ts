@@ -96,6 +96,20 @@ export default class ModuleManager {
 	}
 
 	/**
+	 * getJobs - Get jobs for all modules
+	 */
+	public getJobs() {
+		if (!this._modules) return [];
+
+		return Object.fromEntries(
+			Object.entries(this._modules).map(([name, module]) => [
+				name,
+				module.getJobs()
+			])
+		);
+	}
+
+	/**
 	 * startup - Handle startup
 	 */
 	public async startup() {

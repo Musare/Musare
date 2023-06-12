@@ -406,6 +406,10 @@ const runCommand = (line: string) => {
 				);
 			break;
 		}
+		case "getjobs": {
+			console.log(moduleManager.getJobs());
+			break;
+		}
 		default: {
 			if (!/^\s*$/.test(command))
 				console.log(`Command "${command}" not found`);

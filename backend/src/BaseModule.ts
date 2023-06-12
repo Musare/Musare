@@ -162,6 +162,13 @@ export default abstract class BaseModule {
 	}
 
 	/**
+	 * getJobs - Get module jobs
+	 */
+	public getJobs() {
+		return this._jobs;
+	}
+
+	/**
 	 * startup - Startup module
 	 */
 	public async startup() {
