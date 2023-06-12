@@ -18,7 +18,7 @@ export default class APIModule extends BaseModule {
 	public constructor() {
 		super("api");
 
-		this.dependentModules = ["data", "events", "websocket"];
+		this._dependentModules = ["data", "events", "websocket"];
 		this._subscriptions = {};
 	}
 
@@ -28,7 +28,7 @@ export default class APIModule extends BaseModule {
 	public override async startup() {
 		await super.startup();
 
-		await super.started();
+		await super._started();
 	}
 
 	/**
@@ -39,7 +39,7 @@ export default class APIModule extends BaseModule {
 
 		await this._removeAllSubscriptions();
 
-		await super.stopped();
+		await super._stopped();
 	}
 
 	/**
@@ -140,7 +140,7 @@ export default class APIModule extends BaseModule {
 
 		socket.on("close", async () => {
 			if (socketId)
-				await this.jobQueue.runJob("api", "unsubscribeAll", {
+				await this._jobQueue.runJob("api", "unsubscribeAll", {
 					socketId
 				});
 		});
@@ -222,7 +222,7 @@ export default class APIModule extends BaseModule {
 		const promises = [];
 		for await (const socketId of this._subscriptions[channel].values()) {
 			promises.push(
-				this.jobQueue.runJob("websocket", "dispatch", {
+				this._jobQueue.runJob("websocket", "dispatch", {
 					socketId,
 					channel,
 					value
@@ -315,7 +315,7 @@ export default class APIModule extends BaseModule {
 					const promises = [];
 					for await (const socketId of socketIds.values()) {
 						promises.push(
-							this.jobQueue.runJob("api", "unsubscribe", {
+							this._jobQueue.runJob("api", "unsubscribe", {
 								socketId,
 								channel
 							})

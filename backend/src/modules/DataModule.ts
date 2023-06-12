@@ -119,9 +119,9 @@ export default class DataModule extends BaseModule {
 	public constructor() {
 		super("data");
 
-		this.dependentModules = ["events"];
+		this._dependentModules = ["events"];
 
-		this.jobConfig = {
+		this._jobConfig = {
 			getModel: false
 		};
 	}
@@ -167,7 +167,7 @@ export default class DataModule extends BaseModule {
 		//				}`
 		//			);
 
-		await super.started();
+		await super._started();
 	}
 
 	/**
@@ -178,7 +178,7 @@ export default class DataModule extends BaseModule {
 		//		if (this._redisClient) await this._redisClient.quit();
 		patchEventEmitter.removeAllListeners();
 		if (this._mongoConnection) await this._mongoConnection.close();
-		await this.stopped();
+		await this._stopped();
 	}
 
 	/**
@@ -313,7 +313,7 @@ export default class DataModule extends BaseModule {
 			.filter(([, event]) => !!event)
 			.forEach(([action, event]) => {
 				patchEventEmitter.on(event, async ({ doc }) => {
-					await this.jobQueue.runJob("events", "publish", {
+					await this._jobQueue.runJob("events", "publish", {
 						channel: `model.${modelName}.${doc._id}.${action}`,
 						value: doc
 					});
@@ -443,7 +443,7 @@ export default class DataModule extends BaseModule {
 			Object.entries(this._models).map(async ([modelName, model]) => {
 				await Promise.all(
 					["findById"].map(async method => {
-						this.jobConfig[`${modelName}.${method}`] = {
+						this._jobConfig[`${modelName}.${method}`] = {
 							method: async (context, payload) =>
 								Object.getPrototypeOf(this)[`_${method}`](
 									context,
@@ -458,7 +458,7 @@ export default class DataModule extends BaseModule {
 
 				await Promise.all(
 					Object.keys(model.schema.statics).map(async name => {
-						this.jobConfig[`${modelName}.${name}`] = {
+						this._jobConfig[`${modelName}.${name}`] = {
 							method: async (...args) => model[name](...args)
 						};
 					})

@@ -53,6 +53,12 @@
 				"modifiers": ["private"],
 				"format": null,
 				"leadingUnderscore": "require"
+			},
+			{
+				"selector": "memberLike",
+				"modifiers": ["protected"],
+				"format": null,
+				"leadingUnderscore": "require"
 			}
 		],
 		"no-void": 0,

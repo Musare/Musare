@@ -2,7 +2,7 @@ import Migration from "../../Migration";
 
 export default class Migration1620330161000 extends Migration {
 	async up() {
-		const News = this.getDb().collection("news");
+		const News = this._getDb().collection("news");
 
 		const newsItems = News.find({ documentVersion: 1 }).stream();
 

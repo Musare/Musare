@@ -2,11 +2,11 @@ import { WebSocket as WSWebSocket } from "ws";
 import LogBook, { Log } from "./LogBook";
 
 export default class WebSocket extends WSWebSocket {
-	protected logBook: LogBook = LogBook.getPrimaryInstance();
+	private _logBook: LogBook = LogBook.getPrimaryInstance();
 
-	protected socketId?: string;
+	private _socketId?: string;
 
-	protected sessionId?: string;
+	private _sessionId?: string;
 
 	public dispatch(name: string, ...args: any[]) {
 		this.send(JSON.stringify([name, ...args]));
@@ -25,7 +25,7 @@ export default class WebSocket extends WSWebSocket {
 		} = {
 			...(typeof log === "string" ? { message: log } : log)
 		};
-		this.logBook.log({
+		this._logBook.log({
 			message,
 			type,
 			category: "modules.websocket.socket",
@@ -34,18 +34,18 @@ export default class WebSocket extends WSWebSocket {
 	}
 
 	public getSocketId() {
-		return this.socketId;
+		return this._socketId;
 	}
 
 	public setSocketId(socketId?: string) {
-		this.socketId = socketId;
+		this._socketId = socketId;
 	}
 
 	public getSessionId() {
-		return this.sessionId;
+		return this._sessionId;
 	}
 
 	public setSessionId(sessionId?: string) {
-		this.sessionId = sessionId;
+		this._sessionId = sessionId;
 	}
 }

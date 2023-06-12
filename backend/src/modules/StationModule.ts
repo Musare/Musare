@@ -9,7 +9,7 @@ export default class StationModule extends BaseModule {
 	public constructor() {
 		super("stations");
 
-		this.dependentModules = ["data"];
+		this._dependentModules = ["data"];
 	}
 
 	/**
@@ -18,7 +18,7 @@ export default class StationModule extends BaseModule {
 	public override async startup() {
 		await super.startup();
 		this.log("Station Startup");
-		await super.started();
+		await super._started();
 	}
 
 	/**
@@ -26,7 +26,7 @@ export default class StationModule extends BaseModule {
 	 */
 	public override async shutdown() {
 		await super.shutdown();
-		await super.stopped();
+		await super._stopped();
 	}
 
 	/**

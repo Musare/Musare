@@ -7,7 +7,7 @@ export default class Migration {
 		this._mongoConnection = mongoConnection;
 	}
 
-	protected getDb() {
+	protected _getDb() {
 		return this._mongoConnection.db;
 	}
 

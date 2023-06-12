@@ -22,7 +22,7 @@ export default class WebSocketModule extends BaseModule {
 	public constructor() {
 		super("websocket");
 
-		this.jobApiDefault = false;
+		this._jobApiDefault = false;
 	}
 
 	/**
@@ -53,7 +53,7 @@ export default class WebSocketModule extends BaseModule {
 			clearInterval(this._keepAliveInterval)
 		);
 
-		await super.started();
+		await super._started();
 	}
 
 	/**
@@ -87,7 +87,7 @@ export default class WebSocketModule extends BaseModule {
 		socket: WebSocket,
 		request: IncomingMessage
 	) {
-		if (this.jobQueue.getStatus().isPaused) {
+		if (this._jobQueue.getStatus().isPaused) {
 			socket.close();
 			return;
 		}
@@ -126,7 +126,7 @@ export default class WebSocketModule extends BaseModule {
 	 * handleMessage - Handle websocket message
 	 */
 	private async _handleMessage(socket: WebSocket, message: RawData) {
-		if (this.jobQueue.getStatus().isPaused) {
+		if (this._jobQueue.getStatus().isPaused) {
 			socket.close();
 			return;
 		}
@@ -150,13 +150,13 @@ export default class WebSocketModule extends BaseModule {
 					`No callback reference provided for job ${moduleJob}`
 				);
 
-			const module = this.moduleManager.getModule(moduleName);
+			const module = this._moduleManager.getModule(moduleName);
 			if (!module) throw new Error(`Module "${moduleName}" not found`);
 
 			const job = module.getJob(jobName);
 			if (!job.api) throw new Error(`Job "${jobName}" not found.`);
 
-			const res = await this.jobQueue.runJob("api", "runJob", {
+			const res = await this._jobQueue.runJob("api", "runJob", {
 				moduleName,
 				jobName,
 				payload,
@@ -245,7 +245,7 @@ export default class WebSocketModule extends BaseModule {
 		if (this._httpServer) this._httpServer.close();
 		if (this._wsServer) this._wsServer.close();
 
-		await this.stopped();
+		await this._stopped();
 	}
 }
 

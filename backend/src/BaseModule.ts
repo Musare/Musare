@@ -15,21 +15,21 @@ export enum ModuleStatus {
 }
 
 export default abstract class BaseModule {
-	protected moduleManager: ModuleManager;
+	protected _moduleManager: ModuleManager;
 
-	protected logBook: LogBook;
+	protected _logBook: LogBook;
 
-	protected jobQueue: JobQueue;
+	protected _jobQueue: JobQueue;
 
-	protected name: string;
+	protected _name: string;
 
-	protected status: ModuleStatus;
+	protected _status: ModuleStatus;
 
-	protected dependentModules: (keyof Modules)[];
+	protected _dependentModules: (keyof Modules)[];
 
-	protected jobApiDefault: boolean;
+	protected _jobApiDefault: boolean;
 
-	protected jobConfig: Record<
+	protected _jobConfig: Record<
 		string,
 		| boolean
 		| {
@@ -38,7 +38,7 @@ export default abstract class BaseModule {
 		  }
 	>;
 
-	protected jobs: Record<
+	protected _jobs: Record<
 		string,
 		{
 			api: boolean;
@@ -52,16 +52,16 @@ export default abstract class BaseModule {
 	 * @param name - Module name
 	 */
 	public constructor(name: string) {
-		this.moduleManager = ModuleManager.getPrimaryInstance();
-		this.logBook = LogBook.getPrimaryInstance();
-		this.jobQueue = JobQueue.getPrimaryInstance();
-		this.name = name;
-		this.status = ModuleStatus.LOADED;
-		this.dependentModules = [];
-		this.jobApiDefault = true;
-		this.jobConfig = {};
-		this.jobs = {};
-		this.log(`Module (${this.name}) loaded`);
+		this._moduleManager = ModuleManager.getPrimaryInstance();
+		this._logBook = LogBook.getPrimaryInstance();
+		this._jobQueue = JobQueue.getPrimaryInstance();
+		this._name = name;
+		this._status = ModuleStatus.LOADED;
+		this._dependentModules = [];
+		this._jobApiDefault = true;
+		this._jobConfig = {};
+		this._jobs = {};
+		this.log(`Module (${this._name}) loaded`);
 	}
 
 	/**
@@ -70,7 +70,7 @@ export default abstract class BaseModule {
 	 * @returns name
 	 */
 	public getName() {
-		return this.name;
+		return this._name;
 	}
 
 	/**
@@ -79,7 +79,7 @@ export default abstract class BaseModule {
 	 * @returns status
 	 */
 	public getStatus() {
-		return this.status;
+		return this._status;
 	}
 
 	/**
@@ -88,21 +88,21 @@ export default abstract class BaseModule {
 	 * @param status - Module status
 	 */
 	public setStatus(status: ModuleStatus) {
-		this.status = status;
+		this._status = status;
 	}
 
 	/**
 	 * getDependentModules - Get module dependencies
 	 */
 	public getDependentModules() {
-		return this.dependentModules;
+		return this._dependentModules;
 	}
 
 	/**
 	 * _loadJobs - Load jobs available via api module
 	 */
 	private async _loadJobs() {
-		this.jobs = {};
+		this._jobs = {};
 
 		const module = Object.getPrototypeOf(this);
 		await Promise.all(
@@ -116,9 +116,9 @@ export default abstract class BaseModule {
 				)
 					return;
 
-				const options = this.jobConfig[property];
+				const options = this._jobConfig[property];
 
-				let api = this.jobApiDefault;
+				let api = this._jobApiDefault;
 				if (
 					typeof options === "object" &&
 					typeof options.api === "boolean"
@@ -126,7 +126,7 @@ export default abstract class BaseModule {
 					api = options.api;
 				else if (typeof options === "boolean") api = options;
 
-				this.jobs[property] = {
+				this._jobs[property] = {
 					api,
 					method: module[property]
 				};
@@ -134,16 +134,16 @@ export default abstract class BaseModule {
 		);
 
 		await Promise.all(
-			Object.entries(this.jobConfig).map(async ([name, options]) => {
+			Object.entries(this._jobConfig).map(async ([name, options]) => {
 				if (
 					typeof options === "object" &&
 					typeof options.method === "function"
 				) {
-					if (this.jobs[name])
+					if (this._jobs[name])
 						throw new Error(`Job "${name}" is already defined`);
 
-					this.jobs[name] = {
-						api: options.api ?? this.jobApiDefault,
+					this._jobs[name] = {
+						api: options.api ?? this._jobApiDefault,
 						method: options.method
 					};
 				}
@@ -155,25 +155,25 @@ export default abstract class BaseModule {
 	 * getJob - Get module job
 	 */
 	public getJob(name: string) {
-		if (!this.jobs[name]) throw new Error(`Job "${name}" not found.`);
+		if (!this._jobs[name]) throw new Error(`Job "${name}" not found.`);
 
-		return this.jobs[name];
+		return this._jobs[name];
 	}
 
 	/**
 	 * startup - Startup module
 	 */
 	public async startup() {
-		this.log(`Module (${this.name}) starting`);
+		this.log(`Module (${this._name}) starting`);
 		this.setStatus(ModuleStatus.STARTING);
 	}
 
 	/**
 	 * started - called with the module has started
 	 */
-	protected async started() {
+	protected async _started() {
 		await this._loadJobs();
-		this.log(`Module (${this.name}) started`);
+		this.log(`Module (${this._name}) started`);
 		this.setStatus(ModuleStatus.STARTED);
 	}
 
@@ -181,15 +181,15 @@ export default abstract class BaseModule {
 	 * shutdown - Shutdown module
 	 */
 	public async shutdown() {
-		this.log(`Module (${this.name}) stopping`);
+		this.log(`Module (${this._name}) stopping`);
 		this.setStatus(ModuleStatus.STOPPING);
 	}
 
 	/**
 	 * stopped - called when the module has stopped
 	 */
-	protected async stopped() {
-		this.log(`Module (${this.name}) stopped`);
+	protected async _stopped() {
+		this.log(`Module (${this._name}) stopped`);
 		this.setStatus(ModuleStatus.STOPPED);
 	}
 
@@ -198,7 +198,7 @@ export default abstract class BaseModule {
 	 *
 	 * @param log - Log message or object
 	 */
-	protected log(log: string | Omit<Log, "timestamp" | "category">) {
+	public log(log: string | Omit<Log, "timestamp" | "category">) {
 		const {
 			message,
 			type = undefined,
@@ -206,12 +206,12 @@ export default abstract class BaseModule {
 		} = {
 			...(typeof log === "string" ? { message: log } : log)
 		};
-		this.logBook.log({
+		this._logBook.log({
 			message,
 			type,
 			category: `modules.${this.getName()}`,
 			data: {
-				moduleName: this.name,
+				moduleName: this._name,
 				...data
 			}
 		});

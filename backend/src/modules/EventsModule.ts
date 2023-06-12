@@ -22,7 +22,7 @@ export default class EventsModule extends BaseModule {
 
 		this._subscriptions = {};
 		this._scheduleCallbacks = {};
-		this.jobApiDefault = false;
+		this._jobApiDefault = false;
 	}
 
 	/**
@@ -34,7 +34,7 @@ export default class EventsModule extends BaseModule {
 		await this._createPubClient();
 		await this._createSubClient();
 
-		await super.started();
+		await super._started();
 	}
 
 	/**
@@ -292,7 +292,7 @@ export default class EventsModule extends BaseModule {
 		this._subscriptions = {};
 		this._scheduleCallbacks = {};
 
-		await this.stopped();
+		await this._stopped();
 	}
 }
 

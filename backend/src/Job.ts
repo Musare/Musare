@@ -14,19 +14,19 @@ export enum JobStatus {
 }
 
 export default class Job {
-	protected name: string;
+	private _name: string;
 
-	protected module: Modules[keyof Modules];
+	private _module: Modules[keyof Modules];
 
-	protected jobFunction: any;
+	private _jobFunction: any;
 
-	protected payload: any;
+	private _payload: any;
 
-	protected context: JobContext;
+	private _context: JobContext;
 
-	protected priority: number;
+	private _priority: number;
 
-	protected longJob?: {
+	private _longJob?: {
 		title: string;
 		progress?: {
 			data: unknown;
@@ -35,19 +35,19 @@ export default class Job {
 		};
 	};
 
-	protected uuid: string;
+	private _uuid: string;
 
-	protected status: JobStatus;
+	private _status: JobStatus;
 
-	protected createdAt: number;
+	private _createdAt: number;
 
-	protected startedAt?: number;
+	private _startedAt?: number;
 
-	protected completedAt?: number;
+	private _completedAt?: number;
 
-	protected logBook: LogBook;
+	private _logBook: LogBook;
 
-	protected jobStatistics: JobStatistics;
+	private _jobStatistics: JobStatistics;
 
 	/**
 	 * Job
@@ -63,21 +63,21 @@ export default class Job {
 		payload: any,
 		options?: Omit<JobOptions, "runDirectly">
 	) {
-		this.name = name;
-		this.priority = 1;
+		this._name = name;
+		this._priority = 1;
 
 		const module = ModuleManager.getPrimaryInstance().getModule(moduleName);
 		if (!module) throw new Error("Module not found.");
-		this.module = module;
+		this._module = module;
 
-		this.jobFunction = this.module.getJob(this.name).method;
+		this._jobFunction = this._module.getJob(this._name).method;
 
-		this.payload = payload;
+		this._payload = payload;
 
-		this.logBook = LogBook.getPrimaryInstance();
+		this._logBook = LogBook.getPrimaryInstance();
 
-		this.jobStatistics = JobStatistics.getPrimaryInstance();
-		this.jobStatistics.updateStats(this.getName(), "added");
+		this._jobStatistics = JobStatistics.getPrimaryInstance();
+		this._jobStatistics.updateStats(this.getName(), "added");
 
 		let contextOptions;
 
@@ -86,18 +86,18 @@ export default class Job {
 
 			if (session || socketId) contextOptions = { session, socketId };
 
-			if (priority) this.priority = priority;
+			if (priority) this._priority = priority;
 
 			if (longJob)
-				this.longJob = {
+				this._longJob = {
 					title: longJob
 				};
 		}
 
-		this.context = new JobContext(this, contextOptions);
+		this._context = new JobContext(this, contextOptions);
 
 		/* eslint-disable no-bitwise, eqeqeq */
-		this.uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+		this._uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
 			/[xy]/g,
 			c => {
 				const r = (Math.random() * 16) | 0;
@@ -105,8 +105,8 @@ export default class Job {
 				return v.toString(16);
 			}
 		);
-		this.status = JobStatus.QUEUED;
-		this.createdAt = Date.now();
+		this._status = JobStatus.QUEUED;
+		this._createdAt = Date.now();
 	}
 
 	/**
@@ -115,7 +115,7 @@ export default class Job {
 	 * @returns module.name
 	 */
 	public getName() {
-		return `${this.module.getName()}.${this.name}`;
+		return `${this._module.getName()}.${this._name}`;
 	}
 
 	/**
@@ -124,7 +124,7 @@ export default class Job {
 	 * @returns priority
 	 */
 	public getPriority() {
-		return this.priority;
+		return this._priority;
 	}
 
 	/**
@@ -133,7 +133,7 @@ export default class Job {
 	 * @returns UUID
 	 */
 	public getUuid() {
-		return this.uuid;
+		return this._uuid;
 	}
 
 	/**
@@ -142,7 +142,7 @@ export default class Job {
 	 * @returns status
 	 */
 	public getStatus() {
-		return this.status;
+		return this._status;
 	}
 
 	/**
@@ -150,8 +150,8 @@ export default class Job {
 	 *
 	 * @param status - Job status
 	 */
-	protected setStatus(status: JobStatus) {
-		this.status = status;
+	private _setStatus(status: JobStatus) {
+		this._status = status;
 	}
 
 	/**
@@ -160,7 +160,7 @@ export default class Job {
 	 * @returns module
 	 */
 	public getModule() {
-		return this.module;
+		return this._module;
 	}
 
 	/**
@@ -169,12 +169,12 @@ export default class Job {
 	 * @returns Promise
 	 */
 	public async execute() {
-		if (this.startedAt) throw new Error("Job has already been executed.");
-		this.setStatus(JobStatus.ACTIVE);
-		this.startedAt = Date.now();
+		if (this._startedAt) throw new Error("Job has already been executed.");
+		this._setStatus(JobStatus.ACTIVE);
+		this._startedAt = Date.now();
 		return (
-			this.jobFunction
-				.apply(this.module, [this.context, this.payload])
+			this._jobFunction
+				.apply(this._module, [this._context, this._payload])
 				// eslint-disable-next-line
 				// @ts-ignore
 				.then(response => {
@@ -182,7 +182,7 @@ export default class Job {
 						message: "Job completed successfully",
 						type: "success"
 					});
-					this.jobStatistics.updateStats(
+					this._jobStatistics.updateStats(
 						this.getName(),
 						"successful"
 					);
@@ -193,19 +193,19 @@ export default class Job {
 						message: `Job failed with error "${err}"`,
 						type: "error"
 					});
-					this.jobStatistics.updateStats(this.getName(), "failed");
+					this._jobStatistics.updateStats(this.getName(), "failed");
 					throw err;
 				})
 				.finally(() => {
-					this.completedAt = Date.now();
-					this.jobStatistics.updateStats(this.getName(), "total");
-					if (this.startedAt)
-						this.jobStatistics.updateStats(
+					this._completedAt = Date.now();
+					this._jobStatistics.updateStats(this.getName(), "total");
+					if (this._startedAt)
+						this._jobStatistics.updateStats(
 							this.getName(),
 							"averageTime",
-							this.completedAt - this.startedAt
+							this._completedAt - this._startedAt
 						);
-					this.setStatus(JobStatus.COMPLETED);
+					this._setStatus(JobStatus.COMPLETED);
 				})
 		);
 	}
@@ -223,7 +223,7 @@ export default class Job {
 		} = {
 			...(typeof log === "string" ? { message: log } : log)
 		};
-		this.logBook.log({
+		this._logBook.log({
 			message,
 			type,
 			category: this.getName(),
@@ -245,10 +245,10 @@ export default class Job {
 			priority: this.getPriority(),
 			name: this.getName(),
 			status: this.getStatus(),
-			moduleStatus: this.module.getStatus(),
-			createdAt: this.createdAt,
-			startedAt: this.startedAt,
-			completedAt: this.completedAt
+			moduleStatus: this._module.getStatus(),
+			createdAt: this._createdAt,
+			startedAt: this._startedAt,
+			completedAt: this._completedAt
 		};
 	}
 }
