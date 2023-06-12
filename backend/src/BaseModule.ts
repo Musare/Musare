@@ -112,7 +112,8 @@ export default abstract class BaseModule {
 					Object.prototype.hasOwnProperty.call(
 						BaseModule.prototype,
 						property
-					)
+					) ||
+					property.startsWith("_")
 				)
 					return;
 
