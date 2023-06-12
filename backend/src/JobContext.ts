@@ -14,13 +14,13 @@ export default class JobContext {
 
 	public readonly jobQueue: JobQueue;
 
-	private session?: SessionSchema;
+	private _session?: SessionSchema;
 
-	private readonly socketId?: string;
+	private readonly _socketId?: string;
 
-	private user?: UserSchema;
+	private _user?: UserSchema;
 
-	private permissions?: Record<string, boolean>;
+	private _permissions?: Record<string, boolean>;
 
 	public constructor(
 		job: Job,
@@ -28,8 +28,8 @@ export default class JobContext {
 	) {
 		this.job = job;
 		this.jobQueue = JobQueue.getPrimaryInstance();
-		this.session = options?.session;
-		this.socketId = options?.socketId;
+		this._session = options?.session;
+		this._socketId = options?.socketId;
 	}
 
 	/**
@@ -42,15 +42,15 @@ export default class JobContext {
 	}
 
 	public getSession() {
-		return this.session;
+		return this._session;
 	}
 
 	public setSession(session?: SessionSchema) {
-		this.session = session;
+		this._session = session;
 	}
 
 	public getSocketId() {
-		return this.socketId;
+		return this._socketId;
 	}
 
 	/**
@@ -79,8 +79,8 @@ export default class JobContext {
 		options?: JobOptions
 	): Promise<ReturnType> {
 		return new Job(jobName.toString(), moduleName, payload, {
-			session: this.session,
-			socketId: this.socketId,
+			session: this._session,
+			socketId: this._socketId,
 			...(options ?? {})
 		}).execute();
 	}
@@ -90,36 +90,38 @@ export default class JobContext {
 	}
 
 	public async getUser(refresh = false) {
-		if (!this.session?.userId) throw new Error("No user found for session");
+		if (!this._session?.userId)
+			throw new Error("No user found for session");
 
-		if (this.user && !refresh) return this.user;
+		if (this._user && !refresh) return this._user;
 
 		const User = await this.getModel("user");
 
-		this.user = await User.findById(this.session.userId);
+		this._user = await User.findById(this._session.userId);
 
-		if (!this.user) throw new Error("No user found for session");
+		if (!this._user) throw new Error("No user found for session");
 
-		return this.user;
+		return this._user;
 	}
 
 	public async assertLoggedIn() {
-		if (!this.session?.userId) throw new Error("No user found for session");
+		if (!this._session?.userId)
+			throw new Error("No user found for session");
 	}
 
 	public async getUserPermissions(
 		scope?: { stationId?: Types.ObjectId },
 		refresh = false
 	) {
-		if (this.permissions && !refresh) return this.permissions;
+		if (this._permissions && !refresh) return this._permissions;
 
-		this.permissions = await this.executeJob(
+		this._permissions = await this.executeJob(
 			"api",
 			"getUserPermissions",
 			scope ?? {}
 		);
 
-		return this.permissions;
+		return this._permissions;
 	}
 
 	public async assertPermission(

@@ -10,7 +10,7 @@ import { StationType } from "../schemas/station";
 import permissions from "../permissions";
 
 export default class APIModule extends BaseModule {
-	private subscriptions: Record<string, Set<string>>;
+	private _subscriptions: Record<string, Set<string>>;
 
 	/**
 	 * API Module
@@ -19,7 +19,7 @@ export default class APIModule extends BaseModule {
 		super("api");
 
 		this.dependentModules = ["data", "events", "websocket"];
-		this.subscriptions = {};
+		this._subscriptions = {};
 	}
 
 	/**
@@ -37,7 +37,7 @@ export default class APIModule extends BaseModule {
 	public override async shutdown() {
 		await super.shutdown();
 
-		await this.removeAllSubscriptions();
+		await this._removeAllSubscriptions();
 
 		await super.stopped();
 	}
@@ -91,7 +91,7 @@ export default class APIModule extends BaseModule {
 	/**
 	 * getCookieValueFromHeader - Get value of a cookie from cookie header string
 	 */
-	private getCookieValueFromHeader(cookieName: string, header: string) {
+	private _getCookieValueFromHeader(cookieName: string, header: string) {
 		const cookie = header
 			.split("; ")
 			.find(
@@ -113,7 +113,7 @@ export default class APIModule extends BaseModule {
 		socket.setSocketId(socketId);
 
 		let sessionId = request.headers.cookie
-			? this.getCookieValueFromHeader(
+			? this._getCookieValueFromHeader(
 					config.get<string>("cookie"),
 					request.headers.cookie
 			  )
@@ -218,9 +218,9 @@ export default class APIModule extends BaseModule {
 		return rolePermissions;
 	}
 
-	private async subscriptionCallback(channel: string, value?: any) {
+	private async _subscriptionCallback(channel: string, value?: any) {
 		const promises = [];
-		for await (const socketId of this.subscriptions[channel].values()) {
+		for await (const socketId of this._subscriptions[channel].values()) {
 			promises.push(
 				this.jobQueue.runJob("websocket", "dispatch", {
 					socketId,
@@ -245,18 +245,18 @@ export default class APIModule extends BaseModule {
 
 		if (!socketId) throw new Error("No socketId specified");
 
-		if (!this.subscriptions[channel])
-			this.subscriptions[channel] = new Set();
+		if (!this._subscriptions[channel])
+			this._subscriptions[channel] = new Set();
 
-		if (this.subscriptions[channel].has(socketId)) return;
+		if (this._subscriptions[channel].has(socketId)) return;
 
-		this.subscriptions[channel].add(socketId);
+		this._subscriptions[channel].add(socketId);
 
-		if (this.subscriptions[channel].size === 1)
+		if (this._subscriptions[channel].size === 1)
 			await context.executeJob("events", "subscribe", {
 				type: "event",
 				channel,
-				callback: value => this.subscriptionCallback(channel, value)
+				callback: value => this._subscriptionCallback(channel, value)
 			});
 	}
 
@@ -272,19 +272,19 @@ export default class APIModule extends BaseModule {
 
 		if (
 			!(
-				this.subscriptions[channel] &&
-				this.subscriptions[channel].has(socketId)
+				this._subscriptions[channel] &&
+				this._subscriptions[channel].has(socketId)
 			)
 		)
 			return;
 
-		this.subscriptions[channel].delete(socketId);
+		this._subscriptions[channel].delete(socketId);
 
-		if (this.subscriptions[channel].size === 0)
+		if (this._subscriptions[channel].size === 0)
 			await context.executeJob("events", "unsubscribe", {
 				type: "event",
 				channel,
-				callback: value => this.subscriptionCallback(channel, value)
+				callback: value => this._subscriptionCallback(channel, value)
 			});
 	}
 
@@ -297,7 +297,7 @@ export default class APIModule extends BaseModule {
 		if (!socketId) throw new Error("No socketId specified");
 
 		await Promise.all(
-			Object.entries(this.subscriptions)
+			Object.entries(this._subscriptions)
 				.filter(([, socketIds]) => socketIds.has(socketId))
 				.map(([channel]) =>
 					context.executeJob("api", "unsubscribe", {
@@ -308,9 +308,9 @@ export default class APIModule extends BaseModule {
 		);
 	}
 
-	private async removeAllSubscriptions() {
+	private async _removeAllSubscriptions() {
 		await Promise.all(
-			Object.entries(this.subscriptions).map(
+			Object.entries(this._subscriptions).map(
 				async ([channel, socketIds]) => {
 					const promises = [];
 					for await (const socketId of socketIds.values()) {

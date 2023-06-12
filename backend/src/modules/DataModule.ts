@@ -107,11 +107,11 @@ function getAllKeys(obj: object) {
 }
 
 export default class DataModule extends BaseModule {
-	private models?: Models;
+	private _models?: Models;
 
-	private mongoConnection?: Connection;
+	private _mongoConnection?: Connection;
 
-	//	private redisClient?: RedisClientType;
+	//	private _redisClient?: RedisClientType;
 
 	/**
 	 * Data Module
@@ -132,22 +132,22 @@ export default class DataModule extends BaseModule {
 	public override async startup() {
 		await super.startup();
 
-		await this.createMongoConnection();
+		await this._createMongoConnection();
 
-		await this.runMigrations();
+		await this._runMigrations();
 
-		await this.loadModels();
+		await this._loadModels();
 
-		await this.syncModelIndexes();
+		await this._syncModelIndexes();
 
-		await this.defineModelJobs();
+		await this._defineModelJobs();
 
 		// @ts-ignore
-		//        this.redisClient = createClient({ ...config.get("redis") });
+		//        this._redisClient = createClient({ ...config.get("redis") });
 		//
-		//		await this.redisClient.connect();
+		//		await this._redisClient.connect();
 		//
-		//		const redisConfigResponse = await this.redisClient.sendCommand([
+		//		const redisConfigResponse = await this._redisClient.sendCommand([
 		//			"CONFIG",
 		//			"GET",
 		//			"notify-keyspace-events"
@@ -175,16 +175,16 @@ export default class DataModule extends BaseModule {
 	 */
 	public override async shutdown() {
 		await super.shutdown();
-		//		if (this.redisClient) await this.redisClient.quit();
+		//		if (this._redisClient) await this._redisClient.quit();
 		patchEventEmitter.removeAllListeners();
-		if (this.mongoConnection) await this.mongoConnection.close();
+		if (this._mongoConnection) await this._mongoConnection.close();
 		await this.stopped();
 	}
 
 	/**
 	 * createMongoConnection - Create mongo connection
 	 */
-	private async createMongoConnection() {
+	private async _createMongoConnection() {
 		const { user, password, host, port, database } = config.get<{
 			user: string;
 			password: string;
@@ -194,20 +194,20 @@ export default class DataModule extends BaseModule {
 		}>("mongo");
 		const mongoUrl = `mongodb://${user}:${password}@${host}:${port}/${database}`;
 
-		this.mongoConnection = await mongoose
+		this._mongoConnection = await mongoose
 			.createConnection(mongoUrl)
 			.asPromise();
 
-		this.mongoConnection.set("runValidators", true);
-		this.mongoConnection.set("sanitizeFilter", true);
-		this.mongoConnection.set("strict", "throw");
-		this.mongoConnection.set("strictQuery", "throw");
+		this._mongoConnection.set("runValidators", true);
+		this._mongoConnection.set("sanitizeFilter", true);
+		this._mongoConnection.set("strict", "throw");
+		this._mongoConnection.set("strictQuery", "throw");
 	}
 
 	/**
 	 * registerEvents - Register events for schema with event module
 	 */
-	private async registerEvents<
+	private async _registerEvents<
 		ModelName extends keyof Models,
 		SchemaType extends Schemas[keyof ModelName]
 	>(modelName: ModelName, schema: SchemaType) {
@@ -327,10 +327,10 @@ export default class DataModule extends BaseModule {
 	 * @param modelName - Name of the model
 	 * @returns Model
 	 */
-	private async loadModel<ModelName extends keyof Models>(
+	private async _loadModel<ModelName extends keyof Models>(
 		modelName: ModelName
 	): Promise<Models[ModelName]> {
-		if (!this.mongoConnection) throw new Error("Mongo is not available");
+		if (!this._mongoConnection) throw new Error("Mongo is not available");
 
 		const { schema }: { schema: Schemas[ModelName] } = await import(
 			`../schemas/${modelName.toString()}`
@@ -358,9 +358,9 @@ export default class DataModule extends BaseModule {
 
 		if (getDataEnabled) schema.plugin(getDataPlugin);
 
-		await this.registerEvents(modelName, schema);
+		await this._registerEvents(modelName, schema);
 
-		return this.mongoConnection.model(modelName.toString(), schema);
+		return this._mongoConnection.model(modelName.toString(), schema);
 	}
 
 	/**
@@ -368,26 +368,26 @@ export default class DataModule extends BaseModule {
 	 *
 	 * @returns Promise
 	 */
-	private async loadModels() {
+	private async _loadModels() {
 		mongoose.SchemaTypes.String.set("trim", true);
 
-		this.models = {
-			abc: await this.loadModel("abc"),
-			news: await this.loadModel("news"),
-			session: await this.loadModel("session"),
-			station: await this.loadModel("station"),
-			user: await this.loadModel("user")
+		this._models = {
+			abc: await this._loadModel("abc"),
+			news: await this._loadModel("news"),
+			session: await this._loadModel("session"),
+			station: await this._loadModel("station"),
+			user: await this._loadModel("user")
 		};
 	}
 
 	/**
 	 * syncModelIndexes - Sync indexes for all models
 	 */
-	private async syncModelIndexes() {
-		if (!this.models) throw new Error("Models not loaded");
+	private async _syncModelIndexes() {
+		if (!this._models) throw new Error("Models not loaded");
 
 		await Promise.all(
-			Object.values(this.models).map(model => model.syncIndexes())
+			Object.values(this._models).map(model => model.syncIndexes())
 		);
 	}
 
@@ -400,18 +400,18 @@ export default class DataModule extends BaseModule {
 		jobContext: JobContext,
 		payload: ModelName | { name: ModelName }
 	) {
-		if (!this.models) throw new Error("Models not loaded");
+		if (!this._models) throw new Error("Models not loaded");
 
 		if (this.getStatus() !== ModuleStatus.STARTED)
 			throw new Error("Module not started");
 
 		const name = typeof payload === "object" ? payload.name : payload;
 
-		return this.models[name];
+		return this._models[name];
 	}
 
-	private async loadMigrations() {
-		if (!this.mongoConnection) throw new Error("Mongo is not available");
+	private async _loadMigrations() {
+		if (!this._mongoConnection) throw new Error("Mongo is not available");
 
 		const migrations = await readdir(
 			path.resolve(__dirname, "../schemas/migrations/")
@@ -421,13 +421,13 @@ export default class DataModule extends BaseModule {
 			migrations.map(async migrationFile => {
 				const { default: Migrate }: { default: typeof Migration } =
 					await import(`../schemas/migrations/${migrationFile}`);
-				return new Migrate(this.mongoConnection as Connection);
+				return new Migrate(this._mongoConnection as Connection);
 			})
 		);
 	}
 
-	private async runMigrations() {
-		const migrations = await this.loadMigrations();
+	private async _runMigrations() {
+		const migrations = await this._loadMigrations();
 
 		for (let i = 0; i < migrations.length; i += 1) {
 			const migration = migrations[i];
@@ -436,19 +436,22 @@ export default class DataModule extends BaseModule {
 		}
 	}
 
-	private async defineModelJobs() {
-		if (!this.models) throw new Error("Models not loaded");
+	private async _defineModelJobs() {
+		if (!this._models) throw new Error("Models not loaded");
 
 		await Promise.all(
-			Object.entries(this.models).map(async ([modelName, model]) => {
+			Object.entries(this._models).map(async ([modelName, model]) => {
 				await Promise.all(
 					["findById"].map(async method => {
 						this.jobConfig[`${modelName}.${method}`] = {
 							method: async (context, payload) =>
-								Object.getPrototypeOf(this)[method](context, {
-									...payload,
-									model: modelName
-								})
+								Object.getPrototypeOf(this)[`_${method}`](
+									context,
+									{
+										...payload,
+										model: modelName
+									}
+								)
 						};
 					})
 				);
@@ -464,7 +467,7 @@ export default class DataModule extends BaseModule {
 		);
 	}
 
-	private async findById(
+	private async _findById(
 		context: JobContext,
 		payload: { model: keyof Models; _id: Types.ObjectId }
 	) {

@@ -6,19 +6,19 @@ import { Jobs, Modules } from "./types/Modules";
 export default class JobQueue {
 	static primaryInstance = new this();
 
-	private concurrency: number;
+	private _concurrency: number;
 
-	private isPaused: boolean;
+	private _isPaused: boolean;
 
-	private jobs: Job[];
+	private _jobs: Job[];
 
-	private queue: Job[];
+	private _queue: Job[];
 
-	private active: Job[];
+	private _active: Job[];
 
-	private processLock: boolean;
+	private _processLock: boolean;
 
-	private callbacks: Record<
+	private _callbacks: Record<
 		string,
 		{
 			resolve: (value: any) => void;
@@ -30,13 +30,13 @@ export default class JobQueue {
 	 * Job Queue
 	 */
 	public constructor() {
-		this.concurrency = 10000;
-		this.isPaused = true;
-		this.jobs = [];
-		this.queue = [];
-		this.active = [];
-		this.callbacks = {};
-		this.processLock = false;
+		this._concurrency = 10000;
+		this._isPaused = true;
+		this._jobs = [];
+		this._queue = [];
+		this._active = [];
+		this._callbacks = {};
+		this._processLock = false;
 	}
 
 	/**
@@ -46,7 +46,7 @@ export default class JobQueue {
 	 * @returns Job if found
 	 */
 	public getJob(jobId: string) {
-		return this.jobs.find(job => job.getUuid() === jobId);
+		return this._jobs.find(job => job.getUuid() === jobId);
 	}
 
 	/**
@@ -55,15 +55,15 @@ export default class JobQueue {
 	 * Pause processing of jobs in queue, active jobs will not be paused.
 	 */
 	public pause() {
-		this.isPaused = true;
+		this._isPaused = true;
 	}
 
 	/**
 	 * resume - Resume queue
 	 */
 	public resume() {
-		this.isPaused = false;
-		this.process();
+		this._isPaused = false;
+		this._process();
 	}
 
 	/**
@@ -133,11 +133,11 @@ export default class JobQueue {
 	): Promise<string> {
 		const job = new Job(jobName.toString(), moduleName, payload, options);
 
-		this.callbacks[job.getUuid()] = callback;
+		this._callbacks[job.getUuid()] = callback;
 
-		this.jobs.push(job);
-		this.queue.push(job);
-		this.process();
+		this._jobs.push(job);
+		this._queue.push(job);
+		this._process();
 
 		return job.getUuid();
 	}
@@ -145,22 +145,22 @@ export default class JobQueue {
 	/**
 	 * process - Process queue
 	 */
-	private async process() {
+	private async _process() {
 		// If the process is locked, don't continue. This prevents running process at the same time which could lead to issues
-		if (this.processLock) return;
+		if (this._processLock) return;
 		// If the queue is paused, we've reached the maximum number of active jobs, or there are no jobs in the queue, don't continue
 		if (
-			this.isPaused ||
-			this.active.length >= this.concurrency ||
-			this.queue.length === 0
+			this._isPaused ||
+			this._active.length >= this._concurrency ||
+			this._queue.length === 0
 		)
 			return;
 
 		// Lock the process function
-		this.processLock = true;
+		this._processLock = true;
 
 		// Sort jobs based on priority, with a lower priority being preferred
-		const jobs = this.queue.sort(
+		const jobs = this._queue.sort(
 			(a, b) => a.getPriority() - b.getPriority()
 		);
 
@@ -173,32 +173,32 @@ export default class JobQueue {
 			if (job.getModule().getStatus() !== ModuleStatus.STARTED) continue;
 
 			// Remove the job from the queue and add it to the active jobs array
-			this.queue.splice(this.queue.indexOf(job), 1);
+			this._queue.splice(this._queue.indexOf(job), 1);
 
 			// Execute the job
-			this.active.push(job);
+			this._active.push(job);
 
-			const callback = this.callbacks[job.getUuid()];
+			const callback = this._callbacks[job.getUuid()];
 			job.execute()
 				.then(callback.resolve)
 				.catch(callback.reject)
 				.finally(() => {
-					delete this.callbacks[job.getUuid()];
+					delete this._callbacks[job.getUuid()];
 
 					// If the current job is in the active jobs array, remove it, and then run the process function to run another job
-					const activeJobIndex = this.active.indexOf(job);
+					const activeJobIndex = this._active.indexOf(job);
 					if (activeJobIndex > -1) {
-						this.active.splice(activeJobIndex, 1);
+						this._active.splice(activeJobIndex, 1);
 					}
 
-					this.process();
+					this._process();
 				});
 			// Stop the for loop
-			if (this.active.length >= this.concurrency) break;
+			if (this._active.length >= this._concurrency) break;
 		}
 
 		// Unlock the process after the for loop is finished, so it can be run again
-		this.processLock = false;
+		this._processLock = false;
 	}
 
 	/**
@@ -208,10 +208,10 @@ export default class JobQueue {
 	 */
 	public getStatus() {
 		return {
-			isPaused: this.isPaused,
-			queueLength: this.queue.length,
-			activeLength: this.active.length,
-			concurrency: this.concurrency
+			isPaused: this._isPaused,
+			queueLength: this._queue.length,
+			activeLength: this._active.length,
+			concurrency: this._concurrency
 		};
 	}
 
@@ -224,9 +224,9 @@ export default class JobQueue {
 	public getQueueStatus(type?: JobStatus) {
 		const status: Record<string, ReturnType<Job["toJSON"]>[]> = {};
 		if (!type || type === JobStatus.ACTIVE)
-			status.active = this.active.map(job => job.toJSON());
+			status.active = this._active.map(job => job.toJSON());
 		if (!type || type === JobStatus.QUEUED)
-			status.queue = this.queue.map(job => job.toJSON());
+			status.queue = this._queue.map(job => job.toJSON());
 		return status;
 	}
 
@@ -235,7 +235,7 @@ export default class JobQueue {
 	 *
 	 */
 	public getJobs() {
-		return this.jobs;
+		return this._jobs;
 	}
 
 	static getPrimaryInstance(): JobQueue {

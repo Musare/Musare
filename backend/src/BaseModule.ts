@@ -99,9 +99,9 @@ export default abstract class BaseModule {
 	}
 
 	/**
-	 * loadJobs - Load jobs available via api module
+	 * _loadJobs - Load jobs available via api module
 	 */
-	private async loadJobs() {
+	private async _loadJobs() {
 		this.jobs = {};
 
 		const module = Object.getPrototypeOf(this);
@@ -172,7 +172,7 @@ export default abstract class BaseModule {
 	 * started - called with the module has started
 	 */
 	protected async started() {
-		await this.loadJobs();
+		await this._loadJobs();
 		this.log(`Module (${this.name}) started`);
 		this.setStatus(ModuleStatus.STARTED);
 	}

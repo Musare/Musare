@@ -10,11 +10,11 @@ import JobContext from "../JobContext";
 import Job from "../Job";
 
 export default class WebSocketModule extends BaseModule {
-	private httpServer?: Server;
+	private _httpServer?: Server;
 
-	private wsServer?: WebSocketServer;
+	private _wsServer?: WebSocketServer;
 
-	private keepAliveInterval?: NodeJS.Timer;
+	private _keepAliveInterval?: NodeJS.Timer;
 
 	/**
 	 * WebSocket Module
@@ -31,26 +31,26 @@ export default class WebSocketModule extends BaseModule {
 	public override async startup() {
 		await super.startup();
 
-		this.httpServer = http
+		this._httpServer = http
 			.createServer(express())
 			.listen(config.get("port"));
 
-		this.wsServer = new WebSocketServer({
-			server: this.httpServer,
+		this._wsServer = new WebSocketServer({
+			server: this._httpServer,
 			path: "/ws",
 			WebSocket
 		});
 
-		this.wsServer.on(
+		this._wsServer.on(
 			"connection",
 			(socket: WebSocket, request: IncomingMessage) =>
-				this.handleConnection(socket, request)
+				this._handleConnection(socket, request)
 		);
 
-		this.keepAliveInterval = setInterval(() => this.keepAlive(), 45000);
+		this._keepAliveInterval = setInterval(() => this._keepAlive(), 45000);
 
-		this.wsServer.on("close", async () =>
-			clearInterval(this.keepAliveInterval)
+		this._wsServer.on("close", async () =>
+			clearInterval(this._keepAliveInterval)
 		);
 
 		await super.started();
@@ -59,10 +59,10 @@ export default class WebSocketModule extends BaseModule {
 	/**
 	 * keepAlive - Ping open clients and terminate closed
 	 */
-	private async keepAlive() {
-		if (!this.wsServer) return;
+	private async _keepAlive() {
+		if (!this._wsServer) return;
 
-		for await (const clients of this.wsServer.clients.entries()) {
+		for await (const clients of this._wsServer.clients.entries()) {
 			await Promise.all(
 				clients.map(async socket => {
 					switch (socket.readyState) {
@@ -83,7 +83,7 @@ export default class WebSocketModule extends BaseModule {
 	/**
 	 * handleConnection - Handle websocket connection
 	 */
-	private async handleConnection(
+	private async _handleConnection(
 		socket: WebSocket,
 		request: IncomingMessage
 	) {
@@ -119,13 +119,13 @@ export default class WebSocketModule extends BaseModule {
 
 		socket.dispatch("ready", readyData);
 
-		socket.on("message", message => this.handleMessage(socket, message));
+		socket.on("message", message => this._handleMessage(socket, message));
 	}
 
 	/**
 	 * handleMessage - Handle websocket message
 	 */
-	private async handleMessage(socket: WebSocket, message: RawData) {
+	private async _handleMessage(socket: WebSocket, message: RawData) {
 		if (this.jobQueue.getStatus().isPaused) {
 			socket.close();
 			return;
@@ -186,7 +186,7 @@ export default class WebSocketModule extends BaseModule {
 	 * getSockets - Get websocket clients
 	 */
 	public async getSockets(context: JobContext) {
-		return this.wsServer?.clients;
+		return this._wsServer?.clients;
 	}
 
 	/**
@@ -199,9 +199,9 @@ export default class WebSocketModule extends BaseModule {
 			sessionId
 		}: { socketId?: string; sessionId?: Types.ObjectId }
 	) {
-		if (!this.wsServer) return null;
+		if (!this._wsServer) return null;
 
-		for (const clients of this.wsServer.clients.entries() as IterableIterator<
+		for (const clients of this._wsServer.clients.entries() as IterableIterator<
 			[WebSocket, WebSocket]
 		>) {
 			const socket = clients.find(socket => {
@@ -242,8 +242,8 @@ export default class WebSocketModule extends BaseModule {
 	public override async shutdown() {
 		await super.shutdown();
 
-		if (this.httpServer) this.httpServer.close();
-		if (this.wsServer) this.wsServer.close();
+		if (this._httpServer) this._httpServer.close();
+		if (this._wsServer) this._wsServer.close();
 
 		await this.stopped();
 	}

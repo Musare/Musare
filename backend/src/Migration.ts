@@ -1,14 +1,14 @@
 import { Connection } from "mongoose";
 
 export default class Migration {
-	private mongoConnection: Connection;
+	private _mongoConnection: Connection;
 
 	constructor(mongoConnection: Connection) {
-		this.mongoConnection = mongoConnection;
+		this._mongoConnection = mongoConnection;
 	}
 
 	protected getDb() {
-		return this.mongoConnection.db;
+		return this._mongoConnection.db;
 	}
 
 	public async up() {}

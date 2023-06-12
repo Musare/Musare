@@ -1,7 +1,7 @@
 export default class JobStatistics {
 	static primaryInstance = new this();
 
-	private stats: Record<
+	private _stats: Record<
 		string,
 		{
 			successful: number;
@@ -13,7 +13,7 @@ export default class JobStatistics {
 	>;
 
 	public constructor() {
-		this.stats = {};
+		this._stats = {};
 	}
 
 	/**
@@ -23,8 +23,8 @@ export default class JobStatistics {
 	 */
 	public getStats() {
 		return {
-			...this.stats,
-			total: Object.values(this.stats).reduce(
+			...this._stats,
+			total: Object.values(this._stats).reduce(
 				(a, b) => ({
 					successful: a.successful + b.successful,
 					failed: a.failed + b.failed,
@@ -55,8 +55,8 @@ export default class JobStatistics {
 		type: "successful" | "failed" | "total" | "added" | "averageTime",
 		duration?: number
 	) {
-		if (!this.stats[jobName])
-			this.stats[jobName] = {
+		if (!this._stats[jobName])
+			this._stats[jobName] = {
 				successful: 0,
 				failed: 0,
 				total: 0,
@@ -64,10 +64,10 @@ export default class JobStatistics {
 				averageTime: 0
 			};
 		if (type === "averageTime" && duration)
-			this.stats[jobName].averageTime +=
-				(duration - this.stats[jobName].averageTime) /
-				this.stats[jobName].total;
-		else this.stats[jobName][type] += 1;
+			this._stats[jobName].averageTime +=
+				(duration - this._stats[jobName].averageTime) /
+				this._stats[jobName].total;
+		else this._stats[jobName][type] += 1;
 	}
 
 	static getPrimaryInstance(): JobStatistics {

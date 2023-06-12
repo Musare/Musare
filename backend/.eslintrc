@@ -46,6 +46,15 @@
 		"@typescript-eslint/no-empty-function": 0,
 		"@typescript-eslint/no-this-alias": 0,
 		"@typescript-eslint/no-non-null-assertion": 0,
+		"@typescript-eslint/naming-convention": [
+			"error",
+			{
+				"selector": "memberLike",
+				"modifiers": ["private"],
+				"format": null,
+				"leadingUnderscore": "require"
+			}
+		],
 		"no-void": 0,
 		"import/no-extraneous-dependencies": [
 			"error",

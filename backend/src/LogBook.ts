@@ -35,20 +35,20 @@ export default class LogBook {
 	static primaryInstance = new this();
 
 	// A list of log objects stored in memory, if enabled generally
-	private logs: Log[];
+	private _logs: Log[];
 
-	private default: LogOutputs;
+	private _default: LogOutputs;
 
 	// Settings for different outputs. Currently only memory and outputs is supported as an output
 	// Constructed first via defaults, then via settings set in the config, and then you can make any other changes via a backend command (not persistent)
-	private outputs: LogOutputs;
+	private _outputs: LogOutputs;
 
 	/**
 	 * Log Book
 	 */
 	public constructor() {
-		this.logs = [];
-		this.default = {
+		this._logs = [];
+		this._default = {
 			console: {
 				timestamp: true,
 				title: true,
@@ -76,12 +76,12 @@ export default class LogBook {
 		if (config.has("logging"))
 			(["console", "memory"] as (keyof LogOutputs)[]).forEach(output => {
 				if (config.has(`logging.${output}`))
-					this.default[output] = {
-						...this.default[output],
+					this._default[output] = {
+						...this._default[output],
 						...config.get(`logging.${output}`)
 					};
 			});
-		this.outputs = this.default;
+		this._outputs = this._default;
 	}
 
 	/**
@@ -109,7 +109,7 @@ export default class LogBook {
 
 				// Loop through outputs to see if they have any include/exclude filters
 				(
-					Object.entries(this.outputs) as [
+					Object.entries(this._outputs) as [
 						keyof LogOutputs,
 						LogOutputs[keyof LogOutputs]
 					][]
@@ -139,16 +139,16 @@ export default class LogBook {
 			logObject.data?.jobName ?? logObject.category ?? undefined;
 
 		// If memory is not excluded and memory is enabled, store the log object in the memory (logs array) of this logbook instance
-		if (!exclude.memory && this.outputs.memory.enabled)
-			this.logs.push(logObject);
+		if (!exclude.memory && this._outputs.memory.enabled)
+			this._logs.push(logObject);
 
 		// If console is not excluded, format the log object, and then write the formatted message to the console
 		if (!exclude.console) {
-			const message = this.formatMessage(logObject, String(title));
+			const message = this._formatMessage(logObject, String(title));
 			const logArgs: (string | Record<string, unknown>)[] = [message];
 
 			// Append logObject data, if enabled and it's not falsy
-			if (this.outputs.console.data && logObject.data)
+			if (this._outputs.console.data && logObject.data)
 				logArgs.push(logObject.data);
 
 			switch (logObject.type) {
@@ -173,7 +173,7 @@ export default class LogBook {
 	 * @param length - The total amount of space we have to work with
 	 * @returns
 	 */
-	private centerString(string: string, length: number) {
+	private _centerString(string: string, length: number) {
 		const spaces = Array(
 			Math.floor((length - Math.max(0, string.length)) / 2)
 		).join(" ");
@@ -189,11 +189,11 @@ export default class LogBook {
 	 * @param title - Log title
 	 * @returns Formatted log string
 	 */
-	private formatMessage(log: Log, title: string | undefined): string {
+	private _formatMessage(log: Log, title: string | undefined): string {
 		let message = "";
 
 		// If we want to show colors, prepend the color code
-		if (this.outputs.console.color)
+		if (this._outputs.console.color)
 			switch (log.type) {
 				case "success":
 					message += COLOR_GREEN;
@@ -211,28 +211,28 @@ export default class LogBook {
 			}
 
 		// If we want to show timestamps, e.g. 2022-11-28T18:13:28.081Z
-		if (this.outputs.console.timestamp)
+		if (this._outputs.console.timestamp)
 			message += `| ${new Date(log.timestamp).toISOString()} `;
 
 		// If we want to show titles, show it centered and capped at 20 characters
-		if (this.outputs.console.title)
-			message += `| ${this.centerString(
+		if (this._outputs.console.title)
+			message += `| ${this._centerString(
 				title ? title.substring(0, 20) : "",
 				24
 			)} `;
 
 		// If we want to show the log type, show it centered, in uppercase
-		if (this.outputs.console.type)
-			message += `| ${this.centerString(
+		if (this._outputs.console.type)
+			message += `| ${this._centerString(
 				log.type ? log.type.toUpperCase() : "INFO",
 				10
 			)} `;
 
 		// If we want to the message, show it
-		if (this.outputs.console.message) message += `| ${log.message} `;
+		if (this._outputs.console.message) message += `| ${log.message} `;
 
 		// Reset the color at the end of the message, if we have colors enabled
-		if (this.outputs.console.color) message += COLOR_RESET;
+		if (this._outputs.console.color) message += COLOR_RESET;
 		return message;
 	}
 
@@ -260,14 +260,15 @@ export default class LogBook {
 					if (!values || typeof values !== "object")
 						throw new Error("No filters provided");
 					const filters = Array.isArray(values) ? values : [values];
-					if (action === "set") this.outputs[output][key] = filters;
+					if (action === "set") this._outputs[output][key] = filters;
 					if (action === "add")
-						this.outputs[output][key] = [
-							...(this.outputs[output][key] || []),
+						this._outputs[output][key] = [
+							...(this._outputs[output][key] || []),
 							...filters
 						];
 				} else if (action === "reset") {
-					this.outputs[output][key] = this.default[output][key] || [];
+					this._outputs[output][key] =
+						this._default[output][key] || [];
 				} else
 					throw new Error(
 						`Action "${action}" not found for ${key} in ${output}`
@@ -279,7 +280,7 @@ export default class LogBook {
 				if (output === "memory" && action === "set") {
 					if (values === undefined)
 						throw new Error("No value provided");
-					this.outputs[output][key] = !!values;
+					this._outputs[output][key] = !!values;
 				} else
 					throw new Error(
 						`Action "${action}" not found for ${key} in ${output}`
@@ -291,9 +292,9 @@ export default class LogBook {
 				if (output !== "memory" && action === "set") {
 					if (values === undefined)
 						throw new Error("No value provided");
-					this.outputs[output][key] = !!values;
+					this._outputs[output][key] = !!values;
 				} else if (output !== "memory" && action === "reset") {
-					this.outputs[output][key] = this.default[output][key];
+					this._outputs[output][key] = this._default[output][key];
 				} else
 					throw new Error(
 						`Action "${action}" not found for ${key} in ${output}`

@@ -5,7 +5,7 @@ import { Modules, ModuleClass } from "./types/Modules";
 export default class ModuleManager {
 	static primaryInstance = new this();
 
-	private modules?: Modules;
+	private _modules?: Modules;
 
 	/**
 	 * getStatus - Get status of modules
@@ -14,7 +14,7 @@ export default class ModuleManager {
 	 */
 	public getStatus() {
 		const status: Record<string, ModuleStatus> = {};
-		Object.entries(this.modules || {}).forEach(([name, module]) => {
+		Object.entries(this._modules || {}).forEach(([name, module]) => {
 			status[name] = module.getStatus();
 		});
 		return status;
@@ -25,7 +25,7 @@ export default class ModuleManager {
 	 *
 	 */
 	public getModule(moduleName: keyof Modules) {
-		return this.modules && this.modules[moduleName];
+		return this._modules && this._modules[moduleName];
 	}
 
 	/**
@@ -34,7 +34,7 @@ export default class ModuleManager {
 	 * @param moduleName - Name of the module
 	 * @returns Module
 	 */
-	private async loadModule<T extends keyof Modules>(moduleName: T) {
+	private async _loadModule<T extends keyof Modules>(moduleName: T) {
 		const mapper = {
 			api: "APIModule",
 			data: "DataModule",
@@ -52,20 +52,20 @@ export default class ModuleManager {
 	 *
 	 * @returns Promise
 	 */
-	private async loadModules() {
-		this.modules = {
-			api: await this.loadModule("api"),
-			data: await this.loadModule("data"),
-			events: await this.loadModule("events"),
-			stations: await this.loadModule("stations"),
-			websocket: await this.loadModule("websocket")
+	private async _loadModules() {
+		this._modules = {
+			api: await this._loadModule("api"),
+			data: await this._loadModule("data"),
+			events: await this._loadModule("events"),
+			stations: await this._loadModule("stations"),
+			websocket: await this._loadModule("websocket")
 		};
 	}
 
 	/**
 	 * startModule - Start module
 	 */
-	private async startModule(module: Modules[keyof Modules]) {
+	private async _startModule(module: Modules[keyof Modules]) {
 		switch (module.getStatus()) {
 			case ModuleStatus.STARTING:
 			case ModuleStatus.STARTED:
@@ -86,7 +86,7 @@ export default class ModuleManager {
 			if (!dependency) throw new Error("Dependent module not found");
 
 			// eslint-disable-next-line no-await-in-loop
-			await this.startModule(dependency);
+			await this._startModule(dependency);
 		}
 
 		await module.startup().catch(async err => {
@@ -100,13 +100,13 @@ export default class ModuleManager {
 	 */
 	public async startup() {
 		try {
-			await this.loadModules();
+			await this._loadModules();
 
-			if (!this.modules) throw new Error("No modules were loaded");
+			if (!this._modules) throw new Error("No modules were loaded");
 
-			for (const module of Object.values(this.modules)) {
+			for (const module of Object.values(this._modules)) {
 				// eslint-disable-next-line no-await-in-loop
-				await this.startModule(module);
+				await this._startModule(module);
 			}
 
 			JobQueue.getPrimaryInstance().resume();
@@ -120,8 +120,8 @@ export default class ModuleManager {
 	 * shutdown - Handle shutdown
 	 */
 	public async shutdown() {
-		if (this.modules) {
-			const modules = Object.entries(this.modules).filter(([, module]) =>
+		if (this._modules) {
+			const modules = Object.entries(this._modules).filter(([, module]) =>
 				[
 					ModuleStatus.STARTED,
 					ModuleStatus.STARTING,
