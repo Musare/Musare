@@ -2,6 +2,7 @@ import config from "config";
 // import { createClient, RedisClientType } from "redis";
 import mongoose, {
 	Connection,
+	isObjectIdOrHexString,
 	MongooseDefaultQueryMiddleware,
 	MongooseDistinctQueryMiddleware,
 	MongooseQueryOrDocumentMiddleware
@@ -12,7 +13,7 @@ import path from "path";
 import JobContext from "../JobContext";
 import BaseModule, { ModuleStatus } from "../BaseModule";
 import { UniqueMethods } from "../types/Modules";
-import { Models } from "../types/Models";
+import { AnyModel, Models } from "../types/Models";
 import { Schemas } from "../types/Schemas";
 import documentVersionPlugin from "../schemas/plugins/documentVersion";
 import getDataPlugin from "../schemas/plugins/getData";
@@ -185,6 +186,13 @@ export default class DataModule extends BaseModule {
 	 * createMongoConnection - Create mongo connection
 	 */
 	private async _createMongoConnection() {
+		mongoose.set({
+			runValidators: true,
+			sanitizeFilter: true,
+			strict: "throw",
+			strictQuery: "throw"
+		});
+
 		const { user, password, host, port, database } = config.get<{
 			user: string;
 			password: string;
@@ -197,11 +205,6 @@ export default class DataModule extends BaseModule {
 		this._mongoConnection = await mongoose
 			.createConnection(mongoUrl)
 			.asPromise();
-
-		this._mongoConnection.set("runValidators", true);
-		this._mongoConnection.set("sanitizeFilter", true);
-		this._mongoConnection.set("strict", "throw");
-		this._mongoConnection.set("strictQuery", "throw");
 	}
 
 	/**
@@ -442,44 +445,173 @@ export default class DataModule extends BaseModule {
 		await Promise.all(
 			Object.entries(this._models).map(async ([modelName, model]) => {
 				await Promise.all(
-					["findById"].map(async method => {
-						this._jobConfig[`${modelName}.${method}`] = {
-							method: async (context, payload) =>
-								Object.getPrototypeOf(this)[`_${method}`](
-									context,
-									{
-										...payload,
-										model: modelName
-									}
-								)
-						};
-					})
+					["create", "findById", "updateById", "deleteById"].map(
+						async method => {
+							this._jobConfig[`${modelName}.${method}`] = {
+								method: async (context, payload) =>
+									Object.getPrototypeOf(this)[`_${method}`](
+										context,
+										{
+											...payload,
+											modelName,
+											model
+										}
+									)
+							};
+						}
+					)
 				);
 
-				await Promise.all(
-					Object.keys(model.schema.statics).map(async name => {
-						this._jobConfig[`${modelName}.${name}`] = {
-							method: async (...args) => model[name](...args)
-						};
-					})
-				);
+				const jobConfig = model.schema.get("jobConfig");
+				if (
+					typeof jobConfig === "object" &&
+					Object.keys(jobConfig).length > 0
+				)
+					await Promise.all(
+						Object.entries(jobConfig).map(
+							async ([name, options]) => {
+								if (options === "disabled") {
+									if (this._jobConfig[`${modelName}.${name}`])
+										delete this._jobConfig[
+											`${modelName}.${name}`
+										];
+
+									return;
+								}
+
+								let api = this._jobApiDefault;
+
+								let method;
+
+								const configOptions =
+									this._jobConfig[`${modelName}.${name}`];
+								if (typeof configOptions === "object") {
+									if (typeof configOptions.api === "boolean")
+										api = configOptions.api;
+									if (
+										typeof configOptions.method ===
+										"function"
+									)
+										method = configOptions.method;
+								} else if (typeof configOptions === "function")
+									method = configOptions;
+								else if (typeof configOptions === "boolean")
+									api = configOptions;
+
+								if (
+									typeof options === "object" &&
+									typeof options.api === "boolean"
+								)
+									api = options.api;
+								else if (typeof options === "boolean")
+									api = options;
+
+								if (
+									typeof options === "object" &&
+									typeof options.method === "function"
+								)
+									method = async (...args) =>
+										options.method.apply(model, args);
+								else if (typeof options === "function")
+									method = async (...args) =>
+										options.apply(model, args);
+
+								if (typeof method !== "function")
+									throw new Error(
+										`Job "${name}" has no function method defined`
+									);
+
+								this._jobConfig[`${modelName}.${name}`] = {
+									api,
+									method
+								};
+							}
+						)
+					);
 			})
 		);
 	}
 
 	private async _findById(
 		context: JobContext,
-		payload: { model: keyof Models; _id: Types.ObjectId }
+		payload: {
+			modelName: keyof Models;
+			model: AnyModel;
+			_id: Types.ObjectId;
+		}
 	) {
-		// await context.assertPermission(
-		// 	`data.${payload.model}.findById.${payload._id}`
-		// );
+		const { modelName, model, _id } = payload ?? {};
 
-		const model = await context.getModel(payload.model);
+		await context.assertPermission(`data.${modelName}.findById.${_id}`);
 
-		const query = model.findById(payload._id);
+		const query = model.findById(_id);
 
 		return query.exec();
+	}
+
+	private async _create(
+		context: JobContext,
+		payload: {
+			modelName: keyof Models;
+			model: AnyModel;
+			query: Record<string, any[]>;
+		}
+	) {
+		const { modelName, model, query } = payload ?? {};
+
+		await context.assertPermission(`data.${modelName}.create`);
+
+		if (typeof query !== "object")
+			throw new Error("Query is not an object");
+		if (Object.keys(query).length === 0)
+			throw new Error("Empty query object provided");
+
+		if (model.schema.path("createdBy"))
+			query.createdBy = (await context.getUser())._id;
+
+		return model.create(query);
+	}
+
+	private async _updateById(
+		context: JobContext,
+		payload: {
+			modelName: keyof Models;
+			model: AnyModel;
+			_id: Types.ObjectId;
+			query: Record<string, any[]>;
+		}
+	) {
+		const { modelName, model, _id, query } = payload ?? {};
+
+		await context.assertPermission(`data.${modelName}.updateById.${_id}`);
+
+		if (!isObjectIdOrHexString(_id))
+			throw new Error("_id is not an ObjectId");
+
+		if (typeof query !== "object")
+			throw new Error("Query is not an object");
+		if (Object.keys(query).length === 0)
+			throw new Error("Empty query object provided");
+
+		return model.updateOne({ _id }, { $set: query });
+	}
+
+	private async _deleteById(
+		context: JobContext,
+		payload: {
+			modelName: keyof Models;
+			model: AnyModel;
+			_id: Types.ObjectId;
+		}
+	) {
+		const { modelName, model, _id } = payload ?? {};
+
+		await context.assertPermission(`data.${modelName}.deleteById.${_id}`);
+
+		if (!isObjectIdOrHexString(_id))
+			throw new Error("_id is not an ObjectId");
+
+		return model.deleteOne({ _id });
 	}
 }
 

@@ -11,3 +11,5 @@ export type Models = {
 	station: StationModel;
 	user: UserModel;
 };
+
+export type AnyModel = Models[keyof Models];

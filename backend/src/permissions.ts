@@ -1,9 +1,14 @@
 import config from "config";
 import { UserRole } from "./schemas/user";
 
-const user = {};
+const temp = {
+	"data.news.getData": true,
+};
+
+const user = { ...temp };
 
 const dj = {
+	...user,
 	"stations.autofill": true,
 	"stations.blacklist": true,
 	"stations.index": true,

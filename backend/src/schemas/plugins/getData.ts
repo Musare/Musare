@@ -29,23 +29,20 @@ export interface GetDataSchemaOptions extends SchemaOptions {
 }
 
 export interface GetData {
-	getData(
-		context: JobContext,
-		payload: {
-			page: number;
-			pageSize: number;
-			properties: string[];
-			sort: Record<string, "ascending" | "descending">;
-			queries: {
-				data: any;
-				filter: {
-					property: string;
-				};
-				filterType: FilterType;
-			}[];
-			operator: "and" | "or" | "nor";
-		}
-	): Promise<{
+	getData(payload: {
+		page: number;
+		pageSize: number;
+		properties: string[];
+		sort: Record<string, "ascending" | "descending">;
+		queries: {
+			data: any;
+			filter: {
+				property: string;
+			};
+			filterType: FilterType;
+		}[];
+		operator: "and" | "or" | "nor";
+	}): Promise<{
 		data: any[];
 		count: number;
 	}>;
@@ -55,7 +52,6 @@ export default function getDataPlugin(schema: Schema) {
 	schema.static(
 		"getData",
 		async function getData(
-			context: JobContext,
 			payload: Parameters<GetData["getData"]>[0]
 		): ReturnType<GetData["getData"]> {
 			const { page, pageSize, properties, sort, queries, operator } =
@@ -246,4 +242,18 @@ export default function getDataPlugin(schema: Schema) {
 			return { data, count };
 		}
 	);
+
+	schema.set("jobConfig", {
+		async getData(
+			context: JobContext,
+			payload: Parameters<GetData["getData"]>[0]
+		) {
+			await context.assertPermission(
+				`data.${this.collection.collectionName}.getData`
+			);
+
+			return this.getData(payload);
+		},
+		...(schema.get("jobConfig") ?? {})
+	});
 }

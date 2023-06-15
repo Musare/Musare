@@ -31,7 +31,9 @@ export default abstract class BaseModule {
 
 	protected _jobConfig: Record<
 		string,
+		| "disabled"
 		| boolean
+		| ((context: JobContext, payload?: any) => Promise<any>)
 		| {
 				api?: boolean;
 				method?: (context: JobContext, payload?: any) => Promise<any>;
@@ -136,18 +138,47 @@ export default abstract class BaseModule {
 
 		await Promise.all(
 			Object.entries(this._jobConfig).map(async ([name, options]) => {
+				if (options === "disabled") {
+					if (this._jobs[name]) delete this._jobs[name];
+
+					return;
+				}
+
+				if (
+					typeof options === "boolean" ||
+					(typeof options === "object" &&
+						typeof options.method !== "function")
+				)
+					return;
+
+				if (this._jobs[name])
+					throw new Error(`Job "${name}" is already defined`);
+
+				let api = this._jobApiDefault;
+
 				if (
 					typeof options === "object" &&
-					typeof options.method === "function"
-				) {
-					if (this._jobs[name])
-						throw new Error(`Job "${name}" is already defined`);
+					typeof options.api === "boolean"
+				)
+					api = options.api;
 
-					this._jobs[name] = {
-						api: options.api ?? this._jobApiDefault,
-						method: options.method
-					};
-				}
+				let method = options;
+
+				if (
+					typeof method === "object" &&
+					typeof method.method === "function"
+				)
+					method = method.method;
+
+				if (typeof method !== "function")
+					throw new Error(
+						`Job "${name}" has no function method defined`
+					);
+
+				this._jobs[name] = {
+					api,
+					method
+				};
 			})
 		);
 	}
