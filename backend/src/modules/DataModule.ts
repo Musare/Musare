@@ -5,7 +5,8 @@ import mongoose, {
 	isObjectIdOrHexString,
 	MongooseDefaultQueryMiddleware,
 	MongooseDistinctQueryMiddleware,
-	MongooseQueryOrDocumentMiddleware
+	MongooseQueryOrDocumentMiddleware,
+	Types
 } from "mongoose";
 import { patchHistoryPlugin, patchEventEmitter } from "ts-patch-mongoose";
 import { readdir } from "fs/promises";
@@ -123,7 +124,9 @@ export default class DataModule extends BaseModule {
 		this._dependentModules = ["events"];
 
 		this._jobConfig = {
-			getModel: false
+			getModel: false,
+			find: "disabled",
+			addC: "disabled"
 		};
 	}
 

@@ -216,7 +216,9 @@ export default class EventsModule extends BaseModule {
 		if (type === "schedule") {
 			if (!this._scheduleCallbacks[channel]) return;
 
-			const index = this._scheduleCallbacks[channel].indexOf(callback);
+			const index = this._scheduleCallbacks[channel].findIndex(
+				schedule => schedule.toString() === callback.toString()
+			);
 
 			if (index >= 0) this._scheduleCallbacks[channel].splice(index, 1);
 
@@ -225,7 +227,9 @@ export default class EventsModule extends BaseModule {
 
 		if (!this._subscriptions[channel]) return;
 
-		const index = this._subscriptions[channel].indexOf(callback);
+		const index = this._subscriptions[channel].findIndex(
+			subscription => subscription.toString() === callback.toString()
+		);
 
 		if (index < 0) return;
 
@@ -233,9 +237,7 @@ export default class EventsModule extends BaseModule {
 
 		if (this._subscriptions[channel].length === 0) {
 			delete this._subscriptions[channel];
-			await this._subClient.unsubscribe(channel, (...args) =>
-				this._subscriptionListener(...args)
-			);
+			await this._subClient.unsubscribe(channel); // TODO: Provide callback when unsubscribing
 		}
 	}
 

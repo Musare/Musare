@@ -8,6 +8,7 @@ import WebSocket from "../WebSocket";
 import { UserRole } from "../schemas/user";
 import { StationType } from "../schemas/station";
 import permissions from "../permissions";
+import Job from "../Job";
 
 export default class APIModule extends BaseModule {
 	private _subscriptions: Record<string, Set<string>>;
@@ -315,10 +316,10 @@ export default class APIModule extends BaseModule {
 					const promises = [];
 					for await (const socketId of socketIds.values()) {
 						promises.push(
-							this._jobQueue.runJob("api", "unsubscribe", {
+							new Job("unsubscribe", "api", {
 								socketId,
 								channel
-							})
+							}).execute()
 						);
 					}
 					return Promise.all(promises);
