@@ -244,7 +244,7 @@ export default class DataModule extends BaseModule {
 		methods.forEach(method => {
 			// NOTE: some Mongo selectors may also search through linked documents. Prevent that
 			schema.pre(method, async function () {
-				console.log(`Pre-${method}! START`);
+				// console.log(`Pre-${method}! START`);
 
 				if (
 					this.options?.userContext &&
@@ -253,7 +253,7 @@ export default class DataModule extends BaseModule {
 				)
 					throw new Error("Method not allowed");
 
-				console.log(`Pre-${method}!`, this.options?.userContext);
+				// console.log(`Pre-${method}!`, this.options?.userContext);
 
 				if (["find", "update", "deleteOne"].indexOf(method) !== -1) {
 					const filter = this.getFilter();
@@ -289,20 +289,20 @@ export default class DataModule extends BaseModule {
 						});
 					});
 
-					console.log(`Pre-${method}!`, filterKeys);
+					// console.log(`Pre-${method}!`, filterKeys);
 
 					// Here we want to always exclude some properties depending on the model, like passwords/tokens
 					this.projection({ restrictedName: 0 });
 				}
 
-				console.log(`Pre-${method}! END`);
+				// console.log(`Pre-${method}! END`);
 			});
 
-			schema.post(method, async function (docOrDocs) {
-				console.log(`Post-${method} START!`);
-				console.log(`Post-${method}!`, docOrDocs);
-				console.log(`Post-${method}!`, this);
-				console.log(`Post-${method} END!`);
+			schema.post(method, async docOrDocs => {
+				// console.log(`Post-${method} START!`);
+				// console.log(`Post-${method}!`, docOrDocs);
+				// console.log(`Post-${method}!`, this);
+				// console.log(`Post-${method} END!`);
 			});
 		});
 

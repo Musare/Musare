@@ -29,25 +29,11 @@ process.on("uncaughtException", err => {
 const moduleManager = ModuleManager.getPrimaryInstance();
 const jobQueue = JobQueue.getPrimaryInstance();
 
-moduleManager.startup();
+moduleManager.startup().then(async () => {
 
-// TOOD remove, or put behind debug option
-// eslint-disable-next-line
-// @ts-ignore
-global.moduleManager = moduleManager;
-// eslint-disable-next-line
-// @ts-ignore
-global.jobQueue = jobQueue;
-// eslint-disable-next-line
-// @ts-ignore
-global.rs = () => {
-	process.exit();
-};
-
-setTimeout(async () => {
-	const Model = await jobQueue.runJob("data", "getModel", { name: "abc" });
+	const Model = await jobQueue.runJob("data", "getModel", { name: "news" });
 	// console.log("Model", Model);
-	const abcs = await Model.find({});
+	const abcs = await Model.findOne({}).newest();
 	console.log("Abcs", abcs);
 	console.log(
 		"getData",
@@ -105,7 +91,20 @@ setTimeout(async () => {
 		channel: "test",
 		value: "a value!"
 	});
-}, 100);
+});
+
+// TOOD remove, or put behind debug option
+// eslint-disable-next-line
+// @ts-ignore
+global.moduleManager = moduleManager;
+// eslint-disable-next-line
+// @ts-ignore
+global.jobQueue = jobQueue;
+// eslint-disable-next-line
+// @ts-ignore
+global.rs = () => {
+	process.exit();
+};
 
 // setTimeout(async () => {
 //	const start = Date.now();
@@ -120,162 +119,6 @@ setTimeout(async () => {
 //	const difference = Date.now() - start;
 //	console.log({ difference });
 // }, 100);
-
-// setTimeout(() => {
-// 	clearTimeout(interval);
-// }, 3000);
-
-// setTimeout(async () => {
-// 	const _id = "6371212daf4e9f8fb14444b2";
-
-	// logBook.log("Find with no projection");
-	// await moduleManager
-	// 	.runJob("data", "find", {
-	// 		collection: "abc",
-	// 		filter: {
-	// 			_id
-	// 		}
-	// 	})
-	// 	.then(console.log)
-	// 	.catch(console.error);
-
-	// logBook.log("Find with no projection, and a more advanced filter");
-	// await moduleManager
-	// 	.runJob("data", "find", {
-	// 		collection: "abc",
-	// 		filter: {
-	// 			"autofill.enabled": true
-	// 		}
-	// 	})
-	// 	.then(console.log)
-	// 	.catch(console.error);
-
-	// logBook.log("Find with array projection");
-	// await moduleManager
-	// 	.runJob("data", "find", {
-	// 		collection: "abc",
-	// 		filter: {
-	// 			_id
-	// 		},
-	// 		projection: ["name"]
-	// 	})
-	// 	.then(console.log)
-	// 	.catch(console.error);
-	// logBook.log("Find with object boolean projection");
-	// await moduleManager
-	// 	.runJob("data", "find", {
-	// 		collection: "abc",
-	// 		filter: {
-	// 			_id
-	// 		},
-	// 		projection: { name: true },
-	// 		limit: 1
-	// 	})
-	// 	.then(console.log)
-	// 	.catch(console.error);
-	// logBook.log("Find with object number projection");
-	// await moduleManager
-	// 	.runJob("data", "find", {
-	// 		collection: "abc",
-	// 		filter: {
-	// 			_id
-	// 		},
-	// 		projection: { name: 1 }
-	// 	})
-	// 	.then(console.log)
-	// 	.catch(console.error);
-	// logBook.log("Find with object number projection");
-	// await moduleManager
-	// 	.runJob("data", "find", {
-	// 		collection: "abc",
-	// 		filter: {
-	// 			_id
-	// 		},
-	// 		projection: { "autofill.enabled": true }
-	// 	})
-	// 	.then(console.log)
-	// 	.catch(console.error);
-
-	// logBook.log("Find for testing casting");
-	// await moduleManager
-	// 	.runJob("data", "find", {
-	// 		collection: "abc",
-	// 		filter: {
-	// 			// "songs._id": "6371212daf4e9f8fb14444b0"
-	// 			// "songs._id": "6371212daf4e9f8fb14444b2"
-	// 			// songs: {
-	// 			// 	_id: "6371212daf4e9f8fb14444b0"
-	// 			// }
-	// 			// songs: {
-	// 			// 	randomProperty: "6371212daf4e9f8fb14444b0"
-	// 			// }
-	// 			"songs.obj.test": "6371212daf4e9f8fb14444b0"
-	// 		},
-	// 		// projection: {
-	// 		// 	// songs: true,
-	// 		// 	// someNumbers: false
-	// 		// },
-	// 		limit: 1
-	// 	})
-	// 	.then(console.log)
-	// 	.catch(console.error);
-
-	// logBook.log("Find for testing with $in");
-	// await moduleManager
-	// 	.runJob("data", "find", {
-	// 		collection: "abc",
-	// 		filter: {
-	// 			_id
-	// 		},
-	// 		allowedRestricted: true,
-	// 		// projection: {
-	// 		// 	// songs: true,
-	// 		// 	// someNumbers: false
-	// 		// },
-	// 		limit: 1
-	// 	})
-	// 	.then(console.log)
-	// 	.catch(console.error);
-
-	// logBook.log("Find for testing with $in");
-	// await moduleManager
-	// 	.runJob("data", "find", {
-	// 		collection: "abc",
-	// 		filter: {
-	// 			"songs._id": "6371212daf4e9f8fb14444b0"
-	// 		},
-	// 		allowedRestricted: true,
-	// 		// projection: {
-	// 		// 	// songs: true,
-	// 		// 	// someNumbers: false
-	// 		// },
-	// 		limit: 1
-	// 	})
-	// 	.then(console.log)
-	// 	.catch(console.error);
-
-	// logBook.log("Find for testing with $in with numbers");
-	// await moduleManager
-	// 	.runJob("data", "find", {
-	// 		collection: "abc",
-	// 		filter: {
-	// 			someNumbers: { $in: [54, 84] }
-	// 		},
-	// 		limit: 1,
-	// 		useCache: false
-	// 	})
-	// 	.then(console.log)
-	// 	.catch(console.error);
-
-	// moduleManager
-	// 	.runJob("data", "find", {
-	// 		collection: "abc",
-	// 		filter: { _id: new ObjectId(_id) },
-	// 		limit: 1
-	// 	})
-	// 	.then(console.log)
-	// 	.catch(console.error);
-// }, 0);
 
 const rl = readline.createInterface({
 	input: process.stdin,
@@ -359,7 +202,7 @@ const runCommand = (line: string) => {
 				const jobId = args[0];
 				const job = jobQueue.getJob(jobId);
 
-				if (!job) console.log("Job not found");
+				if (!job) console.log(`Job "${jobId}" not found`);
 				else {
 					console.table(job.toJSON());
 				}
