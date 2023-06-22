@@ -3,6 +3,9 @@ import { UserRole } from "./schemas/user";
 
 const temp = {
 	"data.news.getData": true,
+	"data.news.findById.*": true,
+	"data.news.updateById.*": true,
+	"data.news.deleteById.*": true
 };
 
 const user = { ...temp };

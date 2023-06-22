@@ -64,6 +64,13 @@ export interface StationSchema extends BaseSchema {
 
 export interface StationModel extends Model<StationSchema>, GetData {}
 
+const isDj = (model, user) =>
+	model && user && model.djs.contains(user._id.toString());
+
+const isPublic = model => model && model.privacy === StationPrivacy.PUBLIC;
+const isUnlisted = model => model && model.privacy === StationPrivacy.UNLISTED;
+const isPrivate = model => model && model.privacy === StationPrivacy.PRIVATE;
+
 export const schema = new Schema<StationSchema, StationModel>(
 	{
 		type: {
@@ -176,6 +183,20 @@ export const schema = new Schema<StationSchema, StationModel>(
 	{
 		// @ts-ignore
 		documentVersion: 10,
+		jobConfig: {
+			create: {
+				hasPermission: "loggedIn"
+			},
+			findById: {
+				hasPermission: ["owner", isDj, isPublic, isUnlisted]
+			},
+			updateById: {
+				hasPermission: ["owner", isDj]
+			},
+			deleteById: {
+				hasPermission: ["owner", isDj]
+			}
+		},
 		// @ts-ignore
 		getData: {
 			enabled: true,

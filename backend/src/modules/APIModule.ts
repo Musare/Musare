@@ -9,6 +9,7 @@ import { UserRole } from "../schemas/user";
 import { StationType } from "../schemas/station";
 import permissions from "../permissions";
 import Job from "../Job";
+import { Models } from "../types/Models";
 
 export default class APIModule extends BaseModule {
 	private _subscriptions: Record<string, Set<string>>;
@@ -187,28 +188,12 @@ export default class APIModule extends BaseModule {
 		};
 	}
 
-	public async getUserPermissions(
-		context: JobContext,
-		{ stationId }: { stationId?: Types.ObjectId }
-	) {
-		const user = await context.getUser();
+	public async getUserPermissions(context: JobContext) {
+		const user = await context.getUser().catch(() => null);
 
-		const roles: (UserRole | "owner" | "dj")[] = [user.role];
+		if (!user) return {};
 
-		if (stationId) {
-			const Station = await context.getModel("station");
-
-			const station = await Station.findById(stationId);
-
-			if (!station) throw new Error("Station not found");
-
-			if (
-				station.type === StationType.COMMUNITY &&
-				station.owner === user._id
-			)
-				roles.push("owner");
-			else if (station.djs.find(dj => dj === user._id)) roles.push("dj");
-		}
+		const roles: UserRole[] = [user.role];
 
 		let rolePermissions: Record<string, boolean> = {};
 		roles.forEach(role => {
@@ -217,6 +202,93 @@ export default class APIModule extends BaseModule {
 		});
 
 		return rolePermissions;
+	}
+
+	public async getUserModelPermissions(
+		context: JobContext,
+		{
+			modelName,
+			modelId
+		}: { modelName: keyof Models; modelId?: Types.ObjectId }
+	) {
+		const user = await context.getUser().catch(() => null);
+		const permissions = await context.getUserPermissions();
+
+		const Model = await context.getModel(modelName);
+
+		if (!Model) throw new Error("Model not found");
+
+		const model = modelId ? await Model.findById(modelId) : null;
+
+		if (modelId && !model) throw new Error("Model not found");
+
+		const jobs = await Promise.all(
+			Object.keys(this._moduleManager.getModule("data")?.getJobs() ?? {})
+				.filter(
+					jobName =>
+						jobName.startsWith(modelName.toString()) &&
+						(modelId ? true : !jobName.endsWith("ById"))
+				)
+				.map(async jobName => {
+					jobName = `data.${jobName}`;
+
+					let hasPermission = permissions[jobName];
+
+					if (!hasPermission && modelId)
+						hasPermission =
+							permissions[`${jobName}.*`] ||
+							permissions[`${jobName}.${modelId}`];
+
+					if (hasPermission) return [jobName, true];
+
+					const [, shortJobName] =
+						new RegExp(`^data.${modelName}.([A-z]+)`).exec(
+							jobName
+						) ?? [];
+
+					const schemaOptions = (Model.schema.get("jobConfig") ?? {})[
+						shortJobName
+					];
+					let options = schemaOptions?.hasPermission ?? [];
+
+					if (!Array.isArray(options)) options = [options];
+
+					hasPermission = await options.reduce(
+						async (previous, option) => {
+							if (await previous) return true;
+
+							if (option === "loggedIn" && user) return true;
+
+							if (option === "owner" && user && model) {
+								let ownerAttribute;
+
+								if (model.schema.path("createdBy"))
+									ownerAttribute = "createdBy";
+								else if (model.schema.path("owner"))
+									ownerAttribute = "owner";
+
+								if (ownerAttribute)
+									return (
+										model[ownerAttribute].toString() ===
+										user._id.toString()
+									);
+							}
+
+							if (typeof option === "boolean") return option;
+
+							if (typeof option === "function")
+								return option(model, user);
+
+							return false;
+						},
+						Promise.resolve(false)
+					);
+
+					return [jobName, !!hasPermission];
+				})
+		);
+
+		return Object.fromEntries(jobs);
 	}
 
 	private async _subscriptionCallback(channel: string, value?: any) {

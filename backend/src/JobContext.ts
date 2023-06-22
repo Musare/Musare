@@ -22,6 +22,8 @@ export default class JobContext {
 
 	private _permissions?: Record<string, boolean>;
 
+	private _modelPermissions: Record<string, Record<string, boolean>>;
+
 	public constructor(
 		job: Job,
 		options?: { session?: SessionSchema; socketId?: string }
@@ -30,6 +32,7 @@ export default class JobContext {
 		this.jobQueue = JobQueue.getPrimaryInstance();
 		this._session = options?.session;
 		this._socketId = options?.socketId;
+		this._modelPermissions = {};
 	}
 
 	/**
@@ -109,26 +112,57 @@ export default class JobContext {
 			throw new Error("No user found for session");
 	}
 
-	public async getUserPermissions(
-		scope?: { stationId?: Types.ObjectId },
-		refresh = false
-	) {
+	public async getUserPermissions(refresh = false) {
 		if (this._permissions && !refresh) return this._permissions;
 
 		this._permissions = await this.executeJob(
 			"api",
 			"getUserPermissions",
-			scope ?? {}
+			{}
 		);
 
 		return this._permissions;
 	}
 
-	public async assertPermission(
-		permission: string,
-		scope?: { stationId?: Types.ObjectId }
+	public async getUserModelPermissions(
+		{
+			modelName,
+			modelId
+		}: {
+			modelName: keyof Models;
+			modelId?: Types.ObjectId;
+		},
+		refresh = false
 	) {
-		const permissions = await this.getUserPermissions(scope);
+		if (this._modelPermissions[modelName] && !refresh)
+			return this._modelPermissions[modelName];
+
+		this._modelPermissions[modelName] = await this.executeJob(
+			"api",
+			"getUserModelPermissions",
+			{ modelName, modelId }
+		);
+
+		return this._modelPermissions[modelName];
+	}
+
+	public async assertPermission(permission: string) {
+		let permissions = await this.getUserPermissions();
+
+		if (permission.startsWith("data")) {
+			const [, modelName, modelId] =
+				/^data\.([a-z]+)\.[A-z]+\.?([A-z0-9]+)?$/.exec(permission);
+
+			permissions = {
+				...permissions,
+				...(await this.getUserModelPermissions({
+					modelName,
+					modelId
+				}))
+			};
+
+			return;
+		}
 
 		if (!permissions[permission])
 			throw new Error("Insufficient permissions");

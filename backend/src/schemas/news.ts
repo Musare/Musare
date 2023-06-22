@@ -101,14 +101,17 @@ export const schema = new Schema<NewsSchema, NewsModel, {}, NewsQueryHelpers>(
 			}
 		},
 		jobConfig: {
-			async published() {
-				return this.find().published();
+			published: {
+				async method() {
+					return this.find().published();
+				},
+				hasPermission: true
 			},
-			async newest(
-				context: JobContext,
-				payload: { showToNewUsers?: boolean }
-			) {
-				return this.find().newest(payload?.showToNewUsers);
+			newest: {
+				async method() {
+					return this.find().newest(payload?.showToNewUsers);
+				},
+				hasPermission: true
 			}
 		},
 		// @ts-ignore need to somehow use GetDataSchemaOptions
