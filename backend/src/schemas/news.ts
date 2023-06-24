@@ -108,7 +108,7 @@ export const schema = new Schema<NewsSchema, NewsModel, {}, NewsQueryHelpers>(
 				hasPermission: true
 			},
 			newest: {
-				async method() {
+				async method(payload?: { showToNewUsers: boolean }) {
 					return this.find().newest(payload?.showToNewUsers);
 				},
 				hasPermission: true

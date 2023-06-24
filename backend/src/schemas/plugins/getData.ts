@@ -248,10 +248,6 @@ export default function getDataPlugin(schema: Schema) {
 			context: JobContext,
 			payload: Parameters<GetData["getData"]>[0]
 		) {
-			await context.assertPermission(
-				`data.${this.collection.collectionName}.getData`
-			);
-
 			return this.getData(payload);
 		},
 		...(schema.get("jobConfig") ?? {})

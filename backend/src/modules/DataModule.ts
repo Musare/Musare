@@ -318,10 +318,15 @@ export default class DataModule extends BaseModule {
 		})
 			.filter(([, event]) => !!event)
 			.forEach(([action, event]) => {
-				patchEventEmitter.on(event, async ({ doc }) => {
+				patchEventEmitter.on(event, async ({ doc, oldDoc }) => {
+					const modelId = doc?._id ?? oldDoc?._id;
+
+					if (!modelId)
+						throw new Error(`Model Id not found for "${event}"`);
+
 					await this._jobQueue.runJob("events", "publish", {
-						channel: `model.${modelName}.${doc._id}.${action}`,
-						value: doc
+						channel: `model.${modelName}.${modelId}.${action}`,
+						value: { doc, oldDoc }
 					});
 				});
 			});
