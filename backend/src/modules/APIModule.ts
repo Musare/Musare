@@ -6,7 +6,6 @@ import BaseModule from "../BaseModule";
 import { Jobs, Modules, UniqueMethods } from "../types/Modules";
 import WebSocket from "../WebSocket";
 import { UserRole } from "../models/schemas/users/UserRole";
-import { StationType } from "../models/schemas/stations/StationType";
 import permissions from "../permissions";
 import Job from "../Job";
 import { Models } from "../types/Models";
@@ -21,7 +20,13 @@ export default class APIModule extends BaseModule {
 		super("api");
 
 		this._dependentModules = ["data", "events", "websocket"];
+
 		this._subscriptions = {};
+
+		this._jobConfig = {
+			prepareWebsocket: false,
+			runJob: false
+		};
 	}
 
 	/**
@@ -142,9 +147,14 @@ export default class APIModule extends BaseModule {
 
 		socket.on("close", async () => {
 			if (socketId)
-				await this._jobQueue.runJob("api", "unsubscribeAll", {
-					socketId
-				});
+				await this._jobQueue.runJob(
+					"api",
+					"unsubscribeAll",
+					{},
+					{
+						socketId
+					}
+				);
 		});
 
 		return {
@@ -288,16 +298,18 @@ export default class APIModule extends BaseModule {
 		await Promise.all(promises);
 	}
 
-	public async subscribe(
-		context: JobContext,
-		payload: { channel: string; socketId?: string }
-	) {
-		// TODO: assert perm to join by socketId
-		// TODO: Prevent socketId payload from outside backend
-
+	public async subscribe(context: JobContext, payload: { channel: string }) {
 		const { channel } = payload;
+		const [, moduleName, modelName, modelId] =
+			/^([a-z]+)\.([a-z]+)\.([A-z0-9]+)\.?([A-z]+)?$/.exec(channel) ?? [];
 
-		const socketId = payload.socketId ?? context.getSocketId();
+		if (moduleName === "model" && modelName && modelId)
+			await context.assertPermission(
+				`data.${modelName}.findById.${modelId}`
+			);
+		else await context.assertPermission(`event.${channel}`);
+
+		const socketId = context.getSocketId();
 
 		if (!socketId) throw new Error("No socketId specified");
 
@@ -318,11 +330,11 @@ export default class APIModule extends BaseModule {
 
 	public async unsubscribe(
 		context: JobContext,
-		payload: { channel: string; socketId: string }
+		payload: { channel: string }
 	) {
 		const { channel } = payload;
 
-		const socketId = payload.socketId ?? context.getSocketId();
+		const socketId = context.getSocketId();
 
 		if (!socketId) throw new Error("No socketId specified");
 
@@ -344,11 +356,8 @@ export default class APIModule extends BaseModule {
 			});
 	}
 
-	public async unsubscribeAll(
-		context: JobContext,
-		payload: { socketId: string }
-	) {
-		const socketId = payload.socketId ?? context.getSocketId();
+	public async unsubscribeAll(context: JobContext) {
+		const socketId = context.getSocketId();
 
 		if (!socketId) throw new Error("No socketId specified");
 
@@ -357,7 +366,6 @@ export default class APIModule extends BaseModule {
 				.filter(([, socketIds]) => socketIds.has(socketId))
 				.map(([channel]) =>
 					context.executeJob("api", "unsubscribe", {
-						socketId,
 						channel
 					})
 				)
@@ -371,10 +379,14 @@ export default class APIModule extends BaseModule {
 					const promises = [];
 					for await (const socketId of socketIds.values()) {
 						promises.push(
-							new Job("unsubscribe", "api", {
-								socketId,
-								channel
-							}).execute()
+							new Job(
+								"unsubscribe",
+								"api",
+								{
+									channel
+								},
+								{ socketId }
+							).execute()
 						);
 					}
 					return Promise.all(promises);
