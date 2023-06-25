@@ -1,7 +1,7 @@
 import APIModule, { APIModuleJobs } from "../modules/APIModule";
 import DataModule, { DataModuleJobs } from "../modules/DataModule";
 import EventsModule, { EventsModuleJobs } from "../modules/EventsModule";
-import StationModule, { StationModuleJobs } from "../modules/StationModule";
+import StationsModule, { StationsModuleJobs } from "../modules/StationsModule";
 import WebSocketModule, {
 	WebSocketModuleJobs
 } from "../modules/WebSocketModule";
@@ -24,7 +24,7 @@ export type Jobs = {
 		[Property in keyof EventsModuleJobs]: EventsModuleJobs[Property];
 	};
 	stations: {
-		[Property in keyof StationModuleJobs]: StationModuleJobs[Property];
+		[Property in keyof StationsModuleJobs]: StationsModuleJobs[Property];
 	};
 	websocket: {
 		[Property in keyof WebSocketModuleJobs]: WebSocketModuleJobs[Property];
@@ -35,7 +35,7 @@ export type Modules = {
 	api: APIModule & typeof BaseModule;
 	data: DataModule & typeof BaseModule;
 	events: EventsModule & typeof BaseModule;
-	stations: StationModule & typeof BaseModule;
+	stations: StationsModule & typeof BaseModule;
 	websocket: WebSocketModule & typeof BaseModule;
 };
 

@@ -2,7 +2,7 @@ import JobContext from "../JobContext";
 import { UniqueMethods } from "../types/Modules";
 import BaseModule from "../BaseModule";
 
-export default class StationModule extends BaseModule {
+export default class StationsModule extends BaseModule {
 	/**
 	 * Station Module
 	 */
@@ -65,9 +65,9 @@ export default class StationModule extends BaseModule {
 	}
 }
 
-export type StationModuleJobs = {
-	[Property in keyof UniqueMethods<StationModule>]: {
-		payload: Parameters<UniqueMethods<StationModule>[Property]>[1];
-		returns: Awaited<ReturnType<UniqueMethods<StationModule>[Property]>>;
+export type StationsModuleJobs = {
+	[Property in keyof UniqueMethods<StationsModule>]: {
+		payload: Parameters<UniqueMethods<StationsModule>[Property]>[1];
+		returns: Awaited<ReturnType<UniqueMethods<StationsModule>[Property]>>;
 	};
 };

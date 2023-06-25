@@ -39,7 +39,7 @@ export default class ModuleManager {
 			api: "APIModule",
 			data: "DataModule",
 			events: "EventsModule",
-			stations: "StationModule",
+			stations: "StationsModule",
 			websocket: "WebSocketModule"
 		};
 		const { default: Module }: { default: ModuleClass<Modules[T]> } =
