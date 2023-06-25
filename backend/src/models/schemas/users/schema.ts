@@ -1,25 +1,9 @@
 import { Model, Schema, SchemaTypes, Types } from "mongoose";
-import { BaseSchema } from "../types/Schemas";
-
-export enum UserRole {
-	ADMIN = "admin",
-	MODERATOR = "moderator",
-	USER = "user"
-}
-
-export enum UserAvatarType {
-	GRAVATAR = "gravatar",
-	INITIALS = "initials"
-}
-
-export enum UserAvatarColor {
-	BLUE = "blue",
-	GREEN = "green",
-	ORANGE = "orange",
-	PURPLE = "purple",
-	RED = "red",
-	TEAL = "teal"
-}
+import { BaseSchema } from "../../../types/Schemas";
+import config from "./config";
+import { UserRole } from "./UserRole";
+import { UserAvatarType } from "./UserAvatarType";
+import { UserAvatarColor } from "./UserAvatarColor";
 
 export interface UserSchema extends BaseSchema {
 	username: string;
@@ -230,7 +214,7 @@ export const schema = new Schema<UserSchema, UserModel>(
 			}
 		}
 	},
-	{ documentVersion: 4 }
+	config
 );
 
 export type UserSchemaType = typeof schema;

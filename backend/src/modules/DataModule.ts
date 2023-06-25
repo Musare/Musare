@@ -16,9 +16,9 @@ import BaseModule, { ModuleStatus } from "../BaseModule";
 import { UniqueMethods } from "../types/Modules";
 import { AnyModel, Models } from "../types/Models";
 import { Schemas } from "../types/Schemas";
-import documentVersionPlugin from "../schemas/plugins/documentVersion";
-import getDataPlugin from "../schemas/plugins/getData";
-import Migration from "../Migration";
+import documentVersionPlugin from "../models/plugins/documentVersion";
+import getDataPlugin from "../models/plugins/getData";
+import Migration from "../models/Migration";
 
 /**
  * Experimental: function to get all nested keys from a MongoDB query object
@@ -344,7 +344,7 @@ export default class DataModule extends BaseModule {
 		if (!this._mongoConnection) throw new Error("Mongo is not available");
 
 		const { schema }: { schema: Schemas[ModelName] } = await import(
-			`../schemas/${modelName.toString()}`
+			`../models/schemas/${modelName.toString()}/schema`
 		);
 
 		schema.plugin(documentVersionPlugin);
@@ -385,9 +385,9 @@ export default class DataModule extends BaseModule {
 		this._models = {
 			abc: await this._loadModel("abc"),
 			news: await this._loadModel("news"),
-			session: await this._loadModel("session"),
-			station: await this._loadModel("station"),
-			user: await this._loadModel("user")
+			sessions: await this._loadModel("sessions"),
+			stations: await this._loadModel("stations"),
+			users: await this._loadModel("users")
 		};
 	}
 
@@ -425,13 +425,13 @@ export default class DataModule extends BaseModule {
 		if (!this._mongoConnection) throw new Error("Mongo is not available");
 
 		const migrations = await readdir(
-			path.resolve(__dirname, "../schemas/migrations/")
+			path.resolve(__dirname, "../models/migrations/")
 		);
 
 		return Promise.all(
 			migrations.map(async migrationFile => {
 				const { default: Migrate }: { default: typeof Migration } =
-					await import(`../schemas/migrations/${migrationFile}`);
+					await import(`../models/migrations/${migrationFile}`);
 				return new Migrate(this._mongoConnection as Connection);
 			})
 		);

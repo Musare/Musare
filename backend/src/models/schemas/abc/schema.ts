@@ -1,5 +1,5 @@
 import { Model, Schema, SchemaTypes, Types } from "mongoose";
-import { BaseSchema, TimestampsSchema } from "../types/Schemas";
+import { BaseSchema, TimestampsSchema } from "../../../types/Schemas";
 
 export interface AbcSchema extends Omit<BaseSchema, keyof TimestampsSchema> {
 	name: string;

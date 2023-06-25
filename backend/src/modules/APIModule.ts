@@ -5,8 +5,8 @@ import JobContext from "../JobContext";
 import BaseModule from "../BaseModule";
 import { Jobs, Modules, UniqueMethods } from "../types/Modules";
 import WebSocket from "../WebSocket";
-import { UserRole } from "../schemas/user";
-import { StationType } from "../schemas/station";
+import { UserRole } from "../models/schemas/users/UserRole";
+import { StationType } from "../models/schemas/stations/StationType";
 import permissions from "../permissions";
 import Job from "../Job";
 import { Models } from "../types/Models";
@@ -77,7 +77,7 @@ export default class APIModule extends BaseModule {
 	): Promise<ReturnType> {
 		let session;
 		if (sessionId) {
-			const Session = await context.getModel("session");
+			const Session = await context.getModel("sessions");
 
 			session = await Session.findByIdAndUpdate(sessionId, {
 				updatedAt: Date.now()
@@ -127,7 +127,7 @@ export default class APIModule extends BaseModule {
 
 		let user;
 		if (sessionId) {
-			const Session = await context.getModel("session");
+			const Session = await context.getModel("sessions");
 
 			const session = await Session.findByIdAndUpdate(sessionId, {
 				updatedAt: Date.now()
@@ -256,23 +256,6 @@ export default class APIModule extends BaseModule {
 					hasPermission = await options.reduce(
 						async (previous, option) => {
 							if (await previous) return true;
-
-							if (option === "loggedIn" && user) return true;
-
-							if (option === "owner" && user && model) {
-								let ownerAttribute;
-
-								if (model.schema.path("createdBy"))
-									ownerAttribute = "createdBy";
-								else if (model.schema.path("owner"))
-									ownerAttribute = "owner";
-
-								if (ownerAttribute)
-									return (
-										model[ownerAttribute].toString() ===
-										user._id.toString()
-									);
-							}
 
 							if (typeof option === "boolean") return option;
 

@@ -1,35 +1,12 @@
 import { Model, Schema, SchemaTypes, Types } from "mongoose";
-import { GetData } from "./plugins/getData";
-import { BaseSchema } from "../types/Schemas";
-
-export enum StationType {
-	OFFICIAL = "official",
-	COMMUNITY = "community"
-}
-
-export enum StationPrivacy {
-	PUBLIC = "public",
-	UNLISTED = "unlisted",
-	PRIVATE = "private"
-}
-
-export enum StationTheme {
-	BLUE = "blue",
-	PURPLE = "purple",
-	TEAL = "teal",
-	ORANGE = "orange",
-	RED = "red"
-}
-
-export enum StationRequestsAccess {
-	OWNER = "owner",
-	USER = "user"
-}
-
-export enum StationAutofillMode {
-	RANDOM = "random",
-	SEQUENTIAL = "sequential"
-}
+import { GetData } from "../../plugins/getData";
+import { BaseSchema } from "../../../types/Schemas";
+import { StationType } from "./StationType";
+import { StationPrivacy } from "./StationPrivacy";
+import { StationTheme } from "./StationTheme";
+import { StationRequestsAccess } from "./StationRequestsAccess";
+import { StationAutofillMode } from "./StationAutofillMode";
+import config from "./config";
 
 export interface StationSchema extends BaseSchema {
 	type: StationType;
@@ -63,13 +40,6 @@ export interface StationSchema extends BaseSchema {
 }
 
 export interface StationModel extends Model<StationSchema>, GetData {}
-
-const isDj = (model, user) =>
-	model && user && model.djs.contains(user._id.toString());
-
-const isPublic = model => model && model.privacy === StationPrivacy.PUBLIC;
-const isUnlisted = model => model && model.privacy === StationPrivacy.UNLISTED;
-const isPrivate = model => model && model.privacy === StationPrivacy.PRIVATE;
 
 export const schema = new Schema<StationSchema, StationModel>(
 	{
@@ -180,85 +150,7 @@ export const schema = new Schema<StationSchema, StationModel>(
 			}
 		}
 	},
-	{
-		// @ts-ignore
-		documentVersion: 10,
-		jobConfig: {
-			create: {
-				hasPermission: "loggedIn"
-			},
-			findById: {
-				hasPermission: ["owner", isDj, isPublic, isUnlisted]
-			},
-			updateById: {
-				hasPermission: ["owner", isDj]
-			},
-			deleteById: {
-				hasPermission: ["owner", isDj]
-			}
-		},
-		// @ts-ignore
-		getData: {
-			enabled: true,
-			specialProperties: {
-				owner: [
-					{
-						$addFields: {
-							ownerOID: {
-								$convert: {
-									input: "$owner",
-									to: "objectId",
-									onError: "unknown",
-									onNull: "unknown"
-								}
-							}
-						}
-					},
-					{
-						$lookup: {
-							from: "users",
-							localField: "ownerOID",
-							foreignField: "_id",
-							as: "ownerUser"
-						}
-					},
-					{
-						$unwind: {
-							path: "$ownerUser",
-							preserveNullAndEmptyArrays: true
-						}
-					},
-					{
-						$addFields: {
-							ownerUsername: {
-								$cond: [
-									{ $eq: [{ $type: "$owner" }, "string"] },
-									{
-										$ifNull: [
-											"$ownerUser.username",
-											"unknown"
-										]
-									},
-									"none"
-								]
-							}
-						}
-					},
-					{
-						$project: {
-							ownerOID: 0,
-							ownerUser: 0
-						}
-					}
-				]
-			},
-			specialQueries: {
-				owner: newQuery => ({
-					$or: [newQuery, { ownerUsername: newQuery.owner }]
-				})
-			}
-		}
-	}
+	config
 );
 
 export type StationSchemaType = typeof schema;

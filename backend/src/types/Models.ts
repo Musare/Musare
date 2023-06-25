@@ -1,15 +1,15 @@
-import { AbcModel } from "../schemas/abc";
-import { NewsModel } from "../schemas/news";
-import { SessionModel } from "../schemas/session";
-import { StationModel } from "../schemas/station";
-import { UserModel } from "../schemas/user";
+import { AbcModel } from "../models/schemas/abc/schema";
+import { NewsModel } from "../models/schemas/news/schema";
+import { SessionModel } from "../models/schemas/sessions/schema";
+import { StationModel } from "../models/schemas/stations/schema";
+import { UserModel } from "../models/schemas/users/schema";
 
 export type Models = {
 	abc: AbcModel;
 	news: NewsModel;
-	session: SessionModel;
-	station: StationModel;
-	user: UserModel;
+	sessions: SessionModel;
+	stations: StationModel;
+	users: UserModel;
 };
 
 export type AnyModel = Models[keyof Models];

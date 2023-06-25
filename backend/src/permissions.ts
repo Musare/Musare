@@ -1,5 +1,5 @@
 import config from "config";
-import { UserRole } from "./schemas/user";
+import { UserRole } from "./models/schemas/users/UserRole";
 
 const temp = {
 	"data.news.getData": true,

@@ -3,10 +3,10 @@ import BaseModule from "./BaseModule";
 import Job from "./Job";
 import JobQueue from "./JobQueue";
 import { Log } from "./LogBook";
-import { SessionSchema } from "./schemas/session";
+import { SessionSchema } from "./models/schemas/session";
 import { JobOptions } from "./types/JobOptions";
 import { Jobs, Modules } from "./types/Modules";
-import { UserSchema } from "./schemas/user";
+import { UserSchema } from "./models/schemas/user";
 import { Models } from "./types/Models";
 
 export default class JobContext {
@@ -98,7 +98,7 @@ export default class JobContext {
 
 		if (this._user && !refresh) return this._user;
 
-		const User = await this.getModel("user");
+		const User = await this.getModel("users");
 
 		this._user = await User.findById(this._session.userId);
 
