@@ -147,24 +147,25 @@ export default class JobContext {
 	}
 
 	public async assertPermission(permission: string) {
-		let permissions = await this.getUserPermissions();
+		let hasPermission = false;
 
-		if (permission.startsWith("data")) {
-			const [, modelName, modelId] =
-				/^data\.([a-z]+)\.[A-z]+\.?([A-z0-9]+)?$/.exec(permission);
+		const [, moduleName, modelOrJobName, jobName, modelId] =
+			/^([a-z]+)\.([a-z]+)\.([A-z]+)\.?([A-z0-9]+)?$/.exec(permission) ??
+			[];
 
-			permissions = {
-				...permissions,
-				...(await this.getUserModelPermissions({
-					modelName,
-					modelId
-				}))
-			};
+		if (moduleName === "data" && modelOrJobName && jobName) {
+			const permissions = await this.getUserModelPermissions({
+				modelName: modelOrJobName,
+				modelId
+			});
 
-			return;
+			hasPermission = permissions[`data.${modelOrJobName}.${jobName}`];
+		} else {
+			const permissions = await this.getUserPermissions();
+
+			hasPermission = permissions[permission];
 		}
 
-		if (!permissions[permission])
-			throw new Error("Insufficient permissions");
+		if (!hasPermission) throw new Error("Insufficient permissions");
 	}
 }
