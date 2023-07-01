@@ -1502,6 +1502,15 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 									item-key="name"
 									@update="columnOrderChanged"
 									:attributes="{
+										style: column => ({
+											display:
+												column.name !== 'select' &&
+												column.name !== 'placeholder' &&
+												column.name !==
+													'updatedPlaceholder'
+													? undefined
+													: 'none'
+										}),
 										class: column => ({
 											sortable: column.sortable,
 											'nav-item': true
@@ -1511,61 +1520,48 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 									tag="button"
 								>
 									<template #item="{ element: column }">
-										<template
-											v-if="
-												column.name !== 'select' &&
-												column.name !== 'placeholder' &&
-												column.name !==
-													'updatedPlaceholder'
+										<div
+											@click.prevent="
+												toggleColumnVisibility(column)
 											"
 										>
-											<div
-												@click.prevent="
-													toggleColumnVisibility(
-														column
-													)
-												"
+											<p
+												class="control is-expanded checkbox-control"
 											>
-												<p
-													class="control is-expanded checkbox-control"
+												<label class="switch">
+													<input
+														type="checkbox"
+														:id="`column-dropdown-checkbox-${column.name}`"
+														:checked="
+															shownColumns.indexOf(
+																column.name
+															) !== -1
+														"
+														@click="
+															toggleColumnVisibility(
+																column
+															)
+														"
+													/>
+													<span
+														:class="{
+															slider: true,
+															round: true,
+															disabled:
+																!column.hidable
+														}"
+													></span>
+												</label>
+												<label
+													:for="`column-dropdown-checkbox-${column.name}`"
 												>
-													<label class="switch">
-														<input
-															type="checkbox"
-															:id="`column-dropdown-checkbox-${column.name}`"
-															:checked="
-																shownColumns.indexOf(
-																	column.name
-																) !== -1
-															"
-															@click="
-																toggleColumnVisibility(
-																	column
-																)
-															"
-														/>
-														<span
-															:class="{
-																slider: true,
-																round: true,
-																disabled:
-																	!column.hidable
-															}"
-														></span>
-													</label>
-													<label
-														:for="`column-dropdown-checkbox-${column.name}`"
-													>
-														<span></span>
-														<p>
-															{{
-																column.displayName
-															}}
-														</p>
-													</label>
-												</p>
-											</div>
-										</template>
+													<span></span>
+													<p>
+														{{ column.displayName }}
+													</p>
+												</label>
+											</p>
+										</div>
 									</template>
 								</draggable-list>
 							</div>
@@ -1589,6 +1585,15 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 								tag="th"
 								:attributes="{
 									style: column => ({
+										display:
+											shownColumns.indexOf(
+												column.name
+											) !== -1 &&
+											(column.name !==
+												'updatedPlaceholder' ||
+												rows.length > 0)
+												? undefined
+												: 'none',
 										minWidth: Number.isNaN(column.minWidth)
 											? column.minWidth
 											: `${column.minWidth}px`,
@@ -1606,100 +1611,81 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 								:disabled="column => !column.draggable"
 							>
 								<template #item="{ element: column }">
-									<template
-										v-if="
-											shownColumns.indexOf(
-												column.name
-											) !== -1 &&
-											(column.name !==
-												'updatedPlaceholder' ||
-												rows.length > 0)
-										"
-									>
-										<div v-if="column.name === 'select'">
-											<p class="checkbox">
-												<input
-													v-if="rows.length === 0"
-													type="checkbox"
-													disabled
-												/>
-												<input
-													v-else
-													type="checkbox"
-													:checked="
-														rows.filter(
-															row => !row.removed
-														).length ===
-														selectedRows.length
-													"
-													@click="toggleAllRows()"
-												/>
-											</p>
-										</div>
-										<div v-else class="handle">
-											<span>
-												{{ column.displayName }}
+									<div v-if="column.name === 'select'">
+										<p class="checkbox">
+											<input
+												v-if="rows.length === 0"
+												type="checkbox"
+												disabled
+											/>
+											<input
+												v-else
+												type="checkbox"
+												:checked="
+													rows.filter(
+														row => !row.removed
+													).length ===
+													selectedRows.length
+												"
+												@click="toggleAllRows()"
+											/>
+										</p>
+									</div>
+									<div v-else class="handle">
+										<span>
+											{{ column.displayName }}
+										</span>
+										<span
+											v-if="column.sortable"
+											:content="`Sort by ${column.displayName}`"
+											v-tippy
+										>
+											<span
+												v-if="
+													!sort[column.sortProperty]
+												"
+												class="material-icons"
+												@click="changeSort(column)"
+											>
+												unfold_more
 											</span>
 											<span
-												v-if="column.sortable"
-												:content="`Sort by ${column.displayName}`"
-												v-tippy
+												v-if="
+													sort[
+														column.sortProperty
+													] === 'ascending'
+												"
+												class="material-icons active"
+												@click="changeSort(column)"
 											>
-												<span
-													v-if="
-														!sort[
-															column.sortProperty
-														]
-													"
-													class="material-icons"
-													@click="changeSort(column)"
-												>
-													unfold_more
-												</span>
-												<span
-													v-if="
-														sort[
-															column.sortProperty
-														] === 'ascending'
-													"
-													class="material-icons active"
-													@click="changeSort(column)"
-												>
-													expand_more
-												</span>
-												<span
-													v-if="
-														sort[
-															column.sortProperty
-														] === 'descending'
-													"
-													class="material-icons active"
-													@click="changeSort(column)"
-												>
-													expand_less
-												</span>
+												expand_more
 											</span>
-										</div>
-										<div
-											class="resizer"
-											v-if="column.resizable"
-											@mousedown.prevent.stop="
-												columnResizingStart(
-													column,
-													$event
-												)
-											"
-											@touchstart.prevent.stop="
-												columnResizingStart(
-													column,
-													$event
-												)
-											"
-											@mouseup="columnResizingStop()"
-											@touchend="columnResizingStop()"
-											@dblclick="columnResetWidth(column)"
-										></div>
-									</template>
+											<span
+												v-if="
+													sort[
+														column.sortProperty
+													] === 'descending'
+												"
+												class="material-icons active"
+												@click="changeSort(column)"
+											>
+												expand_less
+											</span>
+										</span>
+									</div>
+									<div
+										class="resizer"
+										v-if="column.resizable"
+										@mousedown.prevent.stop="
+											columnResizingStart(column, $event)
+										"
+										@touchstart.prevent.stop="
+											columnResizingStart(column, $event)
+										"
+										@mouseup="columnResizingStop()"
+										@touchend="columnResizingStop()"
+										@dblclick="columnResetWidth(column)"
+									></div>
 								</template>
 							</draggable-list>
 						</tr>
