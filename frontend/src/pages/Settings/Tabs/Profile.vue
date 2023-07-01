@@ -21,7 +21,7 @@ const { socket } = useWebsocketsStore();
 
 const saveButton = ref();
 
-const { userId } = storeToRefs(userAuthStore);
+const { currentUser } = storeToRefs(userAuthStore);
 const { originalUser, modifiedUser } = settingsStore;
 
 const { updateOriginalUser } = settingsStore;
@@ -44,21 +44,26 @@ const changeName = () => {
 
 	saveButton.value.status = "disabled";
 
-	return socket.dispatch("users.updateName", userId.value, name, res => {
-		if (res.status !== "success") {
-			new Toast(res.message);
-			saveButton.value.handleFailedSave();
-		} else {
-			new Toast("Successfully changed name");
+	return socket.dispatch(
+		"users.updateName",
+		currentUser.value?._id,
+		name,
+		res => {
+			if (res.status !== "success") {
+				new Toast(res.message);
+				saveButton.value.handleFailedSave();
+			} else {
+				new Toast("Successfully changed name");
 
-			updateOriginalUser({
-				property: "name",
-				value: name
-			});
+				updateOriginalUser({
+					property: "name",
+					value: name
+				});
 
-			saveButton.value.handleSuccessfulSave();
+				saveButton.value.handleSuccessfulSave();
+			}
 		}
-	});
+	);
 };
 
 const changeLocation = () => {
@@ -71,7 +76,7 @@ const changeLocation = () => {
 
 	return socket.dispatch(
 		"users.updateLocation",
-		userId.value,
+		currentUser.value?._id,
 		location,
 		res => {
 			if (res.status !== "success") {
@@ -99,21 +104,26 @@ const changeBio = () => {
 
 	saveButton.value.status = "disabled";
 
-	return socket.dispatch("users.updateBio", userId.value, bio, res => {
-		if (res.status !== "success") {
-			new Toast(res.message);
-			saveButton.value.handleFailedSave();
-		} else {
-			new Toast("Successfully changed bio");
+	return socket.dispatch(
+		"users.updateBio",
+		currentUser.value?._id,
+		bio,
+		res => {
+			if (res.status !== "success") {
+				new Toast(res.message);
+				saveButton.value.handleFailedSave();
+			} else {
+				new Toast("Successfully changed bio");
 
-			updateOriginalUser({
-				property: "bio",
-				value: bio
-			});
+				updateOriginalUser({
+					property: "bio",
+					value: bio
+				});
 
-			saveButton.value.handleSuccessfulSave();
+				saveButton.value.handleSuccessfulSave();
+			}
 		}
-	});
+	);
 };
 
 const changeAvatar = () => {
@@ -121,21 +131,26 @@ const changeAvatar = () => {
 
 	saveButton.value.status = "disabled";
 
-	return socket.dispatch("users.updateAvatar", userId.value, avatar, res => {
-		if (res.status !== "success") {
-			new Toast(res.message);
-			saveButton.value.handleFailedSave();
-		} else {
-			new Toast("Successfully updated avatar");
+	return socket.dispatch(
+		"users.updateAvatar",
+		currentUser.value?._id,
+		avatar,
+		res => {
+			if (res.status !== "success") {
+				new Toast(res.message);
+				saveButton.value.handleFailedSave();
+			} else {
+				new Toast("Successfully updated avatar");
 
-			updateOriginalUser({
-				property: "avatar",
-				value: avatar
-			});
+				updateOriginalUser({
+					property: "avatar",
+					value: avatar
+				});
 
-			saveButton.value.handleSuccessfulSave();
+				saveButton.value.handleSuccessfulSave();
+			}
 		}
-	});
+	);
 };
 
 const saveChanges = () => {

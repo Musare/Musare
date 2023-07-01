@@ -4,9 +4,7 @@ import { marked } from "marked";
 import DOMPurify from "dompurify";
 import Toast from "toasters";
 import { formatDistance } from "date-fns";
-import { GetNewsResponse } from "@musare_types/actions/NewsActions";
-import { GenericResponse } from "@musare_types/actions/GenericActions";
-import { useWebsocketsStore } from "@/stores/websockets";
+import { useWebsocketStore } from "@/stores/websocket";
 import { useModalsStore } from "@/stores/modals";
 import { useForm } from "@/composables/useForm";
 
@@ -25,7 +23,7 @@ const props = defineProps({
 	sector: { type: String, default: "admin" }
 });
 
-const { socket } = useWebsocketsStore();
+const { onReady, runJob } = useWebsocketStore();
 
 const { closeCurrentModal } = useModalsStore();
 
@@ -70,19 +68,19 @@ const { inputs, save, setOriginalValue } = useForm(
 	},
 	({ status, messages, values }, resolve, reject) => {
 		if (status === "success") {
-			const data = {
+			const query = {
 				title: getTitle(),
 				markdown: values.markdown,
 				status: values.status,
 				showToNewUsers: values.showToNewUsers
 			};
-			const cb = (res: GenericResponse) => {
-				new Toast(res.message);
-				if (res.status === "success") resolve();
-				else reject(new Error(res.message));
-			};
-			if (props.createNews) socket.dispatch("news.create", data, cb);
-			else socket.dispatch("news.update", props.newsId, data, cb);
+
+			runJob(`data.news.${props.createNews ? "create" : "updateById"}`, {
+				_id: props.createNews ? null : props.newsId,
+				query
+			})
+				.then(resolve)
+				.catch(reject);
 		} else {
 			if (status === "unchanged") new Toast(messages.unchanged);
 			else if (status === "error")
@@ -97,7 +95,7 @@ const { inputs, save, setOriginalValue } = useForm(
 	}
 );
 
-onMounted(() => {
+onMounted(async () => {
 	marked.use({
 		renderer: {
 			table(header, body) {
@@ -109,26 +107,23 @@ onMounted(() => {
 		}
 	});
 
-	socket.onConnect(() => {
+	await onReady(async () => {
 		if (props.newsId && !props.createNews) {
-			socket.dispatch(
-				`news.getNewsFromId`,
-				props.newsId,
-				(res: GetNewsResponse) => {
-					if (res.status === "success") {
-						setOriginalValue({
-							markdown: res.data.news.markdown,
-							status: res.data.news.status,
-							showToNewUsers: res.data.news.showToNewUsers
-						});
-						createdBy.value = res.data.news.createdBy;
-						createdAt.value = res.data.news.createdAt;
-					} else {
-						new Toast("News with that ID not found.");
-						closeCurrentModal();
-					}
-				}
-			);
+			const data = await runJob(`data.news.findById`, {
+				_id: props.newsId
+			}).catch(() => {
+				new Toast("News with that ID not found.");
+				closeCurrentModal();
+			});
+
+			setOriginalValue({
+				markdown: data.markdown,
+				status: data.status,
+				showToNewUsers: data.showToNewUsers
+			});
+
+			createdBy.value = data.createdBy;
+			createdAt.value = data.createdAt;
 		}
 	});
 });

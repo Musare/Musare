@@ -1,330 +1,257 @@
 import { defineStore } from "pinia";
 import Toast from "toasters";
+import { computed, ref } from "vue";
 import validation from "@/validation";
-import { useWebsocketsStore } from "@/stores/websockets";
+import { useWebsocketStore } from "@/stores/websocket";
 import { useConfigStore } from "@/stores/config";
+import { User } from "@/types/user";
 
-export const useUserAuthStore = defineStore("userAuth", {
-	state: (): {
-		userIdMap: Record<string, { name: string; username: string }>;
-		userIdRequested: Record<string, boolean>;
-		pendingUserIdCallbacks: Record<
+export const useUserAuthStore = defineStore("userAuth", () => {
+	const configStore = useConfigStore();
+	const websocketStore = useWebsocketStore();
+
+	const userIdMap = ref<Record<string, { name: string; username: string }>>(
+		{}
+	);
+	const userIdRequested = ref<Record<string, boolean>>({});
+	const pendingUserIdCallbacks = ref<
+		Record<
 			string,
 			((basicUser: { name: string; username: string }) => void)[]
-		>;
-		loggedIn: boolean;
-		role: "user" | "moderator" | "admin";
+		>
+	>({});
+	const currentUser = ref<User | null>();
+	const banned = ref(false);
+	const ban = ref<{
+		reason?: string;
+		expiresAt?: number;
+	} | null>({
+		reason: null,
+		expiresAt: null
+	});
+	const gotData = ref(false);
+	const gotPermissions = ref(false);
+	const permissions = ref<Record<string, boolean>>({});
+
+	const loggedIn = computed(() => !!currentUser.value);
+
+	const register = async (user: {
 		username: string;
 		email: string;
-		userId: string;
-		banned: boolean;
-		ban: {
-			reason: string;
-			expiresAt: number;
-		};
-		gotData: boolean;
-		gotPermissions: boolean;
-		permissions: Record<string, boolean>;
-	} => ({
-		userIdMap: {},
-		userIdRequested: {},
-		pendingUserIdCallbacks: {},
-		loggedIn: false,
-		role: "",
-		username: "",
-		email: "",
-		userId: "",
-		banned: false,
-		ban: {
-			reason: null,
-			expiresAt: null
-		},
-		gotData: false,
-		gotPermissions: false,
-		permissions: {}
-	}),
-	actions: {
-		register(user: {
-			username: string;
-			email: string;
-			password: string;
-			recaptchaToken: string;
-		}) {
-			return new Promise((resolve, reject) => {
-				const { username, email, password, recaptchaToken } = user;
+		password: string;
+		recaptchaToken: string;
+	}) => {
+		const { username, email, password, recaptchaToken } = user;
 
-				if (!email || !username || !password)
-					reject(new Error("Please fill in all fields"));
-				else if (!validation.isLength(email, 3, 254))
-					reject(
-						new Error(
-							"Email must have between 3 and 254 characters."
-						)
-					);
-				else if (
-					email.indexOf("@") !== email.lastIndexOf("@") ||
-					!validation.regex.emailSimple.test(email)
-				)
-					reject(new Error("Invalid email format."));
-				else if (!validation.isLength(username, 2, 32))
-					reject(
-						new Error(
-							"Username must have between 2 and 32 characters."
-						)
-					);
-				else if (!validation.regex.azAZ09_.test(username))
-					reject(
-						new Error(
-							"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _."
-						)
-					);
-				else if (username.replaceAll(/[_]/g, "").length === 0)
-					reject(
-						new Error(
-							"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _, and there has to be at least one letter or number."
-						)
-					);
-				else if (!validation.isLength(password, 6, 200))
-					reject(
-						new Error(
-							"Password must have between 6 and 200 characters."
-						)
-					);
-				else if (!validation.regex.password.test(password))
-					reject(
-						new Error(
-							"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character."
-						)
-					);
-				else {
-					const { socket } = useWebsocketsStore();
-					const configStore = useConfigStore();
-					socket.dispatch(
-						"users.register",
-						username,
-						email,
-						password,
-						recaptchaToken,
-						res => {
-							if (res.status === "success") {
-								if (res.SID) {
-									const date = new Date();
-									date.setTime(
-										new Date().getTime() +
-											2 * 365 * 24 * 60 * 60 * 1000
-									);
+		if (!email || !username || !password)
+			throw new Error("Please fill in all fields");
 
-									const secure = configStore.urls.secure
-										? "secure=true; "
-										: "";
+		if (!validation.isLength(email, 3, 254))
+			throw new Error("Email must have between 3 and 254 characters.");
 
-									let domain = "";
-									if (configStore.urls.host !== "localhost")
-										domain = ` domain=${configStore.urls.host};`;
+		if (
+			email.indexOf("@") !== email.lastIndexOf("@") ||
+			!validation.regex.emailSimple.test(email)
+		)
+			throw new Error("Invalid email format.");
 
-									document.cookie = `${configStore.cookie}=${
-										res.SID
-									}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
+		if (!validation.isLength(username, 2, 32))
+			throw new Error("Username must have between 2 and 32 characters.");
 
-									return resolve({
-										status: "success",
-										message: "Account registered!"
-									});
-								}
-
-								return reject(new Error("You must login"));
-							}
-
-							return reject(new Error(res.message));
-						}
-					);
-				}
-			});
-		},
-		login(user: { email: string; password: string }) {
-			return new Promise((resolve, reject) => {
-				const { email, password } = user;
-
-				const { socket } = useWebsocketsStore();
-				const configStore = useConfigStore();
-				socket.dispatch("users.login", email, password, res => {
-					if (res.status === "success") {
-						const date = new Date();
-						date.setTime(
-							new Date().getTime() + 2 * 365 * 24 * 60 * 60 * 1000
-						);
-
-						const secure = configStore.urls.secure
-							? "secure=true; "
-							: "";
-
-						let domain = "";
-						if (configStore.urls.host !== "localhost")
-							domain = ` domain=${configStore.urls.host};`;
-
-						document.cookie = `${configStore.cookie}=${
-							res.data.SID
-						}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
-
-						const bc = new BroadcastChannel(
-							`${configStore.cookie}.user_login`
-						);
-						bc.postMessage(true);
-						bc.close();
-
-						return resolve({
-							status: "success",
-							message: "Logged in!"
-						});
-					}
-
-					return reject(new Error(res.message));
-				});
-			});
-		},
-		logout() {
-			return new Promise((resolve, reject) => {
-				const { socket } = useWebsocketsStore();
-				socket.dispatch("users.logout", res => {
-					if (res.status === "success") {
-						const configStore = useConfigStore();
-						document.cookie = `${configStore.cookie}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
-						window.location.reload();
-						return resolve(true);
-					}
-					new Toast(res.message);
-					return reject(new Error(res.message));
-				});
-			});
-		},
-		getBasicUser(userId: string) {
-			return new Promise(
-				(
-					resolve: (
-						basicUser: { name: string; username: string } | null
-					) => void
-				) => {
-					if (typeof this.userIdMap[`Z${userId}`] !== "string") {
-						if (this.userIdRequested[`Z${userId}`] !== true) {
-							this.requestingUserId(userId);
-							const { socket } = useWebsocketsStore();
-							socket.dispatch(
-								"users.getBasicUser",
-								userId,
-								res => {
-									if (res.status === "success") {
-										const user = res.data;
-
-										this.mapUserId({
-											userId,
-											user: {
-												name: user.name,
-												username: user.username
-											}
-										});
-
-										this.pendingUserIdCallbacks[
-											`Z${userId}`
-										].forEach(cb => cb(user));
-
-										this.clearPendingCallbacks(userId);
-
-										return resolve(user);
-									}
-									return resolve(null);
-								}
-							);
-						} else {
-							this.pendingUser(userId, user => resolve(user));
-						}
-					} else {
-						resolve(this.userIdMap[`Z${userId}`]);
-					}
-				}
+		if (!validation.regex.azAZ09_.test(username))
+			throw new Error(
+				"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _."
 			);
-		},
-		mapUserId(data: {
-			userId: string;
-			user: { name: string; username: string };
-		}) {
-			this.userIdMap[`Z${data.userId}`] = data.user;
-			this.userIdRequested[`Z${data.userId}`] = false;
-		},
-		requestingUserId(userId: string) {
-			this.userIdRequested[`Z${userId}`] = true;
-			if (!this.pendingUserIdCallbacks[`Z${userId}`])
-				this.pendingUserIdCallbacks[`Z${userId}`] = [];
-		},
-		pendingUser(
-			userId: string,
-			callback: (basicUser: { name: string; username: string }) => void
-		) {
-			this.pendingUserIdCallbacks[`Z${userId}`].push(callback);
-		},
-		clearPendingCallbacks(userId: string) {
-			this.pendingUserIdCallbacks[`Z${userId}`] = [];
-		},
-		authData(data: {
-			loggedIn: boolean;
-			role: string;
-			username: string;
-			email: string;
-			userId: string;
-		}) {
-			this.loggedIn = data.loggedIn;
-			this.role = data.role;
-			this.username = data.username;
-			this.email = data.email;
-			this.userId = data.userId;
-			this.gotData = true;
-		},
-		banUser(ban: { reason: string; expiresAt: number }) {
-			this.banned = true;
-			this.ban = ban;
-		},
-		updateUsername(username: string) {
-			this.username = username;
-		},
-		updateRole(role: string) {
-			this.role = role;
-		},
-		hasPermission(permission: string) {
-			return !!(this.permissions && this.permissions[permission]);
-		},
-		updatePermissions() {
-			return new Promise(resolve => {
-				const { socket } = useWebsocketsStore();
-				socket.dispatch("utils.getPermissions", res => {
-					this.permissions = res.data.permissions;
-					this.gotPermissions = true;
-					resolve(this.permissions);
-				});
-			});
-		},
-		resetCookieExpiration() {
-			const cookies = {};
-			document.cookie.split("; ").forEach(cookie => {
-				cookies[cookie.substring(0, cookie.indexOf("="))] =
-					cookie.substring(cookie.indexOf("=") + 1, cookie.length);
-			});
 
-			const configStore = useConfigStore();
-			const SIDName = configStore.cookie;
+		if (username.replaceAll(/[_]/g, "").length === 0)
+			throw new Error(
+				"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _, and there has to be at least one letter or number."
+			);
 
-			if (!cookies[SIDName]) return;
+		if (!validation.isLength(password, 6, 200))
+			throw new Error("Password must have between 6 and 200 characters.");
 
-			const date = new Date();
-			date.setTime(new Date().getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+		if (!validation.regex.password.test(password))
+			throw new Error(
+				"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character."
+			);
 
-			const secure = configStore.urls.secure ? "secure=true; " : "";
+		const data = await websocketStore.runJob("users.register", {
+			username,
+			email,
+			password,
+			recaptchaToken
+		});
 
-			let domain = "";
-			if (configStore.urls.host !== "localhost")
-				domain = ` domain=${configStore.urls.host};`;
+		if (!data?.SID) throw new Error("You must login");
 
-			document.cookie = `${configStore.cookie}=${
-				cookies[SIDName]
-			}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
-		}
-	}
+		const date = new Date();
+		date.setTime(new Date().getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+
+		const secure = configStore.urls.secure ? "secure=true; " : "";
+
+		let domain = "";
+		if (configStore.urls.host !== "localhost")
+			domain = ` domain=${configStore.urls.host};`;
+
+		document.cookie = `${configStore.cookie}=${
+			data.SID
+		}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
+	};
+
+	const login = async (user: { email: string; password: string }) => {
+		const { email, password } = user;
+
+		const data = await websocketStore.runJob("users.login", {
+			email,
+			password
+		});
+
+		const date = new Date();
+		date.setTime(new Date().getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+
+		const secure = configStore.urls.secure ? "secure=true; " : "";
+
+		let domain = "";
+		if (configStore.urls.host !== "localhost")
+			domain = ` domain=${configStore.urls.host};`;
+
+		document.cookie = `${configStore.cookie}=${
+			data.SID
+		}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
+
+		const bc = new BroadcastChannel(`${configStore.cookie}.user_login`);
+		bc.postMessage(true);
+		bc.close();
+	};
+
+	const logout = async () => {
+		await websocketStore.runJob("users.logout", {});
+
+		document.cookie = `${configStore.cookie}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+
+		window.location.reload();
+	};
+
+	const mapUserId = (data: {
+		userId: string;
+		user: { name: string; username: string };
+	}) => {
+		userIdMap.value[`Z${data.userId}`] = data.user;
+		userIdRequested.value[`Z${data.userId}`] = false;
+	};
+
+	const requestingUserId = (userId: string) => {
+		userIdRequested.value[`Z${userId}`] = true;
+		if (!pendingUserIdCallbacks.value[`Z${userId}`])
+			pendingUserIdCallbacks.value[`Z${userId}`] = [];
+	};
+
+	const pendingUser = (
+		userId: string,
+		callback: (basicUser: { name: string; username: string }) => void
+	) => {
+		pendingUserIdCallbacks.value[`Z${userId}`].push(callback);
+	};
+
+	const clearPendingCallbacks = (userId: string) => {
+		pendingUserIdCallbacks.value[`Z${userId}`] = [];
+	};
+
+	const getBasicUser = async (userId: string) =>
+		new Promise((resolve, reject) => {
+			if (typeof userIdMap.value[`Z${userId}`] === "string") {
+				resolve(userIdMap.value[`Z${userId}`]);
+				return;
+			}
+
+			if (userIdRequested.value[`Z${userId}`] === true) {
+				pendingUser(userId, user => resolve(user));
+				return;
+			}
+
+			requestingUserId(userId);
+
+			websocketStore
+				.runJob("users.getBasicUser", { _id: userId })
+				.then(user => {
+					mapUserId({
+						userId,
+						user
+					});
+
+					pendingUserIdCallbacks.value[`Z${userId}`].forEach(cb =>
+						cb(user)
+					);
+
+					clearPendingCallbacks(userId);
+
+					resolve(user);
+				})
+				.catch(reject);
+		});
+
+	const banUser = (data: { reason: string; expiresAt: number }) => {
+		banned.value = true;
+		ban.value = data;
+	};
+
+	const hasPermission = (permission: string) =>
+		!!(permissions.value && permissions.value[permission]);
+
+	const updatePermissions = () =>
+		websocketStore.runJob("api.getUserPermissions", {}).then(data => {
+			permissions.value = data;
+			gotPermissions.value = true;
+		});
+
+	const resetCookieExpiration = () => {
+		const cookies = {};
+		document.cookie.split("; ").forEach(cookie => {
+			cookies[cookie.substring(0, cookie.indexOf("="))] =
+				cookie.substring(cookie.indexOf("=") + 1, cookie.length);
+		});
+
+		const SIDName = configStore.cookie;
+
+		if (!cookies[SIDName]) return;
+
+		const date = new Date();
+		date.setTime(new Date().getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+
+		const secure = configStore.urls.secure ? "secure=true; " : "";
+
+		let domain = "";
+		if (configStore.urls.host !== "localhost")
+			domain = ` domain=${configStore.urls.host};`;
+
+		document.cookie = `${configStore.cookie}=${
+			cookies[SIDName]
+		}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
+	};
+
+	return {
+		userIdMap,
+		userIdRequested,
+		pendingUserIdCallbacks,
+		currentUser,
+		banned,
+		ban,
+		gotData,
+		gotPermissions,
+		permissions,
+		loggedIn,
+		register,
+		login,
+		logout,
+		mapUserId,
+		requestingUserId,
+		pendingUser,
+		clearPendingCallbacks,
+		getBasicUser,
+		banUser,
+		hasPermission,
+		updatePermissions,
+		resetCookieExpiration
+	};
 });

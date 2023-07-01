@@ -27,7 +27,7 @@ const { socket } = useWebsocketsStore();
 
 const saveButton = ref();
 
-const { userId } = storeToRefs(userAuthStore);
+const { currentUser } = storeToRefs(userAuthStore);
 const { originalUser, modifiedUser } = settingsStore;
 
 const validation = reactive({
@@ -63,21 +63,26 @@ const changeEmail = () => {
 
 	saveButton.value.saveStatus = "disabled";
 
-	return socket.dispatch("users.updateEmail", userId.value, email, res => {
-		if (res.status !== "success") {
-			new Toast(res.message);
-			saveButton.value.handleFailedSave();
-		} else {
-			new Toast("Successfully changed email address");
+	return socket.dispatch(
+		"users.updateEmail",
+		currentUser.value?._id,
+		email,
+		res => {
+			if (res.status !== "success") {
+				new Toast(res.message);
+				saveButton.value.handleFailedSave();
+			} else {
+				new Toast("Successfully changed email address");
 
-			updateOriginalUser({
-				property: "email.address",
-				value: email
-			});
+				updateOriginalUser({
+					property: "email.address",
+					value: email
+				});
 
-			saveButton.value.handleSuccessfulSave();
+				saveButton.value.handleSuccessfulSave();
+			}
 		}
-	});
+	);
 };
 
 const changeUsername = () => {
@@ -100,7 +105,7 @@ const changeUsername = () => {
 
 	return socket.dispatch(
 		"users.updateUsername",
-		userId.value,
+		currentUser.value?._id,
 		username,
 		res => {
 			if (res.status !== "success") {

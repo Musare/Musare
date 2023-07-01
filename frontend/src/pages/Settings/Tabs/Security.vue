@@ -41,7 +41,7 @@ const newPassword = ref();
 const oldPassword = ref();
 
 const { isPasswordLinked, isGithubLinked } = settingsStore;
-const { userId } = storeToRefs(userAuthStore);
+const { currentUser } = storeToRefs(userAuthStore);
 
 const togglePasswordVisibility = refName => {
 	const ref = refName === "oldPassword" ? oldPassword : newPassword;
@@ -91,7 +91,7 @@ const unlinkGitHub = () => {
 	});
 };
 const removeSessions = () => {
-	socket.dispatch(`users.removeSessions`, userId.value, res => {
+	socket.dispatch(`users.removeSessions`, currentUser.value?._id, res => {
 		new Toast(res.message);
 	});
 };

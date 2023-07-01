@@ -21,7 +21,7 @@ const props = defineProps({
 });
 
 const userAuthStore = useUserAuthStore();
-const { email: accountEmail } = storeToRefs(userAuthStore);
+const { currentUser } = storeToRefs(userAuthStore);
 
 const { socket } = useWebsocketsStore();
 
@@ -193,7 +193,7 @@ watch(
 );
 
 onMounted(() => {
-	inputs.value.email.value = accountEmail.value;
+	inputs.value.email.value = currentUser.value?.email;
 });
 </script>
 

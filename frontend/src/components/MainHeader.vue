@@ -31,7 +31,7 @@ const configStore = useConfigStore();
 const { cookie, sitename, registrationDisabled, christmas } =
 	storeToRefs(configStore);
 
-const { loggedIn, username } = storeToRefs(userAuthStore);
+const { loggedIn, currentUser } = storeToRefs(userAuthStore);
 const { logout, hasPermission } = userAuthStore;
 const userPreferencesStore = useUserPreferencesStore();
 const { nightmode } = storeToRefs(userPreferencesStore);
@@ -136,7 +136,7 @@ onMounted(async () => {
 					class="nav-item"
 					:to="{
 						name: 'profile',
-						params: { username },
+						params: { username: currentUser.username },
 						query: { tab: 'playlists' }
 					}"
 				>
@@ -146,7 +146,7 @@ onMounted(async () => {
 					class="nav-item"
 					:to="{
 						name: 'profile',
-						params: { username }
+						params: { username: currentUser.username }
 					}"
 				>
 					Profile

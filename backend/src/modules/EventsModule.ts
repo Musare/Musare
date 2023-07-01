@@ -142,7 +142,9 @@ export default class EventsModule extends BaseModule {
 		else if (message.startsWith('"') && message.endsWith('"'))
 			message = message.substring(1).substring(0, message.length - 2);
 
-		await Promise.all(this._subscriptions[channel].map(cb => cb(message)));
+		await Promise.all(
+			this._subscriptions[channel].map(async cb => cb(message))
+		);
 	}
 
 	/**

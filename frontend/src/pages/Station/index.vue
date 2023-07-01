@@ -130,7 +130,7 @@ const { activeModals } = storeToRefs(modalsStore);
 // TODO fix this if it still has some use, as this is no longer accurate
 // const video = computed(() => store.state.modals.editSong);
 
-const { loggedIn, userId } = storeToRefs(userAuthStore);
+const { loggedIn, currentUser } = storeToRefs(userAuthStore);
 const { nightmode, autoSkipDisliked } = storeToRefs(userPreferencesStore);
 const {
 	station,
@@ -173,7 +173,7 @@ const aModalIsOpen = computed(() => Object.keys(activeModals.value).length > 0);
 const currentUserQueueSongs = computed(
 	() =>
 		songsList.value.filter(
-			queueSong => queueSong.requestedBy === userId.value
+			queueSong => queueSong.requestedBy === currentUser.value?._id
 		).length
 );
 
@@ -1642,7 +1642,7 @@ onMounted(async () => {
 					: currentSong.value.skipVotes - 1,
 				skipVotesCurrent: null,
 				voted:
-					res.data.userId === userId.value
+					res.data.userId === currentUser.value?._id
 						? res.data.voted
 						: currentSong.value.voted
 			});
@@ -1708,7 +1708,7 @@ onMounted(async () => {
 	});
 
 	socket.on("event:station.djs.added", res => {
-		if (res.data.user._id === userId.value)
+		if (res.data.user._id === currentUser.value?._id)
 			updatePermissions().then(() => {
 				if (
 					!hasPermission("stations.view") &&
@@ -1725,7 +1725,7 @@ onMounted(async () => {
 	});
 
 	socket.on("event:station.djs.removed", res => {
-		if (res.data.user._id === userId.value)
+		if (res.data.user._id === currentUser.value?._id)
 			updatePermissions().then(() => {
 				if (
 					!hasPermission("stations.view") &&

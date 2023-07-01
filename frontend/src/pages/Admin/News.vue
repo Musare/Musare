@@ -2,10 +2,10 @@
 import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
 import { GenericResponse } from "@musare_types/actions/GenericActions";
-import { useWebsocketsStore } from "@/stores/websockets";
+import { useWebsocketStore } from "@/stores/websocket";
 import { useModalsStore } from "@/stores/modals";
 import { useUserAuthStore } from "@/stores/userAuth";
-import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
+import { TableColumn, TableFilter } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -17,7 +17,7 @@ const UserLink = defineAsyncComponent(
 	() => import("@/components/UserLink.vue")
 );
 
-const { socket } = useWebsocketsStore();
+const { runJob } = useWebsocketStore();
 
 const columnDefault = ref<TableColumn>({
 	sortable: true,
@@ -110,29 +110,14 @@ const filters = ref<TableFilter[]>([
 		defaultFilterType: "contains"
 	}
 ]);
-const events = ref<TableEvents>({
-	adminRoom: "news",
-	updated: {
-		event: "admin.news.updated",
-		id: "news._id",
-		item: "news"
-	},
-	removed: {
-		event: "admin.news.deleted",
-		id: "newsId"
-	}
-});
 
 const { openModal } = useModalsStore();
 
 const { hasPermission } = useUserAuthStore();
 
-const remove = (id: string) => {
-	socket.dispatch(
-		"news.remove",
-		id,
-		(res: GenericResponse) => new Toast(res.message)
-	);
+const remove = async (_id: string) => {
+	const res = await runJob(`data.news.deleteById`, { _id });
+	new Toast(res.message);
 };
 </script>
 
@@ -163,10 +148,8 @@ const remove = (id: string) => {
 			:column-default="columnDefault"
 			:columns="columns"
 			:filters="filters"
-			data-action="news.getData"
-			name="admin-news"
+			model="news"
 			:max-width="1200"
-			:events="events"
 		>
 			<template #column-options="slotProps">
 				<div class="row-options">

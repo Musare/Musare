@@ -39,7 +39,7 @@ const props = defineProps({
 const tabs = ref([]);
 
 const userAuthStore = useUserAuthStore();
-const { loggedIn, userId } = storeToRefs(userAuthStore);
+const { loggedIn, currentUser } = storeToRefs(userAuthStore);
 
 const { socket } = useWebsocketsStore();
 
@@ -358,14 +358,16 @@ onMounted(() => {
 
 		socket.on("event:manageStation.djs.added", res => {
 			if (res.data.stationId === stationId.value) {
-				if (res.data.user._id === userId.value) updatePermissions();
+				if (res.data.user._id === currentUser.value._id)
+					updatePermissions();
 				addDj(res.data.user);
 			}
 		});
 
 		socket.on("event:manageStation.djs.removed", res => {
 			if (res.data.stationId === stationId.value) {
-				if (res.data.user._id === userId.value) updatePermissions();
+				if (res.data.user._id === currentUser.value._id)
+					updatePermissions();
 				removeDj(res.data.user);
 			}
 		});

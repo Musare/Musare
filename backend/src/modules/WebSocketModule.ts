@@ -143,7 +143,7 @@ export default class WebSocketModule extends BaseModule {
 			const [moduleName, ...jobNameParts] = moduleJob.split(".");
 			const jobName = jobNameParts.join(".");
 
-			callbackRef = (options ?? payload ?? {}).CB_REF;
+			const { callbackRef } = options ?? payload ?? {};
 
 			if (!callbackRef)
 				throw new Error(
@@ -164,21 +164,19 @@ export default class WebSocketModule extends BaseModule {
 				socketId: socket.getSocketId()
 			});
 
-			socket.dispatch("CB_REF", callbackRef, {
+			socket.dispatch("jobCallback", callbackRef, {
 				status: "success",
 				data: res
 			});
 		} catch (error) {
 			const message = error?.message ?? error;
 
-			socket.log({ type: "error", message });
-
 			if (callbackRef)
-				socket.dispatch("CB_REF", callbackRef, {
+				socket.dispatch("jobCallback", callbackRef, {
 					status: "error",
 					message
 				});
-			else socket.dispatch("ERROR", message);
+			else socket.dispatch("error", message);
 		}
 	}
 
@@ -233,7 +231,9 @@ export default class WebSocketModule extends BaseModule {
 
 		if (!socket) return;
 
-		socket.dispatch(channel, value);
+		const values = Array.isArray(value) ? value : [value];
+
+		socket.dispatch(channel, ...values);
 	}
 
 	/**

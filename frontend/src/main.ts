@@ -15,6 +15,7 @@ import ms from "@/ms";
 import i18n from "@/i18n";
 
 import AppComponent from "./App.vue";
+import { useWebsocketStore } from "./stores/websocket";
 
 const handleMetadata = attrs => {
 	const configStore = useConfigStore();
@@ -77,6 +78,16 @@ app.directive("focus", {
 		el.focus();
 	}
 });
+
+app.use(createPinia());
+
+const configStore = useConfigStore();
+const modalsStore = useModalsStore();
+const userAuthStore = useUserAuthStore();
+const ws = useWebsocketStore();
+const { createSocket } = useWebsocketsStore();
+
+createSocket();
 
 const router = createRouter({
 	history: createWebHistory(),
@@ -257,173 +268,136 @@ const router = createRouter({
 	]
 });
 
-app.use(createPinia());
+router.beforeEach((to, from, next) => {
+	if (window.stationInterval) {
+		clearInterval(window.stationInterval);
+		window.stationInterval = 0;
+	}
 
-const { createSocket } = useWebsocketsStore();
-createSocket().then(async socket => {
-	const configStore = useConfigStore();
-	const userAuthStore = useUserAuthStore();
-	const modalsStore = useModalsStore();
+	// if (to.name === "station") {
+	// 	modalsStore.closeModal("manageStation");
+	// }
 
-	router.beforeEach((to, from, next) => {
-		if (window.stationInterval) {
-			clearInterval(window.stationInterval);
-			window.stationInterval = 0;
-		}
+	modalsStore.closeAllModals();
 
-		// if (to.name === "station") {
-		// 	modalsStore.closeModal("manageStation");
-		// }
+	// if (socket.ready && to.fullPath !== from.fullPath) {
+	// 	socket.clearCallbacks();
+	// 	socket.destroyListeners();
+	// }
 
-		modalsStore.closeAllModals();
-
-		if (socket.ready && to.fullPath !== from.fullPath) {
-			socket.clearCallbacks();
-			socket.destroyListeners();
-		}
-
-		if (to.query.toast) {
-			const toast =
-				typeof to.query.toast === "string"
-					? { content: to.query.toast, timeout: 20000 }
-					: { ...to.query.toast };
-			new Toast(toast);
-			const { query } = to;
-			delete query.toast;
-			next({ ...to, query });
-		} else if (
-			to.meta.configRequired ||
-			to.meta.loginRequired ||
-			to.meta.permissionRequired ||
-			to.meta.guestsOnly
-		) {
-			const gotData = () => {
-				if (
-					to.meta.configRequired &&
-					!configStore.get(`${to.meta.configRequired}`)
-				)
-					next({ path: "/" });
-				else if (to.meta.loginRequired && !userAuthStore.loggedIn)
-					next({ path: "/login" });
-				else if (
-					to.meta.permissionRequired &&
-					!userAuthStore.hasPermission(
-						`${to.meta.permissionRequired}`
-					)
-				) {
-					if (
-						to.path.startsWith("/admin") &&
-						to.path !== "/admin/songs"
-					)
-						next({ path: "/admin/songs" });
-					else next({ path: "/" });
-				} else if (to.meta.guestsOnly && userAuthStore.loggedIn)
-					next({ path: "/" });
-				else next();
-			};
-
-			if (userAuthStore.gotData && userAuthStore.gotPermissions)
-				gotData();
-			else {
-				const unsubscribe = userAuthStore.$onAction(
-					({ name, after, onError }) => {
-						if (
-							name === "authData" ||
-							name === "updatePermissions"
-						) {
-							after(() => {
-								if (
-									userAuthStore.gotData &&
-									userAuthStore.gotPermissions
-								)
-									gotData();
-								unsubscribe();
-							});
-
-							onError(() => {
-								unsubscribe();
-							});
-						}
-					}
-				);
-			}
-		} else next();
-	});
-
-	app.use(router);
-
-	socket.on("ready", res => {
-		const { loggedIn, role, username, userId, email } = res.user;
-
-		userAuthStore.authData({
-			loggedIn,
-			role,
-			username,
-			email,
-			userId
-		});
-
-		if (loggedIn) {
-			userAuthStore.resetCookieExpiration();
-		}
-
-		if (configStore.experimental.media_session) ms.initialize();
-		else ms.uninitialize();
-	});
-
-	socket.on("keep.event:user.banned", res =>
-		userAuthStore.banUser(res.data.ban)
-	);
-
-	socket.on("keep.event:user.username.updated", res =>
-		userAuthStore.updateUsername(res.data.username)
-	);
-
-	socket.on("keep.event:user.preferences.updated", res => {
-		const { preferences } = res.data;
-
-		const {
-			changeAutoSkipDisliked,
-			changeNightmode,
-			changeActivityLogPublic,
-			changeAnonymousSongRequests,
-			changeActivityWatch
-		} = useUserPreferencesStore();
-
-		if (preferences.autoSkipDisliked !== undefined)
-			changeAutoSkipDisliked(preferences.autoSkipDisliked);
-
-		if (preferences.nightmode !== undefined) {
-			changeNightmode(preferences.nightmode);
-		}
-
-		if (preferences.activityLogPublic !== undefined)
-			changeActivityLogPublic(preferences.activityLogPublic);
-
-		if (preferences.anonymousSongRequests !== undefined)
-			changeAnonymousSongRequests(preferences.anonymousSongRequests);
-
-		if (preferences.activityWatch !== undefined)
-			changeActivityWatch(preferences.activityWatch);
-	});
-
-	socket.on("keep.event:user.role.updated", res => {
-		userAuthStore.updateRole(res.data.role);
-		userAuthStore.updatePermissions().then(() => {
-			const { meta } = router.currentRoute.value;
+	if (to.query.toast) {
+		const toast =
+			typeof to.query.toast === "string"
+				? { content: to.query.toast, timeout: 20000 }
+				: { ...to.query.toast };
+		new Toast(toast);
+		const { query } = to;
+		delete query.toast;
+		next({ ...to, query });
+	} else if (
+		to.meta.configRequired ||
+		to.meta.loginRequired ||
+		to.meta.permissionRequired ||
+		to.meta.guestsOnly
+	) {
+		const gotData = () => {
 			if (
-				meta &&
-				meta.permissionRequired &&
-				!userAuthStore.hasPermission(`${meta.permissionRequired}`)
+				to.meta.configRequired &&
+				!configStore.get(`${to.meta.configRequired}`)
 			)
-				router.push({
-					path: "/",
-					query: {
-						toast: "You no longer have access to the page you were viewing."
-					}
-				});
-		});
-	});
+				next({ path: "/" });
+			else if (to.meta.loginRequired && !userAuthStore.loggedIn)
+				next({ path: "/login" });
+			else if (
+				to.meta.permissionRequired &&
+				!userAuthStore.hasPermission(`${to.meta.permissionRequired}`)
+			) {
+				if (to.path.startsWith("/admin") && to.path !== "/admin/songs")
+					next({ path: "/admin/songs" });
+				else next({ path: "/" });
+			} else if (to.meta.guestsOnly && userAuthStore.loggedIn)
+				next({ path: "/" });
+			else next();
+		};
 
-	app.mount("#root");
+		if (userAuthStore.gotData && userAuthStore.gotPermissions) gotData();
+		else {
+			const unsubscribe = userAuthStore.$onAction(
+				({ name, after, onError }) => {
+					if (name === "updatePermissions") {
+						after(() => {
+							if (
+								userAuthStore.gotData &&
+								userAuthStore.gotPermissions
+							)
+								gotData();
+							unsubscribe();
+						});
+
+						onError(() => {
+							unsubscribe();
+						});
+					}
+				}
+			);
+		}
+	} else next();
 });
+
+app.use(router);
+
+app.mount("#root");
+
+// socket.on("keep.event:user.banned", res =>
+// 	userAuthStore.banUser(res.data.ban)
+// );
+
+// socket.on("keep.event:user.username.updated", res =>
+// 	userAuthStore.updateUsername(res.data.username)
+// );
+
+// socket.on("keep.event:user.preferences.updated", res => {
+// 	const { preferences } = res.data;
+
+// 	const {
+// 		changeAutoSkipDisliked,
+// 		changeNightmode,
+// 		changeActivityLogPublic,
+// 		changeAnonymousSongRequests,
+// 		changeActivityWatch
+// 	} = useUserPreferencesStore();
+
+// 	if (preferences.autoSkipDisliked !== undefined)
+// 		changeAutoSkipDisliked(preferences.autoSkipDisliked);
+
+// 	if (preferences.nightmode !== undefined) {
+// 		changeNightmode(preferences.nightmode);
+// 	}
+
+// 	if (preferences.activityLogPublic !== undefined)
+// 		changeActivityLogPublic(preferences.activityLogPublic);
+
+// 	if (preferences.anonymousSongRequests !== undefined)
+// 		changeAnonymousSongRequests(preferences.anonymousSongRequests);
+
+// 	if (preferences.activityWatch !== undefined)
+// 		changeActivityWatch(preferences.activityWatch);
+// });
+
+// socket.on("keep.event:user.role.updated", res => {
+// 	userAuthStore.updateRole(res.data.role);
+// 	userAuthStore.updatePermissions().then(() => {
+// 		const { meta } = router.currentRoute.value;
+// 		if (
+// 			meta &&
+// 			meta.permissionRequired &&
+// 			!userAuthStore.hasPermission(`${meta.permissionRequired}`)
+// 		)
+// 			router.push({
+// 				path: "/",
+// 				query: {
+// 					toast: "You no longer have access to the page you were viewing."
+// 				}
+// 			});
+// 	});
+// });

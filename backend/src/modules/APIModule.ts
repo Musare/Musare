@@ -186,22 +186,14 @@ export default class APIModule extends BaseModule {
 					spotify: config.get("experimental.spotify")
 				}
 			},
-			user: user
-				? {
-						loggedIn: true,
-						role: user.role,
-						username: user.username,
-						email: user.email.address,
-						userId: user._id
-				  }
-				: { loggedIn: false }
+			user
 		};
 	}
 
 	public async getUserPermissions(context: JobContext) {
 		const user = await context.getUser().catch(() => null);
 
-		if (!user) return {};
+		if (!user) return permissions.guest;
 
 		const roles: UserRole[] = [user.role];
 
@@ -299,19 +291,27 @@ export default class APIModule extends BaseModule {
 	}
 
 	public async subscribe(context: JobContext, payload: { channel: string }) {
-		const { channel } = payload;
-		const [, moduleName, modelName, modelId] =
-			/^([a-z]+)\.([a-z]+)\.([A-z0-9]+)\.?([A-z]+)?$/.exec(channel) ?? [];
-
-		if (moduleName === "model" && modelName && modelId)
-			await context.assertPermission(
-				`data.${modelName}.findById.${modelId}`
-			);
-		else await context.assertPermission(`event.${channel}`);
-
 		const socketId = context.getSocketId();
 
 		if (!socketId) throw new Error("No socketId specified");
+
+		const { channel } = payload;
+		const [, moduleName, modelName, event, modelId] =
+			/^([a-z]+)\.([a-z]+)\.([A-z]+)\.?([A-z0-9]+)?$/.exec(channel) ?? [];
+
+		let permission = `event.${channel}`;
+
+		if (
+			moduleName === "model" &&
+			modelName &&
+			(modelId || event === "created")
+		) {
+			if (event === "created")
+				permission = `event.model.${modelName}.created`;
+			else permission = `data.${modelName}.findById.${modelId}`;
+		}
+
+		await context.assertPermission(permission);
 
 		if (!this._subscriptions[channel])
 			this._subscriptions[channel] = new Set();
@@ -348,12 +348,15 @@ export default class APIModule extends BaseModule {
 
 		this._subscriptions[channel].delete(socketId);
 
-		if (this._subscriptions[channel].size === 0)
+		if (this._subscriptions[channel].size === 0) {
 			await context.executeJob("events", "unsubscribe", {
 				type: "event",
 				channel,
 				callback: value => this._subscriptionCallback(channel, value)
 			});
+
+			delete this._subscriptions[channel];
+		}
 	}
 
 	public async unsubscribeAll(context: JobContext) {

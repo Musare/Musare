@@ -11,7 +11,7 @@ import {
 	NewsRemovedResponse
 } from "@musare_types/events/NewsEvents";
 import { GetPublishedNewsResponse } from "@musare_types/actions/NewsActions";
-import { useWebsocketsStore } from "@/stores/websockets";
+import { useWebsocketStore } from "@/stores/websocket";
 
 const MainHeader = defineAsyncComponent(
 	() => import("@/components/MainHeader.vue")
@@ -23,13 +23,13 @@ const UserLink = defineAsyncComponent(
 	() => import("@/components/UserLink.vue")
 );
 
-const { socket } = useWebsocketsStore();
+const { onReady, runJob, subscribe } = useWebsocketStore();
 
 const news = ref<NewsModel[]>([]);
 
 const { sanitize } = DOMPurify;
 
-onMounted(() => {
+onMounted(async () => {
 	marked.use({
 		renderer: {
 			table(header, body) {
@@ -41,41 +41,35 @@ onMounted(() => {
 		}
 	});
 
-	socket.onConnect(() => {
-		socket.dispatch(
-			"news.getPublished",
-			(res: GetPublishedNewsResponse) => {
-				if (res.status === "success") news.value = res.data.news;
-			}
-		);
+	await onReady(async () => {
+		news.value = await runJob("data.news.newest", {});
 
-		socket.dispatch("apis.joinRoom", "news");
+		await subscribe("model.news.created", ({ doc }) => {
+			news.value.unshift(doc);
+		});
 	});
 
-	socket.on("event:news.created", (res: NewsCreatedResponse) =>
-		news.value.unshift(res.data.news)
-	);
+	// TODO: Subscribe to loaded model updated/deleted events
+	// socket.on("event:news.updated", (res: NewsUpdatedResponse) => {
+	// 	if (res.data.news.status === "draft") {
+	// 		news.value = news.value.filter(
+	// 			item => item._id !== res.data.news._id
+	// 		);
+	// 		return;
+	// 	}
 
-	socket.on("event:news.updated", (res: NewsUpdatedResponse) => {
-		if (res.data.news.status === "draft") {
-			news.value = news.value.filter(
-				item => item._id !== res.data.news._id
-			);
-			return;
-		}
+	// 	for (let n = 0; n < news.value.length; n += 1) {
+	// 		if (news.value[n]._id === res.data.news._id)
+	// 			news.value[n] = {
+	// 				...news.value[n],
+	// 				...res.data.news
+	// 			};
+	// 	}
+	// });
 
-		for (let n = 0; n < news.value.length; n += 1) {
-			if (news.value[n]._id === res.data.news._id)
-				news.value[n] = {
-					...news.value[n],
-					...res.data.news
-				};
-		}
-	});
-
-	socket.on("event:news.deleted", (res: NewsRemovedResponse) => {
-		news.value = news.value.filter(item => item._id !== res.data.newsId);
-	});
+	// socket.on("event:news.deleted", (res: NewsRemovedResponse) => {
+	// 	news.value = news.value.filter(item => item._id !== res.data.newsId);
+	// });
 });
 </script>
 
@@ -102,9 +96,13 @@ onMounted(() => {
 							:title="new Date(item.createdAt).toString()"
 						>
 							{{
-								formatDistance(item.createdAt, new Date(), {
-									addSuffix: true
-								})
+								formatDistance(
+									new Date(item.createdAt),
+									new Date(),
+									{
+										addSuffix: true
+									}
+								)
 							}}
 						</span>
 					</div>

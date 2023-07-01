@@ -33,7 +33,7 @@ const offsettedFromNextSet = ref(0);
 const isGettingSet = ref(false);
 
 const userAuthStore = useUserAuthStore();
-const { userId: myUserId } = storeToRefs(userAuthStore);
+const { currentUser } = storeToRefs(userAuthStore);
 const { getBasicUser } = userAuthStore;
 
 const hideActivity = activityId => {
@@ -79,7 +79,7 @@ onMounted(() => {
 	document.body.addEventListener("scroll", handleScroll);
 
 	socket.onConnect(() => {
-		if (myUserId.value !== props.userId)
+		if (currentUser.value?._id !== props.userId)
 			getBasicUser(props.userId).then(user => {
 				if (user && user.username) username.value = user.username;
 			});
@@ -131,7 +131,9 @@ onUnmounted(() => {
 
 			<p class="section-description">
 				This is a log of all actions
-				{{ userId === myUserId ? "you have" : `${username} has` }}
+				{{
+					userId === currentUser?._id ? "you have" : `${username} has`
+				}}
 				taken recently
 			</p>
 
@@ -146,7 +148,7 @@ onUnmounted(() => {
 				>
 					<template #actions>
 						<quick-confirm
-							v-if="userId === myUserId"
+							v-if="userId === currentUser?._id"
 							@confirm="hideActivity(activity._id)"
 						>
 							<a content="Hide Activity" v-tippy>

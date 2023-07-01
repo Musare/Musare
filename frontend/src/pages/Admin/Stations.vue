@@ -4,7 +4,7 @@ import Toast from "toasters";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 import { useUserAuthStore } from "@/stores/userAuth";
-import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
+import { TableColumn, TableFilter } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -287,18 +287,6 @@ const filters = ref<TableFilter[]>([
 		]
 	}
 ]);
-const events = ref<TableEvents>({
-	adminRoom: "stations",
-	updated: {
-		event: "station.updated",
-		id: "station._id",
-		item: "station"
-	},
-	removed: {
-		event: "admin.station.deleted",
-		id: "stationId"
-	}
-});
 const jobs = ref([]);
 if (hasPermission("stations.clearEveryStationQueue"))
 	jobs.value.push({
@@ -345,9 +333,7 @@ const remove = stationId => {
 			:column-default="columnDefault"
 			:columns="columns"
 			:filters="filters"
-			data-action="stations.getData"
-			name="admin-stations"
-			:events="events"
+			model="stations"
 		>
 			<template #column-options="slotProps">
 				<div class="row-options">

@@ -14,7 +14,7 @@ export const useSortablePlaylists = () => {
 	const userAuthStore = useUserAuthStore();
 	const userPlaylistsStore = useUserPlaylistsStore();
 
-	const { userId: myUserId } = storeToRefs(userAuthStore);
+	const { currentUser } = storeToRefs(userAuthStore);
 
 	const playlists = computed({
 		get: () => userPlaylistsStore.playlists,
@@ -22,7 +22,9 @@ export const useSortablePlaylists = () => {
 			userPlaylistsStore.updatePlaylists(playlists);
 		}
 	});
-	const isCurrentUser = computed(() => userId.value === myUserId.value);
+	const isCurrentUser = computed(
+		() => userId.value === currentUser.value?._id
+	);
 
 	const { socket } = useWebsocketsStore();
 
@@ -58,7 +60,7 @@ export const useSortablePlaylists = () => {
 	onMounted(async () => {
 		await nextTick();
 
-		if (!userId.value) userId.value = myUserId.value;
+		if (!userId.value) userId.value = currentUser.value?._id;
 
 		socket.onConnect(() => {
 			if (!isCurrentUser.value)
@@ -205,7 +207,7 @@ export const useSortablePlaylists = () => {
 		isCurrentUser,
 		playlists,
 		orderOfPlaylists,
-		myUserId,
+		currentUser,
 		savePlaylistOrder,
 		calculatePlaylistOrder
 	};

@@ -32,7 +32,7 @@ const userId = ref("");
 const isUser = ref(false);
 
 const userAuthStore = useUserAuthStore();
-const { userId: myUserId } = storeToRefs(userAuthStore);
+const { currentUser } = storeToRefs(userAuthStore);
 const { hasPermission } = userAuthStore;
 
 onMounted(() => {
@@ -106,7 +106,8 @@ onMounted(() => {
 				<div
 					class="buttons"
 					v-if="
-						myUserId === userId || hasPermission('admin.view.users')
+						currentUser?._id === userId ||
+						hasPermission('admin.view.users')
 					"
 				>
 					<router-link
@@ -119,7 +120,7 @@ onMounted(() => {
 					<router-link
 						to="/settings"
 						class="button is-primary"
-						v-if="myUserId === userId"
+						v-if="currentUser?._id === userId"
 					>
 						Settings
 					</router-link>

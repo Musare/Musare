@@ -2,13 +2,18 @@ import config from "config";
 import { UserRole } from "./models/schemas/users/UserRole";
 
 const temp = {
+	"data.stations.getData": true,
 	"data.news.getData": true,
+	"event.model.news.created": true,
+	"data.news.create": true,
 	"data.news.findById.*": true,
 	"data.news.updateById.*": true,
 	"data.news.deleteById.*": true
 };
 
-const user = { ...temp };
+const guest = { ...temp };
+
+const user = { ...guest };
 
 const dj = {
 	...user,
@@ -141,8 +146,8 @@ const admin = {
 };
 
 const permissions: Record<
-	UserRole | "owner" | "dj",
+	UserRole | "owner" | "dj" | "guest",
 	Record<string, boolean>
-> = { user, dj, owner, moderator, admin };
+> = { guest, user, dj, owner, moderator, admin };
 
 export default permissions;

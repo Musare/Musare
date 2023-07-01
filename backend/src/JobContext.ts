@@ -3,10 +3,9 @@ import BaseModule from "./BaseModule";
 import Job from "./Job";
 import JobQueue from "./JobQueue";
 import { Log } from "./LogBook";
-import { SessionSchema } from "./models/schemas/session";
+import { SessionSchema } from "./models/schemas/sessions/schema";
 import { JobOptions } from "./types/JobOptions";
 import { Jobs, Modules } from "./types/Modules";
-import { UserSchema } from "./models/schemas/user";
 import { Models } from "./types/Models";
 
 export default class JobContext {
@@ -18,12 +17,6 @@ export default class JobContext {
 
 	private readonly _socketId?: string;
 
-	private _user?: UserSchema;
-
-	private _permissions?: Record<string, boolean>;
-
-	private _modelPermissions: Record<string, Record<string, boolean>>;
-
 	public constructor(
 		job: Job,
 		options?: { session?: SessionSchema; socketId?: string }
@@ -32,7 +25,6 @@ export default class JobContext {
 		this.jobQueue = JobQueue.getPrimaryInstance();
 		this._session = options?.session;
 		this._socketId = options?.socketId;
-		this._modelPermissions = {};
 	}
 
 	/**
@@ -92,19 +84,17 @@ export default class JobContext {
 		return this.executeJob("data", "getModel", model);
 	}
 
-	public async getUser(refresh = false) {
+	public async getUser() {
 		if (!this._session?.userId)
 			throw new Error("No user found for session");
 
-		if (this._user && !refresh) return this._user;
-
 		const User = await this.getModel("users");
 
-		this._user = await User.findById(this._session.userId);
+		const user = await User.findById(this._session.userId);
 
-		if (!this._user) throw new Error("No user found for session");
+		if (!user) throw new Error("No user found for session");
 
-		return this._user;
+		return user;
 	}
 
 	public async assertLoggedIn() {
@@ -112,38 +102,21 @@ export default class JobContext {
 			throw new Error("No user found for session");
 	}
 
-	public async getUserPermissions(refresh = false) {
-		if (this._permissions && !refresh) return this._permissions;
-
-		this._permissions = await this.executeJob(
-			"api",
-			"getUserPermissions",
-			{}
-		);
-
-		return this._permissions;
+	public async getUserPermissions() {
+		return this.executeJob("api", "getUserPermissions", {});
 	}
 
-	public async getUserModelPermissions(
-		{
+	public async getUserModelPermissions({
+		modelName,
+		modelId
+	}: {
+		modelName: keyof Models;
+		modelId?: Types.ObjectId;
+	}) {
+		return this.executeJob("api", "getUserModelPermissions", {
 			modelName,
 			modelId
-		}: {
-			modelName: keyof Models;
-			modelId?: Types.ObjectId;
-		},
-		refresh = false
-	) {
-		if (this._modelPermissions[modelName] && !refresh)
-			return this._modelPermissions[modelName];
-
-		this._modelPermissions[modelName] = await this.executeJob(
-			"api",
-			"getUserModelPermissions",
-			{ modelName, modelId }
-		);
-
-		return this._modelPermissions[modelName];
+		});
 	}
 
 	public async assertPermission(permission: string) {

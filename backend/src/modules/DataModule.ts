@@ -321,11 +321,15 @@ export default class DataModule extends BaseModule {
 				patchEventEmitter.on(event, async ({ doc, oldDoc }) => {
 					const modelId = doc?._id ?? oldDoc?._id;
 
-					if (!modelId)
+					if (!modelId && action !== "created")
 						throw new Error(`Model Id not found for "${event}"`);
 
+					let channel = `model.${modelName}.${action}`;
+
+					if (action !== "created") channel += `.${modelId}`;
+
 					await this._jobQueue.runJob("events", "publish", {
-						channel: `model.${modelName}.${modelId}.${action}`,
+						channel,
 						value: { doc, oldDoc }
 					});
 				});

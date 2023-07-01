@@ -43,7 +43,7 @@ const stationStore = useStationStore();
 const userAuthStore = useUserAuthStore();
 
 const { station } = storeToRefs(stationStore);
-const { loggedIn, userId, role: userRole } = storeToRefs(userAuthStore);
+const { loggedIn, currentUser } = storeToRefs(userAuthStore);
 
 const drag = ref(false);
 const gettingSongs = ref(false);
@@ -85,7 +85,7 @@ const showTab = payload => {
 const { hasPermission } = userAuthStore;
 
 const isOwner = () =>
-	loggedIn.value && userId.value === playlist.value.createdBy;
+	loggedIn.value && currentUser.value._id === playlist.value.createdBy;
 
 const isEditable = permission =>
 	((playlist.value.type === "user" ||
@@ -461,9 +461,10 @@ onBeforeUnmount(() => {
 													'user' ||
 													(station.requests.access ===
 														'owner' &&
-														(userRole === 'admin' ||
+														(currentUser.role ===
+															'admin' ||
 															station.owner ===
-																userId))) &&
+																currentUser._id))) &&
 												(element.mediaSource.split(
 													':'
 												)[0] !== 'soundcloud' ||

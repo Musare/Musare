@@ -14,14 +14,13 @@ import { useRoute, useRouter } from "vue-router";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { DraggableList } from "vue-draggable-list";
-import { useWebsocketsStore } from "@/stores/websockets";
+import { useWebsocketStore } from "@/stores/websocket";
 import { useModalsStore } from "@/stores/modals";
 import keyboardShortcuts from "@/keyboardShortcuts";
 import { useDragBox } from "@/composables/useDragBox";
 import {
 	TableColumn,
 	TableFilter,
-	TableEvents,
 	TableBulkActions
 } from "@/types/advancedTable";
 
@@ -59,12 +58,10 @@ const props = defineProps({
 		type: Array as PropType<TableFilter[]>,
 		default: () => []
 	},
-	dataAction: { type: String, default: null },
-	name: { type: String, default: null },
+	model: { type: String, required: true },
 	maxWidth: { type: Number, default: 1880 },
 	query: { type: Boolean, default: true },
 	keyboardShortcuts: { type: Boolean, default: true },
-	events: { type: Object as PropType<TableEvents>, default: () => {} },
 	bulkActions: {
 		type: Object as PropType<TableBulkActions>,
 		default: () => ({})
@@ -79,7 +76,7 @@ const router = useRouter();
 const modalsStore = useModalsStore();
 const { activeModals } = storeToRefs(modalsStore);
 
-const { socket } = useWebsocketsStore();
+const websocketStore = useWebsocketStore();
 
 const page = ref(1);
 const pageSize = ref(10);
@@ -180,6 +177,10 @@ const columnOrderChangedDebounceTimeout = ref();
 const lastSelectedItemIndex = ref(0);
 const bulkPopup = ref();
 const rowElements = ref([]);
+const subscriptions = ref({
+	updated: new Set(),
+	deleted: new Set()
+});
 
 const lastPage = computed(() => Math.ceil(count.value / pageSize.value));
 const sortedFilteredColumns = computed(() =>
@@ -203,30 +204,88 @@ const hasCheckboxes = computed(
 );
 const aModalIsOpen = computed(() => Object.keys(activeModals.value).length > 0);
 
-const getData = () => {
-	socket.dispatch(
-		props.dataAction,
-		page.value,
-		pageSize.value,
-		properties.value,
-		sort.value,
-		appliedFilters.value.map(filter => ({
+const unsubscribe = async (_subscriptions?) => {
+	_subscriptions = _subscriptions ?? subscriptions.value;
+
+	await Promise.allSettled(
+		Object.entries(_subscriptions).map(async ([event, modelIds]) => {
+			for await (const modelId of modelIds.values()) {
+				await websocketStore.unsubscribe(
+					`model.${props.model}.${event}.${modelId}`,
+					subscribe
+				);
+
+				subscriptions.value[event].delete(modelId);
+			}
+		})
+	);
+};
+
+const subscribe = async () => {
+	const previousSubscriptions = subscriptions.value;
+
+	await Promise.allSettled(
+		rows.value.map((row, index) =>
+			Object.entries(subscriptions.value).map(
+				async ([event, modelIds]) => {
+					if (modelIds.has(row._id)) {
+						previousSubscriptions[event].delete(row._id);
+						return;
+					}
+
+					await websocketStore.subscribe(
+						`model.${props.model}.${event}.${row._id}`,
+						({ doc }) => {
+							switch (event) {
+								case "updated":
+									rows.value[index] = {
+										...row,
+										...doc,
+										updated: true
+									};
+									break;
+								case "deleted":
+									rows.value[index] = {
+										...row,
+										selected: false,
+										removed: true
+									};
+									break;
+								default:
+									break;
+							}
+						}
+					);
+
+					subscriptions.value[event].add(row._id);
+				}
+			)
+		)
+	);
+
+	unsubscribe(previousSubscriptions);
+};
+
+const getData = async () => {
+	const data = await websocketStore.runJob(`data.${props.model}.getData`, {
+		page: page.value,
+		pageSize: pageSize.value,
+		properties: properties.value,
+		sort: sort.value,
+		queries: appliedFilters.value.map(filter => ({
 			...filter,
 			filterType: filter.filterType.name
 		})),
-		appliedFilterOperator.value,
-		res => {
-			if (res.status === "success") {
-				rows.value = res.data.data.map(row => ({
-					...row,
-					selected: false
-				}));
-				count.value = res.data.count;
-			} else {
-				new Toast(res.message);
-			}
-		}
-	);
+		operator: appliedFilterOperator.value
+	});
+
+	rows.value = data.data.map(row => ({
+		...row,
+		selected: false
+	}));
+	count.value = data.count;
+
+	return subscribe();
 };
 
 const setQuery = () => {
@@ -260,7 +319,7 @@ const setQuery = () => {
 
 const setLocalStorage = () => {
 	localStorage.setItem(
-		`advancedTableSettings:${props.name}`,
+		`advancedTableSettings:${props.model}`,
 		JSON.stringify({
 			pageSize: pageSize.value,
 			filter: {
@@ -709,7 +768,7 @@ const getTableSettings = () => {
 	}
 
 	const localStorageTableSettings = JSON.parse(
-		localStorage.getItem(`advancedTableSettings:${props.name}`)
+		localStorage.getItem(`advancedTableSettings:${props.model}`)
 	);
 
 	return {
@@ -743,22 +802,22 @@ const onWindowResize = () => {
 	}, 50);
 };
 
-const updateData = (index, data) => {
-	rows.value[index] = { ...rows.value[index], ...data, updated: true };
-};
-
-const removeData = index => {
-	rows.value[index] = {
-		...rows.value[index],
-		selected: false,
-		removed: true
-	};
-};
-
 onMounted(async () => {
 	const tableSettings = getTableSettings();
 
 	const columns = [
+		{
+			name: "updatedPlaceholder",
+			displayName: "",
+			properties: [],
+			sortable: false,
+			hidable: false,
+			draggable: false,
+			resizable: false,
+			minWidth: 5,
+			width: 5,
+			maxWidth: 5
+		},
 		...props.columns.map(column => ({
 			...(typeof props.columnDefault === "object"
 				? props.columnDefault
@@ -791,20 +850,6 @@ onMounted(async () => {
 			minWidth: 47,
 			defaultWidth: 47,
 			maxWidth: 47
-		});
-
-	if (props.events && props.events.updated)
-		columns.unshift({
-			name: "updatedPlaceholder",
-			displayName: "",
-			properties: [],
-			sortable: false,
-			hidable: false,
-			draggable: false,
-			resizable: false,
-			minWidth: 5,
-			width: 5,
-			maxWidth: 5
 		});
 
 	orderedColumns.value = columns.sort((columnA, columnB) => {
@@ -901,83 +946,22 @@ onMounted(async () => {
 		}
 	}
 
-	socket.onConnect(() => {
-		getData();
-		if (props.query) setQuery();
-		if (props.events) {
-			// if (props.events.room)
-			// 	socket.dispatch("apis.joinRoom", props.events.room, () => {});
-			if (props.events.adminRoom)
-				socket.dispatch(
-					"apis.joinAdminRoom",
-					props.events.adminRoom,
-					() => {}
-				);
-		}
-		props.filters.forEach(filter => {
-			if (filter.autosuggest && filter.autosuggestDataAction) {
-				socket.dispatch(filter.autosuggestDataAction, res => {
-					if (res.status === "success") {
-						const { items } = res.data;
-						autosuggest.value.allItems[filter.name] = items;
-					} else {
-						new Toast(res.message);
-					}
-				});
-			}
-		});
-	});
+	await websocketStore.onReady(async () => {
+		await getData();
 
-	// TODO, this doesn't address special properties
-	if (props.events && props.events.updated)
-		socket.on(`event:${props.events.updated.event}`, res => {
-			const index = rows.value
-				.map(row => row._id)
-				.indexOf(
-					props.events.updated.id
-						.split(".")
-						.reduce(
-							(previous, current) =>
-								previous &&
-								previous[current] !== null &&
-								previous[current] !== undefined
-									? previous[current]
-									: null,
-							res.data
-						)
-				);
-			const row = props.events.updated.item
-				.split(".")
-				.reduce(
-					(previous, current) =>
-						previous &&
-						previous[current] !== null &&
-						previous[current] !== undefined
-							? previous[current]
-							: null,
-					res.data
-				);
-			updateData(index, row);
-		});
-	if (props.events && props.events.removed)
-		socket.on(`event:${props.events.removed.event}`, res => {
-			const index = rows.value
-				.map(row => row._id)
-				.indexOf(
-					props.events.removed.id
-						.split(".")
-						.reduce(
-							(previous, current) =>
-								previous &&
-								previous[current] !== null &&
-								previous[current] !== undefined
-									? previous[current]
-									: null,
-							res.data
-						)
-				);
-			removeData(index);
-		});
+		if (props.query) setQuery();
+
+		await Promise.allSettled(
+			props.filters.map(async filter => {
+				if (filter.autosuggest && filter.autosuggestDataAction) {
+					const { items } = await websocketStore.runJob(
+						filter.autosuggestDataAction
+					);
+					autosuggest.value.allItems[filter.name] = items;
+				}
+			})
+		);
+	});
 
 	if (props.keyboardShortcuts) {
 		// Navigation section
@@ -1062,7 +1046,7 @@ onMounted(async () => {
 				// Reset local storage
 				if (aModalIsOpen.value) return;
 				console.log("Reset local storage");
-				localStorage.removeItem(`advancedTableSettings:${props.name}`);
+				localStorage.removeItem(`advancedTableSettings:${props.model}`);
 				router.push({ query: {} });
 			}
 		});
@@ -1128,6 +1112,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
+	unsubscribe();
 	window.removeEventListener("resize", onWindowResize);
 	if (storeTableSettingsDebounceTimeout.value)
 		clearTimeout(storeTableSettingsDebounceTimeout.value);

@@ -14,7 +14,7 @@ const props = defineProps({
 });
 
 const userAuthStore = useUserAuthStore();
-const { loggedIn, userId } = storeToRefs(userAuthStore);
+const { loggedIn, currentUser } = storeToRefs(userAuthStore);
 const { hasPermission } = userAuthStore;
 
 const { socket } = useWebsocketsStore();
@@ -25,7 +25,7 @@ const { playlist } = storeToRefs(editPlaylistStore);
 const { preventCloseUnsaved } = useModalsStore();
 
 const isOwner = () =>
-	loggedIn.value && userId.value === playlist.value.createdBy;
+	loggedIn.value && currentUser.value._id === playlist.value.createdBy;
 
 const isEditable = permission =>
 	((playlist.value.type === "user" ||

@@ -39,7 +39,7 @@ const route = useRoute();
 const router = useRouter();
 
 const { sitename, registrationDisabled } = storeToRefs(configStore);
-const { loggedIn, userId } = storeToRefs(userAuthStore);
+const { loggedIn, currentUser } = storeToRefs(userAuthStore);
 const { hasPermission } = userAuthStore;
 
 const { socket } = useWebsocketsStore();
@@ -49,9 +49,10 @@ const searchQuery = ref("");
 const orderOfFavoriteStations = ref([]);
 const handledLoginRegisterRedirect = ref(false);
 
-const isOwner = station => loggedIn.value && station.owner === userId.value;
+const isOwner = station =>
+	loggedIn.value && station.owner === currentUser.value;
 const isDj = station =>
-	loggedIn.value && !!station.djs.find(dj => dj === userId.value);
+	loggedIn.value && !!station.djs.find(dj => dj === currentUser.value._id);
 const isOwnerOrDj = station => isOwner(station) || isDj(station);
 
 const isPlaying = station => typeof station.currentSong.title !== "undefined";
@@ -315,11 +316,13 @@ onMounted(async () => {
 	});
 
 	socket.on("event:station.djs.added", res => {
-		if (res.data.user._id === userId.value) fetchStations();
+		if (loggedIn.value && res.data.user._id === currentUser.value._id)
+			fetchStations();
 	});
 
 	socket.on("event:station.djs.removed", res => {
-		if (res.data.user._id === userId.value) fetchStations();
+		if (loggedIn.value && res.data.user._id === currentUser.value._id)
+			fetchStations();
 	});
 
 	socket.on("keep.event:user.role.updated", () => {
