@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted } from "vue";
+import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
 
 import { formatDistance } from "date-fns";
 import { marked } from "marked";
@@ -12,6 +12,7 @@ import {
 } from "@musare_types/events/NewsEvents";
 import { GetPublishedNewsResponse } from "@musare_types/actions/NewsActions";
 import { useWebsocketStore } from "@/stores/websocket";
+import { useNewsModelStore } from "@/stores/models/news";
 
 const MainHeader = defineAsyncComponent(
 	() => import("@/components/MainHeader.vue")
@@ -23,11 +24,21 @@ const UserLink = defineAsyncComponent(
 	() => import("@/components/UserLink.vue")
 );
 
-const { onReady, runJob, subscribe } = useWebsocketStore();
+const { onReady, subscribe, unsubscribe, removeReadyCallback } =
+	useWebsocketStore();
+const { newest, registerModels, unregisterModels } = useNewsModelStore();
 
 const news = ref<NewsModel[]>([]);
 
 const { sanitize } = DOMPurify;
+
+const onCreated = async ({ doc }) => {
+	news.value.unshift(...(await registerModels(doc)));
+};
+
+const onReadyCallback = async () => {
+	news.value = await newest();
+};
 
 onMounted(async () => {
 	marked.use({
@@ -41,13 +52,9 @@ onMounted(async () => {
 		}
 	});
 
-	await onReady(async () => {
-		news.value = await runJob("data.news.newest", {});
+	await onReady(onReadyCallback);
 
-		await subscribe("model.news.created", ({ doc }) => {
-			news.value.unshift(doc);
-		});
-	});
+	await subscribe("model.news.created", onCreated);
 
 	// TODO: Subscribe to loaded model updated/deleted events
 	// socket.on("event:news.updated", (res: NewsUpdatedResponse) => {
@@ -71,6 +78,14 @@ onMounted(async () => {
 	// 	news.value = news.value.filter(item => item._id !== res.data.newsId);
 	// });
 });
+
+onBeforeUnmount(async () => {
+	await unregisterModels(news.value.map(model => model.value._id));
+
+	await unsubscribe("model.news.created", onCreated);
+
+	removeReadyCallback(onReadyCallback);
+});
 </script>
 
 <template>
@@ -81,7 +96,7 @@ onMounted(async () => {
 			<div class="content-wrapper">
 				<h1 class="has-text-centered page-title">News</h1>
 				<div
-					v-for="item in news"
+					v-for="{ value: item } in news"
 					:key="item._id"
 					class="section news-item"
 				>

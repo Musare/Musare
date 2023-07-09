@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
-import { GenericResponse } from "@musare_types/actions/GenericActions";
-import { useWebsocketStore } from "@/stores/websocket";
 import { useModalsStore } from "@/stores/modals";
-import { useUserAuthStore } from "@/stores/userAuth";
 import { TableColumn, TableFilter } from "@/types/advancedTable";
+import { useNewsModelStore } from "@/stores/models/news";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -16,8 +14,6 @@ const QuickConfirm = defineAsyncComponent(
 const UserLink = defineAsyncComponent(
 	() => import("@/components/UserLink.vue")
 );
-
-const { runJob } = useWebsocketStore();
 
 const columnDefault = ref<TableColumn>({
 	sortable: true,
@@ -113,10 +109,10 @@ const filters = ref<TableFilter[]>([
 
 const { openModal } = useModalsStore();
 
-const { hasPermission } = useUserAuthStore();
+const { deleteById, hasPermission } = useNewsModelStore();
 
 const remove = async (_id: string) => {
-	const res = await runJob(`data.news.deleteById`, { _id });
+	const res = await deleteById(_id);
 	new Toast(res.message);
 };
 </script>
@@ -154,7 +150,7 @@ const remove = async (_id: string) => {
 			<template #column-options="slotProps">
 				<div class="row-options">
 					<button
-						v-if="hasPermission('news.update')"
+						v-if="hasPermission('news.update', slotProps.item._id)"
 						class="button is-primary icon-with-button material-icons"
 						@click="
 							openModal({
@@ -168,7 +164,7 @@ const remove = async (_id: string) => {
 						edit
 					</button>
 					<quick-confirm
-						v-if="hasPermission('news.remove')"
+						v-if="hasPermission('news.remove', slotProps.item._id)"
 						@confirm="remove(slotProps.item._id)"
 						:disabled="slotProps.item.removed"
 					>

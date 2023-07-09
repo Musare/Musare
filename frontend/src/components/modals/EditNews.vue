@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted } from "vue";
+import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import Toast from "toasters";
 import { formatDistance } from "date-fns";
 import { useWebsocketStore } from "@/stores/websocket";
 import { useModalsStore } from "@/stores/modals";
+import { useNewsModelStore } from "@/stores/models/news";
 import { useForm } from "@/composables/useForm";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
@@ -23,9 +24,11 @@ const props = defineProps({
 	sector: { type: String, default: "admin" }
 });
 
-const { onReady, runJob } = useWebsocketStore();
+const { onReady, removeReadyCallback } = useWebsocketStore();
 
 const { closeCurrentModal } = useModalsStore();
+
+const { create, findById, updateById, unregisterModels } = useNewsModelStore();
 
 const createdBy = ref();
 const createdAt = ref(0);
@@ -75,12 +78,10 @@ const { inputs, save, setOriginalValue } = useForm(
 				showToNewUsers: values.showToNewUsers
 			};
 
-			runJob(`data.news.${props.createNews ? "create" : "updateById"}`, {
-				_id: props.createNews ? null : props.newsId,
-				query
-			})
-				.then(resolve)
-				.catch(reject);
+			const method = props.createNews
+				? create(query)
+				: updateById(props.newsId, query);
+			method.then(resolve).catch(reject);
 		} else {
 			if (status === "unchanged") new Toast(messages.unchanged);
 			else if (status === "error")
@@ -95,6 +96,24 @@ const { inputs, save, setOriginalValue } = useForm(
 	}
 );
 
+const onReadyCallback = async () => {
+	if (props.newsId && !props.createNews) {
+		const { value: data } = await findById(props.newsId).catch(() => {
+			new Toast("News with that ID not found.");
+			closeCurrentModal();
+		});
+
+		setOriginalValue({
+			markdown: data.markdown,
+			status: data.status,
+			showToNewUsers: data.showToNewUsers
+		});
+
+		createdBy.value = data.createdBy;
+		createdAt.value = data.createdAt;
+	}
+};
+
 onMounted(async () => {
 	marked.use({
 		renderer: {
@@ -107,25 +126,13 @@ onMounted(async () => {
 		}
 	});
 
-	await onReady(async () => {
-		if (props.newsId && !props.createNews) {
-			const data = await runJob(`data.news.findById`, {
-				_id: props.newsId
-			}).catch(() => {
-				new Toast("News with that ID not found.");
-				closeCurrentModal();
-			});
+	await onReady(onReadyCallback);
+});
 
-			setOriginalValue({
-				markdown: data.markdown,
-				status: data.status,
-				showToNewUsers: data.showToNewUsers
-			});
+onBeforeUnmount(async () => {
+	if (props.newsId && !props.createNews) await unregisterModels(props.newsId);
 
-			createdBy.value = data.createdBy;
-			createdAt.value = data.createdAt;
-		}
-	});
+	removeReadyCallback(onReadyCallback);
 });
 </script>
 
