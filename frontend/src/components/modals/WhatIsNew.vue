@@ -46,7 +46,7 @@ const { sanitize } = dompurify;
 					:alt="news.createdBy" /></span
 			>&nbsp;<span :title="new Date(news.createdAt).toString()">
 				{{
-					formatDistance(news.createdAt, new Date(), {
+					formatDistance(new Date(news.createdAt), new Date(), {
 						addSuffix: true
 					})
 				}}

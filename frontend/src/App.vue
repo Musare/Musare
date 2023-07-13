@@ -5,7 +5,6 @@ import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { GenericResponse } from "@musare_types/actions/GenericActions";
 import { GetPreferencesResponse } from "@musare_types/actions/UsersActions";
-import { NewestResponse } from "@musare_types/actions/NewsActions";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
@@ -13,6 +12,7 @@ import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useModalsStore } from "@/stores/modals";
 import aw from "@/aw";
 import keyboardShortcuts from "@/keyboardShortcuts";
+import { useNewsModelStore } from "./stores/models/news";
 
 const ModalManager = defineAsyncComponent(
 	() => import("@/components/ModalManager.vue")
@@ -32,6 +32,7 @@ const configStore = useConfigStore();
 const userAuthStore = useUserAuthStore();
 const userPreferencesStore = useUserPreferencesStore();
 const modalsStore = useModalsStore();
+const { newest } = useNewsModelStore();
 
 const socketConnected = ref(true);
 const keyIsDown = ref("");
@@ -196,10 +197,8 @@ onMounted(async () => {
 		);
 
 		const newUser = !localStorage.getItem("firstVisited");
-		socket.dispatch("news.newest", newUser, (res: NewestResponse) => {
-			if (res.status !== "success") return;
-
-			const { news } = res.data;
+		newest(newUser).then(data => {
+			const news = data[0]?.value;
 
 			if (news) {
 				if (newUser) {

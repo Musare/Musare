@@ -127,7 +127,7 @@ const remove = async (_id: string) => {
 			</div>
 			<div class="button-row">
 				<button
-					v-if="hasPermission('news.create')"
+					v-if="hasPermission('data.news.create')"
 					class="is-primary button"
 					@click="
 						openModal({
@@ -150,7 +150,12 @@ const remove = async (_id: string) => {
 			<template #column-options="slotProps">
 				<div class="row-options">
 					<button
-						v-if="hasPermission('news.update', slotProps.item._id)"
+						v-if="
+							hasPermission(
+								'data.news.updateById',
+								slotProps.item._id
+							)
+						"
 						class="button is-primary icon-with-button material-icons"
 						@click="
 							openModal({
@@ -164,7 +169,12 @@ const remove = async (_id: string) => {
 						edit
 					</button>
 					<quick-confirm
-						v-if="hasPermission('news.remove', slotProps.item._id)"
+						v-if="
+							hasPermission(
+								'data.news.deleteById',
+								slotProps.item._id
+							)
+						"
 						@confirm="remove(slotProps.item._id)"
 						:disabled="slotProps.item.removed"
 					>
