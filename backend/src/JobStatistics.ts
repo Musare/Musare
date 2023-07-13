@@ -22,24 +22,29 @@ export default class JobStatistics {
 	 * @returns Job queue statistics
 	 */
 	public getStats() {
+		const stats = Object.values(this._stats);
+
+		const total = stats.reduce(
+			(a, b) => ({
+				successful: a.successful + b.successful,
+				failed: a.failed + b.failed,
+				total: a.total + b.total,
+				added: a.added + b.added,
+				averageTime: a.averageTime + b.averageTime
+			}),
+			{
+				successful: 0,
+				failed: 0,
+				total: 0,
+				added: 0,
+				averageTime: 0
+			}
+		);
+		total.averageTime /= stats.length;
+
 		return {
 			...this._stats,
-			total: Object.values(this._stats).reduce(
-				(a, b) => ({
-					successful: a.successful + b.successful,
-					failed: a.failed + b.failed,
-					total: a.total + b.total,
-					added: a.added + b.added,
-					averageTime: -1
-				}),
-				{
-					successful: 0,
-					failed: 0,
-					total: 0,
-					added: 0,
-					averageTime: -1
-				}
-			)
+			total
 		};
 	}
 

@@ -106,7 +106,7 @@ export default class Job {
 			}
 		);
 		this._status = JobStatus.QUEUED;
-		this._createdAt = Date.now();
+		this._createdAt = performance.now();
 	}
 
 	/**
@@ -171,7 +171,7 @@ export default class Job {
 	public async execute() {
 		if (this._startedAt) throw new Error("Job has already been executed.");
 		this._setStatus(JobStatus.ACTIVE);
-		this._startedAt = Date.now();
+		this._startedAt = performance.now();
 		return (
 			this._jobFunction
 				.apply(this._module, [this._context, this._payload])
@@ -197,7 +197,7 @@ export default class Job {
 					throw err;
 				})
 				.finally(() => {
-					this._completedAt = Date.now();
+					this._completedAt = performance.now();
 					this._jobStatistics.updateStats(this.getName(), "total");
 					if (this._startedAt)
 						this._jobStatistics.updateStats(
