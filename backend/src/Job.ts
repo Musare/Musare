@@ -202,7 +202,7 @@ export default class Job {
 					if (this._startedAt)
 						this._jobStatistics.updateStats(
 							this.getName(),
-							"averageTime",
+							"duration",
 							this._completedAt - this._startedAt
 						);
 					this._setStatus(JobStatus.COMPLETED);

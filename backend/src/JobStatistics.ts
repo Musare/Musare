@@ -9,6 +9,7 @@ export default class JobStatistics {
 			total: number;
 			added: number;
 			averageTime: number;
+			totalTime: number;
 		}
 	>;
 
@@ -28,17 +29,19 @@ export default class JobStatistics {
 				failed: a.failed + b.failed,
 				total: a.total + b.total,
 				added: a.added + b.added,
-				averageTime: a.averageTime + b.averageTime
+				averageTime: -1,
+				totalTime: a.totalTime + b.totalTime
 			}),
 			{
 				successful: 0,
 				failed: 0,
 				total: 0,
 				added: 0,
-				averageTime: 0
+				averageTime: -1,
+				totalTime: 0
 			}
 		);
-		total.averageTime /= total.total;
+		total.averageTime = total.totalTime / total.total;
 
 		return {
 			...this._stats,
@@ -55,7 +58,7 @@ export default class JobStatistics {
 	 */
 	public updateStats(
 		jobName: string,
-		type: "successful" | "failed" | "total" | "added" | "averageTime",
+		type: "successful" | "failed" | "total" | "added" | "duration",
 		duration?: number
 	) {
 		if (!this._stats[jobName])
@@ -64,13 +67,17 @@ export default class JobStatistics {
 				failed: 0,
 				total: 0,
 				added: 0,
-				averageTime: 0
+				averageTime: 0,
+				totalTime: 0
 			};
-		if (type === "averageTime" && duration)
-			this._stats[jobName].averageTime +=
-				(duration - this._stats[jobName].averageTime) /
-				this._stats[jobName].total;
-		else this._stats[jobName][type] += 1;
+		if (type === "duration") {
+			if (!duration) throw new Error("No duration specified");
+
+			this._stats[jobName].totalTime += duration;
+
+			this._stats[jobName].averageTime =
+				this._stats[jobName].totalTime / this._stats[jobName].total;
+		} else this._stats[jobName][type] += 1;
 	}
 
 	static getPrimaryInstance(): JobStatistics {
