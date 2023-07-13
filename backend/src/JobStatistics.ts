@@ -22,9 +22,7 @@ export default class JobStatistics {
 	 * @returns Job queue statistics
 	 */
 	public getStats() {
-		const stats = Object.values(this._stats);
-
-		const total = stats.reduce(
+		const total = Object.values(this._stats).reduce(
 			(a, b) => ({
 				successful: a.successful + b.successful,
 				failed: a.failed + b.failed,
@@ -40,7 +38,7 @@ export default class JobStatistics {
 				averageTime: 0
 			}
 		);
-		total.averageTime /= stats.length;
+		total.averageTime /= total.total;
 
 		return {
 			...this._stats,
