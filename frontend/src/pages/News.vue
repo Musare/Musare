@@ -13,6 +13,7 @@ import {
 import { GetPublishedNewsResponse } from "@musare_types/actions/NewsActions";
 import { useWebsocketStore } from "@/stores/websocket";
 import { useNewsModelStore } from "@/stores/models/news";
+import { useEvents } from "@/composables/useEvents";
 
 const MainHeader = defineAsyncComponent(
 	() => import("@/components/MainHeader.vue")
@@ -24,20 +25,18 @@ const UserLink = defineAsyncComponent(
 	() => import("@/components/UserLink.vue")
 );
 
-const { onReady, subscribe, unsubscribe, removeReadyCallback } =
-	useWebsocketStore();
+const { onReady, subscribe } = useEvents();
 const { newest, registerModels, unregisterModels } = useNewsModelStore();
 
 const news = ref<NewsModel[]>([]);
 
 const { sanitize } = DOMPurify;
 
-const onCreated = async ({ doc }) => {
-	news.value.unshift(...(await registerModels(doc)));
-};
-
-const onReadyCallback = async () => {
-	news.value = await newest();
+const onDeleted = async ({ oldDoc }) => {
+	news.value.splice(
+		news.value.findIndex(doc => doc._id === oldDoc._id),
+		1
+	);
 };
 
 onMounted(async () => {
@@ -52,9 +51,13 @@ onMounted(async () => {
 		}
 	});
 
-	await onReady(onReadyCallback);
+	await onReady(async () => {
+		news.value = await newest();
+	});
 
-	await subscribe("model.news.created", onCreated);
+	await subscribe("model.news.created", async ({ doc }) => {
+		news.value.unshift(...(await registerModels(doc)));
+	});
 
 	// TODO: Subscribe to loaded model updated/deleted events
 	// socket.on("event:news.updated", (res: NewsUpdatedResponse) => {
@@ -81,10 +84,6 @@ onMounted(async () => {
 
 onBeforeUnmount(async () => {
 	await unregisterModels(news.value.map(model => model.value._id));
-
-	await unsubscribe("model.news.created", onCreated);
-
-	removeReadyCallback(onReadyCallback);
 });
 </script>
 

@@ -4,10 +4,10 @@ import { marked } from "marked";
 import DOMPurify from "dompurify";
 import Toast from "toasters";
 import { formatDistance } from "date-fns";
-import { useWebsocketStore } from "@/stores/websocket";
 import { useModalsStore } from "@/stores/modals";
 import { useNewsModelStore } from "@/stores/models/news";
 import { useForm } from "@/composables/useForm";
+import { useEvents } from "@/composables/useEvents";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const SaveButton = defineAsyncComponent(
@@ -24,11 +24,12 @@ const props = defineProps({
 	sector: { type: String, default: "admin" }
 });
 
-const { onReady, removeReadyCallback } = useWebsocketStore();
+const { onReady } = useEvents();
 
 const { closeCurrentModal } = useModalsStore();
 
-const { create, findById, updateById, unregisterModels } = useNewsModelStore();
+const { create, findById, updateById, hasPermission, unregisterModels } =
+	useNewsModelStore();
 
 const createdBy = ref();
 const createdAt = ref(0);
@@ -96,24 +97,6 @@ const { inputs, save, setOriginalValue } = useForm(
 	}
 );
 
-const onReadyCallback = async () => {
-	if (props.newsId && !props.createNews) {
-		const { value: data } = await findById(props.newsId).catch(() => {
-			new Toast("News with that ID not found.");
-			closeCurrentModal();
-		});
-
-		setOriginalValue({
-			markdown: data.markdown,
-			status: data.status,
-			showToNewUsers: data.showToNewUsers
-		});
-
-		createdBy.value = data.createdBy;
-		createdAt.value = data.createdAt;
-	}
-};
-
 onMounted(async () => {
 	marked.use({
 		renderer: {
@@ -126,13 +109,32 @@ onMounted(async () => {
 		}
 	});
 
-	await onReady(onReadyCallback);
+	await onReady(async () => {
+		if (props.newsId && !props.createNews) {
+			const { value: data } = await findById(props.newsId).catch(() => {
+				new Toast("News with that ID not found.");
+				closeCurrentModal();
+			});
+
+			setOriginalValue({
+				markdown: data.markdown,
+				status: data.status,
+				showToNewUsers: data.showToNewUsers
+			});
+
+			createdBy.value = data.createdBy;
+			createdAt.value = data.createdAt;
+		}
+
+		console.log(
+			43534543,
+			await hasPermission("data.news.published", props.newsId)
+		);
+	});
 });
 
 onBeforeUnmount(async () => {
 	if (props.newsId && !props.createNews) await unregisterModels(props.newsId);
-
-	removeReadyCallback(onReadyCallback);
 });
 </script>
 

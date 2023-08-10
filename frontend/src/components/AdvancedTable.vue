@@ -23,6 +23,7 @@ import {
 	TableFilter,
 	TableBulkActions
 } from "@/types/advancedTable";
+import { useEvents } from "@/composables/useEvents";
 
 const { dragBox, setInitialBox, onDragBox, resetBoxPosition } = useDragBox();
 
@@ -76,7 +77,9 @@ const router = useRouter();
 const modalsStore = useModalsStore();
 const { activeModals } = storeToRefs(modalsStore);
 
-const websocketStore = useWebsocketStore();
+const { runJob } = useWebsocketStore();
+
+const events = useEvents();
 
 const page = ref(1);
 const pageSize = ref(10);
@@ -177,10 +180,15 @@ const columnOrderChangedDebounceTimeout = ref();
 const lastSelectedItemIndex = ref(0);
 const bulkPopup = ref();
 const rowElements = ref([]);
-const subscriptions = ref({
-	updated: new Set(),
-	deleted: new Set()
-});
+const subscriptions = ref<
+	Record<
+		string,
+		{
+			updated: string;
+			deleted: string;
+		}
+	>
+>({});
 
 const lastPage = computed(() => Math.ceil(count.value / pageSize.value));
 const sortedFilteredColumns = computed(() =>
@@ -208,66 +216,105 @@ const unsubscribe = async (_subscriptions?) => {
 	_subscriptions = _subscriptions ?? subscriptions.value;
 
 	await Promise.allSettled(
-		Object.entries(_subscriptions).map(async ([event, modelIds]) => {
-			for await (const modelId of modelIds.values()) {
-				await websocketStore.unsubscribe(
-					`model.${props.model}.${event}.${modelId}`,
-					subscribe
-				);
+		Object.entries(_subscriptions).map(
+			async ([modelId, { updated, deleted }]) => {
+				await Promise.allSettled([
+					events.unsubscribe(updated),
+					events.unsubscribe(deleted)
+				]);
 
-				subscriptions.value[event].delete(modelId);
+				delete subscriptions.value[modelId];
 			}
-		})
+		)
 	);
 };
 
 const subscribe = async () => {
-	const previousSubscriptions = subscriptions.value;
+	const previousSubscriptions = JSON.parse(
+		JSON.stringify(subscriptions.value)
+	);
 
 	await Promise.allSettled(
-		rows.value.map((row, index) =>
-			Object.entries(subscriptions.value).map(
-				async ([event, modelIds]) => {
-					if (modelIds.has(row._id)) {
-						previousSubscriptions[event].delete(row._id);
-						return;
-					}
+		rows.value.map(async row => {
+			if (subscriptions.value[row._id]) {
+				// console.log(11110, row);
+				delete previousSubscriptions[row._id];
+				return;
+			}
 
-					await websocketStore.subscribe(
-						`model.${props.model}.${event}.${row._id}`,
-						({ doc }) => {
-							switch (event) {
-								case "updated":
-									rows.value[index] = {
-										...row,
-										...doc,
-										updated: true
-									};
-									break;
-								case "deleted":
-									rows.value[index] = {
-										...row,
-										selected: false,
-										removed: true
-									};
-									break;
-								default:
-									break;
-							}
-						}
+			// console.log(11111, row);
+
+			const updated = await events.subscribe(
+				`model.${props.model}.updated.${row._id}`,
+				({ doc }) => {
+					const docRow = rows.value.find(
+						_row => _row._id === doc._id
 					);
+					const docRowIndex = rows.value.findIndex(
+						_row => _row._id === doc._id
+					);
+					console.log(45634643, docRow, docRowIndex);
 
-					subscriptions.value[event].add(row._id);
+					if (!docRow) return;
+
+					rows.value[docRowIndex] = {
+						...docRow,
+						...doc,
+						updated: true
+					};
 				}
-			)
-		)
+			);
+			// console.log(11112, updated);
+
+			let deleted;
+
+			try {
+				deleted = await events.subscribe(
+					`model.${props.model}.deleted.${row._id}`,
+					({ doc }) => {
+						const docRow = rows.value.find(
+							_row => _row._id === doc._id
+						);
+						const docRowIndex = rows.value.findIndex(
+							_row => _row._id === doc._id
+						);
+						console.log(34436, docRow, docRowIndex);
+
+						if (!docRow) return;
+
+						rows.value[docRowIndex] = {
+							...docRow,
+							selected: false,
+							removed: true
+						};
+					}
+				);
+			} catch (error) {
+				console.log(11113, error);
+				unsubscribe([updated]);
+
+				throw error;
+			}
+			// console.log(11114, deleted);
+
+			subscriptions.value[row._id] = { updated, deleted };
+			// console.log(
+			// 	11115,
+			// 	Object.entries(subscriptions.value),
+			// 	subscriptions.value,
+			// 	subscriptions.value[row._id],
+			// 	row._id,
+			// 	{ updated, deleted }
+			// );
+		})
 	);
+	console.log(11116, subscriptions.value, previousSubscriptions);
 
 	unsubscribe(previousSubscriptions);
 };
 
 const getData = async () => {
-	const data = await websocketStore.runJob(`data.${props.model}.getData`, {
+	const data = await runJob(`data.${props.model}.getData`, {
 		page: page.value,
 		pageSize: pageSize.value,
 		properties: properties.value,
@@ -946,7 +993,7 @@ onMounted(async () => {
 		}
 	}
 
-	await websocketStore.onReady(async () => {
+	await events.onReady(async () => {
 		await getData();
 
 		if (props.query) setQuery();
@@ -954,7 +1001,7 @@ onMounted(async () => {
 		await Promise.allSettled(
 			props.filters.map(async filter => {
 				if (filter.autosuggest && filter.autosuggestDataAction) {
-					const { items } = await websocketStore.runJob(
+					const { items } = await runJob(
 						filter.autosuggestDataAction
 					);
 					autosuggest.value.allItems[filter.name] = items;

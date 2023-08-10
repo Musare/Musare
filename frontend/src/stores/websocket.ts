@@ -11,7 +11,7 @@ export const useWebsocketStore = defineStore("websocket", () => {
 
 	const socket = ref();
 	const ready = ref(false);
-	const readyCallbacks = ref(new Set());
+	const readyCallbacks = ref({});
 	const jobCallbacks = ref({});
 	const pendingJobs = ref([]);
 	const subscriptions = ref({});
@@ -41,22 +41,29 @@ export const useWebsocketStore = defineStore("websocket", () => {
 		if (!socketChannels.includes(channel))
 			await runJob("api.subscribe", { channel });
 
-		if (!subscriptions.value[channel])
-			subscriptions.value[channel] = new Set();
+		if (!subscriptions.value[channel]) subscriptions.value[channel] = {};
 
-		subscriptions.value[channel].add(callback);
+		const uuid = utils.guid();
+
+		subscriptions.value[channel][uuid] = callback;
+
+		return uuid;
 	};
 
-	const unsubscribe = async (
-		channel: string,
-		callback: (data?: any) => any
-	) => {
+	const unsubscribe = async (channel: string, uuid: string) => {
 		if (!socketChannels.includes(channel))
 			await runJob("api.unsubscribe", { channel });
 
-		if (!subscriptions.value[channel]) return;
+		if (
+			!subscriptions.value[channel] ||
+			!subscriptions.value[channel][uuid]
+		)
+			return;
 
-		subscriptions.value[channel].delete(callback);
+		delete subscriptions.value[channel][uuid];
+
+		if (Object.keys(subscriptions.value[channel]).length === 0)
+			delete subscriptions.value[channel];
 	};
 
 	const unsubscribeAll = async () => {
@@ -66,12 +73,19 @@ export const useWebsocketStore = defineStore("websocket", () => {
 	};
 
 	const onReady = async (callback: () => any) => {
-		readyCallbacks.value.add(callback);
+		const uuid = utils.guid();
+
+		readyCallbacks.value[uuid] = callback;
+
 		if (ready.value) await callback();
+
+		return uuid;
 	};
 
-	const removeReadyCallback = (callback: () => any) => {
-		readyCallbacks.value.delete(callback);
+	const removeReadyCallback = (uuid: string) => {
+		if (!readyCallbacks.value[uuid]) return;
+
+		delete readyCallbacks.value[uuid];
 	};
 
 	subscribe("ready", async data => {
@@ -91,9 +105,11 @@ export const useWebsocketStore = defineStore("websocket", () => {
 
 		await userAuthStore.updatePermissions();
 
-		for await (const callback of readyCallbacks.value.values()) {
-			await callback().catch(() => {}); // TODO: Error handling
-		}
+		await Promise.all(
+			Object.values(readyCallbacks.value).map(
+				async callback => callback() // TODO: Error handling
+			)
+		);
 
 		await Promise.allSettled(
 			Object.keys(subscriptions.value)
@@ -133,11 +149,11 @@ export const useWebsocketStore = defineStore("websocket", () => {
 
 			if (!subscriptions.value[name]) return;
 
-			for await (const subscription of subscriptions.value[
-				name
-			].values()) {
-				await subscription(...data);
-			}
+			await Promise.all(
+				Object.values(subscriptions.value[name]).map(
+					async subscription => subscription(...data) // TODO: Error handling
+				)
+			);
 		});
 
 		socket.value.addEventListener("close", () => {

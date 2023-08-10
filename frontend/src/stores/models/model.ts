@@ -7,6 +7,7 @@ export const createModelStore = modelName => {
 	const models = ref<Ref<any>[]>([]);
 	const permissions = ref(null);
 	const modelPermissions = ref({});
+	const subscriptions = ref({});
 
 	const onUpdated = async ({ doc }) => {
 		const index = models.value.findIndex(
@@ -33,15 +34,26 @@ export const createModelStore = modelName => {
 				if (!models.value.find(model => model.value._id === _doc._id))
 					models.value.push(docRef);
 
-				await subscribe(
-					`model.${modelName}.updated.${_doc._id}`,
-					onUpdated
-				);
+				const updatedChannel = `model.${modelName}.updated.${_doc._id}`;
+				const updatedUuid = await subscribe(updatedChannel, onUpdated);
+				const updated = {
+					channel: updatedChannel,
+					callback: onUpdated,
+					uuid: updatedUuid
+				};
 
-				await subscribe(
-					`model.${modelName}.deleted.${_doc._id}`,
-					onDeleted
-				);
+				const deletedChannel = `model.${modelName}.updated.${_doc._id}`;
+				const deletedUuid = await subscribe(deletedChannel, onDeleted);
+				const deleted = {
+					channel: deletedChannel,
+					callback: onDeleted,
+					uuid: deletedUuid
+				};
+
+				subscriptions.value[_doc._id] = {
+					updated,
+					deleted
+				};
 
 				return docRef;
 			})
@@ -58,15 +70,11 @@ export const createModelStore = modelName => {
 					)
 						return;
 
-					await unsubscribe(
-						`model.${modelName}.updated.${modelId}`,
-						onUpdated
-					);
+					const { updated, deleted } = subscriptions.value[modelId];
 
-					await unsubscribe(
-						`model.${modelName}.deleted.${modelId}`,
-						onDeleted
-					);
+					await unsubscribe(updated.channel, updated.uuid);
+
+					await unsubscribe(deleted.channel, deleted.uuid);
 
 					models.value.splice(
 						models.value.findIndex(
@@ -135,6 +143,7 @@ export const createModelStore = modelName => {
 		models,
 		permissions,
 		modelPermissions,
+		subscriptions,
 		registerModels,
 		unregisterModels,
 		getUserModelPermissions,
