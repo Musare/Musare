@@ -64,10 +64,15 @@ export const createModelStore = modelName => {
 	const registerModels = async docs =>
 		Promise.all(
 			(Array.isArray(docs) ? docs : [docs]).map(async _doc => {
-				const docRef = ref(_doc);
+				const existingRef = models.value.find(
+					model => model.value._id === _doc._id
+				);
 
-				if (!models.value.find(model => model.value._id === _doc._id))
+				const docRef = existingRef ?? ref(_doc);
+
+				if (!existingRef) {
 					models.value.push(docRef);
+				}
 
 				if (subscriptions.value[_doc._id]) return docRef;
 
