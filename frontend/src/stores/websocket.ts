@@ -118,6 +118,8 @@ export const useWebsocketStore = defineStore("websocket", () => {
 		);
 
 		pendingJobs.value.forEach(message => socket.value.send(message));
+
+		pendingJobs.value = [];
 	});
 
 	const init = () => {

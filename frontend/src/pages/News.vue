@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
+import { defineAsyncComponent, ref, onMounted } from "vue";
 
 import { formatDistance } from "date-fns";
 import { marked } from "marked";
@@ -11,9 +11,9 @@ import {
 	NewsRemovedResponse
 } from "@musare_types/events/NewsEvents";
 import { GetPublishedNewsResponse } from "@musare_types/actions/NewsActions";
-import { useWebsocketStore } from "@/stores/websocket";
 import { useNewsModelStore } from "@/stores/models/news";
 import { useEvents } from "@/composables/useEvents";
+import { useModels } from "@/composables/useModels";
 
 const MainHeader = defineAsyncComponent(
 	() => import("@/components/MainHeader.vue")
@@ -25,19 +25,13 @@ const UserLink = defineAsyncComponent(
 	() => import("@/components/UserLink.vue")
 );
 
-const { onReady, subscribe } = useEvents();
-const { newest, registerModels, unregisterModels } = useNewsModelStore();
+const { onReady } = useEvents();
+const { registerModels, onCreated, onDeleted } = useModels();
+const newsStore = useNewsModelStore();
 
 const news = ref<NewsModel[]>([]);
 
 const { sanitize } = DOMPurify;
-
-const onDeleted = async ({ oldDoc }) => {
-	news.value.splice(
-		news.value.findIndex(doc => doc._id === oldDoc._id),
-		1
-	);
-};
 
 onMounted(async () => {
 	marked.use({
@@ -52,38 +46,21 @@ onMounted(async () => {
 	});
 
 	await onReady(async () => {
-		news.value = await newest();
+		news.value = await registerModels(newsStore, await newsStore.newest());
 	});
 
-	await subscribe("model.news.created", async ({ doc }) => {
-		news.value.unshift(...(await registerModels(doc)));
+	await onCreated(newsStore, async ({ doc }) => {
+		const [newDoc] = await registerModels(newsStore, [doc]);
+		news.value.unshift(newDoc);
 	});
 
-	// TODO: Subscribe to loaded model updated/deleted events
-	// socket.on("event:news.updated", (res: NewsUpdatedResponse) => {
-	// 	if (res.data.news.status === "draft") {
-	// 		news.value = news.value.filter(
-	// 			item => item._id !== res.data.news._id
-	// 		);
-	// 		return;
-	// 	}
+	await onDeleted(newsStore, async ({ oldDoc }) => {
+		const index = news.value.findIndex(doc => doc._id === oldDoc._id);
 
-	// 	for (let n = 0; n < news.value.length; n += 1) {
-	// 		if (news.value[n]._id === res.data.news._id)
-	// 			news.value[n] = {
-	// 				...news.value[n],
-	// 				...res.data.news
-	// 			};
-	// 	}
-	// });
+		if (index < 0) return;
 
-	// socket.on("event:news.deleted", (res: NewsRemovedResponse) => {
-	// 	news.value = news.value.filter(item => item._id !== res.data.newsId);
-	// });
-});
-
-onBeforeUnmount(async () => {
-	await unregisterModels(news.value.map(model => model._id));
+		news.value.splice(index, 1);
+	});
 });
 </script>
 

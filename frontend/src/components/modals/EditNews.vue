@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted, onBeforeUnmount } from "vue";
+import { defineAsyncComponent, ref, onMounted } from "vue";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import Toast from "toasters";
@@ -8,6 +8,7 @@ import { useModalsStore } from "@/stores/modals";
 import { useNewsModelStore } from "@/stores/models/news";
 import { useForm } from "@/composables/useForm";
 import { useEvents } from "@/composables/useEvents";
+import { useModels } from "@/composables/useModels";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const SaveButton = defineAsyncComponent(
@@ -28,8 +29,10 @@ const { onReady } = useEvents();
 
 const { closeCurrentModal } = useModalsStore();
 
-const { create, findById, updateById, hasPermission, unregisterModels } =
-	useNewsModelStore();
+const { registerModels, onDeleted } = useModels();
+
+const newsStore = useNewsModelStore();
+const { create, findById, updateById, hasPermission } = newsStore;
 
 const createdBy = ref();
 const createdAt = ref(0);
@@ -116,10 +119,21 @@ onMounted(async () => {
 				closeCurrentModal();
 			});
 
-			setModelValues(data, ["markdown", "status", "showToNewUsers"]);
+			if (!data) return;
 
-			createdBy.value = data.createdBy;
-			createdAt.value = data.createdAt;
+			const [model] = await registerModels(newsStore, [data]);
+
+			setModelValues(model, ["markdown", "status", "showToNewUsers"]);
+
+			createdBy.value = model.createdBy;
+			createdAt.value = model.createdAt;
+
+			await onDeleted(newsStore, ({ oldDoc }) => {
+				if (oldDoc._id !== props.newsId) return;
+
+				new Toast("News item has been deleted.");
+				closeCurrentModal();
+			});
 		}
 
 		console.log(
@@ -127,10 +141,6 @@ onMounted(async () => {
 			await hasPermission("data.news.published", props.newsId)
 		);
 	});
-});
-
-onBeforeUnmount(async () => {
-	if (props.newsId && !props.createNews) await unregisterModels(props.newsId);
 });
 </script>
 

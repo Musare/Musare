@@ -1,5 +1,6 @@
 import { reactive, ref } from "vue";
 import { useWebsocketStore } from "../websocket";
+import utils from "@/utils";
 
 export const createModelStore = modelName => {
 	const { runJob, subscribe, unsubscribe } = useWebsocketStore();
@@ -7,7 +8,13 @@ export const createModelStore = modelName => {
 	const models = ref([]);
 	const permissions = ref(null);
 	const modelPermissions = ref({});
-	const subscriptions = ref({});
+	const createdSubcription = ref(null);
+	const subscriptions = ref({
+		models: {},
+		created: {},
+		updated: {},
+		deleted: {}
+	});
 
 	const fetchUserModelPermissions = async (_id?: string) => {
 		const data = await runJob("api.getUserModelPermissions", {
@@ -41,20 +48,93 @@ export const createModelStore = modelName => {
 		return !!data[permission];
 	};
 
-	const onUpdated = async ({ doc }) => {
+	const onCreatedCallback = async data => {
+		await Promise.all(
+			Object.values(subscriptions.value.created).map(
+				async subscription => subscription(data) // TODO: Error handling
+			)
+		);
+	};
+
+	const onCreated = async (callback: (data?: any) => any) => {
+		if (!createdSubcription.value)
+			createdSubcription.value = await subscribe(
+				`model.${modelName}.created`,
+				onCreatedCallback
+			);
+
+		const uuid = utils.guid();
+
+		subscriptions.value.created[uuid] = callback;
+
+		return uuid;
+	};
+
+	const onUpdated = async (callback: (data?: any) => any) => {
+		const uuid = utils.guid();
+
+		subscriptions.value.updated[uuid] = callback;
+
+		return uuid;
+	};
+
+	const onUpdatedCallback = async ({ doc }) => {
 		const index = models.value.findIndex(model => model._id === doc._id);
 		if (index > -1) Object.assign(models.value[index], doc);
 
 		if (modelPermissions.value[doc._id])
 			await fetchUserModelPermissions(doc._id);
+
+		await Promise.all(
+			Object.values(subscriptions.value.updated).map(
+				async subscription => subscription(data) // TODO: Error handling
+			)
+		);
 	};
 
-	const onDeleted = async ({ oldDoc }) => {
+	const onDeleted = async (callback: (data?: any) => any) => {
+		const uuid = utils.guid();
+
+		subscriptions.value.deleted[uuid] = callback;
+
+		return uuid;
+	};
+
+	const onDeletedCallback = async data => {
+		const { oldDoc } = data;
+
+		await Promise.all(
+			Object.values(subscriptions.value.deleted).map(
+				async subscription => subscription(data) // TODO: Error handling
+			)
+		);
+
 		const index = models.value.findIndex(model => model._id === oldDoc._id);
 		if (index > -1) await unregisterModels(oldDoc._id);
 
 		if (modelPermissions.value[oldDoc._id])
 			delete modelPermissions.value[oldDoc._id];
+	};
+
+	const removeCallback = async (
+		type: "created" | "updated" | "deleted",
+		uuid: string
+	) => {
+		if (!subscriptions.value[type][uuid]) return;
+
+		delete subscriptions.value[type][uuid];
+
+		if (
+			type === "created" &&
+			Object.keys(subscriptions.value.created).length === 0
+		) {
+			await unsubscribe(
+				`model.${modelName}.created`,
+				createdSubcription.value
+			);
+
+			createdSubcription.value = null;
+		}
 	};
 
 	const registerModels = async docs =>
@@ -70,25 +150,31 @@ export const createModelStore = modelName => {
 					models.value.push(docRef);
 				}
 
-				if (subscriptions.value[_doc._id]) return docRef;
+				if (subscriptions.value.models[_doc._id]) return docRef;
 
 				const updatedChannel = `model.${modelName}.updated.${_doc._id}`;
-				const updatedUuid = await subscribe(updatedChannel, onUpdated);
+				const updatedUuid = await subscribe(
+					updatedChannel,
+					onUpdatedCallback
+				);
 				const updated = {
 					channel: updatedChannel,
-					callback: onUpdated,
+					callback: onUpdatedCallback,
 					uuid: updatedUuid
 				};
 
 				const deletedChannel = `model.${modelName}.deleted.${_doc._id}`;
-				const deletedUuid = await subscribe(deletedChannel, onDeleted);
+				const deletedUuid = await subscribe(
+					deletedChannel,
+					onDeletedCallback
+				);
 				const deleted = {
 					channel: deletedChannel,
-					callback: onDeleted,
+					callback: onDeletedCallback,
 					uuid: deletedUuid
 				};
 
-				subscriptions.value[_doc._id] = {
+				subscriptions.value.models[_doc._id] = {
 					updated,
 					deleted
 				};
@@ -108,11 +194,14 @@ export const createModelStore = modelName => {
 					)
 						return;
 
-					const { updated, deleted } = subscriptions.value[modelId];
+					const { updated, deleted } =
+						subscriptions.value.models[modelId];
 
 					await unsubscribe(updated.channel, updated.uuid);
 
 					await unsubscribe(deleted.channel, deleted.uuid);
+
+					delete subscriptions.value.models[modelId];
 
 					models.value.splice(
 						models.value.findIndex(model => model._id === modelId),
@@ -150,6 +239,10 @@ export const createModelStore = modelName => {
 		permissions,
 		modelPermissions,
 		subscriptions,
+		onCreated,
+		onUpdated,
+		onDeleted,
+		removeCallback,
 		registerModels,
 		unregisterModels,
 		fetchUserModelPermissions,
