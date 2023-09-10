@@ -56,7 +56,7 @@ const getTitle = () => {
 	return title;
 };
 
-const { inputs, save, setOriginalValue } = useForm(
+const { inputs, save, setModelValues } = useForm(
 	{
 		markdown: {
 			value: "# Header\n## Sub-Header\n- **So**\n- _Many_\n- ~Points~\n\nOther things you want to say and [link](https://example.com).\n\n### Sub-Sub-Header\n> Oh look, a quote!\n\n`lil code`\n\n```\nbig code\n```\n",
@@ -111,19 +111,15 @@ onMounted(async () => {
 
 	await onReady(async () => {
 		if (props.newsId && !props.createNews) {
-			const { value: data } = await findById(props.newsId).catch(() => {
+			const data = await findById(props.newsId).catch(() => {
 				new Toast("News with that ID not found.");
 				closeCurrentModal();
 			});
 
-			setOriginalValue({
-				markdown: data.markdown,
-				status: data.status,
-				showToNewUsers: data.showToNewUsers
-			});
+			setModelValues(data, ["markdown", "status", "showToNewUsers"]);
 
-			createdBy.value = data.createdBy;
-			createdAt.value = data.createdAt;
+			createdBy.value = data.value.createdBy;
+			createdAt.value = data.value.createdAt;
 		}
 
 		console.log(
