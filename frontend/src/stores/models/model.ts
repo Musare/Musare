@@ -9,11 +9,46 @@ export const createModelStore = modelName => {
 	const modelPermissions = ref({});
 	const subscriptions = ref({});
 
+	const fetchUserModelPermissions = async (_id?: string) => {
+		const data = await runJob("api.getUserModelPermissions", {
+			modelName,
+			modelId: _id
+		});
+
+		if (_id) {
+			modelPermissions.value[_id] = data;
+
+			return modelPermissions.value[_id];
+		}
+
+		permissions.value = data;
+
+		return permissions.value;
+	};
+
+	const getUserModelPermissions = async (_id?: string) => {
+		if (!_id && permissions.value) return permissions.value;
+
+		if (_id && modelPermissions.value[_id])
+			return modelPermissions.value[_id];
+
+		return fetchUserModelPermissions(_id);
+	};
+
+	const hasPermission = async (permission: string, _id?: string) => {
+		const data = await getUserModelPermissions(_id);
+
+		return !!data[permission];
+	};
+
 	const onUpdated = async ({ doc }) => {
 		const index = models.value.findIndex(
 			model => model.value._id === doc._id
 		);
 		if (index > -1) models.value[index].value = doc;
+
+		if (modelPermissions.value[doc._id])
+			await fetchUserModelPermissions(doc._id);
 	};
 
 	const onDeleted = async ({ oldDoc }) => {
@@ -34,6 +69,8 @@ export const createModelStore = modelName => {
 				if (!models.value.find(model => model.value._id === _doc._id))
 					models.value.push(docRef);
 
+				if (subscriptions.value[_doc._id]) return docRef;
+
 				const updatedChannel = `model.${modelName}.updated.${_doc._id}`;
 				const updatedUuid = await subscribe(updatedChannel, onUpdated);
 				const updated = {
@@ -42,7 +79,7 @@ export const createModelStore = modelName => {
 					uuid: updatedUuid
 				};
 
-				const deletedChannel = `model.${modelName}.updated.${_doc._id}`;
+				const deletedChannel = `model.${modelName}.deleted.${_doc._id}`;
 				const deletedUuid = await subscribe(deletedChannel, onDeleted);
 				const deleted = {
 					channel: deletedChannel,
@@ -89,34 +126,6 @@ export const createModelStore = modelName => {
 			)
 		);
 
-	const getUserModelPermissions = async (_id?: string) => {
-		if (!_id && permissions.value) return permissions.value;
-
-		if (_id && modelPermissions.value[_id])
-			return modelPermissions.value[_id];
-
-		const data = await runJob("api.getUserModelPermissions", {
-			modelName,
-			modelId: _id
-		});
-
-		if (_id) {
-			modelPermissions.value[_id] = data;
-
-			return modelPermissions.value[_id];
-		}
-
-		permissions.value = data;
-
-		return permissions.value;
-	};
-
-	const hasPermission = async (permission: string, _id?: string) => {
-		const data = await getUserModelPermissions(_id);
-
-		return !!data[permission];
-	};
-
 	const create = async query => runJob(`data.${modelName}.create`, { query });
 
 	const findById = async _id => {
@@ -146,6 +155,7 @@ export const createModelStore = modelName => {
 		subscriptions,
 		registerModels,
 		unregisterModels,
+		fetchUserModelPermissions,
 		getUserModelPermissions,
 		hasPermission,
 		create,
