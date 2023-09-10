@@ -198,15 +198,15 @@ onMounted(async () => {
 
 		const newUser = !localStorage.getItem("firstVisited");
 		newest(newUser).then(data => {
-			const news = data[0]?.value;
+			const [news] = data;
 
-			if (news) {
+			if (news.value) {
 				if (newUser) {
 					openModal({ modal: "whatIsNew", props: { news } });
 				} else if (localStorage.getItem("whatIsNew")) {
 					if (
 						parseInt(localStorage.getItem("whatIsNew") as string) <
-						news.createdAt
+						news.value.createdAt
 					) {
 						openModal({
 							modal: "whatIsNew",
@@ -214,7 +214,7 @@ onMounted(async () => {
 						});
 						localStorage.setItem(
 							"whatIsNew",
-							news.createdAt.toString()
+							news.value.createdAt.toString()
 						);
 					}
 				} else {
@@ -222,7 +222,7 @@ onMounted(async () => {
 						localStorage.getItem("firstVisited") &&
 						parseInt(
 							localStorage.getItem("firstVisited") as string
-						) < news.createdAt
+						) < news.value.createdAt
 					)
 						openModal({
 							modal: "whatIsNew",
@@ -230,7 +230,7 @@ onMounted(async () => {
 						});
 					localStorage.setItem(
 						"whatIsNew",
-						news.createdAt.toString()
+						news.value.createdAt.toString()
 					);
 				}
 			}
