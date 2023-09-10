@@ -83,7 +83,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(async () => {
-	await unregisterModels(news.value.map(model => model.value._id));
+	await unregisterModels(news.value.map(model => model._id));
 });
 </script>
 
@@ -95,7 +95,7 @@ onBeforeUnmount(async () => {
 			<div class="content-wrapper">
 				<h1 class="has-text-centered page-title">News</h1>
 				<div
-					v-for="{ value: item } in news"
+					v-for="item in news"
 					:key="item._id"
 					class="section news-item"
 				>

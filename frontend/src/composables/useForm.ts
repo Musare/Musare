@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onBeforeUnmount, Ref, watch } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
 import { useModalsStore } from "@/stores/modals";
 
 export const useForm = (
@@ -207,10 +207,7 @@ export const useForm = (
 		});
 	};
 
-	const setModelValues = (
-		model: Ref<Record<string, any>>,
-		keys: string[]
-	) => {
+	const setModelValues = (model: Record<string, any>, keys: string[]) => {
 		const getModelValue = (key, modelObject) => {
 			let value = JSON.parse(JSON.stringify(modelObject));
 			key.split(".").forEach(property => {
@@ -227,7 +224,7 @@ export const useForm = (
 			);
 		};
 
-		setMappedValues(model.value);
+		setMappedValues(model);
 
 		watch(model, setMappedValues);
 	};

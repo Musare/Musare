@@ -1,10 +1,10 @@
-import { Ref, ref } from "vue";
+import { reactive, ref } from "vue";
 import { useWebsocketStore } from "../websocket";
 
 export const createModelStore = modelName => {
 	const { runJob, subscribe, unsubscribe } = useWebsocketStore();
 
-	const models = ref<Ref<any>[]>([]);
+	const models = ref([]);
 	const permissions = ref(null);
 	const modelPermissions = ref({});
 	const subscriptions = ref({});
@@ -42,19 +42,15 @@ export const createModelStore = modelName => {
 	};
 
 	const onUpdated = async ({ doc }) => {
-		const index = models.value.findIndex(
-			model => model.value._id === doc._id
-		);
-		if (index > -1) models.value[index].value = doc;
+		const index = models.value.findIndex(model => model._id === doc._id);
+		if (index > -1) Object.assign(models.value[index], doc);
 
 		if (modelPermissions.value[doc._id])
 			await fetchUserModelPermissions(doc._id);
 	};
 
 	const onDeleted = async ({ oldDoc }) => {
-		const index = models.value.findIndex(
-			model => model.value._id === oldDoc._id
-		);
+		const index = models.value.findIndex(model => model._id === oldDoc._id);
 		if (index > -1) await unregisterModels(oldDoc._id);
 
 		if (modelPermissions.value[oldDoc._id])
@@ -65,10 +61,10 @@ export const createModelStore = modelName => {
 		Promise.all(
 			(Array.isArray(docs) ? docs : [docs]).map(async _doc => {
 				const existingRef = models.value.find(
-					model => model.value._id === _doc._id
+					model => model._id === _doc._id
 				);
 
-				const docRef = existingRef ?? ref(_doc);
+				const docRef = existingRef ?? reactive(_doc);
 
 				if (!existingRef) {
 					models.value.push(docRef);
@@ -107,7 +103,7 @@ export const createModelStore = modelName => {
 				async modelId => {
 					if (
 						models.value.findIndex(
-							model => model.value._id === modelId
+							model => model._id === modelId
 						) === -1
 					)
 						return;
@@ -119,9 +115,7 @@ export const createModelStore = modelName => {
 					await unsubscribe(deleted.channel, deleted.uuid);
 
 					models.value.splice(
-						models.value.findIndex(
-							model => model.value._id === modelId
-						),
+						models.value.findIndex(model => model._id === modelId),
 						1
 					);
 
@@ -134,9 +128,7 @@ export const createModelStore = modelName => {
 	const create = async query => runJob(`data.${modelName}.create`, { query });
 
 	const findById = async _id => {
-		const existingModel = models.value.find(
-			model => model.value._id === _id
-		);
+		const existingModel = models.value.find(model => model._id === _id);
 
 		if (existingModel) return existingModel;
 

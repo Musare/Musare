@@ -118,8 +118,8 @@ onMounted(async () => {
 
 			setModelValues(data, ["markdown", "status", "showToNewUsers"]);
 
-			createdBy.value = data.value.createdBy;
-			createdAt.value = data.value.createdAt;
+			createdBy.value = data.createdBy;
+			createdAt.value = data.createdAt;
 		}
 
 		console.log(

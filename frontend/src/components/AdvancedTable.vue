@@ -271,12 +271,12 @@ const subscribe = async () => {
 			try {
 				deleted = await events.subscribe(
 					`model.${props.model}.deleted.${row._id}`,
-					({ doc }) => {
+					({ oldDoc }) => {
 						const docRow = rows.value.find(
-							_row => _row._id === doc._id
+							_row => _row._id === oldDoc._id
 						);
 						const docRowIndex = rows.value.findIndex(
-							_row => _row._id === doc._id
+							_row => _row._id === oldDoc._id
 						);
 						console.log(34436, docRow, docRowIndex);
 
