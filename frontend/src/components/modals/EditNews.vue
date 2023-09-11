@@ -121,7 +121,7 @@ onMounted(async () => {
 
 			if (!data) return;
 
-			const [model] = await registerModels(newsStore, [data]);
+			const [model] = await registerModels(newsStore, data);
 
 			setModelValues(model, ["markdown", "status", "showToNewUsers"]);
 

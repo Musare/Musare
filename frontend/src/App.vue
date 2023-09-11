@@ -12,7 +12,6 @@ import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useModalsStore } from "@/stores/modals";
 import aw from "@/aw";
 import keyboardShortcuts from "@/keyboardShortcuts";
-import { useNewsModelStore } from "./stores/models/news";
 
 const ModalManager = defineAsyncComponent(
 	() => import("@/components/ModalManager.vue")
@@ -32,7 +31,6 @@ const configStore = useConfigStore();
 const userAuthStore = useUserAuthStore();
 const userPreferencesStore = useUserPreferencesStore();
 const modalsStore = useModalsStore();
-const { newest } = useNewsModelStore();
 
 const socketConnected = ref(true);
 const keyIsDown = ref("");
@@ -196,48 +194,7 @@ onMounted(async () => {
 			}
 		);
 
-		const newUser = !localStorage.getItem("firstVisited");
-		newest(newUser).then(data => {
-			const [news] = data;
-
-			if (news) {
-				if (newUser) {
-					openModal({ modal: "whatIsNew", props: { news } });
-				} else if (localStorage.getItem("whatIsNew")) {
-					if (
-						parseInt(localStorage.getItem("whatIsNew") as string) <
-						news.createdAt
-					) {
-						openModal({
-							modal: "whatIsNew",
-							props: { news }
-						});
-						localStorage.setItem(
-							"whatIsNew",
-							news.createdAt.toString()
-						);
-					}
-				} else {
-					if (
-						localStorage.getItem("firstVisited") &&
-						parseInt(
-							localStorage.getItem("firstVisited") as string
-						) < news.createdAt
-					)
-						openModal({
-							modal: "whatIsNew",
-							props: { news }
-						});
-					localStorage.setItem(
-						"whatIsNew",
-						news.createdAt.toString()
-					);
-				}
-			}
-
-			if (!localStorage.getItem("firstVisited"))
-				localStorage.setItem("firstVisited", Date.now().toString());
-		});
+		openModal("whatIsNew");
 
 		router.isReady().then(() => {
 			if (

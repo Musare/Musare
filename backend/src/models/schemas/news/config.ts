@@ -25,9 +25,11 @@ export default {
 		newest: {
 			async method(
 				context: JobContext,
-				payload?: { showToNewUsers: boolean }
+				payload?: { showToNewUsers?: boolean; limit?: number }
 			) {
-				return this.find().newest(payload?.showToNewUsers);
+				const query = this.find().newest(payload?.showToNewUsers);
+				if (payload?.limit) return query.limit(payload?.limit);
+				return query;
 			},
 			hasPermission: true
 		}

@@ -221,9 +221,7 @@ export const createModelStore = modelName => {
 
 		if (existingModel) return existingModel;
 
-		const data = await runJob(`data.${modelName}.findById`, { _id });
-
-		const [model] = await registerModels(data);
+		const [model] = await runJob(`data.${modelName}.findById`, { _id });
 
 		return model;
 	};

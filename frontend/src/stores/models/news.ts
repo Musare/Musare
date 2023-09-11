@@ -9,11 +9,8 @@ export const useNewsModelStore = defineStore("newsModel", () => {
 
 	const published = async () => runJob("data.news.published", {});
 
-	const newest = async (showToNewUsers?) => {
-		const data = await runJob("data.news.newest", { showToNewUsers });
-
-		return modelStore.registerModels(data);
-	};
+	const newest = async (showToNewUsers?, limit?) =>
+		runJob("data.news.newest", { showToNewUsers, limit });
 
 	return {
 		...modelStore,

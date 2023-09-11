@@ -7,7 +7,7 @@ export default (model, user) => {
 	else if (model.schema.path("owner")) ownerAttribute = "owner";
 
 	if (ownerAttribute)
-		return model[ownerAttribute].toString() === user._id.toString();
+		return model[ownerAttribute]?.toString() === user._id.toString();
 
 	return false;
 };

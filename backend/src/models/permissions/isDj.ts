@@ -1,2 +1,2 @@
 export default (model, user) =>
-	model && user && model.djs.contains(user._id.toString());
+	model && user && model.djs.includes(user._id.toString());
