@@ -212,20 +212,46 @@ const hasCheckboxes = computed(
 );
 const aModalIsOpen = computed(() => Object.keys(activeModals.value).length > 0);
 
+const onUpdatedCallback = ({ doc }) => {
+	const docRow = rows.value.find(_row => _row._id === doc._id);
+	const docRowIndex = rows.value.findIndex(_row => _row._id === doc._id);
+
+	if (!docRow) return;
+
+	rows.value[docRowIndex] = {
+		...docRow,
+		...doc,
+		updated: true
+	};
+};
+
+const onDeletedCallback = ({ oldDoc }) => {
+	const docRow = rows.value.find(_row => _row._id === oldDoc._id);
+	const docRowIndex = rows.value.findIndex(_row => _row._id === oldDoc._id);
+
+	if (!docRow) return;
+
+	rows.value[docRowIndex] = {
+		...docRow,
+		selected: false,
+		removed: true
+	};
+};
+
 const unsubscribe = async (_subscriptions?) => {
 	_subscriptions = _subscriptions ?? subscriptions.value;
 
-	await Promise.allSettled(
-		Object.entries(_subscriptions).map(
-			async ([modelId, { updated, deleted }]) => {
-				await Promise.allSettled([
-					events.unsubscribe(updated),
-					events.unsubscribe(deleted)
-				]);
+	await events.unsubscribeMany(
+		Object.values(_subscriptions).flatMap(({ updated, deleted }) => [
+			updated,
+			deleted
+		])
+	);
 
-				delete subscriptions.value[modelId];
-			}
-		)
+	await Promise.all(
+		Object.keys(_subscriptions).map(async modelId => {
+			delete subscriptions.value[modelId];
+		})
 	);
 };
 
@@ -234,81 +260,41 @@ const subscribe = async () => {
 		JSON.stringify(subscriptions.value)
 	);
 
-	await Promise.allSettled(
-		rows.value.map(async row => {
-			if (subscriptions.value[row._id]) {
-				// console.log(11110, row);
+	await Promise.all(
+		rows.value
+			.filter(row => subscriptions.value[row._id])
+			.map(async row => {
 				delete previousSubscriptions[row._id];
-				return;
-			}
+			})
+	);
 
-			// console.log(11111, row);
+	const uuids = await events.subscribeMany(
+		Object.fromEntries(
+			rows.value
+				.filter(row => !subscriptions.value[row._id])
+				.flatMap(row => [
+					[
+						`model.${props.model}.updated.${row._id}`,
+						onUpdatedCallback
+					],
+					[
+						`model.${props.model}.deleted.${row._id}`,
+						onDeletedCallback
+					]
+				])
+		)
+	);
 
-			const updated = await events.subscribe(
-				`model.${props.model}.updated.${row._id}`,
-				({ doc }) => {
-					const docRow = rows.value.find(
-						_row => _row._id === doc._id
-					);
-					const docRowIndex = rows.value.findIndex(
-						_row => _row._id === doc._id
-					);
-					console.log(45634643, docRow, docRowIndex);
+	await Promise.all(
+		Object.entries(uuids).map(async ([channel, uuid]) => {
+			const [, , , event, modelId] =
+				/^([a-z]+)\.([a-z]+)\.([A-z]+)\.?([A-z0-9]+)?$/.exec(channel) ??
+				[];
 
-					if (!docRow) return;
-
-					rows.value[docRowIndex] = {
-						...docRow,
-						...doc,
-						updated: true
-					};
-				}
-			);
-			// console.log(11112, updated);
-
-			let deleted;
-
-			try {
-				deleted = await events.subscribe(
-					`model.${props.model}.deleted.${row._id}`,
-					({ oldDoc }) => {
-						const docRow = rows.value.find(
-							_row => _row._id === oldDoc._id
-						);
-						const docRowIndex = rows.value.findIndex(
-							_row => _row._id === oldDoc._id
-						);
-						console.log(34436, docRow, docRowIndex);
-
-						if (!docRow) return;
-
-						rows.value[docRowIndex] = {
-							...docRow,
-							selected: false,
-							removed: true
-						};
-					}
-				);
-			} catch (error) {
-				console.log(11113, error);
-				unsubscribe([updated]);
-
-				throw error;
-			}
-			// console.log(11114, deleted);
-
-			subscriptions.value[row._id] = { updated, deleted };
-			// console.log(
-			// 	11115,
-			// 	Object.entries(subscriptions.value),
-			// 	subscriptions.value,
-			// 	subscriptions.value[row._id],
-			// 	row._id,
-			// 	{ updated, deleted }
-			// );
+			subscriptions.value[modelId] ??= {};
+			subscriptions.value[modelId][event] = uuid;
 		})
 	);
-	console.log(11116, subscriptions.value, previousSubscriptions);
 
 	unsubscribe(previousSubscriptions);
 };

@@ -50,6 +50,29 @@ export const useWebsocketStore = defineStore("websocket", () => {
 		return uuid;
 	};
 
+	const subscribeMany = async (
+		channels: Record<string, (data?: any) => any>
+	) => {
+		await runJob("api.subscribeMany", {
+			channels: Object.keys(channels).filter(
+				channel => !socketChannels.includes(channel)
+			)
+		});
+
+		return Object.fromEntries(
+			Object.entries(channels).map(([channel, callback]) => {
+				if (!subscriptions.value[channel])
+					subscriptions.value[channel] = {};
+
+				const uuid = utils.guid();
+
+				subscriptions.value[channel][uuid] = callback;
+
+				return [uuid, { channel, callback }];
+			})
+		);
+	};
+
 	const unsubscribe = async (channel: string, uuid: string) => {
 		if (
 			!subscriptions.value[channel] ||
@@ -67,6 +90,31 @@ export const useWebsocketStore = defineStore("websocket", () => {
 
 		if (Object.keys(subscriptions.value[channel]).length === 0)
 			delete subscriptions.value[channel];
+	};
+
+	const unsubscribeMany = async (channels: Record<string, string>) => {
+		await runJob("api.unsubscribeMany", {
+			channels: Object.values(channels).filter(
+				channel =>
+					!socketChannels.includes(channel) &&
+					Object.keys(subscriptions.value[channel]).length <= 1
+			)
+		});
+
+		return Promise.all(
+			Object.entries(channels).map(async ([uuid, channel]) => {
+				if (
+					!subscriptions.value[channel] ||
+					!subscriptions.value[channel][uuid]
+				)
+					return;
+
+				delete subscriptions.value[channel][uuid];
+
+				if (Object.keys(subscriptions.value[channel]).length === 0)
+					delete subscriptions.value[channel];
+			})
+		);
 	};
 
 	const unsubscribeAll = async () => {
@@ -182,7 +230,9 @@ export const useWebsocketStore = defineStore("websocket", () => {
 		subscriptions,
 		runJob,
 		subscribe,
+		subscribeMany,
 		unsubscribe,
+		unsubscribeMany,
 		unsubscribeAll,
 		onReady,
 		removeReadyCallback

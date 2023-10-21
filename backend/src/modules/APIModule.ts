@@ -328,6 +328,21 @@ export default class APIModule extends BaseModule {
 			});
 	}
 
+	public async subscribeMany(
+		context: JobContext,
+		payload: { channels: string[] }
+	) {
+		const { channels } = payload;
+
+		await Promise.all(
+			channels.map(channel =>
+				context.executeJob("api", "subscribe", {
+					channel
+				})
+			)
+		);
+	}
+
 	public async unsubscribe(
 		context: JobContext,
 		payload: { channel: string }
@@ -357,6 +372,21 @@ export default class APIModule extends BaseModule {
 
 			delete this._subscriptions[channel];
 		}
+	}
+
+	public async unsubscribeMany(
+		context: JobContext,
+		payload: { channels: string[] }
+	) {
+		const { channels } = payload;
+
+		await Promise.all(
+			channels.map(channel =>
+				context.executeJob("api", "unsubscribe", {
+					channel
+				})
+			)
+		);
 	}
 
 	public async unsubscribeAll(context: JobContext) {

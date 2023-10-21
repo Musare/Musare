@@ -28,9 +28,26 @@ export const useEvents = () => {
 
 		subscriptions.value[uuid] = { channel, callback };
 
-		console.log(11114, uuid, subscriptions.value[uuid]);
-
 		return uuid;
+	};
+
+	const subscribeMany = async channels => {
+		const _subscriptions = await websocketStore.subscribeMany(channels);
+
+		await Promise.all(
+			Object.entries(_subscriptions).map(
+				async ([uuid, { channel, callback }]) => {
+					subscriptions.value[uuid] = { channel, callback };
+				}
+			)
+		);
+
+		return Object.fromEntries(
+			Object.entries(_subscriptions).map(([uuid, { channel }]) => [
+				channel,
+				uuid
+			])
+		);
 	};
 
 	const unsubscribe = async uuid => {
@@ -41,6 +58,22 @@ export const useEvents = () => {
 		await websocketStore.unsubscribe(channel, uuid);
 
 		delete subscriptions.value[uuid];
+	};
+
+	const unsubscribeMany = async uuids => {
+		const _subscriptions = Object.fromEntries(
+			Object.entries(subscriptions.value)
+				.filter(([uuid]) => uuids.includes(uuid))
+				.map(([uuid, { channel }]) => [uuid, channel])
+		);
+
+		await websocketStore.unsubscribeMany(_subscriptions);
+
+		return Promise.all(
+			uuids.map(async uuid => {
+				delete subscriptions.value[uuid];
+			})
+		);
 	};
 
 	onBeforeUnmount(async () => {
@@ -61,6 +94,8 @@ export const useEvents = () => {
 		onReady,
 		removeReadyCallback,
 		subscribe,
-		unsubscribe
+		subscribeMany,
+		unsubscribe,
+		unsubscribeMany
 	};
 };
