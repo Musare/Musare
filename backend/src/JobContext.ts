@@ -1,12 +1,12 @@
 import { Types } from "mongoose";
-import BaseModule from "./BaseModule";
-import Job from "./Job";
-import JobQueue from "./JobQueue";
-import { Log } from "./LogBook";
-import { SessionSchema } from "./models/schemas/sessions/schema";
-import { JobOptions } from "./types/JobOptions";
-import { Jobs, Modules } from "./types/Modules";
-import { Models } from "./types/Models";
+import { SessionSchema } from "@/models/schemas/sessions/schema";
+import BaseModule from "@/BaseModule";
+import Job from "@/Job";
+import JobQueue from "@/JobQueue";
+import { Log } from "@/LogBook";
+import { JobOptions } from "@/types/JobOptions";
+import { Jobs, Modules } from "@/types/Modules";
+import { Models } from "@/types/Models";
 
 export default class JobContext {
 	public readonly job: Job;

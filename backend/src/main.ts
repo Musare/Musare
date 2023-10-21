@@ -1,8 +1,8 @@
 import * as readline from "node:readline";
-import ModuleManager from "./ModuleManager";
-import LogBook from "./LogBook";
-import JobQueue from "./JobQueue";
-import JobStatistics from "./JobStatistics";
+import ModuleManager from "@/ModuleManager";
+import LogBook from "@/LogBook";
+import JobQueue from "@/JobQueue";
+import JobStatistics from "@/JobStatistics";
 
 const logBook = LogBook.getPrimaryInstance();
 

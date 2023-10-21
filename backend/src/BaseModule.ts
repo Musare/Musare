@@ -1,8 +1,8 @@
-import JobContext from "./JobContext";
-import JobQueue from "./JobQueue";
-import LogBook, { Log } from "./LogBook";
-import ModuleManager from "./ModuleManager";
-import { Modules } from "./types/Modules";
+import JobContext from "@/JobContext";
+import JobQueue from "@/JobQueue";
+import LogBook, { Log } from "@/LogBook";
+import ModuleManager from "@/ModuleManager";
+import { Modules } from "@/types/Modules";
 
 export enum ModuleStatus {
 	LOADED = "LOADED",

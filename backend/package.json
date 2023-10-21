@@ -9,12 +9,12 @@
 	"license": "GPL-3.0",
 	"repository": "https://github.com/Musare/Musare",
 	"scripts": {
-		"dev": "ts-node-dev -i --transpile-only ${INSPECT_BRK} ./src/main.ts",
+		"dev": "ts-node-dev -r tsconfig-paths/register -i --transpile-only ${INSPECT_BRK} ./src/main.ts",
 		"build": "tsc",
 		"prod": "node build/src/main.js",
 		"lint": "eslint src --ext .js,.ts",
 		"typescript": "tsc --noEmit",
-		"test": "mocha -r ts-node/register 'tests/**/*.test.ts' 'src/**/*.spec.ts'"
+		"test": "mocha -r ts-node/register -r tsconfig-paths/register 'tests/**/*.test.ts' 'src/**/*.spec.ts'"
 	},
 	"dependencies": {
 		"axios": "^1.4.0",
@@ -60,6 +60,7 @@
 		"trace-unhandled": "^2.0.1",
 		"ts-node": "^10.9.1",
 		"ts-node-dev": "^2.0.0",
+		"tsconfig-paths": "^4.2.0",
 		"typescript": "^5.0.4"
 	}
 }

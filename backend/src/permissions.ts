@@ -1,5 +1,5 @@
 import config from "config";
-import { UserRole } from "./models/schemas/users/UserRole";
+import { UserRole } from "@/models/schemas/users/UserRole";
 
 const temp = {
 	"data.stations.getData": true,

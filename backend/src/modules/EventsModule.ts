@@ -1,9 +1,9 @@
 import { createClient, RedisClientType } from "redis";
 import config from "config";
 import crypto from "node:crypto";
-import BaseModule from "../BaseModule";
-import { UniqueMethods } from "../types/Modules";
-import JobContext from "../JobContext";
+import BaseModule from "@/BaseModule";
+import { UniqueMethods } from "@/types/Modules";
+import JobContext from "@/JobContext";
 
 export default class EventsModule extends BaseModule {
 	private _pubClient?: RedisClientType;

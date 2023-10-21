@@ -1,14 +1,14 @@
 import config from "config";
 import { Types, isObjectIdOrHexString } from "mongoose";
 import { IncomingMessage } from "node:http";
-import JobContext from "../JobContext";
-import BaseModule from "../BaseModule";
-import { Jobs, Modules, UniqueMethods } from "../types/Modules";
-import WebSocket from "../WebSocket";
-import { UserRole } from "../models/schemas/users/UserRole";
-import permissions from "../permissions";
-import Job from "../Job";
-import { Models } from "../types/Models";
+import { UserRole } from "@/models/schemas/users/UserRole";
+import JobContext from "@/JobContext";
+import BaseModule from "@/BaseModule";
+import { Jobs, Modules, UniqueMethods } from "@/types/Modules";
+import WebSocket from "@/WebSocket";
+import permissions from "@/permissions";
+import Job from "@/Job";
+import { Models } from "@/types/Models";
 
 export default class APIModule extends BaseModule {
 	private _subscriptions: Record<string, Set<string>>;

@@ -1,7 +1,7 @@
-import BaseModule, { ModuleStatus } from "./BaseModule";
-import Job, { JobStatus } from "./Job";
-import { JobOptions } from "./types/JobOptions";
-import { Jobs, Modules } from "./types/Modules";
+import BaseModule, { ModuleStatus } from "@/BaseModule";
+import Job, { JobStatus } from "@/Job";
+import { JobOptions } from "@/types/JobOptions";
+import { Jobs, Modules } from "@/types/Modules";
 
 export default class JobQueue {
 	static primaryInstance = new this();

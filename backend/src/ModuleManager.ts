@@ -1,6 +1,6 @@
-import { ModuleStatus } from "./BaseModule";
-import JobQueue from "./JobQueue";
-import { Modules, ModuleClass } from "./types/Modules";
+import { ModuleStatus } from "@/BaseModule";
+import JobQueue from "@/JobQueue";
+import { Modules, ModuleClass } from "@/types/Modules";
 
 export default class ModuleManager {
 	static primaryInstance = new this();

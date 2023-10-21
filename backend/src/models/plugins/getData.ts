@@ -1,5 +1,5 @@
 import { PipelineStage, Schema, SchemaOptions } from "mongoose";
-import JobContext from "../../JobContext";
+import JobContext from "@/JobContext";
 
 export enum FilterType {
 	REGEX = "regex",

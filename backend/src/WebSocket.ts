@@ -1,5 +1,5 @@
 import { WebSocket as WSWebSocket } from "ws";
-import LogBook, { Log } from "./LogBook";
+import LogBook, { Log } from "@/LogBook";
 
 export default class WebSocket extends WSWebSocket {
 	private _logBook: LogBook = LogBook.getPrimaryInstance();

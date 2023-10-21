@@ -11,14 +11,14 @@ import mongoose, {
 import { patchHistoryPlugin, patchEventEmitter } from "ts-patch-mongoose";
 import { readdir } from "fs/promises";
 import path from "path";
-import JobContext from "../JobContext";
-import BaseModule, { ModuleStatus } from "../BaseModule";
-import { UniqueMethods } from "../types/Modules";
-import { AnyModel, Models } from "../types/Models";
-import { Schemas } from "../types/Schemas";
-import documentVersionPlugin from "../models/plugins/documentVersion";
-import getDataPlugin from "../models/plugins/getData";
-import Migration from "../models/Migration";
+import documentVersionPlugin from "@/models/plugins/documentVersion";
+import getDataPlugin from "@/models/plugins/getData";
+import Migration from "@/models/Migration";
+import JobContext from "@/JobContext";
+import BaseModule, { ModuleStatus } from "@/BaseModule";
+import { UniqueMethods } from "@/types/Modules";
+import { AnyModel, Models } from "@/types/Models";
+import { Schemas } from "@/types/Schemas";
 
 /**
  * Experimental: function to get all nested keys from a MongoDB query object

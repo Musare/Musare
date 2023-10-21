@@ -4,10 +4,10 @@ import sinon from "sinon";
 import sinonChai from "sinon-chai";
 import chaiAsPromised from "chai-as-promised";
 // import { ObjectId } from "mongodb";
-// import JobContext from "../JobContext";
-import JobQueue from "../JobQueue";
-import LogBook from "../LogBook";
-import ModuleManager from "../ModuleManager";
+// import JobContext from "@/JobContext";
+import JobQueue from "@/JobQueue";
+import LogBook from "@/LogBook";
+import ModuleManager from "@/ModuleManager";
 import DataModule from "./DataModule";
 
 // const should = chai.should();

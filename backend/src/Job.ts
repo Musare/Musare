@@ -1,10 +1,10 @@
-import BaseModule from "./BaseModule";
-import JobContext from "./JobContext";
-import JobStatistics from "./JobStatistics";
-import LogBook, { Log } from "./LogBook";
-import ModuleManager from "./ModuleManager";
-import { JobOptions } from "./types/JobOptions";
-import { Modules } from "./types/Modules";
+import BaseModule from "@/BaseModule";
+import JobContext from "@/JobContext";
+import JobStatistics from "@/JobStatistics";
+import LogBook, { Log } from "@/LogBook";
+import ModuleManager from "@/ModuleManager";
+import { JobOptions } from "@/types/JobOptions";
+import { Modules } from "@/types/Modules";
 
 export enum JobStatus {
 	QUEUED = "QUEUED",

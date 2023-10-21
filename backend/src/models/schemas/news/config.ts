@@ -1,4 +1,4 @@
-import JobContext from "../../../JobContext";
+import JobContext from "@/JobContext";
 import { NewsStatus } from "./NewsStatus";
 import getData from "./getData";
 

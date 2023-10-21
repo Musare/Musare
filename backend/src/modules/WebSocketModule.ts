@@ -3,11 +3,11 @@ import express from "express";
 import http, { Server, IncomingMessage } from "node:http";
 import { RawData, WebSocketServer } from "ws";
 import { Types } from "mongoose";
-import BaseModule from "../BaseModule";
-import { UniqueMethods } from "../types/Modules";
-import WebSocket from "../WebSocket";
-import JobContext from "../JobContext";
-import Job from "../Job";
+import BaseModule from "@/BaseModule";
+import { UniqueMethods } from "@/types/Modules";
+import WebSocket from "@/WebSocket";
+import JobContext from "@/JobContext";
+import Job from "@/Job";
 
 export default class WebSocketModule extends BaseModule {
 	private _httpServer?: Server;

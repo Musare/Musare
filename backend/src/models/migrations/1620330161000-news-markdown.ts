@@ -1,4 +1,4 @@
-import Migration from "../Migration";
+import Migration from "@/models/Migration";
 
 export default class Migration1620330161000 extends Migration {
 	async up() {

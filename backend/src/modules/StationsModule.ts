@@ -1,6 +1,6 @@
-import JobContext from "../JobContext";
-import { UniqueMethods } from "../types/Modules";
-import BaseModule from "../BaseModule";
+import JobContext from "@/JobContext";
+import { UniqueMethods } from "@/types/Modules";
+import BaseModule from "@/BaseModule";
 
 export default class StationsModule extends BaseModule {
 	/**
