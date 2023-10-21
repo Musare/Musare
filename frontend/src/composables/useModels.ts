@@ -1,135 +1,112 @@
 import { onBeforeUnmount, ref } from "vue";
+import { useModelStore } from "@/stores/model";
 
 export const useModels = () => {
+	const modelStore = useModelStore();
+
 	const models = ref([]);
 	const subscriptions = ref({
-		created: [],
-		updated: [],
-		deleted: []
+		created: {},
+		updated: {},
+		deleted: {}
 	});
 
-	const onCreated = async (store, callback: (data?: any) => any) => {
-		const uuid = await store.onCreated(callback);
+	const onCreated = async (
+		modelName: string,
+		callback: (data?: any) => any
+	) => {
+		const uuid = await modelStore.onCreated(modelName, callback);
 
-		subscriptions.value.created.push({
-			store,
-			uuid
-		});
+		subscriptions.value.created[modelName] ??= [];
+		subscriptions.value.created[modelName].push(uuid);
 	};
 
-	const onUpdated = async (store, callback: (data?: any) => any) => {
-		const uuid = await store.onUpdated(callback);
+	const onUpdated = async (
+		modelName: string,
+		callback: (data?: any) => any
+	) => {
+		const uuid = await modelStore.onUpdated(modelName, callback);
 
-		subscriptions.value.updated.push({
-			store,
-			uuid
-		});
+		subscriptions.value.updated[modelName] ??= [];
+		subscriptions.value.updated[modelName].push(uuid);
 	};
 
-	const onDeleted = async (store, callback: (data?: any) => any) => {
-		const uuid = await store.onDeleted(callback);
+	const onDeleted = async (
+		modelName: string,
+		callback: (data?: any) => any
+	) => {
+		const uuid = await modelStore.onDeleted(modelName, callback);
 
-		subscriptions.value.deleted.push({
-			store,
-			uuid
-		});
+		subscriptions.value.deleted[modelName] ??= [];
+		subscriptions.value.deleted[modelName].push(uuid);
 	};
 
 	const removeCallback = async (
-		store,
+		modelName: string,
 		type: "created" | "updated" | "deleted",
 		uuid: string
 	) => {
 		if (
-			!subscriptions.value[type].find(
-				subscription =>
-					subscription.store === store && subscription.uuid === uuid
+			!subscriptions.value[type][modelName] ||
+			!subscriptions.value[type][modelName].find(
+				subscription => subscription === uuid
 			)
 		)
 			return;
 
-		await store.removeCallback(type, uuid);
+		await modelStore.removeCallback(modelName, type, uuid);
 
-		delete subscriptions.value[type][uuid];
+		delete subscriptions.value[type][modelName][uuid];
 	};
 
-	const registerModels = async (store, storeModels: any[]) => {
-		let storeIndex = models.value.findIndex(model => model.store === store);
+	const registerModels = async (modelName: string, storeModels: any[]) => {
+		const registeredModels = await modelStore.registerModels(
+			modelName,
+			storeModels
+		);
 
-		const registeredModels = await store.registerModels(storeModels);
+		models.value.push(...registeredModels);
 
-		if (storeIndex < 0) {
-			models.value.push({
-				store,
-				models: registeredModels
-			});
+		await onDeleted(modelName, ({ oldDoc }) => {
+			if (!models.value[modelName]) return;
 
-			await onDeleted(store, ({ oldDoc }) => {
-				storeIndex = models.value.findIndex(
-					model => model.store === store
-				);
+			const modelIndex = models.value[modelName].findIndex(
+				model => model._id === oldDoc._id
+			);
 
-				if (storeIndex < 0) return;
+			if (modelIndex < 0) return;
 
-				const modelIndex = models.value[storeIndex].models.findIndex(
-					model => model._id === oldDoc._id
-				);
-
-				if (modelIndex < 0) return;
-
-				delete models.value[storeIndex].models[modelIndex];
-			});
-
-			return registeredModels;
-		}
-
-		models.value[storeIndex].models = [
-			...models.value[storeIndex].models,
-			registeredModels
-		];
+			delete models.value[modelName][modelIndex];
+		});
 
 		return registeredModels;
 	};
 
-	const unregisterModels = async (store, modelIds: string[]) => {
-		const storeIndex = models.value.findIndex(
-			model => model.store === store
+	const unregisterModels = async (modelIds: string[]) => {
+		await modelStore.unregisterModels(
+			modelIds.filter(modelId =>
+				models.value.find(model => modelId === model._id)
+			)
 		);
 
-		if (storeIndex < 0) return;
-
-		const storeModels = models.value[storeIndex].models;
-
-		await store.unregisterModels(
-			storeModels
-				.filter(model => modelIds.includes(model._id))
-				.map(model => model._id)
-		);
-
-		models.value[storeIndex].modelIds = storeModels.filter(
+		models.value = models.value.filter(
 			model => !modelIds.includes(model._id)
 		);
 	};
 
 	onBeforeUnmount(async () => {
 		await Promise.all(
-			Object.entries(subscriptions.value).map(
-				async ([type, _subscriptions]) =>
+			Object.entries(subscriptions.value).map(async ([type, uuids]) =>
+				Object.entries(uuids).map(async ([modelName, _subscriptions]) =>
 					Promise.all(
-						_subscriptions.map(({ store, uuid }) =>
-							removeCallback(store, type, uuid)
+						_subscriptions.map(uuid =>
+							removeCallback(modelName, type, uuid)
 						)
 					)
-			)
-		);
-		await Promise.all(
-			models.value.map(({ store, models: storeModels }) =>
-				unregisterModels(
-					store,
-					storeModels.map(model => model._id)
 				)
 			)
 		);
+		await unregisterModels(models.value.map(model => model._id));
 	});
 
 	return {

@@ -3,9 +3,9 @@ import { defineAsyncComponent, onMounted, ref } from "vue";
 import { formatDistance } from "date-fns";
 import { marked } from "marked";
 import dompurify from "dompurify";
-import { useNewsModelStore } from "@/stores/models/news";
 import { useModels } from "@/composables/useModels";
 import { useModalsStore } from "@/stores/modals";
+import { useWebsocketStore } from "@/stores/websocket";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const UserLink = defineAsyncComponent(
@@ -16,9 +16,9 @@ defineProps({
 	modalUuid: { type: String, required: true }
 });
 
-const { registerModels, onDeleted } = useModels();
+const { runJob } = useWebsocketStore();
 
-const newsStore = useNewsModelStore();
+const { registerModels, onDeleted } = useModels();
 
 const { closeCurrentModal } = useModalsStore();
 
@@ -29,7 +29,10 @@ onMounted(async () => {
 
 	const newUser = !firstVisited;
 
-	const [model] = await newsStore.newest(newUser, 1);
+	const [model] = await runJob("data.news.newest", {
+		showToNewUsers: newUser,
+		limit: 1
+	});
 
 	if (model && newUser) {
 		firstVisited = Date.now().toString();
@@ -48,11 +51,11 @@ onMounted(async () => {
 
 	localStorage.setItem("whatIsNew", Date.parse(model.createdAt).toString());
 
-	const [_model] = await registerModels(newsStore, model);
+	const [_model] = await registerModels("news", model);
 
 	news.value = _model;
 
-	await onDeleted(newsStore, ({ oldDoc }) => {
+	await onDeleted("news", ({ oldDoc }) => {
 		if (oldDoc._id === news.value?._id) closeCurrentModal(true);
 	});
 

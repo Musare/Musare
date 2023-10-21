@@ -24,6 +24,7 @@ import {
 	TableBulkActions
 } from "@/types/advancedTable";
 import { useEvents } from "@/composables/useEvents";
+import Model from "@/Model";
 
 const { dragBox, setInitialBox, onDragBox, resetBoxPosition } = useDragBox();
 
@@ -213,29 +214,19 @@ const hasCheckboxes = computed(
 const aModalIsOpen = computed(() => Object.keys(activeModals.value).length > 0);
 
 const onUpdatedCallback = ({ doc }) => {
-	const docRow = rows.value.find(_row => _row._id === doc._id);
 	const docRowIndex = rows.value.findIndex(_row => _row._id === doc._id);
 
-	if (!docRow) return;
+	if (docRowIndex === -1) return;
 
-	rows.value[docRowIndex] = {
-		...docRow,
-		...doc,
-		updated: true
-	};
+	Object.assign(rows.value[docRowIndex], doc, { updated: true });
 };
 
 const onDeletedCallback = ({ oldDoc }) => {
-	const docRow = rows.value.find(_row => _row._id === oldDoc._id);
 	const docRowIndex = rows.value.findIndex(_row => _row._id === oldDoc._id);
 
-	if (!docRow) return;
+	if (docRowIndex === -1) return;
 
-	rows.value[docRowIndex] = {
-		...docRow,
-		selected: false,
-		removed: true
-	};
+	Object.assign(rows.value[docRowIndex], { selected: false, removed: true });
 };
 
 const unsubscribe = async (_subscriptions?) => {
@@ -312,10 +303,13 @@ const getData = async () => {
 		operator: appliedFilterOperator.value
 	});
 
-	rows.value = data.data.map(row => ({
-		...row,
-		selected: false
-	}));
+	rows.value = data.data.map(
+		row =>
+			new Model(props.model, {
+				...row,
+				selected: false
+			})
+	);
 	count.value = data.count;
 
 	return subscribe();

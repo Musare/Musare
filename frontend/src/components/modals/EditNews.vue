@@ -5,10 +5,11 @@ import DOMPurify from "dompurify";
 import Toast from "toasters";
 import { formatDistance } from "date-fns";
 import { useModalsStore } from "@/stores/modals";
-import { useNewsModelStore } from "@/stores/models/news";
 import { useForm } from "@/composables/useForm";
 import { useEvents } from "@/composables/useEvents";
 import { useModels } from "@/composables/useModels";
+import { useWebsocketStore } from "@/stores/websocket";
+import { useModelStore } from "@/stores/model";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const SaveButton = defineAsyncComponent(
@@ -25,14 +26,15 @@ const props = defineProps({
 	sector: { type: String, default: "admin" }
 });
 
+const { runJob } = useWebsocketStore();
+
+const { findById } = useModelStore();
+
 const { onReady } = useEvents();
 
 const { closeCurrentModal } = useModalsStore();
 
 const { registerModels, onDeleted } = useModels();
-
-const newsStore = useNewsModelStore();
-const { create, findById, updateById, hasPermission } = newsStore;
 
 const createdBy = ref();
 const createdAt = ref(0);
@@ -83,8 +85,8 @@ const { inputs, save, setModelValues } = useForm(
 			};
 
 			const method = props.createNews
-				? create(query)
-				: updateById(props.newsId, query);
+				? runJob(`data.news.create`, { query })
+				: runJob(`data.news.updateById`, { _id: props.newsId, query });
 			method.then(resolve).catch(reject);
 		} else {
 			if (status === "unchanged") new Toast(messages.unchanged);
@@ -114,32 +116,27 @@ onMounted(async () => {
 
 	await onReady(async () => {
 		if (props.newsId && !props.createNews) {
-			const data = await findById(props.newsId).catch(() => {
+			const data = await findById("news", props.newsId).catch(() => {
 				new Toast("News with that ID not found.");
 				closeCurrentModal();
 			});
 
 			if (!data) return;
 
-			const [model] = await registerModels(newsStore, data);
+			const [model] = await registerModels("news", data);
 
 			setModelValues(model, ["markdown", "status", "showToNewUsers"]);
 
 			createdBy.value = model.createdBy;
 			createdAt.value = model.createdAt;
 
-			await onDeleted(newsStore, ({ oldDoc }) => {
+			await onDeleted("news", ({ oldDoc }) => {
 				if (oldDoc._id !== props.newsId) return;
 
 				new Toast("News item has been deleted.");
 				closeCurrentModal();
 			});
 		}
-
-		console.log(
-			43534543,
-			await hasPermission("data.news.published", props.newsId)
-		);
 	});
 });
 </script>

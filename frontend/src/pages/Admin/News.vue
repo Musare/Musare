@@ -3,7 +3,7 @@ import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
 import { useModalsStore } from "@/stores/modals";
 import { TableColumn, TableFilter } from "@/types/advancedTable";
-import { useNewsModelStore } from "@/stores/models/news";
+import { useModelStore } from "@/stores/model";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -109,10 +109,10 @@ const filters = ref<TableFilter[]>([
 
 const { openModal } = useModalsStore();
 
-const { deleteById, hasPermission } = useNewsModelStore();
+const { hasPermission } = useModelStore();
 
-const remove = async (_id: string) => {
-	const res = await deleteById(_id);
+const remove = async item => {
+	const res = await item.delete();
 	new Toast(res.message);
 };
 </script>
@@ -127,7 +127,7 @@ const remove = async (_id: string) => {
 			</div>
 			<div class="button-row">
 				<button
-					v-if="hasPermission('data.news.create')"
+					v-if="hasPermission('news', 'data.news.create')"
 					class="is-primary button"
 					@click="
 						openModal({
@@ -151,10 +151,7 @@ const remove = async (_id: string) => {
 				<div class="row-options">
 					<button
 						v-if="
-							hasPermission(
-								'data.news.updateById',
-								slotProps.item._id
-							)
+							slotProps.item.hasPermission('data.news.updateById')
 						"
 						class="button is-primary icon-with-button material-icons"
 						@click="
@@ -170,12 +167,9 @@ const remove = async (_id: string) => {
 					</button>
 					<quick-confirm
 						v-if="
-							hasPermission(
-								'data.news.deleteById',
-								slotProps.item._id
-							)
+							slotProps.item.hasPermission('data.news.deleteById')
 						"
-						@confirm="remove(slotProps.item._id)"
+						@confirm="remove(slotProps.item)"
 						:disabled="slotProps.item.removed"
 					>
 						<button

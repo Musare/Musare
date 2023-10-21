@@ -11,9 +11,9 @@ import {
 	NewsRemovedResponse
 } from "@musare_types/events/NewsEvents";
 import { GetPublishedNewsResponse } from "@musare_types/actions/NewsActions";
-import { useNewsModelStore } from "@/stores/models/news";
 import { useEvents } from "@/composables/useEvents";
 import { useModels } from "@/composables/useModels";
+import { useWebsocketStore } from "@/stores/websocket";
 
 const MainHeader = defineAsyncComponent(
 	() => import("@/components/MainHeader.vue")
@@ -25,9 +25,9 @@ const UserLink = defineAsyncComponent(
 	() => import("@/components/UserLink.vue")
 );
 
+const { runJob } = useWebsocketStore();
 const { onReady } = useEvents();
-const { registerModels, onCreated, onDeleted } = useModels();
-const newsStore = useNewsModelStore();
+const { registerModels, onCreated, onDeleted, subscriptions } = useModels();
 
 const news = ref<NewsModel[]>([]);
 
@@ -46,15 +46,18 @@ onMounted(async () => {
 	});
 
 	await onReady(async () => {
-		news.value = await registerModels(newsStore, await newsStore.newest());
+		news.value = await registerModels(
+			"news",
+			await runJob("data.news.newest", {})
+		);
 	});
 
-	await onCreated(newsStore, async ({ doc }) => {
-		const [newDoc] = await registerModels(newsStore, [doc]);
+	await onCreated("news", async ({ doc }) => {
+		const [newDoc] = await registerModels("news", [doc]);
 		news.value.unshift(newDoc);
 	});
 
-	await onDeleted(newsStore, async ({ oldDoc }) => {
+	await onDeleted("news", async ({ oldDoc }) => {
 		const index = news.value.findIndex(doc => doc._id === oldDoc._id);
 
 		if (index < 0) return;
