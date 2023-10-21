@@ -52,7 +52,7 @@ export default class LogBook {
 			console: {
 				timestamp: true,
 				title: true,
-				type: false,
+				type: true,
 				message: true,
 				data: false,
 				color: true,
@@ -190,49 +190,55 @@ export default class LogBook {
 	 * @returns Formatted log string
 	 */
 	private _formatMessage(log: Log, title: string | undefined): string {
-		let message = "";
-
-		// If we want to show colors, prepend the color code
-		if (this._outputs.console.color)
-			switch (log.type) {
-				case "success":
-					message += COLOR_GREEN;
-					break;
-				case "error":
-					message += COLOR_RED;
-					break;
-				case "debug":
-					message += COLOR_YELLOW;
-					break;
-				case "info":
-				default:
-					message += COLOR_CYAN;
-					break;
-			}
+		const messageParts = [];
 
 		// If we want to show timestamps, e.g. 2022-11-28T18:13:28.081Z
 		if (this._outputs.console.timestamp)
-			message += `| ${new Date(log.timestamp).toISOString()} `;
+			messageParts.push(`${new Date(log.timestamp).toISOString()}`);
 
-		// If we want to show titles, show it centered and capped at 20 characters
-		if (this._outputs.console.title)
-			message += `| ${this._centerString(
-				title ? title.substring(0, 20) : "",
-				24
-			)} `;
-
-		// If we want to show the log type, show it centered, in uppercase
+		// If we want to show the log type, in uppercase
 		if (this._outputs.console.type)
-			message += `| ${this._centerString(
-				log.type ? log.type.toUpperCase() : "INFO",
-				10
-			)} `;
+			messageParts.push(
+				`[${log.type ? log.type.toUpperCase() : "INFO"}]`
+			);
+
+		// If we want to show titles, show it
+		if (this._outputs.console.title && title)
+			messageParts.push(`[${title}]`);
 
 		// If we want to the message, show it
-		if (this._outputs.console.message) message += `| ${log.message} `;
+		if (this._outputs.console.message) messageParts.push(log.message);
 
-		// Reset the color at the end of the message, if we have colors enabled
-		if (this._outputs.console.color) message += COLOR_RESET;
+		const message = messageParts.join(" ");
+
+		// If we want to show colors, prepend the color code
+		if (this._outputs.console.color) {
+			let coloredMessage = "";
+
+			switch (log.type) {
+				case "success":
+					coloredMessage += COLOR_GREEN;
+					break;
+				case "error":
+					coloredMessage += COLOR_RED;
+					break;
+				case "debug":
+					coloredMessage += COLOR_YELLOW;
+					break;
+				case "info":
+				default:
+					coloredMessage += COLOR_CYAN;
+					break;
+			}
+
+			coloredMessage += message;
+
+			// Reset the color at the end of the message
+			coloredMessage += COLOR_RESET;
+
+			return coloredMessage;
+		}
+
 		return message;
 	}
 

@@ -191,7 +191,8 @@ export default class Job {
 				.catch((err: any) => {
 					this.log({
 						message: `Job failed with error "${err}"`,
-						type: "error"
+						type: "error",
+						data: { error: err }
 					});
 					this._jobStatistics.updateStats(this.getName(), "failed");
 					throw err;
