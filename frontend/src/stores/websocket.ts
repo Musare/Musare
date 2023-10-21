@@ -51,14 +51,17 @@ export const useWebsocketStore = defineStore("websocket", () => {
 	};
 
 	const unsubscribe = async (channel: string, uuid: string) => {
-		if (!socketChannels.includes(channel))
-			await runJob("api.unsubscribe", { channel });
-
 		if (
 			!subscriptions.value[channel] ||
 			!subscriptions.value[channel][uuid]
 		)
 			return;
+
+		if (
+			!socketChannels.includes(channel) &&
+			Object.keys(subscriptions.value[channel]).length <= 1
+		)
+			await runJob("api.unsubscribe", { channel });
 
 		delete subscriptions.value[channel][uuid];
 
