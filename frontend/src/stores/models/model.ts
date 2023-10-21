@@ -6,6 +6,7 @@ export const createModelStore = modelName => {
 	const { runJob, subscribe, unsubscribe } = useWebsocketStore();
 
 	const models = ref([]);
+	const modelUses = ref({});
 	const permissions = ref(null);
 	const modelPermissions = ref({});
 	const createdSubcription = ref(null);
@@ -150,6 +151,9 @@ export const createModelStore = modelName => {
 					models.value.push(docRef);
 				}
 
+				modelUses.value[_doc._id] =
+					(modelUses.value[_doc._id] ?? 0) + 1;
+
 				if (subscriptions.value.models[_doc._id]) return docRef;
 
 				const updatedChannel = `model.${modelName}.updated.${_doc._id}`;
@@ -194,6 +198,12 @@ export const createModelStore = modelName => {
 					)
 						return;
 
+					if (modelUses.value[modelId] > 1) {
+						modelUses.value[modelId] -= 1;
+
+						return;
+					}
+
 					const { updated, deleted } =
 						subscriptions.value.models[modelId];
 
@@ -210,6 +220,9 @@ export const createModelStore = modelName => {
 
 					if (modelPermissions.value[modelId])
 						delete modelPermissions.value[modelId];
+
+					if (modelUses.value[modelId])
+						delete modelUses.value[modelId];
 				}
 			)
 		);
@@ -221,9 +234,7 @@ export const createModelStore = modelName => {
 
 		if (existingModel) return existingModel;
 
-		const [model] = await runJob(`data.${modelName}.findById`, { _id });
-
-		return model;
+		return runJob(`data.${modelName}.findById`, { _id });
 	};
 
 	const updateById = async (_id, query) =>
