@@ -200,6 +200,22 @@ export default abstract class BaseModule {
 	}
 
 	/**
+	 * canRunJobs - Determine if module can run jobs
+	 */
+	public canRunJobs() {
+		return this.getDependentModules().reduce(
+			(canRunJobs: boolean, moduleName: keyof Modules): boolean => {
+				if (canRunJobs === false) return false;
+
+				return !!this._moduleManager
+					.getModule(moduleName)
+					?.canRunJobs();
+			},
+			this.getStatus() === ModuleStatus.STARTED
+		);
+	}
+
+	/**
 	 * startup - Startup module
 	 */
 	public async startup() {

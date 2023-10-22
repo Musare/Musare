@@ -170,8 +170,13 @@ export default class Job {
 	 */
 	public async execute() {
 		if (this._startedAt) throw new Error("Job has already been executed.");
+
+		if (!this.getModule().canRunJobs())
+			throw new Error("Module can not currently run jobs.");
+
 		this._setStatus(JobStatus.ACTIVE);
 		this._startedAt = performance.now();
+
 		return (
 			this._jobFunction
 				.apply(this._module, [this._context, this._payload])

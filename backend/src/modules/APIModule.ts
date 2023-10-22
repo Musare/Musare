@@ -19,7 +19,7 @@ export default class APIModule extends BaseModule {
 	public constructor() {
 		super("api");
 
-		this._dependentModules = ["data", "events", "websocket"];
+		this._dependentModules = ["cache", "data", "events", "websocket"];
 
 		this._subscriptions = {};
 

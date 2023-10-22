@@ -1,4 +1,4 @@
-import BaseModule, { ModuleStatus } from "@/BaseModule";
+import BaseModule from "@/BaseModule";
 import Job, { JobStatus } from "@/Job";
 import { JobOptions } from "@/types/JobOptions";
 import { Jobs, Modules } from "@/types/Modules";
@@ -170,7 +170,7 @@ export default class JobQueue {
 
 			// If the module of the job is not started, we can't run the job, so go to the next job in the queue
 			// eslint-disable-next-line no-continue
-			if (job.getModule().getStatus() !== ModuleStatus.STARTED) continue;
+			if (!job.getModule().canRunJobs()) continue;
 
 			// Remove the job from the queue and add it to the active jobs array
 			this._queue.splice(this._queue.indexOf(job), 1);
