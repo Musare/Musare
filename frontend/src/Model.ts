@@ -1,6 +1,5 @@
+import { useModelStore } from "./stores/model";
 import { useWebsocketStore } from "./stores/websocket";
-
-const { runJob } = useWebsocketStore();
 
 export default class Model {
 	private _name: string;
@@ -18,12 +17,49 @@ export default class Model {
 		Object.assign(this, data);
 	}
 
+	public async loadRelations(): Promise<void> {
+		if (!this._relations) return;
+
+		const { findById, registerModels } = useModelStore();
+
+		await Promise.all(
+			Object.entries(this._relations).map(
+				async ([key, { model: modelName }]) => {
+					const data = await findById(modelName, this[key]);
+
+					const [model] = await registerModels(modelName, data);
+
+					this[key] = model;
+				}
+			)
+		);
+	}
+
+	public async unloadRelations(): Promise<void> {
+		if (!this._relations) return;
+
+		const { unregisterModels } = useModelStore();
+
+		const relationIds = Object.fromEntries(
+			Object.entries(this._relations).map(([key, value]) => [
+				this[key]._id,
+				value
+			])
+		);
+
+		await unregisterModels(Object.values(relationIds));
+
+		Object.apply(this, relationIds);
+	}
+
 	public getName(): string {
 		return this._name;
 	}
 
 	public async getPermissions(refresh = false): Promise<object> {
 		if (refresh === false && this._permissions) return this._permissions;
+
+		const { runJob } = useWebsocketStore();
 
 		this._permissions = await runJob("api.getUserModelPermissions", {
 			modelName: this._name,
@@ -74,6 +110,8 @@ export default class Model {
 	}
 
 	public async update(query: object) {
+		const { runJob } = useWebsocketStore();
+
 		return runJob(`data.${this.getName()}.updateById`, {
 			_id: this._id,
 			query
@@ -81,6 +119,8 @@ export default class Model {
 	}
 
 	public async delete() {
+		const { runJob } = useWebsocketStore();
+
 		return runJob(`data.${this.getName()}.deleteById`, { _id: this._id });
 	}
 }

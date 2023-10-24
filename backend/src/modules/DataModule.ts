@@ -6,6 +6,7 @@ import mongoose, {
 	MongooseDefaultQueryMiddleware,
 	MongooseDistinctQueryMiddleware,
 	MongooseQueryOrDocumentMiddleware,
+	SchemaTypes,
 	Types
 } from "mongoose";
 import { patchHistoryPlugin, patchEventEmitter } from "ts-patch-mongoose";
@@ -374,6 +375,23 @@ export default class DataModule extends BaseModule {
 		if (getDataEnabled) schema.plugin(getDataPlugin);
 
 		await this._registerEvents(modelName, schema);
+
+		schema.set("toObject", { virtuals: true });
+		schema.set("toJSON", { virtuals: true });
+
+		const relations = Object.fromEntries(
+			Object.entries(schema.paths)
+				.filter(([, type]) => type instanceof SchemaTypes.ObjectId)
+				.map(([key, type]) => [
+					key,
+					{
+						model: type.options.ref
+					}
+				])
+		);
+
+		if (Object.keys(relations).length > 0)
+			schema.virtual("_relations").get(() => relations);
 
 		return this._mongoConnection.model(modelName.toString(), schema);
 	}

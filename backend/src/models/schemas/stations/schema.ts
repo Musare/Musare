@@ -82,9 +82,10 @@ export const schema = new Schema<StationSchema, StationModel>(
 		},
 		owner: {
 			type: SchemaTypes.ObjectId,
+			ref: "users",
 			required: false
 		},
-		djs: [{ type: SchemaTypes.ObjectId }],
+		djs: [{ type: SchemaTypes.ObjectId, ref: "users" }],
 		currentSong: {
 			type: SchemaTypes.ObjectId,
 			required: false

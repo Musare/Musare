@@ -155,6 +155,8 @@ export const useModelStore = defineStore("model", () => {
 
 				if (existingRef) return docRef;
 
+				await docRef.loadRelations();
+
 				models.value.push(docRef);
 
 				const updatedUuid = await subscribe(
@@ -186,6 +188,8 @@ export const useModelStore = defineStore("model", () => {
 
 						return;
 					}
+
+					await model.unloadRelations();
 
 					const { updated, deleted } = model.getSubscriptions() ?? {};
 

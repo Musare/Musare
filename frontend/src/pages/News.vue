@@ -21,9 +21,6 @@ const MainHeader = defineAsyncComponent(
 const MainFooter = defineAsyncComponent(
 	() => import("@/components/MainFooter.vue")
 );
-const UserLink = defineAsyncComponent(
-	() => import("@/components/UserLink.vue")
-);
 
 const { runJob } = useWebsocketStore();
 const { onReady } = useEvents();
@@ -82,13 +79,14 @@ onMounted(async () => {
 					<div v-html="sanitize(marked(item.markdown))"></div>
 					<div class="info">
 						<hr />
-						By
-						<user-link
-							:user-id="item.createdBy"
-							:alt="item.createdBy"
-						/>&nbsp;<span
-							:title="new Date(item.createdAt).toString()"
+						By&nbsp;
+						<router-link
+							:to="{ path: `/u/${item.createdBy.username}` }"
+							:title="item.createdBy._id"
 						>
+							{{ item.createdBy.name }} </router-link
+						>&nbsp;
+						<span :title="new Date(item.createdAt).toString()">
 							{{
 								formatDistance(
 									new Date(item.createdAt),

@@ -80,6 +80,7 @@ export const schema = new Schema<NewsSchema, NewsModel, {}, NewsQueryHelpers>(
 		},
 		createdBy: {
 			type: SchemaTypes.ObjectId,
+			ref: "users",
 			required: true
 		}
 	},

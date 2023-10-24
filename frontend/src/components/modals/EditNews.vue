@@ -15,9 +15,6 @@ const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const SaveButton = defineAsyncComponent(
 	() => import("@/components/SaveButton.vue")
 );
-const UserLink = defineAsyncComponent(
-	() => import("@/components/UserLink.vue")
-);
 
 const props = defineProps({
 	modalUuid: { type: String, required: true },
@@ -201,11 +198,13 @@ onMounted(async () => {
 				/>
 				<div class="right" v-if="createdAt > 0">
 					<span>
-						By
-						<user-link
-							:user-id="createdBy"
-							:alt="createdBy"
-						/> </span
+						By&nbsp;
+						<router-link
+							:to="{ path: `/u/${createdBy.username}` }"
+							:title="createdBy._id"
+						>
+							{{ createdBy.name }}
+						</router-link></span
 					>&nbsp;<span :title="new Date(createdAt).toString()">
 						{{
 							formatDistance(createdAt, new Date(), {

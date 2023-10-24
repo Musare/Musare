@@ -8,9 +8,6 @@ import { useModalsStore } from "@/stores/modals";
 import { useWebsocketStore } from "@/stores/websocket";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
-const UserLink = defineAsyncComponent(
-	() => import("@/components/UserLink.vue")
-);
 
 defineProps({
 	modalUuid: { type: String, required: true }
@@ -84,11 +81,15 @@ const { sanitize } = dompurify;
 		</template>
 		<template #footer>
 			<span v-if="news.createdBy">
-				By
-				<user-link
-					:user-id="news.createdBy"
-					:alt="news.createdBy" /></span
-			>&nbsp;<span :title="new Date(news.createdAt).toString()">
+				By&nbsp;
+				<router-link
+					:to="{ path: `/u/${news.createdBy.username}` }"
+					:title="news.createdBy._id"
+				>
+					{{ news.createdBy.name }}
+				</router-link> </span
+			>&nbsp;
+			<span :title="new Date(news.createdAt).toString()">
 				{{
 					formatDistance(new Date(news.createdAt), new Date(), {
 						addSuffix: true
