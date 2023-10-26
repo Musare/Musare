@@ -75,10 +75,8 @@ export const useModelStore = defineStore("model", () => {
 	};
 
 	const onUpdatedCallback = async (modelName: string, { doc }) => {
-		const index = models.value.findIndex(model => model._id === doc._id);
-		if (index > -1) Object.assign(models.value[index], doc);
-
-		models.value[index].refreshPermissions();
+		const model = models.value.find(model => model._id === doc._id);
+		if (model) model.updateData(doc);
 
 		if (!subscriptions.value.updated[modelName]) return;
 
@@ -141,15 +139,14 @@ export const useModelStore = defineStore("model", () => {
 		}
 	};
 
-	const registerModels = async (modelName: string, docs) =>
+	const registerModels = async docs =>
 		Promise.all(
 			(Array.isArray(docs) ? docs : [docs]).map(async _doc => {
 				const existingRef = models.value.find(
 					model => model._id === _doc._id
 				);
 
-				const docRef =
-					existingRef ?? reactive(new Model(modelName, _doc));
+				const docRef = existingRef ?? reactive(new Model(_doc));
 
 				docRef.addUse();
 
@@ -160,13 +157,13 @@ export const useModelStore = defineStore("model", () => {
 				models.value.push(docRef);
 
 				const updatedUuid = await subscribe(
-					`model.${modelName}.updated.${_doc._id}`,
-					data => onUpdatedCallback(modelName, data)
+					`model.${docRef._name}.updated.${_doc._id}`,
+					data => onUpdatedCallback(docRef._name, data)
 				);
 
 				const deletedUuid = await subscribe(
-					`model.${modelName}.deleted.${_doc._id}`,
-					data => onDeletedCallback(modelName, data)
+					`model.${docRef._name}.deleted.${_doc._id}`,
+					data => onDeletedCallback(docRef._name, data)
 				);
 
 				docRef.setSubscriptions(updatedUuid, deletedUuid);
@@ -184,12 +181,12 @@ export const useModelStore = defineStore("model", () => {
 					);
 
 					if (!model || model.getUses() > 1) {
-						model.removeUse();
+						model?.removeUse();
 
 						return;
 					}
 
-					await model.unloadRelations();
+					await model.unregisterRelations();
 
 					const { updated, deleted } = model.getSubscriptions() ?? {};
 

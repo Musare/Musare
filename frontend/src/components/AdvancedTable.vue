@@ -214,19 +214,15 @@ const hasCheckboxes = computed(
 const aModalIsOpen = computed(() => Object.keys(activeModals.value).length > 0);
 
 const onUpdatedCallback = ({ doc }) => {
-	const docRowIndex = rows.value.findIndex(_row => _row._id === doc._id);
+	const docRow = rows.value.find(_row => _row._id === doc._id);
 
-	if (docRowIndex === -1) return;
-
-	Object.assign(rows.value[docRowIndex], doc, { updated: true });
+	if (docRow) docRow.updateData({ ...doc, updated: true });
 };
 
 const onDeletedCallback = ({ oldDoc }) => {
-	const docRowIndex = rows.value.findIndex(_row => _row._id === oldDoc._id);
+	const docRow = rows.value.find(_row => _row._id === oldDoc._id);
 
-	if (docRowIndex === -1) return;
-
-	Object.assign(rows.value[docRowIndex], { selected: false, removed: true });
+	Object.assign(docRow, { selected: false, removed: true });
 };
 
 const unsubscribe = async (_subscriptions?) => {
@@ -305,7 +301,7 @@ const getData = async () => {
 
 	rows.value = data.data.map(
 		row =>
-			new Model(props.model, {
+			new Model({
 				...row,
 				selected: false
 			})

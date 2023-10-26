@@ -376,22 +376,50 @@ export default class DataModule extends BaseModule {
 
 		await this._registerEvents(modelName, schema);
 
-		schema.set("toObject", { virtuals: true });
-		schema.set("toJSON", { virtuals: true });
+		schema.set("toObject", { getters: true, virtuals: true });
+		schema.set("toJSON", { getters: true, virtuals: true });
 
-		const relations = Object.fromEntries(
+		schema.virtual("_name").get(() => modelName);
+
+		await Promise.all(
 			Object.entries(schema.paths)
-				.filter(([, type]) => type instanceof SchemaTypes.ObjectId)
-				.map(([key, type]) => [
-					key,
-					{
-						model: type.options.ref
-					}
-				])
-		);
+				.filter(
+					([, type]) =>
+						type instanceof SchemaTypes.ObjectId ||
+						(type instanceof SchemaTypes.Array &&
+							type.caster instanceof SchemaTypes.ObjectId)
+				)
+				.map(async ([key, type]) => {
+					const { ref } =
+						(type instanceof SchemaTypes.ObjectId
+							? type?.options
+							: type.caster?.options) ?? {};
 
-		if (Object.keys(relations).length > 0)
-			schema.virtual("_relations").get(() => relations);
+					if (ref)
+						schema.path(key).get(value => {
+							if (value && type instanceof SchemaTypes.ObjectId)
+								return {
+									_id: value,
+									_name: ref
+								};
+
+							if (
+								Array.isArray(value) &&
+								type instanceof SchemaTypes.Array
+							)
+								return value.map(item =>
+									item === null
+										? null
+										: {
+												_id: value,
+												_name: ref
+										  }
+								);
+
+							return value;
+						});
+				})
+		);
 
 		return this._mongoConnection.model(modelName.toString(), schema);
 	}

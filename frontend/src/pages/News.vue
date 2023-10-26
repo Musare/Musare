@@ -43,14 +43,11 @@ onMounted(async () => {
 	});
 
 	await onReady(async () => {
-		news.value = await registerModels(
-			"news",
-			await runJob("data.news.newest", {})
-		);
+		news.value = await registerModels(await runJob("data.news.newest", {}));
 	});
 
 	await onCreated("news", async ({ doc }) => {
-		const [newDoc] = await registerModels("news", [doc]);
+		const [newDoc] = await registerModels(doc);
 		news.value.unshift(newDoc);
 	});
 

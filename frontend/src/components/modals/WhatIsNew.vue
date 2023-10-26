@@ -48,7 +48,7 @@ onMounted(async () => {
 
 	localStorage.setItem("whatIsNew", Date.parse(model.createdAt).toString());
 
-	const [_model] = await registerModels("news", model);
+	const [_model] = await registerModels(model);
 
 	news.value = _model;
 

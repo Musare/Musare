@@ -10,6 +10,7 @@ export const useModels = () => {
 		updated: {},
 		deleted: {}
 	});
+	const deletedSubscriptions = ref({});
 
 	const onCreated = async (
 		modelName: string,
@@ -19,6 +20,8 @@ export const useModels = () => {
 
 		subscriptions.value.created[modelName] ??= [];
 		subscriptions.value.created[modelName].push(uuid);
+
+		return uuid;
 	};
 
 	const onUpdated = async (
@@ -29,6 +32,8 @@ export const useModels = () => {
 
 		subscriptions.value.updated[modelName] ??= [];
 		subscriptions.value.updated[modelName].push(uuid);
+
+		return uuid;
 	};
 
 	const onDeleted = async (
@@ -39,6 +44,8 @@ export const useModels = () => {
 
 		subscriptions.value.deleted[modelName] ??= [];
 		subscriptions.value.deleted[modelName].push(uuid);
+
+		return uuid;
 	};
 
 	const removeCallback = async (
@@ -59,25 +66,33 @@ export const useModels = () => {
 		delete subscriptions.value[type][modelName][uuid];
 	};
 
-	const registerModels = async (modelName: string, storeModels: any[]) => {
-		const registeredModels = await modelStore.registerModels(
-			modelName,
-			storeModels
-		);
+	const registerModels = async (storeModels: any[]) => {
+		const registeredModels = await modelStore.registerModels(storeModels);
 
 		models.value.push(...registeredModels);
 
-		await onDeleted(modelName, ({ oldDoc }) => {
-			if (!models.value[modelName]) return;
+		await Promise.all(
+			registeredModels
+				.filter(
+					(model, index) =>
+						!deletedSubscriptions.value[model._name] &&
+						registeredModels.findIndex(
+							storeModel => storeModel._name === model._name
+						) === index
+				)
+				.map(async registeredModel => {
+					deletedSubscriptions.value[registeredModel._name] =
+						await onDeleted(registeredModel._name, ({ oldDoc }) => {
+							const modelIndex = models.value.findIndex(
+								model => model._id === oldDoc._id
+							);
 
-			const modelIndex = models.value[modelName].findIndex(
-				model => model._id === oldDoc._id
-			);
+							if (modelIndex < 0) return;
 
-			if (modelIndex < 0) return;
-
-			delete models.value[modelName][modelIndex];
-		});
+							delete models.value[modelIndex];
+						});
+				})
+		);
 
 		return registeredModels;
 	};
@@ -112,6 +127,7 @@ export const useModels = () => {
 	return {
 		models,
 		subscriptions,
+		deletedSubscriptions,
 		onCreated,
 		onUpdated,
 		onDeleted,
