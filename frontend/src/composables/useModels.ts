@@ -66,8 +66,14 @@ export const useModels = () => {
 		delete subscriptions.value[type][modelName][uuid];
 	};
 
-	const registerModels = async (storeModels: any[]) => {
-		const registeredModels = await modelStore.registerModels(storeModels);
+	const registerModels = async (
+		storeModels: any[],
+		relations?: Record<string, string | string[]>
+	) => {
+		const registeredModels = await modelStore.registerModels(
+			storeModels,
+			relations
+		);
 
 		models.value.push(...registeredModels);
 

@@ -43,7 +43,10 @@ onMounted(async () => {
 	});
 
 	await onReady(async () => {
-		news.value = await registerModels(await runJob("data.news.newest", {}));
+		news.value = await registerModels(
+			await runJob("data.news.newest", {}),
+			{ news: "createdBy" }
+		);
 	});
 
 	await onCreated("news", async ({ doc }) => {

@@ -139,7 +139,10 @@ export const useModelStore = defineStore("model", () => {
 		}
 	};
 
-	const registerModels = async docs =>
+	const registerModels = async (
+		docs,
+		relations?: Record<string, string | string[]>
+	) =>
 		Promise.all(
 			(Array.isArray(docs) ? docs : [docs]).map(async _doc => {
 				const existingRef = models.value.find(
@@ -152,7 +155,8 @@ export const useModelStore = defineStore("model", () => {
 
 				if (existingRef) return docRef;
 
-				await docRef.loadRelations();
+				if (relations && relations[docRef._name])
+					await docRef.loadRelations(relations[docRef._name]);
 
 				models.value.push(docRef);
 

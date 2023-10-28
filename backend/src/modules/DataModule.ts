@@ -322,6 +322,12 @@ export default class DataModule extends BaseModule {
 				patchEventEmitter.on(event, async ({ doc, oldDoc }) => {
 					const modelId = doc?._id ?? oldDoc?._id;
 
+					const Model = await this.getModel(null, modelName);
+
+					if (doc) doc = Model.hydrate(doc);
+
+					if (oldDoc) oldDoc = Model.hydrate(oldDoc);
+
 					if (!modelId && action !== "created")
 						throw new Error(`Model Id not found for "${event}"`);
 
@@ -397,7 +403,10 @@ export default class DataModule extends BaseModule {
 
 					if (ref)
 						schema.path(key).get(value => {
-							if (value && type instanceof SchemaTypes.ObjectId)
+							if (
+								typeof value === "object" &&
+								type instanceof SchemaTypes.ObjectId
+							)
 								return {
 									_id: value,
 									_name: ref
@@ -411,7 +420,7 @@ export default class DataModule extends BaseModule {
 									item === null
 										? null
 										: {
-												_id: value,
+												_id: item,
 												_name: ref
 										  }
 								);
@@ -458,7 +467,7 @@ export default class DataModule extends BaseModule {
 	 * @returns Model
 	 */
 	public async getModel<ModelName extends keyof Models>(
-		jobContext: JobContext,
+		jobContext?: JobContext,
 		payload: ModelName | { name: ModelName }
 	) {
 		if (!this._models) throw new Error("Models not loaded");
