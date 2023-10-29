@@ -20,7 +20,7 @@ export default abstract class BaseModule {
 
 	protected _dependentModules: (keyof Modules)[];
 
-	protected _jobApiDefault: boolean;
+	protected _jobConfigDefault: boolean | "disabled";
 
 	protected _jobConfig: Record<
 		string,
@@ -50,7 +50,7 @@ export default abstract class BaseModule {
 		this._name = name;
 		this._status = ModuleStatus.LOADED;
 		this._dependentModules = [];
-		this._jobApiDefault = true;
+		this._jobConfigDefault = true;
 		this._jobConfig = {};
 		this._jobs = {};
 		this.log(`Module (${this._name}) loaded`);
@@ -111,13 +111,14 @@ export default abstract class BaseModule {
 
 				const options = this._jobConfig[property];
 
-				let api = this._jobApiDefault;
+				let api = this._jobConfigDefault === true;
 				if (
 					typeof options === "object" &&
 					typeof options.api === "boolean"
 				)
 					api = options.api;
 				else if (typeof options === "boolean") api = options;
+				else if (this._jobConfigDefault === "disabled") return;
 
 				this._jobs[property] = {
 					api,
@@ -144,7 +145,7 @@ export default abstract class BaseModule {
 				if (this._jobs[name])
 					throw new Error(`Job "${name}" is already defined`);
 
-				let api = this._jobApiDefault;
+				let api = this._jobConfigDefault === true;
 
 				if (
 					typeof options === "object" &&

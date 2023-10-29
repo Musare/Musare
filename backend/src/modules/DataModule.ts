@@ -540,7 +540,7 @@ export class DataModule extends BaseModule {
 									return;
 								}
 
-								let api = this._jobApiDefault;
+								let api = this._jobConfigDefault === true;
 
 								let method;
 
@@ -558,6 +558,16 @@ export class DataModule extends BaseModule {
 									method = configOptions;
 								else if (typeof configOptions === "boolean")
 									api = configOptions;
+								else if (
+									this._jobConfigDefault === "disabled"
+								) {
+									if (this._jobConfig[`${modelName}.${name}`])
+										delete this._jobConfig[
+											`${modelName}.${name}`
+										];
+
+									return;
+								}
 
 								if (
 									typeof options === "object" &&

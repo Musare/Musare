@@ -24,7 +24,7 @@ export class WebSocketModule extends BaseModule {
 	public constructor() {
 		super("websocket");
 
-		this._jobApiDefault = false;
+		this._jobConfigDefault = false;
 
 		this._jobConfig = {
 			getSocket: "disabled",
