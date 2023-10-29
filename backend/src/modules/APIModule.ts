@@ -12,6 +12,7 @@ import { Models } from "@/types/Models";
 import ModuleManager from "@/ModuleManager";
 import JobQueue from "@/JobQueue";
 import DataModule from "@/modules/DataModule";
+import EventsModule from "./EventsModule";
 
 export class APIModule extends BaseModule {
 	private _subscriptions: Record<string, Set<string>>;
@@ -324,11 +325,9 @@ export class APIModule extends BaseModule {
 		this._subscriptions[channel].add(socketId);
 
 		if (this._subscriptions[channel].size === 1)
-			await context.executeJob("events", "subscribe", {
-				type: "event",
-				channel,
-				callback: value => this._subscriptionCallback(channel, value)
-			});
+			await EventsModule.subscribe("event", channel, value =>
+				this._subscriptionCallback(channel, value)
+			);
 	}
 
 	public async subscribeMany(
@@ -367,11 +366,9 @@ export class APIModule extends BaseModule {
 		this._subscriptions[channel].delete(socketId);
 
 		if (this._subscriptions[channel].size === 0) {
-			await context.executeJob("events", "unsubscribe", {
-				type: "event",
-				channel,
-				callback: value => this._subscriptionCallback(channel, value)
-			});
+			await EventsModule.unsubscribe("event", channel, value =>
+				this._subscriptionCallback(channel, value)
+			);
 
 			delete this._subscriptions[channel];
 		}

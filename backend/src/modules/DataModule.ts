@@ -21,6 +21,7 @@ import { UniqueMethods } from "@/types/Modules";
 import { AnyModel, Models } from "@/types/Models";
 import { Schemas } from "@/types/Schemas";
 import JobQueue from "@/JobQueue";
+import EventsModule from "./EventsModule";
 
 /**
  * Experimental: function to get all nested keys from a MongoDB query object
@@ -334,10 +335,7 @@ export class DataModule extends BaseModule {
 
 					if (action !== "created") channel += `.${modelId}`;
 
-					await JobQueue.runJob("events", "publish", {
-						channel,
-						value: { doc, oldDoc }
-					});
+					await EventsModule.publish(channel, { doc, oldDoc });
 				});
 			});
 	}

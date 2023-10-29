@@ -22,7 +22,7 @@ export class EventsModule extends BaseModule {
 
 		this._subscriptions = {};
 		this._scheduleCallbacks = {};
-		this._jobApiDefault = false;
+		this._jobConfigDefault = "disabled";
 	}
 
 	/**
@@ -154,13 +154,8 @@ export class EventsModule extends BaseModule {
 	/**
 	 * publish - Publish an event
 	 */
-	public async publish(
-		context: JobContext,
-		payload: { channel: string; value: any }
-	) {
+	public async publish(channel: string, value: any) {
 		if (!this._pubClient) throw new Error("Redis pubClient unavailable.");
-
-		let { channel, value } = payload;
 
 		channel = this._createKey("event", channel);
 
@@ -196,19 +191,14 @@ export class EventsModule extends BaseModule {
 	 * subscribe - Subscribe to an event or schedule completion
 	 */
 	public async subscribe(
-		context: JobContext,
-		payload: {
-			type?: "event" | "schedule";
-			channel: string;
-			callback: (message?: any) => Promise<void>;
-			unique?: boolean;
-		}
+		type: "event" | "schedule",
+		channel: string,
+		callback: (message?: any) => Promise<void>,
+		unique = false
 	) {
 		if (!this._subClient) throw new Error("Redis subClient unavailable.");
 
-		const { type = "event", callback, unique = false } = payload;
-
-		const channel = this._createKey(type, payload.channel);
+		channel = this._createKey(type, channel);
 
 		if (type === "schedule") {
 			if (
@@ -248,17 +238,13 @@ export class EventsModule extends BaseModule {
 	 * unsubscribe - Unsubscribe from an event or schedule completion
 	 */
 	public async unsubscribe(
-		context: JobContext,
-		payload: {
-			type?: "event" | "schedule";
-			channel: string;
-			callback: (message?: any) => Promise<void>;
-		}
+		type: "event" | "schedule",
+		channel: string,
+		callback: (message?: any) => Promise<void>
 	) {
 		if (!this._subClient) throw new Error("Redis subClient unavailable.");
 
-		const { type = "event", callback } = payload;
-		const channel = this._createKey(type, payload.channel);
+		channel = this._createKey(type, channel);
 
 		if (type === "schedule") {
 			if (!this._scheduleCallbacks[channel]) return;
@@ -291,16 +277,8 @@ export class EventsModule extends BaseModule {
 	/**
 	 * schedule - Schedule a callback trigger
 	 */
-	public async schedule(
-		context: JobContext,
-		payload: {
-			channel: string;
-			time: number;
-		}
-	) {
+	public async schedule(channel: string, time: number) {
 		if (!this._pubClient) throw new Error("Redis pubClient unavailable.");
-
-		let { time } = payload;
 
 		if (typeof time !== "number") throw new Error("Time must be a number");
 
@@ -308,7 +286,7 @@ export class EventsModule extends BaseModule {
 
 		if (time <= 0) throw new Error("Time must be greater than 0");
 
-		const channel = this._createKey("schedule", payload.channel);
+		channel = this._createKey("schedule", channel);
 
 		await this._pubClient.set(channel, "", { PX: time, NX: true });
 	}
@@ -316,15 +294,10 @@ export class EventsModule extends BaseModule {
 	/**
 	 * unschedule - Unschedule a callback trigger
 	 */
-	public async unschedule(
-		context: JobContext,
-		payload: {
-			channel: string;
-		}
-	) {
+	public async unschedule(channel: string) {
 		if (!this._pubClient) throw new Error("Redis pubClient unavailable.");
 
-		const channel = this._createKey("schedule", payload.channel);
+		channel = this._createKey("schedule", channel);
 
 		await this._pubClient.del(channel);
 	}

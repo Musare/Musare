@@ -5,6 +5,7 @@ import LogBook from "@/LogBook";
 import JobQueue from "@/JobQueue";
 import JobStatistics from "@/JobStatistics";
 import DataModule from "@/modules/DataModule";
+import EventsModule from "./modules/EventsModule";
 
 process.removeAllListeners("uncaughtException");
 process.on("uncaughtException", err => {
@@ -56,29 +57,17 @@ ModuleManager.startup().then(async () => {
 
 	// Events schedule (was notifications)
 	const now = Date.now();
-	await JobQueue.runJob("events", "schedule", {
-		channel: "test",
-		time: 30000
-	});
-	await JobQueue.runJob("events", "subscribe", {
-		channel: "test",
-		type: "schedule",
-		callback: async () => {
-			console.log(`SCHEDULED: ${now} :: ${Date.now()}`);
-		}
+	EventsModule.schedule("test", 30000);
+
+	await EventsModule.subscribe("schedule", "test", async () => {
+		console.log(`SCHEDULED: ${now} :: ${Date.now()}`);
 	});
 
 	// Events (was cache pub/sub)
-	await JobQueue.runJob("events", "subscribe", {
-		channel: "test",
-		callback: async value => {
-			console.log(`PUBLISHED: ${value}`);
-		}
+	await EventsModule.subscribe("event", "test", async value => {
+		console.log(`PUBLISHED: ${value}`);
 	});
-	await JobQueue.runJob("events", "publish", {
-		channel: "test",
-		value: "a value!"
-	});
+	await EventsModule.publish("test", "a value!");
 });
 
 // TOOD remove, or put behind debug option
