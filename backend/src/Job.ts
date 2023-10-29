@@ -1,4 +1,3 @@
-import BaseModule from "@/BaseModule";
 import JobContext from "@/JobContext";
 import JobStatistics from "@/JobStatistics";
 import LogBook, { Log } from "@/LogBook";
@@ -45,10 +44,6 @@ export default class Job {
 
 	private _completedAt?: number;
 
-	private _logBook: LogBook;
-
-	private _jobStatistics: JobStatistics;
-
 	/**
 	 * Job
 	 *
@@ -66,7 +61,7 @@ export default class Job {
 		this._name = name;
 		this._priority = 1;
 
-		const module = ModuleManager.getPrimaryInstance().getModule(moduleName);
+		const module = ModuleManager.getModule(moduleName);
 		if (!module) throw new Error("Module not found.");
 		this._module = module;
 
@@ -74,10 +69,7 @@ export default class Job {
 
 		this._payload = payload;
 
-		this._logBook = LogBook.getPrimaryInstance();
-
-		this._jobStatistics = JobStatistics.getPrimaryInstance();
-		this._jobStatistics.updateStats(this.getName(), "added");
+		JobStatistics.updateStats(this.getName(), "added");
 
 		let contextOptions;
 
@@ -187,10 +179,7 @@ export default class Job {
 						message: "Job completed successfully",
 						type: "success"
 					});
-					this._jobStatistics.updateStats(
-						this.getName(),
-						"successful"
-					);
+					JobStatistics.updateStats(this.getName(), "successful");
 					return response;
 				})
 				.catch((err: any) => {
@@ -199,14 +188,14 @@ export default class Job {
 						type: "error",
 						data: { error: err }
 					});
-					this._jobStatistics.updateStats(this.getName(), "failed");
+					JobStatistics.updateStats(this.getName(), "failed");
 					throw err;
 				})
 				.finally(() => {
 					this._completedAt = performance.now();
-					this._jobStatistics.updateStats(this.getName(), "total");
+					JobStatistics.updateStats(this.getName(), "total");
 					if (this._startedAt)
-						this._jobStatistics.updateStats(
+						JobStatistics.updateStats(
 							this.getName(),
 							"duration",
 							this._completedAt - this._startedAt
@@ -229,7 +218,7 @@ export default class Job {
 		} = {
 			...(typeof log === "string" ? { message: log } : log)
 		};
-		this._logBook.log({
+		LogBook.log({
 			message,
 			type,
 			category: this.getName(),

@@ -2,7 +2,6 @@ import { Types } from "mongoose";
 import { SessionSchema } from "@/models/schemas/sessions/schema";
 import BaseModule from "@/BaseModule";
 import Job from "@/Job";
-import JobQueue from "@/JobQueue";
 import { Log } from "@/LogBook";
 import { JobOptions } from "@/types/JobOptions";
 import { Jobs, Modules } from "@/types/Modules";
@@ -10,8 +9,6 @@ import { Models } from "@/types/Models";
 
 export default class JobContext {
 	public readonly job: Job;
-
-	public readonly jobQueue: JobQueue;
 
 	private _session?: SessionSchema;
 
@@ -22,7 +19,6 @@ export default class JobContext {
 		options?: { session?: SessionSchema; socketId?: string }
 	) {
 		this.job = job;
-		this.jobQueue = JobQueue.getPrimaryInstance();
 		this._session = options?.session;
 		this._socketId = options?.socketId;
 	}

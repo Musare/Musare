@@ -1,8 +1,9 @@
 import JobContext from "@/JobContext";
 import { UniqueMethods } from "@/types/Modules";
 import BaseModule from "@/BaseModule";
+import JobQueue from "@/JobQueue";
 
-export default class StationsModule extends BaseModule {
+export class StationsModule extends BaseModule {
 	/**
 	 * Station Module
 	 */
@@ -47,16 +48,16 @@ export default class StationsModule extends BaseModule {
 
 	public async addA(context: JobContext) {
 		context.log("ADDA");
-		await context.jobQueue.runJob("stations", "addB", {}, { priority: 5 });
+		await JobQueue.runJob("stations", "addB", {}, { priority: 5 });
 		return { number: 123 };
 	}
 
 	public async addB(context: JobContext) {
 		context.log("ADDB");
-		await context.jobQueue.runJob("stations", "addToQueue", {
+		await JobQueue.runJob("stations", "addToQueue", {
 			songId: "test"
 		});
-		await context.jobQueue.runJob("stations", "addC", {});
+		await JobQueue.runJob("stations", "addC", {});
 	}
 
 	public async addC(context: JobContext) {
@@ -71,3 +72,5 @@ export type StationsModuleJobs = {
 		returns: Awaited<ReturnType<UniqueMethods<StationsModule>[Property]>>;
 	};
 };
+
+export default new StationsModule();

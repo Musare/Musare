@@ -1,6 +1,4 @@
-export default class JobStatistics {
-	static primaryInstance = new this();
-
+export class JobStatistics {
 	private _stats: Record<
 		string,
 		{
@@ -79,12 +77,6 @@ export default class JobStatistics {
 				this._stats[jobName].totalTime / this._stats[jobName].total;
 		} else this._stats[jobName][type] += 1;
 	}
-
-	static getPrimaryInstance(): JobStatistics {
-		return this.primaryInstance;
-	}
-
-	static setPrimaryInstance(instance: JobStatistics) {
-		this.primaryInstance = instance;
-	}
 }
+
+export default new JobStatistics();

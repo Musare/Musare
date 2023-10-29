@@ -2,8 +2,6 @@ import { WebSocket as WSWebSocket } from "ws";
 import LogBook, { Log } from "@/LogBook";
 
 export default class WebSocket extends WSWebSocket {
-	private _logBook: LogBook = LogBook.getPrimaryInstance();
-
 	private _socketId?: string;
 
 	private _sessionId?: string;
@@ -25,7 +23,7 @@ export default class WebSocket extends WSWebSocket {
 		} = {
 			...(typeof log === "string" ? { message: log } : log)
 		};
-		this._logBook.log({
+		LogBook.log({
 			message,
 			type,
 			category: "modules.websocket.socket",

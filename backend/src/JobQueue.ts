@@ -3,9 +3,7 @@ import Job, { JobStatus } from "@/Job";
 import { JobOptions } from "@/types/JobOptions";
 import { Jobs, Modules } from "@/types/Modules";
 
-export default class JobQueue {
-	static primaryInstance = new this();
-
+export class JobQueue {
 	private _concurrency: number;
 
 	private _isPaused: boolean;
@@ -237,12 +235,6 @@ export default class JobQueue {
 	public getJobs() {
 		return this._jobs;
 	}
-
-	static getPrimaryInstance(): JobQueue {
-		return this.primaryInstance;
-	}
-
-	static setPrimaryInstance(instance: JobQueue) {
-		this.primaryInstance = instance;
-	}
 }
+
+export default new JobQueue();

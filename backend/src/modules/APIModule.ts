@@ -9,8 +9,10 @@ import WebSocket from "@/WebSocket";
 import permissions from "@/permissions";
 import Job from "@/Job";
 import { Models } from "@/types/Models";
+import ModuleManager from "@/ModuleManager";
+import JobQueue from "@/JobQueue";
 
-export default class APIModule extends BaseModule {
+export class APIModule extends BaseModule {
 	private _subscriptions: Record<string, Set<string>>;
 
 	/**
@@ -19,7 +21,7 @@ export default class APIModule extends BaseModule {
 	public constructor() {
 		super("api");
 
-		this._dependentModules = ["cache", "data", "events", "websocket"];
+		this._dependentModules = ["data", "events", "websocket"];
 
 		this._subscriptions = {};
 
@@ -147,7 +149,7 @@ export default class APIModule extends BaseModule {
 
 		socket.on("close", async () => {
 			if (socketId)
-				await this._jobQueue.runJob(
+				await JobQueue.runJob(
 					"api",
 					"unsubscribeAll",
 					{},
@@ -225,7 +227,7 @@ export default class APIModule extends BaseModule {
 		if (modelId && !model) throw new Error("Model not found");
 
 		const jobs = await Promise.all(
-			Object.keys(this._moduleManager.getModule("data")?.getJobs() ?? {})
+			Object.keys(ModuleManager.getModule("data")?.getJobs() ?? {})
 				.filter(
 					jobName =>
 						jobName.startsWith(modelName.toString()) &&
@@ -280,7 +282,7 @@ export default class APIModule extends BaseModule {
 		const promises = [];
 		for await (const socketId of this._subscriptions[channel].values()) {
 			promises.push(
-				this._jobQueue.runJob("websocket", "dispatch", {
+				JobQueue.runJob("websocket", "dispatch", {
 					socketId,
 					channel,
 					value
@@ -435,3 +437,5 @@ export type APIModuleJobs = {
 		returns: Awaited<ReturnType<UniqueMethods<APIModule>[Property]>>;
 	};
 };
+
+export default new APIModule();

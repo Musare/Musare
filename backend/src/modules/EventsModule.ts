@@ -5,7 +5,7 @@ import BaseModule, { ModuleStatus } from "@/BaseModule";
 import { UniqueMethods } from "@/types/Modules";
 import JobContext from "@/JobContext";
 
-export default class EventsModule extends BaseModule {
+export class EventsModule extends BaseModule {
 	private _pubClient?: RedisClientType;
 
 	private _subClient?: RedisClientType;
@@ -351,3 +351,5 @@ export type EventsModuleJobs = {
 		returns: Awaited<ReturnType<UniqueMethods<EventsModule>[Property]>>;
 	};
 };
+
+export default new EventsModule();

@@ -1,10 +1,8 @@
 import { ModuleStatus } from "@/BaseModule";
 import JobQueue from "@/JobQueue";
-import { Modules, ModuleClass } from "@/types/Modules";
+import { Modules } from "@/types/Modules";
 
-export default class ModuleManager {
-	static primaryInstance = new this();
-
+export class ModuleManager {
 	private _modules?: Modules;
 
 	/**
@@ -42,9 +40,10 @@ export default class ModuleManager {
 			stations: "StationsModule",
 			websocket: "WebSocketModule"
 		};
-		const { default: Module }: { default: ModuleClass<Modules[T]> } =
-			await import(`./modules/${mapper[moduleName]}`);
-		return new Module();
+		const { default: Module }: { default: Modules[T] } = await import(
+			`./modules/${mapper[moduleName]}`
+		);
+		return Module;
 	}
 
 	/**
@@ -123,7 +122,7 @@ export default class ModuleManager {
 				await this._startModule(module);
 			}
 
-			JobQueue.getPrimaryInstance().resume();
+			JobQueue.resume();
 		} catch (err) {
 			await this.shutdown();
 			throw err;
@@ -168,12 +167,6 @@ export default class ModuleManager {
 			}
 		}
 	}
-
-	static getPrimaryInstance(): ModuleManager {
-		return this.primaryInstance;
-	}
-
-	static setPrimaryInstance(instance: ModuleManager) {
-		this.primaryInstance = instance;
-	}
 }
+
+export default new ModuleManager();

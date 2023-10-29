@@ -31,9 +31,7 @@ const COLOR_YELLOW = "\x1b[33m";
 const COLOR_CYAN = "\x1b[36m";
 const COLOR_RESET = "\x1b[0m";
 
-export default class LogBook {
-	static primaryInstance = new this();
-
+export class LogBook {
 	// A list of log objects stored in memory, if enabled generally
 	private _logs: Log[];
 
@@ -308,12 +306,6 @@ export default class LogBook {
 			}
 		}
 	}
-
-	static getPrimaryInstance(): LogBook {
-		return this.primaryInstance;
-	}
-
-	static setPrimaryInstance(instance: LogBook) {
-		this.primaryInstance = instance;
-	}
 }
+
+export default new LogBook();

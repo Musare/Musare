@@ -1,5 +1,4 @@
 import JobContext from "@/JobContext";
-import JobQueue from "@/JobQueue";
 import LogBook, { Log } from "@/LogBook";
 import ModuleManager from "@/ModuleManager";
 import { Modules } from "@/types/Modules";
@@ -15,12 +14,6 @@ export enum ModuleStatus {
 }
 
 export default abstract class BaseModule {
-	protected _moduleManager: ModuleManager;
-
-	protected _logBook: LogBook;
-
-	protected _jobQueue: JobQueue;
-
 	protected _name: string;
 
 	protected _status: ModuleStatus;
@@ -54,9 +47,6 @@ export default abstract class BaseModule {
 	 * @param name - Module name
 	 */
 	public constructor(name: string) {
-		this._moduleManager = ModuleManager.getPrimaryInstance();
-		this._logBook = LogBook.getPrimaryInstance();
-		this._jobQueue = JobQueue.getPrimaryInstance();
 		this._name = name;
 		this._status = ModuleStatus.LOADED;
 		this._dependentModules = [];
@@ -207,9 +197,7 @@ export default abstract class BaseModule {
 			(canRunJobs: boolean, moduleName: keyof Modules): boolean => {
 				if (canRunJobs === false) return false;
 
-				return !!this._moduleManager
-					.getModule(moduleName)
-					?.canRunJobs();
+				return !!ModuleManager.getModule(moduleName)?.canRunJobs();
 			},
 			this.getStatus() === ModuleStatus.STARTED
 		);
@@ -261,7 +249,7 @@ export default abstract class BaseModule {
 		} = {
 			...(typeof log === "string" ? { message: log } : log)
 		};
-		this._logBook.log({
+		LogBook.log({
 			message,
 			type,
 			category: `modules.${this.getName()}`,

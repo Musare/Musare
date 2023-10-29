@@ -20,6 +20,7 @@ import BaseModule, { ModuleStatus } from "@/BaseModule";
 import { UniqueMethods } from "@/types/Modules";
 import { AnyModel, Models } from "@/types/Models";
 import { Schemas } from "@/types/Schemas";
+import JobQueue from "@/JobQueue";
 
 /**
  * Experimental: function to get all nested keys from a MongoDB query object
@@ -109,7 +110,7 @@ function getAllKeys(obj: object) {
 	return keys;
 }
 
-export default class DataModule extends BaseModule {
+export class DataModule extends BaseModule {
 	private _models?: Models;
 
 	private _mongoConnection?: Connection;
@@ -335,7 +336,7 @@ export default class DataModule extends BaseModule {
 
 					if (action !== "created") channel += `.${modelId}`;
 
-					await this._jobQueue.runJob("events", "publish", {
+					await JobQueue.runJob("events", "publish", {
 						channel,
 						value: { doc, oldDoc }
 					});
@@ -688,3 +689,5 @@ export type DataModuleJobs = {
 		returns: Awaited<ReturnType<UniqueMethods<DataModule>[Property]>>;
 	};
 };
+
+export default new DataModule();

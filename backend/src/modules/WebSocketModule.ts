@@ -8,8 +8,10 @@ import { UniqueMethods } from "@/types/Modules";
 import WebSocket from "@/WebSocket";
 import JobContext from "@/JobContext";
 import Job from "@/Job";
+import ModuleManager from "@/ModuleManager";
+import JobQueue from "@/JobQueue";
 
-export default class WebSocketModule extends BaseModule {
+export class WebSocketModule extends BaseModule {
 	private _httpServer?: Server;
 
 	private _wsServer?: WebSocketServer;
@@ -87,7 +89,7 @@ export default class WebSocketModule extends BaseModule {
 		socket: WebSocket,
 		request: IncomingMessage
 	) {
-		if (this._jobQueue.getStatus().isPaused) {
+		if (JobQueue.getStatus().isPaused) {
 			socket.close();
 			return;
 		}
@@ -126,7 +128,7 @@ export default class WebSocketModule extends BaseModule {
 	 * handleMessage - Handle websocket message
 	 */
 	private async _handleMessage(socket: WebSocket, message: RawData) {
-		if (this._jobQueue.getStatus().isPaused) {
+		if (JobQueue.getStatus().isPaused) {
 			socket.close();
 			return;
 		}
@@ -150,13 +152,13 @@ export default class WebSocketModule extends BaseModule {
 					`No callback reference provided for job ${moduleJob}`
 				);
 
-			const module = this._moduleManager.getModule(moduleName);
+			const module = ModuleManager.getModule(moduleName);
 			if (!module) throw new Error(`Module "${moduleName}" not found`);
 
 			const job = module.getJob(jobName);
 			if (!job.api) throw new Error(`Job "${jobName}" not found.`);
 
-			const res = await this._jobQueue.runJob("api", "runJob", {
+			const res = await JobQueue.runJob("api", "runJob", {
 				moduleName,
 				jobName,
 				payload,
@@ -255,3 +257,5 @@ export type WebSocketModuleJobs = {
 		returns: Awaited<ReturnType<UniqueMethods<WebSocketModule>[Property]>>;
 	};
 };
+
+export default new WebSocketModule();

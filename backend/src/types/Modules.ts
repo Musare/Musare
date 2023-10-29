@@ -1,8 +1,9 @@
-import APIModule, { APIModuleJobs } from "@/modules/APIModule";
-import DataModule, { DataModuleJobs } from "@/modules/DataModule";
-import EventsModule, { EventsModuleJobs } from "@/modules/EventsModule";
-import StationsModule, { StationsModuleJobs } from "@/modules/StationsModule";
-import WebSocketModule, {
+import { APIModule, APIModuleJobs } from "@/modules/APIModule";
+import { DataModule, DataModuleJobs } from "@/modules/DataModule";
+import { EventsModule, EventsModuleJobs } from "@/modules/EventsModule";
+import { StationsModule, StationsModuleJobs } from "@/modules/StationsModule";
+import {
+	WebSocketModule,
 	WebSocketModuleJobs
 } from "@/modules/WebSocketModule";
 import BaseModule from "@/BaseModule";

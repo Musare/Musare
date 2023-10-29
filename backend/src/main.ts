@@ -1,37 +1,25 @@
 import * as readline from "node:readline";
+import mongoose from "mongoose";
 import ModuleManager from "@/ModuleManager";
 import LogBook from "@/LogBook";
 import JobQueue from "@/JobQueue";
 import JobStatistics from "@/JobStatistics";
 
-const logBook = LogBook.getPrimaryInstance();
 
 process.removeAllListeners("uncaughtException");
 process.on("uncaughtException", err => {
 	if (err.name === "ECONNREFUSED" || err.name === "UNCERTAIN_STATE") return;
 
-	logBook.log({
+	LogBook.log({
 		message: err.message,
 		type: "error",
 		category: "uncaught-exceptions",
-		data: {
-			error: err.message
-				? {
-						cause: err.cause,
-						name: err.name,
-						stack: err.stack
-				  }
-				: err
-		}
+		data: { error: err }
 	});
 });
 
-const moduleManager = ModuleManager.getPrimaryInstance();
-const jobQueue = JobQueue.getPrimaryInstance();
-
-moduleManager.startup().then(async () => {
-
-	const Model = await jobQueue.runJob("data", "getModel", { name: "news" });
+ModuleManager.startup().then(async () => {
+	const Model = await JobQueue.runJob("data", "getModel", { name: "news" });
 	// console.log("Model", Model);
 	const abcs = await Model.findOne({}).newest();
 	console.log("Abcs", abcs);
@@ -68,11 +56,11 @@ moduleManager.startup().then(async () => {
 
 	// Events schedule (was notifications)
 	const now = Date.now();
-	await jobQueue.runJob("events", "schedule", {
+	await JobQueue.runJob("events", "schedule", {
 		channel: "test",
 		time: 30000
 	});
-	await jobQueue.runJob("events", "subscribe", {
+	await JobQueue.runJob("events", "subscribe", {
 		channel: "test",
 		type: "schedule",
 		callback: async () => {
@@ -81,13 +69,13 @@ moduleManager.startup().then(async () => {
 	});
 
 	// Events (was cache pub/sub)
-	await jobQueue.runJob("events", "subscribe", {
+	await JobQueue.runJob("events", "subscribe", {
 		channel: "test",
 		callback: async value => {
 			console.log(`PUBLISHED: ${value}`);
 		}
 	});
-	await jobQueue.runJob("events", "publish", {
+	await JobQueue.runJob("events", "publish", {
 		channel: "test",
 		value: "a value!"
 	});
@@ -96,10 +84,10 @@ moduleManager.startup().then(async () => {
 // TOOD remove, or put behind debug option
 // eslint-disable-next-line
 // @ts-ignore
-global.moduleManager = moduleManager;
+global.ModuleManager = ModuleManager;
 // eslint-disable-next-line
 // @ts-ignore
-global.jobQueue = jobQueue;
+global.JobQueue = JobQueue;
 // eslint-disable-next-line
 // @ts-ignore
 global.rs = () => {
@@ -110,11 +98,11 @@ global.rs = () => {
 //	const start = Date.now();
 //	const x = [];
 //	while (x.length < 1) {
-//		x.push(jobQueue.runJob("stations", "addC", {}).catch(() => {}));
+//		x.push(JobQueue.runJob("stations", "addC", {}).catch(() => {}));
 //	}
 //	const y = await Promise.all(x);
 //	console.log(y);
-//	// const a = await jobQueue.runJob("stations", "addC", {}).catch(() => {});
+//	// const a = await JobQueue.runJob("stations", "addC", {}).catch(() => {});
 //	// console.log(555, a);
 //	const difference = Date.now() - start;
 //	console.log({ difference });
@@ -143,7 +131,7 @@ const shutdown = async () => {
 		rl.removeAllListeners();
 		rl.close();
 	}
-	await moduleManager.shutdown().catch(() => process.exit(1));
+	await ModuleManager.shutdown().catch(() => process.exit(1));
 	process.exit(0);
 };
 process.on("SIGINT", shutdown);
@@ -167,18 +155,18 @@ const runCommand = (line: string) => {
 		}
 		case "status": {
 			console.log("Module Manager Status:");
-			console.table(moduleManager.getStatus());
+			console.table(ModuleManager.getStatus());
 			console.log("Job Queue Status:");
-			console.table(jobQueue.getStatus());
+			console.table(JobQueue.getStatus());
 			break;
 		}
 		case "stats": {
 			console.log("Job Queue Stats:");
-			console.table(JobStatistics.getPrimaryInstance().getStats());
+			console.table(JobStatistics.getStats());
 			break;
 		}
 		case "queue": {
-			const queueStatus = jobQueue.getQueueStatus().queue;
+			const queueStatus = JobQueue.getQueueStatus().queue;
 			if (queueStatus.length === 0)
 				console.log("There are no jobs in the queue.");
 			else
@@ -189,7 +177,7 @@ const runCommand = (line: string) => {
 			break;
 		}
 		case "active": {
-			const activeStatus = jobQueue.getQueueStatus().active;
+			const activeStatus = JobQueue.getQueueStatus().active;
 			if (activeStatus.length === 0)
 				console.log("There are no active jobs.");
 			else console.log(`There are ${activeStatus.length} active jobs.`);
@@ -200,7 +188,7 @@ const runCommand = (line: string) => {
 			if (args.length === 0) console.log("Please specify a jobId");
 			else {
 				const jobId = args[0];
-				const job = jobQueue.getJob(jobId);
+				const job = JobQueue.getJob(jobId);
 
 				if (!job) console.log(`Job "${jobId}" not found`);
 				else {
@@ -239,7 +227,7 @@ const runCommand = (line: string) => {
 				value = values.map(_filter => JSON.parse(_filter));
 				if (value.length === 1) [value] = value;
 			}
-			logBook
+			LogBook
 				// eslint-disable-next-line
 				// @ts-ignore
 				.updateOutput(output, key, action, value)
@@ -250,7 +238,7 @@ const runCommand = (line: string) => {
 			break;
 		}
 		case "getjobs": {
-			console.log(moduleManager.getJobs());
+			console.log(ModuleManager.getJobs());
 			break;
 		}
 		default: {
