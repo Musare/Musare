@@ -126,9 +126,7 @@ export class DataModule extends BaseModule {
 		this._dependentModules = ["events"];
 
 		this._jobConfig = {
-			getModel: false,
-			find: "disabled",
-			addC: "disabled"
+			getModel: "disabled"
 		};
 	}
 
@@ -323,7 +321,7 @@ export class DataModule extends BaseModule {
 				patchEventEmitter.on(event, async ({ doc, oldDoc }) => {
 					const modelId = doc?._id ?? oldDoc?._id;
 
-					const Model = await this.getModel(null, modelName);
+					const Model = await this.getModel(modelName);
 
 					if (doc) doc = Model.hydrate(doc);
 
@@ -467,16 +465,11 @@ export class DataModule extends BaseModule {
 	 *
 	 * @returns Model
 	 */
-	public async getModel<ModelName extends keyof Models>(
-		jobContext?: JobContext,
-		payload: ModelName | { name: ModelName }
-	) {
+	public async getModel<ModelName extends keyof Models>(name: ModelName) {
 		if (!this._models) throw new Error("Models not loaded");
 
 		if (this.getStatus() !== ModuleStatus.STARTED)
 			throw new Error("Module not started");
-
-		const name = typeof payload === "object" ? payload.name : payload;
 
 		return this._models[name];
 	}

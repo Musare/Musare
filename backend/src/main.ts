@@ -4,7 +4,7 @@ import ModuleManager from "@/ModuleManager";
 import LogBook from "@/LogBook";
 import JobQueue from "@/JobQueue";
 import JobStatistics from "@/JobStatistics";
-
+import DataModule from "@/modules/DataModule";
 
 process.removeAllListeners("uncaughtException");
 process.on("uncaughtException", err => {
@@ -19,7 +19,7 @@ process.on("uncaughtException", err => {
 });
 
 ModuleManager.startup().then(async () => {
-	const Model = await JobQueue.runJob("data", "getModel", { name: "news" });
+	const Model = await DataModule.getModel("news");
 	// console.log("Model", Model);
 	const abcs = await Model.findOne({}).newest();
 	console.log("Abcs", abcs);

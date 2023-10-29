@@ -11,6 +11,7 @@ import Job from "@/Job";
 import { Models } from "@/types/Models";
 import ModuleManager from "@/ModuleManager";
 import JobQueue from "@/JobQueue";
+import DataModule from "@/modules/DataModule";
 
 export class APIModule extends BaseModule {
 	private _subscriptions: Record<string, Set<string>>;
@@ -84,7 +85,7 @@ export class APIModule extends BaseModule {
 	): Promise<ReturnType> {
 		let session;
 		if (sessionId) {
-			const Session = await context.getModel("sessions");
+			const Session = await DataModule.getModel("sessions");
 
 			session = await Session.findByIdAndUpdate(sessionId, {
 				updatedAt: Date.now()
@@ -134,7 +135,7 @@ export class APIModule extends BaseModule {
 
 		let user;
 		if (sessionId) {
-			const Session = await context.getModel("sessions");
+			const Session = await DataModule.getModel("sessions");
 
 			const session = await Session.findByIdAndUpdate(sessionId, {
 				updatedAt: Date.now()
@@ -218,7 +219,7 @@ export class APIModule extends BaseModule {
 		const user = await context.getUser().catch(() => null);
 		const permissions = await context.getUserPermissions();
 
-		const Model = await context.getModel(modelName);
+		const Model = await DataModule.getModel(modelName);
 
 		if (!Model) throw new Error("Model not found");
 

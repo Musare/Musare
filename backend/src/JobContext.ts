@@ -6,6 +6,7 @@ import { Log } from "@/LogBook";
 import { JobOptions } from "@/types/JobOptions";
 import { Jobs, Modules } from "@/types/Modules";
 import { Models } from "@/types/Models";
+import DataModule from "@/modules/DataModule";
 
 export default class JobContext {
 	public readonly job: Job;
@@ -76,15 +77,11 @@ export default class JobContext {
 		}).execute();
 	}
 
-	public async getModel(model: keyof Models) {
-		return this.executeJob("data", "getModel", model);
-	}
-
 	public async getUser() {
 		if (!this._session?.userId)
 			throw new Error("No user found for session");
 
-		const User = await this.getModel("users");
+		const User = await DataModule.getModel("users");
 
 		const user = await User.findById(this._session.userId);
 
