@@ -25,6 +25,11 @@ export class WebSocketModule extends BaseModule {
 		super("websocket");
 
 		this._jobApiDefault = false;
+
+		this._jobConfig = {
+			getSocket: "disabled",
+			getSockets: "disabled"
+		};
 	}
 
 	/**
@@ -185,20 +190,14 @@ export class WebSocketModule extends BaseModule {
 	/**
 	 * getSockets - Get websocket clients
 	 */
-	public async getSockets(context: JobContext) {
+	public async getSockets() {
 		return this._wsServer?.clients;
 	}
 
 	/**
 	 * getSocket - Get websocket client
 	 */
-	public async getSocket(
-		context: JobContext,
-		{
-			socketId,
-			sessionId
-		}: { socketId?: string; sessionId?: Types.ObjectId }
-	) {
+	public async getSocket(socketId?: string, sessionId?: Types.ObjectId) {
 		if (!this._wsServer) return null;
 
 		for (const clients of this._wsServer.clients.entries() as IterableIterator<
@@ -227,9 +226,7 @@ export class WebSocketModule extends BaseModule {
 			value
 		}: { socketId: string; channel: string; value?: any }
 	) {
-		const socket = await context.executeJob("websocket", "getSocket", {
-			socketId
-		});
+		const socket = await this.getSocket(socketId);
 
 		if (!socket) return;
 
