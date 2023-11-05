@@ -136,6 +136,28 @@ export class DataModule extends BaseModule {
 	}
 
 	/**
+	 * registerEvents - Register events for schema with event module
+	 */
+	private async _registerEventListeners<
+		ModelName extends keyof Models,
+		SchemaType extends Schemas[keyof ModelName]
+	>(schema: SchemaType) {
+		const eventListeners = schema.get("eventListeners");
+
+		if (
+			typeof eventListeners !== "object" ||
+			Object.keys(eventListeners).length === 0
+		)
+			return;
+
+		await Promise.all(
+			Object.entries(eventListeners).map(async ([event, callback]) =>
+				EventsModule.subscribe("event", event, callback)
+			)
+		);
+	}
+
+	/**
 	 * loadModel - Import and load model schema
 	 *
 	 * @param modelName - Name of the model
@@ -173,6 +195,8 @@ export class DataModule extends BaseModule {
 		if (getDataEnabled) schema.plugin(getDataPlugin);
 
 		await this._registerEvents(modelName, schema);
+
+		await this._registerEventListeners(schema);
 
 		schema.set("toObject", { getters: true, virtuals: true });
 		schema.set("toJSON", { getters: true, virtuals: true });
