@@ -35,6 +35,7 @@ export class ModuleManager {
 	private async _loadModule<T extends keyof Modules>(moduleName: T) {
 		const mapper = {
 			api: "APIModule",
+			cache: "CacheModule",
 			data: "DataModule",
 			events: "EventsModule",
 			stations: "StationsModule",
@@ -54,6 +55,7 @@ export class ModuleManager {
 	private async _loadModules() {
 		this._modules = {
 			api: await this._loadModule("api"),
+			cache: await this._loadModule("cache"),
 			data: await this._loadModule("data"),
 			events: await this._loadModule("events"),
 			stations: await this._loadModule("stations"),

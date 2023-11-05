@@ -1,4 +1,5 @@
 import { APIModule, APIModuleJobs } from "@/modules/APIModule";
+import { CacheModule, CacheModuleJobs } from "@/modules/CacheModule";
 import { DataModule, DataModuleJobs } from "@/modules/DataModule";
 import { EventsModule, EventsModuleJobs } from "@/modules/EventsModule";
 import { StationsModule, StationsModuleJobs } from "@/modules/StationsModule";
@@ -18,6 +19,9 @@ export type Jobs = {
 	api: {
 		[Property in keyof APIModuleJobs]: APIModuleJobs[Property];
 	};
+	cache: {
+		[Property in keyof CacheModuleJobs]: CacheModuleJobs[Property];
+	};
 	data: {
 		[Property in keyof DataModuleJobs]: DataModuleJobs[Property];
 	};
@@ -34,6 +38,7 @@ export type Jobs = {
 
 export type Modules = {
 	api: APIModule & typeof BaseModule;
+	cache: CacheModule & typeof BaseModule;
 	data: DataModule & typeof BaseModule;
 	events: EventsModule & typeof BaseModule;
 	stations: StationsModule & typeof BaseModule;
