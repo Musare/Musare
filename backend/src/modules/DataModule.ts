@@ -122,11 +122,15 @@ export class DataModule extends BaseModule {
 					if (!modelId && action !== "created")
 						throw new Error(`Model Id not found for "${event}"`);
 
-					let channel = `model.${modelName}.${action}`;
-
-					if (action !== "created") channel += `.${modelId}`;
+					const channel = `model.${modelName}.${action}`;
 
 					await EventsModule.publish(channel, { doc, oldDoc });
+
+					if (action !== "created")
+						await EventsModule.publish(`${channel}.${modelId}`, {
+							doc,
+							oldDoc
+						});
 				});
 			});
 	}
