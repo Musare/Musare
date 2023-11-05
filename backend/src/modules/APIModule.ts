@@ -13,6 +13,7 @@ import ModuleManager from "@/ModuleManager";
 import JobQueue from "@/JobQueue";
 import DataModule from "@/modules/DataModule";
 import EventsModule from "./EventsModule";
+import CacheModule from "./CacheModule";
 
 export class APIModule extends BaseModule {
 	private _subscriptions: Record<string, Set<string>>;
@@ -23,7 +24,7 @@ export class APIModule extends BaseModule {
 	public constructor() {
 		super("api");
 
-		this._dependentModules = ["data", "events", "websocket"];
+		this._dependentModules = ["cache", "data", "events", "websocket"];
 
 		this._subscriptions = {};
 
@@ -199,6 +200,12 @@ export class APIModule extends BaseModule {
 
 		if (!user) return permissions.guest;
 
+		const cacheKey = `user-permissions.${user._id}`;
+
+		const cached = await CacheModule.get(cacheKey);
+
+		if (cached) return cached;
+
 		const roles: UserRole[] = [user.role];
 
 		let rolePermissions: Record<string, boolean> = {};
@@ -206,6 +213,8 @@ export class APIModule extends BaseModule {
 			if (permissions[role])
 				rolePermissions = { ...rolePermissions, ...permissions[role] };
 		});
+
+		await CacheModule.set(cacheKey, rolePermissions, 360);
 
 		return rolePermissions;
 	}
@@ -219,6 +228,17 @@ export class APIModule extends BaseModule {
 	) {
 		const user = await context.getUser().catch(() => null);
 		const permissions = await context.getUserPermissions();
+
+		let cacheKey = `model-permissions.${modelName}`;
+
+		if (modelId) cacheKey += `.${modelId}`;
+
+		if (user) cacheKey += `.user.${user._id}`;
+		else cacheKey += `.guest`;
+
+		const cached = await CacheModule.get(cacheKey);
+
+		if (cached) return cached;
 
 		const Model = await DataModule.getModel(modelName);
 
@@ -277,7 +297,11 @@ export class APIModule extends BaseModule {
 				})
 		);
 
-		return Object.fromEntries(jobs);
+		const modelPermissions = Object.fromEntries(jobs);
+
+		await CacheModule.set(cacheKey, modelPermissions, 360);
+
+		return modelPermissions;
 	}
 
 	private async _subscriptionCallback(channel: string, value?: any) {
