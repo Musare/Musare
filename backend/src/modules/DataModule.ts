@@ -8,6 +8,7 @@ import mongoose, {
 import { patchHistoryPlugin, patchEventEmitter } from "ts-patch-mongoose";
 import { readdir } from "fs/promises";
 import path from "path";
+import updateVersioningPlugin from "mongoose-update-versioning";
 import documentVersionPlugin from "@/models/plugins/documentVersion";
 import getDataPlugin from "@/models/plugins/getData";
 import Migration from "@/models/Migration";
@@ -173,6 +174,8 @@ export class DataModule extends BaseModule {
 		schema.set("toJSON", { getters: true, virtuals: true });
 
 		schema.virtual("_name").get(() => modelName);
+
+		schema.plugin(updateVersioningPlugin);
 
 		await Promise.all(
 			Object.entries(schema.paths)
