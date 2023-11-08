@@ -5,4 +5,5 @@ export type JobOptions = {
 	longJob?: string;
 	session?: SessionSchema;
 	socketId?: string;
+	callbackRef?: string;
 };

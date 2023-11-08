@@ -15,13 +15,20 @@ export default class JobContext {
 
 	private readonly _socketId?: string;
 
+	private readonly _callbackRef?: string;
+
 	public constructor(
 		job: Job,
-		options?: { session?: SessionSchema; socketId?: string }
+		options?: {
+			session?: SessionSchema;
+			socketId?: string;
+			callbackRef?: string;
+		}
 	) {
 		this.job = job;
 		this._session = options?.session;
 		this._socketId = options?.socketId;
+		this._callbackRef = options?.callbackRef;
 	}
 
 	/**
@@ -43,6 +50,10 @@ export default class JobContext {
 
 	public getSocketId() {
 		return this._socketId;
+	}
+
+	public getCallbackRef() {
+		return this._callbackRef;
 	}
 
 	/**

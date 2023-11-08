@@ -4,6 +4,7 @@ import LogBook, { Log } from "@/LogBook";
 import ModuleManager from "@/ModuleManager";
 import { JobOptions } from "@/types/JobOptions";
 import { Modules } from "@/types/Modules";
+import WebSocketModule from "./modules/WebSocketModule";
 
 export enum JobStatus {
 	QUEUED = "QUEUED",
@@ -74,9 +75,11 @@ export default class Job {
 		let contextOptions;
 
 		if (options) {
-			const { priority, longJob, session, socketId } = options;
+			const { priority, longJob, session, socketId, callbackRef } =
+				options;
 
-			if (session || socketId) contextOptions = { session, socketId };
+			if (session || socketId)
+				contextOptions = { session, socketId, callbackRef };
 
 			if (priority) this._priority = priority;
 
@@ -174,22 +177,52 @@ export default class Job {
 				.apply(this._module, [this._context, this._payload])
 				// eslint-disable-next-line
 				// @ts-ignore
-				.then(response => {
+				.then(async data => {
+					if (this._context.getSocketId()) {
+						await WebSocketModule.dispatch(
+							this._context.getSocketId(),
+							"jobCallback",
+							this._context.getCallbackRef(),
+							{
+								status: "success",
+								data
+							}
+						);
+					}
+
 					this.log({
 						message: "Job completed successfully",
 						type: "success"
 					});
+
 					JobStatistics.updateStats(this.getName(), "successful");
-					return response;
+
+					return data;
 				})
-				.catch((err: any) => {
+				.catch(async (error: any) => {
+					const message = error?.message ?? error;
+
+					if (this._context.getSocketId()) {
+						await WebSocketModule.dispatch(
+							this._context.getSocketId(),
+							"jobCallback",
+							this._context.getCallbackRef(),
+							{
+								status: "error",
+								message
+							}
+						);
+					}
+
 					this.log({
-						message: `Job failed with error "${err}"`,
+						message: `Job failed with error "${message}"`,
 						type: "error",
-						data: { error: err }
+						data: { error }
 					});
+
 					JobStatistics.updateStats(this.getName(), "failed");
-					throw err;
+
+					throw error;
 				})
 				.finally(() => {
 					this._completedAt = performance.now();

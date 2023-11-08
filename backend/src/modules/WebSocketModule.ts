@@ -2,7 +2,7 @@ import config from "config";
 import express from "express";
 import http, { Server, IncomingMessage } from "node:http";
 import { RawData, WebSocketServer } from "ws";
-import { Types } from "mongoose";
+import { Types, isObjectIdOrHexString } from "mongoose";
 import BaseModule from "@/BaseModule";
 import { UniqueMethods } from "@/types/Modules";
 import WebSocket from "@/WebSocket";
@@ -10,6 +10,7 @@ import JobContext from "@/JobContext";
 import Job from "@/Job";
 import ModuleManager from "@/ModuleManager";
 import JobQueue from "@/JobQueue";
+import DataModule from "./DataModule";
 
 export class WebSocketModule extends BaseModule {
 	private _httpServer?: Server;
@@ -24,12 +25,7 @@ export class WebSocketModule extends BaseModule {
 	public constructor() {
 		super("websocket");
 
-		this._jobConfigDefault = false;
-
-		this._jobConfig = {
-			getSocket: "disabled",
-			getSockets: "disabled"
-		};
+		this._jobConfigDefault = "disabled";
 	}
 
 	/**
@@ -99,10 +95,73 @@ export class WebSocketModule extends BaseModule {
 			return;
 		}
 
-		const readyData = await new Job("prepareWebsocket", "api", {
-			socket,
-			request
-		}).execute();
+		socket.setSocketId(request.headers["sec-websocket-key"]);
+
+		let sessionId;
+		let user;
+
+		if (request.headers.cookie) {
+			sessionId = request.headers.cookie
+				.split("; ")
+				.find(
+					cookie =>
+						cookie.substring(0, cookie.indexOf("=")) ===
+						config.get<string>("cookie")
+				);
+
+			sessionId = sessionId?.substring(
+				sessionId.indexOf("=") + 1,
+				sessionId.length
+			);
+		}
+
+		if (sessionId && isObjectIdOrHexString(sessionId)) {
+			socket.setSessionId(sessionId);
+
+			const Session = await DataModule.getModel("sessions");
+
+			const session = await Session.findByIdAndUpdate(sessionId, {
+				updatedAt: Date.now()
+			});
+
+			if (session) {
+				const User = await DataModule.getModel("users");
+
+				user = await User.findById(session.userId);
+			}
+		}
+
+		const readyData = {
+			config: {
+				cookie: config.get("cookie"),
+				sitename: config.get("sitename"),
+				recaptcha: {
+					enabled: config.get("apis.recaptcha.enabled"),
+					key: config.get("apis.recaptcha.key")
+				},
+				githubAuthentication: config.get("apis.github.enabled"),
+				messages: config.get("messages"),
+				christmas: config.get("christmas"),
+				footerLinks: config.get("footerLinks"),
+				shortcutOverrides: config.get("shortcutOverrides"),
+				registrationDisabled: config.get("registrationDisabled"),
+				mailEnabled: config.get("mail.enabled"),
+				discogsEnabled: config.get("apis.discogs.enabled"),
+				experimental: {
+					changable_listen_mode: config.get(
+						"experimental.changable_listen_mode"
+					),
+					media_session: config.get("experimental.media_session"),
+					disable_youtube_search: config.get(
+						"experimental.disable_youtube_search"
+					),
+					station_history: config.get("experimental.station_history"),
+					soundcloud: config.get("experimental.soundcloud"),
+					spotify: config.get("experimental.spotify")
+				}
+			},
+			user
+		};
 
 		socket.log({
 			type: "debug",
@@ -118,6 +177,15 @@ export class WebSocketModule extends BaseModule {
 		);
 
 		socket.on("close", async () => {
+			await JobQueue.runJob(
+				"api",
+				"unsubscribeAll",
+				{},
+				{
+					socketId: socket.getSocketId()
+				}
+			);
+
 			socket.log({
 				type: "debug",
 				message: `WebSocket closed #${socket.getSocketId()}`
@@ -163,18 +231,29 @@ export class WebSocketModule extends BaseModule {
 			const job = module.getJob(jobName);
 			if (!job.api) throw new Error(`Job "${jobName}" not found.`);
 
-			const res = await JobQueue.runJob("api", "runJob", {
+			let session;
+			if (socket.getSessionId()) {
+				const Session = await DataModule.getModel("sessions");
+
+				session = await Session.findByIdAndUpdate(
+					socket.getSessionId(),
+					{
+						updatedAt: Date.now()
+					}
+				);
+			}
+
+			await JobQueue.queueJob(
 				moduleName,
 				jobName,
 				payload,
-				sessionId: socket.getSessionId(),
-				socketId: socket.getSocketId()
-			});
-
-			socket.dispatch("jobCallback", callbackRef, {
-				status: "success",
-				data: res
-			});
+				{},
+				{
+					session,
+					socketId: socket.getSocketId(),
+					callbackRef
+				}
+			);
 		} catch (error) {
 			const message = error?.message ?? error;
 
@@ -218,19 +297,10 @@ export class WebSocketModule extends BaseModule {
 	/**
 	 * dispatch - Dispatch message to socket
 	 */
-	public async dispatch(
-		context: JobContext,
-		{
-			socketId,
-			channel,
-			value
-		}: { socketId: string; channel: string; value?: any }
-	) {
+	public async dispatch(socketId: string, channel: string, ...values) {
 		const socket = await this.getSocket(socketId);
 
 		if (!socket) return;
-
-		const values = Array.isArray(value) ? value : [value];
 
 		socket.dispatch(channel, ...values);
 	}

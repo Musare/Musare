@@ -1,11 +1,8 @@
-import config from "config";
-import { Types, isObjectIdOrHexString } from "mongoose";
-import { IncomingMessage } from "node:http";
+import { Types } from "mongoose";
 import { UserRole } from "@/models/schemas/users/UserRole";
 import JobContext from "@/JobContext";
 import BaseModule from "@/BaseModule";
-import { Jobs, Modules, UniqueMethods } from "@/types/Modules";
-import WebSocket from "@/WebSocket";
+import { UniqueMethods } from "@/types/Modules";
 import permissions from "@/permissions";
 import Job from "@/Job";
 import { Models } from "@/types/Models";
@@ -27,11 +24,6 @@ export class APIModule extends BaseModule {
 		this._dependentModules = ["cache", "data", "events", "websocket"];
 
 		this._subscriptions = {};
-
-		this._jobConfig = {
-			prepareWebsocket: false,
-			runJob: false
-		};
 	}
 
 	/**
@@ -52,147 +44,6 @@ export class APIModule extends BaseModule {
 		await this._removeAllSubscriptions();
 
 		await super._stopped();
-	}
-
-	/**
-	 * runJob - Run a job
-	 */
-	public async runJob<
-		ModuleNameType extends keyof Jobs & keyof Modules,
-		JobNameType extends keyof Jobs[ModuleNameType] &
-			keyof Omit<Modules[ModuleNameType], keyof BaseModule>,
-		PayloadType extends "payload" extends keyof Jobs[ModuleNameType][JobNameType]
-			? Jobs[ModuleNameType][JobNameType]["payload"] extends undefined
-				? Record<string, never>
-				: Jobs[ModuleNameType][JobNameType]["payload"]
-			: Record<string, never>,
-		ReturnType = "returns" extends keyof Jobs[ModuleNameType][JobNameType]
-			? Jobs[ModuleNameType][JobNameType]["returns"]
-			: never
-	>(
-		context: JobContext,
-		{
-			moduleName,
-			jobName,
-			payload,
-			sessionId,
-			socketId
-		}: {
-			moduleName: ModuleNameType;
-			jobName: JobNameType;
-			payload: PayloadType;
-			sessionId?: string;
-			socketId?: string;
-		}
-	): Promise<ReturnType> {
-		let session;
-		if (sessionId) {
-			const Session = await DataModule.getModel("sessions");
-
-			session = await Session.findByIdAndUpdate(sessionId, {
-				updatedAt: Date.now()
-			});
-		}
-
-		return context.executeJob(moduleName, jobName, payload, {
-			session,
-			socketId
-		});
-	}
-
-	/**
-	 * getCookieValueFromHeader - Get value of a cookie from cookie header string
-	 */
-	private _getCookieValueFromHeader(cookieName: string, header: string) {
-		const cookie = header
-			.split("; ")
-			.find(
-				cookie =>
-					cookie.substring(0, cookie.indexOf("=")) === cookieName
-			);
-
-		return cookie?.substring(cookie.indexOf("=") + 1, cookie.length);
-	}
-
-	/**
-	 * prepareWebsocket - Prepare websocket connection
-	 */
-	public async prepareWebsocket(
-		context: JobContext,
-		{ socket, request }: { socket: WebSocket; request: IncomingMessage }
-	) {
-		const socketId = request.headers["sec-websocket-key"];
-		socket.setSocketId(socketId);
-
-		let sessionId = request.headers.cookie
-			? this._getCookieValueFromHeader(
-					config.get<string>("cookie"),
-					request.headers.cookie
-			  )
-			: undefined;
-
-		if (sessionId && isObjectIdOrHexString(sessionId))
-			socket.setSessionId(sessionId);
-		else sessionId = undefined;
-
-		let user;
-		if (sessionId) {
-			const Session = await DataModule.getModel("sessions");
-
-			const session = await Session.findByIdAndUpdate(sessionId, {
-				updatedAt: Date.now()
-			});
-
-			if (session) {
-				context.setSession(session);
-
-				user = await context.getUser().catch(() => undefined);
-			}
-		}
-
-		socket.on("close", async () => {
-			if (socketId)
-				await JobQueue.runJob(
-					"api",
-					"unsubscribeAll",
-					{},
-					{
-						socketId
-					}
-				);
-		});
-
-		return {
-			config: {
-				cookie: config.get("cookie"),
-				sitename: config.get("sitename"),
-				recaptcha: {
-					enabled: config.get("apis.recaptcha.enabled"),
-					key: config.get("apis.recaptcha.key")
-				},
-				githubAuthentication: config.get("apis.github.enabled"),
-				messages: config.get("messages"),
-				christmas: config.get("christmas"),
-				footerLinks: config.get("footerLinks"),
-				shortcutOverrides: config.get("shortcutOverrides"),
-				registrationDisabled: config.get("registrationDisabled"),
-				mailEnabled: config.get("mail.enabled"),
-				discogsEnabled: config.get("apis.discogs.enabled"),
-				experimental: {
-					changable_listen_mode: config.get(
-						"experimental.changable_listen_mode"
-					),
-					media_session: config.get("experimental.media_session"),
-					disable_youtube_search: config.get(
-						"experimental.disable_youtube_search"
-					),
-					station_history: config.get("experimental.station_history"),
-					soundcloud: config.get("experimental.soundcloud"),
-					spotify: config.get("experimental.spotify")
-				}
-			},
-			user
-		};
 	}
 
 	public async getUserPermissions(context: JobContext) {
