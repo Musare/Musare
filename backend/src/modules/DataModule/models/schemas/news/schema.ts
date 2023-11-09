@@ -6,7 +6,7 @@ import {
 	SchemaTypes,
 	Types
 } from "mongoose";
-import { GetData } from "@/models/plugins/getData";
+import { GetData } from "@models/plugins/getData";
 import { BaseSchema } from "@/types/Schemas";
 import JobContext from "@/JobContext";
 import { NewsStatus } from "./NewsStatus";

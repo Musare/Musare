@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { UserRole } from "@/models/schemas/users/UserRole";
+import { UserRole } from "@models/schemas/users/UserRole";
 import JobContext from "@/JobContext";
 import BaseModule from "@/BaseModule";
 import { UniqueMethods } from "@/types/Modules";

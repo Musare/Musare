@@ -9,9 +9,9 @@ import { patchHistoryPlugin, patchEventEmitter } from "ts-patch-mongoose";
 import { readdir } from "fs/promises";
 import path from "path";
 import updateVersioningPlugin from "mongoose-update-versioning";
-import documentVersionPlugin from "@/models/plugins/documentVersion";
-import getDataPlugin from "@/models/plugins/getData";
-import Migration from "@/models/Migration";
+import documentVersionPlugin from "@models/plugins/documentVersion";
+import getDataPlugin from "@models/plugins/getData";
+import Migration from "@models/Migration";
 import JobContext from "@/JobContext";
 import BaseModule, { ModuleStatus } from "@/BaseModule";
 import { UniqueMethods } from "@/types/Modules";
@@ -169,7 +169,7 @@ export class DataModule extends BaseModule {
 		if (!this._mongoConnection) throw new Error("Mongo is not available");
 
 		const { schema }: { schema: Schemas[ModelName] } = await import(
-			`../models/schemas/${modelName.toString()}/schema`
+			`./DataModule/models/schemas/${modelName.toString()}/schema`
 		);
 
 		schema.plugin(documentVersionPlugin);
@@ -297,13 +297,15 @@ export class DataModule extends BaseModule {
 		if (!this._mongoConnection) throw new Error("Mongo is not available");
 
 		const migrations = await readdir(
-			path.resolve(__dirname, "../models/migrations/")
+			path.resolve(__dirname, "./DataModule/models/migrations/")
 		);
 
 		return Promise.all(
 			migrations.map(async migrationFile => {
 				const { default: Migrate }: { default: typeof Migration } =
-					await import(`../models/migrations/${migrationFile}`);
+					await import(
+						`./DataModule/models/migrations/${migrationFile}`
+					);
 				return new Migrate(this._mongoConnection as Connection);
 			})
 		);

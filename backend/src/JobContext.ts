@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { SessionSchema } from "@/models/schemas/sessions/schema";
+import { SessionSchema } from "@models/schemas/sessions/schema";
 import BaseModule from "@/BaseModule";
 import Job from "@/Job";
 import { Log } from "@/LogBook";
