@@ -303,6 +303,7 @@ const getData = async () => {
 		row =>
 			new Model({
 				...row,
+				_name: props.model,
 				selected: false
 			})
 	);

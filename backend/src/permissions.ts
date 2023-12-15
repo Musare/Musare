@@ -8,7 +8,8 @@ const temp = {
 	"data.news.create": true,
 	"data.news.findById.*": true,
 	"data.news.updateById.*": true,
-	"data.news.deleteById.*": true
+	"data.news.deleteById.*": true,
+	"data.users.findById.*": true
 };
 
 const guest = { ...temp };
