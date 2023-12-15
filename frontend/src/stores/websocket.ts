@@ -16,7 +16,10 @@ export const useWebsocketStore = defineStore("websocket", () => {
 	const pendingJobs = ref([]);
 	const subscriptions = ref({});
 
-	const socketChannels = ["ready", "error"];
+	const socketChannels = {
+		ready: "subscribed",
+		error: "subscribed"
+	};
 
 	const runJob = async (job: string, payload?: any) =>
 		new Promise((resolve, reject) => {
@@ -38,8 +41,14 @@ export const useWebsocketStore = defineStore("websocket", () => {
 		channel: string,
 		callback: (data?: any) => any
 	) => {
-		if (!socketChannels.includes(channel))
+		if (
+			["subscribed", "subscribing"].indexOf(socketChannels[channel]) ===
+			-1
+		) {
+			socketChannels[channel] = "subscribing";
 			await runJob("api.subscribe", { channel });
+			socketChannels[channel] = "subscribed";
+		}
 
 		if (!subscriptions.value[channel]) subscriptions.value[channel] = {};
 
@@ -53,10 +62,20 @@ export const useWebsocketStore = defineStore("websocket", () => {
 	const subscribeMany = async (
 		channels: Record<string, (data?: any) => any>
 	) => {
+		const channelsToSubscribeTo = Object.keys(channels).filter(
+			channel =>
+				["subscribed", "subscribing"].indexOf(
+					socketChannels[channel]
+				) === -1
+		);
+		channelsToSubscribeTo.forEach(channel => {
+			socketChannels[channel] = "subscribing";
+		});
 		await runJob("api.subscribeMany", {
-			channels: Object.keys(channels).filter(
-				channel => !socketChannels.includes(channel)
-			)
+			channels: channelsToSubscribeTo
+		});
+		channelsToSubscribeTo.forEach(channel => {
+			socketChannels[channel] = "subscribed";
 		});
 
 		return Object.fromEntries(
@@ -81,7 +100,7 @@ export const useWebsocketStore = defineStore("websocket", () => {
 			return;
 
 		if (
-			!socketChannels.includes(channel) &&
+			socketChannels[channel] === "subscribed" &&
 			Object.keys(subscriptions.value[channel]).length <= 1
 		)
 			await runJob("api.unsubscribe", { channel });
@@ -93,12 +112,16 @@ export const useWebsocketStore = defineStore("websocket", () => {
 	};
 
 	const unsubscribeMany = async (channels: Record<string, string>) => {
+		const channelsToUnsubscribeFrom = Object.values(channels).filter(
+			channel =>
+				socketChannels[channel] === "subscribed" &&
+				Object.keys(subscriptions.value[channel]).length <= 1
+		);
 		await runJob("api.unsubscribeMany", {
-			channels: Object.values(channels).filter(
-				channel =>
-					!socketChannels.includes(channel) &&
-					Object.keys(subscriptions.value[channel]).length <= 1
-			)
+			channels: channelsToUnsubscribeFrom
+		});
+		channelsToUnsubscribeFrom.forEach(channel => {
+			delete socketChannels[channel];
 		});
 
 		return Promise.all(
@@ -121,6 +144,9 @@ export const useWebsocketStore = defineStore("websocket", () => {
 		await runJob("api.unsubscribeAll");
 
 		subscriptions.value = {};
+		Object.keys(socketChannels).forEach(channel => {
+			delete socketChannels[channel];
+		});
 	};
 
 	const onReady = async (callback: () => any) => {
@@ -164,7 +190,12 @@ export const useWebsocketStore = defineStore("websocket", () => {
 
 		await Promise.allSettled(
 			Object.keys(subscriptions.value)
-				.filter(channel => !socketChannels.includes(channel))
+				.filter(
+					channel =>
+						["subscribing", "subscribed"].indexOf(
+							socketChannels[channel]
+						) === -1
+				)
 				.map(channel => runJob("api.subscribe", { channel }))
 		);
 
@@ -181,7 +212,7 @@ export const useWebsocketStore = defineStore("websocket", () => {
 		)
 			socket.value.close();
 
-		socket.value = new WebSocket(configStore.urls.ws);
+		socket.value = new WebSocket(configStore.urls.ws + "?rewrite=1");
 
 		socket.value.addEventListener("message", async message => {
 			const data = JSON.parse(message.data);

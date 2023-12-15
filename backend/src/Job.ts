@@ -178,7 +178,10 @@ export default class Job {
 				// eslint-disable-next-line
 				// @ts-ignore
 				.then(async data => {
-					if (this._context.getSocketId()) {
+					if (
+						this._context.getSocketId() &&
+						this._context.getCallbackRef()
+					) {
 						await WebSocketModule.dispatch(
 							this._context.getSocketId(),
 							"jobCallback",
@@ -202,7 +205,10 @@ export default class Job {
 				.catch(async (error: any) => {
 					const message = error?.message ?? error;
 
-					if (this._context.getSocketId()) {
+					if (
+						this._context.getSocketId() &&
+						this._context.getCallbackRef()
+					) {
 						await WebSocketModule.dispatch(
 							this._context.getSocketId(),
 							"jobCallback",

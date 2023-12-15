@@ -138,7 +138,7 @@ export default class SocketHandler {
 					this.pendingDispatches = [];
 				}, 150); // small delay between readyState being 1 and the server actually receiving dispatches
 
-				userAuthStore.updatePermissions();
+				// userAuthStore.updatePermissions();
 			});
 		}
 	}

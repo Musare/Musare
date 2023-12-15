@@ -26,6 +26,9 @@ export class WebSocketModule extends BaseModule {
 		super("websocket");
 
 		this._jobConfigDefault = "disabled";
+		this._jobConfig = {
+			dispatch: true
+		};
 	}
 
 	/**
