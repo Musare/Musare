@@ -2,6 +2,7 @@ import BaseModule from "@/BaseModule";
 import Job, { JobStatus } from "@/Job";
 import { JobOptions } from "@/types/JobOptions";
 import { Jobs, Modules } from "@/types/Modules";
+import ModuleManager from "./ModuleManager";
 
 export class JobQueue {
 	private _concurrency: number;
@@ -28,7 +29,7 @@ export class JobQueue {
 	 * Job Queue
 	 */
 	public constructor() {
-		this._concurrency = 10000;
+		this._concurrency = 50;
 		this._isPaused = true;
 		this._jobs = [];
 		this._queue = [];
@@ -71,22 +72,10 @@ export class JobQueue {
 	 * @param jobName - Job name
 	 * @param params - Params
 	 */
-	public async runJob<
-		ModuleNameType extends keyof Jobs & keyof Modules,
-		JobNameType extends keyof Jobs[ModuleNameType] &
-			keyof Omit<Modules[ModuleNameType], keyof BaseModule>,
-		PayloadType extends "payload" extends keyof Jobs[ModuleNameType][JobNameType]
-			? Jobs[ModuleNameType][JobNameType]["payload"] extends undefined
-				? Record<string, never>
-				: Jobs[ModuleNameType][JobNameType]["payload"]
-			: Record<string, never>,
-		ReturnType = "returns" extends keyof Jobs[ModuleNameType][JobNameType]
-			? Jobs[ModuleNameType][JobNameType]["returns"]
-			: never
-	>(
+	public async runJob<ModuleNameType extends keyof Jobs & keyof Modules>(
 		moduleName: ModuleNameType,
-		jobName: JobNameType,
-		payload: PayloadType,
+		jobName: string,
+		payload: any,
 		options?: JobOptions
 	): Promise<ReturnType> {
 		return new Promise<ReturnType>((resolve, reject) => {
@@ -107,29 +96,22 @@ export class JobQueue {
 	 * @param jobName - Job name
 	 * @param params - Params
 	 */
-	public async queueJob<
-		ModuleNameType extends keyof Jobs & keyof Modules,
-		JobNameType extends keyof Jobs[ModuleNameType] &
-			keyof Omit<Modules[ModuleNameType], keyof BaseModule>,
-		PayloadType extends "payload" extends keyof Jobs[ModuleNameType][JobNameType]
-			? Jobs[ModuleNameType][JobNameType]["payload"] extends undefined
-				? Record<string, never>
-				: Jobs[ModuleNameType][JobNameType]["payload"]
-			: Record<string, never>,
-		ReturnType = "returns" extends keyof Jobs[ModuleNameType][JobNameType]
-			? Jobs[ModuleNameType][JobNameType]["returns"]
-			: never
-	>(
+	public async queueJob<ModuleNameType extends keyof Jobs & keyof Modules>(
 		moduleName: ModuleNameType,
-		jobName: JobNameType,
-		payload: PayloadType,
+		jobName: string,
+		payload: any,
 		callback: {
-			resolve: (value: ReturnType) => void;
+			resolve: (value: any) => void;
 			reject: (reason?: any) => void;
 		},
 		options?: JobOptions
 	): Promise<string> {
-		const job = new Job(jobName.toString(), moduleName, payload, options);
+		const module = ModuleManager.getModule(moduleName);
+		if (!module) throw new Error("Module not found.");
+
+		const JobClass = module.getJob(jobName);
+
+		const job = new JobClass(payload, options);
 
 		this._callbacks[job.getUuid()] = callback;
 

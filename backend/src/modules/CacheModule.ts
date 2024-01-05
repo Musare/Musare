@@ -11,8 +11,6 @@ export class CacheModule extends BaseModule {
 	 */
 	public constructor() {
 		super("cache");
-
-		this._jobConfigDefault = "disabled";
 	}
 
 	/**

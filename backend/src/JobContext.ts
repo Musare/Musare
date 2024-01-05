@@ -1,11 +1,7 @@
-import { Types } from "mongoose";
-import { SessionSchema } from "@models/schemas/sessions/schema";
-import BaseModule from "@/BaseModule";
+import { SessionSchema } from "@/modules/DataModule/models/sessions/schema";
 import Job from "@/Job";
 import { Log } from "@/LogBook";
 import { JobOptions } from "@/types/JobOptions";
-import { Jobs, Modules } from "@/types/Modules";
-import { Models } from "@/types/Models";
 import DataModule from "@/modules/DataModule";
 
 export default class JobContext {
@@ -56,32 +52,12 @@ export default class JobContext {
 		return this._callbackRef;
 	}
 
-	/**
-	 * executeJob - Execute a job
-	 *
-	 * @param moduleName - Module name
-	 * @param jobName - Job name
-	 * @param params - Params
-	 */
-	public async executeJob<
-		ModuleNameType extends keyof Jobs & keyof Modules,
-		JobNameType extends keyof Jobs[ModuleNameType] &
-			keyof Omit<Modules[ModuleNameType], keyof BaseModule>,
-		PayloadType extends "payload" extends keyof Jobs[ModuleNameType][JobNameType]
-			? Jobs[ModuleNameType][JobNameType]["payload"] extends undefined
-				? Record<string, never>
-				: Jobs[ModuleNameType][JobNameType]["payload"]
-			: Record<string, never>,
-		ReturnType = "returns" extends keyof Jobs[ModuleNameType][JobNameType]
-			? Jobs[ModuleNameType][JobNameType]["returns"]
-			: never
-	>(
-		moduleName: ModuleNameType,
-		jobName: JobNameType,
-		payload: PayloadType,
+	public executeJob(
+		JobClass: typeof Job,
+		payload?: any,
 		options?: JobOptions
-	): Promise<ReturnType> {
-		return new Job(jobName.toString(), moduleName, payload, {
+	) {
+		return new JobClass(payload, {
 			session: this._session,
 			socketId: this._socketId,
 			...(options ?? {})
@@ -106,23 +82,6 @@ export default class JobContext {
 			throw new Error("No user found for session");
 	}
 
-	public async getUserPermissions() {
-		return this.executeJob("api", "getUserPermissions", {});
-	}
-
-	public async getUserModelPermissions({
-		modelName,
-		modelId
-	}: {
-		modelName: keyof Models;
-		modelId?: Types.ObjectId;
-	}) {
-		return this.executeJob("api", "getUserModelPermissions", {
-			modelName,
-			modelId
-		});
-	}
-
 	public async assertPermission(permission: string) {
 		let hasPermission = false;
 
@@ -131,14 +90,20 @@ export default class JobContext {
 			[];
 
 		if (moduleName === "data" && modelOrJobName && jobName) {
-			const permissions = await this.getUserModelPermissions({
+			const GetModelPermissions = DataModule.getJob(
+				"users.getModelPermissions"
+			);
+
+			const permissions = await this.executeJob(GetModelPermissions, {
 				modelName: modelOrJobName,
 				modelId
 			});
 
 			hasPermission = permissions[`data.${modelOrJobName}.${jobName}`];
 		} else {
-			const permissions = await this.getUserPermissions();
+			const GetPermissions = DataModule.getJob("users.getPermissions");
+
+			const permissions = await this.executeJob(GetPermissions);
 
 			hasPermission = permissions[permission];
 		}

@@ -1,8 +1,8 @@
-import { AbcModel } from "@models/schemas/abc/schema";
-import { NewsModel } from "@models/schemas/news/schema";
-import { SessionModel } from "@models/schemas/sessions/schema";
-import { StationModel } from "@models/schemas/stations/schema";
-import { UserModel } from "@models/schemas/users/schema";
+import { NewsModel } from "@models/news/schema";
+import { SessionModel } from "@models/sessions/schema";
+import { StationModel } from "@models/stations/schema";
+import { UserModel } from "@models/users/schema";
+import { AbcModel } from "@models/abc/schema";
 
 export type Models = {
 	abc: AbcModel;

@@ -173,7 +173,7 @@ export const useUserAuthStore = defineStore("userAuth", () => {
 			requestingUserId(userId);
 
 			websocketStore
-				.runJob("users.getBasicUser", { _id: userId })
+				.runJob("data.users.findById", { _id: userId })
 				.then(user => {
 					mapUserId({
 						userId,
@@ -200,7 +200,7 @@ export const useUserAuthStore = defineStore("userAuth", () => {
 		!!(permissions.value && permissions.value[permission]);
 
 	const updatePermissions = () =>
-		websocketStore.runJob("api.getUserPermissions", {}).then(data => {
+		websocketStore.runJob("data.users.getPermissions", {}).then(data => {
 			permissions.value = data;
 			gotPermissions.value = true;
 		});

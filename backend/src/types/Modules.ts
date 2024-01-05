@@ -1,4 +1,3 @@
-import { APIModule, APIModuleJobs } from "@/modules/APIModule";
 import { CacheModule, CacheModuleJobs } from "@/modules/CacheModule";
 import { DataModule, DataModuleJobs } from "@/modules/DataModule";
 import { EventsModule, EventsModuleJobs } from "@/modules/EventsModule";
@@ -16,9 +15,6 @@ export type ModuleClass<Module extends typeof BaseModule> = {
 };
 
 export type Jobs = {
-	api: {
-		[Property in keyof APIModuleJobs]: APIModuleJobs[Property];
-	};
 	cache: {
 		[Property in keyof CacheModuleJobs]: CacheModuleJobs[Property];
 	};
@@ -37,7 +33,6 @@ export type Jobs = {
 };
 
 export type Modules = {
-	api: APIModule & typeof BaseModule;
 	cache: CacheModule & typeof BaseModule;
 	data: DataModule & typeof BaseModule;
 	events: EventsModule & typeof BaseModule;

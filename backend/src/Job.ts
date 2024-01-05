@@ -1,7 +1,6 @@
 import JobContext from "@/JobContext";
 import JobStatistics from "@/JobStatistics";
 import LogBook, { Log } from "@/LogBook";
-import ModuleManager from "@/ModuleManager";
 import { JobOptions } from "@/types/JobOptions";
 import { Modules } from "@/types/Modules";
 import WebSocketModule from "./modules/WebSocketModule";
@@ -13,20 +12,18 @@ export enum JobStatus {
 	COMPLETED = "COMPLETED"
 }
 
-export default class Job {
-	private _name: string;
+export default abstract class Job {
+	protected static _apiEnabled = true;
 
-	private _module: Modules[keyof Modules];
+	protected _module: Modules[keyof Modules];
 
-	private _jobFunction: any;
+	protected _payload: any;
 
-	private _payload: any;
+	protected _context: JobContext;
 
-	private _context: JobContext;
+	protected _priority: number;
 
-	private _priority: number;
-
-	private _longJob?: {
+	protected _longJob?: {
 		title: string;
 		progress?: {
 			data: unknown;
@@ -35,15 +32,15 @@ export default class Job {
 		};
 	};
 
-	private _uuid: string;
+	protected _uuid: string;
 
-	private _status: JobStatus;
+	protected _status: JobStatus;
 
-	private _createdAt: number;
+	protected _createdAt: number;
 
-	private _startedAt?: number;
+	protected _startedAt?: number;
 
-	private _completedAt?: number;
+	protected _completedAt?: number;
 
 	/**
 	 * Job
@@ -54,23 +51,13 @@ export default class Job {
 	 * @param options - Job options
 	 */
 	public constructor(
-		name: string,
-		moduleName: keyof Modules,
+		module: Modules[keyof Modules],
 		payload: any,
 		options?: Omit<JobOptions, "runDirectly">
 	) {
-		this._name = name;
-		this._priority = 1;
-
-		const module = ModuleManager.getModule(moduleName);
-		if (!module) throw new Error("Module not found.");
 		this._module = module;
-
-		this._jobFunction = this._module.getJob(this._name).method;
-
 		this._payload = payload;
-
-		JobStatistics.updateStats(this.getName(), "added");
+		this._priority = 1;
 
 		let contextOptions;
 
@@ -105,12 +92,27 @@ export default class Job {
 	}
 
 	/**
-	 * getName - Get module and job name in a dot format, e.g. module.jobName
-	 *
-	 * @returns module.name
+	 * getName - Get job name
+	 */
+	public static getName() {
+		return this.name.substring(0, 1).toLowerCase() + this.name.substring(1);
+	}
+
+	/**
+	 * getName - Get job name
 	 */
 	public getName() {
-		return `${this._module.getName()}.${this._name}`;
+		return (
+			this.constructor.name.substring(0, 1).toLowerCase() +
+			this.constructor.name.substring(1)
+		);
+	}
+
+	/**
+	 * getPath - Get module and job name in a dot format, e.g. module.jobName
+	 */
+	public getPath() {
+		return `${this._module.getName()}.${this.getName()}`;
 	}
 
 	/**
@@ -145,7 +147,7 @@ export default class Job {
 	 *
 	 * @param status - Job status
 	 */
-	private _setStatus(status: JobStatus) {
+	protected _setStatus(status: JobStatus) {
 		this._status = status;
 	}
 
@@ -157,6 +159,20 @@ export default class Job {
 	public getModule() {
 		return this._module;
 	}
+
+	public static isApiEnabled() {
+		return this._apiEnabled;
+	}
+
+	public isApiEnabled() {
+		return this.constructor._apiEnabled;
+	}
+
+	protected async _authorize() {
+		await this._context.assertPermission(this.getPath());
+	}
+
+	protected abstract _execute();
 
 	/**
 	 * execute - Execute job
@@ -173,8 +189,8 @@ export default class Job {
 		this._startedAt = performance.now();
 
 		return (
-			this._jobFunction
-				.apply(this._module, [this._context, this._payload])
+			this._authorize()
+				.then(() => this._execute(this._payload))
 				// eslint-disable-next-line
 				// @ts-ignore
 				.then(async data => {
@@ -198,7 +214,7 @@ export default class Job {
 						type: "success"
 					});
 
-					JobStatistics.updateStats(this.getName(), "successful");
+					JobStatistics.updateStats(this.getPath(), "successful");
 
 					return data;
 				})
@@ -226,16 +242,16 @@ export default class Job {
 						data: { error }
 					});
 
-					JobStatistics.updateStats(this.getName(), "failed");
+					JobStatistics.updateStats(this.getPath(), "failed");
 
 					throw error;
 				})
 				.finally(() => {
 					this._completedAt = performance.now();
-					JobStatistics.updateStats(this.getName(), "total");
+					JobStatistics.updateStats(this.getPath(), "total");
 					if (this._startedAt)
 						JobStatistics.updateStats(
-							this.getName(),
+							this.getPath(),
 							"duration",
 							this._completedAt - this._startedAt
 						);
@@ -260,7 +276,7 @@ export default class Job {
 		LogBook.log({
 			message,
 			type,
-			category: this.getName(),
+			category: this.getPath(),
 			data: {
 				...this.toJSON(),
 				...data
@@ -277,12 +293,13 @@ export default class Job {
 		return {
 			uuid: this.getUuid(),
 			priority: this.getPriority(),
-			name: this.getName(),
+			name: this.getPath(),
 			status: this.getStatus(),
 			moduleStatus: this._module.getStatus(),
 			createdAt: this._createdAt,
 			startedAt: this._startedAt,
-			completedAt: this._completedAt
+			completedAt: this._completedAt,
+			payload: JSON.stringify(this._payload)
 		};
 	}
 }

@@ -174,7 +174,7 @@ export default class Model {
 
 		const { runJob } = useWebsocketStore();
 
-		this._permissions = await runJob("api.getUserModelPermissions", {
+		this._permissions = await runJob("data.users.getModelPermissions", {
 			modelName: this._name,
 			modelId: this._id
 		});

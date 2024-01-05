@@ -46,7 +46,7 @@ export const useWebsocketStore = defineStore("websocket", () => {
 			-1
 		) {
 			socketChannels[channel] = "subscribing";
-			await runJob("api.subscribe", { channel });
+			await runJob("events.subscribe", { channel });
 			socketChannels[channel] = "subscribed";
 		}
 
@@ -71,7 +71,7 @@ export const useWebsocketStore = defineStore("websocket", () => {
 		channelsToSubscribeTo.forEach(channel => {
 			socketChannels[channel] = "subscribing";
 		});
-		await runJob("api.subscribeMany", {
+		await runJob("events.subscribeMany", {
 			channels: channelsToSubscribeTo
 		});
 		channelsToSubscribeTo.forEach(channel => {
@@ -103,7 +103,7 @@ export const useWebsocketStore = defineStore("websocket", () => {
 			socketChannels[channel] === "subscribed" &&
 			Object.keys(subscriptions.value[channel]).length <= 1
 		)
-			await runJob("api.unsubscribe", { channel });
+			await runJob("events.unsubscribe", { channel });
 
 		delete subscriptions.value[channel][uuid];
 
@@ -117,7 +117,7 @@ export const useWebsocketStore = defineStore("websocket", () => {
 				socketChannels[channel] === "subscribed" &&
 				Object.keys(subscriptions.value[channel]).length <= 1
 		);
-		await runJob("api.unsubscribeMany", {
+		await runJob("events.unsubscribeMany", {
 			channels: channelsToUnsubscribeFrom
 		});
 		channelsToUnsubscribeFrom.forEach(channel => {
@@ -141,7 +141,7 @@ export const useWebsocketStore = defineStore("websocket", () => {
 	};
 
 	const unsubscribeAll = async () => {
-		await runJob("api.unsubscribeAll");
+		await runJob("events.unsubscribeAll");
 
 		subscriptions.value = {};
 		Object.keys(socketChannels).forEach(channel => {
@@ -196,7 +196,7 @@ export const useWebsocketStore = defineStore("websocket", () => {
 							socketChannels[channel]
 						) === -1
 				)
-				.map(channel => runJob("api.subscribe", { channel }))
+				.map(channel => runJob("events.subscribe", { channel }))
 		);
 
 		pendingJobs.value.forEach(message => socket.value.send(message));
@@ -212,7 +212,7 @@ export const useWebsocketStore = defineStore("websocket", () => {
 		)
 			socket.value.close();
 
-		socket.value = new WebSocket(configStore.urls.ws + "?rewrite=1");
+		socket.value = new WebSocket(`${configStore.urls.ws}?rewrite=1`);
 
 		socket.value.addEventListener("message", async message => {
 			const data = JSON.parse(message.data);

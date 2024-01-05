@@ -3,7 +3,7 @@ import config from "config";
 import crypto from "node:crypto";
 import BaseModule, { ModuleStatus } from "@/BaseModule";
 import { UniqueMethods } from "@/types/Modules";
-import JobContext from "@/JobContext";
+import WebSocketModule from "./WebSocketModule";
 
 export class EventsModule extends BaseModule {
 	private _pubClient?: RedisClientType;
@@ -11,6 +11,8 @@ export class EventsModule extends BaseModule {
 	private _subClient?: RedisClientType;
 
 	private _subscriptions: Record<string, ((message: any) => Promise<void>)[]>;
+
+	private _socketSubscriptions: Record<string, Set<string>>;
 
 	private _scheduleCallbacks: Record<string, (() => Promise<void>)[]>;
 
@@ -21,8 +23,8 @@ export class EventsModule extends BaseModule {
 		super("events");
 
 		this._subscriptions = {};
+		this._socketSubscriptions = {};
 		this._scheduleCallbacks = {};
-		this._jobConfigDefault = "disabled";
 	}
 
 	/**
@@ -145,10 +147,7 @@ export class EventsModule extends BaseModule {
 		if (!channel || typeof channel !== "string")
 			throw new Error("Invalid channel");
 
-		return crypto
-			.createHash("md5")
-			.update(`${type}:${channel}`)
-			.digest("hex");
+		return `${type}:${channel}`;
 	}
 
 	/**
@@ -157,20 +156,20 @@ export class EventsModule extends BaseModule {
 	public async publish(channel: string, value: any) {
 		if (!this._pubClient) throw new Error("Redis pubClient unavailable.");
 
-		channel = this._createKey("event", channel);
-
 		if (!value) throw new Error("Invalid value");
 
 		if (["object", "array"].includes(typeof value))
 			value = JSON.stringify(value);
 
-		await this._pubClient.publish(channel, value);
+		await this._pubClient.publish(this._createKey("event", channel), value);
 	}
 
 	/**
 	 * subscriptionListener - Listener for event subscriptions
 	 */
-	private async _subscriptionListener(message: string, channel: string) {
+	private async _subscriptionListener(message: string, key: string) {
+		const [, channel] = key.split(":");
+
 		if (!this._subscriptions || !this._subscriptions[channel]) return;
 
 		if (message.startsWith("[") || message.startsWith("{"))
@@ -185,6 +184,14 @@ export class EventsModule extends BaseModule {
 		await Promise.all(
 			this._subscriptions[channel].map(async cb => cb(message))
 		);
+
+		if (!this._socketSubscriptions[channel]) return;
+
+		for await (const socketId of this._socketSubscriptions[
+			channel
+		].values()) {
+			await WebSocketModule.dispatch(socketId, channel, message);
+		}
 	}
 
 	/**
@@ -193,21 +200,11 @@ export class EventsModule extends BaseModule {
 	public async subscribe(
 		type: "event" | "schedule",
 		channel: string,
-		callback: (message?: any) => Promise<void>,
-		unique = false
+		callback: (message?: any) => Promise<void>
 	) {
 		if (!this._subClient) throw new Error("Redis subClient unavailable.");
 
-		channel = this._createKey(type, channel);
-
 		if (type === "schedule") {
-			if (
-				unique &&
-				this._scheduleCallbacks[channel] &&
-				this._scheduleCallbacks[channel].length > 0
-			)
-				return;
-
 			if (!this._scheduleCallbacks[channel])
 				this._scheduleCallbacks[channel] = [];
 
@@ -216,18 +213,12 @@ export class EventsModule extends BaseModule {
 			return;
 		}
 
-		if (
-			unique &&
-			this._subscriptions[channel] &&
-			this._subscriptions[channel].length > 0
-		)
-			return;
-
 		if (!this._subscriptions[channel]) {
 			this._subscriptions[channel] = [];
 
-			await this._subClient.subscribe(channel, (...args) =>
-				this._subscriptionListener(...args)
+			await this._subClient.subscribe(
+				this._createKey(type, channel),
+				(...args) => this._subscriptionListener(...args)
 			);
 		}
 
@@ -243,8 +234,6 @@ export class EventsModule extends BaseModule {
 		callback: (message?: any) => Promise<void>
 	) {
 		if (!this._subClient) throw new Error("Redis subClient unavailable.");
-
-		channel = this._createKey(type, channel);
 
 		if (type === "schedule") {
 			if (!this._scheduleCallbacks[channel]) return;
@@ -270,7 +259,7 @@ export class EventsModule extends BaseModule {
 
 		if (this._subscriptions[channel].length === 0) {
 			delete this._subscriptions[channel];
-			await this._subClient.unsubscribe(channel); // TODO: Provide callback when unsubscribing
+			await this._subClient.unsubscribe(this._createKey(type, channel)); // TODO: Provide callback when unsubscribing
 		}
 	}
 
@@ -286,9 +275,10 @@ export class EventsModule extends BaseModule {
 
 		if (time <= 0) throw new Error("Time must be greater than 0");
 
-		channel = this._createKey("schedule", channel);
-
-		await this._pubClient.set(channel, "", { PX: time, NX: true });
+		await this._pubClient.set(this._createKey("schedule", channel), "", {
+			PX: time,
+			NX: true
+		});
 	}
 
 	/**
@@ -297,9 +287,56 @@ export class EventsModule extends BaseModule {
 	public async unschedule(channel: string) {
 		if (!this._pubClient) throw new Error("Redis pubClient unavailable.");
 
-		channel = this._createKey("schedule", channel);
+		await this._pubClient.del(this._createKey("schedule", channel));
+	}
 
-		await this._pubClient.del(channel);
+	public async subscribeSocket(channel: string, socketId: string) {
+		if (!this._socketSubscriptions[channel]) {
+			await this.subscribe("event", channel, () => {});
+
+			this._socketSubscriptions[channel] = new Set();
+		}
+
+		if (this._socketSubscriptions[channel].has(socketId)) return;
+
+		this._socketSubscriptions[channel].add(socketId);
+	}
+
+	public async subscribeManySocket(channels: string[], socketId: string) {
+		await Promise.all(
+			channels.map(channel => this.subscribeSocket(channel, socketId))
+		);
+	}
+
+	public async unsubscribeSocket(channel: string, socketId: string) {
+		if (
+			!(
+				this._socketSubscriptions[channel] &&
+				this._socketSubscriptions[channel].has(socketId)
+			)
+		)
+			return;
+
+		this._socketSubscriptions[channel].delete(socketId);
+
+		if (this._socketSubscriptions[channel].size === 0)
+			delete this._socketSubscriptions[channel];
+	}
+
+	public async unsubscribeManySocket(channels: string[], socketId: string) {
+		await Promise.all(
+			channels.map(channel => this.unsubscribeSocket(channel, socketId))
+		);
+	}
+
+	public async unsubscribeAllSocket(socketId: string) {
+		await Promise.all(
+			Object.entries(this._socketSubscriptions)
+				.filter(([, socketIds]) => socketIds.has(socketId))
+				.map(async ([channel]) =>
+					this.unsubscribeSocket(channel, socketId)
+				)
+		);
 	}
 
 	/**

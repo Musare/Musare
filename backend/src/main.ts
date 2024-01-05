@@ -83,20 +83,6 @@ global.rs = () => {
 	process.exit();
 };
 
-// setTimeout(async () => {
-//	const start = Date.now();
-//	const x = [];
-//	while (x.length < 1) {
-//		x.push(JobQueue.runJob("stations", "addC", {}).catch(() => {}));
-//	}
-//	const y = await Promise.all(x);
-//	console.log(y);
-//	// const a = await JobQueue.runJob("stations", "addC", {}).catch(() => {});
-//	// console.log(555, a);
-//	const difference = Date.now() - start;
-//	console.log({ difference });
-// }, 100);
-
 const rl = readline.createInterface({
 	input: process.stdin,
 	output: process.stdout,

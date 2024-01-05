@@ -1,7 +1,9 @@
-import JobContext from "@/JobContext";
+import { readdir } from "fs/promises";
+import path from "path";
 import LogBook, { Log } from "@/LogBook";
 import ModuleManager from "@/ModuleManager";
 import { Modules } from "@/types/Modules";
+import Job from "./Job";
 
 export enum ModuleStatus {
 	LOADED = "LOADED",
@@ -20,26 +22,7 @@ export default abstract class BaseModule {
 
 	protected _dependentModules: (keyof Modules)[];
 
-	protected _jobConfigDefault: boolean | "disabled";
-
-	protected _jobConfig: Record<
-		string,
-		| "disabled"
-		| boolean
-		| ((context: JobContext, payload?: any) => Promise<any>)
-		| {
-				api?: boolean;
-				method?: (context: JobContext, payload?: any) => Promise<any>;
-		  }
-	>;
-
-	protected _jobs: Record<
-		string,
-		{
-			api: boolean;
-			method: (context: JobContext, payload?: any) => Promise<any>;
-		}
-	>;
+	protected _jobs: Record<string, typeof Job>;
 
 	/**
 	 * Base Module
@@ -50,8 +33,6 @@ export default abstract class BaseModule {
 		this._name = name;
 		this._status = ModuleStatus.LOADED;
 		this._dependentModules = [];
-		this._jobConfigDefault = true;
-		this._jobConfig = {};
 		this._jobs = {};
 		this.log(`Module (${this._name}) loaded`);
 	}
@@ -94,82 +75,30 @@ export default abstract class BaseModule {
 	 * _loadJobs - Load jobs available via api module
 	 */
 	private async _loadJobs() {
-		this._jobs = {};
+		let jobs;
 
-		const module = Object.getPrototypeOf(this);
-		await Promise.all(
-			Object.getOwnPropertyNames(module).map(async property => {
-				if (
-					typeof module[property] !== "function" ||
-					Object.prototype.hasOwnProperty.call(
-						BaseModule.prototype,
-						property
-					) ||
-					property.startsWith("_")
+		try {
+			jobs = await readdir(
+				path.resolve(
+					__dirname,
+					`./modules/${this.constructor.name}/jobs`
 				)
-					return;
+			);
+		} catch (error) {
+			if (error.code === "ENOENT") return;
 
-				const options = this._jobConfig[property];
-
-				let api = this._jobConfigDefault === true;
-				if (
-					typeof options === "object" &&
-					typeof options.api === "boolean"
-				)
-					api = options.api;
-				else if (typeof options === "boolean") api = options;
-				else if (this._jobConfigDefault === "disabled") return;
-
-				this._jobs[property] = {
-					api,
-					method: module[property]
-				};
-			})
-		);
+			throw error;
+		}
 
 		await Promise.all(
-			Object.entries(this._jobConfig).map(async ([name, options]) => {
-				if (options === "disabled") {
-					if (this._jobs[name]) delete this._jobs[name];
+			jobs.map(async jobFile => {
+				const { default: Job } = await import(
+					`./modules/${this.constructor.name}/jobs/${jobFile}`
+				);
 
-					return;
-				}
+				const jobName = Job.getName();
 
-				if (
-					typeof options === "boolean" ||
-					(typeof options === "object" &&
-						typeof options.method !== "function")
-				)
-					return;
-
-				if (this._jobs[name])
-					throw new Error(`Job "${name}" is already defined`);
-
-				let api = this._jobConfigDefault === true;
-
-				if (
-					typeof options === "object" &&
-					typeof options.api === "boolean"
-				)
-					api = options.api;
-
-				let method = options;
-
-				if (
-					typeof method === "object" &&
-					typeof method.method === "function"
-				)
-					method = method.method;
-
-				if (typeof method !== "function")
-					throw new Error(
-						`Job "${name}" has no function method defined`
-					);
-
-				this._jobs[name] = {
-					api,
-					method
-				};
+				this._jobs[jobName] = Job;
 			})
 		);
 	}
@@ -178,9 +107,13 @@ export default abstract class BaseModule {
 	 * getJob - Get module job
 	 */
 	public getJob(name: string) {
-		if (!this._jobs[name]) throw new Error(`Job "${name}" not found.`);
+		const [, Job] =
+			Object.entries(this._jobs).find(([jobName]) => jobName === name) ??
+			[];
 
-		return this._jobs[name];
+		if (!Job) throw new Error(`Job "${name}" not found.`);
+
+		return Job;
 	}
 
 	/**

@@ -19,7 +19,7 @@ export const useModelStore = defineStore("model", () => {
 	const getUserModelPermissions = async (modelName: string) => {
 		if (permissions.value) return permissions.value;
 
-		const data = await runJob("api.getUserModelPermissions", {
+		const data = await runJob("data.users.getModelPermissions", {
 			modelName
 		});
 

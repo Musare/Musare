@@ -1,21 +1,15 @@
 import config from "config";
-import mongoose, {
-	Connection,
-	isObjectIdOrHexString,
-	SchemaTypes,
-	Types
-} from "mongoose";
+import mongoose, { Connection, SchemaTypes } from "mongoose";
 import { patchHistoryPlugin, patchEventEmitter } from "ts-patch-mongoose";
 import { readdir } from "fs/promises";
 import path from "path";
 import updateVersioningPlugin from "mongoose-update-versioning";
-import documentVersionPlugin from "@models/plugins/documentVersion";
-import getDataPlugin from "@models/plugins/getData";
-import Migration from "@models/Migration";
-import JobContext from "@/JobContext";
+import Migration from "@/modules/DataModule/Migration";
+import documentVersionPlugin from "@/modules/DataModule/plugins/documentVersion";
+import getDataPlugin from "@/modules/DataModule/plugins/getData";
 import BaseModule, { ModuleStatus } from "@/BaseModule";
 import { UniqueMethods } from "@/types/Modules";
-import { AnyModel, Models } from "@/types/Models";
+import { Models } from "@/types/Models";
 import { Schemas } from "@/types/Schemas";
 import EventsModule from "./EventsModule";
 
@@ -31,10 +25,6 @@ export class DataModule extends BaseModule {
 		super("data");
 
 		this._dependentModules = ["events"];
-
-		this._jobConfig = {
-			getModel: "disabled"
-		};
 	}
 
 	/**
@@ -51,7 +41,7 @@ export class DataModule extends BaseModule {
 
 		await this._syncModelIndexes();
 
-		await this._defineModelJobs();
+		await this._loadModelJobs();
 
 		await super._started();
 	}
@@ -169,7 +159,7 @@ export class DataModule extends BaseModule {
 		if (!this._mongoConnection) throw new Error("Mongo is not available");
 
 		const { schema }: { schema: Schemas[ModelName] } = await import(
-			`./DataModule/models/schemas/${modelName.toString()}/schema`
+			`./DataModule/models/${modelName.toString()}/schema`
 		);
 
 		schema.plugin(documentVersionPlugin);
@@ -293,26 +283,47 @@ export class DataModule extends BaseModule {
 		return this._models[name];
 	}
 
-	private async _loadMigrations() {
+	private async _loadModelMigrations(modelName: string) {
 		if (!this._mongoConnection) throw new Error("Mongo is not available");
 
-		const migrations = await readdir(
-			path.resolve(__dirname, "./DataModule/models/migrations/")
-		);
+		let migrations;
+
+		try {
+			migrations = await readdir(
+				path.resolve(
+					__dirname,
+					`./DataModule/models/${modelName}/migrations/`
+				)
+			);
+		} catch (error) {
+			if (error.code === "ENOENT") return [];
+
+			throw error;
+		}
 
 		return Promise.all(
 			migrations.map(async migrationFile => {
 				const { default: Migrate }: { default: typeof Migration } =
 					await import(
-						`./DataModule/models/migrations/${migrationFile}`
+						`./DataModule/models/${modelName}/migrations/${migrationFile}`
 					);
 				return new Migrate(this._mongoConnection as Connection);
 			})
 		);
 	}
 
+	private async _loadMigrations() {
+		const models = await readdir(
+			path.resolve(__dirname, "./DataModule/models/")
+		);
+
+		return Promise.all(
+			models.map(async modelName => this._loadModelMigrations(modelName))
+		);
+	}
+
 	private async _runMigrations() {
-		const migrations = await this._loadMigrations();
+		const migrations = (await this._loadMigrations()).flat();
 
 		for (let i = 0; i < migrations.length; i += 1) {
 			const migration = migrations[i];
@@ -321,189 +332,37 @@ export class DataModule extends BaseModule {
 		}
 	}
 
-	private async _defineModelJobs() {
+	private async _loadModelJobs() {
 		if (!this._models) throw new Error("Models not loaded");
 
 		await Promise.all(
-			Object.entries(this._models).map(async ([modelName, model]) => {
-				await Promise.all(
-					["create", "findById", "updateById", "deleteById"].map(
-						async method => {
-							this._jobConfig[`${modelName}.${method}`] = {
-								method: async (context, payload) =>
-									Object.getPrototypeOf(this)[`_${method}`](
-										context,
-										{
-											...payload,
-											modelName,
-											model
-										}
-									)
-							};
-						}
-					)
-				);
+			Object.keys(this._models).map(async modelName => {
+				let jobs;
 
-				const jobConfig = model.schema.get("jobConfig");
-				if (
-					typeof jobConfig === "object" &&
-					Object.keys(jobConfig).length > 0
-				)
-					await Promise.all(
-						Object.entries(jobConfig).map(
-							async ([name, options]) => {
-								if (options === "disabled") {
-									if (this._jobConfig[`${modelName}.${name}`])
-										delete this._jobConfig[
-											`${modelName}.${name}`
-										];
-
-									return;
-								}
-
-								let api = this._jobConfigDefault === true;
-
-								let method;
-
-								const configOptions =
-									this._jobConfig[`${modelName}.${name}`];
-								if (typeof configOptions === "object") {
-									if (typeof configOptions.api === "boolean")
-										api = configOptions.api;
-									if (
-										typeof configOptions.method ===
-										"function"
-									)
-										method = configOptions.method;
-								} else if (typeof configOptions === "function")
-									method = configOptions;
-								else if (typeof configOptions === "boolean")
-									api = configOptions;
-								else if (
-									this._jobConfigDefault === "disabled"
-								) {
-									if (this._jobConfig[`${modelName}.${name}`])
-										delete this._jobConfig[
-											`${modelName}.${name}`
-										];
-
-									return;
-								}
-
-								if (
-									typeof options === "object" &&
-									typeof options.api === "boolean"
-								)
-									api = options.api;
-								else if (typeof options === "boolean")
-									api = options;
-
-								if (
-									typeof options === "object" &&
-									typeof options.method === "function"
-								)
-									method = async (...args) =>
-										options.method.apply(model, args);
-								else if (typeof options === "function")
-									method = async (...args) =>
-										options.apply(model, args);
-
-								if (typeof method !== "function")
-									throw new Error(
-										`Job "${name}" has no function method defined`
-									);
-
-								this._jobConfig[`${modelName}.${name}`] = {
-									api,
-									method
-								};
-							}
+				try {
+					jobs = await readdir(
+						path.resolve(
+							__dirname,
+							`./${this.constructor.name}/models/${modelName}/jobs/`
 						)
 					);
+				} catch (error) {
+					if (error.code === "ENOENT") return;
+
+					throw error;
+				}
+
+				await Promise.all(
+					jobs.map(async jobFile => {
+						const { default: Job } = await import(
+							`./${this.constructor.name}/models/${modelName}/jobs/${jobFile}`
+						);
+
+						this._jobs[Job.getName()] = Job;
+					})
+				);
 			})
 		);
-	}
-
-	private async _findById(
-		context: JobContext,
-		payload: {
-			modelName: keyof Models;
-			model: AnyModel;
-			_id: Types.ObjectId;
-		}
-	) {
-		const { modelName, model, _id } = payload ?? {};
-
-		await context.assertPermission(`data.${modelName}.findById.${_id}`);
-
-		const query = model.findById(_id);
-
-		return query.exec();
-	}
-
-	private async _create(
-		context: JobContext,
-		payload: {
-			modelName: keyof Models;
-			model: AnyModel;
-			query: Record<string, any[]>;
-		}
-	) {
-		const { modelName, model, query } = payload ?? {};
-
-		await context.assertPermission(`data.${modelName}.create`);
-
-		if (typeof query !== "object")
-			throw new Error("Query is not an object");
-		if (Object.keys(query).length === 0)
-			throw new Error("Empty query object provided");
-
-		if (model.schema.path("createdBy"))
-			query.createdBy = (await context.getUser())._id;
-
-		return model.create(query);
-	}
-
-	private async _updateById(
-		context: JobContext,
-		payload: {
-			modelName: keyof Models;
-			model: AnyModel;
-			_id: Types.ObjectId;
-			query: Record<string, any[]>;
-		}
-	) {
-		const { modelName, model, _id, query } = payload ?? {};
-
-		await context.assertPermission(`data.${modelName}.updateById.${_id}`);
-
-		if (!isObjectIdOrHexString(_id))
-			throw new Error("_id is not an ObjectId");
-
-		if (typeof query !== "object")
-			throw new Error("Query is not an object");
-		if (Object.keys(query).length === 0)
-			throw new Error("Empty query object provided");
-
-		return model.updateOne({ _id }, { $set: query });
-	}
-
-	private async _deleteById(
-		context: JobContext,
-		payload: {
-			modelName: keyof Models;
-			model: AnyModel;
-			_id: Types.ObjectId;
-		}
-	) {
-		const { modelName, model, _id } = payload ?? {};
-
-		await context.assertPermission(`data.${modelName}.deleteById.${_id}`);
-
-		if (!isObjectIdOrHexString(_id))
-			throw new Error("_id is not an ObjectId");
-
-		return model.deleteOne({ _id });
 	}
 }
 

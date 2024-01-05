@@ -6,8 +6,6 @@ import { Types, isObjectIdOrHexString } from "mongoose";
 import BaseModule from "@/BaseModule";
 import { UniqueMethods } from "@/types/Modules";
 import WebSocket from "@/WebSocket";
-import JobContext from "@/JobContext";
-import Job from "@/Job";
 import ModuleManager from "@/ModuleManager";
 import JobQueue from "@/JobQueue";
 import DataModule from "./DataModule";
@@ -24,11 +22,6 @@ export class WebSocketModule extends BaseModule {
 	 */
 	public constructor() {
 		super("websocket");
-
-		this._jobConfigDefault = "disabled";
-		this._jobConfig = {
-			dispatch: true
-		};
 	}
 
 	/**
@@ -181,7 +174,7 @@ export class WebSocketModule extends BaseModule {
 
 		socket.on("close", async () => {
 			await JobQueue.runJob(
-				"api",
+				"events",
 				"unsubscribeAll",
 				{},
 				{
@@ -231,8 +224,9 @@ export class WebSocketModule extends BaseModule {
 			const module = ModuleManager.getModule(moduleName);
 			if (!module) throw new Error(`Module "${moduleName}" not found`);
 
-			const job = module.getJob(jobName);
-			if (!job.api) throw new Error(`Job "${jobName}" not found.`);
+			const Job = module.getJob(jobName);
+			if (!Job?.isApiEnabled())
+				throw new Error(`Job "${jobName}" not found.`);
 
 			let session;
 			if (socket.getSessionId()) {

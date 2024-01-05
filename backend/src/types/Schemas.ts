@@ -1,10 +1,10 @@
 import { Types } from "mongoose";
-import { AbcSchemaType } from "@models/schemas/abc/schema";
-import { NewsSchemaType } from "@models/schemas/news/schema";
-import { SessionSchemaType } from "@models/schemas/session/schema";
-import { StationSchemaType } from "@models/schemas/station/schema";
-import { UserSchemaType } from "@models/schemas/user/schema";
-import { DocumentVersion } from "@models/plugins/documentVersion";
+import { NewsSchemaType } from "@models/news/schema";
+import { SessionSchemaType } from "@models/sessions/schema";
+import { StationSchemaType } from "@models/stations/schema";
+import { UserSchemaType } from "@models/users/schema";
+import { AbcSchemaType } from "@models/abc/schema";
+import { DocumentVersion } from "@/modules/DataModule/plugins/documentVersion";
 
 // eslint-disable-next-line
 export interface BaseSchema extends DocumentVersion, TimestampsSchema {
