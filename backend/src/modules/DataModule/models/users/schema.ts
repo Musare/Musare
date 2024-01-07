@@ -172,7 +172,12 @@ export const schema = new Schema<UserSchema, UserModel>(
 			type: SchemaTypes.ObjectId,
 			required: true
 		},
-		favoriteStations: [SchemaTypes.ObjectId],
+		favoriteStations: [
+			{
+				type: SchemaTypes.ObjectId,
+				ref: "stations"
+			}
+		],
 		name: {
 			type: SchemaTypes.String,
 			required: true

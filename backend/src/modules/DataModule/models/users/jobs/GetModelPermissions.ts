@@ -9,6 +9,8 @@ import DataModuleJob from "@/modules/DataModule/DataModuleJob";
 export default class GetModelPermissions extends DataModuleJob {
 	protected static _modelName: keyof Models = "users";
 
+	protected static _hasPermission = true;
+
 	protected override async _validate() {
 		if (typeof this._payload !== "object")
 			throw new Error("Payload must be an object");

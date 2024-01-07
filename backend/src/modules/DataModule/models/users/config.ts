@@ -1,4 +1,5 @@
 import CacheModule from "@/modules/CacheModule";
+import getData from "./getData";
 
 export default {
 	documentVersion: 4,
@@ -15,5 +16,6 @@ export default {
 				`model-permissions.*.user.${oldDoc._id}`
 			]);
 		}
-	}
+	},
+	getData
 };

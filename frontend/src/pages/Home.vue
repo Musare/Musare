@@ -17,6 +17,7 @@ import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
 import keyboardShortcuts from "@/keyboardShortcuts";
+import { useWebsocketStore } from "@/stores/websocket";
 
 const MainHeader = defineAsyncComponent(
 	() => import("@/components/MainHeader.vue")
@@ -43,6 +44,7 @@ const { loggedIn, currentUser } = storeToRefs(userAuthStore);
 const { hasPermission } = userAuthStore;
 
 const { socket } = useWebsocketsStore();
+const websocketStore = useWebsocketStore();
 
 const stations = ref([]);
 const searchQuery = ref("");
@@ -80,7 +82,9 @@ const filteredStations = computed(() => {
 
 const favoriteStations = computed(() =>
 	filteredStations.value
-		.filter(station => station.isFavorited === true)
+		.filter(station =>
+			currentUser.value?.favoriteStations.includes(station._id)
+		)
 		.sort(
 			(a, b) =>
 				orderOfFavoriteStations.value.indexOf(a._id) -
@@ -91,32 +95,33 @@ const favoriteStations = computed(() =>
 const { openModal } = useModalsStore();
 
 const fetchStations = () => {
-	socket.dispatch(
-		"stations.index",
-		route.query.adminFilter === undefined,
-		res => {
-			if (res.status === "success") {
-				stations.value = res.data.stations.map(station => {
-					const modifiableStation = station;
+	websocketStore
+		.runJob("data.stations.index", {
+			adminFilter: route.query.adminFilter !== undefined
+		})
+		.then(data => {
+			console.log(55, data);
+			stations.value = data.map(station => {
+				const modifiableStation = station;
 
-					if (!modifiableStation.currentSong)
-						modifiableStation.currentSong = {
-							thumbnail: "/assets/notes-transparent.png"
-						};
+				modifiableStation.currentSong = {
+					thumbnail: "/assets/notes-transparent.png"
+				};
 
-					if (
-						modifiableStation.currentSong &&
-						!modifiableStation.currentSong.thumbnail
-					)
-						modifiableStation.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.youtubeId}/mqdefault.jpg`;
+				// if (!modifiableStation.currentSong)
+				// 	modifiableStation.currentSong = {
+				// 		thumbnail: "/assets/notes-transparent.png"
+				// 	};
 
-					return modifiableStation;
-				});
+				// if (
+				// 	modifiableStation.currentSong &&
+				// 	!modifiableStation.currentSong.thumbnail
+				// )
+				// 	modifiableStation.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.youtubeId}/mqdefault.jpg`;
 
-				orderOfFavoriteStations.value = res.data.favorited;
-			}
-		}
-	);
+				return modifiableStation;
+			});
+		});
 };
 
 const canRequest = (station, requireLogin = true) =>
@@ -220,7 +225,7 @@ onMounted(async () => {
 			const stationIndex = stations.value.indexOf(station);
 			stations.value.splice(stationIndex, 1);
 
-			if (station.isFavorited)
+			if (currentUser.value?.favoriteStations.includes(station._id))
 				orderOfFavoriteStations.value =
 					orderOfFavoriteStations.value.filter(
 						favoritedId => favoritedId !== stationId
@@ -290,7 +295,6 @@ onMounted(async () => {
 		);
 
 		if (station) {
-			station.isFavorited = true;
 			orderOfFavoriteStations.value.push(stationId);
 		}
 	});
@@ -303,7 +307,6 @@ onMounted(async () => {
 		);
 
 		if (station) {
-			station.isFavorited = false;
 			orderOfFavoriteStations.value =
 				orderOfFavoriteStations.value.filter(
 					favoritedId => favoritedId !== stationId
@@ -316,12 +319,12 @@ onMounted(async () => {
 	});
 
 	socket.on("event:station.djs.added", res => {
-		if (loggedIn.value && res.data.user._id === currentUser.value._id)
+		if (loggedIn.value && res.data.user._id === currentUser.value?._id)
 			fetchStations();
 	});
 
 	socket.on("event:station.djs.removed", res => {
-		if (loggedIn.value && res.data.user._id === currentUser.value._id)
+		if (loggedIn.value && res.data.user._id === currentUser.value?._id)
 			fetchStations();
 	});
 
@@ -485,7 +488,10 @@ onBeforeUnmount(() => {
 									<div class="displayName">
 										<i
 											v-if="
-												loggedIn && !element.isFavorited
+												loggedIn &&
+												!currentUser.favoriteStations.includes(
+													element._id
+												)
 											"
 											@click.prevent="
 												favoriteStation(element._id)
@@ -497,7 +503,10 @@ onBeforeUnmount(() => {
 										>
 										<i
 											v-if="
-												loggedIn && element.isFavorited
+												loggedIn &&
+												currentUser.favoriteStations.includes(
+													element._id
+												)
 											"
 											@click.prevent="
 												unfavoriteStation(element._id)
@@ -761,7 +770,12 @@ onBeforeUnmount(() => {
 						<div class="media">
 							<div class="displayName">
 								<i
-									v-if="loggedIn && !station.isFavorited"
+									v-if="
+										loggedIn &&
+										!currentUser.favoriteStations.includes(
+											station._id
+										)
+									"
 									@click.prevent="
 										favoriteStation(station._id)
 									"
@@ -771,7 +785,12 @@ onBeforeUnmount(() => {
 									>{{ t("Icons.Favorite") }}</i
 								>
 								<i
-									v-if="loggedIn && station.isFavorited"
+									v-if="
+										loggedIn &&
+										currentUser.favoriteStations.includes(
+											station._id
+										)
+									"
 									@click.prevent="
 										unfavoriteStation(station._id)
 									"

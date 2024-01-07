@@ -3,7 +3,7 @@ import { defineAsyncComponent, ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useModalsStore } from "@/stores/modals";
 import { useUserAuthStore } from "@/stores/userAuth";
-import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
+import { TableColumn, TableFilter } from "@/types/advancedTable";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -186,18 +186,6 @@ const filters = ref<TableFilter[]>([
 		defaultFilterType: "numberLesser"
 	}
 ]);
-const events = ref<TableEvents>({
-	adminRoom: "users",
-	updated: {
-		event: "admin.user.updated",
-		id: "user._id",
-		item: "user"
-	},
-	removed: {
-		event: "user.removed",
-		id: "userId"
-	}
-});
 
 const { openModal } = useModalsStore();
 
@@ -225,10 +213,9 @@ onMounted(() => {
 			:column-default="columnDefault"
 			:columns="columns"
 			:filters="filters"
-			data-action="users.getData"
+			model="users"
 			name="admin-users"
 			:max-width="1200"
-			:events="events"
 		>
 			<template #column-options="slotProps">
 				<div class="row-options">

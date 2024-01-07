@@ -244,10 +244,10 @@ export const useStationStore = defineStore("station", {
 			return new Promise(resolve => {
 				const { socket } = useWebsocketsStore();
 				socket.dispatch(
-					"utils.getPermissions",
-					this.station._id,
+					"api.getUserModelPermissions",
+					{ modelName: "stations", modelId: this.station._id },
 					res => {
-						this.permissions = res.data.permissions;
+						this.permissions = res.data;
 						resolve(this.permissions);
 					}
 				);

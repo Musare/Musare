@@ -7,6 +7,8 @@ import DataModuleJob from "@/modules/DataModule/DataModuleJob";
 export default class GetPermissions extends DataModuleJob {
 	protected static _modelName: keyof Models = "users";
 
+	protected static _hasPermission = true;
+
 	protected override async _authorize() {}
 
 	protected async _execute() {
