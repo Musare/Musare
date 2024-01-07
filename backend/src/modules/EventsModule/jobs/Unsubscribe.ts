@@ -11,7 +11,7 @@ export default class Unsubscribe extends Job {
 	}
 
 	protected override async _validate() {
-		if (typeof this._payload !== "object")
+		if (typeof this._payload !== "object" || this._payload === null)
 			throw new Error("Payload must be an object");
 
 		if (typeof this._payload.channel !== "string")

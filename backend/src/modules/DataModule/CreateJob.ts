@@ -3,7 +3,7 @@ import DataModuleJob from "./DataModuleJob";
 
 export default abstract class CreateJob extends DataModuleJob {
 	protected override async _validate() {
-		if (typeof this._payload !== "object")
+		if (typeof this._payload !== "object" || this._payload === null)
 			throw new Error("Payload must be an object");
 
 		if (typeof this._payload.query !== "object")
