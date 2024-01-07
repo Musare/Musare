@@ -10,6 +10,14 @@ export default class Unsubscribe extends Job {
 		super(EventsModule, payload, options);
 	}
 
+	protected override async _validate() {
+		if (typeof this._payload !== "object")
+			throw new Error("Payload must be an object");
+
+		if (typeof this._payload.channel !== "string")
+			throw new Error("Channel must be a string");
+	}
+
 	protected override async _authorize() {}
 
 	protected async _execute({ channel }: { channel: string }) {

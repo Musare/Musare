@@ -10,13 +10,21 @@ export default class Subscribe extends Job {
 		super(EventsModule, payload, options);
 	}
 
+	protected override async _validate() {
+		if (typeof this._payload !== "object")
+			throw new Error("Payload must be an object");
+
+		if (typeof this._payload.channel !== "string")
+			throw new Error("Channel must be a string");
+	}
+
 	protected override async _authorize() {
 		const [, moduleName, modelName, event, modelId] =
 			/^([a-z]+)\.([a-z]+)\.([A-z]+)\.?([A-z0-9]+)?$/.exec(
-				this._payload?.channel
+				this._payload.channel
 			) ?? [];
 
-		let permission = `event.${this._payload?.channel}`;
+		let permission = `event.${this._payload.channel}`;
 
 		if (
 			moduleName === "model" &&

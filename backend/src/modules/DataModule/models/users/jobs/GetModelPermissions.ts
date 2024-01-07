@@ -1,13 +1,28 @@
-import { Types } from "mongoose";
+import { Types, isObjectIdOrHexString } from "mongoose";
 import CacheModule from "@/modules/CacheModule";
 import DataModule from "@/modules/DataModule";
-import { Models, Models } from "@/types/Models";
+import { Models } from "@/types/Models";
 import ModuleManager from "@/ModuleManager";
 import GetPermissions from "./GetPermissions";
 import DataModuleJob from "@/modules/DataModule/DataModuleJob";
 
 export default class GetModelPermissions extends DataModuleJob {
 	protected static _modelName: keyof Models = "users";
+
+	protected override async _validate() {
+		if (typeof this._payload !== "object")
+			throw new Error("Payload must be an object");
+
+		if (typeof this._payload.modelName !== "string")
+			throw new Error("Model name must be a string");
+
+		if (
+			!isObjectIdOrHexString(this._payload.modelId) &&
+			typeof this._payload.modelId !== "undefined" &&
+			this._payload.modelId !== null
+		)
+			throw new Error("Model Id must be an ObjectId or undefined");
+	}
 
 	protected override async _authorize() {}
 

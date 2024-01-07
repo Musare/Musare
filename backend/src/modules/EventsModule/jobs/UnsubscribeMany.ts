@@ -10,6 +10,19 @@ export default class UnsubscribeMany extends Job {
 		super(EventsModule, payload, options);
 	}
 
+	protected override async _validate() {
+		if (typeof this._payload !== "object")
+			throw new Error("Payload must be an object");
+
+		if (!Array.isArray(this._payload.channels))
+			throw new Error("Channels must be an array");
+
+		this._payload.channels.forEach(channel => {
+			if (typeof channel !== "string")
+				throw new Error("Channel must be a string");
+		});
+	}
+
 	protected override async _authorize() {}
 
 	protected async _execute({ channels }: { channels: string[] }) {

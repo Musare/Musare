@@ -168,6 +168,8 @@ export default abstract class Job {
 		return this.constructor._apiEnabled;
 	}
 
+	protected async _validate() {}
+
 	protected async _authorize() {
 		await this._context.assertPermission(this.getPath());
 	}
@@ -189,6 +191,8 @@ export default abstract class Job {
 		this._startedAt = performance.now();
 
 		try {
+			await this._validate();
+
 			await this._authorize();
 
 			const data = await this._execute(this._payload);
