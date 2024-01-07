@@ -1,6 +1,6 @@
 import CacheModule from "@/modules/CacheModule";
 import { Models } from "@/types/Models";
-import permissions from "@/permissions";
+import permissions from "@/modules/DataModule/models/users/permissions";
 import { UserRole } from "../UserRole";
 import DataModuleJob from "@/modules/DataModule/DataModuleJob";
 
