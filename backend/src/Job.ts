@@ -188,76 +188,66 @@ export default abstract class Job {
 		this._setStatus(JobStatus.ACTIVE);
 		this._startedAt = performance.now();
 
-		return (
-			this._authorize()
-				.then(() => this._execute(this._payload))
-				// eslint-disable-next-line
-				// @ts-ignore
-				.then(async data => {
-					if (
-						this._context.getSocketId() &&
-						this._context.getCallbackRef()
-					) {
-						await WebSocketModule.dispatch(
-							this._context.getSocketId(),
-							"jobCallback",
-							this._context.getCallbackRef(),
-							{
-								status: "success",
-								data
-							}
-						);
+		try {
+			await this._authorize();
+
+			const data = await this._execute(this._payload);
+
+			if (this._context.getSocketId() && this._context.getCallbackRef()) {
+				await WebSocketModule.dispatch(
+					this._context.getSocketId(),
+					"jobCallback",
+					this._context.getCallbackRef(),
+					{
+						status: "success",
+						data
 					}
+				);
+			}
 
-					this.log({
-						message: "Job completed successfully",
-						type: "success"
-					});
+			this.log({
+				message: "Job completed successfully",
+				type: "success"
+			});
 
-					JobStatistics.updateStats(this.getPath(), "successful");
+			JobStatistics.updateStats(this.getPath(), "successful");
 
-					return data;
-				})
-				.catch(async (error: any) => {
-					const message = error?.message ?? error;
+			return data;
+		} catch (error: any) {
+			const message = error?.message ?? error;
 
-					if (
-						this._context.getSocketId() &&
-						this._context.getCallbackRef()
-					) {
-						await WebSocketModule.dispatch(
-							this._context.getSocketId(),
-							"jobCallback",
-							this._context.getCallbackRef(),
-							{
-								status: "error",
-								message
-							}
-						);
+			if (this._context.getSocketId() && this._context.getCallbackRef()) {
+				await WebSocketModule.dispatch(
+					this._context.getSocketId(),
+					"jobCallback",
+					this._context.getCallbackRef(),
+					{
+						status: "error",
+						message
 					}
+				);
+			}
 
-					this.log({
-						message: `Job failed with error "${message}"`,
-						type: "error",
-						data: { error }
-					});
+			this.log({
+				message: `Job failed with error "${message}"`,
+				type: "error",
+				data: { error }
+			});
 
-					JobStatistics.updateStats(this.getPath(), "failed");
+			JobStatistics.updateStats(this.getPath(), "failed");
 
-					throw error;
-				})
-				.finally(() => {
-					this._completedAt = performance.now();
-					JobStatistics.updateStats(this.getPath(), "total");
-					if (this._startedAt)
-						JobStatistics.updateStats(
-							this.getPath(),
-							"duration",
-							this._completedAt - this._startedAt
-						);
-					this._setStatus(JobStatus.COMPLETED);
-				})
-		);
+			throw error;
+		} finally {
+			this._completedAt = performance.now();
+			JobStatistics.updateStats(this.getPath(), "total");
+			if (this._startedAt)
+				JobStatistics.updateStats(
+					this.getPath(),
+					"duration",
+					this._completedAt - this._startedAt
+				);
+			this._setStatus(JobStatus.COMPLETED);
+		}
 	}
 
 	/**
