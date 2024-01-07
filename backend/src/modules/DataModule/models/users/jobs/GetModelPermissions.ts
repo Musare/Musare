@@ -1,4 +1,4 @@
-import { Types, isObjectIdOrHexString } from "mongoose";
+import { isObjectIdOrHexString } from "mongoose";
 import CacheModule from "@/modules/CacheModule";
 import DataModule from "@/modules/DataModule";
 import { Models } from "@/types/Models";
@@ -28,13 +28,9 @@ export default class GetModelPermissions extends DataModuleJob {
 
 	protected override async _authorize() {}
 
-	protected async _execute({
-		modelName,
-		modelId
-	}: {
-		modelName: keyof Models;
-		modelId?: Types.ObjectId;
-	}) {
+	protected async _execute() {
+		const { modelName, modelId } = this._payload;
+
 		const user = await this._context.getUser().catch(() => null);
 		const permissions = await this._context.executeJob(GetPermissions);
 

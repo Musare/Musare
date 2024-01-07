@@ -1,6 +1,6 @@
 import DataModule from "../DataModule";
 import DataModuleJob from "./DataModuleJob";
-import { FilterType, GetData } from "./plugins/getData";
+import { FilterType } from "./plugins/getData";
 
 export default abstract class GetDataJob extends DataModuleJob {
 	protected override async _validate() {
@@ -61,9 +61,9 @@ export default abstract class GetDataJob extends DataModuleJob {
 			throw new Error("Operator must be one of; and, or, nor");
 	}
 
-	protected async _execute(payload: Parameters<GetData["getData"]>[0]) {
+	protected async _execute() {
 		const model = await DataModule.getModel(this.getModelName());
 
-		return model.getData(payload);
+		return model.getData(this._payload);
 	}
 }

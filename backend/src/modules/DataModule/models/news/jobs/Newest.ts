@@ -30,15 +30,12 @@ export default class Newest extends DataModuleJob {
 			throw new Error("Limit must be a number or undefined");
 	}
 
-	protected async _execute(payload?: {
-		showToNewUsers?: boolean;
-		limit?: number;
-	}) {
+	protected async _execute() {
 		const model = await DataModule.getModel(this.getModelName());
 
-		const query = model.find().newest(payload?.showToNewUsers);
+		const query = model.find().newest(this._payload?.showToNewUsers);
 
-		if (payload?.limit) return query.limit(payload?.limit);
+		if (this._payload?.limit) return query.limit(this._payload?.limit);
 
 		return query;
 	}

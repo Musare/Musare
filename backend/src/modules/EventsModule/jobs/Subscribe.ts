@@ -39,11 +39,11 @@ export default class Subscribe extends Job {
 		await this._context.assertPermission(permission);
 	}
 
-	protected async _execute({ channel }: { channel: string }) {
+	protected async _execute() {
 		const socketId = this._context.getSocketId();
 
 		if (!socketId) throw new Error("No socketId specified");
 
-		await EventsModule.subscribeSocket(channel, socketId);
+		await EventsModule.subscribeSocket(this._payload.channel, socketId);
 	}
 }

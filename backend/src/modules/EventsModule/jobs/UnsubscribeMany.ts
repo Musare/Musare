@@ -25,11 +25,14 @@ export default class UnsubscribeMany extends Job {
 
 	protected override async _authorize() {}
 
-	protected async _execute({ channels }: { channels: string[] }) {
+	protected async _execute() {
 		const socketId = this._context.getSocketId();
 
 		if (!socketId) throw new Error("No socketId specified");
 
-		await EventsModule.unsubscribeManySocket(channels, socketId);
+		await EventsModule.unsubscribeManySocket(
+			this._payload.channels,
+			socketId
+		);
 	}
 }

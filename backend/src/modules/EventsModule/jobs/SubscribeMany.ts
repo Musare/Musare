@@ -48,11 +48,14 @@ export default class SubscribeMany extends Job {
 		);
 	}
 
-	protected async _execute({ channels }: { channels: string[] }) {
+	protected async _execute() {
 		const socketId = this._context.getSocketId();
 
 		if (!socketId) throw new Error("No socketId specified");
 
-		await EventsModule.subscribeManySocket(channels, socketId);
+		await EventsModule.subscribeManySocket(
+			this._payload.channels,
+			socketId
+		);
 	}
 }

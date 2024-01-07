@@ -13,7 +13,9 @@ export default abstract class CreateJob extends DataModuleJob {
 			throw new Error("Empty query object provided");
 	}
 
-	protected async _execute({ query }: { query: Record<string, any[]> }) {
+	protected async _execute() {
+		const { query } = this._payload;
+
 		const model = await DataModule.getModel(this.getModelName());
 
 		if (model.schema.path("createdBy"))

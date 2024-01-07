@@ -1,4 +1,4 @@
-import { Types, isObjectIdOrHexString } from "mongoose";
+import { isObjectIdOrHexString } from "mongoose";
 import DataModule from "../DataModule";
 import DataModuleJob from "./DataModuleJob";
 
@@ -11,10 +11,10 @@ export default abstract class FindByIdJob extends DataModuleJob {
 			throw new Error("_id is not an ObjectId");
 	}
 
-	protected async _execute({ _id }: { _id: Types.ObjectId }) {
+	protected async _execute() {
 		const model = await DataModule.getModel(this.getModelName());
 
-		const query = model.findById(_id);
+		const query = model.findById(this._payload._id);
 
 		return query.exec();
 	}

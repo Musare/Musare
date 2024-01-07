@@ -1,4 +1,4 @@
-import { Types, isObjectIdOrHexString } from "mongoose";
+import { isObjectIdOrHexString } from "mongoose";
 import DataModule from "../DataModule";
 import DataModuleJob from "./DataModuleJob";
 
@@ -17,13 +17,9 @@ export default abstract class UpdateByIdJob extends DataModuleJob {
 			throw new Error("Empty query object provided");
 	}
 
-	protected async _execute({
-		_id,
-		query
-	}: {
-		_id: Types.ObjectId;
-		query: Record<string, any[]>;
-	}) {
+	protected async _execute() {
+		const { _id, query } = this._payload;
+
 		const model = await DataModule.getModel(this.getModelName());
 
 		return model.updateOne({ _id }, { $set: query });

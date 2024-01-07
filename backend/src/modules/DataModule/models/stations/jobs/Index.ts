@@ -28,7 +28,7 @@ export default class Index extends DataModuleJob {
 
 	protected override async _authorize() {}
 
-	protected async _execute(payload?: { adminFilter?: boolean }) {
+	protected async _execute() {
 		const model = await DataModule.getModel(this.getModelName());
 
 		const data = await model.find();
@@ -41,7 +41,7 @@ export default class Index extends DataModuleJob {
 			if (
 				isPublic(station) ||
 				(user && (isOwner(station, user) || isDj(station, user))) ||
-				(payload?.adminFilter &&
+				(this._payload?.adminFilter &&
 					(await this._context
 						.assertPermission("data.stations.index.adminFilter")
 						.then(() => true)

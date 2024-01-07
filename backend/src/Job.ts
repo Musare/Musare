@@ -195,7 +195,7 @@ export default abstract class Job {
 
 			await this._authorize();
 
-			const data = await this._execute(this._payload);
+			const data = await this._execute();
 
 			if (this._context.getSocketId() && this._context.getCallbackRef()) {
 				await WebSocketModule.dispatch(
