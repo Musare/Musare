@@ -10,7 +10,7 @@
 	"repository": "https://github.com/Musare/Musare",
 	"scripts": {
 		"dev": "ts-node-dev -r tsconfig-paths/register -i --transpile-only ${INSPECT_BRK} ./src/main.ts",
-		"build": "tsc",
+		"build": "tsc && tsc-alias",
 		"prod": "node build/src/main.js",
 		"lint": "eslint src --ext .js,.ts",
 		"typescript": "tsc --noEmit",
@@ -61,6 +61,7 @@
 		"trace-unhandled": "^2.0.1",
 		"ts-node": "^10.9.1",
 		"ts-node-dev": "^2.0.0",
+		"tsc-alias": "^1.8.8",
 		"tsconfig-paths": "^4.2.0",
 		"typescript": "^5.0.4"
 	}
