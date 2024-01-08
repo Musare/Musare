@@ -1,4 +1,3 @@
-import { UniqueMethods } from "@/types/Modules";
 import BaseModule from "@/BaseModule";
 
 export class StationsModule extends BaseModule {
@@ -28,12 +27,5 @@ export class StationsModule extends BaseModule {
 		await super._stopped();
 	}
 }
-
-export type StationsModuleJobs = {
-	[Property in keyof UniqueMethods<StationsModule>]: {
-		payload: Parameters<UniqueMethods<StationsModule>[Property]>[1];
-		returns: Awaited<ReturnType<UniqueMethods<StationsModule>[Property]>>;
-	};
-};
 
 export default new StationsModule();

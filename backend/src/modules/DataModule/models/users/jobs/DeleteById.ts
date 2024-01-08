@@ -1,6 +1,5 @@
 import DeleteByIdJob from "@/modules/DataModule/DeleteByIdJob";
-import { Models } from "@/types/Models";
 
 export default class DeleteById extends DeleteByIdJob {
-	protected static _modelName: keyof Models = "users";
+	protected static _modelName = "users";
 }

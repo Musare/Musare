@@ -6,6 +6,7 @@ import JobQueue from "@/JobQueue";
 import JobStatistics from "@/JobStatistics";
 import DataModule from "@/modules/DataModule";
 import EventsModule from "./modules/EventsModule";
+import { NewsModel } from "./modules/DataModule/models/news/schema";
 
 process.removeAllListeners("uncaughtException");
 process.on("uncaughtException", err => {
@@ -20,7 +21,7 @@ process.on("uncaughtException", err => {
 });
 
 ModuleManager.startup().then(async () => {
-	const Model = await DataModule.getModel("news");
+	const Model = await DataModule.getModel<NewsModel>("news");
 	// console.log("Model", Model);
 	const abcs = await Model.findOne({}).newest();
 	console.log("Abcs", abcs);
@@ -136,7 +137,7 @@ const runCommand = (line: string) => {
 			break;
 		}
 		case "stats": {
-			console.log("Job Queue Stats:");
+			console.log("Job Statistics:");
 			console.table(JobStatistics.getStats());
 			break;
 		}

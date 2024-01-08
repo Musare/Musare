@@ -1,6 +1,7 @@
+import { Model } from "mongoose";
 import DataModule from "../DataModule";
 import DataModuleJob from "./DataModuleJob";
-import { FilterType } from "./plugins/getData";
+import { FilterType, GetData } from "./plugins/getData";
 
 export default abstract class GetDataJob extends DataModuleJob {
 	protected override async _validate() {
@@ -16,7 +17,7 @@ export default abstract class GetDataJob extends DataModuleJob {
 		if (!Array.isArray(this._payload.properties))
 			throw new Error("Properties must be an array");
 
-		this._payload.properties.forEach(property => {
+		this._payload.properties.forEach((property: unknown) => {
 			if (typeof property !== "string")
 				throw new Error("Property must be a string");
 		});
@@ -62,7 +63,12 @@ export default abstract class GetDataJob extends DataModuleJob {
 	}
 
 	protected async _execute() {
-		const model = await DataModule.getModel(this.getModelName());
+		const model = await DataModule.getModel<Model<any> & Partial<GetData>>(
+			this.getModelName()
+		);
+
+		if (typeof model.getData !== "function")
+			throw new Error("Get data not available for model");
 
 		return model.getData(this._payload);
 	}

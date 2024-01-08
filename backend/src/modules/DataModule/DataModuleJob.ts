@@ -1,22 +1,18 @@
-import { isObjectIdOrHexString } from "mongoose";
+import { HydratedDocument, Model, isObjectIdOrHexString } from "mongoose";
 import Job from "@/Job";
 import DataModule from "../DataModule";
-import { AnyModel, Models } from "@/types/Models";
 import { JobOptions } from "@/types/JobOptions";
 import { UserModel } from "./models/users/schema";
 
 export default abstract class DataModuleJob extends Job {
-	protected static _modelName: keyof Models;
+	protected static _modelName: string;
 
 	protected static _hasPermission:
 		| boolean
 		| CallableFunction
 		| (boolean | CallableFunction)[] = false;
 
-	public constructor(
-		payload: any,
-		options?: Omit<JobOptions, "runDirectly">
-	) {
+	public constructor(payload?: unknown, options?: JobOptions) {
 		super(DataModule, payload, options);
 	}
 
@@ -25,7 +21,9 @@ export default abstract class DataModuleJob extends Job {
 	}
 
 	public override getName() {
-		return `${this.constructor._modelName}.${super.getName()}`;
+		return `${
+			(this.constructor as typeof DataModuleJob)._modelName
+		}.${super.getName()}`;
 	}
 
 	public static getModelName() {
@@ -33,10 +31,13 @@ export default abstract class DataModuleJob extends Job {
 	}
 
 	public getModelName() {
-		return this.constructor._modelName;
+		return (this.constructor as typeof DataModuleJob)._modelName;
 	}
 
-	public static async hasPermission(model: AnyModel, user?: UserModel) {
+	public static async hasPermission(
+		model: HydratedDocument<Model<any>>,
+		user?: UserModel
+	) {
 		const options = Array.isArray(this._hasPermission)
 			? this._hasPermission
 			: [this._hasPermission];

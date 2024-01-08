@@ -2,7 +2,6 @@ import { readdir } from "fs/promises";
 import path from "path";
 import LogBook, { Log } from "@/LogBook";
 import ModuleManager from "@/ModuleManager";
-import { Modules } from "@/types/Modules";
 import Job from "./Job";
 
 export enum ModuleStatus {
@@ -20,7 +19,7 @@ export default abstract class BaseModule {
 
 	protected _status: ModuleStatus;
 
-	protected _dependentModules: (keyof Modules)[];
+	protected _dependentModules: string[];
 
 	protected _jobs: Record<string, typeof Job>;
 
@@ -128,7 +127,7 @@ export default abstract class BaseModule {
 	 */
 	public canRunJobs() {
 		return this.getDependentModules().reduce(
-			(canRunJobs: boolean, moduleName: keyof Modules): boolean => {
+			(canRunJobs: boolean, moduleName: string): boolean => {
 				if (canRunJobs === false) return false;
 
 				return !!ModuleManager.getModule(moduleName)?.canRunJobs();

@@ -3,10 +3,7 @@ import EventsModule from "@/modules/EventsModule";
 import { JobOptions } from "@/types/JobOptions";
 
 export default class UnsubscribeMany extends Job {
-	public constructor(
-		payload?: any,
-		options?: Omit<JobOptions, "runDirectly">
-	) {
+	public constructor(payload?: unknown, options?: JobOptions) {
 		super(EventsModule, payload, options);
 	}
 
@@ -17,7 +14,7 @@ export default class UnsubscribeMany extends Job {
 		if (!Array.isArray(this._payload.channels))
 			throw new Error("Channels must be an array");
 
-		this._payload.channels.forEach(channel => {
+		this._payload.channels.forEach((channel: unknown) => {
 			if (typeof channel !== "string")
 				throw new Error("Channel must be a string");
 		});

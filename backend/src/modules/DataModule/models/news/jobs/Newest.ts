@@ -1,9 +1,9 @@
 import DataModule from "@/modules/DataModule";
 import DataModuleJob from "@/modules/DataModule/DataModuleJob";
-import { Models } from "@/types/Models";
+import { NewsModel } from "../schema";
 
 export default class Newest extends DataModuleJob {
-	protected static _modelName: keyof Models = "news";
+	protected static _modelName = "news";
 
 	protected static _hasPermission = true;
 
@@ -31,7 +31,7 @@ export default class Newest extends DataModuleJob {
 	}
 
 	protected async _execute() {
-		const model = await DataModule.getModel(this.getModelName());
+		const model = await DataModule.getModel<NewsModel>(this.getModelName());
 
 		const query = model.find().newest(this._payload?.showToNewUsers);
 

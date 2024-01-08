@@ -3,10 +3,7 @@ import EventsModule from "@/modules/EventsModule";
 import { JobOptions } from "@/types/JobOptions";
 
 export default class Subscribe extends Job {
-	public constructor(
-		payload?: any,
-		options?: Omit<JobOptions, "runDirectly">
-	) {
+	public constructor(payload?: unknown, options?: JobOptions) {
 		super(EventsModule, payload, options);
 	}
 

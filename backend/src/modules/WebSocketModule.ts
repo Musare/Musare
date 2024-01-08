@@ -4,11 +4,12 @@ import http, { Server, IncomingMessage } from "node:http";
 import { RawData, WebSocketServer } from "ws";
 import { Types, isObjectIdOrHexString } from "mongoose";
 import BaseModule from "@/BaseModule";
-import { UniqueMethods } from "@/types/Modules";
 import WebSocket from "@/WebSocket";
 import ModuleManager from "@/ModuleManager";
 import JobQueue from "@/JobQueue";
 import DataModule from "./DataModule";
+import { UserModel } from "./DataModule/models/users/schema";
+import { SessionModel } from "./DataModule/models/sessions/schema";
 
 export class WebSocketModule extends BaseModule {
 	private _httpServer?: Server;
@@ -121,7 +122,7 @@ export class WebSocketModule extends BaseModule {
 			});
 
 			if (session) {
-				const User = await DataModule.getModel("users");
+				const User = await DataModule.getModel<UserModel>("users");
 
 				user = await User.findById(session.userId);
 			}
@@ -230,7 +231,9 @@ export class WebSocketModule extends BaseModule {
 
 			let session;
 			if (socket.getSessionId()) {
-				const Session = await DataModule.getModel("sessions");
+				const Session = await DataModule.getModel<SessionModel>(
+					"sessions"
+				);
 
 				session = await Session.findByIdAndUpdate(
 					socket.getSessionId(),
@@ -294,7 +297,11 @@ export class WebSocketModule extends BaseModule {
 	/**
 	 * dispatch - Dispatch message to socket
 	 */
-	public async dispatch(socketId: string, channel: string, ...values) {
+	public async dispatch(
+		socketId: string,
+		channel: string,
+		...values: unknown[]
+	) {
 		const socket = await this.getSocket(socketId);
 
 		if (!socket) return;
@@ -314,12 +321,5 @@ export class WebSocketModule extends BaseModule {
 		await this._stopped();
 	}
 }
-
-export type WebSocketModuleJobs = {
-	[Property in keyof UniqueMethods<WebSocketModule>]: {
-		payload: Parameters<UniqueMethods<WebSocketModule>[Property]>[1];
-		returns: Awaited<ReturnType<UniqueMethods<WebSocketModule>[Property]>>;
-	};
-};
 
 export default new WebSocketModule();

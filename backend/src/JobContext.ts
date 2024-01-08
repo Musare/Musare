@@ -3,6 +3,7 @@ import Job from "@/Job";
 import { Log } from "@/LogBook";
 import { JobOptions } from "@/types/JobOptions";
 import DataModule from "@/modules/DataModule";
+import { UserModel } from "@/modules/DataModule/models/users/schema";
 
 export default class JobContext {
 	public readonly job: Job;
@@ -54,7 +55,7 @@ export default class JobContext {
 
 	public executeJob(
 		JobClass: typeof Job,
-		payload?: any,
+		payload?: unknown,
 		options?: JobOptions
 	) {
 		return new JobClass(payload, {
@@ -68,7 +69,7 @@ export default class JobContext {
 		if (!this._session?.userId)
 			throw new Error("No user found for session");
 
-		const User = await DataModule.getModel("users");
+		const User = await DataModule.getModel<UserModel>("users");
 
 		const user = await User.findById(this._session.userId);
 

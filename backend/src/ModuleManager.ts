@@ -1,9 +1,8 @@
-import { ModuleStatus } from "@/BaseModule";
+import BaseModule, { ModuleStatus } from "@/BaseModule";
 import JobQueue from "@/JobQueue";
-import { Modules } from "@/types/Modules";
 
 export class ModuleManager {
-	private _modules?: Modules;
+	private _modules?: Record<string, BaseModule>;
 
 	/**
 	 * getStatus - Get status of modules
@@ -22,8 +21,12 @@ export class ModuleManager {
 	 * Gets a module
 	 *
 	 */
-	public getModule(moduleName: keyof Modules) {
-		return this._modules && this._modules[moduleName];
+	public getModule<ModuleType extends BaseModule>(
+		moduleName: string
+	): ModuleType | undefined {
+		return (this._modules && this._modules[moduleName]) as
+			| ModuleType
+			| undefined;
 	}
 
 	/**
@@ -32,15 +35,17 @@ export class ModuleManager {
 	 * @param moduleName - Name of the module
 	 * @returns Module
 	 */
-	private async _loadModule<T extends keyof Modules>(moduleName: T) {
-		const mapper = {
+	private async _loadModule<ModuleType extends BaseModule>(
+		moduleName: string
+	): Promise<ModuleType> {
+		const mapper: Record<string, string> = {
 			cache: "CacheModule",
 			data: "DataModule",
 			events: "EventsModule",
 			stations: "StationsModule",
 			websocket: "WebSocketModule"
 		};
-		const { default: Module }: { default: Modules[T] } = await import(
+		const { default: Module }: { default: ModuleType } = await import(
 			`./modules/${mapper[moduleName]}`
 		);
 		return Module;
@@ -64,7 +69,7 @@ export class ModuleManager {
 	/**
 	 * startModule - Start module
 	 */
-	private async _startModule(module: Modules[keyof Modules]) {
+	private async _startModule(module: BaseModule) {
 		switch (module.getStatus()) {
 			case ModuleStatus.STARTING:
 			case ModuleStatus.STARTED:
@@ -147,7 +152,7 @@ export class ModuleManager {
 				].includes(module.getStatus())
 			);
 
-			const shutdownOrder: (keyof Modules)[] = [];
+			const shutdownOrder: string[] = [];
 
 			for (const [name, module] of modules) {
 				if (!shutdownOrder.includes(name)) shutdownOrder.push(name);

@@ -1,5 +1,5 @@
 import config from "config";
-import mongoose, { Connection, SchemaTypes } from "mongoose";
+import mongoose, { Connection, Model, Schema, SchemaTypes } from "mongoose";
 import { patchHistoryPlugin, patchEventEmitter } from "ts-patch-mongoose";
 import { readdir } from "fs/promises";
 import path from "path";
@@ -8,15 +8,16 @@ import Migration from "@/modules/DataModule/Migration";
 import documentVersionPlugin from "@/modules/DataModule/plugins/documentVersion";
 import getDataPlugin from "@/modules/DataModule/plugins/getData";
 import BaseModule, { ModuleStatus } from "@/BaseModule";
-import { UniqueMethods } from "@/types/Modules";
-import { Models } from "@/types/Models";
-import { Schemas } from "@/types/Schemas";
 import EventsModule from "./EventsModule";
+import DataModuleJob from "./DataModule/DataModuleJob";
+import Job from "@/Job";
 
 export class DataModule extends BaseModule {
-	private _models?: Models;
+	private _models?: Record<string, Model<any>>;
 
 	private _mongoConnection?: Connection;
+
+	declare _jobs: Record<string, typeof Job | typeof DataModuleJob>;
 
 	/**
 	 * Data Module
@@ -84,10 +85,7 @@ export class DataModule extends BaseModule {
 	/**
 	 * registerEvents - Register events for schema with event module
 	 */
-	private async _registerEvents<
-		ModelName extends keyof Models,
-		SchemaType extends Schemas[keyof ModelName]
-	>(modelName: ModelName, schema: SchemaType) {
+	private async _registerEvents(modelName: string, schema: Schema<any>) {
 		const { enabled, eventCreated, eventUpdated, eventDeleted } =
 			schema.get("patchHistory") ?? {};
 
@@ -128,10 +126,7 @@ export class DataModule extends BaseModule {
 	/**
 	 * registerEvents - Register events for schema with event module
 	 */
-	private async _registerEventListeners<
-		ModelName extends keyof Models,
-		SchemaType extends Schemas[keyof ModelName]
-	>(schema: SchemaType) {
+	private async _registerEventListeners(schema: Schema<any>) {
 		const eventListeners = schema.get("eventListeners");
 
 		if (
@@ -153,12 +148,10 @@ export class DataModule extends BaseModule {
 	 * @param modelName - Name of the model
 	 * @returns Model
 	 */
-	private async _loadModel<ModelName extends keyof Models>(
-		modelName: ModelName
-	): Promise<Models[ModelName]> {
+	private async _loadModel(modelName: string): Promise<Model<any>> {
 		if (!this._mongoConnection) throw new Error("Mongo is not available");
 
-		const { schema }: { schema: Schemas[ModelName] } = await import(
+		const { schema }: { schema: Schema<any> } = await import(
 			`./DataModule/models/${modelName.toString()}/schema`
 		);
 
@@ -274,13 +267,17 @@ export class DataModule extends BaseModule {
 	 *
 	 * @returns Model
 	 */
-	public async getModel<ModelName extends keyof Models>(name: ModelName) {
+	public async getModel<ModelType extends Model<any>>(
+		name: string
+	): Promise<ModelType> {
 		if (!this._models) throw new Error("Models not loaded");
 
 		if (this.getStatus() !== ModuleStatus.STARTED)
 			throw new Error("Module not started");
 
-		return this._models[name];
+		if (!this._models[name]) throw new Error("Model not found");
+
+		return this._models[name] as ModelType;
 	}
 
 	private async _loadModelMigrations(modelName: string) {
@@ -365,12 +362,5 @@ export class DataModule extends BaseModule {
 		);
 	}
 }
-
-export type DataModuleJobs = {
-	[Property in keyof UniqueMethods<DataModule>]: {
-		payload: Parameters<UniqueMethods<DataModule>[Property]>[1];
-		returns: Awaited<ReturnType<UniqueMethods<DataModule>[Property]>>;
-	};
-};
 
 export default new DataModule();

@@ -1,7 +1,6 @@
 import config from "config";
 import { RedisClientType, createClient } from "redis";
 import BaseModule, { ModuleStatus } from "@/BaseModule";
-import { UniqueMethods } from "@/types/Modules";
 
 export class CacheModule extends BaseModule {
 	private _redisClient?: RedisClientType;
@@ -19,7 +18,6 @@ export class CacheModule extends BaseModule {
 	public override async startup() {
 		await super.startup();
 
-		// @ts-ignore
 		this._redisClient = createClient({
 			...config.get("redis"),
 			reconnectStrategy: (retries: number, error) => {
@@ -142,12 +140,5 @@ export class CacheModule extends BaseModule {
 		return this._redisClient!.HDEL(table, key);
 	}
 }
-
-export type CacheModuleJobs = {
-	[Property in keyof UniqueMethods<CacheModule>]: {
-		payload: Parameters<UniqueMethods<CacheModule>[Property]>[1];
-		returns: Awaited<ReturnType<UniqueMethods<CacheModule>[Property]>>;
-	};
-};
 
 export default new CacheModule();

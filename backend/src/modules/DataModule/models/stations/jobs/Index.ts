@@ -3,10 +3,10 @@ import DataModuleJob from "@/modules/DataModule/DataModuleJob";
 import isDj from "@/modules/DataModule/permissions/isDj";
 import isOwner from "@/modules/DataModule/permissions/isOwner";
 import isPublic from "@/modules/DataModule/permissions/isPublic";
-import { Models } from "@/types/Models";
+import { StationModel } from "../schema";
 
 export default class Index extends DataModuleJob {
-	protected static _modelName: keyof Models = "stations";
+	protected static _modelName = "stations";
 
 	protected static _hasPermission = true;
 
@@ -29,7 +29,9 @@ export default class Index extends DataModuleJob {
 	protected override async _authorize() {}
 
 	protected async _execute() {
-		const model = await DataModule.getModel(this.getModelName());
+		const model = await DataModule.getModel<StationModel>(
+			this.getModelName()
+		);
 
 		const data = await model.find();
 

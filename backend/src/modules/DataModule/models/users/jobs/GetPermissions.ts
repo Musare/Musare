@@ -1,11 +1,10 @@
 import CacheModule from "@/modules/CacheModule";
-import { Models } from "@/types/Models";
 import permissions from "@/modules/DataModule/models/users/permissions";
 import { UserRole } from "../UserRole";
 import DataModuleJob from "@/modules/DataModule/DataModuleJob";
 
 export default class GetPermissions extends DataModuleJob {
-	protected static _modelName: keyof Models = "users";
+	protected static _modelName = "users";
 
 	protected static _hasPermission = true;
 

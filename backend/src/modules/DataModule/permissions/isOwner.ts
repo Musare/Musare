@@ -1,4 +1,15 @@
-export default (model, user) => {
+import { HydratedDocument, Schema, Types } from "mongoose";
+import { UserSchema } from "../models/users/schema";
+
+export default <
+	ModelSchemaType extends Schema & {
+		createdBy?: Types.ObjectId;
+		owner?: Types.ObjectId;
+	}
+>(
+	model: HydratedDocument<ModelSchemaType>,
+	user?: HydratedDocument<UserSchema>
+) => {
 	if (!(user && model)) return false;
 
 	let ownerAttribute;
@@ -7,7 +18,7 @@ export default (model, user) => {
 	else if (model.schema.path("owner")) ownerAttribute = "owner";
 
 	if (ownerAttribute)
-		return model[ownerAttribute]?.toString() === user._id.toString();
+		return model.get(ownerAttribute)?.toString() === user._id.toString();
 
 	return false;
 };

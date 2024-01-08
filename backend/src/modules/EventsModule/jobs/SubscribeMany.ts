@@ -3,10 +3,7 @@ import EventsModule from "@/modules/EventsModule";
 import { JobOptions } from "@/types/JobOptions";
 
 export default class SubscribeMany extends Job {
-	public constructor(
-		payload?: any,
-		options?: Omit<JobOptions, "runDirectly">
-	) {
+	public constructor(payload?: unknown, options?: JobOptions) {
 		super(EventsModule, payload, options);
 	}
 
@@ -17,7 +14,7 @@ export default class SubscribeMany extends Job {
 		if (!Array.isArray(this._payload.channels))
 			throw new Error("Channels must be an array");
 
-		this._payload.channels.forEach(channel => {
+		this._payload.channels.forEach((channel: unknown) => {
 			if (typeof channel !== "string")
 				throw new Error("Channel must be a string");
 		});
@@ -25,7 +22,7 @@ export default class SubscribeMany extends Job {
 
 	protected override async _authorize() {
 		await Promise.all(
-			this._payload.channels.map(async channel => {
+			this._payload.channels.map(async (channel: string) => {
 				const [, moduleName, modelName, event, modelId] =
 					/^([a-z]+)\.([a-z]+)\.([A-z]+)\.?([A-z0-9]+)?$/.exec(
 						channel

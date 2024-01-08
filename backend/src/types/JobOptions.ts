@@ -1,4 +1,4 @@
-import { SessionSchema } from "@models/schemas/session";
+import { SessionSchema } from "@models/sessions/schema";
 
 export type JobOptions = {
 	priority?: number;

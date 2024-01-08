@@ -1,8 +1,6 @@
 import { createClient, RedisClientType } from "redis";
 import config from "config";
-import crypto from "node:crypto";
 import BaseModule, { ModuleStatus } from "@/BaseModule";
-import { UniqueMethods } from "@/types/Modules";
 import WebSocketModule from "./WebSocketModule";
 
 export class EventsModule extends BaseModule {
@@ -354,12 +352,5 @@ export class EventsModule extends BaseModule {
 		await this._stopped();
 	}
 }
-
-export type EventsModuleJobs = {
-	[Property in keyof UniqueMethods<EventsModule>]: {
-		payload: Parameters<UniqueMethods<EventsModule>[Property]>[1];
-		returns: Awaited<ReturnType<UniqueMethods<EventsModule>[Property]>>;
-	};
-};
 
 export default new EventsModule();

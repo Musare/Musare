@@ -1,13 +1,12 @@
 import { isObjectIdOrHexString } from "mongoose";
 import CacheModule from "@/modules/CacheModule";
 import DataModule from "@/modules/DataModule";
-import { Models } from "@/types/Models";
 import ModuleManager from "@/ModuleManager";
 import GetPermissions from "./GetPermissions";
 import DataModuleJob from "@/modules/DataModule/DataModuleJob";
 
 export default class GetModelPermissions extends DataModuleJob {
-	protected static _modelName: keyof Models = "users";
+	protected static _modelName = "users";
 
 	protected static _hasPermission = true;
 

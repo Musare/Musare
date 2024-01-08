@@ -1,7 +1,5 @@
-import BaseModule from "@/BaseModule";
 import Job, { JobStatus } from "@/Job";
 import { JobOptions } from "@/types/JobOptions";
-import { Jobs, Modules } from "@/types/Modules";
 import ModuleManager from "./ModuleManager";
 
 export class JobQueue {
@@ -20,8 +18,8 @@ export class JobQueue {
 	private _callbacks: Record<
 		string,
 		{
-			resolve: (value: any) => void;
-			reject: (reason?: any) => void;
+			resolve: (value: unknown) => void;
+			reject: (reason?: unknown) => void;
 		}
 	>;
 
@@ -67,18 +65,14 @@ export class JobQueue {
 
 	/**
 	 * runJob - Run a job
-	 *
-	 * @param moduleName - Module name
-	 * @param jobName - Job name
-	 * @param params - Params
 	 */
-	public async runJob<ModuleNameType extends keyof Jobs & keyof Modules>(
-		moduleName: ModuleNameType,
+	public async runJob(
+		moduleName: string,
 		jobName: string,
-		payload: any,
+		payload?: unknown,
 		options?: JobOptions
-	): Promise<ReturnType> {
-		return new Promise<ReturnType>((resolve, reject) => {
+	): Promise<unknown> {
+		return new Promise<unknown>((resolve, reject) => {
 			this.queueJob(
 				moduleName,
 				jobName,
@@ -91,18 +85,14 @@ export class JobQueue {
 
 	/**
 	 * queueJob - Queue a job
-	 *
-	 * @param moduleName - Module name
-	 * @param jobName - Job name
-	 * @param params - Params
 	 */
-	public async queueJob<ModuleNameType extends keyof Jobs & keyof Modules>(
-		moduleName: ModuleNameType,
+	public async queueJob(
+		moduleName: string,
 		jobName: string,
-		payload: any,
+		payload: unknown,
 		callback: {
-			resolve: (value: any) => void;
-			reject: (reason?: any) => void;
+			resolve: (value: unknown) => void;
+			reject: (reason?: unknown) => void;
 		},
 		options?: JobOptions
 	): Promise<string> {

@@ -2,8 +2,8 @@ import JobContext from "@/JobContext";
 import JobStatistics from "@/JobStatistics";
 import LogBook, { Log } from "@/LogBook";
 import { JobOptions } from "@/types/JobOptions";
-import { Modules } from "@/types/Modules";
 import WebSocketModule from "./modules/WebSocketModule";
+import BaseModule from "./BaseModule";
 
 export enum JobStatus {
 	QUEUED = "QUEUED",
@@ -15,7 +15,7 @@ export enum JobStatus {
 export default abstract class Job {
 	protected static _apiEnabled = true;
 
-	protected _module: Modules[keyof Modules];
+	protected _module: InstanceType<typeof BaseModule>;
 
 	protected _payload: any;
 
@@ -51,9 +51,9 @@ export default abstract class Job {
 	 * @param options - Job options
 	 */
 	public constructor(
-		module: Modules[keyof Modules],
-		payload: any,
-		options?: Omit<JobOptions, "runDirectly">
+		module: InstanceType<typeof BaseModule>,
+		payload: unknown,
+		options?: JobOptions
 	) {
 		this._module = module;
 		this._payload = payload;
@@ -165,7 +165,7 @@ export default abstract class Job {
 	}
 
 	public isApiEnabled() {
-		return this.constructor._apiEnabled;
+		return (this.constructor as typeof Job)._apiEnabled;
 	}
 
 	protected async _validate() {}
@@ -174,7 +174,7 @@ export default abstract class Job {
 		await this._context.assertPermission(this.getPath());
 	}
 
-	protected abstract _execute();
+	protected abstract _execute(): Promise<unknown>;
 
 	/**
 	 * execute - Execute job
@@ -197,9 +197,11 @@ export default abstract class Job {
 
 			const data = await this._execute();
 
-			if (this._context.getSocketId() && this._context.getCallbackRef()) {
+			const socketId = this._context.getSocketId();
+
+			if (socketId && this._context.getCallbackRef()) {
 				await WebSocketModule.dispatch(
-					this._context.getSocketId(),
+					socketId,
 					"jobCallback",
 					this._context.getCallbackRef(),
 					{
@@ -217,12 +219,14 @@ export default abstract class Job {
 			JobStatistics.updateStats(this.getPath(), "successful");
 
 			return data;
-		} catch (error: any) {
+		} catch (error: unknown) {
 			const message = error?.message ?? error;
 
-			if (this._context.getSocketId() && this._context.getCallbackRef()) {
+			const socketId = this._context.getSocketId();
+
+			if (socketId && this._context.getCallbackRef()) {
 				await WebSocketModule.dispatch(
-					this._context.getSocketId(),
+					socketId,
 					"jobCallback",
 					this._context.getCallbackRef(),
 					{
