@@ -151,7 +151,7 @@ export class EventsModule extends BaseModule {
 		if (!channel || typeof channel !== "string")
 			throw new Error("Invalid channel");
 
-		return `${type}:${channel}`;
+		return `${type}.${channel}`;
 	}
 
 	/**
@@ -172,9 +172,7 @@ export class EventsModule extends BaseModule {
 	 * subscriptionListener - Listener for event subscriptions
 	 */
 	private async _subscriptionListener(message: string, key: string) {
-		const [, channel] = key.split(":");
-
-		if (!this._subscriptions || !this._subscriptions[channel]) return;
+		const [, channel] = key.split(".");
 
 		if (message.startsWith("[") || message.startsWith("{"))
 			try {
@@ -185,9 +183,10 @@ export class EventsModule extends BaseModule {
 		else if (message.startsWith('"') && message.endsWith('"'))
 			message = message.substring(1).substring(0, message.length - 2);
 
-		await Promise.all(
-			this._subscriptions[channel].map(async cb => cb(message))
-		);
+		if (this._subscriptions && this._subscriptions[channel])
+			await Promise.all(
+				this._subscriptions[channel].map(async cb => cb(message))
+			);
 
 		if (this._pSubscriptions)
 			await Promise.all(

@@ -10,6 +10,7 @@ import JobQueue from "@/JobQueue";
 import DataModule from "./DataModule";
 import { UserModel } from "./DataModule/models/users/schema";
 import { SessionModel } from "./DataModule/models/sessions/schema";
+import EventsModule from "./EventsModule";
 
 export class WebSocketModule extends BaseModule {
 	private _httpServer?: Server;
@@ -23,6 +24,8 @@ export class WebSocketModule extends BaseModule {
 	 */
 	public constructor() {
 		super("websocket");
+
+		this._dependentModules = ["data", "events"];
 	}
 
 	/**
@@ -52,6 +55,24 @@ export class WebSocketModule extends BaseModule {
 		this._wsServer.on("close", async () =>
 			clearInterval(this._keepAliveInterval)
 		);
+
+		await EventsModule.pSubscribe("job.*", async payload => {
+			if (
+				!payload ||
+				typeof payload !== "object" ||
+				Array.isArray(payload)
+			)
+				return;
+
+			const { socketId, callbackRef } = payload;
+
+			if (!socketId || !callbackRef) return;
+
+			delete payload.socketId;
+			delete payload.callbackRef;
+
+			this.dispatch(socketId, "jobCallback", callbackRef, payload);
+		});
 
 		await super._started();
 	}
@@ -174,18 +195,17 @@ export class WebSocketModule extends BaseModule {
 		);
 
 		socket.on("close", async () => {
-			await JobQueue.runJob(
-				"events",
-				"unsubscribeAll",
-				{},
-				{
-					socketId: socket.getSocketId()
-				}
-			);
+			const socketId = socket.getSocketId();
+
+			const Job = EventsModule.getJob("unsubscribeAll");
+
+			await JobQueue.runJob(Job, null, {
+				socketId
+			});
 
 			socket.log({
 				type: "debug",
-				message: `WebSocket closed #${socket.getSocketId()}`
+				message: `WebSocket closed #${socketId}`
 			});
 		});
 
@@ -243,17 +263,11 @@ export class WebSocketModule extends BaseModule {
 				);
 			}
 
-			await JobQueue.queueJob(
-				moduleName,
-				jobName,
-				payload,
-				{},
-				{
-					session,
-					socketId: socket.getSocketId(),
-					callbackRef
-				}
-			);
+			await JobQueue.queueJob(Job, payload, {
+				session,
+				socketId: socket.getSocketId(),
+				callbackRef
+			});
 		} catch (error) {
 			const message = error?.message ?? error;
 

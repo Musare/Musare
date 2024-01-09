@@ -123,7 +123,6 @@ const runCommand = (line: string) => {
 			console.log("stats - Shows jobs stats");
 			console.log("queue - Shows a table of all jobs in the queue");
 			console.log("active - Shows a table of all jobs currently running");
-			console.log("jobinfo <jobId> - Print all info about a job");
 			console.log("eval - Run a command");
 			console.log("debug");
 			console.log("log - Change LogBook settings");
@@ -158,19 +157,6 @@ const runCommand = (line: string) => {
 				console.log("There are no active jobs.");
 			else console.log(`There are ${activeStatus.length} active jobs.`);
 			console.table(activeStatus);
-			break;
-		}
-		case "jobinfo": {
-			if (args.length === 0) console.log("Please specify a jobId");
-			else {
-				const jobId = args[0];
-				const job = JobQueue.getJob(jobId);
-
-				if (!job) console.log(`Job "${jobId}" not found`);
-				else {
-					console.table(job.toJSON());
-				}
-			}
 			break;
 		}
 		case "eval": {

@@ -4,6 +4,7 @@ import LogBook, { Log } from "@/LogBook";
 import { JobOptions } from "@/types/JobOptions";
 import WebSocketModule from "./modules/WebSocketModule";
 import BaseModule from "./BaseModule";
+import EventsModule from "./modules/EventsModule";
 
 export enum JobStatus {
 	QUEUED = "QUEUED",
@@ -55,9 +56,20 @@ export default abstract class Job {
 		payload: unknown,
 		options?: JobOptions
 	) {
+		this._createdAt = performance.now();
 		this._module = module;
 		this._payload = payload;
 		this._priority = 1;
+		this._status = JobStatus.QUEUED;
+		/* eslint-disable no-bitwise, eqeqeq */
+		this._uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+			/[xy]/g,
+			c => {
+				const r = (Math.random() * 16) | 0;
+				const v = c == "x" ? r : (r & 0x3) | 0x8;
+				return v.toString(16);
+			}
+		);
 
 		let contextOptions;
 
@@ -78,17 +90,7 @@ export default abstract class Job {
 
 		this._context = new JobContext(this, contextOptions);
 
-		/* eslint-disable no-bitwise, eqeqeq */
-		this._uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
-			/[xy]/g,
-			c => {
-				const r = (Math.random() * 16) | 0;
-				const v = c == "x" ? r : (r & 0x3) | 0x8;
-				return v.toString(16);
-			}
-		);
-		this._status = JobStatus.QUEUED;
-		this._createdAt = performance.now();
+		JobStatistics.updateStats(this.getPath(), "added");
 	}
 
 	/**
@@ -198,17 +200,15 @@ export default abstract class Job {
 			const data = await this._execute();
 
 			const socketId = this._context.getSocketId();
+			const callbackRef = this._context.getCallbackRef();
 
-			if (socketId && this._context.getCallbackRef()) {
-				await WebSocketModule.dispatch(
+			if (callbackRef) {
+				await EventsModule.publish(`job.${this.getUuid()}`, {
 					socketId,
-					"jobCallback",
-					this._context.getCallbackRef(),
-					{
-						status: "success",
-						data
-					}
-				);
+					callbackRef,
+					status: "success",
+					data
+				});
 			}
 
 			this.log({
@@ -223,17 +223,15 @@ export default abstract class Job {
 			const message = error?.message ?? error;
 
 			const socketId = this._context.getSocketId();
+			const callbackRef = this._context.getCallbackRef();
 
-			if (socketId && this._context.getCallbackRef()) {
-				await WebSocketModule.dispatch(
+			if (callbackRef) {
+				await EventsModule.publish(`job.${this.getUuid()}`, {
 					socketId,
-					"jobCallback",
-					this._context.getCallbackRef(),
-					{
-						status: "error",
-						message
-					}
-				);
+					callbackRef,
+					status: "error",
+					message
+				});
 			}
 
 			this.log({

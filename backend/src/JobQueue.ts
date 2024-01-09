@@ -7,8 +7,6 @@ export class JobQueue {
 
 	private _isPaused: boolean;
 
-	private _jobs: Job[];
-
 	private _queue: Job[];
 
 	private _active: Job[];
@@ -29,21 +27,10 @@ export class JobQueue {
 	public constructor() {
 		this._concurrency = 50;
 		this._isPaused = true;
-		this._jobs = [];
 		this._queue = [];
 		this._active = [];
 		this._callbacks = {};
 		this._processLock = false;
-	}
-
-	/**
-	 * getJob - Fetch job
-	 *
-	 * @param jobId - Job UUID
-	 * @returns Job if found
-	 */
-	public getJob(jobId: string) {
-		return this._jobs.find(job => job.getUuid() === jobId);
 	}
 
 	/**
@@ -67,19 +54,16 @@ export class JobQueue {
 	 * runJob - Run a job
 	 */
 	public async runJob(
-		moduleName: string,
-		jobName: string,
+		JobClass: typeof Job,
 		payload?: unknown,
 		options?: JobOptions
 	): Promise<unknown> {
 		return new Promise<unknown>((resolve, reject) => {
-			this.queueJob(
-				moduleName,
-				jobName,
-				payload,
-				{ resolve, reject },
-				options
-			).catch(reject);
+			this.queueJob(JobClass, payload, options)
+				.then(uuid => {
+					this._callbacks[uuid] = { resolve, reject };
+				})
+				.catch(reject);
 		});
 	}
 
@@ -87,25 +71,12 @@ export class JobQueue {
 	 * queueJob - Queue a job
 	 */
 	public async queueJob(
-		moduleName: string,
-		jobName: string,
-		payload: unknown,
-		callback: {
-			resolve: (value: unknown) => void;
-			reject: (reason?: unknown) => void;
-		},
+		JobClass: typeof Job,
+		payload?: unknown,
 		options?: JobOptions
 	): Promise<string> {
-		const module = ModuleManager.getModule(moduleName);
-		if (!module) throw new Error("Module not found.");
-
-		const JobClass = module.getJob(jobName);
-
 		const job = new JobClass(payload, options);
 
-		this._callbacks[job.getUuid()] = callback;
-
-		this._jobs.push(job);
 		this._queue.push(job);
 		this._process();
 
@@ -149,12 +120,11 @@ export class JobQueue {
 			this._active.push(job);
 
 			const callback = this._callbacks[job.getUuid()];
-			job.execute()
-				.then(callback.resolve)
-				.catch(callback.reject)
-				.finally(() => {
-					delete this._callbacks[job.getUuid()];
 
+			job.execute()
+				.then(callback?.resolve)
+				.catch(callback?.reject)
+				.finally(() => {
 					// If the current job is in the active jobs array, remove it, and then run the process function to run another job
 					const activeJobIndex = this._active.indexOf(job);
 					if (activeJobIndex > -1) {
@@ -163,6 +133,7 @@ export class JobQueue {
 
 					this._process();
 				});
+
 			// Stop the for loop
 			if (this._active.length >= this._concurrency) break;
 		}
@@ -198,14 +169,6 @@ export class JobQueue {
 		if (!type || type === JobStatus.QUEUED)
 			status.queue = this._queue.map(job => job.toJSON());
 		return status;
-	}
-
-	/**
-	 * Gets the job array
-	 *
-	 */
-	public getJobs() {
-		return this._jobs;
 	}
 }
 
