@@ -36,14 +36,18 @@ export default abstract class GetDataJob extends DataModuleJob {
 		if (!Array.isArray(this._payload.queries))
 			throw new Error("Queries must be an array");
 
-		Object.values(this._payload.queries).forEach(query => {
-			if (typeof query !== "object" || Array.isArray(query))
+		Object.values(this._payload.queries).forEach((query: any) => {
+			if (!query || typeof query !== "object" || Array.isArray(query))
 				throw new Error("Query must be an object");
 
-			if (typeof query.filter !== "object" || Array.isArray(query.filter))
+			if (
+				!query.filter ||
+				typeof query.filter !== "object" ||
+				Array.isArray(query.filter)
+			)
 				throw new Error("Query filter must be an object");
 
-			if (typeof query.filter?.property !== "string")
+			if (typeof query.filter.property !== "string")
 				throw new Error("Query filter property must be a string");
 
 			if (

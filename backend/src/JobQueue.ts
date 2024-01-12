@@ -1,6 +1,5 @@
 import Job, { JobStatus } from "@/Job";
 import { JobOptions } from "@/types/JobOptions";
-import ModuleManager from "./ModuleManager";
 
 export class JobQueue {
 	private _concurrency: number;
@@ -125,6 +124,8 @@ export class JobQueue {
 				.then(callback?.resolve)
 				.catch(callback?.reject)
 				.finally(() => {
+					delete this._callbacks[job.getUuid()];
+
 					// If the current job is in the active jobs array, remove it, and then run the process function to run another job
 					const activeJobIndex = this._active.indexOf(job);
 					if (activeJobIndex > -1) {
