@@ -11,6 +11,7 @@ import DataModule from "./DataModule";
 import { UserModel } from "./DataModule/models/users/schema";
 import { SessionModel } from "./DataModule/models/sessions/schema";
 import EventsModule from "./EventsModule";
+import { forEachIn } from "@/utils/forEachIn";
 
 export class WebSocketModule extends BaseModule {
 	private _httpServer?: Server;
@@ -84,20 +85,18 @@ export class WebSocketModule extends BaseModule {
 		if (!this._wsServer) return;
 
 		for await (const clients of this._wsServer.clients.entries()) {
-			await Promise.all(
-				clients.map(async socket => {
-					switch (socket.readyState) {
-						case socket.OPEN:
-							socket.ping();
-							break;
-						case socket.CLOSED:
-							socket.terminate();
-							break;
-						default:
-							break;
-					}
-				})
-			);
+			await forEachIn(clients, async socket => {
+				switch (socket.readyState) {
+					case socket.OPEN:
+						socket.ping();
+						break;
+					case socket.CLOSED:
+						socket.terminate();
+						break;
+					default:
+						break;
+				}
+			});
 		}
 	}
 

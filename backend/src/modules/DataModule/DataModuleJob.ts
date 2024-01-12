@@ -3,6 +3,7 @@ import Job from "@/Job";
 import DataModule from "../DataModule";
 import { JobOptions } from "@/types/JobOptions";
 import { UserModel } from "./models/users/schema";
+import { forEachIn } from "@/utils/forEachIn";
 
 export default abstract class DataModuleJob extends Job {
 	protected static _modelName: string;
@@ -67,10 +68,8 @@ export default abstract class DataModuleJob extends Job {
 		const modelIds = this._payload?.modelIds;
 
 		if (Array.isArray(modelIds)) {
-			await Promise.all(
-				modelIds.map(async _id =>
-					this._context.assertPermission(`${this.getPath()}.${_id}`)
-				)
+			await forEachIn(modelIds, async _id =>
+				this._context.assertPermission(`${this.getPath()}.${_id}`)
 			);
 		}
 

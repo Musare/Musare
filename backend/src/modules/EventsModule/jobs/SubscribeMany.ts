@@ -1,6 +1,7 @@
 import Job from "@/Job";
 import EventsModule from "@/modules/EventsModule";
 import { JobOptions } from "@/types/JobOptions";
+import { forEachIn } from "@/utils/forEachIn";
 
 export default class SubscribeMany extends Job {
 	public constructor(payload?: unknown, options?: JobOptions) {
@@ -21,28 +22,25 @@ export default class SubscribeMany extends Job {
 	}
 
 	protected override async _authorize() {
-		await Promise.all(
-			this._payload.channels.map(async (channel: string) => {
-				const [, moduleName, modelName, event, modelId] =
-					/^([a-z]+)\.([a-z]+)\.([A-z]+)\.?([A-z0-9]+)?$/.exec(
-						channel
-					) ?? [];
+		await forEachIn(this._payload.channels, async (channel: string) => {
+			const [, moduleName, modelName, event, modelId] =
+				/^([a-z]+)\.([a-z]+)\.([A-z]+)\.?([A-z0-9]+)?$/.exec(channel) ??
+				[];
 
-				let permission = `event.${channel}`;
+			let permission = `event.${channel}`;
 
-				if (
-					moduleName === "model" &&
-					modelName &&
-					(modelId || event === "created")
-				) {
-					if (event === "created")
-						permission = `event.model.${modelName}.created`;
-					else permission = `data.${modelName}.findById.${modelId}`;
-				}
+			if (
+				moduleName === "model" &&
+				modelName &&
+				(modelId || event === "created")
+			) {
+				if (event === "created")
+					permission = `event.model.${modelName}.created`;
+				else permission = `data.${modelName}.findById.${modelId}`;
+			}
 
-				await this._context.assertPermission(permission);
-			})
-		);
+			await this._context.assertPermission(permission);
+		});
 	}
 
 	protected async _execute() {

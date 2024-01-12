@@ -3,6 +3,7 @@ import path from "path";
 import LogBook, { Log } from "@/LogBook";
 import ModuleManager from "@/ModuleManager";
 import Job from "./Job";
+import { forEachIn } from "@/utils/forEachIn";
 
 export enum ModuleStatus {
 	LOADED = "LOADED",
@@ -89,17 +90,15 @@ export default abstract class BaseModule {
 			throw error;
 		}
 
-		await Promise.all(
-			jobs.map(async jobFile => {
-				const { default: Job } = await import(
-					`./modules/${this.constructor.name}/jobs/${jobFile}`
-				);
+		await forEachIn(jobs, async jobFile => {
+			const { default: Job } = await import(
+				`./modules/${this.constructor.name}/jobs/${jobFile}`
+			);
 
-				const jobName = Job.getName();
+			const jobName = Job.getName();
 
-				this._jobs[jobName] = Job;
-			})
-		);
+			this._jobs[jobName] = Job;
+		});
 	}
 
 	/**

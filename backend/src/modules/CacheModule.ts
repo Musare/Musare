@@ -1,6 +1,7 @@
 import config from "config";
 import { RedisClientType, createClient } from "redis";
 import BaseModule, { ModuleStatus } from "@/BaseModule";
+import { forEachIn } from "@/utils/forEachIn";
 
 export class CacheModule extends BaseModule {
 	private _redisClient?: RedisClientType;
@@ -109,15 +110,13 @@ export class CacheModule extends BaseModule {
 	}
 
 	public async removeMany(keys: string | string[]) {
-		await Promise.all(
-			(Array.isArray(keys) ? keys : [keys]).map(async pattern => {
-				for await (const key of this._redisClient!.scanIterator({
-					MATCH: pattern
-				})) {
-					await this.remove(key);
-				}
-			})
-		);
+		await forEachIn(Array.isArray(keys) ? keys : [keys], async pattern => {
+			for await (const key of this._redisClient!.scanIterator({
+				MATCH: pattern
+			})) {
+				await this.remove(key);
+			}
+		});
 	}
 
 	public async getTtl(key: string) {

@@ -11,6 +11,7 @@ import BaseModule, { ModuleStatus } from "@/BaseModule";
 import EventsModule from "./EventsModule";
 import DataModuleJob from "./DataModule/DataModuleJob";
 import Job from "@/Job";
+import { forEachIn } from "@/utils/forEachIn";
 
 export class DataModule extends BaseModule {
 	private _models?: Record<string, Model<any>>;
@@ -135,10 +136,10 @@ export class DataModule extends BaseModule {
 		)
 			return;
 
-		await Promise.all(
-			Object.entries(eventListeners).map(async ([event, callback]) =>
+		await forEachIn(
+			Object.entries(eventListeners),
+			async ([event, callback]) =>
 				EventsModule.subscribe("event", event, callback)
-			)
 		);
 	}
 
@@ -188,47 +189,46 @@ export class DataModule extends BaseModule {
 
 		schema.plugin(updateVersioningPlugin);
 
-		await Promise.all(
-			Object.entries(schema.paths)
-				.filter(
-					([, type]) =>
-						type instanceof SchemaTypes.ObjectId ||
-						(type instanceof SchemaTypes.Array &&
-							type.caster instanceof SchemaTypes.ObjectId)
-				)
-				.map(async ([key, type]) => {
-					const { ref } =
-						(type instanceof SchemaTypes.ObjectId
-							? type?.options
-							: type.caster?.options) ?? {};
+		await forEachIn(
+			Object.entries(schema.paths).filter(
+				([, type]) =>
+					type instanceof SchemaTypes.ObjectId ||
+					(type instanceof SchemaTypes.Array &&
+						type.caster instanceof SchemaTypes.ObjectId)
+			),
+			async ([key, type]) => {
+				const { ref } =
+					(type instanceof SchemaTypes.ObjectId
+						? type?.options
+						: type.caster?.options) ?? {};
 
-					if (ref)
-						schema.path(key).get(value => {
-							if (
-								typeof value === "object" &&
-								type instanceof SchemaTypes.ObjectId
-							)
-								return {
-									_id: value,
-									_name: ref
-								};
+				if (ref)
+					schema.path(key).get(value => {
+						if (
+							typeof value === "object" &&
+							type instanceof SchemaTypes.ObjectId
+						)
+							return {
+								_id: value,
+								_name: ref
+							};
 
-							if (
-								Array.isArray(value) &&
-								type instanceof SchemaTypes.Array
-							)
-								return value.map(item =>
-									item === null
-										? null
-										: {
-												_id: item,
-												_name: ref
-										  }
-								);
+						if (
+							Array.isArray(value) &&
+							type instanceof SchemaTypes.Array
+						)
+							return value.map(item =>
+								item === null
+									? null
+									: {
+											_id: item,
+											_name: ref
+									  }
+							);
 
-							return value;
-						});
-				})
+						return value;
+					});
+			}
 		);
 
 		return this._mongoConnection.model(modelName.toString(), schema);
@@ -257,8 +257,8 @@ export class DataModule extends BaseModule {
 	private async _syncModelIndexes() {
 		if (!this._models) throw new Error("Models not loaded");
 
-		await Promise.all(
-			Object.values(this._models).map(model => model.syncIndexes())
+		await forEachIn(Object.values(this._models), model =>
+			model.syncIndexes()
 		);
 	}
 
@@ -298,15 +298,13 @@ export class DataModule extends BaseModule {
 			throw error;
 		}
 
-		return Promise.all(
-			migrations.map(async migrationFile => {
-				const { default: Migrate }: { default: typeof Migration } =
-					await import(
-						`./DataModule/models/${modelName}/migrations/${migrationFile}`
-					);
-				return new Migrate(this._mongoConnection as Connection);
-			})
-		);
+		return forEachIn(migrations, async migrationFile => {
+			const { default: Migrate }: { default: typeof Migration } =
+				await import(
+					`./DataModule/models/${modelName}/migrations/${migrationFile}`
+				);
+			return new Migrate(this._mongoConnection as Connection);
+		});
 	}
 
 	private async _loadMigrations() {
@@ -314,8 +312,8 @@ export class DataModule extends BaseModule {
 			path.resolve(__dirname, "./DataModule/models/")
 		);
 
-		return Promise.all(
-			models.map(async modelName => this._loadModelMigrations(modelName))
+		return forEachIn(models, async modelName =>
+			this._loadModelMigrations(modelName)
 		);
 	}
 
@@ -332,34 +330,30 @@ export class DataModule extends BaseModule {
 	private async _loadModelJobs() {
 		if (!this._models) throw new Error("Models not loaded");
 
-		await Promise.all(
-			Object.keys(this._models).map(async modelName => {
-				let jobs;
+		await forEachIn(Object.keys(this._models), async modelName => {
+			let jobs;
 
-				try {
-					jobs = await readdir(
-						path.resolve(
-							__dirname,
-							`./${this.constructor.name}/models/${modelName}/jobs/`
-						)
-					);
-				} catch (error) {
-					if (error.code === "ENOENT") return;
-
-					throw error;
-				}
-
-				await Promise.all(
-					jobs.map(async jobFile => {
-						const { default: Job } = await import(
-							`./${this.constructor.name}/models/${modelName}/jobs/${jobFile}`
-						);
-
-						this._jobs[Job.getName()] = Job;
-					})
+			try {
+				jobs = await readdir(
+					path.resolve(
+						__dirname,
+						`./${this.constructor.name}/models/${modelName}/jobs/`
+					)
 				);
-			})
-		);
+			} catch (error) {
+				if (error.code === "ENOENT") return;
+
+				throw error;
+			}
+
+			await forEachIn(jobs, async jobFile => {
+				const { default: Job } = await import(
+					`./${this.constructor.name}/models/${modelName}/jobs/${jobFile}`
+				);
+
+				this._jobs[Job.getName()] = Job;
+			});
+		});
 	}
 }
 

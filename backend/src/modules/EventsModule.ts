@@ -2,6 +2,7 @@ import { createClient, RedisClientType } from "redis";
 import config from "config";
 import BaseModule, { ModuleStatus } from "@/BaseModule";
 import WebSocketModule from "./WebSocketModule";
+import { forEachIn } from "@/utils/forEachIn";
 
 export class EventsModule extends BaseModule {
 	private _pubClient?: RedisClientType;
@@ -134,8 +135,8 @@ export class EventsModule extends BaseModule {
 			async message => {
 				if (!this._scheduleCallbacks[message]) return;
 
-				await Promise.all(
-					this._scheduleCallbacks[message].map(callback => callback())
+				await forEachIn(this._scheduleCallbacks[message], callback =>
+					callback()
 				);
 			}
 		);
@@ -184,19 +185,17 @@ export class EventsModule extends BaseModule {
 			message = message.substring(1).substring(0, message.length - 2);
 
 		if (this._subscriptions && this._subscriptions[channel])
-			await Promise.all(
-				this._subscriptions[channel].map(async cb => cb(message))
+			await forEachIn(this._subscriptions[channel], async cb =>
+				cb(message)
 			);
 
 		if (this._pSubscriptions)
-			await Promise.all(
-				Object.entries(this._pSubscriptions)
-					.filter(([subscription]) =>
-						new RegExp(channel).test(subscription)
-					)
-					.map(async ([, callbacks]) =>
-						Promise.all(callbacks.map(async cb => cb(message)))
-					)
+			await forEachIn(
+				Object.entries(this._pSubscriptions).filter(([subscription]) =>
+					new RegExp(channel).test(subscription)
+				),
+				async ([, callbacks]) =>
+					forEachIn(callbacks, async cb => cb(message))
 			);
 
 		if (!this._socketSubscriptions[channel]) return;
@@ -338,8 +337,8 @@ export class EventsModule extends BaseModule {
 	}
 
 	public async subscribeManySocket(channels: string[], socketId: string) {
-		await Promise.all(
-			channels.map(channel => this.subscribeSocket(channel, socketId))
+		await forEachIn(channels, channel =>
+			this.subscribeSocket(channel, socketId)
 		);
 	}
 
@@ -359,18 +358,17 @@ export class EventsModule extends BaseModule {
 	}
 
 	public async unsubscribeManySocket(channels: string[], socketId: string) {
-		await Promise.all(
-			channels.map(channel => this.unsubscribeSocket(channel, socketId))
+		await forEachIn(channels, channel =>
+			this.unsubscribeSocket(channel, socketId)
 		);
 	}
 
 	public async unsubscribeAllSocket(socketId: string) {
-		await Promise.all(
-			Object.entries(this._socketSubscriptions)
-				.filter(([, socketIds]) => socketIds.has(socketId))
-				.map(async ([channel]) =>
-					this.unsubscribeSocket(channel, socketId)
-				)
+		await forEachIn(
+			Object.entries(this._socketSubscriptions).filter(([, socketIds]) =>
+				socketIds.has(socketId)
+			),
+			async ([channel]) => this.unsubscribeSocket(channel, socketId)
 		);
 	}
 
