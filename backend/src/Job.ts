@@ -2,9 +2,9 @@ import JobContext from "@/JobContext";
 import JobStatistics from "@/JobStatistics";
 import LogBook, { Log } from "@/LogBook";
 import { JobOptions } from "@/types/JobOptions";
-import WebSocketModule from "./modules/WebSocketModule";
 import BaseModule from "./BaseModule";
 import EventsModule from "./modules/EventsModule";
+import { generateUuid } from "@/utils/generateUuid";
 
 export enum JobStatus {
 	QUEUED = "QUEUED",
@@ -62,14 +62,7 @@ export default abstract class Job {
 		this._priority = 1;
 		this._status = JobStatus.QUEUED;
 		/* eslint-disable no-bitwise, eqeqeq */
-		this._uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
-			/[xy]/g,
-			c => {
-				const r = (Math.random() * 16) | 0;
-				const v = c == "x" ? r : (r & 0x3) | 0x8;
-				return v.toString(16);
-			}
-		);
+		this._uuid = generateUuid();
 
 		let contextOptions;
 
