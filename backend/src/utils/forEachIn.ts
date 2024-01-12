@@ -8,10 +8,12 @@ export const forEachIn = async <
 >(
 	items: ItemsType,
 	callback: CallbackType,
-	concurrency = 10
-): Promise<CallbackReturnType[]> => {
+	options: { abortOnError?: boolean; concurrency?: number } = {}
+): Promise<{ completed: CallbackReturnType[]; failed: any[] }> => {
+	const { abortOnError = true, concurrency = 10 } = options;
+
 	const queued = items.slice();
-	const failed: any[] = []; // TODO: Report these errors and abortOnError option
+	const failed: any[] = [];
 	const completed: CallbackReturnType[] = [];
 
 	const next = async () => {
@@ -24,6 +26,8 @@ export const forEachIn = async <
 		try {
 			completed[index] = await callback(item, index);
 		} catch (error) {
+			if (abortOnError) throw error;
+
 			failed[index] = error;
 		}
 
@@ -34,5 +38,5 @@ export const forEachIn = async <
 		Array.from(Array(Math.min(items.length, concurrency)).keys()).map(next)
 	);
 
-	return completed;
+	return { completed, failed };
 };
