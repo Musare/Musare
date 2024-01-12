@@ -82,15 +82,10 @@
 				"selector": "WithStatement",
 				"message": "`with` is disallowed in strict mode because it makes code impossible to predict and optimize."
 			}
-		]
+		],
+		"import/prefer-default-export": "off"
 	},
 	"overrides": [
-		{
-			"files": ["src/types/*.ts"],
-			"rules": {
-				"import/prefer-default-export": "off"
-			}
-		},
 		{
 			"files": ["**/*.test.ts", "**/*.spec.ts"],
 			"rules": {
