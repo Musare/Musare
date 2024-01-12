@@ -4,6 +4,7 @@ import LogBook, { Log } from "@/LogBook";
 import { JobOptions } from "@/types/JobOptions";
 import BaseModule from "./BaseModule";
 import EventsModule from "./modules/EventsModule";
+import { getErrorMessage } from "./utils/getErrorMessage";
 import { generateUuid } from "@/utils/generateUuid";
 
 export enum JobStatus {
@@ -213,7 +214,7 @@ export default abstract class Job {
 
 			return data;
 		} catch (error: unknown) {
-			const message = error?.message ?? error;
+			const message = getErrorMessage(error);
 
 			const socketId = this._context.getSocketId();
 			const callbackRef = this._context.getCallbackRef();

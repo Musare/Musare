@@ -5,7 +5,7 @@ export type Log = {
 	message: string;
 	type?: "info" | "success" | "error" | "debug";
 	category?: string;
-	data?: Record<string, unknown>;
+	data?: Record<string, unknown> | Error;
 };
 
 export type LogFilters = {

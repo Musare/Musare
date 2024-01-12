@@ -85,7 +85,12 @@ export default abstract class BaseModule {
 				)
 			);
 		} catch (error) {
-			if (error.code === "ENOENT") return;
+			if (
+				error instanceof Error &&
+				"code" in error &&
+				error.code === "ENOENT"
+			)
+				return;
 
 			throw error;
 		}

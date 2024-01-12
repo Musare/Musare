@@ -7,6 +7,7 @@ import JobStatistics from "@/JobStatistics";
 import DataModule from "@/modules/DataModule";
 import EventsModule from "./modules/EventsModule";
 import { NewsModel } from "./modules/DataModule/models/news/schema";
+import { FilterType } from "./modules/DataModule/plugins/getData";
 
 process.removeAllListeners("uncaughtException");
 process.on("uncaughtException", err => {
@@ -42,7 +43,7 @@ ModuleManager.startup().then(async () => {
 				{
 					data: "v7",
 					filter: { property: "title" },
-					filterType: "contains"
+					filterType: FilterType.CONTAINS
 				}
 			],
 			operator: "and"

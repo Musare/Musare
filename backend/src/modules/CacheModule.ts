@@ -1,10 +1,22 @@
 import config from "config";
-import { RedisClientType, createClient } from "redis";
+import {
+	RedisClientOptions,
+	RedisClientType,
+	RedisDefaultModules,
+	RedisFunctions,
+	RedisModules,
+	RedisScripts,
+	createClient
+} from "redis";
 import BaseModule, { ModuleStatus } from "@/BaseModule";
 import { forEachIn } from "@/utils/forEachIn";
 
 export class CacheModule extends BaseModule {
-	private _redisClient?: RedisClientType;
+	private _redisClient?: RedisClientType<
+		RedisDefaultModules & RedisModules,
+		RedisFunctions,
+		RedisScripts
+	>;
 
 	/**
 	 * Cache Module
@@ -20,23 +32,25 @@ export class CacheModule extends BaseModule {
 		await super.startup();
 
 		this._redisClient = createClient({
-			...config.get("redis"),
-			reconnectStrategy: (retries: number, error) => {
-				if (
-					retries >= 10 ||
-					![ModuleStatus.STARTING, ModuleStatus.STARTED].includes(
-						this.getStatus()
+			...config.get<RedisClientOptions>("redis"),
+			socket: {
+				reconnectStrategy: (retries: number, error) => {
+					if (
+						retries >= 10 ||
+						![ModuleStatus.STARTING, ModuleStatus.STARTED].includes(
+							this.getStatus()
+						)
 					)
-				)
-					return false;
+						return false;
 
-				this.log({
-					type: "debug",
-					message: `Redis reconnect attempt ${retries}`,
-					data: error
-				});
+					this.log({
+						type: "debug",
+						message: `Redis reconnect attempt ${retries}`,
+						data: error
+					});
 
-				return Math.min(retries * 50, 500);
+					return Math.min(retries * 50, 500);
+				}
 			}
 		});
 
