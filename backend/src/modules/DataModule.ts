@@ -298,18 +298,13 @@ export class DataModule extends BaseModule {
 			throw error;
 		}
 
-		const { completed } = await forEachIn(
-			migrations,
-			async migrationFile => {
-				const { default: Migrate }: { default: typeof Migration } =
-					await import(
-						`./DataModule/models/${modelName}/migrations/${migrationFile}`
-					);
-				return new Migrate(this._mongoConnection as Connection);
-			}
-		);
-
-		return completed;
+		return forEachIn(migrations, async migrationFile => {
+			const { default: Migrate }: { default: typeof Migration } =
+				await import(
+					`./DataModule/models/${modelName}/migrations/${migrationFile}`
+				);
+			return new Migrate(this._mongoConnection as Connection);
+		});
 	}
 
 	private async _loadMigrations() {
@@ -317,11 +312,9 @@ export class DataModule extends BaseModule {
 			path.resolve(__dirname, "./DataModule/models/")
 		);
 
-		const { completed } = await forEachIn(models, async modelName =>
+		return forEachIn(models, async modelName =>
 			this._loadModelMigrations(modelName)
 		);
-
-		return completed;
 	}
 
 	private async _runMigrations() {

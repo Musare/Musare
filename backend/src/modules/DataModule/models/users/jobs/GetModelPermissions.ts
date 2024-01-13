@@ -53,7 +53,7 @@ export default class GetModelPermissions extends DataModuleJob {
 
 		if (modelId && !model) throw new Error("Model not found");
 
-		const { completed: jobs } = await forEachIn(
+		const jobs = await forEachIn(
 			Object.entries(
 				ModuleManager.getModule("data")?.getJobs() ?? {}
 			).filter(
