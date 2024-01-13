@@ -1,14 +1,21 @@
+export enum JobStatisticsType {
+	SUCCESSFUL = "successful",
+	FAILED = "failed",
+	TOTAL = "total",
+	CONSTRUCTED = "constructed",
+	QUEUED = "queued",
+	DURATION = "duration"
+}
+
 export class JobStatistics {
 	private _stats: Record<
 		string,
-		{
-			successful: number;
-			failed: number;
-			total: number;
-			added: number;
-			averageTime: number;
-			totalTime: number;
-		}
+		Record<
+			| Exclude<JobStatisticsType, "duration">
+			| "averageTime"
+			| "totalTime",
+			number
+		>
 	>;
 
 	public constructor() {
@@ -26,7 +33,8 @@ export class JobStatistics {
 				successful: a.successful + b.successful,
 				failed: a.failed + b.failed,
 				total: a.total + b.total,
-				added: a.added + b.added,
+				constructed: a.constructed + b.constructed,
+				queued: a.queued + b.queued,
 				averageTime: -1,
 				totalTime: a.totalTime + b.totalTime
 			}),
@@ -34,7 +42,8 @@ export class JobStatistics {
 				successful: 0,
 				failed: 0,
 				total: 0,
-				added: 0,
+				constructed: 0,
+				queued: 0,
 				averageTime: -1,
 				totalTime: 0
 			}
@@ -56,7 +65,7 @@ export class JobStatistics {
 	 */
 	public updateStats(
 		jobName: string,
-		type: "successful" | "failed" | "total" | "added" | "duration",
+		type: JobStatisticsType,
 		duration?: number
 	) {
 		if (!this._stats[jobName])
@@ -64,7 +73,8 @@ export class JobStatistics {
 				successful: 0,
 				failed: 0,
 				total: 0,
-				added: 0,
+				constructed: 0,
+				queued: 0,
 				averageTime: 0,
 				totalTime: 0
 			};

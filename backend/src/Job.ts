@@ -1,5 +1,5 @@
 import JobContext from "@/JobContext";
-import JobStatistics from "@/JobStatistics";
+import JobStatistics, { JobStatisticsType } from "@/JobStatistics";
 import LogBook, { Log } from "@/LogBook";
 import { JobOptions } from "@/types/JobOptions";
 import BaseModule from "./BaseModule";
@@ -84,7 +84,10 @@ export default abstract class Job {
 
 		this._context = new JobContext(this, contextOptions);
 
-		JobStatistics.updateStats(this.getPath(), "added");
+		JobStatistics.updateStats(
+			this.getPath(),
+			JobStatisticsType.CONSTRUCTED
+		);
 	}
 
 	/**
@@ -210,7 +213,10 @@ export default abstract class Job {
 				type: "success"
 			});
 
-			JobStatistics.updateStats(this.getPath(), "successful");
+			JobStatistics.updateStats(
+				this.getPath(),
+				JobStatisticsType.SUCCESSFUL
+			);
 
 			return data;
 		} catch (error: unknown) {
@@ -234,16 +240,16 @@ export default abstract class Job {
 				data: { error }
 			});
 
-			JobStatistics.updateStats(this.getPath(), "failed");
+			JobStatistics.updateStats(this.getPath(), JobStatisticsType.FAILED);
 
 			throw error;
 		} finally {
 			this._completedAt = performance.now();
-			JobStatistics.updateStats(this.getPath(), "total");
+			JobStatistics.updateStats(this.getPath(), JobStatisticsType.TOTAL);
 			if (this._startedAt)
 				JobStatistics.updateStats(
 					this.getPath(),
-					"duration",
+					JobStatisticsType.DURATION,
 					this._completedAt - this._startedAt
 				);
 			this._setStatus(JobStatus.COMPLETED);

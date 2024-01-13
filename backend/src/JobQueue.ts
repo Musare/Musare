@@ -1,5 +1,6 @@
 import Job, { JobStatus } from "@/Job";
 import { JobOptions } from "@/types/JobOptions";
+import JobStatistics, { JobStatisticsType } from "./JobStatistics";
 
 export class JobQueue {
 	private _concurrency: number;
@@ -75,6 +76,8 @@ export class JobQueue {
 		options?: JobOptions
 	): Promise<string> {
 		const job = new JobClass(payload, options);
+
+		JobStatistics.updateStats(job.getPath(), JobStatisticsType.QUEUED);
 
 		this._queue.push(job);
 		this._process();
