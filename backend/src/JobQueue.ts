@@ -123,6 +123,7 @@ export class JobQueue {
 			job.execute()
 				.then(callback?.resolve)
 				.catch(callback?.reject)
+				.catch(() => {}) // Ignore errors, any handling required is in job or callback
 				.finally(() => {
 					delete this._callbacks[job.getUuid()];
 
