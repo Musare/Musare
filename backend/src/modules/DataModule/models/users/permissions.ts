@@ -16,7 +16,7 @@ const moderator = {
 	"data.importJobs.create": true,
 	"data.importJobs.findById.*": true,
 	"data.importJobs.getData": true,
-	"data.importJobs.removeById.*": true,
+	"data.importJobs.deleteById.*": true,
 	"data.importJobs.updateById.*": true,
 
 	// DataModule news model
@@ -119,17 +119,17 @@ const admin = {
 	"data.dataRequests.resolveById.*": true,
 
 	// DataModule importJobs model
-	"data.importJobs.removeById.*": true,
+	"data.importJobs.deleteById.*": true,
 
 	// DataModule news model
-	"data.news.removeById.*": true,
+	"data.news.deleteById.*": true,
 
 	// DataModule playlists model
 	"data.playlists.clearAndRefillById.*": true,
 	"data.playlists.clearAndRefillAll": true,
 	"data.playlists.createMissing": true,
 	"data.playlists.deleteOrphaned": true,
-	"data.playlists.removeById.*": true,
+	"data.playlists.deleteById.*": true,
 	"data.playlists.requestOrphanedPlaylistSongs": true,
 
 	// DataModule punishments model
@@ -139,30 +139,30 @@ const admin = {
 	"data.ratings.recalculateAll": true,
 
 	// DataModule reports model
-	"data.reports.removeById.*": true,
+	"data.reports.deleteById.*": true,
 
 	// DataModule songs model
-	"data.songs.removeById.*": true,
+	"data.songs.deleteById.*": true,
 	"data.songs.updateAll": true,
 
 	// DataModule stations model
 	"data.stations.clearEveryStationQueue": true,
-	"data.stations.removeById.*": true,
+	"data.stations.deleteById.*": true,
 
 	// DataModule users model
-	"data.users.removeById.*": true,
-	"data.users.removeSessionsById.*": true,
+	"data.users.deleteById.*": true,
+	"data.users.deleteSessionsById.*": true,
 	"data.users.updateById.*": true,
 
 	// DataModule youtubeApiRequests model
 	"data.youtubeApiRequests.findById.*": true,
 	"data.youtubeApiRequests.getData": true,
-	"data.youtubeApiRequests.removeAll": true,
-	"data.youtubeApiRequests.removeById.*": true,
+	"data.youtubeApiRequests.deleteAll": true,
+	"data.youtubeApiRequests.deleteById.*": true,
 
 	// DataModule youtubeVideos model
 	"data.youtubeVideos.getMissing": true,
-	"data.youtubeVideos.removeById.*": true,
+	"data.youtubeVideos.deleteById.*": true,
 	"data.youtubeVideos.migrateV1ToV2.*": true,
 
 	// Frontend admin views
