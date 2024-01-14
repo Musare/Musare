@@ -2,9 +2,11 @@ import { isObjectIdOrHexString } from "mongoose";
 import CacheModule from "@/modules/CacheModule";
 import DataModule from "@/modules/DataModule";
 import ModuleManager from "@/ModuleManager";
-import GetPermissions from "./GetPermissions";
+import GetPermissions, { GetPermissionsResult } from "./GetPermissions";
 import DataModuleJob from "@/modules/DataModule/DataModuleJob";
 import { forEachIn } from "@/utils/forEachIn";
+
+export type GetModelPermissionsResult = Record<string, boolean>;
 
 export default class GetModelPermissions extends DataModuleJob {
 	protected static _modelName = "users";
@@ -28,11 +30,13 @@ export default class GetModelPermissions extends DataModuleJob {
 
 	protected override async _authorize() {}
 
-	protected async _execute() {
+	protected async _execute(): Promise<GetModelPermissionsResult> {
 		const { modelName, modelId } = this._payload;
 
 		const user = await this._context.getUser().catch(() => null);
-		const permissions = await this._context.executeJob(GetPermissions);
+		const permissions = (await this._context.executeJob(
+			GetPermissions
+		)) as GetPermissionsResult;
 
 		let cacheKey = `model-permissions.${modelName}`;
 
@@ -53,14 +57,14 @@ export default class GetModelPermissions extends DataModuleJob {
 
 		if (modelId && !model) throw new Error("Model not found");
 
-		const jobs = await forEachIn(
+		const jobs = (await forEachIn(
 			Object.entries(
 				ModuleManager.getModule("data")?.getJobs() ?? {}
 			).filter(
 				([jobName]) =>
 					jobName.startsWith(modelName.toString()) &&
 					(modelId ? true : !jobName.endsWith("ById"))
-			),
+			) as [string, typeof DataModuleJob][],
 			async ([jobName, Job]) => {
 				jobName = `data.${jobName}`;
 
@@ -79,7 +83,7 @@ export default class GetModelPermissions extends DataModuleJob {
 
 				return [jobName, !!hasPermission];
 			}
-		);
+		)) as [string, boolean][];
 
 		const modelPermissions = Object.fromEntries(jobs);
 

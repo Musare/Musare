@@ -293,7 +293,12 @@ export class DataModule extends BaseModule {
 				)
 			);
 		} catch (error) {
-			if (error.code === "ENOENT") return [];
+			if (
+				error instanceof Error &&
+				"code" in error &&
+				error.code === "ENOENT"
+			)
+				return [];
 
 			throw error;
 		}
@@ -341,7 +346,12 @@ export class DataModule extends BaseModule {
 					)
 				);
 			} catch (error) {
-				if (error.code === "ENOENT") return;
+				if (
+					error instanceof Error &&
+					"code" in error &&
+					error.code === "ENOENT"
+				)
+					return;
 
 				throw error;
 			}

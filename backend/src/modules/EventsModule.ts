@@ -1,13 +1,29 @@
-import { createClient, RedisClientType } from "redis";
+import {
+	createClient,
+	RedisClientOptions,
+	RedisClientType,
+	RedisDefaultModules,
+	RedisFunctions,
+	RedisModules,
+	RedisScripts
+} from "redis";
 import config from "config";
 import BaseModule, { ModuleStatus } from "@/BaseModule";
 import WebSocketModule from "./WebSocketModule";
 import { forEachIn } from "@/utils/forEachIn";
 
 export class EventsModule extends BaseModule {
-	private _pubClient?: RedisClientType;
+	private _pubClient?: RedisClientType<
+		RedisDefaultModules & RedisModules,
+		RedisFunctions,
+		RedisScripts
+	>;
 
-	private _subClient?: RedisClientType;
+	private _subClient?: RedisClientType<
+		RedisDefaultModules & RedisModules,
+		RedisFunctions,
+		RedisScripts
+	>;
 
 	private _subscriptions: Record<string, ((message: any) => Promise<void>)[]>;
 
@@ -49,23 +65,25 @@ export class EventsModule extends BaseModule {
 	 */
 	private async _createPubClient() {
 		this._pubClient = createClient({
-			...config.get("redis"),
-			reconnectStrategy: (retries: number, error) => {
-				if (
-					retries >= 10 ||
-					![ModuleStatus.STARTING, ModuleStatus.STARTED].includes(
-						this.getStatus()
+			...config.get<RedisClientOptions>("redis"),
+			socket: {
+				reconnectStrategy: (retries: number, error) => {
+					if (
+						retries >= 10 ||
+						![ModuleStatus.STARTING, ModuleStatus.STARTED].includes(
+							this.getStatus()
+						)
 					)
-				)
-					return false;
+						return false;
 
-				this.log({
-					type: "debug",
-					message: `Redis reconnect attempt ${retries}`,
-					data: error
-				});
+					this.log({
+						type: "debug",
+						message: `Redis reconnect attempt ${retries}`,
+						data: error
+					});
 
-				return Math.min(retries * 50, 500);
+					return Math.min(retries * 50, 500);
+				}
 			}
 		});
 
@@ -336,7 +354,11 @@ export class EventsModule extends BaseModule {
 
 	public async subscribeSocket(channel: string, socketId: string) {
 		if (!this._socketSubscriptions[channel]) {
-			await this.subscribe("event", channel, () => {});
+			await this.subscribe(
+				"event",
+				channel,
+				() => new Promise<void>(resolve => resolve())
+			);
 
 			this._socketSubscriptions[channel] = new Set();
 		}

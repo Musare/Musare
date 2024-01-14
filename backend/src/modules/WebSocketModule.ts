@@ -12,6 +12,7 @@ import { UserModel } from "./DataModule/models/users/schema";
 import { SessionModel } from "./DataModule/models/sessions/schema";
 import EventsModule from "./EventsModule";
 import { forEachIn } from "@/utils/forEachIn";
+import { getErrorMessage } from "@/utils/getErrorMessage";
 
 export class WebSocketModule extends BaseModule {
 	private _httpServer?: Server;
@@ -260,6 +261,8 @@ export class WebSocketModule extends BaseModule {
 						updatedAt: Date.now()
 					}
 				);
+
+				if (!session) throw new Error("Session not found.");
 			}
 
 			await JobQueue.queueJob(Job, payload, {
@@ -268,7 +271,7 @@ export class WebSocketModule extends BaseModule {
 				callbackRef
 			});
 		} catch (error) {
-			const message = error?.message ?? error;
+			const message = getErrorMessage(error);
 
 			if (callbackRef)
 				socket.dispatch("jobCallback", callbackRef, {

@@ -4,6 +4,10 @@ import { Log } from "@/LogBook";
 import { JobOptions } from "@/types/JobOptions";
 import DataModule from "@/modules/DataModule";
 import { UserModel } from "@/modules/DataModule/models/users/schema";
+import { JobDerived } from "./types/JobDerived";
+import assertJobDerived from "./utils/assertJobDerived";
+import { GetModelPermissionsResult } from "./modules/DataModule/models/users/jobs/GetModelPermissions";
+import { GetPermissionsResult } from "./modules/DataModule/models/users/jobs/GetPermissions";
 
 export default class JobContext {
 	public readonly job: Job;
@@ -54,11 +58,13 @@ export default class JobContext {
 	}
 
 	public executeJob(
-		JobClass: typeof Job,
+		JobClass: Function,
 		payload?: unknown,
 		options?: JobOptions
 	) {
-		return new JobClass(payload, {
+		assertJobDerived(JobClass);
+
+		return new (JobClass as JobDerived)(payload, {
 			session: this._session,
 			socketId: this._socketId,
 			...(options ?? {})
@@ -95,16 +101,18 @@ export default class JobContext {
 				"users.getModelPermissions"
 			);
 
-			const permissions = await this.executeJob(GetModelPermissions, {
+			const permissions = (await this.executeJob(GetModelPermissions, {
 				modelName: modelOrJobName,
 				modelId
-			});
+			})) as GetModelPermissionsResult;
 
 			hasPermission = permissions[`data.${modelOrJobName}.${jobName}`];
 		} else {
 			const GetPermissions = DataModule.getJob("users.getPermissions");
 
-			const permissions = await this.executeJob(GetPermissions);
+			const permissions = (await this.executeJob(
+				GetPermissions
+			)) as GetPermissionsResult;
 
 			hasPermission = permissions[permission];
 		}

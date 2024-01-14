@@ -1,6 +1,8 @@
 import Job, { JobStatus } from "@/Job";
 import { JobOptions } from "@/types/JobOptions";
 import JobStatistics, { JobStatisticsType } from "./JobStatistics";
+import { JobDerived } from "./types/JobDerived";
+import assertJobDerived from "./utils/assertJobDerived";
 
 export class JobQueue {
 	private _concurrency: number;
@@ -54,12 +56,13 @@ export class JobQueue {
 	 * runJob - Run a job
 	 */
 	public async runJob(
-		JobClass: typeof Job,
+		JobClass: Function,
 		payload?: unknown,
 		options?: JobOptions
 	): Promise<unknown> {
+		assertJobDerived(JobClass);
 		return new Promise<unknown>((resolve, reject) => {
-			this.queueJob(JobClass, payload, options)
+			this.queueJob(JobClass as JobDerived, payload, options)
 				.then(uuid => {
 					this._callbacks[uuid] = { resolve, reject };
 				})
@@ -71,11 +74,12 @@ export class JobQueue {
 	 * queueJob - Queue a job
 	 */
 	public async queueJob(
-		JobClass: typeof Job,
+		JobClass: Function,
 		payload?: unknown,
 		options?: JobOptions
 	): Promise<string> {
-		const job = new JobClass(payload, options);
+		assertJobDerived(JobClass);
+		const job = new (JobClass as JobDerived)(payload, options);
 
 		JobStatistics.updateStats(job.getPath(), JobStatisticsType.QUEUED);
 

@@ -3,6 +3,8 @@ import permissions from "@/modules/DataModule/models/users/permissions";
 import { UserRole } from "../UserRole";
 import DataModuleJob from "@/modules/DataModule/DataModuleJob";
 
+export type GetPermissionsResult = Record<string, boolean>;
+
 export default class GetPermissions extends DataModuleJob {
 	protected static _modelName = "users";
 
@@ -10,7 +12,7 @@ export default class GetPermissions extends DataModuleJob {
 
 	protected override async _authorize() {}
 
-	protected async _execute() {
+	protected async _execute(): Promise<GetPermissionsResult> {
 		const user = await this._context.getUser().catch(() => null);
 
 		if (!user) return permissions.guest;

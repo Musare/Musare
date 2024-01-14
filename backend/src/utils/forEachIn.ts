@@ -1,5 +1,5 @@
 export const forEachIn = async <
-	ItemsType extends Array<any>,
+	ItemsType extends Array<unknown>,
 	CallbackType extends (
 		item: ItemsType[number],
 		index: number

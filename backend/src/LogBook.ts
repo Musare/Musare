@@ -132,9 +132,12 @@ export class LogBook {
 			}
 		);
 
+		const jobName =
+			logObject.data && "jobName" in logObject.data
+				? logObject.data.jobName
+				: null;
 		// Title will be the jobname, or category of jobname is undefined
-		const title =
-			logObject.data?.jobName ?? logObject.category ?? undefined;
+		const title = jobName ?? logObject.category ?? undefined;
 
 		// If memory is not excluded and memory is enabled, store the log object in the memory (logs array) of this logbook instance
 		if (!exclude.memory && this._outputs.memory.enabled)
@@ -143,7 +146,9 @@ export class LogBook {
 		// If console is not excluded, format the log object, and then write the formatted message to the console
 		if (!exclude.console) {
 			const message = this._formatMessage(logObject, String(title));
-			const logArgs: (string | Record<string, unknown>)[] = [message];
+			const logArgs: (string | Record<string, unknown> | Error)[] = [
+				message
+			];
 
 			// Append logObject data, if enabled and it's not falsy
 			if (this._outputs.console.data && logObject.data)
