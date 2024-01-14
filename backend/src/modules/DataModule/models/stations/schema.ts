@@ -1,6 +1,6 @@
 import { Model, Schema, SchemaTypes, Types } from "mongoose";
 import { GetData } from "@/modules/DataModule/plugins/getData";
-import { BaseSchema } from "@/types/Schemas";
+import { BaseSchema } from "@/modules/DataModule/types/Schemas";
 import { StationType } from "./StationType";
 import { StationPrivacy } from "./StationPrivacy";
 import { StationTheme } from "./StationTheme";

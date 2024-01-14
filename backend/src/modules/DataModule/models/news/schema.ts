@@ -7,7 +7,7 @@ import {
 	Types
 } from "mongoose";
 import { GetData } from "@/modules/DataModule/plugins/getData";
-import { BaseSchema } from "@/types/Schemas";
+import { BaseSchema } from "@/modules/DataModule/types/Schemas";
 import JobContext from "@/JobContext";
 import { NewsStatus } from "./NewsStatus";
 import config from "./config";

@@ -1,5 +1,5 @@
 import { Model, Schema, SchemaTypes, Types } from "mongoose";
-import { BaseSchema } from "@/types/Schemas";
+import { BaseSchema } from "@/modules/DataModule/types/Schemas";
 import config from "./config";
 import { UserRole } from "./UserRole";
 import { UserAvatarType } from "./UserAvatarType";

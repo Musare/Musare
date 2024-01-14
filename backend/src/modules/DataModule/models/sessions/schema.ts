@@ -1,5 +1,5 @@
 import { Model, Schema, SchemaTypes, Types } from "mongoose";
-import { BaseSchema } from "@/types/Schemas";
+import { BaseSchema } from "@/modules/DataModule/types/Schemas";
 
 export interface SessionSchema extends BaseSchema {
 	userId: Types.ObjectId;

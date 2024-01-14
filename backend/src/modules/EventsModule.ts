@@ -133,6 +133,10 @@ export class EventsModule extends BaseModule {
 		await this._subClient.PSUBSCRIBE(
 			`__keyevent@${database}__:expired`,
 			async message => {
+				const type = message.substring(0, message.indexOf("."));
+
+				if (type !== "schedule") return;
+
 				const channel = message.substring(message.indexOf(".") + 1);
 
 				if (!this._scheduleCallbacks[channel]) return;
@@ -175,6 +179,10 @@ export class EventsModule extends BaseModule {
 	 * subscriptionListener - Listener for event subscriptions
 	 */
 	private async _subscriptionListener(message: string, key: string) {
+		const type = key.substring(0, key.indexOf("."));
+
+		if (type !== "event") return;
+
 		const channel = key.substring(key.indexOf(".") + 1);
 
 		if (message.startsWith("[") || message.startsWith("{"))
