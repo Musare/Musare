@@ -206,50 +206,55 @@ export const useWebsocketStore = defineStore("websocket", () => {
 		pendingJobs.value = [];
 	});
 
+	const onMessage = async message => {
+		const data = JSON.parse(message.data);
+		const name = data.shift(0);
+
+		if (name === "jobCallback") {
+			const callbackRef = data.shift(0);
+			const response = data.shift(0);
+
+			if (response?.status === "success")
+				jobCallbacks.value[callbackRef]?.resolve(response?.data);
+			else jobCallbacks.value[callbackRef]?.reject(response);
+
+			delete jobCallbacks.value[callbackRef];
+
+			return;
+		}
+
+		if (!subscriptions.value[name]) return;
+
+		await Promise.all(
+			Object.values(subscriptions.value[name].callbacks).map(
+				async subscription => subscription(...data) // TODO: Error handling
+			)
+		);
+	};
+
+	const onClose = () => {
+		ready.value = false;
+
+		// try to reconnect every 1000ms, if the user isn't banned
+		if (!userAuthStore.banned) setTimeout(init, 1000);
+	};
+
 	const init = () => {
 		if (
 			[WebSocket.CONNECTING, WebSocket.OPEN].includes(
 				socket.value?.readyState
 			)
-		)
+		) {
 			socket.value.close();
+
+			socket.value.removeEventListener("message", onMessage);
+			socket.value.removeEventListener("close", onClose);
+		}
 
 		socket.value = new WebSocket(`${configStore.urls.ws}?rewrite=1`);
 
-		socket.value.addEventListener("message", async message => {
-			const data = JSON.parse(message.data);
-			const name = data.shift(0);
-
-			if (name === "jobCallback") {
-				const callbackRef = data.shift(0);
-				const response = data.shift(0);
-
-				if (response?.status === "success")
-					jobCallbacks.value[callbackRef]?.resolve(response?.data);
-				else jobCallbacks.value[callbackRef]?.reject(response);
-
-				delete jobCallbacks.value[callbackRef];
-
-				return;
-			}
-
-			if (!subscriptions.value[name]) return;
-
-			await Promise.all(
-				Object.values(subscriptions.value[name].callbacks).map(
-					async subscription => subscription(...data) // TODO: Error handling
-				)
-			);
-		});
-
-		socket.value.addEventListener("close", () => {
-			// TODO: fix this not going away after reconnect
-
-			ready.value = false;
-
-			// try to reconnect every 1000ms, if the user isn't banned
-			if (!userAuthStore.banned) setTimeout(init, 1000);
-		});
+		socket.value.addEventListener("message", onMessage);
+		socket.value.addEventListener("close", onClose);
 	};
 
 	init();
