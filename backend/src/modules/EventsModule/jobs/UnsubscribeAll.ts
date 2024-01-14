@@ -1,6 +1,5 @@
-import Job from "@/Job";
+import Job, { JobOptions } from "@/Job";
 import EventsModule from "@/modules/EventsModule";
-import { JobOptions } from "@/types/JobOptions";
 
 export default class UnsubscribeAll extends Job {
 	public constructor(payload?: unknown, options?: JobOptions) {

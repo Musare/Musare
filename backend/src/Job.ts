@@ -1,7 +1,7 @@
+import { SessionSchema } from "@models/sessions/schema";
 import JobContext from "@/JobContext";
 import JobStatistics, { JobStatisticsType } from "@/JobStatistics";
 import LogBook, { Log } from "@/LogBook";
-import { JobOptions } from "@/types/JobOptions";
 import BaseModule from "./BaseModule";
 import EventsModule from "./modules/EventsModule";
 import { getErrorMessage } from "./utils/getErrorMessage";
@@ -13,6 +13,14 @@ export enum JobStatus {
 	PAUSED = "PAUSED",
 	COMPLETED = "COMPLETED"
 }
+
+export type JobOptions = {
+	priority?: number;
+	longJob?: string;
+	session?: SessionSchema;
+	socketId?: string;
+	callbackRef?: string;
+};
 
 export default abstract class Job {
 	protected static _apiEnabled = true;
