@@ -1,6 +1,5 @@
-import Job from "@/Job";
+import Job, { JobOptions } from "@/Job";
 import EventsModule from "@/modules/EventsModule";
-import { JobOptions } from "@/types/JobOptions";
 import { forEachIn } from "@/utils/forEachIn";
 
 export default class SubscribeMany extends Job {

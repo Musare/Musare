@@ -1,5 +1,4 @@
-import Job, { JobStatus } from "@/Job";
-import { JobOptions } from "@/types/JobOptions";
+import Job, { JobStatus, JobOptions } from "@/Job";
 import JobStatistics, { JobStatisticsType } from "./JobStatistics";
 
 export class JobQueue {

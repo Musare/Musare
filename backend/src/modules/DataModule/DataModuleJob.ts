@@ -1,7 +1,6 @@
 import { HydratedDocument, Model, isObjectIdOrHexString } from "mongoose";
-import Job from "@/Job";
+import Job, { JobOptions } from "@/Job";
 import DataModule from "../DataModule";
-import { JobOptions } from "@/types/JobOptions";
 import { UserModel } from "./models/users/schema";
 import { forEachIn } from "@/utils/forEachIn";
 

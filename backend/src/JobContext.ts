@@ -1,7 +1,6 @@
 import { SessionSchema } from "@/modules/DataModule/models/sessions/schema";
-import Job from "@/Job";
+import Job, { JobOptions } from "@/Job";
 import { Log } from "@/LogBook";
-import { JobOptions } from "@/types/JobOptions";
 import DataModule from "@/modules/DataModule";
 import { UserModel } from "@/modules/DataModule/models/users/schema";
 
