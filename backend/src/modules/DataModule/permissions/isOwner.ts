@@ -1,13 +1,10 @@
-import { HydratedDocument, Schema, Types } from "mongoose";
+import { HydratedDocument } from "mongoose";
 import { UserSchema } from "../models/users/schema";
 
-export default <
-	ModelSchemaType extends Schema & {
-		createdBy?: Types.ObjectId;
-		owner?: Types.ObjectId;
-	}
->(
-	model: HydratedDocument<ModelSchemaType>,
+export default (
+	model:
+		| (HydratedDocument<any> & { owner?: any })
+		| (HydratedDocument<any> & { createdBy?: any }),
 	user?: HydratedDocument<UserSchema>
 ) => {
 	if (!(user && model)) return false;

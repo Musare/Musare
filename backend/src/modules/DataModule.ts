@@ -99,7 +99,7 @@ export class DataModule extends BaseModule {
 		})
 			.filter(([, event]) => !!event)
 			.forEach(([action, event]) => {
-				patchEventEmitter.on(event, async ({ doc, oldDoc }) => {
+				patchEventEmitter.on(event!, async ({ doc, oldDoc }) => {
 					const modelId = doc?._id ?? oldDoc?._id;
 
 					const Model = await this.getModel(modelName);
@@ -198,12 +198,12 @@ export class DataModule extends BaseModule {
 			),
 			async ([key, type]) => {
 				const { ref } =
-					(type instanceof SchemaTypes.ObjectId
-						? type?.options
-						: type.caster?.options) ?? {};
+					(type instanceof SchemaTypes.Array
+						? type.caster?.options
+						: type?.options) ?? {};
 
 				if (ref)
-					schema.path(key).get(value => {
+					schema.path(key).get((value: any) => {
 						if (
 							typeof value === "object" &&
 							type instanceof SchemaTypes.ObjectId

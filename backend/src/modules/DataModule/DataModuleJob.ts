@@ -1,7 +1,7 @@
 import { HydratedDocument, Model, isObjectIdOrHexString } from "mongoose";
 import Job, { JobOptions } from "@/Job";
 import DataModule from "../DataModule";
-import { UserModel } from "./models/users/schema";
+import { UserSchema } from "./models/users/schema";
 import { forEachIn } from "@/utils/forEachIn";
 
 export default abstract class DataModuleJob extends Job {
@@ -36,7 +36,7 @@ export default abstract class DataModuleJob extends Job {
 
 	public static async hasPermission(
 		model: HydratedDocument<Model<any>>,
-		user?: UserModel
+		user: HydratedDocument<UserSchema> | null
 	) {
 		const options = Array.isArray(this._hasPermission)
 			? this._hasPermission

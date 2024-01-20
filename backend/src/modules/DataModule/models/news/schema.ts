@@ -3,6 +3,7 @@ import {
 	Model,
 	QueryWithHelpers,
 	Schema,
+	SchemaOptions,
 	SchemaTypes,
 	Types
 } from "mongoose";
@@ -88,3 +89,5 @@ export const schema = new Schema<NewsSchema, NewsModel, {}, NewsQueryHelpers>(
 );
 
 export type NewsSchemaType = typeof schema;
+
+export type NewsSchemaOptions = SchemaOptions<NewsSchema, {}, NewsQueryHelpers>;

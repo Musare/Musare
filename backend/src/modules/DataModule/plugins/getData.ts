@@ -1,5 +1,4 @@
-import { PipelineStage, Schema, SchemaOptions } from "mongoose";
-import JobContext from "@/JobContext";
+import { PipelineStage, Schema } from "mongoose";
 
 export enum FilterType {
 	REGEX = "regex",
@@ -14,18 +13,6 @@ export enum FilterType {
 	NUMBER_EQUAL = "numberEquals",
 	BOOLEAN = "boolean",
 	SPECIAL = "special"
-}
-
-export interface GetDataSchemaOptions extends SchemaOptions {
-	getData?: {
-		blacklistedProperties?: string[];
-		specialProperties?: Record<string, PipelineStage[]>;
-		specialQueries?: Record<
-			string,
-			(query: Record<string, any>) => Record<string, any>
-		>;
-		specialFilters?: Record<string, (...args: any[]) => PipelineStage[]>;
-	};
 }
 
 export interface GetData {
@@ -57,12 +44,15 @@ export default function getDataPlugin(schema: Schema) {
 			const { page, pageSize, properties, sort, queries, operator } =
 				payload;
 
+			const getData = schema.get("getData");
+			if (!getData)
+				throw new Error("Schema doesn't have getData defined.");
 			const {
 				blacklistedProperties,
 				specialFilters,
 				specialProperties,
 				specialQueries
-			} = schema.options?.getData ?? {};
+			} = getData;
 
 			const pipeline: PipelineStage[] = [];
 

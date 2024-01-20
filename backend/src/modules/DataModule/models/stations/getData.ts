@@ -1,3 +1,5 @@
+import { StationSchemaOptions } from "./schema";
+
 export default {
 	enabled: true,
 	specialProperties: {
@@ -54,4 +56,4 @@ export default {
 			$or: [newQuery, { ownerUsername: newQuery.owner }]
 		})
 	}
-};
+} as StationSchemaOptions["getData"];

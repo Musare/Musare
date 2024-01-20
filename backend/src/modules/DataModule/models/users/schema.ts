@@ -1,4 +1,4 @@
-import { Model, Schema, SchemaTypes, Types } from "mongoose";
+import { Model, Schema, SchemaOptions, SchemaTypes, Types } from "mongoose";
 import { BaseSchema } from "@/modules/DataModule/types/Schemas";
 import config from "./config";
 import { UserRole } from "./UserRole";
@@ -223,3 +223,5 @@ export const schema = new Schema<UserSchema, UserModel>(
 );
 
 export type UserSchemaType = typeof schema;
+
+export type UserSchemaOptions = SchemaOptions<UserSchema>;

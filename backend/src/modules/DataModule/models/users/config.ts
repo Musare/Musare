@@ -1,26 +1,18 @@
-import { HydratedDocument } from "mongoose";
+import { SchemaOptions } from "mongoose";
 import CacheModule from "@/modules/CacheModule";
 import getData from "./getData";
-import { UserModel } from "./schema";
+import { UserSchema } from "./schema";
 
 export default {
 	documentVersion: 4,
 	eventListeners: {
-		"model.users.updated": ({
-			doc
-		}: {
-			doc: HydratedDocument<UserModel>;
-		}) => {
+		"model.users.updated": async doc => {
 			CacheModule.removeMany([
 				`user-permissions.${doc._id}`,
 				`model-permissions.*.user.${doc._id}`
 			]);
 		},
-		"model.users.deleted": ({
-			oldDoc
-		}: {
-			oldDoc: HydratedDocument<UserModel>;
-		}) => {
+		"model.users.deleted": async oldDoc => {
 			CacheModule.removeMany([
 				`user-permissions.${oldDoc._id}`,
 				`model-permissions.*.user.${oldDoc._id}`
@@ -28,4 +20,4 @@ export default {
 		}
 	},
 	getData
-};
+} as SchemaOptions<UserSchema>;

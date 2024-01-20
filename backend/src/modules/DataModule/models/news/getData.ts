@@ -1,3 +1,5 @@
+import { NewsSchemaOptions } from "./schema";
+
 export default {
 	enabled: true,
 	specialProperties: {
@@ -48,4 +50,4 @@ export default {
 			$or: [newQuery, { createdByUsername: newQuery.createdBy }]
 		})
 	}
-};
+} as NewsSchemaOptions["getData"];

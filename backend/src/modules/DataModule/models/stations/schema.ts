@@ -1,4 +1,4 @@
-import { Model, Schema, SchemaTypes, Types } from "mongoose";
+import { Model, Schema, SchemaOptions, SchemaTypes, Types } from "mongoose";
 import { GetData } from "@/modules/DataModule/plugins/getData";
 import { BaseSchema } from "@/modules/DataModule/types/Schemas";
 import { StationType } from "./StationType";
@@ -155,3 +155,5 @@ export const schema = new Schema<StationSchema, StationModel>(
 );
 
 export type StationSchemaType = typeof schema;
+
+export type StationSchemaOptions = SchemaOptions<StationSchema>;

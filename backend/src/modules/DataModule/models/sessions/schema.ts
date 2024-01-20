@@ -15,7 +15,11 @@ export const schema = new Schema<SessionSchema, SessionModel>(
 			required: true
 		}
 	},
-	{ patchHistory: { enabled: false } }
+	{
+		patchHistory: {
+			enabled: false
+		}
+	}
 );
 
 export type SessionSchemaType = typeof schema;

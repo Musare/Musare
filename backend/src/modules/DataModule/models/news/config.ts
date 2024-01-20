@@ -1,5 +1,6 @@
 import { NewsStatus } from "./NewsStatus";
 import getData from "./getData";
+import { NewsSchemaOptions } from "./schema";
 
 export default {
 	documentVersion: 3,
@@ -15,4 +16,4 @@ export default {
 		}
 	},
 	getData
-};
+} as NewsSchemaOptions;
