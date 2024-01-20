@@ -1,5 +1,4 @@
 import { defineStore } from "pinia";
-import Toast from "toasters";
 import { computed, ref } from "vue";
 import validation from "@/validation";
 import { useWebsocketStore } from "@/stores/websocket";

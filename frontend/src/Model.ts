@@ -73,7 +73,9 @@ export default class Model {
 		force: boolean,
 		pathParts?: string[]
 	): Promise<void> {
-		let [head, ...rest] = path.split(".");
+		const parts = path.split(".");
+		let [head] = parts;
+		const [, ...rest] = parts;
 		let [next] = rest;
 
 		if (Number.isInteger(head)) head = Number.parseInt(head);

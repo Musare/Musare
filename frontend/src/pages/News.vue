@@ -5,12 +5,6 @@ import { formatDistance } from "date-fns";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { NewsModel } from "@musare_types/models/News";
-import {
-	NewsCreatedResponse,
-	NewsUpdatedResponse,
-	NewsRemovedResponse
-} from "@musare_types/events/NewsEvents";
-import { GetPublishedNewsResponse } from "@musare_types/actions/NewsActions";
 import { useEvents } from "@/composables/useEvents";
 import { useModels } from "@/composables/useModels";
 import { useWebsocketStore } from "@/stores/websocket";
@@ -24,7 +18,7 @@ const MainFooter = defineAsyncComponent(
 
 const { runJob } = useWebsocketStore();
 const { onReady } = useEvents();
-const { registerModels, onCreated, onDeleted, subscriptions } = useModels();
+const { registerModels, onCreated, onDeleted } = useModels();
 
 const news = ref<NewsModel[]>([]);
 

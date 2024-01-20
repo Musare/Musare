@@ -8,10 +8,8 @@ import Toast from "toasters";
 
 import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
-import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useModalsStore } from "@/stores/modals";
 import { useWebsocketsStore } from "@/stores/websockets";
-import ms from "@/ms";
 import i18n from "@/i18n";
 
 import AppComponent from "./App.vue";
@@ -84,7 +82,7 @@ app.use(createPinia());
 const configStore = useConfigStore();
 const modalsStore = useModalsStore();
 const userAuthStore = useUserAuthStore();
-const ws = useWebsocketStore();
+useWebsocketStore();
 const { createSocket } = useWebsocketsStore();
 
 createSocket();

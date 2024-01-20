@@ -34,6 +34,44 @@ export const useModelStore = defineStore("model", () => {
 		return !!data[permission];
 	};
 
+	const unregisterModels = async modelIds =>
+		Promise.all(
+			(Array.isArray(modelIds) ? modelIds : [modelIds]).map(
+				async modelId => {
+					const model = models.value.find(
+						model => model._id === modelId
+					);
+
+					if (!model || model.getUses() > 1) {
+						model?.removeUse();
+
+						return;
+					}
+
+					await model.unregisterRelations();
+
+					const { updated, deleted } = model.getSubscriptions() ?? {};
+
+					if (updated)
+						await unsubscribe(
+							`model.${model.getName()}.updated.${modelId}`,
+							updated
+						);
+
+					if (deleted)
+						await unsubscribe(
+							`model.${model.getName()}.deleted.${modelId}`,
+							deleted
+						);
+
+					models.value.splice(
+						models.value.findIndex(model => model._id === modelId),
+						1
+					);
+				}
+			)
+		);
+
 	const onCreatedCallback = async (modelName: string, data) => {
 		if (!subscriptions.value.created[modelName]) return;
 
@@ -174,44 +212,6 @@ export const useModelStore = defineStore("model", () => {
 
 				return docRef;
 			})
-		);
-
-	const unregisterModels = async modelIds =>
-		Promise.all(
-			(Array.isArray(modelIds) ? modelIds : [modelIds]).map(
-				async modelId => {
-					const model = models.value.find(
-						model => model._id === modelId
-					);
-
-					if (!model || model.getUses() > 1) {
-						model?.removeUse();
-
-						return;
-					}
-
-					await model.unregisterRelations();
-
-					const { updated, deleted } = model.getSubscriptions() ?? {};
-
-					if (updated)
-						await unsubscribe(
-							`model.${model.getName()}.updated.${modelId}`,
-							updated
-						);
-
-					if (deleted)
-						await unsubscribe(
-							`model.${model.getName()}.deleted.${modelId}`,
-							deleted
-						);
-
-					models.value.splice(
-						models.value.findIndex(model => model._id === modelId),
-						1
-					);
-				}
-			)
 		);
 
 	const findById = async (modelName: string, _id) => {

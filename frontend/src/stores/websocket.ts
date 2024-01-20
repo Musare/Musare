@@ -236,6 +236,7 @@ export const useWebsocketStore = defineStore("websocket", () => {
 		ready.value = false;
 
 		// try to reconnect every 1000ms, if the user isn't banned
+		// eslint-disable-next-line no-use-before-define
 		if (!userAuthStore.banned) setTimeout(init, 1000);
 	};
 
