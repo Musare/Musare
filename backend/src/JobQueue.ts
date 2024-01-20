@@ -55,6 +55,7 @@ export class JobQueue {
 	 * runJob - Run a job
 	 */
 	public async runJob(
+		// eslint-disable-next-line @typescript-eslint/ban-types
 		JobClass: Function,
 		payload?: unknown,
 		options?: JobOptions
@@ -73,6 +74,7 @@ export class JobQueue {
 	 * queueJob - Queue a job
 	 */
 	public async queueJob(
+		// eslint-disable-next-line @typescript-eslint/ban-types
 		JobClass: Function,
 		payload?: unknown,
 		options?: JobOptions

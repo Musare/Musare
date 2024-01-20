@@ -2,10 +2,12 @@ declare module "mongoose" {
 	// Add some additional possible config options to Mongoose's schema options
 	interface SchemaOptions<
 		DocType = unknown,
+		/* eslint-disable */
 		TInstanceMethods = {},
 		QueryHelpers = {},
 		TStaticMethods = {},
 		TVirtuals = {},
+		/* eslint-enable */
 		THydratedDocumentType = HydratedDocument<
 			DocType,
 			TInstanceMethods,

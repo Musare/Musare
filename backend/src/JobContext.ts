@@ -57,6 +57,7 @@ export default class JobContext {
 	}
 
 	public executeJob(
+		// eslint-disable-next-line @typescript-eslint/ban-types
 		JobClass: Function,
 		payload?: unknown,
 		options?: JobOptions

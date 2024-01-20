@@ -58,6 +58,7 @@ export interface NewsModel
 	) => Promise<NewsSchema[]>;
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 export const schema = new Schema<NewsSchema, NewsModel, {}, NewsQueryHelpers>(
 	{
 		title: {
@@ -90,4 +91,5 @@ export const schema = new Schema<NewsSchema, NewsModel, {}, NewsQueryHelpers>(
 
 export type NewsSchemaType = typeof schema;
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 export type NewsSchemaOptions = SchemaOptions<NewsSchema, {}, NewsQueryHelpers>;

@@ -1,9 +1,11 @@
+import { HydratedDocument } from "mongoose";
 import DataModule from "@/modules/DataModule";
 import DataModuleJob from "@/modules/DataModule/DataModuleJob";
 import isDj from "@/modules/DataModule/permissions/isDj";
 import isOwner from "@/modules/DataModule/permissions/isOwner";
 import isPublic from "@/modules/DataModule/permissions/isPublic";
-import { StationModel } from "../schema";
+import { StationModel, StationSchema } from "../schema";
+import { forEachIn } from "@/utils/forEachIn";
 
 export default class Index extends DataModuleJob {
 	protected static _modelName = "stations";
@@ -37,9 +39,9 @@ export default class Index extends DataModuleJob {
 
 		const user = await this._context.getUser().catch(() => null);
 
-		const stations = [];
+		const stations: HydratedDocument<StationSchema>[] = [];
 
-		for (const station of data) {
+		await forEachIn(data, async station => {
 			if (
 				isPublic(station) ||
 				(user && (isOwner(station, user) || isDj(station, user))) ||
@@ -50,7 +52,7 @@ export default class Index extends DataModuleJob {
 						.catch(() => false)))
 			)
 				stations.push(station);
-		}
+		});
 
 		return stations;
 	}

@@ -354,11 +354,7 @@ export class EventsModule extends BaseModule {
 
 	public async subscribeSocket(channel: string, socketId: string) {
 		if (!this._socketSubscriptions[channel]) {
-			await this.subscribe(
-				"event",
-				channel,
-				() => new Promise<void>(resolve => resolve())
-			);
+			await this.subscribe("event", channel, () => Promise.resolve());
 
 			this._socketSubscriptions[channel] = new Set();
 		}
