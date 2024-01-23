@@ -62,11 +62,16 @@ export class JobQueue {
 	): Promise<unknown> {
 		assertJobDerived(JobClass);
 		return new Promise<unknown>((resolve, reject) => {
-			this.queueJob(JobClass as JobDerived, payload, options)
-				.then(uuid => {
-					this._callbacks[uuid] = { resolve, reject };
-				})
-				.catch(reject);
+			assertJobDerived(JobClass);
+			const job = new (JobClass as JobDerived)(payload, options);
+
+			this._callbacks[job.getUuid()] = { resolve, reject };
+
+			JobStatistics.updateStats(job.getPath(), JobStatisticsType.QUEUED);
+
+			this._queue.push(job);
+
+			this._process();
 		});
 	}
 
@@ -85,6 +90,7 @@ export class JobQueue {
 		JobStatistics.updateStats(job.getPath(), JobStatisticsType.QUEUED);
 
 		this._queue.push(job);
+
 		this._process();
 
 		return job.getUuid();
