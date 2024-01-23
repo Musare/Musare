@@ -92,9 +92,10 @@ export default class JobContext {
 	public async assertPermission(permission: string) {
 		let hasPermission = false;
 
-		const [, moduleName, modelOrJobName, jobName, modelId] =
-			/^([a-z]+)\.([a-z]+)\.([A-z]+)\.?([A-z0-9]+)?$/.exec(permission) ??
-			[];
+		const [, moduleName, modelOrJobName, jobName, modelId, extra] =
+			/^([a-z]+)\.([A-z]+)\.([A-z]+)(?:\.([A-z0-9]{24}))?(?:\.([A-z]+))?$/.exec(
+				permission
+			) ?? [];
 
 		if (moduleName === "data" && modelOrJobName && jobName) {
 			const GetModelPermissions = DataModule.getJob(
@@ -106,7 +107,11 @@ export default class JobContext {
 				modelId
 			})) as GetModelPermissionsResult;
 
-			hasPermission = permissions[`data.${modelOrJobName}.${jobName}`];
+			let modelPermission = `data.${modelOrJobName}.${jobName}`;
+
+			if (extra) modelPermission += `.${extra}`;
+
+			hasPermission = permissions[modelPermission];
 		} else {
 			const GetPermissions = DataModule.getJob("users.getPermissions");
 

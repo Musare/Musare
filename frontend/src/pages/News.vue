@@ -44,7 +44,7 @@ onMounted(async () => {
 	});
 
 	await onCreated("news", async ({ doc }) => {
-		const [newDoc] = await registerModels(doc);
+		const [newDoc] = await registerModels(doc, { news: "createdBy" });
 		news.value.unshift(newDoc);
 	});
 

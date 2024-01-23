@@ -44,7 +44,10 @@ export const useWebsocketStore = defineStore("websocket", () => {
 				callbacks: {}
 			};
 
-		if (!socketChannels.includes(channel)) {
+		if (
+			!socketChannels.includes(channel) &&
+			subscriptions.value[channel].status !== "subscribed"
+		) {
 			subscriptions.value[channel].status = "subscribing";
 			await runJob("events.subscribe", { channel });
 		}
@@ -62,7 +65,9 @@ export const useWebsocketStore = defineStore("websocket", () => {
 		channels: Record<string, (data?: any) => any>
 	) => {
 		const channelsToSubscribeTo = Object.keys(channels).filter(
-			channel => !socketChannels.includes(channel)
+			channel =>
+				!socketChannels.includes(channel) &&
+				subscriptions.value[channel]?.status !== "subscribed"
 		);
 
 		channelsToSubscribeTo.forEach(channel => {

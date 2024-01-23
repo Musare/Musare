@@ -57,7 +57,15 @@ export default class GetModelPermissions extends DataModuleJob {
 
 		if (modelId && !model) throw new Error("Model not found");
 
-		const jobs = (await forEachIn(
+		const modelPermissions = Object.fromEntries(
+			Object.entries(permissions).filter(
+				([permission]) =>
+					permission.startsWith(`data.${modelName}.`) ||
+					permission.startsWith(`event.data.${modelName}.`)
+			)
+		);
+
+		await forEachIn(
 			Object.entries(
 				ModuleManager.getModule("data")?.getJobs() ?? {}
 			).filter(
@@ -75,17 +83,19 @@ export default class GetModelPermissions extends DataModuleJob {
 						permissions[`${jobName}.*`] ||
 						permissions[`${jobName}.${modelId}`];
 
-				if (hasPermission) return [jobName, true];
+				if (hasPermission) {
+					modelPermissions[jobName] = true;
+
+					return;
+				}
 
 				if (typeof Job.hasPermission === "function") {
 					hasPermission = await Job.hasPermission(model, user);
 				}
 
-				return [jobName, !!hasPermission];
+				modelPermissions[jobName] = !!hasPermission;
 			}
-		)) as [string, boolean][];
-
-		const modelPermissions = Object.fromEntries(jobs);
+		);
 
 		await CacheModule.set(cacheKey, modelPermissions, 360);
 

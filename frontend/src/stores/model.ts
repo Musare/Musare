@@ -8,7 +8,7 @@ export const useModelStore = defineStore("model", () => {
 	const { runJob, subscribe, unsubscribe } = useWebsocketStore();
 
 	const models = ref([]);
-	const permissions = ref(null);
+	const permissions = ref({});
 	const createdSubcription = ref(null);
 	const subscriptions = ref({
 		created: {},
@@ -17,15 +17,15 @@ export const useModelStore = defineStore("model", () => {
 	});
 
 	const getUserModelPermissions = async (modelName: string) => {
-		if (permissions.value) return permissions.value;
+		if (permissions.value[modelName]) return permissions.value[modelName];
 
 		const data = await runJob("data.users.getModelPermissions", {
 			modelName
 		});
 
-		permissions.value = data;
+		permissions.value[modelName] = data;
 
-		return permissions.value;
+		return permissions.value[modelName];
 	};
 
 	const hasPermission = async (modelName: string, permission: string) => {

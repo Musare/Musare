@@ -159,7 +159,7 @@ const changeFavoriteOrder = ({ moved }) => {
 };
 
 watch(
-	() => hasPermission("stations.index.other"),
+	() => hasPermission("data.stations.index.adminFilter"),
 	value => {
 		if (!value && route.query.adminFilter === null)
 			router.push({
@@ -338,7 +338,7 @@ onMounted(async () => {
 		ctrl: true,
 		alt: true,
 		handler: () => {
-			if (hasPermission("stations.index.other"))
+			if (hasPermission("data.stations.index.adminFilter"))
 				if (route.query.adminFilter === undefined)
 					router.push({
 						query: {
