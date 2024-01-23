@@ -16,7 +16,7 @@ export default class Subscribe extends Job {
 
 	protected override async _authorize() {
 		const [, moduleName, modelName, event, modelId] =
-			/^([a-z]+)\.([a-z]+)\.([A-z]+)\.?([A-z0-9]+)?$/.exec(
+			/^([a-z]+)\.([A-z]+)\.([A-z]+)\.?([A-z0-9]+)?$/.exec(
 				this._payload.channel
 			) ?? [];
 

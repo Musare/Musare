@@ -545,7 +545,9 @@ onBeforeUnmount(() => {
 												>
 												<user-link
 													v-else
-													:user-id="element.owner"
+													:user-id="
+														element.owner?._id
+													"
 												/>
 											</span>
 										</p>
@@ -823,7 +825,7 @@ onBeforeUnmount(() => {
 										>
 										<user-link
 											v-else
-											:user-id="station.owner"
+											:user-id="station.owner?._id"
 										/>
 									</span>
 								</p>

@@ -82,7 +82,7 @@ export const schema = new Schema<StationSchema, StationModel>(
 		},
 		owner: {
 			type: SchemaTypes.ObjectId,
-			ref: "users",
+			ref: "minifiedUsers",
 			required: false
 		},
 		djs: [{ type: SchemaTypes.ObjectId, ref: "users" }],

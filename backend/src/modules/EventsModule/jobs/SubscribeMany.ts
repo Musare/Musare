@@ -23,7 +23,7 @@ export default class SubscribeMany extends Job {
 	protected override async _authorize() {
 		await forEachIn(this._payload.channels, async (channel: string) => {
 			const [, moduleName, modelName, event, modelId] =
-				/^([a-z]+)\.([a-z]+)\.([A-z]+)\.?([A-z0-9]+)?$/.exec(channel) ??
+				/^([a-z]+)\.([A-z]+)\.([A-z]+)\.?([A-z0-9]+)?$/.exec(channel) ??
 				[];
 
 			let permission = `event.${channel}`;

@@ -244,6 +244,7 @@ export class DataModule extends BaseModule {
 
 		this._models = {
 			abc: await this._loadModel("abc"),
+			minifiedUsers: await this._loadModel("minifiedUsers"),
 			news: await this._loadModel("news"),
 			sessions: await this._loadModel("sessions"),
 			stations: await this._loadModel("stations"),
@@ -257,8 +258,11 @@ export class DataModule extends BaseModule {
 	private async _syncModelIndexes() {
 		if (!this._models) throw new Error("Models not loaded");
 
-		await forEachIn(Object.values(this._models), model =>
-			model.syncIndexes()
+		await forEachIn(
+			Object.values(this._models).filter(
+				model => model.schema.get("autoIndex") !== false
+			),
+			model => model.syncIndexes()
 		);
 	}
 

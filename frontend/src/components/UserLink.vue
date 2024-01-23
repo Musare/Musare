@@ -1,45 +1,37 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useWebsocketsStore } from "@/stores/websockets";
-import { useUserAuthStore } from "@/stores/userAuth";
+import { useModels } from "@/composables/useModels";
 
 const props = defineProps({
 	userId: { type: String, default: "" },
 	link: { type: Boolean, default: true }
 });
 
-const user = ref<{ name: string; username?: string }>({
-	name: "Unknown"
-});
+const user = ref();
 
 const { socket } = useWebsocketsStore();
-const { getBasicUser } = useUserAuthStore();
+const { loadModels } = useModels();
 
 onMounted(() => {
-	socket.onConnect(() => {
-		getBasicUser(props.userId).then(basicUser => {
-			if (basicUser) {
-				const { name, username } = basicUser;
-				user.value = {
-					name,
-					username
-				};
-			}
-		});
+	socket.onConnect(async () => {
+		const [model] = await loadModels("minifiedUsers", props.userId);
+
+		if (model) user.value = model;
 	});
 });
 </script>
 
 <template>
 	<router-link
-		v-if="$props.link && user.username"
+		v-if="$props.link && user?.username"
 		:to="{ path: `/u/${user.username}` }"
 		:title="userId"
 	>
 		{{ user.name }}
 	</router-link>
 	<span v-else :title="userId">
-		{{ user.name }}
+		{{ user?.name ?? "Unknown" }}
 	</span>
 </template>
 
