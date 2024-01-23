@@ -222,6 +222,28 @@ export const useModelStore = defineStore("model", () => {
 		return runJob(`data.${modelName}.findById`, { _id });
 	};
 
+	const loadModels = async (
+		modelName: string,
+		modelIds: string | string[],
+		relations?: Record<string, string | string[]>
+	) =>
+		Promise.all(
+			(Array.isArray(modelIds) ? modelIds : [modelIds]).map(
+				async modelId => {
+					let model = models.value.find(
+						model =>
+							model._id === modelId && model._name === modelName
+					);
+
+					model ??= await findById(modelName, modelId);
+
+					const [ref] = await registerModels(model, relations);
+
+					return ref;
+				}
+			)
+		);
+
 	return {
 		models,
 		permissions,
@@ -234,6 +256,7 @@ export const useModelStore = defineStore("model", () => {
 		unregisterModels,
 		getUserModelPermissions,
 		hasPermission,
-		findById
+		findById,
+		loadModels
 	};
 });

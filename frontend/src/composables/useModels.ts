@@ -66,18 +66,8 @@ export const useModels = () => {
 		delete subscriptions.value[type][modelName][uuid];
 	};
 
-	const registerModels = async (
-		storeModels: any[],
-		relations?: Record<string, string | string[]>
-	) => {
-		const registeredModels = await modelStore.registerModels(
-			storeModels,
-			relations
-		);
-
-		models.value.push(...registeredModels);
-
-		await Promise.all(
+	const setupDeletedSubscriptions = (registeredModels: any[]) =>
+		Promise.all(
 			registeredModels
 				.filter(
 					(model, index) =>
@@ -99,6 +89,37 @@ export const useModels = () => {
 						});
 				})
 		);
+
+	const registerModels = async (
+		storeModels: any[],
+		relations?: Record<string, string | string[]>
+	) => {
+		const registeredModels = await modelStore.registerModels(
+			storeModels,
+			relations
+		);
+
+		models.value.push(...registeredModels);
+
+		await setupDeletedSubscriptions(registeredModels);
+
+		return registeredModels;
+	};
+
+	const loadModels = async (
+		modelName: string,
+		modelIds: string | string[],
+		relations?: Record<string, string | string[]>
+	) => {
+		const registeredModels = await modelStore.loadModels(
+			modelName,
+			modelIds,
+			relations
+		);
+
+		models.value.push(...registeredModels);
+
+		await setupDeletedSubscriptions(registeredModels);
 
 		return registeredModels;
 	};
@@ -139,6 +160,7 @@ export const useModels = () => {
 		onDeleted,
 		removeCallback,
 		registerModels,
-		unregisterModels
+		unregisterModels,
+		loadModels
 	};
 };
