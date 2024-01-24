@@ -1,7 +1,7 @@
 import { reactive, ref } from "vue";
 import { defineStore } from "pinia";
+import { generateUuid } from "@common/utils/generateUuid";
 import { useWebsocketStore } from "./websocket";
-import utils from "@/utils";
 import Model from "@/Model";
 
 export const useModelStore = defineStore("model", () => {
@@ -92,7 +92,7 @@ export const useModelStore = defineStore("model", () => {
 				data => onCreatedCallback(modelName, data)
 			);
 
-		const uuid = utils.guid();
+		const uuid = generateUuid();
 
 		subscriptions.value.created[modelName] ??= {};
 		subscriptions.value.created[modelName][uuid] = callback;
@@ -104,7 +104,7 @@ export const useModelStore = defineStore("model", () => {
 		modelName: string,
 		callback: (data?: any) => any
 	) => {
-		const uuid = utils.guid();
+		const uuid = generateUuid();
 
 		subscriptions.value.updated[modelName] ??= {};
 		subscriptions.value.updated[modelName][uuid] = callback;
@@ -129,7 +129,7 @@ export const useModelStore = defineStore("model", () => {
 		modelName: string,
 		callback: (data?: any) => any
 	) => {
-		const uuid = utils.guid();
+		const uuid = generateUuid();
 
 		subscriptions.value.deleted[modelName] ??= {};
 		subscriptions.value.deleted[modelName][uuid] = callback;

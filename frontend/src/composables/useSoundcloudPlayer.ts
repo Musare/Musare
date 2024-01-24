@@ -1,10 +1,10 @@
 import { ref, watch } from "vue";
-import utils from "@/utils";
+import { generateUuid } from "@common/utils/generateUuid";
 
 const soundcloudDomain = "https://w.soundcloud.com";
 
 export const useSoundcloudPlayer = () => {
-	const uuid = utils.guid();
+	const uuid = generateUuid();
 
 	const soundcloudIframeElement = ref();
 	const widgetId = ref();

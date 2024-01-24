@@ -1,8 +1,8 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { generateUuid } from "@common/utils/generateUuid";
 import { useConfigStore } from "./config";
 import { useUserAuthStore } from "./userAuth";
-import utils from "@/utils";
 import ms from "@/ms";
 
 export const useWebsocketStore = defineStore("websocket", () => {
@@ -20,7 +20,7 @@ export const useWebsocketStore = defineStore("websocket", () => {
 
 	const runJob = async (job: string, payload?: any) =>
 		new Promise((resolve, reject) => {
-			const callbackRef = utils.guid();
+			const callbackRef = generateUuid();
 			const message = JSON.stringify([
 				job,
 				payload ?? {},
@@ -54,7 +54,7 @@ export const useWebsocketStore = defineStore("websocket", () => {
 
 		subscriptions.value[channel].status = "subscribed";
 
-		const uuid = utils.guid();
+		const uuid = generateUuid();
 
 		subscriptions.value[channel].callbacks[uuid] = callback;
 
@@ -90,7 +90,7 @@ export const useWebsocketStore = defineStore("websocket", () => {
 
 		return Object.fromEntries(
 			Object.entries(channels).map(([channel, callback]) => {
-				const uuid = utils.guid();
+				const uuid = generateUuid();
 
 				subscriptions.value[channel].callbacks[uuid] = callback;
 
@@ -162,7 +162,7 @@ export const useWebsocketStore = defineStore("websocket", () => {
 	};
 
 	const onReady = async (callback: () => any) => {
-		const uuid = utils.guid();
+		const uuid = generateUuid();
 
 		readyCallbacks.value[uuid] = callback;
 

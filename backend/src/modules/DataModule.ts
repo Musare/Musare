@@ -4,6 +4,7 @@ import { patchHistoryPlugin, patchEventEmitter } from "ts-patch-mongoose";
 import { readdir } from "fs/promises";
 import path from "path";
 import updateVersioningPlugin from "mongoose-update-versioning";
+import { forEachIn } from "@common/utils/forEachIn";
 import Migration from "@/modules/DataModule/Migration";
 import documentVersionPlugin from "@/modules/DataModule/plugins/documentVersion";
 import getDataPlugin from "@/modules/DataModule/plugins/getData";
@@ -11,7 +12,6 @@ import BaseModule, { ModuleStatus } from "@/BaseModule";
 import EventsModule from "./EventsModule";
 import DataModuleJob from "./DataModule/DataModuleJob";
 import Job from "@/Job";
-import { forEachIn } from "@/utils/forEachIn";
 
 export class DataModule extends BaseModule {
 	private _models?: Record<string, Model<any>>;

@@ -4,6 +4,7 @@
 !.git/HEAD
 !.git/refs/
 
+!common/
 !types/
 !backend/
 !frontend/

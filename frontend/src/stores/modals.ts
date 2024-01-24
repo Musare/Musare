@@ -1,7 +1,6 @@
 import { defineAsyncComponent } from "vue";
 import { defineStore } from "pinia";
-import utils from "@/utils";
-
+import { generateUuid } from "@common/utils/generateUuid";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useConfigStore } from "@/stores/config";
 
@@ -21,7 +20,7 @@ export const useModalsStore = defineStore("modals", {
 		openModal(
 			dataOrModal: string | { modal: string; props?: Record<string, any> }
 		) {
-			const uuid = utils.guid();
+			const uuid = generateUuid();
 			let modal;
 			let props;
 			if (typeof dataOrModal === "string") modal = dataOrModal;

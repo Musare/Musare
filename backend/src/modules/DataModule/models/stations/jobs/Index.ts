@@ -1,11 +1,11 @@
 import { HydratedDocument } from "mongoose";
+import { forEachIn } from "@common/utils/forEachIn";
 import DataModule from "@/modules/DataModule";
 import DataModuleJob from "@/modules/DataModule/DataModuleJob";
 import isDj from "@/modules/DataModule/permissions/isDj";
 import isOwner from "@/modules/DataModule/permissions/isOwner";
 import isPublic from "@/modules/DataModule/permissions/isPublic";
 import { StationModel, StationSchema } from "../schema";
-import { forEachIn } from "@/utils/forEachIn";
 
 export default class Index extends DataModuleJob {
 	protected static _modelName = "stations";

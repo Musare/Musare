@@ -8,9 +8,9 @@ import {
 	RedisScripts
 } from "redis";
 import config from "config";
+import { forEachIn } from "@common/utils/forEachIn";
 import BaseModule, { ModuleStatus } from "@/BaseModule";
 import WebSocketModule from "./WebSocketModule";
-import { forEachIn } from "@/utils/forEachIn";
 
 export class EventsModule extends BaseModule {
 	private _pubClient?: RedisClientType<

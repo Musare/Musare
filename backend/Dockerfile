@@ -14,10 +14,11 @@ ARG BACKEND_MODE=production
 ENV CONTAINER_MODE=${CONTAINER_MODE}
 ENV BACKEND_MODE=${BACKEND_MODE}
 
-RUN mkdir -p /opt/.git /opt/types /opt/app
+RUN mkdir -p /opt/.git /opt/common /opt/types /opt/app
 WORKDIR /opt/app
 
 COPY .git /opt/.git
+COPY common /opt/common
 COPY types /opt/types
 COPY backend /opt/app
 COPY --from=backend_node_modules /opt/app/node_modules node_modules

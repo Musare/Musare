@@ -5,6 +5,7 @@ services:
       - "${BACKEND_HOST:-0.0.0.0}:${BACKEND_DEBUG_PORT:-9229}:9229"
     volumes:
       - ./.git:/opt/.git:ro
+      - ./common:/opt/common
       - ./types:/opt/types
       - ./backend:/opt/app
     environment:
@@ -13,6 +14,7 @@ services:
   frontend:
     volumes:
       - ./.git:/opt/.git:ro
+      - ./common:/opt/common
       - ./types:/opt/types
       - ./frontend:/opt/app
 

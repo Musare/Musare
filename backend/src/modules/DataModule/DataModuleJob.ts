@@ -1,8 +1,8 @@
 import { HydratedDocument, Model, isObjectIdOrHexString } from "mongoose";
+import { forEachIn } from "@common/utils/forEachIn";
 import Job, { JobOptions } from "@/Job";
 import DataModule from "../DataModule";
 import { UserSchema } from "./models/users/schema";
-import { forEachIn } from "@/utils/forEachIn";
 
 export default abstract class DataModuleJob extends Job {
 	protected static _modelName: string;

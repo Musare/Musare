@@ -1,11 +1,11 @@
 import { SessionSchema } from "@models/sessions/schema";
+import { getErrorMessage } from "@common/utils/getErrorMessage";
+import { generateUuid } from "@common/utils/generateUuid";
 import JobContext from "@/JobContext";
 import JobStatistics, { JobStatisticsType } from "@/JobStatistics";
 import LogBook, { Log } from "@/LogBook";
 import BaseModule from "./BaseModule";
 import EventsModule from "./modules/EventsModule";
-import { getErrorMessage } from "./utils/getErrorMessage";
-import { generateUuid } from "@/utils/generateUuid";
 
 export enum JobStatus {
 	QUEUED = "QUEUED",

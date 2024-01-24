@@ -1,9 +1,9 @@
 import { readdir } from "fs/promises";
 import path from "path";
+import { forEachIn } from "@common/utils/forEachIn";
 import LogBook, { Log } from "@/LogBook";
 import ModuleManager from "@/ModuleManager";
 import Job from "./Job";
-import { forEachIn } from "@/utils/forEachIn";
 
 export enum ModuleStatus {
 	LOADED = "LOADED",

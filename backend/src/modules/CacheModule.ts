@@ -8,8 +8,8 @@ import {
 	RedisScripts,
 	createClient
 } from "redis";
+import { forEachIn } from "@common/utils/forEachIn";
 import BaseModule, { ModuleStatus } from "@/BaseModule";
-import { forEachIn } from "@/utils/forEachIn";
 
 export class CacheModule extends BaseModule {
 	private _redisClient?: RedisClientType<

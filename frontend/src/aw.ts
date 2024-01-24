@@ -1,5 +1,5 @@
 import Toast from "toasters";
-import utils from "@/utils";
+import { generateUuid } from "@common/utils/generateUuid";
 
 let gotPong = false;
 let pingTries = 0;
@@ -73,7 +73,7 @@ export default {
 
 	enable() {
 		if (!enabled) {
-			uuid = utils.guid();
+			uuid = generateUuid();
 
 			document.addEventListener(
 				"ActivityWatchMusareEvent",

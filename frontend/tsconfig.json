@@ -1,32 +1,26 @@
 {
-  "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "moduleResolution": "node",
-    "importHelpers": true,
-    "isolatedModules": true,
-    "resolveJsonModule": true,
-    "noEmit": true,
-    "baseUrl": ".",
-    "paths": {
-      "@musare_types/*": [
-        "../types/*"
-      ],
-      "@/*": [
-        "./src/*"
-      ],
-    },
-    "jsx": "preserve",
-    "types": [
-      "vite/client",
-      "@intlify/unplugin-vue-i18n/messages",
-      "vitest/globals"
-    ],
-    "strict": false,
-    "allowSyntheticDefaultImports": true
-  },
-  "exclude": [
-    "./src/index.html",
-    "./src/coverage"
-  ]
+	"compilerOptions": {
+		"target": "esnext",
+		"module": "esnext",
+		"moduleResolution": "node",
+		"importHelpers": true,
+		"isolatedModules": true,
+		"resolveJsonModule": true,
+		"noEmit": true,
+		"baseUrl": ".",
+		"paths": {
+			"@musare_types/*": ["../types/*"],
+			"@/*": ["./src/*"],
+			"@common/*": ["../common/*"]
+		},
+		"jsx": "preserve",
+		"types": [
+			"vite/client",
+			"@intlify/unplugin-vue-i18n/messages",
+			"vitest/globals"
+		],
+		"strict": false,
+		"allowSyntheticDefaultImports": true
+	},
+	"exclude": ["./src/index.html", "./src/coverage"]
 }

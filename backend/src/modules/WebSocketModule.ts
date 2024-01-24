@@ -3,6 +3,8 @@ import express from "express";
 import http, { Server, IncomingMessage } from "node:http";
 import { RawData, WebSocketServer } from "ws";
 import { Types, isObjectIdOrHexString } from "mongoose";
+import { forEachIn } from "@common/utils/forEachIn";
+import { getErrorMessage } from "@common/utils/getErrorMessage";
 import BaseModule from "@/BaseModule";
 import WebSocket from "@/WebSocket";
 import ModuleManager from "@/ModuleManager";
@@ -11,8 +13,6 @@ import DataModule from "./DataModule";
 import { UserModel } from "./DataModule/models/users/schema";
 import { SessionModel } from "./DataModule/models/sessions/schema";
 import EventsModule from "./EventsModule";
-import { forEachIn } from "@/utils/forEachIn";
-import { getErrorMessage } from "@/utils/getErrorMessage";
 
 export class WebSocketModule extends BaseModule {
 	private _httpServer?: Server;

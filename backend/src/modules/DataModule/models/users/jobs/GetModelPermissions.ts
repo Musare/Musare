@@ -1,10 +1,10 @@
 import { isObjectIdOrHexString } from "mongoose";
+import { forEachIn } from "@common/utils/forEachIn";
 import CacheModule from "@/modules/CacheModule";
 import DataModule from "@/modules/DataModule";
 import ModuleManager from "@/ModuleManager";
 import GetPermissions, { GetPermissionsResult } from "./GetPermissions";
 import DataModuleJob from "@/modules/DataModule/DataModuleJob";
-import { forEachIn } from "@/utils/forEachIn";
 
 export type GetModelPermissionsResult = Record<string, boolean>;
 

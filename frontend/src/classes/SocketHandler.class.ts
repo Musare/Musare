@@ -1,7 +1,7 @@
+import { generateUuid } from "@common/utils/generateUuid";
 import ListenerHandler from "@/classes/ListenerHandler.class";
 import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
-import utils from "@/utils";
 
 export default class SocketHandler {
 	socket?: WebSocket;
@@ -165,7 +165,7 @@ export default class SocketHandler {
 		}
 
 		const lastArg = args[args.length - 1];
-		const CB_REF = utils.guid();
+		const CB_REF = generateUuid();
 
 		if (typeof lastArg === "function") {
 			this.CB_REFS[CB_REF] = lastArg;

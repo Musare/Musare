@@ -146,6 +146,10 @@ export default {
 			{
 				find: "@",
 				replacement: path.resolve(__dirname, "src")
+			},
+			{
+				find: "@common",
+				replacement: path.resolve(__dirname, "../common")
 			}
 		],
 		extensions: [
