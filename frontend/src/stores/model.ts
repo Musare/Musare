@@ -6,7 +6,8 @@ import { useWebsocketStore } from "./websocket";
 import Model from "@/Model";
 
 export const useModelStore = defineStore("model", () => {
-	const { runJob, subscribe, unsubscribe } = useWebsocketStore();
+	const { runJob, subscribe, subscribeMany, unsubscribe } =
+		useWebsocketStore();
 
 	const models = ref([]);
 	const permissions = ref({});
@@ -178,37 +179,73 @@ export const useModelStore = defineStore("model", () => {
 	const registerModels = async (
 		docs,
 		relations?: Record<string, string | string[]>
-	) =>
-		forEachIn(Array.isArray(docs) ? docs : [docs], async _doc => {
-			const existingRef = models.value.find(
-				model => model._id === _doc._id
-			);
+	) => {
+		const documents = Array.isArray(docs) ? docs : [docs];
 
-			const docRef = existingRef ?? reactive(new Model(_doc));
+		const existingsRefs = documents.filter(document =>
+			models.value.find(
+				model =>
+					model._id === document._id && model._name === document._name
+			)
+		);
 
-			docRef.addUse();
+		await forEachIn(existingsRefs, async model => {
+			model.addUse();
 
-			if (existingRef) return docRef;
-
-			if (relations && relations[docRef._name])
-				await docRef.loadRelations(relations[docRef._name]);
-
-			models.value.push(docRef);
-
-			const updatedUuid = await subscribe(
-				`model.${docRef._name}.updated.${_doc._id}`,
-				data => onUpdatedCallback(docRef._name, data)
-			);
-
-			const deletedUuid = await subscribe(
-				`model.${docRef._name}.deleted.${_doc._id}`,
-				data => onDeletedCallback(docRef._name, data)
-			);
-
-			docRef.setSubscriptions(updatedUuid, deletedUuid);
-
-			return docRef;
+			if (relations && relations[model._name])
+				await model.loadRelations(relations[model._name]);
 		});
+
+		if (documents.length === existingsRefs.length) return existingsRefs;
+
+		const missingDocuments = documents.filter(
+			document =>
+				!loadedModelIds.value.includes(
+					`${document._name}.${document._id}`
+				)
+		);
+
+		const channels = Object.fromEntries(
+			missingDocuments.flatMap(document => [
+				[
+					`model.${document._name}.updated.${document._id}`,
+					data => onUpdatedCallback(document._name, data)
+				],
+				[
+					`model.${document._name}.deleted.${document._id}`,
+					data => onDeletedCallback(document._name, data)
+				]
+			])
+		);
+		const subscriptions = Object.entries(await subscribeMany(channels));
+
+		const newRefs = await forEachIn(missingDocuments, async document => {
+			const refSubscriptions = subscriptions.filter(([, { channel }]) =>
+				channel.endsWith(document._id)
+			);
+			const [updated] = refSubscriptions.find(([, { channel }]) =>
+				channel.includes("updated")
+			);
+			const [deleted] = refSubscriptions.find(([, { channel }]) =>
+				channel.includes("deleted")
+			);
+
+			if (!updated || !deleted) return null;
+
+			const model = reactive(new Model(document));
+			model.setSubscriptions(updated, deleted);
+			model.addUse();
+
+			if (relations && relations[model._name])
+				await model.loadRelations(relations[model._name]);
+
+			return model;
+		});
+
+		models.value.push(...newRefs);
+
+		return existingsRefs.concat(newRefs);
+	};
 
 	const findById = async (modelName: string, _id) => {
 		const existingModel = models.value.find(model => model._id === _id);
