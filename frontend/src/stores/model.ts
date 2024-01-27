@@ -222,6 +222,26 @@ export const useModelStore = defineStore("model", () => {
 		return runJob(`data.${modelName}.findById`, { _id });
 	};
 
+	const findManyById = async (modelName: string, _ids: string[]) => {
+		const existingModels = models.value.filter(model =>
+			_ids.includes(model._id)
+		);
+		const existingIds = existingModels.map(model => model._id);
+		const missingIds = _ids.filter(_id => !existingIds.includes(_id));
+
+		let fetchedModels = [];
+		if (missingIds.length > 0)
+			fetchedModels = (await runJob(`data.${modelName}.findManyById`, {
+				_ids: missingIds
+			})) as unknown[];
+
+		const allModels = existingModels.concat(fetchedModels);
+
+		return Object.fromEntries(
+			_ids.map(_id => [_id, allModels.find(model => model._id === _id)])
+		);
+	};
+
 	const loadModels = async (
 		modelName: string,
 		modelIds: string | string[],
@@ -257,6 +277,7 @@ export const useModelStore = defineStore("model", () => {
 		getUserModelPermissions,
 		hasPermission,
 		findById,
+		findManyById,
 		loadModels
 	};
 });
