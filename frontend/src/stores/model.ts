@@ -1,4 +1,4 @@
-import { reactive, ref } from "vue";
+import { reactive, ref, computed } from "vue";
 import { defineStore } from "pinia";
 import { generateUuid } from "@common/utils/generateUuid";
 import { useWebsocketStore } from "./websocket";
@@ -15,6 +15,9 @@ export const useModelStore = defineStore("model", () => {
 		updated: {},
 		deleted: {}
 	});
+	const loadedModelIds = computed(() =>
+		models.value.map(model => `${model._name}.${model._id}`)
+	);
 
 	const getUserModelPermissions = async (modelName: string) => {
 		if (permissions.value[modelName]) return permissions.value[modelName];
@@ -244,25 +247,24 @@ export const useModelStore = defineStore("model", () => {
 
 	const loadModels = async (
 		modelName: string,
-		modelIds: string | string[],
+		modelIdsOrModelId: string | string[],
 		relations?: Record<string, string | string[]>
-	) =>
-		Promise.all(
-			(Array.isArray(modelIds) ? modelIds : [modelIds]).map(
-				async modelId => {
-					let model = models.value.find(
-						model =>
-							model._id === modelId && model._name === modelName
-					);
-
-					model ??= await findById(modelName, modelId);
-
-					const [ref] = await registerModels(model, relations);
-
-					return ref;
-				}
-			)
+	) => {
+		const modelIds = Array.isArray(modelIdsOrModelId)
+			? modelIdsOrModelId
+			: [modelIdsOrModelId];
+		const missingModelIds = modelIds.filter(
+			modelId => !loadedModelIds.value.includes(`${modelName}.${modelId}`)
 		);
+		const missingModels = Object.values(
+			await findManyById(modelName, missingModelIds)
+		);
+		await registerModels(missingModels, relations);
+
+		return models.value.filter(
+			model => modelIds.includes(model._id) && model._name === modelName
+		);
+	};
 
 	return {
 		models,
