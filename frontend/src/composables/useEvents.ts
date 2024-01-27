@@ -1,4 +1,5 @@
 import { onBeforeUnmount, ref } from "vue";
+import { forEachIn } from "@common/utils/forEachIn";
 import { useWebsocketStore } from "@/stores/websocket";
 
 export const useEvents = () => {
@@ -34,12 +35,11 @@ export const useEvents = () => {
 	const subscribeMany = async channels => {
 		const _subscriptions = await websocketStore.subscribeMany(channels);
 
-		await Promise.all(
-			Object.entries(_subscriptions).map(
-				async ([uuid, { channel, callback }]) => {
-					subscriptions.value[uuid] = { channel, callback };
-				}
-			)
+		await forEachIn(
+			Object.entries(_subscriptions),
+			async ([uuid, { channel, callback }]) => {
+				subscriptions.value[uuid] = { channel, callback };
+			}
 		);
 
 		return Object.fromEntries(
@@ -69,22 +69,22 @@ export const useEvents = () => {
 
 		await websocketStore.unsubscribeMany(_subscriptions);
 
-		return Promise.all(
-			uuids.map(async uuid => {
-				delete subscriptions.value[uuid];
-			})
-		);
+		return forEachIn(uuids, async uuid => {
+			delete subscriptions.value[uuid];
+		});
 	};
 
 	onBeforeUnmount(async () => {
-		await Promise.allSettled(
-			Object.keys(subscriptions.value).map(uuid => unsubscribe(uuid))
+		await forEachIn(
+			Object.keys(subscriptions.value),
+			uuid => unsubscribe(uuid),
+			{ onError: Promise.resolve }
 		);
 
-		await Promise.allSettled(
-			Object.keys(readySubscriptions.value).map(async uuid =>
-				removeReadyCallback(uuid)
-			)
+		await forEachIn(
+			Object.keys(readySubscriptions.value),
+			async uuid => removeReadyCallback(uuid),
+			{ onError: Promise.resolve }
 		);
 	});
 

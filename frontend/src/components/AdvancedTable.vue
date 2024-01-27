@@ -14,6 +14,7 @@ import { useRoute, useRouter } from "vue-router";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { DraggableList } from "vue-draggable-list";
+import { forEachIn } from "@common/utils/forEachIn";
 import { useWebsocketStore } from "@/stores/websocket";
 import { useModalsStore } from "@/stores/modals";
 import keyboardShortcuts from "@/keyboardShortcuts";
@@ -235,11 +236,9 @@ const unsubscribe = async (_subscriptions?) => {
 		])
 	);
 
-	await Promise.all(
-		Object.keys(_subscriptions).map(async modelId => {
-			delete subscriptions.value[modelId];
-		})
-	);
+	await forEachIn(Object.keys(_subscriptions), async modelId => {
+		delete subscriptions.value[modelId];
+	});
 };
 
 const subscribe = async () => {
@@ -247,12 +246,11 @@ const subscribe = async () => {
 		JSON.stringify(subscriptions.value)
 	);
 
-	await Promise.all(
-		rows.value
-			.filter(row => subscriptions.value[row._id])
-			.map(async row => {
-				delete previousSubscriptions[row._id];
-			})
+	await forEachIn(
+		rows.value.filter(row => subscriptions.value[row._id]),
+		async row => {
+			delete previousSubscriptions[row._id];
+		}
 	);
 
 	const uuids = await events.subscribeMany(
@@ -272,16 +270,13 @@ const subscribe = async () => {
 		)
 	);
 
-	await Promise.all(
-		Object.entries(uuids).map(async ([channel, uuid]) => {
-			const [, , , event, modelId] =
-				/^([a-z]+)\.([a-z]+)\.([A-z]+)\.?([A-z0-9]+)?$/.exec(channel) ??
-				[];
+	await forEachIn(Object.entries(uuids), async ([channel, uuid]) => {
+		const [, , , event, modelId] =
+			/^([a-z]+)\.([a-z]+)\.([A-z]+)\.?([A-z0-9]+)?$/.exec(channel) ?? [];
 
-			subscriptions.value[modelId] ??= {};
-			subscriptions.value[modelId][event] = uuid;
-		})
-	);
+		subscriptions.value[modelId] ??= {};
+		subscriptions.value[modelId][event] = uuid;
+	});
 
 	unsubscribe(previousSubscriptions);
 };
@@ -975,15 +970,17 @@ onMounted(async () => {
 
 		if (props.query) setQuery();
 
-		await Promise.allSettled(
-			props.filters.map(async filter => {
+		await forEachIn(
+			props.filters,
+			async filter => {
 				if (filter.autosuggest && filter.autosuggestDataAction) {
 					const { items } = await runJob(
 						filter.autosuggestDataAction
 					);
 					autosuggest.value.allItems[filter.name] = items;
 				}
-			})
+			},
+			{ onError: Promise.resolve }
 		);
 	});
 

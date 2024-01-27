@@ -1,6 +1,7 @@
 import { reactive, ref, computed } from "vue";
 import { defineStore } from "pinia";
 import { generateUuid } from "@common/utils/generateUuid";
+import { forEachIn } from "@common/utils/forEachIn";
 import { useWebsocketStore } from "./websocket";
 import Model from "@/Model";
 
@@ -38,50 +39,46 @@ export const useModelStore = defineStore("model", () => {
 	};
 
 	const unregisterModels = async modelIds =>
-		Promise.all(
-			(Array.isArray(modelIds) ? modelIds : [modelIds]).map(
-				async modelId => {
-					const model = models.value.find(
-						model => model._id === modelId
-					);
+		forEachIn(
+			Array.isArray(modelIds) ? modelIds : [modelIds],
+			async modelId => {
+				const model = models.value.find(model => model._id === modelId);
 
-					if (!model || model.getUses() > 1) {
-						model?.removeUse();
+				if (!model || model.getUses() > 1) {
+					model?.removeUse();
 
-						return;
-					}
-
-					await model.unregisterRelations();
-
-					const { updated, deleted } = model.getSubscriptions() ?? {};
-
-					if (updated)
-						await unsubscribe(
-							`model.${model.getName()}.updated.${modelId}`,
-							updated
-						);
-
-					if (deleted)
-						await unsubscribe(
-							`model.${model.getName()}.deleted.${modelId}`,
-							deleted
-						);
-
-					models.value.splice(
-						models.value.findIndex(model => model._id === modelId),
-						1
-					);
+					return;
 				}
-			)
+
+				await model.unregisterRelations();
+
+				const { updated, deleted } = model.getSubscriptions() ?? {};
+
+				if (updated)
+					await unsubscribe(
+						`model.${model.getName()}.updated.${modelId}`,
+						updated
+					);
+
+				if (deleted)
+					await unsubscribe(
+						`model.${model.getName()}.deleted.${modelId}`,
+						deleted
+					);
+
+				models.value.splice(
+					models.value.findIndex(model => model._id === modelId),
+					1
+				);
+			}
 		);
 
 	const onCreatedCallback = async (modelName: string, data) => {
 		if (!subscriptions.value.created[modelName]) return;
 
-		await Promise.all(
-			Object.values(subscriptions.value.created[modelName]).map(
-				async subscription => subscription(data) // TODO: Error handling
-			)
+		await forEachIn(
+			Object.values(subscriptions.value.created[modelName]),
+			async subscription => subscription(data) // TODO: Error handling
 		);
 	};
 
@@ -121,10 +118,9 @@ export const useModelStore = defineStore("model", () => {
 
 		if (!subscriptions.value.updated[modelName]) return;
 
-		await Promise.all(
-			Object.values(subscriptions.value.updated[modelName]).map(
-				async subscription => subscription(data) // TODO: Error handling
-			)
+		await forEachIn(
+			Object.values(subscriptions.value.updated[modelName]),
+			async subscription => subscription(data) // TODO: Error handling
 		);
 	};
 
@@ -144,10 +140,9 @@ export const useModelStore = defineStore("model", () => {
 		const { oldDoc } = data;
 
 		if (subscriptions.value.deleted[modelName])
-			await Promise.all(
-				Object.values(subscriptions.value.deleted[modelName]).map(
-					async subscription => subscription(data) // TODO: Error handling
-				)
+			await forEachIn(
+				Object.values(subscriptions.value.deleted[modelName]),
+				async subscription => subscription(data) // TODO: Error handling
 			);
 
 		const index = models.value.findIndex(model => model._id === oldDoc._id);
@@ -184,38 +179,36 @@ export const useModelStore = defineStore("model", () => {
 		docs,
 		relations?: Record<string, string | string[]>
 	) =>
-		Promise.all(
-			(Array.isArray(docs) ? docs : [docs]).map(async _doc => {
-				const existingRef = models.value.find(
-					model => model._id === _doc._id
-				);
+		forEachIn(Array.isArray(docs) ? docs : [docs], async _doc => {
+			const existingRef = models.value.find(
+				model => model._id === _doc._id
+			);
 
-				const docRef = existingRef ?? reactive(new Model(_doc));
+			const docRef = existingRef ?? reactive(new Model(_doc));
 
-				docRef.addUse();
+			docRef.addUse();
 
-				if (existingRef) return docRef;
+			if (existingRef) return docRef;
 
-				if (relations && relations[docRef._name])
-					await docRef.loadRelations(relations[docRef._name]);
+			if (relations && relations[docRef._name])
+				await docRef.loadRelations(relations[docRef._name]);
 
-				models.value.push(docRef);
+			models.value.push(docRef);
 
-				const updatedUuid = await subscribe(
-					`model.${docRef._name}.updated.${_doc._id}`,
-					data => onUpdatedCallback(docRef._name, data)
-				);
+			const updatedUuid = await subscribe(
+				`model.${docRef._name}.updated.${_doc._id}`,
+				data => onUpdatedCallback(docRef._name, data)
+			);
 
-				const deletedUuid = await subscribe(
-					`model.${docRef._name}.deleted.${_doc._id}`,
-					data => onDeletedCallback(docRef._name, data)
-				);
+			const deletedUuid = await subscribe(
+				`model.${docRef._name}.deleted.${_doc._id}`,
+				data => onDeletedCallback(docRef._name, data)
+			);
 
-				docRef.setSubscriptions(updatedUuid, deletedUuid);
+			docRef.setSubscriptions(updatedUuid, deletedUuid);
 
-				return docRef;
-			})
-		);
+			return docRef;
+		});
 
 	const findById = async (modelName: string, _id) => {
 		const existingModel = models.value.find(model => model._id === _id);

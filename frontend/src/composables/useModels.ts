@@ -1,4 +1,5 @@
 import { onBeforeUnmount, ref } from "vue";
+import { forEachIn } from "@common/utils/forEachIn";
 import { useModelStore } from "@/stores/model";
 
 export const useModels = () => {
@@ -67,27 +68,26 @@ export const useModels = () => {
 	};
 
 	const setupDeletedSubscriptions = (registeredModels: any[]) =>
-		Promise.all(
-			registeredModels
-				.filter(
-					(model, index) =>
-						!deletedSubscriptions.value[model._name] &&
-						registeredModels.findIndex(
-							storeModel => storeModel._name === model._name
-						) === index
-				)
-				.map(async registeredModel => {
-					deletedSubscriptions.value[registeredModel._name] =
-						await onDeleted(registeredModel._name, ({ oldDoc }) => {
-							const modelIndex = models.value.findIndex(
-								model => model._id === oldDoc._id
-							);
+		forEachIn(
+			registeredModels.filter(
+				(model, index) =>
+					!deletedSubscriptions.value[model._name] &&
+					registeredModels.findIndex(
+						storeModel => storeModel._name === model._name
+					) === index
+			),
+			async registeredModel => {
+				deletedSubscriptions.value[registeredModel._name] =
+					await onDeleted(registeredModel._name, ({ oldDoc }) => {
+						const modelIndex = models.value.findIndex(
+							model => model._id === oldDoc._id
+						);
 
-							if (modelIndex < 0) return;
+						if (modelIndex < 0) return;
 
-							delete models.value[modelIndex];
-						});
-				})
+						delete models.value[modelIndex];
+					});
+			}
 		);
 
 	const registerModels = async (
@@ -111,11 +111,11 @@ export const useModels = () => {
 		modelIds: string | string[],
 		relations?: Record<string, string | string[]>
 	) => {
-		const registeredModels = await modelStore.loadModels(
-			modelName,
-			modelIds,
-			relations
-		);
+		const registeredModels = (
+			await modelStore.loadModels(modelName, modelIds, relations)
+		).filter(model => model !== null);
+
+		if (registerModels.length === 0) return registeredModels;
 
 		models.value.push(...registeredModels);
 
@@ -137,16 +137,14 @@ export const useModels = () => {
 	};
 
 	onBeforeUnmount(async () => {
-		await Promise.all(
-			Object.entries(subscriptions.value).map(async ([type, uuids]) =>
+		await forEachIn(
+			Object.entries(subscriptions.value),
+			async ([type, uuids]) =>
 				Object.entries(uuids).map(async ([modelName, _subscriptions]) =>
-					Promise.all(
-						_subscriptions.map(uuid =>
-							removeCallback(modelName, type, uuid)
-						)
+					forEachIn(_subscriptions, uuid =>
+						removeCallback(modelName, type, uuid)
 					)
 				)
-			)
 		);
 		await unregisterModels(models.value.map(model => model._id));
 	});

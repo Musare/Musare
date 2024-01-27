@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { generateUuid } from "@common/utils/generateUuid";
+import { forEachIn } from "@common/utils/forEachIn";
 import { useConfigStore } from "./config";
 import { useUserAuthStore } from "./userAuth";
 import ms from "@/ms";
@@ -136,23 +137,20 @@ export const useWebsocketStore = defineStore("websocket", () => {
 			delete subscriptions.value[channel];
 		});
 
-		return Promise.all(
-			Object.entries(channels).map(async ([uuid, channel]) => {
-				if (
-					!subscriptions.value[channel] ||
-					!subscriptions.value[channel].callbacks[uuid]
-				)
-					return;
+		return forEachIn(Object.entries(channels), async ([uuid, channel]) => {
+			if (
+				!subscriptions.value[channel] ||
+				!subscriptions.value[channel].callbacks[uuid]
+			)
+				return;
 
-				delete subscriptions.value[channel].callbacks[uuid];
+			delete subscriptions.value[channel].callbacks[uuid];
 
-				if (
-					Object.keys(subscriptions.value[channel].callbacks)
-						.length === 0
-				)
-					delete subscriptions.value[channel];
-			})
-		);
+			if (
+				Object.keys(subscriptions.value[channel].callbacks).length === 0
+			)
+				delete subscriptions.value[channel];
+		});
 	};
 
 	const unsubscribeAll = async () => {
@@ -194,16 +192,17 @@ export const useWebsocketStore = defineStore("websocket", () => {
 
 		await userAuthStore.updatePermissions();
 
-		await Promise.all(
-			Object.values(readyCallbacks.value).map(
-				async callback => callback() // TODO: Error handling
-			)
+		await forEachIn(
+			Object.values(readyCallbacks.value),
+			async callback => callback() // TODO: Error handling
 		);
 
-		await Promise.allSettled(
-			Object.keys(subscriptions.value)
-				.filter(channel => !socketChannels.includes(channel))
-				.map(channel => runJob("events.subscribe", { channel }))
+		await forEachIn(
+			Object.keys(subscriptions.value).filter(
+				channel => !socketChannels.includes(channel)
+			),
+			channel => runJob("events.subscribe", { channel }),
+			{ onError: Promise.resolve }
 		);
 
 		pendingJobs.value.forEach(message => socket.value.send(message));
@@ -230,10 +229,9 @@ export const useWebsocketStore = defineStore("websocket", () => {
 
 		if (!subscriptions.value[name]) return;
 
-		await Promise.all(
-			Object.values(subscriptions.value[name].callbacks).map(
-				async subscription => subscription(...data) // TODO: Error handling
-			)
+		await forEachIn(
+			Object.values(subscriptions.value[name].callbacks),
+			async subscription => subscription(...data) // TODO: Error handling
 		);
 	};
 

@@ -1,3 +1,4 @@
+import { forEachIn } from "@common/utils/forEachIn";
 import { useModelStore } from "./stores/model";
 import { useWebsocketStore } from "./stores/websocket";
 
@@ -34,17 +35,15 @@ export default class Model {
 
 				if (typeof value === "object" && value._id) paths.push(path);
 				else if (Array.isArray(value))
-					await Promise.all(
-						value.map(async item => {
-							if (typeof item !== "object") return;
+					await forEachIn(value, async item => {
+						if (typeof item !== "object") return;
 
-							if (item._id) paths.push(path);
-							else
-								paths.push(
-									...(await this._getRelations(item, path))
-								);
-						})
-					);
+						if (item._id) paths.push(path);
+						else
+							paths.push(
+								...(await this._getRelations(item, path))
+							);
+					});
 				else paths.push(...(await this._getRelations(value, path)));
 
 				return paths;
@@ -87,8 +86,9 @@ export default class Model {
 		pathParts.push(head);
 
 		if (Array.isArray(model[head])) {
-			await Promise.all(
-				model[head].map(async (item, index) => {
+			await forEachIn(
+				model[head],
+				async (item, index) => {
 					let itemPath = `${index}`;
 
 					if (rest.length > 0) itemPath += `.${rest.join(".")}`;
@@ -96,7 +96,8 @@ export default class Model {
 					await this._loadRelation(model[head], itemPath, force, [
 						...pathParts
 					]);
-				})
+				},
+				{ concurrency: 1 }
 			);
 
 			return;
@@ -139,20 +140,19 @@ export default class Model {
 		if (relations)
 			relations = Array.isArray(relations) ? relations : [relations];
 
-		await Promise.all(
-			(relations ?? []).map(async path => {
-				await this._loadRelation(this, path, force);
-			})
-		);
+		await forEachIn(relations ?? [], async path => {
+			await this._loadRelation(this, path, force);
+		});
 	}
 
 	public async unregisterRelations(): Promise<void> {
 		const { unregisterModels } = useModelStore();
-		const relationIds = await Promise.all(
-			this._loadedRelations.map(async path => {
+		const relationIds = await forEachIn(
+			this._loadedRelations,
+			async path => {
 				const relation = await this._getRelation(path);
 				return relation._id;
-			})
+			}
 		);
 		await unregisterModels(relationIds);
 	}
