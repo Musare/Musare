@@ -6,7 +6,7 @@ import { useWebsocketStore } from "./websocket";
 import Model from "@/Model";
 
 export const useModelStore = defineStore("model", () => {
-	const { runJob, subscribe, subscribeMany, unsubscribe } =
+	const { runJob, subscribe, subscribeMany, unsubscribe, unsubscribeMany } =
 		useWebsocketStore();
 
 	const models = ref([]);
@@ -39,40 +39,50 @@ export const useModelStore = defineStore("model", () => {
 		return !!data[permission];
 	};
 
-	const unregisterModels = async modelIds =>
-		forEachIn(
+	const unregisterModels = async modelIds => {
+		const removeModels = [];
+
+		await forEachIn(
 			Array.isArray(modelIds) ? modelIds : [modelIds],
 			async modelId => {
 				const model = models.value.find(model => model._id === modelId);
 
-				if (!model || model.getUses() > 1) {
-					model?.removeUse();
+				if (!model) return;
 
-					return;
-				}
+				model?.removeUse();
 
-				await model.unregisterRelations();
+				if (model.getUses() > 1) return;
 
-				const { updated, deleted } = model.getSubscriptions() ?? {};
-
-				if (updated)
-					await unsubscribe(
-						`model.${model.getName()}.updated.${modelId}`,
-						updated
-					);
-
-				if (deleted)
-					await unsubscribe(
-						`model.${model.getName()}.deleted.${modelId}`,
-						deleted
-					);
-
-				models.value.splice(
-					models.value.findIndex(model => model._id === modelId),
-					1
-				);
+				removeModels.push(model);
 			}
 		);
+
+		if (removeModels.length === 0) return;
+
+		await forEachIn(removeModels, async model =>
+			model.unregisterRelations()
+		);
+
+		const subscriptions = Object.fromEntries(
+			removeModels.flatMap(model => {
+				const { updated, deleted } = model.getSubscriptions() ?? {};
+
+				return [
+					[updated, `model.${model.getName()}.updated.${model._id}`],
+					[deleted, `model.${model.getName()}.deleted.${model._id}`]
+				];
+			})
+		);
+
+		await unsubscribeMany(subscriptions);
+
+		await forEachIn(removeModels, async removeModel => {
+			models.value.splice(
+				models.value.findIndex(model => model._id === removeModel._id),
+				1
+			);
+		});
+	};
 
 	const onCreatedCallback = async (modelName: string, data) => {
 		if (!subscriptions.value.created[modelName]) return;
