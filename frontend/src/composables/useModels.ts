@@ -111,17 +111,41 @@ export const useModels = () => {
 		modelIds: string | string[],
 		relations?: Record<string, string | string[]>
 	) => {
-		const registeredModels = (
-			await modelStore.loadModels(modelName, modelIds, relations)
-		).filter(model => model !== null);
+		modelIds = Array.isArray(modelIds) ? modelIds : [modelIds];
 
-		if (registerModels.length === 0) return registeredModels;
+		const missingModelIds = modelIds.filter(
+			modelId =>
+				!models.value.find(
+					model => model._id === modelId && model._name === modelName
+				)
+		);
+		const existingModels = Object.fromEntries(
+			models.value
+				.filter(model => modelIds.includes(model._id))
+				.map(model => [model._id, model])
+		);
 
-		models.value.push(...registeredModels);
+		if (relations)
+			await forEachIn(Object.values(existingModels), async model =>
+				model.loadRelations(relations)
+			);
 
-		await setupDeletedSubscriptions(registeredModels);
+		if (Object.keys(existingModels).length === modelIds.length)
+			return existingModels;
 
-		return registeredModels;
+		const loadedModels = await modelStore.loadModels(
+			modelName,
+			missingModelIds,
+			relations
+		);
+
+		const missingModels = Object.values(loadedModels).filter(
+			missingModel => !!missingModel
+		);
+		models.value.push(...missingModels);
+		await setupDeletedSubscriptions(missingModels);
+
+		return Object.assign(loadedModels, existingModels);
 	};
 
 	const unregisterModels = async (modelIds: string[]) => {

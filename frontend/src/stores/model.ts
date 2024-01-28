@@ -293,16 +293,31 @@ export const useModelStore = defineStore("model", () => {
 		const modelIds = Array.isArray(modelIdsOrModelId)
 			? modelIdsOrModelId
 			: [modelIdsOrModelId];
+		const existingModels = models.value.filter(model =>
+			modelIds.includes(model._id)
+		);
 		const missingModelIds = modelIds.filter(
 			modelId => !loadedModelIds.value.includes(`${modelName}.${modelId}`)
 		);
-		const missingModels = Object.values(
-			await findManyById(modelName, missingModelIds)
-		);
-		await registerModels(missingModels, relations);
 
-		return models.value.filter(
-			model => modelIds.includes(model._id) && model._name === modelName
+		const fetchedModels = await findManyById(modelName, missingModelIds);
+		const registeredModels = await registerModels(
+			Object.values(fetchedModels)
+				.filter(model => !!model)
+				.concat(existingModels),
+			relations
+		);
+		const modelsNotFound = modelIds
+			.filter(
+				modelId =>
+					!registeredModels.find(model => model._id === modelId)
+			)
+			.map(modelId => [modelId, null]);
+
+		return Object.fromEntries(
+			registeredModels
+				.map(model => [model._id, model])
+				.concat(modelsNotFound)
 		);
 	};
 

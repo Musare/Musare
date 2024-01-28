@@ -15,7 +15,10 @@ const { loadModels } = useModels();
 
 onMounted(() => {
 	socket.onConnect(async () => {
-		const [model] = await loadModels("minifiedUsers", props.userId);
+		const { [props.userId]: model } = await loadModels(
+			"minifiedUsers",
+			props.userId
+		);
 
 		if (model) user.value = model;
 	});
