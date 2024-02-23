@@ -85,15 +85,15 @@ const removeFromQueue = mediaSource => {
 	);
 };
 
-const repositionSongInQueue = ({ moved }) => {
+const repositionSongInQueue = ({ moved, song }) => {
 	const { oldIndex, newIndex } = moved;
 	if (oldIndex === newIndex) return; // we only need to update when song is moved
-	const song = queue.value[newIndex];
+	const _song = song ?? queue.value[newIndex];
 	socket.dispatch(
 		"stations.repositionSongInQueue",
 		station.value._id,
 		{
-			...song,
+			..._song,
 			oldIndex,
 			newIndex
 		},
@@ -111,27 +111,23 @@ const repositionSongInQueue = ({ moved }) => {
 
 const moveSongToTop = index => {
 	songItems.value[`song-item-${index}`].$refs.songActions.tippy.hide();
-	queue.value.splice(0, 0, queue.value.splice(index, 1)[0]);
 	repositionSongInQueue({
 		moved: {
 			oldIndex: index,
 			newIndex: 0
-		}
+		},
+		song: queue.value[index]
 	});
 };
 
 const moveSongToBottom = index => {
 	songItems.value[`song-item-${index}`].$refs.songActions.tippy.hide();
-	queue.value.splice(
-		queue.value.length - 1,
-		0,
-		queue.value.splice(index, 1)[0]
-	);
 	repositionSongInQueue({
 		moved: {
 			oldIndex: index,
 			newIndex: queue.value.length - 1
-		}
+		},
+		song: queue.value[index]
 	});
 };
 
