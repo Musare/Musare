@@ -1042,7 +1042,7 @@ onMounted(() => {
 														'future',
 														null,
 														true
-												  )} songs from this playlist`
+													)} songs from this playlist`
 												: 'Your preferences are set to skip disliked songs'
 										"
 										v-tippy

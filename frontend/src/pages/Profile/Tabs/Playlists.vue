@@ -15,7 +15,7 @@ const props = defineProps({
 const {
 	DraggableList,
 	drag,
-	userId,
+	userId: playlistUserId,
 	isCurrentUser,
 	playlists,
 	savePlaylistOrder
@@ -24,7 +24,7 @@ const {
 const { openModal } = useModalsStore();
 
 onMounted(() => {
-	userId.value = props.userId;
+	playlistUserId.value = props.userId;
 });
 </script>
 

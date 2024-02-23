@@ -1172,7 +1172,7 @@ const sendActivityWatchMediaData = () => {
 					? 0
 					: Math.floor(
 							activityWatchMediaLastStartDuration.value / 1000
-					  ),
+						),
 			source: `station#${station.value.name}`,
 			hostname: window.location.hostname,
 			experimentalChangableListenMode:
@@ -1189,7 +1189,7 @@ const sendActivityWatchMediaData = () => {
 							key =>
 								window.YT.PlayerState[key] ===
 								youtubePlayer.value?.getPlayerState()
-					  );
+						);
 
 			videoData.playbackRate = playbackRate.value;
 		} else {
@@ -1351,9 +1351,8 @@ onMounted(async () => {
 					djs
 				});
 
-				document.getElementsByTagName(
-					"html"
-				)[0].style.cssText = `--primary-color: var(--${res.data.theme})`;
+				document.getElementsByTagName("html")[0].style.cssText =
+					`--primary-color: var(--${res.data.theme})`;
 
 				setCurrentSong({
 					currentSong: res.data.currentSong,
@@ -1748,9 +1747,8 @@ onMounted(async () => {
 			}
 
 			if (station.value.theme !== theme)
-				document.getElementsByTagName(
-					"html"
-				)[0].style.cssText = `--primary-color: var(--${theme})`;
+				document.getElementsByTagName("html")[0].style.cssText =
+					`--primary-color: var(--${theme})`;
 
 			updateStation(res.data.station);
 		}
@@ -1922,9 +1920,8 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
-	document.getElementsByTagName(
-		"html"
-	)[0].style.cssText = `--primary-color: ${primaryColor.value}`;
+	document.getElementsByTagName("html")[0].style.cssText =
+		`--primary-color: ${primaryColor.value}`;
 
 	if (experimental.value.media_session) {
 		ms.removeListeners(0);
@@ -2537,8 +2534,8 @@ onBeforeUnmount(() => {
 											muted
 												? "volume_mute"
 												: volumeSliderValue >= 50
-												? "volume_up"
-												: "volume_down"
+													? "volume_up"
+													: "volume_down"
 										}}</i
 									>
 									<input

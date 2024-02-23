@@ -536,8 +536,8 @@ onBeforeUnmount(() => {
 							youtubePlayer.muted
 								? "volume_mute"
 								: youtubePlayer.volume >= 50
-								? "volume_up"
-								: "volume_down"
+									? "volume_up"
+									: "volume_down"
 						}}</i
 					>
 					<input

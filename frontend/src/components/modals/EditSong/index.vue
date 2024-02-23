@@ -82,6 +82,7 @@ const {
 const { openModal, closeCurrentModal, preventCloseCbs } = useModalsStore();
 const { hasPermission } = userAuthStore;
 
+// eslint-disable-next-line vue/no-dupe-keys
 const {
 	tab,
 	video,
@@ -2250,8 +2251,8 @@ onBeforeUnmount(() => {
 												muted
 													? "volume_mute"
 													: volumeSliderValue >= 50
-													? "volume_up"
-													: "volume_down"
+														? "volume_up"
+														: "volume_down"
 											}}</i
 										>
 										<input

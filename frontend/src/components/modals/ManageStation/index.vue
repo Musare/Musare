@@ -46,6 +46,7 @@ const { socket } = useWebsocketsStore();
 const manageStationStore = useManageStationStore({
 	modalUuid: props.modalUuid
 });
+// eslint-disable-next-line vue/no-dupe-keys
 const {
 	stationId,
 	sector,
@@ -482,8 +483,8 @@ onBeforeUnmount(() => {
 			sector === 'home' && !hasPermission('stations.view.manage')
 				? 'View Queue'
 				: !hasPermission('stations.view.manage')
-				? 'Add Song to Queue'
-				: 'Manage Station'
+					? 'Add Song to Queue'
+					: 'Manage Station'
 		"
 		:style="`--primary-color: var(--${station.theme})`"
 		class="manage-station-modal"

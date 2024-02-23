@@ -72,7 +72,7 @@ permissions.moderator = {
 				"admin.view.soundcloudTracks": true,
 				"admin.view.soundcloud": true,
 				"soundcloud.getArtist": true
-		  }
+			}
 		: {}),
 	...(config.get("experimental.spotify")
 		? {
@@ -85,7 +85,7 @@ permissions.moderator = {
 				"spotify.getAlternativeMediaSourcesForTracks": true,
 				"admin.view.youtubeChannels": true,
 				"youtube.getChannel": true
-		  }
+			}
 		: {})
 };
 permissions.admin = {
@@ -123,12 +123,12 @@ permissions.admin = {
 		? {
 				"soundcloud.fetchNewApiKey": true,
 				"soundcloud.testApiKey": true
-		  }
+			}
 		: {}),
 	...(config.get("experimental.spotify")
 		? {
 				"youtube.getMissingChannels": true
-		  }
+			}
 		: {})
 };
 

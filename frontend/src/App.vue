@@ -105,9 +105,8 @@ watch(christmas, enabled => {
 });
 
 onMounted(async () => {
-	document.getElementsByTagName(
-		"html"
-	)[0].style.cssText = `--primary-color: ${configStore.primaryColor}`;
+	document.getElementsByTagName("html")[0].style.cssText =
+		`--primary-color: ${configStore.primaryColor}`;
 
 	window
 		.matchMedia("(prefers-color-scheme: dark)")
@@ -126,9 +125,8 @@ onMounted(async () => {
 	socket.onConnect(() => {
 		socketConnected.value = true;
 
-		document.getElementsByTagName(
-			"html"
-		)[0].style.cssText = `--primary-color: ${configStore.primaryColor}`;
+		document.getElementsByTagName("html")[0].style.cssText =
+			`--primary-color: ${configStore.primaryColor}`;
 
 		if (!loggedIn.value) {
 			broadcastChannel.value.user_login = new BroadcastChannel(
@@ -418,7 +416,8 @@ onMounted(async () => {
 	font-style: normal;
 	font-weight: 200;
 	src: url("/fonts/nunito-v16-latin-200.eot"); /* IE9 Compat Modes */
-	src: local(""),
+	src:
+		local(""),
 		url("/fonts/nunito-v16-latin-200.eot?#iefix")
 			format("embedded-opentype"),
 		/* IE6-IE8 */ url("/fonts/nunito-v16-latin-200.woff2") format("woff2"),
@@ -436,7 +435,8 @@ onMounted(async () => {
 	font-style: normal;
 	font-weight: 400;
 	src: url("/fonts/nunito-v16-latin-regular.eot"); /* IE9 Compat Modes */
-	src: local(""),
+	src:
+		local(""),
 		url("/fonts/nunito-v16-latin-regular.eot?#iefix")
 			format("embedded-opentype"),
 		/* IE6-IE8 */ url("/fonts/nunito-v16-latin-regular.woff2")
@@ -455,7 +455,8 @@ onMounted(async () => {
 	font-style: normal;
 	font-weight: 600;
 	src: url("/fonts/nunito-v16-latin-600.eot"); /* IE9 Compat Modes */
-	src: local(""),
+	src:
+		local(""),
 		url("/fonts/nunito-v16-latin-600.eot?#iefix")
 			format("embedded-opentype"),
 		/* IE6-IE8 */ url("/fonts/nunito-v16-latin-600.woff2") format("woff2"),
@@ -473,7 +474,8 @@ onMounted(async () => {
 	font-style: normal;
 	font-weight: 700;
 	src: url("/fonts/nunito-v16-latin-700.eot"); /* IE9 Compat Modes */
-	src: local(""),
+	src:
+		local(""),
 		url("/fonts/nunito-v16-latin-700.eot?#iefix")
 			format("embedded-opentype"),
 		/* IE6-IE8 */ url("/fonts/nunito-v16-latin-700.woff2") format("woff2"),
@@ -491,7 +493,8 @@ onMounted(async () => {
 	font-style: normal;
 	font-weight: 800;
 	src: url("/fonts/nunito-v16-latin-800.eot"); /* IE9 Compat Modes */
-	src: local(""),
+	src:
+		local(""),
 		url("/fonts/nunito-v16-latin-800.eot?#iefix")
 			format("embedded-opentype"),
 		/* IE6-IE8 */ url("/fonts/nunito-v16-latin-800.woff2") format("woff2"),
@@ -509,7 +512,8 @@ onMounted(async () => {
 	font-style: normal;
 	font-weight: 400;
 	src: url("/fonts/pacifico-v17-latin-regular.eot"); /* IE9 Compat Modes */
-	src: local(""),
+	src:
+		local(""),
 		url("/fonts/pacifico-v17-latin-regular.eot?#iefix")
 			format("embedded-opentype"),
 		/* IE6-IE8 */ url("/fonts/pacifico-v17-latin-regular.woff2")
@@ -527,7 +531,9 @@ onMounted(async () => {
 	font-style: normal;
 	font-weight: 400;
 	src: url(/fonts/MaterialIcons-Regular.ttf); /* For IE6-8 */
-	src: local("Material Icons"), local("MaterialIcons-Regular"),
+	src:
+		local("Material Icons"),
+		local("MaterialIcons-Regular"),
 		url(/fonts/MaterialIcons-Regular.ttf) format("truetype");
 }
 

@@ -605,21 +605,21 @@ onBeforeUnmount(() => {
 									:title="
 										element.currentSong.artists.length > 0
 											? 'Now Playing: ' +
-											  element.currentSong.title +
-											  ' by ' +
-											  element.currentSong.artists.join(
+												element.currentSong.title +
+												' by ' +
+												element.currentSong.artists.join(
 													', '
-											  )
+												)
 											: 'Now Playing: ' +
-											  element.currentSong.title
+												element.currentSong.title
 									"
 									>{{ element.currentSong.title }}
 									{{
 										element.currentSong.artists.length > 0
 											? " by " +
-											  element.currentSong.artists.join(
+												element.currentSong.artists.join(
 													", "
-											  )
+												)
 											: ""
 									}}</span
 								>
@@ -863,17 +863,17 @@ onBeforeUnmount(() => {
 							:title="
 								station.currentSong.artists.length > 0
 									? 'Now Playing: ' +
-									  station.currentSong.title +
-									  ' by ' +
-									  station.currentSong.artists.join(', ')
+										station.currentSong.title +
+										' by ' +
+										station.currentSong.artists.join(', ')
 									: 'Now Playing: ' +
-									  station.currentSong.title
+										station.currentSong.title
 							"
 							>{{ station.currentSong.title }}
 							{{
 								station.currentSong.artists.length > 0
 									? " by " +
-									  station.currentSong.artists.join(", ")
+										station.currentSong.artists.join(", ")
 									: ""
 							}}</span
 						>

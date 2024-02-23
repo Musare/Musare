@@ -64,7 +64,7 @@ defineProps<{
 						track.soundcloudCreatedAt
 							? utils.getDateFormatted(
 									new Date(track.soundcloudCreatedAt)
-							  )
+								)
 							: "Unknown"
 					}}</span
 				>

@@ -113,7 +113,7 @@ const filteredSpotifySongs = computed(() =>
 					(alternativeMediaPerTrack[spotifySong.mediaSource] &&
 						alternativeMediaPerTrack[spotifySong.mediaSource]
 							.mediaSources.length > 0)
-		  )
+			)
 		: spotifySongs.value
 );
 
