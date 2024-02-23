@@ -4,7 +4,7 @@ import { AddSongToPlaylistResponse } from "@musare_types/actions/PlaylistsAction
 import { useWebsocketsStore } from "@/stores/websockets";
 
 const youtubeVideoUrlRegex =
-	/^(https?:\/\/)?(www\.)?(m\.)?(music\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?(?<youtubeId>[\w-]{11})((&([A-Za-z0-9]+)?)*)?$/;
+	/^(?:https?:\/\/)?(?:www\.)?(m\.)?(?:music\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?(?<youtubeId>[\w-]{11}).+?$/;
 const youtubeVideoIdRegex = /^([\w-]{11})$/;
 
 export const useYoutubeDirect = () => {
