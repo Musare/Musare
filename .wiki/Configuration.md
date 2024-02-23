@@ -144,7 +144,7 @@ For more information on configuration files please refer to the
 | `sendDataRequestEmails` | If `true` all admin users will be sent an email if a data request is received. Requires mail to be enabled and configured. |
 | `skipConfigVersionCheck` | Skips checking if the config version is outdated or not. Should almost always be set to false. |
 | `skipDbDocumentsVersionCheck` | Skips checking if there are any DB documents outdated or not. Should almost always be set to false. |
-| `debug.stationIssue` | If set to `true` it will enable the `/debug_station` API endpoint on the backend, which provides information useful to debugging stations not skipping, as well as capture all jobs specified in `debug.captureJobs`.
+| `debug.stationIssue` | If set to `true` it will enable the `/debug_station` API endpoint on the backend, which provides information useful to debugging stations not skipping, as well as capture all jobs specified in `debug.captureJobs`. |
 | `debug.traceUnhandledPromises` | Enables the trace-unhandled package, which provides detailed information when a promise is unhandled. |
 | `debug.captureJobs` | Array of jobs to capture for `debug.stationIssue`. |
 | `debug.git.remote` | Log/expose the current Git repository's remote. |
