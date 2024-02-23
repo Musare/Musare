@@ -26,7 +26,7 @@
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "moment": "^2.29.4",
-    "mongoose": "^6.6.5",
+    "mongoose": "^6.12.6",
     "nodemailer": "^6.9.2",
     "oauth": "^0.10.0",
     "redis": "^4.6.6",
@@ -51,5 +51,8 @@
     "trace-unhandled": "^2.0.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4"
+  },
+  "overrides": {
+    "@aws-sdk/credential-providers": "npm:dry-uninstall"
   }
 }
