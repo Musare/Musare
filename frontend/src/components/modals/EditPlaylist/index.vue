@@ -71,7 +71,7 @@ const {
 	addSong,
 	removeSong,
 	replaceSong,
-	repositionedSong
+	reorderSongsList,
 } = editPlaylistStore;
 
 const { closeCurrentModal, openModal } = useModalsStore();
@@ -320,13 +320,13 @@ onMounted(() => {
 	);
 
 	socket.on(
-		"event:playlist.song.repositioned",
+		"event:playlist.changeOrder",
 		res => {
 			if (playlist.value._id === res.data.playlistId) {
-				const { song, playlistId } = res.data;
+				const { playlistId, playlistOrder } = res.data;
 
 				if (playlist.value._id === playlistId) {
-					repositionedSong(song);
+					reorderSongsList(playlistOrder);
 				}
 			}
 		},

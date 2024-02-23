@@ -195,18 +195,18 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
-	channel: "station.repositionSongInQueue",
+	channel: "station.changeQueueOrder",
 	cb: res => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${res.stationId}`,
-			args: ["event:station.queue.song.repositioned", { data: { song: res.song } }]
+			args: ["event:station.queue.order.changed", { data: { queueOrder: res.queueOrder } }]
 		});
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `manage-station.${res.stationId}`,
 			args: [
-				"event:manageStation.queue.song.repositioned",
-				{ data: { stationId: res.stationId, song: res.song } }
+				"event:manageStation.queue.order.changed",
+				{ data: { stationId: res.stationId, queueOrder: res.queueOrder } }
 			]
 		});
 	}
@@ -2132,7 +2132,7 @@ export default {
 						.catch(next);
 				}
 			],
-			async err => {
+			async (err, station) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -2149,14 +2149,12 @@ export default {
 					`Repositioned song ${song.mediaSource} in queue of station "${stationId}" successfully.`
 				);
 
+				const queueOrder = station.queue.map(song => song.mediaSource);
+
 				CacheModule.runJob("PUB", {
-					channel: "station.repositionSongInQueue",
+					channel: "station.changeQueueOrder",
 					value: {
-						song: {
-							mediaSource: song.mediaSource,
-							oldIndex: song.oldIndex,
-							newIndex: song.newIndex
-						},
+						queueOrder,
 						stationId
 					}
 				});

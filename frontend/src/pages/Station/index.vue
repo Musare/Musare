@@ -238,7 +238,7 @@ const {
 	updateCurrentSong,
 	updateNextSong,
 	updateSongsList,
-	repositionSongInList,
+	reorderSongsList,
 	updateStationPaused,
 	updateLocalPaused,
 	updateNoSong,
@@ -1623,8 +1623,8 @@ onMounted(async () => {
 		autoRequestSong();
 	});
 
-	socket.on("event:station.queue.song.repositioned", res => {
-		repositionSongInList(res.data.song);
+	socket.on("event:station.queue.order.changed", res => {
+		reorderSongsList(res.data.queueOrder);
 
 		let nextSong = null;
 		if (songsList.value[0])

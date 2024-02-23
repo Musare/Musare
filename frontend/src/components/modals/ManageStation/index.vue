@@ -64,7 +64,7 @@ const {
 	clearStation,
 	updateSongsList,
 	updateStationPlaylist,
-	repositionSongInList,
+	reorderSongsList,
 	updateStationPaused,
 	updateCurrentSong,
 	updateStation,
@@ -321,10 +321,10 @@ onMounted(() => {
 		);
 
 		socket.on(
-			"event:manageStation.queue.song.repositioned",
+			"event:manageStation.queue.order.changed",
 			res => {
 				if (res.data.stationId === stationId.value)
-					repositionSongInList(res.data.song);
+					reorderSongsList(res.data.queueOrder);
 			},
 			{ modalUuid: props.modalUuid }
 		);

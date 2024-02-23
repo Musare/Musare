@@ -64,19 +64,18 @@ export const useManageStationStore = ({ modalUuid }: { modalUuid: string }) =>
 			updateStationPlaylist(stationPlaylist) {
 				this.stationPlaylist = stationPlaylist;
 			},
-			repositionSongInList(song) {
-				if (
-					this.songsList[song.newIndex] &&
-					this.songsList[song.newIndex].mediaSource ===
-						song.mediaSource
-				)
-					return;
-
-				this.songsList.splice(
-					song.newIndex,
-					0,
-					this.songsList.splice(song.oldIndex, 1)[0]
-				);
+			reorderSongsList(songsOrder) {
+				this.songsList.sort((songA, songB) => {
+					const indexA = songsOrder.findIndex(
+						mediaSource => mediaSource === songA.mediaSource
+					);
+					const indexB = songsOrder.findIndex(
+						mediaSource => mediaSource === songB.mediaSource
+					);
+					if (indexA === indexB) return 0;
+					if (indexA > indexB) return 1;
+					if (indexA < indexB) return -1;
+				});
 			},
 			updateStationPaused(stationPaused) {
 				this.stationPaused = stationPaused;

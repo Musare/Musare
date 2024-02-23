@@ -65,15 +65,15 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
-	channel: "playlist.repositionSong",
+	channel: "playlist.changeOrder",
 	cb: res => {
-		const { createdBy, playlistId, song } = res;
+		const { createdBy, playlistId, playlistOrder } = res;
 
 		if (createdBy !== "Musare") {
 			WSModule.runJob("SOCKETS_FROM_USER", { userId: createdBy }, this).then(sockets =>
 				sockets.forEach(socket =>
-					socket.dispatch("event:playlist.song.repositioned", {
-						data: { playlistId, song }
+					socket.dispatch("event:playlist.order.changed", {
+						data: { playlistId, playlistOrder }
 					})
 				)
 			);
@@ -1138,12 +1138,14 @@ export default {
 					`Successfully repositioned song ${song.mediaSource} for private playlist "${playlistId}" for user "${session.userId}".`
 				);
 
+				const playlistOrder = playlist.songs.map(song => song.mediaSource);
+
 				CacheModule.runJob("PUB", {
-					channel: "playlist.repositionSong",
+					channel: "playlist.changeOrder",
 					value: {
 						createdBy: playlist.createdBy,
 						playlistId,
-						song
+						playlistOrder
 					}
 				});
 
