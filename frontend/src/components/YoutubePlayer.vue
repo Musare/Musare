@@ -577,8 +577,7 @@ onBeforeUnmount(() => {
 
 	.player-container {
 		position: relative;
-		padding-bottom: 56.25%; /* proportion value to aspect ratio 16:9 (9 / 16 = 0.5625 or 56.25%) */
-		height: 0;
+		aspect-ratio: 16/9;
 		overflow: hidden;
 
 		:deep(iframe) {
