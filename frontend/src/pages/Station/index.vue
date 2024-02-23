@@ -1009,19 +1009,6 @@ const toggleMute = () => {
 
 	changePlayerVolume();
 };
-const increaseVolume = () => {
-	const previousVolume = parseFloat(localStorage.getItem("volume"));
-	let volume = previousVolume + 5;
-	if (previousVolume === 0) {
-		muted.value = false;
-		localStorage.setItem("muted", "false");
-	}
-	if (volume > 100) volume = 100;
-	volumeSliderValue.value = volume;
-	localStorage.setItem("volume", `${volume}`);
-
-	changePlayerVolume();
-};
 const toggleLike = () => {
 	if (currentSong.value.liked)
 		socket.dispatch("media.unlike", currentSong.value.mediaSource, res => {
@@ -2211,9 +2198,8 @@ onBeforeUnmount(() => {
 									allow="autoplay"
 								></iframe>
 								<div
-									class="player-cannot-autoplay"
+									class="player-fullscreen-message"
 									v-if="!canAutoplay"
-									@click="increaseVolume()"
 								>
 									<p>
 										Please click anywhere on the screen for
@@ -3062,11 +3048,10 @@ onBeforeUnmount(() => {
 				aspect-ratio: 16/9;
 				overflow: hidden;
 
-				.player-cannot-autoplay {
+				.player-fullscreen-message {
 					position: relative;
 					width: 100%;
 					height: 100%;
-					bottom: calc(100% + 5px);
 					background: var(--primary-color);
 					display: flex;
 					align-items: center;
