@@ -457,7 +457,7 @@ const calculateTimeElapsed = async () => {
 					}
 				});
 			}
-		} else {
+		} else if (!stationPaused.value && !localPaused.value) {
 			youtubePlayer.value.playVideo();
 			attemptsToPlayVideo.value += 1;
 		}
@@ -544,10 +544,17 @@ const playVideo = () => {
 	if (currentSongMediaType.value === "youtube") {
 		if (youtubePlayerReady.value) {
 			videoLoading.value = true;
-			youtubePlayer.value.loadVideoById(
-				currentYoutubeId.value,
-				getTimeElapsed() / 1000 + currentSong.value.skipDuration
-			);
+			if (stationPaused.value || localPaused.value) {
+				youtubePlayer.value.cueVideoById(
+					currentYoutubeId.value,
+					getTimeElapsed() / 1000 + currentSong.value.skipDuration
+				);
+			} else {
+				youtubePlayer.value.loadVideoById(
+					currentYoutubeId.value,
+					getTimeElapsed() / 1000 + currentSong.value.skipDuration
+				);
+			}
 		}
 	} else if (currentSongMediaType.value === "soundcloud") {
 		const soundcloudId = currentSongMediaValue.value;
@@ -582,6 +589,7 @@ const changePlayerVolume = () => {
 	changeSoundcloudPlayerVolume();
 };
 const playerPlay = () => {
+	if (stationPaused.value || localPaused.value) return;
 	console.debug(
 		TAG,
 		"PLAYER PLAY",
