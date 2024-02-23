@@ -2822,7 +2822,7 @@ onBeforeUnmount(() => {
 							hasPermission('stations.skip')
 						"
 					>
-						<span class="biggest"><b>Admin/owner</b></span>
+						<span class="biggest"><b>Owner/DJ</b></span>
 						<span><b>Ctrl + Space</b> - Pause/resume station</span>
 						<span><b>Ctrl + Numpad right</b> - Skip station</span>
 					</div>
@@ -2933,6 +2933,24 @@ onBeforeUnmount(() => {
 	}
 	100% {
 		transform: rotate(360deg);
+	}
+}
+
+#keyboardShortcutsHelper {
+	.box-body {
+		.biggest {
+			font-size: 1.4rem;
+		}
+
+		> div,
+		> div > div {
+			display: flex;
+			flex-direction: column;
+		}
+
+		> div {
+			row-gap: 8px;
+		}
 	}
 }
 
