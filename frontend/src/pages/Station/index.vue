@@ -113,12 +113,11 @@ const persistentToasts = ref([]);
 const experimentalChangableListenModeEnabled = ref(false);
 const experimentalChangableListenMode = ref("listen_and_participate"); // Can be either listen_and_participate or participate
 // End experimental options
-// NEW
 const videoLoading = ref();
 const startedAt = ref();
 const pausedAt = ref();
 const stationIdentifier = ref();
-// ENDNEW
+const calculateTimeDifferenceTimeout = ref();
 
 const playerDebugBox = ref();
 const keyboardShortcutsHelper = ref();
@@ -262,6 +261,85 @@ const {
 // const stopVideo = payload =>
 // 	store.dispatch("modals/editSong/stopVideo", payload);
 
+const calculateTimeDifference = (firstRun = false) => {
+	if (localStorage.getItem("stationNoSystemTimeDifference") === "true") {
+		console.log(
+			"Not calculating time different because 'stationNoSystemTimeDifference' is 'true' in localStorage"
+		);
+		return;
+	}
+	if (!station.value._id) return;
+	if (calculateTimeDifferenceTimeout.value)
+		clearTimeout(calculateTimeDifferenceTimeout.value);
+
+	// Store the current time in ms before we send a ping to the backend
+	const beforePing = Date.now();
+	socket.dispatch("apis.ping", res => {
+		if (res.status === "success") {
+			// Store the current time in ms after we receive a pong from the backend
+			const afterPing = Date.now();
+
+			// Calculate the approximate latency between the client and the backend, by taking the time the request took and dividing it in 2
+			// This is not perfect, as the request could take longer to get to the server than be sent back, or the other way around
+			let connectionLatency = (afterPing - beforePing) / 2;
+			console.log(
+				`Latency between client and server: ${connectionLatency}ms`,
+				beforePing,
+				afterPing
+			);
+
+			// If we have a station latency in localStorage, use that. Can be used for debugging.
+			if (localStorage.getItem("stationLatency")) {
+				connectionLatency = parseInt(
+					localStorage.getItem("stationLatency")
+				);
+				console.log(
+					`Using latency from local storage: ${connectionLatency}ms`
+				);
+			}
+
+			// Store the server time in ms that the server had before sending the pong
+			const serverDate = res.data.date;
+
+			// Calculates the approximate different in system time that the current client has, compared to the system time of the backend
+			// Takes into account the approximate latency, so if it took approximately 500ms between the backend sending the pong, and the client receiving the pong,
+			// the system time from the backend has to have 500ms added for it to be correct
+			const difference = serverDate + connectionLatency - afterPing;
+
+			console.log(
+				`Difference in system time compared to server: ${difference}ms`
+			);
+			if (Math.abs(difference) > 3000) {
+				console.log("System time difference is bigger than 3 seconds.");
+			}
+
+			// Gets how many ms. difference there is between the last time this function was called and now
+			const differenceBetweenLastTime = Math.abs(
+				systemDifference.value - difference
+			);
+			systemDifference.value = difference;
+
+			// By default, we want to re-run this function every 5 minutes
+			let timeoutTime = 1000 * 300;
+			// If this is the first time this command is called, we want to re-run this function after 15 seconds
+			// Also, if the system time difference is more than 500ms different from last time, we also want to re-run after 15 seconds
+			if (firstRun || differenceBetweenLastTime > 500) {
+				timeoutTime = 1000 * 15;
+			}
+
+			console.log(
+				`Will attempt to get system time difference again in ${
+					timeoutTime / 1000
+				} seconds.`
+			);
+			if (calculateTimeDifferenceTimeout.value)
+				clearTimeout(calculateTimeDifferenceTimeout.value);
+			calculateTimeDifferenceTimeout.value = setTimeout(() => {
+				calculateTimeDifference();
+			}, timeoutTime);
+		}
+	});
+};
 const updateMediaSessionData = song => {
 	if (song) {
 		ms.setMediaSessionData(
@@ -1445,29 +1523,21 @@ onMounted(async () => {
 					}
 				);
 
-				// UNIX client time before ping
-				const beforePing = Date.now();
-				socket.dispatch("apis.ping", res => {
-					if (res.status === "success") {
-						// UNIX client time after ping
-						const afterPing = Date.now();
-						// Average time in MS it took between the server responding and the client receiving
-						const connectionLatency = (afterPing - beforePing) / 2;
-						console.log(connectionLatency, beforePing - afterPing);
-						// UNIX server time
-						const serverDate = res.data.date;
-						// Difference between the server UNIX time and the client UNIX time after ping, with the connectionLatency added to the server UNIX time
-						const difference =
-							serverDate + connectionLatency - afterPing;
-						console.log("Difference: ", difference);
-						if (difference > 3000 || difference < -3000) {
-							console.log(
-								"System time difference is bigger than 3 seconds."
-							);
+				keyboardShortcuts.registerShortcut(
+					"station.recalculateSystemTimeDifference",
+					{
+						keyCode: 82, // R key
+						shift: true,
+						alt: true,
+						preventDefault: true,
+						handler: () => {
+							calculateTimeDifference();
 						}
-						systemDifference.value = difference;
 					}
-				});
+				);
+
+				calculateTimeDifference(true);
+
 				console.debug(TAG, "Station join end");
 			} else {
 				loading.value = false;
@@ -1525,6 +1595,7 @@ onMounted(async () => {
 			if (!noSong.value && currentSong.value._id === _currentSong._id)
 				skipSong();
 		}, getTimeRemaining());
+		clearTimeout(calculateTimeDifferenceTimeout.value);
 	}, true);
 
 	socket.on("event:station.nextSong", res => {
@@ -1870,7 +1941,8 @@ onBeforeUnmount(() => {
 		"station.lowerVolumeSmall",
 		"station.increaseVolumeLarge",
 		"station.increaseVolumeSmall",
-		"station.toggleDebug"
+		"station.toggleDebug",
+		"station.recalculateSystemTimeDifference"
 	];
 
 	shortcutNames.forEach(shortcutName => {
@@ -1883,6 +1955,7 @@ onBeforeUnmount(() => {
 	clearTimeout(window.stationNextSongTimeout);
 	clearTimeout(persistentToastCheckerInterval.value);
 	clearInterval(reportStationStateInterval.value);
+	clearTimeout(calculateTimeDifferenceTimeout.value);
 	persistentToasts.value.forEach(persistentToast => {
 		persistentToast.toast.destroy();
 	});
@@ -2846,6 +2919,10 @@ onBeforeUnmount(() => {
 					<hr />
 					<div>
 						<span class="biggest"><b>Misc</b></span>
+						<span
+							><b>Shift + Alt + R</b> - Recalculates the system
+							time difference</span
+						>
 						<span><b>Ctrl + D</b> - Toggles debug box</span>
 						<span><b>Ctrl + Shift + D</b> - Resets debug box</span>
 						<span
