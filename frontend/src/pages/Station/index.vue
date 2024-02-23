@@ -2199,6 +2199,17 @@ onBeforeUnmount(() => {
 								></iframe>
 								<div
 									class="player-fullscreen-message"
+									v-if="stationPaused"
+								>
+									<p>
+										This station is currently paused. <br />
+										It can only be resumed by a station
+										owner, station DJ or a site
+										admin/moderator.
+									</p>
+								</div>
+								<div
+									class="player-fullscreen-message"
 									v-if="!canAutoplay"
 								>
 									<p>
