@@ -162,9 +162,9 @@ export const useStationStore = defineStore("station", {
 				const indexB = songsOrder.findIndex(
 					mediaSource => mediaSource === songB.mediaSource
 				);
-				if (indexA === indexB) return 0;
 				if (indexA > indexB) return 1;
 				if (indexA < indexB) return -1;
+				return 0;
 			});
 		},
 		updateStationPaused(stationPaused) {

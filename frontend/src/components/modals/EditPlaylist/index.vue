@@ -71,7 +71,7 @@ const {
 	addSong,
 	removeSong,
 	replaceSong,
-	reorderSongsList,
+	reorderSongsList
 } = editPlaylistStore;
 
 const { closeCurrentModal, openModal } = useModalsStore();
@@ -109,14 +109,7 @@ const repositionSong = ({ moved }) => {
 			oldIndex,
 			newIndex
 		},
-		res => {
-			if (res.status !== "success")
-				repositionedSong({
-					...song,
-					newIndex: oldIndex,
-					oldIndex: newIndex
-				});
-		}
+		() => {}
 	);
 };
 

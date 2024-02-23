@@ -646,7 +646,7 @@ class _YouTubeModule extends CoreClass {
 							? 4
 							: Number.parseInt(config.get("apis.youtube.maxPlaylistPages"));
 
-						next(null, maxPages, playlistInfo.isMix);
+						return next(null, maxPages, playlistInfo.isMix);
 					},
 
 					(maxPages, isMix, next) => {
@@ -667,7 +667,7 @@ class _YouTubeModule extends CoreClass {
 									return next(null, false);
 								}
 
-								next(null, true);
+								return next(null, true);
 							},
 							next => {
 								currentPage += 1;
@@ -721,7 +721,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Returns playlist info
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the playlist id
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -743,7 +742,7 @@ class _YouTubeModule extends CoreClass {
 		const privacyStatus = playlistInfo?.status?.privacyStatus;
 
 		// Another way to possibly check for mix is if the first two letters of the playlist ID starts with RD
-		let isMix =
+		const isMix =
 			channelId === YOUTUBE_OFFICIAL_CHANNEL_ID &&
 			(title?.startsWith(YOUTUBE_MIX_PLAYLIST_TITLE_PREFIX) ||
 				enTitle?.startsWith(YOUTUBE_MIX_PLAYLIST_TITLE_PREFIX));
@@ -1018,7 +1017,7 @@ class _YouTubeModule extends CoreClass {
 	async API_GET_PLAYLIST(payload) {
 		const { params } = payload;
 
-		return await YouTubeModule.runJob(
+		return YouTubeModule.runJob(
 			"API_CALL",
 			{
 				url: "https://www.googleapis.com/youtube/v3/playlists",

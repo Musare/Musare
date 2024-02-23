@@ -45,9 +45,9 @@ export const useEditPlaylistStore = ({ modalUuid }: { modalUuid: string }) =>
 					const indexB = songsOrder.findIndex(
 						mediaSource => mediaSource === songB.mediaSource
 					);
-					if (indexA === indexB) return 0;
 					if (indexA > indexB) return 1;
 					if (indexA < indexB) return -1;
+					return 0;
 				});
 			}
 		}
