@@ -3,8 +3,6 @@ import Toast from "toasters";
 import { AddSongToPlaylistResponse } from "@musare_types/actions/PlaylistsActions";
 import { useWebsocketsStore } from "@/stores/websockets";
 
-const youtubeVideoUrlRegex =
-	/^(?:https?:\/\/)?(?:www\.)?(m\.)?(?:music\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?(?<youtubeId>[\w-]{11}).+?$/;
 const youtubeVideoIdRegex = /^([\w-]{11})$/;
 
 export const useYoutubeDirect = () => {
@@ -13,20 +11,16 @@ export const useYoutubeDirect = () => {
 	const { socket } = useWebsocketsStore();
 
 	const getYoutubeVideoId = () => {
-		const youtubeVideoUrlMatch = youtubeVideoUrlRegex.exec(
-			youtubeDirect.value.trim()
-		);
-		if (youtubeVideoUrlMatch && youtubeVideoUrlMatch.groups.youtubeId) {
-			// eslint-disable-next-line prefer-destructuring
-			return youtubeVideoUrlMatch.groups.youtubeId;
-		}
-
-		const youtubeVideoIdParts = youtubeVideoIdRegex.exec(
-			youtubeDirect.value.trim()
-		);
-		if (youtubeVideoIdParts) {
-			// eslint-disable-next-line prefer-destructuring
-			return youtubeVideoIdParts[1];
+		try {
+			const { searchParams } = new URL(youtubeDirect.value.trim());
+			if (searchParams.has("v")) return searchParams.get("v");
+		} catch (error) {
+			const youtubeVideoIdParts = youtubeVideoIdRegex.exec(
+				youtubeDirect.value.trim()
+			);
+			if (youtubeVideoIdParts) {
+				return youtubeVideoIdParts[1];
+			}
 		}
 
 		return null;
