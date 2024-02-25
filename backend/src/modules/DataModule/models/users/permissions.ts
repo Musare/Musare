@@ -126,6 +126,7 @@ const admin = {
 
 	// DataModule news model
 	"data.news.deleteById.*": true,
+	"data.news.deleteManyById.*": true,
 
 	// DataModule playlists model
 	"data.playlists.clearAndRefillById.*": true,
@@ -151,11 +152,13 @@ const admin = {
 	// DataModule stations model
 	"data.stations.clearEveryStationQueue": true,
 	"data.stations.deleteById.*": true,
+	"data.stations.deleteManyById.*": true,
 
 	// DataModule users model
 	"data.users.deleteById.*": true,
 	"data.users.deleteSessionsById.*": true,
 	"data.users.updateById.*": true,
+	"data.users.deleteManyById.*": true,
 
 	// DataModule youtubeApiRequests model
 	"data.youtubeApiRequests.findById.*": true,
