@@ -53,6 +53,7 @@ export default class GetModelPermissions extends DataModuleJob {
 
 		if (!Model) throw new Error("Model not found");
 
+		// TODO when we have a findManyById or other bulk permission, we don't want to call this individually for each modelId
 		const model = modelId ? await Model.findById(modelId) : null;
 
 		if (modelId && !model) throw new Error("Model not found");

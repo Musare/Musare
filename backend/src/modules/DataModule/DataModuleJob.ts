@@ -1,11 +1,11 @@
-import { HydratedDocument, Model, isObjectIdOrHexString } from "mongoose";
-import { forEachIn } from "@common/utils/forEachIn";
+import { HydratedDocument, Model, isValidObjectId } from "mongoose";
 import Job, { JobOptions } from "@/Job";
 import DataModule from "../DataModule";
 import { UserSchema } from "./models/users/schema";
 
 export default abstract class DataModuleJob extends Job {
 	protected static _modelName: string;
+	protected static _isBulk: boolean = false;
 
 	protected static _hasPermission:
 		| boolean
@@ -34,6 +34,14 @@ export default abstract class DataModuleJob extends Job {
 		return (this.constructor as typeof DataModuleJob)._modelName;
 	}
 
+	public static isBulk() {
+		return this._isBulk;
+	}
+
+	public isBulk() {
+		return (this.constructor as typeof DataModuleJob)._isBulk;
+	}
+
 	public static async hasPermission(
 		model: HydratedDocument<Model<any>>,
 		user: HydratedDocument<UserSchema> | null
@@ -54,22 +62,40 @@ export default abstract class DataModuleJob extends Job {
 	}
 
 	protected override async _authorize() {
-		const modelId = this._payload?._id;
+		const modelIds = this._payload?.modelIds ?? this._payload?._ids;
 
-		if (isObjectIdOrHexString(modelId)) {
-			await this._context.assertPermission(
-				`${this.getPath()}.${modelId}`
+		// If this job is a bulk job, and all model ids are valid object ids
+		if (this.isBulk()) {
+			if (modelIds.some((modelId: unknown) => !isValidObjectId(modelId)))
+				throw new Error(
+					`One or more model id is invalid: ${modelIds
+						.filter((modelId: unknown) => !isValidObjectId(modelId))
+						.join(", ")}`
+				);
+
+			const permissions = modelIds.map(
+				(modelId: string) => `${this.getPath()}.${modelId}`
+			);
+			await Promise.all(
+				permissions.map((permission: string) =>
+					this._context.assertPermission(permission)
+				)
 			);
 
 			return;
 		}
 
-		const modelIds = this._payload?.modelIds;
+		const modelId = this._payload?.modelId ?? this._payload?._id;
 
-		if (Array.isArray(modelIds)) {
-			await forEachIn(modelIds, async _id =>
-				this._context.assertPermission(`${this.getPath()}.${_id}`)
+		// If this job is not a bulk job, and the model id is a valid object id
+		if (!this.isBulk() && modelId) {
+			if (!isValidObjectId(modelId))
+				throw new Error(`Model id is invalid: ${modelId}`);
+			await this._context.assertPermission(
+				`${this.getPath()}.${modelId}`
 			);
+
+			return;
 		}
 
 		await this._context.assertPermission(this.getPath());

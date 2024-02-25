@@ -3,6 +3,8 @@ import DataModule from "../DataModule";
 import DataModuleJob from "./DataModuleJob";
 
 export default abstract class FindManyByIdJob extends DataModuleJob {
+	protected static _isBulk: boolean = true;
+
 	protected override async _validate() {
 		if (typeof this._payload !== "object" || this._payload === null)
 			throw new Error("Payload must be an object");

@@ -122,6 +122,9 @@ export default class JobContext {
 			hasPermission = permissions[permission];
 		}
 
-		if (!hasPermission) throw new Error("Insufficient permissions");
+		if (!hasPermission)
+			throw new Error(
+				`Insufficient permissions for permission ${permission}`
+			);
 	}
 }

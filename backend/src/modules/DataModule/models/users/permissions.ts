@@ -23,6 +23,7 @@ const moderator = {
 	"data.news.create": true,
 	"data.news.getData": true,
 	"data.news.updateById.*": true,
+	"data.news.findManyById.*": true,
 
 	// DataModule playlists model
 	"data.playlists.addSongById.*": true,
@@ -57,6 +58,7 @@ const moderator = {
 	"data.stations.getData": true,
 	"data.stations.index.adminFilter": true,
 	"data.stations.updateById.*": true,
+	"data.stations.findManyById.*": true,
 
 	// DataModule users model
 	"data.users.banById.*": true,
@@ -65,6 +67,7 @@ const moderator = {
 	"data.users.requestPasswordResetById.*": !!config.get("mail.enabled"),
 	"data.users.resendVerifyEmailById.*": !!config.get("mail.enabled"),
 	"data.users.updateById.*": true,
+	// "data.users.findManyById.*": true,
 
 	// DataModule youtubeVideos model
 	"data.youtubeVideos.getData": true,
