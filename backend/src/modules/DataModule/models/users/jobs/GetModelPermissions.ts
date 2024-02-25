@@ -31,33 +31,99 @@ export default class GetModelPermissions extends DataModuleJob {
 	protected override async _authorize() {}
 
 	protected async _execute(): Promise<GetModelPermissionsResult> {
-		const { modelName, modelId } = this._payload;
+		const { modelName, modelId, modelIds } = this._payload;
 
 		const user = await this._context.getUser().catch(() => null);
 		const permissions = (await this._context.executeJob(
 			GetPermissions
 		)) as GetPermissionsResult;
 
-		let cacheKey = `model-permissions.${modelName}`;
-
-		if (modelId) cacheKey += `.${modelId}`;
-
-		if (user) cacheKey += `.user.${user._id}`;
-		else cacheKey += `.guest`;
-
-		const cached = await CacheModule.get(cacheKey);
-
-		if (cached) return cached;
-
 		const Model = await DataModule.getModel(modelName);
-
 		if (!Model) throw new Error("Model not found");
 
-		// TODO when we have a findManyById or other bulk permission, we don't want to call this individually for each modelId
-		const model = modelId ? await Model.findById(modelId) : null;
+		if (!modelId && (!modelIds || modelIds.length === 0)) {
+			const cacheKey = this._getCacheKey(user, modelName);
+			const cached = await CacheModule.get(cacheKey);
+			if (cached) return cached;
 
-		if (modelId && !model) throw new Error("Model not found");
+			const modelPermissions = await this._getPermissionsForModel(
+				user,
+				permissions,
+				modelName,
+				modelId
+			);
 
+			await CacheModule.set(cacheKey, modelPermissions, 360);
+
+			return modelPermissions;
+		}
+
+		if (modelId) {
+			const cacheKey = this._getCacheKey(user, modelName, modelId);
+			const cached = await CacheModule.get(cacheKey);
+			if (cached) return cached;
+
+			const model = await Model.findById(modelId);
+			if (!model) throw new Error("Model not found");
+
+			const modelPermissions = await this._getPermissionsForModel(
+				user,
+				permissions,
+				modelName,
+				modelId,
+				model
+			);
+
+			await CacheModule.set(cacheKey, modelPermissions, 360);
+
+			return modelPermissions;
+		}
+
+		const result: any = {};
+		const uncachedModelIds: any = [];
+
+		await forEachIn(modelIds, async modelId => {
+			const cacheKey = this._getCacheKey(user, modelName, modelId);
+			const cached = await CacheModule.get(cacheKey);
+			if (cached) {
+				result[modelId] = cached;
+				return;
+			}
+			uncachedModelIds.push(modelId);
+		});
+
+		const uncachedModels = await Model.find({ _id: uncachedModelIds });
+
+		await forEachIn(uncachedModelIds, async modelId => {
+			const model = uncachedModels.find(
+				model => model._id.toString() === modelId.toString()
+			);
+			if (!model) throw new Error(`No model found for ${modelId}.`);
+
+			const modelPermissions = await this._getPermissionsForModel(
+				user,
+				permissions,
+				modelName,
+				modelId,
+				model
+			);
+
+			const cacheKey = this._getCacheKey(user, modelName, modelId);
+			await CacheModule.set(cacheKey, modelPermissions, 360);
+
+			result[modelId] = modelPermissions;
+		});
+
+		return result;
+	}
+
+	protected async _getPermissionsForModel(
+		user: any,
+		permissions: GetPermissionsResult,
+		modelName: string,
+		modelId: string,
+		model?: any
+	) {
 		const modelPermissions = Object.fromEntries(
 			Object.entries(permissions).filter(
 				([permission]) =>
@@ -98,8 +164,14 @@ export default class GetModelPermissions extends DataModuleJob {
 			}
 		);
 
-		await CacheModule.set(cacheKey, modelPermissions, 360);
-
 		return modelPermissions;
+	}
+
+	protected _getCacheKey(user: any, modelName: string, modelId?: string) {
+		let cacheKey = `model-permissions.${modelName}`;
+		if (modelId) cacheKey += `.${modelId}`;
+		if (user) cacheKey += `.user.${user._id}`;
+		else cacheKey += `.guest`;
+		return cacheKey;
 	}
 }
