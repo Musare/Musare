@@ -76,11 +76,7 @@ export default abstract class DataModuleJob extends Job {
 			const permissions = modelIds.map(
 				(modelId: string) => `${this.getPath()}.${modelId}`
 			);
-			await Promise.all(
-				permissions.map((permission: string) =>
-					this._context.assertPermission(permission)
-				)
-			);
+			await this._context.assertPermissions(permissions);
 
 			return;
 		}

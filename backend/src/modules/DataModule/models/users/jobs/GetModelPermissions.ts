@@ -6,7 +6,9 @@ import ModuleManager from "@/ModuleManager";
 import GetPermissions, { GetPermissionsResult } from "./GetPermissions";
 import DataModuleJob from "@/modules/DataModule/DataModuleJob";
 
-export type GetModelPermissionsResult = Record<string, boolean>;
+export type GetModelPermissionsResult =
+	| Record<string, boolean>
+	| Record<string, Record<string, boolean>>;
 
 export default class GetModelPermissions extends DataModuleJob {
 	protected static _modelName = "users";

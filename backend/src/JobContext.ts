@@ -7,6 +7,10 @@ import { JobDerived } from "./types/JobDerived";
 import assertJobDerived from "./utils/assertJobDerived";
 import { GetModelPermissionsResult } from "./modules/DataModule/models/users/jobs/GetModelPermissions";
 import { GetPermissionsResult } from "./modules/DataModule/models/users/jobs/GetPermissions";
+import { forEachIn } from "@common/utils/forEachIn";
+
+const permissionRegex =
+	/^(?<moduleName>[a-z]+)\.(?<modelOrJobName>[A-z]+)\.(?<jobName>[A-z]+)(?:\.(?<modelId>[A-z0-9]{24}))?(?:\.(?<extra>[A-z]+))?$/;
 
 export default class JobContext {
 	public readonly job: Job;
@@ -92,10 +96,8 @@ export default class JobContext {
 	public async assertPermission(permission: string) {
 		let hasPermission = false;
 
-		const [, moduleName, modelOrJobName, jobName, modelId, extra] =
-			/^([a-z]+)\.([A-z]+)\.([A-z]+)(?:\.([A-z0-9]{24}))?(?:\.([A-z]+))?$/.exec(
-				permission
-			) ?? [];
+		const { moduleName, modelOrJobName, jobName, modelId, extra } =
+			permissionRegex.exec(permission)?.groups ?? {};
 
 		if (moduleName === "data" && modelOrJobName && jobName) {
 			const GetModelPermissions = DataModule.getJob(
@@ -126,5 +128,119 @@ export default class JobContext {
 			throw new Error(
 				`Insufficient permissions for permission ${permission}`
 			);
+	}
+
+	public async assertPermissions(permissions: string[]) {
+		let hasPermission: { [permission: string]: boolean } = {};
+		permissions.forEach(permission => {
+			hasPermission[permission] = false;
+		});
+
+		const permissionData = permissions.map(permission => {
+			const { moduleName, modelOrJobName, jobName, modelId, extra } =
+				permissionRegex.exec(permission)?.groups ?? {};
+
+			return {
+				permission,
+				moduleName,
+				modelOrJobName,
+				jobName,
+				modelId,
+				extra
+			};
+		});
+
+		const dataPermissions = permissionData.filter(
+			({ moduleName, modelOrJobName, jobName }) =>
+				moduleName === "data" && modelOrJobName && jobName
+		);
+		const otherPermissions = permissionData.filter(
+			({ moduleName, modelOrJobName, jobName }) =>
+				!(moduleName === "data" && modelOrJobName && jobName)
+		);
+
+		if (otherPermissions.length > 0) {
+			const GetPermissions = DataModule.getJob("users.getPermissions");
+
+			const permissions = (await this.executeJob(
+				GetPermissions
+			)) as GetPermissionsResult;
+
+			otherPermissions.forEach(({ permission }) => {
+				hasPermission[permission] = permissions[permission];
+			});
+		}
+
+		if (dataPermissions.length > 0) {
+			const dataPermissionsPerModel: any = {};
+			dataPermissions.forEach(dataPermission => {
+				const { modelOrJobName } = dataPermission;
+				if (!Array.isArray(dataPermissionsPerModel[modelOrJobName]))
+					dataPermissionsPerModel[modelOrJobName] = [];
+				dataPermissionsPerModel[modelOrJobName].push(dataPermission);
+			});
+
+			const modelNames = Object.keys(dataPermissionsPerModel);
+
+			const GetModelPermissions = DataModule.getJob(
+				"users.getModelPermissions"
+			);
+
+			await forEachIn(modelNames, async modelName => {
+				const dataPermissionsForThisModel =
+					dataPermissionsPerModel[modelName];
+				const modelIds = dataPermissionsForThisModel.map(
+					({ modelId }: { modelId: string }) => modelId
+				);
+
+				const permissions = (await this.executeJob(
+					GetModelPermissions,
+					{
+						modelName,
+						modelIds
+					}
+				)) as GetModelPermissionsResult;
+
+				dataPermissionsForThisModel.forEach(
+					({
+						modelOrJobName,
+						jobName,
+						modelId,
+						extra,
+						permission
+					}: {
+						modelOrJobName: string;
+						jobName: string;
+						modelId: string;
+						extra?: string;
+						permission: string;
+					}) => {
+						let modelPermission = `data.${modelOrJobName}.${jobName}`;
+
+						if (extra) modelPermission += `.${extra}`;
+
+						const permissionsForModelId = permissions[
+							modelId
+						] as Record<string, boolean>;
+
+						hasPermission[permission] =
+							permissionsForModelId[modelPermission];
+					}
+				);
+			});
+		}
+
+		if (
+			Object.values(hasPermission).some(hasPermission => !hasPermission)
+		) {
+			const missingPermissions = Object.entries(hasPermission)
+				.filter(([, hasPermission]) => !hasPermission)
+				.map(([permission]) => permission);
+			throw new Error(
+				`Insufficient permissions for permission(s) ${missingPermissions.join(
+					", "
+				)}`
+			);
+		}
 	}
 }
