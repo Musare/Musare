@@ -99,7 +99,7 @@ const replaceSongUrlMap = reactive({});
 const showReplacementInputs = ref(false);
 
 const youtubeVideoUrlRegex =
-	/^(https?:\/\/)?(www\.)?(m\.)?(music\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?(?<youtubeId>[\w-]{11})((&([A-Za-z0-9]+)?)*)?$/;
+	/^(?:https?:\/\/)?(?:www\.)?(m\.)?(?:music\.)?(?:youtube\.com|youtu\.be)\/(?:watch\/?\?v=)?(?:.*&v=)?(?<youtubeId>[\w-]{11}).*$/;
 const youtubeVideoIdRegex = /^([\w-]{11})$/;
 
 const youtubePlaylistUrlRegex = /[\\?&]list=([^&#]*)/;
