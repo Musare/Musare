@@ -1,5 +1,18 @@
 # Changelog
 
+## [v3.11.0] - 2024-03-02
+
+This release includes all changes from v3.11.0-rc1, in addition to the following.
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Fixed
+
+- fix: Regression where certain YouTube video URL's could no longer be parsed
+
+### Changed
+
+- refactor: Further improve station system time difference calculation
+
 ## [v3.11.0-rc1] - 2024-02-24
 
 Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
