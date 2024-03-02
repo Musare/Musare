@@ -25,7 +25,7 @@ const getLink = title =>
 		<div class="container">
 			<div class="footer-content">
 				<div id="footer-copyright">
-					<p>© Copyright Musare 2015 - 2023</p>
+					<p>© Copyright Musare 2015 - 2024</p>
 				</div>
 				<router-link id="footer-logo" to="/">
 					<img
