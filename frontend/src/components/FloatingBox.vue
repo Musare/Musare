@@ -43,7 +43,7 @@ const saveBox = () => {
 				? Math.max(
 						document.body.clientHeight - 10 - dragBox.value.height,
 						0
-				  )
+					)
 				: 10,
 		left: 10
 	});

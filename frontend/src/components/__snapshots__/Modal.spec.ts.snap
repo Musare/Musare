@@ -1,21 +1,21 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`Modal component > renders slots 1`] = `
-"<div class=\\"modal is-active\\">
-  <div class=\\"modal-background\\"></div>
+"<div class="modal is-active">
+  <div class="modal-background"></div>
   <div>Sidebar Slot</div>
-  <div class=\\"modal-card\\">
-    <header class=\\"modal-card-head\\">
+  <div class="modal-card">
+    <header class="modal-card-head">
       <div>Toggle Mobile Sidebar Slot</div>
-      <h2 class=\\"modal-card-title is-marginless\\">Modal</h2><span class=\\"delete material-icons\\">highlight_off</span>
-      <transition-stub appear=\\"false\\" persisted=\\"false\\" css=\\"true\\">
+      <h2 class="modal-card-title is-marginless">Modal</h2><span class="delete material-icons">highlight_off</span>
+      <transition-stub appear="false" persisted="false" css="true">
         <!--v-if-->
       </transition-stub>
     </header>
-    <section class=\\"modal-card-body\\">
+    <section class="modal-card-body">
       <div>Body Slot</div>
     </section>
-    <footer class=\\"modal-card-foot\\">
+    <footer class="modal-card-foot">
       <div>Footer Slot</div>
     </footer>
   </div>

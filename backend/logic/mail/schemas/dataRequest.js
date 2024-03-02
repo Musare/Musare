@@ -22,8 +22,8 @@ export default (to, userId, type, cb) => {
 				<br>
 				This request can be viewed and resolved in the
 				<a href="${config.get("url.secure") ? "https" : "http"}://${config.get(
-			"url.host"
-		)}/admin/users">Users tab of the admin page</a>. Note: All admins will be sent the same message.
+					"url.host"
+				)}/admin/users">Users tab of the admin page</a>. Note: All admins will be sent the same message.
 			`
 	};
 

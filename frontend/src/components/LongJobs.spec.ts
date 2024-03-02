@@ -36,11 +36,11 @@ describe("LongJobs component", async () => {
 											message: "Successfully edited tags."
 										}
 									}
-							  }
+								}
 							: {
 									status: "error",
 									message: "Long job not found."
-							  },
+								},
 					"users.removeLongJob": () => ({
 						status: "success"
 					})
@@ -61,7 +61,7 @@ describe("LongJobs component", async () => {
 										status: "update",
 										message: "Updating tags in MongoDB."
 									}
-							  ]
+								]
 							: []
 				},
 				on: {

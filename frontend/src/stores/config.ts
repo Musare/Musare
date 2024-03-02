@@ -12,6 +12,7 @@ export const useConfigStore = defineStore("config", {
 		messages: Record<string, string>;
 		christmas: boolean;
 		footerLinks: Record<string, string | boolean>;
+		primaryColor: string;
 		shortcutOverrides: Record<string, any>;
 		registrationDisabled: boolean;
 		mailEnabled: boolean;
@@ -38,6 +39,7 @@ export const useConfigStore = defineStore("config", {
 		},
 		christmas: false,
 		footerLinks: {},
+		primaryColor: MUSARE_PRIMARY_COLOR,
 		shortcutOverrides: {},
 		registrationDisabled: false,
 		mailEnabled: true,

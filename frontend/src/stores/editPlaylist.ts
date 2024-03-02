@@ -37,19 +37,18 @@ export const useEditPlaylistStore = ({ modalUuid }: { modalUuid: string }) =>
 			updatePlaylistSongs(playlistSongs) {
 				this.playlist.songs = playlistSongs;
 			},
-			repositionedSong(song) {
-				if (
-					this.playlist.songs[song.newIndex] &&
-					this.playlist.songs[song.newIndex].mediaSource ===
-						song.mediaSource
-				)
-					return;
-
-				this.playlist.songs.splice(
-					song.newIndex,
-					0,
-					this.playlist.songs.splice(song.oldIndex, 1)[0]
-				);
+			reorderSongsList(songsOrder) {
+				this.playlist.songs.sort((songA, songB) => {
+					const indexA = songsOrder.findIndex(
+						mediaSource => mediaSource === songA.mediaSource
+					);
+					const indexB = songsOrder.findIndex(
+						mediaSource => mediaSource === songB.mediaSource
+					);
+					if (indexA > indexB) return 1;
+					if (indexA < indexB) return -1;
+					return 0;
+				});
 			}
 		}
 	})();

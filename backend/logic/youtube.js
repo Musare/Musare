@@ -7,6 +7,9 @@ import axios from "axios";
 
 import CoreClass from "../core";
 
+const YOUTUBE_OFFICIAL_CHANNEL_ID = "UCBR8-60-B28hp2BmDPdntcQ";
+const YOUTUBE_MIX_PLAYLIST_TITLE_PREFIX = "Mix - ";
+
 class RateLimitter {
 	/**
 	 * Constructor
@@ -615,28 +618,67 @@ class _YouTubeModule extends CoreClass {
 				return;
 			}
 			const playlistId = splitQuery[1];
-			const maxPages = Number.parseInt(config.get("apis.youtube.maxPlaylistPages"));
 
 			let currentPage = 0;
 
 			async.waterfall(
 				[
 					next => {
+						YouTubeModule.runJob(
+							"GET_PLAYLIST_INFO",
+							{
+								playlistId
+							},
+							this
+						)
+							.then(playlistInfo => {
+								next(null, playlistInfo);
+							})
+							.catch(err => {
+								next(err);
+							});
+					},
+
+					(playlistInfo, next) => {
+						if (playlistInfo.privacyStatus === "private") return next(new Error("Playlist is private."));
+
+						const maxPages = playlistInfo.isMix
+							? 4
+							: Number.parseInt(config.get("apis.youtube.maxPlaylistPages"));
+
+						return next(null, maxPages, playlistInfo.isMix);
+					},
+
+					(maxPages, isMix, next) => {
 						let songs = [];
 						let nextPageToken = "";
 
 						async.whilst(
 							next => {
+								if (nextPageToken === undefined) return next(null, false);
+
+								if (currentPage >= maxPages) {
+									YouTubeModule.log(
+										isMix ? "INFO" : "ERROR",
+										`Playlist ${playlistId}${
+											isMix ? " (mix)" : ""
+										} for job (${this.toString()}) has reached the max page limit.`
+									);
+									return next(null, false);
+								}
+
+								return next(null, true);
+							},
+							next => {
+								currentPage += 1;
+
 								YouTubeModule.log(
 									"INFO",
 									`Getting playlist progress for job (${this.toString()}): ${
 										songs.length
-									} songs gotten so far. Is there a next page: ${nextPageToken !== undefined}.`
+									} songs gotten so far. Current page: ${currentPage}`
 								);
-								next(null, nextPageToken !== undefined && currentPage < maxPages);
-							},
-							next => {
-								currentPage += 1;
+
 								// Add 250ms delay between each job request
 								setTimeout(() => {
 									YouTubeModule.runJob("GET_PLAYLIST_PAGE", { playlistId, nextPageToken }, this)
@@ -675,6 +717,43 @@ class _YouTubeModule extends CoreClass {
 				}
 			);
 		});
+	}
+
+	/**
+	 * Returns playlist info
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.playlistId - the playlist id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async GET_PLAYLIST_INFO(payload) {
+		const { playlistId } = payload;
+		const part = ["id", "snippet", "status", "localizations"].join(",");
+		const params = {
+			part,
+			id: playlistId
+		};
+
+		const { response } = await YouTubeModule.runJob("API_GET_PLAYLIST", { params }, this);
+		const [playlistInfo] = response.data.items;
+
+		const channelId = playlistInfo?.snippet?.channelId;
+		const title = playlistInfo?.snippet?.title;
+		const enTitle = playlistInfo?.localizations?.en?.title;
+		const privacyStatus = playlistInfo?.status?.privacyStatus;
+
+		// Another way to possibly check for mix is if the first two letters of the playlist ID starts with RD
+		const isMix =
+			channelId === YOUTUBE_OFFICIAL_CHANNEL_ID &&
+			(title?.startsWith(YOUTUBE_MIX_PLAYLIST_TITLE_PREFIX) ||
+				enTitle?.startsWith(YOUTUBE_MIX_PLAYLIST_TITLE_PREFIX));
+
+		return {
+			channelId,
+			title,
+			enTitle,
+			privacyStatus,
+			isMix
+		};
 	}
 
 	/**
@@ -927,6 +1006,29 @@ class _YouTubeModule extends CoreClass {
 					reject(err);
 				});
 		});
+	}
+
+	/**
+	 * Perform YouTube API get playlist items request
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.params - request parameters
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async API_GET_PLAYLIST(payload) {
+		const { params } = payload;
+
+		return YouTubeModule.runJob(
+			"API_CALL",
+			{
+				url: "https://www.googleapis.com/youtube/v3/playlists",
+				params: {
+					key: config.get("apis.youtube.key"),
+					...params
+				},
+				quotaCost: 1
+			},
+			this
+		);
 	}
 
 	/**

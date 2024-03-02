@@ -54,7 +54,8 @@ const router = useRouter();
 
 const { socket } = useWebsocketsStore();
 const configStore = useConfigStore();
-const { experimental, sitename, christmas } = storeToRefs(configStore);
+const { experimental, primaryColor, sitename, christmas } =
+	storeToRefs(configStore);
 const stationStore = useStationStore();
 const userAuthStore = useUserAuthStore();
 const userPreferencesStore = useUserPreferencesStore();
@@ -112,12 +113,13 @@ const persistentToasts = ref([]);
 const experimentalChangableListenModeEnabled = ref(false);
 const experimentalChangableListenMode = ref("listen_and_participate"); // Can be either listen_and_participate or participate
 // End experimental options
-// NEW
 const videoLoading = ref();
 const startedAt = ref();
 const pausedAt = ref();
 const stationIdentifier = ref();
-// ENDNEW
+const calculateTimeDifferenceTimeout = ref();
+const systemDifferenceHighDifferenceInARowCount = ref(0);
+const lastSystemDifference = ref(0);
 
 const playerDebugBox = ref();
 const keyboardShortcutsHelper = ref();
@@ -237,7 +239,7 @@ const {
 	updateCurrentSong,
 	updateNextSong,
 	updateSongsList,
-	repositionSongInList,
+	reorderSongsList,
 	updateStationPaused,
 	updateLocalPaused,
 	updateNoSong,
@@ -261,6 +263,105 @@ const {
 // const stopVideo = payload =>
 // 	store.dispatch("modals/editSong/stopVideo", payload);
 
+const calculateTimeDifference = () => {
+	if (localStorage.getItem("stationNoSystemTimeDifference") === "true") {
+		console.log(
+			"Not calculating time different because 'stationNoSystemTimeDifference' is 'true' in localStorage"
+		);
+		return;
+	}
+	if (!station.value._id) return;
+	if (calculateTimeDifferenceTimeout.value)
+		clearTimeout(calculateTimeDifferenceTimeout.value);
+
+	// Store the current time in ms before we send a ping to the backend
+	const beforePing = Date.now();
+	socket.dispatch("ping", serverDate => {
+		// Store the current time in ms after we receive a pong from the backend
+		const afterPing = Date.now();
+
+		// Calculate the approximate latency between the client and the backend, by taking the time the request took and dividing it in 2
+		// This is not perfect, as the request could take longer to get to the server than be sent back, or the other way around
+		let connectionLatency = (afterPing - beforePing) / 2;
+		console.log(
+			`Latency between client and server: ${connectionLatency}ms`,
+			beforePing,
+			afterPing
+		);
+
+		// If we have a station latency in localStorage, use that. Can be used for debugging.
+		if (localStorage.getItem("stationLatency")) {
+			connectionLatency = parseInt(
+				localStorage.getItem("stationLatency")
+			);
+			console.log(
+				`Using latency from local storage: ${connectionLatency}ms`
+			);
+		}
+
+		// Store the server time in ms that the server had before sending the pong
+		// const serverDate = res.data.date;
+
+		// Calculates the approximate different in system time that the current client has, compared to the system time of the backend
+		// Takes into account the approximate latency, so if it took approximately 500ms between the backend sending the pong, and the client receiving the pong,
+		// the system time from the backend has to have 500ms added for it to be correct
+		const difference = serverDate + connectionLatency - afterPing;
+
+		console.log(
+			`Difference in system time compared to server: ${difference}ms`
+		);
+		if (Math.abs(difference) > 3000) {
+			console.log("System time difference is bigger than 3 seconds.");
+		}
+
+		// Gets how many ms. difference there is between the last time this function was called and now
+		const differenceBetweenLastTime = Math.abs(
+			lastSystemDifference.value - difference
+		);
+		const differenceBetweenCurrent = Math.abs(
+			systemDifference.value - difference
+		);
+
+		// By default, we want to re-run this function every 5 minutes
+		let timeoutTime = 1000 * 300;
+		if (differenceBetweenCurrent > 250) {
+			// If the calculated difference is more than 250ms, there might be something wrong
+			if (differenceBetweenLastTime > 250) {
+				// If there's more than 250ms difference between the last calculated difference, reset the difference in a row count to 1
+				systemDifferenceHighDifferenceInARowCount.value = 1;
+			} else if (systemDifferenceHighDifferenceInARowCount.value < 3) {
+				systemDifferenceHighDifferenceInARowCount.value += 1;
+			} else {
+				// If we're on the third attempt in a row where the difference between last time is less than 250ms, accept it as the difference
+				systemDifferenceHighDifferenceInARowCount.value = 0;
+				systemDifference.value = difference;
+			}
+			timeoutTime = 1000 * 10;
+		} else {
+			// Calculated difference is less than 250ms, so we just accept that it's correct
+			systemDifferenceHighDifferenceInARowCount.value = 0;
+			systemDifference.value = difference;
+		}
+		if (systemDifferenceHighDifferenceInARowCount.value > 0) {
+			console.log(
+				`System difference high difference in a row count: ${systemDifferenceHighDifferenceInARowCount.value}`
+			);
+		}
+
+		lastSystemDifference.value = difference;
+
+		console.log(
+			`Will attempt to get system time difference again in ${
+				timeoutTime / 1000
+			} seconds.`
+		);
+		if (calculateTimeDifferenceTimeout.value)
+			clearTimeout(calculateTimeDifferenceTimeout.value);
+		calculateTimeDifferenceTimeout.value = setTimeout(() => {
+			calculateTimeDifference();
+		}, timeoutTime);
+	});
+};
 const updateMediaSessionData = song => {
 	if (song) {
 		ms.setMediaSessionData(
@@ -456,7 +557,7 @@ const calculateTimeElapsed = async () => {
 					}
 				});
 			}
-		} else {
+		} else if (!stationPaused.value && !localPaused.value) {
 			youtubePlayer.value.playVideo();
 			attemptsToPlayVideo.value += 1;
 		}
@@ -543,10 +644,17 @@ const playVideo = () => {
 	if (currentSongMediaType.value === "youtube") {
 		if (youtubePlayerReady.value) {
 			videoLoading.value = true;
-			youtubePlayer.value.loadVideoById(
-				currentYoutubeId.value,
-				getTimeElapsed() / 1000 + currentSong.value.skipDuration
-			);
+			if (stationPaused.value || localPaused.value) {
+				youtubePlayer.value.cueVideoById(
+					currentYoutubeId.value,
+					getTimeElapsed() / 1000 + currentSong.value.skipDuration
+				);
+			} else {
+				youtubePlayer.value.loadVideoById(
+					currentYoutubeId.value,
+					getTimeElapsed() / 1000 + currentSong.value.skipDuration
+				);
+			}
 		}
 	} else if (currentSongMediaType.value === "soundcloud") {
 		const soundcloudId = currentSongMediaValue.value;
@@ -581,6 +689,7 @@ const changePlayerVolume = () => {
 	changeSoundcloudPlayerVolume();
 };
 const playerPlay = () => {
+	if (stationPaused.value || localPaused.value) return;
 	console.debug(
 		TAG,
 		"PLAYER PLAY",
@@ -1000,19 +1109,6 @@ const toggleMute = () => {
 
 	changePlayerVolume();
 };
-const increaseVolume = () => {
-	const previousVolume = parseFloat(localStorage.getItem("volume"));
-	let volume = previousVolume + 5;
-	if (previousVolume === 0) {
-		muted.value = false;
-		localStorage.setItem("muted", "false");
-	}
-	if (volume > 100) volume = 100;
-	volumeSliderValue.value = volume;
-	localStorage.setItem("volume", `${volume}`);
-
-	changePlayerVolume();
-};
 const toggleLike = () => {
 	if (currentSong.value.liked)
 		socket.dispatch("media.unlike", currentSong.value.mediaSource, res => {
@@ -1098,7 +1194,7 @@ const sendActivityWatchMediaData = () => {
 					? 0
 					: Math.floor(
 							activityWatchMediaLastStartDuration.value / 1000
-					  ),
+						),
 			source: `station#${station.value.name}`,
 			hostname: window.location.hostname,
 			experimentalChangableListenMode:
@@ -1115,7 +1211,7 @@ const sendActivityWatchMediaData = () => {
 							key =>
 								window.YT.PlayerState[key] ===
 								youtubePlayer.value?.getPlayerState()
-					  );
+						);
 
 			videoData.playbackRate = playbackRate.value;
 		} else {
@@ -1277,9 +1373,8 @@ onMounted(async () => {
 					djs
 				});
 
-				document.getElementsByTagName(
-					"html"
-				)[0].style.cssText = `--primary-color: var(--${res.data.theme})`;
+				document.getElementsByTagName("html")[0].style.cssText =
+					`--primary-color: var(--${res.data.theme})`;
 
 				setCurrentSong({
 					currentSong: res.data.currentSong,
@@ -1449,29 +1544,21 @@ onMounted(async () => {
 					}
 				);
 
-				// UNIX client time before ping
-				const beforePing = Date.now();
-				socket.dispatch("apis.ping", res => {
-					if (res.status === "success") {
-						// UNIX client time after ping
-						const afterPing = Date.now();
-						// Average time in MS it took between the server responding and the client receiving
-						const connectionLatency = (afterPing - beforePing) / 2;
-						console.log(connectionLatency, beforePing - afterPing);
-						// UNIX server time
-						const serverDate = res.data.date;
-						// Difference between the server UNIX time and the client UNIX time after ping, with the connectionLatency added to the server UNIX time
-						const difference =
-							serverDate + connectionLatency - afterPing;
-						console.log("Difference: ", difference);
-						if (difference > 3000 || difference < -3000) {
-							console.log(
-								"System time difference is bigger than 3 seconds."
-							);
+				keyboardShortcuts.registerShortcut(
+					"station.recalculateSystemTimeDifference",
+					{
+						keyCode: 82, // R key
+						shift: true,
+						alt: true,
+						preventDefault: true,
+						handler: () => {
+							calculateTimeDifference();
 						}
-						systemDifference.value = difference;
 					}
-				});
+				);
+
+				calculateTimeDifference();
+
 				console.debug(TAG, "Station join end");
 			} else {
 				loading.value = false;
@@ -1529,6 +1616,7 @@ onMounted(async () => {
 			if (!noSong.value && currentSong.value._id === _currentSong._id)
 				skipSong();
 		}, getTimeRemaining());
+		clearTimeout(calculateTimeDifferenceTimeout.value);
 	}, true);
 
 	socket.on("event:station.nextSong", res => {
@@ -1622,8 +1710,8 @@ onMounted(async () => {
 		autoRequestSong();
 	});
 
-	socket.on("event:station.queue.song.repositioned", res => {
-		repositionSongInList(res.data.song);
+	socket.on("event:station.queue.order.changed", res => {
+		reorderSongsList(res.data.queueOrder);
 
 		let nextSong = null;
 		if (songsList.value[0])
@@ -1681,9 +1769,8 @@ onMounted(async () => {
 			}
 
 			if (station.value.theme !== theme)
-				document.getElementsByTagName(
-					"html"
-				)[0].style.cssText = `--primary-color: var(--${theme})`;
+				document.getElementsByTagName("html")[0].style.cssText =
+					`--primary-color: var(--${theme})`;
 
 			updateStation(res.data.station);
 		}
@@ -1855,7 +1942,8 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
-	document.getElementsByTagName("html")[0].style.cssText = "";
+	document.getElementsByTagName("html")[0].style.cssText =
+		`--primary-color: ${primaryColor.value}`;
 
 	if (experimental.value.media_session) {
 		ms.removeListeners(0);
@@ -1872,7 +1960,8 @@ onBeforeUnmount(() => {
 		"station.lowerVolumeSmall",
 		"station.increaseVolumeLarge",
 		"station.increaseVolumeSmall",
-		"station.toggleDebug"
+		"station.toggleDebug",
+		"station.recalculateSystemTimeDifference"
 	];
 
 	shortcutNames.forEach(shortcutName => {
@@ -1885,6 +1974,7 @@ onBeforeUnmount(() => {
 	clearTimeout(window.stationNextSongTimeout);
 	clearTimeout(persistentToastCheckerInterval.value);
 	clearInterval(reportStationStateInterval.value);
+	clearTimeout(calculateTimeDifferenceTimeout.value);
 	persistentToasts.value.forEach(persistentToast => {
 		persistentToast.toast.destroy();
 	});
@@ -2200,9 +2290,19 @@ onBeforeUnmount(() => {
 									allow="autoplay"
 								></iframe>
 								<div
-									class="player-cannot-autoplay"
+									class="player-fullscreen-message"
+									v-if="stationPaused"
+								>
+									<p>
+										This station is currently paused. <br />
+										It can only be resumed by a station
+										owner, station DJ or a site
+										admin/moderator.
+									</p>
+								</div>
+								<div
+									class="player-fullscreen-message"
 									v-if="!canAutoplay"
-									@click="increaseVolume()"
 								>
 									<p>
 										Please click anywhere on the screen for
@@ -2456,8 +2556,8 @@ onBeforeUnmount(() => {
 											muted
 												? "volume_mute"
 												: volumeSliderValue >= 50
-												? "volume_up"
-												: "volume_down"
+													? "volume_up"
+													: "volume_down"
 										}}</i
 									>
 									<input
@@ -2814,7 +2914,7 @@ onBeforeUnmount(() => {
 							hasPermission('stations.skip')
 						"
 					>
-						<span class="biggest"><b>Admin/owner</b></span>
+						<span class="biggest"><b>Owner/DJ</b></span>
 						<span><b>Ctrl + Space</b> - Pause/resume station</span>
 						<span><b>Ctrl + Numpad right</b> - Skip station</span>
 					</div>
@@ -2838,6 +2938,10 @@ onBeforeUnmount(() => {
 					<hr />
 					<div>
 						<span class="biggest"><b>Misc</b></span>
+						<span
+							><b>Shift + Alt + R</b> - Recalculates the system
+							time difference</span
+						>
 						<span><b>Ctrl + D</b> - Toggles debug box</span>
 						<span><b>Ctrl + Shift + D</b> - Resets debug box</span>
 						<span
@@ -2925,6 +3029,24 @@ onBeforeUnmount(() => {
 	}
 	100% {
 		transform: rotate(360deg);
+	}
+}
+
+#keyboardShortcutsHelper {
+	.box-body {
+		.biggest {
+			font-size: 1.4rem;
+		}
+
+		> div,
+		> div > div {
+			display: flex;
+			flex-direction: column;
+		}
+
+		> div {
+			row-gap: 8px;
+		}
 	}
 }
 
@@ -3048,15 +3170,13 @@ onBeforeUnmount(() => {
 
 			#video-container {
 				position: relative;
-				padding-bottom: 56.25%; /* proportion value to aspect ratio 16:9 (9 / 16 = 0.5625 or 56.25%) */
-				height: 0;
+				aspect-ratio: 16/9;
 				overflow: hidden;
 
-				.player-cannot-autoplay {
+				.player-fullscreen-message {
 					position: relative;
 					width: 100%;
 					height: 100%;
-					bottom: calc(100% + 5px);
 					background: var(--primary-color);
 					display: flex;
 					align-items: center;

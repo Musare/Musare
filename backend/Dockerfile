@@ -5,7 +5,7 @@ WORKDIR /opt/app
 
 COPY backend/package.json backend/package-lock.json /opt/app/
 
-RUN npm install --silent
+RUN npm install
 
 FROM node:18 AS musare_backend
 

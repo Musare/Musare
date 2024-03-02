@@ -113,7 +113,7 @@ class _CacheModule extends CoreClass {
 	 * @param {string} payload.key -  name of the key to set
 	 * @param {*} payload.value - the value we want to set
 	 * @param {number} payload.ttl -  ttl of the key in seconds
-	 * @param {boolean} [payload.stringifyJson=true] - stringify 'value' if it's an Object or Array
+	 * @param {boolean} [payload.stringifyJson] - stringify 'value' if it's an Object or Array
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	SET(payload) {
@@ -154,7 +154,7 @@ class _CacheModule extends CoreClass {
 	 * @param {string} payload.table - name of the table we want to set a key of (table === redis hash)
 	 * @param {string} payload.key -  name of the key to set
 	 * @param {*} payload.value - the value we want to set
-	 * @param {boolean} [payload.stringifyJson=true] - stringify 'value' if it's an Object or Array
+	 * @param {boolean} [payload.stringifyJson] - stringify 'value' if it's an Object or Array
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	HSET(payload) {
@@ -177,7 +177,7 @@ class _CacheModule extends CoreClass {
 	 * Gets a single value
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.key - name of the key to fetch
-	 * @param {boolean} [payload.parseJson=true] - attempt to parse returned data as JSON
+	 * @param {boolean} [payload.parseJson] - attempt to parse returned data as JSON
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET(payload) {
@@ -213,7 +213,7 @@ class _CacheModule extends CoreClass {
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.table - name of the table to get the value from (table === redis hash)
 	 * @param {string} payload.key - name of the key to fetch
-	 * @param {boolean} [payload.parseJson=true] - attempt to parse returned data as JSON
+	 * @param {boolean} [payload.parseJson] - attempt to parse returned data as JSON
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	HGET(payload) {
@@ -279,7 +279,7 @@ class _CacheModule extends CoreClass {
 	 * Returns all the keys for a table
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.table - name of the table to get the values from (table === redis hash)
-	 * @param {boolean} [payload.parseJson=true] - attempts to parse all values as JSON by default
+	 * @param {boolean} [payload.parseJson] - attempts to parse all values as JSON by default
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	HGETALL(payload) {
@@ -332,7 +332,7 @@ class _CacheModule extends CoreClass {
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.channel - the name of the channel we want to publish a message to
 	 * @param {*} payload.value - the value we want to send
-	 * @param {boolean} [payload.stringifyJson=true] - stringify 'value' if it's an Object or Array
+	 * @param {boolean} [payload.stringifyJson] - stringify 'value' if it's an Object or Array
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	PUB(payload) {
@@ -361,7 +361,7 @@ class _CacheModule extends CoreClass {
 	 * Subscribe to a channel, caches the redis client connection
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.channel - name of the channel to subscribe to
-	 * @param {boolean} [payload.parseJson=true] - parse the message as JSON
+	 * @param {boolean} [payload.parseJson] - parse the message as JSON
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	SUB(payload) {
@@ -426,7 +426,7 @@ class _CacheModule extends CoreClass {
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.key -  name of the list
 	 * @param {*} payload.value - the value we want to set
-	 * @param {boolean} [payload.stringifyJson=true] - stringify 'value' if it's an Object or Array
+	 * @param {boolean} [payload.stringifyJson] - stringify 'value' if it's an Object or Array
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	RPUSH(payload) {
@@ -449,7 +449,7 @@ class _CacheModule extends CoreClass {
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.key -  name of the list
 	 * @param {*} payload.value - the value we want to set
-	 * @param {boolean} [payload.stringifyJson=true] - stringify 'value' if it's an Object or Array
+	 * @param {boolean} [payload.stringifyJson] - stringify 'value' if it's an Object or Array
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	LPUSH(payload) {
@@ -506,7 +506,7 @@ class _CacheModule extends CoreClass {
 	 * @param {object} payload - object containing payload
 	 * @param {string} payload.key -  name of the list
 	 * @param {*} payload.value - the value we want to remove
-	 * @param {boolean} [payload.stringifyJson=true] - stringify 'value' if it's an Object or Array
+	 * @param {boolean} [payload.stringifyJson] - stringify 'value' if it's an Object or Array
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	LREM(payload) {

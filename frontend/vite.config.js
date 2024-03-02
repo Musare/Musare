@@ -168,6 +168,9 @@ export default {
 		MUSARE_SITENAME: JSON.stringify(
 			process.env.MUSARE_SITENAME ?? "Musare"
 		),
+		MUSARE_PRIMARY_COLOR: JSON.stringify(
+			process.env.MUSARE_PRIMARY_COLOR ?? "#03a9f4"
+		),
 		MUSARE_VERSION: JSON.stringify(debug.version),
 		MUSARE_GIT: debug.git,
 		__VUE_I18N_LEGACY_API__: false

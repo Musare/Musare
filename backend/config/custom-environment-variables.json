@@ -1,5 +1,6 @@
 {
 	"sitename": "MUSARE_SITENAME",
+	"primaryColor": "MUSARE_PRIMARY_COLOR",
 	"redis": {
 		"password": "REDIS_PASSWORD"
 	},

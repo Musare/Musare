@@ -19,7 +19,7 @@ let PunishmentsModule;
 class _WSModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
-		super("ws");
+		super("ws", { concurrency: 2 });
 
 		WSModule = this;
 	}
@@ -579,6 +579,7 @@ class _WSModule extends CoreClass {
 					messages: config.get("messages"),
 					christmas: config.get("christmas"),
 					footerLinks: config.get("footerLinks"),
+					primaryColor: config.get("primaryColor"),
 					shortcutOverrides: config.get("shortcutOverrides"),
 					registrationDisabled: config.get("registrationDisabled"),
 					mailEnabled: config.get("mail.enabled"),
@@ -627,6 +628,11 @@ class _WSModule extends CoreClass {
 
 				if (data.length === 0) return socket.dispatch("ERROR", "Not enough arguments specified.");
 				if (typeof data[0] !== "string") return socket.dispatch("ERROR", "First argument must be a string.");
+
+				if (data[0] === "ping" && data.length === 2) {
+					const [, CB_REF] = data;
+					return socket.dispatch("CB_REF", CB_REF.CB_REF, Date.now());
+				}
 
 				const namespaceAction = data[0];
 				if (

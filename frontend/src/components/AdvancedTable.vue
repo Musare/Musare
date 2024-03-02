@@ -64,7 +64,7 @@ const props = defineProps({
 	model: { type: String, required: true },
 	maxWidth: { type: Number, default: 1880 },
 	query: { type: Boolean, default: true },
-	keyboardShortcuts: { type: Boolean, default: true },
+	hasKeyboardShortcuts: { type: Boolean, default: true },
 	bulkActions: {
 		type: Object as PropType<TableBulkActions>,
 		default: () => ({})
@@ -984,7 +984,7 @@ onMounted(async () => {
 		);
 	});
 
-	if (props.keyboardShortcuts) {
+	if (props.hasKeyboardShortcuts) {
 		// Navigation section
 
 		// Page navigation section
@@ -1142,7 +1142,7 @@ onUnmounted(() => {
 	if (columnOrderChangedDebounceTimeout.value)
 		clearTimeout(columnOrderChangedDebounceTimeout.value);
 
-	if (props.keyboardShortcuts) {
+	if (props.hasKeyboardShortcuts) {
 		const shortcutNames = [
 			// Navigation
 			"advancedTable.previousPage",
@@ -1762,7 +1762,7 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 															] !== undefined
 																? previous[
 																		current
-																  ]
+																	]
 																: null,
 														item
 													) !== null

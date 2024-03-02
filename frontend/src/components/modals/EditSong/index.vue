@@ -82,6 +82,7 @@ const {
 const { openModal, closeCurrentModal, preventCloseCbs } = useModalsStore();
 const { hasPermission } = userAuthStore;
 
+// eslint-disable-next-line vue/no-dupe-keys
 const {
 	tab,
 	video,
@@ -732,7 +733,7 @@ const drawCanvas = async () => {
 	const widthCurrentTime = (currentTime / videoDuration) * width;
 
 	const skipDurationColor = "#F42003";
-	const durationColor = "#03A9F4";
+	const durationColor = configStore.primaryColor;
 	const afterDurationColor = "#41E841";
 	const currentDurationColor = "#3b25e8";
 
@@ -2250,8 +2251,8 @@ onBeforeUnmount(() => {
 												muted
 													? "volume_mute"
 													: volumeSliderValue >= 50
-													? "volume_up"
-													: "volume_down"
+														? "volume_up"
+														: "volume_down"
 											}}</i
 										>
 										<input
