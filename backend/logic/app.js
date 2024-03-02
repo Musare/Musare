@@ -29,7 +29,6 @@ class _AppModule extends CoreClass {
 
 	/**
 	 * Initialises the app module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	initialize() {
@@ -520,7 +519,6 @@ class _AppModule extends CoreClass {
 
 	/**
 	 * Returns the express server
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	SERVER() {
@@ -531,7 +529,6 @@ class _AppModule extends CoreClass {
 
 	/**
 	 * Returns the app object
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_APP() {

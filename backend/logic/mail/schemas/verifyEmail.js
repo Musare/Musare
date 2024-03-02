@@ -3,7 +3,6 @@ import mail from "../index";
 
 /**
  * Sends a verify email email
- *
  * @param {string} to - the email address of the recipient
  * @param {string} username - the username of the recipient
  * @param {string} code - the email reset code of the recipient

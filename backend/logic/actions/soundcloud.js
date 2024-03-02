@@ -14,7 +14,6 @@ const CacheModule = moduleManager.modules.cache;
 export default {
 	/**
 	 * Fetches new SoundCloud API key
-	 *
 	 * @returns {{status: string, data: object}}
 	 */
 	fetchNewApiKey: useHasPermission("soundcloud.fetchNewApiKey", async function fetchNewApiKey(session, cb) {
@@ -60,7 +59,6 @@ export default {
 
 	/**
 	 * Tests SoundCloud API key
-	 *
 	 * @returns {{status: string, data: object}}
 	 */
 	testApiKey: useHasPermission("soundcloud.testApiKey", async function testApiKey(session, cb) {
@@ -110,7 +108,6 @@ export default {
 
 	/**
 	 * Get a Soundcloud artist from ID
-	 *
 	 * @returns {{status: string, data: object}}
 	 */
 	getArtist: useHasPermission("soundcloud.getArtist", function getArtist(session, userPermalink, cb) {
@@ -137,7 +134,6 @@ export default {
 
 	/**
 	 * Gets videos, used in the admin youtube page by the AdvancedTable component
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param page - the page
 	 * @param pageSize - the size per page
@@ -243,7 +239,6 @@ export default {
 
 	/**
 	 * Get a SoundCloud track
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param identifier - the identifier of the SoundCloud track
 	 * @param createMissing - whether to create/fetch the SoundCloud track if it's missing

@@ -4,7 +4,6 @@ import async from "async";
  * Migration 23
  *
  * Migration for renaming default user role from default to user
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

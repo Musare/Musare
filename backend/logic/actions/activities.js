@@ -33,7 +33,6 @@ CacheModule.runJob("SUB", {
 export default {
 	/**
 	 * Returns how many activities there are for a user
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} userId - the id of the user in question
 	 * @param {Function} cb - callback
@@ -71,7 +70,6 @@ export default {
 
 	/**
 	 * Gets a set of activities
-	 *
 	 * @param {object} session - user session
 	 * @param {string} userId - the user whose activities we are looking for
 	 * @param {number} set - the set number to return
@@ -127,7 +125,6 @@ export default {
 
 	/**
 	 * Hides an activity for a user
-	 *
 	 * @param session
 	 * @param {string} activityId - the activity which should be hidden
 	 * @param cb
@@ -165,7 +162,6 @@ export default {
 
 	/**
 	 * Removes all activities logged for a logged-in user
-	 *
 	 * @param session
 	 * @param cb
 	 */

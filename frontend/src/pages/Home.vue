@@ -605,21 +605,21 @@ onBeforeUnmount(() => {
 									:title="
 										element.currentSong.artists.length > 0
 											? 'Now Playing: ' +
-											  element.currentSong.title +
-											  ' by ' +
-											  element.currentSong.artists.join(
+												element.currentSong.title +
+												' by ' +
+												element.currentSong.artists.join(
 													', '
-											  )
+												)
 											: 'Now Playing: ' +
-											  element.currentSong.title
+												element.currentSong.title
 									"
 									>{{ element.currentSong.title }}
 									{{
 										element.currentSong.artists.length > 0
 											? " by " +
-											  element.currentSong.artists.join(
+												element.currentSong.artists.join(
 													", "
-											  )
+												)
 											: ""
 									}}</span
 								>
@@ -863,17 +863,17 @@ onBeforeUnmount(() => {
 							:title="
 								station.currentSong.artists.length > 0
 									? 'Now Playing: ' +
-									  station.currentSong.title +
-									  ' by ' +
-									  station.currentSong.artists.join(', ')
+										station.currentSong.title +
+										' by ' +
+										station.currentSong.artists.join(', ')
 									: 'Now Playing: ' +
-									  station.currentSong.title
+										station.currentSong.title
 							"
 							>{{ station.currentSong.title }}
 							{{
 								station.currentSong.artists.length > 0
 									? " by " +
-									  station.currentSong.artists.join(", ")
+										station.currentSong.artists.join(", ")
 									: ""
 							}}</span
 						>
@@ -910,13 +910,7 @@ onBeforeUnmount(() => {
 <style lang="less">
 .christmas-mode .home-page {
 	.header .overlay {
-		background: linear-gradient(
-			180deg,
-			rgba(231, 77, 60, 0.8) 0%,
-			rgba(231, 77, 60, 0.95) 31.25%,
-			rgba(231, 77, 60, 0.9) 54.17%,
-			rgba(231, 77, 60, 0.8) 100%
-		);
+		background-color: var(--red);
 	}
 	.christmas-lights {
 		top: 300px !important;
@@ -966,13 +960,7 @@ html {
 
 .night-mode {
 	.header .overlay {
-		background: linear-gradient(
-			180deg,
-			rgba(34, 34, 34, 0.8) 0%,
-			rgba(34, 34, 34, 0.95) 31.25%,
-			rgba(34, 34, 34, 0.9) 54.17%,
-			rgba(34, 34, 34, 0.8) 100%
-		);
+		background-color: var(--dark-grey-3);
 	}
 	.station-card {
 		background-color: var(--dark-grey-3);
@@ -1016,13 +1004,8 @@ html {
 		user-select: none;
 	}
 	.overlay {
-		background: linear-gradient(
-			180deg,
-			rgba(3, 169, 244, 0.8) 0%,
-			rgba(3, 169, 244, 0.95) 31.25%,
-			rgba(3, 169, 244, 0.9) 54.17%,
-			rgba(3, 169, 244, 0.8) 100%
-		);
+		background-color: var(--primary-color);
+		opacity: 0.85;
 		position: absolute;
 		height: 300px;
 		width: 100%;

@@ -16,7 +16,6 @@ const SpotifyModule = moduleManager.modules.spotify;
 export default {
 	/**
 	 * Fetches a list of songs from Youtube's API
-	 *
 	 * @param {object} session - user session
 	 * @param {string} query - the query we'll pass to youtubes api
 	 * @param {Function} cb - callback
@@ -37,7 +36,6 @@ export default {
 
 	/**
 	 * Fetches a specific page of search results from Youtube's API
-	 *
 	 * @param {object} session - user session
 	 * @param {string} query - the query we'll pass to youtubes api
 	 * @param {string} pageToken - identifies a specific page in the result set that should be retrieved
@@ -67,7 +65,6 @@ export default {
 
 	/**
 	 * Gets Discogs data
-	 *
 	 * @param session
 	 * @param query - the query
 	 * @param {Function} cb
@@ -120,7 +117,6 @@ export default {
 
 	/**
 	 * Gets alternative media sources for list of Spotify tracks (media sources)
-	 *
 	 * @param session
 	 * @param trackId - the trackId
 	 * @param {Function} cb
@@ -185,7 +181,6 @@ export default {
 
 	/**
 	 * Gets alternative album sources (such as YouTube playlists) for a list of Spotify album ids
-	 *
 	 * @param session
 	 * @param trackId - the trackId
 	 * @param {Function} cb
@@ -249,7 +244,6 @@ export default {
 
 	/**
 	 * Gets a list of alternative artist sources (such as YouTube channels) for a list of Spotify artist ids
-	 *
 	 * @param session
 	 * @param trackId - the trackId
 	 * @param {Function} cb
@@ -316,7 +310,6 @@ export default {
 
 	/**
 	 * Joins a room
-	 *
 	 * @param {object} session - user session
 	 * @param {string} room - the room to join
 	 * @param {Function} cb - callback
@@ -363,7 +356,6 @@ export default {
 
 	/**
 	 * Leaves a room
-	 *
 	 * @param {object} session - user session
 	 * @param {string} room - the room to leave
 	 * @param {Function} cb - callback
@@ -393,7 +385,6 @@ export default {
 
 	/**
 	 * Joins an admin room
-	 *
 	 * @param {object} session - user session
 	 * @param {string} page - the admin room to join
 	 * @param {Function} cb - callback
@@ -434,7 +425,6 @@ export default {
 
 	/**
 	 * Leaves all rooms
-	 *
 	 * @param {object} session - user session
 	 * @param {Function} cb - callback
 	 */
@@ -446,7 +436,6 @@ export default {
 
 	/**
 	 * Returns current date
-	 *
 	 * @param {object} session - user session
 	 * @param {Function} cb - callback
 	 */

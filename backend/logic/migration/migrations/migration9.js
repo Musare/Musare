@@ -4,7 +4,6 @@ import async from "async";
  * Migration 9
  *
  * Migration for news
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

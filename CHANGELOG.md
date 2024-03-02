@@ -1,5 +1,42 @@
 # Changelog
 
+## [v3.11.0] - 2024-03-02
+
+This release includes all changes from v3.11.0-rc1, in addition to the following.
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Fixed
+
+- fix: Regression where certain YouTube video URL's could no longer be parsed
+
+### Changed
+
+- refactor: Further improve station system time difference calculation
+
+## [v3.11.0-rc1] - 2024-02-24
+
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Added
+
+- feat: Added primary color configuration
+- feat: Added featured playlist toggle within Edit Playlist modal
+- feat: Added station paused overlay message to player
+
+### Changed
+
+- refactor: Improved support for importing YouTube mixes and non mixes
+- refactor: Improved queue and playlist client-side reordering
+- refactor: Improved station-system time difference handling
+
+### Fixed
+
+- fix: Station player plays 0.1s of video when paused on socket reconnection
+- fix: Station autoplay warning message not displayed
+- fix: Station autoplay warning increasing volume on click
+- fix: Unable to add YouTube video by URL with other query parameters
+- fix: Keyboard shortcut floating box styling
+
 ## [v3.10.0] - 2023-05-21
 
 This release includes all changes from v3.10.0-rc1, v3.10.0-rc2 and v3.10.0-rc3,

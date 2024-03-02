@@ -4,7 +4,6 @@ import async from "async";
  * Migration 19
  *
  * Migration for news showToNewUsers property.
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

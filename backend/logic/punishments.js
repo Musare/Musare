@@ -18,7 +18,6 @@ class _PunishmentsModule extends CoreClass {
 
 	/**
 	 * Initialises the punishments module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async initialize() {
@@ -106,7 +105,6 @@ class _PunishmentsModule extends CoreClass {
 
 	/**
 	 * Gets all punishments in the cache that are active, and removes those that have expired
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_PUNISHMENTS() {
@@ -176,7 +174,6 @@ class _PunishmentsModule extends CoreClass {
 
 	/**
 	 * Gets a punishment by id
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.id - the id of the punishment we are trying to get
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -232,7 +229,6 @@ class _PunishmentsModule extends CoreClass {
 
 	/**
 	 * Gets all punishments from a userId
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.userId - the userId of the punishment(s) we are trying to get
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -265,7 +261,6 @@ class _PunishmentsModule extends CoreClass {
 
 	/**
 	 * Adds a new punishment to the database
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.reason - the reason for the punishment e.g. spam
 	 * @param {string} payload.type - the type of punishment (enum: ["banUserId", "banUserIp"])
@@ -318,7 +313,6 @@ class _PunishmentsModule extends CoreClass {
 
 	/**
 	 * Deactivates a punishment
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.punishmentId - the MongoDB id of the punishment
 	 * @returns {Promise} - returns promise (reject, resolve)

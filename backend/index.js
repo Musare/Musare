@@ -84,7 +84,6 @@ class JobManager {
 
 	/**
 	 * Adds a job to the list of jobs
-	 *
 	 * @param {object} job - the job object
 	 */
 	addJob(job) {
@@ -94,7 +93,6 @@ class JobManager {
 
 	/**
 	 * Removes a job from the list of running jobs (after it's completed)
-	 *
 	 * @param {object} job - the job object
 	 */
 	removeJob(job) {
@@ -104,7 +102,6 @@ class JobManager {
 
 	/**
 	 * Returns detail about a job via a identifier
-	 *
 	 * @param {string} uuid - the job identifier
 	 * @returns {object} - the job object
 	 */
@@ -137,7 +134,6 @@ class ModuleManager {
 
 	/**
 	 * Adds a new module to the backend server/module manager
-	 *
 	 * @param {string} moduleName - the name of the module (also needs to be the same as the filename of a module located in the logic folder or "logic/moduleName/index.js")
 	 */
 	async addModule(moduleName) {
@@ -175,7 +171,6 @@ class ModuleManager {
 
 	/**
 	 * Called when a module is initialised
-	 *
 	 * @param {object} module - the module object/class
 	 */
 	onInitialize(module) {
@@ -195,7 +190,6 @@ class ModuleManager {
 
 	/**
 	 * Called when a module fails to initialise
-	 *
 	 * @param {object} module - the module object/class
 	 */
 	onFail(module) {
@@ -214,7 +208,6 @@ class ModuleManager {
 
 	/**
 	 * Creates a new log message
-	 *
 	 * @param {...any} args - anything to be included in the log message, the first argument is the type of log
 	 */
 	log(...args) {
@@ -283,7 +276,6 @@ moduleManager.initialize();
 
 /**
  * Prints a job
- *
  * @param {object} job - the job
  * @param {number} layer - the layer
  */
@@ -299,7 +291,6 @@ function printJob(job, layer) {
 
 /**
  * Prints a task
- *
  * @param {object} task - the task
  * @param {number} layer - the layer
  */

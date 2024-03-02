@@ -7,10 +7,12 @@ import axios from "axios";
 
 import CoreClass from "../core";
 
+const YOUTUBE_OFFICIAL_CHANNEL_ID = "UCBR8-60-B28hp2BmDPdntcQ";
+const YOUTUBE_MIX_PLAYLIST_TITLE_PREFIX = "Mix - ";
+
 class RateLimitter {
 	/**
 	 * Constructor
-	 *
 	 * @param {number} timeBetween - The time between each allowed YouTube request
 	 */
 	constructor(timeBetween) {
@@ -20,7 +22,6 @@ class RateLimitter {
 
 	/**
 	 * Returns a promise that resolves whenever the ratelimit of a YouTube request is done
-	 *
 	 * @returns {Promise} - promise that gets resolved when the rate limit allows it
 	 */
 	continue() {
@@ -97,7 +98,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Initialises the activities module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async initialize() {
@@ -189,7 +189,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Fetches a list of songs from Youtube's API
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.query - the query we'll pass to youtubes api
 	 * @param {string} payload.pageToken - (optional) if this exists, will search search youtube for a specific page reference
@@ -228,7 +227,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Returns details about the YouTube quota usage
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.fromDate - date to select requests up to
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -289,7 +287,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Returns YouTube quota chart data
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.timePeriod - either hours or days
 	 * @param {string} payload.startDate - beginning date
@@ -470,7 +467,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Gets the id of the channel upload playlist
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.id - the id of the YouTube channel. Optional: can be left out if specifying a username.
 	 * @param {string} payload.username - the username of the YouTube channel. Only gets used if no id is specified.
@@ -513,7 +509,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Gets the id of the channel from the custom URL
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.customUrl - the customUrl of the YouTube channel
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -607,7 +602,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Returns an array of songs taken from a YouTube playlist
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {boolean} payload.musicOnly - whether to return music videos or all videos in the playlist
 	 * @param {string} payload.url - the url of the YouTube playlist
@@ -624,28 +618,67 @@ class _YouTubeModule extends CoreClass {
 				return;
 			}
 			const playlistId = splitQuery[1];
-			const maxPages = Number.parseInt(config.get("apis.youtube.maxPlaylistPages"));
 
 			let currentPage = 0;
 
 			async.waterfall(
 				[
 					next => {
+						YouTubeModule.runJob(
+							"GET_PLAYLIST_INFO",
+							{
+								playlistId
+							},
+							this
+						)
+							.then(playlistInfo => {
+								next(null, playlistInfo);
+							})
+							.catch(err => {
+								next(err);
+							});
+					},
+
+					(playlistInfo, next) => {
+						if (playlistInfo.privacyStatus === "private") return next(new Error("Playlist is private."));
+
+						const maxPages = playlistInfo.isMix
+							? 4
+							: Number.parseInt(config.get("apis.youtube.maxPlaylistPages"));
+
+						return next(null, maxPages, playlistInfo.isMix);
+					},
+
+					(maxPages, isMix, next) => {
 						let songs = [];
 						let nextPageToken = "";
 
 						async.whilst(
 							next => {
+								if (nextPageToken === undefined) return next(null, false);
+
+								if (currentPage >= maxPages) {
+									YouTubeModule.log(
+										isMix ? "INFO" : "ERROR",
+										`Playlist ${playlistId}${
+											isMix ? " (mix)" : ""
+										} for job (${this.toString()}) has reached the max page limit.`
+									);
+									return next(null, false);
+								}
+
+								return next(null, true);
+							},
+							next => {
+								currentPage += 1;
+
 								YouTubeModule.log(
 									"INFO",
 									`Getting playlist progress for job (${this.toString()}): ${
 										songs.length
-									} songs gotten so far. Is there a next page: ${nextPageToken !== undefined}.`
+									} songs gotten so far. Current page: ${currentPage}`
 								);
-								next(null, nextPageToken !== undefined && currentPage < maxPages);
-							},
-							next => {
-								currentPage += 1;
+
 								// Add 250ms delay between each job request
 								setTimeout(() => {
 									YouTubeModule.runJob("GET_PLAYLIST_PAGE", { playlistId, nextPageToken }, this)
@@ -687,8 +720,44 @@ class _YouTubeModule extends CoreClass {
 	}
 
 	/**
+	 * Returns playlist info
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.playlistId - the playlist id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async GET_PLAYLIST_INFO(payload) {
+		const { playlistId } = payload;
+		const part = ["id", "snippet", "status", "localizations"].join(",");
+		const params = {
+			part,
+			id: playlistId
+		};
+
+		const { response } = await YouTubeModule.runJob("API_GET_PLAYLIST", { params }, this);
+		const [playlistInfo] = response.data.items;
+
+		const channelId = playlistInfo?.snippet?.channelId;
+		const title = playlistInfo?.snippet?.title;
+		const enTitle = playlistInfo?.localizations?.en?.title;
+		const privacyStatus = playlistInfo?.status?.privacyStatus;
+
+		// Another way to possibly check for mix is if the first two letters of the playlist ID starts with RD
+		const isMix =
+			channelId === YOUTUBE_OFFICIAL_CHANNEL_ID &&
+			(title?.startsWith(YOUTUBE_MIX_PLAYLIST_TITLE_PREFIX) ||
+				enTitle?.startsWith(YOUTUBE_MIX_PLAYLIST_TITLE_PREFIX));
+
+		return {
+			channelId,
+			title,
+			enTitle,
+			privacyStatus,
+			isMix
+		};
+	}
+
+	/**
 	 * Returns a a page from a YouTube playlist. Is used internally by GET_PLAYLIST and GET_CHANNEL_VIDEOS.
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {boolean} payload.playlistId - the playlist id to get videos from
 	 * @param {boolean} payload.nextPageToken - the nextPageToken to use
@@ -732,7 +801,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Filters a list of YouTube videos so that they only contains videos with music. Is used internally by GET_PLAYLIST
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {Array} payload.videoIds - an array of YouTube videoIds to filter through
 	 * @param {Array} payload.page - the current page/set of video's to get, starting at 0. If left null, 0 is assumed. Will recurse.
@@ -788,7 +856,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Returns an array of songs taken from a YouTube channel
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {boolean} payload.musicOnly - whether to return music videos or all videos in the channel
 	 * @param {boolean} payload.disableSearch - whether to allow searching for custom url/username
@@ -912,7 +979,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Perform YouTube API get videos request
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.params - request parameters
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -944,7 +1010,29 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Perform YouTube API get playlist items request
-	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.params - request parameters
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async API_GET_PLAYLIST(payload) {
+		const { params } = payload;
+
+		return YouTubeModule.runJob(
+			"API_CALL",
+			{
+				url: "https://www.googleapis.com/youtube/v3/playlists",
+				params: {
+					key: config.get("apis.youtube.key"),
+					...params
+				},
+				quotaCost: 1
+			},
+			this
+		);
+	}
+
+	/**
+	 * Perform YouTube API get playlist items request
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.params - request parameters
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -976,7 +1064,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Perform YouTube API get channels request
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.params - request parameters
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -1008,7 +1095,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Perform YouTube API search request
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.params - request parameters
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -1045,7 +1131,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Perform YouTube API call
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.url - request url
 	 * @param {object} payload.params - request parameters
@@ -1104,7 +1189,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Fetch all api requests
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.fromDate - data to fetch requests up to
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -1127,7 +1211,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Fetch an api request
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.apiRequestId - the api request id
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -1188,7 +1271,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Removed all stored api requests from mongo and redis
-	 *
 	 * 	 @returns {Promise} - returns promise (reject, resolve)
 	 */
 	RESET_STORED_API_REQUESTS() {
@@ -1262,7 +1344,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Remove a stored api request
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.requestId - the api request id
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -1325,7 +1406,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Create YouTube videos
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {Array | object} payload.youtubeVideos - the youtubeVideo object or array of
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -1371,7 +1451,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Get YouTube videos
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {Array} payload.identifiers - an array of YouTube video ObjectId's or YouTube ID's
 	 * @param {boolean} payload.createMissing - attempt to fetch and create video's if not in db
@@ -1483,7 +1562,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Get YouTube channels
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {Array} payload.channelIds - an array of YouTube channel id's
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -1555,7 +1633,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Remove YouTube videos
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {string} payload.videoIds - Array of youtubeVideo ObjectIds
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -1738,7 +1815,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Request a set of YouTube videos
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {string} payload.url - the url of the the YouTube playlist or channel
 	 * @param {boolean} payload.musicOnly - whether to only get music from the playlist/channel
@@ -1791,7 +1867,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Gets missing YouTube video's from all playlists, stations and songs
-	 *
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	async GET_MISSING_VIDEOS() {
@@ -1828,7 +1903,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Updates videos from version 1 to version 2
-	 *
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	async UPDATE_VIDEOS_V1_TO_V2() {
@@ -1847,7 +1921,6 @@ class _YouTubeModule extends CoreClass {
 
 	/**
 	 * Gets missing YouTube channels based on cached YouTube video's
-	 *
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	async GET_MISSING_CHANNELS() {

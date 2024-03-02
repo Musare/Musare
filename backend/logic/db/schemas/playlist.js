@@ -26,5 +26,6 @@ export default {
 			replacedAt: { type: Date, required: true }
 		}
 	],
+	featured: { type: Boolean, default: false },
 	documentVersion: { type: Number, default: 7, required: true }
 };

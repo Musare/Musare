@@ -9,7 +9,6 @@ const SpotifyModule = moduleManager.modules.spotify;
 export default {
 	/**
 	 * Fetches tracks from media sources
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Array} mediaSources - the media sources to get tracks for
 	 * @returns {{status: string, data: object}}
@@ -40,7 +39,6 @@ export default {
 
 	/**
 	 * Fetches albums from ids
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Array} albumIds - the ids of the Spotify albums to get
 	 * @returns {{status: string, data: object}}
@@ -60,7 +58,6 @@ export default {
 
 	/**
 	 * Fetches artists from ids
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Array} artistIds - the ids of the Spotify artists to get
 	 * @returns {{status: string, data: object}}

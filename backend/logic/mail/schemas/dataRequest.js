@@ -4,7 +4,6 @@ import mail from "../index";
 
 /**
  * Sends an email to all admins that a user has submitted a data request
- *
  * @param {string} to - an array of email addresses of admins
  * @param {string} userId - the id of the user the data request is for
  * @param {string} type - the type of data request e.g. remove
@@ -23,8 +22,8 @@ export default (to, userId, type, cb) => {
 				<br>
 				This request can be viewed and resolved in the
 				<a href="${config.get("url.secure") ? "https" : "http"}://${config.get(
-			"url.host"
-		)}/admin/users">Users tab of the admin page</a>. Note: All admins will be sent the same message.
+					"url.host"
+				)}/admin/users">Users tab of the admin page</a>. Note: All admins will be sent the same message.
 			`
 	};
 

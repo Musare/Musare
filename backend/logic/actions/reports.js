@@ -90,7 +90,6 @@ CacheModule.runJob("SUB", {
 export default {
 	/**
 	 * Gets reports, used in the admin reports page by the AdvancedTable component
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param page - the page
 	 * @param pageSize - the size per page
@@ -195,7 +194,6 @@ export default {
 
 	/**
 	 * Gets a specific report
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} reportId - the id of the report to return
 	 * @param {Function} cb - gets called with the result
@@ -244,7 +242,6 @@ export default {
 
 	/**
 	 * Gets all reports for a songId
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} songId - the id of the song to index reports for
 	 * @param {Function} cb - gets called with the result
@@ -306,7 +303,6 @@ export default {
 
 	/**
 	 * Gets all a users reports for a specific songId
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} songId - the id of the song
 	 * @param {Function} cb - gets called with the result
@@ -380,7 +376,6 @@ export default {
 
 	/**
 	 * Resolves a report as a whole
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} reportId - the id of the report that is getting resolved
 	 * @param {boolean} resolved - whether to set to resolved to true or false
@@ -445,7 +440,6 @@ export default {
 
 	/**
 	 * Resolves/Unresolves an issue within a report
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} reportId - the id of the report that is getting resolved
 	 * @param {string} issueId - the id of the issue within the report
@@ -509,7 +503,6 @@ export default {
 
 	/**
 	 * Creates a new report
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {object} report - the object of the report data
 	 * @param {string} report.mediaSource - the media source of the song that is being reported
@@ -595,7 +588,6 @@ export default {
 
 	/**
 	 * Removes a report
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {object} reportId - the id of the report item we want to remove
 	 * @param {Function} cb - gets called with the result

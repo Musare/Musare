@@ -16,7 +16,6 @@ const MediaModule = moduleManager.modules.media;
 export default {
 	/**
 	 * Returns details about the YouTube quota usage
-	 *
 	 * @returns {{status: string, data: object}}
 	 */
 	getQuotaStatus: useHasPermission("admin.view.youtube", function getQuotaStatus(session, fromDate, cb) {
@@ -34,7 +33,6 @@ export default {
 
 	/**
 	 * Returns YouTube quota chart data
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param timePeriod - either hours or days
 	 * @param startDate - beginning date
@@ -64,7 +62,6 @@ export default {
 
 	/**
 	 * Gets api requests, used in the admin youtube page by the AdvancedTable component
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param page - the page
 	 * @param pageSize - the size per page
@@ -123,7 +120,6 @@ export default {
 
 	/**
 	 * Returns a specific api request
-	 *
 	 * @returns {{status: string, data: object}}
 	 */
 	getApiRequest: useHasPermission("youtube.getApiRequest", function getApiRequest(session, apiRequestId, cb) {
@@ -152,7 +148,6 @@ export default {
 
 	/**
 	 * Reset stored API requests
-	 *
 	 * @returns {{status: string, data: object}}
 	 */
 	resetStoredApiRequests: useHasPermission(
@@ -206,7 +201,6 @@ export default {
 
 	/**
 	 * Remove stored API requests
-	 *
 	 * @returns {{status: string, data: object}}
 	 */
 	removeStoredApiRequest: useHasPermission(
@@ -236,7 +230,6 @@ export default {
 
 	/**
 	 * Gets videos, used in the admin youtube page by the AdvancedTable component
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param page - the page
 	 * @param pageSize - the size per page
@@ -380,7 +373,6 @@ export default {
 
 	/**
 	 * Gets channels, used in the admin youtube page by the AdvancedTable component
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param page - the page
 	 * @param pageSize - the size per page
@@ -440,7 +432,6 @@ export default {
 
 	/**
 	 * Get a YouTube video
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} identifier - the identifier of the video to get
 	 * @param {string} createMissing - whether to create the video if it doesn't exist yet
@@ -463,7 +454,6 @@ export default {
 
 	/**
 	 * Get a YouTube channel from ID
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} channelId - the YouTube channel id to get
 	 * @param {Function} cb - gets called with the result
@@ -493,7 +483,6 @@ export default {
 
 	/**
 	 * Remove YouTube videos
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Array} videoIds - the YouTube video ids to remove
 	 * @param {Function} cb - gets called with the result
@@ -539,7 +528,6 @@ export default {
 
 	/**
 	 * Gets missing YouTube video's from all playlists, stations and songs
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 * @returns {{status: string, data: object}}
@@ -584,7 +572,6 @@ export default {
 
 	/**
 	 * Updates YouTube video's from version 1 to version 2, by re-fetching the video's
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 * @returns {{status: string, data: object}}
@@ -629,7 +616,6 @@ export default {
 
 	/**
 	 * Requests a set of YouTube videos
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} url - the url of the the YouTube playlist
 	 * @param {boolean} musicOnly - whether to only get music from the playlist
@@ -663,7 +649,6 @@ export default {
 
 	/**
 	 * Requests a set of YouTube videos as an admin
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} url - the url of the the YouTube playlist
 	 * @param {boolean} musicOnly - whether to only get music from the playlist
@@ -782,7 +767,6 @@ export default {
 
 	/**
 	 * Gets missing YouTube channels
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 * @returns {{status: string, data: object}}

@@ -4,7 +4,6 @@ import async from "async";
  * Migration 2
  *
  * Updates the document version 1 stations to add the includedPlaylists and excludedPlaylists properties, and to create a station playlist and link that playlist with the playlist2 property.
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

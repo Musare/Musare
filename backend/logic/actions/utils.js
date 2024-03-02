@@ -113,7 +113,6 @@ export default {
 
 	/**
 	 * Get permissions
-	 *
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {string} stationId - optional, the station id
 	 * @param {Function} cb - gets called with the result

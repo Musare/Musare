@@ -22,7 +22,6 @@ class _MediaModule extends CoreClass {
 
 	/**
 	 * Initialises the media module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async initialize() {
@@ -135,7 +134,6 @@ class _MediaModule extends CoreClass {
 
 	/**
 	 * Recalculates dislikes and likes
-	 *
 	 * @param {object} payload - returns an object containing the payload
 	 * @param {string} payload.mediaSource - the media source
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -204,7 +202,6 @@ class _MediaModule extends CoreClass {
 
 	/**
 	 * Recalculates all dislikes and likes
-	 *
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	RECALCULATE_ALL_RATINGS() {
@@ -260,7 +257,6 @@ class _MediaModule extends CoreClass {
 
 	/**
 	 * Gets ratings by id from the cache or Mongo, and if it isn't in the cache yet, adds it the cache
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.mediaSource - the media source
 	 * @param {string} payload.createMissing - whether to create missing ratings
@@ -314,7 +310,6 @@ class _MediaModule extends CoreClass {
 
 	/**
 	 * Remove ratings by id from the cache and Mongo
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.mediaSources - the media source
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -358,7 +353,6 @@ class _MediaModule extends CoreClass {
 
 	/**
 	 * Get song or youtube video by mediaSource
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {string} payload.mediaSource - the media source of the song/video
 	 * @param {string} payload.userId - the user id
@@ -489,7 +483,6 @@ class _MediaModule extends CoreClass {
 
 	/**
 	 * Gets media from media sources
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {string} payload.mediaSources - the media sources
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -580,7 +573,6 @@ class _MediaModule extends CoreClass {
 
 	/**
 	 * Remove import job by id from Mongo
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.jobIds - the job ids
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -625,7 +617,6 @@ class _MediaModule extends CoreClass {
 
 	/**
 	 * Remove import job by id from Mongo
-	 *
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.jobIds - the job ids
 	 * @returns {Promise} - returns a promise (resolve, reject)

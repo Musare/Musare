@@ -5,7 +5,7 @@ WORKDIR /opt/app
 
 COPY backend/package.json backend/package-lock.json /opt/app/
 
-RUN npm install --silent
+RUN npm install
 
 FROM node:18 AS musare_backend
 
@@ -20,7 +20,7 @@ COPY types /opt/types
 COPY backend /opt/app
 COPY --from=backend_node_modules /opt/app/node_modules node_modules
 
-ENTRYPOINT bash -c '([[ "${CONTAINER_MODE}" == "development" ]] && npm install --silent); npm run docker:dev'
+ENTRYPOINT bash -c '([[ "${CONTAINER_MODE}" == "development" ]] && npm install); npm run docker:dev'
 
 EXPOSE 8080/tcp
 EXPOSE 8080/udp

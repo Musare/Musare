@@ -59,7 +59,6 @@ CacheModule.runJob("SUB", {
 export default {
 	/**
 	 * Gets news items, used in the admin news page by the AdvancedTable component
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param page - the page
 	 * @param pageSize - the size per page
@@ -164,7 +163,6 @@ export default {
 
 	/**
 	 * Gets all news items that are published
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -192,7 +190,6 @@ export default {
 
 	/**
 	 * Gets a news item by id
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} newsId - the news item id
 	 * @param {Function} cb - gets called with the result
@@ -221,7 +218,6 @@ export default {
 	},
 	/**
 	 * Creates a news item
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {object} data - the object of the news data
 	 * @param {Function} cb - gets called with the result
@@ -257,7 +253,6 @@ export default {
 
 	/**
 	 * Gets the latest news item
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {boolean} newUser - whether the user requesting the newest news is a new user
 	 * @param {Function} cb - gets called with the result
@@ -283,7 +278,6 @@ export default {
 
 	/**
 	 * Removes a news item
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {object} newsId - the id of the news item we want to remove
 	 * @param {Function} cb - gets called with the result
@@ -327,7 +321,6 @@ export default {
 
 	/**
 	 * Updates a news item
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} newsId - the id of the news item
 	 * @param {object} item - the news item object

@@ -4,7 +4,6 @@ import async from "async";
  * Migration 11
  *
  * Migration for changing language of verifying a song from 'accepted' to 'verified' for songs
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

@@ -44,7 +44,6 @@ CacheModule.runJob("SUB", {
 export default {
 	/**
 	 * Returns the length of the songs list
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param cb
 	 */
@@ -70,7 +69,6 @@ export default {
 
 	/**
 	 * Gets songs, used in the admin songs page by the AdvancedTable component
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param page - the page
 	 * @param pageSize - the size per page
@@ -209,7 +207,6 @@ export default {
 
 	/**
 	 * Updates all songs
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param cb
 	 */
@@ -265,7 +262,6 @@ export default {
 
 	/**
 	 * Gets a song from the Musare song id
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} songId - the song id
 	 * @param {Function} cb
@@ -294,7 +290,6 @@ export default {
 	/**
 	 * Gets multiple songs from the Musare song ids
 	 * At this time only used in bulk EditSong
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Array} mediaSources - the song media sources
 	 * @param {Function} cb
@@ -341,7 +336,6 @@ export default {
 
 	/**
 	 * Creates a song
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {object} newSong - the song object
 	 * @param {Function} cb
@@ -377,7 +371,6 @@ export default {
 
 	/**
 	 * Updates a song
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} songId - the song id
 	 * @param {object} song - the updated song object
@@ -455,7 +448,6 @@ export default {
 
 	/**
 	 * Removes a song
-	 *
 	 * @param session
 	 * @param songId - the song id
 	 * @param cb
@@ -728,7 +720,6 @@ export default {
 
 	/**
 	 * Removes many songs
-	 *
 	 * @param session
 	 * @param songIds - array of song ids
 	 * @param cb
@@ -828,7 +819,6 @@ export default {
 
 	/**
 	 * Searches through official songs
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} query - the query
 	 * @param {string} page - the page
@@ -871,7 +861,6 @@ export default {
 
 	/**
 	 * Verifies a song
-	 *
 	 * @param session
 	 * @param songId - the song id
 	 * @param cb
@@ -930,7 +919,6 @@ export default {
 
 	/**
 	 * Verify many songs
-	 *
 	 * @param session
 	 * @param songIds - array of song ids
 	 * @param cb
@@ -1026,7 +1014,6 @@ export default {
 
 	/**
 	 * Un-verifies a song
-	 *
 	 * @param session
 	 * @param songId - the song id
 	 * @param cb
@@ -1091,7 +1078,6 @@ export default {
 
 	/**
 	 * Unverify many songs
-	 *
 	 * @param session
 	 * @param songIds - array of song ids
 	 * @param cb
@@ -1195,7 +1181,6 @@ export default {
 
 	/**
 	 * Gets a list of all genres
-	 *
 	 * @param session
 	 * @param cb
 	 */
@@ -1231,7 +1216,6 @@ export default {
 
 	/**
 	 * Bulk update genres for selected songs
-	 *
 	 * @param session
 	 * @param method Whether to add, remove or replace genres
 	 * @param genres Array of genres to apply
@@ -1328,7 +1312,6 @@ export default {
 
 	/**
 	 * Gets a list of all artists
-	 *
 	 * @param session
 	 * @param cb
 	 */
@@ -1364,7 +1347,6 @@ export default {
 
 	/**
 	 * Bulk update artists for selected songs
-	 *
 	 * @param session
 	 * @param method Whether to add, remove or replace artists
 	 * @param artists Array of artists to apply
@@ -1461,7 +1443,6 @@ export default {
 
 	/**
 	 * Gets a list of all tags
-	 *
 	 * @param session
 	 * @param cb
 	 */
@@ -1497,7 +1478,6 @@ export default {
 
 	/**
 	 * Bulk update tags for selected songs
-	 *
 	 * @param session
 	 * @param method Whether to add, remove or replace tags
 	 * @param tags Array of tags to apply

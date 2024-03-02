@@ -43,6 +43,7 @@ permissions.moderator = {
 	"playlists.create.admin": true,
 	"playlists.get": true,
 	"playlists.update.displayName": true,
+	"playlists.update.featured": true,
 	"playlists.update.privacy": true,
 	"playlists.songs.add": true,
 	"playlists.songs.remove": true,
@@ -71,7 +72,7 @@ permissions.moderator = {
 				"admin.view.soundcloudTracks": true,
 				"admin.view.soundcloud": true,
 				"soundcloud.getArtist": true
-		  }
+			}
 		: {}),
 	...(config.get("experimental.spotify")
 		? {
@@ -84,7 +85,7 @@ permissions.moderator = {
 				"spotify.getAlternativeMediaSourcesForTracks": true,
 				"admin.view.youtubeChannels": true,
 				"youtube.getChannel": true
-		  }
+			}
 		: {})
 };
 permissions.admin = {
@@ -122,12 +123,12 @@ permissions.admin = {
 		? {
 				"soundcloud.fetchNewApiKey": true,
 				"soundcloud.testApiKey": true
-		  }
+			}
 		: {}),
 	...(config.get("experimental.spotify")
 		? {
 				"youtube.getMissingChannels": true
-		  }
+			}
 		: {})
 };
 

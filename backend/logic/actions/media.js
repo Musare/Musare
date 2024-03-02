@@ -125,7 +125,6 @@ CacheModule.runJob("SUB", {
 export default {
 	/**
 	 * Recalculates all ratings
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param cb
 	 */
@@ -188,7 +187,6 @@ export default {
 
 	/**
 	 * Like
-	 *
 	 * @param session
 	 * @param mediaSource - the media source
 	 * @param cb
@@ -316,7 +314,6 @@ export default {
 
 	/**
 	 * Dislike
-	 *
 	 * @param session
 	 * @param mediaSource - the media source
 	 * @param cb
@@ -444,7 +441,6 @@ export default {
 
 	/**
 	 * Undislike
-	 *
 	 * @param session
 	 * @param mediaSource - the media source
 	 * @param cb
@@ -575,7 +571,6 @@ export default {
 
 	/**
 	 * Unlike
-	 *
 	 * @param session
 	 * @param mediaSource - the media source
 	 * @param cb
@@ -706,7 +701,6 @@ export default {
 
 	/**
 	 * Get ratings
-	 *
 	 * @param session
 	 * @param mediaSource - the media source
 	 * @param cb
@@ -754,7 +748,6 @@ export default {
 
 	/**
 	 * Gets user's own ratings
-	 *
 	 * @param session
 	 * @param mediaSource - the media source
 	 * @param cb
@@ -839,7 +832,6 @@ export default {
 
 	/**
 	 * Gets importJobs, used in the admin import page by the AdvancedTable component
-	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param page - the page
 	 * @param pageSize - the size per page
@@ -898,7 +890,6 @@ export default {
 
 	/**
 	 * Remove import jobs
-	 *
 	 * @returns {{status: string, data: object}}
 	 */
 	removeImportJobs: useHasPermission("media.removeImportJobs", function removeImportJobs(session, jobIds, cb) {
@@ -917,7 +908,6 @@ export default {
 
 	/**
 	 * Gets an array of media from media sources
-	 *
 	 * @returns {{status: string, data: object}}
 	 */
 	getMediaFromMediaSources: isLoginRequired(function getMediaFromMediaSources(session, mediaSources, cb) {

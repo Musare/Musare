@@ -19,7 +19,6 @@ class _ActivitiesModule extends CoreClass {
 
 	/**
 	 * Initialises the activities module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	initialize() {
@@ -36,7 +35,6 @@ class _ActivitiesModule extends CoreClass {
 
 	/**
 	 * Adds a new activity to the database
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.userId - the id of the user who's activity is to be added
 	 * @param {string} payload.type - the type of activity (enum specified in schema)
@@ -178,7 +176,6 @@ class _ActivitiesModule extends CoreClass {
 
 	/**
 	 * Merges activities about adding/removing songs from a playlist within a 5-minute period to prevent spam
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.userId - the id of the user to check for duplicates
 	 * @param {object} payload.playlist - object that contains info about the relevant playlist
@@ -285,7 +282,6 @@ class _ActivitiesModule extends CoreClass {
 
 	/**
 	 * Removes any references to a station, playlist or song in activities
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.type - type of reference. enum: ["mediaSource", "stationId", "playlistId", "playlistId"]
 	 * @param {string} payload.stationId - (optional) the id of a station
@@ -402,7 +398,6 @@ class _ActivitiesModule extends CoreClass {
 
 	/**
 	 * Hides any activities of the same type within a 15-minute period to prevent spam
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.userId - the id of the user to check for duplicates
 	 * @param {string} payload.type - the type of activity to check for duplicates

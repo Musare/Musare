@@ -4,7 +4,6 @@ import async from "async";
  * Migration 7
  *
  * Migration for adding anonymous song requests preference to user object
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

@@ -50,6 +50,7 @@ machine, even though the application within the container is listening on `21017
 | `BACKUP_LOCATION` | Directory to store musare.sh backups. Defaults to `/backups` in script location. |
 | `BACKUP_NAME` | Name of musare.sh backup files. Defaults to `musare-$(date +"%Y-%m-%d-%s").dump`. |
 | `MUSARE_SITENAME` | Should be the name of the site. [^1] |
+| `MUSARE_PRIMARY_COLOR` | Primary color of the application, in hex format. [^1] |
 | `MUSARE_DEBUG_VERSION` | Log/expose the current package.json version. [^1] |
 | `MUSARE_DEBUG_GIT_REMOTE` | Log/expose the current Git repository's remote. [^1] |
 | `MUSARE_DEBUG_GIT_REMOTE_URL` | Log/expose the current Git repository's remote URL. [^1] |
@@ -134,16 +135,16 @@ For more information on configuration files please refer to the
 | `mongo.port` | MongoDB port. |
 | `mongo.database` | MongoDB database name. |
 | `blacklistedCommunityStationNames` | Array of blacklisted community station names. |
-| `featuredPlaylists` | Array of featured playlist id's. Playlist privacy must be public. |
 | `messages.accountRemoval` | Message to display to users when they request their account to be removed. |
 | `siteSettings.christmas` | Whether to enable christmas theme. |
 | `footerLinks` | Add custom links to footer by specifying `"title": "url"`, e.g. `"GitHub": "https://github.com/Musare/Musare"`. You can disable about, team and news links (but not the pages themselves) by setting them to false, e.g. `"about": false`. |
 | `shortcutOverrides` | Overwrite keyboard shortcuts, for example `"editSong.useAllDiscogs": { "keyCode": 68, "ctrl": true, "alt": true, "shift": false, "preventDefault": true }`. |
+| `primaryColor` | Primary color of the application, in hex format. |
 | `registrationDisabled` | If set to `true`, users can't register accounts. |
 | `sendDataRequestEmails` | If `true` all admin users will be sent an email if a data request is received. Requires mail to be enabled and configured. |
 | `skipConfigVersionCheck` | Skips checking if the config version is outdated or not. Should almost always be set to false. |
 | `skipDbDocumentsVersionCheck` | Skips checking if there are any DB documents outdated or not. Should almost always be set to false. |
-| `debug.stationIssue` | If set to `true` it will enable the `/debug_station` API endpoint on the backend, which provides information useful to debugging stations not skipping, as well as capture all jobs specified in `debug.captureJobs`.
+| `debug.stationIssue` | If set to `true` it will enable the `/debug_station` API endpoint on the backend, which provides information useful to debugging stations not skipping, as well as capture all jobs specified in `debug.captureJobs`. |
 | `debug.traceUnhandledPromises` | Enables the trace-unhandled package, which provides detailed information when a promise is unhandled. |
 | `debug.captureJobs` | Array of jobs to capture for `debug.stationIssue`. |
 | `debug.git.remote` | Log/expose the current Git repository's remote. |

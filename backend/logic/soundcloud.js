@@ -69,7 +69,6 @@ const soundcloudTrackObjectToMusareTrackObject = soundcloudTrackObject => {
 class RateLimitter {
 	/**
 	 * Constructor
-	 *
 	 * @param {number} timeBetween - The time between each allowed YouTube request
 	 */
 	constructor(timeBetween) {
@@ -79,7 +78,6 @@ class RateLimitter {
 
 	/**
 	 * Returns a promise that resolves whenever the ratelimit of a YouTube request is done
-	 *
 	 * @returns {Promise} - promise that gets resolved when the rate limit allows it
 	 */
 	continue() {
@@ -107,7 +105,6 @@ class _SoundCloudModule extends CoreClass {
 
 	/**
 	 * Initialises the soundcloud module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async initialize() {
@@ -152,7 +149,6 @@ class _SoundCloudModule extends CoreClass {
 
 	/**
 	 * Generates/fetches a new SoundCloud API key
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GENERATE_SOUNDCLOUD_API_KEY() {
@@ -195,7 +191,6 @@ class _SoundCloudModule extends CoreClass {
 
 	/**
 	 * Tests the stored SoundCloud API key
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	TEST_SOUNDCLOUD_API_KEY() {
@@ -226,7 +221,6 @@ class _SoundCloudModule extends CoreClass {
 
 	/**
 	 * Perform SoundCloud API get track request
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.trackId - the SoundCloud track id to get
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -253,7 +247,6 @@ class _SoundCloudModule extends CoreClass {
 
 	/**
 	 * Perform SoundCloud API call
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.url - request url
 	 * @param {object} payload.params - request parameters
@@ -290,7 +283,6 @@ class _SoundCloudModule extends CoreClass {
 
 	/**
 	 * Create SoundCloud track
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {object} payload.soundcloudTrack - the soundcloudTrack object
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -336,7 +328,6 @@ class _SoundCloudModule extends CoreClass {
 
 	/**
 	 * Get SoundCloud track
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {string} payload.identifier - the soundcloud track ObjectId or track id
 	 * @param {boolean} payload.createMissing - attempt to fetch and create track if not in db
@@ -390,7 +381,6 @@ class _SoundCloudModule extends CoreClass {
 
 	/**
 	 * Tries to get a SoundCloud track from a URL
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.identifier - the SoundCloud track URL
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -469,7 +459,6 @@ class _SoundCloudModule extends CoreClass {
 
 	/**
 	 * Returns an array of songs taken from a SoundCloud playlist
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.url - the url of the SoundCloud playlist
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -529,7 +518,6 @@ class _SoundCloudModule extends CoreClass {
 
 	/**
 	 * Returns an array of songs taken from a SoundCloud artist
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.artistId - the id of the SoundCloud artist
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -602,7 +590,6 @@ class _SoundCloudModule extends CoreClass {
 
 	/**
 	 * Get Soundcloud artists
-	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {Array} payload.userPermalinks - an array of Soundcloud user permalinks
 	 * @returns {Promise} - returns a promise (resolve, reject)
@@ -678,7 +665,6 @@ class _SoundCloudModule extends CoreClass {
 
 	/**
 	 * Calls the API_CALL with the proper URL to get artist/user tracks
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.artistId - the id of the SoundCloud artist
 	 * @param {string} payload.nextHref - the next url to call

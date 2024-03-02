@@ -32,7 +32,7 @@
 					"limit": 3000000
 				}
 			],
-			"maxPlaylistPages": 20
+			"maxPlaylistPages": 1000
 		},
 		"spotify": {
 			"enabled": false,
@@ -91,8 +91,9 @@
 		"port": 27017,
 		"database": "musare"
 	},
-	"blacklistedCommunityStationNames": ["musare"],
-	"featuredPlaylists": [],
+	"blacklistedCommunityStationNames": [
+		"musare"
+	],
 	"messages": {
 		"accountRemoval": "Your account will be deactivated instantly and your data will shortly be deleted by an admin."
 	},
@@ -103,6 +104,7 @@
 		"news": true,
 		"GitHub": "https://github.com/Musare/Musare"
 	},
+	"primaryColor": "#03a9f4",
 	"shortcutOverrides": {},
 	"registrationDisabled": false,
 	"sendDataRequestEmails": true,
@@ -122,7 +124,9 @@
 		"version": true
 	},
 	"defaultLogging": {
-		"hideType": ["INFO"],
+		"hideType": [
+			"INFO"
+		],
 		"blacklistedTerms": []
 	},
 	"customLoggingPerModule": {

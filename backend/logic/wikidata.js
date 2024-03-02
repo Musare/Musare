@@ -5,7 +5,6 @@ import CoreClass from "../core";
 class RateLimitter {
 	/**
 	 * Constructor
-	 *
 	 * @param {number} timeBetween - The time between each allowed WikiData request
 	 */
 	constructor(timeBetween) {
@@ -15,7 +14,6 @@ class RateLimitter {
 
 	/**
 	 * Returns a promise that resolves whenever the ratelimit of a WikiData request is done
-	 *
 	 * @returns {Promise} - promise that gets resolved when the rate limit allows it
 	 */
 	continue() {
@@ -48,7 +46,6 @@ class _WikiDataModule extends CoreClass {
 
 	/**
 	 * Initialises the activities module
-	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async initialize() {
@@ -66,7 +63,6 @@ class _WikiDataModule extends CoreClass {
 
 	/**
 	 * Get WikiData data from entity url
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.entityUrl - entity url
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -96,7 +92,6 @@ class _WikiDataModule extends CoreClass {
 
 	/**
 	 * Get WikiData data from work id
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.workId - work id
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -135,7 +130,6 @@ class _WikiDataModule extends CoreClass {
 
 	/**
 	 * Get WikiData data from release group id
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.releaseGroupId - release group id
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -174,7 +168,6 @@ class _WikiDataModule extends CoreClass {
 
 	/**
 	 * Get WikiData data from Spotify album id
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.spotifyAlbumId - Spotify album id
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -213,7 +206,6 @@ class _WikiDataModule extends CoreClass {
 
 	/**
 	 * Get WikiData data from Spotify artist id
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.spotifyArtistId - Spotify artist id
 	 * @returns {Promise} - returns promise (reject, resolve)
@@ -254,7 +246,6 @@ class _WikiDataModule extends CoreClass {
 
 	/**
 	 * Perform WikiData API call
-	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.url - request url
 	 * @param {object} payload.params - request parameters

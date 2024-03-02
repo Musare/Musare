@@ -4,8 +4,8 @@ import { AddSongToPlaylistResponse } from "@musare_types/actions/PlaylistsAction
 import { useWebsocketsStore } from "@/stores/websockets";
 
 const youtubeVideoUrlRegex =
-	/^(https?:\/\/)?(www\.)?(m\.)?(music\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?(?<youtubeId>[\w-]{11})((&([A-Za-z0-9]+)?)*)?$/;
-const youtubeVideoIdRegex = /^([\w-]{11})$/;
+	/^(?:https?:\/\/)?(?:www\.)?(m\.)?(?:music\.)?(?:youtube\.com|youtu\.be)\/(?:watch\/?\?v=)?(?:.*&v=)?(?<youtubeId>[\w-]{11}).*$/;
+const youtubeVideoIdRegex = /^(?<youtubeId>[\w-]{11})$/;
 
 export const useYoutubeDirect = () => {
 	const youtubeDirect = ref("");
@@ -13,20 +13,35 @@ export const useYoutubeDirect = () => {
 	const { socket } = useWebsocketsStore();
 
 	const getYoutubeVideoId = () => {
-		const youtubeVideoUrlMatch = youtubeVideoUrlRegex.exec(
-			youtubeDirect.value.trim()
-		);
+		const inputValue = youtubeDirect.value.trim();
+
+		// Check if the user simply used a YouTube ID in the input directly
+		const youtubeVideoIdMatch = youtubeVideoIdRegex.exec(inputValue);
+		if (youtubeVideoIdMatch && youtubeVideoIdMatch.groups.youtubeId) {
+			// eslint-disable-next-line prefer-destructuring
+			return youtubeVideoIdMatch.groups.youtubeId;
+		}
+
+		// Check if we can get the video ID from passing in the input value into the URL regex
+		const youtubeVideoUrlMatch = youtubeVideoUrlRegex.exec(inputValue);
 		if (youtubeVideoUrlMatch && youtubeVideoUrlMatch.groups.youtubeId) {
 			// eslint-disable-next-line prefer-destructuring
 			return youtubeVideoUrlMatch.groups.youtubeId;
 		}
 
-		const youtubeVideoIdParts = youtubeVideoIdRegex.exec(
-			youtubeDirect.value.trim()
-		);
-		if (youtubeVideoIdParts) {
-			// eslint-disable-next-line prefer-destructuring
-			return youtubeVideoIdParts[1];
+		// Check if the user provided a URL of some kind that has the query parameter v, which also passes the YouTube video ID regex
+		try {
+			const { searchParams } = new URL(inputValue);
+			if (searchParams.has("v")) {
+				const vValue = searchParams.get("v");
+				const vValueMatch = youtubeVideoIdRegex.exec(vValue);
+				if (vValueMatch && vValueMatch.groups.youtubeId) {
+					// eslint-disable-next-line prefer-destructuring
+					return youtubeVideoIdMatch.groups.youtubeId;
+				}
+			}
+		} catch (error) {
+			return null;
 		}
 
 		return null;

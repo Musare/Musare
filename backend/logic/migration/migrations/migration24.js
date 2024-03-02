@@ -2,7 +2,6 @@
  * Migration 24
  *
  * Migration for setting station skip vote threshold
- *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise
  */

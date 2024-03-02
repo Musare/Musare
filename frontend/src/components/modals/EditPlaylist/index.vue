@@ -71,7 +71,7 @@ const {
 	addSong,
 	removeSong,
 	replaceSong,
-	repositionedSong
+	reorderSongsList
 } = editPlaylistStore;
 
 const { closeCurrentModal, openModal } = useModalsStore();
@@ -97,52 +97,41 @@ const isEditable = permission =>
 		permission === "playlists.update.privacy" &&
 		hasPermission(permission));
 
-const repositionSong = ({ moved }) => {
+const repositionSong = ({ moved, song }) => {
 	const { oldIndex, newIndex } = moved;
 	if (oldIndex === newIndex) return; // we only need to update when song is moved
-	const song = playlistSongs.value[newIndex];
+	const _song = song ?? playlistSongs.value[newIndex];
 	socket.dispatch(
 		"playlists.repositionSong",
 		playlist.value._id,
 		{
-			...song,
+			..._song,
 			oldIndex,
 			newIndex
 		},
-		res => {
-			if (res.status !== "success")
-				repositionedSong({
-					...song,
-					newIndex: oldIndex,
-					oldIndex: newIndex
-				});
-		}
+		() => {}
 	);
 };
 
 const moveSongToTop = index => {
 	songItems.value[`song-item-${index}`].$refs.songActions.tippy.hide();
-	playlistSongs.value.splice(0, 0, playlistSongs.value.splice(index, 1)[0]);
 	repositionSong({
 		moved: {
 			oldIndex: index,
 			newIndex: 0
-		}
+		},
+		song: playlistSongs.value[index]
 	});
 };
 
 const moveSongToBottom = index => {
 	songItems.value[`song-item-${index}`].$refs.songActions.tippy.hide();
-	playlistSongs.value.splice(
-		playlistSongs.value.length - 1,
-		0,
-		playlistSongs.value.splice(index, 1)[0]
-	);
 	repositionSong({
 		moved: {
 			oldIndex: index,
 			newIndex: playlistSongs.value.length - 1
-		}
+		},
+		song: playlistSongs.value[index]
 	});
 };
 
@@ -320,13 +309,13 @@ onMounted(() => {
 	);
 
 	socket.on(
-		"event:playlist.song.repositioned",
+		"event:playlist.changeOrder",
 		res => {
 			if (playlist.value._id === res.data.playlistId) {
-				const { song, playlistId } = res.data;
+				const { playlistId, playlistOrder } = res.data;
 
 				if (playlist.value._id === playlistId) {
-					repositionedSong(song);
+					reorderSongsList(playlistOrder);
 				}
 			}
 		},

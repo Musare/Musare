@@ -46,6 +46,7 @@ const { socket } = useWebsocketsStore();
 const manageStationStore = useManageStationStore({
 	modalUuid: props.modalUuid
 });
+// eslint-disable-next-line vue/no-dupe-keys
 const {
 	stationId,
 	sector,
@@ -64,7 +65,7 @@ const {
 	clearStation,
 	updateSongsList,
 	updateStationPlaylist,
-	repositionSongInList,
+	reorderSongsList,
 	updateStationPaused,
 	updateCurrentSong,
 	updateStation,
@@ -321,10 +322,10 @@ onMounted(() => {
 		);
 
 		socket.on(
-			"event:manageStation.queue.song.repositioned",
+			"event:manageStation.queue.order.changed",
 			res => {
 				if (res.data.stationId === stationId.value)
-					repositionSongInList(res.data.song);
+					reorderSongsList(res.data.queueOrder);
 			},
 			{ modalUuid: props.modalUuid }
 		);
@@ -482,8 +483,8 @@ onBeforeUnmount(() => {
 			sector === 'home' && !hasPermission('stations.view.manage')
 				? 'View Queue'
 				: !hasPermission('stations.view.manage')
-				? 'Add Song to Queue'
-				: 'Manage Station'
+					? 'Add Song to Queue'
+					: 'Manage Station'
 		"
 		:style="`--primary-color: var(--${station.theme})`"
 		class="manage-station-modal"
