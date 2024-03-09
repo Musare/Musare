@@ -171,6 +171,7 @@ export const useUserAuthStore = defineStore("userAuth", () => {
 
 			requestingUserId(userId);
 
+			// TODO use model store for this?
 			websocketStore
 				.runJob("data.users.findById", { _id: userId })
 				.then(user => {

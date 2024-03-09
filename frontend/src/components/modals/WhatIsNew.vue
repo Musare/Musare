@@ -15,7 +15,7 @@ defineProps({
 
 const { runJob } = useWebsocketStore();
 
-const { registerModels, onDeleted } = useModels();
+const { registerModel, onDeleted } = useModels();
 
 const { closeCurrentModal } = useModalsStore();
 
@@ -48,7 +48,7 @@ onMounted(async () => {
 
 	localStorage.setItem("whatIsNew", Date.parse(model.createdAt).toString());
 
-	const [_model] = await registerModels(model, { news: "createdBy" });
+	const _model = await registerModel(model, { news: "createdBy" });
 
 	news.value = _model;
 

@@ -18,7 +18,7 @@ const MainFooter = defineAsyncComponent(
 
 const { runJob } = useWebsocketStore();
 const { onReady } = useEvents();
-const { registerModels, onCreated, onDeleted } = useModels();
+const { registerModel, registerModels, onCreated, onDeleted } = useModels();
 
 const news = ref<NewsModel[]>([]);
 
@@ -44,7 +44,7 @@ onMounted(async () => {
 	});
 
 	await onCreated("news", async ({ doc }) => {
-		const [newDoc] = await registerModels(doc, { news: "createdBy" });
+		const newDoc = await registerModel(doc, { news: "createdBy" });
 		news.value.unshift(newDoc);
 	});
 

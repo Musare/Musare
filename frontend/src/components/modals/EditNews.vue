@@ -31,7 +31,7 @@ const { onReady } = useEvents();
 
 const { closeCurrentModal } = useModalsStore();
 
-const { registerModels, onDeleted } = useModels();
+const { registerModel, onDeleted } = useModels();
 
 const createdBy = ref();
 const createdAt = ref(0);
@@ -120,7 +120,7 @@ onMounted(async () => {
 
 			if (!data) return;
 
-			const [model] = await registerModels(data, { news: "createdBy" });
+			const model = await registerModel(data, { news: "createdBy" });
 
 			setModelValues(model, ["markdown", "status", "showToNewUsers"]);
 

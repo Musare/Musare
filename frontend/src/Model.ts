@@ -1,15 +1,19 @@
+/* eslint max-classes-per-file: 0 */
+
 import { forEachIn } from "@common/utils/forEachIn";
 import { useModelStore } from "./stores/model";
 import { useWebsocketStore } from "./stores/websocket";
 
-class DeferredPromise {
-	promise: Promise<any>;
+class DeferredPromise<T = any> {
+	promise: Promise<T>;
+
 	reject;
+
 	resolve;
 
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
-		this.promise = new Promise((resolve, reject) => {
+		this.promise = new Promise<T>((resolve, reject) => {
 			this.reject = reject;
 			this.resolve = resolve;
 		});
@@ -30,6 +34,7 @@ interface ModelPermissionFetcherRequest {
  */
 class ModelPermissionFetcher {
 	private static requestsQueued: ModelPermissionFetcherRequest[] = [];
+
 	private static timeoutActive = false;
 
 	private static fetch() {
@@ -223,11 +228,11 @@ export default class Model {
 		const fullPath = pathParts.join(".");
 
 		if (force || !this._loadedRelations.includes(fullPath)) {
-			const { findById, registerModels } = useModelStore();
+			const { findById, registerModel } = useModelStore();
 
 			const data = await findById(model[head]._name, model[head]._id);
 
-			const [registeredModel] = await registerModels(data);
+			const registeredModel = await registerModel(data);
 
 			model[head] = registeredModel;
 
@@ -253,14 +258,19 @@ export default class Model {
 
 	public async unregisterRelations(): Promise<void> {
 		const { unregisterModels } = useModelStore();
-		const relationIds = await forEachIn(
-			this._loadedRelations,
-			async path => {
-				const relation = await this._getRelation(path);
-				return relation._id;
-			}
-		);
-		await unregisterModels(relationIds);
+		const relations = {};
+		await forEachIn(this._loadedRelations, async path => {
+			const relation = await this._getRelation(path);
+			const { _name: modelName, _id: modelId } = relation;
+
+			relations[modelName] ??= [];
+			relations[modelName].push(modelId);
+		});
+
+		const modelNames = Object.keys(relations);
+		await forEachIn(modelNames, async modelName => {
+			await unregisterModels(modelName, relations[modelName]);
+		});
 	}
 
 	public async updateData(data: object) {
@@ -277,11 +287,15 @@ export default class Model {
 		return this._name;
 	}
 
+	public getId(): string {
+		return this._id;
+	}
+
 	public async getPermissions(refresh = false): Promise<object> {
 		if (refresh === false && this._permissions) return this._permissions;
 
 		this._permissions = await ModelPermissionFetcher.fetchModelPermissions(
-			this._name,
+			this.getName(),
 			this._id
 		);
 
@@ -332,7 +346,7 @@ export default class Model {
 		const { runJob } = useWebsocketStore();
 
 		return runJob(`data.${this.getName()}.updateById`, {
-			_id: this._id,
+			_id: this.getId(),
 			query
 		});
 	}

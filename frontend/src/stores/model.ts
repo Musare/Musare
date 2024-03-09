@@ -1,98 +1,101 @@
-import { reactive, ref, computed } from "vue";
+import { reactive, ref, readonly } from "vue";
 import { defineStore } from "pinia";
 import { generateUuid } from "@common/utils/generateUuid";
 import { forEachIn } from "@common/utils/forEachIn";
 import { useWebsocketStore } from "./websocket";
 import Model from "@/Model";
 
+/**
+ * Pinia store for managing models
+ */
 export const useModelStore = defineStore("model", () => {
 	const { runJob, subscribe, subscribeMany, unsubscribe, unsubscribeMany } =
 		useWebsocketStore();
 
-	const models = ref([]);
-	const permissions = ref({});
+	const models = reactive({});
+	const permissions = reactive({});
 	const createdSubcription = ref(null);
-	const subscriptions = ref({
+	const subscriptions = reactive({
 		created: {},
 		updated: {},
 		deleted: {}
 	});
-	const loadedModelIds = computed(() =>
-		models.value.map(model => `${model._name}.${model._id}`)
-	);
 
+	/**
+	 * Returns generic model permissions for the current user for a specific model type
+	 */
 	const getUserModelPermissions = async (modelName: string) => {
-		if (permissions.value[modelName]) return permissions.value[modelName];
+		if (permissions[modelName]) return permissions[modelName];
 
 		const data = await runJob("data.users.getModelPermissions", {
 			modelName
 		});
 
-		permissions.value[modelName] = data;
+		permissions[modelName] = data;
 
-		return permissions.value[modelName];
+		return permissions[modelName];
 	};
 
+	/**
+	 * Checks if we have a specific generic permission for a specific model type
+	 */
 	const hasPermission = async (modelName: string, permission: string) => {
 		const data = await getUserModelPermissions(modelName);
 
 		return !!data[permission];
 	};
 
-	const unregisterModels = async modelIds => {
-		const removeModels = [];
-
-		await forEachIn(
-			Array.isArray(modelIds) ? modelIds : [modelIds],
-			async modelId => {
-				const model = models.value.find(model => model._id === modelId);
-
-				if (!model) return;
-
-				model?.removeUse();
-
-				if (model.getUses() > 1) return;
-
-				removeModels.push(model);
-			}
-		);
-
-		if (removeModels.length === 0) return;
-
-		await forEachIn(removeModels, async model =>
-			model.unregisterRelations()
-		);
-
-		const subscriptions = Object.fromEntries(
-			removeModels.flatMap(model => {
-				const { updated, deleted } = model.getSubscriptions() ?? {};
-
-				return [
-					[updated, `model.${model.getName()}.updated.${model._id}`],
-					[deleted, `model.${model.getName()}.deleted.${model._id}`]
-				];
-			})
-		);
-
-		await unsubscribeMany(subscriptions);
-
-		await forEachIn(removeModels, async removeModel => {
-			models.value.splice(
-				models.value.findIndex(model => model._id === removeModel._id),
-				1
-			);
-		});
-	};
-
+	/**
+	 * This functions gets called when the backend notifies us that a model was created
+	 * We then notify every subscription in the frontend about it
+	 */
 	const onCreatedCallback = async (modelName: string, data) => {
-		if (!subscriptions.value.created[modelName]) return;
+		if (!subscriptions.created[modelName]) return;
 
 		await forEachIn(
-			Object.values(subscriptions.value.created[modelName]),
+			Object.values(subscriptions.created[modelName]),
 			async subscription => subscription(data) // TODO: Error handling
 		);
 	};
 
+	/**
+	 * This functions gets called when the backend notifies us that a model was updated
+	 * We then notify every subscription in the frontend about it
+	 */
+	const onUpdatedCallback = async (modelName: string, { doc }) => {
+		const model = models[modelName] && models[modelName][doc._id];
+		if (model) model.updateData(doc);
+
+		if (!subscriptions.updated[modelName]) return;
+
+		await forEachIn(
+			Object.values(subscriptions.updated[modelName]),
+			async subscription => subscription(data) // TODO: Error handling
+		);
+	};
+
+	/**
+	 * This functions gets called when the backend notifies us that a model was deleted
+	 * We then notify every subscription in the frontend about it
+	 */
+	const onDeletedCallback = async (modelName: string, data) => {
+		const { oldDoc } = data;
+
+		if (subscriptions.deleted[modelName])
+			await forEachIn(
+				Object.values(subscriptions.deleted[modelName]),
+				async subscription => subscription(data) // TODO: Error handling
+			);
+
+		const model = models[modelName] && models[modelName][oldDoc._id];
+		// TODO how does this work with addUse?
+		if (model) await unregisterModels(modelName, oldDoc._id); // eslint-disable-line no-use-before-define
+	};
+
+	/**
+	 * Subscribes the provided callback to model creation events
+	 * The provided callback will be called when the backend notifies us that a model of the provided type is created
+	 */
 	const onCreated = async (
 		modelName: string,
 		callback: (data?: any) => any
@@ -105,77 +108,66 @@ export const useModelStore = defineStore("model", () => {
 
 		const uuid = generateUuid();
 
-		subscriptions.value.created[modelName] ??= {};
-		subscriptions.value.created[modelName][uuid] = callback;
+		subscriptions.created[modelName] ??= {};
+		subscriptions.created[modelName][uuid] = callback;
 
 		return uuid;
 	};
 
+	/**
+	 * Subscribes the provided callback to model update events
+	 * The provided callback will be called when the backend notifies us that a model of the provided type is updated
+	 */
 	const onUpdated = async (
 		modelName: string,
 		callback: (data?: any) => any
 	) => {
 		const uuid = generateUuid();
 
-		subscriptions.value.updated[modelName] ??= {};
-		subscriptions.value.updated[modelName][uuid] = callback;
+		subscriptions.updated[modelName] ??= {};
+		subscriptions.updated[modelName][uuid] = callback;
 
 		return uuid;
 	};
 
-	const onUpdatedCallback = async (modelName: string, { doc }) => {
-		const model = models.value.find(model => model._id === doc._id);
-		if (model) model.updateData(doc);
-
-		if (!subscriptions.value.updated[modelName]) return;
-
-		await forEachIn(
-			Object.values(subscriptions.value.updated[modelName]),
-			async subscription => subscription(data) // TODO: Error handling
-		);
-	};
-
+	/**
+	 * Subscribes the provided callback to model deletion events
+	 * The provided callback will be called when the backend notifies us that a model of the provided type is deleted
+	 */
 	const onDeleted = async (
 		modelName: string,
 		callback: (data?: any) => any
 	) => {
 		const uuid = generateUuid();
 
-		subscriptions.value.deleted[modelName] ??= {};
-		subscriptions.value.deleted[modelName][uuid] = callback;
+		subscriptions.deleted[modelName] ??= {};
+		subscriptions.deleted[modelName][uuid] = callback;
 
 		return uuid;
 	};
 
-	const onDeletedCallback = async (modelName: string, data) => {
-		const { oldDoc } = data;
-
-		if (subscriptions.value.deleted[modelName])
-			await forEachIn(
-				Object.values(subscriptions.value.deleted[modelName]),
-				async subscription => subscription(data) // TODO: Error handling
-			);
-
-		const index = models.value.findIndex(model => model._id === oldDoc._id);
-		if (index > -1) await unregisterModels(oldDoc._id);
-	};
-
+	/**
+	 * Allows removing a specific subscription, so the callback of that subscription is no longer called when the backend notifies us
+	 * For type created, we also unsubscribe to events from the backend
+	 * For type updated/deleted, we are subscribed to specific model id updated/deleted events, those are not unsubscribed when
+	 * there's no subscriptions in the frontend actually using them
+	 */
 	const removeCallback = async (
 		modelName: string,
 		type: "created" | "updated" | "deleted",
 		uuid: string
 	) => {
 		if (
-			!subscriptions.value[type][modelName] ||
-			!subscriptions.value[type][modelName][uuid]
+			!subscriptions[type][modelName] ||
+			!subscriptions[type][modelName][uuid]
 		)
 			return;
 
-		delete subscriptions.value[type][modelName][uuid];
+		delete subscriptions[type][modelName][uuid];
 
 		if (
 			type === "created" &&
-			Object.keys(subscriptions.value.created[modelName]).length === 0
+			Object.keys(subscriptions.created[modelName]).length === 0
 		) {
 			await unsubscribe(
 				`model.${modelName}.created`,
@@ -186,58 +178,177 @@ export const useModelStore = defineStore("model", () => {
 		}
 	};
 
-	const registerModels = async (
-		docs,
-		relations?: Record<string, string | string[]>
-	) => {
-		const documents = Array.isArray(docs) ? docs : [docs];
+	/**
+	 * Returns the model for the provided name and id
+	 * First tries to get the model from the already loaded models
+	 * If it's not already loaded, it fetches it from the backend
+	 *
+	 * Does not register the model that was fetched
+	 *
+	 * // TODO return value?
+	 */
+	const findById = async (modelName: string, modelId: string) => {
+		const existingModel = models[modelName] && models[modelName][modelId];
 
-		const existingsRefs = documents.filter(document =>
-			models.value.find(
-				model =>
-					model._id === document._id && model._name === document._name
-			)
+		if (existingModel) return existingModel;
+
+		return runJob(`data.${modelName}.findById`, { _id: modelId });
+	};
+
+	/**
+	 * Returns a list of models based on the provided model name and ids
+	 * First tries to get all models from the already loaded models
+	 * If after that we miss any models, we fetch those from the backend, and return everything we found
+	 *
+	 * Does not register the models that were fetched
+	 */
+	const findManyById = async (modelName: string, modelIds: string[]) => {
+		const existingModels = modelIds
+			.map(modelId => models[modelName] && models[modelName][modelId])
+			.filter(model => !!model);
+		const existingModelIds = existingModels.map(model => model._id);
+		const missingModelIds = modelIds.filter(
+			_id => !existingModelIds.includes(_id)
 		);
 
-		await forEachIn(existingsRefs, async model => {
+		let fetchedModels = [];
+		if (missingModelIds.length > 0)
+			fetchedModels = (await runJob(`data.${modelName}.findManyById`, {
+				_ids: missingModelIds
+			})) as unknown[];
+
+		const allModels = existingModels.concat(fetchedModels);
+
+		// Warning: returns models and direct results
+
+		return Object.fromEntries(
+			modelIds.map(modelId => [
+				modelId,
+				allModels.find(model => model._id === modelId)
+			])
+		);
+	};
+
+	/**
+	 * Removes models locally if no one else is still using it
+	 * Also unsubscribes to any updated/deleted subscriptions
+	 */
+	const unregisterModels = async (
+		modelName: string,
+		modelIdOrModelIds: string | string[]
+	) => {
+		const modelIds = Array.isArray(modelIdOrModelIds)
+			? modelIdOrModelIds
+			: [modelIdOrModelIds];
+		const removeModels = [];
+		await forEachIn(modelIds, async modelId => {
+			if (!models[modelName] || !models[modelName][modelId]) return;
+
+			const model = models[modelName][modelId];
+
+			model.removeUse();
+
+			if (model.getUses() > 1) return;
+
+			// TODO only do this after a grace period
+			removeModels.push(model);
+		});
+
+		if (removeModels.length === 0) return;
+
+		await forEachIn(removeModels, async model =>
+			model.unregisterRelations()
+		);
+
+		const subscriptions = Object.fromEntries(
+			removeModels.flatMap(model => {
+				const { updated, deleted } = model.getSubscriptions() ?? {};
+
+				return [
+					[
+						updated,
+						`model.${model.getName()}.updated.${model.getId()}`
+					],
+					[
+						deleted,
+						`model.${model.getName()}.deleted.${model.getId()}`
+					]
+				];
+			})
+		);
+
+		await unsubscribeMany(subscriptions);
+
+		await forEachIn(removeModels, async removeModel => {
+			const { _id: modelIdToRemove } = removeModel;
+			if (!models[modelName] || !models[modelName][modelIdToRemove])
+				return;
+			delete models[modelName][modelIdToRemove];
+		});
+
+		console.log("After unregister", JSON.parse(JSON.stringify(models)));
+	};
+
+	/**
+	 * Registers models/documents
+	 * If any models/documents already exist, increments the use counter, and tries to load any potentially missing relations
+	 * For documents that don't already exist, registers them locally, adds subscriptions for updated/deleted events,
+	 * increments the use counter, and loads any potential relations
+	 */
+	const registerModels = async (
+		documentsOrModels: any[],
+		relations?: Record<string, string | string[]>
+	): Promise<Model[]> => {
+		console.info("Register models", documentsOrModels, relations);
+
+		console.log(123123, documentsOrModels);
+		const existingModels = documentsOrModels
+			.map(({ _name, _id }) =>
+				models[_name] ? models[_name][_id] ?? null : null
+			)
+			.filter(model => !!model);
+
+		await forEachIn(existingModels, async model => {
 			model.addUse();
 
 			if (relations && relations[model._name])
 				await model.loadRelations(relations[model._name]);
 		});
 
-		if (documents.length === existingsRefs.length) return existingsRefs;
+		if (documentsOrModels.length === existingModels.length)
+			return existingModels;
 
-		const missingDocuments = documents.filter(
-			document =>
-				!loadedModelIds.value.includes(
-					`${document._name}.${document._id}`
-				)
+		const missingDocuments = documentsOrModels.filter(
+			({ _name, _id }) => !models[_name] || !models[_name][_id]
 		);
 
 		const channels = Object.fromEntries(
-			missingDocuments.flatMap(document => [
+			missingDocuments.flatMap(({ _name, _id }) => [
 				[
-					`model.${document._name}.updated.${document._id}`,
-					data => onUpdatedCallback(document._name, data)
+					`model.${_name}.updated.${_id}`,
+					data => onUpdatedCallback(_name, data)
 				],
 				[
-					`model.${document._name}.deleted.${document._id}`,
-					data => onDeletedCallback(document._name, data)
+					`model.${_name}.deleted.${_id}`,
+					data => onDeletedCallback(_name, data)
 				]
 			])
 		);
 		const subscriptions = Object.entries(await subscribeMany(channels));
 
-		const newRefs = await forEachIn(missingDocuments, async document => {
-			const refSubscriptions = subscriptions.filter(([, { channel }]) =>
-				channel.endsWith(document._id)
+		const newModels = await forEachIn(missingDocuments, async document => {
+			const { _name, _id } = document;
+
+			const modelSubscriptions = subscriptions.filter(
+				([, { channel }]) =>
+					channel.startsWith(`model.${_name}`) &&
+					channel.endsWith(`.${_id}`)
 			);
-			const [updated] = refSubscriptions.find(([, { channel }]) =>
-				channel.includes("updated")
+			const [updated] = modelSubscriptions.find(([, { channel }]) =>
+				channel.includes(".updated.")
 			);
-			const [deleted] = refSubscriptions.find(([, { channel }]) =>
-				channel.includes("deleted")
+			const [deleted] = modelSubscriptions.find(([, { channel }]) =>
+				channel.includes(".deleted.")
 			);
 
 			if (!updated || !deleted) return null;
@@ -246,61 +357,64 @@ export const useModelStore = defineStore("model", () => {
 			model.setSubscriptions(updated, deleted);
 			model.addUse();
 
-			if (relations && relations[model._name])
-				await model.loadRelations(relations[model._name]);
+			// TODO what if relations are relevant for some registers, but not others? Unregister if no register relies on a relation
+			if (relations && relations[_name])
+				await model.loadRelations(relations[_name]);
+
+			if (!models[_name]) {
+				models[_name] = {};
+			}
+			models[_name][_id] = model;
 
 			return model;
 		});
 
-		models.value.push(...newRefs);
-
-		return existingsRefs.concat(newRefs);
+		return existingModels.concat(newModels);
 	};
 
-	const findById = async (modelName: string, _id) => {
-		const existingModel = models.value.find(model => model._id === _id);
+	/**
+	 * Registers a model or document
+	 * Helper function to be able to register a single model/document, simply calls registerModels
+	 */
+	const registerModel = async (
+		documentOrModel: any,
+		relations?: Record<string, string | string[]>
+	): Promise<Model> => {
+		const [model] = await registerModels([documentOrModel], relations);
 
-		if (existingModel) return existingModel;
-
-		return runJob(`data.${modelName}.findById`, { _id });
+		return model;
 	};
 
-	const findManyById = async (modelName: string, _ids: string[]) => {
-		const existingModels = models.value.filter(model =>
-			_ids.includes(model._id)
-		);
-		const existingIds = existingModels.map(model => model._id);
-		const missingIds = _ids.filter(_id => !existingIds.includes(_id));
-
-		let fetchedModels = [];
-		if (missingIds.length > 0)
-			fetchedModels = (await runJob(`data.${modelName}.findManyById`, {
-				_ids: missingIds
-			})) as unknown[];
-
-		const allModels = existingModels.concat(fetchedModels);
-
-		return Object.fromEntries(
-			_ids.map(_id => [_id, allModels.find(model => model._id === _id)])
-		);
-	};
-
+	/**
+	 * Loads one or more models for a provided model name and a provided model id or model ids, optionally including any relations
+	 * First fetches models from the already loaded models
+	 * Tries to fetch any missing models from the backend
+	 */
 	const loadModels = async (
 		modelName: string,
 		modelIdsOrModelId: string | string[],
 		relations?: Record<string, string | string[]>
-	) => {
+	): Promise<Map<string, Model | null>> => {
 		const modelIds = Array.isArray(modelIdsOrModelId)
 			? modelIdsOrModelId
 			: [modelIdsOrModelId];
-		const existingModels = models.value.filter(model =>
-			modelIds.includes(model._id)
-		);
+		const existingModels = modelIds
+			.map(_id => models[modelName] && models[modelName][_id])
+			.filter(model => !!model);
+		const existingModelIds = existingModels.map(model => model._id);
 		const missingModelIds = modelIds.filter(
-			modelId => !loadedModelIds.value.includes(`${modelName}.${modelId}`)
+			_id => !existingModelIds.includes(_id)
+		);
+
+		console.info(
+			"Load models",
+			structuredClone(modelIds),
+			structuredClone(existingModels),
+			structuredClone(missingModelIds)
 		);
 
 		const fetchedModels = await findManyById(modelName, missingModelIds);
+		console.log(999, modelName, missingModelIds, fetchedModels);
 		const registeredModels = await registerModels(
 			Object.values(fetchedModels)
 				.filter(model => !!model)
@@ -310,31 +424,32 @@ export const useModelStore = defineStore("model", () => {
 		const modelsNotFound = modelIds
 			.filter(
 				modelId =>
-					!registeredModels.find(model => model._id === modelId)
+					!registeredModels.find(model => model.getId() === modelId)
 			)
 			.map(modelId => [modelId, null]);
 
+		console.log(123, registeredModels, modelsNotFound, fetchedModels);
 		return Object.fromEntries(
 			registeredModels
-				.map(model => [model._id, model])
+				.map(model => [model.getId(), model])
 				.concat(modelsNotFound)
 		);
 	};
 
 	return {
-		models,
-		permissions,
-		subscriptions,
+		models: readonly(models),
+		permissions: readonly(permissions),
+		subscriptions: readonly(subscriptions),
 		onCreated,
 		onUpdated,
 		onDeleted,
 		removeCallback,
+		registerModel,
 		registerModels,
 		unregisterModels,
-		getUserModelPermissions,
-		hasPermission,
+		loadModels,
 		findById,
 		findManyById,
-		loadModels
+		hasPermission
 	};
 });
