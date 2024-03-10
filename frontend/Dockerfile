@@ -1,13 +1,27 @@
-FROM node:20-alpine AS frontend_node_modules
+FROM node:20-alpine AS frontend_base
 
-RUN mkdir -p /opt/app
+ARG UID=1000
+ARG GID=1000
+
+RUN deluser --remove-home node \
+    && addgroup -S -g ${GID} musare \
+    && adduser -SD -u ${UID} musare \
+    && adduser musare musare
+
+RUN mkdir -p /opt/.git /opt/common /opt/types /opt/app /run/nginx \
+    && chown -R musare:musare /opt/app
+
 WORKDIR /opt/app
 
-COPY frontend/package.json frontend/package-lock.json /opt/app/
+USER musare
 
-RUN npm install --silent
+FROM frontend_base AS frontend_node_modules
 
-FROM node:20-alpine AS musare_frontend
+COPY --chown=musare:musare --link frontend/package.json frontend/package-lock.json /opt/app/
+
+RUN npm install
+
+FROM frontend_base AS musare_frontend
 
 ARG FRONTEND_MODE=production
 ARG FRONTEND_PROD_DEVTOOLS=false
@@ -31,16 +45,15 @@ ENV FRONTEND_MODE=${FRONTEND_MODE} \
     MUSARE_DEBUG_GIT_LATEST_COMMIT=${MUSARE_DEBUG_GIT_LATEST_COMMIT} \
     MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT=${MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT}
 
+USER root
 RUN apk add nginx
+USER musare
 
-RUN mkdir -p /opt/.git /opt/common /opt/types /opt/app /run/nginx
-WORKDIR /opt/app
-
-COPY .git /opt/.git
-COPY common /opt/common
-COPY types /opt/types
-COPY frontend /opt/app
-COPY --from=frontend_node_modules /opt/app/node_modules node_modules
+COPY --chown=musare:musare --link .git /opt/.git
+COPY --chown=musare:musare --link common /opt/common
+COPY --chown=musare:musare --link types /opt/types
+COPY --chown=musare:musare --link frontend /opt/app
+COPY --chown=musare:musare --from=frontend_node_modules --link /opt/app/node_modules node_modules
 
 RUN sh -c '([[ "${FRONTEND_MODE}" == "development" ]] && exit 0) || npm run prod'
 
