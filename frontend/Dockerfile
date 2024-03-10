@@ -1,4 +1,4 @@
-FROM node:18 AS frontend_node_modules
+FROM node:20-alpine AS frontend_node_modules
 
 RUN mkdir -p /opt/app
 WORKDIR /opt/app
@@ -7,7 +7,7 @@ COPY frontend/package.json frontend/package-lock.json /opt/app/
 
 RUN npm install --silent
 
-FROM node:18 AS musare_frontend
+FROM node:20-alpine AS musare_frontend
 
 ARG FRONTEND_MODE=production
 ARG FRONTEND_PROD_DEVTOOLS=false
@@ -31,7 +31,7 @@ ENV FRONTEND_MODE=${FRONTEND_MODE} \
     MUSARE_DEBUG_GIT_LATEST_COMMIT=${MUSARE_DEBUG_GIT_LATEST_COMMIT} \
     MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT=${MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT}
 
-RUN apt-get update && apt-get install nginx -y
+RUN apk add nginx
 
 RUN mkdir -p /opt/.git /opt/common /opt/types /opt/app /run/nginx
 WORKDIR /opt/app
@@ -42,10 +42,10 @@ COPY types /opt/types
 COPY frontend /opt/app
 COPY --from=frontend_node_modules /opt/app/node_modules node_modules
 
-RUN bash -c '([[ "${FRONTEND_MODE}" == "development" ]] && exit 0) || npm run prod'
+RUN sh -c '([[ "${FRONTEND_MODE}" == "development" ]] && exit 0) || npm run prod'
 
 RUN chmod u+x entrypoint.sh
 
-ENTRYPOINT bash /opt/app/entrypoint.sh
+ENTRYPOINT sh /opt/app/entrypoint.sh
 
 EXPOSE 80/tcp
