@@ -1,5 +1,7 @@
 services:
   backend:
+    build:
+      dockerfile: ./Dockerfile.dev
     ports:
       - "${BACKEND_HOST:-0.0.0.0}:${BACKEND_PORT:-8080}:8080"
       - "${BACKEND_HOST:-0.0.0.0}:${BACKEND_DEBUG_PORT:-9229}:9229"
@@ -9,14 +11,19 @@ services:
       - ./types:/opt/types
       - ./backend:/opt/app
     environment:
+      - APP_ENV=${APP_ENV:-development}
       - BACKEND_DEBUG=${BACKEND_DEBUG:-false}
 
   frontend:
+    build:
+      dockerfile: ./Dockerfile.dev
     volumes:
       - ./.git:/opt/.git:ro
       - ./common:/opt/common
       - ./types:/opt/types
       - ./frontend:/opt/app
+    environment:
+      - APP_ENV=${APP_ENV:-development}
 
   mongo:
     ports:

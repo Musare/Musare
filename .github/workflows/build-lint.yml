@@ -5,12 +5,11 @@ on: [ push, pull_request, workflow_dispatch ]
 env:
     COMPOSE_PROJECT_NAME: musare
     RESTART_POLICY: unless-stopped
-    CONTAINER_MODE: production
+    APP_ENV: production
     BACKEND_HOST: 127.0.0.1
     BACKEND_PORT: 8080
     FRONTEND_HOST: 127.0.0.1
     FRONTEND_PORT: 80
-    FRONTEND_MODE: production
     MONGO_HOST: 127.0.0.1
     MONGO_PORT: 27017
     MONGO_ROOT_PASSWORD: PASSWORD_HERE

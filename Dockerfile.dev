@@ -1,0 +1,81 @@
+# Common base image
+FROM node:20-alpine AS common_base
+
+ARG UID=1000
+ARG GID=1000
+
+RUN deluser --remove-home node \
+    && addgroup -S -g ${GID} musare \
+    && adduser -SD -u ${UID} musare \
+    && adduser musare musare
+
+RUN mkdir -p /opt/.git /opt/common /opt/types /opt/app \
+    && chown -R musare:musare /opt/app
+
+WORKDIR /opt/app
+
+USER musare
+
+# Backend node modules
+FROM common_base AS backend_node_modules
+
+COPY --chown=musare:musare --link backend/package.json backend/package-lock.json /opt/app/
+
+RUN npm install
+
+# Backend development image
+FROM common_base AS backend
+
+ENV APP_ENV=development
+
+COPY --chown=musare:musare --link .git /opt/.git
+COPY --chown=musare:musare --link common /opt/common
+COPY --chown=musare:musare --link types /opt/types
+COPY --chown=musare:musare --link backend /opt/app
+COPY --chown=musare:musare --link --from=backend_node_modules /opt/app/node_modules node_modules
+
+ENTRYPOINT sh /opt/app/entrypoint.dev.sh
+
+# Frontend node modules
+FROM common_base AS frontend_node_modules
+
+COPY --chown=musare:musare --link frontend/package.json frontend/package-lock.json /opt/app/
+
+RUN npm install
+
+# Frontend development image
+FROM common_base AS frontend
+
+ARG MUSARE_SITENAME=Musare
+ARG MUSARE_PRIMARY_COLOR="#03a9f4"
+ARG MUSARE_DEBUG_VERSION=true
+ARG MUSARE_DEBUG_GIT_REMOTE=false
+ARG MUSARE_DEBUG_GIT_REMOTE_URL=false
+ARG MUSARE_DEBUG_GIT_BRANCH=true
+ARG MUSARE_DEBUG_GIT_LATEST_COMMIT=true
+ARG MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT=true
+
+ENV APP_ENV=development \
+    MUSARE_SITENAME=${MUSARE_SITENAME} \
+    MUSARE_PRIMARY_COLOR=${MUSARE_PRIMARY_COLOR} \
+    MUSARE_DEBUG_VERSION=${MUSARE_DEBUG_VERSION} \
+    MUSARE_DEBUG_GIT_REMOTE=${MUSARE_DEBUG_GIT_REMOTE} \
+    MUSARE_DEBUG_GIT_REMOTE_URL=${MUSARE_DEBUG_GIT_REMOTE_URL} \
+    MUSARE_DEBUG_GIT_BRANCH=${MUSARE_DEBUG_GIT_BRANCH} \
+    MUSARE_DEBUG_GIT_LATEST_COMMIT=${MUSARE_DEBUG_GIT_LATEST_COMMIT} \
+    MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT=${MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT}
+
+USER root
+RUN apk update \
+    && apk add nginx \
+    && sed -i 's/user nginx;/user musare;/' /etc/nginx/nginx.conf \
+    && chown -R musare:musare /etc/nginx/http.d /run/nginx /var/lib/nginx /var/log/nginx
+USER musare
+
+COPY --chown=musare:musare --link .git /opt/.git
+COPY --chown=musare:musare --link common /opt/common
+COPY --chown=musare:musare --link types /opt/types
+COPY --chown=musare:musare --link frontend /opt/app
+COPY --chown=musare:musare --from=frontend_node_modules --link /opt/app/node_modules node_modules
+
+ENTRYPOINT sh /opt/app/entrypoint.dev.sh

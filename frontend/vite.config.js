@@ -122,7 +122,7 @@ const htmlPlugin = () => ({
 
 let server = null;
 
-if (process.env.FRONTEND_MODE === "development")
+if (process.env.APP_ENV === "development")
 	server = {
 		host: "0.0.0.0",
 		port: process.env.FRONTEND_DEV_PORT ?? 81,
@@ -133,7 +133,7 @@ if (process.env.FRONTEND_MODE === "development")
 	};
 
 export default {
-	mode: process.env.FRONTEND_MODE,
+	mode: process.env.APP_ENV,
 	root: "src",
 	publicDir: "../dist",
 	base: "/",
