@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
       target: backend
-    restart: ${RESTART_POLICY:-unless-stopped}
+    restart: unless-stopped
     volumes:
       - ./backend/config:/opt/app/config
     environment:
@@ -47,7 +47,7 @@ services:
         MUSARE_DEBUG_GIT_BRANCH: ${MUSARE_DEBUG_GIT_BRANCH:-true}
         MUSARE_DEBUG_GIT_LATEST_COMMIT: "${MUSARE_DEBUG_GIT_LATEST_COMMIT:-true}"
         MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT: "${MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT:-true}"
-    restart: ${RESTART_POLICY:-unless-stopped}
+    restart: unless-stopped
     ports:
       - "${FRONTEND_HOST:-0.0.0.0}:${FRONTEND_PORT:-80}:80"
     environment:
@@ -73,7 +73,7 @@ services:
 
   mongo:
     image: docker.io/mongo:${MONGO_VERSION}
-    restart: ${RESTART_POLICY:-unless-stopped}
+    restart: unless-stopped
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
@@ -93,7 +93,7 @@ services:
 
   redis:
     image: docker.io/redis:7
-    restart: ${RESTART_POLICY:-unless-stopped}
+    restart: unless-stopped
     command: "--notify-keyspace-events Ex --requirepass ${REDIS_PASSWORD} --appendonly yes"
     volumes:
       - /data
