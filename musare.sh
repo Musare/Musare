@@ -297,9 +297,9 @@ handleLinting()
     set -e
 
     # shellcheck disable=SC2068
-    servicesString=$(handleServices "backend frontend docs" ${services[@]})
+    servicesString=$(handleServices "backend frontend docs shell" ${services[@]})
     if [[ ${servicesString:0:1} != 1 ]]; then
-        throw "${servicesString:2}\n${YELLOW}Usage: ${1} [backend, frontend, docs] [fix]"
+        throw "${servicesString:2}\n${YELLOW}Usage: ${1} [backend, frontend, docs, shell] [fix]"
     fi
 
     set +e
@@ -317,6 +317,11 @@ handleLinting()
         echo -e "${CYAN}Running docs lint...${NC}"
         ${docker} run --rm -v "${scriptLocation}":/workdir ghcr.io/igorshubovych/markdownlint-cli:latest ".wiki" "*.md" "${fix}"
         docsExitValue=$?
+    fi
+    if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *shell* ]]; then
+        echo -e "${CYAN}Running shell lint...${NC}"
+        ${docker} run --rm -v "${scriptLocation}":/mnt koalaman/shellcheck:stable ./*.sh ./**/*.sh
+        shellExitValue=$?
     fi
     set -e
     if [[ ${frontendExitValue} -gt 0 || ${backendExitValue} -gt 0 || ${docsExitValue} -gt 0 || ${shellExitValue} -gt 0 ]]; then
@@ -551,7 +556,7 @@ logs - View logs for services
 update - Update Musare
 attach [backend,mongo,redis] - Attach to backend service, mongo or redis shell
 build - Build services
-lint - Run lint on frontend, backend, and/or docs
+lint - Run lint on frontend, backend, docs and/or shell
 backup - Backup database data to file
 restore - Restore database data from backup file
 reset - Reset service data

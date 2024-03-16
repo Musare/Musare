@@ -42,3 +42,5 @@ jobs:
 #              run: ./musare.sh typescript frontend
             - name: Docs Lint
               run: ./musare.sh lint docs
+            - name: Shell Lint
+              run: ./musare.sh lint shell
