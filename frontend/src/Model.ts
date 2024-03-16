@@ -296,7 +296,7 @@ export default class Model {
 
 		this._permissions = await ModelPermissionFetcher.fetchModelPermissions(
 			this.getName(),
-			this._id
+			this.getId()
 		);
 
 		return this._permissions;
