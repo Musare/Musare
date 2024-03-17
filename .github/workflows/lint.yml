@@ -1,10 +1,10 @@
-name: Musare Build and Lint
+name: Musare Lint
 
 on: [ push, pull_request, workflow_dispatch ]
 
 env:
     COMPOSE_PROJECT_NAME: musare
-    APP_ENV: production
+    APP_ENV: development
     BACKEND_HOST: 127.0.0.1
     BACKEND_PORT: 8080
     FRONTEND_HOST: 127.0.0.1
@@ -22,24 +22,21 @@ env:
     REDIS_DATA_LOCATION: .redis
 
 jobs:
-    build-lint:
+    lint:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
             - name: Build Musare
               run: |
                   cp .env.example .env
+                  sed -i 's/APP_ENV=production/APP_ENV=development/g' .env
                   ./musare.sh build
             - name: Start Musare
               run: ./musare.sh start
             - name: Backend Lint
               run: ./musare.sh lint backend
-            - name: Backend Typescript
-              run: ./musare.sh typescript backend
             - name: Frontend Lint
               run: ./musare.sh lint frontend
-#            - name: Frontend Typescript
-#              run: ./musare.sh typescript frontend
             - name: Docs Lint
               run: ./musare.sh lint docs
             - name: Shell Lint

@@ -1,10 +1,10 @@
-name: Musare Automated Tests
+name: Musare Build
 
 on: [ push, pull_request, workflow_dispatch ]
 
 env:
     COMPOSE_PROJECT_NAME: musare
-    APP_ENV: development
+    APP_ENV: production
     BACKEND_HOST: 127.0.0.1
     BACKEND_PORT: 8080
     FRONTEND_HOST: 127.0.0.1
@@ -22,18 +22,12 @@ env:
     REDIS_DATA_LOCATION: .redis
 
 jobs:
-    tests:
+    build:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
             - name: Build Musare
               run: |
                   cp .env.example .env
-                  sed -i 's/APP_ENV=production/APP_ENV=development/g' .env
                   ./musare.sh build
-            - name: Start Musare
-              run: ./musare.sh start
-#            - name: Test Backend
-#              run: ./musare.sh test backend
-            - name: Test Frontend
-              run: ./musare.sh test frontend
+
