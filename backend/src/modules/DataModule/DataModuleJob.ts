@@ -5,7 +5,8 @@ import { UserSchema } from "./models/users/schema";
 
 export default abstract class DataModuleJob extends Job {
 	protected static _modelName: string;
-	protected static _isBulk: boolean = false;
+
+	protected static _isBulk = false;
 
 	protected static _hasPermission:
 		| boolean

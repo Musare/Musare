@@ -1,3 +1,4 @@
+import { forEachIn } from "@common/utils/forEachIn";
 import { SessionSchema } from "@/modules/DataModule/models/sessions/schema";
 import Job, { JobOptions } from "@/Job";
 import { Log } from "@/LogBook";
@@ -7,7 +8,6 @@ import { JobDerived } from "./types/JobDerived";
 import assertJobDerived from "./utils/assertJobDerived";
 import { GetModelPermissionsResult } from "./modules/DataModule/models/users/jobs/GetModelPermissions";
 import { GetPermissionsResult } from "./modules/DataModule/models/users/jobs/GetPermissions";
-import { forEachIn } from "@common/utils/forEachIn";
 
 const permissionRegex =
 	/^(?<moduleName>[a-z]+)\.(?<modelOrJobName>[A-z]+)\.(?<jobName>[A-z]+)(?:\.(?<modelId>[A-z0-9]{24}))?(?:\.(?<extra>[A-z]+))?$/;
@@ -131,7 +131,7 @@ export default class JobContext {
 	}
 
 	public async assertPermissions(permissions: string[]) {
-		let hasPermission: { [permission: string]: boolean } = {};
+		const hasPermission: { [permission: string]: boolean } = {};
 		permissions.forEach(permission => {
 			hasPermission[permission] = false;
 		});

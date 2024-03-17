@@ -3,7 +3,7 @@ import DataModule from "../DataModule";
 import DataModuleJob from "./DataModuleJob";
 
 export default abstract class FindManyByIdJob extends DataModuleJob {
-	protected static _isBulk: boolean = true;
+	protected static _isBulk = true;
 
 	protected override async _validate() {
 		if (typeof this._payload !== "object" || this._payload === null)
@@ -19,7 +19,7 @@ export default abstract class FindManyByIdJob extends DataModuleJob {
 	protected async _execute() {
 		const model = await DataModule.getModel(this.getModelName());
 
-		const _ids = this._payload._ids;
+		const { _ids } = this._payload;
 		const query = model.find({
 			_id: _ids
 		});
