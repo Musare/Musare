@@ -26,6 +26,7 @@ machine, even though the application within the container is listening on `21017
 | --- | --- |
 | `COMPOSE_PROJECT_NAME` | Should be a unique name for this installation, especially if you have multiple instances of Musare on the same machine. |
 | `DOCKER_COMMAND` | Should be either `docker` or `podman`.  |
+| `CONTAINER_MODE` | Should be either `production` or `local`.  |
 | `APP_ENV` | Should be either `production` or `development`.  |
 | `BACKEND_HOST` | Backend container host. Only used for development mode. |
 | `BACKEND_PORT` | Backend container port. Only used for development mode. |

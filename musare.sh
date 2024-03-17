@@ -73,6 +73,9 @@ composeFiles="-f docker-compose.yml"
 if [[ ${APP_ENV} == "development" ]]; then
     composeFiles="${composeFiles} -f docker-compose.dev.yml"
 fi
+if [[ ${CONTAINER_MODE} == "local" ]]; then
+    composeFiles="${composeFiles} -f docker-compose.local.yml"
+fi
 if [[ -f docker-compose.override.yml ]]; then
     composeFiles="${composeFiles} -f docker-compose.override.yml"
 fi
