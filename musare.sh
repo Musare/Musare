@@ -376,8 +376,7 @@ handleTypescript()
 # Execute automated tests in services
 handleTests()
 {
-    # shellcheck disable=SC2068
-    servicesString=$(handleServices "backend frontend" ${services[@]})
+    servicesString=$(handleServices "backend frontend" "${@:2}")
     if [[ ${servicesString:0:1} != 1 ]]; then
         throw "${servicesString:2}\n${YELLOW}Usage: ${1} [backend, frontend]"
     fi
