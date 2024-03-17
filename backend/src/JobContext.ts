@@ -6,7 +6,10 @@ import DataModule from "@/modules/DataModule";
 import { UserModel } from "@/modules/DataModule/models/users/schema";
 import { JobDerived } from "./types/JobDerived";
 import assertJobDerived from "./utils/assertJobDerived";
-import { GetModelPermissionsResult } from "./modules/DataModule/models/users/jobs/GetModelPermissions";
+import {
+	GetMultipleModelPermissionsResult,
+	GetSingleModelPermissionsResult
+} from "./modules/DataModule/models/users/jobs/GetModelPermissions";
 import { GetPermissionsResult } from "./modules/DataModule/models/users/jobs/GetPermissions";
 
 const permissionRegex =
@@ -107,7 +110,7 @@ export default class JobContext {
 			const permissions = (await this.executeJob(GetModelPermissions, {
 				modelName: modelOrJobName,
 				modelId
-			})) as GetModelPermissionsResult;
+			})) as GetSingleModelPermissionsResult;
 
 			let modelPermission = `data.${modelOrJobName}.${jobName}`;
 
@@ -199,7 +202,7 @@ export default class JobContext {
 						modelName,
 						modelIds
 					}
-				)) as GetModelPermissionsResult;
+				)) as GetMultipleModelPermissionsResult;
 
 				dataPermissionsForThisModel.forEach(
 					({

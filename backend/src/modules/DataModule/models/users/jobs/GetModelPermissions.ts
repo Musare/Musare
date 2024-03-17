@@ -6,9 +6,14 @@ import ModuleManager from "@/ModuleManager";
 import GetPermissions, { GetPermissionsResult } from "./GetPermissions";
 import DataModuleJob from "@/modules/DataModule/DataModuleJob";
 
+export type GetSingleModelPermissionsResult = Record<string, boolean>; // Returned when getting permissions for a single modelId
+export type GetMultipleModelPermissionsResult = Record<
+	string,
+	Record<string, boolean>
+>; // Returned when getting permissions for several modelIds
 export type GetModelPermissionsResult =
-	| Record<string, boolean>
-	| Record<string, Record<string, boolean>>;
+	| GetSingleModelPermissionsResult
+	| GetMultipleModelPermissionsResult;
 
 export default class GetModelPermissions extends DataModuleJob {
 	protected static _modelName = "users";

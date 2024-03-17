@@ -1,5 +1,4 @@
 import * as readline from "node:readline";
-import mongoose from "mongoose";
 import ModuleManager from "@/ModuleManager";
 import LogBook from "@/LogBook";
 import JobQueue from "@/JobQueue";

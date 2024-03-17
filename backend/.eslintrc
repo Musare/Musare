@@ -83,7 +83,8 @@
 				"message": "`with` is disallowed in strict mode because it makes code impossible to predict and optimize."
 			}
 		],
-		"import/prefer-default-export": "off"
+		"import/prefer-default-export": "off",
+		"@typescript-eslint/no-explicit-any": 0
 	},
 	"overrides": [
 		{
