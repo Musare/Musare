@@ -305,17 +305,20 @@ handleLinting()
     set +e
     if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *frontend* ]]; then
         echo -e "${CYAN}Running frontend lint...${NC}"
-        ${dockerCompose} exec -T frontend npm run lint -- "${cache}" "${fix}"
+        # shellcheck disable=SC2086
+        ${dockerCompose} exec -T frontend npm run lint -- ${cache} ${fix}
         frontendExitValue=$?
     fi
     if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *backend* ]]; then
         echo -e "${CYAN}Running backend lint...${NC}"
-        ${dockerCompose} exec -T backend npm run lint -- "${cache}" "${fix}"
+        # shellcheck disable=SC2086
+        ${dockerCompose} exec -T backend npm run lint -- ${cache} ${fix}
         backendExitValue=$?
     fi
     if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *docs* ]]; then
         echo -e "${CYAN}Running docs lint...${NC}"
-        ${docker} run --rm -v "${scriptLocation}":/workdir ghcr.io/igorshubovych/markdownlint-cli:latest ".wiki" "*.md" "${fix}"
+        # shellcheck disable=SC2086
+        ${docker} run --rm -v "${scriptLocation}":/workdir ghcr.io/igorshubovych/markdownlint-cli:latest ".wiki" "*.md" ${fix}
         docsExitValue=$?
     fi
     if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *shell* ]]; then
@@ -351,12 +354,14 @@ handleTypescript()
     set +e
     if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *frontend* ]]; then
         echo -e "${CYAN}Running frontend typescript check...${NC}"
-        ${dockerCompose} exec -T frontend npm run typescript -- "${strict}"
+        # shellcheck disable=SC2086
+        ${dockerCompose} exec -T frontend npm run typescript -- ${strict}
         frontendExitValue=$?
     fi
     if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *backend* ]]; then
         echo -e "${CYAN}Running backend typescript check...${NC}"
-        ${dockerCompose} exec -T backend npm run typescript -- "${strict}"
+        # shellcheck disable=SC2086
+        ${dockerCompose} exec -T backend npm run typescript -- ${strict}
         backendExitValue=$?
     fi
     set -e
