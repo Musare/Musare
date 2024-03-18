@@ -409,13 +409,6 @@ export const useModelStore = defineStore("model", () => {
 			_id => !existingModelIds.includes(_id)
 		);
 
-		console.info(
-			"Load models",
-			structuredClone(modelIds),
-			structuredClone(existingModels),
-			structuredClone(missingModelIds)
-		);
-
 		const fetchedModels = await findManyById(modelName, missingModelIds);
 		const registeredModels = await registerModels(
 			Object.values(fetchedModels)

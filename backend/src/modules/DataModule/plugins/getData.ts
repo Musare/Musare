@@ -1,4 +1,4 @@
-import { PipelineStage, Schema } from "mongoose";
+import { PipelineStage, Schema, SchemaTypes } from "mongoose";
 
 export enum FilterType {
 	REGEX = "regex",
@@ -225,6 +225,29 @@ export default function getDataPlugin(schema: Schema) {
 			const [result] = await this.aggregate(pipeline).exec();
 
 			if (result.count.length === 0) return { data: [], count: 0 };
+
+			properties.forEach(property => {
+				const type = schema.path(property);
+				if (type instanceof SchemaTypes.ObjectId) {
+					const { ref } = type?.options ?? {};
+					if (ref) {
+						result.documents = result.documents.map(
+							(document: any) => ({
+								...document,
+								[property]: {
+									_name: ref,
+									_id: document[property]
+								}
+							})
+						);
+					}
+				} else if (
+					type instanceof SchemaTypes.Array &&
+					type.caster instanceof SchemaTypes.ObjectId
+				) {
+					console.log("Array relation not implemented", property);
+				}
+			});
 
 			const { documents: data } = result;
 			const { count } = result.count[0];

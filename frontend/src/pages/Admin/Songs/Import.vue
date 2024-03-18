@@ -608,7 +608,9 @@ const removeImportJob = jobId => {
 							}}</span>
 						</template>
 						<template #column-requestedBy="slotProps">
-							<user-link :user-id="slotProps.item.requestedBy" />
+							<user-link
+								:user-id="slotProps.item.requestedBy._id"
+							/>
 						</template>
 						<template #column-requestedAt="slotProps">
 							<span

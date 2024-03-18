@@ -199,8 +199,8 @@ const remove = async item => {
 			</template>
 			<template #column-createdBy="slotProps">
 				<user-link
-					:user-id="slotProps.item.createdBy"
-					:alt="slotProps.item.createdBy"
+					:user-id="slotProps.item.createdBy._id"
+					:alt="slotProps.item.createdBy._id"
 				/>
 			</template>
 			<template #column-markdown="slotProps">

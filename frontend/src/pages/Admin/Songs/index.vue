@@ -700,7 +700,7 @@ onMounted(() => {
 				}}</span>
 			</template>
 			<template #column-requestedBy="slotProps">
-				<user-link :user-id="slotProps.item.requestedBy" />
+				<user-link :user-id="slotProps.item.requestedBy._id" />
 			</template>
 			<template #column-requestedAt="slotProps">
 				<span
@@ -711,7 +711,7 @@ onMounted(() => {
 				>
 			</template>
 			<template #column-verifiedBy="slotProps">
-				<user-link :user-id="slotProps.item.verifiedBy" />
+				<user-link :user-id="slotProps.item.verifiedBy._id" />
 			</template>
 			<template #column-verifiedAt="slotProps">
 				<span :title="new Date(slotProps.item.verifiedAt).toString()">{{

@@ -268,7 +268,7 @@ const resolve = (reportId, value) =>
 			</template>
 			<template #column-createdBy="slotProps">
 				<span v-if="slotProps.item.createdBy === 'Musare'">Musare</span>
-				<user-link v-else :user-id="slotProps.item.createdBy" />
+				<user-link v-else :user-id="slotProps.item.createdBy._id" />
 			</template>
 			<template #column-createdAt="slotProps">
 				<span :title="new Date(slotProps.item.createdAt).toString()">{{

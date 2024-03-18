@@ -411,7 +411,7 @@ const remove = stationId => {
 			</template>
 			<template #column-owner="slotProps">
 				<span v-if="slotProps.item.type === 'official'">Musare</span>
-				<user-link v-else :user-id="slotProps.item.owner" />
+				<user-link v-else :user-id="slotProps.item.owner._id" />
 			</template>
 			<template #column-theme="slotProps">
 				<span :title="slotProps.item.theme">{{

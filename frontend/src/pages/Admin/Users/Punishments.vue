@@ -271,8 +271,8 @@ const deactivatePunishment = punishmentId => {
 			<template #column-value="slotProps">
 				<user-link
 					v-if="slotProps.item.type === 'banUserId'"
-					:user-id="slotProps.item.value"
-					:alt="slotProps.item.value"
+					:user-id="slotProps.item.value._id"
+					:alt="slotProps.item.value._id"
 				/>
 				<span v-else :title="slotProps.item.value">{{
 					slotProps.item.value
@@ -284,7 +284,7 @@ const deactivatePunishment = punishmentId => {
 				}}</span>
 			</template>
 			<template #column-punishedBy="slotProps">
-				<user-link :user-id="slotProps.item.punishedBy" />
+				<user-link :user-id="slotProps.item.punishedBy._id" />
 			</template>
 			<template #column-punishedAt="slotProps">
 				<span :title="new Date(slotProps.item.punishedAt).toString()">{{
