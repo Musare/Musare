@@ -35,10 +35,8 @@ machine, even though the application within the container is listening on `21017
 | `MONGO_ROOT_PASSWORD` | Password of the root/admin user for MongoDB. |
 | `MONGO_USER_USERNAME` | Application username for MongoDB. |
 | `MONGO_USER_PASSWORD` | Application password for MongoDB. |
-| `MONGO_DATA_LOCATION` | The location where MongoDB stores its data. Usually the `.db` folder inside the `Musare` folder. |
 | `MONGO_VERSION` | The MongoDB version to use for scripts and docker compose. Must be numerical. Currently supported MongoDB versions are 4.0+. Always make a backup before changing this value. |
 | `REDIS_PASSWORD` | Redis password. |
-| `REDIS_DATA_LOCATION` | The location where Redis stores its data. Usually the `.redis` folder inside the `Musare` folder. |
 | `BACKUP_LOCATION` | Directory to store musare.sh backups. Defaults to `/backups` in script location. |
 | `BACKUP_NAME` | Name of musare.sh backup files. Defaults to `musare-$(date +"%Y-%m-%d-%s").dump`. |
 | `MUSARE_SITENAME` | Should be the name of the site. [^1] |
