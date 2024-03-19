@@ -11,7 +11,7 @@
 	"scripts": {
 		"dev": "ts-node-dev -r tsconfig-paths/register -i --transpile-only ${INSPECT_BRK} ./src/main.ts",
 		"build": "tsc && tsc-alias",
-		"prod": "node build/src/main.js",
+		"prod": "node build/app/src/main.js",
 		"lint": "eslint src --ext .js,.ts",
 		"typescript": "tsc --noEmit",
 		"test": "mocha -r ts-node/register -r tsconfig-paths/register 'tests/**/*.test.ts' 'src/**/*.spec.ts'"
