@@ -26,11 +26,6 @@ services:
       - redis
     stdin_open: true
     tty: true
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "1m"
-        max-file: "3"
 
   frontend:
     build:
@@ -48,28 +43,8 @@ services:
         MUSARE_DEBUG_GIT_LATEST_COMMIT: "${MUSARE_DEBUG_GIT_LATEST_COMMIT:-true}"
         MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT: "${MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT:-true}"
     restart: unless-stopped
-    ports:
-      - "${FRONTEND_HOST:-0.0.0.0}:${FRONTEND_PORT:-80}:80"
-    environment:
-      - FRONTEND_PORT=${FRONTEND_PORT:-80}
-      - FRONTEND_CLIENT_PORT=${FRONTEND_CLIENT_PORT:-80}
-      - FRONTEND_DEV_PORT=${FRONTEND_DEV_PORT:-81}
-      - FRONTEND_PROD_DEVTOOLS=${FRONTEND_PROD_DEVTOOLS:-false}
-      - MUSARE_SITENAME=${MUSARE_SITENAME:-Musare}
-      - MUSARE_PRIMARY_COLOR=${MUSARE_PRIMARY_COLOR:-#03a9f4}
-      - MUSARE_DEBUG_VERSION=${MUSARE_DEBUG_VERSION:-true}
-      - MUSARE_DEBUG_GIT_REMOTE=${MUSARE_DEBUG_GIT_REMOTE:-false}
-      - MUSARE_DEBUG_GIT_REMOTE_URL=${MUSARE_DEBUG_GIT_REMOTE_URL:-false}
-      - MUSARE_DEBUG_GIT_BRANCH=${MUSARE_DEBUG_GIT_BRANCH:-true}
-      - MUSARE_DEBUG_GIT_LATEST_COMMIT=${MUSARE_DEBUG_GIT_LATEST_COMMIT:-true}
-      - MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT=${MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT:-true}
     links:
       - backend
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "1m"
-        max-file: "3"
 
   mongo:
     image: docker.io/mongo:${MONGO_VERSION}
@@ -78,27 +53,21 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
       - MONGO_INITDB_DATABASE=musare
-      - MONGO_PORT=${MONGO_PORT:-27017}
       - MONGO_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
       - MONGO_USER_USERNAME=${MONGO_USER_USERNAME}
       - MONGO_USER_PASSWORD=${MONGO_USER_PASSWORD}
     volumes:
       - ./tools/docker/setup-mongo.sh:/docker-entrypoint-initdb.d/setup-mongo.sh
-      - ${MONGO_DATA_LOCATION:-./db}:/data/db
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "1m"
-        max-file: "3"
+      - database:/data/db
 
   redis:
     image: docker.io/redis:7
     restart: unless-stopped
     command: "--notify-keyspace-events Ex --requirepass ${REDIS_PASSWORD} --appendonly yes"
     volumes:
-      - /data
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "1m"
-        max-file: "3"
+      - cache:/data
+
+volumes:
+  database:
+
+  cache:

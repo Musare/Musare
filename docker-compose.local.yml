@@ -12,7 +12,3 @@ services:
       - ./common:/opt/common
       - ./types:/opt/types
       - ./frontend:/opt/app
-
-  redis:
-    volumes:
-      - ${REDIS_DATA_LOCATION:-./redis}:/data
