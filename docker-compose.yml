@@ -24,6 +24,9 @@ services:
     links:
       - mongo
       - redis
+    networks:
+      - backend
+      - proxy
     stdin_open: true
     tty: true
 
@@ -45,6 +48,8 @@ services:
     restart: unless-stopped
     links:
       - backend
+    networks:
+      - proxy
 
   mongo:
     image: docker.io/mongo:${MONGO_VERSION}
@@ -56,6 +61,8 @@ services:
       - MONGO_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
       - MONGO_USER_USERNAME=${MONGO_USER_USERNAME}
       - MONGO_USER_PASSWORD=${MONGO_USER_PASSWORD}
+    networks:
+      - backend
     volumes:
       - ./tools/docker/setup-mongo.sh:/docker-entrypoint-initdb.d/setup-mongo.sh
       - database:/data/db
@@ -64,8 +71,15 @@ services:
     image: docker.io/redis:7
     restart: unless-stopped
     command: "--notify-keyspace-events Ex --requirepass ${REDIS_PASSWORD} --appendonly yes"
+    networks:
+      - backend
     volumes:
       - cache:/data
+
+networks:
+  proxy:
+
+  backend:
 
 volumes:
   database:
