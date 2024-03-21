@@ -249,6 +249,14 @@ export default function getDataPlugin(schema: Schema) {
 				}
 			});
 
+			result.documents = result.documents.map((document: any) => ({
+				...document,
+				// TODO properly support getModelName in TypeScript
+				// eslint-disable-next-line
+				// @ts-ignore
+				_name: schema.statics.getModelName()
+			}));
+
 			const { documents: data } = result;
 			const { count } = result.count[0];
 

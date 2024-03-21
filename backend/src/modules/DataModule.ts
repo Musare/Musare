@@ -178,6 +178,8 @@ export class DataModule extends BaseModule {
 
 		if (getDataEnabled) schema.plugin(getDataPlugin);
 
+		schema.static("getModelName", () => modelName);
+
 		await this._registerEvents(modelName, schema);
 
 		await this._registerEventListeners(schema);
