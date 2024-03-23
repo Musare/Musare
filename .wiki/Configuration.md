@@ -158,10 +158,16 @@ For more information on configuration files please refer to the
 | `experimental.soundcloud` | Experimental SoundCloud integration. |
 | `experimental.spotify` | Experimental Spotify integration. |
 
-## Docker compose override
+## Docker
+
+Below are some snippets that may help you get started with Docker.
+For more information please see the [Docker documentation](https://docs.docker.com).
+
+### Compose override
 
 You may want to override the docker compose files in some specific cases.
 For this, you can create a `compose.override.yml` file.
+An example is available at [compose.override.yml.example](../compose.override.yml.example).
 
 For example, to expose the frontend port:
 
@@ -179,4 +185,20 @@ services:
   backend:
     ports:
       - "127.0.0.1:9229:9229"
+```
+
+### Daemon configuration
+
+The below is an example `daemon.json` configured to bind to a specific IP,
+and setup log rotation.
+
+```json
+{
+  "ip": "127.0.0.1",
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "10"
+  }
+}
 ```
