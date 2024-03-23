@@ -6,7 +6,7 @@ services:
       - ./types:/opt/types
       - ./backend:/opt/app
     ports:
-      - ${BACKEND_DEBUG_PORT:-9229}:${BACKEND_DEBUG_PORT:-9229}"
+      - "127.0.0.1:${BACKEND_DEBUG_PORT:-9229}:${BACKEND_DEBUG_PORT:-9229}"
 
   frontend:
     volumes:
