@@ -19,6 +19,7 @@ environment variables yourself.
 | `CONTAINER_MODE` | Should be either `production` or `local`.  |
 | `APP_ENV` | Should be either `production` or `development`.  |
 | `BACKEND_DEBUG` | Should be either `true` or `false`. If enabled backend will await debugger connection and trigger to start. |
+| `BACKEND_DEBUG_PORT` | Backend container debug port, if enabled. |
 | `FRONTEND_CLIENT_PORT` | Should be the port on which the frontend will be accessible from, usually port `80`, or `443` if using SSL. Only used when running in development mode. |
 | `FRONTEND_DEV_PORT` | Should be the port where Vite's dev server will be accessible from, should always be port `81` for Docker since nginx listens on port 80, and is recommended to be port `80` for non-Docker. Only used when running in development mode. |
 | `FRONTEND_PROD_DEVTOOLS` | Whether to enable Vue dev tools in production builds. [^1] |

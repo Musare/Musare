@@ -7,7 +7,7 @@ if [ ! -d node_modules ]; then
 fi
 
 if [ "${BACKEND_DEBUG}" = "true" ]; then
-    export INSPECT_BRK="--inspect-brk=0.0.0.0:9229"
+    export INSPECT_BRK="--inspect-brk=0.0.0.0:${BACKEND_DEBUG_PORT:-9229}"
 else
     export INSPECT_BRK=""
 fi
