@@ -12,16 +12,6 @@ After updating values in `.env`, containers should be restarted or rebuilt.
 If you are using a different setup, you will need to define the relevant
 environment variables yourself.
 
-In the table below, the `[SERVICE]_HOST` properties refer to the IP address that
-the Docker container listens on. Setting this to `127.0.0.1` for will only expose
-the configured port to localhost, whereas setting this to `0.0.0.0` will expose the
-port on all interfaces.
-The `[SERVICE]_PORT` properties refer to the external Docker container port, used
-to access services from outside the container. Changing this does not require any
-changes to configuration within container. For example, setting the `MONGO_PORT`
-to `21018` will allow you to access the mongo database through that port on your
-machine, even though the application within the container is listening on `21017`.
-
 | Property | Description |
 | --- | --- |
 | `COMPOSE_PROJECT_NAME` | Should be a unique name for this installation, especially if you have multiple instances of Musare on the same machine. |
