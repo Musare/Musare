@@ -30,6 +30,13 @@ export class ModuleManager {
 	}
 
 	/**
+	 * Gets modules
+	 */
+	public getModules() {
+		return this._modules;
+	}
+
+	/**
 	 * loadModule - Load and initialize module
 	 *
 	 * @param moduleName - Name of the module

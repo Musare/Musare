@@ -57,18 +57,18 @@ ModuleManager.startup().then(async () => {
 	// });
 
 	// Events schedule (was notifications)
-	const now = Date.now();
-	EventsModule.schedule("test", 30000);
+	// const now = Date.now();
+	// EventsModule.schedule("test", 30000);
 
-	await EventsModule.subscribe("schedule", "test", async () => {
-		console.log(`SCHEDULED: ${now} :: ${Date.now()}`);
-	});
+	// await EventsModule.subscribe("schedule", "test", async () => {
+	// 	console.log(`SCHEDULED: ${now} :: ${Date.now()}`);
+	// });
 
-	// Events (was cache pub/sub)
-	await EventsModule.subscribe("event", "test", async value => {
-		console.log(`PUBLISHED: ${value}`);
-	});
-	await EventsModule.publish("test", "a value!");
+	// // Events (was cache pub/sub)
+	// await EventsModule.subscribe("event", "test", async value => {
+	// 	console.log(`PUBLISHED: ${value}`);
+	// });
+	// await EventsModule.publish("test", "a value!");
 });
 
 // TOOD remove, or put behind debug option
@@ -201,6 +201,10 @@ const runCommand = (line: string) => {
 		}
 		case "getjobs": {
 			console.log(ModuleManager.getJobs());
+			break;
+		}
+		case "getevents": {
+			console.log(EventsModule.getAllEvents());
 			break;
 		}
 		default: {

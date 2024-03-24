@@ -13,6 +13,7 @@ import DataModule from "./DataModule";
 import { UserModel } from "./DataModule/models/users/schema";
 import { SessionModel } from "./DataModule/models/sessions/schema";
 import EventsModule from "./EventsModule";
+import assertEventDerived from "@/utils/assertEventDerived";
 
 export class WebSocketModule extends BaseModule {
 	private _httpServer?: Server;
@@ -58,22 +59,17 @@ export class WebSocketModule extends BaseModule {
 			clearInterval(this._keepAliveInterval)
 		);
 
-		await EventsModule.pSubscribe("job.*", async payload => {
-			if (
-				!payload ||
-				typeof payload !== "object" ||
-				Array.isArray(payload)
-			)
-				return;
-
-			const { socketId, callbackRef } = payload;
+		await EventsModule.pSubscribe("events.job.completed:*", async event => {
+			// assertEventDerived(event);
+			const data = event.getData();
+			const { socketId, callbackRef } = data;
 
 			if (!socketId || !callbackRef) return;
 
-			delete payload.socketId;
-			delete payload.callbackRef;
+			delete data.socketId;
+			delete data.callbackRef;
 
-			this.dispatch(socketId, "jobCallback", callbackRef, payload);
+			this.dispatch(socketId, "jobCallback", callbackRef, data);
 		});
 
 		await super._started();
@@ -232,8 +228,8 @@ export class WebSocketModule extends BaseModule {
 				throw new Error("Invalid request");
 
 			const [moduleJob, payload, options] = data;
-			const [moduleName, ...jobNameParts] = moduleJob.split(".");
-			const jobName = jobNameParts.join(".");
+			const moduleName = moduleJob.substring(0, moduleJob.indexOf("."));
+			const jobName = moduleJob.substring(moduleJob.indexOf(".") + 1);
 
 			const { callbackRef } = options ?? payload ?? {};
 

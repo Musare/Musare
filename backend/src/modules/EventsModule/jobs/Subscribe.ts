@@ -2,6 +2,8 @@ import Job, { JobOptions } from "@/Job";
 import EventsModule from "@/modules/EventsModule";
 
 export default class Subscribe extends Job {
+	protected static _hasPermission = true;
+
 	public constructor(payload?: unknown, options?: JobOptions) {
 		super(EventsModule, payload, options);
 	}
@@ -14,26 +16,18 @@ export default class Subscribe extends Job {
 			throw new Error("Channel must be a string");
 	}
 
-	protected override async _authorize() {
-		const [, moduleName, modelName, event, modelId] =
-			/^([a-z]+)\.([A-z]+)\.([A-z]+)\.?([A-z0-9]+)?$/.exec(
-				this._payload.channel
-			) ?? [];
+	protected override async _authorize() {}
 
-		let permission = `event.${this._payload.channel}`;
+	// protected override async _authorize() {
+	// const [path, scope] = this._payload.channel.split(":");
 
-		if (
-			moduleName === "model" &&
-			modelName &&
-			(modelId || event === "created")
-		) {
-			if (event === "created")
-				permission = `event.model.${modelName}.created`;
-			else permission = `data.${modelName}.findById.${modelId}`;
-		}
+	// const EventClass = EventsModule.getEvent(path);
 
-		await this._context.assertPermission(permission);
-	}
+	// const hasPermission = EventClass.hasPermission(
+	// 	this._context.getUser(),
+	// 	scope
+	// );
+	// }
 
 	protected async _execute() {
 		const socketId = this._context.getSocketId();

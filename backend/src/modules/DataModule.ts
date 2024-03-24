@@ -45,6 +45,8 @@ export class DataModule extends BaseModule {
 
 		await this._loadModelJobs();
 
+		await this._loadModelEvents();
+
 		await super._started();
 	}
 
@@ -111,15 +113,11 @@ export class DataModule extends BaseModule {
 					if (!modelId && action !== "created")
 						throw new Error(`Model Id not found for "${event}"`);
 
-					const channel = `model.${modelName}.${action}`;
+					const EventClass = this.getEvent(`${modelName}.${action}`);
 
-					await EventsModule.publish(channel, { doc, oldDoc });
-
-					if (action !== "created")
-						await EventsModule.publish(`${channel}.${modelId}`, {
-							doc,
-							oldDoc
-						});
+					await EventsModule.publish(
+						new EventClass({ doc, oldDoc }, modelId)
+					);
 				});
 			});
 	}
@@ -139,7 +137,7 @@ export class DataModule extends BaseModule {
 		await forEachIn(
 			Object.entries(eventListeners),
 			async ([event, callback]) =>
-				EventsModule.subscribe("event", event, callback)
+				EventsModule.pSubscribe(event, callback)
 		);
 	}
 
@@ -368,6 +366,40 @@ export class DataModule extends BaseModule {
 				);
 
 				this._jobs[Job.getName()] = Job;
+			});
+		});
+	}
+
+	private async _loadModelEvents() {
+		if (!this._models) throw new Error("Models not loaded");
+
+		await forEachIn(Object.keys(this._models), async modelName => {
+			let events;
+
+			try {
+				events = await readdir(
+					path.resolve(
+						__dirname,
+						`./${this.constructor.name}/models/${modelName}/events/`
+					)
+				);
+			} catch (error) {
+				if (
+					error instanceof Error &&
+					"code" in error &&
+					error.code === "ENOENT"
+				)
+					return;
+
+				throw error;
+			}
+
+			await forEachIn(events, async eventFile => {
+				const { default: EventClass } = await import(
+					`./${this.constructor.name}/models/${modelName}/events/${eventFile}`
+				);
+
+				this._events[EventClass.getName()] = EventClass;
 			});
 		});
 	}

@@ -4,6 +4,7 @@ import { forEachIn } from "@common/utils/forEachIn";
 import LogBook, { Log } from "@/LogBook";
 import ModuleManager from "@/ModuleManager";
 import Job from "./Job";
+import Event from "./modules/EventsModule/Event";
 
 export enum ModuleStatus {
 	LOADED = "LOADED",
@@ -24,6 +25,8 @@ export default abstract class BaseModule {
 
 	protected _jobs: Record<string, typeof Job>;
 
+	protected _events: Record<string, typeof Event>;
+
 	/**
 	 * Base Module
 	 *
@@ -34,6 +37,7 @@ export default abstract class BaseModule {
 		this._status = ModuleStatus.LOADED;
 		this._dependentModules = [];
 		this._jobs = {};
+		this._events = {};
 		this.log(`Module (${this._name}) loaded`);
 	}
 
@@ -141,6 +145,62 @@ export default abstract class BaseModule {
 	}
 
 	/**
+	 * _loadEvents - Load events
+	 */
+	private async _loadEvents() {
+		let events;
+
+		try {
+			events = await readdir(
+				path.resolve(
+					__dirname,
+					`./modules/${this.constructor.name}/events`
+				)
+			);
+		} catch (error) {
+			if (
+				error instanceof Error &&
+				"code" in error &&
+				error.code === "ENOENT"
+			)
+				return;
+
+			throw error;
+		}
+
+		await forEachIn(events, async eventFile => {
+			const { default: EventClass } = await import(
+				`./modules/${this.constructor.name}/events/${eventFile}`
+			);
+
+			const eventName = EventClass.getName();
+
+			this._events[eventName] = EventClass;
+		});
+	}
+
+	/**
+	 * getEvent - Get module event
+	 */
+	public getEvent(name: string) {
+		const [, Event] =
+			Object.entries(this._events).find(
+				([eventName]) => eventName === name
+			) ?? [];
+
+		if (!Event) throw new Error(`Event "${name}" not found.`);
+
+		return Event;
+	}
+
+	/**
+	 * getEvents - Get module events
+	 */
+	public getEvents() {
+		return this._events;
+	}
+
+	/**
 	 * startup - Startup module
 	 */
 	public async startup() {
@@ -153,6 +213,7 @@ export default abstract class BaseModule {
 	 */
 	protected async _started() {
 		await this._loadJobs();
+		await this._loadEvents();
 		this.log(`Module (${this._name}) started`);
 		this.setStatus(ModuleStatus.STARTED);
 	}

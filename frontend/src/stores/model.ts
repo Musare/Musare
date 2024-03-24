@@ -273,11 +273,11 @@ export const useModelStore = defineStore("model", () => {
 				return [
 					[
 						updated,
-						`model.${model.getName()}.updated.${model.getId()}`
+						`data.${model.getName()}.updated:${model.getId()}`
 					],
 					[
 						deleted,
-						`model.${model.getName()}.deleted.${model.getId()}`
+						`data.${model.getName()}.deleted:${model.getId()}`
 					]
 				];
 			})
@@ -328,11 +328,11 @@ export const useModelStore = defineStore("model", () => {
 		const channels = Object.fromEntries(
 			missingDocuments.flatMap(({ _name, _id }) => [
 				[
-					`model.${_name}.updated.${_id}`,
+					`data.${_name}.updated:${_id}`,
 					data => onUpdatedCallback(_name, data)
 				],
 				[
-					`model.${_name}.deleted.${_id}`,
+					`data.${_name}.deleted:${_id}`,
 					data => onDeletedCallback(_name, data)
 				]
 			])
@@ -344,14 +344,14 @@ export const useModelStore = defineStore("model", () => {
 
 			const modelSubscriptions = subscriptions.filter(
 				([, { channel }]) =>
-					channel.startsWith(`model.${_name}`) &&
-					channel.endsWith(`.${_id}`)
+					channel.startsWith(`data.${_name}`) &&
+					channel.endsWith(`:${_id}`)
 			);
 			const [updated] = modelSubscriptions.find(([, { channel }]) =>
-				channel.includes(".updated.")
+				channel.includes(".updated:")
 			);
 			const [deleted] = modelSubscriptions.find(([, { channel }]) =>
-				channel.includes(".deleted.")
+				channel.includes(".deleted:")
 			);
 
 			if (!updated || !deleted) return null;

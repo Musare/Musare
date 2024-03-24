@@ -6,6 +6,7 @@ import JobStatistics, { JobStatisticsType } from "@/JobStatistics";
 import LogBook, { Log } from "@/LogBook";
 import BaseModule from "./BaseModule";
 import EventsModule from "./modules/EventsModule";
+import JobCompletedEvent from "./modules/EventsModule/events/JobCompletedEvent";
 
 export enum JobStatus {
 	QUEUED = "QUEUED",
@@ -208,12 +209,17 @@ export default abstract class Job {
 			const callbackRef = this._context.getCallbackRef();
 
 			if (callbackRef) {
-				await EventsModule.publish(`job.${this.getUuid()}`, {
-					socketId,
-					callbackRef,
-					status: "success",
-					data
-				});
+				await EventsModule.publish(
+					new JobCompletedEvent(
+						{
+							socketId,
+							callbackRef,
+							status: "success",
+							data
+						},
+						this.getUuid()
+					)
+				);
 			}
 
 			this.log({
@@ -234,12 +240,17 @@ export default abstract class Job {
 			const callbackRef = this._context.getCallbackRef();
 
 			if (callbackRef) {
-				await EventsModule.publish(`job.${this.getUuid()}`, {
-					socketId,
-					callbackRef,
-					status: "error",
-					message
-				});
+				await EventsModule.publish(
+					new JobCompletedEvent(
+						{
+							socketId,
+							callbackRef,
+							status: "error",
+							message
+						},
+						this.getUuid()
+					)
+				);
 			}
 
 			this.log({

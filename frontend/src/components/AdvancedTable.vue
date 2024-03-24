@@ -259,11 +259,11 @@ const subscribe = async () => {
 				.filter(row => !subscriptions.value[row._id])
 				.flatMap(row => [
 					[
-						`model.${props.model}.updated.${row._id}`,
+						`data.${props.model}.updated:${row._id}`,
 						onUpdatedCallback
 					],
 					[
-						`model.${props.model}.deleted.${row._id}`,
+						`data.${props.model}.deleted:${row._id}`,
 						onDeletedCallback
 					]
 				])
