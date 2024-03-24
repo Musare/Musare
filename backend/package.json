@@ -14,7 +14,7 @@
 		"prod": "node build/app/src/main.js",
 		"lint": "eslint src --ext .js,.ts",
 		"typescript": "tsc --noEmit",
-		"test": "mocha -r ts-node/register -r tsconfig-paths/register 'tests/**/*.test.ts' 'src/**/*.spec.ts'"
+		"test": "mocha -r ts-node/register -r tsconfig-paths/register -r chai/register-should.js 'tests/**/*.test.ts' 'src/**/*.spec.ts'"
 	},
 	"dependencies": {
 		"axios": "^1.4.0",
@@ -36,6 +36,7 @@
 		"ws": "^8.13.0"
 	},
 	"devDependencies": {
+		"@faker-js/faker": "^8.4.1",
 		"@microsoft/tsdoc": "^0.14.2",
 		"@types/chai": "^4.3.5",
 		"@types/config": "^3.3.0",
