@@ -2,7 +2,7 @@ import Job, { JobOptions } from "@/Job";
 import EventsModule from "@/modules/EventsModule";
 
 const channelRegex =
-	/^(?<moduleName>[a-z]+)\.(?<modelName>[A-z]+)\.(?<event>[A-z]+)\.?(?<modelId>[A-z0-9]+)?$/;
+	/^(?<moduleName>[a-z]+)\.(?<modelName>[A-z]+)\.(?<event>[A-z]+):?(?<modelId>[A-z0-9]+)?$/;
 
 export default class SubscribeMany extends Job {
 	protected static _hasPermission = true;
@@ -24,30 +24,28 @@ export default class SubscribeMany extends Job {
 		});
 	}
 
-	protected override async _authorize() {}
+	protected override async _authorize() {
+		const permissions = this._payload.channels.map((channel: string) => {
+			const { moduleName, modelName, event, modelId } =
+				channelRegex.exec(channel)?.groups ?? {};
 
-	// protected override async _authorize() {
-	// const permissions = this._payload.channels.map((channel: string) => {
-	// 	const { moduleName, modelName, event, modelId } =
-	// 		channelRegex.exec(channel)?.groups ?? {};
+			let permission = `event.${channel}`;
 
-	// 	let permission = `event.${channel}`;
+			if (
+				moduleName === "data" &&
+				modelName &&
+				(modelId || event === "created")
+			) {
+				if (event === "created")
+					permission = `event.model.${modelName}.created`;
+				else permission = `data.${modelName}.findById.${modelId}`;
+			}
 
-	// 	if (
-	// 		moduleName === "model" &&
-	// 		modelName &&
-	// 		(modelId || event === "created")
-	// 	) {
-	// 		if (event === "created")
-	// 			permission = `event.model.${modelName}.created`;
-	// 		else permission = `data.${modelName}.findById.${modelId}`;
-	// 	}
+			return permission;
+		});
 
-	// 	return permission;
-	// });
-
-	// await this._context.assertPermissions(permissions);
-	// }
+		await this._context.assertPermissions(permissions);
+	}
 
 	protected async _execute() {
 		const socketId = this._context.getSocketId();

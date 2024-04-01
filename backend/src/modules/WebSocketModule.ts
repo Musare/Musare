@@ -13,7 +13,7 @@ import DataModule from "./DataModule";
 import { UserModel } from "./DataModule/models/users/schema";
 import { SessionModel } from "./DataModule/models/sessions/schema";
 import EventsModule from "./EventsModule";
-import assertEventDerived from "@/utils/assertEventDerived";
+// import assertEventDerived from "@/utils/assertEventDerived";
 
 export class WebSocketModule extends BaseModule {
 	private _httpServer?: Server;

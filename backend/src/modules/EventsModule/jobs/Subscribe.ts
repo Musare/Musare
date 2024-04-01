@@ -1,6 +1,9 @@
 import Job, { JobOptions } from "@/Job";
 import EventsModule from "@/modules/EventsModule";
 
+const channelRegex =
+	/^(?<moduleName>[a-z]+)\.(?<modelName>[A-z]+)\.(?<event>[A-z]+):?(?<modelId>[A-z0-9]+)?$/;
+
 export default class Subscribe extends Job {
 	protected static _hasPermission = true;
 
@@ -16,18 +19,26 @@ export default class Subscribe extends Job {
 			throw new Error("Channel must be a string");
 	}
 
-	protected override async _authorize() {}
+	protected override async _authorize() {
+		const { channel } = this._payload;
 
-	// protected override async _authorize() {
-	// const [path, scope] = this._payload.channel.split(":");
+		const { moduleName, modelName, event, modelId } =
+			channelRegex.exec(channel)?.groups ?? {};
 
-	// const EventClass = EventsModule.getEvent(path);
+		let permission = `event.${channel}`;
 
-	// const hasPermission = EventClass.hasPermission(
-	// 	this._context.getUser(),
-	// 	scope
-	// );
-	// }
+		if (
+			moduleName === "data" &&
+			modelName &&
+			(modelId || event === "created")
+		) {
+			if (event === "created")
+				permission = `event.model.${modelName}.created`;
+			else permission = `data.${modelName}.findById.${modelId}`;
+		}
+
+		await this._context.assertPermission(permission);
+	}
 
 	protected async _execute() {
 		const socketId = this._context.getSocketId();

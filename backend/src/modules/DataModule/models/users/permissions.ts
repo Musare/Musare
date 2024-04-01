@@ -174,7 +174,7 @@ const admin = {
 	// Frontend admin views
 	"admin.view.dataRequests": true,
 	"admin.view.statistics": true,
-	"admin.view.youtube": true
+	"admin.view.youtube": true,
 
 	// // Experimental SoundCloud
 	// ...(config.get("experimental.soundcloud")
@@ -190,6 +190,8 @@ const admin = {
 	// 			"youtube.getMissingChannels": true
 	// 	  }
 	// 	: {})
+
+	"event.model.news.created": true // WIP - regular users need to be able to subscribe to certain news subscribe events
 };
 
 const permissions: Record<
