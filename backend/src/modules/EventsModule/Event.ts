@@ -1,4 +1,4 @@
-import { HydratedDocument, Model } from "mongoose";
+import { HydratedDocument } from "mongoose";
 import { UserSchema } from "@models/users/schema";
 
 export default abstract class Event {
@@ -122,3 +122,7 @@ export default abstract class Event {
 		return (this.constructor as typeof Event).makeMessage(this._data);
 	}
 }
+
+export type EventClass = {
+	new (...params: ConstructorParameters<typeof Event>): Event;
+};

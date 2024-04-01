@@ -1,3 +1,7 @@
+import ModelCreatedEvent from "@/modules/DataModule/ModelCreatedEvent";
+import ModelDeletedEvent from "@/modules/DataModule/ModelDeletedEvent";
+import ModelUpdatedEvent from "@/modules/DataModule/ModelUpdatedEvent";
+
 declare module "mongoose" {
 	// Add some additional possible config options to Mongoose's schema options
 	interface SchemaOptions<
@@ -7,12 +11,12 @@ declare module "mongoose" {
 		QueryHelpers = {},
 		TStaticMethods = {},
 		TVirtuals = {},
-		/* eslint-enable */
 		THydratedDocumentType = HydratedDocument<
 			DocType,
 			TInstanceMethods,
 			QueryHelpers
 		>
+		/* eslint-enable */
 	> {
 		patchHistory?: {
 			enabled: boolean;
@@ -40,13 +44,13 @@ declare module "mongoose" {
 
 		eventListeners?: {
 			[key: `${string}.created`]: (
-				doc: THydratedDocumentType
+				event: ModelCreatedEvent
 			) => Promise<void>;
 			[key: `${string}.updated`]: (
-				doc: THydratedDocumentType
+				event: ModelUpdatedEvent
 			) => Promise<void>;
 			[key: `${string}.deleted`]: (
-				oldDoc: THydratedDocumentType
+				event: ModelDeletedEvent
 			) => Promise<void>;
 		};
 	}

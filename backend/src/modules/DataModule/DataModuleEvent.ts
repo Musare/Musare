@@ -13,8 +13,4 @@ export default abstract class DataModuleEvent extends ModuleEvent {
 	public static getModelName() {
 		return this._modelName;
 	}
-
-	public getModelName() {
-		return (this.constructor as typeof DataModuleEvent).getModelName();
-	}
 }

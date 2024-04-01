@@ -12,8 +12,6 @@ import { forEachIn } from "@common/utils/forEachIn";
 import BaseModule, { ModuleStatus } from "@/BaseModule";
 import WebSocketModule from "./WebSocketModule";
 import Event from "@/modules/EventsModule/Event";
-import { EventDerived } from "@/types/EventDerived";
-import assertEventDerived from "@/utils/assertEventDerived";
 import ModuleManager from "@/ModuleManager";
 
 export class EventsModule extends BaseModule {
@@ -33,7 +31,7 @@ export class EventsModule extends BaseModule {
 
 	private _pSubscriptions: Record<
 		string,
-		((message: string, key: string) => Promise<void>)[]
+		((event: Event) => Promise<void>)[]
 	>;
 
 	private _socketSubscriptions: Record<string, Set<string>>;
@@ -210,7 +208,7 @@ export class EventsModule extends BaseModule {
 	/**
 	 * publish - Publish an event
 	 */
-	public async publish(event: typeof Event) {
+	public async publish(event: Event) {
 		if (!this._pubClient) throw new Error("Redis pubClient unavailable.");
 
 		const channel = event.getKey();
@@ -231,7 +229,7 @@ export class EventsModule extends BaseModule {
 
 		const { path, scope } = Event.parseKey(key);
 		const EventClass = this.getEvent(path);
-		const parsedMessage = EventClass.parseMessage(message);
+		const parsedMessage = Event.parseMessage(message);
 		const event = new EventClass(parsedMessage, scope);
 
 		if (this._subscriptions && this._subscriptions[key])
@@ -285,7 +283,7 @@ export class EventsModule extends BaseModule {
 	 */
 	public async pSubscribe(
 		pattern: string,
-		callback: (message: string, key: string) => Promise<void>
+		callback: (event: Event) => Promise<void>
 	) {
 		if (!this._subClient) throw new Error("Redis subClient unavailable.");
 

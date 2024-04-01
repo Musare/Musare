@@ -4,7 +4,7 @@ import { forEachIn } from "@common/utils/forEachIn";
 import LogBook, { Log } from "@/LogBook";
 import ModuleManager from "@/ModuleManager";
 import Job from "./Job";
-import Event from "./modules/EventsModule/Event";
+import { EventClass } from "./modules/EventsModule/Event";
 
 export enum ModuleStatus {
 	LOADED = "LOADED",
@@ -25,7 +25,7 @@ export default abstract class BaseModule {
 
 	protected _jobs: Record<string, typeof Job>;
 
-	protected _events: Record<string, typeof Event>;
+	protected _events: Record<string, EventClass>;
 
 	/**
 	 * Base Module
@@ -182,7 +182,7 @@ export default abstract class BaseModule {
 	/**
 	 * getEvent - Get module event
 	 */
-	public getEvent(name: string) {
+	public getEvent(name: string): EventClass {
 		const [, Event] =
 			Object.entries(this._events).find(
 				([eventName]) => eventName === name
