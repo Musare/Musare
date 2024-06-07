@@ -1,5 +1,7 @@
+import { forEachIn } from "@common/utils/forEachIn";
 import Job, { JobOptions } from "@/Job";
 import EventsModule from "@/modules/EventsModule";
+import Event from "../Event";
 
 const channelRegex =
 	/^(?<moduleName>[a-z]+)\.(?<modelName>[A-z]+)\.(?<event>[A-z]+):?(?<modelId>[A-z0-9]+)?$/;
@@ -25,26 +27,16 @@ export default class SubscribeMany extends Job {
 	}
 
 	protected override async _authorize() {
-		const permissions = this._payload.channels.map((channel: string) => {
-			const { moduleName, modelName, event, modelId } =
-				channelRegex.exec(channel)?.groups ?? {};
+		await forEachIn(this._payload.channels, async channel => {
+			const { path, scope } = Event.parseKey(channel);
 
-			let permission = `event.${channel}`;
+			const EventClass = EventsModule.getEvent(path);
 
-			if (
-				moduleName === "data" &&
-				modelName &&
-				(modelId || event === "created")
-			) {
-				if (event === "created")
-					permission = `event.model.${modelName}.created`;
-				else permission = `data.${modelName}.findById.${modelId}`;
-			}
-
-			return permission;
+			await EventClass.hasPermission(
+				await this._context.getUser().catch(() => null),
+				scope
+			);
 		});
-
-		await this._context.assertPermissions(permissions);
 	}
 
 	protected async _execute() {

@@ -1,5 +1,6 @@
 import Job, { JobOptions } from "@/Job";
 import EventsModule from "@/modules/EventsModule";
+import Event from "../Event";
 
 const channelRegex =
 	/^(?<moduleName>[a-z]+)\.(?<modelName>[A-z]+)\.(?<event>[A-z]+):?(?<modelId>[A-z0-9]+)?$/;
@@ -22,22 +23,14 @@ export default class Subscribe extends Job {
 	protected override async _authorize() {
 		const { channel } = this._payload;
 
-		const { moduleName, modelName, event, modelId } =
-			channelRegex.exec(channel)?.groups ?? {};
+		const { path, scope } = Event.parseKey(channel);
 
-		let permission = `event.${channel}`;
+		const EventClass = EventsModule.getEvent(path);
 
-		if (
-			moduleName === "data" &&
-			modelName &&
-			(modelId || event === "created")
-		) {
-			if (event === "created")
-				permission = `event.model.${modelName}.created`;
-			else permission = `data.${modelName}.findById.${modelId}`;
-		}
-
-		await this._context.assertPermission(permission);
+		await EventClass.hasPermission(
+			await this._context.getUser().catch(() => null),
+			scope
+		);
 	}
 
 	protected async _execute() {
