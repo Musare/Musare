@@ -103,7 +103,7 @@ export const useModelStore = defineStore("model", () => {
 	) => {
 		if (!createdSubcription.value)
 			createdSubcription.value = await subscribe(
-				`model.${modelName}.created`,
+				`data.${modelName}.created`,
 				data => onCreatedCallback(modelName, data)
 			);
 
@@ -171,7 +171,7 @@ export const useModelStore = defineStore("model", () => {
 			Object.keys(subscriptions.created[modelName]).length === 0
 		) {
 			await unsubscribe(
-				`model.${modelName}.created`,
+				`data.${modelName}.created`,
 				createdSubcription.value
 			);
 
