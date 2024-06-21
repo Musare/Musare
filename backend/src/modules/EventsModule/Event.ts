@@ -1,5 +1,7 @@
 import { HydratedDocument } from "mongoose";
 import { UserSchema } from "@models/users/schema";
+import { GetPermissionsResult } from "../DataModule/models/users/jobs/GetPermissions";
+import DataModule from "../DataModule";
 
 export default abstract class Event {
 	protected static _namespace: string;
@@ -7,11 +9,6 @@ export default abstract class Event {
 	protected static _name: string;
 
 	protected static _type: "event" | "schedule" = "event";
-
-	protected static _hasPermission:
-		| boolean
-		| CallableFunction
-		| (boolean | CallableFunction)[] = false;
 
 	protected _data: any;
 
@@ -59,19 +56,16 @@ export default abstract class Event {
 		user: HydratedDocument<UserSchema> | null,
 		scope?: string
 	) {
-		const options = Array.isArray(this._hasPermission)
-			? this._hasPermission
-			: [this._hasPermission];
+		const GetPermissions = DataModule.getJob("users.getPermissions");
 
-		return options.reduce(async (previous, option) => {
-			if (await previous) return true;
+		const permissions = (await new GetPermissions({
+			_id: user?._id
+		}).execute()) as GetPermissionsResult;
 
-			if (typeof option === "boolean") return option;
-
-			if (typeof option === "function") return option(user, scope);
-
-			return false;
-		}, Promise.resolve(false));
+		return !!(
+			permissions[`event:${this.getKey(scope)}`] ||
+			permissions[`event:${this.getPath()}:*`]
+		);
 	}
 
 	public static makeMessage(data: any) {

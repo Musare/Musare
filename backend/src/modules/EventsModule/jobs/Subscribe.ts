@@ -2,9 +2,6 @@ import Job, { JobOptions } from "@/Job";
 import EventsModule from "@/modules/EventsModule";
 import Event from "../Event";
 
-const channelRegex =
-	/^(?<moduleName>[a-z]+)\.(?<modelName>[A-z]+)\.(?<event>[A-z]+):?(?<modelId>[A-z0-9]+)?$/;
-
 export default class Subscribe extends Job {
 	protected static _hasPermission = true;
 
@@ -27,10 +24,13 @@ export default class Subscribe extends Job {
 
 		const EventClass = EventsModule.getEvent(path);
 
-		await EventClass.hasPermission(
+		const hasPermission = await EventClass.hasPermission(
 			await this._context.getUser().catch(() => null),
 			scope
 		);
+
+		if (!hasPermission)
+			throw new Error(`Insufficient permissions for event ${channel}`);
 	}
 
 	protected async _execute() {
