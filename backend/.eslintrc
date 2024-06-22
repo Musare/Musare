@@ -65,7 +65,11 @@
 		"import/no-extraneous-dependencies": [
 			"error",
 			{
-				"devDependencies": ["**/*.test.ts", "**/*.spec.ts"]
+				"devDependencies": [
+					"**/*.test.ts",
+					"**/*.spec.ts",
+					"src/tests/**/*.ts"
+				]
 			}
 		],
 		"no-restricted-syntax": [
@@ -88,7 +92,11 @@
 	},
 	"overrides": [
 		{
-			"files": ["**/*.test.ts", "**/*.spec.ts"],
+			"files": [
+				"**/*.test.ts",
+				"**/*.spec.ts",
+				"src/tests/**/*.ts"
+			],
 			"rules": {
 				"no-unused-expressions": "off",
 				"prefer-arrow-callback": "off",
