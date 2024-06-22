@@ -7,16 +7,13 @@ export enum JobStatisticsType {
 	DURATION = "duration"
 }
 
+export type JobStatistic = Record<
+	Exclude<JobStatisticsType, "duration"> | "averageTime" | "totalTime",
+	number
+>;
+
 export class JobStatistics {
-	private _stats: Record<
-		string,
-		Record<
-			| Exclude<JobStatisticsType, "duration">
-			| "averageTime"
-			| "totalTime",
-			number
-		>
-	>;
+	private _stats: Record<string, JobStatistic>;
 
 	public constructor() {
 		this._stats = {};
@@ -27,7 +24,7 @@ export class JobStatistics {
 	 *
 	 * @returns Job queue statistics
 	 */
-	public getStats() {
+	public getStats(): Record<string | "total", JobStatistic> {
 		const total = Object.values(this._stats).reduce(
 			(a, b) => ({
 				successful: a.successful + b.successful,
