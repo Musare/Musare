@@ -100,6 +100,7 @@ export default abstract class BaseModule {
 		}
 
 		await forEachIn(jobs, async jobFile => {
+			if (jobFile.includes(".spec.")) return;
 			const { default: Job } = await import(
 				`./modules/${this.constructor.name}/jobs/${jobFile}`
 			);
@@ -169,6 +170,7 @@ export default abstract class BaseModule {
 		}
 
 		await forEachIn(events, async eventFile => {
+			if (eventFile.includes(".spec.")) return;
 			const { default: EventClass } = await import(
 				`./modules/${this.constructor.name}/events/${eventFile}`
 			);

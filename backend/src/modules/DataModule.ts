@@ -361,6 +361,8 @@ export class DataModule extends BaseModule {
 			}
 
 			await forEachIn(jobs, async jobFile => {
+				if (jobFile.includes(".spec.")) return;
+
 				const { default: Job } = await import(
 					`./${this.constructor.name}/models/${modelName}/jobs/${jobFile}`
 				);
