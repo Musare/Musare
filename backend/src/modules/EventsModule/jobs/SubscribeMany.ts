@@ -24,20 +24,16 @@ export default class SubscribeMany extends Job {
 	}
 
 	protected override async _authorize() {
+		// Channel could be data.news.created, or something like data.news.updated:SOME_OBJECT_ID
 		await forEachIn(this._payload.channels, async channel => {
+			// Path can be for example data.news.created. Scope will be anything after ":", but isn't required, so could be undefined
 			const { path, scope } = Event.parseKey(channel);
 
-			const EventClass = EventsModule.getEvent(path);
+			const permission = scope
+				? `event.${path}.${scope}`
+				: `event.${path}`;
 
-			const hasPermission = await EventClass.hasPermission(
-				await this._context.getUser().catch(() => null),
-				scope
-			);
-
-			if (!hasPermission)
-				throw new Error(
-					`Insufficient permissions for event ${channel}`
-				);
+			await EventsModule.assertPermission(permission);
 		});
 	}
 
