@@ -152,11 +152,13 @@ describe("Job", function () {
 			const job = new TestJob();
 			const data = faker.word.words();
 			Reflect.set(job, "_authorize", sinon.stub());
-			Reflect.set(job, "_execute", sinon.fake(async () => data));
+			Reflect.set(
+				job,
+				"_execute",
+				sinon.fake(async () => data)
+			);
 
-			await job
-				.execute()
-				.should.eventually.be.equal(data);
+			await job.execute().should.eventually.be.equal(data);
 		});
 
 		it("should publish callback event if ref configured on error");
