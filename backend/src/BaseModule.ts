@@ -244,7 +244,7 @@ export default abstract class BaseModule {
 	public log(log: string | Omit<Log, "timestamp" | "category">) {
 		const {
 			message,
-			type = undefined,
+			type = "info",
 			data = {}
 		} = {
 			...(typeof log === "string" ? { message: log } : log)
