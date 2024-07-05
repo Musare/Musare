@@ -1,8 +1,3 @@
-import { HydratedDocument } from "mongoose";
-import { UserSchema } from "@models/users/schema";
-import { GetPermissionsResult } from "../DataModule/models/users/jobs/GetPermissions";
-import DataModule from "../DataModule";
-
 export default abstract class Event {
 	protected static _namespace: string;
 
@@ -50,22 +45,6 @@ export default abstract class Event {
 
 	public static getType() {
 		return this._type;
-	}
-
-	public static async hasPermission(
-		user: HydratedDocument<UserSchema> | null,
-		scope?: string
-	) {
-		const GetPermissions = DataModule.getJob("users.getPermissions");
-
-		const permissions = (await new GetPermissions({
-			_id: user?._id
-		}).execute()) as GetPermissionsResult;
-
-		return !!(
-			permissions[`event:${this.getKey(scope)}`] ||
-			permissions[`event:${this.getPath()}:*`]
-		);
 	}
 
 	public static makeMessage(data: any) {
@@ -119,4 +98,4 @@ export default abstract class Event {
 
 export type EventClass = {
 	new (...params: ConstructorParameters<typeof Event>): Event;
-};
+} & typeof Event;

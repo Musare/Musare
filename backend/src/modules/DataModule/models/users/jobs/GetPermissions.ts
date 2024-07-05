@@ -5,6 +5,10 @@ import DataModuleJob from "@/modules/DataModule/DataModuleJob";
 
 export type GetPermissionsResult = Record<string, boolean>;
 
+/**
+ * This jobs returns the static/pre-defined permissions for the current user/guest based on the user's role.
+ * Permissions are cached. No cache invalidation machanism has been implemented yet, but it expires naturally after 6 minutes.
+ */
 export default class GetPermissions extends DataModuleJob {
 	protected static _modelName = "users";
 

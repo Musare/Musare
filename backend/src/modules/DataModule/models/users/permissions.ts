@@ -191,7 +191,9 @@ const admin = {
 	// 	  }
 	// 	: {})
 
-	"event.model.news.created": true // WIP - regular users need to be able to subscribe to certain news subscribe events
+	"event.data.news.created": true, // For now, only admins can subscribe to these, but that's just temporary
+	"event.data.news.updated.*": true,
+	"event.data.news.deleted.*": true
 };
 
 const permissions: Record<

@@ -1,6 +1,6 @@
 import Job, { JobOptions } from "@/Job";
 import EventsModule from "@/modules/EventsModule";
-import Event from "../Event";
+import Event from "@/modules/EventsModule/Event";
 
 export default class Subscribe extends Job {
 	protected static _hasPermission = true;
@@ -18,19 +18,15 @@ export default class Subscribe extends Job {
 	}
 
 	protected override async _authorize() {
+		// Channel could be data.news.created, or something like data.news.updated:SOME_OBJECT_ID
 		const { channel } = this._payload;
 
+		// Path can be for example data.news.created. Scope will be anything after ":", but isn't required, so could be undefined
 		const { path, scope } = Event.parseKey(channel);
 
-		const EventClass = EventsModule.getEvent(path);
+		const permission = scope ? `event.${path}.${scope}` : `event.${path}`;
 
-		const hasPermission = await EventClass.hasPermission(
-			await this._context.getUser().catch(() => null),
-			scope
-		);
-
-		if (!hasPermission)
-			throw new Error(`Insufficient permissions for event ${channel}`);
+		await EventsModule.assertPermission(permission);
 	}
 
 	protected async _execute() {

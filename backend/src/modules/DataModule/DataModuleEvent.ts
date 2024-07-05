@@ -1,14 +1,17 @@
+import { HydratedDocument, Model } from "mongoose";
 import DataModule from "../DataModule";
 import ModuleEvent from "../EventsModule/ModuleEvent";
-import { HydratedDocument } from "mongoose";
 import { UserSchema } from "./models/users/schema";
-import { GetPermissionsResult } from "./models/users/jobs/GetPermissions";
-import GetModelPermissions from "./models/users/jobs/GetModelPermissions";
 
 export default abstract class DataModuleEvent extends ModuleEvent {
 	protected static _module = DataModule;
 
 	protected static _modelName: string;
+
+	protected static _hasPermission:
+		| boolean
+		| CallableFunction
+		| (boolean | CallableFunction)[] = false;
 
 	public static override getName() {
 		return `${this._modelName}.${super.getName()}`;
@@ -19,18 +22,21 @@ export default abstract class DataModuleEvent extends ModuleEvent {
 	}
 
 	public static async hasPermission(
-		user: HydratedDocument<UserSchema> | null,
-		scope?: string
+		model: HydratedDocument<Model<any>>, // TODO model can be null too, as GetModelPermissions is currently written
+		user: HydratedDocument<UserSchema> | null
 	) {
-		const permissions = (await new GetModelPermissions({
-			_id: user?._id,
-			modelName: this.getModelName(),
-			modelId: scope
-		}).execute()) as GetPermissionsResult;
+		const options = Array.isArray(this._hasPermission)
+			? this._hasPermission
+			: [this._hasPermission];
 
-		return !!(
-			permissions[`event:${this.getKey(scope)}`] ||
-			permissions[`event:${this.getPath()}:*`]
-		);
+		return options.reduce(async (previous, option) => {
+			if (await previous) return true;
+
+			if (typeof option === "boolean") return option;
+
+			if (typeof option === "function") return option(model, user);
+
+			return false;
+		}, Promise.resolve(false));
 	}
 }

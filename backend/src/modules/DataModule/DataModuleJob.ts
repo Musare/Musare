@@ -44,7 +44,7 @@ export default abstract class DataModuleJob extends Job {
 	}
 
 	public static async hasPermission(
-		model: HydratedDocument<Model<any>>,
+		model: HydratedDocument<Model<any>>, // TODO model can be null too, as GetModelPermissions is currently written
 		user: HydratedDocument<UserSchema> | null
 	) {
 		const options = Array.isArray(this._hasPermission)

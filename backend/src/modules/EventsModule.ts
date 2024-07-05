@@ -13,8 +13,19 @@ import BaseModule, { ModuleStatus } from "@/BaseModule";
 import WebSocketModule from "./WebSocketModule";
 import Event from "@/modules/EventsModule/Event";
 import ModuleManager from "@/ModuleManager";
+import DataModule from "@/modules/DataModule";
+import { GetPermissionsResult } from "@/modules/DataModule/models/users/jobs/GetPermissions";
+import { GetSingleModelPermissionsResult } from "@/modules/DataModule/models/users/jobs/GetModelPermissions";
+
+const permissionRegex =
+	// eslint-disable-next-line max-len
+	/^event.(?<moduleName>[a-z]+)\.(?<modelOrEventName>[A-z]+)\.(?<eventName>[A-z]+)(?:\.(?<modelId>[A-z0-9]{24}))?(?:\.(?<extra>[A-z]+))?$/;
 
 export class EventsModule extends BaseModule {
+	/**
+	 * The events module is used to subscribe to events, and to publish events. Events can be documents updating, being created or being deleted.
+	 * Other events can be JobFinished? But probably not for frontend. So atm frontend can only subscribe to update/created/deleted.
+	 */
 	private _pubClient?: RedisClientType<
 		RedisDefaultModules & RedisModules,
 		RedisFunctions,
@@ -190,6 +201,54 @@ export class EventsModule extends BaseModule {
 				([name, module]) => [name, Object.keys(module.getEvents())]
 			)
 		);
+	}
+
+	/**
+	 * Like JobContext assertPermission, checks if the current user has permission to subscribe to the event associated
+	 * with the provided permission.
+	 * Permission can be for example "event.data.news.created" or "event.data.news.updated.6687eec103808fe513c937ff"
+	 */
+	public async assertPermission(permission: string) {
+		console.log("Assert permission", permission);
+		let hasPermission = false;
+
+		const { moduleName, modelOrEventName, eventName, modelId, extra } =
+			permissionRegex.exec(permission)?.groups ?? {};
+
+		if (moduleName === "data" && modelOrEventName && eventName) {
+			const GetModelPermissions = DataModule.getJob(
+				"users.getModelPermissions"
+			);
+
+			// eslint-disable-next-line
+			// @ts-ignore
+			const permissions = (await new GetModelPermissions({
+				modelName: modelOrEventName,
+				modelId
+				// eslint-disable-next-line
+				// @ts-ignore
+			}).execute()) as unknown as GetSingleModelPermissionsResult;
+
+			let modelPermission = `event.data.${modelOrEventName}.${eventName}`;
+
+			if (extra) modelPermission += `.${extra}`;
+
+			hasPermission = permissions[modelPermission];
+		} else {
+			const GetPermissions = DataModule.getJob("users.getPermissions");
+
+			const permissions =
+				// eslint-disable-next-line
+				// @ts-ignore
+				(await new GetPermissions().execute()) as unknown as GetPermissionsResult;
+
+			hasPermission = permissions[permission];
+		}
+
+		if (!hasPermission)
+			throw new Error(
+				`Insufficient permissions for permission ${permission}`
+			);
 	}
 
 	/**
