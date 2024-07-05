@@ -20,7 +20,7 @@ export class WebSocketModule extends BaseModule {
 
 	private _wsServer?: WebSocketServer;
 
-	private _keepAliveInterval?: NodeJS.Timer;
+	private _keepAliveInterval?: NodeJS.Timeout;
 
 	/**
 	 * WebSocket Module
