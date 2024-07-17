@@ -1,15 +1,13 @@
-import { HydratedDocument, Schema } from "mongoose";
+import { HydratedDocument } from "mongoose";
 import ModelUpdatedEvent from "@/modules/DataModule/ModelUpdatedEvent";
 import { NewsStatus } from "@/modules/DataModule/models/news/NewsStatus";
+import { NewsSchema } from "../schema";
 
 export default abstract class NewsUpdatedEvent extends ModelUpdatedEvent {
 	protected static _modelName = "news";
 
-	protected static _hasPermission = <ModelSchemaType extends Schema>(
-		model: HydratedDocument<ModelSchemaType>
-	) => {
-		// eslint-disable-next-line
-		// @ts-ignore
+	// TODO make this function shared
+	protected static _hasPermission = (model: HydratedDocument<NewsSchema>) => {
 		if (model?.status === NewsStatus.PUBLISHED) return true;
 		return false;
 	};
