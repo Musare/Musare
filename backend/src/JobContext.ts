@@ -13,7 +13,8 @@ import {
 import { GetPermissionsResult } from "./modules/DataModule/models/users/jobs/GetPermissions";
 
 const permissionRegex =
-	/^(?<moduleName>[a-z]+)\.(?<modelOrJobName>[A-z]+)\.(?<jobName>[A-z]+)(?:\.(?<modelId>[A-z0-9]{24}))?(?:\.(?<extra>[A-z]+))?$/;
+	// eslint-disable-next-line max-len
+	/^(?<moduleName>[a-z]+)\.(?<modelOrJobName>[A-z]+)\.(?<jobName>[A-z]+)(?::(?:(?<modelId>[A-z0-9]{24})(?:\.(?<extraAfterModelId>[A-z]+))?|(?<extraAfterColon>[A-z]+)))?$/;
 
 export default class JobContext {
 	public readonly job: Job;
@@ -99,8 +100,15 @@ export default class JobContext {
 	public async assertPermission(permission: string) {
 		let hasPermission = false;
 
-		const { moduleName, modelOrJobName, jobName, modelId, extra } =
-			permissionRegex.exec(permission)?.groups ?? {};
+		const {
+			moduleName,
+			modelOrJobName,
+			jobName,
+			modelId,
+			extraAfterModelId,
+			extraAfterColon
+		} = permissionRegex.exec(permission)?.groups ?? {};
+		const extra = extraAfterModelId || extraAfterColon;
 
 		if (moduleName === "data" && modelOrJobName && jobName) {
 			const GetModelPermissions = DataModule.getJob(
@@ -140,8 +148,15 @@ export default class JobContext {
 		});
 
 		const permissionData = permissions.map(permission => {
-			const { moduleName, modelOrJobName, jobName, modelId, extra } =
-				permissionRegex.exec(permission)?.groups ?? {};
+			const {
+				moduleName,
+				modelOrJobName,
+				jobName,
+				modelId,
+				extraAfterModelId,
+				extraAfterColon
+			} = permissionRegex.exec(permission)?.groups ?? {};
+			const extra = extraAfterModelId || extraAfterColon;
 
 			return {
 				permission,

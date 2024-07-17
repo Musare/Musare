@@ -19,7 +19,7 @@ import { GetSingleModelPermissionsResult } from "@/modules/DataModule/models/use
 
 const permissionRegex =
 	// eslint-disable-next-line max-len
-	/^event.(?<moduleName>[a-z]+)\.(?<modelOrEventName>[A-z]+)\.(?<eventName>[A-z]+)(?:\.(?<modelId>[A-z0-9]{24}))?(?:\.(?<extra>[A-z]+))?$/;
+	/^event.(?<moduleName>[a-z]+)\.(?<modelOrEventName>[A-z]+)\.(?<eventName>[A-z]+)(?::(?:(?<modelId>[A-z0-9]{24})(?:\.(?<extraAfterModelId>[A-z]+))?|(?<extraAfterColon>[A-z]+)))?$/;
 
 export class EventsModule extends BaseModule {
 	/**
@@ -206,14 +206,21 @@ export class EventsModule extends BaseModule {
 	/**
 	 * Like JobContext assertPermission, checks if the current user has permission to subscribe to the event associated
 	 * with the provided permission.
-	 * Permission can be for example "event.data.news.created" or "event.data.news.updated.6687eec103808fe513c937ff"
+	 * Permission can be for example "event.data.news.created" or "event.data.news.updated:6687eec103808fe513c937ff"
 	 */
 	public async assertPermission(permission: string) {
 		console.log("Assert permission", permission);
 		let hasPermission = false;
 
-		const { moduleName, modelOrEventName, eventName, modelId, extra } =
-			permissionRegex.exec(permission)?.groups ?? {};
+		const {
+			moduleName,
+			modelOrEventName,
+			eventName,
+			modelId,
+			extraAfterModelId,
+			extraAfterColon
+		} = permissionRegex.exec(permission)?.groups ?? {};
+		const extra = extraAfterModelId || extraAfterColon;
 
 		if (moduleName === "data" && modelOrEventName && eventName) {
 			const GetModelPermissions = DataModule.getJob(

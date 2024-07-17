@@ -47,7 +47,7 @@ export default class Index extends DataModuleJob {
 				(user && (isOwner(station, user) || isDj(station, user))) ||
 				(this._payload?.adminFilter &&
 					(await this._context
-						.assertPermission("data.stations.index.adminFilter")
+						.assertPermission("data.stations.index:adminFilter")
 						.then(() => true)
 						.catch(() => false)))
 			)

@@ -191,9 +191,21 @@ const admin = {
 	// 	  }
 	// 	: {})
 
-	"event.data.news.created": true, // For now, only admins can subscribe to these, but that's just temporary
-	"event.data.news.updated.*": true,
-	"event.data.news.deleted.*": true
+	"event.data.minifiedUsers.created": true,
+	"event.data.minifiedUsers.updated:*": true,
+	"event.data.minifiedUsers.deleted:*": true,
+
+	"event.data.news.created": true,
+	"event.data.news.updated:*": true,
+	"event.data.news.deleted:*": true,
+
+	"event.data.stations.created": true,
+	"event.data.stations.updated:*": true,
+	"event.data.stations.deleted:*": true,
+
+	"event.data.users.created": true,
+	"event.data.users.updated:*": true,
+	"event.data.users.deleted:*": true
 };
 
 const permissions: Record<

@@ -24,7 +24,7 @@ export default class Subscribe extends Job {
 		// Path can be for example data.news.created. Scope will be anything after ":", but isn't required, so could be undefined
 		const { path, scope } = Event.parseKey(channel);
 
-		const permission = scope ? `event.${path}.${scope}` : `event.${path}`;
+		const permission = scope ? `event.${path}:${scope}` : `event.${path}`;
 
 		await EventsModule.assertPermission(permission);
 	}

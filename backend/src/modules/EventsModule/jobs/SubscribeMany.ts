@@ -30,7 +30,7 @@ export default class SubscribeMany extends Job {
 			const { path, scope } = Event.parseKey(channel);
 
 			const permission = scope
-				? `event.${path}.${scope}`
+				? `event.${path}:${scope}`
 				: `event.${path}`;
 
 			await EventsModule.assertPermission(permission);

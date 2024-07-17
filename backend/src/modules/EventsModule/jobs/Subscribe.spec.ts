@@ -235,7 +235,7 @@ describe("Subscribe job", async function () {
 		describe("data.news.updated:${modelId}", function () {
 			const modelId = new mongoose.Types.ObjectId();
 			const channel = `data.news.updated:${modelId}`;
-			const permission = `event.data.news.updated.${modelId}`;
+			const permission = `event.data.news.updated:${modelId}`;
 
 			it("should work for admins for all news", async function () {
 				const job = getJob({
@@ -294,7 +294,7 @@ describe("Subscribe job", async function () {
 		describe("data.news.deleted:${modelId}", function () {
 			const modelId = new mongoose.Types.ObjectId();
 			const channel = `data.news.deleted:${modelId}`;
-			const permission = `event.data.news.deleted.${modelId}`;
+			const permission = `event.data.news.deleted:${modelId}`;
 
 			it("should work for admins for all news", async function () {
 				const job = getJob({
@@ -372,7 +372,7 @@ describe("Subscribe job", async function () {
 		describe("data.news.unpublished:${modelId}", function () {
 			// const modelId = new mongoose.Types.ObjectId();
 			// const channel = `data.news.unpublished:${modelId}`;
-			// const permission = `event.data.news.unpublished.${modelId}`;
+			// const permission = `event.data.news.unpublished:${modelId}`;
 
 			it("should work for admins for all news");
 			// it("should work for admins for all news", async function () {
