@@ -33,7 +33,7 @@ export default class SubscribeMany extends Job {
 				? `event.${path}:${scope}`
 				: `event.${path}`;
 
-			await EventsModule.assertPermission(permission);
+			await EventsModule.assertPermission(this._context, permission);
 		});
 	}
 

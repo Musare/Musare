@@ -16,6 +16,7 @@ import ModuleManager from "@/ModuleManager";
 import DataModule from "@/modules/DataModule";
 import { GetPermissionsResult } from "@/modules/DataModule/models/users/jobs/GetPermissions";
 import { GetSingleModelPermissionsResult } from "@/modules/DataModule/models/users/jobs/GetModelPermissions";
+import JobContext from "@/JobContext";
 
 const permissionRegex =
 	// eslint-disable-next-line max-len
@@ -208,8 +209,7 @@ export class EventsModule extends BaseModule {
 	 * with the provided permission.
 	 * Permission can be for example "event.data.news.created" or "event.data.news.updated:6687eec103808fe513c937ff"
 	 */
-	public async assertPermission(permission: string) {
-		console.log("Assert permission", permission);
+	public async assertPermission(jobContext: JobContext, permission: string) {
 		let hasPermission = false;
 
 		const {
@@ -229,12 +229,16 @@ export class EventsModule extends BaseModule {
 
 			// eslint-disable-next-line
 			// @ts-ignore
-			const permissions = (await new GetModelPermissions({
-				modelName: modelOrEventName,
-				modelId
-				// eslint-disable-next-line
-				// @ts-ignore
-			}).execute()) as unknown as GetSingleModelPermissionsResult;
+			const permissions = (await new GetModelPermissions(
+				{
+					modelName: modelOrEventName,
+					modelId
+				},
+				{
+					session: jobContext.getSession(),
+					socketId: jobContext.getSocketId()
+				}
+			).execute()) as unknown as GetSingleModelPermissionsResult; // Add context?
 
 			let modelPermission = `event.data.${modelOrEventName}.${eventName}`;
 
@@ -247,7 +251,13 @@ export class EventsModule extends BaseModule {
 			const permissions =
 				// eslint-disable-next-line
 				// @ts-ignore
-				(await new GetPermissions().execute()) as unknown as GetPermissionsResult;
+				(await new GetPermissions(
+					{},
+					{
+						session: jobContext.getSession(),
+						socketId: jobContext.getSocketId()
+					}
+				).execute()) as unknown as GetPermissionsResult;
 
 			hasPermission = permissions[permission];
 		}

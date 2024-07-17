@@ -26,7 +26,7 @@ export default class Subscribe extends Job {
 
 		const permission = scope ? `event.${path}:${scope}` : `event.${path}`;
 
-		await EventsModule.assertPermission(permission);
+		await EventsModule.assertPermission(this._context, permission);
 	}
 
 	protected async _execute() {
