@@ -7,7 +7,7 @@ export default (
 		| (HydratedDocument<any> & { createdBy?: any }),
 	user?: HydratedDocument<UserSchema>
 ) => {
-	if (!(user && model)) return false;
+	if (!user || !model) return false;
 
 	let ownerAttribute;
 
