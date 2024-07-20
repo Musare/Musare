@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted } from "vue";
+import { defineAsyncComponent, ref, computed, onMounted } from "vue";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import Toast from "toasters";
@@ -35,6 +35,12 @@ const { registerModel, onDeleted } = useModels();
 
 const createdBy = ref();
 const createdAt = ref(0);
+const dataLoaded = ref(false);
+
+const canShow = computed(() => {
+	if (props.newsId) return dataLoaded.value;
+	return true;
+});
 
 const getTitle = () => {
 	let title = "";
@@ -127,6 +133,8 @@ onMounted(async () => {
 			createdBy.value = model.createdBy;
 			createdAt.value = model.createdAt;
 
+			dataLoaded.value = true;
+
 			await onDeleted("news", ({ oldDoc }) => {
 				if (oldDoc._id !== props.newsId) return;
 
@@ -146,11 +154,11 @@ onMounted(async () => {
 		:split="true"
 	>
 		<template #body>
-			<div class="left-section">
+			<div class="left-section" v-show="canShow">
 				<p><strong>Markdown</strong></p>
 				<textarea v-model="inputs['markdown'].value"></textarea>
 			</div>
-			<div class="right-section">
+			<div class="right-section" v-show="canShow">
 				<p><strong>Preview</strong></p>
 				<div
 					class="news-item"
