@@ -1,5 +1,5 @@
 import { HydratedDocument } from "mongoose";
-import { UserSchema } from "../models/users/schema";
+import { UserSchema } from "../../models/users/schema";
 
 export default (
 	model:

@@ -6,7 +6,7 @@ export default class UnsubscribeAll extends Job {
 		super(EventsModule, payload, options);
 	}
 
-	protected override async _authorize() {}
+	protected static _hasPermission = true;
 
 	protected async _execute() {
 		const socketId = this._context.getSocketId();

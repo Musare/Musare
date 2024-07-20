@@ -1,6 +1,6 @@
 import { HydratedDocument } from "mongoose";
-import { StationSchema } from "../models/stations/schema";
-import { UserSchema } from "../models/users/schema";
+import { StationSchema } from "../../models/stations/schema";
+import { UserSchema } from "../../models/users/schema";
 
 export default (
 	model: HydratedDocument<StationSchema>,

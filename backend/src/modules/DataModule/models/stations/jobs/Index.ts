@@ -2,9 +2,9 @@ import { HydratedDocument } from "mongoose";
 import { forEachIn } from "@common/utils/forEachIn";
 import DataModule from "@/modules/DataModule";
 import DataModuleJob from "@/modules/DataModule/DataModuleJob";
-import isDj from "@/modules/DataModule/permissions/isDj";
-import isOwner from "@/modules/DataModule/permissions/isOwner";
-import isPublic from "@/modules/DataModule/permissions/isPublic";
+import isDj from "@/modules/DataModule/permissions/modelPermissions/isDj";
+import isOwner from "@/modules/DataModule/permissions/modelPermissions/isOwner";
+import isPublic from "@/modules/DataModule/permissions/modelPermissions/isPublic";
 import { StationModel, StationSchema } from "../schema";
 
 export default class Index extends DataModuleJob {
@@ -28,8 +28,6 @@ export default class Index extends DataModuleJob {
 			throw new Error("Admin filter must be a boolean or undefined");
 	}
 
-	protected override async _authorize() {}
-
 	protected async _execute() {
 		const model = await DataModule.getModel<StationModel>(
 			this.getModelName()
@@ -47,7 +45,7 @@ export default class Index extends DataModuleJob {
 				(user && (isOwner(station, user) || isDj(station, user))) ||
 				(this._payload?.adminFilter &&
 					(await this._context
-						.assertPermission("data.stations.index:adminFilter")
+						.assertPermission("data.stations.index:adminFilter") // TODO fix in new permission system
 						.then(() => true)
 						.catch(() => false)))
 			)

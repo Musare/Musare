@@ -8,7 +8,7 @@ export default abstract class DataModuleJob extends Job {
 
 	protected static _isBulk = false;
 
-	protected static _hasPermission:
+	protected static _hasModelPermission:
 		| boolean
 		| CallableFunction
 		| (boolean | CallableFunction)[] = false;
@@ -43,13 +43,13 @@ export default abstract class DataModuleJob extends Job {
 		return (this.constructor as typeof DataModuleJob)._isBulk;
 	}
 
-	public static async hasPermission(
+	public static async hasModelPermission(
 		model: HydratedDocument<Model<any>>, // TODO model can be null too, as GetModelPermissions is currently written
 		user: HydratedDocument<UserSchema> | null
 	) {
-		const options = Array.isArray(this._hasPermission)
-			? this._hasPermission
-			: [this._hasPermission];
+		const options = Array.isArray(this._hasModelPermission)
+			? this._hasModelPermission
+			: [this._hasModelPermission];
 
 		return options.reduce(async (previous, option) => {
 			if (await previous) return true;

@@ -1,12 +1,14 @@
 import { SessionSchema } from "@models/sessions/schema";
 import { getErrorMessage } from "@common/utils/getErrorMessage";
 import { generateUuid } from "@common/utils/generateUuid";
+import { HydratedDocument } from "mongoose";
 import JobContext from "@/JobContext";
 import JobStatistics, { JobStatisticsType } from "@/JobStatistics";
 import LogBook, { Log } from "@/LogBook";
 import BaseModule from "./BaseModule";
 import EventsModule from "./modules/EventsModule";
 import JobCompletedEvent from "./modules/EventsModule/events/JobCompletedEvent";
+import { UserSchema } from "./modules/DataModule/models/users/schema";
 
 export enum JobStatus {
 	QUEUED = "QUEUED",
@@ -174,6 +176,30 @@ export default abstract class Job {
 
 	public isApiEnabled() {
 		return (this.constructor as typeof Job)._apiEnabled;
+	}
+
+	protected static _hasPermission:
+		| boolean
+		| CallableFunction
+		| (boolean | CallableFunction)[] = false;
+
+	// Check if a given user has generic permission to execute a job, using _hasPermission
+	public static async hasPermission(
+		user: HydratedDocument<UserSchema> | null
+	) {
+		const options = Array.isArray(this._hasPermission)
+			? this._hasPermission
+			: [this._hasPermission];
+
+		return options.reduce(async (previous, option) => {
+			if (await previous) return true;
+
+			if (typeof option === "boolean") return option;
+
+			if (typeof option === "function") return option(user);
+
+			return false;
+		}, Promise.resolve(false));
 	}
 
 	protected async _validate() {}

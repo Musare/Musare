@@ -1,7 +1,11 @@
+import { HydratedDocument } from "mongoose";
+import { forEachIn } from "@common/utils/forEachIn";
 import CacheModule from "@/modules/CacheModule";
-import permissions from "@/modules/DataModule/models/users/permissions";
-import { UserRole } from "../UserRole";
 import DataModuleJob from "@/modules/DataModule/DataModuleJob";
+import { UserSchema } from "../schema";
+import ModuleManager from "@/ModuleManager";
+import Job from "@/Job";
+import Event from "@/modules/EventsModule/Event";
 
 export type GetPermissionsResult = Record<string, boolean>;
 
@@ -14,29 +18,79 @@ export default class GetPermissions extends DataModuleJob {
 
 	protected static _hasPermission = true;
 
+	// _authorize calls GetPermissions and GetModelPermissions, so to avoid ending up in an infinite loop, just override it
 	protected override async _authorize() {}
 
 	protected async _execute(): Promise<GetPermissionsResult> {
 		const user = await this._context.getUser().catch(() => null);
 
-		if (!user) return permissions.guest;
+		const cacheKey = user
+			? `user-permissions.${user._id}`
+			: `user-permissions.guest`;
+		const cachedPermissions = await CacheModule.get(cacheKey);
+		if (cachedPermissions) return cachedPermissions;
 
-		const cacheKey = `user-permissions.${user._id}`;
+		const permissions = await this._getPermissions(user);
 
-		const cached = await CacheModule.get(cacheKey);
+		await CacheModule.set(cacheKey, permissions, 360);
 
-		if (cached) return cached;
+		return permissions;
+	}
 
-		const roles: UserRole[] = [user.role];
+	protected async _getPermissions(user: HydratedDocument<UserSchema> | null) {
+		const jobs = this._getAllJobs();
+		const events = this._getAllEvents();
 
-		let rolePermissions: Record<string, boolean> = {};
-		roles.forEach(role => {
-			if (permissions[role])
-				rolePermissions = { ...rolePermissions, ...permissions[role] };
+		const jobNames = Object.keys(jobs);
+		const eventNames = Object.keys(events);
+
+		const permissions: GetPermissionsResult = {};
+
+		await forEachIn(jobNames, async jobName => {
+			const job = jobs[jobName];
+			const hasPermission = await job.hasPermission(user);
+			if (hasPermission) {
+				permissions[jobName] = true;
+			}
 		});
 
-		await CacheModule.set(cacheKey, rolePermissions, 360);
+		await forEachIn(eventNames, async eventName => {
+			const event = events[eventName];
+			const hasPermission = await event.hasPermission(user);
+			if (hasPermission) {
+				permissions[eventName] = true;
+			}
+		});
 
-		return rolePermissions;
+		return permissions;
+	}
+
+	protected _getAllJobs(): Record<string, typeof Job> {
+		const modules = Object.entries(ModuleManager.getModules() ?? {});
+		let jobs: (string | typeof Job)[][] = [];
+		modules.forEach(([moduleName, module]) => {
+			const moduleJobs = Object.entries(module.getJobs()).map(
+				([jobName, job]) => [`${moduleName}.${jobName}`, job]
+			);
+			jobs = [...jobs, ...moduleJobs];
+		});
+
+		return Object.fromEntries(jobs);
+	}
+
+	protected _getAllEvents(): Record<string, typeof Event> {
+		const modules = Object.entries(ModuleManager.getModules() ?? {});
+		let events: (string | typeof Event)[][] = [];
+		modules.forEach(([moduleName, module]) => {
+			const moduleEvents = Object.entries(module.getEvents()).map(
+				([eventName, event]) => [
+					`event.${moduleName}.${eventName}`,
+					event
+				]
+			);
+			events = [...events, ...moduleEvents];
+		});
+
+		return Object.fromEntries(events);
 	}
 }

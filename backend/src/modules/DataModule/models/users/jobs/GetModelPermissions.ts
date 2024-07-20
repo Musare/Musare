@@ -44,6 +44,7 @@ export default class GetModelPermissions extends DataModuleJob {
 			throw new Error("Model Id must be an ObjectId or undefined");
 	}
 
+	// _authorize calls GetPermissions and GetModelPermissions, so to avoid ending up in an infinite loop, just override it
 	protected override async _authorize() {}
 
 	protected async _execute(): Promise<GetModelPermissionsResult> {
@@ -145,7 +146,7 @@ export default class GetModelPermissions extends DataModuleJob {
 	 * After that, it loops through all DataModule jobs for the provided modelName, and checks if the user has permission for that job
 	 * If it does, it includes these job names in the result, along with the filtered generic permissions.
 	 * One example: with modelName being news, it would get the news FindById job, which always results in "data.news.findById" being true
-	 * due to _hasPermission being true in that class
+	 * due to _hasModelPermission being true in that class
 	 * It will also loop through DataModule events in the same manner, except without the extra logic for findById
 	 */
 	protected async _getPermissionsForModel(
@@ -188,20 +189,20 @@ export default class GetModelPermissions extends DataModuleJob {
 				return;
 			}
 
-			// If the generic permissions has access to for example "data.news.findManyById.*", the user will have permission to the job "data.news.findManyById"
-			if (permissions[`${jobName}.*`]) {
+			// If the generic permissions has access to for example "data.news.findManyById", the user will have permission to the job "data.news.findManyById"
+			if (permissions[`${jobName}`]) {
 				modelPermissions[jobName] = true;
 				return;
 			}
 
 			/**
-			 * If we haven't found a generic permission, but the current job has a hasPermission function, call that function to see if the current user
+			 * If we haven't found a generic permission, but the current job has a hasModelPermission function, call that function to see if the current user
 			 * should have permission for the provided model (document? TODO) (if any). The job, for example data.news.findManyById, will already be aware of the model name
-			 * hasPermission can be overwritten, but by default it will check _hasPermission. This is false by default, but can be true, or a function or array of functions
+			 * hasModelPermission can be overwritten, but by default it will check _hasModelPermission. This is false by default, but can be true, or a function or array of functions
 			 */
 			if (
-				typeof Job.hasPermission === "function" &&
-				(await Job.hasPermission(model, user))
+				typeof Job.hasModelPermission === "function" &&
+				(await Job.hasModelPermission(model, user))
 			) {
 				modelPermissions[jobName] = true;
 				return;
@@ -230,21 +231,21 @@ export default class GetModelPermissions extends DataModuleJob {
 				return;
 			}
 
-			// If the generic permissions has access to for example "event.data.news.updated.*", the user will have permission to the event "event.data.news.updated" regardless of the model id
-			if (permissions[`${eventName}.*`]) {
+			// If the generic permissions has access to for example "event.data.news.updated", the user will have permission to the event "event.data.news.updated" regardless of the model id
+			if (permissions[`${eventName}`]) {
 				modelPermissions[eventName] = true;
 				return;
 			}
 
 			/**
-			 * If we haven't found a generic permission, but the current event has a hasPermission function, call that function to see if the current user
+			 * If we haven't found a generic permission, but the current event has a hasModelPermission function, call that function to see if the current user
 			 * should have permission for the provided model (if any). The event, for example event.data.news.updated, will already be aware of the model name
-			 * hasPermission can be overwritten, but by default it will check _hasPermission. This is false by default, but can be changed to true, or a function,
+			 * hasModelPermission can be overwritten, but by default it will check _hasModelPermission. This is false by default, but can be changed to true, or a function,
 			 * or an array of functions
 			 */
 			if (
-				typeof Event.hasPermission === "function" &&
-				(await Event.hasPermission(model, user))
+				typeof Event.hasModelPermission === "function" &&
+				(await Event.hasModelPermission(model, user))
 			) {
 				modelPermissions[eventName] = true;
 				return;

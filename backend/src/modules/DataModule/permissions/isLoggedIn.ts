@@ -1,7 +1,4 @@
-import { HydratedDocument, Schema } from "mongoose";
+import { HydratedDocument } from "mongoose";
 import { UserSchema } from "../models/users/schema";
 
-export default <ModelSchemaType extends Schema>(
-	model: HydratedDocument<ModelSchemaType>,
-	user?: HydratedDocument<UserSchema>
-) => !!user;
+export default (user: HydratedDocument<UserSchema>) => user;

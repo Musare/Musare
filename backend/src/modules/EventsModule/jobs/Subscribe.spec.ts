@@ -52,6 +52,11 @@ describe("Subscribe job", async function () {
 				"subscribeSocket"
 			);
 
+			getPermissionsExecute = sinon.stub(
+				GetPermissions.prototype,
+				"execute"
+			);
+
 			modelFindByIdStub;
 
 			Model;
@@ -67,6 +72,7 @@ describe("Subscribe job", async function () {
 				this.dataModuleGetModelStub.restore();
 				this.eventsModuleGetEventStub.restore();
 				this.eventsModuleSubscribeSocketStub.restore();
+				this.getPermissionsExecute.restore();
 			}
 
 			constructor(Model: mongoose.Model<any>, modelFindByIdStub: any) {
@@ -174,7 +180,10 @@ describe("Subscribe job", async function () {
 				channel
 			});
 			// @ts-ignore
-			th.jobContextGetUserStub.resolves(userAdmin); // Or we set _authorize to return true?
+			th.jobContextGetUserStub.resolves(userAdmin);
+			th.getPermissionsExecute.resolves({
+				"event.data.news.created": true
+			});
 			th.jobContextGetSocketIdStub.returns(undefined);
 
 			await job
@@ -189,7 +198,9 @@ describe("Subscribe job", async function () {
 			});
 			// @ts-ignore
 			th.jobContextGetUserStub.resolves(userAdmin);
-
+			th.getPermissionsExecute.resolves({
+				"event.data.news.created": true
+			});
 			th.jobContextGetSocketIdStub.returns("SomeSocketId");
 
 			await job.execute().should.eventually.be.undefined;
@@ -206,6 +217,7 @@ describe("Subscribe job", async function () {
 				});
 				// @ts-ignore
 				th.jobContextGetUserStub.resolves(userNormal);
+				th.getPermissionsExecute.resolves({});
 
 				await job
 					.execute()
@@ -222,7 +234,9 @@ describe("Subscribe job", async function () {
 				});
 				// @ts-ignore
 				th.jobContextGetUserStub.resolves(userAdmin);
-
+				th.getPermissionsExecute.resolves({
+					"event.data.news.created": true
+				});
 				th.jobContextGetSocketIdStub.returns("SomeSocketId");
 
 				await job.execute().should.eventually.be.undefined;
@@ -243,6 +257,9 @@ describe("Subscribe job", async function () {
 				});
 				// @ts-ignore
 				th.jobContextGetUserStub.resolves(userAdmin);
+				th.getPermissionsExecute.resolves({
+					"event.data.news.updated": true
+				});
 
 				createDocument(modelId, NewsStatus.DRAFT);
 
@@ -259,6 +276,7 @@ describe("Subscribe job", async function () {
 				});
 				// @ts-ignore
 				th.jobContextGetUserStub.resolves(userNormal);
+				th.getPermissionsExecute.resolves({});
 
 				createDocument(modelId, NewsStatus.PUBLISHED);
 
@@ -275,6 +293,7 @@ describe("Subscribe job", async function () {
 				});
 				// @ts-ignore
 				th.jobContextGetUserStub.resolves(userNormal);
+				th.getPermissionsExecute.resolves({});
 
 				createDocument(modelId, NewsStatus.DRAFT);
 
@@ -302,6 +321,9 @@ describe("Subscribe job", async function () {
 				});
 				// @ts-ignore
 				th.jobContextGetUserStub.resolves(userAdmin);
+				th.getPermissionsExecute.resolves({
+					"event.data.news.deleted": true
+				});
 
 				createDocument(modelId, NewsStatus.DRAFT);
 
@@ -318,6 +340,7 @@ describe("Subscribe job", async function () {
 				});
 				// @ts-ignore
 				th.jobContextGetUserStub.resolves(userNormal);
+				th.getPermissionsExecute.resolves({});
 
 				createDocument(modelId, NewsStatus.PUBLISHED);
 
@@ -334,6 +357,7 @@ describe("Subscribe job", async function () {
 				});
 				// @ts-ignore
 				th.jobContextGetUserStub.resolves(userNormal);
+				th.getPermissionsExecute.resolves({});
 
 				createDocument(modelId, NewsStatus.DRAFT);
 

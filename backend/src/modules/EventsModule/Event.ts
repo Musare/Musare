@@ -1,3 +1,6 @@
+import { HydratedDocument } from "mongoose";
+import { UserSchema } from "../DataModule/models/users/schema";
+
 export default abstract class Event {
 	protected static _namespace: string;
 
@@ -93,6 +96,30 @@ export default abstract class Event {
 
 	public makeMessage() {
 		return (this.constructor as typeof Event).makeMessage(this._data);
+	}
+
+	protected static _hasPermission:
+		| boolean
+		| CallableFunction
+		| (boolean | CallableFunction)[] = false;
+
+	// Check if a given user has generic permission to subscribe to an event, using _hasPermission
+	public static async hasPermission(
+		user: HydratedDocument<UserSchema> | null
+	) {
+		const options = Array.isArray(this._hasPermission)
+			? this._hasPermission
+			: [this._hasPermission];
+
+		return options.reduce(async (previous, option) => {
+			if (await previous) return true;
+
+			if (typeof option === "boolean") return option;
+
+			if (typeof option === "function") return option(user);
+
+			return false;
+		}, Promise.resolve(false));
 	}
 }
 

@@ -5,7 +5,7 @@ import { UserModel } from "../schema";
 export default class FindById extends FindByIdJob {
 	protected static _modelName = "users";
 
-	protected static _hasPermission = this._isSelf;
+	protected static _hasModelPermission = this._isSelf;
 
 	protected static _isSelf(
 		model: HydratedDocument<UserModel>,

@@ -4,6 +4,4 @@ export default class FindById extends FindByIdJob {
 	protected static _modelName = "minifiedUsers";
 
 	protected static _hasPermission = true;
-
-	protected async _authorize() {}
 }
