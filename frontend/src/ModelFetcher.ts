@@ -67,12 +67,24 @@ export class ModelFetcher {
 				// Only do a request if more than one model isn't already cached
 				if (modelIds.length > 0) {
 					console.log(`Requesting model ids`, modelName, modelIds);
+					let errorCaught = false;
 					const result = (await runJob(
 						`data.${modelName}.findManyById`,
 						{
 							_ids: modelIds
 						}
-					)) as any[];
+					).catch(err => {
+						errorCaught = true;
+						const requests = requestsPerModel[modelName];
+						// For all requests, reject the deferred promise with the returned error.
+						// TODO in the future, we want to handle mixed cases where one or more model was rejected, and one or more was returned
+						requests.forEach(request => {
+							const { promise } = request;
+							promise.reject(err);
+						});
+					})) as any[];
+
+					if (errorCaught) return;
 
 					// Cache the responses for the requested model ids
 					modelIds.forEach(modelId => {
@@ -92,6 +104,7 @@ export class ModelFetcher {
 					const models = modelIds
 						.map(modelId => this.responseCache[modelName][modelId])
 						.filter(model => model);
+					// TODO add errors here for models that returned an error, or if the entire job returned an error
 					promise.resolve(models);
 				});
 
@@ -129,12 +142,17 @@ export class ModelFetcher {
 	public static fetchModelsByIds(modelName: string, modelIds: string[]) {
 		this.responseCache[modelName] ??= {};
 
-		return new Promise(resolve => {
+		return new Promise((resolve, reject) => {
 			const promise = new DeferredPromise();
 
 			// Listens for the deferred promise response, before we actually push and fetch
 			promise.promise.then(result => {
 				resolve(result);
+			});
+
+			promise.promise.catch(err => {
+				// TODO in the future, we want to handle these cases differently, returning error per-model or if the entire function failed
+				reject(err);
 			});
 
 			// Pushes the request to the queue
