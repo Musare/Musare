@@ -6,6 +6,7 @@ import { UserSchema } from "../schema";
 import ModuleManager from "@/ModuleManager";
 import Job from "@/Job";
 import Event from "@/modules/EventsModule/Event";
+import { UserRole } from "../UserRole";
 
 export type GetPermissionsResult = Record<string, boolean>;
 
@@ -44,7 +45,8 @@ export default class GetPermissions extends DataModuleJob {
 		const jobNames = Object.keys(jobs);
 		const eventNames = Object.keys(events);
 
-		const permissions: GetPermissionsResult = {};
+		const permissions: GetPermissionsResult =
+			this._getFrontendViewPermissions(user);
 
 		await forEachIn(jobNames, async jobName => {
 			const job = jobs[jobName];
@@ -63,6 +65,38 @@ export default class GetPermissions extends DataModuleJob {
 		});
 
 		return permissions;
+	}
+
+	protected _getFrontendViewPermissions(
+		user: HydratedDocument<UserSchema> | null
+	): Record<string, boolean> {
+		if (!user) return {};
+
+		const moderatorPermissions = {
+			"admin.view": true,
+			"admin.view.import": true,
+			"admin.view.news": true,
+			"admin.view.playlists": true,
+			"admin.view.punishments": true,
+			"admin.view.reports": true,
+			"admin.view.songs": true,
+			"admin.view.stations": true,
+			"admin.view.users": true,
+			"admin.view.youtubeVideos": true
+		};
+
+		if (user.role === UserRole.MODERATOR) return moderatorPermissions;
+
+		const adminPermissions = {
+			...moderatorPermissions,
+			"admin.view.dataRequests": true,
+			"admin.view.statistics": true,
+			"admin.view.youtube": true
+		};
+
+		if (user.role === UserRole.ADMIN) return adminPermissions;
+
+		return {};
 	}
 
 	protected _getAllJobs(): Record<string, typeof Job> {
