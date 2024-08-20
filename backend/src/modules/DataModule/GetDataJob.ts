@@ -1,70 +1,37 @@
 import { Model } from "mongoose";
+import Joi from "joi";
 import DataModule from "../DataModule";
 import DataModuleJob from "./DataModuleJob";
 import { FilterType, GetData } from "./plugins/getData";
 
 export default abstract class GetDataJob extends DataModuleJob {
-	protected override async _validate() {
-		if (typeof this._payload !== "object" || this._payload === null)
-			throw new Error("Payload must be an object");
-
-		if (typeof this._payload.page !== "number")
-			throw new Error("Page must be a number");
-
-		if (typeof this._payload.pageSize !== "number")
-			throw new Error("Page size must be a number");
-
-		if (!Array.isArray(this._payload.properties))
-			throw new Error("Properties must be an array");
-
-		this._payload.properties.forEach((property: unknown) => {
-			if (typeof property !== "string")
-				throw new Error("Property must be a string");
-		});
-
-		if (
-			typeof this._payload.sort !== "object" ||
-			Array.isArray(this._payload.sort)
-		)
-			throw new Error("Sort must be an object");
-
-		Object.values(this._payload.sort).forEach(sort => {
-			if (sort !== "ascending" && sort !== "descending")
-				throw new Error("Sort must be ascending or descending");
-		});
-
-		if (!Array.isArray(this._payload.queries))
-			throw new Error("Queries must be an array");
-
-		Object.values(this._payload.queries).forEach((query: any) => {
-			if (!query || typeof query !== "object" || Array.isArray(query))
-				throw new Error("Query must be an object");
-
-			if (
-				!query.filter ||
-				typeof query.filter !== "object" ||
-				Array.isArray(query.filter)
+	protected static _payloadSchema = Joi.object({
+		page: Joi.number().required(),
+		pageSize: Joi.number().required(),
+		properties: Joi.array()
+			.items(Joi.string().required())
+			.min(1)
+			.required(),
+		sort: Joi.object()
+			.pattern(
+				/^/,
+				Joi.string().valid("ascending", "descending").required()
 			)
-				throw new Error("Query filter must be an object");
-
-			if (typeof query.filter.property !== "string")
-				throw new Error("Query filter property must be a string");
-
-			if (
-				!Object.values(FilterType).find(
-					value => value === query.filterType
-				)
+			.required(),
+		queries: Joi.array()
+			.items(
+				Joi.object({
+					filter: Joi.object({
+						property: Joi.string().required()
+					}).required(),
+					filterType: Joi.string()
+						.valid(...Object.values(FilterType))
+						.required()
+				})
 			)
-				throw new Error("Invalid Query filter type");
-		});
-
-		if (
-			!["and", "or", "nor"].find(
-				value => value === this._payload.operator
-			)
-		)
-			throw new Error("Operator must be one of; and, or, nor");
-	}
+			.required(),
+		operator: Joi.string().valid("and", "or", "nor").required()
+	});
 
 	protected async _execute() {
 		const model = await DataModule.getModel<Model<any> & Partial<GetData>>(

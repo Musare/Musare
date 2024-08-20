@@ -61,6 +61,8 @@ export const useEvents = () => {
 	};
 
 	const unsubscribeMany = async uuids => {
+		if (uuids.length === 0) return;
+
 		const _subscriptions = Object.fromEntries(
 			Object.entries(subscriptions.value)
 				.filter(([uuid]) => uuids.includes(uuid))
@@ -69,7 +71,7 @@ export const useEvents = () => {
 
 		await websocketStore.unsubscribeMany(_subscriptions);
 
-		return forEachIn(uuids, async uuid => {
+		await forEachIn(uuids, async uuid => {
 			delete subscriptions.value[uuid];
 		});
 	};

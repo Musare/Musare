@@ -251,13 +251,10 @@ export class EventsModule extends BaseModule {
 			const permissions =
 				// eslint-disable-next-line
 				// @ts-ignore
-				(await new GetPermissions(
-					{},
-					{
-						session: jobContext.getSession(),
-						socketId: jobContext.getSocketId()
-					}
-				).execute()) as unknown as GetPermissionsResult;
+				(await new GetPermissions(undefined, {
+					session: jobContext.getSession(),
+					socketId: jobContext.getSocketId()
+				}).execute()) as unknown as GetPermissionsResult;
 
 			hasPermission = permissions[permission];
 		}

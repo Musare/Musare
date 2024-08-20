@@ -1,5 +1,5 @@
-import { isObjectIdOrHexString } from "mongoose";
 import { forEachIn } from "@common/utils/forEachIn";
+import Joi from "joi";
 import CacheModule from "@/modules/CacheModule";
 import DataModule from "@/modules/DataModule";
 import GetPermissions, { GetPermissionsResult } from "./GetPermissions";
@@ -29,20 +29,15 @@ export default class GetModelPermissions extends DataModuleJob {
 
 	protected static _hasPermission = true;
 
-	protected override async _validate() {
-		if (typeof this._payload !== "object" || this._payload === null)
-			throw new Error("Payload must be an object");
-
-		if (typeof this._payload.modelName !== "string")
-			throw new Error("Model name must be a string");
-
-		if (
-			!isObjectIdOrHexString(this._payload.modelId) &&
-			typeof this._payload.modelId !== "undefined" &&
-			this._payload.modelId !== null
-		)
-			throw new Error("Model Id must be an ObjectId or undefined");
-	}
+	protected static _payloadSchema = Joi.object({
+		modelName: Joi.string().required(), // TODO improve
+		modelId: Joi.string()
+			.pattern(/^[0-9a-fA-F]{24}$/)
+			.optional(),
+		modelIds: Joi.array()
+			.items(Joi.string().pattern(/^[0-9a-fA-F]{24}$/))
+			.optional()
+	}).oxor("modelId", "modelIds"); // Both modelId and modelIds are optional. But they cannot be provided at the same time.
 
 	// _authorize calls GetPermissions and GetModelPermissions, so to avoid ending up in an infinite loop, just override it
 	protected override async _authorize() {}

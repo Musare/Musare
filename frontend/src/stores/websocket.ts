@@ -24,7 +24,7 @@ export const useWebsocketStore = defineStore("websocket", () => {
 			const callbackRef = generateUuid();
 			const message = JSON.stringify([
 				job,
-				payload ?? {},
+				payload ?? undefined,
 				{ callbackRef }
 			]);
 
@@ -81,9 +81,11 @@ export const useWebsocketStore = defineStore("websocket", () => {
 			subscriptions.value[channel].status = "subscribing";
 		});
 
-		await runJob("events.subscribeMany", {
-			channels: channelsToSubscribeTo
-		});
+		if (channelsToSubscribeTo.length > 0) {
+			await runJob("events.subscribeMany", {
+				channels: channelsToSubscribeTo
+			});
+		}
 
 		channelsToSubscribeTo.forEach(channel => {
 			subscriptions.value[channel].status = "subscribed";
@@ -129,9 +131,11 @@ export const useWebsocketStore = defineStore("websocket", () => {
 				Object.keys(subscriptions.value[channel].callbacks).length <= 1
 		);
 
-		await runJob("events.unsubscribeMany", {
-			channels: channelsToUnsubscribeFrom
-		});
+		if (channelsToUnsubscribeFrom.length > 0) {
+			await runJob("events.unsubscribeMany", {
+				channels: channelsToUnsubscribeFrom
+			});
+		}
 
 		channelsToUnsubscribeFrom.forEach(channel => {
 			delete subscriptions.value[channel];

@@ -1,20 +1,18 @@
+import Joi from "joi";
 import Job, { JobOptions } from "@/Job";
 import EventsModule from "@/modules/EventsModule";
+import { channelRegex } from "./Subscribe";
 
 export default class Unsubscribe extends Job {
+	protected static _payloadSchema = Joi.object({
+		channel: Joi.string().pattern(channelRegex).required()
+	});
+
 	public constructor(payload?: unknown, options?: JobOptions) {
 		super(EventsModule, payload, options);
 	}
 
 	protected static _hasPermission = true;
-
-	protected override async _validate() {
-		if (typeof this._payload !== "object" || this._payload === null)
-			throw new Error("Payload must be an object");
-
-		if (typeof this._payload.channel !== "string")
-			throw new Error("Channel must be a string");
-	}
 
 	protected async _execute() {
 		const socketId = this._context.getSocketId();

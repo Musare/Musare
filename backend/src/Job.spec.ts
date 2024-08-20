@@ -7,7 +7,7 @@ import { TestModule } from "@/tests/support/TestModule";
 describe("Job", function () {
 	class TestJob extends Job {
 		public constructor(options?: JobOptions) {
-			super(new TestModule(), null, options);
+			super(new TestModule(), undefined, options);
 		}
 
 		protected async _execute() {}
@@ -125,6 +125,7 @@ describe("Job", function () {
 			const job = new TestJob();
 			const stub = sinon.stub();
 			Reflect.set(job, "_validate", stub);
+			Reflect.set(job, "_validated", true);
 			Reflect.set(job, "_authorize", sinon.stub());
 
 			await job.execute();

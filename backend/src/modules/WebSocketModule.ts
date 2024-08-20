@@ -195,7 +195,7 @@ export class WebSocketModule extends BaseModule {
 
 			const Job = EventsModule.getJob("unsubscribeAll");
 
-			await JobQueue.runJob(Job, null, {
+			await JobQueue.runJob(Job, undefined, {
 				socketId
 			});
 
@@ -227,11 +227,11 @@ export class WebSocketModule extends BaseModule {
 			if (!Array.isArray(data) || data.length < 1)
 				throw new Error("Invalid request");
 
-			const [moduleJob, payload, options] = data;
+			const [moduleJob, _payload, options] = data;
 			const moduleName = moduleJob.substring(0, moduleJob.indexOf("."));
 			const jobName = moduleJob.substring(moduleJob.indexOf(".") + 1);
 
-			const { callbackRef } = options ?? payload ?? {};
+			const { callbackRef } = options ?? _payload ?? {};
 
 			if (!callbackRef)
 				throw new Error(
@@ -261,6 +261,8 @@ export class WebSocketModule extends BaseModule {
 				if (!session) throw new Error("Session not found.");
 			}
 
+			// Transform null to undefined, as JSON doesn't support undefined
+			const payload = _payload === null ? undefined : _payload;
 			await JobQueue.queueJob(Job, payload, {
 				session,
 				socketId: socket.getSocketId(),

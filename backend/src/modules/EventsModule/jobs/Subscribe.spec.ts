@@ -163,7 +163,7 @@ describe("Subscribe job", async function () {
 
 			await job
 				.execute()
-				.should.eventually.be.rejectedWith("Payload must be an object");
+				.should.eventually.be.rejectedWith(`"value" is required`);
 		});
 
 		it("should not allow no channel", async function () {
@@ -171,7 +171,7 @@ describe("Subscribe job", async function () {
 
 			await job
 				.execute()
-				.should.eventually.be.rejectedWith("Channel must be a string");
+				.should.eventually.be.rejectedWith('"channel" is required');
 		});
 
 		it("should not allow no socket id", async function () {

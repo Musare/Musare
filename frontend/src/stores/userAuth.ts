@@ -200,10 +200,12 @@ export const useUserAuthStore = defineStore("userAuth", () => {
 		!!(permissions.value && permissions.value[permission]);
 
 	const updatePermissions = () =>
-		websocketStore.runJob("data.users.getPermissions", {}).then(data => {
-			permissions.value = data;
-			gotPermissions.value = true;
-		});
+		websocketStore
+			.runJob("data.users.getPermissions", undefined)
+			.then(data => {
+				permissions.value = data;
+				gotPermissions.value = true;
+			});
 
 	const resetCookieExpiration = () => {
 		const cookies = {};

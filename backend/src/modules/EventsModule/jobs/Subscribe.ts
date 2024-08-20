@@ -1,20 +1,20 @@
+import Joi from "joi";
 import Job, { JobOptions } from "@/Job";
 import EventsModule from "@/modules/EventsModule";
 import Event from "@/modules/EventsModule/Event";
 
+// TODO support more channels types if more apply
+export const channelRegex = /^data\.[a-zA-Z]+\.[a-z]+(?::[A-z0-9]{24})?$/;
+
 export default class Subscribe extends Job {
 	protected static _hasPermission = true;
 
+	protected static _payloadSchema = Joi.object({
+		channel: Joi.string().pattern(channelRegex).required()
+	});
+
 	public constructor(payload?: unknown, options?: JobOptions) {
 		super(EventsModule, payload, options);
-	}
-
-	protected override async _validate() {
-		if (typeof this._payload !== "object" || this._payload === null)
-			throw new Error("Payload must be an object");
-
-		if (typeof this._payload.channel !== "string")
-			throw new Error("Channel must be a string");
 	}
 
 	protected override async _authorize() {

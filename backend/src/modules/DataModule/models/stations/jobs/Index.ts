@@ -1,5 +1,6 @@
 import { HydratedDocument } from "mongoose";
 import { forEachIn } from "@common/utils/forEachIn";
+import Joi from "joi";
 import DataModule from "@/modules/DataModule";
 import DataModuleJob from "@/modules/DataModule/DataModuleJob";
 import isDj from "@/modules/DataModule/permissions/modelPermissions/isDj";
@@ -12,21 +13,9 @@ export default class Index extends DataModuleJob {
 
 	protected static _hasPermission = true;
 
-	protected override async _validate() {
-		if (
-			typeof this._payload !== "object" &&
-			typeof this._payload !== "undefined" &&
-			this._payload !== null
-		)
-			throw new Error("Payload must be an object or undefined");
-
-		if (
-			typeof this._payload?.adminFilter !== "boolean" &&
-			typeof this._payload?.adminFilter !== "undefined" &&
-			this._payload?.adminFilter !== null
-		)
-			throw new Error("Admin filter must be a boolean or undefined");
-	}
+	protected static _payloadSchema = Joi.object({
+		adminFilter: Joi.boolean().optional()
+	});
 
 	protected async _execute() {
 		const model = await DataModule.getModel<StationModel>(

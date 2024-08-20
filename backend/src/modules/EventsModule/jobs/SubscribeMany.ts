@@ -1,26 +1,23 @@
 import { forEachIn } from "@common/utils/forEachIn";
+import Joi from "joi";
 import Job, { JobOptions } from "@/Job";
 import EventsModule from "@/modules/EventsModule";
 import Event from "../Event";
 
+import { channelRegex } from "./Subscribe";
+
 export default class SubscribeMany extends Job {
 	protected static _hasPermission = true;
 
+	protected static _payloadSchema = Joi.object({
+		channels: Joi.array()
+			.items(Joi.string().pattern(channelRegex).required())
+			.min(1)
+			.required()
+	});
+
 	public constructor(payload?: unknown, options?: JobOptions) {
 		super(EventsModule, payload, options);
-	}
-
-	protected override async _validate() {
-		if (typeof this._payload !== "object" || this._payload === null)
-			throw new Error("Payload must be an object");
-
-		if (!Array.isArray(this._payload.channels))
-			throw new Error("Channels must be an array");
-
-		this._payload.channels.forEach((channel: unknown) => {
-			if (typeof channel !== "string")
-				throw new Error("Channel must be a string");
-		});
 	}
 
 	protected override async _authorize() {

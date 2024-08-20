@@ -2,6 +2,7 @@ import { SessionSchema } from "@models/sessions/schema";
 import { getErrorMessage } from "@common/utils/getErrorMessage";
 import { generateUuid } from "@common/utils/generateUuid";
 import { HydratedDocument } from "mongoose";
+import Joi from "joi";
 import JobContext from "@/JobContext";
 import JobStatistics, { JobStatisticsType } from "@/JobStatistics";
 import LogBook, { Log } from "@/LogBook";
@@ -178,6 +179,10 @@ export default abstract class Job {
 		return (this.constructor as typeof Job)._apiEnabled;
 	}
 
+	public getPayloadSchema() {
+		return (this.constructor as typeof Job)._payloadSchema;
+	}
+
 	protected static _hasPermission:
 		| boolean
 		| CallableFunction
@@ -202,7 +207,30 @@ export default abstract class Job {
 		}, Promise.resolve(false));
 	}
 
-	protected async _validate() {}
+	// If a job expects a payload, it must override this
+	protected static _payloadSchema: Joi.ObjectSchema<any> | null = null;
+
+	// Whether this _validate has been called. May not be modified by classes that extend Job
+	protected _validated = false;
+
+	// If a class that extends Job overrides _validate, it must still call super._validate, so this always gets called
+	protected async _validate() {
+		const payloadSchema = this.getPayloadSchema();
+
+		if (this._payload === undefined && !payloadSchema)
+			this._validated = true;
+		else if (!payloadSchema) {
+			throw new Error(
+				"Payload provided, but no payload schema specified."
+			);
+		} else {
+			await payloadSchema.validateAsync(this._payload, {
+				presence: "required"
+			});
+		}
+
+		this._validated = true;
+	}
 
 	protected async _authorize() {
 		await this._context.assertPermission(this.getPath());
@@ -226,6 +254,13 @@ export default abstract class Job {
 
 		try {
 			await this._validate();
+
+			// Safety check, to make sure this class' _validate function was called
+			if (!this._validated) {
+				throw new Error(
+					"Validate function was fine, but validated was false. Warning. Make sure to call super when you override _validate."
+				);
+			}
 
 			await this._authorize();
 
