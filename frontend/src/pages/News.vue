@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted } from "vue";
+import { defineAsyncComponent, ref, onMounted, computed } from "vue";
 
 import { formatDistance } from "date-fns";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { NewsModel } from "@musare_types/models/News";
+import { forEachIn } from "@common/utils/forEachIn";
 import { useEvents } from "@/composables/useEvents";
 import { useModels } from "@/composables/useModels";
 import { useWebsocketStore } from "@/stores/websocket";
@@ -17,10 +18,18 @@ const MainFooter = defineAsyncComponent(
 );
 
 const { runJob } = useWebsocketStore();
-const { onReady } = useEvents();
-const { registerModel, registerModels, onCreated, onDeleted } = useModels();
+const { onReady, subscribe } = useEvents();
+const { registerModel, registerModels } = useModels();
 
 const news = ref<NewsModel[]>([]);
+
+const sortedNews = computed(() =>
+	news.value.toSorted(
+		(newsA, newsB) =>
+			new Date(newsB.createdAt).getTime() -
+			new Date(newsA.createdAt).getTime()
+	)
+);
 
 const { sanitize } = DOMPurify;
 
@@ -36,24 +45,33 @@ onMounted(async () => {
 		}
 	});
 
+	const addNews = async models => {
+		await forEachIn(models, async model => {
+			await subscribe(
+				`data.news.unpublished:${model._id}`,
+				async ({ oldDoc }) => {
+					const index = news.value.findIndex(
+						doc => doc._id === oldDoc._id
+					);
+
+					if (index < 0) return;
+
+					news.value.splice(index, 1);
+				}
+			);
+			news.value.push(model);
+		});
+	};
+
 	await onReady(async () => {
-		news.value = await registerModels(
-			await runJob("data.news.newest", {}),
-			{ news: "createdBy" }
-		);
+		const docs = await runJob("data.news.newest", {});
+		const models = await registerModels(docs, { news: "createdBy" });
+		await addNews(models);
 	});
 
-	await onCreated("news", async ({ doc }) => {
-		const newDoc = await registerModel(doc, { news: "createdBy" });
-		news.value.unshift(newDoc);
-	});
-
-	await onDeleted("news", async ({ oldDoc }) => {
-		const index = news.value.findIndex(doc => doc._id === oldDoc._id);
-
-		if (index < 0) return;
-
-		news.value.splice(index, 1);
+	await subscribe("data.news.published", async ({ doc }) => {
+		const model = await registerModel(doc, { news: "createdBy" });
+		await addNews([model]);
 	});
 });
 </script>
@@ -66,7 +84,7 @@ onMounted(async () => {
 			<div class="content-wrapper">
 				<h1 class="has-text-centered page-title">News</h1>
 				<div
-					v-for="item in news"
+					v-for="item in sortedNews"
 					:key="item._id"
 					class="section news-item"
 				>
