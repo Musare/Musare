@@ -1,7 +1,8 @@
+import News from "@models/News";
 import DataModuleEvent from "@/modules/DataModule/DataModuleEvent";
 
-export default abstract class NewsPublishedEvent extends DataModuleEvent {
-	protected static _modelName = "news";
+export default class NewsPublishedEvent extends DataModuleEvent {
+	protected static _model = News;
 
 	protected static _name = "published";
 

@@ -91,6 +91,13 @@
 		"port": 27017,
 		"database": "musare"
 	},
+	"postgres": {
+		"username": "musare",
+		"password": "PASSWORD",
+		"host": "postgres",
+		"port": 5432,
+		"database": "musare"
+	},
 	"blacklistedCommunityStationNames": [
 		"musare"
 	],

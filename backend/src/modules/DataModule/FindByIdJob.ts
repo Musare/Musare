@@ -10,10 +10,10 @@ export default abstract class FindByIdJob extends DataModuleJob {
 	});
 
 	protected async _execute() {
-		const model = await DataModule.getModel(this.getModelName());
+		const { _id } = this._payload;
 
-		const query = model.findById(this._payload._id);
-
-		return query.exec();
+		return this.getModel().findOne({
+			where: { _id }
+		});
 	}
 }

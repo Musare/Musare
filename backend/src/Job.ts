@@ -3,6 +3,7 @@ import { getErrorMessage } from "@common/utils/getErrorMessage";
 import { generateUuid } from "@common/utils/generateUuid";
 import { HydratedDocument } from "mongoose";
 import Joi from "joi";
+import * as inflection from "inflection";
 import JobContext from "@/JobContext";
 import JobStatistics, { JobStatisticsType } from "@/JobStatistics";
 import LogBook, { Log } from "@/LogBook";
@@ -106,17 +107,14 @@ export default abstract class Job {
 	 * getName - Get job name
 	 */
 	public static getName() {
-		return this.name.substring(0, 1).toLowerCase() + this.name.substring(1);
+		return inflection.camelize(this.name, true);
 	}
 
 	/**
 	 * getName - Get job name
 	 */
 	public getName() {
-		return (
-			this.constructor.name.substring(0, 1).toLowerCase() +
-			this.constructor.name.substring(1)
-		);
+		return (this.constructor as typeof Job).getName();
 	}
 
 	/**

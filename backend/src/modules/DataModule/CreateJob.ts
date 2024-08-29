@@ -1,5 +1,4 @@
 import Joi from "joi";
-import DataModule from "../DataModule";
 import DataModuleJob from "./DataModuleJob";
 
 export default abstract class CreateJob extends DataModuleJob {
@@ -10,9 +9,9 @@ export default abstract class CreateJob extends DataModuleJob {
 	protected async _execute() {
 		const { query } = this._payload;
 
-		const model = await DataModule.getModel(this.getModelName());
+		const model = this.getModel();
 
-		if (model.schema.path("createdBy"))
+		if (Object.hasOwn(model.getAttributes(), "createdBy"))
 			query.createdBy = (await this._context.getUser())._id;
 
 		return model.create(query);

@@ -8,6 +8,10 @@
 		"user": "MONGO_USER_USERNAME",
 		"password": "MONGO_USER_PASSWORD"
 	},
+	"postgres": {
+		"username": "POSTGRES_USERNAME",
+		"password": "POSTGRES_PASSWORD"
+	},
 	"debug": {
 		"git": {
 			"remote": "MUSARE_DEBUG_GIT_REMOTE",

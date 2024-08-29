@@ -1,10 +1,10 @@
-import { HydratedDocument, Model, isValidObjectId } from "mongoose";
+import { isValidObjectId } from "mongoose";
+import { Model, ModelStatic } from "sequelize";
 import Job, { JobOptions } from "@/Job";
 import DataModule from "../DataModule";
-import { UserSchema } from "./models/users/schema";
 
 export default abstract class DataModuleJob extends Job {
-	protected static _modelName: string;
+	protected static _model: ModelStatic<any>;
 
 	protected static _isBulk = false;
 
@@ -18,21 +18,15 @@ export default abstract class DataModuleJob extends Job {
 	}
 
 	public static override getName() {
-		return `${this._modelName}.${super.getName()}`;
+		return `${this.getModel().getTableName()}.${super.getName()}`;
 	}
 
-	public override getName() {
-		return `${
-			(this.constructor as typeof DataModuleJob)._modelName
-		}.${super.getName()}`;
+	public static getModel() {
+		return this._model;
 	}
 
-	public static getModelName() {
-		return this._modelName;
-	}
-
-	public getModelName() {
-		return (this.constructor as typeof DataModuleJob)._modelName;
+	public getModel() {
+		return (this.constructor as typeof DataModuleJob).getModel();
 	}
 
 	public static isBulk() {
@@ -40,12 +34,12 @@ export default abstract class DataModuleJob extends Job {
 	}
 
 	public isBulk() {
-		return (this.constructor as typeof DataModuleJob)._isBulk;
+		return (this.constructor as typeof DataModuleJob).isBulk();
 	}
 
 	public static async hasModelPermission(
-		model: HydratedDocument<Model<any>>, // TODO model can be null too, as GetModelPermissions is currently written
-		user: HydratedDocument<UserSchema> | null
+		model: Model | null,
+		user: Model | null
 	) {
 		const options = Array.isArray(this._hasModelPermission)
 			? this._hasModelPermission

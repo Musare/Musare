@@ -12,8 +12,8 @@ export default abstract class DeleteByIdJob extends DataModuleJob {
 	protected async _execute() {
 		const { _id } = this._payload;
 
-		const model = await DataModule.getModel(this.getModelName());
-
-		return model.deleteOne({ _id });
+		return this.getModel().destroy({
+			where: { _id }
+		});
 	}
 }

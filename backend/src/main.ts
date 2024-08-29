@@ -3,10 +3,13 @@ import ModuleManager from "@/ModuleManager";
 import LogBook from "@/LogBook";
 import JobQueue from "@/JobQueue";
 import JobStatistics from "@/JobStatistics";
-import DataModule from "@/modules/DataModule";
+// import DataModule from "@/modules/DataModule";
 import EventsModule from "./modules/EventsModule";
-import { NewsModel } from "./modules/DataModule/models/news/schema";
-import { FilterType } from "./modules/DataModule/plugins/getData";
+// import { NewsModel } from "./modules/DataModule/models/news/schema";
+// import { FilterType } from "./modules/DataModule/plugins/getData";
+import News from "./modules/DataModule/models/News";
+import { NewsStatus } from "@models/News/NewsStatus";
+import GetData from "./modules/DataModule/models/News/jobs/GetData";
 
 process.removeAllListeners("uncaughtException");
 process.on("uncaughtException", err => {
@@ -21,33 +24,33 @@ process.on("uncaughtException", err => {
 });
 
 ModuleManager.startup().then(async () => {
-	const Model = await DataModule.getModel<NewsModel>("news");
-	// console.log("Model", Model);
-	const abcs = await Model.findOne({}).newest();
-	console.log("Abcs", abcs);
-	console.log(
-		"getData",
-		await Model.getData({
-			page: 1,
-			pageSize: 3,
-			properties: [
-				"title",
-				"markdown",
-				"status",
-				"showToNewUsers",
-				"createdBy"
-			],
-			sort: {},
-			queries: [
-				{
-					data: "v7",
-					filter: { property: "title" },
-					filterType: FilterType.CONTAINS
-				}
-			],
-			operator: "and"
-		})
-	);
+	// const Model = await DataModule.getModel<NewsModel>("news");
+	// // console.log("Model", Model);
+	// const abcs = await Model.findOne({}).newest();
+	// console.log("Abcs", abcs);
+	// console.log(
+	// 	"getData",
+	// 	await Model.getData({
+	// 		page: 1,
+	// 		pageSize: 3,
+	// 		properties: [
+	// 			"title",
+	// 			"markdown",
+	// 			"status",
+	// 			"showToNewUsers",
+	// 			"createdBy"
+	// 		],
+	// 		sort: {},
+	// 		queries: [
+	// 			{
+	// 				data: "v7",
+	// 				filter: { property: "title" },
+	// 				filterType: FilterType.CONTAINS
+	// 			}
+	// 		],
+	// 		operator: "and"
+	// 	})
+	// );
 
 	// Model.create({
 	// 	name: "Test name",
@@ -69,6 +72,27 @@ ModuleManager.startup().then(async () => {
 	// 	console.log(`PUBLISHED: ${value}`);
 	// });
 	// await EventsModule.publish("test", "a value!");
+
+	console.log(
+		await News.findAll({
+			where: {
+				status: NewsStatus.PUBLISHED
+			}
+		})
+	);
+
+	console.log(
+		await (new GetData({
+			page: 1,
+			pageSize: 10,
+			properties: ['id'],
+			sort: {
+				id: 'ascending'
+			},
+			queries: [],
+			operator: 'and'
+		}).execute())
+	);
 });
 
 // TOOD remove, or put behind debug option

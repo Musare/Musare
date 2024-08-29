@@ -18,6 +18,8 @@ services:
       - MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT=${MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT:-true}
       - MONGO_USER_USERNAME=${MONGO_USER_USERNAME}
       - MONGO_USER_PASSWORD=${MONGO_USER_PASSWORD}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     links:
       - mongo
@@ -74,6 +76,18 @@ services:
     volumes:
       - cache:/data
 
+  postgres:
+    image: postgres
+    restart: unless-stopped
+    networks:
+      - backend
+    environment:
+      - POSTGRES_DB=musare
+      - POSTGRES_USER=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data 
+
 networks:
   proxy:
 
@@ -81,5 +95,7 @@ networks:
 
 volumes:
   database:
+
+  pgdata:
 
   cache:

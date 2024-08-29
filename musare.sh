@@ -122,14 +122,14 @@ runDockerCommand()
         throw "Error: Invalid runDockerCommand input"
     fi
 
-    servicesString=$(handleServices "backend frontend mongo redis" "${@:3}")
+    servicesString=$(handleServices "backend frontend mongo postgres redis" "${@:3}")
     if [[ ${servicesString:0:1} != 1 ]]; then
-        throw "${servicesString:2}\n${YELLOW}Usage: ${1} [backend, frontend, mongo, redis]"
+        throw "${servicesString:2}\n${YELLOW}Usage: ${1} [backend, frontend, mongo, postgres, redis]"
     fi
 
     if [[ ${servicesString:2:4} == "all" ]]; then
         servicesString=""
-        pullServices="mongo redis"
+        pullServices="mongo postgres redis"
         buildServices="backend frontend"
     else
         servicesString=${servicesString:2}
@@ -138,6 +138,10 @@ runDockerCommand()
 
         if [[ "${servicesString}" == *mongo* ]]; then
             pullArray+=("mongo")
+        fi
+
+        if [[ "${servicesString}" == *postgres* ]]; then
+            pullArray+=("postgres")
         fi
 
         if [[ "${servicesString}" == *redis* ]]; then
@@ -198,9 +202,9 @@ getContainerId()
 # Reset services
 handleReset()
 {
-    servicesString=$(handleServices "backend frontend mongo redis" "${@:2}")
+    servicesString=$(handleServices "backend frontend mongo postgres redis" "${@:2}")
     if [[ ${servicesString:0:1} != 1 ]]; then
-        throw "${servicesString:2}\n${YELLOW}Usage: ${1} [backend, frontend, mongo, redis]"
+        throw "${servicesString:2}\n${YELLOW}Usage: ${1} [backend, frontend, mongo, postgres, redis]"
     fi
 
     confirmMessage="${GREEN}Are you sure you want to reset all data"
@@ -247,6 +251,11 @@ attachContainer()
             else
                 ${dockerCompose} exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}"
             fi
+            ;;
+
+        postgres)
+            echo -e "${YELLOW}Detach with CTRL+D${NC}"
+            PGPASSWORD="${POSTGRES_PASSWORD}" ${dockerCompose} exec postgres psql "${POSTGRES_USERNAME}" musare
             ;;
 
         redis)
@@ -536,6 +545,18 @@ handleAdmin()
     esac
 }
 
+# Execute a command in a container
+handleExecute()
+{
+    servicesString=$(handleServices "backend frontend mongo postgres redis" "${2}")
+    if [[ ${servicesString:0:1} != 1 ]]; then
+        throw "${servicesString:2}\n${YELLOW}Usage: ${1} [backend, frontend, mongo, postgres, redis]"
+    fi
+
+    # shellcheck disable=SC2068
+    ${dockerCompose} exec "${2}" ${@:3}
+}
+
 availableCommands=$(cat << COMMANDS
 start - Start services
 stop - Stop services
@@ -543,7 +564,7 @@ restart - Restart services
 status - Service status
 logs - View logs for services
 update - Update Musare
-attach [backend,mongo,redis] - Attach to backend service, mongo or redis shell
+attach [backend,mongo,postgres,redis] - Attach to backend service, mongo, postgres or redis shell
 build - Build services
 lint - Run lint on frontend, backend, docs and/or shell
 backup - Backup database data to file
@@ -551,6 +572,7 @@ restore - Restore database data from backup file
 reset - Reset service data
 admin [add,remove] - Assign/unassign admin role to/from a user
 typescript - Run typescript checks on frontend and/or backend
+execute - Execute command in service docker container
 COMMANDS
 )
 
@@ -651,6 +673,12 @@ case $1 in
         echo -e "${CYAN}Musare | Add Admin${NC}"
         # shellcheck disable=SC2068
         handleAdmin "$(basename "$0") $1" ${@:2}
+        ;;
+
+    execute|exec)
+        echo -e "${CYAN}Musare | Execute${NC}"
+        # shellcheck disable=SC2068
+        handleExecute "$(basename "$0") $1" ${@:2}
         ;;
 
     "")

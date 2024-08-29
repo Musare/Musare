@@ -17,13 +17,10 @@ export default abstract class FindManyByIdJob extends DataModuleJob {
 	});
 
 	protected async _execute() {
-		const model = await DataModule.getModel(this.getModelName());
-
 		const { _ids } = this._payload;
-		const query = model.find({
-			_id: _ids
-		});
 
-		return query.exec();
+		return this.getModel().findAll({
+			where: { _id: _ids }
+		});
 	}
 }

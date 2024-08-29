@@ -13,8 +13,8 @@ export default abstract class UpdateByIdJob extends DataModuleJob {
 	protected async _execute() {
 		const { _id, query } = this._payload;
 
-		const model = await DataModule.getModel(this.getModelName());
-
-		return model.updateOne({ _id }, { $set: query });
+		return this.getModel().update(query, {
+			where: { _id }
+		});
 	}
 }

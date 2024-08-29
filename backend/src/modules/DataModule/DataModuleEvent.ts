@@ -1,29 +1,28 @@
-import { HydratedDocument, Model } from "mongoose";
+import { Model, ModelStatic } from "sequelize";
 import DataModule from "../DataModule";
 import ModuleEvent from "../EventsModule/ModuleEvent";
-import { UserSchema } from "./models/users/schema";
 
 export default abstract class DataModuleEvent extends ModuleEvent {
 	protected static _module = DataModule;
 
-	protected static _modelName: string;
+	protected static _model: ModelStatic<any>;
 
 	protected static _hasModelPermission:
 		| boolean
 		| CallableFunction
 		| (boolean | CallableFunction)[] = false;
 
-	public static override getName() {
-		return `${this._modelName}.${super.getName()}`;
+	public static getModel() {
+		return this._model;
 	}
 
-	public static getModelName() {
-		return this._modelName;
+	public static override getName() {
+		return `${this.getModel().getTableName()}.${super.getName()}`;
 	}
 
 	public static async hasModelPermission(
-		model: HydratedDocument<Model<any>>, // TODO model can be null too, as GetModelPermissions is currently written
-		user: HydratedDocument<UserSchema> | null
+		model: Model | null,
+		user: Model | null
 	) {
 		const options = Array.isArray(this._hasModelPermission)
 			? this._hasModelPermission
