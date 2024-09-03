@@ -1,7 +1,6 @@
 import Joi from "joi";
-import DataModule from "../DataModule";
-import DataModuleJob from "./DataModuleJob";
 import { FindOptions, WhereOptions, Op } from "sequelize";
+import DataModuleJob from "./DataModuleJob";
 
 export enum FilterType {
 	REGEX = "regex",
@@ -49,14 +48,24 @@ export default abstract class GetDataJob extends DataModuleJob {
 
 	protected _blacklistedProperties?: string[];
 
-	protected _specialFilters?: Record<string, (query: FindOptions, data: any) => FindOptions>;
+	protected _specialFilters?: Record<
+		string,
+		(query: FindOptions, data: any) => FindOptions
+	>;
 
-	protected _specialProperties?: Record<string, (query: FindOptions) => FindOptions>;
+	protected _specialProperties?: Record<
+		string,
+		(query: FindOptions) => FindOptions
+	>;
 
-	protected _specialQueries?: Record<string, (query: WhereOptions) => WhereOptions>;
+	protected _specialQueries?: Record<
+		string,
+		(query: WhereOptions) => WhereOptions
+	>;
 
 	protected async _execute() {
-		const { page, pageSize, properties, sort, queries, operator } = this._payload;
+		const { page, pageSize, properties, sort, queries, operator } =
+			this._payload;
 
 		let findQuery: FindOptions = {};
 
@@ -65,15 +74,11 @@ export default abstract class GetDataJob extends DataModuleJob {
 			if (
 				queries.some(query =>
 					this._blacklistedProperties!.some(blacklistedProperty =>
-						blacklistedProperty.startsWith(
-							query.filter.property
-						)
+						blacklistedProperty.startsWith(query.filter.property)
 					)
 				)
 			)
-				throw new Error(
-					"Unable to filter by blacklisted property."
-				);
+				throw new Error("Unable to filter by blacklisted property.");
 			if (
 				Object.keys(sort).some(property =>
 					this._blacklistedProperties!.some(blacklistedProperty =>
@@ -155,9 +160,12 @@ export default abstract class GetDataJob extends DataModuleJob {
 				case FilterType.SPECIAL:
 					if (
 						typeof this._specialFilters?.[filter.property] ===
-							"function"
+						"function"
 					) {
-						findQuery = this._specialFilters[filter.property](findQuery, data);
+						findQuery = this._specialFilters[filter.property](
+							findQuery,
+							data
+						);
 						newQuery[property] = { [Op.eq]: true };
 					}
 					break;
@@ -165,9 +173,7 @@ export default abstract class GetDataJob extends DataModuleJob {
 					throw new Error(`Invalid filter type for "${filter}"`);
 			}
 
-			if (
-				typeof this._specialQueries?.[filter.property] === "function"
-			) {
+			if (typeof this._specialQueries?.[filter.property] === "function") {
 				return this._specialQueries[filter.property](newQuery);
 			}
 
@@ -181,10 +187,12 @@ export default abstract class GetDataJob extends DataModuleJob {
 
 		// Adds order stage to query if there is at least one column being sorted, responsible for sorting data
 		if (Object.keys(sort).length > 0)
-			findQuery.order = Object.entries(sort).map(([property, direction]) => [
-				property,
-				direction === "ascending" ? "ASC" : "DESC"
-			]);
+			findQuery.order = Object.entries(sort).map(
+				([property, direction]) => [
+					property,
+					direction === "ascending" ? "ASC" : "DESC"
+				]
+			);
 
 		findQuery.attributes = {
 			include: properties,
@@ -194,7 +202,9 @@ export default abstract class GetDataJob extends DataModuleJob {
 		findQuery.limit = pageSize;
 
 		// Executes the query
-		const { rows, count } = (await this.getModel().findAndCountAll(findQuery));
+		const { rows, count } = await this.getModel().findAndCountAll(
+			findQuery
+		);
 
 		const data = rows.map(model => model.toJSON()); // TODO: Review generally
 

@@ -1,19 +1,20 @@
 import {
-	Sequelize,
 	DataTypes,
 	Model,
 	InferAttributes,
 	InferCreationAttributes,
-	CreationOptional,
+	CreationOptional
 } from "sequelize";
 import { NewsStatus } from "@models/News/NewsStatus";
 import EventsModule from "@/modules/EventsModule";
+import User from "./User";
+import { ObjectIdType } from "@/modules/DataModule";
 
 export class News extends Model<
 	InferAttributes<News>,
 	InferCreationAttributes<News>
 > {
-	declare id: CreationOptional<number>;
+	declare _id: CreationOptional<ObjectIdType>;
 
 	declare title: string;
 
@@ -29,10 +30,11 @@ export class News extends Model<
 }
 
 export const schema = {
-	id: {
-		type: DataTypes.BIGINT,
-		autoIncrement: true,
-		primaryKey: true
+	_id: {
+		type: DataTypes.OBJECTID,
+		allowNull: false,
+		primaryKey: true,
+		defaultValue: () => "66d6d2d2065de4fd650278be" // TODO add ObjectId generator
 	},
 	title: {
 		type: DataTypes.STRING,
@@ -52,12 +54,15 @@ export const schema = {
 		defaultValue: false,
 		allowNull: false
 	},
-	createdBy: {
-		type: DataTypes.BIGINT,
-		allowNull: false
-	},
 	createdAt: DataTypes.DATE,
-	updatedAt: DataTypes.DATE
+	updatedAt: DataTypes.DATE,
+
+	_name: {
+		type: DataTypes.VIRTUAL,
+		get() {
+			return `news`;
+		}
+	}
 };
 
 export const options = {};
@@ -66,38 +71,80 @@ export const setup = async () => {
 	News.afterSave(async record => {
 		const oldDoc = record.previous();
 		const doc = record.get();
-	
+
 		if (oldDoc.status === doc.status) return;
-	
+
 		if (doc.status === NewsStatus.PUBLISHED) {
-			const EventClass = EventsModule.getEvent(
-				`data.news.published`
+			const EventClass = EventsModule.getEvent(`data.news.published`);
+			await EventsModule.publish(
+				new EventClass({
+					doc
+				})
 			);
-			await EventsModule.publish(new EventClass({
-				doc
-			}));
 		} else if (oldDoc.status === NewsStatus.PUBLISHED) {
-			const EventClass = EventsModule.getEvent(
-				`data.news.unpublished`
+			const EventClass = EventsModule.getEvent(`data.news.unpublished`);
+			await EventsModule.publish(
+				new EventClass(
+					{
+						oldDoc
+					},
+					oldDoc._id!.toString()
+				)
 			);
-			await EventsModule.publish(new EventClass({
-				oldDoc
-			}, oldDoc.id!.toString()));
 		}
 	});
-	
+
 	News.afterDestroy(async record => {
 		const oldDoc = record.previous();
-	
+
 		if (oldDoc.status === NewsStatus.PUBLISHED) {
-			const EventClass = EventsModule.getEvent(
-				`data.news.unpublished`
+			const EventClass = EventsModule.getEvent(`data.news.unpublished`);
+			await EventsModule.publish(
+				new EventClass(
+					{
+						oldDoc
+					},
+					oldDoc._id!.toString()
+				)
 			);
-			await EventsModule.publish(new EventClass({
-				oldDoc
-			}, oldDoc.id!.toString()));
 		}
 	});
+
+	News.addHook("afterFind", (_news, options) => {
+		if (!_news) return;
+
+		// TODO improve TS
+		let news: Model<
+			InferAttributes<
+				News,
+				{
+					omit: never;
+				}
+			>,
+			InferCreationAttributes<
+				News,
+				{
+					omit: never;
+				}
+			>
+		>[] = [];
+
+		if (Array.isArray(_news)) news = _news;
+		// @ts-ignore - possibly not needed after TS update
+		else news.push(_news);
+
+		news.forEach(news => {
+			news.dataValues.createdBy = {
+				_id: news.dataValues.createdBy,
+				_name: "minifiedUsers"
+			};
+		});
+	});
+};
+
+export const setupAssociations = () => {
+	News.belongsTo(User, { foreignKey: "createdBy" });
+	User.hasMany(News, { foreignKey: "createdBy" });
 };
 
 export default News;

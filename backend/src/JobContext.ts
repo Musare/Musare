@@ -3,14 +3,14 @@ import { SessionSchema } from "@/modules/DataModule/models/sessions/schema";
 import Job, { JobOptions } from "@/Job";
 import { Log } from "@/LogBook";
 import DataModule from "@/modules/DataModule";
-import { UserModel } from "@/modules/DataModule/models/users/schema";
 import { JobDerived } from "./types/JobDerived";
 import assertJobDerived from "./utils/assertJobDerived";
 import {
 	GetMultipleModelPermissionsResult,
 	GetSingleModelPermissionsResult
-} from "./modules/DataModule/models/users/jobs/GetModelPermissions";
-import { GetPermissionsResult } from "./modules/DataModule/models/users/jobs/GetPermissions";
+} from "./modules/DataModule/models/User/jobs/GetModelPermissions";
+import { GetPermissionsResult } from "./modules/DataModule/models/User/jobs/GetPermissions";
+import User from "./modules/DataModule/models/User";
 
 const permissionRegex =
 	// eslint-disable-next-line max-len
@@ -83,9 +83,9 @@ export default class JobContext {
 		if (!this._session?.userId)
 			throw new Error("No user found for session");
 
-		const User = await DataModule.getModel<UserModel>("users");
+		const User = await DataModule.getModel<User>("users");
 
-		const user = await User.findById(this._session.userId);
+		const user = await User.findByPk(this._session.userId);
 
 		if (!user) throw new Error("No user found for session");
 

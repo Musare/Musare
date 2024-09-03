@@ -1,5 +1,4 @@
-import { HydratedDocument } from "mongoose";
-import { UserSchema } from "../DataModule/models/users/schema";
+import User from "../DataModule/models/User";
 
 export default abstract class Event {
 	protected static _namespace: string;
@@ -104,9 +103,7 @@ export default abstract class Event {
 		| (boolean | CallableFunction)[] = false;
 
 	// Check if a given user has generic permission to subscribe to an event, using _hasPermission
-	public static async hasPermission(
-		user: HydratedDocument<UserSchema> | null
-	) {
+	public static async hasPermission(user: User | null) {
 		const options = Array.isArray(this._hasPermission)
 			? this._hasPermission
 			: [this._hasPermission];

@@ -2,13 +2,70 @@ import config from "config";
 import { readdir } from "fs/promises";
 import path from "path";
 import { forEachIn } from "@common/utils/forEachIn";
-import { Sequelize, Model as SequelizeModel, ModelStatic } from "sequelize";
+import {
+	Sequelize,
+	Model as SequelizeModel,
+	ModelStatic,
+	DataTypes,
+	Utils
+} from "sequelize";
 import { Dirent } from "fs";
 import * as inflection from "inflection";
 import BaseModule, { ModuleStatus } from "@/BaseModule";
-import EventsModule from "./EventsModule";
 import DataModuleJob from "./DataModule/DataModuleJob";
 import Job from "@/Job";
+
+export type ObjectIdType = string;
+
+// TODO fix TS
+// TODO implement actual checking of ObjectId's
+// TODO move to a better spot
+// Strange behavior would result if we extended DataTypes.ABSTRACT because
+// it's a class wrapped in a Proxy by Utils.classToInvokable.
+class OBJECTID extends DataTypes.ABSTRACT.prototype.constructor {
+	// Mandatory: set the type key
+	static key = "OBJECTID";
+
+	key = OBJECTID.key;
+
+	// Mandatory: complete definition of the new type in the database
+	toSql() {
+		return "VARCHAR(24)";
+	}
+
+	// Optional: validator function
+	// @ts-ignore
+	validate(value, options) {
+		return true;
+		// return (typeof value === 'number') && (!Number.isNaN(value));
+	}
+
+	// Optional: sanitizer
+	// @ts-ignore
+	_sanitize(value) {
+		return value;
+		// Force all numbers to be positive
+		// return value < 0 ? 0 : Math.round(value);
+	}
+
+	// Optional: value stringifier before sending to database
+	// @ts-ignore
+	_stringify(value) {
+		return value;
+		// return value.toString();
+	}
+
+	// Optional: parser for values received from the database
+	// @ts-ignore
+	static parse(value) {
+		return value;
+		// return Number.parseInt(value);
+	}
+}
+
+// Optional: add the new type to DataTypes. Optionally wrap it on `Utils.classToInvokable` to
+// be able to use this datatype directly without having to call `new` on it.
+DataTypes.OBJECTID = Utils.classToInvokable(OBJECTID);
 
 export class DataModule extends BaseModule {
 	private _sequelize?: Sequelize;
@@ -50,7 +107,8 @@ export class DataModule extends BaseModule {
 	 * setupSequelize - Setup sequelize instance
 	 */
 	private async _setupSequelize() {
-		const { username, password, host, port, database } = config.get<any>("postgres");
+		const { username, password, host, port, database } =
+			config.get<any>("postgres");
 		this._sequelize = new Sequelize(database, username, password, {
 			host,
 			port,
@@ -59,6 +117,8 @@ export class DataModule extends BaseModule {
 		});
 
 		await this._sequelize.authenticate();
+
+		const setupAssociationFunctions: Function[] = [];
 
 		await forEachIn(
 			await readdir(
@@ -75,7 +135,8 @@ export class DataModule extends BaseModule {
 					default: ModelClass,
 					schema,
 					options = {},
-					setup
+					setup,
+					setupAssociations
 				} = await import(`${modelFile.path}/${modelFile.name}`);
 
 				const tableName = inflection.camelize(
@@ -91,13 +152,25 @@ export class DataModule extends BaseModule {
 
 				if (typeof setup === "function") await setup();
 
+				if (typeof setupAssociations === "function")
+					setupAssociationFunctions.push(setupAssociations);
+
 				await this._loadModelEvents(ModelClass.name);
 
 				await this._loadModelJobs(ModelClass.name);
 			}
 		);
 
-		this._sequelize.sync();
+		setupAssociationFunctions.forEach(setupAssociation => {
+			setupAssociation();
+		});
+
+		await this._sequelize.sync({ force: true });
+
+		// TODO move to a better spot
+		await this._sequelize.query(
+			`CREATE OR REPLACE VIEW "minifiedUsers" AS SELECT _id, username, name, role FROM users`
+		);
 	}
 
 	// /**
@@ -169,7 +242,10 @@ export class DataModule extends BaseModule {
 		if (this.getStatus() !== ModuleStatus.STARTED)
 			throw new Error("Module not started");
 
-		return this._sequelize.model(name) as ModelStatic<ModelType>;
+		// TODO check if we want to do it via singularize&camelize, or another way
+		const camelizedName = inflection.singularize(inflection.camelize(name));
+
+		return this._sequelize.model(camelizedName) as ModelStatic<ModelType>; // This fails - news has not been defined
 	}
 
 	private async _loadModelJobs(modelClassName: string) {
@@ -190,8 +266,12 @@ export class DataModule extends BaseModule {
 				error instanceof Error &&
 				"code" in error &&
 				error.code === "ENOENT"
-			)
+			) {
+				this.log(
+					`Loading ${modelClassName} jobs failed - folder doesn't exist`
+				);
 				return;
+			}
 
 			throw error;
 		}

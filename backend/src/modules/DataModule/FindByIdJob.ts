@@ -1,5 +1,4 @@
 import Joi from "joi";
-import DataModule from "../DataModule";
 import DataModuleJob from "./DataModuleJob";
 
 export default abstract class FindByIdJob extends DataModuleJob {

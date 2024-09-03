@@ -1,7 +1,6 @@
 import { SessionSchema } from "@models/sessions/schema";
 import { getErrorMessage } from "@common/utils/getErrorMessage";
 import { generateUuid } from "@common/utils/generateUuid";
-import { HydratedDocument } from "mongoose";
 import Joi from "joi";
 import * as inflection from "inflection";
 import JobContext from "@/JobContext";
@@ -10,7 +9,7 @@ import LogBook, { Log } from "@/LogBook";
 import BaseModule from "./BaseModule";
 import EventsModule from "./modules/EventsModule";
 import JobCompletedEvent from "./modules/EventsModule/events/JobCompletedEvent";
-import { UserSchema } from "./modules/DataModule/models/users/schema";
+import User from "./modules/DataModule/models/User";
 
 export enum JobStatus {
 	QUEUED = "QUEUED",
@@ -187,9 +186,7 @@ export default abstract class Job {
 		| (boolean | CallableFunction)[] = false;
 
 	// Check if a given user has generic permission to execute a job, using _hasPermission
-	public static async hasPermission(
-		user: HydratedDocument<UserSchema> | null
-	) {
+	public static async hasPermission(user: User | null) {
 		const options = Array.isArray(this._hasPermission)
 			? this._hasPermission
 			: [this._hasPermission];

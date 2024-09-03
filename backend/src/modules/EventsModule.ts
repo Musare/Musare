@@ -14,8 +14,8 @@ import WebSocketModule from "./WebSocketModule";
 import Event from "@/modules/EventsModule/Event";
 import ModuleManager from "@/ModuleManager";
 import DataModule from "@/modules/DataModule";
-import { GetPermissionsResult } from "@/modules/DataModule/models/users/jobs/GetPermissions";
-import { GetSingleModelPermissionsResult } from "@/modules/DataModule/models/users/jobs/GetModelPermissions";
+import { GetPermissionsResult } from "@/modules/DataModule/models/User/jobs/GetPermissions";
+import { GetSingleModelPermissionsResult } from "@/modules/DataModule/models/User/jobs/GetModelPermissions";
 import JobContext from "@/JobContext";
 
 const permissionRegex =
@@ -211,6 +211,10 @@ export class EventsModule extends BaseModule {
 	 */
 	public async assertPermission(jobContext: JobContext, permission: string) {
 		let hasPermission = false;
+
+		// TODO improve
+		if (!permissionRegex.test(permission))
+			throw new Error("Regex doesn't match");
 
 		const {
 			moduleName,

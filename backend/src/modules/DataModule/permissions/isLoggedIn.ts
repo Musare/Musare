@@ -1,4 +1,3 @@
-import { HydratedDocument } from "mongoose";
-import { UserSchema } from "../models/users/schema";
+import User from "../models/User";
 
-export default (user: HydratedDocument<UserSchema>) => user;
+export default (user: User) => user;

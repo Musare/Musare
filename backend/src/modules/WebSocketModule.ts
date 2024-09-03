@@ -10,9 +10,9 @@ import WebSocket from "@/WebSocket";
 import ModuleManager from "@/ModuleManager";
 import JobQueue from "@/JobQueue";
 import DataModule from "./DataModule";
-import { UserModel } from "./DataModule/models/users/schema";
-import { SessionModel } from "./DataModule/models/sessions/schema";
 import EventsModule from "./EventsModule";
+import User from "./DataModule/models/User";
+import Session from "./DataModule/models/Session";
 // import assertEventDerived from "@/utils/assertEventDerived";
 
 export class WebSocketModule extends BaseModule {
@@ -132,16 +132,24 @@ export class WebSocketModule extends BaseModule {
 		if (sessionId && isObjectIdOrHexString(sessionId)) {
 			socket.setSessionId(sessionId);
 
-			const Session = await DataModule.getModel("sessions");
+			const Session = await DataModule.getModel<Session>("sessions");
 
-			const session = await Session.findByIdAndUpdate(sessionId, {
-				updatedAt: Date.now()
-			});
+			await Session.update(
+				{
+					updatedAt: new Date()
+				},
+				{
+					where: {
+						sessionId
+					}
+				}
+			);
+			const session = await Session.findByPk(sessionId); // pk = primary key
 
 			if (session) {
-				const User = await DataModule.getModel<UserModel>("users");
+				const User = await DataModule.getModel<User>("users");
 
-				user = await User.findById(session.userId);
+				user = await User.findByPk(session.userId);
 			}
 		}
 
@@ -247,16 +255,20 @@ export class WebSocketModule extends BaseModule {
 
 			let session;
 			if (socket.getSessionId()) {
-				const Session = await DataModule.getModel<SessionModel>(
-					"sessions"
-				);
+				const Session = await DataModule.getModel<Session>("sessions");
 
-				session = await Session.findByIdAndUpdate(
-					socket.getSessionId(),
+				await Session.update(
 					{
-						updatedAt: Date.now()
+						updatedAt: new Date()
+					},
+					{
+						where: {
+							sessionId: socket.getSessionId()
+						}
 					}
 				);
+
+				session = await Session.findByPk(socket.getSessionId());
 
 				if (!session) throw new Error("Session not found.");
 			}

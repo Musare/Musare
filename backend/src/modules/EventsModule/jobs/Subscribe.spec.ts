@@ -2,19 +2,19 @@ import "@/tests/support/setup";
 import sinon from "sinon";
 import mongoose from "mongoose";
 import news from "logic/db/schemas/news";
+import NewsCreatedEvent from "@models/News/events/NewsCreatedEvent";
+import NewsUpdatedEvent from "@models/News/events/NewsUpdatedEvent";
+import NewsDeletedEvent from "@models/News/events/NewsDeletedEvent";
+import { NewsStatus } from "@models/News/NewsStatus";
 import { TestModule } from "@/tests/support/TestModule";
 import Subscribe from "@/modules/EventsModule/jobs/Subscribe";
 import DataModule from "@/modules/DataModule";
 import EventsModule from "@/modules/EventsModule";
-import NewsCreatedEvent from "@models/News/events/NewsCreatedEvent";
-import GetModelPermissions from "@models/users/jobs/GetModelPermissions";
+import GetModelPermissions from "@/modules/DataModule/models/User/jobs/GetModelPermissions";
 import JobContext from "@/JobContext";
-import { UserRole } from "@models/users/UserRole";
-import GetPermissions from "@models/users/jobs/GetPermissions";
+import { UserRole } from "@/modules/DataModule/models/User/UserRole";
+import GetPermissions from "@/modules/DataModule/models/User/jobs/GetPermissions";
 import CacheModule from "@/modules/CacheModule";
-import NewsUpdatedEvent from "@models/News/events/NewsUpdatedEvent";
-import NewsDeletedEvent from "@models/News/events/NewsDeletedEvent";
-import { NewsStatus } from "@models/News/NewsStatus";
 
 describe("Subscribe job", async function () {
 	describe("execute", function () {

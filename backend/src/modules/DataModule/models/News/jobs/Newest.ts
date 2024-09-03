@@ -15,7 +15,7 @@ export default class Newest extends DataModuleJob {
 
 	protected async _execute() {
 		return this.getModel().findAll({
-			order: [["created_at", "DESC"]],
+			order: [["createdAt", "DESC"]],
 			limit: this._payload?.limit,
 			where: {
 				status: NewsStatus.PUBLISHED

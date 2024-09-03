@@ -1,4 +1,5 @@
 import * as readline from "node:readline";
+import { NewsStatus } from "@models/News/NewsStatus";
 import ModuleManager from "@/ModuleManager";
 import LogBook from "@/LogBook";
 import JobQueue from "@/JobQueue";
@@ -8,7 +9,6 @@ import EventsModule from "./modules/EventsModule";
 // import { NewsModel } from "./modules/DataModule/models/news/schema";
 // import { FilterType } from "./modules/DataModule/plugins/getData";
 import News from "./modules/DataModule/models/News";
-import { NewsStatus } from "@models/News/NewsStatus";
 import GetData from "./modules/DataModule/models/News/jobs/GetData";
 
 process.removeAllListeners("uncaughtException");
@@ -82,16 +82,16 @@ ModuleManager.startup().then(async () => {
 	);
 
 	console.log(
-		await (new GetData({
+		await new GetData({
 			page: 1,
 			pageSize: 10,
-			properties: ['id'],
+			properties: ["id"],
 			sort: {
-				id: 'ascending'
+				id: "ascending"
 			},
 			queries: [],
-			operator: 'and'
-		}).execute())
+			operator: "and"
+		}).execute()
 	);
 });
 

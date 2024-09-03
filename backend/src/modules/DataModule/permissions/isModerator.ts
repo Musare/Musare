@@ -1,6 +1,4 @@
-import { HydratedDocument } from "mongoose";
-import { UserSchema } from "../models/users/schema";
-import { UserRole } from "../models/users/UserRole";
+import { UserRole } from "../models/User/UserRole";
+import User from "../models/User";
 
-export default (user: HydratedDocument<UserSchema>) =>
-	user && user.role === UserRole.ADMIN;
+export default (user: User) => user && user.role === UserRole.ADMIN;

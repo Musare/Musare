@@ -1,11 +1,11 @@
 import { HydratedDocument } from "mongoose";
-import { UserSchema } from "../../models/users/schema";
+import User from "../../models/User";
 
 export default (
 	model:
 		| (HydratedDocument<any> & { owner?: any })
 		| (HydratedDocument<any> & { createdBy?: any }),
-	user?: HydratedDocument<UserSchema>
+	user?: User
 ) => {
 	if (!user || !model) return false;
 
